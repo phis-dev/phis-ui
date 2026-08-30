@@ -1,0 +1,13 @@
+node_modules/
+.next/
+dist/
+out/
+
+.node_modules.bak.*/
+.package-lock.bak.*.json
+
+.DS_Store
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*

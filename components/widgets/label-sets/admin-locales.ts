@@ -1,0 +1,107 @@
+import "server-only";
+
+import { PHI_TR_CTX_WEB_UI_LABEL, type PhiGlobalTranslatorOptions } from "../../../gateway/tr";
+import { definePhiLabelSet, getPhiLabelSet } from "../../../gateway/label-set";
+
+const PHI_ADMIN_LOCALES_WIDGET_LABEL_SET = definePhiLabelSet({
+  key: "widget:admin-locales",
+  ctx: PHI_TR_CTX_WEB_UI_LABEL,
+  labels: {
+    title: "Locales",
+    description: "Manage the current site's available languages and site translations.",
+    default_locale_label: "Default language",
+    available_locales_label: "Available languages",
+    save_locales_label: "Save languages",
+    saved_label: "Saved.",
+    translations_title: "Site translations",
+    translations_description: "Edit or delete translated variants for the selected site language.",
+    footer_count: "%1 translations of %2 total",
+    language_label: "Language",
+    search_placeholder: "Search source, context, or translation",
+    reset_label: "Reset",
+    refresh_label: "Refresh",
+    delete_selected_label: "Delete selected",
+    delete_site_keys_label: "Delete locale translations",
+    delete_site_keys_success_label: "Deleted.",
+    column_source: "Source",
+    column_context: "Context",
+    column_translation: "Translation",
+    column_updated: "Updated",
+    column_actions: "Actions",
+    action_edit: "Edit",
+    action_delete: "Delete",
+    edit_title: "Edit translation",
+    translation_label: "Translation",
+    cancel_label: "Cancel",
+    save_label: "Save",
+    delete_title: "Delete translation",
+    delete_description: "Delete this translated variant?",
+    delete_site_keys_title: "Delete translations for %1?",
+    delete_site_keys_description: "Only the translations for %1 will be deleted. Global translations are not affected.",
+    delete_selected_title: "Delete %1 selected translations?",
+    delete_selected_description: "The selected translated variants will be deleted permanently.",
+    empty_title: "No translations found.",
+    empty_text: "No site translations exist for this language yet.",
+    load_error: "Failed to load locale data.",
+    save_error: "Failed to save locale data.",
+    delete_error: "Failed to delete translation.",
+    delete_site_keys_error: "Failed to delete site translation keys.",
+  },
+});
+
+export async function getPhiAdminLocalesWidgetLabels(options: PhiGlobalTranslatorOptions) {
+  const labels = await getPhiLabelSet(options, PHI_ADMIN_LOCALES_WIDGET_LABEL_SET);
+  return {
+    title: labels.title,
+    description: labels.description,
+    defaultLocaleLabel: labels.default_locale_label,
+    availableLocalesLabel: labels.available_locales_label,
+    saveLocalesLabel: labels.save_locales_label,
+    savedLabel: labels.saved_label,
+    translationsTitle: labels.translations_title,
+    translationsDescription: labels.translations_description,
+    footer: labels.footer_count,
+    languageLabel: labels.language_label,
+    searchPlaceholder: labels.search_placeholder,
+    resetLabel: labels.reset_label,
+    refreshLabel: labels.refresh_label,
+    deleteSelectedLabel: labels.delete_selected_label,
+    deleteSiteKeysLabel: labels.delete_site_keys_label,
+    deleteSiteKeysSuccessLabel: labels.delete_site_keys_success_label,
+    columns: {
+      source: labels.column_source,
+      context: labels.column_context,
+      translation: labels.column_translation,
+      updated: labels.column_updated,
+      actions: labels.column_actions,
+    },
+    actions: {
+      edit: labels.action_edit,
+      delete: labels.action_delete,
+    },
+    edit: {
+      title: labels.edit_title,
+      translationLabel: labels.translation_label,
+      cancel: labels.cancel_label,
+      save: labels.save_label,
+    },
+    delete: {
+      title: labels.delete_title,
+      description: labels.delete_description,
+      siteKeysTitle: labels.delete_site_keys_title,
+      siteKeysDescription: labels.delete_site_keys_description,
+      selectedTitle: labels.delete_selected_title,
+      selectedDescription: labels.delete_selected_description,
+    },
+    empty: {
+      title: labels.empty_title,
+      text: labels.empty_text,
+    },
+    errors: {
+      load: labels.load_error,
+      save: labels.save_error,
+      delete: labels.delete_error,
+      deleteSiteKeys: labels.delete_site_keys_error,
+    },
+  };
+}

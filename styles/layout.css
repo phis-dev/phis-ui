@@ -1,0 +1,231 @@
+/* ============================================
+   LAYOUT PRIMITIVES
+   ============================================ */
+
+:where(.phi-layout),
+:where([data-layout-kind]) {
+  position: relative;
+  box-sizing: border-box;
+  min-width: 0;
+  min-height: 0;
+}
+
+:where([data-layout-kind]) {
+  --phi-layout-gap: var(--ant-margin);
+  --phi-layout-slot-gap: var(--phi-layout-gap);
+}
+
+:where([data-layout-kind="flex"]) {
+  display: flex;
+  gap: var(--phi-layout-gap);
+}
+
+:where([data-layout-kind="flex"][data-layout-axis="vertical"]) {
+  flex-direction: column;
+}
+
+:where([data-layout-kind="flex"][data-layout-axis="horizontal"]) {
+  flex-direction: row;
+}
+
+:where([data-layout-kind="stack"]) {
+  display: grid;
+  grid-auto-flow: row;
+  gap: var(--phi-layout-gap);
+}
+
+:where([data-layout-kind="grid"]) {
+  display: grid;
+  grid-template-columns: repeat(24, minmax(0, 1fr));
+  gap: 0;
+  column-gap: 0;
+  row-gap: var(--phi-layout-gap);
+}
+
+:where([data-layout-kind="threecol"]) {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr);
+  gap: var(--phi-layout-gap);
+}
+
+:where([data-layout-kind="split"]) {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: var(--phi-layout-gap);
+}
+
+:where([data-layout-kind="masonry"]) {
+  column-gap: var(--phi-layout-gap);
+}
+
+:where(.phi-layout-slot) {
+  min-width: 0;
+  min-height: 0;
+  position: relative;
+  box-sizing: border-box;
+}
+
+:where(.phi-layout-slot[data-slot-mode="fill"]) {
+  align-self: stretch;
+  justify-self: stretch;
+}
+
+:where(.phi-layout-slot[data-slot-mode="hug"]) {
+  width: fit-content;
+  height: fit-content;
+}
+
+:where(.phi-layout-slot[data-slot-mode="fill-inline"]) {
+  width: 100%;
+  height: fit-content;
+}
+
+:where(.phi-layout-slot[data-slot-mode="fill-block"]) {
+  width: fit-content;
+  height: 100%;
+}
+
+:where(.phi-layout-slot[data-slot-mode="fixed"]) {
+  flex: 0 0 auto;
+}
+
+:where(.phi-layout-slot[data-slot-state="collapsed"]) {
+  overflow: hidden;
+}
+
+/* ============================================
+   LIVE SLOT AND REGION GEOMETRY
+   ============================================ */
+
+:where(.phi-layout-scaffold-anchor) {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  pointer-events: none;
+  padding: 0;
+  background: transparent;
+}
+
+:where(.phi-layout-scaffold-anchor--flow) {
+  position: relative;
+  top: auto;
+  right: auto;
+  bottom: auto;
+  left: auto;
+  flex: 0 0 auto;
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+}
+
+:where(.phi-layout-scaffold-anchor__content) {
+  pointer-events: auto;
+  display: inline-flex;
+  max-width: 100%;
+  max-height: 100%;
+  width: fit-content;
+  height: fit-content;
+}
+
+:where(.phi-slot-child) {
+  display: flex;
+  min-width: 0;
+  min-height: 0;
+  max-width: 100%;
+  max-height: 100%;
+}
+
+:where(.phi-slot-child--inline-fill) {
+  width: 100%;
+}
+
+:where(.phi-slot-child--block-fill) {
+  height: 100%;
+}
+
+:where(.phi-slot-child--inline-fill > .phi-layout) {
+  width: 100%;
+}
+
+:where(.phi-slot-child--block-fill > .phi-layout) {
+  flex: 1 1 auto;
+  height: 100%;
+}
+
+:where(.phi-slot-child--inline-intrinsic) {
+  width: fit-content;
+}
+
+:where(.phi-slot-child--block-intrinsic) {
+  height: fit-content;
+}
+
+:where(.phi-layout-scaffold-anchor__content[data-phi-layout-fill-slot="true"]) {
+  min-width: 0;
+  min-height: 0;
+}
+
+:where(.phi-layout-scaffold-anchor__content[data-phi-slot-size-inline="fill"][data-phi-layout-explicit-width="true"]) {
+  width: 100%;
+}
+
+:where(.phi-layout-scaffold-anchor__content[data-phi-slot-size-block="fill"][data-phi-layout-explicit-height="true"]) {
+  height: 100%;
+}
+
+:where(.phi-layout-scaffold-anchor__content[data-phi-slot-size-inline="fill"]:not([data-phi-layout-explicit-width="true"])) {
+  width: 100%;
+}
+
+:where(.phi-layout-scaffold-anchor__content[data-phi-slot-size-block="fill"]:not([data-phi-layout-explicit-height="true"])) {
+  height: 100%;
+}
+
+:where(.phi-widget-preview-fallback) {
+  width: fit-content;
+  height: fit-content;
+  max-width: 100%;
+  max-height: 100%;
+}
+
+:where(
+  [data-phi-slot-size-inline="fill"] > .phi-widget-preview-fallback,
+  [data-phi-slot-size-inline="fixed"][data-phi-layout-explicit-width="true"] > .phi-widget-preview-fallback
+) {
+  width: 100%;
+}
+
+:where(
+  [data-phi-slot-size-block="fill"] > .phi-widget-preview-fallback,
+  [data-phi-slot-size-block="fixed"][data-phi-layout-explicit-height="true"] > .phi-widget-preview-fallback
+) {
+  height: 100%;
+}
+
+:where(.phi-cms-region-shell) {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+}
+
+:where(.phi-cms-region-shell--fill) {
+  width: 100%;
+  height: 100%;
+  flex: 1 1 auto;
+}
+
+:where(.phi-cms-region-shell__content) {
+  box-sizing: border-box;
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+}

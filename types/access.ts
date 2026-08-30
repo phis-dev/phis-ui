@@ -1,0 +1,261 @@
+import { PhiBaseRole } from "../constants/phi-base-roles";
+
+export const PHI_CORE_ROLE_PROVIDER_ID = "@phis/phi-server/core" as const;
+
+export type PhiRoleProviderId = `@${string}/${string}`;
+
+export type PhiViewerRoleClaim = {
+  providerId: PhiRoleProviderId;
+  flags: number;
+};
+
+export type PhiGroupProviderId = `@${string}/${string}`;
+
+export type PhiViewerGroupClaim = {
+  providerId: PhiGroupProviderId;
+  key: string;
+  flags: number;
+};
+
+export type PhiViewerAccessPolicy =
+  | { access: "anyone" }
+  | { access: "anonymous" }
+  | { access: "authenticated" }
+  | {
+      access: "roles";
+      providerId: PhiRoleProviderId;
+      allowedRoleFlags: number;
+    }
+  | {
+      access: "groups";
+      providerId: PhiGroupProviderId;
+      allowedGroupKeys: readonly string[];
+    };
+
+const PHI_ROLE_PROVIDER_ID_PATTERN = /^@[^/]+\/[^/]+(?:\/[^/]+)*$/;
+
+export const PHI_VIEWER_ACCESS_ANYONE = { access: "anyone" } as const satisfies PhiViewerAccessPolicy;
+export const PHI_VIEWER_ACCESS_AUTHENTICATED = {
+  access: "authenticated",
+} as const satisfies PhiViewerAccessPolicy;
+export const PHI_VIEWER_ACCESS_SITE_ADMIN = {
+  access: "roles",
+  providerId: PHI_CORE_ROLE_PROVIDER_ID,
+  allowedRoleFlags: PhiBaseRole.Admin,
+} as const satisfies PhiViewerAccessPolicy;
+export const PHI_VIEWER_ACCESS_DEVELOPER_TOOLS = {
+  access: "roles",
+  providerId: PHI_CORE_ROLE_PROVIDER_ID,
+  allowedRoleFlags: PhiBaseRole.Developer,
+} as const satisfies PhiViewerAccessPolicy;
+export const PHI_VIEWER_ACCESS_STRUCTURE_AUTHORING = {
+  access: "roles",
+  providerId: PHI_CORE_ROLE_PROVIDER_ID,
+  allowedRoleFlags: PhiBaseRole.Developer | PhiBaseRole.Builder,
+} as const satisfies PhiViewerAccessPolicy;
+export const PHI_VIEWER_ACCESS_CONTENT_EDITING = {
+  access: "roles",
+  providerId: PHI_CORE_ROLE_PROVIDER_ID,
+  allowedRoleFlags: PhiBaseRole.Developer | PhiBaseRole.Author | PhiBaseRole.Publisher,
+} as const satisfies PhiViewerAccessPolicy;
+export const PHI_VIEWER_ACCESS_PUBLISHING = {
+  access: "roles",
+  providerId: PHI_CORE_ROLE_PROVIDER_ID,
+  allowedRoleFlags: PhiBaseRole.Developer | PhiBaseRole.Publisher,
+} as const satisfies PhiViewerAccessPolicy;
+export const PHI_VIEWER_ACCESS_SUPPORT = {
+  access: "roles",
+  providerId: PHI_CORE_ROLE_PROVIDER_ID,
+  allowedRoleFlags: PhiBaseRole.Developer | PhiBaseRole.Supporter,
+} as const satisfies PhiViewerAccessPolicy;
+export const PHI_VIEWER_ACCESS_ACCOUNTING = {
+  access: "roles",
+  providerId: PHI_CORE_ROLE_PROVIDER_ID,
+  allowedRoleFlags: PhiBaseRole.Developer | PhiBaseRole.Accountant,
+} as const satisfies PhiViewerAccessPolicy;
+
+export type PhiAccessViewer = {
+  access: "public" | "authenticated";
+  roleClaims?: readonly PhiViewerRoleClaim[];
+  groupClaims?: readonly PhiViewerGroupClaim[];
+};
+
+export function readPhiViewerAccessPolicy(
+  value: unknown,
+): PhiViewerAccessPolicy | null {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return null;
+  }
+  const record = value as Record<string, unknown>;
+  if (
+    record.access === "anyone" ||
+    record.access === "anonymous" ||
+    record.access === "authenticated"
+  ) {
+    return { access: record.access };
+  }
+  if (
+    record.access === "roles" &&
+    typeof record.providerId === "string" &&
+    PHI_ROLE_PROVIDER_ID_PATTERN.test(record.providerId) &&
+    typeof record.allowedRoleFlags === "number" &&
+    Number.isInteger(record.allowedRoleFlags) &&
+    record.allowedRoleFlags > 0
+  ) {
+    return {
+      access: "roles",
+      providerId: record.providerId as PhiRoleProviderId,
+      allowedRoleFlags: record.allowedRoleFlags,
+    };
+  }
+  if (
+    record.access === "groups" &&
+    typeof record.providerId === "string" &&
+    PHI_ROLE_PROVIDER_ID_PATTERN.test(record.providerId) &&
+    Array.isArray(record.allowedGroupKeys) &&
+    record.allowedGroupKeys.length > 0 &&
+    record.allowedGroupKeys.every((key) =>
+      typeof key === "string" && /^[a-z0-9][a-z0-9._-]{0,159}$/u.test(key),
+    )
+  ) {
+    return {
+      access: "groups",
+      providerId: record.providerId as PhiGroupProviderId,
+      allowedGroupKeys: [...new Set(record.allowedGroupKeys as string[])],
+    };
+  }
+  return null;
+}
+
+export function isPhiViewerAccessPolicyProviderOwned(
+  policy: PhiViewerAccessPolicy,
+  ownerProviderId?: PhiRoleProviderId | null,
+) {
+  return (policy.access !== "roles" && policy.access !== "groups") ||
+    policy.providerId === PHI_CORE_ROLE_PROVIDER_ID ||
+    (ownerProviderId != null && policy.providerId === ownerProviderId);
+}
+
+export function canPhiViewerAccessOwnedPolicy(
+  viewer: PhiAccessViewer,
+  policy: PhiViewerAccessPolicy | null | undefined,
+  ownerProviderId?: PhiRoleProviderId | null,
+) {
+  return (
+    (policy == null || isPhiViewerAccessPolicyProviderOwned(policy, ownerProviderId)) &&
+    canPhiViewerAccess(viewer, policy)
+  );
+}
+
+function normalizeRoleFlags(value: unknown) {
+  return typeof value === "number" && Number.isInteger(value) && value >= 0 ? value : 0;
+}
+
+export function getPhiViewerRoleFlags(
+  viewer: Pick<PhiAccessViewer, "roleClaims">,
+  providerId: PhiRoleProviderId,
+) {
+  return normalizeRoleFlags(
+    viewer.roleClaims?.find((claim) => claim.providerId === providerId)?.flags,
+  );
+}
+
+export function hasProviderRole(
+  viewer: Pick<PhiAccessViewer, "roleClaims">,
+  providerId: PhiRoleProviderId,
+  roleFlag: number,
+) {
+  const normalizedRoleFlag = normalizeRoleFlags(roleFlag);
+  return normalizedRoleFlag !== 0 &&
+    (getPhiViewerRoleFlags(viewer, providerId) & normalizedRoleFlag) !== 0;
+}
+
+export function hasPhiBaseRole(
+  viewer: Pick<PhiAccessViewer, "roleClaims">,
+  roleFlag: number,
+) {
+  return hasProviderRole(viewer, PHI_CORE_ROLE_PROVIDER_ID, roleFlag);
+}
+
+export function hasProviderGroup(
+  viewer: Pick<PhiAccessViewer, "groupClaims">,
+  providerId: PhiGroupProviderId,
+  groupKey: string,
+) {
+  return viewer.groupClaims?.some((claim) =>
+    claim.providerId === providerId && claim.key === groupKey,
+  ) === true;
+}
+
+export function canPhiViewerAccess(
+  viewer: PhiAccessViewer,
+  policy: PhiViewerAccessPolicy | null | undefined,
+) {
+  const resolvedPolicy = policy ?? PHI_VIEWER_ACCESS_ANYONE;
+  if (resolvedPolicy.access === "anyone") {
+    return true;
+  }
+  if (resolvedPolicy.access === "anonymous") {
+    return viewer.access !== "authenticated";
+  }
+  if (viewer.access !== "authenticated") {
+    return false;
+  }
+  if (resolvedPolicy.access === "authenticated") {
+    return true;
+  }
+  if (hasPhiBaseRole(viewer, PhiBaseRole.Admin)) {
+    return true;
+  }
+  if (resolvedPolicy.access === "groups") {
+    return resolvedPolicy.allowedGroupKeys.some((key) =>
+      hasProviderGroup(viewer, resolvedPolicy.providerId, key),
+    );
+  }
+  return (
+    resolvedPolicy.allowedRoleFlags > 0 &&
+    (
+      getPhiViewerRoleFlags(viewer, resolvedPolicy.providerId) &
+      resolvedPolicy.allowedRoleFlags
+    ) !== 0
+  );
+}
+
+export const PhiViewport = {
+  Compact: 1 << 0,
+  Medium: 1 << 1,
+  Wide: 1 << 2,
+} as const;
+
+export const PHI_VIEWPORT_ALL_FLAGS =
+  PhiViewport.Compact | PhiViewport.Medium | PhiViewport.Wide;
+
+export type PhiViewportFlags = number;
+
+export function normalizePhiViewportFlags(value: unknown) {
+  if (typeof value !== "number" || !Number.isInteger(value) || value < 0 || value > 6) {
+    return 0;
+  }
+  return value;
+}
+
+export function resolvePhiViewportFlags(value: unknown) {
+  return normalizePhiViewportFlags(value) || PHI_VIEWPORT_ALL_FLAGS;
+}
+
+export function intersectPhiViewportFlags(
+  inheritedFlags: unknown,
+  ownFlags: unknown,
+) {
+  return resolvePhiViewportFlags(inheritedFlags) & resolvePhiViewportFlags(ownFlags);
+}
+
+export function intersectPhiInheritedViewportFlags(
+  inheritedResolvedFlags: number | null | undefined,
+  ownFlags: unknown,
+) {
+  const inherited = inheritedResolvedFlags == null
+    ? PHI_VIEWPORT_ALL_FLAGS
+    : inheritedResolvedFlags & PHI_VIEWPORT_ALL_FLAGS;
+  return inherited & resolvePhiViewportFlags(ownFlags);
+}

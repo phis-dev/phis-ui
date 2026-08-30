@@ -1,0 +1,16 @@
+.root.withFooter [class~="ant-table"] {
+  border-end-start-radius: var(--ant-border-radius-lg);
+  border-end-end-radius: var(--ant-border-radius-lg);
+  overflow: hidden;
+}
+
+.root [class~="ant-table-pagination"][class~="ant-pagination"] {
+  margin-block: var(--ant-padding-sm) 0 !important;
+}
+
+.root
+  [class~="ant-table-tbody"]
+  > tr.stripedRow:not([class~="ant-table-row-selected"]):not(:hover)
+  > td {
+  background-color: var(--phi-table-striped-row-background);
+}

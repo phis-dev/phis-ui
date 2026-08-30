@@ -1,0 +1,16 @@
+@keyframes rotate {
+  from {
+    transform: rotate(var(--phi-expand-indicator-from));
+  }
+
+  to {
+    transform: rotate(var(--phi-expand-indicator-to));
+  }
+}
+
+.animated {
+  animation-duration: var(--phi-expand-indicator-duration);
+  animation-fill-mode: both;
+  animation-name: rotate;
+  animation-timing-function: var(--phi-expand-indicator-easing);
+}

@@ -1,0 +1,238 @@
+.shell-sider-full {
+  container-name: phi-render-viewport;
+  container-type: inline-size;
+  display: grid;
+  gap: 0;
+  grid-template-rows: auto auto auto auto minmax(0, 1fr) auto auto auto;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-areas:
+    "sider header_top header_top"
+    "sider header_main header_main"
+    "sider header_bottom header_bottom"
+    "sider hero hero"
+    "sider content sider_right"
+    "sider footer_top footer_top"
+    "sider footer_main footer_main"
+    "sider footer_bottom footer_bottom";
+  min-width: 0;
+  min-height: var(--phi-shell-content-min-height, 100dvh);
+  height: auto;
+}
+
+.shell-sider-embedded {
+  container-name: phi-render-viewport;
+  container-type: inline-size;
+}
+
+@container phi-render-viewport (width < 768px) {
+  :where([data-phi-viewport-flags="2"], [data-phi-viewport-flags="4"], [data-phi-viewport-flags="6"]) {
+    display: none !important;
+  }
+}
+
+@container phi-render-viewport (768px <= width < 1200px) {
+  :where([data-phi-viewport-flags="1"], [data-phi-viewport-flags="4"], [data-phi-viewport-flags="5"]) {
+    display: none !important;
+  }
+}
+
+@container phi-render-viewport (width >= 1200px) {
+  :where([data-phi-viewport-flags="1"], [data-phi-viewport-flags="2"], [data-phi-viewport-flags="3"]) {
+    display: none !important;
+  }
+}
+
+.shell-sider-full .sider_left {
+  grid-area: sider;
+  position: sticky;
+  top: 0;
+  height: var(--phi-shell-content-min-height, 100dvh);
+  min-width: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  align-self: start;
+}
+
+.shell-sider-full .phi-shell-region.header_top {
+  grid-area: header_top;
+}
+
+.shell-sider-full .phi-shell-region.header_main {
+  grid-area: header_main;
+}
+
+.shell-sider-full .phi-shell-region.header_bottom {
+  grid-area: header_bottom;
+}
+
+.shell-sider-full .phi-shell-region.hero {
+  grid-area: hero;
+}
+
+.shell-sider-full .phi-shell-region,
+.shell-sider-embedded .phi-shell-region {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+}
+
+.shell-sider-full .phi-shell-region > *,
+.shell-sider-embedded .phi-shell-region > * {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+}
+
+.shell-sider-full .phi-shell-content-main {
+  grid-area: content;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  overflow: visible;
+}
+
+.shell-sider-full .phi-shell-content-main > * {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
+}
+
+.shell-sider-full .sider_right {
+  grid-area: sider_right;
+  min-width: 0;
+  min-height: 0;
+  align-self: start;
+}
+
+.shell-sider-full .phi-shell-region.footer_top {
+  grid-area: footer_top;
+}
+
+.shell-sider-full .phi-shell-region.footer_main {
+  grid-area: footer_main;
+}
+
+.shell-sider-full .phi-shell-region.footer_bottom {
+  grid-area: footer_bottom;
+}
+
+.shell-sider-full [data-phi-sider-collapsed="true"] .ant-menu-inline-collapsed,
+.shell-sider-embedded [data-phi-sider-collapsed="true"] .ant-menu-inline-collapsed {
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+  box-sizing: border-box;
+}
+
+.shell-sider-embedded {
+  display: grid;
+  gap: 0;
+  grid-template-rows: auto auto auto auto minmax(0, 1fr) auto auto auto;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-areas:
+    "header_top header_top header_top"
+    "header_main header_main header_main"
+    "sider header_bottom header_bottom"
+    "sider hero hero"
+    "sider content sider_right"
+    "footer_top footer_top footer_top"
+    "footer_main footer_main footer_main"
+    "footer_bottom footer_bottom footer_bottom";
+  min-width: 0;
+  min-height: var(--phi-shell-content-min-height, 100dvh);
+}
+
+.shell-sider-embedded--no-sider {
+  grid-template-columns: 0px minmax(0, 1fr) auto;
+  grid-template-areas:
+    "header_top header_top header_top"
+    "header_main header_main header_main"
+    "sider header_bottom header_bottom"
+    "sider hero hero"
+    "sider content sider_right"
+    "footer_top footer_top footer_top"
+    "footer_main footer_main footer_main"
+    "footer_bottom footer_bottom footer_bottom";
+}
+
+.shell-sider-embedded .phi-shell-region.header_top {
+  grid-area: header_top;
+}
+
+.shell-sider-embedded .phi-shell-region.header_main {
+  grid-area: header_main;
+}
+
+.shell-sider-embedded .phi-shell-region.header_bottom {
+  grid-area: header_bottom;
+}
+
+.shell-sider-embedded .phi-shell-region.hero {
+  grid-area: hero;
+}
+
+.shell-sider-embedded .sider_left {
+  grid-area: sider;
+  position: sticky;
+  top: 0;
+  height: 100%;
+  max-height: var(--phi-shell-content-min-height, 100dvh);
+  min-width: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  align-self: start;
+}
+
+.shell-sider-embedded .content,
+.shell-sider-embedded .phi-shell-content-main {
+  grid-area: content;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  overflow: visible;
+}
+
+.shell-sider-embedded .phi-shell-content-main > * {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
+}
+
+.shell-sider-embedded .sider_right {
+  grid-area: sider_right;
+  min-width: 0;
+  min-height: 0;
+  align-self: start;
+}
+
+.shell-sider-embedded--no-sider .content,
+.shell-sider-embedded--no-sider .phi-shell-content-main {
+  width: 100%;
+}
+
+.shell-sider-embedded .phi-shell-region.footer_top {
+  grid-area: footer_top;
+}
+
+.shell-sider-embedded .phi-shell-region.footer_main {
+  grid-area: footer_main;
+}
+
+.shell-sider-embedded .phi-shell-region.footer_bottom {
+  grid-area: footer_bottom;
+}
+/* Server-rendered regions switch published light/dark shell values with the root theme state. */
+:where(.phi-cms-region-shell) {
+  --phi-region-background: var(--phi-region-background-light, var(--ant-color-bg-container));
+  --phi-region-color: var(--phi-region-color-light, var(--ant-color-text));
+}
+
+:where([data-phi-theme-mode="dark"]) :where(.phi-cms-region-shell) {
+  --phi-region-background: var(--phi-region-background-dark, var(--ant-color-bg-container));
+  --phi-region-color: var(--phi-region-color-dark, var(--ant-color-text));
+}

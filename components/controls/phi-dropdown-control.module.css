@@ -1,0 +1,40 @@
+/*
+ * The shared pill trigger: a bordered, fully rounded label that reacts to hover. Hover is a CSS
+ * state, not React state, so a trigger never re-renders to change its own border colour.
+ */
+/*
+ * Doubled on purpose. Ant Design styles a Typography link with
+ * `:where(...).ant-typography.ant-typography-link { border: 0; padding: 0 }` -- the `:where()` adds no
+ * specificity but the two class names do, so a single-class rule loses `border` and `padding` while
+ * `border-radius` survives because antd does not set it. The Area menu puts this class on a
+ * `Typography.Link` and lost its frame that way; the account pill escaped only because it is a plain
+ * span. Matching antd's two-class weight keeps the pill identical wherever it is used.
+ */
+.pillTrigger.pillTrigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 3.5rem;
+  padding: 4px 10px;
+  border: 1px solid var(--ant-color-border);
+  border-radius: 999px;
+  color: inherit;
+  font-size: inherit;
+  line-height: 1;
+  text-decoration: none;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition:
+    color var(--ant-motion-duration-mid),
+    border-color var(--ant-motion-duration-mid);
+}
+
+/*
+ * The pill reacts both when it is the trigger itself and when it sits inside one — the account
+ * avatar carries its label pill within a larger button, and hovering the button must light the pill.
+ */
+.pillTrigger.pillTrigger:hover,
+.trigger:hover .pillTrigger.pillTrigger {
+  border-color: var(--ant-color-primary-hover);
+  color: var(--ant-color-primary-hover);
+}

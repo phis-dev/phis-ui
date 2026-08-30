@@ -1,0 +1,583 @@
+/* ============================================
+   LAYOUT AUTHORING SCAFFOLD
+   ============================================ */
+
+.phi-html-widget-editor__content strong,
+.phi-html-widget-editor__content b,
+.phi-html-widget-editor__text--bold {
+  font-weight: 600 !important;
+}
+
+.phi-html-widget-editor__content em,
+.phi-html-widget-editor__content i,
+.phi-html-widget-editor__text--italic {
+  font-style: italic !important;
+}
+
+.phi-html-widget-editor__content u,
+.phi-html-widget-editor__text--underline {
+  text-decoration: underline !important;
+  text-decoration-line: underline !important;
+}
+
+.phi-html-widget-editor__content s,
+.phi-html-widget-editor__text--strikethrough {
+  text-decoration: line-through !important;
+  text-decoration-line: line-through !important;
+}
+
+.phi-html-widget-editor__text--underline-strikethrough {
+  text-decoration: underline line-through !important;
+  text-decoration-line: underline line-through !important;
+}
+
+.phi-html-widget-editor__text--code {
+  font-family: var(--ant-font-family-code, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, monospace);
+  background: var(--ant-color-fill-secondary, rgba(0, 0, 0, 0.04));
+  border-radius: 4px;
+  padding: 0 0.2em;
+}
+
+:root {
+  --phi-debug-layer-region-background: transparent;
+  --phi-debug-layer-region-background-strong: transparent;
+  --phi-debug-layer-region-border: transparent;
+  --phi-debug-layer-region-border-strong: transparent;
+
+  --phi-debug-layer-layout-background: transparent;
+  --phi-debug-layer-layout-background-strong: transparent;
+  --phi-debug-layer-layout-border: transparent;
+  --phi-debug-layer-layout-border-strong: transparent;
+
+  --phi-debug-layer-slot-background: transparent;
+  --phi-debug-layer-slot-background-strong: transparent;
+  --phi-debug-layer-slot-border: transparent;
+  --phi-debug-layer-slot-border-strong: transparent;
+
+  --phi-debug-layer-scaffold-background: transparent;
+  --phi-debug-layer-scaffold-background-strong: transparent;
+  --phi-debug-layer-scaffold-border: transparent;
+  --phi-debug-layer-scaffold-border-strong: transparent;
+}
+
+:where(.phi-debug-scaffold--on),
+:where([data-phi-debug-scaffold="on"]) {
+  --phi-debug-layer-region-background: rgba(255, 77, 79, 0.08);
+  --phi-debug-layer-region-background-strong: rgba(255, 77, 79, 0.16);
+  --phi-debug-layer-region-border: rgba(255, 77, 79, 0.45);
+  --phi-debug-layer-region-border-strong: rgba(255, 77, 79, 0.72);
+
+  --phi-debug-layer-layout-background: var(--ant-color-success-bg);
+  --phi-debug-layer-layout-background-strong: var(--ant-color-success-bg-hover);
+  --phi-debug-layer-layout-border: var(--ant-color-success);
+  --phi-debug-layer-layout-border-strong: var(--ant-color-success-text);
+
+  --phi-debug-layer-slot-background: var(--ant-color-warning-bg);
+  --phi-debug-layer-slot-background-strong: var(--ant-color-warning-bg-hover);
+  --phi-debug-layer-slot-border: var(--ant-color-warning);
+  --phi-debug-layer-slot-border-strong: var(--ant-color-warning-text);
+
+  --phi-debug-layer-scaffold-background: rgba(114, 46, 209, 0.10);
+  --phi-debug-layer-scaffold-background-strong: rgba(114, 46, 209, 0.18);
+  --phi-debug-layer-scaffold-border: rgba(114, 46, 209, 0.45);
+  --phi-debug-layer-scaffold-border-strong: rgba(114, 46, 209, 0.72);
+}
+
+:where(.phi-debug-scaffold--off),
+:where([data-phi-debug-scaffold="off"]) {
+  --phi-debug-layer-region-background: transparent;
+  --phi-debug-layer-region-background-strong: transparent;
+  --phi-debug-layer-region-border: transparent;
+  --phi-debug-layer-region-border-strong: transparent;
+
+  --phi-debug-layer-layout-background: transparent;
+  --phi-debug-layer-layout-background-strong: transparent;
+  --phi-debug-layer-layout-border: transparent;
+  --phi-debug-layer-layout-border-strong: transparent;
+
+  --phi-debug-layer-slot-background: transparent;
+  --phi-debug-layer-slot-background-strong: transparent;
+  --phi-debug-layer-slot-border: transparent;
+  --phi-debug-layer-slot-border-strong: transparent;
+
+  --phi-debug-layer-scaffold-background: transparent;
+  --phi-debug-layer-scaffold-background-strong: transparent;
+  --phi-debug-layer-scaffold-border: transparent;
+  --phi-debug-layer-scaffold-border-strong: transparent;
+}
+
+:where(.phi-layout[data-phi-layout-debug-layer="layout"]) {
+  outline: 2px solid var(--phi-debug-layer-layout-border);
+  outline-offset: -2px;
+}
+
+/*
+ * A layout that paints its own background keeps it: the scaffold describes the tree, it does not
+ * repaint it. The guard named `...-surface-background` while every layout writes
+ * `...-layout-background`, so it matched nothing, was therefore always true, and the debug tint went
+ * over every layout including the ones this exists to leave alone.
+ */
+:where(.phi-layout[data-phi-layout-debug-layer="layout"]:not([data-phi-layout-has-explicit-layout-background="true"])) {
+  background-color: var(--phi-debug-layer-layout-background);
+}
+
+/*
+ * The slot band sits inside the layout band rather than on top of it.
+ *
+ * A layout draws its own 2px band at `outline-offset: -2px`, so a slot coextensive with its layout --
+ * every one-slot layout, which is what a page content region usually is -- had its mark hidden
+ * underneath, while a shell region with two or three slots showed them because those sit in the
+ * interior. One pixel past the layout band keeps both visible whatever the arrangement, and stays
+ * legible in the shallow cells a flex row gives a Widget that only hugs its content.
+ *
+ * An outline rather than a border for two reasons. It costs no space, so switching the scaffold on no
+ * longer reflows the tree it exists to describe. And every rule here sits in `:where()`, so a border
+ * loses to any authored one -- while nothing but this layer sets `outline`, which is exactly why the
+ * layout band never had the problem.
+ */
+:where([data-phi-debug-scaffold="on"] .phi-layout-scaffold-slot) {
+  border-radius: 0;
+  box-sizing: border-box;
+}
+
+:where([data-phi-debug-scaffold="on"] .phi-layout-scaffold-slot[data-phi-layout-has-content="true"]) {
+  outline: 2px dashed var(--phi-debug-layer-slot-border);
+  outline-offset: -3px;
+  background: transparent;
+  box-shadow: none;
+}
+
+:where([data-phi-debug-scaffold="on"] .phi-layout-scaffold-slot[data-phi-layout-has-content="false"]) {
+  outline: 2px dashed var(--phi-debug-layer-slot-border);
+  outline-offset: -3px;
+  background: var(--phi-debug-layer-slot-background);
+  box-shadow: none;
+}
+
+:where(
+  [data-phi-debug-scaffold="on"]
+    .phi-layout[data-phi-block-render-mode="preview"]
+) {
+  --phi-debug-layer-layout-background: transparent;
+  --phi-debug-layer-layout-background-strong: transparent;
+  --phi-debug-layer-layout-border: var(--ant-color-success-border-hover);
+  --phi-debug-layer-slot-background: transparent;
+  --phi-debug-layer-slot-background-strong: transparent;
+  --phi-debug-layer-slot-border: var(--ant-color-warning-border-hover);
+  outline-width: 1px;
+  outline-offset: -1px;
+}
+
+:where(
+  [data-phi-debug-scaffold="on"]
+    .phi-layout[data-phi-block-render-mode="preview"]
+    .phi-layout-scaffold-slot
+) {
+  /* The layout band narrows to 1px at -1px in preview, so the slot follows it one step in. */
+  outline-width: 1px;
+  outline-offset: -2px;
+  background: transparent;
+}
+
+:where(.phi-edit-scaffold-drawer),
+:where([data-phi-edit-scaffold-kind]) {
+  position: relative;
+  box-sizing: border-box;
+  min-width: 0;
+  min-height: 0;
+}
+
+:where(.phi-edit-scaffold-drawer) {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  width: 100%;
+  min-height: 0;
+  min-width: 0;
+  cursor: pointer;
+  border: 1px solid var(--phi-edit-scaffold-border);
+  border-radius: 0;
+  background: var(--phi-edit-scaffold-background);
+  box-sizing: border-box;
+}
+
+:where(.phi-edit-scaffold-drawer[data-phi-edit-scaffold-selected="true"]) {
+  border-color: var(--phi-edit-scaffold-border-selected);
+  background: var(--phi-edit-scaffold-background-selected);
+}
+
+:where(.phi-edit-scaffold-drawer[data-phi-edit-scaffold-kind="layout"]),
+:where(.phi-edit-scaffold-drawer[data-phi-edit-scaffold-kind="surface"]) {
+  border-color: transparent;
+  background: transparent;
+}
+
+:where(
+  .phi-edit-scaffold-drawer[data-phi-edit-scaffold-kind="layout"]:hover:not(:has(.phi-edit-scaffold-drawer:hover)):not(:has(.phi-builder-widget-scaffold:hover))
+),
+:where(
+  .phi-edit-scaffold-drawer[data-phi-edit-scaffold-kind="surface"]:hover:not(:has(.phi-edit-scaffold-drawer:hover)):not(:has(.phi-builder-widget-scaffold:hover))
+) {
+  border-color: var(--phi-edit-scaffold-kind-border);
+  background: var(--phi-edit-scaffold-hover-background);
+}
+
+:where(.phi-edit-scaffold-drawer[data-phi-edit-scaffold-kind="layout"][data-phi-edit-scaffold-selected="true"]),
+:where(.phi-edit-scaffold-drawer[data-phi-edit-scaffold-kind="surface"][data-phi-edit-scaffold-selected="true"]) {
+  border-color: var(--phi-edit-scaffold-kind-border);
+  background: var(--phi-edit-scaffold-selected-background);
+}
+
+@supports not (background: color-mix(in srgb, white 50%, transparent)) {
+  :where(
+    .phi-edit-scaffold-drawer[data-phi-edit-scaffold-kind="layout"]:hover:not(:has(.phi-edit-scaffold-drawer:hover)):not(:has(.phi-builder-widget-scaffold:hover))
+  ),
+  :where(
+    .phi-edit-scaffold-drawer[data-phi-edit-scaffold-kind="surface"]:hover:not(:has(.phi-edit-scaffold-drawer:hover)):not(:has(.phi-builder-widget-scaffold:hover))
+  ) {
+    background: rgba(82, 196, 26, 0.08);
+  }
+
+  :where(.phi-edit-scaffold-drawer[data-phi-edit-scaffold-kind="layout"][data-phi-edit-scaffold-selected="true"]),
+  :where(.phi-edit-scaffold-drawer[data-phi-edit-scaffold-kind="surface"][data-phi-edit-scaffold-selected="true"]) {
+    background: rgba(82, 196, 26, 0.12);
+  }
+}
+
+:where(.phi-edit-scaffold-drawer__body) {
+  display: flex;
+  flex: 1 1 auto;
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+  align-items: var(--phi-edit-scaffold-body-align);
+  justify-content: var(--phi-edit-scaffold-body-justify);
+}
+
+:where(.phi-layout-scaffold-delete) {
+  position: absolute;
+  top: var(--phi-layout-scaffold-delete-top);
+  right: var(--phi-layout-scaffold-delete-right);
+  bottom: var(--phi-layout-scaffold-delete-bottom);
+  left: var(--phi-layout-scaffold-delete-left);
+  z-index: var(--phi-layout-scaffold-delete-z-index);
+  pointer-events: auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--phi-layout-scaffold-delete-color);
+  background: var(--phi-layout-scaffold-delete-background);
+  border: 1px solid var(--phi-layout-scaffold-delete-border);
+  border-radius: var(--ant-border-radius);
+  overflow: hidden;
+  box-shadow: var(--phi-layout-scaffold-delete-shadow);
+  transform: var(--phi-layout-scaffold-delete-transform);
+}
+
+:where(
+  .phi-layout-scaffold-delete[data-phi-builder-node-kind="layout"]
+),
+:where(
+  .phi-layout-scaffold-delete[data-phi-builder-node-kind="surface"]
+) {
+  opacity: 0;
+  pointer-events: none;
+}
+
+:where(
+  .phi-edit-scaffold-drawer[data-phi-edit-scaffold-kind="layout"]:hover:not(:has(.phi-edit-scaffold-drawer:hover)):not(:has(.phi-builder-widget-scaffold:hover))
+    > .phi-layout-scaffold-delete[data-phi-builder-node-kind="layout"]
+),
+:where(
+  .phi-edit-scaffold-drawer[data-phi-edit-scaffold-kind="layout"][data-phi-edit-scaffold-selected="true"]
+    > .phi-layout-scaffold-delete[data-phi-builder-node-kind="layout"]
+),
+:where(
+  .phi-edit-scaffold-drawer[data-phi-edit-scaffold-kind="surface"]:hover:not(:has(.phi-edit-scaffold-drawer:hover)):not(:has(.phi-builder-widget-scaffold:hover))
+    > .phi-layout-scaffold-delete[data-phi-builder-node-kind="surface"]
+),
+:where(
+  .phi-edit-scaffold-drawer[data-phi-edit-scaffold-kind="surface"][data-phi-edit-scaffold-selected="true"]
+    > .phi-layout-scaffold-delete[data-phi-builder-node-kind="surface"]
+) {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.phi-edit-scaffold-drawer[data-phi-builder-layout-title]::before {
+  content: attr(data-phi-builder-layout-title);
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 45;
+  max-width: min(100%, calc(var(--ant-control-height) * 10));
+  padding: 0 var(--ant-padding-xxs);
+  border: 1px solid var(--phi-edit-scaffold-label-border);
+  border-radius: var(--ant-border-radius);
+  background: var(--phi-edit-scaffold-label-background);
+  color: var(--phi-edit-scaffold-label-color);
+  font-size: var(--ant-font-size-sm);
+  line-height: var(--ant-control-height-sm);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  pointer-events: none;
+  opacity: 0;
+}
+
+.phi-edit-scaffold-drawer[data-phi-builder-layout-title]:hover:not(:has(.phi-edit-scaffold-drawer:hover)):not(:has(.phi-builder-widget-scaffold:hover))::before,
+.phi-edit-scaffold-drawer[data-phi-builder-layout-title][data-phi-edit-scaffold-selected="true"]::before {
+  opacity: 1;
+}
+
+:where(
+  .phi-edit-scaffold-drawer[data-phi-edit-scaffold-kind="layout"]:hover:not(:has(.phi-edit-scaffold-drawer:hover)):not(:has(.phi-builder-widget-scaffold:hover))
+    > .phi-edit-scaffold-drawer__body
+    > [data-phi-slot-child-frame="true"]
+    > .phi-layout
+    > .phi-layout-scaffold-delete[data-phi-builder-node-kind="layout"]
+),
+:where(
+  .phi-edit-scaffold-drawer[data-phi-edit-scaffold-kind="layout"][data-phi-edit-scaffold-selected="true"]
+    > .phi-edit-scaffold-drawer__body
+    > [data-phi-slot-child-frame="true"]
+    > .phi-layout
+    > .phi-layout-scaffold-delete[data-phi-builder-node-kind="layout"]
+),
+:where(
+  .phi-edit-scaffold-drawer[data-phi-edit-scaffold-kind="surface"]:hover:not(:has(.phi-edit-scaffold-drawer:hover)):not(:has(.phi-builder-widget-scaffold:hover))
+    > .phi-edit-scaffold-drawer__body
+    > [data-phi-slot-child-frame="true"]
+    > .phi-layout
+    > .phi-layout-scaffold-delete[data-phi-builder-node-kind="surface"]
+),
+:where(
+  .phi-edit-scaffold-drawer[data-phi-edit-scaffold-kind="surface"][data-phi-edit-scaffold-selected="true"]
+    > .phi-edit-scaffold-drawer__body
+    > [data-phi-slot-child-frame="true"]
+    > .phi-layout
+    > .phi-layout-scaffold-delete[data-phi-builder-node-kind="surface"]
+) {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+:where(.phi-builder-widget-scaffold[data-phi-slot-child-kind="widget"]) {
+  position: relative;
+  isolation: isolate;
+  box-shadow: none;
+  outline: 1px solid transparent;
+  outline-offset: -1px;
+}
+
+:where(.phi-builder-widget-scaffold__content) {
+  position: relative;
+  z-index: 0;
+  display: inline-flex;
+  width: fit-content;
+  min-width: 0;
+  max-width: 100%;
+  max-height: 100%;
+}
+
+:where(.phi-builder-widget-scaffold[data-phi-slot-size-inline="fill"] > .phi-builder-widget-scaffold__content) {
+  width: 100%;
+}
+
+:where(.phi-builder-widget-scaffold[data-phi-slot-size-block="fill"] > .phi-builder-widget-scaffold__content) {
+  height: 100%;
+}
+
+:where(.phi-builder-widget-scaffold[data-phi-slot-size-inline="fixed"][data-phi-layout-explicit-width="true"] > .phi-builder-widget-scaffold__content) {
+  width: 100%;
+}
+
+:where(.phi-builder-widget-scaffold[data-phi-slot-size-block="fixed"][data-phi-layout-explicit-height="true"] > .phi-builder-widget-scaffold__content) {
+  height: 100%;
+}
+
+:where(
+  [data-phi-slot-size-inline="fill"] > .phi-builder-widget-scaffold__content > .phi-widget-preview-fallback,
+  [data-phi-slot-size-inline="fixed"][data-phi-layout-explicit-width="true"] > .phi-builder-widget-scaffold__content > .phi-widget-preview-fallback
+) {
+  width: 100%;
+}
+
+:where(
+  [data-phi-slot-size-block="fill"] > .phi-builder-widget-scaffold__content > .phi-widget-preview-fallback,
+  [data-phi-slot-size-block="fixed"][data-phi-layout-explicit-height="true"] > .phi-builder-widget-scaffold__content > .phi-widget-preview-fallback
+) {
+  height: 100%;
+}
+
+:where(.phi-builder-widget-scaffold__content[inert]) {
+  pointer-events: none;
+  user-select: none;
+}
+
+:where(.phi-builder-widget-scaffold__content--authoring) {
+  z-index: 2;
+  pointer-events: auto;
+}
+
+:where(.phi-builder-widget-scaffold__interaction) {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: block;
+  cursor: pointer;
+  border: 0;
+  background: transparent;
+}
+
+:where(.phi-builder-widget-scaffold__state) {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  display: block;
+  pointer-events: none;
+  outline: 1px solid transparent;
+  outline-offset: -1px;
+  background: transparent;
+  box-shadow: inset 0 0 0 1px transparent;
+}
+
+/*
+ * The Widget band, from the scaffold switch rather than from the block.
+ *
+ * This asked for `data-phi-debug-scaffold` on the scaffold itself, and the only writer of that attribute
+ * on a scaffold is a block's own serialized `debugMode` -- a field no Inspector control and no signal
+ * ever sets, so the rule could not fire. It now reads the marked ancestor the other two bands read.
+ *
+ * Deliberately ahead of the interaction states below: they are all specificity zero, so document order
+ * decides, and hovering or selecting a Widget has to keep saying so while the scaffold is on.
+ */
+:where(
+  [data-phi-debug-scaffold="on"] .phi-builder-widget-scaffold
+    > .phi-builder-widget-scaffold__state
+) {
+  outline-color: var(--phi-builder-widget-scaffold-debug-border);
+  box-shadow: inset 0 0 0 1px var(--phi-builder-widget-scaffold-debug-border);
+}
+
+:where(
+  .phi-builder-widget-scaffold:hover:not(:has(.phi-edit-scaffold-drawer:hover)):not(:has(.phi-builder-widget-scaffold:hover))
+    > .phi-builder-widget-scaffold__state
+),
+:where(.phi-builder-widget-scaffold__interaction:focus-visible + .phi-builder-widget-scaffold__state),
+:where(.phi-builder-widget-scaffold[data-phi-builder-popup-open="true"] > .phi-builder-widget-scaffold__state) {
+  outline-color: var(--phi-builder-widget-scaffold-hover-border);
+  background: var(--phi-builder-widget-scaffold-hover-background);
+  box-shadow: inset 0 0 0 1px var(--phi-builder-widget-scaffold-hover-border);
+}
+
+:where(
+  .phi-builder-widget-scaffold[data-phi-builder-widget-selected="true"]
+    > .phi-builder-widget-scaffold__state
+) {
+  outline-color: var(--phi-builder-widget-scaffold-selected-border);
+  background: var(--phi-builder-widget-scaffold-selected-background);
+  box-shadow: inset 0 0 0 1px var(--phi-builder-widget-scaffold-selected-border);
+}
+
+:where(
+  .phi-builder-widget-scaffold__interaction[data-phi-structure-drop-state="accepted"]
+    + .phi-builder-widget-scaffold__state
+) {
+  outline-color: var(--phi-builder-widget-scaffold-drop-accepted);
+  box-shadow: inset 0 0 0 2px var(--phi-builder-widget-scaffold-drop-accepted);
+}
+
+:where(
+  .phi-builder-widget-scaffold__interaction[data-phi-structure-drop-state="rejected"]
+    + .phi-builder-widget-scaffold__state
+) {
+  outline-color: var(--phi-builder-widget-scaffold-drop-rejected);
+  box-shadow: inset 0 0 0 2px var(--phi-builder-widget-scaffold-drop-rejected);
+}
+
+:where(
+  .phi-builder-widget-scaffold:has(> .phi-builder-widget-scaffold__content[data-phi-builder-authoring-active="true"])
+    > .phi-builder-widget-scaffold__state
+) {
+  background: transparent;
+}
+
+.phi-builder-widget-scaffold[data-phi-slot-child-kind="widget"]::before {
+  content: attr(data-phi-builder-widget-title);
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 45;
+  max-width: min(100%, calc(var(--ant-control-height) * 10));
+  padding: 0 var(--ant-padding-xxs);
+  border: 1px solid var(--phi-builder-widget-scaffold-label-border);
+  border-radius: var(--ant-border-radius);
+  background: var(--phi-builder-widget-scaffold-label-background);
+  color: var(--phi-builder-widget-scaffold-label-color);
+  font-size: var(--ant-font-size-sm);
+  line-height: var(--ant-control-height-sm);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  pointer-events: none;
+  opacity: 0;
+  transform: none;
+}
+
+:where(
+  .phi-builder-widget-scaffold[data-phi-slot-child-kind="widget"]
+    > .phi-layout-scaffold-delete[data-phi-builder-node-kind="widget"]
+) {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.phi-builder-widget-scaffold[data-phi-slot-child-kind="widget"]:hover:not(:has(.phi-edit-scaffold-drawer:hover)):not(:has(.phi-builder-widget-scaffold:hover))::before,
+.phi-builder-widget-scaffold[data-phi-slot-child-kind="widget"]:has(> .phi-builder-widget-scaffold__interaction:focus-visible)::before,
+.phi-builder-widget-scaffold[data-phi-slot-child-kind="widget"][data-phi-builder-widget-selected="true"]::before,
+.phi-builder-widget-scaffold[data-phi-slot-child-kind="widget"][data-phi-builder-popup-open="true"]::before,
+:where(
+  .phi-builder-widget-scaffold[data-phi-slot-child-kind="widget"]:hover:not(:has(.phi-edit-scaffold-drawer:hover)):not(:has(.phi-builder-widget-scaffold:hover))
+    > .phi-layout-scaffold-delete[data-phi-builder-node-kind="widget"]
+),
+:where(
+  .phi-builder-widget-scaffold[data-phi-slot-child-kind="widget"]:has(> .phi-builder-widget-scaffold__interaction:focus-visible)
+    > .phi-layout-scaffold-delete[data-phi-builder-node-kind="widget"]
+),
+:where(
+  .phi-builder-widget-scaffold[data-phi-slot-child-kind="widget"][data-phi-builder-popup-open="true"]
+    > .phi-layout-scaffold-delete[data-phi-builder-node-kind="widget"]
+) {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+:where(.phi-builder-root-scaffold) {
+  min-height: 0;
+}
+
+:where(.phi-builder-root-scaffold__slot) {
+  display: flex;
+  flex-direction: column;
+  width: var(--phi-root-scaffold-width);
+  height: var(--phi-root-scaffold-height);
+  min-width: var(--phi-root-scaffold-min-width);
+  max-width: var(--phi-root-scaffold-max-width);
+  min-height: var(--phi-root-scaffold-min-height);
+  max-height: var(--phi-root-scaffold-max-height);
+  align-self: stretch;
+  justify-content: flex-start;
+}
+
+:where(.phi-builder-root-scaffold__slot[data-phi-layout-fill-slot="true"]) {
+  flex: var(--phi-root-scaffold-flex);
+}
+
+:where(.phi-builder-root-scaffold__slot[data-phi-layout-explicit-width="true"]) {
+  width: var(--phi-root-scaffold-explicit-width);
+}
+
+:where(.phi-builder-root-scaffold__slot[data-phi-layout-explicit-height="true"]) {
+  height: var(--phi-root-scaffold-explicit-height);
+}

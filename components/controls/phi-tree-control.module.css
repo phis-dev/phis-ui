@@ -1,0 +1,3 @@
+.root [class~="ant-tree-treenode"].stripedRow {
+  background-color: var(--phi-tree-striped-row-background);
+}

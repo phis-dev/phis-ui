@@ -1,0 +1,67 @@
+/*
+ * Control shape, small and large sizes.
+ *
+ * `theme.shape.controls` reaches the default Control size through antd component tokens. It cannot
+ * reach the other two the same way: antd derives the small and large radii from `borderRadiusSM` and
+ * `borderRadiusLG`, and those two tokens ALSO draw the Select dropdown, the DatePicker panel and its
+ * date cells, and the ColorPicker swatches. A component token override cannot separate them, and
+ * SITE-CONFIG.md keeps popup surfaces on the surface-radius scale -- "Popup surfaces opened by a
+ * Select, Picker, or Cascader use the surface-radius scale even though their trigger uses the Control
+ * shape." So the two remaining sizes are applied here, where the selector names the Control body and
+ * nothing else.
+ *
+ * Every rule repeats its size class once. antd emits component rules as `:where(.<theme-hash>).ant-x-sm`
+ * -- the `:where()` contributes no specificity, so the rule weighs a single class and a single-class
+ * rule of ours would only tie and lose or win on source order.
+ *
+ * Deliberately NOT covered:
+ * - Compact and joined groups. antd zeroes their interior corners at three classes, which outranks
+ *   these rules, so a group keeps rounding only its outer boundary.
+ * - `.ant-btn-circle` and `.ant-btn-round`, which antd writes at three classes as well. Intrinsic and
+ *   explicitly requested geometry stays authoritative.
+ * - Input group addons. Their outer corners are already zeroed by `:first-child`/`:last-child` rules
+ *   that a shorthand `border-radius` here would flatten back into a fully rounded box.
+ */
+
+.ant-btn-sm.ant-btn-sm,
+.ant-input-sm.ant-input-sm,
+.ant-input-affix-wrapper-sm.ant-input-affix-wrapper-sm,
+.ant-input-number-sm.ant-input-number-sm,
+.ant-select-sm.ant-select-sm,
+.ant-picker-small.ant-picker-small,
+.ant-segmented.ant-segmented-sm.ant-segmented-sm,
+.ant-color-picker-trigger.ant-color-picker-sm.ant-color-picker-sm {
+  border-radius: var(--phi-control-radius-sm, var(--ant-border-radius-sm));
+}
+
+.ant-btn-lg.ant-btn-lg,
+.ant-input-lg.ant-input-lg,
+.ant-input-affix-wrapper-lg.ant-input-affix-wrapper-lg,
+.ant-input-number-lg.ant-input-number-lg,
+.ant-select-lg.ant-select-lg,
+.ant-picker-large.ant-picker-large,
+.ant-segmented.ant-segmented-lg.ant-segmented-lg,
+.ant-color-picker-trigger.ant-color-picker-lg.ant-color-picker-lg {
+  border-radius: var(--phi-control-radius-lg, var(--ant-border-radius-lg));
+}
+
+/*
+ * A Segmented draws its items and its sliding thumb inside the track, one step below the track's own
+ * radius. An absolute shape has to reach them too -- a capsule track holding square items is the same
+ * defect at one level down. The three rules are ordered default, small, large because they all weigh
+ * four classes and the size-specific one has to come last to win the tie.
+ */
+.ant-segmented.ant-segmented .ant-segmented-item.ant-segmented-item,
+.ant-segmented.ant-segmented .ant-segmented-thumb.ant-segmented-thumb {
+  border-radius: var(--phi-control-radius-inner-md, var(--ant-border-radius-sm));
+}
+
+.ant-segmented.ant-segmented-sm .ant-segmented-item.ant-segmented-item,
+.ant-segmented.ant-segmented-sm .ant-segmented-thumb.ant-segmented-thumb {
+  border-radius: var(--phi-control-radius-inner-sm, var(--ant-border-radius-xs));
+}
+
+.ant-segmented.ant-segmented-lg .ant-segmented-item.ant-segmented-item,
+.ant-segmented.ant-segmented-lg .ant-segmented-thumb.ant-segmented-thumb {
+  border-radius: var(--phi-control-radius-inner-lg, var(--ant-border-radius));
+}

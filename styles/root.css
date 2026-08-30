@@ -1,0 +1,174 @@
+html,
+body {
+  margin: 0;
+  padding: 0;
+  min-height: 100%;
+}
+
+body {
+  min-height: 100vh;
+}
+
+[data-phi-root-layout="true"] {
+  min-height: 100vh;
+}
+
+[data-phi-root-layout="true"] > .ant-app {
+  min-height: inherit;
+  background: var(--ant-color-bg-layout);
+  color: var(--ant-color-text);
+  font-family: var(--ant-font-family, system-ui, sans-serif);
+}
+
+.phi-color-widget-popup.ant-popover .ant-popover-content {
+  padding: 0;
+}
+
+.phi-cascader-control.ant-cascader-dropdown .ant-cascader-menu {
+  height: calc(var(--ant-cascader-dropdown-height, 180px) + var(--ant-padding-sm, 12px));
+}
+
+.phi-color-widget-popup.ant-popover
+  .ant-color-picker-slider.ant-slider
+  .ant-color-picker-slider-handle:is(:hover, :active, :focus)::before {
+  width: 16px;
+  height: 16px;
+  inset-block-start: 50%;
+  inset-inline-start: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.phi-color-widget-popup.ant-popover
+  .ant-color-picker-slider.ant-slider
+  .ant-color-picker-slider-handle:is(:hover, :active, :focus)::after {
+  width: 12px;
+  height: 12px;
+  inset-block-start: -2px;
+  inset-inline-start: -2px;
+}
+
+code,
+pre,
+kbd,
+samp {
+  font-family: var(--ant-font-family-code, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, monospace);
+}
+
+.ant-menu .ant-menu-item.phi-menu-item-current,
+.ant-menu .ant-menu-item.phi-menu-item-current .ant-menu-title-content,
+.ant-menu .ant-menu-item.phi-menu-item-current span,
+.ant-menu .ant-menu-item.phi-menu-item-current a {
+  cursor: default !important;
+}
+
+.phi-html-widget__content > :first-child {
+  margin-top: 0;
+}
+
+.phi-html-widget__content > :last-child {
+  margin-bottom: 0;
+}
+
+:where(.phi-tab-bar.ant-tabs) {
+  height: 100%;
+  line-height: 1;
+}
+
+:where(.phi-tab-bar.ant-tabs > .ant-tabs-nav) {
+  height: 100%;
+  margin: 0;
+}
+
+:where(.phi-tab-bar.ant-tabs > .ant-tabs-content-holder) {
+  flex: 0 0 0;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+:where([data-phi-renderable-block="true"][data-phi-effects-transition], [data-phi-renderable-block="true"][data-phi-effects-viewport]) {
+  --phi-effects-viewport-transform:
+    translate3d(var(--phi-effects-viewport-x, 0px), var(--phi-effects-viewport-y, 0px), 0)
+    rotateX(var(--phi-effects-viewport-rotate-x, 0deg))
+    rotateY(var(--phi-effects-viewport-rotate-y, 0deg))
+    rotateZ(var(--phi-effects-viewport-rotate-z, 0deg))
+    scale(var(--phi-effects-viewport-scale, 1));
+  animation-fill-mode: both;
+  transform: var(--phi-effects-viewport-transform);
+  will-change: opacity, transform;
+}
+
+:where([data-phi-renderable-block="true"][data-phi-effects-viewport-opacity="true"]) {
+  opacity: var(--phi-effects-viewport-opacity, 1);
+}
+
+:where([data-phi-renderable-block="true"][data-phi-effects-transition="composite"][data-phi-effects-trigger="on_mount"]) {
+  animation-composition: var(--phi-effects-animation-composition, replace);
+  animation-delay: var(--phi-effects-animation-delay, 0ms);
+  animation-duration: var(--phi-effects-animation-duration, 1000ms);
+  animation-name: var(--phi-effects-animation-name);
+  animation-timing-function: var(--phi-effects-animation-easing, ease-out);
+}
+
+:where([data-phi-renderable-block="true"][data-phi-effects-transition="composite"][data-phi-effects-trigger="on_visible"]) {
+  animation-composition: var(--phi-effects-animation-composition, replace);
+  animation-delay: var(--phi-effects-animation-delay, 0ms);
+  animation-duration: var(--phi-effects-animation-duration, 1000ms);
+  animation-name: var(--phi-effects-animation-name);
+  animation-play-state: paused;
+  animation-timing-function: var(--phi-effects-animation-easing, ease-out);
+}
+
+:where([data-phi-renderable-block="true"][data-phi-effects-transition="composite"][data-phi-effects-trigger="on_visible"][data-phi-effects-state="running"]) {
+  animation-play-state: running;
+}
+
+:where([data-phi-renderable-block="true"][data-phi-effects-transition="composite"][data-phi-effects-trigger="on_hover"]:hover),
+:where([data-phi-renderable-block="true"][data-phi-effects-transition="composite"][data-phi-effects-trigger="on_focus"]:focus-within) {
+  animation-composition: var(--phi-effects-animation-composition, replace);
+  animation-delay: var(--phi-effects-animation-delay, 0ms);
+  animation-duration: var(--phi-effects-animation-duration, 1000ms);
+  animation-name: var(--phi-effects-animation-name);
+  animation-timing-function: var(--phi-effects-animation-easing, ease-out);
+}
+
+@keyframes phi-renderable-effect-opacity-0 {
+  from {
+    opacity: var(--phi-effects-opacity-0-from, 1);
+  }
+  to {
+    opacity: var(--phi-effects-opacity-0-to, 1);
+  }
+}
+
+@keyframes phi-renderable-effect-opacity-1 { from { opacity: var(--phi-effects-opacity-1-from, 1); } to { opacity: var(--phi-effects-opacity-1-to, 1); } }
+@keyframes phi-renderable-effect-opacity-2 { from { opacity: var(--phi-effects-opacity-2-from, 1); } to { opacity: var(--phi-effects-opacity-2-to, 1); } }
+@keyframes phi-renderable-effect-opacity-3 { from { opacity: var(--phi-effects-opacity-3-from, 1); } to { opacity: var(--phi-effects-opacity-3-to, 1); } }
+@keyframes phi-renderable-effect-opacity-4 { from { opacity: var(--phi-effects-opacity-4-from, 1); } to { opacity: var(--phi-effects-opacity-4-to, 1); } }
+@keyframes phi-renderable-effect-opacity-5 { from { opacity: var(--phi-effects-opacity-5-from, 1); } to { opacity: var(--phi-effects-opacity-5-to, 1); } }
+@keyframes phi-renderable-effect-opacity-6 { from { opacity: var(--phi-effects-opacity-6-from, 1); } to { opacity: var(--phi-effects-opacity-6-to, 1); } }
+@keyframes phi-renderable-effect-opacity-7 { from { opacity: var(--phi-effects-opacity-7-from, 1); } to { opacity: var(--phi-effects-opacity-7-to, 1); } }
+
+@keyframes phi-renderable-effect-transform-0 {
+  from {
+    transform: var(--phi-effects-transform-0-from, translate3d(0, 0, 0));
+  }
+  to {
+    transform: var(--phi-effects-transform-0-to, translate3d(0, 0, 0));
+  }
+}
+
+@keyframes phi-renderable-effect-transform-1 { from { transform: var(--phi-effects-transform-1-from, translate3d(0, 0, 0)); } to { transform: var(--phi-effects-transform-1-to, translate3d(0, 0, 0)); } }
+@keyframes phi-renderable-effect-transform-2 { from { transform: var(--phi-effects-transform-2-from, translate3d(0, 0, 0)); } to { transform: var(--phi-effects-transform-2-to, translate3d(0, 0, 0)); } }
+@keyframes phi-renderable-effect-transform-3 { from { transform: var(--phi-effects-transform-3-from, translate3d(0, 0, 0)); } to { transform: var(--phi-effects-transform-3-to, translate3d(0, 0, 0)); } }
+@keyframes phi-renderable-effect-transform-4 { from { transform: var(--phi-effects-transform-4-from, translate3d(0, 0, 0)); } to { transform: var(--phi-effects-transform-4-to, translate3d(0, 0, 0)); } }
+@keyframes phi-renderable-effect-transform-5 { from { transform: var(--phi-effects-transform-5-from, translate3d(0, 0, 0)); } to { transform: var(--phi-effects-transform-5-to, translate3d(0, 0, 0)); } }
+@keyframes phi-renderable-effect-transform-6 { from { transform: var(--phi-effects-transform-6-from, translate3d(0, 0, 0)); } to { transform: var(--phi-effects-transform-6-to, translate3d(0, 0, 0)); } }
+@keyframes phi-renderable-effect-transform-7 { from { transform: var(--phi-effects-transform-7-from, translate3d(0, 0, 0)); } to { transform: var(--phi-effects-transform-7-to, translate3d(0, 0, 0)); } }
+
+@media (prefers-reduced-motion: reduce) {
+  :where([data-phi-renderable-block="true"][data-phi-effects-transition]) {
+    animation: none;
+  }
+}

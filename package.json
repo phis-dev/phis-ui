@@ -1,0 +1,549 @@
+{
+  "name": "@phis/ui",
+  "version": "0.1.0",
+  "license": "Apache-2.0",
+  "private": true,
+  "type": "module",
+  "main": "index.js",
+  "types": "index.d.ts",
+  "scripts": {
+    "build": "node scripts/clean-package-dist.mjs && tsc -p tsconfig.build.json && node scripts/prepare-package-dist.mjs && node scripts/validate-package-dist.mjs",
+    "audit:graph": "node scripts/audit-module-graph.mjs",
+    "control-boundaries:check": "node scripts/validate-control-boundaries.mjs",
+    "lint": "eslint .",
+    "package:pack": "pnpm build && pnpm --dir dist pack --pack-destination ..",
+    "client-references:check": "node scripts/validate-client-reference-imports.mjs && node scripts/validate-render-client-boundaries.mjs",
+    "runtime-modules:check": "node scripts/validate-client-reference-imports.mjs && node scripts/validate-render-client-boundaries.mjs && node scripts/validate-control-boundaries.mjs && node scripts/validate-runtime-module-manifests.mjs && tsx scripts/validate-layout-contracts.ts && tsx scripts/validate-overlay-form-contracts.ts && tsx scripts/validate-structure-dnd-contracts.ts && tsx scripts/validate-module-descriptors.ts && tsx scripts/validate-route-snapshot-contracts.ts && tsx scripts/validate-builder-page-catalog-contracts.ts && tsx scripts/validate-navigation-contracts.ts && tsx scripts/validate-runtime-module-demand.ts && tsx scripts/validate-access-policy-contracts.ts && NODE_OPTIONS=--conditions=react-server tsx scripts/validate-reference-contracts.ts && NODE_OPTIONS=--conditions=react-server tsx scripts/validate-form-gateway-contracts.ts && tsx scripts/validate-authoring-marker-contracts.ts && tsx scripts/validate-media-space-contracts.ts && tsx scripts/validate-media-upload-contracts.ts && tsx scripts/validate-group-contracts.ts && tsx scripts/validate-image-presentation-contracts.ts && tsx scripts/validate-theme-shape-contracts.ts && tsx scripts/validate-options-provider-contracts.ts && tsx scripts/validate-authoring-layer-contracts.ts && tsx scripts/validate-signal-wiring-contracts.ts && tsx scripts/validate-table-contracts.ts && tsx scripts/validate-tree-contracts.ts",
+    "typecheck": "tsc --noEmit",
+    "verify": "node scripts/verify.mjs"
+  },
+  "exports": {
+    ".": {
+      "import": "./index.js",
+      "require": "./index.js",
+      "types": "./index.d.ts",
+      "default": "./index.js"
+    },
+    "./widgets": {
+      "import": "./widgets.ts",
+      "require": "./widgets.ts",
+      "types": "./widgets.ts",
+      "default": "./widgets.ts"
+    },
+    "./controls": {
+      "import": "./controls.ts",
+      "require": "./controls.ts",
+      "types": "./controls.ts",
+      "default": "./controls.ts"
+    },
+    "./controls/config": {
+      "import": "./control-config.ts",
+      "require": "./control-config.ts",
+      "types": "./control-config.ts",
+      "default": "./control-config.ts"
+    },
+    "./controls/date-time": {
+      "import": "./controls-date-time.ts",
+      "require": "./controls-date-time.ts",
+      "types": "./controls-date-time.ts",
+      "default": "./controls-date-time.ts"
+    },
+    "./media": {
+      "import": "./media.ts",
+      "require": "./media.ts",
+      "types": "./media.ts",
+      "default": "./media.ts"
+    },
+    "./references": {
+      "import": "./references.ts",
+      "require": "./references.ts",
+      "types": "./references.ts",
+      "default": "./references.ts"
+    },
+    "./forms": {
+      "import": "./forms.ts",
+      "require": "./forms.ts",
+      "types": "./forms.ts",
+      "default": "./forms.ts"
+    },
+    "./builder": {
+      "import": "./builder.ts",
+      "require": "./builder.ts",
+      "types": "./builder.ts",
+      "default": "./builder.ts"
+    },
+    "./builder-api-route": {
+      "import": "./builder-api-route.ts",
+      "require": "./builder-api-route.ts",
+      "types": "./builder-api-route.ts",
+      "default": "./builder-api-route.ts"
+    },
+    "./shells": {
+      "import": "./shells.ts",
+      "require": "./shells.ts",
+      "types": "./shells.ts",
+      "default": "./shells.ts"
+    },
+    "./root": {
+      "import": "./root.ts",
+      "require": "./root.ts",
+      "types": "./root.ts",
+      "default": "./root.ts"
+    },
+    "./next/area-route": {
+      "import": "./next/area-route.tsx",
+      "require": "./next/area-route.tsx",
+      "types": "./next/area-route.tsx",
+      "default": "./next/area-route.tsx"
+    },
+    "./next/site-bridge": {
+      "import": "./next/site-bridge.ts",
+      "require": "./next/site-bridge.ts",
+      "types": "./next/site-bridge.ts",
+      "default": "./next/site-bridge.ts"
+    },
+    "./next/runtime-module-client-boundary": {
+      "import": "./next/runtime-module-client-boundary.tsx",
+      "require": "./next/runtime-module-client-boundary.tsx",
+      "types": "./next/runtime-module-client-boundary.tsx",
+      "default": "./next/runtime-module-client-boundary.tsx"
+    },
+    "./next/root-route": {
+      "import": "./next/root-route.tsx",
+      "require": "./next/root-route.tsx",
+      "types": "./next/root-route.tsx",
+      "default": "./next/root-route.tsx"
+    },
+    "./next/site-proxy": {
+      "import": "./next/site-proxy.ts",
+      "require": "./next/site-proxy.ts",
+      "types": "./next/site-proxy.ts",
+      "default": "./next/site-proxy.ts"
+    },
+    "./next/proxy-runtime": {
+      "import": "./next/proxy-runtime.ts",
+      "require": "./next/proxy-runtime.ts",
+      "types": "./next/proxy-runtime.ts",
+      "default": "./next/proxy-runtime.ts"
+    },
+    "./next/navigation-target-route": {
+      "import": "./next/navigation-target-route.ts",
+      "require": "./next/navigation-target-route.ts",
+      "types": "./next/navigation-target-route.ts",
+      "default": "./next/navigation-target-route.ts"
+    },
+    "./next/areas/public": {
+      "import": "./next/areas/public.ts",
+      "require": "./next/areas/public.ts",
+      "types": "./next/areas/public.ts",
+      "default": "./next/areas/public.ts"
+    },
+    "./next/areas/public-client": {
+      "import": "./next/areas/public-client.tsx",
+      "require": "./next/areas/public-client.tsx",
+      "types": "./next/areas/public-client.tsx",
+      "default": "./next/areas/public-client.tsx"
+    },
+    "./next/areas/app": {
+      "import": "./next/areas/app.ts",
+      "require": "./next/areas/app.ts",
+      "types": "./next/areas/app.ts",
+      "default": "./next/areas/app.ts"
+    },
+    "./next/areas/app-client": {
+      "import": "./next/areas/app-client.tsx",
+      "require": "./next/areas/app-client.tsx",
+      "types": "./next/areas/app-client.tsx",
+      "default": "./next/areas/app-client.tsx"
+    },
+    "./next/areas/accounting": {
+      "import": "./next/areas/accounting.ts",
+      "require": "./next/areas/accounting.ts",
+      "types": "./next/areas/accounting.ts",
+      "default": "./next/areas/accounting.ts"
+    },
+    "./next/areas/accounting-client": {
+      "import": "./next/areas/accounting-client.tsx",
+      "require": "./next/areas/accounting-client.tsx",
+      "types": "./next/areas/accounting-client.tsx",
+      "default": "./next/areas/accounting-client.tsx"
+    },
+    "./next/areas/admin": {
+      "import": "./next/areas/admin.ts",
+      "require": "./next/areas/admin.ts",
+      "types": "./next/areas/admin.ts",
+      "default": "./next/areas/admin.ts"
+    },
+    "./next/areas/admin-client": {
+      "import": "./next/areas/admin-client.tsx",
+      "require": "./next/areas/admin-client.tsx",
+      "types": "./next/areas/admin-client.tsx",
+      "default": "./next/areas/admin-client.tsx"
+    },
+    "./next/areas/editor": {
+      "import": "./next/areas/editor.ts",
+      "require": "./next/areas/editor.ts",
+      "types": "./next/areas/editor.ts",
+      "default": "./next/areas/editor.ts"
+    },
+    "./next/areas/editor-client": {
+      "import": "./next/areas/editor-client.tsx",
+      "require": "./next/areas/editor-client.tsx",
+      "types": "./next/areas/editor-client.tsx",
+      "default": "./next/areas/editor-client.tsx"
+    },
+    "./next/areas/builder": {
+      "import": "./next/areas/builder.ts",
+      "require": "./next/areas/builder.ts",
+      "types": "./next/areas/builder.ts",
+      "default": "./next/areas/builder.ts"
+    },
+    "./next/areas/builder-client": {
+      "import": "./next/areas/builder-client.tsx",
+      "require": "./next/areas/builder-client.tsx",
+      "types": "./next/areas/builder-client.tsx",
+      "default": "./next/areas/builder-client.tsx"
+    },
+    "./layouts": {
+      "import": "./layouts.ts",
+      "require": "./layouts.ts",
+      "types": "./layouts.ts",
+      "default": "./layouts.ts"
+    },
+    "./navigation": {
+      "import": "./navigation.ts",
+      "require": "./navigation.ts",
+      "types": "./navigation.ts",
+      "default": "./navigation.ts"
+    },
+    "./theme": {
+      "import": "./theme.ts",
+      "require": "./theme.ts",
+      "types": "./theme.ts",
+      "default": "./theme.ts"
+    },
+    "./constants": {
+      "import": "./constants.ts",
+      "require": "./constants.ts",
+      "types": "./constants.ts",
+      "default": "./constants.ts"
+    },
+    "./types": {
+      "import": "./types.ts",
+      "require": "./types.ts",
+      "types": "./types.ts",
+      "default": "./types.ts"
+    },
+    "./helpers": {
+      "import": "./helpers.ts",
+      "require": "./helpers.ts",
+      "types": "./helpers.ts",
+      "default": "./helpers.ts"
+    },
+    "./helpers/site-runtime": {
+      "import": "./helpers/site-runtime.ts",
+      "require": "./helpers/site-runtime.ts",
+      "types": "./helpers/site-runtime.ts",
+      "default": "./helpers/site-runtime.ts"
+    },
+    "./state": {
+      "import": "./state.ts",
+      "require": "./state.ts",
+      "types": "./state.ts",
+      "default": "./state.ts"
+    },
+    "./runtime": {
+      "import": "./runtime.ts",
+      "require": "./runtime.ts",
+      "types": "./runtime.ts",
+      "default": "./runtime.ts"
+    },
+    "./runtime/controller-client": {
+      "import": "./runtime-controller-client.ts",
+      "require": "./runtime-controller-client.ts",
+      "types": "./runtime-controller-client.ts",
+      "default": "./runtime-controller-client.ts"
+    },
+    "./runtime/render-client": {
+      "import": "./runtime-render-client.ts",
+      "require": "./runtime-render-client.ts",
+      "types": "./runtime-render-client.ts",
+      "default": "./runtime-render-client.ts"
+    },
+    "./runtime/client-manifests/public": {
+      "import": "./runtime-client-manifests-public.ts",
+      "require": "./runtime-client-manifests-public.ts",
+      "types": "./runtime-client-manifests-public.ts",
+      "default": "./runtime-client-manifests-public.ts"
+    },
+    "./runtime/client-manifests/app": {
+      "import": "./runtime-client-manifests-app.ts",
+      "require": "./runtime-client-manifests-app.ts",
+      "types": "./runtime-client-manifests-app.ts",
+      "default": "./runtime-client-manifests-app.ts"
+    },
+    "./runtime/client-manifests/accounting": {
+      "import": "./runtime-client-manifests-accounting.ts",
+      "require": "./runtime-client-manifests-accounting.ts",
+      "types": "./runtime-client-manifests-accounting.ts",
+      "default": "./runtime-client-manifests-accounting.ts"
+    },
+    "./runtime/client-manifests/admin": {
+      "import": "./runtime-client-manifests-admin.ts",
+      "require": "./runtime-client-manifests-admin.ts",
+      "types": "./runtime-client-manifests-admin.ts",
+      "default": "./runtime-client-manifests-admin.ts"
+    },
+    "./runtime/client-manifests/editor": {
+      "import": "./runtime-client-manifests-editor.ts",
+      "require": "./runtime-client-manifests-editor.ts",
+      "types": "./runtime-client-manifests-editor.ts",
+      "default": "./runtime-client-manifests-editor.ts"
+    },
+    "./runtime/client-manifests/builder": {
+      "import": "./runtime-client-manifests-builder.ts",
+      "require": "./runtime-client-manifests-builder.ts",
+      "types": "./runtime-client-manifests-builder.ts",
+      "default": "./runtime-client-manifests-builder.ts"
+    },
+    "./runtime/authoring-manifest-client": {
+      "import": "./runtime-authoring-manifest-client.ts",
+      "require": "./runtime-authoring-manifest-client.ts",
+      "types": "./runtime-authoring-manifest-client.ts",
+      "default": "./runtime-authoring-manifest-client.ts"
+    },
+    "./runtime/authoring-client": {
+      "import": "./runtime-authoring-client.ts",
+      "require": "./runtime-authoring-client.ts",
+      "types": "./runtime-authoring-client.ts",
+      "default": "./runtime-authoring-client.ts"
+    },
+    "./runtime/data-provider-client": {
+      "import": "./runtime-data-provider-client.ts",
+      "require": "./runtime-data-provider-client.ts",
+      "types": "./runtime-data-provider-client.ts",
+      "default": "./runtime-data-provider-client.ts"
+    },
+    "./runtime/calendar-adapter-client": {
+      "import": "./runtime-calendar-adapter-client.ts",
+      "require": "./runtime-calendar-adapter-client.ts",
+      "types": "./runtime-calendar-adapter-client.ts",
+      "default": "./runtime-calendar-adapter-client.ts"
+    },
+    "./runtime/signal-client": {
+      "import": "./runtime-signal-client.ts",
+      "require": "./runtime-signal-client.ts",
+      "types": "./runtime-signal-client.ts",
+      "default": "./runtime-signal-client.ts"
+    },
+    "./cms": {
+      "import": "./cms.ts",
+      "require": "./cms.ts",
+      "types": "./cms.ts",
+      "default": "./cms.ts"
+    },
+    "./cms/root-layout": {
+      "import": "./cms/root-layout.ts",
+      "require": "./cms/root-layout.ts",
+      "types": "./cms/root-layout.ts",
+      "default": "./cms/root-layout.ts"
+    },
+    "./cms/root-page": {
+      "import": "./cms/root-page.ts",
+      "require": "./cms/root-page.ts",
+      "types": "./cms/root-page.ts",
+      "default": "./cms/root-page.ts"
+    },
+    "./cms/root-slot-page": {
+      "import": "./cms/root-slot-page.ts",
+      "require": "./cms/root-slot-page.ts",
+      "types": "./cms/root-slot-page.ts",
+      "default": "./cms/root-slot-page.ts"
+    },
+    "./cms/error-page": {
+      "import": "./cms/error-page.ts",
+      "require": "./cms/error-page.ts",
+      "types": "./cms/error-page.ts",
+      "default": "./cms/error-page.ts"
+    },
+    "./cms/plugins": {
+      "import": "./cms/plugins.ts",
+      "require": "./cms/plugins.ts",
+      "types": "./cms/plugins.ts",
+      "default": "./cms/plugins.ts"
+    },
+    "./cms/plugins/public": {
+      "import": "./cms-plugins-public.ts",
+      "require": "./cms-plugins-public.ts",
+      "types": "./cms-plugins-public.ts",
+      "default": "./cms-plugins-public.ts"
+    },
+    "./cms/plugins/app": {
+      "import": "./cms-plugins-app.ts",
+      "require": "./cms-plugins-app.ts",
+      "types": "./cms-plugins-app.ts",
+      "default": "./cms-plugins-app.ts"
+    },
+    "./cms/plugins/accounting": {
+      "import": "./cms-plugins-accounting.ts",
+      "require": "./cms-plugins-accounting.ts",
+      "types": "./cms-plugins-accounting.ts",
+      "default": "./cms-plugins-accounting.ts"
+    },
+    "./cms/plugins/admin": {
+      "import": "./cms-plugins-admin.ts",
+      "require": "./cms-plugins-admin.ts",
+      "types": "./cms-plugins-admin.ts",
+      "default": "./cms-plugins-admin.ts"
+    },
+    "./cms/plugins/editor": {
+      "import": "./cms-plugins-editor.ts",
+      "require": "./cms-plugins-editor.ts",
+      "types": "./cms-plugins-editor.ts",
+      "default": "./cms-plugins-editor.ts"
+    },
+    "./cms/request": {
+      "import": "./cms/request.ts",
+      "require": "./cms/request.ts",
+      "types": "./cms/request.ts",
+      "default": "./cms/request.ts"
+    },
+    "./plugins/factories/widget-builder-plugin": {
+      "import": "./plugins/factories/widget-builder-plugin.ts",
+      "require": "./plugins/factories/widget-builder-plugin.ts",
+      "types": "./plugins/factories/widget-builder-plugin.ts",
+      "default": "./plugins/factories/widget-builder-plugin.ts"
+    },
+    "./plugins/registries/runtime-controllers": {
+      "import": "./plugins/registries/runtime-controllers.ts",
+      "require": "./plugins/registries/runtime-controllers.ts",
+      "types": "./plugins/registries/runtime-controllers.ts",
+      "default": "./plugins/registries/runtime-controllers.ts"
+    },
+    "./plugins/registries/runtime-controller-core": {
+      "import": "./plugins/registries/runtime-controller-core.ts",
+      "require": "./plugins/registries/runtime-controller-core.ts",
+      "types": "./plugins/registries/runtime-controller-core.ts",
+      "default": "./plugins/registries/runtime-controller-core.ts"
+    },
+    "./server-helpers": {
+      "import": "./server-helpers.ts",
+      "require": "./server-helpers.ts",
+      "types": "./server-helpers.ts",
+      "default": "./server-helpers.ts"
+    },
+    "./net": {
+      "import": "./net.ts",
+      "require": "./net.ts",
+      "types": "./net.ts",
+      "default": "./net.ts"
+    },
+    "./gateway": {
+      "import": "./gateway.ts",
+      "require": "./gateway.ts",
+      "types": "./gateway.ts",
+      "default": "./gateway.ts"
+    },
+    "./gateway/auth-proxy": {
+      "import": "./gateway/auth-proxy.ts",
+      "require": "./gateway/auth-proxy.ts",
+      "types": "./gateway/auth-proxy.ts",
+      "default": "./gateway/auth-proxy.ts"
+    },
+    "./gateway/site-form-route": {
+      "import": "./gateway/site-form-route.ts",
+      "require": "./gateway/site-form-route.ts",
+      "types": "./gateway/site-form-route.ts",
+      "default": "./gateway/site-form-route.ts"
+    },
+    "./gateway/media-proxy": {
+      "import": "./gateway/media-proxy.ts",
+      "require": "./gateway/media-proxy.ts",
+      "types": "./gateway/media-proxy.ts",
+      "default": "./gateway/media-proxy.ts"
+    },
+    "./gateway/site-proxy": {
+      "import": "./gateway/site-proxy.ts",
+      "require": "./gateway/site-proxy.ts",
+      "types": "./gateway/site-proxy.ts",
+      "default": "./gateway/site-proxy.ts"
+    },
+    "./gateway/data-source": {
+      "import": "./gateway/data-source.ts",
+      "require": "./gateway/data-source.ts",
+      "types": "./gateway/data-source.ts",
+      "default": "./gateway/data-source.ts"
+    },
+    "./gateway/data-source-fetch": {
+      "import": "./gateway/data-source-fetch.ts",
+      "require": "./gateway/data-source-fetch.ts",
+      "types": "./gateway/data-source-fetch.ts",
+      "default": "./gateway/data-source-fetch.ts"
+    },
+    "./gateway/mutation": {
+      "import": "./gateway/mutation.ts",
+      "require": "./gateway/mutation.ts",
+      "types": "./gateway/mutation.ts",
+      "default": "./gateway/mutation.ts"
+    },
+    "./gateway/mutation-fetch": {
+      "import": "./gateway/mutation-fetch.ts",
+      "require": "./gateway/mutation-fetch.ts",
+      "types": "./gateway/mutation-fetch.ts",
+      "default": "./gateway/mutation-fetch.ts"
+    }
+  },
+  "devDependencies": {
+    "@ant-design/cli": "^6.5.1",
+    "@ant-design/icons": "^6.3.2",
+    "@ant-design/nextjs-registry": "^1.3.0",
+    "@types/node": "^26.1.0",
+    "@types/react": "^19.2.17",
+    "@types/react-dom": "^19.2.3",
+    "@types/sanitize-html": "2.16.1",
+    "@typescript-eslint/eslint-plugin": "^8.62.1",
+    "@typescript-eslint/parser": "^8.62.1",
+    "antd": "^6.5.1",
+    "eslint": "^9.39.4",
+    "eslint-config-next": "^16.2.11",
+    "next": "^16.2.11",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "tsx": "4.22.4",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.62.1"
+  },
+  "peerDependencies": {
+    "@ant-design/icons": "^6.3.2",
+    "@ant-design/nextjs-registry": "^1.3.0",
+    "antd": "^6.5.1",
+    "next": "^16.2.11",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8"
+  },
+  "dependencies": {
+    "@ant-design/colors": "^8.0.1",
+    "@ant-design/cssinjs": "^2.1.2",
+    "@dnd-kit/core": "^6.3.1",
+    "@dnd-kit/sortable": "^10.0.0",
+    "@dnd-kit/utilities": "^3.2.2",
+    "@iconify/react": "^6.0.2",
+    "@lexical/history": "0.46.0",
+    "@lexical/html": "0.46.0",
+    "@lexical/link": "0.46.0",
+    "@lexical/list": "0.46.0",
+    "@lexical/react": "0.46.0",
+    "@lexical/rich-text": "0.46.0",
+    "@lexical/selection": "0.46.0",
+    "@lexical/utils": "0.46.0",
+    "dayjs": "^1.11.21",
+    "dom-serializer": "^2.0.0",
+    "htmlparser2": "^10.1.0",
+    "lexical": "0.46.0",
+    "remark-gfm": "^4.0.1",
+    "remark-parse": "^11.0.0",
+    "sanitize-html": "2.17.5",
+    "server-only": "^0.0.1",
+    "unified": "^11.0.5"
+  }
+}

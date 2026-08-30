@@ -1,0 +1,58 @@
+/* ============================================
+   LAYOUT AFFORDANCES
+   ============================================ */
+
+:where(.phi-layout-affordance) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--phi-layout-affordance-size);
+  height: var(--phi-layout-affordance-size);
+  min-width: var(--phi-layout-affordance-size);
+  min-height: var(--phi-layout-affordance-size);
+}
+
+:root[data-phi-structure-drop-accepted],
+:root[data-phi-structure-drop-accepted] * {
+  cursor: grabbing !important;
+}
+
+:where(.phi-layout-affordance--insert) {
+  opacity: 0.72;
+}
+
+.phi-layout-affordance.ant-btn.phi-layout-affordance--insert[data-phi-structure-drop-state="accepted"] {
+  opacity: 1;
+  color: var(--ant-color-success);
+  border-color: var(--ant-color-success);
+  box-shadow: 0 0 0 2px var(--ant-color-success-bg);
+}
+
+.phi-layout-affordance.ant-btn.phi-layout-affordance--insert[data-phi-structure-drop-state="rejected"] {
+  opacity: 1;
+  color: var(--ant-color-error);
+  border-color: var(--ant-color-error);
+  box-shadow: 0 0 0 2px var(--ant-color-error-bg);
+}
+
+:where(.phi-layout-affordance--delete) {
+  padding: 0;
+  background: var(--ant-color-bg-container);
+  box-shadow: var(--ant-box-shadow-tertiary);
+}
+
+.phi-layout-affordance.ant-btn.phi-layout-affordance--effects-preview {
+  padding: 0;
+  border-radius: 999px;
+  color: var(--ant-color-info-text) !important;
+  border-color: var(--ant-color-info-border) !important;
+  background-color: var(--ant-color-info-bg) !important;
+  box-shadow: var(--ant-box-shadow-tertiary);
+}
+
+.phi-layout-affordance.ant-btn.phi-layout-affordance--effects-preview:hover,
+.phi-layout-affordance.ant-btn.phi-layout-affordance--effects-preview:focus-visible {
+  color: var(--ant-color-info-text-hover) !important;
+  border-color: var(--ant-color-info-border-hover) !important;
+  background-color: var(--ant-color-info-bg-hover) !important;
+}

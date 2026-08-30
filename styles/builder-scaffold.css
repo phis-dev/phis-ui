@@ -1,0 +1,450 @@
+/* ============================================
+   BUILDER SCAFFOLD
+   ============================================ */
+
+:where(.phi-builder-structure-canvas) {
+  container-name: phi-render-viewport;
+  container-type: inline-size;
+  height: 100%;
+}
+
+:where(.phi-builder-structure-canvas .ant-card-body) {
+  height: 100%;
+  padding: var(--phi-builder-structure-canvas-body-padding);
+}
+
+:where(.phi-builder-structure-canvas__stack) {
+  display: flex;
+  flex-direction: column;
+  gap: var(--phi-builder-structure-canvas-outer-gap);
+  height: 100%;
+}
+
+:where(.phi-builder-structure-canvas__intro) {
+  min-width: 0;
+  gap: var(--phi-builder-structure-canvas-intro-gap);
+}
+
+:where(.phi-builder-structure-canvas__sections) {
+  display: flex;
+  flex-direction: column;
+  gap: var(--phi-builder-section-gap);
+  width: 100%;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+:where(.phi-builder-structure-canvas__sections--preview) {
+  min-block-size: 100vh;
+}
+
+:where(.phi-builder-structure-canvas__split) {
+  display: grid;
+  grid-template-columns: var(--phi-sidebar-width) minmax(0, 1fr);
+  gap: var(--phi-builder-split-gap);
+  min-width: 0;
+  min-height: 0;
+  align-items: stretch;
+  align-self: stretch;
+  flex: 1 1 auto;
+  height: 100%;
+}
+
+:where(.phi-builder-structure-canvas__content-column) {
+  display: flex;
+  flex-direction: column;
+  gap: var(--phi-builder-section-gap);
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+  align-self: stretch;
+  justify-content: flex-start;
+  box-sizing: border-box;
+}
+
+:where(.phi-builder-structure-canvas__content-slot) {
+  border-radius: 0;
+  border: 1px solid var(--phi-builder-content-slot-border);
+  padding: 0;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: stretch;
+  gap: 0;
+}
+
+:where(.phi-builder-structure-region__slot) {
+  border-radius: 0;
+  padding: 0;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: stretch;
+  gap: 0;
+  min-width: 0;
+  min-height: 0;
+}
+
+:where(.phi-builder-structure-region__slot[data-phi-builder-region-mode="editor"][data-phi-region-slot]) {
+  border: 1px dashed var(--ant-color-border-secondary);
+  background: var(--ant-color-bg-container);
+  box-shadow: inset 0 0 0 1px var(--ant-color-border-secondary);
+  padding: 0;
+  gap: 0;
+  cursor: pointer;
+}
+
+:where(.phi-builder-structure-region__slot[data-phi-builder-region-mode="editor"]:not([data-phi-region-slot])) {
+  padding: var(--ant-padding-xs);
+  gap: var(--ant-padding-xs);
+  cursor: pointer;
+}
+
+:where(.phi-builder-structure-region__slot[data-phi-builder-region-mode="editor"][data-phi-region-slot][data-phi-builder-region-selected="true"]) {
+  border-color: var(--ant-color-primary);
+  box-shadow: inset 0 0 0 1px var(--ant-color-primary);
+}
+
+:where(.phi-builder-structure-region__slot[data-phi-builder-region-mode="editor"][data-phi-region-slot][data-phi-builder-region-picking="true"]) {
+  border-color: var(--ant-color-primary);
+  background: var(--ant-color-fill-quaternary);
+  box-shadow: inset 0 0 0 1px var(--ant-color-primary);
+}
+
+:where(.phi-builder-structure-region__slot[data-phi-builder-region-mode="editor"][data-phi-region-slot][data-phi-structure-drop-state="accepted"]) {
+  border-color: var(--ant-color-success) !important;
+  background: var(--ant-color-success-bg) !important;
+  box-shadow: inset 0 0 0 2px var(--ant-color-success) !important;
+}
+
+:where(.phi-builder-structure-region__slot[data-phi-builder-region-mode="editor"][data-phi-region-slot][data-phi-structure-drop-state="rejected"]) {
+  border-color: var(--ant-color-error) !important;
+  background: var(--ant-color-error-bg) !important;
+  box-shadow: inset 0 0 0 2px var(--ant-color-error) !important;
+}
+
+:where(.phi-builder-structure-region__slot[data-phi-builder-region-mode="preview"][data-phi-region-slot]) {
+  border: 1px dashed var(--ant-color-border-secondary);
+  background: var(--ant-color-bg-container);
+  box-shadow: none;
+  padding: 0;
+  gap: 0;
+  cursor: default;
+}
+
+:where(.phi-builder-structure-region) {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: var(--phi-builder-region-gap);
+  padding: var(--phi-builder-region-padding);
+  cursor: pointer;
+  min-width: 0;
+}
+
+:where(.phi-builder-workspace-region-scaffold) {
+  --phi-builder-region-padding: var(--ant-padding-xs);
+}
+
+:where(.phi-builder-structure-region--full-height) {
+  align-self: stretch;
+  flex: 1 1 auto;
+}
+
+:where(.phi-builder-structure-region--compact) {
+  align-self: stretch;
+  inline-size: 100%;
+  max-inline-size: 100%;
+}
+
+:where(.phi-builder-structure-region--empty) {
+  overflow: hidden;
+}
+
+:where(.phi-builder-structure-region__slot--stretch) {
+  flex: 1 1 auto;
+}
+
+:where(.phi-builder-structure-canvas__split > [data-phi-region-slot="sider_left"]) {
+  align-self: stretch;
+  block-size: 100%;
+  min-block-size: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+:where(.phi-builder-structure-canvas__split > [data-phi-region-slot="sider_right"]) {
+  align-self: stretch;
+  block-size: 100%;
+  min-block-size: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+:where(.phi-builder-structure-canvas__split > [data-phi-region-slot="sider_left"] .phi-builder-structure-region__body),
+:where(.phi-builder-structure-canvas__split > [data-phi-region-slot="sider_left"] [data-phi-builder-server-preview-region="sider_left"]),
+:where(.phi-builder-structure-canvas__split > [data-phi-region-slot="sider_left"] [data-phi-region-key="sider_left"]),
+:where(.phi-builder-structure-canvas__split > [data-phi-region-slot="sider_left"] [data-phi-region-key="sider_left"] > .phi-layout) {
+  flex: 1 1 auto;
+  block-size: 100%;
+  min-block-size: 0;
+  inline-size: 100%;
+  min-inline-size: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+:where(.phi-builder-structure-canvas__split > [data-phi-region-slot="sider_right"] .phi-builder-structure-region__body),
+:where(.phi-builder-structure-canvas__split > [data-phi-region-slot="sider_right"] [data-phi-builder-server-preview-region="sider_right"]),
+:where(.phi-builder-structure-canvas__split > [data-phi-region-slot="sider_right"] [data-phi-region-key="sider_right"]),
+:where(.phi-builder-structure-canvas__split > [data-phi-region-slot="sider_right"] [data-phi-region-key="sider_right"] > .phi-layout) {
+  flex: 1 1 auto;
+  block-size: 100%;
+  min-block-size: 0;
+  inline-size: 100%;
+  min-inline-size: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+:where(.phi-structure-region-layout__sider-cell) {
+  display: flex;
+  flex-direction: column;
+  align-self: stretch;
+  block-size: 100%;
+  min-block-size: 0;
+  min-inline-size: 0;
+}
+
+:where(.phi-structure-region-layout__sider-cell > .phi-builder-structure-region),
+:where(.phi-structure-region-layout__sider-cell > .phi-builder-structure-region > [data-phi-region-slot="sider_left"]),
+:where(.phi-structure-region-layout__sider-cell > [data-phi-region-slot="sider_left"]) {
+  flex: 1 1 auto;
+  align-self: stretch;
+  block-size: 100%;
+  min-block-size: 0;
+  inline-size: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+:where(.phi-page-region-layout__content > .phi-builder-structure-region__slot) {
+  flex: 1 1 auto;
+  align-self: stretch;
+  block-size: 100%;
+  min-block-size: 0;
+  inline-size: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+:where(.phi-page-region-layout__content > .phi-builder-structure-region__slot > [data-phi-region-slot="content"]),
+:where(.phi-page-region-layout__content > .phi-builder-structure-region__slot > [data-phi-region-slot="content"] .phi-builder-structure-region__body),
+:where(.phi-page-region-layout__content > .phi-builder-structure-region__slot > [data-phi-region-slot="content"] [data-phi-region-key="content"]),
+:where(.phi-page-region-layout__content > .phi-builder-structure-region__slot > [data-phi-region-slot="content"] [data-phi-region-key="content"] > .phi-layout) {
+  flex: 1 1 auto;
+  block-size: 100%;
+  min-block-size: 0;
+  inline-size: 100%;
+  min-inline-size: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+:where(.phi-page-region-layout__sider-slot > .phi-slot-child),
+:where(.phi-page-region-layout__sider-slot > .phi-slot-child > [data-phi-region-slot="sider_right"]),
+:where(.phi-page-region-layout__sider-slot > .phi-slot-child > [data-phi-region-slot="sider_right"] .phi-builder-structure-region__body),
+:where(.phi-page-region-layout__sider-slot > .phi-slot-child > [data-phi-region-slot="sider_right"] [data-phi-region-key="sider_right"]),
+:where(.phi-page-region-layout__sider-slot > .phi-slot-child > [data-phi-region-slot="sider_right"] [data-phi-region-key="sider_right"] > .phi-layout) {
+  flex: 1 1 auto;
+  block-size: 100%;
+  min-block-size: 0;
+  inline-size: 100%;
+  min-inline-size: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+:where(.phi-page-region-layout__sider:empty) {
+  display: none;
+  inline-size: 0;
+  min-inline-size: 0;
+  max-inline-size: 0;
+}
+
+:where(.phi-builder-structure-region__body) {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: var(--phi-builder-region-body-min-height);
+  max-height: var(--phi-builder-region-body-max-height);
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: stretch;
+  padding: var(--phi-builder-region-body-padding);
+  gap: var(--phi-builder-region-body-gap);
+}
+
+:where(.phi-builder-structure-region__body--preview) {
+  justify-content: stretch;
+}
+
+:where(.phi-builder-structure-region__empty-shell) {
+  position: absolute;
+  inset: 0;
+  min-height: 0;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1;
+}
+
+:where(.phi-builder-structure-region__empty-button) {
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px dashed transparent;
+  background: transparent;
+  padding: 0;
+  margin: 0;
+  box-sizing: border-box;
+  color: var(--phi-builder-empty-insert-color);
+}
+
+:where(.phi-builder-structure-region__header) {
+  min-width: 0;
+  width: 100%;
+}
+
+:where(.phi-builder-structure-region__header-row) {
+  min-width: 0;
+  width: 100%;
+  white-space: nowrap;
+}
+
+:where(.phi-builder-structure-region__header-title),
+:where(.phi-builder-structure-region__header-key),
+:where(.phi-builder-structure-region__header-subtitle) {
+  min-width: 0;
+}
+
+:where(.phi-builder-structure-canvas__content-body) {
+  display: flex;
+  flex-direction: column;
+  flex: var(--phi-builder-content-body-flex);
+  min-width: 0;
+  min-height: var(--phi-builder-content-body-min-height);
+  max-height: var(--phi-builder-content-body-max-height);
+  box-sizing: border-box;
+  justify-content: stretch;
+  align-items: stretch;
+  padding: var(--phi-builder-content-body-padding);
+  gap: var(--phi-builder-content-body-gap);
+}
+
+:where(.phi-builder-structure-canvas__empty-insert) {
+  display: flex;
+  flex: 1 1 auto;
+  min-height: 0;
+  min-width: 0;
+  align-items: var(--phi-builder-content-empty-insert-align);
+  justify-content: var(--phi-builder-content-empty-insert-justify);
+}
+
+:where(.phi-builder-structure-canvas__empty-insert-button) {
+  width: var(--phi-builder-empty-insert-size);
+  height: var(--phi-builder-empty-insert-size);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px dashed transparent;
+  background: transparent;
+  padding: 0;
+  color: var(--phi-builder-empty-insert-color);
+}
+
+:where(.phi-builder-spacer) {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-width: 0;
+  min-height: 0;
+  padding: var(--ant-padding-sm);
+  box-sizing: border-box;
+  pointer-events: none;
+}
+
+:where(.phi-builder-spacer-glyph) {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  min-height: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+:where(.phi-builder-spacer-glyph__track) {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-width: 0;
+  min-height: 0;
+}
+
+:where(.phi-builder-spacer-glyph[data-orientation="horizontal"] .phi-builder-spacer-glyph__track) {
+  flex-direction: row;
+  gap: 12px;
+  width: 100%;
+  height: auto;
+}
+
+:where(.phi-builder-spacer-glyph[data-orientation="vertical"] .phi-builder-spacer-glyph__track) {
+  flex-direction: column;
+  gap: 10px;
+  width: auto;
+  height: 100%;
+}
+
+:where(.phi-builder-spacer-glyph__cap) {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: rgba(71, 85, 105, 0.78);
+  flex-shrink: 0;
+}
+
+:where(.phi-builder-spacer-glyph[data-orientation="horizontal"] .phi-builder-spacer-glyph__line) {
+  width: 100%;
+  height: 0;
+  border-top: 2px solid rgba(71, 85, 105, 0.72);
+}
+
+:where(.phi-builder-spacer-glyph[data-orientation="vertical"] .phi-builder-spacer-glyph__line) {
+  width: 0;
+  height: 100%;
+  border-left: 2px solid rgba(71, 85, 105, 0.72);
+}
+
+:where(.phi-builder-spacer__label) {
+  font-size: 12px;
+  line-height: 1;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(71, 85, 105, 0.82);
+  font-weight: 600;
+}
