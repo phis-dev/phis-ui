@@ -14,12 +14,16 @@ import {
  * One fixed export per boundary, and the boundaries are the ones MODULES.md already requires:
  *
  *   ./server            phiModuleServerContributions
- *   ./client            phiModuleClientContribution
+ *   ./client            phiModuleClientContributions
  *   ./authoring-client  phiModuleAuthoringContributions
  *
- * A Module never names an Area. Where its contribution belongs follows from `eligibleAreas` on its own
- * definition, which is also what decides whether a Site may select it for an Area -- one statement, read
- * in both places, rather than a second list that can disagree with the first.
+ * Each export is a list keyed by Module, because one package may carry several Modules. A Module never
+ * names an Area: where its contributions belong follows from `eligibleAreas` on its own definition, which
+ * is also what decides whether a Site may select it for an Area -- one statement, read in both places,
+ * rather than a second list that can disagree with the first.
+ *
+ * These are what a Module author writes. What `phis-cli` generates from them is the per-Area projection
+ * in `plugins/runtime-modules/site-modules.ts`, which is a different shape for a different reader.
  */
 
 export type PhiModuleServerContributions = readonly PhiRuntimeModuleServerAreaContribution[];
