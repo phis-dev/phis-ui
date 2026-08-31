@@ -179,7 +179,10 @@ const projectedClient = collectPhiSiteModuleClientContributions({
     ],
     calendarAdapters: [{ key: "@acme/shop/calendars/deliveries" }],
   }],
-  authoring: [{ moduleId: storefront, loadAuthoring: async () => null }],
+  authoring: [
+    { moduleId: storefront, loadAuthoring: async () => null },
+    { moduleId: orders, loadAuthoring: async () => null },
+  ],
 } as unknown as Parameters<typeof collectPhiSiteModuleClientContributions>[0]);
 
 assert.deepEqual(projectedClient.areas.public?.renderLoaders?.map(([type]) => type), ["@acme/shop/cart"]);
@@ -208,5 +211,16 @@ for (const area of ["accounting", "admin", "app", "builder", "editor", "public"]
     );
   }
 }
+
+// Every Module must bring an Authoring contribution, because the Builder wraps one around the canvas
+// for each active Module. Refused where the package is composed rather than at render time.
+assert.throws(
+  () => collectPhiSiteModuleClientContributions({
+    definitions,
+    clients: [],
+    authoring: [{ moduleId: storefront, loadAuthoring: async () => null }],
+  } as unknown as Parameters<typeof collectPhiSiteModuleClientContributions>[0]),
+  /"@acme\/shop\/modules\/orders" has no Authoring contribution/,
+);
 
 console.log("Site Module seam valid: both halves ship empty, the projection places by eligibleAreas, and every Area host reads them.");

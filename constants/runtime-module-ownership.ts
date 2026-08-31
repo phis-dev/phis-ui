@@ -187,6 +187,8 @@ const PHI_RUNTIME_MODULE_OWNERSHIP: Readonly<Record<string, readonly [module: st
   "tables/builder-navigation": ["builder", "navigation"],
   "tables/builder-signal-routes": ["builder", "signal-routes"],
   "tables/content": ["core", "content"],
+  // The authoring-time options picker, owned by the Builder like the other authoring tables.
+  "tables/static-options-editor": ["builder", "static-options-editor"],
   "tables/groups": ["groups", "groups"],
   "tables/localization": ["localization", "localization"],
   "tables/observability": ["observability", "observability"],

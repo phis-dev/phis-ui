@@ -20,6 +20,11 @@ import type { PhiSiteModuleClientContributions } from "./plugins/runtime-modules
  *
  * Calendar adapters are not placed at all. They resolve by type wherever a Widget renders, and every Area
  * holds the same set.
+ *
+ * Every Module must bring an Authoring contribution, including one that owns nothing to author. The
+ * Builder wraps each active Module's Authoring Client around the canvas, so a missing loader is a hard
+ * failure at render time -- refused here instead, where the package is composed and the author can still
+ * see which Module it is.
  */
 
 type CollectedArea = {
@@ -37,6 +42,16 @@ export function collectPhiSiteModuleClientContributions(input: {
   const areasByModuleId = new Map<PhiRuntimeModuleId, readonly PhiCmsAreaKey[]>(
     input.definitions.map((definition) => [definition.moduleId, definition.eligibleAreas]),
   );
+  const authoringModuleIds = new Set(input.authoring.map((contribution) => contribution.moduleId));
+  for (const definition of input.definitions) {
+    if (!authoringModuleIds.has(definition.moduleId)) {
+      throw new Error(
+        `Module "${definition.moduleId}" has no Authoring contribution. A Module with nothing to author ` +
+        "registers an empty Widget module rather than omitting one.",
+      );
+    }
+  }
+
   const collected = new Map<PhiCmsAreaKey, CollectedArea>();
 
   const areaFor = (area: PhiCmsAreaKey): CollectedArea => {
