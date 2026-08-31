@@ -193,10 +193,6 @@ export const PHI_EDITOR_RUNTIME_AREA_DEFINITIONS = [
     navigationSurfaces: [{
       navKey: "editor:sidebar",
       label: label("Editor sidebar navigation"),
-      // Opened as an anchor so a Module can place a sidebar entry beside Translations. A surface that
-      // exports nothing cannot be extended at its root at all: an injection there must name a before or
-      // after anchor, and only exported base items or the Module's own items qualify.
-      exportedItemKeys: ["@phis/ui/modules/editor/nav/translations"],
       items: [{
         itemKey: "@phis/ui/modules/editor/nav/translations",
         label: label("Translations"),

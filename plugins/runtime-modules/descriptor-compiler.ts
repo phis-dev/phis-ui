@@ -697,16 +697,14 @@ export function compilePhiCmsDescriptorCatalog({
           `${contributionLabel}: navigation injection cannot set before and after.`,
         );
       }
-      if (
-        contributorId !== areaDefinition.baseModuleId &&
-        injection.parentItemKey === null &&
-        !injection.before &&
-        !injection.after
-      ) {
-        throw new Error(
-          `${contributionLabel}: root navigation injection must reference a before or after anchor.`,
-        );
-      }
+      // An injection without an anchor is allowed and lands at the end of its surface, ordered by
+      // `${ownerModuleId}\u001f${presetKey}\u001f${itemKey}` -- deterministic, and not dependent on the
+      // order Modules happened to be composed in. Requiring an anchor here would have meant a Module can
+      // only contribute where a surface chose to open itself, which is a different question from whether
+      // it may contribute at all.
+      //
+      // What still needs an export is a *reference*: `before`, `after`, and `parentItemKey` name someone
+      // else's item, and a named item is public API that its owner has to promise to keep.
       const itemKeys = collectNavigationItemKeys(
         [injection.item],
         `${contributionLabel}/${injection.navKey}`,

@@ -462,7 +462,10 @@ const unanchoredRootRoute = createRoute({
   itemKey: "@test/pkg/modules/module-a/nav/unanchored",
   injection: { parentItemKey: null },
 });
-assert.throws(() => resolvePhiCmsDescriptorCatalog(createCatalog([unanchoredRootRoute])), /must reference a before or after anchor/);
+// Contributing needs no permission: an entry that names no anchor is accepted and lands at the end of
+// its surface, ordered by owning Module. Only a reference to someone else's item has to be exported,
+// which the two cases below still prove.
+assert.doesNotThrow(() => resolvePhiCmsDescriptorCatalog(createCatalog([unanchoredRootRoute])));
 
 const privateAnchorRoute = createRoute({
   moduleId: MODULE_A_ID,

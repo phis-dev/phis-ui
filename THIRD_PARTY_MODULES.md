@@ -842,10 +842,14 @@ React contexts, so the manifest providers the Site renders are invisible to the 
 `react` and `react-dom` follow the same rule. The peer range doubles as the compatibility statement a
 source's package list carries.
 
-**A navigation entry needs an anchor.** A root-level injection by anything other than an Area's base module
-must name `before` or `after`, so sidebar order is contract rather than an accident of composition order.
-The anchor -- and `parentItemKey` -- must be an item the surface exports through `exportedItemKeys`, or one
-the Module itself injects. A surface that exports nothing cannot be extended by an outside Module at all.
+**A Module may contribute a navigation entry to any declared surface.** An entry that names no anchor
+lands at the end of its surface, ordered by `ownerModuleId`, `presetKey`, and `itemKey` -- deterministic,
+and not dependent on which Module happened to be composed first. Nothing has to be opened for this.
+
+What does need opening is a **reference**. `before`, `after`, and `parentItemKey` name someone else's item,
+and a named item becomes public API its owner has to keep. Those three must therefore point at an item the
+surface exports through `exportedItemKeys`, or at one the Module itself injects. Contributing to a surface
+and depending on a particular item in it are separate permissions.
 
 ## 9. Install without patching the Skeleton
 
