@@ -878,6 +878,24 @@ factories once, in the twelve files under `src/runtime-modules`, and those files
 when a Module is installed or removed. All composition stays in `@phis/ui`: placement by `eligibleAreas`,
 collision checks against first-party ids, and the Builder's union across Areas.
 
+```sh
+phis module add  --site <key> --package @acme/status [--spec <version or workspace:*>]
+phis module del  --site <key> --package @acme/status
+phis module list [--site <key>]
+phis module sync --site <key>
+```
+
+`add` and `del` record the installation in `config/phis-modules.json` and rewrite the projection in the
+same step: for a Module the generated file *is* the application, so there is no separate reconcile the way
+an Add-on artifact needs one. `sync` regenerates from the recorded state, for when the two have drifted.
+
+Nothing is fetched. With `--spec` the package is written into the Site's dependencies and the package
+manager resolves it; without one it has to be resolvable already. Acquisition is a separate step, and
+folding it in would make an install look as though it had verified something it never saw.
+
+The projection is preserved by `phis reconcile`, like `config/site-runtime.json`. Regenerating a Site's
+Skeleton must not silently uninstall its Modules.
+
 The build manifest is deployment state, not a hand-maintained extension surface. It must be regenerated
 atomically and must not be assembled from request, database, or environment package names. Module removal
 removes its manifest projection and package from the next build; it does not edit the Skeleton back.
