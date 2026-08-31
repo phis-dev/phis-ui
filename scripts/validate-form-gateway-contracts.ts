@@ -140,7 +140,7 @@ assert.equal(
 
 const UPSTREAM = "http://phi.test";
 const SITE_HOST = "site.test";
-const AUTH_CAPABILITY = { id: "@phis/phi-server/auth:v1", interfaceDigest: "digest" };
+const AUTH_CAPABILITY = { id: "@phis/phi-server/authentication:v1", interfaceDigest: "digest" };
 
 const FORM_IDS = {
   contact: "@phis/ui/modules/public/forms/contact",
