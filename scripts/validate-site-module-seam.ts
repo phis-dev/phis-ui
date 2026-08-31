@@ -11,6 +11,14 @@ import {
 } from "../plugins/runtime-modules/site-modules";
 import type { PhiRuntimeModuleServerAreaContribution } from "../plugins/runtime-modules/area-contributions";
 import type { PhiRuntimeModuleCatalogEntry } from "../types/cms-plugins";
+import {
+  extendWithPhiSiteModuleClientManifests,
+  readAllPhiSiteModuleAuthoringClientContributions,
+} from "../plugins/runtime-modules/site-module-client-manifests";
+import {
+  PHI_SITE_MODULE_CLIENT_CONTRIBUTIONS,
+  type PhiSiteModuleClientContributions,
+} from "../plugins/runtime-modules/site-modules-client";
 
 /**
  * The seam a Site build replaces, checked from both sides.
@@ -71,4 +79,69 @@ assert.match(
   "the Builder catalog must compose the complete installed union",
 );
 
-console.log("Site Module seam valid: the shipped seam is empty, composes per Area, and every Area catalog reads it.");
+// --- the client half -------------------------------------------------------------------------
+
+// The shipped client seam is empty too, so the first-party manifests reach the boundary untouched.
+assert.deepEqual(PHI_SITE_MODULE_CLIENT_CONTRIBUTIONS.areas, {});
+assert.deepEqual(PHI_SITE_MODULE_CLIENT_CONTRIBUTIONS.calendarAdapters, []);
+
+const clientInstalled: PhiSiteModuleClientContributions = {
+  areas: {
+    public: {
+      controllers: [{ moduleId: "@acme/shop/modules/storefront", loadController: async () => null }],
+      renderLoaders: [["@acme/shop/cart", async () => null]],
+      dataProviders: [{ key: "@acme/shop/orders" }],
+      authoring: [{ moduleId: "@acme/shop/modules/storefront", loadAuthoring: async () => null }],
+    },
+    admin: {
+      authoring: [{ moduleId: "@acme/shop/modules/storefront", loadAuthoring: async () => null }],
+      dataProviders: [{ key: "@acme/shop/reports" }],
+    },
+  },
+  calendarAdapters: [{ key: "@acme/shop/deliveries" }],
+} as unknown as PhiSiteModuleClientContributions;
+
+const emptyManifests = () => ({
+  controller: new Map(),
+  render: new Map(),
+  dataProvider: new Map(),
+  calendarAdapter: new Map(),
+}) as unknown as Parameters<typeof extendWithPhiSiteModuleClientManifests>[2];
+
+// An Area receives its own Modules...
+const publicManifests = extendWithPhiSiteModuleClientManifests(clientInstalled, "public", emptyManifests());
+assert.ok(publicManifests.controller.has("@acme/shop/modules/storefront"));
+assert.ok(publicManifests.render.has("@acme/shop/cart"));
+assert.ok(publicManifests.dataProvider.has("@acme/shop/orders"));
+assert.ok(!publicManifests.dataProvider.has("@acme/shop/reports"), "an Area must not receive another Area's Providers");
+
+// ...and the Calendar adapters, which are not Area-scoped anywhere in this codebase.
+for (const area of ["public", "editor"] as const) {
+  const manifests = extendWithPhiSiteModuleClientManifests(clientInstalled, area, emptyManifests());
+  assert.ok(
+    manifests.calendarAdapter.has("@acme/shop/deliveries"),
+    `Calendar adapters must reach ${area} as well`,
+  );
+}
+
+// A Module authored in two Areas appears once in the Builder's union, which would otherwise be refused.
+assert.deepEqual(
+  readAllPhiSiteModuleAuthoringClientContributions(clientInstalled).map((entry) => entry.moduleId),
+  ["@acme/shop/modules/storefront"],
+);
+
+// Every Client Area host composes through the seam, and the Builder also extends the Authoring union.
+for (const area of ["accounting", "admin", "app", "builder", "editor", "public"] as const) {
+  assert.match(
+    readFileSync(`next/areas/${area}-client.tsx`, "utf8"),
+    new RegExp(`phiSiteModuleClientManifests\\("${area}"`),
+    `the ${area} Client Area host must compose the Site's own Modules`,
+  );
+}
+assert.match(
+  readFileSync("next/areas/builder-client.tsx", "utf8"),
+  /phiSiteModuleAuthoringClientManifest\(/,
+  "the Builder must extend the Authoring union with the Site's own Modules",
+);
+
+console.log("Site Module seam valid: server and client halves ship empty, compose per Area, and every Area host reads them.");
