@@ -252,6 +252,24 @@
       "types": "./state.ts",
       "default": "./state.ts"
     },
+    "./module": {
+      "import": "./module.ts",
+      "require": "./module.ts",
+      "types": "./module.ts",
+      "default": "./module.ts"
+    },
+    "./module/client": {
+      "import": "./module-client.ts",
+      "require": "./module-client.ts",
+      "types": "./module-client.ts",
+      "default": "./module-client.ts"
+    },
+    "./module/authoring-client": {
+      "import": "./module-authoring-client.ts",
+      "require": "./module-authoring-client.ts",
+      "types": "./module-authoring-client.ts",
+      "default": "./module-authoring-client.ts"
+    },
     "./runtime": {
       "import": "./runtime.ts",
       "require": "./runtime.ts",

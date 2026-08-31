@@ -98,7 +98,7 @@ const clientInstalled: PhiSiteModuleClientContributions = {
       dataProviders: [{ key: "@acme/shop/reports" }],
     },
   },
-  calendarAdapters: [{ key: "@acme/shop/deliveries" }],
+  calendarAdapters: [{ key: "@acme/shop/calendars/deliveries" }],
 } as unknown as PhiSiteModuleClientContributions;
 
 const emptyManifests = () => ({
@@ -119,7 +119,7 @@ assert.ok(!publicManifests.dataProvider.has("@acme/shop/reports"), "an Area must
 for (const area of ["public", "editor"] as const) {
   const manifests = extendWithPhiSiteModuleClientManifests(clientInstalled, area, emptyManifests());
   assert.ok(
-    manifests.calendarAdapter.has("@acme/shop/deliveries"),
+    manifests.calendarAdapter.has("@acme/shop/calendars/deliveries"),
     `Calendar adapters must reach ${area} as well`,
   );
 }
