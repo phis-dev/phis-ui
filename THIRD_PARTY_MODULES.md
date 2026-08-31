@@ -176,8 +176,10 @@ Design use may declare it as a peer, but that exception does not widen any Phi C
 
 ## Distribution and commercial Modules (design direction)
 
-A Module may be distributed as a compiled npm package without publishing its TypeScript or TSX
-sources. The source repository may remain private while CI publishes only the generated ESM,
+A Module may be distributed as a compiled package without publishing its TypeScript or TSX
+sources. The archive form below is unchanged by how it travels: phis packages are fetched from a
+source rather than resolved from a registry, and the delivered package carries the Module half, the
+Add-on half, or both. See [DISTRIBUTION.md](../phi-server/DISTRIBUTION.md) in `phi-server`. The source repository may remain private while CI publishes only the generated ESM,
 declaration files, documentation, and license metadata. npm does not require a public source
 repository or the original `src/` tree.
 
@@ -207,9 +209,12 @@ imports or composition files to the Skeleton. A Module installation or version c
 a new Site build, but the deployed runtime may contain only the resulting standalone build or container
 image; neither the Skeleton sources nor the Module sources must remain on the production host.
 
-This also permits commercial Modules. A future `phis-cli` distribution flow may combine private
-registry access, customer or Site entitlements, compatible-version checks, package integrity checks,
-optional Add-on activation, and the final Skeleton build. Compilation and minification are packaging
+This also permits commercial Modules. `phis-cli` acquires such a package from a configured source:
+the source's list states the version, the package digest, and the minimum `phisVersion` the Module
+half requires, and the digest stated by the list -- not one derived from the received bytes -- is what
+makes the delivery checkable. Entitlement is the source's business and not Core's. Acquisition is
+followed by the ordinary steps: the Add-on half through the Add-on workflow, the Module half into
+external build state, then the Site build. Compilation and minification are packaging
 measures, not reliable copy protection: browser-delivered JavaScript can still be inspected. Secrets
 and security-critical or commercially sensitive enforcement must remain in Core or an authorized
 Server Add-on, while package access and contractual licensing govern purely client-side Modules.
@@ -799,6 +804,16 @@ The build manifest is deployment state, not a hand-maintained extension surface.
 atomically and must not be assembled from request, database, or environment package names. Module removal
 removes its manifest projection and package from the next build; it does not edit the Skeleton back.
 
+Each entry also records what the build cannot otherwise be asked afterwards: the package name and
+version it came from, the minimum `phisVersion` it declares, and its origin. A Module reaches a build
+three ways, and the manifest keeps them apart: **local**, built here and stamped only by its own
+`package.json` version; **resolved**, an ordinary dependency the package manager fetched from a registry,
+stamped by the lockfile integrity; **source**, fetched by `phis-cli` and stamped by the package digest
+the source's list stated. A private registry therefore remains a perfectly good way for a company to
+distribute its own Modules -- it is the resolved door, and Core neither performs nor duplicates that
+acquisition. The minimum `phisVersion` is checked against `config/phis-instance.json` before the build,
+so an incompatible Module is refused rather than shipped as a broken Site.
+
 The Builder projection receives the complete installed target-Area Authoring union. This makes the Module
 available inside an isolated target-Area Canvas without activating or mounting it in the outer Builder Area.
 The Site's persisted Area `runtimeModules` activates only eligible ids already present in the build manifest.
@@ -810,8 +825,11 @@ code-owned shell preset. Page rendering, provider/controller resolution, Form di
 dispatch must all consume that same effective Area selection. A missing database override is not an empty
 module list.
 
-If the Module requires code in `phi-server`, `phis-cli` installs its separate `@scope/name-server` Add-on
-package through the Add-on workflow. Module activation never installs or enables that Add-on.
+If the Module requires code in `phi-server`, that Add-on travels in the same package: one repository
+delivers one package, which may carry a Module half, an Add-on half, or both under a single version and
+a single digest. `phis-cli` installs the Add-on half through the Add-on workflow first, because it is
+hot-pluggable while the Module half waits for a build; removal runs in reverse. Module activation never
+installs or enables that Add-on.
 
 ## 10. Access, server capabilities, and errors
 
