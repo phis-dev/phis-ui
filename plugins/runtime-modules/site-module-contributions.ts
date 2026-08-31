@@ -3,10 +3,7 @@ import {
   mergePhiRuntimeModuleServerAreaContributions,
   type PhiRuntimeModuleServerAreaContribution,
 } from "./area-contributions";
-import {
-  PHI_SITE_MODULE_SERVER_AREA_CONTRIBUTIONS,
-  type PhiSiteModuleServerAreaContributions,
-} from "@phis/ui/module/site-modules";
+import type { PhiSiteModuleServerAreaContributions } from "./site-modules";
 
 /**
  * Reading what the Site's own Modules contribute.
@@ -15,9 +12,8 @@ import {
  * to a generated file; logic placed beside the data would have to be reproduced by whatever generates
  * the replacement.
  *
- * Each reader comes in two forms: a pure one taking the contributions, and one bound to the seam. The
- * pair exists so the composition can be checked against contributions that are not the shipped empty
- * ones -- there is no other way to observe it, because what the seam holds is decided at build time.
+ * They take the projection rather than reaching for one: what a Site installed arrives as an argument
+ * at the Area host, so there is nothing here to be bound to.
  */
 
 export function readPhiSiteModuleServerAreaContributions(
@@ -50,10 +46,4 @@ export function readAllPhiSiteModuleServerAreaContributions(
   );
 }
 
-export function phiSiteModuleServerAreaContributions(area: PhiCmsAreaKey) {
-  return readPhiSiteModuleServerAreaContributions(PHI_SITE_MODULE_SERVER_AREA_CONTRIBUTIONS, area);
-}
 
-export function phiAllSiteModuleServerAreaContributions() {
-  return readAllPhiSiteModuleServerAreaContributions(PHI_SITE_MODULE_SERVER_AREA_CONTRIBUTIONS);
-}

@@ -16,16 +16,11 @@ import {
 import type { PhiRuntimeModuleControllerClientManifest } from "../../components/runtime/runtime-module-controller-client-manifest";
 import { extendPhiRuntimeModuleControllerClientManifest } from "./area-contributions-controller-client";
 import type { PhiRuntimeModuleId } from "../../types/cms-module-descriptors";
-import type { PhiRuntimeModuleAuthoringClientManifest } from "../../components/runtime/runtime-module-authoring-client-manifest";
-import {
-  extendPhiRuntimeModuleAuthoringClientManifest,
-  type PhiRuntimeModuleAuthoringClientContribution,
-} from "./authoring-contributions-client";
-import {
-  PHI_SITE_MODULE_CLIENT_CONTRIBUTIONS,
-  type PhiSiteModuleClientAreaContributions,
-  type PhiSiteModuleClientContributions,
-} from "@phis/ui/module/site-modules-client";
+import type { PhiRuntimeModuleAuthoringClientContribution } from "./authoring-contributions-client";
+import type {
+  PhiSiteModuleClientAreaContributions,
+  PhiSiteModuleClientContributions,
+} from "./site-modules-client";
 
 /**
  * Adding what a Site's own Modules contribute to the first-party Client manifests.
@@ -38,8 +33,7 @@ import {
  * so a Site Module claiming a Widget type, Provider key, or Controller that is already taken fails
  * where it is composed rather than by quietly winning or quietly losing at render time.
  *
- * The pure form takes the contributions so the composition can be checked against something other than
- * the shipped empty seam; the bound form is what the hosts call.
+ * The projection is an argument throughout: the Area host receives it and passes it here.
  */
 
 export type PhiSiteModuleClientManifests = {
@@ -82,12 +76,6 @@ export function extendWithPhiSiteModuleClientManifests(
   };
 }
 
-export function phiSiteModuleClientManifests(
-  area: PhiCmsAreaKey,
-  base: PhiSiteModuleClientManifests,
-): PhiSiteModuleClientManifests {
-  return extendWithPhiSiteModuleClientManifests(PHI_SITE_MODULE_CLIENT_CONTRIBUTIONS, area, base);
-}
 
 /**
  * The Site's own Authoring contributions, for the Builder.
@@ -111,11 +99,3 @@ export function readAllPhiSiteModuleAuthoringClientContributions(
   return [...byModuleId.values()];
 }
 
-export function phiSiteModuleAuthoringClientManifest(
-  base: PhiRuntimeModuleAuthoringClientManifest,
-): PhiRuntimeModuleAuthoringClientManifest {
-  return extendPhiRuntimeModuleAuthoringClientManifest(
-    base,
-    readAllPhiSiteModuleAuthoringClientContributions(PHI_SITE_MODULE_CLIENT_CONTRIBUTIONS),
-  );
-}

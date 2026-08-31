@@ -6,46 +6,56 @@ import {
   PHI_BUILDER_RUNTIME_MODULE_DATA_PROVIDER_CLIENT_MANIFEST,
   PHI_BUILDER_RUNTIME_MODULE_RENDER_CLIENT_MANIFEST,
 } from "../../plugins/runtime-modules/client-manifests/builder";
+import { PHI_BUILDER_TARGET_RUNTIME_MODULE_AUTHORING_CLIENT_MANIFEST } from "../../plugins/runtime-modules/client-manifests/builder-authoring";
 import { PhiNextRuntimeModuleClientBoundary } from "../runtime-module-client-boundary";
 import {
-  phiSiteModuleAuthoringClientManifest,
-  phiSiteModuleClientManifests,
+  extendWithPhiSiteModuleClientManifests,
+  readAllPhiSiteModuleAuthoringClientContributions,
 } from "../../plugins/runtime-modules/site-module-client-manifests";
-import { PHI_BUILDER_TARGET_RUNTIME_MODULE_AUTHORING_CLIENT_MANIFEST } from "../../plugins/runtime-modules/client-manifests/builder-authoring";
+import {
+  PHI_NO_SITE_MODULE_CLIENT_CONTRIBUTIONS,
+  type PhiSiteModuleClientContributions,
+} from "../../plugins/runtime-modules/site-modules-client";
+import { extendPhiRuntimeModuleAuthoringClientManifest } from "../../plugins/runtime-modules/authoring-contributions-client";
 
 /**
- * The first-party manifests plus whatever this Site installed, composed once rather than per
- * render. An installation without Modules of its own gets the first-party manifests unchanged.
+ * The Area's Client boundary, given what this Site installed.
+ *
+ * Built once from the projection rather than looked up per render, and handed the first-party
+ * manifests extended with the Site's own Modules. A Site that installed none gets them unchanged.
  */
-/**
- * The Builder authors every Area's Modules, so it receives the Site's complete Authoring union rather
- * than one Area's slice.
- */
-const PHI_BUILDER_AUTHORING_CLIENT_MANIFEST = phiSiteModuleAuthoringClientManifest(
-  PHI_BUILDER_TARGET_RUNTIME_MODULE_AUTHORING_CLIENT_MANIFEST,
-);
-
-const PHI_BUILDER_CLIENT_MANIFESTS = phiSiteModuleClientManifests("builder", {
-  controller: PHI_BUILDER_RUNTIME_MODULE_CONTROLLER_CLIENT_MANIFEST,
-  render: PHI_BUILDER_RUNTIME_MODULE_RENDER_CLIENT_MANIFEST,
-  dataProvider: PHI_BUILDER_RUNTIME_MODULE_DATA_PROVIDER_CLIENT_MANIFEST,
-  calendarAdapter: PHI_BUILDER_RUNTIME_MODULE_CALENDAR_ADAPTER_CLIENT_MANIFEST,
-});
-
-export function PhiBuilderRuntimeModuleClientBoundary({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-  return (
-    <PhiNextRuntimeModuleClientBoundary
-      authoringManifest={PHI_BUILDER_AUTHORING_CLIENT_MANIFEST}
-      calendarAdapterManifest={PHI_BUILDER_CLIENT_MANIFESTS.calendarAdapter}
-      controllerManifest={PHI_BUILDER_CLIENT_MANIFESTS.controller}
-      dataProviderManifest={PHI_BUILDER_CLIENT_MANIFESTS.dataProvider}
-      renderManifest={PHI_BUILDER_CLIENT_MANIFESTS.render}
-    >
-      {children}
-    </PhiNextRuntimeModuleClientBoundary>
+export function createPhiBuilderRuntimeModuleClientBoundary(
+  siteModules: PhiSiteModuleClientContributions = PHI_NO_SITE_MODULE_CLIENT_CONTRIBUTIONS,
+) {
+  const manifests = extendWithPhiSiteModuleClientManifests(siteModules, "builder", {
+    controller: PHI_BUILDER_RUNTIME_MODULE_CONTROLLER_CLIENT_MANIFEST,
+    render: PHI_BUILDER_RUNTIME_MODULE_RENDER_CLIENT_MANIFEST,
+    dataProvider: PHI_BUILDER_RUNTIME_MODULE_DATA_PROVIDER_CLIENT_MANIFEST,
+    calendarAdapter: PHI_BUILDER_RUNTIME_MODULE_CALENDAR_ADAPTER_CLIENT_MANIFEST,
+  });
+  // The Builder authors every Area, so it receives the complete installed Authoring union.
+  const authoringManifest = extendPhiRuntimeModuleAuthoringClientManifest(
+    PHI_BUILDER_TARGET_RUNTIME_MODULE_AUTHORING_CLIENT_MANIFEST,
+    readAllPhiSiteModuleAuthoringClientContributions(siteModules),
   );
+
+  return function PhiBuilderRuntimeModuleClientBoundary({
+    children,
+  }: {
+    children: React.ReactNode;
+  }) {
+    return (
+      <PhiNextRuntimeModuleClientBoundary
+        authoringManifest={authoringManifest}
+        calendarAdapterManifest={manifests.calendarAdapter}
+        controllerManifest={manifests.controller}
+        dataProviderManifest={manifests.dataProvider}
+        renderManifest={manifests.render}
+      >
+        {children}
+      </PhiNextRuntimeModuleClientBoundary>
+    );
+  };
 }
+
+export const PhiBuilderRuntimeModuleClientBoundary = createPhiBuilderRuntimeModuleClientBoundary();

@@ -6,7 +6,7 @@ import {
   readPhiSiteModuleServerAreaContributions,
 } from "../plugins/runtime-modules/site-module-contributions";
 import {
-  PHI_SITE_MODULE_SERVER_AREA_CONTRIBUTIONS,
+  PHI_NO_SITE_MODULE_SERVER_AREA_CONTRIBUTIONS,
   type PhiSiteModuleServerAreaContributions,
 } from "../plugins/runtime-modules/site-modules";
 import type { PhiRuntimeModuleServerAreaContribution } from "../plugins/runtime-modules/area-contributions";
@@ -18,7 +18,7 @@ import {
   readAllPhiSiteModuleAuthoringClientContributions,
 } from "../plugins/runtime-modules/site-module-client-manifests";
 import {
-  PHI_SITE_MODULE_CLIENT_CONTRIBUTIONS,
+  PHI_NO_SITE_MODULE_CLIENT_CONTRIBUTIONS,
   type PhiSiteModuleClientContributions,
 } from "../plugins/runtime-modules/site-modules-client";
 
@@ -51,8 +51,8 @@ const installed: PhiSiteModuleServerAreaContributions = {
 };
 
 // The shipped seam is empty, so an installation without Modules of its own composes as it always did.
-assert.deepEqual(PHI_SITE_MODULE_SERVER_AREA_CONTRIBUTIONS, {});
-assert.deepEqual(readPhiSiteModuleServerAreaContributions(PHI_SITE_MODULE_SERVER_AREA_CONTRIBUTIONS, "public"), []);
+assert.deepEqual(PHI_NO_SITE_MODULE_SERVER_AREA_CONTRIBUTIONS, {});
+assert.deepEqual(readPhiSiteModuleServerAreaContributions(PHI_NO_SITE_MODULE_SERVER_AREA_CONTRIBUTIONS, "public"), []);
 
 // An Area sees its own Modules and no others.
 assert.deepEqual(
@@ -71,21 +71,21 @@ assert.deepEqual(
 for (const area of ["accounting", "admin", "app", "editor", "public"] as const) {
   assert.match(
     readFileSync(`plugins/runtime-modules/area-catalogs/${area}.ts`, "utf8"),
-    new RegExp(`phiSiteModuleServerAreaContributions\\("${area}"\\)`),
+    new RegExp(`readPhiSiteModuleServerAreaContributions\\(siteModules, "${area}"\\)`),
     `the ${area} Area catalog must compose the Site's own Modules`,
   );
 }
 assert.match(
   readFileSync("plugins/runtime-modules/catalog.ts", "utf8"),
-  /phiAllSiteModuleServerAreaContributions\(\)/,
+  /readAllPhiSiteModuleServerAreaContributions\(siteModules\)/,
   "the Builder catalog must compose the complete installed union",
 );
 
 // --- the client half -------------------------------------------------------------------------
 
 // The shipped client seam is empty too, so the first-party manifests reach the boundary untouched.
-assert.deepEqual(PHI_SITE_MODULE_CLIENT_CONTRIBUTIONS.areas, {});
-assert.deepEqual(PHI_SITE_MODULE_CLIENT_CONTRIBUTIONS.calendarAdapters, []);
+assert.deepEqual(PHI_NO_SITE_MODULE_CLIENT_CONTRIBUTIONS.areas, {});
+assert.deepEqual(PHI_NO_SITE_MODULE_CLIENT_CONTRIBUTIONS.calendarAdapters, []);
 
 const clientInstalled: PhiSiteModuleClientContributions = {
   areas: {
@@ -136,13 +136,13 @@ assert.deepEqual(
 for (const area of ["accounting", "admin", "app", "builder", "editor", "public"] as const) {
   assert.match(
     readFileSync(`next/areas/${area}-client.tsx`, "utf8"),
-    new RegExp(`phiSiteModuleClientManifests\\("${area}"`),
+    new RegExp(`extendWithPhiSiteModuleClientManifests\\(siteModules, "${area}"`),
     `the ${area} Client Area host must compose the Site's own Modules`,
   );
 }
 assert.match(
   readFileSync("next/areas/builder-client.tsx", "utf8"),
-  /phiSiteModuleAuthoringClientManifest\(/,
+  /readAllPhiSiteModuleAuthoringClientContributions\(siteModules\)/,
   "the Builder must extend the Authoring union with the Site's own Modules",
 );
 
@@ -197,6 +197,16 @@ for (const area of Object.values(projectedClient.areas)) {
     !JSON.stringify(Object.keys(area ?? {})).includes("calendar"),
     "no Area may carry its own Calendar adapters",
   );
+}
+
+for (const area of ["accounting", "admin", "app", "builder", "editor", "public"] as const) {
+  for (const host of [`next/areas/${area}.ts`, `next/areas/${area}-client.tsx`]) {
+    assert.match(
+      readFileSync(host, "utf8"),
+      /siteModules: PhiSiteModule\w+ =/,
+      `${host} must take the projection as an argument rather than importing one`,
+    );
+  }
 }
 
 console.log("Site Module seam valid: both halves ship empty, the projection places by eligibleAreas, and every Area host reads them.");

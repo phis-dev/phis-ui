@@ -10,11 +10,11 @@ import type { PhiRuntimeModuleAuthoringClientContribution } from "./authoring-co
 import type { PhiRuntimeModuleControllerClientAreaContribution } from "./area-contributions-controller-client";
 
 /**
- * The client half of the seam a Site build replaces, and the counterpart to `site-modules.ts`.
+ * The Client counterpart to `site-modules.ts`, and the shape of the Client file `phis-cli` generates.
  *
- * Split from the server half because these carry Client loaders and must cross the "use client"
- * boundary; a Site build resolves both, and a generated file exports the same names with the installed
- * Modules' loaders in place of the empty lists.
+ * Split from the Server half because these carry Client loaders and must cross the "use client"
+ * boundary. Like the Server half it is passed to the Area host as a value, never imported from here by
+ * the host itself.
  *
  * The shape follows what the first-party manifests actually do rather than what looks symmetrical.
  * Controllers, Render loaders, Data Providers, and Authoring contributions are composed per Area, so
@@ -35,7 +35,8 @@ export type PhiSiteModuleClientContributions = {
   calendarAdapters: readonly PhiRuntimeModuleCalendarAdapterClientDefinition[];
 };
 
-export const PHI_SITE_MODULE_CLIENT_CONTRIBUTIONS: PhiSiteModuleClientContributions = {
+/** A Site that installed no Modules of its own. */
+export const PHI_NO_SITE_MODULE_CLIENT_CONTRIBUTIONS: PhiSiteModuleClientContributions = {
   areas: {},
   calendarAdapters: [],
 };

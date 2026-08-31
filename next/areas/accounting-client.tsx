@@ -7,32 +7,46 @@ import {
   PHI_ACCOUNTING_RUNTIME_MODULE_RENDER_CLIENT_MANIFEST,
 } from "../../plugins/runtime-modules/client-manifests/accounting";
 import { PhiNextRuntimeModuleClientBoundary } from "../runtime-module-client-boundary";
-import { phiSiteModuleClientManifests } from "../../plugins/runtime-modules/site-module-client-manifests";
+import {
+  extendWithPhiSiteModuleClientManifests,
+} from "../../plugins/runtime-modules/site-module-client-manifests";
+import {
+  PHI_NO_SITE_MODULE_CLIENT_CONTRIBUTIONS,
+  type PhiSiteModuleClientContributions,
+} from "../../plugins/runtime-modules/site-modules-client";
 
 /**
- * The first-party manifests plus whatever this Site installed, composed once rather than per
- * render. An installation without Modules of its own gets the first-party manifests unchanged.
+ * The Area's Client boundary, given what this Site installed.
+ *
+ * Built once from the projection rather than looked up per render, and handed the first-party
+ * manifests extended with the Site's own Modules. A Site that installed none gets them unchanged.
  */
-const PHI_ACCOUNTING_CLIENT_MANIFESTS = phiSiteModuleClientManifests("accounting", {
-  controller: PHI_ACCOUNTING_RUNTIME_MODULE_CONTROLLER_CLIENT_MANIFEST,
-  render: PHI_ACCOUNTING_RUNTIME_MODULE_RENDER_CLIENT_MANIFEST,
-  dataProvider: PHI_ACCOUNTING_RUNTIME_MODULE_DATA_PROVIDER_CLIENT_MANIFEST,
-  calendarAdapter: PHI_ACCOUNTING_RUNTIME_MODULE_CALENDAR_ADAPTER_CLIENT_MANIFEST,
-});
+export function createPhiAccountingRuntimeModuleClientBoundary(
+  siteModules: PhiSiteModuleClientContributions = PHI_NO_SITE_MODULE_CLIENT_CONTRIBUTIONS,
+) {
+  const manifests = extendWithPhiSiteModuleClientManifests(siteModules, "accounting", {
+    controller: PHI_ACCOUNTING_RUNTIME_MODULE_CONTROLLER_CLIENT_MANIFEST,
+    render: PHI_ACCOUNTING_RUNTIME_MODULE_RENDER_CLIENT_MANIFEST,
+    dataProvider: PHI_ACCOUNTING_RUNTIME_MODULE_DATA_PROVIDER_CLIENT_MANIFEST,
+    calendarAdapter: PHI_ACCOUNTING_RUNTIME_MODULE_CALENDAR_ADAPTER_CLIENT_MANIFEST,
+  });
 
-export function PhiAccountingRuntimeModuleClientBoundary({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-  return (
-    <PhiNextRuntimeModuleClientBoundary
-      controllerManifest={PHI_ACCOUNTING_CLIENT_MANIFESTS.controller}
-      calendarAdapterManifest={PHI_ACCOUNTING_CLIENT_MANIFESTS.calendarAdapter}
-      dataProviderManifest={PHI_ACCOUNTING_CLIENT_MANIFESTS.dataProvider}
-      renderManifest={PHI_ACCOUNTING_CLIENT_MANIFESTS.render}
-    >
-      {children}
-    </PhiNextRuntimeModuleClientBoundary>
-  );
+  return function PhiAccountingRuntimeModuleClientBoundary({
+    children,
+  }: {
+    children: React.ReactNode;
+  }) {
+    return (
+      <PhiNextRuntimeModuleClientBoundary
+        calendarAdapterManifest={manifests.calendarAdapter}
+        controllerManifest={manifests.controller}
+        dataProviderManifest={manifests.dataProvider}
+        renderManifest={manifests.render}
+      >
+        {children}
+      </PhiNextRuntimeModuleClientBoundary>
+    );
+  };
 }
+
+export const PhiAccountingRuntimeModuleClientBoundary = createPhiAccountingRuntimeModuleClientBoundary();

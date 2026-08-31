@@ -7,28 +7,46 @@ import {
   PHI_ADMIN_RUNTIME_MODULE_RENDER_CLIENT_MANIFEST,
 } from "../../plugins/runtime-modules/client-manifests/admin";
 import { PhiNextRuntimeModuleClientBoundary } from "../runtime-module-client-boundary";
-import { phiSiteModuleClientManifests } from "../../plugins/runtime-modules/site-module-client-manifests";
+import {
+  extendWithPhiSiteModuleClientManifests,
+} from "../../plugins/runtime-modules/site-module-client-manifests";
+import {
+  PHI_NO_SITE_MODULE_CLIENT_CONTRIBUTIONS,
+  type PhiSiteModuleClientContributions,
+} from "../../plugins/runtime-modules/site-modules-client";
 
 /**
- * The first-party manifests plus whatever this Site installed, composed once rather than per
- * render. An installation without Modules of its own gets the first-party manifests unchanged.
+ * The Area's Client boundary, given what this Site installed.
+ *
+ * Built once from the projection rather than looked up per render, and handed the first-party
+ * manifests extended with the Site's own Modules. A Site that installed none gets them unchanged.
  */
-const PHI_ADMIN_CLIENT_MANIFESTS = phiSiteModuleClientManifests("admin", {
-  controller: PHI_ADMIN_RUNTIME_MODULE_CONTROLLER_CLIENT_MANIFEST,
-  render: PHI_ADMIN_RUNTIME_MODULE_RENDER_CLIENT_MANIFEST,
-  dataProvider: PHI_ADMIN_RUNTIME_MODULE_DATA_PROVIDER_CLIENT_MANIFEST,
-  calendarAdapter: PHI_ADMIN_RUNTIME_MODULE_CALENDAR_ADAPTER_CLIENT_MANIFEST,
-});
+export function createPhiAdminRuntimeModuleClientBoundary(
+  siteModules: PhiSiteModuleClientContributions = PHI_NO_SITE_MODULE_CLIENT_CONTRIBUTIONS,
+) {
+  const manifests = extendWithPhiSiteModuleClientManifests(siteModules, "admin", {
+    controller: PHI_ADMIN_RUNTIME_MODULE_CONTROLLER_CLIENT_MANIFEST,
+    render: PHI_ADMIN_RUNTIME_MODULE_RENDER_CLIENT_MANIFEST,
+    dataProvider: PHI_ADMIN_RUNTIME_MODULE_DATA_PROVIDER_CLIENT_MANIFEST,
+    calendarAdapter: PHI_ADMIN_RUNTIME_MODULE_CALENDAR_ADAPTER_CLIENT_MANIFEST,
+  });
 
-export function PhiAdminRuntimeModuleClientBoundary({ children }: { children: React.ReactNode }) {
-  return (
-    <PhiNextRuntimeModuleClientBoundary
-      controllerManifest={PHI_ADMIN_CLIENT_MANIFESTS.controller}
-      calendarAdapterManifest={PHI_ADMIN_CLIENT_MANIFESTS.calendarAdapter}
-      dataProviderManifest={PHI_ADMIN_CLIENT_MANIFESTS.dataProvider}
-      renderManifest={PHI_ADMIN_CLIENT_MANIFESTS.render}
-    >
-      {children}
-    </PhiNextRuntimeModuleClientBoundary>
-  );
+  return function PhiAdminRuntimeModuleClientBoundary({
+    children,
+  }: {
+    children: React.ReactNode;
+  }) {
+    return (
+      <PhiNextRuntimeModuleClientBoundary
+        calendarAdapterManifest={manifests.calendarAdapter}
+        controllerManifest={manifests.controller}
+        dataProviderManifest={manifests.dataProvider}
+        renderManifest={manifests.render}
+      >
+        {children}
+      </PhiNextRuntimeModuleClientBoundary>
+    );
+  };
 }
+
+export const PhiAdminRuntimeModuleClientBoundary = createPhiAdminRuntimeModuleClientBoundary();
