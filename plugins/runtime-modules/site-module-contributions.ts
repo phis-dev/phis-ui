@@ -6,7 +6,7 @@ import {
 import {
   PHI_SITE_MODULE_SERVER_AREA_CONTRIBUTIONS,
   type PhiSiteModuleServerAreaContributions,
-} from "./site-modules";
+} from "@phis/ui/module/site-modules";
 
 /**
  * Reading what the Site's own Modules contribute.

@@ -25,7 +25,7 @@ import {
   PHI_SITE_MODULE_CLIENT_CONTRIBUTIONS,
   type PhiSiteModuleClientAreaContributions,
   type PhiSiteModuleClientContributions,
-} from "./site-modules-client";
+} from "@phis/ui/module/site-modules-client";
 
 /**
  * Adding what a Site's own Modules contribute to the first-party Client manifests.

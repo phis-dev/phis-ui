@@ -282,6 +282,18 @@
       "types": "./module-projection-client.ts",
       "default": "./module-projection-client.ts"
     },
+    "./module/site-modules": {
+      "import": "./plugins/runtime-modules/site-modules.ts",
+      "require": "./plugins/runtime-modules/site-modules.ts",
+      "types": "./plugins/runtime-modules/site-modules.ts",
+      "default": "./plugins/runtime-modules/site-modules.ts"
+    },
+    "./module/site-modules-client": {
+      "import": "./plugins/runtime-modules/site-modules-client.tsx",
+      "require": "./plugins/runtime-modules/site-modules-client.tsx",
+      "types": "./plugins/runtime-modules/site-modules-client.tsx",
+      "default": "./plugins/runtime-modules/site-modules-client.tsx"
+    },
     "./runtime": {
       "import": "./runtime.ts",
       "require": "./runtime.ts",
