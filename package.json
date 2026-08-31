@@ -126,6 +126,12 @@
       "types": "./next/proxy-runtime.ts",
       "default": "./next/proxy-runtime.ts"
     },
+    "./next/module-diagnostics-route": {
+      "import": "./next/module-diagnostics-route.ts",
+      "require": "./next/module-diagnostics-route.ts",
+      "types": "./next/module-diagnostics-route.ts",
+      "default": "./next/module-diagnostics-route.ts"
+    },
     "./next/navigation-target-route": {
       "import": "./next/navigation-target-route.ts",
       "require": "./next/navigation-target-route.ts",
