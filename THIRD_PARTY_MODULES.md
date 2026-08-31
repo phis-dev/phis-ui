@@ -670,6 +670,9 @@ export function extendStatusRuntimeModuleCatalog(
 }
 ```
 
+The catalog above is what the package hands over; the name it hands it over under is fixed in section 8a,
+and the Areas it reaches follow from `eligibleAreas` rather than from anything written here.
+
 `createPhiNextCmsSiteBridge(...)` validates the complete combined catalog through the public
 `assertPhiRuntimeModuleCatalog(...)` contract. Invalid ownership, missing loaders, unsupported render
 policies, malformed signal metadata, or inconsistent declarative artifacts therefore fail at Site
@@ -784,10 +787,65 @@ export function extendStatusAuthoringClientManifest(
 }
 ```
 
+The Client and Authoring projections are exported under the fixed names in section 8a. The example names
+above describe the shape a package builds internally, not what the generator looks for.
+
 Data providers follow the same split: serializable provider descriptors stay in the Server Module
 definition; executable `loadLive` and optional side-effect-free `loadAuthoring` edges stay in immutable
 Area-local Data Provider Client manifests. `options`, `table`, and `collection` are the shared provider
 kinds. Do not create Widget-specific fetch or option registries.
+
+## 8a. What a Module package exports
+
+A generator cannot guess an export it was never told about. `package.json#exports` says where an
+entrypoint is and nothing about what is inside it, so the names are fixed -- one per boundary, the way a
+Server Add-on artifact has exactly one export called `phiServerAddon`:
+
+```text
+.                   phiModuleDefinitions           @phis/ui/module
+./server            phiModuleServerContributions   @phis/ui/module
+./client            phiModuleClientContributions   @phis/ui/module/client
+./authoring-client  phiModuleAuthoringContributions @phis/ui/module/authoring-client
+```
+
+Each is a list keyed by Module id, because one package may carry several Modules. The boundaries are the
+ones this document already requires; only the names are new.
+
+**A Module never names an Area.** Where its contributions land follows from `eligibleAreas` on its own
+definition, which is also what decides whether a Site may select it for an Area. One statement, read in
+both places, rather than two lists that can disagree. This is why the definitions sit at the package root:
+they are shared serializable contract, and the Client projection reads the Areas from there instead of
+importing the Server boundary.
+
+**Every Module brings an Authoring contribution, including one that owns nothing to author.** The Builder
+wraps each active Module's Authoring Client around the canvas, so a missing loader is a hard failure at
+render time rather than an absence. A Module with nothing to author registers an empty Widget module:
+
+```ts
+// authoring-client.ts
+const WidgetModule = createPhiAuthoringWidgetModule([]);
+export const phiModuleAuthoringContributions = definePhiModuleAuthoringContributions([{
+  moduleId: STATUS_MODULE_ID,
+  loadAuthoring: () => Promise.resolve(createPhiRuntimeModuleAuthoringClient({
+    moduleId: STATUS_MODULE_ID,
+    WidgetModule,
+  })),
+}]);
+```
+
+`collectPhiSiteModuleClientContributions` refuses a definition without one, so the mistake surfaces where
+the package is composed and not in the Builder.
+
+**`@phis/ui` is a peer dependency, never a normal one.** A Module consumes its functions and components
+directly, and that is exactly why it must receive the Site's instance: a second copy means a second set of
+React contexts, so the manifest providers the Site renders are invisible to the Module's own components.
+`react` and `react-dom` follow the same rule. The peer range doubles as the compatibility statement a
+source's package list carries.
+
+**A navigation entry needs an anchor.** A root-level injection by anything other than an Area's base module
+must name `before` or `after`, so sidebar order is contract rather than an accident of composition order.
+The anchor -- and `parentItemKey` -- must be an item the surface exports through `exportedItemKeys`, or one
+the Module itself injects. A surface that exports nothing cannot be extended by an outside Module at all.
 
 ## 9. Install without patching the Skeleton
 
@@ -795,10 +853,17 @@ The canonical Skeleton is the reusable, versioned basis for Sites. A Module inst
 rewrite Area composition files, route handlers, `src/runtime-modules/*`, `src/app/*`, or any other
 Skeleton source. The Module package is the only owner of its optional Site code.
 
-`phis-cli` owns build-time installation. It may install package versions and produce an external immutable,
-statically analyzable build manifest that maps installed Module ids to their package-owned Server, Client,
-provider, Calendar-adapter, and Authoring exports. The Skeleton imports only the stable generic Shared Area
-hosts; those hosts consume the generated build projection without containing package-specific branches.
+`phis-cli` owns build-time installation. It installs package versions and generates an immutable,
+statically analyzable projection into build state: a list of imports and one call, which places each
+Module's contributions into the Areas its definition names.
+
+The projection is **passed into** the generic Area hosts rather than imported by them. A Site build cannot
+redirect an import that happens inside `@phis/ui` -- a bundler alias matches the request string, and a
+package's own internal request is not one a Site can name. This was measured rather than assumed: an alias
+on the seam module leaves the empty value in the bundle. So the Skeleton hands the projection to the host
+factories once, in the twelve files under `src/runtime-modules`, and those files are never touched again
+when a Module is installed or removed. All composition stays in `@phis/ui`: placement by `eligibleAreas`,
+collision checks against first-party ids, and the Builder's union across Areas.
 
 The build manifest is deployment state, not a hand-maintained extension surface. It must be regenerated
 atomically and must not be assembled from request, database, or environment package names. Module removal
