@@ -2,6 +2,7 @@ import {
   definePhiRuntimeModuleServerAreaContribution,
   type PhiRuntimeModuleServerAreaContribution,
 } from "./plugins/runtime-modules/area-contributions";
+import type { PhiRuntimeModuleDefinition } from "./types/cms-plugins";
 
 /**
  * What a Module package exports, and under which names.
@@ -13,6 +14,7 @@ import {
  *
  * One fixed export per boundary, and the boundaries are the ones MODULES.md already requires:
  *
+ *   .                   phiModuleDefinitions
  *   ./server            phiModuleServerContributions
  *   ./client            phiModuleClientContributions
  *   ./authoring-client  phiModuleAuthoringContributions
@@ -39,3 +41,29 @@ export function definePhiModuleServerContributions(
 }
 
 export type { PhiRuntimeModuleServerAreaContribution };
+
+/**
+ * The Module definitions of a package, exported from its root entrypoint as `phiModuleDefinitions`.
+ *
+ * A definition is shared serializable contract, which MODULES.md allows every boundary to import, and it
+ * is the only place a Module states its Areas. The generated Client projection needs those Areas and
+ * must not reach into the Server boundary to get them, so it reads them here instead -- still one
+ * statement, read from a place both sides may look at.
+ */
+export type PhiModuleDefinitions = readonly PhiRuntimeModuleDefinition[];
+
+export function definePhiModuleDefinitions(
+  definitions: PhiModuleDefinitions,
+): PhiModuleDefinitions {
+  const seen = new Set<string>();
+  for (const definition of definitions) {
+    if (seen.has(definition.moduleId)) {
+      throw new Error(`Duplicate Module definition for "${definition.moduleId}".`);
+    }
+    if (definition.eligibleAreas.length === 0) {
+      throw new Error(`Module "${definition.moduleId}" declares no eligible Area and could never be used.`);
+    }
+    seen.add(definition.moduleId);
+  }
+  return definitions;
+}

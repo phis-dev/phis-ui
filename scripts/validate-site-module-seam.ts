@@ -10,7 +10,9 @@ import {
   type PhiSiteModuleServerAreaContributions,
 } from "../plugins/runtime-modules/site-modules";
 import type { PhiRuntimeModuleServerAreaContribution } from "../plugins/runtime-modules/area-contributions";
-import type { PhiRuntimeModuleCatalogEntry } from "../types/cms-plugins";
+import type { PhiRuntimeModuleCatalogEntry, PhiRuntimeModuleDefinition } from "../types/cms-plugins";
+import { collectPhiSiteModuleServerAreaContributions } from "../module-projection";
+import { collectPhiSiteModuleClientContributions } from "../module-projection-client";
 import {
   extendWithPhiSiteModuleClientManifests,
   readAllPhiSiteModuleAuthoringClientContributions,
@@ -144,4 +146,57 @@ assert.match(
   "the Builder must extend the Authoring union with the Site's own Modules",
 );
 
-console.log("Site Module seam valid: server and client halves ship empty, compose per Area, and every Area host reads them.");
+// --- the projection a generated file calls -----------------------------------------------------
+
+// `phis-cli` writes imports and one call; the placement happens here, from each Module's own
+// eligibleAreas. Nothing loads a Module to work this out.
+function definition(moduleId: string, eligibleAreas: readonly string[]) {
+  return { moduleId, eligibleAreas } as unknown as PhiRuntimeModuleDefinition;
+}
+
+const storefront = "@acme/shop/modules/storefront";
+const orders = "@acme/shop/modules/orders";
+const definitions = [definition(storefront, ["public", "admin"]), definition(orders, ["admin"])];
+
+const projected = collectPhiSiteModuleServerAreaContributions([
+  { moduleId: storefront, catalogEntry: { definition: definitions[0] } },
+  { moduleId: orders, catalogEntry: { definition: definitions[1] } },
+] as unknown as PhiRuntimeModuleServerAreaContribution[]);
+
+assert.deepEqual(Object.keys(projected).sort(), ["admin", "public"]);
+assert.deepEqual(projected.public?.map((entry) => entry.moduleId), [storefront]);
+assert.deepEqual(projected.admin?.map((entry) => entry.moduleId), [storefront, orders]);
+assert.equal(projected.editor, undefined, "an Area no Module named must stay absent");
+
+const projectedClient = collectPhiSiteModuleClientContributions({
+  definitions,
+  clients: [{
+    modules: [
+      { moduleId: storefront, renderLoaders: [["@acme/shop/cart", async () => null]] },
+      { moduleId: orders, dataProviders: [{ key: "@acme/shop/orders" }] },
+      // A Module the package never defined: dropped rather than registered nowhere.
+      { moduleId: "@acme/shop/modules/ghost", dataProviders: [{ key: "@acme/shop/ghost" }] },
+    ],
+    calendarAdapters: [{ key: "@acme/shop/calendars/deliveries" }],
+  }],
+  authoring: [{ moduleId: storefront, loadAuthoring: async () => null }],
+} as unknown as Parameters<typeof collectPhiSiteModuleClientContributions>[0]);
+
+assert.deepEqual(projectedClient.areas.public?.renderLoaders?.map(([type]) => type), ["@acme/shop/cart"]);
+assert.deepEqual(projectedClient.areas.admin?.renderLoaders?.map(([type]) => type), ["@acme/shop/cart"]);
+assert.deepEqual(projectedClient.areas.admin?.dataProviders?.map((entry) => entry.key), ["@acme/shop/orders"]);
+assert.deepEqual(projectedClient.areas.public?.dataProviders, [], "orders is not eligible for public");
+assert.deepEqual(projectedClient.areas.public?.authoring?.map((entry) => entry.moduleId), [storefront]);
+assert.deepEqual(
+  projectedClient.calendarAdapters.map((entry) => entry.key),
+  ["@acme/shop/calendars/deliveries"],
+  "Calendar adapters are flattened, never placed into an Area",
+);
+for (const area of Object.values(projectedClient.areas)) {
+  assert.ok(
+    !JSON.stringify(Object.keys(area ?? {})).includes("calendar"),
+    "no Area may carry its own Calendar adapters",
+  );
+}
+
+console.log("Site Module seam valid: both halves ship empty, the projection places by eligibleAreas, and every Area host reads them.");

@@ -270,6 +270,18 @@
       "types": "./module-authoring-client.ts",
       "default": "./module-authoring-client.ts"
     },
+    "./module/projection": {
+      "import": "./module-projection.ts",
+      "require": "./module-projection.ts",
+      "types": "./module-projection.ts",
+      "default": "./module-projection.ts"
+    },
+    "./module/projection/client": {
+      "import": "./module-projection-client.ts",
+      "require": "./module-projection-client.ts",
+      "types": "./module-projection-client.ts",
+      "default": "./module-projection-client.ts"
+    },
     "./runtime": {
       "import": "./runtime.ts",
       "require": "./runtime.ts",
