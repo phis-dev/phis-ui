@@ -842,6 +842,15 @@ React contexts, so the manifest providers the Site renders are invisible to the 
 `react` and `react-dom` follow the same rule. The peer range doubles as the compatibility statement a
 source's package list carries.
 
+**A Widget names itself from its own package.** `resolvePhiCmsWidgetPluginKey` maps a bare type key to a
+first-party module and refuses an unknown one, which is what stops an outside package claiming a
+first-party Widget. A Module package composes its own plugin key -- `@acme/status/modules/status/widgets`
+-- and builds the namespaced type with `buildPhiCmsWidgetNamespacedTypeKey`. That namespaced type is what
+crosses the boundary: the Server manifest carries it, and the Render Client manifest the Area host
+composed resolves it. Config parsing uses the primitives from `@phis/ui/widget-config`, so a package does
+not reproduce the renderable base parser. The authoring editor is built from Controls in
+`@phis/ui/controls`; a Module contributes Widgets and does not bring its own control vocabulary.
+
 **A Module may contribute a navigation entry to any declared surface.** An entry that names no anchor
 lands at the end of its surface, ordered by `ownerModuleId`, `presetKey`, and `itemKey` -- deterministic,
 and not dependent on which Module happened to be composed first. Nothing has to be opened for this.

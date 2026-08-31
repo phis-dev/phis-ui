@@ -294,6 +294,12 @@
       "types": "./plugins/runtime-modules/site-modules-client.tsx",
       "default": "./plugins/runtime-modules/site-modules-client.tsx"
     },
+    "./widget-config": {
+      "import": "./widget-config.ts",
+      "require": "./widget-config.ts",
+      "types": "./widget-config.ts",
+      "default": "./widget-config.ts"
+    },
     "./runtime": {
       "import": "./runtime.ts",
       "require": "./runtime.ts",
