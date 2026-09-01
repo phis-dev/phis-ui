@@ -69,7 +69,7 @@ function createModuleDefinition(
     kind: moduleId === PLATFORM_MODULE_ID ? "platform" : "module",
     eligibleAreas: ["public"],
     serverBinding: {
-      providerId: "@phis/phi-server/core",
+      providerId: "@phis/server/core",
       requiredCapabilities: [],
     },
     controllerType: `@test/${controllerKey}`,
@@ -192,7 +192,7 @@ const controllerlessModuleDefinition = {
   kind: "module",
   eligibleAreas: ["public"],
   serverBinding: {
-    providerId: "@phis/phi-server/core",
+    providerId: "@phis/server/core",
     requiredCapabilities: [],
   },
   title: "Controllerless adapter",

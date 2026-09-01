@@ -1,10 +1,10 @@
-export const PHI_CORE_SERVER_PROVIDER_ID = "@phis/phi-server/core" as const;
+export const PHI_CORE_SERVER_PROVIDER_ID = "@phis/server/core" as const;
 
 export const PHI_CORE_SERVER_CAPABILITY = {
-  AuthV1: "@phis/phi-server/authentication:v1",
-  ThreadsV1: "@phis/phi-server/threads:v1",
-  ResourceLinksV1: "@phis/phi-server/resource-links:v1",
-  SupportV1: "@phis/phi-server/support:v1",
+  AuthV1: "@phis/server/authentication:v1",
+  ThreadsV1: "@phis/server/threads:v1",
+  ResourceLinksV1: "@phis/server/resource-links:v1",
+  SupportV1: "@phis/server/support:v1",
 } as const;
 
 export type PhiServerProviderId = `@${string}/${string}`;

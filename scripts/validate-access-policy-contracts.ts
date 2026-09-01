@@ -18,7 +18,7 @@ import type {
 import { filterPhiCommandToolbarButtonsForViewer } from "../plugins/runtime-modules/core/widgets/command-toolbar/config";
 import { buildPhiVisibleAreaMenuItems } from "../components/widgets/area-menu-items";
 
-const CORE_PROVIDER = "@phis/phi-server/core" as const;
+const CORE_PROVIDER = "@phis/server/core" as const;
 const MODULE_PROVIDER = "@test/pkg/modules/add-on" as const;
 const FOREIGN_PROVIDER = "@other/add-on" as const;
 const MODULE_ID = "@test/pkg/modules/module" as const;

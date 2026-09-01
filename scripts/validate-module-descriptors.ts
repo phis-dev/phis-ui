@@ -265,7 +265,7 @@ const adminRoutesForRole = (roleFlags: number) => compilePhiCmsActiveRouteTable(
   activeModuleIds: adminFeatureModuleIds,
   viewer: {
     access: "authenticated",
-    roleClaims: [{ providerId: "@phis/phi-server/core", flags: roleFlags }],
+    roleClaims: [{ providerId: "@phis/server/core", flags: roleFlags }],
     groupClaims: [],
   },
 });
@@ -306,7 +306,7 @@ const adminNavigationPathsForRole = (roleFlags: number) => resolvePhiCmsActiveNa
   activeModuleIds: adminFeatureModuleIds,
   viewer: {
     access: "authenticated",
-    roleClaims: [{ providerId: "@phis/phi-server/core", flags: roleFlags }],
+    roleClaims: [{ providerId: "@phis/server/core", flags: roleFlags }],
     groupClaims: [],
   },
 }).find((surface) => surface.navKey === "admin:sidebar")?.items

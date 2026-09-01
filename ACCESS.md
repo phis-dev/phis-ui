@@ -38,7 +38,7 @@ type PhiRuntimeViewer = {
 };
 ```
 
-The Core claim provider is `@phis/phi-server/core`. Role bit spaces are isolated by provider id.
+The Core claim provider is `@phis/server/core`. Role bit spaces are isolated by provider id.
 `resolvedArea` selects a landing destination only; it is not an authorization boundary.
 
 The runtime does not transport expanded permission lists, role catalogs, group labels, member lists, or

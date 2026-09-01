@@ -238,7 +238,7 @@ Verified in the browser on 2026-08-20 (`browser-test/scripts/check-variant-previ
 - Publish `@phis/groups` as a separate `phis-cli`-installable Module package tree. Keep all Groups
   Admin/App pages, presets, Providers, Controllers, Forms, Tables/Trees/Collections, path injections,
   labels, and signals out of `@phis/ui`.
-- Bind the Module only to Core `@phis/phi-server/groups:v1`. Render local and future Directory-managed
+- Bind the Module only to Core `@phis/server/groups:v1`. Render local and future Directory-managed
   users, groups, fields, and memberships through the same provider-neutral authority/provenance and
   per-operation capability projection; never branch on LDAP, SCIM, Entra, or another package id.
 - Keep provider connection setup, protocol clients, synchronization, writeback, secrets, and health in

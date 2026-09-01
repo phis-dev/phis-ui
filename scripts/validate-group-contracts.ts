@@ -8,7 +8,7 @@ import { PHI_GROUPS_RUNTIME_DATA_PROVIDER_KEYS } from "../plugins/runtime-module
 
 const readSource = (path: string) => readFile(new URL(`../${path}`, import.meta.url), "utf8");
 const claim = (flags: number) => ({
-  providerId: "@phis/phi-server/core" as const,
+  providerId: "@phis/server/core" as const,
   key: "docs-team",
   flags,
 });

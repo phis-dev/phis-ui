@@ -528,8 +528,8 @@ await assert.rejects(
 // Provider availability
 // ---------------------------------------------------------------------------
 
-const CORE = "@phis/phi-server/core" as const;
-const MEDIA_CAPABILITY = "@phis/phi-server/media:v1" as PhiServerCapabilityId;
+const CORE = "@phis/server/core" as const;
+const MEDIA_CAPABILITY = "@phis/server/media:v1" as PhiServerCapabilityId;
 const snapshot = (
   state: PhiServerCapabilitySnapshot["providers"][number]["state"],
   capabilities: readonly PhiServerCapabilityId[],

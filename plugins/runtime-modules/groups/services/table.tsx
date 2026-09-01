@@ -24,7 +24,7 @@ const API_PATH = "/api/site/groups";
 // Administration is the one surface that asks for retired groups: the key stays taken, so the place
 // that reports a name collision has to be able to show what is holding the name.
 const SITE_SCOPE_PATH = `${API_PATH}?scope=site&includeRetired=1`;
-const CORE_PROVIDER_ID = "@phis/phi-server/core";
+const CORE_PROVIDER_ID = "@phis/server/core";
 
 type ApiResponse = {
   rows?: unknown;

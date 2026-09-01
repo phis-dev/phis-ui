@@ -100,7 +100,7 @@ function createDefinition(
     kind,
     eligibleAreas: ["public"],
     serverBinding: {
-      providerId: "@phis/phi-server/core",
+      providerId: "@phis/server/core",
       requiredCapabilities: [],
     },
     controllerType: `@test/${controllerKey}`,
