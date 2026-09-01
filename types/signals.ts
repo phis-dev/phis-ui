@@ -9,15 +9,38 @@ import { createPhiModuleScopedKey, isPhiModuleScopedKey } from "../constants/run
 
 export { PHI_SHARED_PACKAGE_NAME } from "../constants/package";
 
-export const PHI_SIGNAL_SCOPES = [
-  "widget",
-  "layout",
-  "region",
-  "page",
-  "area",
-  "site",
-] as const;
-export type PhiSignalScope = (typeof PHI_SIGNAL_SCOPES)[number];
+/*
+ * The closed vocabularies and the value-schema format come from `@phis/contracts/signals`, because
+ * phi-server validates stored wiring against the same lists. They were two lists once, and they drifted:
+ * this side had `date`, `time` and `length`, the server had not, and a length control's change signal
+ * was refused on save.
+ */
+export {
+  PHI_SIGNAL_ACTIONS,
+  PHI_SIGNAL_SCOPES,
+  PHI_SIGNAL_VALUE_SCHEMA_NAMESPACE,
+  PHI_SIGNAL_VALUE_SCHEMA_SEPARATOR,
+  PHI_SIGNAL_VALUE_TYPES,
+  isPhiSignalAction,
+  isPhiSignalScope,
+  isPhiSignalValueType,
+  type PhiSignalAction,
+  type PhiSignalScope,
+  type PhiSignalValueSchema,
+  type PhiSignalValueType,
+} from "@phis/contracts/signals";
+
+import {
+  PHI_SIGNAL_VALUE_SCHEMA_NAMESPACE,
+  PHI_SIGNAL_VALUE_SCHEMA_SEPARATOR,
+  isPhiSignalAction,
+  isPhiSignalScope,
+  isPhiSignalValueType,
+  type PhiSignalAction,
+  type PhiSignalScope,
+  type PhiSignalValueSchema,
+  type PhiSignalValueType,
+} from "@phis/contracts/signals";
 
 export type PhiSignalRuntimeContext = {
   siteKey?: string | null;
@@ -51,48 +74,6 @@ export const PHI_SIGNAL_CHANNELS = [
   "inspector",
 ] as const;
 export type PhiSignalChannel = string;
-
-export const PHI_SIGNAL_ACTIONS = [
-  "activate",
-  "change",
-  "toggle",
-  "start",
-  "stop",
-  "clear",
-  "open",
-  "close",
-  "reload",
-  "flush",
-  "filter",
-  "drop",
-] as const;
-export type PhiSignalAction = (typeof PHI_SIGNAL_ACTIONS)[number];
-
-export const PHI_SIGNAL_VALUE_TYPES = [
-  "none",
-  "boolean",
-  "string",
-  "number",
-  "date",
-  "time",
-  "enum",
-  "color",
-  "path",
-  "length",
-  "size",
-  "image",
-  "icon",
-  "string[]",
-  "number[]",
-  "enum[]",
-  "json",
-] as const;
-export type PhiSignalValueType = (typeof PHI_SIGNAL_VALUE_TYPES)[number];
-export const PHI_SIGNAL_VALUE_SCHEMA_NAMESPACE = "signals";
-
-export type PhiSignalValueSchema = `${string}/${typeof PHI_SIGNAL_VALUE_SCHEMA_NAMESPACE}/${string}`;
-
-export const PHI_SIGNAL_VALUE_SCHEMA_SEPARATOR = "/";
 
 export function createPhiSignalValueSchema(
   packageName: string,
@@ -500,20 +481,9 @@ export function isPhiSignalCapabilityTarget(value: unknown): value is PhiSignalC
   return value === "self" || value === "subcontrol" || value === "both";
 }
 
-export function isPhiSignalScope(value: unknown): value is PhiSignalScope {
-  return typeof value === "string" && (PHI_SIGNAL_SCOPES as readonly string[]).includes(value);
-}
 
 export function isPhiSignalChannel(value: unknown): value is PhiSignalChannel {
   return typeof value === "string" && value.trim().length > 0;
-}
-
-export function isPhiSignalAction(value: unknown): value is PhiSignalAction {
-  return typeof value === "string" && (PHI_SIGNAL_ACTIONS as readonly string[]).includes(value);
-}
-
-export function isPhiSignalValueType(value: unknown): value is PhiSignalValueType {
-  return typeof value === "string" && (PHI_SIGNAL_VALUE_TYPES as readonly string[]).includes(value);
 }
 
 /**
