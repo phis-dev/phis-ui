@@ -2,7 +2,7 @@ import type { PhiShellTheme } from "../components/shell/shell-types";
 import type { PhiSiteFontSlots, PhiSiteRemSettings } from "./site-theme";
 import type { PhiThemeCustomColorPalette, PhiThemeMode } from "../theme/phi-theme-presets";
 import type { PhiControlShape } from "../theme/phi-control-shape";
-import type { PhiViewerGroupClaim, PhiViewerRoleClaim } from "./access";
+import type { PhiViewerAddonRoleClaim, PhiViewerGroupClaim, PhiViewerRoleClaim } from "./access";
 import type { PhiControllerSignalAddress } from "./signals";
 
 export type PhiWidgetAreaKey =
@@ -87,6 +87,8 @@ export type PhiBlockRuntimeViewer = {
   resolvedArea?: PhiWidgetAreaKey | null;
   roleClaims: readonly PhiViewerRoleClaim[];
   groupClaims: readonly PhiViewerGroupClaim[];
+  /** Absent where a surface never carried them, which denies an `addon-roles` policy. */
+  addonRoleClaims?: readonly PhiViewerAddonRoleClaim[];
   authorizationRevision: number;
   siteFlags?: number;
   userName?: string | null;

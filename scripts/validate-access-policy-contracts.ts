@@ -7,8 +7,11 @@ import {
   PHI_VIEWER_ACCESS_ANYONE,
   PHI_VIEWER_ACCESS_AUTHENTICATED,
   PHI_VIEWER_ACCESS_SITE_ADMIN,
+  canPhiViewerAccess,
   canPhiViewerAccessOwnedPolicy,
   intersectPhiInheritedViewportFlags,
+  readPhiViewerAccessPolicy,
+  type PhiViewerAccessPolicy,
 } from "../types/access";
 import type { PhiResolvedCmsRenderableTree } from "../types/cms";
 import type {
@@ -270,4 +273,60 @@ assert.equal(
   false,
 );
 
-console.log("Access-policy contracts validated.");
+/*
+ * Gating a surface on a role a Server Add-on defined.
+ *
+ * The names travel with the viewer so a navigation entry can be left out for somebody who would be
+ * refused anyway. That is presentation, not protection: the request behind the link is decided again on
+ * the server, and leaving the link out only spares a person a refusal they cannot act on.
+ */
+const MARKET = "@acme/market" as const;
+const vendorOnly = {
+  access: "addon-roles",
+  providerId: MARKET,
+  allowedRoles: ["vendor"],
+} as const satisfies PhiViewerAccessPolicy;
+
+function addonViewer(roles: string[] | null) {
+  return {
+    access: "authenticated" as const,
+    roleClaims: [],
+    groupClaims: [],
+    ...(roles === null ? {} : { addonRoleClaims: [{ providerId: MARKET, roles }] }),
+  };
+}
+
+assert.equal(canPhiViewerAccess(addonViewer(["vendor"]), vendorOnly), true);
+assert.equal(canPhiViewerAccess(addonViewer(["reviewer", "vendor"]), vendorOnly), true);
+assert.equal(canPhiViewerAccess(addonViewer(["reviewer"]), vendorOnly), false);
+// A surface that never carried the claims must deny rather than assume: absent is not empty-and-known.
+assert.equal(canPhiViewerAccess(addonViewer(null), vendorOnly), false);
+assert.equal(
+  canPhiViewerAccess({ access: "public", roleClaims: [], groupClaims: [] }, vendorOnly),
+  false,
+);
+// The same role name from another Add-on is another role.
+assert.equal(
+  canPhiViewerAccess(
+    {
+      access: "authenticated",
+      roleClaims: [],
+      groupClaims: [],
+      addonRoleClaims: [{ providerId: "@acme/other", roles: ["vendor"] }],
+    },
+    vendorOnly,
+  ),
+  false,
+);
+// Owner-checked like every other provider-scoped policy: a Module may not gate on somebody else's roles.
+assert.equal(canPhiViewerAccessOwnedPolicy(addonViewer(["vendor"]), vendorOnly, MARKET), true);
+assert.equal(canPhiViewerAccessOwnedPolicy(addonViewer(["vendor"]), vendorOnly, "@acme/other"), false);
+assert.deepEqual(
+  readPhiViewerAccessPolicy({ ...vendorOnly, allowedRoles: ["vendor", "vendor"] }),
+  { access: "addon-roles", providerId: MARKET, allowedRoles: ["vendor"] },
+);
+assert.equal(readPhiViewerAccessPolicy({ ...vendorOnly, allowedRoles: [] }), null);
+assert.equal(readPhiViewerAccessPolicy({ ...vendorOnly, allowedRoles: ["Vendor"] }), null);
+assert.equal(readPhiViewerAccessPolicy({ ...vendorOnly, providerId: "market" }), null);
+
+console.log("Access-policy contracts validated, including Add-on role policies.");

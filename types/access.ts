@@ -17,6 +17,19 @@ export type PhiViewerGroupClaim = {
   flags: number;
 };
 
+/**
+ * The roles a Server Add-on declared, held by this viewer, by name.
+ *
+ * Names rather than flags, unlike `PhiViewerRoleClaim`. An Add-on's roles are frozen from the first
+ * assignment and are declared in its own manifest, so a bit position would have to be handed out and
+ * kept forever -- reordering the manifest would silently change what a policy means, and thirty-two
+ * would be the ceiling. Core never interprets these; it carries them so a policy can name one.
+ */
+export type PhiViewerAddonRoleClaim = {
+  providerId: PhiRoleProviderId;
+  roles: readonly string[];
+};
+
 export type PhiViewerAccessPolicy =
   | { access: "anyone" }
   | { access: "anonymous" }
@@ -30,9 +43,16 @@ export type PhiViewerAccessPolicy =
       access: "groups";
       providerId: PhiGroupProviderId;
       allowedGroupKeys: readonly string[];
+    }
+  | {
+      access: "addon-roles";
+      providerId: PhiRoleProviderId;
+      allowedRoles: readonly string[];
     };
 
 const PHI_ROLE_PROVIDER_ID_PATTERN = /^@[^/]+\/[^/]+(?:\/[^/]+)*$/;
+/** The same shape a manifest may declare a role under. */
+const PHI_ADDON_ROLE_NAME_PATTERN = /^[a-z][a-z0-9-]{0,63}$/;
 
 export const PHI_VIEWER_ACCESS_ANYONE = { access: "anyone" } as const satisfies PhiViewerAccessPolicy;
 export const PHI_VIEWER_ACCESS_AUTHENTICATED = {
@@ -78,6 +98,11 @@ export type PhiAccessViewer = {
   access: "public" | "authenticated";
   roleClaims?: readonly PhiViewerRoleClaim[];
   groupClaims?: readonly PhiViewerGroupClaim[];
+  /**
+   * Absent means none are known here, not that the viewer holds none: a surface that never asked for
+   * them evaluates an `addon-roles` policy to false, which is the safe direction.
+   */
+  addonRoleClaims?: readonly PhiViewerAddonRoleClaim[];
 };
 
 export function readPhiViewerAccessPolicy(
@@ -124,6 +149,22 @@ export function readPhiViewerAccessPolicy(
       allowedGroupKeys: [...new Set(record.allowedGroupKeys as string[])],
     };
   }
+  if (
+    record.access === "addon-roles" &&
+    typeof record.providerId === "string" &&
+    PHI_ROLE_PROVIDER_ID_PATTERN.test(record.providerId) &&
+    Array.isArray(record.allowedRoles) &&
+    record.allowedRoles.length > 0 &&
+    record.allowedRoles.every((role) =>
+      typeof role === "string" && PHI_ADDON_ROLE_NAME_PATTERN.test(role),
+    )
+  ) {
+    return {
+      access: "addon-roles",
+      providerId: record.providerId as PhiRoleProviderId,
+      allowedRoles: [...new Set(record.allowedRoles as string[])],
+    };
+  }
   return null;
 }
 
@@ -131,7 +172,11 @@ export function isPhiViewerAccessPolicyProviderOwned(
   policy: PhiViewerAccessPolicy,
   ownerProviderId?: PhiRoleProviderId | null,
 ) {
-  return (policy.access !== "roles" && policy.access !== "groups") ||
+  return (
+    policy.access !== "roles" &&
+    policy.access !== "groups" &&
+    policy.access !== "addon-roles"
+  ) ||
     policy.providerId === PHI_CORE_ROLE_PROVIDER_ID ||
     (ownerProviderId != null && policy.providerId === ownerProviderId);
 }
@@ -187,6 +232,16 @@ export function hasProviderGroup(
   ) === true;
 }
 
+export function hasProviderAddonRole(
+  viewer: Pick<PhiAccessViewer, "addonRoleClaims">,
+  providerId: PhiRoleProviderId,
+  role: string,
+) {
+  return viewer.addonRoleClaims?.some((claim) =>
+    claim.providerId === providerId && claim.roles.includes(role),
+  ) === true;
+}
+
 export function canPhiViewerAccess(
   viewer: PhiAccessViewer,
   policy: PhiViewerAccessPolicy | null | undefined,
@@ -210,6 +265,11 @@ export function canPhiViewerAccess(
   if (resolvedPolicy.access === "groups") {
     return resolvedPolicy.allowedGroupKeys.some((key) =>
       hasProviderGroup(viewer, resolvedPolicy.providerId, key),
+    );
+  }
+  if (resolvedPolicy.access === "addon-roles") {
+    return resolvedPolicy.allowedRoles.some((role) =>
+      hasProviderAddonRole(viewer, resolvedPolicy.providerId, role),
     );
   }
   return (

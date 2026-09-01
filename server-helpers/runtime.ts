@@ -346,6 +346,10 @@ export async function getPhiCmsRuntimeInfo({
         key?: string | null;
         flags?: number | null;
       }>;
+      addonRoleClaims?: Array<{
+        providerId?: string | null;
+        roles?: unknown;
+      }>;
       authorizationRevision?: number | null;
       siteFlags?: number | null;
       newsletterOptIn?: boolean | null;
@@ -406,6 +410,18 @@ export async function getPhiCmsRuntimeInfo({
             claim.flags > 0,
           )
           .map((claim) => ({ providerId: claim.providerId, key: claim.key, flags: claim.flags })),
+        // Same shape as the two above: whatever does not read as a claim is dropped rather than
+        // repaired, because a half-read claim would decide what somebody is shown.
+        addonRoleClaims: (payload.user?.addonRoleClaims ?? [])
+          .filter((claim): claim is { providerId: `@${string}/${string}`; roles: string[] } =>
+            typeof claim.providerId === "string" &&
+            /^@[^/]+\/[^/]+/.test(claim.providerId) &&
+            Array.isArray(claim.roles) &&
+            claim.roles.every((role: unknown) =>
+              typeof role === "string" && /^[a-z][a-z0-9-]{0,63}$/.test(role),
+            ),
+          )
+          .map((claim) => ({ providerId: claim.providerId, roles: [...claim.roles] })),
         authorizationRevision:
           Number.isInteger(payload.user?.authorizationRevision) &&
           (payload.user?.authorizationRevision ?? 0) >= 0

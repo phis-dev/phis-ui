@@ -891,6 +891,34 @@ Note the trade this makes. With source, the Site's build typechecks a Module aga
 installed. Compiled, only the declared surface in the `.d.ts` is checked; a changed prop inside a compiled
 body surfaces at runtime. That is what the version range in the package listing is for.
 
+## 8c. Gating a surface on a Server Add-on's role
+
+A Module may hide a page or a navigation entry from somebody who does not hold a role its Add-on half
+declared:
+
+```ts
+accessPolicy: {
+  access: "addon-roles",
+  providerId: "@acme/market",
+  allowedRoles: ["vendor"],
+}
+```
+
+Names, not flags. An Add-on's roles are frozen from the first assignment and declared in its own
+manifest; a bit position would have to be handed out and kept forever, reordering the manifest would
+silently change what a policy means, and thirty-two would be the ceiling.
+
+The names reach the client with the rest of the viewer, as `addonRoleClaims`, filtered to what the
+Add-on's **current** manifest declares and to Add-ons enabled for this Site. A viewer that never carried
+them denies the policy rather than assuming: absent is not the same as empty-and-known.
+
+**This is presentation, not protection.** Leaving a link out spares somebody a refusal they could not
+have acted on; it does not make the page safe. What the link leads to is decided again on the server, by
+the handler, against `roles:v1`. A Module that gates only in the client has hidden a door, not locked it.
+
+Like the other provider-scoped policies, this one is owner-checked: a Module may name its own Add-on and
+Core, and not somebody else's.
+
 ## 9. Install without patching the Skeleton
 
 The canonical Skeleton is the reusable, versioned basis for Sites. A Module installation must not add or
