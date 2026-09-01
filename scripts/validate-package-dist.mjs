@@ -85,6 +85,25 @@ for (const filePath of emittedJavaScriptFiles) {
   }
 }
 
+/*
+ * Nothing that only exists to test this package may ship in it.
+ *
+ * The build compiles by pattern, so a new test file or a tool config at the package root lands in `dist`
+ * unless it is excluded -- and nothing about the result looks wrong: the exports still resolve and the
+ * imports still exist. It is caught here because it is invisible everywhere else.
+ */
+const shippedDevelopmentFiles = emittedJavaScriptFiles.filter((filePath) => {
+  const name = filePath.split("/").pop() ?? "";
+  return name.includes(".test.") || name.endsWith(".config.js");
+});
+if (shippedDevelopmentFiles.length > 0) {
+  throw new Error(
+    `dist carries files that are not part of the package:\n  ${
+      shippedDevelopmentFiles.join("\n  ")
+    }\nExclude them in tsconfig.build.json.`,
+  );
+}
+
 console.log(
   `Package dist valid: ${sourceExportKeys.length} exports, ` +
     `${validatedExportTargets} export targets, ` +

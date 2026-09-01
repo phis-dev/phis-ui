@@ -8,6 +8,7 @@
   "types": "index.d.ts",
   "scripts": {
     "build": "node scripts/clean-package-dist.mjs && tsc -p tsconfig.build.json && node scripts/prepare-package-dist.mjs && node scripts/validate-package-dist.mjs",
+    "test": "vitest run",
     "audit:graph": "node scripts/audit-module-graph.mjs",
     "control-boundaries:check": "node scripts/validate-control-boundaries.mjs",
     "lint": "eslint .",
@@ -565,7 +566,8 @@
     "react-dom": "^19.2.8",
     "tsx": "4.22.4",
     "typescript": "^6.0.3",
-    "typescript-eslint": "^8.62.1"
+    "typescript-eslint": "^8.62.1",
+    "vitest": "3.2.4"
   },
   "peerDependencies": {
     "@ant-design/icons": "^6.3.2",
