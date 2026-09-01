@@ -860,6 +860,37 @@ and a named item becomes public API its owner has to keep. Those three must ther
 surface exports through `exportedItemKeys`, or at one the Module itself injects. Contributing to a surface
 and depending on a particular item in it are separate permissions.
 
+## 8b. How the package is built
+
+A Module package ships compiled, not as source. That is what lets a vendor keep it closed, and it is what
+`@phis/ui` itself does -- `dist` holds transpiled ESM with `"use client"` intact, `.d.ts` beside each file,
+and CSS copied in. Turbopack consumes modules, not TSX; it never sees which of the two it got.
+
+Use `tsc`, not a bundler. `tsc` emits one file per source file and leaves both the directive and the bare
+imports of `react` and `@phis/ui` alone. Bundlers that merge modules tend to hoist or drop the directive and
+will happily inline a peer dependency, and both faults surface at runtime in a browser rather than at the
+Site's build.
+
+Four things have to hold in the built package, and `phis module check` looks at all four:
+
+- **`./client` and `./authoring-client` begin with `"use client"`,** as the first statement, past comments
+  and nothing else. `.` and `./server` must not.
+- **`react` and `@phis/ui` are peer dependencies,** never ordinary ones, and the package carries no copy of
+  its own. Two Reacts mean broken hooks; two `@phis/ui` mean two sets of contexts, so the Builder store a
+  Module reads is not the one the Builder writes.
+- **`.d.ts` ship beside the JavaScript.** The generated projection imports the package by name, and the
+  Site's build typechecks it.
+- **CSS is stated as a side effect.** A package that ships CSS and declares `sideEffects: false` invites a
+  bundler to drop the imports. `sideEffects: ["**/*.css"]` instead. This one does not fail -- it renders
+  unstyled, which is why it is checked rather than waited for.
+
+What compiling does not buy is a hot install: a package with Widgets still triggers a Site build, because
+its Client code has to enter the bundle graph. What it buys is that the vendor's source stays the vendor's.
+
+Note the trade this makes. With source, the Site's build typechecks a Module against the `@phis/ui` actually
+installed. Compiled, only the declared surface in the `.d.ts` is checked; a changed prop inside a compiled
+body surfaces at runtime. That is what the version range in the package listing is for.
+
 ## 9. Install without patching the Skeleton
 
 The canonical Skeleton is the reusable, versioned basis for Sites. A Module installation must not add or
