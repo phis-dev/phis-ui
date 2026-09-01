@@ -1,9 +1,5 @@
-export const PhiBaseRole = {
-  Admin: 1 << 0,
-  Builder: 1 << 1,
-  Publisher: 1 << 2,
-  Author: 1 << 3,
-  Developer: 1 << 4,
-  Supporter: 1 << 5,
-  Accountant: 1 << 6,
-} as const;
+/*
+ * The flags live in `@phis/contracts/access`: phi-server checks a viewer against the same bits, and two
+ * hand-kept copies of a bitmask is a way to grant the wrong role without anyone noticing.
+ */
+export { PhiBaseRole } from "@phis/contracts/access";
