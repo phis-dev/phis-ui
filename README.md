@@ -1100,15 +1100,15 @@ integration owner and deployment lifecycle. The normative server-side installati
 routing, Site-enablement, migration, and load-balancing contract lives in
 `phi-server/SERVER_ADDONS.md`.
 
-Site packages and Add-on packages are physically separate. `phi-server` never imports a Site/React
-package, Site applications never import an Add-on package, and both sides may share only a neutral,
-React-free wire-contract package. Missing or incompatible server capabilities are resolved server-side
+Module and Add-on entrypoints are physically separate module graphs, whether or not they ship in the
+same package. `phi-server` never imports a Site/React entrypoint, Site applications never import an
+`addon/` entrypoint, and both sides may share only a neutral, React-free wire-contract package. Missing or incompatible server capabilities are resolved server-side
 and produce a scoped diagnostic plus a deduplicated structured log entry; Module activation never
 installs or auto-enables server code.
 
-When a Module has a direct `phi-server` counterpart, physical package naming is mandatory:
-`@scope/name` pairs with the Add-on package `@scope/name-server`. The Add-on's logical provider id remains
-`@scope/name`; the `-server` postfix identifies the physical server-only package, not a different provider.
+When a Module has a direct `phi-server` counterpart, both halves ship as one package: `@scope/name` is
+the Module, `@scope/name/addon/…` is the Add-on, and the Add-on's logical provider id is `@scope/name`.
+The entrypoint prefix identifies the half, not a different provider.
 
 `PhiRuntimeModuleDefinition.serverBinding` is mandatory metadata:
 

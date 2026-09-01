@@ -15,8 +15,8 @@ Forms, Providers, presets, adapters, or other declared artifacts are independent
 Controllers are forbidden.
 
 Generic cross-domain infrastructure belongs in the Foundation (see below), domain behavior in its
-Module. A direct server counterpart is a physically separate Add-on package with the mandatory
-`-server` postfix.
+Module. A direct server counterpart is the Add-on half of the same package, reached through its
+`addon/` entrypoints.
 
 ## Module, Core module, Foundation
 
@@ -382,8 +382,9 @@ graph leakage are hard validation errors.
 
 ## Add-on boundary
 
-A Module binds to Core or exactly one logical Add-on. When the Module package is `@scope/name`, its direct
-server package is `@scope/name-server`, while the logical Add-on id remains `@scope/name`.
+A Module binds to Core or exactly one logical Add-on. Both halves ship as one package under one name
+and one version: the Module is `@scope/name`, the Add-on half is `@scope/name/addon/…`, and the logical
+Add-on id is `@scope/name`.
 
 The Site Module never imports Add-on code. The Add-on never imports React or the Site Module. Versioned,
 React-free wire contracts may be shared through a neutral package. Module activation cannot install,

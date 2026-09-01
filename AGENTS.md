@@ -77,7 +77,7 @@
   - `runtimeSignals.dragDrop` declares semantic drag/drop payload types and drop modes; do not encode those in inspector fields or ad hoc widget props
 - Site/client extensions are Modules; server extensions are Add-ons. Every Module binds to exactly one
   Add-on or to Core. A Module must never install, enable, import, or dynamically discover server code,
-  and Site/React packages must stay physically separate from Add-on packages.
+  and Site/React entrypoints must stay physically separate module graphs from the `addon/` ones.
 - Phi-owned Modules are reference implementations and must converge on the one owner-folder and
   Server/live/Authoring projection structure defined in `MODULES.md`. Existing flat first-party manifests
   are migration input, not a template for new Modules or another contribution path.
@@ -87,8 +87,8 @@
 - If a Module cannot express a requirement through a current generic contract, stop and ask before
   implementation. An approved reusable extension is implemented centrally and documented first; a
   Module-local fallback, identity branch, or temporary parallel path is not implied authorization.
-- A direct Add-on counterpart uses the Module package name with the mandatory `-server` postfix:
-  `@scope/name` pairs with `@scope/name-server`; the logical Add-on id remains `@scope/name`.
+- A direct Add-on counterpart is the other half of the same package, reached through
+  `@scope/name/addon/manifest` and `@scope/name/addon/runtime`; the logical Add-on id is `@scope/name`.
 - The Skeleton is the reusable Site base. Installing a Module must not patch or generate Skeleton source;
   all optional Site code stays in Module packages and `phis-cli` emits only external immutable build state.
 - Use the existing runtime signal/bus system for cross-widget, inspector, and shell coordination.

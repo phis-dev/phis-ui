@@ -30,8 +30,8 @@ Controller Client, Render Client, and Authoring Client contributions.
 
 - A **Module** is a Site/client extension compiled into a Site application.
 - An **Add-on** is a server extension compiled into `phi-server` by `phis-cli`.
-- The Site package `@scope/name` and its direct server counterpart use the mandatory physical package
-  pair `@scope/name` plus `@scope/name-server`. The logical Add-on id remains `@scope/name`.
+- One package carries one product. `@scope/name` is the Module half; the Add-on half of the same
+  package lives under `@scope/name/addon/…`, and the logical Add-on id is `@scope/name`.
 - A Module binds to Core or exactly one Add-on and declares required versioned server capabilities.
 - One package may export several Modules. Each Module owns at most one Controller type and may be
   controllerless when its declared artifacts do not need runtime coordination.
@@ -124,15 +124,20 @@ Modules must not add a no-op Controller merely to satisfy package shape.
 
 The Module's `server.ts` export above is a server-safe Site/Next catalog contribution. It is not code
 that runs inside `phi-server`. If the Module needs server routes, hooks, jobs, migrations, secrets, or
-provider adapters, publish those in a separate package:
+provider adapters, those live in the Add-on half of the same package, under its own entrypoints:
 
 ```text
-Site Module package:  @acme/status
-Server Add-on package: @acme/status-server
-Logical Add-on id:     @acme/status
+Package:            @acme/status
+Module entrypoints: @acme/status, @acme/status/client, @acme/status/server
+Add-on entrypoints: @acme/status/addon/manifest, @acme/status/addon/runtime
+Logical Add-on id:  @acme/status
 ```
 
-The Module package never imports the Add-on package, and the Add-on package never imports React or
+Note that `./server` is the Module's own React Server Components -- code that runs in the *Site*
+process. The Add-on runs in `phi-server`, which is why its entrypoints carry the `addon/` prefix rather
+than the name they would otherwise both want.
+
+The Module half never imports the Add-on half, and the Add-on half never imports React or
 `@phis/ui`.
 
 Use physically separate package exports so a Server import cannot accidentally retain Client or

@@ -107,7 +107,7 @@ This document defines the public form-building-block contract in `@phis/ui`.
 - Arbitrary cookie names and credential requests in Form definitions, Site overrides, Widget config,
   signals, or request payloads are forbidden. A new mode is a contract extension requiring operator
   approval. Third-party Modules may use `none` or `site-session`; they cannot claim Core-only credentials.
-- Credential forwarding establishes identity only. The destination Site or `*-server` handler must always
+- Credential forwarding establishes identity only. The destination Site or Add-on handler must always
   revalidate values and enforce internal-token, Site, session, enabled membership, role/access policy,
   rate-limit, and domain authorization. Presentation and client validation never authorize a mutation.
 - The shared resolver primitive is `resolvePhiFormDefinition({ presetDefinition, overrideDefinition })`.

@@ -58,7 +58,7 @@ src/
 │   ├── area-contribution.server.ts
 │   └── controller.tsx            # only when a domain lifecycle is required
 ├── server/
-│   └── request-handler.ts        # site or *-server implementation
+│   └── request-handler.ts        # site or Add-on implementation
 └── presets/
     └── request-page.server.ts    # generic Form Widget + external actions
 ```
@@ -320,7 +320,7 @@ Handler mode posts only `formId`, the closed phase (`submit` or `confirm`), and 
 Site-local `/api/site/forms` gateway. The gateway resolves the Published Form from the active target-Area
 module catalog, resolves the handler Provider on the Server, constructs the execution target from that
 immutable Provider, and rejects Client-carried routing or credential overrides. A third-party feature that
-needs a reusable server counterpart ships that route in its `*-server` add-on; a Site-local feature may
+needs a reusable server counterpart ships that route in its Add-on half; a Site-local feature may
 implement it in the Site dispatcher. Catalog metadata alone does not implement persistence. Without the
 server Provider mapping and actual handler, the Form renders and validates but cannot submit successfully.
 
@@ -481,7 +481,7 @@ Button Widget
               └── Form Widget sends formId + phase + values to its Core Form controller
                   └── Core Form controller POSTs /api/site/forms
                       └── Site gateway resolves Form + handler Provider and dispatches
-                          └── Site or *-server handler persists
+                          └── Site or Add-on handler persists
 ```
 
 The Form Widget can route `submitting`, `validationFailed`, `submitSuccess`, and `submitError` outputs to
@@ -586,7 +586,7 @@ change. It must not mutate the package preset itself.
   Toolbar Widgets with explicit routes.
 - Do not mount the Core Form controller in the preset; verify that the Form Widget demand produces its
   `widget-<widget-id>` instance.
-- For handler mode, declare the server-owned handler Provider, implement its Site or `*-server` endpoint
+- For handler mode, declare the server-owned handler Provider, implement its Site or Add-on endpoint
   behind `/api/site/forms`, and revalidate/authorize all values there.
 - For signal mode, route `submitValues`, validation, and result feedback to the owning domain Controller.
 - Keep executable UI behind the module's lazy UI provider and use Phi Controls.

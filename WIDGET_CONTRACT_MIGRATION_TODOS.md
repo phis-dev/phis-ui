@@ -242,7 +242,7 @@ Verified in the browser on 2026-08-20 (`browser-test/scripts/check-variant-previ
   users, groups, fields, and memberships through the same provider-neutral authority/provenance and
   per-operation capability projection; never branch on LDAP, SCIM, Entra, or another package id.
 - Keep provider connection setup, protocol clients, synchronization, writeback, secrets, and health in
-  physical `*-server` Add-ons. The Module may present server-returned diagnostics and capabilities but
+  their Add-on half. The Module may present server-returned diagnostics and capabilities but
   must not query a Directory directly or ship a provider SDK to a browser.
 - Disabling or uninstalling the Module removes its UI contributions only. Core identities, group access
   policies, membership assertions, Media Spaces, and external Directory bindings remain intact and fail

@@ -89,9 +89,8 @@ the external immutable build manifest, and deployment artifacts, but it must not
 installation mechanism. A Skeleton source update is reserved for an explicitly approved change to the
 physical Next.js route graph, deployment configuration, or another genuinely Site-owned entrypoint.
 
-If a Module needs `phi-server` implementation code, that implementation is a separate Add-on package whose
-physical package name appends `-server` to the Module package name: `@scope/name` pairs with
-`@scope/name-server`. The Site never imports that Add-on package.
+If a Module needs `phi-server` implementation code, that implementation is the Add-on half of the same
+package, under `@scope/name/addon/…`. The Site never imports those entrypoints.
 
 ## Contract governance
 
