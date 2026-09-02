@@ -50,6 +50,10 @@ export async function buildPhiDefaultAdminMediaSettingsPageTree({
           initialValues: {
             defaultUserQuotaBytes: settings.defaultUserQuotaBytes,
             defaultGroupQuotaBytes: settings.defaultGroupQuotaBytes,
+            defaultAddonQuotaBytes: settings.defaultAddonQuotaBytes,
+            maxUserQuotaBytes: settings.maxUserQuotaBytes,
+            maxGroupQuotaBytes: settings.maxGroupQuotaBytes,
+            maxAddonQuotaBytes: settings.maxAddonQuotaBytes,
           },
         }],
       },
@@ -67,6 +71,21 @@ export async function buildPhiDefaultAdminMediaSettingsPageTree({
               `${labels.fields.userSpacesEnabled}: ${settings.userSpacesEnabled ? labels.availability.available : labels.availability.unavailable}`,
               `${labels.fields.groupSpacesEnabled}: ${settings.groupSpacesEnabled ? labels.availability.available : labels.availability.unavailable}`,
               `${labels.fields.maxObjectBytes}: ${settings.maxObjectBytes}`,
+              /*
+               * The Add-on stores, named so they can be sized.
+               *
+               * An Add-on Space appears in no Space listing and belongs to nobody, so this is the only
+               * place an administrator learns one exists and what it costs. The id is here because it is
+               * the address the per-Space route takes: the Site default is set above, and departing from
+               * it for one Add-on needs a Space to point at.
+               */
+              `${labels.addonSpaces.title}: ${
+                settings.addonSpaces.length === 0
+                  ? labels.addonSpaces.empty
+                  : settings.addonSpaces
+                      .map((space) => `${space.addonId} (#${space.spaceId}) ${space.usedBytes} / ${space.quotaBytes ?? "-"}`)
+                      .join(", ")
+              }`,
             ],
           },
         }],

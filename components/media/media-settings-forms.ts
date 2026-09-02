@@ -42,6 +42,40 @@ const PHI_MEDIA_SETTINGS_FORM_DESCRIPTOR: PhiFormDescriptor = {
       label: label("defaultGroupQuota", "Default Group Space quota (bytes)"),
       description: label("defaultGroupQuotaHint", "Applies to Group Spaces without an override. Empty means no limit."),
     },
+    // The fourth kind, on the same rails. An Add-on Space has no owner: no page showing the figure and
+    // no Manager to notice it filling, so the Site default is the only thing that bounds it.
+    {
+      key: "defaultAddonQuotaBytes",
+      fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.number,
+      label: label("defaultAddonQuota", "Default Add-on Space quota (bytes)"),
+      description: label("defaultAddonQuotaHint", "Applies to each Add-on's own store. An Add-on Space has no owner to notice it filling, so a limit here is what bounds it."),
+    },
+    /*
+     * The ceilings, which the API has always carried and this form never offered.
+     *
+     * A default and a ceiling are different instruments: the default is what an unsized Space gets, the
+     * ceiling is what an override may not exceed. Delegated capacity without a ceiling is not delegated
+     * capacity -- an actor who can raise their own allowance has none -- so an administrator who can set
+     * the one and not the other is being shown half a policy.
+     */
+    {
+      key: "maxUserQuotaBytes",
+      fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.number,
+      label: label("maxUserQuota", "Maximum User Space quota (bytes)"),
+      description: label("maxUserQuotaHint", "The ceiling an override may not exceed. Empty means no ceiling."),
+    },
+    {
+      key: "maxGroupQuotaBytes",
+      fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.number,
+      label: label("maxGroupQuota", "Maximum Group Space quota (bytes)"),
+      description: label("maxGroupQuotaHint", "The ceiling a group Manager may not exceed for their own group. Empty means no ceiling."),
+    },
+    {
+      key: "maxAddonQuotaBytes",
+      fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.number,
+      label: label("maxAddonQuota", "Maximum Add-on Space quota (bytes)"),
+      description: label("maxAddonQuotaHint", "The ceiling an override may not exceed. Empty means no ceiling."),
+    },
   ],
   layout: {
     columns: { compact: 1, medium: 1, wide: 1 },
@@ -65,6 +99,14 @@ async function loadLabels(
     defaultUserQuotaHint: labels.fields.defaultUserQuotaHint,
     defaultGroupQuota: labels.fields.defaultGroupQuota,
     defaultGroupQuotaHint: labels.fields.defaultGroupQuotaHint,
+    defaultAddonQuota: labels.fields.defaultAddonQuota,
+    defaultAddonQuotaHint: labels.fields.defaultAddonQuotaHint,
+    maxUserQuota: labels.fields.maxUserQuota,
+    maxUserQuotaHint: labels.fields.maxUserQuotaHint,
+    maxGroupQuota: labels.fields.maxGroupQuota,
+    maxGroupQuotaHint: labels.fields.maxGroupQuotaHint,
+    maxAddonQuota: labels.fields.maxAddonQuota,
+    maxAddonQuotaHint: labels.fields.maxAddonQuotaHint,
   });
 }
 
@@ -74,7 +116,7 @@ export const PHI_MEDIA_SETTINGS_RUNTIME_MODULE_FORM = definePhiRuntimeModuleForm
   version: 1,
   flags: 0,
   title: "Media settings",
-  description: "Default Media Space quotas for the current site.",
+  description: "Default Media Space quotas and per-Space ceilings for the current site.",
   category: "forms",
   tags: ["settings", "media", "admin"],
   descriptor: PHI_MEDIA_SETTINGS_FORM_DESCRIPTOR,
