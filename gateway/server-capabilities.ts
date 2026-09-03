@@ -5,12 +5,12 @@ import type {
   PhiServerCapabilityDescriptor,
   PhiServerCapabilityProvider,
   PhiServerCapabilitySnapshot,
-  PhiCapabilityState,
+  PhiServerCapabilityState,
 } from "../types/server-capabilities";
 
 const PROVIDER_ID_PATTERN = /^@[^/]+\/[^/]+(?:\/[^/]+)*$/;
 const CAPABILITY_ID_PATTERN = /^@[^/]+\/[^:]+:v[1-9]\d*$/;
-const CAPABILITY_STATES = new Set<PhiCapabilityState>([
+const CAPABILITY_STATES = new Set<PhiServerCapabilityState>([
   "available",
   "missing",
   "disabled",
@@ -47,7 +47,7 @@ function parseProvider(value: unknown): PhiServerCapabilityProvider {
     typeof record.providerId !== "string" ||
     !PROVIDER_ID_PATTERN.test(record.providerId) ||
     typeof record.state !== "string" ||
-    !CAPABILITY_STATES.has(record.state as PhiCapabilityState) ||
+    !CAPABILITY_STATES.has(record.state as PhiServerCapabilityState) ||
     (record.diagnosticCode !== null && typeof record.diagnosticCode !== "string") ||
     !Array.isArray(record.capabilities)
   ) {
@@ -55,7 +55,7 @@ function parseProvider(value: unknown): PhiServerCapabilityProvider {
   }
   return {
     providerId: record.providerId as PhiServerCapabilityProvider["providerId"],
-    state: record.state as PhiCapabilityState,
+    state: record.state as PhiServerCapabilityState,
     diagnosticCode: record.diagnosticCode as string | null,
     capabilities: record.capabilities.map(parseCapability),
   };
