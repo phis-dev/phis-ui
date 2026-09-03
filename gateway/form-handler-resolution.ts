@@ -6,7 +6,7 @@ import { resolvePhiCmsAreaMask, type PhiCmsAreaKey } from "../constants/cms-area
 import { isKnownSpecialCmsRoot } from "../helpers/cms-routing";
 import { getResolvedFormDefinition } from "./form-registry";
 import { getExactSiteArea } from "./site-area";
-import { getPhiServerCapabilitySnapshot } from "./server-capabilities";
+import { getPhiCapabilitySnapshot } from "./server-capabilities";
 import { PHI_FIRST_PARTY_RUNTIME_MODULE_CATALOG } from "../plugins/runtime-modules/catalog";
 import { resolvePhiCmsDescriptorCatalog } from "../plugins/runtime-modules/descriptor-compiler";
 import { resolvePhiRuntimeModuleSet } from "../plugins/runtime-modules/resolver";
@@ -117,7 +117,7 @@ export async function resolvePhiServerFormHandler(options: {
     [...catalog.values()].map((entry) => entry.definition),
   );
   const serverCapabilities = fallbackRequestContext?.serverCapabilities ??
-    await getPhiServerCapabilitySnapshot({
+    await getPhiCapabilitySnapshot({
       apiBaseUrl: options.upstreamBaseUrl,
       internalToken: options.internalToken,
       siteKey: options.siteKey,

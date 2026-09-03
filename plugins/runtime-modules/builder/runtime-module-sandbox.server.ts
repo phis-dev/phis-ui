@@ -4,7 +4,7 @@ import type {
   PhiResolvedCmsRenderableTree,
   PhiRuntimeModuleCatalog,
   PhiRuntimeModuleId,
-  PhiServerCapabilitySnapshot,
+  PhiCapabilitySnapshot,
 } from "../../../types";
 import { resolvePhiBuilderAreaAsCmsArea } from "../../../constants/cms-areas";
 import type { PhiDeveloperBuilderArea } from "./developer-workspace-types";
@@ -31,7 +31,7 @@ export async function resolvePhiBuilderCanvasRuntimeModuleSandbox({
   moduleIds: readonly PhiRuntimeModuleId[];
   trees: readonly PhiResolvedCmsRenderableTree[];
   viewer: PhiAccessViewer;
-  serverCapabilities: PhiServerCapabilitySnapshot | null;
+  serverCapabilities: PhiCapabilitySnapshot | null;
 }) {
   const moduleSet = await resolvePhiRuntimeModuleSet({
     catalog,

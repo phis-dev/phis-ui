@@ -5,7 +5,7 @@ import { cookies } from "next/headers";
 
 import { PHI_CANONICAL_SOURCE_LOCALE, localizeAreaPath } from "../helpers/locale";
 import { getPhiExactSiteArea } from "./cms";
-import { getPhiServerCapabilitySnapshot } from "../gateway/server-capabilities";
+import { getPhiCapabilitySnapshot } from "../gateway/server-capabilities";
 import { fetchSiteLocaleConfig } from "./site-locale";
 import {
   compilePhiCmsActiveRouteTable,
@@ -16,7 +16,7 @@ import {
 import { resolveActivePresetModuleKeys } from "./cms-request";
 import type { PhiBlockRuntime } from "../types";
 import type { PhiCmsSiteBridge } from "../types/cms-plugins";
-import type { PhiServerCapabilitySnapshot } from "../types/server-capabilities";
+import type { PhiCapabilitySnapshot } from "../types/server-capabilities";
 
 const PHI_PUBLIC_LOGIN_PATH = "/login";
 
@@ -34,7 +34,7 @@ export const resolvePhiPublicLoginHref = cache(async function resolvePhiPublicLo
   cmsBridge: PhiCmsSiteBridge,
   locale: string,
   viewer?: PhiBlockRuntime["viewer"],
-  serverCapabilities?: PhiServerCapabilitySnapshot | null,
+  serverCapabilities?: PhiCapabilitySnapshot | null,
 ): Promise<string | null> {
   const catalog = resolvePhiCmsDescriptorCatalog(cmsBridge.runtimeModuleCatalog);
   const shellBinding = resolvePhiCmsAreaShellPresetBinding(catalog, "public");
@@ -113,7 +113,7 @@ export async function resolvePhiUnauthenticatedLoginHref(
   // The snapshot has to be loaded here rather than defaulted to null: a module whose server binding
   // cannot be checked resolves as unavailable, which would drop the Auth Module and make every refusal
   // look like "no login configured".
-  const serverCapabilities = await getPhiServerCapabilitySnapshot({
+  const serverCapabilities = await getPhiCapabilitySnapshot({
     apiBaseUrl: cmsBridge.runtime?.apiBaseUrl ?? "",
     internalToken: cmsBridge.runtime?.internalToken ?? "",
     siteKey: cmsBridge.runtime?.siteKey ?? "",

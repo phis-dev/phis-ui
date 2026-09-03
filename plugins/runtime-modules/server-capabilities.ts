@@ -1,12 +1,12 @@
 import type {
   PhiRuntimeModuleServerBinding,
   PhiRuntimeModuleServerBindingResolution,
-  PhiServerCapabilitySnapshot,
+  PhiCapabilitySnapshot,
 } from "../../types/server-capabilities";
 
 export function resolvePhiRuntimeModuleServerBinding(
   binding: PhiRuntimeModuleServerBinding,
-  snapshot: PhiServerCapabilitySnapshot | null,
+  snapshot: PhiCapabilitySnapshot | null,
 ): PhiRuntimeModuleServerBindingResolution {
   if (binding.requiredCapabilities.length === 0) {
     return { available: true };

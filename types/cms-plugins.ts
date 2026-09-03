@@ -427,7 +427,7 @@ export type PhiCmsPreviewWidgetPlugin<TConfig> = PhiCmsWidgetPluginDefinition<TC
 
 export type PhiCmsRuntimeRenderRegistry = {
   runtimeModuleCatalog: PhiRuntimeModuleCatalog;
-  serverCapabilities: import("./server-capabilities").PhiServerCapabilitySnapshot | null;
+  serverCapabilities: import("./server-capabilities").PhiCapabilitySnapshot | null;
   runtimeWidgetPluginsByType: ReadonlyMap<string, PhiCmsRuntimeWidgetPlugin<unknown>>;
   previewWidgetPluginsByType: ReadonlyMap<string, PhiCmsPreviewWidgetPlugin<unknown>>;
   layoutPluginsByType: ReadonlyMap<string, PhiCmsLayoutPlugin<unknown>>;
@@ -535,7 +535,7 @@ export type PhiResolvedCmsRequest = {
   areaPreset: PhiResolvedCmsAreaPresetTree | null;
   page: PhiResolvedCmsPageTree;
   runtime: PhiBlockRuntime;
-  serverCapabilities: import("./server-capabilities").PhiServerCapabilitySnapshot | null;
+  serverCapabilities: import("./server-capabilities").PhiCapabilitySnapshot | null;
 };
 
 export type PhiRuntimeControllerMountScope = "site" | "area" | "page";

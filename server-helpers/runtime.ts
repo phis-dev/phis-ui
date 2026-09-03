@@ -5,7 +5,7 @@ import { resolvePhiCmsAreaKey } from "../constants/cms-areas";
 import { resolvePhiRuntimeConfig } from "../helpers/phis-runtime";
 import { buildApiHeaders, buildApiUrl } from "../helpers/site-api";
 import { getResolvedSiteConfig } from "../gateway/site-config";
-import { getPhiServerCapabilitySnapshot } from "../gateway/server-capabilities";
+import { getPhiCapabilitySnapshot } from "../gateway/server-capabilities";
 import type {
   PhiWidgetAreaKey,
   PhiBlockRuntime,
@@ -13,7 +13,7 @@ import type {
   PhiWidgetThemeMode,
 } from "../types/widget-runtime";
 import type { PhiSiteFontSlots, PhiSiteRemSettings } from "../types/site-theme";
-import type { PhiServerCapabilitySnapshot } from "../types/server-capabilities";
+import type { PhiCapabilitySnapshot } from "../types/server-capabilities";
 
 type PhiWidgetSiteTheme = NonNullable<PhiBlockRuntime["site"]["theme"]>;
 
@@ -60,7 +60,7 @@ export type PhiCmsRuntimeInfo = {
 };
 
 export type PhiSiteRequestContext = {
-  serverCapabilities: PhiServerCapabilitySnapshot | null;
+  serverCapabilities: PhiCapabilitySnapshot | null;
   site: {
     id: number;
     key: string;
@@ -452,9 +452,9 @@ export const loadPhiSiteRequestContext = cache(async function loadPhiSiteRequest
     siteKey,
     cookieHeader,
   });
-  let serverCapabilities: PhiServerCapabilitySnapshot | null = null;
+  let serverCapabilities: PhiCapabilitySnapshot | null = null;
   try {
-    serverCapabilities = await getPhiServerCapabilitySnapshot({
+    serverCapabilities = await getPhiCapabilitySnapshot({
       apiBaseUrl: runtimeInfo.phis.apiBaseUrl,
       internalToken: runtimeInfo.phis.internalToken,
       siteKey: runtimeInfo.site.key,

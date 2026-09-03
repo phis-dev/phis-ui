@@ -3,7 +3,7 @@ import "server-only";
 import type { NextRequest } from "next/server";
 
 import { PHI_CMS_AREA_KEYS, type PhiCmsAreaKey } from "../constants/cms-areas";
-import { getPhiServerCapabilitySnapshot } from "../gateway/server-capabilities";
+import { getPhiCapabilitySnapshot } from "../gateway/server-capabilities";
 import { resolvePhiRuntimeModuleServerBinding } from "../plugins/runtime-modules/server-capabilities";
 import type { PhiCmsSiteBridge } from "../types/cms-plugins";
 import { PHIS_TOKEN_HEADER } from "../constants/http-headers";
@@ -68,7 +68,7 @@ export function buildPhiSiteModuleDiagnosticsRouteHandler({
       return json({ error: "unauthorized" }, 401);
     }
 
-    const snapshot = await getPhiServerCapabilitySnapshot({ apiBaseUrl, internalToken, siteKey })
+    const snapshot = await getPhiCapabilitySnapshot({ apiBaseUrl, internalToken, siteKey })
       .catch(() => null);
     const offeredCapabilities = [
       ...new Set(

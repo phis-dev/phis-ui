@@ -9,7 +9,7 @@ import type {
   PhiRuntimeModuleId,
 } from "../../types/cms-plugins";
 import type { PhiCmsAreaKey } from "../../constants/cms-areas";
-import type { PhiServerCapabilitySnapshot } from "../../types/server-capabilities";
+import type { PhiCapabilitySnapshot } from "../../types/server-capabilities";
 import {
   resolvePhiRuntimeModuleSet,
   resolvePhiRuntimeRenderRegistry,
@@ -23,7 +23,7 @@ const resolvePhiCmsRuntimeModuleScopeForRequest = cache(
     serverCapabilitiesKey: string,
   ) => {
     const moduleIds = JSON.parse(moduleIdsKey) as PhiRuntimeModuleId[];
-    const serverCapabilities = JSON.parse(serverCapabilitiesKey) as PhiServerCapabilitySnapshot | null;
+    const serverCapabilities = JSON.parse(serverCapabilitiesKey) as PhiCapabilitySnapshot | null;
     const moduleSet = await resolvePhiRuntimeModuleSet({
       catalog,
       moduleIds,
@@ -54,7 +54,7 @@ export function resolvePhiCmsRuntimeModuleScope({
   cmsBridge: PhiCmsSiteBridge;
   moduleIds?: readonly PhiRuntimeModuleId[] | null;
   area: PhiCmsAreaKey;
-  serverCapabilities: PhiServerCapabilitySnapshot | null;
+  serverCapabilities: PhiCapabilitySnapshot | null;
 }) {
   return resolvePhiCmsRuntimeModuleScopeForRequest(
     cmsBridge.runtimeModuleCatalog,

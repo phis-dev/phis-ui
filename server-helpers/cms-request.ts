@@ -35,7 +35,7 @@ import {
   applyPhiBackgroundAssetProjection,
   resolvePhiBackgroundAssetProjection,
 } from "../components/widgets/helpers/background-reference-resolver.server";
-import type { PhiServerCapabilitySnapshot } from "../types/server-capabilities";
+import type { PhiCapabilitySnapshot } from "../types/server-capabilities";
 import { getPhiCmsPage, getPhiExactSiteArea } from "./cms";
 import { buildPhiLocalCmsAreaPayload } from "./cms-area";
 import {
@@ -148,7 +148,7 @@ export function resolveActivePresetModuleKeys(
   runtimeModuleCatalog: PhiRuntimeModuleCatalog,
   area: PhiCmsAreaKey,
   areaPreset: Pick<PhiResolvedCmsAreaPresetPayload, "preset"> | null,
-  serverCapabilities: PhiServerCapabilitySnapshot | null,
+  serverCapabilities: PhiCapabilitySnapshot | null,
   viewer?: PhiBlockRuntime["viewer"],
 ) {
   const platformModuleId = runtimeModuleCatalog.platformModuleId;

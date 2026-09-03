@@ -7,47 +7,41 @@ export const PHI_CORE_SERVER_CAPABILITY = {
   SupportV1: "@phis/server/support:v1",
 } as const;
 
-export type PhiServerProviderId = `@${string}/${string}`;
-export type PhiServerCapabilityId = `@${string}/${string}:v${number}`;
+/*
+ * The capability vocabulary itself is the contract's, re-exported here so the readers in this package
+ * keep one import path. What stays below is this side's own: how a Runtime Module binds to a provider,
+ * which is a question phis never asks.
+ */
+export type {
+  PhiCapabilityDescriptor,
+  PhiCapabilityId,
+  PhiCapabilityProvider,
+  PhiCapabilityProviderId,
+  PhiCapabilitySnapshot,
+  PhiCapabilityState,
+} from "@phis/contracts/server-capabilities";
+import type {
+  PhiCapabilityId,
+  PhiCapabilityProviderId,
+  PhiCapabilityState,
+} from "@phis/contracts/server-capabilities";
 
 export type PhiRuntimeModuleServerBinding = {
-  providerId: PhiServerProviderId;
-  requiredCapabilities: readonly PhiServerCapabilityId[];
-};
-
-export type { PhiServerCapabilityState } from "@phis/contracts/server-capabilities";
-import type { PhiServerCapabilityState } from "@phis/contracts/server-capabilities";
-
-export type PhiServerCapabilityDescriptor = {
-  id: PhiServerCapabilityId;
-  interfaceDigest: string;
-};
-
-export type PhiServerCapabilityProvider = {
-  providerId: PhiServerProviderId;
-  state: PhiServerCapabilityState;
-  diagnosticCode: string | null;
-  capabilities: readonly PhiServerCapabilityDescriptor[];
-};
-
-export type PhiServerCapabilitySnapshot = {
-  siteKey: string;
-  releaseBuildId: string | null;
-  buildManifestDigest: string;
-  providers: readonly PhiServerCapabilityProvider[];
+  providerId: PhiCapabilityProviderId;
+  requiredCapabilities: readonly PhiCapabilityId[];
 };
 
 export type PhiRuntimeModuleServerBindingResolution =
   | { available: true }
   | {
       available: false;
-      state: PhiServerCapabilityState;
+      state: PhiCapabilityState;
       diagnosticCode: string;
-      missingCapabilities: readonly PhiServerCapabilityId[];
+      missingCapabilities: readonly PhiCapabilityId[];
     };
 
 export function createPhiCoreServerBinding(
-  ...requiredCapabilities: readonly PhiServerCapabilityId[]
+  ...requiredCapabilities: readonly PhiCapabilityId[]
 ): PhiRuntimeModuleServerBinding {
   return {
     providerId: PHI_CORE_SERVER_PROVIDER_ID,

@@ -19,8 +19,8 @@ import {
 import type { PhiRuntimeModuleId } from "../types/cms-module-descriptors";
 import type { PhiRuntimeModuleDefinition } from "../plugins/runtime-modules/contracts";
 import type {
-  PhiServerCapabilitySnapshot,
-  PhiServerCapabilityId,
+  PhiCapabilitySnapshot,
+  PhiCapabilityId,
 } from "../types/server-capabilities";
 import type {
   PhiDeclarableMediaSpaceKind,
@@ -529,12 +529,12 @@ await assert.rejects(
 // ---------------------------------------------------------------------------
 
 const CORE = "@phis/server/core" as const;
-const MEDIA_CAPABILITY = "@phis/server/media:v1" as PhiServerCapabilityId;
+const MEDIA_CAPABILITY = "@phis/server/media:v1" as PhiCapabilityId;
 const snapshot = (
-  state: PhiServerCapabilitySnapshot["providers"][number]["state"],
-  capabilities: readonly PhiServerCapabilityId[],
+  state: PhiCapabilitySnapshot["providers"][number]["state"],
+  capabilities: readonly PhiCapabilityId[],
   diagnosticCode: string | null = null,
-): PhiServerCapabilitySnapshot => ({
+): PhiCapabilitySnapshot => ({
   siteKey: "test",
   releaseBuildId: null,
   buildManifestDigest: "digest",

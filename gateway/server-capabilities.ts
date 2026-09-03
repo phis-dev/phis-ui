@@ -2,15 +2,15 @@ import "server-only";
 
 import { buildApiHeaders, buildApiUrl } from "../helpers/site-api";
 import type {
-  PhiServerCapabilityDescriptor,
-  PhiServerCapabilityProvider,
-  PhiServerCapabilitySnapshot,
-  PhiServerCapabilityState,
+  PhiCapabilityDescriptor,
+  PhiCapabilityProvider,
+  PhiCapabilitySnapshot,
+  PhiCapabilityState,
 } from "../types/server-capabilities";
 
 const PROVIDER_ID_PATTERN = /^@[^/]+\/[^/]+(?:\/[^/]+)*$/;
 const CAPABILITY_ID_PATTERN = /^@[^/]+\/[^:]+:v[1-9]\d*$/;
-const CAPABILITY_STATES = new Set<PhiServerCapabilityState>([
+const CAPABILITY_STATES = new Set<PhiCapabilityState>([
   "available",
   "missing",
   "disabled",
@@ -19,7 +19,7 @@ const CAPABILITY_STATES = new Set<PhiServerCapabilityState>([
   "unavailable",
 ]);
 
-function parseCapability(value: unknown): PhiServerCapabilityDescriptor {
+function parseCapability(value: unknown): PhiCapabilityDescriptor {
   if (!value || typeof value !== "object") {
     throw new Error("Invalid server capability descriptor.");
   }
@@ -33,12 +33,12 @@ function parseCapability(value: unknown): PhiServerCapabilityDescriptor {
     throw new Error("Invalid server capability descriptor.");
   }
   return {
-    id: record.id as PhiServerCapabilityDescriptor["id"],
+    id: record.id as PhiCapabilityDescriptor["id"],
     interfaceDigest: record.interfaceDigest,
   };
 }
 
-function parseProvider(value: unknown): PhiServerCapabilityProvider {
+function parseProvider(value: unknown): PhiCapabilityProvider {
   if (!value || typeof value !== "object") {
     throw new Error("Invalid server capability provider.");
   }
@@ -47,21 +47,21 @@ function parseProvider(value: unknown): PhiServerCapabilityProvider {
     typeof record.providerId !== "string" ||
     !PROVIDER_ID_PATTERN.test(record.providerId) ||
     typeof record.state !== "string" ||
-    !CAPABILITY_STATES.has(record.state as PhiServerCapabilityState) ||
+    !CAPABILITY_STATES.has(record.state as PhiCapabilityState) ||
     (record.diagnosticCode !== null && typeof record.diagnosticCode !== "string") ||
     !Array.isArray(record.capabilities)
   ) {
     throw new Error("Invalid server capability provider.");
   }
   return {
-    providerId: record.providerId as PhiServerCapabilityProvider["providerId"],
-    state: record.state as PhiServerCapabilityState,
+    providerId: record.providerId as PhiCapabilityProvider["providerId"],
+    state: record.state as PhiCapabilityState,
     diagnosticCode: record.diagnosticCode as string | null,
     capabilities: record.capabilities.map(parseCapability),
   };
 }
 
-function parseSnapshot(value: unknown): PhiServerCapabilitySnapshot {
+function parseSnapshot(value: unknown): PhiCapabilitySnapshot {
   if (!value || typeof value !== "object") {
     throw new Error("Invalid server capability snapshot.");
   }
@@ -82,7 +82,7 @@ function parseSnapshot(value: unknown): PhiServerCapabilitySnapshot {
   };
 }
 
-export async function getPhiServerCapabilitySnapshot({
+export async function getPhiCapabilitySnapshot({
   apiBaseUrl,
   internalToken,
   siteKey,
@@ -90,7 +90,7 @@ export async function getPhiServerCapabilitySnapshot({
   apiBaseUrl: string;
   internalToken: string;
   siteKey: string;
-}): Promise<PhiServerCapabilitySnapshot> {
+}): Promise<PhiCapabilitySnapshot> {
   const response = await fetch(buildApiUrl(apiBaseUrl, "/api/v1/site/capabilities"), {
     headers: buildApiHeaders({
       token: internalToken,

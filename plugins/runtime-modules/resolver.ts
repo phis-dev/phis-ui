@@ -4,7 +4,7 @@ import type { PhiCmsRenderIssue, PhiRuntimeControllerSetting } from "../../types
 import type { PhiRuntimeDataProviderKey } from "../../types/runtime-data-provider";
 import type { PhiCalendarAdapterKey } from "../../types/calendar";
 import type { PhiFormProviderKey } from "../../types/form-descriptor";
-import type { PhiServerCapabilitySnapshot } from "../../types/server-capabilities";
+import type { PhiCapabilitySnapshot } from "../../types/server-capabilities";
 import { splitPhiCmsLayoutNamespacedTypeKey } from "../../constants/cms-layout-types";
 import { PHI_RUNTIME_FORM_CONTROLLER_DEFINITION } from "../../components/forms/runtime-form-controller-definition";
 import { PHI_FORM_CONTROLLER_TYPE } from "../../components/forms/runtime-form-controller-address";
@@ -136,7 +136,7 @@ export async function resolvePhiRuntimeModuleSet({
   catalog: PhiRuntimeModuleCatalog;
   moduleIds?: readonly PhiRuntimeModuleId[] | null;
   area?: PhiCmsAreaKey;
-  serverCapabilities?: PhiServerCapabilitySnapshot | null;
+  serverCapabilities?: PhiCapabilitySnapshot | null;
 }): Promise<PhiResolvedRuntimeModuleSet> {
   const platformModuleId = catalog.platformModuleId;
   if (!platformModuleId) {
@@ -615,7 +615,7 @@ export async function resolvePhiRuntimeRenderRegistry({
   catalog: PhiRuntimeModuleCatalog;
   moduleSet: PhiResolvedRuntimeModuleSet;
   trees: readonly PhiResolvedCmsRenderableTree[];
-  serverCapabilities: PhiServerCapabilitySnapshot | null;
+  serverCapabilities: PhiCapabilitySnapshot | null;
 }): Promise<PhiResolvedRuntimeRenderRegistry> {
   const widgetTypes = collectTreeWidgetTypes(trees);
   const widgetImplementationModes = collectTreeWidgetImplementationModes({ moduleSet, trees });
