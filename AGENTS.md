@@ -494,6 +494,16 @@
   aliases for Forms. `PhiFooterWidget` remains the shared footer composition surface.
 - Public shared component names should use the `Phi*` prefix for consistency across the package surface.
 - Low-level building blocks may still use neutral names such as `ContactForm` and `RegistrationForm`, but exported high-level shared widgets and layouts should follow the `Phi*` naming scheme.
+- `PhiServer*` names the server half of a pair whose client half is the bare `Phi*` name: the props a
+  Server Component takes (`PhiServerBlockBaseProps`), the theme tokens the server delivers
+  (`PhiServerThemeTokens`). It is this package's own prefix and belongs nowhere else -- `phis` retired
+  it everywhere in 2026-09, and a `PhiServer*` name found outside this package is a leftover. Reading
+  one here as a leftover is the mistake to avoid: it is deliberate, and the pair is what it means.
+- A name that comes from `@phis/contracts` keeps the contract's spelling, which is `Phi*` for anything
+  this package reads (`PhiCapabilityState`, `PhiCapabilitySnapshot`, `PhiLogEvent`). The contract's
+  other half is `Phis*`, for what only `phis` and its Add-ons read; nothing here should carry it.
+- "Server" inside a name (`PhiRuntimeModuleServerBinding`) describes the thing being named -- a
+  Module's binding to a server provider -- rather than the namespace, and is unaffected by any of this.
 - Shared math/layout primitives such as neutral spacing scales or golden-ratio variables are allowed here.
 - Start layout/math primitives from a strict golden-ratio / Fibonacci-inspired scale and only round when the UI demonstrates a clear need.
 - Shared token helpers may generate Ant Design `ConfigProvider` token/component payloads from those neutral layout primitives.
