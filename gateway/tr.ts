@@ -6,6 +6,14 @@ import { formatPhiTranslation } from "../helpers/translation-format";
 
 export const PHI_TR_CTX_WEB_UI_LABEL = "Web UI label" as const;
 
+/**
+ * The register for a Module's own prose rather than for a control that carries it. A description is a
+ * sentence written by whoever wrote the Module, so a translator has to keep it a sentence; told it were
+ * a Web UI label it would shorten it into one. Titles stay under the label context, because a Module
+ * title is a noun phrase and behaves like every other label on the page.
+ */
+export const PHI_TR_CTX_MODULE_DESCRIPTION = "Module description" as const;
+
 export type PhiTranslateParams = Array<string | number>;
 export type PhiTranslationFormat = "text" | "html";
 

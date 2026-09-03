@@ -54,6 +54,7 @@ export {
   type PhiLabelSetDefinition,
 } from "./gateway/label-set";
 export {
+  PHI_TR_CTX_MODULE_DESCRIPTION,
   PHI_TR_CTX_WEB_UI_LABEL,
   createGlobalTranslator,
   createSiteTranslator,

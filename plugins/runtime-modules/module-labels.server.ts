@@ -3,7 +3,11 @@ import "server-only";
 import type { PhiBlockRuntime } from "../../types/widget-runtime";
 import type { PhiRuntimeModuleDefinition } from "../../types/cms-plugins";
 import { resolvePhiRuntimeModuleSourceLocale } from "../../types/runtime-module-locale";
-import { PHI_TR_CTX_WEB_UI_LABEL, createGlobalTranslator } from "../../gateway/tr";
+import {
+  PHI_TR_CTX_MODULE_DESCRIPTION,
+  PHI_TR_CTX_WEB_UI_LABEL,
+  createGlobalTranslator,
+} from "../../gateway/tr";
 
 type PhiLocalizedRuntimeModuleLabels = ReadonlyMap<string, Readonly<{ title: string; description: string }>>;
 
@@ -53,15 +57,14 @@ export async function localizePhiRuntimeModuleDefinitions(
       locale: runtime.locale.current,
       sourceLocale,
     });
-    const sourceMessages = sourceDefinitions.flatMap((definition) => [
-      definition.title,
-      definition.description,
+    const [translatedTitles, translatedDescriptions] = await Promise.all([
+      translator.trBulk(sourceDefinitions.map((definition) => definition.title), PHI_TR_CTX_WEB_UI_LABEL),
+      translator.trBulk(sourceDefinitions.map((definition) => definition.description), PHI_TR_CTX_MODULE_DESCRIPTION),
     ]);
-    const translatedMessages = await translator.trBulk(sourceMessages, PHI_TR_CTX_WEB_UI_LABEL);
     sourceDefinitions.forEach((definition, index) => {
       localizedLabelsByModuleId.set(definition.moduleId, {
-        title: translatedMessages[index * 2] ?? definition.title,
-        description: translatedMessages[index * 2 + 1] ?? definition.description,
+        title: translatedTitles[index] ?? definition.title,
+        description: translatedDescriptions[index] ?? definition.description,
       });
     });
   }));
