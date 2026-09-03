@@ -504,6 +504,10 @@
   other half is `Phis*`, for what only `phis` and its Add-ons read; nothing here should carry it.
 - "Server" inside a name (`PhiRuntimeModuleServerBinding`) describes the thing being named -- a
   Module's binding to a server provider -- rather than the namespace, and is unaffected by any of this.
+- The other half of this convention -- when a contract name is `Phis*` and when it is `Phi*` -- is
+  written down in `phis-server/AGENTS.md`, which in turn points back here for `PhiServer*`. Change one
+  and the other stops being true: they were split across two repositories once before, and the half
+  that lived only in someone's head is the half that got lost.
 - Shared math/layout primitives such as neutral spacing scales or golden-ratio variables are allowed here.
 - Start layout/math primitives from a strict golden-ratio / Fibonacci-inspired scale and only round when the UI demonstrates a clear need.
 - Shared token helpers may generate Ant Design `ConfigProvider` token/component payloads from those neutral layout primitives.
