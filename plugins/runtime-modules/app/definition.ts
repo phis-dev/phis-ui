@@ -18,7 +18,7 @@ export const PHI_APP_RUNTIME_MODULE_DEFINITION = definePhiAreaBaseRuntimeModuleD
   controllerType: PHI_APP_BASE_CONTROLLER_TYPE,
   controller: buildPhiRuntimeModuleControllerDescriptor(PHI_APP_BASE_CONTROLLER_DEFINITION),
   description: "Locked App Area shell, navigation surfaces, and authenticated application routes.",
-  category: "app",
+  category: "foundation",
   icon: "antd:appstore",
   controllerMountPolicy: "area",
 });

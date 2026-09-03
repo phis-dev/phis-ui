@@ -22,7 +22,7 @@ export const PHI_AVATAR_RUNTIME_MODULE_DEFINITION = {
   serverBinding: PHI_CORE_SERVER_BINDING,
   title: "Avatar",
   description: "A personal picture, stored in the person's own Media Space.",
-  category: "account",
+  category: "people",
   iconFamily: "account",
   // A picture and nothing else: the Module has one purpose and states it rather than inheriting a list.
   mediaSpaces: { user: { kinds: ["image"] } },

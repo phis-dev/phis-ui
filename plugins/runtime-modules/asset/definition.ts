@@ -22,7 +22,7 @@ export const PHI_ASSET_RUNTIME_MODULE_DEFINITION = {
   controller: buildPhiRuntimeModuleControllerDescriptor(PHI_ASSET_RUNTIME_CONTROLLER_DEFINITION),
   title: "Assets",
   description: "Media, upload, asset picking, and asset-backed data orchestration.",
-  category: "media",
+  category: "content",
   iconFamily: "media",
   controllerMountPolicy: "area",
   dataProviders: PHI_ASSET_RUNTIME_DATA_PROVIDER_DESCRIPTORS,

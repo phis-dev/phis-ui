@@ -19,7 +19,7 @@ export const PHI_USER_MANAGEMENT_RUNTIME_MODULE_DEFINITION = {
   controller: buildPhiRuntimeModuleControllerDescriptor(PHI_USER_MANAGEMENT_RUNTIME_CONTROLLER_DEFINITION),
   title: "User Management",
   description: "User, role, invite, and permission administration.",
-  category: "user-management",
+  category: "people",
   iconFamily: "user-management",
   controllerMountPolicy: "demand",
   formProviders: { handlers: PHI_USER_MANAGEMENT_FORM_HANDLER_PROVIDER_DESCRIPTORS },

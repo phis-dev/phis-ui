@@ -12,7 +12,7 @@ export const PHI_EDITOR_RUNTIME_MODULE_DEFINITION = definePhiAreaBaseRuntimeModu
   controllerType: PHI_EDITOR_CONTROLLER_TYPE,
   controller: buildPhiRuntimeModuleControllerDescriptor(PHI_EDITOR_RUNTIME_CONTROLLER_DEFINITION),
   description: "Locked Editor Area shell, content editor widgets, data, and workflows.",
-  category: "editor",
+  category: "foundation",
   iconFamily: "editor",
   controllerMountPolicy: "area",
 });

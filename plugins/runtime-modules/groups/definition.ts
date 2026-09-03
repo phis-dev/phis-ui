@@ -35,7 +35,7 @@ export const PHI_GROUPS_RUNTIME_MODULE_DEFINITION = {
   dataProviders: PHI_GROUPS_RUNTIME_DATA_PROVIDER_DESCRIPTORS,
   title: "Groups",
   description: "Site groups, their membership levels, and the Media Space a group shares.",
-  category: "groups",
+  category: "people",
   iconFamily: "groups",
   /*
    * What a group works with: documents and media its members share. `binary` is deliberately absent --

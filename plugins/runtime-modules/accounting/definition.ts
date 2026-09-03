@@ -18,7 +18,7 @@ export const PHI_ACCOUNTING_RUNTIME_MODULE_DEFINITION = definePhiAreaBaseRuntime
   controllerType: PHI_ACCOUNTING_BASE_CONTROLLER_TYPE,
   controller: buildPhiRuntimeModuleControllerDescriptor(PHI_ACCOUNTING_BASE_CONTROLLER_DEFINITION),
   description: "Locked Accounting Area shell, navigation surface, and accounting workspace route.",
-  category: "accounting",
+  category: "foundation",
   icon: "antd:profile",
   controllerMountPolicy: "area",
 });

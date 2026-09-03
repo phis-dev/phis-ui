@@ -16,7 +16,7 @@ export const PHI_REVISIONS_RUNTIME_MODULE_DEFINITION = {
   controller: buildPhiRuntimeModuleControllerDescriptor(PHI_REVISIONS_RUNTIME_CONTROLLER_DEFINITION),
   title: "Revisions",
   description: "Revision history, comparison, restore, deletion, and preset-version management.",
-  category: "revisions",
+  category: "workspace",
   iconFamily: "revisions",
   controllerMountPolicy: "area",
   dataProviders: PHI_REVISIONS_RUNTIME_DATA_PROVIDER_DESCRIPTORS,

@@ -3060,6 +3060,9 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                   source: {
                     providerKey: PHI_BUILDER_RUNTIME_DATA_PROVIDER_KEYS.runtimeModulesTable,
                     resourceKey: "modules",
+                    params: {
+                      categoryLabels: modulesLabels?.categories ?? null,
+                    },
                   },
                   presentation: {
                     bordered: true,
@@ -3128,6 +3131,7 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                     params: {
                       moduleId: "",
                       areaLabels: modulesLabels?.areas ?? null,
+                      categoryLabels: modulesLabels?.categories ?? null,
                       detailLabels: modulesDetailLabels,
                     },
                   },

@@ -13,7 +13,7 @@ export const PHI_ADMIN_RUNTIME_MODULE_DEFINITION = definePhiAreaBaseRuntimeModul
   controllerType: PHI_ADMIN_CONTROLLER_TYPE,
   controller: buildPhiRuntimeModuleControllerDescriptor(PHI_ADMIN_RUNTIME_CONTROLLER_DEFINITION),
   description: "Locked Admin Area shell, navigation surface, root route, and Admin settings.",
-  category: "admin",
+  category: "foundation",
   iconFamily: "admin",
   controllerMountPolicy: "area",
   formProviders: { handlers: PHI_ADMIN_SETTINGS_FORM_HANDLER_PROVIDER_DESCRIPTORS },

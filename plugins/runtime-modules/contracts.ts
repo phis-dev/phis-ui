@@ -18,6 +18,10 @@ import type { PhiCmsAreaDefinition } from "../../types/cms-module-descriptors";
 import { isPhiCmsAreaKey } from "../../constants/cms-areas";
 import { PHI_MODULE_MARKER, isPhiRuntimeModuleId } from "../../constants/module-identity";
 import { isPhiCmsPluginCategory } from "../../constants/cms-plugin-categories";
+import {
+  PHI_RUNTIME_MODULE_CATEGORIES,
+  isPhiRuntimeModuleCategory,
+} from "../../constants/runtime-module-categories";
 import { assertPhiSignalPluginMetaContract } from "../../types/signals";
 import {
   isPhiViewerAccessPolicyProviderOwned,
@@ -386,11 +390,15 @@ function assertPhiRuntimeModuleMetadata(definition: PhiRuntimeModuleDefinition) 
   for (const [key, value] of [
     ["title", definition.title],
     ["description", definition.description],
-    ["category", definition.category],
   ] as const) {
     if (!value.trim()) {
       throw new Error(`${definition.moduleId}: ${key} must be a non-empty string.`);
     }
+  }
+  if (!isPhiRuntimeModuleCategory(definition.category)) {
+    throw new Error(
+      `${definition.moduleId}: category must be one of ${PHI_RUNTIME_MODULE_CATEGORIES.join(", ")}.`,
+    );
   }
   if (!definition.icon?.trim() && !definition.iconFamily?.trim()) {
     throw new Error(`${definition.moduleId}: icon or iconFamily must be a non-empty string.`);

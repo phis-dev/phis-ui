@@ -41,7 +41,10 @@ function readAreaLabels(params: Record<string, unknown> | undefined) {
   return candidate as Record<string, string>;
 }
 
-function buildRuntimeModuleRows(state: PhiDeveloperBuilderWorkspaceState) {
+function buildRuntimeModuleRows(
+  state: PhiDeveloperBuilderWorkspaceState,
+  categoryLabels: Record<string, string> | null,
+) {
   const cmsArea = resolvePhiBuilderAreaAsCmsArea(state.area);
   const baseModuleId = resolvePhiRuntimeAreaDefinition(cmsArea).baseModuleId;
   const activeModuleIds = new Set(state.runtimeModuleIdsByArea[state.area] ?? []);
@@ -58,7 +61,7 @@ function buildRuntimeModuleRows(state: PhiDeveloperBuilderWorkspaceState) {
         icon: definition.icon ?? (definition.iconFamily ? `@phis/ui/widgets:${definition.iconFamily}` : ""),
         title: definition.title,
         description: definition.description,
-        category: definition.category,
+        category: categoryLabels?.[definition.category] ?? definition.category,
         isBaseModule,
       };
     })
@@ -85,6 +88,7 @@ function buildRuntimeModuleDetailRows(
   moduleId: string,
   areaLabels: Record<string, string> | null,
   detailLabels: Record<string, string> | null,
+  categoryLabels: Record<string, string> | null,
 ) {
   const definition = state.runtimeModuleDefinitions.find((candidate) => candidate.moduleId === moduleId);
   if (!definition) {
@@ -102,7 +106,11 @@ function buildRuntimeModuleDetailRows(
     { key: "moduleId", label: label("moduleId", "Module id"), value: definition.moduleId },
     { key: "title", label: label("title", "Module"), value: definition.title },
     { key: "description", label: label("description", "Description"), value: definition.description },
-    { key: "category", label: label("category", "Category"), value: definition.category },
+    {
+      key: "category",
+      label: label("category", "Category"),
+      value: categoryLabels?.[definition.category] ?? definition.category,
+    },
     {
       key: "eligibleAreas",
       label: label("eligibleAreas", "Eligible areas"),
@@ -137,6 +145,7 @@ export function PhiBuilderRuntimeModulesTableProviderClient({ children }: { chil
               moduleId,
               readAreaLabels(request.params),
               readLabelMap(request.params, "detailLabels"),
+              readLabelMap(request.params, "categoryLabels"),
             ),
           },
           request,
@@ -148,7 +157,7 @@ export function PhiBuilderRuntimeModulesTableProviderClient({ children }: { chil
       return queryPhiStaticTableResource(
         {
           descriptor: resourceDescriptor,
-          rows: buildRuntimeModuleRows(builderState),
+          rows: buildRuntimeModuleRows(builderState, readLabelMap(request.params, "categoryLabels")),
         },
         request,
       );

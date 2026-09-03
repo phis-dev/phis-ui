@@ -15,7 +15,7 @@ export const PHI_DASHBOARD_RUNTIME_MODULE_DEFINITION = {
   controller: buildPhiRuntimeModuleControllerDescriptor(PHI_DASHBOARD_RUNTIME_CONTROLLER_DEFINITION),
   title: "Dashboard",
   description: "Area-specific Dashboard routes and Dashboard projection orchestration.",
-  category: "dashboard",
+  category: "workspace",
   iconFamily: "dashboard",
   controllerMountPolicy: "area",
 } satisfies PhiRuntimeModuleDefinition;

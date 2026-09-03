@@ -18,7 +18,7 @@ export const PHI_CORE_RUNTIME_MODULE_DEFINITION = {
   controller: buildPhiRuntimeModuleControllerDescriptor(PHI_CORE_RUNTIME_CONTROLLER_DEFINITION),
   title: "Core Runtime",
   description: "Required generic Phi CMS runtime, widgets, layouts, and signaling infrastructure.",
-  category: "runtime",
+  category: "foundation",
   iconFamily: "runtime",
   controllerMountPolicy: "site",
   dataProviders: PHI_CORE_RUNTIME_DATA_PROVIDER_DESCRIPTORS,

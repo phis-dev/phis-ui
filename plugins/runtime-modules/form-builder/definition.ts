@@ -15,7 +15,7 @@ export const PHI_FORM_BUILDER_RUNTIME_MODULE_DEFINITION = {
   controller: buildPhiRuntimeModuleControllerDescriptor(PHI_FORM_BUILDER_CONTROLLER_DEFINITION),
   title: "Form Builder",
   description: "Optional client-only form-definition authoring lifecycle.",
-  category: "forms",
+  category: "content",
   iconFamily: "forms",
   controllerMountPolicy: "area",
 } satisfies PhiRuntimeModuleDefinition;

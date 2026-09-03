@@ -82,7 +82,7 @@ function createModuleDefinition(
     },
     title: moduleId,
     description: `Test runtime module ${moduleId}.`,
-    category: "test",
+    category: "other",
     iconFamily: "test",
     controllerMountPolicy: "demand",
     dataProviders,
@@ -197,7 +197,7 @@ const controllerlessModuleDefinition = {
   },
   title: "Controllerless adapter",
   description: "Controllerless Calendar adapter test module.",
-  category: "test",
+  category: "other",
   iconFamily: "test",
   calendarAdapters: [{
     key: CALENDAR_ADAPTER_KEY,
@@ -239,7 +239,7 @@ const testFormDefinition: PhiRuntimeModuleFormDefinition = {
   flags: 0,
   title: "Example Form",
   description: null,
-  category: "test",
+  category: "other",
   tags: [],
   descriptor: {
     schemaVersion: 1,

@@ -216,7 +216,7 @@ const definition = {
   },
   title: "Test",
   description: "Test runtime module.",
-  category: "test",
+  category: "other",
   iconFamily: "test",
   controllerMountPolicy: "demand",
 } satisfies PhiRuntimeModuleDefinition;

@@ -254,7 +254,7 @@ const addOnEntry = {
     },
     title: "Add-on",
     description: "Third-party Form Add-on.",
-    category: "test",
+    category: "other",
     iconFamily: "test",
     controllerMountPolicy: "demand",
     formProviders: {

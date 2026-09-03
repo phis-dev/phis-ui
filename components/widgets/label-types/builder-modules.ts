@@ -12,6 +12,15 @@ export type PhiBuilderModulesPageLabels = {
   footer: {
     modules: string;
   };
+  categories: {
+    foundation: string;
+    workspace: string;
+    content: string;
+    commerce: string;
+    people: string;
+    operations: string;
+    other: string;
+  };
   areas: {
     public: string;
     app: string;
@@ -45,6 +54,15 @@ export const PHI_BUILDER_MODULES_PAGE_DEFAULT_LABELS: PhiBuilderModulesPageLabel
   },
   footer: {
     modules: "modules",
+  },
+  categories: {
+    foundation: "Foundation",
+    workspace: "Workspace",
+    content: "Content",
+    commerce: "Commerce",
+    people: "People",
+    operations: "Operations",
+    other: "Other",
   },
   areas: {
     public: "Public",

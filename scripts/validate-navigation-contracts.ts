@@ -113,7 +113,7 @@ function createDefinition(
     },
     title: moduleId,
     description: `Test runtime module ${moduleId}.`,
-    category: "test",
+    category: "other",
     iconFamily: "test",
     controllerMountPolicy: "area",
   };

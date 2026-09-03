@@ -21,7 +21,7 @@ export const PHI_PUBLIC_RUNTIME_MODULE_DEFINITION = definePhiAreaBaseRuntimeModu
   controllerType: PHI_PUBLIC_BASE_CONTROLLER_TYPE,
   controller: buildPhiRuntimeModuleControllerDescriptor(PHI_PUBLIC_BASE_CONTROLLER_DEFINITION),
   description: "Locked Public Area shell, navigation surfaces, root routes, and public form handlers.",
-  category: "public",
+  category: "foundation",
   icon: "antd:global",
   controllerMountPolicy: "area",
   formProviders: { handlers: PHI_PUBLIC_FORM_HANDLER_PROVIDER_DESCRIPTORS },
