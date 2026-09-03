@@ -121,7 +121,7 @@ export const getResolvedSiteConfig = cache(async function getResolvedSiteConfig(
       includeSiteKey: true,
       extra: {
         Accept: "application/json",
-        "User-Agent": "phi-shared-ui/1.0",
+        "User-Agent": "phis-ui/1.0",
       },
     }),
     cache: useDevNoStore ? "no-store" : "force-cache",

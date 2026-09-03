@@ -45,7 +45,7 @@ This directory contains the internal `phi-server` adapter layer for `@phis/ui`.
 
 - Runtime proxy logs must use the shared JSON log contract from `net/log.ts`.
 - Emit one log line per event to stdout/stderr so `systemd` and `journalctl` can filter them.
-- Fixed service names are `phi-server`, `phi-shared`, `phi-site`, and `phi-cli`.
+- Fixed service names are `phis`, `ui`, `site`, and `cli`.
 - Proxy and plugin-facing code should log through a `PhiLogger` instance with `child(...)`, `debug(...)`, `info(...)`, `warn(...)`, and `error(...)`.
 - The common fields are:
   - `ts`

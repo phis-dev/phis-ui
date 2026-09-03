@@ -47,7 +47,7 @@ export const getSiteThemeRevision = cache(async function getSiteThemeRevision({
       includeSiteKey: true,
       extra: {
         Accept: "application/json",
-        "User-Agent": "phi-shared-ui/1.0",
+        "User-Agent": "phis-ui/1.0",
         ...(cookieHeader?.trim() ? { Cookie: cookieHeader } : {}),
       },
     }),

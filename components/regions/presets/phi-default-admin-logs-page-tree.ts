@@ -234,9 +234,9 @@ export async function buildPhiDefaultAdminLogsPageTree({
                 type: "select",
                 label: widgetLabels.serviceLabel,
                 options: [
-                  { value: "phi-server", label: widgetLabels.serviceOptions.server },
-                  { value: "phi-site", label: widgetLabels.serviceOptions.site },
-                  { value: "phi-shared", label: widgetLabels.serviceOptions.shared },
+                  { value: "phis", label: widgetLabels.serviceOptions.server },
+                  { value: "site", label: widgetLabels.serviceOptions.site },
+                  { value: "ui", label: widgetLabels.serviceOptions.shared },
                 ],
               },
               {

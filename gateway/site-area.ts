@@ -63,7 +63,7 @@ export const getExactSiteArea = cache(async function getExactSiteArea({
       includeLocale: true,
       extra: {
         Accept: "application/json",
-        "User-Agent": "phi-shared-ui/1.0",
+        "User-Agent": "phis-ui/1.0",
         ...(cookieHeader?.trim() ? { Cookie: cookieHeader } : {}),
       },
     }),
@@ -121,7 +121,7 @@ export const getCurrentSiteAreaDraft = cache(async function getCurrentSiteAreaDr
       includeLocale: true,
       extra: {
         Accept: "application/json",
-        "User-Agent": "phi-shared-ui/1.0",
+        "User-Agent": "phis-ui/1.0",
         ...(cookieHeader?.trim() ? { Cookie: cookieHeader } : {}),
       },
     }),

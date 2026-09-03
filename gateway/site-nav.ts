@@ -37,7 +37,7 @@ export async function fetchSiteNavigationScopes({
         includeSiteKey: true,
         extra: {
           Accept: "application/json",
-          "User-Agent": "phi-shared-ui/1.0",
+          "User-Agent": "phis-ui/1.0",
         },
       }),
       cache: "no-store",
@@ -115,7 +115,7 @@ export async function fetchSiteNavigationOverlay({
         includeSiteKey: true,
         extra: {
           Accept: "application/json",
-          "User-Agent": "phi-shared-ui/1.0",
+          "User-Agent": "phis-ui/1.0",
         },
       }),
       cache: useDevNoStore ? "no-store" : "force-cache",

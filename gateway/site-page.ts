@@ -76,7 +76,7 @@ export const getResolvedCmsPage = cache(async function getResolvedCmsPage({
       includeLocale: true,
       extra: {
         Accept: "application/json",
-        "User-Agent": "phi-shared-ui/1.0",
+        "User-Agent": "phis-ui/1.0",
         ...(cookieHeader?.trim() ? { Cookie: cookieHeader } : {}),
       },
     }),
@@ -140,7 +140,7 @@ export const getCurrentCmsPageDraft = cache(async function getCurrentCmsPageDraf
       includeLocale: true,
       extra: {
         Accept: "application/json",
-        "User-Agent": "phi-shared-ui/1.0",
+        "User-Agent": "phis-ui/1.0",
         ...(cookieHeader?.trim() ? { Cookie: cookieHeader } : {}),
       },
     }),
@@ -195,7 +195,7 @@ export const getSiteCmsPageCatalog = cache(async function getSiteCmsPageCatalog(
       includeLocale: true,
       extra: {
         Accept: "application/json",
-        "User-Agent": "phi-shared-ui/1.0",
+        "User-Agent": "phis-ui/1.0",
         ...(cookieHeader?.trim() ? { Cookie: cookieHeader } : {}),
       },
     }),

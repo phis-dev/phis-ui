@@ -1,4 +1,4 @@
-# phi-shared-ui audit findings
+# phis-ui audit findings
 
 Recorded 2026-08-17 against `c414a20`. Analysis only — no production changes were applied as part
 of this audit. Measurements were taken on a production build of `phis-site-skeleton` (Next 16.2.11,
@@ -32,7 +32,7 @@ components reachable through a single edge:
 antd/es/<component> [app-client]
   <= antd/es/index.js [app-client] <module evaluation>
   <= antd/es/index.js [app-rsc] (client reference proxy)
-  <= phi-shared-ui/components/root/phi-root-layout.tsx [app-rsc]
+  <= phis-ui/components/root/phi-root-layout.tsx [app-rsc]
 ```
 
 `phi-root-layout.tsx` (a server component mounted on every Area route) does
@@ -169,12 +169,12 @@ Highlights by group (full list reproducible with the scan below):
   unreferenced.
 - **Site-structure fossils**: `NAV_ITEMS`, `PRODUCT_PANELS` (`helpers/site-structure.ts`),
   `canAccessPage`, `resolveCmsPath`, `isApiV1Path`, `isMedusaApiPath`, `buildLocalProxyPath`.
-- **Misc**: `phiSharedLogger` (`net/log.ts`), `clearPhiLabelSetCache`, `matchesPhiCmsVisibility`,
+- **Misc**: `phisUiLogger` (`net/log.ts`), `clearPhiLabelSetCache`, `matchesPhiCmsVisibility`,
   `getPhiSiteLocaleConfig`, `PhiDrawer`/`PhiModal` re-exports, `PhiRuntimeModuleAuthoringHost`,
   `PHI_MOTION`, `PhiCmsRegionStatus`, `PhiCmsRevisionFlags`, and ~50 more single items.
 
 Caveats before deleting: several names are deliberate public ABI even if currently unconsumed
-(e.g. `phiSharedLogger` is the documented logging entry point; the signal address helpers mirror a
+(e.g. `phisUiLogger` is the documented logging entry point; the signal address helpers mirror a
 documented contract). Recommended split: delete the clear fossils (site-structure, preview-store
 mutations, serialization round-trip, plugin-type constants), keep contract-documented entries and
 mark them, decide per item for the rest. Scan script:

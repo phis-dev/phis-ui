@@ -1,4 +1,4 @@
-export type PhiLogService = "phi-server" | "phi-shared" | "phi-site" | "phi-cli";
+export type PhiLogService = "phis" | "ui" | "site" | "cli";
 
 export type PhiLogLevel = "debug" | "info" | "warn" | "error";
 
@@ -150,7 +150,7 @@ export function createLogger(context: Partial<PhiLoggerContext>): PhiLogger {
   return createLoggerFromContext(normalizeContext(context));
 }
 
-export const phiSharedLogger = createLogger({ service: "phi-shared" });
+export const phisUiLogger = createLogger({ service: "ui" });
 
 export function logRuntimeEvent(
   level: PhiLogLevel,
@@ -158,7 +158,7 @@ export function logRuntimeEvent(
   input: PhiLogEvent & Partial<PhiLoggerContext> = {},
 ) {
   const logger = createLogger({
-    service: "phi-shared",
+    service: "ui",
     siteKey: input.siteKey ?? null,
     area: input.area ?? null,
     requestId: input.requestId ?? null,

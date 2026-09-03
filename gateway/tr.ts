@@ -32,7 +32,7 @@ function logTranslationFallback(error: unknown, meta: Record<string, unknown>) {
   const message = error instanceof Error ? error.message : String(error);
   console.warn(JSON.stringify({
     level: "warn",
-    service: "phi-shared",
+    service: "ui",
     event: "translation.fallback",
     message: "Translation request failed. Falling back to source text.",
     error: message,
@@ -74,7 +74,7 @@ function buildTranslatorHeaders(
     extra: {
       Accept: "application/json",
       "Content-Type": "application/json",
-      "User-Agent": "phi-shared-ui/1.0",
+      "User-Agent": "phis-ui/1.0",
     },
   });
 }

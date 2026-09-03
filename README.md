@@ -123,7 +123,7 @@ Use CLI findings as the local source of truth for Ant Design implementation deci
   - own DB-backed shell instance
   - public DB-backed shell instance
   - area-appropriate code-owned shell preset
-- If an area has no dedicated code-owned shell preset in `phi-shared-ui`, it should fall back to the public shell preset on read.
+- If an area has no dedicated code-owned shell preset in `phis-ui`, it should fall back to the public shell preset on read.
 - That fallback does not change persistence ownership: saving in an area must still create or update that area's own revision-backed shell state.
 - Staff role to area mapping must follow this contract:
   - `Admin -> /admin`
@@ -1657,7 +1657,7 @@ Submit dispatcher contract:
   Site route such as `/api/site/forms`
 - the dispatcher resolves the Published Form and handler Provider on the Server and constructs all
   execution metadata from that immutable Provider
-- `phi-shared` may help resolve the descriptor, but it does not execute the submit itself
+- `phis-ui` may help resolve the descriptor, but it does not execute the submit itself
 - the site dispatcher may be implemented as:
   - a route handler
   - a server action
@@ -1831,7 +1831,7 @@ Rules:
 
 ## Locale Capability Contract
 
-- Locale support is resolved centrally by `phi-server` and consumed by `phi-shared-ui`.
+- Locale support is resolved centrally by `phi-server` and consumed by `phis-ui`.
 - `phi-server` owns the maximum locale capability superset and each site's validated subset.
 - The server capability superset must cover at least every target language supported by the configured DeepL target-language snapshot.
 - Site locales should use BCP-47-style identifiers where applicable, for example `de-DE`, `de-CH`, `en-US`, `en-GB`, `ja-JP`, `zh-Hans`, `zh-Hant`, `pt-BR`, and `pt-PT`.
@@ -1897,7 +1897,7 @@ Rules:
 ## Current internal structure
 
 ```text
-phi-shared-ui/
+phis-ui/
   AGENTS.md
   README.md
   package.json

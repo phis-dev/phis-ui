@@ -50,7 +50,7 @@ export const getResolvedSiteAuthAdminSettings = cache(async function getResolved
       includeSiteKey: true,
       extra: {
         Accept: "application/json",
-        "User-Agent": "phi-shared-ui/1.0",
+        "User-Agent": "phis-ui/1.0",
       },
     }),
     cache: "no-store",

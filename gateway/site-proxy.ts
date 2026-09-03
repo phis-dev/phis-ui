@@ -12,7 +12,7 @@ export function buildPhiSiteProxyHandlers({
   upstreamBaseUrl,
   timeoutMs,
   buildHeaders,
-  logLabel = "[phi-shared][/api/site proxy]",
+  logLabel = "[phis-ui][/api/site proxy]",
   missingBaseUrlMessage = "Missing apiBaseUrl for /api/site proxy.",
 }: BuildPhiSiteProxyHandlersOptions) {
   return PhiNextProxy({

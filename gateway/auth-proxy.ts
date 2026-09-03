@@ -12,7 +12,7 @@ export function buildPhiAuthProxyHandlers({
   upstreamBaseUrl,
   timeoutMs,
   buildHeaders,
-  logLabel = "[phi-shared][/api/auth proxy]",
+  logLabel = "[phis-ui][/api/auth proxy]",
   missingBaseUrlMessage = "Missing apiBaseUrl for /api/auth proxy.",
 }: BuildPhiAuthProxyHandlersOptions) {
   return PhiNextProxy({

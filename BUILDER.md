@@ -232,7 +232,7 @@ This distinction is not just UI. It is the persistence and hydration boundary fo
 Load rules:
 
 - if a persisted area shell exists in the DB for the selected area, the workspace must load that DB shell as-is
-- if no persisted area shell exists in the DB for the selected area, the workspace must load the full `phi-shared` fallback preset for that area
+- if no persisted area shell exists in the DB for the selected area, the workspace must load the full `phis-ui` fallback preset for that area
 - `/builder/shells` must not build a mixed region-by-region merge of DB and preset content
 - page-owned regions are out of scope for this workspace and must not be loaded here
 

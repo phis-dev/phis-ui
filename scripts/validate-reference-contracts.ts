@@ -71,7 +71,7 @@ for (const invalidScopeId of [0, -1, 1.5, Number.NaN, Number.MAX_SAFE_INTEGER + 
     `Page scope id ${invalidScopeId} must not encode.`,
   );
 }
-for (const invalidModuleId of ["phi-shared", "@phis", "@phis/", "/phi-shared", ""]) {
+for (const invalidModuleId of ["phis-ui", "@phis", "@phis/", "/phis-ui", ""]) {
   assert.throws(
     () => createPhiPageReference({ kind: "module", ownerModuleId: invalidModuleId, presetKey: "page" }),
     /Invalid Phi Page target/u,
@@ -120,7 +120,7 @@ for (const invalid of [
   encode({ v: 1, k: "x", i: 47 }),
   encode({ v: 1, k: "s", i: "47" }),
   encode({ v: 1, k: "s", i: 0 }),
-  encode({ v: 1, k: "m", m: "phi-shared", p: "page" }),
+  encode({ v: 1, k: "m", m: "phis-ui", p: "page" }),
   encode({ v: 1, k: "m", m: "@phis/ui", p: "" }),
   encode([1, 2, 3]),
   encode(null),

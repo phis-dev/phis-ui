@@ -77,7 +77,7 @@ export async function resolveSiteInternalReferences(input: {
       siteKey: input.siteKey,
       includeToken: true,
       includeSiteKey: true,
-      extra: { "Content-Type": "application/json", Accept: "application/json", "User-Agent": "phi-shared-ui/1.0" },
+      extra: { "Content-Type": "application/json", Accept: "application/json", "User-Agent": "phis-ui/1.0" },
     }),
     cache: "no-store",
     body: JSON.stringify({ ...(input.area ? { area: input.area } : {}), references, assets: assetIds }),

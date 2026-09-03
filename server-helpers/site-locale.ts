@@ -121,7 +121,7 @@ export async function fetchSiteLocaleConfig(
       Accept: "application/json",
       Authorization: `Bearer ${resolvedRuntime.internalToken}`,
       [PHIS_SITE_KEY_HEADER]: resolvedRuntime.siteKey as string,
-      "user-agent": "phi-shared-ui-locale-config/1.0",
+      "user-agent": "phis-ui-locale-config/1.0",
     },
     cache: "no-store",
   });
@@ -146,7 +146,7 @@ export async function fetchResolvedSiteLocale(
     Accept: "application/json",
     Authorization: `Bearer ${resolvedRuntime.internalToken}`,
     [PHIS_SITE_KEY_HEADER]: resolvedRuntime.siteKey as string,
-    "user-agent": "phi-shared-ui-locale-resolution/1.0",
+    "user-agent": "phis-ui-locale-resolution/1.0",
   };
   if (options.acceptLanguage?.trim()) headers["accept-language"] = options.acceptLanguage.trim();
   if (options.cookieHeader?.trim()) headers.cookie = options.cookieHeader.trim();

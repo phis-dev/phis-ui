@@ -242,7 +242,7 @@
 - Canonical CMS Areas are exactly `public`, `app`, `admin`, `builder`, `editor`, and `accounting`.
 - `public` is the locale-routed public Site; `/public` is only its explicit technical route. `app` is the authenticated
   Site application. Auth, commerce, and site-specific behavior are modules, not Core Areas.
-- If an area has no dedicated code-owned shell preset in `phi-shared-ui`, it should fall back to the public shell preset on read.
+- If an area has no dedicated code-owned shell preset in `phis-ui`, it should fall back to the public shell preset on read.
 - Non-staff CMS areas `public` and `app` should fall back in this order:
   - own DB-backed shell instance
   - public DB-backed shell instance
@@ -541,7 +541,7 @@
 - Use `loading.tsx` and nested `Suspense` boundaries to keep shell rendering decoupled from slower content regions.
 - Treat intercepting routes and parallel routes as a follow-up tool for modal flows, not the initial shell foundation.
 
-- Internal Phi-server adapter functions belong in `phi-shared-ui/gateway/*`. Public server-only helpers must use a separate namespace such as `server-helpers/*`.
+- Internal Phi-server adapter functions belong in `phis-ui/gateway/*`. Public server-only helpers must use a separate namespace such as `server-helpers/*`.
 - `gateway/site-config.ts` is the typed server-side fetch/read layer for site config JSON from `phi-server`; it is not a widget-level fallback fetch path for client code.
 - Guard issuance/verification, session persistence, and other backend-owned security state still belong to `phi-server`, not to `@phis/ui`.
 - Shared server-side translations must use the internal site-aware translation path behind the public shared `server-helpers/translate` helper.

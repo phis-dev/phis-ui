@@ -12,7 +12,7 @@ export function buildPhiMediaProxyHandlers({
   upstreamBaseUrl,
   timeoutMs,
   buildHeaders,
-  logLabel = "[phi-shared][/media proxy]",
+  logLabel = "[phis-ui][/media proxy]",
   missingBaseUrlMessage = "Missing apiBaseUrl for /media proxy.",
 }: BuildPhiMediaProxyHandlersOptions) {
   return PhiNextProxy({

@@ -53,7 +53,7 @@ export async function fetchFormGuard({
     apiBaseUrl,
     internalToken,
     siteKey,
-    userAgent: "phi-shared-ui/1.0",
+    userAgent: "phis-ui/1.0",
   }, {
     query: {
       form,
