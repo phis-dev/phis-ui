@@ -36,7 +36,8 @@ const PHI_GROUPS_FORM_LABEL_SET = definePhiLabelSet({
     column_level: "Level",
     column_since: "Member since",
     level_member: "Member",
-    level_contributor: "Contributor",
+    level_author: "Author",
+    level_editor: "Editor",
     level_manager: "Manager",
     remove_label: "Remove from group",
     remove_confirm_title: "Remove this member?",
@@ -128,7 +129,8 @@ export async function getPhiGroupFormLabels(options: PhiGlobalTranslatorOptions)
     },
     levels: {
       member: labels.level_member,
-      contributor: labels.level_contributor,
+      author: labels.level_author,
+      editor: labels.level_editor,
       manager: labels.level_manager,
     },
     mine: {

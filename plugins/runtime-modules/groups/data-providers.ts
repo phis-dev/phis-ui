@@ -121,7 +121,8 @@ export const PHI_GROUPS_RUNTIME_DATA_PROVIDER_DESCRIPTORS = [
           { key: "name", title: "Group", type: "string" },
           { key: "membershipFlags", title: "Level", type: "enum", options: [
             { value: String(PhiGroupMembershipFlags.Member), label: "Member" },
-            { value: String(PhiGroupMembershipFlags.Contributor), label: "Contributor" },
+            { value: String(PhiGroupMembershipFlags.Author), label: "Author" },
+            { value: String(PhiGroupMembershipFlags.Editor), label: "Editor" },
             { value: String(PhiGroupMembershipFlags.Manager), label: "Manager" },
           ] },
           { key: "canContribute", title: "May contribute", type: "boolean" },
@@ -178,7 +179,8 @@ export const PHI_GROUPS_RUNTIME_DATA_PROVIDER_DESCRIPTORS = [
             type: "enum",
             options: [
               { value: String(PhiGroupMembershipFlags.Member), label: "Member" },
-              { value: String(PhiGroupMembershipFlags.Contributor), label: "Contributor" },
+              { value: String(PhiGroupMembershipFlags.Author), label: "Author" },
+              { value: String(PhiGroupMembershipFlags.Editor), label: "Editor" },
               { value: String(PhiGroupMembershipFlags.Manager), label: "Manager" },
             ],
             mutable: true,

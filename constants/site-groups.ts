@@ -1,27 +1,17 @@
 /**
- * Membership levels are cumulative: a Manager is a Contributor is a Member.
+ * The membership ladder, taken from the contract rather than mirrored here.
  *
- * The shared UI mirrors the control plane's values so a level can be named in a selector without a
- * round trip. It never decides anything with them -- who may set which level is settled server-side.
+ * Mirroring is what went wrong: this file counted three levels where phis counts four, so what it
+ * called a Manager was phis's Editor. A selector offering it granted a level without the bit that
+ * administers membership, and a member list showed a level the viewer did not hold.
+ *
+ * The UI still decides nothing with these -- who may set which level is settled server-side -- but it
+ * has to name and offer them, and it can only do that against the same ladder.
  */
-export const PhiGroupMembershipFlags = {
-  Member: 1,
-  Contributor: 1 | 2,
-  Manager: 1 | 2 | 4,
-} as const;
 
-export type PhiGroupMembershipFlagValue =
-  (typeof PhiGroupMembershipFlags)[keyof typeof PhiGroupMembershipFlags];
-
-export const PHI_GROUP_MEMBERSHIP_LEVELS = [
-  PhiGroupMembershipFlags.Member,
-  PhiGroupMembershipFlags.Contributor,
-  PhiGroupMembershipFlags.Manager,
-] as const;
-
-export function normalizePhiGroupMembershipFlags(value: unknown): PhiGroupMembershipFlagValue | null {
-  if (typeof value !== "number" || !Number.isInteger(value) || value <= 0) return null;
-  if ((value & 4) !== 0) return PhiGroupMembershipFlags.Manager;
-  if ((value & 2) !== 0) return PhiGroupMembershipFlags.Contributor;
-  return PhiGroupMembershipFlags.Member;
-}
+export {
+  PhiGroupMembershipFlags,
+  PHI_GROUP_MEMBERSHIP_LEVELS,
+  readPhiGroupMembershipLevel as normalizePhiGroupMembershipFlags,
+  type PhiGroupMembershipFlagValue,
+} from "@phis/contracts/site-groups";

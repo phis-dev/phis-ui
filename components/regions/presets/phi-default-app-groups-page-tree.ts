@@ -51,7 +51,8 @@ export async function buildPhiDefaultAppGroupsPageTree({
   });
   const levelOptions = {
     [String(PhiGroupMembershipFlags.Member)]: labels.levels.member,
-    [String(PhiGroupMembershipFlags.Contributor)]: labels.levels.contributor,
+    [String(PhiGroupMembershipFlags.Author)]: labels.levels.author,
+    [String(PhiGroupMembershipFlags.Editor)]: labels.levels.editor,
     [String(PhiGroupMembershipFlags.Manager)]: labels.levels.manager,
   };
 

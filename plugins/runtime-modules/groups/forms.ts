@@ -113,7 +113,8 @@ const PHI_GROUPS_MEMBERSHIP_FORM_DESCRIPTOR: PhiFormDescriptor = {
       label: label("membershipLevel", "Level"),
       options: [
         { value: String(PhiGroupMembershipFlags.Member), label: label("levelMember", "Member") },
-        { value: String(PhiGroupMembershipFlags.Contributor), label: label("levelContributor", "Contributor") },
+        { value: String(PhiGroupMembershipFlags.Author), label: label("levelAuthor", "Author") },
+        { value: String(PhiGroupMembershipFlags.Editor), label: label("levelEditor", "Editor") },
         { value: String(PhiGroupMembershipFlags.Manager), label: label("levelManager", "Manager") },
       ],
       initialValue: String(PhiGroupMembershipFlags.Member),
@@ -166,7 +167,8 @@ async function loadLabels(
     membershipLevel: labels.membership.level,
     membershipLevelRequired: labels.membership.levelRequired,
     levelMember: labels.levels.member,
-    levelContributor: labels.levels.contributor,
+    levelAuthor: labels.levels.author,
+    levelEditor: labels.levels.editor,
     levelManager: labels.levels.manager,
   });
 }

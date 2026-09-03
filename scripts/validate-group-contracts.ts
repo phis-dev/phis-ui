@@ -25,10 +25,10 @@ const claim = (flags: number) => ({
 assert.equal(
   canPhiViewerManageSomeGroup({
     siteWide: false,
-    groupClaims: [claim(PhiGroupMembershipFlags.Contributor), claim(PhiGroupMembershipFlags.Member)],
+    groupClaims: [claim(PhiGroupMembershipFlags.Editor), claim(PhiGroupMembershipFlags.Author)],
   }),
   false,
-  "Someone who manages nothing is not shown a switch they cannot touch.",
+  "An Editor is the highest level that manages nothing, and was the one this UI used to call a Manager.",
 );
 assert.equal(
   canPhiViewerManageSomeGroup({
