@@ -804,7 +804,7 @@ kinds. Do not create Widget-specific fetch or option registries.
 
 A generator cannot guess an export it was never told about. `package.json#exports` says where an
 entrypoint is and nothing about what is inside it, so the names are fixed -- one per boundary, the way a
-Server Add-on artifact has exactly one export called `phiServerAddon`:
+Server Add-on artifact has exactly one export called `phisAddon`:
 
 ```text
 .                   phiModuleDefinitions           @phis/ui/module
