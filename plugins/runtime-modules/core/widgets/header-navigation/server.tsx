@@ -29,7 +29,7 @@ export async function PhiHeaderNavigationWidget({
     <PhiRuntimeModuleRenderClientHost
       type={PhiCmsWidgetType.HeaderNavigation}
       componentProps={{
-        runtime: { locale: runtime.locale, area: runtime.area },
+        runtime: { site: runtime.site, locale: runtime.locale, area: runtime.area },
         items,
         menuTheme,
         height,

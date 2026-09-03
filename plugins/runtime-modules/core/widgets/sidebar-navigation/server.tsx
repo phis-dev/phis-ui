@@ -28,7 +28,7 @@ export async function PhiSidebarNavigationWidget({
     <PhiRuntimeModuleRenderClientHost
       type={PhiCmsWidgetType.SidebarNavigation}
       componentProps={{
-        runtime: { locale: runtime.locale, area: runtime.area },
+        runtime: { site: runtime.site, locale: runtime.locale, area: runtime.area },
         config,
         items: resolvedItems,
         menuTheme,
@@ -52,7 +52,7 @@ export async function PhiSidebarNavigationWidgetPreview({
     <PhiRuntimeModuleRenderClientHost
       type={PhiRuntimeRenderClientType.SidebarNavigationPreview}
       componentProps={{
-        runtime: { locale: runtime.locale, area: runtime.area },
+        runtime: { site: runtime.site, locale: runtime.locale, area: runtime.area },
         config,
         items: resolvedItems,
         menuTheme,

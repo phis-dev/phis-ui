@@ -42,6 +42,17 @@ export type PhiCmsRootLayoutProps = {
   root: string;
   cmsBridge: PhiCmsSiteBridge;
   children: React.ReactNode;
+  /**
+   * The path to resolve instead of the one that was requested.
+   *
+   * Only the root error routes pass this. They exist because a refusal by this Layout is caught above it,
+   * where no Area is left to render into -- so they rebuild the shell themselves. The requested path is
+   * by definition the one that did not resolve, and resolving it again here would refuse a second time.
+   * Resolving the error page's own path instead yields the same Area preset and a tree that exists, so
+   * the shell renders and the refusal cannot repeat. With it set, this Layout answers neither existence
+   * nor canonical form: both were already answered by the render that refused.
+   */
+  path?: string[];
   headerBottom?: React.ReactNode;
   hero?: React.ReactNode;
   siderRight?: React.ReactNode;
@@ -57,6 +68,7 @@ export async function PhiCmsRootLayout({
   root,
   cmsBridge,
   children,
+  path,
   headerBottom,
   hero,
   siderRight,
@@ -67,6 +79,7 @@ export async function PhiCmsRootLayout({
   try {
     rootScope = await loadPhiCmsRootRequest({
       root,
+      path,
       cmsBridge,
     });
   } catch (error) {
@@ -87,7 +100,7 @@ export async function PhiCmsRootLayout({
   const { resolvedRoute, request, resolvedAreaPreset, runtime } = rootScope;
   const isRevisionPreview = hasPhiCmsRevisionPreview(request.searchParams);
 
-  if (resolvedRoute.canonicalHref) {
+  if (!path && resolvedRoute.canonicalHref) {
     redirect(resolvedRoute.canonicalHref);
   }
 
@@ -127,7 +140,7 @@ export async function PhiCmsRootLayout({
    * would be worse still -- a staff Area would report a missing page to anyone not allowed to see it.
    * The resolution is shared with the Page through the request cache, so asking here costs nothing.
    */
-  if (!rootScope.resolvedRequest) {
+  if (!path && !rootScope.resolvedRequest) {
     notFound();
   }
 
