@@ -42,7 +42,7 @@ export type SerializedPhiHtmlImageNode = Spread<{
 }, SerializedLexicalNode>;
 
 /**
- * The stored `src` stays the `phi:asset/<id>` reference the server resolves at render time; a browser
+ * The stored `src` stays the `phis:asset/<id>` reference the server resolves at render time; a browser
  * cannot load that scheme, so the authoring DOM shows the same Asset through the authorized delivery
  * endpoint the other authoring surfaces already read. Nothing here resolves a reference for a rendered
  * page.

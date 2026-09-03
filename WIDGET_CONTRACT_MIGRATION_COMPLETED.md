@@ -81,7 +81,7 @@ publish-materialization batch below.
 ## Stable Page paths and internal Page/Asset references
 
 - Added the shared reference ABI in `types/references.ts`, exported as `@phis/ui/references`. It
-  owns the opaque `PhiPageReference` codec, the `phi:page/<reference>` and `phi:asset/<assetId>` URI
+  owns the opaque `PhiPageReference` codec, the `phis:page/<reference>` and `phis:asset/<assetId>` URI
   forms, and the pure readers. `phi-server` keeps a byte-compatible counterpart in
   `src/lib/internal-references.ts`; neither package imports the other.
 - Separated immutable Page identity from the mutable Site Page path across the Builder Page catalog, Page
@@ -1411,8 +1411,8 @@ publish-materialization batch below.
 keeps the translator from ever seeing a `phi:` string; see the archived entry in
 [WIDGET_CONTRACT_MIGRATION_COMPLETED.md](./WIDGET_CONTRACT_MIGRATION_COMPLETED.md#internal-reference-contract-regressions).
 The runtime half now exists too. `browser-test/scripts/make-reference-fixture.mjs` authors and publishes
-`/zz-reference-fixture` -- a Markdown Widget whose body carries a `phi:page/...` link and a
-`phi:asset/5` image -- and `check-reference-survival.mjs` asserts the round trip across `en`, `de`, and
+`/zz-reference-fixture` -- a Markdown Widget whose body carries a `phis:page/...` link and a
+`phis:asset/5` image -- and `check-reference-survival.mjs` asserts the round trip across `en`, `de`, and
 `fr`. Measured on 2026-08-21:
 
 | | en | de | fr |
@@ -1427,7 +1427,7 @@ Everything a reader sees moves; the target does not. Only the locale prefix on t
 routing rather than translation, and no `phi:` string reaches the page in any locale.
 
 The attribute half is covered too, as of 2026-08-21. The fixture's Rich Text Widget now carries a
-`phi:page/...` link and an image with all three attributes, authored through the Builder's own save body
+`phis:page/...` link and an image with all three attributes, authored through the Builder's own save body
 rather than through Lexical's keyboard (`browser-test/scripts/author-rich-text-reference.mjs`), so the
 markup travels the authoritative sanitizer at the write endpoint exactly as an author's would. One image
 carries both size forms on purpose: whole pixels serialize to the attribute and relative units to inline
@@ -1481,7 +1481,7 @@ The Rich Text half itself is done. It was not before: the sanitizer has always a
   discarded them on import and never wrote them on export -- no surface could set them. The node now
   carries them through import, export, and serialization, a click on an image opens an attribute
   Popover next to it, and the editor shows the Asset through the delivery endpoint while the persisted
-  `src` stays the `phi:asset/<id>` reference. `scripts/validate-reference-contracts.ts` pins both
+  `src` stays the `phis:asset/<id>` reference. `scripts/validate-reference-contracts.ts` pins both
   halves: the attributes survive sanitizer and projection, and `exportDOM` must write `this.__src`
   rather than the resolved URL. A relative width is authorable too: `img` -- and only `img` -- may
   size itself through bounded inline style, in both this sanitizer and the authoritative one in

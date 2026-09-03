@@ -446,8 +446,8 @@ function PhiHtmlWidgetEditorBridgePlugin({
       setLink: (url) => {
         editor.dispatchCommand(TOGGLE_LINK_COMMAND, url == null ? null : {
           url,
-          target: url.startsWith("phi:page/") || url.startsWith("#") ? null : "_blank",
-          rel: url.startsWith("phi:page/") || url.startsWith("#") ? null : "noopener noreferrer",
+          target: url.startsWith("phis:page/") || url.startsWith("#") ? null : "_blank",
+          rel: url.startsWith("phis:page/") || url.startsWith("#") ? null : "noopener noreferrer",
         });
       },
       insertImage: (src, alt) => {

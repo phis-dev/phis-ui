@@ -12,7 +12,7 @@ export const PHI_ASSET_RUNTIME_DATA_PROVIDER_DESCRIPTORS = [
     title: "Media folders",
     description: "Published media folder hierarchy supplied by the Asset runtime controller.",
     // The Builder's own pickers read this regardless of whether the edited Area activates
-    // this Module: a phi:asset reference resolves through the core resolver either way.
+    // this Module: a phis:asset reference resolves through the core resolver either way.
     availableToAuthoringChrome: true,
   },
   {
@@ -24,7 +24,7 @@ export const PHI_ASSET_RUNTIME_DATA_PROVIDER_DESCRIPTORS = [
     title: "Media collection",
     description: "Provider-owned media asset queries and mutations.",
     // The Builder's own pickers read this regardless of whether the edited Area activates
-    // this Module: a phi:asset reference resolves through the core resolver either way.
+    // this Module: a phis:asset reference resolves through the core resolver either way.
     availableToAuthoringChrome: true,
     resources: [
       {

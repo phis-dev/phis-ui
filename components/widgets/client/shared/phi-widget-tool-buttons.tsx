@@ -65,7 +65,7 @@ function resolveExternalOrFragmentLink(value: string) {
   const normalized = value.trim();
   if (!normalized) return null;
   if (normalized.startsWith("#")) return normalized;
-  if (/^(?:\/|\.\/|\.\.\/|phi:)/iu.test(normalized)) return null;
+  if (/^(?:\/|\.\/|\.\.\/|phis:)/iu.test(normalized)) return null;
   const formatted = formatUrl(normalized);
   try {
     const url = new URL(formatted);

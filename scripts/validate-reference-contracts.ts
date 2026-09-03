@@ -154,7 +154,7 @@ for (const emptyFragment of [undefined, null, "", "   ", "#"]) {
   assert.equal(pageFragmentOf(uri), null);
 }
 // Fragments survive characters that would otherwise re-split the URI or break the encoding.
-for (const fragment of ["a#b", "sec 1", "ü/ö", "100%", "a&b=c", "phi:page/spoof"]) {
+for (const fragment of ["a#b", "sec 1", "ü/ö", "100%", "a&b=c", "phis:page/spoof"]) {
   assert.equal(
     pageFragmentOf(createPhiPageUri(siteReference, fragment)),
     fragment,
@@ -162,7 +162,7 @@ for (const fragment of ["a#b", "sec 1", "ü/ö", "100%", "a&b=c", "phi:page/spoo
   );
 }
 // A malformed percent escape is not silently kept as literal text.
-assert.equal(readPhiInternalReference(`phi:page/${siteReference}#%E0%A4%A`), null);
+assert.equal(readPhiInternalReference(`phis:page/${siteReference}#%E0%A4%A`), null);
 assert.throws(() => createPhiPageUri("v1.broken" as PhiPageReference), /Invalid Phi Page reference/u);
 
 // ---------------------------------------------------------------------------
@@ -174,14 +174,14 @@ for (const invalidAssetId of [0, -1, 1.5, Number.NaN, Number.MAX_SAFE_INTEGER + 
   assert.throws(() => createPhiAssetUri(invalidAssetId), /positive integers/u);
 }
 for (const invalid of [
-  "phi:asset/0",
-  "phi:asset/",
-  "phi:asset/007",
-  "phi:asset/1e3",
-  "phi:asset/71#top",
-  "phi:asset/ 71",
-  "phi:asset/-1",
-  "phi:asset/9007199254740993",
+  "phis:asset/0",
+  "phis:asset/",
+  "phis:asset/007",
+  "phis:asset/1e3",
+  "phis:asset/71#top",
+  "phis:asset/ 71",
+  "phis:asset/-1",
+  "phis:asset/9007199254740993",
 ]) {
   assert.equal(readPhiInternalReference(invalid), null, `"${invalid}" must not decode.`);
 }
@@ -194,13 +194,13 @@ assert.equal(readPhiInternalReference(71), null);
 // ---------------------------------------------------------------------------
 
 const html = `<p><a href="${createPhiPageUri(siteReference)}">Page</a><img src="${createPhiAssetUri(71)}" alt="Asset"></p>`;
-assert.match(sanitizePhiHtmlWidgetMarkup(html, { allowInternalReferences: true }), /phi:page\//u);
-assert.doesNotMatch(sanitizePhiHtmlWidgetMarkup(html), /phi:/u);
+assert.match(sanitizePhiHtmlWidgetMarkup(html, { allowInternalReferences: true }), /phis:page\//u);
+assert.doesNotMatch(sanitizePhiHtmlWidgetMarkup(html), /phis:/u);
 assert.match(
   sanitizePhiHtmlWidgetMarkup(`<img src="${createPhiAssetUri(71)}" alt="Asset">`, { allowInternalReferences: true }),
-  /phi:asset\/71/u,
+  /phis:asset\/71/u,
 );
-// The authoring gate opens the `phi` scheme, never anything else.
+// The authoring gate opens the `phis` scheme, never anything else.
 assert.doesNotMatch(
   sanitizePhiHtmlWidgetMarkup(
     `<p><a href="javascript:alert(1)">x</a><a href="data:text/html,x">y</a></p>`,
@@ -518,7 +518,7 @@ assert.ok(projectedHtml.includes("<p>deleted page</p>"));
 assert.ok(projectedHtml.includes("<p>raw path</p>"));
 // An unresolvable Asset leaves no broken image behind.
 assert.doesNotMatch(projectedHtml, /missing/u);
-assert.doesNotMatch(projectedHtml, /phi:/u);
+assert.doesNotMatch(projectedHtml, /phis:/u);
 // External destinations are untouched.
 assert.ok(projectedHtml.includes(`<a href="https://example.test/">external</a>`));
 assert.ok(projectedHtml.includes(`<a href="mailto:a@b.test">mail</a>`));
@@ -604,18 +604,18 @@ assert.equal(deniedHtml, "<p>users</p>");
 /**
  * A remote document is never allowed to smuggle an internal reference past the resolver. The guard
  * normalizes entities, repeated percent-encoding, control characters and case before deciding, so
- * every spelling of `phi:` must lose its link while keeping the visible text.
+ * every spelling of `phis:` must lose its link while keeping the visible text.
  */
 const smuggled = [
-  `phi:page/${siteReference}`,
-  `PHI:page/${siteReference}`,
-  `phi%3Apage/${siteReference}`,
-  `phi%253Apage/${siteReference}`,
-  `p%68i:page/${siteReference}`,
-  `&amp;colon;`.replace("&amp;colon;", `phi&colon;page/${siteReference}`),
-  ` phi:page/${siteReference}`,
-  ` p h i : page/${siteReference}`,
-  `phi:asset/71`,
+  `phis:page/${siteReference}`,
+  `PHIS:page/${siteReference}`,
+  `phis%3Apage/${siteReference}`,
+  `phis%253Apage/${siteReference}`,
+  `p%68is:page/${siteReference}`,
+  `&amp;colon;`.replace("&amp;colon;", `phis&colon;page/${siteReference}`),
+  ` phis:page/${siteReference}`,
+  ` p h i s : page/${siteReference}`,
+  `phis:asset/71`,
 ];
 for (const [index, href] of smuggled.entries()) {
   const output = await resolveHtml({
@@ -665,7 +665,7 @@ const readSource = (path: string) => readFile(new URL(`../${path}`, import.meta.
 
 /**
  * The Client boundary is the sanitizer without the authoring flag: it runs on the projection result,
- * before translation, so no unresolved `phi:` string can reach a Client component even if a future
+ * before translation, so no unresolved `phis:` string can reach a Client component even if a future
  * projection path forgets to unwrap one.
  */
 const htmlWidgetSource = await readSource("plugins/runtime-modules/core/widgets/html/server.tsx");
@@ -705,7 +705,7 @@ assert.match(markdownBuilderSource, /PhiMarkdownWidgetToolbarTools/u);
 
 /**
  * The authoring surface shows the Asset through the delivery endpoint, but what it persists must stay
- * the `phi:asset/<id>` reference: a resolved URL written back into the document would turn a live
+ * the `phis:asset/<id>` reference: a resolved URL written back into the document would turn a live
  * reference into a copied Asset URL, which `REFERENCES.md` forbids.
  */
 const htmlImageNodeSource = await readSource("components/widgets/client/html-editor-image-node.tsx");
@@ -744,7 +744,7 @@ for (const attribute of ["title", "width", "height"]) {
    * height, which it genuinely cannot express. The title is prose and gets translated, but as a unit of
    * its own: it is a separate sentence from the alt text beside it, and asked for both in one string a
    * translator returned them merged and re-split at a different point. The url stays in the unit's
-   * metadata and never reaches the translator at all, which is what keeps a `phi:` reference out of a
+   * metadata and never reaches the translator at all, which is what keeps a `phis:` reference out of a
    * translation request.
    */
   const markdownSource = await readFile(

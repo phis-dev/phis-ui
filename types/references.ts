@@ -1,5 +1,5 @@
-export const PHI_INTERNAL_PAGE_SCHEME = "phi:page/" as const;
-export const PHI_INTERNAL_ASSET_SCHEME = "phi:asset/" as const;
+export const PHIS_INTERNAL_PAGE_SCHEME = "phis:page/" as const;
+export const PHIS_INTERNAL_ASSET_SCHEME = "phis:asset/" as const;
 
 export type PhiPageTarget =
   | { kind: "site"; pageScopeId: number }
@@ -100,30 +100,30 @@ export function createPhiPageUri(reference: PhiPageReference, fragment?: string 
     throw new Error("Invalid Phi Page reference.");
   }
   const normalizedFragment = fragment?.replace(/^#/u, "").trim();
-  return `${PHI_INTERNAL_PAGE_SCHEME}${reference}${normalizedFragment ? `#${encodeURIComponent(normalizedFragment)}` : ""}`;
+  return `${PHIS_INTERNAL_PAGE_SCHEME}${reference}${normalizedFragment ? `#${encodeURIComponent(normalizedFragment)}` : ""}`;
 }
 
 export function createPhiAssetUri(assetId: number) {
   if (!isPositiveInteger(assetId)) {
     throw new Error("Phi Asset ids must be positive integers.");
   }
-  return `${PHI_INTERNAL_ASSET_SCHEME}${assetId}`;
+  return `${PHIS_INTERNAL_ASSET_SCHEME}${assetId}`;
 }
 
 export function readPhiInternalReference(value: unknown): PhiInternalReference | null {
   if (typeof value !== "string") {
     return null;
   }
-  if (value.startsWith(PHI_INTERNAL_ASSET_SCHEME)) {
-    const id = value.slice(PHI_INTERNAL_ASSET_SCHEME.length);
+  if (value.startsWith(PHIS_INTERNAL_ASSET_SCHEME)) {
+    const id = value.slice(PHIS_INTERNAL_ASSET_SCHEME.length);
     return /^[1-9]\d*$/u.test(id) && Number.isSafeInteger(Number(id))
       ? { kind: "asset", assetId: Number(id) }
       : null;
   }
-  if (!value.startsWith(PHI_INTERNAL_PAGE_SCHEME)) {
+  if (!value.startsWith(PHIS_INTERNAL_PAGE_SCHEME)) {
     return null;
   }
-  const [encodedReference, ...fragmentParts] = value.slice(PHI_INTERNAL_PAGE_SCHEME.length).split("#");
+  const [encodedReference, ...fragmentParts] = value.slice(PHIS_INTERNAL_PAGE_SCHEME.length).split("#");
   const parsed = readPhiPageReference(encodedReference);
   if (!parsed) {
     return null;

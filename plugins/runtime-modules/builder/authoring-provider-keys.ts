@@ -6,7 +6,7 @@ import type { PhiRuntimeModuleDataProviderDescriptor } from "../../../types/cms-
  *
  * The Asset picker a Markdown or Rich Text Widget offers from its toolbar, and the Background picker in
  * the Inspector, are Builder surfaces reaching into the Site's Media library. Neither depends on the
- * edited Area activating the Assets Module: a `phi:asset/...` reference is resolved by the core
+ * edited Area activating the Assets Module: a `phis:asset/...` reference is resolved by the core
  * reference resolver, so an Area without that Module still renders its images. Gating the picker on the
  * Module left it reporting "not available from the active runtime modules" over an empty library.
  *

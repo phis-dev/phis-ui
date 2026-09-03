@@ -219,7 +219,7 @@ export const PhiMediaFolderFlagNames = {
 } as const;
 
 /**
- * The public rendering projection of a resolved `phi:asset/<id>` reference.
+ * The public rendering projection of a resolved `phis:asset/<id>` reference.
  *
  * Deliberately narrower than `PhiMediaAsset`: it carries only what a rendered public page already
  * reveals. Ownership, Folder placement, audit attribution, checksum, byte size, and `meta` never

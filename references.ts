@@ -1,6 +1,6 @@
 export {
-  PHI_INTERNAL_ASSET_SCHEME,
-  PHI_INTERNAL_PAGE_SCHEME,
+  PHIS_INTERNAL_ASSET_SCHEME,
+  PHIS_INTERNAL_PAGE_SCHEME,
   createPhiAssetUri,
   createPhiPageReference,
   createPhiPageUri,

@@ -722,7 +722,7 @@ await assert.rejects(
 
 /**
  * The Builder's own pickers read the Site's Media library, and that must not depend on which Modules the
- * edited Area activates. A `phi:asset/...` reference is resolved by the core reference resolver, so an
+ * edited Area activates. A `phis:asset/...` reference is resolved by the core reference resolver, so an
  * Area without the Assets Module still renders its images -- but the Asset picker in a Widget toolbar
  * used to be gated on that Module and opened over an empty library, reporting the provider as
  * unavailable. Both Builder surfaces mount the same declared set.

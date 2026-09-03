@@ -30,7 +30,7 @@ function normalizePotentialPhiScheme(value: string) {
 
 function externalUrl(value: string, sourceUrl: string) {
   const normalized = value.trim();
-  if (!normalized || normalizePotentialPhiScheme(normalized).startsWith("phi:")) return null;
+  if (!normalized || normalizePotentialPhiScheme(normalized).startsWith("phis:")) return null;
   if (normalized.startsWith("#") || /^(?:https?:|mailto:|tel:)/iu.test(normalized)) return normalized;
   try {
     return new URL(normalized, sourceUrl).toString();

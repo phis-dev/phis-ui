@@ -75,12 +75,12 @@ reference and is preserved after Page resolution; it is not part of Page identit
 Internally persisted Markdown and HTML may encode typed references with the reserved Phi URI forms:
 
 ```text
-phi:page/<opaque-page-reference>
-phi:asset/<positive-asset-id>
+phis:page/<opaque-page-reference>
+phis:asset/<positive-asset-id>
 ```
 
-Examples of authored Markdown are `[Account](phi:page/<reference>)` and
-`![Logo](phi:asset/4711)`. The equivalent forms are valid in the approved internal HTML subset through
+Examples of authored Markdown are `[Account](phis:page/<reference>)` and
+`![Logo](phis:asset/4711)`. The equivalent forms are valid in the approved internal HTML subset through
 `href` and `src`. The exact Page-reference payload is produced by the central Page picker and is opaque
 to Markdown/HTML Widgets. Asset references reuse the canonical id of an Asset owned by the current
 Site's Site Media Space; another Asset alias, User-/Group-Space id, Storage key, or copied public URL is
@@ -98,7 +98,7 @@ Link destinations and Asset identities are structural metadata and are never tra
 text and image alternative text remain normal translation units. Translation round-trips must preserve
 the structured reference unchanged.
 
-Internally persisted content must use `phi:page` for a same-Site Page and `phi:asset` for a Site Asset.
+Internally persisted content must use `phis:page` for a same-Site Page and `phis:asset` for a Site Asset.
 Plain root-relative Page links and local Asset paths are invalid internal authoring output. Normal
 absolute external URLs remain allowed under the HTML/Markdown sanitizer policy.
 

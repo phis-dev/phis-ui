@@ -76,7 +76,7 @@ export function sanitizePhiHtmlWidgetMarkup(
     },
     allowedSchemes: [
       ...PHI_HTML_WIDGET_ALLOWED_SCHEMES,
-      ...(options?.allowInternalReferences ? ["phi"] : []),
+      ...(options?.allowInternalReferences ? ["phis"] : []),
     ],
     disallowedTagsMode: "discard",
     parseStyleAttributes: true,
