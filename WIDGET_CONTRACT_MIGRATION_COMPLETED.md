@@ -82,7 +82,7 @@ publish-materialization batch below.
 
 - Added the shared reference ABI in `types/references.ts`, exported as `@phis/ui/references`. It
   owns the opaque `PhiPageReference` codec, the `phis:page/<reference>` and `phis:asset/<assetId>` URI
-  forms, and the pure readers. `phi-server` keeps a byte-compatible counterpart in
+  forms, and the pure readers. `@phis/server` keeps a byte-compatible counterpart in
   `src/lib/internal-references.ts`; neither package imports the other.
 - Separated immutable Page identity from the mutable Site Page path across the Builder Page catalog, Page
   Meta state, preview transport, routing helpers, and Navigation authoring. Module preset identities stay
@@ -840,7 +840,7 @@ publish-materialization batch below.
   Inspector signal-to-draft bridge, its node-id patch action, and the obsolete buffered-editor flush
   broadcast. Canvas Runtime emissions now remain disabled while inline authoring is active; structural
   insert/delete/move operations continue through the central scaffold mutation path.
-- Added persistence-owned publish materialization in `phi-server`. Page and Area publish now assign
+- Added persistence-owned publish materialization in `@phis/server`. Page and Area publish now assign
   global positive identities from the server-owned sequence to new negative layout/widget nodes, reuse identities by stable
   `instanceKey`, remap structural references plus numeric widget/layout/surface signal receivers and
   subcontrols, and activate the revision in the same database transaction. A client-supplied positive id
@@ -1203,9 +1203,9 @@ publish-materialization batch below.
 - Ordering follows the Area declarations, and Public stays out: it is the Area a viewer is already
   in, not one to switch to. Both were implicit in the old chain and are now stated and asserted.
 
-## User management read/write split verified against phi-server
+## User management read/write split verified against `@phis/server`
 
-- `phi-server` splits `/api/site/admin/users` per method: `GET` takes
+- `@phis/server` splits `/api/site/admin/users` per method: `GET` takes
   `requireSiteDeveloperApiContext`, while `POST`, `PUT`, `PATCH` and `DELETE` all take
   `requireSiteAdminOnlyApiContext`. Its policy constants in `src/lib/authorization.ts` are structurally
   identical to the shared ones, including the Admin superuser rule, so both sides speak the same
@@ -1238,7 +1238,7 @@ publish-materialization batch below.
   changing them and points at the entry/capability split.
 - Removed `PHI_CORE_RESOLVED_STAFF_AREA_KEYS` and `PhiCoreResolvedStaffAreaKey` from
   `constants/cms-areas.ts`. Nothing read either one. They were the remnant of a role-to-landing-Area
-  mapping `phi-server` owns; the frontend only receives its result as `viewer.resolvedArea`. A dead
+  mapping `@phis/server` owns; the frontend only receives its result as `viewer.resolvedArea`. A dead
   export that looks authoritative invites a second Area list next to the definitions.
 
 ## Internal reference contract regressions
@@ -1466,7 +1466,7 @@ stays in metadata either way and never reaches a translation request at all. Mea
 | Markdown image alt | A photograph of the harbour | Ein Foto vom Hafen | Une photo du port |
 | Markdown image title | Harbour at dusk | Hafen in der Abenddämmerung | Le port au crépuscule |
 
-Covering it surfaced a defect in `phi-server` that had nothing to do with Markdown and everything to do
+Covering it surfaced a defect in `@phis/server` that had nothing to do with Markdown and everything to do
 with why this could not be measured at first: `computeSiteMessageHash` hashed only the first 50
 characters of a message. `tr_site_msg` is unique on `(site_id, msg_hash, ctx)`, so two messages sharing
 an opening were the same message -- the second was rejected, `ensureSiteMessageId` raised a collision,
@@ -1485,7 +1485,7 @@ The Rich Text half itself is done. It was not before: the sanitizer has always a
   halves: the attributes survive sanitizer and projection, and `exportDOM` must write `this.__src`
   rather than the resolved URL. A relative width is authorable too: `img` -- and only `img` -- may
   size itself through bounded inline style, in both this sanitizer and the authoritative one in
-  `phi-server` (`src/lib/html.ts`, covered by `src/lib/html.test.ts`). Whole pixels persist as the
+  `@phis/server` (`src/lib/html.ts`, covered by `src/lib/html.test.ts`). Whole pixels persist as the
   attribute, every other unit as style, and both forms are read back.
 
 ## Verification record

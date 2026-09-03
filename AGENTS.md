@@ -13,10 +13,10 @@
   normative `ACCESS.md` target v1 contract.
 - Provider-backed visual collections must follow the normative `COLLECTIONS.md` target v1 contract.
 - General group claims and Media Space visibility must consume the normative server contracts in
-  `phi-server/AUTHORIZATION.md` and `phi-server/GROUPS_AND_STORAGE.md`; shared UI must not persist or
+  `phis-server/AUTHORIZATION.md` and `phis-server/GROUPS_AND_STORAGE.md`; shared UI must not persist or
   infer a second ownership, quota, Folder, delivery, or Storage model.
 - Provider-neutral user/group authority, operation capabilities, Directory bindings, and future
-  LDAP/SCIM/Entra providers must consume `phi-server/DIRECTORY_PROVIDERS.md`. The optional management UI
+  LDAP/SCIM/Entra providers must consume `phis-server/DIRECTORY_PROVIDERS.md`. The optional management UI
   belongs to the separate `@phis/groups` package and must not be added to `@phis/ui`.
 - Auth Module ownership, replacement, Account Widget delegation, Admin settings, and CLI preset recovery
   must follow the normative `AUTHENTICATION.md` target v1 contract.
@@ -435,7 +435,7 @@
   - explicit area-owned fallbacks such as admin dashboard or admin users/logs stay local to that area
 - Widget-instance behavior/config must live on widget nodes in revision `tree_json`, not in `site.theme.widgets.*`.
 - If a widget persists canonical CMS content through `content_id`, its shared definition must declare that contract through `contentBinding`.
-- Builder write payloads must forward `contentBinding` as explicit metadata; `phi-server` must not branch on concrete widget `typeKey`s when a declarative content-binding contract is available.
+- Builder write payloads must forward `contentBinding` as explicit metadata; `@phis/server` must not branch on concrete widget `typeKey`s when a declarative content-binding contract is available.
 - Layout and widget type IDs must be defined in central registry constants, not hardcoded ad hoc inside component files.
 - Keep separate central registries for layout types and content/widget types.
 - Add or maintain a duplicate-ID validation check so collisions fail fast.
@@ -486,7 +486,7 @@
 - Layout nodes belong under `components/layouts/*`.
 - Content and flow widgets belong under `components/widgets/*`.
 - For both widgets and layouts, keep overrides minimal and only apply them when the operator explicitly requested a deviation from the default token/theme behavior.
-- Consuming sites should keep area layouts and page entrypoints thin; structural page resolution should flow from site app code to shared UI to `phi-server`.
+- Consuming sites should keep area layouts and page entrypoints thin; structural page resolution should flow from site app code to shared UI to `@phis/server`.
 - `Suspense` and route/region loading boundaries should usually be owned by higher-level composition layers such as shells, headers, footers, and pages, not by every widget individually.
 - Widgets and modals should own interactive loading states caused by user actions (for example submit/loading/error states), while initial server-side loading fallbacks should usually be coordinated one level above them.
 - Preset Forms such as Contact, Login, Registration, Confirmation, and Password Reset are referenced by
@@ -552,8 +552,8 @@
 - Treat intercepting routes and parallel routes as a follow-up tool for modal flows, not the initial shell foundation.
 
 - Internal Phi-server adapter functions belong in `phis-ui/gateway/*`. Public server-only helpers must use a separate namespace such as `server-helpers/*`.
-- `gateway/site-config.ts` is the typed server-side fetch/read layer for site config JSON from `phi-server`; it is not a widget-level fallback fetch path for client code.
-- Guard issuance/verification, session persistence, and other backend-owned security state still belong to `phi-server`, not to `@phis/ui`.
+- `gateway/site-config.ts` is the typed server-side fetch/read layer for site config JSON from `@phis/server`; it is not a widget-level fallback fetch path for client code.
+- Guard issuance/verification, session persistence, and other backend-owned security state still belong to `@phis/server`, not to `@phis/ui`.
 - Shared server-side translations must use the internal site-aware translation path behind the public shared `server-helpers/translate` helper.
 - The public shared free-text translation helper contract is:
   - `tr(msg, params?, ctx?, format?)`

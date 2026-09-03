@@ -29,7 +29,7 @@ Controller Client, Render Client, and Authoring Client contributions.
 ## Terminology and hard boundaries
 
 - A **Module** is a Site/client extension compiled into a Site application.
-- An **Add-on** is a server extension compiled into `phi-server` by `phis-cli`.
+- An **Add-on** is a server extension compiled into `@phis/server` by `phis-cli`.
 - One package carries one product. `@scope/name` is the Module half; the Add-on half of the same
   package lives under `@scope/name/addon/…`, and the logical Add-on id is `@scope/name`.
 - A Module binds to Core or exactly one Add-on and declares required versioned server capabilities.
@@ -123,7 +123,7 @@ several mounted artifacts. Adapter-, provider-, preset-, Theme-, and otherwise s
 Modules must not add a no-op Controller merely to satisfy package shape.
 
 The Module's `server.ts` export above is a server-safe Site/Next catalog contribution. It is not code
-that runs inside `phi-server`. If the Module needs server routes, hooks, jobs, migrations, secrets, or
+that runs inside `@phis/server`. If the Module needs server routes, hooks, jobs, migrations, secrets, or
 provider adapters, those live in the Add-on half of the same package, under its own entrypoints:
 
 ```text
@@ -134,7 +134,7 @@ Logical Add-on id:  @acme/status
 ```
 
 Note that `./server` is the Module's own React Server Components -- code that runs in the *Site*
-process. The Add-on runs in `phi-server`, which is why its entrypoints carry the `addon/` prefix rather
+process. The Add-on runs in `@phis/server`, which is why its entrypoints carry the `addon/` prefix rather
 than the name they would otherwise both want.
 
 The Module half never imports the Add-on half, and the Add-on half never imports React or
@@ -184,7 +184,7 @@ Design use may declare it as a peer, but that exception does not widen any Phi C
 A Module may be distributed as a compiled package without publishing its TypeScript or TSX
 sources. The archive form below is unchanged by how it travels: phis packages are fetched from a
 source rather than resolved from a registry, and the delivered package carries the Module half, the
-Add-on half, or both. See [DISTRIBUTION.md](../phi-server/DISTRIBUTION.md) in `phi-server`. The source repository may remain private while CI publishes only the generated ESM,
+Add-on half, or both. See [DISTRIBUTION.md](../phis-server/DISTRIBUTION.md) in `@phis/server`. The source repository may remain private while CI publishes only the generated ESM,
 declaration files, documentation, and license metadata. npm does not require a public source
 repository or the original `src/` tree.
 
@@ -700,7 +700,7 @@ Design direction: the derived segment is a collision-resistant fallback, not the
 approved target is a Site-owned base path — the descriptor proposes one, the operator confirms or overrides
 it when the Module is activated, and the persisted value feeds route compilation. A Module must therefore
 not treat its effective path as derivable from its own id, and must reference its own pages through
-`presetKey` rather than through a literal path. See the `phi-server` backlog item "Make Module route paths
+`presetKey` rather than through a literal path. See the `@phis/server` backlog item "Make Module route paths
 Site-owned and add the public SEO surface".
 
 ## 8. Export Client and Authoring manifests
@@ -985,7 +985,7 @@ code-owned shell preset. Page rendering, provider/controller resolution, Form di
 dispatch must all consume that same effective Area selection. A missing database override is not an empty
 module list.
 
-If the Module requires code in `phi-server`, that Add-on travels in the same package: one repository
+If the Module requires code in `@phis/server`, that Add-on travels in the same package: one repository
 delivers one package, which may carry a Module half, an Add-on half, or both under a single version and
 a single digest. `phis-cli` installs the Add-on half through the Add-on workflow first, because it is
 hot-pluggable while the Module half waits for a build; removal runs in reverse. Module activation never

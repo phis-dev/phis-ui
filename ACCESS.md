@@ -1,9 +1,9 @@
 # Phi Access and Visibility Contract
 
 This document is the normative target v1 contract for viewer access and responsive visibility in
-`@phis/ui`. `phi-server/AUTHORIZATION.md` owns role and group-claim persistence and server-side
-authorization; `phi-server/GROUPS_AND_STORAGE.md` owns general group membership and Media Space
-semantics; `phi-server/DIRECTORY_PROVIDERS.md` owns provider authority, Directory bindings, and external
+`@phis/ui`. `phis-server/AUTHORIZATION.md` owns role and group-claim persistence and server-side
+authorization; `phis-server/GROUPS_AND_STORAGE.md` owns general group membership and Media Space
+semantics; `phis-server/DIRECTORY_PROVIDERS.md` owns provider authority, Directory bindings, and external
 membership provenance. Shared UI must consume those contracts rather than inventing Page-, Widget-,
 Navigation-, Collection-, or Module-specific access paths.
 
@@ -211,7 +211,7 @@ routes; a disabled control is a courtesy, never the boundary.
 
 User management is the worked example. `/users` carries the Developer-tools policy, so a Developer
 enters and reads. The controller projects `permissions.readOnly`, and the page binds cell editing, the
-create toolbar action, and the edit and delete row actions to it. `phi-server` mirrors the split per
+create toolbar action, and the edit and delete row actions to it. `@phis/server` mirrors the split per
 method: GET behind the Developer guard, every mutating method behind the Admin-only one.
 
 ## 7. Viewport visibility matrix
@@ -301,7 +301,7 @@ columns. Missing and `0` both mean unrestricted; serializers omit the field for 
 unrestricted representation.
 
 Audience persistence stores the discriminated policy and its provider/role mask without separate
-Base/Custom role fields. Exact SQL ownership belongs to `phi-server`; shared parsers and serializers
+Base/Custom role fields. Exact SQL ownership belongs to `@phis/server`; shared parsers and serializers
 must preserve one canonical representation.
 
 For Regions, Layouts, Surfaces, and Widgets the concrete instance policy is the common

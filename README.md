@@ -32,10 +32,10 @@ The normative target v1 mutable Page path and structured Page/Asset reference AB
 The normative target v1 Settings container, Settings page shell, and Module configuration ABI lives in
 [SETTINGS.md](./SETTINGS.md).
 General Site groups, Media Spaces, folders, quotas, Storage Profiles, and protected Asset delivery are
-server-owned by `phi-server/GROUPS_AND_STORAGE.md`; this package consumes that contract only through the
+server-owned by `phis-server/GROUPS_AND_STORAGE.md`; this package consumes that contract only through the
 shared access snapshot and registered Asset Providers.
 Provider-neutral user/group administration and future LDAP, Active Directory, SCIM, or Entra bindings
-are server-owned by `phi-server/DIRECTORY_PROVIDERS.md`. The optional feature UI is the separate P2
+are server-owned by `phis-server/DIRECTORY_PROVIDERS.md`. The optional feature UI is the separate P2
 package `@phis/groups`, not a `@phis/ui` Runtime Module.
 The normative Next.js Site/Skeleton ownership and static entrypoint contract lives in
 [NEXT_INTEGRATION.md](./NEXT_INTEGRATION.md).
@@ -85,7 +85,7 @@ Use CLI findings as the local source of truth for Ant Design implementation deci
 - Site repositories should not host business logic that can already live in `@phis/ui`; wrappers and proxies should delegate, not re-implement.
 - Those proxy entrypoints should delegate to shared gateway helpers rather than hardcode upstream target logic in the site repo.
 - The preferred long-lived site bridge surface is a small fixed set of explicit route entrypoints, not a catch-all `api/v1/*` browser proxy.
-- Admin log ingestion, parsing, and filtering should be served by `phi-server`; shared UI should only render and consume the resulting `/api/site/admin/logs` feed through the existing catch-all route surface.
+- Admin log ingestion, parsing, and filtering should be served by `@phis/server`; shared UI should only render and consume the resulting `/api/site/admin/logs` feed through the existing catch-all route surface.
 - All CMS logic must live in `@phis/ui`.
   - CMS resolution
   - area and page fallback resolution
@@ -635,7 +635,7 @@ Server/client boundary for those layers:
 - Widget instance config belongs to CMS widget nodes in revision `tree_json`, not to `site.theme.widgets.*`.
 - If a widget persists canonical CMS content through `content_id`, its shared definition must declare that contract explicitly through `contentBinding`.
 - Builder CMS write payloads must forward `contentBinding` as declarative metadata.
-- `phi-server` persists namespaced widget types in revision nodes, but it must not branch on concrete widget `typeKey`s for content persistence when the payload already declares `contentBinding`.
+- `@phis/server` persists namespaced widget types in revision nodes, but it must not branch on concrete widget `typeKey`s for content persistence when the payload already declares `contentBinding`.
 - `site.theme` remains reserved for global design defaults such as fonts, colors, shell defaults, and Ant Design deltas.
 - Region and preset data should be normalized into stable shared interfaces before rendering.
 - `PhiCmsLayoutRenderer` is the generic region/layout tree renderer for area-owned regions.
@@ -823,7 +823,7 @@ never performs identity remapping itself.
 - Registries should expose both:
   - the current technical runtime id
   - and canonical `pluginKey` / `typeKey` metadata for future DB/plugin resolution
-- A consuming site should keep its CMS catch-all `layout.tsx` and `page.tsx` thin and deterministic; layout and content resolution should flow from the site wrapper to `@phis/ui` to `phi-server`.
+- A consuming site should keep its CMS catch-all `layout.tsx` and `page.tsx` thin and deterministic; layout and content resolution should flow from the site wrapper to `@phis/ui` to `@phis/server`.
 
 Example site bridge:
 
@@ -1090,23 +1090,23 @@ activation and ownership details within that contract.
 The terminology is strict across the Site/server boundary:
 
 - a **Module** is a Site/client extension compiled into a Site application
-- an **Add-on** is a server extension compiled into `phi-server`
-- **Core** is the built-in `phi-server` capability provider
+- an **Add-on** is a server extension compiled into `@phis/server`
+- **Core** is the built-in `@phis/server` capability provider
 
 Every Module declares exactly one server binding: either Core or exactly one logical Add-on id. A
 Module must not bind to several Add-ons, install or enable an Add-on, or derive server availability
 from client state. One Add-on may serve several Modules only when they intentionally share one
 integration owner and deployment lifecycle. The normative server-side installation, capability,
 routing, Site-enablement, migration, and load-balancing contract lives in
-`phi-server/SERVER_ADDONS.md`.
+`phis-server/SERVER_ADDONS.md`.
 
 Module and Add-on entrypoints are physically separate module graphs, whether or not they ship in the
-same package. `phi-server` never imports a Site/React entrypoint, Site applications never import an
+same package. `@phis/server` never imports a Site/React entrypoint, Site applications never import an
 `addon/` entrypoint, and both sides may share only a neutral, React-free wire-contract package. Missing or incompatible server capabilities are resolved server-side
 and produce a scoped diagnostic plus a deduplicated structured log entry; Module activation never
 installs or auto-enables server code.
 
-When a Module has a direct `phi-server` counterpart, both halves ship as one package: `@scope/name` is
+When a Module has a direct `@phis/server` counterpart, both halves ship as one package: `@scope/name` is
 the Module, `@scope/name/addon/…` is the Add-on, and the Add-on's logical provider id is `@scope/name`.
 The entrypoint prefix identifies the half, not a different provider.
 
@@ -1120,7 +1120,7 @@ type PhiRuntimeModuleServerBinding = {
 ```
 
 Capability ids are exact, versioned ABI requirements. During server resolution the Site fetches the
-site-specific capability snapshot from `phi-server`. A selected Module activates only when its provider
+site-specific capability snapshot from `@phis/server`. A selected Module activates only when its provider
 is available and every required capability is present. An unavailable dependent Module is omitted from
 route, controller, widget, layout, and provider activation while its persisted selection remains intact
 for diagnostics and later recovery. Modules with no server requirements bind explicitly to Core with an
@@ -1640,9 +1640,9 @@ Submit dispatch contract:
 - `route target`
   - the actual execution endpoint selected from the active module-owned handler Provider by the Site gateway
   - examples:
-    - `phi-server:/api/auth/route.ts`
-    - `phi-server:/api/account/route.ts`
-    - `phi-server:/api/forms/route.ts`
+    - `phis-server:/api/auth/route.ts`
+    - `phis-server:/api/account/route.ts`
+    - `phis-server:/api/forms/route.ts`
     - `site:/api/site/forms/route.ts`
 
 The Site gateway resolves the Published Form from the active target-Area module catalog, resolves its
@@ -1651,7 +1651,7 @@ category to the concrete target. A Form revision or Client request never chooses
 
 Submit dispatcher contract:
 
-- the browser must never call `phi-server` directly
+- the browser must never call `@phis/server` directly
 - the browser talks only to a site-local dispatcher or server action
 - the Browser sends only `formId`, the closed phase (`submit` or `confirm`), and validated values to a thin
   Site route such as `/api/site/forms`
@@ -1673,9 +1673,9 @@ Submit dispatcher contract:
   name a cookie, or grant authorization
 - Translation payloads stay out of the data-source contract and the submit contract.
 - the dispatcher then chooses one of the category targets:
-  - `phi-server:/api/auth/route.ts`
-  - `phi-server:/api/account/route.ts`
-  - `phi-server:/api/forms/route.ts`
+  - `phis-server:/api/auth/route.ts`
+  - `phis-server:/api/account/route.ts`
+  - `phis-server:/api/forms/route.ts`
   - `site:/api/site/forms/route.ts`
 - no single global submit route should own every form flow
 - Persisted forms should be site-scoped and plugin-scoped, with positive IDs and flags for stateful control.
@@ -1786,7 +1786,7 @@ Rules:
 - Set `ctx` only when semantic conflicts require it.
 - `format` defaults to `text`.
 - Use `format = "html"` only when the source string is intentional translatable HTML markup.
-- Site-scoped `tr`/`trBulk` calls do not carry Site source-language policy through widget runtime. `phi-server` derives the immutable Site `sourceLocale` from the Site context.
+- Site-scoped `tr`/`trBulk` calls do not carry Site source-language policy through widget runtime. `@phis/server` derives the immutable Site `sourceLocale` from the Site context.
 - Global Phi Core/package/preset source text is `en` and never inherits a Site locale. The Site `defaultLocale` must never be substituted for it.
 - `defaultLocale` is only the final request-locale fallback and is not part of the general widget runtime contract. Locale settings obtain it from their dedicated Admin endpoint.
 - Dynamic values must not be part of the string sent to `tr`, `trGlobal`, `trBulk`, or label-set translation. This includes first names, last names, usernames, email addresses, company names, customer numbers, site names, URLs, and similar profile/business data.
@@ -1814,10 +1814,10 @@ Rules:
 - `react`, `react-dom`, `next`, `antd`, and `@ant-design/icons` stay in `peerDependencies`.
 - Consuming sites must use `transpilePackages: ["@phis/ui"]`.
 - Ant Design SSR/style injection belongs to the consuming site's root layout through `@ant-design/nextjs-registry`, `ConfigProvider`, and `App`.
-- Backend-owned state such as session persistence, auth storage, CSRF state, and form-guard verification stays in `phi-server`.
+- Backend-owned state such as session persistence, auth storage, CSRF state, and form-guard verification stays in `@phis/server`.
 - Internal Phi-server adapter functions in `gateway/*` are not public package API.
 - Public server-only helpers must use dedicated namespaces such as `server-helpers/*`.
-- `gateway/site-config.ts` is the typed server-side fetch/read layer for site config JSON from `phi-server`; it is not the site-config source of truth and not a widget-specific fallback path for client code.
+- `gateway/site-config.ts` is the typed server-side fetch/read layer for site config JSON from `@phis/server`; it is not the site-config source of truth and not a widget-specific fallback path for client code.
 - A normalized shared widget runtime should distinguish at least:
   - `site`
   - `locale`
@@ -1831,8 +1831,8 @@ Rules:
 
 ## Locale Capability Contract
 
-- Locale support is resolved centrally by `phi-server` and consumed by `phis-ui`.
-- `phi-server` owns the maximum locale capability superset and each site's validated subset.
+- Locale support is resolved centrally by `@phis/server` and consumed by `phis-ui`.
+- `@phis/server` owns the maximum locale capability superset and each site's validated subset.
 - The server capability superset must cover at least every target language supported by the configured DeepL target-language snapshot.
 - Site locales should use BCP-47-style identifiers where applicable, for example `de-DE`, `de-CH`, `en-US`, `en-GB`, `ja-JP`, `zh-Hans`, `zh-Hant`, `pt-BR`, and `pt-PT`.
 - Shared UI must not validate platform locale support and must not assume that site locales map 1:1 to Ant Design or DeepL identifiers.

@@ -137,9 +137,9 @@ Used by `PhiLocaleWidget`.
 
 ## Locale Capability Contract
 
-Locale availability is not a theme concern. It is part of site runtime config and is validated/resolved by `phi-server`.
+Locale availability is not a theme concern. It is part of site runtime config and is validated/resolved by `@phis/server`.
 
-- `phi-server` defines the maximum supported locale capability set.
+- `@phis/server` defines the maximum supported locale capability set.
 - The server capability set must cover at least every DeepL target language supported by the configured DeepL provider snapshot.
 - Each site exposes a subset through its default locale and available locales.
 - Site locales should use BCP-47-style identifiers where applicable, for example `de-DE`, `de-CH`, `en-US`, `en-GB`, `ja-JP`, `zh-Hans`, `zh-Hant`, `pt-BR`, and `pt-PT`.

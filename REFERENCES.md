@@ -3,7 +3,7 @@
 This document defines the normative target-v1 `@phis/ui` contract for mutable Site Page paths,
 structured internal Page and Asset references, navigation targets, and references embedded in Markdown
 or HTML. Persistence, authorization, reference indexing, and authoritative resolution are owned by
-`phi-server` and must remain compatible with this contract.
+`@phis/server` and must remain compatible with this contract.
 
 ## Identity and canonical Page paths
 
@@ -13,7 +13,7 @@ Builder `pageKey`, a CMS node id, a title, a path, a navigation item id, and a r
 substituted for either Page identity.
 
 For a Site-authored Page, the canonical normalized path is the relational Page Scope path owned by
-`phi-server`. It is independent of Page revision JSON, Builder history, Undo/Redo, and publish pointers.
+`@phis/server`. It is independent of Page revision JSON, Builder history, Undo/Redo, and publish pointers.
 A serialized Page render model may carry the currently resolved path as transport data, but
 `tree_json.page.path` must not remain an independently writable or authoritative persistence path.
 

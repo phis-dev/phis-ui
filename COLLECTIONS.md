@@ -148,7 +148,7 @@ the Site Space; App collections may expose only the User or Group Spaces returne
 server. Widget `source.params`, filters, signals, and persisted presentation cannot claim Space ownership
 or widen access. Upload inherits the trusted active Space and selected Folder, not arbitrary presentation
 filters. Asset quota, ownership, Folder isolation, delivery policy, signed URLs, and Storage selection are
-governed exclusively by `phi-server/GROUPS_AND_STORAGE.md` and are not implied by this view contract.
+governed exclusively by `phis-server/GROUPS_AND_STORAGE.md` and are not implied by this view contract.
 
 ## Loading and signals
 

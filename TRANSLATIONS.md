@@ -1,11 +1,11 @@
 # Translation Client Contract
 
 This document defines the `@phis/ui` side of the normative v1 translation contract. Persistence,
-canonicalization, and provider behavior are owned by `phi-server`.
+canonicalization, and provider behavior are owned by `@phis/server`.
 
 ## Source locale transport
 
-- Ordinary Site translation calls omit `sourceLocale`; `phi-server` resolves the immutable Site source
+- Ordinary Site translation calls omit `sourceLocale`; `@phis/server` resolves the immutable Site source
   locale.
 - Standalone global labels may declare `sourceLocale`; omission means English. Module-owned third-party
   presets inherit their owning Module locale instead of declaring another source language.
@@ -23,7 +23,7 @@ canonicalization, and provider behavior are owned by `phi-server`.
 ## Context and format
 
 Callers provide only optional natural-language provider context. They do not create internal context
-flags. The gateway forwards `format: "html"` and explicit external source metadata; `phi-server` owns the
+flags. The gateway forwards `format: "html"` and explicit external source metadata; `@phis/server` owns the
 canonical `[html]`, `[extern]`, and `[html:extern]` storage envelope.
 
 ## Structured documents
@@ -36,7 +36,7 @@ canonical `[html]`, `[extern]`, and `[html:extern]` storage envelope.
   chunking while preserving unit order.
 
 HTML sanitization follows trust boundaries rather than render frequency. Canonical inline HTML is
-sanitized by `phi-server` before persistence. External documents and provider-produced HTML are
+sanitized by `@phis/server` before persistence. External documents and provider-produced HTML are
 sanitized in the server render path because they are not trusted persisted Widget markup. Public and
 App HTML Widget clients receive safe serialized markup and must not import the HTML sanitizer.
 

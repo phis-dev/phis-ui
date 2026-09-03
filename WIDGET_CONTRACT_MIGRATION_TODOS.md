@@ -15,7 +15,7 @@ projection are implemented and archived in
 the contract regressions are archived in
 [Media Space contract regressions](./WIDGET_CONTRACT_MIGRATION_COMPLETED.md#media-space-contract-regressions).
 
-- Add the App-side Space selector once `phi-server` exposes its authorized Space result. The active Space
+- Add the App-side Space selector once `@phis/server` exposes its authorized Space result. The active Space
   already reaches the Provider and Binding context, but the server currently reports only the Site Space,
   so the selector has no source. Builder, Editor, Picker, Inspector, and CMS Asset references stay pinned
   to the Site Space; Widget config and preset params must still never persist or claim ownership.
@@ -337,11 +337,11 @@ Verified in the browser on 2026-08-20 (`browser-test/scripts/check-variant-previ
 
 - The current Builder preview handoff stores each materialized snapshot in a process-local `globalThis` Map and
   passes only its opaque id to the following server render. This is intentionally not CMS Draft persistence.
-- This contract is valid while the Skeleton runs as exactly one frontend Node.js process. `phi-server` may be
+- This contract is valid while the Skeleton runs as exactly one frontend Node.js process. `@phis/server` may be
   load-balanced independently because it does not own the current snapshot Map.
 - Before enabling multiple Skeleton workers, instances, serverless handlers, or rolling request handoff, replace
   the Map with a shared TTL-backed transient store in
-  `phi-server` or equivalent shared infrastructure. Bind every entry to the Site and authorized Builder session,
+  `@phis/server` or equivalent shared infrastructure. Bind every entry to the Site and authorized Builder session,
   preserve the short-lived opaque-id transport, and reject cross-session reads.
 - Process restarts currently discard in-flight preview snapshots by design. Sticky sessions may reduce
   cross-instance misses but do not satisfy the target contract across restarts or deployments.

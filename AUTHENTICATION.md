@@ -2,7 +2,7 @@
 
 This document is the normative target v1 frontend/runtime-module projection of the Site authentication
 contract. Global users, credentials, provider validation, account linking, Site policy, sessions, and CLI
-recovery are owned by `phi-server` and defined in the sibling `phi-server/AUTHENTICATION.md`. This package
+recovery are owned by `@phis/server` and defined in the sibling `phis-server/AUTHENTICATION.md`. This package
 must not create a second identity, policy, or session model.
 
 The migration is an ABI break. Legacy area-agnostic Auth presentation, globally unioned provider
@@ -166,7 +166,7 @@ security surfaces.
 ## 6. Browser/server boundary
 
 Widgets and Controllers consume only the Site runtime's same-origin `/api/auth/*` facade. The Site bridge
-maps that facade to canonical `phi-server` `/api/v1/auth/*`, injects trusted Site/server context, and keeps
+maps that facade to canonical `@phis/server` `/api/v1/auth/*`, injects trusted Site/server context, and keeps
 server tokens and provider secrets outside the browser.
 
 Successful login navigation resolves an explicit `next` path inside the server-selected user Area. The
