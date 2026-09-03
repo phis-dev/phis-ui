@@ -15,13 +15,8 @@ export type PhiRuntimeModuleServerBinding = {
   requiredCapabilities: readonly PhiServerCapabilityId[];
 };
 
-export type PhiServerCapabilityState =
-  | "available"
-  | "missing"
-  | "disabled"
-  | "incompatible"
-  | "misconfigured"
-  | "unavailable";
+export type { PhiServerCapabilityState } from "@phis/contracts/server-capabilities";
+import type { PhiServerCapabilityState } from "@phis/contracts/server-capabilities";
 
 export type PhiServerCapabilityDescriptor = {
   id: PhiServerCapabilityId;
