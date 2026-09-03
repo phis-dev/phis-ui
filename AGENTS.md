@@ -496,18 +496,12 @@
 - Low-level building blocks may still use neutral names such as `ContactForm` and `RegistrationForm`, but exported high-level shared widgets and layouts should follow the `Phi*` naming scheme.
 - `PhiServer*` names the server half of a pair whose client half is the bare `Phi*` name: the props a
   Server Component takes (`PhiServerBlockBaseProps`), the theme tokens the server delivers
-  (`PhiServerThemeTokens`). It is this package's own prefix and belongs nowhere else -- `phis` retired
-  it everywhere in 2026-09, and a `PhiServer*` name found outside this package is a leftover. Reading
-  one here as a leftover is the mistake to avoid: it is deliberate, and the pair is what it means.
-- A name that comes from `@phis/contracts` keeps the contract's spelling, which is `Phi*` for anything
-  this package reads (`PhiCapabilityState`, `PhiCapabilitySnapshot`, `PhiLogEvent`). The contract's
-  other half is `Phis*`, for what only `phis` and its Add-ons read; nothing here should carry it.
-- "Server" inside a name (`PhiRuntimeModuleServerBinding`) describes the thing being named -- a
-  Module's binding to a server provider -- rather than the namespace, and is unaffected by any of this.
-- The other half of this convention -- when a contract name is `Phis*` and when it is `Phi*` -- is
-  written down in `phis-server/AGENTS.md`, which in turn points back here for `PhiServer*`. Change one
-  and the other stops being true: they were split across two repositories once before, and the half
-  that lived only in someone's head is the half that got lost.
+  (`PhiServerThemeTokens`). It is this package's own prefix and appears nowhere else.
+- A name from `@phis/contracts` keeps the contract's spelling: `Phi*` for what this package reads
+  (`PhiCapabilityState`, `PhiCapabilitySnapshot`, `PhiLogEvent`). Its other half, `Phis*`, is for what
+  only `phis` and its Add-ons read and does not appear here.
+- "Server" inside a name (`PhiRuntimeModuleServerBinding`) describes the thing, not the namespace.
+- The `Phis*`/`Phi*` half of this convention is in `phis-server/AGENTS.md`.
 - Shared math/layout primitives such as neutral spacing scales or golden-ratio variables are allowed here.
 - Start layout/math primitives from a strict golden-ratio / Fibonacci-inspired scale and only round when the UI demonstrates a clear need.
 - Shared token helpers may generate Ant Design `ConfigProvider` token/component payloads from those neutral layout primitives.
