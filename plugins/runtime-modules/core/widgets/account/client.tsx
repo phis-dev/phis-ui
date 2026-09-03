@@ -15,6 +15,7 @@ import type { PhiCmsInstanceId } from "../../../../../types/cms-instance-id";
 import type { PhiNavItem } from "../../../../../components/shell/shell-types";
 import { fetchPhiViewerAvatar } from "../../../../../components/account/avatar-client";
 import { PHI_AVATAR_REVISION } from "../../../../../components/account/avatar-revision";
+import { PHIS_SITE_KEY_HEADER } from "../../../../../constants/http-headers";
 
 export type PhiAccountWidgetConfig = {
   variant?: "full" | "compact" | "icon-only";
@@ -92,7 +93,7 @@ export function PhiAccountWidgetClient({
       });
 
       if (runtime?.site.key?.trim()) {
-        headers.set("x-phi-site-key", runtime.site.key.trim().toLowerCase());
+        headers.set(PHIS_SITE_KEY_HEADER, runtime.site.key.trim().toLowerCase());
       }
 
       const logoutResponse = await fetch("/api/auth/logout", {

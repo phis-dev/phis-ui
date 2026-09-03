@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Button, Flex, Spin, Typography } from "antd";
 import { PhiAlertControl } from "../../../../../components/controls/phi-alert-control";
 import type { PhiBlockRuntime, PhiClientBlockBaseProps } from "../../../../../types";
+import { PHIS_SITE_KEY_HEADER } from "../../../../../constants/http-headers";
 
 export function PhiAuthLogoutWidgetClient({
   runtime,
@@ -30,7 +31,7 @@ export function PhiAuthLogoutWidgetClient({
         if (!csrfResponse.ok || !token) throw new Error("Logout could not be initialized.");
 
         const headers = new Headers({ "x-csrf-token": token });
-        if (siteKey) headers.set("x-phi-site-key", siteKey);
+        if (siteKey) headers.set(PHIS_SITE_KEY_HEADER, siteKey);
         const response = await fetch("/api/auth/logout", {
           method: "POST",
           credentials: "include",

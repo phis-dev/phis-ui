@@ -1,4 +1,5 @@
 import type { PhiImagePreviewApiRecord } from "./phi-image-preview-data";
+import { PHIS_AREA_HEADER, buildPhiMediaRequestHeaders } from "./phi-media-request-headers";
 
 /**
  * How the control plane says this body is to be delivered.
@@ -100,7 +101,10 @@ export async function reportPhiMediaUploadFailure(
     await fetch(reportUrl, {
       method: "POST",
       credentials: "include",
-      headers: { "Content-Type": "application/json", Accept: "application/json" },
+      headers: buildPhiMediaRequestHeaders({
+      "Content-Type": "application/json",
+      Accept: "application/json",
+    }),
       body: JSON.stringify({ reason, detail: detail ?? null }),
     });
   } catch {
@@ -206,7 +210,10 @@ export async function initPhiMediaUploadSession(
     : "/api/site/media/uploads/init";
   const response = await fetch(initUrl, {
     method: "POST",
-    headers: { Accept: "application/json", "Content-Type": "application/json" },
+    headers: buildPhiMediaRequestHeaders({
+      Accept: "application/json",
+      "Content-Type": "application/json",
+    }),
     cache: "no-store",
     body: JSON.stringify({
       filename: file.name,
@@ -260,6 +267,10 @@ export async function uploadPhiMediaUploadBody(
       xhr.setRequestHeader("Accept", "application/json");
       if (file.type) {
         xhr.setRequestHeader("Content-Type", file.type);
+      }
+      const area = buildPhiMediaRequestHeaders().get(PHIS_AREA_HEADER);
+      if (area) {
+        xhr.setRequestHeader(PHIS_AREA_HEADER, area);
       }
     }
     for (const [header, value] of Object.entries(plan.headers ?? {})) {
@@ -335,7 +346,10 @@ export async function finalizePhiMediaUploadSession(
 ): Promise<{ asset: PhiImagePreviewApiRecord }> {
   const response = await fetch(finalizeUrl, {
     method: "POST",
-    headers: { Accept: "application/json", "Content-Type": "application/json" },
+    headers: buildPhiMediaRequestHeaders({
+      Accept: "application/json",
+      "Content-Type": "application/json",
+    }),
     cache: "no-store",
     body: JSON.stringify(completion === undefined ? {} : { completion }),
   });

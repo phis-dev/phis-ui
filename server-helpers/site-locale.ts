@@ -7,6 +7,7 @@ import type {
   SiteLocaleConfig,
   SiteLocaleOption,
 } from "../helpers/site-locale-config";
+import { PHIS_SITE_KEY_HEADER } from "../constants/http-headers";
 
 export type FetchSiteLocaleConfigOptions = {
   apiBaseUrl?: string;
@@ -119,7 +120,7 @@ export async function fetchSiteLocaleConfig(
     headers: {
       Accept: "application/json",
       Authorization: `Bearer ${resolvedRuntime.internalToken}`,
-      "x-phi-site-key": resolvedRuntime.siteKey as string,
+      [PHIS_SITE_KEY_HEADER]: resolvedRuntime.siteKey as string,
       "user-agent": "phi-shared-ui-locale-config/1.0",
     },
     cache: "no-store",
@@ -144,7 +145,7 @@ export async function fetchResolvedSiteLocale(
   const headers: Record<string, string> = {
     Accept: "application/json",
     Authorization: `Bearer ${resolvedRuntime.internalToken}`,
-    "x-phi-site-key": resolvedRuntime.siteKey as string,
+    [PHIS_SITE_KEY_HEADER]: resolvedRuntime.siteKey as string,
     "user-agent": "phi-shared-ui-locale-resolution/1.0",
   };
   if (options.acceptLanguage?.trim()) headers["accept-language"] = options.acceptLanguage.trim();

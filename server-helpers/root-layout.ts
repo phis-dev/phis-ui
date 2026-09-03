@@ -7,6 +7,7 @@ import { getSiteThemeRevision } from "../gateway/site-theme";
 import type { PhiResolvedLocale } from "../helpers/site-locale-config";
 import { getPhiCmsReviewRevision, resolvePhiCmsReviewParams } from "./cms-review";
 import { resolvePhiResolvedRequestLocale } from "./request-locale";
+import { PHIS_REQUEST_SEARCH_HEADER } from "../constants/http-headers";
 
 export type PhiRootLayoutContext = {
   site: Awaited<ReturnType<typeof getResolvedSiteConfig>>;
@@ -87,7 +88,7 @@ export async function loadPhiRootLayoutContext({
 }: LoadPhiRootLayoutContextOptions): Promise<PhiRootLayoutContext> {
   const requestHeaders = await headers();
   const cookieHeader = requestHeaders.get("cookie");
-  const searchParams = parseSearchParamsHeader(requestHeaders.get("x-phi-request-search"));
+  const searchParams = parseSearchParamsHeader(requestHeaders.get(PHIS_REQUEST_SEARCH_HEADER));
   const [site, resolvedLocale] = await Promise.all([
     getResolvedSiteConfig({
       apiBaseUrl,

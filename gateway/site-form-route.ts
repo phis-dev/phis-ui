@@ -6,6 +6,7 @@ import {
 } from "./form-submit";
 import { resolvePhiServerFormHandler } from "./form-handler-resolution";
 import type { PhiRuntimeModuleCatalog } from "../plugins/runtime-modules/contracts";
+import { PHIS_SITE_KEY_HEADER } from "../constants/http-headers";
 
 export type BuildPhiSiteFormRouteHandlersOptions = {
   upstreamBaseUrl: string;
@@ -199,7 +200,7 @@ export function buildPhiSiteFormRouteHandlers({
       request,
       upstreamBaseUrl,
       internalToken: readBearerToken(relayHeaders),
-      siteKey: relayHeaders.get("x-phi-site-key")?.trim() ?? "",
+      siteKey: relayHeaders.get(PHIS_SITE_KEY_HEADER)?.trim() ?? "",
       formId,
       phase: "preview",
       runtimeModuleCatalog,
@@ -243,7 +244,7 @@ export function buildPhiSiteFormRouteHandlers({
         request,
         upstreamBaseUrl,
         internalToken: readBearerToken(relayHeaders),
-        siteKey: relayHeaders.get("x-phi-site-key")?.trim() ?? "",
+        siteKey: relayHeaders.get(PHIS_SITE_KEY_HEADER)?.trim() ?? "",
         formId: body.formId,
         phase: body.phase,
         runtimeModuleCatalog,

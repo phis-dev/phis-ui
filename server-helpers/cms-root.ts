@@ -31,6 +31,7 @@ import {
   applyPhiBackgroundAssetProjection,
   resolvePhiBackgroundAssetProjection,
 } from "../components/widgets/helpers/background-reference-resolver.server";
+import { PHIS_REQUEST_PATH_HEADER, PHIS_REQUEST_SEARCH_HEADER } from "../constants/http-headers";
 
 export type LoadPhiCmsRootRequestArgs = {
   root: string;
@@ -92,8 +93,8 @@ async function loadPhiCmsServerRequest(): Promise<{
 
   return {
     request: {
-      pathname: normalizeRequestPathname(requestHeaders.get("x-phi-request-path")),
-      searchParams: parseSearchParamsHeader(requestHeaders.get("x-phi-request-search")),
+      pathname: normalizeRequestPathname(requestHeaders.get(PHIS_REQUEST_PATH_HEADER)),
+      searchParams: parseSearchParamsHeader(requestHeaders.get(PHIS_REQUEST_SEARCH_HEADER)),
     },
     cookieHeader: cookieStore.toString(),
   };

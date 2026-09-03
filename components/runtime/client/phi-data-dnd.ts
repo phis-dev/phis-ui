@@ -2,7 +2,7 @@
 
 import type { PhiRuntimeDataProviderKey } from "../../../types/runtime-data-provider";
 
-const PHI_DATA_DRAG_DATA_TYPE = "application/x-phi-data-drag+json";
+const PHI_DATA_DRAG_DATA_TYPE = "application/x-phis-data-drag+json";
 const PHI_DATA_DRAG_SCROLL_EDGE = 48;
 const PHI_DATA_DRAG_SCROLL_MAX_STEP = 20;
 let activePhiDataDragPayload: PhiDataDragPayload | null = null;

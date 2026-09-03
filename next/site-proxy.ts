@@ -6,6 +6,7 @@ import {
 } from "../helpers/site-locale-config";
 import { readPhiSiteRuntimeConfigSync } from "../helpers/site-runtime";
 import { fetchResolvedSiteLocale, fetchSiteLocaleConfig } from "../server-helpers/site-locale";
+import { PHIS_REQUEST_PATH_HEADER, PHIS_REQUEST_SEARCH_HEADER } from "../constants/http-headers";
 
 const KNOWN_SPECIAL_ROOTS = new Set<string>(PHI_CMS_SPECIAL_ROOTS);
 const PHI_LOCALE_COOKIE = "phi_locale";
@@ -62,8 +63,8 @@ export async function proxyPhiNextSiteRequest(request: NextRequest) {
 
   if (prefixedLocale) {
     requestHeaders.set("x-locale", prefixedLocale);
-    requestHeaders.set("x-phi-request-path", pathname);
-    requestHeaders.set("x-phi-request-search", search);
+    requestHeaders.set(PHIS_REQUEST_PATH_HEADER, pathname);
+    requestHeaders.set(PHIS_REQUEST_SEARCH_HEADER, search);
     const response = NextResponse.next({
       request: {
         headers: requestHeaders,
@@ -97,8 +98,8 @@ export async function proxyPhiNextSiteRequest(request: NextRequest) {
      * refused. `PhiCmsRootLayout` already resolves the catalog and owns both the redirect and the
      * refusal; see `AUTHENTICATION.md` section 6.
      */
-    requestHeaders.set("x-phi-request-path", pathname);
-    requestHeaders.set("x-phi-request-search", search);
+    requestHeaders.set(PHIS_REQUEST_PATH_HEADER, pathname);
+    requestHeaders.set(PHIS_REQUEST_SEARCH_HEADER, search);
     const response = NextResponse.next({
       request: {
         headers: requestHeaders,

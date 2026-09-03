@@ -218,7 +218,7 @@ mark them, decide per item for the rest. Scan script:
 
 - **Gateway layer is thin**: 27 files, 2,874 lines total; site-key headers, URL building and
   envelope reading go through the shared `data-source-fetch.ts` / `mutation-fetch.ts` helpers.
-  Only `site-form-route.ts` sets `x-phi-site-key` directly (it proxies, so that is correct).
+  Only `site-form-route.ts` sets `x-phis-site-key` directly (it proxies, so that is correct).
 - **Client envelope gates** were already converged in the server envelope stage 2 work
   (`{error, message?, details?}` + HTTP status; form gateway excluded by design).
 - The `types/references.ts` ≙ `phi-server/src/lib/internal-references.ts` codec twin is an

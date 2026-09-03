@@ -1,3 +1,5 @@
+import { PHIS_SITE_KEY_HEADER, PHIS_TOKEN_HEADER } from "../constants/http-headers";
+
 const DEFAULT_API_BASE_URL = "";
 
 export const API_PATHS = {
@@ -71,7 +73,7 @@ export function buildApiHeaders({
   const headers = new Headers(extra);
 
   if (includeToken && token) {
-    headers.set("x-phi-token", token);
+    headers.set(PHIS_TOKEN_HEADER, token);
   }
 
   if (includePublishable && publishableApiKey) {
@@ -79,7 +81,7 @@ export function buildApiHeaders({
   }
 
   if (includeSiteKey && siteKey) {
-    headers.set("x-phi-site-key", siteKey);
+    headers.set(PHIS_SITE_KEY_HEADER, siteKey);
   }
 
   if (includeLocale && locale) {

@@ -14,6 +14,7 @@ import { createPhiRuntimeModuleCatalog } from "../plugins/runtime-modules/contra
 import { PHI_AUTH_RUNTIME_MODULE_ID } from "../plugins/runtime-modules/auth/ids";
 import type { PhiFormHandlerProviderDescriptor } from "../types/form-descriptor";
 import type { PhiRuntimeModuleCatalogEntry } from "../types/cms-plugins";
+import { PHIS_SITE_KEY_HEADER } from "../constants/http-headers";
 
 // ---------------------------------------------------------------------------
 // Descriptor algebra
@@ -306,7 +307,7 @@ function buildHandlers(options?: { upstreamBaseUrl?: string; withAddOn?: boolean
     upstreamBaseUrl: options?.upstreamBaseUrl ?? UPSTREAM,
     buildHeaders: () => new Headers({
       authorization: "Bearer internal-token",
-      "x-phi-site-key": "site",
+      [PHIS_SITE_KEY_HEADER]: "site",
     }),
     timeoutMs: 2000,
     ...(options?.withAddOn ? { runtimeModuleCatalog: catalogWithAddOn } : {}),

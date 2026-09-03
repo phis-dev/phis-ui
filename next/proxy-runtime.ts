@@ -6,6 +6,7 @@ import {
   getPhiInternalApiTimeoutMs,
   readPhiSiteRuntimeConfigSync,
 } from "../helpers/site-runtime";
+import { PHIS_SITE_KEY_HEADER } from "../constants/http-headers";
 
 const HOP_BY_HOP_HEADERS = new Set(["connection", "content-length", "host"]);
 
@@ -27,8 +28,8 @@ export function buildPhiNextProxyHeaders(request: NextRequest, userAgent: string
     }
   });
 
-  if (runtimeConfig.site.key && !headers.has("x-phi-site-key")) {
-    headers.set("x-phi-site-key", runtimeConfig.site.key);
+  if (runtimeConfig.site.key && !headers.has(PHIS_SITE_KEY_HEADER)) {
+    headers.set(PHIS_SITE_KEY_HEADER, runtimeConfig.site.key);
   }
 
   if (runtimeConfig.phis.internalToken) {

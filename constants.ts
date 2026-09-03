@@ -3,6 +3,7 @@ export * from "./constants/phi-cms";
 export * from "./constants/cms-layout-types";
 export * from "./constants/cms-widget-types";
 export * from "./constants/cms-plugin-categories";
+export * from "./constants/http-headers";
 export * from "./constants/media";
 export * from "./constants/package";
 export * from "./constants/module-identity";

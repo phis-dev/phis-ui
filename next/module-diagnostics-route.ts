@@ -6,6 +6,7 @@ import { PHI_CMS_AREA_KEYS, type PhiCmsAreaKey } from "../constants/cms-areas";
 import { getPhiServerCapabilitySnapshot } from "../gateway/server-capabilities";
 import { resolvePhiRuntimeModuleServerBinding } from "../plugins/runtime-modules/server-capabilities";
 import type { PhiCmsSiteBridge } from "../types/cms-plugins";
+import { PHIS_TOKEN_HEADER } from "../constants/http-headers";
 
 /**
  * What this Site needs from its server, and what it is not getting.
@@ -63,7 +64,7 @@ export function buildPhiSiteModuleDiagnosticsRouteHandler({
     const { apiBaseUrl, internalToken, siteKey } = anyBridge.runtime;
 
     // An operator's check, not a public one: it names which Modules a Site lost and why.
-    if (!internalToken || request.headers.get("x-phi-token")?.trim() !== internalToken) {
+    if (!internalToken || request.headers.get(PHIS_TOKEN_HEADER)?.trim() !== internalToken) {
       return json({ error: "unauthorized" }, 401);
     }
 
