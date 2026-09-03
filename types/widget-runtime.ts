@@ -22,10 +22,19 @@ export type PhiBlockRuntimeSite = {
   publicUrl?: string;
   name?: string;
   hostname?: string;
-  availableLocales?: Array<{
+  /**
+   * Which locales this Site has, and which one it falls back to.
+   *
+   * Both are Site configuration and neither is optional: `phis.sites` requires a default locale, and a
+   * Site with no locales cannot render. They are here rather than resolved in the browser because the
+   * alternative was every caller carrying its own guess -- a hardcoded ["en","de","fr","es"] and a
+   * hardcoded "en", neither of which an installation could depart from.
+   */
+  availableLocales: Array<{
     code: string;
     label: string;
   }>;
+  defaultLocale: string;
   store?: {
     enabled: boolean;
   };

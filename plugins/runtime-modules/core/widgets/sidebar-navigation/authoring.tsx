@@ -25,7 +25,7 @@ function PhiSidebarNavigationWidgetEditor({
   config,
   canvas,
 }: {
-  runtime: Pick<PhiBlockRuntime, "locale">;
+  runtime: Pick<PhiBlockRuntime, "site" | "locale">;
   config: PhiCmsSidebarNavigationWidgetConfig;
   canvas: PhiCmsWidgetAuthoringCanvas;
 }) {
@@ -41,7 +41,7 @@ function PhiSidebarNavigationWidgetEditor({
 
   return (
     <PhiSidebarNavigationWidgetPreviewClient
-      runtime={{ locale: runtime.locale, area: currentCmsArea }}
+      runtime={{ site: runtime.site, locale: runtime.locale, area: currentCmsArea }}
       config={config}
       items={mapPhiBuilderNavigationItemsToNavItems(
         resolvePhiBuilderNavigationPageTargets(currentCmsArea, navigation.items, canvas.pageCatalog),

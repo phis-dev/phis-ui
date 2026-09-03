@@ -16,7 +16,7 @@ import { resolvePhiWidgetFontSize } from "../../../../../components/widgets/help
 export type PhiSidebarNavigationWidgetClientProps = PhiClientBlockBaseProps<
   PhiNoLabels,
   Pick<PhiCmsSidebarNavigationWidgetConfig, "fontFamily" | "fontSize">,
-  Pick<PhiBlockRuntime, "locale" | "area">
+  Pick<PhiBlockRuntime, "site" | "locale" | "area">
 > & {
   items: PhiNavItem[];
   menuTheme?: "light" | "dark";
@@ -63,6 +63,8 @@ export function PhiSidebarNavigationWidgetClient({
   menuTheme,
 }: PhiSidebarNavigationWidgetClientProps) {
   const pathname = usePathname() ?? "/";
+  // Without a runtime the Site's locales are unknown, and no path segment can be read as one.
+  const availableLocales = runtime?.site.availableLocales.map((option) => option.code) ?? [];
   const presentation = usePhiSidebarMenuPresentation(config);
 
   async function handleAction(action: "logout") {
@@ -101,12 +103,13 @@ export function PhiSidebarNavigationWidgetClient({
       scope="sidebar-navigation"
       mode="inline"
       menuTheme={menuTheme}
-      selectedKeys={collectPhiSelectedNavKeys(pathname, items)}
+      selectedKeys={collectPhiSelectedNavKeys(pathname, items, availableLocales)}
       items={mapPhiNavItems(
         runtime?.locale.current ?? "en",
         runtime?.area ?? "public",
         pathname,
         items,
+        availableLocales,
         { onAction: handleAction },
       )}
       collapsed={presentation.collapsed}
@@ -133,7 +136,7 @@ export function PhiSidebarNavigationWidgetPreviewClient({
       scope="sidebar-navigation-preview"
       mode="inline"
       menuTheme={menuTheme}
-      selectedKeys={collectPhiSelectedNavKeys(pathname, items)}
+      selectedKeys={collectPhiSelectedNavKeys(pathname, items, [])}
       items={mapPhiNavItemsStatic(items)}
       collapsed={presentation.collapsed}
       collapsedWidth={presentation.collapsedWidth}

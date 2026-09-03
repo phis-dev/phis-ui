@@ -14,6 +14,8 @@ export function mapPhiNavItems(
   currentArea: PhiBlockRuntime["area"],
   currentPathname: string,
   items: PhiNavItem[],
+  /** Which locales this Site has, so a locale prefix is recognised as one. */
+  availableLocales: readonly string[],
   options?: {
     interactive?: boolean;
     onAction?: (action: NonNullable<PhiNavItem["action"]>) => void;
@@ -48,7 +50,7 @@ export function mapPhiNavItems(
     const localizedHref = resolveNavHref(item);
     const isCurrent =
       !item.external && !hasChildren && localizedHref !== null &&
-      isPhiNavPathActive(currentPathname, localizedHref);
+      isPhiNavPathActive(currentPathname, localizedHref, availableLocales);
     const labelContent = <span>{item.label}</span>;
 
     return {
@@ -71,7 +73,7 @@ export function mapPhiNavItems(
       disabled: item.disabled,
       ...(item.icon ? { icon: <PhiIcon name={item.icon} /> } : {}),
       ...(hasChildren
-        ? { children: mapPhiNavItems(currentLocale, currentArea, currentPathname, item.children ?? [], options) }
+        ? { children: mapPhiNavItems(currentLocale, currentArea, currentPathname, item.children ?? [], availableLocales, options) }
         : {}),
     };
   });

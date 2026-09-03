@@ -71,6 +71,7 @@ export type PhiSiteRequestContext = {
       code: string;
       label: string;
     }>;
+    defaultLocale: string;
     themeRevision: {
       publishedRevisionId: number | null;
       workingDraftRevisionId: number | null;
@@ -275,7 +276,8 @@ export async function getPhiCmsRuntimeInfo({
     publicUrl: site.publicUrl,
     name: site.name,
     hostname: site.hostname,
-    availableLocales: site.availableLocales ?? [],
+    availableLocales: site.availableLocales,
+    defaultLocale: site.defaultLocale,
     store: {
       enabled: Boolean(site.store?.enabled),
     },

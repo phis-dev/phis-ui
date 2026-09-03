@@ -1,6 +1,13 @@
 import { PHI_CMS_AREA_KEYS, type PhiCmsAreaKey } from "../constants/cms-areas";
 
 export const DEFAULT_LOCALE = "en";
+/**
+ * The last hardcoded locale list, kept only for the Builder preview href.
+ *
+ * Which locales a Site has is server configuration and reaches the browser in the runtime; every other
+ * reader takes it from there. This one remains because the Builder's preview controller has no runtime
+ * in scope, and inventing one for it belongs to its own change rather than to this one.
+ */
 export const SUPPORTED_LOCALES = ["en", "de", "fr", "es"] as const;
 export const SUPPORTED_CMS_AREAS = PHI_CMS_AREA_KEYS;
 
@@ -161,8 +168,7 @@ export function stripLocaleFromPathname(
   pathname: string,
   options: Pick<NormalizeLocaleOptions, "defaultLocale" | "availableLocales"> = {},
 ) {
-  const availableLocales = normalizeAvailableLocales(options.availableLocales);
-  const resolvedAvailableLocales = availableLocales.length > 0 ? availableLocales : [...SUPPORTED_LOCALES];
+  const resolvedAvailableLocales = normalizeAvailableLocales(options.availableLocales);
   const segments = pathname.split("/").filter(Boolean);
   const firstSegment = segments[0];
   const localeCandidate = firstSegment

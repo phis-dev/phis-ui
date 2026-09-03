@@ -13,7 +13,7 @@ import { type PhiMenuTheme, type PhiNavItem } from "../../../../../components/sh
 export type PhiHeaderNavigationWidgetClientProps = PhiClientBlockBaseProps<
   PhiNoLabels,
   Record<string, never>,
-  Pick<PhiBlockRuntime, "locale" | "area">
+  Pick<PhiBlockRuntime, "site" | "locale" | "area">
 > & {
   items: PhiNavItem[];
   menuTheme?: PhiMenuTheme;
@@ -32,8 +32,10 @@ export function PhiHeaderNavigationWidgetClient({
 }: PhiHeaderNavigationWidgetClientProps) {
   const { token } = usePhiConfig();
   const pathname = usePathname() ?? "/";
-  const selectedKeys = collectPhiSelectedNavKeys(pathname, items);
-  const menuItems = mapPhiNavItems(runtime?.locale.current ?? "en", runtime?.area ?? "public", pathname, items, {
+  // Without a runtime the Site's locales are unknown, and no path segment can be read as one.
+  const availableLocales = runtime?.site.availableLocales.map((option) => option.code) ?? [];
+  const selectedKeys = collectPhiSelectedNavKeys(pathname, items, availableLocales);
+  const menuItems = mapPhiNavItems(runtime?.locale.current ?? "en", runtime?.area ?? "public", pathname, items, availableLocales, {
     interactive,
   });
   const resolvedHeight =

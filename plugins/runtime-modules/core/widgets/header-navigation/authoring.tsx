@@ -41,7 +41,7 @@ function PhiHeaderNavigationWidgetEditor({
 
   return (
     <PhiHeaderNavigationWidgetClient
-      runtime={{ locale: runtime.locale, area: currentCmsArea }}
+      runtime={{ site: runtime.site, locale: runtime.locale, area: currentCmsArea }}
       items={mapPhiBuilderNavigationItemsToNavItems(
         resolvePhiBuilderNavigationPageTargets(currentCmsArea, navigation.items, canvas.pageCatalog),
       )}
