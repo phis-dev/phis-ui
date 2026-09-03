@@ -1,6 +1,6 @@
 import "server-only";
 
-import { DEFAULT_LOCALE, normalizeLocale } from "../helpers/locale";
+import { PHI_CANONICAL_SOURCE_LOCALE, normalizeLocale } from "../helpers/locale";
 import { resolvePhiRuntimeConfig } from "../helpers/phis-runtime";
 import {
   formatPhiTranslation,
@@ -121,7 +121,7 @@ export async function trGlobalForLocale(
   const locale = normalizeLocale(localeInput);
   const options = buildGlobalTranslatorOptions(locale);
 
-  if (locale === normalizeLocale(DEFAULT_LOCALE)) {
+  if (locale === normalizeLocale(PHI_CANONICAL_SOURCE_LOCALE)) {
     return formatPhiTranslation(normalizedMessage, params);
   }
 
@@ -198,7 +198,7 @@ export async function trGlobalBulkForLocale(
   const locale = normalizeLocale(localeInput);
   const options = buildGlobalTranslatorOptions(locale);
 
-  if (locale === normalizeLocale(DEFAULT_LOCALE)) {
+  if (locale === normalizeLocale(PHI_CANONICAL_SOURCE_LOCALE)) {
     return normalizedMessages;
   }
 

@@ -1,6 +1,7 @@
 import { PHI_CMS_AREA_KEYS, type PhiCmsAreaKey } from "../constants/cms-areas";
 
-export const DEFAULT_LOCALE = "en";
+export { PHI_CANONICAL_SOURCE_LOCALE } from "@phis/contracts/locale";
+import { PHI_CANONICAL_SOURCE_LOCALE } from "@phis/contracts/locale";
 export const SUPPORTED_CMS_AREAS = PHI_CMS_AREA_KEYS;
 
 export type SiteLocale = string;
@@ -53,7 +54,7 @@ export function normalizeLocale(
   input: string | null | undefined,
   options: NormalizeLocaleOptions = {},
 ): SiteLocale {
-  const defaultLocale = normalizeLocaleCode(options.defaultLocale) || DEFAULT_LOCALE;
+  const defaultLocale = normalizeLocaleCode(options.defaultLocale) || PHI_CANONICAL_SOURCE_LOCALE;
   const availableLocales = normalizeAvailableLocales(options.availableLocales);
 
   if (!input) {

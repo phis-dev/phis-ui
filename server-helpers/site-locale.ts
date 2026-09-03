@@ -1,6 +1,6 @@
 import "server-only";
 
-import { DEFAULT_LOCALE, normalizeLocale } from "../helpers/locale";
+import { PHI_CANONICAL_SOURCE_LOCALE, normalizeLocale } from "../helpers/locale";
 import { resolvePhiRuntimeConfig } from "../helpers/phis-runtime";
 import type {
   PhiResolvedLocale,
@@ -92,13 +92,13 @@ function sanitizeSiteLocaleConfig(payload: unknown): SiteLocaleConfig {
     ? (site as { defaultLocale?: unknown; availableLocales?: unknown })
     : {};
   const fallbackDefaultLocale = typeof record.defaultLocale === "string"
-    ? normalizeLocale(record.defaultLocale, { defaultLocale: DEFAULT_LOCALE })
-    : DEFAULT_LOCALE;
+    ? normalizeLocale(record.defaultLocale, { defaultLocale: PHI_CANONICAL_SOURCE_LOCALE })
+    : PHI_CANONICAL_SOURCE_LOCALE;
   const availableLocales = normalizeLocaleOptions(record.availableLocales, fallbackDefaultLocale);
   return {
     defaultLocale: availableLocales.some((option) => option.code === fallbackDefaultLocale)
       ? fallbackDefaultLocale
-      : availableLocales[0]?.code ?? DEFAULT_LOCALE,
+      : availableLocales[0]?.code ?? PHI_CANONICAL_SOURCE_LOCALE,
     availableLocales,
   };
 }

@@ -4,7 +4,7 @@ import {
   createGlobalTranslator,
   type PhiGlobalTranslatorOptions,
 } from "./tr";
-import { DEFAULT_LOCALE, normalizeLocale } from "../helpers/locale";
+import { PHI_CANONICAL_SOURCE_LOCALE, normalizeLocale } from "../helpers/locale";
 import type { PhiRuntimeModuleDefinition } from "../types/cms-plugins";
 import { resolvePhiRuntimeModuleSourceLocale } from "../types/runtime-module-locale";
 
@@ -87,7 +87,7 @@ export async function getPhiLabelSet<TLabels extends Record<string, string>>(
   options: PhiGlobalTranslatorOptions,
   definition: PhiLabelSetDefinition<TLabels>,
 ) {
-  const sourceLocale = normalizeLocale(definition.sourceLocale ?? options.sourceLocale ?? DEFAULT_LOCALE);
+  const sourceLocale = normalizeLocale(definition.sourceLocale ?? options.sourceLocale ?? PHI_CANONICAL_SOURCE_LOCALE);
   const targetLocale = normalizeLocale(options.locale);
   const cacheKey = getLabelSetCacheKey(
     targetLocale,
