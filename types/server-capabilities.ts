@@ -15,8 +15,8 @@ export type PhiRuntimeModuleServerBinding = {
   requiredCapabilities: readonly PhiServerCapabilityId[];
 };
 
-export type { PhiServerCapabilityState } from "@phis/contracts/server-capabilities";
-import type { PhiServerCapabilityState } from "@phis/contracts/server-capabilities";
+export type { PhiCapabilityState } from "@phis/contracts/server-capabilities";
+import type { PhiCapabilityState } from "@phis/contracts/server-capabilities";
 
 export type PhiServerCapabilityDescriptor = {
   id: PhiServerCapabilityId;
@@ -25,7 +25,7 @@ export type PhiServerCapabilityDescriptor = {
 
 export type PhiServerCapabilityProvider = {
   providerId: PhiServerProviderId;
-  state: PhiServerCapabilityState;
+  state: PhiCapabilityState;
   diagnosticCode: string | null;
   capabilities: readonly PhiServerCapabilityDescriptor[];
 };
@@ -41,7 +41,7 @@ export type PhiRuntimeModuleServerBindingResolution =
   | { available: true }
   | {
       available: false;
-      state: PhiServerCapabilityState;
+      state: PhiCapabilityState;
       diagnosticCode: string;
       missingCapabilities: readonly PhiServerCapabilityId[];
     };
