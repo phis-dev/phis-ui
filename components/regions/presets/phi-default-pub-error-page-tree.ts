@@ -4,8 +4,6 @@ import { PHI_CMS_DEFAULT_SLOT_INDEX } from "../../../constants/cms-layout-types"
 import { PhiCmsPageType, PhiCmsRegionType, PhiCmsStatus } from "../../../constants/phi-cms";
 import { buildPhiCmsLayoutNode, buildPhiCmsWidgetNode } from "../../../helpers/cms-node-factories";
 import type { PhiCmsPageNode, PhiResolvedCmsPageTree } from "../../../types/cms";
-import type { PhiBlockRuntime } from "../../../types/widget-runtime";
-import { getPhiPubErrorPageLabels } from "./pub-error-label-set";
 
 export type PhiCmsErrorCode = 401 | 403 | 404 | 500;
 
@@ -16,14 +14,18 @@ const ERROR_STATUS: Record<PhiCmsErrorCode, "403" | "404" | "500"> = {
   500: "500",
 };
 
-type PhiCmsErrorPresetRuntime = Pick<PhiBlockRuntime, "locale" | "phis"> | {
-  phis: { apiBaseUrl: string; internalToken: string };
-};
-
-function resolveErrorPresetLocale(runtime: PhiCmsErrorPresetRuntime) {
-  return "locale" in runtime ? runtime.locale.current : "";
-}
-
+/**
+ * The source text, and the source text only.
+ *
+ * It goes into the widget config untranslated, because the `result` widget translates through the Site
+ * translator -- which is the point: a Site defines its own error strings, and it can only do that if
+ * what reaches the translator is the source rather than an already translated string. Pre-translating
+ * here would register the German text as a Site source, ask for a de->de translation, and show the
+ * translation in the builder inspector where every other widget shows the original.
+ *
+ * The admin presets are the deliberate other case: their labels are system copy shared across Sites, so
+ * they are translated globally in the preset and carry `translate: false` into the widget.
+ */
 const ERROR_SOURCE_COPY: Record<PhiCmsErrorCode, { title: string; subTitle: string }> = {
   401: {
     title: "Not authorized",
@@ -59,18 +61,11 @@ export function parsePhiCmsErrorCode(value: string | number | null | undefined):
 export async function buildPhiDefaultPubErrorPageTree({
   code,
   page,
-  runtime,
 }: {
   code: PhiCmsErrorCode;
   page: PhiCmsPageNode;
-  runtime: PhiCmsErrorPresetRuntime;
 }): Promise<PhiResolvedCmsPageTree> {
-  const labels = await getPhiPubErrorPageLabels({
-    apiBaseUrl: runtime.phis.apiBaseUrl,
-    internalToken: runtime.phis.internalToken,
-    locale: resolveErrorPresetLocale(runtime),
-  });
-  const copy = labels[code] ?? ERROR_SOURCE_COPY[code];
+  const copy = ERROR_SOURCE_COPY[code];
   const presetKey = `pub-error-${code}-page`;
   const layoutContentId = createPhiPresetCmsInstanceId({
       domain: "page",

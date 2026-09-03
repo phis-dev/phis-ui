@@ -103,9 +103,9 @@ export const PHI_AREA_BASE_RUNTIME_MODULE_ROUTES = [
     area: "public" as const,
     title: String(code),
     path: `/error/${code}`,
-    loadTree: ({ page, runtime }: PhiCmsDescriptorBuildContext) =>
+    loadTree: ({ page }: PhiCmsDescriptorBuildContext) =>
       import("../../components/regions/presets/phi-default-pub-error-page-tree")
-        .then((module) => module.buildPhiDefaultPubErrorPageTree({ code, page, runtime })),
+        .then((module) => module.buildPhiDefaultPubErrorPageTree({ code, page })),
   })),
   {
     ownerModuleId: PHI_PUBLIC_RUNTIME_MODULE_ID,
