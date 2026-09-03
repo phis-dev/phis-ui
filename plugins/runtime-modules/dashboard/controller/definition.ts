@@ -10,7 +10,6 @@ export const PHI_DASHBOARD_RUNTIME_CONTROLLER_DEFINITION = {
   key: PHI_DASHBOARD_CONTROLLER_KEY,
   title: "Dashboard Controller",
   description: "Module owner for Area-specific Dashboard routes and future Dashboard projections.",
-  category: "dashboard",
   iconFamily: "dashboard",
   allowedMountScopes: ["area"],
   runtimeSignals: { emits: [], listens: [] },

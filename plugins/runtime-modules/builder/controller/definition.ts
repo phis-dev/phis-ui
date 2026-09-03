@@ -56,7 +56,6 @@ export const PHI_BUILDER_RUNTIME_CONTROLLER_DEFINITION = {
   key: PHI_BUILDER_CONTROLLER_KEY,
   title: "Builder Controller",
   description: "Headless controller for Builder workspace state, structure drafts, navigation, Inspector routing, and Builder chrome.",
-  category: "builder",
   iconFamily: "builder",
   flags: ["internal"],
   allowedMountScopes: ["area"],

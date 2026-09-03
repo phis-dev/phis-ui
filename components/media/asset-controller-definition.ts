@@ -20,7 +20,6 @@ export const PHI_ASSET_RUNTIME_CONTROLLER_DEFINITION = {
   key: PHI_ASSET_CONTROLLER_KEY,
   title: "Asset Controller",
   description: "Headless controller for asset search, filtering, pagination, reloads, and media preview state.",
-  category: "media",
   iconFamily: "media",
   allowedMountScopes: ["area", "page"],
   runtimeSignals: {

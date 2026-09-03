@@ -10,7 +10,6 @@ export const PHI_ADMIN_RUNTIME_CONTROLLER_DEFINITION = {
   key: PHI_ADMIN_CONTROLLER_KEY,
   title: "Admin Controller",
   description: "Area-base owner for the Admin shell, navigation surface, and Admin settings.",
-  category: "admin",
   iconFamily: "admin",
   allowedMountScopes: ["area"],
   runtimeSignals: { emits: [], listens: [] },

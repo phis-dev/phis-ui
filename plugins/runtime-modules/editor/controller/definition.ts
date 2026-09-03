@@ -10,7 +10,6 @@ export const PHI_EDITOR_RUNTIME_CONTROLLER_DEFINITION = {
   key: PHI_EDITOR_CONTROLLER_KEY,
   title: "Editor Controller",
   description: "Module owner for content authoring functionality.",
-  category: "editor",
   iconFamily: "editor",
   allowedMountScopes: ["area"],
   runtimeSignals: { emits: [], listens: [] },

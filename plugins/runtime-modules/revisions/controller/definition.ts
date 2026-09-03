@@ -13,7 +13,6 @@ export const PHI_REVISIONS_RUNTIME_CONTROLLER_DEFINITION = {
   key: PHI_REVISIONS_CONTROLLER_KEY,
   title: "Revisions Controller",
   description: "Module owner for revision scope, history, restore, deletion, and status coordination.",
-  category: "revisions",
   iconFamily: "revisions",
   allowedMountScopes: ["area"],
   runtimeSignals: {

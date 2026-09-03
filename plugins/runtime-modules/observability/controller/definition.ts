@@ -25,7 +25,6 @@ export const PHI_OBSERVABILITY_RUNTIME_CONTROLLER_DEFINITION = {
   key: PHI_OBSERVABILITY_CONTROLLER_KEY,
   title: "Observability Controller",
   description: "Owns transient Page state for Observability detail workflows.",
-  category: "observability",
   iconFamily: "observability",
   allowedMountScopes: ["page"],
   runtimeSignals: {

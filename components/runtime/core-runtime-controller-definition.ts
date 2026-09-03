@@ -13,7 +13,6 @@ export const PHI_CORE_RUNTIME_CONTROLLER_DEFINITION = {
   key: PHI_CORE_RUNTIME_CONTROLLER_KEY,
   title: "Runtime Controller",
   description: "Required controller and module owner for the generic Phi CMS runtime.",
-  category: "runtime",
   iconFamily: "runtime",
   allowedMountScopes: ["site"],
   runtimeSignals: {

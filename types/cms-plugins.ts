@@ -584,7 +584,6 @@ export type PhiRuntimeControllerDefinition<TConfig, TPreload = unknown> = {
   key: string;
   title: string;
   description?: string;
-  category?: string;
   tags?: string[];
   icon?: string;
   iconName?: string;

@@ -18,7 +18,6 @@ export const PHI_THEME_RUNTIME_CONTROLLER_DEFINITION = {
   key: PHI_THEME_CONTROLLER_KEY,
   title: "Theme Controller",
   description: "Headless controller for builder brand theme drafts, preview mode, revision state, and theme commands.",
-  category: "builder",
   iconFamily: "theme",
   allowedMountScopes: ["area"],
   runtimeSignals: {

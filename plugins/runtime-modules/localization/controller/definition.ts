@@ -11,7 +11,6 @@ export const PHI_LOCALIZATION_RUNTIME_CONTROLLER_DEFINITION = {
   key: PHI_LOCALIZATION_CONTROLLER_KEY,
   title: "Localization Controller",
   description: "Module owner for locale and translation administration.",
-  category: "localization",
   iconFamily: "localization",
   allowedMountScopes: ["area"],
   runtimeSignals: {

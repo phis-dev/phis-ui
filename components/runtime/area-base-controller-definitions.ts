@@ -17,7 +17,7 @@ function createPhiEmptyControllerDefinition(
   pluginKey: string,
   key: string,
   title: string,
-  category: string,
+  iconFamily: string,
   areaBase = true,
 ) {
   return {
@@ -28,8 +28,7 @@ function createPhiEmptyControllerDefinition(
     description: areaBase
       ? `Locked Area controller for ${title}.`
       : `Runtime module controller for ${title}.`,
-    category,
-    iconFamily: category,
+    iconFamily,
     allowedMountScopes: ["area"],
     runtimeSignals: { emits: [], listens: [] },
     defaultConfig: {},
@@ -51,7 +50,6 @@ export const PHI_AUTH_CONTROLLER_DEFINITION = {
   key: PHI_AUTH_CONTROLLER_KEY,
   title: "Auth Controller",
   description: "Coordinates the active Auth UI provider modal and workflow presentation state.",
-  category: "auth",
   iconFamily: "auth",
   allowedMountScopes: ["area"],
   runtimeSignals: {

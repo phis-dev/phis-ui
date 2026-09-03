@@ -18,7 +18,6 @@ export const PHI_RUNTIME_FORM_CONTROLLER_DEFINITION = {
   key: PHI_FORM_CONTROLLER_KEY,
   title: "Form Controller",
   description: "Headless multi-instance controller for runtime form state, submit, confirm, reset, clear, result, and error signaling.",
-  category: "forms",
   iconFamily: "forms",
   flags: ["multiInstance"],
   allowedMountScopes: ["site", "area", "page"],

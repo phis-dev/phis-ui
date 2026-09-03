@@ -18,7 +18,6 @@ export const PHI_GROUPS_RUNTIME_CONTROLLER_DEFINITION = {
   key: PHI_GROUPS_CONTROLLER_KEY,
   title: "Groups Controller",
   description: "Carries the selected group from the group table to the membership table.",
-  category: "groups",
   iconFamily: "groups",
   allowedMountScopes: ["page"],
   runtimeSignals: {

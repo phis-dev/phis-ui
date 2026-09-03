@@ -14,7 +14,6 @@ export const PHI_FORM_BUILDER_CONTROLLER_DEFINITION = {
   key: PHI_FORM_BUILDER_CONTROLLER_KEY,
   title: "Form Builder Controller",
   description: "Client-only controller lifecycle for authoring form definitions.",
-  category: "forms",
   iconFamily: "forms",
   allowedMountScopes: ["area"],
   runtimeSignals: {

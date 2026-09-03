@@ -11,7 +11,6 @@ export const PHI_USER_MANAGEMENT_RUNTIME_CONTROLLER_DEFINITION = {
   key: PHI_USER_MANAGEMENT_CONTROLLER_KEY,
   title: "User Management Controller",
   description: "Owns Page-scoped user-management workflow selection and presentation permissions.",
-  category: "user-management",
   iconFamily: "user-management",
   allowedMountScopes: ["page"],
   runtimeSignals: {
