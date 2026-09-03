@@ -219,6 +219,7 @@ export const PHI_BUILDER_RUNTIME_AREA_DEFINITIONS = [
       navKey: "builder:sidebar",
       label: label("Builder sidebar navigation"),
       items: [
+        { itemKey: "@phis/ui/builder/nav/modules", label: label("Modules"), icon: "antd:appstore", routePresetKey: "builder-modules-page" },
         { itemKey: "@phis/ui/builder/nav/shells", label: label("Shells"), icon: "antd:branches", routePresetKey: "builder-shells-page" },
         { itemKey: "@phis/ui/builder/nav/pages", label: label("Pages"), icon: "antd:profile", routePresetKey: "builder-pages-page" },
         { itemKey: "@phis/ui/builder/nav/navigation", label: label("Navigation"), icon: "antd:menu", routePresetKey: "builder-navigation-page" },
@@ -235,6 +236,7 @@ export const PHI_BUILDER_RUNTIME_AREA_DEFINITIONS = [
         },
       ],
       exportedItemKeys: [
+        "@phis/ui/builder/nav/modules",
         "@phis/ui/builder/nav/shells",
         "@phis/ui/builder/nav/navigation",
         PHI_BUILDER_SETTINGS_NAV_ITEM_KEY,

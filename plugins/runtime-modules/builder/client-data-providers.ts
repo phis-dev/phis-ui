@@ -76,6 +76,16 @@ export const PHI_BUILDER_RUNTIME_DATA_PROVIDER_CLIENT_DEFINITIONS = [
         .PhiRuntimeModulesOptionsProviderClient,
   },
   {
+    key: PHI_BUILDER_RUNTIME_DATA_PROVIDER_KEYS.runtimeModulesTable,
+    ownerModuleId: PHI_BUILDER_RUNTIME_MODULE_ID,
+    loadLive: async () =>
+      (await import("./services/runtime-modules-table"))
+        .PhiBuilderRuntimeModulesTableProviderClient,
+    loadAuthoring: async () =>
+      (await import("./services/runtime-modules-table"))
+        .PhiBuilderRuntimeModulesTableProviderClient,
+  },
+  {
     key: PHI_BUILDER_RUNTIME_DATA_PROVIDER_KEYS.navigationTable,
     ownerModuleId: PHI_BUILDER_RUNTIME_MODULE_ID,
     loadLive: async () =>

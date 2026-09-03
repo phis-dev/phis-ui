@@ -121,7 +121,7 @@ function resolveTableTagColor(color: PhiTableTagColor | undefined) {
   return typeof color === "object" ? color.value : color;
 }
 
-function renderTableValue(value: unknown, column: PhiTableColumnDefinition): ReactNode {
+function renderTableValueContent(value: unknown, column: PhiTableColumnDefinition): ReactNode {
   if (value == null || value === "") return null;
   const normalizedValue = normalizeTextValue(value);
   const displayValue = column.valueMap?.[normalizedValue] ?? normalizedValue;
@@ -163,6 +163,27 @@ function renderTableValue(value: unknown, column: PhiTableColumnDefinition): Rea
   if (column.renderer === "checkbox") return <PhiCheckboxControl checked={value === true} readOnly />;
   if (column.renderer === "icon") return typeof value === "string" && value.trim() ? <PhiIcon name={value} /> : null;
   return displayValue;
+}
+
+function renderTableValue(
+  value: unknown,
+  column: PhiTableColumnDefinition,
+  row: Record<string, unknown> | undefined,
+): ReactNode {
+  const content = renderTableValueContent(value, column);
+  if (!column.iconFieldKey) {
+    return content;
+  }
+  const iconName = row?.[column.iconFieldKey];
+  if (typeof iconName !== "string" || !iconName.trim()) {
+    return content;
+  }
+  return (
+    <Space size={6}>
+      <PhiIcon name={iconName} />
+      {content}
+    </Space>
+  );
 }
 
 function renderTableSummaryItem(item: PhiTableSummaryItemDefinition, value: PhiTableSummaryValue | undefined) {
@@ -692,7 +713,7 @@ export function PhiTableWidgetClient({
           proposedValue,
         }).catch(() => undefined);
       } : undefined,
-      render: (value: unknown) => renderTableValue(value, column),
+      render: (value: unknown, row) => renderTableValue(value, column, row),
     }));
     if (rowActions.length || features.rowReordering?.enabled) {
       result.push({

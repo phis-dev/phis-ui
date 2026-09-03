@@ -35,6 +35,10 @@ export function resolvePhiDeveloperBuilderCommandWorkspace(
     return "navigation";
   }
 
+  if (pathname.includes("/builder/modules")) {
+    return "modules";
+  }
+
   if (pathname.includes("/builder/theme")) {
     return "theme";
   }

@@ -101,6 +101,14 @@ type CmsAreaPresetWritePayload = {
   }>;
 };
 
+type CmsAreaModulesWritePayload = {
+  area: string;
+  sourcePreset: PhiCmsPresetSource;
+  draft?: CmsDraftWriteState;
+  config: Record<string, unknown>;
+  baseline?: CmsAreaPresetWritePayload;
+};
+
 type SerializedRoot = {
   rootLayoutNodeId: PhiCmsInstanceId;
   layoutNodes: PhiCmsLayoutNode[];
@@ -110,6 +118,13 @@ type SerializedRoot = {
 };
 
 export type PhiDeveloperBuilderWorkspaceKind = "structure" | "pages";
+
+/**
+ * A save that was refused because there is nothing to patch yet -- an Area with no stored revision at
+ * all. Distinguished from any other save failure so a Module save can retry once, with its Shell
+ * baseline attached, instead of surfacing a conflict the caller never asked about.
+ */
+class CmsDraftConflictError extends Error {}
 
 function assertPersistableAreaRuntimeModuleIds(
   moduleIds: readonly PhiRuntimeModuleId[],
@@ -342,7 +357,10 @@ function serializeRootDraft(
   };
 }
 
-async function postCmsDraft(path: string, payload: CmsPageWritePayload | CmsAreaPresetWritePayload) {
+async function postCmsDraft(
+  path: string,
+  payload: CmsPageWritePayload | CmsAreaPresetWritePayload | CmsAreaModulesWritePayload,
+) {
   const response = await fetch(path, {
     method: "POST",
     headers: {
@@ -363,7 +381,8 @@ async function postCmsDraft(path: string, payload: CmsPageWritePayload | CmsArea
     | null;
   if (!response.ok) {
     const detail = body?.details?.length ? ` ${body.details.join(" ")}` : "";
-    throw new Error(`${body?.error ?? "CMS draft save failed."}${detail}`);
+    const message = `${body?.error ?? "CMS draft save failed."}${detail}`;
+    throw response.status === 409 ? new CmsDraftConflictError(message) : new Error(message);
   }
 
   if (
@@ -610,10 +629,232 @@ export async function getPhiDeveloperBuilderDraftAllocation(input: {
   return draft;
 }
 
+/** The Area's open Module draft, if the Builder does not already have it cached. */
+export async function getPhiDeveloperBuilderModulesDraftAllocation(input: {
+  area: PhiDeveloperBuilderArea;
+  areaPresetSource: PhiCmsPresetSource | null;
+}) {
+  const cmsArea = resolvePhiBuilderAreaAsCmsArea(input.area);
+  const draft = await getCmsDraft("/api/site/cms/area/modules/draft", {
+    area: cmsArea,
+    ownerModuleId: input.areaPresetSource?.ownerModuleId,
+    presetKey: input.areaPresetSource?.presetKey,
+  });
+  if (!draft) {
+    return null;
+  }
+
+  const allocationKey = createPhiBuilderDraftAllocationKey(input.area, input.area, "modules");
+  storePhiDeveloperBuilderDraftAllocation(allocationKey, draft);
+  return draft;
+}
+
+export function clearPhiDeveloperBuilderModulesDraftAllocation(area: PhiDeveloperBuilderArea) {
+  const allocationKey = createPhiBuilderDraftAllocationKey(area, area, "modules");
+  builderWorkspaceStore.patch("public", (current) => {
+    if (!current.draftAllocations[allocationKey]) {
+      return current;
+    }
+    const draftAllocations = { ...current.draftAllocations };
+    delete draftAllocations[allocationKey];
+    return { ...current, draftAllocations };
+  });
+}
+
+/**
+ * Saves an Area's Module selection, apart from its structure.
+ *
+ * It patches rather than writes: the server clones the source revision -- the open Module draft, or
+ * otherwise the published one -- and replaces only `preset.config`. There is one case that source can be
+ * missing: an Area that has never been saved at all, still running on its code-owned Shell preset. The
+ * server asks for that preset as `baseline` when it hits exactly that case, and only then; the Builder
+ * already has it loaded (every `/builder/*` page does, regardless of which one is open), so this is the
+ * one path along which a Module save reaches into Shell region drafts at all.
+ */
+export async function savePhiDeveloperBuilderModulesDraft(
+  state: Pick<
+    PhiDeveloperBuilderWorkspaceState,
+    "draftAllocations" | "runtimeModuleDefinitions" | "runtimeModuleIdsByArea" | "areaPresetSourcesByArea"
+  >,
+  regionDrafts: Record<string, PhiDeveloperBuilderRegionDraft>,
+  options: {
+    builderPlugins: readonly PhiBuilderPluginMeta[];
+    scope: { area: PhiDeveloperBuilderArea };
+  },
+): Promise<{ revisionId: number; version: number; nextNodeSequence: number }> {
+  const area = options.scope.area;
+  const cmsArea = resolvePhiBuilderAreaAsCmsArea(area);
+  const areaPresetSource = state.areaPresetSourcesByArea[area] ?? null;
+  if (!areaPresetSource) {
+    throw new Error(`Area "${area}" has no active shell preset source.`);
+  }
+
+  const optionalRuntimeModuleIds = resolvePhiRuntimeModuleIdsForArea(
+    area,
+    state.runtimeModuleIdsByArea?.[area] ?? null,
+    state.runtimeModuleDefinitions,
+  );
+  assertPersistableAreaRuntimeModuleIds(optionalRuntimeModuleIds, state.runtimeModuleDefinitions);
+
+  const allocationKey = createPhiBuilderDraftAllocationKey(area, area, "modules");
+  const draftAllocation =
+    state.draftAllocations[allocationKey] ??
+    (await getPhiDeveloperBuilderModulesDraftAllocation({ area, areaPresetSource }));
+
+  const payload: CmsAreaModulesWritePayload = {
+    area: cmsArea,
+    sourcePreset: draftAllocation?.sourcePreset ?? areaPresetSource,
+    ...(draftAllocation ? { draft: draftAllocation } : {}),
+    config: {
+      runtimeModules: optionalRuntimeModuleIds satisfies readonly PhiRuntimeModuleId[],
+      authUiProviderModuleId: resolvePhiAuthUiProviderModuleId(
+        optionalRuntimeModuleIds,
+        state.runtimeModuleDefinitions,
+      ),
+      // Derived from the selection, never authored: the control plane holds no Module metadata, so the
+      // Area preset is what carries which Spaces its Modules need and what may go in them.
+      mediaSpaces: resolvePhiDeclaredMediaSpaces(
+        optionalRuntimeModuleIds,
+        state.runtimeModuleDefinitions,
+      ),
+    },
+  };
+
+  let result;
+  try {
+    result = await postCmsDraft("/api/site/cms/area/modules", payload);
+  } catch (error) {
+    if (!(error instanceof CmsDraftConflictError) || draftAllocation) {
+      throw error;
+    }
+    const widgetMetasByType = buildPhiBuilderWidgetMetaMap(options.builderPlugins);
+    const structurePayload = buildAreaStructureWritePayload(area, regionDrafts, widgetMetasByType);
+    if (!structurePayload) {
+      throw error;
+    }
+    result = await postCmsDraft("/api/site/cms/area/modules", {
+      ...payload,
+      baseline: {
+        area: cmsArea,
+        sourcePreset: areaPresetSource,
+        preset: { status: 1, flags: 0, visibilityMask: structurePayload.areaMask },
+        regions: structurePayload.regions,
+        overlays: structurePayload.overlays,
+        layoutNodes: structurePayload.layoutNodes,
+        contentWidgets: structurePayload.contentWidgets,
+      },
+    });
+  }
+
+  storePhiDeveloperBuilderDraftAllocation(allocationKey, result);
+  return { revisionId: result.revisionId, version: result.version, nextNodeSequence: result.nextNodeSequence };
+}
+
+/** Publishes the Area's Module selection. Its structure draft, if one is open, is left exactly as it is. */
+export async function publishPhiDeveloperBuilderModulesDraft(
+  state: Pick<
+    PhiDeveloperBuilderWorkspaceState,
+    "draftAllocations" | "runtimeModuleDefinitions" | "runtimeModuleIdsByArea" | "areaPresetSourcesByArea"
+  >,
+  regionDrafts: Record<string, PhiDeveloperBuilderRegionDraft>,
+  options: {
+    builderPlugins: readonly PhiBuilderPluginMeta[];
+    scope: { area: PhiDeveloperBuilderArea };
+  },
+) {
+  const area = options.scope.area;
+  const areaPresetSource = state.areaPresetSourcesByArea[area] ?? null;
+  const saved = await savePhiDeveloperBuilderModulesDraft(state, regionDrafts, options);
+  if (!Number.isInteger(saved.revisionId) || saved.revisionId <= 0) {
+    throw new Error("Module draft save did not return a revision.");
+  }
+
+  await postCmsAction("/api/site/cms/area/modules/publish", {
+    area,
+    ownerModuleId: areaPresetSource?.ownerModuleId,
+    presetKey: areaPresetSource?.presetKey,
+    revisionId: saved.revisionId,
+  });
+
+  clearPhiDeveloperBuilderModulesDraftAllocation(area);
+
+  return saved;
+}
+
+/** Discards the Area's Module draft, leaving its structure draft, if any, untouched. */
+export async function discardPhiDeveloperBuilderModulesDraft(input: {
+  area: PhiDeveloperBuilderArea;
+  areaPresetSource: PhiCmsPresetSource | null;
+}) {
+  await deleteCmsDraft("/api/site/cms/area/modules", {
+    area: resolvePhiBuilderAreaAsCmsArea(input.area),
+    ownerModuleId: input.areaPresetSource?.ownerModuleId ?? "",
+    presetKey: input.areaPresetSource?.presetKey ?? "",
+  });
+  clearPhiDeveloperBuilderModulesDraftAllocation(input.area);
+}
+
+/**
+ * Serializes an Area's Shell drafts into the shape a write payload carries -- regions, layout nodes,
+ * content widgets. Nothing here touches `preset.config`: that is the Module selection's own field now,
+ * and this function has no opinion about it.
+ *
+ * Returns null when nothing is loaded for the Area at all, which is not an error -- there is simply
+ * nothing to save here. A partial load, though, is refused: saving fewer than all Shell regions would
+ * read as deleting the ones that were never fetched.
+ */
+function buildAreaStructureWritePayload(
+  area: PhiDeveloperBuilderArea,
+  regionDrafts: Record<string, PhiDeveloperBuilderRegionDraft>,
+  widgetMetasByType: ReadonlyMap<string, PhiBuilderWidgetMeta>,
+) {
+  const areaMask = resolvePhiBuilderAreaMask(area);
+  const allAreaDrafts = PHI_BUILDER_SHELL_REGION_KEYS
+    .map((regionKey) => [regionKey, regionDrafts[getPhiBuilderRegionDraftKey(area, regionKey)] ?? null] as const)
+    .filter((entry): entry is [typeof PHI_BUILDER_SHELL_REGION_KEYS[number], PhiDeveloperBuilderRegionDraft] => entry[1] != null);
+  if (allAreaDrafts.length === 0) {
+    return null;
+  }
+  if (allAreaDrafts.length !== PHI_BUILDER_SHELL_REGION_KEYS.length) {
+    throw new Error("Area preset save needs all area region drafts loaded to avoid deleting unchanged shell regions.");
+  }
+  const areaDraftEntries = allAreaDrafts.filter(
+    (entry): entry is [typeof PHI_BUILDER_SHELL_REGION_KEYS[number], PhiDeveloperBuilderRegionDraft] => entry[1].rootNodeTypeKey != null,
+  );
+
+  const layoutNodes: PhiCmsLayoutNode[] = [];
+  const contentWidgets: Array<Omit<PhiCmsContentWidgetNode, "resolvedContent"> & {
+    contentBinding?: PhiCmsWidgetContentBinding | null;
+  }> = [];
+  assertUniqueDraftNodeIds(areaDraftEntries.map(([, draft]) => draft));
+  const regions = areaDraftEntries.map(([regionKey, draft], index) => {
+    const serializedRegion = serializeRootDraft(draft, widgetMetasByType);
+    layoutNodes.push(...serializedRegion.layoutNodes);
+    contentWidgets.push(...serializedRegion.contentWidgets);
+    return {
+      regionType: resolvePhiCmsRegionType(regionKey),
+      rootLayoutNodeId: serializedRegion.rootLayoutNodeId,
+      status: 1,
+      flags: 0,
+      visibilityMask: areaMask,
+      sortOrder: index,
+      config: serializePhiDeveloperBuilderRegionConfig(regionKey, draft),
+    };
+  });
+
+  return {
+    areaMask,
+    regions,
+    overlays: [] as PhiCmsOverlayNode[],
+    layoutNodes,
+    contentWidgets,
+  };
+}
+
 export async function savePhiDeveloperBuilderDraft(
   state: Pick<
     PhiDeveloperBuilderWorkspaceState,
-    "area" | "pageKey" | "sidebarKey" | "pageMetaDrafts" | "deletedPageDrafts" | "draftAllocations" | "runtimeModuleDefinitions" | "runtimeModuleIdsByArea" | "modulePresetPagesByArea" | "customPages" | "persistedPageCatalogByArea" | "areaPresetSourcesByArea"
+    "area" | "pageKey" | "sidebarKey" | "pageMetaDrafts" | "deletedPageDrafts" | "draftAllocations" | "modulePresetPagesByArea" | "customPages" | "persistedPageCatalogByArea" | "areaPresetSourcesByArea"
   >,
   regionDrafts: Record<string, PhiDeveloperBuilderRegionDraft>,
   workspaceKind: PhiDeveloperBuilderWorkspaceKind,
@@ -642,7 +883,6 @@ export async function savePhiDeveloperBuilderDraft(
   const currentAreaPresetSource = state.areaPresetSourcesByArea[area] ?? null;
   const pageMetaDraft = state.pageMetaDrafts?.[getPhiBuilderRegionDraftKey(area, "page_meta", pageKey)] ?? null;
   const isDeletedPageDraft = state.deletedPageDrafts?.[getPhiBuilderRegionDraftKey(area, "page_delete", pageKey)] === true;
-  const runtimeModuleIds = state.runtimeModuleIdsByArea?.[area] ?? null;
   const allocationKey = createPhiBuilderDraftAllocationKey(
     area,
     pageKey,
@@ -668,12 +908,6 @@ export async function savePhiDeveloperBuilderDraft(
     .filter((entry): entry is [typeof PHI_BUILDER_PAGE_REGION_KEYS[number], PhiDeveloperBuilderRegionDraft] => entry[1] != null);
   const pageDraftEntries = allPageDraftEntries
     .filter((entry): entry is [typeof PHI_BUILDER_PAGE_REGION_KEYS[number], PhiDeveloperBuilderRegionDraft] => entry[1]?.rootNodeTypeKey != null);
-  const allAreaDrafts = PHI_BUILDER_SHELL_REGION_KEYS
-    .map((regionKey) => [regionKey, regionDrafts[getPhiBuilderRegionDraftKey(area, regionKey)] ?? null] as const)
-    .filter((entry): entry is [typeof PHI_BUILDER_SHELL_REGION_KEYS[number], PhiDeveloperBuilderRegionDraft] => entry[1] != null);
-  const areaDraftEntries = allAreaDrafts.filter(
-    (entry): entry is [typeof PHI_BUILDER_SHELL_REGION_KEYS[number], PhiDeveloperBuilderRegionDraft] => entry[1].rootNodeTypeKey != null,
-  );
   let savedScopes = 0;
   let revisionId: number | null = null;
   let savedDraftState: CmsDraftWriteState | null = null;
@@ -757,71 +991,32 @@ export async function savePhiDeveloperBuilderDraft(
     savedScopes += 1;
   }
 
-  if (workspaceKind === "structure" && allAreaDrafts.length > 0) {
-    if (!areaPresetSource) {
-      throw new Error(`Area "${area}" has no active shell preset source.`);
-    }
-    if (allAreaDrafts.length !== PHI_BUILDER_SHELL_REGION_KEYS.length) {
-      throw new Error("Area preset save needs all area region drafts loaded to avoid deleting unchanged shell regions.");
-    }
+  if (workspaceKind === "structure") {
+    const structurePayload = buildAreaStructureWritePayload(area, regionDrafts, widgetMetasByType);
+    if (structurePayload) {
+      if (!areaPresetSource) {
+        throw new Error(`Area "${area}" has no active shell preset source.`);
+      }
 
-    const layoutNodes: PhiCmsLayoutNode[] = [];
-    const contentWidgets: Array<Omit<PhiCmsContentWidgetNode, "resolvedContent"> & {
-      contentBinding?: PhiCmsWidgetContentBinding | null;
-    }> = [];
-    assertUniqueDraftNodeIds(areaDraftEntries.map(([, draft]) => draft));
-    const regions = areaDraftEntries.map(([regionKey, draft], index) => {
-      const serializedRegion = serializeRootDraft(draft, widgetMetasByType);
-      layoutNodes.push(...serializedRegion.layoutNodes);
-      contentWidgets.push(...serializedRegion.contentWidgets);
-      return {
-        regionType: resolvePhiCmsRegionType(regionKey),
-        rootLayoutNodeId: serializedRegion.rootLayoutNodeId,
-        status: 1,
-        flags: 0,
-        visibilityMask: areaMask,
-        sortOrder: index,
-        config: serializePhiDeveloperBuilderRegionConfig(regionKey, draft),
-      };
-    });
-    const optionalRuntimeModuleIds = resolvePhiRuntimeModuleIdsForArea(
-      area,
-      runtimeModuleIds,
-      state.runtimeModuleDefinitions,
-    );
-    assertPersistableAreaRuntimeModuleIds(optionalRuntimeModuleIds, state.runtimeModuleDefinitions);
-
-    const result = await postCmsDraft("/api/site/cms/area", {
-      area: cmsArea,
-      sourcePreset: areaPresetSource,
-      ...(draftAllocation ? { draft: draftAllocation } : {}),
-      preset: {
-        status: 1,
-        flags: 0,
-        visibilityMask: areaMask,
-        config: {
-          runtimeModules: optionalRuntimeModuleIds satisfies readonly PhiRuntimeModuleId[],
-          authUiProviderModuleId: resolvePhiAuthUiProviderModuleId(
-            optionalRuntimeModuleIds,
-            state.runtimeModuleDefinitions,
-          ),
-          // Derived from the selection, never authored: the control plane holds no Module metadata, so
-          // the Area preset is what carries which Spaces its Modules need and what may go in them.
-          mediaSpaces: resolvePhiDeclaredMediaSpaces(
-            optionalRuntimeModuleIds,
-            state.runtimeModuleDefinitions,
-          ),
+      const result = await postCmsDraft("/api/site/cms/area", {
+        area: cmsArea,
+        sourcePreset: areaPresetSource,
+        ...(draftAllocation ? { draft: draftAllocation } : {}),
+        preset: {
+          status: 1,
+          flags: 0,
+          visibilityMask: structurePayload.areaMask,
         },
-      },
-      regions,
-      overlays: [],
-      layoutNodes,
-      contentWidgets,
-    });
-    storePhiDeveloperBuilderDraftAllocation(allocationKey, result);
-    savedDraftState = result;
-    revisionId = result.revisionId;
-    savedScopes += 1;
+        regions: structurePayload.regions,
+        overlays: structurePayload.overlays,
+        layoutNodes: structurePayload.layoutNodes,
+        contentWidgets: structurePayload.contentWidgets,
+      });
+      storePhiDeveloperBuilderDraftAllocation(allocationKey, result);
+      savedDraftState = result;
+      revisionId = result.revisionId;
+      savedScopes += 1;
+    }
   }
 
   if (savedScopes === 0 || !savedDraftState) {

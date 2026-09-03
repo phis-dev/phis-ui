@@ -17,7 +17,7 @@ export type PhiDeveloperBuilderArea = PhiBuilderAreaKey;
 export type PhiDeveloperBuilderMode = "editor" | "preview";
 export type PhiDeveloperBuilderPanel = "toolbar" | "breadcrumbs" | "pages" | "canvas" | "inspector";
 export type PhiDeveloperBuilderNodeKind = "page" | "region" | "layout" | "widget" | "slot";
-export type PhiDeveloperBuilderCommandWorkspace = "structure" | "pages" | "navigation" | "theme" | null;
+export type PhiDeveloperBuilderCommandWorkspace = "structure" | "pages" | "navigation" | "modules" | "theme" | null;
 
 export type PhiBuilderChromeControls = {
   editorPreviewDisabled: boolean;

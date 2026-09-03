@@ -185,6 +185,7 @@ const PHI_RUNTIME_MODULE_OWNERSHIP: Readonly<Record<string, readonly [module: st
   "signals/tree-mutation": ["core", "tree-mutation"],
   "signals/tree-state": ["core", "tree-state"],
   "tables/builder-navigation": ["builder", "navigation"],
+  "tables/runtime-modules": ["builder", "runtime-modules"],
   "tables/builder-signal-routes": ["builder", "signal-routes"],
   "tables/content": ["core", "content"],
   // The authoring-time options picker, owned by the Builder like the other authoring tables.

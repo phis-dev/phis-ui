@@ -48,10 +48,7 @@ import {
   isPhiBuilderAreaKey,
   resolvePhiBuilderAreaAsCmsArea,
 } from "../../../constants/cms-areas";
-import {
-  isPhiRuntimeAreaBaseModuleId,
-  resolvePhiRuntimeAreaDefinition,
-} from "../../../plugins/runtime-modules/area-definitions";
+import { resolvePhiRuntimeAreaDefinition } from "../../../plugins/runtime-modules/area-definitions";
 import { resolvePhiBuilderNavigationWidgetNavKey } from "./navigation-widget-runtime";
 import { parsePhiBuilderNavigationScopeKey } from "../../../helpers/cms-navigation-catalog";
 import type {
@@ -96,6 +93,11 @@ import {
   PHI_BUILDER_INSPECTOR_OVERLAY_IDS,
   PHI_BUILDER_INSPECTOR_WIDGET_IDS,
 } from "./inspector-overlay-addresses";
+import {
+  PHI_BUILDER_MODULES_TABLE_WIDGET_ID,
+  PHI_BUILDER_MODULE_DETAIL_OVERLAY_IDS,
+  PHI_BUILDER_MODULE_DETAIL_WIDGET_IDS,
+} from "../../../helpers/cms-page-addresses";
 import { readPhiRuntimeFormValuesSignalValue } from "../../../components/forms/runtime-form-state";
 import {
   PHI_BUILDER_EFFECTS_SECTIONS,
@@ -111,17 +113,19 @@ import {
   applyPhiDeveloperBuilderSiderLeftMode,
 } from "./region-controller";
 import {
-  capturePhiBuilderWorkspaceHistoryState,
   createPhiBuilderHistoryContext,
   phiBuilderHistory,
 } from "./history";
+import {
+  applyPhiBuilderRuntimeModuleSelectionChange,
+  areRuntimeModuleIdsEqual,
+} from "./runtime-module-selection";
 import { createPhiCommandToolbarControlAddress } from "../../../components/widgets/signals/command-toolbar-address";
 import { PHI_BUILDER_RUNTIME_MODULE_ID } from "../../../plugins/runtime-modules/builder/ids";
 import { usePhiSignalInstancesReady, usePhiSignalReceiverReady } from "../../../components/runtime/runtime-signal-registry";
 import { createPhiRuntimeFormControllerAddress } from "../../../components/forms/runtime-form-controller-address";
 import type { PhiWorkspaceCatalogState } from "../../../components/workspace/catalog-state";
 import { phiWorkspaceCatalogStore } from "../../../components/workspace/catalog-store";
-import { PHI_BUILDER_STRUCTURE_RUNTIME_MODULES_WIDGET_ID } from "./area-addresses";
 import {
   PHI_BUILDER_PAGE_META_DEFAULT_PRESENTATION_LABELS,
   type PhiBuilderPageMetaPresentationLabels,
@@ -169,69 +173,12 @@ function serializeRuntimeModuleDefinitions(
   return JSON.stringify(definitions ?? []);
 }
 
-function areRuntimeModuleIdsEqual(
-  left: readonly PhiRuntimeModuleId[] | null | undefined,
-  right: readonly PhiRuntimeModuleId[] | null | undefined,
-) {
-  return serializeRuntimeModuleIds(left) === serializeRuntimeModuleIds(right);
-}
-
 function selectRuntimeModuleIds(
   moduleIds: readonly PhiRuntimeModuleId[] | null | undefined,
   area: PhiDeveloperBuilderArea,
   definitions: readonly PhiRuntimeModuleDefinition[],
 ) {
   return resolvePhiRuntimeModuleIdsForArea(area, moduleIds, definitions);
-}
-
-function normalizeRuntimeModuleSelection(
-  selectedIds: readonly string[],
-  area: PhiDeveloperBuilderArea,
-  definitions: readonly PhiRuntimeModuleDefinition[],
-): PhiRuntimeModuleId[] {
-  const definitionsById = new Map(definitions.map((definition) => [definition.moduleId, definition] as const));
-  const selectedIdSet = new Set(selectedIds);
-  const invalidIds = selectedIds.filter((moduleId) => !definitionsById.has(moduleId as PhiRuntimeModuleId));
-  if (invalidIds.length > 0) {
-    throw new Error(`Unknown runtime module "${invalidIds[0]}".`);
-  }
-  const cmsArea = resolvePhiBuilderAreaAsCmsArea(area);
-  const baseModuleId = resolvePhiRuntimeAreaDefinition(cmsArea).baseModuleId;
-  const foreignBaseModuleId = selectedIds.find((moduleId) =>
-    isPhiRuntimeAreaBaseModuleId(moduleId) && moduleId !== baseModuleId,
-  );
-  if (foreignBaseModuleId) {
-    throw new Error(
-      `Base module "${foreignBaseModuleId}" does not belong to Area "${cmsArea}".`,
-    );
-  }
-
-  return resolvePhiRuntimeModuleIdsForArea(
-    area,
-    definitions.filter((definition) =>
-      definition.kind === "module" &&
-      definition.moduleId !== baseModuleId &&
-      selectedIdSet.has(definition.moduleId),
-    )
-      .map((definition) => definition.moduleId),
-    definitions,
-  );
-}
-
-function resolveRuntimeModuleSelectionDisplay(
-  selectedIds: readonly PhiRuntimeModuleId[],
-  area: PhiDeveloperBuilderArea,
-  definitions: readonly PhiRuntimeModuleDefinition[],
-): PhiRuntimeModuleId[] {
-  const cmsArea = resolvePhiBuilderAreaAsCmsArea(area);
-  const baseModuleId = resolvePhiRuntimeAreaDefinition(cmsArea).baseModuleId;
-  return [
-    ...definitions
-      .filter((definition) => definition.kind === "platform")
-      .map((definition) => definition.moduleId),
-    baseModuleId,
-    ...selectedIds,
-  ];
 }
 
 function resolveBuilderActiveModuleIds(
@@ -351,6 +298,7 @@ function usePhiDeveloperBuilderWorkspaceController(
     (pathname.includes("/builder/shells") ||
       pathname.includes("/builder/pages") ||
       pathname.includes("/builder/media") ||
+      pathname.includes("/builder/modules") ||
       pathname.includes("/builder/navigation") ||
       pathname.includes("/builder/theme") ||
       pathname.includes("/builder/revisions"));
@@ -694,22 +642,15 @@ function usePhiDeveloperBuilderWorkspaceController(
     ),
     [currentRuntimeModuleIdsByArea, effectiveArea, runtimeModuleDefinitions],
   );
-  const displayedRuntimeModuleIds = useMemo(
-    () => resolveRuntimeModuleSelectionDisplay(
-      selectedRuntimeModuleIds,
-      effectiveArea,
-      runtimeModuleDefinitions,
-    ),
-    [effectiveArea, runtimeModuleDefinitions, selectedRuntimeModuleIds],
-  );
-  const displayedRuntimeModuleIdsKey = displayedRuntimeModuleIds.join("\u001f");
-  const runtimeModuleSelectorReady = usePhiSignalReceiverReady(
-    createPhiSignalAddress("cms", PHI_BUILDER_STRUCTURE_RUNTIME_MODULES_WIDGET_ID),
-  );
   const selectedRuntimeModuleIdsSearchValue = serializePhiBuilderRuntimeModuleIdsSearchParam(
     selectedRuntimeModuleIds,
   );
 
+  /*
+   * The Pages workspace derives which Pages are visible from which Modules are active, so an unsaved
+   * Module change has to reach it even though the change itself is made and persisted from elsewhere --
+   * the URL is what carries it across that gap.
+   */
   useEffect(() => {
     if (
       typeof pathname !== "string" ||
@@ -725,23 +666,6 @@ function usePhiDeveloperBuilderWorkspaceController(
     );
     router.replace(`${pathname}?${nextSearchParams.toString()}`, { scroll: false });
   }, [pathname, router, searchParams, selectedRuntimeModuleIdsSearchValue]);
-
-  useEffect(() => {
-    if (!pathname?.includes("/builder/shells") || !runtimeModuleSelectorReady) {
-      return;
-    }
-
-    dispatchSignal({
-      scope: "area",
-      channel: "runtimeModules",
-      action: "change",
-      value: displayedRuntimeModuleIds,
-      valueType: "string[]",
-      sender: createPhiBuilderControllerAddress(),
-      receiver: "broadcast",
-      timestamp: Date.now(),
-    });
-  }, [dispatchSignal, displayedRuntimeModuleIds, displayedRuntimeModuleIdsKey, pathname, runtimeModuleSelectorReady]);
 
   useEffect(() => {
     if (!pathname?.includes("/builder/shells")) {
@@ -790,7 +714,8 @@ function usePhiDeveloperBuilderWorkspaceController(
     if (
       commandWorkspace !== "structure" &&
       commandWorkspace !== "pages" &&
-      commandWorkspace !== "navigation"
+      commandWorkspace !== "navigation" &&
+      commandWorkspace !== "modules"
     ) {
       return;
     }
@@ -806,7 +731,9 @@ function usePhiDeveloperBuilderWorkspaceController(
         ? "builder-shells-page"
         : commandWorkspace === "pages"
           ? "builder-pages-page"
-          : "builder-navigation-page";
+          : commandWorkspace === "modules"
+            ? "builder-modules-page"
+            : "builder-navigation-page";
     const emitAvailability = () => {
       const availability = phiBuilderHistory.getAvailability(historyContext);
       for (const [controlKey, enabled] of [
@@ -1161,6 +1088,50 @@ function usePhiDeveloperBuilderWorkspaceController(
       const builderControllerReceiver = createPhiBuilderControllerAddress();
       const targetsBuilderController = signal.receiver === builderControllerReceiver;
 
+      /*
+       * The Modules Table names a row, the detail Table needs binding params, and the overlay needs an
+       * open: three different value shapes, so the translation between them lives here rather than in a
+       * route the Table could carry on its own.
+       */
+      if (
+        signal.scope === "area" &&
+        signal.channel === "action" &&
+        signal.action === "activate" &&
+        signal.valueType === "json" &&
+        signal.receiver === builderControllerReceiver &&
+        signal.sender === createPhiSignalAddress("cms", PHI_BUILDER_MODULES_TABLE_WIDGET_ID)
+      ) {
+        const tableAction = readPhiTableActionSignalValue(signal.value);
+        if (tableAction?.actionKey !== "details" || typeof tableAction.rowIdentity !== "string") {
+          return;
+        }
+
+        dispatchSignal({
+          scope: "page",
+          channel: "bindingParams",
+          action: "change",
+          value: { params: { moduleId: tableAction.rowIdentity } },
+          valueType: "json",
+          valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.tableBindingParams,
+          correlationId: signal.correlationId,
+          sender: builderControllerReceiver,
+          receiver: createPhiSignalAddress("cms", PHI_BUILDER_MODULE_DETAIL_WIDGET_IDS.fields),
+          timestamp: Date.now(),
+        });
+        dispatchSignal({
+          scope: "page",
+          channel: "dialog",
+          action: "activate",
+          value: null,
+          valueType: "none",
+          correlationId: signal.correlationId,
+          sender: builderControllerReceiver,
+          receiver: createPhiSignalAddress("cms", PHI_BUILDER_MODULE_DETAIL_OVERLAY_IDS.overlayModuleDetail),
+          timestamp: Date.now(),
+        });
+        return;
+      }
+
       if (
         signal.scope === "area" &&
         signal.channel === "runtimeModules" &&
@@ -1177,45 +1148,7 @@ function usePhiDeveloperBuilderWorkspaceController(
         }
 
         try {
-          const current = getPhiDeveloperBuilderStateSnapshot(defaultArea);
-          const currentModuleIds = current.runtimeModuleIdsByArea?.[effectiveArea] ?? [];
-          const nextModuleIds = normalizeRuntimeModuleSelection(
-            selectedIds,
-            effectiveArea,
-            current.runtimeModuleDefinitions,
-          );
-          if (areRuntimeModuleIdsEqual(currentModuleIds, nextModuleIds)) {
-            return;
-          }
-          const historyBefore = capturePhiBuilderWorkspaceHistoryState(
-            getPhiDeveloperBuilderStateSnapshot(defaultArea),
-          );
-          phiWorkspaceCatalogStore.patch(defaultArea, (catalog) => ({
-            ...catalog,
-            runtimeModuleIdsByArea: {
-              ...(catalog.runtimeModuleIdsByArea ?? {}),
-              [effectiveArea]: nextModuleIds,
-            },
-          }));
-          phiBuilderHistory.record(
-            createPhiBuilderHistoryContext({
-              workspace: "structure",
-              area: effectiveArea,
-            }),
-            {
-              label: "Change runtime modules",
-              before: {
-                kind: "workspace",
-                state: historyBefore,
-              },
-              after: {
-                kind: "workspace",
-                state: capturePhiBuilderWorkspaceHistoryState(
-                  getPhiDeveloperBuilderStateSnapshot(defaultArea),
-                ),
-              },
-            },
-          );
+          applyPhiBuilderRuntimeModuleSelectionChange(effectiveArea, selectedIds, defaultArea);
         } catch (error) {
           showMessage(
             { level: "error", content: error instanceof Error ? error.message : "Invalid runtime module selection." },

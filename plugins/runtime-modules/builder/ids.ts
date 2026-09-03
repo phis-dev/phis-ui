@@ -11,6 +11,7 @@ export const PHI_BUILDER_RUNTIME_DATA_PROVIDER_KEYS = {
   builderPages: createPhiSharedRuntimeDataProviderKey("options", "builder-pages"),
   builderNavigationSets: createPhiSharedRuntimeDataProviderKey("options", "builder-navigation-sets"),
   runtimeModules: createPhiSharedRuntimeDataProviderKey("options", "runtime-modules"),
+  runtimeModulesTable: createPhiSharedRuntimeDataProviderKey("tables", "runtime-modules"),
   /*
    * The four Signal wiring selects cascade: the capabilities offered depend on the endpoint chosen
    * before them, and the receiver capabilities additionally have to match the sender output. The chosen

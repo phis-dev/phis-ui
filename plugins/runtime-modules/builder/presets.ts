@@ -19,6 +19,7 @@ const BUILDER_ROUTE_PRESETS = [
   { presetKey: "builder-shells-page", pageKey: "shells", title: "Shells", path: "/shells" },
   { presetKey: "builder-pages-page", pageKey: "pages", title: "Pages", path: "/pages" },
   { presetKey: "builder-navigation-page", pageKey: "navigation", title: "Navigation", path: "/navigation" },
+  { presetKey: "builder-modules-page", pageKey: "modules", title: "Modules", path: "/modules" },
   { presetKey: "builder-root-page", pageKey: "home", title: "Builder", path: "/" },
 ] as const;
 

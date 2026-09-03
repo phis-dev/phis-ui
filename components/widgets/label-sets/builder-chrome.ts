@@ -52,6 +52,7 @@ const PHI_BUILDER_CHROME_WIDGET_LABEL_SET = definePhiLabelSet({
     canvas_picker_filter_categories: PHI_BUILDER_CHROME_WIDGET_DEFAULT_LABELS.canvas.picker.filterCategories,
     canvas_picker_no_compatible_items: PHI_BUILDER_CHROME_WIDGET_DEFAULT_LABELS.canvas.picker.noCompatibleItems,
     page_title_dashboard: PHI_BUILDER_CHROME_WIDGET_DEFAULT_LABELS.pageTitles.dashboard,
+    page_title_modules: PHI_BUILDER_CHROME_WIDGET_DEFAULT_LABELS.pageTitles.modules,
     page_title_shells: PHI_BUILDER_CHROME_WIDGET_DEFAULT_LABELS.pageTitles.shells,
     page_title_pages: PHI_BUILDER_CHROME_WIDGET_DEFAULT_LABELS.pageTitles.pages,
     page_title_navigation: PHI_BUILDER_CHROME_WIDGET_DEFAULT_LABELS.pageTitles.navigation,
@@ -122,6 +123,7 @@ export async function getPhiBuilderChromeWidgetLabels(
     },
     pageTitles: {
       dashboard: labels.page_title_dashboard,
+      modules: labels.page_title_modules,
       shells: labels.page_title_shells,
       pages: labels.page_title_pages,
       navigation: labels.page_title_navigation,

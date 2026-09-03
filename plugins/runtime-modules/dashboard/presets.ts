@@ -36,7 +36,7 @@ export const PHI_DASHBOARD_RUNTIME_MODULE_ROUTES = [
     navigation: [{
       navKey: "builder:sidebar",
       parentItemKey: null,
-      before: "@phis/ui/builder/nav/shells",
+      before: "@phis/ui/builder/nav/modules",
       item: {
         itemKey: "@phis/ui/modules/dashboard/nav/builder/dashboard",
         label: { defaultMessage: "Dashboard" },

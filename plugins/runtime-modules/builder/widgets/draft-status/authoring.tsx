@@ -33,6 +33,7 @@ type PhiBuilderDraftStatusWorkspaceKind =
   | "structure"
   | "pages"
   | "navigation"
+  | "modules"
   | "brand"
   | "revisions-area"
   | "revisions-page"
@@ -49,6 +50,10 @@ function resolveWorkspaceKind(
 
   if (pathname?.includes("/builder/navigation")) {
     return "navigation";
+  }
+
+  if (pathname?.includes("/builder/modules")) {
+    return "modules";
   }
 
   if (pathname?.includes("/builder/theme")) {
@@ -85,7 +90,7 @@ function resolveStatusPath(
     return navKey;
   }
 
-  if (workspaceKind === "structure" || workspaceKind === "revisions-area") {
+  if (workspaceKind === "structure" || workspaceKind === "modules" || workspaceKind === "revisions-area") {
     return area === "public" ? "/" : `${area}/`;
   }
 
@@ -158,25 +163,34 @@ export function PhiDeveloperBuilderDraftStatusWidgetClient({
   );
   const isPageWorkspace = workspaceKind === "pages" || workspaceKind === "revisions-page";
   const isAreaWorkspace = workspaceKind === "structure" || workspaceKind === "revisions-area";
+  /*
+   * The Module selection has its own Draft on the same Area revision, so it reports its own status:
+   * asking the structure endpoint here would show the shell's Draft on a page that cannot save one.
+   */
+  const isModulesWorkspace = workspaceKind === "modules";
   const pageStoragePath = isPageWorkspace && catalogHydrated && pageCatalogHydratedByArea[area] && pageKey
     ? resolvePhiBuilderCmsStoragePath(area, pageKey, pages)
     : null;
   const areaSourcePreset = catalogHydrated
     ? areaPresetSourcesByArea[area] ?? null
     : null;
-  if (isAreaWorkspace && catalogHydrated && !areaSourcePreset) {
+  if ((isAreaWorkspace || isModulesWorkspace) && catalogHydrated && !areaSourcePreset) {
     throw new Error(`Builder target Area "${area}" has no source preset identity.`);
   }
-  const areaDraftUrl = areaSourcePreset
-    ? `/api/site/cms/area/draft?${new URLSearchParams({
+  const areaDraftQuery = areaSourcePreset
+    ? new URLSearchParams({
         area,
         ownerModuleId: areaSourcePreset.ownerModuleId,
         presetKey: areaSourcePreset.presetKey,
-      }).toString()}`
+      }).toString()
     : null;
+  const areaDraftUrl = areaDraftQuery === null ? null : `/api/site/cms/area/draft?${areaDraftQuery}`;
+  const modulesDraftUrl = areaDraftQuery === null ? null : `/api/site/cms/area/modules/draft?${areaDraftQuery}`;
   const baseUrl =
     workspaceKind === "brand" || workspaceKind === "revisions-theme"
       ? "/api/site/cms/theme/draft?key=default"
+      : isModulesWorkspace
+      ? modulesDraftUrl
       : isAreaWorkspace
       ? areaDraftUrl
       : isPageWorkspace
@@ -275,7 +289,7 @@ export function PhiDeveloperBuilderDraftStatusWidgetClient({
         ? draftStatusValue?.themeKey === "default"
         : workspaceKind === "navigation" || workspaceKind === "revisions-navigation"
         ? draftStatusValue?.navKey === navKey
-        : workspaceKind === "structure" || workspaceKind === "revisions-area"
+        : workspaceKind === "structure" || workspaceKind === "modules" || workspaceKind === "revisions-area"
           ? draftStatusValue?.area === area
           : draftStatusValue?.area === area && draftStatusValue?.pageKey === pageKey;
     if (!matchesScope) {

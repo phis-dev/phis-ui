@@ -20,6 +20,9 @@ import { buildPhiBuilderLiveHref,
   clearPhiDeveloperBuilderDraftAllocation,
   createPhiDeveloperBuilderInitialPageDrafts,
   deleteCmsDraft,
+  discardPhiDeveloperBuilderModulesDraft,
+  savePhiDeveloperBuilderModulesDraft,
+  publishPhiDeveloperBuilderModulesDraft,
   previewPhiDeveloperBuilderDraft,
   publishPhiDeveloperBuilderDraft,
   savePhiDeveloperBuilderDraft,
@@ -150,6 +153,20 @@ export function usePhiBuilderDraftCommandController({
   async function runSaveCommand(
     workspaceKind: Exclude<PhiDeveloperBuilderCommandWorkspace, "theme" | null>,
   ) {
+    if (workspaceKind === "modules") {
+      const modulesResult = await savePhiDeveloperBuilderModulesDraft(
+        state,
+        getPhiDeveloperRegionDraftsSnapshot(),
+        {
+          builderPlugins: builderModuleMetas.plugins,
+          scope: { area: effectiveArea },
+        },
+      );
+      emitDraftStatus("draft", modulesResult.revisionId);
+      showMessage({ level: "success", content: "Saved module selection draft." });
+      return;
+    }
+
     const result = workspaceKind === "navigation"
       ? await Promise.resolve().then(async () => {
           const navigationDraft = await resolveCurrentNavigationDraft();
@@ -189,6 +206,20 @@ export function usePhiBuilderDraftCommandController({
   async function runPublishCommand(
     workspaceKind: Exclude<PhiDeveloperBuilderCommandWorkspace, "theme" | null>,
   ) {
+    if (workspaceKind === "modules") {
+      await publishPhiDeveloperBuilderModulesDraft(
+        state,
+        getPhiDeveloperRegionDraftsSnapshot(),
+        {
+          builderPlugins: builderModuleMetas.plugins,
+          scope: { area: effectiveArea },
+        },
+      );
+      emitDraftStatus("published", null);
+      showMessage({ level: "success", content: "Published module selection." });
+      return;
+    }
+
     if (workspaceKind === "navigation") {
       const navigationDraft = await resolveCurrentNavigationDraft();
       await publishPhiBuilderNavigationDraft(navigationDraft);
@@ -240,6 +271,15 @@ export function usePhiBuilderDraftCommandController({
       return;
     }
 
+    if (workspaceKind === "modules") {
+      window.open(
+        buildPhiBuilderLiveHref(effectiveArea, effectivePageKey, currentPageTree, "structure"),
+        "_blank",
+        "noopener,noreferrer",
+      );
+      return;
+    }
+
     const previewScope = {
       area: effectiveArea,
       pageKey: effectivePageKey,
@@ -286,6 +326,44 @@ export function usePhiBuilderDraftCommandController({
             workspaceKind: "structure",
           });
           mergePhiDeveloperRegionDrafts(presetDrafts);
+          phiBuilderHistory.clear(createPhiBuilderHistoryContext({
+            workspace: "structure",
+            area: effectiveArea,
+          }));
+          showMessage({ level: "success", content: "Reset shell draft." });
+        } catch (error) {
+          showMessage({ level: "error", content: error instanceof Error ? error.message : "Shell reset failed." });
+          throw error;
+        } finally {
+          setActiveDraftAction(null);
+        }
+      },
+    });
+  }
+
+  /**
+   * Discards the Area's Module draft and puts the selection back to what a fresh Area would run with.
+   *
+   * Deliberately the code-owned default rather than a re-fetch of the published selection: that is what
+   * "Reset" already means for the Shell draft above, and for the same reason -- a reload would need a
+   * round trip this dialog has no occasion to make, and "back to the start" is the answer either way
+   * once there is no draft left to describe something in between.
+   */
+  function confirmResetModules() {
+    modal.confirm({
+      title: "Delete Module draft?",
+      content: "This removes the current DB Module draft and restores the shared default selection.",
+      okText: "Delete and reset",
+      okButtonProps: { danger: true },
+      cancelText: "Cancel",
+      centered: true,
+      onOk: async () => {
+        setActiveDraftAction("reset");
+        try {
+          await discardPhiDeveloperBuilderModulesDraft({
+            area: effectiveArea,
+            areaPresetSource: state.areaPresetSourcesByArea[effectiveArea] ?? null,
+          });
           phiWorkspaceCatalogStore.patch(defaultArea, (current) => ({
             ...current,
             runtimeModuleIdsByArea: {
@@ -294,12 +372,12 @@ export function usePhiBuilderDraftCommandController({
             },
           }));
           phiBuilderHistory.clear(createPhiBuilderHistoryContext({
-            workspace: "structure",
+            workspace: "modules",
             area: effectiveArea,
           }));
-          showMessage({ level: "success", content: "Reset shell draft." });
+          showMessage({ level: "success", content: "Reset Module draft." });
         } catch (error) {
-          showMessage({ level: "error", content: error instanceof Error ? error.message : "Shell reset failed." });
+          showMessage({ level: "error", content: error instanceof Error ? error.message : "Module reset failed." });
           throw error;
         } finally {
           setActiveDraftAction(null);
@@ -489,6 +567,11 @@ export function usePhiBuilderDraftCommandController({
       return;
     }
 
+    if (workspaceKind === "modules") {
+      confirmResetModules();
+      return;
+    }
+
     confirmResetNavigation();
   }
 
@@ -526,9 +609,19 @@ export function usePhiBuilderDraftCommandController({
         restorePhiBuilderNavigationDraft(snapshot.navKey, snapshot.draft);
         return;
       }
+      if (snapshot.kind === "modules") {
+        phiWorkspaceCatalogStore.patch(defaultArea, (current) => ({
+          ...current,
+          runtimeModuleIdsByArea: {
+            ...(current.runtimeModuleIdsByArea ?? {}),
+            [snapshot.area]: snapshot.moduleIds,
+          },
+        }));
+        return;
+      }
       /*
-       * A workspace snapshot spans both halves -- customPages and runtimeModuleIdsByArea belong to the
-       * catalog, the page drafts to the Builder -- so undo has to put each back where it lives.
+       * A workspace snapshot spans both halves -- customPages belongs to the catalog, the page drafts
+       * to the Builder -- so undo has to put each back where it lives.
        */
       const { catalog, tool } = splitWorkspacePatch(snapshot.state);
       if (Object.keys(catalog).length > 0) {
@@ -572,5 +665,5 @@ export function usePhiBuilderDraftCommandController({
       });
   }
 
-  return { confirmResetPage, runBuilderCommand };
+  return { confirmResetPage, confirmResetModules, runBuilderCommand };
 }

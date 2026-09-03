@@ -49,6 +49,7 @@ export type PhiBuilderChromeWidgetLabels = {
   };
   pageTitles: {
     dashboard: string;
+    modules: string;
     shells: string;
     pages: string;
     navigation: string;
@@ -105,6 +106,7 @@ export const PHI_BUILDER_CHROME_WIDGET_DEFAULT_LABELS: PhiBuilderChromeWidgetLab
   },
   pageTitles: {
     dashboard: "Dashboard",
+    modules: "Modules",
     shells: "Shells",
     pages: "Pages",
     navigation: "Navigation",

@@ -82,6 +82,12 @@ export type PhiTableColumnDefinition = {
   title: string;
   fieldKey: string;
   sortField?: string;
+  /**
+   * An icon field rendered ahead of this column's own value, so that a name and the icon standing for
+   * it read as one thing rather than as two columns that happen to be adjacent. Mirrors the Tree
+   * Control's node `iconFieldKey`.
+   */
+  iconFieldKey?: string;
   renderer?: "text" | "email" | "date" | "datetime" | "badge" | "tags" | "link" | "code" | "json" | "switch" | "checkbox" | "icon";
   editor?: {
     control?: PhiTableColumnEditorControl;
@@ -891,6 +897,14 @@ export function validatePhiTableWidgetBinding(
     const field = fieldsByKey.get(column.fieldKey);
     if (column.editor && !field?.mutable) {
       errors.push(`Table column "${column.key}" cannot edit read-only field "${column.fieldKey}".`);
+    }
+    if (column.iconFieldKey !== undefined) {
+      const iconField = fieldsByKey.get(column.iconFieldKey);
+      if (!iconField) {
+        errors.push(`Table column "${column.key}" references undeclared icon field "${column.iconFieldKey}".`);
+      } else if (iconField.type !== "icon") {
+        errors.push(`Table column "${column.key}" icon field "${column.iconFieldKey}" must be an icon field.`);
+      }
     }
     if (column.editor && field?.type === "json") {
       errors.push(`Table column "${column.key}" cannot use an implicit JSON editor.`);

@@ -429,7 +429,7 @@ const builderNavigationItems = resolvePhiCmsActiveNavigationSurfaces({
 })[0]?.items;
 assert.deepEqual(
   builderNavigationItems?.map((item) => readPhiCmsNavigationTargetPath(item.target) ?? null),
-  ["/dashboard", "/shells", "/pages", "/navigation", "/theme", "/revisions", null, "/media"],
+  ["/dashboard", "/modules", "/shells", "/pages", "/navigation", "/theme", "/revisions", null, "/media"],
 );
 const builderSettingsContainer = builderNavigationItems?.at(-2);
 assert.equal(builderSettingsContainer?.kind, "container");

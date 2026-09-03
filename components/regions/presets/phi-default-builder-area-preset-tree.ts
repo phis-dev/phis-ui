@@ -46,6 +46,7 @@ import { PHI_BUILDER_CHROME_WIDGET_DEFAULT_LABELS } from "../../widgets/label-ty
 import type { PhiBuilderChromeWidgetLabels } from "../../widgets/label-types/builder-chrome";
 import type { PhiInspectorWidgetLabels } from "../../widgets/label-types/inspector";
 import { getPhiBuilderRevisionsWidgetLabels } from "../../widgets/label-sets/revisions";
+import { getPhiBuilderModulesPageLabels } from "../../widgets/label-sets/builder-modules";
 import { PHI_REVISIONS_RUNTIME_DATA_PROVIDER_KEYS } from "../../../plugins/runtime-modules/revisions/ids";
 import { createPhiRevisionsControllerAddress } from "../../../plugins/runtime-modules/revisions/controller/address";
 import {
@@ -53,13 +54,16 @@ import {
   PHI_BUILDER_PAGE_META_OVERLAY_IDS,
   PHI_BUILDER_PAGE_META_WIDGET_IDS,
   PHI_BUILDER_REVISIONS_TABLE_WIDGET_ID,
+  PHI_BUILDER_MODULES_TABLE_WIDGET_ID,
+  PHI_BUILDER_MODULE_DETAIL_OVERLAY_IDS,
+  PHI_BUILDER_MODULE_DETAIL_LAYOUT_IDS,
+  PHI_BUILDER_MODULE_DETAIL_WIDGET_IDS,
 } from "../../../helpers/cms-page-addresses";
 import { PHI_BUILDER_PAGE_META_FORM_ID } from "../../../plugins/runtime-modules/builder/page-meta-form";
 import { PHI_BUILDER_EFFECTS_FORM_IDS } from "../../../plugins/runtime-modules/builder/page-meta-form";
 import { PHI_BUILDER_SIGNAL_WIRING_FORM_ID } from "../../../plugins/runtime-modules/builder/signal-wiring-form";
 import { getPhiBuilderNavigationPageLabels } from "./builder-navigation-label-set";
 import { PHI_BUILDER_EFFECTS_FORM_WIDGET_IDS, PHI_BUILDER_INSPECTOR_LAYOUT_IDS, PHI_BUILDER_INSPECTOR_OVERLAY_IDS, PHI_BUILDER_INSPECTOR_SECTION_WIDGET_IDS, PHI_BUILDER_INSPECTOR_WIDGET_IDS } from "../../../plugins/runtime-modules/builder/inspector-overlay-addresses";
-import { PHI_BUILDER_STRUCTURE_RUNTIME_MODULES_WIDGET_ID } from "../../../plugins/runtime-modules/builder/area-addresses";
 import { PHI_BUILDER_EFFECTS_SECTIONS } from "../../../plugins/runtime-modules/builder/effects-form-values";
 import { getPhiMediaWidgetLabels } from "../../media/label-sets/media";
 import {
@@ -1291,6 +1295,7 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
   const isPagesPage = page.path === `${builderBasePath}/pages`;
   const isNavigationPage = page.path === `${builderBasePath}/navigation`;
   const isRevisionsPage = page.path === `${builderBasePath}/revisions`;
+  const isModulesPage = page.path === `${builderBasePath}/modules`;
   const isMediaPage = page.path === `${builderBasePath}/media`;
   const isThemePage = page.path === `${builderBasePath}/theme`;
   const revisionsLabels = isRevisionsPage ? await getPhiBuilderRevisionsWidgetLabels({
@@ -1298,6 +1303,22 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
     internalToken: runtime.phis.internalToken,
     locale: runtime.locale.current,
   }) : null;
+  const modulesLabels = isModulesPage ? await getPhiBuilderModulesPageLabels({
+    apiBaseUrl: runtime.phis.apiBaseUrl,
+    internalToken: runtime.phis.internalToken,
+    locale: runtime.locale.current,
+  }) : null;
+  const modulesDetailLabels = modulesLabels ? {
+    moduleId: modulesLabels.detail.moduleId,
+    title: modulesLabels.columns.title,
+    description: modulesLabels.columns.description,
+    category: modulesLabels.columns.category,
+    eligibleAreas: modulesLabels.columns.eligibleAreas,
+    baseModule: modulesLabels.detail.baseModule,
+    active: modulesLabels.detail.active,
+    yes: modulesLabels.detail.yes,
+    no: modulesLabels.detail.no,
+  } : null;
   const navigationLabels = isNavigationPage ? await getPhiBuilderNavigationPageLabels({
     apiBaseUrl: runtime.phis.apiBaseUrl,
     internalToken: runtime.phis.internalToken,
@@ -1353,6 +1374,31 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
               { routeKey: "builder-page-meta-open", capabilityId: "open", scope: "page", channel: "dialog", action: "activate", valueType: "none", receiver: createPhiSignalAddress("cms", PHI_BUILDER_PAGE_META_OVERLAY_IDS.editor) },
               { routeKey: "builder-page-meta-close", capabilityId: "close", scope: "page", channel: "dialog", action: "close", valueType: "none", receiver: createPhiSignalAddress("cms", PHI_BUILDER_PAGE_META_OVERLAY_IDS.editor) },
               { routeKey: "builder-page-meta-title", capabilityId: "title", scope: "page", channel: "title", action: "change", valueType: "string", receiver: createPhiSignalAddress("cms", PHI_BUILDER_PAGE_META_OVERLAY_IDS.editor) },
+            ],
+          },
+        },
+      }] : []),
+      ...(isModulesPage ? [{
+        id: PHI_BUILDER_MODULE_DETAIL_OVERLAY_IDS.overlayModuleDetail,
+        overlayType: "modal" as const,
+        headerLayoutNodeId: null,
+        bodyLayoutNodeId: PHI_BUILDER_MODULE_DETAIL_LAYOUT_IDS.body,
+        footerPresentation: "none" as const,
+        footerLayoutNodeId: null,
+        status: PhiCmsStatus.Published,
+        flags: 0,
+        visibilityMask: page.visibilityMask,
+        sortOrder: 0,
+        label: "Builder module detail",
+        config: {
+          title: modulesLabels?.detail.title ?? "Module details",
+          width: { compact: "calc(100vw - 32px)", medium: 560, wide: 640 },
+          mountPolicy: "keep-alive",
+          closeMode: "immediate",
+          signalRoutes: {
+            listens: [
+              { routeKey: "builder-module-detail-open", capabilityId: "open", scope: "page", channel: "dialog", action: "activate", valueType: "none", receiver: createPhiSignalAddress("cms", PHI_BUILDER_MODULE_DETAIL_OVERLAY_IDS.overlayModuleDetail) },
+              { routeKey: "builder-module-detail-close", capabilityId: "close", scope: "page", channel: "dialog", action: "close", valueType: "none", receiver: createPhiSignalAddress("cms", PHI_BUILDER_MODULE_DETAIL_OVERLAY_IDS.overlayModuleDetail) },
             ],
           },
         },
@@ -1502,7 +1548,7 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
       }] : []),
     ],
     regions: [
-      ...(isStructurePage || isPagesPage || isNavigationPage || isRevisionsPage || isMediaPage || isThemePage
+      ...(isStructurePage || isPagesPage || isNavigationPage || isRevisionsPage || isMediaPage || isThemePage || isModulesPage
         ? [
             {
               id: SYNTHETIC_DEV_REGION_IDS.regionHeaderBottom,
@@ -1546,7 +1592,7 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
       },
     ],
     layoutNodes: [
-      ...((isStructurePage || isPagesPage || isMediaPage || isNavigationPage || isRevisionsPage || isThemePage)
+      ...((isStructurePage || isPagesPage || isMediaPage || isNavigationPage || isRevisionsPage || isThemePage || isModulesPage)
         ? [
             buildPhiCmsLayoutNode({
               creationPreset: { layoutKind: "threecol", preset: "panel" },
@@ -1690,7 +1736,7 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                   borderRadius: 0,
                 },
               }
-          : isRevisionsPage
+          : isRevisionsPage || isModulesPage
             ? {
                 creationPreset: { layoutKind: "verticalflex", preset: "panel" },
                 typeKey: "flex-vertical",
@@ -1702,7 +1748,7 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                 status: PhiCmsStatus.Published,
                 flags: 0,
                 visibilityMask: page.visibilityMask,
-                label: "dev revisions content vertical",
+                label: isModulesPage ? "dev modules content vertical" : "dev revisions content vertical",
                 config: {
                   anchor: {
                     horizontal: "center",
@@ -1900,6 +1946,28 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
             }),
           ]
         : []),
+      ...(isModulesPage ? [
+        buildPhiCmsLayoutNode({
+          creationPreset: { layoutKind: "verticalflex", preset: "panel" },
+          typeKey: "flex-vertical",
+          id: PHI_BUILDER_MODULE_DETAIL_LAYOUT_IDS.body,
+          siteId: page.siteId,
+          parentLayoutNodeId: null,
+          slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
+          sortOrder: 0,
+          status: PhiCmsStatus.Published,
+          flags: 0,
+          visibilityMask: page.visibilityMask,
+          label: "Builder module detail body",
+          config: {
+            gap: PHI_SPACE.base,
+            padding: PHI_SPACE.base,
+            width: "100%",
+            background: PHI_COLOR.bgLayout,
+            border: "none",
+          },
+        }),
+      ] : []),
       ...(isPagesPage ? [
         buildPhiCmsLayoutNode({
           creationPreset: { layoutKind: "verticalflex", preset: "panel" },
@@ -2603,55 +2671,6 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
               contentId: null,
             }),
             buildPhiCmsWidgetNode({
-              typeKey: "multi-select",
-              id: PHI_BUILDER_STRUCTURE_RUNTIME_MODULES_WIDGET_ID,
-              siteId: page.siteId,
-              parentLayoutNodeId: SYNTHETIC_DEV_LAYOUT_IDS.layoutWorkspaceHeader,
-              slotIndex: PHI_CMS_THREE_COLUMN_LAYOUT_SLOT_INDEX.Middle,
-              sortOrder: 0,
-              status: PhiCmsStatus.Published,
-              flags: 0,
-              visibilityMask: page.visibilityMask,
-              label: "Runtime modules",
-              config: {
-                label: "Modules",
-                value: [],
-                valueType: "string[]",
-                key: "dev-structure-runtime-modules",
-                placeholder: "Select modules",
-                maxTagCount: "responsive",
-                optionsProvider: {
-                  providerKey: PHI_BUILDER_RUNTIME_DATA_PROVIDER_KEYS.runtimeModules,
-                },
-                options: [],
-                signalRoutes: {
-                  emits: [
-                    {
-                    routeKey: "shell-runtime-modules-change",
-                    capabilityId: "changeString",
-                      scope: "area",
-                      channel: "runtimeModules",
-                      action: "change",
-                      valueType: "string[]",
-                      receiver: createPhiBuilderControllerAddress(),
-                    },
-                  ],
-                  listens: [
-                    {
-                    routeKey: "shell-runtime-modules-feedback",
-                    capabilityId: "selectionString",
-                      scope: "area",
-                      channel: "runtimeModules",
-                      action: "change",
-                      valueType: "string[]",
-                      receiver: "broadcast",
-                    },
-                  ],
-                },
-              },
-              contentId: null,
-            }),
-            buildPhiCmsWidgetNode({
               typeKey: "command-toolbar",
               id: SYNTHETIC_DEV_WIDGET_IDS.widgetToolbar,
               siteId: page.siteId,
@@ -2968,6 +2987,169 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                     { value: "1",
  label: "Style" },
                   ],
+                },
+                contentId: null,
+              }),
+            ]
+        : isModulesPage
+          ? [
+              /*
+               * The Module selection is Area-wide, so the page choice here steers nothing but Preview:
+               * it names the page the Preview button opens once the selection is saved.
+               */
+              buildPhiCmsWidgetNode({
+                typeKey: "cascader",
+                id: SYNTHETIC_DEV_WIDGET_IDS.widgetPagesHeaderSelector,
+                siteId: page.siteId,
+                parentLayoutNodeId: SYNTHETIC_DEV_LAYOUT_IDS.layoutHeaderBottom,
+                slotIndex: PHI_CMS_THREE_COLUMN_LAYOUT_SLOT_INDEX.Left,
+                sortOrder: 0,
+                status: PhiCmsStatus.Published,
+                flags: 0,
+                visibilityMask: page.visibilityMask,
+                label: "dev modules preview page select",
+                config: {
+                  key: "pageSelect",
+                  signalRoutes: {
+                    emits: [
+                      {
+                        routeKey: "builder-page-path-change",
+                        capabilityId: "change",
+                        scope: "page",
+                        channel: "path",
+                        action: "change",
+                        valueType: "path",
+                        receiver: "broadcast",
+                      },
+                    ],
+                  },
+                  placeholder: labels.pages.selectPage,
+                  optionsProvider: {
+                    providerKey: PHI_BUILDER_RUNTIME_DATA_PROVIDER_KEYS.builderPages,
+                  },
+                  options: [],
+                },
+                contentId: null,
+              }),
+              buildPhiCmsWidgetNode({
+                typeKey: "command-toolbar",
+                id: SYNTHETIC_DEV_WIDGET_IDS.widgetToolbar,
+                siteId: page.siteId,
+                parentLayoutNodeId: SYNTHETIC_DEV_LAYOUT_IDS.layoutHeaderBottom,
+                slotIndex: PHI_CMS_THREE_COLUMN_LAYOUT_SLOT_INDEX.Middle,
+                sortOrder: 0,
+                status: PhiCmsStatus.Published,
+                flags: 0,
+                visibilityMask: page.visibilityMask,
+                label: "dev modules toolbar",
+                config: builderCommandToolbarConfig,
+                contentId: null,
+              }),
+              buildPhiCmsWidgetNode({
+                typeKey: "table",
+                id: PHI_BUILDER_MODULES_TABLE_WIDGET_ID,
+                siteId: page.siteId,
+                parentLayoutNodeId: SYNTHETIC_DEV_LAYOUT_IDS.layoutContent,
+                slotIndex: 0,
+                sortOrder: 0,
+                status: PhiCmsStatus.Published,
+                flags: 0,
+                visibilityMask: page.visibilityMask,
+                label: "dev modules table",
+                config: {
+                  source: {
+                    providerKey: PHI_BUILDER_RUNTIME_DATA_PROVIDER_KEYS.runtimeModulesTable,
+                    resourceKey: "modules",
+                  },
+                  presentation: {
+                    bordered: true,
+                    layout: { mode: "auto", overflowX: "auto" },
+                    columns: [
+                      {
+                        key: "active",
+                        fieldKey: "active",
+                        title: modulesLabels?.columns.active ?? "Active",
+                        renderer: "switch",
+                        align: "center",
+                        sticky: "left",
+                        editor: {
+                          control: "switch",
+                          disabledWhen: { source: "row", valuePath: "locked", operator: "truthy" },
+                        },
+                      },
+                      { key: "title", fieldKey: "title", iconFieldKey: "icon", title: modulesLabels?.columns.title ?? "Module", sortable: true },
+                      { key: "category", fieldKey: "category", title: modulesLabels?.columns.category ?? "Category", sortable: true },
+                      { key: "description", fieldKey: "description", title: modulesLabels?.columns.description ?? "Description", sizing: { mode: "fill" } },
+                    ],
+                    controlSize: "small",
+                    footer: {
+                      template: `%1 ${modulesLabels?.footer.modules ?? "modules"}`,
+                      values: [{ key: "modules", value: { source: "core", fieldKey: "totalRows" } }],
+                      align: "start",
+                    },
+                  },
+                  features: {
+                    search: { enabled: true },
+                    pagination: { enabled: false, pageSize: 200, showSizeChanger: false },
+                    sorting: { mode: "single" },
+                    editing: { mode: "cell" },
+                    tools: { mode: "self-contained", reset: false, reload: false },
+                    actions: { row: [{
+                      key: "details",
+                      label: modulesLabels?.actions.details ?? "Details",
+                      icon: "antd:info-circle",
+                      display: "icon",
+                      execution: "signal",
+                    }] },
+                  },
+                  signalRoutes: {
+                    emits: [
+                      { routeKey: "builder-modules-table-action", capabilityId: "actionActivate", scope: "area", channel: "action", action: "activate", valueType: "json", valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.tableAction, receiver: createPhiBuilderControllerAddress() },
+                    ],
+                  },
+                },
+                contentId: null,
+              }),
+              buildPhiCmsWidgetNode({
+                typeKey: "table",
+                id: PHI_BUILDER_MODULE_DETAIL_WIDGET_IDS.fields,
+                siteId: page.siteId,
+                parentLayoutNodeId: PHI_BUILDER_MODULE_DETAIL_LAYOUT_IDS.body,
+                slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
+                sortOrder: 0,
+                status: PhiCmsStatus.Published,
+                flags: 0,
+                visibilityMask: page.visibilityMask,
+                label: "dev module detail fields",
+                config: {
+                  source: {
+                    providerKey: PHI_BUILDER_RUNTIME_DATA_PROVIDER_KEYS.runtimeModulesTable,
+                    resourceKey: "moduleDetail",
+                    params: {
+                      moduleId: "",
+                      areaLabels: modulesLabels?.areas ?? null,
+                      detailLabels: modulesDetailLabels,
+                    },
+                  },
+                  presentation: {
+                    bordered: true,
+                    layout: { mode: "auto", overflowX: "auto" },
+                    columns: [
+                      { key: "label", fieldKey: "label", title: modulesLabels?.detail.field ?? "Field" },
+                      { key: "value", fieldKey: "value", title: modulesLabels?.detail.value ?? "Value", sizing: { mode: "fill" } },
+                    ],
+                    controlSize: "small",
+                  },
+                  features: {
+                    pagination: { enabled: false, pageSize: 50, showSizeChanger: false },
+                    sorting: { mode: "none" },
+                    tools: { mode: "self-contained", reset: false, reload: false },
+                  },
+                  signalRoutes: {
+                    listens: [
+                      { routeKey: "builder-module-detail-binding", capabilityId: "bindingParamsChange", scope: "page", channel: "bindingParams", action: "change", valueType: "json", valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.tableBindingParams, receiver: createPhiSignalAddress("cms", PHI_BUILDER_MODULE_DETAIL_WIDGET_IDS.fields) },
+                    ],
+                  },
                 },
                 contentId: null,
               }),
@@ -3313,7 +3495,7 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
             }),
           ]
         : []),
-      ...((isStructurePage || isPagesPage || isNavigationPage || isThemePage)
+      ...((isStructurePage || isPagesPage || isNavigationPage || isThemePage || isModulesPage)
         ? [
             buildPhiCmsWidgetNode({
               typeKey: "builder-draft-status",

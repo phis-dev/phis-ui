@@ -115,6 +115,47 @@ export const PHI_BUILDER_RUNTIME_DATA_PROVIDER_DESCRIPTORS = [
     description: "Installed optional runtime modules available for area activation.",
   },
   {
+    key: PHI_BUILDER_RUNTIME_DATA_PROVIDER_KEYS.runtimeModulesTable,
+    ownerModuleId: PHI_BUILDER_RUNTIME_MODULE_ID,
+    kind: "table",
+    executionMode: "live",
+    authoringMode: "edit",
+    title: "Runtime modules",
+    description: "Installed runtime modules, activatable per Area.",
+    resources: [{
+      resourceKey: "modules",
+      title: "Modules",
+      rowIdentityPath: "moduleId",
+      fields: [
+        { key: "moduleId", title: "Module id", type: "string", required: true },
+        { key: "active", title: "Active", type: "boolean", required: true, mutable: true },
+        { key: "locked", title: "Locked", type: "boolean", required: true },
+        { key: "icon", title: "Icon", type: "icon" },
+        { key: "title", title: "Title", type: "string", required: true },
+        { key: "description", title: "Description", type: "string" },
+        { key: "category", title: "Category", type: "string" },
+        { key: "isBaseModule", title: "Area Base module", type: "boolean", required: true },
+      ],
+      query: { search: true, sorting: "single", pagination: "none" },
+      actions: [{ key: "details", title: "Details", scope: "row", valueType: "none", intent: "read" }],
+    }, {
+      /*
+       * The detail view is a field/value list rather than a wide row, so that the Module facts still
+       * missing from the contract -- vendor, support link, manual, version -- become further rows here
+       * instead of a second layout.
+       */
+      resourceKey: "moduleDetail",
+      title: "Module detail",
+      rowIdentityPath: "key",
+      fields: [
+        { key: "key", title: "Key", type: "string", required: true },
+        { key: "label", title: "Field", type: "string", required: true },
+        { key: "value", title: "Value", type: "string", required: true },
+      ],
+      query: { sorting: "none", pagination: "none" },
+    }],
+  },
+  {
     key: PHI_BUILDER_RUNTIME_DATA_PROVIDER_KEYS.navigationTable,
     ownerModuleId: PHI_BUILDER_RUNTIME_MODULE_ID,
     kind: "table",

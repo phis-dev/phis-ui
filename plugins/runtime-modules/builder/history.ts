@@ -1,6 +1,7 @@
 "use client";
 
 import type { PhiBuilderNavigationTree } from "../../../helpers/cms-navigation-catalog";
+import type { PhiRuntimeModuleId } from "../../../types";
 import type {
   PhiDeveloperBuilderArea,
   PhiDeveloperBuilderRegionDraft,
@@ -8,7 +9,7 @@ import type {
 } from "./developer-workspace-types";
 import { createPhiHistoryStore } from "../../../components/state/history-store";
 
-export type PhiBuilderHistoryWorkspace = "structure" | "pages" | "navigation";
+export type PhiBuilderHistoryWorkspace = "structure" | "pages" | "navigation" | "modules";
 
 export type PhiBuilderHistorySnapshot =
   | {
@@ -27,8 +28,19 @@ export type PhiBuilderHistorySnapshot =
         | "customPages"
         | "deletedPageDrafts"
         | "pageMetaDrafts"
-        | "runtimeModuleIdsByArea"
       >;
+    }
+  | {
+      /**
+       * The Module selection of one Area, and nothing else.
+       *
+       * A `"workspace"` snapshot restores every field it captured, so bundling the selection in there
+       * would mean an unrelated Page-meta undo puts a stale selection back -- for whichever Area last
+       * changed it, not the Area the undo is even about. This kind is scoped to one Area's own list.
+       */
+      kind: "modules";
+      area: PhiDeveloperBuilderArea;
+      moduleIds: readonly PhiRuntimeModuleId[] | null;
     };
 
 export const phiBuilderHistory = createPhiHistoryStore<PhiBuilderHistorySnapshot>(
@@ -46,6 +58,9 @@ export function createPhiBuilderHistoryContext(input: {
   }
   if (input.workspace === "navigation") {
     return `navigation:${input.area}:${input.navKey?.trim() || "default"}`;
+  }
+  if (input.workspace === "modules") {
+    return `modules:${input.area}`;
   }
   return `pages:${input.area}:${input.pageKey?.trim() || "home"}`;
 }
@@ -69,6 +84,16 @@ export function capturePhiBuilderWorkspaceHistoryState(
     customPages: state.customPages,
     deletedPageDrafts: state.deletedPageDrafts,
     pageMetaDrafts: state.pageMetaDrafts,
-    runtimeModuleIdsByArea: state.runtimeModuleIdsByArea,
+  };
+}
+
+export function capturePhiBuilderModulesHistoryState(
+  state: Pick<PhiDeveloperBuilderWorkspaceState, "runtimeModuleIdsByArea">,
+  area: PhiDeveloperBuilderArea,
+): Extract<PhiBuilderHistorySnapshot, { kind: "modules" }> {
+  return {
+    kind: "modules",
+    area,
+    moduleIds: state.runtimeModuleIdsByArea?.[area] ?? null,
   };
 }
