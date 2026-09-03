@@ -44,7 +44,8 @@ export type PhiMediaAssetFolder = {
   updatedAt?: string;
 };
 
-export type PhiMediaSpaceKind = "site" | "user" | "group";
+export type { PhiMediaSpaceKind } from "@phis/contracts/media";
+import type { PhiMediaSpaceKind } from "@phis/contracts/media";
 
 /**
  * The Space kinds a Module may declare a need for.
@@ -52,14 +53,12 @@ export type PhiMediaSpaceKind = "site" | "user" | "group";
  * The Site Space is not declarable: it always exists and is governed by the Core Media role matrix,
  * so a declaration could only ever repeat what is already true.
  */
-export type PhiDeclarableMediaSpaceKind = Exclude<PhiMediaSpaceKind, "site">;
+export type { PhiDeclarableMediaSpaceKind } from "@phis/contracts/media";
 
-export const PHI_DECLARABLE_MEDIA_SPACE_KINDS = ["user", "group"] as const satisfies
-  readonly PhiDeclarableMediaSpaceKind[];
-
-export function isPhiDeclarableMediaSpaceKind(value: unknown): value is PhiDeclarableMediaSpaceKind {
-  return (PHI_DECLARABLE_MEDIA_SPACE_KINDS as readonly string[]).includes(value as string);
-}
+export {
+  PHI_DECLARABLE_MEDIA_SPACE_KINDS,
+  isPhiDeclarableMediaSpaceKind,
+} from "@phis/contracts/media";
 
 export type PhiMediaSpace = {
   id: number;
