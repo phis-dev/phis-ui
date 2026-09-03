@@ -1,14 +1,6 @@
 import { PHI_CMS_AREA_KEYS, type PhiCmsAreaKey } from "../constants/cms-areas";
 
 export const DEFAULT_LOCALE = "en";
-/**
- * The last hardcoded locale list, kept only for the Builder preview href.
- *
- * Which locales a Site has is server configuration and reaches the browser in the runtime; every other
- * reader takes it from there. This one remains because the Builder's preview controller has no runtime
- * in scope, and inventing one for it belongs to its own change rather than to this one.
- */
-export const SUPPORTED_LOCALES = ["en", "de", "fr", "es"] as const;
 export const SUPPORTED_CMS_AREAS = PHI_CMS_AREA_KEYS;
 
 export type SiteLocale = string;
@@ -110,16 +102,15 @@ export function localizePath(locale: SiteLocale | string, targetPath: string) {
   return `/${locale}/${targetPath}`;
 }
 
-export function localizeAreaPath(
-  locale: SiteLocale | string,
-  area: SiteArea | string,
-  targetPath: string,
-) {
+/**
+ * The path for a staff Area, which carries no locale prefix.
+ *
+ * Only the Public Area is localized in the URL; `/admin`, `/builder`, `/editor`, `/accounting` and
+ * `/app` are routed by their own segment. A caller that has no locale to offer wants this rather than
+ * a locale it had to invent.
+ */
+export function phiAreaPath(area: SiteArea | string, targetPath: string) {
   const normalizedArea = normalizeAreaSegment(area);
-
-  if (normalizedArea === "public") {
-    return localizePath(locale, targetPath);
-  }
 
   if (!targetPath || targetPath === "/") {
     return `/${normalizedArea}`;
@@ -134,6 +125,18 @@ export function localizeAreaPath(
   }
 
   return `/${normalizedArea}/${targetPath}`;
+}
+
+export function localizeAreaPath(
+  locale: SiteLocale | string,
+  area: SiteArea | string,
+  targetPath: string,
+) {
+  if (normalizeAreaSegment(area) === "public") {
+    return localizePath(locale, targetPath);
+  }
+
+  return phiAreaPath(area, targetPath);
 }
 
 export function resolvePhiNavHref(

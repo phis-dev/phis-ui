@@ -232,7 +232,7 @@ export function usePhiBuilderDraftCommandController({
           state.persistedPageCatalogByArea,
         )[0]?.key ?? effectivePageKey;
       const previewHref = new URL(
-        buildPhiBuilderLiveHref(effectiveArea, previewPageKey, currentPageTree, "pages", pathname),
+        buildPhiBuilderLiveHref(effectiveArea, previewPageKey, currentPageTree, "pages"),
         window.location.origin,
       );
       previewHref.searchParams.set("navRevision", String(draft.revisionId));
@@ -254,7 +254,6 @@ export function usePhiBuilderDraftCommandController({
         previewScope.pageKey,
         currentPageTree,
         workspaceKind,
-        pathname,
       );
     window.open(href, "_blank", "noopener,noreferrer");
   }

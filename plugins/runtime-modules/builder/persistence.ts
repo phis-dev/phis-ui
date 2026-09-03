@@ -1,6 +1,6 @@
 "use client";
 
-import { DEFAULT_LOCALE, SUPPORTED_LOCALES, localizeAreaPath, localizePath } from "../../../helpers/locale";
+import { phiAreaPath } from "../../../helpers/locale";
 import { resolvePhiBuilderAreaAsCmsArea, resolvePhiBuilderAreaMask } from "../../../constants/cms-areas";
 import { PhiCmsStatus } from "../../../constants/phi-cms";
 import type {
@@ -463,24 +463,18 @@ async function getCmsDraft(path: string, payload: Record<string, unknown>) {
   };
 }
 
-function resolveBuilderPreviewLocale(pathname?: string | null) {
-  if (!pathname?.trim()) {
-    return DEFAULT_LOCALE;
-  }
-
-  const segments = pathname.split("/").filter(Boolean);
-  const candidate = segments[0]?.trim().toLowerCase();
-  return candidate && SUPPORTED_LOCALES.includes(candidate as (typeof SUPPORTED_LOCALES)[number])
-    ? candidate
-    : DEFAULT_LOCALE;
-}
-
-function resolveBuilderLivePreviewLocale(area: PhiDeveloperBuilderArea, pathname?: string | null) {
-  if (area === "public") {
-    return DEFAULT_LOCALE;
-  }
-
-  return resolveBuilderPreviewLocale(pathname);
+/**
+ * The href a preview opens, with no locale in it.
+ *
+ * A staff Area carries no locale prefix at all. The Public Area does, and the Site proxy is what puts
+ * it there: a path arriving without one is redirected to the locale it resolves for this request --
+ * the viewer's own choice first, then the cookie, then Accept-Language, then the Site default. Naming
+ * a locale here could only be a second opinion on that question, and it was the wrong one: it read the
+ * Builder's own path, which is `/builder/...` and has no locale segment to find, and fell back to a
+ * hardcoded "en" on every Site.
+ */
+function buildPhiBuilderPreviewPath(area: PhiDeveloperBuilderArea, storagePath: string) {
+  return area === "public" ? storagePath || "/" : phiAreaPath(area, storagePath);
 }
 
 function buildPhiBuilderLivePreviewHref(
@@ -489,12 +483,10 @@ function buildPhiBuilderLivePreviewHref(
   pages: readonly PhiPresetPageNode[],
   workspaceKind: PhiDeveloperBuilderWorkspaceKind,
   revisionId: number,
-  pathname?: string | null,
 ) {
   void workspaceKind;
-  const locale = resolveBuilderLivePreviewLocale(area, pathname);
   const storagePath = resolvePhiBuilderCmsStoragePath(area, pageKey, pages);
-  const href = area === "public" ? localizePath(locale, storagePath) : localizeAreaPath(locale, area, storagePath);
+  const href = buildPhiBuilderPreviewPath(area, storagePath);
   const url = new URL(href, typeof window !== "undefined" ? window.location.origin : "http://localhost");
   url.searchParams.set("revision", String(revisionId));
   return `${url.pathname}${url.search}${url.hash}`;
@@ -505,12 +497,10 @@ export function buildPhiBuilderLiveHref(
   pageKey: string,
   pages: readonly PhiPresetPageNode[],
   workspaceKind: PhiDeveloperBuilderWorkspaceKind,
-  pathname?: string | null,
 ) {
   void workspaceKind;
-  const locale = resolveBuilderLivePreviewLocale(area, pathname);
   const storagePath = resolvePhiBuilderCmsStoragePath(area, pageKey, pages);
-  const href = area === "public" ? localizePath(locale, storagePath) : localizeAreaPath(locale, area, storagePath);
+  const href = buildPhiBuilderPreviewPath(area, storagePath);
   const url = new URL(href, typeof window !== "undefined" ? window.location.origin : "http://localhost");
   return `${url.pathname}${url.search}${url.hash}`;
 }
@@ -851,7 +841,6 @@ export async function savePhiDeveloperBuilderDraft(
             pages,
             workspaceKind,
             revisionId,
-            options?.pathname,
           )
         : null,
   };
@@ -954,7 +943,6 @@ export async function createPhiDeveloperBuilderPageDraft(input: {
             [{ key: input.pageKey, title: input.title, storagePath: input.storagePath }],
             "pages",
             result.revisionId,
-            input.pathname,
           )
         : null,
   };
@@ -1014,7 +1002,6 @@ export async function previewPhiDeveloperBuilderDraft(
       pages,
       workspaceKind,
       draft.revisionId as number,
-      options?.pathname,
     ),
   };
 }
