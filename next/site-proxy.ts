@@ -9,7 +9,7 @@ import { fetchResolvedSiteLocale, fetchSiteLocaleConfig } from "../server-helper
 import { PHIS_REQUEST_PATH_HEADER, PHIS_REQUEST_SEARCH_HEADER } from "../constants/http-headers";
 
 const KNOWN_SPECIAL_ROOTS = new Set<string>(PHI_CMS_SPECIAL_ROOTS);
-const PHI_LOCALE_COOKIE = "phi_locale";
+const PHI_LOCALE_COOKIE = "phis_locale";
 
 function isAssetOrBackendPath(pathname: string) {
   return (

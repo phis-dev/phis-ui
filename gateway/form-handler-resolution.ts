@@ -40,7 +40,7 @@ function resolveRequestArea(request: NextRequest): { area: PhiCmsAreaKey; locale
     return null;
   }
   const firstSegment = pathname.split("/").filter(Boolean)[0]?.trim().toLowerCase() ?? "";
-  const cookieLocale = request.cookies.get("phi_locale")?.value?.trim().toLowerCase() || "en";
+  const cookieLocale = request.cookies.get("phis_locale")?.value?.trim().toLowerCase() || "en";
   if (isKnownSpecialCmsRoot(firstSegment)) {
     return { area: firstSegment as PhiCmsAreaKey, locale: cookieLocale };
   }

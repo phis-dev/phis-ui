@@ -91,7 +91,7 @@ export async function resolvePhiUnauthenticatedLoginHref(
   root: string,
 ): Promise<string | null> {
   const cookieStore = await cookies();
-  const locale = cookieStore.get("phi_locale")?.value?.trim() || DEFAULT_LOCALE;
+  const locale = cookieStore.get("phis_locale")?.value?.trim() || DEFAULT_LOCALE;
   // The snapshot has to be loaded here rather than defaulted to null: a module whose server binding
   // cannot be checked resolves as unavailable, which would drop the Auth Module and make every refusal
   // look like "no login configured".

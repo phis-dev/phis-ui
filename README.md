@@ -1667,7 +1667,7 @@ Submit dispatcher contract:
 - `credentialPolicy` is exactly `none`, `site-session`, or Core-only `auth-link`; a future mode requires
   operator-approved contract work
 - `none` is for anonymous Site-scoped handlers and forwards no Browser cookie, while preserving trusted
-  Site/internal gateway identity and endpoint validation; `site-session` forwards only `phi_session`, and
+  Site/internal gateway identity and endpoint validation; `site-session` forwards only `phis_session`, and
   the endpoint still decides whether the session and a particular role are required
 - Client payload, Form config, Site override, Widget config, and signals cannot select execution metadata,
   name a cookie, or grant authorization

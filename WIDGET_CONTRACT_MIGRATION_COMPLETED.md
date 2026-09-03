@@ -1334,8 +1334,8 @@ publish-materialization batch below.
   naming a module the catalog does not install fails loudly rather than falling back.
 - Credential policies are asserted at the wire. The relay strips the browser cookie header and re-adds
   exactly the cookie the Provider's policy names: `none` forwards nothing at all even though the
-  browser sent a Site session, `site-session` forwards only `phi_session`, `auth-link` forwards only
-  `phi_auth_link`, and the CSRF handshake carries the same restriction. A denied handshake stops the
+  browser sent a Site session, `site-session` forwards only `phis_session`, `auth-link` forwards only
+  `phis_auth_link`, and the CSRF handshake carries the same restriction. A denied handshake stops the
   dispatch instead of submitting without a token, and an empty token is treated as a denial.
 - Upstream authority: values are forwarded verbatim and the verdict is relayed with its status and
   payload. Covered for unauthenticated, insufficient role, disabled membership, Site mismatch, invalid

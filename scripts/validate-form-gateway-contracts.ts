@@ -331,7 +331,7 @@ async function submit(options: SubmitOptions) {
     headers.set("referer", options.referer ?? `http://${SITE_HOST}/en/contact`);
   }
   if (options.cookie !== null) {
-    headers.set("cookie", options.cookie ?? "phi_session=session-1; phi_auth_link=link-1; other=keep");
+    headers.set("cookie", options.cookie ?? "phis_session=session-1; phis_auth_link=link-1; other=keep");
   }
   if (options.forwardedHost) {
     headers.set("x-forwarded-host", options.forwardedHost);
@@ -491,27 +491,27 @@ assert.equal(calls[0]?.method, "GET");
 assert.equal(calls[0]?.headers.cookie, undefined);
 assert.equal(calls[1]?.url, `${UPSTREAM}/api/auth/login`);
 assert.equal(calls[1]?.headers["x-csrf-token"], "csrf-token-1");
-assert.deepEqual(cookiesOf(calls[1]), ["phi_csrf=csrf-token-1"]);
+assert.deepEqual(cookiesOf(calls[1]), ["phis_csrf=csrf-token-1"]);
 
 // A Site-session Provider forwards the session cookie and nothing else.
 const siteSessionDispatch = await submit({ body: { formId: FORM_IDS.adminPolicy, phase: "submit", values: {} } });
 assert.equal(siteSessionDispatch.response.status, 200);
 assert.equal(calls[1]?.method, "PATCH");
 assert.equal(calls[1]?.url, `${UPSTREAM}/api/v1/auth/admin/policy`);
-assert.deepEqual(cookiesOf(calls[0]), ["phi_session=session-1"]);
+assert.deepEqual(cookiesOf(calls[0]), ["phis_session=session-1"]);
 assert.deepEqual(
   cookiesOf(calls[1]).sort(),
-  ["phi_csrf=csrf-token-1", "phi_session=session-1"],
+  ["phis_csrf=csrf-token-1", "phis_session=session-1"],
 );
 
 // An Auth-link Provider forwards the link cookie and never the Site session.
 const authLinkDispatch = await submit({ body: { formId: FORM_IDS.providerLink, phase: "confirm", values: {} } });
 assert.equal(authLinkDispatch.response.status, 200);
 assert.equal(calls[0]?.url, `${UPSTREAM}/api/v1/auth/csrf`);
-assert.deepEqual(cookiesOf(calls[0]), ["phi_auth_link=link-1"]);
+assert.deepEqual(cookiesOf(calls[0]), ["phis_auth_link=link-1"]);
 assert.deepEqual(
   cookiesOf(calls[1]).sort(),
-  ["phi_auth_link=link-1", "phi_csrf=csrf-token-1"],
+  ["phis_auth_link=link-1", "phis_csrf=csrf-token-1"],
 );
 assert.equal(calls[1]?.url, `${UPSTREAM}/api/v1/auth/providers/link/confirm`);
 
@@ -521,7 +521,7 @@ const noCookies = await submit({
   cookie: null,
 });
 assert.equal(noCookies.response.status, 200);
-assert.deepEqual(cookiesOf(calls[1]), ["phi_csrf=csrf-token-1"]);
+assert.deepEqual(cookiesOf(calls[1]), ["phis_csrf=csrf-token-1"]);
 
 // A failed CSRF handshake stops the dispatch instead of submitting without a token.
 csrfStatus = 403;
@@ -569,11 +569,11 @@ upstreamStatus = 200;
 upstreamPayload = { ok: true };
 
 // Session cookies the server issues reach the browser.
-upstreamSetCookies = ["phi_session=fresh; Path=/; HttpOnly", "phi_locale=de; Path=/"];
+upstreamSetCookies = ["phis_session=fresh; Path=/; HttpOnly", "phis_locale=de; Path=/"];
 const withSetCookies = await submit({ body: { formId: FORM_IDS.contact, phase: "submit", values: {} } });
 assert.deepEqual(
   withSetCookies.response.headers.getSetCookie(),
-  ["phi_session=fresh; Path=/; HttpOnly", "phi_locale=de; Path=/"],
+  ["phis_session=fresh; Path=/; HttpOnly", "phis_locale=de; Path=/"],
 );
 upstreamSetCookies = [];
 

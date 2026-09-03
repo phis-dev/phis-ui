@@ -199,7 +199,7 @@ never leaves an unusable confirmation form visible. It proves the existing passw
 linked-method proofs may extend the same closed workflow later.
 
 The generic Form relay strips Browser cookies by default. For this closed workflow the server-resolved
-Core handler Provider uses the `auth-link` credential policy and forwards only the `phi_auth_link`
+Core handler Provider uses the `auth-link` credential policy and forwards only the `phis_auth_link`
 HttpOnly credential. Client-provided descriptors cannot opt another Form, Provider, target, or credential
 into forwarding.
 

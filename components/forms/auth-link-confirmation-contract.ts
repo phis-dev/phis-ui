@@ -5,5 +5,5 @@ export const PHI_AUTH_LINK_CONFIRMATION_CONTRACT = {
   submitHandlerKey: "auth.provider-link.confirm",
   upstreamPath: "/api/v1/auth/providers/link/confirm",
   csrfPath: "/api/v1/auth/csrf",
-  cookieName: "phi_auth_link",
+  cookieName: "phis_auth_link",
 } as const;

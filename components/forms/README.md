@@ -97,8 +97,8 @@ This document defines the public form-building-block contract in `@phis/ui`.
     to select or override execution metadata
 - Every handler Provider declares one mandatory closed `credentialPolicy`:
   - `none` strips all Browser cookies
-  - `site-session` forwards only the canonical `phi_session`
-  - `auth-link` forwards only `phi_auth_link` and is reserved for the closed Core link workflow
+  - `site-session` forwards only the canonical `phis_session`
+  - `auth-link` forwards only `phis_auth_link` and is reserved for the closed Core link workflow
 - `none` is for anonymous Site-scoped handlers such as login, registration, password reset, or a public
   contact Form. It does not bypass the Site gateway: trusted Site identity/internal headers, CSRF where
   declared, server validation, abuse controls, and endpoint policy still apply. `site-session` merely

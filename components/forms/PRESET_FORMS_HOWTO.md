@@ -325,7 +325,7 @@ implement it in the Site dispatcher. Catalog metadata alone does not implement p
 server Provider mapping and actual handler, the Form renders and validates but cannot submit successfully.
 
 `credentialPolicy` is mandatory and closed: `none` forwards no Browser cookie, `site-session` forwards
-only `phi_session`, and Core-only `auth-link` forwards only `phi_auth_link` for the closed link workflow.
+only `phis_session`, and Core-only `auth-link` forwards only `phis_auth_link` for the closed link workflow.
 No Provider, Form config, Site override, Widget config, signal, or Browser payload may name a cookie.
 `none` remains a Site-scoped server request through the trusted gateway and is intended for anonymous
 login, registration, password-reset, and public-contact handlers; it does not disable Site resolution,

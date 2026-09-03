@@ -23,8 +23,8 @@ type SiteFormSubmitBody = {
   values?: unknown;
 };
 
-const PHI_SITE_SESSION_COOKIE_NAME = "phi_session";
-const PHI_AUTH_LINK_COOKIE_NAME = "phi_auth_link";
+const PHI_SITE_SESSION_COOKIE_NAME = "phis_session";
+const PHI_AUTH_LINK_COOKIE_NAME = "phis_auth_link";
 
 function isPlainObject(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
@@ -278,7 +278,7 @@ export function buildPhiSiteFormRouteHandlers({
         proxyHeaders.set("content-type", "application/json");
         proxyHeaders.set("x-csrf-token", csrfToken);
         appendCredentialCookieForPolicy(proxyHeaders, request, descriptor.credentialPolicy);
-        appendCookieHeader(proxyHeaders, `phi_csrf=${csrfToken}`);
+        appendCookieHeader(proxyHeaders, `phis_csrf=${csrfToken}`);
 
         const upstreamResponse = await fetch(`${upstreamBaseUrl}${target.upstreamPath}`, {
           method: descriptor.method,
