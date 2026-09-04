@@ -1,3 +1,7 @@
+import type { PhiBuilderAreaKey } from "../constants/cms-areas";
+import { createPhiDefaultAreaRuntimeModuleIds } from "../plugins/runtime-modules/builder/runtime-module-defaults";
+import { readPhiRuntimeModuleIds } from "../plugins/runtime-modules/settings";
+import type { PhiRuntimeModuleId } from "../types";
 import type { PhiResolvedCmsAreaPresetTree } from "../types/cms";
 import { readPhiPageReference, type PhiPageReference } from "../types/references";
 
@@ -43,6 +47,27 @@ export function readPhiAreaPresetRuntimeModules(
 ) {
   return tree?.runtimeModuleIds
     ?? readPhiAreaConfigNamespace(tree?.preset.config, PHI_AREA_CONFIG_MODULES_NAMESPACE)?.runtimeModules;
+}
+
+/**
+ * The Modules an Area preset actually activates.
+ *
+ * Absent and empty are different answers and are read as different answers: nothing stated is an Area
+ * that was never asked, and it gets the selection its preset ships with; `[]` is a Builder who
+ * switched everything off, and it gets nothing.
+ *
+ * The distinction is load-bearing rather than pedantic. A stored Area preset need not carry the
+ * Modules namespace at all -- the structure draft owns `config.shell` and writes only that -- so
+ * reading an absent selection as an empty one would let the first structure save of an Area whose
+ * Modules were never published turn every optional Module off, silently, and take the Pages they carry
+ * with them.
+ */
+export function readPhiAreaPresetRuntimeModuleIds(
+  tree: Pick<PhiResolvedCmsAreaPresetTree, "runtimeModuleIds" | "preset"> | null | undefined,
+  area: PhiBuilderAreaKey,
+): PhiRuntimeModuleId[] {
+  return readPhiRuntimeModuleIds(readPhiAreaPresetRuntimeModules(tree))
+    ?? createPhiDefaultAreaRuntimeModuleIds(area);
 }
 
 export const PHI_AREA_ROOT_ROUTE_KEY = "rootRoute" as const;

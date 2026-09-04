@@ -27,7 +27,7 @@ import {
   resolvePhiCmsDescriptorCatalog,
   resolvePhiCmsRoutePreset,
 } from "../plugins/runtime-modules/descriptor-compiler";
-import { readPhiRuntimeModuleIds, resolvePhiRuntimeModuleIdsForArea } from "../plugins/runtime-modules/settings";
+import { resolvePhiRuntimeModuleIdsForArea } from "../plugins/runtime-modules/settings";
 import { resolvePhiCmsRoutePage } from "../plugins/runtime-modules/route-page-resolution";
 import { resolvePhiRuntimeModuleServerBinding } from "../plugins/runtime-modules/server-capabilities";
 import { resolvePhiAuthUiRuntimeProjection } from "../plugins/runtime-modules/auth/ui-provider";
@@ -55,7 +55,7 @@ import {
   type PhiSiteRequestContext,
 } from "./runtime";
 import { trForLocale } from "./translate";
-import { readPhiAreaPresetRuntimeModules } from "../helpers/cms-area-config";
+import { readPhiAreaPresetRuntimeModuleIds } from "../helpers/cms-area-config";
 
 type LoadPhiResolvedCmsPage = (
   path: string,
@@ -165,9 +165,7 @@ export function resolveActivePresetModuleKeys(
     throw new Error(`Area "${area}" is not declared in the runtime module catalog.`);
   }
   activeModuleKeys.add(areaDefinition.baseModuleId);
-  const configuredModuleKeys = readPhiRuntimeModuleIds(
-    readPhiAreaPresetRuntimeModules(areaPreset?.preset),
-  );
+  const configuredModuleKeys = readPhiAreaPresetRuntimeModuleIds(areaPreset?.preset, area);
   for (const moduleKey of resolvePhiRuntimeModuleIdsForArea(
     area,
     configuredModuleKeys,

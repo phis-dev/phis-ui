@@ -8,13 +8,9 @@ import type { PhiResolvedCmsAreaPresetTree, PhiResolvedCmsPageTree } from "../..
 import type { PhiRuntimeModuleCatalog, PhiRuntimeModuleId } from "../../../types";
 import type { PhiBlockRuntime } from "../../../types/widget-runtime";
 import { getCurrentSiteAreaDraft, getExactSiteArea } from "../../../gateway/site-area";
+import { resolvePhiRuntimeModuleIdsForArea } from "../../../plugins/runtime-modules/settings";
 import {
-  readPhiRuntimeModuleIds,
-  resolvePhiRuntimeModuleIdsForArea,
-} from "../../../plugins/runtime-modules/settings";
-import {
-  PHI_AREA_CONFIG_MODULES_NAMESPACE,
-  readPhiAreaConfigNamespace,
+  readPhiAreaPresetRuntimeModuleIds,
   readPhiAreaRootRoute,
   type PhiAreaRootRoute,
 } from "../../../helpers/cms-area-config";
@@ -113,12 +109,11 @@ function readRuntimeModuleIdsFromStructureTree(
   area: PhiDeveloperBuilderArea,
   runtimeModuleCatalog: PhiRuntimeModuleCatalog,
 ): PhiRuntimeModuleId[] {
-  const presetConfig = tree && "preset" in tree ? tree.preset.config : undefined;
   const optionalModuleIds = resolvePhiRuntimeModuleIdsForArea(
     area,
-    readPhiRuntimeModuleIds(
-      tree?.runtimeModuleIds
-        ?? readPhiAreaConfigNamespace(presetConfig, PHI_AREA_CONFIG_MODULES_NAMESPACE)?.runtimeModules,
+    readPhiAreaPresetRuntimeModuleIds(
+      tree && "preset" in tree ? tree : null,
+      area,
     ),
     [...runtimeModuleCatalog.values()].map((entry) => entry.definition),
   );

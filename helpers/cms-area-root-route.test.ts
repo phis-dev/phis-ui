@@ -6,7 +6,7 @@ import {
   applyPhiAreaRootRouteDecision,
   resolvePhiAreaModulePageReferencePath,
 } from "./cms-area-root-route";
-import { readPhiAreaRootRoute } from "./cms-area-config";
+import { readPhiAreaPresetRuntimeModuleIds, readPhiAreaRootRoute } from "./cms-area-config";
 import { PhiCmsPageType } from "../constants/phi-cms";
 import { createPhiBuilderRuntimeModuleCatalog } from "../plugins/runtime-modules/catalog";
 import { createPhiDefaultAreaRuntimeModuleIds } from "../plugins/runtime-modules/builder/runtime-module-defaults";
@@ -164,5 +164,33 @@ describe("applying the decision", () => {
   it("leaves a landing page that already is one alone", () => {
     const payload = payloadWith({ pageType: PhiCmsPageType.Landing });
     expect(applyPhiAreaRootRouteDecision(payload, { kind: "page" }, "public")).toBe(payload);
+  });
+});
+
+describe("the Modules an Area preset activates", () => {
+  const treeWith = (config: Record<string, unknown> | null) => ({
+    runtimeModuleIds: undefined,
+    preset: { config },
+  } as unknown as Parameters<typeof readPhiAreaPresetRuntimeModuleIds>[0]);
+
+  it("takes the Area's own default when the preset states nothing", () => {
+    // The case the Shell namespace made reachable: a structure save stores `config.shell` and no
+    // Modules namespace, and reading that as "none" would switch every optional Module off.
+    expect(readPhiAreaPresetRuntimeModuleIds(treeWith({ shell: { rootRoute: { mode: "landing" } } }), "admin"))
+      .toEqual(createPhiDefaultAreaRuntimeModuleIds("admin"));
+    expect(readPhiAreaPresetRuntimeModuleIds(treeWith(null), "builder"))
+      .toEqual(createPhiDefaultAreaRuntimeModuleIds("builder"));
+  });
+
+  it("takes an empty selection literally, which is a Builder switching everything off", () => {
+    expect(readPhiAreaPresetRuntimeModuleIds(treeWith({ modules: { runtimeModules: [] } }), "admin"))
+      .toEqual([]);
+  });
+
+  it("takes what the preset states", () => {
+    expect(readPhiAreaPresetRuntimeModuleIds(
+      treeWith({ modules: { runtimeModules: [PHI_DASHBOARD_RUNTIME_MODULE_ID] } }),
+      "admin",
+    )).toEqual([PHI_DASHBOARD_RUNTIME_MODULE_ID]);
   });
 });
