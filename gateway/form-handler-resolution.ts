@@ -16,6 +16,7 @@ import { buildPhiLocalCmsAreaPayload } from "../server-helpers/cms-area";
 import { buildPhiBlockRuntime, loadPhiSiteRequestContext } from "../server-helpers/runtime";
 import { runWithPhiRequestRuntime } from "../server-helpers/request-runtime";
 import type { PhiFormHandlerPhase, PhiFormHandlerProviderDescriptor } from "../types/form-descriptor";
+import { readPhiAreaPresetRuntimeModules } from "../helpers/cms-area-config";
 
 export type PhiResolvedServerFormHandler = {
   formId: string;
@@ -113,7 +114,7 @@ export async function resolvePhiServerFormHandler(options: {
   if (!tree) return null;
   const optionalModuleIds = resolvePhiRuntimeModuleIdsForArea(
     requestContext.area,
-    readPhiRuntimeModuleIds(tree.runtimeModuleIds ?? tree.preset.config.runtimeModules),
+    readPhiRuntimeModuleIds(readPhiAreaPresetRuntimeModules(tree)),
     [...catalog.values()].map((entry) => entry.definition),
   );
   const serverCapabilities = fallbackRequestContext?.serverCapabilities ??

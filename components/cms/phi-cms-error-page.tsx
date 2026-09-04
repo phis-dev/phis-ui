@@ -20,6 +20,7 @@ import {
   resolvePhiCmsTreeRuntimeRegistry,
 } from "./phi-cms-runtime-registry";
 import { PhiRuntimeModuleDataProviderHost } from "../runtime/runtime-module-data-provider-host";
+import { readPhiAreaPresetRuntimeModules } from "../../helpers/cms-area-config";
 
 export type PhiCmsErrorPageProps = {
   code: PhiCmsErrorCode;
@@ -110,7 +111,7 @@ export async function PhiCmsErrorPage({ code, cmsBridge }: PhiCmsErrorPageProps)
   const runtimeModuleIds = resolvePhiRuntimeModuleIdsForArea(
     resolvedRequest.runtime.area,
     readPhiRuntimeModuleIds(
-      resolvedRequest.areaPreset?.runtimeModuleIds ?? resolvedRequest.areaPreset?.preset.config.runtimeModules,
+      readPhiAreaPresetRuntimeModules(resolvedRequest.areaPreset),
     ),
     [...cmsBridge.runtimeModuleCatalog.values()].map((entry) => entry.definition),
   );

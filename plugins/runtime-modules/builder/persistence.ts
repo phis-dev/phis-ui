@@ -44,6 +44,7 @@ import {
 } from "../../../helpers/cms-page-catalog";
 import type { PhiCmsPresetSource } from "../../../types/cms-module-descriptors";
 import type { PhiBuilderPluginMeta, PhiBuilderWidgetMeta } from "../../../types/builder";
+import { PHI_AREA_CONFIG_MODULES_NAMESPACE } from "../../../helpers/cms-area-config";
 
 type CmsDraftWriteState = PhiDeveloperBuilderDraftAllocation;
 
@@ -665,7 +666,7 @@ export function clearPhiDeveloperBuilderModulesDraftAllocation(area: PhiDevelope
  * Saves an Area's Module selection, apart from its structure.
  *
  * It patches rather than writes: the server clones the source revision -- the open Module draft, or
- * otherwise the published one -- and replaces only `preset.config`. There is one case that source can be
+ * otherwise the published one -- and replaces only `preset.config.modules`. There is one case that source can be
  * missing: an Area that has never been saved at all, still running on its code-owned Shell preset. The
  * server asks for that preset as `baseline` when it hits exactly that case, and only then; the Builder
  * already has it loaded (every `/builder/*` page does, regardless of which one is open), so this is the
@@ -706,17 +707,21 @@ export async function savePhiDeveloperBuilderModulesDraft(
     sourcePreset: draftAllocation?.sourcePreset ?? areaPresetSource,
     ...(draftAllocation ? { draft: draftAllocation } : {}),
     config: {
-      runtimeModules: optionalRuntimeModuleIds satisfies readonly PhiRuntimeModuleId[],
-      authUiProviderModuleId: resolvePhiAuthUiProviderModuleId(
-        optionalRuntimeModuleIds,
-        state.runtimeModuleDefinitions,
-      ),
-      // Derived from the selection, never authored: the control plane holds no Module metadata, so the
-      // Area preset is what carries which Spaces its Modules need and what may go in them.
-      mediaSpaces: resolvePhiDeclaredMediaSpaces(
-        optionalRuntimeModuleIds,
-        state.runtimeModuleDefinitions,
-      ),
+      // The Module namespace, and only it: `config.shell` belongs to the structure draft, and this
+      // route rejects a payload that carries it.
+      [PHI_AREA_CONFIG_MODULES_NAMESPACE]: {
+        runtimeModules: optionalRuntimeModuleIds satisfies readonly PhiRuntimeModuleId[],
+        authUiProviderModuleId: resolvePhiAuthUiProviderModuleId(
+          optionalRuntimeModuleIds,
+          state.runtimeModuleDefinitions,
+        ),
+        // Derived from the selection, never authored: the control plane holds no Module metadata, so
+        // the Area preset is what carries which Spaces its Modules need and what may go in them.
+        mediaSpaces: resolvePhiDeclaredMediaSpaces(
+          optionalRuntimeModuleIds,
+          state.runtimeModuleDefinitions,
+        ),
+      },
     },
   };
 
@@ -796,8 +801,9 @@ export async function discardPhiDeveloperBuilderModulesDraft(input: {
 
 /**
  * Serializes an Area's Shell drafts into the shape a write payload carries -- regions, layout nodes,
- * content widgets. Nothing here touches `preset.config`: that is the Module selection's own field now,
- * and this function has no opinion about it.
+ * content widgets. Nothing here touches `preset.config`: `config.modules` belongs to the Module
+ * selection, and `config.shell` -- the Shell's own statements about itself -- is not part of the
+ * region drafts this serializes.
  *
  * Returns null when nothing is loaded for the Area at all, which is not an error -- there is simply
  * nothing to save here. A partial load, though, is refused: saving fewer than all Shell regions would

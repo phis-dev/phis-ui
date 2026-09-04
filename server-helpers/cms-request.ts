@@ -53,6 +53,7 @@ import {
   type PhiSiteRequestContext,
 } from "./runtime";
 import { trForLocale } from "./translate";
+import { readPhiAreaPresetRuntimeModules } from "../helpers/cms-area-config";
 
 type LoadPhiResolvedCmsPage = (
   path: string,
@@ -163,7 +164,7 @@ export function resolveActivePresetModuleKeys(
   }
   activeModuleKeys.add(areaDefinition.baseModuleId);
   const configuredModuleKeys = readPhiRuntimeModuleIds(
-    areaPreset?.preset.runtimeModuleIds ?? areaPreset?.preset.preset.config.runtimeModules,
+    readPhiAreaPresetRuntimeModules(areaPreset?.preset),
   );
   for (const moduleKey of resolvePhiRuntimeModuleIdsForArea(
     area,

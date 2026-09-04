@@ -33,6 +33,7 @@ import {
   buildPhiRuntimeModuleAccessRegistry,
   filterPhiCmsRenderableTreeForViewer,
 } from "../../helpers/cms-access-policy";
+import { readPhiAreaPresetRuntimeModules } from "../../helpers/cms-area-config";
 
 export type PhiCmsRootPageProps = {
   root: string;
@@ -112,7 +113,7 @@ export async function PhiCmsRootPage({
   const runtimeModuleIds = resolvePhiRuntimeModuleIdsForArea(
     resolvedRequest.runtime.area,
     readPhiRuntimeModuleIds(
-      resolvedRequest.areaPreset?.runtimeModuleIds ?? resolvedRequest.areaPreset?.preset.config.runtimeModules,
+      readPhiAreaPresetRuntimeModules(resolvedRequest.areaPreset),
     ),
     [...cmsBridge.runtimeModuleCatalog.values()].map((entry) => entry.definition),
   ).filter((moduleId) =>
