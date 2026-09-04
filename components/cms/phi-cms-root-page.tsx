@@ -77,10 +77,16 @@ export async function PhiCmsRootPage({
     notFound();
   }
 
-  const pageRedirect = resolvePhiCmsPageRedirect(resolvedRequest.page.page, resolvedRoute.locale);
+  // Still here as well as in the Layout: the Layout answers a document request, this answers a client
+  // navigation that stayed inside the same branch and never re-ran it. The request path is passed so a
+  // forward onto the current path is refused here too -- streamed into a client navigation, such a
+  // forward repeats at request speed.
+  const pageRedirect = resolvePhiCmsPageRedirect(
+    resolvedRequest.page.page,
+    resolvedRoute.locale,
+    request.pathname,
+  );
   if (pageRedirect) {
-    // Still here as well as in the Layout: the Layout answers a document request, this answers a client
-    // navigation that stayed inside the same branch and never re-ran it.
     performPhiCmsPageRedirect(pageRedirect);
   }
 

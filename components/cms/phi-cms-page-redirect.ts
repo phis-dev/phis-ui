@@ -49,9 +49,22 @@ function readRedirectConfig(layoutConfig: Record<string, unknown> | null | undef
   };
 }
 
+/**
+ * Where a forwarding Page sends the request, or nothing when it is already there.
+ *
+ * `currentPathname` is what keeps a forward from repeating. Which Page a render resolved is derived
+ * rather than given wherever the request path is not carried down, and a derivation that lands on the
+ * Area root instead of the Page below it produces a forward onto the path the request already names.
+ * That does not fail: the client applies it, asks again, and receives the same answer -- for a client
+ * navigation the forward is streamed as a serialised NEXT_REDIRECT, so the loop runs at request speed.
+ *
+ * The comparison lives here rather than at each call site because it already drifted once: the Layout
+ * had it and the two Page entry points did not.
+ */
 export function resolvePhiCmsPageRedirect(
   page: PhiCmsPageNode,
   locale: string,
+  currentPathname?: string | null,
 ): RedirectResolution | null {
   if (page.pageType !== PhiCmsPageType.Redirect) {
     return null;
@@ -64,8 +77,13 @@ export function resolvePhiCmsPageRedirect(
     );
   }
 
+  const href = localizeAreaPath(locale, redirectConfig.target.area, redirectConfig.target.path);
+  if (currentPathname && href === currentPathname) {
+    return null;
+  }
+
   return {
-    href: localizeAreaPath(locale, redirectConfig.target.area, redirectConfig.target.path),
+    href,
     permanent: redirectConfig.status == null || redirectConfig.status === 301 || redirectConfig.status === 308,
   };
 }

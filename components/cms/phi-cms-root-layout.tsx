@@ -162,6 +162,7 @@ export async function PhiCmsAreaBoundary({
     const pageRedirect = resolvePhiCmsPageRedirect(
       rootScope.resolvedRequest.page.page,
       resolvedRoute.locale,
+      request.pathname,
     );
     /*
      * Never onto the path the request already names.
@@ -173,7 +174,7 @@ export async function PhiCmsAreaBoundary({
      * again, and the same answer comes back. The Page keeps its own copy of this decision and is given
      * its segments, so what is skipped here is only ever a forward that was already satisfied.
      */
-    if (pageRedirect && pageRedirect.href !== request.pathname) {
+    if (pageRedirect) {
       performPhiCmsPageRedirect(pageRedirect);
     }
   }

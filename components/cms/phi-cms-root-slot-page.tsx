@@ -7,7 +7,7 @@ import { resolvePhiUnauthenticatedLoginHref } from "../../server-helpers/public-
 import { PhiCmsLayoutRenderer } from "./phi-cms-layout-renderer";
 import { hasRenderableRegionRoot } from "./phi-cms-region-helpers";
 import { loadPhiCmsRootRequest } from "../../server-helpers/cms-root";
-import { performPhiCmsPageRedirect, resolvePhiCmsPageRedirect } from "./phi-cms-page-redirect";
+import { resolvePhiCmsPageRedirect } from "./phi-cms-page-redirect";
 import { isPhiCmsGatewayAuthError } from "../../gateway/errors";
 import { PhiRuntimeControllerServerHost } from "../runtime/runtime-controller-server-host";
 import { materializePhiRuntimeControllerSettings } from "../runtime/runtime-controller-materialization";
@@ -84,15 +84,26 @@ export async function PhiCmsRootSlotPage({
     }
     throw error;
   }
-  const { resolvedRequest } = rootRequest;
+  const { request, resolvedRequest } = rootRequest;
 
   if (!resolvedRequest) {
     return null;
   }
 
-  const pageRedirect = resolvePhiCmsPageRedirect(resolvedRequest.page.page, resolvedRequest.runtime.locale.current);
+  /*
+   * A slot renders nothing for a forwarding Page, and does not forward itself.
+   *
+   * Five slots and the Page render in parallel beside this one, so a forward raised here is the same
+   * forward raised seven times. The Layout above owns the decision, answers it once with a status
+   * line, and a slot that repeats it only multiplies what the client has to unwind.
+   */
+  const pageRedirect = resolvePhiCmsPageRedirect(
+    resolvedRequest.page.page,
+    resolvedRequest.runtime.locale.current,
+    request.pathname,
+  );
   if (pageRedirect) {
-    performPhiCmsPageRedirect(pageRedirect);
+    return null;
   }
 
   const region = findRenderableRegion(resolvedRequest.page, regionType);
