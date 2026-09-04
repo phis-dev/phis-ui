@@ -112,6 +112,20 @@ export async function reportPhiMediaUploadFailure(
   }
 }
 
+/**
+ * What the Server is told this failure was.
+ *
+ * Only the four readings a browser can honestly distinguish are passed on; anything else is reported as
+ * a Client error rather than as a guess about whose end it happened at. One rule, because both runs
+ * below report against the same vocabulary and a second copy would be a second answer.
+ */
+function readPhiMediaUploadFailureReason(error: unknown): PhiMediaUploadFailureReason {
+  const code = error instanceof PhiMediaUploadError ? error.code : null;
+  return (Object.values(PHI_MEDIA_UPLOAD_FAILURE_REASONS) as string[]).includes(code ?? "")
+    ? (code as PhiMediaUploadFailureReason)
+    : PHI_MEDIA_UPLOAD_FAILURE_REASONS.ClientError;
+}
+
 /** The origin the browser was told to deliver to, and never the signature that came with it. */
 function readPlanTarget(plan: PhiMediaUploadPlan) {
   try {
@@ -389,13 +403,9 @@ export async function runPhiMediaUploadSession(
     upload = await uploadPhiMediaUploadBody(init.plan, file, onProgress);
   } catch (uploadError) {
     // The Server cannot see this leg, so it is told rather than left to infer it from an expiry.
-    const code = uploadError instanceof PhiMediaUploadError ? uploadError.code : null;
-    const reason = (Object.values(PHI_MEDIA_UPLOAD_FAILURE_REASONS) as string[]).includes(code ?? "")
-      ? (code as PhiMediaUploadFailureReason)
-      : PHI_MEDIA_UPLOAD_FAILURE_REASONS.ClientError;
     await reportPhiMediaUploadFailure(
       init.reportUrl,
-      reason,
+      readPhiMediaUploadFailureReason(uploadError),
       uploadError instanceof Error ? uploadError.message : null,
     );
     throw uploadError;
@@ -405,4 +415,60 @@ export async function runPhiMediaUploadSession(
     asset: finalize.asset,
     token: init.token,
   };
+}
+
+/**
+ * A place an Add-on's route made for a file, as `assets:v1` answered it.
+ *
+ * Structurally the same three fields Core's own init returns, and deliberately so: there is one upload
+ * lifecycle, and an Add-on's reservation is a reservation in it rather than something parallel.
+ */
+export type PhiAddonAssetReservation = {
+  token: string;
+  plan: PhiMediaUploadPlan;
+  expiresAt?: string;
+};
+
+/**
+ * Carries out an upload an Add-on's own route reserved.
+ *
+ * The two legs an Add-on must not write for itself. `begin` and `finalize` are its own -- they are the
+ * calls that name a row and a slot, and Core has no route that could know either -- but everything
+ * between them is Core's: which transport the plan asks for, how a presigned endpoint differs from a
+ * proxied one, what a browser may honestly claim about a body it could not deliver, and where it says
+ * so. An Add-on that reimplemented this leg would get the transport wrong on the Provider it was not
+ * developed against, and its failures would be the ones no operator can see.
+ *
+ * The report address is derived from the token rather than asked for, the way Core's own run derives it
+ * when a control plane did not send one: reporting is a courtesy to the operator's log, and losing it
+ * must not be what makes an upload fail.
+ *
+ * `finalize` is the caller's because only the Add-on's route knows what its answer looks like. It is
+ * called with whatever the plan's issuer wanted reported back, unread on the way through.
+ */
+export async function runPhiAddonAssetUpload<TAsset>(input: {
+  file: File;
+  reservation: PhiAddonAssetReservation;
+  finalize: (completion: unknown) => Promise<TAsset>;
+  onProgress?: PhiMediaUploadProgressHandler;
+  /** Where the Add-on's Client says a body will not arrive. Core's own route when absent. */
+  reportUrl?: string;
+}): Promise<TAsset> {
+  const { file, reservation, finalize, onProgress } = input;
+  const reportUrl = input.reportUrl
+    ?? `/api/site/media/uploads/${encodeURIComponent(reservation.token)}/report`;
+
+  let upload;
+  try {
+    upload = await uploadPhiMediaUploadBody(reservation.plan, file, onProgress);
+  } catch (uploadError) {
+    await reportPhiMediaUploadFailure(
+      reportUrl,
+      readPhiMediaUploadFailureReason(uploadError),
+      uploadError instanceof Error ? uploadError.message : null,
+    );
+    throw uploadError;
+  }
+
+  return await finalize(upload.completion);
 }
