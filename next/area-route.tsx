@@ -5,7 +5,12 @@ import { headers } from "next/headers";
 
 import { PhiCmsErrorPage } from "../components/cms/phi-cms-error-page";
 import type { PhiCmsErrorPageProps } from "../components/cms/phi-cms-error-page";
-import { PhiCmsRootLayout } from "../components/cms/phi-cms-root-layout";
+import {
+  PhiCmsAreaBoundary,
+  PhiCmsAreaShell,
+  PhiCmsRootLayout,
+  type PhiCmsAreaChrome,
+} from "../components/cms/phi-cms-root-layout";
 import { resolvePhiCmsErrorPagePath } from "../components/regions/presets/phi-default-pub-error-page-tree";
 import { resolvePhiRequestLocale } from "../server-helpers/request-locale";
 import { PHIS_REQUEST_PATH_HEADER } from "../constants/http-headers";
@@ -34,10 +39,38 @@ type PhiNextDynamicRootPageProps = {
 
 type PhiNextStaticAreaRegionType = Parameters<typeof PhiCmsRootSlotPage>[0]["regionType"];
 
-export function createPhiNextStaticAreaLayout(
+/**
+ * The Area's own Layout: guards, providers, Overlays, and the Client boundary.
+ *
+ * It draws no Region. Those belong to the two Layouts below it -- one branch for the root of the Area,
+ * which draws no Shell, and one for every page inside it, which does. Keeping the providers here is
+ * what makes a navigation across that boundary rebuild the Shell without rebuilding the Area.
+ */
+export function createPhiNextStaticAreaBoundary(
   root: string,
   cmsBridge: PhiCmsSiteBridge,
   Provider?: React.ComponentType<{ children: React.ReactNode }>,
+) {
+  return function PhiNextStaticAreaBoundary({ children }: { children: React.ReactNode }) {
+    const content = (
+      <PhiCmsAreaBoundary root={root} cmsBridge={cmsBridge}>
+        {children}
+      </PhiCmsAreaBoundary>
+    );
+    return Provider ? <Provider>{content}</Provider> : content;
+  };
+}
+
+/**
+ * One branch's Layout: the Page-owned slots, with or without the Area's own Regions around them.
+ *
+ * Both branches call this; only `chrome` differs. `none` is the root of the Area, where the Shell is
+ * neither drawn nor resolved.
+ */
+export function createPhiNextStaticAreaLayout(
+  root: string,
+  cmsBridge: PhiCmsSiteBridge,
+  chrome: PhiCmsAreaChrome = "shell",
 ) {
   return function PhiNextStaticAreaLayout({
     children,
@@ -47,10 +80,11 @@ export function createPhiNextStaticAreaLayout(
     footerTop,
     drawer,
   }: PhiNextStaticAreaLayoutProps) {
-    const content = (
-      <PhiCmsRootLayout
+    return (
+      <PhiCmsAreaShell
         root={root}
         cmsBridge={cmsBridge}
+        chrome={chrome}
         headerBottom={headerBottom}
         hero={hero}
         siderRight={siderRight}
@@ -58,9 +92,8 @@ export function createPhiNextStaticAreaLayout(
         drawer={drawer}
       >
         {children}
-      </PhiCmsRootLayout>
+      </PhiCmsAreaShell>
     );
-    return Provider ? <Provider>{content}</Provider> : content;
   };
 }
 
@@ -219,9 +252,31 @@ export function createPhiNextRootErrorPage(
   };
 }
 
-export function createPhiNextDynamicRootLayout(
+/** The Public Area's boundary. Its root segment is a locale, so it only reaches it through `params`. */
+export function createPhiNextDynamicRootBoundary(
   cmsBridge: PhiCmsSiteBridge,
   Provider?: React.ComponentType<{ children: React.ReactNode }>,
+) {
+  return async function PhiNextDynamicRootBoundary({
+    children,
+    params,
+  }: {
+    children: React.ReactNode;
+    params: Promise<{ root: string }>;
+  }) {
+    const { root } = await params;
+    const content = (
+      <PhiCmsAreaBoundary root={root} cmsBridge={cmsBridge}>
+        {children}
+      </PhiCmsAreaBoundary>
+    );
+    return Provider ? <Provider>{content}</Provider> : content;
+  };
+}
+
+export function createPhiNextDynamicRootLayout(
+  cmsBridge: PhiCmsSiteBridge,
+  chrome: PhiCmsAreaChrome = "shell",
 ) {
   return async function PhiNextDynamicRootLayout({
     children,
@@ -235,10 +290,11 @@ export function createPhiNextDynamicRootLayout(
     params: Promise<{ root: string }>;
   }) {
     const { root } = await params;
-    const content = (
-      <PhiCmsRootLayout
+    return (
+      <PhiCmsAreaShell
         root={root}
         cmsBridge={cmsBridge}
+        chrome={chrome}
         headerBottom={headerBottom}
         hero={hero}
         siderRight={siderRight}
@@ -246,9 +302,8 @@ export function createPhiNextDynamicRootLayout(
         drawer={drawer}
       >
         {children}
-      </PhiCmsRootLayout>
+      </PhiCmsAreaShell>
     );
-    return Provider ? <Provider>{content}</Provider> : content;
   };
 }
 

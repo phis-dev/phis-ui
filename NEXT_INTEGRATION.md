@@ -60,21 +60,62 @@ or gain Module-specific routes. Request/database values may select only ids alre
 build manifest; they never become package import targets. Builder alone may consume the installed target-Area
 authoring union for its isolated Canvas, without activating those Modules in the outer Builder runtime.
 
+## Area route graph
+
+Every Area is routed through two branches, because the root of an Area draws no Shell. It is either a
+landing page -- whose point is to arrive without the Area's chrome and the cost of resolving it -- or a
+redirect, which draws nothing at all. The Public Area is addressed by locale rather than by an Area
+segment, so `/de` is its root exactly as `/builder` is the Builder's; there is no separate rule for it.
+
+```text
+src/app/<area>/layout.tsx              guards, providers, Area Overlays, Client boundary
+src/app/<area>/(root)/layout.tsx       chrome "none"   -- the Area root
+src/app/<area>/(root)/page.tsx
+src/app/<area>/(root)/@<slot>/page.tsx
+src/app/<area>/(pages)/layout.tsx      chrome "shell"  -- everything below it
+src/app/<area>/(pages)/[...path]/page.tsx
+src/app/<area>/(pages)/@<slot>/[...path]/page.tsx
+```
+
+Two properties of that shape are load-bearing and must not be flattened back:
+
+- **The branch decides the chrome, not a condition inside a Layout.** Next only mounts and unmounts a
+  Layout when the branch it belongs to changes, so a Layout that decided per path would keep drawing
+  chrome after a client navigation that was supposed to remove it.
+- **The catch-all is required, not optional.** An optional catch-all matches the Area root as well, so
+  it would collide with the root branch's own page -- and Next refuses both catch-all kinds at one
+  level outright.
+
+The Area's own Layout holds what is true of the Area regardless of which branch answers: the access and
+existence guards, the signal partition, the Runtime Module providers, the data provider host and the
+Area Overlays. Keeping them above the split is what makes a navigation across it rebuild the Shell
+without rebuilding the Area.
+
 ## Required Skeleton entrypoint shape
 
-A normal Area layout is limited to static registration:
+An Area's own layout is limited to static registration:
 
 ```tsx
-import { createPhiNextStaticAreaLayout } from "@phis/ui/next/area-route";
+import { createPhiNextStaticAreaBoundary } from "@phis/ui/next/area-route";
 import { PHI_ADMIN_CMS_SITE_BRIDGE } from "@phis/ui/next/areas/admin";
 import { PhiAdminRuntimeModuleClientBoundary } from "@phis/ui/next/areas/admin-client";
 
 export const dynamic = "force-dynamic";
-export default createPhiNextStaticAreaLayout(
+export default createPhiNextStaticAreaBoundary(
   "admin",
   PHI_ADMIN_CMS_SITE_BRIDGE,
   PhiAdminRuntimeModuleClientBoundary,
 );
+```
+
+Each branch layout registers the same factory and differs only in how much it draws:
+
+```tsx
+import { createPhiNextStaticAreaLayout } from "@phis/ui/next/area-route";
+import { PHI_ADMIN_CMS_SITE_BRIDGE } from "@phis/ui/next/areas/admin";
+
+export const dynamic = "force-dynamic";
+export default createPhiNextStaticAreaLayout("admin", PHI_ADMIN_CMS_SITE_BRIDGE, "shell");
 ```
 
 The Skeleton may adapt a Next route parameter name or provide route-specific logging labels and user

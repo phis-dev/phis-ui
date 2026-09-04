@@ -1,21 +1,13 @@
 import { forbidden, notFound, redirect, unauthorized } from "next/navigation";
 
 import { PhiCmsRegionType } from "../../constants/phi-cms";
-import type {
-  PhiResolvedCmsAreaPresetTree,
-} from "../../types/cms";
+import type { PhiResolvedCmsAreaPresetTree } from "../../types/cms";
 import type { PhiCmsSiteBridge } from "../../types/cms-plugins";
 import { PhiCmsShell } from "../shell/phi-cms-shell";
 import { PhiCmsLayoutRenderer, PhiCmsOverlayRenderer } from "./phi-cms-layout-renderer";
-import {
-  resolvePhiCmsRuntimeModuleScope,
-  resolvePhiCmsTreeRuntimeRegistry,
-} from "./phi-cms-runtime-registry";
 import { hasRenderableRegionRoot } from "./phi-cms-region-helpers";
-import {
-  hasPhiCmsRevisionPreview,
-  loadPhiCmsRootRequest,
-} from "../../server-helpers/cms-root";
+import { loadPhiCmsAreaRenderScope } from "./phi-cms-area-render-scope";
+import { hasPhiCmsRevisionPreview } from "../../server-helpers/cms-root";
 import { localizeAreaPath } from "../../helpers/locale";
 import {
   resolvePhiPublicLoginHref,
@@ -23,23 +15,24 @@ import {
 } from "../../server-helpers/public-login-route";
 import { isPhiCmsGatewayAuthError } from "../../gateway/errors";
 import { PhiRuntimeControllerServerHost } from "../runtime/runtime-controller-server-host";
-import {
-  readPhiRuntimeModuleIds,
-  resolvePhiRuntimeModuleIdsForArea,
-} from "../../plugins/runtime-modules/settings";
-import { materializePhiRuntimeControllerSettings } from "../runtime/runtime-controller-materialization";
 import { PhiRuntimeModuleProvider } from "../runtime/runtime-module-context";
 import { PhiRuntimeModuleDataProviderHost } from "../runtime/runtime-module-data-provider-host";
 import { PhiSignalRuntimePartitionProvider } from "../runtime/runtime-signal-partition";
-import { resolvePhiRuntimeControllerDefinitions } from "../../plugins/runtime-modules/resolver";
 import { canPhiViewerAccess } from "../../types/access";
 import { resolvePhiCmsDescriptorCatalog } from "../../plugins/runtime-modules/descriptor-compiler";
-import {
-  buildPhiRuntimeModuleAccessRegistry,
-  filterPhiCmsRenderableTreeForViewer,
-} from "../../helpers/cms-access-policy";
-import { readPhiAreaPresetRuntimeModules } from "../../helpers/cms-area-config";
-export type PhiCmsRootLayoutProps = {
+
+/**
+ * How much of the Area a Layout draws.
+ *
+ * `shell` is the ordinary case. `none` is the root of an Area, which draws the Page-owned Regions and
+ * nothing around them: it is either a landing page, whose whole point is to arrive without the Area's
+ * chrome and its cost, or a redirect, which draws nothing at all. Because that is decided by which
+ * branch of the route tree answers rather than by a condition inside one Layout, a client navigation
+ * between the two mounts and unmounts the Shell instead of leaving a stale one standing.
+ */
+export type PhiCmsAreaChrome = "shell" | "none";
+
+export type PhiCmsAreaBoundaryProps = {
   root: string;
   cmsBridge: PhiCmsSiteBridge;
   children: React.ReactNode;
@@ -54,6 +47,14 @@ export type PhiCmsRootLayoutProps = {
    * nor canonical form: both were already answered by the render that refused.
    */
   path?: string[];
+};
+
+export type PhiCmsAreaShellProps = {
+  root: string;
+  cmsBridge: PhiCmsSiteBridge;
+  children: React.ReactNode;
+  chrome?: PhiCmsAreaChrome;
+  path?: string[];
   headerBottom?: React.ReactNode;
   hero?: React.ReactNode;
   siderRight?: React.ReactNode;
@@ -61,28 +62,29 @@ export type PhiCmsRootLayoutProps = {
   drawer?: React.ReactNode;
 };
 
+export type PhiCmsRootLayoutProps = PhiCmsAreaBoundaryProps & Omit<PhiCmsAreaShellProps, "children">;
+
 function findRegion(tree: PhiResolvedCmsAreaPresetTree, regionType: number) {
   return tree.regions.find((region) => region.regionType === regionType);
 }
 
-export async function PhiCmsRootLayout({
+/**
+ * The Area's guards, its providers, and its Overlays.
+ *
+ * Everything here is true of the Area regardless of which of its Layouts draws the Regions, which is
+ * why it sits above them: a client navigation between the root of an Area and a page inside it changes
+ * the branch below this one, and remounting the signal partition or the data provider host on that
+ * boundary would rebuild state that never changed.
+ */
+export async function PhiCmsAreaBoundary({
   root,
   cmsBridge,
   children,
   path,
-  headerBottom,
-  hero,
-  siderRight,
-  footerTop,
-  drawer,
-}: PhiCmsRootLayoutProps) {
-  let rootScope: Awaited<ReturnType<typeof loadPhiCmsRootRequest>>;
+}: PhiCmsAreaBoundaryProps) {
+  let scope: Awaited<ReturnType<typeof loadPhiCmsAreaRenderScope>>;
   try {
-    rootScope = await loadPhiCmsRootRequest({
-      root,
-      path,
-      cmsBridge,
-    });
+    scope = await loadPhiCmsAreaRenderScope({ root, path, cmsBridge });
   } catch (error) {
     if (isPhiCmsGatewayAuthError(error)) {
       if (error.status === 401) {
@@ -98,7 +100,8 @@ export async function PhiCmsRootLayout({
     }
     throw error;
   }
-  const { resolvedRoute, request, resolvedAreaPreset, runtime } = rootScope;
+  const { rootScope, runtime, runtimeModuleScope, filteredLayoutTree } = scope;
+  const { resolvedRoute, request } = rootScope;
   const isRevisionPreview = hasPhiCmsRevisionPreview(request.searchParams);
 
   if (!path && resolvedRoute.canonicalHref) {
@@ -145,150 +148,6 @@ export async function PhiCmsRootLayout({
     notFound();
   }
 
-  const layoutTree = resolvedAreaPreset ?? null;
-  const renderRuntime = runtime;
-  const runtimeModuleIds = resolvePhiRuntimeModuleIdsForArea(
-    runtime.area,
-    layoutTree
-      ? readPhiRuntimeModuleIds(readPhiAreaPresetRuntimeModules(layoutTree))
-      : null,
-    [...cmsBridge.runtimeModuleCatalog.values()].map((entry) => entry.definition),
-  ).filter((moduleId) =>
-    canPhiViewerAccess(runtime.viewer, cmsBridge.runtimeModuleCatalog.get(moduleId)?.definition.accessPolicy)
-  );
-  const runtimeModuleScope = await resolvePhiCmsRuntimeModuleScope({
-    cmsBridge,
-    moduleIds: runtimeModuleIds,
-    area: runtime.area,
-    serverCapabilities: rootScope.requestContext.serverCapabilities,
-  });
-  const filteredLayoutTree = layoutTree
-    ? filterPhiCmsRenderableTreeForViewer({
-        tree: layoutTree,
-        viewer: runtime.viewer,
-        registry: buildPhiRuntimeModuleAccessRegistry(runtimeModuleScope.moduleSet),
-      })
-    : null;
-  const runtimeRegistry = await resolvePhiCmsTreeRuntimeRegistry({
-    moduleScope: runtimeModuleScope,
-    trees: filteredLayoutTree ? [filteredLayoutTree] : [],
-  });
-  const headerTopRegion = filteredLayoutTree ? findRegion(filteredLayoutTree, PhiCmsRegionType.HeaderTop) : null;
-  const headerMainRegion = filteredLayoutTree ? findRegion(filteredLayoutTree, PhiCmsRegionType.HeaderMain) : null;
-  const siderLeftRegion = filteredLayoutTree ? findRegion(filteredLayoutTree, PhiCmsRegionType.SiderLeft) : null;
-  const footerMainRegion = filteredLayoutTree ? findRegion(filteredLayoutTree, PhiCmsRegionType.Footer) : null;
-  const footerBottomRegion = filteredLayoutTree ? findRegion(filteredLayoutTree, PhiCmsRegionType.FooterBottom) : null;
-  const registeredControllerSettings = filteredLayoutTree
-    ? materializePhiRuntimeControllerSettings({
-        tree: filteredLayoutTree,
-        ownerMountScope: "area",
-        widgetPluginsByType: runtimeModuleScope.widgetDefinitionsByType,
-        baseSettings: runtimeModuleScope.moduleSet.areaControllerSettings,
-        activeControllerTypes: [...runtimeModuleScope.moduleSet.controllerDescriptorsByType.keys()],
-      })
-    : null;
-  const controllerDefinitionsByType = registeredControllerSettings
-    ? await resolvePhiRuntimeControllerDefinitions({
-        catalog: cmsBridge.runtimeModuleCatalog,
-        moduleSet: runtimeModuleScope.moduleSet,
-        settings: registeredControllerSettings,
-      })
-    : new Map();
-  const hasRenderableHeaderTop = headerTopRegion
-    ? hasRenderableRegionRoot(filteredLayoutTree!, headerTopRegion.rootLayoutNodeId)
-    : false;
-  const hasRenderableHeaderMain = headerMainRegion
-    ? hasRenderableRegionRoot(filteredLayoutTree!, headerMainRegion.rootLayoutNodeId)
-    : false;
-  const hasRenderableSiderLeft = siderLeftRegion
-    ? hasRenderableRegionRoot(filteredLayoutTree!, siderLeftRegion.rootLayoutNodeId)
-    : false;
-  const hasRenderableFooterMain = footerMainRegion
-    ? hasRenderableRegionRoot(filteredLayoutTree!, footerMainRegion.rootLayoutNodeId)
-    : false;
-  const hasRenderableFooterBottom = footerBottomRegion
-    ? hasRenderableRegionRoot(filteredLayoutTree!, footerBottomRegion.rootLayoutNodeId)
-    : false;
-
-  const runtimeContent = (
-    <PhiRuntimeModuleDataProviderHost
-      providerKeys={[...runtimeRegistry.dataProviderDescriptorsByKey.keys()]}
-    >
-      {registeredControllerSettings && registeredControllerSettings.length > 0 ? (
-        <PhiRuntimeControllerServerHost
-          controllers={registeredControllerSettings}
-          runtime={renderRuntime}
-          registry={controllerDefinitionsByType}
-          controllerModuleIdsByType={runtimeModuleScope.moduleSet.ownerModuleIdByControllerType}
-          runtimeModuleCatalog={runtimeRegistry.runtimeModuleCatalog}
-        />
-      ) : null}
-      <PhiCmsShell
-        content={children}
-        headerTop={hasRenderableHeaderTop ? (
-          <PhiCmsLayoutRenderer
-            tree={filteredLayoutTree!}
-            runtime={renderRuntime}
-            regionClassName="phi-shell-region header_top"
-            regionTypes={[PhiCmsRegionType.HeaderTop]}
-            registry={runtimeRegistry}
-          />
-        ) : undefined}
-        headerMain={hasRenderableHeaderMain ? (
-          <PhiCmsLayoutRenderer
-            tree={filteredLayoutTree!}
-            runtime={renderRuntime}
-            regionClassName="phi-shell-region header_main"
-            regionTypes={[PhiCmsRegionType.HeaderMain]}
-            registry={runtimeRegistry}
-          />
-        ) : undefined}
-        headerBottom={headerBottom}
-        hero={hero}
-        siderLeft={hasRenderableSiderLeft ? (
-          <PhiCmsLayoutRenderer
-            tree={filteredLayoutTree!}
-            runtime={renderRuntime}
-            regionClassName="sider_left"
-            regionTypes={[PhiCmsRegionType.SiderLeft]}
-            stackGap={0}
-            registry={runtimeRegistry}
-          />
-        ) : undefined}
-        siderRight={siderRight}
-        siderLeftFullHeight={siderLeftRegion?.config?.fullHeight === true && hasRenderableSiderLeft}
-        footerTop={footerTop}
-        drawer={drawer}
-        footerMain={hasRenderableFooterMain ? (
-          <PhiCmsLayoutRenderer
-            tree={filteredLayoutTree!}
-            runtime={renderRuntime}
-            regionClassName="phi-shell-region footer_main"
-            regionTypes={[PhiCmsRegionType.Footer]}
-            registry={runtimeRegistry}
-          />
-        ) : undefined}
-        footerBottom={hasRenderableFooterBottom ? (
-          <PhiCmsLayoutRenderer
-            tree={filteredLayoutTree!}
-            runtime={renderRuntime}
-            regionClassName="phi-shell-region footer_bottom"
-            regionTypes={[PhiCmsRegionType.FooterBottom]}
-            registry={runtimeRegistry}
-          />
-        ) : undefined}
-      />
-      {filteredLayoutTree ? (
-        <PhiCmsOverlayRenderer
-          tree={filteredLayoutTree}
-          runtime={renderRuntime}
-          registry={runtimeRegistry}
-          signalScope="area"
-        />
-      ) : null}
-    </PhiRuntimeModuleDataProviderHost>
-  );
-
   return (
     <PhiSignalRuntimePartitionProvider
       id={`area:${runtime.site.key}:${runtime.area}`}
@@ -306,8 +165,185 @@ export async function PhiCmsRootLayout({
           ...runtimeModuleScope.moduleSet.calendarAdapterDescriptorsByKey.values(),
         ]}
       >
-        {runtimeContent}
+        <PhiRuntimeModuleDataProviderHost
+          providerKeys={[...scope.runtimeRegistry.dataProviderDescriptorsByKey.keys()]}
+        >
+          {scope.registeredControllerSettings && scope.registeredControllerSettings.length > 0 ? (
+            <PhiRuntimeControllerServerHost
+              controllers={scope.registeredControllerSettings}
+              runtime={runtime}
+              registry={scope.controllerDefinitionsByType}
+              controllerModuleIdsByType={runtimeModuleScope.moduleSet.ownerModuleIdByControllerType}
+              runtimeModuleCatalog={scope.runtimeRegistry.runtimeModuleCatalog}
+            />
+          ) : null}
+          {children}
+          {filteredLayoutTree ? (
+            <PhiCmsOverlayRenderer
+              tree={filteredLayoutTree}
+              runtime={runtime}
+              registry={scope.runtimeRegistry}
+              signalScope="area"
+            />
+          ) : null}
+        </PhiRuntimeModuleDataProviderHost>
       </PhiRuntimeModuleProvider>
     </PhiSignalRuntimePartitionProvider>
+  );
+}
+
+/**
+ * The Area-owned Regions around a Page, or nothing but the grid they share.
+ *
+ * With `chrome: "none"` the five Area-owned Regions are not drawn and not resolved -- their Widgets,
+ * their chunks and the Navigation surfaces they carry never enter the response. The Page-owned slots
+ * still render, because a landing page is a page like any other.
+ *
+ * It refuses nothing: a gated Area throws inside the boundary above, which answers 401 or 403 while
+ * this returns the Page bare rather than racing it to a different error.
+ */
+export async function PhiCmsAreaShell({
+  root,
+  cmsBridge,
+  children,
+  chrome = "shell",
+  path,
+  headerBottom,
+  hero,
+  siderRight,
+  footerTop,
+  drawer,
+}: PhiCmsAreaShellProps) {
+  const slots = { headerBottom, hero, siderRight, footerTop, drawer };
+
+  if (chrome === "none") {
+    return <PhiCmsShell content={children} {...slots} />;
+  }
+
+  let scope: Awaited<ReturnType<typeof loadPhiCmsAreaRenderScope>>;
+  try {
+    scope = await loadPhiCmsAreaRenderScope({ root, path, cmsBridge });
+  } catch (error) {
+    if (isPhiCmsGatewayAuthError(error)) {
+      return <PhiCmsShell content={children} {...slots} />;
+    }
+    throw error;
+  }
+  const { runtime, filteredLayoutTree, runtimeRegistry } = scope;
+
+  const headerTopRegion = filteredLayoutTree ? findRegion(filteredLayoutTree, PhiCmsRegionType.HeaderTop) : null;
+  const headerMainRegion = filteredLayoutTree ? findRegion(filteredLayoutTree, PhiCmsRegionType.HeaderMain) : null;
+  const siderLeftRegion = filteredLayoutTree ? findRegion(filteredLayoutTree, PhiCmsRegionType.SiderLeft) : null;
+  const footerMainRegion = filteredLayoutTree ? findRegion(filteredLayoutTree, PhiCmsRegionType.Footer) : null;
+  const footerBottomRegion = filteredLayoutTree ? findRegion(filteredLayoutTree, PhiCmsRegionType.FooterBottom) : null;
+  const hasRenderableHeaderTop = headerTopRegion
+    ? hasRenderableRegionRoot(filteredLayoutTree!, headerTopRegion.rootLayoutNodeId)
+    : false;
+  const hasRenderableHeaderMain = headerMainRegion
+    ? hasRenderableRegionRoot(filteredLayoutTree!, headerMainRegion.rootLayoutNodeId)
+    : false;
+  const hasRenderableSiderLeft = siderLeftRegion
+    ? hasRenderableRegionRoot(filteredLayoutTree!, siderLeftRegion.rootLayoutNodeId)
+    : false;
+  const hasRenderableFooterMain = footerMainRegion
+    ? hasRenderableRegionRoot(filteredLayoutTree!, footerMainRegion.rootLayoutNodeId)
+    : false;
+  const hasRenderableFooterBottom = footerBottomRegion
+    ? hasRenderableRegionRoot(filteredLayoutTree!, footerBottomRegion.rootLayoutNodeId)
+    : false;
+
+  return (
+    <PhiCmsShell
+      content={children}
+      headerTop={hasRenderableHeaderTop ? (
+        <PhiCmsLayoutRenderer
+          tree={filteredLayoutTree!}
+          runtime={runtime}
+          regionClassName="phi-shell-region header_top"
+          regionTypes={[PhiCmsRegionType.HeaderTop]}
+          registry={runtimeRegistry}
+        />
+      ) : undefined}
+      headerMain={hasRenderableHeaderMain ? (
+        <PhiCmsLayoutRenderer
+          tree={filteredLayoutTree!}
+          runtime={runtime}
+          regionClassName="phi-shell-region header_main"
+          regionTypes={[PhiCmsRegionType.HeaderMain]}
+          registry={runtimeRegistry}
+        />
+      ) : undefined}
+      headerBottom={headerBottom}
+      hero={hero}
+      siderLeft={hasRenderableSiderLeft ? (
+        <PhiCmsLayoutRenderer
+          tree={filteredLayoutTree!}
+          runtime={runtime}
+          regionClassName="sider_left"
+          regionTypes={[PhiCmsRegionType.SiderLeft]}
+          stackGap={0}
+          registry={runtimeRegistry}
+        />
+      ) : undefined}
+      siderRight={siderRight}
+      siderLeftFullHeight={siderLeftRegion?.config?.fullHeight === true && hasRenderableSiderLeft}
+      footerTop={footerTop}
+      drawer={drawer}
+      footerMain={hasRenderableFooterMain ? (
+        <PhiCmsLayoutRenderer
+          tree={filteredLayoutTree!}
+          runtime={runtime}
+          regionClassName="phi-shell-region footer_main"
+          regionTypes={[PhiCmsRegionType.Footer]}
+          registry={runtimeRegistry}
+        />
+      ) : undefined}
+      footerBottom={hasRenderableFooterBottom ? (
+        <PhiCmsLayoutRenderer
+          tree={filteredLayoutTree!}
+          runtime={runtime}
+          regionClassName="phi-shell-region footer_bottom"
+          regionTypes={[PhiCmsRegionType.FooterBottom]}
+          registry={runtimeRegistry}
+        />
+      ) : undefined}
+    />
+  );
+}
+
+/**
+ * Boundary and Shell in one component, for a caller that is not a pair of Layouts.
+ *
+ * The root error routes are the case: they run above every Area Layout, so there is no branch left to
+ * split across and they rebuild the whole Area themselves.
+ */
+export async function PhiCmsRootLayout({
+  root,
+  cmsBridge,
+  children,
+  path,
+  chrome,
+  headerBottom,
+  hero,
+  siderRight,
+  footerTop,
+  drawer,
+}: PhiCmsRootLayoutProps) {
+  return (
+    <PhiCmsAreaBoundary root={root} cmsBridge={cmsBridge} path={path}>
+      <PhiCmsAreaShell
+        root={root}
+        cmsBridge={cmsBridge}
+        chrome={chrome}
+        path={path}
+        headerBottom={headerBottom}
+        hero={hero}
+        siderRight={siderRight}
+        footerTop={footerTop}
+        drawer={drawer}
+      >
+        {children}
+      </PhiCmsAreaShell>
+    </PhiCmsAreaBoundary>
   );
 }

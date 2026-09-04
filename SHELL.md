@@ -245,6 +245,17 @@ Inside the shell page-content viewport, the page/layout renderer may define its 
 
 That inner structure is intentionally not part of `shell.css`.
 
+## Where the Shell is not drawn
+
+The root of an Area draws no Area-owned Region at all. It is either a landing page, whose point is to
+arrive without the Area's chrome and without the cost of resolving it, or a redirect, which draws
+nothing. The Page-owned Regions still render there, in the same grid -- a landing page is a page like
+any other, and one that wants a header builds it in `header_bottom`.
+
+This is a property of the route graph, not a runtime condition: the Area root and the pages below it
+are separate branches with separate Layouts (see `NEXT_INTEGRATION.md`). The Area's guards, providers
+and Overlays sit above the split, so crossing it rebuilds the Shell without rebuilding the Area.
+
 ## Ownership Boundary
 
 Area-owned shell regions are:
