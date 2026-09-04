@@ -10,13 +10,13 @@ import { getPhiCapabilitySnapshot } from "./server-capabilities";
 import { PHI_FIRST_PARTY_RUNTIME_MODULE_CATALOG } from "../plugins/runtime-modules/catalog";
 import { resolvePhiCmsDescriptorCatalog } from "../plugins/runtime-modules/descriptor-compiler";
 import { resolvePhiRuntimeModuleSet } from "../plugins/runtime-modules/resolver";
-import { readPhiRuntimeModuleIds, resolvePhiRuntimeModuleIdsForArea } from "../plugins/runtime-modules/settings";
+import { resolvePhiRuntimeModuleIdsForArea } from "../plugins/runtime-modules/settings";
 import type { PhiRuntimeModuleCatalog } from "../plugins/runtime-modules/contracts";
 import { buildPhiLocalCmsAreaPayload } from "../server-helpers/cms-area";
 import { buildPhiBlockRuntime, loadPhiSiteRequestContext } from "../server-helpers/runtime";
 import { runWithPhiRequestRuntime } from "../server-helpers/request-runtime";
 import type { PhiFormHandlerPhase, PhiFormHandlerProviderDescriptor } from "../types/form-descriptor";
-import { readPhiAreaPresetRuntimeModules } from "../helpers/cms-area-config";
+import { readPhiAreaPresetRuntimeModuleIds } from "../helpers/cms-area-config";
 
 export type PhiResolvedServerFormHandler = {
   formId: string;
@@ -114,7 +114,7 @@ export async function resolvePhiServerFormHandler(options: {
   if (!tree) return null;
   const optionalModuleIds = resolvePhiRuntimeModuleIdsForArea(
     requestContext.area,
-    readPhiRuntimeModuleIds(readPhiAreaPresetRuntimeModules(tree)),
+    readPhiAreaPresetRuntimeModuleIds(tree, requestContext.area),
     [...catalog.values()].map((entry) => entry.definition),
   );
   const serverCapabilities = fallbackRequestContext?.serverCapabilities ??

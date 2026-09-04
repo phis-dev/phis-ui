@@ -9,7 +9,6 @@ import {
 } from "./phi-cms-runtime-registry";
 import { loadPhiCmsRootRequest } from "../../server-helpers/cms-root";
 import {
-  readPhiRuntimeModuleIds,
   resolvePhiRuntimeModuleIdsForArea,
 } from "../../plugins/runtime-modules/settings";
 import { materializePhiRuntimeControllerSettings } from "../runtime/runtime-controller-materialization";
@@ -19,7 +18,7 @@ import {
   buildPhiRuntimeModuleAccessRegistry,
   filterPhiCmsRenderableTreeForViewer,
 } from "../../helpers/cms-access-policy";
-import { readPhiAreaPresetRuntimeModules } from "../../helpers/cms-area-config";
+import { readPhiAreaPresetRuntimeModuleIds } from "../../helpers/cms-area-config";
 
 /**
  * Everything an Area's own render needs, resolved once per request.
@@ -51,7 +50,7 @@ const loadPhiCmsAreaRenderScopeCached = cache(async function loadPhiCmsAreaRende
 
   const runtimeModuleIds = resolvePhiRuntimeModuleIdsForArea(
     runtime.area,
-    layoutTree ? readPhiRuntimeModuleIds(readPhiAreaPresetRuntimeModules(layoutTree)) : null,
+    readPhiAreaPresetRuntimeModuleIds(layoutTree, runtime.area),
     [...cmsBridge.runtimeModuleCatalog.values()].map((entry) => entry.definition),
   ).filter((moduleId) =>
     canPhiViewerAccess(runtime.viewer, cmsBridge.runtimeModuleCatalog.get(moduleId)?.definition.accessPolicy)
