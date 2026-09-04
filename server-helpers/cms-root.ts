@@ -273,6 +273,7 @@ const loadPhiCmsRootRequestCached = cache(async function loadPhiCmsRootRequestCa
   const resolvedRequest = await loadResolvedRequest({
     siteKey,
     locale: rootScope.resolvedRoute.locale,
+    area: rootScope.resolvedRoute.area,
     path: rootScope.resolvedRoute.cmsPath,
     cookieHeader: rootScope.cookieHeader,
     searchParams: rootScope.request.searchParams,

@@ -3,6 +3,7 @@ import "server-only";
 import { cookies } from "next/headers";
 
 import type { PhiCmsSiteBridge } from "../../types/cms-plugins";
+import type { PhiCmsAreaKey } from "../../constants/cms-areas";
 import { resolvePhiRequestLocale } from "../../server-helpers/request-locale";
 import { loadPhiResolvedCmsRequest } from "../../server-helpers/cms-request";
 import { PhiCmsPageRenderer } from "./phi-cms-page-renderer";
@@ -24,6 +25,8 @@ import { readPhiAreaPresetRuntimeModuleIds } from "../../helpers/cms-area-config
 export type PhiCmsErrorPageProps = {
   code: PhiCmsErrorCode;
   cmsBridge: PhiCmsSiteBridge;
+  /** The Area whose route refused the request; its error page is the one to render. */
+  area: PhiCmsAreaKey;
 };
 
 const ERROR_COPY: Record<PhiCmsErrorCode, { title: string; text: string }> = {
@@ -71,7 +74,7 @@ export function isPhiCmsErrorCode(value: string | number | null | undefined): va
   return parsePhiCmsErrorCode(value) != null;
 }
 
-export async function PhiCmsErrorPage({ code, cmsBridge }: PhiCmsErrorPageProps) {
+export async function PhiCmsErrorPage({ code, cmsBridge, area }: PhiCmsErrorPageProps) {
   const cookieHeader = (await cookies()).toString();
   const bridgeRuntime = cmsBridge.runtime;
   const siteKey = bridgeRuntime?.siteKey?.trim() ?? "";
@@ -91,6 +94,7 @@ export async function PhiCmsErrorPage({ code, cmsBridge }: PhiCmsErrorPageProps)
     resolvedRequest = await loadPhiResolvedCmsRequest(
       siteKey,
       locale,
+      area,
       resolvePhiCmsErrorPagePath(code),
       cookieHeader,
       bridgeRuntime?.apiBaseUrl,

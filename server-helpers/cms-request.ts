@@ -76,6 +76,7 @@ type PhiCmsPresetPageBuildArgs = {
 export type ResolvePhiCmsRequestArgs = {
   siteKey: string;
   locale: string;
+  area: PhiCmsAreaKey;
   path: string;
   cookieHeader: string;
   apiBaseUrl?: string;
@@ -120,16 +121,6 @@ async function instantiatePhiRoutePresetPage({
         trForLocale(runtime.locale.current, sourceTitle),
     }),
   };
-}
-
-function isAreaRootPath(path: string) {
-  const segments = path.split("/").filter(Boolean);
-  return segments.length === 1 ? segments[0] : null;
-}
-
-function resolveAreaMaskFromPath(path: string) {
-  const rootArea = isAreaRootPath(path) ?? path.split("/").filter(Boolean)[0] ?? "public";
-  return resolvePhiCmsAreaMask(rootArea);
 }
 
 function resolveAreaOwnedStoragePath(path: string, areaMask: number) {
@@ -234,6 +225,7 @@ function buildPhiRuntimePage(
 export async function resolvePhiCmsRequest({
   siteKey,
   locale,
+  area,
   path,
   cookieHeader,
   apiBaseUrl,
@@ -244,7 +236,7 @@ export async function resolvePhiCmsRequest({
   loadExactCmsArea,
   runtimeModuleCatalog,
 }: ResolvePhiCmsRequestArgs): Promise<PhiResolvedCmsRequest | null> {
-  const areaMask = resolveAreaMaskFromPath(path);
+  const areaMask = resolvePhiCmsAreaMask(area);
   const baseRequestContext =
     requestContext ??
     (await loadPhiSiteRequestContext(
@@ -395,6 +387,7 @@ export async function resolvePhiCmsRequest({
 export const loadPhiResolvedCmsRequest = cache(async function loadPhiResolvedCmsRequest(
   siteKey: string,
   locale: string,
+  area: PhiCmsAreaKey,
   path: string,
   cookieHeader: string,
   apiBaseUrl: string | undefined,
@@ -408,6 +401,7 @@ export const loadPhiResolvedCmsRequest = cache(async function loadPhiResolvedCms
   return resolvePhiCmsRequest({
     siteKey,
     locale,
+    area,
     path,
     cookieHeader,
     apiBaseUrl,

@@ -25,6 +25,7 @@ export function createPhiNextCmsSiteBridge({
     loadResolvedRequest: async ({
       siteKey,
       locale,
+      area,
       path,
       cookieHeader,
       searchParams,
@@ -35,6 +36,7 @@ export function createPhiNextCmsSiteBridge({
       return loadPhiResolvedCmsRequest(
         siteKey.trim() || runtime.siteKey,
         locale,
+        area,
         path,
         cookieHeader,
         runtime.apiBaseUrl,

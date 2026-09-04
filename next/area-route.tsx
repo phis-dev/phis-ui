@@ -5,6 +5,7 @@ import { headers } from "next/headers";
 
 import { PhiCmsErrorPage } from "../components/cms/phi-cms-error-page";
 import type { PhiCmsErrorPageProps } from "../components/cms/phi-cms-error-page";
+import { isPhiCmsAreaKey, type PhiCmsAreaKey } from "../constants/cms-areas";
 import {
   PhiCmsAreaBoundary,
   PhiCmsAreaShell,
@@ -161,14 +162,15 @@ export function createPhiNextStaticAreaSlotPage(
 export function createPhiNextStaticAreaErrorPage(
   code: PhiCmsErrorPageProps["code"],
   cmsBridge: PhiCmsSiteBridge,
+  area: PhiCmsAreaKey,
 ) {
   return function PhiNextStaticAreaErrorPage() {
-    return <PhiCmsErrorPage code={code} cmsBridge={cmsBridge} />;
+    return <PhiCmsErrorPage code={code} cmsBridge={cmsBridge} area={area} />;
   };
 }
 
-export function createPhiNextStaticAreaNotFound(cmsBridge: PhiCmsSiteBridge) {
-  return createPhiNextStaticAreaErrorPage(404, cmsBridge);
+export function createPhiNextStaticAreaNotFound(cmsBridge: PhiCmsSiteBridge, area: PhiCmsAreaKey) {
+  return createPhiNextStaticAreaErrorPage(404, cmsBridge, area);
 }
 
 /**
@@ -214,12 +216,19 @@ export function createPhiNextRootErrorPage(
   return async function PhiNextRootErrorPage() {
     const requestPath = (await headers()).get(PHIS_REQUEST_PATH_HEADER) ?? "";
     const firstSegment = requestPath.split("/").filter(Boolean)[0]?.toLowerCase() ?? "";
-    const areaKey = firstSegment && firstSegment !== "public" && areas[firstSegment] ? firstSegment : "public";
+    /*
+     * A refusal names its Area only when the first segment is one. Under a locale root that segment is
+     * a page name, so it is checked against the known Areas rather than trusted as one.
+     */
+    const areaKey: PhiCmsAreaKey =
+      isPhiCmsAreaKey(firstSegment) && firstSegment !== "public" && areas[firstSegment]
+        ? firstSegment
+        : "public";
     const { cmsBridge, Boundary } = areas[areaKey] ?? areas.public;
 
     const bridgeRuntime = cmsBridge.runtime;
     const siteKey = bridgeRuntime?.siteKey?.trim() ?? "";
-    const errorPage = <PhiCmsErrorPage code={code} cmsBridge={cmsBridge} />;
+    const errorPage = <PhiCmsErrorPage code={code} cmsBridge={cmsBridge} area={areaKey} />;
     if (!siteKey) {
       /* Without a Site there is no shell to resolve; the error page falls back to its own bare copy. */
       return <Boundary>{errorPage}</Boundary>;

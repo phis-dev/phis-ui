@@ -519,6 +519,13 @@ export type PhiCmsLayoutPluginDefinition<TConfig> = Pick<
 export type PhiCmsResolvedRequestLoaderArgs = {
   siteKey: string;
   locale: string;
+  /**
+   * The Area the route branch answers for.
+   *
+   * It is stated rather than derived because only the branch knows it: under a locale root every
+   * segment is a page name, so a page stored at `/admin/x` must not be mistaken for the Admin Area.
+   */
+  area: PhiCmsAreaKey;
   path: string;
   cookieHeader: string;
   searchParams?: Record<string, string | undefined>;
