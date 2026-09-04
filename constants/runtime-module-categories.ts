@@ -11,5 +11,6 @@
 export {
   PHI_RUNTIME_MODULE_CATEGORIES,
   isPhiRuntimeModuleCategory,
+  readPhiRuntimeModuleCategory,
   type PhiRuntimeModuleCategory,
 } from "@phis/contracts/catalog";

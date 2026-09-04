@@ -5,6 +5,7 @@ import { useMemo, type ReactNode } from "react";
 import { PHI_BUILDER_RUNTIME_DATA_PROVIDER_KEYS } from "../ids";
 import { PHI_BUILDER_RUNTIME_DATA_PROVIDER_DESCRIPTORS } from "../../../../plugins/runtime-modules/builder/data-providers";
 import { resolvePhiBuilderAreaAsCmsArea } from "../../../../constants/cms-areas";
+import { readPhiRuntimeModuleCategory } from "../../../../constants/runtime-module-categories";
 import { resolvePhiRuntimeAreaDefinition } from "../../area-definitions";
 import { applyPhiBuilderRuntimeModuleSelectionChange } from "../runtime-module-selection";
 import { usePhiDeveloperBuilderStateValue } from "../developer-workspace-store";
@@ -61,7 +62,7 @@ function buildRuntimeModuleRows(
         icon: definition.icon ?? (definition.iconFamily ? `@phis/ui/widgets:${definition.iconFamily}` : ""),
         title: definition.title,
         description: definition.description,
-        category: categoryLabels?.[definition.category] ?? definition.category,
+        category: categoryLabels?.[readPhiRuntimeModuleCategory(definition.category)] ?? definition.category,
         isBaseModule,
       };
     })
@@ -109,7 +110,7 @@ function buildRuntimeModuleDetailRows(
     {
       key: "category",
       label: label("category", "Category"),
-      value: categoryLabels?.[definition.category] ?? definition.category,
+      value: categoryLabels?.[readPhiRuntimeModuleCategory(definition.category)] ?? definition.category,
     },
     {
       key: "eligibleAreas",
