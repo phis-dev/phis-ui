@@ -54,7 +54,7 @@ export const PHI_BUILDER_MODULES_PAGE_DEFAULT_LABELS: PhiBuilderModulesPageLabel
     workspace: "Workspace",
     content: "Content",
     commerce: "Commerce",
-    people: "People",
+    identity: "Identity",
     operations: "Operations",
     other: "Other",
   },

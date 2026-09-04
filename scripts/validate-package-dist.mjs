@@ -33,6 +33,18 @@ if (
   throw new Error("Built package must include the complete generated dist tree.");
 }
 
+if (distManifest.license !== sourceManifest.license) {
+  throw new Error("Built package must carry the workspace licence.");
+}
+
+for (const legalFile of ["LICENSE", "NOTICE"]) {
+  try {
+    await access(path.join(distDirectory, legalFile));
+  } catch {
+    throw new Error(`Built package must ship ${legalFile}.`);
+  }
+}
+
 if (distManifest.dependencies?.["server-only"] == null) {
   throw new Error('Built package must declare "server-only" as a runtime dependency.');
 }

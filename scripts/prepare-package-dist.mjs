@@ -66,6 +66,7 @@ const packageExports = Object.fromEntries(
 const distManifest = {
   name: sourceManifest.name,
   version: sourceManifest.version,
+  license: sourceManifest.license,
   type: "module",
   main: "./index.js",
   module: "./index.js",
@@ -89,6 +90,15 @@ await copyFile(
   path.join(packageRoot, "README.md"),
   path.join(distDirectory, "README.md"),
 );
+// The terms travel with the artifact or they do not apply to it: whoever installs this from npm has
+// the tarball and nothing else, and the repository they would otherwise have to go looking in is not
+// part of what they received.
+for (const legalFile of ["LICENSE", "NOTICE"]) {
+  await copyFile(
+    path.join(packageRoot, legalFile),
+    path.join(distDirectory, legalFile),
+  );
+}
 await cp(
   path.join(packageRoot, "styles"),
   path.join(distDirectory, "styles"),
