@@ -33,6 +33,7 @@ import type { PhiRenderableBlockEffects } from "../../../types/renderable-block"
 import type { PhiCmsInstanceId } from "../../../types/cms-instance-id";
 import type { PhiAnchorWidgetPlacement } from "../../../components/controls/phi-anchor-control-contract";
 import { phiBuilderHistory } from "./history";
+import type { PhiAreaRootRoute } from "../../../helpers/cms-area-config";
 
 export function normalizePhiDeveloperBuilderArea(scopeKey: string): PhiDeveloperBuilderArea {
   return isPhiBuilderAreaKey(scopeKey) ? scopeKey : "public";
@@ -73,6 +74,7 @@ function createDefaultBuilderState(): PhiDeveloperBuilderState {
     commandWorkspace: null,
     builderChromeControls: createDefaultBuilderChromeControls(),
     pickerWidgetCategoryFilters: [],
+    areaRootRouteDrafts: {},
     deletedPageDrafts: {},
     draftAllocations: {},
   };
@@ -645,6 +647,28 @@ export function setPhiDeveloperRegionDraftsWithHistory(
     label: options.historyLabel,
     before: { kind: "regionDrafts", drafts: before },
     after: { kind: "regionDrafts", drafts: after },
+  });
+}
+
+/**
+ * The Area's root route, as the Builder is editing it.
+ *
+ * `undefined` clears the entry, which is not the same as `null`: the first says nobody touched this
+ * Area in this session and the Area's stored answer stands, the second says the Builder chose the
+ * default back and the write has to remove the stored config.
+ */
+export function setPhiDeveloperBuilderAreaRootRoute(
+  area: PhiDeveloperBuilderArea,
+  rootRoute: PhiAreaRootRoute | null | undefined,
+) {
+  builderWorkspaceStore.patch("public", (current) => {
+    const next = { ...current.areaRootRouteDrafts };
+    if (rootRoute === undefined) {
+      delete next[area];
+    } else {
+      next[area] = rootRoute;
+    }
+    return { ...current, areaRootRouteDrafts: next };
   });
 }
 

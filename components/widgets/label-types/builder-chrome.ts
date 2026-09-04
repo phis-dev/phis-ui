@@ -47,6 +47,21 @@ export type PhiBuilderChromeWidgetLabels = {
   canvas: {
     picker: PhiBuilderInsertPickerControlLabels;
   };
+  /**
+   * The Area root selector on the Shells workspace.
+   *
+   * `automatic` names what happens with nothing stored, and is a choice rather than a blank: a Builder
+   * who picked a redirect has to be able to take it back, and "the first navigation entry" is what they
+   * are taking it back to.
+   */
+  rootRoute: {
+    title: string;
+    automatic: string;
+    landing: string;
+    redirect: string;
+    selectTarget: string;
+    noTarget: string;
+  };
   pageTitles: {
     dashboard: string;
     modules: string;
@@ -103,6 +118,14 @@ export const PHI_BUILDER_CHROME_WIDGET_DEFAULT_LABELS: PhiBuilderChromeWidgetLab
   },
   canvas: {
     picker: PHI_BUILDER_INSERT_PICKER_CONTROL_DEFAULT_LABELS,
+  },
+  rootRoute: {
+    title: "Area root",
+    automatic: "First navigation entry",
+    landing: "Landing page",
+    redirect: "Redirect to",
+    selectTarget: "Select target Page",
+    noTarget: "No Page selected",
   },
   pageTitles: {
     dashboard: "Dashboard",

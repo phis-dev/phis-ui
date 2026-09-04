@@ -12,6 +12,7 @@ import type { PhiBuilderRootNodeKind } from "./preview-transport";
 import type { PhiCmsInstanceId } from "../../../types/cms-instance-id";
 import type { PhiWorkspaceCatalogState } from "../../../components/workspace/catalog-state";
 import type { PhiCmsPresetSource } from "../../../types/cms-module-descriptors";
+import type { PhiAreaRootRoute } from "../../../helpers/cms-area-config";
 
 export type PhiDeveloperBuilderArea = PhiBuilderAreaKey;
 export type PhiDeveloperBuilderMode = "editor" | "preview";
@@ -104,6 +105,13 @@ export type PhiDeveloperBuilderState = {
   commandWorkspace: PhiDeveloperBuilderCommandWorkspace;
   builderChromeControls: PhiBuilderChromeControls;
   pickerWidgetCategoryFilters: string[];
+  /**
+   * The Area root route being edited, by target Area.
+   *
+   * A missing key is an Area nobody has touched in this session; `null` is the Builder having chosen
+   * the default back, which is stored as no config at all so the code-owned preset answers again.
+   */
+  areaRootRouteDrafts: Record<string, PhiAreaRootRoute | null>;
 };
 
 /**

@@ -44,7 +44,11 @@ import {
 } from "../../../helpers/cms-page-catalog";
 import type { PhiCmsPresetSource } from "../../../types/cms-module-descriptors";
 import type { PhiBuilderPluginMeta, PhiBuilderWidgetMeta } from "../../../types/builder";
-import { PHI_AREA_CONFIG_MODULES_NAMESPACE } from "../../../helpers/cms-area-config";
+import {
+  PHI_AREA_CONFIG_MODULES_NAMESPACE,
+  PHI_AREA_CONFIG_SHELL_NAMESPACE,
+  PHI_AREA_ROOT_ROUTE_KEY,
+} from "../../../helpers/cms-area-config";
 
 type CmsDraftWriteState = PhiDeveloperBuilderDraftAllocation;
 
@@ -860,7 +864,7 @@ function buildAreaStructureWritePayload(
 export async function savePhiDeveloperBuilderDraft(
   state: Pick<
     PhiDeveloperBuilderWorkspaceState,
-    "area" | "pageKey" | "sidebarKey" | "pageMetaDrafts" | "deletedPageDrafts" | "draftAllocations" | "modulePresetPagesByArea" | "customPages" | "persistedPageCatalogByArea" | "areaPresetSourcesByArea"
+    "area" | "pageKey" | "sidebarKey" | "pageMetaDrafts" | "deletedPageDrafts" | "draftAllocations" | "modulePresetPagesByArea" | "customPages" | "persistedPageCatalogByArea" | "areaPresetSourcesByArea" | "areaRootRouteDrafts"
   >,
   regionDrafts: Record<string, PhiDeveloperBuilderRegionDraft>,
   workspaceKind: PhiDeveloperBuilderWorkspaceKind,
@@ -998,6 +1002,7 @@ export async function savePhiDeveloperBuilderDraft(
   }
 
   if (workspaceKind === "structure") {
+    const rootRouteDraft = state.areaRootRouteDrafts?.[area] ?? null;
     const structurePayload = buildAreaStructureWritePayload(area, regionDrafts, widgetMetasByType);
     if (structurePayload) {
       if (!areaPresetSource) {
@@ -1012,6 +1017,19 @@ export async function savePhiDeveloperBuilderDraft(
           status: 1,
           flags: 0,
           visibilityMask: structurePayload.areaMask,
+          /*
+           * The structure draft owns `config.shell` whole, so it states it whole.
+           *
+           * The publish merge takes the owned namespace from the draft and nothing else, which means an
+           * absent value is a removal rather than an omission. Sending the Area's current root route on
+           * every structure save is what keeps a save that never touched it from erasing it -- and
+           * sending an empty namespace is how the Builder asks for the default back.
+           */
+          config: {
+            [PHI_AREA_CONFIG_SHELL_NAMESPACE]: rootRouteDraft
+              ? { [PHI_AREA_ROOT_ROUTE_KEY]: rootRouteDraft }
+              : {},
+          },
         },
         regions: structurePayload.regions,
         overlays: structurePayload.overlays,
@@ -1210,7 +1228,7 @@ export async function previewPhiDeveloperBuilderDraft(
 export async function publishPhiDeveloperBuilderDraft(
   state: Pick<
     PhiDeveloperBuilderWorkspaceState,
-    "area" | "pageKey" | "sidebarKey" | "pageMetaDrafts" | "deletedPageDrafts" | "draftAllocations" | "runtimeModuleDefinitions" | "runtimeModuleIdsByArea" | "modulePresetPagesByArea" | "customPages" | "persistedPageCatalogByArea" | "areaPresetSourcesByArea"
+    "area" | "pageKey" | "sidebarKey" | "pageMetaDrafts" | "deletedPageDrafts" | "draftAllocations" | "runtimeModuleDefinitions" | "runtimeModuleIdsByArea" | "modulePresetPagesByArea" | "customPages" | "persistedPageCatalogByArea" | "areaPresetSourcesByArea" | "areaRootRouteDrafts"
   >,
   regionDrafts: Record<string, PhiDeveloperBuilderRegionDraft>,
   workspaceKind: PhiDeveloperBuilderWorkspaceKind,

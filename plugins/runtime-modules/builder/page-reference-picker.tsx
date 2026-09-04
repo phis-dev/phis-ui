@@ -21,7 +21,7 @@ export type PhiBuilderPageReferenceSelection = {
   path: string;
 };
 
-function collectPageReferenceOptions(
+export function collectPhiBuilderPageReferenceOptions(
   area: Parameters<typeof resolvePhiBuilderCmsFetchPath>[0],
   nodes: readonly PhiPresetPageNode[],
   allNodes: readonly PhiPresetPageNode[],
@@ -41,7 +41,7 @@ function collectPageReferenceOptions(
       : [];
     return [
       ...current,
-      ...collectPageReferenceOptions(area, node.children ?? [], allNodes),
+      ...collectPhiBuilderPageReferenceOptions(area, node.children ?? [], allNodes),
     ];
   });
 }
@@ -62,7 +62,7 @@ export function PhiBuilderPageReferencePicker({
     state.persistedPageCatalogByArea,
   ), [state.area, state.customPages, state.modulePresetPagesByArea, state.persistedPageCatalogByArea]);
   const options = useMemo(
-    () => collectPageReferenceOptions(state.area, pages, pages),
+    () => collectPhiBuilderPageReferenceOptions(state.area, pages, pages),
     [pages, state.area],
   );
 

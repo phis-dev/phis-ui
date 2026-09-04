@@ -1,4 +1,5 @@
 import type { PhiResolvedCmsAreaPresetTree } from "../types/cms";
+import { readPhiPageReference, type PhiPageReference } from "../types/references";
 
 /**
  * The two halves of an Area preset config, expressed as a path rather than as a list of field names.
@@ -42,4 +43,44 @@ export function readPhiAreaPresetRuntimeModules(
 ) {
   return tree?.runtimeModuleIds
     ?? readPhiAreaConfigNamespace(tree?.preset.config, PHI_AREA_CONFIG_MODULES_NAMESPACE)?.runtimeModules;
+}
+
+export const PHI_AREA_ROOT_ROUTE_KEY = "rootRoute" as const;
+
+/**
+ * What an Area's `/` resolves to.
+ *
+ * The root is the one path drawn without the Shell around it, so it can only be a page that wants to
+ * arrive alone or a forward that draws nothing. `landing` is the first; `redirect` is the second and
+ * names its destination as a Page reference rather than a path, because a path is a fact about today's
+ * routing table while a reference survives a Page being renamed or a Module moving its route.
+ *
+ * Absent means the Area has not been asked: the code-owned preset answers, which forwards to the first
+ * entry of the Area's own navigation. That stays the fallback when a configured target no longer
+ * resolves -- a Module switched off must move the front door, not break it.
+ */
+export type PhiAreaRootRoute =
+  | { mode: "landing" }
+  | { mode: "redirect"; target: PhiPageReference };
+
+export function readPhiAreaRootRoute(
+  config: Record<string, unknown> | null | undefined,
+): PhiAreaRootRoute | null {
+  const value = readPhiAreaConfigNamespace(config, PHI_AREA_CONFIG_SHELL_NAMESPACE)?.[
+    PHI_AREA_ROOT_ROUTE_KEY
+  ];
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return null;
+  }
+  const record = value as Record<string, unknown>;
+  if (record.mode === "landing") {
+    return { mode: "landing" };
+  }
+  if (record.mode !== "redirect") {
+    return null;
+  }
+  // An unreadable reference is the same answer as none: the preset decides, and the Builder sees the
+  // selector fall back to what actually happens rather than to what was stored.
+  const reference = readPhiPageReference(record.target);
+  return reference ? { mode: "redirect", target: reference.reference } : null;
 }

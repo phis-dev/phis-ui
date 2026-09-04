@@ -8,6 +8,7 @@ import { PhiCmsLayoutRenderer, PhiCmsOverlayRenderer } from "./phi-cms-layout-re
 import { hasRenderableRegionRoot } from "./phi-cms-region-helpers";
 import { loadPhiCmsAreaRenderScope } from "./phi-cms-area-render-scope";
 import { hasPhiCmsRevisionPreview } from "../../server-helpers/cms-root";
+import { performPhiCmsPageRedirect, resolvePhiCmsPageRedirect } from "./phi-cms-page-redirect";
 import { localizeAreaPath } from "../../helpers/locale";
 import {
   resolvePhiPublicLoginHref,
@@ -146,6 +147,25 @@ export async function PhiCmsAreaBoundary({
    */
   if (!path && !rootScope.resolvedRequest) {
     notFound();
+  }
+
+  /*
+   * A forwarding Page is answered here for the same reason, and it matters more.
+   *
+   * A redirect decided in the Page arrives after the shell has flushed, so Next can only put a
+   * client-side redirect into a 200 -- which a browser follows and a crawler files as a page. An Area
+   * root that forwards is exactly the case that must not be indexed as a page, so the status line has
+   * to say 307. The Page keeps its own copy of this for the client navigation that never re-runs this
+   * Layout.
+   */
+  if (!path && rootScope.resolvedRequest) {
+    const pageRedirect = resolvePhiCmsPageRedirect(
+      rootScope.resolvedRequest.page.page,
+      resolvedRoute.locale,
+    );
+    if (pageRedirect) {
+      performPhiCmsPageRedirect(pageRedirect);
+    }
   }
 
   return (

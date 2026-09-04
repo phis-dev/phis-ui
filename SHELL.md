@@ -265,6 +265,19 @@ entry in App, Accounting, Admin, Editor and Builder; switching it off moves the 
 entry instead of breaking it, and an Area with no reachable entry left renders an empty page rather
 than forwarding to itself.
 
+That is the default, not the rule. `preset.config.shell.rootRoute` is where a Builder overrides it, on
+the Shells workspace next to the Regions the same draft owns: `landing` for a root that is a page, and
+`redirect` for one that forwards to a Page it names. The target is stored as an internal Page
+reference and never as a path, so it survives a Page being renamed or a Module moving its route; a
+reference that no longer resolves -- a deleted Page, a Module switched off, a route this viewer may not
+reach -- falls back to the default above rather than to a 404. The structure draft states the whole
+`shell` namespace on every save, because the publish merge takes that namespace from the draft alone.
+
+A forwarding root answers `307` on the status line rather than a `200` carrying a client-side redirect.
+That is decided in the Area boundary Layout, above the branch split and before the shell flushes, for
+the same reason `notFound()` is: after the shell has flushed Next can only swap the body, and a
+forward filed as a page is exactly what an Area root must not be.
+
 ## Ownership Boundary
 
 Area-owned shell regions are:

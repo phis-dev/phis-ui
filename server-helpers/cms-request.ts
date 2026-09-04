@@ -38,6 +38,8 @@ import {
 import type { PhiCapabilitySnapshot } from "../types/server-capabilities";
 import { getPhiCmsPage, getPhiExactSiteArea } from "./cms";
 import { buildPhiLocalCmsAreaPayload } from "./cms-area";
+import { resolvePhiAreaRootRouteDecision } from "./area-root-route";
+import { applyPhiAreaRootRouteDecision } from "../helpers/cms-area-root-route";
 import {
   resolvePhiCmsReviewParams,
   resolvePhiCmsRevisionFromSearchParams,
@@ -318,7 +320,7 @@ export async function resolvePhiCmsRequest({
   const routeBinding = areaOwnedStoragePath && areaAllowed
     ? resolvePhiCmsRoutePreset(routeTable, areaOwnedStoragePath)
     : null;
-  const resolvedPage = await resolvePhiCmsRoutePage({
+  const loadedPage = await resolvePhiCmsRoutePage({
     binding: routeBinding,
     requestedPath: path,
     loadPage: loadResolvedCmsPage,
@@ -332,6 +334,27 @@ export async function resolvePhiCmsRequest({
       activeModuleKeys,
     }),
   });
+
+  /*
+   * The Area root, as the Builder configured it.
+   *
+   * It is read here rather than inside the preset because the preset is the fallback: with nothing
+   * stored, or with a stored target that no longer resolves, the code-owned root route answers and
+   * forwards to the first entry of the Area's own navigation.
+   */
+  const rootRouteDecision = loadedPage && areaAllowed
+    ? await resolvePhiAreaRootRouteDecision({
+        config: effectiveAreaPreset?.preset.preset.config,
+        requestedStoragePath: areaOwnedStoragePath,
+        runtime: runtimeWithAuthProvider,
+        area: requestedAreaKey,
+        catalog,
+        activeModuleIds: activeModuleKeys,
+      })
+    : null;
+  const resolvedPage = loadedPage && rootRouteDecision
+    ? applyPhiAreaRootRouteDecision(loadedPage, rootRouteDecision, requestedAreaKey)
+    : loadedPage;
 
   const accessiblePage =
     resolvedPage &&

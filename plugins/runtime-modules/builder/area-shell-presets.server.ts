@@ -12,6 +12,12 @@ import {
   readPhiRuntimeModuleIds,
   resolvePhiRuntimeModuleIdsForArea,
 } from "../../../plugins/runtime-modules/settings";
+import {
+  PHI_AREA_CONFIG_MODULES_NAMESPACE,
+  readPhiAreaConfigNamespace,
+  readPhiAreaRootRoute,
+  type PhiAreaRootRoute,
+} from "../../../helpers/cms-area-config";
 import type { PhiDeveloperBuilderArea, PhiDeveloperBuilderRegionDraft } from "./developer-workspace-types";
 import { PHI_BUILDER_SHELL_REGION_KEYS } from "./region-keys";
 import { buildPhiProjectedBuilderRegionDrafts } from "./draft-background-assets.server";
@@ -110,7 +116,10 @@ function readRuntimeModuleIdsFromStructureTree(
   const presetConfig = tree && "preset" in tree ? tree.preset.config : undefined;
   const optionalModuleIds = resolvePhiRuntimeModuleIdsForArea(
     area,
-    readPhiRuntimeModuleIds(tree?.runtimeModuleIds ?? presetConfig?.runtimeModules),
+    readPhiRuntimeModuleIds(
+      tree?.runtimeModuleIds
+        ?? readPhiAreaConfigNamespace(presetConfig, PHI_AREA_CONFIG_MODULES_NAMESPACE)?.runtimeModules,
+    ),
     [...runtimeModuleCatalog.values()].map((entry) => entry.definition),
   );
   return optionalModuleIds;
@@ -191,6 +200,39 @@ const buildShellDraftsForArea = cache(async function buildShellDraftsForArea(
     "home",
     PHI_BUILDER_SHELL_REGION_KEYS,
   );
+});
+
+/**
+ * The root route an Area currently states, from the same three sources the shell drafts come from.
+ *
+ * An open structure draft first, because that is what the Builder is looking at; then what is
+ * published; then nothing, which is the Area saying it has never been asked and letting the code-owned
+ * preset answer. The installed preset is deliberately not consulted: it carries no config, and reading
+ * a value out of it would put a stored-looking answer in front of a Builder who never stored one.
+ */
+export const buildPhiBuilderAreaRootRoute = cache(async function buildPhiBuilderAreaRootRoute(
+  runtime: PhiBlockRuntime,
+  area: PhiDeveloperBuilderArea,
+  runtimeModuleCatalog: PhiRuntimeModuleCatalog,
+): Promise<PhiAreaRootRoute | null> {
+  const path = resolveStructureAreaPath(area);
+  const sourcePreset = resolveAreaPresetSource(area, runtimeModuleCatalog);
+  const cookieHeader = (await cookies()).toString();
+  const request = {
+    apiBaseUrl: runtime.phis.apiBaseUrl,
+    internalToken: runtime.phis.internalToken,
+    siteKey: runtime.site.key,
+    path,
+    locale: runtime.locale.current,
+    cookieHeader,
+    sourcePreset,
+  };
+  const draftPreset = await getCurrentSiteAreaDraft({ ...request, area }).catch(() => null);
+  if (draftPreset?.preset) {
+    return readPhiAreaRootRoute(draftPreset.preset.preset.config);
+  }
+  const resolvedPreset = await getExactSiteArea(request).catch(() => null);
+  return resolvedPreset?.preset ? readPhiAreaRootRoute(resolvedPreset.preset.preset.config) : null;
 });
 
 export function resolvePhiBuilderCurrentStructureArea(runtime: PhiBlockRuntime): PhiDeveloperBuilderArea {

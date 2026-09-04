@@ -32,6 +32,8 @@ import {
   type PhiRegionWidgetLabels,
 } from "../../../../components/widgets/label-types/region";
 import { PhiStructureRegionScaffold } from "../widgets/structure-region/built-in";
+import { PhiBuilderAreaRootRouteControl } from "./area-root-route-control";
+import type { PhiAreaRootRoute } from "../../../../helpers/cms-area-config";
 
 export function PhiDeveloperBuilderShellsWorkspaceWidgetClient({
   serverPreviewRegions,
@@ -41,8 +43,10 @@ export function PhiDeveloperBuilderShellsWorkspaceWidgetClient({
   shellTheme: _shellTheme,
   disabled: _disabled = false,
   targetArea,
+  rootRoute = null,
   regionLabels = PHI_REGION_WIDGET_DEFAULT_LABELS,
   pickerLabels = PHI_BUILDER_CHROME_WIDGET_DEFAULT_LABELS.canvas.picker,
+  rootRouteLabels = PHI_BUILDER_CHROME_WIDGET_DEFAULT_LABELS.rootRoute,
 }: {
   serverPreviewRegions?: PhiDeveloperBuilderStructureCanvasProps["serverPreviewRegions"];
   structureShellDrafts?: Record<string, PhiDeveloperBuilderRegionDraft>;
@@ -51,12 +55,13 @@ export function PhiDeveloperBuilderShellsWorkspaceWidgetClient({
   shellTheme?: PhiShellRegionTheme;
   disabled?: boolean;
   targetArea: PhiDeveloperBuilderArea;
+  rootRoute?: PhiAreaRootRoute | null;
   regionLabels?: PhiRegionWidgetLabels;
   pickerLabels?: PhiBuilderChromeWidgetLabels["canvas"]["picker"];
+  rootRouteLabels?: PhiBuilderChromeWidgetLabels["rootRoute"];
 }) {
   void _pageDraftsByScope;
   void _shellTheme;
-  void _disabled;
   const area = usePhiDeveloperBuilderStateValue("public", (state) => state.area);
   const pageKey = usePhiDeveloperBuilderStateValue("public", (state) => state.pageKey);
   const builderMode = usePhiDeveloperBuilderStateValue("public", (state) => state.builderMode);
@@ -133,7 +138,22 @@ export function PhiDeveloperBuilderShellsWorkspaceWidgetClient({
 
   return (
     <PhiStructureDndProvider>
-      <div style={{ minWidth: 0, width: "100%", minHeight: 0, flex: "1 1 auto" }}>
+      <div style={{
+        minWidth: 0,
+        width: "100%",
+        minHeight: 0,
+        flex: "1 1 auto",
+        display: "flex",
+        flexDirection: "column",
+      }}>
+        <div style={{ padding: "8px 12px" }}>
+          <PhiBuilderAreaRootRouteControl
+            targetArea={targetArea}
+            persistedRootRoute={rootRoute}
+            disabled={_disabled}
+            labels={rootRouteLabels}
+          />
+        </div>
         <PhiStructureRegionLayout
         labels={regionLabels}
         headerTop={renderStructureRegion("header_top", regionLabels.regions.headerTop.title)}

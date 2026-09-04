@@ -80,6 +80,8 @@ export async function PhiCmsRootPage({
 
   const pageRedirect = resolvePhiCmsPageRedirect(resolvedRequest.page.page, resolvedRoute.locale);
   if (pageRedirect) {
+    // Still here as well as in the Layout: the Layout answers a document request, this answers a client
+    // navigation that stayed inside the same branch and never re-ran it.
     performPhiCmsPageRedirect(pageRedirect);
   }
 
