@@ -9,7 +9,15 @@ import { PHI_CORE_SERVER_BINDING } from "../../../types/server-capabilities";
 export const PHI_DASHBOARD_RUNTIME_MODULE_DEFINITION = {
   moduleId: PHI_DASHBOARD_RUNTIME_MODULE_ID,
   kind: "module",
-  eligibleAreas: ["admin", "builder"] as const satisfies readonly PhiCmsAreaKey[],
+  /*
+   * Every Area a person arrives in to work, which is every Area but Public.
+   *
+   * The Area root draws no Shell, so it can only be a landing page or a forward. Public is the one
+   * Area whose front door really is a landing page; the rest forward to their Dashboard, and that
+   * makes this Module the thing they forward to.
+   */
+  eligibleAreas: ["app", "accounting", "admin", "builder", "editor"] as const satisfies
+    readonly PhiCmsAreaKey[],
   serverBinding: PHI_CORE_SERVER_BINDING,
   controllerType: PHI_DASHBOARD_CONTROLLER_TYPE,
   controller: buildPhiRuntimeModuleControllerDescriptor(PHI_DASHBOARD_RUNTIME_CONTROLLER_DEFINITION),

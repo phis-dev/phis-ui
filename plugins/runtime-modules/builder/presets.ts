@@ -3,6 +3,7 @@ import type {
   PhiCmsRoutePresetDescriptor,
 } from "../../../types/cms-module-descriptors";
 import { PHI_BUILDER_SETTINGS_NAV_ITEM_KEY } from "../area-definitions";
+import { buildPhiAreaRootRoutePresetDescriptor } from "../area-root-route";
 import { PHI_BUILDER_RUNTIME_MODULE_ID } from "./ids";
 
 export const PHI_BUILDER_RUNTIME_MODULE_AREA_SHELLS = [{
@@ -20,7 +21,6 @@ const BUILDER_ROUTE_PRESETS = [
   { presetKey: "builder-pages-page", pageKey: "pages", title: "Pages", path: "/pages" },
   { presetKey: "builder-navigation-page", pageKey: "navigation", title: "Navigation", path: "/navigation" },
   { presetKey: "builder-modules-page", pageKey: "modules", title: "Modules", path: "/modules" },
-  { presetKey: "builder-root-page", pageKey: "home", title: "Builder", path: "/" },
 ] as const;
 
 const BUILDER_WORKSPACE_ROUTES = BUILDER_ROUTE_PRESETS.map((route) => ({
@@ -86,6 +86,12 @@ const BUILDER_SETTINGS_ROUTES = [
 ] satisfies readonly PhiCmsRoutePresetDescriptor[];
 
 export const PHI_BUILDER_RUNTIME_MODULE_ROUTES = [
+  buildPhiAreaRootRoutePresetDescriptor({
+    ownerModuleId: PHI_BUILDER_RUNTIME_MODULE_ID,
+    area: "builder",
+    navKey: "builder:sidebar",
+    title: "Builder",
+  }),
   ...BUILDER_WORKSPACE_ROUTES,
   ...BUILDER_SETTINGS_ROUTES,
 ] satisfies readonly PhiCmsRoutePresetDescriptor[];

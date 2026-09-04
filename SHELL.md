@@ -256,6 +256,15 @@ This is a property of the route graph, not a runtime condition: the Area root an
 are separate branches with separate Layouts (see `NEXT_INTEGRATION.md`). The Area's guards, providers
 and Overlays sit above the split, so crossing it rebuilds the Shell without rebuilding the Area.
 
+What ships in each root follows from that. Public is the landing page -- the Welcome page, which draws
+its own brand, header navigation and locale switch in `header_bottom` and its quick links and contact
+in `footer_top`, because there is no Shell above it to draw them. Every other Area's root is a
+redirect, and it names its destination by reading the first entry of the Area's own sidebar that the
+current viewer may reach, rather than by naming a path. The Dashboard Module contributes that first
+entry in App, Accounting, Admin, Editor and Builder; switching it off moves the front door to the next
+entry instead of breaking it, and an Area with no reachable entry left renders an empty page rather
+than forwarding to itself.
+
 ## Ownership Boundary
 
 Area-owned shell regions are:

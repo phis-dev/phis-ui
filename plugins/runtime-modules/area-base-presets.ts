@@ -18,6 +18,7 @@ import { PHI_VIEWER_ACCESS_SITE_ADMIN } from "../../types/access";
 import {
   PHI_ADMIN_SETTINGS_NAV_ITEM_KEY,
 } from "./area-definitions";
+import { buildPhiAreaRootRoutePresetDescriptor } from "./area-root-route";
 
 export const PHI_AREA_BASE_RUNTIME_MODULE_AREA_SHELLS = [
   {
@@ -79,10 +80,20 @@ export const PHI_AREA_BASE_RUNTIME_MODULE_ROUTES = [
     area: "public",
     title: "Home",
     path: "/",
-    loadTree: ({ page }) =>
+    loadTree: ({ page, runtime }) =>
       import("../../components/regions/presets/phi-default-pub-welcome-page-tree")
-        .then((module) => module.buildPhiDefaultPubWelcomePageTree({ page })),
+        .then((module) => module.buildPhiDefaultPubWelcomePageTree({
+          page,
+          runtime,
+          includeLandingChrome: true,
+        })),
   },
+  buildPhiAreaRootRoutePresetDescriptor({
+    ownerModuleId: PHI_APP_RUNTIME_MODULE_ID,
+    area: "app",
+    navKey: "app:sidebar",
+    title: "App",
+  }),
   {
     ownerModuleId: PHI_APP_RUNTIME_MODULE_ID,
     presetKey: "app-home-page",
@@ -90,10 +101,10 @@ export const PHI_AREA_BASE_RUNTIME_MODULE_ROUTES = [
     presetVersion: 1,
     area: "app",
     title: "Home",
-    path: "/",
-    loadTree: ({ page }) =>
+    path: "/home",
+    loadTree: ({ page, runtime }) =>
       import("../../components/regions/presets/phi-default-pub-welcome-page-tree")
-        .then((module) => module.buildPhiDefaultPubWelcomePageTree({ page })),
+        .then((module) => module.buildPhiDefaultPubWelcomePageTree({ page, runtime })),
   },
   ...([401, 403, 404, 500] as const).map((code) => ({
     ownerModuleId: PHI_PUBLIC_RUNTIME_MODULE_ID,
@@ -119,14 +130,20 @@ export const PHI_AREA_BASE_RUNTIME_MODULE_ROUTES = [
       import("../../components/regions/presets/phi-default-pub-terms-page-tree")
         .then((module) => module.buildPhiDefaultPubTermsPageTree({ page })),
   },
+  buildPhiAreaRootRoutePresetDescriptor({
+    ownerModuleId: PHI_ACCOUNTING_RUNTIME_MODULE_ID,
+    area: "accounting",
+    navKey: "accounting:sidebar",
+    title: "Accounting",
+  }),
   {
     ownerModuleId: PHI_ACCOUNTING_RUNTIME_MODULE_ID,
-    presetKey: "accounting-page",
-    pageKey: "home",
+    presetKey: "accounting-overview-page",
+    pageKey: "overview",
     presetVersion: 1,
     area: "accounting",
-    title: "Accounting",
-    path: "/",
+    title: "Overview",
+    path: "/overview",
     loadTree: ({ page, runtime }: PhiCmsDescriptorBuildContext) =>
       import("../../components/regions/presets/phi-default-accounting-page-tree")
         .then((module) => module.buildPhiDefaultAccountingPageTree({ page, runtime })),

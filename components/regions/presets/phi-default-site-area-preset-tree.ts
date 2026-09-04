@@ -15,6 +15,7 @@ import { trGlobal } from "../../../server-helpers/translate";
 import { PHI_TR_CTX_WEB_UI_LABEL } from "../../../gateway/tr";
 import { PHI_PADDING } from "../../../theme/phi-tokens";
 import { buildPhiCmsWidgetTypeKey } from "../../../helpers/cms-node-factories";
+import { resolvePhiBrandContact } from "../../../helpers/brand-contact";
 import { resolvePhiBrandWordmarkText } from "../../../helpers/brand-wordmark";
 import { resolvePhiShellMetric } from "../../../helpers/shell-region-style";
 import { resolvePhiLayoutCreationPreset } from "../../../helpers/cms-layout-defaults";
@@ -34,15 +35,6 @@ const SYNTHETIC_REGION_IDS = {
   regionFooterMain: -28,
   regionFooterBottom: -33,
 } as const;
-
-function normalizeContactHost(hostname: string | undefined) {
-  const normalized = hostname?.trim().toLowerCase();
-  if (!normalized) {
-    return undefined;
-  }
-
-  return normalized.replace(/^www\./, "");
-}
 
 export async function buildPhiDefaultSiteAreaPresetTree({
   page,
@@ -97,14 +89,11 @@ export async function buildPhiDefaultSiteAreaPresetTree({
   const sloganIcon = runtime.site.theme?.brand?.slogan?.icon?.trim() || "antd:star";
   const locationLabel = runtime.site.theme?.brand?.location?.label?.trim() || brandWordmarkText;
   const locationIcon = runtime.site.theme?.brand?.location?.icon?.trim() || "antd:location";
-  const contactLabel = runtime.site.theme?.contact?.label?.trim() || "Contact";
-  const contactHref =
-    runtime.site.theme?.contact?.href?.trim() ||
-    (() => {
-      const host = normalizeContactHost(runtime.site.hostname);
-      return host ? `mailto:info@${host}` : "mailto:info@example.com";
-    })();
-  const contactIcon = runtime.site.theme?.contact?.icon?.trim() || "antd:mail";
+  const {
+    label: contactLabel,
+    href: contactHref,
+    icon: contactIcon,
+  } = resolvePhiBrandContact(runtime);
   const defaultQuickLinksTitle = await trGlobal("Quick Links", 0, PHI_TR_CTX_WEB_UI_LABEL);
   const footerBottomText = await trGlobal(
     "© %1 %2. All rights reserved.",

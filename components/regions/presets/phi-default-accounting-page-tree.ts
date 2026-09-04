@@ -16,7 +16,7 @@ const SYNTHETIC_ACCOUNTING_REGION_IDS = {
 const SYNTHETIC_ACCOUNTING_LAYOUT_IDS = createPhiPresetCmsInstanceIdMap({
   domain: "page",
   ownerModuleId: PHI_ACCOUNTING_RUNTIME_MODULE_ID,
-  presetKey: "accounting-page",
+  presetKey: "accounting-overview-page",
 }, [
   "layoutContent",
 ]);
@@ -24,7 +24,7 @@ const SYNTHETIC_ACCOUNTING_LAYOUT_IDS = createPhiPresetCmsInstanceIdMap({
 const SYNTHETIC_ACCOUNTING_WIDGET_IDS = createPhiPresetCmsInstanceIdMap({
   domain: "page",
   ownerModuleId: PHI_ACCOUNTING_RUNTIME_MODULE_ID,
-  presetKey: "accounting-page",
+  presetKey: "accounting-overview-page",
 }, [
   "widgetOverview",
 ]);

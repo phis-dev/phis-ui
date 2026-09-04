@@ -17,7 +17,7 @@ export function createPhiDefaultAreaRuntimeModuleIds(
   }
 
   if (area === "app") {
-    return [PHI_AUTH_RUNTIME_MODULE_ID];
+    return [PHI_AUTH_RUNTIME_MODULE_ID, PHI_DASHBOARD_RUNTIME_MODULE_ID];
   }
 
   if (area === "builder") {
@@ -41,7 +41,11 @@ export function createPhiDefaultAreaRuntimeModuleIds(
   }
 
   if (area === "editor") {
-    return [PHI_LOCALIZATION_RUNTIME_MODULE_ID];
+    return [PHI_LOCALIZATION_RUNTIME_MODULE_ID, PHI_DASHBOARD_RUNTIME_MODULE_ID];
+  }
+
+  if (area === "accounting") {
+    return [PHI_DASHBOARD_RUNTIME_MODULE_ID];
   }
 
   return [];

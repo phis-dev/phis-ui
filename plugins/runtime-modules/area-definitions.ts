@@ -141,10 +141,11 @@ export const PHI_ACCOUNTING_RUNTIME_AREA_DEFINITIONS = [
       label: label("Accounting sidebar navigation"),
       items: [{
         itemKey: "@phis/ui/modules/accounting/nav/home",
-        label: label("Accounting"),
-        icon: "antd:dashboard",
-        routePresetKey: "accounting-page",
+        label: label("Overview"),
+        icon: "antd:audit",
+        routePresetKey: "accounting-overview-page",
       }],
+      exportedItemKeys: ["@phis/ui/modules/accounting/nav/home"],
     }],
   },
 ] satisfies readonly PhiCmsAreaDefinition[];
@@ -199,6 +200,7 @@ export const PHI_EDITOR_RUNTIME_AREA_DEFINITIONS = [
         icon: "antd:translation",
         routePresetKey: "editor-translations-page",
       }],
+      exportedItemKeys: ["@phis/ui/modules/editor/nav/translations"],
     }],
   },
 ] satisfies readonly PhiCmsAreaDefinition[];

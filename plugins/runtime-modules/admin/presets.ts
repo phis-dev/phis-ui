@@ -5,6 +5,7 @@ import type {
   PhiRuntimeModuleId,
 } from "../../../types/cms-module-descriptors";
 import { PHI_ADMIN_SETTINGS_NAV_ITEM_KEY } from "../area-definitions";
+import { buildPhiAreaRootRoutePresetDescriptor } from "../area-root-route";
 import { PhiCmsRegionType } from "../../../constants/phi-cms";
 import {
   PHI_DEFAULT_PUB_AREA_COMPOSITION_NODE_KEYS,
@@ -52,17 +53,7 @@ export const PHI_ADMIN_RUNTIME_MODULE_AREA_SHELLS = [{
   },
 }] satisfies readonly PhiCmsAreaShellPresetDescriptor[];
 
-export const PHI_ADMIN_RUNTIME_MODULE_ROUTES = [
-  {
-    presetKey: "admin-root-page",
-    pageKey: "home",
-    title: "Admin",
-    accessPolicy: PHI_VIEWER_ACCESS_DEVELOPER_TOOLS,
-    path: "/",
-    loadTree: ({ page }: PhiCmsDescriptorBuildContext) =>
-      import("../../../components/regions/presets/phi-default-admin-root-page-tree")
-        .then((module) => module.buildPhiDefaultAdminRootPageTree({ page })),
-  },
+const ADMIN_OWNED_ROUTES = [
   {
     presetKey: "admin-settings-page",
     pageKey: "settings",
@@ -100,4 +91,15 @@ export const PHI_ADMIN_RUNTIME_MODULE_ROUTES = [
   ...route,
   ownerModuleId: PHI_ADMIN_RUNTIME_MODULE_ID,
   area: "admin" as const,
-})) satisfies readonly PhiCmsRoutePresetDescriptor[];
+}));
+
+export const PHI_ADMIN_RUNTIME_MODULE_ROUTES = [
+  buildPhiAreaRootRoutePresetDescriptor({
+    ownerModuleId: PHI_ADMIN_RUNTIME_MODULE_ID,
+    area: "admin",
+    navKey: "admin:sidebar",
+    title: "Admin",
+    accessPolicy: PHI_VIEWER_ACCESS_DEVELOPER_TOOLS,
+  }),
+  ...ADMIN_OWNED_ROUTES,
+] satisfies readonly PhiCmsRoutePresetDescriptor[];
