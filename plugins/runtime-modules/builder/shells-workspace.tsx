@@ -98,7 +98,6 @@ export async function PhiDeveloperBuilderShellsWorkspaceWidget({
           rootRoute={rootRoute}
           regionLabels={regionLabels}
           pickerLabels={chromeLabels.canvas.picker}
-          rootRouteLabels={chromeLabels.rootRoute}
         />
       </PhiBuilderWorkspaceScopeBoundary>
     </PhiBuilderRuntimeModuleAuthoringBoundary>

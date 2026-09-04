@@ -265,9 +265,11 @@ entry in App, Accounting, Admin, Editor and Builder; switching it off moves the 
 entry instead of breaking it, and an Area with no reachable entry left renders an empty page rather
 than forwarding to itself.
 
-That is the default, not the rule. `preset.config.shell.rootRoute` is where a Builder overrides it, on
-the Shells workspace next to the Regions the same draft owns: `landing` for a root that is a page, and
-`redirect` for one that forwards to a Page it names. The target is stored as an internal Page
+That is the default, not the rule. `preset.config.shell.rootRoute` is where a Builder overrides it,
+through one Select in the Shells workspace header beside the Sider switch -- a plain `select-box` fed
+by an options provider, because it is the same kind of statement the switch is: about the Area being
+edited rather than about anything on the canvas. The list is the two answers that are not a Page,
+`landing` and the default, followed by every registered Page of the Area. The target is stored as an internal Page
 reference and never as a path, so it survives a Page being renamed or a Module moving its route; a
 reference that no longer resolves -- a deleted Page, a Module switched off, a route this viewer may not
 reach -- falls back to the default above rather than to a 404. The structure draft states the whole

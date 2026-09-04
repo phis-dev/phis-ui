@@ -11,6 +11,13 @@ export const PHI_BUILDER_RUNTIME_DATA_PROVIDER_CLIENT_DEFINITIONS = [
         .PhiBuilderPagesOptionsProviderClient,
   },
   {
+    key: PHI_BUILDER_RUNTIME_DATA_PROVIDER_KEYS.areaRootRoute,
+    ownerModuleId: PHI_BUILDER_RUNTIME_MODULE_ID,
+    loadLive: async () =>
+      (await import("./options-providers"))
+        .PhiBuilderAreaRootRouteOptionsProviderClient,
+  },
+  {
     key: PHI_BUILDER_RUNTIME_DATA_PROVIDER_KEYS.signalSenders,
     ownerModuleId: PHI_BUILDER_RUNTIME_MODULE_ID,
     loadLive: async () =>

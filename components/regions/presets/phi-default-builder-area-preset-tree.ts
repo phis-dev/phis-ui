@@ -151,6 +151,7 @@ const PHI_BUILDER_WIDGET_NODE_KEYS = [
   "widgetNavigationSource",
   "widgetFooterMainText",
   "widgetBuilderAreaSelector",
+  "widgetAreaRootRoute",
   "widgetBuilderModeSwitch",
   "widgetHeaderMainDebugSwitch",
   "widgetHeaderTopThemeModeSwitch",
@@ -2664,6 +2665,53 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                       action: "change",
                       valueType: "boolean",
                       receiver: "broadcast",
+                    },
+                  ],
+                },
+              },
+              contentId: null,
+            }),
+            /*
+             * Where the Area's `/` goes.
+             *
+             * A plain Select, next to the Sider switch it shares the header with, because it is the
+             * same kind of statement: about the Area being edited rather than about anything on the
+             * canvas. The choices are the Area's own registered Pages plus the two answers that are
+             * not a Page, and what a choice stores is a Page reference rather than a path.
+             */
+            buildPhiCmsWidgetNode({
+              typeKey: "select-box",
+              id: SYNTHETIC_DEV_WIDGET_IDS.widgetAreaRootRoute,
+              siteId: page.siteId,
+              parentLayoutNodeId: SYNTHETIC_DEV_LAYOUT_IDS.layoutWorkspaceHeader,
+              slotIndex: PHI_CMS_THREE_COLUMN_LAYOUT_SLOT_INDEX.Middle,
+              sortOrder: 0,
+              status: PhiCmsStatus.Published,
+              flags: 0,
+              visibilityMask: page.visibilityMask,
+              label: "Area root route select",
+              config: {
+                key: "areaRootRoute",
+                label: labels.rootRoute.title,
+                placeholder: labels.rootRoute.title,
+                options: [],
+                optionsProvider: {
+                  providerKey: PHI_BUILDER_RUNTIME_DATA_PROVIDER_KEYS.areaRootRoute,
+                  params: {
+                    automaticLabel: labels.rootRoute.automatic,
+                    landingLabel: labels.rootRoute.landing,
+                  },
+                },
+                signalRoutes: {
+                  emits: [
+                    {
+                      routeKey: "builder-area-root-route-change",
+                      capabilityId: "change",
+                      scope: "area",
+                      channel: "rootRoute",
+                      action: "change",
+                      valueType: "string",
+                      receiver: createPhiBuilderControllerAddress(),
                     },
                   ],
                 },

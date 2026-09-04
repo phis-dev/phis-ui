@@ -15,6 +15,15 @@ export const PHI_BUILDER_RUNTIME_DATA_PROVIDER_DESCRIPTORS = [
     description: "Builder page catalog choices for the active target area.",
   },
   {
+    key: PHI_BUILDER_RUNTIME_DATA_PROVIDER_KEYS.areaRootRoute,
+    ownerModuleId: PHI_BUILDER_RUNTIME_MODULE_ID,
+    kind: "options",
+    executionMode: "live",
+    authoringMode: "none",
+    title: "Area root route",
+    description: "Where the root of the target Area resolves to: the default, a landing page, or a Page it forwards to.",
+  },
+  {
     key: PHI_BUILDER_RUNTIME_DATA_PROVIDER_KEYS.signalSenders,
     ownerModuleId: PHI_BUILDER_RUNTIME_MODULE_ID,
     kind: "options",

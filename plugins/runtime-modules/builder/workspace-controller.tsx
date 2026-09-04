@@ -67,7 +67,13 @@ import {
   selectPhiDeveloperBuilderNode,
   usePhiDeveloperRegionDraft,
   getPhiDeveloperBuilderStateSnapshot,
+  setPhiDeveloperBuilderAreaRootRoute,
 } from "./developer-workspace-store";
+import {
+  PHI_BUILDER_AREA_ROOT_ROUTE_AUTOMATIC,
+  PHI_BUILDER_AREA_ROOT_ROUTE_LANDING,
+} from "./options-providers";
+import type { PhiPageReference } from "../../../types/references";
 import { getPhiBuilderRegionDraftKey } from "./region-keys";
 import { getDefaultRegionDraft } from "./developer-region-drafts";
 import {
@@ -1299,6 +1305,32 @@ function usePhiDeveloperBuilderWorkspaceController(
             );
           });
         }
+        return;
+      }
+
+      /*
+       * Where the target Area's root goes.
+       *
+       * The Select emits one string: a sentinel for the two answers that are not a Page, or a Page
+       * reference. It lands in the structure draft, which states `config.shell` whole on every save.
+       */
+      if (
+        signal.scope === "area" &&
+        signal.channel === "rootRoute" &&
+        signal.action === "change" &&
+        signal.receiver === createPhiBuilderControllerAddress()
+      ) {
+        if (typeof signal.value !== "string") {
+          return;
+        }
+        setPhiDeveloperBuilderAreaRootRoute(
+          state.area,
+          signal.value === PHI_BUILDER_AREA_ROOT_ROUTE_AUTOMATIC
+            ? null
+            : signal.value === PHI_BUILDER_AREA_ROOT_ROUTE_LANDING
+              ? { mode: "landing" }
+              : { mode: "redirect", target: signal.value as PhiPageReference },
+        );
         return;
       }
 

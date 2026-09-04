@@ -9,6 +9,7 @@ export const PHI_BUILDER_RUNTIME_MODULE_ID =
 export const PHI_BUILDER_RUNTIME_DATA_PROVIDER_KEYS = {
   forms: createPhiSharedRuntimeDataProviderKey("options", "forms"),
   builderPages: createPhiSharedRuntimeDataProviderKey("options", "builder-pages"),
+  areaRootRoute: createPhiSharedRuntimeDataProviderKey("options", "builder-area-root-route"),
   builderNavigationSets: createPhiSharedRuntimeDataProviderKey("options", "builder-navigation-sets"),
   runtimeModules: createPhiSharedRuntimeDataProviderKey("options", "runtime-modules"),
   runtimeModulesTable: createPhiSharedRuntimeDataProviderKey("tables", "runtime-modules"),

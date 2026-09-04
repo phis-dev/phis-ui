@@ -138,6 +138,70 @@ function resolveFormsOptions(context: PhiControlOptionsProviderContext): PhiReso
   };
 }
 
+/**
+ * Where the target Area's `/` goes, as one list.
+ *
+ * The two answers that are not a Page come first and are followed by every registered Page of the
+ * Area. What a choice stores is the Page's reference, never its path: a path is a fact about today's
+ * routing table and would rot the first time a Page moved or a Module renamed its route. The two
+ * labels arrive as provider params because the preset that places the select is server-rendered and
+ * has the translated label set; a Client provider has neither.
+ */
+export const PHI_BUILDER_AREA_ROOT_ROUTE_AUTOMATIC = "phi-root-route:automatic" as const;
+export const PHI_BUILDER_AREA_ROOT_ROUTE_LANDING = "phi-root-route:landing" as const;
+
+function collectPageReferenceOptions(
+  area: PhiBuilderPageCatalogArea,
+  nodes: readonly PhiPresetPageNode[],
+  allNodes: readonly PhiPresetPageNode[],
+): PhiControlOption[] {
+  return nodes.flatMap((node) => [
+    ...(node.reference && node.tombstoned !== true
+      ? [{
+          value: node.reference,
+          label: node.title,
+          description: resolvePhiBuilderCmsStoragePathForCatalog(area, node.key, allNodes),
+        }]
+      : []),
+    ...collectPageReferenceOptions(area, node.children ?? [], allNodes),
+  ]);
+}
+
+function resolveAreaRootRouteOptions(
+  context: PhiControlOptionsProviderContext,
+): PhiResolvedControlOptions {
+  const snapshot = readBuilderSnapshot(context);
+  const area = resolveProviderArea(context);
+  const pageTree = resolvePhiBuilderActivePageCatalog(
+    area,
+    snapshot.modulePresetPagesByArea,
+    snapshot.customPages,
+    snapshot.persistedPageCatalogByArea,
+  );
+  const draft = snapshot.areaRootRouteDrafts?.[area];
+
+  return {
+    options: [
+      {
+        value: PHI_BUILDER_AREA_ROOT_ROUTE_AUTOMATIC,
+        label: readPhiControlOptionsProviderParam(context.optionsProvider, "automaticLabel")
+          ?? "First navigation entry",
+      },
+      {
+        value: PHI_BUILDER_AREA_ROOT_ROUTE_LANDING,
+        label: readPhiControlOptionsProviderParam(context.optionsProvider, "landingLabel")
+          ?? "Landing page",
+      },
+      ...collectPageReferenceOptions(area, pageTree, pageTree),
+    ],
+    value: !draft
+      ? PHI_BUILDER_AREA_ROOT_ROUTE_AUTOMATIC
+      : draft.mode === "landing"
+        ? PHI_BUILDER_AREA_ROOT_ROUTE_LANDING
+        : draft.target,
+  };
+}
+
 const builderProviderStore = {
   subscribe: (listener: () => void) => builderWorkspaceStore.subscribe("public", listener),
   getSnapshot: () => getPhiDeveloperBuilderStateSnapshot("public"),
@@ -147,6 +211,11 @@ export const PhiBuilderPagesOptionsProviderClient = createPhiControlOptionsProvi
   key: PHI_BUILDER_RUNTIME_DATA_PROVIDER_KEYS.builderPages,
   ...builderProviderStore,
   resolve: resolveBuilderPagesOptions,
+});
+export const PhiBuilderAreaRootRouteOptionsProviderClient = createPhiControlOptionsProviderClient({
+  key: PHI_BUILDER_RUNTIME_DATA_PROVIDER_KEYS.areaRootRoute,
+  ...builderProviderStore,
+  resolve: resolveAreaRootRouteOptions,
 });
 export const PhiBuilderNavigationSetsOptionsProviderClient = createPhiControlOptionsProviderClient({
   key: PHI_BUILDER_RUNTIME_DATA_PROVIDER_KEYS.builderNavigationSets,

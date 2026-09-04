@@ -32,8 +32,8 @@ import {
   type PhiRegionWidgetLabels,
 } from "../../../../components/widgets/label-types/region";
 import { PhiStructureRegionScaffold } from "../widgets/structure-region/built-in";
-import { PhiBuilderAreaRootRouteControl } from "./area-root-route-control";
 import type { PhiAreaRootRoute } from "../../../../helpers/cms-area-config";
+import { setPhiDeveloperBuilderAreaRootRoute } from "../developer-workspace-store";
 
 export function PhiDeveloperBuilderShellsWorkspaceWidgetClient({
   serverPreviewRegions,
@@ -46,7 +46,6 @@ export function PhiDeveloperBuilderShellsWorkspaceWidgetClient({
   rootRoute = null,
   regionLabels = PHI_REGION_WIDGET_DEFAULT_LABELS,
   pickerLabels = PHI_BUILDER_CHROME_WIDGET_DEFAULT_LABELS.canvas.picker,
-  rootRouteLabels = PHI_BUILDER_CHROME_WIDGET_DEFAULT_LABELS.rootRoute,
 }: {
   serverPreviewRegions?: PhiDeveloperBuilderStructureCanvasProps["serverPreviewRegions"];
   structureShellDrafts?: Record<string, PhiDeveloperBuilderRegionDraft>;
@@ -58,10 +57,10 @@ export function PhiDeveloperBuilderShellsWorkspaceWidgetClient({
   rootRoute?: PhiAreaRootRoute | null;
   regionLabels?: PhiRegionWidgetLabels;
   pickerLabels?: PhiBuilderChromeWidgetLabels["canvas"]["picker"];
-  rootRouteLabels?: PhiBuilderChromeWidgetLabels["rootRoute"];
 }) {
   void _pageDraftsByScope;
   void _shellTheme;
+  void _disabled;
   const area = usePhiDeveloperBuilderStateValue("public", (state) => state.area);
   const pageKey = usePhiDeveloperBuilderStateValue("public", (state) => state.pageKey);
   const builderMode = usePhiDeveloperBuilderStateValue("public", (state) => state.builderMode);
@@ -72,6 +71,23 @@ export function PhiDeveloperBuilderShellsWorkspaceWidgetClient({
     [builderModuleMetas.plugins],
   );
   const hydratedAreaRef = useRef<PhiDeveloperBuilderArea | null>(null);
+  const hydratedRootRouteAreaRef = useRef<PhiDeveloperBuilderArea | null>(null);
+
+  /*
+   * The Area's stored root route, seeded into the draft.
+   *
+   * The Select that edits it lives in the workspace header, drawn by the preset rather than by this
+   * Canvas, and reads the draft through its options provider. Seeding belongs here regardless: the
+   * structure write states `config.shell` whole, so a save that never touched the root route still has
+   * to carry it, or publishing would remove it.
+   */
+  useEffect(() => {
+    if (hydratedRootRouteAreaRef.current === targetArea) {
+      return;
+    }
+    hydratedRootRouteAreaRef.current = targetArea;
+    setPhiDeveloperBuilderAreaRootRoute(targetArea, rootRoute);
+  }, [rootRoute, targetArea]);
 
   useEffect(() => {
     if (builderMode === "preview" && previewRegionDrafts && Object.keys(previewRegionDrafts).length > 0) {
@@ -138,22 +154,7 @@ export function PhiDeveloperBuilderShellsWorkspaceWidgetClient({
 
   return (
     <PhiStructureDndProvider>
-      <div style={{
-        minWidth: 0,
-        width: "100%",
-        minHeight: 0,
-        flex: "1 1 auto",
-        display: "flex",
-        flexDirection: "column",
-      }}>
-        <div style={{ padding: "8px 12px" }}>
-          <PhiBuilderAreaRootRouteControl
-            targetArea={targetArea}
-            persistedRootRoute={rootRoute}
-            disabled={_disabled}
-            labels={rootRouteLabels}
-          />
-        </div>
+      <div style={{ minWidth: 0, width: "100%", minHeight: 0, flex: "1 1 auto" }}>
         <PhiStructureRegionLayout
         labels={regionLabels}
         headerTop={renderStructureRegion("header_top", regionLabels.regions.headerTop.title)}
