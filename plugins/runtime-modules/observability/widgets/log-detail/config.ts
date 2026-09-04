@@ -1,16 +1,14 @@
 import { resolvePhiCmsWidgetPluginKey } from "../../../../../constants/cms-widget-types";
 import { PHI_OBSERVABILITY_RUNTIME_DATA_PROVIDER_KEYS } from "../../ids";
-import type { PhiCmsWidgetPlugin, PhiCmsWidgetRuntimeControllerRequirementResolver } from "../../../../../types";
+import type { PhiCmsWidgetPlugin } from "../../../../../types";
 import type { PhiTableSourceBinding } from "../../../../../types/table-widget";
 import { isPhiRuntimeDataProviderKey } from "../../../../../types/runtime-data-provider";
-import {
-  PHI_OBSERVABILITY_CONTROLLER_INSTANCE_KEY,
-  PHI_OBSERVABILITY_CONTROLLER_TYPE,
-} from "../../../../../plugins/runtime-modules/observability/controller/address";
+import { PHI_SIGNAL_VALUE_SCHEMAS, readPhiSignalRouteSet } from "../../../../../types/signals";
 
 export type PhiObservabilityLogDetailWidgetConfig = {
   source: PhiTableSourceBinding | null;
   openActionKey: string;
+  signalRoutes: ReturnType<typeof readPhiSignalRouteSet>;
 };
 
 function readRecord(value: unknown): Record<string, unknown> {
@@ -36,17 +34,9 @@ export function parsePhiObservabilityLogDetailWidgetConfig(
     openActionKey: typeof rawConfig.openActionKey === "string" && rawConfig.openActionKey.trim()
       ? rawConfig.openActionKey.trim()
       : "view",
+    signalRoutes: readPhiSignalRouteSet(rawConfig.signalRoutes),
   };
 }
-
-const requirePhiObservabilityController: PhiCmsWidgetRuntimeControllerRequirementResolver<
-  PhiObservabilityLogDetailWidgetConfig
-> = ({ config }) => [{
-  type: PHI_OBSERVABILITY_CONTROLLER_TYPE,
-  instanceKey: PHI_OBSERVABILITY_CONTROLLER_INSTANCE_KEY,
-  enabled: true,
-  config: { openActionKey: config.openActionKey },
-}];
 
 export const PHI_OBSERVABILITY_LOG_DETAIL_WIDGET_DEFINITION = {
   kind: "widget",
@@ -58,8 +48,19 @@ export const PHI_OBSERVABILITY_LOG_DETAIL_WIDGET_DEFINITION = {
   tags: ["logs", "detail", "observability"],
   icon: "antd:file-search",
   slotSizePolicy: "fill-inline",
-  runtimeSignals: { emits: [], listens: [] },
-  requiredRuntimeControllers: requirePhiObservabilityController,
+  runtimeSignals: {
+    emits: [],
+    listens: [
+      {
+        id: "recordOpen",
+        channel: "action",
+        action: "activate",
+        valueType: "json",
+        valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.tableAction,
+      },
+      { id: "close", channel: "state", action: "change", valueType: "boolean" },
+    ],
+  },
   requiredDataProviders: [PHI_OBSERVABILITY_RUNTIME_DATA_PROVIDER_KEYS.table],
   fields: [
     {
@@ -77,6 +78,7 @@ export const PHI_OBSERVABILITY_LOG_DETAIL_WIDGET_DEFINITION = {
       resourceKey: "logs",
     },
     openActionKey: "view",
+    signalRoutes: null,
   },
   parseConfig: parsePhiObservabilityLogDetailWidgetConfig,
 } satisfies Pick<
@@ -90,7 +92,6 @@ export const PHI_OBSERVABILITY_LOG_DETAIL_WIDGET_DEFINITION = {
   | "tags"
   | "icon"
   | "slotSizePolicy"
-  | "requiredRuntimeControllers"
   | "runtimeSignals"
   | "requiredDataProviders"
   | "fields"

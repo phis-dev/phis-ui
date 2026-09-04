@@ -263,6 +263,21 @@ Module Widgets and Layouts follow the same shared config, render-mode, signal, a
 Preview, and Authoring contracts as Core artifacts. Their lightweight definitions are the only Picker
 and Inspector metadata source.
 
+A Widget owns no space that it later reads back. What a Widget shows arrives through its declared
+contracts -- config, a Provider binding, and its `signalRoutes.listens` -- and never by importing a
+Module store and subscribing to it. A Widget that reaches for state is no longer described by its
+declaration: the Inspector cannot show the wiring, the write path cannot validate it, and the same
+Widget behaves differently depending on which Module happens to be mounted beside it.
+
+Ordering is not a reason to break this. A receiver that has not mounted yet still gets the signal:
+an addressed signal whose receiver exists in the page revision is held by the signal bus until that
+address is usable, then delivered once. That is what makes a Widget inside a lazily mounted Overlay
+safe to drive by signal.
+
+The exception is business logic that genuinely needs shared state -- state several artifacts read and
+write over time, such as an editing session or a Builder draft -- not the parameter of a single view.
+A selected row, a record id, an open target: those are signals.
+
 Modules use generic Core Widgets whenever the feature is expressible through config, a Provider, a
 Form descriptor, and signals. A domain-named wrapper around `PhiTableWidget`, `PhiFormWidget`, generic
 Controls, navigation, search, actions, or another Core Widget is forbidden when it only supplies:

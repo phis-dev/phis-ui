@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Descriptions, Flex, Skeleton, Tag, Typography } from "antd";
 
 import { formatPhiDateTime } from "../../../../../helpers/format-date-time";
@@ -9,8 +9,9 @@ import {
 } from "../../../../../types/table-widget";
 import { usePhiTableProvider } from "../../../../../components/widgets/client/shared/phi-table-provider";
 import type { PhiObservabilityLogDetailWidgetConfig } from "./config";
-import { createPhiObservabilityControllerAddress } from "../../../../../plugins/runtime-modules/observability/controller/address";
-import { usePhiObservabilitySelection } from "../../../../../plugins/runtime-modules/observability/controller/state";
+import { usePhiSignalListener } from "../../../../../components/runtime/runtime-signal-bus";
+import { usePhiSignalIdentity } from "../../../../../components/runtime/runtime-signal-identity";
+import { readPhiTableActionSignalValue } from "../../../../../types/table-widget";
 import { PhiAlertControl } from "../../../../../components/controls/phi-alert-control";
 
 type LogLevel = "debug" | "info" | "warn" | "error";
@@ -113,8 +114,16 @@ function levelColor(level: LogLevel) {
 }
 
 export function PhiObservabilityLogDetailWidgetClient({ config, labels }: Props) {
-  const controllerAddress = createPhiObservabilityControllerAddress();
-  const selectedRowIdentity = usePhiObservabilitySelection(controllerAddress);
+  /*
+   * Which record to show arrives as a signal, and is not read out of a store the widget knows about.
+   *
+   * The overlay this sits in mounts on first open, so the row action that opens it is addressed to a
+   * widget that does not exist yet. The signal bus holds an addressed signal until its receiver is
+   * usable, which is what lets this stay a declarative listener instead of reaching for module state.
+   */
+  const signalIdentity = usePhiSignalIdentity();
+  const listenRoutes = config.signalRoutes?.listens ?? [];
+  const [selectedRowIdentity, setSelectedRowIdentity] = useState<PhiTableRowIdentity | null>(null);
   const { provider, resource, bindingError } = usePhiTableProvider(config.source);
   const [selectedRow, setSelectedRow] = useState<LogRow | null>(null);
   const [loading, setLoading] = useState(false);
@@ -155,6 +164,30 @@ export function PhiObservabilityLogDetailWidgetClient({ config, labels }: Props)
       }
     }
   }, [bindingError, config.source, provider, resource?.recordRead]);
+
+  usePhiSignalListener(useCallback((signal) => {
+    const route = listenRoutes.find((candidate) =>
+      candidate.channel === signal.channel &&
+      candidate.action === signal.action &&
+      candidate.valueType === signal.valueType &&
+      (candidate.valueType !== "json" || candidate.valueSchema === signal.valueSchema));
+    if (!route || (signal.receiver !== "broadcast" && signal.receiver !== signalIdentity.receiver)) return;
+    if (route.capabilityId === "recordOpen") {
+      const action = readPhiTableActionSignalValue(signal.value);
+      if (!action || action.actionKey !== config.openActionKey || action.rowIdentity == null) return;
+      setSelectedRowIdentity(action.rowIdentity);
+    } else if (route.capabilityId === "close" && signal.value === false) {
+      setSelectedRowIdentity(null);
+      setSelectedRow(null);
+      setError(null);
+    }
+  }, [config.openActionKey, listenRoutes, signalIdentity.receiver]), useMemo(() => {
+    if (listenRoutes.length === 0) return null;
+    return {
+      scopes: Array.from(new Set(listenRoutes.map((route) => route.scope))),
+      channels: Array.from(new Set(listenRoutes.map((route) => route.channel))),
+    };
+  }, [listenRoutes]), signalIdentity.receiver);
 
   useEffect(() => {
     if (selectedRowIdentity == null) {

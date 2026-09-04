@@ -10,7 +10,6 @@ import { getPhiObservabilityLogsWidgetLabels } from "../../widgets/label-sets/ob
 import { PHI_OBSERVABILITY_RUNTIME_DATA_PROVIDER_KEYS } from "../../../plugins/runtime-modules/observability/ids";
 import { createPhiSignalAddress, PHI_SIGNAL_VALUE_SCHEMAS } from "../../../types/signals";
 import { PHI_COLOR, PHI_SPACE } from "../../../theme/antd-css-var-contract";
-import { createPhiObservabilityControllerAddress } from "../../../plugins/runtime-modules/observability/controller/address";
 
 const SYNTHETIC_ADMIN_LOGS_REGION_IDS = {
   regionContent: -441,
@@ -94,7 +93,7 @@ export async function buildPhiDefaultAdminLogsPageTree({
             channel: "state",
             action: "change",
             valueType: "boolean",
-            receiver: createPhiObservabilityControllerAddress(),
+            receiver: createPhiSignalAddress("cms", SYNTHETIC_ADMIN_LOGS_WIDGET_IDS.widgetDetail),
           }],
           listens: [{
             routeKey: "admin-logs-detail-modal-open",
@@ -287,7 +286,7 @@ export async function buildPhiDefaultAdminLogsPageTree({
               action: "activate",
               valueType: "json",
               valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.tableAction,
-              receiver: createPhiObservabilityControllerAddress(),
+              receiver: createPhiSignalAddress("cms", SYNTHETIC_ADMIN_LOGS_WIDGET_IDS.widgetDetail),
             }, {
               routeKey: "admin-logs-table-open-detail-overlay",
               capabilityId: "actionActivate",
@@ -318,6 +317,26 @@ export async function buildPhiDefaultAdminLogsPageTree({
             resourceKey: "logs",
           },
           openActionKey: "view",
+          signalRoutes: {
+            listens: [{
+              routeKey: "admin-logs-detail-record-open",
+              capabilityId: "recordOpen",
+              scope: "page",
+              channel: "action",
+              action: "activate",
+              valueType: "json",
+              valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.tableAction,
+              receiver: createPhiSignalAddress("cms", SYNTHETIC_ADMIN_LOGS_WIDGET_IDS.widgetDetail),
+            }, {
+              routeKey: "admin-logs-detail-modal-closed",
+              capabilityId: "close",
+              scope: "page",
+              channel: "state",
+              action: "change",
+              valueType: "boolean",
+              receiver: createPhiSignalAddress("cms", SYNTHETIC_ADMIN_LOGS_WIDGET_IDS.widgetDetail),
+            }],
+          },
         },
       }),
     ],

@@ -58,34 +58,63 @@ function resolveDeliveryPartition(partition: PhiSignalRuntimePartition, signal: 
     : partition;
 }
 
-export function canDeliverPhiSignalToReceiver(
+/**
+ * Whether a signal can be delivered now, later, or not at all.
+ *
+ * The distinction that matters is between an address that is wrong and an address that is merely not
+ * there yet. A route persists only if its receiver exists in the same page revision -- the CMS write
+ * and publish paths both refuse an unknown instance -- so an absent receiver is a promise not yet
+ * kept, not a mistake. `"pending"` says the caller may hold the signal for it.
+ *
+ * A registered receiver with no listener counts as pending for the same reason: the instance and its
+ * subscription arrive in separate effects, and delivering between the two would drop the signal into
+ * a partition where nothing matches it.
+ */
+export type PhiSignalDeliverability = "deliverable" | "pending" | "undeliverable";
+
+export function resolvePhiSignalDeliverability(
   partition: PhiSignalRuntimePartition,
   signal: PhiSignal,
-) {
+): PhiSignalDeliverability {
   if (signal.receiver == null) {
-    return false;
+    return "undeliverable";
   }
 
   const deliveryPartition = resolveDeliveryPartition(partition, signal);
   if (signal.receiver === "broadcast") {
-    return signal.scope !== "site";
+    return signal.scope !== "site" ? "deliverable" : "undeliverable";
   }
 
   if (
     signal.scope === "site" &&
     signal.receiver !== createPhiCoreRuntimeControllerAddress()
   ) {
-    return false;
+    return "undeliverable";
   }
 
   const registered = deliveryPartition.instances.get(signal.receiver);
   if (!registered) {
-    return false;
+    return "pending";
   }
 
-  return registered.scope === signal.scope &&
-    registered.active !== false &&
-    matchesPhiSignalRuntimeContext(registered.context, deliveryPartition.context);
+  if (
+    registered.scope !== signal.scope ||
+    registered.active === false ||
+    !matchesPhiSignalRuntimeContext(registered.context, deliveryPartition.context)
+  ) {
+    return "undeliverable";
+  }
+
+  return (deliveryPartition.receiverListenerCounts.get(signal.receiver) ?? 0) > 0
+    ? "deliverable"
+    : "pending";
+}
+
+export function canDeliverPhiSignalToReceiver(
+  partition: PhiSignalRuntimePartition,
+  signal: PhiSignal,
+) {
+  return resolvePhiSignalDeliverability(partition, signal) === "deliverable";
 }
 
 export function resolvePhiSignalDeliveryPartition(

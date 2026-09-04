@@ -5,7 +5,6 @@ import { PHI_ADMIN_RUNTIME_MODULE_ID } from "../admin/ids";
 import { PHI_AUTH_RUNTIME_MODULE_ID } from "../auth/ids";
 import { PHI_GROUPS_RUNTIME_MODULE_ID } from "../groups/ids";
 import { PHI_LOCALIZATION_RUNTIME_MODULE_ID } from "../localization/ids";
-import { PHI_OBSERVABILITY_RUNTIME_MODULE_ID } from "../observability/ids";
 import { PHI_USER_MANAGEMENT_RUNTIME_MODULE_ID } from "../user-management/ids";
 import { PHI_DASHBOARD_RUNTIME_MODULE_CONTROLLER_CLIENT_AREA_CONTRIBUTION } from "../dashboard/client";
 import { PHI_COMMON_RUNTIME_MODULE_CONTROLLER_CLIENT_AREA_CONTRIBUTIONS } from "./common";
@@ -27,11 +26,6 @@ export const PHI_ADMIN_RUNTIME_MODULE_CONTROLLER_CLIENT_AREA_CONTRIBUTIONS = [
     moduleId: PHI_LOCALIZATION_RUNTIME_MODULE_ID,
     loadController: () => import("../localization/client")
       .then((module) => module.loadPhiLocalizationRuntimeControllerClient()),
-  }),
-  definePhiRuntimeModuleControllerClientAreaContribution({
-    moduleId: PHI_OBSERVABILITY_RUNTIME_MODULE_ID,
-    loadController: () => import("../observability/client")
-      .then((module) => module.loadPhiObservabilityRuntimeControllerClient()),
   }),
   definePhiRuntimeModuleControllerClientAreaContribution({
     moduleId: PHI_USER_MANAGEMENT_RUNTIME_MODULE_ID,

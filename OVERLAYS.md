@@ -292,13 +292,20 @@ The Overlay matches only its persisted listen routes and concrete `cms:<instance
 
 Business payloads remain owned by a Widget, Provider, or Controller. A generic Overlay must not parse a
 Table row identity, Form payload, User id, or domain command. With the default `on-open` policy, an active
-Widget, Provider, or Controller outside the closed Overlay stores the business selection before sending a
-separate generic open command to the Overlay. The lazily mounted zone Widgets then read that state through
-their normal domain contracts. A Widget inside an initially unmounted Overlay must not be required to open
-its own Overlay.
+Widget, Provider, or Controller outside the closed Overlay addresses the zone Widget directly and sends a
+separate generic open command to the Overlay. A Widget inside an initially unmounted Overlay must not be
+required to open its own Overlay, and must not read the selection out of a Module store -- see the Widget
+contract in `MODULES.md`.
 
-Signal delivery to a closed zone subtree is guaranteed only for `eager`, or after the first open for
-`keep-alive`. Presets must choose a non-default policy explicitly when that behavior is genuinely required.
+Signal delivery into a zone that has not mounted yet is guaranteed for every mount policy. An addressed
+signal whose receiver is absent is held by the bus and delivered once that address becomes usable, which
+is registration plus a listener. The write and publish paths refuse a route whose receiver is not in the
+revision, so an absent receiver is a promise not yet kept rather than a wrong address. What is still
+waiting when the partition goes away is discarded without complaint: a never-opened Overlay is ordinary
+operation, and only a development build traces it.
+
+Mount policy therefore remains a rendering decision -- what exists in the DOM and what survives a close --
+and is no longer a delivery decision.
 
 Runtime, preview, and future authoring must resolve the same Overlay config and all declared zone trees.
 Provider demand, Widget/Controller materialization, access filtering, signal-route validation, and

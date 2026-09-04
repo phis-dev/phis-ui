@@ -16,8 +16,8 @@ import type {
 } from "../../types/signals";
 import { readPhiSignalValueSchema } from "../../types/signals";
 import {
-  canDeliverPhiSignalToReceiver,
   matchesPhiSignalRuntimeContext,
+  resolvePhiSignalDeliverability,
   resolvePhiSignalDeliveryPartition,
 } from "./runtime-signal-registry";
 import {
@@ -79,14 +79,105 @@ function matchesPhiSignalFilter(
   return !filter.context || matchesPhiSignalRuntimeContext(filter.context, partition.context);
 }
 
-function deliverPhiSignal(partition: PhiSignalRuntimePartition, signal: PhiSignal) {
-  if (!canDeliverPhiSignalToReceiver(partition, signal)) {
+/**
+ * The emission path a pending signal is coalesced on.
+ *
+ * A route is a sender addressing a channel and action, which is what this reconstructs: `routeKey`
+ * names the declaration but never travels on the wire, so this is the closest identity a receiver
+ * can be given. Two sends along the same path while the receiver is absent are one wait, and the
+ * later value is the one worth keeping.
+ */
+function resolvePhiPendingSignalKey(signal: PhiSignal) {
+  return `${signal.sender ?? "-"}|${signal.scope}|${signal.channel}|${signal.action}`;
+}
+
+function deliverPhiSignalNow(deliveryPartition: PhiSignalRuntimePartition, signal: PhiSignal) {
+  for (const listener of deliveryPartition.listeners) {
+    listener(signal);
+  }
+}
+
+/*
+ * Partitions whose pending queue is already watched.
+ *
+ * The flush hangs off `instanceSubscribers`, which both a registering instance and a subscribing
+ * listener already notify -- the two halves of becoming usable, in whichever order a widget's
+ * effects happen to run. Subscribing lazily keeps a partition that never defers anything free of it.
+ */
+const watchedPhiSignalPartitions = new WeakSet<PhiSignalRuntimePartition>();
+
+function watchPhiSignalPartition(partition: PhiSignalRuntimePartition) {
+  if (watchedPhiSignalPartitions.has(partition)) {
+    return;
+  }
+  watchedPhiSignalPartitions.add(partition);
+  partition.instanceSubscribers.add(() => flushPendingPhiSignals(partition));
+}
+
+function holdPhiSignal(
+  deliveryPartition: PhiSignalRuntimePartition,
+  receiver: PhiSignalAddress,
+  signal: PhiSignal,
+) {
+  let byRoute = deliveryPartition.pendingSignals.get(receiver);
+  if (!byRoute) {
+    byRoute = new Map();
+    deliveryPartition.pendingSignals.set(receiver, byRoute);
+  }
+  const key = resolvePhiPendingSignalKey(signal);
+  byRoute.set(key, { signal, queuedAt: byRoute.get(key)?.queuedAt ?? Date.now() });
+  watchPhiSignalPartition(deliveryPartition);
+}
+
+function flushPendingPhiSignals(partition: PhiSignalRuntimePartition) {
+  if (partition.pendingSignals.size === 0) {
     return;
   }
 
+  for (const [receiver, byRoute] of [...partition.pendingSignals]) {
+    for (const [key, pending] of [...byRoute]) {
+      const deliverability = resolvePhiSignalDeliverability(partition, pending.signal);
+      if (deliverability === "pending") {
+        continue;
+      }
+      byRoute.delete(key);
+      if (deliverability !== "deliverable") {
+        continue;
+      }
+      if (process.env.NODE_ENV === "development") {
+        console.debug(
+          `[phi-signal] ${key} -> ${receiver} delivered after waiting ${Date.now() - pending.queuedAt}ms for its receiver`,
+        );
+      }
+      deliverPhiSignalNow(
+        resolvePhiSignalDeliveryPartition(partition, pending.signal),
+        pending.signal,
+      );
+    }
+    if (byRoute.size === 0) {
+      partition.pendingSignals.delete(receiver);
+    }
+  }
+}
+
+function deliverPhiSignal(partition: PhiSignalRuntimePartition, signal: PhiSignal) {
   const deliveryPartition = resolvePhiSignalDeliveryPartition(partition, signal);
-  for (const listener of deliveryPartition.listeners) {
-    listener(signal);
+  const deliverability = resolvePhiSignalDeliverability(partition, signal);
+
+  if (deliverability === "deliverable") {
+    deliverPhiSignalNow(deliveryPartition, signal);
+    return;
+  }
+
+  /*
+   * A receiver that has not mounted yet keeps the signal instead of losing it.
+   *
+   * Overlay bodies mount on first open, so a controller that answers a row action addresses a widget
+   * that does not exist for another render. Holding the signal until the address is usable is what
+   * makes the first click behave like every later one, without a widget knowing anything new.
+   */
+  if (deliverability === "pending" && signal.receiver != null && signal.receiver !== "broadcast") {
+    holdPhiSignal(deliveryPartition, signal.receiver, signal);
   }
 }
 
