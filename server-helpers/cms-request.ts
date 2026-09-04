@@ -86,6 +86,14 @@ export type ResolvePhiCmsRequestArgs = {
   loadResolvedCmsPage: LoadPhiResolvedCmsPage;
   loadExactCmsArea: LoadPhiExactSiteArea;
   runtimeModuleCatalog: PhiRuntimeModuleCatalog;
+  /**
+   * `"render"` resolves the request being answered: it binds the request-scoped runtime and
+   * navigation context and projects Background assets for drawing. `"lookup"` peeks at what another
+   * path would resolve to -- the same routing, access and root-route decisions -- without touching
+   * request state and without asset work, and returns once the Page is decided. Anything rendered
+   * from a lookup result would draw unprojected Backgrounds; a lookup is for reading the Page node.
+   */
+  purpose?: "render" | "lookup";
 };
 
 async function instantiatePhiRoutePresetPage({
@@ -235,6 +243,7 @@ export async function resolvePhiCmsRequest({
   loadResolvedCmsPage,
   loadExactCmsArea,
   runtimeModuleCatalog,
+  purpose = "render",
 }: ResolvePhiCmsRequestArgs): Promise<PhiResolvedCmsRequest | null> {
   const areaMask = resolvePhiCmsAreaMask(area);
   const baseRequestContext =
@@ -256,7 +265,9 @@ export async function resolvePhiCmsRequest({
     areaMask,
     request: searchParams ? { searchParams } : undefined,
   });
-  setPhiRequestRuntime(runtime);
+  if (purpose === "render") {
+    setPhiRequestRuntime(runtime);
+  }
 
   const catalog = resolvePhiCmsDescriptorCatalog(runtimeModuleCatalog);
   const requestedAreaKey = resolvePhiCmsAreaKey(areaMask);
@@ -296,8 +307,10 @@ export async function resolvePhiCmsRequest({
       requestedAreaKey,
     ),
   };
-  setPhiRequestRuntime(runtimeWithAuthProvider);
-  setPhiRequestNavigationContext(requestedAreaKey, catalog, activeModuleKeys);
+  if (purpose === "render") {
+    setPhiRequestRuntime(runtimeWithAuthProvider);
+    setPhiRequestNavigationContext(requestedAreaKey, catalog, activeModuleKeys);
+  }
   const areaAllowed = canPhiViewerAccess(runtime.viewer, areaShellBinding.descriptor.area === requestedAreaKey
     ? catalog.areaDefinitions.get(requestedAreaKey)?.accessPolicy
     : undefined);
@@ -364,6 +377,14 @@ export async function resolvePhiCmsRequest({
     ...runtimeWithAuthProvider,
     page: buildPhiRuntimePage(resolvedContent),
   };
+  if (purpose === "lookup") {
+    return {
+      areaPreset: effectiveAreaPreset?.preset ?? null,
+      page: resolvedContent.page,
+      runtime: resolvedRuntime,
+      serverCapabilities: resolvedRequestContext.serverCapabilities,
+    };
+  }
   setPhiRequestRuntime(resolvedRuntime);
 
   // Asset-bound Backgrounds get their delivery projection here, in one bulk request across both
