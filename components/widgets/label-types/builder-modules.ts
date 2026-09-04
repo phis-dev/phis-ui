@@ -1,3 +1,5 @@
+import type { PhiRuntimeModuleCategory } from "../../../constants/runtime-module-categories";
+
 export type PhiBuilderModulesPageLabels = {
   columns: {
     active: string;
@@ -12,15 +14,7 @@ export type PhiBuilderModulesPageLabels = {
   footer: {
     modules: string;
   };
-  categories: {
-    foundation: string;
-    workspace: string;
-    content: string;
-    commerce: string;
-    people: string;
-    operations: string;
-    other: string;
-  };
+  categories: Record<PhiRuntimeModuleCategory, string>;
   areas: {
     public: string;
     app: string;
