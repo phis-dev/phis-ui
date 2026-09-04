@@ -163,7 +163,17 @@ export async function PhiCmsAreaBoundary({
       rootScope.resolvedRequest.page.page,
       resolvedRoute.locale,
     );
-    if (pageRedirect) {
+    /*
+     * Never onto the path the request already names.
+     *
+     * This Layout is above the branch split and receives no catch-all segments of its own, so which
+     * Page it resolved is derived rather than given. Derived can be wrong -- a partial re-render that
+     * does not carry the request path resolves the Area root instead of the Page below it -- and a
+     * forward to where the browser already is does not fail, it repeats: the client applies it, asks
+     * again, and the same answer comes back. The Page keeps its own copy of this decision and is given
+     * its segments, so what is skipped here is only ever a forward that was already satisfied.
+     */
+    if (pageRedirect && pageRedirect.href !== request.pathname) {
       performPhiCmsPageRedirect(pageRedirect);
     }
   }
