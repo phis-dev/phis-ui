@@ -3,6 +3,11 @@ import "server-only";
 import { normalizeLocale } from "../helpers/locale";
 import { buildApiHeaders, buildApiUrl } from "../helpers/site-api";
 import { formatPhiTranslation } from "../helpers/translation-format";
+import {
+  buildPhiTranslationCacheKey,
+  readPhiTranslationCache,
+  writePhiTranslationCache,
+} from "../helpers/translation-cache";
 
 export const PHI_TR_CTX_WEB_UI_LABEL = "Web UI label" as const;
 
@@ -87,6 +92,26 @@ function buildTranslatorHeaders(
   });
 }
 
+/**
+ * The cache key for one message under one translator.
+ *
+ * A Site translator and a global one may hold the same message under different translations, so the
+ * Site key is part of the identity rather than an attribute of it.
+ */
+function buildTranslationKey(
+  options: PhiGlobalTranslatorOptions | PhiSiteTranslatorOptions,
+  input: { locale: string; sourceLocale: string | undefined; ctx: string | undefined; format: PhiTranslationFormat; msg: string },
+) {
+  return buildPhiTranslationCacheKey({
+    scope: "siteKey" in options ? options.siteKey.trim() : "",
+    sourceLocale: input.sourceLocale ?? "",
+    targetLocale: input.locale,
+    ctx: input.ctx ?? "",
+    format: input.format,
+    msg: input.msg,
+  });
+}
+
 function isSourceLocale(options: PhiGlobalTranslatorOptions | PhiSiteTranslatorOptions) {
   return options.sourceLocale != null && normalizeLocale(options.locale) === normalizeLocale(options.sourceLocale);
 }
@@ -135,6 +160,19 @@ export async function tr(
     return formatPhiTranslation(normalizedMessage, params);
   }
 
+  // The cache holds the translation, never the formatted result: `params` belong to the call site.
+  const cacheKey = buildTranslationKey(options, {
+    locale,
+    sourceLocale,
+    ctx: context,
+    format,
+    msg: normalizedMessage,
+  });
+  const cached = readPhiTranslationCache(cacheKey);
+  if (cached != null) {
+    return formatPhiTranslation(cached, params);
+  }
+
   try {
     const response = await requestTranslation(options, {
       locale,
@@ -145,7 +183,9 @@ export async function tr(
     });
 
     const payload = (await response.json()) as TranslationResponse;
-    return formatPhiTranslation(payload.translation ?? normalizedMessage, params);
+    const translation = payload.translation ?? normalizedMessage;
+    writePhiTranslationCache(cacheKey, translation);
+    return formatPhiTranslation(translation, params);
   } catch (error) {
     logTranslationFallback(error, {
       locale,
@@ -184,22 +224,59 @@ export async function trBulk(
     return normalizedMessages;
   }
 
+  const cacheKeys = normalizedMessages.map((msg) =>
+    buildTranslationKey(options, { locale, sourceLocale, ctx: context, format, msg }),
+  );
+  const resolved = cacheKeys.map((key) => readPhiTranslationCache(key));
+
+  /*
+   * A batch repeats the same message often -- a Navigation surface and the Overlay that mirrors it, an
+   * Area whose header and sidebar share entries -- so what is missing is asked for once per distinct
+   * message and the answer is spread back over every position that wanted it.
+   */
+  const pending: string[] = [];
+  const pendingIndexByKey = new Map<string, number>();
+  for (const [index, value] of resolved.entries()) {
+    const key = cacheKeys[index];
+    if (value != null || key == null || pendingIndexByKey.has(key)) {
+      continue;
+    }
+    pendingIndexByKey.set(key, pending.length);
+    pending.push(normalizedMessages[index] ?? "");
+  }
+
+  if (pending.length === 0) {
+    return normalizedMessages.map((msg, index) => resolved[index] ?? msg);
+  }
+
   try {
     const response = await requestTranslation(options, {
       locale,
       ...(sourceLocale ? { sourceLocale } : {}),
-      msgs: normalizedMessages,
+      msgs: pending,
       ...(context ? { ctx: context } : {}),
       ...(format !== "text" ? { format } : {}),
     });
 
     const payload = (await response.json()) as TranslationBatchResponse;
     const translations = Array.isArray(payload.translations) ? payload.translations : [];
-    if (translations.length !== normalizedMessages.length) {
+    if (translations.length !== pending.length) {
       throw new Error("Translation batch length mismatch.");
     }
 
-    return translations.map((translation, index) => translation || normalizedMessages[index] || "");
+    for (const [key, pendingIndex] of pendingIndexByKey) {
+      writePhiTranslationCache(key, translations[pendingIndex] || pending[pendingIndex] || "");
+    }
+
+    return normalizedMessages.map((msg, index) => {
+      const hit = resolved[index];
+      if (hit != null) {
+        return hit;
+      }
+      const key = cacheKeys[index];
+      const pendingIndex = key == null ? undefined : pendingIndexByKey.get(key);
+      return (pendingIndex == null ? undefined : translations[pendingIndex]) || msg || "";
+    });
   } catch (error) {
     logTranslationFallback(error, {
       locale,
@@ -208,8 +285,10 @@ export async function trBulk(
       format,
       siteKey: "siteKey" in options ? options.siteKey : null,
       msgCount: normalizedMessages.length,
+      requestedCount: pending.length,
     });
-    return normalizedMessages;
+    // What the cache already answered stays answered; only what this request asked for falls back.
+    return normalizedMessages.map((msg, index) => resolved[index] ?? msg);
   }
 }
 
