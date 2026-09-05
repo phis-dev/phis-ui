@@ -28,6 +28,19 @@ import { normalizePhiCssSize } from "../../../layouts/phi-layout-contract";
  * which is one field in its registration -- the Media library is what that looks like.
  */
 
+/**
+ * How narrow a column of cards may get before it stops being one.
+ *
+ * The Collection control defaults to the width a Media tile wants -- a small square with no words in it
+ * -- and a card at that width wraps its text a word at a time and reads as a column of syllables. A card
+ * is mostly language, so its floor is set by the shortest line worth reading rather than by a thumbnail.
+ *
+ * Still a floor and not a width: the grid fills the row with equal columns from here upwards, so a wide
+ * page gets more cards rather than wider ones, and a narrow one gets a single column instead of a
+ * squeezed pair.
+ */
+const CARD_MIN_COLUMN_WIDTH = 260;
+
 function readPath(item: Record<string, unknown>, path: string | undefined) {
   if (!path) {
     return undefined;
@@ -106,7 +119,7 @@ export function PhiCardCollectionViewBinding({
       description={presentation.description}
       mode={presentation.mode}
       {...(presentation.gap ? { gap: presentation.gap } : {})}
-      {...(presentation.minColumnWidth ? { minColumnWidth: presentation.minColumnWidth } : {})}
+      minColumnWidth={presentation.minColumnWidth ?? CARD_MIN_COLUMN_WIDTH}
       filters={features.search?.enabled ? (
         <PhiTextControl
           inputType="search"
