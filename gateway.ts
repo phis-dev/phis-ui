@@ -3,6 +3,10 @@ export {
   type BuildPhiAddonProxyHandlersOptions,
 } from "./gateway/addon-proxy";
 export {
+  buildPhiHookProxyHandlers,
+  type BuildPhiHookProxyHandlersOptions,
+} from "./gateway/hook-proxy";
+export {
   buildPhiAuthProxyHandlers,
   type BuildPhiAuthProxyHandlersOptions,
 } from "./gateway/auth-proxy";
