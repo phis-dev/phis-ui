@@ -65,7 +65,16 @@ function buildCard(item: Record<string, unknown>, card: PhiCmsCollectionCardPres
     actionLabel: readPath(item, card?.actionLabel),
   };
   const config = {
-    imageUrl: readPath(item, card?.imageUrl),
+    /*
+     * The same courtesy the title and the description already get.
+     *
+     * A mapping is for saying which field means what where the names do not say it themselves; a
+     * provider that hands over `iconUrl` has said it. Leaving the picture out of that while the text
+     * had it was an inconsistency, and it showed as cards with no image and no reason given.
+     */
+    imageUrl: readPath(item, card?.imageUrl)
+      ?? readPath(item, "iconUrl")
+      ?? readPath(item, "imageUrl"),
     href: readPath(item, card?.href),
     actionHref: readPath(item, card?.actionHref),
     ...(card?.variant ? { variant: card.variant } : {}),
