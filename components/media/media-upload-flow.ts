@@ -54,6 +54,20 @@ export class PhiMediaUploadError extends Error {
 
 export type PhiMediaUploadProgressHandler = (progress: number) => void;
 
+/**
+ * One file, from chosen to settled.
+ *
+ * The transport in the middle is Core's and the same every time; what differs is where the session is
+ * begun and where it is settled. A Media Space uses Core's own upload routes; a slot on an Add-on's row
+ * uses the Add-on's root. Making it a parameter is what lets the acceptance, the progress, the refusal
+ * and the labels stay shared instead of being written twice with the second one drifting.
+ */
+export type PhiMediaUploadSessionRunner = (
+  file: File,
+  onProgress?: PhiMediaUploadProgressHandler,
+  options?: PhiMediaUploadInitOptions,
+) => Promise<{ asset: { id: number } }>;
+
 export type PhiMediaUploadSessionResult = {
   asset: PhiImagePreviewApiRecord;
   token: string;

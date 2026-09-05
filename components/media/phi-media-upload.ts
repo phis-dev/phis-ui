@@ -7,6 +7,7 @@ import type { PhiMediaKindValue } from "../../types/media";
 import {
   PhiMediaUploadError,
   runPhiMediaUploadSession,
+  type PhiMediaUploadSessionRunner,
   type PhiMediaUploadInitOptions,
 } from "./media-upload-flow";
 
@@ -153,10 +154,19 @@ export function usePhiMediaUpload(input: {
   labels: PhiMediaUploadLabels;
   acceptance?: PhiMediaUploadAcceptance;
   initOptions?: PhiMediaUploadInitOptions;
+  /**
+   * Where the session is begun and settled. Core's Media routes unless a caller says otherwise.
+   *
+   * A slot on an Add-on's row is begun and settled at that Add-on's root and travels the same way in
+   * between, so it is this one thing that differs -- and everything a person sees while it happens is
+   * shared rather than reimplemented alongside.
+   */
+  runSession?: PhiMediaUploadSessionRunner;
   onUploaded?: (asset: { id: number }, file: File) => void | Promise<void>;
   onRejected?: (message: string, file: File) => void;
 }) {
   const { labels, acceptance, initOptions, onUploaded, onRejected } = input;
+  const runSession = input.runSession ?? runPhiMediaUploadSession;
   const [items, setItems] = useState<readonly PhiMediaUploadItem[]>([]);
   const sequence = useRef(0);
 
@@ -179,7 +189,7 @@ export function usePhiMediaUpload(input: {
       ...current,
     ]);
     try {
-      const { asset } = await runPhiMediaUploadSession(
+      const { asset } = await runSession(
         file,
         (progress) => patch(localId, { progress }),
         initOptions,
@@ -193,7 +203,7 @@ export function usePhiMediaUpload(input: {
       onRejected?.(message, file);
       return null;
     }
-  }, [acceptance, initOptions, labels, onRejected, onUploaded, patch]);
+  }, [acceptance, initOptions, labels, onRejected, onUploaded, patch, runSession]);
 
   const reset = useCallback(() => setItems([]), []);
 
