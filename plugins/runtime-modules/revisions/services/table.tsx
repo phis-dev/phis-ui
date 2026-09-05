@@ -210,9 +210,19 @@ function buildRevisionQuery(scope: PhiBuilderRevisionScope) {
 }
 
 async function loadRevisionHistory(scope: PhiBuilderRevisionScope, signal: AbortSignal) {
-  if (scope.kind === "page" && !scope.path) {
-    // Nothing is being asked about yet. Asking anyway would put the question to the server as one about
-    // every page at once, and answer a surface that is waiting for its catalog with an error.
+  /*
+   * Nothing is being asked about yet.
+   *
+   * Both cases are the same moment: a panel opened before the workspace catalog arrived. A page scope
+   * has no page and an Area scope has no preset source -- and the Area scope is refused by the server
+   * rather than the client, because a revision belongs to a preset and an Area without one names
+   * nothing. Asking anyway answers a surface that is waiting with an error; the scope key carries the
+   * preset, so the question is asked again by itself once there is one.
+   */
+  if (
+    (scope.kind === "page" && !scope.path) ||
+    (scope.kind === "area" && !scope.sourcePreset)
+  ) {
     return {
       kind: scope.kind,
       scope: { area: scope.area, path: null, navKey: null, themeKey: null },
