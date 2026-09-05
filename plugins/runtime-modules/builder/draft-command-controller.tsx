@@ -160,6 +160,14 @@ export function usePhiBuilderDraftCommandController({
         {
           builderPlugins: builderModuleMetas.plugins,
           scope: { area: effectiveArea },
+          /*
+           * The Area's code-owned Shell, which this controller holds on every Builder page -- the same
+           * drafts "reset shell" restores from. A Module selection for an Area nobody has saved yet
+           * needs a Shell baseline, and the Modules workspace hydrates no region drafts of its own: it
+           * edits a selection rather than a structure. Without this the save asked the operator to go
+           * and create a Shell that already exists in code.
+           */
+          shellPresetDrafts: shellPresetDraftsByArea[effectiveArea] ?? null,
         },
       );
       emitDraftStatus("draft", modulesResult.revisionId);

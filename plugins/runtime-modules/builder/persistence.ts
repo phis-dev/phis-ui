@@ -675,6 +675,13 @@ export function clearPhiDeveloperBuilderModulesDraftAllocation(area: PhiDevelope
  * server asks for that preset as `baseline` when it hits exactly that case, and only then; the Builder
  * already has it loaded (every `/builder/*` page does, regardless of which one is open), so this is the
  * one path along which a Module save reaches into Shell region drafts at all.
+ *
+ * Which is why the Shell preset is a second source here. The region drafts hold what a workspace has
+ * *hydrated*, and the Modules workspace hydrates none: it edits a selection, not a structure. Building
+ * the baseline from those alone therefore worked on the Shells page and nowhere else, and an operator
+ * activating a Module for a fresh Area was told to go and create a Shell first -- for a Shell that
+ * already exists in code and that they were not going to change. The preset fills whatever the drafts
+ * do not hold, and an open draft still wins where there is one.
  */
 export async function savePhiDeveloperBuilderModulesDraft(
   state: Pick<
@@ -685,6 +692,8 @@ export async function savePhiDeveloperBuilderModulesDraft(
   options: {
     builderPlugins: readonly PhiBuilderPluginMeta[];
     scope: { area: PhiDeveloperBuilderArea };
+    /** The Area's code-owned Shell, for the one case where nothing is stored and nothing is loaded. */
+    shellPresetDrafts?: Record<string, PhiDeveloperBuilderRegionDraft> | null;
   },
 ): Promise<{ revisionId: number; version: number; nextNodeSequence: number }> {
   const area = options.scope.area;
@@ -737,7 +746,9 @@ export async function savePhiDeveloperBuilderModulesDraft(
       throw error;
     }
     const widgetMetasByType = buildPhiBuilderWidgetMetaMap(options.builderPlugins);
-    const structurePayload = buildAreaStructureWritePayload(area, regionDrafts, widgetMetasByType);
+    // The preset first, so anything a workspace actually hydrated overwrites it rather than the reverse.
+    const baselineDrafts = { ...(options.shellPresetDrafts ?? {}), ...regionDrafts };
+    const structurePayload = buildAreaStructureWritePayload(area, baselineDrafts, widgetMetasByType);
     if (!structurePayload) {
       throw error;
     }

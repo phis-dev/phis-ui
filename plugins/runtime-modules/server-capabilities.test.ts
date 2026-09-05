@@ -18,7 +18,7 @@ import {
 const ADDON = "@acme/shop";
 
 function snapshot(providers: PhiCapabilitySnapshot["providers"]): PhiCapabilitySnapshot {
-  return { releaseBuildId: null, buildManifestDigest: null, providers };
+  return { siteKey: "acme", releaseBuildId: null, buildManifestDigest: "pgtest", providers };
 }
 
 describe("resolving a Module's server binding", () => {
