@@ -115,10 +115,21 @@ function readParams(value: unknown): RevisionsTableParams {
       scopeArea === state.area ? state.pageKey : null,
       pages,
     );
-    if (!activePageKey) throw new Error("Revisions scope has no active Builder page.");
+    /*
+     * A page is needed for a page scope and for nothing else.
+     *
+     * The other three kinds -- area, navigation, theme -- never read it: `resolvePhiBuilderRevisionScope`
+     * takes the area, the nav key or the theme key and leaves the page alone. Demanding one anyway made
+     * an Area whose pages all come from Modules unable to show the revisions it does have, which is the
+     * Area a Module was just switched on in: its own history, refused for want of a page that has
+     * nothing to do with it.
+     */
+    if (kind === "page" && !activePageKey) {
+      throw new Error("Revisions scope has no active Builder page.");
+    }
     const pageKey = kind === "page" && configuredScopeKey.startsWith("/")
       ? resolvePhiBuilderPageKeyFromStoragePath(scopeArea, configuredScopeKey, pages)
-      : activePageKey;
+      : activePageKey ?? "";
     const navScopeKey = kind === "navigation" && configuredScopeKey
       ? resolvePhiBuilderRevisionNavScopeKey(scopeArea, configuredScopeKey)
       : resolvePhiBuilderRevisionNavScopeKey(
