@@ -116,17 +116,15 @@ function readParams(value: unknown): RevisionsTableParams {
       pages,
     );
     /*
-     * A page is needed for a page scope and for nothing else.
+     * No page is not an error, in any of the four kinds.
      *
-     * The other three kinds -- area, navigation, theme -- never read it: `resolvePhiBuilderRevisionScope`
-     * takes the area, the nav key or the theme key and leaves the page alone. Demanding one anyway made
-     * an Area whose pages all come from Modules unable to show the revisions it does have, which is the
-     * Area a Module was just switched on in: its own history, refused for want of a page that has
-     * nothing to do with it.
+     * Three of them never read one: `resolvePhiBuilderRevisionScope` takes the area, the nav key or the
+     * theme key and leaves the page alone, so demanding one made an Area whose pages all come from
+     * Modules unable to show the revisions it does have. And the fourth reaches this before anything is
+     * loaded: opening `/builder/revisions` directly means the page catalog is still empty, which is a
+     * moment rather than a fault. A page scope without a page asks for nothing and shows nothing, and
+     * fills in as soon as there is one.
      */
-    if (kind === "page" && !activePageKey) {
-      throw new Error("Revisions scope has no active Builder page.");
-    }
     const pageKey = kind === "page" && configuredScopeKey.startsWith("/")
       ? resolvePhiBuilderPageKeyFromStoragePath(scopeArea, configuredScopeKey, pages)
       : activePageKey ?? "";
@@ -147,9 +145,13 @@ function readParams(value: unknown): RevisionsTableParams {
     return {
       scope,
       scopeKey: [scope.kind, scope.area, scope.path ?? "", scope.sourcePreset?.ownerModuleId ?? "", scope.sourcePreset?.presetKey ?? "", scope.navKey ?? "", scope.themeKey ?? ""].join(":"),
+      // Where "review this" would lead. Without a page there is nowhere, and asking the catalog for a
+      // page it does not hold throws -- which is how the empty catalog of a cold load became an error.
       reviewPagePath: scope.kind === "page" && scope.path
         ? scope.path
-        : resolvePhiBuilderRevisionPagePath(scopeArea, pageKey, pages),
+        : pageKey
+          ? resolvePhiBuilderRevisionPagePath(scopeArea, pageKey, pages)
+          : "",
       navScopeKey,
       labels: value.labels as unknown as PhiBuilderRevisionsWidgetLabels,
     };
@@ -208,6 +210,16 @@ function buildRevisionQuery(scope: PhiBuilderRevisionScope) {
 }
 
 async function loadRevisionHistory(scope: PhiBuilderRevisionScope, signal: AbortSignal) {
+  if (scope.kind === "page" && !scope.path) {
+    // Nothing is being asked about yet. Asking anyway would put the question to the server as one about
+    // every page at once, and answer a surface that is waiting for its catalog with an error.
+    return {
+      kind: scope.kind,
+      scope: { area: scope.area, path: null, navKey: null, themeKey: null },
+      current: { publishedRevisionId: null, workingDraftRevisionId: null },
+      rows: [],
+    } satisfies PhiBuilderRevisionHistoryResponse;
+  }
   const response = await fetch(`/api/site/cms/revisions?${buildRevisionQuery(scope).toString()}`, {
     method: "GET",
     cache: "no-store",
