@@ -256,9 +256,21 @@ function resolvePhiCmsWidgetContentBinding(
   return binding;
 }
 
+/**
+ * Where a widget's content binding comes from.
+ *
+ * `derive` asks the active Canvas metadata what this widget type binds, which is right for a tree the
+ * operator is editing: the answer follows the Widget's current definition rather than what was stored
+ * the last time. `carry` keeps whatever the node already holds and asks nothing -- right for a tree
+ * nobody is editing, and necessary for one: a Shell preset serialized outside a Canvas has no
+ * metadata to ask, and refusing there would mean refusing to store the Shell that already exists.
+ */
+type PhiBuilderContentBindingSource = "derive" | "carry";
+
 function serializeRootDraft(
   draft: PhiDeveloperBuilderRegionDraft,
   widgetMetasByType: ReadonlyMap<string, PhiBuilderWidgetMeta>,
+  bindings: PhiBuilderContentBindingSource = "derive",
 ): SerializedRoot {
   if (!draft.rootNodeTypeKey || !draft.rootNodeKind || draft.rootNodeKind === "widget") {
     throw new Error("CMS persistence requires a layout root node.");
@@ -277,11 +289,15 @@ function serializeRootDraft(
       siteId: -1,
       parentLayoutNodeId,
       config: stripTransientConfig(widget.config),
-      contentBinding: resolvePhiCmsWidgetContentBinding(
-        widgetMetasByType,
-        widget.widgetType,
-        widget.config,
-      ),
+      ...(bindings === "derive"
+        ? {
+          contentBinding: resolvePhiCmsWidgetContentBinding(
+            widgetMetasByType,
+            widget.widgetType,
+            widget.config,
+          ),
+        }
+        : {}),
     });
   }
 
@@ -748,7 +764,18 @@ export async function savePhiDeveloperBuilderModulesDraft(
     const widgetMetasByType = buildPhiBuilderWidgetMetaMap(options.builderPlugins);
     // The preset first, so anything a workspace actually hydrated overwrites it rather than the reverse.
     const baselineDrafts = { ...(options.shellPresetDrafts ?? {}), ...regionDrafts };
-    const structurePayload = buildAreaStructureWritePayload(area, baselineDrafts, widgetMetasByType);
+    /*
+     * Bindings are carried rather than derived here, because there is nothing to derive them from: the
+     * Modules workspace mounts no Canvas, so no Module's metadata is loaded, and a Shell preset names
+     * Widgets of Modules this Area may not even have selected yet. What the nodes already hold is the
+     * preset's own answer, which is the better one for a tree nobody is editing.
+     */
+    const structurePayload = buildAreaStructureWritePayload(
+      area,
+      baselineDrafts,
+      widgetMetasByType,
+      "carry",
+    );
     if (!structurePayload) {
       throw error;
     }
@@ -828,6 +855,7 @@ function buildAreaStructureWritePayload(
   area: PhiDeveloperBuilderArea,
   regionDrafts: Record<string, PhiDeveloperBuilderRegionDraft>,
   widgetMetasByType: ReadonlyMap<string, PhiBuilderWidgetMeta>,
+  bindings: PhiBuilderContentBindingSource = "derive",
 ) {
   const areaMask = resolvePhiBuilderAreaMask(area);
   const allAreaDrafts = PHI_BUILDER_SHELL_REGION_KEYS
@@ -849,7 +877,7 @@ function buildAreaStructureWritePayload(
   }> = [];
   assertUniqueDraftNodeIds(areaDraftEntries.map(([, draft]) => draft));
   const regions = areaDraftEntries.map(([regionKey, draft], index) => {
-    const serializedRegion = serializeRootDraft(draft, widgetMetasByType);
+    const serializedRegion = serializeRootDraft(draft, widgetMetasByType, bindings);
     layoutNodes.push(...serializedRegion.layoutNodes);
     contentWidgets.push(...serializedRegion.contentWidgets);
     return {
