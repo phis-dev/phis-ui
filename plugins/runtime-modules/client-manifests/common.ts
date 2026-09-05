@@ -376,6 +376,13 @@ export const PHI_COMMON_RUNTIME_MODULE_RENDER_CLIENT_MANIFEST =
       ),
     ],
     [
+      PhiCmsWidgetType.SlotUpload,
+      definePhiRuntimeModuleRenderClientLoader(
+        () => import("../core/widgets/slot-upload/client")
+          .then((module) => module.PhiSlotUploadWidgetClient),
+      ),
+    ],
+    [
       PhiCmsWidgetType.AreaUpload,
       definePhiRuntimeModuleRenderClientLoader(
         () => import("../../../components/media/phi-area-upload-widget")

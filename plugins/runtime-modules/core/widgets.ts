@@ -83,6 +83,7 @@ import {
 import {
   PHI_LOCALE_WIDGET_DEFINITION,
 } from "./widgets/locale/config";
+import { PHI_SLOT_UPLOAD_WIDGET_DEFINITION } from "./widgets/slot-upload/config";
 import {
   PHI_MARKDOWN_WIDGET_DEFINITION,
 } from "./widgets/markdown/config";
@@ -341,6 +342,15 @@ export const PHI_RUNTIME_MODULE_WIDGETS: readonly PhiRuntimeModuleWidgetDefiniti
     renderPolicies: {"runtime":"custom","preview":"custom","authoring":"custom"},
     loadRuntime: () => import("./widgets/checkbox-group/plugin").then((module) => module.PHI_CHECKBOX_GROUP_WIDGET_PLUGIN),
     loadPreview: () => import("./widgets/checkbox-group/plugin").then((module) => module.PHI_CHECKBOX_GROUP_WIDGET_PLUGIN),
+  }),
+  defineFirstPartyWidget({
+    definition: PHI_SLOT_UPLOAD_WIDGET_DEFINITION,
+    ownerModuleId: PHI_CORE_RUNTIME_MODULE_ID,
+    renderPolicies: {"runtime":"custom","preview":"custom","authoring":"custom"},
+    loadRuntime: () => import("./widgets/slot-upload/plugin")
+      .then((module) => module.PHI_SLOT_UPLOAD_WIDGET_PLUGIN),
+    loadPreview: () => import("./widgets/slot-upload/plugin")
+      .then((module) => module.PHI_SLOT_UPLOAD_WIDGET_PLUGIN),
   }),
   defineFirstPartyWidget({
     definition: PHI_LOCALE_WIDGET_DEFINITION,

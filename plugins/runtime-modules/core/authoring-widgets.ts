@@ -81,6 +81,7 @@ import {
 import {
   PHI_LOCALE_WIDGET_DEFINITION,
 } from "./widgets/locale/config";
+import { PHI_SLOT_UPLOAD_WIDGET_DEFINITION } from "./widgets/slot-upload/config";
 import {
   PHI_MARKDOWN_WIDGET_DEFINITION,
 } from "./widgets/markdown/config";
@@ -254,6 +255,11 @@ export default createPhiAuthoringWidgetModule([
   definePhiAuthoringWidgetModuleLoader(
     PHI_CHECKBOX_GROUP_WIDGET_DEFINITION,
     () => import("./widgets/checkbox-group/authoring").then((module) => module.PHI_CHECKBOX_GROUP_WIDGET_BUILDER_PLUGIN),
+  ),
+  definePhiAuthoringWidgetModuleLoader(
+    PHI_SLOT_UPLOAD_WIDGET_DEFINITION,
+    () => import("./widgets/slot-upload/authoring")
+      .then((module) => module.PHI_SLOT_UPLOAD_WIDGET_BUILDER_PLUGIN),
   ),
   definePhiAuthoringWidgetModuleLoader(
     PHI_LOCALE_WIDGET_DEFINITION,
