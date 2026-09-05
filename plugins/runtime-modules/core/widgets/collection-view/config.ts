@@ -52,6 +52,8 @@ export type PhiCmsCollectionCardPresentation = {
   meta?: string;
   /** A path to something already servable: a Media delivery path or a URL. */
   imageUrl?: string;
+  /** The same, for the small mark beside the title. A cover and a mark are different pictures. */
+  iconUrl?: string;
   href?: string;
   actionLabel?: string;
   actionHref?: string;
@@ -128,6 +130,7 @@ function readCardPresentation(value: unknown): PhiCmsCollectionCardPresentation 
     description: readString(value.description),
     meta: readString(value.meta),
     imageUrl: readString(value.imageUrl),
+    iconUrl: readString(value.iconUrl),
     href: readString(value.href),
     actionLabel: readString(value.actionLabel),
     actionHref: readString(value.actionHref),

@@ -17,6 +17,15 @@ export type PhiCardWidgetClientLabels = {
 export type PhiCardWidgetClientConfig = {
   imageUrl?: string;
   /**
+   * A small mark beside the title -- a logo, an app icon, an avatar.
+   *
+   * Not the cover, and the difference is the point: a cover is an opening image and takes the width it
+   * is given, while a mark is read at one size and stops being a mark when it is stretched. A card that
+   * had only the first turned every icon into a poster.
+   */
+  iconUrl?: string;
+  iconAlt?: string;
+  /**
    * How the delivered bytes meet the cover box. Both come from the shared image presentation
    * resolver, so a generated variant arrives already centered and an original keeps its focal
    * position instead of the Card inventing a second framing rule.
@@ -109,6 +118,25 @@ export function PhiCardWidgetClient({
           gap: variant === "compact" ? token.paddingSM : token.paddingLG,
         }}
       >
+        {config?.iconUrl ? (
+          <img
+            alt={config.iconAlt ?? labels.title ?? ""}
+            src={config.iconUrl}
+            loading="lazy"
+            width={40}
+            height={40}
+            style={{
+              display: "block",
+              width: 40,
+              height: 40,
+              borderRadius: token.borderRadius,
+              objectFit: "contain",
+              // Marks are drawn to their own edges, so one is given room rather than cropped: what a
+              // cover may lose at the sides, a logo may not.
+              background: token.colorFillQuaternary,
+            }}
+          />
+        ) : null}
         {labels.eyebrow ? (
           <Typography.Text
             type="secondary"

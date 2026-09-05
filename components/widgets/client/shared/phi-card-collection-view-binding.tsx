@@ -66,15 +66,17 @@ function buildCard(item: Record<string, unknown>, card: PhiCmsCollectionCardPres
   };
   const config = {
     /*
-     * The same courtesy the title and the description already get.
+     * Two pictures with two jobs, and the fallbacks say which is which.
      *
-     * A mapping is for saying which field means what where the names do not say it themselves; a
-     * provider that hands over `iconUrl` has said it. Leaving the picture out of that while the text
-     * had it was an inconsistency, and it showed as cards with no image and no reason given.
+     * A cover opens the card and takes the width it is given; a mark sits beside the title and is read
+     * at one size. Falling the cover back to the icon -- which this did at first -- turned every icon
+     * into a poster, and a 256-pixel square drawn four-by-three is not a mistake anybody can see the
+     * cause of.
      */
     imageUrl: readPath(item, card?.imageUrl)
-      ?? readPath(item, "iconUrl")
+      ?? readPath(item, "coverUrl")
       ?? readPath(item, "imageUrl"),
+    iconUrl: readPath(item, card?.iconUrl) ?? readPath(item, "iconUrl"),
     href: readPath(item, card?.href),
     actionHref: readPath(item, card?.actionHref),
     ...(card?.variant ? { variant: card.variant } : {}),

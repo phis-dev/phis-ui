@@ -13,6 +13,9 @@ import {
 export type PhiCmsCardWidgetConfig = PhiCmsWidgetConfigBase &
   PhiMediaImageSourceConfig & {
     eyebrow?: string;
+    /** A small mark beside the title. The cover is a different picture with a different job. */
+    iconUrl?: string;
+    iconAlt?: string;
     title?: string;
     description?: string;
     meta?: string;
@@ -35,6 +38,8 @@ export function parsePhiCmsCardWidgetConfig(config: Record<string, unknown>): Ph
     title: readString(config.title),
     blurDataUrl: readString(config.blurDataUrl),
     eyebrow: readString(config.eyebrow),
+    iconUrl: readString(config.iconUrl),
+    iconAlt: readString(config.iconAlt),
     description: readString(config.description),
     meta: readString(config.meta),
     href: readString(config.href),
@@ -65,6 +70,7 @@ export const PHI_CARD_WIDGET_DEFINITION = {
   slotSizePolicy: "fill-inline",
   fields: [
     { key: "eyebrow", type: "string", label: "Eyebrow" },
+    { key: "iconUrl", type: "string", label: "Icon URL" },
     { key: "title", type: "string", label: "Title" },
     { key: "description", type: "string", label: "Description" },
     { key: "meta", type: "string", label: "Meta" },
