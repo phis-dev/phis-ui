@@ -33,10 +33,37 @@ export type PhiCmsCollectionToolbarActionPresentation = {
   mode?: "normal" | "primary" | "danger";
 };
 
+/**
+ * Where a card takes each of its parts from, as paths into one item.
+ *
+ * The Card Widget already knows what a card is -- eyebrow, title, description, meta, a cover, a link --
+ * and a Collection already knows how to lay items out. What was missing between them is only this: which
+ * field of a row is the title. Stating it here rather than in the provider keeps it where the rest of
+ * the presentation lives, so a Site can point the title at another field without anybody writing code,
+ * exactly as a Table's columns are chosen from the fields a provider offers.
+ *
+ * A resource that outgrows this ships its own View instead; that is one field in its registration, and
+ * the Media library is the example of a domain that needed one.
+ */
+export type PhiCmsCollectionCardPresentation = {
+  eyebrow?: string;
+  title?: string;
+  description?: string;
+  meta?: string;
+  /** A path to something already servable: a Media delivery path or a URL. */
+  imageUrl?: string;
+  href?: string;
+  actionLabel?: string;
+  actionHref?: string;
+  variant?: "default" | "compact" | "featured";
+};
+
 export type PhiCmsCollectionViewWidgetConfig = PhiCmsWidgetConfigBase & {
   presentation: {
     title?: string;
     description?: string;
+    /** Read by the card View and by no other: a View that draws something else ignores it. */
+    card?: PhiCmsCollectionCardPresentation;
     mode: PhiCmsCollectionViewMode;
     gap?: PhiCssLength;
     minColumnWidth?: PhiCssLength;
@@ -88,6 +115,26 @@ export function parsePhiCmsAssetPreviewGridWidgetConfig(
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
+}
+
+function readCardPresentation(value: unknown): PhiCmsCollectionCardPresentation | undefined {
+  if (!isRecord(value)) {
+    return undefined;
+  }
+  const variant = readString(value.variant);
+  return {
+    eyebrow: readString(value.eyebrow),
+    title: readString(value.title),
+    description: readString(value.description),
+    meta: readString(value.meta),
+    imageUrl: readString(value.imageUrl),
+    href: readString(value.href),
+    actionLabel: readString(value.actionLabel),
+    actionHref: readString(value.actionHref),
+    variant: variant === "compact" || variant === "featured" || variant === "default"
+      ? variant
+      : undefined,
+  };
 }
 
 function readMode(value: unknown): PhiCmsCollectionViewMode {
@@ -177,6 +224,7 @@ export function normalizePhiCmsCollectionViewWidgetConfig(config: unknown): PhiC
     presentation: {
       title: readString(presentation.title),
       description: readString(presentation.description),
+      card: readCardPresentation(presentation.card),
       mode: readMode(presentation.mode),
       gap: readPhiLengthValue(presentation.gap) ?? undefined,
       minColumnWidth: readPhiLengthValue(presentation.minColumnWidth) ?? undefined,

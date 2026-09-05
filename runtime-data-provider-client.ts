@@ -49,6 +49,16 @@ export {
 export type {
   PhiCollectionProviderRegistration,
 } from "./components/widgets/client/shared/phi-collection-provider";
+/*
+ * The View a resource gets when its items are cards, which is most of them.
+ *
+ * Exported beside the provider factory because that is where it is used: a resource names its View when
+ * it registers, and an Add-on with rows to show should be able to reach for this one rather than draw a
+ * collection of its own.
+ */
+export {
+  PhiCardCollectionViewBinding,
+} from "./components/widgets/client/shared/phi-card-collection-view-binding";
 export {
   createPhiRuntimeModuleDataProviderClientManifest,
   extendPhiRuntimeModuleDataProviderClientManifest,
