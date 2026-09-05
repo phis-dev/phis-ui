@@ -1,4 +1,8 @@
 export {
+  buildPhiAddonProxyHandlers,
+  type BuildPhiAddonProxyHandlersOptions,
+} from "./gateway/addon-proxy";
+export {
   buildPhiAuthProxyHandlers,
   type BuildPhiAuthProxyHandlersOptions,
 } from "./gateway/auth-proxy";
