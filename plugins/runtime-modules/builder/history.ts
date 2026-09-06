@@ -32,15 +32,18 @@ export type PhiBuilderHistorySnapshot =
     }
   | {
       /**
-       * The Module selection of one Area, and nothing else.
+       * The Module selection of the Areas one edit touched, and nothing else.
        *
        * A `"workspace"` snapshot restores every field it captured, so bundling the selection in there
-       * would mean an unrelated Page-meta undo puts a stale selection back -- for whichever Area last
-       * changed it, not the Area the undo is even about. This kind is scoped to one Area's own list.
+       * would mean an unrelated Page-meta undo puts a stale selection back. This kind carries only the
+       * Areas the recorded edit actually changed: a per-Area checkbox records one, the module-wide
+       * switch records every eligible Area in a single entry, so one undo takes the whole gesture back
+       * instead of leaving the partial state the gesture was meant to avoid.
        */
       kind: "modules";
-      area: PhiDeveloperBuilderArea;
-      moduleIds: readonly PhiRuntimeModuleId[] | null;
+      moduleIdsByArea: Readonly<
+        Partial<Record<PhiDeveloperBuilderArea, readonly PhiRuntimeModuleId[] | null>>
+      >;
     };
 
 export const phiBuilderHistory = createPhiHistoryStore<PhiBuilderHistorySnapshot>(
@@ -60,7 +63,9 @@ export function createPhiBuilderHistoryContext(input: {
     return `navigation:${input.area}:${input.navKey?.trim() || "default"}`;
   }
   if (input.workspace === "modules") {
-    return `modules:${input.area}`;
+    // The Modules workspace edits the site-wide activation matrix, so its history is one context:
+    // an undo there means "the last Module change", regardless of which Area it landed in.
+    return "modules:site";
   }
   return `pages:${input.area}:${input.pageKey?.trim() || "home"}`;
 }
@@ -89,11 +94,13 @@ export function capturePhiBuilderWorkspaceHistoryState(
 
 export function capturePhiBuilderModulesHistoryState(
   state: Pick<PhiDeveloperBuilderWorkspaceState, "runtimeModuleIdsByArea">,
-  area: PhiDeveloperBuilderArea,
+  areas: readonly PhiDeveloperBuilderArea[],
 ): Extract<PhiBuilderHistorySnapshot, { kind: "modules" }> {
-  return {
-    kind: "modules",
-    area,
-    moduleIds: state.runtimeModuleIdsByArea?.[area] ?? null,
-  };
+  const moduleIdsByArea: Partial<
+    Record<PhiDeveloperBuilderArea, readonly PhiRuntimeModuleId[] | null>
+  > = {};
+  for (const area of areas) {
+    moduleIdsByArea[area] = state.runtimeModuleIdsByArea?.[area] ?? null;
+  }
+  return { kind: "modules", moduleIdsByArea };
 }

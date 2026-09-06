@@ -4,12 +4,22 @@ import { useMemo, type ReactNode } from "react";
 
 import { PHI_BUILDER_RUNTIME_DATA_PROVIDER_KEYS } from "../ids";
 import { PHI_BUILDER_RUNTIME_DATA_PROVIDER_DESCRIPTORS } from "../../../../plugins/runtime-modules/builder/data-providers";
-import { resolvePhiBuilderAreaAsCmsArea } from "../../../../constants/cms-areas";
+import {
+  isPhiBuilderAreaKey,
+  isPhiCmsAreaKey,
+  PHI_CMS_AREA_KEYS,
+  resolvePhiBuilderAreaAsCmsArea,
+  type PhiCmsAreaKey,
+} from "../../../../constants/cms-areas";
 import { readPhiRuntimeModuleCategory } from "../../../../constants/runtime-module-categories";
+import type { PhiRuntimeModuleId } from "../../../../types";
 import { resolvePhiRuntimeAreaDefinition } from "../../area-definitions";
-import { applyPhiBuilderRuntimeModuleSelectionChange } from "../runtime-module-selection";
+import { applyPhiBuilderRuntimeModuleSelectionChanges } from "../runtime-module-selection";
 import { usePhiDeveloperBuilderStateValue } from "../developer-workspace-store";
-import type { PhiDeveloperBuilderWorkspaceState } from "../developer-workspace-types";
+import type {
+  PhiDeveloperBuilderArea,
+  PhiDeveloperBuilderWorkspaceState,
+} from "../developer-workspace-types";
 import {
   PhiTableProviderClient,
   type PhiTableProviderRegistration,
@@ -27,12 +37,14 @@ const RESOURCE_KEY = "modules";
 const DETAIL_RESOURCE_KEY = "moduleDetail";
 
 /**
- * The Area's installed Modules, as table rows.
+ * The site's installed Modules, as table rows -- one row per Module, across every Area at once.
  *
  * The Platform Module is left out entirely: it is the one Module that is never a choice, so a row for
- * it would only ever be a switch nobody may touch. The Area selector is the filter: a Module the chosen
- * Area cannot carry is not a row here at all, because the selection being edited is that Area's, and
- * the full list of Areas a Module serves is a fact about the Module, shown in its detail view.
+ * it would only ever be a switch nobody may touch. Everything else is a row regardless of which Areas
+ * it serves: the row's switch answers "does this Module run anywhere", and one `area_*` cell per
+ * eligible Area answers "where exactly". An Area the Module cannot carry holds `null` there, which the
+ * cell renders as nothing at all. The Modules Area filter narrows which rows are listed (Modules
+ * eligible for that Area), never what a cell means.
  */
 function readAreaLabels(params: Record<string, unknown> | undefined) {
   const candidate = params?.areaLabels;
@@ -42,28 +54,59 @@ function readAreaLabels(params: Record<string, unknown> | undefined) {
   return candidate as Record<string, string>;
 }
 
+function isModuleActiveInArea(
+  state: Pick<PhiDeveloperBuilderWorkspaceState, "runtimeModuleIdsByArea">,
+  moduleId: string,
+  cmsArea: PhiCmsAreaKey,
+) {
+  if (!isPhiBuilderAreaKey(cmsArea)) {
+    return false;
+  }
+  return (state.runtimeModuleIdsByArea[cmsArea] ?? []).includes(moduleId as PhiRuntimeModuleId);
+}
+
+function resolveModuleBaseAreaKey(moduleId: string): PhiCmsAreaKey | null {
+  for (const areaKey of PHI_CMS_AREA_KEYS) {
+    if (resolvePhiRuntimeAreaDefinition(areaKey).baseModuleId === moduleId) {
+      return areaKey;
+    }
+  }
+  return null;
+}
+
 function buildRuntimeModuleRows(
   state: PhiDeveloperBuilderWorkspaceState,
   categoryLabels: Record<string, string> | null,
 ) {
-  const cmsArea = resolvePhiBuilderAreaAsCmsArea(state.area);
-  const baseModuleId = resolvePhiRuntimeAreaDefinition(cmsArea).baseModuleId;
-  const activeModuleIds = new Set(state.runtimeModuleIdsByArea[state.area] ?? []);
+  const areaFilter = state.modulesAreaFilter
+    ? resolvePhiBuilderAreaAsCmsArea(state.modulesAreaFilter)
+    : null;
 
   return state.runtimeModuleDefinitions
     .filter((definition) =>
-      definition.kind !== "platform" && definition.eligibleAreas.includes(cmsArea))
+      definition.kind !== "platform" &&
+      (areaFilter == null || definition.eligibleAreas.includes(areaFilter)))
     .map((definition) => {
-      const isBaseModule = definition.moduleId === baseModuleId;
+      const baseAreaKey = resolveModuleBaseAreaKey(definition.moduleId);
+      const activeAreas = PHI_CMS_AREA_KEYS.filter((areaKey) =>
+        definition.eligibleAreas.includes(areaKey) &&
+        (areaKey === baseAreaKey || isModuleActiveInArea(state, definition.moduleId, areaKey)));
       return {
         moduleId: definition.moduleId,
-        active: isBaseModule || activeModuleIds.has(definition.moduleId),
-        locked: isBaseModule,
+        // "Runs anywhere": a base Module always does (its own Area never lets go of it), which is
+        // exactly why its switch is locked -- the checkboxes carry the per-Area choice that remains.
+        active: activeAreas.length > 0,
+        locked: baseAreaKey != null,
         icon: definition.icon ?? (definition.iconFamily ? `@phis/ui/widgets:${definition.iconFamily}` : ""),
         title: definition.title,
         description: definition.description,
         category: categoryLabels?.[readPhiRuntimeModuleCategory(definition.category)] ?? definition.category,
-        isBaseModule,
+        isBaseModule: baseAreaKey != null,
+        baseAreaKey,
+        ...Object.fromEntries(PHI_CMS_AREA_KEYS.map((areaKey) => [
+          `area_${areaKey}`,
+          definition.eligibleAreas.includes(areaKey) ? activeAreas.includes(areaKey) : null,
+        ])),
       };
     })
     .sort((left, right) => left.title.localeCompare(right.title, "en", { sensitivity: "base" }));
@@ -96,9 +139,10 @@ function buildRuntimeModuleDetailRows(
     return [];
   }
 
-  const cmsArea = resolvePhiBuilderAreaAsCmsArea(state.area);
-  const isBaseModule = definition.moduleId === resolvePhiRuntimeAreaDefinition(cmsArea).baseModuleId;
-  const active = isBaseModule || (state.runtimeModuleIdsByArea[state.area] ?? []).includes(definition.moduleId);
+  const baseAreaKey = resolveModuleBaseAreaKey(definition.moduleId);
+  const activeAreas = PHI_CMS_AREA_KEYS.filter((areaKey) =>
+    definition.eligibleAreas.includes(areaKey) &&
+    (areaKey === baseAreaKey || isModuleActiveInArea(state, definition.moduleId, areaKey)));
   const label = (key: string, fallback: string) => detailLabels?.[key] ?? fallback;
   const yesNo = (value: boolean) =>
     value ? label("yes", "Yes") : label("no", "No");
@@ -117,8 +161,12 @@ function buildRuntimeModuleDetailRows(
       label: label("eligibleAreas", "Eligible areas"),
       value: definition.eligibleAreas.map((areaKey) => areaLabels?.[areaKey] ?? areaKey).join(", "),
     },
-    { key: "baseModule", label: label("baseModule", "Area Base module"), value: yesNo(isBaseModule) },
-    { key: "active", label: label("active", "Active in this Area"), value: yesNo(active) },
+    { key: "baseModule", label: label("baseModule", "Area Base module"), value: yesNo(baseAreaKey != null) },
+    {
+      key: "activeAreas",
+      label: label("activeAreas", "Active areas"),
+      value: activeAreas.map((areaKey) => areaLabels?.[areaKey] ?? areaKey).join(", ") || "–",
+    },
   ];
 }
 
@@ -170,42 +218,79 @@ export function PhiBuilderRuntimeModulesTableProviderClient({ children }: { chil
       if (request.resourceKey !== RESOURCE_KEY) {
         throw new Error("Unknown Runtime Modules Table resource.");
       }
-      if (request.kind !== "field" || request.fieldKey !== "active") {
+      if (request.kind !== "field") {
         return { status: "rejected", invalidation: "none", errorCode: "unsupported-mutation" };
       }
 
-      const cmsArea = resolvePhiBuilderAreaAsCmsArea(builderState.area);
       const moduleId = String(request.rowIdentity);
       const definition = builderState.runtimeModuleDefinitions.find((candidate) => candidate.moduleId === moduleId);
       if (!definition) {
         return { status: "rejected", invalidation: "none", errorCode: "not-found", message: "Module not found." };
       }
-      const baseModuleId = resolvePhiRuntimeAreaDefinition(cmsArea).baseModuleId;
-      if (moduleId === baseModuleId) {
+      const baseAreaKey = resolveModuleBaseAreaKey(moduleId);
+      const proposedActive = request.proposedValue === true;
+
+      const applyAreaChange = (cmsAreas: readonly PhiCmsAreaKey[]) => {
+        const changes = cmsAreas
+          .filter((areaKey): areaKey is PhiCmsAreaKey & PhiDeveloperBuilderArea => isPhiBuilderAreaKey(areaKey))
+          .map((areaKey) => {
+            const currentModuleIds = builderState.runtimeModuleIdsByArea[areaKey] ?? [];
+            return {
+              area: areaKey,
+              selectedIds: proposedActive
+                ? [...currentModuleIds, definition.moduleId]
+                : currentModuleIds.filter((candidateId) => candidateId !== definition.moduleId),
+            };
+          });
+        applyPhiBuilderRuntimeModuleSelectionChanges(changes, "public");
+      };
+
+      // The row's switch: the Module as a whole, i.e. every eligible Area in one gesture.
+      if (request.fieldKey === "active") {
+        if (baseAreaKey != null) {
+          return {
+            status: "rejected",
+            invalidation: "none",
+            errorCode: "locked",
+            message: `"${definition.title}" is Area "${baseAreaKey}"'s Base module and always runs there.`,
+          };
+        }
+        try {
+          applyAreaChange(definition.eligibleAreas);
+        } catch (error) {
+          return {
+            status: "rejected",
+            invalidation: "none",
+            errorCode: "invalid-selection",
+            message: error instanceof Error ? error.message : "Invalid Module selection.",
+          };
+        }
+        return { status: "accepted", invalidation: "view", rowPatch: { active: proposedActive } };
+      }
+
+      // An area_* checkbox: one Area's own choice.
+      const areaKey = request.fieldKey.startsWith("area_") ? request.fieldKey.slice("area_".length) : null;
+      if (!areaKey || !isPhiCmsAreaKey(areaKey)) {
+        return { status: "rejected", invalidation: "none", errorCode: "unsupported-mutation" };
+      }
+      if (areaKey === baseAreaKey) {
         return {
           status: "rejected",
           invalidation: "none",
           errorCode: "locked",
-          message: `"${definition.title}" is this Area's Base module and is always active.`,
+          message: `"${definition.title}" is this Area's Base module and is always active there.`,
         };
       }
-      if (!definition.eligibleAreas.includes(cmsArea)) {
+      if (!definition.eligibleAreas.includes(areaKey)) {
         return {
           status: "rejected",
           invalidation: "none",
           errorCode: "ineligible",
-          message: `"${definition.title}" is not eligible for Area "${cmsArea}".`,
+          message: `"${definition.title}" is not eligible for Area "${areaKey}".`,
         };
       }
-
-      const proposedActive = request.proposedValue === true;
-      const currentModuleIds = builderState.runtimeModuleIdsByArea[builderState.area] ?? [];
-      const nextModuleIds = proposedActive
-        ? [...currentModuleIds, definition.moduleId]
-        : currentModuleIds.filter((candidateId) => candidateId !== definition.moduleId);
-
       try {
-        applyPhiBuilderRuntimeModuleSelectionChange(builderState.area, nextModuleIds, "public");
+        applyAreaChange([areaKey]);
       } catch (error) {
         return {
           status: "rejected",
@@ -214,8 +299,7 @@ export function PhiBuilderRuntimeModulesTableProviderClient({ children }: { chil
           message: error instanceof Error ? error.message : "Invalid Module selection.",
         };
       }
-
-      return { status: "accepted", invalidation: "view", rowPatch: { active: proposedActive } };
+      return { status: "accepted", invalidation: "view", rowPatch: { [request.fieldKey]: proposedActive } };
     };
 
     return {

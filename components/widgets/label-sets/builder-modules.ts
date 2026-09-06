@@ -40,10 +40,11 @@ const PHI_BUILDER_MODULES_PAGE_LABEL_SET = definePhiLabelSet({
     detail_field: PHI_BUILDER_MODULES_PAGE_DEFAULT_LABELS.detail.field,
     detail_value: PHI_BUILDER_MODULES_PAGE_DEFAULT_LABELS.detail.value,
     detail_module_id: PHI_BUILDER_MODULES_PAGE_DEFAULT_LABELS.detail.moduleId,
-    detail_active: PHI_BUILDER_MODULES_PAGE_DEFAULT_LABELS.detail.active,
+    detail_active_areas: PHI_BUILDER_MODULES_PAGE_DEFAULT_LABELS.detail.activeAreas,
     detail_base_module: PHI_BUILDER_MODULES_PAGE_DEFAULT_LABELS.detail.baseModule,
     detail_yes: PHI_BUILDER_MODULES_PAGE_DEFAULT_LABELS.detail.yes,
     detail_no: PHI_BUILDER_MODULES_PAGE_DEFAULT_LABELS.detail.no,
+    filter_all_areas: PHI_BUILDER_MODULES_PAGE_DEFAULT_LABELS.filter.allAreas,
   },
 });
 
@@ -92,10 +93,13 @@ export async function getPhiBuilderModulesPageLabels(
       field: labels.detail_field,
       value: labels.detail_value,
       moduleId: labels.detail_module_id,
-      active: labels.detail_active,
+      activeAreas: labels.detail_active_areas,
       baseModule: labels.detail_base_module,
       yes: labels.detail_yes,
       no: labels.detail_no,
+    },
+    filter: {
+      allAreas: labels.filter_all_areas,
     },
   };
 }

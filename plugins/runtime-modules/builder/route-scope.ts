@@ -1,5 +1,18 @@
 import type { PhiDeveloperBuilderCommandWorkspace } from "./developer-workspace-types";
 
+/**
+ * The Builder pages that edit one Area at a time -- the only pages that arm the header Area
+ * selector. The selector's meaning is "the Area being edited", so every page NOT in this list gets
+ * it disabled by default: a new Builder page that forgets to opt in sits in the safe state instead
+ * of showing a scope that steers nothing. Site-wide pages (modules, media, theme, dashboard,
+ * settings) never opt in.
+ */
+const PHI_AREA_SCOPED_BUILDER_PAGE_KEYS = new Set(["shells", "pages", "navigation", "revisions"]);
+
+export function isPhiAreaScopedBuilderPage(pageKey: string) {
+  return PHI_AREA_SCOPED_BUILDER_PAGE_KEYS.has(pageKey);
+}
+
 export function resolvePhiDeveloperBuilderRouteScope(pathname: string | null) {
   if (typeof pathname !== "string") {
     return null;

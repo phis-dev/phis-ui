@@ -185,6 +185,7 @@ export const PHI_SELECT_CONTROL_SIGNALS = {
   ],
   listens: [
     { ...PHI_CONTROL_SET_VALUE_SIGNAL, channel: "selection", valueType: "string" },
+    PHI_CONTROL_SET_ENABLED_SIGNAL,
     {
       id: "stackMeta",
       channel: "stackMeta",

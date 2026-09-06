@@ -144,6 +144,17 @@ export const PHI_BUILDER_RUNTIME_DATA_PROVIDER_DESCRIPTORS = [
         { key: "description", title: "Description", type: "string" },
         { key: "category", title: "Category", type: "string" },
         { key: "isBaseModule", title: "Area Base module", type: "boolean", required: true },
+        { key: "baseAreaKey", title: "Base area", type: "string" },
+        /*
+         * One optional boolean per Area: `true`/`false` is the Module's activation there, absence
+         * (`null`) means the Module is not eligible for that Area at all -- the cell renders empty.
+         */
+        { key: "area_public", title: "Public", type: "boolean", mutable: true },
+        { key: "area_app", title: "App", type: "boolean", mutable: true },
+        { key: "area_admin", title: "Admin", type: "boolean", mutable: true },
+        { key: "area_builder", title: "Builder", type: "boolean", mutable: true },
+        { key: "area_editor", title: "Editor", type: "boolean", mutable: true },
+        { key: "area_accounting", title: "Accounting", type: "boolean", mutable: true },
       ],
       query: { search: true, sorting: "single", pagination: "none" },
       actions: [{ key: "details", title: "Details", scope: "row", valueType: "none", intent: "read" }],

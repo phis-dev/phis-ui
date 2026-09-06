@@ -62,6 +62,7 @@ import {
   type PhiBuilderHistorySnapshot,
 } from "./history";
 import { usePhiBuilderModuleMetas } from "./plugin-meta-store";
+import { clearPhiBuilderModuleAreasDirty } from "./runtime-module-selection";
 import { phiWorkspaceCatalogStore } from "../../../components/workspace/catalog-store";
 
 export type PhiDeveloperBuilderToolbarCommand =
@@ -150,28 +151,58 @@ export function usePhiBuilderDraftCommandController({
     });
   }
 
+  /**
+   * The Areas a site-wide Modules command has to reach: every Area with unsaved selection edits,
+   * plus every Area already holding an open Module draft allocation -- a draft saved earlier in the
+   * session still wants its publish even when nothing changed since. The Modules workspace edits the
+   * whole activation matrix at once, so its commands walk this list instead of the header Area scope.
+   */
+  function resolveModulesCommandAreas(): PhiDeveloperBuilderArea[] {
+    const areas = new Set<PhiDeveloperBuilderArea>(state.modulesDirtyAreas ?? []);
+    for (const key of Object.keys(state.draftAllocations ?? {})) {
+      if (key.startsWith("modules:")) {
+        areas.add(key.slice("modules:".length) as PhiDeveloperBuilderArea);
+      }
+    }
+    return [...areas];
+  }
+
   async function runSaveCommand(
     workspaceKind: Exclude<PhiDeveloperBuilderCommandWorkspace, "theme" | null>,
   ) {
     if (workspaceKind === "modules") {
-      const modulesResult = await savePhiDeveloperBuilderModulesDraft(
-        state,
-        getPhiDeveloperRegionDraftsSnapshot(),
-        {
-          builderPlugins: builderModuleMetas.plugins,
-          scope: { area: effectiveArea },
-          /*
-           * The Area's code-owned Shell, which this controller holds on every Builder page -- the same
-           * drafts "reset shell" restores from. A Module selection for an Area nobody has saved yet
-           * needs a Shell baseline, and the Modules workspace hydrates no region drafts of its own: it
-           * edits a selection rather than a structure. Without this the save asked the operator to go
-           * and create a Shell that already exists in code.
-           */
-          shellPresetDrafts: shellPresetDraftsByArea[effectiveArea] ?? null,
-        },
-      );
-      emitDraftStatus("draft", modulesResult.revisionId);
-      showMessage({ level: "success", content: "Saved module selection draft." });
+      const areas = resolveModulesCommandAreas();
+      if (areas.length === 0) {
+        showMessage({ level: "info", content: "No module selection changes to save." });
+        return;
+      }
+      let lastRevisionId: number | null = null;
+      for (const area of areas) {
+        const modulesResult = await savePhiDeveloperBuilderModulesDraft(
+          state,
+          getPhiDeveloperRegionDraftsSnapshot(),
+          {
+            builderPlugins: builderModuleMetas.plugins,
+            scope: { area },
+            /*
+             * The Area's code-owned Shell, which this controller holds on every Builder page -- the same
+             * drafts "reset shell" restores from. A Module selection for an Area nobody has saved yet
+             * needs a Shell baseline, and the Modules workspace hydrates no region drafts of its own: it
+             * edits a selection rather than a structure. Without this the save asked the operator to go
+             * and create a Shell that already exists in code.
+             */
+            shellPresetDrafts: shellPresetDraftsByArea[area] ?? null,
+          },
+        );
+        lastRevisionId = modulesResult.revisionId;
+      }
+      emitDraftStatus("draft", lastRevisionId);
+      showMessage({
+        level: "success",
+        content: areas.length === 1
+          ? "Saved module selection draft."
+          : `Saved module selection drafts for ${areas.length} areas.`,
+      });
       return;
     }
 
@@ -215,16 +246,29 @@ export function usePhiBuilderDraftCommandController({
     workspaceKind: Exclude<PhiDeveloperBuilderCommandWorkspace, "theme" | null>,
   ) {
     if (workspaceKind === "modules") {
-      await publishPhiDeveloperBuilderModulesDraft(
-        state,
-        getPhiDeveloperRegionDraftsSnapshot(),
-        {
-          builderPlugins: builderModuleMetas.plugins,
-          scope: { area: effectiveArea },
-        },
-      );
+      const areas = resolveModulesCommandAreas();
+      if (areas.length === 0) {
+        showMessage({ level: "info", content: "No module selection changes to publish." });
+        return;
+      }
+      for (const area of areas) {
+        await publishPhiDeveloperBuilderModulesDraft(
+          state,
+          getPhiDeveloperRegionDraftsSnapshot(),
+          {
+            builderPlugins: builderModuleMetas.plugins,
+            scope: { area },
+          },
+        );
+      }
+      clearPhiBuilderModuleAreasDirty(defaultArea);
       emitDraftStatus("published", null);
-      showMessage({ level: "success", content: "Published module selection." });
+      showMessage({
+        level: "success",
+        content: areas.length === 1
+          ? "Published module selection."
+          : `Published module selection for ${areas.length} areas.`,
+      });
       return;
     }
 
@@ -358,9 +402,14 @@ export function usePhiBuilderDraftCommandController({
    * once there is no draft left to describe something in between.
    */
   function confirmResetModules() {
+    const areas = resolveModulesCommandAreas();
+    if (areas.length === 0) {
+      showMessage({ level: "info", content: "No module selection changes to reset." });
+      return;
+    }
     modal.confirm({
-      title: "Delete Module draft?",
-      content: "This removes the current DB Module draft and restores the shared default selection.",
+      title: "Delete Module drafts?",
+      content: "This removes the open DB Module drafts and restores the shared default selection for every touched area.",
       okText: "Delete and reset",
       okButtonProps: { danger: true },
       cancelText: "Cancel",
@@ -368,22 +417,25 @@ export function usePhiBuilderDraftCommandController({
       onOk: async () => {
         setActiveDraftAction("reset");
         try {
-          await discardPhiDeveloperBuilderModulesDraft({
-            area: effectiveArea,
-            areaPresetSource: state.areaPresetSourcesByArea[effectiveArea] ?? null,
-          });
+          for (const area of areas) {
+            await discardPhiDeveloperBuilderModulesDraft({
+              area,
+              areaPresetSource: state.areaPresetSourcesByArea[area] ?? null,
+            });
+          }
           phiWorkspaceCatalogStore.patch(defaultArea, (current) => ({
             ...current,
             runtimeModuleIdsByArea: {
               ...(current.runtimeModuleIdsByArea ?? {}),
-              [effectiveArea]: createPhiDefaultAreaRuntimeModuleIds(effectiveArea),
+              ...Object.fromEntries(areas.map((area) => [area, createPhiDefaultAreaRuntimeModuleIds(area)])),
             },
           }));
+          clearPhiBuilderModuleAreasDirty(defaultArea);
           phiBuilderHistory.clear(createPhiBuilderHistoryContext({
             workspace: "modules",
-            area: effectiveArea,
+            area: defaultArea,
           }));
-          showMessage({ level: "success", content: "Reset Module draft." });
+          showMessage({ level: "success", content: "Reset Module drafts." });
         } catch (error) {
           showMessage({ level: "error", content: error instanceof Error ? error.message : "Module reset failed." });
           throw error;
@@ -622,7 +674,11 @@ export function usePhiBuilderDraftCommandController({
           ...current,
           runtimeModuleIdsByArea: {
             ...(current.runtimeModuleIdsByArea ?? {}),
-            [snapshot.area]: snapshot.moduleIds,
+            // `null` recorded "no selection stored", which resolves to the Area's default set.
+            ...Object.fromEntries(Object.entries(snapshot.moduleIdsByArea).map(([area, moduleIds]) => [
+              area,
+              moduleIds ? [...moduleIds] : createPhiDefaultAreaRuntimeModuleIds(area as PhiDeveloperBuilderArea),
+            ])),
           },
         }));
         return;

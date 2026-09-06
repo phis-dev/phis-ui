@@ -6,7 +6,7 @@ import {
 } from "../area-definitions";
 import { resolvePhiRuntimeModuleIdsForArea } from "../settings";
 import { phiWorkspaceCatalogStore } from "../../../components/workspace/catalog-store";
-import { getPhiDeveloperBuilderStateSnapshot } from "./developer-workspace-store";
+import { builderWorkspaceStore, getPhiDeveloperBuilderStateSnapshot } from "./developer-workspace-store";
 import {
   capturePhiBuilderModulesHistoryState,
   createPhiBuilderHistoryContext,
@@ -68,44 +68,94 @@ export function normalizeRuntimeModuleSelection(
 }
 
 /**
- * Applies a new Module selection to one Area: validates it, patches the catalog, and records the
- * change in the Area's own Module history -- the one place all of this happens, so a Switch cell in the
- * Modules table and the legacy `runtimeModules` signal channel stay in perfect step rather than each
- * growing its own copy of "what does changing this actually mean."
+ * Applies a new Module selection to one or more Areas: validates each Area's list, patches the
+ * catalog, and records the whole gesture as ONE history entry -- the one place all of this happens,
+ * so a Switch cell in the Modules table and the legacy `runtimeModules` signal channel stay in
+ * perfect step rather than each growing its own copy of "what does changing this actually mean."
  *
- * A no-op selection (the normalized list already matches what is live) records nothing: an empty history
- * entry would just be something to undo back into itself.
+ * One entry per gesture is the point of taking a list: the module-wide switch changes several Areas
+ * at once, and recording those as separate entries would make undo restore exactly the partial state
+ * the switch exists to avoid. Areas whose normalized list already matches what is live are dropped;
+ * if nothing remains, nothing is recorded.
  */
-export function applyPhiBuilderRuntimeModuleSelectionChange(
-  area: PhiDeveloperBuilderArea,
-  selectedIds: readonly string[],
+export function applyPhiBuilderRuntimeModuleSelectionChanges(
+  changes: ReadonlyArray<{ area: PhiDeveloperBuilderArea; selectedIds: readonly string[] }>,
   defaultArea: PhiDeveloperBuilderArea,
 ) {
   const current = getPhiDeveloperBuilderStateSnapshot(defaultArea);
-  const currentModuleIds = current.runtimeModuleIdsByArea?.[area] ?? [];
-  const nextModuleIds = normalizeRuntimeModuleSelection(selectedIds, area, current.runtimeModuleDefinitions);
-  if (areRuntimeModuleIdsEqual(currentModuleIds, nextModuleIds)) {
-    return nextModuleIds;
+  const effective: Array<{ area: PhiDeveloperBuilderArea; moduleIds: PhiRuntimeModuleId[] }> = [];
+  for (const change of changes) {
+    const currentModuleIds = current.runtimeModuleIdsByArea?.[change.area] ?? [];
+    const nextModuleIds = normalizeRuntimeModuleSelection(
+      change.selectedIds,
+      change.area,
+      current.runtimeModuleDefinitions,
+    );
+    if (!areRuntimeModuleIdsEqual(currentModuleIds, nextModuleIds)) {
+      effective.push({ area: change.area, moduleIds: nextModuleIds });
+    }
+  }
+  if (effective.length === 0) {
+    return;
   }
 
+  const changedAreas = effective.map(({ area }) => area);
   const historyBefore = capturePhiBuilderModulesHistoryState(
     getPhiDeveloperBuilderStateSnapshot(defaultArea),
-    area,
+    changedAreas,
   );
   phiWorkspaceCatalogStore.patch(defaultArea, (catalog) => ({
     ...catalog,
     runtimeModuleIdsByArea: {
       ...(catalog.runtimeModuleIdsByArea ?? {}),
-      [area]: nextModuleIds,
+      ...Object.fromEntries(effective.map(({ area, moduleIds }) => [area, moduleIds])),
     },
   }));
+  markPhiBuilderModuleAreasDirty(changedAreas, defaultArea);
   phiBuilderHistory.record(
-    createPhiBuilderHistoryContext({ workspace: "modules", area }),
+    createPhiBuilderHistoryContext({ workspace: "modules", area: defaultArea }),
     {
       label: "Change runtime modules",
       before: historyBefore,
-      after: capturePhiBuilderModulesHistoryState(getPhiDeveloperBuilderStateSnapshot(defaultArea), area),
+      after: capturePhiBuilderModulesHistoryState(
+        getPhiDeveloperBuilderStateSnapshot(defaultArea),
+        changedAreas,
+      ),
     },
   );
-  return nextModuleIds;
+}
+
+export function applyPhiBuilderRuntimeModuleSelectionChange(
+  area: PhiDeveloperBuilderArea,
+  selectedIds: readonly string[],
+  defaultArea: PhiDeveloperBuilderArea,
+) {
+  applyPhiBuilderRuntimeModuleSelectionChanges([{ area, selectedIds }], defaultArea);
+  return getPhiDeveloperBuilderStateSnapshot(defaultArea).runtimeModuleIdsByArea?.[area] ?? [];
+}
+
+/**
+ * The Areas whose Module selection has unsaved edits, kept as Builder tool state so the Modules
+ * workspace commands know which Areas a site-wide save or publish has to reach. Undo does not clear
+ * an Area from here -- a save of an unchanged selection is a no-op draft, while a missed Area would
+ * silently publish stale state.
+ */
+export function markPhiBuilderModuleAreasDirty(
+  areas: readonly PhiDeveloperBuilderArea[],
+  defaultArea: PhiDeveloperBuilderArea,
+) {
+  builderWorkspaceStore.patch(defaultArea, (tool) => {
+    const next = new Set(tool.modulesDirtyAreas ?? []);
+    for (const area of areas) {
+      next.add(area);
+    }
+    return next.size === (tool.modulesDirtyAreas ?? []).length
+      ? tool
+      : { ...tool, modulesDirtyAreas: [...next] };
+  });
+}
+
+export function clearPhiBuilderModuleAreasDirty(defaultArea: PhiDeveloperBuilderArea) {
+  builderWorkspaceStore.patch(defaultArea, (tool) =>
+    (tool.modulesDirtyAreas?.length ?? 0) === 0 ? tool : { ...tool, modulesDirtyAreas: [] });
 }

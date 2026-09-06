@@ -8,6 +8,7 @@ import {
   PHI_CMS_THREE_COLUMN_LAYOUT_SLOT_INDEX,
 } from "../../../constants/cms-layout-types";
 import { PhiCmsFlags, PhiCmsRegionType, PhiCmsStatus } from "../../../constants/phi-cms";
+import { PHI_CMS_AREA_KEYS } from "../../../constants/cms-areas";
 import { PhiMediaKind } from "../../../constants/media";
 import { buildPhiCmsLayoutNode, buildPhiCmsWidgetNode } from "../../../helpers/cms-node-factories";
 import { remapPhiSignalRoutesInConfig } from "../../../helpers/signal-route-lifecycle";
@@ -31,6 +32,7 @@ import {
   resolvePhiThemeSelectionValue,
 } from "../../../theme/phi-theme-selection";
 import { createPhiBuilderControllerAddress } from "../../../plugins/runtime-modules/builder/controller/address";
+import { isPhiAreaScopedBuilderPage } from "../../../plugins/runtime-modules/builder/route-scope";
 import { createPhiThemeControllerAddress } from "../../../plugins/runtime-modules/theme/controller/address";
 import { PHI_THEME_SIGNAL_CHANNELS } from "../../../plugins/runtime-modules/theme/controller/signals";
 import { createPhiCoreRuntimeControllerAddress } from "../../runtime/core-runtime-controller-address";
@@ -164,6 +166,7 @@ const PHI_BUILDER_WIDGET_NODE_KEYS = [
   "widgetPagesMetaToolbar",
   "widgetPagesHeaderSelector",
   "widgetRevisionsTable",
+  "widgetModulesAreaFilter",
   "widgetBrandContextSelect",
   "widgetBrandPreviewModeSwitch",
   "widgetBrandThemeControls",
@@ -852,6 +855,13 @@ export async function buildPhiDefaultBuilderAreaPresetTree({
         config: {
           key: "builder-area-selector",
           value: "public",
+          /*
+           * Disabled is the selector's resting state: only Builder pages that edit one Area at a
+           * time arm it, via the workspace controller's "enabled" signal (isPhiAreaScopedBuilderPage
+           * holds the opt-in list). The static default also renders on pages nobody armed, and on
+           * pages that opted in the SSR baseline matches because the controller enables it on mount.
+           */
+          disabled: !isPhiAreaScopedBuilderPage(page.path.split("/").filter(Boolean)[1] ?? "root"),
           options: [
             { value: "public", label: "Public" },
             { value: "app", label: "App" },
@@ -862,7 +872,10 @@ export async function buildPhiDefaultBuilderAreaPresetTree({
           ],
           signalRoutes: {
             emits: [{ routeKey: "builder-area-change", capabilityId: "change", scope: "area", channel: "area", action: "change", valueType: "string", receiver: createPhiBuilderControllerAddress() }],
-            listens: [{ routeKey: "builder-area-selection", capabilityId: "change", scope: "area", channel: "areaSelection", action: "change", valueType: "string", receiver: createPhiSignalAddress("cms", SYNTHETIC_DEV_WIDGET_IDS.widgetBuilderAreaSelector) }],
+            listens: [
+              { routeKey: "builder-area-selection", capabilityId: "change", scope: "area", channel: "areaSelection", action: "change", valueType: "string", receiver: createPhiSignalAddress("cms", SYNTHETIC_DEV_WIDGET_IDS.widgetBuilderAreaSelector) },
+              { routeKey: "builder-area-selector-enabled", capabilityId: "enabled", scope: "area", channel: "enabled", action: "change", valueType: "boolean", receiver: createPhiSignalAddress("cms", SYNTHETIC_DEV_WIDGET_IDS.widgetBuilderAreaSelector) },
+            ],
           },
         },
         contentId: null,
@@ -1316,7 +1329,7 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
     category: modulesLabels.columns.category,
     eligibleAreas: modulesLabels.columns.eligibleAreas,
     baseModule: modulesLabels.detail.baseModule,
-    active: modulesLabels.detail.active,
+    activeAreas: modulesLabels.detail.activeAreas,
     yes: modulesLabels.detail.yes,
     no: modulesLabels.detail.no,
   } : null;
@@ -3079,6 +3092,39 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                 },
                 contentId: null,
               }),
+              /*
+               * The table's own Area filter, with "all Areas" as the default. A view filter only: it
+               * narrows which Modules are listed (those eligible for the chosen Area) and never what
+               * a switch or checkbox does -- which is why it lives here beside the table rather than
+               * in the header Area selector, whose meaning is "the Area being edited".
+               */
+              buildPhiCmsWidgetNode({
+                typeKey: "select-box",
+                id: SYNTHETIC_DEV_WIDGET_IDS.widgetModulesAreaFilter,
+                siteId: page.siteId,
+                parentLayoutNodeId: SYNTHETIC_DEV_LAYOUT_IDS.layoutHeaderBottom,
+                slotIndex: PHI_CMS_THREE_COLUMN_LAYOUT_SLOT_INDEX.Left,
+                sortOrder: 1,
+                status: PhiCmsStatus.Published,
+                flags: 0,
+                visibilityMask: page.visibilityMask,
+                label: "dev modules area filter",
+                config: {
+                  key: "modules-area-filter",
+                  value: "all",
+                  options: [
+                    { value: "all", label: modulesLabels?.filter.allAreas ?? "All areas" },
+                    ...PHI_CMS_AREA_KEYS.map((areaKey) => ({
+                      value: areaKey,
+                      label: modulesLabels?.areas[areaKey] ?? areaKey,
+                    })),
+                  ],
+                  signalRoutes: {
+                    emits: [{ routeKey: "builder-modules-area-filter", capabilityId: "change", scope: "area", channel: "modulesAreaFilter", action: "change", valueType: "string", receiver: createPhiBuilderControllerAddress() }],
+                  },
+                },
+                contentId: null,
+              }),
               buildPhiCmsWidgetNode({
                 typeKey: "command-toolbar",
                 id: SYNTHETIC_DEV_WIDGET_IDS.widgetToolbar,
@@ -3129,6 +3175,27 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                         },
                       },
                       { key: "title", fieldKey: "title", iconFieldKey: "icon", title: modulesLabels?.columns.title ?? "Module", sortable: true },
+                      /*
+                       * One checkbox column per Area: the switch is the Module everywhere, these are
+                       * the per-Area refinement. A Module not eligible for an Area carries null there
+                       * and the cell renders empty; the Area whose Base module the row is stays
+                       * checked and disabled.
+                       */
+                      ...PHI_CMS_AREA_KEYS.map((areaKey) => ({
+                        key: `area_${areaKey}`,
+                        fieldKey: `area_${areaKey}`,
+                        title: modulesLabels?.areas[areaKey] ?? areaKey,
+                        align: "center" as const,
+                        editor: {
+                          control: "checkbox" as const,
+                          disabledWhen: {
+                            source: "row" as const,
+                            valuePath: "baseAreaKey",
+                            operator: "equals" as const,
+                            value: areaKey,
+                          },
+                        },
+                      })),
                       { key: "category", fieldKey: "category", title: modulesLabels?.columns.category ?? "Category", sortable: true },
                       { key: "description", fieldKey: "description", title: modulesLabels?.columns.description ?? "Description", sizing: { mode: "fill" } },
                     ],

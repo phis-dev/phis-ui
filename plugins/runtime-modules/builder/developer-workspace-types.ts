@@ -112,6 +112,16 @@ export type PhiDeveloperBuilderState = {
    * the default back, which is stored as no config at all so the code-owned preset answers again.
    */
   areaRootRouteDrafts: Record<string, PhiAreaRootRoute | null>;
+  /**
+   * Areas whose Module selection has unsaved edits. The Modules workspace is site-wide, so its save
+   * and publish commands walk this list instead of the header Area scope.
+   */
+  modulesDirtyAreas: PhiDeveloperBuilderArea[];
+  /**
+   * The Modules table's own Area filter -- `null` is "all Areas". A view filter only: it narrows
+   * which Modules are listed (those eligible for the Area), never what a switch or checkbox does.
+   */
+  modulesAreaFilter: PhiDeveloperBuilderArea | null;
 };
 
 /**

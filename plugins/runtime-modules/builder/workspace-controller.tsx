@@ -9,7 +9,7 @@ import type {
   PhiRuntimeModuleDefinition,
   PhiRuntimeModuleId,
 } from "../../../types/cms-plugins";
-import { readPhiCmsInstanceId } from "../../../types/cms-instance-id";
+import { createPhiPresetCmsInstanceId, readPhiCmsInstanceId } from "../../../types/cms-instance-id";
 import {
   usePhiSignalDispatcher,
   usePhiSignalListener,
@@ -77,6 +77,7 @@ import type { PhiPageReference } from "../../../types/references";
 import { getPhiBuilderRegionDraftKey } from "./region-keys";
 import { getDefaultRegionDraft } from "./developer-region-drafts";
 import {
+  isPhiAreaScopedBuilderPage,
   resolvePhiDeveloperBuilderCommandWorkspace,
   resolvePhiDeveloperBuilderRouteScope,
 } from "./route-scope";
@@ -962,6 +963,20 @@ function usePhiDeveloperBuilderWorkspaceController(
 
       if (
         signal.scope === "area" &&
+        signal.channel === "modulesAreaFilter" &&
+        signal.action === "change" &&
+        signal.valueType === "string" &&
+        signal.receiver === createPhiBuilderControllerAddress()
+      ) {
+        // The Modules table's view filter -- "all" clears it. Never an edit scope.
+        const nextFilter = isPhiBuilderAreaKey(signal.value) ? signal.value : null;
+        builderWorkspaceStore.patch(defaultArea, (current) =>
+          current.modulesAreaFilter === nextFilter ? current : { ...current, modulesAreaFilter: nextFilter });
+        return;
+      }
+
+      if (
+        signal.scope === "area" &&
         signal.channel === "bindingParams" &&
         signal.action === "change" &&
         signal.valueType === "json" &&
@@ -1798,6 +1813,42 @@ function usePhiDeveloperBuilderWorkspaceController(
       timestamp: Date.now(),
     });
   }, [dispatchSignal, state.area]);
+
+  /*
+   * The header Area selector is disabled at rest and armed only by pages that edit one Area at a
+   * time (`isPhiAreaScopedBuilderPage` holds the opt-in list). Steering it from here rather than
+   * baking the state into the Shell tree keeps a DB-overridden Builder Shell honest: whatever the
+   * stored tree says, the live page decides. The emit waits for the selector to register as a
+   * receiver, so a late-mounting Shell still hears it.
+   */
+  const areaSelectorAddress = useMemo(
+    () => createPhiSignalAddress("cms", createPhiPresetCmsInstanceId({
+      domain: "area",
+      ownerModuleId: PHI_BUILDER_RUNTIME_MODULE_ID,
+      presetKey: "builder-area-preset",
+      nodeKey: "widgetBuilderAreaSelector",
+    })),
+    [],
+  );
+  const areaSelectorReady = usePhiSignalReceiverReady(areaSelectorAddress);
+  const areaSelectorArmed = isPhiAreaScopedBuilderPage(
+    resolvePhiDeveloperBuilderRouteScope(pathname)?.pageKey ?? "root",
+  );
+  useEffect(() => {
+    if (!areaSelectorReady) {
+      return;
+    }
+    dispatchSignal({
+      scope: "area",
+      channel: "enabled",
+      action: "change",
+      value: areaSelectorArmed,
+      valueType: "boolean",
+      sender: createPhiBuilderControllerAddress(),
+      receiver: areaSelectorAddress,
+      timestamp: Date.now(),
+    });
+  }, [areaSelectorArmed, areaSelectorAddress, areaSelectorReady, dispatchSignal]);
 
   return pageMetaDialog;
 }

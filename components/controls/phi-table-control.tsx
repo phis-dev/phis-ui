@@ -503,6 +503,11 @@ function EditableTableCell({ value, editor, onCommit }: {
     if (disabled) textInputRef.current?.blur();
   }, [disabled]);
   if (editor.type === "boolean") {
+    // An optional boolean that holds no value is a field this row does not have -- a switch or
+    // checkbox for it would offer a choice that does not exist, so the cell stays empty.
+    if (value == null && !editor.required) {
+      return null;
+    }
     if (editor.control === "checkbox") {
       return <PhiCheckboxControl checked={draft === true} disabled={editor.disabled || editor.loading}
         onChange={(next) => { draftRef.current = next; setDraft(next); onCommit(next); }} />;

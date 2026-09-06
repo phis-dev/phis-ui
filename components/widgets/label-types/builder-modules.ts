@@ -28,10 +28,13 @@ export type PhiBuilderModulesPageLabels = {
     field: string;
     value: string;
     moduleId: string;
-    active: string;
+    activeAreas: string;
     baseModule: string;
     yes: string;
     no: string;
+  };
+  filter: {
+    allAreas: string;
   };
 };
 
@@ -76,9 +79,12 @@ export const PHI_BUILDER_MODULES_PAGE_DEFAULT_LABELS: PhiBuilderModulesPageLabel
     field: "Field",
     value: "Value",
     moduleId: "Module id",
-    active: "Active in this Area",
+    activeAreas: "Active areas",
     baseModule: "Area Base module",
     yes: "Yes",
     no: "No",
+  },
+  filter: {
+    allAreas: "All areas",
   },
 };
