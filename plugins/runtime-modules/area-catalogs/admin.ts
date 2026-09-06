@@ -19,6 +19,7 @@ export function createPhiAdminRuntimeModuleCatalog(
       ...readPhiSiteModuleServerAreaContributions(siteModules, "admin"),
     ],
     PHI_ADMIN_RUNTIME_AREA_DEFINITIONS,
+    "admin",
   );
 }
 

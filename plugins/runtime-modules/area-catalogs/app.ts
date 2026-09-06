@@ -19,6 +19,7 @@ export function createPhiAppRuntimeModuleCatalog(
       ...readPhiSiteModuleServerAreaContributions(siteModules, "app"),
     ],
     PHI_APP_RUNTIME_AREA_DEFINITIONS,
+    "app",
   );
 }
 

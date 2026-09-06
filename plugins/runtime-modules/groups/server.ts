@@ -21,9 +21,7 @@ export function createPhiGroupsRuntimeModuleServerAreaContribution(area?: PhiCms
         ? PHI_GROUPS_APP_RUNTIME_MODULE_FORMS
         : PHI_GROUPS_RUNTIME_MODULE_FORMS,
       layouts: [],
-      routes: area
-        ? PHI_GROUPS_RUNTIME_MODULE_ROUTES.filter((route) => route.area === area)
-        : PHI_GROUPS_RUNTIME_MODULE_ROUTES,
+      routes: PHI_GROUPS_RUNTIME_MODULE_ROUTES,
       load: () => import("./module").then((module) => module.PHI_GROUPS_RUNTIME_MODULE),
     },
   });

@@ -19,6 +19,7 @@ export function createPhiEditorRuntimeModuleCatalog(
       ...readPhiSiteModuleServerAreaContributions(siteModules, "editor"),
     ],
     PHI_EDITOR_RUNTIME_AREA_DEFINITIONS,
+    "editor",
   );
 }
 

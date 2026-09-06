@@ -1,4 +1,3 @@
-import type { PhiCmsAreaKey } from "../../../constants/cms-areas";
 import {
   PHI_ASSET_FOLDER_RUNTIME_MODULE_FORM,
   PHI_ASSET_METADATA_RUNTIME_MODULE_FORM,
@@ -13,7 +12,7 @@ import { PHI_RUNTIME_MODULE_WIDGETS as PHI_ASSET_WIDGETS } from "./widgets";
  * Every Area carries this module, and each shows a different set of its Pages. The filter lives here
  * rather than in the Area files, so no Area needs to reach into this module's presets.
  */
-export function createPhiAssetRuntimeModuleServerAreaContribution(area?: PhiCmsAreaKey) {
+export function createPhiAssetRuntimeModuleServerAreaContribution() {
   return definePhiRuntimeModuleServerAreaContribution({
     moduleId: PHI_ASSET_RUNTIME_MODULE_DEFINITION.moduleId,
     catalogEntry: {
@@ -25,9 +24,7 @@ export function createPhiAssetRuntimeModuleServerAreaContribution(area?: PhiCmsA
         PHI_ASSET_FOLDER_RUNTIME_MODULE_FORM,
         PHI_MEDIA_SETTINGS_RUNTIME_MODULE_FORM,
       ],
-      routes: area
-        ? PHI_ASSET_RUNTIME_MODULE_ROUTES.filter((descriptor) => descriptor.area === area)
-        : PHI_ASSET_RUNTIME_MODULE_ROUTES,
+      routes: PHI_ASSET_RUNTIME_MODULE_ROUTES,
       loadUiProvider: () => import("../../../components/media/asset-form-ui-provider")
         .then((module) => module.PhiAssetFormUiProvider),
       load: () => import("./module").then((module) => module.PHI_ASSET_RUNTIME_MODULE),

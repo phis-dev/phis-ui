@@ -12,6 +12,11 @@ import type { PhiSiteModuleServerAreaContributions } from "./plugins/runtime-mod
  *
  * Placement follows `eligibleAreas` on each Module's own definition. A Module that names no Area reaches
  * no catalog; that is refused when the package is built, in `definePhiModuleDefinitions`.
+ *
+ * Placement only -- the whole contribution goes into every Area the Module was admitted to, and the Area
+ * catalog cuts it to the descriptors addressed to itself. The cut is one implementation for first-party
+ * and installed Modules alike, in `cutPhiRuntimeModuleServerAreaContribution`, rather than a rule each
+ * Module writes out again.
  */
 export function collectPhiSiteModuleServerAreaContributions(
   contributions: readonly PhiRuntimeModuleServerAreaContribution[],

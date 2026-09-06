@@ -8,11 +8,9 @@ import { createPhiAuthRuntimeModuleServerAreaContribution } from "../auth/server
 import { PHI_ADMIN_RUNTIME_MODULE_SERVER_AREA_CONTRIBUTION } from "../admin/server";
 
 export const PHI_ADMIN_RUNTIME_MODULE_AREA_CONTRIBUTIONS = [
-  ...createPhiCommonRuntimeModuleServerAreaContributions({
-    area: "admin",
-  }),
+  ...createPhiCommonRuntimeModuleServerAreaContributions(),
   createPhiAuthRuntimeModuleServerAreaContribution("admin"),
-  createPhiDashboardRuntimeModuleServerAreaContribution("admin"),
+  createPhiDashboardRuntimeModuleServerAreaContribution(),
   createPhiGroupsRuntimeModuleServerAreaContribution("admin"),
   createPhiLocalizationRuntimeModuleServerAreaContribution("admin"),
   PHI_OBSERVABILITY_RUNTIME_MODULE_SERVER_AREA_CONTRIBUTION,

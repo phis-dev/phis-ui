@@ -19,6 +19,7 @@ export function createPhiAccountingRuntimeModuleCatalog(
       ...readPhiSiteModuleServerAreaContributions(siteModules, "accounting"),
     ],
     PHI_ACCOUNTING_RUNTIME_AREA_DEFINITIONS,
+    "accounting",
   );
 }
 

@@ -23,7 +23,7 @@ export function createPhiLocalizationRuntimeModuleServerAreaContribution(area?: 
           (form.formId === PHI_LOCALIZATION_FORM_IDS.editorTranslation) === isEditor)
         : PHI_LOCALIZATION_RUNTIME_MODULE_FORMS,
       layouts: [],
-      routes: isEditor ? [] : PHI_LOCALIZATION_RUNTIME_MODULE_ROUTES,
+      routes: PHI_LOCALIZATION_RUNTIME_MODULE_ROUTES,
       load: () => import("./module").then((module) => module.PHI_LOCALIZATION_RUNTIME_MODULE),
     },
   });

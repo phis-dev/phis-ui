@@ -19,6 +19,7 @@ export function createPhiPublicRuntimeModuleCatalog(
       ...readPhiSiteModuleServerAreaContributions(siteModules, "public"),
     ],
     PHI_PUBLIC_RUNTIME_AREA_DEFINITIONS,
+    "public",
   );
 }
 

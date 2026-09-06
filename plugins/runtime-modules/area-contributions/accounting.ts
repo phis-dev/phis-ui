@@ -3,7 +3,7 @@ import { createPhiDashboardRuntimeModuleServerAreaContribution } from "../dashbo
 import { PHI_ACCOUNTING_RUNTIME_MODULE_SERVER_AREA_CONTRIBUTION } from "../accounting/server";
 
 export const PHI_ACCOUNTING_RUNTIME_MODULE_AREA_CONTRIBUTIONS = [
-  ...createPhiCommonRuntimeModuleServerAreaContributions({ area: "accounting" }),
-  createPhiDashboardRuntimeModuleServerAreaContribution("accounting"),
+  ...createPhiCommonRuntimeModuleServerAreaContributions(),
+  createPhiDashboardRuntimeModuleServerAreaContribution(),
   PHI_ACCOUNTING_RUNTIME_MODULE_SERVER_AREA_CONTRIBUTION,
 ] as const;

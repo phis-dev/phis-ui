@@ -4,8 +4,8 @@ import { PHI_EDITOR_RUNTIME_MODULE_SERVER_AREA_CONTRIBUTION } from "../editor/se
 import { createPhiLocalizationRuntimeModuleServerAreaContribution } from "../localization/server";
 
 export const PHI_EDITOR_RUNTIME_MODULE_AREA_CONTRIBUTIONS = [
-  ...createPhiCommonRuntimeModuleServerAreaContributions({ area: "editor" }),
-  createPhiDashboardRuntimeModuleServerAreaContribution("editor"),
+  ...createPhiCommonRuntimeModuleServerAreaContributions(),
+  createPhiDashboardRuntimeModuleServerAreaContribution(),
   createPhiLocalizationRuntimeModuleServerAreaContribution("editor"),
   PHI_EDITOR_RUNTIME_MODULE_SERVER_AREA_CONTRIBUTION,
 ] as const;

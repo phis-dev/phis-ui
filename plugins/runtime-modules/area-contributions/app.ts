@@ -6,10 +6,10 @@ import { createPhiAuthRuntimeModuleServerAreaContribution } from "../auth/server
 import { PHI_APP_RUNTIME_MODULE_SERVER_AREA_CONTRIBUTION } from "../app/server";
 
 export const PHI_APP_RUNTIME_MODULE_AREA_CONTRIBUTIONS = [
-  ...createPhiCommonRuntimeModuleServerAreaContributions({ area: "app" }),
+  ...createPhiCommonRuntimeModuleServerAreaContributions(),
   createPhiAuthRuntimeModuleServerAreaContribution("app"),
-  createPhiDashboardRuntimeModuleServerAreaContribution("app"),
+  createPhiDashboardRuntimeModuleServerAreaContribution(),
   createPhiGroupsRuntimeModuleServerAreaContribution("app"),
-  createPhiAvatarRuntimeModuleServerAreaContribution("app"),
+  createPhiAvatarRuntimeModuleServerAreaContribution(),
   PHI_APP_RUNTIME_MODULE_SERVER_AREA_CONTRIBUTION,
 ] as const;
