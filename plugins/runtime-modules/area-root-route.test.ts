@@ -110,7 +110,7 @@ describe("an Area root", () => {
       const resolved = await resolveRootRedirect(area);
       expect(resolved.pageType).toBe(PhiCmsPageType.Redirect);
       expect(resolved.layoutConfig.redirect).toEqual({
-        target: { area, path: "/dashboard" },
+        target: { area, path: "/phis/ui/dashboard" },
         status: 307,
       });
     },
@@ -120,14 +120,14 @@ describe("an Area root", () => {
     const resolved = await resolveRootRedirect("builder", { withoutDashboard: true });
     expect(resolved.pageType).toBe(PhiCmsPageType.Redirect);
     expect(resolved.layoutConfig.redirect).toMatchObject({
-      target: { area: "builder", path: "/modules" },
+      target: { area: "builder", path: "/phis/ui/modules" },
     });
   });
 
   it("falls back to the Area's own page, not to the Module's", async () => {
     const resolved = await resolveRootRedirect("accounting", { withoutDashboard: true });
     expect(resolved.layoutConfig.redirect).toMatchObject({
-      target: { area: "accounting", path: "/overview" },
+      target: { area: "accounting", path: "/phis/ui/overview" },
     });
   });
 

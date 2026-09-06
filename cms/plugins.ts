@@ -18,8 +18,8 @@ export {
   resolvePhiCmsThemePresetBinding,
 } from "../plugins/runtime-modules/descriptor-compiler";
 export {
-  buildPhiRuntimeModuleRouteSegment,
-  readPhiRuntimeModuleRouteParts,
+  buildPhiRuntimeModulePackageRoutePrefix,
+  readPhiRuntimeModulePackageRouteParts,
 } from "../helpers/runtime-module-route-path";
 export {
   assertPhiRuntimeModuleCatalog,

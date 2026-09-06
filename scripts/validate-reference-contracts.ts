@@ -379,7 +379,7 @@ const unknownPresetReference = createPhiPageReference({
 installReferenceProjection({ resolved: [] });
 assert.deepEqual(
   [...(await resolveReferences({ pageReferences: [usersReference] })).pagePaths.entries()],
-  [[usersReference, "/admin/users"]],
+  [[usersReference, "/admin/phis/ui/users"]],
 );
 
 // Selecting from another Area must not leak a path across the Area boundary.
@@ -413,7 +413,7 @@ assert.deepEqual(
     roleFlags: PhiBaseRole.Admin,
     pageReferences: [usersReference],
   })).pagePaths.values()],
-  ["/admin/users"],
+  ["/admin/phis/ui/users"],
 );
 
 // An unknown preset key resolves to nothing rather than to the owning module's first route.
@@ -429,7 +429,7 @@ installReferenceProjection({
 });
 assert.equal(
   (await resolveReferences({ pageReferences: [usersReference] })).pagePaths.get(usersReference),
-  "/admin/users",
+  "/admin/phis/ui/users",
   "A Module target is resolved from the route table, which the projection reports as pathless.",
 );
 

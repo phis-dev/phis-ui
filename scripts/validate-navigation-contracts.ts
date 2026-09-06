@@ -9,7 +9,7 @@ import {
   resolvePhiCmsNavigationOverlay,
   resolvePhiCmsRoutePreset,
 } from "../plugins/runtime-modules/descriptor-compiler";
-import { buildPhiRuntimeModuleRouteSegment } from "../helpers/runtime-module-route-path";
+import { buildPhiRuntimeModulePackageRoutePrefix } from "../helpers/runtime-module-route-path";
 import { localizeAreaPath, stripLocaleAndAreaFromPathname } from "../helpers/locale";
 import type {
   PhiCmsAreaDefinition,
@@ -66,7 +66,6 @@ const areaDefinition: PhiCmsAreaDefinition = {
   accessPolicy: { access: "anyone" },
   routeMounts: [{
     mountKey: "settings",
-    basePath: "/settings",
     navKey: "public:header",
     parentItemKey: SETTINGS_ITEM_KEY,
   }],
@@ -179,7 +178,7 @@ const validRouteB = createRoute({
 const mountedRoute = createRoute({
   moduleId: MOUNTED_MODULE_ID,
   presetKey: "module-c-settings",
-  path: "/",
+  path: "/settings/module-c",
   mountKey: "settings",
   itemKey: MOUNTED_MODULE_ITEM_KEY,
   injection: { parentItemKey: SETTINGS_ITEM_KEY },
@@ -256,19 +255,17 @@ assert.deepEqual(
   surface.items.at(-1)?.children.map((item) => item.id),
   [SETTINGS_GENERAL_ID, MOUNTED_MODULE_IDENTITY],
 );
-assert.equal(buildPhiRuntimeModuleRouteSegment(MOUNTED_MODULE_ID), "test+package+module-c");
+// The namespace is the package and stops there: how a package arranges its routes underneath is its
+// own business, and the module key would decide that for it.
+assert.equal(buildPhiRuntimeModulePackageRoutePrefix(MOUNTED_MODULE_ID), "/test/package");
 assert.equal(
-  buildPhiRuntimeModuleRouteSegment("acme-status/modules/auth" as PhiRuntimeModuleId),
-  "acme-status+auth",
-);
-assert.throws(
-  () => buildPhiRuntimeModuleRouteSegment("@test/package+/modules/module-c" as PhiRuntimeModuleId),
-  /cannot be encoded/,
+  buildPhiRuntimeModulePackageRoutePrefix("acme-status/modules/auth" as PhiRuntimeModuleId),
+  "/acme-status",
 );
 // The pre-marker form. It is the one a third-party module written against the old guide would carry,
-// so it has to keep failing here rather than becoming a route segment that silently drops a part.
+// so it has to keep failing here rather than becoming a namespace that silently drops a part.
 assert.throws(
-  () => buildPhiRuntimeModuleRouteSegment("@test/package/module-c" as PhiRuntimeModuleId),
+  () => buildPhiRuntimeModulePackageRoutePrefix("@test/package/module-c" as PhiRuntimeModuleId),
   /must use <npm-package>\/modules\/<module-key>/,
 );
 const mountedRouteTable = compilePhiCmsActiveRouteTable({
@@ -280,9 +277,9 @@ const mountedRouteTable = compilePhiCmsActiveRouteTable({
     MOUNTED_MODULE_ID,
   ]),
 });
+// Public carries no namespace: what the Module wrote is what answers.
 assert.equal(
-  resolvePhiCmsRoutePreset(mountedRouteTable, "/settings/test+package+module-c")
-    ?.descriptor.ownerModuleId,
+  resolvePhiCmsRoutePreset(mountedRouteTable, "/settings/module-c")?.descriptor.ownerModuleId,
   MOUNTED_MODULE_ID,
 );
 

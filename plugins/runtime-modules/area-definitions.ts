@@ -158,7 +158,6 @@ export const PHI_ADMIN_RUNTIME_AREA_DEFINITIONS = [
     accessPolicy: PHI_VIEWER_ACCESS_DEVELOPER_TOOLS,
     routeMounts: [{
       mountKey: "settings",
-      basePath: "/settings",
       navKey: "admin:sidebar",
       parentItemKey: PHI_ADMIN_SETTINGS_NAV_ITEM_KEY,
     }],
@@ -213,7 +212,6 @@ export const PHI_BUILDER_RUNTIME_AREA_DEFINITIONS = [
     accessPolicy: PHI_VIEWER_ACCESS_STRUCTURE_AUTHORING,
     routeMounts: [{
       mountKey: "settings",
-      basePath: "/settings",
       navKey: "builder:sidebar",
       parentItemKey: PHI_BUILDER_SETTINGS_NAV_ITEM_KEY,
     }],

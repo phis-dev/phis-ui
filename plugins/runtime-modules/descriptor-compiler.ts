@@ -49,7 +49,7 @@ import {
   mergePhiCmsShellTrees,
   omitPhiCmsShellCompositionNodes,
 } from "./shell-tree-composition";
-import { buildPhiRuntimeModuleRouteSegment } from "../../helpers/runtime-module-route-path";
+import { buildPhiRuntimeModulePackageRoutePrefix } from "../../helpers/runtime-module-route-path";
 import { resolvePhiLayoutCreationPreset } from "../../helpers/cms-layout-defaults";
 import {
   buildPhiBasePageLayoutNode,
@@ -101,35 +101,45 @@ export function normalizePhiCmsRoutePath(value: string) {
   return `/${segments.join("/")}`;
 }
 
-function resolvePhiCmsMountedRouteDescriptor(
+/**
+ * The address a route actually answers on.
+ *
+ * Public is the Site's own address space: a Module writes `/login` there and gets `/login`, and the one
+ * place two Modules can contest an address is settled when a Module is enabled, not here. Every other
+ * Area is authenticated and never indexed, so a Module's routes live under its package -- `/phis/ui/...`,
+ * `/acme/shop/...` -- where a collision between two packages cannot arise at all.
+ *
+ * `/` is the exception in either case. It is an application for the Area root slot rather than a route of
+ * the Module's own, so it keeps the address it asks for.
+ */
+function resolvePhiCmsNamespacedRouteDescriptor(
   descriptor: PhiCmsRoutePresetDescriptor,
   areaDefinition: PhiCmsAreaDefinition,
 ): PhiCmsRoutePresetDescriptor {
-  if (!descriptor.mount) {
+  if (descriptor.mount) {
+    const mount = (areaDefinition.routeMounts ?? []).find(
+      (candidate) => candidate.mountKey === descriptor.mount?.mountKey,
+    );
+    if (!mount) {
+      throw new Error(
+        `${descriptor.ownerModuleId}/${descriptor.presetKey}: Area "${descriptor.area}" ` +
+        `does not declare route mount "${descriptor.mount.mountKey}".`,
+      );
+    }
+  }
+  if (descriptor.area === "public" || descriptor.path === "/") {
     return descriptor;
   }
-  const mount = (areaDefinition.routeMounts ?? []).find(
-    (candidate) => candidate.mountKey === descriptor.mount?.mountKey,
-  );
-  if (!mount) {
+  const path = normalizePhiCmsRoutePath(descriptor.path);
+  if (path !== descriptor.path) {
     throw new Error(
-      `${descriptor.ownerModuleId}/${descriptor.presetKey}: Area "${descriptor.area}" ` +
-      `does not declare route mount "${descriptor.mount.mountKey}".`,
-    );
-  }
-  const relativePath = normalizePhiCmsRoutePath(descriptor.path);
-  if (relativePath !== descriptor.path) {
-    throw new Error(
-      `${descriptor.ownerModuleId}/${descriptor.presetKey}: mounted route path ` +
+      `${descriptor.ownerModuleId}/${descriptor.presetKey}: route path ` +
       `"${descriptor.path}" must be normalized.`,
     );
   }
-  const moduleSegment = buildPhiRuntimeModuleRouteSegment(descriptor.ownerModuleId);
-  const basePath = mount.basePath === "/" ? "" : mount.basePath;
-  const suffix = relativePath === "/" ? "" : relativePath;
   return {
     ...descriptor,
-    path: `${basePath}/${moduleSegment}${suffix}`,
+    path: `${buildPhiRuntimeModulePackageRoutePrefix(descriptor.ownerModuleId)}${path}`,
   };
 }
 
@@ -282,7 +292,6 @@ function assertAreaDefinitions(
       }
     }
     const routeMountKeys = new Set<string>();
-    const routeMountPaths = new Set<string>();
     for (const mount of definition.routeMounts ?? []) {
       if (
         !PHI_ROUTE_MOUNT_KEY_PATTERN.test(mount.mountKey) ||
@@ -293,13 +302,6 @@ function assertAreaDefinitions(
         );
       }
       routeMountKeys.add(mount.mountKey);
-      const basePath = normalizePhiCmsRoutePath(mount.basePath);
-      if (basePath !== mount.basePath || routeMountPaths.has(basePath)) {
-        throw new Error(
-          `Area "${definition.area}" route mount "${mount.mountKey}" has an invalid or duplicate base path.`,
-        );
-      }
-      routeMountPaths.add(basePath);
       const surface = (definition.navigationSurfaces ?? []).find(
         (candidate) => candidate.navKey === mount.navKey,
       );
@@ -462,7 +464,7 @@ export function compilePhiCmsDescriptorCatalog({
           `${moduleId}/${descriptor.presetKey}: owner module is not eligible for Area "${descriptor.area}".`,
         );
       }
-      const resolvedDescriptor = resolvePhiCmsMountedRouteDescriptor(descriptor, areaDefinition);
+      const resolvedDescriptor = resolvePhiCmsNamespacedRouteDescriptor(descriptor, areaDefinition);
       const compiled = compilePhiCmsRoutePattern(resolvedDescriptor);
       routeByIdentity.set(identity, resolvedDescriptor);
       const areaRoutes = routesByArea.get(descriptor.area) ?? [];
@@ -490,19 +492,6 @@ export function compilePhiCmsDescriptorCatalog({
       throw new Error(
         `Area "${area}" is missing shell preset "${definition.baseModuleId}/${definition.shellPresetKey}".`,
       );
-    }
-    for (const mount of definition.routeMounts ?? []) {
-      const baseRoute = (routesByArea.get(area) ?? []).find(
-        (pattern) =>
-          pattern.descriptor.ownerModuleId === definition.baseModuleId &&
-          pattern.descriptor.path === mount.basePath,
-      );
-      if (!baseRoute || baseRoute.parameterName !== null) {
-        throw new Error(
-          `Area "${area}" route mount "${mount.mountKey}" requires exact base route ` +
-          `"${definition.baseModuleId}:${mount.basePath}".`,
-        );
-      }
     }
   }
 

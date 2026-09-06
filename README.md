@@ -656,14 +656,14 @@ to exactly one Area, one stable Area-local `pageKey`, and one immutable effectiv
 is the Builder/Draft identity (for example `home`), while the effective `path` is the routed URL (for
 example `/`); neither is derived from the other. Duplicate `pageKey` values within one Area are rejected.
 
-An Area may explicitly export a route mount such as `settings`. The mount binds a stable `mountKey` and
-normalized `basePath` to an exported href-less navigation container. A route that opts into that mount
-declares a normalized mount-relative `path`; the descriptor compiler materializes its effective path as
-`<basePath>/<module-segment><relativePath>`. The module segment encodes the complete runtime module id by
-removing the leading scope marker and joining its package/module parts with `+`: `@acme/status/auth`
-becomes `acme+status+auth`. The `+` character is reserved and cannot occur in an encoded identity part.
-Mounts are explicit injection points, never an automatic response to a route collision, and the Area base
-module must own an exact route at every mount base path.
+Outside Public, the descriptor compiler serves a route under its owner's package: `@acme/status/modules/auth`
+declaring `/providers` answers at `/acme/status/providers`. Two packages therefore cannot contest an address.
+Public carries no namespace, because it is the Site's own address space, and `/` is an application for the
+Area root slot rather than a route of the Module's own.
+
+An Area may explicitly export a route mount such as `settings`. The mount binds a stable `mountKey` to an
+exported href-less navigation container, and a route that opts in has its navigation entry placed there. A
+mount composes navigation, never paths.
 
 Route paths are exact or contain at most one whole-segment parameter such as `/news/:id`. Catch-alls,
 optional segments, regexes, arbitrary matcher callbacks, and multiple dynamic segments are rejected.

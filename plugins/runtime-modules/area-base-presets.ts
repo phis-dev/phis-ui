@@ -285,7 +285,7 @@ export const PHI_AUTH_RUNTIME_MODULE_ROUTES = [
     area: "admin",
     pageKey: "auth-settings",
     title: "Authentication",
-    path: "/",
+    path: "/settings/authentication",
     mount: { mountKey: "settings" },
     accessPolicy: PHI_VIEWER_ACCESS_SITE_ADMIN,
     navigation: [{

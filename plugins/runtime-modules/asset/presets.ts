@@ -42,7 +42,7 @@ export const PHI_ASSET_RUNTIME_MODULE_ROUTES = [{
   area: "admin",
   pageKey: "media-settings",
   title: "Media",
-  path: "/",
+  path: "/settings/media",
   mount: { mountKey: "settings" },
   accessPolicy: PHI_VIEWER_ACCESS_SITE_ADMIN,
   navigation: [{

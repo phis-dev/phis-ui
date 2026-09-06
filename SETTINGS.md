@@ -24,27 +24,26 @@ Settings container and loses nothing.
 
 ## 2. Routing
 
-An Area that offers Module configuration declares exactly one Area-owned `settings` route mount with
-base path `/settings`. Modules contribute Settings pages only by opting into that mount; a Settings
-surface must not be registered as an absolute-path route.
+An Area that offers Module configuration declares exactly one Area-owned `settings` route mount. Modules
+contribute Settings pages by opting into that mount, which is how their entry reaches the container
+without the Module having to know the container's item key.
 
-The effective path of a mounted Settings page is built centrally as
+A Settings page addresses itself like any other route outside Public: under its own package.
 
 ```text
-/settings/<module-segment><mount-relative path>
+/<scope>/<package><the path the route declares>
 ```
 
-where the module segment is derived from the immutable Module id by the normal module-segment builder
-(for example `@phis/ui/auth` → `phis+ui+auth`, as documented in
-[AUTHENTICATION.md](./AUTHENTICATION.md)). Path collisions are therefore impossible by construction, and
-a Module never chooses its own top-level Settings path.
+`@phis/ui/modules/admin` declaring `/settings/general` is therefore served at `/phis/ui/settings/general`.
+Collisions between packages are impossible by construction, and the mount says nothing about the path -- it
+places the navigation entry, nothing more.
 
 Each mounted Settings route declares its own access policy. Access is enforced per route; the Settings
 container itself adds no access of its own.
 
-The container root `/settings` is not a content page. It resolves by redirecting to the first Settings
-entry visible to the current viewer. If no entry is visible, the container is not reachable for that
-viewer.
+The container has no address of its own. It is a navigation node whose children are ordinary pages under
+their packages, so there is no `/settings` page to answer, and nothing to decide when no child is visible:
+a container with no visible child hides, the way a navigation item with an unrouted target hides.
 
 ## 3. Navigation
 
@@ -57,8 +56,7 @@ navigation between pages. This placement is deliberate and normative: per-path c
 regions and header slot pages) remounts on navigation, so any Settings navigation presented there
 re-renders visibly on every switch. Settings navigation must therefore stay in the persistent shell.
 
-- The Settings container is a container item, not a link. The container root `/settings` remains a
-  route (section 2) for deep links and redirects to the first visible child.
+- The Settings container is a container item, not a link, and has no route behind it.
 - The base Area Module's General page (section 5) is declared statically as the container's first
   child by the Area definition. All other Modules contribute their entries through the mount's
   navigation injection, ordered after the static items. Ordering is owned by the surface declaration

@@ -3,7 +3,6 @@ import type {
   PhiCmsAreaShellPresetDescriptor,
   PhiCmsRoutePresetDescriptor,
 } from "../../../types/cms-module-descriptors";
-import { PHI_BUILDER_SETTINGS_NAV_ITEM_KEY } from "../area-definitions";
 import { buildPhiAreaRootRoutePresetDescriptor } from "../area-root-route";
 import { PHI_BUILDER_RUNTIME_MODULE_ID } from "./ids";
 
@@ -45,32 +44,11 @@ const BUILDER_WORKSPACE_ROUTES = BUILDER_ROUTE_PRESETS.map((route) => ({
 })) satisfies readonly PhiCmsRoutePresetDescriptor[];
 
 /**
- * The Builder Settings container (SETTINGS.md sections 2 and 5): the container root redirects to
- * the first entry the viewer can see, and the base Module's General page is mounted rather than
- * routed absolutely, so Modules can contribute further Settings pages through the same mount.
+ * The Builder Settings container (SETTINGS.md sections 2 and 5): a navigation container with no address
+ * of its own, into which the base Module's General page and any other Module's Settings page hang
+ * themselves through the shared mount.
  */
 const BUILDER_SETTINGS_ROUTES = [
-  {
-    ownerModuleId: PHI_BUILDER_RUNTIME_MODULE_ID,
-    presetKey: "builder-settings-page",
-    presetVersion: 1,
-    area: "builder" as const,
-    pageKey: "settings",
-    title: "Settings",
-    path: "/settings",
-    loadTree: ({ page, runtime, catalog, activeModuleIds }) =>
-      import("../../../components/regions/presets/phi-settings-root-redirect-tree")
-        .then((module) => module.buildPhiSettingsRootRedirectTree({
-          page,
-          runtime,
-          catalog,
-          activeModuleIds,
-          area: "builder",
-          navKey: "builder:sidebar",
-          containerItemKey: PHI_BUILDER_SETTINGS_NAV_ITEM_KEY,
-          title: "Settings",
-        })),
-  },
   {
     ownerModuleId: PHI_BUILDER_RUNTIME_MODULE_ID,
     presetKey: "builder-settings-general-page",
@@ -78,7 +56,7 @@ const BUILDER_SETTINGS_ROUTES = [
     area: "builder" as const,
     pageKey: "settings-general",
     title: "General",
-    path: "/",
+    path: "/settings/general",
     mount: { mountKey: "settings" },
     loadTree: ({ page, runtime }) =>
       import("../../../components/regions/presets/phi-default-builder-settings-page-tree")

@@ -301,12 +301,14 @@ one Area, one stable Area-local `pageKey`, and one immutable effective normalize
 its Builder/Draft target and is never inferred from `path`. Duplicate Area-local page keys, multi-target
 presets, and generic preset kinds do not exist.
 
-An Area may export explicit route mounts. Each mount binds a stable key and normalized base path to an
-exported href-less navigation container and requires an exact base-module route at that path. An opting-in
-route declares the mount key and a normalized mount-relative path. The compiler prefixes it with the mount
-base and a single module-derived segment: the complete runtime module id without its leading scope marker,
-joined with `+` (`@acme/status/auth` becomes `acme+status+auth`). `+` is reserved inside encoded identity
-parts. Route collisions remain hard errors after this expansion; collisions never create mounts implicitly.
+Outside Public the compiler prefixes a route with its owner's package (`@acme/status/modules/auth` declaring
+`/providers` answers at `/acme/status/providers`), so a collision between two packages cannot arise. Public
+carries no namespace and is the only contested address space; `/` is an application for the Area root slot
+and keeps the address it asks for.
+
+An Area may export explicit route mounts. Each mount binds a stable key to an exported href-less navigation
+container, and a route that opts in has its navigation entry placed inside it. A mount composes navigation,
+never paths.
 
 Route paths are exact or contain at most one whole-segment parameter such as `/news/:id`. Catch-alls,
 optional segments, regexes, arbitrary match callbacks, and multiple dynamic segments are rejected. The

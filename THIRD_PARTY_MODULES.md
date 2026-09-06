@@ -687,22 +687,27 @@ Area-shell and route contributions use the same catalog entry. Routes own immuta
 paths, stable Area-local `pageKey` values, optional navigation injections, and lazy tree loaders. Modules
 do not create physical Next.js routes in the Site Skeleton.
 
-An Area can export a route mount such as `settings`. A Module opts in explicitly with
-`mount: { mountKey: "settings" }` and declares a normalized mount-relative path such as `/` or
-`/providers/:id`. The compiler inserts one collision-resistant segment derived from the full Module id:
-`@acme/status/auth` becomes `acme+status+auth`, producing for example
-`/settings/acme+status+auth/providers/:id`. `+` is reserved inside Module identity parts. The Module's
-navigation descriptor injects its item under the mount's exported container separately; moving that item
-in Builder changes presentation only, never the route path. A mount must be declared by the target Area and
-is never inferred from an existing path collision.
+Outside Public, a Module's routes answer under its own package. A route declaring `/orders` in `@acme/shop`
+is served at `/acme/shop/orders` within its Area — the scope loses its `@`, the module key is not part of
+it, and how the package arranges its routes underneath is the package's own business. Two packages
+therefore cannot contest an address, and a package can only collide with itself. These Areas are
+authenticated and never indexed, so the extra segments cost nothing.
 
-Design direction: the derived `+` segment goes away. Outside Public, a Module's routes will live under its
-own package — `/acme/shop/…` — where package names make collisions impossible and nothing is indexed, so a
-mount becomes a navigation grouping rather than a path composition. Public keeps no namespace at all, and is
-the only place a path can be contested; that is settled when a Module is enabled for an Area. A Module must
-therefore not treat its effective path as derivable from its own id, and must reference its own pages through
-`presetKey` rather than through a literal path. See the `@phis/server` backlog item "Give every Area route a
-package namespace, and settle Public path collisions".
+Public is the exception in both directions: it carries no namespace, because it is the Site's own address
+space and the only indexed one. A Module writes `/contact` there and `/contact` is what answers — which
+also makes it the one place where two Modules can want the same address. That is settled when a Module is
+enabled for an Area, not at compile time.
+
+`/` is an exception in either case: it is an application for the Area root slot rather than a route of the
+Module's own, so it keeps the address it asks for.
+
+An Area can export a route mount such as `settings`. A Module opts in with `mount: { mountKey: "settings" }`
+and thereby hangs its navigation entry inside that container, without having to know the container's item
+key. A mount says nothing about paths — the address is already unique under the package — and must be
+declared by the target Area. Moving the item in Builder changes presentation only, never the route path.
+
+A Module must not treat its effective path as derivable from its own id, and must reference its own pages
+through `presetKey` rather than through a literal path.
 
 ## 8. Export Client and Authoring manifests
 

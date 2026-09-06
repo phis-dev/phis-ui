@@ -230,11 +230,14 @@ const adminBaseRoutes = compilePhiCmsActiveRouteTable({
   activeModuleIds: adminBaseModuleIds,
 });
 assert.equal(resolvePhiCmsRoutePreset(adminBaseRoutes, "/")?.descriptor.ownerModuleId, PHI_ADMIN_RUNTIME_MODULE_ID);
-assert.equal(resolvePhiCmsRoutePreset(adminBaseRoutes, "/dashboard"), null);
-assert.equal(resolvePhiCmsRoutePreset(adminBaseRoutes, "/users"), null);
-assert.equal(resolvePhiCmsRoutePreset(adminBaseRoutes, "/locales"), null);
-assert.equal(resolvePhiCmsRoutePreset(adminBaseRoutes, "/logs"), null);
-assert.equal(resolvePhiCmsRoutePreset(adminBaseRoutes, "/settings")?.descriptor.ownerModuleId, PHI_ADMIN_RUNTIME_MODULE_ID);
+assert.equal(resolvePhiCmsRoutePreset(adminBaseRoutes, "/phis/ui/dashboard"), null);
+assert.equal(resolvePhiCmsRoutePreset(adminBaseRoutes, "/phis/ui/users"), null);
+assert.equal(resolvePhiCmsRoutePreset(adminBaseRoutes, "/phis/ui/locales"), null);
+assert.equal(resolvePhiCmsRoutePreset(adminBaseRoutes, "/phis/ui/logs"), null);
+assert.equal(
+  resolvePhiCmsRoutePreset(adminBaseRoutes, "/phis/ui/settings/general")?.descriptor.ownerModuleId,
+  PHI_ADMIN_RUNTIME_MODULE_ID,
+);
 const adminFeatureModuleIds = new Set([
   ...adminBaseModuleIds,
   PHI_AUTH_RUNTIME_MODULE_ID,
@@ -249,12 +252,12 @@ const adminFeatureRoutes = compilePhiCmsActiveRouteTable({
   activeModuleIds: adminFeatureModuleIds,
 });
 assert.equal(
-  resolvePhiCmsRoutePreset(adminFeatureRoutes, "/dashboard")?.descriptor.ownerModuleId,
+  resolvePhiCmsRoutePreset(adminFeatureRoutes, "/phis/ui/dashboard")?.descriptor.ownerModuleId,
   PHI_DASHBOARD_RUNTIME_MODULE_ID,
 );
-assert.equal(resolvePhiCmsRoutePreset(adminFeatureRoutes, "/locales")?.descriptor.ownerModuleId, PHI_LOCALIZATION_RUNTIME_MODULE_ID);
-assert.equal(resolvePhiCmsRoutePreset(adminFeatureRoutes, "/logs")?.descriptor.ownerModuleId, PHI_OBSERVABILITY_RUNTIME_MODULE_ID);
-assert.equal(resolvePhiCmsRoutePreset(adminFeatureRoutes, "/users")?.descriptor.ownerModuleId, PHI_USER_MANAGEMENT_RUNTIME_MODULE_ID);
+assert.equal(resolvePhiCmsRoutePreset(adminFeatureRoutes, "/phis/ui/locales")?.descriptor.ownerModuleId, PHI_LOCALIZATION_RUNTIME_MODULE_ID);
+assert.equal(resolvePhiCmsRoutePreset(adminFeatureRoutes, "/phis/ui/logs")?.descriptor.ownerModuleId, PHI_OBSERVABILITY_RUNTIME_MODULE_ID);
+assert.equal(resolvePhiCmsRoutePreset(adminFeatureRoutes, "/phis/ui/users")?.descriptor.ownerModuleId, PHI_USER_MANAGEMENT_RUNTIME_MODULE_ID);
 // User management is readable by a Developer and writable only by an Admin, the same split
 // `phi-server` enforces per method. Entry is therefore the Developer's; the read-only projection
 // that removes the capability lives in the page's controller, not in this route policy. A Builder
@@ -270,21 +273,21 @@ const adminRoutesForRole = (roleFlags: number) => compilePhiCmsActiveRouteTable(
   },
 });
 assert.equal(
-  resolvePhiCmsRoutePreset(adminRoutesForRole(PhiBaseRole.Developer), "/users")?.descriptor.ownerModuleId,
+  resolvePhiCmsRoutePreset(adminRoutesForRole(PhiBaseRole.Developer), "/phis/ui/users")?.descriptor.ownerModuleId,
   PHI_USER_MANAGEMENT_RUNTIME_MODULE_ID,
 );
 assert.equal(
-  resolvePhiCmsRoutePreset(adminRoutesForRole(PhiBaseRole.Admin), "/users")?.descriptor.ownerModuleId,
+  resolvePhiCmsRoutePreset(adminRoutesForRole(PhiBaseRole.Admin), "/phis/ui/users")?.descriptor.ownerModuleId,
   PHI_USER_MANAGEMENT_RUNTIME_MODULE_ID,
 );
-assert.equal(resolvePhiCmsRoutePreset(adminRoutesForRole(PhiBaseRole.Builder), "/users"), null);
+assert.equal(resolvePhiCmsRoutePreset(adminRoutesForRole(PhiBaseRole.Builder), "/phis/ui/users"), null);
 assert.equal(
-  resolvePhiCmsRoutePreset(adminFeatureRoutes, "/settings/phis+ui+auth")?.descriptor.ownerModuleId,
+  resolvePhiCmsRoutePreset(adminFeatureRoutes, "/phis/ui/settings/authentication")?.descriptor.ownerModuleId,
   PHI_AUTH_RUNTIME_MODULE_ID,
 );
-assert.equal(resolvePhiCmsRoutePreset(adminFeatureRoutes, "/locale"), null);
+assert.equal(resolvePhiCmsRoutePreset(adminFeatureRoutes, "/phis/ui/locale"), null);
 assert.equal(
-  resolvePhiCmsRoutePreset(adminFeatureRoutes, "/settings/phis+ui+admin")?.descriptor.ownerModuleId,
+  resolvePhiCmsRoutePreset(adminFeatureRoutes, "/phis/ui/settings/general")?.descriptor.ownerModuleId,
   PHI_ADMIN_RUNTIME_MODULE_ID,
 );
 const adminNavigationSurfaces = resolvePhiCmsActiveNavigationSurfaces({
@@ -296,7 +299,7 @@ const adminNavigationItems = adminNavigationSurfaces
   .find((surface) => surface.navKey === "admin:sidebar")?.items;
 assert.deepEqual(
   adminNavigationItems?.map((item) => readPhiCmsNavigationTargetPath(item.target) ?? null),
-  ["/dashboard", "/locales", "/logs", "/users", null],
+  ["/phis/ui/dashboard", "/phis/ui/locales", "/phis/ui/logs", "/phis/ui/users", null],
 );
 // The Users entry inherits the route policy, so it follows entry rather than write capability: a
 // Developer sees it and reads the page, a Builder never reaches the Admin sidebar.
@@ -311,15 +314,15 @@ const adminNavigationPathsForRole = (roleFlags: number) => resolvePhiCmsActiveNa
   },
 }).find((surface) => surface.navKey === "admin:sidebar")?.items
   .map((item) => readPhiCmsNavigationTargetPath(item.target) ?? null);
-assert.equal(adminNavigationPathsForRole(PhiBaseRole.Developer)?.includes("/users"), true);
-assert.equal(adminNavigationPathsForRole(PhiBaseRole.Admin)?.includes("/users"), true);
-assert.equal(adminNavigationPathsForRole(PhiBaseRole.Builder)?.includes("/users"), false);
+assert.equal(adminNavigationPathsForRole(PhiBaseRole.Developer)?.includes("/phis/ui/users"), true);
+assert.equal(adminNavigationPathsForRole(PhiBaseRole.Admin)?.includes("/phis/ui/users"), true);
+assert.equal(adminNavigationPathsForRole(PhiBaseRole.Builder)?.includes("/phis/ui/users"), false);
 
 const adminSettingsContainer = adminNavigationItems?.at(-1);
 assert.equal(adminSettingsContainer?.kind, "container");
 assert.deepEqual(
   adminSettingsContainer?.children.map((item) => readPhiCmsNavigationTargetPath(item.target) ?? null),
-  ["/settings/phis+ui+admin", "/settings/phis+ui+auth"],
+  ["/phis/ui/settings/general", "/phis/ui/settings/authentication"],
 );
 assert.equal(
   adminNavigationSurfaces.find((surface) => surface.navKey === "admin:settings"),
@@ -400,8 +403,8 @@ const builderBaseRoutes = compilePhiCmsActiveRouteTable({
   area: "builder",
   activeModuleIds: builderBaseModuleIds,
 });
-assert.equal(resolvePhiCmsRoutePreset(builderBaseRoutes, "/dashboard"), null);
-assert.equal(resolvePhiCmsRoutePreset(builderBaseRoutes, "/revisions"), null);
+assert.equal(resolvePhiCmsRoutePreset(builderBaseRoutes, "/phis/ui/dashboard"), null);
+assert.equal(resolvePhiCmsRoutePreset(builderBaseRoutes, "/phis/ui/revisions"), null);
 const builderFeatureModuleIds = new Set([
   ...builderBaseModuleIds,
   PHI_DASHBOARD_RUNTIME_MODULE_ID,
@@ -415,11 +418,11 @@ const builderFeatureRoutes = compilePhiCmsActiveRouteTable({
   activeModuleIds: builderFeatureModuleIds,
 });
 assert.equal(
-  resolvePhiCmsRoutePreset(builderFeatureRoutes, "/dashboard")?.descriptor.ownerModuleId,
+  resolvePhiCmsRoutePreset(builderFeatureRoutes, "/phis/ui/dashboard")?.descriptor.ownerModuleId,
   PHI_DASHBOARD_RUNTIME_MODULE_ID,
 );
 assert.equal(
-  resolvePhiCmsRoutePreset(builderFeatureRoutes, "/revisions")?.descriptor.ownerModuleId,
+  resolvePhiCmsRoutePreset(builderFeatureRoutes, "/phis/ui/revisions")?.descriptor.ownerModuleId,
   PHI_REVISIONS_RUNTIME_MODULE_ID,
 );
 const builderNavigationItems = resolvePhiCmsActiveNavigationSurfaces({
@@ -427,22 +430,32 @@ const builderNavigationItems = resolvePhiCmsActiveNavigationSurfaces({
   area: "builder",
   activeModuleIds: builderFeatureModuleIds,
 })[0]?.items;
+// Every Area but Public puts a Module's routes under its package, so these read `/phis/ui/...` and a
+// second package could not reach them however it named its own pages.
 assert.deepEqual(
   builderNavigationItems?.map((item) => readPhiCmsNavigationTargetPath(item.target) ?? null),
-  ["/dashboard", "/modules", "/shells", "/pages", "/navigation", "/theme", "/revisions", null, "/media"],
+  [
+    "/phis/ui/dashboard",
+    "/phis/ui/modules",
+    "/phis/ui/shells",
+    "/phis/ui/pages",
+    "/phis/ui/navigation",
+    "/phis/ui/theme",
+    "/phis/ui/revisions",
+    null,
+    "/phis/ui/media",
+  ],
 );
 const builderSettingsContainer = builderNavigationItems?.at(-2);
 assert.equal(builderSettingsContainer?.kind, "container");
 assert.deepEqual(
   builderSettingsContainer?.children.map((item) => readPhiCmsNavigationTargetPath(item.target) ?? null),
-  ["/settings/phis+ui+builder"],
+  ["/phis/ui/settings/general"],
 );
+// The container itself is navigation and nothing else: no route answers where it sits.
+assert.equal(resolvePhiCmsRoutePreset(builderFeatureRoutes, "/settings"), null);
 assert.equal(
-  resolvePhiCmsRoutePreset(builderFeatureRoutes, "/settings")?.descriptor.presetKey,
-  "builder-settings-page",
-);
-assert.equal(
-  resolvePhiCmsRoutePreset(builderFeatureRoutes, "/settings/phis+ui+builder")
+  resolvePhiCmsRoutePreset(builderFeatureRoutes, "/phis/ui/settings/general")
     ?.descriptor.ownerModuleId,
   PHI_BUILDER_RUNTIME_MODULE_ID,
 );

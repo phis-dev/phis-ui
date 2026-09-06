@@ -49,7 +49,7 @@ The builder area is the workspace for composing site structure, page trees, bran
 - Shared preset trees are the explicit exception and may keep `simple-text` copy directly in `config.text` without first creating `content_id`.
 - Widget `renderPreview()` and `renderEditor()` implementations must stay render-only and must not import widget registries or resolve `WIDGETS_BY_TYPE` internally. If a widget needs a portable preview/editor body, it should render from the already passed config and labels only.
 - `renderPreview()` may be SSR-safe and may use server helpers such as `tr()`. It should stay inert, but it is not required to be client-only.
-- `renderEditor()` remains client-side editor chrome for structure-authoring surfaces. In the builder this path is used when `/builder/shells` or `/builder/pages` edits the actual shell/page composition tree. Other builder workspaces such as `/builder/navigation`, `/builder/revisions`, `/builder/media`, and `/builder/brand` render their workspace widgets through the normal live/server widget path unless those pages are themselves being edited from `/builder/pages`.
+- `renderEditor()` remains client-side editor chrome for structure-authoring surfaces. In the builder this path is used when `/builder/phis/ui/shells` or `/builder/phis/ui/pages` edits the actual shell/page composition tree. Other builder workspaces such as `/builder/phis/ui/navigation`, `/builder/phis/ui/revisions`, `/builder/phis/ui/media`, and `/builder/phis/ui/brand` render their workspace widgets through the normal live/server widget path unless those pages are themselves being edited from `/builder/phis/ui/pages`.
 - Internal builder widgets that appear on live-rendered builder pages must therefore provide a live/server render path; a `renderEditor()` implementation alone is not sufficient for those workspaces.
 - `renderMode` stays a runtime concern and must not be stored inside the root config blob.
 - Switching from editor to server-rendered preview sends the materialized transient snapshot through the
@@ -188,11 +188,11 @@ The sider is not the final site navigation. It is builder chrome.
 
 Current workspace note:
 
-- `/builder/shells` and `/builder/pages` are different workspaces and must not silently share one editor model
-- `/builder/shells` is the area-shell workspace
-- `/builder/pages` is the page workspace
-- the current `/builder/pages` path is still only a partial idea and does not yet define the final page-selection flow
-- missing selectors or unfinished page tooling must not be papered over by reusing `/builder/shells` ownership rules
+- `/builder/phis/ui/shells` and `/builder/phis/ui/pages` are different workspaces and must not silently share one editor model
+- `/builder/phis/ui/shells` is the area-shell workspace
+- `/builder/phis/ui/pages` is the page workspace
+- the current `/builder/phis/ui/pages` path is still only a partial idea and does not yet define the final page-selection flow
+- missing selectors or unfinished page tooling must not be papered over by reusing `/builder/phis/ui/shells` ownership rules
 
 Expected behavior:
 
@@ -210,30 +210,30 @@ The page tree must mirror the target site structure as closely as possible. The 
 
 The developer builder currently uses two different routes with different ownership:
 
-- `/builder/shells`
+- `/builder/phis/ui/shells`
   - edits area-owned shell regions
   - is keyed by the selected target `area`
   - uses the area selector in the builder header as its primary scope control
   - must not behave like a page editor
-- `/builder/pages`
+- `/builder/phis/ui/pages`
   - edits page-owned regions
   - is keyed by `area + page/path`
   - will later need its own explicit page/path selector
-  - must not implicitly inherit `/builder/shells` save or hydration behavior just because both live inside the same editor shell
+  - must not implicitly inherit `/builder/phis/ui/shells` save or hydration behavior just because both live inside the same editor shell
   - owns its own workspace chrome above the selected page canvas
   - that workspace chrome is not the same thing as the selected page's CMS region tree
 
 This distinction is not just UI. It is the persistence and hydration boundary for the builder.
 
-### `/builder/shells` load and save contract
+### `/builder/phis/ui/shells` load and save contract
 
-`/builder/shells` is strict about its source of truth.
+`/builder/phis/ui/shells` is strict about its source of truth.
 
 Load rules:
 
 - if a persisted area shell exists in the DB for the selected area, the workspace must load that DB shell as-is
 - if no persisted area shell exists in the DB for the selected area, the workspace must load the full `phis-ui` fallback preset for that area
-- `/builder/shells` must not build a mixed region-by-region merge of DB and preset content
+- `/builder/phis/ui/shells` must not build a mixed region-by-region merge of DB and preset content
 - page-owned regions are out of scope for this workspace and must not be loaded here
 
 Edit rules:
@@ -245,21 +245,21 @@ Edit rules:
 
 Save rules:
 
-- saving `/builder/shells` persists the full current shell snapshot for the selected area
+- saving `/builder/phis/ui/shells` persists the full current shell snapshot for the selected area
 - this persisted snapshot may still contain widgets or layout structures that originally came from the fallback preset
 - after the first successful save, the DB snapshot becomes the only source of truth for that area shell
 - the fallback preset is ignored after that, unless the operator explicitly resets the area shell
 - explicit reset instantiates the current module-owned preset template again and deterministically restores the same `PhiCmsInstanceId` values; the resulting snapshot may be saved as a Draft and later published without changing those identities
 - the first structural insertion into an in-memory preset creates the owning Area Draft before allocating the new node from that Draft revision's shared `nextNodeSequence`
 
-### `/builder/navigation` workspace contract
+### `/builder/phis/ui/navigation` workspace contract
 
-`/builder/navigation` is the navigation-tree workspace.
+`/builder/phis/ui/navigation` is the navigation-tree workspace.
 
 It is distinct from both:
 
-- `/builder/shells`
-- `/builder/pages`
+- `/builder/phis/ui/shells`
+- `/builder/phis/ui/pages`
 
 It edits site navigation trees, not shell regions and not page-capable content regions.
 
@@ -277,7 +277,7 @@ Load and save rules:
 
 Selector contract:
 
-- `/builder/navigation` uses an autocomplete selector of the current Area's declared and Site-owned surfaces in
+- `/builder/phis/ui/navigation` uses an autocomplete selector of the current Area's declared and Site-owned surfaces in
   `header_bottom.left`
 - the separate Area tag carries the Area context, so the input displays and accepts only the local surface key
 - entering a valid unused local key creates a Site-owned navigation surface in the current Area
@@ -295,7 +295,7 @@ Selector contract:
 - right:
   - reset
 
-`save` and `publish` stay global builder actions in the builder header and must not be duplicated in `/builder/navigation/header_bottom`.
+`save` and `publish` stay global builder actions in the builder header and must not be duplicated in `/builder/phis/ui/navigation/header_bottom`.
 Draft/published status also stays in the shared builder chrome and must not be duplicated in the navigation workspace header.
 
 Canvas/content contract:
@@ -319,9 +319,9 @@ Canvas/content contract:
 
 The builder must not assume that every navigation item resolves to a page path.
 
-### `/builder/revisions` workspace contract
+### `/builder/phis/ui/revisions` workspace contract
 
-`/builder/revisions` is the revision-browser workspace. It is not an editor canvas and must not rebuild shell/page composition logic inside the table widget.
+`/builder/phis/ui/revisions` is the revision-browser workspace. It is not an editor canvas and must not rebuild shell/page composition logic inside the table widget.
 
 Scope rules:
 
@@ -556,7 +556,7 @@ The contract must preserve this distinction in the canvas tree, the inspector, a
 
 ### Current ownership split
 
-`/builder/shells` is responsible for area-owned shell regions:
+`/builder/phis/ui/shells` is responsible for area-owned shell regions:
 
 - `header_top`
 - `header_main`
@@ -564,7 +564,7 @@ The contract must preserve this distinction in the canvas tree, the inspector, a
 - `footer_main`
 - `footer_bottom`
 
-`/builder/pages` is responsible for page-owned regions:
+`/builder/phis/ui/pages` is responsible for page-owned regions:
 
 - `header_bottom`
 - `hero`
@@ -576,7 +576,7 @@ The contract must preserve this distinction in the canvas tree, the inspector, a
 
 Builder workspaces may render their own controls, but they must not bypass the normal Region, Layout, and Widget composition model.
 
-The global workspace chrome for `/builder/shells`, `/builder/pages`, `/builder/navigation`, `/builder/revisions`, `/builder/media`, and `/builder/brand` should be represented by the builder page's normal `header_bottom` region when that workspace exposes such chrome. A typical shape is:
+The global workspace chrome for `/builder/phis/ui/shells`, `/builder/phis/ui/pages`, `/builder/phis/ui/navigation`, `/builder/phis/ui/revisions`, `/builder/phis/ui/media`, and `/builder/phis/ui/brand` should be represented by the builder page's normal `header_bottom` region when that workspace exposes such chrome. A typical shape is:
 
 - `header_bottom` region
 - one root `three-column` Layout
@@ -593,9 +593,9 @@ A workspace canvas may still own additional canvas-local controls. When those co
 
 This canvas-local header is part of the canvas widget's own layout. It is not a replacement for the builder page's `header_bottom` region.
 
-### `/builder/pages` selected page header contract
+### `/builder/phis/ui/pages` selected page header contract
 
-When `/builder/pages` edits a selected page, that selected page's own `header_bottom` must remain a normal page-owned CMS region.
+When `/builder/phis/ui/pages` edits a selected page, that selected page's own `header_bottom` must remain a normal page-owned CMS region.
 
 - it belongs to the currently selected page
 - it owns its own root layout node and child tree exactly like `hero`, `content`, `sider_right`, and `footer_top`
@@ -689,7 +689,7 @@ The inspector is workspace UI, not a separate forms system.
 
 The canonical workspace structure is three Builder-Module Drawer Overlays: one Region Inspector, one
 Layout Inspector, and one Widget Inspector. They are Area-owned because the same instances serve both
-`/builder/shells` and `/builder/pages`. They are not Page-owned duplicates, normal `drawer_right` Regions,
+`/builder/phis/ui/shells` and `/builder/phis/ui/pages`. They are not Page-owned duplicates, normal `drawer_right` Regions,
 or imperative Drawers mounted by an Inspector host Widget.
 
 Each Drawer declares exactly one direct Body root, its own n-slot `PhiCollapsibleLayout`. Every slot
@@ -1092,7 +1092,7 @@ The `developer` workspace uses a dedicated shell arrangement:
   - media, brand, theme, blocks, settings
 - `content`
   - editable target-site canvas viewport
-  - host surface for either the `/builder/shells` shell editor or the `/builder/pages` page editor
+  - host surface for either the `/builder/phis/ui/shells` shell editor or the `/builder/phis/ui/pages` page editor
 - `sider_right`
   - optional inspector
   - page organized context panel
@@ -1117,7 +1117,7 @@ The canvas must visually distinguish shell-owned regions from page-owned regions
 - are shared by all pages in the area
 - should usually appear in the canvas frame outside the page body
 - may be shown as fixed shell bands, rails, or containers
-- are edited from `/builder/shells`
+- are edited from `/builder/phis/ui/shells`
 - should not reload on pure page changes
 
 ### Page-owned regions
@@ -1125,7 +1125,7 @@ The canvas must visually distinguish shell-owned regions from page-owned regions
 - belong to the current page only
 - are part of the editable page canvas
 - should appear inside the page body or page frame
-- are edited from `/builder/pages`
+- are edited from `/builder/phis/ui/pages`
 - should change when the active page/path changes, without rebuilding the area shell
 - may change from page to page without changing the shell profile
 
@@ -1285,7 +1285,7 @@ The builder must support a clear change lifecycle.
 
 ### Undo / Redo
 
-- `/builder/shells`, `/builder/pages`, `/builder/navigation`, and `/builder/theme` expose
+- `/builder/phis/ui/shells`, `/builder/phis/ui/pages`, `/builder/phis/ui/navigation`, and `/builder/phis/ui/theme` expose
   `Undo` and `Redo` in the middle slot of the `header_bottom` three-column layout.
 - The command toolbar emits semantic command signals. Shell, page, and navigation commands target
   the Builder Controller. Theme commands target the Theme Controller directly; Theme must remain

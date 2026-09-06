@@ -10,9 +10,15 @@ export type PhiRuntimeModuleId = `${string}/${string}`;
 
 export type PhiCmsRouteMountKey = string;
 
+/**
+ * A published name a Module can hang a navigation entry under.
+ *
+ * A mount says nothing about paths -- every route outside Public is under its own package already, so
+ * the address is unique without it. What it still does is let one package put its entry inside a
+ * container another package owns, without hardcoding that container's item key.
+ */
 export type PhiCmsAreaRouteMountDescriptor = {
   mountKey: PhiCmsRouteMountKey;
-  basePath: string;
   navKey: `${PhiCmsAreaKey}:${string}`;
   parentItemKey: string;
 };

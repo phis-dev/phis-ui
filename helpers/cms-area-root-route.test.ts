@@ -96,7 +96,7 @@ describe("a configured root route", () => {
 
 describe("resolving a Module-carried target", () => {
   it("names the path the Module's route answers", () => {
-    expect(resolveDashboard()).toBe("/dashboard");
+    expect(resolveDashboard()).toBe("/phis/ui/dashboard");
   });
 
   it("resolves nothing once the Module is switched off", () => {
@@ -119,7 +119,7 @@ describe("resolving a Module-carried target", () => {
       viewer,
     });
 
-    expect(resolve(developer)).toMatch(/^\/settings\//u);
+    expect(resolve(developer)).toMatch(/^\/phis\/ui\/settings\//u);
     expect(resolve({
       access: "authenticated",
       roleClaims: [],
