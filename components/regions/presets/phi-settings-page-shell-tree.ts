@@ -2,13 +2,14 @@ import {
   PHI_CMS_COLLAPSIBLE_LAYOUT_MAX_SLOTS,
   PHI_CMS_DEFAULT_SLOT_INDEX,
 } from "../../../constants/cms-layout-types";
-import { PhiCmsPageType, PhiCmsRegionType, PhiCmsStatus } from "../../../constants/phi-cms";
+import { PhiCmsPageType, PhiCmsStatus } from "../../../constants/phi-cms";
 import { buildPhiCmsLayoutNode, buildPhiCmsWidgetNode } from "../../../helpers/cms-node-factories";
-import { PHI_COLOR, PHI_SPACE } from "../../../theme/antd-css-var-contract";
+import { PHI_SPACE } from "../../../theme/antd-css-var-contract";
 import type { PhiCmsPageNode, PhiCmsContentWidgetNode, PhiCmsLayoutNode, PhiResolvedCmsPageTree } from "../../../types/cms";
 import type { PhiRuntimeModuleId } from "../../../types/cms-module-descriptors";
 import { createPhiPresetCmsInstanceIdMap } from "../../../types/cms-instance-id";
 import { createPhiSignalAddress } from "../../../types/signals";
+import { buildPhiBasePageContentScaffold, PHI_BASE_PAGE_LAYOUT_NODE_ID } from "./phi-base-page-layout";
 
 export type PhiSettingsPageShellWidgetSection = {
   kind?: "widget";
@@ -66,8 +67,9 @@ export type PhiSettingsPageShellPanel = {
  * The one shared Settings page shell (SETTINGS.md section 4): every mounted Settings page composes
  * its tree through this builder. Navigation between Settings pages lives in the persistent Area
  * sidebar (the Settings container's children), so the shell renders content only: the page content
- * region roots directly on one Collapsible on the layout background, and every panel is one of its
- * slots. Modules pass their panels; they never build Settings layout themselves.
+ * region roots on the shared base page scaffold, one Collapsible fills its slot, and every panel is
+ * one of the Collapsible's slots. Modules pass their panels; they never build Settings layout
+ * themselves.
  *
  * Each panel wraps its sections in a vertical Layout because a sequential slot renders exactly one
  * child node, while a Form panel is always at least the Form plus its Save Button.
@@ -107,11 +109,18 @@ export function buildPhiSettingsPageShellTree({
     ]),
   ]);
 
+  const scaffold = buildPhiBasePageContentScaffold({
+    page,
+    regionId,
+    regionConfig: { maxSize: { width: 1440 }, margin: "0 auto", border: false },
+  });
   const layoutNodes: PhiCmsLayoutNode[] = [
+    scaffold.layoutNode,
+    // The base scaffold owns padding and background; the Collapsible only stacks the panels.
     buildPhiCmsLayoutNode({
       id: layouts.settingsPanels,
       siteId: page.siteId,
-      parentLayoutNodeId: null,
+      parentLayoutNodeId: PHI_BASE_PAGE_LAYOUT_NODE_ID,
       creationPreset: { layoutKind: "collapsible", preset: "panel" },
       typeKey: "collapsible",
       slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
@@ -129,8 +138,7 @@ export function buildPhiSettingsPageShellTree({
         width: "100%",
         maxWidth: "100%",
         margin: 0,
-        padding: PHI_SPACE.base,
-        background: PHI_COLOR.bgLayout,
+        padding: 0,
         border: false,
       },
     }),
@@ -265,18 +273,7 @@ export function buildPhiSettingsPageShellTree({
       description: null,
     },
     overlays: [],
-    regions: [{
-      id: regionId,
-      pageId: page.id,
-      areaPresetId: null,
-      regionType: PhiCmsRegionType.Content,
-      rootLayoutNodeId: layouts.settingsPanels,
-      status: PhiCmsStatus.Published,
-      flags: 0,
-      visibilityMask: page.visibilityMask,
-      sortOrder: 30,
-      config: { maxSize: { width: 1440 }, margin: "0 auto", border: false },
-    }],
+    regions: [scaffold.region],
     layoutNodes,
     contentWidgets,
   };

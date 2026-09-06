@@ -1,3 +1,4 @@
+import { PHI_BASE_PAGE_LAYOUT_VERSION } from "../../../components/regions/presets/phi-base-page-layout";
 import type {
   PhiCmsAreaShellPresetDescriptor,
   PhiCmsDescriptorBuildContext,
@@ -77,6 +78,7 @@ const ADMIN_OWNED_ROUTES = [
   },
   {
     presetKey: "admin-settings-general-page",
+    presetVersion: 1 + PHI_BASE_PAGE_LAYOUT_VERSION,
     pageKey: "settings-general",
     title: "General",
     accessPolicy: PHI_VIEWER_ACCESS_SITE_ADMIN,

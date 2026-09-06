@@ -1,3 +1,4 @@
+import { PHI_BASE_PAGE_LAYOUT_VERSION } from "../../../components/regions/presets/phi-base-page-layout";
 import type {
   PhiCmsAreaShellPresetDescriptor,
   PhiCmsRoutePresetDescriptor,
@@ -73,7 +74,7 @@ const BUILDER_SETTINGS_ROUTES = [
   {
     ownerModuleId: PHI_BUILDER_RUNTIME_MODULE_ID,
     presetKey: "builder-settings-general-page",
-    presetVersion: 1,
+    presetVersion: 1 + PHI_BASE_PAGE_LAYOUT_VERSION,
     area: "builder" as const,
     pageKey: "settings-general",
     title: "General",

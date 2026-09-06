@@ -1,4 +1,5 @@
 import type { PhiCmsRoutePresetDescriptor } from "../../../types/cms-module-descriptors";
+import { PHI_BASE_PAGE_LAYOUT_VERSION } from "../../../components/regions/presets/phi-base-page-layout";
 import { PHI_ASSET_RUNTIME_MODULE_ID } from "./ids";
 import { PHI_VIEWER_ACCESS_SITE_ADMIN } from "../../../types/access";
 import {
@@ -37,7 +38,7 @@ export const PHI_ASSET_RUNTIME_MODULE_ROUTES = [{
 }, {
   ownerModuleId: PHI_ASSET_RUNTIME_MODULE_ID,
   presetKey: "admin-media-settings-page",
-  presetVersion: 1,
+  presetVersion: 1 + PHI_BASE_PAGE_LAYOUT_VERSION,
   area: "admin",
   pageKey: "media-settings",
   title: "Media",

@@ -281,7 +281,7 @@ export const PHI_AUTH_RUNTIME_MODULE_ROUTES = [
   {
     ownerModuleId: PHI_AUTH_RUNTIME_MODULE_ID,
     presetKey: "admin-auth-settings-page",
-    presetVersion: 1,
+    presetVersion: 1 + PHI_BASE_PAGE_LAYOUT_VERSION,
     area: "admin",
     pageKey: "auth-settings",
     title: "Authentication",
