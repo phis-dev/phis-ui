@@ -1,10 +1,8 @@
-import { PHI_EDITOR_RUNTIME_MODULE_ID } from "../../../plugins/runtime-modules/editor/ids";
-import { createPhiPresetCmsInstanceId } from "../../../types/cms-instance-id";
 import {
   PHI_CMS_DEFAULT_SLOT_INDEX,
   PHI_CMS_SEQUENTIAL_LAYOUT_SLOTS,
 } from "../../../constants/cms-layout-types";
-import { PhiCmsPageType, PhiCmsRegionType, PhiCmsStatus } from "../../../constants/phi-cms";
+import { PhiCmsPageType, PhiCmsStatus } from "../../../constants/phi-cms";
 import { buildPhiCmsLayoutNode, buildPhiCmsWidgetNode } from "../../../helpers/cms-node-factories";
 import type { PhiCmsPageNode, PhiResolvedCmsPageTree } from "../../../types/cms";
 import type { PhiBlockRuntime } from "../../../types";
@@ -19,6 +17,7 @@ import {
   PHI_EDITOR_TRANSLATIONS_SOURCE_LOCALE_WIDGET_ID,
   PHI_EDITOR_TRANSLATIONS_WIDGET_ID,
 } from "./editor-shell";
+import { buildPhiBasePageContentScaffold, PHI_BASE_PAGE_LAYOUT_NODE_ID } from "./phi-base-page-layout";
 import { getPhiEditorTranslationsPageLabels } from "./editor-translations-label-set";
 import { getPhiEditorTranslationsWidgetLabels } from "../../widgets/label-sets/editor-translations";
 import { PHI_LOCALIZATION_RUNTIME_DATA_PROVIDER_KEYS } from "../../../plugins/runtime-modules/localization/ids";
@@ -27,12 +26,6 @@ import { PHI_SIGNAL_VALUE_SCHEMAS } from "../../../types/signals";
 import { createPhiLocalizationControllerAddress } from "../../../plugins/runtime-modules/localization/controller/address";
 
 const SYNTHETIC_EDITOR_TRANSLATIONS_REGION_IDS = { regionContent: -561 } as const;
-const SYNTHETIC_EDITOR_TRANSLATIONS_CONTENT_LAYOUT_ID = createPhiPresetCmsInstanceId({
-  domain: "page",
-  ownerModuleId: PHI_EDITOR_RUNTIME_MODULE_ID,
-  presetKey: "editor-translations-page",
-  nodeKey: "layoutContent",
-});
 export async function buildPhiDefaultEditorTranslationsPageTree({
   page,
   runtime,
@@ -49,6 +42,12 @@ export async function buildPhiDefaultEditorTranslationsPageTree({
     apiBaseUrl: runtime.phis.apiBaseUrl,
     internalToken: runtime.phis.internalToken,
     locale: runtime.locale.current,
+  });
+
+  const scaffold = buildPhiBasePageContentScaffold({
+    page,
+    regionId: SYNTHETIC_EDITOR_TRANSLATIONS_REGION_IDS.regionContent,
+    regionConfig: { maxSize: { width: 1600 }, margin: "0 auto" },
   });
 
   return {
@@ -86,45 +85,9 @@ export async function buildPhiDefaultEditorTranslationsPageTree({
         },
       },
     }],
-    regions: [
-      {
-        id: SYNTHETIC_EDITOR_TRANSLATIONS_REGION_IDS.regionContent,
-        pageId: page.id,
-        areaPresetId: null,
-        regionType: PhiCmsRegionType.Content,
-        rootLayoutNodeId: SYNTHETIC_EDITOR_TRANSLATIONS_CONTENT_LAYOUT_ID,
-        status: PhiCmsStatus.Published,
-        flags: 0,
-        visibilityMask: page.visibilityMask,
-        sortOrder: 30,
-        config: {
-          maxSize: { width: 1600 },
-          margin: "0 auto",
-        },
-      },
-    ],
+    regions: [scaffold.region],
     layoutNodes: [
-      buildPhiCmsLayoutNode({
-        id: SYNTHETIC_EDITOR_TRANSLATIONS_CONTENT_LAYOUT_ID,
-        siteId: page.siteId,
-        parentLayoutNodeId: null,
-        creationPreset: { layoutKind: "verticalflex", preset: "panel" },
-        typeKey: "flex-vertical",
-        slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
-        sortOrder: 0,
-        status: PhiCmsStatus.Published,
-        flags: 0,
-        visibilityMask: page.visibilityMask,
-        label: labels.contentLabel,
-        config: {
-          anchor: { horizontal: "left", vertical: "top" },
-          gap: PHI_SPACE.base,
-          width: "100%",
-          maxWidth: "100%",
-          margin: 0,
-          padding: PHI_SPACE.base,
-        },
-      }),
+      scaffold.layoutNode,
       buildPhiCmsLayoutNode({
         id: PHI_EDITOR_TRANSLATION_OVERLAY_LAYOUT_ID,
         siteId: page.siteId,
@@ -158,7 +121,7 @@ export async function buildPhiDefaultEditorTranslationsPageTree({
       buildPhiCmsWidgetNode({
         id: PHI_EDITOR_TRANSLATIONS_SOURCE_LOCALE_WIDGET_ID,
         siteId: page.siteId,
-        parentLayoutNodeId: SYNTHETIC_EDITOR_TRANSLATIONS_CONTENT_LAYOUT_ID,
+        parentLayoutNodeId: PHI_BASE_PAGE_LAYOUT_NODE_ID,
         typeKey: "input",
         slotIndex: PHI_CMS_SEQUENTIAL_LAYOUT_SLOTS[0].slotIndex,
         sortOrder: 0,
@@ -189,7 +152,7 @@ export async function buildPhiDefaultEditorTranslationsPageTree({
       buildPhiCmsWidgetNode({
         id: PHI_EDITOR_TRANSLATIONS_WIDGET_ID,
         siteId: page.siteId,
-        parentLayoutNodeId: SYNTHETIC_EDITOR_TRANSLATIONS_CONTENT_LAYOUT_ID,
+        parentLayoutNodeId: PHI_BASE_PAGE_LAYOUT_NODE_ID,
         typeKey: "table",
         slotIndex: PHI_CMS_SEQUENTIAL_LAYOUT_SLOTS[1].slotIndex,
         sortOrder: 10,

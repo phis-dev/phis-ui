@@ -5,7 +5,7 @@ import { PHI_RENDERABLE_BLOCK_DEFAULT_ANCHOR } from "./renderable-block-defaults
 type JsonRecord = Record<string, unknown>;
 
 export type PhiLayoutDefaults = JsonRecord;
-export type PhiLayoutCreationPreset = "panel" | "overlay-actions";
+export type PhiLayoutCreationPreset = "panel" | "overlay-actions" | "page-base";
 
 const PHI_LAYOUT_CHROME_PRESET_DEFAULTS = {
   borderRadius: PHI_RADIUS.base,
@@ -74,6 +74,19 @@ const PHI_FLEX_VERTICAL_LAYOUT_PANEL_PRESET = {
     ...PHI_LAYOUT_CHROME_PRESET_DEFAULTS,
     gap: PHI_SPACE.base,
     padding: PHI_SPACE.base,
+} as const;
+/**
+ * The one content-region scaffold every built-in page preset roots on. Byte-identical wherever it
+ * appears: a page that needs different chrome puts its own Layout node inside a slot instead of
+ * touching this config -- the preset tree contract rejects a deviating copy.
+ */
+const PHI_FLEX_VERTICAL_LAYOUT_PAGE_BASE_PRESET = {
+    ...PHI_LAYOUT_CHROME_PRESET_DEFAULTS,
+    gap: PHI_SPACE.base,
+    padding: PHI_SPACE.base,
+    width: "100%",
+    background: PHI_COLOR.bgLayout,
+    border: false,
 } as const;
 
 export const PHI_GRID_LAYOUT_DEFAULTS: PhiLayoutDefaults = {
@@ -257,6 +270,13 @@ export function resolvePhiLayoutCreationPreset(
       throw new Error('Layout creation preset "overlay-actions" requires the Flex Layout.');
     }
     return { ...PHI_FLEX_LAYOUT_OVERLAY_ACTIONS_PRESET };
+  }
+
+  if (preset === "page-base") {
+    if (layoutKind !== "verticalflex") {
+      throw new Error('Layout creation preset "page-base" requires the vertical Flex Layout.');
+    }
+    return { ...PHI_FLEX_VERTICAL_LAYOUT_PAGE_BASE_PRESET };
   }
 
   return { ...PHI_LAYOUT_PANEL_PRESETS_BY_KIND[layoutKind] };

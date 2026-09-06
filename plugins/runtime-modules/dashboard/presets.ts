@@ -1,4 +1,5 @@
 import type { PhiCmsAreaKey } from "../../../constants/cms-areas";
+import { PHI_BASE_PAGE_LAYOUT_VERSION } from "../../../components/regions/presets/phi-base-page-layout";
 import type {
   PhiCmsDescriptorBuildContext,
   PhiCmsRoutePresetDescriptor,
@@ -59,7 +60,7 @@ function buildDashboardRoute({
   return {
     ownerModuleId: PHI_DASHBOARD_RUNTIME_MODULE_ID,
     presetKey,
-    presetVersion: 1,
+    presetVersion: 1 + PHI_BASE_PAGE_LAYOUT_VERSION,
     area,
     pageKey: "dashboard",
     title: "Dashboard",

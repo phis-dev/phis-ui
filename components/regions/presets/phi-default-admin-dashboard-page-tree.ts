@@ -4,13 +4,14 @@ import {
   PHI_CMS_DEFAULT_SLOT_INDEX,
   PHI_CMS_SEQUENTIAL_LAYOUT_SLOTS,
 } from "../../../constants/cms-layout-types";
-import { PhiCmsPageType, PhiCmsRegionType, PhiCmsStatus } from "../../../constants/phi-cms";
+import { PhiCmsPageType, PhiCmsStatus } from "../../../constants/phi-cms";
 import { getResolvedSiteStats } from "../../../gateway/site-stats";
 import { buildPhiCmsLayoutNode, buildPhiCmsWidgetNode } from "../../../helpers/cms-node-factories";
 import { formatPhiTranslation } from "../../../helpers/translation-format";
 import { PHI_SPACE } from "../../../theme/antd-css-var-contract";
 import type { PhiCmsPageNode, PhiResolvedCmsPageTree } from "../../../types/cms";
 import type { PhiBlockRuntime } from "../../../types";
+import { buildPhiBasePageContentScaffold, PHI_BASE_PAGE_LAYOUT_NODE_ID } from "./phi-base-page-layout";
 import { getPhiAdminDashboardPageLabels } from "./admin-dashboard-label-set";
 
 const SYNTHETIC_ADMIN_DASHBOARD_REGION_IDS = {
@@ -93,6 +94,12 @@ export async function buildPhiDefaultAdminDashboardPageTree({
   const uptimeText = formatDashboardUptime(process.uptime());
   const availableLocaleMeta = formatPhiTranslation(labels.localesMeta, availableLocaleCount);
 
+  const scaffold = buildPhiBasePageContentScaffold({
+    page,
+    regionId: SYNTHETIC_ADMIN_DASHBOARD_REGION_IDS.regionContent,
+    regionConfig: { maxSize: { width: 1120 }, margin: "0 auto", border: false },
+  });
+
   return {
     page: {
       ...page,
@@ -104,29 +111,13 @@ export async function buildPhiDefaultAdminDashboardPageTree({
       description: { msgId: 0, source: "Review the current site status and core runtime counters at a glance.", value: labels.pageDescription },
     },
     overlays: [],
-    regions: [
-      {
-        id: SYNTHETIC_ADMIN_DASHBOARD_REGION_IDS.regionContent,
-        pageId: page.id,
-        areaPresetId: null,
-        regionType: PhiCmsRegionType.Content,
-        rootLayoutNodeId: SYNTHETIC_ADMIN_DASHBOARD_LAYOUT_IDS.layoutGrid,
-        status: PhiCmsStatus.Published,
-        flags: 0,
-        visibilityMask: page.visibilityMask,
-        sortOrder: 30,
-        config: {
-          maxSize: { width: 1120 },
-          margin: "0 auto",
-          border: false,
-        },
-      },
-    ],
+    regions: [scaffold.region],
     layoutNodes: [
+      scaffold.layoutNode,
       buildPhiCmsLayoutNode({
         id: SYNTHETIC_ADMIN_DASHBOARD_LAYOUT_IDS.layoutGrid,
         siteId: page.siteId,
-        parentLayoutNodeId: null,
+        parentLayoutNodeId: PHI_BASE_PAGE_LAYOUT_NODE_ID,
         creationPreset: { layoutKind: "grid", preset: "panel" },
         typeKey: "grid",
         slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,

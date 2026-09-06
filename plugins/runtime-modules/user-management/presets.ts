@@ -1,11 +1,12 @@
 import type { PhiCmsRoutePresetDescriptor } from "../../../types/cms-module-descriptors";
+import { PHI_BASE_PAGE_LAYOUT_VERSION } from "../../../components/regions/presets/phi-base-page-layout";
 import { PHI_USER_MANAGEMENT_RUNTIME_MODULE_ID } from "./ids";
 import { PHI_VIEWER_ACCESS_DEVELOPER_TOOLS } from "../../../types/access";
 
 export const PHI_USER_MANAGEMENT_RUNTIME_MODULE_ROUTES = [{
   ownerModuleId: PHI_USER_MANAGEMENT_RUNTIME_MODULE_ID,
   presetKey: "admin-users-page",
-  presetVersion: 1,
+  presetVersion: 1 + PHI_BASE_PAGE_LAYOUT_VERSION,
   area: "admin",
   pageKey: "users",
   title: "Users",

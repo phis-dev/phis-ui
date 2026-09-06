@@ -1,10 +1,11 @@
 import {
   PHI_CMS_DEFAULT_SLOT_INDEX,
 } from "../../../constants/cms-layout-types";
-import { PhiCmsPageType, PhiCmsRegionType, PhiCmsStatus } from "../../../constants/phi-cms";
+import { PhiCmsPageType, PhiCmsStatus } from "../../../constants/phi-cms";
 import { buildPhiCmsLayoutNode, buildPhiCmsWidgetNode } from "../../../helpers/cms-node-factories";
 import type { PhiResolvedCmsPageTree, PhiCmsPageNode } from "../../../types/cms";
 import type { PhiBlockRuntime } from "../../../types";
+import { buildPhiBasePageContentScaffold, PHI_BASE_PAGE_LAYOUT_NODE_ID } from "./phi-base-page-layout";
 import { getPhiAdminUsersPageLabels } from "./admin-users-label-set";
 import { getPhiAdminUsersTableWidgetLabels } from "../../widgets/label-sets/admin-users";
 import { PHI_USER_MANAGEMENT_RUNTIME_DATA_PROVIDER_KEYS } from "../../../plugins/runtime-modules/user-management/ids";
@@ -146,6 +147,12 @@ export async function buildPhiDefaultAdminUsersPageTree({
       },
     },
   });
+  const scaffold = buildPhiBasePageContentScaffold({
+    page,
+    regionId: SYNTHETIC_ADMIN_USERS_REGION_IDS.regionContent,
+    regionConfig: { maxSize: { width: 1440 }, margin: "0 auto", border: false },
+  });
+
   return {
     page: {
       ...page,
@@ -181,48 +188,9 @@ export async function buildPhiDefaultAdminUsersPageTree({
         "admin-users-history-modal",
       ),
     ],
-    regions: [
-      {
-        id: SYNTHETIC_ADMIN_USERS_REGION_IDS.regionContent,
-        pageId: page.id,
-        areaPresetId: null,
-        regionType: PhiCmsRegionType.Content,
-        rootLayoutNodeId: PHI_USER_MANAGEMENT_PAGE_LAYOUT_IDS.layoutContent,
-        status: PhiCmsStatus.Published,
-        flags: 0,
-        visibilityMask: page.visibilityMask,
-        sortOrder: 30,
-        config: {
-          maxSize: { width: 1440 },
-          margin: "0 auto",
-          border: false,
-        },
-      },
-    ],
+    regions: [scaffold.region],
     layoutNodes: [
-      buildPhiCmsLayoutNode({
-        id: PHI_USER_MANAGEMENT_PAGE_LAYOUT_IDS.layoutContent,
-        siteId: page.siteId,
-        parentLayoutNodeId: null,
-        creationPreset: { layoutKind: "verticalflex", preset: "panel" },
-        typeKey: "flex-vertical",
-        slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
-        sortOrder: 0,
-        status: PhiCmsStatus.Published,
-        flags: 0,
-        visibilityMask: page.visibilityMask,
-        label: labels.contentLabel,
-        config: {
-          anchor: { horizontal: "left", vertical: "top" },
-          gap: PHI_SPACE.base,
-          width: "100%",
-          maxWidth: "100%",
-          margin: 0,
-          padding: PHI_SPACE.base,
-          background: PHI_COLOR.bgLayout,
-          border: false,
-        },
-      }),
+      scaffold.layoutNode,
       ...([
         [PHI_USER_MANAGEMENT_PAGE_LAYOUT_IDS.layoutCreate, "admin users create modal content"],
         [PHI_USER_MANAGEMENT_PAGE_LAYOUT_IDS.layoutEdit, "admin users edit modal content"],
@@ -272,7 +240,7 @@ export async function buildPhiDefaultAdminUsersPageTree({
       buildPhiCmsWidgetNode({
         id: PHI_USER_MANAGEMENT_PAGE_WIDGET_IDS.widgetTable,
         siteId: page.siteId,
-        parentLayoutNodeId: PHI_USER_MANAGEMENT_PAGE_LAYOUT_IDS.layoutContent,
+        parentLayoutNodeId: PHI_BASE_PAGE_LAYOUT_NODE_ID,
         typeKey: "table",
         slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
         sortOrder: 0,

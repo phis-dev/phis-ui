@@ -1,17 +1,14 @@
 import { PHI_CMS_DEFAULT_SLOT_INDEX } from "../../../constants/cms-layout-types";
-import { PhiCmsPageType, PhiCmsRegionType, PhiCmsStatus } from "../../../constants/phi-cms";
+import { PhiCmsPageType, PhiCmsStatus } from "../../../constants/phi-cms";
 import { PHI_GROUPS_RUNTIME_DATA_PROVIDER_KEYS } from "../../../plugins/runtime-modules/groups/ids";
 import { PhiGroupMembershipFlags } from "../../../constants/site-groups";
-import { buildPhiCmsLayoutNode, buildPhiCmsWidgetNode } from "../../../helpers/cms-node-factories";
+import { buildPhiCmsWidgetNode } from "../../../helpers/cms-node-factories";
 import type { PhiCmsPageNode, PhiResolvedCmsPageTree } from "../../../types/cms";
 import type { PhiBlockRuntime } from "../../../types";
 import { createPhiSignalAddress, PHI_SIGNAL_VALUE_SCHEMAS } from "../../../types/signals";
-import { PHI_SPACE } from "../../../theme/antd-css-var-contract";
 import { createPhiGroupsControllerAddress } from "../../../plugins/runtime-modules/groups/controller/address";
-import {
-  PHI_GROUPS_PAGE_LAYOUT_IDS,
-  PHI_GROUPS_PAGE_WIDGET_IDS,
-} from "../../../plugins/runtime-modules/groups/addresses";
+import { PHI_GROUPS_PAGE_WIDGET_IDS } from "../../../plugins/runtime-modules/groups/addresses";
+import { buildPhiBasePageContentScaffold, PHI_BASE_PAGE_LAYOUT_NODE_ID } from "./phi-base-page-layout";
 import { getPhiGroupFormLabels } from "../../../plugins/runtime-modules/groups/labels";
 import { PHI_GROUPS_FORM_IDS } from "../../../plugins/runtime-modules/groups/forms";
 
@@ -51,6 +48,12 @@ export async function buildPhiDefaultAdminGroupsPageTree({
     [String(PhiGroupMembershipFlags.Manager)]: labels.levels.manager,
   };
 
+  const scaffold = buildPhiBasePageContentScaffold({
+    page,
+    regionId: SYNTHETIC_ADMIN_GROUPS_REGION_IDS.regionContent,
+    regionConfig: { maxSize: { width: 1440 }, margin: "0 auto", border: false },
+  });
+
   return {
     page: {
       ...page,
@@ -66,47 +69,13 @@ export async function buildPhiDefaultAdminGroupsPageTree({
       },
     },
     overlays: [],
-    regions: [{
-      id: SYNTHETIC_ADMIN_GROUPS_REGION_IDS.regionContent,
-      pageId: page.id,
-      areaPresetId: null,
-      regionType: PhiCmsRegionType.Content,
-      rootLayoutNodeId: PHI_GROUPS_PAGE_LAYOUT_IDS.layoutContent,
-      status: PhiCmsStatus.Published,
-      flags: 0,
-      visibilityMask: page.visibilityMask,
-      sortOrder: 30,
-      config: { maxSize: { width: 1440 }, margin: "0 auto", border: false },
-    }],
-    layoutNodes: [
-      buildPhiCmsLayoutNode({
-        id: PHI_GROUPS_PAGE_LAYOUT_IDS.layoutContent,
-        siteId: page.siteId,
-        parentLayoutNodeId: null,
-        creationPreset: { layoutKind: "verticalflex", preset: "panel" },
-        typeKey: "flex-vertical",
-        slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
-        sortOrder: 0,
-        status: PhiCmsStatus.Published,
-        flags: 0,
-        visibilityMask: page.visibilityMask,
-        label: labels.page.title,
-        config: {
-          anchor: { horizontal: "left", vertical: "top" },
-          gap: PHI_SPACE.base,
-          width: "100%",
-          maxWidth: "100%",
-          margin: 0,
-          padding: PHI_SPACE.base,
-          border: false,
-        },
-      }),
-    ],
+    regions: [scaffold.region],
+    layoutNodes: [scaffold.layoutNode],
     contentWidgets: [
       buildPhiCmsWidgetNode({
         id: PHI_GROUPS_PAGE_WIDGET_IDS.widgetGroupsTable,
         siteId: page.siteId,
-        parentLayoutNodeId: PHI_GROUPS_PAGE_LAYOUT_IDS.layoutContent,
+        parentLayoutNodeId: PHI_BASE_PAGE_LAYOUT_NODE_ID,
         typeKey: "table",
         slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
         sortOrder: 0,
@@ -236,7 +205,7 @@ export async function buildPhiDefaultAdminGroupsPageTree({
       buildPhiCmsWidgetNode({
         id: PHI_GROUPS_PAGE_WIDGET_IDS.widgetMembersTable,
         siteId: page.siteId,
-        parentLayoutNodeId: PHI_GROUPS_PAGE_LAYOUT_IDS.layoutContent,
+        parentLayoutNodeId: PHI_BASE_PAGE_LAYOUT_NODE_ID,
         typeKey: "table",
         // Its own slot: one slot holds one direct node, so the two tables stack rather than collide.
         slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX + 1,
@@ -329,7 +298,7 @@ export async function buildPhiDefaultAdminGroupsPageTree({
       buildPhiCmsWidgetNode({
         id: PHI_GROUPS_PAGE_WIDGET_IDS.widgetCreateForm,
         siteId: page.siteId,
-        parentLayoutNodeId: PHI_GROUPS_PAGE_LAYOUT_IDS.layoutContent,
+        parentLayoutNodeId: PHI_BASE_PAGE_LAYOUT_NODE_ID,
         typeKey: "form",
         slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX + 2,
         sortOrder: 2,
@@ -367,7 +336,7 @@ export async function buildPhiDefaultAdminGroupsPageTree({
       buildPhiCmsWidgetNode({
         id: PHI_GROUPS_PAGE_WIDGET_IDS.widgetCreateCommands,
         siteId: page.siteId,
-        parentLayoutNodeId: PHI_GROUPS_PAGE_LAYOUT_IDS.layoutContent,
+        parentLayoutNodeId: PHI_BASE_PAGE_LAYOUT_NODE_ID,
         typeKey: "command-toolbar",
         slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX + 3,
         sortOrder: 3,
@@ -400,7 +369,7 @@ export async function buildPhiDefaultAdminGroupsPageTree({
       buildPhiCmsWidgetNode({
         id: PHI_GROUPS_PAGE_WIDGET_IDS.widgetMembershipForm,
         siteId: page.siteId,
-        parentLayoutNodeId: PHI_GROUPS_PAGE_LAYOUT_IDS.layoutContent,
+        parentLayoutNodeId: PHI_BASE_PAGE_LAYOUT_NODE_ID,
         typeKey: "form",
         slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX + 4,
         sortOrder: 4,
@@ -437,7 +406,7 @@ export async function buildPhiDefaultAdminGroupsPageTree({
       buildPhiCmsWidgetNode({
         id: PHI_GROUPS_PAGE_WIDGET_IDS.widgetMembershipCommands,
         siteId: page.siteId,
-        parentLayoutNodeId: PHI_GROUPS_PAGE_LAYOUT_IDS.layoutContent,
+        parentLayoutNodeId: PHI_BASE_PAGE_LAYOUT_NODE_ID,
         typeKey: "command-toolbar",
         slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX + 5,
         sortOrder: 5,

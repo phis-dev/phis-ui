@@ -3,9 +3,10 @@ import { PHI_DASHBOARD_RUNTIME_MODULE_ID } from "../../../plugins/runtime-module
 import { PHI_CMS_DEFAULT_SLOT_INDEX, PHI_CMS_THREE_COLUMN_LAYOUT_SLOT_INDEX } from "../../../constants/cms-layout-types";
 import { PhiCmsPageType, PhiCmsRegionType, PhiCmsStatus } from "../../../constants/phi-cms";
 import { buildPhiCmsLayoutNode, buildPhiCmsWidgetNode } from "../../../helpers/cms-node-factories";
-import { PHI_COLOR, PHI_SPACE } from "../../../theme/antd-css-var-contract";
+
 import type { PhiCmsPageNode, PhiResolvedCmsPageTree } from "../../../types/cms";
 import type { PhiBlockRuntime } from "../../../types";
+import { buildPhiBasePageContentScaffold, PHI_BASE_PAGE_LAYOUT_NODE_ID } from "./phi-base-page-layout";
 import { getPhiBuilderChromeWidgetLabels } from "../../widgets/label-sets/builder-chrome";
 
 const SYNTHETIC_BUILDER_DASHBOARD_REGION_IDS = {
@@ -19,7 +20,6 @@ const SYNTHETIC_BUILDER_DASHBOARD_LAYOUT_IDS = createPhiPresetCmsInstanceIdMap({
   presetKey: "builder-dashboard-page",
 }, [
   "layoutHeaderBottom",
-  "layoutContent",
 ]);
 
 const SYNTHETIC_BUILDER_DASHBOARD_WIDGET_IDS = createPhiPresetCmsInstanceIdMap({
@@ -45,6 +45,11 @@ export async function buildPhiDefaultBuilderDashboardPageTree({
   });
   const pageTitleSource = "Dashboard";
   const pageTitle = labels.pageTitles.dashboard;
+  const scaffold = buildPhiBasePageContentScaffold({
+    page,
+    regionId: SYNTHETIC_BUILDER_DASHBOARD_REGION_IDS.regionContent,
+    regionConfig: { maxSize: { width: 1280 }, margin: "0 auto" },
+  });
 
   return {
     page: {
@@ -80,21 +85,7 @@ export async function buildPhiDefaultBuilderDashboardPageTree({
           offsetTop: 55,
         },
       },
-      {
-        id: SYNTHETIC_BUILDER_DASHBOARD_REGION_IDS.regionContent,
-        pageId: page.id,
-        areaPresetId: null,
-        regionType: PhiCmsRegionType.Content,
-        rootLayoutNodeId: SYNTHETIC_BUILDER_DASHBOARD_LAYOUT_IDS.layoutContent,
-        status: PhiCmsStatus.Published,
-        flags: 0,
-        visibilityMask: page.visibilityMask,
-        sortOrder: 30,
-        config: {
-          maxSize: { width: 1280 },
-          margin: "0 auto",
-        },
-      },
+      scaffold.region,
     ],
     layoutNodes: [
       buildPhiCmsLayoutNode({
@@ -115,35 +106,14 @@ export async function buildPhiDefaultBuilderDashboardPageTree({
           style: { height: "100%" },
         },
       }),
-      buildPhiCmsLayoutNode({
-        creationPreset: { layoutKind: "verticalflex", preset: "panel" },
-        typeKey: "flex-vertical",
-        id: SYNTHETIC_BUILDER_DASHBOARD_LAYOUT_IDS.layoutContent,
-        siteId: page.siteId,
-        parentLayoutNodeId: null,
-        slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
-        sortOrder: 0,
-        status: PhiCmsStatus.Published,
-        flags: 0,
-        visibilityMask: page.visibilityMask,
-        label: "builder dashboard content",
-        config: {
-          gap: PHI_SPACE.base,
-          width: "100%",
-          maxWidth: "100%",
-          margin: 0,
-          padding: PHI_SPACE.base,
-          background: PHI_COLOR.bgLayout,
-          border: false,
-        },
-      }),
+      scaffold.layoutNode,
     ],
     contentWidgets: [
       buildPhiCmsWidgetNode({
         typeKey: "builder-chrome-controls",
         id: SYNTHETIC_BUILDER_DASHBOARD_WIDGET_IDS.widgetBuilderChromeControls,
         siteId: page.siteId,
-        parentLayoutNodeId: SYNTHETIC_BUILDER_DASHBOARD_LAYOUT_IDS.layoutContent,
+        parentLayoutNodeId: PHI_BASE_PAGE_LAYOUT_NODE_ID,
         slotIndex: 0,
         sortOrder: 0,
         status: PhiCmsStatus.Published,

@@ -33,6 +33,7 @@ import type {
   PhiRuntimeModuleId,
 } from "../../types/cms-module-descriptors";
 import type {
+  PhiCmsLayoutNode,
   PhiCmsPageNode,
   PhiResolvedCmsAreaPresetTree,
   PhiResolvedCmsPageTree,
@@ -50,6 +51,10 @@ import {
 } from "./shell-tree-composition";
 import { buildPhiRuntimeModuleRouteSegment } from "../../helpers/runtime-module-route-path";
 import { resolvePhiLayoutCreationPreset } from "../../helpers/cms-layout-defaults";
+import {
+  buildPhiBasePageLayoutNode,
+  PHI_BASE_PAGE_LAYOUT_NODE_ID,
+} from "../../components/regions/presets/phi-base-page-layout";
 
 const PHI_CMS_REGION_TYPE_VALUES = new Set<number>(Object.values(PhiCmsRegionType));
 const PHI_ROUTE_PARAMETER_PATTERN = /^:[A-Za-z][A-Za-z0-9_]*$/;
@@ -1443,6 +1448,50 @@ function createSyntheticPresetPage({
   };
 }
 
+function stablePresetNodeJson(value: unknown): string {
+  if (Array.isArray(value)) {
+    return `[${value.map(stablePresetNodeJson).join(",")}]`;
+  }
+  if (value && typeof value === "object") {
+    return `{${Object.entries(value as Record<string, unknown>)
+      .filter(([, entry]) => entry !== undefined)
+      .sort(([left], [right]) => (left < right ? -1 : left > right ? 1 : 0))
+      .map(([key, entry]) => `${JSON.stringify(key)}:${stablePresetNodeJson(entry)}`)
+      .join(",")}}`;
+  }
+  return JSON.stringify(value) ?? "undefined";
+}
+
+/**
+ * Equal id must mean equal node: the shared page scaffold carries the same instance id in every
+ * built-in preset tree, which stays sound only while every copy is the canonical node. A preset that
+ * wants different chrome gets its own Layout node in a slot -- a deviating copy of the scaffold is a
+ * contract violation, not a customisation.
+ */
+function assertPhiCmsBasePageLayoutNode(
+  tree: PhiResolvedCmsPageTree,
+  layoutsById: ReadonlyMap<string, PhiCmsLayoutNode>,
+) {
+  for (const node of [...tree.overlays, ...tree.contentWidgets]) {
+    if (node.id === PHI_BASE_PAGE_LAYOUT_NODE_ID) {
+      throw new Error("The base page layout instance id is reserved for the scaffold Layout node.");
+    }
+  }
+  const node = layoutsById.get(PHI_BASE_PAGE_LAYOUT_NODE_ID);
+  if (!node) {
+    return;
+  }
+  const canonical = buildPhiBasePageLayoutNode(tree.page);
+  const mismatch = (Object.keys(canonical) as (keyof PhiCmsLayoutNode)[])
+    .find((key) => stablePresetNodeJson(node[key]) !== stablePresetNodeJson(canonical[key]));
+  if (mismatch) {
+    throw new Error(
+      `Preset tree carries a deviating base page layout node: "${String(mismatch)}" is ` +
+      `${stablePresetNodeJson(node[mismatch])}, canonical is ${stablePresetNodeJson(canonical[mismatch])}.`,
+    );
+  }
+}
+
 export function assertPhiCmsPresetTreeContract(
   tree: PhiResolvedCmsPageTree,
   expectedPage?: PhiCmsPageNode,
@@ -1504,6 +1553,7 @@ export function assertPhiCmsPresetTreeContract(
     }
   }
   const layoutsById = new Map(tree.layoutNodes.map((node) => [node.id, node]));
+  assertPhiCmsBasePageLayoutNode(tree, layoutsById);
   for (const overlay of tree.overlays) {
     if (!layoutIds.has(overlay.bodyLayoutNodeId)) {
       throw new Error(`Preset Overlay "${overlay.id}" has unresolved Body root "${overlay.bodyLayoutNodeId}".`);

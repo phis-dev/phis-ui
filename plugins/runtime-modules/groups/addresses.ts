@@ -7,24 +7,11 @@ const identity = {
   presetKey: "admin-groups-page",
 } as const;
 
-/**
- * Stable node ids for the Groups administration Page.
- *
- * The Controller has to name the membership table to send it a filter, so the id cannot be positional.
- */
-export const PHI_GROUPS_PAGE_LAYOUT_IDS = createPhiPresetCmsInstanceIdMap(identity, [
-  "layoutContent",
-]);
-
 const appIdentity = {
   domain: "page",
   ownerModuleId: PHI_GROUPS_RUNTIME_MODULE_ID,
   presetKey: "app-groups-page",
 } as const;
-
-export const PHI_APP_GROUPS_PAGE_LAYOUT_IDS = createPhiPresetCmsInstanceIdMap(appIdentity, [
-  "layoutContent",
-]);
 
 export const PHI_APP_GROUPS_PAGE_WIDGET_IDS = createPhiPresetCmsInstanceIdMap(appIdentity, [
   "widgetMyGroupsTable",
@@ -33,6 +20,11 @@ export const PHI_APP_GROUPS_PAGE_WIDGET_IDS = createPhiPresetCmsInstanceIdMap(ap
   "widgetMembershipCommands",
 ]);
 
+/**
+ * Stable Widget ids for the Groups administration Page.
+ *
+ * The Controller has to name the membership table to send it a filter, so the id cannot be positional.
+ */
 export const PHI_GROUPS_PAGE_WIDGET_IDS = createPhiPresetCmsInstanceIdMap(identity, [
   "widgetGroupsTable",
   "widgetMembersTable",

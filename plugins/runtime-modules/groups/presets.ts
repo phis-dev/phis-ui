@@ -1,4 +1,5 @@
 import type { PhiCmsRoutePresetDescriptor } from "../../../types/cms-module-descriptors";
+import { PHI_BASE_PAGE_LAYOUT_VERSION } from "../../../components/regions/presets/phi-base-page-layout";
 import { PHI_GROUPS_RUNTIME_MODULE_ID } from "./ids";
 import {
   PHI_VIEWER_ACCESS_AUTHENTICATED,
@@ -8,7 +9,7 @@ import {
 export const PHI_GROUPS_RUNTIME_MODULE_ROUTES = [{
   ownerModuleId: PHI_GROUPS_RUNTIME_MODULE_ID,
   presetKey: "admin-groups-page",
-  presetVersion: 1,
+  presetVersion: 1 + PHI_BASE_PAGE_LAYOUT_VERSION,
   area: "admin",
   pageKey: "groups",
   title: "Groups",
@@ -34,7 +35,7 @@ export const PHI_GROUPS_RUNTIME_MODULE_ROUTES = [{
 }, {
   ownerModuleId: PHI_GROUPS_RUNTIME_MODULE_ID,
   presetKey: "app-groups-page",
-  presetVersion: 1,
+  presetVersion: 1 + PHI_BASE_PAGE_LAYOUT_VERSION,
   area: "app",
   pageKey: "groups",
   title: "Groups",

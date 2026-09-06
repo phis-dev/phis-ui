@@ -1,10 +1,11 @@
 import { createPhiPresetCmsInstanceIdMap } from "../../../types/cms-instance-id";
 import { PHI_OBSERVABILITY_RUNTIME_MODULE_ID } from "../../../plugins/runtime-modules/observability/ids";
 import { PHI_CMS_DEFAULT_SLOT_INDEX } from "../../../constants/cms-layout-types";
-import { PhiCmsPageType, PhiCmsRegionType, PhiCmsStatus } from "../../../constants/phi-cms";
+import { PhiCmsPageType, PhiCmsStatus } from "../../../constants/phi-cms";
 import { buildPhiCmsLayoutNode, buildPhiCmsWidgetNode } from "../../../helpers/cms-node-factories";
 import type { PhiCmsPageNode, PhiResolvedCmsPageTree } from "../../../types/cms";
 import type { PhiBlockRuntime } from "../../../types";
+import { buildPhiBasePageContentScaffold, PHI_BASE_PAGE_LAYOUT_NODE_ID } from "./phi-base-page-layout";
 import { getPhiAdminLogsPageLabels } from "./admin-logs-label-set";
 import { getPhiObservabilityLogsWidgetLabels } from "../../widgets/label-sets/observability-logs";
 import { PHI_OBSERVABILITY_RUNTIME_DATA_PROVIDER_KEYS } from "../../../plugins/runtime-modules/observability/ids";
@@ -20,7 +21,6 @@ const SYNTHETIC_ADMIN_LOGS_LAYOUT_IDS = createPhiPresetCmsInstanceIdMap({
   ownerModuleId: PHI_OBSERVABILITY_RUNTIME_MODULE_ID,
   presetKey: "admin-logs-page",
 }, [
-  "layoutContent",
   "layoutDetail",
 ]);
 
@@ -57,6 +57,12 @@ export async function buildPhiDefaultAdminLogsPageTree({
     apiBaseUrl: runtime.phis.apiBaseUrl,
     internalToken: runtime.phis.internalToken,
     locale: runtime.locale.current,
+  });
+
+  const scaffold = buildPhiBasePageContentScaffold({
+    page,
+    regionId: SYNTHETIC_ADMIN_LOGS_REGION_IDS.regionContent,
+    regionConfig: { maxSize: { width: 1440 }, margin: "0 auto", border: false },
   });
 
   return {
@@ -108,47 +114,9 @@ export async function buildPhiDefaultAdminLogsPageTree({
         },
       },
     }],
-    regions: [
-      {
-        id: SYNTHETIC_ADMIN_LOGS_REGION_IDS.regionContent,
-        pageId: page.id,
-        areaPresetId: null,
-        regionType: PhiCmsRegionType.Content,
-        rootLayoutNodeId: SYNTHETIC_ADMIN_LOGS_LAYOUT_IDS.layoutContent,
-        status: PhiCmsStatus.Published,
-        flags: 0,
-        visibilityMask: page.visibilityMask,
-        sortOrder: 30,
-        config: {
-          maxSize: { width: 1440 },
-          margin: "0 auto",
-          border: false,
-        },
-      },
-    ],
+    regions: [scaffold.region],
     layoutNodes: [
-      buildPhiCmsLayoutNode({
-        id: SYNTHETIC_ADMIN_LOGS_LAYOUT_IDS.layoutContent,
-        siteId: page.siteId,
-        parentLayoutNodeId: null,
-        creationPreset: { layoutKind: "verticalflex", preset: "panel" },
-        typeKey: "flex-vertical",
-        slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
-        sortOrder: 0,
-        status: PhiCmsStatus.Published,
-        flags: 0,
-        visibilityMask: page.visibilityMask,
-        label: labels.contentLabel,
-        config: {
-          anchor: { horizontal: "left", vertical: "top" },
-          gap: PHI_SPACE.base,
-          width: "100%",
-          maxWidth: "100%",
-          margin: 0,
-          padding: PHI_SPACE.base,
-          border: false,
-        },
-      }),
+      scaffold.layoutNode,
       buildPhiCmsLayoutNode({
         id: SYNTHETIC_ADMIN_LOGS_LAYOUT_IDS.layoutDetail,
         siteId: page.siteId,
@@ -177,7 +145,7 @@ export async function buildPhiDefaultAdminLogsPageTree({
       buildPhiCmsWidgetNode({
         id: SYNTHETIC_ADMIN_LOGS_WIDGET_IDS.widgetTable,
         siteId: page.siteId,
-        parentLayoutNodeId: SYNTHETIC_ADMIN_LOGS_LAYOUT_IDS.layoutContent,
+        parentLayoutNodeId: PHI_BASE_PAGE_LAYOUT_NODE_ID,
         typeKey: "table",
         slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
         sortOrder: 0,

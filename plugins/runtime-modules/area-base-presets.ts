@@ -19,6 +19,7 @@ import {
   PHI_ADMIN_SETTINGS_NAV_ITEM_KEY,
 } from "./area-definitions";
 import { buildPhiAreaRootRoutePresetDescriptor } from "./area-root-route";
+import { PHI_BASE_PAGE_LAYOUT_VERSION } from "../../components/regions/presets/phi-base-page-layout";
 
 export const PHI_AREA_BASE_RUNTIME_MODULE_AREA_SHELLS = [
   {
@@ -140,7 +141,7 @@ export const PHI_AREA_BASE_RUNTIME_MODULE_ROUTES = [
     ownerModuleId: PHI_ACCOUNTING_RUNTIME_MODULE_ID,
     presetKey: "accounting-overview-page",
     pageKey: "overview",
-    presetVersion: 1,
+    presetVersion: 1 + PHI_BASE_PAGE_LAYOUT_VERSION,
     area: "accounting",
     title: "Overview",
     path: "/overview",
@@ -251,7 +252,7 @@ export const PHI_AUTH_RUNTIME_MODULE_ROUTES = [
   {
     ownerModuleId: PHI_AUTH_RUNTIME_MODULE_ID,
     presetKey: "app-profile-page",
-    presetVersion: 1,
+    presetVersion: 1 + PHI_BASE_PAGE_LAYOUT_VERSION,
     area: "app",
     pageKey: "profile",
     title: "Profile",

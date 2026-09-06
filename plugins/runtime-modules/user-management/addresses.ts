@@ -9,7 +9,7 @@ const USER_MANAGEMENT_PAGE_PRESET = {
 
 export const PHI_USER_MANAGEMENT_PAGE_LAYOUT_IDS = createPhiPresetCmsInstanceIdMap(
   USER_MANAGEMENT_PAGE_PRESET,
-  ["layoutContent", "layoutCreate", "layoutCreateFooter", "layoutEdit", "layoutEditFooter", "layoutHistory"],
+  ["layoutCreate", "layoutCreateFooter", "layoutEdit", "layoutEditFooter", "layoutHistory"],
 );
 
 export const PHI_USER_MANAGEMENT_PAGE_OVERLAY_IDS = createPhiPresetCmsInstanceIdMap(
