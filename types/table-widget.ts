@@ -134,6 +134,12 @@ export type PhiTableFilterDefinition =
   | {
       key: string;
       type: "boolean";
+      /*
+       * `select` offers yes/no/cleared -- three answers, for a column that may be either and may be
+       * left alone. `switch` offers two, for a filter that is always answered: it is on or it is off,
+       * and `defaultValue` says which way it starts.
+       */
+      control?: "select" | "switch";
       label: string;
       defaultValue?: boolean;
     }

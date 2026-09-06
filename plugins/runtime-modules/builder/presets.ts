@@ -10,7 +10,7 @@ import { PHI_BUILDER_RUNTIME_MODULE_ID } from "./ids";
 export const PHI_BUILDER_RUNTIME_MODULE_AREA_SHELLS = [{
   ownerModuleId: PHI_BUILDER_RUNTIME_MODULE_ID,
   presetKey: "builder-area-preset",
-  shellPresetVersion: 2,
+  shellPresetVersion: 3,
   area: "builder",
   loadTree: ({ page, runtime }) =>
     import("../../../components/regions/presets/phi-default-builder-area-preset-tree")
@@ -21,8 +21,9 @@ const BUILDER_ROUTE_PRESETS = [
   { presetKey: "builder-shells-page", pageKey: "shells", title: "Shells", path: "/shells" },
   { presetKey: "builder-pages-page", pageKey: "pages", title: "Pages", path: "/pages" },
   { presetKey: "builder-navigation-page", pageKey: "navigation", title: "Navigation", path: "/navigation" },
-  // v2: the site-wide activation matrix (module switch + per-Area checkboxes + Area view filter).
-  { presetKey: "builder-modules-page", pageKey: "modules", title: "Modules", path: "/modules", presetVersion: 2 },
+  // v3: the site-wide activation matrix (module switch + per-Area checkboxes), with the Area and
+  // foundation view filters as the table's own Controls rather than widgets beside it.
+  { presetKey: "builder-modules-page", pageKey: "modules", title: "Modules", path: "/modules", presetVersion: 3 },
 ] as const;
 
 const BUILDER_WORKSPACE_ROUTES = BUILDER_ROUTE_PRESETS.map((route) => ({

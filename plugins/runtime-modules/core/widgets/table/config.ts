@@ -397,7 +397,13 @@ function readFilters(value: unknown): PhiTableFilterDefinition[] {
       continue;
     }
     if (item.type === "boolean") {
-      result.push({ key, type: "boolean", label, defaultValue: readBoolean(item.defaultValue) });
+      result.push({
+        key,
+        type: "boolean",
+        control: item.control === "switch" ? "switch" : undefined,
+        label,
+        defaultValue: readBoolean(item.defaultValue),
+      });
       continue;
     }
     if (item.type === "dateRange") {

@@ -39,6 +39,10 @@ import { createPhiCoreRuntimeControllerAddress } from "../../runtime/core-runtim
 import { PHI_BUILDER_RUNTIME_MODULE_ID } from "../../../plugins/runtime-modules/builder/ids";
 import { PHI_ASSET_RUNTIME_DATA_PROVIDER_KEYS } from "../../../plugins/runtime-modules/asset/ids";
 import { PHI_BUILDER_RUNTIME_DATA_PROVIDER_KEYS } from "../../../plugins/runtime-modules/builder/ids";
+import {
+  PHI_BUILDER_MODULES_TABLE_ALL_AREAS_VALUE,
+  PHI_BUILDER_MODULES_TABLE_FILTER_KEYS,
+} from "../../../plugins/runtime-modules/builder/data-providers";
 import { PHI_BUILDER_NAVIGATION_DND_TYPE_PAGE } from "../../../constants/builder-navigation-dnd";
 import { createPhiDefaultAreaRuntimeModuleIds } from "../../../plugins/runtime-modules/builder/runtime-module-defaults";
 import { getPhiBuilderChromeWidgetLabels } from "../../widgets/label-sets/builder-chrome";
@@ -166,7 +170,6 @@ const PHI_BUILDER_WIDGET_NODE_KEYS = [
   "widgetPagesMetaToolbar",
   "widgetPagesHeaderSelector",
   "widgetRevisionsTable",
-  "widgetModulesAreaFilter",
   "widgetBrandContextSelect",
   "widgetBrandPreviewModeSwitch",
   "widgetBrandThemeControls",
@@ -3092,39 +3095,6 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                 },
                 contentId: null,
               }),
-              /*
-               * The table's own Area filter, with "all Areas" as the default. A view filter only: it
-               * narrows which Modules are listed (those eligible for the chosen Area) and never what
-               * a switch or checkbox does -- which is why it lives here beside the table rather than
-               * in the header Area selector, whose meaning is "the Area being edited".
-               */
-              buildPhiCmsWidgetNode({
-                typeKey: "select-box",
-                id: SYNTHETIC_DEV_WIDGET_IDS.widgetModulesAreaFilter,
-                siteId: page.siteId,
-                parentLayoutNodeId: SYNTHETIC_DEV_LAYOUT_IDS.layoutHeaderBottom,
-                slotIndex: PHI_CMS_THREE_COLUMN_LAYOUT_SLOT_INDEX.Left,
-                sortOrder: 1,
-                status: PhiCmsStatus.Published,
-                flags: 0,
-                visibilityMask: page.visibilityMask,
-                label: "dev modules area filter",
-                config: {
-                  key: "modules-area-filter",
-                  value: "all",
-                  options: [
-                    { value: "all", label: modulesLabels?.filter.allAreas ?? "All areas" },
-                    ...PHI_CMS_AREA_KEYS.map((areaKey) => ({
-                      value: areaKey,
-                      label: modulesLabels?.areas[areaKey] ?? areaKey,
-                    })),
-                  ],
-                  signalRoutes: {
-                    emits: [{ routeKey: "builder-modules-area-filter", capabilityId: "change", scope: "area", channel: "modulesAreaFilter", action: "change", valueType: "string", receiver: createPhiBuilderControllerAddress() }],
-                  },
-                },
-                contentId: null,
-              }),
               buildPhiCmsWidgetNode({
                 typeKey: "command-toolbar",
                 id: SYNTHETIC_DEV_WIDGET_IDS.widgetToolbar,
@@ -3207,6 +3177,38 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                     },
                   },
                   features: {
+                    /*
+                     * Both filters are the table's own view Controls, in front of its search box: they
+                     * narrow which Modules are listed and never what a switch or checkbox does. That is
+                     * also why neither is the header Area selector, whose meaning is "the Area being
+                     * edited". Foundation Modules -- the ones that carry the Areas themselves -- start
+                     * hidden, because they are scaffolding rather than a choice.
+                     */
+                    filters: [
+                      {
+                        key: PHI_BUILDER_MODULES_TABLE_FILTER_KEYS.area,
+                        type: "select",
+                        label: modulesLabels?.filter.area ?? "Area",
+                        defaultValue: PHI_BUILDER_MODULES_TABLE_ALL_AREAS_VALUE,
+                        options: [
+                          {
+                            value: PHI_BUILDER_MODULES_TABLE_ALL_AREAS_VALUE,
+                            label: modulesLabels?.filter.allAreas ?? "All areas",
+                          },
+                          ...PHI_CMS_AREA_KEYS.map((areaKey) => ({
+                            value: areaKey,
+                            label: modulesLabels?.areas[areaKey] ?? areaKey,
+                          })),
+                        ],
+                      },
+                      {
+                        key: PHI_BUILDER_MODULES_TABLE_FILTER_KEYS.hideFoundation,
+                        type: "boolean",
+                        control: "switch",
+                        label: modulesLabels?.filter.hideFoundation ?? "Hide foundation",
+                        defaultValue: true,
+                      },
+                    ],
                     search: { enabled: true },
                     pagination: { enabled: false, pageSize: 200, showSizeChanger: false },
                     sorting: { mode: "single" },

@@ -3,12 +3,14 @@
 import { useMemo, type ReactNode } from "react";
 
 import { PHI_BUILDER_RUNTIME_DATA_PROVIDER_KEYS } from "../ids";
-import { PHI_BUILDER_RUNTIME_DATA_PROVIDER_DESCRIPTORS } from "../../../../plugins/runtime-modules/builder/data-providers";
+import {
+  PHI_BUILDER_MODULES_TABLE_FILTER_KEYS,
+  PHI_BUILDER_RUNTIME_DATA_PROVIDER_DESCRIPTORS,
+} from "../../../../plugins/runtime-modules/builder/data-providers";
 import {
   isPhiBuilderAreaKey,
   isPhiCmsAreaKey,
   PHI_CMS_AREA_KEYS,
-  resolvePhiBuilderAreaAsCmsArea,
   type PhiCmsAreaKey,
 } from "../../../../constants/cms-areas";
 import { readPhiRuntimeModuleCategory } from "../../../../constants/runtime-module-categories";
@@ -43,8 +45,11 @@ const DETAIL_RESOURCE_KEY = "moduleDetail";
  * it would only ever be a switch nobody may touch. Everything else is a row regardless of which Areas
  * it serves: the row's switch answers "does this Module run anywhere", and one `area_*` cell per
  * eligible Area answers "where exactly". An Area the Module cannot carry holds `null` there, which the
- * cell renders as nothing at all. The Modules Area filter narrows which rows are listed (Modules
- * eligible for that Area), never what a cell means.
+ * cell renders as nothing at all.
+ *
+ * Both table filters narrow which rows are listed and never what a cell means: `area` keeps the Modules
+ * eligible for one Area, `hideFoundation` drops the Modules that carry the Areas themselves -- those are
+ * the site's own scaffolding rather than a choice, which is why it starts on.
  */
 function readAreaLabels(params: Record<string, unknown> | undefined) {
   const candidate = params?.areaLabels;
@@ -65,6 +70,26 @@ function isModuleActiveInArea(
   return (state.runtimeModuleIdsByArea[cmsArea] ?? []).includes(moduleId as PhiRuntimeModuleId);
 }
 
+type PhiRuntimeModulesTableView = {
+  areaFilter: PhiCmsAreaKey | null;
+  hideFoundation: boolean;
+};
+
+function readRuntimeModulesTableView(query: PhiTableProviderQueryRequest["query"]) {
+  const filters = { ...(query.filters ?? {}) };
+  const areaValue = filters[PHI_BUILDER_MODULES_TABLE_FILTER_KEYS.area];
+  const hideFoundationValue = filters[PHI_BUILDER_MODULES_TABLE_FILTER_KEYS.hideFoundation];
+  delete filters[PHI_BUILDER_MODULES_TABLE_FILTER_KEYS.area];
+  delete filters[PHI_BUILDER_MODULES_TABLE_FILTER_KEYS.hideFoundation];
+  return {
+    view: {
+      areaFilter: typeof areaValue === "string" && isPhiCmsAreaKey(areaValue) ? areaValue : null,
+      hideFoundation: hideFoundationValue === true,
+    } satisfies PhiRuntimeModulesTableView,
+    query: { ...query, filters },
+  };
+}
+
 function resolveModuleBaseAreaKey(moduleId: string): PhiCmsAreaKey | null {
   for (const areaKey of PHI_CMS_AREA_KEYS) {
     if (resolvePhiRuntimeAreaDefinition(areaKey).baseModuleId === moduleId) {
@@ -77,15 +102,13 @@ function resolveModuleBaseAreaKey(moduleId: string): PhiCmsAreaKey | null {
 function buildRuntimeModuleRows(
   state: PhiDeveloperBuilderWorkspaceState,
   categoryLabels: Record<string, string> | null,
+  view: PhiRuntimeModulesTableView,
 ) {
-  const areaFilter = state.modulesAreaFilter
-    ? resolvePhiBuilderAreaAsCmsArea(state.modulesAreaFilter)
-    : null;
-
   return state.runtimeModuleDefinitions
     .filter((definition) =>
       definition.kind !== "platform" &&
-      (areaFilter == null || definition.eligibleAreas.includes(areaFilter)))
+      (view.areaFilter == null || definition.eligibleAreas.includes(view.areaFilter)) &&
+      (!view.hideFoundation || readPhiRuntimeModuleCategory(definition.category) !== "foundation"))
     .map((definition) => {
       const baseAreaKey = resolveModuleBaseAreaKey(definition.moduleId);
       const activeAreas = PHI_CMS_AREA_KEYS.filter((areaKey) =>
@@ -203,12 +226,18 @@ export function PhiBuilderRuntimeModulesTableProviderClient({ children }: { chil
       if (request.resourceKey !== RESOURCE_KEY) {
         throw new Error("Unknown Runtime Modules Table resource.");
       }
+      /*
+       * The two view filters are read here rather than left to the generic row matcher: neither is a
+       * field on a row -- one asks about eligibility, the other inverts a category -- and both are
+       * dropped from the query so the matcher does not look for columns that do not exist.
+       */
+      const { view, query: filteredQuery } = readRuntimeModulesTableView(request.query);
       return queryPhiStaticTableResource(
         {
           descriptor: resourceDescriptor,
-          rows: buildRuntimeModuleRows(builderState, readLabelMap(request.params, "categoryLabels")),
+          rows: buildRuntimeModuleRows(builderState, readLabelMap(request.params, "categoryLabels"), view),
         },
-        request,
+        { ...request, query: filteredQuery },
       );
     };
 

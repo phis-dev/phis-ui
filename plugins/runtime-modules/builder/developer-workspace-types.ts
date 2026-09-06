@@ -117,11 +117,6 @@ export type PhiDeveloperBuilderState = {
    * and publish commands walk this list instead of the header Area scope.
    */
   modulesDirtyAreas: PhiDeveloperBuilderArea[];
-  /**
-   * The Modules table's own Area filter -- `null` is "all Areas". A view filter only: it narrows
-   * which Modules are listed (those eligible for the Area), never what a switch or checkbox does.
-   */
-  modulesAreaFilter: PhiDeveloperBuilderArea | null;
 };
 
 /**

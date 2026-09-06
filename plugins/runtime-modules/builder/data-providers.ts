@@ -4,6 +4,17 @@ import { PHI_BUILDER_RUNTIME_MODULE_ID } from "./ids";
 import { PHI_BUILDER_AREA_OPTIONS } from "../../../constants/cms-areas";
 import { PHI_BUILDER_NAVIGATION_DND_TYPE_PAGE } from "../../../constants/builder-navigation-dnd";
 
+/*
+ * The Modules table's view filters: neither is a field on a row -- one asks which Areas a Module is
+ * eligible for, the other inverts a category -- so the provider reads them itself. `all` is a real
+ * option value rather than an empty selection, so the control keeps reading "All areas".
+ */
+export const PHI_BUILDER_MODULES_TABLE_FILTER_KEYS = {
+  area: "area",
+  hideFoundation: "hideFoundation",
+} as const;
+export const PHI_BUILDER_MODULES_TABLE_ALL_AREAS_VALUE = "all";
+
 export const PHI_BUILDER_RUNTIME_DATA_PROVIDER_DESCRIPTORS = [
   {
     key: PHI_BUILDER_RUNTIME_DATA_PROVIDER_KEYS.builderPages,
@@ -156,7 +167,12 @@ export const PHI_BUILDER_RUNTIME_DATA_PROVIDER_DESCRIPTORS = [
         { key: "area_editor", title: "Editor", type: "boolean", mutable: true },
         { key: "area_accounting", title: "Accounting", type: "boolean", mutable: true },
       ],
-      query: { search: true, sorting: "single", pagination: "none" },
+      query: {
+        search: true,
+        sorting: "single",
+        pagination: "none",
+        filterFields: [PHI_BUILDER_MODULES_TABLE_FILTER_KEYS.area, PHI_BUILDER_MODULES_TABLE_FILTER_KEYS.hideFoundation],
+      },
       actions: [{ key: "details", title: "Details", scope: "row", valueType: "none", intent: "read" }],
     }, {
       /*

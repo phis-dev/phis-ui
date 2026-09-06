@@ -1297,6 +1297,11 @@ function TableFilter({ filter, field, sourceConfig, value, size, onChange, label
     );
   }
   if (filter.type === "boolean") {
+    if (filter.control === "switch") {
+      // A switch answers yes or no and nothing else, so an absent value reads as off.
+      return <PhiSwitchControl checked={value === true} size={size === "large" ? undefined : size}
+        onChange={(next) => onChange(next)} />;
+    }
     return <PhiSelectControl allowClear value={typeof value === "boolean" ? String(value) : undefined}
       options={[{ value: "true", label: labels.yes }, { value: "false", label: labels.no }]}
       size={size} onChange={(next) => onChange(next === undefined ? undefined : next === "true")}

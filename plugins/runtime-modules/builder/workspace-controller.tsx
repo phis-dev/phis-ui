@@ -963,20 +963,6 @@ function usePhiDeveloperBuilderWorkspaceController(
 
       if (
         signal.scope === "area" &&
-        signal.channel === "modulesAreaFilter" &&
-        signal.action === "change" &&
-        signal.valueType === "string" &&
-        signal.receiver === createPhiBuilderControllerAddress()
-      ) {
-        // The Modules table's view filter -- "all" clears it. Never an edit scope.
-        const nextFilter = isPhiBuilderAreaKey(signal.value) ? signal.value : null;
-        builderWorkspaceStore.patch(defaultArea, (current) =>
-          current.modulesAreaFilter === nextFilter ? current : { ...current, modulesAreaFilter: nextFilter });
-        return;
-      }
-
-      if (
-        signal.scope === "area" &&
         signal.channel === "bindingParams" &&
         signal.action === "change" &&
         signal.valueType === "json" &&

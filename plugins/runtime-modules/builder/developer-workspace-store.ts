@@ -78,7 +78,6 @@ function createDefaultBuilderState(): PhiDeveloperBuilderState {
     deletedPageDrafts: {},
     draftAllocations: {},
     modulesDirtyAreas: [],
-    modulesAreaFilter: null,
   };
 }
 

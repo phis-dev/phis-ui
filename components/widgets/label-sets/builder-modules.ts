@@ -44,7 +44,9 @@ const PHI_BUILDER_MODULES_PAGE_LABEL_SET = definePhiLabelSet({
     detail_base_module: PHI_BUILDER_MODULES_PAGE_DEFAULT_LABELS.detail.baseModule,
     detail_yes: PHI_BUILDER_MODULES_PAGE_DEFAULT_LABELS.detail.yes,
     detail_no: PHI_BUILDER_MODULES_PAGE_DEFAULT_LABELS.detail.no,
+    filter_area: PHI_BUILDER_MODULES_PAGE_DEFAULT_LABELS.filter.area,
     filter_all_areas: PHI_BUILDER_MODULES_PAGE_DEFAULT_LABELS.filter.allAreas,
+    filter_hide_foundation: PHI_BUILDER_MODULES_PAGE_DEFAULT_LABELS.filter.hideFoundation,
   },
 });
 
@@ -99,7 +101,9 @@ export async function getPhiBuilderModulesPageLabels(
       no: labels.detail_no,
     },
     filter: {
+      area: labels.filter_area,
       allAreas: labels.filter_all_areas,
+      hideFoundation: labels.filter_hide_foundation,
     },
   };
 }
