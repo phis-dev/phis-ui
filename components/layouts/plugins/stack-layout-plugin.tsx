@@ -25,6 +25,8 @@ function serializePhiCmsStackLayoutConfig(value: unknown) {
       next.defaultActiveSlotKey = normalized.defaultActiveSlotKey;
       next.mountPolicy = normalized.mountPolicy;
       next.slotTransition = normalized.slotTransition;
+      next.slotTransitionDurationMs = normalized.slotTransitionDurationMs;
+      next.slotTransitionEasing = normalized.slotTransitionEasing;
     },
   );
 }
@@ -79,6 +81,8 @@ export const PHI_STACK_LAYOUT_PLUGIN: PhiCmsLayoutPlugin<PhiCmsStackLayoutConfig
       defaultActiveSlotKey={config.defaultActiveSlotKey}
       mountPolicy={config.mountPolicy}
       slotTransition={config.slotTransition}
+      slotTransitionDurationMs={config.slotTransitionDurationMs}
+      slotTransitionEasing={config.slotTransitionEasing}
       slotAnchor={config.anchor ? resolvePhiAnchorPlacement(config.anchor) : undefined}
       editSlotAnchor={config.anchor ? resolvePhiAnchorPlacement(config.anchor) : undefined}
       zIndex={config.zIndex}

@@ -1,3 +1,4 @@
+import type { PhiMotionEasing } from "../helpers/motion";
 import type { CSSProperties } from "react";
 import type { PhiCmsInstanceId } from "./cms-instance-id";
 import type { PhiViewerAccessPolicy, PhiViewportFlags } from "./access";
@@ -40,12 +41,8 @@ export type PhiRenderableBlockTransitionDirection =
   | "left"
   | "top-left";
 
-export type PhiRenderableBlockTransitionEasing =
-  | "linear"
-  | "ease"
-  | "ease-in"
-  | "ease-out"
-  | "ease-in-out";
+/** Kept as a name because the effects vocabulary is written in it; the list itself is motion's. */
+export type PhiRenderableBlockTransitionEasing = PhiMotionEasing;
 
 export type PhiRenderableBlockTransitionAxis = "x" | "y" | "z";
 

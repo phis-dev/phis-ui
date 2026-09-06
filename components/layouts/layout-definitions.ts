@@ -13,6 +13,7 @@ import {
   PHI_CMS_THREE_COLUMN_LAYOUT_SLOTS,
 } from "../../constants/cms-layout-types";
 import { PHI_CMS_MOUNT_POLICY_FIELD_OPTIONS } from "../../types/cms-mount-policy";
+import { PHI_MOTION_EASING_FIELD_OPTIONS } from "../../helpers/motion";
 import { resolvePhiLayoutDefaults } from "../../helpers/cms-layout-defaults";
 import { PHI_RENDERABLE_BLOCK_DEFAULT_ANCHOR } from "../../helpers/renderable-block-defaults";
 import { PHI_LAYOUT_PADDING_FIELDS } from "../../helpers/layout-padding-field";
@@ -238,6 +239,13 @@ export const PHI_STACK_LAYOUT_DEFINITION = {
         { value: "none", label: "None" },
         { value: "fade-over", label: "Fade over" },
       ],
+    },
+    { key: "slotTransitionDurationMs", type: "number", label: "Transition Duration (ms)" },
+    {
+      key: "slotTransitionEasing",
+      type: "choice",
+      label: "Transition Easing",
+      options: [...PHI_MOTION_EASING_FIELD_OPTIONS],
     },
   ],
   runtimeSignals: {

@@ -5,7 +5,11 @@ import { LeftOutlined, RightOutlined } from "@ant-design/icons";
 import type { CSSProperties, ReactNode } from "react";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 
-import { resolvePhiMotionDurationMs } from "../../../helpers/motion";
+import {
+  clampPhiSequenceTransitionMs,
+  resolvePhiMotionDurationMs,
+  type PhiMotionEasing,
+} from "../../../helpers/motion";
 import {
   shouldPhiCmsContentStayMounted,
   type PhiCmsMountPolicy,
@@ -55,6 +59,8 @@ export type PhiStackLayoutProps = Omit<PhiBaseLayoutProps, "slots"> & {
   defaultActiveSlotKey?: string;
   mountPolicy?: PhiCmsMountPolicy;
   slotTransition?: "none" | "fade-over";
+  slotTransitionDurationMs?: number;
+  slotTransitionEasing?: PhiMotionEasing;
   slotAnchor?: PhiAnchorWidgetPlacement | null;
   editSlotAnchor?: PhiAnchorWidgetPlacement | null;
   style?: CSSProperties;
@@ -84,6 +90,8 @@ export function PhiStackLayout({
   defaultActiveSlotKey,
   mountPolicy = "remount",
   slotTransition = "none",
+  slotTransitionDurationMs,
+  slotTransitionEasing,
   slotAnchor = "center",
   ...layoutProps
 }: PhiStackLayoutProps) {
@@ -275,7 +283,13 @@ export function PhiStackLayout({
         : current);
     };
     const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const duration = resolvePhiMotionDurationMs(token.motionDurationSlow);
+    /*
+     * A configured length, or the theme's. Reduced motion still means none of it rather than less of
+     * it: somebody who has asked for no movement has not asked for shorter movement.
+     */
+    const duration = slotTransitionDurationMs === undefined
+      ? resolvePhiMotionDurationMs(token.motionDurationSlow)
+      : clampPhiSequenceTransitionMs(slotTransitionDurationMs, 0);
     if (reducedMotion || duration <= 0 || typeof outgoingSlot.animate !== "function") {
       outgoingSlot.style.opacity = "0";
       queueMicrotask(clearOutgoingSlot);
@@ -286,7 +300,7 @@ export function PhiStackLayout({
       [{ opacity: 1 }, { opacity: 0 }],
       {
         duration,
-        easing: token.motionEaseOut,
+        easing: slotTransitionEasing ?? token.motionEaseOut,
         fill: "forwards",
       },
     );
@@ -302,7 +316,14 @@ export function PhiStackLayout({
     return () => {
       animation.cancel();
     };
-  }, [outgoingSlotIndex, token.motionDurationSlow, token.motionEaseOut, transitionState.sequence]);
+  }, [
+    outgoingSlotIndex,
+    slotTransitionDurationMs,
+    slotTransitionEasing,
+    token.motionDurationSlow,
+    token.motionEaseOut,
+    transitionState.sequence,
+  ]);
 
   if (isEditMode) {
     const editableSlotCount = Math.max(slots.length, 1);

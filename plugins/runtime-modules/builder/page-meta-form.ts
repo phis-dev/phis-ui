@@ -1,3 +1,4 @@
+import { PHI_MOTION_EASINGS } from "../../../helpers/motion";
 import type { PhiFormDescriptor } from "../../../types/form-descriptor";
 import { createPhiFormId } from "../../../types/form-id";
 import { PHI_SHARED_PACKAGE_NAME } from "../../../types/signals";
@@ -30,7 +31,7 @@ const transitionTriggerOptions = [
 const transitionDirectionOptions = ["top", "top-right", "right", "bottom-right", "bottom", "bottom-left", "left", "top-left"].map((value) => option(value));
 const transitionAxisOptions = ["x", "y", "z"].map((value) => option(value));
 const transitionOriginOptions = ["top left", "top center", "top right", "center left", "center", "center right", "bottom left", "bottom center", "bottom right"].map((value) => option(value));
-const easingOptions = ["linear", "ease", "ease-in", "ease-out", "ease-in-out"].map((value) => option(value));
+const easingOptions = PHI_MOTION_EASINGS.map((value) => option(value));
 const viewportPropertyOptions = ["translate", "opacity", "rotate", "scale"].map((value) => option(value));
 const viewportAxisOptions = ["x", "y"].map((value) => option(value));
 const viewportUnitOptions = [option("px"), option("%"), option("deg"), option("unitless", "none")];

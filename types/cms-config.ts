@@ -1,6 +1,11 @@
 import type { CSSProperties } from "react";
 import { readPhiControlSize, type PhiControlSize } from "./control";
 import { readPhiCmsMountPolicy, type PhiCmsMountPolicy } from "./cms-mount-policy";
+import {
+  clampPhiSequenceTransitionMs,
+  readPhiMotionEasing,
+  type PhiMotionEasing,
+} from "../helpers/motion";
 import { readPhiLengthValue, type PhiCssLength } from "./length";
 import type { PhiResponsiveValue } from "./responsive";
 
@@ -294,6 +299,8 @@ export type PhiCmsStackLayoutConfig = PhiCmsLayerBase & {
   defaultActiveSlotKey?: string;
   mountPolicy?: PhiCmsMountPolicy;
   slotTransition?: "none" | "fade-over";
+  slotTransitionDurationMs?: number;
+  slotTransitionEasing?: PhiMotionEasing;
 };
 
 export type PhiCmsCollapsibleLayoutConfig = PhiCmsLayerBase & {
@@ -601,6 +608,14 @@ export function parsePhiCmsStackLayoutConfig(
       defaultActiveSlotKey: readString(config.defaultActiveSlotKey),
       mountPolicy: readPhiCmsMountPolicy(config.mountPolicy, "remount"),
       slotTransition: config.slotTransition === "fade-over" ? "fade-over" : "none",
+      // Absent means "whatever the theme does", which is why the fallback is read from the token
+      // rather than written here as a number.
+      ...(config.slotTransitionDurationMs === undefined ? {} : {
+        slotTransitionDurationMs: clampPhiSequenceTransitionMs(config.slotTransitionDurationMs, 0),
+      }),
+      ...(config.slotTransitionEasing === undefined ? {} : {
+        slotTransitionEasing: readPhiMotionEasing(config.slotTransitionEasing, undefined),
+      }),
     },
     resolvePhiLayoutDefaults("stack"),
   );

@@ -1,3 +1,4 @@
+import { readPhiMotionEasing } from "./motion";
 import type {
   PhiRenderableBlock,
   PhiRenderableBlockAnchor,
@@ -156,13 +157,7 @@ function normalizeRenderableBlockTransitionDirection(value: unknown): PhiRendera
 }
 
 function normalizeRenderableBlockTransitionEasing(value: unknown): PhiRenderableBlockTransitionEasing | undefined {
-  return value === "linear" ||
-    value === "ease" ||
-    value === "ease-in" ||
-    value === "ease-out" ||
-    value === "ease-in-out"
-    ? value
-    : undefined;
+  return readPhiMotionEasing(value, undefined);
 }
 
 function normalizeRenderableBlockTransitionTrigger(value: unknown): PhiRenderableBlockTransitionTrigger | undefined {
