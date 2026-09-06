@@ -134,6 +134,20 @@ export function resolvePageNodePath(
   return findPageNodePath([...pages], pageKey);
 }
 
+/** The first node in the tree that is a Page rather than a folder holding Pages. */
+function findFirstPhiBuilderPageNodeKey(pages: readonly PhiPresetPageNode[]): string | null {
+  for (const node of pages) {
+    if (node.storagePath) {
+      return node.key;
+    }
+    const childKey = node.children ? findFirstPhiBuilderPageNodeKey(node.children) : null;
+    if (childKey) {
+      return childKey;
+    }
+  }
+  return null;
+}
+
 export function resolvePhiBuilderActivePageKey(
   requestedPageKey: string | null | undefined,
   pages: readonly PhiPresetPageNode[],
@@ -143,7 +157,11 @@ export function resolvePhiBuilderActivePageKey(
     return normalizedPageKey;
   }
 
-  return pages[0]?.key ?? null;
+  /*
+   * Not `pages[0]`: since a Module's routes live under its package, the first root node is the folder
+   * `phis` rather than a Page, and selecting a folder leaves the workspace with nothing to show.
+   */
+  return findFirstPhiBuilderPageNodeKey(pages);
 }
 
 export function resolvePhiBuilderPagePresetSource(

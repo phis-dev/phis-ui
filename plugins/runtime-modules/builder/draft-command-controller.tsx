@@ -15,7 +15,11 @@ import {
   PHI_BUILDER_PAGE_REGION_KEYS,
 } from "./region-keys";
 import { resolvePhiBuilderCmsStoragePath } from "../../../helpers/cms-paths";
-import { resolvePhiBuilderActivePageCatalog, resolvePhiBuilderPagePresetSource } from "../../../helpers/cms-page-catalog";
+import {
+  resolvePhiBuilderActivePageCatalog,
+  resolvePhiBuilderActivePageKey,
+  resolvePhiBuilderPagePresetSource,
+} from "../../../helpers/cms-page-catalog";
 import { buildPhiBuilderLiveHref,
   clearPhiDeveloperBuilderDraftAllocation,
   createPhiDeveloperBuilderInitialPageDrafts,
@@ -336,12 +340,12 @@ export function usePhiBuilderDraftCommandController({
       }
 
       const previewPageKey =
-        resolvePhiBuilderActivePageCatalog(
+        resolvePhiBuilderActivePageKey(null, resolvePhiBuilderActivePageCatalog(
           effectiveArea,
           state.modulePresetPagesByArea,
           state.customPages ?? {},
           state.persistedPageCatalogByArea,
-        )[0]?.key ?? effectivePageKey;
+        )) ?? effectivePageKey;
       const previewHref = new URL(
         buildPhiBuilderLiveHref(effectiveArea, previewPageKey, currentPageTree, "pages"),
         window.location.origin,
@@ -357,12 +361,12 @@ export function usePhiBuilderDraftCommandController({
        * Area itself: its first catalog page, rather than whatever page another workspace last held.
        */
       const previewPageKey =
-        resolvePhiBuilderActivePageCatalog(
+        resolvePhiBuilderActivePageKey(null, resolvePhiBuilderActivePageCatalog(
           effectiveArea,
           state.modulePresetPagesByArea,
           state.customPages ?? {},
           state.persistedPageCatalogByArea,
-        )[0]?.key ?? effectivePageKey;
+        )) ?? effectivePageKey;
       window.open(
         buildPhiBuilderLiveHref(effectiveArea, previewPageKey, currentPageTree, "structure"),
         "_blank",

@@ -9,6 +9,7 @@ import {
   resolvePhiBuilderPageKeyFromStoragePath,
   resolvePhiBuilderCmsStoragePathForCatalog,
   resolvePhiBuilderActivePageCatalog,
+  resolvePhiBuilderActivePageKey,
   type PhiBuilderPageCatalogArea,
   type PhiPresetPageNode,
 } from "../../../../helpers/cms-page-catalog";
@@ -159,7 +160,7 @@ export function PhiDeveloperBuilderPagesHeaderSection({
   const pageKey =
     searchPageKey ??
     (searchArea != null && searchArea !== currentArea
-      ? (modulePresetPagesByArea[searchArea][0]?.key ?? "")
+      ? (resolvePhiBuilderActivePageKey(null, modulePresetPagesByArea[searchArea]) ?? "")
       : currentPageKey);
   const pageTree = resolvePhiBuilderActivePageCatalog(
     area,

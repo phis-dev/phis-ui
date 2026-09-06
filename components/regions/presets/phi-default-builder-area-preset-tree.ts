@@ -1317,25 +1317,33 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
   runtime,
   registry,
   activeModuleKeys,
+  presetKey,
 }: {
   page: PhiCmsPageNode;
   runtime: PhiBlockRuntime;
   registry: PhiCmsCompiledDescriptorCatalog;
   activeModuleKeys: ReadonlySet<string>;
+  presetKey: string;
 }): Promise<PhiResolvedCmsPageTree> {
   const labels = await getPhiBuilderChromeWidgetLabels({
     apiBaseUrl: runtime.phis.apiBaseUrl,
     internalToken: runtime.phis.internalToken,
     locale: runtime.locale.current,
   });
-  const builderBasePath = "/builder";
-  const isStructurePage = page.path === `${builderBasePath}/shells`;
-  const isPagesPage = page.path === `${builderBasePath}/pages`;
-  const isNavigationPage = page.path === `${builderBasePath}/navigation`;
-  const isRevisionsPage = page.path === `${builderBasePath}/revisions`;
-  const isModulesPage = page.path === `${builderBasePath}/modules`;
-  const isMediaPage = page.path === `${builderBasePath}/media`;
-  const isThemePage = page.path === `${builderBasePath}/theme`;
+  /*
+   * Which workspace this is, asked of the preset rather than of the path.
+   *
+   * The path is not the Module's to know: outside Public every route answers under its package, and a
+   * Public path can be reassigned when a Module is enabled. The preset key is the identity that does not
+   * move -- the same pair the Page is addressed by.
+   */
+  const isStructurePage = presetKey === "builder-shells-page";
+  const isPagesPage = presetKey === "builder-pages-page";
+  const isNavigationPage = presetKey === "builder-navigation-page";
+  const isRevisionsPage = presetKey === "builder-revisions-page";
+  const isModulesPage = presetKey === "builder-modules-page";
+  const isMediaPage = presetKey === "builder-media-page";
+  const isThemePage = presetKey === "builder-theme-page";
   const revisionsLabels = isRevisionsPage ? await getPhiBuilderRevisionsWidgetLabels({
     apiBaseUrl: runtime.phis.apiBaseUrl,
     internalToken: runtime.phis.internalToken,
@@ -1372,7 +1380,11 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
       ? createPhiThemeControllerAddress()
       : createPhiBuilderControllerAddress(),
   );
-  const builderPageKey = page.path.replace(`${builderBasePath}/`, "") || "dashboard";
+  /*
+   * The label key, read off the preset rather than off the path for the same reason. `builder-pages-page`
+   * is `pages`; a preset from another package that shipped no label falls through to its own words.
+   */
+  const builderPageKey = presetKey.replace(/^builder-/, "").replace(/-page$/, "") || "dashboard";
   const builderPageTitleSource = resolveBuilderPageTitleSource(builderPageKey);
   const builderPageTitle = resolveBuilderPageTitle(labels, builderPageKey, builderPageTitleSource);
   return {
@@ -3756,6 +3768,7 @@ export async function buildPhiDefaultBuilderPagePresetTree({
       runtime,
       registry,
       activeModuleKeys,
+      presetKey,
     }),
     ownerModuleId,
     presetKey,

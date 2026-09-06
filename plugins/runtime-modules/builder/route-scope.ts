@@ -24,48 +24,64 @@ export function isPhiDebugScaffoldBuilderPage(pageKey: string) {
   return PHI_DEBUG_SCAFFOLD_BUILDER_PAGE_KEYS.has(pageKey);
 }
 
-export function resolvePhiDeveloperBuilderRouteScope(pathname: string | null) {
+/**
+ * Which Builder workspace a path names.
+ *
+ * The Builder's own routes live under its package like every other Module's -- `/builder/phis/ui/pages`
+ * -- so the segment after the Area is the package, not the workspace. The workspace is named by the last
+ * segment that is one of the names the Builder knows; a path that names none is not a workspace.
+ */
+const PHI_BUILDER_WORKSPACE_KEYS = new Set([
+  "dashboard",
+  "shells",
+  "pages",
+  "navigation",
+  "modules",
+  "theme",
+  "revisions",
+  "media",
+  "settings",
+]);
+
+export function readPhiDeveloperBuilderWorkspaceKey(pathname: string | null) {
   if (typeof pathname !== "string") {
     return null;
   }
-
   const segments = pathname.split("/").filter(Boolean);
   if (segments[0] !== "builder") {
+    return null;
+  }
+  for (let index = segments.length - 1; index > 0; index -= 1) {
+    const segment = segments[index];
+    if (segment && PHI_BUILDER_WORKSPACE_KEYS.has(segment)) {
+      return segment;
+    }
+  }
+  return null;
+}
+
+export function resolvePhiDeveloperBuilderRouteScope(pathname: string | null) {
+  if (typeof pathname !== "string" || pathname.split("/").filter(Boolean)[0] !== "builder") {
     return null;
   }
 
   return {
     area: "builder" as const,
-    pageKey: segments[1] ?? "root",
+    pageKey: readPhiDeveloperBuilderWorkspaceKey(pathname) ?? "root",
   };
 }
+
+const PHI_BUILDER_COMMAND_WORKSPACES: Record<string, PhiDeveloperBuilderCommandWorkspace> = {
+  shells: "structure",
+  pages: "pages",
+  navigation: "navigation",
+  modules: "modules",
+  theme: "theme",
+};
 
 export function resolvePhiDeveloperBuilderCommandWorkspace(
   pathname: string | null,
 ): PhiDeveloperBuilderCommandWorkspace {
-  if (typeof pathname !== "string") {
-    return null;
-  }
-
-  if (pathname.includes("/builder/shells")) {
-    return "structure";
-  }
-
-  if (pathname.includes("/builder/pages")) {
-    return "pages";
-  }
-
-  if (pathname.includes("/builder/navigation")) {
-    return "navigation";
-  }
-
-  if (pathname.includes("/builder/modules")) {
-    return "modules";
-  }
-
-  if (pathname.includes("/builder/theme")) {
-    return "theme";
-  }
-
-  return null;
+  const workspaceKey = readPhiDeveloperBuilderWorkspaceKey(pathname);
+  return workspaceKey ? PHI_BUILDER_COMMAND_WORKSPACES[workspaceKey] ?? null : null;
 }

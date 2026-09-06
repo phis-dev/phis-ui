@@ -36,6 +36,7 @@ import {
 import {
   createEmptyPhiBuilderModulePresetPagesByArea,
   resolvePhiBuilderActivePageCatalog,
+  resolvePhiBuilderActivePageKey,
   resolvePhiBuilderPageKeyFromStoragePath,
   type PhiPresetPageNode,
 } from "../../../helpers/cms-page-catalog";
@@ -79,6 +80,7 @@ import { getDefaultRegionDraft } from "./developer-region-drafts";
 import {
   isPhiAreaScopedBuilderPage,
   isPhiDebugScaffoldBuilderPage,
+  readPhiDeveloperBuilderWorkspaceKey,
   resolvePhiDeveloperBuilderCommandWorkspace,
   resolvePhiDeveloperBuilderRouteScope,
 } from "./route-scope";
@@ -300,16 +302,10 @@ function usePhiDeveloperBuilderWorkspaceController(
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const commandWorkspace = resolvePhiDeveloperBuilderCommandWorkspace(pathname);
-  const isNavigationWorkspace = typeof pathname === "string" && pathname.includes("/builder/navigation");
-  const isBuilderWorkspace =
-    typeof pathname === "string" &&
-    (pathname.includes("/builder/shells") ||
-      pathname.includes("/builder/pages") ||
-      pathname.includes("/builder/media") ||
-      pathname.includes("/builder/modules") ||
-      pathname.includes("/builder/navigation") ||
-      pathname.includes("/builder/theme") ||
-      pathname.includes("/builder/revisions"));
+  const builderWorkspaceKey = readPhiDeveloperBuilderWorkspaceKey(pathname);
+  const isNavigationWorkspace = builderWorkspaceKey === "navigation";
+  const isBuilderWorkspace = builderWorkspaceKey !== null && builderWorkspaceKey !== "dashboard" &&
+    builderWorkspaceKey !== "settings";
   const hasPreviewSnapshot = searchParams.has(PHI_BUILDER_PREVIEW_SEARCH_PARAM);
   const scopeAreaFromSearch = normalizePhiBuilderAreaSearchParam(
     searchParams.get(PHI_BUILDER_AREA_SEARCH_PARAM),
@@ -513,7 +509,8 @@ function usePhiDeveloperBuilderWorkspaceController(
       const navigationSurfacesChanged =
         JSON.stringify(current.navigationSurfacesByArea) !== navigationSurfacesPreloadKey;
       const catalogHydrationChanged = !current.catalogHydrated;
-      const initialPageKey = current.pageKey || activePreloadCatalogs.modulePresetPagesByArea[current.area][0]?.key || "";
+      const initialPageKey = current.pageKey ||
+        resolvePhiBuilderActivePageKey(null, activePreloadCatalogs.modulePresetPagesByArea[current.area]) || "";
       const initialPageChanged = initialPageKey !== current.pageKey;
       const nextModuleIdsByArea = {
         ...(current.runtimeModuleIdsByArea ?? {}),
@@ -812,7 +809,7 @@ function usePhiDeveloperBuilderWorkspaceController(
       const canonicalPageKey =
         scopePageFromSearch ??
         (scopeAreaFromSearch != null && scopeAreaFromSearch !== state.area
-          ? (canonicalPages[0]?.key ?? "")
+          ? (resolvePhiBuilderActivePageKey(null, canonicalPages) ?? "")
           : state.pageKey);
       if (!canonicalPageKey) {
         return;
@@ -834,7 +831,7 @@ function usePhiDeveloperBuilderWorkspaceController(
     const nextPageKey =
       scopePageFromSearch ??
       (scopeAreaFromSearch != null && scopeAreaFromSearch !== state.area
-        ? (nextPages[0]?.key ?? "")
+        ? (resolvePhiBuilderActivePageKey(null, nextPages) ?? "")
         : state.pageKey);
     if (!nextPageKey) {
       return;
@@ -923,12 +920,14 @@ function usePhiDeveloperBuilderWorkspaceController(
         }
 
         const nextArea = signal.value;
-        const nextPageKey = resolvePhiBuilderActivePageCatalog(
+        const nextPages = resolvePhiBuilderActivePageCatalog(
           nextArea,
           state.modulePresetPagesByArea,
           state.customPages ?? {},
           state.persistedPageCatalogByArea,
-        )[0]?.key ?? "";
+        );
+        // The first node that is a Page: with routes under their package the first root node is a folder.
+        const nextPageKey = resolvePhiBuilderActivePageKey(null, nextPages) ?? "";
 
         if (typeof pathname === "string") {
           const nextSearchParams = new URLSearchParams(searchParams.toString());
