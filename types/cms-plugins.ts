@@ -489,7 +489,6 @@ export type PhiCmsLayoutPlugin<TConfig> = {
   fields: PhiCmsConfigField[];
   slots: PhiCmsLayoutSlotDefinition[];
   parseConfig: (raw: Record<string, unknown>) => TConfig;
-  serializeConfig?: (value: Record<string, unknown>) => Record<string, unknown>;
   render: PhiBivariantCallback<[PhiCmsLayoutPluginRenderArgs<TConfig>], ReactNode>;
   renderEditor: PhiBivariantCallback<[PhiCmsLayoutPluginRenderArgs<TConfig>], ReactNode>;
 };

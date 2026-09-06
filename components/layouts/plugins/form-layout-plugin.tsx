@@ -1,34 +1,16 @@
 import { PhiCmsLayoutType } from "../../../constants/cms-layout-types";
 import type { PhiCmsLayoutPlugin } from "../../../types";
 import type { PhiCmsFormLayoutConfig } from "../../../types/cms-config";
-import { resolvePhiLayoutDefaults } from "../../../helpers/cms-layout-defaults";
 import { parsePhiCmsFormLayoutConfig } from "../../../types/cms-config";
 import {
   resolvePhiAnchorPlacement,
-  serializePhiBaseLayoutConfigWithDefaults,
 } from "../phi-layout-contract";
 import { PhiFormLayout } from "../phi-form-layout";
 import { definePhiLayoutRenderers } from "../layout-plugin-renderers";
 import { PHI_FORM_LAYOUT_DEFINITION } from "../layout-definitions";
 
-function serializePhiCmsFormLayoutConfig(value: unknown) {
-  return serializePhiBaseLayoutConfigWithDefaults<PhiCmsFormLayoutConfig>(
-    value,
-    resolvePhiLayoutDefaults("form"),
-    (next, normalized) => {
-      next.margin = normalized.margin;
-      next.paddingLeft = normalized.paddingLeft;
-      next.paddingRight = normalized.paddingRight;
-      next.paddingTop = normalized.paddingTop;
-      next.paddingBottom = normalized.paddingBottom;
-      next.anchor = normalized.anchor;
-    },
-  );
-}
-
 export const PHI_FORM_LAYOUT_PLUGIN: PhiCmsLayoutPlugin<PhiCmsFormLayoutConfig> = {
   ...PHI_FORM_LAYOUT_DEFINITION,
-  serializeConfig: serializePhiCmsFormLayoutConfig,
   parseConfig: parsePhiCmsFormLayoutConfig,
   ...definePhiLayoutRenderers<PhiCmsFormLayoutConfig>(({ node, config, layoutKind, renderChildren }, renderMode) => (
     <PhiFormLayout

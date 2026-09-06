@@ -1,43 +1,14 @@
 import { PhiCmsLayoutType } from "../../../constants/cms-layout-types";
-import { resolvePhiLayoutDefaults } from "../../../helpers/cms-layout-defaults";
 import type { PhiCmsLayoutPlugin } from "../../../types";
 import type { PhiCmsThreeColumnLayoutConfig } from "../../../types/cms-config";
 import { parsePhiCmsThreeColumnLayoutConfig } from "../../../types/cms-config";
-import {
-  serializePhiBaseLayoutConfigWithDefaults,
-} from "../phi-layout-contract";
 import { resolvePhiAnchorPlacement } from "../phi-layout-contract";
 import { PhiThreeColumnLayout } from "../phi-three-column-layout";
 import { definePhiLayoutRenderers } from "../layout-plugin-renderers";
 import { PHI_THREE_COLUMN_LAYOUT_DEFINITION } from "../layout-definitions";
 
-function serializePhiCmsThreeColumnLayoutConfig(value: unknown) {
-  return serializePhiBaseLayoutConfigWithDefaults<PhiCmsThreeColumnLayoutConfig>(
-    value,
-    resolvePhiLayoutDefaults("threecol"),
-    (next, normalized) => {
-      next.anchor = normalized.anchor;
-      next.balancedSides = normalized.balancedSides;
-      next.gap = normalized.gap;
-      next.leftWidth = normalized.leftWidth;
-      next.middleWidth = normalized.middleWidth;
-      next.rightWidth = normalized.rightWidth;
-      next.align = normalized.align;
-      next.justify = normalized.justify;
-      next.wrap = normalized.wrap;
-      next.padding = normalized.padding;
-      next.paddingLeft = normalized.paddingLeft;
-      next.paddingRight = normalized.paddingRight;
-      next.paddingTop = normalized.paddingTop;
-      next.paddingBottom = normalized.paddingBottom;
-      next.contentAlign = normalized.contentAlign;
-    },
-  );
-}
-
 export const PHI_THREE_COLUMN_LAYOUT_PLUGIN: PhiCmsLayoutPlugin<PhiCmsThreeColumnLayoutConfig> = {
   ...PHI_THREE_COLUMN_LAYOUT_DEFINITION,
-  serializeConfig: serializePhiCmsThreeColumnLayoutConfig,
   parseConfig: parsePhiCmsThreeColumnLayoutConfig,
   ...definePhiLayoutRenderers<PhiCmsThreeColumnLayoutConfig>((
     { node, config, layoutKind, renderSequentialSlotChildren },

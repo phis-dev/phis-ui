@@ -1,36 +1,19 @@
 import {
   PhiCmsLayoutType,
 } from "../../../constants/cms-layout-types";
-import { resolvePhiLayoutDefaults } from "../../../helpers/cms-layout-defaults";
 import type { PhiCmsLayoutPlugin } from "../../../types";
 import type { PhiCmsFlexVerticalLayoutConfig } from "../../../types/cms-config";
 import {
   parsePhiCmsFlexVerticalLayoutConfig,
 } from "../../../types/cms-config";
-import {
-  serializePhiBaseLayoutConfigWithDefaults,
-} from "../phi-layout-contract";
 import { resolvePhiAnchorPlacement } from "../phi-layout-contract";
 import { PhiFlexVerticalLayout } from "../phi-flex-vertical-layout";
 import { definePhiLayoutRenderers } from "../layout-plugin-renderers";
 import { PHI_FLEX_VERTICAL_LAYOUT_DEFINITION } from "../layout-definitions";
 
-function serializePhiCmsFlexVerticalLayoutConfig(value: unknown) {
-  return serializePhiBaseLayoutConfigWithDefaults<PhiCmsFlexVerticalLayoutConfig>(
-    value,
-    resolvePhiLayoutDefaults("verticalflex"),
-    (next, normalized) => {
-      next.initialSlotStates = normalized.initialSlotStates;
-      next.anchor = normalized.anchor;
-      next.gap = normalized.gap;
-    },
-  );
-}
-
 export const PHI_FLEX_VERTICAL_LAYOUT_PLUGIN: PhiCmsLayoutPlugin<PhiCmsFlexVerticalLayoutConfig> = {
   ...PHI_FLEX_VERTICAL_LAYOUT_DEFINITION,
   parseConfig: parsePhiCmsFlexVerticalLayoutConfig,
-  serializeConfig: serializePhiCmsFlexVerticalLayoutConfig,
   ...definePhiLayoutRenderers<PhiCmsFlexVerticalLayoutConfig>((
     { node, config, layoutKind, renderSequentialSlotChildren },
     renderMode,

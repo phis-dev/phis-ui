@@ -3,6 +3,8 @@ import { PhiCmsWidgetType } from "../../../../../constants/cms-widget-types";
 import type { PhiCmsWidgetPlugin } from "../../../../../types";
 import {
   PHI_MOTION_EASING_FIELD_OPTIONS,
+  PHI_SEQUENCE_TRANSITION_MAX_MS,
+  PHI_SEQUENCE_TRANSITION_MIN_MS,
   clampPhiSequenceTransitionMs,
   readPhiMotionEasing,
   type PhiMotionEasing,
@@ -176,7 +178,7 @@ export const PHI_GALLERY_WIDGET_DEFINITION = {
   icon: "antd:picture-outlined",
   iconFamily: "media",
   fields: [
-    { key: "visibleCount", type: "number", label: "Visible Pictures" },
+    { key: "visibleCount", type: "number", label: "Visible Pictures", min: 1 },
     {
       key: "windowAnchor",
       type: "choice",
@@ -197,7 +199,13 @@ export const PHI_GALLERY_WIDGET_DEFINITION = {
         { value: "diagonal", label: "Diagonal" },
       ],
     },
-    { key: "durationMs", type: "number", label: "Transition Duration (ms)" },
+    {
+      key: "durationMs",
+      type: "number",
+      label: "Transition Duration (ms)",
+      min: PHI_SEQUENCE_TRANSITION_MIN_MS,
+      max: PHI_SEQUENCE_TRANSITION_MAX_MS,
+    },
     {
       key: "easing",
       type: "choice",
@@ -205,7 +213,7 @@ export const PHI_GALLERY_WIDGET_DEFINITION = {
       options: [...PHI_MOTION_EASING_FIELD_OPTIONS],
     },
     { key: "gap", type: "string", label: "Gap" },
-    { key: "lookahead", type: "number", label: "Preload Ahead" },
+    { key: "lookahead", type: "number", label: "Preload Ahead", min: 0 },
     {
       key: "mountPolicy",
       type: "choice",
@@ -234,7 +242,14 @@ export const PHI_GALLERY_WIDGET_DEFINITION = {
       ],
     },
     { key: "loop", type: "boolean", label: "Wrap Around" },
-    { key: "autoplayMs", type: "number", label: "Autoplay Interval (ms)" },
+    {
+      // Zero is the one value below the floor that means something: it does not move on its own.
+      key: "autoplayMs",
+      type: "number",
+      label: "Autoplay Interval (ms)",
+      min: 0,
+      max: PHI_SEQUENCE_TRANSITION_MAX_MS,
+    },
   ],
   parseConfig: parsePhiCmsGalleryWidgetConfig,
 } satisfies Pick<

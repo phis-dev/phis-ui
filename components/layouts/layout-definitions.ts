@@ -13,7 +13,11 @@ import {
   PHI_CMS_THREE_COLUMN_LAYOUT_SLOTS,
 } from "../../constants/cms-layout-types";
 import { PHI_CMS_MOUNT_POLICY_FIELD_OPTIONS } from "../../types/cms-mount-policy";
-import { PHI_MOTION_EASING_FIELD_OPTIONS } from "../../helpers/motion";
+import {
+  PHI_MOTION_EASING_FIELD_OPTIONS,
+  PHI_SEQUENCE_TRANSITION_MAX_MS,
+  PHI_SEQUENCE_TRANSITION_MIN_MS,
+} from "../../helpers/motion";
 import { resolvePhiLayoutDefaults } from "../../helpers/cms-layout-defaults";
 import { PHI_RENDERABLE_BLOCK_DEFAULT_ANCHOR } from "../../helpers/renderable-block-defaults";
 import { PHI_LAYOUT_PADDING_FIELDS } from "../../helpers/layout-padding-field";
@@ -240,7 +244,13 @@ export const PHI_STACK_LAYOUT_DEFINITION = {
         { value: "fade-over", label: "Fade over" },
       ],
     },
-    { key: "slotTransitionDurationMs", type: "number", label: "Transition Duration (ms)" },
+    {
+      key: "slotTransitionDurationMs",
+      type: "number",
+      label: "Transition Duration (ms)",
+      min: PHI_SEQUENCE_TRANSITION_MIN_MS,
+      max: PHI_SEQUENCE_TRANSITION_MAX_MS,
+    },
     {
       key: "slotTransitionEasing",
       type: "choice",

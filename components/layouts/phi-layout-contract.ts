@@ -10,11 +10,7 @@ import type {
   PhiRenderableBlockAnchor,
   PhiRenderableBlockSize,
 } from "../../types";
-import { serializeRenderableBlock } from "../../helpers/renderable-block-serialization";
-import { stripPhiLayoutDefaults } from "../../helpers/cms-layout-defaults";
 import type { PhiShadow, PhiLayoutEffectId } from "../../types/layout-style";
-
-type JsonRecord = Record<string, unknown>;
 
 export type PhiLayoutProps = {
   size?: PhiRenderableBlockSize;
@@ -110,45 +106,6 @@ export function normalizePhiCssSize(value: number | string | undefined) {
   }
 
   return value;
-}
-
-function isRecord(value: unknown): value is JsonRecord {
-  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
-}
-
-function copyIfPresent(target: JsonRecord, key: string, value: unknown) {
-  if (value === undefined || value === null || value === "") {
-    return;
-  }
-
-  target[key] = value;
-}
-
-export function serializePhiBaseLayoutConfig(value: unknown): JsonRecord {
-  const normalized = isRecord(value) ? value : {};
-  const next = serializeRenderableBlock(normalized);
-
-  copyIfPresent(next, "padding", normalized.padding);
-  copyIfPresent(next, "paddingTop", normalized.paddingTop);
-  copyIfPresent(next, "paddingRight", normalized.paddingRight);
-  copyIfPresent(next, "paddingBottom", normalized.paddingBottom);
-  copyIfPresent(next, "paddingLeft", normalized.paddingLeft);
-  copyIfPresent(next, "background", normalized.background);
-  copyIfPresent(next, "border", normalized.border);
-  copyIfPresent(next, "borderRadius", normalized.borderRadius);
-
-  return next;
-}
-
-export function serializePhiBaseLayoutConfigWithDefaults<T extends JsonRecord>(
-  value: unknown,
-  defaults: JsonRecord,
-  append: (next: JsonRecord, normalized: JsonRecord) => void,
-) {
-  const normalized = isRecord(value) ? value : {};
-  const next = serializePhiBaseLayoutConfig(normalized);
-  append(next, normalized);
-  return stripPhiLayoutDefaults<T>(next as Partial<T>, defaults);
 }
 
 export function resolvePhiLayoutBoxStyle({

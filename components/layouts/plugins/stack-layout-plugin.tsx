@@ -2,12 +2,10 @@ import {
   PHI_CMS_STACK_LAYOUT_SLOTS,
   PhiCmsLayoutType,
 } from "../../../constants/cms-layout-types";
-import { resolvePhiLayoutDefaults } from "../../../helpers/cms-layout-defaults";
 import type { PhiCmsLayoutPlugin } from "../../../types";
 import type { PhiCmsStackLayoutConfig } from "../../../types/cms-config";
 import { parsePhiCmsStackLayoutConfig } from "../../../types/cms-config";
 import {
-  serializePhiBaseLayoutConfigWithDefaults,
   resolvePhiAnchorPlacement,
 } from "../phi-layout-contract";
 import { PhiStackLayout } from "../phi-stack-layout";
@@ -15,21 +13,6 @@ import { definePhiLayoutRenderers } from "../layout-plugin-renderers";
 import type { PhiCmsLayoutRenderNode } from "../../../types/cms";
 import { comparePhiCmsInstanceIds } from "../../../types/cms-instance-id";
 import { PHI_STACK_LAYOUT_DEFINITION } from "../layout-definitions";
-
-function serializePhiCmsStackLayoutConfig(value: unknown) {
-  return serializePhiBaseLayoutConfigWithDefaults<PhiCmsStackLayoutConfig>(
-    value,
-    resolvePhiLayoutDefaults("stack"),
-    (next, normalized) => {
-      next.activeSlotKey = normalized.activeSlotKey;
-      next.defaultActiveSlotKey = normalized.defaultActiveSlotKey;
-      next.mountPolicy = normalized.mountPolicy;
-      next.slotTransition = normalized.slotTransition;
-      next.slotTransitionDurationMs = normalized.slotTransitionDurationMs;
-      next.slotTransitionEasing = normalized.slotTransitionEasing;
-    },
-  );
-}
 
 function resolvePhiStackSlotKeys() {
   return PHI_CMS_STACK_LAYOUT_SLOTS.map((slot) => slot.key);
@@ -63,7 +46,6 @@ function resolvePhiStackSlotMeta(node: PhiCmsLayoutRenderNode) {
 
 export const PHI_STACK_LAYOUT_PLUGIN: PhiCmsLayoutPlugin<PhiCmsStackLayoutConfig> = {
   ...PHI_STACK_LAYOUT_DEFINITION,
-  serializeConfig: serializePhiCmsStackLayoutConfig,
   parseConfig: parsePhiCmsStackLayoutConfig,
   ...definePhiLayoutRenderers<PhiCmsStackLayoutConfig>((
     { node, config, layoutKind, renderSequentialSlotChildren },

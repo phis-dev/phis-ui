@@ -20,6 +20,8 @@ import {
   isPhiBuilderPageScopedRegion,
 } from "./region-keys";
 import { createPhiBuilderRegionHistoryContext } from "./history";
+import { assertPhiCmsConfigFields } from "../../../helpers/cms-config-field-validation";
+import { getPhiBuilderModuleMetasSnapshot } from "./plugin-meta-store";
 import {
   builderWorkspaceStore,
   getPhiDeveloperRegionDraftsSnapshot,
@@ -78,6 +80,41 @@ function patchWidgetNodeByIdInLayouts(
     childLayouts: patchWidgetNodeByIdInLayouts(node.childLayouts ?? [], nodeId, patchConfig),
     childWidgets: patchWidgetNodeById(node.childWidgets ?? [], nodeId, patchConfig),
   }));
+}
+
+/**
+ * The write path's one gate.
+ *
+ * A control is drawn from the same field declaration this checks against, so nobody clicking through
+ * the Builder can produce a value that fails here -- what can is a patch written in code, and that is
+ * exactly what should not reach a stored page quietly. Reading stays forgiving; writing does not.
+ *
+ * A type with no metadata in the active Canvas is left alone rather than refused: the catalogue is
+ * per Area, and a node from elsewhere is a question about scope, not about this value.
+ */
+function assertPhiBuilderPatchedConfig(
+  area: PhiDeveloperBuilderArea,
+  widgetType: string,
+  config: Record<string, unknown>,
+) {
+  const meta = getPhiBuilderModuleMetasSnapshot(area).plugins
+    .find((candidate) => `${candidate.pluginKey}/${candidate.typeKey}` === widgetType);
+  if (!meta?.fields) {
+    return;
+  }
+  assertPhiCmsConfigFields(meta.fields, config, meta.title ?? widgetType);
+}
+
+function guardPhiBuilderConfigPatch(
+  area: PhiDeveloperBuilderArea,
+  widgetType: string,
+  patchConfig: (config: Record<string, unknown>) => Record<string, unknown>,
+) {
+  return (config: Record<string, unknown>) => {
+    const next = patchConfig(config);
+    assertPhiBuilderPatchedConfig(area, widgetType, next);
+    return next;
+  };
 }
 
 function resolveWidgetSizeFromGeometry(
@@ -164,6 +201,12 @@ function patchSelectedWidgetDraftConfig(
     return false;
   }
 
+  const guardedPatch = guardPhiBuilderConfigPatch(
+    state.area,
+    selectedWidgetNode.widgetType,
+    patchConfig,
+  );
+
   setPhiDeveloperRegionDraft(
     draftKey,
     {
@@ -171,12 +214,12 @@ function patchSelectedWidgetDraftConfig(
       rootNodeChildWidgets: patchWidgetNodeById(
         selectedRootDraft.rootNodeChildWidgets ?? [],
         state.nodeId,
-        patchConfig,
+        guardedPatch,
       ),
       rootNodeChildLayouts: patchWidgetNodeByIdInLayouts(
         selectedRootDraft.rootNodeChildLayouts ?? [],
         state.nodeId,
-        patchConfig,
+        guardedPatch,
       ),
     },
     {
@@ -221,7 +264,11 @@ function patchSelectedStructureDraftConfig(
       rootNodeChildLayouts: patchLayoutNodeById(
         selectedRootDraft.rootNodeChildLayouts ?? [],
         state.nodeId,
-        patchConfig,
+        guardPhiBuilderConfigPatch(
+          state.area,
+          selectedNestedLayoutNode.widgetType,
+          patchConfig,
+        ),
       ),
     },
     {
