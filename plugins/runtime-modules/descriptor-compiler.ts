@@ -852,6 +852,7 @@ type ResolvedNavigationNode = {
   item: PhiCmsResolvedNavigationItem;
   definitionItemKey: string;
   intrinsicChildren: ResolvedNavigationNode[];
+  isUnrouted: boolean;
   injection: {
     descriptor: PhiCmsNavigationInjectionDescriptor;
     /** Absent for a Module-level contribution, which has no Page to come from. */
@@ -860,8 +861,17 @@ type ResolvedNavigationNode = {
   } | null;
 };
 
+/**
+ * What an item points at, if anything currently answers there.
+ *
+ * Reading a navigation surface may not fail. An item can name a route that no longer answers -- a Module
+ * switched off, a path the Module lost when another one took it over -- and the honest response is the
+ * one already given to a route the viewer may not reach: the entry is not shown. Refusing belongs to the
+ * write that produced the state, not to every read afterwards.
+ */
 function resolveNavigationTarget(
   catalog: PhiCmsCompiledDescriptorCatalog,
+  activeRouteIdentityKeys: ReadonlySet<string>,
   ownerModuleId: PhiRuntimeModuleId,
   routePresetKey: string | undefined,
   overlay?: { presetKey: string; nodeKey: string } | null,
@@ -880,10 +890,8 @@ function resolveNavigationTarget(
     return null;
   }
   const route = resolvePhiCmsRoutePresetByIdentity(catalog, ownerModuleId, routePresetKey);
-  if (!route) {
-    throw new Error(
-      `Navigation item references missing route preset "${ownerModuleId}/${routePresetKey}".`,
-    );
+  if (!route || !activeRouteIdentityKeys.has(buildPhiCmsPresetIdentityKey(ownerModuleId, routePresetKey))) {
+    return null;
   }
   return {
     kind: "module" as const,
@@ -895,6 +903,7 @@ function resolveNavigationTarget(
 
 function buildResolvedNavigationNode(
   catalog: PhiCmsCompiledDescriptorCatalog,
+  activeRouteIdentityKeys: ReadonlySet<string>,
   navKey: string,
   ownerModuleId: PhiRuntimeModuleId,
   descriptor: PhiCmsNavigationBaseItemDescriptor | PhiCmsNavigationInjectionItemDescriptor,
@@ -902,6 +911,7 @@ function buildResolvedNavigationNode(
 ): ResolvedNavigationNode {
   const target = resolveNavigationTarget(
     catalog,
+    activeRouteIdentityKeys,
     ownerModuleId,
     descriptor.routePresetKey,
     descriptor.overlayPresetKey && descriptor.overlayNodeKey
@@ -909,7 +919,7 @@ function buildResolvedNavigationNode(
       : null,
   );
   const intrinsicChildren = (descriptor.children ?? []).map((child) =>
-    buildResolvedNavigationNode(catalog, navKey, ownerModuleId, child, null),
+    buildResolvedNavigationNode(catalog, activeRouteIdentityKeys, navKey, ownerModuleId, child, null),
   );
   return {
     item: {
@@ -928,6 +938,8 @@ function buildResolvedNavigationNode(
       children: [],
     },
     definitionItemKey: descriptor.itemKey,
+    // An item that named a route and got nothing back. A container never is one: it named nothing.
+    isUnrouted: Boolean(descriptor.routePresetKey) && !target,
     intrinsicChildren,
     injection,
   };
@@ -1021,7 +1033,12 @@ export function resolvePhiCmsActiveNavigationSurfaces({
     .map(({ descriptor }) => descriptor)
     .filter(({ ownerModuleId }) => activeModuleIds.has(ownerModuleId))
     .filter((route) => !viewer || canPhiViewerAccess(viewer, route.accessPolicy));
-  const canAccessNavigationNode = (node: ResolvedNavigationNode) => {
+  const activeRouteIdentityKeys = new Set(activeRoutes.map((route) =>
+    buildPhiCmsPresetIdentityKey(route.ownerModuleId, route.presetKey)));
+  const isNavigationNodeVisible = (node: ResolvedNavigationNode) => {
+    if (node.isUnrouted) {
+      return false;
+    }
     if (!viewer) {
       return true;
     }
@@ -1036,8 +1053,15 @@ export function resolvePhiCmsActiveNavigationSurfaces({
 
   return (definition.navigationSurfaces ?? []).map((surface) => {
     const roots = surface.items
-      .map((item) => buildResolvedNavigationNode(catalog, surface.navKey, definition.baseModuleId, item, null))
-      .filter(canAccessNavigationNode);
+      .map((item) => buildResolvedNavigationNode(
+        catalog,
+        activeRouteIdentityKeys,
+        surface.navKey,
+        definition.baseModuleId,
+        item,
+        null,
+      ))
+      .filter(isNavigationNodeVisible);
     const injectedRoots: ResolvedNavigationNode[] = [];
     const injectedByParent = new Map<string, ResolvedNavigationNode[]>();
     const nodesByKey = new Map<string, ResolvedNavigationNode>();
@@ -1074,11 +1098,14 @@ export function resolvePhiCmsActiveNavigationSurfaces({
         if (descriptor.navKey !== surface.navKey) {
           continue;
         }
-        const node = buildResolvedNavigationNode(catalog, surface.navKey, contributorId, descriptor.item, {
-          descriptor,
-          route,
-          sortKey,
-        });
+        const node = buildResolvedNavigationNode(
+          catalog,
+          activeRouteIdentityKeys,
+          surface.navKey,
+          contributorId,
+          descriptor.item,
+          { descriptor, route, sortKey },
+        );
         registerNode(node);
         if (descriptor.parentItemKey === null) {
           injectedRoots.push(node);
@@ -1098,21 +1125,27 @@ export function resolvePhiCmsActiveNavigationSurfaces({
       }
     }
 
+    /*
+     * Two rules, not one. An item is judged by its target: unrouted or out of reach and it is gone. A
+     * container names nothing and is judged by what is left under it -- a Settings container whose every
+     * page belongs to Modules that are switched off is an empty word in a sidebar, so it goes too.
+     */
     const materialize = (
       intrinsic: readonly ResolvedNavigationNode[],
       injected: readonly ResolvedNavigationNode[],
       parentItemKey: string | null,
     ): readonly PhiCmsResolvedNavigationItem[] =>
       orderNavigationSiblings(intrinsic, injected, parentItemKey)
-        .filter(canAccessNavigationNode)
+        .filter(isNavigationNodeVisible)
         .map((node) => ({
-        ...node.item,
-        children: materialize(
-          node.intrinsicChildren,
-          injectedByParent.get(node.definitionItemKey) ?? [],
-          node.definitionItemKey,
-        ),
-        }));
+          ...node.item,
+          children: materialize(
+            node.intrinsicChildren,
+            injectedByParent.get(node.definitionItemKey) ?? [],
+            node.definitionItemKey,
+          ),
+        }))
+        .filter((item) => item.kind !== "container" || item.children.length > 0);
 
     return {
       area,

@@ -36,6 +36,7 @@ const MOUNTED_MODULE_ID = "@test/package/modules/module-c" as const;
 const SETTINGS_ITEM_KEY = "@test/pkg/modules/base/nav/settings";
 const SETTINGS_GENERAL_ITEM_KEY = "@test/pkg/modules/base/nav/settings/general";
 const PRIVATE_ITEM_KEY = "@test/pkg/modules/base/nav/private";
+const EMPTY_CONTAINER_ITEM_KEY = "@test/pkg/modules/base/nav/empty";
 const MODULE_A_ITEM_KEY = "@test/pkg/modules/module-a/nav/page";
 const MODULE_B_ITEM_KEY = "@test/pkg/modules/module-b/nav/page";
 const MOUNTED_MODULE_ITEM_KEY = "@test/package/modules/module-c/nav/settings";
@@ -48,6 +49,7 @@ const navigationPresetId = (ownerModuleId: string, itemKey: string) => createPhi
 const SETTINGS_ID = navigationPresetId(BASE_MODULE_ID, SETTINGS_ITEM_KEY);
 const SETTINGS_GENERAL_ID = navigationPresetId(BASE_MODULE_ID, SETTINGS_GENERAL_ITEM_KEY);
 const PRIVATE_ID = navigationPresetId(BASE_MODULE_ID, PRIVATE_ITEM_KEY);
+const EMPTY_CONTAINER_ID = navigationPresetId(BASE_MODULE_ID, EMPTY_CONTAINER_ITEM_KEY);
 const MODULE_A_IDENTITY = navigationPresetId(MODULE_A_ID, MODULE_A_ITEM_KEY);
 const MODULE_B_IDENTITY = navigationPresetId(MODULE_B_ID, MODULE_B_ITEM_KEY);
 const MOUNTED_MODULE_IDENTITY = navigationPresetId(MOUNTED_MODULE_ID, MOUNTED_MODULE_ITEM_KEY);
@@ -73,7 +75,13 @@ const areaDefinition: PhiCmsAreaDefinition = {
     navKey: "public:header",
     label: { defaultMessage: "Header" },
     items: [
-      { itemKey: PRIVATE_ITEM_KEY, label: { defaultMessage: "Private" } },
+      {
+        itemKey: PRIVATE_ITEM_KEY,
+        label: { defaultMessage: "Private" },
+        routePresetKey: "base-private",
+      },
+      // Nothing points here and nothing hangs under it, so it never reaches a sidebar.
+      { itemKey: EMPTY_CONTAINER_ITEM_KEY, label: { defaultMessage: "Empty" } },
       {
         itemKey: SETTINGS_ITEM_KEY,
         label: { defaultMessage: "Settings" },
@@ -215,6 +223,17 @@ function createCatalog(
     loadTree: async () => {
       throw new Error("Navigation contract route trees are not loaded.");
     },
+  }, {
+    ownerModuleId: BASE_MODULE_ID,
+    presetKey: "base-private",
+    presetVersion: 1,
+    area: "public",
+    pageKey: "private",
+    title: "Private",
+    path: "/private",
+    loadTree: async () => {
+      throw new Error("Navigation contract route trees are not loaded.");
+    },
   }]);
   base.areaShells = [{
     ownerModuleId: BASE_MODULE_ID,
@@ -251,6 +270,8 @@ assert.deepEqual(
   surface.items.map((item) => item.id),
   [PRIVATE_ID, MODULE_A_IDENTITY, MODULE_B_IDENTITY, SETTINGS_ID],
 );
+// A container is judged by its children: this one has none and is not in the surface at all.
+assert.equal(surface.items.some((item) => item.id === EMPTY_CONTAINER_ID), false);
 assert.deepEqual(
   surface.items.at(-1)?.children.map((item) => item.id),
   [SETTINGS_GENERAL_ID, MOUNTED_MODULE_IDENTITY],
