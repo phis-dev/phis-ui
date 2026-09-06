@@ -1,6 +1,10 @@
 import "server-only";
 
-import { PHI_TR_CTX_WEB_UI_LABEL, type PhiGlobalTranslatorOptions } from "../../../gateway/tr";
+import {
+  PHI_TR_CTX_WEB_UI_LABEL,
+  PHI_TR_CTX_WEB_UI_MESSAGE,
+  type PhiGlobalTranslatorOptions,
+} from "../../../gateway/tr";
 import { definePhiLabelSet, getPhiLabelSet } from "../../../gateway/label-set";
 import type { PhiTableWidgetLabels } from "../label-types/table";
 
@@ -12,14 +16,15 @@ const PHI_TABLE_WIDGET_LABEL_SET = definePhiLabelSet({
     reset: "Reset",
     reload: "Reload",
     actions: "Actions",
-    selected: "%1 selected",
-    empty_title: "No rows found.",
-    empty_description: "Adjust the table filters and try again.",
+    // What the table says rather than what it labels: sentences, kept out of the caption register.
+    selected: { text: "%1 selected", ctx: PHI_TR_CTX_WEB_UI_MESSAGE },
+    empty_title: { text: "No rows found.", ctx: PHI_TR_CTX_WEB_UI_MESSAGE },
+    empty_description: { text: "Adjust the table filters and try again.", ctx: PHI_TR_CTX_WEB_UI_MESSAGE },
     yes: "Yes",
     no: "No",
-    missing_binding: "Table provider binding is missing.",
-    provider_unavailable: 'Table provider "%1" is not available.',
-    missing_row_key: 'Table data is missing required row key "%1".',
+    missing_binding: { text: "Table provider binding is missing.", ctx: PHI_TR_CTX_WEB_UI_MESSAGE },
+    provider_unavailable: { text: 'Table provider "%1" is not available.', ctx: PHI_TR_CTX_WEB_UI_MESSAGE },
+    missing_row_key: { text: 'Table data is missing required row key "%1".', ctx: PHI_TR_CTX_WEB_UI_MESSAGE },
     edit_row: "Edit row",
     save_row: "Save row",
     cancel_row: "Cancel row editing",

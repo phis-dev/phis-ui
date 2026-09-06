@@ -19,6 +19,15 @@ export const PHI_TR_CTX_WEB_UI_LABEL = "Web UI label" as const;
  */
 export const PHI_TR_CTX_MODULE_DESCRIPTION = "Module description" as const;
 
+/**
+ * The register for the sentences a UI says rather than the words it labels: an empty state, a failure,
+ * a count read back to the operator. Told these were Web UI labels a translator clips them into button
+ * captions -- "Adjust the table filters and try again." comes back as "Adjust filters". Anything that
+ * ends in a full stop, or would if it were written out, belongs here; the words on a control stay under
+ * the label context.
+ */
+export const PHI_TR_CTX_WEB_UI_MESSAGE = "Web UI message" as const;
+
 export type PhiTranslateParams = Array<string | number>;
 export type PhiTranslationFormat = "text" | "html";
 

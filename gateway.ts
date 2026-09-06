@@ -60,10 +60,14 @@ export {
   definePhiRuntimeModuleLabelSet,
   getPhiLabelSet,
   type PhiLabelSetDefinition,
+  type PhiLabelSetEntry,
+  type PhiLabelSetLabels,
+  type PhiLabelSetTexts,
 } from "./gateway/label-set";
 export {
   PHI_TR_CTX_MODULE_DESCRIPTION,
   PHI_TR_CTX_WEB_UI_LABEL,
+  PHI_TR_CTX_WEB_UI_MESSAGE,
   createGlobalTranslator,
   createSiteTranslator,
   type PhiGlobalTranslatorOptions,
