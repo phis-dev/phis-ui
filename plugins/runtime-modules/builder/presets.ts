@@ -10,7 +10,7 @@ import { PHI_BUILDER_RUNTIME_MODULE_ID } from "./ids";
 export const PHI_BUILDER_RUNTIME_MODULE_AREA_SHELLS = [{
   ownerModuleId: PHI_BUILDER_RUNTIME_MODULE_ID,
   presetKey: "builder-area-preset",
-  shellPresetVersion: 3,
+  shellPresetVersion: 4,
   area: "builder",
   loadTree: ({ page, runtime }) =>
     import("../../../components/regions/presets/phi-default-builder-area-preset-tree")

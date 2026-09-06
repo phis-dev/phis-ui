@@ -78,6 +78,7 @@ import { getPhiBuilderRegionDraftKey } from "./region-keys";
 import { getDefaultRegionDraft } from "./developer-region-drafts";
 import {
   isPhiAreaScopedBuilderPage,
+  isPhiDebugScaffoldBuilderPage,
   resolvePhiDeveloperBuilderCommandWorkspace,
   resolvePhiDeveloperBuilderRouteScope,
 } from "./route-scope";
@@ -1835,6 +1836,36 @@ function usePhiDeveloperBuilderWorkspaceController(
       timestamp: Date.now(),
     });
   }, [areaSelectorArmed, areaSelectorAddress, areaSelectorReady, dispatchSignal]);
+
+  // The debug switch rests disabled the same way, armed only where a canvas is drawn.
+  const debugSwitchAddress = useMemo(
+    () => createPhiSignalAddress("cms", createPhiPresetCmsInstanceId({
+      domain: "area",
+      ownerModuleId: PHI_BUILDER_RUNTIME_MODULE_ID,
+      presetKey: "builder-area-preset",
+      nodeKey: "widgetHeaderMainDebugSwitch",
+    })),
+    [],
+  );
+  const debugSwitchReady = usePhiSignalReceiverReady(debugSwitchAddress);
+  const debugSwitchArmed = isPhiDebugScaffoldBuilderPage(
+    resolvePhiDeveloperBuilderRouteScope(pathname)?.pageKey ?? "root",
+  );
+  useEffect(() => {
+    if (!debugSwitchReady) {
+      return;
+    }
+    dispatchSignal({
+      scope: "area",
+      channel: "enabled",
+      action: "change",
+      value: debugSwitchArmed,
+      valueType: "boolean",
+      sender: createPhiBuilderControllerAddress(),
+      receiver: debugSwitchAddress,
+      timestamp: Date.now(),
+    });
+  }, [debugSwitchArmed, debugSwitchAddress, debugSwitchReady, dispatchSignal]);
 
   return pageMetaDialog;
 }

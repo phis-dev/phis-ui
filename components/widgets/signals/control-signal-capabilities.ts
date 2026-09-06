@@ -172,6 +172,7 @@ export const PHI_BOOLEAN_CONTROL_SIGNALS = {
   ],
   listens: [
     { ...PHI_CONTROL_SET_VALUE_SIGNAL, valueType: "boolean" },
+    PHI_CONTROL_SET_ENABLED_SIGNAL,
     { id: "toggle", channel: "value", action: "toggle", valueType: "none" },
   ],
 } satisfies PhiSignalPluginMeta;

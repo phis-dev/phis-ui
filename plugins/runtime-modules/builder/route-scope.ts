@@ -13,6 +13,17 @@ export function isPhiAreaScopedBuilderPage(pageKey: string) {
   return PHI_AREA_SCOPED_BUILDER_PAGE_KEYS.has(pageKey);
 }
 
+/**
+ * The Builder pages that draw a canvas, and the only pages that arm the header debug switch. The
+ * switch outlines the scaffold a canvas is built from, so anywhere else it toggles state nothing
+ * renders. Same resting state as the Area selector: disabled unless a page opts in here.
+ */
+const PHI_DEBUG_SCAFFOLD_BUILDER_PAGE_KEYS = new Set(["shells", "pages"]);
+
+export function isPhiDebugScaffoldBuilderPage(pageKey: string) {
+  return PHI_DEBUG_SCAFFOLD_BUILDER_PAGE_KEYS.has(pageKey);
+}
+
 export function resolvePhiDeveloperBuilderRouteScope(pathname: string | null) {
   if (typeof pathname !== "string") {
     return null;

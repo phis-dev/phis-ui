@@ -32,7 +32,10 @@ import {
   resolvePhiThemeSelectionValue,
 } from "../../../theme/phi-theme-selection";
 import { createPhiBuilderControllerAddress } from "../../../plugins/runtime-modules/builder/controller/address";
-import { isPhiAreaScopedBuilderPage } from "../../../plugins/runtime-modules/builder/route-scope";
+import {
+  isPhiAreaScopedBuilderPage,
+  isPhiDebugScaffoldBuilderPage,
+} from "../../../plugins/runtime-modules/builder/route-scope";
 import { createPhiThemeControllerAddress } from "../../../plugins/runtime-modules/theme/controller/address";
 import { PHI_THEME_SIGNAL_CHANNELS } from "../../../plugins/runtime-modules/theme/controller/signals";
 import { createPhiCoreRuntimeControllerAddress } from "../../runtime/core-runtime-controller-address";
@@ -1207,6 +1210,13 @@ export async function buildPhiDefaultBuilderAreaPresetTree({
           label: labels.themeSwitch.debug,
           defaultChecked: false,
           key: "debugScaffold",
+          /*
+           * Disabled is the switch's resting state, the same way the Area selector rests: only the
+           * pages that draw a canvas arm it, via the workspace controller's "enabled" signal
+           * (isPhiDebugScaffoldBuilderPage holds the opt-in list). A page that forgets to opt in
+           * shows a switch that cannot promise something nothing renders.
+           */
+          disabled: !isPhiDebugScaffoldBuilderPage(page.path.split("/").filter(Boolean)[1] ?? "root"),
           signalRoutes: {
             emits: [
               {
@@ -1217,6 +1227,17 @@ export async function buildPhiDefaultBuilderAreaPresetTree({
                 action: "change",
                 valueType: "boolean",
                 receiver: "broadcast",
+              },
+            ],
+            listens: [
+              {
+                routeKey: "builder-debug-switch-enabled",
+                capabilityId: "enabled",
+                scope: "area",
+                channel: "enabled",
+                action: "change",
+                valueType: "boolean",
+                receiver: createPhiSignalAddress("cms", SYNTHETIC_DEV_WIDGET_IDS.widgetHeaderMainDebugSwitch),
               },
             ],
           },
