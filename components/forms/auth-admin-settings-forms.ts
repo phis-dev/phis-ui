@@ -315,6 +315,7 @@ function defineAuthAdminSettingsForm(input: {
 }) {
   return definePhiRuntimeModuleForm({
     ownerModuleId: PHI_AUTH_RUNTIME_MODULE_ID,
+    areas: ["admin"],
     formId: input.formId,
     version: 1,
     flags: 0,

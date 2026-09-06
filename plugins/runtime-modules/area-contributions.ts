@@ -20,14 +20,19 @@ function readPhiRuntimeModuleNavigationArea(navKey: `${PhiCmsAreaKey}:${string}`
 /**
  * Every descriptor that addresses an Area, with the Area it addresses.
  *
- * Four of the nine things a contribution carries name an Area themselves; the rest -- Widgets,
- * Layouts, Forms, Themes, the UI provider -- know none and reach every Area the Module does.
+ * Five of the nine things a contribution carries name an Area themselves; the rest -- Widgets, Layouts,
+ * Themes, the UI provider -- know none and reach every Area the Module does. A Form names several, so it
+ * appears once per Area it claims.
  */
 function readPhiRuntimeModuleAreaAddressedDescriptors(entry: PhiRuntimeModuleCatalogEntry) {
   return [
     ...(entry.routes ?? []).map((descriptor) => ({ label: `route "${descriptor.presetKey}"`, area: descriptor.area })),
     ...(entry.areaShells ?? []).map((descriptor) => ({ label: `shell "${descriptor.presetKey}"`, area: descriptor.area })),
     ...(entry.areaOverlays ?? []).map((descriptor) => ({ label: `overlay "${descriptor.presetKey}"`, area: descriptor.area })),
+    ...(entry.forms ?? []).flatMap((definition) => definition.areas.map((area) => ({
+      label: `form "${definition.formId}"`,
+      area,
+    }))),
     ...(entry.navigation ?? []).map((descriptor) => ({
       label: `navigation "${descriptor.item.itemKey}"`,
       area: readPhiRuntimeModuleNavigationArea(descriptor.navKey),
@@ -67,7 +72,8 @@ export function definePhiRuntimeModuleServerAreaContribution(
  *
  * Everything without an Area passes through untouched. A Widget has to reach every Area its Module
  * does; where it behaves differently is a question about who is asking, answered by its access
- * policy, not by where the page happens to stand.
+ * policy, not by where the page happens to stand. A Form is the other case: one transaction with one
+ * audience, so it names its Areas and is cut like a route.
  */
 export function cutPhiRuntimeModuleServerAreaContribution(
   contribution: PhiRuntimeModuleServerAreaContribution,
@@ -83,6 +89,7 @@ export function cutPhiRuntimeModuleServerAreaContribution(
       ...(entry.areaOverlays
         ? { areaOverlays: entry.areaOverlays.filter((descriptor) => descriptor.area === area) }
         : {}),
+      ...(entry.forms ? { forms: entry.forms.filter((definition) => definition.areas.includes(area)) } : {}),
       ...(entry.navigation
         ? {
           navigation: entry.navigation.filter(

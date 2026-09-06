@@ -112,6 +112,7 @@ async function loadLabels(
 
 export const PHI_MEDIA_SETTINGS_RUNTIME_MODULE_FORM = definePhiRuntimeModuleForm({
   ownerModuleId: PHI_ASSET_RUNTIME_MODULE_ID,
+  areas: ["admin"],
   formId: PHI_MEDIA_SETTINGS_FORM_IDS.general,
   version: 1,
   flags: 0,

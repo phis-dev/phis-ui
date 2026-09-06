@@ -176,6 +176,7 @@ async function loadLabels(
 export const PHI_GROUPS_RUNTIME_MODULE_FORMS = [
   definePhiRuntimeModuleForm({
     ownerModuleId: PHI_GROUPS_RUNTIME_MODULE_ID,
+    areas: ["admin"],
     formId: PHI_GROUPS_FORM_IDS.create,
     version: 1,
     flags: 0,
@@ -195,6 +196,7 @@ export const PHI_GROUPS_RUNTIME_MODULE_FORMS = [
   }),
   definePhiRuntimeModuleForm({
     ownerModuleId: PHI_GROUPS_RUNTIME_MODULE_ID,
+    areas: ["admin"],
     formId: PHI_GROUPS_FORM_IDS.membership,
     version: 1,
     flags: 0,
@@ -217,6 +219,7 @@ export const PHI_GROUPS_RUNTIME_MODULE_FORMS = [
 export const PHI_GROUPS_APP_RUNTIME_MODULE_FORMS = [
   definePhiRuntimeModuleForm({
     ownerModuleId: PHI_GROUPS_RUNTIME_MODULE_ID,
+    areas: ["app"],
     formId: PHI_GROUPS_FORM_IDS.myMembership,
     version: 1,
     flags: 0,

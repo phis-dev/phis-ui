@@ -76,6 +76,18 @@ const PUBLIC_NAV = {
   item: { itemKey: "@acme/catalogue/nav/public", label: { defaultMessage: "Catalogue" } },
 } as unknown as NonNullable<PhiRuntimeModuleCatalogEntry["navigation"]>[number];
 
+const APP_FORM = {
+  ownerModuleId: MODULE_ID,
+  areas: ["app"],
+  formId: "@acme/catalogue/forms/order",
+} as unknown as NonNullable<PhiRuntimeModuleCatalogEntry["forms"]>[number];
+
+const SHARED_FORM = {
+  ownerModuleId: MODULE_ID,
+  areas: ["app", "public"],
+  formId: "@acme/catalogue/forms/enquiry",
+} as unknown as NonNullable<PhiRuntimeModuleCatalogEntry["forms"]>[number];
+
 describe("what one Area receives", () => {
   it("keeps the Page in the Area it was addressed to and nowhere else", () => {
     const contribution = buildContribution({ routes: [APP_ROUTE] });
@@ -102,10 +114,23 @@ describe("what one Area receives", () => {
     }
   });
 
+  it("cuts a Form to the Areas it named", () => {
+    // Unlike a Widget: one transaction with one audience, so ordering a catalogue item has no
+    // business in a public Form picker while enquiring about one does.
+    const contribution = buildContribution({ forms: [APP_FORM, SHARED_FORM] });
+    expect(cutPhiRuntimeModuleServerAreaContribution(contribution, "public").catalogEntry.forms)
+      .toEqual([SHARED_FORM]);
+    expect(cutPhiRuntimeModuleServerAreaContribution(contribution, "app").catalogEntry.forms)
+      .toEqual([APP_FORM, SHARED_FORM]);
+  });
+
   it("names the descriptor that addresses an Area the Module was never admitted to", () => {
     expect(() => buildContribution({
       routes: [{ ...APP_ROUTE, area: "admin" }] as PhiRuntimeModuleCatalogEntry["routes"],
     })).toThrow(/route "app-catalogue-page" addresses Area "admin"/);
+    expect(() => buildContribution({
+      forms: [{ ...APP_FORM, areas: ["admin"] }] as PhiRuntimeModuleCatalogEntry["forms"],
+    })).toThrow(/form "@acme\/catalogue\/forms\/order" addresses Area "admin"/);
   });
 });
 

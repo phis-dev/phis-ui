@@ -6,6 +6,6 @@ import { createPhiLocalizationRuntimeModuleServerAreaContribution } from "../loc
 export const PHI_EDITOR_RUNTIME_MODULE_AREA_CONTRIBUTIONS = [
   ...createPhiCommonRuntimeModuleServerAreaContributions(),
   createPhiDashboardRuntimeModuleServerAreaContribution(),
-  createPhiLocalizationRuntimeModuleServerAreaContribution("editor"),
+  createPhiLocalizationRuntimeModuleServerAreaContribution(),
   PHI_EDITOR_RUNTIME_MODULE_SERVER_AREA_CONTRIBUTION,
 ] as const;

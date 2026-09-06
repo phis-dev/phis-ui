@@ -9,10 +9,10 @@ import { PHI_ADMIN_RUNTIME_MODULE_SERVER_AREA_CONTRIBUTION } from "../admin/serv
 
 export const PHI_ADMIN_RUNTIME_MODULE_AREA_CONTRIBUTIONS = [
   ...createPhiCommonRuntimeModuleServerAreaContributions(),
-  createPhiAuthRuntimeModuleServerAreaContribution("admin"),
+  createPhiAuthRuntimeModuleServerAreaContribution(),
   createPhiDashboardRuntimeModuleServerAreaContribution(),
-  createPhiGroupsRuntimeModuleServerAreaContribution("admin"),
-  createPhiLocalizationRuntimeModuleServerAreaContribution("admin"),
+  createPhiGroupsRuntimeModuleServerAreaContribution(),
+  createPhiLocalizationRuntimeModuleServerAreaContribution(),
   PHI_OBSERVABILITY_RUNTIME_MODULE_SERVER_AREA_CONTRIBUTION,
   PHI_USER_MANAGEMENT_RUNTIME_MODULE_SERVER_AREA_CONTRIBUTION,
   PHI_ADMIN_RUNTIME_MODULE_SERVER_AREA_CONTRIBUTION,

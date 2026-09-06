@@ -104,6 +104,7 @@ async function loadEditorLabels(context: Parameters<NonNullable<ReturnType<typeo
 export const PHI_LOCALIZATION_RUNTIME_MODULE_FORMS = [
   definePhiRuntimeModuleForm({
     ownerModuleId: PHI_LOCALIZATION_RUNTIME_MODULE_ID,
+    areas: ["admin"],
     formId: PHI_LOCALIZATION_FORM_IDS.siteLocales,
     version: 1,
     flags: 0,
@@ -144,6 +145,7 @@ export const PHI_LOCALIZATION_RUNTIME_MODULE_FORMS = [
   }),
   definePhiRuntimeModuleForm({
     ownerModuleId: PHI_LOCALIZATION_RUNTIME_MODULE_ID,
+    areas: ["editor"],
     formId: PHI_LOCALIZATION_FORM_IDS.editorTranslation,
     version: 1,
     flags: 0,

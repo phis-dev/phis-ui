@@ -156,6 +156,7 @@ async function loadAssetFormLabels(context: Parameters<NonNullable<ReturnType<ty
 
 export const PHI_ASSET_METADATA_RUNTIME_MODULE_FORM = definePhiRuntimeModuleForm({
   ownerModuleId: PHI_ASSET_RUNTIME_MODULE_ID,
+  areas: ["builder"],
   formId: PHI_ASSET_METADATA_FORM_ID,
   version: 1,
   flags: 0,
@@ -176,6 +177,7 @@ export const PHI_ASSET_METADATA_RUNTIME_MODULE_FORM = definePhiRuntimeModuleForm
 
 export const PHI_ASSET_FOLDER_RUNTIME_MODULE_FORM = definePhiRuntimeModuleForm({
   ownerModuleId: PHI_ASSET_RUNTIME_MODULE_ID,
+  areas: ["builder"],
   formId: PHI_ASSET_FOLDER_FORM_ID,
   version: 1,
   flags: 0,

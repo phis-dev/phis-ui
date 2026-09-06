@@ -233,6 +233,7 @@ const formOwnerModuleDefinition = {
   },
 } as const satisfies PhiRuntimeModuleDefinition;
 const testFormDefinition: PhiRuntimeModuleFormDefinition = {
+  areas: ["app"],
   ownerModuleId: FORM_OWNER_MODULE_ID,
   formId: TEST_FORM_ID,
   version: 1,

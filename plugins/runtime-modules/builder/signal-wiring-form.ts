@@ -89,6 +89,7 @@ const loadPhiBuilderSignalWiringFormLabels: PhiFormLabelSetLoader = async ({ run
 
 export const PHI_BUILDER_SIGNAL_WIRING_FORM = definePhiRuntimeModuleForm({
   ownerModuleId: PHI_BUILDER_RUNTIME_MODULE_ID,
+  areas: ["builder"],
   formId: PHI_BUILDER_SIGNAL_WIRING_FORM_ID,
   version: 1,
   flags: 0,

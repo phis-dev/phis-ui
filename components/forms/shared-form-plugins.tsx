@@ -38,6 +38,7 @@ function createLabelLoader(
 export const PHI_SHARED_FORM_DEFINITIONS: readonly PhiRuntimeModuleFormDefinition[] = [
   definePhiRuntimeModuleForm({
     ownerModuleId: PHI_AUTH_RUNTIME_MODULE_ID,
+    areas: ["public", "app"],
     formId: PHI_SHARED_FORM_IDS.login,
     version: 1,
     flags: 0,
@@ -60,6 +61,7 @@ export const PHI_SHARED_FORM_DEFINITIONS: readonly PhiRuntimeModuleFormDefinitio
   }),
   definePhiRuntimeModuleForm({
     ownerModuleId: PHI_AUTH_RUNTIME_MODULE_ID,
+    areas: ["public", "app"],
     formId: PHI_SHARED_FORM_IDS.registration,
     version: 1,
     flags: 0,
@@ -82,6 +84,7 @@ export const PHI_SHARED_FORM_DEFINITIONS: readonly PhiRuntimeModuleFormDefinitio
   }),
   definePhiRuntimeModuleForm({
     ownerModuleId: PHI_PUBLIC_RUNTIME_MODULE_ID,
+    areas: ["public"],
     formId: PHI_SHARED_FORM_IDS.contact,
     version: 1,
     flags: 0,
@@ -104,6 +107,7 @@ export const PHI_SHARED_FORM_DEFINITIONS: readonly PhiRuntimeModuleFormDefinitio
   }),
   definePhiRuntimeModuleForm({
     ownerModuleId: PHI_AUTH_RUNTIME_MODULE_ID,
+    areas: ["public", "app"],
     formId: PHI_SHARED_FORM_IDS.confirm,
     version: 1,
     flags: 0,
@@ -126,6 +130,7 @@ export const PHI_SHARED_FORM_DEFINITIONS: readonly PhiRuntimeModuleFormDefinitio
   }),
   definePhiRuntimeModuleForm({
     ownerModuleId: PHI_AUTH_RUNTIME_MODULE_ID,
+    areas: ["public", "app"],
     formId: PHI_SHARED_FORM_IDS.resetPassword,
     version: 1,
     flags: 0,
@@ -148,6 +153,7 @@ export const PHI_SHARED_FORM_DEFINITIONS: readonly PhiRuntimeModuleFormDefinitio
   }),
   definePhiRuntimeModuleForm({
     ownerModuleId: PHI_AUTH_RUNTIME_MODULE_ID,
+    areas: ["public", "app"],
     formId: PHI_SHARED_FORM_IDS.providerLinkConfirmation,
     version: 1,
     flags: 0,

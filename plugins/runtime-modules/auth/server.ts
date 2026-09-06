@@ -1,4 +1,3 @@
-import type { PhiCmsAreaKey } from "../../../constants/cms-areas";
 import { PHI_AUTH_RUNTIME_MODULE_AREA_OVERLAYS } from "../../../components/regions/presets/phi-auth-area-overlay-tree";
 import { PHI_AUTH_RUNTIME_MODULE_FORMS } from "../../../components/forms/shared-form-plugins";
 import { PHI_AUTH_ADMIN_SETTINGS_RUNTIME_MODULE_FORMS } from "../../../components/forms/auth-admin-settings-forms";
@@ -21,20 +20,14 @@ import { PHI_AUTH_RUNTIME_MODULE_WIDGETS } from "./widgets";
  * type" to anybody signing out. A Widget reaches every Area its Module does; whether it may be used
  * is a question about who is asking, and its access policy is what answers that.
  */
-export function createPhiAuthRuntimeModuleServerAreaContribution(area?: PhiCmsAreaKey) {
-  const isViewerArea = area === "app" || area === "public";
-  const isAdmin = area === "admin";
+export function createPhiAuthRuntimeModuleServerAreaContribution() {
   return definePhiRuntimeModuleServerAreaContribution({
     moduleId: PHI_AUTH_RUNTIME_MODULE_DEFINITION.moduleId,
     catalogEntry: {
       definition: PHI_AUTH_RUNTIME_MODULE_DEFINITION,
       widgets: PHI_AUTH_RUNTIME_MODULE_WIDGETS,
       layouts: [],
-      forms: isAdmin
-        ? PHI_AUTH_ADMIN_SETTINGS_RUNTIME_MODULE_FORMS
-        : isViewerArea
-          ? PHI_AUTH_RUNTIME_MODULE_FORMS
-          : [...PHI_AUTH_RUNTIME_MODULE_FORMS, ...PHI_AUTH_ADMIN_SETTINGS_RUNTIME_MODULE_FORMS],
+      forms: [...PHI_AUTH_RUNTIME_MODULE_FORMS, ...PHI_AUTH_ADMIN_SETTINGS_RUNTIME_MODULE_FORMS],
       areaOverlays: PHI_AUTH_RUNTIME_MODULE_AREA_OVERLAYS,
       routes: PHI_AUTH_RUNTIME_MODULE_ROUTES,
       loadUiProvider: () => import("../../../components/forms/auth-form-ui-provider")

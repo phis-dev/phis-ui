@@ -464,6 +464,7 @@ const loadPhiBuilderPageMetaFormLabels: PhiFormLabelSetLoader = async ({ runtime
 
 export const PHI_BUILDER_PAGE_META_FORM = definePhiRuntimeModuleForm({
   ownerModuleId: PHI_BUILDER_RUNTIME_MODULE_ID,
+  areas: ["builder"],
   formId: PHI_BUILDER_PAGE_META_FORM_ID,
   version: 1,
   flags: 0,
@@ -485,6 +486,7 @@ export const PHI_BUILDER_PAGE_META_FORM = definePhiRuntimeModuleForm({
 export const PHI_BUILDER_EFFECTS_FORMS = PHI_BUILDER_EFFECTS_SECTIONS.map(
   (section) => definePhiRuntimeModuleForm({
     ownerModuleId: PHI_BUILDER_RUNTIME_MODULE_ID,
+    areas: ["builder"],
     formId: PHI_BUILDER_EFFECTS_FORM_IDS[section],
     version: 1,
     flags: 0,

@@ -191,6 +191,7 @@ async function loadLabels(
 export const PHI_USER_MANAGEMENT_RUNTIME_MODULE_FORMS = [
   definePhiRuntimeModuleForm({
     ownerModuleId: PHI_USER_MANAGEMENT_RUNTIME_MODULE_ID,
+    areas: ["admin"],
     formId: PHI_USER_MANAGEMENT_FORM_IDS.create,
     version: 1,
     flags: 0,
@@ -210,6 +211,7 @@ export const PHI_USER_MANAGEMENT_RUNTIME_MODULE_FORMS = [
   }),
   definePhiRuntimeModuleForm({
     ownerModuleId: PHI_USER_MANAGEMENT_RUNTIME_MODULE_ID,
+    areas: ["admin"],
     formId: PHI_USER_MANAGEMENT_FORM_IDS.edit,
     version: 1,
     flags: 0,

@@ -5,5 +5,5 @@ import { PHI_PUBLIC_RUNTIME_MODULE_SERVER_AREA_CONTRIBUTION } from "../public/se
 export const PHI_PUBLIC_RUNTIME_MODULE_AREA_CONTRIBUTIONS = [
   ...createPhiCommonRuntimeModuleServerAreaContributions(),
   PHI_PUBLIC_RUNTIME_MODULE_SERVER_AREA_CONTRIBUTION,
-  createPhiAuthRuntimeModuleServerAreaContribution("public"),
+  createPhiAuthRuntimeModuleServerAreaContribution(),
 ] as const;
