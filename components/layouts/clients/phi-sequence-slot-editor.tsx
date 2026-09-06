@@ -18,9 +18,11 @@ import { PhiLayoutAnchoredOverlay } from "./phi-layout-anchored-overlay";
 import type { PhiAnchorWidgetPlacement } from "../../controls/phi-anchor-control-contract";
 import type { PhiRenderableBlockRenderMode } from "../../../types";
 import {
+  isPhiLayoutAuthoringRender,
   phiLayoutDebugLayerMarker,
   phiLayoutSlotClassName,
   phiLayoutSlotContentMarker,
+  type PhiLayoutAuthoringSignal,
 } from "../../../helpers/layout-authoring-markers";
 
 /**
@@ -47,7 +49,14 @@ export type PhiSequenceSlotEditorProps = {
   slotNoun: string;
   layoutKind: PhiLayoutKind;
   renderMode?: PhiRenderableBlockRenderMode;
-  isAuthoringRender: boolean;
+  /**
+   * The three props only the Builder passes, not the answer they add up to.
+   *
+   * This component writes the scaffold markers, so it is the one that has to ask -- a boolean handed
+   * in would be a second thing to keep true, and a published page that received it by mistake would
+   * carry the whole authoring model to people who cannot author.
+   */
+  authoring: PhiLayoutAuthoringSignal;
   chrome: Pick<
     PhiBaseLayoutProps,
     | "padding"
@@ -77,7 +86,7 @@ export function PhiSequenceSlotEditor({
   slotNoun,
   layoutKind,
   renderMode,
-  isAuthoringRender,
+  authoring,
   chrome,
   backgroundLayer,
   editSlotAction,
@@ -85,6 +94,7 @@ export function PhiSequenceSlotEditor({
   editSlotAnchor = "center",
   style,
 }: PhiSequenceSlotEditorProps) {
+  const isAuthoringRender = isPhiLayoutAuthoringRender(authoring);
   const editableSlotCount = Math.max(slots.length, 1);
   const currentIndex = Math.min(activeIndex, editableSlotCount - 1);
   const currentSlot = slots[currentIndex] ?? null;

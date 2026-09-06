@@ -6,20 +6,18 @@ import {
   PHI_SEQUENCE_TRANSITION_MAX_MS,
   PHI_SEQUENCE_TRANSITION_MIN_MS,
   clampPhiSequenceTransitionMs,
+  PHI_SEQUENCE_ANCHORS,
+  PHI_SEQUENCE_TRANSITIONS,
   readPhiMotionEasing,
   type PhiMotionEasing,
+  type PhiSequenceAnchor,
+  type PhiSequenceTransition,
 } from "../../../../../helpers/motion";
 import {
   PHI_CMS_MOUNT_POLICY_FIELD_OPTIONS,
   readPhiCmsMountPolicy,
   type PhiCmsMountPolicy,
 } from "../../../../../types/cms-mount-policy";
-import {
-  PHI_SEQUENCE_ANCHORS,
-  PHI_SEQUENCE_TRANSITIONS,
-  type PhiSequenceAnchor,
-  type PhiSequenceTransition,
-} from "../../../../../components/motion/phi-sequence-viewport";
 import {
   readRenderableBlockConfig,
   type PhiCmsWidgetConfigBase,

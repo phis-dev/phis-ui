@@ -5,6 +5,8 @@ import { useState, type CSSProperties, type ReactNode } from "react";
 import {
   clampPhiSequenceTransitionMs,
   type PhiMotionEasing,
+  type PhiSequenceAnchor,
+  type PhiSequenceTransition,
 } from "../../helpers/motion";
 import {
   shouldPhiCmsContentStayMounted,
@@ -25,12 +27,6 @@ import {
  * `none` put the window's items in flow and cross-fade the ones that are leaving over the top, which
  * is what the Stack has always done -- the items do not travel, they exchange places.
  */
-
-export const PHI_SEQUENCE_TRANSITIONS = ["none", "fade", "slide", "diagonal"] as const;
-export type PhiSequenceTransition = (typeof PHI_SEQUENCE_TRANSITIONS)[number];
-
-export const PHI_SEQUENCE_ANCHORS = ["start", "center"] as const;
-export type PhiSequenceAnchor = (typeof PHI_SEQUENCE_ANCHORS)[number];
 
 /** How far a diagonal leaves the horizontal, as a share of the travel it is already making. */
 const DIAGONAL_RISE = 0.35;

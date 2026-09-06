@@ -5,13 +5,11 @@ import {
   clampPhiSequenceTransitionMs,
   readPhiMotionEasing,
   type PhiMotionEasing,
-} from "../helpers/motion";
-import {
   PHI_SEQUENCE_ANCHORS,
   PHI_SEQUENCE_TRANSITIONS,
   type PhiSequenceAnchor,
   type PhiSequenceTransition,
-} from "../components/motion/phi-sequence-viewport";
+} from "../helpers/motion";
 import { readPhiLengthValue, type PhiCssLength } from "./length";
 import type { PhiResponsiveValue } from "./responsive";
 

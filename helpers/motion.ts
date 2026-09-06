@@ -64,6 +64,19 @@ export const PHI_SEQUENCE_TRANSITION_MIN_MS = 100;
 export const PHI_SEQUENCE_TRANSITION_MAX_MS = 600_000;
 
 /**
+ * The two ways of showing a sequence, and which end of a wider window an index means.
+ *
+ * They live here rather than beside the viewport that draws them because a stored configuration is
+ * read on the server: a parser reaching into a `"use client"` module for a word list drags the whole
+ * component into the Server graph, where `useState` does not exist.
+ */
+export const PHI_SEQUENCE_TRANSITIONS = ["none", "fade", "slide", "diagonal"] as const;
+export type PhiSequenceTransition = (typeof PHI_SEQUENCE_TRANSITIONS)[number];
+
+export const PHI_SEQUENCE_ANCHORS = ["start", "center"] as const;
+export type PhiSequenceAnchor = (typeof PHI_SEQUENCE_ANCHORS)[number];
+
+/**
  * A stored length brought into range.
  *
  * Clamping is the stated rule and not a rescue: the bounds are what the setting means. Anything that

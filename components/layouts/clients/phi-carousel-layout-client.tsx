@@ -7,12 +7,12 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { PhiButtonControl } from "../../controls/phi-button-control";
 
-import type { PhiMotionEasing } from "../../../helpers/motion";
-import {
-  PhiSequenceViewport,
-  type PhiSequenceAnchor,
-  type PhiSequenceTransition,
-} from "../../motion/phi-sequence-viewport";
+import type {
+  PhiMotionEasing,
+  PhiSequenceAnchor,
+  PhiSequenceTransition,
+} from "../../../helpers/motion";
+import { PhiSequenceViewport } from "../../motion/phi-sequence-viewport";
 import { resolvePhiLayoutInset } from "../phi-layout-contract";
 import {
   resolvePhiBaseLayoutChrome,
@@ -23,7 +23,6 @@ import { PhiLayoutAnchoredOverlay } from "./phi-layout-anchored-overlay";
 import { PhiSequenceSlotEditor } from "./phi-sequence-slot-editor";
 import type { PhiAnchorWidgetPlacement } from "../../controls/phi-anchor-control-contract";
 import { usePhiSlotSequence } from "../use-phi-slot-sequence";
-import { isPhiLayoutAuthoringRender } from "../../../helpers/layout-authoring-markers";
 
 /**
  * A Stack with a wider window.
@@ -106,11 +105,11 @@ export function PhiCarouselLayout({
 }: PhiCarouselLayoutProps) {
   // Named fields rather than the rest object: handing the compiler a whole rest object makes every
   // value later destructured out of it look like it may change, which costs the component its memoization.
-  const isAuthoringRender = isPhiLayoutAuthoringRender({
+  const authoring = {
     editSlotAction: layoutProps.editSlotAction,
     editSlotLabels: layoutProps.editSlotLabels,
     capabilities: layoutProps.capabilities,
-  });
+  };
   const {
     blockId,
     renderMode,
@@ -228,7 +227,7 @@ export function PhiCarouselLayout({
         slotNoun="carousel slot"
         layoutKind={layoutKind}
         renderMode={renderMode}
-        isAuthoringRender={isAuthoringRender}
+        authoring={authoring}
         chrome={chrome}
         backgroundLayer={backgroundLayer}
         editSlotAction={editSlotAction}

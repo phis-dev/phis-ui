@@ -25,7 +25,6 @@ import { PhiSequenceSlotEditor } from "./phi-sequence-slot-editor";
 import type { PhiAnchorWidgetPlacement } from "../../controls/phi-anchor-control-contract";
 import { usePhiSlotSequence } from "../use-phi-slot-sequence";
 import { usePhiConfig } from "../../root/phi-config-provider";
-import { isPhiLayoutAuthoringRender } from "../../../helpers/layout-authoring-markers";
 
 export type PhiStackLayoutSlotMeta = {
   key: string;
@@ -65,11 +64,11 @@ export function PhiStackLayout({
 }: PhiStackLayoutProps) {
   // Named fields rather than the rest object: handing the compiler a whole rest object makes every
   // value later destructured out of it look like it may change, which costs the component its memoization.
-  const isAuthoringRender = isPhiLayoutAuthoringRender({
+  const authoring = {
     editSlotAction: layoutProps.editSlotAction,
     editSlotLabels: layoutProps.editSlotLabels,
     capabilities: layoutProps.capabilities,
-  });
+  };
   const { token } = usePhiConfig();
   const {
     blockId,
@@ -224,7 +223,7 @@ export function PhiStackLayout({
         slotNoun="stack slot"
         layoutKind={layoutKind}
         renderMode={renderMode}
-        isAuthoringRender={isAuthoringRender}
+        authoring={authoring}
         chrome={chrome}
         backgroundLayer={backgroundLayer}
         editSlotAction={editSlotAction}
