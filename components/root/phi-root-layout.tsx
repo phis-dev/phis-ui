@@ -21,6 +21,7 @@ import {
   type PhiThemePresetPlugin,
 } from "../../theme/phi-theme-presets";
 import { resolvePhiPublishedRootTheme } from "../../theme/phi-published-root-style";
+import { projectPhiSiteThemeRootBackground } from "../../theme/phi-root-background.server";
 
 const firaSans = Fira_Sans({
   variable: "--phi-font-source-body",
@@ -99,6 +100,7 @@ export async function PhiRootLayout({
   themePresets = PHI_CORE_THEME_PRESET_PLUGINS,
 }: PhiRootLayoutProps) {
   const site = siteSnapshot ?? await getResolvedSiteConfig({ apiBaseUrl, internalToken, siteKey });
+  const siteTheme = await projectPhiSiteThemeRootBackground(site.theme, { apiBaseUrl, internalToken, siteKey });
   const antdLocale = await loadPhiAntdLocale(resolvedLocale?.locale ?? resolvedLocale?.intlLocale);
   const resolvedThemeMode = site.theme?.mode === "dark" ? "dark" : "light";
 
@@ -133,7 +135,7 @@ export async function PhiRootLayout({
         >
           <PhiRootLiveThemeProvider
             siteKey={site.key}
-            siteTheme={site.theme}
+            siteTheme={siteTheme}
             locale={antdLocale}
             initialMode={resolvedThemeMode}
             initialLocale={resolvedLocale?.locale ?? site.defaultLocale}

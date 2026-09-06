@@ -289,7 +289,7 @@ export function PhiStackLayout({
      */
     const duration = slotTransitionDurationMs === undefined
       ? resolvePhiMotionDurationMs(token.motionDurationSlow)
-      : clampPhiSequenceTransitionMs(slotTransitionDurationMs, 0);
+      : clampPhiSequenceTransitionMs(slotTransitionDurationMs);
     if (reducedMotion || duration <= 0 || typeof outgoingSlot.animate !== "function") {
       outgoingSlot.style.opacity = "0";
       queueMicrotask(clearOutgoingSlot);

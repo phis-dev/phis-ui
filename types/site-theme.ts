@@ -1,5 +1,19 @@
+import type { PhiCmsBackgroundWidgetConfig } from "../components/widgets/config/background";
+
 export type PhiSiteRemSettings = {
   rootValue?: number | null;
+};
+
+/**
+ * The Theme Root Background (SHELL.md "Root Background and Shell Backdrop Layers"): painted once at
+ * the document root, independently per mode, using the canonical structured Phi Background contract.
+ * An unconfigured mode falls back to the resolved Ant Design layout background.
+ */
+export type PhiSiteThemeRoot = {
+  background?: {
+    light?: PhiCmsBackgroundWidgetConfig | null;
+    dark?: PhiCmsBackgroundWidgetConfig | null;
+  } | null;
 };
 
 export type PhiWidgetFontFamilyKey =

@@ -15,6 +15,7 @@ import type {
 } from "../../theme/phi-theme-presets";
 import { resolvePhiPublishedThemeCustomColors } from "../../theme/phi-theme-palette";
 import { PhiConfigProvider } from "./phi-config-provider";
+import { PhiRootBackgroundLayer } from "./phi-root-background";
 import { readPhiControlShape } from "../../theme/phi-control-shape";
 import {
   PHI_SIGNAL_VALUE_SCHEMAS,
@@ -184,6 +185,7 @@ export function PhiRootLiveThemeProvider({
         rootStyle={rootStyle}
         remRootValue={remRootValue}
       >
+        <PhiRootBackgroundLayer root={liveSiteTheme.root} mode={mode} />
         {children}
       </PhiConfigProvider>
     </>

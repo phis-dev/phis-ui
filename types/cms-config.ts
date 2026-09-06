@@ -611,7 +611,7 @@ export function parsePhiCmsStackLayoutConfig(
       // Absent means "whatever the theme does", which is why the fallback is read from the token
       // rather than written here as a number.
       ...(config.slotTransitionDurationMs === undefined ? {} : {
-        slotTransitionDurationMs: clampPhiSequenceTransitionMs(config.slotTransitionDurationMs, 0),
+        slotTransitionDurationMs: clampPhiSequenceTransitionMs(config.slotTransitionDurationMs),
       }),
       ...(config.slotTransitionEasing === undefined ? {} : {
         slotTransitionEasing: readPhiMotionEasing(config.slotTransitionEasing, undefined),

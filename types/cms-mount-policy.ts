@@ -41,21 +41,26 @@ export function isPhiCmsMountPolicy(value: unknown): value is PhiCmsMountPolicy 
 }
 
 /**
- * A stored value, or the fallback this particular container prefers.
+ * A stored value, or the container's own default where none is stored.
  *
- * The default belongs to the caller and not to the type: an Overlay opens rarely and starts at
- * `remount`, a Carousel is walked through and starts at `lazy-keep`. The vocabulary has no opinion.
- *
- * Every value of the two older vocabularies fails this check, which is the point. `keep` was the one
- * string valid in both worlds with two different meanings, and no validator could have told them
- * apart -- so it was renamed rather than reinterpreted, and a stored one now lands on the fallback
- * loudly instead of quietly changing what a page does.
+ * A value that is present and is not one of the three throws. It is not this function's business to
+ * guess what somebody meant: the two vocabularies this replaced both spelled `keep`, with opposite
+ * meanings, and a quiet fallback would turn "everything is mounted" into "only what was visited" on
+ * a page that renders perfectly and behaves wrongly. Absent is a different thing entirely -- nothing
+ * was said, so the container says what it wants.
  */
 export function readPhiCmsMountPolicy(
   value: unknown,
-  fallback: PhiCmsMountPolicy,
+  whenAbsent: PhiCmsMountPolicy,
 ): PhiCmsMountPolicy {
-  return isPhiCmsMountPolicy(value) ? value : fallback;
+  if (value === undefined || value === null) return whenAbsent;
+  if (!isPhiCmsMountPolicy(value)) {
+    throw new Error(
+      `Invalid Phi CMS mount policy ${JSON.stringify(value)}. ` +
+      `Expected one of ${PHI_CMS_MOUNT_POLICIES.join(", ")}.`,
+    );
+  }
+  return value;
 }
 
 /**

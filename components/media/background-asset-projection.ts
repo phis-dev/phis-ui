@@ -53,6 +53,15 @@ function collectFrom(value: unknown, into: Set<number>) {
   for (const entry of Object.values(value)) collectFrom(entry, into);
 }
 
+/** Every Asset id an Asset-bound Background anywhere inside these values binds. */
+export function collectPhiBackgroundAssetIdsFromValues(
+  values: readonly unknown[],
+): number[] {
+  const assetIds = new Set<number>();
+  for (const value of values) collectFrom(value, assetIds);
+  return [...assetIds];
+}
+
 /** Every Asset id an Asset-bound Background in these trees binds. */
 export function collectPhiBackgroundAssetIds(
   trees: readonly (PhiBackgroundProjectableTree | null | undefined)[],
@@ -91,6 +100,14 @@ function projectInto(
   }
 
   return projected;
+}
+
+/** The value counterpart of {@link applyPhiBackgroundAssetProjection}, for Backgrounds outside a tree. */
+export function projectPhiBackgroundAssetsIntoValue<T>(
+  value: T,
+  assets: ReadonlyMap<number, PhiImageDeliveryProjection>,
+): T {
+  return assets.size === 0 ? value : projectInto(value, assets) as T;
 }
 
 /**

@@ -79,7 +79,7 @@ function GalleryPicture({ image, fit }: { image: PhiGalleryImage; fit: "cover" |
 export function PhiGalleryWidget({ config, labels }: PhiGalleryWidgetProps) {
   const { token } = theme.useToken();
   const images = useMemo(() => config?.images ?? [], [config?.images]);
-  const visibleCount = Math.max(1, config?.visibleCount ?? 1);
+  const visibleCount = config?.visibleCount ?? 1;
   const windowAnchor = config?.windowAnchor ?? "start";
   const loop = config?.loop ?? false;
   const controls = config?.controls ?? "both";
@@ -88,11 +88,10 @@ export function PhiGalleryWidget({ config, labels }: PhiGalleryWidgetProps) {
   const [activeIndex, setActiveIndex] = useState(0);
   const [paused, setPaused] = useState(false);
 
-  const span = Math.max(1, Math.min(visibleCount, Math.max(images.length, 1)));
+  const span = Math.min(visibleCount, Math.max(images.length, 1));
   // The last window rather than the last picture: past this the window would hang off the end, and
   // stepping to it would move nothing.
   const lastStart = Math.max(0, images.length - span);
-  const clampedIndex = Math.min(Math.max(activeIndex, 0), Math.max(images.length - 1, 0));
 
   const step = useCallback((direction: 1 | -1) => {
     setActiveIndex((current) => {
@@ -122,7 +121,7 @@ export function PhiGalleryWidget({ config, labels }: PhiGalleryWidgetProps) {
   }
 
   const windowStart = resolvePhiSequenceWindowStart({
-    activeIndex: clampedIndex,
+    activeIndex: activeIndex,
     visibleCount: span,
     itemCount: images.length,
     anchor: windowAnchor,
@@ -156,7 +155,7 @@ export function PhiGalleryWidget({ config, labels }: PhiGalleryWidgetProps) {
               fit={config?.fit ?? "cover"}
             />
           ))}
-          activeIndex={clampedIndex}
+          activeIndex={activeIndex}
           visibleCount={span}
           anchor={windowAnchor}
           transition={config?.transition ?? "slide"}

@@ -38,6 +38,7 @@ type PhiResolvedWidgetRuntimeSite = PhiBlockRuntimeSite & {
     brand?: PhiWidgetSiteTheme["brand"];
     contact?: PhiWidgetSiteTheme["contact"];
     shell?: PhiWidgetSiteTheme["shell"];
+    root?: PhiWidgetSiteTheme["root"];
   };
 };
 
@@ -291,6 +292,7 @@ export async function getPhiCmsRuntimeInfo({
       ...(site.theme?.brand ? { brand: site.theme.brand } : {}),
       ...(site.theme?.contact ? { contact: site.theme.contact } : {}),
       ...(site.theme?.shell ? { shell: site.theme.shell } : {}),
+      ...(site.theme?.root ? { root: site.theme.root } : {}),
       ...(site.theme?.antd ? { antd: site.theme.antd } : {}),
       ...(site.theme?.phi ? { phi: site.theme.phi } : {}),
     },

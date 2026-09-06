@@ -4,7 +4,7 @@ import "server-only";
 import { buildApiHeaders, buildApiUrl } from "../helpers/site-api";
 import type { PhiShellTheme } from "../components/shell/shell-types";
 import { getSiteConfigCacheTag } from "./cache-tags";
-import type { PhiSiteFontSlots, PhiSiteRemSettings } from "../types/site-theme";
+import type { PhiSiteFontSlots, PhiSiteRemSettings, PhiSiteThemeRoot } from "../types/site-theme";
 import type { PhiThemeCustomColorPalette, PhiThemeMode } from "../theme/phi-theme-presets";
 import type { PhiControlShape } from "../theme/phi-control-shape";
 
@@ -58,6 +58,7 @@ export type PhiSiteTheme = {
     } | null;
   } | null;
   shell?: PhiShellTheme;
+  root?: PhiSiteThemeRoot | null;
   rem?: PhiSiteRemSettings | null;
   antd?: {
     token?: Record<string, unknown>;

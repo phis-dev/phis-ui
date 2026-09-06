@@ -1,5 +1,5 @@
 import type { PhiShellTheme } from "../components/shell/shell-types";
-import type { PhiSiteFontSlots, PhiSiteRemSettings } from "./site-theme";
+import type { PhiSiteFontSlots, PhiSiteRemSettings, PhiSiteThemeRoot } from "./site-theme";
 import type { PhiThemeCustomColorPalette, PhiThemeMode } from "../theme/phi-theme-presets";
 import type { PhiControlShape } from "../theme/phi-control-shape";
 import type { PhiViewerAddonRoleClaim, PhiViewerGroupClaim, PhiViewerRoleClaim } from "./access";
@@ -75,6 +75,7 @@ export type PhiBlockRuntimeSite = {
       icon?: string | null;
     };
     shell?: PhiShellTheme;
+    root?: PhiSiteThemeRoot | null;
     antd?: {
       token?: Record<string, unknown>;
       components?: Record<string, Record<string, unknown>>;

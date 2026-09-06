@@ -13,9 +13,11 @@ body {
   min-height: 100vh;
 }
 
+/* The ground is painted by the Theme Root Background layer (data-phi-root-background), fixed
+   behind the content; .ant-app stays transparent so that layer shows through. */
 [data-phi-root-layout="true"] > .ant-app {
   min-height: inherit;
-  background: var(--ant-color-bg-layout);
+  background: transparent;
   color: var(--ant-color-text);
   font-family: var(--ant-font-family, system-ui, sans-serif);
 }

@@ -35,6 +35,9 @@ export type PhiSequenceAnchor = (typeof PHI_SEQUENCE_ANCHORS)[number];
 /** How far a diagonal leaves the horizontal, as a share of the travel it is already making. */
 const DIAGONAL_RISE = 0.35;
 
+/** What a caller who says nothing gets: long enough to read as movement, short enough to ignore. */
+const DEFAULT_SEQUENCE_DURATION_MS = 320;
+
 export type PhiSequenceViewportProps = {
   items: readonly ReactNode[];
   /**
@@ -108,7 +111,9 @@ export function PhiSequenceViewport({
   renderItem,
 }: PhiSequenceViewportProps) {
   const itemCount = items.length;
-  const span = Math.max(1, Math.min(Math.floor(visibleCount) || 1, Math.max(itemCount, 1)));
+  // Only the geometric limit: you cannot show four of three. A visibleCount that is not a positive
+  // whole number is a caller's mistake, and the type says so rather than this line rescuing it.
+  const span = Math.min(visibleCount, Math.max(itemCount, 1));
   const start = resolvePhiSequenceWindowStart({ activeIndex, visibleCount: span, itemCount, anchor });
   const onTrack = transition === "slide" || transition === "diagonal";
 
@@ -150,7 +155,9 @@ export function PhiSequenceViewport({
    */
   const resolvedDurationMs = reducedMotion || transition === "none"
     ? 0
-    : clampPhiSequenceTransitionMs(durationMs, 320);
+    : durationMs === undefined
+      ? DEFAULT_SEQUENCE_DURATION_MS
+      : clampPhiSequenceTransitionMs(durationMs);
   const resolvedEasing = easing ?? "ease-in-out";
 
   const gapLength = toCssLength(gap);

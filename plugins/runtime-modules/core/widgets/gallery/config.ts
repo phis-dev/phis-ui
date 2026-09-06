@@ -13,15 +13,13 @@ import {
   type PhiCmsMountPolicy,
 } from "../../../../../types/cms-mount-policy";
 import {
+  PHI_SEQUENCE_ANCHORS,
   PHI_SEQUENCE_TRANSITIONS,
   type PhiSequenceAnchor,
   type PhiSequenceTransition,
 } from "../../../../../components/motion/phi-sequence-viewport";
 import {
-  readBoolean,
-  readInteger,
   readRenderableBlockConfig,
-  readString,
   type PhiCmsWidgetConfigBase,
 } from "../../../../../components/widgets/config/parser-primitives";
 
@@ -67,58 +65,104 @@ export type PhiCmsGalleryWidgetConfig = PhiCmsWidgetConfigBase & {
   autoplayMs?: number;
 };
 
+/*
+ * Read strictly, and say so when a document is wrong.
+ *
+ * Nothing here falls back. A stored value that is not one of the words this Widget knows is a
+ * mistake in the document, and a Widget that renders anyway hides it: the picture wall simply does
+ * something other than what somebody wrote, on a page that reports no error at all. Absent is not
+ * the same as wrong -- a key that was never written leaves the decision to the defaults below.
+ */
+
+function fail(key: string, value: unknown, expected: string): never {
+  throw new Error(`Invalid Gallery ${key} ${JSON.stringify(value)}. Expected ${expected}.`);
+}
+
+function readMember<TMember extends string>(
+  value: unknown,
+  members: readonly TMember[],
+  key: string,
+): TMember | undefined {
+  if (value === undefined || value === null) return undefined;
+  if (typeof value !== "string" || !(members as readonly string[]).includes(value)) {
+    fail(key, value, `one of ${members.join(", ")}`);
+  }
+  return value as TMember;
+}
+
+function readCount(value: unknown, key: string, min: number): number | undefined {
+  if (value === undefined || value === null) return undefined;
+  if (typeof value !== "number" || !Number.isInteger(value) || value < min) {
+    fail(key, value, `a whole number of at least ${min}`);
+  }
+  return value;
+}
+
+function readFlag(value: unknown, key: string): boolean | undefined {
+  if (value === undefined || value === null) return undefined;
+  if (typeof value !== "boolean") fail(key, value, "true or false");
+  return value;
+}
+
+function readText(value: unknown, key: string): string | undefined {
+  if (value === undefined || value === null) return undefined;
+  if (typeof value !== "string" || value.trim() === "") fail(key, value, "a non-empty string");
+  return value;
+}
+
 function readGalleryImages(value: unknown): PhiGalleryImage[] {
-  if (!Array.isArray(value)) return [];
-  return value.flatMap((entry) => {
-    if (!entry || typeof entry !== "object") return [];
+  if (value === undefined || value === null) return [];
+  if (!Array.isArray(value)) fail("images", value, "an array of pictures");
+  return value.map((entry, index) => {
+    if (!entry || typeof entry !== "object" || Array.isArray(entry)) {
+      fail(`images[${index}]`, entry, "an object with a url");
+    }
     const record = entry as Record<string, unknown>;
-    const url = readString(record.url);
-    if (!url) return [];
-    const alt = readString(record.alt);
-    const href = readString(record.href);
-    return [{ url, ...(alt ? { alt } : {}), ...(href ? { href } : {}) }];
+    const url = readText(record.url, `images[${index}].url`);
+    if (!url) fail(`images[${index}].url`, record.url, "a non-empty string");
+    const alt = readText(record.alt, `images[${index}].alt`);
+    const href = readText(record.href, `images[${index}].href`);
+    return { url, ...(alt ? { alt } : {}), ...(href ? { href } : {}) };
   });
 }
 
-function readTransition(value: unknown): PhiSequenceTransition | undefined {
-  return typeof value === "string" && (PHI_SEQUENCE_TRANSITIONS as readonly string[]).includes(value)
-    ? value as PhiSequenceTransition
-    : undefined;
-}
-
 export function parsePhiCmsGalleryWidgetConfig(raw: Record<string, unknown>): PhiCmsGalleryWidgetConfig {
-  const autoplayMs = readInteger(raw.autoplayMs);
+  const visibleCount = readCount(raw.visibleCount, "visibleCount", 1);
+  const windowAnchor = readMember(raw.windowAnchor, PHI_SEQUENCE_ANCHORS, "windowAnchor");
+  const transition = readMember(raw.transition, PHI_SEQUENCE_TRANSITIONS, "transition");
+  const easing = readPhiMotionEasing(raw.easing, undefined);
+  const gap = readText(raw.gap, "gap");
+  const lookahead = readCount(raw.lookahead, "lookahead", 0);
+  const aspectRatio = readText(raw.aspectRatio, "aspectRatio");
+  const fit = readMember(raw.fit, ["cover", "contain"] as const, "fit");
+  const controls = readMember(raw.controls, ["none", "arrows", "dots", "both"] as const, "controls");
+  const loop = readFlag(raw.loop, "loop");
+  const autoplayMs = readCount(raw.autoplayMs, "autoplayMs", 0);
+
   return {
     ...readRenderableBlockConfig(raw),
     images: readGalleryImages(raw.images),
-    ...(readInteger(raw.visibleCount) === undefined
-      ? {}
-      : { visibleCount: Math.max(1, readInteger(raw.visibleCount)!) }),
-    ...(raw.windowAnchor === "center" ? { windowAnchor: "center" as const } : {}),
-    ...(readTransition(raw.transition) ? { transition: readTransition(raw.transition)! } : {}),
+    ...(visibleCount === undefined ? {} : { visibleCount }),
+    ...(windowAnchor === undefined ? {} : { windowAnchor }),
+    ...(transition === undefined ? {} : { transition }),
     // Absent stays absent: the viewport then moves at the pace the theme sets rather than one this
     // Widget invented.
-    ...(raw.durationMs === undefined
+    ...(raw.durationMs === undefined || raw.durationMs === null
       ? {}
-      : { durationMs: clampPhiSequenceTransitionMs(raw.durationMs, 320) }),
-    ...(readPhiMotionEasing(raw.easing, undefined)
-      ? { easing: readPhiMotionEasing(raw.easing, undefined)! }
-      : {}),
-    ...(readString(raw.gap) ? { gap: readString(raw.gap)! } : {}),
-    ...(readInteger(raw.lookahead) === undefined
-      ? {}
-      : { lookahead: Math.max(0, readInteger(raw.lookahead)!) }),
+      : { durationMs: clampPhiSequenceTransitionMs(raw.durationMs) }),
+    ...(easing === undefined ? {} : { easing }),
+    ...(gap === undefined ? {} : { gap }),
+    ...(lookahead === undefined ? {} : { lookahead }),
     mountPolicy: readPhiCmsMountPolicy(raw.mountPolicy, "lazy-keep"),
-    ...(readString(raw.aspectRatio) ? { aspectRatio: readString(raw.aspectRatio)! } : {}),
-    ...(raw.fit === "contain" ? { fit: "contain" as const } : {}),
-    ...(raw.controls === "none" || raw.controls === "arrows" || raw.controls === "dots"
-      ? { controls: raw.controls }
-      : {}),
-    ...(readBoolean(raw.loop) === undefined ? {} : { loop: readBoolean(raw.loop)! }),
-    // Zero is how "do not move on its own" is written, so it is not clamped up to the floor.
-    ...(autoplayMs === undefined || autoplayMs <= 0
+    ...(aspectRatio === undefined ? {} : { aspectRatio }),
+    ...(fit === undefined ? {} : { fit }),
+    ...(controls === undefined ? {} : { controls }),
+    ...(loop === undefined ? {} : { loop }),
+    // Zero is how "does not move on its own" is written, so it is the one number below the floor
+    // that means something.
+    ...(autoplayMs === undefined || autoplayMs === 0
       ? {}
-      : { autoplayMs: clampPhiSequenceTransitionMs(autoplayMs, 5000) }),
+      : { autoplayMs: clampPhiSequenceTransitionMs(autoplayMs) }),
   };
 }
 

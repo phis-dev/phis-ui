@@ -46,21 +46,23 @@ describe("what stays mounted", () => {
 });
 
 describe("reading a stored value", () => {
-  it("takes the caller's fallback rather than one of its own", () => {
+  it("takes the container's default where nothing was stored", () => {
     // An Overlay is shut most of the time and an Carousel is walked through, so the cheap end is
     // right for one and the sticky end for the other. The vocabulary has no opinion.
     expect(readPhiCmsMountPolicy(undefined, "remount")).toBe("remount");
     expect(readPhiCmsMountPolicy(undefined, "lazy-keep")).toBe("lazy-keep");
   });
 
-  it("refuses every word of the two vocabularies it replaced", () => {
+  it("throws on every word of the two vocabularies it replaced", () => {
     /*
      * Including `keep`, which is the point. It was valid in both worlds with two different meanings,
-     * so a stored one now lands on the fallback where somebody can see it, instead of quietly turning
-     * "everything is mounted" into "only what was visited".
+     * so nothing can work out which was meant -- and a fallback would turn "everything is mounted"
+     * into "only what was visited" on a page that renders perfectly and behaves wrongly. It has to
+     * be the loudest failure available, which is refusing to render at all.
      */
     for (const legacy of ["on-open", "keep-alive", "active", "keep"]) {
-      expect(readPhiCmsMountPolicy(legacy, "remount")).toBe("remount");
+      expect(() => readPhiCmsMountPolicy(legacy, "remount"))
+        .toThrow(/Invalid Phi CMS mount policy/);
     }
   });
 

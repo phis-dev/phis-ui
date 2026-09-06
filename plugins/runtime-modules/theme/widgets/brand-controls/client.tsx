@@ -48,6 +48,13 @@ import {
 } from "../../../../../components/widgets/config/color-picker-presets";
 import { PHI_SPACING_TOKEN_KEYS } from "../../../../../components/widgets/config/spacing-options";
 import { PhiColorWidget } from "../../../../../components/widgets/client/phi-color-widget";
+import { PhiBackgroundControl, type PhiBackgroundControlProps } from "../../../../../components/controls/phi-background-control";
+import { normalizePhiBackgroundWidgetConfig, type PhiCmsBackgroundWidgetConfig } from "../../../../../components/widgets/config/background";
+import { PhiMediaPickerBinding } from "../../../../../components/media/phi-media-picker-binding";
+import { PHI_MEDIA_WIDGET_DEFAULT_LABELS } from "../../../../../components/media/media-widget-labels";
+import { PHI_SEARCH_WIDGET_DEFAULT_LABELS } from "../../../../../components/widgets/label-types/search";
+import { PhiMediaKind } from "../../../../../constants/media";
+import { createPhiMediaPickerAssetControllerRoutes } from "../../../../../components/media/asset-controller-routes";
 import { PhiPresetSizeControl, type PhiPresetSizeOption } from "../../../../../components/controls/phi-preset-size-control";
 import type { PhiBuilderBrandWidgetConfig } from "./config";
 import { createPhiHistoryStore } from "../../../../../components/state/history-store";
@@ -574,6 +581,28 @@ function buildThemeReviewHref({
   url.searchParams.set("reviewThemeKey", themeKey);
 
   return `${url.pathname}${url.search}`;
+}
+
+const PHI_THEME_ROOT_BACKGROUND_MEDIA_ROUTES = {
+  preview: createPhiMediaPickerAssetControllerRoutes("theme-root-background-preview-media", "area"),
+  field: createPhiMediaPickerAssetControllerRoutes("theme-root-background-field-media", "area"),
+} as const;
+
+function mergeThemeRootBackground(
+  theme: ThemePayload,
+  mode: "light" | "dark",
+  value: PhiCmsBackgroundWidgetConfig,
+): ThemePayload {
+  return {
+    ...theme,
+    root: {
+      ...(theme.root ?? {}),
+      background: {
+        ...(theme.root?.background ?? {}),
+        [mode]: value,
+      },
+    },
+  };
 }
 
 function createInitialBrandThemeState(themeKey: string, fallbackTheme: ThemePayload): BrandThemeState {
@@ -1501,6 +1530,29 @@ export function PhiBuilderBrandStyleControlsWidgetClient({
     publishDraft(mergeThemeToken(state.draft, tokenPatch));
   }
 
+  const renderRootBackgroundMediaPicker = useCallback<NonNullable<PhiBackgroundControlProps["renderMediaPicker"]>>((props) => (
+    <PhiMediaPickerBinding
+      config={{
+        mediaType: PhiMediaKind.Image,
+        pageSize: 12,
+        showPagination: true,
+        showGroupFilter: true,
+        showSearchBar: true,
+        signalRoutes: PHI_THEME_ROOT_BACKGROUND_MEDIA_ROUTES[props.purpose],
+      }}
+      labels={PHI_MEDIA_WIDGET_DEFAULT_LABELS}
+      searchLabels={PHI_SEARCH_WIDGET_DEFAULT_LABELS}
+      value={props.value}
+      open={props.open}
+      trigger={props.trigger}
+      onOpenChange={props.onOpenChange}
+      onCommit={props.onCommit}
+      onDiscard={props.onDiscard}
+      onAssetSelect={props.onAssetSelect}
+      onAssetClear={props.onAssetClear}
+    />
+  ), []);
+
   return (
     <Flex vertical gap={clientToken.padding} style={{ width: "100%", minWidth: 0, opacity: loading ? 0.65 : 1 }}>
       <Card size="small" styles={{ body: { padding: clientToken.paddingSM } }}>
@@ -1678,6 +1730,32 @@ export function PhiBuilderBrandStyleControlsWidgetClient({
                     unCheckedChildren="Off"
                     onChange={(checked) => updateToken({ wireframe: checked })}
                   />
+                </Flex>
+              ),
+            },
+            {
+              key: "rootBackground",
+              label: <Typography.Text strong>Root Background</Typography.Text>,
+              children: (
+                /*
+                 * The Theme Root Background (SHELL.md): one fixed layer behind the whole site, per
+                 * mode. Both modes are shown side by side rather than following the preview switch,
+                 * because an author setting a dark ground wants to see what the light one is.
+                 */
+                <Flex vertical gap={clientToken.paddingSM}>
+                  {(["light", "dark"] as const).map((backgroundMode) => (
+                    <Flex key={backgroundMode} vertical gap={clientToken.paddingXXS}>
+                      <Typography.Text type="secondary">
+                        {backgroundMode === "light" ? "Light mode" : "Dark mode"}
+                      </Typography.Text>
+                      <PhiBackgroundControl
+                        value={normalizePhiBackgroundWidgetConfig(state.draft.root?.background?.[backgroundMode] ?? null)}
+                        disabled={saving}
+                        renderMediaPicker={renderRootBackgroundMediaPicker}
+                        onChange={(value) => publishDraft(mergeThemeRootBackground(state.draft, backgroundMode, value))}
+                      />
+                    </Flex>
+                  ))}
                 </Flex>
               ),
             },

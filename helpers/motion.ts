@@ -25,11 +25,24 @@ export function isPhiMotionEasing(value: unknown): value is PhiMotionEasing {
   return typeof value === "string" && (PHI_MOTION_EASINGS as readonly string[]).includes(value);
 }
 
-export function readPhiMotionEasing<TFallback extends PhiMotionEasing | undefined>(
+/**
+ * A stored curve, or nothing where none was stored.
+ *
+ * A present value that is not one of the five throws rather than quietly becoming the theme's. An
+ * animation that ignores what somebody wrote is harder to notice than one that refuses to start.
+ */
+export function readPhiMotionEasing<TWhenAbsent extends PhiMotionEasing | undefined>(
   value: unknown,
-  fallback: TFallback,
-): PhiMotionEasing | TFallback {
-  return isPhiMotionEasing(value) ? value : fallback;
+  whenAbsent: TWhenAbsent,
+): PhiMotionEasing | TWhenAbsent {
+  if (value === undefined || value === null) return whenAbsent;
+  if (!isPhiMotionEasing(value)) {
+    throw new Error(
+      `Invalid Phi motion easing ${JSON.stringify(value)}. ` +
+      `Expected one of ${PHI_MOTION_EASINGS.join(", ")}.`,
+    );
+  }
+  return value;
 }
 
 /** The vocabulary as a picker offers it. The labels are the keywords: they are what a designer says. */
@@ -50,10 +63,23 @@ export const PHI_MOTION_EASING_FIELD_OPTIONS = PHI_MOTION_EASINGS.map(
 export const PHI_SEQUENCE_TRANSITION_MIN_MS = 100;
 export const PHI_SEQUENCE_TRANSITION_MAX_MS = 600_000;
 
-export function clampPhiSequenceTransitionMs(value: unknown, fallbackMs: number): number {
-  const requested = typeof value === "number" && Number.isFinite(value) ? value : fallbackMs;
+/**
+ * A stored length brought into range.
+ *
+ * Clamping is the stated rule and not a rescue: the bounds are what the setting means. Anything that
+ * is not a number throws instead, because a duration of "fast" is a mistake in the document rather
+ * than a value to interpret -- and a caller with no value at all does not call this, it uses its own
+ * default, so there is no second argument here to hide an absent one behind.
+ */
+export function clampPhiSequenceTransitionMs(value: unknown): number {
+  if (typeof value !== "number" || !Number.isFinite(value)) {
+    throw new Error(
+      `Invalid Phi sequence transition duration ${JSON.stringify(value)}. ` +
+      "Expected a number of milliseconds.",
+    );
+  }
   return Math.min(
     PHI_SEQUENCE_TRANSITION_MAX_MS,
-    Math.max(PHI_SEQUENCE_TRANSITION_MIN_MS, Math.round(requested)),
+    Math.max(PHI_SEQUENCE_TRANSITION_MIN_MS, Math.round(value)),
   );
 }
