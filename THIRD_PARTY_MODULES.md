@@ -696,12 +696,13 @@ navigation descriptor injects its item under the mount's exported container sepa
 in Builder changes presentation only, never the route path. A mount must be declared by the target Area and
 is never inferred from an existing path collision.
 
-Design direction: the derived segment is a collision-resistant fallback, not the intended public shape. The
-approved target is a Site-owned base path — the descriptor proposes one, the operator confirms or overrides
-it when the Module is activated, and the persisted value feeds route compilation. A Module must therefore
-not treat its effective path as derivable from its own id, and must reference its own pages through
-`presetKey` rather than through a literal path. See the `@phis/server` backlog item "Make Module route paths
-Site-owned and add the public SEO surface".
+Design direction: the derived `+` segment goes away. Outside Public, a Module's routes will live under its
+own package — `/acme/shop/…` — where package names make collisions impossible and nothing is indexed, so a
+mount becomes a navigation grouping rather than a path composition. Public keeps no namespace at all, and is
+the only place a path can be contested; that is settled when a Module is enabled for an Area. A Module must
+therefore not treat its effective path as derivable from its own id, and must reference its own pages through
+`presetKey` rather than through a literal path. See the `@phis/server` backlog item "Give every Area route a
+package namespace, and settle Public path collisions".
 
 ## 8. Export Client and Authoring manifests
 
