@@ -133,6 +133,7 @@ import {
 import {
   PHI_SPACER_WIDGET_DEFINITION,
 } from "./widgets/spacer/config";
+import { PHI_GALLERY_WIDGET_DEFINITION } from "./widgets/gallery/config";
 import {
   PHI_TAB_BAR_WIDGET_DEFINITION,
 } from "../../../components/widgets/config/stack-tabs";
@@ -328,6 +329,10 @@ export default createPhiAuthoringWidgetModule([
   definePhiAuthoringWidgetModuleLoader(
     PHI_SIMPLE_TEXT_WIDGET_DEFINITION,
     () => import("./widgets/simple-text/authoring").then((module) => module.PHI_SIMPLE_TEXT_WIDGET_BUILDER_PLUGIN),
+  ),
+  definePhiAuthoringWidgetModuleLoader(
+    PHI_GALLERY_WIDGET_DEFINITION,
+    () => import("./widgets/gallery/authoring").then((module) => module.PHI_GALLERY_WIDGET_BUILDER_PLUGIN),
   ),
   definePhiAuthoringWidgetModuleLoader(
     PHI_SPACER_WIDGET_DEFINITION,

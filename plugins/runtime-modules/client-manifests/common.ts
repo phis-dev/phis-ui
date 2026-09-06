@@ -173,6 +173,13 @@ export const PHI_COMMON_RUNTIME_MODULE_RENDER_CLIENT_MANIFEST =
       ),
     ],
     [
+      PhiCmsWidgetType.Gallery,
+      definePhiRuntimeModuleRenderClientLoader(
+        () => import("../core/widgets/gallery/client")
+          .then((module) => module.PhiGalleryWidget),
+      ),
+    ],
+    [
       PhiCmsWidgetType.Spacer,
       definePhiRuntimeModuleRenderClientLoader(
         () => import("../core/widgets/spacer/client")

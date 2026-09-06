@@ -135,6 +135,7 @@ import {
 import {
   PHI_SPACER_WIDGET_DEFINITION,
 } from "./widgets/spacer/config";
+import { PHI_GALLERY_WIDGET_DEFINITION } from "./widgets/gallery/config";
 import {
   PHI_TAB_BAR_WIDGET_DEFINITION,
 } from "../../../components/widgets/config/stack-tabs";
@@ -470,6 +471,13 @@ export const PHI_RUNTIME_MODULE_WIDGETS: readonly PhiRuntimeModuleWidgetDefiniti
     renderPolicies: {"runtime":"custom","preview":"custom","authoring":"custom"},
     loadRuntime: () => import("./widgets/simple-text/plugin").then((module) => module.PHI_SIMPLE_TEXT_WIDGET_PLUGIN),
     loadPreview: () => import("./widgets/simple-text/plugin").then((module) => module.PHI_SIMPLE_TEXT_WIDGET_PLUGIN),
+  }),
+  defineFirstPartyWidget({
+    definition: PHI_GALLERY_WIDGET_DEFINITION,
+    ownerModuleId: PHI_CORE_RUNTIME_MODULE_ID,
+    renderPolicies: {"runtime":"custom","preview":"custom","authoring":"custom"},
+    loadRuntime: () => import("./widgets/gallery/plugin").then((module) => module.PHI_GALLERY_WIDGET_PLUGIN),
+    loadPreview: () => import("./widgets/gallery/plugin").then((module) => module.PHI_GALLERY_WIDGET_PLUGIN),
   }),
   defineFirstPartyWidget({
     definition: PHI_SPACER_WIDGET_DEFINITION,

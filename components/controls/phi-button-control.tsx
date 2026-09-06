@@ -21,6 +21,8 @@ export type PhiButtonControlProps = {
   tooltip?: ReactNode;
   icon?: ReactNode;
   type?: PhiButtonType;
+  /** A round button is what an icon on its own wants, over a picture or in a toolbar. */
+  shape?: ButtonProps["shape"];
   danger?: boolean;
   disabled?: boolean;
   loading?: boolean;
@@ -38,6 +40,7 @@ export function PhiButtonControl({
   tooltip,
   icon,
   type = "default",
+  shape,
   danger,
   disabled,
   loading,
@@ -55,6 +58,7 @@ export function PhiButtonControl({
     <Button
       aria-label={ariaLabel}
       type={type}
+      shape={shape}
       danger={danger}
       disabled={disabled || (!onClick && htmlType !== "submit")}
       loading={loading}
