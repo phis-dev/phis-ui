@@ -132,6 +132,15 @@ export const PHI_CAROUSEL_LAYOUT_DEFAULTS: PhiLayoutDefaults = {
     transition: "slide",
     visibleSlots: 1,
     windowAnchor: "start",
+    /*
+     * Arrows, not dots, and not both.
+     *
+     * A Carousel's slots are authored blocks rather than pictures: there are a handful of them, not
+     * thirty, so a row of dots buys little and costs a strip of vertical space under content that
+     * was laid out to fill its box. Arrows sit over the slots and take none. Both are one setting
+     * away either way.
+     */
+    controls: "arrows",
     loop: false,
 };
 const PHI_CAROUSEL_LAYOUT_PANEL_PRESET = {

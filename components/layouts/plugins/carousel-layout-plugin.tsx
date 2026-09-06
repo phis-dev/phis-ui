@@ -71,6 +71,7 @@ export const PHI_CAROUSEL_LAYOUT_PLUGIN: PhiCmsLayoutPlugin<PhiCmsCarouselLayout
       transitionDurationMs={config.transitionDurationMs}
       transitionEasing={config.transitionEasing}
       slotGap={config.slotGap}
+      controls={config.controls}
       loop={config.loop}
       autoplayMs={config.autoplayMs}
       lookahead={config.lookahead}

@@ -320,6 +320,8 @@ export type PhiCmsCarouselLayoutConfig = PhiCmsLayerBase & {
   transitionDurationMs?: number;
   transitionEasing?: PhiMotionEasing;
   slotGap?: string;
+  /** Which of its own controls the Carousel draws. Pager Widgets work regardless of this. */
+  controls?: "none" | "arrows" | "dots" | "both";
   loop?: boolean;
   /** Absent or zero means it does not move on its own. */
   autoplayMs?: number;
@@ -689,6 +691,7 @@ export function parsePhiCmsCarouselLayoutConfig(
   const visibleSlots = readCarouselCount(config.visibleSlots, "visibleSlots", 1);
   const windowAnchor = readCarouselMember(config.windowAnchor, PHI_SEQUENCE_ANCHORS, "windowAnchor");
   const transition = readCarouselMember(config.transition, PHI_SEQUENCE_TRANSITIONS, "transition");
+  const controls = readCarouselMember(config.controls, ["none", "arrows", "dots", "both"] as const, "controls");
   const loop = readCarouselFlag(config.loop, "loop");
   const autoplayMs = readCarouselCount(config.autoplayMs, "autoplayMs", 0);
   const lookahead = readCarouselCount(config.lookahead, "lookahead", 0);
@@ -714,6 +717,7 @@ export function parsePhiCmsCarouselLayoutConfig(
         transitionEasing: readPhiMotionEasing(config.transitionEasing, undefined),
       }),
       slotGap: readString(config.slotGap),
+      ...(controls === undefined ? {} : { controls }),
       ...(loop === undefined ? {} : { loop }),
       // Zero is how "does not move on its own" is written, so it is the one number below the floor
       // that means something.

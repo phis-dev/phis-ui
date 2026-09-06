@@ -20,6 +20,7 @@ describe("what a Carousel accepts", () => {
       transitionDurationMs: 480,
       transitionEasing: "ease-out",
       slotGap: "16px",
+      controls: "both",
       loop: true,
       autoplayMs: 5000,
       lookahead: 2,
@@ -30,6 +31,7 @@ describe("what a Carousel accepts", () => {
       transitionDurationMs: 480,
       transitionEasing: "ease-out",
       slotGap: "16px",
+      controls: "both",
       loop: true,
       autoplayMs: 5000,
       lookahead: 2,
@@ -42,6 +44,8 @@ describe("what a Carousel accepts", () => {
     expect(parsed.transition).toBe("slide");
     expect(parsed.visibleSlots).toBe(1);
     expect(parsed.windowAnchor).toBe("start");
+    // Arrows rather than dots: a handful of authored blocks, and no strip of space under them.
+    expect(parsed.controls).toBe("arrows");
     // No duration means the theme's pace, not a number this parser invented.
     expect(parsed.transitionDurationMs).toBeUndefined();
     expect(parsed.transitionEasing).toBeUndefined();
@@ -67,6 +71,8 @@ describe("what a Carousel refuses", () => {
       .toThrow(/Invalid Carousel windowAnchor/);
     expect(() => parsePhiCmsCarouselLayoutConfig({ transitionEasing: "springy" }))
       .toThrow(/Invalid Phi motion easing/);
+    expect(() => parsePhiCmsCarouselLayoutConfig({ controls: "buttons" }))
+      .toThrow(/Invalid Carousel controls/);
   });
 
   it("refuses a count that is not one", () => {

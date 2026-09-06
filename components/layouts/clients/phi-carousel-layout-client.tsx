@@ -1,7 +1,11 @@
 "use client";
 
+import { LeftOutlined, RightOutlined } from "@ant-design/icons";
+import { theme } from "antd";
 import type { CSSProperties, ReactNode } from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+
+import { PhiButtonControl } from "../../controls/phi-button-control";
 
 import type { PhiMotionEasing } from "../../../helpers/motion";
 import {
@@ -63,6 +67,15 @@ export type PhiCarouselLayoutProps = Omit<PhiBaseLayoutProps, "slots"> & {
   transitionEasing?: PhiMotionEasing;
   slotGap?: number | string;
   loop?: boolean;
+  controls?: "none" | "arrows" | "dots" | "both";
+  /**
+   * The words a screen reader says on the arrows.
+   *
+   * Passed in rather than translated here: a Layout client has no translation of its own, and the
+   * dots need none -- they are named after the slots, which carry whatever the person who authored
+   * them wrote.
+   */
+  controlLabels?: { previous?: string; next?: string };
   /** Absent or zero means it does not move on its own. */
   autoplayMs?: number;
   lookahead?: number;
@@ -84,6 +97,8 @@ export function PhiCarouselLayout({
   transitionEasing,
   slotGap = 0,
   loop = false,
+  controls = "arrows",
+  controlLabels,
   autoplayMs = 0,
   lookahead = 1,
   slotAnchor = "center",
@@ -117,6 +132,7 @@ export function PhiCarouselLayout({
     editSlotAnchor = "center",
   } = layoutProps;
   const isEditMode = renderMode === "editor";
+  const { token } = theme.useToken();
   const {
     activeIndex,
     slotMeta: resolvedSlotMeta,
@@ -157,10 +173,14 @@ export function PhiCarouselLayout({
     if (entry) setActiveIndex(entry.slotIndex);
   }, [setActiveIndex, track]);
 
-  const advance = useCallback(() => {
-    const next = trackIndex + span;
-    stepTo(next > lastTrackStart ? (loop ? 0 : lastTrackStart) : next);
+  const step = useCallback((direction: 1 | -1) => {
+    const next = trackIndex + direction * span;
+    if (next > lastTrackStart) return stepTo(loop ? 0 : lastTrackStart);
+    if (next < 0) return stepTo(loop ? lastTrackStart : 0);
+    return stepTo(next);
   }, [lastTrackStart, loop, span, stepTo, trackIndex]);
+
+  const advance = useCallback(() => step(1), [step]);
 
   /*
    * Movement nobody asked for, and the two ways to decline it.
@@ -220,17 +240,36 @@ export function PhiCarouselLayout({
   }
 
   const resolvedLayoutInset = resolvePhiLayoutInset(chrome);
+  /*
+   * One dot per window, not per slot: with a wide window the slots move a window at a time, so a dot
+   * per slot would offer positions the Carousel never stops at. Each is named after the first slot it
+   * brings into view -- the label a person gave the block, which needs no translating.
+   */
+  const pageCount = Math.ceil(track.length / span);
+  const currentPage = Math.min(Math.floor(trackIndex / span), Math.max(pageCount - 1, 0));
+  const slotLabelAt = (position: number) => {
+    const entry = track[position];
+    const meta = entry && resolvedSlotMeta.find((candidate) => candidate.index === entry.slotIndex);
+    return meta?.label ?? `Slot ${position + 1}`;
+  };
+  const showArrows = (controls === "arrows" || controls === "both") && track.length > span;
+  const showDots = (controls === "dots" || controls === "both") && pageCount > 1;
+  const atStart = trackIndex <= 0;
+  const atEnd = trackIndex >= lastTrackStart;
 
   return (
     <div
       data-layout-kind={layoutKind}
       data-phi-carousel-transition={transition}
+      data-phi-carousel-controls={controls}
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
       onFocusCapture={() => setPaused(true)}
       onBlurCapture={() => setPaused(false)}
       style={{
         position: "relative",
+        display: "flex",
+        flexDirection: "column",
         width: "100%",
         height: "100%",
         minWidth: 0,
@@ -241,29 +280,76 @@ export function PhiCarouselLayout({
       }}
     >
       {backgroundLayer}
-      <PhiSequenceViewport
-        items={track.map((entry) => entry.slot)}
-        activeIndex={trackIndex}
-        visibleCount={span}
-        anchor={windowAnchor}
-        transition={transition}
-        {...(transitionDurationMs === undefined ? {} : { durationMs: transitionDurationMs })}
-        {...(transitionEasing === undefined ? {} : { easing: transitionEasing })}
-        lookahead={lookahead}
-        gap={slotGap}
-        style={{ width: "100%", height: "100%", minHeight: 0 }}
-        renderItem={(slot) => (
-          <PhiLayoutAnchoredOverlay
-            anchor={slotAnchor}
-            positionMode="flow"
-            fillAvailableInline
-            fillAvailableBlock
-            inset={resolvedLayoutInset}
-          >
-            {slot}
-          </PhiLayoutAnchoredOverlay>
-        )}
-      />
+      <div style={{ position: "relative", flex: "1 1 auto", minWidth: 0, minHeight: 0 }}>
+        <PhiSequenceViewport
+          items={track.map((entry) => entry.slot)}
+          activeIndex={trackIndex}
+          visibleCount={span}
+          anchor={windowAnchor}
+          transition={transition}
+          {...(transitionDurationMs === undefined ? {} : { durationMs: transitionDurationMs })}
+          {...(transitionEasing === undefined ? {} : { easing: transitionEasing })}
+          lookahead={lookahead}
+          gap={slotGap}
+          style={{ width: "100%", height: "100%", minHeight: 0 }}
+          renderItem={(slot) => (
+            <PhiLayoutAnchoredOverlay
+              anchor={slotAnchor}
+              positionMode="flow"
+              fillAvailableInline
+              fillAvailableBlock
+              inset={resolvedLayoutInset}
+            >
+              {slot}
+            </PhiLayoutAnchoredOverlay>
+          )}
+        />
+        {showArrows ? (
+          <>
+            <div style={{ position: "absolute", insetBlockStart: "50%", insetInlineStart: token.marginXS, transform: "translateY(-50%)", zIndex: 1 }}>
+              <PhiButtonControl
+                icon={<LeftOutlined />}
+                ariaLabel={controlLabels?.previous ?? "Previous"}
+                shape="circle"
+                disabled={atStart && !loop}
+                onClick={() => step(-1)}
+              />
+            </div>
+            <div style={{ position: "absolute", insetBlockStart: "50%", insetInlineEnd: token.marginXS, transform: "translateY(-50%)", zIndex: 1 }}>
+              <PhiButtonControl
+                icon={<RightOutlined />}
+                ariaLabel={controlLabels?.next ?? "Next"}
+                shape="circle"
+                disabled={atEnd && !loop}
+                onClick={() => step(1)}
+              />
+            </div>
+          </>
+        ) : null}
+      </div>
+      {showDots ? (
+        <div style={{ display: "flex", flex: "0 0 auto", justifyContent: "center", gap: token.marginXXS, paddingBlockStart: token.marginXS }}>
+          {Array.from({ length: pageCount }, (_, page) => (
+            <button
+              key={page}
+              type="button"
+              aria-label={slotLabelAt(page * span)}
+              aria-current={page === currentPage || undefined}
+              onClick={() => stepTo(Math.min(page * span, lastTrackStart))}
+              style={{
+                width: page === currentPage ? token.controlHeightXS : token.marginXS,
+                height: token.marginXS,
+                padding: 0,
+                border: "none",
+                cursor: "pointer",
+                borderRadius: token.borderRadiusSM,
+                background: page === currentPage ? token.colorPrimary : token.colorFill,
+                transition: `width ${token.motionDurationMid}, background ${token.motionDurationMid}`,
+              }}
+            />
+          ))}
+        </div>
+      ) : null}
     </div>
   );
 }

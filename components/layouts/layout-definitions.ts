@@ -327,6 +327,17 @@ export const PHI_CAROUSEL_LAYOUT_DEFINITION = {
       options: [...PHI_MOTION_EASING_FIELD_OPTIONS],
     },
     { key: "slotGap", type: "string", label: "Slot Gap" },
+    {
+      key: "controls",
+      type: "choice",
+      label: "Controls",
+      options: [
+        { value: "arrows", label: "Arrows" },
+        { value: "dots", label: "Dots" },
+        { value: "both", label: "Arrows and dots" },
+        { value: "none", label: "None" },
+      ],
+    },
     { key: "loop", type: "boolean", label: "Wrap Around" },
     {
       // Zero is the one value below the floor that means something: it does not move on its own.
