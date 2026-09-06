@@ -3,7 +3,7 @@
 import { Button, Space, Typography } from "antd";
 import { LeftOutlined, RightOutlined } from "@ant-design/icons";
 import type { CSSProperties, ReactNode } from "react";
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 
 import {
   clampPhiSequenceTransitionMs,
@@ -24,18 +24,7 @@ import {
 import { isRenderablePhiNode } from "../phi-layout-scaffold-utils";
 import { PhiLayoutAnchoredOverlay } from "./phi-layout-anchored-overlay";
 import type { PhiAnchorWidgetPlacement } from "../../controls/phi-anchor-control-contract";
-import {
-  usePhiSignalDispatcher,
-  usePhiSignalListener,
-} from "../../runtime/runtime-signal-bus";
-import { usePhiSignalIdentity } from "../../runtime/runtime-signal-identity";
-import { PHI_SIGNAL_VALUE_SCHEMAS, createPhiSignalAddress } from "../../../types/signals";
-import {
-  PHI_STACK_ACTIVE_SLOT_KEY_SIGNAL_CHANNEL,
-  PHI_STACK_ACTIVE_SLOT_SIGNAL_CHANNEL,
-  PHI_STACK_META_SIGNAL_CHANNEL,
-  type PhiStackSignalSlotMeta,
-} from "../stack-signals";
+import { usePhiSlotSequence } from "../use-phi-slot-sequence";
 import { usePhiConfig } from "../../root/phi-config-provider";
 import {
   isPhiLayoutAuthoringRender,
@@ -66,21 +55,6 @@ export type PhiStackLayoutProps = Omit<PhiBaseLayoutProps, "slots"> & {
   style?: CSSProperties;
 };
 
-function resolvePhiStackActiveIndex(
-  slotKeys: string[],
-  activeSlotKey?: string,
-  defaultActiveSlotKey?: string,
-) {
-  const fallbackKey = defaultActiveSlotKey ?? slotKeys[0];
-  const resolvedKey = activeSlotKey ?? fallbackKey;
-  const index = slotKeys.indexOf(resolvedKey ?? "");
-
-  return index >= 0 ? index : 0;
-}
-
-function clampPhiStackSlotIndex(index: number, slotCount: number) {
-  return Math.min(Math.max(index, 0), Math.max(slotCount - 1, 0));
-}
 
 export function PhiStackLayout({
   slots,
@@ -103,9 +77,6 @@ export function PhiStackLayout({
     capabilities: layoutProps.capabilities,
   });
   const { token } = usePhiConfig();
-  const dispatchSignal = usePhiSignalDispatcher();
-  const signalIdentity = usePhiSignalIdentity();
-  const signalScope = signalIdentity.scope ?? "page";
   const {
     blockId,
     renderMode,
@@ -126,110 +97,21 @@ export function PhiStackLayout({
     editRenderInsertControl,
     editSlotAnchor = "center",
   } = layoutProps;
-  const activeIndex = resolvePhiStackActiveIndex(slotKeys, activeSlotKey, defaultActiveSlotKey);
   const isEditMode = renderMode === "editor";
-  const [controlledActiveSlot, setControlledActiveSlot] = useState<{
-    key?: string;
-    index: number;
-  } | null>(null);
   const outgoingSlotRef = useRef<HTMLDivElement | null>(null);
   const fadeAnimationRef = useRef<Animation | null>(null);
-  const stackSignalAddress = blockId == null ? null : createPhiSignalAddress("cms", blockId);
-  const currentActiveIndex =
-    controlledActiveSlot && controlledActiveSlot.key === stackSignalAddress
-      ? controlledActiveSlot.index
-      : activeIndex;
-  const resolvedSlotMeta = useMemo<PhiStackSignalSlotMeta[]>(
-    () =>
-      slotKeys.map((key, index) => {
-        const meta = slotMeta?.find((candidate) => candidate.slotIndex === index || candidate.key === key);
-        const child = slots[index] ?? null;
-
-        return {
-          index,
-          key,
-          label: meta?.label?.trim() || key,
-          hasContent: meta?.hasContent ?? isRenderablePhiNode(child),
-        };
-      }),
-    [slotKeys, slotMeta, slots],
-  );
-
-  const publishStackMeta = useCallback(() => {
-    if (!stackSignalAddress) {
-      return;
-    }
-
-    dispatchSignal({
-      scope: signalScope,
-      channel: PHI_STACK_META_SIGNAL_CHANNEL,
-      action: "change",
-      value: {
-        activeSlotIndex: clampPhiStackSlotIndex(currentActiveIndex, slots.length),
-        slots: resolvedSlotMeta,
-      },
-      valueType: "json",
-      valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.stackMeta,
-      sender: stackSignalAddress,
-      receiver: "broadcast",
-    });
-  }, [currentActiveIndex, dispatchSignal, resolvedSlotMeta, signalScope, slots.length, stackSignalAddress]);
-
-  usePhiSignalListener(
-    (signal) => {
-      if (!stackSignalAddress) {
-        return;
-      }
-      if (signal.receiver !== stackSignalAddress) {
-        return;
-      }
-
-      if (signal.channel === PHI_STACK_ACTIVE_SLOT_SIGNAL_CHANNEL && signal.action === "change") {
-        const activeSlotIndex = typeof signal.value === "number" ? signal.value : null;
-        if (activeSlotIndex == null) {
-          return;
-        }
-        setControlledActiveSlot({
-          key: stackSignalAddress,
-          index: clampPhiStackSlotIndex(activeSlotIndex, slots.length),
-        });
-        return;
-      }
-
-      if (signal.channel === PHI_STACK_ACTIVE_SLOT_KEY_SIGNAL_CHANNEL && signal.action === "change") {
-        const nextIndex = typeof signal.value === "string" ? slotKeys.indexOf(signal.value) : -1;
-        if (nextIndex < 0) {
-          return;
-        }
-        setControlledActiveSlot({
-          key: stackSignalAddress,
-          index: nextIndex,
-        });
-        return;
-      }
-
-      if (signal.channel === PHI_STACK_META_SIGNAL_CHANNEL && signal.action === "activate") {
-        publishStackMeta();
-      }
-    },
-    useMemo(
-      () => ({
-        scopes: [signalScope],
-        channels: [
-          PHI_STACK_META_SIGNAL_CHANNEL,
-          PHI_STACK_ACTIVE_SLOT_SIGNAL_CHANNEL,
-          PHI_STACK_ACTIVE_SLOT_KEY_SIGNAL_CHANNEL,
-        ],
-      }),
-      [signalScope],
-    ),
-  );
-
-  useEffect(() => {
-    publishStackMeta();
-  }, [publishStackMeta]);
-
-  const resolvedActiveIndex = clampPhiStackSlotIndex(currentActiveIndex, slots.length);
+  const {
+    activeIndex: resolvedActiveIndex,
+    slotMeta: resolvedSlotMeta,
+    setActiveIndex,
+  } = usePhiSlotSequence({
+    blockId,
+    slots,
+    slotKeys,
+    ...(slotMeta ? { slotLabels: slotMeta } : {}),
+    ...(activeSlotKey === undefined ? {} : { activeSlotKey }),
+    ...(defaultActiveSlotKey === undefined ? {} : { defaultActiveSlotKey }),
+  });
 
   /*
    * Which slots have ever been wanted, which is what `lazy-keep` keeps.
@@ -327,7 +209,7 @@ export function PhiStackLayout({
 
   if (isEditMode) {
     const editableSlotCount = Math.max(slots.length, 1);
-    const currentIndex = clampPhiStackSlotIndex(currentActiveIndex, editableSlotCount);
+    const currentIndex = Math.min(resolvedActiveIndex, editableSlotCount - 1);
     const currentSlot = slots[currentIndex] ?? null;
     const hasCurrentSlot = isRenderablePhiNode(currentSlot);
     const currentSlotKey = slotKeys[currentIndex] ?? `slot_${currentIndex + 1}`;
@@ -358,10 +240,7 @@ export function PhiStackLayout({
     });
 
     const setCurrentIndex = (nextIndex: number) => {
-      setControlledActiveSlot({
-        key: stackSignalAddress ?? undefined,
-        index: clampPhiStackSlotIndex(nextIndex, editableSlotCount),
-      });
+      setActiveIndex(nextIndex);
     };
 
     return (
