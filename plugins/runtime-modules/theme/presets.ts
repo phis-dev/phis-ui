@@ -6,7 +6,6 @@ export const PHI_THEME_RUNTIME_MODULE_ROUTES = [{
   presetKey: "builder-theme-page",
   presetVersion: 1,
   area: "builder",
-  pageKey: "theme",
   title: "Theme",
   path: "/theme",
   navigation: [{

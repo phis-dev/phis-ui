@@ -652,9 +652,10 @@ Server/client boundary for those layers:
 Area-shell, route, and theme presets are separate descriptor families. The generic preset-kind registry,
 multi-target contributions, and arbitrary route plugins are not v1 extension surfaces. Every descriptor
 has one stable `(ownerModuleId, presetKey)` identity and a positive integer version. A route preset belongs
-to exactly one Area, one stable Area-local `pageKey`, and one immutable effective normalized path. `pageKey`
-is the Builder/Draft identity (for example `home`), while the effective `path` is the routed URL (for
-example `/`); neither is derived from the other. Duplicate `pageKey` values within one Area are rejected.
+to exactly one Area and one effective normalized path. The Builder addresses it by
+`createPhiPresetCmsPageId(ownerModuleId, presetKey)`: a hash of the pair the server already stores for a
+Module Page, so it is recomputable rather than allocated, unique across Modules, and unmoved when a path is
+reassigned. A Site Page is addressed by its path, which is what `site_page_scopes` keeps for it.
 
 Outside Public, the descriptor compiler serves a route under its owner's package: `@acme/status/modules/auth`
 declaring `/providers` answers at `/acme/status/providers`. Two packages therefore cannot contest an address.
@@ -667,11 +668,12 @@ mount composes navigation, never paths.
 
 Route paths are exact or contain at most one whole-segment parameter such as `/news/:id`. Catch-alls,
 optional segments, regexes, arbitrary matcher callbacks, and multiple dynamic segments are rejected.
-The metadata-only descriptor compiler validates Area base ownership, route-mount exports, shell and route
-versions, module ownership, route syntax, active-set collisions after mount expansion, theme identity, and
-Area-shell composition before any tree loader runs. Its active route table resolves requests by effective
-`path` and Builder targets independently by `pageKey`; callers must use the matching resolver instead of
-treating either value as the other.
+The metadata-only descriptor compiler validates route-mount exports, shell and route versions, module
+ownership, route syntax, theme identity, and Area-shell composition before any tree loader runs. Its active
+route table resolves requests by effective `path` and Builder targets independently by Page id; callers must
+use the matching resolver instead of treating either value as the other. Building that table is a read and
+never refuses: where two active routes want one address, the first claim answers and the second is absent,
+which hides its navigation entry.
 
 Preset templates contain no numeric CMS node IDs. Their structure and wiring use stable local node keys.
 The central codec derives one canonical 96-bit `instanceId` from

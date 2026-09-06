@@ -80,7 +80,7 @@ function buildInstalledShellDraftsForArea(
       runtime,
       installedTree,
       area,
-      "home",
+      null,
       PHI_BUILDER_SHELL_REGION_KEYS,
     );
   });
@@ -153,7 +153,7 @@ const buildShellDraftsForArea = cache(async function buildShellDraftsForArea(
       runtime,
       draftPreset.preset,
       area,
-      "home",
+      null,
       PHI_BUILDER_SHELL_REGION_KEYS,
     );
   }
@@ -178,7 +178,7 @@ const buildShellDraftsForArea = cache(async function buildShellDraftsForArea(
       runtime,
       resolvedPreset.preset,
       area,
-      "home",
+      null,
       PHI_BUILDER_SHELL_REGION_KEYS,
     );
   }
@@ -192,7 +192,7 @@ const buildShellDraftsForArea = cache(async function buildShellDraftsForArea(
       runtime,
     installedTree,
     area,
-    "home",
+    null,
     PHI_BUILDER_SHELL_REGION_KEYS,
   );
 });

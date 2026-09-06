@@ -18,7 +18,6 @@ const createDescriptor = (
   presetKey,
   presetVersion: 3,
   area: "public",
-  pageKey: presetKey,
   path,
   title: presetKey,
   loadTree: async () => {

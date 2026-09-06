@@ -1,6 +1,8 @@
 import { readPhiCmsNavigationTargetPath } from "../helpers/navigation-target";
 import assert from "node:assert/strict";
 
+import { createPhiPresetCmsPageId } from "../types/cms-instance-id";
+
 import { PhiBaseRole } from "../constants/phi-base-roles";
 import { PHI_FIRST_PARTY_RUNTIME_MODULE_CATALOG } from "../plugins/runtime-modules/catalog";
 import { PHI_PUBLIC_RUNTIME_MODULE_CATALOG } from "../plugins/runtime-modules/area-catalogs/public";
@@ -12,7 +14,7 @@ import {
   resolvePhiCmsActiveNavigationSurfaces,
   resolvePhiCmsDescriptorCatalog,
   resolvePhiCmsRoutePreset,
-  resolvePhiCmsRoutePresetByPageKey,
+  resolvePhiCmsRoutePresetByPageId,
 } from "../plugins/runtime-modules/descriptor-compiler";
 import type {
   PhiCmsCompiledDescriptorCatalog,
@@ -174,8 +176,13 @@ const publicBaseRoutes = compilePhiCmsActiveRouteTable({
   area: "public",
   activeModuleIds: publicBaseModuleIds,
 });
-assert.equal(resolvePhiCmsRoutePreset(publicBaseRoutes, "/")?.descriptor.pageKey, "home");
-assert.equal(resolvePhiCmsRoutePresetByPageKey(publicBaseRoutes, "home")?.descriptor.path, "/");
+// The Public landing answers at `/` and is addressed by its preset identity, not by a second name.
+const publicWelcomeId = createPhiPresetCmsPageId({
+  ownerModuleId: PHI_PUBLIC_RUNTIME_MODULE_ID,
+  presetKey: "public-welcome-page",
+});
+assert.equal(resolvePhiCmsRoutePreset(publicBaseRoutes, "/")?.descriptor.presetKey, "public-welcome-page");
+assert.equal(resolvePhiCmsRoutePresetByPageId(publicBaseRoutes, publicWelcomeId)?.descriptor.path, "/");
 assert.equal(resolvePhiCmsRoutePreset(publicBaseRoutes, "/contact")?.descriptor.ownerModuleId, PHI_PUBLIC_RUNTIME_MODULE_ID);
 assert.equal(resolvePhiCmsRoutePreset(publicBaseRoutes, "/register"), null);
 const publicBaseHeader = resolvePhiCmsActiveNavigationSurfaces({
@@ -469,7 +476,6 @@ const createTestRoute = (
   presetKey,
   presetVersion: 1,
   area: "public",
-  pageKey: presetKey,
   path,
   title: presetKey,
   loadTree: async () => {
@@ -513,13 +519,20 @@ const precedenceTable = compilePhiCmsActiveRouteTable({
 });
 assert.equal(resolvePhiCmsRoutePreset(precedenceTable, "/news/archive")?.descriptor, exactRoute);
 assert.deepEqual(resolvePhiCmsRoutePreset(precedenceTable, "/news/42")?.params, { id: "42" });
-assert.throws(
-  () => compilePhiCmsActiveRouteTable({
-    catalog: buildTestCatalog([dynamicRoute, createTestRoute("article-slug", "/news/:slug")]),
-    area: "public",
-    activeModuleIds: activeTestModules,
-  }),
-  /dynamic route collision/,
+// Two active routes wanting one address is a state the write allowed; the read answers with the first
+// claim rather than refusing, and the second is simply not in the table.
+const contestedTable = compilePhiCmsActiveRouteTable({
+  catalog: buildTestCatalog([dynamicRoute, createTestRoute("article-slug", "/news/:slug")]),
+  area: "public",
+  activeModuleIds: activeTestModules,
+});
+assert.equal(resolvePhiCmsRoutePreset(contestedTable, "/news/42")?.descriptor, dynamicRoute);
+assert.equal(
+  resolvePhiCmsRoutePresetByPageId(
+    contestedTable,
+    createPhiPresetCmsPageId({ ownerModuleId: TEST_MODULE_ID, presetKey: "article-slug" }),
+  )?.descriptor.presetKey,
+  "article-slug",
 );
 
 console.log(

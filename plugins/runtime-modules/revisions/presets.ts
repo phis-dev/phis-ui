@@ -6,7 +6,6 @@ export const PHI_REVISIONS_RUNTIME_MODULE_ROUTES = [{
   presetKey: "builder-revisions-page",
   presetVersion: 1,
   area: "builder",
-  pageKey: "revisions",
   title: "Revisions",
   path: "/revisions",
   navigation: [{

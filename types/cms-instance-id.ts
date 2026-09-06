@@ -5,6 +5,8 @@ const PHI_CMS_INSTANCE_ID_ORIGIN_PRESET = 1;
 const PHI_CMS_INSTANCE_ID_ORIGIN_DRAFT = 2;
 const PHI_CMS_INSTANCE_ID_VERSION_SHIFT = 4;
 const PHI_CMS_INSTANCE_ID_ORIGIN_MASK = 0x0f;
+/** The Page itself, not a node inside it -- the one place a Page id differs from a node id. */
+const PHI_CMS_PAGE_NODE_KEY = "page";
 const PHI_CMS_INSTANCE_ID_PATTERN = /^[A-Za-z0-9_-]{16}$/;
 const PHI_CMS_BASE64URL_ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
 const PHI_CMS_MAX_DRAFT_REVISION_ID = 0xffff_ffff_ffff;
@@ -188,6 +190,20 @@ export function createPhiPresetCmsInstanceId({
   bytes[1] = PHI_CMS_INSTANCE_DOMAIN_CODES[domain];
   bytes.set(hashPresetIdentity(identity), 2);
   return encodeBase64Url(bytes) as PhiCmsInstanceId;
+}
+
+/**
+ * A Page's identity, as the Builder carries it.
+ *
+ * The pair a Module Page is stored under -- owner and preset key -- hashed to one opaque token. It is
+ * recomputable rather than allocated, so no row has to exist before a Page can be addressed, and it
+ * never mentions the path: reassigning where a Page answers leaves its drafts exactly where they were.
+ * A Page authored in the Builder has no preset to hash and takes a draft-origin id instead.
+ */
+export function createPhiPresetCmsPageId(
+  identity: Omit<PhiCmsPresetInstanceIdentity, "domain" | "nodeKey">,
+): PhiCmsInstanceId {
+  return createPhiPresetCmsInstanceId({ ...identity, domain: "page", nodeKey: PHI_CMS_PAGE_NODE_KEY });
 }
 
 export function createPhiPresetCmsInstanceIdMap<const TNodeKey extends string>(

@@ -11,7 +11,6 @@ export const PHI_GROUPS_RUNTIME_MODULE_ROUTES = [{
   presetKey: "admin-groups-page",
   presetVersion: 1 + PHI_BASE_PAGE_LAYOUT_VERSION,
   area: "admin",
-  pageKey: "groups",
   title: "Groups",
   // Entry is Developer, which the Core Admin override widens to Admin -- a group is an authorization
   // unit Pages, Navigation, and Assets refer to, so making one is Site administration. A group's own
@@ -37,7 +36,6 @@ export const PHI_GROUPS_RUNTIME_MODULE_ROUTES = [{
   presetKey: "app-groups-page",
   presetVersion: 1 + PHI_BASE_PAGE_LAYOUT_VERSION,
   area: "app",
-  pageKey: "groups",
   title: "Groups",
   // Anyone signed in: the page answers "which groups am I in and what may I do there", and having no
   // group is an answer rather than a reason to hide the page.
@@ -47,7 +45,6 @@ export const PHI_GROUPS_RUNTIME_MODULE_ROUTES = [{
     navKey: "app:sidebar",
     parentItemKey: null,
     // After Home, which is the App's own anchor: a root injection has to name where it goes.
-    after: "@phis/ui/modules/app/nav/home",
     item: {
       itemKey: "@phis/ui/modules/groups/nav/app/groups",
       label: { defaultMessage: "Groups" },

@@ -8,6 +8,7 @@ import type {
   PhiPresetPageNode,
 } from "../../../helpers/cms-page-catalog";
 import type { PhiCmsPresetSource } from "../../../types/cms-module-descriptors";
+import { createPhiPresetCmsPageId } from "../../../types/cms-instance-id";
 
 function humanizePageKey(value: string) {
   const label = value.replace(/[-_]+/g, " ").trim();
@@ -25,17 +26,21 @@ function resolveBuilderArea(area: string): PhiBuilderAreaKey | null {
 
 function insertPageTarget(
   roots: PhiPresetPageNode[],
-  target: { path: string; pageKey: string; title: string; ownerModuleId: PhiRuntimeModuleId; presetKey: string; presetVersion: number },
+  target: { path: string; title: string; ownerModuleId: PhiRuntimeModuleId; presetKey: string; presetVersion: number },
 ) {
   const sourcePreset = {
     ownerModuleId: target.ownerModuleId,
     presetKey: target.presetKey,
     sourcePresetVersion: target.presetVersion,
   } as const;
+  const pageId = createPhiPresetCmsPageId({
+    ownerModuleId: target.ownerModuleId,
+    presetKey: target.presetKey,
+  });
   const segments = target.path.split("/").filter(Boolean);
   if (segments.length === 0) {
     roots.push({
-      key: target.pageKey,
+      key: pageId,
       title: target.title,
       storagePath: target.path,
       sourcePreset,
@@ -55,7 +60,7 @@ function insertPageTarget(
   }
 
   siblings.push({
-    key: target.pageKey,
+    key: pageId,
     title: target.title,
     storagePath: target.path,
     sourcePreset,

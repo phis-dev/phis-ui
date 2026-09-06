@@ -24,7 +24,8 @@ export async function buildPhiProjectedBuilderRegionDrafts<T extends PhiResolved
   runtime: Pick<PhiBlockRuntime, "site" | "phis">,
   tree: T,
   area: PhiDeveloperBuilderArea,
-  pageKey: string,
+  /** Null for the Area shell, whose regions are Area-scoped and name no Page. */
+  pageKey: string | null,
   regionKeys: readonly string[],
 ): Promise<Record<string, PhiDeveloperBuilderRegionDraft>> {
   const assets = await resolvePhiBackgroundAssetProjection({ runtime, trees: [tree] });

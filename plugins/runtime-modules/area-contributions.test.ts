@@ -58,7 +58,6 @@ const APP_ROUTE = {
   presetKey: "app-catalogue-page",
   presetVersion: 1,
   area: "app",
-  pageKey: "catalogue",
   title: "Catalogue",
   path: "/catalogue",
   loadTree: () => Promise.resolve({}),

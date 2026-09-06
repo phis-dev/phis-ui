@@ -13,7 +13,7 @@ export {
   resolvePhiCmsAreaShellPresetBinding,
   resolvePhiCmsDescriptorCatalog,
   resolvePhiCmsRoutePreset,
-  resolvePhiCmsRoutePresetByPageKey,
+  resolvePhiCmsRoutePresetByPageId,
   resolvePhiCmsRoutePresetByIdentity,
   resolvePhiCmsThemePresetBinding,
 } from "../plugins/runtime-modules/descriptor-compiler";

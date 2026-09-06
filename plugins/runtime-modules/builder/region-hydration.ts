@@ -254,7 +254,8 @@ function buildRegionDraft(
 export function buildPhiDeveloperBuilderRegionDraftsFromTree(
   tree: PhiBuilderHydrationTree,
   area: PhiDeveloperBuilderArea,
-  pageKey: string,
+  /** Null for the Area shell, whose regions are Area-scoped and name no Page. */
+  pageKey: string | null,
   regionKeys: readonly PhiBuilderRegionKey[] = BUILDER_REGION_KEYS,
 ) {
   const drafts: Record<string, PhiDeveloperBuilderRegionDraft> = {};

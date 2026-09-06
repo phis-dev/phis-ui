@@ -8,7 +8,6 @@ export const PHI_USER_MANAGEMENT_RUNTIME_MODULE_ROUTES = [{
   presetKey: "admin-users-page",
   presetVersion: 1 + PHI_BASE_PAGE_LAYOUT_VERSION,
   area: "admin",
-  pageKey: "users",
   title: "Users",
   // A Developer reads user management but changes nothing, matching what `phi-server` enforces:
   // GET on /api/site/admin/users takes the developer guard, every mutating method the admin-only

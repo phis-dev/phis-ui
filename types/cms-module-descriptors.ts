@@ -77,8 +77,10 @@ export type PhiCmsAreaOverlayPresetDescriptor = PhiCmsPresetIdentity & {
 export type PhiCmsRoutePresetDescriptor = PhiCmsPresetIdentity & {
   presetVersion: number;
   area: PhiCmsAreaKey;
-  pageKey: string;
-  /** Absolute Area-local path, or a mount-relative path when `mount` is declared. */
+  /**
+   * The Area-local path, before the package namespace outside Public is put in front of it. `/` is an
+   * application for the Area root slot and keeps the address it asks for.
+   */
   path: string;
   mount?: PhiCmsRouteMountReference;
   title: string;
@@ -281,7 +283,8 @@ export type PhiCmsCompiledDescriptorCatalog = {
 
 export type PhiCmsActiveRouteTable = {
   area: PhiCmsAreaKey;
-  byPageKey: ReadonlyMap<string, PhiCmsRoutePresetDescriptor>;
+  /** By the Page identity the Builder carries: a hash of owner and preset key, so never contested. */
+  byPageId: ReadonlyMap<PhiCmsInstanceId, PhiCmsRoutePresetDescriptor>;
   exactByPath: ReadonlyMap<string, PhiCmsRoutePresetDescriptor>;
   dynamic: readonly PhiCmsCompiledRoutePattern[];
 };

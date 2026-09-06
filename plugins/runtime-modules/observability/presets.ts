@@ -8,7 +8,6 @@ export const PHI_OBSERVABILITY_RUNTIME_MODULE_ROUTES = [{
   presetKey: "admin-logs-page",
   presetVersion: 1 + PHI_BASE_PAGE_LAYOUT_VERSION,
   area: "admin",
-  pageKey: "logs",
   title: "Logs",
   accessPolicy: PHI_VIEWER_ACCESS_DEVELOPER_TOOLS,
   path: "/logs",

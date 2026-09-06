@@ -34,7 +34,6 @@ export function buildPhiAreaRootRoutePresetDescriptor({
     presetKey: `${area}-root-page`,
     presetVersion: 1,
     area,
-    pageKey: "root",
     title,
     path: "/",
     ...(accessPolicy ? { accessPolicy } : {}),

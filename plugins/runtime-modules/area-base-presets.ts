@@ -76,7 +76,6 @@ export const PHI_AREA_BASE_RUNTIME_MODULE_ROUTES = [
   {
     ownerModuleId: PHI_PUBLIC_RUNTIME_MODULE_ID,
     presetKey: "public-welcome-page",
-    pageKey: "home",
     presetVersion: 1,
     area: "public",
     title: "Home",
@@ -95,22 +94,9 @@ export const PHI_AREA_BASE_RUNTIME_MODULE_ROUTES = [
     navKey: "app:sidebar",
     title: "App",
   }),
-  {
-    ownerModuleId: PHI_APP_RUNTIME_MODULE_ID,
-    presetKey: "app-home-page",
-    pageKey: "home",
-    presetVersion: 1,
-    area: "app",
-    title: "Home",
-    path: "/home",
-    loadTree: ({ page, runtime }) =>
-      import("../../components/regions/presets/phi-default-pub-welcome-page-tree")
-        .then((module) => module.buildPhiDefaultPubWelcomePageTree({ page, runtime })),
-  },
   ...([401, 403, 404, 500] as const).map((code) => ({
     ownerModuleId: PHI_PUBLIC_RUNTIME_MODULE_ID,
     presetKey: `public-error-${code}-page`,
-    pageKey: String(code),
     presetVersion: 1,
     area: "public" as const,
     title: String(code),
@@ -122,7 +108,6 @@ export const PHI_AREA_BASE_RUNTIME_MODULE_ROUTES = [
   {
     ownerModuleId: PHI_PUBLIC_RUNTIME_MODULE_ID,
     presetKey: "public-terms-page",
-    pageKey: "terms-and-conditions",
     presetVersion: 1,
     area: "public",
     title: "Terms and Conditions",
@@ -140,7 +125,6 @@ export const PHI_AREA_BASE_RUNTIME_MODULE_ROUTES = [
   {
     ownerModuleId: PHI_ACCOUNTING_RUNTIME_MODULE_ID,
     presetKey: "accounting-overview-page",
-    pageKey: "overview",
     presetVersion: 1 + PHI_BASE_PAGE_LAYOUT_VERSION,
     area: "accounting",
     title: "Overview",
@@ -164,7 +148,6 @@ export const PHI_CORE_RUNTIME_MODULE_THEMES = PHI_CORE_THEME_PRESET_PLUGINS.map(
 const FORM_ROUTE_TEMPLATES = [
   {
     key: "registration",
-    pageKey: "register",
     title: "Register",
     path: "/register",
     loadTree: (presetKey: string, { page, runtime }: PhiCmsDescriptorBuildContext) =>
@@ -173,7 +156,6 @@ const FORM_ROUTE_TEMPLATES = [
   },
   {
     key: "login",
-    pageKey: "login",
     title: "Login",
     path: "/login",
     loadTree: (presetKey: string, { page, runtime }: PhiCmsDescriptorBuildContext) =>
@@ -182,7 +164,6 @@ const FORM_ROUTE_TEMPLATES = [
   },
   {
     key: "confirm",
-    pageKey: "confirm",
     title: "Confirm",
     path: "/confirm",
     loadTree: (presetKey: string, { page, runtime }: PhiCmsDescriptorBuildContext) =>
@@ -191,7 +172,6 @@ const FORM_ROUTE_TEMPLATES = [
   },
   {
     key: "reset-password",
-    pageKey: "reset-password",
     title: "Reset Password",
     path: "/reset-password",
     loadTree: (presetKey: string, { page, runtime }: PhiCmsDescriptorBuildContext) =>
@@ -226,7 +206,6 @@ export const PHI_AUTH_RUNTIME_MODULE_ROUTES = [
       presetKey,
       presetVersion: 1,
       area: "public" as const,
-      pageKey: template.pageKey,
       title: template.title,
       path: template.path,
       navigation: buildFormRouteNavigation(template),
@@ -238,7 +217,6 @@ export const PHI_AUTH_RUNTIME_MODULE_ROUTES = [
     presetKey: "public-logout-page",
     presetVersion: 1,
     area: "public",
-    pageKey: "logout",
     title: "Logout",
     path: "/logout",
     loadTree: ({ page }) => import("../../components/regions/presets/phi-auth-runtime-page-tree")
@@ -254,7 +232,6 @@ export const PHI_AUTH_RUNTIME_MODULE_ROUTES = [
     presetKey: "app-profile-page",
     presetVersion: 1 + PHI_BASE_PAGE_LAYOUT_VERSION,
     area: "app",
-    pageKey: "profile",
     title: "Profile",
     path: "/profile",
     navigation: [],
@@ -266,7 +243,6 @@ export const PHI_AUTH_RUNTIME_MODULE_ROUTES = [
     presetKey: "app-auth-security-page",
     presetVersion: 1,
     area: "app",
-    pageKey: "security",
     title: "Security",
     path: "/security",
     navigation: [],
@@ -283,7 +259,6 @@ export const PHI_AUTH_RUNTIME_MODULE_ROUTES = [
     presetKey: "admin-auth-settings-page",
     presetVersion: 1 + PHI_BASE_PAGE_LAYOUT_VERSION,
     area: "admin",
-    pageKey: "auth-settings",
     title: "Authentication",
     path: "/settings/authentication",
     mount: { mountKey: "settings" },
@@ -308,7 +283,6 @@ export const PHI_PUBLIC_FORM_RUNTIME_MODULE_ROUTES = [
   {
     ownerModuleId: PHI_PUBLIC_RUNTIME_MODULE_ID,
     presetKey: "public-contact-page",
-    pageKey: "contact",
     presetVersion: 1,
     area: "public",
     title: "Contact",

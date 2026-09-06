@@ -148,7 +148,6 @@ function createRoute({
     presetKey,
     presetVersion: 1,
     area: "public",
-    pageKey: presetKey,
     title: presetKey,
     path,
     ...(mountKey ? { mount: { mountKey } } : {}),
@@ -217,7 +216,6 @@ function createCatalog(
     presetKey: "base-settings",
     presetVersion: 1,
     area: "public",
-    pageKey: "settings",
     title: "Settings",
     path: "/settings",
     loadTree: async () => {
@@ -228,7 +226,6 @@ function createCatalog(
     presetKey: "base-private",
     presetVersion: 1,
     area: "public",
-    pageKey: "private",
     title: "Private",
     path: "/private",
     loadTree: async () => {

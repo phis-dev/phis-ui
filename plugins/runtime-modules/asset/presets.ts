@@ -11,7 +11,6 @@ export const PHI_ASSET_RUNTIME_MODULE_ROUTES = [{
   presetKey: "builder-media-page",
   presetVersion: 1,
   area: "builder",
-  pageKey: "media",
   title: "Media",
   path: "/media",
   navigation: [{
@@ -40,7 +39,6 @@ export const PHI_ASSET_RUNTIME_MODULE_ROUTES = [{
   presetKey: "admin-media-settings-page",
   presetVersion: 1 + PHI_BASE_PAGE_LAYOUT_VERSION,
   area: "admin",
-  pageKey: "media-settings",
   title: "Media",
   path: "/settings/media",
   mount: { mountKey: "settings" },

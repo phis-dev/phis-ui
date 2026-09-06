@@ -297,9 +297,9 @@ edge per Widget occurrence; activation alone executes neither loader.
 
 Area-shell, route, and theme presets are separate descriptor families. Every descriptor has one stable
 `(ownerModuleId, presetKey)` identity and a positive integer version. A route preset belongs to exactly
-one Area, one stable Area-local `pageKey`, and one immutable effective normalized path; `pageKey` identifies
-its Builder/Draft target and is never inferred from `path`. Duplicate Area-local page keys, multi-target
-presets, and generic preset kinds do not exist.
+one Area and one effective normalized path. Its Builder/Draft target is
+`createPhiPresetCmsPageId(ownerModuleId, presetKey)`, a hash of the preset identity rather than a second
+name to keep unique. Multi-target presets and generic preset kinds do not exist.
 
 Outside Public the compiler prefixes a route with its owner's package (`@acme/status/modules/auth` declaring
 `/providers` answers at `/acme/status/providers`), so a collision between two packages cannot arise. Public
@@ -313,8 +313,7 @@ never paths.
 Route paths are exact or contain at most one whole-segment parameter such as `/news/:id`. Catch-alls,
 optional segments, regexes, arbitrary match callbacks, and multiple dynamic segments are rejected. The
 metadata-only compiler validates the active route table and resolves Exact before Dynamic. Runtime requests
-resolve that table by effective URL path; Builder/Draft selection resolves it independently by Area-local
-`pageKey`. Navigation overlays may reorder or reparent a mounted item without changing that path. A
+resolve that table by effective URL path; Builder/Draft selection resolves it independently by Page id. Navigation overlays may reorder or reparent a mounted item without changing that path. A
 tombstoned Area container hides its remaining runtime subtree, but Builder authoring still exposes the
 source subtree as disabled and may move a child outside it.
 

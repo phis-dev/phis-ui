@@ -86,15 +86,12 @@ export const PHI_APP_RUNTIME_AREA_DEFINITIONS = [
         exportedItemKeys: [],
       },
       {
+        // No intrinsic entry: the App root forwards to the first Module entry a viewer can see, and a
+        // Home page beside a root that already forwards was one door too many.
         navKey: "app:sidebar",
         label: label("App sidebar navigation"),
-        items: [{
-          itemKey: "@phis/ui/modules/app/nav/home",
-          label: label("Home"),
-          icon: "antd:home",
-          routePresetKey: "app-home-page",
-        }],
-        exportedItemKeys: ["@phis/ui/modules/app/nav/home"],
+        items: [],
+        exportedItemKeys: [],
       },
       {
         navKey: "app:footer",

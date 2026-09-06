@@ -58,7 +58,7 @@ export const PHI_STRUCTURE_REGION_WIDGET_PLUGIN: PhiCmsWidgetPlugin<PhiStructure
       [currentStructureDrafts.area]: resolvedStructureDraft,
     } as Partial<Record<PhiDeveloperBuilderArea, PhiDeveloperBuilderRegionDraft | null>>;
     const currentPageArea = currentPageDrafts?.area ?? "public";
-    const currentPageKey = currentPageDrafts?.pageKey ?? "home";
+    const currentPageKey = currentPageDrafts?.pageKey ?? "/";
     const resolvedPageDraft =
       snapshot && isPhiBuilderPageScopedRegion(regionKey)
         ? ({

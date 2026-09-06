@@ -7,8 +7,10 @@ import { PhiCmsPageType, PhiCmsRegionType, PhiCmsStatus } from "../../constants/
 import { PhiCmsLayoutType } from "../../constants/cms-layout-types";
 import {
   createPhiPresetCmsInstanceId,
+  createPhiPresetCmsPageId,
   isPhiCmsInstanceId,
   readPhiCmsInstanceIdDescriptor,
+  type PhiCmsInstanceId,
 } from "../../types/cms-instance-id";
 import type {
   PhiCmsActiveRouteTable,
@@ -353,7 +355,6 @@ export function compilePhiCmsDescriptorCatalog({
     descriptor: PhiCmsNavigationInjectionDescriptor;
   }[]>();
   const routesByArea = new Map<PhiCmsAreaKey, PhiCmsCompiledRoutePattern[]>();
-  const routeOwnerByAreaPageKey = new Map<string, string>();
   const themeByKey = new Map<string, PhiCmsThemePresetBinding>();
 
   for (const [moduleId, entry] of catalog) {
@@ -447,17 +448,7 @@ export function compilePhiCmsDescriptorCatalog({
         throw new Error(`${moduleId}/${descriptor.presetKey}: Area "${descriptor.area}" is not declared.`);
       }
       assertPositiveVersion(descriptor.presetVersion, `${moduleId}/${descriptor.presetKey} presetVersion`);
-      normalizeRequiredKey(descriptor.pageKey, `${moduleId}/${descriptor.presetKey} page key`);
       normalizeRequiredKey(descriptor.title, `${moduleId}/${descriptor.presetKey} title`);
-      const areaPageKey = `${descriptor.area}\u001f${descriptor.pageKey}`;
-      const currentPageKeyOwner = routeOwnerByAreaPageKey.get(areaPageKey);
-      if (currentPageKeyOwner) {
-        throw new Error(
-          `Area "${descriptor.area}" page key "${descriptor.pageKey}" is owned by both ` +
-          `"${currentPageKeyOwner}" and "${moduleId}/${descriptor.presetKey}".`,
-        );
-      }
-      routeOwnerByAreaPageKey.set(areaPageKey, `${moduleId}/${descriptor.presetKey}`);
       const identity = registerIdentity(descriptor.presetKey);
       if (!entry.definition.eligibleAreas.includes(descriptor.area)) {
         throw new Error(
@@ -805,7 +796,14 @@ export function compilePhiCmsActiveRouteTable({
   if (!activeModuleIds.has(areaDefinition.baseModuleId)) {
     throw new Error(`Area "${area}" base module "${areaDefinition.baseModuleId}" is not active.`);
   }
-  const byPageKey = new Map<string, PhiCmsRoutePresetDescriptor>();
+  /*
+   * A read of what was written, and reads do not refuse. Two active routes wanting one address is a
+   * state the write that produced it had to allow -- enabling a Module asks for another path or does
+   * not enable it -- so here the address answers with the first claim and the second is simply not in
+   * the table. Its navigation entry then hides on its own, which is what an entry with nowhere to go
+   * should do.
+   */
+  const byPageId = new Map<PhiCmsInstanceId, PhiCmsRoutePresetDescriptor>();
   const exactByPath = new Map<string, PhiCmsRoutePresetDescriptor>();
   const dynamic: PhiCmsCompiledRoutePattern[] = [];
   for (const pattern of catalog.routesByArea.get(area) ?? []) {
@@ -815,37 +813,24 @@ export function compilePhiCmsActiveRouteTable({
     if (viewer && !canPhiViewerAccess(viewer, pattern.descriptor.accessPolicy)) {
       continue;
     }
-    const currentPage = byPageKey.get(pattern.descriptor.pageKey);
-    if (currentPage) {
-      throw new Error(
-        `Active Page collision at "${area}:${pattern.descriptor.pageKey}" between ` +
-        `"${currentPage.ownerModuleId}/${currentPage.presetKey}" and ` +
-        `"${pattern.descriptor.ownerModuleId}/${pattern.descriptor.presetKey}".`,
-      );
-    }
-    byPageKey.set(pattern.descriptor.pageKey, pattern.descriptor);
+    byPageId.set(
+      createPhiPresetCmsPageId({
+        ownerModuleId: pattern.descriptor.ownerModuleId,
+        presetKey: pattern.descriptor.presetKey,
+      }),
+      pattern.descriptor,
+    );
     if (pattern.parameterName === null) {
-      const current = exactByPath.get(pattern.descriptor.path);
-      if (current) {
-        throw new Error(
-          `Active route collision at "${area}:${pattern.descriptor.path}" between ` +
-          `"${current.ownerModuleId}/${current.presetKey}" and ` +
-          `"${pattern.descriptor.ownerModuleId}/${pattern.descriptor.presetKey}".`,
-        );
+      if (!exactByPath.has(pattern.descriptor.path)) {
+        exactByPath.set(pattern.descriptor.path, pattern.descriptor);
       }
-      exactByPath.set(pattern.descriptor.path, pattern.descriptor);
       continue;
     }
-    const overlap = dynamic.find((candidate) => routePatternsOverlap(candidate, pattern));
-    if (overlap) {
-      throw new Error(
-        `Active dynamic route collision in Area "${area}" between ` +
-        `"${overlap.descriptor.path}" and "${pattern.descriptor.path}".`,
-      );
+    if (!dynamic.some((candidate) => routePatternsOverlap(candidate, pattern))) {
+      dynamic.push(pattern);
     }
-    dynamic.push(pattern);
   }
-  return { area, byPageKey, exactByPath, dynamic };
+  return { area, byPageId, exactByPath, dynamic };
 }
 
 type ResolvedNavigationNode = {
@@ -1385,11 +1370,11 @@ export function resolvePhiCmsRoutePreset(
   return null;
 }
 
-export function resolvePhiCmsRoutePresetByPageKey(
+export function resolvePhiCmsRoutePresetByPageId(
   table: PhiCmsActiveRouteTable,
-  pageKey: string,
+  pageId: PhiCmsInstanceId,
 ): PhiCmsRoutePresetBinding | null {
-  const descriptor = table.byPageKey.get(pageKey.trim());
+  const descriptor = table.byPageId.get(pageId);
   return descriptor ? { descriptor, params: {} } : null;
 }
 

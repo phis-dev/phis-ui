@@ -684,7 +684,7 @@ policies, malformed signal metadata, or inconsistent declarative artifacts there
 assembly rather than becoming a request-time fallback.
 
 Area-shell and route contributions use the same catalog entry. Routes own immutable effective normalized
-paths, stable Area-local `pageKey` values, optional navigation injections, and lazy tree loaders. Modules
+paths, optional navigation injections, and lazy tree loaders. Modules
 do not create physical Next.js routes in the Site Skeleton.
 
 Outside Public, a Module's routes answer under its own package. A route declaring `/orders` in `@acme/shop`

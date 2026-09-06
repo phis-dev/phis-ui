@@ -206,13 +206,7 @@ export function resolvePhiBuilderCmsStoragePathForCatalog(
   }
   const rawPath = resolvePagePath(area, pageKey, pages);
 
-  const withoutAreaPrefix = rawPath.replace(new RegExp(`^/${area}(?=/|$)`), "") || "/";
-
-  if (pageKey === "home") {
-    return "/";
-  }
-
-  return withoutAreaPrefix;
+  return rawPath.replace(new RegExp(`^/${area}(?=/|$)`), "") || "/";
 }
 
 export function resolvePhiBuilderPageKeyFromStoragePath(
@@ -243,16 +237,28 @@ export function resolvePhiBuilderPageKeyFromStoragePath(
     return presetKey;
   }
 
-  if (normalizedPath === "/") {
-    return "home";
-  }
-
-  return normalizedPath.replace(/^\/+/, "");
+  return normalizedPath === "/" ? "/" : normalizedPath.replace(/^\/+/, "");
 }
 
+/**
+ * A Site Page in the catalog tree.
+ *
+ * Its key is its path, because that is the identity the server stores for it -- `site_page_scopes.path`
+ * -- and because a Site Page's path is renamed by the person who owns it, not reassigned underneath
+ * them. A Module Page is the other case and carries a hash of its preset identity instead.
+ */
 function insertCatalogPath(nodes: PhiPresetPageNode[], path: string) {
   const normalizedPath = normalizePhiBuilderCmsCatalogPath(path);
-  const segments = normalizedPath === "/" ? ["home"] : normalizedPath.split("/").filter(Boolean);
+  if (normalizedPath === "/") {
+    const existing = nodes.find((candidate) => candidate.key === "/");
+    const node = existing ?? { key: "/", title: "Home" };
+    node.storagePath = "/";
+    if (!existing) {
+      nodes.push(node);
+    }
+    return;
+  }
+  const segments = normalizedPath.split("/").filter(Boolean);
   let currentNodes = nodes;
   let cumulativeKey = "";
 

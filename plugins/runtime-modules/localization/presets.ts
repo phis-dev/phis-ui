@@ -7,7 +7,6 @@ export const PHI_LOCALIZATION_RUNTIME_MODULE_ROUTES = [{
   presetKey: "admin-locales-page",
   presetVersion: 1 + PHI_BASE_PAGE_LAYOUT_VERSION,
   area: "admin",
-  pageKey: "locales",
   title: "Locales",
   path: "/locales",
   navigation: [{

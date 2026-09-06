@@ -17,10 +17,10 @@ export const PHI_BUILDER_RUNTIME_MODULE_AREA_SHELLS = [{
 }] satisfies readonly PhiCmsAreaShellPresetDescriptor[];
 
 const BUILDER_ROUTE_PRESETS = [
-  { presetKey: "builder-shells-page", pageKey: "shells", title: "Shells", path: "/shells" },
-  { presetKey: "builder-pages-page", pageKey: "pages", title: "Pages", path: "/pages" },
-  { presetKey: "builder-navigation-page", pageKey: "navigation", title: "Navigation", path: "/navigation" },
-  { presetKey: "builder-modules-page", pageKey: "modules", title: "Modules", path: "/modules" },
+  { presetKey: "builder-shells-page", title: "Shells", path: "/shells" },
+  { presetKey: "builder-pages-page", title: "Pages", path: "/pages" },
+  { presetKey: "builder-navigation-page", title: "Navigation", path: "/navigation" },
+  { presetKey: "builder-modules-page", title: "Modules", path: "/modules" },
 ] as const;
 
 const BUILDER_WORKSPACE_ROUTES = BUILDER_ROUTE_PRESETS.map((route) => ({
@@ -28,7 +28,6 @@ const BUILDER_WORKSPACE_ROUTES = BUILDER_ROUTE_PRESETS.map((route) => ({
   presetKey: route.presetKey,
   presetVersion: 1,
   area: "builder" as const,
-  pageKey: route.pageKey,
   title: route.title,
   path: route.path,
   loadTree: ({ page, runtime, catalog, activeModuleIds }) =>
@@ -54,7 +53,6 @@ const BUILDER_SETTINGS_ROUTES = [
     presetKey: "builder-settings-general-page",
     presetVersion: 1 + PHI_BASE_PAGE_LAYOUT_VERSION,
     area: "builder" as const,
-    pageKey: "settings-general",
     title: "General",
     path: "/settings/general",
     mount: { mountKey: "settings" },

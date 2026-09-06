@@ -16,7 +16,8 @@ import { PHI_DASHBOARD_RUNTIME_MODULE_ID } from "./ids";
 type PhiDashboardRouteTemplate = {
   area: PhiCmsAreaKey;
   navKey: `${PhiCmsAreaKey}:${string}`;
-  before: string;
+  /** Absent where the Area declares no intrinsic entry to sit before, as the App does not. */
+  before?: string;
   eyebrow: string;
   description: string;
 };
@@ -25,7 +26,6 @@ const GENERIC_DASHBOARDS = [
   {
     area: "app",
     navKey: "app:sidebar",
-    before: "@phis/ui/modules/app/nav/home",
     eyebrow: "App",
     description: "Everything this site makes available to you once you are signed in.",
   },
@@ -53,7 +53,8 @@ function buildDashboardRoute({
 }: {
   area: PhiCmsAreaKey;
   navKey: `${PhiCmsAreaKey}:${string}`;
-  before: string;
+  /** Absent where the Area declares no intrinsic entry to sit before, as the App does not. */
+  before?: string;
   loadTree: PhiCmsRoutePresetDescriptor["loadTree"];
 }): PhiCmsRoutePresetDescriptor {
   const presetKey = `${area}-dashboard-page`;
@@ -62,13 +63,12 @@ function buildDashboardRoute({
     presetKey,
     presetVersion: 1 + PHI_BASE_PAGE_LAYOUT_VERSION,
     area,
-    pageKey: "dashboard",
     title: "Dashboard",
     path: "/dashboard",
     navigation: [{
       navKey,
       parentItemKey: null,
-      before,
+      ...(before ? { before } : {}),
       item: {
         itemKey: `@phis/ui/modules/dashboard/nav/${area}/dashboard`,
         label: { defaultMessage: "Dashboard" },
@@ -101,7 +101,7 @@ export const PHI_DASHBOARD_RUNTIME_MODULE_ROUTES = [
     buildDashboardRoute({
       area: template.area,
       navKey: template.navKey,
-      before: template.before,
+      ...("before" in template ? { before: template.before } : {}),
       loadTree: ({ page }: PhiCmsDescriptorBuildContext) =>
         import("../../../components/regions/presets/phi-default-area-dashboard-page-tree")
           .then((module) => module.buildPhiDefaultAreaDashboardPageTree({

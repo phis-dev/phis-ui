@@ -67,7 +67,7 @@ export function createPhiBuilderHistoryContext(input: {
     // an undo there means "the last Module change", regardless of which Area it landed in.
     return "modules:site";
   }
-  return `pages:${input.area}:${input.pageKey?.trim() || "home"}`;
+  return `pages:${input.area}:${input.pageKey?.trim() || "/"}`;
 }
 
 export function createPhiBuilderRegionHistoryContext(input: {

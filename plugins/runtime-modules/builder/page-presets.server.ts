@@ -26,9 +26,10 @@ import {
   instantiatePhiCmsRoutePreset,
   resolvePhiCmsDescriptorCatalog,
   resolvePhiCmsRoutePreset,
-  resolvePhiCmsRoutePresetByPageKey,
+  resolvePhiCmsRoutePresetByPageId,
 } from "../../../plugins/runtime-modules/descriptor-compiler";
 import { resolvePhiBuilderAreaAsCmsArea } from "../../../constants/cms-areas";
+import { createPhiPresetCmsPageId, isPhiCmsInstanceId } from "../../../types/cms-instance-id";
 import { buildPhiBuilderRuntimeModuleIdsForArea } from "./area-shell-presets.server";
 
 export type PhiBuilderPageDraftsByScope = Partial<
@@ -79,10 +80,12 @@ async function resolvePhiRegistryPresetPageBinding({
     throw new Error(`Builder target Area "${cmsArea}" is not declared.`);
   }
   activeModuleKeys.add(areaDefinition.baseModuleId);
-  const binding = resolvePhiCmsRoutePresetByPageKey(
-    compilePhiCmsActiveRouteTable({ catalog, area: cmsArea, activeModuleIds: activeModuleKeys }),
-    pageKey,
-  );
+  const binding = isPhiCmsInstanceId(pageKey)
+    ? resolvePhiCmsRoutePresetByPageId(
+      compilePhiCmsActiveRouteTable({ catalog, area: cmsArea, activeModuleIds: activeModuleKeys }),
+      pageKey,
+    )
+    : null;
   return binding ? { binding, activeModuleKeys } : null;
 }
 
@@ -328,9 +331,14 @@ export async function resolvePhiBuilderCurrentPageScope(
     area: cmsArea,
     activeModuleIds: activeModuleKeys,
   });
-  const pageKey = resolvePhiCmsRoutePreset(table, "/")?.descriptor.pageKey ??
-    table.byPageKey.keys().next().value ??
-    "";
+  // The Area root if one answers, otherwise the first Page there is: the Builder opens on something.
+  const rootDescriptor = resolvePhiCmsRoutePreset(table, "/")?.descriptor;
+  const pageKey = (rootDescriptor
+    ? createPhiPresetCmsPageId({
+      ownerModuleId: rootDescriptor.ownerModuleId,
+      presetKey: rootDescriptor.presetKey,
+    })
+    : table.byPageId.keys().next().value) ?? "";
 
   return { area, pageKey };
 }
