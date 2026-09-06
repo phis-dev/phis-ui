@@ -21,6 +21,7 @@ import { buildPhiBuilderLiveHref,
   createPhiDeveloperBuilderInitialPageDrafts,
   deleteCmsDraft,
   discardPhiDeveloperBuilderModulesDraft,
+  getPhiDeveloperBuilderModulesDraftAllocation,
   savePhiDeveloperBuilderModulesDraft,
   publishPhiDeveloperBuilderModulesDraft,
   previewPhiDeveloperBuilderDraft,
@@ -167,6 +168,33 @@ export function usePhiBuilderDraftCommandController({
     return [...areas];
   }
 
+  /**
+   * Publish and reset also have to see Module drafts this client never touched -- a draft saved in
+   * an earlier session leaves nothing in the local dirty list or allocations after a reload. When
+   * the local answer is empty, ask the server which Areas hold an open Module draft; a save never
+   * needs this, because "nothing edited" genuinely means nothing to save.
+   */
+  async function resolveModulesCommandAreasWithServer(): Promise<PhiDeveloperBuilderArea[]> {
+    const local = resolveModulesCommandAreas();
+    if (local.length > 0) {
+      return local;
+    }
+    const areas: PhiDeveloperBuilderArea[] = [];
+    for (const [area, source] of Object.entries(state.areaPresetSourcesByArea)) {
+      if (!source) {
+        continue;
+      }
+      const allocation = await getPhiDeveloperBuilderModulesDraftAllocation({
+        area: area as PhiDeveloperBuilderArea,
+        areaPresetSource: source,
+      }).catch(() => null);
+      if (allocation) {
+        areas.push(area as PhiDeveloperBuilderArea);
+      }
+    }
+    return areas;
+  }
+
   async function runSaveCommand(
     workspaceKind: Exclude<PhiDeveloperBuilderCommandWorkspace, "theme" | null>,
   ) {
@@ -246,7 +274,7 @@ export function usePhiBuilderDraftCommandController({
     workspaceKind: Exclude<PhiDeveloperBuilderCommandWorkspace, "theme" | null>,
   ) {
     if (workspaceKind === "modules") {
-      const areas = resolveModulesCommandAreas();
+      const areas = await resolveModulesCommandAreasWithServer();
       if (areas.length === 0) {
         showMessage({ level: "info", content: "No module selection changes to publish." });
         return;
@@ -402,7 +430,11 @@ export function usePhiBuilderDraftCommandController({
    * once there is no draft left to describe something in between.
    */
   function confirmResetModules() {
-    const areas = resolveModulesCommandAreas();
+    void confirmResetModulesForAreas();
+  }
+
+  async function confirmResetModulesForAreas() {
+    const areas = await resolveModulesCommandAreasWithServer();
     if (areas.length === 0) {
       showMessage({ level: "info", content: "No module selection changes to reset." });
       return;
