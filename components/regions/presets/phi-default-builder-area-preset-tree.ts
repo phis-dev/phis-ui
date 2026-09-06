@@ -3181,14 +3181,17 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                      * Both filters are the table's own view Controls, in front of its search box: they
                      * narrow which Modules are listed and never what a switch or checkbox does. That is
                      * also why neither is the header Area selector, whose meaning is "the Area being
-                     * edited". Foundation Modules -- the ones that carry the Areas themselves -- start
-                     * hidden, because they are scaffolding rather than a choice.
+                     * edited". The Area select carries no title of its own -- it reads "All areas" until
+                     * it says otherwise -- while the switch takes its label in front of it, since a bare
+                     * switch says nothing. Foundation Modules, the ones that carry the Areas themselves,
+                     * stay out until asked for: they are scaffolding rather than a choice.
                      */
                     filters: [
                       {
                         key: PHI_BUILDER_MODULES_TABLE_FILTER_KEYS.area,
                         type: "select",
                         label: modulesLabels?.filter.area ?? "Area",
+                        labelPlacement: "none",
                         defaultValue: PHI_BUILDER_MODULES_TABLE_ALL_AREAS_VALUE,
                         options: [
                           {
@@ -3202,11 +3205,12 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                         ],
                       },
                       {
-                        key: PHI_BUILDER_MODULES_TABLE_FILTER_KEYS.hideFoundation,
+                        key: PHI_BUILDER_MODULES_TABLE_FILTER_KEYS.showFoundation,
                         type: "boolean",
                         control: "switch",
-                        label: modulesLabels?.filter.hideFoundation ?? "Hide foundation",
-                        defaultValue: true,
+                        label: modulesLabels?.filter.showFoundation ?? "Show foundations",
+                        labelPlacement: "inline",
+                        defaultValue: false,
                       },
                     ],
                     search: { enabled: true },

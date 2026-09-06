@@ -21,9 +21,9 @@ const BUILDER_ROUTE_PRESETS = [
   { presetKey: "builder-shells-page", pageKey: "shells", title: "Shells", path: "/shells" },
   { presetKey: "builder-pages-page", pageKey: "pages", title: "Pages", path: "/pages" },
   { presetKey: "builder-navigation-page", pageKey: "navigation", title: "Navigation", path: "/navigation" },
-  // v3: the site-wide activation matrix (module switch + per-Area checkboxes), with the Area and
+  // v4: the site-wide activation matrix (module switch + per-Area checkboxes), with the Area and
   // foundation view filters as the table's own Controls rather than widgets beside it.
-  { presetKey: "builder-modules-page", pageKey: "modules", title: "Modules", path: "/modules", presetVersion: 3 },
+  { presetKey: "builder-modules-page", pageKey: "modules", title: "Modules", path: "/modules", presetVersion: 4 },
 ] as const;
 
 const BUILDER_WORKSPACE_ROUTES = BUILDER_ROUTE_PRESETS.map((route) => ({

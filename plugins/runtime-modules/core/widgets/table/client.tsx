@@ -5,7 +5,7 @@ import type { PhiTableWidgetLabels } from "../../../../../components/widgets/lab
 import { PHI_TABLE_WIDGET_DEFAULT_LABELS } from "../../../../../components/widgets/label-types/table";
 import { formatPhiTableWidgetLabel } from "../../../../../components/widgets/label-types/table";
 import { App, Button, Flex, Space, Tag, Tooltip, Typography } from "antd";
-import { useCallback, useEffect, useEffectEvent, useMemo, useState, type ReactNode } from "react";
+import { Fragment, useCallback, useEffect, useEffectEvent, useMemo, useState, type ReactNode } from "react";
 
 import { PhiMultiSelectControl } from "../../../../../components/controls/phi-multi-select-control";
 import { PhiAlertControl } from "../../../../../components/controls/phi-alert-control";
@@ -18,6 +18,7 @@ import { PhiToolbarControl } from "../../../../../components/controls/phi-toolba
 import { PhiConfirmControl } from "../../../../../components/controls/phi-confirm-control";
 import { usePhiControlOptionsProvider } from "../../../../../components/controls/phi-options-provider";
 import { PhiSelectControl } from "../../../../../components/controls/phi-select-control";
+import { PhiLabeledControl } from "../../../../../components/controls/phi-labeled-control";
 import { PhiSwitchControl } from "../../../../../components/controls/phi-switch-control";
 import {
   readPhiTableControlValue,
@@ -832,9 +833,8 @@ export function PhiTableWidgetClient({
           } : undefined}
         />
       ))}
-      {features.filters?.map((filter) => (
-        <Space key={filter.key} orientation="vertical" size="small">
-          <Typography.Text type="secondary">{filter.label}</Typography.Text>
+      {features.filters?.map((filter) => {
+        const control = (
           <TableFilter
             filter={filter}
             field={resource?.fields.find((field) => field.key === filter.key)}
@@ -851,8 +851,20 @@ export function PhiTableWidgetClient({
               }));
             }}
           />
-        </Space>
-      ))}
+        );
+        if (filter.labelPlacement === "none") {
+          return <Fragment key={filter.key}>{control}</Fragment>;
+        }
+        if (filter.labelPlacement === "inline") {
+          return <PhiLabeledControl key={filter.key} label={filter.label}>{control}</PhiLabeledControl>;
+        }
+        return (
+          <Space key={filter.key} orientation="vertical" size="small">
+            <Typography.Text type="secondary">{filter.label}</Typography.Text>
+            {control}
+          </Space>
+        );
+      })}
       {features.search?.enabled ? (
         <PhiTextControl inputType="search" allowClear placeholder={features.search.placeholder ?? labels.search}
           value={searchDraft} size={resolvedControlSize}
@@ -1275,6 +1287,9 @@ function TableFilter({ filter, field, sourceConfig, value, size, onChange, label
   onChange: (value: TableFilterValue) => void;
   labels?: PhiTableWidgetLabels;
 }) {
+  // A label with nowhere to go still has something to say: it becomes the Control's placeholder, so a
+  // cleared filter reads as the question it asks rather than as an empty box.
+  const hiddenLabelPlaceholder = filter.labelPlacement === "none" ? filter.label : undefined;
   const fieldWithOptions = field?.type === "enum" || field?.type === "enum[]" ? field : null;
   const resolvedOptions = usePhiControlOptionsProvider<string>({
     options: filter.type === "select" && (filter.options?.length ?? 0) > 0
@@ -1289,11 +1304,11 @@ function TableFilter({ filter, field, sourceConfig, value, size, onChange, label
     return filter.multiple ? (
       <PhiMultiSelectControl allowClear value={Array.isArray(value) ? value.filter((entry): entry is string => typeof entry === "string") : []}
         disabled={Boolean(resolvedOptions.warning)} options={resolvedOptions.options} size={size}
-        onChange={onChange} style={{ minWidth: 180 }} />
+        placeholder={hiddenLabelPlaceholder} onChange={onChange} style={{ minWidth: 180 }} />
     ) : (
       <PhiSelectControl allowClear value={typeof value === "string" ? value : undefined}
         disabled={Boolean(resolvedOptions.warning)} options={resolvedOptions.options} size={size}
-        onChange={onChange} style={{ minWidth: 180 }} />
+        placeholder={hiddenLabelPlaceholder} onChange={onChange} style={{ minWidth: 180 }} />
     );
   }
   if (filter.type === "boolean") {
@@ -1304,7 +1319,8 @@ function TableFilter({ filter, field, sourceConfig, value, size, onChange, label
     }
     return <PhiSelectControl allowClear value={typeof value === "boolean" ? String(value) : undefined}
       options={[{ value: "true", label: labels.yes }, { value: "false", label: labels.no }]}
-      size={size} onChange={(next) => onChange(next === undefined ? undefined : next === "true")}
+      size={size} placeholder={hiddenLabelPlaceholder}
+      onChange={(next) => onChange(next === undefined ? undefined : next === "true")}
       style={{ minWidth: 140 }} />;
   }
   if (filter.type === "dateRange") {
@@ -1316,6 +1332,7 @@ function TableFilter({ filter, field, sourceConfig, value, size, onChange, label
         size={size} onChange={(next) => onChange({ ...range, end: next ?? "" })} />
     </Space.Compact>;
   }
-  return <PhiTextControl value={typeof value === "string" ? value : ""} placeholder={filter.placeholder}
+  return <PhiTextControl value={typeof value === "string" ? value : ""}
+    placeholder={filter.placeholder ?? hiddenLabelPlaceholder}
     size={size} onChange={(next) => onChange(next ?? "")} />;
 }

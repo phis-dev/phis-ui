@@ -114,25 +114,31 @@ export type PhiTableColumnEditorControl =
   | "checkbox-group"
   | "icon-picker";
 
-export type PhiTableFilterDefinition =
+type PhiTableFilterCommon = {
+  key: string;
+  label: string;
+  /*
+   * Where the label goes. `above` is the default and reads as a form field. `inline` hands the label
+   * to the Control, which sets it before itself -- what a switch wants, since a switch on its own says
+   * nothing. `none` drops it, for a Control whose own value already asks the question ("All areas").
+   */
+  labelPlacement?: "above" | "inline" | "none";
+};
+
+export type PhiTableFilterDefinition = PhiTableFilterCommon & (
   | {
-      key: string;
       type: "text";
-      label: string;
       placeholder?: string;
       defaultValue?: string;
     }
   | {
-      key: string;
       type: "select";
-      label: string;
       multiple?: boolean;
       options?: readonly { label: string; value: string }[];
       optionsProvider?: PhiControlOptionsProviderConfig | null;
       defaultValue?: string | readonly string[];
     }
   | {
-      key: string;
       type: "boolean";
       /*
        * `select` offers yes/no/cleared -- three answers, for a column that may be either and may be
@@ -140,13 +146,10 @@ export type PhiTableFilterDefinition =
        * and `defaultValue` says which way it starts.
        */
       control?: "select" | "switch";
-      label: string;
       defaultValue?: boolean;
     }
   | {
-      key: string;
       type: "dateRange";
-      label: string;
       startKey: string;
       endKey: string;
       startPlaceholder?: string;
@@ -155,7 +158,8 @@ export type PhiTableFilterDefinition =
         start?: string;
         end?: string;
       };
-    };
+    }
+);
 
 export type PhiTableActionExecution = "provider" | "signal" | "link";
 

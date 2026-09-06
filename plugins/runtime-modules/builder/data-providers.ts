@@ -11,7 +11,7 @@ import { PHI_BUILDER_NAVIGATION_DND_TYPE_PAGE } from "../../../constants/builder
  */
 export const PHI_BUILDER_MODULES_TABLE_FILTER_KEYS = {
   area: "area",
-  hideFoundation: "hideFoundation",
+  showFoundation: "showFoundation",
 } as const;
 export const PHI_BUILDER_MODULES_TABLE_ALL_AREAS_VALUE = "all";
 
@@ -171,7 +171,7 @@ export const PHI_BUILDER_RUNTIME_DATA_PROVIDER_DESCRIPTORS = [
         search: true,
         sorting: "single",
         pagination: "none",
-        filterFields: [PHI_BUILDER_MODULES_TABLE_FILTER_KEYS.area, PHI_BUILDER_MODULES_TABLE_FILTER_KEYS.hideFoundation],
+        filterFields: [PHI_BUILDER_MODULES_TABLE_FILTER_KEYS.area, PHI_BUILDER_MODULES_TABLE_FILTER_KEYS.showFoundation],
       },
       actions: [{ key: "details", title: "Details", scope: "row", valueType: "none", intent: "read" }],
     }, {

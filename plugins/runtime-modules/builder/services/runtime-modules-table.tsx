@@ -48,8 +48,8 @@ const DETAIL_RESOURCE_KEY = "moduleDetail";
  * cell renders as nothing at all.
  *
  * Both table filters narrow which rows are listed and never what a cell means: `area` keeps the Modules
- * eligible for one Area, `hideFoundation` drops the Modules that carry the Areas themselves -- those are
- * the site's own scaffolding rather than a choice, which is why it starts on.
+ * eligible for one Area, `showFoundation` admits the Modules that carry the Areas themselves -- those are
+ * the site's own scaffolding rather than a choice, which is why it starts off.
  */
 function readAreaLabels(params: Record<string, unknown> | undefined) {
   const candidate = params?.areaLabels;
@@ -72,19 +72,19 @@ function isModuleActiveInArea(
 
 type PhiRuntimeModulesTableView = {
   areaFilter: PhiCmsAreaKey | null;
-  hideFoundation: boolean;
+  showFoundation: boolean;
 };
 
 function readRuntimeModulesTableView(query: PhiTableProviderQueryRequest["query"]) {
   const filters = { ...(query.filters ?? {}) };
   const areaValue = filters[PHI_BUILDER_MODULES_TABLE_FILTER_KEYS.area];
-  const hideFoundationValue = filters[PHI_BUILDER_MODULES_TABLE_FILTER_KEYS.hideFoundation];
+  const showFoundationValue = filters[PHI_BUILDER_MODULES_TABLE_FILTER_KEYS.showFoundation];
   delete filters[PHI_BUILDER_MODULES_TABLE_FILTER_KEYS.area];
-  delete filters[PHI_BUILDER_MODULES_TABLE_FILTER_KEYS.hideFoundation];
+  delete filters[PHI_BUILDER_MODULES_TABLE_FILTER_KEYS.showFoundation];
   return {
     view: {
       areaFilter: typeof areaValue === "string" && isPhiCmsAreaKey(areaValue) ? areaValue : null,
-      hideFoundation: hideFoundationValue === true,
+      showFoundation: showFoundationValue === true,
     } satisfies PhiRuntimeModulesTableView,
     query: { ...query, filters },
   };
@@ -108,7 +108,7 @@ function buildRuntimeModuleRows(
     .filter((definition) =>
       definition.kind !== "platform" &&
       (view.areaFilter == null || definition.eligibleAreas.includes(view.areaFilter)) &&
-      (!view.hideFoundation || readPhiRuntimeModuleCategory(definition.category) !== "foundation"))
+      (view.showFoundation || readPhiRuntimeModuleCategory(definition.category) !== "foundation"))
     .map((definition) => {
       const baseAreaKey = resolveModuleBaseAreaKey(definition.moduleId);
       const activeAreas = PHI_CMS_AREA_KEYS.filter((areaKey) =>

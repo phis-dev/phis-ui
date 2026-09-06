@@ -381,11 +381,15 @@ function readFilters(value: unknown): PhiTableFilterDefinition[] {
     if (!key || !label) {
       continue;
     }
+    const labelPlacement = item.labelPlacement === "inline" || item.labelPlacement === "none"
+      ? item.labelPlacement
+      : undefined;
     if (item.type === "select") {
       result.push({
         key,
         type: "select" as const,
         label,
+        labelPlacement,
         multiple: readBoolean(item.multiple),
         options: readFilterOptions(item.options),
         optionsProvider: parsePhiControlOptionsProviderConfig(item.optionsProvider),
@@ -402,6 +406,7 @@ function readFilters(value: unknown): PhiTableFilterDefinition[] {
         type: "boolean",
         control: item.control === "switch" ? "switch" : undefined,
         label,
+        labelPlacement,
         defaultValue: readBoolean(item.defaultValue),
       });
       continue;
@@ -419,6 +424,7 @@ function readFilters(value: unknown): PhiTableFilterDefinition[] {
         key,
         type: "dateRange" as const,
         label,
+        labelPlacement,
         startKey,
         endKey,
         startPlaceholder: readString(item.startPlaceholder),
@@ -431,6 +437,7 @@ function readFilters(value: unknown): PhiTableFilterDefinition[] {
       key,
       type: "text" as const,
       label,
+      labelPlacement,
       placeholder: readString(item.placeholder),
       defaultValue: readString(item.defaultValue),
     });
