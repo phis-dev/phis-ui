@@ -3057,44 +3057,6 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
             ]
         : isModulesPage
           ? [
-              /*
-               * The Module selection is Area-wide, so the page choice here steers nothing but Preview:
-               * it names the page the Preview button opens once the selection is saved.
-               */
-              buildPhiCmsWidgetNode({
-                typeKey: "cascader",
-                id: SYNTHETIC_DEV_WIDGET_IDS.widgetPagesHeaderSelector,
-                siteId: page.siteId,
-                parentLayoutNodeId: SYNTHETIC_DEV_LAYOUT_IDS.layoutHeaderBottom,
-                slotIndex: PHI_CMS_THREE_COLUMN_LAYOUT_SLOT_INDEX.Left,
-                sortOrder: 0,
-                status: PhiCmsStatus.Published,
-                flags: 0,
-                visibilityMask: page.visibilityMask,
-                label: "dev modules preview page select",
-                config: {
-                  key: "pageSelect",
-                  signalRoutes: {
-                    emits: [
-                      {
-                        routeKey: "builder-page-path-change",
-                        capabilityId: "change",
-                        scope: "page",
-                        channel: "path",
-                        action: "change",
-                        valueType: "path",
-                        receiver: "broadcast",
-                      },
-                    ],
-                  },
-                  placeholder: labels.pages.selectPage,
-                  optionsProvider: {
-                    providerKey: PHI_BUILDER_RUNTIME_DATA_PROVIDER_KEYS.builderPages,
-                  },
-                  options: [],
-                },
-                contentId: null,
-              }),
               buildPhiCmsWidgetNode({
                 typeKey: "command-toolbar",
                 id: SYNTHETIC_DEV_WIDGET_IDS.widgetToolbar,
@@ -3208,7 +3170,7 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                         key: PHI_BUILDER_MODULES_TABLE_FILTER_KEYS.showFoundation,
                         type: "boolean",
                         control: "switch",
-                        label: modulesLabels?.filter.showFoundation ?? "Show foundations",
+                        label: modulesLabels?.filter.showFoundation ?? "Foundations",
                         labelPlacement: "inline",
                         defaultValue: false,
                       },

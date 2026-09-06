@@ -89,6 +89,6 @@ export const PHI_BUILDER_MODULES_PAGE_DEFAULT_LABELS: PhiBuilderModulesPageLabel
   filter: {
     area: "Area",
     allAreas: "All areas",
-    showFoundation: "Show foundations",
+    showFoundation: "Foundations",
   },
 };

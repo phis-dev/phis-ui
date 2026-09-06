@@ -352,8 +352,19 @@ export function usePhiBuilderDraftCommandController({
     }
 
     if (workspaceKind === "modules") {
+      /*
+       * Nothing on the Modules page names a page -- the selection is site-wide -- so Preview opens the
+       * Area itself: its first catalog page, rather than whatever page another workspace last held.
+       */
+      const previewPageKey =
+        resolvePhiBuilderActivePageCatalog(
+          effectiveArea,
+          state.modulePresetPagesByArea,
+          state.customPages ?? {},
+          state.persistedPageCatalogByArea,
+        )[0]?.key ?? effectivePageKey;
       window.open(
-        buildPhiBuilderLiveHref(effectiveArea, effectivePageKey, currentPageTree, "structure"),
+        buildPhiBuilderLiveHref(effectiveArea, previewPageKey, currentPageTree, "structure"),
         "_blank",
         "noopener,noreferrer",
       );
