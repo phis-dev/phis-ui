@@ -14,6 +14,7 @@ import {
 } from "../../../components/controls/phi-options-provider";
 import { PHI_BUILDER_RUNTIME_DATA_PROVIDER_KEYS } from "./ids";
 import {
+  resolvePhiBuilderCatalogPathForCatalog,
   resolvePhiBuilderCmsStoragePathForCatalog,
   resolvePhiBuilderActivePageCatalog,
   type PhiBuilderPageCatalogArea,
@@ -37,7 +38,7 @@ function resolveProviderArea(context: PhiControlOptionsProviderContext) {
 function collectPageOptions(area: PhiBuilderPageCatalogArea, nodes: PhiPresetPageNode[]): PhiControlOption[] {
   return nodes.flatMap((node) => [
     {
-      value: resolvePhiBuilderCmsStoragePathForCatalog(area, node.key, nodes),
+      value: resolvePhiBuilderCatalogPathForCatalog(area, node.key, nodes),
       label: node.title,
     },
     ...collectPageOptions(area, node.children ?? []),
@@ -61,7 +62,7 @@ function resolveBuilderPagesOptions(context: PhiControlOptionsProviderContext): 
     options: collectPageOptions(resolvedArea, pageTree),
     ...(snapshot.pageKey
       ? {
-          value: resolvePhiBuilderCmsStoragePathForCatalog(
+          value: resolvePhiBuilderCatalogPathForCatalog(
             resolvedArea,
             snapshot.pageKey,
             pageTree,

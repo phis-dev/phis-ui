@@ -37,7 +37,7 @@ import {
   createEmptyPhiBuilderModulePresetPagesByArea,
   resolvePhiBuilderActivePageCatalog,
   resolvePhiBuilderActivePageKey,
-  resolvePhiBuilderPageKeyFromStoragePath,
+  resolvePhiBuilderPageKeyFromCatalogPath,
   type PhiPresetPageNode,
 } from "../../../helpers/cms-page-catalog";
 import { loadPhiBuilderPersistedPageCatalog } from "./page-catalog-client";
@@ -659,7 +659,7 @@ function usePhiDeveloperBuilderWorkspaceController(
   useEffect(() => {
     if (
       typeof pathname !== "string" ||
-      (!pathname.includes("/builder/shells") && !pathname.includes("/builder/pages")) ||
+      (builderWorkspaceKey !== "shells" && builderWorkspaceKey !== "pages") ||
       searchParams.get(PHI_BUILDER_RUNTIME_MODULES_SEARCH_PARAM) === selectedRuntimeModuleIdsSearchValue
     ) {
       return;
@@ -670,10 +670,10 @@ function usePhiDeveloperBuilderWorkspaceController(
       selectedRuntimeModuleIdsSearchValue,
     );
     router.replace(`${pathname}?${nextSearchParams.toString()}`, { scroll: false });
-  }, [pathname, router, searchParams, selectedRuntimeModuleIdsSearchValue]);
+  }, [builderWorkspaceKey, pathname, router, searchParams, selectedRuntimeModuleIdsSearchValue]);
 
   useEffect(() => {
-    if (!pathname?.includes("/builder/shells")) {
+    if (builderWorkspaceKey !== "shells") {
       return;
     }
 
@@ -697,6 +697,7 @@ function usePhiDeveloperBuilderWorkspaceController(
       timestamp: Date.now(),
     });
   }, [
+    builderWorkspaceKey,
     dispatchSignal,
     pathname,
     siderLeftDraftKey,
@@ -1020,10 +1021,10 @@ function usePhiDeveloperBuilderWorkspaceController(
 	      }
 
 	      if (signal.scope === "page" && signal.channel === "path" && signal.action === "change") {
-        if (!pathname?.includes("/builder/pages") || typeof signal.value !== "string" || signal.value.length === 0) {
+        if (builderWorkspaceKey !== "pages" || typeof signal.value !== "string" || signal.value.length === 0) {
           return;
         }
-        const nextPageKey = resolvePhiBuilderPageKeyFromStoragePath(
+        const nextPageKey = resolvePhiBuilderPageKeyFromCatalogPath(
           effectiveArea,
           signal.value,
           currentPageTree,
@@ -1049,7 +1050,7 @@ function usePhiDeveloperBuilderWorkspaceController(
           typeof next.pageKey === "string" && next.pageKey.length > 0
             ? next.pageKey
 	            : typeof next.value === "string" && next.value.length > 0
-              ? resolvePhiBuilderPageKeyFromStoragePath(
+              ? resolvePhiBuilderPageKeyFromCatalogPath(
                   state.area,
                   next.value,
                   resolvePhiBuilderActivePageCatalog(
@@ -1064,7 +1065,7 @@ function usePhiDeveloperBuilderWorkspaceController(
           return;
         }
 
-	        if (pathname?.includes("/builder/pages")) {
+	        if (builderWorkspaceKey === "pages") {
 	          navigateToBuilderPage(nextPageKey);
 	          emitPageTitleInputValue(nextPageKey);
 	          return;
@@ -1173,7 +1174,7 @@ function usePhiDeveloperBuilderWorkspaceController(
         targetsBuilderController
       ) {
         const commandValue = signal.value;
-        if (pathname?.includes("/builder/pages")) {
+        if (builderWorkspaceKey === "pages") {
           if (commandValue === "createPage") {
             openPageMetaDialog("create");
             return;

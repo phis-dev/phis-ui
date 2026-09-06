@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import {
   resolvePhiBuilderActivePageCatalog,
   resolvePhiBuilderCmsStoragePathForCatalog,
-  resolvePhiBuilderPageKeyFromStoragePath,
+  resolvePhiBuilderPageKeyFromCatalogPath,
 } from "../helpers/cms-page-catalog";
 import { createPhiPageReference } from "../types/references";
 
@@ -43,7 +43,7 @@ assert.equal(resolvePhiBuilderCmsStoragePathForCatalog("public", "home", catalog
 assert.equal(resolvePhiBuilderCmsStoragePathForCatalog("public", "new-page", catalog), "/new-page");
 assert.equal(resolvePhiBuilderCmsStoragePathForCatalog("public", "nested/child", catalog), "/nested/child");
 assert.equal(resolvePhiBuilderCmsStoragePathForCatalog("public", "pending", catalog), "/pending");
-assert.equal(resolvePhiBuilderPageKeyFromStoragePath("public", "/new-page", catalog), "new-page");
+assert.equal(resolvePhiBuilderPageKeyFromCatalogPath("public", "/new-page", catalog), "new-page");
 assert.throws(
   () => resolvePhiBuilderCmsStoragePathForCatalog("public", "inactive-page", catalog),
   /not present in the active Builder Page catalog/,

@@ -27,7 +27,7 @@ import {
 import {
   resolvePhiBuilderActivePageCatalog,
   resolvePhiBuilderActivePageKey,
-  resolvePhiBuilderPageKeyFromStoragePath,
+  resolvePhiBuilderPageKeyFromCatalogPath,
 } from "../../../../helpers/cms-page-catalog";
 import {
   PHI_BUILDER_NAVIGATION_KEY_SEARCH_PARAM,
@@ -126,7 +126,7 @@ function readParams(value: unknown): RevisionsTableParams {
      * fills in as soon as there is one.
      */
     const pageKey = kind === "page" && configuredScopeKey.startsWith("/")
-      ? resolvePhiBuilderPageKeyFromStoragePath(scopeArea, configuredScopeKey, pages)
+      ? resolvePhiBuilderPageKeyFromCatalogPath(scopeArea, configuredScopeKey, pages)
       : activePageKey ?? "";
     const navScopeKey = kind === "navigation" && configuredScopeKey
       ? resolvePhiBuilderRevisionNavScopeKey(scopeArea, configuredScopeKey)

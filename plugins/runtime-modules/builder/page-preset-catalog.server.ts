@@ -9,6 +9,7 @@ import type {
 } from "../../../helpers/cms-page-catalog";
 import type { PhiCmsPresetSource } from "../../../types/cms-module-descriptors";
 import { createPhiPresetCmsPageId } from "../../../types/cms-instance-id";
+import { buildPhiRuntimeModulePackageRoutePrefix } from "../../../helpers/runtime-module-route-path";
 
 function humanizePageKey(value: string) {
   const label = value.replace(/[-_]+/g, " ").trim();
@@ -26,7 +27,14 @@ function resolveBuilderArea(area: string): PhiBuilderAreaKey | null {
 
 function insertPageTarget(
   roots: PhiPresetPageNode[],
-  target: { path: string; title: string; ownerModuleId: PhiRuntimeModuleId; presetKey: string; presetVersion: number },
+  target: {
+    path: string;
+    area: string;
+    title: string;
+    ownerModuleId: PhiRuntimeModuleId;
+    presetKey: string;
+    presetVersion: number;
+  },
 ) {
   const sourcePreset = {
     ownerModuleId: target.ownerModuleId,
@@ -37,12 +45,26 @@ function insertPageTarget(
     ownerModuleId: target.ownerModuleId,
     presetKey: target.presetKey,
   });
-  const segments = target.path.split("/").filter(Boolean);
+  /*
+   * The package namespace is an addressing device, not structure a person authored.
+   *
+   * Every Page of a Module outside Public answers under `/<scope>/<package>`, so leaving those segments
+   * in would bury every Page two folders deep under the same two words and say nothing about how the
+   * Pages relate. The tree shows what the Module arranged below its namespace; the address keeps it.
+   */
+  const namespace = target.area === "public"
+    ? ""
+    : buildPhiRuntimeModulePackageRoutePrefix(target.ownerModuleId);
+  const treePath = namespace && target.path.startsWith(`${namespace}/`)
+    ? target.path.slice(namespace.length)
+    : target.path;
+  const segments = treePath.split("/").filter(Boolean);
   if (segments.length === 0) {
     roots.push({
       key: pageId,
       title: target.title,
       storagePath: target.path,
+      catalogPath: treePath,
       sourcePreset,
     });
     return;
@@ -63,6 +85,7 @@ function insertPageTarget(
     key: pageId,
     title: target.title,
     storagePath: target.path,
+    catalogPath: treePath,
     sourcePreset,
   });
 }

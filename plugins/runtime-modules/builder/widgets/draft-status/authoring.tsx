@@ -1,5 +1,6 @@
 "use client";
 
+import { readPhiDeveloperBuilderWorkspaceKey } from "../../route-scope";
 import { useEffect, useState } from "react";
 
 import { Flex, Space, Tag, Typography } from "antd";
@@ -44,23 +45,26 @@ function resolveWorkspaceKind(
   pathname: string | null,
   revisionKind: "area" | "page" | "navigation" | "theme" | null,
 ): PhiBuilderDraftStatusWorkspaceKind {
-  if (pathname?.includes("/builder/shells")) {
+  // The workspace is named by the path, but not by its position in it: a Module's routes answer under
+  // its package, so `/builder/phis/ui/shells` is the Shells workspace and `/builder/shells` is nothing.
+  const workspaceKey = readPhiDeveloperBuilderWorkspaceKey(pathname);
+  if (workspaceKey === "shells") {
     return "structure";
   }
 
-  if (pathname?.includes("/builder/navigation")) {
+  if (workspaceKey === "navigation") {
     return "navigation";
   }
 
-  if (pathname?.includes("/builder/modules")) {
+  if (workspaceKey === "modules") {
     return "modules";
   }
 
-  if (pathname?.includes("/builder/theme")) {
+  if (workspaceKey === "theme") {
     return "brand";
   }
 
-  if (pathname?.includes("/builder/revisions")) {
+  if (workspaceKey === "revisions") {
     if (revisionKind === "navigation") {
       return "revisions-navigation";
     }

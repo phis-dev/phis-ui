@@ -1,5 +1,6 @@
 "use client";
 
+import { readPhiDeveloperBuilderWorkspaceKey } from "./route-scope";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
@@ -12,7 +13,7 @@ import { usePhiApplicationFeedback } from "../../../components/runtime/use-phi-a
 import {
   normalizePhiBuilderCmsCatalogPath,
   resolvePhiBuilderActivePageCatalog,
-  resolvePhiBuilderPageKeyFromStoragePath,
+  resolvePhiBuilderPageKeyFromCatalogPath,
 } from "../../../helpers/cms-page-catalog";
 import { changePhiBuilderPagePath, loadPhiBuilderPersistedPageCatalog } from "./page-catalog-client";
 import { resolvePhiBuilderCmsStoragePath } from "../../../helpers/cms-paths";
@@ -360,7 +361,7 @@ export function usePhiBuilderPageController({
           refreshed.customPages,
           refreshed.persistedPageCatalogByArea,
         );
-        const nextPageKey = resolvePhiBuilderPageKeyFromStoragePath(effectiveArea, pathResult.path, refreshedPages);
+        const nextPageKey = resolvePhiBuilderPageKeyFromCatalogPath(effectiveArea, pathResult.path, refreshedPages);
         if (nextPageKey) navigateToBuilderPage(nextPageKey);
       }
       dispatchPageMetaOverlay("close");
@@ -378,7 +379,7 @@ export function usePhiBuilderPageController({
       return;
     }
 
-    const requestedKey = resolvePhiBuilderPageKeyFromStoragePath(
+    const requestedKey = resolvePhiBuilderPageKeyFromCatalogPath(
       effectiveArea,
       requestedPath,
       currentPageTree,
@@ -543,7 +544,7 @@ export function usePhiBuilderPageController({
   }, { channels: ["pageMeta", "pageMetaForm", "pageMetaVisibility"], receiver: createPhiBuilderControllerAddress() });
 
   useEffect(() => {
-    if (!pathname?.includes("/builder/pages")) {
+    if (readPhiDeveloperBuilderWorkspaceKey(pathname) !== "pages") {
       return;
     }
 

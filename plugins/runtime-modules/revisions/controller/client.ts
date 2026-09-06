@@ -31,7 +31,7 @@ import {
 import {
   resolvePhiBuilderActivePageCatalog,
   resolvePhiBuilderActivePageKey,
-  resolvePhiBuilderPageKeyFromStoragePath,
+  resolvePhiBuilderPageKeyFromCatalogPath,
 } from "../../../../helpers/cms-page-catalog";
 import { PHI_BUILDER_REVISIONS_TABLE_WIDGET_ID } from "../../../../helpers/cms-page-addresses";
 import {
@@ -221,7 +221,7 @@ function PhiRevisionsControllerMount({ address }: { address: PhiSignalAddress })
                   ? {
                       area: state.area,
                       pageKey: revisionScope.startsWith("/")
-                        ? resolvePhiBuilderPageKeyFromStoragePath(state.area, revisionScope, pages)
+                        ? resolvePhiBuilderPageKeyFromCatalogPath(state.area, revisionScope, pages)
                         : normalizePhiBuilderPageSearchParam(
                             search.get(PHI_BUILDER_PAGE_SEARCH_PARAM),
                           ) ?? state.pageKey,

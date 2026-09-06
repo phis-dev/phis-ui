@@ -6,8 +6,8 @@ import { Flex, Typography } from "antd";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 import {
-  resolvePhiBuilderPageKeyFromStoragePath,
-  resolvePhiBuilderCmsStoragePathForCatalog,
+  resolvePhiBuilderPageKeyFromCatalogPath,
+  resolvePhiBuilderCatalogPathForCatalog,
   resolvePhiBuilderActivePageCatalog,
   resolvePhiBuilderActivePageKey,
   type PhiBuilderPageCatalogArea,
@@ -174,7 +174,7 @@ export function PhiDeveloperBuilderPagesHeaderSection({
     : [];
   const selectedPageTitle = selectedPath.at(-1)?.title ?? pageKey;
   const storagePath = pageSelectionReady
-    ? resolvePhiBuilderCmsStoragePathForCatalog(area, pageKey, pageTree)
+    ? resolvePhiBuilderCatalogPathForCatalog(area, pageKey, pageTree)
     : null;
   const resolvedInitialPageTitle = (pageTitle?.trim() ?? "") || selectedPageTitle;
   const isPreviewMode = builderMode === "preview";
@@ -226,7 +226,7 @@ export function PhiDeveloperBuilderPagesHeaderSection({
       const signalValue = signal.value;
       const nextPageKey =
         typeof signalValue === "string"
-          ? resolvePhiBuilderPageKeyFromStoragePath(area, signalValue, pageTree)
+          ? resolvePhiBuilderPageKeyFromCatalogPath(area, signalValue, pageTree)
           : null;
       if (nextPageKey && nextPageKey !== pageKey) {
         navigateToPage(nextPageKey);

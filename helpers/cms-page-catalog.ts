@@ -14,7 +14,15 @@ import {
 export type PhiPresetPageNode = {
   key: string;
   title: string;
+  /** The address the Page answers on, including the package namespace outside Public. */
   storagePath?: string;
+  /**
+   * Where the Page sits in the Builder's tree: its address without the package namespace.
+   *
+   * The namespace is an addressing device rather than structure a person authored, so the tree and the
+   * picker leave it out; `storagePath` keeps it, because that is what a fetch has to ask for.
+   */
+  catalogPath?: string;
   sourcePreset?: PhiCmsPresetSource;
   pageScopeId?: number;
   reference?: PhiPageReference;
@@ -227,7 +235,20 @@ export function resolvePhiBuilderCmsStoragePathForCatalog(
   return rawPath.replace(new RegExp(`^/${area}(?=/|$)`), "") || "/";
 }
 
-export function resolvePhiBuilderPageKeyFromStoragePath(
+/** Where the Builder shows a Page, which is what its picker offers and its path signal carries. */
+export function resolvePhiBuilderCatalogPathForCatalog(
+  area: PhiBuilderPageCatalogArea,
+  pageKey: string,
+  pages: readonly PhiPresetPageNode[],
+) {
+  const node = findPageNodePath([...pages], pageKey)?.at(-1);
+  if (node?.catalogPath) {
+    return normalizePhiBuilderCmsCatalogPath(node.catalogPath);
+  }
+  return resolvePhiBuilderCmsStoragePathForCatalog(area, pageKey, pages);
+}
+
+export function resolvePhiBuilderPageKeyFromCatalogPath(
   area: PhiBuilderPageCatalogArea,
   path: string,
   pages: readonly PhiPresetPageNode[],
@@ -237,7 +258,7 @@ export function resolvePhiBuilderPageKeyFromStoragePath(
     for (const node of nodes) {
       if (
         normalizePhiBuilderCmsCatalogPath(
-          resolvePhiBuilderCmsStoragePathForCatalog(area, node.key, pages),
+          resolvePhiBuilderCatalogPathForCatalog(area, node.key, pages),
         ) === normalizedPath
       ) {
         return node.key;
@@ -271,6 +292,7 @@ function insertCatalogPath(nodes: PhiPresetPageNode[], path: string) {
     const existing = nodes.find((candidate) => candidate.key === "/");
     const node = existing ?? { key: "/", title: "Home" };
     node.storagePath = "/";
+    node.catalogPath = "/";
     if (!existing) {
       nodes.push(node);
     }
@@ -298,6 +320,7 @@ function insertCatalogPath(nodes: PhiPresetPageNode[], path: string) {
       currentNodes = node.children;
     } else {
       node.storagePath = normalizedPath;
+      node.catalogPath = normalizedPath;
     }
   });
 }
