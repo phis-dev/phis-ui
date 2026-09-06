@@ -93,14 +93,13 @@ const clientInstalled: PhiSiteModuleClientContributions = {
       controllers: [{ moduleId: "@acme/shop/modules/storefront", loadController: async () => null }],
       renderLoaders: [["@acme/shop/cart", async () => null]],
       dataProviders: [{ key: "@acme/shop/orders" }],
-      authoring: [{ moduleId: "@acme/shop/modules/storefront", loadAuthoring: async () => null }],
     },
     admin: {
-      authoring: [{ moduleId: "@acme/shop/modules/storefront", loadAuthoring: async () => null }],
       dataProviders: [{ key: "@acme/shop/reports" }],
     },
   },
   calendarAdapters: [{ key: "@acme/shop/calendars/deliveries" }],
+  authoring: [{ moduleId: "@acme/shop/modules/storefront", loadAuthoring: async () => null }],
 } as unknown as PhiSiteModuleClientContributions;
 
 const emptyManifests = () => ({
@@ -126,7 +125,13 @@ for (const area of ["public", "editor"] as const) {
   );
 }
 
-// A Module authored in two Areas appears once in the Builder's union, which would otherwise be refused.
+// The Builder reads the Authoring contributions whole; no Area holds any.
+for (const area of Object.values(clientInstalled.areas)) {
+  assert.ok(
+    !Object.keys(area ?? {}).includes("authoring"),
+    "no Area may carry its own Authoring contributions",
+  );
+}
 assert.deepEqual(
   readAllPhiSiteModuleAuthoringClientContributions(clientInstalled).map((entry) => entry.moduleId),
   ["@acme/shop/modules/storefront"],
@@ -189,7 +194,14 @@ assert.deepEqual(projectedClient.areas.public?.renderLoaders?.map(([type]) => ty
 assert.deepEqual(projectedClient.areas.admin?.renderLoaders?.map(([type]) => type), ["@acme/shop/cart"]);
 assert.deepEqual(projectedClient.areas.admin?.dataProviders?.map((entry) => entry.key), ["@acme/shop/orders"]);
 assert.deepEqual(projectedClient.areas.public?.dataProviders, [], "orders is not eligible for public");
-assert.deepEqual(projectedClient.areas.public?.authoring?.map((entry) => entry.moduleId), [storefront]);
+// A Module in two Areas is held once, not once per Area, so nothing has to be de-duplicated later.
+assert.deepEqual(projectedClient.authoring.map((entry) => entry.moduleId), [storefront, orders]);
+for (const area of Object.values(projectedClient.areas)) {
+  assert.ok(
+    !Object.keys(area ?? {}).includes("authoring"),
+    "the projection must not place Authoring contributions into an Area",
+  );
+}
 assert.deepEqual(
   projectedClient.calendarAdapters.map((entry) => entry.key),
   ["@acme/shop/calendars/deliveries"],

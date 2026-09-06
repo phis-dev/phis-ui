@@ -1,6 +1,6 @@
 "use client";
 
-import { PHI_CMS_AREA_KEYS, type PhiCmsAreaKey } from "../../constants/cms-areas";
+import type { PhiCmsAreaKey } from "../../constants/cms-areas";
 import {
   extendPhiRuntimeModuleCalendarAdapterClientManifest,
   type PhiRuntimeModuleCalendarAdapterClientManifest,
@@ -15,7 +15,6 @@ import {
 } from "../../components/runtime/runtime-module-render-client-manifest";
 import type { PhiRuntimeModuleControllerClientManifest } from "../../components/runtime/runtime-module-controller-client-manifest";
 import { extendPhiRuntimeModuleControllerClientManifest } from "./area-contributions-controller-client";
-import type { PhiRuntimeModuleId } from "../../types/cms-module-descriptors";
 import type { PhiRuntimeModuleAuthoringClientContribution } from "./authoring-contributions-client";
 import type {
   PhiSiteModuleClientAreaContributions,
@@ -80,22 +79,14 @@ export function extendWithPhiSiteModuleClientManifests(
 /**
  * The Site's own Authoring contributions, for the Builder.
  *
- * The Builder receives the union across every Area so a Module can be authored inside an isolated
- * target-Area Canvas without being mounted in the Builder Area itself. A Module contributing to
- * several Areas appears once: `extendPhiRuntimeModuleAuthoringClientManifest` refuses a repeated
- * module id, and repeating one across Areas is ordinary rather than a fault.
+ * One per Module and no Area dimension: the Builder wraps an Authoring Client around the canvas for
+ * every active Module so a Module can be authored inside an isolated target-Area Canvas without being
+ * mounted in the Builder Area itself. The projection already holds them that way, so this is a read
+ * rather than a union across six Areas that only ever undid a placement.
  */
 export function readAllPhiSiteModuleAuthoringClientContributions(
   contributions: PhiSiteModuleClientContributions,
 ): readonly PhiRuntimeModuleAuthoringClientContribution[] {
-  const byModuleId = new Map<PhiRuntimeModuleId, PhiRuntimeModuleAuthoringClientContribution>();
-  for (const area of PHI_CMS_AREA_KEYS) {
-    for (const contribution of readPhiSiteModuleClientAreaContributions(contributions, area).authoring ?? []) {
-      if (!byModuleId.has(contribution.moduleId)) {
-        byModuleId.set(contribution.moduleId, contribution);
-      }
-    }
-  }
-  return [...byModuleId.values()];
+  return contributions.authoring;
 }
 

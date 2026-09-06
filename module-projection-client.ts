@@ -19,19 +19,19 @@ import type { PhiSiteModuleClientContributions } from "./plugins/runtime-modules
  * inconsistently, and carrying it would leave a loader registered for a Module no Area offers.
  *
  * Calendar adapters are not placed at all. They resolve by type wherever a Widget renders, and every Area
- * holds the same set.
+ * holds the same set. Authoring contributions are not placed either, and for a kindred reason: the
+ * Builder wraps one around the canvas for each active Module whichever Area is being edited, so an Area
+ * is not a thing they are ever asked about.
  *
- * Every Module must bring an Authoring contribution, including one that owns nothing to author. The
- * Builder wraps each active Module's Authoring Client around the canvas, so a missing loader is a hard
- * failure at render time -- refused here instead, where the package is composed and the author can still
- * see which Module it is.
+ * Every Module must bring an Authoring contribution, including one that owns nothing to author. A
+ * missing loader is a hard failure at render time -- refused here instead, where the package is composed
+ * and the author can still see which Module it is.
  */
 
 type CollectedArea = {
   controllers: PhiRuntimeModuleControllerClientAreaContribution[];
   renderLoaders: Array<readonly [string, PhiRuntimeModuleRenderClientLoader]>;
   dataProviders: PhiRuntimeModuleDataProviderClientDefinition[];
-  authoring: PhiRuntimeModuleAuthoringClientContribution[];
 };
 
 export function collectPhiSiteModuleClientContributions(input: {
@@ -63,7 +63,6 @@ export function collectPhiSiteModuleClientContributions(input: {
       controllers: [],
       renderLoaders: [],
       dataProviders: [],
-      authoring: [],
     };
     collected.set(area, created);
     return created;
@@ -83,14 +82,17 @@ export function collectPhiSiteModuleClientContributions(input: {
     }
   }
 
+  /* One per Module, in the order the package composed them, and none for a Module nothing defined. */
+  const authoringByModuleId = new Map<PhiRuntimeModuleId, PhiRuntimeModuleAuthoringClientContribution>();
   for (const contribution of input.authoring) {
-    for (const area of areasByModuleId.get(contribution.moduleId) ?? []) {
-      areaFor(area).authoring.push(contribution);
+    if (areasByModuleId.has(contribution.moduleId) && !authoringByModuleId.has(contribution.moduleId)) {
+      authoringByModuleId.set(contribution.moduleId, contribution);
     }
   }
 
   return {
     areas: Object.fromEntries(collected),
     calendarAdapters: input.clients.flatMap((client) => [...(client.calendarAdapters ?? [])]),
+    authoring: [...authoringByModuleId.values()],
   };
 }
