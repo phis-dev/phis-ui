@@ -88,6 +88,17 @@ export type PhiTableColumnDefinition = {
    * Control's node `iconFieldKey`.
    */
   iconFieldKey?: string;
+  /**
+   * An icon for the column heading itself, from the same icon vocabulary as everything else
+   * (`antd:info-circle`, `@phis/ui/widgets:table`).
+   *
+   * With `titleDisplay: "icon"` the heading is the icon alone and `title` becomes its accessible name
+   * and its tooltip -- for a column whose heading is longer than anything under it, six checkbox
+   * columns wearing Area names being the case that asked for it. The title is never dropped, only
+   * moved: a heading nobody can read is worse than a wide one.
+   */
+  titleIcon?: string;
+  titleDisplay?: "icon-label" | "icon";
   renderer?: "text" | "email" | "date" | "datetime" | "badge" | "tags" | "link" | "code" | "json" | "switch" | "checkbox" | "icon";
   editor?: {
     control?: PhiTableColumnEditorControl;
@@ -907,6 +918,9 @@ export function validatePhiTableWidgetBinding(
     const field = fieldsByKey.get(column.fieldKey);
     if (column.editor && !field?.mutable) {
       errors.push(`Table column "${column.key}" cannot edit read-only field "${column.fieldKey}".`);
+    }
+    if (column.titleDisplay === "icon" && !column.titleIcon) {
+      errors.push(`Table column "${column.key}" hides its title without a title icon.`);
     }
     if (column.iconFieldKey !== undefined) {
       const iconField = fieldsByKey.get(column.iconFieldKey);

@@ -317,6 +317,8 @@ function readColumns(value: unknown): PhiTableColumnDefinition[] {
       fieldKey,
       sortField: readString(item.sortField),
       iconFieldKey: readString(item.iconFieldKey),
+      titleIcon: readString(item.titleIcon),
+      titleDisplay: item.titleDisplay === "icon" ? "icon" : undefined,
       renderer,
       editor: rawEditor && readBoolean(rawEditor.enabled) !== false
         ? { control: editorControl, disabledWhen: readConditionExpression(rawEditor.disabledWhen) }

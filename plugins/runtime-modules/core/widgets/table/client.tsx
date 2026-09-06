@@ -195,6 +195,32 @@ function renderTableSummaryItem(item: PhiTableSummaryItemDefinition, value: PhiT
     : <>{item.label} {renderedValue}</>;
 }
 
+/**
+ * The column heading: its text, its icon, or the icon alone with the text as its name.
+ *
+ * An icon-only heading keeps the title in the tooltip and in `aria-label`, so a screen reader and a
+ * hesitating pointer both still get the word the column was named after.
+ */
+function buildTableColumnTitle(column: PhiTableColumnDefinition) {
+  if (!column.titleIcon) {
+    return column.title;
+  }
+  const icon = <PhiIcon name={column.titleIcon} />;
+  if (column.titleDisplay === "icon") {
+    return (
+      <Tooltip title={column.title}>
+        <span role="img" aria-label={column.title}>{icon}</span>
+      </Tooltip>
+    );
+  }
+  return (
+    <Flex align="center" gap={4} wrap={false}>
+      {icon}
+      <span>{column.title}</span>
+    </Flex>
+  );
+}
+
 function buildDefaultFilterState(filters: readonly PhiTableFilterDefinition[] | undefined) {
   return Object.fromEntries((filters ?? []).flatMap((filter) =>
     filter.defaultValue === undefined ? [] : [[filter.key, filter.defaultValue]],
@@ -661,7 +687,7 @@ export function PhiTableWidgetClient({
   const columns = useMemo<PhiTableControlColumn<TableRow>[]>(() => {
     const result: PhiTableControlColumn<TableRow>[] = presentation.columns.filter((column) => !column.hidden).map((column) => ({
       key: column.key,
-      title: column.title,
+      title: buildTableColumnTitle(column),
       fieldPath: column.fieldKey,
       sortField: column.sortField,
       sizing: column.sizing,
