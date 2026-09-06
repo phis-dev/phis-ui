@@ -1,10 +1,7 @@
 import "server-only";
 
-import {
-  PHI_TR_CTX_WEB_UI_LABEL,
-  type PhiGlobalTranslatorOptions,
-} from "../../../gateway/tr";
-import { definePhiLabelSet, getPhiLabelSet } from "../../../gateway/label-set";
+import { PHI_TR_CTX_WEB_UI_LABEL, type PhiGlobalTranslatorOptions } from "../../../gateway/tr";
+import { definePhiLabelSet, definePhiMessageLabel, getPhiLabelSet } from "../../../gateway/label-set";
 
 const PHI_ACCOUNT_MENU_LABEL_SET = definePhiLabelSet({
   key: "widget:account-menu",
@@ -27,14 +24,14 @@ const PHI_LOGIN_MODAL_LABEL_SET = definePhiLabelSet({
     email_label: "Email",
     password_label: "Password",
     forgot_password_label: "Forgot password?",
-    email_required: "Please enter your email.",
-    email_invalid: "Please enter a valid email address.",
-    password_required: "Please enter your password.",
-    error_init_session: "Could not initialize login session.",
-    error_account_disabled: "Your account is disabled. Please contact support.",
-    error_invalid_credentials: "Invalid credentials.",
-    error_login_failed: "Login failed.",
-    error_network: "Network error while logging in.",
+    email_required: definePhiMessageLabel("Please enter your email."),
+    email_invalid: definePhiMessageLabel("Please enter a valid email address."),
+    password_required: definePhiMessageLabel("Please enter your password."),
+    error_init_session: definePhiMessageLabel("Could not initialize login session."),
+    error_account_disabled: definePhiMessageLabel("Your account is disabled. Please contact support."),
+    error_invalid_credentials: definePhiMessageLabel("Invalid credentials."),
+    error_login_failed: definePhiMessageLabel("Login failed."),
+    error_network: definePhiMessageLabel("Network error while logging in."),
   },
 });
 

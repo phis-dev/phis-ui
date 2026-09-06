@@ -1,40 +1,37 @@
 import "server-only";
 
-import {
-  PHI_TR_CTX_WEB_UI_LABEL,
-  type PhiGlobalTranslatorOptions,
-} from "../../gateway/tr";
-import { definePhiLabelSet, getPhiLabelSet } from "../../gateway/label-set";
+import { PHI_TR_CTX_WEB_UI_LABEL, type PhiGlobalTranslatorOptions } from "../../gateway/tr";
+import { definePhiLabelSet, definePhiMessageLabel, getPhiLabelSet } from "../../gateway/label-set";
 
 const PHI_MEDIA_SETTINGS_PAGE_LABEL_SET = definePhiLabelSet({
   key: "preset:admin-media-settings-page",
   ctx: PHI_TR_CTX_WEB_UI_LABEL,
   labels: {
     page_title: "Media",
-    page_description: "Configure the default Media Space quotas for this site.",
+    page_description: definePhiMessageLabel("Configure the default Media Space quotas for this site."),
     intro_title: "Media settings",
-    intro_description: "Control the default storage quotas, and the ceilings an individual Space may not exceed.",
+    intro_description: definePhiMessageLabel("Control the default storage quotas, and the ceilings an individual Space may not exceed."),
     technical_title: "Technical",
-    technical_description: "Read-only runtime values derived from the current media configuration.",
+    technical_description: definePhiMessageLabel("Read-only runtime values derived from the current media configuration."),
     max_object_bytes_label: "Maximum object size (bytes)",
     user_spaces_enabled_label: "User Spaces",
     group_spaces_enabled_label: "Group Spaces",
     space_kind_available: "available",
     space_kind_unavailable: "not activated by any Module",
     default_user_quota_label: "Default User Space quota (bytes)",
-    default_user_quota_hint: "Applies to User Spaces without an override. Empty means no limit.",
+    default_user_quota_hint: definePhiMessageLabel("Applies to User Spaces without an override. Empty means no limit."),
     default_group_quota_label: "Default Group Space quota (bytes)",
-    default_group_quota_hint: "Applies to Group Spaces without an override. Empty means no limit.",
+    default_group_quota_hint: definePhiMessageLabel("Applies to Group Spaces without an override. Empty means no limit."),
     default_addon_quota_label: "Default Add-on Space quota (bytes)",
-    default_addon_quota_hint: "Applies to each Add-on's own store. An Add-on Space has no owner to notice it filling, so a limit here is what bounds it.",
+    default_addon_quota_hint: definePhiMessageLabel("Applies to each Add-on's own store. An Add-on Space has no owner to notice it filling, so a limit here is what bounds it."),
     max_user_quota_label: "Maximum User Space quota (bytes)",
-    max_user_quota_hint: "The ceiling an override may not exceed. Empty means no ceiling.",
+    max_user_quota_hint: definePhiMessageLabel("The ceiling an override may not exceed. Empty means no ceiling."),
     max_group_quota_label: "Maximum Group Space quota (bytes)",
-    max_group_quota_hint: "The ceiling a group Manager may not exceed for their own group. Empty means no ceiling.",
+    max_group_quota_hint: definePhiMessageLabel("The ceiling a group Manager may not exceed for their own group. Empty means no ceiling."),
     max_addon_quota_label: "Maximum Add-on Space quota (bytes)",
-    max_addon_quota_hint: "The ceiling an override may not exceed. Empty means no ceiling.",
+    max_addon_quota_hint: definePhiMessageLabel("The ceiling an override may not exceed. Empty means no ceiling."),
     addon_spaces_title: "Add-on stores",
-    addon_spaces_empty: "No Add-on holds files on this site.",
+    addon_spaces_empty: definePhiMessageLabel("No Add-on holds files on this site."),
     submit_label: "Save",
   },
 });

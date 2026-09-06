@@ -1,10 +1,7 @@
 import "server-only";
 
-import { definePhiLabelSet, getPhiLabelSet } from "../../../gateway/label-set";
-import {
-  PHI_TR_CTX_WEB_UI_LABEL,
-  type PhiGlobalTranslatorOptions,
-} from "../../../gateway/tr";
+import { definePhiLabelSet, definePhiMessageLabel, getPhiLabelSet } from "../../../gateway/label-set";
+import { PHI_TR_CTX_WEB_UI_LABEL, type PhiGlobalTranslatorOptions } from "../../../gateway/tr";
 import {
   PHI_IMAGE_WIDGET_DEFAULT_LABELS,
   type PhiImageWidgetLabels,
@@ -15,7 +12,7 @@ const PHI_IMAGE_WIDGET_LABEL_SET = definePhiLabelSet({
   ctx: PHI_TR_CTX_WEB_UI_LABEL,
   labels: {
     empty_title: PHI_IMAGE_WIDGET_DEFAULT_LABELS.emptyTitle,
-    empty_description: PHI_IMAGE_WIDGET_DEFAULT_LABELS.emptyDescription,
+    empty_description: definePhiMessageLabel(PHI_IMAGE_WIDGET_DEFAULT_LABELS.emptyDescription),
   },
 });
 

@@ -1,14 +1,14 @@
 import "server-only";
 
 import { PHI_TR_CTX_WEB_UI_LABEL, type PhiGlobalTranslatorOptions } from "../../../gateway/tr";
-import { definePhiLabelSet, getPhiLabelSet } from "../../../gateway/label-set";
+import { definePhiLabelSet, definePhiMessageLabel, getPhiLabelSet } from "../../../gateway/label-set";
 
 const PHI_EDITOR_TRANSLATIONS_PAGE_LABEL_SET = definePhiLabelSet({
   key: "preset:editor-translations-page",
   ctx: PHI_TR_CTX_WEB_UI_LABEL,
   labels: {
     page_title: "Translations",
-    page_description: "Review and edit site-specific translations for the current site.",
+    page_description: definePhiMessageLabel("Review and edit site-specific translations for the current site."),
     content_label: "Translations content",
     widget_label: "Translation workspace",
   },

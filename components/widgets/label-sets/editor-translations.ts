@@ -1,7 +1,7 @@
 import "server-only";
 
 import { PHI_TR_CTX_WEB_UI_LABEL, type PhiGlobalTranslatorOptions } from "../../../gateway/tr";
-import { definePhiLabelSet, getPhiLabelSet } from "../../../gateway/label-set";
+import { definePhiLabelSet, definePhiMessageLabel, getPhiLabelSet } from "../../../gateway/label-set";
 import type { PhiEditorTranslationsWidgetLabels } from "../label-types/editor-translations";
 
 const PHI_EDITOR_TRANSLATIONS_WIDGET_LABEL_SET = definePhiLabelSet({
@@ -9,7 +9,7 @@ const PHI_EDITOR_TRANSLATIONS_WIDGET_LABEL_SET = definePhiLabelSet({
   ctx: PHI_TR_CTX_WEB_UI_LABEL,
   labels: {
     title: "Translations",
-    description: "Edit translated site messages for the selected language.",
+    description: definePhiMessageLabel("Edit translated site messages for the selected language."),
     source_locale_label: "Source language",
     target_locale_label: "Target language",
     context_label: "Context",
@@ -35,14 +35,14 @@ const PHI_EDITOR_TRANSLATIONS_WIDGET_LABEL_SET = definePhiLabelSet({
     action_delete: "Delete",
     translation_placeholder: "Enter translation",
     delete_title: "Delete translation",
-    delete_description: "Delete this translated variant?",
-    empty_title: "No translations found.",
-    empty_text: "No source messages match the current filters.",
-    load_error: "Failed to load translations.",
-    save_error: "Failed to save translation.",
-    delete_error: "Failed to delete translation.",
-    save_success: "Translation saved.",
-    delete_success: "Translation deleted.",
+    delete_description: definePhiMessageLabel("Delete this translated variant?"),
+    empty_title: definePhiMessageLabel("No translations found."),
+    empty_text: definePhiMessageLabel("No source messages match the current filters."),
+    load_error: definePhiMessageLabel("Failed to load translations."),
+    save_error: definePhiMessageLabel("Failed to save translation."),
+    delete_error: definePhiMessageLabel("Failed to delete translation."),
+    save_success: definePhiMessageLabel("Translation saved."),
+    delete_success: definePhiMessageLabel("Translation deleted."),
   },
 });
 

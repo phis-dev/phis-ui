@@ -1,14 +1,14 @@
 import "server-only";
 
 import { PHI_TR_CTX_WEB_UI_LABEL, type PhiGlobalTranslatorOptions } from "../../../gateway/tr";
-import { definePhiLabelSet, getPhiLabelSet } from "../../../gateway/label-set";
+import { definePhiLabelSet, definePhiMessageLabel, getPhiLabelSet } from "../../../gateway/label-set";
 
 const PHI_ADMIN_USERS_PAGE_LABEL_SET = definePhiLabelSet({
   key: "preset:admin-users-page",
   ctx: PHI_TR_CTX_WEB_UI_LABEL,
   labels: {
     page_title: "Users",
-    page_description: "Manage local site users, roles, access, and login history.",
+    page_description: definePhiMessageLabel("Manage local site users, roles, access, and login history."),
     content_label: "Users content",
     table_label: "Users table",
   },

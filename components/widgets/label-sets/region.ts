@@ -1,10 +1,7 @@
 import "server-only";
 
-import {
-  PHI_TR_CTX_WEB_UI_LABEL,
-  type PhiGlobalTranslatorOptions,
-} from "../../../gateway/tr";
-import { definePhiLabelSet, getPhiLabelSet } from "../../../gateway/label-set";
+import { PHI_TR_CTX_WEB_UI_LABEL, type PhiGlobalTranslatorOptions } from "../../../gateway/tr";
+import { definePhiLabelSet, definePhiMessageLabel, getPhiLabelSet } from "../../../gateway/label-set";
 import {
   PHI_REGION_WIDGET_DEFAULT_LABELS,
   type PhiRegionWidgetLabels,
@@ -19,7 +16,7 @@ const PHI_REGION_WIDGET_LABEL_SET = definePhiLabelSet({
     structure_surface_selected_page_header_band: PHI_REGION_WIDGET_DEFAULT_LABELS.structure.surface.selectedPageHeaderBand,
     structure_surface_page_sidebar: PHI_REGION_WIDGET_DEFAULT_LABELS.structure.surface.pageSidebar,
     structure_surface_content_title: PHI_REGION_WIDGET_DEFAULT_LABELS.structure.surface.contentTitle,
-    structure_surface_content_description: PHI_REGION_WIDGET_DEFAULT_LABELS.structure.surface.contentDescription,
+    structure_surface_content_description: definePhiMessageLabel(PHI_REGION_WIDGET_DEFAULT_LABELS.structure.surface.contentDescription),
     header_top_title: PHI_REGION_WIDGET_DEFAULT_LABELS.regions.headerTop.title,
     header_top_subtitle: PHI_REGION_WIDGET_DEFAULT_LABELS.regions.headerTop.subtitle,
     header_main_title: PHI_REGION_WIDGET_DEFAULT_LABELS.regions.headerMain.title,

@@ -1,10 +1,7 @@
 import "server-only";
 
-import {
-  PHI_TR_CTX_WEB_UI_LABEL,
-  type PhiGlobalTranslatorOptions,
-} from "../../../gateway/tr";
-import { definePhiLabelSet, getPhiLabelSet } from "../../../gateway/label-set";
+import { PHI_TR_CTX_WEB_UI_LABEL, type PhiGlobalTranslatorOptions } from "../../../gateway/tr";
+import { definePhiLabelSet, definePhiMessageLabel, getPhiLabelSet } from "../../../gateway/label-set";
 
 const PHI_CONTACT_FORM_LABEL_SET = definePhiLabelSet({
   key: "widget:contact-form",
@@ -12,21 +9,21 @@ const PHI_CONTACT_FORM_LABEL_SET = definePhiLabelSet({
   labels: {
     name_label: "Name",
     name_placeholder: "Your name",
-    name_required: "Please enter your name.",
+    name_required: definePhiMessageLabel("Please enter your name."),
     email_label: "Email",
     email_placeholder: "mail@example.com",
-    email_required: "Please enter your email address.",
-    email_invalid: "Please provide a valid email address.",
+    email_required: definePhiMessageLabel("Please enter your email address."),
+    email_invalid: definePhiMessageLabel("Please provide a valid email address."),
     subject_label: "Subject",
-    subject_placeholder: "What is this about?",
-    subject_required: "Please enter a subject.",
+    subject_placeholder: definePhiMessageLabel("What is this about?"),
+    subject_required: definePhiMessageLabel("Please enter a subject."),
     message_label: "Message",
     message_placeholder: "Your message",
-    message_required: "Please enter your message.",
-    generic_error: "Could not send message.",
+    message_required: definePhiMessageLabel("Please enter your message."),
+    generic_error: definePhiMessageLabel("Could not send message."),
     submit_label: "Send",
     success_title: "Message sent",
-    success_text: "Your message has been submitted successfully. We will get back to you as soon as possible.",
+    success_text: definePhiMessageLabel("Your message has been submitted successfully. We will get back to you as soon as possible."),
   },
 });
 

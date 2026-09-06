@@ -1,10 +1,7 @@
 import "server-only";
 
-import {
-  PHI_TR_CTX_WEB_UI_LABEL,
-  type PhiGlobalTranslatorOptions,
-} from "../../../gateway/tr";
-import { definePhiLabelSet, getPhiLabelSet } from "../../../gateway/label-set";
+import { PHI_TR_CTX_WEB_UI_LABEL, type PhiGlobalTranslatorOptions } from "../../../gateway/tr";
+import { definePhiLabelSet, definePhiMessageLabel, getPhiLabelSet } from "../../../gateway/label-set";
 import {
   PHI_EFFECTS_WIDGET_DEFAULT_LABELS,
   type PhiEffectsWidgetLabels,
@@ -53,8 +50,8 @@ const PHI_EFFECTS_WIDGET_LABEL_SET = definePhiLabelSet({
     table_transition: PHI_EFFECTS_WIDGET_DEFAULT_LABELS.table.transition,
     table_trigger: PHI_EFFECTS_WIDGET_DEFAULT_LABELS.table.trigger,
     table_viewport_effect: PHI_EFFECTS_WIDGET_DEFAULT_LABELS.table.viewportEffect,
-    table_empty_transitions: PHI_EFFECTS_WIDGET_DEFAULT_LABELS.table.emptyTransitions,
-    table_empty_viewport_effects: PHI_EFFECTS_WIDGET_DEFAULT_LABELS.table.emptyViewportEffects,
+    table_empty_transitions: definePhiMessageLabel(PHI_EFFECTS_WIDGET_DEFAULT_LABELS.table.emptyTransitions),
+    table_empty_viewport_effects: definePhiMessageLabel(PHI_EFFECTS_WIDGET_DEFAULT_LABELS.table.emptyViewportEffects),
     transition_fade: PHI_EFFECTS_WIDGET_DEFAULT_LABELS.transitions.fade,
     transition_slide: PHI_EFFECTS_WIDGET_DEFAULT_LABELS.transitions.slide,
     transition_flip: PHI_EFFECTS_WIDGET_DEFAULT_LABELS.transitions.flip,

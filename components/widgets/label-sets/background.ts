@@ -1,10 +1,7 @@
 import "server-only";
 
-import {
-  PHI_TR_CTX_WEB_UI_LABEL,
-  type PhiGlobalTranslatorOptions,
-} from "../../../gateway/tr";
-import { definePhiLabelSet, getPhiLabelSet } from "../../../gateway/label-set";
+import { PHI_TR_CTX_WEB_UI_LABEL, type PhiGlobalTranslatorOptions } from "../../../gateway/tr";
+import { definePhiLabelSet, definePhiMessageLabel, getPhiLabelSet } from "../../../gateway/label-set";
 import {
   PHI_BACKGROUND_WIDGET_DEFAULT_LABELS,
   type PhiBackgroundWidgetLabels,
@@ -15,7 +12,7 @@ const PHI_BACKGROUND_WIDGET_LABEL_SET = definePhiLabelSet({
   ctx: PHI_TR_CTX_WEB_UI_LABEL,
   labels: {
     title: PHI_BACKGROUND_WIDGET_DEFAULT_LABELS.title,
-    description: PHI_BACKGROUND_WIDGET_DEFAULT_LABELS.description,
+    description: definePhiMessageLabel(PHI_BACKGROUND_WIDGET_DEFAULT_LABELS.description),
     section_base: PHI_BACKGROUND_WIDGET_DEFAULT_LABELS.sections.base,
     section_image: PHI_BACKGROUND_WIDGET_DEFAULT_LABELS.sections.image,
     section_gradient: PHI_BACKGROUND_WIDGET_DEFAULT_LABELS.sections.gradient,
@@ -41,7 +38,7 @@ const PHI_BACKGROUND_WIDGET_LABEL_SET = definePhiLabelSet({
     motion_travel: PHI_BACKGROUND_WIDGET_DEFAULT_LABELS.motion.travel,
     motion_rate: PHI_BACKGROUND_WIDGET_DEFAULT_LABELS.motion.rate,
     motion_range: PHI_BACKGROUND_WIDGET_DEFAULT_LABELS.motion.range,
-    motion_uses_original: PHI_BACKGROUND_WIDGET_DEFAULT_LABELS.motion.usesOriginal,
+    motion_uses_original: definePhiMessageLabel(PHI_BACKGROUND_WIDGET_DEFAULT_LABELS.motion.usesOriginal),
     gradient_direction: PHI_BACKGROUND_WIDGET_DEFAULT_LABELS.gradient.direction,
     gradient_stops: PHI_BACKGROUND_WIDGET_DEFAULT_LABELS.gradient.stops,
     gradient_add_stop: PHI_BACKGROUND_WIDGET_DEFAULT_LABELS.gradient.addStop,

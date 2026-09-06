@@ -1,10 +1,7 @@
 import "server-only";
 
-import { definePhiLabelSet, getPhiLabelSet } from "../../../gateway/label-set";
-import {
-  PHI_TR_CTX_WEB_UI_LABEL,
-  type PhiGlobalTranslatorOptions,
-} from "../../../gateway/tr";
+import { definePhiLabelSet, definePhiMessageLabel, getPhiLabelSet } from "../../../gateway/label-set";
+import { PHI_TR_CTX_WEB_UI_LABEL, type PhiGlobalTranslatorOptions } from "../../../gateway/tr";
 import {
   PHI_LENGTH_WIDGET_DEFAULT_LABELS,
   type PhiLengthWidgetLabels,
@@ -15,7 +12,7 @@ const PHI_LENGTH_WIDGET_LABEL_SET = definePhiLabelSet({
   ctx: PHI_TR_CTX_WEB_UI_LABEL,
   labels: {
     title: PHI_LENGTH_WIDGET_DEFAULT_LABELS.title,
-    description: PHI_LENGTH_WIDGET_DEFAULT_LABELS.description,
+    description: definePhiMessageLabel(PHI_LENGTH_WIDGET_DEFAULT_LABELS.description),
     placeholder: PHI_LENGTH_WIDGET_DEFAULT_LABELS.placeholder,
   },
 });

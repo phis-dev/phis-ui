@@ -1,10 +1,7 @@
 import "server-only";
 
-import {
-  PHI_TR_CTX_WEB_UI_LABEL,
-  type PhiGlobalTranslatorOptions,
-} from "../../../gateway/tr";
-import { definePhiLabelSet, getPhiLabelSet } from "../../../gateway/label-set";
+import { PHI_TR_CTX_WEB_UI_LABEL, type PhiGlobalTranslatorOptions } from "../../../gateway/tr";
+import { definePhiLabelSet, definePhiMessageLabel, getPhiLabelSet } from "../../../gateway/label-set";
 import {
   PHI_SIGNALS_WIDGET_DEFAULT_LABELS,
   type PhiSignalsWidgetLabels,
@@ -15,7 +12,7 @@ const PHI_SIGNALS_WIDGET_LABEL_SET = definePhiLabelSet({
   ctx: PHI_TR_CTX_WEB_UI_LABEL,
   labels: {
     title: PHI_SIGNALS_WIDGET_DEFAULT_LABELS.title,
-    description: PHI_SIGNALS_WIDGET_DEFAULT_LABELS.description,
+    description: definePhiMessageLabel(PHI_SIGNALS_WIDGET_DEFAULT_LABELS.description),
     block_commands: PHI_SIGNALS_WIDGET_DEFAULT_LABELS.blocks.commands,
     block_events: PHI_SIGNALS_WIDGET_DEFAULT_LABELS.blocks.events,
     block_state: PHI_SIGNALS_WIDGET_DEFAULT_LABELS.blocks.state,
@@ -41,7 +38,7 @@ const PHI_SIGNALS_WIDGET_LABEL_SET = definePhiLabelSet({
     routes_derived_scope: PHI_SIGNALS_WIDGET_DEFAULT_LABELS.routes.derivedScope,
     routes_route_preview: PHI_SIGNALS_WIDGET_DEFAULT_LABELS.routes.routePreview,
     routes_no_compatible_route: PHI_SIGNALS_WIDGET_DEFAULT_LABELS.routes.noCompatibleRoute,
-    routes_duplicate_route: PHI_SIGNALS_WIDGET_DEFAULT_LABELS.routes.duplicateRoute,
+    routes_duplicate_route: definePhiMessageLabel(PHI_SIGNALS_WIDGET_DEFAULT_LABELS.routes.duplicateRoute),
     routes_unavailable_receiver: PHI_SIGNALS_WIDGET_DEFAULT_LABELS.routes.unavailableReceiver,
     routes_cancel: PHI_SIGNALS_WIDGET_DEFAULT_LABELS.routes.cancel,
     routes_apply: PHI_SIGNALS_WIDGET_DEFAULT_LABELS.routes.apply,

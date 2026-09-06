@@ -1,20 +1,20 @@
 import "server-only";
 
 import { PHI_TR_CTX_WEB_UI_LABEL, type PhiGlobalTranslatorOptions } from "../../../gateway/tr";
-import { definePhiLabelSet, getPhiLabelSet } from "../../../gateway/label-set";
+import { definePhiLabelSet, definePhiMessageLabel, getPhiLabelSet } from "../../../gateway/label-set";
 
 const PHI_ADMIN_LOCALES_WIDGET_LABEL_SET = definePhiLabelSet({
   key: "widget:admin-locales",
   ctx: PHI_TR_CTX_WEB_UI_LABEL,
   labels: {
     title: "Locales",
-    description: "Manage the current site's available languages and site translations.",
+    description: definePhiMessageLabel("Manage the current site's available languages and site translations."),
     default_locale_label: "Default language",
     available_locales_label: "Available languages",
     save_locales_label: "Save languages",
-    saved_label: "Saved.",
+    saved_label: definePhiMessageLabel("Saved."),
     translations_title: "Site translations",
-    translations_description: "Edit or delete translated variants for the selected site language.",
+    translations_description: definePhiMessageLabel("Edit or delete translated variants for the selected site language."),
     footer_count: "%1 translations of %2 total",
     language_label: "Language",
     search_placeholder: "Search source, context, or translation",
@@ -22,7 +22,7 @@ const PHI_ADMIN_LOCALES_WIDGET_LABEL_SET = definePhiLabelSet({
     refresh_label: "Refresh",
     delete_selected_label: "Delete selected",
     delete_site_keys_label: "Delete locale translations",
-    delete_site_keys_success_label: "Deleted.",
+    delete_site_keys_success_label: definePhiMessageLabel("Deleted."),
     column_source: "Source",
     column_context: "Context",
     column_translation: "Translation",
@@ -35,17 +35,17 @@ const PHI_ADMIN_LOCALES_WIDGET_LABEL_SET = definePhiLabelSet({
     cancel_label: "Cancel",
     save_label: "Save",
     delete_title: "Delete translation",
-    delete_description: "Delete this translated variant?",
-    delete_site_keys_title: "Delete translations for %1?",
-    delete_site_keys_description: "Only the translations for %1 will be deleted. Global translations are not affected.",
-    delete_selected_title: "Delete %1 selected translations?",
-    delete_selected_description: "The selected translated variants will be deleted permanently.",
-    empty_title: "No translations found.",
-    empty_text: "No site translations exist for this language yet.",
-    load_error: "Failed to load locale data.",
-    save_error: "Failed to save locale data.",
-    delete_error: "Failed to delete translation.",
-    delete_site_keys_error: "Failed to delete site translation keys.",
+    delete_description: definePhiMessageLabel("Delete this translated variant?"),
+    delete_site_keys_title: definePhiMessageLabel("Delete translations for %1?"),
+    delete_site_keys_description: definePhiMessageLabel("Only the translations for %1 will be deleted. Global translations are not affected."),
+    delete_selected_title: definePhiMessageLabel("Delete %1 selected translations?"),
+    delete_selected_description: definePhiMessageLabel("The selected translated variants will be deleted permanently."),
+    empty_title: definePhiMessageLabel("No translations found."),
+    empty_text: definePhiMessageLabel("No site translations exist for this language yet."),
+    load_error: definePhiMessageLabel("Failed to load locale data."),
+    save_error: definePhiMessageLabel("Failed to save locale data."),
+    delete_error: definePhiMessageLabel("Failed to delete translation."),
+    delete_site_keys_error: definePhiMessageLabel("Failed to delete site translation keys."),
   },
 });
 

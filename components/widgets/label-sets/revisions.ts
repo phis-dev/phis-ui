@@ -1,7 +1,7 @@
 import "server-only";
 
 import { PHI_TR_CTX_WEB_UI_LABEL, type PhiGlobalTranslatorOptions } from "../../../gateway/tr";
-import { definePhiLabelSet, getPhiLabelSet } from "../../../gateway/label-set";
+import { definePhiLabelSet, definePhiMessageLabel, getPhiLabelSet } from "../../../gateway/label-set";
 import {
   PHI_BUILDER_REVISIONS_WIDGET_DEFAULT_LABELS,
   type PhiBuilderRevisionsWidgetLabels,
@@ -50,13 +50,14 @@ const PHI_BUILDER_REVISIONS_WIDGET_LABEL_SET = definePhiLabelSet({
     action_restore: PHI_BUILDER_REVISIONS_WIDGET_DEFAULT_LABELS.actions.restore,
     action_delete: PHI_BUILDER_REVISIONS_WIDGET_DEFAULT_LABELS.actions.delete,
     action_delete_selected: PHI_BUILDER_REVISIONS_WIDGET_DEFAULT_LABELS.actions.deleteSelected,
-    confirm_restore_title: PHI_BUILDER_REVISIONS_WIDGET_DEFAULT_LABELS.confirm.restoreTitle,
-    confirm_restore_description: PHI_BUILDER_REVISIONS_WIDGET_DEFAULT_LABELS.confirm.restoreDescription,
-    confirm_delete_title: PHI_BUILDER_REVISIONS_WIDGET_DEFAULT_LABELS.confirm.deleteTitle,
-    confirm_delete_description: PHI_BUILDER_REVISIONS_WIDGET_DEFAULT_LABELS.confirm.deleteDescription,
-    confirm_delete_selected_title: PHI_BUILDER_REVISIONS_WIDGET_DEFAULT_LABELS.confirm.deleteSelectedTitle,
-    confirm_delete_selected_description:
+    confirm_restore_title: definePhiMessageLabel(PHI_BUILDER_REVISIONS_WIDGET_DEFAULT_LABELS.confirm.restoreTitle),
+    confirm_restore_description: definePhiMessageLabel(PHI_BUILDER_REVISIONS_WIDGET_DEFAULT_LABELS.confirm.restoreDescription),
+    confirm_delete_title: definePhiMessageLabel(PHI_BUILDER_REVISIONS_WIDGET_DEFAULT_LABELS.confirm.deleteTitle),
+    confirm_delete_description: definePhiMessageLabel(PHI_BUILDER_REVISIONS_WIDGET_DEFAULT_LABELS.confirm.deleteDescription),
+    confirm_delete_selected_title: definePhiMessageLabel(PHI_BUILDER_REVISIONS_WIDGET_DEFAULT_LABELS.confirm.deleteSelectedTitle),
+    confirm_delete_selected_description: definePhiMessageLabel(
       PHI_BUILDER_REVISIONS_WIDGET_DEFAULT_LABELS.confirm.deleteSelectedDescription,
+    ),
   },
 });
 

@@ -1,10 +1,7 @@
 import "server-only";
 
-import { definePhiLabelSet, getPhiLabelSet } from "../../../gateway/label-set";
-import {
-  PHI_TR_CTX_WEB_UI_LABEL,
-  type PhiGlobalTranslatorOptions,
-} from "../../../gateway/tr";
+import { definePhiLabelSet, definePhiMessageLabel, getPhiLabelSet } from "../../../gateway/label-set";
+import { PHI_TR_CTX_WEB_UI_LABEL, type PhiGlobalTranslatorOptions } from "../../../gateway/tr";
 import {
   PHI_BUILDER_CHROME_WIDGET_DEFAULT_LABELS,
   type PhiBuilderChromeWidgetLabels,
@@ -22,7 +19,7 @@ const PHI_BUILDER_CHROME_WIDGET_LABEL_SET = definePhiLabelSet({
     toolbar_reset: PHI_BUILDER_CHROME_WIDGET_DEFAULT_LABELS.toolbar.reset,
     mode_editor: PHI_BUILDER_CHROME_WIDGET_DEFAULT_LABELS.modeSwitch.editor,
     mode_preview: PHI_BUILDER_CHROME_WIDGET_DEFAULT_LABELS.modeSwitch.preview,
-    mode_preview_snapshot_failed: PHI_BUILDER_CHROME_WIDGET_DEFAULT_LABELS.modeSwitch.previewSnapshotFailed,
+    mode_preview_snapshot_failed: definePhiMessageLabel(PHI_BUILDER_CHROME_WIDGET_DEFAULT_LABELS.modeSwitch.previewSnapshotFailed),
     theme_debug: PHI_BUILDER_CHROME_WIDGET_DEFAULT_LABELS.themeSwitch.debug,
     theme_dark: PHI_BUILDER_CHROME_WIDGET_DEFAULT_LABELS.themeSwitch.dark,
     theme_light: PHI_BUILDER_CHROME_WIDGET_DEFAULT_LABELS.themeSwitch.light,
@@ -31,7 +28,7 @@ const PHI_BUILDER_CHROME_WIDGET_LABEL_SET = definePhiLabelSet({
     draft_draft_with_revision: PHI_BUILDER_CHROME_WIDGET_DEFAULT_LABELS.draftStatus.draftWithRevision,
     draft_published: PHI_BUILDER_CHROME_WIDGET_DEFAULT_LABELS.draftStatus.published,
     draft_unavailable: PHI_BUILDER_CHROME_WIDGET_DEFAULT_LABELS.draftStatus.unavailable,
-    draft_read_failed: PHI_BUILDER_CHROME_WIDGET_DEFAULT_LABELS.draftStatus.readFailed,
+    draft_read_failed: definePhiMessageLabel(PHI_BUILDER_CHROME_WIDGET_DEFAULT_LABELS.draftStatus.readFailed),
     pages_new_page: PHI_BUILDER_CHROME_WIDGET_DEFAULT_LABELS.pages.newPage,
     pages_page_meta: PHI_BUILDER_CHROME_WIDGET_DEFAULT_LABELS.pages.pageMeta,
     pages_select_page: PHI_BUILDER_CHROME_WIDGET_DEFAULT_LABELS.pages.selectPage,
@@ -40,8 +37,8 @@ const PHI_BUILDER_CHROME_WIDGET_LABEL_SET = definePhiLabelSet({
     pages_form_title: PHI_BUILDER_CHROME_WIDGET_DEFAULT_LABELS.pages.form.title,
     pages_form_path: PHI_BUILDER_CHROME_WIDGET_DEFAULT_LABELS.pages.form.path,
     pages_form_description: PHI_BUILDER_CHROME_WIDGET_DEFAULT_LABELS.pages.form.description,
-    pages_form_title_required: PHI_BUILDER_CHROME_WIDGET_DEFAULT_LABELS.pages.form.titleRequired,
-    pages_form_path_required: PHI_BUILDER_CHROME_WIDGET_DEFAULT_LABELS.pages.form.pathRequired,
+    pages_form_title_required: definePhiMessageLabel(PHI_BUILDER_CHROME_WIDGET_DEFAULT_LABELS.pages.form.titleRequired),
+    pages_form_path_required: definePhiMessageLabel(PHI_BUILDER_CHROME_WIDGET_DEFAULT_LABELS.pages.form.pathRequired),
     canvas_picker_pick_layout: PHI_BUILDER_CHROME_WIDGET_DEFAULT_LABELS.canvas.picker.pickLayout,
     canvas_picker_pick_widget: PHI_BUILDER_CHROME_WIDGET_DEFAULT_LABELS.canvas.picker.pickWidget,
     canvas_picker_layouts: PHI_BUILDER_CHROME_WIDGET_DEFAULT_LABELS.canvas.picker.layouts,
@@ -50,7 +47,9 @@ const PHI_BUILDER_CHROME_WIDGET_LABEL_SET = definePhiLabelSet({
     canvas_picker_search_widgets: PHI_BUILDER_CHROME_WIDGET_DEFAULT_LABELS.canvas.picker.searchWidgets,
     canvas_picker_filter_packages: PHI_BUILDER_CHROME_WIDGET_DEFAULT_LABELS.canvas.picker.filterPackages,
     canvas_picker_filter_categories: PHI_BUILDER_CHROME_WIDGET_DEFAULT_LABELS.canvas.picker.filterCategories,
-    canvas_picker_no_compatible_items: PHI_BUILDER_CHROME_WIDGET_DEFAULT_LABELS.canvas.picker.noCompatibleItems,
+    canvas_picker_no_compatible_items: definePhiMessageLabel(
+      PHI_BUILDER_CHROME_WIDGET_DEFAULT_LABELS.canvas.picker.noCompatibleItems,
+    ),
     root_route_title: PHI_BUILDER_CHROME_WIDGET_DEFAULT_LABELS.rootRoute.title,
     root_route_automatic: PHI_BUILDER_CHROME_WIDGET_DEFAULT_LABELS.rootRoute.automatic,
     root_route_landing: PHI_BUILDER_CHROME_WIDGET_DEFAULT_LABELS.rootRoute.landing,

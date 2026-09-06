@@ -1,7 +1,7 @@
 import "server-only";
 
 import { PHI_TR_CTX_WEB_UI_LABEL, type PhiGlobalTranslatorOptions } from "../../../gateway/tr";
-import { definePhiLabelSet, getPhiLabelSet } from "../../../gateway/label-set";
+import { definePhiLabelSet, definePhiMessageLabel, getPhiLabelSet } from "../../../gateway/label-set";
 
 const PHI_BUILDER_SETTINGS_PAGE_LABEL_SET = definePhiLabelSet({
   key: "preset:builder-settings-page",
@@ -9,7 +9,7 @@ const PHI_BUILDER_SETTINGS_PAGE_LABEL_SET = definePhiLabelSet({
   labels: {
     page_title: "General",
     technical_title: "Technical",
-    technical_description: "Runtime identity of this Builder area.",
+    technical_description: definePhiMessageLabel("Runtime identity of this Builder area."),
     field_site_key: "Site key",
     field_area: "Area",
     field_base_module: "Base module",

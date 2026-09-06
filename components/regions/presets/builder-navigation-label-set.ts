@@ -1,6 +1,6 @@
 import "server-only";
 
-import { definePhiLabelSet, getPhiLabelSet } from "../../../gateway/label-set";
+import { definePhiLabelSet, definePhiMessageLabel, getPhiLabelSet } from "../../../gateway/label-set";
 import { PHI_TR_CTX_WEB_UI_LABEL, type PhiGlobalTranslatorOptions } from "../../../gateway/tr";
 
 const PHI_BUILDER_NAVIGATION_PAGE_LABEL_SET = definePhiLabelSet({
@@ -20,7 +20,7 @@ const PHI_BUILDER_NAVIGATION_PAGE_LABEL_SET = definePhiLabelSet({
     type_external: "External",
     type_container: "Container",
     type_separator: "Separator",
-    empty_title: "No navigation items yet.",
+    empty_title: definePhiMessageLabel("No navigation items yet."),
     navigation_placeholder: "Choose navigation",
     navigation_create: "Add navigation",
     navigation_key_placeholder: "navigation-key",
@@ -31,7 +31,7 @@ const PHI_BUILDER_NAVIGATION_PAGE_LABEL_SET = definePhiLabelSet({
     action_hide: "Hide",
     action_show: "Show",
     action_delete: "Delete",
-    action_delete_confirm: "Delete navigation item?",
+    action_delete_confirm: definePhiMessageLabel("Delete navigation item?"),
     action_cancel: "Cancel",
   },
 });

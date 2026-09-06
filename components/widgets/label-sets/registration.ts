@@ -1,10 +1,7 @@
 import "server-only";
 
-import {
-  PHI_TR_CTX_WEB_UI_LABEL,
-  type PhiGlobalTranslatorOptions,
-} from "../../../gateway/tr";
-import { definePhiLabelSet, getPhiLabelSet } from "../../../gateway/label-set";
+import { PHI_TR_CTX_WEB_UI_LABEL, type PhiGlobalTranslatorOptions } from "../../../gateway/tr";
+import { definePhiLabelSet, definePhiMessageLabel, getPhiLabelSet } from "../../../gateway/label-set";
 
 const PHI_REGISTRATION_FORM_LABEL_SET = definePhiLabelSet({
   key: "widget:registration",
@@ -12,40 +9,41 @@ const PHI_REGISTRATION_FORM_LABEL_SET = definePhiLabelSet({
   labels: {
     first_name_label: "First name",
     first_name_placeholder: "Jane",
-    first_name_required: "Please enter your first name.",
-    first_name_min_letters: "First name must contain at least 3 letters.",
+    first_name_required: definePhiMessageLabel("Please enter your first name."),
+    first_name_min_letters: definePhiMessageLabel("First name must contain at least 3 letters."),
     last_name_label: "Last name",
     last_name_placeholder: "Doe",
-    last_name_required: "Please enter your last name.",
-    last_name_min_letters: "Last name must contain at least 3 letters.",
+    last_name_required: definePhiMessageLabel("Please enter your last name."),
+    last_name_min_letters: definePhiMessageLabel("Last name must contain at least 3 letters."),
     company_label: "Company",
     company_placeholder: "Optional",
     email_label: "Email",
     email_placeholder: "you@example.com",
-    email_required: "Please enter your email address.",
-    email_invalid: "Please enter a valid email address.",
+    email_required: definePhiMessageLabel("Please enter your email address."),
+    email_invalid: definePhiMessageLabel("Please enter a valid email address."),
     password_label: "Password",
     password_placeholder: "Choose a secure password",
-    password_required: "Please enter a password.",
-    password_length: "Use at least 10 characters.",
+    password_required: definePhiMessageLabel("Please enter a password."),
+    password_length: definePhiMessageLabel("Use at least 10 characters."),
     confirm_password_label: "Confirm password",
     confirm_password_placeholder: "Repeat your password",
-    confirm_password_required: "Please confirm your password.",
-    password_mismatch: "The passwords do not match.",
+    confirm_password_required: definePhiMessageLabel("Please confirm your password."),
+    password_mismatch: definePhiMessageLabel("The passwords do not match."),
     terms_text: "I agree to the %1",
     terms_link_label: "Terms & Conditions",
-    terms_required: "You must accept the terms to continue.",
-    newsletter: "Send me product and platform updates.",
-    notice: "This form sends a verification email first. The live customer account is created only after confirmation.",
-    generic_error: "The registration request could not be completed.",
-    account_exists_error: "Account already exists.",
-    invalid_credentials_error:
+    terms_required: definePhiMessageLabel("You must accept the terms to continue."),
+    newsletter: definePhiMessageLabel("Send me product and platform updates."),
+    notice: definePhiMessageLabel("This form sends a verification email first. The live customer account is created only after confirmation."),
+    generic_error: definePhiMessageLabel("The registration request could not be completed."),
+    account_exists_error: definePhiMessageLabel("Account already exists."),
+    invalid_credentials_error: definePhiMessageLabel(
       "The account with this email already exists. Enter the existing account password to attach it to this site.",
+    ),
     error_title: "Registration failed",
     submit_label: "Create account",
     pending_label: "Preparing request",
     success_title: "Registration request captured",
-    success_text: "Your registration request was stored. Check your email and confirm the link to activate the account.",
+    success_text: definePhiMessageLabel("Your registration request was stored. Check your email and confirm the link to activate the account."),
   },
 });
 

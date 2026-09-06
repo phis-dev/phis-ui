@@ -1,14 +1,14 @@
 import "server-only";
 
 import { PHI_TR_CTX_WEB_UI_LABEL, type PhiGlobalTranslatorOptions } from "../../../gateway/tr";
-import { definePhiLabelSet, getPhiLabelSet } from "../../../gateway/label-set";
+import { definePhiLabelSet, definePhiMessageLabel, getPhiLabelSet } from "../../../gateway/label-set";
 
 const PHI_ADMIN_DASHBOARD_PAGE_LABEL_SET = definePhiLabelSet({
   key: "preset:admin-dashboard-page",
   ctx: PHI_TR_CTX_WEB_UI_LABEL,
   labels: {
     page_title: "Dashboard",
-    page_description: "Review the current site status and core runtime counters at a glance.",
+    page_description: definePhiMessageLabel("Review the current site status and core runtime counters at a glance."),
     runtime_eyebrow: "Runtime",
     uptime_title: "Server uptime",
     uptime_description: "Server process uptime",

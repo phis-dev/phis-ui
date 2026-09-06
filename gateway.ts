@@ -57,6 +57,7 @@ export { fetchPhiMutationJson } from "./gateway/mutation-fetch";
 export { getResolvedSiteConfig, type GetResolvedSiteConfigOptions, type PhiSiteConfig, type PhiSiteTheme, type PhiSiteLocaleOption } from "./gateway/site-config";
 export {
   definePhiLabelSet,
+  definePhiMessageLabel,
   definePhiRuntimeModuleLabelSet,
   getPhiLabelSet,
   type PhiLabelSetDefinition,

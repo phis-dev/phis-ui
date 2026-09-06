@@ -2,6 +2,7 @@ import "server-only";
 
 import {
   createGlobalTranslator,
+  PHI_TR_CTX_WEB_UI_MESSAGE,
   type PhiGlobalTranslatorOptions,
 } from "./tr";
 import { PHI_CANONICAL_SOURCE_LOCALE, normalizeLocale } from "../helpers/locale";
@@ -19,6 +20,16 @@ import { resolvePhiRuntimeModuleSourceLocale } from "../types/runtime-module-loc
 export type PhiLabelSetEntry = string | { text: string; ctx: string };
 
 export type PhiLabelSetLabels = Record<string, PhiLabelSetEntry>;
+
+/**
+ * One label that is a sentence rather than a caption, in a set that is otherwise captions.
+ *
+ * Written out at every call site the register would bury the label it marks, so this says the same
+ * thing in the width of the text itself. Any other register is still written as the plain object.
+ */
+export function definePhiMessageLabel(text: string): PhiLabelSetEntry {
+  return { text, ctx: PHI_TR_CTX_WEB_UI_MESSAGE };
+}
 
 /** What a set reads as once translated: the same keys, all of them plain text. */
 export type PhiLabelSetTexts<TLabels extends PhiLabelSetLabels> = { [K in keyof TLabels]: string };

@@ -1,7 +1,7 @@
 import "server-only";
 
 import { PHI_TR_CTX_WEB_UI_LABEL, type PhiGlobalTranslatorOptions } from "../../../gateway/tr";
-import { definePhiLabelSet, getPhiLabelSet } from "../../../gateway/label-set";
+import { definePhiLabelSet, definePhiMessageLabel, getPhiLabelSet } from "../../../gateway/label-set";
 
 const PHI_OBSERVABILITY_LOGS_WIDGET_LABEL_SET = definePhiLabelSet({
   key: "widget:observability-logs",
@@ -40,8 +40,8 @@ const PHI_OBSERVABILITY_LOGS_WIDGET_LABEL_SET = definePhiLabelSet({
     detail_method: "Method",
     detail_path: "Path",
     detail_status: "Status",
-    empty_title: "No logs found.",
-    empty_text: "Adjust the filters or extend the time window.",
+    empty_title: definePhiMessageLabel("No logs found."),
+    empty_text: definePhiMessageLabel("Adjust the filters or extend the time window."),
   },
 });
 

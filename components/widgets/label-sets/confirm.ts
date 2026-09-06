@@ -1,10 +1,7 @@
 import "server-only";
 
-import {
-  PHI_TR_CTX_WEB_UI_LABEL,
-  type PhiGlobalTranslatorOptions,
-} from "../../../gateway/tr";
-import { definePhiLabelSet, getPhiLabelSet } from "../../../gateway/label-set";
+import { PHI_TR_CTX_WEB_UI_LABEL, type PhiGlobalTranslatorOptions } from "../../../gateway/tr";
+import { definePhiLabelSet, definePhiMessageLabel, getPhiLabelSet } from "../../../gateway/label-set";
 
 const PHI_CONFIRM_WIDGET_LABEL_SET = definePhiLabelSet({
   key: "widget:confirm",
@@ -13,23 +10,23 @@ const PHI_CONFIRM_WIDGET_LABEL_SET = definePhiLabelSet({
     confirm_label: "Confirm",
     pending_label: "Confirming",
     success_title: "Confirmed",
-    success_text: "Your registration has been confirmed.",
+    success_text: definePhiMessageLabel("Your registration has been confirmed."),
     already_title: "Already Confirmed",
-    already_text: "This registration has already been confirmed.",
+    already_text: definePhiMessageLabel("This registration has already been confirmed."),
     invalid_title: "Invalid Link",
-    invalid_text: "This confirmation link is invalid.",
+    invalid_text: definePhiMessageLabel("This confirmation link is invalid."),
     expired_title: "Expired Link",
-    expired_text: "This confirmation link has expired.",
+    expired_text: definePhiMessageLabel("This confirmation link has expired."),
     generic_error_title: "Confirmation Failed",
-    generic_error_text: "The confirmation could not be completed.",
+    generic_error_text: definePhiMessageLabel("The confirmation could not be completed."),
     details_title: "Details",
     name_label: "Name",
     email_label: "Email",
     company_label: "Company",
-    pending_intro: "Review the registration details before confirming.",
-    already_intro: "This registration has already been confirmed.",
+    pending_intro: definePhiMessageLabel("Review the registration details before confirming."),
+    already_intro: definePhiMessageLabel("This registration has already been confirmed."),
     missing_token_title: "Missing Token",
-    missing_token_text: "No confirmation token was provided.",
+    missing_token_text: definePhiMessageLabel("No confirmation token was provided."),
     login_label: "Login",
     back_label: "Back",
   },
