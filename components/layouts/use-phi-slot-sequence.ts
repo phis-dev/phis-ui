@@ -183,6 +183,16 @@ export function usePhiSlotSequence({
       }),
       [signalScope],
     ),
+    /*
+     * The address this sequence answers to, declared so the bus knows it has arrived.
+     *
+     * A signal aimed at a receiver whose instance is registered but which nothing is listening for is
+     * held rather than dropped -- an Overlay body mounts on first open, so the click that opens it
+     * addresses a Widget that will not exist for another render. A sequence subscribes by scope and
+     * channel, which tells the bus nothing about the address it is, so every command aimed at it
+     * waited for a listener that, from the bus's side, never showed up.
+     */
+    signalAddress,
   );
 
   useEffect(() => {

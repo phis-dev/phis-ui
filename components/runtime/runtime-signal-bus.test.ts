@@ -192,3 +192,56 @@ describe("deferred signal delivery", () => {
     expect(received[1]?.channel).toBe("dialog");
   });
 });
+
+/**
+ * Being registered is not the same as listening.
+ *
+ * A block registers its address when it mounts, but the subscription that answers to that address
+ * arrives in a separate effect -- so delivery waits for both. What made this worth a test is the
+ * shape that satisfies neither half: a listener subscribing by scope and channel says nothing about
+ * which address it is, so its instance can be registered, the signal correctly routed, and the
+ * message still held for a listener the bus has no way to recognise. That is what a sequence layout
+ * did, and every command aimed at one waited forever with nothing reported anywhere.
+ */
+describe("a listener that does not name its address", () => {
+  it("leaves an addressed signal waiting, even with the instance registered", async () => {
+    const partition = createPartition();
+    const received: PhiSignal[] = [];
+    const unregister = registerPhiSignalInstance(partition, { address: RECEIVER, scope: "page" });
+    const unsubscribe = subscribePhiSignals(
+      partition,
+      (signal) => received.push(signal),
+      { scopes: ["page"], channels: ["bindingParams"] },
+    );
+
+    emit(partition);
+    await settle();
+    expect(received).toHaveLength(0);
+    expect(partition.pendingSignals.get(RECEIVER)?.size).toBe(1);
+
+    unsubscribe();
+    unregister();
+  });
+
+  it("delivers once the same listener declares the address it answers to", async () => {
+    // The third argument, which is the whole fix: the filter still selects by scope and channel, and
+    // the address is stated separately so the bus can count a listener for it.
+    const partition = createPartition();
+    const received: PhiSignal[] = [];
+    const unregister = registerPhiSignalInstance(partition, { address: RECEIVER, scope: "page" });
+    const unsubscribe = subscribePhiSignals(
+      partition,
+      (signal) => received.push(signal),
+      { scopes: ["page"], channels: ["bindingParams"] },
+      RECEIVER,
+    );
+
+    emit(partition);
+    await settle();
+    expect(received).toHaveLength(1);
+    expect(received[0]?.receiver).toBe(RECEIVER);
+
+    unsubscribe();
+    unregister();
+  });
+});
