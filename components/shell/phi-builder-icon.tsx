@@ -7,6 +7,7 @@ type PhiBuilderIconMotif =
   | "vertical"
   | "flex"
   | "stack"
+  | "carousel"
   | "grid"
   | "masonry"
   | "split-card"
@@ -82,6 +83,17 @@ function StackMotif() {
   );
 }
 
+/** A wide slot with its neighbours cut off at both edges: a window on a run rather than a pile. */
+function CarouselMotif() {
+  return (
+    <>
+      <rect x="1" y="5" width="2.5" height="6" rx="0.8" fill="currentColor" fillOpacity="0.12" />
+      <rect x="4.5" y="4" width="7" height="8" rx="1" fill="currentColor" fillOpacity="0.3" />
+      <rect x="12.5" y="5" width="2.5" height="6" rx="0.8" fill="currentColor" fillOpacity="0.12" />
+    </>
+  );
+}
+
 function GridMotif() {
   return (
     <>
@@ -140,6 +152,7 @@ export function PhiBuilderIcon({ motif, size = 16 }: PhiBuilderIconProps) {
       {motif === "vertical" ? <VerticalMotif /> : null}
       {motif === "flex" ? <FlexMotif /> : null}
       {motif === "stack" ? <StackMotif /> : null}
+      {motif === "carousel" ? <CarouselMotif /> : null}
       {motif === "grid" ? <GridMotif /> : null}
       {motif === "masonry" ? <MasonryMotif /> : null}
       {motif === "split-card" ? <SplitCardMotif /> : null}

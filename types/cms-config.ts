@@ -6,6 +6,12 @@ import {
   readPhiMotionEasing,
   type PhiMotionEasing,
 } from "../helpers/motion";
+import {
+  PHI_SEQUENCE_ANCHORS,
+  PHI_SEQUENCE_TRANSITIONS,
+  type PhiSequenceAnchor,
+  type PhiSequenceTransition,
+} from "../components/motion/phi-sequence-viewport";
 import { readPhiLengthValue, type PhiCssLength } from "./length";
 import type { PhiResponsiveValue } from "./responsive";
 
@@ -301,6 +307,24 @@ export type PhiCmsStackLayoutConfig = PhiCmsLayerBase & {
   slotTransition?: "none" | "fade-over";
   slotTransitionDurationMs?: number;
   slotTransitionEasing?: PhiMotionEasing;
+};
+
+export type PhiCmsCarouselLayoutConfig = PhiCmsLayerBase & {
+  activeSlotKey?: string;
+  defaultActiveSlotKey?: string;
+  /** How many slots stand in the window at once. The Stack's window is always one; this one is not. */
+  visibleSlots?: number;
+  /** Which end of the window the index means, once the window is wider than a slot. */
+  windowAnchor?: PhiSequenceAnchor;
+  transition?: PhiSequenceTransition;
+  transitionDurationMs?: number;
+  transitionEasing?: PhiMotionEasing;
+  slotGap?: string;
+  loop?: boolean;
+  /** Absent or zero means it does not move on its own. */
+  autoplayMs?: number;
+  /** How many slots beyond the window stay mounted, and so how far ahead their content is ready. */
+  lookahead?: number;
 };
 
 export type PhiCmsCollapsibleLayoutConfig = PhiCmsLayerBase & {
@@ -618,6 +642,87 @@ export function parsePhiCmsStackLayoutConfig(
       }),
     },
     resolvePhiLayoutDefaults("stack"),
+  );
+}
+
+/*
+ * Read strictly, and say so when a document is wrong.
+ *
+ * A Carousel whose stored transition is a word nobody knows is a mistake in the document, and a
+ * layout that quietly picks something else hides it: the page renders, no error is reported, and the
+ * slots simply move in a way nobody wrote. Absent is not wrong -- a key that was never written falls
+ * to the layout's defaults, which is a decision rather than a rescue.
+ */
+function failCarousel(key: string, value: unknown, expected: string): never {
+  throw new Error(`Invalid Carousel ${key} ${JSON.stringify(value)}. Expected ${expected}.`);
+}
+
+function readCarouselMember<TMember extends string>(
+  value: unknown,
+  members: readonly TMember[],
+  key: string,
+): TMember | undefined {
+  if (value === undefined || value === null) return undefined;
+  if (typeof value !== "string" || !(members as readonly string[]).includes(value)) {
+    failCarousel(key, value, `one of ${members.join(", ")}`);
+  }
+  return value as TMember;
+}
+
+function readCarouselCount(value: unknown, key: string, min: number): number | undefined {
+  if (value === undefined || value === null) return undefined;
+  if (typeof value !== "number" || !Number.isInteger(value) || value < min) {
+    failCarousel(key, value, `a whole number of at least ${min}`);
+  }
+  return value;
+}
+
+function readCarouselFlag(value: unknown, key: string): boolean | undefined {
+  if (value === undefined || value === null) return undefined;
+  if (typeof value !== "boolean") failCarousel(key, value, "true or false");
+  return value;
+}
+
+export function parsePhiCmsCarouselLayoutConfig(
+  config: Record<string, unknown>,
+): PhiCmsCarouselLayoutConfig {
+  const visibleSlots = readCarouselCount(config.visibleSlots, "visibleSlots", 1);
+  const windowAnchor = readCarouselMember(config.windowAnchor, PHI_SEQUENCE_ANCHORS, "windowAnchor");
+  const transition = readCarouselMember(config.transition, PHI_SEQUENCE_TRANSITIONS, "transition");
+  const loop = readCarouselFlag(config.loop, "loop");
+  const autoplayMs = readCarouselCount(config.autoplayMs, "autoplayMs", 0);
+  const lookahead = readCarouselCount(config.lookahead, "lookahead", 0);
+
+  return applyPhiLayoutDefaults(
+    {
+      ...readRenderableBlockConfig(config),
+      padding: readCssSize(config.padding),
+      background: readString(config.background),
+      border: readString(config.border),
+      borderRadius: readCssSize(config.borderRadius),
+      activeSlotKey: readString(config.activeSlotKey),
+      defaultActiveSlotKey: readString(config.defaultActiveSlotKey),
+      ...(visibleSlots === undefined ? {} : { visibleSlots }),
+      ...(windowAnchor === undefined ? {} : { windowAnchor }),
+      ...(transition === undefined ? {} : { transition }),
+      // Absent means "whatever the theme does", which is why nothing is written here rather than a
+      // number this parser invented.
+      ...(config.transitionDurationMs === undefined || config.transitionDurationMs === null ? {} : {
+        transitionDurationMs: clampPhiSequenceTransitionMs(config.transitionDurationMs),
+      }),
+      ...(config.transitionEasing === undefined ? {} : {
+        transitionEasing: readPhiMotionEasing(config.transitionEasing, undefined),
+      }),
+      slotGap: readString(config.slotGap),
+      ...(loop === undefined ? {} : { loop }),
+      // Zero is how "does not move on its own" is written, so it is the one number below the floor
+      // that means something.
+      ...(autoplayMs === undefined || autoplayMs === 0
+        ? {}
+        : { autoplayMs: clampPhiSequenceTransitionMs(autoplayMs) }),
+      ...(lookahead === undefined ? {} : { lookahead }),
+    },
+    resolvePhiLayoutDefaults("carousel"),
   );
 }
 

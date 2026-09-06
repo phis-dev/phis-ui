@@ -76,6 +76,7 @@ export type PhiLayoutEditRenderTitleControl = (
 export type PhiLayoutKind =
   | "flex"
   | "stack"
+  | "carousel"
   | "grid"
   | "split"
   | "threecol"

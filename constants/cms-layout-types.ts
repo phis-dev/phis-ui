@@ -33,6 +33,7 @@ export const PHI_CMS_LAYOUT_PLUGIN_KEYS = {
 } as const;
 
 const PHI_CMS_LAYOUT_MODULE_BY_TYPE_KEY: Readonly<Record<string, keyof typeof PHI_CMS_LAYOUT_PLUGIN_KEYS>> = {
+  "carousel": "core",
   "collapsible": "core",
   "content": "core",
   "flex": "core",
@@ -125,6 +126,7 @@ export const PHI_CMS_MASONRY_LAYOUT_SLOTS = Array.from({ length: 12 }, (_, index
 
 export const PHI_CMS_GRID_LAYOUT_SLOTS = PHI_CMS_SEQUENTIAL_LAYOUT_SLOTS;
 export const PHI_CMS_STACK_LAYOUT_SLOTS = PHI_CMS_SEQUENTIAL_LAYOUT_SLOTS;
+export const PHI_CMS_CAROUSEL_LAYOUT_SLOTS = PHI_CMS_SEQUENTIAL_LAYOUT_SLOTS;
 export const PHI_CMS_COLLAPSIBLE_LAYOUT_MAX_SLOTS = 12;
 export const PHI_CMS_COLLAPSIBLE_LAYOUT_SLOTS = PHI_CMS_SEQUENTIAL_LAYOUT_SLOTS;
 
@@ -221,6 +223,7 @@ export const PhiCmsLayoutType = {
   Flex: defineLayoutType(resolvePhiCmsLayoutPluginKey("flex"), "flex"),
   FlexVertical: defineLayoutType(resolvePhiCmsLayoutPluginKey("flex-vertical"), "flex-vertical"),
   Stack: defineLayoutType(resolvePhiCmsLayoutPluginKey("stack"), "stack"),
+  Carousel: defineLayoutType(resolvePhiCmsLayoutPluginKey("carousel"), "carousel"),
   Collapsible: defineLayoutType(resolvePhiCmsLayoutPluginKey("collapsible"), "collapsible"),
   Masonry: defineLayoutType(resolvePhiCmsLayoutPluginKey("masonry"), "masonry"),
   Grid: defineLayoutType(resolvePhiCmsLayoutPluginKey("grid"), "grid"),
@@ -270,6 +273,14 @@ const PHI_CMS_LAYOUT_REGISTRY_RAW = [
     typeKey: "stack",
     namespacedTypeKey: PhiCmsLayoutType.Stack,
     slots: PHI_CMS_STACK_LAYOUT_SLOTS,
+  },
+  {
+    key: "carousel",
+    exportName: "PhiCarouselLayout",
+    pluginKey: resolvePhiCmsLayoutPluginKey("carousel"),
+    typeKey: "carousel",
+    namespacedTypeKey: PhiCmsLayoutType.Carousel,
+    slots: PHI_CMS_CAROUSEL_LAYOUT_SLOTS,
   },
   {
     key: "collapsible",

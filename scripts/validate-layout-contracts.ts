@@ -33,6 +33,7 @@ const layoutKinds: readonly PhiLayoutKind[] = [
   "form",
   "flex",
   "stack",
+  "carousel",
   "grid",
   "split",
   "threecol",

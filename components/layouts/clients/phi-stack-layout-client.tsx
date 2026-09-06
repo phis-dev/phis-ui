@@ -1,7 +1,5 @@
 "use client";
 
-import { Button, Space, Typography } from "antd";
-import { LeftOutlined, RightOutlined } from "@ant-design/icons";
 import type { CSSProperties, ReactNode } from "react";
 import { useLayoutEffect, useRef, useState } from "react";
 
@@ -23,15 +21,11 @@ import {
 } from "../phi-layout-view-model";
 import { isRenderablePhiNode } from "../phi-layout-scaffold-utils";
 import { PhiLayoutAnchoredOverlay } from "./phi-layout-anchored-overlay";
+import { PhiSequenceSlotEditor } from "./phi-sequence-slot-editor";
 import type { PhiAnchorWidgetPlacement } from "../../controls/phi-anchor-control-contract";
 import { usePhiSlotSequence } from "../use-phi-slot-sequence";
 import { usePhiConfig } from "../../root/phi-config-provider";
-import {
-  isPhiLayoutAuthoringRender,
-  phiLayoutDebugLayerMarker,
-  phiLayoutSlotClassName,
-  phiLayoutSlotContentMarker,
-} from "../../../helpers/layout-authoring-markers";
+import { isPhiLayoutAuthoringRender } from "../../../helpers/layout-authoring-markers";
 
 export type PhiStackLayoutSlotMeta = {
   key: string;
@@ -98,6 +92,18 @@ export function PhiStackLayout({
     editSlotAnchor = "center",
   } = layoutProps;
   const isEditMode = renderMode === "editor";
+  const chrome = {
+    padding,
+    paddingTop,
+    paddingRight,
+    paddingBottom,
+    paddingLeft,
+    background,
+    border,
+    borderRadius,
+    effect,
+    shadow,
+  };
   const outgoingSlotRef = useRef<HTMLDivElement | null>(null);
   const fadeAnimationRef = useRef<Animation | null>(null);
   const {
@@ -208,163 +214,28 @@ export function PhiStackLayout({
   ]);
 
   if (isEditMode) {
-    const editableSlotCount = Math.max(slots.length, 1);
-    const currentIndex = Math.min(resolvedActiveIndex, editableSlotCount - 1);
-    const currentSlot = slots[currentIndex] ?? null;
-    const hasCurrentSlot = isRenderablePhiNode(currentSlot);
-    const currentSlotKey = slotKeys[currentIndex] ?? `slot_${currentIndex + 1}`;
-    const currentSlotLabel = resolvedSlotMeta.find((meta) => meta.index === currentIndex)?.label ?? currentSlotKey;
-    const hasPreviousSlot = currentIndex > 0;
-    const hasNextSlot = currentIndex < editableSlotCount - 1;
-    const {
-      style: resolvedLayoutStyle,
-      hasExplicitLayoutBackground,
-    } = resolvePhiBaseLayoutChrome({
-      padding,
-      paddingTop,
-      paddingRight,
-      paddingBottom,
-      paddingLeft,
-      background,
-      border,
-      borderRadius,
-      effect,
-      shadow,
-    });
-    const resolvedLayoutInset = resolvePhiLayoutInset({
-      padding,
-      paddingTop,
-      paddingRight,
-      paddingBottom,
-      paddingLeft,
-    });
-
-    const setCurrentIndex = (nextIndex: number) => {
-      setActiveIndex(nextIndex);
-    };
-
     return (
-      <div
-        data-layout-kind={layoutKind}
-        data-phi-block-render-mode={renderMode}
-        data-phi-layout-debug-layer={phiLayoutDebugLayerMarker(isAuthoringRender)}
-        data-phi-layout-has-explicit-layout-background={hasExplicitLayoutBackground ? "true" : "false"}
-        className="phi-layout"
-        style={{
-          position: "relative",
-          display: "flex",
-          flexDirection: "column",
-          ...resolvedLayoutStyle,
-          width: "100%",
-          height: "100%",
-          minWidth: 0,
-          minHeight: 0,
-          ...style,
-        }}
-      >
-        {backgroundLayer}
-        <Space
-          align="center"
-          size={8}
-          style={{
-            position: "relative",
-            zIndex: 2,
-            flex: "0 0 auto",
-            width: "100%",
-            justifyContent: "center",
-            paddingBottom: "var(--ant-padding-xs)",
-          }}
-        >
-          <Button
-            aria-label="Previous stack slot"
-            icon={<LeftOutlined />}
-            size="small"
-            type="text"
-            disabled={!hasPreviousSlot}
-            onClick={(event) => {
-              event.stopPropagation();
-              setCurrentIndex(currentIndex - 1);
-            }}
-          />
-          <Typography.Text type="secondary" style={{ fontSize: 12, minWidth: 64, textAlign: "center" }}>
-            {currentIndex + 1} / {editableSlotCount}
-          </Typography.Text>
-          <Button
-            aria-label="Next stack slot"
-            icon={<RightOutlined />}
-            size="small"
-            type="text"
-            disabled={!hasNextSlot}
-            onClick={(event) => {
-              event.stopPropagation();
-              setCurrentIndex(currentIndex + 1);
-            }}
-          />
-          {editSlotAction && editRenderInsertControl
-            ? editRenderInsertControl({
-              presentation: "inline",
-              slotIndex: currentIndex + 1,
-              label: currentSlotLabel,
-              ariaLabel: "Add stack slot",
-              onInsert: (targetSlotIndex) =>
-                editSlotAction(targetSlotIndex, {
-                  defaultPickSection: "widget",
-                  allowWidgetSection: true,
-                  slotIndex: targetSlotIndex,
-                }),
-            })
-            : null}
-        </Space>
-        <div
-          className={phiLayoutSlotClassName(isAuthoringRender)}
-          data-phi-layout-has-content={phiLayoutSlotContentMarker(isAuthoringRender, hasCurrentSlot)}
-          data-phi-stack-active-slot={currentSlotKey}
-          style={{
-            position: "relative",
-            display: "flex",
-            flex: "1 1 auto",
-            minWidth: 0,
-            minHeight: 0,
-          }}
-        >
-          {hasCurrentSlot ? (
-            <PhiLayoutAnchoredOverlay
-              anchor={editSlotAnchor}
-              positionMode="flow"
-              fillAvailableInline
-              fillAvailableBlock
-              inset={resolvedLayoutInset}
-            >
-              {currentSlot}
-            </PhiLayoutAnchoredOverlay>
-          ) : null}
-          {!hasCurrentSlot && editSlotAction && editRenderInsertControl
-            ? editRenderInsertControl({
-              presentation: "overlay",
-              slotIndex: currentIndex,
-              label: currentSlotLabel,
-              anchor: editSlotAnchor,
-              inset: resolvedLayoutInset,
-              onInsert: (targetSlotIndex) =>
-                editSlotAction(targetSlotIndex, {
-                  defaultPickSection: "widget",
-                  allowWidgetSection: true,
-                  slotIndex: targetSlotIndex,
-                }),
-            })
-            : null}
-        </div>
-      </div>
+      <PhiSequenceSlotEditor
+        slots={slots}
+        slotKeys={slotKeys}
+        slotLabels={resolvedSlotMeta}
+        activeIndex={resolvedActiveIndex}
+        onActiveIndexChange={setActiveIndex}
+        slotNoun="stack slot"
+        layoutKind={layoutKind}
+        renderMode={renderMode}
+        isAuthoringRender={isAuthoringRender}
+        chrome={chrome}
+        backgroundLayer={backgroundLayer}
+        editSlotAction={editSlotAction}
+        editRenderInsertControl={editRenderInsertControl}
+        editSlotAnchor={editSlotAnchor}
+        style={style}
+      />
     );
   }
 
-  const resolvedLayoutInset = resolvePhiLayoutInset({
-    padding,
-    paddingTop,
-    paddingRight,
-    paddingBottom,
-    paddingLeft,
-  });
+  const resolvedLayoutInset = resolvePhiLayoutInset(chrome);
 
   return (
     <div
@@ -376,18 +247,7 @@ export function PhiStackLayout({
         minWidth: 0,
         minHeight: 0,
         boxSizing: "border-box",
-        ...resolvePhiBaseLayoutChrome({
-          padding,
-          paddingTop,
-          paddingRight,
-          paddingBottom,
-          paddingLeft,
-          background,
-          border,
-          borderRadius,
-          effect,
-          shadow,
-        }).style,
+        ...resolvePhiBaseLayoutChrome(chrome).style,
         ...style,
       }}
     >

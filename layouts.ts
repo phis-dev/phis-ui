@@ -8,6 +8,8 @@ export { PhiFlexVerticalLayout } from "./components/layouts/phi-flex-vertical-la
 export type { PhiFlexVerticalLayoutProps } from "./components/layouts/phi-flex-vertical-layout";
 export { PhiStackLayout } from "./components/layouts/phi-stack-layout";
 export type { PhiStackLayoutProps } from "./components/layouts/phi-stack-layout";
+export { PhiCarouselLayout } from "./components/layouts/phi-carousel-layout";
+export type { PhiCarouselLayoutProps } from "./components/layouts/phi-carousel-layout";
 export { PhiCollapsibleLayout } from "./components/layouts/phi-collapsible-layout";
 export type { PhiCollapsibleLayoutProps } from "./components/layouts/phi-collapsible-layout";
 export { PhiGridLayout } from "./components/layouts/phi-grid-layout";

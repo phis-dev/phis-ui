@@ -125,6 +125,20 @@ const PHI_STACK_LAYOUT_PANEL_PRESET = {
     padding: PHI_SPACE.base,
 } as const;
 
+export const PHI_CAROUSEL_LAYOUT_DEFAULTS: PhiLayoutDefaults = {
+    // A slide is what tells somebody the slots are a run rather than a set, so it is the opening
+    // impression rather than a preference to be discovered. Everything else is left absent: the
+    // duration then follows the theme, and the window shows one slot until somebody widens it.
+    transition: "slide",
+    visibleSlots: 1,
+    windowAnchor: "start",
+    loop: false,
+};
+const PHI_CAROUSEL_LAYOUT_PANEL_PRESET = {
+    ...PHI_LAYOUT_CHROME_PRESET_DEFAULTS,
+    padding: PHI_SPACE.base,
+} as const;
+
 export const PHI_COLLAPSIBLE_LAYOUT_DEFAULTS: PhiLayoutDefaults = {
     anchor: PHI_RENDERABLE_BLOCK_DEFAULT_ANCHOR,
     accordion: false,
@@ -218,6 +232,7 @@ const PHI_LAYOUT_DEFAULTS_BY_KIND: Record<PhiLayoutKind, PhiLayoutDefaults> = {
   form: PHI_FORM_LAYOUT_DEFAULTS,
   flex: PHI_FLEX_LAYOUT_DEFAULTS,
   stack: PHI_STACK_LAYOUT_DEFAULTS,
+  carousel: PHI_CAROUSEL_LAYOUT_DEFAULTS,
   grid: PHI_GRID_LAYOUT_DEFAULTS,
   split: PHI_SPLIT_CARD_LAYOUT_DEFAULTS,
   threecol: PHI_THREE_COLUMN_LAYOUT_DEFAULTS,
@@ -253,6 +268,7 @@ const PHI_LAYOUT_PANEL_PRESETS_BY_KIND: Record<PhiLayoutKind, JsonRecord> = {
   form: PHI_FORM_LAYOUT_PANEL_PRESET,
   flex: PHI_FLEX_LAYOUT_PANEL_PRESET,
   stack: PHI_STACK_LAYOUT_PANEL_PRESET,
+  carousel: PHI_CAROUSEL_LAYOUT_PANEL_PRESET,
   grid: PHI_GRID_LAYOUT_PANEL_PRESET,
   split: PHI_SPLIT_CARD_LAYOUT_PANEL_PRESET,
   threecol: PHI_THREE_COLUMN_LAYOUT_PANEL_PRESET,

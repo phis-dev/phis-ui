@@ -1,5 +1,6 @@
 import { resolvePhiCmsLayoutPluginKey } from "../../constants/cms-layout-types";
 import {
+  PHI_CMS_CAROUSEL_LAYOUT_SLOTS,
   PHI_CMS_COLLAPSIBLE_LAYOUT_SLOTS,
   PHI_CMS_DEFAULT_LAYOUT_SLOTS,
   PHI_CMS_FLEX_LAYOUT_SLOTS,
@@ -25,6 +26,7 @@ import type { PhiCmsLayoutPluginDefinition } from "../../types/cms-plugins";
 import { PHI_SIGNAL_VALUE_SCHEMAS } from "../../types/signals";
 import { PHI_CORE_RUNTIME_DATA_PROVIDER_KEYS } from "../../plugins/runtime-modules/core/ids";
 import type {
+  PhiCmsCarouselLayoutConfig,
   PhiCmsCollapsibleLayoutConfig,
   PhiCmsContentLayoutConfig,
   PhiCmsFlexLayoutConfig,
@@ -276,6 +278,89 @@ export const PHI_STACK_LAYOUT_DEFINITION = {
   slots: [...PHI_CMS_STACK_LAYOUT_SLOTS],
 } satisfies PhiCmsLayoutPluginDefinition<PhiCmsStackLayoutConfig>;
 
+export const PHI_CAROUSEL_LAYOUT_DEFINITION = {
+  kind: "layout",
+  pluginKey: resolvePhiCmsLayoutPluginKey("carousel"),
+  typeKey: "carousel",
+  layoutKind: "carousel",
+  title: "Carousel",
+  description: "A run of slots shown a few at a time, moving on their own or on a signal.",
+  category: "structure",
+  iconName: "carousel",
+  defaultConfig: resolvePhiLayoutDefaults("carousel"),
+  fields: [
+    ...PHI_LAYOUT_PADDING_FIELDS,
+    { key: "activeSlotKey", type: "string", label: "Active Slot Key" },
+    { key: "defaultActiveSlotKey", type: "string", label: "Default Active Slot Key" },
+    { key: "visibleSlots", type: "number", label: "Visible Slots", min: 1, max: PHI_CMS_CAROUSEL_LAYOUT_SLOTS.length },
+    {
+      key: "windowAnchor",
+      type: "choice",
+      label: "Window Anchor",
+      options: [
+        { value: "start", label: "Leading edge" },
+        { value: "center", label: "Centre" },
+      ],
+    },
+    {
+      key: "transition",
+      type: "choice",
+      label: "Transition",
+      options: [
+        { value: "none", label: "None" },
+        { value: "fade", label: "Fade" },
+        { value: "slide", label: "Slide" },
+        { value: "diagonal", label: "Diagonal" },
+      ],
+    },
+    {
+      key: "transitionDurationMs",
+      type: "number",
+      label: "Transition Duration (ms)",
+      min: PHI_SEQUENCE_TRANSITION_MIN_MS,
+      max: PHI_SEQUENCE_TRANSITION_MAX_MS,
+    },
+    {
+      key: "transitionEasing",
+      type: "choice",
+      label: "Transition Easing",
+      options: [...PHI_MOTION_EASING_FIELD_OPTIONS],
+    },
+    { key: "slotGap", type: "string", label: "Slot Gap" },
+    { key: "loop", type: "boolean", label: "Wrap Around" },
+    {
+      // Zero is the one value below the floor that means something: it does not move on its own.
+      key: "autoplayMs",
+      type: "number",
+      label: "Autoplay Interval (ms)",
+      min: 0,
+      max: PHI_SEQUENCE_TRANSITION_MAX_MS,
+    },
+    { key: "lookahead", type: "number", label: "Mount Ahead", min: 0 },
+    /*
+     * No mounting setting, deliberately. The window already decides what exists, and a Carousel that
+     * dropped a slot the moment it left the window would re-run its content every time somebody
+     * stepped back past it. It is fixed to `lazy-keep`.
+     */
+  ],
+  runtimeSignals: {
+    emits: [
+      {
+        id: "stackMeta",
+        action: "change",
+        valueType: "json",
+        valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.stackMeta,
+      },
+    ],
+    listens: [
+      { id: "stackMeta", channel: "stackMeta", action: "activate", valueType: "none" },
+      { id: "activeSlotIndex", channel: "activeSlotIndex", action: "change", valueType: "number" },
+      { id: "activeSlotKey", channel: "activeSlotKey", action: "change", valueType: "string" },
+    ],
+  },
+  slots: [...PHI_CMS_CAROUSEL_LAYOUT_SLOTS],
+} satisfies PhiCmsLayoutPluginDefinition<PhiCmsCarouselLayoutConfig>;
+
 export const PHI_GRID_LAYOUT_DEFINITION = {
   kind: "layout",
   pluginKey: resolvePhiCmsLayoutPluginKey("grid"),
@@ -395,6 +480,7 @@ export const PHI_CORE_LAYOUT_DEFINITIONS = [
   PHI_FLEX_VERTICAL_LAYOUT_DEFINITION,
   PHI_COLLAPSIBLE_LAYOUT_DEFINITION,
   PHI_STACK_LAYOUT_DEFINITION,
+  PHI_CAROUSEL_LAYOUT_DEFINITION,
   PHI_GRID_LAYOUT_DEFINITION,
   PHI_MASONRY_LAYOUT_DEFINITION,
   PHI_SPLIT_CARD_LAYOUT_DEFINITION,

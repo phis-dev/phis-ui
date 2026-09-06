@@ -432,6 +432,13 @@ export const PHI_COMMON_RUNTIME_MODULE_RENDER_CLIENT_MANIFEST =
       ),
     ],
     [
+      PhiCmsLayoutType.Carousel,
+      definePhiRuntimeModuleRenderClientLoader(
+        () => import("../../../components/layouts/clients/phi-carousel-layout-client")
+          .then((module) => module.PhiCarouselLayout),
+      ),
+    ],
+    [
       PhiCmsWidgetType.Brand,
       definePhiRuntimeModuleRenderClientLoader(
         () => import("../core/widgets/brand/client")
