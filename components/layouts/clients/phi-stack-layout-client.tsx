@@ -7,6 +7,10 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } fr
 
 import { resolvePhiMotionDurationMs } from "../../../helpers/motion";
 import {
+  shouldPhiCmsContentStayMounted,
+  type PhiCmsMountPolicy,
+} from "../../../types/cms-mount-policy";
+import {
   resolvePhiLayoutInset,
 } from "../phi-layout-contract";
 import {
@@ -49,7 +53,7 @@ export type PhiStackLayoutProps = Omit<PhiBaseLayoutProps, "slots"> & {
   slotMeta?: PhiStackLayoutSlotMeta[];
   activeSlotKey?: string;
   defaultActiveSlotKey?: string;
-  mountPolicy?: "active" | "keep";
+  mountPolicy?: PhiCmsMountPolicy;
   slotTransition?: "none" | "fade-over";
   slotAnchor?: PhiAnchorWidgetPlacement | null;
   editSlotAnchor?: PhiAnchorWidgetPlacement | null;
@@ -78,7 +82,7 @@ export function PhiStackLayout({
   slotMeta,
   activeSlotKey,
   defaultActiveSlotKey,
-  mountPolicy = "active",
+  mountPolicy = "remount",
   slotTransition = "none",
   slotAnchor = "center",
   ...layoutProps
@@ -218,6 +222,23 @@ export function PhiStackLayout({
   }, [publishStackMeta]);
 
   const resolvedActiveIndex = clampPhiStackSlotIndex(currentActiveIndex, slots.length);
+
+  /*
+   * Which slots have ever been wanted, which is what `lazy-keep` keeps.
+   *
+   * It starts holding the first active slot, so the common case costs no extra render: the set grows
+   * once per slot the first time somebody reaches it, and never again.
+   */
+  const [visitedSlotIndices, setVisitedSlotIndices] = useState<ReadonlySet<number>>(
+    () => new Set([resolvedActiveIndex]),
+  );
+  if (!visitedSlotIndices.has(resolvedActiveIndex)) {
+    // Adjusted during render rather than in an effect, the same way the transition below tracks the
+    // index it is leaving: the memory has to be right for the render that first shows the slot, not
+    // for the one after it.
+    setVisitedSlotIndices(new Set(visitedSlotIndices).add(resolvedActiveIndex));
+  }
+
   const [transitionState, setTransitionState] = useState(() => ({
     activeSlotIndex: resolvedActiveIndex,
     outgoingSlotIndex: null as number | null,
@@ -478,7 +499,16 @@ export function PhiStackLayout({
         {slots.map((slot, index) => {
           const isActive = index === resolvedActiveIndex;
           const isOutgoing = index === outgoingSlotIndex;
-          const shouldMount = mountPolicy === "keep" || isActive || isOutgoing;
+          /*
+           * The outgoing slot counts as inside the window, which is how a fade survives `remount`:
+           * the window lags by the length of the transition rather than cutting at the moment the
+           * index changes.
+           */
+          const shouldMount = shouldPhiCmsContentStayMounted({
+            policy: mountPolicy,
+            insideWindow: isActive || isOutgoing,
+            hasEnteredWindow: visitedSlotIndices.has(index),
+          });
           if (!shouldMount || !isRenderablePhiNode(slot)) return null;
 
           return (

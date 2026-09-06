@@ -404,7 +404,7 @@ export async function buildPhiDefaultBuilderAreaPresetTree({
         title: null,
         placement: "right",
         size: 377,
-        mountPolicy: "keep-alive",
+        mountPolicy: "lazy-keep",
         effect: "glass",
         mask: {
           appearance: "transparent",
@@ -763,7 +763,7 @@ export async function buildPhiDefaultBuilderAreaPresetTree({
         flags: 0,
         visibilityMask: page.visibilityMask,
         label: "Builder effects body",
-        config: { mountPolicy: "keep", slotTransition: "fade-over", defaultActiveSlotKey: "slot_0", padding: PHI_SPACE.base, width: "100%", background: PHI_COLOR.bgLayout, border: "none" },
+        config: { mountPolicy: "eager", slotTransition: "fade-over", defaultActiveSlotKey: "slot_0", padding: PHI_SPACE.base, width: "100%", background: PHI_COLOR.bgLayout, border: "none" },
       }),
       buildPhiCmsLayoutNode({
         creationPreset: { layoutKind: "flex", preset: "overlay-actions" },
@@ -1367,7 +1367,7 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
         config: {
           title: labels.pages.pageMeta,
           width: { compact: "calc(100vw - 32px)", medium: 560, wide: 640 },
-          mountPolicy: "keep-alive",
+          mountPolicy: "lazy-keep",
           closeMode: "immediate",
           signalRoutes: {
             emits: [{ routeKey: "builder-page-meta-visibility", capabilityId: "openChange", scope: "area", channel: "pageMetaVisibility", action: "change", valueType: "boolean", receiver: createPhiBuilderControllerAddress() }],
@@ -1394,7 +1394,7 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
         config: {
           title: modulesLabels?.detail.title ?? "Module details",
           width: { compact: "calc(100vw - 32px)", medium: 560, wide: 640 },
-          mountPolicy: "keep-alive",
+          mountPolicy: "lazy-keep",
           closeMode: "immediate",
           signalRoutes: {
             listens: [
@@ -1420,7 +1420,7 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
         title: mediaLabels?.inspector.inspectorTitle ?? "Asset inspector",
         placement: "right",
         size: 377,
-        mountPolicy: "keep-alive",
+        mountPolicy: "lazy-keep",
         effect: "glass",
         background: "transparent",
         mask: {
@@ -1468,7 +1468,7 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
           title: mediaLabels?.editor.focalRectLabel ?? "Focal rectangle",
           controlSize: "large",
           centered: true,
-          mountPolicy: "on-open",
+          mountPolicy: "remount",
           closeMode: "immediate",
           mask: {
             appearance: "normal",
@@ -1516,7 +1516,7 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
           controlSize: "medium",
           width: { compact: "calc(100vw - 32px)", medium: 480, wide: 520 },
           centered: true,
-          mountPolicy: "on-open",
+          mountPolicy: "remount",
           closeMode: "immediate",
           mask: {
             appearance: "normal",

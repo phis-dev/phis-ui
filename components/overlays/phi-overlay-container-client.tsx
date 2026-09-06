@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 
 import type { PhiCmsInstanceId } from "../../types/cms-instance-id";
+import { shouldPhiCmsContentStayMounted } from "../../types/cms-mount-policy";
 import {
   parsePhiCmsOverlayConfig,
   type PhiOverlayCloseSource,
@@ -186,8 +187,13 @@ export function PhiOverlayContainerClient({
     updateOpen(false);
   }, [config.closeMode, emitCapability, updateOpen]);
 
-  const shouldRenderContent = config.mountPolicy === "eager" || open ||
-    (config.mountPolicy === "keep-alive" && hasOpened);
+  // An Overlay's window is simply "open", which is why it can share the rule with a Carousel whose
+  // window is several slots wide.
+  const shouldRenderContent = shouldPhiCmsContentStayMounted({
+    policy: config.mountPolicy,
+    insideWindow: open,
+    hasEnteredWindow: hasOpened,
+  });
   const renderZone = (zone: ReactNode) => shouldRenderContent && zone != null ? (
     <PhiSignalIdentityProvider value={{ sender: receiver, receiver, scope: signalScope }}>
       {zone}

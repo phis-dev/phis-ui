@@ -1,8 +1,8 @@
 import type { CSSProperties, ReactNode } from "react";
 
+import type { PhiCmsMountPolicy } from "../../types/cms-mount-policy";
 import type {
   PhiCmsOverlayMaskConfig,
-  PhiCmsOverlayMountPolicy,
   PhiOverlayCloseSource,
 } from "../../types/cms-overlay";
 
@@ -20,7 +20,7 @@ export type PhiOverlayControlCommonProps = {
   closable?: boolean;
   keyboard?: boolean;
   mask?: PhiCmsOverlayMaskConfig;
-  mountPolicy?: PhiCmsOverlayMountPolicy;
+  mountPolicy?: PhiCmsMountPolicy;
   containerStyle?: CSSProperties;
   onDismiss?: (source: PhiOverlayCloseSource) => void;
   afterOpenChange?: (open: boolean) => void;

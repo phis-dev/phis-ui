@@ -49,7 +49,7 @@ export async function buildPhiAuthAreaLoginOverlayTree({
         title: labels.title ?? "Login",
         controlSize: "medium",
         width: { compact: "calc(100vw - 32px)", medium: 480, wide: 520 },
-        mountPolicy: "keep-alive",
+        mountPolicy: "lazy-keep",
         closeMode: "request",
         signalRoutes: {
           emits: [{

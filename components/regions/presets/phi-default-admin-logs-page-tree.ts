@@ -90,7 +90,7 @@ export async function buildPhiDefaultAdminLogsPageTree({
       config: {
         title: widgetLabels.detail.title,
         width: 960,
-        mountPolicy: "keep-alive",
+        mountPolicy: "lazy-keep",
         signalRoutes: {
           emits: [{
             routeKey: "admin-logs-detail-modal-open-change",

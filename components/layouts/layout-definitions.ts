@@ -12,6 +12,7 @@ import {
   PHI_CMS_STRUCTURE_REGION_LAYOUT_SLOTS,
   PHI_CMS_THREE_COLUMN_LAYOUT_SLOTS,
 } from "../../constants/cms-layout-types";
+import { PHI_CMS_MOUNT_POLICY_FIELD_OPTIONS } from "../../types/cms-mount-policy";
 import { resolvePhiLayoutDefaults } from "../../helpers/cms-layout-defaults";
 import { PHI_RENDERABLE_BLOCK_DEFAULT_ANCHOR } from "../../helpers/renderable-block-defaults";
 import { PHI_LAYOUT_PADDING_FIELDS } from "../../helpers/layout-padding-field";
@@ -227,10 +228,7 @@ export const PHI_STACK_LAYOUT_DEFINITION = {
       key: "mountPolicy",
       type: "choice",
       label: "Slot Mounting",
-      options: [
-        { value: "active", label: "Active slot only" },
-        { value: "keep", label: "Keep all slots" },
-      ],
+      options: [...PHI_CMS_MOUNT_POLICY_FIELD_OPTIONS],
     },
     {
       key: "slotTransition",

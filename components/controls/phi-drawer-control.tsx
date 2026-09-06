@@ -33,7 +33,7 @@ export function PhiDrawerControl({
   closable = true,
   keyboard = true,
   mask = PHI_OVERLAY_DEFAULT_MASK,
-  mountPolicy = "on-open",
+  mountPolicy = "remount",
   placement = "right",
   size,
   maxSize,
@@ -65,7 +65,7 @@ export function PhiDrawerControl({
       closable={closable ? { placement: closeAtInlineStart ? "start" : "end" } : false}
       keyboard={keyboard}
       mask={resolvedMask.adapterMask}
-      destroyOnHidden={mountPolicy === "on-open"}
+      destroyOnHidden={mountPolicy === "remount"}
       forceRender={hydrated && mountPolicy === "eager"}
       placement={placement}
       size={size}

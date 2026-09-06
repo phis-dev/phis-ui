@@ -3,6 +3,10 @@ import { readPhiCmsBorderWidgetConfig } from "./cms-config";
 import type { PhiCmsContainerChromeConfig } from "./cms-container";
 import { isPhiLayoutEffectId, readPhiShadow } from "./layout-style";
 import { readPhiSignalRouteSet, type PhiSignalRouteSet } from "./signals";
+import {
+  readPhiCmsMountPolicy,
+  type PhiCmsMountPolicy,
+} from "./cms-mount-policy";
 import type { PhiResponsiveValue } from "./responsive";
 import { readPhiControlSize, type PhiControlSize } from "./control";
 
@@ -10,8 +14,6 @@ export const PHI_CMS_OVERLAY_TYPES = ["modal", "drawer"] as const;
 export type PhiCmsOverlayType = (typeof PHI_CMS_OVERLAY_TYPES)[number];
 export const PHI_OVERLAY_FOOTER_PRESENTATIONS = ["none", "actions", "custom"] as const;
 export type PhiOverlayFooterPresentation = (typeof PHI_OVERLAY_FOOTER_PRESENTATIONS)[number];
-export const PHI_CMS_OVERLAY_MOUNT_POLICIES = ["on-open", "keep-alive", "eager"] as const;
-export type PhiCmsOverlayMountPolicy = (typeof PHI_CMS_OVERLAY_MOUNT_POLICIES)[number];
 
 export const PHI_CMS_OVERLAY_MASK_APPEARANCES = ["transparent", "normal", "blurred"] as const;
 export type PhiCmsOverlayMaskAppearance = (typeof PHI_CMS_OVERLAY_MASK_APPEARANCES)[number];
@@ -43,7 +45,7 @@ export type PhiCmsOverlayConfig = PhiOverlayChromeConfig & {
   controlSize?: PhiControlSize;
   closable: boolean;
   keyboard: boolean;
-  mountPolicy: PhiCmsOverlayMountPolicy;
+  mountPolicy: PhiCmsMountPolicy;
   mask: PhiCmsOverlayMaskConfig;
   centered: boolean;
   width?: PhiCmsOverlaySize | PhiCmsOverlayResponsiveSize;
@@ -113,11 +115,6 @@ export function isPhiCmsOverlayType(value: unknown): value is PhiCmsOverlayType 
   return typeof value === "string" && (PHI_CMS_OVERLAY_TYPES as readonly string[]).includes(value);
 }
 
-export function isPhiCmsOverlayMountPolicy(value: unknown): value is PhiCmsOverlayMountPolicy {
-  return typeof value === "string" &&
-    (PHI_CMS_OVERLAY_MOUNT_POLICIES as readonly string[]).includes(value);
-}
-
 export function readPhiOverlayCloseRequest(value: unknown): PhiOverlayCloseRequest | null {
   if (!value || typeof value !== "object" || Array.isArray(value)) return null;
   const record = value as Record<string, unknown>;
@@ -141,7 +138,8 @@ export function parsePhiCmsOverlayConfig(
     controlSize: readPhiControlSize(rawConfig.controlSize),
     closable: readBoolean(rawConfig.closable, true),
     keyboard: readBoolean(rawConfig.keyboard, true),
-    mountPolicy: isPhiCmsOverlayMountPolicy(rawConfig.mountPolicy) ? rawConfig.mountPolicy : "on-open",
+    // An Overlay is shut far more often than it is open, so the cheap end is the right default.
+    mountPolicy: readPhiCmsMountPolicy(rawConfig.mountPolicy, "remount"),
     mask: readMask(rawConfig.mask),
     centered: readBoolean(rawConfig.centered, false),
     width: overlayType === "modal"

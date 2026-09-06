@@ -286,7 +286,7 @@ export function PhiStaticOptionsToolButton({
         title="Static options"
         width={920}
         mask={{ appearance: "normal", allowOutsideInteraction: false, closable: false }}
-        mountPolicy="on-open"
+        mountPolicy="remount"
         rootClassName={popup.rootClassName}
         onDismiss={discardPicker}
         footer={<Flex justify="end" gap={12}>

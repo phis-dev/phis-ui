@@ -1,5 +1,6 @@
 import type { CSSProperties } from "react";
 import { readPhiControlSize, type PhiControlSize } from "./control";
+import { readPhiCmsMountPolicy, type PhiCmsMountPolicy } from "./cms-mount-policy";
 import { readPhiLengthValue, type PhiCssLength } from "./length";
 import type { PhiResponsiveValue } from "./responsive";
 
@@ -291,7 +292,7 @@ export type PhiCmsFlexVerticalLayoutConfig = PhiCmsLayerBase & {
 export type PhiCmsStackLayoutConfig = PhiCmsLayerBase & {
   activeSlotKey?: string;
   defaultActiveSlotKey?: string;
-  mountPolicy?: "active" | "keep";
+  mountPolicy?: PhiCmsMountPolicy;
   slotTransition?: "none" | "fade-over";
 };
 
@@ -598,7 +599,7 @@ export function parsePhiCmsStackLayoutConfig(
       borderRadius: readCssSize(config.borderRadius),
       activeSlotKey: readString(config.activeSlotKey),
       defaultActiveSlotKey: readString(config.defaultActiveSlotKey),
-      mountPolicy: config.mountPolicy === "keep" ? "keep" : "active",
+      mountPolicy: readPhiCmsMountPolicy(config.mountPolicy, "remount"),
       slotTransition: config.slotTransition === "fade-over" ? "fade-over" : "none",
     },
     resolvePhiLayoutDefaults("stack"),

@@ -71,7 +71,7 @@ export async function buildPhiDefaultEditorTranslationsPageTree({
       config: {
         title: widgetLabels.actions.edit,
         width: { compact: "calc(100vw - 32px)", medium: 640, wide: 720 },
-        mountPolicy: "on-open",
+        mountPolicy: "remount",
         closeMode: "request",
         signalRoutes: {
           emits: [

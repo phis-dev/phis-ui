@@ -98,7 +98,7 @@ export async function buildPhiDefaultAdminUsersPageTree({
     config: {
       title,
       width,
-      mountPolicy: "on-open",
+      mountPolicy: "remount",
       closeMode: formMode ? "request" : "immediate",
       signalRoutes: {
         emits: [
