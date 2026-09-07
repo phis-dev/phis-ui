@@ -189,6 +189,25 @@ export const PHI_BUILDER_RUNTIME_DATA_PROVIDER_DESCRIPTORS = [
         { key: "value", title: "Value", type: "string", required: true },
       ],
       query: { sorting: "none", pagination: "none" },
+    }, {
+      /*
+       * The addresses a Module could not have, one row each, with the answer typed into the row.
+       *
+       * It is a resource of this provider rather than one of its own because it is the same gesture:
+       * the rows exist only while a Module's switch is waiting for an answer, and they are read from
+       * the request that switch opened.
+       */
+      resourceKey: "publicRouteCollisions",
+      title: "Contested Public addresses",
+      rowIdentityPath: "presetKey",
+      fields: [
+        { key: "presetKey", title: "Route key", type: "string", required: true },
+        { key: "title", title: "Page", type: "string", required: true },
+        { key: "declaredPath", title: "Wanted", type: "string", required: true },
+        { key: "heldBy", title: "Taken by", type: "string", required: true },
+        { key: "path", title: "Address", type: "string", required: true, mutable: true },
+      ],
+      query: { sorting: "none", pagination: "none" },
     }],
   },
   {

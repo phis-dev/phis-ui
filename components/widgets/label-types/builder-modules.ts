@@ -38,6 +38,17 @@ export type PhiBuilderModulesPageLabels = {
     allAreas: string;
     showFoundation: string;
   };
+  /** The one question enabling a Module can ask: a Public address it wants is taken. */
+  publicRoutes: {
+    title: string;
+    intro: string;
+    page: string;
+    wanted: string;
+    heldBy: string;
+    address: string;
+    assign: string;
+    cancel: string;
+  };
 };
 
 export const PHI_BUILDER_MODULES_PAGE_DEFAULT_LABELS: PhiBuilderModulesPageLabels = {
@@ -90,5 +101,16 @@ export const PHI_BUILDER_MODULES_PAGE_DEFAULT_LABELS: PhiBuilderModulesPageLabel
     area: "Area",
     allAreas: "All areas",
     showFoundation: "Foundations",
+  },
+  publicRoutes: {
+    title: "Public addresses are taken",
+    intro:
+      "This Module wants Public addresses that already answer. Give each one another address, or cancel and leave the Module switched off.",
+    page: "Page",
+    wanted: "Wanted",
+    heldBy: "Taken by",
+    address: "Address",
+    assign: "Enable with these addresses",
+    cancel: "Cancel",
   },
 };

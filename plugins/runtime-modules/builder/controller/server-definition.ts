@@ -6,6 +6,7 @@ import {
   type PhiBuilderRuntimeControllerPreload,
 } from "./definition";
 import {
+  buildPhiBuilderPublicRoutePaths,
   buildPhiBuilderStructureRuntimeModuleIdsByArea,
   buildPhiBuilderStructureShellPresetDraftsByArea,
 } from "../area-shell-presets.server";
@@ -13,6 +14,7 @@ import type { PhiRuntimeControllerDefinition } from "../../../../types";
 import {
   buildPhiBuilderAreaPresetSourcesByArea,
   buildPhiBuilderModulePresetPagesByArea,
+  buildPhiBuilderPublicRouteClaims,
 } from "../page-preset-catalog.server";
 import { buildPhiBuilderNavigationSurfacesByArea } from "../navigation-catalog.server";
 import {
@@ -28,7 +30,7 @@ import { getPhiBuilderChromeWidgetLabels } from "../../../../components/widgets/
 export const PHI_BUILDER_RUNTIME_CONTROLLER_SERVER_DEFINITION = {
   ...PHI_BUILDER_RUNTIME_CONTROLLER_DEFINITION,
   serverPreload: async ({ runtime, runtimeModuleCatalog }) => {
-    const [shellPresetDraftsByArea, runtimeModuleIdsByArea, builderLabels] = await Promise.all([
+    const [shellPresetDraftsByArea, runtimeModuleIdsByArea, publicRoutePaths, builderLabels] = await Promise.all([
       buildPhiBuilderStructureShellPresetDraftsByArea(
         runtime,
         runtimeModuleCatalog,
@@ -37,6 +39,7 @@ export const PHI_BUILDER_RUNTIME_CONTROLLER_SERVER_DEFINITION = {
         runtime,
         runtimeModuleCatalog,
       ),
+      buildPhiBuilderPublicRoutePaths(runtime, runtimeModuleCatalog),
       getPhiBuilderChromeWidgetLabels({
         apiBaseUrl: runtime.phis.apiBaseUrl,
         internalToken: runtime.phis.internalToken,
@@ -67,6 +70,8 @@ export const PHI_BUILDER_RUNTIME_CONTROLLER_SERVER_DEFINITION = {
       shellPresetDraftsByArea,
       runtimeModuleDefinitions: moduleDefinitions,
       runtimeModuleIdsByArea: effectiveRuntimeModuleIdsByArea,
+      publicRouteClaims: buildPhiBuilderPublicRouteClaims(runtimeModuleCatalog),
+      publicRoutePaths,
       modulePresetPagesByArea: buildPhiBuilderModulePresetPagesByArea(
         runtimeModuleCatalog,
       ),

@@ -8,6 +8,8 @@ import type {
   PhiCmsPresetSource,
   PhiCmsResolvedNavigationSurface,
 } from "../../types/cms-module-descriptors";
+import type { PhiPublicRoutePathAssignment } from "../../helpers/cms-area-config";
+import type { PhiPublicRouteClaim } from "../../helpers/public-route-claims";
 import type { PhiRuntimeModuleDefinition, PhiRuntimeModuleId } from "../../types";
 
 export type PhiWorkspaceCatalogArea = PhiBuilderAreaKey;
@@ -39,4 +41,14 @@ export type PhiWorkspaceCatalogState = {
   areaPresetSourcesByArea: Partial<Record<PhiWorkspaceCatalogArea, PhiCmsPresetSource>>;
   runtimeModuleDefinitions: PhiRuntimeModuleDefinition[];
   runtimeModuleIdsByArea: Partial<Record<PhiWorkspaceCatalogArea, PhiRuntimeModuleId[]>>;
+  /**
+   * Every Public address an installed Module would answer on, switched on or not.
+   *
+   * The installed set rather than the active one, because this is what the question at enable time is
+   * asked against: a Module that is off still has claims, and they become real the moment somebody
+   * flips its switch.
+   */
+  publicRouteClaims: readonly PhiPublicRouteClaim[];
+  /** The addresses this Site already assigned, as the Modules draft has them. */
+  publicRoutePaths: readonly PhiPublicRoutePathAssignment[];
 };

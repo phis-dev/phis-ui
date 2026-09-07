@@ -2,6 +2,7 @@ import type { PhiCmsContentWidgetNode, PhiCmsLayoutRenderNode } from "../../../t
 import type { PhiCmsBorderWidgetConfig, PhiCmsPaddingWidgetConfig } from "../../../types/cms-config";
 import type {
   PhiRenderableBlockEffects,
+  PhiRuntimeModuleId,
 } from "../../../types";
 import type { PhiBuilderAreaKey } from "../../../constants/cms-areas";
 import type { PhiCmsBackgroundWidgetConfig } from "../../../components/widgets/config/background";
@@ -65,6 +66,26 @@ export type PhiDeveloperBuilderEffectsRequest = {
   effects: PhiRenderableBlockEffects;
 };
 
+/** One contested address, with the answer being typed for it. */
+export type PhiBuilderPublicRouteCollisionAnswer = {
+  presetKey: string;
+  title: string;
+  declaredPath: string;
+  /** What holds the address today, said the way the dialog shows it. */
+  heldBy: string;
+  /** The address being proposed instead. Starts at a suggestion, and the Builder may overwrite it. */
+  path: string;
+};
+
+export type PhiBuilderPublicRouteCollisionRequest = {
+  correlationId: string;
+  moduleId: PhiRuntimeModuleId;
+  moduleTitle: string;
+  /** The Areas the gesture wanted, so confirming enables exactly what the switch or checkbox asked for. */
+  areas: PhiDeveloperBuilderArea[];
+  answers: PhiBuilderPublicRouteCollisionAnswer[];
+};
+
 export type PhiDeveloperBuilderState = {
   nodeKey: string;
   nodeId: PhiCmsInstanceId | null;
@@ -98,6 +119,14 @@ export type PhiDeveloperBuilderState = {
     receiverCapabilityId: string | null;
   };
   effectsEditorRequest: PhiDeveloperBuilderEffectsRequest | null;
+  /**
+   * The question enabling a Module asked, while it waits for an answer.
+   *
+   * A Module is active with every route addressed or it is not active, so nothing is applied while
+   * this stands: the switch springs back, the dialog holds what was asked for, and confirming is what
+   * enables the Module. Cancelling leaves the Site exactly as it was.
+   */
+  publicRouteCollisionRequest: PhiBuilderPublicRouteCollisionRequest | null;
   builderMode: PhiDeveloperBuilderMode;
   search: string;
   darkMode: boolean;

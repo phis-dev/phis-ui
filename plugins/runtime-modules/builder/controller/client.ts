@@ -21,6 +21,8 @@ export const PHI_BUILDER_RUNTIME_CONTROLLER_PLUGIN = {
       !preloadData.modulePresetPagesByArea ||
       !preloadData.areaPresetSourcesByArea ||
       !preloadData.navigationSurfacesByArea ||
+      !preloadData.publicRouteClaims ||
+      !preloadData.publicRoutePaths ||
       !preloadData.pageMetaLabels
     ) {
       throw new Error("Builder runtime controller requires server preload data.");
@@ -33,6 +35,8 @@ export const PHI_BUILDER_RUNTIME_CONTROLLER_PLUGIN = {
       modulePresetPagesByArea: preloadData.modulePresetPagesByArea,
       areaPresetSourcesByArea: preloadData.areaPresetSourcesByArea,
       navigationSurfacesByArea: preloadData.navigationSurfacesByArea,
+      publicRouteClaims: preloadData.publicRouteClaims,
+      publicRoutePaths: preloadData.publicRoutePaths,
       pageMetaLabels: preloadData.pageMetaLabels,
     });
   },

@@ -17,7 +17,12 @@ import { readPhiRuntimeModuleCategory } from "../../../../constants/runtime-modu
 import type { PhiRuntimeModuleId } from "../../../../types";
 import { resolvePhiRuntimeAreaDefinition } from "../../area-definitions";
 import { applyPhiBuilderRuntimeModuleSelectionChanges } from "../runtime-module-selection";
-import { usePhiDeveloperBuilderStateValue } from "../developer-workspace-store";
+import {
+  answerPhiBuilderPublicRouteCollision,
+  openPhiBuilderPublicRouteCollisionRequest,
+  usePhiDeveloperBuilderStateValue,
+} from "../developer-workspace-store";
+import { resolvePhiBuilderPublicRouteCollisionAnswers } from "../public-route-collisions";
 import type {
   PhiDeveloperBuilderArea,
   PhiDeveloperBuilderWorkspaceState,
@@ -37,6 +42,7 @@ import type {
 
 const RESOURCE_KEY = "modules";
 const DETAIL_RESOURCE_KEY = "moduleDetail";
+const PUBLIC_ROUTES_RESOURCE_KEY = "publicRouteCollisions";
 
 /**
  * The site's installed Modules, as table rows -- one row per Module, across every Area at once.
@@ -202,7 +208,10 @@ export function PhiBuilderRuntimeModulesTableProviderClient({ children }: { chil
     const resources = descriptor?.kind === "table" ? descriptor.resources : [];
     const resourceDescriptor = resources.find((resource) => resource.resourceKey === RESOURCE_KEY);
     const detailResourceDescriptor = resources.find((resource) => resource.resourceKey === DETAIL_RESOURCE_KEY);
-    if (!resourceDescriptor || !detailResourceDescriptor) {
+    const publicRoutesResourceDescriptor = resources.find(
+      (resource) => resource.resourceKey === PUBLIC_ROUTES_RESOURCE_KEY,
+    );
+    if (!resourceDescriptor || !detailResourceDescriptor || !publicRoutesResourceDescriptor) {
       throw new Error("Runtime Modules Table provider descriptor has no resource.");
     }
 
@@ -219,6 +228,15 @@ export function PhiBuilderRuntimeModulesTableProviderClient({ children }: { chil
               readLabelMap(request.params, "detailLabels"),
               readLabelMap(request.params, "categoryLabels"),
             ),
+          },
+          request,
+        );
+      }
+      if (request.resourceKey === PUBLIC_ROUTES_RESOURCE_KEY) {
+        return queryPhiStaticTableResource(
+          {
+            descriptor: publicRoutesResourceDescriptor,
+            rows: (builderState.publicRouteCollisionRequest?.answers ?? []).map((answer) => ({ ...answer })),
           },
           request,
         );
@@ -244,6 +262,14 @@ export function PhiBuilderRuntimeModulesTableProviderClient({ children }: { chil
     const mutate = async (
       request: PhiTableProviderMutationRequest,
     ): Promise<PhiTableProviderMutationResult> => {
+      if (request.resourceKey === PUBLIC_ROUTES_RESOURCE_KEY) {
+        if (request.kind !== "field" || request.fieldKey !== "path") {
+          return { status: "rejected", invalidation: "none", errorCode: "unsupported-mutation" };
+        }
+        const path = typeof request.proposedValue === "string" ? request.proposedValue.trim() : "";
+        answerPhiBuilderPublicRouteCollision("public", String(request.rowIdentity), path);
+        return { status: "accepted", invalidation: "none", rowPatch: { path } };
+      }
       if (request.resourceKey !== RESOURCE_KEY) {
         throw new Error("Unknown Runtime Modules Table resource.");
       }
@@ -258,6 +284,32 @@ export function PhiBuilderRuntimeModulesTableProviderClient({ children }: { chil
       }
       const baseAreaKey = resolveModuleBaseAreaKey(moduleId);
       const proposedActive = request.proposedValue === true;
+
+      /*
+       * The one question a switch cannot answer by itself.
+       *
+       * Asked only when Public is among the Areas being turned on, because Public is the only address
+       * space two Modules can contest. Nothing is applied while the question stands: a Module is active
+       * with every route addressed or it is not active, so the switch springs back and the dialog is
+       * what enables it.
+       */
+      const askAboutPublicAddresses = (cmsAreas: readonly PhiCmsAreaKey[]) => {
+        if (!proposedActive || !cmsAreas.includes("public")) {
+          return false;
+        }
+        const answers = resolvePhiBuilderPublicRouteCollisionAnswers(builderState, definition.moduleId);
+        if (answers.length === 0) {
+          return false;
+        }
+        openPhiBuilderPublicRouteCollisionRequest("public", {
+          moduleId: definition.moduleId,
+          moduleTitle: definition.title,
+          areas: cmsAreas.filter((areaKey): areaKey is PhiCmsAreaKey & PhiDeveloperBuilderArea =>
+            isPhiBuilderAreaKey(areaKey)),
+          answers,
+        });
+        return true;
+      };
 
       const applyAreaChange = (cmsAreas: readonly PhiCmsAreaKey[]) => {
         const changes = cmsAreas
@@ -283,6 +335,9 @@ export function PhiBuilderRuntimeModulesTableProviderClient({ children }: { chil
             errorCode: "locked",
             message: `"${definition.title}" is Area "${baseAreaKey}"'s Base module and always runs there.`,
           };
+        }
+        if (askAboutPublicAddresses(definition.eligibleAreas)) {
+          return { status: "rejected", invalidation: "none", errorCode: "public-address-taken" };
         }
         try {
           applyAreaChange(definition.eligibleAreas);
@@ -318,6 +373,9 @@ export function PhiBuilderRuntimeModulesTableProviderClient({ children }: { chil
           message: `"${definition.title}" is not eligible for Area "${areaKey}".`,
         };
       }
+      if (askAboutPublicAddresses([areaKey])) {
+        return { status: "rejected", invalidation: "none", errorCode: "public-address-taken" };
+      }
       try {
         applyAreaChange([areaKey]);
       } catch (error) {
@@ -333,7 +391,7 @@ export function PhiBuilderRuntimeModulesTableProviderClient({ children }: { chil
 
     return {
       key: PHI_BUILDER_RUNTIME_DATA_PROVIDER_KEYS.runtimeModulesTable,
-      resources: [resourceDescriptor, detailResourceDescriptor],
+      resources: [resourceDescriptor, detailResourceDescriptor, publicRoutesResourceDescriptor],
       query,
       mutate,
     };

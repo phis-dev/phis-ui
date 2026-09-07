@@ -69,6 +69,7 @@ import {
   usePhiDeveloperRegionDraft,
   getPhiDeveloperBuilderStateSnapshot,
   setPhiDeveloperBuilderAreaRootRoute,
+  closePhiBuilderPublicRouteCollisionRequest,
 } from "./developer-workspace-store";
 import {
   PHI_BUILDER_AREA_ROOT_ROUTE_AUTOMATIC,
@@ -107,6 +108,8 @@ import {
   PHI_BUILDER_MODULES_TABLE_WIDGET_ID,
   PHI_BUILDER_MODULE_DETAIL_OVERLAY_IDS,
   PHI_BUILDER_MODULE_DETAIL_WIDGET_IDS,
+  PHI_BUILDER_PUBLIC_ROUTES_OVERLAY_IDS,
+  PHI_BUILDER_PUBLIC_ROUTES_WIDGET_IDS,
 } from "../../../helpers/cms-page-addresses";
 import { readPhiRuntimeFormValuesSignalValue } from "../../../components/forms/runtime-form-state";
 import {
@@ -128,8 +131,13 @@ import {
 } from "./history";
 import {
   applyPhiBuilderRuntimeModuleSelectionChange,
+  applyPhiBuilderRuntimeModuleSelectionChanges,
   areRuntimeModuleIdsEqual,
 } from "./runtime-module-selection";
+import {
+  applyPhiBuilderPublicRouteAssignments,
+  findPhiBuilderPublicRouteAnswerProblem,
+} from "./public-route-collisions";
 import { createPhiCommandToolbarControlAddress } from "../../../components/widgets/signals/command-toolbar-address";
 import { PHI_BUILDER_RUNTIME_MODULE_ID } from "../../../plugins/runtime-modules/builder/ids";
 import { usePhiSignalInstancesReady, usePhiSignalReceiverReady } from "../../../components/runtime/runtime-signal-registry";
@@ -148,10 +156,14 @@ type PhiDeveloperBuilderWorkspaceControllerOptions = {
   modulePresetPagesByArea?: PhiWorkspaceCatalogState["modulePresetPagesByArea"];
   areaPresetSourcesByArea?: PhiWorkspaceCatalogState["areaPresetSourcesByArea"];
   navigationSurfacesByArea?: PhiWorkspaceCatalogState["navigationSurfacesByArea"];
+  publicRouteClaims?: PhiWorkspaceCatalogState["publicRouteClaims"];
+  publicRoutePaths?: PhiWorkspaceCatalogState["publicRoutePaths"];
   pageMetaLabels?: PhiBuilderPageMetaPresentationLabels;
 };
 const EMPTY_RUNTIME_MODULE_IDS_BY_AREA: Partial<Record<PhiDeveloperBuilderArea, PhiRuntimeModuleId[]>> = {};
 const EMPTY_MODULE_PRESET_PAGES_BY_AREA = createEmptyPhiBuilderModulePresetPagesByArea();
+const EMPTY_PUBLIC_ROUTE_CLAIMS: PhiWorkspaceCatalogState["publicRouteClaims"] = [];
+const EMPTY_PUBLIC_ROUTE_PATHS: PhiWorkspaceCatalogState["publicRoutePaths"] = [];
 export type {
   PhiBuilderPageRegionKey,
   PhiBuilderRegionKey,
@@ -285,6 +297,8 @@ function usePhiDeveloperBuilderWorkspaceController(
     modulePresetPagesByArea = EMPTY_MODULE_PRESET_PAGES_BY_AREA,
     areaPresetSourcesByArea = {},
     navigationSurfacesByArea = {},
+    publicRouteClaims = EMPTY_PUBLIC_ROUTE_CLAIMS,
+    publicRoutePaths = EMPTY_PUBLIC_ROUTE_PATHS,
     pageMetaLabels = PHI_BUILDER_PAGE_META_DEFAULT_PRESENTATION_LABELS,
   } = options;
   const state = usePhiDeveloperBuilderWorkspaceState(defaultArea);
@@ -382,6 +396,8 @@ function usePhiDeveloperBuilderWorkspaceController(
   const modulePresetPagesPreloadKey = JSON.stringify(activePreloadCatalogs.modulePresetPagesByArea);
   const areaPresetSourcesPreloadKey = JSON.stringify(areaPresetSourcesByArea);
   const navigationSurfacesPreloadKey = JSON.stringify(activePreloadCatalogs.navigationSurfacesByArea);
+  const publicRouteClaimsPreloadKey = JSON.stringify(publicRouteClaims);
+  const publicRoutePathsPreloadKey = JSON.stringify(publicRoutePaths);
 
   const signalWiringOverlayAddress = createPhiSignalAddress("cms", PHI_BUILDER_INSPECTOR_OVERLAY_IDS.signalWiring);
   const signalWiringFormAddress = createPhiSignalAddress("cms", PHI_BUILDER_INSPECTOR_WIDGET_IDS.signalWiringForm);
@@ -470,6 +486,65 @@ function usePhiDeveloperBuilderWorkspaceController(
     }));
   }, [dispatchSignal, effectsFormsReady, effectsOverlayAddress, effectsOverlayReady, state.effectsEditorRequest]);
 
+  /*
+   * The collision dialog follows the request rather than a click.
+   *
+   * A Module's switch opens the question and applies nothing; this turns the question into an open
+   * modal once the overlay is listening, and closes it again when the request is gone -- answered,
+   * cancelled, or replaced by the next one. Keeping the open state derived is what makes cancelling
+   * leave the Site exactly as it was: there is only ever the request to undo.
+   */
+  const publicRoutesOverlayAddress = useMemo(
+    () => createPhiSignalAddress("cms", PHI_BUILDER_PUBLIC_ROUTES_OVERLAY_IDS.overlayPublicRoutes),
+    [],
+  );
+  const publicRoutesTableAddress = useMemo(
+    () => createPhiSignalAddress("cms", PHI_BUILDER_PUBLIC_ROUTES_WIDGET_IDS.publicRoutesTable),
+    [],
+  );
+  const publicRoutesOverlayReady = usePhiSignalReceiverReady(publicRoutesOverlayAddress);
+  const openedPublicRoutesCorrelationRef = useRef<string | null>(null);
+  const publicRouteCollisionRequest = state.publicRouteCollisionRequest;
+  useEffect(() => {
+    if (!publicRoutesOverlayReady) {
+      return;
+    }
+    const correlationId = publicRouteCollisionRequest?.correlationId ?? null;
+    if (openedPublicRoutesCorrelationRef.current === correlationId) {
+      return;
+    }
+    openedPublicRoutesCorrelationRef.current = correlationId;
+    if (correlationId) {
+      // The rows come from the request, so the table has to re-read before the modal is shown.
+      dispatchSignal({
+        scope: "area",
+        channel: "reload",
+        action: "activate",
+        value: null,
+        valueType: "none",
+        sender: createPhiBuilderControllerAddress(),
+        receiver: publicRoutesTableAddress,
+        timestamp: Date.now(),
+      });
+    }
+    dispatchSignal({
+      scope: "area",
+      channel: "publicRoutesDialog",
+      action: correlationId ? "activate" : "close",
+      value: null,
+      valueType: "none",
+      sender: createPhiBuilderControllerAddress(),
+      receiver: publicRoutesOverlayAddress,
+      timestamp: Date.now(),
+    });
+  }, [
+    dispatchSignal,
+    publicRouteCollisionRequest,
+    publicRoutesOverlayAddress,
+    publicRoutesOverlayReady,
+    publicRoutesTableAddress,
+  ]);
+
   useEffect(() => {
     const selectedOverlayId = state.nodeKind === "region"
       ? PHI_BUILDER_INSPECTOR_OVERLAY_IDS.regionInspector
@@ -508,6 +583,15 @@ function usePhiDeveloperBuilderWorkspaceController(
         JSON.stringify(current.areaPresetSourcesByArea) !== areaPresetSourcesPreloadKey;
       const navigationSurfacesChanged =
         JSON.stringify(current.navigationSurfacesByArea) !== navigationSurfacesPreloadKey;
+      const publicRouteClaimsChanged =
+        JSON.stringify(current.publicRouteClaims) !== publicRouteClaimsPreloadKey;
+      /*
+       * The assignments arrive with the Modules draft and are edited by the collision dialog, so this
+       * follows the same rule as the Module selection beside it: what the server sent replaces what is
+       * here when the server's answer changed, and an unsaved answer survives a re-render.
+       */
+      const publicRoutePathsChanged =
+        JSON.stringify(current.publicRoutePaths) !== publicRoutePathsPreloadKey;
       const catalogHydrationChanged = !current.catalogHydrated;
       const initialPageKey = current.pageKey ||
         resolvePhiBuilderActivePageKey(null, activePreloadCatalogs.modulePresetPagesByArea[current.area]) || "";
@@ -532,7 +616,7 @@ function usePhiDeveloperBuilderWorkspaceController(
         }));
       }
 
-      return changed || definitionsChanged || modulePresetPagesChanged || areaPresetSourcesChanged || navigationSurfacesChanged || catalogHydrationChanged || initialPageChanged
+      return changed || definitionsChanged || modulePresetPagesChanged || areaPresetSourcesChanged || navigationSurfacesChanged || publicRouteClaimsChanged || publicRoutePathsChanged || catalogHydrationChanged || initialPageChanged
         ? {
             ...current,
             ...(initialPageChanged ? { pageKey: initialPageKey } : {}),
@@ -542,6 +626,8 @@ function usePhiDeveloperBuilderWorkspaceController(
             modulePresetPagesByArea: activePreloadCatalogs.modulePresetPagesByArea,
             areaPresetSourcesByArea,
             navigationSurfacesByArea: activePreloadCatalogs.navigationSurfacesByArea,
+            publicRouteClaims,
+            ...(publicRoutePathsChanged ? { publicRoutePaths } : {}),
           }
         : current;
     });
@@ -553,6 +639,10 @@ function usePhiDeveloperBuilderWorkspaceController(
     runtimeModuleIdsPreloadKey,
     modulePresetPagesByArea,
     modulePresetPagesPreloadKey,
+    publicRouteClaims,
+    publicRouteClaimsPreloadKey,
+    publicRoutePaths,
+    publicRoutePathsPreloadKey,
     areaPresetSourcesByArea,
     areaPresetSourcesPreloadKey,
     activePreloadCatalogs,
@@ -959,6 +1049,58 @@ function usePhiDeveloperBuilderWorkspaceController(
             sidebarKey: "pages",
           }));
         }
+        return;
+      }
+
+      /*
+       * The answer to the one question enabling a Module can ask.
+       *
+       * Assigning writes the addresses first and enables the Module in the same gesture, because a
+       * Module is active with every route addressed or it is not active. Cancelling writes nothing:
+       * the Module stays off, and the Site is where it was before the switch was touched.
+       */
+      if (
+        signal.scope === "area" &&
+        signal.channel === "publicRoutes" &&
+        signal.action === "activate" &&
+        signal.valueType === "string" &&
+        signal.receiver === createPhiBuilderControllerAddress()
+      ) {
+        const request = state.publicRouteCollisionRequest;
+        if (!request) {
+          return;
+        }
+        if (signal.value === "cancel") {
+          closePhiBuilderPublicRouteCollisionRequest(defaultArea);
+          return;
+        }
+        if (signal.value !== "assign") {
+          return;
+        }
+        const rejection = findPhiBuilderPublicRouteAnswerProblem(state, request);
+        if (rejection) {
+          showMessage({ level: "error", content: rejection });
+          return;
+        }
+        applyPhiBuilderPublicRouteAssignments(defaultArea, request);
+        applyPhiBuilderRuntimeModuleSelectionChanges(
+          request.areas.map((area) => ({
+            area,
+            selectedIds: [...(state.runtimeModuleIdsByArea?.[area] ?? []), request.moduleId],
+          })),
+          defaultArea,
+        );
+        closePhiBuilderPublicRouteCollisionRequest(defaultArea);
+        dispatchSignal({
+          scope: "area",
+          channel: "reload",
+          action: "activate",
+          value: null,
+          valueType: "none",
+          sender: createPhiBuilderControllerAddress(),
+          receiver: createPhiSignalAddress("cms", PHI_BUILDER_MODULES_TABLE_WIDGET_ID),
+          timestamp: Date.now(),
+        });
         return;
       }
 
@@ -1878,6 +2020,8 @@ export type PhiDeveloperBuilderWorkspaceControllerProps = {
   modulePresetPagesByArea?: PhiWorkspaceCatalogState["modulePresetPagesByArea"];
   areaPresetSourcesByArea?: PhiWorkspaceCatalogState["areaPresetSourcesByArea"];
   navigationSurfacesByArea?: PhiWorkspaceCatalogState["navigationSurfacesByArea"];
+  publicRouteClaims?: PhiWorkspaceCatalogState["publicRouteClaims"];
+  publicRoutePaths?: PhiWorkspaceCatalogState["publicRoutePaths"];
   pageMetaLabels?: PhiBuilderPageMetaPresentationLabels;
 };
 

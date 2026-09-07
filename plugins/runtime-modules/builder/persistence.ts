@@ -47,7 +47,9 @@ import type { PhiBuilderPluginMeta, PhiBuilderWidgetMeta } from "../../../types/
 import {
   PHI_AREA_CONFIG_MODULES_NAMESPACE,
   PHI_AREA_CONFIG_SHELL_NAMESPACE,
+  PHI_AREA_PUBLIC_ROUTE_PATHS_KEY,
   PHI_AREA_ROOT_ROUTE_KEY,
+  normalizePhiAreaPublicRoutePaths,
 } from "../../../helpers/cms-area-config";
 
 type CmsDraftWriteState = PhiDeveloperBuilderDraftAllocation;
@@ -703,6 +705,7 @@ export async function savePhiDeveloperBuilderModulesDraft(
   state: Pick<
     PhiDeveloperBuilderWorkspaceState,
     "draftAllocations" | "runtimeModuleDefinitions" | "runtimeModuleIdsByArea" | "areaPresetSourcesByArea"
+    | "publicRoutePaths"
   >,
   regionDrafts: Record<string, PhiDeveloperBuilderRegionDraft>,
   options: {
@@ -750,6 +753,19 @@ export async function savePhiDeveloperBuilderModulesDraft(
           optionalRuntimeModuleIds,
           state.runtimeModuleDefinitions,
         ),
+        /*
+         * Authored, unlike everything above it: the answer somebody gave when a Module was enabled and
+         * the address it wanted was taken. Public only -- everywhere else a route lives under its
+         * package and has nothing to contest -- and written even when empty, so clearing the last
+         * assignment is a change the Area records rather than a value that lingers.
+         */
+        ...(area === "public"
+          ? {
+            [PHI_AREA_PUBLIC_ROUTE_PATHS_KEY]: normalizePhiAreaPublicRoutePaths(
+              state.publicRoutePaths ?? [],
+            ),
+          }
+          : {}),
       },
     },
   };
@@ -802,6 +818,7 @@ export async function publishPhiDeveloperBuilderModulesDraft(
   state: Pick<
     PhiDeveloperBuilderWorkspaceState,
     "draftAllocations" | "runtimeModuleDefinitions" | "runtimeModuleIdsByArea" | "areaPresetSourcesByArea"
+    | "publicRoutePaths"
   >,
   regionDrafts: Record<string, PhiDeveloperBuilderRegionDraft>,
   options: {

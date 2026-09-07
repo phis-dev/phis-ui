@@ -47,6 +47,14 @@ const PHI_BUILDER_MODULES_PAGE_LABEL_SET = definePhiLabelSet({
     filter_area: PHI_BUILDER_MODULES_PAGE_DEFAULT_LABELS.filter.area,
     filter_all_areas: PHI_BUILDER_MODULES_PAGE_DEFAULT_LABELS.filter.allAreas,
     filter_show_foundation: PHI_BUILDER_MODULES_PAGE_DEFAULT_LABELS.filter.showFoundation,
+    public_routes_title: PHI_BUILDER_MODULES_PAGE_DEFAULT_LABELS.publicRoutes.title,
+    public_routes_intro: PHI_BUILDER_MODULES_PAGE_DEFAULT_LABELS.publicRoutes.intro,
+    public_routes_page: PHI_BUILDER_MODULES_PAGE_DEFAULT_LABELS.publicRoutes.page,
+    public_routes_wanted: PHI_BUILDER_MODULES_PAGE_DEFAULT_LABELS.publicRoutes.wanted,
+    public_routes_held_by: PHI_BUILDER_MODULES_PAGE_DEFAULT_LABELS.publicRoutes.heldBy,
+    public_routes_address: PHI_BUILDER_MODULES_PAGE_DEFAULT_LABELS.publicRoutes.address,
+    public_routes_assign: PHI_BUILDER_MODULES_PAGE_DEFAULT_LABELS.publicRoutes.assign,
+    public_routes_cancel: PHI_BUILDER_MODULES_PAGE_DEFAULT_LABELS.publicRoutes.cancel,
   },
 });
 
@@ -104,6 +112,16 @@ export async function getPhiBuilderModulesPageLabels(
       area: labels.filter_area,
       allAreas: labels.filter_all_areas,
       showFoundation: labels.filter_show_foundation,
+    },
+    publicRoutes: {
+      title: labels.public_routes_title,
+      intro: labels.public_routes_intro,
+      page: labels.public_routes_page,
+      wanted: labels.public_routes_wanted,
+      heldBy: labels.public_routes_held_by,
+      address: labels.public_routes_address,
+      assign: labels.public_routes_assign,
+      cancel: labels.public_routes_cancel,
     },
   };
 }

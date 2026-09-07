@@ -34,6 +34,25 @@ export const PHI_BUILDER_MODULE_DETAIL_WIDGET_IDS = createPhiPresetCmsInstanceId
   ["fields"],
 );
 
+/**
+ * The dialog that asks where a Module's Public routes should answer.
+ *
+ * Its own address map rather than more keys in the Modules detail map, because it is a different
+ * conversation: the detail overlay reads a Module, this one holds an unanswered question about one.
+ */
+export const PHI_BUILDER_PUBLIC_ROUTES_OVERLAY_IDS = createPhiPresetCmsInstanceIdMap(
+  MODULES_DETAIL_ID_CONTEXT,
+  ["overlayPublicRoutes"],
+);
+export const PHI_BUILDER_PUBLIC_ROUTES_LAYOUT_IDS = createPhiPresetCmsInstanceIdMap(
+  MODULES_DETAIL_ID_CONTEXT,
+  ["publicRoutesBody", "publicRoutesFooter"],
+);
+export const PHI_BUILDER_PUBLIC_ROUTES_WIDGET_IDS = createPhiPresetCmsInstanceIdMap(
+  MODULES_DETAIL_ID_CONTEXT,
+  ["publicRoutesIntro", "publicRoutesTable", "publicRoutesCommands"],
+);
+
 const PAGE_META_ID_CONTEXT = {
   domain: "page" as const,
   ownerModuleId: PHI_BUILDER_RUNTIME_MODULE_ID,

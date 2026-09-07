@@ -21,6 +21,7 @@ import {
 import { createPhiBuilderControllerAddress } from "./controller/address";
 import type {
   PhiBuilderChromeControls,
+  PhiBuilderPublicRouteCollisionRequest,
   PhiDeveloperBuilderArea,
   PhiDeveloperBuilderEffectsRequest,
   PhiDeveloperBuilderNodeKind,
@@ -67,6 +68,7 @@ function createDefaultBuilderState(): PhiDeveloperBuilderState {
     signalWiringRequest: null,
     signalWiring: { senderAddress: null, senderCapabilityId: null, receiverAddress: null, receiverCapabilityId: null },
     effectsEditorRequest: null,
+    publicRouteCollisionRequest: null,
     builderMode: "editor",
     search: "",
     darkMode: false,
@@ -125,6 +127,54 @@ export function completePhiDeveloperBuilderEffectsEditor(
   if (effects) {
     onCommit?.(effects);
   }
+}
+
+/**
+ * The question a Module's switch could not answer on its own.
+ *
+ * Opening it changes nothing about the Site: the request holds what was asked for -- which Module, for
+ * which Areas, and which addresses are contested -- and the answer is what enables the Module. A second
+ * question replaces the first, because there is only one dialog and only one gesture behind it.
+ */
+export function openPhiBuilderPublicRouteCollisionRequest(
+  scopeKey: PhiDeveloperBuilderArea,
+  request: Omit<PhiBuilderPublicRouteCollisionRequest, "correlationId">,
+) {
+  const correlationId = createPhiSignalCorrelationId();
+  builderWorkspaceStore.patch(scopeKey, (current) => ({
+    ...current,
+    publicRouteCollisionRequest: { ...request, correlationId },
+  }));
+  return correlationId;
+}
+
+/** The address being typed for one contested route. */
+export function answerPhiBuilderPublicRouteCollision(
+  scopeKey: PhiDeveloperBuilderArea,
+  presetKey: string,
+  path: string,
+) {
+  builderWorkspaceStore.patch(scopeKey, (current) => {
+    const request = current.publicRouteCollisionRequest;
+    if (!request) {
+      return current;
+    }
+    return {
+      ...current,
+      publicRouteCollisionRequest: {
+        ...request,
+        answers: request.answers.map((answer) =>
+          answer.presetKey === presetKey ? { ...answer, path } : answer),
+      },
+    };
+  });
+}
+
+export function closePhiBuilderPublicRouteCollisionRequest(scopeKey: PhiDeveloperBuilderArea) {
+  builderWorkspaceStore.patch(scopeKey, (current) =>
+    current.publicRouteCollisionRequest === null
+      ? current
+      : { ...current, publicRouteCollisionRequest: null });
 }
 
 export type PhiDeveloperBuilderNodeSelection = {
@@ -217,6 +267,8 @@ const PHI_WORKSPACE_CATALOG_KEYS = [
   "areaPresetSourcesByArea",
   "runtimeModuleDefinitions",
   "runtimeModuleIdsByArea",
+  "publicRouteClaims",
+  "publicRoutePaths",
 ] as const satisfies readonly (keyof PhiWorkspaceCatalogState)[];
 
 export function splitWorkspacePatch(next: Partial<PhiDeveloperBuilderWorkspaceState>) {
