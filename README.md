@@ -861,6 +861,11 @@ Client-only cross-component coordination uses the consolidated `PhiSignal` contr
   - JSON wiring matches only when `scope`, `channel`, `action`, `valueType`, and `valueSchema` are compatible.
   - Non-JSON signals must not use `valueSchema`.
 - `scope` is the signal routing level. `scopeKey` is not a routing scope and must not be used as a fallback for signal delivery; it may name a concrete transient store, provider, collection, or data-source namespace.
+- A receiver is registered in exactly one scope, and that registration decides.
+  - A block registers in the scope of the tree it is drawn from: a Page tree gives `page`, an Area preset gives `area`, a Region gives `region`.
+  - Delivery to a concrete address takes the scope from that registration; what a route or a dispatch declared is not consulted. A declared scope that disagrees is inert, not fatal.
+  - `broadcast` is the exception: there is no receiver to ask, so the scope is the address and has to be named.
+- A signal to an address that is not registered yet is held and delivered when it registers. One that cannot be delivered at all -- nothing at that address, or a broadcast in a scope that forbids it -- is dropped, and says so once on the console as `[phi-signals] Dropped ...`. `pending` is normal; `undeliverable` is a fault.
 - `sender` is `PhiSignalAddress | null`; it identifies the concrete sending instance or controller and must never be `broadcast`.
 - `receiver` is `PhiSignalAddress | "broadcast" | null`.
   - `null` means not wired and no runtime signal should be emitted.
