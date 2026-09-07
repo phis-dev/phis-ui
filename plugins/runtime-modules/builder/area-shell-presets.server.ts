@@ -11,8 +11,10 @@ import { getCurrentSiteAreaDraft, getExactSiteArea } from "../../../gateway/site
 import { resolvePhiRuntimeModuleIdsForArea } from "../../../plugins/runtime-modules/settings";
 import {
   readPhiAreaPresetRuntimeModuleIds,
+  readPhiAreaPublicRoutePaths,
   readPhiAreaRootRoute,
   type PhiAreaRootRoute,
+  type PhiPublicRoutePathAssignment,
 } from "../../../helpers/cms-area-config";
 import type { PhiDeveloperBuilderArea, PhiDeveloperBuilderRegionDraft } from "./developer-workspace-types";
 import { PHI_BUILDER_SHELL_REGION_KEYS } from "./region-keys";
@@ -104,20 +106,25 @@ function resolveStructureAreaPath(area: PhiDeveloperBuilderArea) {
   }
 }
 
-function readRuntimeModuleIdsFromStructureTree(
+export type PhiBuilderAreaModulesConfig = {
+  moduleIds: PhiRuntimeModuleId[];
+  publicRoutePaths: PhiPublicRoutePathAssignment[];
+};
+
+function readRuntimeModulesConfigFromStructureTree(
   tree: PhiResolvedCmsPageTree | PhiResolvedCmsAreaPresetTree | null | undefined,
   area: PhiDeveloperBuilderArea,
   runtimeModuleCatalog: PhiRuntimeModuleCatalog,
-): PhiRuntimeModuleId[] {
-  const optionalModuleIds = resolvePhiRuntimeModuleIdsForArea(
-    area,
-    readPhiAreaPresetRuntimeModuleIds(
-      tree && "preset" in tree ? tree : null,
+): PhiBuilderAreaModulesConfig {
+  const presetTree = tree && "preset" in tree ? tree : null;
+  return {
+    moduleIds: resolvePhiRuntimeModuleIdsForArea(
       area,
+      readPhiAreaPresetRuntimeModuleIds(presetTree, area),
+      [...runtimeModuleCatalog.values()].map((entry) => entry.definition),
     ),
-    [...runtimeModuleCatalog.values()].map((entry) => entry.definition),
-  );
-  return optionalModuleIds;
+    publicRoutePaths: readPhiAreaPublicRoutePaths(presetTree?.preset.config),
+  };
 }
 
 const buildShellDraftsForArea = cache(async function buildShellDraftsForArea(
@@ -295,7 +302,13 @@ export async function buildPhiBuilderStructureShellDraftsByArea(
   return Object.fromEntries(entries) as Record<PhiDeveloperBuilderArea, Record<string, PhiDeveloperBuilderRegionDraft>>;
 }
 
-const buildRuntimeModuleIdsForArea = cache(async function buildRuntimeModuleIdsForArea(
+/**
+ * What an Area's Modules namespace says, as the Builder sees it: the draft first, then what is
+ * published, then the preset the code ships. Both answers come from one load because they are one
+ * config -- reading the assigned Public addresses separately would fetch the Area a second time and,
+ * worse, could read a different revision than the Module selection it belongs to.
+ */
+const buildRuntimeModulesConfigForArea = cache(async function buildRuntimeModulesConfigForArea(
   runtime: PhiBlockRuntime,
   siteKey: string,
   locale: string,
@@ -303,7 +316,7 @@ const buildRuntimeModuleIdsForArea = cache(async function buildRuntimeModuleIdsF
   internalToken: string,
   area: PhiDeveloperBuilderArea,
   runtimeModuleCatalog: PhiRuntimeModuleCatalog,
-): Promise<PhiRuntimeModuleId[]> {
+): Promise<PhiBuilderAreaModulesConfig> {
   const path = resolveStructureAreaPath(area);
   const sourcePreset = resolveAreaPresetSource(area, runtimeModuleCatalog);
   const cookieHeader = (await cookies()).toString();
@@ -324,7 +337,7 @@ const buildRuntimeModuleIdsForArea = cache(async function buildRuntimeModuleIdsF
   });
 
   if (draftPreset?.preset) {
-    return readRuntimeModuleIdsFromStructureTree(draftPreset.preset, area, runtimeModuleCatalog);
+    return readRuntimeModulesConfigFromStructureTree(draftPreset.preset, area, runtimeModuleCatalog);
   }
 
   const resolvedPreset = await getExactSiteArea({
@@ -343,22 +356,22 @@ const buildRuntimeModuleIdsForArea = cache(async function buildRuntimeModuleIdsF
   });
 
   if (resolvedPreset?.preset) {
-    return readRuntimeModuleIdsFromStructureTree(resolvedPreset.preset, area, runtimeModuleCatalog);
+    return readRuntimeModulesConfigFromStructureTree(resolvedPreset.preset, area, runtimeModuleCatalog);
   }
 
-  return readRuntimeModuleIdsFromStructureTree(
+  return readRuntimeModulesConfigFromStructureTree(
     await instantiateAreaShellPresetTree(runtime, area, runtimeModuleCatalog),
     area,
     runtimeModuleCatalog,
   );
 });
 
-export function buildPhiBuilderRuntimeModuleIdsForArea(
+export function buildPhiBuilderRuntimeModulesConfigForArea(
   runtime: PhiBlockRuntime,
   area: PhiDeveloperBuilderArea,
   runtimeModuleCatalog: PhiRuntimeModuleCatalog,
 ) {
-  return buildRuntimeModuleIdsForArea(
+  return buildRuntimeModulesConfigForArea(
     runtime,
     runtime.site.key,
     runtime.locale.current,
@@ -369,6 +382,14 @@ export function buildPhiBuilderRuntimeModuleIdsForArea(
   );
 }
 
+export async function buildPhiBuilderRuntimeModuleIdsForArea(
+  runtime: PhiBlockRuntime,
+  area: PhiDeveloperBuilderArea,
+  runtimeModuleCatalog: PhiRuntimeModuleCatalog,
+) {
+  return (await buildPhiBuilderRuntimeModulesConfigForArea(runtime, area, runtimeModuleCatalog)).moduleIds;
+}
+
 export async function buildPhiBuilderStructureRuntimeModuleIdsByArea(
   runtime: PhiBlockRuntime,
   runtimeModuleCatalog: PhiRuntimeModuleCatalog,
@@ -377,19 +398,26 @@ export async function buildPhiBuilderStructureRuntimeModuleIdsByArea(
   const entries = await Promise.all(
     areas.map(async (area) => [
       area,
-      await buildRuntimeModuleIdsForArea(
-        runtime,
-        runtime.site.key,
-        runtime.locale.current,
-        runtime.phis.apiBaseUrl,
-        runtime.phis.internalToken,
-        area,
-        runtimeModuleCatalog,
-      ),
+      await buildPhiBuilderRuntimeModuleIdsForArea(runtime, area, runtimeModuleCatalog),
     ] as const),
   );
 
   return Object.fromEntries(entries) as Record<PhiDeveloperBuilderArea, PhiRuntimeModuleId[]>;
+}
+
+/**
+ * The Public addresses this Site assigned, as the Builder's draft sees them.
+ *
+ * Only Public is asked, because only Public has an address space two Modules can contest. The Builder
+ * needs the same list the reader uses: it is what says whether a path a Module proposes is free, and
+ * it is what the collision dialog writes back.
+ */
+export function buildPhiBuilderPublicRoutePaths(
+  runtime: PhiBlockRuntime,
+  runtimeModuleCatalog: PhiRuntimeModuleCatalog,
+) {
+  return buildPhiBuilderRuntimeModulesConfigForArea(runtime, "public", runtimeModuleCatalog)
+    .then((config) => config.publicRoutePaths);
 }
 
 export async function buildPhiBuilderStructureShellPresetDraftsByArea(

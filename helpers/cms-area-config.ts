@@ -109,3 +109,128 @@ export function readPhiAreaRootRoute(
   const reference = readPhiPageReference(record.target);
   return reference ? { mode: "redirect", target: reference.reference } : null;
 }
+
+export const PHI_AREA_PUBLIC_ROUTE_PATHS_KEY = "publicRoutePaths" as const;
+
+/**
+ * A Public address a Module route was given instead of the one it declared.
+ *
+ * Only Public has an address space two Modules can contest -- everywhere else a route lives under its
+ * package -- so this is the answer to the one question enabling a Module can ask. It names the route by
+ * its identity, `ownerModuleId` and `presetKey`, never by the path it declared: the point of writing it
+ * down is that the declared path was not available, and a rename on either side must not silently
+ * detach the assignment from the route it was made for.
+ *
+ * It is a value in the Modules namespace, beside `runtimeModules`, written by the same route with the
+ * same draft and publish behaviour. That is what keeps assigning a path from pulling the structure
+ * preset into the draft: a Page still renders straight from its preset.
+ */
+export type PhiPublicRoutePathAssignment = {
+  ownerModuleId: PhiRuntimeModuleId;
+  presetKey: string;
+  path: string;
+};
+
+const PHI_PUBLIC_ROUTE_PATH_SEGMENT_PATTERN = /^[\p{L}\p{N}][\p{L}\p{N}._~-]*$/u;
+
+/**
+ * Whether a string is an address a Module route may be given.
+ *
+ * An assignment is always a fixed address. A dynamic segment belongs to the route the Module declared
+ * -- it says what the Module reads out of the path -- and is not something a Builder types into a
+ * dialog, so a value carrying one is not an assignment at all.
+ */
+export function isPhiAssignablePublicRoutePath(value: unknown): value is string {
+  if (typeof value !== "string" || !value.startsWith("/") || value === "/") {
+    return false;
+  }
+  const segments = value.split("/");
+  return segments[0] === "" &&
+    segments.length > 1 &&
+    segments.slice(1).every((segment) => PHI_PUBLIC_ROUTE_PATH_SEGMENT_PATTERN.test(segment));
+}
+
+function readPublicRoutePathAssignment(value: unknown): PhiPublicRoutePathAssignment | null {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return null;
+  }
+  const record = value as Record<string, unknown>;
+  const ownerModuleId = typeof record.ownerModuleId === "string" ? record.ownerModuleId.trim() : "";
+  const presetKey = typeof record.presetKey === "string" ? record.presetKey.trim() : "";
+  if (!ownerModuleId || !presetKey || !isPhiAssignablePublicRoutePath(record.path)) {
+    return null;
+  }
+  return { ownerModuleId: ownerModuleId as PhiRuntimeModuleId, presetKey, path: record.path };
+}
+
+function readPublicRoutePathIdentity(assignment: PhiPublicRoutePathAssignment) {
+  return `${assignment.ownerModuleId}/${assignment.presetKey}`;
+}
+
+/**
+ * The assignments a stored Area config carries, as a read that cannot refuse.
+ *
+ * An entry nothing can act on -- a route that no longer exists, a path a later rule stopped allowing --
+ * is dropped rather than raised: this is read on every request, and an old value in a config may not be
+ * what takes a Site down. The write path is where an assignment has to be right, and it says so.
+ */
+export function readPhiAreaPublicRoutePaths(
+  config: Record<string, unknown> | null | undefined,
+): PhiPublicRoutePathAssignment[] {
+  const value = readPhiAreaConfigNamespace(config, PHI_AREA_CONFIG_MODULES_NAMESPACE)?.[
+    PHI_AREA_PUBLIC_ROUTE_PATHS_KEY
+  ];
+  if (!Array.isArray(value)) {
+    return [];
+  }
+  const assignments: PhiPublicRoutePathAssignment[] = [];
+  const seen = new Set<string>();
+  for (const entry of value) {
+    const assignment = readPublicRoutePathAssignment(entry);
+    // One route, one address: a second entry for the same route is not a second answer.
+    if (!assignment || seen.has(readPublicRoutePathIdentity(assignment))) {
+      continue;
+    }
+    seen.add(readPublicRoutePathIdentity(assignment));
+    assignments.push(assignment);
+  }
+  return assignments;
+}
+
+/**
+ * The same list on the way in, where being wrong is worth saying out loud.
+ *
+ * Sorted by route identity so an unchanged selection serializes byte-identically, which is what lets a
+ * save of a config nobody touched stay a no-op draft.
+ */
+export function normalizePhiAreaPublicRoutePaths(
+  assignments: readonly PhiPublicRoutePathAssignment[],
+): PhiPublicRoutePathAssignment[] {
+  const byIdentity = new Map<string, PhiPublicRoutePathAssignment>();
+  for (const assignment of assignments) {
+    const ownerModuleId = assignment.ownerModuleId?.trim() ?? "";
+    const presetKey = assignment.presetKey?.trim() ?? "";
+    if (!ownerModuleId || !presetKey) {
+      throw new Error("A public route path assignment must name a Module and a preset.");
+    }
+    if (!isPhiAssignablePublicRoutePath(assignment.path)) {
+      throw new Error(`"${assignment.path}" is not an address a Public route may be given.`);
+    }
+    const normalized = {
+      ownerModuleId: ownerModuleId as PhiRuntimeModuleId,
+      presetKey,
+      path: assignment.path,
+    };
+    const identity = readPublicRoutePathIdentity(normalized);
+    const existing = byIdentity.get(identity);
+    if (existing && existing.path !== normalized.path) {
+      throw new Error(
+        `Route "${identity}" was assigned two addresses: "${existing.path}" and "${normalized.path}".`,
+      );
+    }
+    byIdentity.set(identity, normalized);
+  }
+  return [...byIdentity.entries()]
+    .sort(([left], [right]) => left.localeCompare(right))
+    .map(([, assignment]) => assignment);
+}

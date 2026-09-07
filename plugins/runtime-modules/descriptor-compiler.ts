@@ -52,6 +52,10 @@ import {
   omitPhiCmsShellCompositionNodes,
 } from "./shell-tree-composition";
 import { buildPhiRuntimeModulePackageRoutePrefix } from "../../helpers/runtime-module-route-path";
+import {
+  isPhiAssignablePublicRoutePath,
+  type PhiPublicRoutePathAssignment,
+} from "../../helpers/cms-area-config";
 import { resolvePhiLayoutCreationPreset } from "../../helpers/cms-layout-defaults";
 import {
   buildPhiBasePageLayoutNode,
@@ -783,11 +787,20 @@ export function compilePhiCmsActiveRouteTable({
   area,
   activeModuleIds,
   viewer,
+  publicRoutePaths,
 }: {
   catalog: PhiCmsCompiledDescriptorCatalog;
   area: PhiCmsAreaKey;
   activeModuleIds: ReadonlySet<PhiRuntimeModuleId>;
   viewer?: PhiAccessViewer;
+  /**
+   * The addresses the Area's config gave Public routes whose declared path was taken.
+   *
+   * Read here rather than baked into the catalog because the catalog is what a package installs and
+   * this is what one Site decided: the same installed Module answers on different addresses on two
+   * Sites, and a draft's answer differs from the published one while it is being edited.
+   */
+  publicRoutePaths?: readonly PhiPublicRoutePathAssignment[];
 }): PhiCmsActiveRouteTable {
   const areaDefinition = catalog.areaDefinitions.get(area);
   if (!areaDefinition) {
@@ -806,13 +819,29 @@ export function compilePhiCmsActiveRouteTable({
   const byPageId = new Map<PhiCmsInstanceId, PhiCmsRoutePresetDescriptor>();
   const exactByPath = new Map<string, PhiCmsRoutePresetDescriptor>();
   const dynamic: PhiCmsCompiledRoutePattern[] = [];
-  for (const pattern of catalog.routesByArea.get(area) ?? []) {
-    if (!activeModuleIds.has(pattern.descriptor.ownerModuleId)) {
+  const assignedPaths = new Map(
+    area === "public"
+      ? (publicRoutePaths ?? [])
+        .filter((assignment) => isPhiAssignablePublicRoutePath(assignment.path))
+        .map((assignment) => [
+          buildPhiCmsPresetIdentityKey(assignment.ownerModuleId, assignment.presetKey),
+          assignment.path,
+        ] as const)
+      : [],
+  );
+  for (const declared of catalog.routesByArea.get(area) ?? []) {
+    if (!activeModuleIds.has(declared.descriptor.ownerModuleId)) {
       continue;
     }
-    if (viewer && !canPhiViewerAccess(viewer, pattern.descriptor.accessPolicy)) {
+    if (viewer && !canPhiViewerAccess(viewer, declared.descriptor.accessPolicy)) {
       continue;
     }
+    const assignedPath = assignedPaths.get(
+      buildPhiCmsPresetIdentityKey(declared.descriptor.ownerModuleId, declared.descriptor.presetKey),
+    );
+    const pattern = assignedPath == null || assignedPath === declared.descriptor.path
+      ? declared
+      : compilePhiCmsRoutePattern({ ...declared.descriptor, path: assignedPath });
     byPageId.set(
       createPhiPresetCmsPageId({
         ownerModuleId: pattern.descriptor.ownerModuleId,

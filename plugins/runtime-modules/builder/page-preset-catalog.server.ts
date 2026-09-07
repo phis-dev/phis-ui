@@ -10,6 +10,7 @@ import type {
 import type { PhiCmsPresetSource } from "../../../types/cms-module-descriptors";
 import { createPhiPresetCmsPageId } from "../../../types/cms-instance-id";
 import { buildPhiRuntimeModulePackageRoutePrefix } from "../../../helpers/runtime-module-route-path";
+import type { PhiPublicRouteClaim } from "../../../helpers/public-route-claims";
 
 function humanizePageKey(value: string) {
   const label = value.replace(/[-_]+/g, " ").trim();
@@ -115,6 +116,31 @@ export function buildPhiBuilderModulePresetPagesByArea(
   }
 
   return pagesByArea;
+}
+
+/**
+ * Every Public address an installed Module would answer on, whether or not it is switched on.
+ *
+ * The whole installed set, not the active one, because this is what the question at enable time is
+ * asked against: a Module that is off still has claims, and they become real the moment somebody flips
+ * its switch. Which of them currently answer is decided elsewhere, from the active set.
+ */
+export function buildPhiBuilderPublicRouteClaims(
+  runtimeModuleCatalog: PhiRuntimeModuleCatalog,
+): PhiPublicRouteClaim[] {
+  const catalog = resolvePhiCmsDescriptorCatalog(runtimeModuleCatalog);
+  const claims: PhiPublicRouteClaim[] = [];
+
+  for (const { descriptor } of catalog.routesByArea.get("public") ?? []) {
+    claims.push({
+      ownerModuleId: descriptor.ownerModuleId,
+      presetKey: descriptor.presetKey,
+      title: descriptor.title,
+      declaredPath: descriptor.path,
+    });
+  }
+
+  return claims;
 }
 
 export function buildPhiBuilderAreaPresetSourcesByArea(

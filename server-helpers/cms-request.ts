@@ -55,7 +55,7 @@ import {
   type PhiSiteRequestContext,
 } from "./runtime";
 import { trForLocale } from "./translate";
-import { readPhiAreaPresetRuntimeModuleIds } from "../helpers/cms-area-config";
+import { readPhiAreaPresetRuntimeModuleIds, readPhiAreaPublicRoutePaths } from "../helpers/cms-area-config";
 
 type LoadPhiResolvedCmsPage = (
   path: string,
@@ -319,6 +319,7 @@ export async function resolvePhiCmsRequest({
     area: requestedAreaKey,
     activeModuleIds: activeModuleKeys,
     viewer: runtime.viewer,
+    publicRoutePaths: readPhiAreaPublicRoutePaths(effectiveAreaPreset?.preset.preset.config),
   });
   const routeBinding = areaOwnedStoragePath && areaAllowed
     ? resolvePhiCmsRoutePreset(routeTable, areaOwnedStoragePath)

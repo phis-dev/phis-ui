@@ -30,7 +30,7 @@ import {
 } from "../../../plugins/runtime-modules/descriptor-compiler";
 import { resolvePhiBuilderAreaAsCmsArea } from "../../../constants/cms-areas";
 import { createPhiPresetCmsPageId, isPhiCmsInstanceId } from "../../../types/cms-instance-id";
-import { buildPhiBuilderRuntimeModuleIdsForArea } from "./area-shell-presets.server";
+import { buildPhiBuilderRuntimeModulesConfigForArea } from "./area-shell-presets.server";
 
 export type PhiBuilderPageDraftsByScope = Partial<
   Record<PhiDeveloperBuilderArea, Partial<Record<string, PhiDeveloperBuilderRegionDraft | null>>>
@@ -63,12 +63,12 @@ async function resolvePhiRegistryPresetPageBinding({
   area: PhiDeveloperBuilderArea;
   pageKey: string;
 }) {
-  const activeModuleIds = await buildPhiBuilderRuntimeModuleIdsForArea(
+  const modulesConfig = await buildPhiBuilderRuntimeModulesConfigForArea(
     runtime,
     area,
     runtimeModuleCatalog,
   );
-  const activeModuleKeys = new Set(activeModuleIds);
+  const activeModuleKeys = new Set(modulesConfig.moduleIds);
   if (!runtimeModuleCatalog.platformModuleId) {
     throw new Error("Builder runtime catalog has no Platform contribution.");
   }
@@ -82,7 +82,12 @@ async function resolvePhiRegistryPresetPageBinding({
   activeModuleKeys.add(areaDefinition.baseModuleId);
   const binding = isPhiCmsInstanceId(pageKey)
     ? resolvePhiCmsRoutePresetByPageId(
-      compilePhiCmsActiveRouteTable({ catalog, area: cmsArea, activeModuleIds: activeModuleKeys }),
+      compilePhiCmsActiveRouteTable({
+        catalog,
+        area: cmsArea,
+        activeModuleIds: activeModuleKeys,
+        publicRoutePaths: modulesConfig.publicRoutePaths,
+      }),
       pageKey,
     )
     : null;
@@ -309,12 +314,12 @@ export async function resolvePhiBuilderCurrentPageScope(
     return { area, pageKey: requestedPageKey };
   }
 
-  const activeModuleIds = await buildPhiBuilderRuntimeModuleIdsForArea(
+  const modulesConfig = await buildPhiBuilderRuntimeModulesConfigForArea(
     runtime,
     area,
     runtimeModuleCatalog,
   );
-  const activeModuleKeys = new Set(activeModuleIds);
+  const activeModuleKeys = new Set(modulesConfig.moduleIds);
   if (!runtimeModuleCatalog.platformModuleId) {
     throw new Error("Builder runtime catalog has no Platform contribution.");
   }
@@ -330,6 +335,7 @@ export async function resolvePhiBuilderCurrentPageScope(
     catalog,
     area: cmsArea,
     activeModuleIds: activeModuleKeys,
+    publicRoutePaths: modulesConfig.publicRoutePaths,
   });
   // The Area root if one answers, otherwise the first Page there is: the Builder opens on something.
   const rootDescriptor = resolvePhiCmsRoutePreset(table, "/")?.descriptor;

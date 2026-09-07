@@ -7,6 +7,7 @@ import { PHI_CANONICAL_SOURCE_LOCALE, localizeAreaPath } from "../helpers/locale
 import { getPhiExactSiteArea } from "./cms";
 import { getPhiCapabilitySnapshot } from "../gateway/server-capabilities";
 import { fetchSiteLocaleConfig } from "./site-locale";
+import { readPhiAreaPublicRoutePaths } from "../helpers/cms-area-config";
 import {
   compilePhiCmsActiveRouteTable,
   resolvePhiCmsAreaShellPresetBinding,
@@ -75,6 +76,7 @@ export const resolvePhiPublicLoginHref = cache(async function resolvePhiPublicLo
     area: "public",
     activeModuleIds,
     viewer,
+    publicRoutePaths: readPhiAreaPublicRoutePaths(areaPreset?.preset.preset.config),
   });
 
   return resolvePhiCmsRoutePreset(routeTable, PHI_PUBLIC_LOGIN_PATH)
