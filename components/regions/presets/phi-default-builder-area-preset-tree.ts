@@ -35,6 +35,7 @@ import { createPhiBuilderControllerAddress } from "../../../plugins/runtime-modu
 import {
   isPhiAreaScopedBuilderPage,
   isPhiDebugScaffoldBuilderPage,
+  readPhiDeveloperBuilderWorkspaceKey,
 } from "../../../plugins/runtime-modules/builder/route-scope";
 import { createPhiThemeControllerAddress } from "../../../plugins/runtime-modules/theme/controller/address";
 import { PHI_THEME_SIGNAL_CHANNELS } from "../../../plugins/runtime-modules/theme/controller/signals";
@@ -867,7 +868,7 @@ export async function buildPhiDefaultBuilderAreaPresetTree({
            * holds the opt-in list). The static default also renders on pages nobody armed, and on
            * pages that opted in the SSR baseline matches because the controller enables it on mount.
            */
-          disabled: !isPhiAreaScopedBuilderPage(page.path.split("/").filter(Boolean)[1] ?? "root"),
+          disabled: !isPhiAreaScopedBuilderPage(readPhiDeveloperBuilderWorkspaceKey(page.path) ?? "root"),
           options: [
             { value: "public", label: "Public" },
             { value: "app", label: "App" },
@@ -1216,7 +1217,7 @@ export async function buildPhiDefaultBuilderAreaPresetTree({
            * (isPhiDebugScaffoldBuilderPage holds the opt-in list). A page that forgets to opt in
            * shows a switch that cannot promise something nothing renders.
            */
-          disabled: !isPhiDebugScaffoldBuilderPage(page.path.split("/").filter(Boolean)[1] ?? "root"),
+          disabled: !isPhiDebugScaffoldBuilderPage(readPhiDeveloperBuilderWorkspaceKey(page.path) ?? "root"),
           signalRoutes: {
             emits: [
               {
