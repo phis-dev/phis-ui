@@ -7,7 +7,7 @@ import type {
   PhiSignalAddress,
   PhiSignalRuntimeContext,
 } from "../../types";
-import { createPhiCoreRuntimeControllerAddress } from "./core-runtime-controller-address";
+import { readPhiSignalReceiverScopeProblem } from "@phis/contracts/signals";
 import {
   resolvePhiSiteSignalRuntimePartition,
   usePhiSignalRuntimePartition,
@@ -81,15 +81,14 @@ export function resolvePhiSignalDeliverability(
   }
 
   const deliveryPartition = resolveDeliveryPartition(partition, signal);
-  if (signal.receiver === "broadcast") {
-    return signal.scope !== "site" ? "deliverable" : "undeliverable";
+  // Which receivers a scope admits is the contract's sentence; phi-server refuses the same
+  // combinations on the way in, and until 2026-09-07 each side had written them out for itself.
+  if (readPhiSignalReceiverScopeProblem(signal.scope, signal.receiver)) {
+    return "undeliverable";
   }
 
-  if (
-    signal.scope === "site" &&
-    signal.receiver !== createPhiCoreRuntimeControllerAddress()
-  ) {
-    return "undeliverable";
+  if (signal.receiver === "broadcast") {
+    return "deliverable";
   }
 
   const registered = deliveryPartition.instances.get(signal.receiver);

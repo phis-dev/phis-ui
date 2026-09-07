@@ -90,10 +90,16 @@ assert.equal(phiSignalCapabilitiesMatch(backgroundOut, null), false);
 }
 
 /**
- * phi-server keeps its own copy of this grammar, because it does not depend on this package. The
- * copies are the failure mode: widening one alone turns a stored wiring into a rejected write. These
- * are the same cases `phi-server/src/lib/cms/signal-value-schema.test.ts` asserts, so a widening that
- * reaches only one side fails on the other.
+ * The stricter of the two questions asked about a value schema name.
+ *
+ * This side holds the Module registry, so it asks whether the package part names a Module it knows.
+ * phi-server holds no such registry and must not: refusing a schema because it had never heard of the
+ * package would refuse every third party's, so it asks the shape alone --
+ * `isPhiSignalValueSchemaShape` in `@phis/contracts/signals`. Two different questions about one string,
+ * and a wiring that passes here has to pass there.
+ *
+ * These are the cases `phi-server/src/lib/cms/signal-value-schema.test.ts` asserts, so a widening that
+ * reaches only one of the two answers fails on the other.
  */
 const ACCEPTED_VALUE_SCHEMAS = [
   "@phis/ui/modules/core/signals/message",

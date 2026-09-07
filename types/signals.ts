@@ -30,6 +30,38 @@ export {
   type PhiSignalValueType,
 } from "@phis/contracts/signals";
 
+/*
+ * The address families come from there too, and for a sharper reason.
+ *
+ * A wiring is stored by the Builder, checked by phi-server on the way in and delivered here at runtime,
+ * so all three parse the same string. Two of them did it from separate copies until 2026-09-07 -- the
+ * server's said in its own comment that it "mirrors the grammar in @phis/ui", because it could not
+ * import it.
+ */
+export {
+  isPhiControllerSignalAddress,
+  isPhiSignalAddress,
+  isPhiSignalReceiver,
+  readPhiSignalAddress,
+  type PhiControllerSignalAddress,
+  type PhiSignalAddress,
+  type PhiSignalAddressFamily,
+  type PhiSignalReceiver,
+  type PhiSignalSender,
+} from "@phis/contracts/signals";
+
+import {
+  isPhiControllerPluginKey,
+  isPhiControllerSignalAddress,
+  isPhiSignalAddressSegment,
+  isPhiSignalReceiver,
+  type PhiControllerSignalAddress,
+  type PhiSignalAddress,
+  type PhiSignalAddressFamily,
+  type PhiSignalReceiver,
+  type PhiSignalSender,
+} from "@phis/contracts/signals";
+
 import {
   PHI_SIGNAL_VALUE_SCHEMA_NAMESPACE,
   PHI_SIGNAL_VALUE_SCHEMA_SEPARATOR,
@@ -158,27 +190,8 @@ export type PhiSignalMeta = {
   sourceLabel?: string | null;
 };
 
-export type PhiSignalAddress =
-  | `cms:${PhiCmsInstanceId}`
-  | `cms:${PhiCmsInstanceId}:${string}`
-  | `region:${string}`
-  | `controller:${string}/${string}:${string}`;
-
-export type PhiControllerSignalAddress = Extract<PhiSignalAddress, `controller:${string}`>;
-
-export type PhiSignalSender = PhiSignalAddress | null;
-export type PhiSignalReceiver = PhiSignalAddress | "broadcast" | null;
-
-export type PhiSignalAddressFamily =
-  | "cms"
-  | "region";
-
 function normalizePhiSignalAddressPart(value: string | number) {
   return String(value).trim();
-}
-
-function isPhiSignalAddressSegment(value: string) {
-  return value.length > 0 && !value.includes("/") && !value.includes(":");
 }
 
 export function createPhiSignalAddress(
@@ -208,24 +221,6 @@ export function createPhiSignalSubcontrolAddress(
   return `${family}:${instance}:${control}` as PhiSignalAddress;
 }
 
-/**
- * A controller lives in the namespace of the module that owns it, so a plugin key is either a bare
- * package name or that package followed by `/modules/<module>/<namespace>`. Foreign packages use
- * either form; the grammar does not privilege first-party keys.
- */
-function isPhiControllerPluginKey(value: string) {
-  const marker = value.indexOf("/modules/");
-  if (marker < 0) {
-    return isPhiNpmPackageName(value);
-  }
-  const rest = value.slice(marker + "/modules/".length).split("/");
-  return (
-    isPhiNpmPackageName(value.slice(0, marker)) &&
-    rest.length === 2 &&
-    rest.every((part) => isPhiSignalAddressSegment(part))
-  );
-}
-
 export function createPhiControllerSignalAddress(
   pluginKey: string | number,
   controllerKey: string | number,
@@ -242,36 +237,6 @@ export function createPhiControllerSignalAddress(
     throw new Error(`Invalid Phi controller signal address parts: ${plugin}/${controller}:${instance}.`);
   }
   return `controller:${plugin}/${controller}:${instance}` as PhiControllerSignalAddress;
-}
-
-export function isPhiControllerSignalAddress(address: unknown): address is PhiControllerSignalAddress {
-  if (typeof address !== "string") {
-    return false;
-  }
-  if (!address.startsWith("controller:")) {
-    return false;
-  }
-
-  const body = address.slice("controller:".length);
-  const instanceSeparatorIndex = body.lastIndexOf(":");
-  if (instanceSeparatorIndex <= 0 || instanceSeparatorIndex === body.length - 1) {
-    return false;
-  }
-
-  const namespacedType = body.slice(0, instanceSeparatorIndex);
-  const instanceKey = body.slice(instanceSeparatorIndex + 1);
-  const controllerSeparatorIndex = namespacedType.lastIndexOf("/");
-  if (controllerSeparatorIndex <= 0 || controllerSeparatorIndex === namespacedType.length - 1) {
-    return false;
-  }
-
-  const pluginKey = namespacedType.slice(0, controllerSeparatorIndex);
-  const controllerKey = namespacedType.slice(controllerSeparatorIndex + 1);
-  return (
-    isPhiControllerPluginKey(pluginKey) &&
-    isPhiSignalAddressSegment(controllerKey) &&
-    isPhiSignalAddressSegment(instanceKey)
-  );
 }
 
 export function readPhiControllerSignalAddress(
@@ -303,34 +268,6 @@ export function readPhiControllerSignalAddressParts(value: unknown): {
     instanceKey,
     type: `${pluginKey}/${controllerKey}`,
   };
-}
-
-export function isPhiSignalAddress(value: unknown): value is PhiSignalAddress {
-  if (typeof value !== "string") {
-    return false;
-  }
-
-  const address = value.trim();
-  if (address.startsWith("cms:")) {
-    const parts = address.slice("cms:".length).split(":");
-    return (
-      (parts.length === 1 || parts.length === 2) &&
-      readPhiCmsInstanceId(parts[0]) != null &&
-      (parts.length === 1 || isPhiSignalAddressSegment(parts[1]!))
-    );
-  }
-  if (address.startsWith("region:")) {
-    return isPhiSignalAddressSegment(address.slice("region:".length));
-  }
-  return isPhiControllerSignalAddress(address);
-}
-
-export function readPhiSignalAddress(value: unknown): PhiSignalAddress | undefined {
-  return isPhiSignalAddress(value) ? (value.trim() as PhiSignalAddress) : undefined;
-}
-
-export function isPhiSignalReceiver(value: unknown): value is PhiSignalReceiver {
-  return value === null || value === "broadcast" || isPhiSignalAddress(value);
 }
 
 export type PhiSignal = {
