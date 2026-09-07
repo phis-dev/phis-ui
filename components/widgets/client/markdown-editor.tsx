@@ -29,8 +29,13 @@ export function PhiMarkdownWidgetEditor({
   const sourceUrl = config?.sourceUrl?.trim() ?? "";
   const markdown = config?.markdown ?? "";
   const sourceLocale = config?.sourceLocale?.trim() ?? "";
-  const [draftState, setDraftState] = useState(() => ({ source: markdown, value: markdown }));
-  const draftMarkdown = draftState.source === markdown ? draftState.value : markdown;
+  /*
+   * What is being typed, held here until the field is left; see the same state in the Simple Text
+   * editor. The textarea has its own undo while it is focused, and one Builder history entry per
+   * keystroke would bury every other edit in the workspace.
+   */
+  const [editedMarkdown, setEditedMarkdown] = useState<string | null>(null);
+  const draftMarkdown = editedMarkdown ?? markdown;
   const textareaRef = useRef<TextAreaRef>(null);
   const currentValueRef = useRef(draftMarkdown);
   const selectionRef = useRef({ start: draftMarkdown.length, end: draftMarkdown.length });
@@ -52,7 +57,9 @@ export function PhiMarkdownWidgetEditor({
       const next = `${current.slice(0, start)}${content}${current.slice(end)}`;
       const caret = start + content.length;
       selectionRef.current = { start: caret, end: caret };
-      setDraftState({ source: markdown, value: next });
+      // An insert is a finished gesture of its own, so it is written straight through and the
+      // typing draft is given up: what the toolbar produced now stands in the config.
+      setEditedMarkdown(null);
       currentValueRef.current = next;
       onChangeRef.current?.(next);
       requestAnimationFrame(() => {
@@ -61,7 +68,7 @@ export function PhiMarkdownWidgetEditor({
         textarea?.setSelectionRange(caret, caret);
       });
     },
-  }), [blockId, markdown]);
+  }), [blockId]);
 
   if (sourceMode === "url") {
     return (
@@ -82,18 +89,19 @@ export function PhiMarkdownWidgetEditor({
       readOnly={!onChange}
       variant="borderless"
       placeholder="Write markdown..."
-      onChange={(value) => {
-        const nextMarkdown = value ?? "";
-        setDraftState({ source: markdown, value: nextMarkdown });
-        onChange?.(nextMarkdown);
-      }}
+      onChange={(value) => setEditedMarkdown(value ?? "")}
       onBlur={() => {
         const textarea = textareaRef.current?.resizableTextArea?.textArea;
-        if (!textarea) return;
-        selectionRef.current = {
-          start: textarea.selectionStart,
-          end: textarea.selectionEnd,
-        };
+        if (textarea) {
+          selectionRef.current = {
+            start: textarea.selectionStart,
+            end: textarea.selectionEnd,
+          };
+        }
+        setEditedMarkdown(null);
+        if (draftMarkdown !== markdown) {
+          onChange?.(draftMarkdown);
+        }
       }}
       style={{
         width: MARKDOWN_EDITOR_WIDTH,

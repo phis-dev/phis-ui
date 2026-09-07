@@ -62,6 +62,13 @@ export function PhiDescriptionWidgetEditor({
     [draft],
   );
 
+  /*
+   * Typing changes the draft and nothing else.
+   *
+   * Each of these fields is a textarea with an undo of its own, and it keeps it while it has the
+   * focus. What leaves this Widget is one write per field, when that field is left -- so the
+   * Builder's history holds "the title was changed", not one entry per character of it.
+   */
   function updateField<Key extends keyof PhiDescriptionEditorConfig>(
     key: Key,
     value: PhiDescriptionEditorConfig[Key],
@@ -70,7 +77,13 @@ export function PhiDescriptionWidgetEditor({
       const currentDraft = current.source === config ? current.value : resolvedConfig;
       return { source: config, value: { ...currentDraft, [key]: value } };
     });
-    onChange?.({ [key]: value } as Partial<PhiCmsDescriptionWidgetConfig>);
+  }
+
+  function commitField<Key extends keyof PhiDescriptionEditorConfig>(key: Key) {
+    if (draft[key] === resolvedConfig[key]) {
+      return;
+    }
+    onChange?.({ [key]: draft[key] } as Partial<PhiCmsDescriptionWidgetConfig>);
   }
 
   function updateAsideItem(index: number, value: string) {
@@ -86,9 +99,18 @@ export function PhiDescriptionWidgetEditor({
         },
       };
     });
-    onChange?.({
-      asideItems: draft.asideItems.map((item, itemIndex) => (itemIndex === index ? value : item)),
-    });
+  }
+
+  function commitAsideItems() {
+    const items = draft.asideItems;
+    const storedItems = resolvedConfig.asideItems;
+    if (
+      items.length === storedItems.length &&
+      items.every((item, index) => item === storedItems[index])
+    ) {
+      return;
+    }
+    onChange?.({ asideItems: items });
   }
 
   return (
@@ -121,6 +143,7 @@ export function PhiDescriptionWidgetEditor({
               placeholder="Eyebrow"
               autoSize={{ minRows: 1, maxRows: 2 }}
               onChange={(value) => updateField("eyebrow", value ?? "")}
+              onBlur={() => commitField("eyebrow")}
               style={{ ...EDITOR_TEXTAREA_STYLE, borderBottom: "none", paddingBlock: 0 }}
             />
           </Tag>
@@ -133,6 +156,7 @@ export function PhiDescriptionWidgetEditor({
             placeholder="Eyebrow"
             autoSize={{ minRows: 1, maxRows: 2 }}
             onChange={(value) => updateField("eyebrow", value ?? "")}
+            onBlur={() => commitField("eyebrow")}
             style={EDITOR_TEXTAREA_STYLE}
           />
         )}
@@ -146,6 +170,7 @@ export function PhiDescriptionWidgetEditor({
               placeholder="Title"
               autoSize={{ minRows: 1, maxRows: 4 }}
               onChange={(value) => updateField("title", value ?? "")}
+              onBlur={() => commitField("title")}
               style={{
                 ...EDITOR_TEXTAREA_STYLE,
                 fontSize: "var(--ant-font-size-heading-2, 2rem)",
@@ -162,6 +187,7 @@ export function PhiDescriptionWidgetEditor({
               placeholder="Description"
               autoSize={{ minRows: 2, maxRows: 8 }}
               onChange={(value) => updateField("description", value ?? "")}
+              onBlur={() => commitField("description")}
               style={{
                 ...EDITOR_TEXTAREA_STYLE,
                 color: "var(--ant-color-text-secondary)",
@@ -181,6 +207,7 @@ export function PhiDescriptionWidgetEditor({
               placeholder="Aside title"
               autoSize={{ minRows: 1, maxRows: 3 }}
               onChange={(value) => updateField("asideTitle", value ?? "")}
+              onBlur={() => commitField("asideTitle")}
               style={{
                 ...EDITOR_TEXTAREA_STYLE,
                 color: "var(--ant-color-text-heading)",
@@ -223,6 +250,7 @@ export function PhiDescriptionWidgetEditor({
                     placeholder={`Item ${index + 1}`}
                     autoSize={{ minRows: 1, maxRows: 6 }}
                     onChange={(value) => updateAsideItem(index, value ?? "")}
+                    onBlur={() => commitAsideItems()}
                     style={{
                       ...EDITOR_TEXTAREA_STYLE,
                       borderBottom: "none",
@@ -242,6 +270,7 @@ export function PhiDescriptionWidgetEditor({
           placeholder="Footer"
           autoSize={{ minRows: 1, maxRows: 5 }}
           onChange={(value) => updateField("footer", value ?? "")}
+          onBlur={() => commitField("footer")}
           style={{
             ...EDITOR_TEXTAREA_STYLE,
             color: "var(--ant-color-text-tertiary)",

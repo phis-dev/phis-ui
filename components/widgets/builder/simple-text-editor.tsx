@@ -152,9 +152,18 @@ export function PhiSimpleTextWidgetEditor({
   onChangeText,
 }: PhiSimpleTextWidgetEditorProps) {
   const { fonts, token } = usePhiConfig();
-  const [draftTextState, setDraftTextState] = useState(() => ({ source: text, value: text }));
+  /*
+   * What is being typed, held here and nowhere else until the field is left.
+   *
+   * The characters belong to the input: it has its own undo while it holds the focus, and the
+   * Builder's history has no business recording one entry per keystroke. `null` means nothing is
+   * being edited, so the field shows the stored text -- which is what makes an undo visible here at
+   * all: a draft kept past the blur would go on showing the typed value while the text underneath
+   * had already been taken back.
+   */
+  const [editedText, setEditedText] = useState<string | null>(null);
   const [isFocused, setIsFocused] = useState(false);
-  const draftText = draftTextState.source === text ? draftTextState.value : text;
+  const draftText = editedText ?? text;
   const textDecoration = [
     config?.underline ? "underline" : null,
     config?.delete ? "line-through" : null,
@@ -187,17 +196,19 @@ export function PhiSimpleTextWidgetEditor({
         variant="borderless"
         placeholder="Text"
         readOnly={!onChangeText}
-        onFocus={() => setIsFocused(true)}
+        onFocus={() => {
+          setIsFocused(true);
+          setEditedText(text);
+        }}
         onBlur={() => setIsFocused(false)}
-        onChange={(nextText) => {
-          setDraftTextState({ source: text, value: nextText });
-          onChangeText?.(nextText);
+        onChange={(nextText) => setEditedText(nextText)}
+        onCommit={(committedText) => {
+          setEditedText(null);
+          if (committedText !== text) {
+            onChangeText?.(committedText);
+          }
         }}
-        onCommit={() => undefined}
-        onCancel={() => {
-          setDraftTextState({ source: text, value: text });
-          onChangeText?.(text);
-        }}
+        onCancel={() => setEditedText(null)}
         styles={{
           input: {
             borderBottom: "1px solid var(--ant-color-border, rgba(0, 0, 0, 0.15))",

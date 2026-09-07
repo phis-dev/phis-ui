@@ -17,6 +17,7 @@ import {
   $isRangeSelection,
   $isRootOrShadowRoot,
   $insertNodes,
+  BLUR_COMMAND,
   CAN_REDO_COMMAND,
   CAN_UNDO_COMMAND,
   COMMAND_PRIORITY_CRITICAL,
@@ -297,30 +298,52 @@ function PhiHtmlWidgetEditorContentSyncPlugin({
   return null;
 }
 
+/**
+ * What the editor produced, written out when it is left.
+ *
+ * Lexical keeps its own history -- `HistoryExtension` is in the extension list -- so while the editor
+ * has the focus, undo belongs to it and every keystroke is its business alone. Reporting each of them
+ * upwards would put a second history over the first: two stacks over one field, and a Builder
+ * workspace whose undo header is one entry per character. So the markup is tracked as it changes and
+ * reported once, on blur, and only when it differs from what the config already holds.
+ */
 function PhiHtmlWidgetEditorChangePlugin({
+  html,
   latestHtmlRef,
   onChange,
 }: {
+  html: string;
   latestHtmlRef: MutableRefObject<string>;
   onChange?: (html: string) => void;
 }) {
   const [editor] = useLexicalComposerContext();
-  const emitChange = useEffectEvent((html: string) => onChange?.(html));
+  const emitChange = useEffectEvent(() => {
+    const nextHtml = latestHtmlRef.current;
+    if (nextHtml === html) {
+      return;
+    }
+    onChange?.(nextHtml);
+  });
 
   useEffect(() => {
     return editor.registerUpdateListener(({ editorState }) => {
-      const nextHtml = editorState.read(() => sanitizePhiHtmlWidgetMarkup(
+      latestHtmlRef.current = editorState.read(() => sanitizePhiHtmlWidgetMarkup(
         $generateHtmlFromNodes(editor),
         { allowInternalReferences: true },
       ));
-      if (nextHtml === latestHtmlRef.current) {
-        return;
-      }
-
-      latestHtmlRef.current = nextHtml;
-      emitChange(nextHtml);
     });
   }, [editor, latestHtmlRef]);
+
+  useEffect(() => {
+    return editor.registerCommand(
+      BLUR_COMMAND,
+      () => {
+        emitChange();
+        return false;
+      },
+      COMMAND_PRIORITY_LOW,
+    );
+  }, [editor]);
 
   return null;
 }
@@ -611,7 +634,11 @@ export function PhiHtmlWidgetEditor({
             html={normalizedHtml}
             latestHtmlRef={latestHtmlRef}
           />
-          <PhiHtmlWidgetEditorChangePlugin latestHtmlRef={latestHtmlRef} onChange={onChange} />
+          <PhiHtmlWidgetEditorChangePlugin
+            html={normalizedHtml}
+            latestHtmlRef={latestHtmlRef}
+            onChange={onChange}
+          />
         </div>
       </LexicalExtensionComposer>
     </div>
