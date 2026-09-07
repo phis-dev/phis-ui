@@ -141,16 +141,29 @@ function uniqueOutputCapabilities(capabilities: readonly PhiSignalOutputCapabili
   });
 }
 
+/**
+ * A receiver capability is named once per endpoint.
+ *
+ * The two ways to get it wrong read very differently, so they are reported differently: a plugin
+ * that lists the same capability twice has a redundant line, while a plugin that lists one every
+ * renderable block already receives has reached for something it is given. Without the second
+ * message the author sees a duplicate in a list that shows the capability only once.
+ */
 function assertNoDuplicateInputCapabilities(
   capabilities: readonly PhiSignalInputCapability[],
+  inheritedCapabilities: readonly PhiSignalInputCapability[],
   context: string,
 ) {
+  const inherited = new Set(inheritedCapabilities.map(inputCapabilityKey));
   const seen = new Set<string>();
   for (const capability of capabilities) {
     const key = inputCapabilityKey(capability);
+    const name = `${capability.channel}/${capability.action}:${capability.valueType}`;
     if (seen.has(key)) {
       throw new Error(
-        `${context}: duplicate receiver capability "${capability.channel}/${capability.action}:${capability.valueType}".`,
+        inherited.has(key)
+          ? `${context}: receiver capability "${name}" is inherited by every renderable block and must not be declared again.`
+          : `${context}: duplicate receiver capability "${name}".`,
       );
     }
     seen.add(key);
@@ -219,7 +232,7 @@ function resolveSelfSignalEndpoint({
     ...inheritedListens,
   ];
   assertNoDuplicateOutputCapabilities(emits, `${address}.emits`);
-  assertNoDuplicateInputCapabilities(listens, `${address}.listens`);
+  assertNoDuplicateInputCapabilities(listens, inheritedListens, `${address}.listens`);
 
   return {
     address,

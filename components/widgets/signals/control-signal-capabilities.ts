@@ -9,6 +9,14 @@ const PHI_CONTROL_SET_VALUE_SIGNAL = {
   action: "change",
 } as const;
 
+/**
+ * Enabling a Control from a signal.
+ *
+ * Only the subcontrol form is declared here. A Control is a renderable block, and every renderable
+ * block already receives `enabled/change` at its own address through
+ * `PHI_RENDERABLE_BLOCK_RECEIVE_BINDINGS`; a Control naming it again would say the same thing twice
+ * about one endpoint. A subcontrol has an address of its own and inherits nothing, so it says it.
+ */
 const PHI_CONTROL_SET_ENABLED_SIGNAL = {
   id: "enabled",
   channel: "enabled",
@@ -172,7 +180,6 @@ export const PHI_BOOLEAN_CONTROL_SIGNALS = {
   ],
   listens: [
     { ...PHI_CONTROL_SET_VALUE_SIGNAL, valueType: "boolean" },
-    PHI_CONTROL_SET_ENABLED_SIGNAL,
     { id: "toggle", channel: "value", action: "toggle", valueType: "none" },
   ],
 } satisfies PhiSignalPluginMeta;
@@ -186,7 +193,6 @@ export const PHI_SELECT_CONTROL_SIGNALS = {
   ],
   listens: [
     { ...PHI_CONTROL_SET_VALUE_SIGNAL, channel: "selection", valueType: "string" },
-    PHI_CONTROL_SET_ENABLED_SIGNAL,
     {
       id: "stackMeta",
       channel: "stackMeta",

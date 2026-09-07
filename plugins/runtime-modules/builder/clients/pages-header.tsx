@@ -173,7 +173,7 @@ export function PhiDeveloperBuilderPagesHeaderSection({
     ? findPageNodePath(pageTree, pageKey) ?? [{ key: pageKey, title: pageKey }]
     : [];
   const selectedPageTitle = selectedPath.at(-1)?.title ?? pageKey;
-  const storagePath = pageSelectionReady
+  const catalogPath = pageSelectionReady
     ? resolvePhiBuilderCatalogPathForCatalog(area, pageKey, pageTree)
     : null;
   const resolvedInitialPageTitle = (pageTitle?.trim() ?? "") || selectedPageTitle;
@@ -205,11 +205,11 @@ export function PhiDeveloperBuilderPagesHeaderSection({
   }
 
   const titleInput = (
-    titleModeEnabled && storagePath !== null ? (
+    titleModeEnabled && catalogPath !== null ? (
       <PhiDeveloperBuilderPagesHeaderTitleField
-        key={storagePath}
+        key={catalogPath}
         area={area}
-        path={storagePath}
+        path={catalogPath}
         disabled={disabled}
         initialTitle={resolvedInitialPageTitle}
         labels={labels}
