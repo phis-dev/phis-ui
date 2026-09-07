@@ -18,6 +18,7 @@ import { readPhiSignalValueSchema } from "../../types/signals";
 import {
   matchesPhiSignalRuntimeContext,
   resolvePhiSignalDeliverability,
+  resolvePhiSignalReceiverScope,
   resolvePhiSignalDeliveryPartition,
 } from "./runtime-signal-registry";
 import {
@@ -136,7 +137,10 @@ function flushPendingPhiSignals(partition: PhiSignalRuntimePartition) {
 
   for (const [receiver, byRoute] of [...partition.pendingSignals]) {
     for (const [key, pending] of [...byRoute]) {
-      const deliverability = resolvePhiSignalDeliverability(partition, pending.signal);
+      // The scope is resolved on the way out, not on the way in: the receiver that turned up while
+      // this waited is the one that says which scope it answers in.
+      const signal = withPhiSignalReceiverScope(partition, pending.signal);
+      const deliverability = resolvePhiSignalDeliverability(partition, signal);
       if (deliverability === "pending") {
         continue;
       }
@@ -149,10 +153,7 @@ function flushPendingPhiSignals(partition: PhiSignalRuntimePartition) {
           `[phi-signal] ${key} -> ${receiver} delivered after waiting ${Date.now() - pending.queuedAt}ms for its receiver`,
         );
       }
-      deliverPhiSignalNow(
-        resolvePhiSignalDeliveryPartition(partition, pending.signal),
-        pending.signal,
-      );
+      deliverPhiSignalNow(resolvePhiSignalDeliveryPartition(partition, signal), signal);
     }
     if (byRoute.size === 0) {
       partition.pendingSignals.delete(receiver);
@@ -160,7 +161,22 @@ function flushPendingPhiSignals(partition: PhiSignalRuntimePartition) {
   }
 }
 
-function deliverPhiSignal(partition: PhiSignalRuntimePartition, signal: PhiSignal) {
+/**
+ * The scope the receiver answers in, put on the signal before anybody filters by it.
+ *
+ * A concrete address is registered in exactly one scope, so the scope a sender names is a repetition
+ * of something the receiver already states -- and one that could disagree. What a route declared is
+ * not consulted; a broadcast keeps its own, because there the scope really is the address.
+ */
+function withPhiSignalReceiverScope(partition: PhiSignalRuntimePartition, signal: PhiSignal) {
+  const receiverScope = resolvePhiSignalReceiverScope(partition, signal.receiver);
+  return receiverScope && receiverScope !== signal.scope
+    ? { ...signal, scope: receiverScope }
+    : signal;
+}
+
+function deliverPhiSignal(partition: PhiSignalRuntimePartition, input: PhiSignal) {
+  const signal = withPhiSignalReceiverScope(partition, input);
   const deliveryPartition = resolvePhiSignalDeliveryPartition(partition, signal);
   const deliverability = resolvePhiSignalDeliverability(partition, signal);
 

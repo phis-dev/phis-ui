@@ -144,7 +144,13 @@ describe("deferred signal delivery", () => {
     expect(partition.pendingSignals.size).toBe(0);
   });
 
-  it("drops a held signal whose receiver turns up in another scope", async () => {
+  it("delivers in the scope the receiver registered, not the one the sender named", async () => {
+    /*
+     * An address is registered in exactly one scope, so the scope a sender names is a repetition of
+     * something the receiver already states -- and a repetition that could disagree. It used to be
+     * half of the address: a signal named `page` for a block registered as `area` was not late, it
+     * was undeliverable, and it went in the bin without a word.
+     */
     const partition = createPartition();
     const received: PhiSignal[] = [];
 
@@ -156,7 +162,8 @@ describe("deferred signal delivery", () => {
     subscribePhiSignals(partition, (signal) => received.push(signal), { receiver: RECEIVER }, RECEIVER);
     await settle();
 
-    expect(received).toHaveLength(0);
+    expect(received).toHaveLength(1);
+    expect(received[0]?.scope).toBe("area");
     expect(partition.pendingSignals.size).toBe(0);
   });
 

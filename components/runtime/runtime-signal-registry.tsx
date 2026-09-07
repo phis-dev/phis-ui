@@ -5,7 +5,9 @@ import { useCallback, useMemo, useSyncExternalStore } from "react";
 import type {
   PhiSignal,
   PhiSignalAddress,
+  PhiSignalReceiver,
   PhiSignalRuntimeContext,
+  PhiSignalScope,
 } from "../../types";
 import { readPhiSignalReceiverScopeProblem } from "@phis/contracts/signals";
 import {
@@ -59,6 +61,32 @@ function resolveDeliveryPartition(partition: PhiSignalRuntimePartition, signal: 
 }
 
 /**
+ * The scope a concrete receiver actually answers in.
+ *
+ * A signal names one address, and an address is registered in exactly one scope -- so the scope a
+ * route declared is not a second half of the address, it is a repetition of something the receiver
+ * already states. It was a repetition that could disagree: a route declaring `area` for a block the
+ * Page registered was not late, it was undeliverable, and the signal went in the bin.
+ *
+ * So the receiver's registration decides, and the declaration is not consulted. Broadcast is the one
+ * case where the scope really is the address -- there is no receiver to ask -- and it keeps saying it.
+ */
+export function resolvePhiSignalReceiverScope(
+  partition: PhiSignalRuntimePartition,
+  receiver: PhiSignalReceiver,
+): PhiSignalScope | null {
+  if (receiver == null || receiver === "broadcast") {
+    return null;
+  }
+  const local = partition.instances.get(receiver);
+  if (local) {
+    return local.scope;
+  }
+  const site = resolvePhiSiteSignalRuntimePartition(partition);
+  return site === partition ? null : site.instances.get(receiver)?.scope ?? null;
+}
+
+/**
  * Whether a signal can be delivered now, later, or not at all.
  *
  * The distinction that matters is between an address that is wrong and an address that is merely not
@@ -97,7 +125,6 @@ export function resolvePhiSignalDeliverability(
   }
 
   if (
-    registered.scope !== signal.scope ||
     registered.active === false ||
     !matchesPhiSignalRuntimeContext(registered.context, deliveryPartition.context)
   ) {
