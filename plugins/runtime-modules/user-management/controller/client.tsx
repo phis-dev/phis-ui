@@ -10,7 +10,6 @@ import { readPhiTableActionSignalValue } from "../../../../types/table-widget";
 import { readPhiOverlayCloseRequest } from "../../../../types/cms-overlay";
 import { createPhiRuntimeControllerClient } from "../../../../components/runtime/runtime-controller-client-factory";
 import { usePhiSignalDispatcher, usePhiSignalListener } from "../../../../components/runtime/runtime-signal-bus";
-import { usePhiSignalReceiverReady } from "../../../../components/runtime/runtime-signal-registry";
 import { usePhiTableProvider } from "../../../../components/widgets/client/shared/phi-table-provider";
 import {
   PHI_USER_MANAGEMENT_RUNTIME_CONTROLLER_DEFINITION,
@@ -63,8 +62,6 @@ function PhiUserManagementControllerView({
   const readOnly = !canPhiViewerAccess(runtime.viewer, PHI_VIEWER_ACCESS_SITE_ADMIN);
   const [workflowState, setWorkflowState] = useState<UserManagementWorkflowState | null>(null);
   const [submitting, setSubmitting] = useState(false);
-  const editFormReady = usePhiSignalReceiverReady(EDIT_FORM_ADDRESS);
-  const historyTableReady = usePhiSignalReceiverReady(HISTORY_TABLE_ADDRESS);
   const deliveredWorkflowRef = useRef<string | null>(null);
   const workflowRef = useRef<{
     workflow: UserManagementWorkflow;
@@ -335,7 +332,6 @@ function PhiUserManagementControllerView({
     if (deliveredWorkflowRef.current === deliveryKey) return;
 
     if (workflowState.workflow === "edit") {
-      if (!editFormReady) return;
       deliveredWorkflowRef.current = deliveryKey;
       send({
         receiver: EDIT_FORM_ADDRESS,
@@ -349,7 +345,7 @@ function PhiUserManagementControllerView({
       return;
     }
 
-    if (!historyTableReady || workflowState.action.rowIdentity == null) return;
+    if (workflowState.action.rowIdentity == null) return;
     deliveredWorkflowRef.current = deliveryKey;
     send({
       receiver: HISTORY_TABLE_ADDRESS,
@@ -360,7 +356,7 @@ function PhiUserManagementControllerView({
       valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.tableFilters,
       correlationId: workflowState.correlationId,
     });
-  }, [editFormReady, historyTableReady, send, workflowState]);
+  }, [send, workflowState]);
 
   return null;
 }

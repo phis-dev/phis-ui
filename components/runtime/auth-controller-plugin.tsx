@@ -14,7 +14,6 @@ import { createPhiRuntimeControllerClient } from "./runtime-controller-client-fa
 import { localizeAreaPath } from "../../helpers/locale";
 import { createPhiSignalAddress, PHI_SIGNAL_VALUE_SCHEMAS, type PhiSignal } from "../../types/signals";
 import { createPhiRuntimeFormControllerAddress } from "../forms/runtime-form-controller-address";
-import { usePhiSignalInstancesReady } from "./runtime-signal-registry";
 import {
   isPhiAuthLoginOverlayArea,
   PHI_AUTH_LOGIN_OVERLAY_IDS,
@@ -45,17 +44,6 @@ function PhiAuthControllerView({
       ? createPhiRuntimeFormControllerAddress(`widget-${overlayIds.widgetLogin}`)
       : null,
     [overlayIds],
-  );
-  const formWidgetAddress = useMemo(
-    () => overlayIds ? createPhiSignalAddress("cms", overlayIds.widgetLogin) : null,
-    [overlayIds],
-  );
-  const receiversReady = usePhiSignalInstancesReady(
-    useMemo(
-      () => [overlayAddress, formControllerAddress, formWidgetAddress]
-        .filter((value): value is NonNullable<typeof value> => value != null),
-      [formControllerAddress, formWidgetAddress, overlayAddress],
-    ),
   );
   const canRenderPrimaryLogin = runtime.authUiProvider?.capabilities.includes("primary-login") === true;
 
@@ -129,7 +117,7 @@ function PhiAuthControllerView({
 
   useEffect(() => {
     const pendingOpen = pendingOpenRef.current;
-    if (!pendingOpen || !receiversReady || !overlayAddress || !formControllerAddress) return;
+    if (!pendingOpen || !overlayAddress || !formControllerAddress) return;
     dispatch({
       channel: "values",
       action: "change",
@@ -149,7 +137,7 @@ function PhiAuthControllerView({
       correlationId: pendingOpen.correlationId,
     });
     pendingOpenRef.current = null;
-  }, [dispatch, formControllerAddress, openSequence, overlayAddress, receiversReady]);
+  }, [dispatch, formControllerAddress, openSequence, overlayAddress]);
 
   return null;
 }

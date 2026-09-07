@@ -1,14 +1,13 @@
 "use client";
 
 import { readPhiDeveloperBuilderWorkspaceKey } from "./route-scope";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 import {
 } from "../../../components/widgets/signals/page-title-signals";
 import { normalizePhiCascaderValue } from "../../../components/controls/phi-cascader-control";
 import { usePhiSignalDispatcher, usePhiSignalListener } from "../../../components/runtime/runtime-signal-bus";
-import { usePhiSignalInstancesReady } from "../../../components/runtime/runtime-signal-registry";
 import { usePhiApplicationFeedback } from "../../../components/runtime/use-phi-application-feedback";
 import {
   normalizePhiBuilderCmsCatalogPath,
@@ -87,20 +86,13 @@ export function usePhiBuilderPageController({
   const [pageMetaDialogMode, setPageMetaDialogMode] = useState<PhiPageMetaDialogMode>("create");
   const [pageMetaDialogSaving, setPageMetaDialogSaving] = useState(false);
   const [pendingPageMetaInitialValues, setPendingPageMetaInitialValues] = useState<Record<string, unknown> | null>(null);
-  const pendingPageMetaActionLabelRef = useRef<string | null>(null);
   const pageMetaFormControllerAddress = createPhiRuntimeFormControllerAddress(`widget-${PHI_BUILDER_PAGE_META_WIDGET_IDS.form}`);
-  const pageMetaFormWidgetAddress = createPhiSignalAddress("cms", PHI_BUILDER_PAGE_META_WIDGET_IDS.form);
   const pageMetaOverlayAddress = createPhiSignalAddress("cms", PHI_BUILDER_PAGE_META_OVERLAY_IDS.editor);
   const pageMetaSaveControlAddress = createPhiSignalSubcontrolAddress(
     "cms",
     PHI_BUILDER_PAGE_META_WIDGET_IDS.commands,
     "save",
   );
-  const pageMetaFormReady = usePhiSignalInstancesReady([
-    pageMetaFormWidgetAddress,
-    pageMetaFormControllerAddress,
-  ]);
-  const pageMetaSaveControlReady = usePhiSignalInstancesReady([pageMetaSaveControlAddress]);
 
   const emitPageMetaTitle = useCallback((title: string) => {
     emitSignal({
@@ -218,12 +210,8 @@ export function usePhiBuilderPageController({
       ? { title: pageMetaLabels.createTitle, actionLabel: pageMetaLabels.createAction }
       : { title: pageMetaLabels.updateTitle, actionLabel: pageMetaLabels.updateAction };
     emitPageMetaTitle(presentation.title);
-    if (pageMetaSaveControlReady) {
-      emitPageMetaActionLabel(presentation.actionLabel);
-      pendingPageMetaActionLabelRef.current = null;
-    } else {
-      pendingPageMetaActionLabelRef.current = presentation.actionLabel;
-    }
+    // Held by the bus until the control exists, which is what the queue kept here used to do.
+    emitPageMetaActionLabel(presentation.actionLabel);
     const initialValues = mode === "create"
       ? {
           title: "New Page",
@@ -245,14 +233,6 @@ export function usePhiBuilderPageController({
   }
 
   useEffect(() => {
-    const pendingLabel = pendingPageMetaActionLabelRef.current;
-    if (!pageMetaSaveControlReady || pendingLabel == null) return;
-    emitPageMetaActionLabel(pendingLabel);
-    pendingPageMetaActionLabelRef.current = null;
-  }, [emitPageMetaActionLabel, pageMetaSaveControlReady]);
-
-  useEffect(() => {
-    if (!pageMetaSaveControlReady) return;
     emitSignal({
       scope: "page",
       channel: "pageMetaSubmitting",
@@ -263,10 +243,10 @@ export function usePhiBuilderPageController({
       receiver: pageMetaSaveControlAddress,
       timestamp: Date.now(),
     });
-  }, [emitSignal, pageMetaDialogSaving, pageMetaSaveControlAddress, pageMetaSaveControlReady]);
+  }, [emitSignal, pageMetaDialogSaving, pageMetaSaveControlAddress]);
 
   useEffect(() => {
-    if (!pageMetaFormReady || !pendingPageMetaInitialValues) return;
+    if (!pendingPageMetaInitialValues) return;
     emitSignal({
       scope: "page",
       channel: "values",
@@ -278,7 +258,7 @@ export function usePhiBuilderPageController({
       receiver: pageMetaFormControllerAddress,
       timestamp: Date.now(),
     });
-  }, [emitSignal, pageMetaFormControllerAddress, pageMetaFormReady, pendingPageMetaInitialValues]);
+  }, [emitSignal, pageMetaFormControllerAddress, pendingPageMetaInitialValues]);
 
   async function submitPageMetaDialog(values: Record<string, unknown>) {
     const title = typeof values.title === "string" ? values.title.trim() || "New Page" : "New Page";

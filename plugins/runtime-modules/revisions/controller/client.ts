@@ -8,7 +8,6 @@ import { readPhiTableBindingParamsSignalValue } from "../../../../types/table-wi
 import { isPhiBuilderAreaKey } from "../../../../constants/cms-areas";
 import { createPhiRuntimeControllerClient } from "../../../../components/runtime/runtime-controller-client-factory";
 import { usePhiSignalDispatcher, usePhiSignalListener } from "../../../../components/runtime/runtime-signal-bus";
-import { usePhiSignalReceiverReady } from "../../../../components/runtime/runtime-signal-registry";
 import { usePhiApplicationFeedback } from "../../../../components/runtime/use-phi-application-feedback";
 import {
   getPhiWorkspaceCatalogSnapshot,
@@ -54,7 +53,6 @@ function PhiRevisionsControllerMount({ address }: { address: PhiSignalAddress })
   const { showMessage } = usePhiApplicationFeedback();
   const pathname = usePathname();
   const router = useRouter();
-  const tableReady = usePhiSignalReceiverReady(PHI_REVISIONS_TABLE_ADDRESS);
   const builderArea = usePhiWorkspaceCatalogValue(PHI_WORKSPACE_CATALOG_SCOPE, (state) => state.area);
   const builderPageKey = usePhiWorkspaceCatalogValue(PHI_WORKSPACE_CATALOG_SCOPE, (state) => state.pageKey);
   const modulePresetPagesByArea = usePhiWorkspaceCatalogValue(
@@ -68,7 +66,6 @@ function PhiRevisionsControllerMount({ address }: { address: PhiSignalAddress })
   );
 
   useEffect(() => {
-    if (!tableReady) return;
     const state = getPhiWorkspaceCatalogSnapshot(PHI_WORKSPACE_CATALOG_SCOPE);
     const pages = resolvePhiBuilderActivePageCatalog(
       state.area,
@@ -119,7 +116,6 @@ function PhiRevisionsControllerMount({ address }: { address: PhiSignalAddress })
     dispatchSignal,
     modulePresetPagesByArea,
     persistedPageCatalogByArea,
-    tableReady,
   ]);
 
   usePhiSignalListener(useCallback((signal) => {

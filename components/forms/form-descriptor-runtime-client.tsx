@@ -12,7 +12,6 @@ import {
 import type { PhiCmsFormWidgetConfig } from "../../plugins/runtime-modules/core/widgets/form/config";
 import { usePhiSignalListener } from "../runtime/runtime-signal-bus";
 import { createPhiSignalCorrelationId } from "../runtime/runtime-signal-bus";
-import { usePhiSignalInstancesReady } from "../runtime/runtime-signal-registry";
 import { usePhiSignalEmitter, usePhiSignalIdentity } from "../runtime/runtime-signal-identity";
 import { findPhiSignalRoutesByCapabilityId } from "../../types/signals";
 import { isPhiControllerSignalAddress } from "../../types/signals";
@@ -70,11 +69,6 @@ export function PhiFormDescriptorRuntimeClient({
         ? [condition.controllerAddress]
         : []),
   ), [descriptor.fields]);
-  const conditionControllerAddressList = useMemo(
-    () => [...conditionControllerAddresses],
-    [conditionControllerAddresses],
-  );
-  const conditionControllersReady = usePhiSignalInstancesReady(conditionControllerAddressList);
   const runtimeBinding = usePhiRuntimeFormBinding({
     formRef,
     fieldKeys: descriptor.fields.map((field) => field.key),
@@ -214,10 +208,10 @@ export function PhiFormDescriptorRuntimeClient({
   }, [identity.receiver, widgetConfig]));
 
   useEffect(() => {
-    if (conditionControllerAddresses.size > 0 && conditionControllersReady) {
+    if (conditionControllerAddresses.size > 0) {
       emitCapability("conditionStateRequest");
     }
-  }, [conditionControllerAddresses, conditionControllersReady, emitCapability]);
+  }, [conditionControllerAddresses, emitCapability]);
 
   const content = loading ? <Skeleton active paragraph={{ rows: 4 }} /> : (
     <div style={{ display: "grid", gap: "var(--ant-padding-sm)", width: "100%", minWidth: 0 }}>

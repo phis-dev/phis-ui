@@ -147,7 +147,6 @@ import {
 } from "./public-route-collisions";
 import { createPhiCommandToolbarControlAddress } from "../../../components/widgets/signals/command-toolbar-address";
 import { PHI_BUILDER_RUNTIME_MODULE_ID } from "../../../plugins/runtime-modules/builder/ids";
-import { usePhiSignalInstancesReady, usePhiSignalReceiverReady } from "../../../components/runtime/runtime-signal-registry";
 import { createPhiRuntimeFormControllerAddress } from "../../../components/forms/runtime-form-controller-address";
 import type { PhiWorkspaceCatalogState } from "../../../components/workspace/catalog-state";
 import { phiWorkspaceCatalogStore } from "../../../components/workspace/catalog-store";
@@ -314,16 +313,7 @@ function usePhiDeveloperBuilderWorkspaceController(
     pageMetaLabels = PHI_BUILDER_PAGE_META_DEFAULT_PRESENTATION_LABELS,
   } = options;
   const state = usePhiDeveloperBuilderWorkspaceState(defaultArea);
-  const effectsFormRuntimeAddresses = useMemo(() => PHI_BUILDER_EFFECTS_SECTIONS.flatMap((section) => {
-    const widgetId = PHI_BUILDER_EFFECTS_FORM_WIDGET_IDS[section];
-    return [
-      createPhiSignalAddress("cms", widgetId),
-      createPhiRuntimeFormControllerAddress(`widget-${widgetId}`),
-    ];
-  }), []);
   const effectsOverlayAddress = createPhiSignalAddress("cms", PHI_BUILDER_INSPECTOR_OVERLAY_IDS.effectsEditor);
-  const effectsFormsReady = usePhiSignalInstancesReady(effectsFormRuntimeAddresses);
-  const effectsOverlayReady = usePhiSignalReceiverReady(effectsOverlayAddress);
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -426,14 +416,11 @@ function usePhiDeveloperBuilderWorkspaceController(
 
   const signalWiringOverlayAddress = createPhiSignalAddress("cms", PHI_BUILDER_INSPECTOR_OVERLAY_IDS.signalWiring);
   const signalWiringFormAddress = createPhiSignalAddress("cms", PHI_BUILDER_INSPECTOR_WIDGET_IDS.signalWiringForm);
-  const signalWiringReady = usePhiSignalInstancesReady(
-    useMemo(() => [signalWiringOverlayAddress, signalWiringFormAddress], [signalWiringFormAddress, signalWiringOverlayAddress]),
-  );
   const openedSignalWiringCorrelationRef = useRef<string | null>(null);
 
   useEffect(() => {
     const request = state.signalWiringRequest;
-    if (!request || !signalWiringReady || openedSignalWiringCorrelationRef.current === request.correlationId) {
+    if (!request || openedSignalWiringCorrelationRef.current === request.correlationId) {
       return;
     }
     openedSignalWiringCorrelationRef.current = request.correlationId;
@@ -474,12 +461,11 @@ function usePhiDeveloperBuilderWorkspaceController(
       receiver: signalWiringOverlayAddress,
       timestamp: Date.now(),
     }));
-  }, [defaultArea, dispatchSignal, signalWiringFormAddress, signalWiringOverlayAddress, signalWiringReady, state.signalWiringRequest]);
+  }, [defaultArea, dispatchSignal, signalWiringFormAddress, signalWiringOverlayAddress, state.signalWiringRequest]);
 
   useEffect(() => {
     const request = state.effectsEditorRequest;
-    if (!request || !effectsFormsReady || !effectsOverlayReady ||
-      initializedEffectsCorrelationRef.current === request.correlationId) return;
+    if (!request || initializedEffectsCorrelationRef.current === request.correlationId) return;
     effectsWorkflowCorrelationRef.current = request.correlationId;
     initializedEffectsCorrelationRef.current = request.correlationId;
     const valuesBySection = splitPhiBuilderEffectsFormValues(request.effects);
@@ -509,7 +495,7 @@ function usePhiDeveloperBuilderWorkspaceController(
       receiver: effectsOverlayAddress,
       timestamp: Date.now(),
     }));
-  }, [dispatchSignal, effectsFormsReady, effectsOverlayAddress, effectsOverlayReady, state.effectsEditorRequest]);
+  }, [dispatchSignal, effectsOverlayAddress, state.effectsEditorRequest]);
 
   /*
    * The collision dialog follows the request rather than a click.
@@ -2135,8 +2121,8 @@ function usePhiDeveloperBuilderWorkspaceController(
    * The header Area selector is disabled at rest and armed only by pages that edit one Area at a
    * time (`isPhiAreaScopedBuilderPage` holds the opt-in list). Steering it from here rather than
    * baking the state into the Shell tree keeps a DB-overridden Builder Shell honest: whatever the
-   * stored tree says, the live page decides. The emit waits for the selector to register as a
-   * receiver, so a late-mounting Shell still hears it.
+   * stored tree says, the live page decides. It is stated once and held by the bus until the
+   * selector exists, so a late-mounting Shell hears it without anybody waiting for it here.
    */
   const areaSelectorAddress = useMemo(
     () => createPhiSignalAddress("cms", createPhiPresetCmsInstanceId({
@@ -2147,14 +2133,10 @@ function usePhiDeveloperBuilderWorkspaceController(
     })),
     [],
   );
-  const areaSelectorReady = usePhiSignalReceiverReady(areaSelectorAddress);
   const areaSelectorArmed = isPhiAreaScopedBuilderPage(
     resolvePhiDeveloperBuilderRouteScope(pathname)?.pageKey ?? "root",
   );
   useEffect(() => {
-    if (!areaSelectorReady) {
-      return;
-    }
     dispatchSignal({
       scope: "area",
       channel: "enabled",
@@ -2165,7 +2147,7 @@ function usePhiDeveloperBuilderWorkspaceController(
       receiver: areaSelectorAddress,
       timestamp: Date.now(),
     });
-  }, [areaSelectorArmed, areaSelectorAddress, areaSelectorReady, dispatchSignal]);
+  }, [areaSelectorArmed, areaSelectorAddress, dispatchSignal]);
 
   // The debug switch rests disabled the same way, armed only where a canvas is drawn.
   const debugSwitchAddress = useMemo(
@@ -2177,14 +2159,10 @@ function usePhiDeveloperBuilderWorkspaceController(
     })),
     [],
   );
-  const debugSwitchReady = usePhiSignalReceiverReady(debugSwitchAddress);
   const debugSwitchArmed = isPhiDebugScaffoldBuilderPage(
     resolvePhiDeveloperBuilderRouteScope(pathname)?.pageKey ?? "root",
   );
   useEffect(() => {
-    if (!debugSwitchReady) {
-      return;
-    }
     dispatchSignal({
       scope: "area",
       channel: "enabled",
@@ -2195,7 +2173,7 @@ function usePhiDeveloperBuilderWorkspaceController(
       receiver: debugSwitchAddress,
       timestamp: Date.now(),
     });
-  }, [debugSwitchArmed, debugSwitchAddress, debugSwitchReady, dispatchSignal]);
+  }, [debugSwitchArmed, debugSwitchAddress, dispatchSignal]);
 
   return pageMetaDialog;
 }

@@ -8,7 +8,6 @@ import { PHI_SIGNAL_VALUE_SCHEMAS } from "../../../../types/signals";
 import { createPhiSignalAddress, createPhiSignalSubcontrolAddress } from "../../../../types/signals";
 import { readPhiTableActionSignalValue, readPhiTableQuery } from "../../../../types/table-widget";
 import { readPhiOverlayCloseRequest } from "../../../../types/cms-overlay";
-import { usePhiSignalReceiverReady } from "../../../../components/runtime/runtime-signal-registry";
 import {
   PHI_EDITOR_TRANSLATION_FORM_WIDGET_ID,
   PHI_EDITOR_TRANSLATION_COMMANDS_WIDGET_ID,
@@ -41,7 +40,6 @@ function PhiLocalizationControllerMount({ address }: { address: PhiSignalAddress
   const tableAddress = createPhiSignalAddress("cms", PHI_EDITOR_TRANSLATIONS_WIDGET_ID);
   const sourceLocaleAddress = createPhiSignalAddress("cms", PHI_EDITOR_TRANSLATIONS_SOURCE_LOCALE_WIDGET_ID);
   const saveActionAddress = createPhiSignalSubcontrolAddress("cms", PHI_EDITOR_TRANSLATION_COMMANDS_WIDGET_ID, "save");
-  const formReady = usePhiSignalReceiverReady(formAddress);
 
   const send = useCallback((input: {
     receiver: PhiSignalAddress;
@@ -259,7 +257,7 @@ function PhiLocalizationControllerMount({ address }: { address: PhiSignalAddress
   });
 
   useEffect(() => {
-    if (!pendingEdit || !formReady) return;
+    if (!pendingEdit) return;
     const deliveryKey = `${pendingEdit.correlationId}:${String(pendingEdit.value.rowIdentity)}`;
     if (deliveredEditRef.current === deliveryKey) return;
     deliveredEditRef.current = deliveryKey;
@@ -272,7 +270,7 @@ function PhiLocalizationControllerMount({ address }: { address: PhiSignalAddress
       valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.tableAction,
       correlationId: pendingEdit.correlationId,
     });
-  }, [formAddress, formReady, pendingEdit, send]);
+  }, [formAddress, pendingEdit, send]);
 
   return null;
 }

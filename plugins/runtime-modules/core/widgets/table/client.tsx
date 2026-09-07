@@ -29,7 +29,6 @@ import { PhiLink } from "../../../../../components/navigation/phi-link";
 import { PhiIcon } from "../../../../../components/shell/phi-icon";
 import { usePhiConfig } from "../../../../../components/root/phi-config-provider";
 import { usePhiSignalListener } from "../../../../../components/runtime/runtime-signal-bus";
-import { usePhiSignalInstancesReady } from "../../../../../components/runtime/runtime-signal-registry";
 import { usePhiSignalEmitter, usePhiSignalIdentity } from "../../../../../components/runtime/runtime-signal-identity";
 import { usePhiTableBinding } from "../../../../../components/tables/client/phi-table-binding";
 import { PhiTableBindingControl } from "../../../../../components/tables/client/phi-table-binding-control";
@@ -482,11 +481,6 @@ export function PhiTableWidgetClient({
         ? [condition.controllerAddress]
         : []),
   ), [bulkActions, features.editing?.disabledWhen, features.rowSelection?.disabledWhen, presentation.columns, presentation.row?.mutedWhen, resource?.fields, rowActions, toolbarActions]);
-  const conditionControllerAddressList = useMemo(
-    () => [...conditionControllerAddresses],
-    [conditionControllerAddresses],
-  );
-  const conditionControllersReady = usePhiSignalInstancesReady(conditionControllerAddressList);
 
   const effectiveLoading = loading && !bindingError && !contractError;
 
@@ -658,10 +652,10 @@ export function PhiTableWidgetClient({
   }, [listenRoutes]), signalIdentity.receiver);
 
   useEffect(() => {
-    if (conditionControllerAddresses.size > 0 && conditionControllersReady) {
+    if (conditionControllerAddresses.size > 0) {
       emitCapability("conditionStateRequest", null);
     }
-  }, [conditionControllerAddresses, conditionControllersReady, emitCapability]);
+  }, [conditionControllerAddresses, emitCapability]);
 
   useEffect(() => {
     emitCapability("queryChange", resolvedQuery as Record<string, unknown>);

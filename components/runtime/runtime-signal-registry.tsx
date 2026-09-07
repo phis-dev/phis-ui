@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useSyncExternalStore } from "react";
+import { useCallback, useSyncExternalStore } from "react";
 
 import type {
   PhiSignal,
@@ -197,37 +197,3 @@ export function usePhiSignalInstance(address: PhiSignalAddress | null | undefine
   );
 }
 
-export function usePhiSignalReceiverReady(address: PhiSignalAddress | null | undefined) {
-  const partition = usePhiSignalRuntimePartition();
-  return useSyncExternalStore(
-    useCallback((subscriber) => {
-      partition.instanceSubscribers.add(subscriber);
-      return () => partition.instanceSubscribers.delete(subscriber);
-    }, [partition]),
-    useCallback(
-      () => Boolean(
-        address &&
-        resolvePhiSignalInstance(partition, address) &&
-        (partition.receiverListenerCounts.get(address) ?? 0) > 0
-      ),
-      [address, partition],
-    ),
-    () => false,
-  );
-}
-
-export function usePhiSignalInstancesReady(addresses: readonly PhiSignalAddress[]) {
-  const partition = usePhiSignalRuntimePartition();
-  const stableAddresses = useMemo(() => [...addresses], [addresses]);
-  return useSyncExternalStore(
-    useCallback((subscriber) => {
-      partition.instanceSubscribers.add(subscriber);
-      return () => partition.instanceSubscribers.delete(subscriber);
-    }, [partition]),
-    useCallback(
-      () => stableAddresses.every((address) => resolvePhiSignalInstance(partition, address) != null),
-      [partition, stableAddresses],
-    ),
-    () => false,
-  );
-}

@@ -20,7 +20,6 @@ import type { PhiSignal, PhiSignalAddress } from "../../types/signals";
 import type { PhiMediaAssetFolder } from "../../types/media";
 import { usePhiSignalListener } from "../runtime/runtime-signal-bus";
 import { usePhiSignalEmitter } from "../runtime/runtime-signal-identity";
-import { usePhiSignalInstancesReady } from "../runtime/runtime-signal-registry";
 import { createPhiRuntimeFormControllerAddress } from "../forms/runtime-form-controller-address";
 import { createPhiAssetControllerAddress } from "./asset-controller-address";
 import {
@@ -233,14 +232,6 @@ export function usePhiAssetRuntimeController(mountScope: "site" | "area" | "page
   const [inspectorSubmitting, setInspectorSubmitting] = useState(false);
   const [folderRequest, setFolderRequest] = useState<PhiAssetFolderRequest | null>(null);
   const [folderSubmitting, setFolderSubmitting] = useState(false);
-  const formReady = usePhiSignalInstancesReady([
-    ASSET_METADATA_FORM_WIDGET_ADDRESS,
-    ASSET_METADATA_FORM_CONTROLLER_ADDRESS,
-  ]);
-  const folderFormReady = usePhiSignalInstancesReady([
-    ASSET_FOLDER_FORM_WIDGET_ADDRESS,
-    ASSET_FOLDER_FORM_CONTROLLER_ADDRESS,
-  ]);
 
   const sendPageSignal = useCallback((input: {
     receiver: PhiSignalAddress;
@@ -443,7 +434,7 @@ export function usePhiAssetRuntimeController(mountScope: "site" | "area" | "page
   );
 
   useEffect(() => {
-    if (!inspectorRequest || !formReady) return;
+    if (!inspectorRequest) return;
     const asset = state.selectedAsset?.id === inspectorRequest.assetId
       ? state.selectedAsset
       : state.assets.find((entry) => entry.id === inspectorRequest.assetId) ?? null;
@@ -468,10 +459,10 @@ export function usePhiAssetRuntimeController(mountScope: "site" | "area" | "page
       valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.formValues,
       correlationId: inspectorRequest.correlationId,
     });
-  }, [formReady, inspectorRequest, sendPageSignal, state.assets, state.folders, state.selectedAsset]);
+  }, [inspectorRequest, sendPageSignal, state.assets, state.folders, state.selectedAsset]);
 
   useEffect(() => {
-    if (!folderRequest || !folderFormReady) return;
+    if (!folderRequest) return;
     sendPageSignal({
       receiver: ASSET_FOLDER_FORM_CONTROLLER_ADDRESS,
       channel: "values",
@@ -481,7 +472,7 @@ export function usePhiAssetRuntimeController(mountScope: "site" | "area" | "page
       valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.formValues,
       correlationId: folderRequest.correlationId,
     });
-  }, [folderFormReady, folderRequest, sendPageSignal]);
+  }, [folderRequest, sendPageSignal]);
 
   useEffect(() => {
     emitAssetSignal({
