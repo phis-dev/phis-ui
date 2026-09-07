@@ -80,6 +80,7 @@ export const PHI_AREA_BASE_RUNTIME_MODULE_ROUTES = [
     area: "public",
     title: "Home",
     path: "/",
+    landingPage: true,
     loadTree: ({ page, runtime }) =>
       import("../../components/regions/presets/phi-default-pub-welcome-page-tree")
         .then((module) => module.buildPhiDefaultPubWelcomePageTree({

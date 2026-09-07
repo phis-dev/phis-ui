@@ -69,6 +69,8 @@ import {
   usePhiDeveloperRegionDraft,
   getPhiDeveloperBuilderStateSnapshot,
   setPhiDeveloperBuilderAreaRootRoute,
+  readPhiBuilderEffectiveAreaRootRoute,
+  setPhiDeveloperBuilderAreaRootRoutes,
   closePhiBuilderModuleDeactivationRequest,
   closePhiBuilderPublicRouteCollisionRequest,
 } from "./developer-workspace-store";
@@ -77,6 +79,7 @@ import {
   PHI_BUILDER_AREA_ROOT_ROUTE_LANDING,
 } from "./options-providers";
 import type { PhiPageReference } from "../../../types/references";
+import type { PhiAreaRootRoute } from "../../../helpers/cms-area-config";
 import { getPhiBuilderRegionDraftKey } from "./region-keys";
 import { getDefaultRegionDraft } from "./developer-region-drafts";
 import {
@@ -111,6 +114,7 @@ import {
   PHI_BUILDER_MODULE_DETAIL_WIDGET_IDS,
   PHI_BUILDER_PUBLIC_ROUTES_OVERLAY_IDS,
   PHI_BUILDER_PUBLIC_ROUTES_WIDGET_IDS,
+  PHI_BUILDER_SHELLS_WIDGET_IDS,
   PHI_BUILDER_MODULE_USAGE_OVERLAY_IDS,
   PHI_BUILDER_MODULE_USAGE_WIDGET_IDS,
 } from "../../../helpers/cms-page-addresses";
@@ -162,12 +166,14 @@ type PhiDeveloperBuilderWorkspaceControllerOptions = {
   unresolvedModuleIdsByArea?: PhiWorkspaceCatalogState["unresolvedModuleIdsByArea"];
   publicRouteClaims?: PhiWorkspaceCatalogState["publicRouteClaims"];
   publicRoutePaths?: PhiWorkspaceCatalogState["publicRoutePaths"];
+  areaRootRoutesByArea?: Record<string, PhiAreaRootRoute | null>;
   pageMetaLabels?: PhiBuilderPageMetaPresentationLabels;
 };
 const EMPTY_RUNTIME_MODULE_IDS_BY_AREA: Partial<Record<PhiDeveloperBuilderArea, PhiRuntimeModuleId[]>> = {};
 const EMPTY_MODULE_PRESET_PAGES_BY_AREA = createEmptyPhiBuilderModulePresetPagesByArea();
 const EMPTY_PUBLIC_ROUTE_CLAIMS: PhiWorkspaceCatalogState["publicRouteClaims"] = [];
 const EMPTY_PUBLIC_ROUTE_PATHS: PhiWorkspaceCatalogState["publicRoutePaths"] = [];
+const EMPTY_AREA_ROOT_ROUTES: Record<string, PhiAreaRootRoute | null> = {};
 export type {
   PhiBuilderPageRegionKey,
   PhiBuilderRegionKey,
@@ -304,6 +310,7 @@ function usePhiDeveloperBuilderWorkspaceController(
     unresolvedModuleIdsByArea = EMPTY_RUNTIME_MODULE_IDS_BY_AREA,
     publicRouteClaims = EMPTY_PUBLIC_ROUTE_CLAIMS,
     publicRoutePaths = EMPTY_PUBLIC_ROUTE_PATHS,
+    areaRootRoutesByArea = EMPTY_AREA_ROOT_ROUTES,
     pageMetaLabels = PHI_BUILDER_PAGE_META_DEFAULT_PRESENTATION_LABELS,
   } = options;
   const state = usePhiDeveloperBuilderWorkspaceState(defaultArea);
@@ -404,6 +411,18 @@ function usePhiDeveloperBuilderWorkspaceController(
   const unresolvedModuleIdsPreloadKey = JSON.stringify(unresolvedModuleIdsByArea);
   const publicRouteClaimsPreloadKey = JSON.stringify(publicRouteClaims);
   const publicRoutePathsPreloadKey = JSON.stringify(publicRoutePaths);
+  const areaRootRoutesPreloadKey = JSON.stringify(areaRootRoutesByArea);
+  /*
+   * The Areas' root routes, handed to every workspace rather than to /shells alone.
+   *
+   * It is a baseline and not a draft: /pages reads it to leave `/` out of its page selector while the
+   * root forwards, and nothing about that is an edit.
+   */
+  useEffect(() => {
+    setPhiDeveloperBuilderAreaRootRoutes(areaRootRoutesByArea);
+    // The serialized preload is the identity that matters; the object is rebuilt on every render.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [areaRootRoutesPreloadKey]);
 
   const signalWiringOverlayAddress = createPhiSignalAddress("cms", PHI_BUILDER_INSPECTOR_OVERLAY_IDS.signalWiring);
   const signalWiringFormAddress = createPhiSignalAddress("cms", PHI_BUILDER_INSPECTOR_WIDGET_IDS.signalWiringForm);
@@ -559,6 +578,37 @@ function usePhiDeveloperBuilderWorkspaceController(
     moduleUsageOverlayAddress,
     moduleUsageTableAddress,
   ]);
+
+  /*
+   * Whether the landing Select can be answered at all.
+   *
+   * A Select emits its value as a string and nothing turns "the value is landing" into the boolean the
+   * enabled channel carries, so the controller says it: the capability is the one every renderable
+   * block inherits, and the Select only had to listen. Sent on mount as well as on every change,
+   * because a workspace that opens with the root forwarding must not start out answerable.
+   */
+  const landingSelectAddress = useMemo(
+    () => createPhiSignalAddress("cms", PHI_BUILDER_SHELLS_WIDGET_IDS.widgetAreaLandingPage),
+    [],
+  );
+  const landingSelectEnabled =
+    readPhiBuilderEffectiveAreaRootRoute(state, state.area)?.mode === "landing" &&
+    (state.modulePresetPagesByArea?.[state.area] ?? []).some((node) =>
+      node.landingPage === true &&
+      node.sourcePreset &&
+      (state.runtimeModuleIdsByArea?.[state.area] ?? []).includes(node.sourcePreset.ownerModuleId));
+  useEffect(() => {
+    dispatchSignal({
+      scope: "area",
+      channel: "enabled",
+      action: "change",
+      value: landingSelectEnabled,
+      valueType: "boolean",
+      sender: createPhiBuilderControllerAddress(),
+      receiver: landingSelectAddress,
+      timestamp: Date.now(),
+    });
+  }, [dispatchSignal, landingSelectAddress, landingSelectEnabled]);
 
   const openedPublicRoutesCorrelationRef = useRef<string | null>(null);
   const publicRouteCollisionRequest = state.publicRouteCollisionRequest;
@@ -1564,13 +1614,42 @@ function usePhiDeveloperBuilderWorkspaceController(
         if (typeof signal.value !== "string") {
           return;
         }
+        const currentRootRoute = readPhiBuilderEffectiveAreaRootRoute(state, state.area);
         setPhiDeveloperBuilderAreaRootRoute(
           state.area,
           signal.value === PHI_BUILDER_AREA_ROOT_ROUTE_AUTOMATIC
             ? null
             : signal.value === PHI_BUILDER_AREA_ROOT_ROUTE_LANDING
-              ? { mode: "landing" }
+              // Switching back to a landing keeps the applicant that was chosen before, if there was
+              // one: the two Selects answer one question between them, and the second one's answer is
+              // not something the first one just unsaid.
+              ? { mode: "landing", ...(currentRootRoute?.mode === "landing" && currentRootRoute.target
+                  ? { target: currentRootRoute.target }
+                  : {}) }
               : { mode: "redirect", target: signal.value as PhiPageReference },
+        );
+        return;
+      }
+
+      /*
+       * Which landing stands at the root, among those offered.
+       *
+       * Only reachable while the Area is set to a landing, because that is when the Select is enabled.
+       * Clearing it is an answer of its own -- a landing without an applicant, whose tree the Site
+       * authors itself -- so an empty value stores the mode without a target rather than nothing.
+       */
+      if (
+        signal.scope === "area" &&
+        signal.channel === "landingPage" &&
+        signal.action === "change" &&
+        signal.receiver === createPhiBuilderControllerAddress()
+      ) {
+        const target = typeof signal.value === "string" && signal.value.length > 0
+          ? (signal.value as PhiPageReference)
+          : null;
+        setPhiDeveloperBuilderAreaRootRoute(
+          state.area,
+          target ? { mode: "landing", target } : { mode: "landing" },
         );
         return;
       }
@@ -2120,6 +2199,7 @@ export type PhiDeveloperBuilderWorkspaceControllerProps = {
   unresolvedModuleIdsByArea?: PhiWorkspaceCatalogState["unresolvedModuleIdsByArea"];
   publicRouteClaims?: PhiWorkspaceCatalogState["publicRouteClaims"];
   publicRoutePaths?: PhiWorkspaceCatalogState["publicRoutePaths"];
+  areaRootRoutesByArea?: Record<string, PhiAreaRootRoute | null>;
   pageMetaLabels?: PhiBuilderPageMetaPresentationLabels;
 };
 
@@ -2134,6 +2214,7 @@ export function PhiDeveloperBuilderWorkspaceController({
   unresolvedModuleIdsByArea = EMPTY_RUNTIME_MODULE_IDS_BY_AREA,
   publicRouteClaims = EMPTY_PUBLIC_ROUTE_CLAIMS,
   publicRoutePaths = EMPTY_PUBLIC_ROUTE_PATHS,
+  areaRootRoutesByArea = EMPTY_AREA_ROOT_ROUTES,
   pageMetaLabels = PHI_BUILDER_PAGE_META_DEFAULT_PRESENTATION_LABELS,
 }: PhiDeveloperBuilderWorkspaceControllerProps) {
   const controller = usePhiDeveloperBuilderWorkspaceController(defaultArea, {
@@ -2146,6 +2227,7 @@ export function PhiDeveloperBuilderWorkspaceController({
     unresolvedModuleIdsByArea,
     publicRouteClaims,
     publicRoutePaths,
+    areaRootRoutesByArea,
     pageMetaLabels,
   });
 

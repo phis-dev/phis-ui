@@ -71,6 +71,7 @@ import {
   PHI_BUILDER_PUBLIC_ROUTES_OVERLAY_IDS,
   PHI_BUILDER_PUBLIC_ROUTES_LAYOUT_IDS,
   PHI_BUILDER_PUBLIC_ROUTES_WIDGET_IDS,
+  PHI_BUILDER_SHELLS_WIDGET_IDS,
   PHI_BUILDER_MODULE_USAGE_OVERLAY_IDS,
   PHI_BUILDER_MODULE_USAGE_LAYOUT_IDS,
   PHI_BUILDER_MODULE_USAGE_WIDGET_IDS,
@@ -2887,6 +2888,63 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                       action: "change",
                       valueType: "string",
                       receiver: createPhiBuilderControllerAddress(),
+                    },
+                  ],
+                },
+              },
+              contentId: null,
+            }),
+            /*
+             * Which landing stands at `/`, when a Module offers one.
+             *
+             * The other half of the Select beside it: that one says what the root does, this one says
+             * which of the applications for the slot is answered. It is disabled until the first says
+             * "landing", and it lists offers rather than Pages -- a Module that declares `/` is
+             * applying, and only the ones that say they mean it are candidates. Empty is an answer
+             * too: nobody offers one here, and the root then draws the empty tree /pages authors.
+             */
+            buildPhiCmsWidgetNode({
+              typeKey: "select-box",
+              id: PHI_BUILDER_SHELLS_WIDGET_IDS.widgetAreaLandingPage,
+              siteId: page.siteId,
+              parentLayoutNodeId: SYNTHETIC_DEV_LAYOUT_IDS.layoutWorkspaceHeader,
+              slotIndex: PHI_CMS_THREE_COLUMN_LAYOUT_SLOT_INDEX.Right,
+              sortOrder: 0,
+              status: PhiCmsStatus.Published,
+              flags: 0,
+              visibilityMask: page.visibilityMask,
+              label: "Area landing page select",
+              config: {
+                key: "areaLandingPage",
+                label: labels.rootRoute.landingPage,
+                placeholder: labels.rootRoute.landingPageEmpty,
+                allowClear: true,
+                options: [],
+                optionsProvider: {
+                  providerKey: PHI_BUILDER_RUNTIME_DATA_PROVIDER_KEYS.landingPage,
+                  params: { adoptedLabel: labels.rootRoute.landingPageAdopted },
+                },
+                signalRoutes: {
+                  emits: [
+                    {
+                      routeKey: "builder-area-landing-page-change",
+                      capabilityId: "change",
+                      scope: "area",
+                      channel: "landingPage",
+                      action: "change",
+                      valueType: "string",
+                      receiver: createPhiBuilderControllerAddress(),
+                    },
+                  ],
+                  listens: [
+                    {
+                      routeKey: "builder-area-landing-page-enabled",
+                      capabilityId: "enabled",
+                      scope: "area",
+                      channel: "enabled",
+                      action: "change",
+                      valueType: "boolean",
+                      receiver: createPhiSignalAddress("cms", PHI_BUILDER_SHELLS_WIDGET_IDS.widgetAreaLandingPage),
                     },
                   ],
                 },

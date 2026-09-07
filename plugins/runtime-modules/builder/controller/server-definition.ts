@@ -6,6 +6,7 @@ import {
   type PhiBuilderRuntimeControllerPreload,
 } from "./definition";
 import {
+  buildPhiBuilderAreaRootRoutesByArea,
   buildPhiBuilderPublicRoutePaths,
   buildPhiBuilderStructureRuntimeModuleIdsByArea,
   buildPhiBuilderUnresolvedRuntimeModuleIdsByArea,
@@ -36,6 +37,7 @@ export const PHI_BUILDER_RUNTIME_CONTROLLER_SERVER_DEFINITION = {
       runtimeModuleIdsByArea,
       unresolvedModuleIdsByArea,
       publicRoutePaths,
+      areaRootRoutesByArea,
       builderLabels,
     ] = await Promise.all([
       buildPhiBuilderStructureShellPresetDraftsByArea(
@@ -48,6 +50,7 @@ export const PHI_BUILDER_RUNTIME_CONTROLLER_SERVER_DEFINITION = {
       ),
       buildPhiBuilderUnresolvedRuntimeModuleIdsByArea(runtime, runtimeModuleCatalog),
       buildPhiBuilderPublicRoutePaths(runtime, runtimeModuleCatalog),
+      buildPhiBuilderAreaRootRoutesByArea(runtime, runtimeModuleCatalog),
       getPhiBuilderChromeWidgetLabels({
         apiBaseUrl: runtime.phis.apiBaseUrl,
         internalToken: runtime.phis.internalToken,
@@ -81,6 +84,7 @@ export const PHI_BUILDER_RUNTIME_CONTROLLER_SERVER_DEFINITION = {
       unresolvedModuleIdsByArea,
       publicRouteClaims: buildPhiBuilderPublicRouteClaims(runtimeModuleCatalog),
       publicRoutePaths,
+      areaRootRoutesByArea,
       modulePresetPagesByArea: buildPhiBuilderModulePresetPagesByArea(
         runtimeModuleCatalog,
       ),

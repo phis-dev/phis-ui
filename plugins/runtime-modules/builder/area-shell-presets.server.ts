@@ -456,6 +456,28 @@ export function buildPhiBuilderPublicRoutePaths(
     .then((config) => config.publicRoutePaths);
 }
 
+/**
+ * What every Area states about its root, not only the one /shells is editing.
+ *
+ * /pages needs it too: while `/` forwards it is not offered there, because the forward lives in the
+ * root preset's tree and a stored revision would replace it -- authoring the root Page would switch
+ * the forward off without anyone touching the Select. One value, read once, handed to every workspace
+ * like the Public addresses beside it.
+ */
+export async function buildPhiBuilderAreaRootRoutesByArea(
+  runtime: PhiBlockRuntime,
+  runtimeModuleCatalog: PhiRuntimeModuleCatalog,
+): Promise<Record<string, PhiAreaRootRoute | null>> {
+  const areas: readonly PhiDeveloperBuilderArea[] = PHI_BUILDER_AREA_KEYS;
+  const entries = await Promise.all(
+    areas.map(async (area) => [
+      area,
+      await buildPhiBuilderAreaRootRoute(runtime, area, runtimeModuleCatalog),
+    ] as const),
+  );
+  return Object.fromEntries(entries);
+}
+
 export async function buildPhiBuilderStructureShellPresetDraftsByArea(
   runtime: PhiBlockRuntime,
   runtimeModuleCatalog: PhiRuntimeModuleCatalog,

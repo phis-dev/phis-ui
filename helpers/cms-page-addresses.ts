@@ -15,6 +15,22 @@ export const PHI_BUILDER_MODULES_TABLE_WIDGET_ID = createPhiPresetCmsInstanceId(
   nodeKey: "widgetModulesTable",
 });
 
+/**
+ * Blocks of the Shells workspace the Builder controller has to reach by address.
+ *
+ * The landing Select is disabled by a signal rather than by a config the preset could carry, because
+ * what enables it is a value only the controller holds -- so both sides need the same address, and it
+ * is stated here rather than twice.
+ */
+export const PHI_BUILDER_SHELLS_WIDGET_IDS = createPhiPresetCmsInstanceIdMap(
+  {
+    domain: "area" as const,
+    ownerModuleId: PHI_BUILDER_RUNTIME_MODULE_ID,
+    presetKey: "builder-area-preset",
+  },
+  ["widgetAreaLandingPage"],
+);
+
 const MODULES_DETAIL_ID_CONTEXT = {
   domain: "page" as const,
   ownerModuleId: PHI_BUILDER_RUNTIME_MODULE_ID,

@@ -79,6 +79,7 @@ function createDefaultBuilderState(): PhiDeveloperBuilderState {
     builderChromeControls: createDefaultBuilderChromeControls(),
     pickerWidgetCategoryFilters: [],
     areaRootRouteDrafts: {},
+    areaRootRoutes: {},
     deletedPageDrafts: {},
     draftAllocations: {},
     modulesDirtyAreas: [],
@@ -729,6 +730,36 @@ export function setPhiDeveloperRegionDraftsWithHistory(
     before: { kind: "regionDrafts", drafts: before },
     after: { kind: "regionDrafts", drafts: after },
   });
+}
+
+/**
+ * What the Areas answered, as the server sent it with the workspace.
+ *
+ * Replaces the baseline whole rather than merging: it is one server answer about every Area, and half
+ * of an older one beside half of a newer one would be a state no Site was ever in.
+ */
+export function setPhiDeveloperBuilderAreaRootRoutes(
+  areaRootRoutes: Record<string, PhiAreaRootRoute | null>,
+) {
+  builderWorkspaceStore.patch("public", (current) =>
+    JSON.stringify(current.areaRootRoutes) === JSON.stringify(areaRootRoutes)
+      ? current
+      : { ...current, areaRootRoutes });
+}
+
+/**
+ * What an Area's root does right now: this session's answer, or the one it arrived with.
+ *
+ * `undefined` in the drafts is an Area nobody touched, which is why it cannot simply be defaulted --
+ * `null` there is a Builder asking for the code-owned preset back, and that is a different sentence
+ * from never having been asked.
+ */
+export function readPhiBuilderEffectiveAreaRootRoute(
+  state: Pick<PhiDeveloperBuilderWorkspaceState, "areaRootRouteDrafts" | "areaRootRoutes">,
+  area: string,
+): PhiAreaRootRoute | null {
+  const draft = state.areaRootRouteDrafts?.[area];
+  return draft !== undefined ? draft : state.areaRootRoutes?.[area] ?? null;
 }
 
 /**

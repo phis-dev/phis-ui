@@ -20,7 +20,11 @@ import {
   type PhiBuilderPageCatalogArea,
   type PhiPresetPageNode,
 } from "../../../helpers/cms-page-catalog";
-import { builderWorkspaceStore , getPhiDeveloperBuilderStateSnapshot } from "./developer-workspace-store";
+import {
+  builderWorkspaceStore,
+  getPhiDeveloperBuilderStateSnapshot,
+  readPhiBuilderEffectiveAreaRootRoute,
+} from "./developer-workspace-store";
 import type { PhiDeveloperBuilderWorkspaceState } from "./developer-workspace-types";
 import { getPhiBuilderModuleMetasSnapshot } from "./plugin-meta-store";
 
@@ -51,12 +55,22 @@ function resolveBuilderPagesOptions(context: PhiControlOptionsProviderContext): 
   if (!snapshot.catalogHydrated || !snapshot.pageCatalogHydratedByArea[resolvedArea]) {
     return { options: [] };
   }
+  /*
+   * While `/` forwards, it is not a Page anybody authors.
+   *
+   * The forward is the whole content of the root preset's tree, and a stored revision replaces a
+   * preset's tree -- so a Builder who opened the root here and put anything on it would switch the
+   * forward off without touching the Select that decides it. Taking the entry away is the whole fix:
+   * no entry, no revision, no contradiction. It comes back with whatever it had when the Area is set
+   * to a landing again, because nothing is cleaned up here either.
+   */
+  const forwards = readPhiBuilderEffectiveAreaRootRoute(snapshot, resolvedArea)?.mode !== "landing";
   const pageTree = resolvePhiBuilderActivePageCatalog(
     resolvedArea,
     snapshot.modulePresetPagesByArea,
     snapshot.customPages,
     snapshot.persistedPageCatalogByArea,
-  );
+  ).filter((node) => !(forwards && node.storagePath === "/"));
 
   return {
     options: collectPageOptions(resolvedArea, pageTree),
@@ -168,6 +182,58 @@ function collectPageReferenceOptions(
   ]);
 }
 
+/**
+ * Every landing a Module offers this Area, as the second Select lists them.
+ *
+ * The offers rather than everything declaring `/`: the Area's own root Page declares it too and is the
+ * machinery that forwards, which is exactly the difference the descriptor's flag exists to state. Only
+ * from Modules that are switched on here -- an offer from a Module that is off would name a Page the
+ * Site cannot draw. Where there is none the list is empty, and the Select says so by being empty
+ * rather than by being absent.
+ */
+function resolveLandingPageOptions(
+  context: PhiControlOptionsProviderContext,
+): PhiResolvedControlOptions {
+  const snapshot = readBuilderSnapshot(context);
+  const area = resolveProviderArea(context);
+  const activeModuleIds = new Set(snapshot.runtimeModuleIdsByArea?.[area] ?? []);
+  const moduleTitles = new Map(
+    (snapshot.runtimeModuleDefinitions ?? []).map((definition) => [definition.moduleId, definition.title] as const),
+  );
+  const adopted = new Set(
+    (snapshot.persistedPageCatalogByArea?.[area] ?? [])
+      .filter((entry) => entry.ownerModuleId && entry.presetKey && !entry.tombstoned)
+      .map((entry) => buildAdoptedPresetKey(entry.ownerModuleId!, entry.presetKey!)),
+  );
+  const adoptedLabel = readPhiControlOptionsProviderParam(context.optionsProvider, "adoptedLabel");
+  const options = (snapshot.modulePresetPagesByArea?.[area] ?? [])
+    .filter((node) =>
+      node.landingPage === true &&
+      node.reference &&
+      node.sourcePreset &&
+      activeModuleIds.has(node.sourcePreset.ownerModuleId))
+    .map((node) => {
+      const source = node.sourcePreset!;
+      const owner = moduleTitles.get(source.ownerModuleId) ?? source.ownerModuleId;
+      const isAdopted = adopted.has(buildAdoptedPresetKey(source.ownerModuleId, source.presetKey));
+      return {
+        value: node.reference!,
+        label: node.title,
+        description: isAdopted && adoptedLabel ? `${owner} -- ${adoptedLabel}` : owner,
+      };
+    });
+  const rootRoute = readPhiBuilderEffectiveAreaRootRoute(snapshot, area);
+  return {
+    options,
+    ...(rootRoute?.mode === "landing" && rootRoute.target ? { value: rootRoute.target } : {}),
+  };
+}
+
+/** A Module Page this Site took over, so the list can say where a landing's tree comes from. */
+function buildAdoptedPresetKey(ownerModuleId: string, presetKey: string) {
+  return `${ownerModuleId}::${presetKey}`;
+}
+
 function resolveAreaRootRouteOptions(
   context: PhiControlOptionsProviderContext,
 ): PhiResolvedControlOptions {
@@ -217,6 +283,11 @@ export const PhiBuilderAreaRootRouteOptionsProviderClient = createPhiControlOpti
   key: PHI_BUILDER_RUNTIME_DATA_PROVIDER_KEYS.areaRootRoute,
   ...builderProviderStore,
   resolve: resolveAreaRootRouteOptions,
+});
+export const PhiBuilderLandingPageOptionsProviderClient = createPhiControlOptionsProviderClient({
+  key: PHI_BUILDER_RUNTIME_DATA_PROVIDER_KEYS.landingPage,
+  ...builderProviderStore,
+  resolve: resolveLandingPageOptions,
 });
 export const PhiBuilderNavigationSetsOptionsProviderClient = createPhiControlOptionsProviderClient({
   key: PHI_BUILDER_RUNTIME_DATA_PROVIDER_KEYS.builderNavigationSets,

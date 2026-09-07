@@ -29,6 +29,7 @@ import type {
   PhiCmsNavigationOverlayResolution,
   PhiCmsResolvedNavigationItem,
   PhiCmsResolvedNavigationSurface,
+  PhiCmsPresetIdentity,
   PhiCmsRoutePresetBinding,
   PhiCmsRoutePresetDescriptor,
   PhiCmsThemePresetBinding,
@@ -788,6 +789,7 @@ export function compilePhiCmsActiveRouteTable({
   activeModuleIds,
   viewer,
   publicRoutePaths,
+  landingPreset,
 }: {
   catalog: PhiCmsCompiledDescriptorCatalog;
   area: PhiCmsAreaKey;
@@ -801,6 +803,15 @@ export function compilePhiCmsActiveRouteTable({
    * Sites, and a draft's answer differs from the published one while it is being edited.
    */
   publicRoutePaths?: readonly PhiPublicRoutePathAssignment[];
+  /**
+   * The Module Page this Site gave the Area's root slot, when more than one applied for it.
+   *
+   * `/` is the one address no Module can be assigned: it is a slot, and a Page that declares it is
+   * applying rather than claiming. Which application is answered is a decision of the Site, kept in
+   * the Area's config beside the Public addresses and read on the same terms -- a draft's answer may
+   * differ from the published one while somebody is choosing.
+   */
+  landingPreset?: PhiCmsPresetIdentity | null;
 }): PhiCmsActiveRouteTable {
   const areaDefinition = catalog.areaDefinitions.get(area);
   if (!areaDefinition) {
@@ -816,6 +827,31 @@ export function compilePhiCmsActiveRouteTable({
    * the table. Its navigation entry then hides on its own, which is what an entry with nowhere to go
    * should do.
    */
+  /*
+   * Which application for `/` is answered, decided once before anything is compiled.
+   *
+   * The chosen one when the Site chose and it is still active. Otherwise the single offer, if exactly
+   * one Module offers a landing here -- one applicant needs no question, and the Module selection it
+   * rides on is itself draft-and-publish, so nothing reaches a visitor unasked. Otherwise the Area's
+   * base Module, which owns the root as the machinery that forwards and is the answer a Site that was
+   * never configured keeps. The applications that are not answered are not in the table at all.
+   */
+  const rootApplicants = (catalog.routesByArea.get(area) ?? []).filter((declared) =>
+    declared.descriptor.path === "/" &&
+    activeModuleIds.has(declared.descriptor.ownerModuleId) &&
+    (!viewer || canPhiViewerAccess(viewer, declared.descriptor.accessPolicy)));
+  const landingOffers = rootApplicants.filter((declared) => declared.descriptor.landingPage === true);
+  const chosenRoot =
+    (landingPreset
+      ? rootApplicants.find((declared) =>
+        declared.descriptor.ownerModuleId === landingPreset.ownerModuleId &&
+        declared.descriptor.presetKey === landingPreset.presetKey)
+      : undefined)
+    ?? (landingOffers.length === 1 ? landingOffers[0] : undefined)
+    ?? rootApplicants.find((declared) =>
+      declared.descriptor.ownerModuleId === areaDefinition.baseModuleId)
+    ?? rootApplicants[0];
+
   const byPageId = new Map<PhiCmsInstanceId, PhiCmsRoutePresetDescriptor>();
   const exactByPath = new Map<string, PhiCmsRoutePresetDescriptor>();
   const dynamic: PhiCmsCompiledRoutePattern[] = [];
@@ -834,6 +870,9 @@ export function compilePhiCmsActiveRouteTable({
       continue;
     }
     if (viewer && !canPhiViewerAccess(viewer, declared.descriptor.accessPolicy)) {
+      continue;
+    }
+    if (declared.descriptor.path === "/" && declared !== chosenRoot) {
       continue;
     }
     const assignedPath = assignedPaths.get(

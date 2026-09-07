@@ -10,7 +10,7 @@ import { PHI_BUILDER_CONTROLLER_KEY,
   PHI_BUILDER_CONTROLLER_PLUGIN_KEY } from "./address";
 import type { PhiDeveloperBuilderRegionDraft } from "../developer-workspace-types";
 import type { PhiBuilderModulePresetPagesByArea } from "../../../../helpers/cms-page-catalog";
-import type { PhiPublicRoutePathAssignment } from "../../../../helpers/cms-area-config";
+import type { PhiAreaRootRoute, PhiPublicRoutePathAssignment } from "../../../../helpers/cms-area-config";
 import type { PhiPublicRouteClaim } from "../../../../helpers/public-route-claims";
 import type { PhiBuilderAreaKey } from "../../../../constants/cms-areas";
 import type {
@@ -43,6 +43,7 @@ export type PhiBuilderRuntimeControllerPreload = {
   unresolvedModuleIdsByArea: Record<string, PhiRuntimeModuleId[]>;
   publicRouteClaims: readonly PhiPublicRouteClaim[];
   publicRoutePaths: readonly PhiPublicRoutePathAssignment[];
+  areaRootRoutesByArea: Record<string, PhiAreaRootRoute | null>;
   modulePresetPagesByArea: PhiBuilderModulePresetPagesByArea;
   areaPresetSourcesByArea: Partial<Record<PhiBuilderAreaKey, PhiCmsPresetSource>>;
   navigationSurfacesByArea: Partial<

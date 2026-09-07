@@ -24,6 +24,8 @@ export type PhiPresetPageNode = {
    */
   catalogPath?: string;
   sourcePreset?: PhiCmsPresetSource;
+  /** That the Module offers this Page as the Area's landing, rather than merely declaring `/`. */
+  landingPage?: true;
   pageScopeId?: number;
   reference?: PhiPageReference;
   tombstoned?: boolean;

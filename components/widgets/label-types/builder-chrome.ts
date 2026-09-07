@@ -58,6 +58,9 @@ export type PhiBuilderChromeWidgetLabels = {
     title: string;
     automatic: string;
     landing: string;
+    landingPage: string;
+    landingPageEmpty: string;
+    landingPageAdopted: string;
   };
   pageTitles: {
     dashboard: string;
@@ -120,6 +123,9 @@ export const PHI_BUILDER_CHROME_WIDGET_DEFAULT_LABELS: PhiBuilderChromeWidgetLab
     title: "Area root",
     automatic: "First navigation entry",
     landing: "Landing page",
+    landingPage: "Landing",
+    landingPageEmpty: "No Module offers one",
+    landingPageAdopted: "edited here",
   },
   pageTitles: {
     dashboard: "Dashboard",

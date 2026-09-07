@@ -167,6 +167,14 @@ export type PhiDeveloperBuilderState = {
    */
   areaRootRouteDrafts: Record<string, PhiAreaRootRoute | null>;
   /**
+   * What the server said each Area's root does, before this session said anything.
+   *
+   * Kept apart from the drafts because absence means different things in the two: a missing draft is
+   * an Area nobody touched, a missing baseline is an Area that never answered. Every workspace reads
+   * it -- /pages hides `/` while it forwards -- and only /shells writes the draft beside it.
+   */
+  areaRootRoutes: Record<string, PhiAreaRootRoute | null>;
+  /**
    * Areas whose Module selection has unsaved edits. The Modules workspace is site-wide, so its save
    * and publish commands walk this list instead of the header Area scope.
    */

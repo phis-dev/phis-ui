@@ -35,7 +35,10 @@ import {
 } from "../../../plugins/runtime-modules/settings";
 import { isPhiRuntimeAreaBaseModuleId } from "../../../plugins/runtime-modules/area-definitions";
 import { createPhiBuilderDraftAllocationKey } from "./draft-allocation-key";
-import { builderWorkspaceStore } from "./developer-workspace-store";
+import {
+  builderWorkspaceStore,
+  readPhiBuilderEffectiveAreaRootRoute,
+} from "./developer-workspace-store";
 import type { PhiDeveloperBuilderDraftAllocation } from "./developer-workspace-types";
 import {
   resolvePhiBuilderActivePageCatalog,
@@ -928,7 +931,7 @@ function buildAreaStructureWritePayload(
 export async function savePhiDeveloperBuilderDraft(
   state: Pick<
     PhiDeveloperBuilderWorkspaceState,
-    "area" | "pageKey" | "sidebarKey" | "pageMetaDrafts" | "deletedPageDrafts" | "draftAllocations" | "modulePresetPagesByArea" | "customPages" | "persistedPageCatalogByArea" | "areaPresetSourcesByArea" | "areaRootRouteDrafts"
+    "area" | "pageKey" | "sidebarKey" | "pageMetaDrafts" | "deletedPageDrafts" | "draftAllocations" | "modulePresetPagesByArea" | "customPages" | "persistedPageCatalogByArea" | "areaPresetSourcesByArea" | "areaRootRouteDrafts" | "areaRootRoutes"
   >,
   regionDrafts: Record<string, PhiDeveloperBuilderRegionDraft>,
   workspaceKind: PhiDeveloperBuilderWorkspaceKind,
@@ -1066,7 +1069,9 @@ export async function savePhiDeveloperBuilderDraft(
   }
 
   if (workspaceKind === "structure") {
-    const rootRouteDraft = state.areaRootRouteDrafts?.[area] ?? null;
+    // The effective answer, not only this session's: the structure write states `config.shell` whole,
+    // so a save that never touched the root route still has to carry what the Area already said.
+    const rootRouteDraft = readPhiBuilderEffectiveAreaRootRoute(state, area);
     const structurePayload = buildAreaStructureWritePayload(area, regionDrafts, widgetMetasByType);
     if (structurePayload) {
       if (!areaPresetSource) {
@@ -1292,7 +1297,7 @@ export async function previewPhiDeveloperBuilderDraft(
 export async function publishPhiDeveloperBuilderDraft(
   state: Pick<
     PhiDeveloperBuilderWorkspaceState,
-    "area" | "pageKey" | "sidebarKey" | "pageMetaDrafts" | "deletedPageDrafts" | "draftAllocations" | "runtimeModuleDefinitions" | "runtimeModuleIdsByArea" | "modulePresetPagesByArea" | "customPages" | "persistedPageCatalogByArea" | "areaPresetSourcesByArea" | "areaRootRouteDrafts"
+    "area" | "pageKey" | "sidebarKey" | "pageMetaDrafts" | "deletedPageDrafts" | "draftAllocations" | "runtimeModuleDefinitions" | "runtimeModuleIdsByArea" | "modulePresetPagesByArea" | "customPages" | "persistedPageCatalogByArea" | "areaPresetSourcesByArea" | "areaRootRouteDrafts" | "areaRootRoutes"
   >,
   regionDrafts: Record<string, PhiDeveloperBuilderRegionDraft>,
   workspaceKind: PhiDeveloperBuilderWorkspaceKind,

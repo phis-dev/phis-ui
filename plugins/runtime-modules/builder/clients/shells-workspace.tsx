@@ -32,8 +32,6 @@ import {
   type PhiRegionWidgetLabels,
 } from "../../../../components/widgets/label-types/region";
 import { PhiStructureRegionScaffold } from "../widgets/structure-region/built-in";
-import type { PhiAreaRootRoute } from "../../../../helpers/cms-area-config";
-import { setPhiDeveloperBuilderAreaRootRoute } from "../developer-workspace-store";
 
 export function PhiDeveloperBuilderShellsWorkspaceWidgetClient({
   serverPreviewRegions,
@@ -43,7 +41,6 @@ export function PhiDeveloperBuilderShellsWorkspaceWidgetClient({
   shellTheme: _shellTheme,
   disabled: _disabled = false,
   targetArea,
-  rootRoute = null,
   regionLabels = PHI_REGION_WIDGET_DEFAULT_LABELS,
   pickerLabels = PHI_BUILDER_CHROME_WIDGET_DEFAULT_LABELS.canvas.picker,
 }: {
@@ -54,7 +51,6 @@ export function PhiDeveloperBuilderShellsWorkspaceWidgetClient({
   shellTheme?: PhiShellRegionTheme;
   disabled?: boolean;
   targetArea: PhiDeveloperBuilderArea;
-  rootRoute?: PhiAreaRootRoute | null;
   regionLabels?: PhiRegionWidgetLabels;
   pickerLabels?: PhiBuilderChromeWidgetLabels["canvas"]["picker"];
 }) {
@@ -71,23 +67,6 @@ export function PhiDeveloperBuilderShellsWorkspaceWidgetClient({
     [builderModuleMetas.plugins],
   );
   const hydratedAreaRef = useRef<PhiDeveloperBuilderArea | null>(null);
-  const hydratedRootRouteAreaRef = useRef<PhiDeveloperBuilderArea | null>(null);
-
-  /*
-   * The Area's stored root route, seeded into the draft.
-   *
-   * The Select that edits it lives in the workspace header, drawn by the preset rather than by this
-   * Canvas, and reads the draft through its options provider. Seeding belongs here regardless: the
-   * structure write states `config.shell` whole, so a save that never touched the root route still has
-   * to carry it, or publishing would remove it.
-   */
-  useEffect(() => {
-    if (hydratedRootRouteAreaRef.current === targetArea) {
-      return;
-    }
-    hydratedRootRouteAreaRef.current = targetArea;
-    setPhiDeveloperBuilderAreaRootRoute(targetArea, rootRoute);
-  }, [rootRoute, targetArea]);
 
   useEffect(() => {
     if (builderMode === "preview" && previewRegionDrafts && Object.keys(previewRegionDrafts).length > 0) {

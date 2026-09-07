@@ -121,6 +121,7 @@ const PHI_RUNTIME_MODULE_OWNERSHIP: Readonly<Record<string, readonly [module: st
   "forms/user-management/edit": ["user-management", "edit"],
   "options/admin-site-locales": ["localization", "admin-site-locales"],
   "options/builder-area-root-route": ["builder", "area-root-route"],
+  "options/builder-landing-page": ["builder", "landing-page"],
   "options/builder-navigation-sets": ["builder", "navigation-sets"],
   "options/builder-pages": ["builder", "pages"],
   "options/builder-signal-receiver-capabilities": ["builder", "signal-receiver-capabilities"],

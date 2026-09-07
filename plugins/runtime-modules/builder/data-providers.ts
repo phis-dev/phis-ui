@@ -35,6 +35,15 @@ export const PHI_BUILDER_RUNTIME_DATA_PROVIDER_DESCRIPTORS = [
     description: "Where the root of the target Area resolves to: the default, a landing page, or a Page it forwards to.",
   },
   {
+    key: PHI_BUILDER_RUNTIME_DATA_PROVIDER_KEYS.landingPage,
+    ownerModuleId: PHI_BUILDER_RUNTIME_MODULE_ID,
+    kind: "options",
+    executionMode: "live",
+    authoringMode: "none",
+    title: "Landing pages offered",
+    description: "The landings the Modules switched on for the target Area offer for its root slot.",
+  },
+  {
     key: PHI_BUILDER_RUNTIME_DATA_PROVIDER_KEYS.signalSenders,
     ownerModuleId: PHI_BUILDER_RUNTIME_MODULE_ID,
     kind: "options",

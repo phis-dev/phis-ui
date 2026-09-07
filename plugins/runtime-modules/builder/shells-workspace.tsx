@@ -1,6 +1,5 @@
 import type { PhiBlockRuntime, PhiCmsRuntimeRenderRegistry } from "../../../types";
 import {
-  buildPhiBuilderAreaRootRoute,
   buildPhiBuilderRuntimeModuleIdsForArea,
   buildPhiBuilderStructureShellDraftsForArea,
   resolvePhiBuilderCurrentStructureArea,
@@ -46,10 +45,9 @@ export async function PhiDeveloperBuilderShellsWorkspaceWidget({
   const targetArea: PhiDeveloperBuilderArea = snapshotArea != null && isPhiBuilderAreaKey(snapshotArea)
     ? snapshotArea
     : resolvePhiBuilderCurrentStructureArea(runtime);
-  const [structureShellDrafts, moduleIds, rootRoute, chromeLabels, regionLabels] = await Promise.all([
+  const [structureShellDrafts, moduleIds, chromeLabels, regionLabels] = await Promise.all([
     buildPhiBuilderStructureShellDraftsForArea(runtime, targetArea, registry.runtimeModuleCatalog),
     buildPhiBuilderRuntimeModuleIdsForArea(runtime, targetArea, registry.runtimeModuleCatalog),
-    buildPhiBuilderAreaRootRoute(runtime, targetArea, registry.runtimeModuleCatalog),
     getPhiBuilderChromeWidgetLabels({
       apiBaseUrl: runtime.phis.apiBaseUrl,
       internalToken: runtime.phis.internalToken,
@@ -95,7 +93,6 @@ export async function PhiDeveloperBuilderShellsWorkspaceWidget({
           structureShellDrafts={structureShellDrafts}
           disabled={disabled}
           targetArea={targetArea}
-          rootRoute={rootRoute}
           regionLabels={regionLabels}
           pickerLabels={chromeLabels.canvas.picker}
         />

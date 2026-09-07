@@ -3,6 +3,7 @@ import { createPhiDefaultAreaRuntimeModuleIds } from "../plugins/runtime-modules
 import { readPhiRuntimeModuleIds } from "../plugins/runtime-modules/settings";
 import type { PhiRuntimeModuleId } from "../types";
 import type { PhiResolvedCmsAreaPresetTree } from "../types/cms";
+import type { PhiCmsPresetIdentity } from "../types/cms-module-descriptors";
 import { readPhiPageReference, type PhiPageReference } from "../types/references";
 
 /**
@@ -85,7 +86,7 @@ export const PHI_AREA_ROOT_ROUTE_KEY = "rootRoute" as const;
  * resolves -- a Module switched off must move the front door, not break it.
  */
 export type PhiAreaRootRoute =
-  | { mode: "landing" }
+  | { mode: "landing"; target?: PhiPageReference }
   | { mode: "redirect"; target: PhiPageReference };
 
 export function readPhiAreaRootRoute(
@@ -99,7 +100,15 @@ export function readPhiAreaRootRoute(
   }
   const record = value as Record<string, unknown>;
   if (record.mode === "landing") {
-    return { mode: "landing" };
+    /*
+     * Which landing, when several Modules offer one.
+     *
+     * Absent is a landing without an applicant, which is a state and not a gap: the root draws its own
+     * empty tree and somebody authors it in /pages. An unreadable target is the same answer, for the
+     * same reason a redirect's is -- what the Builder sees then is what actually happens.
+     */
+    const landing = readPhiPageReference(record.target);
+    return landing ? { mode: "landing", target: landing.reference } : { mode: "landing" };
   }
   if (record.mode !== "redirect") {
     return null;
@@ -108,6 +117,26 @@ export function readPhiAreaRootRoute(
   // selector fall back to what actually happens rather than to what was stored.
   const reference = readPhiPageReference(record.target);
   return reference ? { mode: "redirect", target: reference.reference } : null;
+}
+
+/**
+ * The Module Page the Area's root slot was given, as the identity the route table matches on.
+ *
+ * A reference is what the Builder stores, here as everywhere; the compiler works in identities, so the
+ * translation happens once, here. A reference to a Site Page answers with nothing: only a Module can
+ * apply for the slot, because only a Module's Page exists before a Site has authored anything.
+ */
+export function readPhiAreaLandingPresetIdentity(
+  config: Record<string, unknown> | null | undefined,
+): PhiCmsPresetIdentity | null {
+  const rootRoute = readPhiAreaRootRoute(config);
+  if (rootRoute?.mode !== "landing" || !rootRoute.target) {
+    return null;
+  }
+  const parsed = readPhiPageReference(rootRoute.target);
+  return parsed?.target.kind === "module"
+    ? { ownerModuleId: parsed.target.ownerModuleId as PhiRuntimeModuleId, presetKey: parsed.target.presetKey }
+    : null;
 }
 
 export const PHI_AREA_PUBLIC_ROUTE_PATHS_KEY = "publicRoutePaths" as const;

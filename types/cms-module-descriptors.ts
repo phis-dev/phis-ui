@@ -82,6 +82,16 @@ export type PhiCmsRoutePresetDescriptor = PhiCmsPresetIdentity & {
    * application for the Area root slot and keeps the address it asks for.
    */
   path: string;
+  /**
+   * That a Page at `/` means to be the Area's landing, and is not the root's forwarding machinery.
+   *
+   * The two are indistinguishable from outside -- both are a preset at `/` -- and they are opposites:
+   * one is content a visitor lingers on, the other exists to send them somewhere else. A Module says
+   * this to apply for the slot; the Site picks one applicant per Area, and the ones it does not pick
+   * are simply not routed. Nothing else about the Module changes, because a landing is an offer and
+   * not an address it needs to do its work.
+   */
+  landingPage?: true;
   mount?: PhiCmsRouteMountReference;
   title: string;
   accessPolicy?: PhiViewerAccessPolicy;
