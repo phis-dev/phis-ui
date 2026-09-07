@@ -71,6 +71,9 @@ import {
   PHI_BUILDER_PUBLIC_ROUTES_OVERLAY_IDS,
   PHI_BUILDER_PUBLIC_ROUTES_LAYOUT_IDS,
   PHI_BUILDER_PUBLIC_ROUTES_WIDGET_IDS,
+  PHI_BUILDER_MODULE_USAGE_OVERLAY_IDS,
+  PHI_BUILDER_MODULE_USAGE_LAYOUT_IDS,
+  PHI_BUILDER_MODULE_USAGE_WIDGET_IDS,
 } from "../../../helpers/cms-page-addresses";
 import { PHI_BUILDER_PAGE_META_FORM_ID } from "../../../plugins/runtime-modules/builder/page-meta-form";
 import { PHI_BUILDER_EFFECTS_FORM_IDS } from "../../../plugins/runtime-modules/builder/page-meta-form";
@@ -1458,6 +1461,31 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
         },
       }] : []),
       ...(isModulesPage ? [{
+        id: PHI_BUILDER_MODULE_USAGE_OVERLAY_IDS.overlayModuleUsage,
+        overlayType: "modal" as const,
+        headerLayoutNodeId: null,
+        bodyLayoutNodeId: PHI_BUILDER_MODULE_USAGE_LAYOUT_IDS.moduleUsageBody,
+        footerPresentation: "actions" as const,
+        footerLayoutNodeId: PHI_BUILDER_MODULE_USAGE_LAYOUT_IDS.moduleUsageFooter,
+        status: PhiCmsStatus.Published,
+        flags: 0,
+        visibilityMask: page.visibilityMask,
+        sortOrder: 0,
+        label: "Builder module usage",
+        config: {
+          title: modulesLabels?.usage.title ?? "This Module draws on pages",
+          width: { compact: "calc(100vw - 32px)", medium: 600, wide: 680 },
+          mountPolicy: "lazy-keep",
+          closeMode: "immediate",
+          signalRoutes: {
+            listens: [
+              { routeKey: "builder-module-usage-open", capabilityId: "open", scope: "page", channel: "moduleUsageDialog", action: "activate", valueType: "none", receiver: createPhiSignalAddress("cms", PHI_BUILDER_MODULE_USAGE_OVERLAY_IDS.overlayModuleUsage) },
+              { routeKey: "builder-module-usage-close", capabilityId: "close", scope: "page", channel: "moduleUsageDialog", action: "close", valueType: "none", receiver: createPhiSignalAddress("cms", PHI_BUILDER_MODULE_USAGE_OVERLAY_IDS.overlayModuleUsage) },
+            ],
+          },
+        },
+      }] : []),
+      ...(isModulesPage ? [{
         id: PHI_BUILDER_PUBLIC_ROUTES_OVERLAY_IDS.overlayPublicRoutes,
         overlayType: "modal" as const,
         headerLayoutNodeId: null,
@@ -2027,6 +2055,40 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
           ]
         : []),
       ...(isModulesPage ? [
+        buildPhiCmsLayoutNode({
+          creationPreset: { layoutKind: "verticalflex", preset: "panel" },
+          typeKey: "flex-vertical",
+          id: PHI_BUILDER_MODULE_USAGE_LAYOUT_IDS.moduleUsageBody,
+          siteId: page.siteId,
+          parentLayoutNodeId: null,
+          slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
+          sortOrder: 0,
+          status: PhiCmsStatus.Published,
+          flags: 0,
+          visibilityMask: page.visibilityMask,
+          label: "Builder module usage body",
+          config: {
+            gap: PHI_SPACE.base,
+            padding: PHI_SPACE.base,
+            width: "100%",
+            background: PHI_COLOR.bgLayout,
+            border: "none",
+          },
+        }),
+        buildPhiCmsLayoutNode({
+          creationPreset: { layoutKind: "flex", preset: "overlay-actions" },
+          typeKey: "flex",
+          id: PHI_BUILDER_MODULE_USAGE_LAYOUT_IDS.moduleUsageFooter,
+          siteId: page.siteId,
+          parentLayoutNodeId: null,
+          slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
+          sortOrder: 0,
+          status: PhiCmsStatus.Published,
+          flags: 0,
+          visibilityMask: page.visibilityMask,
+          label: "Builder module usage footer",
+          config: {},
+        }),
         buildPhiCmsLayoutNode({
           creationPreset: { layoutKind: "verticalflex", preset: "panel" },
           typeKey: "flex-vertical",
@@ -3185,6 +3247,11 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                     resourceKey: "modules",
                     params: {
                       categoryLabels: modulesLabels?.categories ?? null,
+                      missingLabels: modulesLabels
+                        ? { missing: modulesLabels.missing.category, missingHint: modulesLabels.missing.hint }
+                        : null,
+                      areaLabels: modulesLabels?.areas ?? null,
+                      usageLabels: modulesLabels ? { shell: modulesLabels.usage.shell } : null,
                     },
                   },
                   presentation: {
@@ -3295,6 +3362,98 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
               }),
               buildPhiCmsWidgetNode({
                 typeKey: "simple-text",
+                id: PHI_BUILDER_MODULE_USAGE_WIDGET_IDS.moduleUsageIntro,
+                siteId: page.siteId,
+                parentLayoutNodeId: PHI_BUILDER_MODULE_USAGE_LAYOUT_IDS.moduleUsageBody,
+                slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
+                sortOrder: 0,
+                status: PhiCmsStatus.Published,
+                flags: 0,
+                visibilityMask: page.visibilityMask,
+                label: "Builder module usage intro",
+                config: {
+                  text: modulesLabels?.usage.intro ?? "",
+                  type: "secondary",
+                },
+                contentId: null,
+              }),
+              buildPhiCmsWidgetNode({
+                typeKey: "table",
+                id: PHI_BUILDER_MODULE_USAGE_WIDGET_IDS.moduleUsageTable,
+                siteId: page.siteId,
+                parentLayoutNodeId: PHI_BUILDER_MODULE_USAGE_LAYOUT_IDS.moduleUsageBody,
+                slotIndex: PHI_CMS_SEQUENTIAL_LAYOUT_SLOTS[1].slotIndex,
+                sortOrder: 1,
+                status: PhiCmsStatus.Published,
+                flags: 0,
+                visibilityMask: page.visibilityMask,
+                label: "Builder module usage rows",
+                config: {
+                  source: {
+                    providerKey: PHI_BUILDER_RUNTIME_DATA_PROVIDER_KEYS.runtimeModulesTable,
+                    resourceKey: "moduleUsage",
+                    params: {},
+                  },
+                  presentation: {
+                    bordered: true,
+                    layout: { mode: "auto", overflowX: "auto" },
+                    columns: [
+                      { key: "area", fieldKey: "area", title: modulesLabels?.usage.area ?? "Area", sizing: { mode: "content" } },
+                      { key: "where", fieldKey: "where", title: modulesLabels?.usage.where ?? "Page", sizing: { mode: "fill", minWidth: 200 } },
+                      { key: "blocks", fieldKey: "blocks", title: modulesLabels?.usage.blocks ?? "Blocks", align: "right" as const, sizing: { mode: "content" } },
+                    ],
+                    controlSize: "small",
+                  },
+                  features: {
+                    pagination: { enabled: false, pageSize: 50, showSizeChanger: false },
+                    sorting: { mode: "none" },
+                    tools: { mode: "self-contained", reset: false, reload: false },
+                  },
+                  signalRoutes: {
+                    listens: [
+                      { routeKey: "builder-module-usage-reload", capabilityId: "reload", scope: "page", channel: "reload", action: "activate", valueType: "none", receiver: createPhiSignalAddress("cms", PHI_BUILDER_MODULE_USAGE_WIDGET_IDS.moduleUsageTable) },
+                    ],
+                  },
+                },
+                contentId: null,
+              }),
+              buildPhiCmsWidgetNode({
+                typeKey: "command-toolbar",
+                id: PHI_BUILDER_MODULE_USAGE_WIDGET_IDS.moduleUsageCommands,
+                siteId: page.siteId,
+                parentLayoutNodeId: PHI_BUILDER_MODULE_USAGE_LAYOUT_IDS.moduleUsageFooter,
+                slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
+                sortOrder: 0,
+                status: PhiCmsStatus.Published,
+                flags: 0,
+                visibilityMask: page.visibilityMask,
+                label: "Builder module usage commands",
+                config: {
+                  key: "module-usage-commands",
+                  compact: false,
+                  wrap: true,
+                  showLabels: true,
+                  controlSize: "medium",
+                  buttons: [
+                    { key: "cancel", emits: [{ capabilityId: "command", value: "cancel" }], actionKey: "cancel", label: modulesLabels?.usage.cancel ?? "Keep it on" },
+                    { key: "confirm", emits: [{ capabilityId: "command", value: "confirm" }], actionKey: "save", buttonType: "primary" as const, label: modulesLabels?.usage.confirm ?? "Switch off anyway" },
+                  ],
+                  signalRoutes: {
+                    emits: [{
+                      routeKey: "builder-module-usage-command",
+                      capabilityId: "command",
+                      scope: "area",
+                      channel: "moduleUsage",
+                      action: "activate",
+                      valueType: "string",
+                      receiver: createPhiBuilderControllerAddress(),
+                    }],
+                  },
+                },
+                contentId: null,
+              }),
+              buildPhiCmsWidgetNode({
+                typeKey: "simple-text",
                 id: PHI_BUILDER_PUBLIC_ROUTES_WIDGET_IDS.publicRoutesIntro,
                 siteId: page.siteId,
                 parentLayoutNodeId: PHI_BUILDER_PUBLIC_ROUTES_LAYOUT_IDS.publicRoutesBody,
@@ -3315,7 +3474,7 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                 id: PHI_BUILDER_PUBLIC_ROUTES_WIDGET_IDS.publicRoutesTable,
                 siteId: page.siteId,
                 parentLayoutNodeId: PHI_BUILDER_PUBLIC_ROUTES_LAYOUT_IDS.publicRoutesBody,
-                slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
+                slotIndex: PHI_CMS_SEQUENTIAL_LAYOUT_SLOTS[1].slotIndex,
                 sortOrder: 1,
                 status: PhiCmsStatus.Published,
                 flags: 0,

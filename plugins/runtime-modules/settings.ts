@@ -91,14 +91,84 @@ export function resolvePhiAuthUiProviderModuleId(
   )?.moduleId ?? null;
 }
 
+/** Why a stored Module id is not part of the selection this build can serve. */
+export type PhiUnresolvedRuntimeModuleReason = "not-installed" | "ineligible" | "locked";
+
+export type PhiRuntimeModuleSelectionReading = {
+  moduleIds: PhiRuntimeModuleId[];
+  unresolved: { moduleId: PhiRuntimeModuleId; reason: PhiUnresolvedRuntimeModuleReason }[];
+};
+
+/**
+ * The Modules an Area activates, as far as this build can serve them.
+ *
+ * A stored selection and an installed set are allowed to disagree, and they do so routinely: a deploy
+ * updates the configuration before the new build is rolled out, a rollback puts an older build under a
+ * newer configuration, and an operator removes a package a Site still names. None of those is a reason
+ * to stop answering -- the Area would go down over a Module that was optional in the first place.
+ *
+ * So the read drops what it cannot serve and says which ids it dropped; the caller decides whether that
+ * is worth a line in the log or a row in the Builder. Refusing stays where it belongs, on the write:
+ * `assertPhiRuntimeModuleIdsAllowedForArea` is what a Builder save still goes through, so nothing
+ * unresolvable is ever written back.
+ *
+ * The Area's own Base Module and the Platform Module are not part of this at all. They are implicit and
+ * added elsewhere; a build missing one of those cannot serve the Area, and that is a failure rather
+ * than a selection to trim.
+ */
+export function readPhiRuntimeModuleIdsForArea(
+  area: string,
+  moduleIds: readonly PhiRuntimeModuleId[] | null | undefined,
+  moduleDefinitions: readonly PhiRuntimeModuleDefinition[],
+): PhiRuntimeModuleSelectionReading {
+  const cmsArea = resolveSelectionArea(area);
+  const definitionsById = new Map(
+    moduleDefinitions.map((definition) => [definition.moduleId, definition] as const),
+  );
+  const reading: PhiRuntimeModuleSelectionReading = { moduleIds: [], unresolved: [] };
+
+  for (const moduleId of [...new Set(moduleIds ?? [])]) {
+    const definition = definitionsById.get(moduleId);
+    if (!definition) {
+      reading.unresolved.push({ moduleId, reason: "not-installed" });
+      continue;
+    }
+    if (!definition.eligibleAreas.includes(cmsArea)) {
+      reading.unresolved.push({ moduleId, reason: "ineligible" });
+      continue;
+    }
+    if (definition.kind === "platform" || isPhiRuntimeAreaBaseModuleId(moduleId)) {
+      reading.unresolved.push({ moduleId, reason: "locked" });
+      continue;
+    }
+    reading.moduleIds.push(moduleId);
+  }
+
+  return reading;
+}
+
+export function describePhiUnresolvedRuntimeModules(
+  area: string,
+  unresolved: readonly { moduleId: PhiRuntimeModuleId; reason: PhiUnresolvedRuntimeModuleReason }[],
+) {
+  return unresolved
+    .map(({ moduleId, reason }) => `${moduleId} (${reason})`)
+    .join(", ") + ` -- Area "${area}"`;
+}
+
 export function resolvePhiRuntimeModuleIdsForArea(
   area: string,
   moduleIds: readonly PhiRuntimeModuleId[] | null | undefined,
   moduleDefinitions: readonly PhiRuntimeModuleDefinition[],
 ): PhiRuntimeModuleId[] {
-  const resolvedModuleIds = [...new Set(moduleIds ?? [])];
-  assertPhiRuntimeModuleIdsAllowedForArea(area, resolvedModuleIds, moduleDefinitions);
-  return resolvedModuleIds;
+  const reading = readPhiRuntimeModuleIdsForArea(area, moduleIds, moduleDefinitions);
+  if (reading.unresolved.length > 0) {
+    console.warn(
+      "[phi-runtime-modules] Stored Module selection names Modules this build cannot serve.",
+      { area, unresolved: reading.unresolved },
+    );
+  }
+  return reading.moduleIds;
 }
 
 export type PhiDeclaredMediaSpaces = {

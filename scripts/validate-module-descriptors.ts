@@ -35,7 +35,10 @@ import { PHI_OBSERVABILITY_RUNTIME_MODULE_ID } from "../plugins/runtime-modules/
 import { PHI_USER_MANAGEMENT_RUNTIME_MODULE_ID } from "../plugins/runtime-modules/user-management/ids";
 import { PHI_DASHBOARD_RUNTIME_MODULE_ID } from "../plugins/runtime-modules/dashboard/ids";
 import { PHI_REVISIONS_RUNTIME_MODULE_ID } from "../plugins/runtime-modules/revisions/ids";
-import { resolvePhiRuntimeModuleIdsForArea } from "../plugins/runtime-modules/settings";
+import {
+  assertPhiRuntimeModuleIdsAllowedForArea,
+  readPhiRuntimeModuleIdsForArea,
+} from "../plugins/runtime-modules/settings";
 import { resolvePhiAuthUiRuntimeProjection } from "../plugins/runtime-modules/auth/ui-provider";
 import { createPhiRuntimeModuleCatalog } from "../plugins/runtime-modules/contracts";
 import { normalizePhiCmsRouteSegment } from "../helpers/cms-routing";
@@ -49,13 +52,45 @@ assert.equal(normalizePhiCmsRouteSegment("phis%2Bui%2Bauth"), "phis+ui+auth");
 const catalog = resolvePhiCmsDescriptorCatalog(PHI_FIRST_PARTY_RUNTIME_MODULE_CATALOG);
 const runtimeModuleDefinitions = [...PHI_FIRST_PARTY_RUNTIME_MODULE_CATALOG.values()]
   .map(({ definition }) => definition);
+/*
+ * The read drops what it cannot serve, the write refuses it.
+ *
+ * A stored selection and an installed set are allowed to disagree -- a deploy that ran ahead of its
+ * build, a rollback, a package an operator removed -- and an Area may not go down over an optional
+ * Module. Refusing stays on the write, which is what a Builder save goes through.
+ */
+const lockedReading = readPhiRuntimeModuleIdsForArea(
+  "public",
+  [PHI_PUBLIC_RUNTIME_MODULE_ID],
+  runtimeModuleDefinitions,
+);
+assert.deepEqual(lockedReading.moduleIds, []);
+assert.deepEqual(lockedReading.unresolved, [
+  { moduleId: PHI_PUBLIC_RUNTIME_MODULE_ID, reason: "locked" },
+]);
+assert.deepEqual(
+  readPhiRuntimeModuleIdsForArea(
+    "public",
+    ["@acme/gone/modules/gone" as never],
+    runtimeModuleDefinitions,
+  ).unresolved,
+  [{ moduleId: "@acme/gone/modules/gone", reason: "not-installed" }],
+);
 assert.throws(
-  () => resolvePhiRuntimeModuleIdsForArea(
+  () => assertPhiRuntimeModuleIdsAllowedForArea(
     "public",
     [PHI_PUBLIC_RUNTIME_MODULE_ID],
     runtimeModuleDefinitions,
   ),
   /Locked runtime module/,
+);
+assert.throws(
+  () => assertPhiRuntimeModuleIdsAllowedForArea(
+    "public",
+    ["@acme/gone/modules/gone" as never],
+    runtimeModuleDefinitions,
+  ),
+  /is not installed/,
 );
 let navigationSurfaceCount = 0;
 let publicHeaderSurface: PhiCmsResolvedNavigationSurface | null = null;

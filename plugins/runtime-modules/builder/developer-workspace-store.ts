@@ -21,6 +21,7 @@ import {
 import { createPhiBuilderControllerAddress } from "./controller/address";
 import type {
   PhiBuilderChromeControls,
+  PhiBuilderModuleDeactivationRequest,
   PhiBuilderPublicRouteCollisionRequest,
   PhiDeveloperBuilderArea,
   PhiDeveloperBuilderEffectsRequest,
@@ -69,6 +70,7 @@ function createDefaultBuilderState(): PhiDeveloperBuilderState {
     signalWiring: { senderAddress: null, senderCapabilityId: null, receiverAddress: null, receiverCapabilityId: null },
     effectsEditorRequest: null,
     publicRouteCollisionRequest: null,
+    moduleDeactivationRequest: null,
     builderMode: "editor",
     search: "",
     darkMode: false,
@@ -170,6 +172,31 @@ export function answerPhiBuilderPublicRouteCollision(
   });
 }
 
+/**
+ * What switching a Module off takes off the Site, put to the person doing it.
+ *
+ * Opened only when there is something to say: a Module nothing draws from is switched off without a
+ * word, because a dialog that always says "nothing happens" is a dialog nobody reads.
+ */
+export function openPhiBuilderModuleDeactivationRequest(
+  scopeKey: PhiDeveloperBuilderArea,
+  request: Omit<PhiBuilderModuleDeactivationRequest, "correlationId">,
+) {
+  const correlationId = createPhiSignalCorrelationId();
+  builderWorkspaceStore.patch(scopeKey, (current) => ({
+    ...current,
+    moduleDeactivationRequest: { ...request, correlationId },
+  }));
+  return correlationId;
+}
+
+export function closePhiBuilderModuleDeactivationRequest(scopeKey: PhiDeveloperBuilderArea) {
+  builderWorkspaceStore.patch(scopeKey, (current) =>
+    current.moduleDeactivationRequest === null
+      ? current
+      : { ...current, moduleDeactivationRequest: null });
+}
+
 export function closePhiBuilderPublicRouteCollisionRequest(scopeKey: PhiDeveloperBuilderArea) {
   builderWorkspaceStore.patch(scopeKey, (current) =>
     current.publicRouteCollisionRequest === null
@@ -267,6 +294,7 @@ const PHI_WORKSPACE_CATALOG_KEYS = [
   "areaPresetSourcesByArea",
   "runtimeModuleDefinitions",
   "runtimeModuleIdsByArea",
+  "unresolvedModuleIdsByArea",
   "publicRouteClaims",
   "publicRoutePaths",
 ] as const satisfies readonly (keyof PhiWorkspaceCatalogState)[];

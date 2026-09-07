@@ -69,6 +69,7 @@ import {
   usePhiDeveloperRegionDraft,
   getPhiDeveloperBuilderStateSnapshot,
   setPhiDeveloperBuilderAreaRootRoute,
+  closePhiBuilderModuleDeactivationRequest,
   closePhiBuilderPublicRouteCollisionRequest,
 } from "./developer-workspace-store";
 import {
@@ -110,6 +111,8 @@ import {
   PHI_BUILDER_MODULE_DETAIL_WIDGET_IDS,
   PHI_BUILDER_PUBLIC_ROUTES_OVERLAY_IDS,
   PHI_BUILDER_PUBLIC_ROUTES_WIDGET_IDS,
+  PHI_BUILDER_MODULE_USAGE_OVERLAY_IDS,
+  PHI_BUILDER_MODULE_USAGE_WIDGET_IDS,
 } from "../../../helpers/cms-page-addresses";
 import { readPhiRuntimeFormValuesSignalValue } from "../../../components/forms/runtime-form-state";
 import {
@@ -156,6 +159,7 @@ type PhiDeveloperBuilderWorkspaceControllerOptions = {
   modulePresetPagesByArea?: PhiWorkspaceCatalogState["modulePresetPagesByArea"];
   areaPresetSourcesByArea?: PhiWorkspaceCatalogState["areaPresetSourcesByArea"];
   navigationSurfacesByArea?: PhiWorkspaceCatalogState["navigationSurfacesByArea"];
+  unresolvedModuleIdsByArea?: PhiWorkspaceCatalogState["unresolvedModuleIdsByArea"];
   publicRouteClaims?: PhiWorkspaceCatalogState["publicRouteClaims"];
   publicRoutePaths?: PhiWorkspaceCatalogState["publicRoutePaths"];
   pageMetaLabels?: PhiBuilderPageMetaPresentationLabels;
@@ -297,6 +301,7 @@ function usePhiDeveloperBuilderWorkspaceController(
     modulePresetPagesByArea = EMPTY_MODULE_PRESET_PAGES_BY_AREA,
     areaPresetSourcesByArea = {},
     navigationSurfacesByArea = {},
+    unresolvedModuleIdsByArea = EMPTY_RUNTIME_MODULE_IDS_BY_AREA,
     publicRouteClaims = EMPTY_PUBLIC_ROUTE_CLAIMS,
     publicRoutePaths = EMPTY_PUBLIC_ROUTE_PATHS,
     pageMetaLabels = PHI_BUILDER_PAGE_META_DEFAULT_PRESENTATION_LABELS,
@@ -396,6 +401,7 @@ function usePhiDeveloperBuilderWorkspaceController(
   const modulePresetPagesPreloadKey = JSON.stringify(activePreloadCatalogs.modulePresetPagesByArea);
   const areaPresetSourcesPreloadKey = JSON.stringify(areaPresetSourcesByArea);
   const navigationSurfacesPreloadKey = JSON.stringify(activePreloadCatalogs.navigationSurfacesByArea);
+  const unresolvedModuleIdsPreloadKey = JSON.stringify(unresolvedModuleIdsByArea);
   const publicRouteClaimsPreloadKey = JSON.stringify(publicRouteClaims);
   const publicRoutePathsPreloadKey = JSON.stringify(publicRoutePaths);
 
@@ -502,6 +508,58 @@ function usePhiDeveloperBuilderWorkspaceController(
     () => createPhiSignalAddress("cms", PHI_BUILDER_PUBLIC_ROUTES_WIDGET_IDS.publicRoutesTable),
     [],
   );
+  /*
+   * The other half of the same switch: what turning a Module off stops drawing.
+   *
+   * Opened the same way and for the same reason -- nothing is applied while it stands -- so both
+   * directions of one gesture behave alike: a question that must be answered, a consequence that must
+   * be acknowledged.
+   */
+  const moduleUsageOverlayAddress = useMemo(
+    () => createPhiSignalAddress("cms", PHI_BUILDER_MODULE_USAGE_OVERLAY_IDS.overlayModuleUsage),
+    [],
+  );
+  const moduleUsageTableAddress = useMemo(
+    () => createPhiSignalAddress("cms", PHI_BUILDER_MODULE_USAGE_WIDGET_IDS.moduleUsageTable),
+    [],
+  );
+  const openedModuleUsageCorrelationRef = useRef<string | null>(null);
+  const moduleDeactivationRequest = state.moduleDeactivationRequest;
+  useEffect(() => {
+    const correlationId = moduleDeactivationRequest?.correlationId ?? null;
+    if (openedModuleUsageCorrelationRef.current === correlationId) {
+      return;
+    }
+    openedModuleUsageCorrelationRef.current = correlationId;
+    dispatchSignal({
+      scope: "page",
+      channel: "moduleUsageDialog",
+      action: correlationId ? "activate" : "close",
+      value: null,
+      valueType: "none",
+      sender: createPhiBuilderControllerAddress(),
+      receiver: moduleUsageOverlayAddress,
+      timestamp: Date.now(),
+    });
+    if (correlationId) {
+      dispatchSignal({
+        scope: "page",
+        channel: "reload",
+        action: "activate",
+        value: null,
+        valueType: "none",
+        sender: createPhiBuilderControllerAddress(),
+        receiver: moduleUsageTableAddress,
+        timestamp: Date.now(),
+      });
+    }
+  }, [
+    dispatchSignal,
+    moduleDeactivationRequest,
+    moduleUsageOverlayAddress,
+    moduleUsageTableAddress,
+  ]);
+
   const openedPublicRoutesCorrelationRef = useRef<string | null>(null);
   const publicRouteCollisionRequest = state.publicRouteCollisionRequest;
   useEffect(() => {
@@ -582,6 +640,8 @@ function usePhiDeveloperBuilderWorkspaceController(
         JSON.stringify(current.areaPresetSourcesByArea) !== areaPresetSourcesPreloadKey;
       const navigationSurfacesChanged =
         JSON.stringify(current.navigationSurfacesByArea) !== navigationSurfacesPreloadKey;
+      const unresolvedModuleIdsChanged =
+        JSON.stringify(current.unresolvedModuleIdsByArea) !== unresolvedModuleIdsPreloadKey;
       const publicRouteClaimsChanged =
         JSON.stringify(current.publicRouteClaims) !== publicRouteClaimsPreloadKey;
       /*
@@ -615,7 +675,7 @@ function usePhiDeveloperBuilderWorkspaceController(
         }));
       }
 
-      return changed || definitionsChanged || modulePresetPagesChanged || areaPresetSourcesChanged || navigationSurfacesChanged || publicRouteClaimsChanged || publicRoutePathsChanged || catalogHydrationChanged || initialPageChanged
+      return changed || definitionsChanged || modulePresetPagesChanged || areaPresetSourcesChanged || navigationSurfacesChanged || unresolvedModuleIdsChanged || publicRouteClaimsChanged || publicRoutePathsChanged || catalogHydrationChanged || initialPageChanged
         ? {
             ...current,
             ...(initialPageChanged ? { pageKey: initialPageKey } : {}),
@@ -625,6 +685,7 @@ function usePhiDeveloperBuilderWorkspaceController(
             modulePresetPagesByArea: activePreloadCatalogs.modulePresetPagesByArea,
             areaPresetSourcesByArea,
             navigationSurfacesByArea: activePreloadCatalogs.navigationSurfacesByArea,
+            unresolvedModuleIdsByArea,
             publicRouteClaims,
             ...(publicRoutePathsChanged ? { publicRoutePaths } : {}),
           }
@@ -638,6 +699,8 @@ function usePhiDeveloperBuilderWorkspaceController(
     runtimeModuleIdsPreloadKey,
     modulePresetPagesByArea,
     modulePresetPagesPreloadKey,
+    unresolvedModuleIdsByArea,
+    unresolvedModuleIdsPreloadKey,
     publicRouteClaims,
     publicRouteClaimsPreloadKey,
     publicRoutePaths,
@@ -1048,6 +1111,41 @@ function usePhiDeveloperBuilderWorkspaceController(
             sidebarKey: "pages",
           }));
         }
+        return;
+      }
+
+      if (
+        signal.scope === "area" &&
+        signal.channel === "moduleUsage" &&
+        signal.action === "activate" &&
+        signal.valueType === "string" &&
+        signal.receiver === createPhiBuilderControllerAddress()
+      ) {
+        const request = state.moduleDeactivationRequest;
+        if (!request) {
+          return;
+        }
+        if (signal.value === "confirm") {
+          applyPhiBuilderRuntimeModuleSelectionChanges(
+            request.areas.map((area) => ({
+              area,
+              selectedIds: (state.runtimeModuleIdsByArea?.[area] ?? [])
+                .filter((moduleId) => moduleId !== request.moduleId),
+            })),
+            defaultArea,
+          );
+          dispatchSignal({
+            scope: "area",
+            channel: "reload",
+            action: "activate",
+            value: null,
+            valueType: "none",
+            sender: createPhiBuilderControllerAddress(),
+            receiver: createPhiSignalAddress("cms", PHI_BUILDER_MODULES_TABLE_WIDGET_ID),
+            timestamp: Date.now(),
+          });
+        }
+        closePhiBuilderModuleDeactivationRequest(defaultArea);
         return;
       }
 
@@ -2019,6 +2117,7 @@ export type PhiDeveloperBuilderWorkspaceControllerProps = {
   modulePresetPagesByArea?: PhiWorkspaceCatalogState["modulePresetPagesByArea"];
   areaPresetSourcesByArea?: PhiWorkspaceCatalogState["areaPresetSourcesByArea"];
   navigationSurfacesByArea?: PhiWorkspaceCatalogState["navigationSurfacesByArea"];
+  unresolvedModuleIdsByArea?: PhiWorkspaceCatalogState["unresolvedModuleIdsByArea"];
   publicRouteClaims?: PhiWorkspaceCatalogState["publicRouteClaims"];
   publicRoutePaths?: PhiWorkspaceCatalogState["publicRoutePaths"];
   pageMetaLabels?: PhiBuilderPageMetaPresentationLabels;
@@ -2032,6 +2131,7 @@ export function PhiDeveloperBuilderWorkspaceController({
   modulePresetPagesByArea = EMPTY_MODULE_PRESET_PAGES_BY_AREA,
   areaPresetSourcesByArea = {},
   navigationSurfacesByArea = {},
+  unresolvedModuleIdsByArea = EMPTY_RUNTIME_MODULE_IDS_BY_AREA,
   publicRouteClaims = EMPTY_PUBLIC_ROUTE_CLAIMS,
   publicRoutePaths = EMPTY_PUBLIC_ROUTE_PATHS,
   pageMetaLabels = PHI_BUILDER_PAGE_META_DEFAULT_PRESENTATION_LABELS,
@@ -2043,6 +2143,7 @@ export function PhiDeveloperBuilderWorkspaceController({
     modulePresetPagesByArea,
     areaPresetSourcesByArea,
     navigationSurfacesByArea,
+    unresolvedModuleIdsByArea,
     publicRouteClaims,
     publicRoutePaths,
     pageMetaLabels,

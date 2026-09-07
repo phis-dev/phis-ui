@@ -86,6 +86,23 @@ export type PhiBuilderPublicRouteCollisionRequest = {
   answers: PhiBuilderPublicRouteCollisionAnswer[];
 };
 
+/** One place a Module's blocks stand, said the way the dialog shows it. */
+export type PhiBuilderModuleUsageEntry = {
+  key: string;
+  area: string;
+  where: string;
+  blocks: number;
+};
+
+export type PhiBuilderModuleDeactivationRequest = {
+  correlationId: string;
+  moduleId: PhiRuntimeModuleId;
+  moduleTitle: string;
+  /** The Areas the gesture would switch off, so confirming does exactly what was asked for. */
+  areas: PhiDeveloperBuilderArea[];
+  usage: PhiBuilderModuleUsageEntry[];
+};
+
 export type PhiDeveloperBuilderState = {
   nodeKey: string;
   nodeId: PhiCmsInstanceId | null;
@@ -127,6 +144,14 @@ export type PhiDeveloperBuilderState = {
    * enables the Module. Cancelling leaves the Site exactly as it was.
    */
   publicRouteCollisionRequest: PhiBuilderPublicRouteCollisionRequest | null;
+  /**
+   * What switching a Module off would stop drawing, while it waits to be acknowledged.
+   *
+   * The mirror image of the question beside it: enabling asks for an answer, disabling states a
+   * consequence. Nothing is applied while it stands -- the switch springs back, and confirming is what
+   * switches the Module off.
+   */
+  moduleDeactivationRequest: PhiBuilderModuleDeactivationRequest | null;
   builderMode: PhiDeveloperBuilderMode;
   search: string;
   darkMode: boolean;

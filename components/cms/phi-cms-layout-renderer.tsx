@@ -97,12 +97,26 @@ function resolveLayoutRegistryType(type: string) {
   return `${pluginKey}/${typeKey}`;
 }
 
-function renderCmsDiagnostic(issue: PhiCmsRenderIssue, error?: unknown) {
+/**
+ * A block that cannot be drawn, said to the person who can do something about it.
+ *
+ * In a workspace that is the author: the diagnostic sits in the block's own place, names the type and
+ * the Module, and the hole is visible where it has to be repaired. On a live page it is nobody: a
+ * visitor cannot switch a Module back on and has no business reading a Module id off a page, so the
+ * block is simply absent and the rest of the page stands. The warning is written either way, which is
+ * where an operator finds it.
+ */
+function renderCmsDiagnostic(
+  issue: PhiCmsRenderIssue,
+  renderMode: string,
+  error?: unknown,
+) {
   console.warn("[phi-cms-layout-renderer] CMS block is not renderable.", {
     issue,
+    renderMode,
     error,
   });
-  return <PhiCmsRenderDiagnostic issue={issue} />;
+  return renderMode === "live" ? null : <PhiCmsRenderDiagnostic issue={issue} />;
 }
 
 function wrapPhiRuntimeModuleUiProvider(
@@ -340,7 +354,7 @@ function renderContentWidget(
           blockId: widget.id,
           moduleId,
           detail: `The declared ${renderMode} render policy has no runtime implementation.`,
-        });
+        }, renderMode);
       }
       const rendered = normalizeRenderedCmsNode(renderWidget({
         widget,
@@ -370,7 +384,7 @@ function renderContentWidget(
         blockId: widget.id,
         moduleId: context.runtimeRegistry.ownerModuleIdByWidgetType.get(widget.widgetType) ?? null,
         detail: error instanceof Error ? error.message : String(error),
-      }, error);
+      }, renderMode, error);
     }
   }
 
@@ -391,7 +405,7 @@ function renderContentWidget(
       context.runtimeRegistry.ownerModuleIdByWidgetType.get(widget.widgetType) ??
       null,
     detail: registryIssue?.detail ?? "Widget is missing from the resolved runtime registry.",
-  });
+  }, renderMode);
 }
 
 function isRenderableNode(node: ReactNode) {
@@ -424,7 +438,7 @@ function renderInvalidCmsNodeDiagnostic(
     blockId: id,
     moduleId,
     detail: `Invalid ${renderMode} render output.`,
-  });
+  }, renderMode);
 }
 
 function normalizeRenderedCmsNode(
@@ -447,7 +461,7 @@ function normalizeRenderedCmsNode(
         blockId: meta.id,
         moduleId: meta.moduleId,
         detail: error instanceof Error ? error.message : String(error),
-      }, error)) as unknown as ReactNode;
+      }, meta.renderMode, error)) as unknown as ReactNode;
   }
 
   if (isValidElement(node) && !isRenderableElementType(node.type)) {
@@ -635,7 +649,7 @@ function renderLayoutNode(
           blockId: node.id,
           moduleId,
           detail: `No ${renderMode} renderer is declared.`,
-        });
+        }, renderMode);
       }
       const rendered = renderLayout({
         node,
@@ -712,19 +726,43 @@ function renderLayoutNode(
         blockId: node.id,
         moduleId,
         detail: error instanceof Error ? error.message : String(error),
-      }, error);
+      }, readPhiRuntimeTreeRenderMode(node.config), error);
     }
   }
 
+  /*
+   * A Layout that cannot be drawn takes its frame with it, not its content.
+   *
+   * The children are somebody's text and pictures and belong to the Page, while the Layout only said
+   * how they sit. Dropping the subtree with the frame was the older answer and the more destructive
+   * one: switching a Module off could empty a Page that has nothing to do with that Module. They are
+   * stacked plainly instead -- unstyled rather than invisible.
+   */
   const registryIssue = context.runtimeRegistry.renderIssuesByLayoutType.get(registryType);
-  return renderCmsDiagnostic({
+  const layoutRenderMode = readPhiRuntimeTreeRenderMode(node.config);
+  const diagnostic = renderCmsDiagnostic({
     code: registryIssue?.code ?? "missing-renderer",
     kind: "layout",
     type: node.widgetType,
     blockId: node.id,
     moduleId: registryIssue?.moduleId ?? moduleId,
     detail: registryIssue?.detail ?? "Layout is missing from the resolved runtime registry.",
-  });
+  }, layoutRenderMode);
+  const orphanedChildren = renderChildren(node, context);
+
+  if (orphanedChildren.length === 0) {
+    return diagnostic;
+  }
+
+  return (
+    <div
+      data-phi-cms-orphaned-layout={node.widgetType}
+      style={{ display: "flex", flexDirection: "column", gap: 21, width: "100%", minWidth: 0 }}
+    >
+      {diagnostic}
+      {orphanedChildren}
+    </div>
+  );
 }
 
 export async function PhiCmsLayoutRenderer({

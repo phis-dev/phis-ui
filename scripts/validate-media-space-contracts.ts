@@ -14,6 +14,7 @@ import { resolvePhiRuntimeModuleServerBinding } from "../plugins/runtime-modules
 import {
   readPhiRuntimeModuleIds,
   resolvePhiDeclaredMediaSpaces,
+  assertPhiRuntimeModuleIdsAllowedForArea,
   resolvePhiRuntimeModuleIdsForArea,
 } from "../plugins/runtime-modules/settings";
 import type { PhiRuntimeModuleId } from "../types/cms-module-descriptors";
@@ -632,8 +633,24 @@ assert.deepEqual(
   ),
   [PHI_ASSET_RUNTIME_MODULE_ID],
 );
+/*
+ * Reading a stored selection drops what this build cannot serve; writing one refuses it. A locked
+ * Module and a Module nobody installed are both simply absent from the reading, and both stop a save.
+ */
+assert.deepEqual(
+  resolvePhiRuntimeModuleIdsForArea("public", [PHI_PUBLIC_RUNTIME_MODULE_ID], moduleDefinitions),
+  [],
+);
+assert.deepEqual(
+  resolvePhiRuntimeModuleIdsForArea(
+    "admin",
+    ["@test/pkg/modules/not-installed" as PhiRuntimeModuleId],
+    moduleDefinitions,
+  ),
+  [],
+);
 assert.throws(
-  () => resolvePhiRuntimeModuleIdsForArea(
+  () => assertPhiRuntimeModuleIdsAllowedForArea(
     "public",
     [PHI_PUBLIC_RUNTIME_MODULE_ID],
     moduleDefinitions,
@@ -641,7 +658,7 @@ assert.throws(
   /Locked runtime module/u,
 );
 assert.throws(
-  () => resolvePhiRuntimeModuleIdsForArea(
+  () => assertPhiRuntimeModuleIdsAllowedForArea(
     "admin",
     ["@test/pkg/modules/not-installed" as PhiRuntimeModuleId],
     moduleDefinitions,

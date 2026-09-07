@@ -596,11 +596,17 @@ assert.equal(dispatchCall()?.url, `${UPSTREAM}/api/v1/add-on/subscribe`);
 assert.equal(dispatchCall()?.headers.cookie, undefined);
 assert.equal(dispatchCall()?.body, JSON.stringify({ email: "a@b.test" }));
 
-// An Area that names a module the catalog does not install is a configuration error, not a silent
-// fallback: the dispatch fails loudly rather than resolving some other Provider.
+/*
+ * An Area that names a Module this build does not install answers the way an Area that switched it off
+ * answers: the Form is not here. What must never happen is dispatching to some other Provider, and
+ * that is what is pinned -- no call goes out.
+ *
+ * It used to fail loudly with the Module id in the body. A stored selection is allowed to name a Module
+ * a build does not have (a deploy ahead of its rollout, a rollback, a removed package), so that is a
+ * state to answer rather than a fault to report at a visitor.
+ */
 const uninstalled = await submit({ body: { formId: FORM_IDS.addOn, phase: "submit", values: {} } });
-assert.equal(uninstalled.response.status, 502);
-assert.match(String(uninstalled.payload.error), /"@test\/pkg\/modules\/add-on" is not installed/u);
+assert.equal(uninstalled.response.status, 404);
 assert.equal(calls.length, 0);
 
 // Installed but not activated for the Area: the Form simply does not dispatch.

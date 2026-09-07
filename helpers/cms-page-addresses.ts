@@ -53,6 +53,20 @@ export const PHI_BUILDER_PUBLIC_ROUTES_WIDGET_IDS = createPhiPresetCmsInstanceId
   ["publicRoutesIntro", "publicRoutesTable", "publicRoutesCommands"],
 );
 
+/** The dialog that says what switching a Module off stops drawing. */
+export const PHI_BUILDER_MODULE_USAGE_OVERLAY_IDS = createPhiPresetCmsInstanceIdMap(
+  MODULES_DETAIL_ID_CONTEXT,
+  ["overlayModuleUsage"],
+);
+export const PHI_BUILDER_MODULE_USAGE_LAYOUT_IDS = createPhiPresetCmsInstanceIdMap(
+  MODULES_DETAIL_ID_CONTEXT,
+  ["moduleUsageBody", "moduleUsageFooter"],
+);
+export const PHI_BUILDER_MODULE_USAGE_WIDGET_IDS = createPhiPresetCmsInstanceIdMap(
+  MODULES_DETAIL_ID_CONTEXT,
+  ["moduleUsageIntro", "moduleUsageTable", "moduleUsageCommands"],
+);
+
 const PAGE_META_ID_CONTEXT = {
   domain: "page" as const,
   ownerModuleId: PHI_BUILDER_RUNTIME_MODULE_ID,

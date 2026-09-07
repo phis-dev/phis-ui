@@ -4,7 +4,7 @@ import {
   isPhiRuntimeAreaBaseModuleId,
   resolvePhiRuntimeAreaDefinition,
 } from "../area-definitions";
-import { resolvePhiRuntimeModuleIdsForArea } from "../settings";
+import { assertPhiRuntimeModuleIdsAllowedForArea } from "../settings";
 import { phiWorkspaceCatalogStore } from "../../../components/workspace/catalog-store";
 import { builderWorkspaceStore, getPhiDeveloperBuilderStateSnapshot } from "./developer-workspace-store";
 import {
@@ -55,16 +55,23 @@ export function normalizeRuntimeModuleSelection(
     );
   }
 
-  return resolvePhiRuntimeModuleIdsForArea(
-    area,
-    definitions.filter((definition) =>
+  const moduleIds = definitions
+    .filter((definition) =>
       definition.kind === "module" &&
       definition.moduleId !== baseModuleId &&
       selectedIdSet.has(definition.moduleId),
     )
-      .map((definition) => definition.moduleId),
-    definitions,
-  );
+    .map((definition) => definition.moduleId);
+  /*
+   * The write refuses where the read drops.
+   *
+   * Reading a stored selection tolerates a Module this build cannot serve -- an Area may not go down
+   * over one -- but writing one may not: a selection leaving the Builder has to be one this build can
+   * stand behind, which is also what keeps an unresolvable id from being written back after it was
+   * dropped on the way in.
+   */
+  assertPhiRuntimeModuleIdsAllowedForArea(area, moduleIds, definitions);
+  return moduleIds;
 }
 
 /**

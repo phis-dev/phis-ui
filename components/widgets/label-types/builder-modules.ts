@@ -38,6 +38,22 @@ export type PhiBuilderModulesPageLabels = {
     allAreas: string;
     showFoundation: string;
   };
+  /** A Module this Site activates and this build does not have. */
+  missing: {
+    category: string;
+    hint: string;
+  };
+  /** What switching a Module off stops drawing. */
+  usage: {
+    title: string;
+    intro: string;
+    area: string;
+    where: string;
+    blocks: string;
+    shell: string;
+    confirm: string;
+    cancel: string;
+  };
   /** The one question enabling a Module can ask: a Public address it wants is taken. */
   publicRoutes: {
     title: string;
@@ -101,6 +117,21 @@ export const PHI_BUILDER_MODULES_PAGE_DEFAULT_LABELS: PhiBuilderModulesPageLabel
     area: "Area",
     allAreas: "All areas",
     showFoundation: "Foundations",
+  },
+  missing: {
+    category: "Not in this build",
+    hint: "This Site activates the Module, this build does not have it. The next save drops it.",
+  },
+  usage: {
+    title: "This Module draws on pages",
+    intro:
+      "Switching it off leaves these blocks in place and stops drawing them. They come back when the Module comes back; nothing is deleted.",
+    area: "Area",
+    where: "Page",
+    blocks: "Blocks",
+    shell: "Area shell",
+    confirm: "Switch off anyway",
+    cancel: "Keep it on",
   },
   publicRoutes: {
     title: "Public addresses are taken",

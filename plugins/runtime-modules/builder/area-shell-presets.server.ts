@@ -8,7 +8,7 @@ import type { PhiResolvedCmsAreaPresetTree, PhiResolvedCmsPageTree } from "../..
 import type { PhiRuntimeModuleCatalog, PhiRuntimeModuleId } from "../../../types";
 import type { PhiBlockRuntime } from "../../../types/widget-runtime";
 import { getCurrentSiteAreaDraft, getExactSiteArea } from "../../../gateway/site-area";
-import { resolvePhiRuntimeModuleIdsForArea } from "../../../plugins/runtime-modules/settings";
+import { readPhiRuntimeModuleIdsForArea } from "../../../plugins/runtime-modules/settings";
 import {
   readPhiAreaPresetRuntimeModuleIds,
   readPhiAreaPublicRoutePaths,
@@ -108,6 +108,14 @@ function resolveStructureAreaPath(area: PhiDeveloperBuilderArea) {
 
 export type PhiBuilderAreaModulesConfig = {
   moduleIds: PhiRuntimeModuleId[];
+  /**
+   * Stored ids this build cannot serve, kept so the Builder can show them.
+   *
+   * Dropping them silently would make Pages disappear with no way to find out why, and the next save
+   * would write the selection without them -- which is right, but has to be something somebody sees
+   * happening rather than something that happens to them.
+   */
+  unresolvedModuleIds: PhiRuntimeModuleId[];
   publicRoutePaths: PhiPublicRoutePathAssignment[];
 };
 
@@ -117,12 +125,20 @@ function readRuntimeModulesConfigFromStructureTree(
   runtimeModuleCatalog: PhiRuntimeModuleCatalog,
 ): PhiBuilderAreaModulesConfig {
   const presetTree = tree && "preset" in tree ? tree : null;
+  const reading = readPhiRuntimeModuleIdsForArea(
+    area,
+    readPhiAreaPresetRuntimeModuleIds(presetTree, area),
+    [...runtimeModuleCatalog.values()].map((entry) => entry.definition),
+  );
+  if (reading.unresolved.length > 0) {
+    console.warn(
+      "[phi-builder] Stored Module selection names Modules this build cannot serve.",
+      { area, unresolved: reading.unresolved },
+    );
+  }
   return {
-    moduleIds: resolvePhiRuntimeModuleIdsForArea(
-      area,
-      readPhiAreaPresetRuntimeModuleIds(presetTree, area),
-      [...runtimeModuleCatalog.values()].map((entry) => entry.definition),
-    ),
+    moduleIds: reading.moduleIds,
+    unresolvedModuleIds: reading.unresolved.map((entry) => entry.moduleId),
     publicRoutePaths: readPhiAreaPublicRoutePaths(presetTree?.preset.config),
   };
 }
@@ -402,6 +418,26 @@ export async function buildPhiBuilderStructureRuntimeModuleIdsByArea(
     ] as const),
   );
 
+  return Object.fromEntries(entries) as Record<PhiDeveloperBuilderArea, PhiRuntimeModuleId[]>;
+}
+
+/**
+ * The Modules a Site names that this build cannot serve, by Area.
+ *
+ * Read from the same config as the selection beside it, so the two always describe one revision.
+ */
+export async function buildPhiBuilderUnresolvedRuntimeModuleIdsByArea(
+  runtime: PhiBlockRuntime,
+  runtimeModuleCatalog: PhiRuntimeModuleCatalog,
+): Promise<Record<PhiDeveloperBuilderArea, PhiRuntimeModuleId[]>> {
+  const areas: readonly PhiDeveloperBuilderArea[] = PHI_BUILDER_AREA_KEYS;
+  const entries = await Promise.all(
+    areas.map(async (area) => [
+      area,
+      (await buildPhiBuilderRuntimeModulesConfigForArea(runtime, area, runtimeModuleCatalog))
+        .unresolvedModuleIds,
+    ] as const),
+  );
   return Object.fromEntries(entries) as Record<PhiDeveloperBuilderArea, PhiRuntimeModuleId[]>;
 }
 

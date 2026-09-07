@@ -197,6 +197,21 @@ export const PHI_BUILDER_RUNTIME_DATA_PROVIDER_DESCRIPTORS = [
        * the rows exist only while a Module's switch is waiting for an answer, and they are read from
        * the request that switch opened.
        */
+      /*
+       * What a Module currently draws, one row per place. Read from the Site when its switch is about
+       * to go off, and gone again once that gesture is finished.
+       */
+      resourceKey: "moduleUsage",
+      title: "Blocks in use",
+      rowIdentityPath: "key",
+      fields: [
+        { key: "key", title: "Key", type: "string", required: true },
+        { key: "area", title: "Area", type: "string", required: true },
+        { key: "where", title: "Where", type: "string", required: true },
+        { key: "blocks", title: "Blocks", type: "number", required: true },
+      ],
+      query: { sorting: "none", pagination: "none" },
+    }, {
       resourceKey: "publicRouteCollisions",
       title: "Contested Public addresses",
       rowIdentityPath: "presetKey",

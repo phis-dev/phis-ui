@@ -19,9 +19,12 @@ import { resolvePhiRuntimeAreaDefinition } from "../../area-definitions";
 import { applyPhiBuilderRuntimeModuleSelectionChanges } from "../runtime-module-selection";
 import {
   answerPhiBuilderPublicRouteCollision,
+  openPhiBuilderModuleDeactivationRequest,
   openPhiBuilderPublicRouteCollisionRequest,
   usePhiDeveloperBuilderStateValue,
 } from "../developer-workspace-store";
+import { loadPhiBuilderModuleBlockUsage } from "../module-usage-client";
+import type { PhiBuilderModuleUsageEntry } from "../developer-workspace-types";
 import { resolvePhiBuilderPublicRouteCollisionAnswers } from "../public-route-collisions";
 import type {
   PhiDeveloperBuilderArea,
@@ -43,6 +46,7 @@ import type {
 const RESOURCE_KEY = "modules";
 const DETAIL_RESOURCE_KEY = "moduleDetail";
 const PUBLIC_ROUTES_RESOURCE_KEY = "publicRouteCollisions";
+const MODULE_USAGE_RESOURCE_KEY = "moduleUsage";
 
 /**
  * The site's installed Modules, as table rows -- one row per Module, across every Area at once.
@@ -141,6 +145,68 @@ function buildRuntimeModuleRows(
     .sort((left, right) => left.title.localeCompare(right.title, "en", { sensitivity: "base" }));
 }
 
+/**
+ * A row for a Module this Site activates and this build does not have.
+ *
+ * Its Pages are gone from the catalog and its Widgets do not draw, which is what somebody noticed
+ * before coming here -- so the row exists to answer why. It is inert: no switch, no checkbox, nothing
+ * to flip, because there is no definition to flip anything against. The next save of this workspace
+ * writes the selection without it, and the row says so rather than letting that happen quietly.
+ */
+function buildUnresolvedRuntimeModuleRows(
+  state: PhiDeveloperBuilderWorkspaceState,
+  view: PhiRuntimeModulesTableView,
+  labels: { missing: string; missingHint: string } | null,
+) {
+  const installed = new Set(state.runtimeModuleDefinitions.map((definition) => definition.moduleId));
+  const areas = view.areaFilter ? [view.areaFilter] : PHI_CMS_AREA_KEYS;
+  const byModuleId = new Map<string, PhiCmsAreaKey[]>();
+
+  for (const areaKey of areas) {
+    if (!isPhiBuilderAreaKey(areaKey)) {
+      continue;
+    }
+    for (const moduleId of state.unresolvedModuleIdsByArea?.[areaKey] ?? []) {
+      if (installed.has(moduleId)) {
+        continue;
+      }
+      byModuleId.set(moduleId, [...(byModuleId.get(moduleId) ?? []), areaKey]);
+    }
+  }
+
+  return [...byModuleId.entries()].map(([moduleId, namedAreas]) => ({
+    moduleId,
+    active: false,
+    locked: true,
+    icon: "",
+    title: moduleId,
+    description: labels?.missingHint ?? "Not part of this build. The next save drops it from the Site.",
+    category: labels?.missing ?? "Not in this build",
+    isBaseModule: false,
+    baseAreaKey: null,
+    ...Object.fromEntries(PHI_CMS_AREA_KEYS.map((areaKey) => [
+      `area_${areaKey}`,
+      // Absent rather than false: there is nothing to switch, and an empty cell says that.
+      namedAreas.includes(areaKey) ? false : null,
+    ])),
+  }));
+}
+
+function areaLabelFor(areaKey: string, params: Record<string, unknown> | undefined) {
+  return readAreaLabels(params)?.[areaKey] ?? areaKey;
+}
+
+function shellLabel(params: Record<string, unknown> | undefined) {
+  return readLabelMap(params, "usageLabels")?.shell ?? "Area shell";
+}
+
+function readMissingLabels(params: Record<string, unknown> | undefined) {
+  const labels = readLabelMap(params, "missingLabels");
+  return labels?.missing && labels.missingHint
+    ? { missing: labels.missing, missingHint: labels.missingHint }
+    : null;
+}
+
 function readLabelMap(params: Record<string, unknown> | undefined, key: string) {
   const candidate = params?.[key];
   if (candidate == null || typeof candidate !== "object") {
@@ -211,7 +277,13 @@ export function PhiBuilderRuntimeModulesTableProviderClient({ children }: { chil
     const publicRoutesResourceDescriptor = resources.find(
       (resource) => resource.resourceKey === PUBLIC_ROUTES_RESOURCE_KEY,
     );
-    if (!resourceDescriptor || !detailResourceDescriptor || !publicRoutesResourceDescriptor) {
+    const moduleUsageResourceDescriptor = resources.find(
+      (resource) => resource.resourceKey === MODULE_USAGE_RESOURCE_KEY,
+    );
+    if (
+      !resourceDescriptor || !detailResourceDescriptor ||
+      !publicRoutesResourceDescriptor || !moduleUsageResourceDescriptor
+    ) {
       throw new Error("Runtime Modules Table provider descriptor has no resource.");
     }
 
@@ -228,6 +300,24 @@ export function PhiBuilderRuntimeModulesTableProviderClient({ children }: { chil
               readLabelMap(request.params, "detailLabels"),
               readLabelMap(request.params, "categoryLabels"),
             ),
+          },
+          request,
+        );
+      }
+      if (request.resourceKey === MODULE_USAGE_RESOURCE_KEY) {
+        return queryPhiStaticTableResource(
+          {
+            descriptor: moduleUsageResourceDescriptor,
+            rows: (builderState.moduleDeactivationRequest?.usage ?? []).map((entry) => ({ ...entry })),
+          },
+          request,
+        );
+      }
+      if (request.resourceKey === MODULE_USAGE_RESOURCE_KEY) {
+        return queryPhiStaticTableResource(
+          {
+            descriptor: moduleUsageResourceDescriptor,
+            rows: (builderState.moduleDeactivationRequest?.usage ?? []).map((entry) => ({ ...entry })),
           },
           request,
         );
@@ -253,7 +343,10 @@ export function PhiBuilderRuntimeModulesTableProviderClient({ children }: { chil
       return queryPhiStaticTableResource(
         {
           descriptor: resourceDescriptor,
-          rows: buildRuntimeModuleRows(builderState, readLabelMap(request.params, "categoryLabels"), view),
+          rows: [
+            ...buildUnresolvedRuntimeModuleRows(builderState, view, readMissingLabels(request.params)),
+            ...buildRuntimeModuleRows(builderState, readLabelMap(request.params, "categoryLabels"), view),
+          ],
         },
         { ...request, query: filteredQuery },
       );
@@ -262,6 +355,9 @@ export function PhiBuilderRuntimeModulesTableProviderClient({ children }: { chil
     const mutate = async (
       request: PhiTableProviderMutationRequest,
     ): Promise<PhiTableProviderMutationResult> => {
+      if (request.resourceKey === MODULE_USAGE_RESOURCE_KEY) {
+        return { status: "rejected", invalidation: "none", errorCode: "unsupported-mutation" };
+      }
       if (request.resourceKey === PUBLIC_ROUTES_RESOURCE_KEY) {
         if (request.kind !== "field" || request.fieldKey !== "path") {
           return { status: "rejected", invalidation: "none", errorCode: "unsupported-mutation" };
@@ -311,6 +407,48 @@ export function PhiBuilderRuntimeModulesTableProviderClient({ children }: { chil
         return true;
       };
 
+      /*
+       * What switching this Module off would stop drawing.
+       *
+       * Read from the Site rather than from anything the Builder holds: the blocks sit in stored page
+       * trees, which no workspace loads. Nothing is applied while the answer is pending -- the switch
+       * springs back and the dialog is what completes the gesture.
+       */
+      const askAboutBlocksInUse = async (cmsAreas: readonly PhiCmsAreaKey[]) => {
+        if (proposedActive) {
+          return false;
+        }
+        const areas = cmsAreas.filter(
+          (areaKey): areaKey is PhiCmsAreaKey & PhiDeveloperBuilderArea =>
+            isPhiBuilderAreaKey(areaKey) && isModuleActiveInArea(builderState, definition.moduleId, areaKey),
+        );
+        const usage: PhiBuilderModuleUsageEntry[] = [];
+        for (const areaKey of areas) {
+          const entries = await loadPhiBuilderModuleBlockUsage(areaKey, definition.moduleId)
+            .catch(() => []);
+          for (const entry of entries) {
+            usage.push({
+              key: `${areaKey}:${entry.kind}:${entry.pageScopeId ?? entry.presetKey ?? "shell"}`,
+              area: areaLabelFor(areaKey, request.params),
+              where: entry.kind === "area"
+                ? shellLabel(request.params)
+                : entry.path ?? `${entry.ownerModuleId ?? ""}/${entry.presetKey ?? ""}`,
+              blocks: entry.blocks,
+            });
+          }
+        }
+        if (usage.length === 0) {
+          return false;
+        }
+        openPhiBuilderModuleDeactivationRequest("public", {
+          moduleId: definition.moduleId,
+          moduleTitle: definition.title,
+          areas,
+          usage,
+        });
+        return true;
+      };
+
       const applyAreaChange = (cmsAreas: readonly PhiCmsAreaKey[]) => {
         const changes = cmsAreas
           .filter((areaKey): areaKey is PhiCmsAreaKey & PhiDeveloperBuilderArea => isPhiBuilderAreaKey(areaKey))
@@ -338,6 +476,9 @@ export function PhiBuilderRuntimeModulesTableProviderClient({ children }: { chil
         }
         if (askAboutPublicAddresses(definition.eligibleAreas)) {
           return { status: "rejected", invalidation: "none", errorCode: "public-address-taken" };
+        }
+        if (await askAboutBlocksInUse(definition.eligibleAreas)) {
+          return { status: "rejected", invalidation: "none", errorCode: "module-in-use" };
         }
         try {
           applyAreaChange(definition.eligibleAreas);
@@ -376,6 +517,9 @@ export function PhiBuilderRuntimeModulesTableProviderClient({ children }: { chil
       if (askAboutPublicAddresses([areaKey])) {
         return { status: "rejected", invalidation: "none", errorCode: "public-address-taken" };
       }
+      if (await askAboutBlocksInUse([areaKey])) {
+        return { status: "rejected", invalidation: "none", errorCode: "module-in-use" };
+      }
       try {
         applyAreaChange([areaKey]);
       } catch (error) {
@@ -391,7 +535,12 @@ export function PhiBuilderRuntimeModulesTableProviderClient({ children }: { chil
 
     return {
       key: PHI_BUILDER_RUNTIME_DATA_PROVIDER_KEYS.runtimeModulesTable,
-      resources: [resourceDescriptor, detailResourceDescriptor, publicRoutesResourceDescriptor],
+      resources: [
+        resourceDescriptor,
+        detailResourceDescriptor,
+        publicRoutesResourceDescriptor,
+        moduleUsageResourceDescriptor,
+      ],
       query,
       mutate,
     };

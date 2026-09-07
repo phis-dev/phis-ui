@@ -42,6 +42,14 @@ export type PhiWorkspaceCatalogState = {
   runtimeModuleDefinitions: PhiRuntimeModuleDefinition[];
   runtimeModuleIdsByArea: Partial<Record<PhiWorkspaceCatalogArea, PhiRuntimeModuleId[]>>;
   /**
+   * Module ids a stored Area selection names that this build has no definition for.
+   *
+   * They are not part of the selection -- nothing addresses them and nothing renders from them -- but
+   * they are still written down on the Site, and the next Modules save drops them. A workspace shows
+   * them so that both facts are visible before that happens.
+   */
+  unresolvedModuleIdsByArea: Partial<Record<PhiWorkspaceCatalogArea, PhiRuntimeModuleId[]>>;
+  /**
    * Every Public address an installed Module would answer on, switched on or not.
    *
    * The installed set rather than the active one, because this is what the question at enable time is

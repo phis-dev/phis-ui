@@ -24,6 +24,7 @@ function createDefaultWorkspaceCatalogState(scopeKey: string): PhiWorkspaceCatal
     areaPresetSourcesByArea: {},
     runtimeModuleDefinitions: [],
     runtimeModuleIdsByArea: {},
+    unresolvedModuleIdsByArea: {},
     publicRouteClaims: [],
     publicRoutePaths: [],
   };

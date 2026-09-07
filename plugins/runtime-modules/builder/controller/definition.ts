@@ -40,6 +40,7 @@ export type PhiBuilderRuntimeControllerPreload = {
   shellPresetDraftsByArea: Record<string, Record<string, PhiDeveloperBuilderRegionDraft>>;
   runtimeModuleDefinitions: PhiRuntimeModuleDefinition[];
   runtimeModuleIdsByArea: Record<string, PhiRuntimeModuleId[]>;
+  unresolvedModuleIdsByArea: Record<string, PhiRuntimeModuleId[]>;
   publicRouteClaims: readonly PhiPublicRouteClaim[];
   publicRoutePaths: readonly PhiPublicRoutePathAssignment[];
   modulePresetPagesByArea: PhiBuilderModulePresetPagesByArea;

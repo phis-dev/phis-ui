@@ -705,7 +705,7 @@ export async function savePhiDeveloperBuilderModulesDraft(
   state: Pick<
     PhiDeveloperBuilderWorkspaceState,
     "draftAllocations" | "runtimeModuleDefinitions" | "runtimeModuleIdsByArea" | "areaPresetSourcesByArea"
-    | "publicRoutePaths"
+    | "publicRoutePaths" | "publicRouteClaims"
   >,
   regionDrafts: Record<string, PhiDeveloperBuilderRegionDraft>,
   options: {
@@ -762,7 +762,15 @@ export async function savePhiDeveloperBuilderModulesDraft(
         ...(area === "public"
           ? {
             [PHI_AREA_PUBLIC_ROUTE_PATHS_KEY]: normalizePhiAreaPublicRoutePaths(
-              state.publicRoutePaths ?? [],
+              /*
+               * Only for routes this build can name. An answer about a route that left with its
+               * package is not something this save can stand behind, and it goes the same way the
+               * Module id itself goes -- out, visibly, with the Area revision remembering it.
+               */
+              (state.publicRoutePaths ?? []).filter((assignment) =>
+                (state.publicRouteClaims ?? []).some((claim) =>
+                  claim.ownerModuleId === assignment.ownerModuleId &&
+                  claim.presetKey === assignment.presetKey)),
             ),
           }
           : {}),
@@ -818,7 +826,7 @@ export async function publishPhiDeveloperBuilderModulesDraft(
   state: Pick<
     PhiDeveloperBuilderWorkspaceState,
     "draftAllocations" | "runtimeModuleDefinitions" | "runtimeModuleIdsByArea" | "areaPresetSourcesByArea"
-    | "publicRoutePaths"
+    | "publicRoutePaths" | "publicRouteClaims"
   >,
   regionDrafts: Record<string, PhiDeveloperBuilderRegionDraft>,
   options: {
