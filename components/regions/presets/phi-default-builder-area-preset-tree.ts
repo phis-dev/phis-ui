@@ -3347,6 +3347,7 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                   features: {
                     pagination: { enabled: false, pageSize: 20, showSizeChanger: false },
                     sorting: { mode: "none" },
+                    editing: { mode: "cell" },
                     tools: { mode: "self-contained", reset: false, reload: false },
                   },
                   signalRoutes: {

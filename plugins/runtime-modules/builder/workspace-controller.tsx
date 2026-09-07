@@ -502,22 +502,32 @@ function usePhiDeveloperBuilderWorkspaceController(
     () => createPhiSignalAddress("cms", PHI_BUILDER_PUBLIC_ROUTES_WIDGET_IDS.publicRoutesTable),
     [],
   );
-  const publicRoutesOverlayReady = usePhiSignalReceiverReady(publicRoutesOverlayAddress);
   const openedPublicRoutesCorrelationRef = useRef<string | null>(null);
   const publicRouteCollisionRequest = state.publicRouteCollisionRequest;
   useEffect(() => {
-    if (!publicRoutesOverlayReady) {
-      return;
-    }
     const correlationId = publicRouteCollisionRequest?.correlationId ?? null;
     if (openedPublicRoutesCorrelationRef.current === correlationId) {
       return;
     }
     openedPublicRoutesCorrelationRef.current = correlationId;
+    dispatchSignal({
+      scope: "page",
+      channel: "publicRoutesDialog",
+      action: correlationId ? "activate" : "close",
+      value: null,
+      valueType: "none",
+      sender: createPhiBuilderControllerAddress(),
+      receiver: publicRoutesOverlayAddress,
+      timestamp: Date.now(),
+    });
     if (correlationId) {
-      // The rows come from the request, so the table has to re-read before the modal is shown.
+      /*
+       * And a re-read afterwards, not before: the rows live inside the overlay body, which mounts when
+       * the modal opens and is kept mounted after -- so a second question would otherwise show the
+       * first one's rows.
+       */
       dispatchSignal({
-        scope: "area",
+        scope: "page",
         channel: "reload",
         action: "activate",
         value: null,
@@ -527,21 +537,10 @@ function usePhiDeveloperBuilderWorkspaceController(
         timestamp: Date.now(),
       });
     }
-    dispatchSignal({
-      scope: "area",
-      channel: "publicRoutesDialog",
-      action: correlationId ? "activate" : "close",
-      value: null,
-      valueType: "none",
-      sender: createPhiBuilderControllerAddress(),
-      receiver: publicRoutesOverlayAddress,
-      timestamp: Date.now(),
-    });
   }, [
     dispatchSignal,
     publicRouteCollisionRequest,
     publicRoutesOverlayAddress,
-    publicRoutesOverlayReady,
     publicRoutesTableAddress,
   ]);
 
@@ -2033,6 +2032,8 @@ export function PhiDeveloperBuilderWorkspaceController({
   modulePresetPagesByArea = EMPTY_MODULE_PRESET_PAGES_BY_AREA,
   areaPresetSourcesByArea = {},
   navigationSurfacesByArea = {},
+  publicRouteClaims = EMPTY_PUBLIC_ROUTE_CLAIMS,
+  publicRoutePaths = EMPTY_PUBLIC_ROUTE_PATHS,
   pageMetaLabels = PHI_BUILDER_PAGE_META_DEFAULT_PRESENTATION_LABELS,
 }: PhiDeveloperBuilderWorkspaceControllerProps) {
   const controller = usePhiDeveloperBuilderWorkspaceController(defaultArea, {
@@ -2042,6 +2043,8 @@ export function PhiDeveloperBuilderWorkspaceController({
     modulePresetPagesByArea,
     areaPresetSourcesByArea,
     navigationSurfacesByArea,
+    publicRouteClaims,
+    publicRoutePaths,
     pageMetaLabels,
   });
 
