@@ -251,4 +251,39 @@ describe("a listener that does not name its address", () => {
     unsubscribe();
     unregister();
   });
+
+  it("answers for every address it names, not only the first", async () => {
+    /*
+     * A Command Toolbar listens once and answers for its own address and for every button in it, each
+     * addressed separately. Naming one of them left the rest registered but unheard: the signal was
+     * held rather than dropped, so nothing complained -- a Save button never learned it should read
+     * "Create", and Undo never learned it was disabled on an empty history.
+     */
+    const partition = createPartition();
+    const second = "cms:widget-detail:save" as PhiSignalAddress;
+    const received: PhiSignal[] = [];
+    const unregister = [
+      registerPhiSignalInstance(partition, { address: RECEIVER, scope: "page" }),
+      registerPhiSignalInstance(partition, { address: second, scope: "page" }),
+    ];
+    const unsubscribe = subscribePhiSignals(
+      partition,
+      (signal) => received.push(signal),
+      { scopes: ["page"], channels: ["bindingParams"] },
+      [RECEIVER, second],
+    );
+
+    emit(partition, { receiver: second });
+    await settle();
+    expect(received.map((signal) => signal.receiver)).toEqual([second]);
+
+    emit(partition);
+    await settle();
+    expect(received.map((signal) => signal.receiver)).toEqual([second, RECEIVER]);
+    expect(partition.pendingSignals.size).toBe(0);
+
+    unsubscribe();
+    for (const dispose of unregister) dispose();
+    expect(partition.receiverListenerCounts.size).toBe(0);
+  });
 });

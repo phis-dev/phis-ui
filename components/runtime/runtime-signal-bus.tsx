@@ -251,7 +251,7 @@ export function subscribePhiSignals(
   partition: PhiSignalRuntimePartition,
   listener: (signal: PhiSignal) => void,
   filter?: PhiSignalFilter,
-  readyReceiver?: PhiSignalAddress | null,
+  readyReceiver?: PhiSignalAddress | readonly PhiSignalAddress[] | null,
 ) {
   const wrappedListener = (signal: PhiSignal) => {
     if (matchesPhiSignalFilter(partition, signal, filter)) {
@@ -259,24 +259,36 @@ export function subscribePhiSignals(
     }
   };
   partition.listeners.add(wrappedListener);
+  /*
+   * One listener may answer for several addresses.
+   *
+   * A Command Toolbar is the case that asks for it: it listens once and answers for its own address
+   * and for every button inside it, each of which is addressed separately. Naming only one of them
+   * left the others registered but unheard -- an addressed signal to them was held forever, which is
+   * why a Save button never learned it should read "Create" and Undo never learned it was disabled.
+   */
   const receiverCandidate = readyReceiver === undefined ? filter?.receiver : readyReceiver;
-  const receiver = receiverCandidate && receiverCandidate !== "broadcast"
-    ? receiverCandidate
-    : null;
-  if (receiver) {
+  const receivers = (Array.isArray(receiverCandidate) ? receiverCandidate : [receiverCandidate])
+    .filter((candidate): candidate is PhiSignalAddress =>
+      typeof candidate === "string" && candidate !== "broadcast");
+  for (const receiver of receivers) {
     partition.receiverListenerCounts.set(
       receiver,
       (partition.receiverListenerCounts.get(receiver) ?? 0) + 1,
     );
+  }
+  if (receivers.length > 0) {
     for (const subscriber of partition.instanceSubscribers) subscriber();
   }
 
   return () => {
     partition.listeners.delete(wrappedListener);
-    if (receiver) {
+    for (const receiver of receivers) {
       const remaining = (partition.receiverListenerCounts.get(receiver) ?? 1) - 1;
       if (remaining > 0) partition.receiverListenerCounts.set(receiver, remaining);
       else partition.receiverListenerCounts.delete(receiver);
+    }
+    if (receivers.length > 0) {
       for (const subscriber of partition.instanceSubscribers) subscriber();
     }
   };
@@ -337,7 +349,7 @@ export function usePhiSignalDispatcher(): PhiSignalDispatch {
 export function usePhiSignalListener(
   handler: (signal: PhiSignal) => void,
   filter?: PhiSignalFilter | null,
-  readyReceiver?: PhiSignalAddress | null,
+  readyReceiver?: PhiSignalAddress | readonly PhiSignalAddress[] | null,
 ) {
   const partition = usePhiSignalRuntimePartition();
   const handleSignal = useEffectEvent((signal: PhiSignal) => {

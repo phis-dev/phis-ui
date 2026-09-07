@@ -264,7 +264,20 @@ export function PhiCommandToolbarWidget({
     [listenRoutes],
   );
 
-  usePhiSignalListener(handleSignal, signalFilter);
+  /*
+   * The addresses this one listener answers for: the toolbar, and every button in it.
+   *
+   * Registering the buttons as instances was only half of it. A receiver with an instance and no
+   * listener counted for it is not wrong, it is "not ready yet", so an addressed signal was held and
+   * never delivered -- the Save button in the Page dialog never learned it should read "Create", and
+   * Undo never learned it was disabled. Both were sent, both waited.
+   */
+  const answeredAddresses = useMemo(
+    () => [toolbarReceiver, ...buttonAddresses.values()]
+      .filter((address): address is PhiSignalAddress => typeof address === "string"),
+    [buttonAddresses, toolbarReceiver],
+  );
+  usePhiSignalListener(handleSignal, signalFilter, answeredAddresses);
 
   const controlItems = buttons.map((button) => {
     const buttonState = buttonStateByKey[button.key] ?? {};
