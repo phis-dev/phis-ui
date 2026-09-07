@@ -26,6 +26,8 @@ import {
   readPhiBuilderEffectiveAreaRootRoute,
 } from "./developer-workspace-store";
 import type { PhiDeveloperBuilderWorkspaceState } from "./developer-workspace-types";
+import type { PhiRuntimeModuleId } from "../../../types/cms-module-descriptors";
+import type { PhiPageReference } from "../../../types/references";
 import { getPhiBuilderModuleMetasSnapshot } from "./plugin-meta-store";
 
 function readBuilderSnapshot(context: PhiControlOptionsProviderContext) {
@@ -196,42 +198,58 @@ function resolveLandingPageOptions(
 ): PhiResolvedControlOptions {
   const snapshot = readBuilderSnapshot(context);
   const area = resolveProviderArea(context);
-  const activeModuleIds = new Set(snapshot.runtimeModuleIdsByArea?.[area] ?? []);
+  /*
+   * Switched on here, or the Area's own base Module -- which is never in the selection because it is
+   * never switchable: the Area is its Module. Leaving it out would drop the landing every Site starts
+   * with from the list of the landings it may choose.
+   */
+  const cmsArea = resolvePhiBuilderAreaAsCmsArea(area);
+  const baseModuleId = resolvePhiRuntimeAreaDefinition(cmsArea)?.baseModuleId ?? null;
+  const selectedModuleIds = new Set(snapshot.runtimeModuleIdsByArea?.[area] ?? []);
+  const isActive = (moduleId: PhiRuntimeModuleId) =>
+    moduleId === baseModuleId || selectedModuleIds.has(moduleId);
   const moduleTitles = new Map(
     (snapshot.runtimeModuleDefinitions ?? []).map((definition) => [definition.moduleId, definition.title] as const),
   );
-  const adopted = new Set(
-    (snapshot.persistedPageCatalogByArea?.[area] ?? [])
-      .filter((entry) => entry.ownerModuleId && entry.presetKey && !entry.tombstoned)
-      .map((entry) => buildAdoptedPresetKey(entry.ownerModuleId!, entry.presetKey!)),
-  );
   const adoptedLabel = readPhiControlOptionsProviderParam(context.optionsProvider, "adoptedLabel");
-  const options = (snapshot.modulePresetPagesByArea?.[area] ?? [])
-    .filter((node) =>
-      node.landingPage === true &&
-      node.reference &&
-      node.sourcePreset &&
-      activeModuleIds.has(node.sourcePreset.ownerModuleId))
+  // The merged catalog rather than the raw preset pages: that is where a Module Page is given its
+  // reference, and where a Page the Site has taken over carries the scope it was stored under.
+  const options = collectLandingOffers(resolvePhiBuilderActivePageCatalog(
+    area,
+    snapshot.modulePresetPagesByArea,
+    snapshot.customPages,
+    snapshot.persistedPageCatalogByArea,
+  ))
+    .filter((node) => isActive(node.sourcePreset!.ownerModuleId))
     .map((node) => {
       const source = node.sourcePreset!;
       const owner = moduleTitles.get(source.ownerModuleId) ?? source.ownerModuleId;
-      const isAdopted = adopted.has(buildAdoptedPresetKey(source.ownerModuleId, source.presetKey));
       return {
         value: node.reference!,
         label: node.title,
-        description: isAdopted && adoptedLabel ? `${owner} -- ${adoptedLabel}` : owner,
+        description: node.pageScopeId != null && adoptedLabel ? `${owner} -- ${adoptedLabel}` : owner,
       };
     });
+  /*
+   * The empty string rather than nothing, when no applicant was chosen.
+   *
+   * A Select with no value of its own shows the first option it was given, which would put a landing
+   * in front of a Builder who never picked one. Saying "none" out loud is what makes the placeholder
+   * appear instead.
+   */
   const rootRoute = readPhiBuilderEffectiveAreaRootRoute(snapshot, area);
   return {
     options,
-    ...(rootRoute?.mode === "landing" && rootRoute.target ? { value: rootRoute.target } : {}),
+    value: rootRoute?.mode === "landing" && rootRoute.target ? rootRoute.target : ("" as PhiPageReference),
   };
 }
 
-/** A Module Page this Site took over, so the list can say where a landing's tree comes from. */
-function buildAdoptedPresetKey(ownerModuleId: string, presetKey: string) {
-  return `${ownerModuleId}::${presetKey}`;
+/** The Pages a Module offered as landings, wherever the catalog put them. */
+function collectLandingOffers(nodes: readonly PhiPresetPageNode[]): PhiPresetPageNode[] {
+  return nodes.flatMap((node) => [
+    ...(node.landingPage === true && node.reference && node.sourcePreset ? [node] : []),
+    ...collectLandingOffers(node.children ?? []),
+  ]);
 }
 
 function resolveAreaRootRouteOptions(
@@ -245,7 +263,9 @@ function resolveAreaRootRouteOptions(
     snapshot.customPages,
     snapshot.persistedPageCatalogByArea,
   );
-  const draft = snapshot.areaRootRouteDrafts?.[area];
+  // The effective answer, not only this session's: the Select has to open on what the Area actually
+  // says, and until somebody changes it that sentence came from the server.
+  const rootRoute = readPhiBuilderEffectiveAreaRootRoute(snapshot, area);
 
   return {
     options: [
@@ -261,11 +281,11 @@ function resolveAreaRootRouteOptions(
       },
       ...collectPageReferenceOptions(area, pageTree, pageTree),
     ],
-    value: !draft
+    value: !rootRoute
       ? PHI_BUILDER_AREA_ROOT_ROUTE_AUTOMATIC
-      : draft.mode === "landing"
+      : rootRoute.mode === "landing"
         ? PHI_BUILDER_AREA_ROOT_ROUTE_LANDING
-        : draft.target,
+        : rootRoute.target,
   };
 }
 

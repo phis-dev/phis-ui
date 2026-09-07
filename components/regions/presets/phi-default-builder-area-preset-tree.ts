@@ -2940,7 +2940,7 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                     {
                       routeKey: "builder-area-landing-page-enabled",
                       capabilityId: "enabled",
-                      scope: "area",
+                      scope: "page",
                       channel: "enabled",
                       action: "change",
                       valueType: "boolean",

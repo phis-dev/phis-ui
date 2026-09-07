@@ -591,15 +591,27 @@ function usePhiDeveloperBuilderWorkspaceController(
     () => createPhiSignalAddress("cms", PHI_BUILDER_SHELLS_WIDGET_IDS.widgetAreaLandingPage),
     [],
   );
+  const landingSelectBaseModuleId = resolvePhiRuntimeAreaDefinition(
+    resolvePhiBuilderAreaAsCmsArea(state.area),
+  )?.baseModuleId ?? null;
   const landingSelectEnabled =
     readPhiBuilderEffectiveAreaRootRoute(state, state.area)?.mode === "landing" &&
     (state.modulePresetPagesByArea?.[state.area] ?? []).some((node) =>
       node.landingPage === true &&
       node.sourcePreset &&
-      (state.runtimeModuleIdsByArea?.[state.area] ?? []).includes(node.sourcePreset.ownerModuleId));
+      (node.sourcePreset.ownerModuleId === landingSelectBaseModuleId ||
+        (state.runtimeModuleIdsByArea?.[state.area] ?? []).includes(node.sourcePreset.ownerModuleId)));
+  /*
+   * Said in the Select's own scope, and said once.
+   *
+   * The workspace header belongs to the Page, so the Select is registered as a Page-scoped receiver;
+   * an Area-scoped signal to it is not late, it is wrong, and the bus drops it rather than holding
+   * it. Held is what happens with the right scope: the controller mounts before the Control's chunk
+   * arrives, and the bus keeps the statement until somebody is there to hear it.
+   */
   useEffect(() => {
     dispatchSignal({
-      scope: "area",
+      scope: "page",
       channel: "enabled",
       action: "change",
       value: landingSelectEnabled,
