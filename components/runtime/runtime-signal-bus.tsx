@@ -178,7 +178,57 @@ function deliverPhiSignal(partition: PhiSignalRuntimePartition, signal: PhiSigna
    */
   if (deliverability === "pending" && signal.receiver != null && signal.receiver !== "broadcast") {
     holdPhiSignal(deliveryPartition, signal.receiver, signal);
+    return;
   }
+
+  warnAboutUndeliverablePhiSignal(deliveryPartition, signal);
+}
+
+/*
+ * Addresses already complained about, so a change signal on every keystroke says it once.
+ *
+ * Keyed by what makes the fault, not by the value that carried it: a wiring is static, so the set is
+ * bounded by the number of wrong routes on the page -- which is the number somebody is about to fix.
+ */
+const reportedUndeliverablePhiSignals = new Set<string>();
+
+/**
+ * What was thrown away, said out loud.
+ *
+ * `pending` is a receiver that has not mounted yet and is held; `undeliverable` is a fault -- an
+ * address nothing answers to, or one answering in a different scope -- and it is dropped. Silently,
+ * until now, which is how the same mistake cost an afternoon four times: a Select that would not
+ * disable, an Overlay that would not open, Undo and Redo that did nothing when pressed. Every one of
+ * them was one of these lines, and none of them was printed.
+ *
+ * It says it on a live page too. Nothing is drawn, so a visitor sees nothing; and a wiring that names
+ * an address nobody answers to is not a state a Site is meant to be in.
+ */
+function warnAboutUndeliverablePhiSignal(
+  deliveryPartition: PhiSignalRuntimePartition,
+  signal: PhiSignal,
+) {
+  if (signal.receiver == null) {
+    return;
+  }
+  const key = `${signal.receiver}|${signal.scope}|${signal.channel}|${signal.action}`;
+  if (reportedUndeliverablePhiSignals.has(key)) {
+    return;
+  }
+  reportedUndeliverablePhiSignals.add(key);
+  const registered = signal.receiver === "broadcast"
+    ? null
+    : deliveryPartition.instances.get(signal.receiver);
+  console.warn(
+    `[phi-signals] Dropped ${signal.channel}/${signal.action} to ${signal.receiver}: ` +
+    (signal.receiver === "broadcast"
+      ? `nothing may be broadcast in "${signal.scope}" scope.`
+      : registered
+        ? `sent in "${signal.scope}" scope, but the receiver is registered in "${registered.scope}". ` +
+          "A receiver hears only in the scope it registered under."
+        : `no receiver is registered at that address in "${signal.scope}" scope.`),
+    { sender: signal.sender ?? null },
+  );
 }
 
 export function subscribePhiSignals(
