@@ -7,8 +7,9 @@ import type { AliasToken } from "antd/es/theme/interface";
 import type { PhiColorPickerLabels } from "../../../../../components/widgets/label-types/color-picker";
 
 import { usePhiSignalDispatcher, usePhiSignalListener } from "../../../../../components/runtime/runtime-signal-bus";
+import { usePhiSignalIdentity } from "../../../../../components/runtime/runtime-signal-identity";
 import { usePhiApplicationFeedback } from "../../../../../components/runtime/use-phi-application-feedback";
-import { PHI_SIGNAL_VALUE_SCHEMAS } from "../../../../../types/signals";
+import { PHI_SIGNAL_VALUE_SCHEMAS, type PhiSignalAddress } from "../../../../../types/signals";
 import type { PhiBlockRuntime } from "../../../../../types/widget-runtime";
 import { createPhiThemeControllerAddress } from "../../../../../plugins/runtime-modules/theme/controller/address";
 import { PHI_THEME_SIGNAL_CHANNELS } from "../../../../../plugins/runtime-modules/theme/controller/signals";
@@ -757,15 +758,48 @@ function emitThemeState(
  * broadcast every other listener already understands -- the shape `stackMeta` uses between a Segmented
  * and its Stack, and the reason no request/response machinery is needed for it.
  */
-function emitThemeHydrateRequest(dispatchSignal: ReturnType<typeof usePhiSignalDispatcher>) {
+function emitThemeHydrateRequest(
+  dispatchSignal: ReturnType<typeof usePhiSignalDispatcher>,
+  sender: PhiSignalAddress,
+) {
   dispatchSignal({
     scope: "area",
     channel: PHI_THEME_SIGNAL_CHANNELS.command,
     action: "activate",
     value: "hydrate",
     valueType: "string",
-    sender: null,
+    sender,
     receiver: createPhiThemeControllerAddress(),
+    timestamp: Date.now(),
+  });
+}
+
+/**
+ * The reply, addressed to the one Widget that asked.
+ *
+ * Deliberately not `emitThemeState`. That one announces a change everybody is affected by, and says
+ * three things -- the theme, the draft status, the selected preset -- because all three moved. Nothing
+ * moved here: one Widget arrived late and needs catching up, so a broadcast would set the state of
+ * Widgets that already had it, under the correlation of a mount they had no part in.
+ */
+function emitThemeStateTo(
+  dispatchSignal: ReturnType<typeof usePhiSignalDispatcher>,
+  receiver: PhiSignalAddress,
+  theme: ThemePayload,
+  revisionId: number | null,
+  draftStatus: "draft" | "published",
+  correlationId: string,
+) {
+  dispatchSignal({
+    scope: "area",
+    channel: PHI_THEME_SIGNAL_CHANNELS.brandTheme,
+    action: "change",
+    value: { theme, revisionId, draftStatus, themeKey: DEFAULT_THEME_KEY },
+    valueType: "json",
+    valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.brandTheme,
+    sender: createPhiThemeControllerAddress(),
+    receiver,
+    correlationId,
     timestamp: Date.now(),
   });
 }
@@ -1165,12 +1199,16 @@ export function PhiBuilderBrandThemeControllerWidgetClient({
      * is a question about state and not a command that would compete with the save.
      */
     if (commandValue === "hydrate") {
+      const asker = signal.sender;
+      if (asker == null) {
+        return;
+      }
       const current = stateRef.current;
-      emitThemeState(
+      emitThemeStateTo(
         dispatchSignal,
+        asker,
         current.draft,
         current.revisionId,
-        resolvePhiThemeSelectionValue(siteKey, current.hasSiteThemeRevision),
         current.revisionId == null ? "published" : "draft",
         signal.correlationId,
       );
@@ -1329,9 +1367,17 @@ export function PhiBuilderBrandThemeControlsWidgetClient({
   const saving = false;
   const [activeColorSections, setActiveColorSections] = useState<string[]>([]);
 
+  /*
+   * The address the Controller answers a hydrate request at. A Widget the Builder mounted without one
+   * cannot be told anything, so it does not ask -- it keeps the theme the Site was rendered with.
+   */
+  const selfAddress = usePhiSignalIdentity().receiver ?? null;
+
   useEffect(() => {
-    emitThemeHydrateRequest(dispatchSignal);
-  }, [dispatchSignal]);
+    if (selfAddress) {
+      emitThemeHydrateRequest(dispatchSignal, selfAddress);
+    }
+  }, [dispatchSignal, selfAddress]);
 
   useEffect(() => {
     queueMicrotask(() => {
@@ -1355,7 +1401,8 @@ export function PhiBuilderBrandThemeControlsWidgetClient({
     if (
       signal.channel === PHI_THEME_SIGNAL_CHANNELS.brandTheme &&
       signal.action === "change" &&
-      signal.receiver === "broadcast" &&
+      /* A change everybody is told about, or the answer to this Widget's own hydrate request. */
+      (signal.receiver === "broadcast" || signal.receiver === selfAddress) &&
       signal.sender === createPhiThemeControllerAddress()
     ) {
       const value = signal.value && typeof signal.value === "object"
@@ -1599,9 +1646,14 @@ export function PhiBuilderBrandStyleControlsWidgetClient({
   const saving = false;
   const [activeStyleSections, setActiveStyleSections] = useState<string[]>([]);
 
+  /* As in the Color controls: no address, no reply to receive, so no question worth asking. */
+  const selfAddress = usePhiSignalIdentity().receiver ?? null;
+
   useEffect(() => {
-    emitThemeHydrateRequest(dispatchSignal);
-  }, [dispatchSignal]);
+    if (selfAddress) {
+      emitThemeHydrateRequest(dispatchSignal, selfAddress);
+    }
+  }, [dispatchSignal, selfAddress]);
 
   useEffect(() => {
     queueMicrotask(() => {
@@ -1625,7 +1677,8 @@ export function PhiBuilderBrandStyleControlsWidgetClient({
     if (
       signal.channel === PHI_THEME_SIGNAL_CHANNELS.brandTheme &&
       signal.action === "change" &&
-      signal.receiver === "broadcast" &&
+      /* A change everybody is told about, or the answer to this Widget's own hydrate request. */
+      (signal.receiver === "broadcast" || signal.receiver === selfAddress) &&
       signal.sender === createPhiThemeControllerAddress()
     ) {
       const value = signal.value && typeof signal.value === "object"
@@ -1896,6 +1949,19 @@ export function PhiBuilderBrandThemePreviewWidgetClient({
   );
   const [previewTheme, setPreviewTheme] = useState<ThemePayload>(fallbackTheme);
   const [hoveredStatusKey, setHoveredStatusKey] = useState<string | null>(null);
+  /*
+   * The preview shows the draft too, and mounting late knew as little about it as the controls did --
+   * it just never showed, because a broadcast happened to arrive before anyone looked. It asks now.
+   * Rendered on the Builder canvas it has no address, so it does not, and shows the saved theme.
+   */
+  const dispatchSignal = usePhiSignalDispatcher();
+  const selfAddress = usePhiSignalIdentity().receiver ?? null;
+
+  useEffect(() => {
+    if (selfAddress) {
+      emitThemeHydrateRequest(dispatchSignal, selfAddress);
+    }
+  }, [dispatchSignal, selfAddress]);
   const mode = usePhiBrandPreviewMode(resolveThemePayloadMode(fallbackTheme));
   const previewPreset = resolveThemePayloadPreset(previewTheme, themePresets);
   const previewPresetToken = resolveThemePresetTokenInput(previewTheme, previewPreset, mode);
@@ -1912,7 +1978,10 @@ export function PhiBuilderBrandThemePreviewWidgetClient({
   ];
 
   usePhiSignalListener((signal) => {
-    if (signal.action !== "change" || signal.receiver !== "broadcast") {
+    if (
+      signal.action !== "change" ||
+      (signal.receiver !== "broadcast" && signal.receiver !== selfAddress)
+    ) {
       return;
     }
     if (
