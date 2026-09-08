@@ -1,6 +1,9 @@
 import "server-only";
 
 import type { Metadata } from "next";
+
+import { readPhiAreaMeta } from "../helpers/cms-area-config";
+import { buildPhiAreaPageMetadata } from "../helpers/phi-metadata";
 import { headers } from "next/headers";
 
 import { PhiCmsErrorPage } from "../components/cms/phi-cms-error-page";
@@ -116,13 +119,13 @@ export function createPhiNextStaticAreaPage(root: string, cmsBridge: PhiCmsSiteB
       return {};
     }
 
-    const title = resolvedRequest.page.pageMeta?.title?.value?.trim();
-    const description = resolvedRequest.page.pageMeta?.description?.value?.trim();
-
-    return {
-      ...(title ? { title } : {}),
-      ...(description ? { description } : {}),
-    };
+    return buildPhiAreaPageMetadata({
+      area: resolvedRoute.area,
+      meta: readPhiAreaMeta(rootRequest.resolvedAreaPreset?.preset.config),
+      siteName: resolvedRequest.runtime.site.name,
+      pageTitle: resolvedRequest.page.pageMeta?.title?.value,
+      pageDescription: resolvedRequest.page.pageMeta?.description?.value,
+    });
   }
 
   async function PhiNextStaticAreaPage({ params }: PhiNextStaticAreaPageProps) {
@@ -334,13 +337,13 @@ export function createPhiNextDynamicRootPage(cmsBridge: PhiCmsSiteBridge) {
       return {};
     }
 
-    const title = resolvedRequest.page.pageMeta?.title?.value?.trim();
-    const description = resolvedRequest.page.pageMeta?.description?.value?.trim();
-
-    return {
-      ...(title ? { title } : {}),
-      ...(description ? { description } : {}),
-    };
+    return buildPhiAreaPageMetadata({
+      area: resolvedRoute.area,
+      meta: readPhiAreaMeta(rootRequest.resolvedAreaPreset?.preset.config),
+      siteName: resolvedRequest.runtime.site.name,
+      pageTitle: resolvedRequest.page.pageMeta?.title?.value,
+      pageDescription: resolvedRequest.page.pageMeta?.description?.value,
+    });
   }
 
   async function PhiNextDynamicRootPage({ params }: PhiNextDynamicRootPageProps) {

@@ -35,7 +35,7 @@ import type { PhiRenderableBlockEffects } from "../../../types/renderable-block"
 import type { PhiCmsInstanceId } from "../../../types/cms-instance-id";
 import type { PhiAnchorWidgetPlacement } from "../../../components/controls/phi-anchor-control-contract";
 import { phiBuilderHistory } from "./history";
-import type { PhiAreaRootRoute, PhiAreaSeo } from "../../../helpers/cms-area-config";
+import type { PhiAreaRootRoute, PhiAreaMeta } from "../../../helpers/cms-area-config";
 
 export function normalizePhiDeveloperBuilderArea(scopeKey: string): PhiDeveloperBuilderArea {
   return isPhiBuilderAreaKey(scopeKey) ? scopeKey : "public";
@@ -80,8 +80,8 @@ function createDefaultBuilderState(): PhiDeveloperBuilderState {
     pickerWidgetCategoryFilters: [],
     areaRootRouteDrafts: {},
     areaRootRoutes: {},
-    areaSeoDrafts: {},
-    areaSeo: {},
+    areaMetaDrafts: {},
+    areaMeta: {},
     deletedPageDrafts: {},
     draftAllocations: {},
     modulesDirtyAreas: [],
@@ -787,22 +787,22 @@ export function setPhiDeveloperBuilderAreaRootRoute(
 }
 
 /** What the Areas answered about being found, as the server sent it with the workspace. */
-export function setPhiDeveloperBuilderAreaSeoBaseline(
-  areaSeo: Record<string, PhiAreaSeo | null>,
+export function setPhiDeveloperBuilderAreaMetaBaseline(
+  areaMeta: Record<string, PhiAreaMeta | null>,
 ) {
   builderWorkspaceStore.patch("public", (current) =>
-    JSON.stringify(current.areaSeo) === JSON.stringify(areaSeo)
+    JSON.stringify(current.areaMeta) === JSON.stringify(areaMeta)
       ? current
-      : { ...current, areaSeo });
+      : { ...current, areaMeta });
 }
 
 /** What an Area says about being found right now: this session's answer, or the one it arrived with. */
-export function readPhiBuilderEffectiveAreaSeo(
-  state: Pick<PhiDeveloperBuilderWorkspaceState, "areaSeoDrafts" | "areaSeo">,
+export function readPhiBuilderEffectiveAreaMeta(
+  state: Pick<PhiDeveloperBuilderWorkspaceState, "areaMetaDrafts" | "areaMeta">,
   area: string,
-): PhiAreaSeo | null {
-  const draft = state.areaSeoDrafts?.[area];
-  return draft !== undefined ? draft : state.areaSeo?.[area] ?? null;
+): PhiAreaMeta | null {
+  const draft = state.areaMetaDrafts?.[area];
+  return draft !== undefined ? draft : state.areaMeta?.[area] ?? null;
 }
 
 /**
@@ -811,14 +811,14 @@ export function readPhiBuilderEffectiveAreaSeo(
  * Written key by key rather than whole, because the two switches are answered one at a time and the
  * one nobody touched must keep saying what it said.
  */
-export function setPhiDeveloperBuilderAreaSeo(
+export function setPhiDeveloperBuilderAreaMeta(
   area: PhiDeveloperBuilderArea,
-  patch: PhiAreaSeo,
+  patch: PhiAreaMeta,
 ) {
   builderWorkspaceStore.patch("public", (current) => {
-    const effective = readPhiBuilderEffectiveAreaSeo(current, area) ?? {};
+    const effective = readPhiBuilderEffectiveAreaMeta(current, area) ?? {};
     const next = { ...effective, ...patch };
-    return { ...current, areaSeoDrafts: { ...current.areaSeoDrafts, [area]: next } };
+    return { ...current, areaMetaDrafts: { ...current.areaMetaDrafts, [area]: next } };
   });
 }
 

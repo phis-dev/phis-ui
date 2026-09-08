@@ -13,7 +13,7 @@ import type { PhiBuilderRootNodeKind } from "./preview-transport";
 import type { PhiCmsInstanceId } from "../../../types/cms-instance-id";
 import type { PhiWorkspaceCatalogState } from "../../../components/workspace/catalog-state";
 import type { PhiCmsPresetSource } from "../../../types/cms-module-descriptors";
-import type { PhiAreaRootRoute, PhiAreaSeo } from "../../../helpers/cms-area-config";
+import type { PhiAreaRootRoute, PhiAreaMeta } from "../../../helpers/cms-area-config";
 
 export type PhiDeveloperBuilderArea = PhiBuilderAreaKey;
 export type PhiDeveloperBuilderMode = "editor" | "preview";
@@ -181,8 +181,8 @@ export type PhiDeveloperBuilderState = {
    * touched, a missing baseline is an Area that was never asked. Only Public is ever asked at all --
    * every other Area is authenticated -- so the other keys stay absent rather than answering "no".
    */
-  areaSeoDrafts: Record<string, PhiAreaSeo | null>;
-  areaSeo: Record<string, PhiAreaSeo | null>;
+  areaMetaDrafts: Record<string, PhiAreaMeta | null>;
+  areaMeta: Record<string, PhiAreaMeta | null>;
   /**
    * Areas whose Module selection has unsaved edits. The Modules workspace is site-wide, so its save
    * and publish commands walk this list instead of the header Area scope.

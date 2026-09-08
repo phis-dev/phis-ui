@@ -28,7 +28,13 @@ export const PHI_BUILDER_SHELLS_WIDGET_IDS = createPhiPresetCmsInstanceIdMap(
     ownerModuleId: PHI_BUILDER_RUNTIME_MODULE_ID,
     presetKey: "builder-area-preset",
   },
-  ["widgetAreaLandingPage", "widgetAreaSeoIndex", "widgetAreaSeoSitemap"],
+  [
+    "widgetAreaLandingPage",
+    "widgetAreaSeoIndex",
+    "widgetAreaSeoSitemap",
+    "widgetAreaTitleTemplate",
+    "widgetAreaDefaultTitle",
+  ],
 );
 
 /**
@@ -55,7 +61,7 @@ export const PHI_BUILDER_AREA_SETTINGS_LAYOUT_IDS = createPhiPresetCmsInstanceId
 );
 export const PHI_BUILDER_AREA_SETTINGS_WIDGET_IDS = createPhiPresetCmsInstanceIdMap(
   AREA_SETTINGS_ID_CONTEXT,
-  ["areaSettingsAction", "areaSettingsSeoTitle", "areaSettingsCommands"],
+  ["areaSettingsAction", "areaSettingsSeoTitle", "areaSettingsTitlesTitle", "areaSettingsCommands"],
 );
 
 const MODULES_DETAIL_ID_CONTEXT = {

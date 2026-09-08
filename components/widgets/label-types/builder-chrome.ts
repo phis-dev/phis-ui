@@ -75,6 +75,11 @@ export type PhiBuilderChromeWidgetLabels = {
     seoTitle: string;
     seoIndex: string;
     seoSitemap: string;
+    titlesTitle: string;
+    titleTemplate: string;
+    titleTemplatePlaceholder: string;
+    defaultTitle: string;
+    defaultTitlePlaceholder: string;
   };
   pageTitles: {
     dashboard: string;
@@ -148,6 +153,17 @@ export const PHI_BUILDER_CHROME_WIDGET_DEFAULT_LABELS: PhiBuilderChromeWidgetLab
     seoTitle: "Search engines",
     seoIndex: "Allow indexing",
     seoSitemap: "List pages in the sitemap",
+    titlesTitle: "Page titles",
+    /*
+     * The placeholders say what an empty field does rather than repeating the label.
+     *
+     * Both fields are answerable and both may be left alone, so the resting state has to be visible:
+     * an Operator who types nothing here still gets titles, and the field is where that is said.
+     */
+    titleTemplate: "Title template",
+    titleTemplatePlaceholder: "%s — site name",
+    defaultTitle: "Default title",
+    defaultTitlePlaceholder: "Site name",
   },
   pageTitles: {
     dashboard: "Dashboard",

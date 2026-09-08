@@ -91,6 +91,26 @@ existence guards, the signal partition, the Runtime Module providers, the data p
 Area Overlays. Keeping them above the split is what makes a navigation across it rebuild the Shell
 without rebuilding the Area.
 
+## What an Area puts in the document head
+
+Two levels answer, and they answer different questions. The Root Layout states the Site's own
+metadata once, including a title template of `%s | <site name>`. Each Area route then states its
+Page's head through `buildPhiAreaPageMetadata`, reading the Area's stored answers out of
+`config.shell.meta` -- a title template, a default title, and whether the Area may be indexed.
+
+The title an Area route returns is **absolute**. Next has no way to replace an inherited template,
+only to opt out of one, and an Area that stated its own template has to replace the Site's rather
+than be wrapped by it. That is why the fallback is restated rather than inherited: an Area that never
+opened the dialog still gets `%s | <site name>`, which is what the Root Layout always did.
+
+A Page that names no title of its own gets the Area's default title, ungrouped by the template --
+that is the whole reason a template and a default are two answers and not one.
+
+`robots` is decided in the same place, because the answer is a fact about the Area rather than about
+the Page: every Area but Public is authenticated and is `noindex` whatever is stored, and Public
+follows its stored switch. A Site that never opened the Area settings dialog still keeps its Admin
+out of the index.
+
 ## Required Skeleton entrypoint shape
 
 An Area's own layout is limited to static registration:

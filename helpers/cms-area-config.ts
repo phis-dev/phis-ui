@@ -139,38 +139,53 @@ export function readPhiAreaLandingPresetIdentity(
     : null;
 }
 
-export const PHI_AREA_SEO_KEY = "seo" as const;
+export const PHI_AREA_META_KEY = "meta" as const;
 
 /**
- * What an Area says about being found.
+ * What an Area says about itself in the head of every Page it draws.
  *
- * Two answers, and only Public is ever asked them: whether search engines may index the Area, and
- * whether its published Pages are listed in the sitemap. Every other Area is authenticated and is
- * never indexed whatever is stored, which is why the dialog only arms these controls for Public.
+ * Four answers under one key, because they are one subject -- what the Area puts in the document head
+ * -- even though they are asked in two groups and answerable by different Areas. `index` and `sitemap`
+ * are only ever asked of Public: every other Area is authenticated and is never indexed whatever is
+ * stored, which is why the dialog only arms those two there. `titleTemplate` and `defaultTitle` are
+ * asked everywhere, because a tab title is not a search result and the Admin wants its own.
  *
  * Absent is an Area that was never asked, and it stays absent rather than becoming a stored default:
  * the Shell states its config whole on every structure save, so writing a guess would turn the first
  * unrelated save of a Site into a decision nobody made.
  */
-export type PhiAreaSeo = {
+export type PhiAreaMeta = {
   index?: boolean;
   sitemap?: boolean;
+  titleTemplate?: string;
+  defaultTitle?: string;
 };
 
 /**
- * What an Area that was never asked means, in the one Area the question is ever asked in.
+ * What an Area that was never asked means, in the one Area the indexing question is ever asked in.
  *
  * A Public Area wants to be found: that is what makes it public. Stated once so the Builder's switches
  * and whatever reads them later say the same thing, rather than each inventing its own resting state.
  * Outside Public there is nothing to default -- those Areas are authenticated and are never indexed
  * whatever is stored.
+ *
+ * The two titles have no entry here on purpose. Their resting state is not a constant but the name of
+ * the Site, which this file cannot see, so the absent answer is resolved where the name is known.
  */
-export const PHI_AREA_SEO_PUBLIC_DEFAULTS = { index: true, sitemap: true } as const;
+export const PHI_AREA_META_PUBLIC_DEFAULTS = { index: true, sitemap: true } as const;
 
-export function readPhiAreaSeo(
+/**
+ * The placeholder a title template puts the Page's own title into.
+ *
+ * Next's spelling, restated here because both the Builder's field and the reader have to agree on it:
+ * a template without it would silently give every Page the same title.
+ */
+export const PHI_AREA_TITLE_TEMPLATE_PLACEHOLDER = "%s" as const;
+
+export function readPhiAreaMeta(
   config: Record<string, unknown> | null | undefined,
-): PhiAreaSeo | null {
-  const value = readPhiAreaConfigNamespace(config, PHI_AREA_CONFIG_SHELL_NAMESPACE)?.[PHI_AREA_SEO_KEY];
+): PhiAreaMeta | null {
+  const value = readPhiAreaConfigNamespace(config, PHI_AREA_CONFIG_SHELL_NAMESPACE)?.[PHI_AREA_META_KEY];
   if (!value || typeof value !== "object" || Array.isArray(value)) {
     return null;
   }
@@ -178,6 +193,8 @@ export function readPhiAreaSeo(
   return {
     ...(typeof record.index === "boolean" ? { index: record.index } : {}),
     ...(typeof record.sitemap === "boolean" ? { sitemap: record.sitemap } : {}),
+    ...(typeof record.titleTemplate === "string" ? { titleTemplate: record.titleTemplate } : {}),
+    ...(typeof record.defaultTitle === "string" ? { defaultTitle: record.defaultTitle } : {}),
   };
 }
 

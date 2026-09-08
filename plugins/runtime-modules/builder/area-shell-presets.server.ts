@@ -13,9 +13,9 @@ import {
   readPhiAreaPresetRuntimeModuleIds,
   readPhiAreaPublicRoutePaths,
   readPhiAreaRootRoute,
-  readPhiAreaSeo,
+  readPhiAreaMeta,
   type PhiAreaRootRoute,
-  type PhiAreaSeo,
+  type PhiAreaMeta,
   type PhiPublicRoutePathAssignment,
 } from "../../../helpers/cms-area-config";
 import type { PhiDeveloperBuilderArea, PhiDeveloperBuilderRegionDraft } from "./developer-workspace-types";
@@ -269,13 +269,13 @@ export async function buildPhiBuilderAreaRootRoute(
   );
 }
 
-/** What an Area says about being found. */
-export async function buildPhiBuilderAreaSeo(
+/** What an Area says about the head of its Pages. */
+export async function buildPhiBuilderAreaMeta(
   runtime: PhiBlockRuntime,
   area: PhiDeveloperBuilderArea,
   runtimeModuleCatalog: PhiRuntimeModuleCatalog,
-): Promise<PhiAreaSeo | null> {
-  return readPhiAreaSeo(
+): Promise<PhiAreaMeta | null> {
+  return readPhiAreaMeta(
     await buildPhiBuilderAreaPresetConfig(runtime, area, runtimeModuleCatalog),
   );
 }
@@ -506,15 +506,15 @@ export async function buildPhiBuilderAreaRootRoutesByArea(
 }
 
 /** What every Area states about being found, handed to the workspace beside the root routes. */
-export async function buildPhiBuilderAreaSeoByArea(
+export async function buildPhiBuilderAreaMetaByArea(
   runtime: PhiBlockRuntime,
   runtimeModuleCatalog: PhiRuntimeModuleCatalog,
-): Promise<Record<string, PhiAreaSeo | null>> {
+): Promise<Record<string, PhiAreaMeta | null>> {
   const areas: readonly PhiDeveloperBuilderArea[] = PHI_BUILDER_AREA_KEYS;
   const entries = await Promise.all(
     areas.map(async (area) => [
       area,
-      await buildPhiBuilderAreaSeo(runtime, area, runtimeModuleCatalog),
+      await buildPhiBuilderAreaMeta(runtime, area, runtimeModuleCatalog),
     ] as const),
   );
   return Object.fromEntries(entries);

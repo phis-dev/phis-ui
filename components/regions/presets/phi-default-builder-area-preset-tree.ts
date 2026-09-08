@@ -11,7 +11,7 @@ import { PhiCmsFlags, PhiCmsRegionType, PhiCmsStatus } from "../../../constants/
 import { PHI_CMS_AREA_KEYS } from "../../../constants/cms-areas";
 import { PhiMediaKind } from "../../../constants/media";
 import { buildPhiCmsLayoutNode, buildPhiCmsWidgetNode } from "../../../helpers/cms-node-factories";
-import { PHI_AREA_SEO_PUBLIC_DEFAULTS } from "../../../helpers/cms-area-config";
+import { PHI_AREA_META_PUBLIC_DEFAULTS } from "../../../helpers/cms-area-config";
 import { remapPhiSignalRoutesInConfig } from "../../../helpers/signal-route-lifecycle";
 import { resolvePhiBrandWordmarkText } from "../../../helpers/brand-wordmark";
 import { resolvePhiShellMetric } from "../../../helpers/shell-region-style";
@@ -1438,7 +1438,16 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
         config: {
           title: labels.areaSettings.title,
           width: { compact: "calc(100vw - 32px)", medium: 560, wide: 640 },
-          mountPolicy: "lazy-keep",
+          /*
+           * Mounted with the Page rather than on first open, because the controls inside show state
+           * rather than ask for it.
+           *
+           * The controller states the Area's four answers when the dialog opens, and a signal is
+           * delivered once: whichever mount is standing at that moment gets it, and any later one
+           * shows its resting value as though the Area had said so. Under Strict Mode every lazy
+           * mount is immediately a remount, which is exactly the case that loses it.
+           */
+          mountPolicy: "eager",
           closeMode: "immediate",
           signalRoutes: {
             listens: [
@@ -3073,6 +3082,100 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
               contentId: null,
             }),
             /*
+             * What the Area writes into the title of every Page it draws.
+             *
+             * Two fields under their own heading, above the search-engine switches and separate from
+             * them, because they are a different question answered by different Areas: the switches are
+             * about Public being found, these are about what stands in the browser tab, and the Admin
+             * wants its own answer to that. Both may be left alone -- an Area that says nothing here
+             * still gets titles -- which is why the placeholders state the resting value rather than
+             * repeating the label.
+             */
+            buildPhiCmsWidgetNode({
+              typeKey: "simple-text",
+              id: PHI_BUILDER_AREA_SETTINGS_WIDGET_IDS.areaSettingsTitlesTitle,
+              siteId: page.siteId,
+              parentLayoutNodeId: PHI_BUILDER_AREA_SETTINGS_LAYOUT_IDS.areaSettingsFields,
+              slotIndex: PHI_CMS_SEQUENTIAL_LAYOUT_SLOTS[2].slotIndex,
+              sortOrder: 2,
+              status: PhiCmsStatus.Published,
+              flags: 0,
+              visibilityMask: page.visibilityMask,
+              label: "Area settings titles title",
+              config: {
+                text: labels.areaSettings.titlesTitle,
+                strong: true,
+              },
+              contentId: null,
+            }),
+            ...([
+              [
+                PHI_BUILDER_SHELLS_WIDGET_IDS.widgetAreaTitleTemplate,
+                "areaTitleTemplate",
+                "titleTemplate",
+                labels.areaSettings.titleTemplate,
+                labels.areaSettings.titleTemplatePlaceholder,
+                3,
+              ],
+              [
+                PHI_BUILDER_SHELLS_WIDGET_IDS.widgetAreaDefaultTitle,
+                "areaDefaultTitle",
+                "defaultTitle",
+                labels.areaSettings.defaultTitle,
+                labels.areaSettings.defaultTitlePlaceholder,
+                4,
+              ],
+            ] as const).map(([id, key, channel, label, placeholder, sortOrder]) =>
+              buildPhiCmsWidgetNode({
+                typeKey: "input",
+                id,
+                siteId: page.siteId,
+                parentLayoutNodeId: PHI_BUILDER_AREA_SETTINGS_LAYOUT_IDS.areaSettingsFields,
+                slotIndex: PHI_CMS_SEQUENTIAL_LAYOUT_SLOTS[sortOrder].slotIndex,
+                sortOrder,
+                status: PhiCmsStatus.Published,
+                flags: 0,
+                visibilityMask: page.visibilityMask,
+                label: `Area settings ${key}`,
+                config: {
+                  key,
+                  label,
+                  placeholder,
+                  size: { width: "100%" },
+                  text: "",
+                  inputType: "text",
+                  allowClear: true,
+                  trimEmittedValue: true,
+                  /*
+                   * Long enough that a word is one edit rather than five, short enough that the answer
+                   * is in the draft before anyone reaches for Save. Without it every keystroke would be
+                   * its own entry in the undo stack.
+                   */
+                  debounceMs: 400,
+                  signalRoutes: {
+                    emits: [{
+                      routeKey: `builder-${channel}-change`,
+                      capabilityId: "change",
+                      scope: "area",
+                      channel,
+                      action: "change",
+                      valueType: "string",
+                      receiver: createPhiBuilderControllerAddress(),
+                    }],
+                    listens: [{
+                      routeKey: `builder-${channel}-value`,
+                      capabilityId: "change",
+                      scope: "page",
+                      channel: "titleValue",
+                      action: "change",
+                      valueType: "string",
+                      receiver: createPhiSignalAddress("cms", id),
+                    }],
+                  },
+                },
+                contentId: null,
+              })),
+            /*
              * What the Area says about being found, and who may say it.
              *
              * Two switches under a heading, because they are a different subject from the root route
@@ -3100,19 +3203,19 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
             ...([
               [
                 PHI_BUILDER_SHELLS_WIDGET_IDS.widgetAreaSeoIndex,
-                "areaSeoIndex",
+                "areaMetaIndex",
                 "seoIndex",
                 labels.areaSettings.seoIndex,
-                PHI_AREA_SEO_PUBLIC_DEFAULTS.index,
-                3,
+                PHI_AREA_META_PUBLIC_DEFAULTS.index,
+                6,
               ],
               [
                 PHI_BUILDER_SHELLS_WIDGET_IDS.widgetAreaSeoSitemap,
-                "areaSeoSitemap",
+                "areaMetaSitemap",
                 "seoSitemap",
                 labels.areaSettings.seoSitemap,
-                PHI_AREA_SEO_PUBLIC_DEFAULTS.sitemap,
-                4,
+                PHI_AREA_META_PUBLIC_DEFAULTS.sitemap,
+                7,
               ],
             ] as const).map(([id, key, channel, label, defaultChecked, sortOrder]) =>
               buildPhiCmsWidgetNode({

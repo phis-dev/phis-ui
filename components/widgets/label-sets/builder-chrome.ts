@@ -62,6 +62,13 @@ const PHI_BUILDER_CHROME_WIDGET_LABEL_SET = definePhiLabelSet({
     area_settings_seo_title: PHI_BUILDER_CHROME_WIDGET_DEFAULT_LABELS.areaSettings.seoTitle,
     area_settings_seo_index: PHI_BUILDER_CHROME_WIDGET_DEFAULT_LABELS.areaSettings.seoIndex,
     area_settings_seo_sitemap: PHI_BUILDER_CHROME_WIDGET_DEFAULT_LABELS.areaSettings.seoSitemap,
+    area_settings_titles_title: PHI_BUILDER_CHROME_WIDGET_DEFAULT_LABELS.areaSettings.titlesTitle,
+    area_settings_title_template: PHI_BUILDER_CHROME_WIDGET_DEFAULT_LABELS.areaSettings.titleTemplate,
+    area_settings_title_template_placeholder:
+      PHI_BUILDER_CHROME_WIDGET_DEFAULT_LABELS.areaSettings.titleTemplatePlaceholder,
+    area_settings_default_title: PHI_BUILDER_CHROME_WIDGET_DEFAULT_LABELS.areaSettings.defaultTitle,
+    area_settings_default_title_placeholder:
+      PHI_BUILDER_CHROME_WIDGET_DEFAULT_LABELS.areaSettings.defaultTitlePlaceholder,
     page_title_dashboard: PHI_BUILDER_CHROME_WIDGET_DEFAULT_LABELS.pageTitles.dashboard,
     page_title_modules: PHI_BUILDER_CHROME_WIDGET_DEFAULT_LABELS.pageTitles.modules,
     page_title_shells: PHI_BUILDER_CHROME_WIDGET_DEFAULT_LABELS.pageTitles.shells,
@@ -147,6 +154,11 @@ export async function getPhiBuilderChromeWidgetLabels(
       seoTitle: labels.area_settings_seo_title,
       seoIndex: labels.area_settings_seo_index,
       seoSitemap: labels.area_settings_seo_sitemap,
+      titlesTitle: labels.area_settings_titles_title,
+      titleTemplate: labels.area_settings_title_template,
+      titleTemplatePlaceholder: labels.area_settings_title_template_placeholder,
+      defaultTitle: labels.area_settings_default_title,
+      defaultTitlePlaceholder: labels.area_settings_default_title_placeholder,
     },
     pageTitles: {
       dashboard: labels.page_title_dashboard,
