@@ -289,6 +289,22 @@ export function usePhiAssetRuntimeController(mountScope: "site" | "area" | "page
         const assetId = (signal.value as { assetId?: unknown }).assetId;
         if (typeof assetId === "number" && Number.isInteger(assetId) && assetId > 0) {
           setInspectorRequest({ assetId, correlationId: signal.correlationId });
+          /*
+           * The Controller opens the inspector, as it opens the folder dialog beside it.
+           *
+           * The collection used to open it directly and tell the Controller separately, which is two
+           * sentences about one gesture -- and it hid the day the Controller stopped hearing anything:
+           * the drawer still opened, on an empty form, over a Save that did nothing. A selection is
+           * reported to the Controller, and what the Controller does about it is the Controller's.
+           */
+          sendPageSignal({
+            receiver: ASSET_INSPECTOR_OVERLAY_ADDRESS,
+            channel: "dialog",
+            action: "open",
+            value: null,
+            valueType: "none",
+            correlationId: signal.correlationId,
+          });
         }
         return;
       }
@@ -351,6 +367,7 @@ export function usePhiAssetRuntimeController(mountScope: "site" | "area" | "page
 
       if (signal.channel === PHI_ASSET_SIGNAL_CHANNELS.command && signal.action === "activate") {
         if (signal.value === "cancel") {
+          setInspectorRequest(null);
           sendPageSignal({ receiver: ASSET_METADATA_FORM_WIDGET_ADDRESS, channel: "reset", action: "activate", value: null, valueType: "none", correlationId: signal.correlationId });
           sendPageSignal({ receiver: ASSET_INSPECTOR_OVERLAY_ADDRESS, channel: "dialog", action: "close", value: null, valueType: "none", correlationId: signal.correlationId });
         } else if (signal.value === "save" && !inspectorSubmitting) {
@@ -367,6 +384,7 @@ export function usePhiAssetRuntimeController(mountScope: "site" | "area" | "page
 
       if (signal.channel === PHI_ASSET_SIGNAL_CHANNELS.submit && signal.action === "activate") {
         setInspectorSubmitting(false);
+        setInspectorRequest(null);
         sendPageSignal({ receiver: ASSET_INSPECTOR_OVERLAY_ADDRESS, channel: "dialog", action: "close", value: null, valueType: "none", correlationId: signal.correlationId });
         sendPageSignal({ receiver: ASSET_COLLECTION_WIDGET_ADDRESS, channel: "reload", action: "activate", value: null, valueType: "none", correlationId: signal.correlationId });
         return;

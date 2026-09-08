@@ -1575,13 +1575,12 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
         signalRoutes: {
           listens: [
             {
-              routeKey: "builder-media-selection-open-inspector",
+              routeKey: "builder-media-inspector-open",
               capabilityId: "open",
               scope: "page",
-              channel: "selection",
-              action: "change",
-              valueType: "json",
-              valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.mediaAssetSelection,
+              channel: "dialog",
+              action: "open",
+              valueType: "none",
               receiver: createPhiSignalAddress("cms", PHI_ASSET_INSPECTOR_OVERLAY_IDS.overlayMediaInspector),
             },
             {
@@ -2530,16 +2529,6 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                 },
                 signalRoutes: {
                   emits: [
-                    {
-                      routeKey: "builder-media-selection-open",
-                      capabilityId: "selection",
-                      scope: "page",
-                      channel: "selection",
-                      action: "change",
-                      valueType: "json",
-                      valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.mediaAssetSelection,
-                      receiver: createPhiSignalAddress("cms", PHI_ASSET_INSPECTOR_OVERLAY_IDS.overlayMediaInspector),
-                    },
                     {
                       routeKey: "builder-media-selection-controller",
                       capabilityId: "selection",
