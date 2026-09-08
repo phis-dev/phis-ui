@@ -19,7 +19,7 @@ export const PHI_LOCALIZATION_RUNTIME_MODULE_DEFINITION = {
   controller: buildPhiRuntimeModuleControllerDescriptor(PHI_LOCALIZATION_RUNTIME_CONTROLLER_DEFINITION),
   title: "Localization",
   description: "Locale and translation administration.",
-  category: "operations",
+  category: "foundation",
   iconFamily: "localization",
   controllerMountPolicy: "area",
   formProviders: { handlers: PHI_LOCALIZATION_FORM_HANDLER_PROVIDER_DESCRIPTORS },

@@ -16,7 +16,7 @@ export const PHI_THEME_RUNTIME_MODULE_DEFINITION = {
   controller: buildPhiRuntimeModuleControllerDescriptor(PHI_THEME_RUNTIME_CONTROLLER_DEFINITION),
   title: "Theme",
   description: "Theme, brand, palette, and typography editing orchestration.",
-  category: "workspace",
+  category: "foundation",
   iconFamily: "theme",
   controllerMountPolicy: "area",
   dataProviders: PHI_THEME_RUNTIME_DATA_PROVIDER_DESCRIPTORS,

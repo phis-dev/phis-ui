@@ -13,7 +13,7 @@ export const PHI_OBSERVABILITY_RUNTIME_MODULE_DEFINITION = {
   accessPolicy: PHI_VIEWER_ACCESS_DEVELOPER_TOOLS,
   title: "Observability",
   description: "Site-runtime log administration.",
-  category: "operations",
+  category: "foundation",
   iconFamily: "observability",
   dataProviders: PHI_OBSERVABILITY_RUNTIME_DATA_PROVIDER_DESCRIPTORS,
 } satisfies PhiRuntimeModuleDefinition;

@@ -58,8 +58,10 @@ const MODULE_USAGE_RESOURCE_KEY = "moduleUsage";
  * cell renders as nothing at all.
  *
  * Both table filters narrow which rows are listed and never what a cell means: `area` keeps the Modules
- * eligible for one Area, `showFoundation` admits the Modules that carry the Areas themselves -- those are
- * the site's own scaffolding rather than a choice, which is why it starts off.
+ * eligible for one Area, `showFoundation` admits the Modules the site is built out of -- the ones that
+ * carry the Areas themselves, and the ones every site keeps anyway because taking them away leaves it
+ * unable to be administered at all. Those are the site's own scaffolding rather than a choice, which is
+ * why the filter starts off.
  */
 function readAreaLabels(params: Record<string, unknown> | undefined) {
   const candidate = params?.areaLabels;
