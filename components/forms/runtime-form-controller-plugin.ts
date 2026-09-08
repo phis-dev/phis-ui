@@ -12,9 +12,11 @@ import { PhiRuntimeFormControllerMount } from "./runtime-form-controller-mount";
 
 export const PHI_RUNTIME_FORM_CONTROLLER_PLUGIN = {
   ...PHI_RUNTIME_FORM_CONTROLLER_DEFINITION,
-  renderController: ({ address }) =>
+  renderController: ({ address, instanceKey }) =>
     createElement(PhiRuntimeFormControllerMount, {
       address,
+      // Which Form this Controller answers for: the state it echoes is addressed at that Widget.
+      instanceKey,
       registerInstance: false,
     }),
 } satisfies PhiRuntimeControllerPlugin<PhiRuntimeFormControllerConfig>;

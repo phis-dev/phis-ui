@@ -2228,6 +2228,15 @@ function usePhiDeveloperBuilderWorkspaceController(
 
       return;
     },
+    undefined,
+    /*
+     * The address this listener answers for.
+     *
+     * It was answered anyway, but by accident: the Page controller beside it names the same address in
+     * its own filter, and that one count carried every signal the Builder sends here. Saying it where
+     * the listener is means the Builder does not go silent the day that other listener changes.
+     */
+    createPhiBuilderControllerAddress(),
   );
 
   useEffect(() => {

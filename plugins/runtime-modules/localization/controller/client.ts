@@ -254,7 +254,9 @@ function PhiLocalizationControllerMount({ address }: { address: PhiSignalAddress
   }, [address, closeEditor, dispatchSignal, formAddress, overlayAddress, send, sourceLocaleAddress, tableAddress]), {
     scopes: ["page", "area"],
     channels: ["locale", "context", "status", "query", "command", "localizationWorkspace", "action", "dialog", "submitting", "submit", "state"],
-  });
+  },
+  /* The address this listener answers for; without it the bus holds every signal sent here. */
+  address);
 
   useEffect(() => {
     if (!pendingEdit) return;

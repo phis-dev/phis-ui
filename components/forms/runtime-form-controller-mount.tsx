@@ -4,9 +4,11 @@ import { useEffect, useMemo } from "react";
 
 import {
   PHI_SIGNAL_VALUE_SCHEMAS,
+  createPhiSignalAddress,
   type PhiSignalAddress,
   type PhiSignalRuntimeContext,
 } from "../../types/signals";
+import type { PhiCmsInstanceId } from "../../types/cms-instance-id";
 import {
   usePhiSignalDispatcher,
   usePhiSignalListener,
@@ -18,6 +20,7 @@ import {
   PHI_FORM_SIGNAL_CHANNELS,
   createPhiRuntimeFormControllerAddress,
 } from "./runtime-form-controller-signals";
+import { readPhiRuntimeFormControllerWidgetId } from "./runtime-form-controller-requirement";
 import {
   readPhiRuntimeFormFieldSignalValue,
   readPhiRuntimeFormTouchedSignalValue,
@@ -47,6 +50,23 @@ export type PhiRuntimeFormControllerMountProps = {
   context?: PhiSignalRuntimeContext | null;
   registerInstance?: boolean;
 };
+
+/**
+ * Who the Controller's answer is for.
+ *
+ * The state a Form Controller accepts is echoed back so the Form can show it, and that echo used to
+ * be a broadcast -- which nobody holds. The values for a Media asset were sent while the drawer was
+ * still closed: the Controller's own signal waited for it to mount, as it should, and the echo it
+ * made on arrival went out one render before the Form's binding had subscribed, into an empty room.
+ * The Form opened blank, and its Save submitted nothing.
+ *
+ * Addressed to the Widget the Controller belongs to, the echo waits with everything else. A Form
+ * Controller mounted for something other than a Widget has nobody to name and keeps broadcasting.
+ */
+function resolveFormOwnerReceiver(instanceKey: string | number | null | undefined) {
+  const widgetId = readPhiRuntimeFormControllerWidgetId(instanceKey);
+  return widgetId ? createPhiSignalAddress("cms", widgetId as PhiCmsInstanceId) : "broadcast";
+}
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
@@ -89,6 +109,7 @@ export function PhiRuntimeFormControllerMount({
     () => address ?? (instanceKey == null ? null : createPhiRuntimeFormControllerAddress(instanceKey)),
     [address, instanceKey],
   );
+  const ownerReceiver = useMemo(() => resolveFormOwnerReceiver(instanceKey), [instanceKey]);
 
   usePhiSignalListener(
     (signal) => {
@@ -118,7 +139,7 @@ export function PhiRuntimeFormControllerMount({
           {
             scope: signal.scope,
             sender: controllerAddress,
-            receiver: "broadcast",
+            receiver: ownerReceiver,
             correlationId: signal.correlationId,
           },
           {

@@ -431,6 +431,15 @@ export function usePhiAssetRuntimeController(mountScope: "site" | "area" | "page
     {
       channels: Object.values(PHI_ASSET_SIGNAL_CHANNELS),
     },
+    /*
+     * The address this listener answers for.
+     *
+     * A receiver with an instance and no listener counted for it is not wrong, it is "not ready yet",
+     * so every signal addressed here was held rather than delivered -- and held silently, which is why
+     * the media inspector opened with an empty form and its Save did nothing at all. The instance the
+     * controller mount registers says the address exists; this says somebody is behind it.
+     */
+    createPhiAssetControllerAddress(),
   );
 
   useEffect(() => {

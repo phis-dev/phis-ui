@@ -246,7 +246,15 @@ function PhiRevisionsControllerMount({ address }: { address: PhiSignalAddress })
   }, [address, dispatchSignal, pathname, router, showMessage]), {
     scopes: ["area", "page"],
     channels: ["areaSelection", "bindingParams", "mutation"],
-  });
+  },
+  /*
+   * The address this listener answers for.
+   *
+   * An instance with no listener counted for it is "not ready yet" rather than wrong, so the bus holds
+   * every signal addressed here -- silently, and forever, when the count never arrives. A Controller is
+   * its own listener, and this is where it says so.
+   */
+  address);
   return null;
 }
 

@@ -128,6 +128,56 @@ function holdPhiSignal(
   const key = resolvePhiPendingSignalKey(signal);
   byRoute.set(key, { signal, queuedAt: byRoute.get(key)?.queuedAt ?? Date.now() });
   watchPhiSignalPartition(deliveryPartition);
+  reportPhiReceiverThatNobodyAnswers(deliveryPartition, receiver);
+}
+
+/*
+ * How long a hold may last before it is worth saying that nobody is behind the address.
+ *
+ * Long enough for a mount, a chunk and a re-render, short enough to be noticed while the click that
+ * caused it is still in mind. Nothing is retried when it elapses -- the flush already runs on every
+ * registration -- so the only cost of the wait being wrong is a line in the console.
+ */
+const PHI_SIGNAL_UNANSWERED_RECEIVER_DELAY_MS = 5_000;
+
+const reportedUnansweredPhiReceivers = new Set<PhiSignalAddress>();
+
+/**
+ * A receiver that exists and hears nothing, said out loud.
+ *
+ * Holding an addressed signal is right when the receiver has not mounted yet, and the flush delivers
+ * it the moment it does. But a receiver whose instance is registered while no listener answers for it
+ * is a different state entirely: it is finished mounting and it will never hear anything, and the
+ * signal waits for a flush that can only ever conclude the same thing again.
+ *
+ * That is a wiring fault -- a Controller subscribing without naming the address it answers for, which
+ * cost an afternoon on the media inspector -- and it looked exactly like nothing at all: no drop, no
+ * warning, an empty form and a Save that did nothing. Held is not delivered; where the wait cannot
+ * end, it says so.
+ */
+function reportPhiReceiverThatNobodyAnswers(
+  partition: PhiSignalRuntimePartition,
+  receiver: PhiSignalAddress,
+) {
+  if (process.env.NODE_ENV !== "development" || reportedUnansweredPhiReceivers.has(receiver)) {
+    return;
+  }
+  setTimeout(() => {
+    if (
+      reportedUnansweredPhiReceivers.has(receiver) ||
+      !partition.instances.has(receiver) ||
+      (partition.receiverListenerCounts.get(receiver) ?? 0) > 0 ||
+      !partition.pendingSignals.get(receiver)?.size
+    ) {
+      return;
+    }
+    reportedUnansweredPhiReceivers.add(receiver);
+    console.warn(
+      `[phi-signals] ${receiver} is registered but no listener answers for it, so ` +
+      `${partition.pendingSignals.get(receiver)?.size ?? 0} signal(s) are held and will not arrive. ` +
+      "A listener says which addresses it answers for when it subscribes.",
+    );
+  }, PHI_SIGNAL_UNANSWERED_RECEIVER_DELAY_MS);
 }
 
 function flushPendingPhiSignals(partition: PhiSignalRuntimePartition) {
@@ -179,7 +229,6 @@ function deliverPhiSignal(partition: PhiSignalRuntimePartition, input: PhiSignal
   const signal = withPhiSignalReceiverScope(partition, input);
   const deliveryPartition = resolvePhiSignalDeliveryPartition(partition, signal);
   const deliverability = resolvePhiSignalDeliverability(partition, signal);
-
   if (deliverability === "deliverable") {
     deliverPhiSignalNow(deliveryPartition, signal);
     return;
