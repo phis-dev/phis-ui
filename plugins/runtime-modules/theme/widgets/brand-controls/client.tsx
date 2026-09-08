@@ -891,7 +891,7 @@ function usePhiBrandThemeDraft(runtime: PhiBlockRuntime, themeKey: string) {
       : state.revisionId;
     draftRef.current = nextTheme;
     setState((current) => ({ ...current, draft: nextTheme, revisionId }));
-  });
+  }, undefined, selfAddress);
 
   return { state, draftRef, publishDraft };
 }
@@ -1157,6 +1157,14 @@ export function PhiBuilderBrandThemeControllerWidgetClient({
     showMessage({ level: "success", content: "Published theme." }, { correlationId: correlationId ?? null });
   }
 
+  /*
+   * The Controller names the address it is addressed at, or the bus has nobody to deliver to.
+   *
+   * A signal is held until a listener answers for its receiver, and a listener answers only for an
+   * address it names. Every draft a Widget sent -- and every hydrate request -- was held here and
+   * never arrived, silently: the Widget rendered its own copy, so the controls looked right while the
+   * Controller knew nothing and the preview was never told.
+   */
   usePhiSignalListener((signal) => {
     if (
       signal.channel === PHI_THEME_SIGNAL_CHANNELS.brandTheme &&
@@ -1333,7 +1341,7 @@ export function PhiBuilderBrandThemeControllerWidgetClient({
         publishDraft(next, { history: false, correlationId: signal.correlationId });
       });
     }
-  });
+  }, undefined, createPhiThemeControllerAddress());
 
   void state;
 
@@ -1948,7 +1956,7 @@ export function PhiBuilderBrandThemePreviewWidgetClient({
       ? signal.value as { theme?: unknown }
       : null;
     setPreviewTheme(normalizeTheme(value?.theme, fallbackTheme, themePresets));
-  });
+  }, undefined, selfAddress);
 
   /**
    * The preview has to resolve Control shape exactly as the live render does, or the Style tab's shape
