@@ -138,6 +138,7 @@ function PhiRevisionsControllerMount({ address }: { address: PhiSignalAddress })
         valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.tableBindingParams,
         sender: address,
         receiver: PHI_REVISIONS_TABLE_ADDRESS,
+        correlationId: signal.correlationId,
         timestamp: Date.now(),
       });
       return;

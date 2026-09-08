@@ -120,7 +120,15 @@ export function usePhiBuilderPageController({
     });
   }, [emitSignal, pageMetaSaveControlAddress]);
 
-  const dispatchPageMetaOverlay = useCallback((action: "activate" | "close") => {
+  /*
+   * `correlationId` is the exchange this opening or closing belongs to. Opening from a toolbar click
+   * begins one and passes none; closing after a submit continues the one the submit arrived on, across
+   * the await that saved the page.
+   */
+  const dispatchPageMetaOverlay = useCallback((
+    action: "activate" | "close",
+    correlationId?: string,
+  ) => {
     emitSignal({
       scope: "page",
       channel: "dialog",
@@ -129,6 +137,7 @@ export function usePhiBuilderPageController({
       valueType: "none",
       sender: createPhiBuilderControllerAddress(),
       receiver: pageMetaOverlayAddress,
+      correlationId,
       timestamp: Date.now(),
     });
   }, [emitSignal, pageMetaOverlayAddress]);
@@ -260,7 +269,7 @@ export function usePhiBuilderPageController({
     });
   }, [emitSignal, pageMetaFormControllerAddress, pendingPageMetaInitialValues]);
 
-  async function submitPageMetaDialog(values: Record<string, unknown>) {
+  async function submitPageMetaDialog(values: Record<string, unknown>, correlationId: string) {
     const title = typeof values.title === "string" ? values.title.trim() || "New Page" : "New Page";
     const description = typeof values.description === "string" ? values.description.trim() : "";
     const requestedPath = normalizePhiBuilderCmsCatalogPath(
@@ -344,7 +353,7 @@ export function usePhiBuilderPageController({
         const nextPageKey = resolvePhiBuilderPageKeyFromCatalogPath(effectiveArea, pathResult.path, refreshedPages);
         if (nextPageKey) navigateToBuilderPage(nextPageKey);
       }
-      dispatchPageMetaOverlay("close");
+      dispatchPageMetaOverlay("close", correlationId);
       showMessage({
         level: "success",
         content: pathResult
@@ -432,7 +441,7 @@ export function usePhiBuilderPageController({
       await reloadPersistedPageCatalog(effectiveArea);
       navigateToBuilderPage(requestedKey);
       emitPageTitleInputValue(requestedKey, title);
-      dispatchPageMetaOverlay("close");
+      dispatchPageMetaOverlay("close", correlationId);
       showMessage({ level: "success", content: "Page draft created." });
     } catch (error) {
       showMessage({ level: "error", content: error instanceof Error ? error.message : "Failed to create page." });
@@ -486,7 +495,7 @@ export function usePhiBuilderPageController({
         correlationId: signal.correlationId,
         timestamp: Date.now(),
       });
-      dispatchPageMetaOverlay("close");
+      dispatchPageMetaOverlay("close", signal.correlationId);
       return;
     }
 
@@ -518,7 +527,7 @@ export function usePhiBuilderPageController({
     ) {
       const submitted = readPhiRuntimeFormValuesSignalValue(signal.value);
       if (submitted && !pageMetaDialogSaving) {
-        void submitPageMetaDialog(submitted.values);
+        void submitPageMetaDialog(submitted.values, signal.correlationId);
       }
     }
   }, { channels: ["pageMeta", "pageMetaForm", "pageMetaVisibility"], receiver: createPhiBuilderControllerAddress() });

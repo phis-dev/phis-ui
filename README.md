@@ -929,6 +929,8 @@ Client-only cross-component coordination uses the consolidated `PhiSignal` contr
   unregister on unmount. This keeps shell-to-current-page routes possible without a second global current-page
   singleton or a parallel signal bus.
 - `correlationId` is required on delivered runtime signals. The signal bus/controller creates it centrally when no existing correlation is supplied. Feedback or state-change signals produced by handling a command must keep the initiating correlation id.
+- Because a missing correlation id is replaced by a fresh one rather than rejected, an answer that leaves the field out is indistinguishable from one that started a new exchange. Pass `signal.correlationId` explicitly when replying -- through any helper the listener calls, and across an `await` -- and write `createPhiSignalCorrelationId()` where a new exchange really begins. A correlation id is never a literal of one's own: every occurrence of such a string is the same id, so concurrent exchanges become indistinguishable. `pnpm runtime-modules:check` fails on both mistakes.
+- `condition/reload` is answered by `usePhiRuntimeConditionStateResponder`, which replies to the asker under the asked correlation id. It accepts a getter for state that is not held in React state.
 - Listen routes are read-only with respect to the signal graph: they may update local UI/control state, but must not implicitly emit another runtime signal. If relay/automation is needed later, it requires an explicitly approved contract extension.
 - Controllers must suppress no-op state changes instead of emitting redundant feedback.
 - Context matching is part of routing:

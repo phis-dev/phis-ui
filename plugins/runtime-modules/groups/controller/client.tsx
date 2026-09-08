@@ -8,6 +8,7 @@ import { readPhiTableSelectionSignalValue } from "../../../../types/table-widget
 import { createPhiRuntimeControllerClient } from "../../../../components/runtime/runtime-controller-client-factory";
 import { PHI_GROUPS_OPTIONS_REVISION } from "../services/options-revision";
 import { usePhiSignalDispatcher, usePhiSignalListener } from "../../../../components/runtime/runtime-signal-bus";
+import { usePhiRuntimeConditionStateResponder } from "../../../../components/runtime/runtime-condition-state-responder";
 import {
   PHI_GROUPS_RUNTIME_CONTROLLER_DEFINITION,
   type PhiGroupsControllerConfig,
@@ -37,6 +38,9 @@ const MEMBERSHIP_FORM_ADDRESSES = [
   createPhiSignalAddress("cms", PHI_APP_GROUPS_PAGE_WIDGET_IDS.widgetMembershipForm),
 ];
 
+/* This Controller gates nothing, so the answer never varies -- but a Widget still has to hear it. */
+const GROUPS_CONDITION_STATE = { ready: true } as const;
+
 function readSelectedGroupId(value: unknown) {
   const selection = readPhiTableSelectionSignalValue(value);
   const identity = selection?.selectedRowIdentities?.[0];
@@ -48,7 +52,7 @@ function readSelectedGroupId(value: unknown) {
 function PhiGroupsControllerView({ address }: Pick<ControllerRenderArgs, "address">) {
   const dispatchSignal = usePhiSignalDispatcher();
 
-  const sendGroupFilter = useCallback((groupId: number | null) => {
+  const sendGroupFilter = useCallback((groupId: number | null, correlationId: string) => {
     for (const receiver of MEMBERS_TABLE_ADDRESSES) {
       dispatchSignal({
         scope: "page",
@@ -61,30 +65,16 @@ function PhiGroupsControllerView({ address }: Pick<ControllerRenderArgs, "addres
         value: { groupId },
         valueType: "json",
         valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.tableFilters,
-        correlationId: `groups-filter-${groupId ?? "none"}`,
+        correlationId,
         timestamp: Date.now(),
       });
     }
   }, [address, dispatchSignal]);
 
+  // Nothing about this Controller gates a Widget; answering keeps the asking Widget from waiting.
+  usePhiRuntimeConditionStateResponder({ address, scope: "page", state: GROUPS_CONDITION_STATE });
+
   usePhiSignalListener((signal) => {
-    if (signal.channel === "condition") {
-      if (!signal.sender) return;
-      // Nothing about this Controller gates a Widget; answering keeps the asking Widget from waiting.
-      dispatchSignal({
-        scope: "page",
-        sender: address,
-        receiver: signal.sender,
-        channel: "condition",
-        action: "change",
-        value: { state: { ready: true } },
-        valueType: "json",
-        valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.runtimeConditionState,
-        correlationId: signal.correlationId ?? "groups-condition-state",
-        timestamp: Date.now(),
-      });
-      return;
-    }
     if (signal.channel === "command") {
       // The Forms are submitted from outside, so a toolbar asks and this carries it to the right one.
       const forms = signal.value === "save"
@@ -101,7 +91,7 @@ function PhiGroupsControllerView({ address }: Pick<ControllerRenderArgs, "addres
           action: "activate",
           value: null,
           valueType: "none",
-          correlationId: signal.correlationId ?? "groups-create-submit",
+          correlationId: signal.correlationId,
           timestamp: Date.now(),
         });
       }
@@ -124,13 +114,13 @@ function PhiGroupsControllerView({ address }: Pick<ControllerRenderArgs, "addres
           action: "activate",
           value: null,
           valueType: "none",
-          correlationId: signal.correlationId ?? "groups-written",
+          correlationId: signal.correlationId,
           timestamp: Date.now(),
         });
       }
       return;
     }
-    sendGroupFilter(readSelectedGroupId(signal.value));
+    sendGroupFilter(readSelectedGroupId(signal.value), signal.correlationId);
   }, {
     scopes: ["page"],
     channels: ["selection", "condition", "submit", "command"],

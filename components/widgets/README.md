@@ -300,7 +300,7 @@ domain content.
   - complex widget protocols may use `valueType: "json"`, but public CMS protocols must declare a stable `valueSchema`; the outer signal still uses a standard `action`, and domain-specific data belongs inside the JSON `value`
   - drag and drop uses the standard `drag` and `drop` channels with generic actions; concrete DnD metadata belongs in `value`
   - receivers match signals by `scope`, `channel`, `action`, and optional `receiver`, then read the canonical value from `value`
-  - delivered runtime signals always carry `correlationId`; feedback/state-change signals caused by a command keep the initiating correlation id
+  - delivered runtime signals always carry `correlationId`; feedback/state-change signals caused by a command keep the initiating correlation id, passed explicitly -- the bus mints a new one for anything that omits the field, so a forgotten reply looks correlated and is not
   - listen routes may update local state but must not implicitly emit another runtime signal; no-op state changes must not emit feedback
   - `renderPreview()` and `renderEditor()` must suppress live signal emission unless the widget explicitly owns editor-only scaffold commands
 - Renderable-block controls are inherited by every CMS Widget, Layout, and Region through the shared runtime controller.

@@ -122,7 +122,12 @@ export function usePhiSlotSequence({
     [slotKeys, slotLabels, slots],
   );
 
-  const publishSlotMeta = useCallback(() => {
+  /*
+   * `correlationId` is the id of the request being answered, and absent when the sequence publishes
+   * because its own state changed. Both are correct: an answer belongs to the exchange that asked for
+   * it, an unprompted announcement begins one.
+   */
+  const publishSlotMeta = useCallback((correlationId?: string) => {
     if (!signalAddress) {
       return;
     }
@@ -139,6 +144,7 @@ export function usePhiSlotSequence({
       valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.stackMeta,
       sender: signalAddress,
       receiver: "broadcast",
+      correlationId,
     });
   }, [currentIndex, dispatchSignal, signalAddress, signalScope, slotMeta, slots.length]);
 
@@ -169,7 +175,7 @@ export function usePhiSlotSequence({
       }
 
       if (signal.channel === PHI_STACK_META_SIGNAL_CHANNEL && signal.action === "activate") {
-        publishSlotMeta();
+        publishSlotMeta(signal.correlationId);
       }
     },
     useMemo(

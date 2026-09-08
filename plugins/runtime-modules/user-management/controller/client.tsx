@@ -9,6 +9,7 @@ import { PHI_SIGNAL_VALUE_SCHEMAS, createPhiSignalAddress, createPhiSignalSubcon
 import { readPhiTableActionSignalValue } from "../../../../types/table-widget";
 import { readPhiOverlayCloseRequest } from "../../../../types/cms-overlay";
 import { createPhiRuntimeControllerClient } from "../../../../components/runtime/runtime-controller-client-factory";
+import { usePhiRuntimeConditionStateResponder } from "../../../../components/runtime/runtime-condition-state-responder";
 import { usePhiSignalDispatcher, usePhiSignalListener } from "../../../../components/runtime/runtime-signal-bus";
 import { usePhiTableProvider } from "../../../../components/widgets/client/shared/phi-table-provider";
 import {
@@ -63,11 +64,17 @@ function PhiUserManagementControllerView({
   const [workflowState, setWorkflowState] = useState<UserManagementWorkflowState | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const deliveredWorkflowRef = useRef<string | null>(null);
+  /*
+   * `correlationId` is the exchange the open workflow belongs to, and what a late read is measured
+   * against. Comparing the row identity instead let a reply from a first open reach a second open of
+   * the same row, because the identity is equal in both and says nothing about which one asked.
+   */
   const workflowRef = useRef<{
     workflow: UserManagementWorkflow;
     action: ReturnType<typeof readPhiTableActionSignalValue>;
     selectedSelf: boolean;
-  }>({ workflow: null, action: null, selectedSelf: true });
+    correlationId: string | null;
+  }>({ workflow: null, action: null, selectedSelf: true, correlationId: null });
 
   const send = useCallback((input: {
     receiver: PhiSignalAddress;
@@ -171,7 +178,7 @@ function PhiUserManagementControllerView({
         params: {},
         signal: new AbortController().signal,
       });
-      if (workflowRef.current.action?.rowIdentity !== rowIdentity) return;
+      if (workflowRef.current.correlationId !== correlationId) return;
       workflowRef.current.selectedSelf = record.self === true;
       sendConditionState(
         cmsAddress(PHI_USER_MANAGEMENT_PAGE_WIDGET_IDS.widgetEditForm),
@@ -182,32 +189,29 @@ function PhiUserManagementControllerView({
     }
   }, [provider, sendConditionState]);
 
+  usePhiRuntimeConditionStateResponder({ address, scope: "page", state: conditionState });
+
   usePhiSignalListener(useCallback((signal) => {
     if (signal.receiver !== address) return;
-
-    if (signal.channel === "condition" && signal.action === "reload" && signal.sender) {
-      sendConditionState(signal.sender, signal.correlationId);
-      return;
-    }
 
     if (signal.channel === "action" && signal.action === "activate") {
       const action = readPhiTableActionSignalValue(signal.value);
       if (!action) return;
       if (action.actionKey === "create" && !readOnly) {
         setSubmitting(false);
-        workflowRef.current = { workflow: "create", action, selectedSelf: false };
+        workflowRef.current = { workflow: "create", action, selectedSelf: false, correlationId: signal.correlationId };
         deliveredWorkflowRef.current = null;
         setWorkflowState({ workflow: "create", action, correlationId: signal.correlationId });
         openOverlay("create", signal.correlationId);
       } else if (action.actionKey === "edit" && action.rowIdentity != null && !readOnly) {
         setSubmitting(false);
-        workflowRef.current = { workflow: "edit", action, selectedSelf: true };
+        workflowRef.current = { workflow: "edit", action, selectedSelf: true, correlationId: signal.correlationId };
         deliveredWorkflowRef.current = null;
         setWorkflowState({ workflow: "edit", action, correlationId: signal.correlationId });
         openOverlay("edit", signal.correlationId);
         void loadSelectionState(action.rowIdentity, signal.correlationId);
       } else if (action.actionKey === "history" && action.rowIdentity != null) {
-        workflowRef.current = { workflow: "history", action, selectedSelf: false };
+        workflowRef.current = { workflow: "history", action, selectedSelf: false, correlationId: signal.correlationId };
         deliveredWorkflowRef.current = null;
         setWorkflowState({ workflow: "history", action, correlationId: signal.correlationId });
         openOverlay("history", signal.correlationId);
@@ -218,7 +222,7 @@ function PhiUserManagementControllerView({
     if (signal.channel === "state" && signal.action === "change" && typeof signal.value === "boolean") {
       if (signal.value === false) {
         setSubmitting(false);
-        workflowRef.current = { workflow: null, action: null, selectedSelf: true };
+        workflowRef.current = { workflow: null, action: null, selectedSelf: true, correlationId: null };
         deliveredWorkflowRef.current = null;
         setWorkflowState(null);
       }
@@ -317,7 +321,7 @@ function PhiUserManagementControllerView({
         correlationId: signal.correlationId,
       });
     }
-  }, [address, closeOverlay, commandWorkflowFromSender, conditionState, formAddressForWorkflow, loadSelectionState, openOverlay, overlayWorkflowFromSender, readOnly, send, sendConditionState, submitting]), {
+  }, [address, closeOverlay, commandWorkflowFromSender, conditionState, formAddressForWorkflow, loadSelectionState, openOverlay, overlayWorkflowFromSender, readOnly, send, submitting]), {
     scopes: ["page"],
     receiver: address,
   });

@@ -686,7 +686,7 @@ function usePhiDeveloperBuilderWorkspaceController(
     () => createPhiSignalAddress("cms", PHI_BUILDER_AREA_SETTINGS_OVERLAY_IDS.overlayAreaSettings),
     [],
   );
-  const dispatchAreaSettingsDialog = (open: boolean) => {
+  const dispatchAreaSettingsDialog = (open: boolean, correlationId: string) => {
     dispatchSignal({
       scope: "page",
       channel: "areaSettingsDialog",
@@ -695,6 +695,7 @@ function usePhiDeveloperBuilderWorkspaceController(
       valueType: "none",
       sender: createPhiBuilderControllerAddress(),
       receiver: areaSettingsOverlayAddress,
+      correlationId,
       timestamp: Date.now(),
     });
   };
@@ -1281,6 +1282,7 @@ function usePhiDeveloperBuilderWorkspaceController(
             valueType: "none",
             sender: createPhiBuilderControllerAddress(),
             receiver: createPhiSignalAddress("cms", PHI_BUILDER_MODULES_TABLE_WIDGET_ID),
+            correlationId: signal.correlationId,
             timestamp: Date.now(),
           });
         }
@@ -1335,6 +1337,7 @@ function usePhiDeveloperBuilderWorkspaceController(
           valueType: "none",
           sender: createPhiBuilderControllerAddress(),
           receiver: createPhiSignalAddress("cms", PHI_BUILDER_MODULES_TABLE_WIDGET_ID),
+          correlationId: signal.correlationId,
           timestamp: Date.now(),
         });
         return;
@@ -1677,6 +1680,7 @@ function usePhiDeveloperBuilderWorkspaceController(
 	              valueType: "string",
 	              sender: createPhiBuilderControllerAddress(),
 	              receiver: "broadcast",
+	              correlationId: signal.correlationId,
 	              timestamp: Date.now(),
 	            });
             showMessage(
@@ -1774,7 +1778,7 @@ function usePhiDeveloperBuilderWorkspaceController(
         signal.valueType === "string" &&
         signal.receiver === createPhiBuilderControllerAddress()
       ) {
-        dispatchAreaSettingsDialog(signal.value === "open");
+        dispatchAreaSettingsDialog(signal.value === "open", signal.correlationId);
         return;
       }
 
