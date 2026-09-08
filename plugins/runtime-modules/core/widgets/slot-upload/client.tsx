@@ -102,7 +102,14 @@ export function PhiSlotUploadWidgetClient({ config }: PhiSlotUploadWidgetClientP
     const params = readPhiTableBindingParamsSignalValue(signal.value)?.params;
     const next = params?.[ownerParam];
     setOwnerId(next == null ? null : String(next));
-  }, [listenRoutes, ownerParam, signalIdentity.receiver]));
+  }, [listenRoutes, ownerParam, signalIdentity.receiver]),
+  undefined,
+  /*
+   * The address this Widget answers for. Read without being named, a signal sent to it is held by the
+   * bus until somebody answers -- which nobody did, so a binding parameter aimed at this upload slot
+   * waited forever while a broadcast of the same value went through.
+   */
+  signalIdentity.receiver ?? undefined);
 
   // What the slot takes. Asked once per table, because it is the manifest's answer and does not vary
   // with the row.
