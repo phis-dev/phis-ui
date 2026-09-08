@@ -110,8 +110,6 @@ type BrandThemeState = {
   hasSiteThemeRevision: boolean;
 };
 
-let sharedBrandThemeState: BrandThemeState | null = null;
-
 const DEFAULT_THEME_KEY = "default";
 const BRAND_THEME_COLOR_COLLAPSE_STORAGE_KEY = "phi.builder.brand.theme.colorCollapse.activeKeys";
 const BRAND_THEME_STYLE_COLLAPSE_STORAGE_KEY = "phi.builder.brand.theme.styleCollapse.activeKeys";
@@ -556,10 +554,6 @@ function omitThemeToken(theme: ThemePayload, tokenKey: string): ThemePayload {
   };
 }
 
-function writeSharedBrandThemeState(state: BrandThemeState) {
-  sharedBrandThemeState = state;
-}
-
 function buildThemeReviewRoutePath(area: PhiCmsAreaKey) {
   return area === "public" ? "/public" : `/${area}`;
 }
@@ -663,8 +657,16 @@ function mergeThemeRootBackground(
   };
 }
 
+/**
+ * What a Widget knows before the Controller has told it anything: the theme the Site was rendered with.
+ *
+ * It used to consult a module variable the Widgets kept between them, because a Widget mounting late
+ * had no other way to learn about an unsaved draft. That variable answered for the browser tab, while
+ * the draft belongs to the Area the Controller is mounted in -- so it was right by coincidence and
+ * silently wrong wherever the two differed. A Widget asks now, and this is only the starting point.
+ */
 function createInitialBrandThemeState(themeKey: string, fallbackTheme: ThemePayload): BrandThemeState {
-  return sharedBrandThemeState?.key === themeKey ? sharedBrandThemeState : {
+  return {
     key: themeKey,
     published: fallbackTheme,
     draft: fallbackTheme,
@@ -738,6 +740,32 @@ function emitThemeState(
     sender,
     receiver,
     correlationId,
+    timestamp: Date.now(),
+  });
+}
+
+/**
+ * "Publish what you are holding" -- the question a Widget asks the Controller when it mounts.
+ *
+ * A Widget renders the draft but does not own it; the Controller does. Mounting late (a Stack slot
+ * that was not open, a return to the Page) it knows only the theme the Site was rendered with, and an
+ * unsaved draft would be invisible to it until something else happened to change. Nothing told it, so
+ * every Widget used to leave its state in a module variable for the next one to find, which answered
+ * for the Page and not for the Area the Controller lives in.
+ *
+ * The Controller answers by announcing its state the way it always does, so the reply is the same
+ * broadcast every other listener already understands -- the shape `stackMeta` uses between a Segmented
+ * and its Stack, and the reason no request/response machinery is needed for it.
+ */
+function emitThemeHydrateRequest(dispatchSignal: ReturnType<typeof usePhiSignalDispatcher>) {
+  dispatchSignal({
+    scope: "area",
+    channel: PHI_THEME_SIGNAL_CHANNELS.command,
+    action: "activate",
+    value: "hydrate",
+    valueType: "string",
+    sender: null,
+    receiver: createPhiThemeControllerAddress(),
     timestamp: Date.now(),
   });
 }
@@ -848,7 +876,6 @@ export function PhiBuilderBrandThemeControllerWidgetClient({
     if (options?.updateSiteSnapshot !== false) {
       siteThemeRef.current = nextTheme;
     }
-    writeSharedBrandThemeState(nextState);
     setState(nextState);
     emitThemeState(
       dispatchSignal,
@@ -928,7 +955,6 @@ export function PhiBuilderBrandThemeControllerWidgetClient({
         };
         stateRef.current = nextState;
         siteThemeRef.current = draft;
-        writeSharedBrandThemeState(nextState);
         setState(nextState);
         phiThemeHistory.clear(historyScope);
         emitThemeState(
@@ -983,7 +1009,6 @@ export function PhiBuilderBrandThemeControllerWidgetClient({
       };
       stateRef.current = nextState;
       siteThemeRef.current = savedTheme;
-      writeSharedBrandThemeState(nextState);
       setState(nextState);
       emitThemeState(
         dispatchSignal,
@@ -1036,7 +1061,6 @@ export function PhiBuilderBrandThemeControllerWidgetClient({
     };
     stateRef.current = nextState;
     siteThemeRef.current = published;
-    writeSharedBrandThemeState(nextState);
     setState(nextState);
     emitThemeState(
       dispatchSignal,
@@ -1134,11 +1158,28 @@ export function PhiBuilderBrandThemeControllerWidgetClient({
       return;
     }
 
-    if (saving) {
+    const commandValue = signal.value;
+
+    /*
+     * Answered before the saving guard: a Widget that mounts mid-save is asking what is there, which
+     * is a question about state and not a command that would compete with the save.
+     */
+    if (commandValue === "hydrate") {
+      const current = stateRef.current;
+      emitThemeState(
+        dispatchSignal,
+        current.draft,
+        current.revisionId,
+        resolvePhiThemeSelectionValue(siteKey, current.hasSiteThemeRevision),
+        current.revisionId == null ? "published" : "draft",
+        signal.correlationId,
+      );
       return;
     }
 
-    const commandValue = signal.value;
+    if (saving) {
+      return;
+    }
 
     if (commandValue === "save") {
       void saveTheme(undefined, { correlationId: signal.correlationId }).catch((error) => {
@@ -1289,6 +1330,10 @@ export function PhiBuilderBrandThemeControlsWidgetClient({
   const [activeColorSections, setActiveColorSections] = useState<string[]>([]);
 
   useEffect(() => {
+    emitThemeHydrateRequest(dispatchSignal);
+  }, [dispatchSignal]);
+
+  useEffect(() => {
     queueMicrotask(() => {
       setActiveColorSections(readStoredActiveColorSections());
     });
@@ -1301,7 +1346,6 @@ export function PhiBuilderBrandThemeControlsWidgetClient({
         ...current,
         draft: nextTheme,
       };
-      writeSharedBrandThemeState(nextState);
       return nextState;
     });
     emitThemeDraftRequest(dispatchSignal, nextTheme, state.revisionId);
@@ -1326,7 +1370,6 @@ export function PhiBuilderBrandThemeControlsWidgetClient({
           draft: nextTheme,
           revisionId,
         };
-        writeSharedBrandThemeState(nextState);
         return nextState;
       });
       return;
@@ -1557,6 +1600,10 @@ export function PhiBuilderBrandStyleControlsWidgetClient({
   const [activeStyleSections, setActiveStyleSections] = useState<string[]>([]);
 
   useEffect(() => {
+    emitThemeHydrateRequest(dispatchSignal);
+  }, [dispatchSignal]);
+
+  useEffect(() => {
     queueMicrotask(() => {
       setActiveStyleSections(readStoredActiveStyleSections());
     });
@@ -1569,7 +1616,6 @@ export function PhiBuilderBrandStyleControlsWidgetClient({
         ...current,
         draft: nextTheme,
       };
-      writeSharedBrandThemeState(nextState);
       return nextState;
     });
     emitThemeDraftRequest(dispatchSignal, nextTheme, state.revisionId);
@@ -1594,7 +1640,6 @@ export function PhiBuilderBrandStyleControlsWidgetClient({
           draft: nextTheme,
           revisionId,
         };
-        writeSharedBrandThemeState(nextState);
         return nextState;
       });
       return;
