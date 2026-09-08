@@ -62,6 +62,22 @@ export type PhiBuilderChromeWidgetLabels = {
     landingPageEmpty: string;
     landingPageAdopted: string;
   };
+  /**
+   * The dialog the Shells workspace keeps its statements about the Area in.
+   *
+   * The root route moved in here from the header, and the two SEO answers joined it, because they are
+   * the same kind of sentence: about the Area being edited rather than about anything on the canvas.
+   * `seoHint` says why the switches are unanswerable outside Public, which a disabled control cannot.
+   */
+  areaSettings: {
+    action: string;
+    title: string;
+    close: string;
+    seoTitle: string;
+    seoIndex: string;
+    seoSitemap: string;
+    seoHint: string;
+  };
   pageTitles: {
     dashboard: string;
     modules: string;
@@ -126,6 +142,15 @@ export const PHI_BUILDER_CHROME_WIDGET_DEFAULT_LABELS: PhiBuilderChromeWidgetLab
     landingPage: "Landing",
     landingPageEmpty: "No Module offers one",
     landingPageAdopted: "edited here",
+  },
+  areaSettings: {
+    action: "Area settings",
+    title: "Area settings",
+    close: "Done",
+    seoTitle: "Search engines",
+    seoIndex: "Allow indexing",
+    seoSitemap: "List pages in the sitemap",
+    seoHint: "Only the Public area is ever indexed. Every other area is signed in.",
   },
   pageTitles: {
     dashboard: "Dashboard",

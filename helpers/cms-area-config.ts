@@ -139,6 +139,48 @@ export function readPhiAreaLandingPresetIdentity(
     : null;
 }
 
+export const PHI_AREA_SEO_KEY = "seo" as const;
+
+/**
+ * What an Area says about being found.
+ *
+ * Two answers, and only Public is ever asked them: whether search engines may index the Area, and
+ * whether its published Pages are listed in the sitemap. Every other Area is authenticated and is
+ * never indexed whatever is stored, which is why the dialog only arms these controls for Public.
+ *
+ * Absent is an Area that was never asked, and it stays absent rather than becoming a stored default:
+ * the Shell states its config whole on every structure save, so writing a guess would turn the first
+ * unrelated save of a Site into a decision nobody made.
+ */
+export type PhiAreaSeo = {
+  index?: boolean;
+  sitemap?: boolean;
+};
+
+/**
+ * What an Area that was never asked means, in the one Area the question is ever asked in.
+ *
+ * A Public Area wants to be found: that is what makes it public. Stated once so the Builder's switches
+ * and whatever reads them later say the same thing, rather than each inventing its own resting state.
+ * Outside Public there is nothing to default -- those Areas are authenticated and are never indexed
+ * whatever is stored.
+ */
+export const PHI_AREA_SEO_PUBLIC_DEFAULTS = { index: true, sitemap: true } as const;
+
+export function readPhiAreaSeo(
+  config: Record<string, unknown> | null | undefined,
+): PhiAreaSeo | null {
+  const value = readPhiAreaConfigNamespace(config, PHI_AREA_CONFIG_SHELL_NAMESPACE)?.[PHI_AREA_SEO_KEY];
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return null;
+  }
+  const record = value as Record<string, unknown>;
+  return {
+    ...(typeof record.index === "boolean" ? { index: record.index } : {}),
+    ...(typeof record.sitemap === "boolean" ? { sitemap: record.sitemap } : {}),
+  };
+}
+
 export const PHI_AREA_PUBLIC_ROUTE_PATHS_KEY = "publicRoutePaths" as const;
 
 /**

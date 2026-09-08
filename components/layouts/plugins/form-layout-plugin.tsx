@@ -35,6 +35,7 @@ export const PHI_FORM_LAYOUT_PLUGIN: PhiCmsLayoutPlugin<PhiCmsFormLayoutConfig> 
       background={config.background}
       border={config.border}
       borderRadius={config.borderRadius}
+      labelWidth={config.labelWidth}
     />
   )),
 };

@@ -35,7 +35,7 @@ import type { PhiRenderableBlockEffects } from "../../../types/renderable-block"
 import type { PhiCmsInstanceId } from "../../../types/cms-instance-id";
 import type { PhiAnchorWidgetPlacement } from "../../../components/controls/phi-anchor-control-contract";
 import { phiBuilderHistory } from "./history";
-import type { PhiAreaRootRoute } from "../../../helpers/cms-area-config";
+import type { PhiAreaRootRoute, PhiAreaSeo } from "../../../helpers/cms-area-config";
 
 export function normalizePhiDeveloperBuilderArea(scopeKey: string): PhiDeveloperBuilderArea {
   return isPhiBuilderAreaKey(scopeKey) ? scopeKey : "public";
@@ -80,6 +80,8 @@ function createDefaultBuilderState(): PhiDeveloperBuilderState {
     pickerWidgetCategoryFilters: [],
     areaRootRouteDrafts: {},
     areaRootRoutes: {},
+    areaSeoDrafts: {},
+    areaSeo: {},
     deletedPageDrafts: {},
     draftAllocations: {},
     modulesDirtyAreas: [],
@@ -781,6 +783,42 @@ export function setPhiDeveloperBuilderAreaRootRoute(
       next[area] = rootRoute;
     }
     return { ...current, areaRootRouteDrafts: next };
+  });
+}
+
+/** What the Areas answered about being found, as the server sent it with the workspace. */
+export function setPhiDeveloperBuilderAreaSeoBaseline(
+  areaSeo: Record<string, PhiAreaSeo | null>,
+) {
+  builderWorkspaceStore.patch("public", (current) =>
+    JSON.stringify(current.areaSeo) === JSON.stringify(areaSeo)
+      ? current
+      : { ...current, areaSeo });
+}
+
+/** What an Area says about being found right now: this session's answer, or the one it arrived with. */
+export function readPhiBuilderEffectiveAreaSeo(
+  state: Pick<PhiDeveloperBuilderWorkspaceState, "areaSeoDrafts" | "areaSeo">,
+  area: string,
+): PhiAreaSeo | null {
+  const draft = state.areaSeoDrafts?.[area];
+  return draft !== undefined ? draft : state.areaSeo?.[area] ?? null;
+}
+
+/**
+ * The Area's SEO answers, as the Builder is editing them.
+ *
+ * Written key by key rather than whole, because the two switches are answered one at a time and the
+ * one nobody touched must keep saying what it said.
+ */
+export function setPhiDeveloperBuilderAreaSeo(
+  area: PhiDeveloperBuilderArea,
+  patch: PhiAreaSeo,
+) {
+  builderWorkspaceStore.patch("public", (current) => {
+    const effective = readPhiBuilderEffectiveAreaSeo(current, area) ?? {};
+    const next = { ...effective, ...patch };
+    return { ...current, areaSeoDrafts: { ...current.areaSeoDrafts, [area]: next } };
   });
 }
 

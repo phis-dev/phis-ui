@@ -11,6 +11,7 @@ import { PhiCmsFlags, PhiCmsRegionType, PhiCmsStatus } from "../../../constants/
 import { PHI_CMS_AREA_KEYS } from "../../../constants/cms-areas";
 import { PhiMediaKind } from "../../../constants/media";
 import { buildPhiCmsLayoutNode, buildPhiCmsWidgetNode } from "../../../helpers/cms-node-factories";
+import { PHI_AREA_SEO_PUBLIC_DEFAULTS } from "../../../helpers/cms-area-config";
 import { remapPhiSignalRoutesInConfig } from "../../../helpers/signal-route-lifecycle";
 import { resolvePhiBrandWordmarkText } from "../../../helpers/brand-wordmark";
 import { resolvePhiShellMetric } from "../../../helpers/shell-region-style";
@@ -60,6 +61,9 @@ import { getPhiBuilderModulesPageLabels } from "../../widgets/label-sets/builder
 import { PHI_REVISIONS_RUNTIME_DATA_PROVIDER_KEYS } from "../../../plugins/runtime-modules/revisions/ids";
 import { createPhiRevisionsControllerAddress } from "../../../plugins/runtime-modules/revisions/controller/address";
 import {
+  PHI_BUILDER_AREA_SETTINGS_LAYOUT_IDS,
+  PHI_BUILDER_AREA_SETTINGS_OVERLAY_IDS,
+  PHI_BUILDER_AREA_SETTINGS_WIDGET_IDS,
   PHI_BUILDER_PAGE_META_LAYOUT_IDS,
   PHI_BUILDER_PAGE_META_OVERLAY_IDS,
   PHI_BUILDER_PAGE_META_WIDGET_IDS,
@@ -1409,6 +1413,38 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
       description: null,
     },
     overlays: [
+      /*
+       * Everything the Area says about itself, in one place.
+       *
+       * A modal rather than a drawer because it is answered and left, and it holds no question of its
+       * own: the controller opens and closes it on the two commands, and every control inside writes
+       * into the structure draft as it is answered.
+       */
+      ...(isStructurePage ? [{
+        id: PHI_BUILDER_AREA_SETTINGS_OVERLAY_IDS.overlayAreaSettings,
+        overlayType: "modal" as const,
+        headerLayoutNodeId: null,
+        bodyLayoutNodeId: PHI_BUILDER_AREA_SETTINGS_LAYOUT_IDS.areaSettingsBody,
+        footerPresentation: "actions" as const,
+        footerLayoutNodeId: PHI_BUILDER_AREA_SETTINGS_LAYOUT_IDS.areaSettingsFooter,
+        status: PhiCmsStatus.Published,
+        flags: 0,
+        visibilityMask: page.visibilityMask,
+        sortOrder: 0,
+        label: "Builder area settings",
+        config: {
+          title: labels.areaSettings.title,
+          width: { compact: "calc(100vw - 32px)", medium: 560, wide: 640 },
+          mountPolicy: "lazy-keep",
+          closeMode: "immediate",
+          signalRoutes: {
+            listens: [
+              { routeKey: "builder-area-settings-open-dialog", capabilityId: "open", scope: "page", channel: "areaSettingsDialog", action: "activate", valueType: "none", receiver: createPhiSignalAddress("cms", PHI_BUILDER_AREA_SETTINGS_OVERLAY_IDS.overlayAreaSettings) },
+              { routeKey: "builder-area-settings-close-dialog", capabilityId: "close", scope: "page", channel: "areaSettingsDialog", action: "close", valueType: "none", receiver: createPhiSignalAddress("cms", PHI_BUILDER_AREA_SETTINGS_OVERLAY_IDS.overlayAreaSettings) },
+            ],
+          },
+        },
+      }] : []),
       ...(isPagesPage ? [{
         id: PHI_BUILDER_PAGE_META_OVERLAY_IDS.editor,
         overlayType: "modal" as const,
@@ -2145,6 +2181,65 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
           },
         }),
       ] : []),
+      ...(isStructurePage ? [
+        /*
+         * The form is the container, not the decoration.
+         *
+         * It states the label column once and everything inside inherits it, which is what makes four
+         * labelled Controls read as two columns rather than four differently indented rows.
+         */
+        buildPhiCmsLayoutNode({
+          creationPreset: { layoutKind: "form", preset: "panel" },
+          typeKey: "form",
+          id: PHI_BUILDER_AREA_SETTINGS_LAYOUT_IDS.areaSettingsBody,
+          siteId: page.siteId,
+          parentLayoutNodeId: null,
+          slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
+          sortOrder: 0,
+          status: PhiCmsStatus.Published,
+          flags: 0,
+          visibilityMask: page.visibilityMask,
+          label: "Builder area settings body",
+          config: {
+            padding: PHI_SPACE.base,
+            background: PHI_COLOR.bgLayout,
+            border: "none",
+          },
+        }),
+        buildPhiCmsLayoutNode({
+          creationPreset: { layoutKind: "verticalflex", preset: "panel" },
+          typeKey: "flex-vertical",
+          id: PHI_BUILDER_AREA_SETTINGS_LAYOUT_IDS.areaSettingsFields,
+          siteId: page.siteId,
+          parentLayoutNodeId: PHI_BUILDER_AREA_SETTINGS_LAYOUT_IDS.areaSettingsBody,
+          slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
+          sortOrder: 0,
+          status: PhiCmsStatus.Published,
+          flags: 0,
+          visibilityMask: page.visibilityMask,
+          label: "Builder area settings fields",
+          config: {
+            gap: PHI_SPACE.base,
+            width: "100%",
+            background: "transparent",
+            border: "none",
+          },
+        }),
+        buildPhiCmsLayoutNode({
+          creationPreset: { layoutKind: "flex", preset: "overlay-actions" },
+          typeKey: "flex",
+          id: PHI_BUILDER_AREA_SETTINGS_LAYOUT_IDS.areaSettingsFooter,
+          siteId: page.siteId,
+          parentLayoutNodeId: null,
+          slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
+          sortOrder: 0,
+          status: PhiCmsStatus.Published,
+          flags: 0,
+          visibilityMask: page.visibilityMask,
+          label: "Builder area settings footer",
+          config: {},
+        }),
+      ] : []),
       ...(isPagesPage ? [
         buildPhiCmsLayoutNode({
           creationPreset: { layoutKind: "verticalflex", preset: "panel" },
@@ -2850,17 +2945,18 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
             /*
              * Where the Area's `/` goes.
              *
-             * A plain Select, next to the Sider switch it shares the header with, because it is the
-             * same kind of statement: about the Area being edited rather than about anything on the
-             * canvas. The choices are the Area's own registered Pages plus the two answers that are
-             * not a Page, and what a choice stores is a Page reference rather than a path.
+             * A plain Select, in the Area settings dialog rather than in the header it used to share
+             * with the Sider switch: it is a statement about the Area being edited rather than about
+             * anything on the canvas, and the header is where the canvas is worked on. The choices are
+             * the Area's own registered Pages plus the two answers that are not a Page, and what a
+             * choice stores is a Page reference rather than a path.
              */
             buildPhiCmsWidgetNode({
               typeKey: "select-box",
               id: SYNTHETIC_DEV_WIDGET_IDS.widgetAreaRootRoute,
               siteId: page.siteId,
-              parentLayoutNodeId: SYNTHETIC_DEV_LAYOUT_IDS.layoutWorkspaceHeader,
-              slotIndex: PHI_CMS_THREE_COLUMN_LAYOUT_SLOT_INDEX.Middle,
+              parentLayoutNodeId: PHI_BUILDER_AREA_SETTINGS_LAYOUT_IDS.areaSettingsFields,
+              slotIndex: PHI_CMS_SEQUENTIAL_LAYOUT_SLOTS[0].slotIndex,
               sortOrder: 0,
               status: PhiCmsStatus.Published,
               flags: 0,
@@ -2907,9 +3003,9 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
               typeKey: "select-box",
               id: PHI_BUILDER_SHELLS_WIDGET_IDS.widgetAreaLandingPage,
               siteId: page.siteId,
-              parentLayoutNodeId: SYNTHETIC_DEV_LAYOUT_IDS.layoutWorkspaceHeader,
-              slotIndex: PHI_CMS_THREE_COLUMN_LAYOUT_SLOT_INDEX.Right,
-              sortOrder: 0,
+              parentLayoutNodeId: PHI_BUILDER_AREA_SETTINGS_LAYOUT_IDS.areaSettingsFields,
+              slotIndex: PHI_CMS_SEQUENTIAL_LAYOUT_SLOTS[1].slotIndex,
+              sortOrder: 1,
               status: PhiCmsStatus.Published,
               flags: 0,
               visibilityMask: page.visibilityMask,
@@ -2947,6 +3043,214 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                       receiver: createPhiSignalAddress("cms", PHI_BUILDER_SHELLS_WIDGET_IDS.widgetAreaLandingPage),
                     },
                   ],
+                },
+              },
+              contentId: null,
+            }),
+            /*
+             * What the Area says about being found, and who may say it.
+             *
+             * Two switches under a heading, because they are a different subject from the root route
+             * and a form that runs them together would read as one. Both are shown in every Area and
+             * answerable in none but Public -- the controller says which by signal, as it does for the
+             * landing Select -- and the line under the heading is why: a disabled control cannot say
+             * what would make it live.
+             */
+            buildPhiCmsWidgetNode({
+              typeKey: "simple-text",
+              id: PHI_BUILDER_AREA_SETTINGS_WIDGET_IDS.areaSettingsSeoTitle,
+              siteId: page.siteId,
+              parentLayoutNodeId: PHI_BUILDER_AREA_SETTINGS_LAYOUT_IDS.areaSettingsFields,
+              slotIndex: PHI_CMS_SEQUENTIAL_LAYOUT_SLOTS[2].slotIndex,
+              sortOrder: 2,
+              status: PhiCmsStatus.Published,
+              flags: 0,
+              visibilityMask: page.visibilityMask,
+              label: "Area settings SEO title",
+              config: {
+                text: labels.areaSettings.seoTitle,
+                strong: true,
+              },
+              contentId: null,
+            }),
+            buildPhiCmsWidgetNode({
+              typeKey: "simple-text",
+              id: PHI_BUILDER_AREA_SETTINGS_WIDGET_IDS.areaSettingsSeoHint,
+              siteId: page.siteId,
+              parentLayoutNodeId: PHI_BUILDER_AREA_SETTINGS_LAYOUT_IDS.areaSettingsFields,
+              slotIndex: PHI_CMS_SEQUENTIAL_LAYOUT_SLOTS[3].slotIndex,
+              sortOrder: 3,
+              status: PhiCmsStatus.Published,
+              flags: 0,
+              visibilityMask: page.visibilityMask,
+              label: "Area settings SEO hint",
+              config: {
+                text: labels.areaSettings.seoHint,
+                type: "secondary",
+              },
+              contentId: null,
+            }),
+            ...([
+              [
+                PHI_BUILDER_SHELLS_WIDGET_IDS.widgetAreaSeoIndex,
+                "areaSeoIndex",
+                "seoIndex",
+                labels.areaSettings.seoIndex,
+                PHI_AREA_SEO_PUBLIC_DEFAULTS.index,
+                4,
+              ],
+              [
+                PHI_BUILDER_SHELLS_WIDGET_IDS.widgetAreaSeoSitemap,
+                "areaSeoSitemap",
+                "seoSitemap",
+                labels.areaSettings.seoSitemap,
+                PHI_AREA_SEO_PUBLIC_DEFAULTS.sitemap,
+                5,
+              ],
+            ] as const).map(([id, key, channel, label, defaultChecked, sortOrder]) =>
+              buildPhiCmsWidgetNode({
+                typeKey: "switch",
+                id,
+                siteId: page.siteId,
+                parentLayoutNodeId: PHI_BUILDER_AREA_SETTINGS_LAYOUT_IDS.areaSettingsFields,
+                slotIndex: PHI_CMS_SEQUENTIAL_LAYOUT_SLOTS[sortOrder].slotIndex,
+                sortOrder,
+                status: PhiCmsStatus.Published,
+                flags: 0,
+                visibilityMask: page.visibilityMask,
+                label: `Area settings ${key}`,
+                config: {
+                  key,
+                  label,
+                  /*
+                   * A switch is intrinsically sized, and in a form that is exactly wrong: the row has
+                   * to be as wide as the others or its label column is a third of nothing. Said as
+                   * the block size it is, rather than by teaching the Control about forms.
+                   */
+                  size: { width: "100%" },
+                  /*
+                   * The resting state, and only that: what the Area actually says arrives by signal
+                   * before anyone sees the dialog. It matches the reader's default so the two never
+                   * disagree in the moment between the render and the controller's first word.
+                   */
+                  defaultChecked,
+                  signalRoutes: {
+                    emits: [{
+                      routeKey: `builder-${channel}-change`,
+                      capabilityId: "change",
+                      scope: "area",
+                      channel,
+                      action: "change",
+                      valueType: "boolean",
+                      receiver: createPhiBuilderControllerAddress(),
+                    }],
+                    listens: [{
+                      routeKey: `builder-${channel}-value`,
+                      capabilityId: "change",
+                      scope: "page",
+                      channel: "seoValue",
+                      action: "change",
+                      valueType: "boolean",
+                      receiver: createPhiSignalAddress("cms", id),
+                    }, {
+                      routeKey: `builder-${channel}-enabled`,
+                      capabilityId: "enabled",
+                      scope: "page",
+                      channel: "enabled",
+                      action: "change",
+                      valueType: "boolean",
+                      receiver: createPhiSignalAddress("cms", id),
+                    }],
+                  },
+                },
+                contentId: null,
+              })),
+            /*
+             * Where the header's third column went.
+             *
+             * One button rather than the two Selects that used to stand here: the header is about the
+             * canvas, and everything the Area says about itself is one click away instead of spread
+             * across a row that grew every time the Area gained a sentence.
+             */
+            buildPhiCmsWidgetNode({
+              typeKey: "command-toolbar",
+              id: PHI_BUILDER_AREA_SETTINGS_WIDGET_IDS.areaSettingsAction,
+              siteId: page.siteId,
+              parentLayoutNodeId: SYNTHETIC_DEV_LAYOUT_IDS.layoutWorkspaceHeader,
+              slotIndex: PHI_CMS_THREE_COLUMN_LAYOUT_SLOT_INDEX.Right,
+              sortOrder: 0,
+              status: PhiCmsStatus.Published,
+              flags: 0,
+              visibilityMask: page.visibilityMask,
+              label: "dev area settings action",
+              config: {
+                key: "areaSettingsAction",
+                compact: true,
+                wrap: false,
+                showLabels: true,
+                buttons: [{
+                  key: "areaSettings",
+                  emits: [{ capabilityId: "command", value: "open" }],
+                  label: labels.areaSettings.action,
+                  tooltip: labels.areaSettings.action,
+                  icon: "setting",
+                }],
+                signalRoutes: {
+                  emits: [{
+                    routeKey: "builder-area-settings-open",
+                    capabilityId: "command",
+                    scope: "area",
+                    channel: "areaSettings",
+                    action: "activate",
+                    valueType: "string",
+                    receiver: createPhiBuilderControllerAddress(),
+                  }],
+                },
+              },
+              contentId: null,
+            }),
+            buildPhiCmsWidgetNode({
+              typeKey: "command-toolbar",
+              id: PHI_BUILDER_AREA_SETTINGS_WIDGET_IDS.areaSettingsCommands,
+              siteId: page.siteId,
+              parentLayoutNodeId: PHI_BUILDER_AREA_SETTINGS_LAYOUT_IDS.areaSettingsFooter,
+              slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
+              sortOrder: 0,
+              status: PhiCmsStatus.Published,
+              flags: 0,
+              visibilityMask: page.visibilityMask,
+              label: "Area settings commands",
+              config: {
+                key: "area-settings-commands",
+                compact: false,
+                wrap: true,
+                showLabels: true,
+                controlSize: "medium",
+                /*
+                 * One button, and it says "done" rather than "save".
+                 *
+                 * Every control in here writes into the draft the moment it is answered, exactly as it
+                 * did while it stood in the header, so there is nothing left to confirm -- and a Save
+                 * beside controls that already saved would be a second, wrong sentence about when a
+                 * change takes effect.
+                 */
+                buttons: [{
+                  key: "close",
+                  emits: [{ capabilityId: "command", value: "close" }],
+                  actionKey: "save",
+                  buttonType: "primary" as const,
+                  label: labels.areaSettings.close,
+                }],
+                signalRoutes: {
+                  emits: [{
+                    routeKey: "builder-area-settings-close",
+                    capabilityId: "command",
+                    scope: "area",
+                    channel: "areaSettings",
+                    action: "activate",
+                    valueType: "string",
+                    receiver: createPhiBuilderControllerAddress(),
+                  }],
                 },
               },
               contentId: null,

@@ -13,7 +13,9 @@ import {
   readPhiAreaPresetRuntimeModuleIds,
   readPhiAreaPublicRoutePaths,
   readPhiAreaRootRoute,
+  readPhiAreaSeo,
   type PhiAreaRootRoute,
+  type PhiAreaSeo,
   type PhiPublicRoutePathAssignment,
 } from "../../../helpers/cms-area-config";
 import type { PhiDeveloperBuilderArea, PhiDeveloperBuilderRegionDraft } from "./developer-workspace-types";
@@ -221,18 +223,21 @@ const buildShellDraftsForArea = cache(async function buildShellDraftsForArea(
 });
 
 /**
- * The root route an Area currently states, from the same three sources the shell drafts come from.
+ * The config an Area currently states about its Shell, from the same three sources the drafts come from.
  *
  * An open structure draft first, because that is what the Builder is looking at; then what is
  * published; then nothing, which is the Area saying it has never been asked and letting the code-owned
  * preset answer. The installed preset is deliberately not consulted: it carries no config, and reading
  * a value out of it would put a stored-looking answer in front of a Builder who never stored one.
+ *
+ * Read once and read whole, because everything the Shell says about itself arrives in the same
+ * revision: the root route and the two SEO answers are one fetch, not one each.
  */
-export const buildPhiBuilderAreaRootRoute = cache(async function buildPhiBuilderAreaRootRoute(
+const buildPhiBuilderAreaPresetConfig = cache(async function buildPhiBuilderAreaPresetConfig(
   runtime: PhiBlockRuntime,
   area: PhiDeveloperBuilderArea,
   runtimeModuleCatalog: PhiRuntimeModuleCatalog,
-): Promise<PhiAreaRootRoute | null> {
+): Promise<Record<string, unknown> | null> {
   const path = resolveStructureAreaPath(area);
   const sourcePreset = resolveAreaPresetSource(area, runtimeModuleCatalog);
   const cookieHeader = (await cookies()).toString();
@@ -247,11 +252,33 @@ export const buildPhiBuilderAreaRootRoute = cache(async function buildPhiBuilder
   };
   const draftPreset = await getCurrentSiteAreaDraft({ ...request, area }).catch(() => null);
   if (draftPreset?.preset) {
-    return readPhiAreaRootRoute(draftPreset.preset.preset.config);
+    return draftPreset.preset.preset.config ?? null;
   }
   const resolvedPreset = await getExactSiteArea(request).catch(() => null);
-  return resolvedPreset?.preset ? readPhiAreaRootRoute(resolvedPreset.preset.preset.config) : null;
+  return resolvedPreset?.preset ? resolvedPreset.preset.preset.config ?? null : null;
 });
+
+/** What an Area says its `/` resolves to. */
+export async function buildPhiBuilderAreaRootRoute(
+  runtime: PhiBlockRuntime,
+  area: PhiDeveloperBuilderArea,
+  runtimeModuleCatalog: PhiRuntimeModuleCatalog,
+): Promise<PhiAreaRootRoute | null> {
+  return readPhiAreaRootRoute(
+    await buildPhiBuilderAreaPresetConfig(runtime, area, runtimeModuleCatalog),
+  );
+}
+
+/** What an Area says about being found. */
+export async function buildPhiBuilderAreaSeo(
+  runtime: PhiBlockRuntime,
+  area: PhiDeveloperBuilderArea,
+  runtimeModuleCatalog: PhiRuntimeModuleCatalog,
+): Promise<PhiAreaSeo | null> {
+  return readPhiAreaSeo(
+    await buildPhiBuilderAreaPresetConfig(runtime, area, runtimeModuleCatalog),
+  );
+}
 
 export function resolvePhiBuilderCurrentStructureArea(runtime: PhiBlockRuntime): PhiDeveloperBuilderArea {
   return normalizePhiBuilderAreaSearchParam(runtime.request?.searchParams?.[PHI_BUILDER_AREA_SEARCH_PARAM]) ?? "public";
@@ -473,6 +500,21 @@ export async function buildPhiBuilderAreaRootRoutesByArea(
     areas.map(async (area) => [
       area,
       await buildPhiBuilderAreaRootRoute(runtime, area, runtimeModuleCatalog),
+    ] as const),
+  );
+  return Object.fromEntries(entries);
+}
+
+/** What every Area states about being found, handed to the workspace beside the root routes. */
+export async function buildPhiBuilderAreaSeoByArea(
+  runtime: PhiBlockRuntime,
+  runtimeModuleCatalog: PhiRuntimeModuleCatalog,
+): Promise<Record<string, PhiAreaSeo | null>> {
+  const areas: readonly PhiDeveloperBuilderArea[] = PHI_BUILDER_AREA_KEYS;
+  const entries = await Promise.all(
+    areas.map(async (area) => [
+      area,
+      await buildPhiBuilderAreaSeo(runtime, area, runtimeModuleCatalog),
     ] as const),
   );
   return Object.fromEntries(entries);

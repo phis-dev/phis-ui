@@ -25,6 +25,7 @@ export const PHI_BUILDER_RUNTIME_CONTROLLER_PLUGIN = {
       !preloadData.publicRouteClaims ||
       !preloadData.publicRoutePaths ||
       !preloadData.areaRootRoutesByArea ||
+      !preloadData.areaSeoByArea ||
       !preloadData.pageMetaLabels
     ) {
       throw new Error("Builder runtime controller requires server preload data.");
@@ -41,6 +42,7 @@ export const PHI_BUILDER_RUNTIME_CONTROLLER_PLUGIN = {
       publicRouteClaims: preloadData.publicRouteClaims,
       publicRoutePaths: preloadData.publicRoutePaths,
       areaRootRoutesByArea: preloadData.areaRootRoutesByArea,
+      areaSeoByArea: preloadData.areaSeoByArea,
       pageMetaLabels: preloadData.pageMetaLabels,
     });
   },

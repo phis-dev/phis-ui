@@ -43,7 +43,14 @@ export function PhiLabeledControl({
         alignItems: "center",
         columnGap: token.paddingXS,
         minWidth: 0,
-        width: fill ? "100%" : undefined,
+        /*
+         * A form makes its rows the same width; anywhere else the row is as wide as it needs to be.
+         *
+         * `auto` is what a labelled Control has always been, and inside a flex column that means
+         * shrink-to-fit -- which is why two rows in a form would otherwise sit at two label widths.
+         * The form layout sets both variables, so a Control still knows nothing about forms.
+         */
+        width: fill ? "100%" : "var(--phi-labeled-control-width, auto)",
       }}
     >
       <span style={{ display: "inline-flex", alignItems: "center", gap: token.paddingXXS, minWidth: 0 }}>

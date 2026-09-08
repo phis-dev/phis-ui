@@ -283,7 +283,17 @@ export type PhiCmsContentLayoutConfig = PhiCmsLayerBase & {
   paddingBottom?: CSSProperties["paddingBottom"];
 };
 
-export type PhiCmsFormLayoutConfig = PhiCmsContentLayoutConfig;
+/**
+ * The one thing a form container states that a content container does not: how wide the labels are.
+ *
+ * Every labelled Control already draws itself as label beside input; what it cannot know is how wide
+ * the column is next to the Control above it. The form layout says it once for everything inside,
+ * through the same CSS variable the media inspector uses, and that is what turns a stack of labelled
+ * Controls into a two-column form.
+ */
+export type PhiCmsFormLayoutConfig = PhiCmsContentLayoutConfig & {
+  labelWidth?: string | number;
+};
 
 export type PhiCmsFlexLayoutDistribution = "anchor" | "between" | "around" | "evenly";
 
@@ -529,9 +539,11 @@ export function parsePhiCmsContentLayoutConfig(
 export function parsePhiCmsFormLayoutConfig(
   config: Record<string, unknown>,
 ): PhiCmsFormLayoutConfig {
+  const labelWidth = readCssSize(config.labelWidth);
   return applyPhiLayoutDefaults(
     {
       ...parsePhiCmsContentLayoutConfig(config),
+      ...(labelWidth === undefined ? null : { labelWidth }),
     },
     resolvePhiLayoutDefaults("form"),
   );

@@ -85,7 +85,10 @@ export const PHI_FORM_LAYOUT_DEFINITION = {
   category: "structure",
   iconName: "content",
   defaultConfig: resolvePhiLayoutDefaults("form"),
-  fields: [...PHI_LAYOUT_PADDING_FIELDS],
+  fields: [
+    ...PHI_LAYOUT_PADDING_FIELDS,
+    { key: "labelWidth", type: "length", label: "Label Width", min: 0 },
+  ],
   slots: [...PHI_CMS_DEFAULT_LAYOUT_SLOTS],
 } satisfies PhiCmsLayoutPluginDefinition<PhiCmsFormLayoutConfig>;
 

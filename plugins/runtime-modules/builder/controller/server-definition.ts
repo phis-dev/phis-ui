@@ -7,6 +7,7 @@ import {
 } from "./definition";
 import {
   buildPhiBuilderAreaRootRoutesByArea,
+  buildPhiBuilderAreaSeoByArea,
   buildPhiBuilderPublicRoutePaths,
   buildPhiBuilderStructureRuntimeModuleIdsByArea,
   buildPhiBuilderUnresolvedRuntimeModuleIdsByArea,
@@ -38,6 +39,7 @@ export const PHI_BUILDER_RUNTIME_CONTROLLER_SERVER_DEFINITION = {
       unresolvedModuleIdsByArea,
       publicRoutePaths,
       areaRootRoutesByArea,
+      areaSeoByArea,
       builderLabels,
     ] = await Promise.all([
       buildPhiBuilderStructureShellPresetDraftsByArea(
@@ -51,6 +53,7 @@ export const PHI_BUILDER_RUNTIME_CONTROLLER_SERVER_DEFINITION = {
       buildPhiBuilderUnresolvedRuntimeModuleIdsByArea(runtime, runtimeModuleCatalog),
       buildPhiBuilderPublicRoutePaths(runtime, runtimeModuleCatalog),
       buildPhiBuilderAreaRootRoutesByArea(runtime, runtimeModuleCatalog),
+      buildPhiBuilderAreaSeoByArea(runtime, runtimeModuleCatalog),
       getPhiBuilderChromeWidgetLabels({
         apiBaseUrl: runtime.phis.apiBaseUrl,
         internalToken: runtime.phis.internalToken,
@@ -85,6 +88,7 @@ export const PHI_BUILDER_RUNTIME_CONTROLLER_SERVER_DEFINITION = {
       publicRouteClaims: buildPhiBuilderPublicRouteClaims(runtimeModuleCatalog),
       publicRoutePaths,
       areaRootRoutesByArea,
+      areaSeoByArea,
       modulePresetPagesByArea: buildPhiBuilderModulePresetPagesByArea(
         runtimeModuleCatalog,
       ),

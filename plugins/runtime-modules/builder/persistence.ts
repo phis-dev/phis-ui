@@ -38,6 +38,7 @@ import { createPhiBuilderDraftAllocationKey } from "./draft-allocation-key";
 import {
   builderWorkspaceStore,
   readPhiBuilderEffectiveAreaRootRoute,
+  readPhiBuilderEffectiveAreaSeo,
 } from "./developer-workspace-store";
 import type { PhiDeveloperBuilderDraftAllocation } from "./developer-workspace-types";
 import {
@@ -52,6 +53,7 @@ import {
   PHI_AREA_CONFIG_SHELL_NAMESPACE,
   PHI_AREA_PUBLIC_ROUTE_PATHS_KEY,
   PHI_AREA_ROOT_ROUTE_KEY,
+  PHI_AREA_SEO_KEY,
   normalizePhiAreaPublicRoutePaths,
 } from "../../../helpers/cms-area-config";
 
@@ -931,7 +933,7 @@ function buildAreaStructureWritePayload(
 export async function savePhiDeveloperBuilderDraft(
   state: Pick<
     PhiDeveloperBuilderWorkspaceState,
-    "area" | "pageKey" | "sidebarKey" | "pageMetaDrafts" | "deletedPageDrafts" | "draftAllocations" | "modulePresetPagesByArea" | "customPages" | "persistedPageCatalogByArea" | "areaPresetSourcesByArea" | "areaRootRouteDrafts" | "areaRootRoutes"
+    "area" | "pageKey" | "sidebarKey" | "pageMetaDrafts" | "deletedPageDrafts" | "draftAllocations" | "modulePresetPagesByArea" | "customPages" | "persistedPageCatalogByArea" | "areaPresetSourcesByArea" | "areaRootRouteDrafts" | "areaRootRoutes" | "areaSeoDrafts" | "areaSeo"
   >,
   regionDrafts: Record<string, PhiDeveloperBuilderRegionDraft>,
   workspaceKind: PhiDeveloperBuilderWorkspaceKind,
@@ -1072,6 +1074,7 @@ export async function savePhiDeveloperBuilderDraft(
     // The effective answer, not only this session's: the structure write states `config.shell` whole,
     // so a save that never touched the root route still has to carry what the Area already said.
     const rootRouteDraft = readPhiBuilderEffectiveAreaRootRoute(state, area);
+    const seoDraft = readPhiBuilderEffectiveAreaSeo(state, area);
     const structurePayload = buildAreaStructureWritePayload(area, regionDrafts, widgetMetasByType);
     if (structurePayload) {
       if (!areaPresetSource) {
@@ -1095,9 +1098,10 @@ export async function savePhiDeveloperBuilderDraft(
            * sending an empty namespace is how the Builder asks for the default back.
            */
           config: {
-            [PHI_AREA_CONFIG_SHELL_NAMESPACE]: rootRouteDraft
-              ? { [PHI_AREA_ROOT_ROUTE_KEY]: rootRouteDraft }
-              : {},
+            [PHI_AREA_CONFIG_SHELL_NAMESPACE]: {
+              ...(rootRouteDraft ? { [PHI_AREA_ROOT_ROUTE_KEY]: rootRouteDraft } : {}),
+              ...(seoDraft ? { [PHI_AREA_SEO_KEY]: seoDraft } : {}),
+            },
           },
         },
         regions: structurePayload.regions,
@@ -1297,7 +1301,7 @@ export async function previewPhiDeveloperBuilderDraft(
 export async function publishPhiDeveloperBuilderDraft(
   state: Pick<
     PhiDeveloperBuilderWorkspaceState,
-    "area" | "pageKey" | "sidebarKey" | "pageMetaDrafts" | "deletedPageDrafts" | "draftAllocations" | "runtimeModuleDefinitions" | "runtimeModuleIdsByArea" | "modulePresetPagesByArea" | "customPages" | "persistedPageCatalogByArea" | "areaPresetSourcesByArea" | "areaRootRouteDrafts" | "areaRootRoutes"
+    "area" | "pageKey" | "sidebarKey" | "pageMetaDrafts" | "deletedPageDrafts" | "draftAllocations" | "runtimeModuleDefinitions" | "runtimeModuleIdsByArea" | "modulePresetPagesByArea" | "customPages" | "persistedPageCatalogByArea" | "areaPresetSourcesByArea" | "areaRootRouteDrafts" | "areaRootRoutes" | "areaSeoDrafts" | "areaSeo"
   >,
   regionDrafts: Record<string, PhiDeveloperBuilderRegionDraft>,
   workspaceKind: PhiDeveloperBuilderWorkspaceKind,

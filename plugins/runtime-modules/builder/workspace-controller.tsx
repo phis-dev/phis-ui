@@ -71,6 +71,9 @@ import {
   setPhiDeveloperBuilderAreaRootRoute,
   readPhiBuilderEffectiveAreaRootRoute,
   setPhiDeveloperBuilderAreaRootRoutes,
+  setPhiDeveloperBuilderAreaSeo,
+  setPhiDeveloperBuilderAreaSeoBaseline,
+  readPhiBuilderEffectiveAreaSeo,
   closePhiBuilderModuleDeactivationRequest,
   closePhiBuilderPublicRouteCollisionRequest,
 } from "./developer-workspace-store";
@@ -79,7 +82,8 @@ import {
   PHI_BUILDER_AREA_ROOT_ROUTE_LANDING,
 } from "./options-providers";
 import type { PhiPageReference } from "../../../types/references";
-import type { PhiAreaRootRoute } from "../../../helpers/cms-area-config";
+import { PHI_AREA_SEO_PUBLIC_DEFAULTS } from "../../../helpers/cms-area-config";
+import type { PhiAreaRootRoute, PhiAreaSeo } from "../../../helpers/cms-area-config";
 import { getPhiBuilderRegionDraftKey } from "./region-keys";
 import { getDefaultRegionDraft } from "./developer-region-drafts";
 import {
@@ -115,6 +119,7 @@ import {
   PHI_BUILDER_PUBLIC_ROUTES_OVERLAY_IDS,
   PHI_BUILDER_PUBLIC_ROUTES_WIDGET_IDS,
   PHI_BUILDER_SHELLS_WIDGET_IDS,
+  PHI_BUILDER_AREA_SETTINGS_OVERLAY_IDS,
   PHI_BUILDER_MODULE_USAGE_OVERLAY_IDS,
   PHI_BUILDER_MODULE_USAGE_WIDGET_IDS,
 } from "../../../helpers/cms-page-addresses";
@@ -166,6 +171,7 @@ type PhiDeveloperBuilderWorkspaceControllerOptions = {
   publicRouteClaims?: PhiWorkspaceCatalogState["publicRouteClaims"];
   publicRoutePaths?: PhiWorkspaceCatalogState["publicRoutePaths"];
   areaRootRoutesByArea?: Record<string, PhiAreaRootRoute | null>;
+  areaSeoByArea?: Record<string, PhiAreaSeo | null>;
   pageMetaLabels?: PhiBuilderPageMetaPresentationLabels;
 };
 const EMPTY_RUNTIME_MODULE_IDS_BY_AREA: Partial<Record<PhiDeveloperBuilderArea, PhiRuntimeModuleId[]>> = {};
@@ -173,6 +179,7 @@ const EMPTY_MODULE_PRESET_PAGES_BY_AREA = createEmptyPhiBuilderModulePresetPages
 const EMPTY_PUBLIC_ROUTE_CLAIMS: PhiWorkspaceCatalogState["publicRouteClaims"] = [];
 const EMPTY_PUBLIC_ROUTE_PATHS: PhiWorkspaceCatalogState["publicRoutePaths"] = [];
 const EMPTY_AREA_ROOT_ROUTES: Record<string, PhiAreaRootRoute | null> = {};
+const EMPTY_AREA_SEO: Record<string, PhiAreaSeo | null> = {};
 export type {
   PhiBuilderPageRegionKey,
   PhiBuilderRegionKey,
@@ -310,6 +317,7 @@ function usePhiDeveloperBuilderWorkspaceController(
     publicRouteClaims = EMPTY_PUBLIC_ROUTE_CLAIMS,
     publicRoutePaths = EMPTY_PUBLIC_ROUTE_PATHS,
     areaRootRoutesByArea = EMPTY_AREA_ROOT_ROUTES,
+    areaSeoByArea = EMPTY_AREA_SEO,
     pageMetaLabels = PHI_BUILDER_PAGE_META_DEFAULT_PRESENTATION_LABELS,
   } = options;
   const state = usePhiDeveloperBuilderWorkspaceState(defaultArea);
@@ -413,6 +421,13 @@ function usePhiDeveloperBuilderWorkspaceController(
     // The serialized preload is the identity that matters; the object is rebuilt on every render.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [areaRootRoutesPreloadKey]);
+
+  // What the Areas said about being found, read from the same revision and set the same way.
+  const areaSeoPreloadKey = JSON.stringify(areaSeoByArea);
+  useEffect(() => {
+    setPhiDeveloperBuilderAreaSeoBaseline(areaSeoByArea);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [areaSeoPreloadKey]);
 
   const signalWiringOverlayAddress = createPhiSignalAddress("cms", PHI_BUILDER_INSPECTOR_OVERLAY_IDS.signalWiring);
   const signalWiringFormAddress = createPhiSignalAddress("cms", PHI_BUILDER_INSPECTOR_WIDGET_IDS.signalWiringForm);
@@ -607,6 +622,82 @@ function usePhiDeveloperBuilderWorkspaceController(
       timestamp: Date.now(),
     });
   }, [dispatchSignal, landingSelectAddress, landingSelectEnabled]);
+
+  /*
+   * What the Area currently says about being found, and whether it may be answered here.
+   *
+   * Only Public is ever asked: every other Area is authenticated and is not indexed whatever is
+   * stored, so its switches stand at the Public default and are shown as unanswerable rather than
+   * hidden -- the dialog is the same dialog in every Area, and a control that vanishes reads as a
+   * feature that is missing. Said in the switches' own Page scope, for the reason the landing Select
+   * is: the workspace header belongs to the Page.
+   */
+  const seoIndexAddress = useMemo(
+    () => createPhiSignalAddress("cms", PHI_BUILDER_SHELLS_WIDGET_IDS.widgetAreaSeoIndex),
+    [],
+  );
+  const seoSitemapAddress = useMemo(
+    () => createPhiSignalAddress("cms", PHI_BUILDER_SHELLS_WIDGET_IDS.widgetAreaSeoSitemap),
+    [],
+  );
+  const areaSeo = readPhiBuilderEffectiveAreaSeo(state, state.area);
+  const seoAnswerable = state.area === "public";
+  // Outside Public the switches state the fact rather than the default: those Areas are not indexed
+  // and are in no sitemap, whatever a stored value from some earlier Area would suggest.
+  const seoIndex = seoAnswerable && (areaSeo?.index ?? PHI_AREA_SEO_PUBLIC_DEFAULTS.index);
+  const seoSitemap = seoAnswerable && (areaSeo?.sitemap ?? PHI_AREA_SEO_PUBLIC_DEFAULTS.sitemap);
+  useEffect(() => {
+    for (const [receiver, checked] of [
+      [seoIndexAddress, seoIndex],
+      [seoSitemapAddress, seoSitemap],
+    ] as const) {
+      dispatchSignal({
+        scope: "page",
+        channel: "seoValue",
+        action: "change",
+        value: checked,
+        valueType: "boolean",
+        sender: createPhiBuilderControllerAddress(),
+        receiver,
+        timestamp: Date.now(),
+      });
+      dispatchSignal({
+        scope: "page",
+        channel: "enabled",
+        action: "change",
+        value: seoAnswerable,
+        valueType: "boolean",
+        sender: createPhiBuilderControllerAddress(),
+        receiver,
+        timestamp: Date.now(),
+      });
+    }
+  }, [dispatchSignal, seoAnswerable, seoIndex, seoIndexAddress, seoSitemap, seoSitemapAddress]);
+
+  /*
+   * The Area settings dialog, opened and closed by the two commands that ask for it.
+   *
+   * No state of its own: unlike the two Modules dialogs there is no question waiting to be answered
+   * here -- every control inside writes into the draft the moment it is answered, exactly as it did
+   * while it stood in the header -- so the dialog is only a place, and the commands are the whole of
+   * its lifecycle.
+   */
+  const areaSettingsOverlayAddress = useMemo(
+    () => createPhiSignalAddress("cms", PHI_BUILDER_AREA_SETTINGS_OVERLAY_IDS.overlayAreaSettings),
+    [],
+  );
+  const dispatchAreaSettingsDialog = (open: boolean) => {
+    dispatchSignal({
+      scope: "page",
+      channel: "areaSettingsDialog",
+      action: open ? "activate" : "close",
+      value: null,
+      valueType: "none",
+      sender: createPhiBuilderControllerAddress(),
+      receiver: areaSettingsOverlayAddress,
+      timestamp: Date.now(),
+    });
+  };
 
   const openedPublicRoutesCorrelationRef = useRef<string | null>(null);
   const publicRouteCollisionRequest = state.publicRouteCollisionRequest;
@@ -1652,6 +1743,41 @@ function usePhiDeveloperBuilderWorkspaceController(
         return;
       }
 
+      /*
+       * Whether the Area may be found, and whether its Pages are listed.
+       *
+       * Two switches, one sentence each, stored key by key: the answers are given one at a time and
+       * the one nobody touched has to keep saying what it said. Only Public can reach here at all,
+       * because only there are the switches enabled.
+       */
+      if (
+        signal.scope === "area" &&
+        (signal.channel === "seoIndex" || signal.channel === "seoSitemap") &&
+        signal.action === "change" &&
+        signal.receiver === createPhiBuilderControllerAddress()
+      ) {
+        if (typeof signal.value !== "boolean") {
+          return;
+        }
+        setPhiDeveloperBuilderAreaSeo(
+          state.area,
+          signal.channel === "seoIndex" ? { index: signal.value } : { sitemap: signal.value },
+        );
+        return;
+      }
+
+      /* The dialog those switches stand in, opened from the workspace header and closed from its footer. */
+      if (
+        signal.scope === "area" &&
+        signal.channel === "areaSettings" &&
+        signal.action === "activate" &&
+        signal.valueType === "string" &&
+        signal.receiver === createPhiBuilderControllerAddress()
+      ) {
+        dispatchAreaSettingsDialog(signal.value === "open");
+        return;
+      }
+
       if (
         signal.scope === "area" &&
         signal.channel === "layout" &&
@@ -2190,6 +2316,7 @@ export type PhiDeveloperBuilderWorkspaceControllerProps = {
   publicRouteClaims?: PhiWorkspaceCatalogState["publicRouteClaims"];
   publicRoutePaths?: PhiWorkspaceCatalogState["publicRoutePaths"];
   areaRootRoutesByArea?: Record<string, PhiAreaRootRoute | null>;
+  areaSeoByArea?: Record<string, PhiAreaSeo | null>;
   pageMetaLabels?: PhiBuilderPageMetaPresentationLabels;
 };
 
@@ -2205,6 +2332,7 @@ export function PhiDeveloperBuilderWorkspaceController({
   publicRouteClaims = EMPTY_PUBLIC_ROUTE_CLAIMS,
   publicRoutePaths = EMPTY_PUBLIC_ROUTE_PATHS,
   areaRootRoutesByArea = EMPTY_AREA_ROOT_ROUTES,
+  areaSeoByArea = EMPTY_AREA_SEO,
   pageMetaLabels = PHI_BUILDER_PAGE_META_DEFAULT_PRESENTATION_LABELS,
 }: PhiDeveloperBuilderWorkspaceControllerProps) {
   const controller = usePhiDeveloperBuilderWorkspaceController(defaultArea, {
@@ -2218,6 +2346,7 @@ export function PhiDeveloperBuilderWorkspaceController({
     publicRouteClaims,
     publicRoutePaths,
     areaRootRoutesByArea,
+    areaSeoByArea,
     pageMetaLabels,
   });
 
