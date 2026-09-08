@@ -3,12 +3,13 @@ import type { CSSProperties } from "react";
 import { PhiContentLayout, type PhiContentLayoutProps } from "./phi-content-layout-client";
 
 /**
- * How wide a form's labels are when it says nothing: a third, as the media inspector's sections use.
+ * How wide a form's labels are when it says nothing: six of twenty-four columns, label to input 6/18.
  *
- * Wide enough for a phrase, narrow enough that the Control beside it stays the larger half, and the
- * same figure in both places so two forms in one Site do not sit at different widths for no reason.
+ * The ratio forms are usually built at -- wide enough for a phrase, and it leaves the input the larger
+ * three quarters. One figure for every row, which is the whole point: the inputs line up because their
+ * labels stand in one column, not because each row happened to need the same width.
  */
-const PHI_FORM_LAYOUT_DEFAULT_LABEL_WIDTH = "33.333333%";
+const PHI_FORM_LAYOUT_DEFAULT_LABEL_WIDTH = "25%";
 
 export type PhiFormLayoutProps = PhiContentLayoutProps & {
   labelWidth?: string | number;

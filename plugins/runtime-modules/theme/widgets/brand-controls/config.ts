@@ -3,6 +3,7 @@ import {
   isPhiCmsAreaKey,
   type PhiCmsAreaKey,
 } from "../../../../../constants/cms-areas";
+import { PHI_ASSET_RUNTIME_DATA_PROVIDER_KEYS } from "../../../asset/ids";
 import { PHI_THEME_SIGNAL_CHANNELS } from "../../../../../plugins/runtime-modules/theme/controller/signals";
 import { createPhiCmsWidgetDefinition } from "../../../../../components/widgets/config/helpers";
 import { readString } from "../../../../../components/widgets/config/parser-primitives";
@@ -30,6 +31,7 @@ type PhiBuilderBrandWidgetDefinition = Pick<
   | "category"
   | "iconFamily"
   | "runtimeSignals"
+  | "requiredDataProviders"
   | "slotSizePolicy"
   | "fields"
   | "parseConfig"
@@ -56,6 +58,15 @@ export const PHI_BUILDER_BRAND_STYLE_CONTROLS_WIDGET_DEFINITION: PhiBuilderBrand
   category: "configuration",
   iconFamily: "theme",
   slotSizePolicy: "fill-inline",
+  /*
+   * The Theme Root Background is authored here, and its image source is picked from the Media
+   * library. A Page mounts only the Data Providers its tree asks for, and the tree scan can see a
+   * `providerKey` in a Widget's config or this declaration -- not a Provider a Widget reaches for
+   * from inside its own client code. Without the declaration the picker opened on
+   * "Collection provider ... is not available from the active runtime modules" over an empty
+   * library, on a Page where the Assets Module was active the whole time.
+   */
+  requiredDataProviders: [PHI_ASSET_RUNTIME_DATA_PROVIDER_KEYS.mediaCollection],
   fields: [
     { key: "themeKey", type: "string", label: "Theme Key" },
     { key: "reviewArea", type: "string", label: "Review Area" },

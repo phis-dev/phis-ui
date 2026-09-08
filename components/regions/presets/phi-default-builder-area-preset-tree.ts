@@ -2964,6 +2964,7 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
               label: "Area root route select",
               config: {
                 key: "areaRootRoute",
+                size: { width: "100%" },
                 label: labels.rootRoute.title,
                 placeholder: labels.rootRoute.title,
                 options: [],
@@ -3012,6 +3013,7 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
               label: "Area landing page select",
               config: {
                 key: "areaLandingPage",
+                size: { width: "100%" },
                 label: labels.rootRoute.landingPage,
                 placeholder: labels.rootRoute.landingPageEmpty,
                 allowClear: true,
@@ -3053,8 +3055,7 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
              * Two switches under a heading, because they are a different subject from the root route
              * and a form that runs them together would read as one. Both are shown in every Area and
              * answerable in none but Public -- the controller says which by signal, as it does for the
-             * landing Select -- and the line under the heading is why: a disabled control cannot say
-             * what would make it live.
+             * landing Select -- and outside Public they stand at what is actually the case.
              */
             buildPhiCmsWidgetNode({
               typeKey: "simple-text",
@@ -3073,23 +3074,6 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
               },
               contentId: null,
             }),
-            buildPhiCmsWidgetNode({
-              typeKey: "simple-text",
-              id: PHI_BUILDER_AREA_SETTINGS_WIDGET_IDS.areaSettingsSeoHint,
-              siteId: page.siteId,
-              parentLayoutNodeId: PHI_BUILDER_AREA_SETTINGS_LAYOUT_IDS.areaSettingsFields,
-              slotIndex: PHI_CMS_SEQUENTIAL_LAYOUT_SLOTS[3].slotIndex,
-              sortOrder: 3,
-              status: PhiCmsStatus.Published,
-              flags: 0,
-              visibilityMask: page.visibilityMask,
-              label: "Area settings SEO hint",
-              config: {
-                text: labels.areaSettings.seoHint,
-                type: "secondary",
-              },
-              contentId: null,
-            }),
             ...([
               [
                 PHI_BUILDER_SHELLS_WIDGET_IDS.widgetAreaSeoIndex,
@@ -3097,7 +3081,7 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                 "seoIndex",
                 labels.areaSettings.seoIndex,
                 PHI_AREA_SEO_PUBLIC_DEFAULTS.index,
-                4,
+                3,
               ],
               [
                 PHI_BUILDER_SHELLS_WIDGET_IDS.widgetAreaSeoSitemap,
@@ -3105,7 +3089,7 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                 "seoSitemap",
                 labels.areaSettings.seoSitemap,
                 PHI_AREA_SEO_PUBLIC_DEFAULTS.sitemap,
-                5,
+                4,
               ],
             ] as const).map(([id, key, channel, label, defaultChecked, sortOrder]) =>
               buildPhiCmsWidgetNode({

@@ -62,7 +62,6 @@ const PHI_BUILDER_CHROME_WIDGET_LABEL_SET = definePhiLabelSet({
     area_settings_seo_title: PHI_BUILDER_CHROME_WIDGET_DEFAULT_LABELS.areaSettings.seoTitle,
     area_settings_seo_index: PHI_BUILDER_CHROME_WIDGET_DEFAULT_LABELS.areaSettings.seoIndex,
     area_settings_seo_sitemap: PHI_BUILDER_CHROME_WIDGET_DEFAULT_LABELS.areaSettings.seoSitemap,
-    area_settings_seo_hint: PHI_BUILDER_CHROME_WIDGET_DEFAULT_LABELS.areaSettings.seoHint,
     page_title_dashboard: PHI_BUILDER_CHROME_WIDGET_DEFAULT_LABELS.pageTitles.dashboard,
     page_title_modules: PHI_BUILDER_CHROME_WIDGET_DEFAULT_LABELS.pageTitles.modules,
     page_title_shells: PHI_BUILDER_CHROME_WIDGET_DEFAULT_LABELS.pageTitles.shells,
@@ -148,7 +147,6 @@ export async function getPhiBuilderChromeWidgetLabels(
       seoTitle: labels.area_settings_seo_title,
       seoIndex: labels.area_settings_seo_index,
       seoSitemap: labels.area_settings_seo_sitemap,
-      seoHint: labels.area_settings_seo_hint,
     },
     pageTitles: {
       dashboard: labels.page_title_dashboard,

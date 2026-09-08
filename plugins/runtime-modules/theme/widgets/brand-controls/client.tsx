@@ -583,10 +583,68 @@ function buildThemeReviewHref({
   return `${url.pathname}${url.search}`;
 }
 
+/*
+ * One route set per mode and per purpose.
+ *
+ * The light and the dark ground are edited side by side, so their pickers are mounted at the same
+ * time -- four of them, counting the preview swatch and the image field of each Control. Keying the
+ * routes by purpose alone gave the light picker and the dark picker the same route identity towards
+ * the asset controller, which is exactly the thing a route key exists to keep apart: two senders
+ * claiming one route are indistinguishable to anything that reads the route set. The mode belongs in
+ * the key for the same reason the purpose does.
+ */
 const PHI_THEME_ROOT_BACKGROUND_MEDIA_ROUTES = {
-  preview: createPhiMediaPickerAssetControllerRoutes("theme-root-background-preview-media", "area"),
-  field: createPhiMediaPickerAssetControllerRoutes("theme-root-background-field-media", "area"),
+  light: {
+    preview: createPhiMediaPickerAssetControllerRoutes("theme-root-background-light-preview-media", "area"),
+    field: createPhiMediaPickerAssetControllerRoutes("theme-root-background-light-field-media", "area"),
+  },
+  dark: {
+    preview: createPhiMediaPickerAssetControllerRoutes("theme-root-background-dark-preview-media", "area"),
+    field: createPhiMediaPickerAssetControllerRoutes("theme-root-background-dark-field-media", "area"),
+  },
 } as const;
+
+/*
+ * The renderer a Background Control asks for its media picker, one per mode.
+ *
+ * Built once at module level rather than per render: the identity is stable without a hook, and the
+ * mode it closes over is the mode whose routes it must use, so the two can no longer drift apart.
+ */
+function createPhiThemeRootBackgroundMediaPickerRenderer(
+  mode: PhiThemeMode,
+): NonNullable<PhiBackgroundControlProps["renderMediaPicker"]> {
+  return function renderPhiThemeRootBackgroundMediaPicker(props) {
+    return (
+      <PhiMediaPickerBinding
+        config={{
+          mediaType: PhiMediaKind.Image,
+          pageSize: 12,
+          showPagination: true,
+          showGroupFilter: true,
+          showSearchBar: true,
+          signalRoutes: PHI_THEME_ROOT_BACKGROUND_MEDIA_ROUTES[mode][props.purpose],
+        }}
+        labels={PHI_MEDIA_WIDGET_DEFAULT_LABELS}
+        searchLabels={PHI_SEARCH_WIDGET_DEFAULT_LABELS}
+        value={props.value}
+        open={props.open}
+        trigger={props.trigger}
+        onOpenChange={props.onOpenChange}
+        onCommit={props.onCommit}
+        onDiscard={props.onDiscard}
+        onAssetSelect={props.onAssetSelect}
+        onAssetClear={props.onAssetClear}
+      />
+    );
+  };
+}
+
+const PHI_THEME_ROOT_BACKGROUND_MEDIA_PICKER_RENDERERS: Readonly<
+  Record<PhiThemeMode, NonNullable<PhiBackgroundControlProps["renderMediaPicker"]>>
+> = {
+  light: createPhiThemeRootBackgroundMediaPickerRenderer("light"),
+  dark: createPhiThemeRootBackgroundMediaPickerRenderer("dark"),
+};
 
 function mergeThemeRootBackground(
   theme: ThemePayload,
@@ -1530,29 +1588,6 @@ export function PhiBuilderBrandStyleControlsWidgetClient({
     publishDraft(mergeThemeToken(state.draft, tokenPatch));
   }
 
-  const renderRootBackgroundMediaPicker = useCallback<NonNullable<PhiBackgroundControlProps["renderMediaPicker"]>>((props) => (
-    <PhiMediaPickerBinding
-      config={{
-        mediaType: PhiMediaKind.Image,
-        pageSize: 12,
-        showPagination: true,
-        showGroupFilter: true,
-        showSearchBar: true,
-        signalRoutes: PHI_THEME_ROOT_BACKGROUND_MEDIA_ROUTES[props.purpose],
-      }}
-      labels={PHI_MEDIA_WIDGET_DEFAULT_LABELS}
-      searchLabels={PHI_SEARCH_WIDGET_DEFAULT_LABELS}
-      value={props.value}
-      open={props.open}
-      trigger={props.trigger}
-      onOpenChange={props.onOpenChange}
-      onCommit={props.onCommit}
-      onDiscard={props.onDiscard}
-      onAssetSelect={props.onAssetSelect}
-      onAssetClear={props.onAssetClear}
-    />
-  ), []);
-
   return (
     <Flex vertical gap={clientToken.padding} style={{ width: "100%", minWidth: 0, opacity: loading ? 0.65 : 1 }}>
       <Card size="small" styles={{ body: { padding: clientToken.paddingSM } }}>
@@ -1751,7 +1786,7 @@ export function PhiBuilderBrandStyleControlsWidgetClient({
                       <PhiBackgroundControl
                         value={normalizePhiBackgroundWidgetConfig(state.draft.root?.background?.[backgroundMode] ?? null)}
                         disabled={saving}
-                        renderMediaPicker={renderRootBackgroundMediaPicker}
+                        renderMediaPicker={PHI_THEME_ROOT_BACKGROUND_MEDIA_PICKER_RENDERERS[backgroundMode]}
                         onChange={(value) => publishDraft(mergeThemeRootBackground(state.draft, backgroundMode, value))}
                       />
                     </Flex>

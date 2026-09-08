@@ -55,7 +55,7 @@ export const PHI_BUILDER_AREA_SETTINGS_LAYOUT_IDS = createPhiPresetCmsInstanceId
 );
 export const PHI_BUILDER_AREA_SETTINGS_WIDGET_IDS = createPhiPresetCmsInstanceIdMap(
   AREA_SETTINGS_ID_CONTEXT,
-  ["areaSettingsAction", "areaSettingsSeoTitle", "areaSettingsSeoHint", "areaSettingsCommands"],
+  ["areaSettingsAction", "areaSettingsSeoTitle", "areaSettingsCommands"],
 );
 
 const MODULES_DETAIL_ID_CONTEXT = {
