@@ -177,7 +177,7 @@ export function PhiFormDescriptorRuntimeClient({
       const action = readPhiTableActionSignalValue(signal.value);
       if (!action || action.actionKey !== (widgetConfig?.openActionKey ?? "edit") || action.rowIdentity == null) return;
       void loadRecord(action.rowIdentity);
-      emitCapability("conditionStateRequest");
+      emitCapability("conditionStateRequest", null, signal.correlationId);
     } else if (route.capabilityId === "close") {
       requestReset(signal.correlationId);
       emitCapability("cancel", null, signal.correlationId);

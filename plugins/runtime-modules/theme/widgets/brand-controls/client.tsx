@@ -678,12 +678,18 @@ function isSameThemePayload(left: ThemePayload, right: ThemePayload) {
   return JSON.stringify(left) === JSON.stringify(right);
 }
 
+/*
+ * `correlationId` is the exchange this state belongs to: the command that saved, published or reset,
+ * or the draft another Widget asked the Controller to take. It is absent only where the Controller
+ * announces the state it loaded on arrival, which begins one.
+ */
 function emitThemeState(
   dispatchSignal: ReturnType<typeof usePhiSignalDispatcher>,
   theme: ThemePayload,
   revisionId: number | null,
   selectionValue: string,
   draftStatus: "draft" | "published" = "draft",
+  correlationId?: string,
 ) {
   const sender = createPhiThemeControllerAddress();
   const receiver = "broadcast" as const;
@@ -702,6 +708,7 @@ function emitThemeState(
       valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.brandTheme,
       sender,
       receiver,
+    correlationId,
     timestamp: Date.now(),
   });
 
@@ -718,6 +725,7 @@ function emitThemeState(
       valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.revisionsDraftStatus,
       sender,
       receiver,
+    correlationId,
     timestamp: Date.now(),
   });
 
@@ -729,6 +737,7 @@ function emitThemeState(
     valueType: "string",
     sender,
     receiver,
+    correlationId,
     timestamp: Date.now(),
   });
 }
@@ -756,7 +765,11 @@ function emitThemeDraftRequest(
   });
 }
 
-function emitRootThemeState(dispatchSignal: ReturnType<typeof usePhiSignalDispatcher>, theme: ThemePayload) {
+function emitRootThemeState(
+  dispatchSignal: ReturnType<typeof usePhiSignalDispatcher>,
+  theme: ThemePayload,
+  correlationId: string,
+) {
   dispatchSignal({
     scope: "site",
     channel: "theme",
@@ -766,6 +779,7 @@ function emitRootThemeState(dispatchSignal: ReturnType<typeof usePhiSignalDispat
     valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.runtimeTheme,
     sender: createPhiThemeControllerAddress(),
     receiver: createPhiCoreRuntimeControllerAddress(),
+    correlationId,
     timestamp: Date.now(),
   });
 }
@@ -815,7 +829,7 @@ export function PhiBuilderBrandThemeControllerWidgetClient({
 
   const publishDraft = useCallback((
     nextTheme: ThemePayload,
-    options?: { history?: boolean; updateSiteSnapshot?: boolean },
+    options?: { history?: boolean; updateSiteSnapshot?: boolean; correlationId?: string },
   ) => {
     const current = stateRef.current;
     if (options?.history !== false && !isSameThemePayload(current.draft, nextTheme)) {
@@ -842,6 +856,7 @@ export function PhiBuilderBrandThemeControllerWidgetClient({
       nextState.revisionId,
       resolvePhiThemeSelectionValue(siteKey, nextState.hasSiteThemeRevision),
       "draft",
+      options?.correlationId,
     );
   }, [dispatchSignal, historyScope, siteKey]);
 
@@ -935,7 +950,10 @@ export function PhiBuilderBrandThemeControllerWidgetClient({
     };
   }, [dispatchSignal, fallbackTheme, historyScope, showMessage, siteKey, themeKey, themePresets]);
 
-  async function saveTheme(nextTheme = stateRef.current.draft, options?: { notify?: boolean }) {
+  async function saveTheme(
+    nextTheme = stateRef.current.draft,
+    options?: { notify?: boolean; correlationId?: string },
+  ) {
     setSaving(true);
     try {
       const current = stateRef.current;
@@ -973,9 +991,13 @@ export function PhiBuilderBrandThemeControllerWidgetClient({
         revisionId,
         resolvePhiThemeSelectionValue(siteKey, true),
         "draft",
+        options?.correlationId,
       );
       if (options?.notify !== false) {
-        showMessage({ level: "success", content: "Saved theme draft." });
+        showMessage(
+          { level: "success", content: "Saved theme draft." },
+          { correlationId: options?.correlationId ?? null },
+        );
       }
       return revisionId;
     } finally {
@@ -983,7 +1005,7 @@ export function PhiBuilderBrandThemeControllerWidgetClient({
     }
   }
 
-  async function publishTheme() {
+  async function publishTheme(correlationId?: string) {
     const current = stateRef.current;
     if (current.revisionId == null) {
       throw new Error("No saved theme draft found to publish.");
@@ -1022,8 +1044,9 @@ export function PhiBuilderBrandThemeControllerWidgetClient({
       null,
       resolvePhiThemeSelectionValue(siteKey, true),
       "published",
+      correlationId,
     );
-    showMessage({ level: "success", content: "Published theme." });
+    showMessage({ level: "success", content: "Published theme." }, { correlationId: correlationId ?? null });
   }
 
   usePhiSignalListener((signal) => {
@@ -1042,7 +1065,7 @@ export function PhiBuilderBrandThemeControllerWidgetClient({
       if (revisionId !== current.revisionId) {
         stateRef.current = { ...current, revisionId };
       }
-      publishDraft(nextTheme);
+      publishDraft(nextTheme, { correlationId: signal.correlationId });
       return;
     }
 
@@ -1065,7 +1088,7 @@ export function PhiBuilderBrandThemeControllerWidgetClient({
         ...baseTheme,
         mode: nextMode,
       } satisfies ThemePayload, themePresets);
-      emitRootThemeState(dispatchSignal, nextTheme);
+      emitRootThemeState(dispatchSignal, nextTheme, signal.correlationId);
       return;
     }
 
@@ -1080,7 +1103,7 @@ export function PhiBuilderBrandThemeControllerWidgetClient({
         if (isPhiSiteThemeSelectionValue(signal.value, siteKey)) {
           const nextTheme = siteThemeRef.current;
           if (!isSameThemePayload(stateRef.current.draft, nextTheme)) {
-            publishDraft(nextTheme, { updateSiteSnapshot: false });
+            publishDraft(nextTheme, { updateSiteSnapshot: false, correlationId: signal.correlationId });
           }
           return;
         }
@@ -1093,7 +1116,7 @@ export function PhiBuilderBrandThemeControllerWidgetClient({
           selectedPreset,
         );
         if (!isSameThemePayload(stateRef.current.draft, nextTheme)) {
-          publishDraft(nextTheme, { updateSiteSnapshot: false });
+          publishDraft(nextTheme, { updateSiteSnapshot: false, correlationId: signal.correlationId });
         }
         return;
       }
@@ -1118,15 +1141,21 @@ export function PhiBuilderBrandThemeControllerWidgetClient({
     const commandValue = signal.value;
 
     if (commandValue === "save") {
-      void saveTheme().catch((error) => {
-        showMessage({ level: "error", content: error instanceof Error ? error.message : "Failed to save theme draft." });
+      void saveTheme(undefined, { correlationId: signal.correlationId }).catch((error) => {
+        showMessage(
+          { level: "error", content: error instanceof Error ? error.message : "Failed to save theme draft." },
+          { correlationId: signal.correlationId },
+        );
       });
       return;
     }
 
     if (commandValue === "publish") {
-      void publishTheme().catch((error) => {
-        showMessage({ level: "error", content: error instanceof Error ? error.message : "Failed to publish theme." });
+      void publishTheme(signal.correlationId).catch((error) => {
+        showMessage(
+          { level: "error", content: error instanceof Error ? error.message : "Failed to publish theme." },
+          { correlationId: signal.correlationId },
+        );
       });
       return;
     }
@@ -1134,7 +1163,10 @@ export function PhiBuilderBrandThemeControllerWidgetClient({
     if (commandValue === "preview") {
       const revisionId = stateRef.current.revisionId;
       if (!Number.isInteger(revisionId) || (revisionId as number) <= 0) {
-        showMessage({ level: "error", content: "No saved theme draft found. Save first before opening live preview." });
+        showMessage(
+          { level: "error", content: "No saved theme draft found. Save first before opening live preview." },
+          { correlationId: signal.correlationId },
+        );
         return;
       }
 
@@ -1149,21 +1181,27 @@ export function PhiBuilderBrandThemeControllerWidgetClient({
 
     if (commandValue === "reset") {
       const preset = resolveThemePayloadPreset(stateRef.current.draft, themePresets);
-      publishDraft(resetThemeToPreset(stateRef.current.draft, themePresets, preset));
-      showMessage({ level: "success", content: `Reset theme to ${preset.title}.` });
+      publishDraft(
+        resetThemeToPreset(stateRef.current.draft, themePresets, preset),
+        { correlationId: signal.correlationId },
+      );
+      showMessage(
+        { level: "success", content: `Reset theme to ${preset.title}.` },
+        { correlationId: signal.correlationId },
+      );
       return;
     }
 
     if (commandValue === "undo") {
       phiThemeHistory.undo(historyScope, (previous) => {
-        publishDraft(previous, { history: false });
+        publishDraft(previous, { history: false, correlationId: signal.correlationId });
       });
       return;
     }
 
     if (commandValue === "redo") {
       phiThemeHistory.redo(historyScope, (next) => {
-        publishDraft(next, { history: false });
+        publishDraft(next, { history: false, correlationId: signal.correlationId });
       });
     }
   });

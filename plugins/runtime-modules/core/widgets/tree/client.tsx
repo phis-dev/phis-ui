@@ -87,7 +87,15 @@ export function PhiTreeWidgetClient({ config, labels }: { config: PhiTreeWidgetC
   const emitSignal = usePhiSignalEmitter(signalIdentity.sender);
   const emitRoutes = useMemo(() => config.signalRoutes?.emits ?? [], [config.signalRoutes?.emits]);
   const listenRoutes = useMemo(() => config.signalRoutes?.listens ?? [], [config.signalRoutes?.listens]);
-  const emitCapability = useCallback((capabilityId: string, value: PhiSignalValue) => {
+  /*
+   * `correlationId` is the exchange this output belongs to: present when the Tree is answering a
+   * signal it received, absent when the operator drove it from the Tree itself, which begins one.
+   */
+  const emitCapability = useCallback((
+    capabilityId: string,
+    value: PhiSignalValue,
+    correlationId?: string,
+  ) => {
     for (const route of findPhiSignalRoutesByCapabilityId(emitRoutes, capabilityId)) {
       if (route.receiver == null || route.valueType === "json" && !route.valueSchema) continue;
       emitSignal({
@@ -98,6 +106,7 @@ export function PhiTreeWidgetClient({ config, labels }: { config: PhiTreeWidgetC
         valueType: route.valueType,
         valueSchema: route.valueSchema ?? null,
         receiver: route.receiver,
+        correlationId,
       });
     }
   }, [emitRoutes, emitSignal]);
@@ -127,16 +136,20 @@ export function PhiTreeWidgetClient({ config, labels }: { config: PhiTreeWidgetC
   const contractError = binding.resource ? validatePhiTreeWidgetBinding(config, binding.resource)[0] ?? null : null;
   const treeQuery = binding.query;
   const setTreeQuery = binding.setQuery;
-  const activate = useCallback((action: PhiTreeActionDefinition, identity?: PhiTreeNodeIdentity | null) => {
+  const activate = useCallback((
+    action: PhiTreeActionDefinition,
+    identity?: PhiTreeNodeIdentity | null,
+    correlationId?: string,
+  ) => {
     if (action.execution === "signal") {
       emitCapability("actionActivate", {
         actionKey: action.key,
         nodeIdentity: identity ?? null,
         selectedNodeIdentities: binding.selectedNodeIdentities,
-      });
+      }, correlationId);
     } else if (action.execution === "provider") {
       void binding.executeAction(action.key, identity).then((result) => {
-        emitCapability("mutationChange", result as unknown as Record<string, unknown>);
+        emitCapability("mutationChange", result as unknown as Record<string, unknown>, correlationId);
       }).catch(() => undefined);
     }
   }, [binding, emitCapability]);
@@ -170,7 +183,15 @@ export function PhiTreeWidgetClient({ config, labels }: { config: PhiTreeWidgetC
       const request = signal.value as Record<string, unknown>;
       const action = [...(config.features.actions?.toolbar ?? []), ...(config.features.actions?.node ?? []), ...(config.features.actions?.selection ?? [])]
         .find((candidate) => candidate.key === request.actionKey);
-      if (action) activate(action, typeof request.nodeIdentity === "string" || typeof request.nodeIdentity === "number" ? request.nodeIdentity : null);
+      if (action) {
+        activate(
+          action,
+          typeof request.nodeIdentity === "string" || typeof request.nodeIdentity === "number"
+            ? request.nodeIdentity
+            : null,
+          signal.correlationId,
+        );
+      }
     }
   }, [activate, binding, config.features.actions, listenRoutes, signalIdentity.receiver]), useMemo(() => {
     if (!listenRoutes.length) return null;

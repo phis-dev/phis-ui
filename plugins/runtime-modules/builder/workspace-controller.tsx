@@ -1317,7 +1317,7 @@ function usePhiDeveloperBuilderWorkspaceController(
         }
         const rejection = findPhiBuilderPublicRouteAnswerProblem(state, request);
         if (rejection) {
-          showMessage({ level: "error", content: rejection });
+          showMessage({ level: "error", content: rejection }, { correlationId: signal.correlationId });
           return;
         }
         applyPhiBuilderPublicRouteAssignments(defaultArea, request);

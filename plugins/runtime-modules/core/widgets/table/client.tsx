@@ -386,7 +386,15 @@ export function PhiTableWidgetClient({
   const emitSignal = usePhiSignalEmitter(signalIdentity.sender);
   const emitRoutes = useMemo(() => config.signalRoutes?.emits ?? [], [config.signalRoutes?.emits]);
   const listenRoutes = useMemo(() => config.signalRoutes?.listens ?? [], [config.signalRoutes?.listens]);
-  const emitCapability = useCallback((capabilityId: string, value: PhiSignalValue) => {
+  /*
+   * `correlationId` is the exchange this output belongs to: present when the Table is answering a
+   * signal it received, absent when the operator drove it from the Table itself, which begins one.
+   */
+  const emitCapability = useCallback((
+    capabilityId: string,
+    value: PhiSignalValue,
+    correlationId?: string,
+  ) => {
     for (const route of findPhiSignalRoutesByCapabilityId(emitRoutes, capabilityId)) {
       if (route.receiver == null || (route.valueType === "json" && !route.valueSchema)) continue;
       emitSignal({
@@ -397,6 +405,7 @@ export function PhiTableWidgetClient({
         valueType: route.valueType,
         valueSchema: route.valueSchema ?? null,
         receiver: route.receiver,
+        correlationId,
       });
     }
   }, [emitRoutes, emitSignal]);
@@ -492,24 +501,24 @@ export function PhiTableWidgetClient({
     return () => window.clearTimeout(timer);
   }, [features.search?.debounceMs, features.search?.enabled, query.search, searchDraft, setQuery]);
 
-  const updateColumnOrder = useCallback((next: readonly string[]) => {
+  const updateColumnOrder = useCallback((next: readonly string[], correlationId?: string) => {
     const known = new Set(presentation.columns.filter((column) => !column.hidden).map((column) => column.key));
     if (next.length !== known.size || next.some((key) => !known.has(key)) || new Set(next).size !== next.length) return;
     setColumnOrder(next);
-    emitCapability("columnsChange", { columnOrder: [...next] });
+    emitCapability("columnsChange", { columnOrder: [...next] }, correlationId);
   }, [emitCapability, presentation.columns]);
 
-  const updateExpandedRows = useCallback((next: readonly PhiTableRowIdentity[]) => {
+  const updateExpandedRows = useCallback((next: readonly PhiTableRowIdentity[], correlationId?: string) => {
     setExpandedRowIdentities(next);
-    emitCapability("expansionChange", { expandedRowIdentities: [...next] });
+    emitCapability("expansionChange", { expandedRowIdentities: [...next] }, correlationId);
   }, [emitCapability, setExpandedRowIdentities]);
 
-  const updateSelection = useCallback((next: readonly PhiTableRowIdentity[]) => {
+  const updateSelection = useCallback((next: readonly PhiTableRowIdentity[], correlationId?: string) => {
     setSelectedRowIdentities(next);
-    emitCapability("selectionChange", { selectedRowIdentities: [...next] });
+    emitCapability("selectionChange", { selectedRowIdentities: [...next] }, correlationId);
   }, [emitCapability, setSelectedRowIdentities]);
 
-  const updateBindingParams = useCallback((next: Record<string, unknown>) => {
+  const updateBindingParams = useCallback((next: Record<string, unknown>, correlationId?: string) => {
     setBindingParams(next);
     setQuery((current) => ({ ...current, page: 1, cursor: null }));
     setSelectedRowIdentities([]);
@@ -523,7 +532,7 @@ export function PhiTableWidgetClient({
           ? [[field.key, value]]
           : [];
       })),
-    });
+    }, correlationId);
   }, [configuredBindingFields, emitCapability, setExpandedRowIdentities, setQuery, setSelectedRowIdentities]);
 
   useEffect(() => {
@@ -549,6 +558,7 @@ export function PhiTableWidgetClient({
     row?: TableRow,
     identities: readonly PhiTableRowIdentity[] = [],
     actionValue?: string | number | boolean | readonly string[] | readonly number[] | null,
+    correlationId?: string,
   ) => {
     if (onAction?.({ action: action as PhiTableActionDefinition, row, actionValue, selectedRowIdentities: identities }) === true) return;
     const rowIdentity = row && resource ? readRowIdentity(row, resource.rowIdentityPath) : null;
@@ -559,7 +569,7 @@ export function PhiTableWidgetClient({
       ...(actionValue === undefined ? null : { actionValue }),
     };
     if (action.execution === "signal") {
-      emitCapability("actionActivate", signalValue);
+      emitCapability("actionActivate", signalValue, correlationId);
       return;
     }
     if (action.execution === "link") return;
@@ -591,17 +601,17 @@ export function PhiTableWidgetClient({
       if (filters) setQuery((current) => ({ ...current, page: 1, cursor: null, filters }));
     } else if (route.capabilityId === "bindingParamsChange") {
       const next = readPhiTableBindingParamsSignalValue(signal.value);
-      if (next) updateBindingParams({ ...bindingParams, ...next.params });
+      if (next) updateBindingParams({ ...bindingParams, ...next.params }, signal.correlationId);
     } else if (route.capabilityId === "reload") {
       reload();
     } else if (route.capabilityId === "selectionClear") {
-      updateSelection([]);
+      updateSelection([], signal.correlationId);
     } else if (route.capabilityId === "columnsChange") {
       const next = readPhiTableColumnOrderSignalValue(signal.value);
-      if (next) updateColumnOrder(next.columnOrder);
+      if (next) updateColumnOrder(next.columnOrder, signal.correlationId);
     } else if (route.capabilityId === "expansionChange") {
       const next = readPhiTableExpansionSignalValue(signal.value);
-      if (next) updateExpandedRows(next.expandedRowIdentities);
+      if (next) updateExpandedRows(next.expandedRowIdentities, signal.correlationId);
     } else if (route.capabilityId === "actionActivate") {
       const request = readPhiTableActionSignalValue(signal.value);
       if (!request) return;
@@ -614,7 +624,13 @@ export function PhiTableWidgetClient({
       const row = request.rowIdentity == null || !resource
         ? undefined
         : rows.find((candidate) => String(readPhiTableControlValue(candidate, resource.rowIdentityPath)) === String(request.rowIdentity));
-      const execute = () => activateAction(action, row, request.selectedRowIdentities ?? [], request.actionValue);
+      const execute = () => activateAction(
+        action,
+        row,
+        request.selectedRowIdentities ?? [],
+        request.actionValue,
+        signal.correlationId,
+      );
       if (action.confirm) {
         const templateValue = request.rowIdentity ?? request.selectedRowIdentities.length;
         modal.confirm({
