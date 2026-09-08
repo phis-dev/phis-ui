@@ -2133,6 +2133,10 @@ export function PhiBuilderBrandThemePreviewWidgetClient({
              * preview's own cards, which cover this surface but for the gaps between them -- of a
              * picture set as the Root Background barely a seam showed. The layer below carries it, and
              * the padding here is what leaves it visible.
+             *
+             * The padding does not depend on whether a ground is set. It did, and that is a value the
+             * server cannot know: the ground arrives with the draft, after the markup was rendered, so
+             * the first client render would have disagreed with the server about the padding.
              */
             position: "relative",
             /*
@@ -2144,7 +2148,7 @@ export function PhiBuilderBrandThemePreviewWidgetClient({
             isolation: "isolate",
             background: previewSurfaceBackground,
             color: previewTextColor,
-            padding: previewRootBackground ? clientToken.paddingLG : clientToken.paddingSM,
+            padding: clientToken.padding,
             borderRadius: clientToken.paddingXS,
             overflow: "hidden",
           }}
