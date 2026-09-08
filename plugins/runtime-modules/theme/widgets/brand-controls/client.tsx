@@ -2127,12 +2127,35 @@ export function PhiBuilderBrandThemePreviewWidgetClient({
           vertical
           gap={clientToken.padding}
           style={{
-            ...(previewRootBackground ?? { background: previewSurfaceBackground }),
+            /*
+             * The ground, painted the way the Site paints it: its own layer behind the content rather
+             * than a background on the box that holds it. As an inline background it sat under the
+             * preview's own cards, which cover this surface but for the gaps between them -- of a
+             * picture set as the Root Background barely a seam showed. The layer below carries it, and
+             * the padding here is what leaves it visible.
+             */
+            position: "relative",
+            /*
+             * `isolation` is what makes the layer land where it is meant to. At `z-index: -1` without
+             * a stacking context of its own here, the layer would fall behind the opaque preview Card
+             * instead of this surface; at `0` it would paint over the content, because a positioned
+             * box is drawn after its static siblings.
+             */
+            isolation: "isolate",
+            background: previewSurfaceBackground,
             color: previewTextColor,
-            padding: clientToken.paddingSM,
+            padding: previewRootBackground ? clientToken.paddingLG : clientToken.paddingSM,
             borderRadius: clientToken.paddingXS,
+            overflow: "hidden",
           }}
         >
+          {previewRootBackground ? (
+            <div
+              aria-hidden
+              data-phi-preview-root-background="true"
+              style={{ position: "absolute", inset: 0, zIndex: -1, ...previewRootBackground }}
+            />
+          ) : null}
           <Flex align="center" justify="space-between" gap={clientToken.padding} wrap="wrap">
             <Space orientation="vertical" size={0}>
               <Typography.Title level={4} style={{ margin: 0 }}>
