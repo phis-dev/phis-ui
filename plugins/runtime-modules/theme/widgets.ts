@@ -3,6 +3,7 @@ import type { PhiCmsPreviewWidgetPlugin, PhiCmsRuntimeWidgetPlugin } from "../..
 import { PHI_THEME_RUNTIME_MODULE_ID } from "./ids";
 import type { PhiRuntimeModuleRenderPolicies, PhiRuntimeModuleWidgetDefinition } from "../contracts";
 import {
+  PHI_BUILDER_BRAND_BACKGROUND_CONTROLS_WIDGET_DEFINITION,
   PHI_BUILDER_BRAND_STYLE_CONTROLS_WIDGET_DEFINITION,
   PHI_BUILDER_BRAND_THEME_CONTROLS_WIDGET_DEFINITION,
   PHI_BUILDER_BRAND_THEME_PREVIEW_WIDGET_DEFINITION,
@@ -32,6 +33,13 @@ export const PHI_RUNTIME_MODULE_WIDGETS: readonly PhiRuntimeModuleWidgetDefiniti
     renderPolicies: {"runtime":"custom","preview":"custom","authoring":"custom"},
     loadRuntime: () => import("./widgets/brand-controls/plugin").then((module) => module.PHI_BUILDER_BRAND_THEME_CONTROLS_WIDGET_PLUGIN),
     loadPreview: () => import("./widgets/brand-controls/plugin").then((module) => module.PHI_BUILDER_BRAND_THEME_CONTROLS_WIDGET_PLUGIN),
+  }),
+  defineFirstPartyWidget({
+    definition: PHI_BUILDER_BRAND_BACKGROUND_CONTROLS_WIDGET_DEFINITION,
+    ownerModuleId: PHI_THEME_RUNTIME_MODULE_ID,
+    renderPolicies: {"runtime":"custom","preview":"custom","authoring":"custom"},
+    loadRuntime: () => import("./widgets/brand-controls/plugin").then((module) => module.PHI_BUILDER_BRAND_BACKGROUND_CONTROLS_WIDGET_PLUGIN),
+    loadPreview: () => import("./widgets/brand-controls/plugin").then((module) => module.PHI_BUILDER_BRAND_BACKGROUND_CONTROLS_WIDGET_PLUGIN),
   }),
   defineFirstPartyWidget({
     definition: PHI_BUILDER_BRAND_THEME_PREVIEW_WIDGET_DEFINITION,

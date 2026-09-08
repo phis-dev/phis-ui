@@ -2,6 +2,7 @@
 
 import type { PhiCmsBuilderWidgetPlugin } from "../../../../../types";
 import {
+  PHI_BUILDER_BRAND_BACKGROUND_CONTROLS_WIDGET_DEFINITION,
   PHI_BUILDER_BRAND_STYLE_CONTROLS_WIDGET_DEFINITION,
   PHI_BUILDER_BRAND_THEME_CONTROLS_WIDGET_DEFINITION,
   PHI_BUILDER_BRAND_THEME_PREVIEW_WIDGET_DEFINITION,
@@ -47,5 +48,13 @@ export const PHI_BUILDER_BRAND_STYLE_CONTROLS_WIDGET_BUILDER_PLUGIN = {
   renderEditor: renderBrandPlaceholder(
     "Builder Brand Style Controls",
     "Style controls are available in the live Theme workspace.",
+  ),
+} satisfies PhiCmsBuilderWidgetPlugin<PhiBuilderBrandWidgetConfig>;
+
+export const PHI_BUILDER_BRAND_BACKGROUND_CONTROLS_WIDGET_BUILDER_PLUGIN = {
+  ...PHI_BUILDER_BRAND_BACKGROUND_CONTROLS_WIDGET_DEFINITION,
+  renderEditor: renderBrandPlaceholder(
+    "Builder Brand Background Controls",
+    "The Theme Root Background is authored in the live Theme workspace.",
   ),
 } satisfies PhiCmsBuilderWidgetPlugin<PhiBuilderBrandWidgetConfig>;

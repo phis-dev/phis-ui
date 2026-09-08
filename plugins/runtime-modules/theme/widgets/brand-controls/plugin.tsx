@@ -1,11 +1,13 @@
 import type { PhiCmsWidgetPlugin } from "../../../../../types";
 import { PhiWidgetPreviewFallback } from "../../../../../components/widgets/built-in/widget-preview";
 import {
+  PhiBuilderBrandBackgroundControlsWidgetClient,
   PhiBuilderBrandStyleControlsWidgetClient,
   PhiBuilderBrandThemeControlsWidgetClient,
   PhiBuilderBrandThemePreviewWidgetClient,
 } from "./client";
 import {
+  PHI_BUILDER_BRAND_BACKGROUND_CONTROLS_WIDGET_DEFINITION,
   PHI_BUILDER_BRAND_STYLE_CONTROLS_WIDGET_DEFINITION,
   PHI_BUILDER_BRAND_THEME_CONTROLS_WIDGET_DEFINITION,
   PHI_BUILDER_BRAND_THEME_PREVIEW_WIDGET_DEFINITION,
@@ -45,6 +47,18 @@ export const PHI_BUILDER_BRAND_STYLE_CONTROLS_WIDGET_PLUGIN: PhiCmsWidgetPlugin<
       widget={widget}
       pluginTitle="Builder Brand Style Controls"
       summary="Brand style controls are rendered live in the builder."
+    />
+  ),
+};
+
+export const PHI_BUILDER_BRAND_BACKGROUND_CONTROLS_WIDGET_PLUGIN: PhiCmsWidgetPlugin<PhiBuilderBrandWidgetConfig> = {
+  ...PHI_BUILDER_BRAND_BACKGROUND_CONTROLS_WIDGET_DEFINITION,
+  render: ({ runtime, config }) => <PhiBuilderBrandBackgroundControlsWidgetClient runtime={runtime} config={config} />,
+  renderPreview: ({ widget }) => (
+    <PhiWidgetPreviewFallback
+      widget={widget}
+      pluginTitle="Builder Brand Background Controls"
+      summary="The Theme Root Background is authored live in the builder."
     />
   ),
 };

@@ -35,6 +35,7 @@ const PHI_CMS_WIDGET_MODULE_BY_TYPE_KEY: Readonly<Record<string, keyof typeof PH
   "auth-security": "auth",
   "brand": "core",
   "breadcrumb": "core",
+  "builder-brand-background-controls": "theme",
   "builder-brand-style-controls": "theme",
   "builder-brand-theme-controls": "theme",
   "builder-brand-theme-preview": "theme",

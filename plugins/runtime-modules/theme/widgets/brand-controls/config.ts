@@ -58,6 +58,20 @@ export const PHI_BUILDER_BRAND_STYLE_CONTROLS_WIDGET_DEFINITION: PhiBuilderBrand
   category: "configuration",
   iconFamily: "theme",
   slotSizePolicy: "fill-inline",
+  fields: [
+    { key: "themeKey", type: "string", label: "Theme Key" },
+    { key: "reviewArea", type: "string", label: "Review Area" },
+  ],
+  parseConfig: parseBuilderBrandWidgetConfig,
+});
+
+export const PHI_BUILDER_BRAND_BACKGROUND_CONTROLS_WIDGET_DEFINITION: PhiBuilderBrandWidgetDefinition = createPhiCmsWidgetDefinition({
+  typeKey: "builder-brand-background-controls",
+  title: "Builder Brand Background Controls",
+  description: "Theme Root Background authoring for the brand Builder workspace.",
+  category: "configuration",
+  iconFamily: "theme",
+  slotSizePolicy: "fill-inline",
   /*
    * The Theme Root Background is authored here, and its image source is picked from the Media
    * library. A Page mounts only the Data Providers its tree asks for, and the tree scan can see a
@@ -67,6 +81,17 @@ export const PHI_BUILDER_BRAND_STYLE_CONTROLS_WIDGET_DEFINITION: PhiBuilderBrand
    * library, on a Page where the Assets Module was active the whole time.
    */
   requiredDataProviders: [PHI_ASSET_RUNTIME_DATA_PROVIDER_KEYS.mediaCollection],
+  runtimeSignals: {
+    emits: [],
+    listens: [
+      {
+        id: "previewThemeMode",
+        channel: PHI_THEME_SIGNAL_CHANNELS.previewThemeMode,
+        action: "change",
+        valueType: "boolean",
+      },
+    ],
+  },
   fields: [
     { key: "themeKey", type: "string", label: "Theme Key" },
     { key: "reviewArea", type: "string", label: "Review Area" },

@@ -579,36 +579,26 @@ function buildThemeReviewHref({
 }
 
 /*
- * One route set per mode and per purpose.
+ * One route set per purpose: the preview swatch and the image field each open their own picker.
  *
- * The light and the dark ground are edited side by side, so their pickers are mounted at the same
- * time -- four of them, counting the preview swatch and the image field of each Control. Keying the
- * routes by purpose alone gave the light picker and the dark picker the same route identity towards
- * the asset controller, which is exactly the thing a route key exists to keep apart: two senders
- * claiming one route are indistinguishable to anything that reads the route set. The mode belongs in
- * the key for the same reason the purpose does.
+ * There used to be a set per mode as well, because the light and the dark ground were edited side by
+ * side and their four pickers were mounted at once -- two senders on one route are indistinguishable
+ * to anything that reads the route set. Only the mode being edited is mounted now, so the mode is a
+ * property of the value and not of the route. The Control is rebuilt when the mode changes, so a
+ * picker can never outlive the ground it was opened for.
  */
 const PHI_THEME_ROOT_BACKGROUND_MEDIA_ROUTES = {
-  light: {
-    preview: createPhiMediaPickerAssetControllerRoutes("theme-root-background-light-preview-media", "area"),
-    field: createPhiMediaPickerAssetControllerRoutes("theme-root-background-light-field-media", "area"),
-  },
-  dark: {
-    preview: createPhiMediaPickerAssetControllerRoutes("theme-root-background-dark-preview-media", "area"),
-    field: createPhiMediaPickerAssetControllerRoutes("theme-root-background-dark-field-media", "area"),
-  },
+  preview: createPhiMediaPickerAssetControllerRoutes("theme-root-background-preview-media", "area"),
+  field: createPhiMediaPickerAssetControllerRoutes("theme-root-background-field-media", "area"),
 } as const;
 
 /*
- * The renderer a Background Control asks for its media picker, one per mode.
+ * The renderer a Background Control asks for its media picker.
  *
- * Built once at module level rather than per render: the identity is stable without a hook, and the
- * mode it closes over is the mode whose routes it must use, so the two can no longer drift apart.
+ * Built once at module level rather than per render, so its identity is stable without a hook.
  */
-function createPhiThemeRootBackgroundMediaPickerRenderer(
-  mode: PhiThemeMode,
-): NonNullable<PhiBackgroundControlProps["renderMediaPicker"]> {
-  return function renderPhiThemeRootBackgroundMediaPicker(props) {
+const renderPhiThemeRootBackgroundMediaPicker: NonNullable<PhiBackgroundControlProps["renderMediaPicker"]> =
+  function renderPhiThemeRootBackgroundMediaPicker(props) {
     return (
       <PhiMediaPickerBinding
         config={{
@@ -617,7 +607,7 @@ function createPhiThemeRootBackgroundMediaPickerRenderer(
           showPagination: true,
           showGroupFilter: true,
           showSearchBar: true,
-          signalRoutes: PHI_THEME_ROOT_BACKGROUND_MEDIA_ROUTES[mode][props.purpose],
+          signalRoutes: PHI_THEME_ROOT_BACKGROUND_MEDIA_ROUTES[props.purpose],
         }}
         labels={PHI_MEDIA_WIDGET_DEFAULT_LABELS}
         searchLabels={PHI_SEARCH_WIDGET_DEFAULT_LABELS}
@@ -632,14 +622,6 @@ function createPhiThemeRootBackgroundMediaPickerRenderer(
       />
     );
   };
-}
-
-const PHI_THEME_ROOT_BACKGROUND_MEDIA_PICKER_RENDERERS: Readonly<
-  Record<PhiThemeMode, NonNullable<PhiBackgroundControlProps["renderMediaPicker"]>>
-> = {
-  light: createPhiThemeRootBackgroundMediaPickerRenderer("light"),
-  dark: createPhiThemeRootBackgroundMediaPickerRenderer("dark"),
-};
 
 function mergeThemeRootBackground(
   theme: ThemePayload,
@@ -844,6 +826,73 @@ function emitRootThemeState(
     correlationId,
     timestamp: Date.now(),
   });
+}
+
+/**
+ * The draft, for a Widget that edits it but does not own it.
+ *
+ * Three Widgets do that -- colours, style, the root background -- and each held its own copy of this:
+ * a ref for the current draft, a change that asks the Controller to take it, a listener that accepts
+ * what the Controller then states, and a question asked on mount. Written out three times it had
+ * already drifted; the fourth copy is the one worth not writing.
+ *
+ * The Controller stays the owner. Nothing here decides anything about the theme -- it asks, it renders
+ * what it is told, and it reports what the author changed.
+ */
+function usePhiBrandThemeDraft(runtime: PhiBlockRuntime, themeKey: string) {
+  const dispatchSignal = usePhiSignalDispatcher();
+  const { presets: themePresets } = usePhiConfig();
+  const fallbackTheme = useMemo(
+    () => resolveInitialTheme(runtime, themePresets),
+    [runtime, themePresets],
+  );
+  const initialState = useMemo(
+    () => createInitialBrandThemeState(themeKey, fallbackTheme),
+    [fallbackTheme, themeKey],
+  );
+  const draftRef = useRef<ThemePayload>(initialState.draft);
+  const [state, setState] = useState<BrandThemeState>(initialState);
+
+  /*
+   * The address the Controller answers a hydrate request at. A Widget the Builder mounted without one
+   * cannot be told anything, so it does not ask -- it keeps the theme the Site was rendered with.
+   */
+  const selfAddress = usePhiSignalIdentity().receiver ?? null;
+
+  useEffect(() => {
+    if (selfAddress) {
+      emitThemeHydrateRequest(dispatchSignal, selfAddress);
+    }
+  }, [dispatchSignal, selfAddress]);
+
+  const publishDraft = useCallback((nextTheme: ThemePayload) => {
+    draftRef.current = nextTheme;
+    setState((current) => ({ ...current, draft: nextTheme }));
+    emitThemeDraftRequest(dispatchSignal, nextTheme, state.revisionId);
+  }, [dispatchSignal, state.revisionId]);
+
+  usePhiSignalListener((signal) => {
+    if (
+      signal.channel !== PHI_THEME_SIGNAL_CHANNELS.brandTheme ||
+      signal.action !== "change" ||
+      /* A change everybody is told about, or the answer to this Widget's own hydrate request. */
+      (signal.receiver !== "broadcast" && signal.receiver !== selfAddress) ||
+      signal.sender !== createPhiThemeControllerAddress()
+    ) {
+      return;
+    }
+    const value = signal.value && typeof signal.value === "object"
+      ? signal.value as { theme?: unknown; revisionId?: unknown }
+      : null;
+    const nextTheme = normalizeTheme(value?.theme, draftRef.current, themePresets);
+    const revisionId = typeof value?.revisionId === "number" && Number.isInteger(value.revisionId)
+      ? value.revisionId
+      : state.revisionId;
+    draftRef.current = nextTheme;
+    setState((current) => ({ ...current, draft: nextTheme, revisionId }));
+  });
+
+  return { state, draftRef, publishDraft };
 }
 
 function usePhiBrandPreviewMode(initialMode: "light" | "dark") {
@@ -1350,79 +1399,21 @@ export function PhiBuilderBrandThemeControlsWidgetClient({
   config?: PhiBuilderBrandWidgetConfig | null;
   colorPickerLabels?: PhiColorPickerLabels;
 }) {
-  const dispatchSignal = usePhiSignalDispatcher();
   const { presets: themePresets, token: clientToken } = usePhiConfig();
   const sectionLabelWidth = clientToken.controlHeight * 3;
   const colorControlWidth = clientToken.controlHeight * 5.5;
   const themeKey = resolveThemeKey(config);
-  const fallbackTheme = useMemo(
-    () => resolveInitialTheme(runtime, themePresets),
-    [runtime, themePresets],
-  );
-  const initialState = useMemo(() => createInitialBrandThemeState(themeKey, fallbackTheme), [fallbackTheme, themeKey]);
-  const previewMode = usePhiBrandPreviewMode(resolveThemePayloadMode(initialState.draft));
-  const draftRef = useRef<ThemePayload>(initialState.draft);
-  const [state, setState] = useState<BrandThemeState>(initialState);
+  const { state, draftRef, publishDraft } = usePhiBrandThemeDraft(runtime, themeKey);
+  const previewMode = usePhiBrandPreviewMode(resolveThemePayloadMode(state.draft));
   const loading = false;
   const saving = false;
   const [activeColorSections, setActiveColorSections] = useState<string[]>([]);
-
-  /*
-   * The address the Controller answers a hydrate request at. A Widget the Builder mounted without one
-   * cannot be told anything, so it does not ask -- it keeps the theme the Site was rendered with.
-   */
-  const selfAddress = usePhiSignalIdentity().receiver ?? null;
-
-  useEffect(() => {
-    if (selfAddress) {
-      emitThemeHydrateRequest(dispatchSignal, selfAddress);
-    }
-  }, [dispatchSignal, selfAddress]);
 
   useEffect(() => {
     queueMicrotask(() => {
       setActiveColorSections(readStoredActiveColorSections());
     });
   }, []);
-
-  const publishDraft = useCallback((nextTheme: ThemePayload) => {
-    draftRef.current = nextTheme;
-    setState((current) => {
-      const nextState = {
-        ...current,
-        draft: nextTheme,
-      };
-      return nextState;
-    });
-    emitThemeDraftRequest(dispatchSignal, nextTheme, state.revisionId);
-  }, [dispatchSignal, state.revisionId]);
-
-  usePhiSignalListener((signal) => {
-    if (
-      signal.channel === PHI_THEME_SIGNAL_CHANNELS.brandTheme &&
-      signal.action === "change" &&
-      /* A change everybody is told about, or the answer to this Widget's own hydrate request. */
-      (signal.receiver === "broadcast" || signal.receiver === selfAddress) &&
-      signal.sender === createPhiThemeControllerAddress()
-    ) {
-      const value = signal.value && typeof signal.value === "object"
-        ? signal.value as { theme?: unknown; revisionId?: unknown }
-        : null;
-      const nextTheme = normalizeTheme(value?.theme, draftRef.current, themePresets);
-      const revisionId = typeof value?.revisionId === "number" && Number.isInteger(value.revisionId) ? value.revisionId : state.revisionId;
-      draftRef.current = nextTheme;
-      setState((current) => {
-        const nextState = {
-          ...current,
-          draft: nextTheme,
-          revisionId,
-        };
-        return nextState;
-      });
-      return;
-    }
-
-  });
 
   const token = stripEmptyTokenValues(state.draft.antd?.token ?? {});
   const algorithm = previewMode === "dark" ? antdTheme.darkAlgorithm : antdTheme.defaultAlgorithm;
@@ -1631,74 +1622,19 @@ export function PhiBuilderBrandStyleControlsWidgetClient({
   runtime: PhiBlockRuntime;
   config?: PhiBuilderBrandWidgetConfig | null;
 }) {
-  const dispatchSignal = usePhiSignalDispatcher();
-  const { fonts, presets: themePresets, token: clientToken } = usePhiConfig();
+  const { fonts, token: clientToken } = usePhiConfig();
   const fieldLabelWidth = clientToken.controlHeight * 4;
   const themeKey = resolveThemeKey(config);
-  const fallbackTheme = useMemo(
-    () => resolveInitialTheme(runtime, themePresets),
-    [runtime, themePresets],
-  );
-  const initialState = useMemo(() => createInitialBrandThemeState(themeKey, fallbackTheme), [fallbackTheme, themeKey]);
-  const draftRef = useRef<ThemePayload>(initialState.draft);
-  const [state, setState] = useState<BrandThemeState>(initialState);
+  const { state, publishDraft } = usePhiBrandThemeDraft(runtime, themeKey);
   const loading = false;
   const saving = false;
   const [activeStyleSections, setActiveStyleSections] = useState<string[]>([]);
-
-  /* As in the Color controls: no address, no reply to receive, so no question worth asking. */
-  const selfAddress = usePhiSignalIdentity().receiver ?? null;
-
-  useEffect(() => {
-    if (selfAddress) {
-      emitThemeHydrateRequest(dispatchSignal, selfAddress);
-    }
-  }, [dispatchSignal, selfAddress]);
 
   useEffect(() => {
     queueMicrotask(() => {
       setActiveStyleSections(readStoredActiveStyleSections());
     });
   }, []);
-
-  const publishDraft = useCallback((nextTheme: ThemePayload) => {
-    draftRef.current = nextTheme;
-    setState((current) => {
-      const nextState = {
-        ...current,
-        draft: nextTheme,
-      };
-      return nextState;
-    });
-    emitThemeDraftRequest(dispatchSignal, nextTheme, state.revisionId);
-  }, [dispatchSignal, state.revisionId]);
-
-  usePhiSignalListener((signal) => {
-    if (
-      signal.channel === PHI_THEME_SIGNAL_CHANNELS.brandTheme &&
-      signal.action === "change" &&
-      /* A change everybody is told about, or the answer to this Widget's own hydrate request. */
-      (signal.receiver === "broadcast" || signal.receiver === selfAddress) &&
-      signal.sender === createPhiThemeControllerAddress()
-    ) {
-      const value = signal.value && typeof signal.value === "object"
-        ? signal.value as { theme?: unknown; revisionId?: unknown }
-        : null;
-      const nextTheme = normalizeTheme(value?.theme, draftRef.current, themePresets);
-      const revisionId = typeof value?.revisionId === "number" && Number.isInteger(value.revisionId) ? value.revisionId : state.revisionId;
-      draftRef.current = nextTheme;
-      setState((current) => {
-        const nextState = {
-          ...current,
-          draft: nextTheme,
-          revisionId,
-        };
-        return nextState;
-      });
-      return;
-    }
-
-  });
 
   const token = stripEmptyTokenValues(state.draft.antd?.token ?? {});
   const styleTokenInput = {
@@ -1904,34 +1840,51 @@ export function PhiBuilderBrandStyleControlsWidgetClient({
                 </Flex>
               ),
             },
-            {
-              key: "rootBackground",
-              label: <Typography.Text strong>Root Background</Typography.Text>,
-              children: (
-                /*
-                 * The Theme Root Background (SHELL.md): one fixed layer behind the whole site, per
-                 * mode. Both modes are shown side by side rather than following the preview switch,
-                 * because an author setting a dark ground wants to see what the light one is.
-                 */
-                <Flex vertical gap={clientToken.paddingSM}>
-                  {(["light", "dark"] as const).map((backgroundMode) => (
-                    <Flex key={backgroundMode} vertical gap={clientToken.paddingXXS}>
-                      <Typography.Text type="secondary">
-                        {backgroundMode === "light" ? "Light mode" : "Dark mode"}
-                      </Typography.Text>
-                      <PhiBackgroundControl
-                        value={normalizePhiBackgroundWidgetConfig(state.draft.root?.background?.[backgroundMode] ?? null)}
-                        disabled={saving}
-                        renderMediaPicker={PHI_THEME_ROOT_BACKGROUND_MEDIA_PICKER_RENDERERS[backgroundMode]}
-                        onChange={(value) => publishDraft(mergeThemeRootBackground(state.draft, backgroundMode, value))}
-                      />
-                    </Flex>
-                  ))}
-                </Flex>
-              ),
-            },
           ]}
         />
+      </Card>
+    </Flex>
+  );
+}
+
+/**
+ * The Theme Root Background (SHELL.md): one fixed layer behind the whole Site, per mode.
+ *
+ * Its own Stack slot rather than a section of the style controls, because it is not a token -- it is a
+ * picture, and it wants the width. The mode being edited follows the preview switch, the way the
+ * colour controls do: one ground at a time, and the switch says which. It used to show both at once,
+ * so that an author setting the dark ground could see the light one, but the Control draws what it is
+ * given, so each ground is already visible while it is being set.
+ *
+ * The Control is keyed by mode. Switching rebuilds it rather than handing it a different value, so an
+ * open media picker cannot commit into the ground the author has just switched away from.
+ */
+export function PhiBuilderBrandBackgroundControlsWidgetClient({
+  runtime,
+  config,
+}: {
+  runtime: PhiBlockRuntime;
+  config?: PhiBuilderBrandWidgetConfig | null;
+}) {
+  const { token: clientToken } = usePhiConfig();
+  const themeKey = resolveThemeKey(config);
+  const { state, publishDraft } = usePhiBrandThemeDraft(runtime, themeKey);
+  const mode = usePhiBrandPreviewMode(resolveThemePayloadMode(state.draft));
+
+  return (
+    <Flex vertical gap={clientToken.padding} style={{ width: "100%", minWidth: 0 }}>
+      <Card size="small" styles={{ body: { padding: clientToken.paddingSM } }}>
+        <Flex vertical gap={clientToken.paddingXS}>
+          <Typography.Text strong>
+            {mode === "dark" ? "Dark mode ground" : "Light mode ground"}
+          </Typography.Text>
+          <PhiBackgroundControl
+            key={mode}
+            value={normalizePhiBackgroundWidgetConfig(state.draft.root?.background?.[mode] ?? null)}
+            renderMediaPicker={renderPhiThemeRootBackgroundMediaPicker}
+            onChange={(value) => publishDraft(mergeThemeRootBackground(state.draft, mode, value))}
+          />
+        </Flex>
       </Card>
     </Flex>
   );

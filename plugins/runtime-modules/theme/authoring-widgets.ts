@@ -2,6 +2,7 @@
 
 
 import {
+  PHI_BUILDER_BRAND_BACKGROUND_CONTROLS_WIDGET_DEFINITION,
   PHI_BUILDER_BRAND_STYLE_CONTROLS_WIDGET_DEFINITION,
   PHI_BUILDER_BRAND_THEME_CONTROLS_WIDGET_DEFINITION,
   PHI_BUILDER_BRAND_THEME_PREVIEW_WIDGET_DEFINITION,
@@ -19,6 +20,10 @@ export default createPhiAuthoringWidgetModule([
   definePhiAuthoringWidgetModuleLoader(
     PHI_BUILDER_BRAND_THEME_CONTROLS_WIDGET_DEFINITION,
     () => import("./widgets/brand-controls/authoring").then((module) => module.PHI_BUILDER_BRAND_THEME_CONTROLS_WIDGET_BUILDER_PLUGIN),
+  ),
+  definePhiAuthoringWidgetModuleLoader(
+    PHI_BUILDER_BRAND_BACKGROUND_CONTROLS_WIDGET_DEFINITION,
+    () => import("./widgets/brand-controls/authoring").then((module) => module.PHI_BUILDER_BRAND_BACKGROUND_CONTROLS_WIDGET_BUILDER_PLUGIN),
   ),
   definePhiAuthoringWidgetModuleLoader(
     PHI_BUILDER_BRAND_THEME_PREVIEW_WIDGET_DEFINITION,

@@ -153,6 +153,7 @@ const PHI_BUILDER_LAYOUT_NODE_KEYS = [
   "layoutBrandStack",
   "layoutBrandCardsRow",
   "layoutBrandStylePanel",
+  "layoutBrandBackgroundPanel",
   "layoutWorkspaceHeader",
 ] as const;
 
@@ -192,6 +193,7 @@ const PHI_BUILDER_WIDGET_NODE_KEYS = [
   "widgetThemeStackSegmented",
   "widgetBrandStyleControls",
   "widgetBrandStylePreview",
+  "widgetBrandBackgroundControls",
 ] as const;
 
 const SYNTHETIC_DEV_WIDGET_IDS = createPhiPresetCmsInstanceIdMap({
@@ -2373,6 +2375,37 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                 borderRadius: 0,
               },
             }),
+            /*
+             * The label is the Segmented's third entry: it reads the Stack's slots and takes the label
+             * of the first child in each, so naming this one is all the Segmented needs.
+             */
+            buildPhiCmsLayoutNode({
+              creationPreset: { layoutKind: "flex", preset: "panel" },
+              typeKey: "flex",
+              id: SYNTHETIC_DEV_LAYOUT_IDS.layoutBrandBackgroundPanel,
+              siteId: page.siteId,
+              parentLayoutNodeId: SYNTHETIC_DEV_LAYOUT_IDS.layoutBrandStack,
+              slotIndex: PHI_CMS_SEQUENTIAL_LAYOUT_SLOTS[2].slotIndex,
+              sortOrder: 2,
+              status: PhiCmsStatus.Published,
+              flags: 0,
+              visibilityMask: page.visibilityMask,
+              label: "Background",
+              config: {
+                gap: PHI_SPACE.base,
+                anchor: {
+                  horizontal: "left",
+                  vertical: "top",
+                },
+                wrap: true,
+                padding: 0,
+                paddingLeft: 0,
+                paddingRight: 0,
+                background: "transparent",
+                border: "none",
+                borderRadius: 0,
+              },
+            }),
           ]
         : []),
     ],
@@ -4379,6 +4412,24 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                     themeKey: "default",
                     minSize: { width: 300 },
                     maxSize: { width: 400 },
+                  },
+                  contentId: null,
+                }),
+                buildPhiCmsWidgetNode({
+                  typeKey: "builder-brand-background-controls",
+                  id: SYNTHETIC_DEV_WIDGET_IDS.widgetBrandBackgroundControls,
+                  siteId: page.siteId,
+                  parentLayoutNodeId: SYNTHETIC_DEV_LAYOUT_IDS.layoutBrandBackgroundPanel,
+                  slotIndex: PHI_CMS_SEQUENTIAL_LAYOUT_SLOTS[0].slotIndex,
+                  sortOrder: 0,
+                  status: PhiCmsStatus.Published,
+                  flags: 0,
+                  visibilityMask: page.visibilityMask,
+                  label: "dev brand background controls",
+                  config: {
+                    themeKey: "default",
+                    minSize: { width: 360 },
+                    maxSize: { width: 560 },
                   },
                   contentId: null,
                 }),
