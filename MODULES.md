@@ -372,6 +372,28 @@ working-surface routes and navigation entries remain ordinary contributions unde
 Mutable Site Page paths and typed internal Page/Asset targets follow [REFERENCES.md](./REFERENCES.md).
 Module route paths remain descriptor-owned and cannot be changed by a Site Page Meta Form.
 
+### Who owns an address
+
+Outside Public a Module's route path is its package path -- `/acme/shop/...`, derived from the Module id
+-- and nothing can contest it: two packages never meet, and a package only ever collides with itself.
+
+In Public there is no such namespace, so the path a route descriptor declares is an application and not
+a title. The Site settles it when the Module is enabled, and whoever asks second bears the cost: the
+newcomer is offered another address and cannot be enabled without taking one, while the holder keeps what
+it has. A holder is another active Module or a Page the Site authored; both answer the same way.
+
+Outside Public that same principle produces the other outcome, because there the newcomer has nothing to
+yield with. A Site Page authored before a package was installed can sit on that package's path, and
+activation is then refused -- naming the occupied path -- until the Site moves the Page. A Site Page may
+not be moved onto the path of a package active in its Area, so the case can only arise in that one order.
+
+Two consequences bind every Module. Its declared Public path is not necessarily the path it runs under,
+so no Module code may spell out its own address: the way to its own Page is the
+`(ownerModuleId, presetKey)` reference resolved through the current route table. And a Module route path
+stays descriptor-owned against the Site's authoring surfaces -- no Page Meta Form changes it -- while the
+Public address assignment a Site writes at activation is routing rather than authoring, and does change
+which address the descriptor is served under.
+
 ## Contracts, Server, live Client, Controls, and Authoring projections
 
 The Module exports five independently analyzable projections:

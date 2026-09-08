@@ -224,6 +224,41 @@ measures, not reliable copy protection: browser-delivered JavaScript can still b
 and security-critical or commercially sensitive enforcement must remain in Core or an authorized
 Server Add-on, while package access and contractual licensing govern purely client-side Modules.
 
+## Addresses are granted, not owned
+
+Your Module does not own its Public address. It applies for one, and the Site settles the application
+when the Module is enabled. The normative rule is in [MODULES.md](./MODULES.md#who-owns-an-address);
+what follows is what it means while you build.
+
+Outside Public there is nothing to settle. Every route lives under your package path --
+`/acme/shop/...`, derived from the Module id -- so two packages can never contest an address, and how
+your package arranges its routes underneath is your own business.
+
+In Public there is no such namespace. The path your route descriptor declares is an application, and
+where it is already held the operator is asked for another one at activation; the dialog refuses to
+enable the Module without an answer. The holder keeps what it has, whether that is another Module or a
+Page the Site authored. So:
+
+- **The declared path is a wish, not a promise.** In Public your Module may run under a different
+  address than it declared, permanently.
+- **Your own path must not appear anywhere in your Module.** No link, no forward, no condition on
+  `/login`. The way to your own Page is the `(ownerModuleId, presetKey)` reference, resolved through the
+  current route table -- the same reference navigation persists.
+- **A taken address is not a fault.** On a Site that has grown it is the ordinary case.
+- **Yielding an address costs nothing else.** A renamed route, like a declined landing offer, leaves
+  every other route your Module has standing.
+
+One case runs the other way, and it is worth knowing because your Module cannot resolve it. A Page the
+Site authored before your package was installed can sit on your package path outside Public. There your
+Module has nothing to yield with -- that path is its identity -- so activation is refused, naming the
+occupied path, until the Site moves the Page. It needs an operator, and there is nothing to build
+against it: no Module code can avoid or detect it.
+
+*Designed 2026-09-08 and not yet built:* nothing checks a Site Page path against a Module route path in
+either direction today. The Public dialog and the refusal above are the intended behaviour, not the
+current one. What is already true is everything else in this section, including that your declared
+Public path can be reassigned.
+
 ## 1. Define stable ids
 
 Build every identifier from the Module id rather than spelling it out. The factories validate as they
