@@ -194,6 +194,7 @@ const PHI_BUILDER_WIDGET_NODE_KEYS = [
   "widgetBrandStyleControls",
   "widgetBrandStylePreview",
   "widgetBrandBackgroundControls",
+  "widgetBrandBackgroundPreview",
 ] as const;
 
 const SYNTHETIC_DEV_WIDGET_IDS = createPhiPresetCmsInstanceIdMap({
@@ -4430,6 +4431,23 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                     themeKey: "default",
                     minSize: { width: 360 },
                     maxSize: { width: 560 },
+                  },
+                  contentId: null,
+                }),
+                buildPhiCmsWidgetNode({
+                  typeKey: "builder-brand-theme-preview",
+                  id: SYNTHETIC_DEV_WIDGET_IDS.widgetBrandBackgroundPreview,
+                  siteId: page.siteId,
+                  parentLayoutNodeId: SYNTHETIC_DEV_LAYOUT_IDS.layoutBrandBackgroundPanel,
+                  slotIndex: PHI_CMS_SEQUENTIAL_LAYOUT_SLOTS[1].slotIndex,
+                  sortOrder: 1,
+                  status: PhiCmsStatus.Published,
+                  flags: 0,
+                  visibilityMask: page.visibilityMask,
+                  label: "dev brand background preview",
+                  config: {
+                    themeKey: "default",
+                    minSize: { width: 360 },
                   },
                   contentId: null,
                 }),

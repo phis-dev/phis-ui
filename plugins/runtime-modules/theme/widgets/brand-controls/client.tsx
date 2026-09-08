@@ -50,6 +50,7 @@ import {
 import { PHI_SPACING_TOKEN_KEYS } from "../../../../../components/widgets/config/spacing-options";
 import { PhiColorWidget } from "../../../../../components/widgets/client/phi-color-widget";
 import { PhiBackgroundControl, type PhiBackgroundControlProps } from "../../../../../components/controls/phi-background-control";
+import { resolvePhiRootBackgroundPaintStyle } from "../../../../../components/root/phi-root-background";
 import { normalizePhiBackgroundWidgetConfig, type PhiCmsBackgroundWidgetConfig } from "../../../../../components/widgets/config/background";
 import { PhiMediaPickerBinding } from "../../../../../components/media/phi-media-picker-binding";
 import { PHI_MEDIA_WIDGET_DEFAULT_LABELS } from "../../../../../components/media/media-widget-labels";
@@ -1977,6 +1978,12 @@ export function PhiBuilderBrandThemePreviewWidgetClient({
   };
   const previewCardBackground = readEffectiveTokenString(previewEffectiveToken, "colorBgContainer", mode === "dark" ? "#141414" : "#ffffff");
   const previewSurfaceBackground = readEffectiveTokenString(previewEffectiveToken, "colorBgLayout", mode === "dark" ? "#000000" : "#f5f5f5");
+  /*
+   * The Theme Root Background, on the surface the preview treats as the page ground -- the same layer
+   * the Site paints behind everything, in the mode the preview switch is showing. A mode with no
+   * ground configured keeps the resolved layout background, which is exactly what the Site does.
+   */
+  const previewRootBackground = resolvePhiRootBackgroundPaintStyle(previewTheme.root, mode);
   const previewTextColor = readEffectiveTokenString(previewEffectiveToken, "colorText", mode === "dark" ? "rgba(255,255,255,0.85)" : "rgba(0,0,0,0.88)");
   const previewTextSecondaryColor = readEffectiveTokenString(previewEffectiveToken, "colorTextSecondary", mode === "dark" ? "rgba(255,255,255,0.65)" : "rgba(0,0,0,0.65)");
   const previewTextTertiaryColor = readEffectiveTokenString(previewEffectiveToken, "colorTextTertiary", mode === "dark" ? "rgba(255,255,255,0.45)" : "rgba(0,0,0,0.45)");
@@ -2120,7 +2127,7 @@ export function PhiBuilderBrandThemePreviewWidgetClient({
           vertical
           gap={clientToken.padding}
           style={{
-            background: previewSurfaceBackground,
+            ...(previewRootBackground ?? { background: previewSurfaceBackground }),
             color: previewTextColor,
             padding: clientToken.paddingSM,
             borderRadius: clientToken.paddingXS,

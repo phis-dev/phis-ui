@@ -16,19 +16,33 @@ import type { PhiThemeMode } from "../../theme/phi-theme-presets";
  * Motion is inert here by construction: the layer is viewport-fixed, so there is nothing to move
  * against, and no motion layer is mounted for it.
  */
+/**
+ * What the ground paints, without the geometry of the layer that paints it.
+ *
+ * `null` where the mode has no configured ground, which is the caller's cue to use the resolved Ant
+ * Design layout background -- the layer below does it with a CSS variable, the Theme preview with the
+ * token it has already resolved. Separated so both ask this one question about a mode rather than
+ * each reaching into `root.background` and deciding for itself what an empty one means.
+ */
+export function resolvePhiRootBackgroundPaintStyle(
+  root: PhiSiteThemeRoot | null | undefined,
+  mode: PhiThemeMode,
+): CSSProperties | null {
+  const configured = mode === "dark" ? root?.background?.dark : root?.background?.light;
+  return configured ? resolvePhiBackgroundWidgetStyle(configured) : null;
+}
+
 export function resolvePhiRootBackgroundLayerStyle(
   root: PhiSiteThemeRoot | null | undefined,
   mode: PhiThemeMode,
 ): CSSProperties {
-  const configured = mode === "dark" ? root?.background?.dark : root?.background?.light;
-  const style = configured ? resolvePhiBackgroundWidgetStyle(configured) : null;
   return {
     position: "fixed",
     inset: 0,
     zIndex: -1,
     pointerEvents: "none",
     background: "var(--ant-color-bg-layout)",
-    ...(style ?? {}),
+    ...(resolvePhiRootBackgroundPaintStyle(root, mode) ?? {}),
   };
 }
 
