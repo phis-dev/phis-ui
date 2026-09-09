@@ -83,7 +83,13 @@ export function PhiButtonControl({
       {label}
     </Button>
   );
-  const linked = href && !disabled ? <Link href={href}>{button}</Link> : button;
+  /*
+   * Never prefetched. A button-shaped link is a deliberate action rather than somewhere the visitor is
+   * already heading, so speculating on it buys nothing -- and on a refusal page, where this is what the
+   * home link is made of, it buys a request for the Area root that the visitor never asked for. An Area
+   * root that forwards turns that into two.
+   */
+  const linked = href && !disabled ? <Link href={href} prefetch={false}>{button}</Link> : button;
   const badged = badge?.enabled ? (
     <Badge
       color={badge.color}
