@@ -12,11 +12,8 @@ import { isPhiCmsAreaKey, type PhiCmsAreaKey } from "../constants/cms-areas";
 import {
   PhiCmsAreaBoundary,
   PhiCmsAreaShell,
-  PhiCmsRootLayout,
   type PhiCmsAreaChrome,
 } from "../components/cms/phi-cms-root-layout";
-import { resolvePhiCmsErrorPagePath } from "../components/regions/presets/phi-default-pub-error-page-tree";
-import { resolvePhiRequestLocale } from "../server-helpers/request-locale";
 import { PHIS_REQUEST_PATH_HEADER } from "../constants/http-headers";
 import { PhiCmsRootPage } from "../components/cms/phi-cms-root-page";
 import { PhiCmsRootSlotPage } from "../components/cms/phi-cms-root-slot-page";
@@ -212,53 +209,49 @@ export type PhiNextErrorAreaRegistry = Readonly<Record<string, PhiNextErrorAreaE
  * answered by the Public Area. Deciding here rather than redirecting keeps both the status line and the
  * address the visitor asked for.
  */
+
+/**
+ * Which Area answers a refusal, given the path the Site proxy recorded.
+ *
+ * A refusal names its Area only when the first segment is one. Under a locale root that segment is a
+ * page name, so it is checked against the known Areas rather than trusted as one. A path that names no
+ * Area, and any path the proxy did not record, is answered by the Public Area.
+ */
+function resolvePhiRefusalAreaKey(
+  areas: PhiNextErrorAreaRegistry,
+  requestPath: string,
+): PhiCmsAreaKey {
+  const firstSegment = requestPath.split("/").filter(Boolean)[0]?.toLowerCase() ?? "";
+  return isPhiCmsAreaKey(firstSegment) && firstSegment !== "public" && areas[firstSegment]
+    ? firstSegment
+    : "public";
+}
+
 export function createPhiNextRootErrorPage(
   code: PhiCmsErrorPageProps["code"],
   areas: PhiNextErrorAreaRegistry,
 ) {
   return async function PhiNextRootErrorPage() {
     const requestPath = (await headers()).get(PHIS_REQUEST_PATH_HEADER) ?? "";
-    const firstSegment = requestPath.split("/").filter(Boolean)[0]?.toLowerCase() ?? "";
-    /*
-     * A refusal names its Area only when the first segment is one. Under a locale root that segment is
-     * a page name, so it is checked against the known Areas rather than trusted as one.
-     */
-    const areaKey: PhiCmsAreaKey =
-      isPhiCmsAreaKey(firstSegment) && firstSegment !== "public" && areas[firstSegment]
-        ? firstSegment
-        : "public";
+    const areaKey = resolvePhiRefusalAreaKey(areas, requestPath);
     const { cmsBridge, Boundary } = areas[areaKey] ?? areas.public;
 
-    const bridgeRuntime = cmsBridge.runtime;
-    const siteKey = bridgeRuntime?.siteKey?.trim() ?? "";
-    const errorPage = <PhiCmsErrorPage code={code} cmsBridge={cmsBridge} area={areaKey} />;
-    if (!siteKey) {
-      /* Without a Site there is no shell to resolve; the error page falls back to its own bare copy. */
-      return <Boundary>{errorPage}</Boundary>;
-    }
-
     /*
-     * Only the Public Area is addressed by locale; a staff Area is addressed by its own segment, and
-     * `PhiCmsRootLayout` takes whichever of the two the request used as its root.
+     * A refusal draws no Shell at all, and asks for none later.
+     *
+     * Next renders every refusal boundary of the matched segments into the response whether one is
+     * shown or not, so a Shell resolved here was paid for by every successful Page as well -- measured
+     * at three resolutions and roughly 56 KB per request, for output almost no visitor sees. Fetching
+     * it from the client afterwards moved that cost rather than removing it, and bought a page that
+     * changed shape after it had appeared.
+     *
+     * The Area's Client boundary is still mounted, because the error page renders a page tree like any
+     * other and cannot resolve its Runtime Module Clients without one. What the visitor loses is the
+     * navigation, which is why the 404 result carries a link to the Area root.
      */
-    const root =
-      areaKey === "public"
-        ? await resolvePhiRequestLocale({
-            apiBaseUrl: bridgeRuntime?.apiBaseUrl,
-            internalToken: bridgeRuntime?.internalToken,
-            siteKey,
-          })
-        : areaKey;
-
     return (
       <Boundary>
-        <PhiCmsRootLayout
-          root={root}
-          cmsBridge={cmsBridge}
-          path={resolvePhiCmsErrorPagePath(code).split("/").filter(Boolean)}
-        >
-          {errorPage}
-        </PhiCmsRootLayout>
+        <PhiCmsErrorPage code={code} cmsBridge={cmsBridge} area={areaKey} />
       </Boundary>
     );
   };

@@ -28,6 +28,9 @@ export type PhiCmsResultWidgetConfig = PhiCmsWidgetConfigBase & {
  * left on a page with nothing to press. The target is not configured because there is only one sensible
  * answer -- the root of the Area the result was rendered in -- and asking a Site to state it would
  * invite a broken one.
+ *
+ * On by default. A Result ends something, and a page that ends something should say where to go next;
+ * the presets that want silence say so, which is the rarer case and the one worth spelling out.
  */
 export const PHI_RESULT_HOME_LINK_SOURCE_LABEL = "Back to homepage" as const;
 
@@ -55,7 +58,7 @@ export function parsePhiCmsResultWidgetConfig(config: Record<string, unknown>): 
     title: readString(config.title),
     subTitle: readString(config.subTitle),
     translate: readBoolean(config.translate) ?? true,
-    homeLink: readBoolean(config.homeLink) ?? false,
+    homeLink: readBoolean(config.homeLink) ?? true,
     homeLinkLabel: readString(config.homeLinkLabel),
   };
 }
@@ -89,7 +92,7 @@ export const PHI_RESULT_WIDGET_DEFINITION = {
     title: "Information",
     subTitle: "",
     translate: true,
-    homeLink: false,
+    homeLink: true,
     size: {
       width: "100%",
       height: "auto",
