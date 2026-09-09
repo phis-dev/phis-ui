@@ -163,8 +163,8 @@ assert.match(
 /*
  * The separation that keeps Builder implementations out of a live Area's bundle. It is an import
  * question rather than a type question: a value the live projection can reach is a value every Area
- * host that imports it has to ship, which is how `@phis/ui/runtime/authoring-client` -- table controls
- * and the static-resource editor -- once landed on the Public landing page.
+ * host that imports it has to ship, which is how `@phis/ui/runtime/authoring-client` -- the static
+ * options picker and the static-resource editor -- once landed on the Public landing page.
  */
 for (const area of ["accounting", "admin", "app", "editor", "public"] as const) {
   assert.doesNotMatch(
