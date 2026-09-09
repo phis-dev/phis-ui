@@ -310,7 +310,9 @@ function buildHandlers(options?: { upstreamBaseUrl?: string; withAddOn?: boolean
       [PHIS_SITE_KEY_HEADER]: "site",
     }),
     timeoutMs: 2000,
-    ...(options?.withAddOn ? { runtimeModuleCatalog: catalogWithAddOn } : {}),
+    // The Area is the argument now, so a validator hands back one catalog for whichever Area asks.
+    loadRuntimeModuleCatalog: async () =>
+      options?.withAddOn ? catalogWithAddOn : PHI_FIRST_PARTY_RUNTIME_MODULE_CATALOG,
   });
 }
 

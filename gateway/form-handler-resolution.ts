@@ -7,7 +7,6 @@ import { isKnownSpecialCmsRoot } from "../helpers/cms-routing";
 import { getResolvedFormDefinition } from "./form-registry";
 import { getExactSiteArea } from "./site-area";
 import { getPhiCapabilitySnapshot } from "./server-capabilities";
-import { PHI_FIRST_PARTY_RUNTIME_MODULE_CATALOG } from "../plugins/runtime-modules/catalog";
 import { resolvePhiCmsDescriptorCatalog } from "../plugins/runtime-modules/descriptor-compiler";
 import { resolvePhiRuntimeModuleSet } from "../plugins/runtime-modules/resolver";
 import { resolvePhiRuntimeModuleIdsForArea } from "../plugins/runtime-modules/settings";
@@ -62,11 +61,25 @@ export async function resolvePhiServerFormHandler(options: {
   siteKey: string;
   formId: string;
   phase: PhiFormHandlerPhase;
-  runtimeModuleCatalog?: PhiRuntimeModuleCatalog;
+  /**
+   * The catalog of the Area the request came from, loaded once that Area is known.
+   *
+   * A loader rather than a catalog, and required rather than defaulted. It used to fall back to the
+   * Builder's all-Areas catalog, which had two costs. It answered a question nobody asked -- a Module
+   * inactive in the requesting Area still resolved a handler, so activation was a display decision for
+   * Forms and a boundary everywhere else. And being a static import, it pulled every Area's Widget
+   * plugins into any graph that reached this file.
+   *
+   * A Form drawn on the Builder canvas needs no exception. The canvas is authoring: its runtime is a
+   * stand-in and a Form there must not submit, so resolving against the Builder's own Area is the
+   * correct refusal rather than a case to work around.
+   */
+  loadRuntimeModuleCatalog: (area: PhiCmsAreaKey) => Promise<PhiRuntimeModuleCatalog | null>;
 }): Promise<PhiResolvedServerFormHandler | null> {
   const requestContext = resolveRequestArea(options.request);
   if (!requestContext) return null;
-  const catalog = options.runtimeModuleCatalog ?? PHI_FIRST_PARTY_RUNTIME_MODULE_CATALOG;
+  const catalog = await options.loadRuntimeModuleCatalog(requestContext.area);
+  if (!catalog) return null;
   const descriptorCatalog = resolvePhiCmsDescriptorCatalog(catalog);
   const areaDefinition = descriptorCatalog.areaDefinitions.get(requestContext.area);
   if (!areaDefinition) return null;

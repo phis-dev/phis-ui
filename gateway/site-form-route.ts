@@ -5,8 +5,18 @@ import {
   resolvePhiFormSubmitTarget,
 } from "./form-submit";
 import { resolvePhiServerFormHandler } from "./form-handler-resolution";
+import type { PhiCmsAreaKey } from "../constants/cms-areas";
 import type { PhiRuntimeModuleCatalog } from "../plugins/runtime-modules/contracts";
 import { PHIS_SITE_KEY_HEADER } from "../constants/http-headers";
+
+/**
+ * How a Site hands over the catalog of the Area a Form was submitted from.
+ *
+ * A loader, because the Area is only known once the request is read, and importing all of them would
+ * put every Area's Widget plugins into this graph. An Area the Site does not host answers null.
+ */
+export type PhiSiteAreaRuntimeModuleCatalogLoader =
+  (area: PhiCmsAreaKey) => Promise<PhiRuntimeModuleCatalog | null>;
 
 export type BuildPhiSiteFormRouteHandlersOptions = {
   upstreamBaseUrl: string;
@@ -14,7 +24,8 @@ export type BuildPhiSiteFormRouteHandlersOptions = {
   timeoutMs: number;
   logLabel?: string;
   missingBaseUrlMessage?: string;
-  runtimeModuleCatalog?: PhiRuntimeModuleCatalog;
+  /** The catalog of the Area a Form was submitted from. See `resolvePhiServerFormHandler`. */
+  loadRuntimeModuleCatalog: PhiSiteAreaRuntimeModuleCatalogLoader;
 };
 
 type SiteFormSubmitBody = {
@@ -173,7 +184,7 @@ export function buildPhiSiteFormRouteHandlers({
   buildHeaders,
   timeoutMs,
   missingBaseUrlMessage = "Missing apiBaseUrl for /api/site/forms proxy.",
-  runtimeModuleCatalog,
+  loadRuntimeModuleCatalog,
 }: BuildPhiSiteFormRouteHandlersOptions) {
   async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
@@ -203,7 +214,7 @@ export function buildPhiSiteFormRouteHandlers({
       siteKey: relayHeaders.get(PHIS_SITE_KEY_HEADER)?.trim() ?? "",
       formId,
       phase: "preview",
-      runtimeModuleCatalog,
+      loadRuntimeModuleCatalog,
     });
     if (!resolved?.provider.upstreamPath) {
       return toJsonResponse(
@@ -247,7 +258,7 @@ export function buildPhiSiteFormRouteHandlers({
         siteKey: relayHeaders.get(PHIS_SITE_KEY_HEADER)?.trim() ?? "",
         formId: body.formId,
         phase: body.phase,
-        runtimeModuleCatalog,
+        loadRuntimeModuleCatalog,
       });
       if (!resolved) {
         return toJsonResponse({ ok: false, error: "Form handler is not active for this Area." }, 404);

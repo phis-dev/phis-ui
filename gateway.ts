@@ -13,6 +13,7 @@ export {
 export {
   buildPhiSiteFormRouteHandlers,
   type BuildPhiSiteFormRouteHandlersOptions,
+  type PhiSiteAreaRuntimeModuleCatalogLoader,
 } from "./gateway/site-form-route";
 export {
   buildPhiMediaProxyHandlers,
