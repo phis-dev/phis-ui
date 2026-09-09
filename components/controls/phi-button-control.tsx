@@ -1,6 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
+import Link from "next/link";
 import { Badge, Button, Tooltip } from "antd";
 import type { ButtonProps } from "antd";
 
@@ -18,6 +19,15 @@ export type PhiControlBadgePresentation = {
 export type PhiButtonControlProps = {
   label?: ReactNode;
   ariaLabel?: string;
+  /**
+   * Renders the button as a link rather than a command.
+   *
+   * A Button without `onClick` is disabled on purpose -- a control that emits nothing is not a control
+   * -- but a link emits nothing and still does something, so `href` lifts that rule for itself. The
+   * anchor is a real one: it works before hydration and survives a page that mounts no Controller,
+   * which is exactly the case a refusal page is.
+   */
+  href?: string;
   tooltip?: ReactNode;
   icon?: ReactNode;
   type?: PhiButtonType;
@@ -37,6 +47,7 @@ export type PhiButtonControlProps = {
 export function PhiButtonControl({
   label,
   ariaLabel,
+  href,
   tooltip,
   icon,
   type = "default",
@@ -60,7 +71,7 @@ export function PhiButtonControl({
       type={type}
       shape={shape}
       danger={danger}
-      disabled={disabled || (!onClick && htmlType !== "submit")}
+      disabled={disabled || (!onClick && !href && htmlType !== "submit")}
       loading={loading}
       htmlType={htmlType}
       block={block}
@@ -72,6 +83,7 @@ export function PhiButtonControl({
       {label}
     </Button>
   );
+  const linked = href && !disabled ? <Link href={href}>{button}</Link> : button;
   const badged = badge?.enabled ? (
     <Badge
       color={badge.color}
@@ -80,9 +92,9 @@ export function PhiButtonControl({
       showZero={badge.showZero}
       size="small"
     >
-      {button}
+      {linked}
     </Badge>
-  ) : button;
+  ) : linked;
 
   return visibleTooltip ? <Tooltip title={visibleTooltip}>{badged}</Tooltip> : badged;
 }

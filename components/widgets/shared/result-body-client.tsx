@@ -3,12 +3,16 @@
 import { Result } from "antd";
 
 import type { PhiCmsResultWidgetConfig } from "../../../plugins/runtime-modules/core/widgets/result/config";
+import { PhiButtonControl } from "../../controls/phi-button-control";
 
 export type PhiResultWidgetBodyProps = {
   config?: Pick<PhiCmsResultWidgetConfig, "status">;
   code?: string;
   title?: string;
   subTitle?: string;
+  /** Absent unless the widget was asked for the link; the server resolves the target. */
+  homeHref?: string;
+  homeLinkLabel?: string;
 };
 
 export function PhiResultWidgetBody({
@@ -16,6 +20,8 @@ export function PhiResultWidgetBody({
   code,
   title,
   subTitle,
+  homeHref,
+  homeLinkLabel,
 }: PhiResultWidgetBodyProps) {
   const renderedTitle = code && title && code !== title
     ? (
@@ -31,6 +37,9 @@ export function PhiResultWidgetBody({
       status={config?.status ?? "info"}
       title={renderedTitle}
       subTitle={subTitle}
+      extra={homeHref
+        ? <PhiButtonControl href={homeHref} label={homeLinkLabel} type="primary" />
+        : undefined}
     />
   );
 }

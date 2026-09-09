@@ -142,6 +142,14 @@ export async function buildPhiDefaultPubErrorPageTree({
           code: String(code),
           title: copy.title,
           subTitle: copy.subTitle,
+          /*
+           * Only the 404 offers the way out, and only because only the 404 has one.
+           *
+           * The link goes to the root of the Area the refusal happened in. For a missing page that is
+           * somewhere the visitor may go; for 401 and 403 it is the same door that just refused them,
+           * and for 500 it may be as broken as the page they came from.
+           */
+          homeLink: code === 404,
         },
         contentId: null,
       }),

@@ -17,7 +17,19 @@ export type PhiCmsResultWidgetConfig = PhiCmsWidgetConfigBase & {
   title?: string;
   subTitle?: string;
   translate?: boolean;
+  homeLink?: boolean;
+  homeLinkLabel?: string;
 };
+
+/**
+ * The way out of a result that ended a journey.
+ *
+ * A refusal page draws no Shell, so there is no navigation on it at all: without this the visitor is
+ * left on a page with nothing to press. The target is not configured because there is only one sensible
+ * answer -- the root of the Area the result was rendered in -- and asking a Site to state it would
+ * invite a broken one.
+ */
+export const PHI_RESULT_HOME_LINK_SOURCE_LABEL = "Back to homepage" as const;
 
 const PHI_RESULT_STATUS_OPTIONS: Array<{ value: PhiResultWidgetVisualStatus; label: string }> = [
   { value: "success", label: "Success" },
@@ -43,6 +55,8 @@ export function parsePhiCmsResultWidgetConfig(config: Record<string, unknown>): 
     title: readString(config.title),
     subTitle: readString(config.subTitle),
     translate: readBoolean(config.translate) ?? true,
+    homeLink: readBoolean(config.homeLink) ?? false,
+    homeLinkLabel: readString(config.homeLinkLabel),
   };
 }
 
@@ -67,12 +81,15 @@ export const PHI_RESULT_WIDGET_DEFINITION = {
     { key: "title", type: "string", label: "Title" },
     { key: "subTitle", type: "string", label: "Subtitle" },
     { key: "translate", type: "boolean", label: "Translate Text" },
+    { key: "homeLink", type: "boolean", label: "Show Home Link" },
+    { key: "homeLinkLabel", type: "string", label: "Home Link Label" },
   ],
   defaultConfig: {
     status: "info",
     title: "Information",
     subTitle: "",
     translate: true,
+    homeLink: false,
     size: {
       width: "100%",
       height: "auto",
