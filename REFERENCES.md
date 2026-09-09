@@ -19,9 +19,14 @@ A serialized Page render model may carry the currently resolved path as transpor
 
 A Page path change is an explicit structural command addressed by Page Scope id. It is never inferred
 from an ordinary Page Form save. The server normalizes and validates the destination, locks the Scope,
-rejects collisions and reserved or cross-Area paths, changes the canonical path atomically, and records
-an audit event. The command does not create an Undo/Redo entry and cannot be reverted by restoring a
-Page revision.
+rejects collisions against the live and pending paths of the Area, and records the request as a pending
+path -- it does not move the Page. The address changes when the Page is published, which is also where
+the move is audited. Asking for the path the Page already answers on cancels a pending change, and
+discarding a Page draft discards one. The command creates no Undo/Redo entry and cannot be reverted by
+restoring a Page revision.
+
+Builder must therefore show a pending path wherever it shows a path, and must keep routing on the live
+one: a pending path is what the Page will answer on, not what it answers on now.
 
 Module-owned Page paths remain owned by the active route descriptor. A Page Scope with Module preset
 identity must reject path mutation even when the Site has a Draft derived from that preset. The Page

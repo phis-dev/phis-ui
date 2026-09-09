@@ -69,8 +69,8 @@ export async function changePhiBuilderPagePath(input: {
     error?: string;
     message?: string;
     pageScopeId?: number;
-    oldPath?: string;
     path?: string;
+    pendingPath?: string | null;
     references?: {
       total?: number;
       bySource?: { page?: number; navigation?: number; content?: number; area?: number };
@@ -81,8 +81,9 @@ export async function changePhiBuilderPagePath(input: {
   }
   return {
     pageScopeId: body.pageScopeId ?? input.pageScopeId,
-    oldPath: body.oldPath ?? null,
+    /* Still the address the Page answers on: a rename is a pending change until somebody publishes. */
     path: body.path,
+    pendingPath: typeof body.pendingPath === "string" ? body.pendingPath : null,
     references: Number.isSafeInteger(body.references?.total) ? body.references!.total as number : 0,
   };
 }

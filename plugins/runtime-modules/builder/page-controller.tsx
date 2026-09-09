@@ -357,7 +357,9 @@ export function usePhiBuilderPageController({
       showMessage({
         level: "success",
         content: pathResult
-          ? `Page updated. ${pathResult.references} internal reference${pathResult.references === 1 ? "" : "s"} retained.`
+          ? pathResult.pendingPath
+            ? `Page updated. It moves to ${pathResult.pendingPath} when you publish; ${pathResult.references} internal reference${pathResult.references === 1 ? "" : "s"} follow it.`
+            : "Page updated. The pending move was cancelled."
           : "Page meta updated.",
       });
       } catch (error) {
