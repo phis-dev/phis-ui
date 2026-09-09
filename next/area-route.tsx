@@ -4,17 +4,15 @@ import type { Metadata } from "next";
 
 import { readPhiAreaMeta } from "../helpers/cms-area-config";
 import { buildPhiAreaPageMetadata } from "../helpers/phi-metadata";
-import { headers } from "next/headers";
 
 import { PhiCmsErrorPage } from "../components/cms/phi-cms-error-page";
 import type { PhiCmsErrorPageProps } from "../components/cms/phi-cms-error-page";
-import { isPhiCmsAreaKey, type PhiCmsAreaKey } from "../constants/cms-areas";
+import type { PhiCmsAreaKey } from "../constants/cms-areas";
 import {
   PhiCmsAreaBoundary,
   PhiCmsAreaShell,
   type PhiCmsAreaChrome,
 } from "../components/cms/phi-cms-root-layout";
-import { PHIS_REQUEST_PATH_HEADER } from "../constants/http-headers";
 import { PhiCmsRootPage } from "../components/cms/phi-cms-root-page";
 import { PhiCmsRootSlotPage } from "../components/cms/phi-cms-root-slot-page";
 import { isPhiCmsGatewayAuthError } from "../gateway/errors";
@@ -174,35 +172,17 @@ export function createPhiNextStaticAreaNotFound(cmsBridge: PhiCmsSiteBridge, are
 }
 
 /**
- * A root-level error route: `unauthorized.tsx` and `forbidden.tsx`.
+ * What a root error route rebuilds before it renders.
  *
- * These are reached only when an Area layout refuses before it renders -- a reachable Area answers from
- * its own `unauthorized.tsx` or `forbidden.tsx` instead, inside its shell. Being above every Area layout,
- * they are also above the only place the Client boundary is mounted, and the CMS error page renders a
- * page tree like any other: without a boundary it cannot resolve its Runtime Module Clients and throws,
- * replacing the 401 or 403 it was asked to show with a runtime error. So they mount one themselves.
+ * The Bridge is loaded rather than imported, and the Boundary mounted through `next/dynamic`, for the
+ * same reason: the root error routes are the fallback boundary of the whole app, so every module this
+ * value can reach joins every route's Client-reference manifest, and from there the chunk group of
+ * every page. A plain Bridge import is enough to do it -- a Bridge carries its Area's server catalog,
+ * and that catalog names the Widget plugins.
  */
-export type PhiNextErrorAreaEntry = {
-  /**
-   * Loaded rather than imported, for the same reason the Boundary is.
-   *
-   * The root error routes are the fallback boundary of the whole app, so everything this registry can
-   * reach lands in every route's Client-reference manifest. A plain Bridge import put the Builder's
-   * workspace Clients -- pages, shells, the inspector -- into the Public route that way, because a
-   * Bridge carries its Area's server catalog and that catalog names the Widget plugins.
-   */
+export type PhiNextRootErrorArea = {
   loadBridge: () => Promise<PhiCmsSiteBridge>;
   Boundary: React.ComponentType<{ children: React.ReactNode }>;
-};
-
-/**
- * The Areas a root error route can rebuild a shell from, keyed by Area root segment.
- *
- * `public` is required: it is what answers when the path names no Area of its own, and what a Site
- * always has.
- */
-export type PhiNextErrorAreaRegistry = Readonly<Record<string, PhiNextErrorAreaEntry>> & {
-  public: PhiNextErrorAreaEntry;
 };
 
 /**
@@ -212,37 +192,23 @@ export type PhiNextErrorAreaRegistry = Readonly<Record<string, PhiNextErrorAreaE
  * layout, so neither the Area's shell nor the Client boundary it mounts exist any more -- which is why
  * this rebuilds both rather than rendering the error tree bare.
  *
- * The Area comes from the request path the Site proxy recorded, so a refused `/builder/...` is answered
- * in the Builder's own shell. A path that names no Area, and any path the proxy did not record, is
- * answered by the Public Area. Deciding here rather than redirecting keeps both the status line and the
- * address the visitor asked for.
- */
-
-/**
- * Which Area answers a refusal, given the path the Site proxy recorded.
+ * It answers as Public whichever Area was asked for, and every Area is welcome to answer for itself
+ * first: an Area that carries its own `not-found.tsx`, `unauthorized.tsx` or `forbidden.tsx` catches
+ * the refusal inside its own shell and never reaches here. What is left for this route are refusals
+ * raised above an Area segment, and paths that name no Area at all.
  *
- * A refusal names its Area only when the first segment is one. Under a locale root that segment is a
- * page name, so it is checked against the known Areas rather than trusted as one. A path that names no
- * Area, and any path the proxy did not record, is answered by the Public Area.
+ * Rebuilding the refused Area here instead was measured and dropped: one registry naming all six put
+ * 22 further Client modules into every route, the Builder's workspace among them, and roughly half of
+ * the Public landing page's script payload with them. Deciding here rather than redirecting still
+ * keeps both the status line and the address the visitor asked for.
  */
-function resolvePhiRefusalAreaKey(
-  areas: PhiNextErrorAreaRegistry,
-  requestPath: string,
-): PhiCmsAreaKey {
-  const firstSegment = requestPath.split("/").filter(Boolean)[0]?.toLowerCase() ?? "";
-  return isPhiCmsAreaKey(firstSegment) && firstSegment !== "public" && areas[firstSegment]
-    ? firstSegment
-    : "public";
-}
-
 export function createPhiNextRootErrorPage(
   code: PhiCmsErrorPageProps["code"],
-  areas: PhiNextErrorAreaRegistry,
+  area: PhiNextRootErrorArea,
 ) {
+  const { loadBridge, Boundary } = area;
+
   return async function PhiNextRootErrorPage() {
-    const requestPath = (await headers()).get(PHIS_REQUEST_PATH_HEADER) ?? "";
-    const areaKey = resolvePhiRefusalAreaKey(areas, requestPath);
-    const { loadBridge, Boundary } = areas[areaKey] ?? areas.public;
     const cmsBridge = await loadBridge();
 
     /*
@@ -254,13 +220,13 @@ export function createPhiNextRootErrorPage(
      * it from the client afterwards moved that cost rather than removing it, and bought a page that
      * changed shape after it had appeared.
      *
-     * The Area's Client boundary is still mounted, because the error page renders a page tree like any
-     * other and cannot resolve its Runtime Module Clients without one. What the visitor loses is the
+     * The Client boundary is still mounted, because the error page renders a page tree like any other
+     * and cannot resolve its Runtime Module Clients without one. What the visitor loses is the
      * navigation, which is why the 404 result carries a link to the Area root.
      */
     return (
       <Boundary>
-        <PhiCmsErrorPage code={code} cmsBridge={cmsBridge} area={areaKey} />
+        <PhiCmsErrorPage code={code} cmsBridge={cmsBridge} area="public" />
       </Boundary>
     );
   };
