@@ -288,6 +288,12 @@
       "types": "./module-projection-client.ts",
       "default": "./module-projection-client.ts"
     },
+    "./module/projection/authoring-client": {
+      "import": "./module-projection-authoring-client.ts",
+      "require": "./module-projection-authoring-client.ts",
+      "types": "./module-projection-authoring-client.ts",
+      "default": "./module-projection-authoring-client.ts"
+    },
     "./module/site-modules": {
       "import": "./plugins/runtime-modules/site-modules.ts",
       "require": "./plugins/runtime-modules/site-modules.ts",

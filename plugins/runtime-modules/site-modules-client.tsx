@@ -6,7 +6,6 @@ import type {
   PhiRuntimeModuleCalendarAdapterClientDefinition,
   PhiRuntimeModuleDataProviderClientDefinition,
 } from "../../types/cms-plugins";
-import type { PhiRuntimeModuleAuthoringClientContribution } from "./authoring-contributions-client";
 import type { PhiRuntimeModuleControllerClientAreaContribution } from "./area-contributions-controller-client";
 
 /**
@@ -22,14 +21,14 @@ import type { PhiRuntimeModuleControllerClientAreaContribution } from "./area-co
  *
  * Calendar adapters, because every Area re-exports the same common manifest and adapters resolve by
  * their type when a Widget renders; an Area dimension would model a distinction the runtime does not
- * make. And Authoring contributions, because they belong to the Builder rather than to an Area: it
- * wraps one around the canvas for every active Module, whichever Area is being edited. They used to
- * be placed into each eligible Area and read back as a union across all of them, which stored a
- * Module three times to answer one question and let the first Area seen decide if the three ever
- * differed.
+ * make.
  *
- * If either ever becomes Area-scoped it becomes so for first-party Modules too, and the flat list
- * becomes a per-Area one for both.
+ * Authoring contributions are not here either, and for a stronger reason than shape: they live in
+ * `site-modules-authoring-client.tsx` and in a generated file of their own, so that importing this
+ * projection cannot drag a Builder implementation into a live Area's bundle.
+ *
+ * If calendar adapters ever become Area-scoped they become so for first-party Modules too, and the flat
+ * list becomes a per-Area one for both.
  */
 export type PhiSiteModuleClientAreaContributions = {
   controllers?: readonly PhiRuntimeModuleControllerClientAreaContribution[];
@@ -40,13 +39,10 @@ export type PhiSiteModuleClientAreaContributions = {
 export type PhiSiteModuleClientContributions = {
   areas: Readonly<Partial<Record<PhiCmsAreaKey, PhiSiteModuleClientAreaContributions>>>;
   calendarAdapters: readonly PhiRuntimeModuleCalendarAdapterClientDefinition[];
-  /** One per Module, for the Builder. No Area reads these. */
-  authoring: readonly PhiRuntimeModuleAuthoringClientContribution[];
 };
 
 /** A Site that installed no Modules of its own. */
 export const PHI_NO_SITE_MODULE_CLIENT_CONTRIBUTIONS: PhiSiteModuleClientContributions = {
   areas: {},
   calendarAdapters: [],
-  authoring: [],
 };

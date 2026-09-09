@@ -4,7 +4,6 @@ import type { PhiCmsAreaKey } from "./constants/cms-areas";
 import type { PhiRuntimeModuleRenderClientLoader } from "./components/runtime/runtime-module-render-client-manifest";
 import type { PhiModuleClientContributions } from "./module-client";
 import type { PhiModuleDefinitions } from "./module";
-import type { PhiRuntimeModuleAuthoringClientContribution } from "./plugins/runtime-modules/authoring-contributions-client";
 import type { PhiRuntimeModuleControllerClientAreaContribution } from "./plugins/runtime-modules/area-contributions-controller-client";
 import type { PhiRuntimeModuleId } from "./types/cms-module-descriptors";
 import type { PhiRuntimeModuleDataProviderClientDefinition } from "./types/cms-plugins";
@@ -19,13 +18,11 @@ import type { PhiSiteModuleClientContributions } from "./plugins/runtime-modules
  * inconsistently, and carrying it would leave a loader registered for a Module no Area offers.
  *
  * Calendar adapters are not placed at all. They resolve by type wherever a Widget renders, and every Area
- * holds the same set. Authoring contributions are not placed either, and for a kindred reason: the
- * Builder wraps one around the canvas for each active Module whichever Area is being edited, so an Area
- * is not a thing they are ever asked about.
+ * holds the same set.
  *
- * Every Module must bring an Authoring contribution, including one that owns nothing to author. A
- * missing loader is a hard failure at render time -- refused here instead, where the package is composed
- * and the author can still see which Module it is.
+ * Authoring contributions are not here at all. They have their own projection and their own generated
+ * file, because a value this object can reach is a value every Area host that imports it must ship --
+ * see `collectPhiSiteModuleAuthoringContributions`.
  */
 
 type CollectedArea = {
@@ -37,21 +34,10 @@ type CollectedArea = {
 export function collectPhiSiteModuleClientContributions(input: {
   definitions: PhiModuleDefinitions;
   clients: readonly PhiModuleClientContributions[];
-  authoring: readonly PhiRuntimeModuleAuthoringClientContribution[];
 }): PhiSiteModuleClientContributions {
   const areasByModuleId = new Map<PhiRuntimeModuleId, readonly PhiCmsAreaKey[]>(
     input.definitions.map((definition) => [definition.moduleId, definition.eligibleAreas]),
   );
-  const authoringModuleIds = new Set(input.authoring.map((contribution) => contribution.moduleId));
-  for (const definition of input.definitions) {
-    if (!authoringModuleIds.has(definition.moduleId)) {
-      throw new Error(
-        `Module "${definition.moduleId}" has no Authoring contribution. A Module with nothing to author ` +
-        "registers an empty Widget module rather than omitting one.",
-      );
-    }
-  }
-
   const collected = new Map<PhiCmsAreaKey, CollectedArea>();
 
   const areaFor = (area: PhiCmsAreaKey): CollectedArea => {
@@ -82,17 +68,8 @@ export function collectPhiSiteModuleClientContributions(input: {
     }
   }
 
-  /* One per Module, in the order the package composed them, and none for a Module nothing defined. */
-  const authoringByModuleId = new Map<PhiRuntimeModuleId, PhiRuntimeModuleAuthoringClientContribution>();
-  for (const contribution of input.authoring) {
-    if (areasByModuleId.has(contribution.moduleId) && !authoringByModuleId.has(contribution.moduleId)) {
-      authoringByModuleId.set(contribution.moduleId, contribution);
-    }
-  }
-
   return {
     areas: Object.fromEntries(collected),
     calendarAdapters: input.clients.flatMap((client) => [...(client.calendarAdapters ?? [])]),
-    authoring: [...authoringByModuleId.values()],
   };
 }

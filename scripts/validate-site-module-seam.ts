@@ -13,6 +13,8 @@ import type { PhiRuntimeModuleServerAreaContribution } from "../plugins/runtime-
 import type { PhiRuntimeModuleCatalogEntry, PhiRuntimeModuleDefinition } from "../types/cms-plugins";
 import { collectPhiSiteModuleServerAreaContributions } from "../module-projection";
 import { collectPhiSiteModuleClientContributions } from "../module-projection-client";
+import { collectPhiSiteModuleAuthoringContributions } from "../module-projection-authoring-client";
+import type { PhiSiteModuleAuthoringContributions } from "../plugins/runtime-modules/site-modules-authoring-client";
 import {
   extendWithPhiSiteModuleClientManifests,
   readAllPhiSiteModuleAuthoringClientContributions,
@@ -99,8 +101,11 @@ const clientInstalled: PhiSiteModuleClientContributions = {
     },
   },
   calendarAdapters: [{ key: "@acme/shop/calendars/deliveries" }],
-  authoring: [{ moduleId: "@acme/shop/modules/storefront", loadAuthoring: async () => null }],
 } as unknown as PhiSiteModuleClientContributions;
+
+const authoringInstalled = {
+  authoring: [{ moduleId: "@acme/shop/modules/storefront", loadAuthoring: async () => null }],
+} as unknown as PhiSiteModuleAuthoringContributions;
 
 const emptyManifests = () => ({
   controller: new Map(),
@@ -133,8 +138,12 @@ for (const area of Object.values(clientInstalled.areas)) {
   );
 }
 assert.deepEqual(
-  readAllPhiSiteModuleAuthoringClientContributions(clientInstalled).map((entry) => entry.moduleId),
+  readAllPhiSiteModuleAuthoringClientContributions(authoringInstalled).map((entry) => entry.moduleId),
   ["@acme/shop/modules/storefront"],
+);
+assert.ok(
+  !Object.keys(clientInstalled).includes("authoring"),
+  "the live Client projection must not carry Authoring contributions at all",
 );
 
 // Every Client Area host composes through the seam, and the Builder also extends the Authoring union.
@@ -147,9 +156,23 @@ for (const area of ["accounting", "admin", "app", "builder", "editor", "public"]
 }
 assert.match(
   readFileSync("next/areas/builder-client.tsx", "utf8"),
-  /readAllPhiSiteModuleAuthoringClientContributions\(siteModules\)/,
+  /readAllPhiSiteModuleAuthoringClientContributions\(siteModuleAuthoring\)/,
   "the Builder must extend the Authoring union with the Site's own Modules",
 );
+
+/*
+ * The separation that keeps Builder implementations out of a live Area's bundle. It is an import
+ * question rather than a type question: a value the live projection can reach is a value every Area
+ * host that imports it has to ship, which is how `@phis/ui/runtime/authoring-client` -- table controls
+ * and the static-resource editor -- once landed on the Public landing page.
+ */
+for (const area of ["accounting", "admin", "app", "editor", "public"] as const) {
+  assert.doesNotMatch(
+    readFileSync(`next/areas/${area}-client.tsx`, "utf8"),
+    /site-modules-authoring-client|AuthoringContributions/,
+    `the ${area} Client Area host must not reach the Authoring projection`,
+  );
+}
 
 // --- the projection a generated file calls -----------------------------------------------------
 
@@ -184,18 +207,26 @@ const projectedClient = collectPhiSiteModuleClientContributions({
     ],
     calendarAdapters: [{ key: "@acme/shop/calendars/deliveries" }],
   }],
+} as unknown as Parameters<typeof collectPhiSiteModuleClientContributions>[0]);
+
+const projectedAuthoring = collectPhiSiteModuleAuthoringContributions({
+  definitions,
   authoring: [
     { moduleId: storefront, loadAuthoring: async () => null },
     { moduleId: orders, loadAuthoring: async () => null },
   ],
-} as unknown as Parameters<typeof collectPhiSiteModuleClientContributions>[0]);
+} as unknown as Parameters<typeof collectPhiSiteModuleAuthoringContributions>[0]);
 
 assert.deepEqual(projectedClient.areas.public?.renderLoaders?.map(([type]) => type), ["@acme/shop/cart"]);
 assert.deepEqual(projectedClient.areas.admin?.renderLoaders?.map(([type]) => type), ["@acme/shop/cart"]);
 assert.deepEqual(projectedClient.areas.admin?.dataProviders?.map((entry) => entry.key), ["@acme/shop/orders"]);
 assert.deepEqual(projectedClient.areas.public?.dataProviders, [], "orders is not eligible for public");
 // A Module in two Areas is held once, not once per Area, so nothing has to be de-duplicated later.
-assert.deepEqual(projectedClient.authoring.map((entry) => entry.moduleId), [storefront, orders]);
+assert.deepEqual(projectedAuthoring.authoring.map((entry) => entry.moduleId), [storefront, orders]);
+assert.ok(
+  !Object.keys(projectedClient).includes("authoring"),
+  "the live projection must not return Authoring contributions",
+);
 for (const area of Object.values(projectedClient.areas)) {
   assert.ok(
     !Object.keys(area ?? {}).includes("authoring"),
@@ -227,11 +258,10 @@ for (const area of ["accounting", "admin", "app", "builder", "editor", "public"]
 // Every Module must bring an Authoring contribution, because the Builder wraps one around the canvas
 // for each active Module. Refused where the package is composed rather than at render time.
 assert.throws(
-  () => collectPhiSiteModuleClientContributions({
+  () => collectPhiSiteModuleAuthoringContributions({
     definitions,
-    clients: [],
     authoring: [{ moduleId: storefront, loadAuthoring: async () => null }],
-  } as unknown as Parameters<typeof collectPhiSiteModuleClientContributions>[0]),
+  } as unknown as Parameters<typeof collectPhiSiteModuleAuthoringContributions>[0]),
   /"@acme\/shop\/modules\/orders" has no Authoring contribution/,
 );
 

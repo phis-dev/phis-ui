@@ -16,6 +16,7 @@ import {
 import type { PhiRuntimeModuleControllerClientManifest } from "../../components/runtime/runtime-module-controller-client-manifest";
 import { extendPhiRuntimeModuleControllerClientManifest } from "./area-contributions-controller-client";
 import type { PhiRuntimeModuleAuthoringClientContribution } from "./authoring-contributions-client";
+import type { PhiSiteModuleAuthoringContributions } from "./site-modules-authoring-client";
 import type {
   PhiSiteModuleClientAreaContributions,
   PhiSiteModuleClientContributions,
@@ -81,11 +82,14 @@ export function extendWithPhiSiteModuleClientManifests(
  *
  * One per Module and no Area dimension: the Builder wraps an Authoring Client around the canvas for
  * every active Module so a Module can be authored inside an isolated target-Area Canvas without being
- * mounted in the Builder Area itself. The projection already holds them that way, so this is a read
- * rather than a union across six Areas that only ever undid a placement.
+ * mounted in the Builder Area itself.
+ *
+ * It takes the Authoring projection rather than the live one. That is the whole separation: only the
+ * Builder host imports the generated file this argument comes from, so no other Area's bundle can reach
+ * an Authoring implementation.
  */
 export function readAllPhiSiteModuleAuthoringClientContributions(
-  contributions: PhiSiteModuleClientContributions,
+  contributions: PhiSiteModuleAuthoringContributions,
 ): readonly PhiRuntimeModuleAuthoringClientContribution[] {
   return contributions.authoring;
 }

@@ -183,7 +183,15 @@ export function createPhiNextStaticAreaNotFound(cmsBridge: PhiCmsSiteBridge, are
  * replacing the 401 or 403 it was asked to show with a runtime error. So they mount one themselves.
  */
 export type PhiNextErrorAreaEntry = {
-  cmsBridge: PhiCmsSiteBridge;
+  /**
+   * Loaded rather than imported, for the same reason the Boundary is.
+   *
+   * The root error routes are the fallback boundary of the whole app, so everything this registry can
+   * reach lands in every route's Client-reference manifest. A plain Bridge import put the Builder's
+   * workspace Clients -- pages, shells, the inspector -- into the Public route that way, because a
+   * Bridge carries its Area's server catalog and that catalog names the Widget plugins.
+   */
+  loadBridge: () => Promise<PhiCmsSiteBridge>;
   Boundary: React.ComponentType<{ children: React.ReactNode }>;
 };
 
@@ -234,7 +242,8 @@ export function createPhiNextRootErrorPage(
   return async function PhiNextRootErrorPage() {
     const requestPath = (await headers()).get(PHIS_REQUEST_PATH_HEADER) ?? "";
     const areaKey = resolvePhiRefusalAreaKey(areas, requestPath);
-    const { cmsBridge, Boundary } = areas[areaKey] ?? areas.public;
+    const { loadBridge, Boundary } = areas[areaKey] ?? areas.public;
+    const cmsBridge = await loadBridge();
 
     /*
      * A refusal draws no Shell at all, and asks for none later.
