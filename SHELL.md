@@ -201,19 +201,41 @@ The site-owned Shell Chrome Overlay is its counterpart in front of the scrolling
   `data-phi-theme-mode`, because the Regions that paint it are rendered far below the Theme provider
 - has no Area-specific record in the v1 target contract
 
-Still deferred: a single continuous pane per Chrome family, above the scrolling Page and below the
-Region/Layout/Widget content, in place of Regions painting the overlay themselves. It is what a seamless
-`glass` and a single outer Shadow need, and it costs a centrally derived visible geometry that the overlay
-above does not:
+The overlay is painted by one continuous pane per Chrome family, above the scrolling Page and below the
+Region/Layout/Widget content, rather than by each Region for itself. `backdrop-filter` belongs to its
+element: three stacked bands frost three slices of one picture and clamp at their own edges, which put a
+measurable step on every seam. One element spanning the family leaves the seam nowhere to appear, and it
+is what a single outer Shadow needs as well. The panes are:
 
-- one shared Header backdrop covering `header_top`, `header_main`, and the Page-owned `header_bottom`
-- one Sider backdrop covering `sider_left`
+- one Header pane covering `header_top`, `header_main`, and the Page-owned `header_bottom`
+- one pane per Sider, covering `sider_left` and `sider_right`
+- one Footer pane covering `footer_top`, `footer_main`, and `footer_bottom`
+
+The visible geometry is the grid's, not a measurement. Named areas publish start and end lines, so a pane
+spans from a family's first area to its last without anyone resolving a height, and a Region that is
+absent, unmounted, viewport-hidden or collapsed takes its track with it. Two cases do not fall out of the
+grid:
+
+- sticking. Where the bands above the first sticky one scroll away, the pane sticks at a negative offset
+  rather than splitting: over a 55px band that does not stick, above bands that stick at 0, it sticks at
+  -55px and stands still once exactly that band has left the viewport. The offset is derived from the
+  Region configs the Area already resolves, and an unknown height there resolves to no sticking rather
+  than to a guess
+- the embedded topology, where the Header is an L: `header_bottom` sits beside the Sider, and a grid item
+  covers a rectangle, so it takes two panes with the seam on the row the Sider starts in
+
+The Page is isolated so that nothing inside it can stack over the frame, whatever a Page or a Builder
+canvas puts there.
 
 Each Shell backdrop uses the canonical structured Phi Background contract and may therefore add a plain or
 semi-transparent color, gradient, image, Pattern, or noise. It may additionally use the canonical Effect
 contract, including glass/backdrop blur, and the canonical Shadow contract. The declarative properties are
-`headerBackdrop.shadow` and `siderBackdrop.shadow`; they reuse `none`, the shared Shadow presets, and the existing
-explicit custom Shadow value instead of introducing a Shell-specific Shadow shape. Border remains Region chrome.
+`chrome.shadow.header`, `chrome.shadow.sider` and `chrome.shadow.footer`; they reuse `none`, the shared Shadow
+presets, and the existing explicit custom Shadow value instead of introducing a Shell-specific Shadow shape.
+A preset resolves to offsets pointed at the edge the family owns, because the shared presets are Ant's own
+multi-part variables: they point down, they only exist in the browser, and a value that only exists there
+cannot be turned around for a Footer or a Sider. Both Siders take the one Sider entry, being the same edge
+seen from two sides. A custom value passes through untouched. Border remains Region chrome.
 
 The Header-backdrop Shadow is painted exactly once at the outside lower edge of the complete currently visible
 Header stack. It therefore covers `header_top`, `header_main`, and `header_bottom` as one visual unit instead of

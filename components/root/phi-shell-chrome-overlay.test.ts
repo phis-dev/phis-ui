@@ -4,6 +4,8 @@ import {
   phiRegionUsesShellChromeOverlay,
   resolvePhiShellChromeOverlayStyle,
   resolvePhiShellChromeOverlayVariables,
+  resolvePhiShellChromePaneShadow,
+  resolvePhiShellChromePaneShadows,
   resolvePhiShellChromePaneStickyTop,
 } from "./phi-shell-chrome-overlay";
 
@@ -228,5 +230,51 @@ describe("resolvePhiShellChromePaneStickyTop", () => {
       { sticky: false, height: "auto" },
       { sticky: true, offsetTop: 0, height: "55px" },
     ])).toBeNull();
+  });
+});
+
+describe("resolvePhiShellChromePaneShadows", () => {
+  it("points each family's preset at the edge that family owns", () => {
+    const shadows = resolvePhiShellChromePaneShadows({
+      chrome: { shadow: { header: "soft", sider: "soft", footer: "soft" } },
+    });
+    expect(shadows.header).toBe("0px 2px 8px rgba(0, 0, 0, 0.08)");
+    expect(shadows.footer).toBe("0px -2px 8px rgba(0, 0, 0, 0.08)");
+    expect(shadows["sider-left"]).toBe("2px 0px 8px rgba(0, 0, 0, 0.08)");
+    expect(shadows["sider-right"]).toBe("-2px 0px 8px rgba(0, 0, 0, 0.08)");
+  });
+
+  it("carries the second step of weight the shared contract offers", () => {
+    expect(resolvePhiShellChromePaneShadow("strong", "header")).toBe("0px 4px 16px rgba(0, 0, 0, 0.16)");
+  });
+
+  /* An author who wrote a Shadow by hand has already said where it goes. */
+  it("passes a custom value through untouched", () => {
+    expect(resolvePhiShellChromePaneShadow({ kind: "custom", value: "0 0 40px #f00" }, "footer"))
+      .toBe("0 0 40px #f00");
+  });
+
+  it("casts nothing for none, and nothing where the Theme says nothing", () => {
+    expect(resolvePhiShellChromePaneShadow("none", "header")).toBeUndefined();
+    expect(resolvePhiShellChromePaneShadow(null, "header")).toBeUndefined();
+    const empty = resolvePhiShellChromePaneShadows(null);
+    expect(empty.header).toBeUndefined();
+    expect(empty["sider-right"]).toBeUndefined();
+  });
+
+  /* Both Siders are the same edge seen from two sides, so one entry drives both. */
+  it("gives both Siders the one Sider entry", () => {
+    const shadows = resolvePhiShellChromePaneShadows({ chrome: { shadow: { sider: "strong" } } });
+    expect(shadows["sider-left"]).toBe("4px 0px 16px rgba(0, 0, 0, 0.16)");
+    expect(shadows["sider-right"]).toBe("-4px 0px 16px rgba(0, 0, 0, 0.16)");
+    expect(shadows.header).toBeUndefined();
+  });
+
+  it("publishes a shadow variable per family that has one", () => {
+    const variables = resolvePhiShellChromeOverlayVariables({
+      chrome: { shadow: { header: "soft" } },
+    });
+    expect(variables["--phi-shell-chrome-shadow-header"]).toBe("0px 2px 8px rgba(0, 0, 0, 0.08)");
+    expect(variables["--phi-shell-chrome-shadow-footer"]).toBeUndefined();
   });
 });

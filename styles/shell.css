@@ -353,6 +353,18 @@
 }
 
 /*
+ * The right Sider is one Region in one area, so its pane is that area.
+ *
+ * It fills the area rather than following the Region, which sits at the start of it and is only as tall
+ * as its content. There is no way for a grid item to be the height of a sibling, and of the two wrong
+ * answers a frame that runs the height of the row reads as a frame, while one that stops halfway reads
+ * as a floating panel.
+ */
+.shell-sider-full .phi-shell-chrome-pane--sider-right {
+  grid-area: sider_right;
+}
+
+/*
  * The embedded topology: `header_top` and `header_main` run the full width, `header_bottom` does not,
  * because the Sider starts beside it. A grid item covers a rectangle and nothing else, so one pane over
  * all three would reach across the Sider and frost it twice. Two panes instead, and the seam between
@@ -379,6 +391,10 @@
 .shell-sider-embedded .phi-shell-chrome-pane--footer {
   grid-row: footer_top-start / footer_bottom-end;
   grid-column: footer_top-start / footer_top-end;
+}
+
+.shell-sider-embedded .phi-shell-chrome-pane--sider-right {
+  grid-area: sider_right;
 }
 
 /* What a Chrome Region paints of the shared ground, which is the overlay itself while it is the Region

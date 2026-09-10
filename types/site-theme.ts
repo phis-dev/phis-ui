@@ -1,3 +1,4 @@
+import type { PhiShadow } from "./layout-style";
 import type { PhiCmsBackgroundWidgetConfig } from "../components/widgets/config/background";
 
 export type PhiSiteRemSettings = {
@@ -27,6 +28,21 @@ export type PhiSiteThemeRoot = {
   chrome?: {
     light?: PhiCmsBackgroundWidgetConfig | null;
     dark?: PhiCmsBackgroundWidgetConfig | null;
+    /**
+     * The Shadow each Chrome pane casts at its own outside edge, on the canonical Shadow contract
+     * (SHELL.md): `none`, a shared preset, or an explicit custom value.
+     *
+     * One entry per family rather than one for the frame, because a Shadow cannot point in three
+     * directions at once: the Header casts down onto the Page, a Sider sideways at its outer inline
+     * edge, and the Footer up towards the Content. It sits beside the ground rather than in it because
+     * it is not a mode value -- the frame is one surface in either mode, and a Shadow that changed with
+     * the mode would be a second ground, not an edge.
+     */
+    shadow?: {
+      header?: PhiShadow | null;
+      sider?: PhiShadow | null;
+      footer?: PhiShadow | null;
+    } | null;
   } | null;
 };
 

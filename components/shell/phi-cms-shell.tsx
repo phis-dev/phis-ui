@@ -50,21 +50,41 @@ const PHI_SHELL_CHROME_PANE_PAINT: CSSProperties = {
   WebkitBackdropFilter: "var(--phi-shell-chrome-filter, none)",
 };
 
+type PhiShellChromePaneName =
+  | "header"
+  | "header-bottom"
+  | "sider"
+  | "sider-right"
+  | "footer";
+
+/*
+ * Which published Shadow a pane wears. The two Header panes of the embedded topology share the Header's
+ * Shadow, and the left Sider's pane is named `sider` for the grid area it covers.
+ */
+const PHI_SHELL_CHROME_PANE_SHADOW_SOURCE: Record<PhiShellChromePaneName, string> = {
+  header: "header",
+  "header-bottom": "header",
+  sider: "sider-left",
+  "sider-right": "sider-right",
+  footer: "footer",
+};
+
 function PhiShellChromePane({
   family,
   stickyTop,
 }: {
-  family: "header" | "header-bottom" | "sider" | "footer";
+  family: PhiShellChromePaneName;
   stickyTop?: string | null;
 }) {
+  const boxShadow = `var(--phi-shell-chrome-shadow-${PHI_SHELL_CHROME_PANE_SHADOW_SOURCE[family]}, none)`;
   return (
     <div
       aria-hidden
       className={`phi-shell-chrome-pane phi-shell-chrome-pane--${family}`}
       style={
         stickyTop == null
-          ? PHI_SHELL_CHROME_PANE_PAINT
-          : { ...PHI_SHELL_CHROME_PANE_PAINT, position: "sticky", top: stickyTop }
+          ? { ...PHI_SHELL_CHROME_PANE_PAINT, boxShadow }
+          : { ...PHI_SHELL_CHROME_PANE_PAINT, boxShadow, position: "sticky", top: stickyTop }
       }
     />
   );
@@ -109,6 +129,7 @@ export function PhiCmsShell({
       >
         {hasHeader ? <PhiShellChromePane family="header" stickyTop={headerPaneStickyTop} /> : null}
         <PhiShellChromePane family="sider" />
+        {siderRight ? <PhiShellChromePane family="sider-right" /> : null}
         {hasFooter ? <PhiShellChromePane family="footer" /> : null}
         {siderLeft}
         {headerTop}
@@ -139,6 +160,7 @@ export function PhiCmsShell({
       {headerTop || headerMain ? <PhiShellChromePane family="header" stickyTop={headerPaneStickyTop} /> : null}
       {headerBottom ? <PhiShellChromePane family="header-bottom" /> : null}
       {siderLeft ? <PhiShellChromePane family="sider" /> : null}
+      {siderRight ? <PhiShellChromePane family="sider-right" /> : null}
       {hasFooter ? <PhiShellChromePane family="footer" /> : null}
       {headerTop}
       {headerMain}
