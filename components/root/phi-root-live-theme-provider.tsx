@@ -13,6 +13,8 @@ import type {
   PhiThemeMode,
   PhiThemePresetPlugin,
 } from "../../theme/phi-theme-presets";
+import { PHI_CORE_THEME_BLOCK_CATALOG, type PhiThemeBlockCatalog } from "../../theme/phi-theme-composition";
+import { resolvePhiThemeRuntimePayload } from "../../theme/phi-theme-runtime";
 import { resolvePhiPublishedThemeCustomColors } from "../../theme/phi-theme-palette";
 import { PhiConfigProvider } from "./phi-config-provider";
 import { PhiRootBackgroundLayer } from "./phi-root-background";
@@ -40,6 +42,7 @@ export function PhiRootLiveThemeProvider({
   availableLocales,
   fonts,
   presets,
+  themeBlocks,
   rootClassName,
   rootStyle,
   remRootValue,
@@ -53,6 +56,8 @@ export function PhiRootLiveThemeProvider({
   availableLocales: readonly string[];
   fonts: PhiRootThemeFonts;
   presets: readonly PhiThemePresetPlugin[];
+  /** Style, ground and set blocks; palettes arrive as `presets`. */
+  themeBlocks?: Partial<Omit<PhiThemeBlockCatalog, "palettes">>;
   rootClassName: string;
   rootStyle: CSSProperties & Record<`--${string}`, string>;
   remRootValue: number;
@@ -134,7 +139,16 @@ export function PhiRootLiveThemeProvider({
       typeof signal.value === "object" &&
       !Array.isArray(signal.value)
     ) {
-      const nextTheme = signal.value as PhiSiteTheme;
+      /*
+       * A draft states what its author chose, not what it resolves to. Folding the blocks in here is
+       * what makes the live preview show the same Theme the Site will render, including the parts a
+       * Module contributed and the parts that fell back to the core.
+       */
+      const nextTheme = resolvePhiThemeRuntimePayload(signal.value as PhiSiteTheme, {
+        ...PHI_CORE_THEME_BLOCK_CATALOG,
+        ...themeBlocks,
+        palettes: presets,
+      }).theme;
       setLiveSiteTheme(nextTheme);
       setMode(nextTheme.mode === "dark" ? "dark" : "light");
       return;

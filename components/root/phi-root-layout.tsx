@@ -21,6 +21,8 @@ import {
   type PhiThemePresetPlugin,
 } from "../../theme/phi-theme-presets";
 import { resolvePhiPublishedRootTheme } from "../../theme/phi-published-root-style";
+import { PHI_CORE_THEME_BLOCK_CATALOG, type PhiThemeBlockCatalog } from "../../theme/phi-theme-composition";
+import { resolvePhiThemeRuntimePayload } from "../../theme/phi-theme-runtime";
 import { projectPhiSiteThemeRootBackground } from "../../theme/phi-root-background.server";
 
 const firaSans = Fira_Sans({
@@ -49,6 +51,11 @@ export type PhiRootLayoutProps = {
   site?: PhiSiteConfig;
   resolvedLocale?: PhiResolvedLocale | null;
   themePresets?: readonly PhiThemePresetPlugin[];
+  /**
+   * Style, ground and set blocks the active Modules contribute. Palettes arrive as `themePresets`,
+   * which is the field Modules have always shipped them in.
+   */
+  themeBlocks?: Partial<Omit<PhiThemeBlockCatalog, "palettes">>;
 };
 
 type FontSelection = {
@@ -98,19 +105,29 @@ export async function PhiRootLayout({
   site: siteSnapshot,
   resolvedLocale,
   themePresets = PHI_CORE_THEME_PRESET_PLUGINS,
+  themeBlocks,
 }: PhiRootLayoutProps) {
   const site = siteSnapshot ?? await getResolvedSiteConfig({ apiBaseUrl, internalToken, siteKey });
-  const siteTheme = await projectPhiSiteThemeRootBackground(site.theme, { apiBaseUrl, internalToken, siteKey });
+  /*
+   * The blocks the Site follows are folded in before anything reads the Theme, so every consumer below
+   * sees one ordinary Theme record and none of them has to know that a Module shipped half of it.
+   */
+  const { theme: siteThemeRecord } = resolvePhiThemeRuntimePayload(site.theme, {
+    ...PHI_CORE_THEME_BLOCK_CATALOG,
+    ...themeBlocks,
+    palettes: themePresets,
+  });
+  const siteTheme = await projectPhiSiteThemeRootBackground(siteThemeRecord, { apiBaseUrl, internalToken, siteKey });
   const antdLocale = await loadPhiAntdLocale(resolvedLocale?.locale ?? resolvedLocale?.intlLocale);
-  const resolvedThemeMode = site.theme?.mode === "dark" ? "dark" : "light";
+  const resolvedThemeMode = siteThemeRecord?.mode === "dark" ? "dark" : "light";
 
   // Keep the basiset explicit and self-hosted; accent/display stay as open slots for later.
-  const bodyFont = resolveThemeFont(site.theme?.fonts?.body, "var(--phi-font-source-body)");
-  const monoFont = resolveThemeFont(site.theme?.fonts?.mono, "var(--phi-font-source-mono)");
-  const serifFont = resolveThemeFont(site.theme?.fonts?.serif, "var(--phi-font-source-serif)");
-  const accentFont = resolveThemeFont(site.theme?.fonts?.accent, "");
-  const displayFont = resolveThemeFont(site.theme?.fonts?.display, "");
-  const remSettings: PhiRemSelection = site.theme?.rem;
+  const bodyFont = resolveThemeFont(siteThemeRecord?.fonts?.body, "var(--phi-font-source-body)");
+  const monoFont = resolveThemeFont(siteThemeRecord?.fonts?.mono, "var(--phi-font-source-mono)");
+  const serifFont = resolveThemeFont(siteThemeRecord?.fonts?.serif, "var(--phi-font-source-serif)");
+  const accentFont = resolveThemeFont(siteThemeRecord?.fonts?.accent, "");
+  const displayFont = resolveThemeFont(siteThemeRecord?.fonts?.display, "");
+  const remSettings: PhiRemSelection = siteThemeRecord?.rem;
   const remRootValue = resolveFinitePositiveNumber(remSettings?.rootValue, 16);
   const themeFonts = {
       body: bodyFont.fontFamily,
@@ -120,7 +137,7 @@ export async function PhiRootLayout({
       display: displayFont.fontFamily,
   };
   const publishedRootTheme = resolvePhiPublishedRootTheme({
-    siteTheme: site.theme,
+    siteTheme: siteThemeRecord,
     remRootValue,
     themePresets,
   });
@@ -142,6 +159,7 @@ export async function PhiRootLayout({
             availableLocales={site.availableLocales.map((option) => option.code)}
             fonts={themeFonts}
             presets={themePresets}
+            themeBlocks={themeBlocks}
             rootClassName={PHI_ROOT_FONT_CLASS_NAME}
             rootStyle={publishedRootTheme.style}
             remRootValue={remRootValue}

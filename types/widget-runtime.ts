@@ -1,6 +1,7 @@
 import type { PhiShellTheme } from "../components/shell/shell-types";
 import type { PhiSiteFontSlots, PhiSiteRemSettings, PhiSiteThemeRoot } from "./site-theme";
 import type { PhiThemeCustomColorPalette, PhiThemeMode } from "../theme/phi-theme-presets";
+import type { PhiThemeBlockSelection } from "../theme/phi-theme-composition";
 import type { PhiControlShape } from "../theme/phi-control-shape";
 import type { PhiViewerAddonRoleClaim, PhiViewerGroupClaim, PhiViewerRoleClaim } from "./access";
 import type { PhiControllerSignalAddress } from "./signals";
@@ -44,6 +45,8 @@ export type PhiBlockRuntimeSite = {
   };
   theme?: {
     mode: PhiWidgetThemeMode;
+    /** Which Theme blocks the Site follows; `preset` remains the palette of a Theme written before. */
+    blocks?: PhiThemeBlockSelection | null;
     preset?: string | null;
     presetVersion?: number | null;
     shape?: {
