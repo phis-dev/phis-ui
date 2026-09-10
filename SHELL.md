@@ -158,7 +158,9 @@ They must not be collapsed into per-Region backgrounds or per-Region glass effec
 
 The site-owned Theme Root Background:
 
-- is configured in `/builder/theme`, independently for light and dark mode
+- is configured in `/builder/theme`, independently for light and dark mode, with one button that
+  copies the mode on screen onto the other one. The two modes usually differ in a colour rather
+  than in what is painted, and the copy is a draft change like any other, so Undo takes it back
 - uses the canonical structured Phi Background contract, including color, gradient, image, Pattern,
   and noise; a new shell-only background representation is forbidden
 - falls back to the resolved Ant Design layout background (`colorBgLayout` / `PHI_COLOR.bgLayout`)
@@ -176,7 +178,8 @@ The site-owned Theme Root Background:
 
 The site-owned Shell Chrome Overlay is its counterpart in front of the scrolling Page:
 
-- is configured in `/builder/theme` beside the Root Background, independently for light and dark mode
+- is configured in `/builder/theme` beside the Root Background, independently for light and dark
+  mode, and offers the same copy between the two modes
 - uses the same canonical structured Phi Background contract, narrowed to what a frame can express: a
   color, a gradient, a Pattern, or noise. An `image` Base is not offered. The overlay is a treatment laid
   over the Root Background rather than a second ground, and a picture here, anchored to the viewport,

@@ -1940,6 +1940,41 @@ export function PhiBuilderBrandStyleControlsWidgetClient({
  * The Control is keyed by mode. Switching rebuilds it rather than handing it a different value, so an
  * open media picker cannot commit into the ground the author has just switched away from.
  */
+/**
+ * Carry the ground authored for one mode over to the other.
+ *
+ * A Site is authored in one mode first, and the other one usually wants the same picture with at most
+ * a colour changed. Without this the author rebuilds it field by field in a mode that is not on
+ * screen. The copy goes through the same draft change every control here makes, so Undo takes it back
+ * in one step like any other edit, and it is offered only while the two modes actually differ.
+ */
+function PhiBrandCopyModeButton({
+  mode,
+  disabled,
+  onCopy,
+}: {
+  mode: "light" | "dark";
+  disabled: boolean;
+  onCopy: () => void;
+}) {
+  return (
+    <Button size="small" style={{ flexShrink: 0 }} disabled={disabled} onClick={onCopy}>
+      {`Copy to ${mode === "dark" ? "light" : "dark"}`}
+    </Button>
+  );
+}
+
+/**
+ * Whether a copy would change anything, asked of the shape the control renders rather than of the
+ * stored record: an absent field and an explicit empty one describe the same ground.
+ */
+function isSamePhiBackgroundConfig(
+  left: PhiCmsBackgroundWidgetConfig,
+  right: PhiCmsBackgroundWidgetConfig,
+) {
+  return JSON.stringify(left) === JSON.stringify(right);
+}
+
 export function PhiBuilderBrandBackgroundControlsWidgetClient({
   runtime,
   config,
@@ -1956,6 +1991,13 @@ export function PhiBuilderBrandBackgroundControlsWidgetClient({
     BRAND_THEME_BACKGROUND_SECTION_KEYS,
   );
   const modeLabel = mode === "dark" ? "Dark mode" : "Light mode";
+  const otherMode = mode === "dark" ? "light" : "dark";
+  const rootBackground = normalizePhiBackgroundWidgetConfig(state.draft.root?.background?.[mode] ?? null);
+  const otherRootBackground =
+    normalizePhiBackgroundWidgetConfig(state.draft.root?.background?.[otherMode] ?? null);
+  const chromeOverlay = resolvePhiShellChromeOverlayConfig(state.draft.root?.chrome?.[mode] ?? null);
+  const otherChromeOverlay =
+    resolvePhiShellChromeOverlayConfig(state.draft.root?.chrome?.[otherMode] ?? null);
 
   return (
     <Flex vertical gap={clientToken.padding} style={{ width: "100%", minWidth: 0 }}>
@@ -1977,12 +2019,20 @@ export function PhiBuilderBrandBackgroundControlsWidgetClient({
               label: <Typography.Text strong>Root Background</Typography.Text>,
               children: (
                 <Flex vertical gap={clientToken.paddingXS}>
-                  <Typography.Text type="secondary">
-                    {modeLabel}. One layer behind the whole Site, fixed to the viewport.
-                  </Typography.Text>
+                  <Flex align="center" justify="space-between" gap={clientToken.paddingXS}>
+                    <Typography.Text type="secondary">
+                      {modeLabel}. One layer behind the whole Site, fixed to the viewport.
+                    </Typography.Text>
+                    <PhiBrandCopyModeButton
+                      mode={mode}
+                      disabled={isSamePhiBackgroundConfig(rootBackground, otherRootBackground)}
+                      onCopy={() =>
+                        publishDraft(mergeThemeRootBackground(state.draft, otherMode, rootBackground))}
+                    />
+                  </Flex>
                   <PhiBackgroundControl
                     key={mode}
-                    value={normalizePhiBackgroundWidgetConfig(state.draft.root?.background?.[mode] ?? null)}
+                    value={rootBackground}
                     motionModes={PHI_ROOT_BACKGROUND_MOTION_MODES}
                     renderMediaPicker={renderPhiThemeRootBackgroundMediaPicker}
                     onChange={(value) => publishDraft(mergeThemeRootBackground(state.draft, mode, value))}
@@ -1995,13 +2045,21 @@ export function PhiBuilderBrandBackgroundControlsWidgetClient({
               label: <Typography.Text strong>Chrome Overlay</Typography.Text>,
               children: (
                 <Flex vertical gap={clientToken.paddingXS}>
-                  <Typography.Text type="secondary">
-                    {modeLabel}. Shared by the Header, Sider and Footer Regions. Content and Hero never
-                    take it, and a Region that authors its own Background or Effect paints over it.
-                  </Typography.Text>
+                  <Flex align="center" justify="space-between" gap={clientToken.paddingXS}>
+                    <Typography.Text type="secondary">
+                      {modeLabel}. Shared by the Header, Sider and Footer Regions. Content and Hero never
+                      take it, and a Region that authors its own Background or Effect paints over it.
+                    </Typography.Text>
+                    <PhiBrandCopyModeButton
+                      mode={mode}
+                      disabled={isSamePhiBackgroundConfig(chromeOverlay, otherChromeOverlay)}
+                      onCopy={() =>
+                        publishDraft(mergeThemeChromeOverlay(state.draft, otherMode, chromeOverlay))}
+                    />
+                  </Flex>
                   <PhiBackgroundControl
                     key={`chrome-${mode}`}
-                    value={resolvePhiShellChromeOverlayConfig(state.draft.root?.chrome?.[mode] ?? null)}
+                    value={chromeOverlay}
                     motionModes={PHI_SHELL_CHROME_OVERLAY_MOTION_MODES}
                     effects={PHI_SHELL_CHROME_OVERLAY_EFFECTS}
                     baseKinds={PHI_SHELL_CHROME_OVERLAY_BASE_KINDS}
