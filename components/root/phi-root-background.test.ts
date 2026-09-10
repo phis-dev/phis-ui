@@ -12,7 +12,7 @@ import {
 describe("root background layer style", () => {
   it("falls back to the layout background when nothing is configured", () => {
     const style = resolvePhiRootBackgroundLayerStyle(null, "light");
-    expect(style.background).toBe("var(--ant-color-bg-layout)");
+    expect(style.backgroundColor).toBe("var(--ant-color-bg-layout)");
     expect(style.position).toBe("fixed");
     expect(style.zIndex).toBe(-1);
     expect(style.pointerEvents).toBe("none");
@@ -37,7 +37,7 @@ describe("root background layer style", () => {
     expect(light.backgroundImage).toBe("linear-gradient(to bottom, #ffffff 0%, #e0e0ff 100%)");
     const dark = resolvePhiRootBackgroundLayerStyle(root, "dark");
     expect(dark.backgroundImage).toBeUndefined();
-    expect(dark.background).toBe("var(--ant-color-bg-layout)");
+    expect(dark.backgroundColor).toBe("var(--ant-color-bg-layout)");
   });
 
   it("keeps the fallback ground under an explicit \"none\" base", () => {
@@ -45,7 +45,7 @@ describe("root background layer style", () => {
       { background: { light: { base: { kind: "none" as const } } } },
       "light",
     );
-    expect(style.background).toBe("var(--ant-color-bg-layout)");
+    expect(style.backgroundColor).toBe("var(--ant-color-bg-layout)");
     expect(style.backgroundImage).toBeUndefined();
   });
 
@@ -92,7 +92,7 @@ describe("root background motion", () => {
       "dark",
     );
     expect(style.backgroundImage).toBeUndefined();
-    expect(style.background).toBe("var(--ant-color-bg-layout)");
+    expect(style.backgroundColor).toBe("var(--ant-color-bg-layout)");
     expect(style.position).toBe("fixed");
   });
 

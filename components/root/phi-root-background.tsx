@@ -87,7 +87,15 @@ export function resolvePhiRootBackgroundLayerStyle(
     inset: 0,
     zIndex: -1,
     pointerEvents: "none",
-    background: "var(--ant-color-bg-layout)",
+    /*
+     * The fallback ground as a longhand, never as the `background` shorthand.
+     *
+     * The paint spread in below emits longhands, and React warns when a rerender has to drop one of
+     * those from an element whose shorthand is still set: switching a Root Background from an image to
+     * a colour removes `background-image` while `background` stands, which is exactly the warning. The
+     * value is a colour, so the longhand says the same thing without the shorthand's silent resets.
+     */
+    backgroundColor: "var(--ant-color-bg-layout)",
     /*
      * Under motion the image belongs to the moving layer alone. Painting it here as well would leave a
      * second, still copy of the same picture underneath the one that moves. The fallback ground stays:
