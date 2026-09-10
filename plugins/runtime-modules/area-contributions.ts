@@ -184,6 +184,11 @@ export function mergePhiRuntimeModuleServerAreaContributions(
           contribution.catalogEntry.themes,
           (entry) => `${entry.ownerModuleId}/${entry.presetKey}/${entry.themeKey}`,
         ),
+        themeBlocks: mergeUnique(
+          current.catalogEntry.themeBlocks,
+          contribution.catalogEntry.themeBlocks,
+          (entry) => `${entry.ownerModuleId}/${entry.presetKey}/${entry.blockKind}:${entry.blockKey}`,
+        ),
       },
     }));
   }

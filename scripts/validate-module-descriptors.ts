@@ -545,6 +545,7 @@ const buildTestCatalog = (
   routesByArea: new Map([["public", routes.map(compilePhiCmsRoutePattern)]]),
   moduleNavigationByArea: new Map(),
   themeByKey: new Map(),
+  themeBlockByKey: new Map(),
 });
 const activeTestModules = new Set([TEST_MODULE_ID]);
 const precedenceTable = compilePhiCmsActiveRouteTable({

@@ -13,6 +13,11 @@ import {
   type PhiCmsInstanceId,
 } from "../../types/cms-instance-id";
 import type {
+  PhiThemeGroundBlock,
+  PhiThemeSetBlock,
+  PhiThemeStyleBlock,
+} from "../../theme/phi-theme-blocks";
+import type {
   PhiCmsActiveRouteTable,
   PhiCmsAreaDefinition,
   PhiCmsAreaOverlayPresetDescriptor,
@@ -31,6 +36,7 @@ import type {
   PhiCmsResolvedNavigationSurface,
   PhiCmsRoutePresetBinding,
   PhiCmsRoutePresetDescriptor,
+  PhiCmsThemeBlockBinding,
   PhiCmsThemePresetBinding,
   PhiRuntimeModuleId,
 } from "../../types/cms-module-descriptors";
@@ -362,6 +368,7 @@ export function compilePhiCmsDescriptorCatalog({
   }[]>();
   const routesByArea = new Map<PhiCmsAreaKey, PhiCmsCompiledRoutePattern[]>();
   const themeByKey = new Map<string, PhiCmsThemePresetBinding>();
+  const themeBlockByKey = new Map<string, PhiCmsThemeBlockBinding>();
 
   for (const [moduleId, entry] of catalog) {
     const descriptorKeys = new Set<string>();
@@ -481,6 +488,25 @@ export function compilePhiCmsDescriptorCatalog({
         throw new Error(`Duplicate theme preset key "${descriptor.themeKey}".`);
       }
       themeByKey.set(descriptor.themeKey, { descriptor });
+    }
+
+    /*
+     * Style, ground and Set blocks. Keyed by kind and key together, because the three kinds are three
+     * namespaces: a "forest" ground and a "forest" Set are different things and both are wanted.
+     */
+    for (const descriptor of entry.themeBlocks ?? []) {
+      if (descriptor.ownerModuleId !== moduleId) {
+        throw new Error(`${moduleId}: theme block "${descriptor.presetKey}" has a different owner.`);
+      }
+      assertPositiveVersion(descriptor.presetVersion, `${moduleId}/${descriptor.presetKey} presetVersion`);
+      normalizeRequiredKey(descriptor.blockKey, `${moduleId}/${descriptor.presetKey} block key`);
+      normalizeRequiredKey(descriptor.title, `${moduleId}/${descriptor.presetKey} title`);
+      registerIdentity(descriptor.presetKey);
+      const blockIdentity = `${descriptor.blockKind}:${descriptor.blockKey}`;
+      if (themeBlockByKey.has(blockIdentity)) {
+        throw new Error(`Duplicate theme block "${blockIdentity}".`);
+      }
+      themeBlockByKey.set(blockIdentity, { descriptor });
     }
   }
 
@@ -763,6 +789,7 @@ export function compilePhiCmsDescriptorCatalog({
     routeByIdentity,
     routesByArea,
     themeByKey,
+    themeBlockByKey,
   };
 }
 
@@ -1486,6 +1513,37 @@ export async function instantiatePhiCmsThemePresets(
       .filter((binding) => activeModuleIds.has(binding.descriptor.ownerModuleId))
       .map(instantiatePhiCmsThemePreset),
   );
+}
+
+/**
+ * The blocks the active Modules contribute, sorted into the three kinds.
+ *
+ * Each block is checked against the descriptor that announced it, the same way a palette is: a
+ * mismatch means the catalog says one thing and the code another, and a Site would then follow a key
+ * that resolves to something else.
+ */
+export async function instantiatePhiCmsThemeBlocks(
+  catalog: PhiCmsCompiledDescriptorCatalog,
+  activeModuleIds: ReadonlySet<PhiRuntimeModuleId>,
+) {
+  const bindings = [...catalog.themeBlockByKey.values()].filter(
+    (binding) => activeModuleIds.has(binding.descriptor.ownerModuleId),
+  );
+  const blocks = await Promise.all(bindings.map(async (binding) => {
+    const block = await binding.descriptor.loadBlock();
+    if (block.key !== binding.descriptor.blockKey || block.title !== binding.descriptor.title) {
+      throw new Error(
+        `Theme block "${binding.descriptor.ownerModuleId}/${binding.descriptor.presetKey}" metadata mismatch.`,
+      );
+    }
+    return { kind: binding.descriptor.blockKind, block };
+  }));
+
+  return {
+    styles: blocks.filter((entry) => entry.kind === "style").map((entry) => entry.block as PhiThemeStyleBlock),
+    grounds: blocks.filter((entry) => entry.kind === "ground").map((entry) => entry.block as PhiThemeGroundBlock),
+    sets: blocks.filter((entry) => entry.kind === "set").map((entry) => entry.block as PhiThemeSetBlock),
+  };
 }
 
 function createSyntheticPresetPage({

@@ -4,6 +4,8 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 
 import { PhiRootLayout } from "../components/root/phi-root-layout";
+import { PHI_FIRST_PARTY_RUNTIME_MODULE_CATALOG } from "../plugins/runtime-modules/catalog";
+import { loadPhiThemeBlockCatalog } from "../plugins/runtime-modules/theme/block-catalog";
 import { buildPhiRootMetadata } from "../helpers/phi-metadata";
 import { localizePath } from "../helpers/locale";
 import {
@@ -50,6 +52,11 @@ export async function generatePhiNextRootMetadata(): Promise<Metadata> {
 export async function PhiNextRootLayout({ children }: { children: React.ReactNode }) {
   const { runtimeConfig, site, resolvedLocale } = await loadPhiNextRootContract();
   const remRootValue = site.theme?.rem?.rootValue ?? 16;
+  /*
+   * The Theme blocks this Site can follow. Asked here rather than per Area, because a Theme is
+   * site-wide: the same record has to resolve the same way on every page.
+   */
+  const themeBlocks = await loadPhiThemeBlockCatalog(PHI_FIRST_PARTY_RUNTIME_MODULE_CATALOG);
 
   return (
     <html lang={resolvedLocale.intlLocale} style={{ fontSize: `${remRootValue}px` }}>
@@ -60,6 +67,8 @@ export async function PhiNextRootLayout({ children }: { children: React.ReactNod
           siteKey={runtimeConfig.site.key}
           site={site}
           resolvedLocale={resolvedLocale}
+          themePresets={themeBlocks.palettes}
+          themeBlocks={themeBlocks}
         >
           {children}
         </PhiRootLayout>

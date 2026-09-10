@@ -3,6 +3,11 @@ import type { PhiCmsRegionTypeValue } from "../constants/phi-cms";
 import type { PhiCmsPageNode, PhiResolvedCmsPageTree } from "./cms";
 import type { PhiBlockRuntime } from "./widget-runtime";
 import type { PhiThemePresetPlugin } from "../theme/phi-theme-presets";
+import type {
+  PhiThemeGroundBlock,
+  PhiThemeSetBlock,
+  PhiThemeStyleBlock,
+} from "../theme/phi-theme-blocks";
 import type { PhiViewerAccessPolicy } from "./access";
 import type { PhiCmsInstanceId } from "./cms-instance-id";
 
@@ -110,6 +115,32 @@ export type PhiCmsThemePresetDescriptor = PhiCmsPresetIdentity & {
   title: string;
   description?: string;
   loadPreset: () => PhiThemePresetPlugin | Promise<PhiThemePresetPlugin>;
+};
+
+/**
+ * A style, a ground or a Set a Module contributes (theme/phi-theme-blocks.ts).
+ *
+ * The palette has its own descriptor above, kept as it is because Modules already ship palettes
+ * through it. The other three arrive here, one descriptor shape for all of them: they differ in what
+ * they carry, not in how they are announced, and a single shape keeps the catalog and its duplicate
+ * check from growing three near-identical copies.
+ *
+ * `loadBlock` is called only for an active Module, which is what lets a ground carry an image the
+ * bundler resolves: nothing is loaded on a Site that does not use it.
+ */
+export type PhiCmsThemeBlockKind = "style" | "ground" | "set";
+
+export type PhiCmsThemeBlockDescriptor = PhiCmsPresetIdentity & {
+  presetVersion: number;
+  blockKind: PhiCmsThemeBlockKind;
+  blockKey: string;
+  title: string;
+  description?: string;
+  loadBlock: () =>
+    | PhiThemeStyleBlock
+    | PhiThemeGroundBlock
+    | PhiThemeSetBlock
+    | Promise<PhiThemeStyleBlock | PhiThemeGroundBlock | PhiThemeSetBlock>;
 };
 
 export type PhiCmsNavigationLabel = {
@@ -255,6 +286,7 @@ export type PhiCmsModulePresetDescriptors = {
   areaOverlays?: readonly PhiCmsAreaOverlayPresetDescriptor[];
   routes?: readonly PhiCmsRoutePresetDescriptor[];
   themes?: readonly PhiCmsThemePresetDescriptor[];
+  themeBlocks?: readonly PhiCmsThemeBlockDescriptor[];
 };
 
 export type PhiCmsAreaShellPresetBinding = {
@@ -268,6 +300,10 @@ export type PhiCmsRoutePresetBinding = {
 
 export type PhiCmsThemePresetBinding = {
   descriptor: PhiCmsThemePresetDescriptor;
+};
+
+export type PhiCmsThemeBlockBinding = {
+  descriptor: PhiCmsThemeBlockDescriptor;
 };
 
 export type PhiCmsCompiledRoutePattern = {
@@ -289,6 +325,8 @@ export type PhiCmsCompiledDescriptorCatalog = {
   routeByIdentity: ReadonlyMap<string, PhiCmsRoutePresetDescriptor>;
   routesByArea: ReadonlyMap<PhiCmsAreaKey, readonly PhiCmsCompiledRoutePattern[]>;
   themeByKey: ReadonlyMap<string, PhiCmsThemePresetBinding>;
+  /** Keyed by `<kind>:<blockKey>`, so a style and a ground may share a name. */
+  themeBlockByKey: ReadonlyMap<string, PhiCmsThemeBlockBinding>;
 };
 
 export type PhiCmsActiveRouteTable = {

@@ -1,0 +1,77 @@
+import { PHI_THEME_ALPINE_GROUND_IMAGE } from "./alpine-ground-image";
+import type { PhiThemeGroundBlock, PhiThemeSetBlock } from "../../../../theme/phi-theme-blocks";
+
+/**
+ * A ground with a picture, and the Set that uses it.
+ *
+ * The core blocks paint gradients so that the floor every Site falls back to depends on no file. This
+ * is the other case: a Module that brings its own picture, which is the whole reason a Theme can be
+ * handed over as a look rather than as a palette.
+ *
+ * The picture is stated as a plain source, the same shape an author's own image takes once it is in
+ * the Media library. That is what makes the hand-over work: the moment somebody edits this Theme, the
+ * workspace takes the picture into the Site's own library and rewrites the draft to point at the
+ * Asset. From then on the Site owns it and switching this Module off costs nothing.
+ *
+ * The Chrome is frosted and tinted rather than clear: over a photograph, plain glass leaves the Header
+ * legible only where the picture happens to be quiet.
+ */
+export const PHI_THEME_ALPINE_GROUND: PhiThemeGroundBlock = {
+  key: "alpine",
+  version: 1,
+  title: "Alpine",
+  description: "A photograph behind the Page, with a frosted frame over it.",
+  root: {
+    background: {
+      light: {
+        base: {
+          kind: "image",
+          sourceKind: "url",
+          sourceUrl: PHI_THEME_ALPINE_GROUND_IMAGE,
+          size: "cover",
+          repeat: "no-repeat",
+        },
+        overlay: null,
+        effect: null,
+        motion: null,
+      },
+      dark: {
+        base: {
+          kind: "image",
+          sourceKind: "url",
+          sourceUrl: PHI_THEME_ALPINE_GROUND_IMAGE,
+          size: "cover",
+          repeat: "no-repeat",
+        },
+        overlay: null,
+        effect: "dim",
+        motion: null,
+      },
+    },
+    chrome: {
+      light: {
+        base: { kind: "color", color: "rgba(255, 255, 255, 0.62)" },
+        overlay: null,
+        effect: "glass",
+        motion: null,
+      },
+      dark: {
+        base: { kind: "color", color: "rgba(6, 12, 20, 0.62)" },
+        overlay: null,
+        effect: "glass",
+        motion: null,
+      },
+      shadow: { header: "soft", sider: "soft", footer: "soft" },
+    },
+  },
+};
+
+export const PHI_THEME_ALPINE_SET: PhiThemeSetBlock = {
+  key: "alpine",
+  version: 1,
+  title: "Alpine",
+  description: "Evergreen colour over a mountain photograph.",
+  palette: "forest",
+  style: "phi",
+  ground: "alpine",
+};

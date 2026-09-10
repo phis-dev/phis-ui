@@ -27,6 +27,7 @@ import type {
   PhiCmsAreaOverlayPresetDescriptor,
   PhiCmsAreaShellPresetDescriptor,
   PhiCmsRoutePresetDescriptor,
+  PhiCmsThemeBlockDescriptor,
   PhiCmsThemePresetDescriptor,
   PhiRuntimeModuleId,
   PhiCmsNavigationInjectionDescriptor,
@@ -808,6 +809,7 @@ export type PhiRuntimeModuleCatalogEntry = {
    */
   navigation?: readonly PhiCmsNavigationInjectionDescriptor[];
   themes?: readonly PhiCmsThemePresetDescriptor[];
+  themeBlocks?: readonly PhiCmsThemeBlockDescriptor[];
   loadUiProvider?: () => Promise<PhiRuntimeModuleUiProvider>;
   load: PhiRuntimeModuleLoader;
 };
