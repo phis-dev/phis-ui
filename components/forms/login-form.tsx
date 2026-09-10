@@ -68,12 +68,20 @@ export function LoginForm({
             await waitForNextPaint();
             await onSubmit(values as LoginFormValues);
           } catch (error) {
+            /*
+             * A refused login is an answer, not a crash.
+             *
+             * The message is the whole handling: it belongs in the Alert above the form, where the
+             * person who typed the password reads it. Rethrowing it as well left it unhandled --
+             * nothing above awaits this submit -- so wrong credentials arrived as an unhandled
+             * rejection and Next.js put the dev error overlay over the form that was already saying
+             * the same thing.
+             */
             setErrorMessage(
               error instanceof Error
                 ? error.message
                 : labels?.errors?.loginFailed ?? "Login failed.",
             );
-            throw error;
           }
         }}
       />

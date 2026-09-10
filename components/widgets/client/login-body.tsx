@@ -7,7 +7,7 @@ import { LoginForm, type LoginFormLabels, type LoginFormValues } from "../../for
 import { PHI_SHARED_FORM_IDS } from "../../forms/shared-form-ids";
 import type { PhiClientBlockBaseProps, PhiBlockRuntime, PhiSignalAddress } from "../../../types";
 import { normalizeLoginRedirectTarget, resolveSafePostLoginTarget } from "../login-redirect";
-import { usePhiRuntimeFormClient } from "../../forms/runtime-form-client";
+import { PhiRuntimeFormSubmitError, usePhiRuntimeFormClient } from "../../forms/runtime-form-client";
 import type { PhiFormDescriptor } from "../../../types/form-descriptor";
 import type { PhiAuthWorkflow } from "./auth-workflow-body";
 import { PhiFormControl, type PhiFormControlHandle } from "../../controls/phi-form-control";
@@ -52,6 +52,28 @@ type PhiPublicAuthManifest = {
     startPath: string;
   }>;
 };
+
+/**
+ * What to say when the submit never reached an answer, which is a different thing from a refusal.
+ *
+ * Only a transport failure is the network. Naming every one of them that way is how a submit held by
+ * a wiring fault, ending at its 30s timeout, reached the person typing their password as a connection
+ * problem -- and it hid the fault for as long as it lasted. The rest carry their own message, which is
+ * technical because it is meant for whoever has to find out why a form stopped answering.
+ */
+function resolveLoginSubmitFailureMessage(
+  labels: LoginFormLabels | undefined,
+  error: unknown,
+) {
+  const resolvedNetwork = labels?.errors?.network ?? "Network error while logging in.";
+
+  if (error instanceof PhiRuntimeFormSubmitError) {
+    return error.failure === "transport" ? resolvedNetwork : error.message;
+  }
+
+  const message = error instanceof Error ? error.message.trim() : "";
+  return message || resolvedNetwork;
+}
 
 function resolveLoginErrorMessage(
   labels: LoginFormLabels | undefined,
@@ -304,8 +326,8 @@ export function PhiLoginWidget({
         code?: string;
         error?: string;
       };
-    } catch {
-      throw new Error(labels?.errors?.network ?? "Network error while logging in.");
+    } catch (error) {
+      throw new Error(resolveLoginSubmitFailureMessage(labels, error));
     }
 
     if (!loginResponseOk) {

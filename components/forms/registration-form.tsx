@@ -136,11 +136,11 @@ export function RegistrationForm({
             window.sessionStorage.removeItem(storageKey);
             setState({ submitted: true, error: "" });
           } catch (error) {
+            // Shown, so handled. Rethrowing reaches nobody and surfaces as an unhandled rejection.
             setState({
               submitted: false,
               error: error instanceof Error ? error.message : labels.feedback.genericError,
             });
-            throw error;
           }
         }}
       />

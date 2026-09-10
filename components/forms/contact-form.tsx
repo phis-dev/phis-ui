@@ -73,8 +73,8 @@ export function ContactForm({
             formRef.current?.reset();
             showMessage({ level: "success", content: labels.feedback.successTitle });
           } catch (error) {
+            // Shown, so handled. Rethrowing reaches nobody and surfaces as an unhandled rejection.
             showMessage({ level: "error", content: error instanceof Error ? error.message : labels.feedback.genericError });
-            throw error;
           }
         }}
       />

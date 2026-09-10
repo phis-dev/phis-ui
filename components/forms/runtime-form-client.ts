@@ -33,6 +33,35 @@ export type PhiRuntimeFormSubmitOptions = {
   correlationId?: string;
 };
 
+/**
+ * Why a submit failed, which is not the same question as whether the form was accepted.
+ *
+ * A refusal is not a failure at all: it comes back as a result with `ok: false` and the payload the
+ * server sent. These four are the ways the exchange itself did not conclude, and only `transport` is
+ * the network. A caller that cannot tell them apart has to guess, and the Login guessed "network" for
+ * all of them -- so a submit held by a wiring fault, which ended at the 30s timeout, was reported to
+ * the person typing their password as a connection problem.
+ */
+export type PhiRuntimeFormSubmitFailure =
+  /** The Controller's own request did not complete. */
+  | "transport"
+  /** No result and no error arrived before the submit gave up waiting. */
+  | "timeout"
+  /** The caller unmounted while the submit was still in flight. */
+  | "cancelled"
+  /** The caller has no Controller address to submit to. */
+  | "unaddressed";
+
+export class PhiRuntimeFormSubmitError extends Error {
+  readonly failure: PhiRuntimeFormSubmitFailure;
+
+  constructor(failure: PhiRuntimeFormSubmitFailure, message: string) {
+    super(message);
+    this.name = "PhiRuntimeFormSubmitError";
+    this.failure = failure;
+  }
+}
+
 export type PhiRuntimeFormClient = {
   submit(options: PhiRuntimeFormSubmitOptions): Promise<PhiRuntimeFormSubmitResult>;
   setValues(values: Record<string, unknown>): void;
@@ -114,16 +143,29 @@ export function usePhiRuntimeFormClient({
         }
         pending.delete(signal.correlationId);
         clearTimeout(entry.timeout);
-        entry.reject(new Error(error.message));
+        entry.reject(new PhiRuntimeFormSubmitError("transport", error.message));
       }
     },
     undefined,
+    /*
+     * The address this listener answers for, which is the one the Controller answers to.
+     *
+     * A submit names itself as `sender`, and the Controller sends the result and the error straight
+     * back to it. Listening without naming that address left the caller registered but unheard: the
+     * result was held rather than delivered, the submit sat until its 30s timeout, and the caller
+     * reported the rejection as its own generic failure. A Login answered `401 invalid_credentials` in
+     * milliseconds and still surfaced half a minute later as a network error.
+     */
+    identity.sender,
   );
 
   const submit = useCallback<PhiRuntimeFormClient["submit"]>(
     ({ formId, values, phase = "submit", correlationId: requestedCorrelationId }) => {
       if (!controllerAddress) {
-        throw new Error("Runtime form controller address is required.");
+        throw new PhiRuntimeFormSubmitError(
+          "unaddressed",
+          "Runtime form controller address is required.",
+        );
       }
 
       const correlationId = requestedCorrelationId ?? createPhiSignalCorrelationId();
@@ -138,7 +180,7 @@ export function usePhiRuntimeFormClient({
           const entry = pendingRef.current.get(correlationId);
           if (!entry) return;
           pendingRef.current.delete(correlationId);
-          entry.reject(new Error("Form submission timed out."));
+          entry.reject(new PhiRuntimeFormSubmitError("timeout", "Form submission timed out."));
         }, 30_000);
         pendingRef.current.set(correlationId, { resolve, reject, timeout });
         dispatchSignal({
@@ -161,7 +203,7 @@ export function usePhiRuntimeFormClient({
   useEffect(() => () => {
     for (const entry of pendingRef.current.values()) {
       clearTimeout(entry.timeout);
-      entry.reject(new Error("Form submission was cancelled."));
+      entry.reject(new PhiRuntimeFormSubmitError("cancelled", "Form submission was cancelled."));
     }
     pendingRef.current.clear();
   }, []);
@@ -175,7 +217,10 @@ export function usePhiRuntimeFormClient({
     correlationId?: string;
   }) => {
     if (!controllerAddress) {
-      throw new Error("Runtime form controller address is required.");
+      throw new PhiRuntimeFormSubmitError(
+        "unaddressed",
+        "Runtime form controller address is required.",
+      );
     }
     dispatchSignal({
       scope,
