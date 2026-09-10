@@ -21,6 +21,10 @@ import type {
   PhiThemeMode,
   PhiThemePresetPlugin,
 } from "../../theme/phi-theme-presets";
+import {
+  PHI_CORE_THEME_BLOCK_CATALOG,
+  type PhiThemeBlockCatalog,
+} from "../../theme/phi-theme-composition";
 import type { PhiRootThemeFonts } from "./phi-root-theme-resolver";
 import {
   buildPhiControlShapeCssVars,
@@ -36,6 +40,11 @@ export type PhiConfig = {
   mode: PhiThemeMode;
   controlShape: PhiControlShape;
   presets: readonly PhiThemePresetPlugin[];
+  /**
+   * The Theme blocks available here: the core ones plus whatever the active Modules contribute.
+   * Palettes are `presets`, which is the field they have always been shipped in.
+   */
+  themeBlocks: PhiThemeBlockCatalog;
   token: GlobalToken;
 };
 
@@ -49,6 +58,7 @@ function PhiConfigValueProvider({
   mode,
   controlShape,
   presets,
+  themeBlocks,
   rootClassName,
   rootStyle,
   remRootValue,
@@ -61,6 +71,7 @@ function PhiConfigValueProvider({
   mode: PhiThemeMode;
   controlShape: PhiControlShape;
   presets: readonly PhiThemePresetPlugin[];
+  themeBlocks?: Partial<Omit<PhiThemeBlockCatalog, "palettes">>;
   rootClassName: string;
   rootStyle: CSSProperties & Record<`--${string}`, string>;
   remRootValue: number;
@@ -93,6 +104,11 @@ function PhiConfigValueProvider({
       }
     };
   }, [controlShapeVars]);
+  const blockCatalog = useMemo<PhiThemeBlockCatalog>(() => ({
+    ...PHI_CORE_THEME_BLOCK_CATALOG,
+    ...themeBlocks,
+    palettes: presets,
+  }), [presets, themeBlocks]);
   const value = useMemo<PhiConfig>(() => ({
     customColors,
     fonts,
@@ -100,8 +116,9 @@ function PhiConfigValueProvider({
     mode,
     controlShape,
     presets,
+    themeBlocks: blockCatalog,
     token,
-  }), [controlShape, customColors, fonts, heroHeight, mode, presets, token]);
+  }), [blockCatalog, controlShape, customColors, fonts, heroHeight, mode, presets, token]);
 
   return (
     <PhiConfigContext.Provider value={value}>
@@ -130,6 +147,7 @@ export function PhiConfigProvider({
   mode,
   theme,
   presets,
+  themeBlocks,
   customColors,
   rootClassName,
   rootStyle,
@@ -142,6 +160,7 @@ export function PhiConfigProvider({
   mode: PhiThemeMode;
   theme: ThemeConfig;
   presets: readonly PhiThemePresetPlugin[];
+  themeBlocks?: Partial<Omit<PhiThemeBlockCatalog, "palettes">>;
   customColors: PhiThemeCustomColorPalette;
   rootClassName: string;
   rootStyle: CSSProperties & Record<`--${string}`, string>;
@@ -167,6 +186,7 @@ export function PhiConfigProvider({
         mode={mode}
         controlShape={controlShape}
         presets={presets}
+        themeBlocks={themeBlocks}
         rootClassName={rootClassName}
         rootStyle={rootStyle}
         remRootValue={remRootValue}

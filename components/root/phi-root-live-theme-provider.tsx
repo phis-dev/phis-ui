@@ -205,6 +205,7 @@ export function PhiRootLiveThemeProvider({
         controlShape={readPhiControlShape(liveSiteTheme.shape?.controls)}
         theme={resolvedTheme.theme}
         presets={presets}
+        themeBlocks={themeBlocks}
         rootClassName={rootClassName}
         rootStyle={chromeOverlayStyle}
         remRootValue={remRootValue}

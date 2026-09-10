@@ -53,7 +53,7 @@ export type PhiThemeRuntimeResult<T> = {
 export function resolvePhiThemeRuntimePayload<T extends PhiThemeRuntimeSource>(
   theme: T | null | undefined,
   catalog: PhiThemeBlockCatalog = PHI_CORE_THEME_BLOCK_CATALOG,
-): PhiThemeRuntimeResult<T> {
+): PhiThemeRuntimeResult<T & PhiThemeRuntimeSource> {
   const composition = resolvePhiThemeComposition(
     theme as Parameters<typeof resolvePhiThemeComposition>[0],
     catalog,
@@ -65,7 +65,7 @@ export function resolvePhiThemeRuntimePayload<T extends PhiThemeRuntimeSource>(
   return {
     composition,
     theme: {
-      ...((theme ?? {}) as T),
+      ...((theme ?? {}) as T & PhiThemeRuntimeSource),
       preset: composition.palette.key,
       presetVersion: composition.palette.version,
       root: resolvePhiThemeEffectiveRoot(theme?.root, composition.ground),

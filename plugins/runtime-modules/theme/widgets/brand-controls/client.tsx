@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
 
-import { Button, Card, Collapse, ConfigProvider, Divider, Flex, Form, Input, Space, Statistic, Switch, Tag, Typography, theme as antdTheme } from "antd";
+import { Button, Card, Collapse, ConfigProvider, Divider, Flex, Form, Input, Select, Space, Statistic, Switch, Tag, Typography, theme as antdTheme } from "antd";
 import type { AliasToken } from "antd/es/theme/interface";
 import type { PhiColorPickerLabels } from "../../../../../components/widgets/label-types/color-picker";
 
@@ -31,6 +31,12 @@ import {
   resolvePhiThemePresetCustomColors,
 } from "../../../../../theme/phi-theme-palette";
 import { usePhiConfig } from "../../../../../components/root/phi-config-provider";
+import {
+  resolvePhiThemeComposition,
+  resolvePhiThemeEffectiveRoot,
+  splitPhiThemeAuthoredTokens,
+} from "../../../../../theme/phi-theme-composition";
+import { resolvePhiThemeRuntimePayload } from "../../../../../theme/phi-theme-runtime";
 import {
   createPhiAntdThemeCssVarKey,
   resolvePhiAntdAliasTokens,
@@ -1491,7 +1497,7 @@ export function PhiBuilderBrandThemeControlsWidgetClient({
   config?: PhiBuilderBrandWidgetConfig | null;
   colorPickerLabels?: PhiColorPickerLabels;
 }) {
-  const { presets: themePresets, token: clientToken } = usePhiConfig();
+  const { presets: themePresets, themeBlocks, token: clientToken } = usePhiConfig();
   const sectionLabelWidth = clientToken.controlHeight * 3;
   const colorControlWidth = clientToken.controlHeight * 5.5;
   const themeKey = resolveThemeKey(config);
@@ -1504,6 +1510,7 @@ export function PhiBuilderBrandThemeControlsWidgetClient({
     BRAND_THEME_COLOR_SECTION_KEYS,
   );
 
+  const themeComposition = resolvePhiThemeComposition(state.draft, themeBlocks);
   const token = stripEmptyTokenValues(state.draft.antd?.token ?? {});
   const algorithm = previewMode === "dark" ? antdTheme.darkAlgorithm : antdTheme.defaultAlgorithm;
   const selectedPreset = resolveThemePayloadPreset(state.draft, themePresets);
@@ -1530,6 +1537,38 @@ export function PhiBuilderBrandThemeControlsWidgetClient({
     <Flex vertical gap={clientToken.padding} style={{ width: "100%", minWidth: 0, opacity: loading ? 0.65 : 1 }}>
       <Card size="small" styles={{ body: { padding: clientToken.paddingSM } }}>
         <Flex vertical gap={clientToken.paddingSM}>
+          {/*
+            The Set and the palette it stands for. A Set sets all three parts at once; picking a palette
+            on its own is what somebody does who wants the Set's ground with another brand, and it wins
+            over the Set from then on.
+          */}
+          <PhiBrandBlockPicker
+            label="Set"
+            value={themeComposition.set?.key ?? ""}
+            unavailable={themeComposition.unavailable.set}
+            options={themeBlocks.sets}
+            onChange={(key) => {
+              const set = themeBlocks.sets.find((candidate) => candidate.key === key);
+              if (!set) return;
+              const palette = themeBlocks.palettes.find((candidate) => candidate.key === set.palette);
+              const withSet = mergeThemeSetChoice(state.draft, set);
+              publishDraft(palette ? applyThemePreset(withSet, palette) : withSet);
+            }}
+          />
+          <PhiBrandBlockPicker
+            label="Palette"
+            value={themeComposition.palette.key}
+            unavailable={themeComposition.unavailable.palette}
+            options={themeBlocks.palettes}
+            onChange={(key) => {
+              const palette = themeBlocks.palettes.find((candidate) => candidate.key === key);
+              if (!palette) return;
+              publishDraft(
+                mergeThemeBlockChoice(applyThemePreset(state.draft, palette), "palette", palette),
+              );
+            }}
+          />
+          <Divider style={{ marginBlock: 0 }} />
           <Collapse
             accordion
             bordered={false}
@@ -1708,7 +1747,7 @@ export function PhiBuilderBrandStyleControlsWidgetClient({
   runtime: PhiBlockRuntime;
   config?: PhiBuilderBrandWidgetConfig | null;
 }) {
-  const { fonts, token: clientToken } = usePhiConfig();
+  const { fonts, themeBlocks, token: clientToken } = usePhiConfig();
   const fieldLabelWidth = clientToken.controlHeight * 4;
   const themeKey = resolveThemeKey(config);
   const { state, publishDraft } = usePhiBrandThemeDraft(runtime, themeKey);
@@ -1743,9 +1782,35 @@ export function PhiBuilderBrandStyleControlsWidgetClient({
     publishDraft(mergeThemeToken(state.draft, tokenPatch));
   }
 
+  const themeComposition = resolvePhiThemeComposition(state.draft, themeBlocks);
+  const authoredStyleTokens = splitPhiThemeAuthoredTokens(state.draft.antd?.token).style;
+
   return (
     <Flex vertical gap={clientToken.padding} style={{ width: "100%", minWidth: 0, opacity: loading ? 0.65 : 1 }}>
       <Card size="small" styles={{ body: { padding: clientToken.paddingSM } }}>
+        {/*
+          The style block sets the proportions an author has not decided for themselves. The reset drops
+          every structural override at once, which is the only granularity that makes sense here: the
+          numbers below are one scale, and handing back half of it would leave a shape nobody chose.
+        */}
+        <Flex align="center" justify="space-between" gap={clientToken.paddingXS}>
+          <PhiBrandBlockPicker
+            label="Style"
+            value={themeComposition.style.key}
+            unavailable={themeComposition.unavailable.style}
+            options={themeBlocks.styles}
+            onChange={(key) => {
+              const block = themeBlocks.styles.find((candidate) => candidate.key === key);
+              if (block) publishDraft(mergeThemeBlockChoice(state.draft, "style", block));
+            }}
+          />
+          <PhiBrandBlockResetButton
+            blockTitle={themeComposition.style.title}
+            disabled={Object.keys(authoredStyleTokens).length === 0}
+            onReset={() => publishDraft(clearThemeStyleTokens(state.draft))}
+          />
+        </Flex>
+        <Divider style={{ marginBlock: clientToken.paddingXS }} />
         <Collapse
           accordion
           bordered={false}
@@ -1941,6 +2006,143 @@ export function PhiBuilderBrandStyleControlsWidgetClient({
  * open media picker cannot commit into the ground the author has just switched away from.
  */
 /**
+ * Choosing which block a part of the Theme follows.
+ *
+ * A choice is a pointer, never a copy: the block's values are worked out on every render, so a Module
+ * that improves its own look reaches a Site that follows it. Choosing a Set clears the parts that were
+ * picked one by one, because a Set is what somebody falls back on when they stop deciding each part.
+ */
+function mergeThemeBlockChoice(
+  theme: ThemePayload,
+  part: "palette" | "style" | "ground",
+  block: { key: string; version: number },
+): ThemePayload {
+  return {
+    ...theme,
+    blocks: {
+      ...(theme.blocks ?? {}),
+      [part]: { key: block.key, version: block.version },
+    },
+  };
+}
+
+function mergeThemeSetChoice(
+  theme: ThemePayload,
+  set: { key: string; version: number },
+): ThemePayload {
+  return {
+    ...theme,
+    blocks: { set: { key: set.key, version: set.version } },
+  };
+}
+
+/**
+ * Dropping the author's values for one surface, so the block below shows through again.
+ *
+ * This is what "reset" means once a Theme follows blocks: not restoring a copy, but taking the layer
+ * on top away. One surface and one mode at a time, because that is the granularity an author edits in
+ * -- and the Shadow goes in one piece, since it never was a per-mode value.
+ */
+function clearThemeRootSurface(
+  theme: ThemePayload,
+  surface: "background" | "chrome" | "shadow",
+  mode: "light" | "dark",
+): ThemePayload {
+  const root = theme.root ?? {};
+  const without = <T extends Record<string, unknown>>(record: T | null | undefined, key: string) =>
+    Object.fromEntries(Object.entries(record ?? {}).filter(([entry]) => entry !== key)) as T;
+
+  if (surface === "background") {
+    return { ...theme, root: { ...root, background: without(root.background, mode) } };
+  }
+  return {
+    ...theme,
+    root: { ...root, chrome: without(root.chrome, surface === "shadow" ? "shadow" : mode) },
+  };
+}
+
+/**
+ * Handing one surface back to the block it follows.
+ *
+ * "Reset" here takes the author's layer away rather than restoring a copy, which is why it names the
+ * block: what comes back is whatever that block says today, not what it said when somebody last
+ * looked. Offered only where there is something to take away.
+ */
+function PhiBrandBlockResetButton({
+  blockTitle,
+  disabled,
+  onReset,
+}: {
+  blockTitle: string;
+  disabled: boolean;
+  onReset: () => void;
+}) {
+  return (
+    <Button size="small" type="text" disabled={disabled} onClick={onReset}>
+      {`Follow ${blockTitle}`}
+    </Button>
+  );
+}
+
+/**
+ * Dropping every structural override, so the style block shows through again.
+ *
+ * Colour stays: the two tabs are two decisions, and somebody resetting the proportions did not ask to
+ * lose the brand colour they picked. The seam is the token name, the same one the tabs are split by.
+ */
+function clearThemeStyleTokens(theme: ThemePayload): ThemePayload {
+  return {
+    ...theme,
+    antd: {
+      ...(theme.antd ?? {}),
+      token: splitPhiThemeAuthoredTokens(theme.antd?.token).color,
+    },
+  };
+}
+
+/**
+ * The picker for one part of the Theme.
+ *
+ * It names what the Site follows, and it says so even when the block is not available: a Module that
+ * was switched off leaves its key in the record, and showing the core block as if somebody had chosen
+ * it would be a lie the author could not act on.
+ */
+function PhiBrandBlockPicker({
+  label,
+  value,
+  unavailable,
+  options,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  unavailable: string | null;
+  options: ReadonlyArray<{ key: string; title: string; description?: string }>;
+  onChange: (key: string) => void;
+}) {
+  const { token: clientToken } = usePhiConfig();
+  return (
+    <Flex vertical gap={clientToken.paddingXXS} style={{ minWidth: 0 }}>
+      <Flex align="center" justify="space-between" gap={clientToken.paddingXS}>
+        <Typography.Text strong>{label}</Typography.Text>
+        <Select
+          size="small"
+          value={value}
+          style={{ minWidth: clientToken.controlHeight * 5 }}
+          onChange={onChange}
+          options={options.map((option) => ({ value: option.key, label: option.title }))}
+        />
+      </Flex>
+      {unavailable ? (
+        <Typography.Text type="warning">
+          {`Not available: ${unavailable}. Showing the built-in block until its Module is switched on again.`}
+        </Typography.Text>
+      ) : null}
+    </Flex>
+  );
+}
+
+/**
  * Carry the ground authored for one mode over to the other.
  *
  * A Site is authored in one mode first, and the other one usually wants the same picture with at most
@@ -1982,26 +2184,49 @@ export function PhiBuilderBrandBackgroundControlsWidgetClient({
   runtime: PhiBlockRuntime;
   config?: PhiBuilderBrandWidgetConfig | null;
 }) {
-  const { token: clientToken } = usePhiConfig();
+  const { token: clientToken, themeBlocks } = usePhiConfig();
   const themeKey = resolveThemeKey(config);
   const { state, publishDraft } = usePhiBrandThemeDraft(runtime, themeKey);
   const mode = usePhiBrandPreviewMode(resolveThemePayloadMode(state.draft));
+  const composition = resolvePhiThemeComposition(state.draft, themeBlocks);
   const [activeBackgroundSection, changeActiveBackgroundSection] = usePhiBrandAccordionSection(
     BRAND_THEME_BACKGROUND_COLLAPSE_STORAGE_KEY,
     BRAND_THEME_BACKGROUND_SECTION_KEYS,
   );
   const modeLabel = mode === "dark" ? "Dark mode" : "Light mode";
   const otherMode = mode === "dark" ? "light" : "dark";
-  const rootBackground = normalizePhiBackgroundWidgetConfig(state.draft.root?.background?.[mode] ?? null);
+  /*
+   * The controls show what the Site paints, which is the block wherever the author set nothing. Editing
+   * one then takes it over as an authored value, which is the same move as everywhere else here: what
+   * you touch becomes yours, and the reset beside it hands it back.
+   */
+  const effectiveRoot = resolvePhiThemeEffectiveRoot(state.draft.root, composition.ground);
+  const rootBackground = normalizePhiBackgroundWidgetConfig(effectiveRoot.background?.[mode] ?? null);
   const otherRootBackground =
-    normalizePhiBackgroundWidgetConfig(state.draft.root?.background?.[otherMode] ?? null);
-  const chromeOverlay = resolvePhiShellChromeOverlayConfig(state.draft.root?.chrome?.[mode] ?? null);
+    normalizePhiBackgroundWidgetConfig(effectiveRoot.background?.[otherMode] ?? null);
+  const chromeOverlay = resolvePhiShellChromeOverlayConfig(effectiveRoot.chrome?.[mode] ?? null);
   const otherChromeOverlay =
-    resolvePhiShellChromeOverlayConfig(state.draft.root?.chrome?.[otherMode] ?? null);
+    resolvePhiShellChromeOverlayConfig(effectiveRoot.chrome?.[otherMode] ?? null);
 
   return (
     <Flex vertical gap={clientToken.padding} style={{ width: "100%", minWidth: 0 }}>
       <Card size="small" styles={{ body: { padding: clientToken.paddingSM } }}>
+        {/*
+          Which ground this Site follows. The block is what shows wherever the author set nothing, so
+          switching it changes the untouched surfaces and leaves the edited ones alone. The reset beside
+          each section is how somebody hands a surface back to the block.
+        */}
+        <PhiBrandBlockPicker
+          label="Ground"
+          value={composition.ground.key}
+          unavailable={composition.unavailable.ground}
+          options={themeBlocks.grounds}
+          onChange={(key) => {
+            const block = themeBlocks.grounds.find((candidate) => candidate.key === key);
+            if (block) publishDraft(mergeThemeBlockChoice(state.draft, "ground", block));
+          }}
+        />
+        <Divider style={{ marginBlock: clientToken.paddingXS }} />
         <Collapse
           accordion
           bordered={false}
@@ -2023,12 +2248,19 @@ export function PhiBuilderBrandBackgroundControlsWidgetClient({
                     <Typography.Text type="secondary">
                       {modeLabel}. One layer behind the whole Site, fixed to the viewport.
                     </Typography.Text>
-                    <PhiBrandCopyModeButton
-                      mode={mode}
-                      disabled={isSamePhiBackgroundConfig(rootBackground, otherRootBackground)}
-                      onCopy={() =>
-                        publishDraft(mergeThemeRootBackground(state.draft, otherMode, rootBackground))}
-                    />
+                    <Flex align="center" gap={clientToken.paddingXXS} style={{ flexShrink: 0 }}>
+                      <PhiBrandBlockResetButton
+                        disabled={state.draft.root?.background?.[mode] == null}
+                        blockTitle={composition.ground.title}
+                        onReset={() => publishDraft(clearThemeRootSurface(state.draft, "background", mode))}
+                      />
+                      <PhiBrandCopyModeButton
+                        mode={mode}
+                        disabled={isSamePhiBackgroundConfig(rootBackground, otherRootBackground)}
+                        onCopy={() =>
+                          publishDraft(mergeThemeRootBackground(state.draft, otherMode, rootBackground))}
+                      />
+                    </Flex>
                   </Flex>
                   <PhiBackgroundControl
                     key={mode}
@@ -2050,12 +2282,19 @@ export function PhiBuilderBrandBackgroundControlsWidgetClient({
                       {modeLabel}. Shared by the Header, Sider and Footer Regions. Content and Hero never
                       take it, and a Region that authors its own Background or Effect paints over it.
                     </Typography.Text>
-                    <PhiBrandCopyModeButton
-                      mode={mode}
-                      disabled={isSamePhiBackgroundConfig(chromeOverlay, otherChromeOverlay)}
-                      onCopy={() =>
-                        publishDraft(mergeThemeChromeOverlay(state.draft, otherMode, chromeOverlay))}
-                    />
+                    <Flex align="center" gap={clientToken.paddingXXS} style={{ flexShrink: 0 }}>
+                      <PhiBrandBlockResetButton
+                        disabled={state.draft.root?.chrome?.[mode] == null}
+                        blockTitle={composition.ground.title}
+                        onReset={() => publishDraft(clearThemeRootSurface(state.draft, "chrome", mode))}
+                      />
+                      <PhiBrandCopyModeButton
+                        mode={mode}
+                        disabled={isSamePhiBackgroundConfig(chromeOverlay, otherChromeOverlay)}
+                        onCopy={() =>
+                          publishDraft(mergeThemeChromeOverlay(state.draft, otherMode, chromeOverlay))}
+                      />
+                    </Flex>
                   </Flex>
                   <PhiBackgroundControl
                     key={`chrome-${mode}`}
@@ -2079,15 +2318,22 @@ export function PhiBuilderBrandBackgroundControlsWidgetClient({
                     entry per family, because a Shadow cannot point three ways at once, and both Siders
                     share theirs -- the same edge seen from two sides.
                   */}
-                  <Typography.Text type="secondary">
-                    Cast at the outside edge of each pane, once for the whole visible stack. Applies to
-                    both modes.
-                  </Typography.Text>
+                  <Flex align="center" justify="space-between" gap={clientToken.paddingXS}>
+                    <Typography.Text type="secondary">
+                      Cast at the outside edge of each pane, once for the whole visible stack. Applies to
+                      both modes.
+                    </Typography.Text>
+                    <PhiBrandBlockResetButton
+                      disabled={state.draft.root?.chrome?.shadow == null}
+                      blockTitle={composition.ground.title}
+                      onReset={() => publishDraft(clearThemeRootSurface(state.draft, "shadow", mode))}
+                    />
+                  </Flex>
                   {PHI_THEME_CHROME_SHADOW_EDGES.map(({ family, label }) => (
                     <Flex key={family} vertical gap={clientToken.paddingXXS}>
                       <Typography.Text>{label}</Typography.Text>
                       <PhiShadowControl
-                        value={state.draft.root?.chrome?.shadow?.[family] ?? "none"}
+                        value={effectiveRoot.chrome?.shadow?.[family] ?? "none"}
                         resolvePreview={(shadow) =>
                           resolvePhiShellChromePaneShadow(shadow, family === "sider" ? "sider-left" : family)}
                         onChange={(value) => publishDraft(mergeThemeChromeShadow(state.draft, family, value))}
@@ -2231,12 +2477,18 @@ export function PhiBuilderBrandThemePreviewWidgetClient({
 }: {
   runtime: PhiBlockRuntime;
 }) {
-  const { fonts, presets: themePresets, token: clientToken } = usePhiConfig();
+  const { fonts, presets: themePresets, themeBlocks, token: clientToken } = usePhiConfig();
   const fallbackTheme = useMemo(
     () => resolveInitialTheme(runtime, themePresets),
     [runtime, themePresets],
   );
   const [previewTheme, setPreviewTheme] = useState<ThemePayload>(fallbackTheme);
+  /*
+   * The preview shows the Site, so it shows the blocks folded in: a draft states what its author chose,
+   * and the parts nobody chose are the block's. Resolving here rather than in the state keeps the draft
+   * that travels back to the Controller free of anything that was only worked out for display.
+   */
+  const previewThemeResolved = resolvePhiThemeRuntimePayload(previewTheme, themeBlocks).theme;
   const [hoveredStatusKey, setHoveredStatusKey] = useState<string | null>(null);
   /*
    * The preview shows the draft too, and mounting late knew as little about it as the controls did --
@@ -2252,12 +2504,12 @@ export function PhiBuilderBrandThemePreviewWidgetClient({
     }
   }, [dispatchSignal, selfAddress]);
   const mode = usePhiBrandPreviewMode(resolveThemePayloadMode(fallbackTheme));
-  const previewPreset = resolveThemePayloadPreset(previewTheme, themePresets);
-  const previewPresetToken = resolveThemePresetTokenInput(previewTheme, previewPreset, mode);
+  const previewPreset = resolveThemePayloadPreset(previewThemeResolved, themePresets);
+  const previewPresetToken = resolveThemePresetTokenInput(previewThemeResolved, previewPreset, mode);
   const previewTokenInput = {
-    ...buildPhiEffectiveNonColorThemeTokens(previewTheme),
+    ...buildPhiEffectiveNonColorThemeTokens(previewThemeResolved),
     ...previewPresetToken,
-    ...(previewTheme.antd?.token ?? {}),
+    ...(previewThemeResolved.antd?.token ?? {}),
   };
   const previewEffectiveToken = resolvePhiAntdAliasTokens(mode, previewTokenInput);
   type PreviewRow = { key: string; name: string; status: string } & Record<string, unknown>;
@@ -2292,7 +2544,7 @@ export function PhiBuilderBrandThemePreviewWidgetClient({
    * serve each other from cache.
    */
   const previewShapedComponents = applyPhiControlShapeComponentTokens(
-    { ...(previewTheme.antd?.components ?? {}) },
+    { ...(previewThemeResolved.antd?.components ?? {}) },
     readPhiControlShape(previewTheme.shape?.controls),
     previewEffectiveToken,
   );
@@ -2318,13 +2570,13 @@ export function PhiBuilderBrandThemePreviewWidgetClient({
    * the Site paints behind everything, in the mode the preview switch is showing. A mode with no
    * ground configured keeps the resolved layout background, which is exactly what the Site does.
    */
-  const previewRootBackground = resolvePhiRootBackgroundPaintStyle(previewTheme.root, mode);
-  const previewChromeOverlay = resolvePhiShellChromeOverlayStyle(previewTheme.root, mode);
+  const previewRootBackground = resolvePhiRootBackgroundPaintStyle(previewThemeResolved.root, mode);
+  const previewChromeOverlay = resolvePhiShellChromeOverlayStyle(previewThemeResolved.root, mode);
   /*
    * The preview's frame casts what the Theme says its frame casts. Its Sider is the left one, being the
    * only one the preview draws.
    */
-  const previewPaneShadows = resolvePhiShellChromePaneShadows(previewTheme.root);
+  const previewPaneShadows = resolvePhiShellChromePaneShadows(previewThemeResolved.root);
   const previewTextColor = readEffectiveTokenString(previewEffectiveToken, "colorText", mode === "dark" ? "rgba(255,255,255,0.85)" : "rgba(0,0,0,0.88)");
   const previewTextSecondaryColor = readEffectiveTokenString(previewEffectiveToken, "colorTextSecondary", mode === "dark" ? "rgba(255,255,255,0.65)" : "rgba(0,0,0,0.65)");
   const previewTextTertiaryColor = readEffectiveTokenString(previewEffectiveToken, "colorTextTertiary", mode === "dark" ? "rgba(255,255,255,0.45)" : "rgba(0,0,0,0.45)");
