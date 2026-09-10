@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { App } from "antd";
 
 import { PhiCmsRegionType } from "../../../constants/phi-cms";
@@ -51,7 +52,9 @@ import {
   getPhiDeveloperRegionDraftsSnapshot,
   mergePhiDeveloperDeletedPageDrafts,
   mergePhiDeveloperRegionDrafts,
+  restorePhiDeveloperBuilderAreaMeta,
   restorePhiDeveloperRegionDrafts,
+  setPhiDeveloperBuilderAreaRootRoute,
 } from "./developer-workspace-store";
 import type {
   PhiDeveloperBuilderArea,
@@ -76,7 +79,8 @@ export type PhiDeveloperBuilderToolbarCommand =
   | "publish"
   | "undo"
   | "redo"
-  | "reset";
+  | "reset"
+  | "restorePreset";
 
 export function usePhiBuilderDraftCommandController({
   commandWorkspace,
@@ -98,6 +102,7 @@ export function usePhiBuilderDraftCommandController({
   state: PhiDeveloperBuilderWorkspaceState;
 }) {
   const { modal } = App.useApp();
+  const router = useRouter();
   const { showMessage } = usePhiApplicationFeedback();
   const dispatchSignal = usePhiSignalDispatcher();
   const builderModuleMetas = usePhiBuilderModuleMetas(effectiveArea);
@@ -401,9 +406,9 @@ export function usePhiBuilderDraftCommandController({
     }
 
     modal.confirm({
-      title: "Delete shell override?",
-      content: "This removes the current DB shell override and restores the shared preset.",
-      okText: "Delete and reset",
+      title: "Discard shell draft?",
+      content: "This discards the unpublished shell draft for this Area. What is published stays live.",
+      okText: "Discard draft",
       okButtonProps: { danger: true },
       cancelText: "Cancel",
       centered: true,
@@ -425,6 +430,20 @@ export function usePhiBuilderDraftCommandController({
             workspace: "structure",
             area: effectiveArea,
           }));
+          /*
+           * What the Shell said about itself went with the draft, and only the server knows what is
+           * left.
+           *
+           * The Region tree above can be put back from the preset this client already holds; the root
+           * route and the SEO answers cannot -- what stands after the override is deleted is whatever
+           * was published, and that is a value nobody here has. So the session's answers are dropped
+           * and the workspace is asked for again: `/pages` reads the stored root route to decide which
+           * Pages it may open, and leaving the deleted draft's answer in place would have it offering
+           * a `/` that no longer exists.
+           */
+          setPhiDeveloperBuilderAreaRootRoute(effectiveArea, undefined);
+          restorePhiDeveloperBuilderAreaMeta(effectiveArea, undefined);
+          router.refresh();
           showMessage({ level: "success", content: "Reset shell draft." });
         } catch (error) {
           showMessage({ level: "error", content: error instanceof Error ? error.message : "Shell reset failed." });
@@ -437,11 +456,73 @@ export function usePhiBuilderDraftCommandController({
   }
 
   /**
+   * Gives the Area back to the Module preset by removing the Site's own shell entirely.
+   *
+   * The reset above discards a draft and leaves what is published standing, which is right when an edit
+   * went wrong and wrong when the shell itself should no longer exist: an Area published once kept its
+   * snapshot forever, and every later preset improvement stopped at it, invisibly, because the Area
+   * still rendered. This is the way back, and it is a separate command because it also takes the live
+   * chrome with it.
+   */
+  function confirmRestoreShellPreset() {
+    const presetDrafts = shellPresetDraftsByArea[effectiveArea] ?? null;
+    const sourcePreset = state.areaPresetSourcesByArea[effectiveArea] ?? null;
+    if (!presetDrafts || !sourcePreset) {
+      showMessage({ level: "warning", content: "No shell preset found for the current area." });
+      return;
+    }
+
+    modal.confirm({
+      title: "Restore the Module preset?",
+      content:
+        "This deletes this Area's own shell, drafts and published alike, and puts the Module preset back. " +
+        "It cannot be undone.",
+      okText: "Delete shell and restore",
+      okButtonProps: { danger: true },
+      cancelText: "Cancel",
+      centered: true,
+      onOk: async () => {
+        setActiveDraftAction("restorePreset");
+        try {
+          await deleteCmsDraft("/api/site/cms/area/override", {
+            area: effectiveArea,
+            ownerModuleId: sourcePreset.ownerModuleId,
+            presetKey: sourcePreset.presetKey,
+          });
+          clearPhiDeveloperBuilderDraftAllocation({
+            area: effectiveArea,
+            pageKey: effectivePageKey,
+            workspaceKind: "structure",
+          });
+          mergePhiDeveloperRegionDrafts(presetDrafts);
+          phiBuilderHistory.clear(createPhiBuilderHistoryContext({
+            workspace: "structure",
+            area: effectiveArea,
+          }));
+          // What the deleted shell said about itself -- its root route, its SEO answers -- went with it,
+          // and what stands now is the preset's own. Only the server knows that, so the session drops
+          // its copies and asks again, exactly as the draft reset does.
+          setPhiDeveloperBuilderAreaRootRoute(effectiveArea, undefined);
+          restorePhiDeveloperBuilderAreaMeta(effectiveArea, undefined);
+          router.refresh();
+          showMessage({ level: "success", content: "Restored the Module preset." });
+        } catch (error) {
+          showMessage({ level: "error", content: error instanceof Error ? error.message : "Preset restore failed." });
+          throw error;
+        } finally {
+          setActiveDraftAction(null);
+        }
+      },
+    });
+  }
+
+  /**
    * Discards the Area's Module draft and puts the selection back to what a fresh Area would run with.
    *
-   * Deliberately the code-owned default rather than a re-fetch of the published selection: that is what
-   * "Reset" already means for the Shell draft above, and for the same reason -- a reload would need a
-   * round trip this dialog has no occasion to make, and "back to the start" is the answer either way
+   * Deliberately the code-owned default rather than a re-fetch of the published selection. The Shell
+   * reset above does ask the server again, because what it discards -- the Area's root route -- decides
+   * which Pages another workspace may open, and a stale answer there is a Page list describing a Site
+   * that is not served. A Module selection has no such reader: "back to the start" is a complete answer
    * once there is no draft left to describe something in between.
    */
   function confirmResetModules() {
@@ -701,6 +782,14 @@ export function usePhiBuilderDraftCommandController({
       return;
     }
 
+    if (command === "restorePreset") {
+      // Only the shell workspace owns an Area preset to restore; elsewhere the command is not offered.
+      if (workspaceKind === "structure") {
+        confirmRestoreShellPreset();
+      }
+      return;
+    }
+
     const historyContext = createPhiBuilderHistoryContext({
       workspace: workspaceKind,
       area: effectiveArea,
@@ -714,6 +803,15 @@ export function usePhiBuilderDraftCommandController({
       }
       if (snapshot.kind === "navigation") {
         restorePhiBuilderNavigationDraft(snapshot.navKey, snapshot.draft);
+        return;
+      }
+      if (snapshot.kind === "areaRootRoute") {
+        // Without a history context of its own, so restoring does not record a step back to here.
+        setPhiDeveloperBuilderAreaRootRoute(snapshot.area, snapshot.rootRoute);
+        return;
+      }
+      if (snapshot.kind === "areaMeta") {
+        restorePhiDeveloperBuilderAreaMeta(snapshot.area, snapshot.meta);
         return;
       }
       if (snapshot.kind === "modules") {

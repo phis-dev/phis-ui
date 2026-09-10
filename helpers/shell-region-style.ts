@@ -257,26 +257,37 @@ export function resolvePhiShellRegionChrome(
   const shellBackground = resolvePhiShellRegionBackground(shellTheme, resolvedMode, { family, region });
   const shellColor = resolvePhiShellRegionColor(shellTheme, resolvedMode, { family, region });
   const resolvedShadow = resolvePhiShadow(config?.shadow);
-  const opaqueBackground = isHeader
-    ? config?.background ??
-      shellBackground ??
-      (resolvedMode === "dark" ? "#001529" : tokens.colorBgElevated)
-    : isSider
-      ? config?.background ??
-        shellBackground ??
-        (resolvedMode === "dark" ? "#001529" : tokens.colorBgContainer)
-      : isFooter
-        ? config?.background ??
-          shellBackground ??
-          (resolvedMode === "dark" ? "#001529" : tokens.colorBgContainer)
-        : resolvedMode === "dark"
-          ? (config?.background ?? shellBackground ?? tokens.colorBgSpotlight)
-          : (config?.background ?? shellBackground ?? tokens.colorBgContainer);
+  // The Region's own ground, which exists only where somebody authored one: the local config first,
+  // then the Shell record for this Region, its family, and the Shell root.
+  const authoredBackground = config?.background ?? shellBackground;
+  /*
+   * The family ground, which no Region paints on its own any more.
+   *
+   * It survives as the base a glass Region frosts: `glass` mixes its tint from the ground beneath it and
+   * an unauthored Region has none, so mixing from `transparent` would erase the effect instead of
+   * rendering it. Painting is decided below; this only answers what glass frosts.
+   */
+  const effectBaseBackground = isHeader
+    ? authoredBackground ?? (resolvedMode === "dark" ? "#001529" : tokens.colorBgElevated)
+    : isSider || isFooter
+      ? authoredBackground ?? (resolvedMode === "dark" ? "#001529" : tokens.colorBgContainer)
+      : authoredBackground ??
+        (resolvedMode === "dark" ? tokens.colorBgSpotlight : tokens.colorBgContainer);
   const effectStyle = resolvePhiLayoutEffectStyle({
     effect: config?.effect,
-    background: opaqueBackground,
+    background: effectBaseBackground,
   });
-  const resolvedBackground = effectStyle?.background ?? opaqueBackground;
+  /*
+   * An unauthored Region has no ground of its own (SHELL.md "Root Background and Shell Backdrop
+   * Layers"). Every Region used to fall back to an opaque family token instead, which covered the Theme
+   * Root Background completely and left the shared Shell Chrome Overlay nothing to be continuous
+   * across. A ground is painted where one is authored, in the Shell record or on the Region.
+   *
+   * Left undefined rather than resolved to `transparent`, so the Region publishes no ground variable at
+   * all and the CSS fallback chain can hand a Chrome Region the shared overlay before landing on
+   * transparent. An authored ground still wins, which is how an Area paints over the Theme.
+   */
+  const resolvedBackground = effectStyle?.backgroundColor ?? authoredBackground;
   const resolvedTextColor =
     shellColor ?? (resolvedMode === "dark" ? tokens.colorTextLightSolid : tokens.colorText);
 
@@ -287,6 +298,27 @@ export function resolvePhiShellRegionChrome(
     shadow: resolvedShadow,
     effectStyle,
   };
+}
+
+/**
+ * A Region ground as a longhand property.
+ *
+ * Never as the `background` shorthand: the same inline style also carries longhands, from an authored
+ * Background config and from the Shell Chrome Overlay, and React warns when a rerender has to drop one
+ * of those from an element whose shorthand is still set. A ground is a colour unless it names an image,
+ * which is what a gradient string from the Shell record is.
+ */
+export function resolvePhiShellRegionGroundStyle(
+  ground: CSSProperties["background"] | null | undefined,
+): CSSProperties {
+  if (ground == null) {
+    return {};
+  }
+
+  const value = String(ground);
+  return /(?:gradient|image-set|url)\(/i.test(value)
+    ? { backgroundImage: value }
+    : { backgroundColor: value };
 }
 
 export function resolvePhiShellSiderWidth(shellTheme: PhiShellRegionTheme | undefined): CSSProperties["width"] {

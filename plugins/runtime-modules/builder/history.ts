@@ -1,6 +1,7 @@
 "use client";
 
 import type { PhiBuilderNavigationTree } from "../../../helpers/cms-navigation-catalog";
+import type { PhiAreaRootRoute, PhiAreaMeta } from "../../../helpers/cms-area-config";
 import type { PhiRuntimeModuleId } from "../../../types";
 import type {
   PhiDeveloperBuilderArea,
@@ -44,6 +45,27 @@ export type PhiBuilderHistorySnapshot =
       moduleIdsByArea: Readonly<
         Partial<Record<PhiDeveloperBuilderArea, readonly PhiRuntimeModuleId[] | null>>
       >;
+    }
+  | {
+      /**
+       * What the Shell says about itself, which its canvas does not carry.
+       *
+       * The root route and the SEO answers live in the Area's config rather than in its Region tree, so
+       * a `"regionDrafts"` snapshot walks straight past them -- which is why choosing a landing was the
+       * one edit in `/shells` that could not be taken back. They are two kinds rather than one because
+       * they are two sentences: an undo of the front door should not also move the Site's description.
+       *
+       * `undefined` is a value here and not an omission: it restores "this session never touched the
+       * Area", which is a different state from `null`, the Builder asking for the shipped default back.
+       */
+      kind: "areaRootRoute";
+      area: PhiDeveloperBuilderArea;
+      rootRoute: PhiAreaRootRoute | null | undefined;
+    }
+  | {
+      kind: "areaMeta";
+      area: PhiDeveloperBuilderArea;
+      meta: PhiAreaMeta | null | undefined;
     };
 
 export const phiBuilderHistory = createPhiHistoryStore<PhiBuilderHistorySnapshot>(

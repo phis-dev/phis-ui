@@ -14,11 +14,16 @@ import type {
   PhiCmsBackgroundWidgetConfig,
 } from "../widgets/config/background";
 import {
+  PHI_BACKGROUND_BASE_KINDS,
+  PHI_BACKGROUND_MOTION_MODES,
   PHI_BACKGROUND_PARALLAX_DEFAULT_STRENGTH,
+  phiBackgroundBaseSupportsGlassEffect,
   resolvePhiBackgroundParallaxDefaultStrength,
   normalizePhiBackgroundWidgetConfig,
+  readPhiBackgroundPatternInkFromCss,
   resolvePhiBackgroundWidgetStyle,
   serializePhiBackgroundBaseCss,
+  serializePhiBackgroundPatternInkCss,
 } from "../widgets/config/background";
 import {
   PHI_CORE_BACKGROUND_PATTERN_PROVIDERS,
@@ -29,7 +34,10 @@ import {
   PHI_DEFAULT_BACKGROUND_PATTERN_KEY,
   type PhiBackgroundPatternKey,
 } from "../widgets/config/background-pattern-contract";
-import { resolvePhiBackgroundPatternLiveLayer } from "../widgets/config/background-pattern-live";
+import {
+  PHI_BACKGROUND_PATTERN_DEFAULT_INK,
+  resolvePhiBackgroundPatternLiveLayer,
+} from "../widgets/config/background-pattern-live";
 import { PhiImageAssetVariantKeyName } from "../../constants/media";
 import type { PhiImageAssetVariantKeyValue, PhiMediaAssetTile } from "../../types/media";
 import { normalizeMediaFocalRect } from "../media/focal-rect";
@@ -38,6 +46,7 @@ import {
   type PhiBackgroundWidgetLabels,
 } from "../widgets/label-types/background";
 import type { PhiColorPickerLabels } from "../widgets/label-types/color-picker";
+import { PHI_LAYOUT_EFFECT_IDS, type PhiLayoutEffectId } from "../../types/layout-style";
 import type { PhiWidgetControlMode } from "../../types/widget-ui";
 import { ConfigPreviewShell } from "./config-preview-shell";
 import { PhiColorControl } from "./phi-color-control";
@@ -56,6 +65,32 @@ export type PhiBackgroundControlProps = {
   labels?: PhiBackgroundWidgetLabels;
   colorPickerLabels?: PhiColorPickerLabels;
   colorPickerPlacement?: PhiPickerPlacement;
+  /**
+   * The motion modes this surface can actually render, defaulting to the full contract.
+   *
+   * A surface that cannot express a mode must not offer it: the Theme Root Background is viewport-fixed
+   * by construction, so `fixed` would promise a difference from `static` that nothing could deliver.
+   * Narrowing the offer here keeps that decision with the surface instead of teaching this Control who
+   * its host is.
+   */
+  motionModes?: readonly PhiBackgroundMotionMode[];
+  /**
+   * The Effects this surface can actually render, defaulting to the full contract.
+   *
+   * Same rule as `motionModes`: an Effect acts on the surface that carries it, and not every surface
+   * survives every one of them. The Shell Chrome Overlay is the Chrome's own ground, so `blur` and
+   * `dim` would take the Header's text with them and only `glass` describes anything there.
+   */
+  effects?: readonly PhiLayoutEffectId[];
+  /**
+   * The Base kinds this surface can actually render, defaulting to the full contract.
+   *
+   * Same rule as `motionModes` and `effects`. The Shell Chrome Overlay is a treatment laid over the
+   * Theme Root Background, so an `image` there would be a second picture cut against the first along
+   * the frame edge, and it would hide the very ground the frame is meant to let through. A value the
+   * offer no longer covers reads as `none`, which is what such a surface renders for it.
+   */
+  baseKinds?: readonly PhiCmsBackgroundWidgetConfig["base"]["kind"][];
   renderMediaPicker?: (props: {
     purpose: "preview" | "field";
     value?: number | null;
@@ -162,6 +197,9 @@ export function PhiBackgroundControl({
   labels = PHI_BACKGROUND_WIDGET_DEFAULT_LABELS,
   colorPickerLabels = PHI_COLOR_PICKER_DEFAULT_LABELS,
   colorPickerPlacement,
+  motionModes = PHI_BACKGROUND_MOTION_MODES,
+  effects = PHI_LAYOUT_EFFECT_IDS,
+  baseKinds = PHI_BACKGROUND_BASE_KINDS,
   renderMediaPicker,
   onChange,
 }: PhiBackgroundControlProps) {
@@ -169,9 +207,22 @@ export function PhiBackgroundControl({
   const colorPickerPresets = usePhiColorControlPresets({ labels: colorPickerLabels });
   const currentValue = useMemo(() => normalizePhiBackgroundWidgetConfig(value ?? config ?? null), [value, config]);
   const isDisabled = disabled || !onChange;
+  /*
+   * The mode this Control shows and acts on, which is the stored one only while the surface offers it.
+   * A value narrowed out of the offer -- a Root Background still carrying `fixed` -- reads as `static`,
+   * which is exactly what such a surface renders, so the Control and the render agree.
+   */
+  const storedMotionMode = currentValue.motion?.mode ?? "static";
+  const activeMotionMode: PhiBackgroundMotionMode = motionModes.includes(storedMotionMode)
+    ? storedMotionMode
+    : "static";
+  const activeParallaxMotion =
+    activeMotionMode === "parallax" && currentValue.motion?.mode === "parallax"
+      ? currentValue.motion
+      : null;
   // Motion modes render the original asset and steer the crop through the focal rect, so a
   // variant selection would have no effect and is locked out while motion is active.
-  const hasActiveMotion = currentValue.motion != null && currentValue.motion.mode !== "static";
+  const hasActiveMotion = activeMotionMode !== "static";
   const [previewOpenTarget, setPreviewOpenTarget] = useState<"image" | null>(null);
   const derivedPickerValue = useMemo<string>(() => {
     if (currentValue.base.kind === "color") {
@@ -199,12 +250,13 @@ export function PhiBackgroundControl({
   const previewStyle = resolvePhiBackgroundWidgetStyle(currentValue);
   const previewMinHeight = token.controlHeight * 3;
   const fieldControlWidth = token.controlHeight * 4;
-  const baseKindOptions = [
+  const baseKindCatalog: Array<{ value: PhiCmsBackgroundWidgetConfig["base"]["kind"]; label: string }> = [
     { value: "none", label: labels.base.none },
     { value: "color", label: labels.base.color },
     { value: "gradient", label: labels.base.gradient },
     { value: "image", label: labels.base.image },
   ];
+  const baseKindOptions = baseKindCatalog.filter((option) => baseKinds.includes(option.value));
   const backgroundPositionOptions = [
     { value: "center", label: labels.position.center },
     { value: "top", label: labels.position.top },
@@ -227,11 +279,14 @@ export function PhiBackgroundControl({
     { value: "repeat-x", label: labels.repeat.repeatX },
     { value: "repeat-y", label: labels.repeat.repeatY },
   ];
-  const backgroundMotionOptions: Array<{ value: PhiBackgroundMotionMode; label: string }> = [
+  const backgroundMotionModeCatalog: Array<{ value: PhiBackgroundMotionMode; label: string }> = [
     { value: "static", label: labels.motion.static },
     { value: "fixed", label: labels.motion.fixed },
     { value: "parallax", label: labels.motion.parallax },
   ];
+  const backgroundMotionOptions = backgroundMotionModeCatalog.filter((option) =>
+    motionModes.includes(option.value),
+  );
   const backgroundMotionDirectionOptions: Array<{ value: PhiBackgroundMotionDirection; label: string }> = [
     { value: "natural", label: labels.motion.natural },
     { value: "reverse", label: labels.motion.reverse },
@@ -285,13 +340,27 @@ export function PhiBackgroundControl({
     { value: "medium", label: labels.overlay.grains.medium },
     { value: "coarse", label: labels.overlay.grains.coarse },
   ];
-  const effectKindOptions = [
+  const effectKindCatalog: Array<{ value: "none" | PhiLayoutEffectId; label: string }> = [
     { value: "none", label: labels.common.none },
     { value: "glass", label: labels.effect.glass },
     { value: "blur", label: labels.effect.blur },
     { value: "dim", label: labels.effect.dim },
     { value: "tint", label: labels.effect.tint },
   ];
+  /*
+   * Glass frosts what shows through a surface, so a base that paints its own opaque material has
+   * nothing for it to work on. Offering it there promised a pane over a picture and delivered a wash,
+   * so the segment disappears with such a base and a value stored from before reads as no Effect --
+   * which is exactly what `resolvePhiBackgroundEffect` renders for it.
+   */
+  const supportsGlassEffect = phiBackgroundBaseSupportsGlassEffect(currentValue.base);
+  const isOfferedEffect = (effect: PhiLayoutEffectId) =>
+    effects.includes(effect) && (effect !== "glass" || supportsGlassEffect);
+  const effectKindOptions = effectKindCatalog.filter(
+    (option) => option.value === "none" || isOfferedEffect(option.value),
+  );
+  const activeEffectKind =
+    currentValue.effect && isOfferedEffect(currentValue.effect) ? currentValue.effect : "none";
   const canOpenPreview = currentValue.base.kind !== "none";
   useEffect(() => {
     if (currentValue.base.kind === "color") {
@@ -938,64 +1007,65 @@ export function PhiBackgroundControl({
               onChange={(next) => updateImageField("repeat", next)}
             />
           </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: token.paddingXS, width: "100%" }}>
-            <Typography.Text>{labels.sections.motion}</Typography.Text>
-            <PhiSegmentedControl<PhiBackgroundMotionMode>
-              block
-              value={currentValue.motion?.mode ?? "static"}
-              options={backgroundMotionOptions}
-              disabled={isDisabled}
-              onChange={updateMotionMode}
-            />
-            {currentValue.motion?.mode === "parallax" ? (
-              <>
-                <PhiSliderControl
-                  label={labels.motion.strength}
-                  min={0}
-                  max={1}
-                  step={0.05}
-                  value={currentValue.motion.strength ?? resolvePhiBackgroundParallaxDefaultStrength(currentValue.motion.travel)}
-                  disabled={isDisabled}
-                  tooltipSuffix="×"
-                  style={{ width: "100%" }}
-                  onChange={(strength) => updateParallaxMotion({ strength })}
-                />
-                <PhiSegmentedControl<PhiBackgroundMotionDirection>
-                  label={labels.motion.direction}
-                  block
-                  value={currentValue.motion.direction ?? "natural"}
-                  options={backgroundMotionDirectionOptions}
-                  disabled={isDisabled}
-                  onChange={(direction) => updateParallaxMotion({ direction })}
-                />
-                <PhiSegmentedControl<PhiBackgroundMotionTravel>
-                  label={labels.motion.travel}
-                  block
-                  value={currentValue.motion.travel ?? "rate"}
-                  options={backgroundMotionTravelOptions}
-                  disabled={isDisabled}
-                  onChange={(travel) => updateParallaxMotion({ travel })}
-                />
-              </>
-            ) : null}
-          </div>
+          {backgroundMotionOptions.length > 1 ? (
+            <div style={{ display: "flex", flexDirection: "column", gap: token.paddingXS, width: "100%" }}>
+              <Typography.Text>{labels.sections.motion}</Typography.Text>
+              <PhiSegmentedControl<PhiBackgroundMotionMode>
+                block
+                value={activeMotionMode}
+                options={backgroundMotionOptions}
+                disabled={isDisabled}
+                onChange={updateMotionMode}
+              />
+              {activeParallaxMotion ? (
+                <>
+                  <Typography.Text>{labels.motion.strength}</Typography.Text>
+                  <PhiSliderControl
+                    min={0}
+                    max={1}
+                    step={0.05}
+                    ariaLabel={labels.motion.strength}
+                    value={activeParallaxMotion.strength ?? resolvePhiBackgroundParallaxDefaultStrength(activeParallaxMotion.travel)}
+                    disabled={isDisabled}
+                    tooltipSuffix="×"
+                    style={{ width: "100%" }}
+                    onChange={(strength) => updateParallaxMotion({ strength })}
+                  />
+                  <Typography.Text>{labels.motion.direction}</Typography.Text>
+                  <PhiSegmentedControl<PhiBackgroundMotionDirection>
+                    block
+                    value={activeParallaxMotion.direction ?? "natural"}
+                    options={backgroundMotionDirectionOptions}
+                    disabled={isDisabled}
+                    onChange={(direction) => updateParallaxMotion({ direction })}
+                  />
+                  <Typography.Text>{labels.motion.travel}</Typography.Text>
+                  <PhiSegmentedControl<PhiBackgroundMotionTravel>
+                    block
+                    value={activeParallaxMotion.travel ?? "rate"}
+                    options={backgroundMotionTravelOptions}
+                    disabled={isDisabled}
+                    onChange={(travel) => updateParallaxMotion({ travel })}
+                  />
+                </>
+              ) : null}
+            </div>
+          ) : null}
         </div>
       ) : currentValue.base.kind !== "none" ? (
         <div style={{ display: "flex", flexDirection: "column", gap: token.paddingSM, width: "100%" }}>
           {currentValue.base.kind === "color" ? (
-            <Flex align="center" gap={token.paddingSM} wrap={false} style={{ width: "100%" }}>
-              <Typography.Text style={{ flex: "0 0 140px", minWidth: 140 }}>{labels.base.color}</Typography.Text>
-              <div style={{ flex: "1 1 auto", minWidth: 0 }}>
-                <PhiColorControl
-                  value={currentValue.base.color}
-                  disabled={isDisabled}
-                  presets={colorPickerPresets}
-                  placement={colorPickerPlacement}
-                  onChange={(value) => {
-                    if (value != null) updateBaseFromCss(value);
-                  }}
-                />
-              </div>
+            <Flex align="center" justify="space-between" gap={token.paddingSM} wrap="wrap">
+              <Typography.Text>{labels.base.color}</Typography.Text>
+              <PhiColorControl
+                value={currentValue.base.color}
+                disabled={isDisabled}
+                presets={colorPickerPresets}
+                placement={colorPickerPlacement}
+                onChange={(value) => {
+                  if (value != null) updateBaseFromCss(value);
+                }}
+              />
             </Flex>
           ) : (
             <Flex align="center" justify="space-between" gap={token.paddingSM} wrap="wrap">
@@ -1037,46 +1107,80 @@ export function PhiBackgroundControl({
         {currentValue.overlay ? (
           <Space orientation="vertical" size={8} style={{ width: "100%" }}>
             {currentValue.overlay.kind === "pattern" ? (
-              <Flex align="center" justify="space-between" gap={token.paddingSM} wrap="wrap">
-                <Typography.Text>{labels.overlay.pattern}</Typography.Text>
-                <PhiSelectControl<PhiBackgroundPatternKey>
-                  value={currentValue.overlay.patternKey}
-                  options={resolvedPatternOptions}
+              <>
+                <Flex align="center" justify="space-between" gap={token.paddingSM} wrap="wrap">
+                  <Typography.Text>{labels.overlay.pattern}</Typography.Text>
+                  <PhiSelectControl<PhiBackgroundPatternKey>
+                    value={currentValue.overlay.patternKey}
+                    options={resolvedPatternOptions}
+                    disabled={isDisabled}
+                    style={{ width: fieldControlWidth }}
+                    onChange={(patternKey) => {
+                      const provider = resolvePhiBackgroundPatternProvider(patternKey);
+                      if (!provider) return;
+                      emit({
+                        ...currentValue,
+                        overlay: {
+                          kind: "pattern",
+                          patternKey,
+                          opacity: currentValue.overlay?.opacity ?? 0.14,
+                          // The ink belongs to the Overlay rather than to one Pattern, so switching the
+                          // shape keeps the paint the author picked for it.
+                          ...(currentValue.overlay?.kind === "pattern" && currentValue.overlay.ink
+                            ? { ink: currentValue.overlay.ink }
+                            : {}),
+                          values: resolvePhiBackgroundPatternDefaultValues(provider),
+                        },
+                      });
+                    }}
+                  />
+                </Flex>
+                <Flex align="center" justify="space-between" gap={token.paddingSM} wrap="wrap">
+                  <Typography.Text>{labels.overlay.color}</Typography.Text>
+                  {/*
+                    * One picker for both shapes of ink. The value travels as CSS and comes back parsed
+                    * by the same reader the Base uses, so a gradient the author builds here is stored in
+                    * the same structure a Base gradient is.
+                    */}
+                  <PhiColorControl
+                    mode="both"
+                    value={serializePhiBackgroundPatternInkCss(
+                      currentValue.overlay.ink ?? PHI_BACKGROUND_PATTERN_DEFAULT_INK,
+                    )}
+                    disabled={isDisabled}
+                    presets={colorPickerPresets}
+                    placement={colorPickerPlacement}
+                    onChange={(nextCss) => {
+                      const nextInk = nextCss == null ? null : readPhiBackgroundPatternInkFromCss(nextCss);
+                      if (!nextInk || currentValue.overlay?.kind !== "pattern") return;
+                      emit({
+                        ...currentValue,
+                        overlay: { ...currentValue.overlay, ink: nextInk },
+                      });
+                    }}
+                  />
+                </Flex>
+              </>
+            ) : (
+              <Flex vertical gap={token.paddingXS} style={{ width: "100%" }}>
+                <Typography.Text>{labels.overlay.grain}</Typography.Text>
+                <PhiSegmentedControl<PhiBackgroundNoiseGrain>
+                  block
+                  value={currentValue.overlay.grain}
+                  options={noiseGrainOptions}
                   disabled={isDisabled}
-                  style={{ width: fieldControlWidth }}
-                  onChange={(patternKey) => {
-                    const provider = resolvePhiBackgroundPatternProvider(patternKey);
-                    if (!provider) return;
+                  onChange={(grain) =>
                     emit({
                       ...currentValue,
                       overlay: {
-                        kind: "pattern",
-                        patternKey,
-                        opacity: currentValue.overlay?.opacity ?? 0.14,
-                        values: resolvePhiBackgroundPatternDefaultValues(provider),
+                        ...currentValue.overlay!,
+                        kind: "noise",
+                        grain,
                       },
-                    });
-                  }}
+                    })
+                  }
                 />
               </Flex>
-            ) : (
-              <PhiSegmentedControl<PhiBackgroundNoiseGrain>
-                label={labels.overlay.grain}
-                block
-                value={currentValue.overlay.grain}
-                options={noiseGrainOptions}
-                disabled={isDisabled}
-                onChange={(grain) =>
-                  emit({
-                    ...currentValue,
-                    overlay: {
-                      ...currentValue.overlay!,
-                      kind: "noise",
-                      grain,
-                    },
-                  })
-                }
-              />
             )}
 
             <Flex align="center" justify="space-between" gap={token.paddingSM} wrap="wrap">
@@ -1160,18 +1264,21 @@ export function PhiBackgroundControl({
         ) : null}
       </Space>
 
-      <Divider dashed size="small" />
+      {effectKindOptions.length > 1 ? (
+        <>
+          <Divider dashed size="small" />
 
-      <Space orientation="vertical" size={8} style={{ width: "100%" }}>
-        <Typography.Text>{labels.sections.effect}</Typography.Text>
-        <PhiSegmentedControl
-          block
-          value={currentValue.effect ?? "none"}
-          options={effectKindOptions}
-          onChange={(next) => updateEffectKind(next as "glass" | "blur" | "dim" | "tint" | "none")}
-        />
-
-      </Space>
+          <Space orientation="vertical" size={8} style={{ width: "100%" }}>
+            <Typography.Text>{labels.sections.effect}</Typography.Text>
+            <PhiSegmentedControl
+              block
+              value={activeEffectKind}
+              options={effectKindOptions}
+              onChange={(next) => updateEffectKind(next as "glass" | "blur" | "dim" | "tint" | "none")}
+            />
+          </Space>
+        </>
+      ) : null}
     </Space>
   );
 }

@@ -2,10 +2,30 @@ import type { PhiBackgroundDirection } from "./background";
 import {
   PHI_CORE_BACKGROUND_PATTERN_KEYS,
   type PhiBackgroundNoiseGrain,
+  type PhiBackgroundPatternInk,
   type PhiBackgroundPatternKey,
   type PhiBackgroundPatternLayer,
   type PhiBackgroundPatternValues,
 } from "./background-pattern-contract";
+
+/**
+ * The rendered form of a Pattern Overlay.
+ *
+ * Every Pattern is one SVG image rather than a stack of CSS gradients, because the ink may be a
+ * gradient and a CSS colour stop only takes a colour: there is nowhere in `repeating-linear-gradient`
+ * to put another gradient. Inside an SVG the two are separable -- the shapes become a mask and the ink
+ * fills a rectangle through it -- so the layer stays a single `background-image` and no surface needs
+ * an extra element to carry it.
+ *
+ * The image spans the painting area rather than tiling, so a gradient ink runs across the whole surface
+ * instead of restarting in every tile. The shapes keep their own size in pixels regardless: the SVG
+ * carries no `viewBox`, so one user unit stays one pixel of the area it is painted into.
+ */
+
+export const PHI_BACKGROUND_PATTERN_DEFAULT_INK: PhiBackgroundPatternInk = {
+  kind: "color",
+  color: "#ffffff",
+};
 
 function resolveScale(values: PhiBackgroundPatternValues, fallback = 12) {
   const value = values.scale;
@@ -35,67 +55,135 @@ function directionToDegrees(direction: PhiBackgroundDirection) {
   return 270;
 }
 
-function patternColor(opacity: number) {
-  return `rgba(255, 255, 255, ${opacity})`;
+/**
+ * One tiled family of shapes, in the coordinates of its own tile.
+ *
+ * Crosshatch is the reason this is a list: two line families at different angles cannot share a tile,
+ * and an SVG `pattern` carries one transform. Each family becomes its own `pattern`, and the mask
+ * simply paints them over one another.
+ */
+type PhiBackgroundPatternShapeFamily = {
+  tile: number;
+  rotate?: number;
+  shapes: string;
+};
+
+function resolvePatternShapeFamilies(
+  patternKey: PhiBackgroundPatternKey,
+  values: PhiBackgroundPatternValues,
+): readonly PhiBackgroundPatternShapeFamily[] | null {
+  const scale = resolveScale(values);
+
+  if (patternKey === PHI_CORE_BACKGROUND_PATTERN_KEYS.stripes) {
+    const lineWidth = Math.max(1, scale / 4);
+    return [{
+      tile: scale,
+      rotate: directionToDegrees(resolveDirection(values)),
+      shapes: `<rect width="${scale}" height="${lineWidth}" fill="#fff"/>`,
+    }];
+  }
+
+  if (patternKey === PHI_CORE_BACKGROUND_PATTERN_KEYS.grid) {
+    return [{
+      tile: scale,
+      shapes: `<rect width="${scale}" height="1" fill="#fff"/><rect width="1" height="${scale}" fill="#fff"/>`,
+    }];
+  }
+
+  if (patternKey === PHI_CORE_BACKGROUND_PATTERN_KEYS.dots) {
+    const radius = Math.max(1, Math.min(3, scale / 5));
+    const center = scale / 2;
+    return [{
+      tile: scale,
+      shapes: `<circle cx="${center}" cy="${center}" r="${radius}" fill="#fff"/>`,
+    }];
+  }
+
+  if (patternKey === PHI_CORE_BACKGROUND_PATTERN_KEYS.checker) {
+    return [{
+      tile: scale * 2,
+      shapes: [
+        `<rect width="${scale}" height="${scale}" fill="#fff"/>`,
+        `<rect x="${scale}" y="${scale}" width="${scale}" height="${scale}" fill="#fff"/>`,
+      ].join(""),
+    }];
+  }
+
+  if (patternKey === PHI_CORE_BACKGROUND_PATTERN_KEYS.crosshatch) {
+    const degrees = directionToDegrees(resolveDirection(values));
+    return [degrees, degrees + 90].map((rotate) => ({
+      tile: scale,
+      rotate,
+      shapes: `<rect width="${scale}" height="1" fill="#fff"/>`,
+    }));
+  }
+
+  return null;
+}
+
+/**
+ * The ink as an SVG paint, plus the gradient definition it needs.
+ *
+ * The endpoints follow the CSS reading of the angle -- zero points up, degrees run clockwise -- so a
+ * Pattern ink and a Background Base gradient given the same direction lean the same way.
+ */
+function resolvePatternInkPaint(ink: PhiBackgroundPatternInk) {
+  if (ink.kind === "color") {
+    return { defs: "", paint: ink.color };
+  }
+
+  const radians = (directionToDegrees(ink.direction) * Math.PI) / 180;
+  const dx = Math.sin(radians) / 2;
+  const dy = Math.cos(radians) / 2;
+  const stops = ink.stops
+    .map((stop) => `<stop offset="${stop.percent}%" stop-color="${stop.color}"/>`)
+    .join("");
+
+  return {
+    defs: `<linearGradient id="phi-ink" x1="${0.5 - dx}" y1="${0.5 + dy}" x2="${0.5 + dx}" y2="${0.5 - dy}">${stops}</linearGradient>`,
+    paint: "url(#phi-ink)",
+  };
+}
+
+function encodeSvgLayer(svg: string) {
+  return `url("data:image/svg+xml,${encodeURIComponent(svg)}")`;
 }
 
 export function resolvePhiBackgroundPatternLiveLayer(
   patternKey: PhiBackgroundPatternKey,
   values: PhiBackgroundPatternValues,
   opacity: number,
+  ink: PhiBackgroundPatternInk = PHI_BACKGROUND_PATTERN_DEFAULT_INK,
 ): PhiBackgroundPatternLayer | null {
-  const scale = resolveScale(values);
-  const color = patternColor(opacity);
+  const families = resolvePatternShapeFamilies(patternKey, values);
+  if (!families) {
+    return null;
+  }
 
-  if (patternKey === PHI_CORE_BACKGROUND_PATTERN_KEYS.stripes) {
-    const lineWidth = Math.max(1, scale / 4);
-    return {
-      images: [
-        `repeating-linear-gradient(${resolveDirection(values)}, ${color} 0, ${color} ${lineWidth}px, transparent ${lineWidth}px, transparent ${scale}px)`,
-      ],
-      repeats: ["repeat"],
-    };
-  }
-  if (patternKey === PHI_CORE_BACKGROUND_PATTERN_KEYS.grid) {
-    return {
-      images: [
-        `linear-gradient(${color} 1px, transparent 1px)`,
-        `linear-gradient(90deg, ${color} 1px, transparent 1px)`,
-      ],
-      sizes: [`${scale}px ${scale}px`, `${scale}px ${scale}px`],
-      repeats: ["repeat", "repeat"],
-    };
-  }
-  if (patternKey === PHI_CORE_BACKGROUND_PATTERN_KEYS.dots) {
-    const dotSize = Math.max(1, Math.min(3, scale / 5));
-    return {
-      images: [
-        `radial-gradient(circle, ${color} 0 ${dotSize}px, transparent ${dotSize + 0.5}px)`,
-      ],
-      sizes: [`${scale}px ${scale}px`],
-      repeats: ["repeat"],
-    };
-  }
-  if (patternKey === PHI_CORE_BACKGROUND_PATTERN_KEYS.checker) {
-    return {
-      images: [
-        `conic-gradient(${color} 25%, transparent 0 50%, ${color} 0 75%, transparent 0)`,
-      ],
-      sizes: [`${scale * 2}px ${scale * 2}px`],
-      repeats: ["repeat"],
-    };
-  }
-  if (patternKey === PHI_CORE_BACKGROUND_PATTERN_KEYS.crosshatch) {
-    const direction = directionToDegrees(resolveDirection(values));
-    return {
-      images: [
-        `repeating-linear-gradient(${direction}deg, ${color} 0 1px, transparent 1px ${scale}px)`,
-        `repeating-linear-gradient(${direction + 90}deg, ${color} 0 1px, transparent 1px ${scale}px)`,
-      ],
-      repeats: ["repeat", "repeat"],
-    };
-  }
-  return null;
+  const inkPaint = resolvePatternInkPaint(ink);
+  const patterns = families
+    .map((family, index) => [
+      `<pattern id="phi-shape-${index}" width="${family.tile}" height="${family.tile}" patternUnits="userSpaceOnUse"`,
+      family.rotate ? ` patternTransform="rotate(${family.rotate})"` : "",
+      `>${family.shapes}</pattern>`,
+    ].join(""))
+    .join("");
+  const maskLayers = families
+    .map((_, index) => `<rect width="100%" height="100%" fill="url(#phi-shape-${index})"/>`)
+    .join("");
+  const svg = [
+    '<svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%">',
+    `<defs>${patterns}${inkPaint.defs}<mask id="phi-mask">${maskLayers}</mask></defs>`,
+    `<rect width="100%" height="100%" fill="${inkPaint.paint}" mask="url(#phi-mask)" opacity="${Math.max(0, Math.min(1, opacity))}"/>`,
+    "</svg>",
+  ].join("");
+
+  return {
+    images: [encodeSvgLayer(svg)],
+    sizes: ["100% 100%"],
+    positions: ["0 0"],
+    repeats: ["no-repeat"],
+  };
 }
 
 export function resolvePhiBackgroundNoiseLiveLayer(
@@ -114,7 +202,7 @@ export function resolvePhiBackgroundNoiseLiveLayer(
     '</svg>',
   ].join("");
   return {
-    images: [`url("data:image/svg+xml,${encodeURIComponent(noiseSvg)}")`],
+    images: [encodeSvgLayer(noiseSvg)],
     sizes: [`${tileSize}px ${tileSize}px`],
     positions: ["0 0"],
     repeats: ["repeat"],

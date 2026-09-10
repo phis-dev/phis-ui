@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 
 import { PhiDeveloperBuilderCanvasWidgetClient } from "./canvas-widget";
 import type { PhiDeveloperBuilderStructureCanvasProps } from "./structure-canvas";
@@ -11,7 +11,11 @@ import {
   mergePhiDeveloperDeletedPageDrafts,
   mergePhiDeveloperPageMetaDrafts,
   mergePhiDeveloperPagePresetDrafts,
+  usePhiDeveloperBuilderStateValue,
 } from "../developer-workspace-store";
+import { isPhiBuilderConstructedRootPage } from "../offered-page-catalog";
+import { buildPhiDeveloperBuilderRegionDraftsFromTree } from "../region-hydration";
+import { PHI_BUILDER_PAGE_REGION_KEYS } from "../region-keys";
 import type {
   PhiDeveloperBuilderArea,
   PhiDeveloperBuilderRegionDraft,
@@ -40,9 +44,32 @@ export function PhiDeveloperBuilderPagesWorkspaceWidgetClient({
   regionLabels?: PhiRegionWidgetLabels;
   pickerLabels?: PhiBuilderChromeWidgetLabels["canvas"]["picker"];
 }) {
+  /*
+   * A root the Builder constructs starts empty, the way a Page somebody just created does.
+   *
+   * The seed the server sends is the tree of whatever Preset currently answers `/` -- the Area's own
+   * Page, when the landing is answered with nobody. Copying that into the drafts would mean "make your
+   * own landing" opens on somebody else's, so this replaces it with the same projection run over an
+   * empty tree: one draft per Page region, each with nothing in it.
+   *
+   * Empty drafts rather than no drafts, because the merge below is a merge: leaving the keys out would
+   * let the Preset's regions stand from before the Builder answered.
+   */
+  const constructedRoot = usePhiDeveloperBuilderStateValue("public", (state) =>
+    isPhiBuilderConstructedRootPage(state, pageMetaArea, pageMetaPageKey));
+  const emptyPresetDrafts = useMemo(
+    () => buildPhiDeveloperBuilderRegionDraftsFromTree(
+      { regions: [], layoutNodes: [], contentWidgets: [] },
+      pageMetaArea,
+      pageMetaPageKey,
+      PHI_BUILDER_PAGE_REGION_KEYS,
+    ),
+    [pageMetaArea, pageMetaPageKey],
+  );
+
   useEffect(() => {
-    mergePhiDeveloperPagePresetDrafts(pagePresetDrafts);
-  }, [pagePresetDrafts]);
+    mergePhiDeveloperPagePresetDrafts(constructedRoot ? emptyPresetDrafts : pagePresetDrafts);
+  }, [constructedRoot, emptyPresetDrafts, pagePresetDrafts]);
 
   useEffect(() => {
     mergePhiDeveloperPageMetaDrafts(pageMetaArea, {

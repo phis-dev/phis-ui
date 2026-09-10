@@ -76,23 +76,28 @@ export const PHI_AREA_BASE_RUNTIME_MODULE_ROUTES = [
   {
     ownerModuleId: PHI_PUBLIC_RUNTIME_MODULE_ID,
     presetKey: "public-welcome-page",
-    presetVersion: 1,
+    // 2: the Page-owned header and footer copy is gone -- the landing is its Content Region alone.
+    presetVersion: 2,
     area: "public",
     title: "Home",
     path: "/",
-    landingPage: true,
-    loadTree: ({ page, runtime }) =>
+    /*
+     * It stands at `/` without applying for it.
+     *
+     * A built-in Page is not an applicant for the landing slot: it is what the slot falls back to
+     * while nobody else has taken it, which the base-Module rung of the chain already says. Declaring
+     * it an offer as well made every Site ship with one application already on the table, so a Site
+     * package that offered a landing arrived as the second and the "one applicant needs no question"
+     * adoption stopped firing -- an Operator would have had to open the Builder and choose. The Page
+     * is unchanged; only the application is withdrawn.
+     */
+    loadTree: ({ page }) =>
       import("../../components/regions/presets/phi-default-pub-welcome-page-tree")
-        .then((module) => module.buildPhiDefaultPubWelcomePageTree({
-          page,
-          runtime,
-          includeLandingChrome: true,
-        })),
+        .then((module) => module.buildPhiDefaultPubWelcomePageTree({ page })),
   },
   buildPhiAreaRootRoutePresetDescriptor({
     ownerModuleId: PHI_APP_RUNTIME_MODULE_ID,
     area: "app",
-    navKey: "app:sidebar",
     title: "App",
   }),
   ...([401, 403, 404, 500] as const).map((code) => ({
@@ -120,7 +125,6 @@ export const PHI_AREA_BASE_RUNTIME_MODULE_ROUTES = [
   buildPhiAreaRootRoutePresetDescriptor({
     ownerModuleId: PHI_ACCOUNTING_RUNTIME_MODULE_ID,
     area: "accounting",
-    navKey: "accounting:sidebar",
     title: "Accounting",
   }),
   {

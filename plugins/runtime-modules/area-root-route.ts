@@ -16,16 +16,27 @@ import type {
  * The Area's base Module owns it rather than the Module it forwards to, because the root outlives any
  * one Module: switching the Dashboard off has to move the destination, not delete the front door.
  */
+/**
+ * The surface an Area root forwards through.
+ *
+ * Stated once because two sides read it: the preset below draws the forward from it, and the Builder
+ * has to name the same surface to say where a root that forwards would land. A convention repeated in
+ * two places is a convention until the day it is not.
+ */
+export function resolvePhiAreaRootRouteNavKey(area: PhiCmsAreaKey) {
+  return `${area}:sidebar` as const satisfies `${PhiCmsAreaKey}:${string}`;
+}
+
 export function buildPhiAreaRootRoutePresetDescriptor({
   ownerModuleId,
   area,
-  navKey,
+  navKey = resolvePhiAreaRootRouteNavKey(area),
   title,
   accessPolicy,
 }: {
   ownerModuleId: PhiRuntimeModuleId;
   area: PhiCmsAreaKey;
-  navKey: `${PhiCmsAreaKey}:${string}`;
+  navKey?: `${PhiCmsAreaKey}:${string}`;
   title: string;
   accessPolicy?: PhiViewerAccessPolicy;
 }): PhiCmsRoutePresetDescriptor {

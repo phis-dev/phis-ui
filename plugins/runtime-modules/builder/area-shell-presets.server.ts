@@ -14,6 +14,8 @@ import {
   readPhiAreaPublicRoutePaths,
   readPhiAreaRootRoute,
   readPhiAreaMeta,
+  resolvePhiAreaLandingSelection,
+  type PhiAreaLandingSelection,
   type PhiAreaRootRoute,
   type PhiAreaMeta,
   type PhiPublicRoutePathAssignment,
@@ -269,7 +271,25 @@ export async function buildPhiBuilderAreaRootRoute(
   );
 }
 
-/** What an Area says about the head of its Pages. */
+/**
+ * Which application for the Area root this Site answered, in the form the route table asks for.
+ *
+ * The same sentence as the root route above, read for the other half of what it says: the mode decides
+ * whether `/` forwards, the selection decides which Module's landing stands there when it does not.
+ * The compiler works in identities and the Builder stores references, so the translation happens here
+ * rather than at the two call sites that compile a table.
+ */
+export async function buildPhiBuilderAreaLandingSelection(
+  runtime: PhiBlockRuntime,
+  area: PhiDeveloperBuilderArea,
+  runtimeModuleCatalog: PhiRuntimeModuleCatalog,
+): Promise<PhiAreaLandingSelection | null> {
+  return resolvePhiAreaLandingSelection(
+    await buildPhiBuilderAreaRootRoute(runtime, area, runtimeModuleCatalog),
+  );
+}
+
+/** What an Area says about being found. */
 export async function buildPhiBuilderAreaMeta(
   runtime: PhiBlockRuntime,
   area: PhiDeveloperBuilderArea,

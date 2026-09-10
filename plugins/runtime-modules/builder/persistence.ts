@@ -37,6 +37,7 @@ import { isPhiRuntimeAreaBaseModuleId } from "../../../plugins/runtime-modules/a
 import { createPhiBuilderDraftAllocationKey } from "./draft-allocation-key";
 import {
   builderWorkspaceStore,
+  commitPhiDeveloperBuilderAreaConfig,
   readPhiBuilderEffectiveAreaRootRoute,
   readPhiBuilderEffectiveAreaMeta,
 } from "./developer-workspace-store";
@@ -924,6 +925,18 @@ function buildAreaStructureWritePayload(
   return {
     areaMask,
     regions,
+    /*
+     * The Shells workspace edits Regions, so a saved Area carries no Overlays -- and, per BUILDER.md,
+     * that saved snapshot then replaces the code preset entirely. Anything a Module needs to survive
+     * such a save is contributed to the Area instead of declared in the shell it replaces, which is
+     * where the Builder's own Inspector, Effects and wiring Overlays live.
+     *
+     * The empty list is the workspace telling the truth about what it edits, not a shortcut: there is
+     * no Overlay authoring yet, so a draft holds none. When there is -- an Overlay built here the way a
+     * Form is built in the Form Builder -- this is the line that changes: the draft's own Overlays are
+     * written, and Module contributions keep composing beside them, as the id collision check in
+     * composePhiCmsActiveAreaOverlayPresets already assumes.
+     */
     overlays: [] as PhiCmsOverlayNode[],
     layoutNodes,
     contentWidgets,
@@ -1110,6 +1123,16 @@ export async function savePhiDeveloperBuilderDraft(
         contentWidgets: structurePayload.contentWidgets,
       });
       storePhiDeveloperBuilderDraftAllocation(allocationKey, result);
+      /*
+       * What the Shell says about itself is now written down, so the workspace stops calling it unsaved.
+       *
+       * `/pages` reads the stored answer rather than the one being edited -- that is what keeps it from
+       * offering a Page the server does not serve -- and the stored answer otherwise only arrives with a
+       * fresh server render. The Builder chrome is one layout across both workspaces, so walking from
+       * here to `/pages` does not produce one: without this, a root route saved a moment ago reached the
+       * Page list only after a reload.
+       */
+      commitPhiDeveloperBuilderAreaConfig(area, { rootRoute: rootRouteDraft, meta: metaDraft });
       savedDraftState = result;
       revisionId = result.revisionId;
       savedScopes += 1;

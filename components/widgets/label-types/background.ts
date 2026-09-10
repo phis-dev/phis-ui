@@ -46,6 +46,7 @@ export type PhiBackgroundWidgetLabels = {
     pattern: string;
     noise: string;
     grain: string;
+    color: string;
     opacity: string;
     direction: string;
     scale: string;
@@ -158,6 +159,7 @@ export const PHI_BACKGROUND_WIDGET_DEFAULT_LABELS: PhiBackgroundWidgetLabels = {
     pattern: "Pattern",
     noise: "Noise",
     grain: "Grain",
+    color: "Color",
     opacity: "Opacity",
     direction: "Direction",
     scale: "Scale",

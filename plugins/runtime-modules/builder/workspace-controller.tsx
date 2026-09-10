@@ -41,6 +41,10 @@ import {
   type PhiPresetPageNode,
 } from "../../../helpers/cms-page-catalog";
 import { loadPhiBuilderPersistedPageCatalog } from "./page-catalog-client";
+import {
+  resolvePhiBuilderOfferedPageKey,
+  type PhiBuilderOfferedCatalogState,
+} from "./offered-page-catalog";
 import type {
   PhiCmsResolvedNavigationItem,
   PhiCmsResolvedNavigationSurface,
@@ -78,6 +82,7 @@ import {
   closePhiBuilderPublicRouteCollisionRequest,
 } from "./developer-workspace-store";
 import {
+  PHI_BUILDER_AREA_LANDING_PAGE_EMPTY,
   PHI_BUILDER_AREA_ROOT_ROUTE_AUTOMATIC,
   PHI_BUILDER_AREA_ROOT_ROUTE_LANDING,
 } from "./options-providers";
@@ -193,7 +198,8 @@ function readPhiDeveloperBuilderToolbarCommand(value: unknown): PhiDeveloperBuil
     value === "publish" ||
     value === "undo" ||
     value === "redo" ||
-    value === "reset"
+    value === "reset" ||
+    value === "restorePreset"
   ) {
     return value;
   }
@@ -592,16 +598,15 @@ function usePhiDeveloperBuilderWorkspaceController(
     () => createPhiSignalAddress("cms", PHI_BUILDER_SHELLS_WIDGET_IDS.widgetAreaLandingPage),
     [],
   );
-  const landingSelectBaseModuleId = resolvePhiRuntimeAreaDefinition(
-    resolvePhiBuilderAreaAsCmsArea(state.area),
-  )?.baseModuleId ?? null;
+  /*
+   * Answerable whenever the root is a landing, and not only when somebody offers one.
+   *
+   * "None -- I will author it myself" is one of the answers, so there is always something to say. The
+   * older rule asked whether any Page carried the application flag, which after built-in Pages stopped
+   * applying left the Select switched off for good in an Area whose landing nobody had applied for.
+   */
   const landingSelectEnabled =
-    readPhiBuilderEffectiveAreaRootRoute(state, state.area)?.mode === "landing" &&
-    (state.modulePresetPagesByArea?.[state.area] ?? []).some((node) =>
-      node.landingPage === true &&
-      node.sourcePreset &&
-      (node.sourcePreset.ownerModuleId === landingSelectBaseModuleId ||
-        (state.runtimeModuleIdsByArea?.[state.area] ?? []).includes(node.sourcePreset.ownerModuleId)));
+    readPhiBuilderEffectiveAreaRootRoute(state, state.area)?.mode === "landing";
   /*
    * Said in the Select's own scope, and said once.
    *
@@ -1131,6 +1136,33 @@ function usePhiDeveloperBuilderWorkspaceController(
     }));
   }, [defaultArea, hasPreviewSnapshot, isBuilderWorkspace, isNavigationWorkspace, state.builderMode]);
 
+  /*
+   * The workspace, narrowed to what deciding the offered Pages actually reads.
+   *
+   * The effect below used to be handed the state whole, which asks it to re-run on every unrelated
+   * store change and made its dependency list a copy of the offered catalog's own field list, kept by
+   * hand. Naming the same Pick the resolver names keeps the two together: what the Area's Page list
+   * depends on is stated once, and a field added there arrives here without anybody remembering to.
+   *
+   * The unsaved root route is deliberately absent, because the Page list does not follow it: what
+   * `/pages` may open is what the Area has stored, which is what the server serves.
+   */
+  const offeredCatalogState = useMemo<PhiBuilderOfferedCatalogState>(() => ({
+    modulePresetPagesByArea: state.modulePresetPagesByArea,
+    customPages: state.customPages,
+    persistedPageCatalogByArea: state.persistedPageCatalogByArea,
+    navigationSurfacesByArea: state.navigationSurfacesByArea,
+    runtimeModuleIdsByArea: state.runtimeModuleIdsByArea,
+    areaRootRoutes: state.areaRootRoutes,
+  }), [
+    state.modulePresetPagesByArea,
+    state.customPages,
+    state.persistedPageCatalogByArea,
+    state.navigationSurfacesByArea,
+    state.runtimeModuleIdsByArea,
+    state.areaRootRoutes,
+  ]);
+
   useEffect(() => {
     if (!isBuilderWorkspace || !state.pageCatalogHydratedByArea[effectiveArea]) {
       return;
@@ -1142,17 +1174,12 @@ function usePhiDeveloperBuilderWorkspaceController(
       }
 
       const canonicalArea = scopeAreaFromSearch ?? state.area;
-      const canonicalPages = resolvePhiBuilderActivePageCatalog(
+      const { pageKey: canonicalPageKey } = resolvePhiBuilderOfferedPageKey(
+        offeredCatalogState,
         canonicalArea,
-        state.modulePresetPagesByArea,
-        state.customPages,
-        state.persistedPageCatalogByArea,
-      );
-      const canonicalPageKey =
         scopePageFromSearch ??
-        (scopeAreaFromSearch != null && scopeAreaFromSearch !== state.area
-          ? (resolvePhiBuilderActivePageKey(null, canonicalPages) ?? "")
-          : state.pageKey);
+          (scopeAreaFromSearch != null && scopeAreaFromSearch !== state.area ? null : state.pageKey),
+      );
       if (!canonicalPageKey) {
         return;
       }
@@ -1164,18 +1191,35 @@ function usePhiDeveloperBuilderWorkspaceController(
     }
 
     const nextArea = scopeAreaFromSearch ?? state.area;
-    const nextPages = resolvePhiBuilderActivePageCatalog(
+    /*
+     * The Page the address names, if the Area still offers it -- otherwise the one the shared order
+     * picks.
+     *
+     * A Page can stop being on offer without anybody navigating: setting the Area root to forward
+     * takes `/` out of the Builder's list, and whoever was standing on it is then parked on a Page
+     * that must not be authored, because a revision stored there would switch the forward off. So the
+     * key is normalised on every read of the address rather than only when the Area changes.
+     */
+    const { pageKey: nextPageKey } = resolvePhiBuilderOfferedPageKey(
+      offeredCatalogState,
       nextArea,
-      state.modulePresetPagesByArea,
-      state.customPages,
-      state.persistedPageCatalogByArea,
-    );
-    const nextPageKey =
       scopePageFromSearch ??
-      (scopeAreaFromSearch != null && scopeAreaFromSearch !== state.area
-        ? (resolvePhiBuilderActivePageKey(null, nextPages) ?? "")
-        : state.pageKey);
+        (scopeAreaFromSearch != null && scopeAreaFromSearch !== state.area ? null : state.pageKey),
+    );
     if (!nextPageKey) {
+      return;
+    }
+
+    /*
+     * A normalised key is written back to the address, not only into the state: the address is what a
+     * reload and a copied link read, and leaving it pointing at a Page the Builder has moved off would
+     * make it move again on every open.
+     */
+    if (nextPageKey !== scopePageFromSearch && typeof pathname === "string") {
+      const correctedSearchParams = new URLSearchParams(searchParams.toString());
+      correctedSearchParams.set(PHI_BUILDER_AREA_SEARCH_PARAM, nextArea);
+      correctedSearchParams.set(PHI_BUILDER_PAGE_SEARCH_PARAM, nextPageKey);
+      router.replace(`${pathname}?${correctedSearchParams.toString()}`, { scroll: false });
       return;
     }
 
@@ -1203,6 +1247,7 @@ function usePhiDeveloperBuilderWorkspaceController(
   }, [
     defaultArea,
     isBuilderWorkspace,
+    offeredCatalogState,
     pathname,
     router,
     searchParams,
@@ -1210,9 +1255,6 @@ function usePhiDeveloperBuilderWorkspaceController(
     scopePageFromSearch,
     state.area,
     state.pageCatalogHydratedByArea,
-    state.modulePresetPagesByArea,
-    state.customPages,
-    state.persistedPageCatalogByArea,
     state.pageKey,
     effectiveArea,
   ]);
@@ -1757,6 +1799,13 @@ function usePhiDeveloperBuilderWorkspaceController(
           return;
         }
         const currentRootRoute = readPhiBuilderEffectiveAreaRootRoute(state, state.area);
+        /*
+         * Recorded like every other edit in this workspace, and for the same reason.
+         *
+         * What the Shell says about itself is not in its Region tree, so it used to pass the history by
+         * -- the front door was the one thing in `/shells` that could be changed and not taken back.
+         * The scope is the structure workspace because that is the only surface these Selects appear on.
+         */
         setPhiDeveloperBuilderAreaRootRoute(
           state.area,
           signal.value === PHI_BUILDER_AREA_ROOT_ROUTE_AUTOMATIC
@@ -1769,6 +1818,10 @@ function usePhiDeveloperBuilderWorkspaceController(
                   ? { target: currentRootRoute.target }
                   : {}) }
               : { mode: "redirect", target: signal.value as PhiPageReference },
+          {
+            historyContext: createPhiBuilderHistoryContext({ workspace: "structure", area: state.area }),
+            historyLabel: "Change root route",
+          },
         );
         return;
       }
@@ -1786,12 +1839,18 @@ function usePhiDeveloperBuilderWorkspaceController(
         signal.action === "change" &&
         signal.receiver === createPhiBuilderControllerAddress()
       ) {
-        const target = typeof signal.value === "string" && signal.value.length > 0
+        const target = typeof signal.value === "string" &&
+          signal.value.length > 0 &&
+          signal.value !== PHI_BUILDER_AREA_LANDING_PAGE_EMPTY
           ? (signal.value as PhiPageReference)
           : null;
         setPhiDeveloperBuilderAreaRootRoute(
           state.area,
           target ? { mode: "landing", target } : { mode: "landing" },
+          {
+            historyContext: createPhiBuilderHistoryContext({ workspace: "structure", area: state.area }),
+            historyLabel: "Change landing page",
+          },
         );
         return;
       }
@@ -1815,6 +1874,10 @@ function usePhiDeveloperBuilderWorkspaceController(
         setPhiDeveloperBuilderAreaMeta(
           state.area,
           signal.channel === "seoIndex" ? { index: signal.value } : { sitemap: signal.value },
+          {
+            historyContext: createPhiBuilderHistoryContext({ workspace: "structure", area: state.area }),
+            historyLabel: "Change area SEO",
+          },
         );
         return;
       }
@@ -1841,6 +1904,10 @@ function usePhiDeveloperBuilderWorkspaceController(
           signal.channel === "titleTemplate"
             ? { titleTemplate: signal.value }
             : { defaultTitle: signal.value },
+          {
+            historyContext: createPhiBuilderHistoryContext({ workspace: "structure", area: state.area }),
+            historyLabel: "Change area title",
+          },
         );
         return;
       }

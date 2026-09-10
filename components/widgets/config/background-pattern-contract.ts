@@ -26,6 +26,27 @@ export type PhiBackgroundPatternFieldDescriptor =
       step: number;
     };
 
+/**
+ * The ink a Pattern is drawn in.
+ *
+ * A Pattern is a shape cut out of one paint, so the paint belongs to the Overlay rather than to a
+ * provider's `values`: every Pattern draws with it and switching the shape keeps it. Structurally the
+ * same two shapes a Background Base offers, minus the ones that make no sense as ink, so the Control
+ * can hand a parsed Base straight over and the picker needs no shape of its own.
+ */
+export type PhiBackgroundPatternInkStop = {
+  color: string;
+  percent: number;
+};
+
+export type PhiBackgroundPatternInk =
+  | { kind: "color"; color: string }
+  | {
+      kind: "gradient";
+      direction: PhiBackgroundDirection;
+      stops: readonly PhiBackgroundPatternInkStop[];
+    };
+
 export type PhiBackgroundPatternLayer = {
   images: readonly string[];
   sizes?: readonly string[];

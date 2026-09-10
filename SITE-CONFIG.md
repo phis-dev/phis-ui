@@ -25,9 +25,25 @@ schema.
 
 The active value follows `theme.mode`. When the matching mode has no configured Root Background, the runtime
 uses the resolved Ant Design layout background (`colorBgLayout` / `PHI_COLOR.bgLayout`). The Root Background is
-site-wide in the v1 target contract and has no Area override. Area-owned Header/Sider backdrops are Shell preset
-data documented in [SHELL.md](./SHELL.md#root-background-and-shell-backdrop-layers), not fields below
-`theme.rootBackground`.
+site-wide in the v1 target contract and has no Area override. The deferred single-pane Header/Sider backdrops
+are Shell preset data documented in [SHELL.md](./SHELL.md#root-background-and-shell-backdrop-layers), not fields
+below `theme.rootBackground`.
+
+## `theme.chromeOverlay`
+
+- `light?: PhiCmsBackgroundWidgetConfig`
+- `dark?: PhiCmsBackgroundWidgetConfig`
+
+Defines the site-owned ground the Header, Sider, and Footer Regions share, configured through `/builder/theme`
+beside the Root Background and reusing the same canonical structured Phi Background contract, narrowed to a
+color, a gradient, a Pattern, or noise. There is no image Base, `glass` is its only Effect, and it has no
+motion; see
+[SHELL.md](./SHELL.md#root-background-and-shell-backdrop-layers) for why, for the Regions that paint it, and
+for how a Region overrides it.
+
+The active value follows `theme.mode`. A mode with no configured overlay paints nothing, which leaves each
+Chrome Region on its own ground. Like the Root Background, the overlay is site-wide in the v1 target contract
+and has no Area override; an Area varies it by authoring Region chrome that paints over it.
 
 ## `theme.shape.controls`
 
@@ -252,8 +268,8 @@ Current known fields include:
 
 Notes:
 - `background` may be a plain color or a CSS gradient string.
-- these legacy Shell surface fallbacks do not replace `theme.rootBackground` and do not define the shared
-  Header/Sider backdrop layers
+- these legacy Shell surface fallbacks do not replace `theme.rootBackground` or `theme.chromeOverlay`, and do
+  not define the deferred shared Header/Sider backdrop layers
 - the active variant is selected from `theme.mode`
 - surface resolution uses this order:
   - region-specific, for example `header.main.dark.background`

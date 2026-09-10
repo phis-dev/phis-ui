@@ -29,7 +29,6 @@ import type {
   PhiCmsNavigationOverlayResolution,
   PhiCmsResolvedNavigationItem,
   PhiCmsResolvedNavigationSurface,
-  PhiCmsPresetIdentity,
   PhiCmsRoutePresetBinding,
   PhiCmsRoutePresetDescriptor,
   PhiCmsThemePresetBinding,
@@ -54,7 +53,9 @@ import {
 } from "./shell-tree-composition";
 import { buildPhiRuntimeModulePackageRoutePrefix } from "../../helpers/runtime-module-route-path";
 import {
+  choosePhiAreaRootApplicant,
   isPhiAssignablePublicRoutePath,
+  type PhiAreaLandingSelection,
   type PhiPublicRoutePathAssignment,
 } from "../../helpers/cms-area-config";
 import { resolvePhiLayoutCreationPreset } from "../../helpers/cms-layout-defaults";
@@ -789,7 +790,7 @@ export function compilePhiCmsActiveRouteTable({
   activeModuleIds,
   viewer,
   publicRoutePaths,
-  landingPreset,
+  landingSelection,
 }: {
   catalog: PhiCmsCompiledDescriptorCatalog;
   area: PhiCmsAreaKey;
@@ -804,14 +805,18 @@ export function compilePhiCmsActiveRouteTable({
    */
   publicRoutePaths?: readonly PhiPublicRoutePathAssignment[];
   /**
-   * The Module Page this Site gave the Area's root slot, when more than one applied for it.
+   * What this Site said about the Area's root slot, when more than one Module applied for it.
    *
    * `/` is the one address no Module can be assigned: it is a slot, and a Page that declares it is
    * applying rather than claiming. Which application is answered is a decision of the Site, kept in
    * the Area's config beside the Public addresses and read on the same terms -- a draft's answer may
    * differ from the published one while somebody is choosing.
+   *
+   * Absent is the Site that never answered, and only then may a lone applicant be adopted unasked.
+   * An `empty` selection is an answer: the Site said "landing" and named nobody, so the slot stays
+   * with the Area's own Page and the Site authors it.
    */
-  landingPreset?: PhiCmsPresetIdentity | null;
+  landingSelection?: PhiAreaLandingSelection | null;
 }): PhiCmsActiveRouteTable {
   const areaDefinition = catalog.areaDefinitions.get(area);
   if (!areaDefinition) {
@@ -830,27 +835,19 @@ export function compilePhiCmsActiveRouteTable({
   /*
    * Which application for `/` is answered, decided once before anything is compiled.
    *
-   * The chosen one when the Site chose and it is still active. Otherwise the single offer, if exactly
-   * one Module offers a landing here -- one applicant needs no question, and the Module selection it
-   * rides on is itself draft-and-publish, so nothing reaches a visitor unasked. Otherwise the Area's
-   * base Module, which owns the root as the machinery that forwards and is the answer a Site that was
-   * never configured keeps. The applications that are not answered are not in the table at all.
+   * Who wins is `choosePhiAreaRootApplicant`, shared with the Builder so the Page an author edits is
+   * the Page a visitor is served. What belongs here is only who gets to apply: active in this Area,
+   * and visible to this viewer. The applications that are not answered are not in the table at all.
    */
   const rootApplicants = (catalog.routesByArea.get(area) ?? []).filter((declared) =>
     declared.descriptor.path === "/" &&
     activeModuleIds.has(declared.descriptor.ownerModuleId) &&
     (!viewer || canPhiViewerAccess(viewer, declared.descriptor.accessPolicy)));
-  const landingOffers = rootApplicants.filter((declared) => declared.descriptor.landingPage === true);
-  const chosenRoot =
-    (landingPreset
-      ? rootApplicants.find((declared) =>
-        declared.descriptor.ownerModuleId === landingPreset.ownerModuleId &&
-        declared.descriptor.presetKey === landingPreset.presetKey)
-      : undefined)
-    ?? (landingOffers.length === 1 ? landingOffers[0] : undefined)
-    ?? rootApplicants.find((declared) =>
-      declared.descriptor.ownerModuleId === areaDefinition.baseModuleId)
-    ?? rootApplicants[0];
+  const chosenRoot = choosePhiAreaRootApplicant(
+    rootApplicants,
+    (declared) => declared.descriptor,
+    { baseModuleId: areaDefinition.baseModuleId, landingSelection },
+  ) ?? undefined;
 
   const byPageId = new Map<PhiCmsInstanceId, PhiCmsRoutePresetDescriptor>();
   const exactByPath = new Map<string, PhiCmsRoutePresetDescriptor>();

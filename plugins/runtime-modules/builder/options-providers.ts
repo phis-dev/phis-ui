@@ -14,6 +14,7 @@ import {
 } from "../../../components/controls/phi-options-provider";
 import { PHI_BUILDER_RUNTIME_DATA_PROVIDER_KEYS } from "./ids";
 import {
+  findPhiBuilderCatalogPathForCatalog,
   resolvePhiBuilderCatalogPathForCatalog,
   resolvePhiBuilderCmsStoragePathForCatalog,
   resolvePhiBuilderActivePageCatalog,
@@ -21,13 +22,15 @@ import {
   type PhiPresetPageNode,
 } from "../../../helpers/cms-page-catalog";
 import {
+  resolvePhiBuilderAreaRootApplicants,
+  resolvePhiBuilderOfferedPageKey,
+} from "./offered-page-catalog";
+import {
   builderWorkspaceStore,
   getPhiDeveloperBuilderStateSnapshot,
   readPhiBuilderEffectiveAreaRootRoute,
 } from "./developer-workspace-store";
 import type { PhiDeveloperBuilderWorkspaceState } from "./developer-workspace-types";
-import type { PhiRuntimeModuleId } from "../../../types/cms-module-descriptors";
-import type { PhiPageReference } from "../../../types/references";
 import { getPhiBuilderModuleMetasSnapshot } from "./plugin-meta-store";
 
 function readBuilderSnapshot(context: PhiControlOptionsProviderContext) {
@@ -42,13 +45,24 @@ function resolveProviderArea(context: PhiControlOptionsProviderContext) {
 }
 
 function collectPageOptions(area: PhiBuilderPageCatalogArea, nodes: PhiPresetPageNode[]): PhiControlOption[] {
-  return nodes.flatMap((node) => [
-    {
-      value: resolvePhiBuilderCatalogPathForCatalog(area, node.key, nodes),
-      label: node.title,
-    },
-    ...collectPageOptions(area, node.children ?? []),
-  ]);
+  return nodes.flatMap((node) => {
+    const path = resolvePhiBuilderCatalogPathForCatalog(area, node.key, nodes);
+    return [
+      {
+        value: path,
+        /*
+         * The root reads as the address, not as the title of whatever Page is standing in it.
+         *
+         * Which Page answers `/` is a decision taken elsewhere and it changes -- the Area's own Page,
+         * a Module's landing, or one the Builder constructs. Showing that Page's title here would put
+         * a name in the Page list that means "the front door" today and something else tomorrow, and
+         * would read as a second entry for a Page that is already listed under its own address.
+         */
+        label: node.storagePath === "/" ? path : node.title,
+      },
+      ...collectPageOptions(area, node.children ?? []),
+    ];
+  });
 }
 
 function resolveBuilderPagesOptions(context: PhiControlOptionsProviderContext): PhiResolvedControlOptions {
@@ -58,33 +72,25 @@ function resolveBuilderPagesOptions(context: PhiControlOptionsProviderContext): 
     return { options: [] };
   }
   /*
-   * While `/` forwards, it is not a Page anybody authors.
+   * The same Page the workspace moves to, displayed as its path.
    *
-   * The forward is the whole content of the root preset's tree, and a stored revision replaces a
-   * preset's tree -- so a Builder who opened the root here and put anything on it would switch the
-   * forward off without touching the Select that decides it. Taking the entry away is the whole fix:
-   * no entry, no revision, no contradiction. It comes back with whatever it had when the Area is set
-   * to a landing again, because nothing is cleaned up here either.
+   * Not "no value": a Cascader has no such state. Its value is a path, and an absent one normalises to
+   * the root path -- so leaving it out while the root is hidden printed the one entry the forward
+   * exists to keep off the screen. Naming a Page that is really on offer is the only way to say "not
+   * the root" in a control whose empty value is spelled `/`.
    */
-  const forwards = readPhiBuilderEffectiveAreaRootRoute(snapshot, resolvedArea)?.mode !== "landing";
-  const pageTree = resolvePhiBuilderActivePageCatalog(
+  const { pages: pageTree, pageKey } = resolvePhiBuilderOfferedPageKey(
+    snapshot,
     resolvedArea,
-    snapshot.modulePresetPagesByArea,
-    snapshot.customPages,
-    snapshot.persistedPageCatalogByArea,
-  ).filter((node) => !(forwards && node.storagePath === "/"));
+    snapshot.pageKey,
+  );
+  const activePagePath = pageKey
+    ? findPhiBuilderCatalogPathForCatalog(resolvedArea, pageKey, pageTree)
+    : null;
 
   return {
     options: collectPageOptions(resolvedArea, pageTree),
-    ...(snapshot.pageKey
-      ? {
-          value: resolvePhiBuilderCatalogPathForCatalog(
-            resolvedArea,
-            snapshot.pageKey,
-            pageTree,
-          ),
-        }
-      : {}),
+    ...(activePagePath ? { value: activePagePath } : {}),
   };
 }
 
@@ -166,6 +172,14 @@ function resolveFormsOptions(context: PhiControlOptionsProviderContext): PhiReso
  */
 export const PHI_BUILDER_AREA_ROOT_ROUTE_AUTOMATIC = "phi-root-route:automatic" as const;
 export const PHI_BUILDER_AREA_ROOT_ROUTE_LANDING = "phi-root-route:landing" as const;
+/**
+ * "Nobody -- I will author it myself", as a value the Select can carry.
+ *
+ * The state has always existed in storage as a landing without a target; what it never had was a way
+ * to be said. A cleared Select is indistinguishable from one nobody has touched, so a Builder who
+ * meant "none" was read as "never asked" and the single applicant on offer was adopted behind them.
+ */
+export const PHI_BUILDER_AREA_LANDING_PAGE_EMPTY = "phi-landing-page:empty" as const;
 
 function collectPageReferenceOptions(
   area: PhiBuilderPageCatalogArea,
@@ -185,71 +199,58 @@ function collectPageReferenceOptions(
 }
 
 /**
- * Every landing a Module offers this Area, as the second Select lists them.
+ * Every Page that may stand at this Area's root, as the second Select lists them.
  *
- * The offers rather than everything declaring `/`: the Area's own root Page declares it too and is the
- * machinery that forwards, which is exactly the difference the descriptor's flag exists to state. Only
- * from Modules that are switched on here -- an offer from a Module that is off would name a Page the
- * Site cannot draw. Where there is none the list is empty, and the Select says so by being empty
- * rather than by being absent.
+ * The eligible Pages, not the applications: a Module applies so that it can be adopted without being
+ * asked, and a built-in Page never applies -- but it is still a Page a Builder may choose, and leaving
+ * it out would drop the landing every Site starts with from the list of the landings it may pick.
+ *
+ * "None" leads, because it is the answer that has to be sayable: it is what a Builder who wants to
+ * author the root themselves selects, and until it was an option of its own it could only be spelled
+ * as a cleared Select, which reads as "not answered yet" and was treated as one.
  */
 function resolveLandingPageOptions(
   context: PhiControlOptionsProviderContext,
 ): PhiResolvedControlOptions {
   const snapshot = readBuilderSnapshot(context);
   const area = resolveProviderArea(context);
-  /*
-   * Switched on here, or the Area's own base Module -- which is never in the selection because it is
-   * never switchable: the Area is its Module. Leaving it out would drop the landing every Site starts
-   * with from the list of the landings it may choose.
-   */
-  const cmsArea = resolvePhiBuilderAreaAsCmsArea(area);
-  const baseModuleId = resolvePhiRuntimeAreaDefinition(cmsArea)?.baseModuleId ?? null;
-  const selectedModuleIds = new Set(snapshot.runtimeModuleIdsByArea?.[area] ?? []);
-  const isActive = (moduleId: PhiRuntimeModuleId) =>
-    moduleId === baseModuleId || selectedModuleIds.has(moduleId);
   const moduleTitles = new Map(
     (snapshot.runtimeModuleDefinitions ?? []).map((definition) => [definition.moduleId, definition.title] as const),
   );
   const adoptedLabel = readPhiControlOptionsProviderParam(context.optionsProvider, "adoptedLabel");
   // The merged catalog rather than the raw preset pages: that is where a Module Page is given its
   // reference, and where a Page the Site has taken over carries the scope it was stored under.
-  const options = collectLandingOffers(resolvePhiBuilderActivePageCatalog(
+  const catalog = resolvePhiBuilderActivePageCatalog(
     area,
     snapshot.modulePresetPagesByArea,
     snapshot.customPages,
     snapshot.persistedPageCatalogByArea,
-  ))
-    .filter((node) => isActive(node.sourcePreset!.ownerModuleId))
-    .map((node) => {
-      const source = node.sourcePreset!;
-      const owner = moduleTitles.get(source.ownerModuleId) ?? source.ownerModuleId;
-      return {
-        value: node.reference!,
-        label: node.title,
-        description: node.pageScopeId != null && adoptedLabel ? `${owner} -- ${adoptedLabel}` : owner,
-      };
-    });
-  /*
-   * The empty string rather than nothing, when no applicant was chosen.
-   *
-   * A Select with no value of its own shows the first option it was given, which would put a landing
-   * in front of a Builder who never picked one. Saying "none" out loud is what makes the placeholder
-   * appear instead.
-   */
+  );
+  const options: PhiControlOption[] = [
+    {
+      value: PHI_BUILDER_AREA_LANDING_PAGE_EMPTY,
+      label: readPhiControlOptionsProviderParam(context.optionsProvider, "emptyLabel") ?? "None",
+    },
+    ...resolvePhiBuilderAreaRootApplicants(snapshot, area, catalog)
+      .filter((node) => node.reference)
+      .map((node) => {
+        const source = node.sourcePreset!;
+        const owner = moduleTitles.get(source.ownerModuleId) ?? source.ownerModuleId;
+        return {
+          value: node.reference!,
+          label: node.title,
+          description: node.pageScopeId != null && adoptedLabel ? `${owner} -- ${adoptedLabel}` : owner,
+        };
+      }),
+  ];
+
   const rootRoute = readPhiBuilderEffectiveAreaRootRoute(snapshot, area);
   return {
     options,
-    value: rootRoute?.mode === "landing" && rootRoute.target ? rootRoute.target : ("" as PhiPageReference),
+    value: rootRoute?.mode === "landing" && rootRoute.target
+      ? rootRoute.target
+      : PHI_BUILDER_AREA_LANDING_PAGE_EMPTY,
   };
-}
-
-/** The Pages a Module offered as landings, wherever the catalog put them. */
-function collectLandingOffers(nodes: readonly PhiPresetPageNode[]): PhiPresetPageNode[] {
-  return nodes.flatMap((node) => [
-    ...(node.landingPage === true && node.reference && node.sourcePreset ? [node] : []),
-    ...collectLandingOffers(node.children ?? []),
-  ]);
 }
 
 function resolveAreaRootRouteOptions(

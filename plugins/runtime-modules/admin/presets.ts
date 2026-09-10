@@ -74,7 +74,6 @@ export const PHI_ADMIN_RUNTIME_MODULE_ROUTES = [
   buildPhiAreaRootRoutePresetDescriptor({
     ownerModuleId: PHI_ADMIN_RUNTIME_MODULE_ID,
     area: "admin",
-    navKey: "admin:sidebar",
     title: "Admin",
     accessPolicy: PHI_VIEWER_ACCESS_DEVELOPER_TOOLS,
   }),

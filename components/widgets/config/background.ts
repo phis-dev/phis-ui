@@ -17,6 +17,7 @@ import {
   PHI_DEFAULT_BACKGROUND_PATTERN_KEY,
   isPhiBackgroundPatternKey,
   type PhiBackgroundNoiseGrain,
+  type PhiBackgroundPatternInk,
   type PhiBackgroundPatternKey,
   type PhiBackgroundPatternValues,
 } from "./background-pattern-contract";
@@ -64,6 +65,24 @@ export type PhiBackgroundBaseImage = {
   };
 
 export type PhiBackgroundMotionMode = "static" | "fixed" | "parallax";
+/**
+ * Every motion mode of the contract, in authoring order.
+ *
+ * A surface that cannot express one of them narrows this list for its own Control rather than
+ * rebuilding the vocabulary, so the offer stays derived from the contract it belongs to.
+ */
+export const PHI_BACKGROUND_BASE_KINDS: readonly PhiCmsBackgroundWidgetConfig["base"]["kind"][] = [
+  "none",
+  "color",
+  "gradient",
+  "image",
+];
+
+export const PHI_BACKGROUND_MOTION_MODES: readonly PhiBackgroundMotionMode[] = [
+  "static",
+  "fixed",
+  "parallax",
+];
 export type PhiBackgroundMotionDirection = "natural" | "reverse";
 /**
  * What `strength` measures, and therefore how the effect ends.
@@ -85,6 +104,14 @@ export type PhiBackgroundPatternOverlay = {
   kind: "pattern";
   patternKey: PhiBackgroundPatternKey;
   opacity?: number;
+  /**
+   * The ink the Pattern is drawn in, defaulting to white.
+   *
+   * White was hardcoded, which is legible on a dark ground and all but invisible on a light one. It is
+   * a colour or a gradient, the same two shapes a Base offers, because the Pattern is drawn as a mask
+   * over the ink rather than as coloured shapes.
+   */
+  ink?: PhiBackgroundPatternInk | null;
   values: PhiBackgroundPatternValues;
 };
 
@@ -253,6 +280,28 @@ function normalizePhiBackgroundBase(value: unknown): PhiCmsBackgroundWidgetConfi
   return color ? { kind: "color", color } : null;
 }
 
+/**
+ * The ink, from the Overlay's own field or from a bare colour.
+ *
+ * The bare colour is what the field looked like before a gradient was possible; reading it here keeps a
+ * record written then rendering what it rendered, without a migration.
+ */
+function readBackgroundPatternInk(value: unknown): PhiBackgroundPatternInk | null {
+  if (typeof value === "string") {
+    const color = value.trim();
+    return color ? { kind: "color", color } : null;
+  }
+
+  const base = normalizePhiBackgroundBase(value);
+  if (base?.kind === "color") {
+    return { kind: "color", color: base.color };
+  }
+
+  return base?.kind === "gradient"
+    ? { kind: "gradient", direction: base.direction, stops: base.stops }
+    : null;
+}
+
 function readBackgroundOverlay(value: unknown): PhiBackgroundOverlay | null {
   if (!value || typeof value !== "object" || Array.isArray(value)) return null;
   const raw = value as Record<string, unknown>;
@@ -281,10 +330,12 @@ function readBackgroundOverlay(value: unknown): PhiBackgroundOverlay | null {
       );
     }),
   );
+  const ink = readBackgroundPatternInk(raw.ink) ?? readBackgroundPatternInk(raw.color);
   return {
     kind,
     patternKey,
     opacity: readNumber(raw.opacity),
+    ...(ink ? { ink } : {}),
     values,
   };
 }
@@ -338,6 +389,23 @@ export function normalizePhiBackgroundWidgetConfig(config: unknown): PhiCmsBackg
   };
 }
 
+/**
+ * The ink as CSS, and back.
+ *
+ * The Control edits it through the same picker the Base uses, which speaks CSS, and the reader is the
+ * one that already parses a Base: a gradient built for a Pattern ends up in exactly the structure a
+ * Base gradient has.
+ */
+export function serializePhiBackgroundPatternInkCss(ink: PhiBackgroundPatternInk) {
+  return ink.kind === "color"
+    ? ink.color
+    : serializePhiBackgroundBaseCss({ kind: "gradient", direction: ink.direction, stops: [...ink.stops] });
+}
+
+export function readPhiBackgroundPatternInkFromCss(css: string): PhiBackgroundPatternInk | null {
+  return readBackgroundPatternInk(normalizePhiBackgroundBase(css));
+}
+
 export function serializePhiBackgroundBaseCss(base: PhiCmsBackgroundWidgetConfig["base"]) {
   if (base.kind === "none") return "none";
   if (base.kind === "color") return base.color;
@@ -375,7 +443,12 @@ function resolvePhiBackgroundOverlayLayer(overlay: PhiBackgroundOverlay | null |
   if (!overlay) return null;
   const opacity = Math.max(0, Math.min(1, overlay.opacity ?? 0.14));
   if (overlay.kind === "noise") return resolvePhiBackgroundNoiseLiveLayer(overlay.grain, opacity);
-  return resolvePhiBackgroundPatternLiveLayer(overlay.patternKey, overlay.values, opacity);
+  return resolvePhiBackgroundPatternLiveLayer(
+    overlay.patternKey,
+    overlay.values,
+    opacity,
+    overlay.ink ?? undefined,
+  );
 }
 
 export function resolvePhiBackgroundWidgetStyle(config: unknown): CSSProperties {
@@ -419,10 +492,56 @@ export function resolvePhiBackgroundWidgetStyle(config: unknown): CSSProperties 
   return composePhiLayoutEffectStyle(
     style,
     resolvePhiLayoutEffectStyle({
-      effect: normalized.effect,
+      effect: resolvePhiBackgroundEffect(normalized),
       background: style.background ?? style.backgroundColor,
     }),
   );
+}
+
+/**
+ * Whether this Background actually paints a ground.
+ *
+ * The Builder writes a Background config onto every Region draft it persists, so the presence of the
+ * field says nothing about whether an author ever set a ground. A config whose Base is `none` and that
+ * carries no Overlay paints nothing at all, and treating it as an authored ground kept the Region from
+ * taking the Shell Chrome Overlay and from reading its own Shell-record colour: switching a Header's
+ * glass off wrote exactly such a config and locked the Region out of everything.
+ *
+ * The Effect is not part of the question. A Region carries its own Effect beside the Background, and
+ * the Builder nulls the one inside the config when it stores it.
+ */
+export function phiBackgroundWidgetConfigPaintsGround(config: unknown): boolean {
+  if (config == null) {
+    return false;
+  }
+
+  const normalized = normalizePhiBackgroundWidgetConfig(config);
+  return normalized.base.kind !== "none" || normalized.overlay != null;
+}
+
+/**
+ * Whether `glass` describes anything on this base.
+ *
+ * Glass is a pane: it frosts what shows THROUGH a surface, which is why it reads as glass on a Region
+ * that lets the layer beneath it come up. An image or gradient base is not a pane, it is the material
+ * itself, and there is nothing of it to see through -- the frost lands behind opaque paint and the
+ * glass ground can only ever read as a wash laid over the picture. So the Effect is neither offered
+ * nor honoured there. `blur`, `dim` and `tint` act on the surface itself and stay valid on every base.
+ */
+export function phiBackgroundBaseSupportsGlassEffect(
+  base: PhiCmsBackgroundWidgetConfig["base"],
+): boolean {
+  return base.kind !== "image" && base.kind !== "gradient";
+}
+
+/**
+ * The Effect this Background actually renders, which is the configured one unless it is a `glass` the
+ * base cannot express. A stored value is never rewritten; it simply resolves to no Effect.
+ */
+export function resolvePhiBackgroundEffect(config: unknown): PhiLayoutEffectId | null {
+  const normalized = normalizePhiBackgroundWidgetConfig(config);
+  const effect = normalized.effect ?? null;
+  return effect === "glass" && !phiBackgroundBaseSupportsGlassEffect(normalized.base) ? null : effect;
 }
 
 export function resolvePhiBackgroundMotion(config: unknown): PhiBackgroundMotion | null {

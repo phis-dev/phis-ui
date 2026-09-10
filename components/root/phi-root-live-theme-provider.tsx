@@ -16,6 +16,7 @@ import type {
 import { resolvePhiPublishedThemeCustomColors } from "../../theme/phi-theme-palette";
 import { PhiConfigProvider } from "./phi-config-provider";
 import { PhiRootBackgroundLayer } from "./phi-root-background";
+import { resolvePhiShellChromeOverlayVariables } from "./phi-shell-chrome-overlay";
 import { readPhiControlShape } from "../../theme/phi-control-shape";
 import {
   PHI_SIGNAL_VALUE_SCHEMAS,
@@ -70,6 +71,15 @@ export function PhiRootLiveThemeProvider({
   const customColors = useMemo(
     () => resolvePhiPublishedThemeCustomColors(liveSiteTheme, mode, presets),
     [liveSiteTheme, mode, presets],
+  );
+  /*
+   * The Shell Chrome Overlay travels as custom properties on the Root Layout element, both modes at
+   * once, because the Regions that paint it are rendered far below this provider and switch modes
+   * through `data-phi-theme-mode` rather than through a re-render.
+   */
+  const chromeOverlayStyle = useMemo(
+    () => ({ ...rootStyle, ...resolvePhiShellChromeOverlayVariables(liveSiteTheme.root) }),
+    [liveSiteTheme.root, rootStyle],
   );
 
   useEffect(() => registerPhiSignalInstance(signalPartition, {
@@ -182,7 +192,7 @@ export function PhiRootLiveThemeProvider({
         theme={resolvedTheme.theme}
         presets={presets}
         rootClassName={rootClassName}
-        rootStyle={rootStyle}
+        rootStyle={chromeOverlayStyle}
         remRootValue={remRootValue}
       >
         <PhiRootBackgroundLayer root={liveSiteTheme.root} mode={mode} />

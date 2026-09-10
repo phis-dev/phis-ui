@@ -67,6 +67,9 @@ const distManifest = {
   name: sourceManifest.name,
   version: sourceManifest.version,
   license: sourceManifest.license,
+  // A scoped package is restricted unless it says otherwise, and the tarball is what npm reads: the
+  // workspace manifest never reaches the registry, so the answer has to travel with the artifact.
+  publishConfig: sourceManifest.publishConfig,
   type: "module",
   main: "./index.js",
   module: "./index.js",

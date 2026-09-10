@@ -120,23 +120,112 @@ export function readPhiAreaRootRoute(
 }
 
 /**
- * The Module Page the Area's root slot was given, as the identity the route table matches on.
+ * What the Area said about its root slot, in the three answers the slot can be given.
+ *
+ * `null` is the Area that was never asked, and it is the only one of the three that lets the route
+ * table adopt a single applicant unasked -- which is what makes a Site package land live the moment it
+ * is switched on, with nobody clicking anything.
+ *
+ * `empty` is a landing whose applicant was left blank, and it is a decision rather than a gap: a
+ * Builder who says "landing" while the applicant Select sits on its empty placeholder is looking at
+ * what they will get. Reading it as "nothing was said" is what used to hand the front door to a
+ * Module behind their back, with the Select still showing blank.
+ *
+ * `preset` names one applicant. It is not a promise that the applicant is still there -- a Module that
+ * was switched off falls back through the ordinary chain, front door moving rather than breaking.
  *
  * A reference is what the Builder stores, here as everywhere; the compiler works in identities, so the
- * translation happens once, here. A reference to a Site Page answers with nothing: only a Module can
- * apply for the slot, because only a Module's Page exists before a Site has authored anything.
+ * translation happens once, here. A reference to a Site Page is not an applicant: only a Module can
+ * apply for the slot, because only a Module's Page exists before a Site has authored anything -- so it
+ * reads as the blank it effectively is rather than as "never asked".
  */
-export function readPhiAreaLandingPresetIdentity(
+export type PhiAreaLandingSelection =
+  | { kind: "preset"; identity: PhiCmsPresetIdentity }
+  | { kind: "empty" };
+
+export function readPhiAreaLandingSelection(
   config: Record<string, unknown> | null | undefined,
-): PhiCmsPresetIdentity | null {
-  const rootRoute = readPhiAreaRootRoute(config);
-  if (rootRoute?.mode !== "landing" || !rootRoute.target) {
+): PhiAreaLandingSelection | null {
+  return resolvePhiAreaLandingSelection(readPhiAreaRootRoute(config));
+}
+
+/**
+ * The same answer, for a caller that already has the route rather than the config it came from.
+ *
+ * The Builder is that caller: what it must show is the sentence being edited, draft included, and the
+ * draft never went through a config record.
+ */
+export function resolvePhiAreaLandingSelection(
+  rootRoute: PhiAreaRootRoute | null,
+): PhiAreaLandingSelection | null {
+  if (rootRoute?.mode !== "landing") {
     return null;
   }
-  const parsed = readPhiPageReference(rootRoute.target);
+  const parsed = rootRoute.target ? readPhiPageReference(rootRoute.target) : null;
   return parsed?.target.kind === "module"
-    ? { ownerModuleId: parsed.target.ownerModuleId as PhiRuntimeModuleId, presetKey: parsed.target.presetKey }
-    : null;
+    ? {
+        kind: "preset",
+        identity: {
+          ownerModuleId: parsed.target.ownerModuleId as PhiRuntimeModuleId,
+          presetKey: parsed.target.presetKey,
+        },
+      }
+    : { kind: "empty" };
+}
+
+/**
+ * Which applicant answers the Area's root slot.
+ *
+ * One implementation with two readers, and they must not drift: the route table decides what a visitor
+ * is served at `/`, and the Builder's Page list decides which `/` an author is offered and fills the
+ * canvas with. Two copies of this chain would agree while exactly one Module applies -- which is every
+ * case except the one the slot exists for -- and disagree the moment a second one does, leaving an
+ * author editing a Page nobody is served.
+ *
+ * The chain: the applicant the Site named, while it is still there. Otherwise the single offer, which
+ * is what lets a Site package ship a front door that is live on install. Otherwise the Area's own base
+ * Module, which holds the slot as a fallback rather than as an application. `applicants` is expected to
+ * be narrowed to what is active and permitted before it gets here; this decides only which of them.
+ */
+export type PhiAreaRootApplicant = {
+  ownerModuleId: PhiRuntimeModuleId;
+  presetKey: string;
+  landingPage?: boolean;
+};
+
+export function choosePhiAreaRootApplicant<TApplicant>(
+  applicants: readonly TApplicant[],
+  readApplicant: (applicant: TApplicant) => PhiAreaRootApplicant,
+  {
+    baseModuleId,
+    landingSelection,
+  }: {
+    baseModuleId: PhiRuntimeModuleId | null;
+    landingSelection?: PhiAreaLandingSelection | null;
+  },
+): TApplicant | null {
+  const named = landingSelection?.kind === "preset"
+    ? applicants.find((applicant) => {
+      const identity = readApplicant(applicant);
+      return identity.ownerModuleId === landingSelection.identity.ownerModuleId &&
+        identity.presetKey === landingSelection.identity.presetKey;
+    })
+    : undefined;
+  /*
+   * A named applicant that is no longer there falls through to the adoption rather than to the blank:
+   * an Operator who removes the example package and installs their own gets the new package's landing
+   * without editing the sentence the old one left behind. Only an explicit "landing, nobody" stops it.
+   */
+  const offers = landingSelection?.kind === "empty"
+    ? []
+    : applicants.filter((applicant) => readApplicant(applicant).landingPage === true);
+  const adopted = offers.length === 1 ? offers[0] : undefined;
+
+  return named
+    ?? adopted
+    ?? applicants.find((applicant) => readApplicant(applicant).ownerModuleId === baseModuleId)
+    ?? applicants[0]
+    ?? null;
 }
 
 export const PHI_AREA_META_KEY = "meta" as const;

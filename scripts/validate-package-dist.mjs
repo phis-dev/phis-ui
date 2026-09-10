@@ -37,6 +37,12 @@ if (distManifest.license !== sourceManifest.license) {
   throw new Error("Built package must carry the workspace licence.");
 }
 
+// Publishing a scoped package without this is a 402 at best and a private package at worst, and either
+// way it is found out at release time rather than here.
+if (distManifest.publishConfig?.access !== "public") {
+  throw new Error("Built package must be published publicly.");
+}
+
 for (const legalFile of ["LICENSE", "NOTICE"]) {
   try {
     await access(path.join(distDirectory, legalFile));

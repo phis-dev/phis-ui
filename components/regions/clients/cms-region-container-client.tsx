@@ -6,6 +6,7 @@ import { Button, Flex } from "antd";
 import { MenuFoldOutlined, MenuUnfoldOutlined } from "@ant-design/icons";
 import { resolvePhiBorderWidgetStyle } from "../../../helpers/border-widget-style";
 import {
+  phiBackgroundWidgetConfigPaintsGround,
   resolvePhiBackgroundMotion,
   resolvePhiBackgroundMotionHostStyle,
   resolvePhiBackgroundWidgetStyle,
@@ -13,12 +14,14 @@ import {
 } from "../../widgets/config/background";
 import {
   resolvePhiShellRegionChrome,
+  resolvePhiShellRegionGroundStyle,
   resolvePhiShellRegionTypography,
   resolvePhiShellRegionZIndex,
   resolvePhiShellSiderCollapsedWidth,
   resolvePhiShellSiderWidth,
 } from "../../../helpers/shell-region-style";
 import { combinePhiBoxShadows } from "../../../helpers/layout-style";
+import { phiRegionUsesShellChromeOverlay } from "../../root/phi-shell-chrome-overlay";
 import { hasPhiFlag } from "../../../helpers/flags";
 import { PhiCmsFlags } from "../../../constants/phi-cms";
 import type { PhiCmsRegionConfig, PhiCmsRegionKey } from "../../../types";
@@ -174,8 +177,14 @@ export function PhiCmsRegionContainerClient({
   const resolvedCollapsible = config?.collapsible === true;
   const resolvedCollapseIcon = typeof config?.collapseIcon === "string" ? config.collapseIcon : undefined;
   const isCollapsed = hasPhiFlag(config?.flags, PhiCmsFlags.Collapsed);
-  const regionBackgroundConfig =
-    config?.backgroundConfig != null ? (config.backgroundConfig as PhiCmsBackgroundWidgetConfig) : null;
+  /*
+   * A Background config that paints nothing is not an authored ground. The Builder writes one onto every
+   * Region draft it persists, so its presence would otherwise mean "authored" for every Region an author
+   * has ever opened.
+   */
+  const regionBackgroundConfig = phiBackgroundWidgetConfigPaintsGround(config?.backgroundConfig)
+    ? (config?.backgroundConfig as PhiCmsBackgroundWidgetConfig)
+    : null;
   const regionBackgroundMotion = resolvePhiBackgroundMotion(regionBackgroundConfig);
   const regionBackgroundStyle = regionBackgroundConfig
     ? regionBackgroundMotion == null
@@ -198,6 +207,37 @@ export function PhiCmsRegionContainerClient({
     },
   });
   const resolvedBackground = resolvedChrome.background;
+  /*
+   * The ground as a longhand, because the same style also carries longhands from an authored Background
+   * and from the Shell Chrome Overlay. Mixing them with the `background` shorthand makes React warn as
+   * soon as a rerender drops one of the longhands.
+   */
+  const regionGroundStyle = regionBackgroundStyle == null
+    ? resolvePhiShellRegionGroundStyle(resolvedBackground)
+    : {};
+  /*
+   * The Shell Chrome Overlay (SHELL.md), read from the custom properties the Root Layout publishes,
+   * exactly as the server-rendered Region reads them, and decided by the same rule. Only the Header,
+   * Sider and Footer branches below spread it, so the Region-key test is belt and braces there.
+   */
+  const shellChromeOverlayStyle: CSSProperties =
+    phiRegionUsesShellChromeOverlay({
+      regionKey,
+      backgroundConfig: regionBackgroundConfig,
+      effect: config?.effect,
+      grounds: [resolvedBackground],
+    })
+      ? {
+        backgroundColor: "var(--phi-shell-chrome-color, transparent)",
+        backgroundImage: "var(--phi-shell-chrome-image, none)",
+        backgroundSize: "var(--phi-shell-chrome-size, auto)",
+        backgroundPosition: "var(--phi-shell-chrome-position, 0 0)",
+        backgroundRepeat: "var(--phi-shell-chrome-repeat, repeat)",
+        backgroundAttachment: "fixed",
+        backdropFilter: "var(--phi-shell-chrome-filter, none)",
+        WebkitBackdropFilter: "var(--phi-shell-chrome-filter, none)",
+      }
+      : {};
   const resolvedTextColor = resolvedChrome.color;
   const resolvedShadow = resolvedChrome.shadow;
   const resolvedTypography = resolvePhiShellRegionTypography(regionKey, shellTheme, {
@@ -249,10 +289,8 @@ export function PhiCmsRegionContainerClient({
             insetBlockStart: config?.sticky ? resolvedTop : undefined,
             zIndex: resolvedZIndex,
             ...resolvedChrome.effectStyle,
-            background:
-              regionBackgroundStyle == null
-                ? resolvedBackground
-                : undefined,
+            ...regionGroundStyle,
+            ...shellChromeOverlayStyle,
             boxShadow: combinePhiBoxShadows(regionBackgroundBoxShadow, resolvedChrome.effectStyle?.boxShadow, resolvedShadow),
             ...(resolvedHeight ? { height: resolvedHeight } : {}),
             color: resolvedTextColor,
@@ -265,8 +303,8 @@ export function PhiCmsRegionContainerClient({
               ...(regionBackgroundStyle ?? {}),
               position: "relative",
               ...resolvedChrome.effectStyle,
-              background:
-                regionBackgroundStyle == null ? resolvedBackground : undefined,
+              ...regionGroundStyle,
+              ...shellChromeOverlayStyle,
               boxShadow: combinePhiBoxShadows(regionBackgroundBoxShadow, resolvedChrome.effectStyle?.boxShadow, resolvedShadow),
               zIndex: resolvedZIndex,
               ...(resolvedHeight ? { height: resolvedHeight } : {}),
@@ -279,8 +317,8 @@ export function PhiCmsRegionContainerClient({
             ? {
               ...(regionBackgroundStyle ?? {}),
                 ...resolvedChrome.effectStyle,
-                background:
-                  regionBackgroundStyle == null ? resolvedBackground : undefined,
+                ...regionGroundStyle,
+                ...shellChromeOverlayStyle,
                 boxShadow: combinePhiBoxShadows(regionBackgroundBoxShadow, resolvedChrome.effectStyle?.boxShadow, resolvedShadow),
                 ...resolvedBorderStyle,
                 ...(resolvedWidth
@@ -311,8 +349,7 @@ export function PhiCmsRegionContainerClient({
                 position: "relative",
                 zIndex: resolvedZIndex,
                 ...resolvedChrome.effectStyle,
-                background:
-                  regionBackgroundStyle == null ? resolvedBackground : undefined,
+                ...regionGroundStyle,
                 width: "100%",
                 boxShadow: combinePhiBoxShadows(regionBackgroundBoxShadow, resolvedChrome.effectStyle?.boxShadow, resolvedShadow),
                 ...resolvedBorderStyle,

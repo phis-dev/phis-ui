@@ -341,7 +341,14 @@ prompts. They use three separate Area-owned Drawer Overlay instances contributed
 
 Area ownership is required because the same Inspector set serves both `/builder/shells` and
 `/builder/pages` and follows the Builder Area Controller lifecycle. Page presets must not duplicate the
-instances. The Inspector content must consume current Area Controller/workspace state and must not retain
+instances.
+
+They are contributed through the `areaOverlays` descriptor family, not declared in the Builder Area
+shell preset, and the same holds for the Effects editor and the Signal wiring Modal beside them. A shell
+preset is a starting point an operator may save over, after which the saved snapshot is the only source
+of truth for that Area; an Overlay declared there disappears with that save. The Inspectors are the tool
+doing the authoring rather than content being authored, so they are composed onto whatever Area tree
+resolves, code preset or saved snapshot alike. The Inspector content must consume current Area Controller/workspace state and must not retain
 a Page-render snapshot that becomes stale when navigation changes the active Builder workspace.
 
 Every Inspector Drawer has exactly one direct Body root, an explicitly declared n-slot

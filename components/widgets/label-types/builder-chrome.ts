@@ -11,6 +11,7 @@ export type PhiBuilderChromeWidgetLabels = {
     undo: string;
     redo: string;
     reset: string;
+    restorePreset: string;
   };
   modeSwitch: {
     editor: string;
@@ -102,6 +103,7 @@ export const PHI_BUILDER_CHROME_WIDGET_DEFAULT_LABELS: PhiBuilderChromeWidgetLab
     undo: "Undo",
     redo: "Redo",
     reset: "Reset",
+    restorePreset: "Restore preset",
   },
   modeSwitch: {
     editor: "Editor",
@@ -143,7 +145,10 @@ export const PHI_BUILDER_CHROME_WIDGET_DEFAULT_LABELS: PhiBuilderChromeWidgetLab
     automatic: "First navigation entry",
     landing: "Landing page",
     landingPage: "Landing",
-    landingPageEmpty: "No Module offers one",
+    // The option, not a report about the list: it is what a Builder picks to say the root is theirs to
+    // construct. It used to read "No Module offers one", which was written when an empty list was the
+    // only way to express this and now sits directly above the Pages that are on offer.
+    landingPageEmpty: "Builder",
     landingPageAdopted: "edited here",
   },
   areaSettings: {

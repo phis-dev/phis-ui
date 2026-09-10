@@ -665,6 +665,17 @@ domain content.
     reuse this image-Background setting as an implicit child transform.
   - Noise is not a Pattern provider. It persists the independent semantic grain preset `fine`, `medium`,
     or `coarse`; opacity remains shared, while Pattern-only fields never render for Noise.
+  - A Pattern is a shape cut out of one ink, so the ink belongs to the Overlay rather than to a
+    provider's `values`: every Pattern draws with it, and switching the shape keeps it. It persists as
+    `overlay.ink`, a colour or a gradient in the same structure a Base uses, and an unset ink paints the
+    white the resolver used to hardcode. A bare colour string stays readable in that field. Noise carries
+    no ink; its grain is generated greyscale.
+  - The Live resolver emits each Pattern as one SVG image rather than a stack of CSS gradients, because
+    a CSS colour stop takes a colour and a gradient ink has nowhere to go in one. Inside the SVG the two
+    separate: the shapes become a mask and the ink fills a rectangle through it, so the layer stays a
+    single `background-image` and no surface needs an extra element for it. The image spans the painting
+    area rather than tiling, so a gradient ink runs across the whole surface; the shapes keep their pixel
+    size because the SVG carries no `viewBox`.
   - Base and overlay are separate CSS background layers. The shared resolver must emit size, position,
     and repeat values for every individual image layer so an Image base using `cover` never stretches
     Pattern or Noise. Multi-image Patterns such as Grid and Crosshatch must keep each image, size,

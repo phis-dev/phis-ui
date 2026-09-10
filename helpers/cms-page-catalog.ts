@@ -237,6 +237,24 @@ export function resolvePhiBuilderCmsStoragePathForCatalog(
   return rawPath.replace(new RegExp(`^/${area}(?=/|$)`), "") || "/";
 }
 
+/**
+ * The same path, for a caller that is asking whether the Page is on offer at all.
+ *
+ * The resolving sibling below is right where a Page is known to exist and a missing one is a broken
+ * catalog. It is wrong where absence is an ordinary answer: the Area root is deliberately kept out of
+ * the Builder's Page list while it forwards, and a Builder standing on it is a normal state rather
+ * than a fault. Asking the throwing function that question took the Page Select down with it.
+ */
+export function findPhiBuilderCatalogPathForCatalog(
+  area: PhiBuilderPageCatalogArea,
+  pageKey: string,
+  pages: readonly PhiPresetPageNode[],
+) {
+  return findPageNodePath([...pages], pageKey)
+    ? resolvePhiBuilderCatalogPathForCatalog(area, pageKey, pages)
+    : null;
+}
+
 /** Where the Builder shows a Page, which is what its picker offers and its path signal carries. */
 export function resolvePhiBuilderCatalogPathForCatalog(
   area: PhiBuilderPageCatalogArea,
@@ -248,6 +266,40 @@ export function resolvePhiBuilderCatalogPathForCatalog(
     return normalizePhiBuilderCmsCatalogPath(node.catalogPath);
   }
   return resolvePhiBuilderCmsStoragePathForCatalog(area, pageKey, pages);
+}
+
+/**
+ * The Page a runtime address names, as the Builder's key for it.
+ *
+ * The sibling below matches the path the Builder shows, which has the package namespace taken out.
+ * A navigation target carries the address a browser asks for, namespace included, so it has to be
+ * matched against the storage path or nothing outside Public would ever be found.
+ */
+export function findPhiBuilderPageKeyFromStoragePath(
+  area: PhiBuilderPageCatalogArea,
+  path: string,
+  pages: readonly PhiPresetPageNode[],
+): string | null {
+  const normalizedPath = normalizePhiBuilderCmsCatalogPath(path);
+  const visit = (nodes: readonly PhiPresetPageNode[]): string | null => {
+    for (const node of nodes) {
+      if (
+        node.storagePath != null &&
+        normalizePhiBuilderCmsCatalogPath(
+          resolvePhiBuilderCmsStoragePathForCatalog(area, node.key, pages),
+        ) === normalizedPath
+      ) {
+        return node.key;
+      }
+      const childKey = node.children ? visit(node.children) : null;
+      if (childKey) {
+        return childKey;
+      }
+    }
+    return null;
+  };
+
+  return visit(pages);
 }
 
 export function resolvePhiBuilderPageKeyFromCatalogPath(

@@ -2,6 +2,7 @@ import type { CSSProperties, ReactNode } from "react";
 
 import { resolvePhiBorderWidgetStyle } from "../../helpers/border-widget-style";
 import {
+  phiBackgroundWidgetConfigPaintsGround,
   resolvePhiBackgroundWidgetStyle,
   type PhiCmsBackgroundWidgetConfig,
 } from "../widgets/config/background";
@@ -12,6 +13,7 @@ import {
   resolvePhiShellSiderWidth,
 } from "../../helpers/shell-region-style";
 import { combinePhiBoxShadows } from "../../helpers/layout-style";
+import { phiRegionUsesShellChromeOverlay } from "../root/phi-shell-chrome-overlay";
 import { resolveRenderableBlockEffectsAttributes, resolveRenderableBlockEffectsStyle } from "../../helpers/renderable-block-effects";
 import { hasPhiFlag } from "../../helpers/flags";
 import { PhiCmsFlags } from "../../constants/phi-cms";
@@ -81,8 +83,14 @@ export function PhiCmsRegionStatic({
       : resolvedHeight;
   const shouldStickSider = config.sticky === true || resolvedFullHeight;
   const resolvedZIndex = config.zIndex ?? resolvePhiShellRegionZIndex(regionKey, resolvedFullHeight);
-  const regionBackgroundConfig =
-    config.backgroundConfig != null ? config.backgroundConfig as PhiCmsBackgroundWidgetConfig : null;
+  /*
+   * A Background config that paints nothing is not an authored ground. The Builder writes one onto every
+   * Region draft it persists, so its presence would otherwise mean "authored" for every Region an author
+   * has ever opened.
+   */
+  const regionBackgroundConfig = phiBackgroundWidgetConfigPaintsGround(config.backgroundConfig)
+    ? config.backgroundConfig as PhiCmsBackgroundWidgetConfig
+    : null;
   const regionBackgroundStyle = regionBackgroundConfig
     ? resolvePhiBackgroundWidgetStyle({ ...regionBackgroundConfig, effect: null })
     : null;
@@ -135,9 +143,29 @@ export function PhiCmsRegionStatic({
     paddingBottom: config.paddingBottom,
     paddingLeft: config.paddingLeft,
   });
+  /*
+   * The Shell Chrome Overlay (SHELL.md), read from the custom properties the Root Layout publishes.
+   * Which Regions take it, and when, is decided in one place for both this renderer and the client one.
+   *
+   * The config handed over is the one that survived `phiBackgroundWidgetConfigPaintsGround` above, not
+   * the stored one. The Builder persists an empty Background record for every Region an author has
+   * ever opened, and the raw value is never null for those -- so this renderer read them as authored
+   * and dropped them out of the overlay, while the client renderer, which passes the filtered config,
+   * kept them in. One decision in one place only holds if both sides ask it the same question.
+   */
+  const usesShellChromeOverlay = phiRegionUsesShellChromeOverlay({
+    regionKey,
+    backgroundConfig: regionBackgroundConfig,
+    effect: config.effect,
+    grounds: [lightChrome.background, darkChrome.background],
+  });
   const modeStyle: PhiRegionModeStyle = {
-    "--phi-region-background-light": String(lightChrome.background),
-    "--phi-region-background-dark": String(darkChrome.background),
+    ...(lightChrome.background == null
+      ? {}
+      : { "--phi-region-background-light": String(lightChrome.background) }),
+    ...(darkChrome.background == null
+      ? {}
+      : { "--phi-region-background-dark": String(darkChrome.background) }),
     "--phi-region-color-light": String(lightChrome.color),
     "--phi-region-color-dark": String(darkChrome.color),
   };
@@ -169,7 +197,27 @@ export function PhiCmsRegionStatic({
     overflowY: isSider ? resolvedFullHeight ? "auto" : "visible" : undefined,
     color: "var(--phi-region-color)",
     ...lightChrome.effectStyle,
-    background: regionBackgroundStyle == null ? "var(--phi-region-background)" : undefined,
+    /*
+     * The ground itself is painted by `shell.css`, from `--phi-region-background`, because it may be a
+     * colour or a gradient and only CSS can tell which without guessing. Nothing here is the `background`
+     * shorthand: React warns when a rerender drops a longhand from an element whose shorthand is still
+     * set, and everything below is a longhand.
+     *
+     * The Chrome Overlay is anchored to the viewport so the Regions share one painting instead of each
+     * starting it again: a gradient runs from the Header into the Sider, and a Pattern keeps its grid
+     * across the seam.
+     */
+    ...(usesShellChromeOverlay
+      ? {
+        backgroundImage: "var(--phi-shell-chrome-image, none)",
+        backgroundSize: "var(--phi-shell-chrome-size, auto)",
+        backgroundPosition: "var(--phi-shell-chrome-position, 0 0)",
+        backgroundRepeat: "var(--phi-shell-chrome-repeat, repeat)",
+        backgroundAttachment: "fixed",
+        backdropFilter: "var(--phi-shell-chrome-filter, none)",
+        WebkitBackdropFilter: "var(--phi-shell-chrome-filter, none)",
+      }
+      : {}),
     boxShadow: combinePhiBoxShadows(regionBackgroundStyle?.boxShadow, lightChrome.effectStyle?.boxShadow, lightChrome.shadow),
     ...(resolvedTypography.fontSize ? { fontSize: resolvedTypography.fontSize } : {}),
     ...(resolvedTypography.lineHeight ? { lineHeight: resolvedTypography.lineHeight } : {}),
@@ -187,6 +235,7 @@ export function PhiCmsRegionStatic({
   const commonProps = {
     "data-phi-region-key": regionKey,
     "data-phi-region-type": regionType,
+    "data-phi-shell-chrome": usesShellChromeOverlay ? "true" : undefined,
     "data-phi-renderable-block": "true",
     "data-phi-signal-receiver": createPhiSignalAddress("region", regionKey),
     "data-phi-block-visibility": resolvedVisibility,

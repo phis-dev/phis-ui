@@ -9,7 +9,7 @@ import {
 } from "../constants/cms-areas";
 import { canPhiViewerAccess } from "../types/access";
 import {
-  readPhiAreaLandingPresetIdentity,
+  readPhiAreaLandingSelection,
   readPhiAreaPublicRoutePaths,
 } from "../helpers/cms-area-config";
 import {
@@ -242,7 +242,7 @@ export function buildPhiNavigationTargetRouteHandler({
         activeModuleIds,
         viewer: requestContext.viewer,
         publicRoutePaths: readPhiAreaPublicRoutePaths(areaPreset?.preset.preset.config),
-        landingPreset: readPhiAreaLandingPresetIdentity(areaPreset?.preset.preset.config),
+        landingSelection: readPhiAreaLandingSelection(areaPreset?.preset.preset.config),
       });
       const routeBinding = storagePath
         ? resolvePhiCmsRoutePreset(routeTable, storagePath)

@@ -30,7 +30,10 @@ import {
 } from "../../../plugins/runtime-modules/descriptor-compiler";
 import { resolvePhiBuilderAreaAsCmsArea } from "../../../constants/cms-areas";
 import { createPhiPresetCmsPageId, isPhiCmsInstanceId } from "../../../types/cms-instance-id";
-import { buildPhiBuilderRuntimeModulesConfigForArea } from "./area-shell-presets.server";
+import {
+  buildPhiBuilderAreaLandingSelection,
+  buildPhiBuilderRuntimeModulesConfigForArea,
+} from "./area-shell-presets.server";
 
 export type PhiBuilderPageDraftsByScope = Partial<
   Record<PhiDeveloperBuilderArea, Partial<Record<string, PhiDeveloperBuilderRegionDraft | null>>>
@@ -52,22 +55,27 @@ export type PhiBuilderPageMeta = {
   isDeleted?: boolean;
 };
 
-async function resolvePhiRegistryPresetPageBinding({
-  runtime,
-  runtimeModuleCatalog,
-  area,
-  pageKey,
-}: {
-  runtime: PhiBlockRuntime;
-  runtimeModuleCatalog: PhiRuntimeModuleCatalog;
-  area: PhiDeveloperBuilderArea;
-  pageKey: string;
-}) {
-  const modulesConfig = await buildPhiBuilderRuntimeModulesConfigForArea(
-    runtime,
-    area,
-    runtimeModuleCatalog,
-  );
+/**
+ * The Area's routes as the Builder's server half must see them: the table the reader compiles.
+ *
+ * Three answers from the Area's own config decide which Page answers where -- the Module selection, the
+ * addresses assigned to contested Public routes, and which application for `/` was accepted. Leaving the
+ * last one out made this side compute "nobody was ever asked" while the Client had the Site's answer in
+ * front of it: with two Modules offering a landing, the Page an author opened was then a Page this table
+ * did not contain at all, and every lookup of it threw.
+ *
+ * Compiled once per Area and request, because both callers below want the same table and a second
+ * compilation is a second chance to disagree.
+ */
+const resolvePhiBuilderAreaRouteTable = cache(async function resolvePhiBuilderAreaRouteTable(
+  runtime: PhiBlockRuntime,
+  area: PhiDeveloperBuilderArea,
+  runtimeModuleCatalog: PhiRuntimeModuleCatalog,
+) {
+  const [modulesConfig, landingSelection] = await Promise.all([
+    buildPhiBuilderRuntimeModulesConfigForArea(runtime, area, runtimeModuleCatalog),
+    buildPhiBuilderAreaLandingSelection(runtime, area, runtimeModuleCatalog),
+  ]);
   const activeModuleKeys = new Set(modulesConfig.moduleIds);
   if (!runtimeModuleCatalog.platformModuleId) {
     throw new Error("Builder runtime catalog has no Platform contribution.");
@@ -80,16 +88,37 @@ async function resolvePhiRegistryPresetPageBinding({
     throw new Error(`Builder target Area "${cmsArea}" is not declared.`);
   }
   activeModuleKeys.add(areaDefinition.baseModuleId);
+
+  return {
+    activeModuleKeys,
+    table: compilePhiCmsActiveRouteTable({
+      catalog,
+      area: cmsArea,
+      activeModuleIds: activeModuleKeys,
+      publicRoutePaths: modulesConfig.publicRoutePaths,
+      landingSelection,
+    }),
+  };
+});
+
+async function resolvePhiRegistryPresetPageBinding({
+  runtime,
+  runtimeModuleCatalog,
+  area,
+  pageKey,
+}: {
+  runtime: PhiBlockRuntime;
+  runtimeModuleCatalog: PhiRuntimeModuleCatalog;
+  area: PhiDeveloperBuilderArea;
+  pageKey: string;
+}) {
+  const { activeModuleKeys, table } = await resolvePhiBuilderAreaRouteTable(
+    runtime,
+    area,
+    runtimeModuleCatalog,
+  );
   const binding = isPhiCmsInstanceId(pageKey)
-    ? resolvePhiCmsRoutePresetByPageId(
-      compilePhiCmsActiveRouteTable({
-        catalog,
-        area: cmsArea,
-        activeModuleIds: activeModuleKeys,
-        publicRoutePaths: modulesConfig.publicRoutePaths,
-      }),
-      pageKey,
-    )
+    ? resolvePhiCmsRoutePresetByPageId(table, pageKey)
     : null;
   return binding ? { binding, activeModuleKeys } : null;
 }
@@ -310,33 +339,23 @@ export async function resolvePhiBuilderCurrentPageScope(
   const requestedPageKey = normalizePhiBuilderPageSearchParam(
     searchParams[PHI_BUILDER_PAGE_SEARCH_PARAM],
   );
-  if (requestedPageKey) {
+  const { table } = await resolvePhiBuilderAreaRouteTable(runtime, area, runtimeModuleCatalog);
+  /*
+   * A Module Page this Area does not serve is a stale address, not a request to be honoured.
+   *
+   * The Page key travels in the URL, so it outlives the state that produced it -- a landing chosen and
+   * then changed, a Module switched off, a bookmark from last week. Answering with it anyway means
+   * resolving a Page that is not in the table, which throws several layers further down where the
+   * message can only describe the wreck. Falling back is the same answer the Client's own
+   * normalisation gives: open what this Area actually serves.
+   *
+   * Only Preset keys are checked. A Site Page has no entry here by nature -- it is addressed by path
+   * through the persisted catalog -- so its key passes as it always did.
+   */
+  if (requestedPageKey && (!isPhiCmsInstanceId(requestedPageKey) || table.byPageId.has(requestedPageKey))) {
     return { area, pageKey: requestedPageKey };
   }
 
-  const modulesConfig = await buildPhiBuilderRuntimeModulesConfigForArea(
-    runtime,
-    area,
-    runtimeModuleCatalog,
-  );
-  const activeModuleKeys = new Set(modulesConfig.moduleIds);
-  if (!runtimeModuleCatalog.platformModuleId) {
-    throw new Error("Builder runtime catalog has no Platform contribution.");
-  }
-  activeModuleKeys.add(runtimeModuleCatalog.platformModuleId);
-  const cmsArea = resolvePhiBuilderAreaAsCmsArea(area);
-  const catalog = resolvePhiCmsDescriptorCatalog(runtimeModuleCatalog);
-  const areaDefinition = catalog.areaDefinitions.get(cmsArea);
-  if (!areaDefinition) {
-    throw new Error(`Builder target Area "${cmsArea}" is not declared.`);
-  }
-  activeModuleKeys.add(areaDefinition.baseModuleId);
-  const table = compilePhiCmsActiveRouteTable({
-    catalog,
-    area: cmsArea,
-    activeModuleIds: activeModuleKeys,
-    publicRoutePaths: modulesConfig.publicRoutePaths,
-  });
   // The Area root if one answers, otherwise the first Page there is: the Builder opens on something.
   const rootDescriptor = resolvePhiCmsRoutePreset(table, "/")?.descriptor;
   const pageKey = (rootDescriptor

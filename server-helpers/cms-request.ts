@@ -56,7 +56,7 @@ import {
 } from "./runtime";
 import { trForLocale } from "./translate";
 import {
-  readPhiAreaLandingPresetIdentity,
+  readPhiAreaLandingSelection,
   readPhiAreaPresetRuntimeModuleIds,
   readPhiAreaPublicRoutePaths,
 } from "../helpers/cms-area-config";
@@ -324,7 +324,7 @@ export async function resolvePhiCmsRequest({
     activeModuleIds: activeModuleKeys,
     viewer: runtime.viewer,
     publicRoutePaths: readPhiAreaPublicRoutePaths(effectiveAreaPreset?.preset.preset.config),
-    landingPreset: readPhiAreaLandingPresetIdentity(effectiveAreaPreset?.preset.preset.config),
+    landingSelection: readPhiAreaLandingSelection(effectiveAreaPreset?.preset.preset.config),
   });
   const routeBinding = areaOwnedStoragePath && areaAllowed
     ? resolvePhiCmsRoutePreset(routeTable, areaOwnedStoragePath)

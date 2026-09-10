@@ -692,6 +692,10 @@ Layout Inspector, and one Widget Inspector. They are Area-owned because the same
 `/builder/phis/ui/shells` and `/builder/phis/ui/pages`. They are not Page-owned duplicates, normal `drawer_right` Regions,
 or imperative Drawers mounted by an Inspector host Widget.
 
+The Builder Module contributes them as Area Overlays rather than declaring them in its Area shell preset.
+Saving `/builder/phis/ui/shells` for the Builder Area itself would otherwise take them with it: the saved
+snapshot replaces the code preset, and the Drawers the Controller opens would no longer exist.
+
 Each Drawer declares exactly one direct Body root, its own n-slot `PhiCollapsibleLayout`. Every slot
 contains one normal Builder-Module Widget for that Inspector section. There is no Stack above the root,
 no runtime topology switch, and no client-created Collapsible Layout inside a section host. The Builder

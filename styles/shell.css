@@ -226,13 +226,54 @@
 .shell-sider-embedded .phi-shell-region.footer_bottom {
   grid-area: footer_bottom;
 }
-/* Server-rendered regions switch published light/dark shell values with the root theme state. */
+/* The Region ground, painted here rather than inline: the value may be a colour or a gradient, and the
+   shorthand is the only form that carries both. Inline the Region emits longhands alone -- an authored
+   Background, an Effect, the Shell Chrome Overlay -- so every one of them overrides the part of this
+   declaration it names, and React never has to drop a longhand from an element whose shorthand is set. */
 :where(.phi-cms-region-shell) {
-  --phi-region-background: var(--phi-region-background-light, var(--ant-color-bg-container));
+  background: var(--phi-region-background);
+}
+
+/* Server-rendered regions switch published light/dark shell values with the root theme state.
+   The ground falls back to transparent, never to a container token: a Region paints only what the
+   Shell record or the Region itself authored, so the Theme Root Background stays visible beneath it. */
+:where(.phi-cms-region-shell) {
+  --phi-region-background: var(--phi-region-background-light, transparent);
   --phi-region-color: var(--phi-region-color-light, var(--ant-color-text));
 }
 
 :where([data-phi-theme-mode="dark"]) :where(.phi-cms-region-shell) {
-  --phi-region-background: var(--phi-region-background-dark, var(--ant-color-bg-container));
+  --phi-region-background: var(--phi-region-background-dark, transparent);
   --phi-region-color: var(--phi-region-color-dark, var(--ant-color-text));
+}
+
+/* The Shell Chrome Overlay (SHELL.md "Root Background and Shell Backdrop Layers").
+   The site-owned ground the Header, Sider and Footer Regions share, published per mode on the Root
+   Layout element and switched here the way every other Region value switches. A mode with no overlay
+   publishes nothing and lands on the neutral value, which paints nothing at all. */
+:where([data-phi-root-layout="true"]) {
+  --phi-shell-chrome-image: var(--phi-shell-chrome-image-light, none);
+  --phi-shell-chrome-size: var(--phi-shell-chrome-size-light, auto);
+  --phi-shell-chrome-position: var(--phi-shell-chrome-position-light, 0 0);
+  --phi-shell-chrome-repeat: var(--phi-shell-chrome-repeat-light, repeat);
+  --phi-shell-chrome-color: var(--phi-shell-chrome-color-light, transparent);
+  --phi-shell-chrome-filter: var(--phi-shell-chrome-filter-light, none);
+}
+
+:where([data-phi-root-layout="true"][data-phi-theme-mode="dark"]) {
+  --phi-shell-chrome-image: var(--phi-shell-chrome-image-dark, none);
+  --phi-shell-chrome-size: var(--phi-shell-chrome-size-dark, auto);
+  --phi-shell-chrome-position: var(--phi-shell-chrome-position-dark, 0 0);
+  --phi-shell-chrome-repeat: var(--phi-shell-chrome-repeat-dark, repeat);
+  --phi-shell-chrome-color: var(--phi-shell-chrome-color-dark, transparent);
+  --phi-shell-chrome-filter: var(--phi-shell-chrome-filter-dark, none);
+}
+
+/* A Chrome Region carries the marker only while it authored no ground of its own, so there is nothing
+   left to fall back through here: the shared colour is the ground. It needs no light and dark pair
+   either, because the pair above has already resolved the mode. This rule follows the two that set the
+   Region ground on purpose -- none of them carries specificity, so the later one has to be the one that
+   matches. */
+:where(.phi-cms-region-shell[data-phi-shell-chrome="true"]) {
+  --phi-region-background: var(--phi-shell-chrome-color, transparent);
 }

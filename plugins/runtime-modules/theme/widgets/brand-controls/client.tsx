@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
 
 import { Button, Card, Collapse, ConfigProvider, Divider, Flex, Form, Input, Space, Statistic, Switch, Tag, Typography, theme as antdTheme } from "antd";
 import type { AliasToken } from "antd/es/theme/interface";
@@ -50,7 +50,17 @@ import {
 import { PHI_SPACING_TOKEN_KEYS } from "../../../../../components/widgets/config/spacing-options";
 import { PhiColorWidget } from "../../../../../components/widgets/client/phi-color-widget";
 import { PhiBackgroundControl, type PhiBackgroundControlProps } from "../../../../../components/controls/phi-background-control";
-import { resolvePhiRootBackgroundPaintStyle } from "../../../../../components/root/phi-root-background";
+import {
+  PHI_ROOT_BACKGROUND_MOTION_MODES,
+  resolvePhiRootBackgroundPaintStyle,
+} from "../../../../../components/root/phi-root-background";
+import {
+  PHI_SHELL_CHROME_OVERLAY_BASE_KINDS,
+  PHI_SHELL_CHROME_OVERLAY_EFFECTS,
+  PHI_SHELL_CHROME_OVERLAY_MOTION_MODES,
+  resolvePhiShellChromeOverlayConfig,
+  resolvePhiShellChromeOverlayStyle,
+} from "../../../../../components/root/phi-shell-chrome-overlay";
 import { normalizePhiBackgroundWidgetConfig, type PhiCmsBackgroundWidgetConfig } from "../../../../../components/widgets/config/background";
 import { PhiMediaPickerBinding } from "../../../../../components/media/phi-media-picker-binding";
 import { PHI_MEDIA_WIDGET_DEFAULT_LABELS } from "../../../../../components/media/media-widget-labels";
@@ -113,8 +123,17 @@ type BrandThemeState = {
 };
 
 const DEFAULT_THEME_KEY = "default";
-const BRAND_THEME_COLOR_COLLAPSE_STORAGE_KEY = "phi.builder.brand.theme.colorCollapse.activeKeys";
-const BRAND_THEME_STYLE_COLLAPSE_STORAGE_KEY = "phi.builder.brand.theme.styleCollapse.activeKeys";
+const BRAND_THEME_COLOR_COLLAPSE_STORAGE_KEY = "phi.builder.brand.theme.colorCollapse.activeKey";
+const BRAND_THEME_STYLE_COLLAPSE_STORAGE_KEY = "phi.builder.brand.theme.styleCollapse.activeKey";
+const BRAND_THEME_BACKGROUND_COLLAPSE_STORAGE_KEY = "phi.builder.brand.theme.backgroundCollapse.activeKey";
+const BRAND_THEME_BACKGROUND_SECTION_KEYS = ["root", "chrome"] as const;
+const BRAND_THEME_STYLE_SECTION_KEYS = [
+  "radius",
+  "controlHeight",
+  "fontFamily",
+  "fontSize",
+  "wireframe",
+] as const;
 const PHI_STYLE_SIZE_PRESET_KEYS = PHI_SPACING_TOKEN_KEYS;
 type PhiStyleSizePresetKey = (typeof PHI_STYLE_SIZE_PRESET_KEYS)[number];
 type PhiStyleSizePresetMap = Record<PhiStyleSizePresetKey, number>;
@@ -290,6 +309,12 @@ const THEME_COLOR_SEED_SECTIONS = [
     ],
   },
 ] as const;
+
+/** The Collapse order of the colour panel, which decides which section an author finds open. */
+const BRAND_THEME_COLOR_SECTION_KEYS: readonly string[] = [
+  "custom",
+  ...THEME_COLOR_SEED_SECTIONS.map((section) => section.key),
+];
 
 const THEME_COLOR_SEED_KEYS = new Set<string>(THEME_COLOR_SEED_SECTIONS.map((section) => section.key));
 const THEME_DERIVED_COLOR_KEYS = new Set<string>(THEME_COLOR_SEED_SECTIONS.flatMap((section) => section.derived.map((item) => item.key)));
@@ -596,7 +621,8 @@ const PHI_THEME_ROOT_BACKGROUND_MEDIA_ROUTES = {
 /*
  * The renderer a Background Control asks for its media picker.
  *
- * Built once at module level rather than per render, so its identity is stable without a hook.
+ * Built once at module level rather than per render, so its identity is stable without a hook. Only the
+ * Root Background asks for one: the Chrome Overlay offers no image Base, so it never opens a picker.
  */
 const renderPhiThemeRootBackgroundMediaPicker: NonNullable<PhiBackgroundControlProps["renderMediaPicker"]> =
   function renderPhiThemeRootBackgroundMediaPicker(props) {
@@ -635,6 +661,23 @@ function mergeThemeRootBackground(
       ...(theme.root ?? {}),
       background: {
         ...(theme.root?.background ?? {}),
+        [mode]: value,
+      },
+    },
+  };
+}
+
+function mergeThemeChromeOverlay(
+  theme: ThemePayload,
+  mode: "light" | "dark",
+  value: PhiCmsBackgroundWidgetConfig,
+): ThemePayload {
+  return {
+    ...theme,
+    root: {
+      ...(theme.root ?? {}),
+      chrome: {
+        ...(theme.root?.chrome ?? {}),
         [mode]: value,
       },
     },
@@ -1348,42 +1391,53 @@ export function PhiBuilderBrandThemeControllerWidgetClient({
   return null;
 }
 
-function readStoredActiveColorSections() {
+/**
+ * The open section of a Theme panel, remembered for the session.
+ *
+ * The three panels are accordions: one section at a time, the first one open until the author opens
+ * another. `sessionStorage` rather than `localStorage`, so the choice follows the working session
+ * instead of deciding how the panel looks weeks later.
+ *
+ * The stored key is applied after mount and never read during render. The server has no storage to read
+ * from, so a value read while rendering would disagree with the markup it hydrates.
+ */
+function readStoredAccordionSection(storageKey: string, sectionKeys: readonly string[]) {
   if (typeof window === "undefined") {
-    return [];
+    return null;
   }
 
   try {
-    const storedValue = window.localStorage.getItem(BRAND_THEME_COLOR_COLLAPSE_STORAGE_KEY);
-    const parsedValue = storedValue ? JSON.parse(storedValue) : null;
-    if (!Array.isArray(parsedValue)) {
-      return [];
-    }
-
-    const validKeys = new Set<string>(["custom", ...THEME_COLOR_SEED_SECTIONS.map((section) => section.key)]);
-    return parsedValue.filter((value): value is string => typeof value === "string" && validKeys.has(value));
+    const storedValue = window.sessionStorage.getItem(storageKey);
+    return storedValue && sectionKeys.includes(storedValue) ? storedValue : null;
   } catch {
-    return [];
+    return null;
   }
 }
 
-function readStoredActiveStyleSections() {
-  if (typeof window === "undefined") {
-    return [];
-  }
+function usePhiBrandAccordionSection(storageKey: string, sectionKeys: readonly string[]) {
+  const [activeSection, setActiveSection] = useState<string>(sectionKeys[0] ?? "");
 
-  try {
-    const storedValue = window.localStorage.getItem(BRAND_THEME_STYLE_COLLAPSE_STORAGE_KEY);
-    const parsedValue = storedValue ? JSON.parse(storedValue) : null;
-    if (!Array.isArray(parsedValue)) {
-      return [];
+  useEffect(() => {
+    queueMicrotask(() => {
+      const storedSection = readStoredAccordionSection(storageKey, sectionKeys);
+      if (storedSection) {
+        setActiveSection(storedSection);
+      }
+    });
+  }, [sectionKeys, storageKey]);
+
+  const changeActiveSection = useCallback((keys: string | readonly string[]) => {
+    const nextSection = Array.isArray(keys) ? keys[0] ?? "" : String(keys ?? "");
+    setActiveSection(nextSection);
+
+    try {
+      window.sessionStorage.setItem(storageKey, nextSection);
+    } catch {
+      // A browser that refuses storage still gets a working accordion, it just forgets the choice.
     }
+  }, [storageKey]);
 
-    const validKeys = new Set<string>(["radius", "controlHeight", "fontFamily", "fontSize", "wireframe"]);
-    return parsedValue.filter((value): value is string => typeof value === "string" && validKeys.has(value));
-  } catch {
-    return [];
-  }
+  return [activeSection, changeActiveSection] as const;
 }
 
 function resolveThemeFontSlots(
@@ -1416,13 +1470,10 @@ export function PhiBuilderBrandThemeControlsWidgetClient({
   const previewMode = usePhiBrandPreviewMode(resolveThemePayloadMode(state.draft));
   const loading = false;
   const saving = false;
-  const [activeColorSections, setActiveColorSections] = useState<string[]>([]);
-
-  useEffect(() => {
-    queueMicrotask(() => {
-      setActiveColorSections(readStoredActiveColorSections());
-    });
-  }, []);
+  const [activeColorSection, changeActiveColorSection] = usePhiBrandAccordionSection(
+    BRAND_THEME_COLOR_COLLAPSE_STORAGE_KEY,
+    BRAND_THEME_COLOR_SECTION_KEYS,
+  );
 
   const token = stripEmptyTokenValues(state.draft.antd?.token ?? {});
   const algorithm = previewMode === "dark" ? antdTheme.darkAlgorithm : antdTheme.defaultAlgorithm;
@@ -1451,14 +1502,11 @@ export function PhiBuilderBrandThemeControlsWidgetClient({
       <Card size="small" styles={{ body: { padding: clientToken.paddingSM } }}>
         <Flex vertical gap={clientToken.paddingSM}>
           <Collapse
+            accordion
             bordered={false}
             size="small"
-            activeKey={activeColorSections}
-            onChange={(keys) => {
-              const nextKeys = Array.isArray(keys) ? keys.map(String) : [String(keys)];
-              setActiveColorSections(nextKeys);
-              window.localStorage.setItem(BRAND_THEME_COLOR_COLLAPSE_STORAGE_KEY, JSON.stringify(nextKeys));
-            }}
+            activeKey={activeColorSection}
+            onChange={changeActiveColorSection}
             styles={{
               root: { background: "transparent" },
               header: { alignItems: "center", paddingInline: 0 },
@@ -1637,13 +1685,10 @@ export function PhiBuilderBrandStyleControlsWidgetClient({
   const { state, publishDraft } = usePhiBrandThemeDraft(runtime, themeKey);
   const loading = false;
   const saving = false;
-  const [activeStyleSections, setActiveStyleSections] = useState<string[]>([]);
-
-  useEffect(() => {
-    queueMicrotask(() => {
-      setActiveStyleSections(readStoredActiveStyleSections());
-    });
-  }, []);
+  const [activeStyleSection, changeActiveStyleSection] = usePhiBrandAccordionSection(
+    BRAND_THEME_STYLE_COLLAPSE_STORAGE_KEY,
+    BRAND_THEME_STYLE_SECTION_KEYS,
+  );
 
   const token = stripEmptyTokenValues(state.draft.antd?.token ?? {});
   const styleTokenInput = {
@@ -1673,14 +1718,11 @@ export function PhiBuilderBrandStyleControlsWidgetClient({
     <Flex vertical gap={clientToken.padding} style={{ width: "100%", minWidth: 0, opacity: loading ? 0.65 : 1 }}>
       <Card size="small" styles={{ body: { padding: clientToken.paddingSM } }}>
         <Collapse
+          accordion
           bordered={false}
           size="small"
-          activeKey={activeStyleSections}
-          onChange={(keys) => {
-            const nextKeys = Array.isArray(keys) ? keys.map(String) : [String(keys)];
-            setActiveStyleSections(nextKeys);
-            window.localStorage.setItem(BRAND_THEME_STYLE_COLLAPSE_STORAGE_KEY, JSON.stringify(nextKeys));
-          }}
+          activeKey={activeStyleSection}
+          onChange={changeActiveStyleSection}
           styles={{
             root: { background: "transparent" },
             header: { alignItems: "center", paddingInline: 0 },
@@ -1857,7 +1899,8 @@ export function PhiBuilderBrandStyleControlsWidgetClient({
 }
 
 /**
- * The Theme Root Background (SHELL.md): one fixed layer behind the whole Site, per mode.
+ * The Theme Root Background and the Shell Chrome Overlay (SHELL.md): the two site-owned grounds, one
+ * behind the whole Site and one shared by the Header, Sider and Footer Regions, each per mode.
  *
  * Its own Stack slot rather than a section of the style controls, because it is not a token -- it is a
  * picture, and it wants the width. The mode being edited follows the preview switch, the way the
@@ -1879,23 +1922,167 @@ export function PhiBuilderBrandBackgroundControlsWidgetClient({
   const themeKey = resolveThemeKey(config);
   const { state, publishDraft } = usePhiBrandThemeDraft(runtime, themeKey);
   const mode = usePhiBrandPreviewMode(resolveThemePayloadMode(state.draft));
+  const [activeBackgroundSection, changeActiveBackgroundSection] = usePhiBrandAccordionSection(
+    BRAND_THEME_BACKGROUND_COLLAPSE_STORAGE_KEY,
+    BRAND_THEME_BACKGROUND_SECTION_KEYS,
+  );
+  const modeLabel = mode === "dark" ? "Dark mode" : "Light mode";
 
   return (
     <Flex vertical gap={clientToken.padding} style={{ width: "100%", minWidth: 0 }}>
       <Card size="small" styles={{ body: { padding: clientToken.paddingSM } }}>
-        <Flex vertical gap={clientToken.paddingXS}>
-          <Typography.Text strong>
-            {mode === "dark" ? "Dark mode ground" : "Light mode ground"}
-          </Typography.Text>
-          <PhiBackgroundControl
-            key={mode}
-            value={normalizePhiBackgroundWidgetConfig(state.draft.root?.background?.[mode] ?? null)}
-            renderMediaPicker={renderPhiThemeRootBackgroundMediaPicker}
-            onChange={(value) => publishDraft(mergeThemeRootBackground(state.draft, mode, value))}
-          />
-        </Flex>
+        <Collapse
+          accordion
+          bordered={false}
+          size="small"
+          activeKey={activeBackgroundSection}
+          onChange={changeActiveBackgroundSection}
+          styles={{
+            root: { background: "transparent" },
+            header: { alignItems: "center", paddingInline: 0 },
+            body: { paddingInline: 0 },
+          }}
+          items={[
+            {
+              key: "root",
+              label: <Typography.Text strong>Root Background</Typography.Text>,
+              children: (
+                <Flex vertical gap={clientToken.paddingXS}>
+                  <Typography.Text type="secondary">
+                    {modeLabel}. One layer behind the whole Site, fixed to the viewport.
+                  </Typography.Text>
+                  <PhiBackgroundControl
+                    key={mode}
+                    value={normalizePhiBackgroundWidgetConfig(state.draft.root?.background?.[mode] ?? null)}
+                    motionModes={PHI_ROOT_BACKGROUND_MOTION_MODES}
+                    renderMediaPicker={renderPhiThemeRootBackgroundMediaPicker}
+                    onChange={(value) => publishDraft(mergeThemeRootBackground(state.draft, mode, value))}
+                  />
+                </Flex>
+              ),
+            },
+            {
+              key: "chrome",
+              label: <Typography.Text strong>Chrome Overlay</Typography.Text>,
+              children: (
+                <Flex vertical gap={clientToken.paddingXS}>
+                  <Typography.Text type="secondary">
+                    {modeLabel}. Shared by the Header, Sider and Footer Regions. Content and Hero never
+                    take it, and a Region that authors its own Background or Effect paints over it.
+                  </Typography.Text>
+                  <PhiBackgroundControl
+                    key={`chrome-${mode}`}
+                    value={resolvePhiShellChromeOverlayConfig(state.draft.root?.chrome?.[mode] ?? null)}
+                    motionModes={PHI_SHELL_CHROME_OVERLAY_MOTION_MODES}
+                    effects={PHI_SHELL_CHROME_OVERLAY_EFFECTS}
+                    baseKinds={PHI_SHELL_CHROME_OVERLAY_BASE_KINDS}
+                    onChange={(value) => publishDraft(mergeThemeChromeOverlay(state.draft, mode, value))}
+                  />
+                </Flex>
+              ),
+            },
+          ]}
+        />
       </Card>
     </Flex>
+  );
+}
+
+/**
+ * The preview surface as a small Shell: a Header, a Sider and a Footer around the Content that carries
+ * the preview's own Widgets.
+ *
+ * The Chrome Overlay is a treatment the chrome lays over the ground, so without chrome there was nothing
+ * for it to be on and an author setting a glass here saw only what the Root Background already did.
+ * Content stays transparent, exactly as a Content Region does on a Site, so the ground reads through it.
+ *
+ * Two layers rather than one, because the two halves of the overlay clip differently. The frost is three
+ * plain boxes, one per Chrome family, as three Regions filter their own boxes on a Site. The paint is a
+ * single box clipped to the frame, so a gradient runs across the corner instead of restarting in each
+ * strip. Putting both on one clipped box looked right until the filtered backdrop ignored the clip and
+ * frosted the Content with it.
+ *
+ * The frame is padding, and the clip follows the same three numbers, so the paint stops exactly where
+ * the Content begins and never covers a Widget.
+ */
+function PhiBrandChromePreviewShell({
+  overlayStyle,
+  rootBackgroundStyle,
+  surfaceBackground,
+  textColor,
+  labelColor,
+  radius,
+  padding,
+  children,
+}: {
+  overlayStyle: CSSProperties | null;
+  rootBackgroundStyle: CSSProperties | null;
+  surfaceBackground: string;
+  textColor: string;
+  labelColor: string;
+  radius: number;
+  padding: number;
+  children: ReactNode;
+}) {
+  const header = 34;
+  const sider = 88;
+  const footer = 28;
+  const { backdropFilter, WebkitBackdropFilter, ...paintStyle } = overlayStyle ?? {};
+  const frostStyle = backdropFilter ? { backdropFilter, WebkitBackdropFilter } : null;
+
+  return (
+    <div
+      style={{
+        position: "relative",
+        /*
+         * `isolation` is what makes the ground land where it is meant to. At `z-index: -1` without a
+         * stacking context of its own here, the layer would fall behind the opaque preview Card instead
+         * of this surface; at `0` it would paint over the content, because a positioned box is drawn
+         * after its static siblings.
+         */
+        isolation: "isolate",
+        background: surfaceBackground,
+        color: textColor,
+        borderRadius: radius,
+        overflow: "hidden",
+        paddingTop: header,
+        paddingInlineStart: sider,
+        paddingBottom: footer,
+      }}
+    >
+      {rootBackgroundStyle ? (
+        <div
+          aria-hidden
+          data-phi-preview-root-background="true"
+          style={{ position: "absolute", inset: 0, zIndex: -1, ...rootBackgroundStyle }}
+        />
+      ) : null}
+      {frostStyle ? (
+        <>
+          <div aria-hidden style={{ position: "absolute", left: 0, right: 0, top: 0, height: header, ...frostStyle }} />
+          <div aria-hidden style={{ position: "absolute", left: 0, width: sider, top: header, bottom: footer, ...frostStyle }} />
+          <div aria-hidden style={{ position: "absolute", left: 0, right: 0, bottom: 0, height: footer, ...frostStyle }} />
+        </>
+      ) : null}
+      <div
+        aria-hidden
+        data-phi-preview-chrome-overlay="true"
+        style={{
+          position: "absolute",
+          inset: 0,
+          clipPath: `polygon(0 0, 100% 0, 100% ${header}px, ${sider}px ${header}px, ${sider}px calc(100% - ${footer}px), 100% calc(100% - ${footer}px), 100% 100%, 0 100%)`,
+          ...paintStyle,
+        }}
+      />
+      <div aria-hidden style={{ position: "absolute", inset: 0, fontSize: 11, color: labelColor, pointerEvents: "none" }}>
+        <span style={{ position: "absolute", left: sider + 8, top: (header - 14) / 2 }}>Header</span>
+        <span style={{ position: "absolute", left: 8, top: header + 8 }}>Sider</span>
+        <span style={{ position: "absolute", left: sider + 8, bottom: (footer - 14) / 2 }}>Footer</span>
+      </div>
+      <div style={{ display: "flex", flexDirection: "column", gap: padding, padding, minWidth: 0 }}>
+        {children}
+      </div>
+    </div>
   );
 }
 
@@ -1992,6 +2179,7 @@ export function PhiBuilderBrandThemePreviewWidgetClient({
    * ground configured keeps the resolved layout background, which is exactly what the Site does.
    */
   const previewRootBackground = resolvePhiRootBackgroundPaintStyle(previewTheme.root, mode);
+  const previewChromeOverlay = resolvePhiShellChromeOverlayStyle(previewTheme.root, mode);
   const previewTextColor = readEffectiveTokenString(previewEffectiveToken, "colorText", mode === "dark" ? "rgba(255,255,255,0.85)" : "rgba(0,0,0,0.88)");
   const previewTextSecondaryColor = readEffectiveTokenString(previewEffectiveToken, "colorTextSecondary", mode === "dark" ? "rgba(255,255,255,0.65)" : "rgba(0,0,0,0.65)");
   const previewTextTertiaryColor = readEffectiveTokenString(previewEffectiveToken, "colorTextTertiary", mode === "dark" ? "rgba(255,255,255,0.45)" : "rgba(0,0,0,0.45)");
@@ -2131,43 +2319,15 @@ export function PhiBuilderBrandThemePreviewWidgetClient({
           ),
         }}
       >
-        <Flex
-          vertical
-          gap={clientToken.padding}
-          style={{
-            /*
-             * The ground, painted the way the Site paints it: its own layer behind the content rather
-             * than a background on the box that holds it. As an inline background it sat under the
-             * preview's own cards, which cover this surface but for the gaps between them -- of a
-             * picture set as the Root Background barely a seam showed. The layer below carries it, and
-             * the padding here is what leaves it visible.
-             *
-             * The padding does not depend on whether a ground is set. It did, and that is a value the
-             * server cannot know: the ground arrives with the draft, after the markup was rendered, so
-             * the first client render would have disagreed with the server about the padding.
-             */
-            position: "relative",
-            /*
-             * `isolation` is what makes the layer land where it is meant to. At `z-index: -1` without
-             * a stacking context of its own here, the layer would fall behind the opaque preview Card
-             * instead of this surface; at `0` it would paint over the content, because a positioned
-             * box is drawn after its static siblings.
-             */
-            isolation: "isolate",
-            background: previewSurfaceBackground,
-            color: previewTextColor,
-            padding: clientToken.padding,
-            borderRadius: clientToken.paddingXS,
-            overflow: "hidden",
-          }}
+        <PhiBrandChromePreviewShell
+          overlayStyle={previewChromeOverlay}
+          rootBackgroundStyle={previewRootBackground}
+          surfaceBackground={previewSurfaceBackground}
+          textColor={previewTextColor}
+          labelColor={previewTextSecondaryColor}
+          radius={clientToken.paddingXS}
+          padding={clientToken.padding}
         >
-          {previewRootBackground ? (
-            <div
-              aria-hidden
-              data-phi-preview-root-background="true"
-              style={{ position: "absolute", inset: 0, zIndex: -1, ...previewRootBackground }}
-            />
-          ) : null}
           <Flex align="center" justify="space-between" gap={clientToken.padding} wrap="wrap">
             <Space orientation="vertical" size={0}>
               <Typography.Title level={4} style={{ margin: 0 }}>
@@ -2337,7 +2497,7 @@ export function PhiBuilderBrandThemePreviewWidgetClient({
               { key: "2", name: "Checkout", status: "Review" },
             ]}
           />
-        </Flex>
+        </PhiBrandChromePreviewShell>
       </Card>
     </ConfigProvider>
   );

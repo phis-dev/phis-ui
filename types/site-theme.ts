@@ -14,6 +14,20 @@ export type PhiSiteThemeRoot = {
     light?: PhiCmsBackgroundWidgetConfig | null;
     dark?: PhiCmsBackgroundWidgetConfig | null;
   } | null;
+  /**
+   * The Shell Chrome Overlay (SHELL.md "Root Background and Shell Backdrop Layers"): the ground the
+   * Header, Sider and Footer Regions share, independently per mode, using the same canonical
+   * structured Phi Background contract as the Root Background.
+   *
+   * Site-owned like the Root Background, and for the same reason: it is one continuous surface across
+   * the whole Shell frame, not a value a single Region owns. Content and Hero never take it -- the
+   * overlay would paint over their content, and the frame is exactly what is left when both are taken
+   * out. A Region that authors its own Background or Effect paints over it.
+   */
+  chrome?: {
+    light?: PhiCmsBackgroundWidgetConfig | null;
+    dark?: PhiCmsBackgroundWidgetConfig | null;
+  } | null;
 };
 
 export type PhiWidgetFontFamilyKey =

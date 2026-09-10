@@ -765,6 +765,62 @@ export function readPhiBuilderEffectiveAreaRootRoute(
 }
 
 /**
+ * The Area's stored answers moved forward to what a save has just written.
+ *
+ * The baseline otherwise only changes when the server sends the workspace again, and the Builder's
+ * chrome is one layout across `/shells` and `/pages`: walking between them re-renders neither, so a
+ * saved root route stayed invisible to the Page list until a full reload. Since `/pages` deliberately
+ * reads the stored answer rather than the one being edited, that is the moment it has to learn it.
+ *
+ * Only ever called with what a write returned successfully, which is why this states the baseline
+ * rather than guessing at it: the value that was sent is the value the server now holds.
+ */
+export function commitPhiDeveloperBuilderAreaConfig(
+  area: PhiDeveloperBuilderArea,
+  committed: { rootRoute: PhiAreaRootRoute | null; meta: PhiAreaMeta | null },
+) {
+  builderWorkspaceStore.patch("public", (current) => {
+    const rootRoutes = { ...current.areaRootRoutes, [area]: committed.rootRoute };
+    const areaMeta = { ...current.areaMeta, [area]: committed.meta };
+    return JSON.stringify(current.areaRootRoutes) === JSON.stringify(rootRoutes) &&
+      JSON.stringify(current.areaMeta) === JSON.stringify(areaMeta)
+      ? current
+      : { ...current, areaRootRoutes: rootRoutes, areaMeta };
+  });
+}
+
+/**
+ * What an edit to the Shell's own config records, so it can be taken back.
+ *
+ * Optional, because the recording belongs to the workspace that made the edit rather than to the
+ * store: the same setter is how the Area's answers are restored during an undo, and an undo that
+ * recorded itself would never reach the state before it.
+ */
+export type PhiBuilderAreaConfigMutationOptions = {
+  historyContext?: string | null;
+  historyLabel?: string;
+};
+
+/**
+ * The answer the Area has written down, which is not always the one being edited.
+ *
+ * `/pages` reads this rather than the effective one above. The two workspaces do not share a moment:
+ * a Select in `/shells` that has been changed but not saved exists nowhere except in this session, so
+ * a Page offered on the strength of it is a Page the server does not serve -- and authoring there
+ * writes a revision for a root nobody is drawn. Two Modules can each hold a `/` of their own that way,
+ * both edited, one displayed.
+ *
+ * Saving is what makes the answer visible here, because saving is what makes it visible to the server:
+ * from that moment both halves read one revision and cannot disagree about which Page `/` is.
+ */
+export function readPhiBuilderStoredAreaRootRoute(
+  state: Pick<PhiDeveloperBuilderWorkspaceState, "areaRootRoutes">,
+  area: string,
+): PhiAreaRootRoute | null {
+  return state.areaRootRoutes?.[area] ?? null;
+}
+
+/**
  * The Area's root route, as the Builder is editing it.
  *
  * `undefined` clears the entry, which is not the same as `null`: the first says nobody touched this
@@ -774,7 +830,9 @@ export function readPhiBuilderEffectiveAreaRootRoute(
 export function setPhiDeveloperBuilderAreaRootRoute(
   area: PhiDeveloperBuilderArea,
   rootRoute: PhiAreaRootRoute | null | undefined,
+  options?: PhiBuilderAreaConfigMutationOptions,
 ) {
+  const previous = builderWorkspaceStore.getSnapshot("public").areaRootRouteDrafts?.[area];
   builderWorkspaceStore.patch("public", (current) => {
     const next = { ...current.areaRootRouteDrafts };
     if (rootRoute === undefined) {
@@ -784,6 +842,14 @@ export function setPhiDeveloperBuilderAreaRootRoute(
     }
     return { ...current, areaRootRouteDrafts: next };
   });
+
+  if (options?.historyContext) {
+    phiBuilderHistory.record(options.historyContext, {
+      label: options.historyLabel ?? "Change root route",
+      before: { kind: "areaRootRoute", area, rootRoute: previous },
+      after: { kind: "areaRootRoute", area, rootRoute },
+    });
+  }
 }
 
 /** What the Areas answered about being found, as the server sent it with the workspace. */
@@ -814,11 +880,43 @@ export function readPhiBuilderEffectiveAreaMeta(
 export function setPhiDeveloperBuilderAreaMeta(
   area: PhiDeveloperBuilderArea,
   patch: PhiAreaMeta,
+  options?: PhiBuilderAreaConfigMutationOptions,
 ) {
+  const previous = builderWorkspaceStore.getSnapshot("public").areaMetaDrafts?.[area];
   builderWorkspaceStore.patch("public", (current) => {
     const effective = readPhiBuilderEffectiveAreaMeta(current, area) ?? {};
     const next = { ...effective, ...patch };
     return { ...current, areaMetaDrafts: { ...current.areaMetaDrafts, [area]: next } };
+  });
+
+  if (options?.historyContext) {
+    phiBuilderHistory.record(options.historyContext, {
+      label: options.historyLabel ?? "Change area SEO",
+      before: { kind: "areaMeta", area, meta: previous },
+      after: { kind: "areaMeta", area, meta: builderWorkspaceStore.getSnapshot("public").areaMetaDrafts?.[area] },
+    });
+  }
+}
+
+/**
+ * The Area's SEO answers put back as they were, which the merging setter above cannot do.
+ *
+ * Editing answers one switch at a time and merges; undo restores a whole state, including the state of
+ * never having been asked. Same distinction as the root route: `undefined` removes the entry, `null`
+ * is an Area that stated it has nothing to say.
+ */
+export function restorePhiDeveloperBuilderAreaMeta(
+  area: PhiDeveloperBuilderArea,
+  meta: PhiAreaMeta | null | undefined,
+) {
+  builderWorkspaceStore.patch("public", (current) => {
+    const next = { ...current.areaMetaDrafts };
+    if (meta === undefined) {
+      delete next[area];
+    } else {
+      next[area] = meta;
+    }
+    return { ...current, areaMetaDrafts: next };
   });
 }
 

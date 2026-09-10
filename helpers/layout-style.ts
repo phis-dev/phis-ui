@@ -59,8 +59,16 @@ export function resolvePhiLayoutEffectStyle({
 
   const definition = PHI_LAYOUT_EFFECT_DEFINITIONS[effect];
   if (effect === "glass") {
+    /*
+     * The ground as `backgroundColor`, never as the `background` shorthand.
+     *
+     * Callers spread this into an inline style that also carries longhands, from an authored Background
+     * config or from the Shell Chrome Overlay, and React warns when a rerender has to drop a longhand
+     * from an element whose shorthand is still set. The value is always a colour, so the longhand says
+     * the same thing without the shorthand's silent resets.
+     */
     return {
-      background: resolvePhiGlassBackground(background),
+      backgroundColor: resolvePhiGlassBackground(background),
       backdropFilter: PHI_GLASS_BACKDROP_FILTER,
       WebkitBackdropFilter: PHI_GLASS_BACKDROP_FILTER,
     };

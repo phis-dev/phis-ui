@@ -164,10 +164,47 @@ The site-owned Theme Root Background:
 - falls back to the resolved Ant Design layout background (`colorBgLayout` / `PHI_COLOR.bgLayout`)
   when no Root Background is configured
 - is painted once at the document/root level and does not scroll with Page content
+- supports the canonical Background motion contract in its `static` and `parallax` modes only. The layer
+  is viewport-fixed, so `fixed` would be indistinguishable from `static` and is not offered for the Root
+  Background; a record that still carries it renders as `static`. Under `parallax` the moving layer owns
+  the image and the fixed layer keeps only the fallback ground beneath it
 - has no Area-specific override in the v1 target contract
 
-An Area-owned Shell may add two independent backdrop layers above the scrolling Page and below the
-Region/Layout/Widget content:
+The site-owned Shell Chrome Overlay is its counterpart in front of the scrolling Page:
+
+- is configured in `/builder/theme` beside the Root Background, independently for light and dark mode
+- uses the same canonical structured Phi Background contract, narrowed to what a frame can express: a
+  color, a gradient, a Pattern, or noise. An `image` Base is not offered. The overlay is a treatment laid
+  over the Root Background rather than a second ground, and a picture here, anchored to the viewport,
+  would be cut against the picture behind the Content along the frame edge while hiding the Root
+  Background exactly where the frame is. A Region that really wants one authors it locally
+- offers `glass` as its only Effect and offers no motion at all. The overlay is the ground of the Regions
+  that paint it, so `blur` and `dim` would take those Regions' own content with them and `tint` would fight
+  their Shadow. `glass` is the one Effect that acts on what is behind a Region, which is what a shared
+  frame over a scrolling Page wants; motion has nothing to travel against on a viewport-anchored ground
+- is painted by `header_top`, `header_main`, `header_bottom`, `sider_left`, `sider_right`, `footer_top`,
+  `footer_main`, and `footer_bottom`, and never by `content`, `hero`, or a Drawer. The Shell grid tiles
+  completely, so the Chrome Regions already are the frame around Content and Hero, and letting them paint
+  it keeps every sticky, collapsed, and viewport-hidden case correct without measuring anything. Content
+  and Hero stay out because the overlay would paint over their content
+- is anchored to the viewport, so the participating Regions show one painting rather than each starting it
+  again: a gradient runs from the Header into the Sider and a Pattern keeps its grid across the seam
+- is not painted by a Region that authored any chrome of its own. Every carrier counts: the structured
+  Background config, the plain ground string a Region or the Shell record can set, and the Region's own
+  Effect. Such a Region paints over the Theme, which is how an Area keeps its own chrome, and it is why
+  the Builder's own Sider and Header stay on their authored look rather than following the Site's Theme
+- reads "authored" as painting something, not as the field being present. Builder persistence writes a
+  Background config onto every Region draft it stores, so a config whose Base is `none` and that carries
+  no Overlay counts as no ground at all. Otherwise switching a Region's own Effect off would lock it out
+  of the overlay and out of its Shell-record colour, because the same edit stores an empty config
+- travels as custom properties on the Root Layout element, published for both modes and switched by
+  `data-phi-theme-mode`, because the Regions that paint it are rendered far below the Theme provider
+- has no Area-specific record in the v1 target contract
+
+Still deferred: a single continuous pane per Chrome family, above the scrolling Page and below the
+Region/Layout/Widget content, in place of Regions painting the overlay themselves. It is what a seamless
+`glass` and a single outer Shadow need, and it costs a centrally derived visible geometry that the overlay
+above does not:
 
 - one shared Header backdrop covering `header_top`, `header_main`, and the Page-owned `header_bottom`
 - one Sider backdrop covering `sider_left`
@@ -200,7 +237,7 @@ The resulting paint order is:
 
 1. Theme Root Background
 2. scrolling Page/content
-3. shared Header and Sider backdrop layers
+3. Shell Chrome Overlay, and the shared Header and Sider backdrop layers once they exist
 4. Region paint/effects and Region content
 
 `shell.css` owns only these layering and geometry mechanics. Theme and Shell records own the declarative values.
@@ -224,7 +261,7 @@ Region glass or Shadows, the resulting double blur, edge, or Shadow is an intent
 may warn about it, but the runtime must not silently discard either layer.
 
 In Builder, `/builder/shells` owns selection and authoring of the Shell root plus Header/Sider backdrop
-scaffolds. `/builder/theme` owns the Theme Root Background. `/builder/pages` continues to own the content and
+scaffolds. `/builder/theme` owns the Theme Root Background and the Shell Chrome Overlay. `/builder/pages` continues to own the content and
 local Region chrome of `header_bottom`. A backdrop is not a normal CMS Region/Layout/Widget node merely because
 Builder exposes an authoring scaffold for it.
 

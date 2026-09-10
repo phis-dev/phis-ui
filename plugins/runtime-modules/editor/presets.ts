@@ -19,7 +19,6 @@ export const PHI_EDITOR_RUNTIME_MODULE_AREA_SHELLS = [{
 export const PHI_EDITOR_RUNTIME_MODULE_ROUTES = [buildPhiAreaRootRoutePresetDescriptor({
   ownerModuleId: PHI_EDITOR_RUNTIME_MODULE_ID,
   area: "editor",
-  navKey: "editor:sidebar",
   title: "Editor",
 }), {
   ownerModuleId: PHI_EDITOR_RUNTIME_MODULE_ID,

@@ -264,7 +264,17 @@ assert.equal(assetFolderParentField?.config?.allowRoot, true);
 const inspectorSectionSource = await readFile(new URL("../plugins/runtime-modules/builder/clients/inspector-section-widget.tsx", import.meta.url), "utf8");
 const inspectorSectionPluginSource = await readFile(new URL("../plugins/runtime-modules/builder/widgets/inspector-section/plugin.tsx", import.meta.url), "utf8");
 const effectsToolSource = await readFile(new URL("../plugins/runtime-modules/builder/clients/widget-effects-editor.tsx", import.meta.url), "utf8");
-const builderPresetSource = await readFile(new URL("../components/regions/presets/phi-default-builder-area-preset-tree.ts", import.meta.url), "utf8");
+/*
+ * What the Builder declares is spread over two presets, and the assertions below ask about all of it.
+ *
+ * The Area shell holds the Regions an operator may save over; the Overlay preset holds the Inspectors,
+ * the Effects editor and the wiring Modal, which are the Builder's own tools and must outlive such a
+ * save. Reading them as one text keeps every rule here about the Builder's declaration rather than
+ * about which file happens to carry it.
+ */
+const builderShellPresetSource = await readFile(new URL("../components/regions/presets/phi-default-builder-area-preset-tree.ts", import.meta.url), "utf8");
+const builderOverlayPresetSource = await readFile(new URL("../components/regions/presets/phi-builder-inspector-area-overlay-tree.server.ts", import.meta.url), "utf8");
+const builderPresetSource = `${builderShellPresetSource}\n${builderOverlayPresetSource}`;
 const builderClientManifestSource = await readFile(new URL("../plugins/runtime-modules/client-manifests/builder.tsx", import.meta.url), "utf8");
 const commonClientManifestSource = await readFile(new URL("../plugins/runtime-modules/client-manifests/common.ts", import.meta.url), "utf8");
 const formHandlerResolutionSource = await readFile(new URL("../gateway/form-handler-resolution.ts", import.meta.url), "utf8");
