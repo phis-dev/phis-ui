@@ -68,6 +68,8 @@ import { PHI_SEARCH_WIDGET_DEFAULT_LABELS } from "../../../../../components/widg
 import { PhiMediaKind } from "../../../../../constants/media";
 import { createPhiMediaPickerAssetControllerRoutes } from "../../../../../components/media/asset-controller-routes";
 import { PhiPresetSizeControl, type PhiPresetSizeOption } from "../../../../../components/controls/phi-preset-size-control";
+import { PhiShadowControl } from "../../../../../components/controls/phi-shadow-control";
+import type { PhiShadow } from "../../../../../types/layout-style";
 import type { PhiBuilderBrandWidgetConfig } from "./config";
 import { createPhiHistoryStore } from "../../../../../components/state/history-store";
 import { createPhiCommandToolbarControlAddress } from "../../../../../components/widgets/signals/command-toolbar-address";
@@ -123,10 +125,15 @@ type BrandThemeState = {
 };
 
 const DEFAULT_THEME_KEY = "default";
+const PHI_THEME_CHROME_SHADOW_EDGES = [
+  { family: "header" as const, label: "Header, downwards onto the Page" },
+  { family: "sider" as const, label: "Sider, outwards at its outer edge" },
+  { family: "footer" as const, label: "Footer, upwards towards the Content" },
+];
 const BRAND_THEME_COLOR_COLLAPSE_STORAGE_KEY = "phi.builder.brand.theme.colorCollapse.activeKey";
 const BRAND_THEME_STYLE_COLLAPSE_STORAGE_KEY = "phi.builder.brand.theme.styleCollapse.activeKey";
 const BRAND_THEME_BACKGROUND_COLLAPSE_STORAGE_KEY = "phi.builder.brand.theme.backgroundCollapse.activeKey";
-const BRAND_THEME_BACKGROUND_SECTION_KEYS = ["root", "chrome"] as const;
+const BRAND_THEME_BACKGROUND_SECTION_KEYS = ["root", "chrome", "shadow"] as const;
 const BRAND_THEME_STYLE_SECTION_KEYS = [
   "radius",
   "controlHeight",
@@ -662,6 +669,26 @@ function mergeThemeRootBackground(
       background: {
         ...(theme.root?.background ?? {}),
         [mode]: value,
+      },
+    },
+  };
+}
+
+function mergeThemeChromeShadow(
+  theme: ThemePayload,
+  family: "header" | "sider" | "footer",
+  value: PhiShadow,
+): ThemePayload {
+  return {
+    ...theme,
+    root: {
+      ...(theme.root ?? {}),
+      chrome: {
+        ...(theme.root?.chrome ?? {}),
+        shadow: {
+          ...(theme.root?.chrome?.shadow ?? {}),
+          [family]: value,
+        },
       },
     },
   };
@@ -1978,6 +2005,33 @@ export function PhiBuilderBrandBackgroundControlsWidgetClient({
                     baseKinds={PHI_SHELL_CHROME_OVERLAY_BASE_KINDS}
                     onChange={(value) => publishDraft(mergeThemeChromeOverlay(state.draft, mode, value))}
                   />
+                </Flex>
+              ),
+            },
+            {
+              key: "shadow",
+              label: <Typography.Text strong>Chrome Shadow</Typography.Text>,
+              children: (
+                <Flex vertical gap={clientToken.paddingXS}>
+                  {/*
+                    A section of its own rather than a tail on the Chrome Overlay: the ground above is a
+                    mode value and switches with light and dark, while an edge is the same in both. One
+                    entry per family, because a Shadow cannot point three ways at once, and both Siders
+                    share theirs -- the same edge seen from two sides.
+                  */}
+                  <Typography.Text type="secondary">
+                    Cast at the outside edge of each pane, once for the whole visible stack. Applies to
+                    both modes.
+                  </Typography.Text>
+                  {PHI_THEME_CHROME_SHADOW_EDGES.map(({ family, label }) => (
+                    <Flex key={family} vertical gap={clientToken.paddingXXS}>
+                      <Typography.Text>{label}</Typography.Text>
+                      <PhiShadowControl
+                        value={state.draft.root?.chrome?.shadow?.[family] ?? "none"}
+                        onChange={(value) => publishDraft(mergeThemeChromeShadow(state.draft, family, value))}
+                      />
+                    </Flex>
+                  ))}
                 </Flex>
               ),
             },
