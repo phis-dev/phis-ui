@@ -196,3 +196,66 @@ export function resolvePhiShellChromeOverlayVariables(
   assignPhiShellChromeOverlayModeVariables(variables, "dark", resolvePhiShellChromeOverlayStyle(root, "dark"));
   return variables;
 }
+
+/**
+ * One Header band, as the pane's sticky offset needs to see it.
+ */
+export type PhiShellChromePaneBand = {
+  sticky?: boolean;
+  offsetTop?: string | number | null;
+  height?: string | number | null;
+} | null | undefined;
+
+function readPhiShellChromePanePixels(value: string | number | null | undefined): number | null {
+  if (typeof value === "number") {
+    return Number.isFinite(value) ? value : null;
+  }
+
+  if (typeof value !== "string") {
+    return null;
+  }
+
+  const match = /^\s*(-?\d+(?:\.\d+)?)px\s*$/.exec(value);
+  return match ? Number(match[1]) : null;
+}
+
+/**
+ * Where the Header pane sticks, which is the one thing about it the grid cannot answer.
+ *
+ * Every other case the pane handles falls out of the grid: an absent band collapses its track, a
+ * hidden one does the same, a collapsed Sider narrows its column. Sticking does not, because a grid
+ * area has no opinion about scrolling.
+ *
+ * The pane stays one element even where the bands above the first sticky one scroll away, and it does
+ * that by sticking at a negative offset instead of splitting in two. A pane over a 55px band that does
+ * not stick, above bands that stick at 0, sticks at -55px: it travels up until exactly the part that
+ * scrolled away has left the viewport, and what remains standing is the sticky extent. Splitting it
+ * would put a seam back at rest, which is what the pane exists to remove.
+ *
+ * Answers `null` where the offset cannot be known -- no band sticks at all, or a band above the first
+ * sticky one has no pixel height to travel by. A pane that does not stick is wrong only while
+ * scrolling; a pane that sticks at a guessed offset is wrong the whole time.
+ */
+export function resolvePhiShellChromePaneStickyTop(
+  bands: readonly PhiShellChromePaneBand[],
+): string | null {
+  const firstSticky = bands.findIndex((band) => band?.sticky === true);
+  if (firstSticky < 0) {
+    return null;
+  }
+
+  let travel = 0;
+  for (const band of bands.slice(0, firstSticky)) {
+    if (band == null) {
+      continue;
+    }
+    const height = readPhiShellChromePanePixels(band.height);
+    if (height == null) {
+      return null;
+    }
+    travel += height;
+  }
+
+  const offsetTop = readPhiShellChromePanePixels(bands[firstSticky]?.offsetTop) ?? 0;
+  return `${offsetTop - travel}px`;
+}

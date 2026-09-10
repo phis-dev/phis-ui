@@ -4,6 +4,7 @@ import {
   phiRegionUsesShellChromeOverlay,
   resolvePhiShellChromeOverlayStyle,
   resolvePhiShellChromeOverlayVariables,
+  resolvePhiShellChromePaneStickyTop,
 } from "./phi-shell-chrome-overlay";
 
 /**
@@ -174,5 +175,58 @@ describe("shell chrome overlay participation", () => {
     expect(
       phiRegionUsesShellChromeOverlay({ regionKey: "header_main", effect: "glass", grounds: [null] }),
     ).toBe(false);
+  });
+});
+
+describe("resolvePhiShellChromePaneStickyTop", () => {
+  it("sticks at zero when every band sticks there", () => {
+    expect(resolvePhiShellChromePaneStickyTop([
+      { sticky: true, offsetTop: 0, height: "55px" },
+      { sticky: true, offsetTop: 0, height: "55px" },
+    ])).toBe("0px");
+  });
+
+  /*
+   * The Builder's own Header: a 55px band that does not stick, above bands that do. The pane travels
+   * the height of what scrolls away and stands still after that, as one element rather than two.
+   */
+  it("travels the height of the bands above the first sticky one", () => {
+    expect(resolvePhiShellChromePaneStickyTop([
+      { sticky: false, offsetTop: 0, height: "55px" },
+      { sticky: true, offsetTop: 0, height: "55px" },
+      { sticky: true, offsetTop: 55, height: "55px" },
+    ])).toBe("-55px");
+  });
+
+  it("counts an absent band as no travel at all", () => {
+    expect(resolvePhiShellChromePaneStickyTop([
+      null,
+      { sticky: true, offsetTop: 0, height: "55px" },
+    ])).toBe("0px");
+  });
+
+  it("adds the first sticky band's own offset", () => {
+    expect(resolvePhiShellChromePaneStickyTop([
+      { sticky: false, height: 40 },
+      { sticky: true, offsetTop: 10, height: "55px" },
+    ])).toBe("-30px");
+  });
+
+  it("does not stick when no band does", () => {
+    expect(resolvePhiShellChromePaneStickyTop([
+      { sticky: false, height: "55px" },
+      { height: "55px" },
+    ])).toBeNull();
+  });
+
+  /*
+   * An `auto` height above the first sticky band leaves the travel unknown. Not sticking is wrong only
+   * while scrolling; sticking at a guessed offset is wrong at rest too.
+   */
+  it("does not stick when a band above the first sticky one has no pixel height", () => {
+    expect(resolvePhiShellChromePaneStickyTop([
+      { sticky: false, height: "auto" },
+      { sticky: true, offsetTop: 0, height: "55px" },
+    ])).toBeNull();
   });
 });

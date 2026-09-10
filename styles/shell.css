@@ -67,6 +67,8 @@
 
 .shell-sider-full .phi-shell-region.hero {
   grid-area: hero;
+  /* Travels under the sticky Header pane exactly as Content does, so it is capped the same way. */
+  isolation: isolate;
 }
 
 .shell-sider-full .phi-shell-region,
@@ -93,6 +95,16 @@
   min-width: 0;
   min-height: 0;
   overflow: visible;
+  /*
+   * The Page stacks inside itself, never against the frame.
+   *
+   * A Chrome pane sits at 50, above Content at 0 and below every Chrome Region at 100. That only holds
+   * while nothing inside Content climbs past it, and things do: a Builder canvas renders Regions of its
+   * own, carrying the very z-indexes the real chrome uses -- a 210 was measured scrolling over the pane.
+   * Isolating the Page keeps every such value inside it, so the frame stays above the Page whatever the
+   * Page contains, without the pane bidding higher and higher.
+   */
+  isolation: isolate;
 }
 
 .shell-sider-full .phi-shell-content-main > * {
@@ -173,6 +185,7 @@
 
 .shell-sider-embedded .phi-shell-region.hero {
   grid-area: hero;
+  isolation: isolate;
 }
 
 .shell-sider-embedded .sider_left {
@@ -195,6 +208,8 @@
   min-width: 0;
   min-height: 0;
   overflow: visible;
+  /* Isolated for the reason given on the full-height topology above. */
+  isolation: isolate;
 }
 
 .shell-sider-embedded .phi-shell-content-main > * {
@@ -275,5 +290,116 @@
    Region ground on purpose -- none of them carries specificity, so the later one has to be the one that
    matches. */
 :where(.phi-cms-region-shell[data-phi-shell-chrome="true"]) {
-  --phi-region-background: var(--phi-shell-chrome-color, transparent);
+  --phi-region-background: var(--phi-region-chrome-color, transparent);
+}
+
+/* ---------------------------------------------------------------------------------------------
+   Shell Chrome Panes (SHELL.md "Root Background and Shell Backdrop Layers")
+
+   One continuous pane per Chrome family, above the scrolling Page and below the Region content, in
+   place of Regions frosting one by one.
+
+   `backdrop-filter` belongs to its element: it frosts only the slice of backdrop behind that element
+   and clamps at that element's own edges. Three stacked 55px bands under a 24px radius therefore
+   average three different results out of one picture, and the steps land on the seams -- measured at 8
+   and 23 points across a gradient in the Root Background. The fixed attachment carries a colour, a
+   gradient or a Pattern across a seam, because every Region shows its own window onto one
+   viewport-sized painting; there is no equivalent for the filter. So the frosting moves to one element
+   that spans the whole family, and the seam has nowhere left to appear.
+
+   The geometry is the grid's, not a measurement. Named areas publish `<name>-start` and `<name>-end`
+   lines, so a pane spans from the first band to the last without anyone knowing a height. A Region
+   that is absent, unmounted or hidden by a container query collapses its track to zero and the pane
+   follows; a collapsed Sider narrows its column and the pane narrows with it.
+   --------------------------------------------------------------------------------------------- */
+.phi-shell-chrome-pane {
+  /* Never a target: the pane sits over the Page and under the Region content, and both stay clickable. */
+  pointer-events: none;
+  /*
+   * Below every Chrome Region (100 and up) and above Content and Hero (0). The Regions above it are
+   * transparent where they authored nothing, so what shows through them is this.
+   */
+  z-index: 50;
+}
+
+/*
+ * What the pane paints is set inline by the Shell, not here.
+ *
+ * A `backdrop-filter` written in this file does not reach the browser: the rule arrives with its
+ * background-color intact and the filter declaration missing entirely, so the pane painted a tint and
+ * frosted nothing. The Regions have always emitted their overlay longhands inline and always frosted,
+ * which is the difference. Geometry stays in CSS, because only the grid knows it.
+ */
+
+/* The full-height Sider topology: the Sider owns column one over every row, so the three Header bands
+   are a clean rectangle and one pane covers them. The Footer likewise. */
+.shell-sider-full .phi-shell-chrome-pane--header {
+  grid-row: header_top-start / header_bottom-end;
+  grid-column: header_top-start / header_top-end;
+}
+
+/* The Sider pane sticks the way the Sider itself does, or it would scroll out from under it. */
+.shell-sider-full .phi-shell-chrome-pane--sider {
+  grid-area: sider;
+  position: sticky;
+  top: 0;
+  height: var(--phi-shell-content-min-height, 100dvh);
+  align-self: start;
+}
+
+.shell-sider-full .phi-shell-chrome-pane--footer {
+  grid-row: footer_top-start / footer_bottom-end;
+  grid-column: footer_top-start / footer_top-end;
+}
+
+/*
+ * The embedded topology: `header_top` and `header_main` run the full width, `header_bottom` does not,
+ * because the Sider starts beside it. A grid item covers a rectangle and nothing else, so one pane over
+ * all three would reach across the Sider and frost it twice. Two panes instead, and the seam between
+ * them falls exactly on the row where the Sider begins, which is a structural edge either way.
+ */
+.shell-sider-embedded .phi-shell-chrome-pane--header {
+  grid-row: header_top-start / header_main-end;
+  grid-column: header_top-start / header_top-end;
+}
+
+.shell-sider-embedded .phi-shell-chrome-pane--header-bottom {
+  grid-area: header_bottom;
+}
+
+.shell-sider-embedded .phi-shell-chrome-pane--sider {
+  grid-area: sider;
+  position: sticky;
+  top: 0;
+  height: 100%;
+  max-height: var(--phi-shell-content-min-height, 100dvh);
+  align-self: start;
+}
+
+.shell-sider-embedded .phi-shell-chrome-pane--footer {
+  grid-row: footer_top-start / footer_bottom-end;
+  grid-column: footer_top-start / footer_top-end;
+}
+
+/* What a Chrome Region paints of the shared ground, which is the overlay itself while it is the Region
+   doing the painting. The Regions read these rather than the overlay properties directly, so that the
+   answer can be changed for a whole Shell at once -- an inline longhand cannot be overridden by a later
+   rule, but the value inside it can. */
+:where([data-phi-root-layout="true"]) {
+  --phi-region-chrome-image: var(--phi-shell-chrome-image, none);
+  --phi-region-chrome-size: var(--phi-shell-chrome-size, auto);
+  --phi-region-chrome-position: var(--phi-shell-chrome-position, 0 0);
+  --phi-region-chrome-repeat: var(--phi-shell-chrome-repeat, repeat);
+  --phi-region-chrome-color: var(--phi-shell-chrome-color, transparent);
+  --phi-region-chrome-filter: var(--phi-shell-chrome-filter, none);
+  --phi-region-chrome-attachment: fixed;
+}
+
+/* Where panes cover the families, the Regions under them paint none of it: one frosting for the frame,
+   not one per band. An authored ground still wins, because it never carried the marker to begin with. */
+:where([data-phi-shell-chrome-panes="true"]) {
+  --phi-region-chrome-image: none;
+  --phi-region-chrome-color: transparent;
+  --phi-region-chrome-filter: none;
+  --phi-region-chrome-attachment: scroll;
 }

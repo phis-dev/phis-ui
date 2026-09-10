@@ -228,14 +228,14 @@ export function PhiCmsRegionContainerClient({
       grounds: [resolvedBackground],
     })
       ? {
-        backgroundColor: "var(--phi-shell-chrome-color, transparent)",
-        backgroundImage: "var(--phi-shell-chrome-image, none)",
-        backgroundSize: "var(--phi-shell-chrome-size, auto)",
-        backgroundPosition: "var(--phi-shell-chrome-position, 0 0)",
-        backgroundRepeat: "var(--phi-shell-chrome-repeat, repeat)",
-        backgroundAttachment: "fixed",
-        backdropFilter: "var(--phi-shell-chrome-filter, none)",
-        WebkitBackdropFilter: "var(--phi-shell-chrome-filter, none)",
+        backgroundColor: "var(--phi-region-chrome-color, transparent)",
+        backgroundImage: "var(--phi-region-chrome-image, none)",
+        backgroundSize: "var(--phi-region-chrome-size, auto)",
+        backgroundPosition: "var(--phi-region-chrome-position, 0 0)",
+        backgroundRepeat: "var(--phi-region-chrome-repeat, repeat)",
+        backgroundAttachment: "var(--phi-region-chrome-attachment, fixed)",
+        backdropFilter: "var(--phi-region-chrome-filter, none)",
+        WebkitBackdropFilter: "var(--phi-region-chrome-filter, none)",
       }
       : {};
   const resolvedTextColor = resolvedChrome.color;

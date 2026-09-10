@@ -4,6 +4,10 @@ import { PhiCmsRegionType } from "../../constants/phi-cms";
 import type { PhiResolvedCmsAreaPresetTree } from "../../types/cms";
 import type { PhiCmsSiteBridge } from "../../types/cms-plugins";
 import { PhiCmsShell } from "../shell/phi-cms-shell";
+import {
+  resolvePhiShellChromePaneStickyTop,
+  type PhiShellChromePaneBand,
+} from "../root/phi-shell-chrome-overlay";
 import { PhiCmsLayoutRenderer, PhiCmsOverlayRenderer } from "./phi-cms-layout-renderer";
 import { hasRenderableRegionRoot } from "./phi-cms-region-helpers";
 import { loadPhiCmsAreaRenderScope } from "./phi-cms-area-render-scope";
@@ -67,6 +71,26 @@ export type PhiCmsRootLayoutProps = PhiCmsAreaBoundaryProps & Omit<PhiCmsAreaShe
 
 function findRegion(tree: PhiResolvedCmsAreaPresetTree, regionType: number) {
   return tree.regions.find((region) => region.regionType === regionType);
+}
+
+/** One Header band as the Chrome pane's sticky offset reads it. */
+function readPhiShellChromePaneBand(config: unknown): PhiShellChromePaneBand {
+  if (config == null || typeof config !== "object") {
+    return null;
+  }
+
+  const { sticky, offsetTop, size } = config as {
+    sticky?: unknown;
+    offsetTop?: unknown;
+    size?: { height?: unknown } | null;
+  };
+  const height = size?.height;
+
+  return {
+    sticky: sticky === true,
+    offsetTop: typeof offsetTop === "string" || typeof offsetTop === "number" ? offsetTop : null,
+    height: typeof height === "string" || typeof height === "number" ? height : null,
+  };
 }
 
 /**
@@ -283,9 +307,20 @@ export async function PhiCmsAreaShell({
     ? hasRenderableRegionRoot(filteredLayoutTree!, footerBottomRegion.rootLayoutNodeId)
     : false;
 
+  /*
+   * Where the Header pane sticks (SHELL.md). Only the bands above the first sticky one matter, and the
+   * Area resolves those two; the Page-owned `header_bottom` never arrives here as a config, so a Header
+   * whose only sticky band is that one resolves to no sticking rather than to a guess.
+   */
+  const headerPaneStickyTop = resolvePhiShellChromePaneStickyTop([
+    hasRenderableHeaderTop ? readPhiShellChromePaneBand(headerTopRegion?.config) : null,
+    hasRenderableHeaderMain ? readPhiShellChromePaneBand(headerMainRegion?.config) : null,
+  ]);
+
   return (
     <PhiCmsShell
       content={children}
+      headerPaneStickyTop={headerPaneStickyTop}
       headerTop={hasRenderableHeaderTop ? (
         <PhiCmsLayoutRenderer
           tree={filteredLayoutTree!}
