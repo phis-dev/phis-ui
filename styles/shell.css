@@ -316,20 +316,6 @@
   /* Never a target: the pane sits over the Page and under the Region content, and both stay clickable. */
   pointer-events: none;
   /*
-   * A standing element whose backdrop moves under it.
-   *
-   * That is the shape compositors repaint late: the pane itself never changes, so nothing about it
-   * invalidates, while the picture it frosts scrolls the whole time. Firefox was reported catching up a
-   * frame or two behind at some scroll positions on `header_main`, with `header_bottom` beside it
-   * correct -- one pane, one filter, so a difference between its own bands can only come from the
-   * compositor. This says the frosting is what changes, so the pane gets a layer of its own to change on.
-   *
-   * Not verified here: this Firefox build never paints the Builder at all, and Chromium repaints on time
-   * with or without the hint. If it does not help, `transform: translateZ(0)` forces the same layer more
-   * bluntly; neither is free, both cost a composited layer the size of the frame.
-   */
-  will-change: backdrop-filter;
-  /*
    * Below every Chrome Region (100 and up) and above Content and Hero (0). The Regions above it are
    * transparent where they authored nothing, so what shows through them is this.
    */
