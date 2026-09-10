@@ -1248,6 +1248,11 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
             }),
           ]
         : []),
+      /*
+       * The workspace content root, one shape per Builder page and none of them painting a ground.
+       * The Theme's Root Background is what a workspace shows behind its panels, and a plate here
+       * would cover exactly that. A panel that wants its own ground paints it on its own node.
+       */
       buildPhiCmsLayoutNode(
         isStructurePage || isPagesPage
           ? {
@@ -1272,7 +1277,7 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                 width: "100%",
                 margin: 0,
                 padding: PHI_SPACE.base,
-                background: PHI_COLOR.bgLayout,
+                background: "transparent",
                 border: "none",
                 borderRadius: 0,
               },
@@ -1303,7 +1308,7 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                   padding: PHI_SPACE.base,
                   paddingTop: PHI_SPACE.base,
                   paddingBottom: PHI_SPACE.base,
-                  background: PHI_COLOR.bgLayout,
+                  background: "transparent",
                   border: "none",
                   borderRadius: 0,
                 },
@@ -1329,7 +1334,7 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                   gap: PHI_SPACE.base,
                   maxWidth: "100%",
                   margin: 0,
-                  background: PHI_COLOR.bgLayout,
+                  background: "transparent",
                   border: "none",
                   borderRadius: 0,
                 },
@@ -1357,7 +1362,7 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                   maxWidth: "100%",
                   margin: 0,
                   padding: PHI_SPACE.base,
-                  background: PHI_COLOR.bgLayout,
+                  background: "transparent",
                   border: "none",
                   borderRadius: 0,
                 },
@@ -1385,7 +1390,7 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                   maxWidth: "100%",
                   margin: 0,
                   padding: PHI_SPACE.base,
-                  background: PHI_COLOR.bgLayout,
+                  background: "transparent",
                   border: "none",
                   borderRadius: 0,
                 },
@@ -1405,7 +1410,7 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                 maxWidth: "100%",
                 margin: 0,
                 padding: 0,
-                background: PHI_COLOR.bgLayout,
+                background: "transparent",
               },
             },
       ),

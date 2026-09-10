@@ -5,6 +5,7 @@ import type {
 } from "../../../types/cms-module-descriptors";
 import { buildPhiAreaRootRoutePresetDescriptor } from "../area-root-route";
 import { PHI_BUILDER_RUNTIME_MODULE_ID } from "./ids";
+import { PHI_BUILDER_PAGE_PRESET_VERSION } from "../../../components/regions/presets/phi-builder-page-preset-version";
 
 export const PHI_BUILDER_RUNTIME_MODULE_AREA_SHELLS = [{
   ownerModuleId: PHI_BUILDER_RUNTIME_MODULE_ID,
@@ -26,7 +27,7 @@ const BUILDER_ROUTE_PRESETS = [
 const BUILDER_WORKSPACE_ROUTES = BUILDER_ROUTE_PRESETS.map((route) => ({
   ownerModuleId: PHI_BUILDER_RUNTIME_MODULE_ID,
   presetKey: route.presetKey,
-  presetVersion: 1,
+  presetVersion: 1 + PHI_BUILDER_PAGE_PRESET_VERSION,
   area: "builder" as const,
   title: route.title,
   path: route.path,
