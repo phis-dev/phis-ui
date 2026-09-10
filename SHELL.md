@@ -169,6 +169,10 @@ The site-owned Theme Root Background:
   Background; a record that still carries it renders as `static`. Under `parallax` the moving layer owns
   the image and the fixed layer keeps only the fallback ground beneath it
 - has no Area-specific override in the v1 target contract
+- reaches the Page unobstructed: the shared page-content scaffold every built-in page preset roots
+  on paints no ground of its own, so an unauthored page shows the Root Background behind its
+  content instead of a plate over it. A page that wants its own ground paints it on a Layout node
+  inside a slot
 
 The site-owned Shell Chrome Overlay is its counterpart in front of the scrolling Page:
 

@@ -85,7 +85,12 @@ const PHI_FLEX_VERTICAL_LAYOUT_PAGE_BASE_PRESET = {
     gap: PHI_SPACE.base,
     padding: PHI_SPACE.base,
     width: "100%",
-    background: PHI_COLOR.bgLayout,
+    /*
+     * Transparent, so whatever the theme paints behind the page -- a colour, an image, the frosted
+     * Chrome pane -- reaches the content region instead of stopping at a grey plate. A page that
+     * wants its own ground paints it on a Layout node inside a slot.
+     */
+    background: "transparent",
     border: false,
 } as const;
 

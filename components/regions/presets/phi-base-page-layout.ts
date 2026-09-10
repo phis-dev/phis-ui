@@ -23,7 +23,7 @@ import { createPhiPresetCmsInstanceId } from "../../../types/cms-instance-id";
  * chrome, centered panels) do not use the scaffold yet.
  */
 
-export const PHI_BASE_PAGE_LAYOUT_VERSION = 1;
+export const PHI_BASE_PAGE_LAYOUT_VERSION = 2;
 
 export const PHI_BASE_PAGE_LAYOUT_NODE_ID = createPhiPresetCmsInstanceId({
   domain: "page",
