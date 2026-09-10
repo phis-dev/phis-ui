@@ -59,6 +59,8 @@ import {
   PHI_SHELL_CHROME_OVERLAY_EFFECTS,
   PHI_SHELL_CHROME_OVERLAY_MOTION_MODES,
   resolvePhiShellChromeOverlayConfig,
+  resolvePhiShellChromePaneShadow,
+  resolvePhiShellChromePaneShadows,
   resolvePhiShellChromeOverlayStyle,
 } from "../../../../../components/root/phi-shell-chrome-overlay";
 import { normalizePhiBackgroundWidgetConfig, type PhiCmsBackgroundWidgetConfig } from "../../../../../components/widgets/config/background";
@@ -2028,6 +2030,8 @@ export function PhiBuilderBrandBackgroundControlsWidgetClient({
                       <Typography.Text>{label}</Typography.Text>
                       <PhiShadowControl
                         value={state.draft.root?.chrome?.shadow?.[family] ?? "none"}
+                        resolvePreview={(shadow) =>
+                          resolvePhiShellChromePaneShadow(shadow, family === "sider" ? "sider-left" : family)}
                         onChange={(value) => publishDraft(mergeThemeChromeShadow(state.draft, family, value))}
                       />
                     </Flex>
@@ -2061,6 +2065,7 @@ export function PhiBuilderBrandBackgroundControlsWidgetClient({
  */
 function PhiBrandChromePreviewShell({
   overlayStyle,
+  paneShadows,
   rootBackgroundStyle,
   surfaceBackground,
   textColor,
@@ -2070,6 +2075,7 @@ function PhiBrandChromePreviewShell({
   children,
 }: {
   overlayStyle: CSSProperties | null;
+  paneShadows: Record<"header" | "sider-left" | "footer", string | undefined>;
   rootBackgroundStyle: CSSProperties | null;
   surfaceBackground: string;
   textColor: string;
@@ -2128,6 +2134,28 @@ function PhiBrandChromePreviewShell({
           ...paintStyle,
         }}
       />
+      {/*
+        The frame's edges, each cast from the band that owns it. Absolutely positioned, so they paint
+        over the Content that follows them in the flow, which is the side a Shadow falls on.
+      */}
+      {paneShadows.header ? (
+        <div
+          aria-hidden
+          style={{ position: "absolute", left: 0, right: 0, top: 0, height: header, boxShadow: paneShadows.header, pointerEvents: "none" }}
+        />
+      ) : null}
+      {paneShadows["sider-left"] ? (
+        <div
+          aria-hidden
+          style={{ position: "absolute", left: 0, width: sider, top: header, bottom: footer, boxShadow: paneShadows["sider-left"], pointerEvents: "none" }}
+        />
+      ) : null}
+      {paneShadows.footer ? (
+        <div
+          aria-hidden
+          style={{ position: "absolute", left: 0, right: 0, bottom: 0, height: footer, boxShadow: paneShadows.footer, pointerEvents: "none" }}
+        />
+      ) : null}
       <div aria-hidden style={{ position: "absolute", inset: 0, fontSize: 11, color: labelColor, pointerEvents: "none" }}>
         <span style={{ position: "absolute", left: sider + 8, top: (header - 14) / 2 }}>Header</span>
         <span style={{ position: "absolute", left: 8, top: header + 8 }}>Sider</span>
@@ -2234,6 +2262,11 @@ export function PhiBuilderBrandThemePreviewWidgetClient({
    */
   const previewRootBackground = resolvePhiRootBackgroundPaintStyle(previewTheme.root, mode);
   const previewChromeOverlay = resolvePhiShellChromeOverlayStyle(previewTheme.root, mode);
+  /*
+   * The preview's frame casts what the Theme says its frame casts. Its Sider is the left one, being the
+   * only one the preview draws.
+   */
+  const previewPaneShadows = resolvePhiShellChromePaneShadows(previewTheme.root);
   const previewTextColor = readEffectiveTokenString(previewEffectiveToken, "colorText", mode === "dark" ? "rgba(255,255,255,0.85)" : "rgba(0,0,0,0.88)");
   const previewTextSecondaryColor = readEffectiveTokenString(previewEffectiveToken, "colorTextSecondary", mode === "dark" ? "rgba(255,255,255,0.65)" : "rgba(0,0,0,0.65)");
   const previewTextTertiaryColor = readEffectiveTokenString(previewEffectiveToken, "colorTextTertiary", mode === "dark" ? "rgba(255,255,255,0.45)" : "rgba(0,0,0,0.45)");
@@ -2375,6 +2408,7 @@ export function PhiBuilderBrandThemePreviewWidgetClient({
       >
         <PhiBrandChromePreviewShell
           overlayStyle={previewChromeOverlay}
+          paneShadows={previewPaneShadows}
           rootBackgroundStyle={previewRootBackground}
           surfaceBackground={previewSurfaceBackground}
           textColor={previewTextColor}

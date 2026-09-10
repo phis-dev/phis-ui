@@ -17,6 +17,14 @@ export type PhiShadowControlProps = {
   disabled?: boolean;
   mode?: PhiWidgetControlMode;
   onChange?: (value: PhiShadow) => void;
+  /**
+   * How the preset turns into CSS for the preview, where the caller resolves it differently.
+   *
+   * The shared presets point down, which is right for everything that casts onto what follows it. A
+   * Shell Chrome pane casts at the edge its family owns instead, so a Footer's preview showing a Shadow
+   * below it would show the one direction that Footer never has.
+   */
+  resolvePreview?: (value: PhiShadow) => string | undefined;
 };
 
 type PhiShadowPresetKey = PhiShadowId | "custom";
@@ -26,6 +34,7 @@ export function PhiShadowControl({
   disabled = false,
   mode = "control",
   onChange,
+  resolvePreview = resolvePhiShadow,
 }: PhiShadowControlProps) {
   const { token } = usePhiConfig();
   const resolvedValue = value ?? "none";
@@ -45,7 +54,7 @@ export function PhiShadowControl({
     editingCustomValue || derivedPreset !== "custom"
       ? customValue
       : typeof resolvedValue === "object" ? resolvedValue.value : "";
-  const previewShadow = resolvePhiShadow(
+  const previewShadow = resolvePreview(
     selectedPreset === "custom"
       ? { kind: "custom", value: displayedCustomValue }
       : selectedPreset,
