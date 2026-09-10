@@ -2009,31 +2009,53 @@ export function PhiBuilderBrandStyleControlsWidgetClient({
  * Choosing which block a part of the Theme follows.
  *
  * A choice is a pointer, never a copy: the block's values are worked out on every render, so a Module
- * that improves its own look reaches a Site that follows it. Choosing a Set clears the parts that were
- * picked one by one, because a Set is what somebody falls back on when they stop deciding each part.
+ * that improves its own look reaches a Site that follows it.
+ *
+ * Picking a block also drops the author's values for that part, and only picking does. The rule that a
+ * block stays under what somebody authored is about a block acting on its own -- a Module updating, a
+ * Set filling in a part nobody decided. Reaching for the picker is not that: somebody asking for
+ * another ground means to see it, and a switch that changed nothing on screen would read as broken.
+ * Undo takes the whole exchange back in one step, which is what makes trying one on safe.
  */
 function mergeThemeBlockChoice(
   theme: ThemePayload,
   part: "palette" | "style" | "ground",
   block: { key: string; version: number },
 ): ThemePayload {
-  return {
+  const withChoice: ThemePayload = {
     ...theme,
     blocks: {
       ...(theme.blocks ?? {}),
       [part]: { key: block.key, version: block.version },
     },
   };
+
+  if (part === "ground") return clearThemeAuthoredGround(withChoice);
+  if (part === "style") return clearThemeStyleTokens(withChoice);
+  return withChoice;
 }
 
+/**
+ * A Set decides all three parts, so it clears all three: the parts picked one by one, because a Set is
+ * what somebody falls back on when they stop deciding each part, and the values authored on top of
+ * them, for the same reason picking a single block clears its own.
+ */
 function mergeThemeSetChoice(
   theme: ThemePayload,
   set: { key: string; version: number },
 ): ThemePayload {
-  return {
+  return clearThemeAuthoredGround(clearThemeStyleTokens({
     ...theme,
     blocks: { set: { key: set.key, version: set.version } },
-  };
+  }));
+}
+
+/** Every ground value an author set, in both modes, so the chosen block is what shows. */
+function clearThemeAuthoredGround(theme: ThemePayload): ThemePayload {
+  const root = Object.fromEntries(
+    Object.entries(theme.root ?? {}).filter(([key]) => key !== "background" && key !== "chrome"),
+  ) as NonNullable<ThemePayload["root"]>;
+  return { ...theme, root };
 }
 
 /**
