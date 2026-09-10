@@ -37,6 +37,7 @@ import {
   splitPhiThemeAuthoredTokens,
 } from "../../../../../theme/phi-theme-composition";
 import { resolvePhiThemeRuntimePayload } from "../../../../../theme/phi-theme-runtime";
+import { materializePhiThemeGroundImages } from "../../materialize-images";
 import {
   createPhiAntdThemeCssVarKey,
   resolvePhiAntdAliasTokens,
@@ -1001,7 +1002,7 @@ export function PhiBuilderBrandThemeControllerWidgetClient({
 }) {
   const dispatchSignal = usePhiSignalDispatcher();
   const { showMessage } = usePhiApplicationFeedback();
-  const { presets: themePresets } = usePhiConfig();
+  const { presets: themePresets, themeBlocks } = usePhiConfig();
   const themeKey = resolveThemeKey(config);
   const siteKey = runtime.site.key;
   const historyScope = `theme:${siteKey}:${themeKey}`;
@@ -1145,6 +1146,16 @@ export function PhiBuilderBrandThemeControllerWidgetClient({
     setSaving(true);
     try {
       const current = stateRef.current;
+      /*
+       * A picture a Module brought becomes the Site's here, on the way to the server and nowhere else.
+       * Following a ground costs nothing; editing one is what says somebody means to keep it, and a
+       * look somebody has worked on must not depend on a package staying installed.
+       */
+      const materialized = await materializePhiThemeGroundImages(
+        nextTheme,
+        resolvePhiThemeComposition(nextTheme, themeBlocks).ground,
+      );
+      nextTheme = materialized.theme;
       const response = await fetch("/api/site/cms/theme", {
         method: "POST",
         headers: {
