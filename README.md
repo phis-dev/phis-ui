@@ -317,6 +317,12 @@ Use CLI findings as the local source of truth for Ant Design implementation deci
   - Public, App, Admin, Developer, and Editor Areas may define their own fallback title and description behavior.
   - Internal areas may also choose stronger defaults such as `noindex`.
   - The two rungs only ever add up: the Area decides first, every authenticated Area is `noindex` whatever a page says, and inside Public a page may withdraw itself but can never reopen an Area that was switched off.
+- Addresses are stated only for an indexable Public page.
+  - Such a page gets `alternates.canonical`, its own absolute URL in its own locale, and `alternates.languages`, one entry per Site locale with the same locale-neutral path plus `x-default` for the default locale. A language version is never canonical to another one.
+  - Both are built by `helpers/phi-seo.ts` from the Site's public base (`site.publicUrl`, else `config/site-runtime.json`). A Site without an absolute public base states no canonical, no alternates and has no sitemap.
+- `/sitemap.xml` and `/robots.txt` are route handlers from `@phis/ui/next/seo-routes`, answered from the Public bridge only.
+  - The sitemap exists when the Site has a public base and the Public Area has both `index` and `sitemap` switched on; otherwise it answers 404. Its candidates are the Area root, the exact Module routes and the published Public pages (`GET /api/v1/site/public-pages`); each candidate is resolved as an anonymous page view and listed only when that view is not a redirect, not refused and not `noindex`. Every page appears once per locale with the full hreflang set.
+  - `robots.txt` allows everything and names the sitemap when there is one. It lists no staff Area on purpose: those stay out of the index through `noindex`, and a `Disallow` list would publish where they are. It answers even when the Site cannot be read, because a failing robots.txt stops crawling of the whole host.
 - Site metadata is the global fallback layer.
   - `site.name` and `site.theme.brand` are the most natural site-level fallback sources.
   - Site metadata should not replace a concrete page title when the page provides one.

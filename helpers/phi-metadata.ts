@@ -6,6 +6,7 @@ import {
   PHI_AREA_TITLE_TEMPLATE_PLACEHOLDER,
   type PhiAreaMeta,
 } from "./cms-area-config";
+import { buildPhiPublicPageAlternates, type PhiPublicPageAddress } from "./phi-seo";
 
 export type PhiMetadataScope = {
   title?: string | null;
@@ -126,6 +127,10 @@ export function buildPhiRootMetadata(options: PhiRootMetadataInput = {}): Metada
  * withdraw itself, which is how a sign-in Form stays out of a search result without the Area having to
  * close. The Page can only ever add to the Area's answer: a Public Area that was switched off is not
  * reopened by a Page that never asked to be indexed in the first place.
+ *
+ * The canonical URL and the hreflang set follow the same answer: they are said only of a Page that may
+ * be indexed, because naming the preferred address of a Page that asks to stay out says nothing a
+ * search engine can use, and an hreflang set pointing at it contradicts the sitemap that leaves it out.
  */
 export function buildPhiAreaPageMetadata({
   area,
@@ -134,6 +139,7 @@ export function buildPhiAreaPageMetadata({
   pageTitle,
   pageDescription,
   pageNoindex,
+  publicAddress,
 }: {
   area: PhiCmsAreaKey;
   meta: PhiAreaMeta | null | undefined;
@@ -141,6 +147,8 @@ export function buildPhiAreaPageMetadata({
   pageTitle?: string | null;
   pageDescription?: string | null;
   pageNoindex?: boolean | null;
+  /** Where this Page lives. Only Public has such an address; elsewhere it is ignored. */
+  publicAddress?: PhiPublicPageAddress | null;
 }): Metadata {
   const resolvedSiteName = resolveFirstText(siteName);
   const resolvedPageTitle = resolveFirstText(pageTitle);
@@ -162,10 +170,12 @@ export function buildPhiAreaPageMetadata({
   const indexable = area === "public"
     && (meta?.index ?? PHI_AREA_META_PUBLIC_DEFAULTS.index)
     && pageNoindex !== true;
+  const alternates = indexable && publicAddress ? buildPhiPublicPageAlternates(publicAddress) : null;
 
   return {
     ...(title ? { title: { absolute: title } } : {}),
     ...(description ? { description } : {}),
     ...(indexable ? {} : { robots: { index: false, follow: false } }),
+    ...(alternates ? { alternates: { canonical: alternates.canonical, languages: alternates.languages } } : {}),
   };
 }

@@ -141,6 +141,12 @@
       "types": "./next/navigation-target-route.ts",
       "default": "./next/navigation-target-route.ts"
     },
+    "./next/seo-routes": {
+      "import": "./next/seo-routes.ts",
+      "require": "./next/seo-routes.ts",
+      "types": "./next/seo-routes.ts",
+      "default": "./next/seo-routes.ts"
+    },
     "./next/areas/public": {
       "import": "./next/areas/public.ts",
       "require": "./next/areas/public.ts",

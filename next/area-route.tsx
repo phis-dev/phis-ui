@@ -4,6 +4,8 @@ import type { Metadata } from "next";
 
 import { readPhiAreaMeta } from "../helpers/cms-area-config";
 import { buildPhiAreaPageMetadata } from "../helpers/phi-metadata";
+import { resolvePhiSitePublicBase } from "../helpers/phi-seo";
+import { readPhiSiteRuntimeConfigSync } from "../helpers/site-runtime";
 
 import { PhiCmsErrorPage } from "../components/cms/phi-cms-error-page";
 import type { PhiCmsErrorPageProps } from "../components/cms/phi-cms-error-page";
@@ -313,6 +315,16 @@ export function createPhiNextDynamicRootPage(cmsBridge: PhiCmsSiteBridge) {
       pageTitle: resolvedRequest.page.pageMeta?.title?.value,
       pageDescription: resolvedRequest.page.pageMeta?.description?.value,
       pageNoindex: resolvedRequest.runtime.page?.noindex,
+      publicAddress: {
+        publicBase: resolvePhiSitePublicBase(
+          resolvedRequest.runtime.site.publicUrl,
+          readPhiSiteRuntimeConfigSync().site.publicUrl,
+        ),
+        path: resolvedRoute.cmsPath,
+        locale: resolvedRoute.locale,
+        availableLocales: resolvedRequest.runtime.site.availableLocales.map((option) => option.code),
+        defaultLocale: resolvedRequest.runtime.site.defaultLocale,
+      },
     });
   }
 
