@@ -17,11 +17,23 @@ function readFirstName(value: string | null | undefined) {
 
 export const PHI_ACCOUNT_WIDGET_PLUGIN: PhiCmsServerWidgetPlugin<PhiAccountWidgetConfig> = {
   ...PHI_ACCOUNT_WIDGET_DEFINITION,
-  render: ({ widget, runtime }) => (
+  /*
+   * The parsed config, not the Widget node's own.
+   *
+   * The renderer hands every Widget its config already read through `parseConfig`; this one reached
+   * past it for `widget.config`, the raw object that also travels with the node. The same object in
+   * two places of one payload is serialized once and referred to the second time, and the reference is
+   * filled in after the element holding it exists -- whose props React freezes in development. The
+   * write threw, and the Widget that did not render was the account menu on every staff shell.
+   *
+   * Reading the parsed config is also what the Widget was supposed to do: `parseConfig` is where the
+   * three presentation options are checked, and bypassing it trusted whatever the node carried.
+   */
+  render: ({ widget, runtime, config }) => (
     <PhiAccountWidget
       key={`widget-${widget.id}`}
       runtime={runtime}
-      config={widget.config}
+      config={config}
       state={
         runtime.viewer.access === "authenticated"
             ? {
