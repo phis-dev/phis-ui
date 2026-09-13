@@ -22,13 +22,21 @@ export type PhiMarkdownInline =
   | { kind: "image"; src: string; alt: string; title?: string }
   | { kind: "break" };
 
+export type PhiMarkdownTableAlign = "left" | "center" | "right" | null;
+
 export type PhiMarkdownBlock =
   | { kind: "heading"; id: string; level: 1 | 2 | 3 | 4 | 5; inlines: PhiMarkdownInline[] }
   | { kind: "paragraph"; inlines: PhiMarkdownInline[] }
   | { kind: "blockquote"; children: PhiMarkdownBlock[] }
   | { kind: "list"; ordered: boolean; start?: number; items: PhiMarkdownBlock[][] }
   | { kind: "code"; text: string }
-  | { kind: "table"; header: PhiMarkdownInline[][]; rows: PhiMarkdownInline[][][] }
+  | {
+      kind: "table";
+      header: PhiMarkdownInline[][];
+      rows: PhiMarkdownInline[][][];
+      /** One entry per column, from the GFM delimiter row; `null` where the column states none. */
+      align: PhiMarkdownTableAlign[];
+    }
   | { kind: "divider" };
 
 export type PhiMarkdownWidgetClientProps = PhiClientBlockBaseProps<
@@ -194,6 +202,7 @@ function renderBlocks(
           title: renderInlineNodes(header),
           fieldPath: `column-${columnIndex}`,
           sizing: { mode: "fill" },
+          align: block.align[columnIndex] ?? undefined,
           render: (value) => Array.isArray(value) ? renderInlineNodes(value as PhiMarkdownInline[]) : null,
         }));
         const rows: MarkdownTableRow[] = block.rows.map((cells, rowIndex) => ({

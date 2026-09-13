@@ -10,7 +10,7 @@ import type { PhiBlockRuntime, PhiNoLabels, PhiServerBlockBaseProps } from "../.
 import { PhiRuntimeModuleRenderClientHost } from "../../../../../components/runtime/runtime-module-render-client-manifest";
 import type { PhiCmsMarkdownWidgetConfig } from "./config";
 import type { PhiMarkdownTocHeading } from "../markdown-toc/config";
-import type { PhiMarkdownBlock, PhiMarkdownInline } from "./client";
+import type { PhiMarkdownBlock, PhiMarkdownInline, PhiMarkdownTableAlign } from "./client";
 import { readPhiInternalReference, type PhiPageReference } from "../../../../../types/references";
 import { resolvePhiWidgetInternalReferences } from "../../../../../components/widgets/helpers/internal-reference-resolver.server";
 
@@ -24,6 +24,8 @@ type MarkdownNode = {
   alt?: string;
   title?: string;
   children?: MarkdownNode[];
+  /** GFM tables: one alignment per column, as the delimiter row states it. */
+  align?: (string | null)[];
 };
 
 export type PhiMarkdownWidgetProps = PhiServerBlockBaseProps<
@@ -506,7 +508,8 @@ function mapBlockNodes(
         const cells = tableRows.map((row) => (row.children ?? []).map((cell) =>
           inlineMap.get(cell) ?? mapInlineNodes(cell.children)));
         const header = cells[0] ?? [];
-        blocks.push({ kind: "table", header, rows: cells.slice(1) });
+        const align = header.map((_, columnIndex) => readMarkdownTableAlign(node.align?.[columnIndex]));
+        blocks.push({ kind: "table", header, rows: cells.slice(1), align });
         break;
       }
     }
@@ -657,4 +660,15 @@ export async function PhiMarkdownWidget({
       }}
     />
   );
+}
+
+/** remark-gfm states `left`, `center`, `right` or nothing; nothing else can come out of its parser. */
+function readMarkdownTableAlign(value: string | null | undefined): PhiMarkdownTableAlign {
+  if (value === "left" || value === "center" || value === "right") {
+    return value;
+  }
+  if (value == null) {
+    return null;
+  }
+  throw new Error(`Unknown Markdown table alignment "${value}".`);
 }
