@@ -1,5 +1,11 @@
+import { cookies } from "next/headers";
+
 import { localizeAreaPath } from "../../helpers/locale";
 import { phiRuntime } from "../../server-helpers/phi-runtime";
+import {
+  fetchPhiAuthWorkflow,
+  fetchPhiPublicAuthManifest,
+} from "../../gateway/auth-public-manifest";
 import { fetchFormGuard } from "../../gateway/form-guard";
 import {
   getPhiLoginFormLabels,
@@ -28,13 +34,57 @@ function readFormOption(options: PhiFormRenderContext["options"], key: string) {
   return typeof value === "string" && value.trim() ? value.trim() : undefined;
 }
 
+/**
+ * The Site's sign-in methods and any authentication already under way, for one render of the Login.
+ *
+ * The manifest failing is worth saying out loud -- without it the Login has no methods to offer and an
+ * empty card explains nothing -- so it comes back as a message the widget shows. A workflow that cannot
+ * be read is a different matter: nobody is mid-authentication in the ordinary case, which is exactly
+ * what "none" means here.
+ */
+async function resolvePhiLoginAuthState(options: {
+  apiBaseUrl: string;
+  internalToken: string;
+  siteKey: string;
+  cookieHeader: string;
+}) {
+  const [manifest, resumedWorkflow] = await Promise.all([
+    fetchPhiPublicAuthManifest(options).catch((error: unknown) => ({
+      error: error instanceof Error ? error.message : "Authentication methods could not be loaded.",
+    })),
+    fetchPhiAuthWorkflow(options).catch(() => null),
+  ]);
+
+  return "error" in manifest
+    ? { manifest: null, manifestError: manifest.error, resumedWorkflow }
+    : { manifest, manifestError: null, resumedWorkflow };
+}
+
 export async function renderPhiLoginForm({ runtime, resolvedForm, options }: PhiFormRenderContext) {
   const rt = phiRuntime(runtime);
-  const labels = await getPhiLoginFormLabels({
-    apiBaseUrl: rt.apiBaseUrl,
-    internalToken: rt.internalToken,
-    locale: runtime.locale.current,
-  });
+  const cookieStore = await cookies();
+  /*
+   * What the Login needs to know before it can be drawn, read here rather than by the widget.
+   *
+   * Both used to be fetched after hydration, and the form was a skeleton until the first of them
+   * answered -- a blank card for as long as the page took to become interactive, which is the wait a
+   * visitor reads as a slow login. Neither question needs the browser to ask it. A failure is reported
+   * rather than swallowed: the Login has to say that it could not read the Site's sign-in methods,
+   * because with none of them it has nothing to offer.
+   */
+  const [labels, auth] = await Promise.all([
+    getPhiLoginFormLabels({
+      apiBaseUrl: rt.apiBaseUrl,
+      internalToken: rt.internalToken,
+      locale: runtime.locale.current,
+    }),
+    resolvePhiLoginAuthState({
+      apiBaseUrl: rt.apiBaseUrl,
+      internalToken: rt.internalToken,
+      siteKey: rt.siteKey,
+      cookieHeader: cookieStore.toString(),
+    }),
+  ]);
 
   const resolvedForgotPasswordHref =
     typeof resolvedForm?.effectiveConfig.forgotPasswordHref === "string"
@@ -49,6 +99,9 @@ export async function renderPhiLoginForm({ runtime, resolvedForm, options }: Phi
         labels,
         descriptor: resolvedForm?.definition.descriptor,
         config: options?.config as PhiLoginWidgetConfig | undefined,
+        manifest: auth.manifest,
+        manifestError: auth.manifestError,
+        resumedWorkflow: auth.resumedWorkflow,
         formId: resolvedForm?.definition.formId,
         formControllerAddress: options?.formControllerAddress,
         forgotPasswordHref:

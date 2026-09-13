@@ -1,6 +1,6 @@
 "use client";
 
-import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
+import { lazy, Suspense, useMemo, useRef, useState } from "react";
 import { Button, Divider, Flex, Skeleton, Typography } from "antd";
 import { usePathname, useSearchParams } from "next/navigation";
 import { LoginForm, type LoginFormLabels, type LoginFormValues } from "../../forms/login-form";
@@ -9,7 +9,7 @@ import type { PhiClientBlockBaseProps, PhiBlockRuntime, PhiSignalAddress } from 
 import { normalizeLoginRedirectTarget, resolveSafePostLoginTarget } from "../login-redirect";
 import { PhiRuntimeFormSubmitError, usePhiRuntimeFormClient } from "../../forms/runtime-form-client";
 import type { PhiFormDescriptor } from "../../../types/form-descriptor";
-import type { PhiAuthWorkflow } from "./auth-workflow-body";
+import type { PhiAuthWorkflow, PhiPublicAuthManifest } from "../../../types/auth-manifest";
 import { PhiFormControl, type PhiFormControlHandle } from "../../controls/phi-form-control";
 import { PHI_PROVIDER_LINK_CONFIRMATION_FORM_DESCRIPTOR } from "../../forms/shared-form-descriptors";
 import { PhiAlertControl } from "../../controls/phi-alert-control";
@@ -39,18 +39,9 @@ export type PhiLoginWidgetProps = PhiClientBlockBaseProps<
   formControllerAddress?: PhiSignalAddress | null;
   descriptor?: PhiFormDescriptor;
   nextPath?: string | null;
-};
-
-type PhiPublicAuthManifest = {
-  version: 1;
-  registrationMode: "disabled" | "invite-only" | "automatic";
-  methods: Array<{
-    methodKey: string;
-    stage: "primary" | "second-factor" | "step-up" | "recovery";
-    label: string;
-    icon?: string;
-    startPath: string;
-  }>;
+  manifest: PhiPublicAuthManifest | null;
+  manifestError?: string | null;
+  resumedWorkflow?: PhiAuthWorkflow | null;
 };
 
 /**
@@ -118,16 +109,28 @@ export function PhiLoginWidget({
   formControllerAddress,
   descriptor,
   nextPath: explicitNextPath,
+  manifest,
+  manifestError: initialManifestError = null,
+  resumedWorkflow = null,
 }: PhiLoginWidgetProps) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const formController = usePhiRuntimeFormClient({
     controllerAddress: formControllerAddress,
   });
-  const [manifest, setManifest] = useState<PhiPublicAuthManifest | null>(null);
-  const [manifestError, setManifestError] = useState<string | null>(null);
+  const [manifestError, setManifestError] = useState<string | null>(initialManifestError);
   const [startingMethod, setStartingMethod] = useState<string | null>(null);
-  const [workflow, setWorkflow] = useState<PhiAuthWorkflow | null>(null);
+  /*
+   * What the Login needs to know, handed in rather than fetched.
+   *
+   * The widget used to ask for both of these itself, once mounted: the manifest, which nothing about
+   * the viewer changes, and the workflow, which answers 401 for everyone who is not mid-authentication
+   * -- so every anonymous visit spent a round trip to be told that nobody is signed in, and logged two
+   * failed requests for it. Worse, the form was a skeleton until the manifest arrived, so the wait for
+   * the page to become interactive was a wait for the login form to exist at all. Both are resolved
+   * where the page is rendered now; what follows is the authentication this session goes on to do.
+   */
+  const [workflow, setWorkflow] = useState<PhiAuthWorkflow | null>(resumedWorkflow);
   const [confirmingLink, setConfirmingLink] = useState(false);
   const providerLinkFormRef = useRef<PhiFormControlHandle | null>(null);
   const [linkError, setLinkError] = useState<string | null>(null);
@@ -138,7 +141,6 @@ export function PhiLoginWidget({
     () => resolvedNextPath ? { next: resolvedNextPath } : undefined,
     [resolvedNextPath],
   );
-  const authContinuationRequested = searchParams.get("auth") === "continue";
   const providerLinkRequired =
     searchParams.get("auth") === "link_required" && !linkConfirmationDismissed;
 
@@ -157,54 +159,6 @@ export function PhiLoginWidget({
     channels: [PHI_FORM_SIGNAL_CHANNELS.values],
     actions: ["change"],
   });
-
-  useEffect(() => {
-    const controller = new AbortController();
-    void fetch("/api/auth/manifest", {
-      credentials: "include",
-      cache: "no-store",
-      headers: { accept: "application/json" },
-      signal: controller.signal,
-    }).then(async (response) => {
-      const payload = await response.json().catch(() => null) as PhiPublicAuthManifest | null;
-      if (!response.ok || !payload || payload.version !== 1 || !Array.isArray(payload.methods)) {
-        throw new Error("Authentication methods could not be loaded.");
-      }
-      setManifest(payload);
-      setManifestError(null);
-    }).catch((error: unknown) => {
-      if (!controller.signal.aborted) {
-        setManifestError(error instanceof Error ? error.message : "Authentication methods could not be loaded.");
-      }
-    });
-    return () => controller.abort();
-  }, []);
-
-  useEffect(() => {
-    const controller = new AbortController();
-    void fetch("/api/auth/workflow", {
-      credentials: "include",
-      cache: "no-store",
-      headers: { accept: "application/json" },
-      signal: controller.signal,
-    }).then(async (response) => {
-      const payload = await response.json().catch(() => null) as { workflow?: PhiAuthWorkflow } | null;
-      if (response.status === 401 && !authContinuationRequested) {
-        return;
-      }
-      if (!response.ok || !payload?.workflow) {
-        throw new Error("Authentication workflow could not be resumed.");
-      }
-      if (payload.workflow.state !== "complete") {
-        setWorkflow(payload.workflow);
-      }
-    }).catch((error: unknown) => {
-      if (!controller.signal.aborted) {
-        setManifestError(error instanceof Error ? error.message : "Authentication workflow could not be resumed.");
-      }
-    });
-    return () => controller.abort();
-  }, [authContinuationRequested]);
 
   async function navigateAfterCompletion(area: string | null, nextTarget: string | null) {
     const fallbackArea = area?.trim().toLowerCase() ?? "";
@@ -348,10 +302,6 @@ export function PhiLoginWidget({
     const nextTarget = normalizeLoginRedirectTarget(values.next) ?? resolvedNextPath ??
       normalizeLoginRedirectTarget(searchParams.get("next"));
     await navigateAfterCompletion(payload.area, nextTarget);
-  }
-
-  if (!manifest && !manifestError) {
-    return <Skeleton active title={false} paragraph={{ rows: 4 }} />;
   }
 
   const primaryMethods = manifest?.methods.filter((method) => method.stage === "primary") ?? [];
