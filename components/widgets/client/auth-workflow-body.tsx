@@ -3,12 +3,7 @@
 import { useState } from "react";
 import { Button, Flex, Input, QRCode, Typography } from "antd";
 import { PhiAlertControl } from "../../controls/phi-alert-control";
-
-export type PhiAuthWorkflow = {
-  state: "factor-enrollment-required" | "factor-challenge-required" | "complete";
-  methodKey: "totp" | null;
-  next: string;
-};
+import type { PhiAuthWorkflow } from "../../../types/auth-manifest";
 
 type Enrollment = {
   factorId: string;
