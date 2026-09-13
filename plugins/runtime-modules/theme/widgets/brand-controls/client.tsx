@@ -93,15 +93,18 @@ import { createPhiCommandToolbarControlAddress } from "../../../../../components
 import { PHI_THEME_RUNTIME_MODULE_ID } from "../../../../../plugins/runtime-modules/theme/ids";
 import { PhiTableControl, type PhiTableControlColumn } from "../../../../../components/controls/phi-table-control";
 import { PhiSegmentedControl } from "../../../../../components/controls/phi-segmented-control";
-import { PhiButtonControl } from "../../../../../components/controls/phi-button-control";
 import { PhiSelectControl } from "../../../../../components/controls/phi-select-control";
 import { PhiTextControl } from "../../../../../components/controls/phi-text-control";
 import {
   PHI_CONTROL_SHAPES,
   applyPhiControlShapeComponentTokens,
   buildPhiControlShapeCssVars,
-  readPhiControlShape,
+  createPhiControlShapeCorners,
+  readPhiControlShapeCorners,
+  resolvePhiControlShape,
+  resolvePhiUniformControlShape,
   type PhiControlShape,
+  type PhiControlShapeCorners,
 } from "../../../../../theme/phi-control-shape";
 
 type ThemePayload = NonNullable<PhiBlockRuntime["site"]["theme"]>;
@@ -481,7 +484,7 @@ function mergeThemeToken(theme: ThemePayload, tokenPatch: Record<string, unknown
   };
 }
 
-function mergeThemeControlShape(theme: ThemePayload, controls: PhiControlShape): ThemePayload {
+function mergeThemeControlShape(theme: ThemePayload, controls: PhiControlShapeCorners): ThemePayload {
   return {
     ...theme,
     shape: {
@@ -489,6 +492,61 @@ function mergeThemeControlShape(theme: ThemePayload, controls: PhiControlShape):
       controls,
     },
   };
+}
+
+/**
+ * What the Style tab's shape segments decide together: the Control shape and the scale it is drawn on.
+ * "Theme" hands all of it back to the style the Set brings; the other type values stay the author's.
+ */
+const PHI_THEME_SHAPE_SCALE_TOKEN_KEYS: readonly string[] = [
+  "borderRadiusXS",
+  "borderRadiusSM",
+  "borderRadius",
+  "borderRadiusLG",
+  "controlHeightSM",
+  "controlHeight",
+  "controlHeightLG",
+];
+
+type PhiBrandShapeChoice = "theme" | PhiControlShape;
+
+/**
+ * Which segment the draft stands on.
+ *
+ * A named shape when the author picked one. "Theme" when the author decided none of the shape, the
+ * radii and the Control heights. Nothing when they changed a radius or a height but picked no shape:
+ * that follows the Theme no longer, and showing "Theme" would also leave it unclickable, since a
+ * segment that is already selected reports no change.
+ */
+function resolveThemeShapeChoice(theme: ThemePayload): PhiBrandShapeChoice | null {
+  const corners = readPhiControlShapeCorners(theme.shape?.controls);
+  if (corners) {
+    return resolvePhiUniformControlShape(corners);
+  }
+  const token = theme.style?.token ?? {};
+  const authoredScale = PHI_THEME_SHAPE_SCALE_TOKEN_KEYS.some((key) => {
+    const value = token[key];
+    return value !== undefined && value !== null && value !== "";
+  });
+  return authoredScale ? null : "theme";
+}
+
+/** The shape, the radii and the Control heights handed back to the style block; the rest stays. */
+function clearThemeShapeScale(theme: ThemePayload): ThemePayload {
+  const token = Object.fromEntries(
+    Object.entries(theme.style?.token ?? {}).filter(([key]) => !PHI_THEME_SHAPE_SCALE_TOKEN_KEYS.includes(key)),
+  );
+  return {
+    ...clearThemeControlShape(theme),
+    style: { ...(theme.style ?? {}), token },
+  };
+}
+
+function clearThemeControlShape(theme: ThemePayload): ThemePayload {
+  const shape = Object.fromEntries(
+    Object.entries(theme.shape ?? {}).filter(([key]) => key !== "controls"),
+  ) as NonNullable<ThemePayload["shape"]>;
+  return Object.keys(shape).length > 0 ? { ...theme, shape } : omitThemeFields(theme, "shape");
 }
 
 function resolveThemePayloadPreset(
@@ -1875,27 +1933,31 @@ export function PhiBuilderBrandStyleControlsWidgetClient({
     <Flex vertical gap={clientToken.padding} style={{ width: "100%", minWidth: 0, opacity: loading ? 0.65 : 1 }}>
       <Card size="small" styles={{ body: { padding: clientToken.paddingSM } }}>
         {/*
-          The style block sets the proportions an author has not decided for themselves. The reset drops
-          every structural override at once, which is the only granularity that makes sense here: the
-          numbers below are one scale, and handing back half of it would leave a shape nobody chose.
+          The style comes with the Set; what an author decides here is the Control shape. "Theme" hands
+          the shape, the radii and the Control heights back to that style in one step, because they are
+          one scale and handing back half of it would leave a shape nobody chose.
         */}
-        <Flex align="center" justify="space-between" gap={clientToken.paddingXS}>
-          <PhiBrandBlockPicker
-            label="Style"
-            value={themeComposition.style.key}
-            unavailable={themeComposition.unavailable.style}
-            options={themeBlocks.styles}
-            onChange={(key) => {
-              const block = themeBlocks.styles.find((candidate) => candidate.key === key);
-              if (block) publishDraft(mergeThemeBlockChoice(state.draft, "style", block));
-            }}
-          />
-          <PhiBrandBlockResetButton
-            blockTitle={themeComposition.style.title}
-            disabled={Object.keys(token).length === 0}
-            onReset={() => publishDraft(clearThemeStyleTokens(state.draft))}
-          />
-        </Flex>
+        <PhiSegmentedControl<PhiBrandShapeChoice>
+          label="Controls"
+          value={resolveThemeShapeChoice(state.draft)}
+          options={[
+            {
+              value: "theme",
+              label: "Theme",
+              description: `${themeComposition.style.title}: ${formatShapeLabel(
+                resolvePhiUniformControlShape(themeComposition.style.shape.controls),
+              )}`,
+            },
+            ...PHI_CONTROL_SHAPES.map((value) => ({ value, label: formatShapeLabel(value) })),
+          ]}
+          block
+          disabled={saving}
+          onChange={(value) => publishDraft(
+            value === "theme"
+              ? clearThemeShapeScale(state.draft)
+              : mergeThemeControlShape(state.draft, createPhiControlShapeCorners(value)),
+          )}
+        />
         <Divider style={{ marginBlock: clientToken.paddingXS }} />
         <Collapse
           accordion
@@ -1914,65 +1976,6 @@ export function PhiBuilderBrandStyleControlsWidgetClient({
               label: <Typography.Text strong>Border Radius</Typography.Text>,
               children: (
                 <Flex vertical gap={clientToken.paddingXS}>
-                  <PhiSegmentedControl<PhiControlShape>
-                    label="Controls"
-                    value={readPhiControlShape(state.draft.shape?.controls)}
-                    options={PHI_CONTROL_SHAPES.map((value) => ({
-                      value,
-                      label: value.charAt(0).toUpperCase() + value.slice(1),
-                    }))}
-                    block
-                    disabled={saving}
-                    onChange={(value) => publishDraft(mergeThemeControlShape(state.draft, value))}
-                  />
-                  {/*
-                    * The row that sits under the shape segments is the one an author watches while
-                    * switching, so it renders through the draft's own shape rather than the Builder's
-                    * ambient theme. Without this the segments moved the draft and nothing here changed.
-                    */}
-                  <ConfigProvider
-                    theme={{
-                      token: { ...radiusValues, ...controlHeightValues },
-                      components: applyPhiControlShapeComponentTokens(
-                        {},
-                        readPhiControlShape(state.draft.shape?.controls),
-                        radiusValues,
-                      ),
-                    }}
-                  >
-                    {/*
-                      * The small and large radii travel as custom properties rather than component
-                      * tokens, so the preview row has to declare them the same way the live Root does
-                      * -- otherwise the two outer Buttons keep the Builder's own shape.
-                      */}
-                    <Flex
-                      align="center"
-                      gap={clientToken.paddingXS}
-                      wrap
-                      style={buildPhiControlShapeCssVars(
-                        readPhiControlShape(state.draft.shape?.controls),
-                        radiusValues,
-                      )}
-                    >
-                      {(["small", "medium", "large"] as const).map((size) => (
-                        <PhiButtonControl key={size} size={size} label={size} />
-                      ))}
-                      <PhiTextControl value="Control preview" readOnly size="medium" />
-                      {/*
-                        * A Select follows the shape like any other Control body, but the row showed only
-                        * a Button and a text field, so an author had no way to see it and could
-                        * reasonably conclude Selects were left out.
-                        */}
-                      <PhiSelectControl
-                        value="preview"
-                        size="medium"
-                        options={[{ value: "preview", label: "Select preview" }]}
-                        ariaLabel="Select shape preview"
-                        readOnly
-                        onChange={() => undefined}
-                      />
-                    </Flex>
-                  </ConfigProvider>
                   {[
                     { key: "borderRadiusSM", label: "Small", value: radiusValues.borderRadiusSM, fallbackPreset: "xs" },
                     { key: "borderRadius", label: "Base", value: radiusValues.borderRadius, fallbackPreset: "sm" },
@@ -2105,7 +2108,7 @@ export function PhiBuilderBrandStyleControlsWidgetClient({
  */
 function mergeThemeBlockChoice(
   theme: ThemePayload,
-  part: "palette" | "style" | "ground",
+  part: "palette" | "ground",
   block: { key: string; version: number },
 ): ThemePayload {
   const withChoice: ThemePayload = {
@@ -2117,23 +2120,27 @@ function mergeThemeBlockChoice(
   };
 
   if (part === "ground") return clearThemeAuthoredGround(withChoice);
-  if (part === "style") return clearThemeStyleTokens(withChoice);
   return withChoice;
 }
 
 /**
  * A Set decides all three parts, so it clears all three: the parts picked one by one, because a Set is
  * what somebody falls back on when they stop deciding each part, and the values authored on top of
- * them, for the same reason picking a single block clears its own.
+ * them, for the same reason picking a single block clears its own. The Control shape belongs to the
+ * style, so it goes with the style tokens.
  */
 function mergeThemeSetChoice(
   theme: ThemePayload,
   set: { key: string; version: number },
 ): ThemePayload {
-  return clearThemeAuthoredGround(clearThemeStyleTokens({
+  return clearThemeAuthoredGround(clearThemeControlShape(clearThemeStyleTokens({
     ...theme,
     blocks: { set: { key: set.key, version: set.version } },
-  }));
+  })));
+}
+
+function formatShapeLabel(shape: PhiControlShape) {
+  return shape.charAt(0).toUpperCase() + shape.slice(1);
 }
 
 /** Every ground value an author set, in both modes, so the chosen block is what shows. */
@@ -2591,6 +2598,7 @@ export function PhiBuilderBrandThemePreviewWidgetClient({
    */
   const previewThemeResolved = resolvePhiThemeRuntimePayload(previewTheme, themeBlocks).theme;
   const [hoveredStatusKey, setHoveredStatusKey] = useState<string | null>(null);
+  const [previewTableSearch, setPreviewTableSearch] = useState("");
   /*
    * The preview shows the draft too, and mounting late knew as little about it as the controls did --
    * it just never showed, because a broadcast happened to arrive before anyone looked. It asks now.
@@ -2617,6 +2625,10 @@ export function PhiBuilderBrandThemePreviewWidgetClient({
     { title: "Name", key: "name", fieldPath: "name", sizing: { mode: "fill" } },
     { title: "Status", key: "status", fieldPath: "status", sizing: { mode: "content" }, render: (value) => <Tag color="processing">{String(value)}</Tag> },
   ];
+  const previewTableRows: readonly PreviewRow[] = [
+    { key: "1", name: "Landing page", status: "Ready" },
+    { key: "2", name: "Checkout", status: "Review" },
+  ].filter((row) => row.name.toLowerCase().includes(previewTableSearch.trim().toLowerCase()));
 
   usePhiSignalListener((signal) => {
     if (
@@ -2645,7 +2657,7 @@ export function PhiBuilderBrandThemePreviewWidgetClient({
    */
   const previewShapedComponents = applyPhiControlShapeComponentTokens(
     { ...(previewThemeResolved.components ?? {}) },
-    readPhiControlShape(previewTheme.shape?.controls),
+    resolvePhiControlShape(previewThemeResolved.shape?.controls),
     previewEffectiveToken,
   );
   const previewAntdTheme = {
@@ -2811,7 +2823,7 @@ export function PhiBuilderBrandThemePreviewWidgetClient({
            * own here and overrides whatever the surrounding Builder shape put on the Root.
            */
           ...buildPhiControlShapeCssVars(
-            readPhiControlShape(previewTheme.shape?.controls),
+            resolvePhiControlShape(previewThemeResolved.shape?.controls),
             previewEffectiveToken,
           ),
         }}
@@ -2841,6 +2853,25 @@ export function PhiBuilderBrandThemePreviewWidgetClient({
               <Button danger>Danger</Button>
             </Space>
           </Flex>
+          <Divider style={{ margin: 0 }} />
+          <Flex vertical gap={clientToken.paddingSM} style={{ minWidth: 0 }}>
+            <Typography.Title level={5} style={{ margin: 0, color: previewTextColor }}>
+              Control Height
+            </Typography.Title>
+            <Flex gap={clientToken.paddingXS} wrap="wrap" align="end">
+              {controlHeightPreviewItems.map((item) => (
+                <Button key={item.key} style={{ height: item.value }}>
+                  {item.label}
+                </Button>
+              ))}
+            </Flex>
+            <Typography.Text type="secondary">Wireframe {wireframeEnabled ? "on" : "off"}</Typography.Text>
+          </Flex>
+          <Form layout="vertical">
+            <Form.Item label="Campaign" style={{ marginBottom: 0 }}>
+              <Input placeholder="Preview input" />
+            </Form.Item>
+          </Form>
           <Divider style={{ margin: 0 }} />
           <Flex gap={clientToken.padding} wrap="wrap">
             <Flex vertical gap={clientToken.paddingXS} style={{ flex: "1 1 260px", minWidth: 0 }}>
@@ -2962,39 +2993,33 @@ export function PhiBuilderBrandThemePreviewWidgetClient({
                 ))}
               </Flex>
             </Flex>
-            <Flex vertical gap={clientToken.paddingSM} style={{ flex: "1 1 260px", minWidth: 0 }}>
-              <Typography.Title level={5} style={{ margin: 0, color: previewTextColor }}>
-                Control Height
-              </Typography.Title>
-              <Flex gap={clientToken.paddingXS} wrap="wrap" align="end">
-                {controlHeightPreviewItems.map((item) => (
-                  <Button key={item.key} style={{ height: item.value }}>
-                    {item.label}
-                  </Button>
-                ))}
-              </Flex>
-              <Typography.Text type="secondary">Wireframe {wireframeEnabled ? "on" : "off"}</Typography.Text>
-            </Flex>
           </Flex>
-          <Form layout="vertical">
-            <Form.Item label="Campaign">
-              <Input placeholder="Preview input" />
-            </Form.Item>
-          </Form>
-          <PhiTableControl<PreviewRow>
-            size="small"
-            pagination={false}
-            rowIdentityPath="key"
-            sortingMode="none"
-            sorts={[]}
-            columnOrder={["name", "status"]}
-            layout={{ mode: "auto", overflowX: "auto" }}
-            columns={columns}
-            rows={[
-              { key: "1", name: "Landing page", status: "Ready" },
-              { key: "2", name: "Checkout", status: "Review" },
-            ]}
-          />
+          {/* The search field and footer the Table Widget draws around its Control, so both follow the draft too. */}
+          <Flex vertical gap={clientToken.paddingXS} style={{ minWidth: 0 }}>
+            <Flex justify="end">
+              <PhiTextControl
+                inputType="search"
+                allowClear
+                size="small"
+                placeholder="Search"
+                value={previewTableSearch}
+                onChange={(value) => setPreviewTableSearch(value ?? "")}
+                style={{ width: 260, maxWidth: "100%" }}
+              />
+            </Flex>
+            <PhiTableControl<PreviewRow>
+              size="small"
+              pagination={false}
+              rowIdentityPath="key"
+              sortingMode="none"
+              sorts={[]}
+              columnOrder={["name", "status"]}
+              layout={{ mode: "auto", overflowX: "auto" }}
+              columns={columns}
+              rows={previewTableRows}
+              footer={{ content: `${previewTableRows.length} of 2 rows`, align: "start" }}
+            />
+          </Flex>
         </PhiBrandChromePreviewShell>
       </Card>
     </ConfigProvider>

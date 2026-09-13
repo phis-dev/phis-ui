@@ -20,13 +20,13 @@ import {
 describe("theme block selection", () => {
   it("resolves a block that is available", () => {
     const resolved = resolvePhiThemeBlockSelection(
-      PHI_CORE_THEME_STYLE_BLOCKS,
-      "sharp",
-      PHI_CORE_THEME_STYLE_BLOCK_KEY,
+      PHI_CORE_THEME_GROUND_BLOCKS,
+      "forest",
+      PHI_CORE_THEME_GROUND_BLOCK_KEY,
     );
-    expect(resolved.block.key).toBe("sharp");
+    expect(resolved.block.key).toBe("forest");
     expect(resolved.available).toBe(true);
-    expect(resolved.requested).toBe("sharp");
+    expect(resolved.requested).toBe("forest");
   });
 
   it("falls back to the core block and keeps the selection readable", () => {

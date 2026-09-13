@@ -2,6 +2,7 @@ import { PHI_CORE_THEME_GROUND_BLOCKS, PHI_CORE_THEME_STYLE_BLOCKS, type PhiThem
 import { resolvePhiThemeEffectiveRoot, type PhiThemeComposition } from "./phi-theme-composition";
 import { mergePhiThemePalettes, PHI_CORE_THEME_PRESET_PLUGINS, type PhiThemePalette, type PhiThemePresetPlugin } from "./phi-theme-presets";
 import type { PhiSiteThemeRoot } from "../types/site-theme";
+import type { PhiControlShapeCorners } from "./phi-control-shape";
 
 /**
  * Whether a block ships with phis-ui and can therefore never be missing.
@@ -26,6 +27,7 @@ export type PhiThemeAdoptionSource = {
   root?: PhiSiteThemeRoot | null;
   palette?: PhiThemePalette | null;
   style?: { token?: Record<string, unknown> } | null;
+  shape?: { controls?: PhiControlShapeCorners | null } | null;
 };
 
 /**
@@ -69,7 +71,10 @@ export function adoptPhiThemeModulePalette<T extends PhiThemeAdoptionSource>(
   return { ...theme, palette: mergePhiThemePalettes(palette.palette, theme.palette) };
 }
 
-/** Taking a Module's style over: its tokens under the author's. A core style is left followed. */
+/**
+ * Taking a Module's style over: its tokens under the author's, and its Control shape where the author
+ * picked none. A core style is left followed.
+ */
 export function adoptPhiThemeModuleStyle<T extends PhiThemeAdoptionSource>(
   theme: T,
   style: PhiThemeStyleBlock,
@@ -77,7 +82,11 @@ export function adoptPhiThemeModuleStyle<T extends PhiThemeAdoptionSource>(
   if (isPhiCoreThemeStyle(style)) {
     return theme;
   }
-  return { ...theme, style: { ...(theme.style ?? {}), token: { ...style.style.token, ...(theme.style?.token ?? {}) } } };
+  return {
+    ...theme,
+    style: { ...(theme.style ?? {}), token: { ...style.style.token, ...(theme.style?.token ?? {}) } },
+    shape: { ...(theme.shape ?? {}), controls: theme.shape?.controls ?? style.shape.controls },
+  };
 }
 
 /**

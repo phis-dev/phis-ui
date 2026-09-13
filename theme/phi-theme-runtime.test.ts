@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 
+import { createPhiControlShapeCorners } from "./phi-control-shape";
+import { PHI_CORE_THEME_BLOCK_CATALOG } from "./phi-theme-composition";
 import { resolvePhiThemeRuntimePayload } from "./phi-theme-runtime";
 
 /**
@@ -24,16 +26,34 @@ describe("theme runtime payload", () => {
   });
 
   it("puts the style block under the author's tokens", () => {
-    const { theme } = resolvePhiThemeRuntimePayload({
-      blocks: { style: { key: "sharp" } },
-      style: { token: { borderRadius: 20 } },
-    });
-    expect(theme.style?.token).toEqual({
-      borderRadius: 20,
-      borderRadiusLG: 4,
-      borderRadiusSM: 2,
-      controlHeight: 30,
-    });
+    const { theme } = resolvePhiThemeRuntimePayload(
+      { blocks: { style: { key: "brutal" } }, style: { token: { borderRadius: 20 } } },
+      {
+        ...PHI_CORE_THEME_BLOCK_CATALOG,
+        styles: [
+          ...PHI_CORE_THEME_BLOCK_CATALOG.styles,
+          {
+            key: "brutal",
+            version: 1,
+            title: "Brutal",
+            style: { token: { borderRadius: 0, controlHeight: 28 } },
+            shape: { controls: createPhiControlShapeCorners("square") },
+          },
+        ],
+      },
+    );
+    expect(theme.style?.token).toEqual({ borderRadius: 20, controlHeight: 28 });
+  });
+
+  it("states the style block's Control shape wherever the author picked none", () => {
+    expect(resolvePhiThemeRuntimePayload({}).theme.shape?.controls)
+      .toEqual(createPhiControlShapeCorners("rounded"));
+    const pill = createPhiControlShapeCorners("pill");
+    expect(resolvePhiThemeRuntimePayload({ shape: { controls: pill } }).theme.shape?.controls).toEqual(pill);
+  });
+
+  it("refuses a Control shape that is not four named corners", () => {
+    expect(() => resolvePhiThemeRuntimePayload({ shape: { controls: "rounded" as never } })).toThrow();
   });
 
   it("merges the ground and keeps the author's mode on top", () => {

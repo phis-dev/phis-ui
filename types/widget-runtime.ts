@@ -3,7 +3,7 @@ import type { PhiSiteFontSlots, PhiSiteRemSettings, PhiSiteThemeRoot } from "./s
 import type { PhiThemeMode, PhiThemePalette } from "../theme/phi-theme-presets";
 import type { PhiThemeBlockSelection } from "../theme/phi-theme-composition";
 import type { PhiThemeDerivation } from "../theme/phi-theme-selection";
-import type { PhiControlShape } from "../theme/phi-control-shape";
+import type { PhiControlShapeCorners } from "../theme/phi-control-shape";
 import type { PhiViewerAddonRoleClaim, PhiViewerGroupClaim, PhiViewerRoleClaim } from "./access";
 import type { PhiControllerSignalAddress } from "./signals";
 
@@ -53,7 +53,7 @@ export type PhiBlockRuntimeSite = {
     preset?: string | null;
     presetVersion?: number | null;
     shape?: {
-      controls?: PhiControlShape | null;
+      controls?: PhiControlShapeCorners | null;
     } | null;
     fonts?: PhiSiteFontSlots | null;
     rem?: PhiSiteRemSettings | null;

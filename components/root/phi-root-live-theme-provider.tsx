@@ -19,7 +19,7 @@ import { resolvePhiPublishedThemeCustomColors } from "../../theme/phi-theme-pale
 import { PhiConfigProvider } from "./phi-config-provider";
 import { PhiRootBackgroundLayer } from "./phi-root-background";
 import { resolvePhiShellChromeOverlayVariables } from "./phi-shell-chrome-overlay";
-import { readPhiControlShape } from "../../theme/phi-control-shape";
+import { resolvePhiControlShape } from "../../theme/phi-control-shape";
 import {
   PHI_SIGNAL_VALUE_SCHEMAS,
   type PhiSignal,
@@ -202,7 +202,7 @@ export function PhiRootLiveThemeProvider({
         fonts={fonts}
         locale={locale}
         mode={mode}
-        controlShape={readPhiControlShape(liveSiteTheme.shape?.controls)}
+        controlShape={resolvePhiControlShape(liveSiteTheme.shape?.controls)}
         theme={resolvedTheme.theme}
         presets={presets}
         themeBlocks={themeBlocks}

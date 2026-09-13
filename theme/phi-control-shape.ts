@@ -1,10 +1,73 @@
 export const PHI_CONTROL_SHAPES = ["square", "subtle", "rounded", "pill"] as const;
 export type PhiControlShape = (typeof PHI_CONTROL_SHAPES)[number];
 
-export function readPhiControlShape(value: unknown): PhiControlShape {
-  return typeof value === "string" && PHI_CONTROL_SHAPES.includes(value as PhiControlShape)
-    ? value as PhiControlShape
-    : "rounded";
+/**
+ * The stored form of a Control shape: one of the four names per corner.
+ *
+ * Four corners from the start, although only four equal corners render today, so that a shape which
+ * rounds two opposite corners can arrive later without a stored Theme changing its form. Names rather
+ * than pixels per corner, because the names are what keeps a shape size-aware: a pill corner on a small
+ * Control is still half that Control's height.
+ */
+export const PHI_CONTROL_SHAPE_CORNER_KEYS = ["topLeft", "topRight", "bottomRight", "bottomLeft"] as const;
+export type PhiControlShapeCornerKey = (typeof PHI_CONTROL_SHAPE_CORNER_KEYS)[number];
+export type PhiControlShapeCorners = Record<PhiControlShapeCornerKey, PhiControlShape>;
+
+export function createPhiControlShapeCorners(shape: PhiControlShape): PhiControlShapeCorners {
+  return { topLeft: shape, topRight: shape, bottomRight: shape, bottomLeft: shape };
+}
+
+/**
+ * The corners a record states, or `null` where it states none.
+ *
+ * Absent means the Theme follows the style block, which is an ordinary state. Anything else that is
+ * not four known names is a closed vocabulary broken, and it throws rather than render some shape
+ * nobody chose.
+ */
+export function readPhiControlShapeCorners(value: unknown): PhiControlShapeCorners | null {
+  if (value === undefined || value === null) {
+    return null;
+  }
+  if (typeof value !== "object" || Array.isArray(value)) {
+    throw new Error(`Control shape must name its four corners, got ${JSON.stringify(value)}.`);
+  }
+  const record = value as Record<string, unknown>;
+  const unknownKeys = Object.keys(record).filter(
+    (key) => !PHI_CONTROL_SHAPE_CORNER_KEYS.includes(key as PhiControlShapeCornerKey),
+  );
+  if (unknownKeys.length > 0) {
+    throw new Error(`Control shape has unknown corners: ${unknownKeys.join(", ")}.`);
+  }
+  for (const key of PHI_CONTROL_SHAPE_CORNER_KEYS) {
+    if (!PHI_CONTROL_SHAPES.includes(record[key] as PhiControlShape)) {
+      throw new Error(`Control shape corner "${key}" must be one of ${PHI_CONTROL_SHAPES.join(", ")}.`);
+    }
+  }
+  return record as PhiControlShapeCorners;
+}
+
+/**
+ * The one shape four corners render as.
+ *
+ * Unequal corners are a valid record but not yet a drawable one: antd carries a single radius per
+ * size, and every Control that rounds itself from that token would need its own override. Until that
+ * exists, a Theme that asks for it fails loudly instead of quietly rendering all four alike.
+ */
+export function resolvePhiUniformControlShape(corners: PhiControlShapeCorners): PhiControlShape {
+  const shape = corners.topLeft;
+  if (PHI_CONTROL_SHAPE_CORNER_KEYS.some((key) => corners[key] !== shape)) {
+    throw new Error("Control shapes with differing corners are not rendered yet.");
+  }
+  return shape;
+}
+
+/** The shape a resolved Theme renders; the runtime fold has already put the style block's under it. */
+export function resolvePhiControlShape(value: unknown): PhiControlShape {
+  const corners = readPhiControlShapeCorners(value);
+  if (!corners) {
+    throw new Error("A resolved Theme must state its Control shape; fold it through its style block first.");
+  }
+  return resolvePhiUniformControlShape(corners);
 }
 
 /**

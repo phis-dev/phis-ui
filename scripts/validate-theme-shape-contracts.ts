@@ -5,14 +5,30 @@ import {
   applyPhiControlShapeComponentTokens,
   buildPhiControlShapeCssVars,
   PHI_CONTROL_SHAPE_CSS_VARS,
-  readPhiControlShape,
+  createPhiControlShapeCorners,
+  readPhiControlShapeCorners,
+  resolvePhiControlShape,
   resolvePhiControlShapeRadii,
   resolvePhiControlShapeRadius,
 } from "../theme/phi-control-shape";
 
-assert.equal(readPhiControlShape(undefined), "rounded");
-assert.equal(readPhiControlShape("pill"), "pill");
-assert.equal(readPhiControlShape("adapter-radius"), "rounded");
+/**
+ * The stored shape names its four corners. Absent means "follow the style block"; anything else that
+ * is not four known names is a broken closed vocabulary and throws. Unequal corners are a valid record
+ * that does not render yet, so they throw only where a shape is resolved for drawing.
+ */
+assert.equal(readPhiControlShapeCorners(undefined), null);
+assert.deepEqual(readPhiControlShapeCorners(createPhiControlShapeCorners("pill")), createPhiControlShapeCorners("pill"));
+assert.throws(() => readPhiControlShapeCorners("rounded"));
+assert.throws(() => readPhiControlShapeCorners({ ...createPhiControlShapeCorners("pill"), topLeft: "adapter-radius" }));
+assert.throws(() => readPhiControlShapeCorners({ ...createPhiControlShapeCorners("pill"), middle: "pill" }));
+assert.equal(resolvePhiControlShape(createPhiControlShapeCorners("subtle")), "subtle");
+assert.deepEqual(
+  readPhiControlShapeCorners({ ...createPhiControlShapeCorners("rounded"), topRight: "square" })?.topRight,
+  "square",
+);
+assert.throws(() => resolvePhiControlShape({ ...createPhiControlShapeCorners("rounded"), topRight: "square" }));
+assert.throws(() => resolvePhiControlShape(undefined));
 assert.equal(resolvePhiControlShapeRadius("square", { borderRadiusSM: 2, borderRadius: 8 }), 0);
 assert.equal(resolvePhiControlShapeRadius("subtle", { borderRadiusSM: 2, borderRadius: 8 }), 2);
 assert.equal(resolvePhiControlShapeRadius("rounded", { borderRadiusSM: 2, borderRadius: 8 }), 8);
@@ -174,8 +190,8 @@ assert.match(
 );
 assert.equal(
   previewSource.match(/buildPhiControlShapeCssVars\(/gu)?.length,
-  2,
-  "Both preview surfaces declare the shape properties: the shape row and the full theme preview.",
+  1,
+  "The theme preview declares the shape properties; it is the one place the Style tab's shapes are seen.",
 );
 
 console.log("Theme Control shape contracts validated.");

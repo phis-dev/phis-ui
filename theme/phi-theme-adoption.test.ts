@@ -11,6 +11,7 @@ import { PHI_CORE_THEME_GROUND_BLOCKS, PHI_CORE_THEME_STYLE_BLOCKS, type PhiThem
 import { resolvePhiThemeEffectiveRoot } from "./phi-theme-composition";
 import { PHI_CORE_THEME_PRESET_PLUGINS, resolvePhiThemeColorTokens, type PhiThemePresetPlugin } from "./phi-theme-presets";
 import type { PhiSiteThemeRoot } from "../types/site-theme";
+import { createPhiControlShapeCorners, type PhiControlShapeCorners } from "./phi-control-shape";
 
 /** The slice of a Site Theme the adoption reads and writes. */
 type Theme = {
@@ -18,6 +19,7 @@ type Theme = {
   root: PhiSiteThemeRoot | null;
   palette?: PhiThemePresetPlugin["palette"] | null;
   style?: { token?: Record<string, unknown> } | null;
+  shape?: { controls?: PhiControlShapeCorners | null } | null;
 };
 
 const phiPalette = PHI_CORE_THEME_PRESET_PLUGINS[0];
@@ -51,6 +53,7 @@ const moduleStyle: PhiThemeStyleBlock = {
   version: 1,
   title: "Brutal",
   style: { token: { borderRadius: 0, controlHeight: 28 } },
+  shape: { controls: createPhiControlShapeCorners("square") },
 };
 
 const plain = PHI_CORE_THEME_GROUND_BLOCKS.find((block) => block.key === "plain")!;
@@ -149,6 +152,14 @@ describe("adopting a Module palette and style on save", () => {
   it("puts the Module's style under the author's tokens", () => {
     const adopted = adoptPhiThemeModuleStyle({ root: null, style: { token: { controlHeight: 40 } } } as Theme, moduleStyle);
     expect(adopted.style?.token).toEqual({ borderRadius: 0, controlHeight: 40 });
+  });
+
+  it("takes the Module's Control shape only where the author picked none", () => {
+    expect(adoptPhiThemeModuleStyle({ root: null } as Theme, moduleStyle).shape?.controls)
+      .toEqual(createPhiControlShapeCorners("square"));
+    const pill = createPhiControlShapeCorners("pill");
+    expect(adoptPhiThemeModuleStyle({ root: null, shape: { controls: pill } } as Theme, moduleStyle).shape?.controls)
+      .toEqual(pill);
   });
 
   it("takes every Module block over at once", () => {

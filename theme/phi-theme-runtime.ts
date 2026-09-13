@@ -7,6 +7,7 @@ import {
 } from "./phi-theme-composition";
 import type { PhiSiteThemeRoot } from "../types/site-theme";
 import type { PhiThemePalette } from "./phi-theme-presets";
+import { readPhiControlShapeCorners, type PhiControlShapeCorners } from "./phi-control-shape";
 
 /**
  * The Theme as everything downstream should see it: blocks resolved, author values on top.
@@ -27,6 +28,7 @@ export type PhiThemeRuntimeSource = {
   root?: PhiSiteThemeRoot | null;
   palette?: PhiThemePalette | null;
   style?: { token?: Record<string, unknown> } | null;
+  shape?: { controls?: PhiControlShapeCorners | null } | null;
   components?: Record<string, Record<string, unknown>> | null;
 };
 
@@ -45,7 +47,8 @@ export type PhiThemeRuntimeResult<T> = {
  *   are then literally the same thing to everything downstream. The Site's own `palette` stays as it
  *   is: the colour consumers lay it over the preset themselves, per mode
  * - the style block's tokens go under the author's `style.token`, so an author who set a radius keeps
- *   it while the ones they never touched follow the block
+ *   it while the ones they never touched follow the block; the block's Control shape stands wherever
+ *   the author picked none
  * - the ground is merged part by part into `root`
  *
  * The composition comes back alongside, because the workspace needs to know which parts are running on
@@ -74,6 +77,17 @@ export function resolvePhiThemeRuntimePayload<T extends PhiThemeRuntimeSource>(
         ...(theme?.style ?? {}),
         token: { ...styleToken, ...authoredToken },
       },
+      shape: {
+        ...(theme?.shape ?? {}),
+        controls: readPhiControlShapeCorners(theme?.shape?.controls) ??
+          readPhiControlShapeCorners(composition.style.shape?.controls) ??
+          failMissingStyleShape(composition.style.key),
+      },
     },
   };
+}
+
+/** A style block without a shape is a broken block -- a Module's, since the core one states it. */
+function failMissingStyleShape(styleKey: string): never {
+  throw new Error(`Theme style "${styleKey}" states no Control shape.`);
 }

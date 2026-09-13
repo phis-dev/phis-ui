@@ -7,7 +7,11 @@ import type { PhiControlOption } from "./phi-control-options";
 import { PhiLabeledControl } from "./phi-labeled-control";
 
 export type PhiSegmentedControlProps<TValue extends string | number = string> = {
-  value?: TValue;
+  /**
+   * `undefined` leaves the Segmented to itself, which selects its first option. `null` selects none:
+   * the value is stated, and it matches no option.
+   */
+  value?: TValue | null;
   label?: string;
   options: readonly PhiControlOption<TValue>[];
   disabled?: boolean;
@@ -34,7 +38,7 @@ export function PhiSegmentedControl<TValue extends string | number = string>({
   const control = (
     <Segmented
       block={block}
-      value={value ?? undefined}
+      value={value as TValue | undefined}
       disabled={disabled || readOnly || !onChange}
       options={options.map((option) => ({
         value: option.value,

@@ -654,9 +654,12 @@ share; `modes.light` / `modes.dark` carry the two base seeds, explicit colour to
 and the ten custom colours under `customColors`. A Site's own `theme.palette` has exactly this shape and
 is laid over the preset field by field.
 
-A palette is one of three Theme blocks. A Module may also ship a **ground** -- the Root Background, the
-Chrome Overlay and its Shadow, one value per mode -- and a **Set** that names a palette, a style and a
-ground by key. Both are announced through `themeBlocks` on the same catalog entry, with the
+A palette is one of three Theme blocks. A Module may also ship a **style** (structural tokens under
+`style.token`, and a Control shape under `shape.controls` that every style must state; see
+`SITE-CONFIG.md`), a **ground** (the Root Background, the Chrome Overlay and its Shadow, one value per
+mode), and a **Set** that names a palette, a style and a ground by key. A style reaches a Site only through
+a Set: the Builder offers no style picker, and its Style tab overrides shape and scale on top. All three are
+announced through `themeBlocks` on the same catalog entry, with the
 `PhiCmsThemeBlockDescriptor` shape from `@phis/ui/types` and the block types from `@phis/ui/theme`:
 
 ```ts
@@ -687,7 +690,8 @@ Builder takes the whole ground over: background, Chrome and Shadow of both modes
 values and every picture becomes a Site Asset in the Media library. From then on the Site owns the look,
 switching the Module off changes nothing, and a Module update no longer reaches it; the key stays as
 provenance so a reset can show the Module's current version again. A Module's palette and style are
-taken over the same way, into `theme.palette` and `theme.style`; core blocks are followed, never copied.
+taken over the same way, into `theme.palette`, `theme.style` and, where the author picked none,
+`theme.shape.controls`; core blocks are followed, never copied.
 A Theme is site-wide, so palettes and blocks are read from the
 installed union -- what `phis module add` projected -- rather than from the Areas the Module is
 enabled in. `@phis/example` in this workspace ships a complete palette, ground and Set.

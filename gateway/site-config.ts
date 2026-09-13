@@ -7,7 +7,7 @@ import { getSiteConfigCacheTag } from "./cache-tags";
 import type { PhiSiteFontSlots, PhiSiteRemSettings, PhiSiteThemeRoot } from "../types/site-theme";
 import type { PhiThemePalette } from "../theme/phi-theme-presets";
 import type { PhiThemeBlockSelection } from "../theme/phi-theme-composition";
-import type { PhiControlShape } from "../theme/phi-control-shape";
+import type { PhiControlShapeCorners } from "../theme/phi-control-shape";
 
 export type PhiSiteTheme = {
   mode?: "light" | "dark" | null;
@@ -19,7 +19,7 @@ export type PhiSiteTheme = {
   preset?: string | null;
   presetVersion?: number | null;
   shape?: {
-    controls?: PhiControlShape | null;
+    controls?: PhiControlShapeCorners | null;
   } | null;
   fonts?: PhiSiteFontSlots;
   contact?: {

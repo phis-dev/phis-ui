@@ -19,7 +19,7 @@ import {
 } from "../../theme/phi-theme-presets";
 import {
   applyPhiControlShapeComponentTokens,
-  readPhiControlShape,
+  resolvePhiControlShape,
 } from "../../theme/phi-control-shape";
 
 const PHI_DEFAULT_DARK_NAV_BACKGROUND = "#001529";
@@ -127,7 +127,7 @@ export function resolvePhiRootTheme({
   const components = applyPhiControlShapeComponentTokens(mergeComponentThemes(
     sharedComponentDefaults,
     siteTheme?.components ?? undefined,
-  ), readPhiControlShape(siteTheme.shape?.controls), effectiveThemeTokens);
+  ), resolvePhiControlShape(siteTheme.shape?.controls), effectiveThemeTokens);
   const token = {
     ...effectiveThemeTokens,
   };

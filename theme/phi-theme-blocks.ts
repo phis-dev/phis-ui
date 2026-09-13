@@ -1,5 +1,6 @@
 import { PHI_CORE_THEME_PRESET_PLUGINS, type PhiThemePresetPlugin } from "./phi-theme-presets";
 import type { PhiSiteThemeRoot } from "../types/site-theme";
+import { createPhiControlShapeCorners, type PhiControlShapeCorners } from "./phi-control-shape";
 
 /**
  * A Theme as three parts, each of them something a Module can ship.
@@ -41,13 +42,16 @@ export type PhiThemeBlockIdentity = {
 export type PhiThemePaletteBlock = PhiThemePresetPlugin;
 
 /**
- * Everything that is not colour: radii, spacing, control heights, type scale.
+ * Everything that is not colour: radii, spacing, control heights, type scale, and the Control shape.
  *
- * Stated as the Ant Design tokens it changes rather than as a full set, because a block that repeated
- * every structural token would silently freeze the ones it never meant to have an opinion about.
+ * The tokens are stated as the Ant Design tokens the block changes rather than as a full set, because a
+ * block that repeated every structural token would silently freeze the ones it never meant to have an
+ * opinion about. The shape is always stated: it is the one part of a style every Site renders, and a
+ * block that left it open would hand the decision to a default nobody chose.
  */
 export type PhiThemeStyleBlock = PhiThemeBlockIdentity & {
   style: { token: Record<string, string | number | boolean> };
+  shape: { controls: PhiControlShapeCorners };
 };
 
 /**
@@ -84,6 +88,10 @@ export const PHI_CORE_THEME_SET_KEY = "phi";
 export const PHI_CORE_THEME_PALETTE_BLOCKS: readonly PhiThemePaletteBlock[] =
   PHI_CORE_THEME_PRESET_PLUGINS;
 
+/**
+ * One core style. A square or a pill look is a Control shape the author picks in the Style tab, not a
+ * block of its own; a Module that wants a whole other proportion ships it inside a Set.
+ */
 export const PHI_CORE_THEME_STYLE_BLOCKS: readonly PhiThemeStyleBlock[] = [
   {
     key: "phi",
@@ -91,34 +99,7 @@ export const PHI_CORE_THEME_STYLE_BLOCKS: readonly PhiThemeStyleBlock[] = [
     title: "Phi",
     description: "The house proportions: soft radii, generous spacing.",
     style: { token: {} },
-  },
-  {
-    key: "sharp",
-    version: 1,
-    title: "Sharp",
-    description: "Square corners and tighter controls, for dense workspaces.",
-    style: {
-      token: {
-        borderRadius: 2,
-        borderRadiusLG: 4,
-        borderRadiusSM: 2,
-        controlHeight: 30,
-      },
-    },
-  },
-  {
-    key: "round",
-    version: 1,
-    title: "Round",
-    description: "Pill-shaped controls and wide radii, for editorial Sites.",
-    style: {
-      token: {
-        borderRadius: 12,
-        borderRadiusLG: 18,
-        borderRadiusSM: 8,
-        controlHeight: 38,
-      },
-    },
+    shape: { controls: createPhiControlShapeCorners("rounded") },
   },
 ];
 

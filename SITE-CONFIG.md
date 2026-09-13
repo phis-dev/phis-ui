@@ -47,12 +47,19 @@ and has no Area override; an Area varies it by authoring Region chrome that pain
 
 ## `theme.shape.controls`
 
-- `"square" | "subtle" | "rounded" | "pill"`
-- default: `"rounded"`
+- `{ topLeft, topRight, bottomRight, bottomLeft }`, each `"square" | "subtle" | "rounded" | "pill"`
+- absent: the Control shape of the style block the Theme follows (the core style `phi` states `rounded`)
 
 Defines the site-wide semantic corner treatment for interactive Phi Controls. The persisted value is the
 semantic preset only; CSS percentages, pixel radii, Ant Design token names, and per-component Ant Design
 overrides are not part of this ABI.
+
+The four corners are the stored form from the start, so a shape that rounds some corners and not others can
+arrive later without a stored Theme changing its form. Only four equal corners render today: a record with
+differing corners is valid, but resolving it for drawing throws until the adapter can draw it. Anything that
+is not four known names -- a bare string included -- is rejected. The Builder's Style tab writes this field
+when an author picks a shape; its **Theme** segment removes it together with the authored radii and Control
+heights, handing all three back to the style block.
 
 The central Theme/Control adapter resolves the preset for the active `controlSize` and UI implementation:
 
@@ -293,12 +300,13 @@ record is not a dump of `ConfigProvider` state.
   and `customColors` (the ten Phi custom colours).
 - `style?: { token?: Record<string, unknown> }` -- structural tokens the author set: radii, control
   heights, spacing, typography sizes. Mode-free.
+- `shape?: { controls?: ... }` -- the Control shape the author picked; see `theme.shape.controls` above.
 - `components?: Record<string, Record<string, unknown>>` -- component overrides, merged per component
   over the shared component defaults.
 
 Resolution per mode is one chain everywhere: structural defaults, then the palette block with the Site's
 `palette` merged over it field by field, then `style.token`, then fonts. Absent means "follow the
-block". Saving a Theme that resolves to a Module's palette, style or ground copies that block into these
+block". Saving a Theme that resolves to a Module's palette, style (with its Control shape) or ground copies that block into these
 fields (`theme/phi-theme-adoption.ts`), so a saved Site does not depend on the Module staying installed;
 core blocks are followed, never copied.
 
