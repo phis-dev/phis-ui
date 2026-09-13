@@ -10,19 +10,18 @@ import { resolvePhiThemeRuntimePayload } from "./phi-theme-runtime";
  */
 describe("theme runtime payload", () => {
   it("presents the palette block as the preset every colour consumer resolves", () => {
-    const { theme } = resolvePhiThemeRuntimePayload({ blocks: { palette: { key: "forest" } } });
-    expect(theme.preset).toBe("forest");
+    const { theme } = resolvePhiThemeRuntimePayload({ blocks: { palette: { key: "phis" } } });
+    expect(theme.preset).toBe("phis");
     expect(theme.presetVersion).toBe(1);
   });
 
   it("leaves a Theme from before the split exactly as it was", () => {
-    const { theme } = resolvePhiThemeRuntimePayload({ preset: "sea", presetVersion: 1 });
-    expect(theme.preset).toBe("sea");
+    const { theme } = resolvePhiThemeRuntimePayload({ preset: "phis", presetVersion: 1 });
+    expect(theme.preset).toBe("phis");
     expect(theme.style?.token).toEqual({});
-    expect(theme.root).toEqual({
-      background: { light: null, dark: null },
-      chrome: { light: null, dark: null },
-    });
+    // The core ground is folded in like any other block: a Theme that names nothing stands on it.
+    expect(theme.root?.background?.light?.base?.kind).toBe("image");
+    expect(theme.root?.chrome?.light?.effect).toBe("glass");
   });
 
   it("puts the style block under the author's tokens", () => {
@@ -58,11 +57,11 @@ describe("theme runtime payload", () => {
 
   it("merges the ground and keeps the author's mode on top", () => {
     const { theme } = resolvePhiThemeRuntimePayload({
-      blocks: { set: { key: "forest" } },
+      blocks: { set: { key: "phis" } },
       root: { background: { light: { base: { kind: "color", color: "#101010" } } } },
     });
     expect(theme.root?.background?.light?.base).toEqual({ kind: "color", color: "#101010" });
-    expect(theme.root?.background?.dark?.base?.kind).toBe("gradient");
+    expect(theme.root?.background?.dark?.base?.kind).toBe("image");
     expect(theme.root?.chrome?.light?.effect).toBe("glass");
   });
 
@@ -71,7 +70,7 @@ describe("theme runtime payload", () => {
       blocks: { ground: { key: "@acme/ui/grounds/dunes" } },
     });
     expect(composition.unavailable.ground).toBe("@acme/ui/grounds/dunes");
-    expect(composition.ground.key).toBe("plain");
+    expect(composition.ground.key).toBe("phis");
   });
 
   it("keeps every other field of the record untouched", () => {

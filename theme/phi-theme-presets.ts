@@ -61,7 +61,7 @@ export function isPhiThemePaletteModeSeedKey(key: string) {
   return (PHI_THEME_PALETTE_MODE_SEED_KEYS as readonly string[]).includes(key);
 }
 
-export const PHI_DEFAULT_THEME_PRESET_KEY = "phi";
+export const PHI_DEFAULT_THEME_PRESET_KEY = "phis";
 export const PHI_DEFAULT_THEME_PRESET_VERSION = 1;
 export const PHI_THEME_CUSTOM_COLOR_KEYS = [
   "custom1",
@@ -76,11 +76,18 @@ export const PHI_THEME_CUSTOM_COLOR_KEYS = [
   "custom10",
 ] as const satisfies readonly PhiThemeCustomColorKey[];
 
+/**
+ * The one palette phis-ui ships.
+ *
+ * Core carries a single Theme -- "Phis" -- and it is the floor every selection falls back to. Further
+ * looks are Modules' business: a palette is data a package can hand over, and keeping variants in
+ * core would only make them the one kind of block nobody can switch off.
+ */
 export const PHI_CORE_THEME_PRESET_PLUGINS = [
   {
-    key: "phi",
+    key: "phis",
     version: 1,
-    title: "Phi",
+    title: "Phis",
     description: "Warm orange brand color with a deep blue text base.",
     palette: {
       seed: {
@@ -102,66 +109,6 @@ export const PHI_CORE_THEME_PRESET_PLUGINS = [
           seed: {
             colorTextBase: "#DCE7F8",
             colorBgBase: "#050914",
-          },
-        },
-      },
-    },
-  },
-  {
-    key: "forest",
-    version: 1,
-    title: "Forest",
-    description: "Evergreen brand tones with moss, fern and amber accents.",
-    palette: {
-      seed: {
-        colorPrimary: "#2F6F4E",
-        colorInfo: "#3F7C72",
-        colorSuccess: "#4F8A3B",
-        colorWarning: "#B8872B",
-        colorError: "#A94632",
-        colorLink: "#2E7D63",
-      },
-      modes: {
-        light: {
-          seed: {
-            colorTextBase: "#183326",
-            colorBgBase: "#FBFCF6",
-          },
-        },
-        dark: {
-          seed: {
-            colorTextBase: "#DCEBDE",
-            colorBgBase: "#07110C",
-          },
-        },
-      },
-    },
-  },
-  {
-    key: "sea",
-    version: 1,
-    title: "Sea",
-    description: "Clear ocean blue with teal depth and coral contrast.",
-    palette: {
-      seed: {
-        colorPrimary: "#0A7EA4",
-        colorInfo: "#2B8FBF",
-        colorSuccess: "#2E9D8F",
-        colorWarning: "#D69435",
-        colorError: "#D85C4A",
-        colorLink: "#087EA4",
-      },
-      modes: {
-        light: {
-          seed: {
-            colorTextBase: "#12324A",
-            colorBgBase: "#F7FCFF",
-          },
-        },
-        dark: {
-          seed: {
-            colorTextBase: "#D8EDF6",
-            colorBgBase: "#04101A",
           },
         },
       },

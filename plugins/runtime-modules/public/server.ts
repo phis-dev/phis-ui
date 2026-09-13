@@ -1,6 +1,7 @@
 import {
   PHI_AREA_BASE_RUNTIME_MODULE_AREA_SHELLS,
   PHI_AREA_BASE_RUNTIME_MODULE_ROUTES,
+  PHI_PUBLIC_FORM_RUNTIME_MODULE_ROUTES,
 } from "../area-base-presets";
 import { definePhiRuntimeModuleServerAreaContribution } from "../area-contributions";
 import { PHI_PUBLIC_RUNTIME_MODULE_DEFINITION } from "../public/definition";
@@ -22,13 +23,13 @@ export const PHI_PUBLIC_RUNTIME_MODULE_SERVER_AREA_CONTRIBUTION =
         (descriptor) => descriptor.ownerModuleId === PHI_PUBLIC_RUNTIME_MODULE_DEFINITION.moduleId,
       ),
       /*
-       * Only the error Pages. The landing, the terms and the contact page are ordinary Public pages
-       * and travel with the Site package (`@phis/example` in this workspace), replaceable like any other
-       * Module; the base Module keeps what no Site can do without.
+       * The error Pages, the terms, and the contact page: what no Site can do without. The landing is
+       * the one Public page that is not Core's -- it travels with the Site package (`@phis/example` in
+       * this workspace) and applies for the root slot like any other Module's would.
        */
       routes: PHI_AREA_BASE_RUNTIME_MODULE_ROUTES.filter(
         (descriptor) => descriptor.ownerModuleId === PHI_PUBLIC_RUNTIME_MODULE_DEFINITION.moduleId,
-      ),
+      ).concat(PHI_PUBLIC_FORM_RUNTIME_MODULE_ROUTES),
       load: () => import("./module").then((module) => module.PHI_PUBLIC_RUNTIME_MODULE),
     },
   });

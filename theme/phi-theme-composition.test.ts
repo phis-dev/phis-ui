@@ -20,23 +20,23 @@ const groundOf = (key: string) => {
  */
 describe("theme block selection", () => {
   it("reads the old single preset as the palette", () => {
-    const selection = readPhiThemeBlockSelection({ preset: "forest", presetVersion: 1 });
-    expect(selection.palette).toBe("forest");
+    const selection = readPhiThemeBlockSelection({ preset: "phis", presetVersion: 1 });
+    expect(selection.palette).toBe("phis");
     expect(selection.style).toBeNull();
     expect(selection.ground).toBeNull();
   });
 
   it("fills the parts a Set names", () => {
-    const selection = readPhiThemeBlockSelection({ blocks: { set: { key: "sea" } } });
-    expect(selection).toEqual({ set: "sea", palette: "sea", style: "phi", ground: "sea" });
+    const selection = readPhiThemeBlockSelection({ blocks: { set: { key: "phis" } } });
+    expect(selection).toEqual({ set: "phis", palette: "phis", style: "phis", ground: "phis" });
   });
 
   it("lets an explicit part win over the Set it follows", () => {
     const selection = readPhiThemeBlockSelection({
-      blocks: { set: { key: "sea" }, ground: { key: "forest" } },
+      blocks: { set: { key: "phis" }, ground: { key: "@acme/ui/grounds/dunes" } },
     });
-    expect(selection.palette).toBe("sea");
-    expect(selection.ground).toBe("forest");
+    expect(selection.palette).toBe("phis");
+    expect(selection.ground).toBe("@acme/ui/grounds/dunes");
   });
 
   it("ignores a Set that names nothing available", () => {
@@ -53,28 +53,28 @@ describe("theme block selection", () => {
 describe("theme composition", () => {
   it("resolves each part on its own", () => {
     const composition = resolvePhiThemeComposition({
-      blocks: { palette: { key: "forest" }, ground: { key: "@acme/ui/grounds/dunes" } },
+      blocks: { palette: { key: "phis" }, ground: { key: "@acme/ui/grounds/dunes" } },
     });
-    expect(composition.palette.key).toBe("forest");
-    expect(composition.ground.key).toBe("plain");
+    expect(composition.palette.key).toBe("phis");
+    expect(composition.ground.key).toBe("phis");
     expect(composition.unavailable.ground).toBe("@acme/ui/grounds/dunes");
     expect(composition.unavailable.palette).toBeNull();
   });
 
   it("reports an unavailable Set without losing the parts it could resolve", () => {
     const composition = resolvePhiThemeComposition({
-      blocks: { set: { key: "@acme/ui/sets/neon" }, palette: { key: "sea" } },
+      blocks: { set: { key: "@acme/ui/sets/neon" }, palette: { key: "phis" } },
     });
     expect(composition.unavailable.set).toBe("@acme/ui/sets/neon");
     expect(composition.set).toBeNull();
-    expect(composition.palette.key).toBe("sea");
+    expect(composition.palette.key).toBe("phis");
   });
 
   it("lands on the core blocks when a Theme names nothing", () => {
     const composition = resolvePhiThemeComposition(null, PHI_CORE_THEME_BLOCK_CATALOG);
-    expect(composition.palette.key).toBe("phi");
-    expect(composition.style.key).toBe("phi");
-    expect(composition.ground.key).toBe("plain");
+    expect(composition.palette.key).toBe("phis");
+    expect(composition.style.key).toBe("phis");
+    expect(composition.ground.key).toBe("phis");
   });
 });
 
@@ -83,7 +83,7 @@ describe("theme composition", () => {
  * opened vanish the moment they edited the light one.
  */
 describe("effective root", () => {
-  const ground = groundOf("forest");
+  const ground = groundOf("phis");
 
   it("keeps the block's other mode when one mode is authored", () => {
     const effective = resolvePhiThemeEffectiveRoot(
@@ -91,7 +91,7 @@ describe("effective root", () => {
       ground,
     );
     expect(effective.background?.light?.base).toEqual({ kind: "color", color: "#ff0000" });
-    expect(effective.background?.dark?.base?.kind).toBe("gradient");
+    expect(effective.background?.dark?.base?.kind).toBe("image");
   });
 
   it("honours an explicit none over the block's ground", () => {
@@ -104,7 +104,7 @@ describe("effective root", () => {
 
   it("takes the block's ground where nothing was authored", () => {
     const effective = resolvePhiThemeEffectiveRoot(null, ground);
-    expect(effective.background?.light?.base?.kind).toBe("gradient");
+    expect(effective.background?.light?.base?.kind).toBe("image");
     expect(effective.chrome?.light?.effect).toBe("glass");
     expect(effective.chrome?.shadow?.header).toBe("soft");
   });
@@ -118,8 +118,8 @@ describe("effective root", () => {
     expect(effective.chrome?.shadow?.footer).toBe("soft");
   });
 
-  it("paints nothing for the plain ground and an empty Theme", () => {
-    const effective = resolvePhiThemeEffectiveRoot(null, groundOf("plain"));
+  it("paints nothing for a ground that states nothing", () => {
+    const effective = resolvePhiThemeEffectiveRoot(null, { key: "@acme/ui/grounds/bare", version: 1, title: "Bare", root: {} });
     expect(effective.background?.light).toBeNull();
     expect(effective.chrome?.dark).toBeNull();
     expect(effective.chrome?.shadow).toBeUndefined();

@@ -56,8 +56,7 @@ const moduleStyle: PhiThemeStyleBlock = {
   shape: { controls: createPhiControlShapeCorners("square") },
 };
 
-const plain = PHI_CORE_THEME_GROUND_BLOCKS.find((block) => block.key === "plain")!;
-const phi = PHI_CORE_THEME_GROUND_BLOCKS.find((block) => block.key === "phi")!;
+const phis = PHI_CORE_THEME_GROUND_BLOCKS.find((block) => block.key === "phis")!;
 
 /** A ground the way a Module ships one: a picture per mode under a frosted, tinted frame. */
 const moduleGround: PhiThemeGroundBlock = {
@@ -83,9 +82,9 @@ const moduleGround: PhiThemeGroundBlock = {
  */
 describe("adopting a Module ground on save", () => {
   it("leaves a Theme on a core ground alone", () => {
-    expect(isPhiCoreThemeGround(phi)).toBe(true);
-    const theme: Theme = { blocks: { ground: { key: "phi" } }, root: null };
-    expect(adoptPhiThemeModuleGround(theme, phi)).toBe(theme);
+    expect(isPhiCoreThemeGround(phis)).toBe(true);
+    const theme: Theme = { blocks: { ground: { key: "phis" } }, root: null };
+    expect(adoptPhiThemeModuleGround(theme, phis)).toBe(theme);
   });
 
   it("copies the whole effective ground into the record", () => {
@@ -114,7 +113,7 @@ describe("adopting a Module ground on save", () => {
     const adopted = adoptPhiThemeModuleGround(theme, moduleGround);
     // After the Module is switched off the selection resolves to the core floor -- and nothing changes.
     const withModule = resolvePhiThemeEffectiveRoot(adopted.root, moduleGround);
-    const withoutModule = resolvePhiThemeEffectiveRoot(adopted.root, plain);
+    const withoutModule = resolvePhiThemeEffectiveRoot(adopted.root, phis);
     expect(withoutModule.background).toEqual(withModule.background);
     expect(withoutModule.chrome).toEqual(withModule.chrome);
   });

@@ -91,6 +91,17 @@ export const PHI_AREA_BASE_RUNTIME_MODULE_ROUTES = [
       import("../../components/regions/presets/phi-default-pub-error-page-tree")
         .then((module) => module.buildPhiDefaultPubErrorPageTree({ code, page })),
   })),
+  {
+    ownerModuleId: PHI_PUBLIC_RUNTIME_MODULE_ID,
+    presetKey: "public-terms-page",
+    presetVersion: 2,
+    area: "public",
+    title: "Terms and Conditions",
+    path: "/terms-and-conditions",
+    loadTree: ({ page }) =>
+      import("../../components/regions/presets/phi-default-pub-terms-page-tree")
+        .then((module) => module.buildPhiDefaultPubTermsPageTree({ page })),
+  },
   buildPhiAreaRootRoutePresetDescriptor({
     ownerModuleId: PHI_ACCOUNTING_RUNTIME_MODULE_ID,
     area: "accounting",
@@ -118,3 +129,45 @@ export const PHI_CORE_RUNTIME_MODULE_THEMES = PHI_CORE_THEME_PRESET_PLUGINS.map(
   ...(preset.description ? { description: preset.description } : {}),
   loadPreset: () => preset,
 })) satisfies readonly PhiCmsThemePresetDescriptor[];
+
+/**
+ * The Public form pages, in their own list because they appear only where Forms are allowed. The
+ * contact page is Core's like the terms: every Site starts with a way to be reached, and neither is
+ * a landing -- the front door is the Site package's business.
+ */
+export const PHI_PUBLIC_FORM_RUNTIME_MODULE_ROUTES = [
+  {
+    ownerModuleId: PHI_PUBLIC_RUNTIME_MODULE_ID,
+    presetKey: "public-contact-page",
+    presetVersion: 1,
+    area: "public",
+    title: "Contact",
+    path: "/contact",
+    navigation: [
+      {
+        navKey: "public:header",
+        parentItemKey: null,
+        after: "@phis/ui/modules/public/nav/terms",
+        item: {
+          itemKey: "@phis/ui/modules/public/nav/contact",
+          label: { defaultMessage: "Contact" },
+          icon: "antd:mail",
+          routePresetKey: "public-contact-page",
+        },
+      },
+      {
+        navKey: "public:footer",
+        parentItemKey: null,
+        after: "@phis/ui/modules/public/nav/terms",
+        item: {
+          itemKey: "@phis/ui/modules/public/nav/contact",
+          label: { defaultMessage: "Contact" },
+          routePresetKey: "public-contact-page",
+        },
+      },
+    ],
+    loadTree: ({ page, runtime }) =>
+      import("../../components/regions/presets/phi-default-pub-contact-page-tree")
+        .then((module) => module.buildPhiDefaultPubContactPageTree({ page, runtime })),
+  },
+] satisfies readonly PhiCmsRoutePresetDescriptor[];

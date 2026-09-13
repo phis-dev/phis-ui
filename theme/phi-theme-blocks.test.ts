@@ -21,12 +21,12 @@ describe("theme block selection", () => {
   it("resolves a block that is available", () => {
     const resolved = resolvePhiThemeBlockSelection(
       PHI_CORE_THEME_GROUND_BLOCKS,
-      "forest",
+      "phis",
       PHI_CORE_THEME_GROUND_BLOCK_KEY,
     );
-    expect(resolved.block.key).toBe("forest");
+    expect(resolved.block.key).toBe("phis");
     expect(resolved.available).toBe(true);
-    expect(resolved.requested).toBe("forest");
+    expect(resolved.requested).toBe("phis");
   });
 
   it("falls back to the core block and keeps the selection readable", () => {
@@ -48,7 +48,7 @@ describe("theme block selection", () => {
   });
 
   it("throws only when the core block itself is missing", () => {
-    expect(() => resolvePhiThemeBlock([], "phi", "phi")).toThrow(/missing from the core blocks/);
+    expect(() => resolvePhiThemeBlock([], "phis", "phis")).toThrow(/missing from the core blocks/);
   });
 });
 
@@ -66,21 +66,21 @@ describe("core theme sets", () => {
   });
 
   it("resolves a set by key and falls back to the house set", () => {
-    expect(resolvePhiThemeSetSelection(PHI_CORE_THEME_SETS, "forest").set.ground).toBe("forest");
+    expect(resolvePhiThemeSetSelection(PHI_CORE_THEME_SETS, "phis").set.ground).toBe("phis");
     const missing = resolvePhiThemeSetSelection(PHI_CORE_THEME_SETS, "@acme/ui/theme-sets/neon");
-    expect(missing.set.key).toBe("phi");
+    expect(missing.set.key).toBe("phis");
     expect(missing.available).toBe(false);
   });
 });
 
 /**
- * The core ground paints no picture. A guaranteed floor cannot depend on a file, because the case it
- * exists for is exactly the one where a package is gone.
+ * The core ground depends on nothing that can go missing. A guaranteed floor cannot rest on a file or
+ * an Asset, because the case it exists for is exactly the one where a package is gone; a picture it
+ * carries inline is code, and allowed.
  */
 describe("core grounds", () => {
-  it("keeps the fallback ground empty", () => {
-    const plain = PHI_CORE_THEME_GROUND_BLOCKS.find((block) => block.key === "plain");
-    expect(plain?.root).toEqual({});
+  it("ships exactly one, the house ground", () => {
+    expect(PHI_CORE_THEME_GROUND_BLOCKS.map((block) => block.key)).toEqual([PHI_CORE_THEME_GROUND_BLOCK_KEY]);
   });
 
   it("states both modes wherever it states one", () => {
@@ -93,11 +93,14 @@ describe("core grounds", () => {
     }
   });
 
-  it("carries no image base, in either mode", () => {
+  it("carries any picture inline, never as a file or an Asset", () => {
     for (const ground of PHI_CORE_THEME_GROUND_BLOCKS) {
       for (const mode of ["light", "dark"] as const) {
-        expect(ground.root.background?.[mode]?.base?.kind).not.toBe("image");
-        expect(ground.root.chrome?.[mode]?.base?.kind).not.toBe("image");
+        for (const base of [ground.root.background?.[mode]?.base, ground.root.chrome?.[mode]?.base]) {
+          if (base?.kind !== "image") continue;
+          expect(base.sourceKind).toBe("url");
+          expect("sourceUrl" in base && (base.sourceUrl ?? "").startsWith("data:image/")).toBe(true);
+        }
       }
     }
   });

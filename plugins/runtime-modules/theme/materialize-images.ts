@@ -2,7 +2,7 @@
 
 import { runPhiMediaUploadSession } from "../../../components/media/media-upload-flow";
 import { adoptPhiThemeModuleBlocks } from "../../../theme/phi-theme-adoption";
-import { resolvePhiThemeEffectiveRoot, type PhiThemeComposition } from "../../../theme/phi-theme-composition";
+import type { PhiThemeComposition } from "../../../theme/phi-theme-composition";
 import type { PhiSiteThemeRoot } from "../../../types/site-theme";
 
 /**
@@ -87,19 +87,21 @@ async function uploadPhiThemeImage(source: string, hint: string) {
  * The two modes are handled separately and both are uploaded, because a Site that keeps only the light
  * half of a look it saved would lose the dark one the day the Module goes. Whatever else the base
  * carries -- position, size, a focal rectangle somebody set -- travels along untouched. A Theme on a
- * core ground is left following it; only an author's own pasted data URL is uploaded there.
+ * core ground is left following it; the core picture stays inline and is never uploaded.
  */
 export async function materializePhiThemeModuleBlocks<T extends { root?: PhiSiteThemeRoot | null }>(
   source: T,
   composition: Pick<PhiThemeComposition, "palette" | "style" | "ground">,
 ): Promise<PhiThemeImageMaterializeResult<T>> {
-  const ground = composition.ground;
   const theme = adoptPhiThemeModuleBlocks(source, composition);
   /*
-   * The effective ground, not the stored one: on a core ground the Site may still follow the block and
-   * carry only what its author pasted, and that is what gets uploaded here.
+   * The record's own ground, not the effective one. A Module's pictures are already in the record by
+   * now -- the adoption put them there -- and a core ground's picture must stay where it is: the core
+   * ground carries an inline picture of its own, and a Site that merely follows it must not end up
+   * owning a copy in its Media library for having saved a colour. What is uploaded is therefore
+   * exactly what the record holds: a Module's picture taken over, or one an author pasted.
    */
-  const background = resolvePhiThemeEffectiveRoot(theme.root, ground).background;
+  const background = theme.root?.background;
   if (!background) return { theme, assetIds: [] };
 
   const assetIds: number[] = [];

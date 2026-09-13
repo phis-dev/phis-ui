@@ -1,6 +1,7 @@
 import { PHI_CORE_THEME_PRESET_PLUGINS, type PhiThemePresetPlugin } from "./phi-theme-presets";
 import type { PhiSiteThemeRoot } from "../types/site-theme";
 import { createPhiControlShapeCorners, type PhiControlShapeCorners } from "./phi-control-shape";
+import { PHI_THEME_PHIS_GROUND_IMAGE_DARK, PHI_THEME_PHIS_GROUND_IMAGE_LIGHT } from "./phi-theme-ground-image";
 
 /**
  * A Theme as three parts, each of them something a Module can ship.
@@ -75,28 +76,25 @@ export type PhiThemeSetBlock = PhiThemeBlockIdentity & {
 /**
  * The blocks that ship with phis-ui and can never be missing.
  *
- * Every selection resolves against these when the block it names is not available -- a Module that was
- * switched off, or one that never was installed. That makes "not resolvable" an ordinary state rather
- * than an error, and it is why the core ground paints no picture: a guaranteed floor cannot depend on
- * a file that a package might not carry.
+ * One of each, all named "Phis": every selection resolves against these when the block it names is
+ * not available -- a Module that was switched off, or one that never was installed. That makes "not
+ * resolvable" an ordinary state rather than an error, and it is why the core ground carries its
+ * picture inline: a guaranteed floor cannot depend on a file that a package might not carry, and a
+ * data URL is code, not a file. Further looks are Modules' business.
  */
-export const PHI_CORE_THEME_PALETTE_BLOCK_KEY = "phi";
-export const PHI_CORE_THEME_STYLE_BLOCK_KEY = "phi";
-export const PHI_CORE_THEME_GROUND_BLOCK_KEY = "plain";
-export const PHI_CORE_THEME_SET_KEY = "phi";
+export const PHI_CORE_THEME_PALETTE_BLOCK_KEY = "phis";
+export const PHI_CORE_THEME_STYLE_BLOCK_KEY = "phis";
+export const PHI_CORE_THEME_GROUND_BLOCK_KEY = "phis";
+export const PHI_CORE_THEME_SET_KEY = "phis";
 
 export const PHI_CORE_THEME_PALETTE_BLOCKS: readonly PhiThemePaletteBlock[] =
   PHI_CORE_THEME_PRESET_PLUGINS;
 
-/**
- * One core style. A square or a pill look is a Control shape the author picks in the Style tab, not a
- * block of its own; a Module that wants a whole other proportion ships it inside a Set.
- */
 export const PHI_CORE_THEME_STYLE_BLOCKS: readonly PhiThemeStyleBlock[] = [
   {
-    key: "phi",
+    key: "phis",
     version: 1,
-    title: "Phi",
+    title: "Phis",
     description: "The house proportions: soft radii, generous spacing.",
     style: { token: {} },
     shape: { controls: createPhiControlShapeCorners("rounded") },
@@ -104,163 +102,61 @@ export const PHI_CORE_THEME_STYLE_BLOCKS: readonly PhiThemeStyleBlock[] = [
 ];
 
 /*
- * The grounds are gradients, never pictures.
+ * The ground: soft colour fields in the Phis palette under the outlined wordmark, as an inline SVG per
+ * mode, with a frosted frame over it.
  *
- * A gradient travels in the package: it is four numbers and two colours, it needs no Asset, and it
- * survives a Module being switched off. A picture cannot do any of that, which is why a ground that
- * carries one is a Module's business rather than the core's.
- *
- * Each one states both modes. An author should never have to build the dark half of a look that was
- * handed to them complete.
+ * Inline is the condition. The floor every Site falls back to may depend on nothing that can go
+ * missing -- no Asset, no static file -- and a data URL meets that the way a gradient does. Both modes
+ * are stated: an author should never have to build the dark half of a look that was handed to them
+ * complete. Following this ground uploads nothing; only a Module's pictures are taken over on save.
  */
-const PHI_CORE_THEME_CHROME_LIGHT = {
-  base: { kind: "color", color: "rgba(255, 255, 255, 0.55)" },
-  overlay: null,
-  effect: "glass",
-  motion: null,
-} as const;
-
-const PHI_CORE_THEME_CHROME_DARK = {
-  base: { kind: "color", color: "rgba(9, 14, 26, 0.55)" },
-  overlay: null,
-  effect: "glass",
-  motion: null,
-} as const;
-
-const PHI_CORE_THEME_CHROME_SHADOW = {
-  header: "soft",
-  sider: "soft",
-  footer: "soft",
-} as const;
-
 export const PHI_CORE_THEME_GROUND_BLOCKS: readonly PhiThemeGroundBlock[] = [
   {
-    key: "plain",
+    key: "phis",
     version: 1,
-    title: "Plain",
-    description: "No ground of its own; the Site shows the resolved layout background.",
-    root: {},
-  },
-  {
-    key: "phi",
-    version: 1,
-    title: "Phi",
-    description: "A warm wash under a frosted frame.",
+    title: "Phis",
+    description: "Soft colour fields under the outlined phi/s wordmark, with a frosted frame over it.",
     root: {
       background: {
         light: {
           base: {
-            kind: "gradient",
-            direction: "to bottom",
-            stops: [
-              { color: "#FFF8F4", percent: 0 },
-              { color: "#FBE7DC", percent: 100 },
-            ],
+            kind: "image",
+            sourceKind: "url",
+            sourceUrl: PHI_THEME_PHIS_GROUND_IMAGE_LIGHT,
+            size: "cover",
+            repeat: "no-repeat",
           },
           overlay: null,
           effect: null,
-          motion: null,
+          motion: { mode: "fixed" },
         },
         dark: {
           base: {
-            kind: "gradient",
-            direction: "to bottom",
-            stops: [
-              { color: "#050914", percent: 0 },
-              { color: "#131B2E", percent: 100 },
-            ],
+            kind: "image",
+            sourceKind: "url",
+            sourceUrl: PHI_THEME_PHIS_GROUND_IMAGE_DARK,
+            size: "cover",
+            repeat: "no-repeat",
           },
           overlay: null,
           effect: null,
-          motion: null,
+          motion: { mode: "fixed" },
         },
       },
       chrome: {
-        light: PHI_CORE_THEME_CHROME_LIGHT,
-        dark: PHI_CORE_THEME_CHROME_DARK,
-        shadow: PHI_CORE_THEME_CHROME_SHADOW,
-      },
-    },
-  },
-  {
-    key: "forest",
-    version: 1,
-    title: "Forest",
-    description: "Moss light and evergreen dark, under the same frosted frame.",
-    root: {
-      background: {
         light: {
-          base: {
-            kind: "gradient",
-            direction: "to bottom",
-            stops: [
-              { color: "#FBFCF6", percent: 0 },
-              { color: "#E6F0E2", percent: 100 },
-            ],
-          },
+          base: { kind: "color", color: "rgba(255, 255, 255, 0.55)" },
           overlay: null,
-          effect: null,
+          effect: "glass",
           motion: null,
         },
         dark: {
-          base: {
-            kind: "gradient",
-            direction: "to bottom",
-            stops: [
-              { color: "#07110C", percent: 0 },
-              { color: "#0F2018", percent: 100 },
-            ],
-          },
+          base: { kind: "color", color: "rgba(9, 14, 26, 0.55)" },
           overlay: null,
-          effect: null,
+          effect: "glass",
           motion: null,
         },
-      },
-      chrome: {
-        light: PHI_CORE_THEME_CHROME_LIGHT,
-        dark: PHI_CORE_THEME_CHROME_DARK,
-        shadow: PHI_CORE_THEME_CHROME_SHADOW,
-      },
-    },
-  },
-  {
-    key: "sea",
-    version: 1,
-    title: "Sea",
-    description: "Shallow water light, deep water dark.",
-    root: {
-      background: {
-        light: {
-          base: {
-            kind: "gradient",
-            direction: "to bottom",
-            stops: [
-              { color: "#F7FCFF", percent: 0 },
-              { color: "#E1EFF8", percent: 100 },
-            ],
-          },
-          overlay: null,
-          effect: null,
-          motion: null,
-        },
-        dark: {
-          base: {
-            kind: "gradient",
-            direction: "to bottom",
-            stops: [
-              { color: "#04101A", percent: 0 },
-              { color: "#0A1E2C", percent: 100 },
-            ],
-          },
-          overlay: null,
-          effect: null,
-          motion: null,
-        },
-      },
-      chrome: {
-        light: PHI_CORE_THEME_CHROME_LIGHT,
-        dark: PHI_CORE_THEME_CHROME_DARK,
-        shadow: PHI_CORE_THEME_CHROME_SHADOW,
+        shadow: { header: "soft", sider: "soft", footer: "soft" },
       },
     },
   },
@@ -268,31 +164,13 @@ export const PHI_CORE_THEME_GROUND_BLOCKS: readonly PhiThemeGroundBlock[] = [
 
 export const PHI_CORE_THEME_SETS: readonly PhiThemeSetBlock[] = [
   {
-    key: "phi",
+    key: "phis",
     version: 1,
-    title: "Phi",
+    title: "Phis",
     description: "The house look: warm orange on a deep blue text base.",
-    palette: "phi",
-    style: "phi",
-    ground: "phi",
-  },
-  {
-    key: "forest",
-    version: 1,
-    title: "Forest",
-    description: "Evergreen tones over a moss wash.",
-    palette: "forest",
-    style: "phi",
-    ground: "forest",
-  },
-  {
-    key: "sea",
-    version: 1,
-    title: "Sea",
-    description: "Ocean blue over shallow water.",
-    palette: "sea",
-    style: "phi",
-    ground: "sea",
+    palette: "phis",
+    style: "phis",
+    ground: "phis",
   },
 ];
 

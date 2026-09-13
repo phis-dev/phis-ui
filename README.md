@@ -252,7 +252,7 @@ Use CLI findings as the local source of truth for Ant Design implementation deci
   - A later active-theme selector may be added without breaking the current contract.
 - `site.themeRevision` carries the resolved default Theme scope pointers separately from the visual Theme payload.
   - Builder preset selection uses only `publishedRevisionId` and `workingDraftRevisionId` to distinguish a Site-owned Theme from immutable preset choices; it never infers ownership from Theme contents or the stored preset key.
-  - If either pointer exists, the internal selection is `site:<siteKey>` and its visible label is the Site name. If neither pointer exists, the initial selection is the `phi` preset.
+  - If either pointer exists, the internal selection is `site:<siteKey>` and its visible label is the Site name. If neither pointer exists, the initial selection is the `phis` preset, the one Theme core ships.
 - The `/builder/theme` page-local Light/Dark switch selects the preview and color-authoring mode only.
   - It resolves mode-specific preset seeds, derived Ant Design colors, and the matching custom-color palette without changing the global Area Theme mode.
   - Shared seeds in `site.theme.palette.seed` and structural `site.theme.style.token` values apply in both modes; the base seeds, explicit colour tokens and custom colours live per mode under `site.theme.palette.modes`.

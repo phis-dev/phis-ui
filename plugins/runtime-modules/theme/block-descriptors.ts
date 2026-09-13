@@ -26,7 +26,7 @@ export const PHI_THEME_RUNTIME_MODULE_BLOCKS = [
     blockKind: "set",
     blockKey: "alpine",
     title: "Alpine",
-    description: "Evergreen colour over a mountain photograph.",
+    description: "The house colour over a mountain photograph.",
     loadBlock: () => import("./blocks/alpine").then((module) => module.PHI_THEME_ALPINE_SET),
   },
 ] satisfies readonly PhiCmsThemeBlockDescriptor[];

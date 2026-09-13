@@ -4,9 +4,9 @@ import type { PhiThemeGroundBlock, PhiThemeSetBlock } from "../../../../theme/ph
 /**
  * A ground with a picture, and the Set that uses it.
  *
- * The core blocks paint gradients so that the floor every Site falls back to depends on no file. This
- * is the other case: a Module that brings its own picture, which is the whole reason a Theme can be
- * handed over as a look rather than as a palette.
+ * The core ground carries its picture inline so that the floor every Site falls back to depends on no
+ * file. This is a Module's picture: a photograph, far too large to inline lightly, and the whole reason
+ * a Theme can be handed over as a look rather than as a palette.
  *
  * The picture is stated as a plain source, the same shape an author's own image takes once it is in
  * the Media library. That is what makes the hand-over work: the moment somebody saves a Theme that
@@ -71,8 +71,8 @@ export const PHI_THEME_ALPINE_SET: PhiThemeSetBlock = {
   key: "alpine",
   version: 1,
   title: "Alpine",
-  description: "Evergreen colour over a mountain photograph.",
-  palette: "forest",
-  style: "phi",
+  description: "The house colour over a mountain photograph.",
+  palette: "phis",
+  style: "phis",
   ground: "alpine",
 };

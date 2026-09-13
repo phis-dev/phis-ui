@@ -21,38 +21,36 @@ export const PHI_ADMIN_SETTINGS_NAV_ITEM_KEY = "@phis/ui/modules/admin/nav/setti
 export const PHI_BUILDER_SETTINGS_NAV_ITEM_KEY = "@phis/ui/builder/nav/settings";
 
 /*
- * The Public surfaces carry no intrinsic entry and export no anchor.
+ * The Public surfaces carry one intrinsic entry, the terms, and export it as the one anchor.
  *
- * The landing, the terms and the contact page are the Site package's -- `@phis/example` here -- and so
- * are the entries that lead to them; the base Module owns only the error Pages, which no navigation
- * should name. An exported anchor is a promise its owner has to keep, and a surface whose entries all
- * come from optional Modules has nothing to promise: contributed entries land at the end of their
- * surface, ordered by Module, preset key and item key, or anchor on the contributing Module's own items.
+ * The terms are Core's, so their entry is; the contact entry hangs after it, and a Site package's
+ * landing places its Home entry before it. Public has no sidebar surface: the Public Shell draws a
+ * header and a footer, and a surface nothing renders is a promise nobody can see kept.
  */
+const publicTermsItem = {
+  itemKey: "@phis/ui/modules/public/nav/terms",
+  label: label("Terms and Conditions"),
+  routePresetKey: "public-terms-page",
+} as const;
+
 const publicNavigationSurfaces = [
   {
     navKey: "public:header",
     label: label("Public header navigation"),
-    items: [],
-    exportedItemKeys: [],
-  },
-  {
-    navKey: "public:sidebar",
-    label: label("Public sidebar navigation"),
-    items: [],
-    exportedItemKeys: [],
+    items: [publicTermsItem],
+    exportedItemKeys: [publicTermsItem.itemKey],
   },
   {
     navKey: "public:footer",
     label: label("Public footer navigation"),
-    items: [],
-    exportedItemKeys: [],
+    items: [publicTermsItem],
+    exportedItemKeys: [publicTermsItem.itemKey],
   },
   {
     navKey: "public:quicklinks",
     label: label("Public quick links"),
-    items: [],
-    exportedItemKeys: [],
+    items: [publicTermsItem],
+    exportedItemKeys: [publicTermsItem.itemKey],
   },
 ] as const;
 
@@ -92,6 +90,12 @@ export const PHI_APP_RUNTIME_AREA_DEFINITIONS = [
       {
         navKey: "app:footer",
         label: label("App footer navigation"),
+        items: [],
+        exportedItemKeys: [],
+      },
+      {
+        navKey: "app:quicklinks",
+        label: label("App quick links"),
         items: [],
         exportedItemKeys: [],
       },

@@ -9,7 +9,7 @@ import {
 } from "./phi-theme-presets";
 import { resolvePhiPublishedThemeCustomColors } from "./phi-theme-palette";
 
-const forest = PHI_CORE_THEME_PRESET_PLUGINS.find((preset) => preset.key === "forest")!;
+const phis = PHI_CORE_THEME_PRESET_PLUGINS.find((preset) => preset.key === "phis")!;
 
 /**
  * Colour is one shape on both sides of the hand-over: a Module ships a palette, a Site owns one, and an
@@ -39,15 +39,15 @@ describe("theme palettes", () => {
   });
 
   it("lays the Site's palette over the block it follows, field by field", () => {
-    const tokens = resolvePhiThemeColorTokens(forest, {
+    const tokens = resolvePhiThemeColorTokens(phis, {
       seed: { colorPrimary: "#ff0000" },
       modes: { dark: { seed: { colorBgBase: "#050505" } } },
     }, "dark");
     expect(tokens.colorPrimary).toBe("#ff0000");
     expect(tokens.colorBgBase).toBe("#050505");
     // Untouched keys show through from the block, in the mode asked for.
-    expect(tokens.colorTextBase).toBe(forest.palette.modes?.dark?.seed?.colorTextBase);
-    expect(tokens.colorSuccess).toBe(forest.palette.seed?.colorSuccess);
+    expect(tokens.colorTextBase).toBe(phis.palette.modes?.dark?.seed?.colorTextBase);
+    expect(tokens.colorSuccess).toBe(phis.palette.seed?.colorSuccess);
   });
 
   it("keeps a mode override of the block from undercutting a shared seed the Site owns", () => {
@@ -62,11 +62,11 @@ describe("theme palettes", () => {
 
   it("derives custom colours per mode from the merged palette", () => {
     const colors = resolvePhiPublishedThemeCustomColors(
-      { preset: "forest", palette: { modes: { dark: { customColors: { custom1: "#123456" } } } } },
+      { preset: "phis", palette: { modes: { dark: { customColors: { custom1: "#123456" } } } } },
       "dark",
       PHI_CORE_THEME_PRESET_PLUGINS,
     );
     expect(colors.custom1).toBe("#123456");
-    expect(colors.custom6).toBe(forest.palette.seed?.colorPrimary);
+    expect(colors.custom6).toBe(phis.palette.seed?.colorPrimary);
   });
 });
