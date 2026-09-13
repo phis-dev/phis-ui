@@ -96,6 +96,31 @@ function resolvePhiSlotChildSizeConstraints(
   };
 }
 
+/**
+ * The sizing a client-enhanced slot child hands to the parent layout, resolved rather than referred.
+ *
+ * A Widget that needs a client frame is rendered through the Render Client Host, and the parent layout
+ * still has to learn how it sizes. Passing the block config along for the parent to read looked like the
+ * small move, and it put the same object in two places of one element's props. React's serializer writes
+ * the second one as a reference back into the element it is still building, to be filled in once that
+ * element exists -- and element props are frozen on creation in development, so the write can throw
+ * `Cannot assign to read only property 'config'` and take the Widget's whole render with it. The account
+ * menu was lost to exactly that shape, from a different source; see the Account Widget plugin.
+ *
+ * Six resolved values carry the same information and share nothing, so there is no reference to fill in.
+ */
+export function resolvePhiSlotChildSizingForConfig(
+  kind: PhiSlotChildKind,
+  slotSizePolicy: PhiSlotSizePolicy | null | undefined,
+  config: Pick<PhiRenderableBlockBase, "size" | "minSize" | "maxSize"> | null | undefined,
+): PhiSlotChildSizing {
+  return {
+    policy: resolvePhiSlotSizePolicy(slotSizePolicy, kind),
+    ...resolvePhiSlotChildExplicitAxes(config),
+    ...resolvePhiSlotChildSizeConstraints(config),
+  };
+}
+
 export function buildPhiSlotChildClassName(policy: PhiNormalizedSlotSizePolicy) {
   return [
     "phi-slot-child",
@@ -161,24 +186,12 @@ export function resolvePhiSlotChildSizing(
     "data-phi-slot-min-block-size"?: unknown;
     "data-phi-slot-max-inline-size"?: unknown;
     "data-phi-slot-max-block-size"?: unknown;
-    slotChildSizing?: {
-      kind?: unknown;
-      slotSizePolicy?: PhiSlotSizePolicy | null;
-      config?: Pick<PhiRenderableBlockBase, "size" | "minSize" | "maxSize"> | null;
-    };
+    slotChildSizing?: PhiSlotChildSizing | null;
   };
 
   const sizingProps = props.slotChildSizing;
-  if (
-    sizingProps &&
-    (sizingProps.kind === "widget" || sizingProps.kind === "layout")
-  ) {
-    const explicitAxes = resolvePhiSlotChildExplicitAxes(sizingProps.config);
-    return {
-      policy: resolvePhiSlotSizePolicy(sizingProps.slotSizePolicy, sizingProps.kind),
-      ...explicitAxes,
-      ...resolvePhiSlotChildSizeConstraints(sizingProps.config),
-    };
+  if (sizingProps?.policy) {
+    return sizingProps;
   }
 
   const configConstraints = resolvePhiSlotChildSizeConstraints(props.config);

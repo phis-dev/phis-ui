@@ -20,7 +20,10 @@ import { PhiCmsRegionStatic } from "../components/regions/phi-cms-region-static"
 import { resolvePhiBuilderPreviewRegionConfig } from "../plugins/runtime-modules/builder/render-root-node-preview.server";
 import { parsePhiCmsGridLayoutConfig } from "../types/cms-config";
 import { resolvePhiGridSlotPlacement } from "../components/layouts/phi-grid-contract";
-import { resolvePhiSlotChildSizing } from "../plugins/runtime/slot-size-policy";
+import {
+  resolvePhiSlotChildSizing,
+  resolvePhiSlotChildSizingForConfig,
+} from "../plugins/runtime/slot-size-policy";
 import {
   normalizePhiBackgroundWidgetConfig,
   PHI_BACKGROUND_PARALLAX_DEFAULT_STRENGTH,
@@ -125,11 +128,11 @@ function EnhancedSlotChildProxy() {
 
 assert.deepEqual(
   resolvePhiSlotChildSizing(createElement(EnhancedSlotChildProxy, {
-    slotChildSizing: {
-      kind: "widget",
-      slotSizePolicy: { inline: "fill", block: "intrinsic" },
-      config: null,
-    },
+    slotChildSizing: resolvePhiSlotChildSizingForConfig(
+      "widget",
+      { inline: "fill", block: "intrinsic" },
+      null,
+    ),
   })),
   {
     policy: { inline: "fill", block: "intrinsic" },
@@ -141,6 +144,31 @@ assert.deepEqual(
     maxBlockSize: undefined,
   },
   "Client-enhanced slot children must preserve their sizing policy for parent layouts.",
+);
+
+/*
+ * The sizing a client-enhanced slot child sends is values, not the block config it came from.
+ *
+ * Sending the config meant the same object sat in two places of one element's props, which React
+ * serializes as a reference back into the element being built and fills in after the fact. Element props
+ * are frozen by then in development, and the write that follows can throw.
+ */
+assert.deepEqual(
+  resolvePhiSlotChildSizingForConfig("widget", "fill-inline", {
+    size: { width: 240 },
+    minSize: { width: 120, height: 40 },
+    maxSize: { height: "50vh" },
+  }),
+  {
+    policy: { inline: "fill", block: "intrinsic" },
+    explicitInlineSize: true,
+    explicitBlockSize: false,
+    minInlineSize: 120,
+    minBlockSize: 40,
+    maxInlineSize: undefined,
+    maxBlockSize: "50vh",
+  },
+  "Client-enhanced slot child sizing must be resolved to plain values before it is serialized.",
 );
 assert.deepEqual(
   resolvePhiBuilderPreviewRegionConfig({

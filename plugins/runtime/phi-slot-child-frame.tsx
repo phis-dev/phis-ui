@@ -18,7 +18,7 @@ import {
   PhiSlotChildFrameView,
   requiresPhiSlotChildEffectsObserver,
 } from "./phi-slot-child-frame-view";
-import type { PhiSlotChildKind } from "./slot-size-policy";
+import { resolvePhiSlotChildSizingForConfig, type PhiSlotChildKind } from "./slot-size-policy";
 import { PhiRuntimeModuleRenderClientHost } from "../../components/runtime/runtime-module-render-client-manifest";
 import { PhiRuntimeRenderClientType } from "../../constants/runtime-render-client-types";
 
@@ -76,11 +76,7 @@ export function PhiSlotChildFrame(props: PhiSlotChildFrameProps) {
       <PhiRuntimeModuleRenderClientHost
         type={PhiRuntimeRenderClientType.SlotChildFrameEnhancer}
         componentProps={{ ...props }}
-        slotChildSizing={{
-          kind,
-          slotSizePolicy: props.slotSizePolicy,
-          config,
-        }}
+        slotChildSizing={resolvePhiSlotChildSizingForConfig(kind, props.slotSizePolicy, config)}
       />
     );
   }

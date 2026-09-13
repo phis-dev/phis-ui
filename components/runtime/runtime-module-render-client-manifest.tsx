@@ -10,8 +10,7 @@ import {
   type ReactNode,
 } from "react";
 
-import type { PhiRenderableBlock, PhiSlotSizePolicy } from "../../types";
-import type { PhiSlotChildKind } from "../../plugins/runtime/slot-size-policy";
+import type { PhiSlotChildSizing } from "../../plugins/runtime/slot-size-policy";
 
 export type PhiRuntimeModuleRenderClientProps = Readonly<Record<string, unknown>>;
 export type PhiRuntimeModuleRenderClientLoader =
@@ -78,11 +77,7 @@ export function PhiRuntimeModuleRenderClientHost(props: {
   type: string;
   componentProps: PhiRuntimeModuleRenderClientProps;
   fallback?: ReactNode;
-  slotChildSizing?: {
-    kind: PhiSlotChildKind;
-    slotSizePolicy?: PhiSlotSizePolicy | null;
-    config?: Partial<PhiRenderableBlock> | null;
-  };
+  slotChildSizing?: PhiSlotChildSizing | null;
 }) {
   const { type, componentProps, fallback = null } = props;
   const manifest = usePhiRuntimeModuleRenderClientManifest();
