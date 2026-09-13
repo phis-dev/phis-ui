@@ -60,9 +60,10 @@ describe("the Pages a visitor signs in through", () => {
     const login = resolvePhiCmsRoutePreset(table, "/login");
     expect(hasPhiFlag(login?.descriptor.defaultPageFlags, PhiCmsFlags.NoIndex)).toBe(true);
 
-    // A Public Page that is not a sign-in Form is untouched by any of this.
-    const terms = resolvePhiCmsRoutePreset(table, "/terms-and-conditions");
-    expect(terms?.descriptor).toBeDefined();
-    expect(hasPhiFlag(terms?.descriptor.defaultPageFlags, PhiCmsFlags.NoIndex)).toBe(false);
+    // The flag is the route's own, not the table's: a Public Page that states none carries none.
+    const unflagged = [...table.exactByPath.values()].filter((route) => route.defaultPageFlags === undefined);
+    for (const route of unflagged) {
+      expect(hasPhiFlag(route.defaultPageFlags, PhiCmsFlags.NoIndex)).toBe(false);
+    }
   });
 });

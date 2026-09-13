@@ -95,7 +95,7 @@ assert.throws(
   /is not installed/,
 );
 let navigationSurfaceCount = 0;
-let publicHeaderSurface: PhiCmsResolvedNavigationSurface | null = null;
+let builderSidebarSurface: PhiCmsResolvedNavigationSurface | null = null;
 
 for (const [area, definition] of catalog.areaDefinitions) {
   const activeModuleIds = new Set([
@@ -111,8 +111,8 @@ for (const [area, definition] of catalog.areaDefinitions) {
     activeModuleIds,
   });
   navigationSurfaceCount += navigationSurfaces.length;
-  if (area === "public") {
-    publicHeaderSurface = navigationSurfaces.find(({ navKey }) => navKey === "public:header") ?? null;
+  if (area === "builder") {
+    builderSidebarSurface = navigationSurfaces.find(({ navKey }) => navKey === "builder:sidebar") ?? null;
   }
   for (const surface of navigationSurfaces) {
     assert.equal(surface.area, area);
@@ -130,36 +130,46 @@ for (const [area, definition] of catalog.areaDefinitions) {
   }
 }
 
-assert(publicHeaderSurface, "Public header navigation surface must resolve.");
-const publicHomeKey = "@phis/ui/modules/public/nav/home";
-const publicTermsKey = "@phis/ui/modules/public/nav/terms";
+/*
+ * Navigation overlays, exercised on the Builder sidebar: the one first-party surface that still carries
+ * intrinsic base items. The Public surfaces carry none -- the landing, terms and contact entries travel
+ * with the Site package -- so an overlay there has nothing of the base Module's to override.
+ */
+assert(builderSidebarSurface, "Builder sidebar navigation surface must resolve.");
+const builderModulesKey = "@phis/ui/builder/nav/modules";
+const builderShellsKey = "@phis/ui/builder/nav/shells";
 const missingKey = "@test/pkg/modules/navigation/missing";
-const navigationPresetId = (ownerModuleId: string, itemKey: string, navKey = "public:header") =>
+const navigationPresetId = (ownerModuleId: string, itemKey: string, navKey: string) =>
   createPhiPresetCmsInstanceId({
     domain: "navigation",
     ownerModuleId,
     presetKey: navKey,
     nodeKey: itemKey,
   });
-const publicHomeId = navigationPresetId(PHI_PUBLIC_RUNTIME_MODULE_ID, publicHomeKey);
-const publicTermsId = navigationPresetId(PHI_PUBLIC_RUNTIME_MODULE_ID, publicTermsKey);
-const missingId = navigationPresetId("@test/pkg/modules/navigation", missingKey);
+const builderModulesId = navigationPresetId(PHI_BUILDER_RUNTIME_MODULE_ID, builderModulesKey, "builder:sidebar");
+const builderShellsId = navigationPresetId(PHI_BUILDER_RUNTIME_MODULE_ID, builderShellsKey, "builder:sidebar");
+const missingId = navigationPresetId("@test/pkg/modules/navigation", missingKey, "builder:sidebar");
 const publicRegistrationId = navigationPresetId(
   PHI_AUTH_RUNTIME_MODULE_ID,
   "@phis/ui/modules/auth/nav/public/registration",
+  "public:header",
 );
-const overlayResolution = resolvePhiCmsNavigationOverlay(publicHeaderSurface, {
-  navKey: "public:header",
+const overlayResolution = resolvePhiCmsNavigationOverlay(builderSidebarSurface, {
+  navKey: "builder:sidebar",
   itemOverrides: [
-    { id: publicHomeId, label: "Start" },
-    { id: publicTermsId, placement: { parentId: null, index: 0 } },
+    { id: builderModulesId, label: "Start" },
+    { id: builderShellsId, placement: { parentId: null, index: 0 } },
     { id: missingId, label: "Dormant" },
   ],
   customItems: [],
   tombstones: [],
 });
-assert.equal(overlayResolution.surface.items[0]?.id, publicTermsId);
-assert.equal(overlayResolution.surface.items[1]?.label.defaultMessage, "Start");
+assert.equal(overlayResolution.surface.items[0]?.id, builderShellsId);
+// Found by id rather than position: optional Modules inject their own entries beside the base ones.
+assert.equal(
+  overlayResolution.surface.items.find(({ id }) => id === builderModulesId)?.label.defaultMessage,
+  "Start",
+);
 assert.deepEqual(overlayResolution.diagnostics, [{ code: "unresolved-item", id: missingId }]);
 
 const customItemId = createPhiDraftCmsInstanceId({
@@ -167,8 +177,8 @@ const customItemId = createPhiDraftCmsInstanceId({
   draftRevisionId: 1,
   sequence: 1,
 });
-const customOverlayResolution = resolvePhiCmsNavigationOverlay(publicHeaderSurface, {
-  navKey: "public:header",
+const customOverlayResolution = resolvePhiCmsNavigationOverlay(builderSidebarSurface, {
+  navKey: "builder:sidebar",
   itemOverrides: [],
   customItems: [{
     id: customItemId,
@@ -186,22 +196,22 @@ assert.equal(
   "/custom",
 );
 
-const invalidPlacementResolution = resolvePhiCmsNavigationOverlay(publicHeaderSurface, {
-  navKey: "public:header",
-  itemOverrides: [{ id: publicHomeId, placement: { parentId: publicHomeId, index: 0 } }],
+const invalidPlacementResolution = resolvePhiCmsNavigationOverlay(builderSidebarSurface, {
+  navKey: "builder:sidebar",
+  itemOverrides: [{ id: builderModulesId, placement: { parentId: builderModulesId, index: 0 } }],
   customItems: [],
   tombstones: [],
 });
-assert.equal(invalidPlacementResolution.surface.items.some(({ id }) => id === publicHomeId), true);
+assert.equal(invalidPlacementResolution.surface.items.some(({ id }) => id === builderModulesId), true);
 assert.equal(invalidPlacementResolution.diagnostics[0]?.code, "invalid-placement");
 
-const tombstoneResolution = resolvePhiCmsNavigationOverlay(publicHeaderSurface, {
-  navKey: "public:header",
+const tombstoneResolution = resolvePhiCmsNavigationOverlay(builderSidebarSurface, {
+  navKey: "builder:sidebar",
   itemOverrides: [],
   customItems: [],
-  tombstones: [publicTermsId],
+  tombstones: [builderShellsId],
 });
-assert.equal(tombstoneResolution.surface.items.some(({ id }) => id === publicTermsId), false);
+assert.equal(tombstoneResolution.surface.items.some(({ id }) => id === builderShellsId), false);
 
 const publicCatalog = resolvePhiCmsDescriptorCatalog(PHI_PUBLIC_RUNTIME_MODULE_CATALOG);
 const publicBaseModuleIds = new Set([
@@ -213,14 +223,19 @@ const publicBaseRoutes = compilePhiCmsActiveRouteTable({
   area: "public",
   activeModuleIds: publicBaseModuleIds,
 });
-// The Public landing answers at `/` and is addressed by its preset identity, not by a second name.
-const publicWelcomeId = createPhiPresetCmsPageId({
+/*
+ * The base Module owns only the error Pages. The landing, the terms and the contact page are the Site
+ * package's, so with nothing but the base active the root slot has no applicant and `/contact` no
+ * holder -- neither is a fault, both are what a Site without a Site package looks like.
+ */
+assert.equal(resolvePhiCmsRoutePreset(publicBaseRoutes, "/"), null);
+assert.equal(resolvePhiCmsRoutePreset(publicBaseRoutes, "/contact"), null);
+const publicError404Id = createPhiPresetCmsPageId({
   ownerModuleId: PHI_PUBLIC_RUNTIME_MODULE_ID,
-  presetKey: "public-welcome-page",
+  presetKey: "public-error-404-page",
 });
-assert.equal(resolvePhiCmsRoutePreset(publicBaseRoutes, "/")?.descriptor.presetKey, "public-welcome-page");
-assert.equal(resolvePhiCmsRoutePresetByPageId(publicBaseRoutes, publicWelcomeId)?.descriptor.path, "/");
-assert.equal(resolvePhiCmsRoutePreset(publicBaseRoutes, "/contact")?.descriptor.ownerModuleId, PHI_PUBLIC_RUNTIME_MODULE_ID);
+assert.equal(resolvePhiCmsRoutePreset(publicBaseRoutes, "/error/404")?.descriptor.ownerModuleId, PHI_PUBLIC_RUNTIME_MODULE_ID);
+assert.equal(resolvePhiCmsRoutePresetByPageId(publicBaseRoutes, publicError404Id)?.descriptor.path, "/error/404");
 assert.equal(resolvePhiCmsRoutePreset(publicBaseRoutes, "/register"), null);
 const publicBaseHeader = resolvePhiCmsActiveNavigationSurfaces({
   catalog: publicCatalog,

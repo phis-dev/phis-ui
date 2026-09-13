@@ -20,43 +20,39 @@ const label = (defaultMessage: string) => ({ defaultMessage });
 export const PHI_ADMIN_SETTINGS_NAV_ITEM_KEY = "@phis/ui/modules/admin/nav/settings";
 export const PHI_BUILDER_SETTINGS_NAV_ITEM_KEY = "@phis/ui/builder/nav/settings";
 
-const publicHomeItem = {
-  itemKey: "@phis/ui/modules/public/nav/home",
-  label: label("Home"),
-  icon: "antd:home",
-  routePresetKey: "public-welcome-page",
-} as const;
-
-const publicTermsItem = {
-  itemKey: "@phis/ui/modules/public/nav/terms",
-  label: label("Terms and Conditions"),
-  routePresetKey: "public-terms-page",
-} as const;
-
+/*
+ * The Public surfaces carry no intrinsic entry and export no anchor.
+ *
+ * The landing, the terms and the contact page are the Site package's -- `@phis/example` here -- and so
+ * are the entries that lead to them; the base Module owns only the error Pages, which no navigation
+ * should name. An exported anchor is a promise its owner has to keep, and a surface whose entries all
+ * come from optional Modules has nothing to promise: contributed entries land at the end of their
+ * surface, ordered by Module, preset key and item key, or anchor on the contributing Module's own items.
+ */
 const publicNavigationSurfaces = [
   {
     navKey: "public:header",
     label: label("Public header navigation"),
-    items: [publicHomeItem, publicTermsItem],
-    exportedItemKeys: [publicHomeItem.itemKey, publicTermsItem.itemKey],
+    items: [],
+    exportedItemKeys: [],
   },
   {
     navKey: "public:sidebar",
     label: label("Public sidebar navigation"),
-    items: [publicHomeItem, publicTermsItem],
-    exportedItemKeys: [publicHomeItem.itemKey, publicTermsItem.itemKey],
+    items: [],
+    exportedItemKeys: [],
   },
   {
     navKey: "public:footer",
     label: label("Public footer navigation"),
-    items: [publicTermsItem],
-    exportedItemKeys: [publicTermsItem.itemKey],
+    items: [],
+    exportedItemKeys: [],
   },
   {
     navKey: "public:quicklinks",
     label: label("Public quick links"),
-    items: [publicHomeItem, publicTermsItem],
-    exportedItemKeys: [publicHomeItem.itemKey, publicTermsItem.itemKey],
+    items: [],
+    exportedItemKeys: [],
   },
 ] as const;
 

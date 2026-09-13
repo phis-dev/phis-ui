@@ -65,10 +65,10 @@ function buildFormRouteNavigation(template: (typeof FORM_ROUTE_TEMPLATES)[number
   } as const;
 
   if (template.key === "registration") {
+    // Unanchored: the Public header exports no base item, so the entry lands at the end of the surface.
     return [{
       navKey: "public:header",
       parentItemKey: null,
-      after: "@phis/ui/modules/public/nav/home",
       item,
     }] as const;
   }

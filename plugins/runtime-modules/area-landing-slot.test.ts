@@ -98,12 +98,14 @@ function chose(identity: PhiCmsPresetIdentity): PhiAreaLandingSelection {
 }
 
 describe("the Area root slot", () => {
-  it("is the base Module's Page when nobody applies", () => {
-    const root = resolvePhiCmsRoutePreset(compile(), "/");
-    expect(root?.descriptor.ownerModuleId).toBe(PHI_PUBLIC_RUNTIME_MODULE_ID);
-    // It holds the slot as the fallback rung, not as an application: a built-in Page never applies,
-    // or every Site would ship with the table already occupied and adoption would never fire.
-    expect(root?.descriptor.landingPage).toBeUndefined();
+  it("is empty when nobody applies", () => {
+    /*
+     * The Public base Module owns no Page at `/`: the landing is the Site package's, and a Site
+     * without one has no front door rather than a built-in stand-in. That is also what keeps the
+     * adoption rule honest -- a built-in applicant would occupy the table on every Site, and a single
+     * offer from a Site package would never be the single one.
+     */
+    expect(resolvePhiCmsRoutePreset(compile(), "/")).toBeNull();
   });
 
   it("goes to a single applicant unasked, so an installed Site package is live at once", () => {
@@ -111,7 +113,7 @@ describe("the Area root slot", () => {
     expect(root?.descriptor.ownerModuleId).toBe(OFFEROR_ID);
   });
 
-  it("stays with the base Module when the Site answered the slot with nobody", () => {
+  it("leaves the slot empty when the Site answered it with nobody", () => {
     /*
      * "Landing, no applicant" is a decision and outranks the adoption: the Builder is looking at an
      * empty applicant Select and authors the root themselves. Reading it as "never asked" is what used
@@ -121,7 +123,7 @@ describe("the Area root slot", () => {
       compile({ entries: withOfferor(), landingSelection: { kind: "empty" } }),
       "/",
     );
-    expect(root?.descriptor.ownerModuleId).toBe(PHI_PUBLIC_RUNTIME_MODULE_ID);
+    expect(root).toBeNull();
   });
 
   it("goes to the applicant the Site chose", () => {
@@ -161,14 +163,14 @@ describe("the Area root slot", () => {
     expect(resolvePhiCmsRoutePreset(table, "/")?.descriptor.ownerModuleId).toBe(OFFEROR_ID);
   });
 
-  it("falls back when the chosen applicant is switched off", () => {
-    // The front door moves rather than breaking, which is what makes a Module safe to switch off.
+  it("empties the slot when the chosen applicant is switched off", () => {
+    // The front door goes with the Module rather than breaking the table: nothing else applied.
     const table = compile({
       entries: withOfferor(),
       activeModuleIds: baseModuleIds,
       landingSelection: chose({ ownerModuleId: OFFEROR_ID, presetKey: OFFERED_PRESET_KEY }),
     });
-    expect(resolvePhiCmsRoutePreset(table, "/")?.descriptor.ownerModuleId).toBe(PHI_PUBLIC_RUNTIME_MODULE_ID);
+    expect(resolvePhiCmsRoutePreset(table, "/")).toBeNull();
   });
 
   it("adopts the replacement when the chosen applicant was swapped for another package", () => {

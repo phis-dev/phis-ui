@@ -4,3 +4,4 @@ export * from "./theme/phi-theme-presets";
 export * from "./theme/phi-theme-palette";
 export * from "./theme/phi-theme";
 export * from "./theme/phi-tokens";
+export * from "./theme/phi-theme-blocks";

@@ -69,28 +69,6 @@ export const PHI_AREA_BASE_RUNTIME_MODULE_AREA_SHELLS = [
 ] satisfies readonly PhiCmsAreaShellPresetDescriptor[];
 
 export const PHI_AREA_BASE_RUNTIME_MODULE_ROUTES = [
-  {
-    ownerModuleId: PHI_PUBLIC_RUNTIME_MODULE_ID,
-    presetKey: "public-welcome-page",
-    // 2: the Page-owned header and footer copy is gone -- the landing is its Content Region alone.
-    presetVersion: 2,
-    area: "public",
-    title: "Home",
-    path: "/",
-    /*
-     * It stands at `/` without applying for it.
-     *
-     * A built-in Page is not an applicant for the landing slot: it is what the slot falls back to
-     * while nobody else has taken it, which the base-Module rung of the chain already says. Declaring
-     * it an offer as well made every Site ship with one application already on the table, so a Site
-     * package that offered a landing arrived as the second and the "one applicant needs no question"
-     * adoption stopped firing -- an Operator would have had to open the Builder and choose. The Page
-     * is unchanged; only the application is withdrawn.
-     */
-    loadTree: ({ page }) =>
-      import("../../components/regions/presets/phi-default-pub-welcome-page-tree")
-        .then((module) => module.buildPhiDefaultPubWelcomePageTree({ page })),
-  },
   buildPhiAreaRootRoutePresetDescriptor({
     ownerModuleId: PHI_APP_RUNTIME_MODULE_ID,
     area: "app",
@@ -113,17 +91,6 @@ export const PHI_AREA_BASE_RUNTIME_MODULE_ROUTES = [
       import("../../components/regions/presets/phi-default-pub-error-page-tree")
         .then((module) => module.buildPhiDefaultPubErrorPageTree({ code, page })),
   })),
-  {
-    ownerModuleId: PHI_PUBLIC_RUNTIME_MODULE_ID,
-    presetKey: "public-terms-page",
-    presetVersion: 1,
-    area: "public",
-    title: "Terms and Conditions",
-    path: "/terms-and-conditions",
-    loadTree: ({ page }) =>
-      import("../../components/regions/presets/phi-default-pub-terms-page-tree")
-        .then((module) => module.buildPhiDefaultPubTermsPageTree({ page })),
-  },
   buildPhiAreaRootRoutePresetDescriptor({
     ownerModuleId: PHI_ACCOUNTING_RUNTIME_MODULE_ID,
     area: "accounting",
@@ -151,40 +118,3 @@ export const PHI_CORE_RUNTIME_MODULE_THEMES = PHI_CORE_THEME_PRESET_PLUGINS.map(
   ...(preset.description ? { description: preset.description } : {}),
   loadPreset: () => preset,
 })) satisfies readonly PhiCmsThemePresetDescriptor[];
-
-export const PHI_PUBLIC_FORM_RUNTIME_MODULE_ROUTES = [
-  {
-    ownerModuleId: PHI_PUBLIC_RUNTIME_MODULE_ID,
-    presetKey: "public-contact-page",
-    presetVersion: 1,
-    area: "public",
-    title: "Contact",
-    path: "/contact",
-    navigation: [
-      {
-        navKey: "public:header",
-        parentItemKey: null,
-        after: "@phis/ui/modules/public/nav/terms",
-        item: {
-          itemKey: "@phis/ui/modules/public/nav/contact-header",
-          label: { defaultMessage: "Contact" },
-          icon: "antd:mail",
-          routePresetKey: "public-contact-page",
-        },
-      },
-      {
-        navKey: "public:footer",
-        parentItemKey: null,
-        after: "@phis/ui/modules/public/nav/terms",
-        item: {
-          itemKey: "@phis/ui/modules/public/nav/contact-footer",
-          label: { defaultMessage: "Contact" },
-          routePresetKey: "public-contact-page",
-        },
-      },
-    ],
-    loadTree: ({ page, runtime }) =>
-      import("../../components/regions/presets/phi-default-pub-contact-page-tree")
-        .then((module) => module.buildPhiDefaultPubContactPageTree({ page, runtime })),
-  },
-] satisfies readonly PhiCmsRoutePresetDescriptor[];
