@@ -376,15 +376,19 @@ assert.equal(
 const authEntry = PHI_FIRST_PARTY_RUNTIME_MODULE_CATALOG.get(PHI_AUTH_RUNTIME_MODULE_ID);
 assert(authEntry);
 /*
- * Every Public sign-in Page starts out unindexed.
+ * Every Public sign-in Page and every Public error Page starts out unindexed -- and so out of the
+ * sitemap, which lists only what a crawler may index.
  *
  * Asserted over the live catalog rather than over the module's own list, because the failure this
  * guards against is not a wrong value -- it is a route that was added later and nobody thought about,
  * or a default that fell off during a move. Both look correct where they are written.
  */
-for (const path of ["/register", "/login", "/confirm", "/reset-password", "/logout"]) {
+for (const path of [
+  "/register", "/login", "/confirm", "/reset-password", "/logout",
+  "/error/401", "/error/403", "/error/404", "/error/500",
+]) {
   const binding = resolvePhiCmsRoutePreset(publicWithAuthRoutes, path);
-  assert(binding, `Auth must own the Public route ${path}.`);
+  assert(binding, `The Public route ${path} must be declared.`);
   assert.equal(
     hasPhiFlag(binding.descriptor.defaultPageFlags, PhiCmsFlags.NoIndex),
     true,

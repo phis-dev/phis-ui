@@ -8,6 +8,7 @@ import {
   PHI_DEFAULT_PUB_AREA_COMPOSITION_NODE_KEYS,
   PHI_DEFAULT_PUB_AREA_PRESET_KEY,
 } from "./preset-contracts/pub-area";
+import { PhiCmsFlags } from "../../constants/phi-cms";
 import { PHI_CORE_RUNTIME_MODULE_ID } from "./core/ids";
 import { PHI_ACCOUNTING_RUNTIME_MODULE_ID } from "./accounting/ids";
 import { PHI_APP_RUNTIME_MODULE_ID } from "./app/ids";
@@ -102,6 +103,12 @@ export const PHI_AREA_BASE_RUNTIME_MODULE_ROUTES = [
     area: "public" as const,
     title: String(code),
     path: `/error/${code}`,
+    /*
+     * An error Page is what a failed request shows, not something to be found: listed in a search
+     * result it would send a visitor straight to "not found". Unindexed by default, like the sign-in
+     * Pages, and the Site can still decide otherwise.
+     */
+    defaultPageFlags: PhiCmsFlags.NoIndex,
     loadTree: ({ page }: PhiCmsDescriptorBuildContext) =>
       import("../../components/regions/presets/phi-default-pub-error-page-tree")
         .then((module) => module.buildPhiDefaultPubErrorPageTree({ code, page })),
