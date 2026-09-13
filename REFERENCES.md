@@ -130,10 +130,18 @@ Site. Only internally persisted trusted content may contain resolvable Phi refer
 ## Validation, indexing, and failure behavior
 
 The server maintains one indexed reference projection for structured Page and Asset references across
-current CMS content and navigation. Save/import paths validate and update this index transactionally.
-Page and Asset deletion flows query it for affected-reference diagnostics instead of relying on browser
-state or broad JSON scans; a deleted Page may intentionally leave a stable unresolved reference for the
-Authoring diagnostic and Live omission behavior defined above.
+current CMS content, navigation, and the Site-wide Theme. Save/import paths validate and update this
+index transactionally. Page and Asset deletion flows query it for affected-reference diagnostics instead
+of relying on browser state or broad JSON scans; a deleted Page may intentionally leave a stable
+unresolved reference for the Authoring diagnostic and Live omission behavior defined above.
+
+A Control that persists an Asset writes its id into a field named `assetId`, or into one whose name ends
+in `AssetId`, and nothing else identifies an Asset in persisted config. `phis:asset/<id>` stays the form
+for Markdown and HTML bodies. This is what the server's reference collector reads: a Widget that keeps
+an Asset under another shape, a copied delivery URL, or a Storage key authors a reference the delete
+guard cannot see, and the Asset it needs can be deleted while the Widget still renders it. A Module
+picture the Site takes over -- a ground somebody edited -- is uploaded into the Site Media Space on the
+way to the server and is referenced by id from then on, like any other Asset.
 
 An unresolved internal Page reference renders non-interactive text; an unresolved Asset reference
 renders no media. Authoring receives a typed diagnostic containing the owner scope and source location.
