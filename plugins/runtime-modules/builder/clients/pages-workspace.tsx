@@ -76,12 +76,20 @@ export function PhiDeveloperBuilderPagesWorkspaceWidgetClient({
       [getPhiBuilderRegionDraftKey(pageMetaArea, "page_meta", pageMetaPageKey)]: {
         title: pageMeta?.title ?? null,
         description: pageMeta?.description ?? null,
+        index: pageMeta?.index ?? true,
       },
     });
     mergePhiDeveloperDeletedPageDrafts(pageMetaArea, {
       [getPhiBuilderRegionDraftKey(pageMetaArea, "page_delete", pageMetaPageKey)]: pageMeta?.isDeleted === true,
     });
-  }, [pageMeta?.description, pageMeta?.isDeleted, pageMeta?.title, pageMetaArea, pageMetaPageKey]);
+  }, [
+    pageMeta?.description,
+    pageMeta?.index,
+    pageMeta?.isDeleted,
+    pageMeta?.title,
+    pageMetaArea,
+    pageMetaPageKey,
+  ]);
 
   return (
     <div style={{ minWidth: 0, width: "100%", minHeight: 0, flex: "1 1 auto" }}>

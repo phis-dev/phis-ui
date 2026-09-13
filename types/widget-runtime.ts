@@ -122,6 +122,13 @@ export type PhiBlockRuntimePage = {
   descriptionMsgId?: number | null;
   title?: string | null;
   description?: string | null;
+  /**
+   * That this Page asked to stay out of the index, as its record answers it.
+   *
+   * The Area still decides first and decides harder: every authenticated Area is `noindex` whatever
+   * a Page says, and this can only add to that, never take it back.
+   */
+  noindex?: boolean;
 };
 
 export type PhiBlockRuntime = {

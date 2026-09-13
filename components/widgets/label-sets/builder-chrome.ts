@@ -40,6 +40,9 @@ const PHI_BUILDER_CHROME_WIDGET_LABEL_SET = definePhiLabelSet({
     pages_form_description: PHI_BUILDER_CHROME_WIDGET_DEFAULT_LABELS.pages.form.description,
     pages_form_title_required: definePhiMessageLabel(PHI_BUILDER_CHROME_WIDGET_DEFAULT_LABELS.pages.form.titleRequired),
     pages_form_path_required: definePhiMessageLabel(PHI_BUILDER_CHROME_WIDGET_DEFAULT_LABELS.pages.form.pathRequired),
+    pages_form_index: definePhiMessageLabel(PHI_BUILDER_CHROME_WIDGET_DEFAULT_LABELS.pages.form.index),
+    pages_form_index_description:
+      definePhiMessageLabel(PHI_BUILDER_CHROME_WIDGET_DEFAULT_LABELS.pages.form.indexDescription),
     canvas_picker_pick_layout: PHI_BUILDER_CHROME_WIDGET_DEFAULT_LABELS.canvas.picker.pickLayout,
     canvas_picker_pick_widget: PHI_BUILDER_CHROME_WIDGET_DEFAULT_LABELS.canvas.picker.pickWidget,
     canvas_picker_layouts: PHI_BUILDER_CHROME_WIDGET_DEFAULT_LABELS.canvas.picker.layouts,
@@ -126,6 +129,8 @@ export async function getPhiBuilderChromeWidgetLabels(
         description: labels.pages_form_description,
         titleRequired: labels.pages_form_title_required,
         pathRequired: labels.pages_form_path_required,
+        index: labels.pages_form_index,
+        indexDescription: labels.pages_form_index_description,
       },
     },
     canvas: {

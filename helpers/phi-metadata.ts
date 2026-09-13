@@ -120,9 +120,12 @@ export function buildPhiRootMetadata(options: PhiRootMetadataInput = {}): Metada
  * template" -- `absolute` is how a page opts out of one -- so the formatting happens here, where both
  * the Area's answer and the Page's own title are known.
  *
- * `robots` is decided here for the same reason: the answer is a fact about the Area, and only Public
- * is ever asked. Every other Area is authenticated, so it is `noindex` whatever is stored -- a Site
- * that never opened the dialog still keeps its Admin out of the index.
+ * `robots` is decided here for the same reason, and in two rungs. The Area answers first and answers
+ * hardest: every Area but Public is authenticated, so it is `noindex` whatever is stored -- a Site
+ * that never opened the dialog still keeps its Admin out of the index. Inside Public the Page may then
+ * withdraw itself, which is how a sign-in Form stays out of a search result without the Area having to
+ * close. The Page can only ever add to the Area's answer: a Public Area that was switched off is not
+ * reopened by a Page that never asked to be indexed in the first place.
  */
 export function buildPhiAreaPageMetadata({
   area,
@@ -130,12 +133,14 @@ export function buildPhiAreaPageMetadata({
   siteName,
   pageTitle,
   pageDescription,
+  pageNoindex,
 }: {
   area: PhiCmsAreaKey;
   meta: PhiAreaMeta | null | undefined;
   siteName?: string | null;
   pageTitle?: string | null;
   pageDescription?: string | null;
+  pageNoindex?: boolean | null;
 }): Metadata {
   const resolvedSiteName = resolveFirstText(siteName);
   const resolvedPageTitle = resolveFirstText(pageTitle);
@@ -154,7 +159,9 @@ export function buildPhiAreaPageMetadata({
       : resolvedPageTitle)
     : fallbackTitle;
   const description = resolveFirstText(pageDescription);
-  const indexable = area === "public" && (meta?.index ?? PHI_AREA_META_PUBLIC_DEFAULTS.index);
+  const indexable = area === "public"
+    && (meta?.index ?? PHI_AREA_META_PUBLIC_DEFAULTS.index)
+    && pageNoindex !== true;
 
   return {
     ...(title ? { title: { absolute: title } } : {}),

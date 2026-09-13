@@ -2,7 +2,7 @@
 
 import { phiAreaPath } from "../../../helpers/locale";
 import { resolvePhiBuilderAreaAsCmsArea, resolvePhiBuilderAreaMask } from "../../../constants/cms-areas";
-import { PhiCmsStatus } from "../../../constants/phi-cms";
+import { PhiCmsFlags, PhiCmsStatus } from "../../../constants/phi-cms";
 import type {
   PhiCmsContentWidgetNode,
   PhiCmsLayoutNode,
@@ -44,6 +44,7 @@ import {
 import type { PhiDeveloperBuilderDraftAllocation } from "./developer-workspace-types";
 import {
   resolvePhiBuilderActivePageCatalog,
+  resolvePhiBuilderPageDefaultFlags,
   resolvePhiBuilderPagePresetSource,
   type PhiPresetPageNode,
 } from "../../../helpers/cms-page-catalog";
@@ -974,6 +975,22 @@ export async function savePhiDeveloperBuilderDraft(
   const currentPagePresetSource = resolvePhiBuilderPagePresetSource(pageKey, pages);
   const currentAreaPresetSource = state.areaPresetSourcesByArea[area] ?? null;
   const pageMetaDraft = state.pageMetaDrafts?.[getPhiBuilderRegionDraftKey(area, "page_meta", pageKey)] ?? null;
+  /*
+   * The Page flags travel apart from the rest of the meta draft: the titles become translated
+   * messages and this is a column on the row, so the payload splits them even though the dialog
+   * asks them together.
+   *
+   * Writing 0 here is what used to clear a route's `NoIndex` the first time an Operator saved a
+   * Page it shipped -- the Page stayed out of the index until somebody opened it in the Builder,
+   * and was in it from then on, with nothing said and nothing shown.
+   *
+   * A draft that never answered the question is not an answer of "yes": the allocator saves Pages by
+   * key from a scope the workspace never opened, so the route's own default has to stand in, exactly
+   * as it does when the Page is instantiated rather than stored.
+   */
+  const pageFlags = pageMetaDraft?.index == null
+    ? resolvePhiBuilderPageDefaultFlags(pageKey, pages)
+    : pageMetaDraft.index === false ? PhiCmsFlags.NoIndex : 0;
   const isDeletedPageDraft = state.deletedPageDrafts?.[getPhiBuilderRegionDraftKey(area, "page_delete", pageKey)] === true;
   const allocationKey = createPhiBuilderDraftAllocationKey(
     area,
@@ -1013,7 +1030,7 @@ export async function savePhiDeveloperBuilderDraft(
       ...(pageMetaDraft ? { pageMeta: pageMetaDraft } : {}),
       page: {
         status: PhiCmsStatus.Deleted,
-        flags: 0,
+        flags: pageFlags,
         visibilityMask: areaMask,
         heroRootLayoutNodeId: null,
         headerBottomRootLayoutNodeId: null,
@@ -1061,7 +1078,7 @@ export async function savePhiDeveloperBuilderDraft(
       ...(pageMetaDraft ? { pageMeta: pageMetaDraft } : {}),
       page: {
         status: 1,
-        flags: 0,
+        flags: pageFlags,
         visibilityMask: areaMask,
         heroRootLayoutNodeId: pageRootIds.hero ?? null,
         headerBottomRootLayoutNodeId: pageRootIds.header_bottom ?? null,

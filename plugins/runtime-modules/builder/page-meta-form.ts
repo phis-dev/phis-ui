@@ -442,6 +442,28 @@ const descriptor: PhiFormDescriptor = {
       label: label("fields.description.label", "Description"),
       config: { rows: 4, maxLength: 500 },
     },
+    /*
+     * Whether this Page may be found, asked of every Page rather than only the ones a Module shipped.
+     *
+     * It is disabled rather than hidden outside Public, the way the path field already is: the answer
+     * is still true there -- an authenticated Area is never indexed -- and a field that vanishes reads
+     * as a question nobody thought to ask.
+     */
+    {
+      key: "index",
+      fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.switch,
+      label: label("fields.index.label", "Allow indexing"),
+      description: label(
+        "fields.index.description",
+        "Only Public pages can be indexed, and only while the Area allows it.",
+      ),
+      disabledWhen: { source: "form", valuePath: "indexLocked", operator: "equals", value: "true" },
+    },
+    {
+      key: "indexLocked",
+      fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.hidden,
+      initialValue: "false",
+    },
   ],
 };
 
@@ -459,6 +481,8 @@ const loadPhiBuilderPageMetaFormLabels: PhiFormLabelSetLoader = async ({ runtime
     "fields.path.required": labels.pages.form.pathRequired,
     "fields.path.description": "Module-owned Page paths are read-only.",
     "fields.description.label": labels.pages.form.description,
+    "fields.index.label": labels.pages.form.index,
+    "fields.index.description": labels.pages.form.indexDescription,
   };
 };
 

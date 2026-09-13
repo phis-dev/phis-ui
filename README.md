@@ -310,9 +310,13 @@ Use CLI findings as the local source of truth for Ant Design implementation deci
   - Page metadata has the highest priority and should override all area and site defaults.
   - Code-owned route presets return resolved title and description through `pageMeta`. When a preset has no title label or explicit metadata, its descriptor title is resolved through the normal Site-scoped translation path before becoming the runtime title.
   - A Page Title Widget reads `runtime.page.title` automatically and receives stable-shell navigation updates through the Core Page-context projection without persisted signal routes.
+- Indexing is answered on the page record, not in `pageMeta`.
+  - `pageMeta` is the translation projection of `titleMsgId` and `descriptionMsgId`; a boolean has no place in it. Whether a page may be indexed is the `PhiCmsFlags.NoIndex` bit on the page row, and the Builder's page-meta dialog is where it is set.
+  - A route preset states only what a page of it *starts out* as, through `defaultPageFlags`. The value is seeded onto the page when the route is instantiated and copied into the draft on install; from then on the record answers. The sign-in pages ship `NoIndex` this way, and a Site that wants its `/register` found can switch it on without the Module agreeing.
 - Area metadata is the contextual fallback layer.
   - Public, App, Admin, Developer, and Editor Areas may define their own fallback title and description behavior.
   - Internal areas may also choose stronger defaults such as `noindex`.
+  - The two rungs only ever add up: the Area decides first, every authenticated Area is `noindex` whatever a page says, and inside Public a page may withdraw itself but can never reopen an Area that was switched off.
 - Site metadata is the global fallback layer.
   - `site.name` and `site.theme.brand` are the most natural site-level fallback sources.
   - Site metadata should not replace a concrete page title when the page provides one.

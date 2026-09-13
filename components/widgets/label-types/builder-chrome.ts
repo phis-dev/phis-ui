@@ -43,6 +43,8 @@ export type PhiBuilderChromeWidgetLabels = {
       description: string;
       titleRequired: string;
       pathRequired: string;
+      index: string;
+      indexDescription: string;
     };
   };
   canvas: {
@@ -135,6 +137,13 @@ export const PHI_BUILDER_CHROME_WIDGET_DEFAULT_LABELS: PhiBuilderChromeWidgetLab
       description: "Description",
       titleRequired: "Title is required.",
       pathRequired: "Path is required.",
+      /*
+       * Phrased as the permission and not as the refusal, so the switch reads the same way round as
+       * the Area's own: on means found, off means not. The description carries the part an Operator
+       * cannot see from the switch -- that a closed Area outranks an open Page.
+       */
+      index: "Allow indexing",
+      indexDescription: "Only Public pages can be indexed, and only while the Area allows it.",
     },
   },
   canvas: {

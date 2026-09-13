@@ -52,6 +52,15 @@ export type PhiDeveloperBuilderRegionDraft = PhiCmsGeometryWidgetConfig & {
 export type PhiDeveloperBuilderPageMetaDraft = {
   title?: string | null;
   description?: string | null;
+  /**
+   * Whether the Page may be found, as the Operator last said it in the dialog.
+   *
+   * Absent is not "no": it is a draft that never touched the question, and the stored Page -- or, for
+   * a Page that has none yet, the flags its route ships -- keeps answering. The two travel to
+   * phi-server by different roads, the titles as translated messages and this as a Page flag, which is
+   * why it is resolved apart from them at save time.
+   */
+  index?: boolean;
 };
 
 export type PhiDeveloperBuilderDraftAllocation = {

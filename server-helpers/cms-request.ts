@@ -29,6 +29,8 @@ import {
 } from "../plugins/runtime-modules/descriptor-compiler";
 import { resolvePhiRuntimeModuleIdsForArea } from "../plugins/runtime-modules/settings";
 import { resolvePhiCmsRoutePage } from "../plugins/runtime-modules/route-page-resolution";
+import { PhiCmsFlags } from "../constants/phi-cms";
+import { hasPhiFlag } from "../helpers/flags";
 import { resolvePhiRuntimeModuleServerBinding } from "../plugins/runtime-modules/server-capabilities";
 import { resolvePhiAuthUiRuntimeProjection } from "../plugins/runtime-modules/auth/ui-provider";
 import {
@@ -231,6 +233,7 @@ function buildPhiRuntimePage(
     descriptionMsgId: pagePayload.page.page.descriptionMsgId,
     title: pageMeta?.title?.value ?? null,
     description: pageMeta?.description?.value ?? null,
+    noindex: hasPhiFlag(pagePayload.page.page.flags, PhiCmsFlags.NoIndex),
   };
 }
 

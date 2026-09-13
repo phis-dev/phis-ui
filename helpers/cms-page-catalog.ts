@@ -24,6 +24,15 @@ export type PhiPresetPageNode = {
    */
   catalogPath?: string;
   sourcePreset?: PhiCmsPresetSource;
+  /**
+   * The `PhiCmsFlags` the route says a Page of it starts out with.
+   *
+   * Carried on the catalog node because the Builder saves Pages it is not looking at -- a draft is
+   * allocated for a Page by key, from a scope the workspace never opened, and the meta draft that
+   * would otherwise answer does not exist yet. Without it that save writes the resting state of a
+   * Page nobody stated, which for a sign-in Page means quietly putting it back in the index.
+   */
+  defaultPageFlags?: number;
   /** That the Module offers this Page as the Area's landing, rather than merely declaring `/`. */
   landingPage?: true;
   pageScopeId?: number;
@@ -179,6 +188,13 @@ export function resolvePhiBuilderPagePresetSource(
   pages: readonly PhiPresetPageNode[],
 ) {
   return findPageNodePath([...pages], pageKey)?.at(-1)?.sourcePreset ?? null;
+}
+
+export function resolvePhiBuilderPageDefaultFlags(
+  pageKey: string,
+  pages: readonly PhiPresetPageNode[],
+) {
+  return findPageNodePath([...pages], pageKey)?.at(-1)?.defaultPageFlags ?? 0;
 }
 
 export function normalizePhiBuilderCmsCatalogPath(value: string) {

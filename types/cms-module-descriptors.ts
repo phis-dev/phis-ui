@@ -100,6 +100,15 @@ export type PhiCmsRoutePresetDescriptor = PhiCmsPresetIdentity & {
   mount?: PhiCmsRouteMountReference;
   title: string;
   accessPolicy?: PhiViewerAccessPolicy;
+  /**
+   * The `PhiCmsFlags` a Page of this route starts out with.
+   *
+   * A default, not a decision. It is written onto the Page when the route is instantiated and copied
+   * into the draft when the Builder installs it; from then on the record answers and this is not
+   * consulted again. A sign-in Page ships `NoIndex` because that is what almost every Site wants, and
+   * the one that wants its `/register` found can say so without the Module having to agree.
+   */
+  defaultPageFlags?: number;
   loadTree: (
     context: PhiCmsDescriptorBuildContext & {
       activeModuleIds: ReadonlySet<PhiRuntimeModuleId>;

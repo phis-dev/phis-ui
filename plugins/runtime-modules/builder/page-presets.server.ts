@@ -3,7 +3,8 @@ import "server-only";
 import { cache } from "react";
 import { cookies } from "next/headers";
 
-import { PhiCmsStatus } from "../../../constants/phi-cms";
+import { PhiCmsFlags, PhiCmsStatus } from "../../../constants/phi-cms";
+import { hasPhiFlag } from "../../../helpers/flags";
 import type { PhiBlockRuntime } from "../../../types/widget-runtime";
 import type { PhiRuntimeModuleCatalog, PhiRuntimeModuleId } from "../../../types";
 import type { PhiCmsRoutePresetBinding } from "../../../types/cms-module-descriptors";
@@ -53,6 +54,15 @@ export type PhiBuilderPageMeta = {
   title: string | null;
   description: string | null;
   isDeleted?: boolean;
+  /**
+   * Whether the Page may be found, resolved down the same chain the titles take: the Page as it is
+   * stored answers, and where nothing is stored the route's own default does.
+   *
+   * Always a decided value rather than a maybe. The dialog shows a switch and a switch is always in a
+   * position, so the question of what an unanswered Page means is settled here, once, instead of at
+   * every place that reads it.
+   */
+  index: boolean;
 };
 
 /**
@@ -438,6 +448,7 @@ async function buildPageMetaForScope(
       title: draftPage.page.pageMeta.title?.value ?? null,
       description: draftPage.page.pageMeta.description?.value ?? null,
       isDeleted: draftPage.page.page.status === PhiCmsStatus.Deleted,
+      index: readPageIndexFlag(draftPage.page.page.flags),
     };
   }
 
@@ -446,6 +457,7 @@ async function buildPageMetaForScope(
       title: null,
       description: null,
       isDeleted: draftPage.page.page.status === PhiCmsStatus.Deleted,
+      index: readPageIndexFlag(draftPage.page.page.flags),
     };
   }
 
@@ -464,6 +476,7 @@ async function buildPageMetaForScope(
       title: resolvedPage.page.pageMeta.title?.value ?? null,
       description: resolvedPage.page.pageMeta.description?.value ?? null,
       isDeleted: resolvedPage.page.page.status === PhiCmsStatus.Deleted,
+      index: readPageIndexFlag(resolvedPage.page.page.flags),
     };
   }
 
@@ -477,14 +490,28 @@ async function buildPageMetaForScope(
       })
     : null;
 
+  /*
+   * The route's default, which is what a Page that was never saved is. `presetTree` carries it on the
+   * Page the compiler seeded, so it is read from there rather than from the descriptor again -- one
+   * answer, arrived at once.
+   */
+  const presetIndex = presetTree
+    ? readPageIndexFlag(presetTree.page.flags)
+    : readPageIndexFlag(0);
+
   if (!presetTree?.pageMeta) {
-    return { title: null, description: null };
+    return { title: null, description: null, index: presetIndex };
   }
 
   return {
     title: presetTree.pageMeta.title?.value ?? null,
     description: presetTree.pageMeta.description?.value ?? null,
+    index: presetIndex,
   };
+}
+
+function readPageIndexFlag(flags: number | null | undefined) {
+  return !hasPhiFlag(flags, PhiCmsFlags.NoIndex);
 }
 
 export const buildPhiBuilderCurrentPageMeta = cache(async function buildPhiBuilderCurrentPageMeta(

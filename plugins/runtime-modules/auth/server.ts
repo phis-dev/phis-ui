@@ -1,9 +1,11 @@
-import { PHI_AUTH_RUNTIME_MODULE_AREA_OVERLAYS } from "../../../components/regions/presets/phi-auth-area-overlay-tree";
 import { PHI_AUTH_RUNTIME_MODULE_FORMS } from "../../../components/forms/shared-form-plugins";
 import { PHI_AUTH_ADMIN_SETTINGS_RUNTIME_MODULE_FORMS } from "../../../components/forms/auth-admin-settings-forms";
 import { definePhiRuntimeModuleServerAreaContribution } from "../area-contributions";
 import { PHI_AUTH_RUNTIME_MODULE_DEFINITION } from "../auth/definition";
-import { PHI_AUTH_RUNTIME_MODULE_ROUTES } from "../area-base-presets";
+import {
+  PHI_AUTH_RUNTIME_MODULE_AREA_OVERLAYS,
+  PHI_AUTH_RUNTIME_MODULE_ROUTES,
+} from "./presets";
 import { PHI_AUTH_RUNTIME_MODULE_WIDGETS } from "./widgets";
 
 /**

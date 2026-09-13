@@ -213,6 +213,7 @@ export function usePhiBuilderPageController({
       resolvePhiBuilderCmsStoragePath(effectiveArea, effectivePageKey, currentPageTree),
     );
     const currentNode = findPhiDeveloperBuilderPageNode(currentPageTree, effectivePageKey);
+    const indexAnswerable = effectiveArea === "public";
 
     setPageMetaDialogMode(mode);
     const presentation = mode === "create"
@@ -230,12 +231,21 @@ export function usePhiBuilderPageController({
           ),
           pathLocked: "false",
           description: "",
+          index: indexAnswerable,
+          indexLocked: indexAnswerable ? "false" : "true",
         }
       : {
           title: pageTitle,
           path: currentPath,
           pathLocked: currentNode?.pathLocked === true ? "true" : "false",
           description: currentMetaDraft.description ?? "",
+          /*
+           * Outside Public the switch states the fact rather than the draft, the way the Area dialog's
+           * own switches do: those Areas are authenticated and are never indexed, whatever a Page that
+           * was once Public left behind in its record.
+           */
+          index: indexAnswerable && currentMetaDraft.index !== false,
+          indexLocked: indexAnswerable ? "false" : "true",
         };
     setPendingPageMetaInitialValues(initialValues);
     dispatchPageMetaOverlay("activate");
@@ -275,6 +285,14 @@ export function usePhiBuilderPageController({
     const requestedPath = normalizePhiBuilderCmsCatalogPath(
       normalizePhiCascaderValue(typeof values.path === "string" ? values.path : title, { normalize: "path" }),
     );
+    /*
+     * The indexing answer is taken only where it was asked. Outside Public the switch is disabled and
+     * shows the fact rather than the record, so reading it back would write that fact into a Page that
+     * never said it -- and would quietly clear a `NoIndex` an Area move left behind.
+     */
+    const indexPatch = effectiveArea === "public"
+      ? { index: values.index !== false }
+      : {};
 
     if (pageMetaDialogMode === "update") {
       const currentNode = findPhiDeveloperBuilderPageNode(currentPageTree, effectivePageKey);
@@ -316,6 +334,7 @@ export function usePhiBuilderPageController({
             ...(current.pageMetaDrafts[pageMetaDraftKey] ?? {}),
             title,
             description,
+            ...indexPatch,
           },
         },
       };
@@ -433,6 +452,7 @@ export function usePhiBuilderPageController({
           [getPhiBuilderRegionDraftKey(effectiveArea, "page_meta", requestedKey)]: {
             title,
             description,
+            ...indexPatch,
           },
         },
         deletedPageDrafts: {

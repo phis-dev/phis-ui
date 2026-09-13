@@ -120,6 +120,7 @@ export function createPhiNextStaticAreaPage(root: string, cmsBridge: PhiCmsSiteB
       siteName: resolvedRequest.runtime.site.name,
       pageTitle: resolvedRequest.page.pageMeta?.title?.value,
       pageDescription: resolvedRequest.page.pageMeta?.description?.value,
+      pageNoindex: resolvedRequest.runtime.page?.noindex,
     });
   }
 
@@ -311,6 +312,7 @@ export function createPhiNextDynamicRootPage(cmsBridge: PhiCmsSiteBridge) {
       siteName: resolvedRequest.runtime.site.name,
       pageTitle: resolvedRequest.page.pageMeta?.title?.value,
       pageDescription: resolvedRequest.page.pageMeta?.description?.value,
+      pageNoindex: resolvedRequest.runtime.page?.noindex,
     });
   }
 

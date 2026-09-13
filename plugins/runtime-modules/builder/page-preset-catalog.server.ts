@@ -35,6 +35,7 @@ function insertPageTarget(
     ownerModuleId: PhiRuntimeModuleId;
     presetKey: string;
     presetVersion: number;
+    defaultPageFlags?: number;
     landingPage?: true;
   },
 ) {
@@ -68,6 +69,7 @@ function insertPageTarget(
       storagePath: target.path,
       catalogPath: treePath,
       sourcePreset,
+      ...(target.defaultPageFlags ? { defaultPageFlags: target.defaultPageFlags } : {}),
       ...(target.landingPage ? { landingPage: true as const } : {}),
     });
     return;
@@ -90,6 +92,7 @@ function insertPageTarget(
     storagePath: target.path,
     catalogPath: treePath,
     sourcePreset,
+    ...(target.defaultPageFlags ? { defaultPageFlags: target.defaultPageFlags } : {}),
     ...(target.landingPage ? { landingPage: true as const } : {}),
   });
 }

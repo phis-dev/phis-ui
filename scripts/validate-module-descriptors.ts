@@ -4,6 +4,8 @@ import assert from "node:assert/strict";
 import { createPhiPresetCmsPageId } from "../types/cms-instance-id";
 
 import { PhiBaseRole } from "../constants/phi-base-roles";
+import { PhiCmsFlags } from "../constants/phi-cms";
+import { hasPhiFlag } from "../helpers/flags";
 import { PHI_FIRST_PARTY_RUNTIME_MODULE_CATALOG } from "../plugins/runtime-modules/catalog";
 import { PHI_PUBLIC_RUNTIME_MODULE_CATALOG } from "../plugins/runtime-modules/area-catalogs/public";
 import { PHI_APP_RUNTIME_MODULE_CATALOG } from "../plugins/runtime-modules/area-catalogs/app";
@@ -373,6 +375,22 @@ assert.equal(
 
 const authEntry = PHI_FIRST_PARTY_RUNTIME_MODULE_CATALOG.get(PHI_AUTH_RUNTIME_MODULE_ID);
 assert(authEntry);
+/*
+ * Every Public sign-in Page starts out unindexed.
+ *
+ * Asserted over the live catalog rather than over the module's own list, because the failure this
+ * guards against is not a wrong value -- it is a route that was added later and nobody thought about,
+ * or a default that fell off during a move. Both look correct where they are written.
+ */
+for (const path of ["/register", "/login", "/confirm", "/reset-password", "/logout"]) {
+  const binding = resolvePhiCmsRoutePreset(publicWithAuthRoutes, path);
+  assert(binding, `Auth must own the Public route ${path}.`);
+  assert.equal(
+    hasPhiFlag(binding.descriptor.defaultPageFlags, PhiCmsFlags.NoIndex),
+    true,
+    `The Public route ${path} must ship as NoIndex.`,
+  );
+}
 assert.deepEqual(
   PHI_PUBLIC_RUNTIME_MODULE_CATALOG.get(PHI_AUTH_RUNTIME_MODULE_ID)?.areaOverlays?.map(({ area }) => area),
   ["public"],

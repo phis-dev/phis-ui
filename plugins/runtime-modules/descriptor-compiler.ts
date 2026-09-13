@@ -1550,10 +1550,20 @@ function createSyntheticPresetPage({
   siteId,
   area,
   path,
+  flags = 0,
 }: {
   siteId: number;
   area: PhiCmsAreaKey;
   path: string;
+  /**
+   * What the route said a Page of it starts out as -- today that is `NoIndex` and nothing else.
+   *
+   * It is seeded here rather than applied to the finished tree so that the loader sees it on the Page
+   * it is handed and carries it through the spread every preset tree already does. A loader that
+   * builds a Page instead of spreading the given one loses it, and loses `siteId` and `path` with it,
+   * which the tree contract below refuses.
+   */
+  flags?: number;
 }): PhiCmsPageNode {
   const areaMask = resolvePhiCmsAreaMask(area);
   return {
@@ -1563,7 +1573,7 @@ function createSyntheticPresetPage({
     path,
     pageType: PhiCmsPageType.Standard,
     status: PhiCmsStatus.Published,
-    flags: 0,
+    flags,
     visibilityMask: areaMask,
     accessPolicy: PHI_VIEWER_ACCESS_ANYONE,
     titleMsgId: null,
@@ -1882,7 +1892,12 @@ export async function instantiatePhiCmsRoutePreset({
   resolveMissingPageTitle?: (sourceTitle: string) => string | Promise<string>;
 }) {
   const descriptor = binding.descriptor;
-  const page = createSyntheticPresetPage({ siteId, area: descriptor.area, path });
+  const page = createSyntheticPresetPage({
+    siteId,
+    area: descriptor.area,
+    path,
+    flags: descriptor.defaultPageFlags ?? 0,
+  });
   const loadedTree = await descriptor.loadTree({
     page,
     runtime: resolveTargetRuntime(runtime, descriptor.area),

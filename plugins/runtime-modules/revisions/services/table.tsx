@@ -326,12 +326,19 @@ function formatPageMetaChangeLabel(
   labels: PhiBuilderRevisionsWidgetLabels,
   pageMeta: Record<string, unknown> | null,
 ) {
-  const titleChanged = readBoolean(pageMeta?.titleChanged);
-  const descriptionChanged = readBoolean(pageMeta?.descriptionChanged);
-  if (titleChanged && descriptionChanged) return labels.messages.titleAndDescriptionFields;
-  if (titleChanged) return labels.messages.titleField;
-  if (descriptionChanged) return labels.messages.descriptionField;
-  return labels.messages.titleAndDescriptionFields;
+  const changed = [
+    readBoolean(pageMeta?.titleChanged) ? labels.messages.titleField : "",
+    readBoolean(pageMeta?.descriptionChanged) ? labels.messages.descriptionField : "",
+    readBoolean(pageMeta?.indexChanged) ? labels.messages.indexingField : "",
+  ].filter(Boolean);
+  /*
+   * Composed rather than enumerated. Two fields were two named labels and one pair; a third turns that
+   * into seven, and the eighth -- what a row from before this field was recorded says -- would still
+   * have to be guessed. The pair keeps its own label because it is the common case and reads better as
+   * one phrase than as two joined ones.
+   */
+  if (changed.length === 0) return labels.messages.titleAndDescriptionFields;
+  return changed.join(labels.messages.fieldConjunction);
 }
 
 function formatRevisionMessage(

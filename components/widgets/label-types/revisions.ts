@@ -31,7 +31,10 @@ export type PhiBuilderRevisionsWidgetLabels = {
     themeSaved: string;
     titleField: string;
     descriptionField: string;
+    indexingField: string;
     titleAndDescriptionFields: string;
+    /** What joins two field names when a save changed more than one of them. */
+    fieldConjunction: string;
   };
   columns: {
     revision: string;
@@ -89,7 +92,9 @@ export const PHI_BUILDER_REVISIONS_WIDGET_DEFAULT_LABELS: PhiBuilderRevisionsWid
     themeSaved: "Saved theme draft from revision %1",
     titleField: "title",
     descriptionField: "description",
+    indexingField: "indexing",
     titleAndDescriptionFields: "title and description",
+    fieldConjunction: " and ",
   },
   columns: {
     revision: "Revision",

@@ -64,4 +64,32 @@ describe("the head of a Page in an Area", () => {
       siteName: "phis.dev",
     }).robots).toEqual({ index: false, follow: false });
   });
+
+  it("lets one Public Page withdraw itself from an open Area", () => {
+    // What a sign-in Form is: the Area wants to be found, this Page does not.
+    expect(buildPhiAreaPageMetadata({
+      area: "public",
+      meta: null,
+      siteName: "phis.dev",
+      pageTitle: "Login",
+      pageNoindex: true,
+    }).robots).toEqual({ index: false, follow: false });
+  });
+
+  it("does not let a Page reopen an Area that was closed", () => {
+    // The two rungs only ever add up. A Page that never asked to stay out is not an argument for
+    // going in, in Public or anywhere else.
+    expect(buildPhiAreaPageMetadata({
+      area: "public",
+      meta: { index: false },
+      siteName: "phis.dev",
+      pageNoindex: false,
+    }).robots).toEqual({ index: false, follow: false });
+    expect(buildPhiAreaPageMetadata({
+      area: "admin",
+      meta: { index: true },
+      siteName: "phis.dev",
+      pageNoindex: false,
+    }).robots).toEqual({ index: false, follow: false });
+  });
 });
