@@ -2,11 +2,22 @@ import {
   PHI_SIGNAL_VALUE_SCHEMAS,
 } from "../../../../types/signals";
 import type { PhiRuntimeControllerDefinition } from "../../../../types/cms-plugins";
+import type { PhiControlOption } from "../../../../components/controls/phi-control-options";
 import { PHI_THEME_CONTROLLER_KEY,
   PHI_THEME_CONTROLLER_PLUGIN_KEY } from "./address";
 import { PHI_THEME_SIGNAL_CHANNELS } from "./signals";
 
 export type PhiThemeRuntimeControllerConfig = Record<string, never>;
+
+/**
+ * The Sets this Area offers, worked out on the server where the active Modules are known.
+ *
+ * The Controller restates the Set select's options whenever the stored Theme changes, and it replaces
+ * the whole list; the client knows the installed blocks but not which Modules are active here.
+ */
+export type PhiThemeRuntimeControllerPreload = {
+  setOptions: PhiControlOption[];
+};
 
 export function parsePhiThemeRuntimeControllerConfig(): PhiThemeRuntimeControllerConfig {
   return {};
@@ -38,6 +49,12 @@ export const PHI_THEME_RUNTIME_CONTROLLER_DEFINITION = {
         id: "presetSelection",
         action: "change",
         valueType: "string",
+      },
+      {
+        id: "presetOptions",
+        action: "change",
+        valueType: "json",
+        valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.controlOptions,
       },
       {
         id: "commandEnabled",
@@ -75,4 +92,4 @@ export const PHI_THEME_RUNTIME_CONTROLLER_DEFINITION = {
   },
   defaultConfig: {},
   parseConfig: parsePhiThemeRuntimeControllerConfig,
-} satisfies PhiRuntimeControllerDefinition<PhiThemeRuntimeControllerConfig>;
+} satisfies PhiRuntimeControllerDefinition<PhiThemeRuntimeControllerConfig, PhiThemeRuntimeControllerPreload>;

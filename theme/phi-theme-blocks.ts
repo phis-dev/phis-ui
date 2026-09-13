@@ -19,6 +19,10 @@ import type { PhiSiteThemeRoot } from "../types/site-theme";
  * What a Site stores stays small: which blocks it follows, and the values its author changed. The
  * blocks themselves live in code, which is what lets a Module update its own look and lets a reset
  * show the real thing again rather than a copy that was frozen at some point.
+ *
+ * A Module's blocks are taken over whole by a save (theme/phi-theme-adoption.ts): a look somebody
+ * decided on must not depend on a package staying installed, and must not come apart halfway --
+ * picture kept, frame and colour gone -- when it is switched off. Core blocks are followed, never copied.
  */
 
 export type PhiThemeBlockIdentity = {
@@ -43,7 +47,7 @@ export type PhiThemePaletteBlock = PhiThemePresetPlugin;
  * every structural token would silently freeze the ones it never meant to have an opinion about.
  */
 export type PhiThemeStyleBlock = PhiThemeBlockIdentity & {
-  antd: { token: Record<string, string | number | boolean> };
+  style: { token: Record<string, string | number | boolean> };
 };
 
 /**
@@ -86,14 +90,14 @@ export const PHI_CORE_THEME_STYLE_BLOCKS: readonly PhiThemeStyleBlock[] = [
     version: 1,
     title: "Phi",
     description: "The house proportions: soft radii, generous spacing.",
-    antd: { token: {} },
+    style: { token: {} },
   },
   {
     key: "sharp",
     version: 1,
     title: "Sharp",
     description: "Square corners and tighter controls, for dense workspaces.",
-    antd: {
+    style: {
       token: {
         borderRadius: 2,
         borderRadiusLG: 4,
@@ -107,7 +111,7 @@ export const PHI_CORE_THEME_STYLE_BLOCKS: readonly PhiThemeStyleBlock[] = [
     version: 1,
     title: "Round",
     description: "Pill-shaped controls and wide radii, for editorial Sites.",
-    antd: {
+    style: {
       token: {
         borderRadius: 12,
         borderRadiusLG: 18,

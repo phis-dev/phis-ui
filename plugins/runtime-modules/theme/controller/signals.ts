@@ -4,4 +4,5 @@ export const PHI_THEME_SIGNAL_CHANNELS = {
   previewThemeMode: "brandPreviewThemeMode",
   command: "command",
   presetSelect: "select",
+  presetOptions: "selectOptions",
 } as const;

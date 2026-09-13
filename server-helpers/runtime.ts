@@ -293,8 +293,9 @@ export async function getPhiCmsRuntimeInfo({
       ...(site.theme?.contact ? { contact: site.theme.contact } : {}),
       ...(site.theme?.shell ? { shell: site.theme.shell } : {}),
       ...(site.theme?.root ? { root: site.theme.root } : {}),
-      ...(site.theme?.antd ? { antd: site.theme.antd } : {}),
-      ...(site.theme?.phi ? { phi: site.theme.phi } : {}),
+      ...(site.theme?.palette ? { palette: site.theme.palette } : {}),
+      ...(site.theme?.style ? { style: site.theme.style } : {}),
+      ...(site.theme?.components ? { components: site.theme.components } : {}),
     },
   };
 

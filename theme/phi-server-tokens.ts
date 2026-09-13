@@ -5,8 +5,9 @@ import { resolvePhiAntdAliasTokens } from "./phi-antd-token-resolver";
 import {
   PHI_CORE_THEME_PRESET_PLUGINS,
   resolvePhiThemePresetPlugin,
-  resolvePhiThemePresetTokens,
+  resolvePhiThemeColorTokens,
   type PhiThemeMode,
+  type PhiThemePalette,
   type PhiThemePresetPlugin,
 } from "./phi-theme-presets";
 
@@ -52,10 +53,10 @@ type PhiServerThemeSource = {
   mode?: PhiThemeMode | null;
   preset?: string | null;
   presetVersion?: number | null;
-  antd?: {
+  palette?: PhiThemePalette | null;
+  style?: {
     token?: Record<string, unknown>;
-    components?: Record<string, Record<string, unknown>>;
-  };
+  } | null;
 };
 
 const phiServerThemeTokenCache = new Map<string, PhiServerThemeTokens>();
@@ -77,7 +78,8 @@ export function resolvePhiServerThemeTokens(
     mode: siteTheme?.mode ?? "light",
     preset: siteTheme?.preset ?? null,
     presetVersion: siteTheme?.presetVersion ?? null,
-    token: siteTheme?.antd?.token ?? {},
+    palette: siteTheme?.palette ?? null,
+    token: siteTheme?.style?.token ?? {},
   });
   const cached = phiServerThemeTokenCache.get(cacheKey);
 
@@ -87,11 +89,11 @@ export function resolvePhiServerThemeTokens(
 
   const resolvedThemeMode = siteTheme?.mode === "dark" ? "dark" : "light";
   const themePreset = resolvePhiThemePresetPlugin(themePresets, siteTheme?.preset);
-  const presetTokens = resolvePhiThemePresetTokens(themePreset, resolvedThemeMode);
+  const colorTokens = resolvePhiThemeColorTokens(themePreset, siteTheme?.palette, resolvedThemeMode);
   const structuralTokens = buildPhiThemeStructuralTokens();
   const explicitTokens = {
-    ...presetTokens,
-    ...(siteTheme?.antd?.token ?? {}),
+    ...colorTokens,
+    ...(siteTheme?.style?.token ?? {}),
   };
   const tokenInput = {
     ...structuralTokens,

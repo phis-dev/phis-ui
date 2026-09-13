@@ -87,7 +87,7 @@ It must not contain:
 
 ## Token Sources
 
-`site.theme.antd.token` remains the source of truth for Ant Design design tokens.
+`site.theme.palette` (colour, per mode) and `site.theme.style.token` (structure) are the Site's source of truth for Ant Design design tokens, resolved over the Theme blocks the Site follows.
 
 If the root provider enables Ant Design `cssVar`, the runtime CSS variables are derived from that same token source.
 
@@ -110,7 +110,7 @@ These are expected to be available through Ant Design runtime CSS variables when
 - shadows
 - font metrics
 
-The canonical source for Ant Design semantics remains the numeric theme token input in `site.theme.antd.token`. Ant Design emits the matching `--ant-*` variables during SSR. Phi must not mirror those values into a second color, spacing, radius, shadow, or typography variable set.
+The canonical source for Ant Design semantics remains the theme token input resolved from `site.theme.palette` and `site.theme.style.token`. Ant Design emits the matching `--ant-*` variables during SSR. Phi must not mirror those values into a second color, spacing, radius, shadow, or typography variable set.
 
 The shared typography seed is `fontSize = 12`. Shell Regions inherit that base unless their persisted Region typography explicitly overrides it; content Widgets may use Ant Design aliases such as `fontSizeLG` as their own default.
 

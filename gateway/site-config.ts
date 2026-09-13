@@ -5,7 +5,7 @@ import { buildApiHeaders, buildApiUrl } from "../helpers/site-api";
 import type { PhiShellTheme } from "../components/shell/shell-types";
 import { getSiteConfigCacheTag } from "./cache-tags";
 import type { PhiSiteFontSlots, PhiSiteRemSettings, PhiSiteThemeRoot } from "../types/site-theme";
-import type { PhiThemeCustomColorPalette, PhiThemeMode } from "../theme/phi-theme-presets";
+import type { PhiThemePalette } from "../theme/phi-theme-presets";
 import type { PhiThemeBlockSelection } from "../theme/phi-theme-composition";
 import type { PhiControlShape } from "../theme/phi-control-shape";
 
@@ -66,13 +66,20 @@ export type PhiSiteTheme = {
   shell?: PhiShellTheme;
   root?: PhiSiteThemeRoot | null;
   rem?: PhiSiteRemSettings | null;
-  antd?: {
+  /**
+   * The colour the Site owns: a palette in the shape a Module ships one (theme/phi-theme-presets.ts),
+   * laid over the palette block the Site follows. Seeds shared by both modes under `seed`; the base
+   * seeds, explicit colour tokens and custom colours per mode under `modes`. Absent while the Site only
+   * follows a core palette; filled when a Module palette is taken over on save or an author changes a
+   * colour.
+   */
+  palette?: PhiThemePalette | null;
+  /** The proportions the Site owns, laid over the style block it follows. */
+  style?: {
     token?: Record<string, unknown>;
-    components?: Record<string, Record<string, unknown>>;
-  };
-  phi?: {
-    customColors?: Partial<Record<PhiThemeMode, Partial<PhiThemeCustomColorPalette>>>;
-  };
+  } | null;
+  /** Site-level component overrides, merged per component over the shared component defaults. */
+  components?: Record<string, Record<string, unknown>> | null;
 };
 
 export type PhiSiteLocaleOption = {

@@ -6,6 +6,7 @@ import {
   type PhiThemeComposition,
 } from "./phi-theme-composition";
 import type { PhiSiteThemeRoot } from "../types/site-theme";
+import type { PhiThemePalette } from "./phi-theme-presets";
 
 /**
  * The Theme as everything downstream should see it: blocks resolved, author values on top.
@@ -24,10 +25,9 @@ export type PhiThemeRuntimeSource = {
   preset?: string | null;
   presetVersion?: number | null;
   root?: PhiSiteThemeRoot | null;
-  antd?: {
-    token?: Record<string, unknown>;
-    components?: Record<string, Record<string, unknown>>;
-  } | null;
+  palette?: PhiThemePalette | null;
+  style?: { token?: Record<string, unknown> } | null;
+  components?: Record<string, Record<string, unknown>> | null;
 };
 
 export type PhiThemeRuntimeResult<T> = {
@@ -42,9 +42,10 @@ export type PhiThemeRuntimeResult<T> = {
  *
  * - the palette becomes `preset`, because that is the field every colour consumer already resolves
  *   against the preset plugins; a Theme that names a palette block and one that names the old preset
- *   are then literally the same thing to everything downstream
- * - the style block's tokens go under the author's, so an author who set a radius keeps it while the
- *   ones they never touched follow the block
+ *   are then literally the same thing to everything downstream. The Site's own `palette` stays as it
+ *   is: the colour consumers lay it over the preset themselves, per mode
+ * - the style block's tokens go under the author's `style.token`, so an author who set a radius keeps
+ *   it while the ones they never touched follow the block
  * - the ground is merged part by part into `root`
  *
  * The composition comes back alongside, because the workspace needs to know which parts are running on
@@ -59,8 +60,8 @@ export function resolvePhiThemeRuntimePayload<T extends PhiThemeRuntimeSource>(
     catalog,
   );
 
-  const authoredToken = theme?.antd?.token ?? {};
-  const styleToken = composition.style.antd.token;
+  const authoredToken = theme?.style?.token ?? {};
+  const styleToken = composition.style.style.token;
 
   return {
     composition,
@@ -69,8 +70,8 @@ export function resolvePhiThemeRuntimePayload<T extends PhiThemeRuntimeSource>(
       preset: composition.palette.key,
       presetVersion: composition.palette.version,
       root: resolvePhiThemeEffectiveRoot(theme?.root, composition.ground),
-      antd: {
-        ...(theme?.antd ?? {}),
+      style: {
+        ...(theme?.style ?? {}),
         token: { ...styleToken, ...authoredToken },
       },
     },

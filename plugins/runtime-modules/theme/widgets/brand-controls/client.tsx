@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
 
-import { Button, Card, Collapse, ConfigProvider, Divider, Flex, Form, Input, Select, Space, Statistic, Switch, Tag, Typography, theme as antdTheme } from "antd";
+import { Button, Card, Collapse, ConfigProvider, Divider, Flex, Form, Input, Space, Statistic, Switch, Tag, Typography, theme as antdTheme } from "antd";
 import type { AliasToken } from "antd/es/theme/interface";
 import type { PhiColorPickerLabels } from "../../../../../components/widgets/label-types/color-picker";
 
@@ -19,25 +19,29 @@ import {
   PHI_DEFAULT_THEME_PRESET_KEY,
   PHI_DEFAULT_THEME_PRESET_VERSION,
   PHI_THEME_CUSTOM_COLOR_KEYS,
+  isPhiThemePaletteModeSeedKey,
+  mergePhiThemePalettes,
+  resolvePhiThemeColorTokens,
   resolvePhiThemePresetPlugin,
-  resolvePhiThemePresetTokens,
   type PhiThemeMode,
+  type PhiThemePalette,
+  type PhiThemePaletteMode,
   type PhiThemePresetPlugin,
   type PhiThemeCustomColorKey,
   type PhiThemeCustomColorPalette,
 } from "../../../../../theme/phi-theme-presets";
 import {
   buildPhiThemeCustomColorPalette,
+  resolvePhiThemePaletteCustomColors,
   resolvePhiThemePresetCustomColors,
 } from "../../../../../theme/phi-theme-palette";
 import { usePhiConfig } from "../../../../../components/root/phi-config-provider";
 import {
   resolvePhiThemeComposition,
   resolvePhiThemeEffectiveRoot,
-  splitPhiThemeAuthoredTokens,
 } from "../../../../../theme/phi-theme-composition";
 import { resolvePhiThemeRuntimePayload } from "../../../../../theme/phi-theme-runtime";
-import { materializePhiThemeGroundImages } from "../../materialize-images";
+import { materializePhiThemeModuleBlocks } from "../../materialize-images";
 import {
   createPhiAntdThemeCssVarKey,
   resolvePhiAntdAliasTokens,
@@ -46,9 +50,13 @@ import {
   buildPhiThemeStructuralTokens,
 } from "../../../../../theme/phi-theme";
 import {
+  buildPhiSiteThemeSelectOption,
+  createPhiThemeDerivation,
+  ensurePhiThemeDerivation,
   isPhiSiteThemeSelectionValue,
   resolvePhiThemeSelectionValue,
 } from "../../../../../theme/phi-theme-selection";
+import type { PhiControlOption } from "../../../../../components/controls/phi-control-options";
 import { PHI_CONTROL_HEIGHTS, PHI_PADDING, PHI_RADII } from "../../../../../theme/phi-tokens";
 import {
   PHI_COLOR_PICKER_NEUTRAL_PRESETS,
@@ -332,74 +340,141 @@ const BRAND_THEME_COLOR_SECTION_KEYS: readonly string[] = [
   ...THEME_COLOR_SEED_SECTIONS.map((section) => section.key),
 ];
 
-const THEME_COLOR_SEED_KEYS = new Set<string>(THEME_COLOR_SEED_SECTIONS.map((section) => section.key));
-const THEME_DERIVED_COLOR_KEYS = new Set<string>(THEME_COLOR_SEED_SECTIONS.flatMap((section) => section.derived.map((item) => item.key)));
-const THEME_COLOR_TOKEN_KEYS = new Set<string>([
-  ...THEME_COLOR_SEED_KEYS,
-  ...THEME_DERIVED_COLOR_KEYS,
-]);
-
 type ThemeColorSeedSection = (typeof THEME_COLOR_SEED_SECTIONS)[number];
 
+/** The record without the named fields, for the places where a part of the Theme is handed back to its block. */
+function omitThemeFields(theme: ThemePayload, ...fields: ReadonlyArray<keyof ThemePayload>): ThemePayload {
+  return Object.fromEntries(
+    Object.entries(theme).filter(([key]) => !fields.includes(key as keyof ThemePayload)),
+  ) as ThemePayload;
+}
+
+/**
+ * The Site's palette written back with empty containers dropped, so a Theme whose author cleared their
+ * last colour owns nothing again and follows its palette block outright. An absent `palette` and an
+ * empty one mean the same thing to every consumer; keeping the record free of the empty one is what
+ * lets "Draft colors" and a Module take-over read the truth off the shape.
+ */
+function withThemePalette(theme: ThemePayload, palette: PhiThemePalette): ThemePayload {
+  const modes = Object.fromEntries(
+    Object.entries(palette.modes ?? {}).filter(([, mode]) => mode && Object.keys(mode).length > 0),
+  );
+  const next: PhiThemePalette = {
+    ...(Object.keys(palette.seed ?? {}).length > 0 ? { seed: palette.seed } : {}),
+    ...(Object.keys(modes).length > 0 ? { modes } : {}),
+  };
+  return Object.keys(next).length === 0
+    ? omitThemeFields(theme, "palette")
+    : { ...theme, palette: next };
+}
+
+/** One mode of the Site's palette rewritten; a mode left with nothing in it disappears. */
+function mergeThemePaletteMode(
+  theme: ThemePayload,
+  mode: PhiThemeMode,
+  rewrite: (current: PhiThemePaletteMode) => PhiThemePaletteMode,
+): ThemePayload {
+  const palette = theme.palette ?? {};
+  const written = rewrite(palette.modes?.[mode] ?? {});
+  const nextMode = Object.fromEntries(
+    (["seed", "overrides", "customColors"] as const)
+      .filter((part) => Object.keys(written[part] ?? {}).length > 0)
+      .map((part) => [part, written[part]]),
+  ) as PhiThemePaletteMode;
+  return withThemePalette(theme, {
+    ...palette,
+    modes: { ...(palette.modes ?? {}), [mode]: nextMode },
+  });
+}
+
+/**
+ * A seed the author set. The two base seeds belong to the mode being edited, every other seed to the
+ * palette as a whole, because Ant Design derives both modes from the one value. Setting a seed takes
+ * the section's derived overrides of that mode with it: they were tuned to the old seed.
+ */
 function mergeThemeSeedToken(
   theme: ThemePayload,
   section: ThemeColorSeedSection,
   value: string,
+  mode: PhiThemeMode,
 ): ThemePayload {
   const derivedTokenKeys = new Set<string>(section.derived.map((item) => item.key));
-  const nextToken = Object.fromEntries(
-    Object.entries(theme.antd?.token ?? {}).filter(([key]) => !derivedTokenKeys.has(key)),
-  );
+  const withoutDerived = mergeThemePaletteMode(theme, mode, (current) => ({
+    ...current,
+    overrides: Object.fromEntries(
+      Object.entries(current.overrides ?? {}).filter(([key]) => !derivedTokenKeys.has(key)),
+    ),
+  }));
 
-  return {
-    ...theme,
-    antd: {
-      ...(theme.antd ?? {}),
-      token: {
-        ...nextToken,
-        [section.key]: value,
-      },
-    },
-  };
+  if (isPhiThemePaletteModeSeedKey(section.key)) {
+    return mergeThemePaletteMode(withoutDerived, mode, (current) => ({
+      ...current,
+      seed: { ...(current.seed ?? {}), [section.key]: value },
+    }));
+  }
+  const palette = withoutDerived.palette ?? {};
+  return withThemePalette(withoutDerived, {
+    ...palette,
+    seed: { ...(palette.seed ?? {}), [section.key]: value },
+  });
+}
+
+/** A derived colour stated outright for one mode: a hover tone that suits light is wrong in dark. */
+function mergeThemeColorOverride(
+  theme: ThemePayload,
+  tokenKey: string,
+  value: string,
+  mode: PhiThemeMode,
+): ThemePayload {
+  return mergeThemePaletteMode(theme, mode, (current) => ({
+    ...current,
+    overrides: { ...(current.overrides ?? {}), [tokenKey]: value },
+  }));
+}
+
+/** The override taken away again, so the palette below derives the colour as before. */
+function omitThemeColorOverride(theme: ThemePayload, tokenKey: string, mode: PhiThemeMode): ThemePayload {
+  return mergeThemePaletteMode(theme, mode, (current) => ({
+    ...current,
+    overrides: Object.fromEntries(
+      Object.entries(current.overrides ?? {}).filter(([key]) => key !== tokenKey),
+    ),
+  }));
 }
 
 function resolveThemeKey(config?: PhiBuilderBrandWidgetConfig | null) {
   return config?.themeKey?.trim() || DEFAULT_THEME_KEY;
 }
 
-function normalizeTheme(
-  input: unknown,
-  fallback: ThemePayload,
-  presets: readonly PhiThemePresetPlugin[],
-): ThemePayload {
+function normalizeTheme(input: unknown, fallback: ThemePayload): ThemePayload {
   if (!input || typeof input !== "object" || Array.isArray(input)) {
-    return ensureThemeCustomColors(fallback, presets);
+    return fallback;
   }
 
-  return ensureThemeCustomColors(input as ThemePayload, presets);
+  return input as ThemePayload;
 }
 
-function resolveInitialTheme(
-  runtime: PhiBlockRuntime,
-  presets: readonly PhiThemePresetPlugin[],
-): ThemePayload {
+/**
+ * A fresh draft names its blocks and owns nothing: the proportions come from the style block at
+ * resolve time, the colour from the palette block, and nothing is copied in that a reset would later
+ * have to know how to take away.
+ */
+function resolveInitialTheme(runtime: PhiBlockRuntime): ThemePayload {
   return normalizeTheme(runtime.site.theme, {
     mode: "light",
     preset: PHI_DEFAULT_THEME_PRESET_KEY,
     presetVersion: PHI_DEFAULT_THEME_PRESET_VERSION,
-    antd: {
-      token: buildPhiNonColorThemeTokens(),
-    },
-  } as ThemePayload, presets);
+  } as ThemePayload);
 }
 
+/** A structural token the author set, laid over the style block under `style.token`. */
 function mergeThemeToken(theme: ThemePayload, tokenPatch: Record<string, unknown>): ThemePayload {
   return {
     ...theme,
-    antd: {
-      ...(theme.antd ?? {}),
+    style: {
+      ...(theme.style ?? {}),
       token: {
-        ...(theme.antd?.token ?? {}),
+        ...(theme.style?.token ?? {}),
         ...tokenPatch,
       },
     },
@@ -427,107 +502,53 @@ function resolveThemePayloadMode(theme: ThemePayload) {
   return theme.mode === "dark" ? "dark" : "light";
 }
 
-function resolveThemePresetTokenInput(
+/**
+ * The ten custom colours the draft shows in one mode: the palette block with the Site's own palette on
+ * top, resolved the way the Site renders them. Nothing is written into the record for reading them.
+ */
+function resolveThemeCustomPalette(
   theme: ThemePayload,
   preset: PhiThemePresetPlugin,
-  mode: PhiThemeMode = resolveThemePayloadMode(theme),
-) {
-  return resolvePhiThemePresetTokens(preset, mode);
-}
-
-function resolveThemePresetCustomPalette(
-  theme: ThemePayload,
-  preset: PhiThemePresetPlugin,
-  mode: PhiThemeMode = resolveThemePayloadMode(theme),
-) {
-  return {
-    ...resolvePhiThemePresetCustomColors(preset, mode),
-    ...(theme.phi?.customColors?.[mode] ?? {}),
-  } satisfies PhiThemeCustomColorPalette;
+  mode: PhiThemeMode,
+): PhiThemeCustomColorPalette {
+  return resolvePhiThemePaletteCustomColors(mergePhiThemePalettes(preset.palette, theme.palette), mode);
 }
 
 function mergeThemeCustomColors(
   theme: ThemePayload,
   colorPatch: Partial<PhiThemeCustomColorPalette>,
-  mode: PhiThemeMode = resolveThemePayloadMode(theme),
+  mode: PhiThemeMode,
 ): ThemePayload {
-  return {
-    ...theme,
-    phi: {
-      ...(theme.phi ?? {}),
-      customColors: {
-        ...(theme.phi?.customColors ?? {}),
-        [mode]: {
-          ...(theme.phi?.customColors?.[mode] ?? {}),
-          ...colorPatch,
-        },
-      },
-    },
-  };
+  return mergeThemePaletteMode(theme, mode, (current) => ({
+    ...current,
+    customColors: { ...(current.customColors ?? {}), ...colorPatch },
+  }));
 }
 
-function ensureThemeCustomColors(
-  theme: ThemePayload,
-  presets: readonly PhiThemePresetPlugin[],
-): ThemePayload {
-  const mode = resolveThemePayloadMode(theme);
-  const customColors = theme.phi?.customColors?.[mode];
-  if (customColors && PHI_THEME_CUSTOM_COLOR_KEYS.every((key) => typeof customColors[key] === "string" && customColors[key]?.trim())) {
-    return theme;
-  }
-
-  return mergeThemeCustomColors(
-    theme,
-    resolveThemePresetCustomPalette(theme, resolveThemePayloadPreset(theme, presets)),
-  );
-}
-
+/**
+ * Picking a palette block drops the author's own palette, exactly as picking a ground or a style drops
+ * theirs: somebody choosing another palette means to see it, and their seeds laid over it would hide
+ * the very thing they asked for.
+ */
 function applyThemePreset(theme: ThemePayload, preset: PhiThemePresetPlugin): ThemePayload {
-  const existingToken = theme.antd?.token ?? {};
-  const nextToken = Object.fromEntries(
-    Object.entries(existingToken).filter(([key]) => !THEME_COLOR_TOKEN_KEYS.has(key)),
-  );
-
   return {
-    ...theme,
+    ...omitThemeFields(theme, "palette"),
     preset: preset.key,
     presetVersion: preset.version,
-    antd: {
-      ...(theme.antd ?? {}),
-      token: nextToken,
-    },
-    phi: {
-      ...(theme.phi ?? {}),
-      customColors: {
-        ...(theme.phi?.customColors ?? {}),
-        [resolveThemePayloadMode(theme)]: resolvePhiThemePresetCustomColors(preset, resolveThemePayloadMode(theme)),
-      },
-    },
   };
 }
 
+/** Back to the blocks alone: the palette, the proportions and the component overrides all go. */
 function resetThemeToPreset(
   theme: ThemePayload,
   presets: readonly PhiThemePresetPlugin[],
   preset = resolveThemePayloadPreset(theme, presets),
 ): ThemePayload {
-  const mode = resolveThemePayloadMode(theme);
-
-  return ensureThemeCustomColors({
-    ...theme,
+  return {
+    ...omitThemeFields(theme, "palette", "style", "components"),
     preset: preset.key,
     presetVersion: preset.version,
-    antd: {
-      token: buildPhiNonColorThemeTokens(),
-    },
-    phi: {
-      ...(theme.phi ?? {}),
-      customColors: {
-        ...(theme.phi?.customColors ?? {}),
-        [mode]: resolvePhiThemePresetCustomColors(preset, mode),
-      },
-    },
-  }, presets);
+  };
 }
 
 function stripEmptyTokenValues(token: Record<string, unknown>) {
@@ -542,13 +563,25 @@ function buildPhiNonColorThemeTokens() {
 
 function buildPhiEffectiveNonColorThemeTokens(theme: ThemePayload) {
   const defaults = buildPhiNonColorThemeTokens();
-  const overrides = theme.antd?.token ?? {};
+  const overrides = theme.style?.token ?? {};
 
   return Object.fromEntries(
     Object.entries(defaults).map(([key, value]) => [
       key,
       overrides[key] ?? value,
     ]),
+  );
+}
+
+/** Every colour the Site owns: shared seeds, and the seeds, overrides and custom colours of each mode. */
+function countThemePaletteLeaves(palette: PhiThemePalette | null | undefined) {
+  return Object.values(palette?.modes ?? {}).reduce(
+    (count, mode) =>
+      count +
+      Object.keys(mode?.seed ?? {}).length +
+      Object.keys(mode?.overrides ?? {}).length +
+      Object.keys(mode?.customColors ?? {}).length,
+    Object.keys(palette?.seed ?? {}).length,
   );
 }
 
@@ -582,19 +615,6 @@ function readEffectiveTokenNumber(token: Record<string, unknown>, key: string, f
 function readEffectiveTokenBoolean(token: Record<string, unknown>, key: string, fallback: boolean) {
   const value = token[key];
   return typeof value === "boolean" ? value : fallback;
-}
-
-function omitThemeToken(theme: ThemePayload, tokenKey: string): ThemePayload {
-  const nextToken = { ...(theme.antd?.token ?? {}) };
-  delete nextToken[tokenKey];
-
-  return {
-    ...theme,
-    antd: {
-      ...(theme.antd ?? {}),
-      token: nextToken,
-    },
-  };
 }
 
 function buildThemeReviewRoutePath(area: PhiCmsAreaKey) {
@@ -808,6 +828,32 @@ function emitThemeState(
 }
 
 /**
+ * The Set select's options, stated again for a stored Theme that changed.
+ *
+ * The Site Theme entry names the Set the stored Theme was derived from, and a save or a publish is a
+ * new stored Theme. The whole list goes out, because that is what the select takes; the Sets come from
+ * the server, where the active Modules are known.
+ */
+function emitThemeSelectOptions(
+  dispatchSignal: ReturnType<typeof usePhiSignalDispatcher>,
+  options: readonly PhiControlOption[],
+  correlationId?: string,
+) {
+  dispatchSignal({
+    scope: "area",
+    channel: PHI_THEME_SIGNAL_CHANNELS.presetOptions,
+    action: "change",
+    value: { options: options.map((option) => ({ ...option })) },
+    valueType: "json",
+    valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.controlOptions,
+    sender: createPhiThemeControllerAddress(),
+    receiver: "broadcast",
+    correlationId,
+    timestamp: Date.now(),
+  });
+}
+
+/**
  * "Publish what you are holding" -- the question a Widget asks the Controller when it mounts.
  *
  * A Widget renders the draft but does not own it; the Controller does. Mounting late (a Stack slot
@@ -921,11 +967,7 @@ function emitRootThemeState(
  */
 function usePhiBrandThemeDraft(runtime: PhiBlockRuntime, themeKey: string) {
   const dispatchSignal = usePhiSignalDispatcher();
-  const { presets: themePresets } = usePhiConfig();
-  const fallbackTheme = useMemo(
-    () => resolveInitialTheme(runtime, themePresets),
-    [runtime, themePresets],
-  );
+  const fallbackTheme = useMemo(() => resolveInitialTheme(runtime), [runtime]);
   const initialState = useMemo(
     () => createInitialBrandThemeState(themeKey, fallbackTheme),
     [fallbackTheme, themeKey],
@@ -964,7 +1006,7 @@ function usePhiBrandThemeDraft(runtime: PhiBlockRuntime, themeKey: string) {
     const value = signal.value && typeof signal.value === "object"
       ? signal.value as { theme?: unknown; revisionId?: unknown }
       : null;
-    const nextTheme = normalizeTheme(value?.theme, draftRef.current, themePresets);
+    const nextTheme = normalizeTheme(value?.theme, draftRef.current);
     const revisionId = typeof value?.revisionId === "number" && Number.isInteger(value.revisionId)
       ? value.revisionId
       : state.revisionId;
@@ -996,9 +1038,11 @@ function usePhiBrandPreviewMode(initialMode: "light" | "dark") {
 export function PhiBuilderBrandThemeControllerWidgetClient({
   runtime,
   config,
+  setOptions,
 }: {
   runtime: PhiBlockRuntime;
   config?: PhiBuilderBrandWidgetConfig | null;
+  setOptions: readonly PhiControlOption[];
 }) {
   const dispatchSignal = usePhiSignalDispatcher();
   const { showMessage } = usePhiApplicationFeedback();
@@ -1008,20 +1052,28 @@ export function PhiBuilderBrandThemeControllerWidgetClient({
   const historyScope = `theme:${siteKey}:${themeKey}`;
   const reviewArea =
     config?.reviewArea ?? (runtime.area === "builder" ? "public" : runtime.area);
-  const fallbackTheme = useMemo(
-    () => resolveInitialTheme(runtime, themePresets),
-    [runtime, themePresets],
-  );
+  const fallbackTheme = useMemo(() => resolveInitialTheme(runtime), [runtime]);
   const initialState = useMemo(() => createInitialBrandThemeState(themeKey, fallbackTheme), [fallbackTheme, themeKey]);
   const [state, setState] = useState<BrandThemeState>(initialState);
   const stateRef = useRef<BrandThemeState>(initialState);
   const siteThemeRef = useRef<ThemePayload>(initialState.draft);
   const [saving, setSaving] = useState(false);
 
+  /*
+   * Every draft states the Set it was derived from. A Theme that never named one gets the core Set on
+   * its first draft, so the Site Theme entry is never without a name.
+   */
   const publishDraft = useCallback((
-    nextTheme: ThemePayload,
-    options?: { history?: boolean; updateSiteSnapshot?: boolean; correlationId?: string },
+    draftTheme: ThemePayload,
+    options?: {
+      history?: boolean;
+      updateSiteSnapshot?: boolean;
+      correlationId?: string;
+      /** What the Set select shows for this draft; the Site Theme entry unless a Set is being tried. */
+      selectionValue?: string;
+    },
   ) => {
+    const nextTheme = ensurePhiThemeDerivation(draftTheme);
     const current = stateRef.current;
     if (options?.history !== false && !isSameThemePayload(current.draft, nextTheme)) {
       phiThemeHistory.record(historyScope, {
@@ -1044,11 +1096,18 @@ export function PhiBuilderBrandThemeControllerWidgetClient({
       dispatchSignal,
       nextTheme,
       nextState.revisionId,
-      resolvePhiThemeSelectionValue(siteKey, nextState.hasSiteThemeRevision),
+      options?.selectionValue ?? resolvePhiThemeSelectionValue(siteKey, nextState.hasSiteThemeRevision),
       "draft",
       options?.correlationId,
     );
   }, [dispatchSignal, historyScope, siteKey]);
+
+  const emitSelectOptionsFor = useCallback((storedTheme: ThemePayload, correlationId?: string) => {
+    emitThemeSelectOptions(dispatchSignal, [
+      buildPhiSiteThemeSelectOption({ siteKey, siteName: runtime.site.name, theme: storedTheme }),
+      ...setOptions,
+    ], correlationId);
+  }, [dispatchSignal, runtime.site.name, setOptions, siteKey]);
 
   useEffect(() => {
     const emitAvailability = () => {
@@ -1094,8 +1153,8 @@ export function PhiBuilderBrandThemeControllerWidgetClient({
           return;
         }
 
-        const published = normalizeTheme(body?.published, fallbackTheme, themePresets);
-        const draft = normalizeTheme(body?.draft?.theme?.theme, published, themePresets);
+        const published = normalizeTheme(body?.published, fallbackTheme);
+        const draft = normalizeTheme(body?.draft?.theme?.theme, published);
         const revisionId =
           typeof body?.draft?.revisionId === "number" && Number.isInteger(body.draft.revisionId)
             ? body.draft.revisionId
@@ -1127,6 +1186,7 @@ export function PhiBuilderBrandThemeControllerWidgetClient({
           resolvePhiThemeSelectionValue(siteKey, nextState.hasSiteThemeRevision),
           revisionId == null ? "published" : "draft",
         );
+        emitSelectOptionsFor(draft);
       })
       .catch((error) => {
         if (!cancelled) {
@@ -1137,23 +1197,26 @@ export function PhiBuilderBrandThemeControllerWidgetClient({
     return () => {
       cancelled = true;
     };
-  }, [dispatchSignal, fallbackTheme, historyScope, showMessage, siteKey, themeKey, themePresets]);
+  }, [dispatchSignal, emitSelectOptionsFor, fallbackTheme, historyScope, showMessage, siteKey, themeKey]);
 
   async function saveTheme(
-    nextTheme = stateRef.current.draft,
+    draftTheme = stateRef.current.draft,
     options?: { notify?: boolean; correlationId?: string },
   ) {
+    let nextTheme = ensurePhiThemeDerivation(draftTheme);
     setSaving(true);
     try {
       const current = stateRef.current;
       /*
-       * A picture a Module brought becomes the Site's here, on the way to the server and nowhere else.
-       * Following a ground costs nothing; editing one is what says somebody means to keep it, and a
-       * look somebody has worked on must not depend on a package staying installed.
+       * The blocks a Module brought become the Site's here, on the way to the server and nowhere else:
+       * its palette, its style tokens, and its ground -- background, Chrome and Shadow of both modes as
+       * values, every picture as a Site Asset. Following a block costs nothing; saving is what says
+       * somebody means to keep it, and a look somebody decided on must not depend on a package staying
+       * installed.
        */
-      const materialized = await materializePhiThemeGroundImages(
+      const materialized = await materializePhiThemeModuleBlocks(
         nextTheme,
-        resolvePhiThemeComposition(nextTheme, themeBlocks).ground,
+        resolvePhiThemeComposition(nextTheme, themeBlocks),
       );
       nextTheme = materialized.theme;
       const response = await fetch("/api/site/cms/theme", {
@@ -1172,7 +1235,7 @@ export function PhiBuilderBrandThemeControllerWidgetClient({
         throw new Error(body?.error ?? "Failed to save theme draft.");
       }
       const revisionId = typeof body?.revisionId === "number" && Number.isInteger(body.revisionId) ? body.revisionId : null;
-      const savedTheme = normalizeTheme(body?.theme?.theme, nextTheme, themePresets);
+      const savedTheme = normalizeTheme(body?.theme?.theme, nextTheme);
       const nextState = {
         ...stateRef.current,
         draft: savedTheme,
@@ -1191,6 +1254,7 @@ export function PhiBuilderBrandThemeControllerWidgetClient({
         "draft",
         options?.correlationId,
       );
+      emitSelectOptionsFor(savedTheme, options?.correlationId);
       if (options?.notify !== false) {
         showMessage(
           { level: "success", content: "Saved theme draft." },
@@ -1223,7 +1287,7 @@ export function PhiBuilderBrandThemeControllerWidgetClient({
     if (!response.ok) {
       throw new Error(body?.error ?? "Failed to publish theme.");
     }
-    const published = normalizeTheme(body?.theme?.theme, current.draft, themePresets);
+    const published = normalizeTheme(body?.theme?.theme, current.draft);
     const nextState = {
       ...current,
       published,
@@ -1243,6 +1307,7 @@ export function PhiBuilderBrandThemeControllerWidgetClient({
       "published",
       correlationId,
     );
+    emitSelectOptionsFor(published, correlationId);
     showMessage({ level: "success", content: "Published theme." }, { correlationId: correlationId ?? null });
   }
 
@@ -1265,7 +1330,7 @@ export function PhiBuilderBrandThemeControllerWidgetClient({
         ? signal.value as { theme?: unknown; revisionId?: unknown }
         : null;
       const current = stateRef.current;
-      const nextTheme = normalizeTheme(value?.theme, current.draft, themePresets);
+      const nextTheme = normalizeTheme(value?.theme, current.draft);
       const revisionId = typeof value?.revisionId === "number" && Number.isInteger(value.revisionId) ? value.revisionId : current.revisionId;
       if (revisionId !== current.revisionId) {
         stateRef.current = { ...current, revisionId };
@@ -1289,10 +1354,10 @@ export function PhiBuilderBrandThemeControllerWidgetClient({
       }
       const current = stateRef.current;
       const baseTheme = current.hasPublishedThemeRevision ? current.published : fallbackTheme;
-      const nextTheme = ensureThemeCustomColors({
+      const nextTheme = {
         ...baseTheme,
         mode: nextMode,
-      } satisfies ThemePayload, themePresets);
+      } satisfies ThemePayload;
       emitRootThemeState(dispatchSignal, nextTheme, signal.correlationId);
       return;
     }
@@ -1312,16 +1377,26 @@ export function PhiBuilderBrandThemeControllerWidgetClient({
           }
           return;
         }
-        const selectedPreset = themePresets.find((preset) => preset.key === signal.value);
-        if (!selectedPreset) {
+        /*
+         * A Set is tried on, not taken: it decides all three parts and names itself as the derivation,
+         * but the Site Theme entry keeps what was there before, so choosing it again takes the Set back.
+         */
+        const set = themeBlocks.sets.find((candidate) => candidate.key === signal.value);
+        if (!set) {
           return;
         }
-        const nextTheme = applyThemePreset(
-          stateRef.current.draft,
-          selectedPreset,
-        );
+        const palette = themeBlocks.palettes.find((candidate) => candidate.key === set.palette);
+        const withSet = mergeThemeSetChoice(stateRef.current.draft, set);
+        const nextTheme: ThemePayload = {
+          ...(palette ? applyThemePreset(withSet, palette) : withSet),
+          derivedFrom: createPhiThemeDerivation(set),
+        };
         if (!isSameThemePayload(stateRef.current.draft, nextTheme)) {
-          publishDraft(nextTheme, { updateSiteSnapshot: false, correlationId: signal.correlationId });
+          publishDraft(nextTheme, {
+            updateSiteSnapshot: false,
+            correlationId: signal.correlationId,
+            selectionValue: set.key,
+          });
         }
         return;
       }
@@ -1522,25 +1597,36 @@ export function PhiBuilderBrandThemeControlsWidgetClient({
   );
 
   const themeComposition = resolvePhiThemeComposition(state.draft, themeBlocks);
-  const token = stripEmptyTokenValues(state.draft.antd?.token ?? {});
   const algorithm = previewMode === "dark" ? antdTheme.darkAlgorithm : antdTheme.defaultAlgorithm;
   const selectedPreset = resolveThemePayloadPreset(state.draft, themePresets);
-  const presetToken = resolveThemePresetTokenInput(state.draft, selectedPreset, previewMode);
-  const customPalette = resolveThemePresetCustomPalette(state.draft, selectedPreset, previewMode);
+  /*
+   * What the tab shows is what the Site renders: the palette block with the draft's palette on top,
+   * resolved for the mode being edited. The seeds the author owns are the ones present in the draft's
+   * palette, shared or under this mode; the derived overrides live under this mode alone.
+   */
+  const colorToken = resolvePhiThemeColorTokens(selectedPreset, state.draft.palette, previewMode);
+  const ownPalette = state.draft.palette ?? {};
+  const ownOverrides = ownPalette.modes?.[previewMode]?.overrides ?? {};
+  /*
+   * The same colour without the author's derived overrides: what a derived control falls back to, and
+   * what its "Reset override" hands back. Seeds stay in, so the algorithm derives from the author's seed.
+   */
+  const baseColorToken = resolvePhiThemeColorTokens(
+    selectedPreset,
+    mergeThemePaletteMode(state.draft, previewMode, (current) => ({ ...current, overrides: {} })).palette,
+    previewMode,
+  );
+  const customPalette = resolveThemeCustomPalette(state.draft, selectedPreset, previewMode);
   const customColorOptions = PHI_THEME_CUSTOM_COLOR_KEYS.map((key, index) => ({
     key,
     label: `${colorPickerLabels?.custom ?? "Custom"} ${index + 1}`,
     value: customPalette[key],
   }));
-  const seedTokenOverrides = Object.fromEntries(
-    Object.entries(token).filter(([key]) => THEME_COLOR_SEED_KEYS.has(key)),
-  );
   const computedToken = antdTheme.getDesignToken({
     algorithm,
     token: {
       ...buildPhiEffectiveNonColorThemeTokens(state.draft),
-      ...presetToken,
-      ...seedTokenOverrides,
+      ...baseColorToken,
     },
   });
 
@@ -1549,23 +1635,10 @@ export function PhiBuilderBrandThemeControlsWidgetClient({
       <Card size="small" styles={{ body: { padding: clientToken.paddingSM } }}>
         <Flex vertical gap={clientToken.paddingSM}>
           {/*
-            The Set and the palette it stands for. A Set sets all three parts at once; picking a palette
-            on its own is what somebody does who wants the Set's ground with another brand, and it wins
-            over the Set from then on.
+            The palette, over the Set chosen in the workspace header. The Set decides all three parts at
+            once; picking a palette here is what somebody does who wants the Set's ground with another
+            brand, and it wins over the Set from then on.
           */}
-          <PhiBrandBlockPicker
-            label="Set"
-            value={themeComposition.set?.key ?? ""}
-            unavailable={themeComposition.unavailable.set}
-            options={themeBlocks.sets}
-            onChange={(key) => {
-              const set = themeBlocks.sets.find((candidate) => candidate.key === key);
-              if (!set) return;
-              const palette = themeBlocks.palettes.find((candidate) => candidate.key === set.palette);
-              const withSet = mergeThemeSetChoice(state.draft, set);
-              publishDraft(palette ? applyThemePreset(withSet, palette) : withSet);
-            }}
-          />
           <PhiBrandBlockPicker
             label="Palette"
             value={themeComposition.palette.key}
@@ -1658,10 +1731,13 @@ export function PhiBuilderBrandThemeControlsWidgetClient({
                 ),
               },
               ...THEME_COLOR_SEED_SECTIONS.map((section) => {
-              const seedValue = Object.prototype.hasOwnProperty.call(token, section.key)
-                ? readTokenColor(token, section.key, section.fallback)
-                : readComputedTokenColor(computedToken, section.key, section.fallback);
+              const seedAuthored =
+                Object.prototype.hasOwnProperty.call(ownPalette.seed ?? {}, section.key) ||
+                Object.prototype.hasOwnProperty.call(ownPalette.modes?.[previewMode]?.seed ?? {}, section.key);
               const seedDefaultValue = readComputedTokenColor(computedToken, section.key, section.fallback);
+              const seedValue = seedAuthored
+                ? readTokenColor(colorToken, section.key, seedDefaultValue)
+                : seedDefaultValue;
 
               return {
                 key: section.key,
@@ -1688,7 +1764,7 @@ export function PhiBuilderBrandThemeControlsWidgetClient({
                         labels={colorPickerLabels}
                         presets={section.presets}
                         onChange={(value) => {
-                          publishDraft(mergeThemeSeedToken(draftRef.current, section, value));
+                          publishDraft(mergeThemeSeedToken(draftRef.current, section, value, previewMode));
                         }}
                       />
                     </div>
@@ -1697,7 +1773,7 @@ export function PhiBuilderBrandThemeControlsWidgetClient({
                 children: (
                   <Flex wrap="wrap" style={{ minWidth: 0, columnGap: clientToken.paddingXXS, rowGap: clientToken.paddingSM }}>
                     {section.derived.map((item) => {
-                      const overridden = Object.prototype.hasOwnProperty.call(token, item.key);
+                      const overridden = Object.prototype.hasOwnProperty.call(ownOverrides, item.key);
                       const fallback = readComputedTokenColor(computedToken, item.key, section.fallback);
                       return (
                         <div
@@ -1712,7 +1788,7 @@ export function PhiBuilderBrandThemeControlsWidgetClient({
                             <PhiColorWidget
                               label={item.label}
                               tokenKey={item.key}
-                              value={overridden ? readTokenColor(token, item.key, fallback) : fallback}
+                              value={overridden ? readTokenColor(colorToken, item.key, fallback) : fallback}
                               defaultValue={fallback}
                               disabled={saving}
                               customColors={customColorOptions}
@@ -1721,7 +1797,7 @@ export function PhiBuilderBrandThemeControlsWidgetClient({
                                 if (!tokenKey) {
                                   return;
                                 }
-                                publishDraft(mergeThemeToken(state.draft, { [tokenKey]: value }));
+                                publishDraft(mergeThemeColorOverride(state.draft, tokenKey, value, previewMode));
                               }}
                             />
                             {overridden ? (
@@ -1730,7 +1806,7 @@ export function PhiBuilderBrandThemeControlsWidgetClient({
                                 type="link"
                                 disabled={saving}
                                 style={{ alignSelf: "flex-start", paddingInline: 0, height: clientToken.controlHeightSM }}
-                                onClick={() => publishDraft(omitThemeToken(state.draft, item.key))}
+                                onClick={() => publishDraft(omitThemeColorOverride(state.draft, item.key, previewMode))}
                               >
                                 Reset override
                               </Button>
@@ -1769,7 +1845,7 @@ export function PhiBuilderBrandStyleControlsWidgetClient({
     BRAND_THEME_STYLE_SECTION_KEYS,
   );
 
-  const token = stripEmptyTokenValues(state.draft.antd?.token ?? {});
+  const token = stripEmptyTokenValues(state.draft.style?.token ?? {});
   const styleTokenInput = {
     ...buildPhiEffectiveNonColorThemeTokens(state.draft),
     ...token,
@@ -1794,7 +1870,6 @@ export function PhiBuilderBrandStyleControlsWidgetClient({
   }
 
   const themeComposition = resolvePhiThemeComposition(state.draft, themeBlocks);
-  const authoredStyleTokens = splitPhiThemeAuthoredTokens(state.draft.antd?.token).style;
 
   return (
     <Flex vertical gap={clientToken.padding} style={{ width: "100%", minWidth: 0, opacity: loading ? 0.65 : 1 }}>
@@ -1817,7 +1892,7 @@ export function PhiBuilderBrandStyleControlsWidgetClient({
           />
           <PhiBrandBlockResetButton
             blockTitle={themeComposition.style.title}
-            disabled={Object.keys(authoredStyleTokens).length === 0}
+            disabled={Object.keys(token).length === 0}
             onReset={() => publishDraft(clearThemeStyleTokens(state.draft))}
           />
         </Flex>
@@ -2121,16 +2196,11 @@ function PhiBrandBlockResetButton({
  * Dropping every structural override, so the style block shows through again.
  *
  * Colour stays: the two tabs are two decisions, and somebody resetting the proportions did not ask to
- * lose the brand colour they picked. The seam is the token name, the same one the tabs are split by.
+ * lose the brand colour they picked. The record keeps them apart -- `palette` and `style` -- so taking
+ * the one away never touches the other.
  */
 function clearThemeStyleTokens(theme: ThemePayload): ThemePayload {
-  return {
-    ...theme,
-    antd: {
-      ...(theme.antd ?? {}),
-      token: splitPhiThemeAuthoredTokens(theme.antd?.token).color,
-    },
-  };
+  return omitThemeFields(theme, "style");
 }
 
 /**
@@ -2158,8 +2228,9 @@ function PhiBrandBlockPicker({
     <Flex vertical gap={clientToken.paddingXXS} style={{ minWidth: 0 }}>
       <Flex align="center" justify="space-between" gap={clientToken.paddingXS}>
         <Typography.Text strong>{label}</Typography.Text>
-        <Select
-          size="small"
+        <PhiSelectControl
+          ariaLabel={label}
+          size="medium"
           value={value}
           style={{ minWidth: clientToken.controlHeight * 5 }}
           onChange={onChange}
@@ -2511,10 +2582,7 @@ export function PhiBuilderBrandThemePreviewWidgetClient({
   runtime: PhiBlockRuntime;
 }) {
   const { fonts, presets: themePresets, themeBlocks, token: clientToken } = usePhiConfig();
-  const fallbackTheme = useMemo(
-    () => resolveInitialTheme(runtime, themePresets),
-    [runtime, themePresets],
-  );
+  const fallbackTheme = useMemo(() => resolveInitialTheme(runtime), [runtime]);
   const [previewTheme, setPreviewTheme] = useState<ThemePayload>(fallbackTheme);
   /*
    * The preview shows the Site, so it shows the blocks folded in: a draft states what its author chose,
@@ -2538,11 +2606,10 @@ export function PhiBuilderBrandThemePreviewWidgetClient({
   }, [dispatchSignal, selfAddress]);
   const mode = usePhiBrandPreviewMode(resolveThemePayloadMode(fallbackTheme));
   const previewPreset = resolveThemePayloadPreset(previewThemeResolved, themePresets);
-  const previewPresetToken = resolveThemePresetTokenInput(previewThemeResolved, previewPreset, mode);
   const previewTokenInput = {
     ...buildPhiEffectiveNonColorThemeTokens(previewThemeResolved),
-    ...previewPresetToken,
-    ...(previewThemeResolved.antd?.token ?? {}),
+    ...resolvePhiThemeColorTokens(previewPreset, previewThemeResolved.palette, mode),
+    ...(previewThemeResolved.style?.token ?? {}),
   };
   const previewEffectiveToken = resolvePhiAntdAliasTokens(mode, previewTokenInput);
   type PreviewRow = { key: string; name: string; status: string } & Record<string, unknown>;
@@ -2567,7 +2634,7 @@ export function PhiBuilderBrandThemePreviewWidgetClient({
     const value = signal.value && typeof signal.value === "object"
       ? signal.value as { theme?: unknown }
       : null;
-    setPreviewTheme(normalizeTheme(value?.theme, fallbackTheme, themePresets));
+    setPreviewTheme(normalizeTheme(value?.theme, fallbackTheme));
   }, undefined, selfAddress);
 
   /**
@@ -2577,7 +2644,7 @@ export function PhiBuilderBrandThemePreviewWidgetClient({
    * serve each other from cache.
    */
   const previewShapedComponents = applyPhiControlShapeComponentTokens(
-    { ...(previewThemeResolved.antd?.components ?? {}) },
+    { ...(previewThemeResolved.components ?? {}) },
     readPhiControlShape(previewTheme.shape?.controls),
     previewEffectiveToken,
   );
@@ -2826,7 +2893,7 @@ export function PhiBuilderBrandThemePreviewWidgetClient({
           </Flex>
           <Divider style={{ margin: 0 }} />
           <Flex gap={clientToken.padding} wrap="wrap">
-            <Statistic title="Draft colors" value={Object.keys(previewTheme.antd?.token ?? {}).length} />
+            <Statistic title="Draft colors" value={countThemePaletteLeaves(previewTheme.palette)} />
             <Statistic title="Preset" value={previewPreset.title} />
             <Statistic title="Mode" value={mode} />
           </Flex>

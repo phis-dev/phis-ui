@@ -204,6 +204,22 @@ export const PHI_SELECT_CONTROL_SIGNALS = {
   ],
 } satisfies PhiSignalPluginMeta;
 
+/**
+ * Replacing a select's options from a signal, sent as `{ options }`.
+ *
+ * The whole list, not single entries: whoever sends it has decided what the select offers, and a
+ * merge would leave entries standing that the sender no longer means. The sent list stands until the
+ * Control's configured options change. Declared by the select box alone; the segmented control and
+ * the stack tabs share the select signals but take their options from a Stack, not from a sender.
+ */
+export const PHI_SELECT_CONTROL_OPTIONS_SIGNAL = {
+  id: "options",
+  channel: "options",
+  action: "change",
+  valueType: "json",
+  valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.controlOptions,
+} as const;
+
 export const PHI_MULTI_SELECT_CONTROL_SIGNALS = {
   emits: [
     { id: "change", action: "change", valueType: "enum[]" },

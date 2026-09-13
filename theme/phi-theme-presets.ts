@@ -12,10 +12,32 @@ export type PhiThemeCustomColorKey =
   | "custom10";
 export type PhiThemeCustomColorPalette = Record<PhiThemeCustomColorKey, string>;
 
-export type PhiThemePresetModeConfig = {
+/**
+ * One mode of a palette: the seeds that define it, explicit colour tokens that are not seeds, and the
+ * ten custom colours.
+ *
+ * `seed` carries what Ant Design derives the mode from -- in practice `colorTextBase` and `colorBgBase`,
+ * the two seeds that have no value valid in both modes. `overrides` carries colour tokens an author or
+ * a palette states outright instead of letting the algorithm derive them, a hover or a container
+ * background; they belong to a mode for the same reason the base seeds do.
+ */
+export type PhiThemePaletteMode = {
   seed?: Record<string, string>;
   overrides?: Record<string, string>;
   customColors?: Partial<PhiThemeCustomColorPalette>;
+};
+
+/**
+ * A palette: the colour of a Theme, in the one shape a Module ships it in and a Site owns it in.
+ *
+ * `seed` holds the seeds both modes share -- brand, status and link colours -- and `modes` what differs
+ * between them. The same shape sits on a palette block (`PhiThemePresetPlugin.palette`) and on the Site
+ * record (`theme.palette`), which is what lets a Site take a Module's palette over by copying it, and
+ * lets an author's change be one more palette merged on top rather than a second vocabulary.
+ */
+export type PhiThemePalette = {
+  seed?: Record<string, string>;
+  modes?: Partial<Record<PhiThemeMode, PhiThemePaletteMode>>;
 };
 
 export type PhiThemePresetPlugin = {
@@ -23,15 +45,21 @@ export type PhiThemePresetPlugin = {
   version: number;
   title: string;
   description?: string;
-  antd: {
-    seed: Record<string, string>;
-    modes?: Partial<Record<PhiThemeMode, PhiThemePresetModeConfig>>;
-    overrides?: Record<string, string>;
-  };
-  phi?: {
-    customColors?: Partial<Record<PhiThemeMode, Partial<PhiThemeCustomColorPalette>>>;
-  };
+  palette: PhiThemePalette;
 };
+
+/**
+ * The seeds that belong to a mode rather than to the palette as a whole.
+ *
+ * Stated once, because two sides read it: a palette states these under `modes`, and the workspace
+ * writes an author's change to them under the mode being edited. Every other colour seed is shared,
+ * because Ant Design derives its light and dark variants from the one value.
+ */
+export const PHI_THEME_PALETTE_MODE_SEED_KEYS = ["colorTextBase", "colorBgBase"] as const;
+
+export function isPhiThemePaletteModeSeedKey(key: string) {
+  return (PHI_THEME_PALETTE_MODE_SEED_KEYS as readonly string[]).includes(key);
+}
 
 export const PHI_DEFAULT_THEME_PRESET_KEY = "phi";
 export const PHI_DEFAULT_THEME_PRESET_VERSION = 1;
@@ -54,7 +82,7 @@ export const PHI_CORE_THEME_PRESET_PLUGINS = [
     version: 1,
     title: "Phi",
     description: "Warm orange brand color with a deep blue text base.",
-    antd: {
+    palette: {
       seed: {
         colorPrimary: "#E05A2A",
         colorInfo: "#7088BA",
@@ -84,7 +112,7 @@ export const PHI_CORE_THEME_PRESET_PLUGINS = [
     version: 1,
     title: "Forest",
     description: "Evergreen brand tones with moss, fern and amber accents.",
-    antd: {
+    palette: {
       seed: {
         colorPrimary: "#2F6F4E",
         colorInfo: "#3F7C72",
@@ -114,7 +142,7 @@ export const PHI_CORE_THEME_PRESET_PLUGINS = [
     version: 1,
     title: "Sea",
     description: "Clear ocean blue with teal depth and coral contrast.",
-    antd: {
+    palette: {
       seed: {
         colorPrimary: "#0A7EA4",
         colorInfo: "#2B8FBF",
@@ -153,16 +181,67 @@ export function resolvePhiThemePresetPlugin(
   return resolved;
 }
 
-export function resolvePhiThemePresetTokens(
-  preset: PhiThemePresetPlugin,
-  mode: PhiThemeMode,
-) {
-  const modeConfig = preset.antd.modes?.[mode];
-
+function mergePhiThemePaletteModes(
+  base: PhiThemePaletteMode | undefined,
+  own: PhiThemePaletteMode | undefined,
+): PhiThemePaletteMode | undefined {
+  if (!base && !own) return undefined;
   return {
-    ...preset.antd.seed,
+    ...(base?.seed || own?.seed ? { seed: { ...(base?.seed ?? {}), ...(own?.seed ?? {}) } } : {}),
+    ...(base?.overrides || own?.overrides
+      ? { overrides: { ...(base?.overrides ?? {}), ...(own?.overrides ?? {}) } }
+      : {}),
+    ...(base?.customColors || own?.customColors
+      ? { customColors: { ...(base?.customColors ?? {}), ...(own?.customColors ?? {}) } }
+      : {}),
+  };
+}
+
+/**
+ * One palette laid over another, field by field.
+ *
+ * This is the whole authoring model for colour: the block a Site follows is the base, what the Site
+ * owns -- a palette it took over from a Module, or the seeds its author changed -- lies on top. A key
+ * the upper palette states wins; everything else shows through. Merging before resolving is what keeps
+ * a Site's shared seed from being undercut by a mode override the block declares.
+ */
+export function mergePhiThemePalettes(
+  base: PhiThemePalette | null | undefined,
+  own: PhiThemePalette | null | undefined,
+): PhiThemePalette {
+  const modes: Partial<Record<PhiThemeMode, PhiThemePaletteMode>> = {};
+  for (const mode of ["light", "dark"] as const) {
+    const merged = mergePhiThemePaletteModes(base?.modes?.[mode], own?.modes?.[mode]);
+    if (merged) modes[mode] = merged;
+  }
+  return {
+    ...(base?.seed || own?.seed ? { seed: { ...(base?.seed ?? {}), ...(own?.seed ?? {}) } } : {}),
+    ...(Object.keys(modes).length > 0 ? { modes } : {}),
+  };
+}
+
+/** The Ant Design token input one palette contributes in one mode: shared seeds, mode seeds, mode overrides. */
+export function resolvePhiThemePaletteTokens(
+  palette: PhiThemePalette | null | undefined,
+  mode: PhiThemeMode,
+): Record<string, string> {
+  const modeConfig = palette?.modes?.[mode];
+  return {
+    ...(palette?.seed ?? {}),
     ...(modeConfig?.seed ?? {}),
-    ...(preset.antd.overrides ?? {}),
     ...(modeConfig?.overrides ?? {}),
   };
+}
+
+/**
+ * The token input of a Site in one mode: the palette block it follows, with the Site's own palette on
+ * top. Every colour consumer -- root layout, server snapshot, workspace preview -- resolves through this
+ * one function so the two can never disagree.
+ */
+export function resolvePhiThemeColorTokens(
+  preset: PhiThemePresetPlugin,
+  sitePalette: PhiThemePalette | null | undefined,
+  mode: PhiThemeMode,
+) {
+  return resolvePhiThemePaletteTokens(mergePhiThemePalettes(preset.palette, sitePalette), mode);
 }

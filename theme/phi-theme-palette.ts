@@ -1,18 +1,18 @@
 import { generate } from "@ant-design/colors";
 
 import {
+  mergePhiThemePalettes,
   PHI_THEME_CUSTOM_COLOR_KEYS,
   resolvePhiThemePresetPlugin,
   type PhiThemeCustomColorPalette,
   type PhiThemeMode,
+  type PhiThemePalette,
   type PhiThemePresetPlugin,
 } from "./phi-theme-presets";
 
 type PhiThemeCustomColorSource = {
   preset?: string | null;
-  phi?: {
-    customColors?: Partial<Record<PhiThemeMode, Partial<PhiThemeCustomColorPalette>>>;
-  };
+  palette?: PhiThemePalette | null;
 };
 
 export function buildPhiThemeCustomColorPalette(seedColor: string): PhiThemeCustomColorPalette {
@@ -27,33 +27,42 @@ export function buildPhiThemeCustomColorPalette(seedColor: string): PhiThemeCust
   };
 }
 
-export function resolvePhiThemePresetCustomColors(
-  preset: PhiThemePresetPlugin,
+/**
+ * The ten custom colours one palette yields in one mode.
+ *
+ * A palette may state them outright under `modes[mode].customColors`; whatever it leaves out is
+ * generated from its primary colour, the sixth step being the seed itself.
+ */
+export function resolvePhiThemePaletteCustomColors(
+  palette: PhiThemePalette | null | undefined,
   mode: PhiThemeMode,
 ): PhiThemeCustomColorPalette {
-  const modeConfig = preset.antd.modes?.[mode];
+  const modeConfig = palette?.modes?.[mode];
   const seedColor =
     modeConfig?.customColors?.custom6 ??
-    preset.phi?.customColors?.[mode]?.custom6 ??
     modeConfig?.seed?.colorPrimary ??
-    preset.antd.seed.colorPrimary ??
+    palette?.seed?.colorPrimary ??
     "#1677ff";
 
   return {
     ...buildPhiThemeCustomColorPalette(seedColor),
-    ...(preset.phi?.customColors?.[mode] ?? {}),
     ...(modeConfig?.customColors ?? {}),
   };
 }
 
+export function resolvePhiThemePresetCustomColors(
+  preset: PhiThemePresetPlugin,
+  mode: PhiThemeMode,
+): PhiThemeCustomColorPalette {
+  return resolvePhiThemePaletteCustomColors(preset.palette, mode);
+}
+
+/** The custom colours a Site renders: the palette it follows with the Site's own palette on top. */
 export function resolvePhiPublishedThemeCustomColors(
   siteTheme: PhiThemeCustomColorSource,
   mode: PhiThemeMode,
   presets: readonly PhiThemePresetPlugin[],
 ): PhiThemeCustomColorPalette {
   const preset = resolvePhiThemePresetPlugin(presets, siteTheme.preset);
-  return {
-    ...resolvePhiThemePresetCustomColors(preset, mode),
-    ...(siteTheme.phi?.customColors?.[mode] ?? {}),
-  };
+  return resolvePhiThemePaletteCustomColors(mergePhiThemePalettes(preset.palette, siteTheme.palette), mode);
 }

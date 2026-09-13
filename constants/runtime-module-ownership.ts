@@ -151,6 +151,7 @@ const PHI_RUNTIME_MODULE_OWNERSHIP: Readonly<Record<string, readonly [module: st
   "signals/builder-navigation": ["builder", "navigation"],
   "signals/builder-node-selection": ["builder", "node-selection"],
   "signals/collection-action": ["core", "collection-action"],
+  "signals/control-options": ["core", "control-options"],
   "signals/drag-drop": ["core", "drag-drop"],
   "signals/form-error": ["core", "form-error"],
   "signals/form-field": ["core", "form-field"],

@@ -6,7 +6,10 @@ import {
   parsePhiChoiceControlConfig,
   type PhiChoiceControlConfig,
 } from "../../../../../components/widgets/config/choice-shared";
-import { PHI_SELECT_CONTROL_SIGNALS } from "../../../../../components/widgets/signals/control-signal-capabilities";
+import {
+  PHI_SELECT_CONTROL_OPTIONS_SIGNAL,
+  PHI_SELECT_CONTROL_SIGNALS,
+} from "../../../../../components/widgets/signals/control-signal-capabilities";
 
 export type PhiSelectBoxWidgetConfig = PhiChoiceControlConfig;
 
@@ -23,7 +26,8 @@ export const PHI_SELECT_BOX_WIDGET_DEFINITION = {
   category: "form",
   iconFamily: "form",
   runtimeSignals: {
-    ...PHI_SELECT_CONTROL_SIGNALS,
+    emits: PHI_SELECT_CONTROL_SIGNALS.emits,
+    listens: [...PHI_SELECT_CONTROL_SIGNALS.listens, PHI_SELECT_CONTROL_OPTIONS_SIGNAL],
   },
   fields: [
     { key: "label", type: "string", label: "Label" },

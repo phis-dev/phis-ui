@@ -5,3 +5,4 @@ export * from "./theme/phi-theme-palette";
 export * from "./theme/phi-theme";
 export * from "./theme/phi-tokens";
 export * from "./theme/phi-theme-blocks";
+export * from "./theme/phi-theme-adoption";

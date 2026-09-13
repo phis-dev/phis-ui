@@ -16,7 +16,7 @@ describe("theme runtime payload", () => {
   it("leaves a Theme from before the split exactly as it was", () => {
     const { theme } = resolvePhiThemeRuntimePayload({ preset: "sea", presetVersion: 1 });
     expect(theme.preset).toBe("sea");
-    expect(theme.antd?.token).toEqual({});
+    expect(theme.style?.token).toEqual({});
     expect(theme.root).toEqual({
       background: { light: null, dark: null },
       chrome: { light: null, dark: null },
@@ -26,9 +26,9 @@ describe("theme runtime payload", () => {
   it("puts the style block under the author's tokens", () => {
     const { theme } = resolvePhiThemeRuntimePayload({
       blocks: { style: { key: "sharp" } },
-      antd: { token: { borderRadius: 20 } },
+      style: { token: { borderRadius: 20 } },
     });
-    expect(theme.antd?.token).toEqual({
+    expect(theme.style?.token).toEqual({
       borderRadius: 20,
       borderRadiusLG: 4,
       borderRadiusSM: 2,

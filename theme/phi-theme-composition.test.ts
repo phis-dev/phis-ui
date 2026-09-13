@@ -5,7 +5,6 @@ import {
   readPhiThemeBlockSelection,
   resolvePhiThemeComposition,
   resolvePhiThemeEffectiveRoot,
-  splitPhiThemeAuthoredTokens,
 } from "./phi-theme-composition";
 import { PHI_CORE_THEME_GROUND_BLOCKS } from "./phi-theme-blocks";
 
@@ -124,25 +123,5 @@ describe("effective root", () => {
     expect(effective.background?.light).toBeNull();
     expect(effective.chrome?.dark).toBeNull();
     expect(effective.chrome?.shadow).toBeUndefined();
-  });
-});
-
-/**
- * Colour against everything else, told apart by the token name. Ant Design draws that line already and
- * the workspace has always reset along it.
- */
-describe("authored token split", () => {
-  it("separates colour from structure", () => {
-    const split = splitPhiThemeAuthoredTokens({
-      colorPrimary: "#123456",
-      borderRadius: 8,
-      controlHeight: 32,
-    });
-    expect(split.color).toEqual({ colorPrimary: "#123456" });
-    expect(split.style).toEqual({ borderRadius: 8, controlHeight: 32 });
-  });
-
-  it("survives an absent token record", () => {
-    expect(splitPhiThemeAuthoredTokens(null)).toEqual({ color: {}, style: {} });
   });
 });

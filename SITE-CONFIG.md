@@ -279,20 +279,28 @@ Notes:
 - default dark shell navigation surface is the AntD dark nav blue (`#001529`)
 - default light shell surfaces fall back to the normal AntD component defaults
 
-## `theme.antd`
+## `theme.palette`, `theme.style`, `theme.components`
 
-- `token?: Record<string, unknown>`
-- `components?: Record<string, Record<string, unknown>>`
+The Site's own values, laid over the Theme blocks it follows (`theme.blocks`, `theme.preset`). The
+container names are neutral on purpose: the vocabulary inside is Ant Design's token vocabulary, the
+record is not a dump of `ConfigProvider` state.
 
-`site.theme.antd` is the intended place for runtime-overridable Ant Design theme deltas.
-The root layout may bridge these values into Ant Design `ConfigProvider` and `StyleProvider`, while the rest of the app consumes the resolved runtime theme.
+- `palette?: PhiThemePalette` -- colour, in the one shape a Module ships a palette in
+  (`theme/phi-theme-presets.ts`): `seed` for the seeds both modes share (`colorPrimary`, `colorInfo`,
+  `colorSuccess`, `colorWarning`, `colorError`, `colorLink`), and `modes.light` / `modes.dark` each with
+  `seed` (the two base seeds `colorTextBase`, `colorBgBase`, which have no value valid in both modes),
+  `overrides` (explicit colour tokens that are not seeds, such as `colorLinkHover` or `colorBgLayout`),
+  and `customColors` (the ten Phi custom colours).
+- `style?: { token?: Record<string, unknown> }` -- structural tokens the author set: radii, control
+  heights, spacing, typography sizes. Mode-free.
+- `components?: Record<string, Record<string, unknown>>` -- component overrides, merged per component
+  over the shared component defaults.
 
-Site-level Ant Design token and component overrides.
-
-Examples:
-- `colorPrimary`
-- `colorLink`
-- `colorLinkHover`
+Resolution per mode is one chain everywhere: structural defaults, then the palette block with the Site's
+`palette` merged over it field by field, then `style.token`, then fonts. Absent means "follow the
+block". Saving a Theme that resolves to a Module's palette, style or ground copies that block into these
+fields (`theme/phi-theme-adoption.ts`), so a saved Site does not depend on the Module staying installed;
+core blocks are followed, never copied.
 
 ## Rules
 

@@ -138,6 +138,7 @@ export const PHI_SIGNAL_VALUE_SCHEMAS = {
   builderNodeSelection: createPhiSharedSignalValueSchema("builder-node-selection"),
   revisionsDraftStatus: createPhiSharedSignalValueSchema("revisions-draft-status"),
   collectionAction: createPhiSharedSignalValueSchema("collection-action"),
+  controlOptions: createPhiSharedSignalValueSchema("control-options"),
   dragDrop: createPhiSharedSignalValueSchema("drag-drop"),
   formError: createPhiSharedSignalValueSchema("form-error"),
   formField: createPhiSharedSignalValueSchema("form-field"),

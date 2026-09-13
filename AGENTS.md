@@ -544,7 +544,7 @@
 - Site theme config is a delta layer, not a replacement for the shared base.
 - Merge Ant Design component overrides per component instead of replacing the whole `components` object.
 - Do not override Ant Design typography defaults in shared UI unless there is an explicit shared-system decision to do so.
-- If a site needs different typography, prefer `site.theme.antd.token` overrides such as `fontSize*` and `lineHeight*`.
+- If a site needs different typography, prefer `site.theme.style.token` overrides such as `fontSize*` and `lineHeight*`.
 - Shared shell architecture should follow App Router composition rules:
   - server layouts load data and compose
   - client shell components handle interactive layout UI

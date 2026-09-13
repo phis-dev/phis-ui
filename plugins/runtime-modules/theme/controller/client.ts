@@ -8,12 +8,21 @@ import { PhiBuilderBrandThemeControllerWidgetClient } from "../widgets/brand-con
 import {
   PHI_THEME_RUNTIME_CONTROLLER_DEFINITION,
   type PhiThemeRuntimeControllerConfig,
+  type PhiThemeRuntimeControllerPreload,
 } from "./definition";
 
 export const PHI_THEME_RUNTIME_CONTROLLER_PLUGIN = {
   ...PHI_THEME_RUNTIME_CONTROLLER_DEFINITION,
-  renderController: ({ runtime }) => createElement(PhiBuilderBrandThemeControllerWidgetClient, { runtime }),
-} satisfies PhiRuntimeControllerPlugin<PhiThemeRuntimeControllerConfig>;
+  renderController: ({ runtime, preloadData }) => {
+    if (!preloadData?.setOptions) {
+      throw new Error("Theme controller preload is missing its Set options.");
+    }
+    return createElement(PhiBuilderBrandThemeControllerWidgetClient, {
+      runtime,
+      setOptions: preloadData.setOptions,
+    });
+  },
+} satisfies PhiRuntimeControllerPlugin<PhiThemeRuntimeControllerConfig, PhiThemeRuntimeControllerPreload>;
 
 export const PhiThemeRuntimeControllerClient = createPhiRuntimeControllerClient(
   PHI_THEME_RUNTIME_CONTROLLER_PLUGIN,

@@ -29,9 +29,10 @@ import {
 import { PHI_LAYOUT } from "../../../theme/phi-tokens";
 import { PHI_COLOR, PHI_SPACE } from "../../../theme/antd-css-var-contract";
 import {
-  createPhiSiteThemeSelectionValue,
+  buildPhiSiteThemeSelectOption,
   resolvePhiThemeSelectionValue,
 } from "../../../theme/phi-theme-selection";
+import { buildPhiThemeSetSelectOptions } from "../../../plugins/runtime-modules/theme/set-options";
 import { createPhiBuilderControllerAddress } from "../../../plugins/runtime-modules/builder/controller/address";
 import {
   isPhiAreaScopedBuilderPage,
@@ -3024,7 +3025,7 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                 status: PhiCmsStatus.Published,
                 flags: 0,
                 visibilityMask: page.visibilityMask,
-                label: "Brand preset select",
+                label: "Brand set select",
                 config: {
                   value: resolvePhiThemeSelectionValue(
                     runtime.site.key,
@@ -3054,21 +3055,29 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                         valueType: "string",
                         receiver: "broadcast",
                       },
+                      /*
+                       * The Site Theme entry names the Set the stored Theme was derived from; a save
+                       * stores another Theme, so the Controller states the list again.
+                       */
+                      {
+                        routeKey: "brand-theme-select-options",
+                        capabilityId: "options",
+                        scope: "area",
+                        channel: PHI_THEME_SIGNAL_CHANNELS.presetOptions,
+                        action: "change",
+                        valueType: "json",
+                        valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.controlOptions,
+                        receiver: "broadcast",
+                      },
                     ],
                   },
                   options: [
-                    {
-                      value: createPhiSiteThemeSelectionValue(runtime.site.key),
-                      label: runtime.site.name?.trim() || runtime.site.key,
-                      description: "Site theme",
-                    },
-                    ...[...registry.themeByKey.values()]
-                      .filter(({ descriptor }) => activeModuleKeys.has(descriptor.ownerModuleId))
-                      .map(({ descriptor }) => ({
-                        value: descriptor.themeKey,
-                        label: descriptor.title,
-                        description: descriptor.description,
-                      })),
+                    buildPhiSiteThemeSelectOption({
+                      siteKey: runtime.site.key,
+                      siteName: runtime.site.name,
+                      theme: runtime.site.theme,
+                    }),
+                    ...buildPhiThemeSetSelectOptions(registry, activeModuleKeys),
                   ],
                 },
                 contentId: null,

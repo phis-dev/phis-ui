@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 
 import type { PhiSignalAddress } from "../../../../types";
 import { findPhiSignalRoutesByCapabilityId } from "../../../../types/signals";
-import type { PhiControlOption } from "../../../controls/phi-control-options";
+import { readPhiControlOptions, type PhiControlOption } from "../../../controls/phi-control-options";
 import type { PhiChoiceControlConfig, PhiStackChoiceControlConfig } from "../../config/choice-shared";
 import {
   isPhiStackSignalMessage,
@@ -54,6 +54,18 @@ export function usePhiChoiceController<TConfig extends PhiChoiceControlConfig>({
     value: fallbackValue,
   }));
   const value = state.source === fallbackValue ? state.value : fallbackValue;
+  /*
+   * Options a sender replaced, held against the configured list they replaced. When the configuration
+   * brings a different list, that one is what the Control was given last, so the sent one steps aside.
+   */
+  const configuredOptions = config?.options;
+  const [sentOptions, setSentOptions] = useState<{
+    source: typeof configuredOptions;
+    options: PhiControlOption[];
+  } | null>(null);
+  const options = sentOptions && sentOptions.source === configuredOptions
+    ? sentOptions.options
+    : resolvedOptions.options;
   const controlSignals = usePhiControlSignalController<string>({
     key: config?.key ?? defaultKey,
     sender,
@@ -65,6 +77,16 @@ export function usePhiChoiceController<TConfig extends PhiChoiceControlConfig>({
     initialReadOnly: readOnly,
     clearValue: fallbackValue,
     onSetValue: (nextValue) => setState({ source: fallbackValue, value: nextValue }),
+    onReceiveCapability: (capabilityId, signal) => {
+      if (capabilityId !== "options") {
+        return false;
+      }
+      const value = signal.value && typeof signal.value === "object" && !Array.isArray(signal.value)
+        ? (signal.value as { options?: unknown }).options
+        : undefined;
+      setSentOptions({ source: configuredOptions, options: readPhiControlOptions(value) });
+      return true;
+    },
     coerceValue: (nextValue) => (typeof nextValue === "string" ? nextValue : nextValue == null ? "" : String(nextValue)),
   });
 
@@ -80,7 +102,7 @@ export function usePhiChoiceController<TConfig extends PhiChoiceControlConfig>({
   }
 
   return {
-    options: resolvedOptions.options,
+    options,
     value,
     readOnly,
     disabled: controlSignals.disabled,

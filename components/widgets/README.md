@@ -943,7 +943,7 @@ const signalRoutes = {
   - `viewer`
 - Only pass the runtime slice the concrete client widget actually needs.
 - Raw site/theme JSON should not be passed into client components unless there is a clear, documented reason.
-- Ant Design visual defaults come from `PhiConfigProvider` and any site-level `site.theme.antd` overrides.
+- Ant Design visual defaults come from `PhiConfigProvider` and the site-level `site.theme.palette`, `site.theme.style` and `site.theme.components` overrides.
 - In client widgets, avoid hydrating browser-normalized visual end values as raw inline styles.
 - In particular, avoid passing token-derived `color`, `background`, `border*`, or `boxShadow` values directly as the final inline value when a CSS variable or class can carry the same meaning.
 - Browsers normalize those values during SSR/DOM parsing, which can produce React hydration mismatches even when the visual result is equivalent.
@@ -1308,7 +1308,7 @@ Site/theme config consumed:
 
 Theme contract consumed indirectly:
 - `Menu`
-- shared menu component tokens from `site.theme.antd.components.Menu`
+- shared menu component tokens from `site.theme.components.Menu`
 
 ## PhiImageWidget
 

@@ -616,7 +616,7 @@ export const STATUS_THEME_PRESET = {
   version: 1,
   title: "Status Night",
   description: "Dark operations palette.",
-  antd: {
+  palette: {
     seed: {
       colorPrimary: "#4f8cff",
       colorSuccess: "#45a675",
@@ -649,8 +649,48 @@ export const STATUS_THEMES = [{
 ```
 
 `themeKey` and the loaded preset's `key` must match, as must their titles. Increment the descriptor and
-preset versions when the published preset contract changes. A Site's Draft/Published theme override is
-separate from the immutable package preset.
+preset versions when the published preset contract changes. `palette.seed` carries the seeds both modes
+share; `modes.light` / `modes.dark` carry the two base seeds, explicit colour tokens under `overrides`
+and the ten custom colours under `customColors`. A Site's own `theme.palette` has exactly this shape and
+is laid over the preset field by field.
+
+A palette is one of three Theme blocks. A Module may also ship a **ground** -- the Root Background, the
+Chrome Overlay and its Shadow, one value per mode -- and a **Set** that names a palette, a style and a
+ground by key. Both are announced through `themeBlocks` on the same catalog entry, with the
+`PhiCmsThemeBlockDescriptor` shape from `@phis/ui/types` and the block types from `@phis/ui/theme`:
+
+```ts
+// themes.ts
+export const STATUS_THEME_BLOCKS = [{
+  ownerModuleId: STATUS_MODULE_ID,
+  presetKey: "status-night-ground",
+  presetVersion: 1,
+  blockKind: "ground",
+  blockKey: "status-night",
+  title: "Status Night",
+  loadBlock: () => import("./theme-ground").then((module) => module.STATUS_NIGHT_GROUND),
+}, {
+  ownerModuleId: STATUS_MODULE_ID,
+  presetKey: "status-night-set",
+  presetVersion: 1,
+  blockKind: "set",
+  blockKey: "status-night",
+  title: "Status Night",
+  loadBlock: () => import("./theme-set").then((module) => module.STATUS_NIGHT_SET),
+}] as const satisfies readonly PhiCmsThemeBlockDescriptor[];
+```
+
+A ground may carry a picture. The package build copies no files, so the picture travels inline as a
+`data:image/...` URL. A Site that only follows the ground stores its key and nothing else, and the
+Module delivers the look. The first time the Site saves a Theme that resolves to a Module's ground, the
+Builder takes the whole ground over: background, Chrome and Shadow of both modes become the Site's own
+values and every picture becomes a Site Asset in the Media library. From then on the Site owns the look,
+switching the Module off changes nothing, and a Module update no longer reaches it; the key stays as
+provenance so a reset can show the Module's current version again. A Module's palette and style are
+taken over the same way, into `theme.palette` and `theme.style`; core blocks are followed, never copied.
+A Theme is site-wide, so palettes and blocks are read from the
+installed union -- what `phis module add` projected -- rather than from the Areas the Module is
+enabled in. `@phis/example` in this workspace ships a complete palette, ground and Set.
 
 Client components consume Ant Design semantics through `usePhiConfig().token` and module-specific
 custom colors through the approved Phi config contract. Do not create parallel `--phi-*` variables for
@@ -979,7 +1019,8 @@ The projection is **passed into** the generic Area hosts rather than imported by
 redirect an import that happens inside `@phis/ui` -- a bundler alias matches the request string, and a
 package's own internal request is not one a Site can name. This was measured rather than assumed: an alias
 on the seam module leaves the empty value in the bundle. So the Skeleton hands the projection to the host
-factories once, in the twelve files under `src/runtime-modules`, and those files are never touched again
+factories once, in the thirteen files under `src/runtime-modules` -- one per Area host, one Client
+boundary per Area, and the document shell -- and those files are never touched again
 when a Module is installed or removed. All composition stays in `@phis/ui`: placement by `eligibleAreas`,
 collision checks against first-party ids, and the Builder's union across Areas.
 

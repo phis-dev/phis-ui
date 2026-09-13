@@ -13,7 +13,7 @@ import {
 } from "../../theme/phi-theme";
 import {
   resolvePhiThemePresetPlugin,
-  resolvePhiThemePresetTokens,
+  resolvePhiThemeColorTokens,
   type PhiThemeMode,
   type PhiThemePresetPlugin,
 } from "../../theme/phi-theme-presets";
@@ -74,12 +74,17 @@ export function resolvePhiRootTheme({
   presets: readonly PhiThemePresetPlugin[];
 }): PhiResolvedRootTheme {
   const themePreset = resolvePhiThemePresetPlugin(presets, siteTheme?.preset);
-  const presetTokens = resolvePhiThemePresetTokens(themePreset, mode);
+  /*
+   * Colour per mode: the palette block the Site follows with the Site's own palette on top, then the
+   * Site's proportions. The palette merge happens before the tokens resolve, so a shared seed the Site
+   * owns is never undercut by a mode override the block declares.
+   */
+  const colorTokens = resolvePhiThemeColorTokens(themePreset, siteTheme?.palette, mode);
   const sharedTokenDefaults = buildPhiThemeStructuralTokens();
   const resolvedThemeTokens = {
     ...sharedTokenDefaults,
-    ...presetTokens,
-    ...(siteTheme?.antd?.token ?? {}),
+    ...colorTokens,
+    ...(siteTheme?.style?.token ?? {}),
   } as Record<string, unknown>;
   const themeTokenInput = {
     ...resolvedThemeTokens,
@@ -121,7 +126,7 @@ export function resolvePhiRootTheme({
   });
   const components = applyPhiControlShapeComponentTokens(mergeComponentThemes(
     sharedComponentDefaults,
-    siteTheme?.antd?.components,
+    siteTheme?.components ?? undefined,
   ), readPhiControlShape(siteTheme.shape?.controls), effectiveThemeTokens);
   const token = {
     ...effectiveThemeTokens,

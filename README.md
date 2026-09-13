@@ -255,16 +255,16 @@ Use CLI findings as the local source of truth for Ant Design implementation deci
   - If either pointer exists, the internal selection is `site:<siteKey>` and its visible label is the Site name. If neither pointer exists, the initial selection is the `phi` preset.
 - The `/builder/theme` page-local Light/Dark switch selects the preview and color-authoring mode only.
   - It resolves mode-specific preset seeds, derived Ant Design colors, and the matching custom-color palette without changing the global Area Theme mode.
-  - Explicit flat `site.theme.antd.token` values remain global overrides in both modes.
-- The published `site.theme.phi.customColors` palette is the canonical custom-color source for live rendering, Builder canvases, inspectors, and normal CMS widgets.
+  - Shared seeds in `site.theme.palette.seed` and structural `site.theme.style.token` values apply in both modes; the base seeds, explicit colour tokens and custom colours live per mode under `site.theme.palette.modes`.
+- The published custom colours, resolved per mode from `site.theme.palette.modes[mode].customColors` over the followed palette block, are the canonical custom-color source for live rendering, Builder canvases, inspectors, and normal CMS widgets.
   - `PhiColorWidget` consumes that palette through `usePhiConfig().customColors`; consumers must not reconstruct it from CSS variables or substitute semantic Ant Design tokens.
   - The `/theme` authoring workspace is the only path that supplies its current draft palette explicitly, because it must preview colors before they are published.
 - `site.runtime` may later carry the active theme selection, but the current live rendering path should keep reading the resolved `site.theme` contract.
-- `site.theme.antd.token` remains the source of truth for Ant Design design tokens.
+- `site.theme.palette` and `site.theme.style.token` are the Site's source of truth for Ant Design design tokens, resolved over the Theme blocks it follows.
   - If the root provider enables Ant Design `cssVar`, the runtime CSS variables are derived from that same token source.
   - `px2remTransformer` remains a separate bridge for rem conversion and should not be treated as a token source.
   - `site.theme.rem` contains only `rootValue`; typography is not persisted under `rem`.
-  - The shared Ant Design `fontSize` seed is `12`. Ant Design's token algorithm derives `fontSizeSM`, `fontSizeLG`, headings, and line heights; any of those derived aliases may still be overridden explicitly in `site.theme.antd.token`.
+  - The shared Ant Design `fontSize` seed is `12`. Ant Design's token algorithm derives `fontSizeSM`, `fontSizeLG`, headings, and line heights; any of those derived aliases may still be overridden explicitly in `site.theme.style.token`.
   - Theme authors may override size tokens as canonical numeric values such as `padding = 21`, `paddingMD = 34`, or `paddingXL = 89`.
   - Ant Design consumes the numeric token value directly and emits both CSS-in-JS rules and SSR-extracted `--ant-*` variables.
   - Phi may additionally project a value only when it represents a distinct Phi-owned shell or layout contract, for example a sidebar width expressed in `rem`.
@@ -298,7 +298,7 @@ Use CLI findings as the local source of truth for Ant Design implementation deci
 - `layout-affordances.css` defines Builder-only insert/delete affordance styling.
 - Builder scaffold and affordance styles are imported only by the Builder Authoring module, never by the global Root or a Public runtime entry.
 - Sequential flow layouts compact their `slotIndex` order after delete; sparse slot layouts keep their positions stable.
-- Typography remains configurable through `site.theme.antd.token`, the active font selection in `site.theme`, and the rem bridge in `site.theme.rem`.
+- Typography remains configurable through `site.theme.style.token`, the active font selection in `site.theme`, and the rem bridge in `site.theme.rem`.
 - Root rem scaling and Phi-only structural variables are resolved and emitted by `PhiRootLayout` on the server.
 - Client Ant Design token updates remain inside `PhiConfigProvider`; generated `--ant-*` variables are Ant Design's
   canonical CSS projection, while mirrored `--phi-color-*` output is forbidden.

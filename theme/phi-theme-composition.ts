@@ -180,22 +180,3 @@ export function resolvePhiThemeEffectiveRoot(
     chrome,
   };
 }
-
-/**
- * The tokens the palette and the style contribute, separated the way the two tabs are.
- *
- * Colour against everything else, told apart by the token name. Ant Design already draws that line and
- * the Theme workspace has always reset along it, so the blocks keep the same seam rather than
- * introducing a second one that would have to be kept in step.
- */
-export function isPhiThemeColorTokenKey(key: string) {
-  return key.startsWith("color");
-}
-
-export function splitPhiThemeAuthoredTokens(token: Record<string, unknown> | null | undefined) {
-  const entries = Object.entries(token ?? {});
-  return {
-    color: Object.fromEntries(entries.filter(([key]) => isPhiThemeColorTokenKey(key))),
-    style: Object.fromEntries(entries.filter(([key]) => !isPhiThemeColorTokenKey(key))),
-  };
-}

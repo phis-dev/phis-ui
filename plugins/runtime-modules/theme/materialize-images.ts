@@ -1,26 +1,30 @@
 "use client";
 
 import { runPhiMediaUploadSession } from "../../../components/media/media-upload-flow";
-import { resolvePhiThemeEffectiveRoot } from "../../../theme/phi-theme-composition";
-import type { PhiThemeGroundBlock } from "../../../theme/phi-theme-blocks";
+import { adoptPhiThemeModuleBlocks } from "../../../theme/phi-theme-adoption";
+import { resolvePhiThemeEffectiveRoot, type PhiThemeComposition } from "../../../theme/phi-theme-composition";
 import type { PhiSiteThemeRoot } from "../../../types/site-theme";
 
 /**
- * Taking a picture a Module brought into the Site's own Media library.
+ * Taking a ground a Module brought over into the Site's own record, pictures included.
  *
- * A ground a Module ships carries its picture in the package, and a Site that merely follows that
- * ground needs nothing else: the Module delivers it, and switching the Module off takes the look with
- * it, which is what somebody switching it off asked for.
+ * A ground a Module ships carries its look in the package, and a Site that merely follows that ground
+ * needs nothing else: the Module delivers it, and switching the Module off takes the look with it,
+ * which is what somebody switching it off asked for.
  *
- * Editing the Theme is the moment that changes. Somebody who opens the ground and changes it has made
- * it theirs, and a look somebody has worked on should not depend on a package staying installed. So a
- * draft that carries such a picture brings it into the Media library on the way to the server and
- * points at the Asset from then on. The Site owns it; the Module is out of the picture.
+ * Saving the Theme is the moment that changes. Somebody who saves has decided to keep what they see,
+ * and a look somebody decided on should not depend on a package staying installed. So a draft that
+ * resolves to a Module's blocks takes them over on the way to the server -- `adoptPhiThemeModuleBlocks`
+ * copies palette, style tokens, and the ground's background, Chrome and Shadow of both modes into the
+ * record -- and every picture that is still the Module's goes into the Media library, with the draft
+ * pointing at the Asset from then on. The Site owns it; the Module is out of the picture. Copying the
+ * frame and the colour along with the picture is what keeps the look from coming apart halfway when the
+ * Module is switched off.
  *
  * Only on a draft save, never on a keystroke: a draft in memory is somebody thinking out loud, and an
  * upload for every intermediate state would fill the library with pictures nobody chose. The upload
  * goes through the ordinary session, so quota, sniffing and the checksum that recognises a duplicate
- * all apply -- following the same ground twice does not leave two copies.
+ * all apply -- saving the same ground twice does not leave two copies.
  */
 
 /** What the Theme may carry as a picture, narrowed to the fields this touches. */
@@ -77,21 +81,23 @@ async function uploadPhiThemeImage(source: string, hint: string) {
 }
 
 /**
- * Rewrites every ground picture that is still the Module's into one the Site owns.
+ * Takes a Module's blocks over and rewrites every picture that is still the Module's into one the
+ * Site owns.
  *
  * The two modes are handled separately and both are uploaded, because a Site that keeps only the light
- * half of a look it edited would lose the dark one the day the Module goes. Whatever else the base
- * carries -- position, size, a focal rectangle somebody set -- travels along untouched.
+ * half of a look it saved would lose the dark one the day the Module goes. Whatever else the base
+ * carries -- position, size, a focal rectangle somebody set -- travels along untouched. A Theme on a
+ * core ground is left following it; only an author's own pasted data URL is uploaded there.
  */
-export async function materializePhiThemeGroundImages<T extends { root?: PhiSiteThemeRoot | null }>(
-  theme: T,
-  ground: PhiThemeGroundBlock,
+export async function materializePhiThemeModuleBlocks<T extends { root?: PhiSiteThemeRoot | null }>(
+  source: T,
+  composition: Pick<PhiThemeComposition, "palette" | "style" | "ground">,
 ): Promise<PhiThemeImageMaterializeResult<T>> {
+  const ground = composition.ground;
+  const theme = adoptPhiThemeModuleBlocks(source, composition);
   /*
-   * The effective ground, not the stored one: a Site that follows a Module's ground stores a key and
-   * nothing else, and that key is exactly the case this exists for. Saving such a draft takes the
-   * picture over, which also turns the ground into an authored value -- what somebody saved is theirs,
-   * and the two modes stop drifting apart the day the Module changes one of them.
+   * The effective ground, not the stored one: on a core ground the Site may still follow the block and
+   * carry only what its author pasted, and that is what gets uploaded here.
    */
   const background = resolvePhiThemeEffectiveRoot(theme.root, ground).background;
   if (!background) return { theme, assetIds: [] };
