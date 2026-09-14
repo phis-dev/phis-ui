@@ -201,8 +201,8 @@ Expected behavior:
 - the tree shows the current target area only
 - the active page is highlighted
 - selecting a page opens its canvas
-- `+` actions create new root pages or child pages
-- `+` on a node can create a child page or submenu entry
+- `+` actions create pages; a page is never a folder, so a page cannot be created beneath another page
+- `+` on a folder node can create a page inside that folder or a submenu entry
 
 The page tree must mirror the target site structure as closely as possible. The contract should not introduce a second independent navigation model.
 
@@ -467,7 +467,7 @@ Interaction rules:
 
 - clicking a page node selects that page in the canvas
 - double-clicking a page node may open a focused edit state if the implementation supports it
-- expanding a node reveals its child pages or submenu entries
+- expanding a folder node reveals the pages and folders inside it, or its submenu entries
 - creating a page from the tree must immediately insert it into the active area structure
 - moving or reordering nodes must update the canvas selection if the active node changed
 - deleting a page node must clear or replace the current selection in a predictable way
@@ -1179,7 +1179,6 @@ The builder must expose explicit creation actions.
 Required creation targets:
 
 - `+ page`
-- `+ child page`
 - `+ submenu`
 - `+ layout`
 - `+ widget`
@@ -1191,7 +1190,8 @@ Rules:
 
 - `+` actions must always respect the active area and shell selector.
 - `+` actions must only appear where the current contract allows creation.
-- `+ page` and `+ child page` may appear in the pages tree and page context menu.
+- `+ page` may appear in the pages tree and in a folder's context menu. There is no `+ child page`: a
+  page is never a folder (see phis-server `TODOS.md`, "Folder addresses").
 - `+ submenu` may appear when the selected node can own navigation children.
 - `+ layout` and `+ widget` may appear inside the Canvas and slot context.
 - `+ slot` may appear only on Layouts that explicitly own named or sequential slots.
