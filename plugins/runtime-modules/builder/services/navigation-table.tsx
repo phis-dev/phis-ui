@@ -37,6 +37,7 @@ import {
   type PhiBuilderNavigationTree,
 } from "../../../../helpers/cms-navigation-catalog";
 import {
+  parsePhiBuilderNavigationFolderDragSourceKey,
   parsePhiBuilderNavigationPageDragSourceKey,
   resolvePhiBuilderNavigationWidgetNavKey,
 } from "../navigation-widget-runtime";
@@ -45,7 +46,11 @@ import { resolvePhiBuilderNavigationTargetPath } from "../../../../helpers/cms-p
 import { PHI_BUILDER_NAVIGATION_DND_TYPE_PAGE } from "../../../../constants/builder-navigation-dnd";
 import { PHI_BUILDER_RUNTIME_DATA_PROVIDER_DESCRIPTORS } from "../../../../plugins/runtime-modules/builder/data-providers";
 import { isPhiExternalHref } from "../../../../helpers/external-href";
-import { readPhiInternalReference } from "../../../../types/references";
+import { createPhiPageUri, readPhiInternalReference } from "../../../../types/references";
+import {
+  buildPhiBuilderNavigationContainerFromCatalogFolder,
+  findPhiBuilderCatalogNode,
+} from "../navigation-folder-drop";
 import { phiWorkspaceCatalogStore } from "../../../../components/workspace/catalog-store";
 
 type LoadedNavigation = { navKey: string; navigation: PhiBuilderNavigationTree };
@@ -436,6 +441,39 @@ export function PhiBuilderNavigationTableProviderClient({ children }: { children
       if (request.kind === "drop") {
         if (request.payloadType !== PHI_BUILDER_NAVIGATION_DND_TYPE_PAGE) {
           return { status: "rejected", invalidation: "none", errorCode: "drop-type" };
+        }
+        const folderSource = parsePhiBuilderNavigationFolderDragSourceKey(request.sourceObjectIdentity);
+        if (folderSource) {
+          const pages = resolvePhiBuilderActivePageCatalog(
+            folderSource.area,
+            scope.state.modulePresetPagesByArea,
+            scope.state.customPages,
+            scope.state.persistedPageCatalogByArea,
+          );
+          const folder = findPhiBuilderCatalogNode(pages, folderSource.folderKey);
+          if (!folder) return { status: "rejected", invalidation: "none", errorCode: "folder-not-found" };
+          // Every id is allocated before the one write, so the whole folder is a single Undo step.
+          let current = scope;
+          const container = await buildPhiBuilderNavigationContainerFromCatalogFolder(folder, {
+            allocateId: async () => {
+              const allocated = await allocateItem(current);
+              current = allocated.scope;
+              return allocated.id;
+            },
+            createPageItem: (id, page) => page.reference
+              ? createPageNavigationItem(id, folderSource.area, createPhiPageUri(page.reference), pages)
+              : null,
+            createContainerItem: (id, label, children) => ({ ...createNavigationItem(id, "container"), label, children }),
+          });
+          if (!container) return { status: "rejected", invalidation: "none", errorCode: "folder-not-found" };
+          writeNavigation(current, insertNavigationItem(
+            current.navigation.items,
+            request.targetParentRowIdentity == null ? null : String(request.targetParentRowIdentity),
+            request.beforeRowIdentity == null ? null : String(request.beforeRowIdentity),
+            request.afterRowIdentity == null ? null : String(request.afterRowIdentity),
+            container,
+          ));
+          return accepted("view");
         }
         const source = parsePhiBuilderNavigationPageDragSourceKey(request.sourceObjectIdentity);
         if (!source) return { status: "rejected", invalidation: "none", errorCode: "drop-source" };

@@ -8,7 +8,10 @@ import {
   parsePhiBuilderNavigationScopeKey,
 } from "../../../helpers/cms-navigation-catalog";
 import type { PhiBuilderPageCatalogArea } from "../../../helpers/cms-page-catalog";
-import { PHI_BUILDER_NAVIGATION_DND_SOURCE_PAGE } from "../../../constants/builder-navigation-dnd";
+import {
+  PHI_BUILDER_NAVIGATION_DND_SOURCE_FOLDER,
+  PHI_BUILDER_NAVIGATION_DND_SOURCE_PAGE,
+} from "../../../constants/builder-navigation-dnd";
 import { createPhiPageUri, readPhiInternalReference, type PhiPageReference } from "../../../types/references";
 
 export function resolvePhiBuilderNavigationWidgetNavKey(
@@ -53,5 +56,32 @@ export function parsePhiBuilderNavigationPageDragSourceKey(sourceKey: string | n
   const parsed = readPhiInternalReference(reference);
   return area && parsed?.kind === "page"
     ? { area: area as PhiBuilderPageCatalogArea, reference }
+    : null;
+}
+
+/**
+ * A catalog folder has no Page reference -- it is a path segment with Pages beneath it -- so its key
+ * in the Area's catalog is what identifies it. That is enough: what the drop builds from it is a
+ * container that stands on its own afterwards.
+ */
+export function buildPhiBuilderNavigationFolderDragSourceKey(
+  area: PhiBuilderPageCatalogArea,
+  folderKey: string,
+) {
+  return `${PHI_BUILDER_NAVIGATION_DND_SOURCE_FOLDER}:${area}:${folderKey}`;
+}
+
+export function parsePhiBuilderNavigationFolderDragSourceKey(sourceKey: string | null | undefined) {
+  const prefix = `${PHI_BUILDER_NAVIGATION_DND_SOURCE_FOLDER}:`;
+  if (!sourceKey?.startsWith(prefix)) {
+    return null;
+  }
+  const remainder = sourceKey.slice(prefix.length);
+  const separator = remainder.indexOf(":");
+  if (separator <= 0) return null;
+  const area = remainder.slice(0, separator);
+  const folderKey = remainder.slice(separator + 1);
+  return area && folderKey
+    ? { area: area as PhiBuilderPageCatalogArea, folderKey }
     : null;
 }
