@@ -606,7 +606,7 @@ Server/client boundary for those layers:
     - inner structure and slot composition
     - examples: `gap`, named slots, sequential slots, alignment, distribution
 - Regions may own shell behavior such as sticky placement, viewport offset, width, height, collapse, padding, background, border, shadow, a semantic effect, and full-height behavior.
-- Static and client-enhanced Region renderers resolve that chrome through the same Region-shell resolver. Presets and Builder drafts persist only the closed effect ids `glass`, `blur`, or `dim`, and only the closed shadow ids `none`, `soft`, or `strong`. Their CSS definitions are global Phi policy and must never be copied into a preset, module, renderer, or Area-specific path. A custom shadow is the sole exception and persists as `{ kind: "custom", value: "<box-shadow>" }`; arbitrary effect parameters and arbitrary strings in the standard shadow field are invalid v1 ABI.
+- Static and client-enhanced Region renderers resolve that chrome through the same Region-shell resolver. Presets and Builder drafts persist only the closed effect ids `glass`, `haze`, `blur`, or `dim`, and only the closed shadow ids `none`, `soft`, or `strong`. Their CSS definitions are global Phi policy and must never be copied into a preset, module, renderer, or Area-specific path. A custom shadow is the sole exception and persists as `{ kind: "custom", value: "<box-shadow>" }`; arbitrary effect parameters and arbitrary strings in the standard shadow field are invalid v1 ABI.
 - Widgets should own only their own content rendering and should not need to know the surrounding layout box.
 - Regions must never contain content widgets directly.
 - Every active region must point to exactly one root layout node.

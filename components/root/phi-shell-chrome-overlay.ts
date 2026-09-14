@@ -28,15 +28,16 @@ import type { PhiThemeMode } from "../../theme/phi-theme-presets";
  */
 
 /**
- * The Effects the overlay offers and honours, which is `glass` alone.
+ * The Effects the overlay offers and honours, which are the two glass panes.
  *
  * The overlay is not a layer above the Chrome, it is the Chrome's own ground, so an Effect here acts on
  * the Region itself: `blur` and `dim` are `filter`, which would blur and darken the Header's own text.
- * `glass` is the one that acts on what is behind the Region, which is exactly what a shared frame over
- * a scrolling Page wants. A wash of colour over the frame is an Overlay rather than an Effect, and the
- * overlay offers those unnarrowed.
+ * A pane acts on what is behind the Region instead, which is exactly what a shared frame over a
+ * scrolling Page wants, and both strengths of it belong to a frame -- `glass` where the Page should
+ * read as frosted underneath, `haze` where it should stay almost legible. A wash of colour over the
+ * frame is an Overlay rather than an Effect, and the overlay offers those unnarrowed.
  */
-export const PHI_SHELL_CHROME_OVERLAY_EFFECTS: readonly PhiLayoutEffectId[] = ["glass"];
+export const PHI_SHELL_CHROME_OVERLAY_EFFECTS: readonly PhiLayoutEffectId[] = ["glass", "haze"];
 
 /**
  * The Base kinds the overlay offers and honours, which is the whole contract.
@@ -133,8 +134,7 @@ function readPhiShellChromeOverlayConfig(
  * The overlay as this surface renders it, narrowed to what it offers.
  *
  * A stored value is never rewritten. A Base or an Effect the overlay does not offer simply resolves
- * away, which is what a record still carrying an image from before it was withheld renders here, and
- * what the Control shows for it.
+ * away, which is what the Control shows for it too.
  */
 export function resolvePhiShellChromeOverlayConfig(
   config: unknown,

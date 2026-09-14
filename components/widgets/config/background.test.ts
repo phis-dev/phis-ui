@@ -46,6 +46,18 @@ describe("background glass effect", () => {
     expect(style.backgroundImage).toBe('url("https://example.test/ground.jpg")');
   });
 
+  it("withholds both glass strengths from a base with nothing to thin", () => {
+    for (const effect of ["glass", "haze"] as const) {
+      expect(resolvePhiBackgroundEffect({ base: image, effect })).toBeNull();
+      expect(
+        resolvePhiBackgroundEffect({
+          base: { kind: "gradient", direction: "to top", stops: [] },
+          effect,
+        }),
+      ).toBeNull();
+    }
+  });
+
   it("keeps every other effect on an image base", () => {
     expect(resolvePhiBackgroundEffect({ base: image, effect: "dim" })).toBe("dim");
     expect(resolvePhiBackgroundWidgetStyle({ base: image, effect: "dim" }).filter).toBe(

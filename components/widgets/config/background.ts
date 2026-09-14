@@ -9,6 +9,7 @@ import {
 import { readPhiMediaImageSourceConfig } from "./image-source-parser";
 import { readBoolean, readNumber, readString } from "./parser-primitives";
 import {
+  isPhiGlassLayoutEffectId,
   isPhiLayoutEffectId,
   type PhiLayoutEffectId,
 } from "../../../types/layout-style";
@@ -565,10 +566,11 @@ export function phiBackgroundWidgetConfigPaintsGround(config: unknown): boolean 
 }
 
 /**
- * Whether `glass` describes anything on this base.
+ * Whether a glass pane -- `glass` or `haze` -- describes anything on this base.
  *
  * Glass is a pane: it frosts what shows THROUGH a surface, which is why it reads as glass on a Region
- * that lets the layer beneath it come up. An image or gradient base is not a pane, it is the material
+ * that lets the layer beneath it come up. Both strengths work by thinning the Base until the filtered
+ * backdrop reads through it, so both need a Base there is something to thin. An image or gradient base is not a pane, it is the material
  * itself, and there is nothing of it to see through -- the frost lands behind opaque paint and the
  * glass ground can only ever read as a wash laid over the picture. So the Effect is neither offered
  * nor honoured there. `blur` and `dim` act on the surface itself and stay valid on every base.
@@ -580,13 +582,15 @@ export function phiBackgroundBaseSupportsGlassEffect(
 }
 
 /**
- * The Effect this Background actually renders, which is the configured one unless it is a `glass` the
+ * The Effect this Background actually renders, which is the configured one unless it is a pane the
  * base cannot express. A stored value is never rewritten; it simply resolves to no Effect.
  */
 export function resolvePhiBackgroundEffect(config: unknown): PhiLayoutEffectId | null {
   const normalized = normalizePhiBackgroundWidgetConfig(config);
   const effect = normalized.effect ?? null;
-  return effect === "glass" && !phiBackgroundBaseSupportsGlassEffect(normalized.base) ? null : effect;
+  return isPhiGlassLayoutEffectId(effect) && !phiBackgroundBaseSupportsGlassEffect(normalized.base)
+    ? null
+    : effect;
 }
 
 export function resolvePhiBackgroundMotion(config: unknown): PhiBackgroundMotion | null {

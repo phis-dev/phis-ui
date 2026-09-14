@@ -1,23 +1,41 @@
 import type { CSSProperties } from "react";
 
 import { PHI_COLOR, PHI_SHADOW } from "../theme/antd-css-var-contract";
-import type { PhiShadow, PhiLayoutEffectId } from "../types/layout-style";
+import {
+  isPhiGlassLayoutEffectId,
+  type PhiGlassLayoutEffectId,
+  type PhiLayoutEffectId,
+  type PhiShadow,
+} from "../types/layout-style";
 
-export const PHI_GLASS_BACKGROUND_STRENGTH_PERCENT = 36;
-export const PHI_GLASS_BACKDROP_FILTER = "blur(24px) saturate(1.2)";
+/**
+ * What each glass strength is made of.
+ *
+ * The two numbers move together. The radius alone decides how much of the ground survives as shape,
+ * the share decides how much of it survives as light, and changing one without the other gives a
+ * window that is dirty rather than glass that is lighter.
+ */
+export const PHI_GLASS_LAYOUT_EFFECT_DEFINITIONS = {
+  glass: { filter: "blur(24px) saturate(1.2)", strengthPercent: 36 },
+  haze: { filter: "blur(10px) saturate(1.1)", strengthPercent: 60 },
+} as const satisfies Record<PhiGlassLayoutEffectId, { filter: string; strengthPercent: number }>;
 
 function resolvePhiGlassBackground(
   background: CSSProperties["background"] | null | undefined,
+  strengthPercent: number,
 ) {
   const base = typeof background === "string" && background.trim()
     ? background
     : PHI_COLOR.bgElevated;
-  return `color-mix(in srgb, ${base} ${PHI_GLASS_BACKGROUND_STRENGTH_PERCENT}%, transparent)`;
+  return `color-mix(in srgb, ${base} ${strengthPercent}%, transparent)`;
 }
 
 export const PHI_LAYOUT_EFFECT_DEFINITIONS = {
   glass: {
-    backdropFilter: PHI_GLASS_BACKDROP_FILTER,
+    backdropFilter: PHI_GLASS_LAYOUT_EFFECT_DEFINITIONS.glass.filter,
+  },
+  haze: {
+    backdropFilter: PHI_GLASS_LAYOUT_EFFECT_DEFINITIONS.haze.filter,
   },
   blur: {
     filter: "blur(6px)",
@@ -54,8 +72,8 @@ export function resolvePhiLayoutEffectStyle({
     return undefined;
   }
 
-  const definition = PHI_LAYOUT_EFFECT_DEFINITIONS[effect];
-  if (effect === "glass") {
+  if (isPhiGlassLayoutEffectId(effect)) {
+    const glass = PHI_GLASS_LAYOUT_EFFECT_DEFINITIONS[effect];
     /*
      * The ground as `backgroundColor`, never as the `background` shorthand.
      *
@@ -65,13 +83,13 @@ export function resolvePhiLayoutEffectStyle({
      * the same thing without the shorthand's silent resets.
      */
     return {
-      backgroundColor: resolvePhiGlassBackground(background),
-      backdropFilter: PHI_GLASS_BACKDROP_FILTER,
-      WebkitBackdropFilter: PHI_GLASS_BACKDROP_FILTER,
+      backgroundColor: resolvePhiGlassBackground(background, glass.strengthPercent),
+      backdropFilter: glass.filter,
+      WebkitBackdropFilter: glass.filter,
     };
   }
 
-  return definition;
+  return PHI_LAYOUT_EFFECT_DEFINITIONS[effect];
 }
 
 export function composePhiLayoutEffectStyle(

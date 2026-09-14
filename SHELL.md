@@ -192,12 +192,13 @@ The site-owned Shell Chrome Overlay is its counterpart in front of the scrolling
   around the Page rather than as four pictures meeting at the corners — and what the frame shows of it
   are its edges, which is what makes flat pictures (textures, fields of color, the outer reaches of a
   landscape) the ones that work. A picture and `glass` are mutually exclusive: see the Effect rule below
-- offers `glass` as its only Effect and offers no motion at all. The overlay is the ground of the Regions
-  that paint it, so `blur` and `dim` would take those Regions' own content with them. `glass` is the one
-  Effect that acts on what is behind a Region, which is what a shared frame over a scrolling Page wants;
+- offers the two glass panes, `glass` and `haze`, as its only Effects, and offers no motion at all. The
+  overlay is the ground of the Regions that paint it, so `blur` and `dim` would take those Regions' own
+  content with them. A pane acts on what is behind a Region instead, which is what a shared frame over a
+  scrolling Page wants — `glass` frosts the Page underneath, `haze` only clouds it;
   motion has nothing to travel against on a viewport-anchored ground. Tinting the frame is the business
   of the color Overlay, which the overlay offers unnarrowed
-- cannot frost a picture. `glass` works by thinning the Base so the filtered backdrop reads through it,
+- cannot frost a picture, at either strength. A pane works by thinning the Base so the filtered backdrop reads through it,
   which is why it holds on a color and on no Base at all, and why it resolves away on a picture and on a
   gradient alike — both are opaque material with nothing to thin, and the frost would land behind paint
   that hides it. Legibility over a picture is the color Overlay's job instead: a wash, or a gradient

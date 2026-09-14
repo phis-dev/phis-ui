@@ -66,6 +66,7 @@ export type PhiBackgroundWidgetLabels = {
   effect: {
     none: string;
     glass: string;
+    haze: string;
     blur: string;
     dim: string;
   };
@@ -177,6 +178,7 @@ export const PHI_BACKGROUND_WIDGET_DEFAULT_LABELS: PhiBackgroundWidgetLabels = {
   effect: {
     none: "None",
     glass: "Glass",
+    haze: "Haze",
     blur: "Blur",
     dim: "Dim",
   },

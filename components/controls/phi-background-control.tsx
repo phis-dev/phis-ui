@@ -51,7 +51,11 @@ import {
   type PhiBackgroundWidgetLabels,
 } from "../widgets/label-types/background";
 import type { PhiColorPickerLabels } from "../widgets/label-types/color-picker";
-import { PHI_LAYOUT_EFFECT_IDS, type PhiLayoutEffectId } from "../../types/layout-style";
+import {
+  PHI_LAYOUT_EFFECT_IDS,
+  isPhiGlassLayoutEffectId,
+  type PhiLayoutEffectId,
+} from "../../types/layout-style";
 import type { PhiWidgetControlMode } from "../../types/widget-ui";
 import { ConfigPreviewShell } from "./config-preview-shell";
 import { PhiColorControl } from "./phi-color-control";
@@ -84,7 +88,7 @@ export type PhiBackgroundControlProps = {
    *
    * Same rule as `motionModes`: an Effect acts on the surface that carries it, and not every surface
    * survives every one of them. The Shell Chrome Overlay is the Chrome's own ground, so `blur` and
-   * `dim` would take the Header's text with them and only `glass` describes anything there.
+   * `dim` would take the Header's text with them and only the glass panes describe anything there.
    */
   effects?: readonly PhiLayoutEffectId[];
   /**
@@ -99,10 +103,9 @@ export type PhiBackgroundControlProps = {
   /**
    * The Base kinds this surface can actually render, defaulting to the full contract.
    *
-   * Same rule as `motionModes` and `effects`. The Shell Chrome Overlay is a treatment laid over the
-   * Theme Root Background, so an `image` there would be a second picture cut against the first along
-   * the frame edge, and it would hide the very ground the frame is meant to let through. A value the
-   * offer no longer covers reads as `none`, which is what such a surface renders for it.
+   * Same rule as `motionModes` and `effects`. A surface that cannot render a Base kind must not offer
+   * it, and a value the offer no longer covers reads as `none`, which is what such a surface renders
+   * for it.
    */
   baseKinds?: readonly PhiCmsBackgroundWidgetConfig["base"]["kind"][];
   renderMediaPicker?: (props: {
@@ -359,6 +362,7 @@ export function PhiBackgroundControl({
   const effectKindCatalog: Array<{ value: "none" | PhiLayoutEffectId; label: string }> = [
     { value: "none", label: labels.common.none },
     { value: "glass", label: labels.effect.glass },
+    { value: "haze", label: labels.effect.haze },
     { value: "blur", label: labels.effect.blur },
     { value: "dim", label: labels.effect.dim },
   ];
@@ -370,7 +374,7 @@ export function PhiBackgroundControl({
    */
   const supportsGlassEffect = phiBackgroundBaseSupportsGlassEffect(currentValue.base);
   const isOfferedEffect = (effect: PhiLayoutEffectId) =>
-    effects.includes(effect) && (effect !== "glass" || supportsGlassEffect);
+    effects.includes(effect) && (!isPhiGlassLayoutEffectId(effect) || supportsGlassEffect);
   const effectKindOptions = effectKindCatalog.filter(
     (option) => option.value === "none" || isOfferedEffect(option.value),
   );
