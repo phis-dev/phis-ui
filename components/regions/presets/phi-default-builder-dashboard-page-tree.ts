@@ -1,6 +1,6 @@
 import { createPhiPresetCmsInstanceIdMap } from "../../../types/cms-instance-id";
 import { PHI_DASHBOARD_RUNTIME_MODULE_ID } from "../../../plugins/runtime-modules/dashboard/ids";
-import { PHI_CMS_DEFAULT_SLOT_INDEX, PHI_CMS_THREE_COLUMN_LAYOUT_SLOT_INDEX } from "../../../constants/cms-layout-types";
+import { PHI_CMS_DEFAULT_SLOT_INDEX } from "../../../constants/cms-layout-types";
 import { PhiCmsPageType, PhiCmsRegionType, PhiCmsStatus } from "../../../constants/phi-cms";
 import { buildPhiCmsLayoutNode, buildPhiCmsWidgetNode } from "../../../helpers/cms-node-factories";
 
@@ -28,7 +28,6 @@ const SYNTHETIC_BUILDER_DASHBOARD_WIDGET_IDS = createPhiPresetCmsInstanceIdMap({
   presetKey: "builder-dashboard-page",
 }, [
   "widgetBuilderChromeControls",
-  "widgetTitle",
 ]);
 
 export async function buildPhiDefaultBuilderDashboardPageTree({
@@ -79,7 +78,11 @@ export async function buildPhiDefaultBuilderDashboardPageTree({
         sortOrder: 25,
         config: {
           sticky: true,
-          effect: "glass",
+          /*
+           * No Effect of its own, like every other Builder Header. A `glass` authored here frosts this
+           * one Region against the Site's Shell Chrome Overlay, so the Dashboard's Header stopped
+           * matching the Sider and Footer beside it. What the frame looks like belongs to the Theme.
+           */
           shadow: "soft",
           size: { height: "55px" },
           offsetTop: 55,
@@ -125,20 +128,6 @@ export async function buildPhiDefaultBuilderDashboardPageTree({
           actionsDisabled: true,
           debugDisabled: true,
         },
-        contentId: null,
-      }),
-      buildPhiCmsWidgetNode({
-        typeKey: "page-title",
-        id: SYNTHETIC_BUILDER_DASHBOARD_WIDGET_IDS.widgetTitle,
-        siteId: page.siteId,
-        parentLayoutNodeId: SYNTHETIC_BUILDER_DASHBOARD_LAYOUT_IDS.layoutHeaderBottom,
-        slotIndex: PHI_CMS_THREE_COLUMN_LAYOUT_SLOT_INDEX.Left,
-        sortOrder: 0,
-        status: PhiCmsStatus.Published,
-        flags: 0,
-        visibilityMask: page.visibilityMask,
-        label: "builder dashboard title",
-        config: {},
         contentId: null,
       }),
     ],
