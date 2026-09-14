@@ -76,7 +76,7 @@ describe("shell chrome overlay effects", () => {
   });
 
   it("resolves an Effect it does not offer away", () => {
-    for (const effect of ["blur", "dim", "tint"] as const) {
+    for (const effect of ["blur", "dim"] as const) {
       const style = resolvePhiShellChromeOverlayStyle(
         { chrome: { light: { base: { kind: "color" as const, color: "#123456" }, effect } } },
         "light",

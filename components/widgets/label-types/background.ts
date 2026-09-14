@@ -68,7 +68,6 @@ export type PhiBackgroundWidgetLabels = {
     glass: string;
     blur: string;
     dim: string;
-    tint: string;
   };
   direction: {
     up: string;
@@ -180,7 +179,6 @@ export const PHI_BACKGROUND_WIDGET_DEFAULT_LABELS: PhiBackgroundWidgetLabels = {
     glass: "Glass",
     blur: "Blur",
     dim: "Dim",
-    tint: "Tint",
   },
   direction: {
     up: "Up",

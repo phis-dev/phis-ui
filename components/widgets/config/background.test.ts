@@ -175,3 +175,103 @@ describe("background pattern ink", () => {
     expect(normalized.overlay).not.toHaveProperty("ink");
   });
 });
+
+/**
+ * The wash: the same ink a Pattern uses, with nothing masked out of it. It is what darkens a picture
+ * enough to carry text, which `dim` cannot do -- a filter takes the content rendered inside the
+ * element with it, a layer only covers the paint.
+ */
+describe("background colour overlay", () => {
+  function overlaySvg(overlay: Record<string, unknown>) {
+    const image = String(
+      resolvePhiBackgroundWidgetStyle({ base: { kind: "none" }, overlay }).backgroundImage ?? "",
+    );
+    const encoded = image.replace(/^url\("data:image\/svg\+xml,/, "").replace(/"\)$/, "");
+    return decodeURIComponent(encoded);
+  }
+
+  it("washes in black when no ink is set, because a wash is reached for to darken", () => {
+    const svg = overlaySvg({ kind: "color", opacity: 0.5 });
+    expect(svg).toContain('fill="#000000"');
+    expect(svg).toContain('opacity="0.5"');
+    expect(svg).not.toContain("mask=");
+  });
+
+  it("washes in an authored colour", () => {
+    expect(overlaySvg({ kind: "color", ink: { kind: "color", color: "#101018" } })).toContain(
+      'fill="#101018"',
+    );
+  });
+
+  it("fades rather than covers when the ink is a gradient", () => {
+    const svg = overlaySvg({
+      kind: "color",
+      ink: {
+        kind: "gradient",
+        direction: "to top",
+        stops: [
+          { color: "rgba(0, 0, 0, 0.8)", percent: 0 },
+          { color: "rgba(0, 0, 0, 0)", percent: 100 },
+        ],
+      },
+    });
+    expect(svg).toContain("<linearGradient");
+    expect(svg).toContain('fill="url(#phi-ink)"');
+  });
+
+  it("covers the painting area once, over the Base image", () => {
+    const style = resolvePhiBackgroundWidgetStyle({
+      base: { kind: "image", sourceKind: "url", sourceUrl: "https://example.test/ground.jpg" },
+      overlay: { kind: "color", opacity: 0.4 },
+    });
+    const images = String(style.backgroundImage ?? "").split(", ");
+    expect(images).toHaveLength(2);
+    expect(images[0]).toContain("data:image/svg+xml");
+    expect(images[1]).toContain("https://example.test/ground.jpg");
+    expect(style.backgroundSize).toBe("100% 100%, cover");
+    expect(style.backgroundRepeat).toBe("no-repeat, no-repeat");
+  });
+
+  it("keeps the ink through a normalize round trip, and reads a bare colour", () => {
+    expect(
+      normalizePhiBackgroundWidgetConfig({
+        base: { kind: "none" },
+        overlay: { kind: "color", ink: { kind: "color", color: "#ff8800" } },
+      }).overlay,
+    ).toMatchObject({ kind: "color", ink: { kind: "color", color: "#ff8800" } });
+
+    expect(
+      normalizePhiBackgroundWidgetConfig({
+        base: { kind: "none" },
+        overlay: { kind: "color", color: "#ff8800" },
+      }).overlay,
+    ).toMatchObject({ kind: "color", ink: { kind: "color", color: "#ff8800" } });
+  });
+
+  it("paints a ground on its own, the way every other Overlay does", () => {
+    expect(
+      phiBackgroundWidgetConfigPaintsGround({ base: { kind: "none" }, overlay: { kind: "color" } }),
+    ).toBe(true);
+  });
+});
+
+/**
+ * `tint` was a fixed inset Shadow in one Theme colour at one strength, with no way to choose either.
+ * The colour Overlay is what it was reaching for, so the Effect is gone rather than doubled.
+ */
+describe("retired tint effect", () => {
+  it("resolves away instead of painting", () => {
+    const style = resolvePhiBackgroundWidgetStyle({
+      base: { kind: "color", color: "#101018" },
+      effect: "tint",
+    });
+    expect(style.boxShadow).toBeUndefined();
+    expect(style.backgroundColor).toBe("#101018");
+  });
+
+  it("normalizes to no Effect at all", () => {
+    expect(
+      normalizePhiBackgroundWidgetConfig({ base: { kind: "none" }, effect: "tint" }).effect,
+    ).toBeNull();
+  });
+});

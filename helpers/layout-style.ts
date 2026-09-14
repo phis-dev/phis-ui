@@ -25,9 +25,6 @@ export const PHI_LAYOUT_EFFECT_DEFINITIONS = {
   dim: {
     filter: "brightness(0.85)",
   },
-  tint: {
-    boxShadow: `inset 0 0 0 9999px color-mix(in srgb, ${PHI_COLOR.bgElevated} 16%, transparent)`,
-  },
 } as const satisfies Record<PhiLayoutEffectId, Readonly<CSSProperties>>;
 
 export const PHI_SHADOW_DEFINITIONS = {

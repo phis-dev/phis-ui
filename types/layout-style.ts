@@ -1,4 +1,4 @@
-export const PHI_LAYOUT_EFFECT_IDS = ["glass", "blur", "dim", "tint"] as const;
+export const PHI_LAYOUT_EFFECT_IDS = ["glass", "blur", "dim"] as const;
 
 export type PhiLayoutEffectId = (typeof PHI_LAYOUT_EFFECT_IDS)[number];
 

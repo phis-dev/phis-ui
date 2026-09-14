@@ -22,6 +22,8 @@ import {
   type PhiBackgroundPatternValues,
 } from "./background-pattern-contract";
 import {
+  PHI_BACKGROUND_COLOR_OVERLAY_DEFAULT_INK,
+  resolvePhiBackgroundColorLiveLayer,
   resolvePhiBackgroundNoiseLiveLayer,
   resolvePhiBackgroundPatternLiveLayer,
 } from "./background-pattern-live";
@@ -128,7 +130,27 @@ export type PhiBackgroundNoiseOverlay = {
   grain: PhiBackgroundNoiseGrain;
 };
 
-export type PhiBackgroundOverlay = PhiBackgroundPatternOverlay | PhiBackgroundNoiseOverlay;
+/**
+ * A wash of colour over the Base.
+ *
+ * It carries the same ink a Pattern does, so a flat colour and a directional fade -- dark at the
+ * bottom, clear at the top -- are the same Overlay with a different paint. This is what darkens a
+ * photograph enough to carry text, and it does so as a layer rather than as a filter: `dim` acts on
+ * the element and takes the content rendered inside it along, a wash only covers the paint.
+ */
+export type PhiBackgroundColorOverlay = {
+  kind: "color";
+  opacity?: number;
+  ink?: PhiBackgroundPatternInk | null;
+};
+
+export type PhiBackgroundOverlay =
+  | PhiBackgroundColorOverlay
+  | PhiBackgroundPatternOverlay
+  | PhiBackgroundNoiseOverlay;
+
+/** What an Overlay that states no opacity is painted at, shared by every kind. */
+export const PHI_BACKGROUND_OVERLAY_DEFAULT_OPACITY = 0.14;
 
 export type PhiCmsBackgroundWidgetConfig = {
   base: PhiBackgroundBaseColor | PhiBackgroundBaseGradient | PhiBackgroundBaseImage | PhiBackgroundBaseNone;
@@ -312,6 +334,14 @@ function readBackgroundOverlay(value: unknown): PhiBackgroundOverlay | null {
   if (!value || typeof value !== "object" || Array.isArray(value)) return null;
   const raw = value as Record<string, unknown>;
   const kind = readString(raw.kind);
+  if (kind === "color") {
+    const inkValue = readBackgroundPatternInk(raw.ink) ?? readBackgroundPatternInk(raw.color);
+    return {
+      kind,
+      opacity: readNumber(raw.opacity),
+      ...(inkValue ? { ink: inkValue } : {}),
+    };
+  }
   if (kind === "noise") {
     const grain = readString(raw.grain);
     return {
@@ -447,7 +477,16 @@ function resolvePhiBackgroundImagePresentation(base: PhiBackgroundBaseImage) {
 
 function resolvePhiBackgroundOverlayLayer(overlay: PhiBackgroundOverlay | null | undefined) {
   if (!overlay) return null;
-  const opacity = Math.max(0, Math.min(1, overlay.opacity ?? 0.14));
+  const opacity = Math.max(
+    0,
+    Math.min(1, overlay.opacity ?? PHI_BACKGROUND_OVERLAY_DEFAULT_OPACITY),
+  );
+  if (overlay.kind === "color") {
+    return resolvePhiBackgroundColorLiveLayer(
+      overlay.ink ?? PHI_BACKGROUND_COLOR_OVERLAY_DEFAULT_INK,
+      opacity,
+    );
+  }
   if (overlay.kind === "noise") return resolvePhiBackgroundNoiseLiveLayer(overlay.grain, opacity);
   return resolvePhiBackgroundPatternLiveLayer(
     overlay.patternKey,
@@ -532,7 +571,7 @@ export function phiBackgroundWidgetConfigPaintsGround(config: unknown): boolean 
  * that lets the layer beneath it come up. An image or gradient base is not a pane, it is the material
  * itself, and there is nothing of it to see through -- the frost lands behind opaque paint and the
  * glass ground can only ever read as a wash laid over the picture. So the Effect is neither offered
- * nor honoured there. `blur`, `dim` and `tint` act on the surface itself and stay valid on every base.
+ * nor honoured there. `blur` and `dim` act on the surface itself and stay valid on every base.
  */
 export function phiBackgroundBaseSupportsGlassEffect(
   base: PhiCmsBackgroundWidgetConfig["base"],

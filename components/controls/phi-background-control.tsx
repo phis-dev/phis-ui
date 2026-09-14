@@ -11,6 +11,7 @@ import type {
   PhiBackgroundMotionTravel,
   PhiBackgroundMotionMode,
   PhiBackgroundNoiseGrain,
+  PhiBackgroundOverlay,
   PhiCmsBackgroundWidgetConfig,
 } from "../widgets/config/background";
 import {
@@ -18,6 +19,7 @@ import {
   PHI_BACKGROUND_IMAGE_SOURCE_KINDS,
   type PhiBackgroundImageSourceKind,
   PHI_BACKGROUND_MOTION_MODES,
+  PHI_BACKGROUND_OVERLAY_DEFAULT_OPACITY,
   PHI_BACKGROUND_PARALLAX_DEFAULT_STRENGTH,
   phiBackgroundBaseSupportsGlassEffect,
   resolvePhiBackgroundParallaxDefaultStrength,
@@ -37,6 +39,7 @@ import {
   type PhiBackgroundPatternKey,
 } from "../widgets/config/background-pattern-contract";
 import {
+  PHI_BACKGROUND_COLOR_OVERLAY_DEFAULT_INK,
   PHI_BACKGROUND_PATTERN_DEFAULT_INK,
   resolvePhiBackgroundPatternLiveLayer,
 } from "../widgets/config/background-pattern-live";
@@ -309,6 +312,7 @@ export function PhiBackgroundControl({
   ];
   const overlayKindOptions = [
     { value: "none", label: labels.common.none },
+    { value: "color", label: labels.overlay.color },
     { value: "pattern", label: labels.overlay.pattern },
     { value: "noise", label: labels.overlay.noise },
   ];
@@ -357,7 +361,6 @@ export function PhiBackgroundControl({
     { value: "glass", label: labels.effect.glass },
     { value: "blur", label: labels.effect.blur },
     { value: "dim", label: labels.effect.dim },
-    { value: "tint", label: labels.effect.tint },
   ];
   /*
    * Glass frosts what shows through a surface, so a base that paints its own opaque material has
@@ -790,9 +793,30 @@ export function PhiBackgroundControl({
     });
   }
 
-  function updateOverlayKind(nextKind: "pattern" | "noise" | "none") {
+  function updateOverlayKind(nextKind: PhiBackgroundOverlay["kind"] | "none") {
     if (nextKind === "none") {
       emit({ ...currentValue, overlay: null });
+      return;
+    }
+
+    if (nextKind === "color") {
+      emit({
+        ...currentValue,
+        overlay: currentValue.overlay?.kind === "color"
+          ? currentValue.overlay
+          : {
+              kind: "color",
+              opacity: currentValue.overlay?.opacity ?? PHI_BACKGROUND_OVERLAY_DEFAULT_OPACITY,
+              /*
+               * A wash carries the ink an author already picked for a Pattern, the way switching the
+               * Pattern shape keeps it. Only the two kinds that paint with ink share it; coming from
+               * noise, the wash starts at its own default.
+               */
+              ...(currentValue.overlay?.kind === "pattern" && currentValue.overlay.ink
+                ? { ink: currentValue.overlay.ink }
+                : {}),
+            },
+      });
       return;
     }
 
@@ -801,7 +825,11 @@ export function PhiBackgroundControl({
         ...currentValue,
         overlay: currentValue.overlay?.kind === "noise"
           ? currentValue.overlay
-          : { kind: "noise", opacity: currentValue.overlay?.opacity ?? 0.14, grain: "fine" },
+          : {
+              kind: "noise",
+              opacity: currentValue.overlay?.opacity ?? PHI_BACKGROUND_OVERLAY_DEFAULT_OPACITY,
+              grain: "fine",
+            },
       });
       return;
     }
@@ -814,13 +842,18 @@ export function PhiBackgroundControl({
         : {
             kind: "pattern",
             patternKey: PHI_DEFAULT_BACKGROUND_PATTERN_KEY,
-            opacity: currentValue.overlay?.opacity ?? 0.14,
+            opacity: currentValue.overlay?.opacity ?? PHI_BACKGROUND_OVERLAY_DEFAULT_OPACITY,
+            // The other direction of the same rule: the ink follows the author between the two kinds
+            // that paint with it.
+            ...(currentValue.overlay?.kind === "color" && currentValue.overlay.ink
+              ? { ink: currentValue.overlay.ink }
+              : {}),
             values: resolvePhiBackgroundPatternDefaultValues(provider),
           },
     });
   }
 
-  function updateEffectKind(nextKind: "glass" | "blur" | "dim" | "tint" | "none") {
+  function updateEffectKind(nextKind: PhiLayoutEffectId | "none") {
     if (nextKind === "none") {
       emit({ ...currentValue, effect: null });
       return;
@@ -1105,67 +1138,42 @@ export function PhiBackgroundControl({
           block
           value={currentValue.overlay?.kind ?? "none"}
           options={overlayKindOptions}
-          onChange={(next) => updateOverlayKind(next as "pattern" | "noise" | "none")}
+          onChange={(next) => updateOverlayKind(next as PhiBackgroundOverlay["kind"] | "none")}
         />
 
         {currentValue.overlay ? (
           <Space orientation="vertical" size={8} style={{ width: "100%" }}>
             {currentValue.overlay.kind === "pattern" ? (
-              <>
-                <Flex align="center" justify="space-between" gap={token.paddingSM} wrap="wrap">
-                  <Typography.Text>{labels.overlay.pattern}</Typography.Text>
-                  <PhiSelectControl<PhiBackgroundPatternKey>
-                    value={currentValue.overlay.patternKey}
-                    options={resolvedPatternOptions}
-                    disabled={isDisabled}
-                    style={{ width: fieldControlWidth }}
-                    onChange={(patternKey) => {
-                      const provider = resolvePhiBackgroundPatternProvider(patternKey);
-                      if (!provider) return;
-                      emit({
-                        ...currentValue,
-                        overlay: {
-                          kind: "pattern",
-                          patternKey,
-                          opacity: currentValue.overlay?.opacity ?? 0.14,
-                          // The ink belongs to the Overlay rather than to one Pattern, so switching the
-                          // shape keeps the paint the author picked for it.
-                          ...(currentValue.overlay?.kind === "pattern" && currentValue.overlay.ink
-                            ? { ink: currentValue.overlay.ink }
-                            : {}),
-                          values: resolvePhiBackgroundPatternDefaultValues(provider),
-                        },
-                      });
-                    }}
-                  />
-                </Flex>
-                <Flex align="center" justify="space-between" gap={token.paddingSM} wrap="wrap">
-                  <Typography.Text>{labels.overlay.color}</Typography.Text>
-                  {/*
-                    * One picker for both shapes of ink. The value travels as CSS and comes back parsed
-                    * by the same reader the Base uses, so a gradient the author builds here is stored in
-                    * the same structure a Base gradient is.
-                    */}
-                  <PhiColorControl
-                    mode="both"
-                    value={serializePhiBackgroundPatternInkCss(
-                      currentValue.overlay.ink ?? PHI_BACKGROUND_PATTERN_DEFAULT_INK,
-                    )}
-                    disabled={isDisabled}
-                    presets={colorPickerPresets}
-                    placement={colorPickerPlacement}
-                    onChange={(nextCss) => {
-                      const nextInk = nextCss == null ? null : readPhiBackgroundPatternInkFromCss(nextCss);
-                      if (!nextInk || currentValue.overlay?.kind !== "pattern") return;
-                      emit({
-                        ...currentValue,
-                        overlay: { ...currentValue.overlay, ink: nextInk },
-                      });
-                    }}
-                  />
-                </Flex>
-              </>
-            ) : (
+              <Flex align="center" justify="space-between" gap={token.paddingSM} wrap="wrap">
+                <Typography.Text>{labels.overlay.pattern}</Typography.Text>
+                <PhiSelectControl<PhiBackgroundPatternKey>
+                  value={currentValue.overlay.patternKey}
+                  options={resolvedPatternOptions}
+                  disabled={isDisabled}
+                  style={{ width: fieldControlWidth }}
+                  onChange={(patternKey) => {
+                    const provider = resolvePhiBackgroundPatternProvider(patternKey);
+                    if (!provider) return;
+                    emit({
+                      ...currentValue,
+                      overlay: {
+                        kind: "pattern",
+                        patternKey,
+                        opacity: currentValue.overlay?.opacity ?? PHI_BACKGROUND_OVERLAY_DEFAULT_OPACITY,
+                        // The ink belongs to the Overlay rather than to one Pattern, so switching the
+                        // shape keeps the paint the author picked for it.
+                        ...(currentValue.overlay?.kind === "pattern" && currentValue.overlay.ink
+                          ? { ink: currentValue.overlay.ink }
+                          : {}),
+                        values: resolvePhiBackgroundPatternDefaultValues(provider),
+                      },
+                    });
+                  }}
+                />
+              </Flex>
+            ) : null}
+
+            {currentValue.overlay.kind === "noise" ? (
               <Flex vertical gap={token.paddingXS} style={{ width: "100%" }}>
                 <Typography.Text>{labels.overlay.grain}</Typography.Text>
                 <PhiSegmentedControl<PhiBackgroundNoiseGrain>
@@ -1185,6 +1193,38 @@ export function PhiBackgroundControl({
                   }
                 />
               </Flex>
+            ) : null}
+
+            {currentValue.overlay.kind === "noise" ? null : (
+              <Flex align="center" justify="space-between" gap={token.paddingSM} wrap="wrap">
+                <Typography.Text>{labels.overlay.color}</Typography.Text>
+                {/*
+                  * One picker for both shapes of ink, and for both kinds that paint with it. The value
+                  * travels as CSS and comes back parsed by the same reader the Base uses, so a gradient
+                  * the author builds here is stored in the same structure a Base gradient is -- which is
+                  * what lets a wash fade rather than only cover.
+                  */}
+                <PhiColorControl
+                  mode="both"
+                  value={serializePhiBackgroundPatternInkCss(
+                    currentValue.overlay.ink ?? (currentValue.overlay.kind === "color"
+                      ? PHI_BACKGROUND_COLOR_OVERLAY_DEFAULT_INK
+                      : PHI_BACKGROUND_PATTERN_DEFAULT_INK),
+                  )}
+                  disabled={isDisabled}
+                  presets={colorPickerPresets}
+                  placement={colorPickerPlacement}
+                  onChange={(nextCss) => {
+                    const overlay = currentValue.overlay;
+                    const nextInk = nextCss == null ? null : readPhiBackgroundPatternInkFromCss(nextCss);
+                    if (!nextInk || !overlay || overlay.kind === "noise") return;
+                    emit({
+                      ...currentValue,
+                      overlay: { ...overlay, ink: nextInk },
+                    });
+                  }}
+                />
+              </Flex>
             )}
 
             <Flex align="center" justify="space-between" gap={token.paddingSM} wrap="wrap">
@@ -1193,14 +1233,14 @@ export function PhiBackgroundControl({
                 min={0}
                 max={1}
                 step={0.01}
-                value={currentValue.overlay.opacity ?? 0.14}
+                value={currentValue.overlay.opacity ?? PHI_BACKGROUND_OVERLAY_DEFAULT_OPACITY}
                 disabled={isDisabled}
                 onChange={(next) =>
                   emit({
                     ...currentValue,
                     overlay: {
                       ...currentValue.overlay!,
-                      opacity: typeof next === "number" ? next : 0.14,
+                      opacity: typeof next === "number" ? next : PHI_BACKGROUND_OVERLAY_DEFAULT_OPACITY,
                     },
                   })
                 }
@@ -1278,7 +1318,7 @@ export function PhiBackgroundControl({
               block
               value={activeEffectKind}
               options={effectKindOptions}
-              onChange={(next) => updateEffectKind(next as "glass" | "blur" | "dim" | "tint" | "none")}
+              onChange={(next) => updateEffectKind(next as PhiLayoutEffectId | "none")}
             />
           </Space>
         </>

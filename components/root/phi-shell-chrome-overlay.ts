@@ -30,9 +30,10 @@ import type { PhiThemeMode } from "../../theme/phi-theme-presets";
  * The Effects the overlay offers and honours, which is `glass` alone.
  *
  * The overlay is not a layer above the Chrome, it is the Chrome's own ground, so an Effect here acts on
- * the Region itself: `blur` and `dim` are `filter`, which would blur and darken the Header's own text,
- * and `tint` is an inset Shadow that would fight the Region's Shadow. `glass` is the one that acts on
- * what is behind the Region, which is exactly what a shared frame over a scrolling Page wants.
+ * the Region itself: `blur` and `dim` are `filter`, which would blur and darken the Header's own text.
+ * `glass` is the one that acts on what is behind the Region, which is exactly what a shared frame over
+ * a scrolling Page wants. A wash of colour over the frame is an Overlay rather than an Effect, and the
+ * overlay offers those unnarrowed.
  */
 export const PHI_SHELL_CHROME_OVERLAY_EFFECTS: readonly PhiLayoutEffectId[] = ["glass"];
 

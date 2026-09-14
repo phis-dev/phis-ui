@@ -63,7 +63,6 @@ const PHI_BACKGROUND_WIDGET_LABEL_SET = definePhiLabelSet({
     effect_glass: PHI_BACKGROUND_WIDGET_DEFAULT_LABELS.effect.glass,
     effect_blur: PHI_BACKGROUND_WIDGET_DEFAULT_LABELS.effect.blur,
     effect_dim: PHI_BACKGROUND_WIDGET_DEFAULT_LABELS.effect.dim,
-    effect_tint: PHI_BACKGROUND_WIDGET_DEFAULT_LABELS.effect.tint,
     direction_up: PHI_BACKGROUND_WIDGET_DEFAULT_LABELS.direction.up,
     direction_right: PHI_BACKGROUND_WIDGET_DEFAULT_LABELS.direction.right,
     direction_down: PHI_BACKGROUND_WIDGET_DEFAULT_LABELS.direction.down,
@@ -165,7 +164,6 @@ export async function getPhiBackgroundWidgetLabels(options: PhiGlobalTranslatorO
       glass: labels.effect_glass,
       blur: labels.effect_blur,
       dim: labels.effect_dim,
-      tint: labels.effect_tint,
     },
     direction: {
       up: labels.direction_up,

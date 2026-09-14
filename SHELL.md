@@ -186,14 +186,15 @@ The site-owned Shell Chrome Overlay is its counterpart in front of the scrolling
 - is configured in `/builder/theme` beside the Root Background, independently for light and dark
   mode, and offers the same copy between the two modes
 - uses the same canonical structured Phi Background contract, narrowed to what a frame can express: a
-  color, a gradient, a Pattern, or noise. An `image` Base is not offered. The overlay is a treatment laid
+  color, a gradient, a wash of color, a Pattern, or noise. An `image` Base is not offered. The overlay is a treatment laid
   over the Root Background rather than a second ground, and a picture here, anchored to the viewport,
   would be cut against the picture behind the Content along the frame edge while hiding the Root
   Background exactly where the frame is. A Region that really wants one authors it locally
 - offers `glass` as its only Effect and offers no motion at all. The overlay is the ground of the Regions
-  that paint it, so `blur` and `dim` would take those Regions' own content with them and `tint` would fight
-  their Shadow. `glass` is the one Effect that acts on what is behind a Region, which is what a shared
-  frame over a scrolling Page wants; motion has nothing to travel against on a viewport-anchored ground
+  that paint it, so `blur` and `dim` would take those Regions' own content with them. `glass` is the one
+  Effect that acts on what is behind a Region, which is what a shared frame over a scrolling Page wants;
+  motion has nothing to travel against on a viewport-anchored ground. Tinting the frame is the business
+  of the color Overlay, which the overlay offers unnarrowed
 - is painted by `header_top`, `header_main`, `header_bottom`, `sider_left`, `sider_right`, `footer_top`,
   `footer_main`, and `footer_bottom`, and never by `content`, `hero`, or a Drawer. The Shell grid tiles
   completely, so the Chrome Regions already are the frame around Content and Hero, and letting them paint

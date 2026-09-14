@@ -27,6 +27,18 @@ export const PHI_BACKGROUND_PATTERN_DEFAULT_INK: PhiBackgroundPatternInk = {
   color: "#ffffff",
 };
 
+/**
+ * A colour Overlay starts black, where a Pattern starts white.
+ *
+ * The two inks answer different questions. A Pattern has to be visible against the ground it is drawn
+ * on; a wash is reached for to hold a picture down, so the first thing it should do is darken. A
+ * lightening wash or a colour cast is one pick away.
+ */
+export const PHI_BACKGROUND_COLOR_OVERLAY_DEFAULT_INK: PhiBackgroundPatternInk = {
+  kind: "color",
+  color: "#000000",
+};
+
 function resolveScale(values: PhiBackgroundPatternValues, fallback = 12) {
   const value = values.scale;
   return typeof value === "number" && Number.isFinite(value)
@@ -175,6 +187,33 @@ export function resolvePhiBackgroundPatternLiveLayer(
     '<svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%">',
     `<defs>${patterns}${inkPaint.defs}<mask id="phi-mask">${maskLayers}</mask></defs>`,
     `<rect width="100%" height="100%" fill="${inkPaint.paint}" mask="url(#phi-mask)" opacity="${Math.max(0, Math.min(1, opacity))}"/>`,
+    "</svg>",
+  ].join("");
+
+  return {
+    images: [encodeSvgLayer(svg)],
+    sizes: ["100% 100%"],
+    positions: ["0 0"],
+    repeats: ["no-repeat"],
+  };
+}
+
+/**
+ * The rendered form of a colour Overlay: the ink over the whole painting area, nothing masked out.
+ *
+ * It is an SVG like the other two rather than a CSS gradient, so that a gradient ink leans the way the
+ * same direction leans everywhere else and the Overlay's opacity stays one attribute instead of being
+ * mixed into every stop.
+ */
+export function resolvePhiBackgroundColorLiveLayer(
+  ink: PhiBackgroundPatternInk,
+  opacity: number,
+): PhiBackgroundPatternLayer {
+  const inkPaint = resolvePatternInkPaint(ink);
+  const svg = [
+    '<svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%">',
+    inkPaint.defs ? `<defs>${inkPaint.defs}</defs>` : "",
+    `<rect width="100%" height="100%" fill="${inkPaint.paint}" opacity="${Math.max(0, Math.min(1, opacity))}"/>`,
     "</svg>",
   ].join("");
 
