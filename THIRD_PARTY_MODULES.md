@@ -602,6 +602,32 @@ export const PhiStatusAuthoringClient = createPhiRuntimeModuleAuthoringClient({
 The shared Canvas scaffold owns selection, hover chrome, drag/drop, slots, debug outlines, and common
 tools. A Widget adds only its body and optional `renderEditorTools()` extension.
 
+### Offering an image picker
+
+A Widget that lets an author choose an image reads the Site's Media library, and it names that library
+through a Foundation contract rather than through the Module that serves it:
+
+```ts
+import { PHI_MEDIA_LIBRARY_DATA_PROVIDER_KEYS } from "@phis/ui/constants";
+
+requiredDataProviders: [PHI_MEDIA_LIBRARY_DATA_PROVIDER_KEYS.collection],
+```
+
+Declare it. A Page mounts only the providers its tree asks for, and the tree scan reads a `providerKey`
+out of a Widget's config or out of this declaration -- it cannot see a provider the Widget reaches for
+from inside its own client code. Without the declaration the picker opens over an empty library,
+reporting the provider as unavailable.
+
+The import is the dependency, not the reading. Citing the Asset Module's own ids would bind your package
+to that Module at build time, which is the Module-to-Module edge the dependency rule forbids; the
+contract above holds no such reference. Whether anything answers the keys is an installation question,
+and a Widget whose provider is absent degrades to an empty library instead of failing to build.
+
+Inside the Builder's own chrome the library is always readable, whatever the edited Area activates -- a
+`phis:asset/...` reference is resolved by the core reference resolver, so an Area without the Asset
+Module still renders its images. That availability is declared by the owning Module through
+`availableToAuthoringChrome` on its provider descriptor, not listed anywhere in the Builder.
+
 ## 5. Add a Theme preset
 
 A Theme preset is module-owned data, not a global registration and not arbitrary `ConfigProvider`

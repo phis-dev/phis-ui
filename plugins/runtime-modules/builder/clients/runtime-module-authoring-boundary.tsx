@@ -6,19 +6,25 @@ import { PhiRuntimeModuleAuthoringClientHost } from "../../../../components/runt
 import { PhiRuntimeModuleAuthoringDataProviderHost } from "../../../../components/runtime/runtime-module-authoring-host";
 import { PhiRuntimeModuleDataProviderClientHost } from "../../../../components/runtime/runtime-module-data-provider-client-manifest";
 import { PhiRuntimeModuleProvider } from "../../../../components/runtime/runtime-module-context";
-import { resolvePhiBuilderAuthoringPickerDataProviderKeys } from "../authoring-provider-keys";
 import { setPhiBuilderModuleMetas } from "../plugin-meta-store";
 import type { PhiBuilderModuleAuthoringCatalogEntry } from "../module-authoring-catalog";
 import { usePhiDeveloperBuilderStateValue } from "../developer-workspace-store";
 import type { PhiDeveloperBuilderArea } from "../developer-workspace-types";
+import type { PhiRuntimeDataProviderKey } from "../../../../types/runtime-data-provider";
 
 export function PhiBuilderRuntimeModuleAuthoringBoundary({
   targetArea,
   catalog,
+  pickerDataProviderKeys,
   children,
 }: {
   targetArea: PhiDeveloperBuilderArea;
   catalog: readonly PhiBuilderModuleAuthoringCatalogEntry[];
+  /**
+   * Resolved by the Widget from the whole install catalog, because `catalog` is Area-scoped and has
+   * already dropped every Module the edited Area does not activate.
+   */
+  pickerDataProviderKeys: readonly PhiRuntimeDataProviderKey[];
   children: ReactNode;
 }) {
   const selectedModuleIds = usePhiDeveloperBuilderStateValue(
@@ -34,10 +40,6 @@ export function PhiBuilderRuntimeModuleAuthoringBoundary({
       entry.locked || selectedModuleIdSet.has(entry.moduleId)
     );
   }, [catalog, selectedModuleIds]);
-  const pickerDataProviderKeys = useMemo(
-    () => resolvePhiBuilderAuthoringPickerDataProviderKeys(catalog),
-    [catalog],
-  );
   const moduleIds = useMemo(
     () => activeEntries.map((entry) => entry.moduleId),
     [activeEntries],

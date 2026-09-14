@@ -762,17 +762,53 @@ await assert.rejects(
     /PHI_[A-Z0-9_]+_RUNTIME_DATA_PROVIDER_KEYS/u,
     "The Builder collects picker providers from the catalog; naming a Module's keys here excludes installed packages.",
   );
+  // Naming the resolver is not enough: it reports what it is handed, and the Area-scoped authoring
+  // catalog has already dropped the inactive Module that declared the provider. Editing Public, whose
+  // default selection is Auth alone, took the Asset picker with it. Every surface passes the whole
+  // install catalog, and the one shared resolver is what keeps them from drifting apart again.
   for (const surface of [
-    "plugins/runtime-modules/builder/clients/runtime-module-authoring-boundary.tsx",
+    "plugins/runtime-modules/builder/pages-workspace.tsx",
+    "plugins/runtime-modules/builder/shells-workspace.tsx",
     "plugins/runtime-modules/builder/inspector-section-widget.tsx",
   ]) {
     const source = await readSource(surface);
     assert.match(
       source,
-      /resolvePhiBuilderAuthoringPickerDataProviderKeys/u,
-      `${surface} must mount the Builder's picker providers rather than rely on the Area's active Modules.`,
+      /resolvePhiBuilderAuthoringPickerDataProviderKeysFromCatalog\(\s*registry\.runtimeModuleCatalog,?\s*\)/u,
+      `${surface} must resolve picker providers from the whole install catalog.`,
     );
   }
+  const boundary = await readSource(
+    "plugins/runtime-modules/builder/clients/runtime-module-authoring-boundary.tsx",
+  );
+  assert.doesNotMatch(
+    boundary,
+    /resolvePhiBuilderAuthoringPickerDataProviderKeys/u,
+    "The authoring boundary receives picker keys; resolving them there sees only the Area-scoped catalog.",
+  );
+  assert.match(
+    boundary,
+    /pickerDataProviderKeys/u,
+    "The authoring boundary mounts the picker keys it is handed.",
+  );
+
+  // A Widget outside the Asset Module names the Media library through the Foundation contract. The
+  // import is the dependency, not the reading: citing `asset/ids` bound Theme to the Asset Module at
+  // compile time, and an installed package cannot reach that file at all.
+  const mediaContract = await readSource("constants/media-library-provider-keys.ts");
+  assert.match(
+    mediaContract,
+    /PHI_MEDIA_LIBRARY_DATA_PROVIDER_KEYS/u,
+    "The Media library keys are stated as a Foundation contract.",
+  );
+  const brandControls = await readSource(
+    "plugins/runtime-modules/theme/widgets/brand-controls/config.ts",
+  );
+  assert.doesNotMatch(
+    brandControls,
+    /asset\/ids/u,
+    "Theme cites the Foundation contract for the Media library, never the Asset Module.",
+  );
 }
 
 // ---------------------------------------------------------------------------

@@ -22,7 +22,7 @@ import {
 } from "../../../plugins/runtime-modules/resolver";
 import { PhiRuntimeModuleAuthoringDataProviderHost } from "../../../components/runtime/runtime-module-authoring-host";
 import { PhiRuntimeModuleDataProviderClientHost } from "../../../components/runtime/runtime-module-data-provider-client-manifest";
-import { resolvePhiBuilderAuthoringPickerDataProviderKeys } from "./authoring-provider-keys";
+import { resolvePhiBuilderAuthoringPickerDataProviderKeysFromCatalog } from "./authoring-provider-keys";
 
 export type PhiBuilderInspectorSectionWidgetProps = {
   runtime: PhiBlockRuntime;
@@ -104,10 +104,8 @@ export async function PhiBuilderInspectorSectionWidget({
       providerKeys={authoringDataProviderKeys}
     >
       <PhiRuntimeModuleDataProviderClientHost
-        providerKeys={resolvePhiBuilderAuthoringPickerDataProviderKeys(
-          [...registry.runtimeModuleCatalog.values()].map((entry) => ({
-            dataProviderDescriptors: entry.definition.dataProviders ?? [],
-          })),
+        providerKeys={resolvePhiBuilderAuthoringPickerDataProviderKeysFromCatalog(
+          registry.runtimeModuleCatalog,
         )}
         mode="live"
       >

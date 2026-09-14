@@ -17,6 +17,7 @@ import { buildPhiBuilderRuntimeModuleIdsForArea } from "./area-shell-presets.ser
 import { resolvePhiBuilderCanvasRuntimeModuleSandbox } from "./runtime-module-sandbox.server";
 import { PhiBuilderWorkspaceScopeBoundary } from "./clients/workspace-scope-boundary";
 import { buildPhiBuilderModuleAuthoringCatalog } from "./module-authoring-catalog.server";
+import { resolvePhiBuilderAuthoringPickerDataProviderKeysFromCatalog } from "./authoring-provider-keys";
 import { PhiBuilderRuntimeModuleAuthoringBoundary } from "./clients/runtime-module-authoring-boundary";
 import {
   PHI_BUILDER_RUNTIME_MODULES_SEARCH_PARAM,
@@ -112,6 +113,9 @@ export async function PhiDeveloperBuilderPagesWorkspaceWidget({
     <PhiBuilderRuntimeModuleAuthoringBoundary
       targetArea={previewArea}
       catalog={authoringCatalog}
+      pickerDataProviderKeys={resolvePhiBuilderAuthoringPickerDataProviderKeysFromCatalog(
+        registry.runtimeModuleCatalog,
+      )}
     >
       <PhiBuilderWorkspaceScopeBoundary
         kind="pages"

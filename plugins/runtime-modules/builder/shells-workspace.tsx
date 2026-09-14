@@ -18,6 +18,7 @@ import {
 import type { PhiDeveloperBuilderArea } from "./developer-workspace-types";
 import { PhiBuilderWorkspaceScopeBoundary } from "./clients/workspace-scope-boundary";
 import { buildPhiBuilderModuleAuthoringCatalog } from "./module-authoring-catalog.server";
+import { resolvePhiBuilderAuthoringPickerDataProviderKeysFromCatalog } from "./authoring-provider-keys";
 import { PhiBuilderRuntimeModuleAuthoringBoundary } from "./clients/runtime-module-authoring-boundary";
 import {
   PHI_BUILDER_RUNTIME_MODULES_SEARCH_PARAM,
@@ -81,6 +82,9 @@ export async function PhiDeveloperBuilderShellsWorkspaceWidget({
     <PhiBuilderRuntimeModuleAuthoringBoundary
       targetArea={targetArea}
       catalog={authoringCatalog}
+      pickerDataProviderKeys={resolvePhiBuilderAuthoringPickerDataProviderKeysFromCatalog(
+        registry.runtimeModuleCatalog,
+      )}
     >
       <PhiBuilderWorkspaceScopeBoundary kind="shells" targetArea={targetArea}>
         <PhiDeveloperBuilderShellsWorkspaceWidgetClient

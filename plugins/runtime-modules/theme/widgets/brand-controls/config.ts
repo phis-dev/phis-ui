@@ -3,7 +3,7 @@ import {
   isPhiCmsAreaKey,
   type PhiCmsAreaKey,
 } from "../../../../../constants/cms-areas";
-import { PHI_ASSET_RUNTIME_DATA_PROVIDER_KEYS } from "../../../asset/ids";
+import { PHI_MEDIA_LIBRARY_DATA_PROVIDER_KEYS } from "../../../../../constants/media-library-provider-keys";
 import { PHI_THEME_SIGNAL_CHANNELS } from "../../../../../plugins/runtime-modules/theme/controller/signals";
 import { createPhiCmsWidgetDefinition } from "../../../../../components/widgets/config/helpers";
 import { readString } from "../../../../../components/widgets/config/parser-primitives";
@@ -80,7 +80,7 @@ export const PHI_BUILDER_BRAND_BACKGROUND_CONTROLS_WIDGET_DEFINITION: PhiBuilder
    * "Collection provider ... is not available from the active runtime modules" over an empty
    * library, on a Page where the Assets Module was active the whole time.
    */
-  requiredDataProviders: [PHI_ASSET_RUNTIME_DATA_PROVIDER_KEYS.mediaCollection],
+  requiredDataProviders: [PHI_MEDIA_LIBRARY_DATA_PROVIDER_KEYS.collection],
   runtimeSignals: {
     emits: [],
     listens: [

@@ -1,5 +1,8 @@
 import type { PhiRuntimeDataProviderKey } from "../../../types/runtime-data-provider";
-import type { PhiRuntimeModuleDataProviderDescriptor } from "../../../types/cms-plugins";
+import type {
+  PhiRuntimeModuleCatalog,
+  PhiRuntimeModuleDataProviderDescriptor,
+} from "../../../types/cms-plugins";
 
 /**
  * Data providers the Builder's OWN chrome binds, independent of the Area being edited.
@@ -29,4 +32,23 @@ export function resolvePhiBuilderAuthoringPickerDataProviderKeys(
     }
   }
   return [...keys];
+}
+
+/**
+ * The same set, read from the install catalog a request resolved.
+ *
+ * Every chrome surface must pass the whole catalog, never the Area-scoped authoring catalog: that one
+ * drops a Module the edited Area does not activate, so a picker provider declared by an inactive Module
+ * never reaches the declaration above. Editing Public, whose default selection is Auth alone, took the
+ * Asset picker with it. Both surfaces call this rather than mapping the catalog themselves, because the
+ * duplicated mapping is what let the two drift apart.
+ */
+export function resolvePhiBuilderAuthoringPickerDataProviderKeysFromCatalog(
+  catalog: PhiRuntimeModuleCatalog,
+): readonly PhiRuntimeDataProviderKey[] {
+  return resolvePhiBuilderAuthoringPickerDataProviderKeys(
+    [...catalog.values()].map((entry) => ({
+      dataProviderDescriptors: entry.definition.dataProviders ?? [],
+    })),
+  );
 }
