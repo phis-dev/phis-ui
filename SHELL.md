@@ -185,16 +185,23 @@ The site-owned Shell Chrome Overlay is its counterpart in front of the scrolling
 
 - is configured in `/builder/theme` beside the Root Background, independently for light and dark
   mode, and offers the same copy between the two modes
-- uses the same canonical structured Phi Background contract, narrowed to what a frame can express: a
-  color, a gradient, a wash of color, a Pattern, or noise. An `image` Base is not offered. The overlay is a treatment laid
-  over the Root Background rather than a second ground, and a picture here, anchored to the viewport,
-  would be cut against the picture behind the Content along the frame edge while hiding the Root
-  Background exactly where the frame is. A Region that really wants one authors it locally
+- uses the same canonical structured Phi Background contract in full: a color, a gradient, a picture, a
+  wash of color, a Pattern, or noise. A picture takes its source from the Site's Media library and never
+  an external URL, the same rule the Root Background follows. Anchored to the viewport, the Chrome
+  Regions show their own windows onto one viewport-sized painting, so a picture reads as a passepartout
+  around the Page rather than as four pictures meeting at the corners — and what the frame shows of it
+  are its edges, which is what makes flat pictures (textures, fields of color, the outer reaches of a
+  landscape) the ones that work. A picture and `glass` are mutually exclusive: see the Effect rule below
 - offers `glass` as its only Effect and offers no motion at all. The overlay is the ground of the Regions
   that paint it, so `blur` and `dim` would take those Regions' own content with them. `glass` is the one
   Effect that acts on what is behind a Region, which is what a shared frame over a scrolling Page wants;
   motion has nothing to travel against on a viewport-anchored ground. Tinting the frame is the business
   of the color Overlay, which the overlay offers unnarrowed
+- cannot frost a picture. `glass` works by thinning the Base so the filtered backdrop reads through it,
+  which is why it holds on a color and on no Base at all, and why it resolves away on a picture and on a
+  gradient alike — both are opaque material with nothing to thin, and the frost would land behind paint
+  that hides it. Legibility over a picture is the color Overlay's job instead: a wash, or a gradient
+  wash that darkens only the edge the text sits on
 - is painted by `header_top`, `header_main`, `header_bottom`, `sider_left`, `sider_right`, `footer_top`,
   `footer_main`, and `footer_bottom`, and never by `content`, `hero`, or a Drawer. The Shell grid tiles
   completely, so the Chrome Regions already are the frame around Content and Hero, and letting them paint

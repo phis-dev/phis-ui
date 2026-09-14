@@ -73,6 +73,7 @@ import {
 import {
   PHI_SHELL_CHROME_OVERLAY_BASE_KINDS,
   PHI_SHELL_CHROME_OVERLAY_EFFECTS,
+  PHI_SHELL_CHROME_OVERLAY_IMAGE_SOURCE_KINDS,
   PHI_SHELL_CHROME_OVERLAY_MOTION_MODES,
   resolvePhiShellChromeOverlayConfig,
   resolvePhiShellChromePaneShadow,
@@ -716,8 +717,9 @@ const PHI_THEME_ROOT_BACKGROUND_MEDIA_ROUTES = {
 /*
  * The renderer a Background Control asks for its media picker.
  *
- * Built once at module level rather than per render, so its identity is stable without a hook. Only the
- * Root Background asks for one: the Chrome Overlay offers no image Base, so it never opens a picker.
+ * Built once at module level rather than per render, so its identity is stable without a hook. Both
+ * Theme grounds ask for the same one: the Root Background and the Chrome Overlay take their pictures
+ * from the same Site library, and the picker has nothing in it that belongs to one surface.
  */
 const renderPhiThemeRootBackgroundMediaPicker: NonNullable<PhiBackgroundControlProps["renderMediaPicker"]> =
   function renderPhiThemeRootBackgroundMediaPicker(props) {
@@ -2415,6 +2417,8 @@ export function PhiBuilderBrandBackgroundControlsWidgetClient({
                     motionModes={PHI_SHELL_CHROME_OVERLAY_MOTION_MODES}
                     effects={PHI_SHELL_CHROME_OVERLAY_EFFECTS}
                     baseKinds={PHI_SHELL_CHROME_OVERLAY_BASE_KINDS}
+                    imageSourceKinds={PHI_SHELL_CHROME_OVERLAY_IMAGE_SOURCE_KINDS}
+                    renderMediaPicker={renderPhiThemeRootBackgroundMediaPicker}
                     onChange={(value) => publishDraft(mergeThemeChromeOverlay(state.draft, mode, value))}
                   />
                 </Flex>

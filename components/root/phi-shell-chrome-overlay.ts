@@ -4,6 +4,7 @@ import {
   normalizePhiBackgroundWidgetConfig,
   resolvePhiBackgroundEffect,
   resolvePhiBackgroundWidgetStyle,
+  type PhiBackgroundImageSourceKind,
   type PhiBackgroundMotionMode,
   type PhiCmsBackgroundWidgetConfig,
 } from "../widgets/config/background";
@@ -38,19 +39,33 @@ import type { PhiThemeMode } from "../../theme/phi-theme-presets";
 export const PHI_SHELL_CHROME_OVERLAY_EFFECTS: readonly PhiLayoutEffectId[] = ["glass"];
 
 /**
- * The Base kinds the overlay offers and honours.
+ * The Base kinds the overlay offers and honours, which is the whole contract.
  *
- * `image` is withheld. The overlay is a treatment laid over the Theme Root Background, not a second
- * ground: anchored to the viewport, a picture here would be cut against the picture behind the Content
- * along the frame edge, and it would hide the Root Background exactly where the frame is. Everything a
- * frame legitimately wants is a colour with alpha, a gradient, a Pattern, or `glass`, and each of those
- * lets the ground beneath keep reading. A Region that really wants a picture authors one locally, which
- * paints over the Theme anyway.
+ * A picture included. The overlay is anchored to the viewport, so the frame is not four surfaces that
+ * each need their own picture: Header, Siders and Footer show their own window onto one viewport-sized
+ * painting, and what the frame draws is a passepartout around the Page. That is the same mechanism a
+ * gradient already uses to stay continuous across the seam between a Header and the Sider beside it.
+ *
+ * What the frame shows of a picture is its edges -- a band along the top, two narrow columns, a band
+ * along the bottom -- so the pictures that work here are flat ones: textures, fields of colour, the
+ * outer reaches of a landscape. A picture whose subject sits in the middle has that subject behind the
+ * Content, where the frame never reaches.
  */
 export const PHI_SHELL_CHROME_OVERLAY_BASE_KINDS: readonly PhiCmsBackgroundWidgetConfig["base"]["kind"][] = [
   "none",
   "color",
   "gradient",
+  "image",
+];
+
+/**
+ * Where the overlay's picture comes from, which is the Site's own Media library and nothing else.
+ *
+ * The same rule the Root Background follows, for the same reason: the frame every Page stands in must
+ * not hang off a server nobody here controls.
+ */
+export const PHI_SHELL_CHROME_OVERLAY_IMAGE_SOURCE_KINDS: readonly PhiBackgroundImageSourceKind[] = [
+  "asset",
 ];
 
 /**
@@ -127,8 +142,8 @@ export function resolvePhiShellChromeOverlayConfig(
   const normalized = normalizePhiBackgroundWidgetConfig(config);
   /*
    * The Base is narrowed first and the Effect resolved against the result, not against what is stored.
-   * A record carrying an image and a glass reads here as a pane over the Root Background: the image is
-   * not honoured, so there is no opaque material left for the glass to be meaningless against.
+   * The narrowing can only ever take a Base away, and an Effect that needed the Base it took has to go
+   * with it -- `glass` on a picture is the case, and the shared resolver already answers it.
    */
   const narrowed: PhiCmsBackgroundWidgetConfig = {
     ...normalized,

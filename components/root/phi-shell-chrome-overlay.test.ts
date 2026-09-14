@@ -95,12 +95,35 @@ describe("shell chrome overlay effects", () => {
 });
 
 /**
- * The overlay is a treatment laid over the Theme Root Background, not a second ground. An image Base
- * would be a picture cut against the picture behind the Content along the frame edge, and it would hide
- * the Root Background exactly where the frame is, so it is neither offered nor honoured.
+ * The frame paints a picture like any other ground. Anchored to the viewport, the Header, Siders and
+ * Footer show their own window onto one painting, so what they draw together is a passepartout around
+ * the Page rather than four separate pictures meeting at the corners.
  */
 describe("shell chrome overlay base", () => {
-  it("paints nothing for an image base and keeps the rest of the record", () => {
+  it("paints a picture, as one viewport-sized painting the frame shows windows onto", () => {
+    const style = resolvePhiShellChromeOverlayStyle(
+      {
+        chrome: {
+          light: {
+            base: {
+              kind: "image" as const,
+              sourceKind: "url" as const,
+              sourceUrl: "https://example.test/frame.jpg",
+            },
+          },
+        },
+      },
+      "light",
+    );
+    expect(String(style?.backgroundImage)).toContain("https://example.test/frame.jpg");
+  });
+
+  /*
+   * Glass is a pane: it frosts what shows THROUGH a surface, and it does that by thinning the Base to
+   * let the backdrop read. A picture is opaque material with nothing to thin, so the frost would land
+   * behind paint that hides it. The shared resolver answers this for every surface, not just here.
+   */
+  it("drops a glass that the picture underneath it leaves nothing to frost", () => {
     const style = resolvePhiShellChromeOverlayStyle(
       {
         chrome: {
@@ -116,8 +139,8 @@ describe("shell chrome overlay base", () => {
       },
       "light",
     );
-    expect(style?.backgroundImage).toBeUndefined();
-    expect(style?.backdropFilter).toBeTruthy();
+    expect(style?.backdropFilter).toBeUndefined();
+    expect(String(style?.backgroundImage)).toContain("https://example.test/frame.jpg");
   });
 
   it("keeps a gradient and its Pattern, which are treatments rather than pictures", () => {
