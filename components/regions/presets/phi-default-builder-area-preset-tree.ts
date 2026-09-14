@@ -3739,12 +3739,8 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                           icon: "antd:delete",
                           display: "icon",
                           mode: "danger",
+                          // No confirmation: the Navigation workspace has Undo, which takes a delete back.
                           execution: "provider",
-                          confirm: {
-                            title: navigationLabels!.actions.deleteConfirm,
-                            okText: navigationLabels!.actions.delete,
-                            cancelText: navigationLabels!.actions.cancel,
-                          },
                         },
                       ],
                     },

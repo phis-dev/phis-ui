@@ -31,8 +31,6 @@ const PHI_BUILDER_NAVIGATION_PAGE_LABEL_SET = definePhiLabelSet({
     action_hide: "Hide",
     action_show: "Show",
     action_delete: "Delete",
-    action_delete_confirm: definePhiMessageLabel("Delete navigation item?"),
-    action_cancel: "Cancel",
   },
 });
 
@@ -70,8 +68,6 @@ export async function getPhiBuilderNavigationPageLabels(options: PhiGlobalTransl
       hide: labels.action_hide,
       show: labels.action_show,
       delete: labels.action_delete,
-      deleteConfirm: labels.action_delete_confirm,
-      cancel: labels.action_cancel,
     },
   };
 }

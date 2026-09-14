@@ -726,6 +726,7 @@ capability owns:
 - its accepted primitive action-value type;
 - semantic intent: `read`, `write`, or `destructive`;
 - confirmation policy: `none` or `required`;
+- whether the mutation is `undoable` through the workspace history;
 - Provider-owned business `visibleWhen` and `disabledWhen` availability metadata.
 
 The Table does not know what `deleteLocale`, `restore`, or another domain key means. It renders the
@@ -743,7 +744,10 @@ presentation only; it cannot replace the required confirmation, change Provider 
 the action.
 It may add presentation-level visibility or disablement, but cannot loosen Provider availability,
 redefine scope/value type/intent, or remove a required confirmation. A destructive Provider capability
-must require confirmation and its Widget action must use danger presentation. Icon and icon-label
+must require confirmation unless it declares itself `undoable`, and its Widget action must use danger
+presentation either way. `undoable` is the Provider's promise that the workspace history takes the
+mutation back; like the confirmation policy it is declared rather than verified, and a Widget may still
+configure a confirmation for an undoable action. Icon and icon-label
 display require a resolvable icon; a missing icon is a contract error rather than a blank action.
 Dynamic confirmation
 values come from declared serializable Binding/action context and are inserted with the central

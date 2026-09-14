@@ -467,6 +467,12 @@ export type PhiTableProviderActionCapability = {
   valueType?: "none" | "boolean" | "string" | "number" | "string[]" | "number[]" | "json";
   intent?: "read" | "write" | "destructive";
   confirmation?: "none" | "required";
+  /**
+   * The Provider's promise that the mutation can be taken back through the workspace history. It is
+   * what lets a destructive action go without confirmation; like `confirmation`, it is declared, not
+   * verified.
+   */
+  undoable?: boolean;
   visibleWhen?: PhiRuntimeConditionExpression;
   disabledWhen?: PhiRuntimeConditionExpression;
 };

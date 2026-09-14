@@ -3,6 +3,8 @@ import fs from "node:fs";
 import path from "node:path";
 
 import { PHI_CORE_RUNTIME_DATA_PROVIDER_KEYS } from "../plugins/runtime-modules/core/ids";
+import { PHI_BUILDER_RUNTIME_DATA_PROVIDER_KEYS } from "../plugins/runtime-modules/builder/ids";
+import { PHI_BUILDER_RUNTIME_DATA_PROVIDER_DESCRIPTORS } from "../plugins/runtime-modules/builder/data-providers";
 import {
   createPhiStaticTableProviderRegistration,
   createPhiVersionedStaticTableProviderRegistration,
@@ -22,6 +24,7 @@ import {
   readPhiTableQuery,
   validatePhiTableProviderFieldValue,
   validatePhiTableWidgetBinding,
+  type PhiTableProviderActionCapability,
   type PhiTableProviderResourceDescriptor,
   type PhiTableWidgetConfig,
 } from "../types/table-widget";
@@ -174,6 +177,41 @@ assert.match(validatePhiTableWidgetBinding({
       index === 0 ? { ...column, ellipsis: true } : column),
   },
 }, resource)[0] ?? "", /Ellipsis/);
+
+// A destructive action asks first unless its Provider declares the mutation undoable; either way it is
+// presented as danger. The Builder's Navigation delete is the undoable case: it edits a Draft Undo restores.
+const destructiveDeleteConfig: PhiTableWidgetConfig = {
+  ...config,
+  features: {
+    ...config.features,
+    actions: {
+      row: [{ key: "delete", label: "Delete", icon: "antd:delete", display: "icon", mode: "danger", execution: "provider" }],
+    },
+  },
+};
+const withDeleteCapability = (
+  capability: Pick<PhiTableProviderActionCapability, "confirmation" | "undoable">,
+): PhiTableProviderResourceDescriptor => ({
+  ...resource,
+  actions: [{ key: "delete", title: "Delete", scope: "row", intent: "destructive", ...capability }],
+});
+assert.match(
+  validatePhiTableWidgetBinding(destructiveDeleteConfig, withDeleteCapability({ confirmation: "required" })).join("\n"),
+  /requires Widget confirmation/,
+);
+assert.deepEqual(
+  validatePhiTableWidgetBinding(destructiveDeleteConfig, withDeleteCapability({ confirmation: "none", undoable: true })),
+  [],
+);
+const builderNavigationActions: readonly PhiTableProviderActionCapability[] = PHI_BUILDER_RUNTIME_DATA_PROVIDER_DESCRIPTORS
+  .flatMap((descriptor): readonly PhiTableProviderActionCapability[] =>
+    descriptor.kind === "table" && descriptor.key === PHI_BUILDER_RUNTIME_DATA_PROVIDER_KEYS.navigationTable
+      ? descriptor.resources.flatMap((entry): readonly PhiTableProviderActionCapability[] => entry.actions ?? [])
+      : []);
+const builderNavigationDelete = builderNavigationActions.find((action) => action.key === "delete");
+assert.equal(builderNavigationDelete?.intent, "destructive");
+assert.equal(builderNavigationDelete?.confirmation, "none");
+assert.equal(builderNavigationDelete?.undoable, true, "The Navigation delete relies on Undo instead of a confirmation.");
 assert.equal(readPhiTableQuery({ sorts: [{ key: "name", direction: "ascending" }] })?.sorts?.[0]?.direction, "ascending");
 assert.equal(readPhiTableQuery({ sorts: [{ key: "name", direction: "ascend" }] }), null);
 assert.equal(readPhiTableQuery({ sorts: [{ key: "name", direction: "ascending", order: 1 }] }), null);

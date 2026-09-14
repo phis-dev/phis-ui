@@ -344,7 +344,9 @@ export const PHI_BUILDER_RUNTIME_DATA_PROVIDER_DESCRIPTORS = [
           title: "Delete",
           scope: "row",
           intent: "destructive",
-          confirmation: "required",
+          // Deleting edits the Navigation Draft, which Undo takes back; nothing is lost before Save.
+          confirmation: "none",
+          undoable: true,
           visibleWhen: { source: "row", valuePath: "source", operator: "equals", value: "custom" },
         },
       ],

@@ -214,8 +214,8 @@ function assertPhiTableProviderResources(
         throw new Error(`${moduleId}: Table resource "${resource.resourceKey}" has an invalid action schema.`);
       }
       actionKeys.add(action.key);
-      if (action.intent === "destructive" && action.confirmation !== "required") {
-        throw new Error(`${moduleId}: destructive Table action "${resource.resourceKey}/${action.key}" must require confirmation.`);
+      if (action.intent === "destructive" && action.confirmation !== "required" && action.undoable !== true) {
+        throw new Error(`${moduleId}: destructive Table action "${resource.resourceKey}/${action.key}" must require confirmation or be undoable.`);
       }
     }
     const bindingFieldKeys = new Set<string>();
@@ -319,8 +319,8 @@ function assertPhiTreeProviderResources(
         throw new Error(`${moduleId}: Tree resource "${resource.resourceKey}" has an invalid action schema.`);
       }
       actionKeys.add(action.key);
-      if (action.intent === "destructive" && action.confirmation !== "required") {
-        throw new Error(`${moduleId}: destructive Tree action "${resource.resourceKey}/${action.key}" must require confirmation.`);
+      if (action.intent === "destructive" && action.confirmation !== "required" && action.undoable !== true) {
+        throw new Error(`${moduleId}: destructive Tree action "${resource.resourceKey}/${action.key}" must require confirmation or be undoable.`);
       }
     }
   }

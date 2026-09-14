@@ -88,7 +88,8 @@ localized description as a tooltip. A Binding Control may declare its token-comp
 uses the remaining Collection Header width with a `10rem` minimum and wraps only when that minimum no
 longer fits beside the preceding Controls.
 Actions select declared Provider capabilities but Widget config owns label, icon, display, mode,
-confirmation text, placement, and order within the configured action segment.
+confirmation text, placement, and order within the configured action segment. Confirmation policy,
+`undoable`, and the destructive-action rule are the ones `TABLES.md` states for Table actions.
 
 Widget-level `presentation.title` and `presentation.description` use the shared Collection Header;
 description is a tooltip beside a present title and is independent of
