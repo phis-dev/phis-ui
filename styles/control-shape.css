@@ -21,25 +21,29 @@
  *   explicitly requested geometry stays authoritative.
  * - Input group addons. Their outer corners are already zeroed by `:first-child`/`:last-child` rules
  *   that a shorthand `border-radius` here would flatten back into a fully rounded box.
+ * - The `underlined` variant. antd draws it as a bare bottom rule with `border-radius: 0`, at one class,
+ *   so a rule here would round its hover and focus ground -- visible wherever an underlined field sits
+ *   flush, as in a Table cell. The exclusion is wrapped in `:where()` so it adds no specificity and the
+ *   weighing described above still holds.
  */
 
 .ant-btn-sm.ant-btn-sm,
-.ant-input-sm.ant-input-sm,
-.ant-input-affix-wrapper-sm.ant-input-affix-wrapper-sm,
-.ant-input-number-sm.ant-input-number-sm,
-.ant-select-sm.ant-select-sm,
-.ant-picker-small.ant-picker-small,
+.ant-input-sm.ant-input-sm:not(:where(.ant-input-underlined)),
+.ant-input-affix-wrapper-sm.ant-input-affix-wrapper-sm:not(:where(.ant-input-underlined)),
+.ant-input-number-sm.ant-input-number-sm:not(:where(.ant-input-number-underlined)),
+.ant-select-sm.ant-select-sm:not(:where(.ant-select-underlined)),
+.ant-picker-small.ant-picker-small:not(:where(.ant-picker-underlined)),
 .ant-segmented.ant-segmented-sm.ant-segmented-sm,
 .ant-color-picker-trigger.ant-color-picker-sm.ant-color-picker-sm {
   border-radius: var(--phi-control-radius-sm, var(--ant-border-radius-sm));
 }
 
 .ant-btn-lg.ant-btn-lg,
-.ant-input-lg.ant-input-lg,
-.ant-input-affix-wrapper-lg.ant-input-affix-wrapper-lg,
-.ant-input-number-lg.ant-input-number-lg,
-.ant-select-lg.ant-select-lg,
-.ant-picker-large.ant-picker-large,
+.ant-input-lg.ant-input-lg:not(:where(.ant-input-underlined)),
+.ant-input-affix-wrapper-lg.ant-input-affix-wrapper-lg:not(:where(.ant-input-underlined)),
+.ant-input-number-lg.ant-input-number-lg:not(:where(.ant-input-number-underlined)),
+.ant-select-lg.ant-select-lg:not(:where(.ant-select-underlined)),
+.ant-picker-large.ant-picker-large:not(:where(.ant-picker-underlined)),
 .ant-segmented.ant-segmented-lg.ant-segmented-lg,
 .ant-color-picker-trigger.ant-color-picker-lg.ant-color-picker-lg {
   border-radius: var(--phi-control-radius-lg, var(--ant-border-radius-lg));
