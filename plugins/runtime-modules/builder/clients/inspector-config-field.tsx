@@ -18,7 +18,7 @@ import { PhiBackgroundControl } from "../../../../components/controls/phi-backgr
 import { PhiBorderControl } from "../../../../components/controls/phi-border-control";
 import { PhiColorWidget } from "../../../../components/widgets/client/phi-color-widget";
 import type { PhiColorPickerLabels } from "../../../../components/widgets/label-types/color-picker";
-import { PhiBoundRadiusControl } from "../../../../components/controls/phi-bound-radius-control";
+import { PHI_RADIUS_CONTROL_DEFAULT_LABELS, PhiBoundRadiusControl } from "../../../../components/controls/phi-bound-radius-control";
 import { PhiDimensionControl } from "../../../../components/controls/phi-dimension-control";
 import { PhiLengthControl } from "../../../../components/controls/phi-length-control";
 import type { PhiCmsBackgroundWidgetConfig } from "../../../../components/widgets/config/background";
@@ -39,7 +39,7 @@ import { PhiPaddingControl } from "../../../../components/controls/phi-padding-c
 import type { PhiPaddingWidgetLabels } from "../../../../components/widgets/label-types/padding";
 import type { PhiBackgroundWidgetLabels } from "../../../../components/widgets/label-types/background";
 import type { PhiBorderWidgetLabels } from "../../../../components/widgets/label-types/border";
-import { PhiInspectorFieldRow } from "../../../../components/widgets/inspector-field-row";
+import { PHI_INSPECTOR_FIELD_LABEL_WIDTH, PhiInspectorFieldRow } from "../../../../components/widgets/inspector-field-row";
 import { PhiShadowControl } from "../../../../components/controls/phi-shadow-control";
 import { readPhiShadow } from "../../../../types/layout-style";
 import {
@@ -794,9 +794,20 @@ export function renderPhiInspectorConfigField({
   }
 
   if (field.type === "radius") {
-    return renderPhiInspectorConfigFieldControl(
-      field,
+    /*
+     * Four corners do not fit beside a label: squeezed into the control column they truncate to
+     * three letters each. The Control draws its own header in the label column -- name and switch
+     * where every other row has them -- and the corner grid takes the full width beneath, top-left
+     * over bottom-left on the left and top-right over bottom-right on the right.
+     */
+    return (
       <PhiBoundRadiusControl
+        key={field.key}
+        labels={{
+          ...PHI_RADIUS_CONTROL_DEFAULT_LABELS,
+          sections: { radius: field.required ? `${field.label} *` : field.label },
+        }}
+        labelWidth={PHI_INSPECTOR_FIELD_LABEL_WIDTH}
         value={{
           borderTopLeftRadius: resolveInspectorSizeValue(config[field.topLeftKey]),
           borderTopRightRadius: resolveInspectorSizeValue(config[field.topRightKey]),
@@ -804,7 +815,6 @@ export function renderPhiInspectorConfigField({
           borderBottomRightRadius: resolveInspectorSizeValue(config[field.bottomRightKey]),
         }}
         disabled={disabled || !onChange}
-        showLabel={false}
         onChange={(nextRadius) =>
           onChange?.({
             [field.topLeftKey]: nextRadius.borderTopLeftRadius,
@@ -813,7 +823,7 @@ export function renderPhiInspectorConfigField({
             [field.bottomRightKey]: nextRadius.borderBottomRightRadius,
           })
         }
-      />,
+      />
     );
   }
 
@@ -832,19 +842,26 @@ export function renderPhiInspectorConfigField({
   }
 
   if (field.type === "boolean") {
+    /*
+     * The row's label is one control height tall and the switch is shorter, so left to the row's
+     * top alignment it sat above the text's centre line. Centred in the same height it sits where
+     * the Corner radius header puts its switch, and the switches of a Widget line up.
+     */
     return renderPhiInspectorConfigFieldControl(
       field,
-      <PhiSwitchControl
-        checked={
-          typeof value === "boolean"
-            ? value
-            : typeof defaultValue === "boolean"
-              ? defaultValue
-              : false
-        }
-        disabled={disabled || !onChange}
-        onChange={(checked) => onChange?.({ [field.key]: checked })}
-      />,
+      <Flex align="center" style={{ minHeight: "var(--ant-control-height)" }}>
+        <PhiSwitchControl
+          checked={
+            typeof value === "boolean"
+              ? value
+              : typeof defaultValue === "boolean"
+                ? defaultValue
+                : false
+          }
+          disabled={disabled || !onChange}
+          onChange={(checked) => onChange?.({ [field.key]: checked })}
+        />
+      </Flex>,
     );
   }
 

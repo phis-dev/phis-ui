@@ -359,7 +359,10 @@ export function PhiDeveloperBuilderStructureCanvas({
                   ? `1px solid ${token.colorBorderSecondary}`
                   : `1px dashed ${token.colorBorderSecondary}`,
               borderRadius: 0,
-              backgroundColor: builderMode === "preview" ? token.colorFillQuaternary : token.colorFillTertiary,
+              backgroundColor:
+                builderMode === "preview"
+                  ? token.colorFillQuaternary
+                  : `color-mix(in srgb, ${token.colorBgLayout} 20%, transparent)`,
               width: "100%",
               alignSelf: "stretch",
             }, {

@@ -18,9 +18,11 @@ import { PhiSignalRuntimePartitionProvider } from "../runtime/runtime-signal-par
 import { PhiCoreRuntimeApplicationAdapter } from "../runtime/core-runtime-application-adapter";
 import {
   PHI_CORE_THEME_PRESET_PLUGINS,
+  type PhiThemeMode,
   type PhiThemePresetPlugin,
 } from "../../theme/phi-theme-presets";
 import { resolvePhiPublishedRootTheme } from "../../theme/phi-published-root-style";
+import { normalizePhiThemeModeSetting, resolvePhiThemeMode } from "../../theme/phi-theme-mode";
 import { PHI_CORE_THEME_BLOCK_CATALOG, type PhiThemeBlockCatalog } from "../../theme/phi-theme-composition";
 import { resolvePhiThemeRuntimePayload } from "../../theme/phi-theme-runtime";
 import { projectPhiSiteThemeRootBackground } from "../../theme/phi-root-background.server";
@@ -56,6 +58,12 @@ export type PhiRootLayoutProps = {
    * which is the field Modules have always shipped them in.
    */
   themeBlocks?: Partial<Omit<PhiThemeBlockCatalog, "palettes">>;
+  /**
+   * What the browser last reported as its `prefers-color-scheme`, carried in the hint cookie. Only
+   * consulted when the Site Theme is set to `system`; absent means the browser has not been asked
+   * yet and the projection falls back to light.
+   */
+  browserColorScheme?: PhiThemeMode | null;
 };
 
 type FontSelection = {
@@ -106,6 +114,7 @@ export async function PhiRootLayout({
   resolvedLocale,
   themePresets = PHI_CORE_THEME_PRESET_PLUGINS,
   themeBlocks,
+  browserColorScheme,
 }: PhiRootLayoutProps) {
   const site = siteSnapshot ?? await getResolvedSiteConfig({ apiBaseUrl, internalToken, siteKey });
   /*
@@ -119,7 +128,8 @@ export async function PhiRootLayout({
   });
   const siteTheme = await projectPhiSiteThemeRootBackground(siteThemeRecord, { apiBaseUrl, internalToken, siteKey });
   const antdLocale = await loadPhiAntdLocale(resolvedLocale?.locale ?? resolvedLocale?.intlLocale);
-  const resolvedThemeMode = siteThemeRecord?.mode === "dark" ? "dark" : "light";
+  const themeModeSetting = normalizePhiThemeModeSetting(siteThemeRecord?.mode);
+  const resolvedThemeMode = resolvePhiThemeMode(themeModeSetting, browserColorScheme);
 
   // Keep the basiset explicit and self-hosted; accent/display stay as open slots for later.
   const bodyFont = resolveThemeFont(siteThemeRecord?.fonts?.body, "var(--phi-font-source-body)");
@@ -138,6 +148,7 @@ export async function PhiRootLayout({
   };
   const publishedRootTheme = resolvePhiPublishedRootTheme({
     siteTheme: siteThemeRecord,
+    mode: resolvedThemeMode,
     remRootValue,
     themePresets,
   });
@@ -155,6 +166,7 @@ export async function PhiRootLayout({
             siteTheme={siteTheme}
             locale={antdLocale}
             initialMode={resolvedThemeMode}
+            themeModeSetting={themeModeSetting}
             initialLocale={resolvedLocale?.locale ?? site.defaultLocale}
             availableLocales={site.availableLocales.map((option) => option.code)}
             fonts={themeFonts}

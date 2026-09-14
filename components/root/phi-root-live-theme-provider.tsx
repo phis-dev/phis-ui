@@ -1,7 +1,7 @@
 "use client";
 
 import type { ConfigProviderProps } from "antd";
-import { useEffect, useMemo, useState, type CSSProperties, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
 
 import type { PhiSiteTheme } from "../../gateway/site-config";
 import { usePhiSignalListener } from "../runtime/runtime-signal-bus";
@@ -15,6 +15,11 @@ import type {
 } from "../../theme/phi-theme-presets";
 import { PHI_CORE_THEME_BLOCK_CATALOG, type PhiThemeBlockCatalog } from "../../theme/phi-theme-composition";
 import { resolvePhiThemeRuntimePayload } from "../../theme/phi-theme-runtime";
+import {
+  applyPhiThemeModeToDocument,
+  writePhiColorSchemeHint,
+  type PhiThemeModeSetting,
+} from "../../theme/phi-theme-mode";
 import { resolvePhiPublishedThemeCustomColors } from "../../theme/phi-theme-palette";
 import { PhiConfigProvider } from "./phi-config-provider";
 import { PhiRootBackgroundLayer } from "./phi-root-background";
@@ -38,6 +43,7 @@ export function PhiRootLiveThemeProvider({
   siteTheme,
   locale,
   initialMode,
+  themeModeSetting,
   initialLocale,
   availableLocales,
   fonts,
@@ -52,6 +58,8 @@ export function PhiRootLiveThemeProvider({
   siteTheme: PhiSiteTheme;
   locale: ConfigProviderProps["locale"];
   initialMode: PhiThemeMode;
+  /** What the Site configured. `system` is the only value that lets the browser have a say. */
+  themeModeSetting: PhiThemeModeSetting;
   initialLocale: string;
   availableLocales: readonly string[];
   fonts: PhiRootThemeFonts;
@@ -66,6 +74,12 @@ export function PhiRootLiveThemeProvider({
   const coreAddress = createPhiCoreRuntimeControllerAddress();
   const [liveSiteTheme, setLiveSiteTheme] = useState(siteTheme);
   const [mode, setMode] = useState<PhiThemeMode>(initialMode);
+  /*
+   * A live Theme signal - the Builder's dark mode switch, or a Theme draft preview - states what the
+   * author wants to see right now. Once one has arrived, a change of the operating system setting
+   * must not pull the page back out from under them.
+   */
+  const liveModeOverride = useRef(false);
   const [pageDescription, setPageDescription] = useState<string | null>(null);
   const [openGraphImage, setOpenGraphImage] = useState<string | null>(null);
   const [canonicalUrl, setCanonicalUrl] = useState<string | null>(null);
@@ -98,6 +112,38 @@ export function PhiRootLiveThemeProvider({
       document.documentElement.lang = initialLocale;
     }
   }, [availableLocales, initialLocale]);
+
+  /*
+   * <html> carries the marker and the colour scheme for the document ground and the native controls,
+   * and shell.css matches it as an ancestor. It has to follow a live switch, or the two would
+   * disagree about which mode is on screen.
+   */
+  useEffect(() => {
+    applyPhiThemeModeToDocument(mode);
+  }, [mode]);
+
+  /*
+   * A Site on `system` follows the browser for as long as nobody has overridden it live. The hint is
+   * stored so the next server render starts in the right mode instead of correcting itself.
+   */
+  useEffect(() => {
+    if (themeModeSetting !== "system") {
+      return;
+    }
+
+    const query = window.matchMedia("(prefers-color-scheme: dark)");
+    const apply = () => {
+      const next = query.matches ? "dark" : "light";
+      writePhiColorSchemeHint(next);
+      if (!liveModeOverride.current) {
+        setMode(next);
+      }
+    };
+
+    apply();
+    query.addEventListener("change", apply);
+    return () => query.removeEventListener("change", apply);
+  }, [themeModeSetting]);
 
   usePhiSignalListener((signal) => {
     if (signal.receiver !== coreAddress || signal.scope !== "site") {
@@ -150,6 +196,7 @@ export function PhiRootLiveThemeProvider({
         palettes: presets,
       }).theme;
       setLiveSiteTheme(nextTheme);
+      liveModeOverride.current = true;
       setMode(nextTheme.mode === "dark" ? "dark" : "light");
       return;
     }
@@ -159,6 +206,7 @@ export function PhiRootLiveThemeProvider({
       signal.action === "change" &&
       signal.valueType === "boolean"
     ) {
+      liveModeOverride.current = true;
       setMode(signal.value ? "dark" : "light");
       return;
     }

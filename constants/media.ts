@@ -91,6 +91,28 @@ export function isPhiMediaAssetPublic(
   return deliveryPolicy === PhiMediaDeliveryPolicy.Public && lifecycleStatus === PhiMediaLifecycleStatus.Ready;
 }
 
+export function isPhiMediaSvgContentType(contentType: string | null | undefined) {
+  return (contentType ?? "").trim().toLowerCase().split(";", 1)[0]!.trim() === "image/svg+xml";
+}
+
+/**
+ * Whether `next/image` may be asked to optimise an Asset's original.
+ *
+ * The optimiser serves only public, ready Assets, and it refuses SVG outright ("image type is not
+ * allowed") unless a Site enables `dangerouslyAllowSVG`, which nobody should for a format the optimiser
+ * cannot improve. `next/image` recognises SVG by a `.svg` suffix on the URL alone, and our delivery URLs
+ * end in `/content`, so the decision has to be taken here from the Asset's content type. Generated
+ * variants are always raster and stay with `isPhiMediaAssetPublic`.
+ */
+export function isPhiMediaAssetOriginalOptimizable(asset: {
+  deliveryPolicy: number | null | undefined;
+  lifecycleStatus: number | null | undefined;
+  contentType: string | null | undefined;
+}) {
+  return isPhiMediaAssetPublic(asset.deliveryPolicy, asset.lifecycleStatus)
+    && !isPhiMediaSvgContentType(asset.contentType);
+}
+
 export function hasPhiMediaFolderFlag(flags: number | null | undefined, flag: number) {
   return typeof flags === "number" && (flags & flag) === flag;
 }

@@ -56,7 +56,7 @@ export async function buildPhiDefaultAppGroupsPageTree({
   const scaffold = buildPhiBasePageContentScaffold({
     page,
     regionId: SYNTHETIC_APP_GROUPS_REGION_IDS.regionContent,
-    regionConfig: { maxSize: { width: 1200 }, margin: "0 auto", border: false },
+    regionConfig: { border: false },
   });
 
   return {

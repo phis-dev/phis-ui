@@ -90,7 +90,6 @@ const PHI_BACKGROUND_WIDGET_LABEL_SET = definePhiLabelSet({
     common_direction: PHI_BACKGROUND_WIDGET_DEFAULT_LABELS.common.direction,
     placeholder_color_hex: PHI_BACKGROUND_WIDGET_DEFAULT_LABELS.placeholders.colorHex,
     placeholder_source_url: PHI_BACKGROUND_WIDGET_DEFAULT_LABELS.placeholders.sourceUrl,
-    placeholder_source_alt: PHI_BACKGROUND_WIDGET_DEFAULT_LABELS.placeholders.sourceAlt,
   },
 });
 
@@ -205,7 +204,6 @@ export async function getPhiBackgroundWidgetLabels(options: PhiGlobalTranslatorO
     placeholders: {
       colorHex: labels.placeholder_color_hex,
       sourceUrl: labels.placeholder_source_url,
-      sourceAlt: labels.placeholder_source_alt,
     },
   };
 }

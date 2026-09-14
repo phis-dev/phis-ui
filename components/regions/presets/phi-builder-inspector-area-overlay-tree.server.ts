@@ -37,11 +37,11 @@ const PHI_BUILDER_INSPECTOR_SECTIONS = {
   layout: [
     [PHI_BUILDER_INSPECTOR_SECTION_WIDGET_IDS.layoutSettings, "builder-layout-settings-inspector", "settings"],
     [PHI_BUILDER_INSPECTOR_SECTION_WIDGET_IDS.layoutAnchor, "builder-layout-anchor-inspector", "anchor"],
+    [PHI_BUILDER_INSPECTOR_SECTION_WIDGET_IDS.layoutPadding, "builder-layout-padding-inspector", "padding"],
     [PHI_BUILDER_INSPECTOR_SECTION_WIDGET_IDS.layoutViewport, "builder-layout-viewport-inspector", "viewport"],
     [PHI_BUILDER_INSPECTOR_SECTION_WIDGET_IDS.layoutBackground, "builder-layout-background-inspector", "background"],
     [PHI_BUILDER_INSPECTOR_SECTION_WIDGET_IDS.layoutBorder, "builder-layout-border-inspector", "border"],
     [PHI_BUILDER_INSPECTOR_SECTION_WIDGET_IDS.layoutShadow, "builder-layout-shadow-inspector", "shadow"],
-    [PHI_BUILDER_INSPECTOR_SECTION_WIDGET_IDS.layoutChrome, "builder-layout-fields-inspector", "layoutFields"],
     [PHI_BUILDER_INSPECTOR_SECTION_WIDGET_IDS.layoutSignals, "builder-layout-signals-inspector", "signals"],
   ],
   widget: [

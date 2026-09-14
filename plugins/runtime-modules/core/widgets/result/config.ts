@@ -71,7 +71,15 @@ export const PHI_RESULT_WIDGET_DEFINITION = {
   category: "content",
   description: "Render a compact Ant Design result state.",
   iconFamily: "content",
-  slotSizePolicy: "fill-inline",
+  /*
+   * A Result is as wide as what it says.
+   *
+   * It used to fill its slot and carry `width: 100%` in its default config as well, which is belt and
+   * braces for the same thing: the explicit size wins over the policy, so changing only one of the two
+   * moves nothing. A Result that ends a page still fills one -- by being put in a slot that is that
+   * wide, which is the layout's business rather than the widget's.
+   */
+  slotSizePolicy: "intrinsic",
   fields: [
     ...PHI_RENDERABLE_BLOCK_GEOMETRY_FIELDS,
     {
@@ -93,13 +101,6 @@ export const PHI_RESULT_WIDGET_DEFINITION = {
     subTitle: "",
     translate: true,
     homeLink: true,
-    size: {
-      width: "100%",
-      height: "auto",
-    },
-    maxSize: {
-      width: "100%",
-    },
   },
   parseConfig: parsePhiCmsResultWidgetConfig,
 } satisfies Pick<

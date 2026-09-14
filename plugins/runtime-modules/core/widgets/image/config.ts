@@ -172,7 +172,6 @@ export const PHI_IMAGE_WIDGET_DEFINITION = {
       ],
     },
     { key: "objectPosition", type: "choice", label: "Object Position", options: IMAGE_OBJECT_POSITION_OPTIONS },
-    { key: "preload", type: "boolean", label: "Preload" },
     {
       key: "previewMode",
       type: "choice",
@@ -183,19 +182,11 @@ export const PHI_IMAGE_WIDGET_DEFINITION = {
         { value: "lightbox", label: "Lightbox" },
       ],
     },
+    { key: "preload", type: "boolean", label: "Preload" },
     {
       key: "overrideSize",
       type: "boolean",
       label: "Override size",
-    },
-    {
-      key: "radius",
-      type: "radius",
-      label: "Corner radius",
-      topLeftKey: "borderTopLeftRadius",
-      topRightKey: "borderTopRightRadius",
-      bottomLeftKey: "borderBottomLeftRadius",
-      bottomRightKey: "borderBottomRightRadius",
     },
     {
       key: "imageSize",
@@ -206,6 +197,15 @@ export const PHI_IMAGE_WIDGET_DEFINITION = {
       widthPlaceholder: "Width",
       heightPlaceholder: "Height",
       visibleWhen: { field: "overrideSize", equals: true },
+    },
+    {
+      key: "radius",
+      type: "radius",
+      label: "Corner radius",
+      topLeftKey: "borderTopLeftRadius",
+      topRightKey: "borderTopRightRadius",
+      bottomLeftKey: "borderBottomLeftRadius",
+      bottomRightKey: "borderBottomRightRadius",
     },
   ],
   contentBinding: {

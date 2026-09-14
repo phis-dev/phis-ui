@@ -49,7 +49,6 @@ export function buildPhiDefaultAreaDashboardPageTree({
   const scaffold = buildPhiBasePageContentScaffold({
     page,
     regionId,
-    regionConfig: { maxSize: { width: 1120 }, margin: "0 auto" },
   });
 
   return {

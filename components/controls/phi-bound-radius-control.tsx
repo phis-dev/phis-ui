@@ -38,6 +38,17 @@ export type PhiBoundRadiusControlProps = {
   disabled?: boolean;
   labels?: PhiRadiusControlLabels;
   showLabel?: boolean;
+  /**
+   * A fixed width for the header's label, so the switch beside it lines up with the controls of the
+   * rows around it. Left unset, the label takes its own width and the switch follows it directly.
+   */
+  labelWidth?: number;
+  /**
+   * Render as rows of the parent's two-column grid instead of as a block of its own: label cell,
+   * switch cell, and the corner grid across both columns. For a host like the Border Control, whose
+   * other rows already sit in such a grid, this is what puts the switch in the same column as theirs.
+   */
+  asGridRows?: boolean;
   onChange?: (nextValue: PhiBoundRadiusValue) => void;
 };
 
@@ -77,7 +88,7 @@ const PHI_RADIUS_CORNER_SHORT_LABELS: Record<keyof PhiBoundRadiusValue, string> 
   borderBottomRightRadius: "BR",
 };
 
-const PHI_RADIUS_CONTROL_DEFAULT_LABELS: PhiRadiusControlLabels = {
+export const PHI_RADIUS_CONTROL_DEFAULT_LABELS: PhiRadiusControlLabels = {
   sections: { radius: "Corner radius" },
   fields: {
     topLeft: "Top left",
@@ -155,6 +166,8 @@ export function PhiBoundRadiusControl({
   disabled = false,
   labels = PHI_RADIUS_CONTROL_DEFAULT_LABELS,
   showLabel = true,
+  labelWidth,
+  asGridRows = false,
   onChange,
 }: PhiBoundRadiusControlProps) {
   const { token } = usePhiConfig();
@@ -176,18 +189,16 @@ export function PhiBoundRadiusControl({
     });
   }
 
-  return (
-    <div style={{ display: "grid", gap: token.paddingXS, width: "100%" }}>
-      <Flex align="center" justify="flex-start" gap={8}>
-        {showLabel ? <Typography.Text>{labels.sections.radius}</Typography.Text> : null}
-        <Switch
-          checked={enabled}
-          disabled={isDisabled}
-          onChange={(checked) => {
-            onChange?.(checked ? createRadiusValue("base") : createRadiusValue("none"));
-          }}
-        />
-      </Flex>
+  const switchControl = (
+    <Switch
+      checked={enabled}
+      disabled={isDisabled}
+      onChange={(checked) => {
+        onChange?.(checked ? createRadiusValue("base") : createRadiusValue("none"));
+      }}
+    />
+  );
+  const cornerGrid = enabled ? (
       <div
         style={{
           display: "grid",
@@ -202,7 +213,7 @@ export function PhiBoundRadiusControl({
               {PHI_RADIUS_CORNER_SHORT_LABELS.borderTopLeftRadius}
             </Typography.Text>
             <Select<PhiRadiusOptionValue>
-              disabled={isDisabled || !enabled}
+              disabled={isDisabled}
               value={resolveRadiusToken(currentValue?.borderTopLeftRadius)}
               options={options}
               onChange={(token) => updateCorner("borderTopLeftRadius", token)}
@@ -214,7 +225,7 @@ export function PhiBoundRadiusControl({
               {PHI_RADIUS_CORNER_SHORT_LABELS.borderBottomLeftRadius}
             </Typography.Text>
             <Select<PhiRadiusOptionValue>
-              disabled={isDisabled || !enabled}
+              disabled={isDisabled}
               value={resolveRadiusToken(currentValue?.borderBottomLeftRadius)}
               options={options}
               onChange={(token) => updateCorner("borderBottomLeftRadius", token)}
@@ -228,7 +239,7 @@ export function PhiBoundRadiusControl({
               {PHI_RADIUS_CORNER_SHORT_LABELS.borderTopRightRadius}
             </Typography.Text>
             <Select<PhiRadiusOptionValue>
-              disabled={isDisabled || !enabled}
+              disabled={isDisabled}
               value={resolveRadiusToken(currentValue?.borderTopRightRadius)}
               options={options}
               onChange={(token) => updateCorner("borderTopRightRadius", token)}
@@ -240,7 +251,7 @@ export function PhiBoundRadiusControl({
               {PHI_RADIUS_CORNER_SHORT_LABELS.borderBottomRightRadius}
             </Typography.Text>
             <Select<PhiRadiusOptionValue>
-              disabled={isDisabled || !enabled}
+              disabled={isDisabled}
               value={resolveRadiusToken(currentValue?.borderBottomRightRadius)}
               options={options}
               onChange={(token) => updateCorner("borderBottomRightRadius", token)}
@@ -249,6 +260,32 @@ export function PhiBoundRadiusControl({
           </Flex>
         </div>
       </div>
+  ) : null;
+
+  if (asGridRows) {
+    return (
+      <>
+        <Typography.Text>{labels.sections.radius}</Typography.Text>
+        {/* A grid cell stretches its content; the switch keeps its own width, left in the column. */}
+        <div style={{ justifySelf: "start" }}>{switchControl}</div>
+        {cornerGrid ? <div style={{ gridColumn: "1 / -1", minWidth: 0 }}>{cornerGrid}</div> : null}
+      </>
+    );
+  }
+
+  return (
+    <div style={{ display: "grid", gap: token.paddingXS, width: "100%" }}>
+      <Flex align="center" justify="flex-start" gap={labelWidth == null ? 8 : 12}>
+        {showLabel ? (
+          <Typography.Text
+            style={labelWidth == null ? undefined : { flex: `0 0 ${labelWidth}px`, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", lineHeight: "var(--ant-control-height)" }}
+          >
+            {labels.sections.radius}
+          </Typography.Text>
+        ) : null}
+        {switchControl}
+      </Flex>
+      {cornerGrid}
     </div>
   );
 }

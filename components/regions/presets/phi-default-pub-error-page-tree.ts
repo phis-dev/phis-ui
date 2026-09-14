@@ -98,10 +98,7 @@ export async function buildPhiDefaultPubErrorPageTree({
         flags: 0,
         visibilityMask: page.visibilityMask,
         sortOrder: 30,
-        config: {
-          maxSize: { width: 960 },
-          margin: "0 auto",
-        },
+        config: {},
       },
     ],
     layoutNodes: [
@@ -118,9 +115,6 @@ export async function buildPhiDefaultPubErrorPageTree({
         visibilityMask: page.visibilityMask,
         label: `pub error ${code} page`,
         config: {
-          width: "100%",
-          maxWidth: "100%",
-          margin: 0,
           anchor: "center",
         },
       }),

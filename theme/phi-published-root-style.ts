@@ -7,6 +7,7 @@ import { buildPhiCssVars, buildPhiShellCssVars } from "./phi-css-vars";
 import { resolvePhiServerThemeTokens } from "./phi-server-tokens";
 import {
   PHI_CORE_THEME_PRESET_PLUGINS,
+  type PhiThemeMode,
   type PhiThemePresetPlugin,
 } from "./phi-theme-presets";
 
@@ -17,14 +18,17 @@ export type PhiPublishedRootTheme = {
 
 export function resolvePhiPublishedRootTheme({
   siteTheme,
+  mode,
   remRootValue,
   themePresets = PHI_CORE_THEME_PRESET_PLUGINS,
 }: {
   siteTheme: PhiSiteTheme;
+  /** The resolved projection; the Site record itself may still say `system`. */
+  mode: PhiThemeMode;
   remRootValue: number;
   themePresets?: readonly PhiThemePresetPlugin[];
 }): PhiPublishedRootTheme {
-  const themeTokens = resolvePhiServerThemeTokens(siteTheme, themePresets);
+  const themeTokens = resolvePhiServerThemeTokens({ siteTheme, mode, themePresets });
   return {
     style: {
       ...buildPhiCssVars(remRootValue, themeTokens),

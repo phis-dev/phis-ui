@@ -170,16 +170,15 @@ export function PhiBorderControl({
               });
             }}
           />
-        </div>
-      </div>
 
-      <div style={{ display: "grid", gap: token.paddingXS, width: "100%" }}>
-        <PhiBoundRadiusControl
-          disabled={isDisabled}
-          value={resolvedValue}
-          labels={labels}
-          onChange={(nextRadius) => emit(nextRadius)}
-        />
+          <PhiBoundRadiusControl
+            asGridRows
+            disabled={isDisabled}
+            value={resolvedValue}
+            labels={labels}
+            onChange={(nextRadius) => emit(nextRadius)}
+          />
+        </div>
       </div>
     </div>
   );

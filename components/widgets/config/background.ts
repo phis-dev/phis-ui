@@ -71,6 +71,13 @@ export type PhiBackgroundMotionMode = "static" | "fixed" | "parallax";
  * A surface that cannot express one of them narrows this list for its own Control rather than
  * rebuilding the vocabulary, so the offer stays derived from the contract it belongs to.
  */
+export type PhiBackgroundImageSourceKind = "asset" | "url";
+/**
+ * Where an image Base may take its picture from, in authoring order. A surface narrows this list the
+ * way it narrows `PHI_BACKGROUND_BASE_KINDS`: the Theme Root Background offers the Media library alone.
+ */
+export const PHI_BACKGROUND_IMAGE_SOURCE_KINDS: readonly PhiBackgroundImageSourceKind[] = ["asset", "url"];
+
 export const PHI_BACKGROUND_BASE_KINDS: readonly PhiCmsBackgroundWidgetConfig["base"]["kind"][] = [
   "none",
   "color",
@@ -254,7 +261,6 @@ function normalizePhiBackgroundBase(value: unknown): PhiCmsBackgroundWidgetConfi
     const normalized = {
       kind: "image" as const,
       trusted: readBoolean(raw.trusted) ?? false,
-      alt: readString(raw.alt),
       blurDataUrl: readString(raw.blurDataUrl),
       // The projection wins; the raw value stays readable for content persisted before it existed.
       focalRect: resolvedAsset?.focalRect ?? raw.focalRect,

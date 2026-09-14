@@ -5,7 +5,7 @@ import NextImage from "next/image";
 
 import type { PhiClientBlockBaseProps } from "../../../../../types";
 import type { PhiCmsImageWidgetConfig } from "./config";
-import { isPhiMediaAssetPublic } from "../../../../../constants/media";
+import { isPhiMediaAssetOriginalOptimizable, isPhiMediaAssetPublic } from "../../../../../constants/media";
 import type { PhiMediaAsset } from "../../../../../types/media";
 import { resolvePhiImagePresentation } from "../../../../../components/media/image-presentation";
 import type { PhiImageWidgetLabels } from "../../../../../components/widgets/label-types/image";
@@ -97,6 +97,13 @@ export function PhiImageWidget({
     resolvedAsset?.deliveryPolicy,
     resolvedAsset?.lifecycleStatus,
   );
+  /*
+   * A generated variant is raster and optimisable whenever the Asset is public; the original is the
+   * Asset's own bytes, which the optimiser refuses for an SVG.
+   */
+  const optimizable = presentation.kind === "generated-variant"
+    ? isPublicAsset
+    : resolvedAsset != null && isPhiMediaAssetOriginalOptimizable(resolvedAsset);
   const previewMode = config?.previewMode ?? "none";
   const preload = config?.preload === true && isPublicAsset;
   const trusted = isTrustedSource(sourceKind, config?.trusted);
@@ -187,7 +194,7 @@ export function PhiImageWidget({
           width={width}
           height={height}
           sizes={config?.sizes?.trim() || undefined}
-          unoptimized={!isPublicAsset}
+          unoptimized={!optimizable}
           placeholder={blurDataUrl ? "blur" : undefined}
           blurDataURL={blurDataUrl || undefined}
           preload={preload}

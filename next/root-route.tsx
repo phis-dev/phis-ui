@@ -1,6 +1,7 @@
 import "server-only";
 
 import type { Metadata } from "next";
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
 import { PhiRootLayout } from "../components/root/phi-root-layout";
@@ -15,6 +16,13 @@ import {
 } from "../helpers/site-runtime";
 import { loadPhiRootLayoutContext } from "../server-helpers/root-layout";
 import { resolvePhiResolvedRequestLocale } from "../server-helpers/request-locale";
+import {
+  PHI_COLOR_SCHEME_COOKIE,
+  buildPhiThemeModeBootstrapScript,
+  normalizePhiColorSchemeHint,
+  normalizePhiThemeModeSetting,
+  resolvePhiThemeMode,
+} from "../theme/phi-theme-mode";
 
 async function loadPhiNextRootContract() {
   const runtimeConfig = readPhiSiteRuntimeConfigSync();
@@ -74,11 +82,34 @@ export function createPhiNextRootLayout(siteModules: PhiSiteModuleServerAreaCont
       loadThemeBlocks(),
     ]);
     const remRootValue = site.theme?.rem?.rootValue ?? 16;
+    /*
+     * The projection is decided here as well as inside PhiRootLayout, because <html> carries the
+     * marker and the colour scheme: without them the document ground and the native controls would
+     * stay light until the layout below mounts. The hint cookie is written by the bootstrap script
+     * on the first view, so every later request already renders the right projection server-side.
+     */
+    const themeModeSetting = normalizePhiThemeModeSetting(site.theme?.mode);
+    const browserColorScheme = normalizePhiColorSchemeHint(
+      (await cookies()).get(PHI_COLOR_SCHEME_COOKIE)?.value,
+    );
+    const themeMode = resolvePhiThemeMode(themeModeSetting, browserColorScheme);
+    const bootstrapScript = buildPhiThemeModeBootstrapScript(themeModeSetting);
 
     return (
-      <html lang={resolvedLocale.intlLocale} style={{ fontSize: `${remRootValue}px` }}>
+      <html
+        lang={resolvedLocale.intlLocale}
+        data-phi-theme-mode={themeMode}
+        style={{ fontSize: `${remRootValue}px`, colorScheme: themeMode }}
+        suppressHydrationWarning
+      >
+        <head>
+          {bootstrapScript ? (
+            <script dangerouslySetInnerHTML={{ __html: bootstrapScript }} />
+          ) : null}
+        </head>
         <body>
           <PhiRootLayout
+            browserColorScheme={browserColorScheme}
             apiBaseUrl={runtimeConfig.phis.apiBaseUrl}
             internalToken={runtimeConfig.phis.internalToken}
             siteKey={runtimeConfig.site.key}

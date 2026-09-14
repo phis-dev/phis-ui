@@ -28,7 +28,6 @@ export async function buildPhiDefaultAccountingPageTree({
   const scaffold = buildPhiBasePageContentScaffold({
     page,
     regionId: SYNTHETIC_ACCOUNTING_REGION_IDS.regionContent,
-    regionConfig: { maxSize: { width: 1120 }, margin: "0 auto" },
   });
 
   return {

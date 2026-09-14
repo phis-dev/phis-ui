@@ -21,9 +21,11 @@ import { createPhiPresetCmsInstanceId } from "../../../types/cms-instance-id";
  * the scaffold folds it into its `presetVersion`, which is how overridden copies learn about the
  * update. The Settings pages (their own Collapsible shell) and the public/auth pages (landing
  * chrome, centered panels) do not use the scaffold yet.
+ *
+ * Version 3: the content Region no longer carries a reading width (`maxSize`); it spans the page.
  */
 
-export const PHI_BASE_PAGE_LAYOUT_VERSION = 2;
+export const PHI_BASE_PAGE_LAYOUT_VERSION = 3;
 
 export const PHI_BASE_PAGE_LAYOUT_NODE_ID = createPhiPresetCmsInstanceId({
   domain: "page",
@@ -52,9 +54,9 @@ export function buildPhiBasePageLayoutNode(page: PhiCmsPageNode): PhiCmsLayoutNo
 }
 
 /**
- * Content region rooted on the scaffold. The region keeps its per-page identity and sizing --
- * `regionId` stays the preset's synthetic id, and `maxSize`/`margin` remain a per-page decision --
- * only the tree below the root is standardised.
+ * Content region rooted on the scaffold. The region keeps its per-page identity -- `regionId` stays the
+ * preset's synthetic id -- and spans the full page width; the built-in pages set no reading width.
+ * Only the tree below the root is standardised.
  */
 export function buildPhiBasePageContentScaffold({
   page,

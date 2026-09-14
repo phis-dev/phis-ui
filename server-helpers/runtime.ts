@@ -13,6 +13,10 @@ import type {
   PhiWidgetThemeMode,
 } from "../types/widget-runtime";
 import type { PhiSiteFontSlots, PhiSiteRemSettings } from "../types/site-theme";
+import {
+  readPhiColorSchemeHintFromCookieHeader,
+  resolvePhiThemeMode,
+} from "../theme/phi-theme-mode";
 import type { PhiCapabilitySnapshot } from "../types/server-capabilities";
 
 type PhiWidgetSiteTheme = NonNullable<PhiBlockRuntime["site"]["theme"]>;
@@ -284,7 +288,11 @@ export async function getPhiCmsRuntimeInfo({
     },
     themeRevision: site.themeRevision,
     theme: {
-      mode: site.theme?.mode === "dark" ? "dark" : "light",
+      /* The widget runtime carries the projection, never the `system` setting behind it. */
+      mode: resolvePhiThemeMode(
+        site.theme?.mode,
+        readPhiColorSchemeHintFromCookieHeader(cookieHeader),
+      ),
       ...(site.theme?.preset ? { preset: site.theme.preset } : {}),
       ...(site.theme?.presetVersion != null ? { presetVersion: site.theme.presetVersion } : {}),
       ...(site.theme?.fonts ? { fonts: site.theme.fonts } : {}),

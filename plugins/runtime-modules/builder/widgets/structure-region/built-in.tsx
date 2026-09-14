@@ -15,7 +15,10 @@ import {
   resolvePhiCmsRenderLayoutNodeDepth,
 } from "../../../../../helpers/cms-layout-depth";
 import { resolvePhiBorderWidgetStyle } from "../../../../../helpers/border-widget-style";
-import { resolvePhiBackgroundWidgetStyle } from "../../../../../components/widgets/config/background";
+import {
+  phiBackgroundWidgetConfigPaintsGround,
+  resolvePhiBackgroundWidgetStyle,
+} from "../../../../../components/widgets/config/background";
 import { combinePhiBoxShadows, resolvePhiShadow } from "../../../../../helpers/layout-style";
 import { normalizePhiGeometryWidgetConfig } from "../../../../../components/widgets/config/geometry";
 import type { PhiCmsContentWidgetNode, PhiCmsLayoutRenderNode } from "../../../../../types/cms";
@@ -762,6 +765,13 @@ export function PhiStructureRegionScaffold({
         effect: effectiveDraft.effect ?? null,
       })
     : {};
+  /*
+   * Whether the author gave this Region a ground. The Builder writes a Background config onto every
+   * Region draft it persists, so only a config that paints something counts. An unauthored Region is
+   * transparent in the live Shell, and the Canvas keeps that legible: its slot paints a half-transparent
+   * container tint, so the Theme Root Background stays visible through it.
+   */
+  const hasAuthoredGround = phiBackgroundWidgetConfigPaintsGround(effectiveDraft?.background);
   const slotBorderStyle = effectiveDraft?.border ? resolvePhiBorderWidgetStyle(effectiveDraft.border) : {};
   const regionConfig = (effectiveDraft?.regionConfig ?? null) as PhiCmsRegionConfig | null;
   const regionPaddingStyle = resolvePhiPaddingStyle(
@@ -788,6 +798,9 @@ export function PhiStructureRegionScaffold({
   const slotMaxWidth = hasExplicitSidebarWidth
     ? "100%"
     : resolvePhiCssLength(draftMaxSize?.width) ?? resolvePhiCssLength(draftSize?.width);
+  // A Region with a maximum width is a centred column, exactly as the live Region shell renders it.
+  const slotCentreStyle: CSSProperties =
+    !hasExplicitSidebarWidth && draftMaxSize?.width != null ? { marginInline: "auto" } : {};
   const slotHeight = shouldStretchAvailableHeight
     ? undefined
     : shouldFillAvailableHeight
@@ -2238,6 +2251,7 @@ export function PhiStructureRegionScaffold({
           minHeight: slotMinHeight,
           maxHeight: slotMaxHeight,
           marginTop: resolvePhiCssLength(offsetTop),
+          ...slotCentreStyle,
           ...slotBackgroundStyle,
           ...slotBorderStyle,
           boxShadow: combinePhiBoxShadows(slotBackgroundStyle.boxShadow, resolvePhiShadow(effectiveDraft?.shadow)),
@@ -2283,7 +2297,8 @@ export function PhiStructureRegionScaffold({
       tabIndex={config.allowSelect && !isPreviewMode ? 0 : undefined}
       style={{
         border: `1px dashed ${token.colorBorderSecondary}`,
-        backgroundColor: token.colorFillTertiary,
+        // The area a Region lives in: a faint layout tint so the Theme Root Background stays visible.
+        backgroundColor: `color-mix(in srgb, ${token.colorBgLayout} 20%, transparent)`,
         boxShadow: `inset 0 0 0 1px ${token.colorBorderSecondary}`,
         width: outerWidth,
         minWidth: outerMinWidth,
@@ -2355,9 +2370,13 @@ export function PhiStructureRegionScaffold({
             border: isPicking
               ? `1px dashed ${token.colorPrimary}`
               : `1px dashed ${token.colorBorderSecondary}`,
-            backgroundColor: isSelected
-              ? token.colorFillQuaternary
-              : token.colorBgContainer,
+            ...(hasAuthoredGround
+              ? {}
+              : {
+                  backgroundColor: isSelected
+                    ? token.colorFillQuaternary
+                    : `color-mix(in srgb, ${token.colorBgContainer} 50%, transparent)`,
+                }),
             boxShadow: combinePhiBoxShadows(
               slotBackgroundStyle.boxShadow,
               resolvePhiShadow(effectiveDraft?.shadow) ??
@@ -2370,6 +2389,7 @@ export function PhiStructureRegionScaffold({
             minHeight: slotMinHeight,
             maxHeight: slotMaxHeight,
             marginTop: resolvePhiCssLength(offsetTop),
+            ...slotCentreStyle,
             ...slotBackgroundStyle,
             ...slotBorderStyle,
             zIndex: resolvedRegionZIndex,

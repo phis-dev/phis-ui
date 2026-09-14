@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
-import { Typography } from "antd";
+import { Flex, Typography } from "antd";
 
+import { usePhiBaseLayoutOwnSlotController } from "../../../../components/layouts/phi-layout-slot-state";
 import { PhiBackgroundControl, type PhiBackgroundControlProps } from "../../../../components/controls/phi-background-control";
 import { PhiBorderControl } from "../../../../components/controls/phi-border-control";
 import { PhiShadowControl } from "../../../../components/controls/phi-shadow-control";
@@ -168,6 +169,23 @@ export function PhiDeveloperBuilderLayoutInspectorWidgetClient({
       .filter(isPhiCmsChromeConfigField)
       .filter((field) => isPhiInspectorConfigFieldVisible(field, currentLayoutConfigRecord))
       .find((field) => field.type === "slot-placement") ?? null;
+
+  /*
+   * The Settings panel hides itself when the layout declares nothing for it. It is the Drawer's first
+   * panel and open by default, so it is mounted and can act; the Drawer itself lists one Collapse item
+   * per section and cannot know what a section will render.
+   */
+  const settingsHasContent = !isTargetKind || section !== "settings" || settingsFields.length > 0 || slotPlacementField != null
+    || chromeFields.some((field) => field.type !== "padding");
+  const ownSlot = usePhiBaseLayoutOwnSlotController();
+  useEffect(() => {
+    if (!ownSlot) return;
+    if (!settingsHasContent) {
+      if (ownSlot.state !== "hidden") ownSlot.hide();
+      return;
+    }
+    if (ownSlot.state === "hidden") ownSlot.show();
+  }, [ownSlot, settingsHasContent]);
   const resolveGridSlotPlacements = (value: unknown): PhiCmsGridLayoutSlotPlacementConfig[] => {
     if (!Array.isArray(value)) {
       return [];
@@ -269,6 +287,83 @@ export function PhiDeveloperBuilderLayoutInspectorWidgetClient({
         routeScope: signalRouteScope,
       });
   const signalCapabilities = resolvePhiSignalEndpointCapabilities(signalEndpoints);
+  /*
+   * The chrome fields a layout declares itself: its own padding, which has the Drawer's Paddings panel,
+   * and anything else -- Split Card's two cards -- which lives in Settings with the layout's other fields.
+   */
+  const declaredChromeSections = chromeFields.map((field) => ({
+    field,
+    section: {
+                      key: field.section ?? field.key,
+                      title: field.label,
+                      children: (
+                        <div style={{ display: "grid", gap: PHI_GAP_SM, width: "100%" }}>
+                          {field.type === "padding" ? (
+                            renderPhiInspectorPaddingConfigControl({
+                              field,
+                              disabled: isPreviewMode || (!onPaddingChange && !onConfigChange),
+                              config: isCanonicalPaddingField(field)
+                                ? { ...(currentDraftRecord ?? {}), ...(resolvedLayoutPadding ?? {}) }
+                                : currentDraftRecord ?? {},
+                              defaultConfig: isCanonicalPaddingField(field)
+                                ? { ...(layoutDefaultConfigRecord ?? {}), ...(resolvedLayoutPaddingDefaults ?? {}) }
+                                : layoutDefaultConfigRecord,
+                              labels: paddingLabels,
+                              onChange: (padding, patch) => {
+                                if (isCanonicalPaddingField(field)) {
+                                  onPaddingChange?.(padding);
+                                  return;
+                                }
+
+                                if (!onConfigChange) {
+                                  return;
+                                }
+
+                                for (const [key, value] of Object.entries(patch)) {
+                                  onConfigChange(key, value ?? null);
+                                }
+                              },
+                            })
+                          ) : field.type === "background" ? (
+                            <PhiBackgroundControl
+                              mode="control"
+                              disabled={isPreviewMode || !onConfigChange}
+                              value={(currentDraftRecord?.[field.key] as PhiCmsBackgroundWidgetConfig | null) ?? null}
+                              config={(layoutDefaultConfigRecord?.[field.key] as PhiCmsBackgroundWidgetConfig | null) ?? null}
+                              onChange={(background) => onConfigChange?.(field.key, background)}
+                              labels={backgroundLabels}
+                              colorPickerLabels={colorPickerLabels}
+                              colorPickerPlacement="left"
+                              renderMediaPicker={renderMediaPicker}
+                            />
+                          ) : field.type === "border" ? (
+                            <PhiBorderControl
+                              mode="control"
+                              disabled={isPreviewMode || !onConfigChange}
+                              value={(currentDraftRecord?.[field.key] as PhiCmsBorderWidgetConfig | null) ?? null}
+                              config={(layoutDefaultConfigRecord?.[field.key] as PhiCmsBorderWidgetConfig | null) ?? null}
+                              onChange={(border) => onConfigChange?.(field.key, border)}
+                              labels={borderLabels}
+                              colorPickerLabels={colorPickerLabels}
+                              colorPickerPlacement="left"
+                            />
+                          ) : (
+                            <PhiShadowControl
+                              mode="control"
+                              disabled={isPreviewMode || !onConfigChange}
+                              value={
+                                readPhiShadow(currentDraftRecord?.[field.key]) ??
+                                readPhiShadow(layoutDefaultConfigRecord?.[field.key]) ??
+                                null
+                              }
+                              onChange={(shadow) => onConfigChange?.(field.key, shadow)}
+                            />
+                          )}
+                        </div>
+                      ),
+    },
+  }));
+  const declaredCardSections = declaredChromeSections.filter((entry) => entry.field.type !== "padding");
   return (
     <div style={{ display: "grid", gap: PHI_GAP_SM, width: "100%" }}>
       {!isTargetKind ? (
@@ -276,10 +371,9 @@ export function PhiDeveloperBuilderLayoutInspectorWidgetClient({
       ) : (
         <div style={{ display: "grid", gap: PHI_GAP_SM, width: "100%" }}>
           <PhiInspectorSectionContent
-            sectionKey={section === "chrome" ? "*" : section ?? "settings"}
-            excludeSectionKeys={section === "chrome" ? ["settings", "anchor", "viewport", "background", "border", "shadow", "signals"] : undefined}
+            sectionKey={section ?? "settings"}
             sections={[
-              ...(settingsFields.length > 0 || slotPlacementField
+              ...(settingsFields.length > 0 || slotPlacementField || declaredCardSections.length > 0
                 ? [
                     {
                       key: "settings",
@@ -370,6 +464,12 @@ export function PhiDeveloperBuilderLayoutInspectorWidgetClient({
                                 </>
                               )
                             : null}
+                          {declaredCardSections.map((entry) => (
+                            <Flex key={entry.section.key} vertical gap={8} style={{ width: "100%", minWidth: 0 }}>
+                              <Typography.Text>{entry.section.title}</Typography.Text>
+                              {entry.section.children}
+                            </Flex>
+                          ))}
                         </div>
                       ),
                     },
@@ -454,75 +554,9 @@ export function PhiDeveloperBuilderLayoutInspectorWidgetClient({
                         </div>
                       ),
                     },
-                    ...chromeFields.map((field) => ({
-                      key: field.section ?? field.key,
-                      title: field.label,
-                      children: (
-                        <div style={{ display: "grid", gap: PHI_GAP_SM, width: "100%" }}>
-                          {field.type === "padding" ? (
-                            renderPhiInspectorPaddingConfigControl({
-                              field,
-                              disabled: isPreviewMode || (!onPaddingChange && !onConfigChange),
-                              config: isCanonicalPaddingField(field)
-                                ? { ...(currentDraftRecord ?? {}), ...(resolvedLayoutPadding ?? {}) }
-                                : currentDraftRecord ?? {},
-                              defaultConfig: isCanonicalPaddingField(field)
-                                ? { ...(layoutDefaultConfigRecord ?? {}), ...(resolvedLayoutPaddingDefaults ?? {}) }
-                                : layoutDefaultConfigRecord,
-                              labels: paddingLabels,
-                              onChange: (padding, patch) => {
-                                if (isCanonicalPaddingField(field)) {
-                                  onPaddingChange?.(padding);
-                                  return;
-                                }
-
-                                if (!onConfigChange) {
-                                  return;
-                                }
-
-                                for (const [key, value] of Object.entries(patch)) {
-                                  onConfigChange(key, value ?? null);
-                                }
-                              },
-                            })
-                          ) : field.type === "background" ? (
-                            <PhiBackgroundControl
-                              mode="control"
-                              disabled={isPreviewMode || !onConfigChange}
-                              value={(currentDraftRecord?.[field.key] as PhiCmsBackgroundWidgetConfig | null) ?? null}
-                              config={(layoutDefaultConfigRecord?.[field.key] as PhiCmsBackgroundWidgetConfig | null) ?? null}
-                              onChange={(background) => onConfigChange?.(field.key, background)}
-                              labels={backgroundLabels}
-                              colorPickerLabels={colorPickerLabels}
-                              colorPickerPlacement="left"
-                              renderMediaPicker={renderMediaPicker}
-                            />
-                          ) : field.type === "border" ? (
-                            <PhiBorderControl
-                              mode="control"
-                              disabled={isPreviewMode || !onConfigChange}
-                              value={(currentDraftRecord?.[field.key] as PhiCmsBorderWidgetConfig | null) ?? null}
-                              config={(layoutDefaultConfigRecord?.[field.key] as PhiCmsBorderWidgetConfig | null) ?? null}
-                              onChange={(border) => onConfigChange?.(field.key, border)}
-                              labels={borderLabels}
-                              colorPickerLabels={colorPickerLabels}
-                              colorPickerPlacement="left"
-                            />
-                          ) : (
-                            <PhiShadowControl
-                              mode="control"
-                              disabled={isPreviewMode || !onConfigChange}
-                              value={
-                                readPhiShadow(currentDraftRecord?.[field.key]) ??
-                                readPhiShadow(layoutDefaultConfigRecord?.[field.key]) ??
-                                null
-                              }
-                              onChange={(shadow) => onConfigChange?.(field.key, shadow)}
-                            />
-                          )}
-                        </div>
-                      ),
-                    })),
+                    ...declaredChromeSections
+                      .filter((entry) => entry.field.type === "padding")
+                      .map((entry) => entry.section),
               ],
               {
                 key: "signals",

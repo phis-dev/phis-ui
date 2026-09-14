@@ -69,10 +69,7 @@ export async function buildPhiDefaultPubTermsPageTree({
         flags: 0,
         visibilityMask: page.visibilityMask,
         sortOrder: 30,
-        config: {
-          maxSize: { width: 1120 },
-          margin: "0 auto",
-        },
+        config: {},
       },
     ],
     layoutNodes: [

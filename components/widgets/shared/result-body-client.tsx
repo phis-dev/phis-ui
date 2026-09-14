@@ -6,11 +6,16 @@ import type { PhiCmsResultWidgetConfig } from "../../../plugins/runtime-modules/
 import { PhiButtonControl } from "../../controls/phi-button-control";
 
 export type PhiResultWidgetBodyProps = {
-  config?: Pick<PhiCmsResultWidgetConfig, "status">;
+  config?: Pick<PhiCmsResultWidgetConfig, "status" | "homeLink">;
   code?: string;
   title?: string;
   subTitle?: string;
-  /** Absent unless the widget was asked for the link; the server resolves the target. */
+  /**
+   * Absent in the Canvas, where there is no Area to send anybody to: the target is resolved where the
+   * result is rendered. Whether the link shows is `config.homeLink` and not this, so that switching it
+   * in the Inspector shows up on the Canvas -- reading the target instead left an author toggling a
+   * button they could not see.
+   */
   homeHref?: string;
   homeLinkLabel?: string;
 };
@@ -37,7 +42,7 @@ export function PhiResultWidgetBody({
       status={config?.status ?? "info"}
       title={renderedTitle}
       subTitle={subTitle}
-      extra={homeHref
+      extra={config?.homeLink
         ? <PhiButtonControl href={homeHref} label={homeLinkLabel} type="primary" />
         : undefined}
     />

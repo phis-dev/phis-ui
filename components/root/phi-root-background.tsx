@@ -6,6 +6,7 @@ import {
   resolvePhiBackgroundMotionHostStyle,
   resolvePhiBackgroundWidgetStyle,
   type PhiBackgroundMotion,
+  type PhiBackgroundImageSourceKind,
   type PhiBackgroundMotionMode,
   type PhiCmsBackgroundWidgetConfig,
 } from "../widgets/config/background";
@@ -38,6 +39,15 @@ export const PHI_ROOT_BACKGROUND_MOTION_MODES: readonly PhiBackgroundMotionMode[
   "static",
   "parallax",
 ];
+
+/**
+ * Where the Theme Root Background takes its picture from: the Site's Media library, and nothing else.
+ *
+ * This layer is the ground every Page stands on. An external URL here would make that ground depend
+ * on a server nobody in the Site controls, so the Control offers no field for one. A block's inline
+ * picture is not an exception to this: it shows, and a saved Theme takes it over into the library.
+ */
+export const PHI_ROOT_BACKGROUND_IMAGE_SOURCE_KINDS: readonly PhiBackgroundImageSourceKind[] = ["asset"];
 
 function readPhiRootBackgroundConfig(
   root: PhiSiteThemeRoot | null | undefined,

@@ -44,7 +44,7 @@ export function buildPhiAuthRuntimePageTree({
       flags: 0,
       visibilityMask: page.visibilityMask,
       sortOrder: 30,
-      config: { maxSize: { width: 1440 }, margin: "0 auto", border: false },
+      config: { border: false },
     }],
     layoutNodes: [buildPhiCmsLayoutNode({
       id: layouts.layoutRoot,
@@ -58,7 +58,7 @@ export function buildPhiAuthRuntimePageTree({
       flags: 0,
       visibilityMask: page.visibilityMask,
       label,
-      config: { width: "100%", maxWidth: "100%", margin: 0 },
+      config: {},
     })],
     contentWidgets: [buildPhiCmsWidgetNode({
       typeKey: widgetTypeKey,

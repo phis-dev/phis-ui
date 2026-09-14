@@ -112,7 +112,7 @@ export function buildPhiSettingsPageShellTree({
   const scaffold = buildPhiBasePageContentScaffold({
     page,
     regionId,
-    regionConfig: { maxSize: { width: 1440 }, margin: "0 auto", border: false },
+    regionConfig: { border: false },
   });
   const layoutNodes: PhiCmsLayoutNode[] = [
     scaffold.layoutNode,

@@ -243,7 +243,13 @@ export function PhiCmsRegionStatic({
     "data-phi-block-enabled": resolvedEnabled ? "true" : "false",
     ...effectsAttributes,
     className: ["phi-cms-region-shell", className].filter(Boolean).join(" "),
-    style: { padding: 0, ...baseStyle, margin: 0 },
+    // A Region with a maximum width is a centred column, see the client container.
+    style: {
+      padding: 0,
+      ...baseStyle,
+      margin: 0,
+      ...(!isSider && config.maxSize?.width != null ? { marginInline: "auto" } : {}),
+    },
   };
   const content = (
     <div className="phi-cms-region-shell__content" style={regionPaddingStyle}>

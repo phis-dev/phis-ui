@@ -107,7 +107,6 @@ export type PhiBackgroundWidgetLabels = {
   placeholders: {
     colorHex: string;
     sourceUrl: string;
-    sourceAlt: string;
   };
 };
 
@@ -220,6 +219,5 @@ export const PHI_BACKGROUND_WIDGET_DEFAULT_LABELS: PhiBackgroundWidgetLabels = {
   placeholders: {
     colorHex: "#f0f0f0",
     sourceUrl: "Source URL",
-    sourceAlt: "Source alt",
   },
 };

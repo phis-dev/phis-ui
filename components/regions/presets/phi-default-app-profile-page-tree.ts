@@ -19,7 +19,7 @@ export async function buildPhiDefaultAppProfilePageTree({ page, runtime }: { pag
     [widgets.email, "profile-email", labels.email],
     [widgets.password, "profile-password", labels.password],
   ] as const;
-  const scaffold = buildPhiBasePageContentScaffold({ page, regionId: REGION_CONTENT_ID, regionConfig: { maxSize: { width: 960 }, margin: "0 auto", border: false } });
+  const scaffold = buildPhiBasePageContentScaffold({ page, regionId: REGION_CONTENT_ID, regionConfig: { border: false } });
   return {
     page: { ...page, pageType: PhiCmsPageType.Standard, status: PhiCmsStatus.Published },
     pageMeta: { title: { msgId: 0, source: "Profile", value: labels.page }, description: null },

@@ -50,7 +50,6 @@ export type PhiServerThemeTokens = {
 };
 
 type PhiServerThemeSource = {
-  mode?: PhiThemeMode | null;
   preset?: string | null;
   presetVersion?: number | null;
   palette?: PhiThemePalette | null;
@@ -69,13 +68,19 @@ function readRequiredNumberToken(value: string | number, key: string) {
   return value;
 }
 
-export function resolvePhiServerThemeTokens(
-  siteTheme?: PhiServerThemeSource,
-  themePresets: readonly PhiThemePresetPlugin[] = PHI_CORE_THEME_PRESET_PLUGINS,
-): PhiServerThemeTokens {
+export function resolvePhiServerThemeTokens({
+  siteTheme,
+  mode,
+  themePresets = PHI_CORE_THEME_PRESET_PLUGINS,
+}: {
+  siteTheme?: PhiServerThemeSource;
+  /** The resolved projection. A Site set to `system` is decided before it reaches here. */
+  mode: PhiThemeMode;
+  themePresets?: readonly PhiThemePresetPlugin[];
+}): PhiServerThemeTokens {
   const cacheKey = JSON.stringify({
     themePresets: themePresets.map((preset) => [preset.key, preset.version]),
-    mode: siteTheme?.mode ?? "light",
+    mode,
     preset: siteTheme?.preset ?? null,
     presetVersion: siteTheme?.presetVersion ?? null,
     palette: siteTheme?.palette ?? null,
@@ -87,9 +92,8 @@ export function resolvePhiServerThemeTokens(
     return cached;
   }
 
-  const resolvedThemeMode = siteTheme?.mode === "dark" ? "dark" : "light";
   const themePreset = resolvePhiThemePresetPlugin(themePresets, siteTheme?.preset);
-  const colorTokens = resolvePhiThemeColorTokens(themePreset, siteTheme?.palette, resolvedThemeMode);
+  const colorTokens = resolvePhiThemeColorTokens(themePreset, siteTheme?.palette, mode);
   const structuralTokens = buildPhiThemeStructuralTokens();
   const explicitTokens = {
     ...colorTokens,
@@ -99,7 +103,7 @@ export function resolvePhiServerThemeTokens(
     ...structuralTokens,
     ...explicitTokens,
   };
-  const resolvedToken = resolvePhiAntdAliasTokens(resolvedThemeMode, tokenInput);
+  const resolvedToken = resolvePhiAntdAliasTokens(mode, tokenInput);
   const tokens: PhiServerThemeTokens = {
     ...resolvedToken,
     colorBgContainer: resolvedToken.colorBgContainer,

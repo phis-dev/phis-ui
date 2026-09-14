@@ -51,7 +51,7 @@ export async function buildPhiDefaultAdminGroupsPageTree({
   const scaffold = buildPhiBasePageContentScaffold({
     page,
     regionId: SYNTHETIC_ADMIN_GROUPS_REGION_IDS.regionContent,
-    regionConfig: { maxSize: { width: 1440 }, margin: "0 auto", border: false },
+    regionConfig: { border: false },
   });
 
   return {

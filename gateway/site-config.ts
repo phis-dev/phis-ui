@@ -6,11 +6,13 @@ import type { PhiShellTheme } from "../components/shell/shell-types";
 import { getSiteConfigCacheTag } from "./cache-tags";
 import type { PhiSiteFontSlots, PhiSiteRemSettings, PhiSiteThemeRoot } from "../types/site-theme";
 import type { PhiThemePalette } from "../theme/phi-theme-presets";
+import type { PhiThemeModeSetting } from "../theme/phi-theme-mode";
 import type { PhiThemeBlockSelection } from "../theme/phi-theme-composition";
 import type { PhiControlShapeCorners } from "../theme/phi-control-shape";
 
 export type PhiSiteTheme = {
-  mode?: "light" | "dark" | null;
+  /** `system` follows the browser; absent means light. Resolved in theme/phi-theme-mode.ts. */
+  mode?: PhiThemeModeSetting | null;
   /**
    * Which Theme blocks this Site follows (theme/phi-theme-blocks.ts). Absent on a Theme written before
    * a Theme had three parts, where `preset` alone named the palette and still does.

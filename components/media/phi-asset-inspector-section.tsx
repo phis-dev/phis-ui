@@ -8,7 +8,7 @@ import type { CSSProperties } from "react";
 import {
   PhiImageAssetVariantKeyName,
   PhiMediaKind,
-  isPhiMediaAssetPublic,
+  isPhiMediaAssetOriginalOptimizable,
   resolvePhiImageAssetVariantSpec,
 } from "../../constants/media";
 import type { PhiImageAssetVariantKeyValue, PhiMediaAsset } from "../../types/media";
@@ -156,7 +156,11 @@ export function PhiAssetInspectorSection({
     : null;
   const selectedVariantCoverImageStyle = variantPresentation?.simulatedCropStyle ?? null;
   const byteLabel = formatBytes(asset.bytes);
-  const unoptimizedPreview = !isPhiMediaAssetPublic(asset.deliveryPolicy, asset.lifecycleStatus);
+  /*
+   * Every picture below is the original: the variant previews draw the original with a simulated crop.
+   * So the one question is whether the optimiser may touch this original, which for an SVG it may not.
+   */
+  const unoptimizedPreview = !isPhiMediaAssetOriginalOptimizable(asset);
   return (
     <Flex
       vertical

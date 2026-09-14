@@ -47,7 +47,6 @@ export async function buildPhiDefaultEditorTranslationsPageTree({
   const scaffold = buildPhiBasePageContentScaffold({
     page,
     regionId: SYNTHETIC_EDITOR_TRANSLATIONS_REGION_IDS.regionContent,
-    regionConfig: { maxSize: { width: 1600 }, margin: "0 auto" },
   });
 
   return {

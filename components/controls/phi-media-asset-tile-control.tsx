@@ -5,7 +5,7 @@ import { Flex, Skeleton, Typography } from "antd";
 import NextImage from "next/image";
 import type { CSSProperties } from "react";
 
-import { PhiMediaKind, isPhiMediaAssetPublic } from "../../constants/media";
+import { PhiMediaKind, isPhiMediaAssetOriginalOptimizable, isPhiMediaAssetPublic } from "../../constants/media";
 import type { PhiControlSize } from "../../types/control";
 import type { PhiMediaAssetTile } from "../../types/media";
 import { resolvePhiMediaAssetDisplayDimensions } from "../media/phi-image-preview-data";
@@ -84,6 +84,8 @@ export function PhiMediaAssetTileControl({
   const isRestricted = !isPublic;
   const displayDimensions = resolvePhiMediaAssetDisplayDimensions(asset);
   const imageUrl = asset.thumbnailUrl ?? asset.previewUrl ?? asset.deliveryUrl;
+  // The thumbnail and the preview are raster variants; only the original can be an SVG the optimiser refuses.
+  const optimizable = imageUrl === asset.deliveryUrl ? isPhiMediaAssetOriginalOptimizable(asset) : isPublic;
   const cardStyle: CSSProperties = {
     border: `1px solid ${selected ? token.colorPrimary : token.colorBorderSecondary}`,
     borderRadius: token.borderRadiusLG,
@@ -133,7 +135,7 @@ export function PhiMediaAssetTileControl({
             alt={asset.altText ?? asset.title ?? asset.originalName}
             src={imageUrl}
             fill
-            unoptimized={!isPublic}
+            unoptimized={!optimizable}
             sizes={typeof minColumnWidth === "number" ? `${minColumnWidth}px` : minColumnWidth}
             placeholder={asset.blurDataUrl ? "blur" : "empty"}
             blurDataURL={asset.blurDataUrl ?? undefined}

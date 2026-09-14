@@ -89,7 +89,8 @@
 
 :where(.phi-builder-structure-region__slot[data-phi-builder-region-mode="editor"][data-phi-region-slot]) {
   border: 1px dashed var(--ant-color-border-secondary);
-  background: var(--ant-color-bg-container);
+  /* Half-transparent: an unauthored Region has no ground, and the Theme Root Background stays visible. */
+  background: color-mix(in srgb, var(--ant-color-bg-container) 50%, transparent);
   box-shadow: inset 0 0 0 1px var(--ant-color-border-secondary);
   padding: 0;
   gap: 0;
@@ -127,7 +128,8 @@
 
 :where(.phi-builder-structure-region__slot[data-phi-builder-region-mode="preview"][data-phi-region-slot]) {
   border: 1px dashed var(--ant-color-border-secondary);
-  background: var(--ant-color-bg-container);
+  /* Preview mirrors the live Shell, where an unauthored Region is transparent. */
+  background: transparent;
   box-shadow: none;
   padding: 0;
   gap: 0;

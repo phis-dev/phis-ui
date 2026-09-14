@@ -373,6 +373,13 @@ export function PhiCmsRegionContainerClient({
   const effectsAttributes = resolveRenderableBlockEffectsAttributes(renderableConfig);
   const viewportEffects = resolveRenderableBlockViewportEffects(renderableConfig);
   const shouldObserveVisibility = effectsAttributes?.["data-phi-effects-trigger"] === "on_visible";
+  /*
+   * A Region with a maximum width is a column in a full-width host, and the column sits in the middle:
+   * the block-level inline margins carry the centring, because the shell forces `margin: 0` below and
+   * a `margin` value in the Region config is not a thing the renderer reads.
+   */
+  const centreInlineStyle: CSSProperties =
+    !isSider && blockRuntime.state.maxSize?.width != null ? { marginInline: "auto" } : {};
   const runtimeStyle = {
     borderRadius: resolvedBorderRadius,
     ...(resolvedSize?.width == null ? {} : { width: resolvedSize.width }),
@@ -449,7 +456,7 @@ export function PhiCmsRegionContainerClient({
         {...effectsAttributes}
         data-phi-effects-state={blockRuntime.state.effectsState ?? effectsAttributes?.["data-phi-effects-state"]}
         className={["phi-cms-region-shell", className].filter(Boolean).join(" ")}
-        style={{ padding: 0, ...mergedStyle, margin: 0 }}
+        style={{ padding: 0, ...mergedStyle, margin: 0, ...centreInlineStyle }}
       >
         {backgroundMotionLayer}
         <div className="phi-cms-region-shell__content" style={regionPaddingStyle}>
@@ -587,7 +594,7 @@ export function PhiCmsRegionContainerClient({
         {...effectsAttributes}
         data-phi-effects-state={blockRuntime.state.effectsState ?? effectsAttributes?.["data-phi-effects-state"]}
         className={["phi-cms-region-shell", className].filter(Boolean).join(" ")}
-        style={{ padding: 0, ...mergedStyle, margin: 0 } as CSSProperties}
+        style={{ padding: 0, ...mergedStyle, margin: 0, ...centreInlineStyle } as CSSProperties}
       >
         {backgroundMotionLayer}
         <div className="phi-cms-region-shell__content" style={regionPaddingStyle}>
@@ -610,7 +617,7 @@ export function PhiCmsRegionContainerClient({
       {...effectsAttributes}
       data-phi-effects-state={blockRuntime.state.effectsState ?? effectsAttributes?.["data-phi-effects-state"]}
       className={["phi-cms-region-shell", className].filter(Boolean).join(" ")}
-      style={{ padding: 0, ...mergedStyle, margin: 0 } as CSSProperties}
+      style={{ padding: 0, ...mergedStyle, margin: 0, ...centreInlineStyle } as CSSProperties}
     >
       {backgroundMotionLayer}
       <div className="phi-cms-region-shell__content" style={regionPaddingStyle}>

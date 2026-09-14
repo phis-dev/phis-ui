@@ -1,7 +1,6 @@
 "use client";
 
 import {
-  createContext,
   cloneElement,
   isValidElement,
   useCallback,
@@ -28,19 +27,7 @@ import {
 } from "../../../helpers/layout-authoring-markers";
 
 export type { PhiBaseLayoutProps } from "../phi-layout-view-model";
-
-type PhiBaseLayoutSlotStateContextValue = {
-  parent: PhiBaseLayoutSlotStateContextValue | null;
-  slotStates: PhiBaseLayoutSlotState[];
-  setSlotState: (slotIndex: number, nextState: PhiBaseLayoutSlotState) => void;
-  toggleSlotState: (slotIndex: number) => void;
-  expandSlot: (slotIndex: number) => void;
-  collapseSlot: (slotIndex: number) => void;
-  hideSlot: (slotIndex: number) => void;
-  showSlot: (slotIndex: number) => void;
-};
-
-const PhiBaseLayoutSlotStateContext = createContext<PhiBaseLayoutSlotStateContextValue | null>(null);
+import { PhiBaseLayoutSlotStateContext, type PhiBaseLayoutSlotStateContextValue } from "../phi-layout-slot-state";
 
 function resolvePhiRenderableBlockStyleValue(value: number | string | null | undefined) {
   return value == null || value === 0 || value === "0" || value === "0px" ? undefined : value;
@@ -77,62 +64,14 @@ export function resolvePhiLayoutEmptySlotFrameStyle(options: {
   };
 }
 
-function resolvePhiBaseLayoutAncestorContext(
-  context: PhiBaseLayoutSlotStateContextValue | null,
-  ancestorLevel: number,
-) {
-  let current = context;
-  let remaining = ancestorLevel;
+export {
+  PhiBaseLayoutSlotScope,
+  usePhiBaseLayoutOwnSlotController,
+  usePhiBaseLayoutSlotController,
+  usePhiBaseLayoutSlotState,
+  usePhiBaseLayoutSlotStates,
+} from "../phi-layout-slot-state";
 
-  while (current && remaining > 0) {
-    current = current.parent;
-    remaining -= 1;
-  }
-
-  return current;
-}
-
-export function usePhiBaseLayoutSlotState(slotIndex: number, ancestorLevel = 0) {
-  const context = useContext(PhiBaseLayoutSlotStateContext);
-  const targetContext = resolvePhiBaseLayoutAncestorContext(context, ancestorLevel);
-  if (!targetContext) {
-    return null;
-  }
-
-  return targetContext.slotStates[slotIndex] ?? "expanded";
-}
-
-export function usePhiBaseLayoutSlotStates(ancestorLevel = 0) {
-  const context = useContext(PhiBaseLayoutSlotStateContext);
-  const targetContext = resolvePhiBaseLayoutAncestorContext(context, ancestorLevel);
-  if (!targetContext) {
-    return null;
-  }
-
-  return targetContext.slotStates;
-}
-
-export function usePhiBaseLayoutSlotController(slotIndex: number, ancestorLevel = 0) {
-  const context = useContext(PhiBaseLayoutSlotStateContext);
-  const targetContext = resolvePhiBaseLayoutAncestorContext(context, ancestorLevel);
-  const state = targetContext?.slotStates[slotIndex] ?? "expanded";
-
-  return useMemo(
-    () =>
-      targetContext
-        ? {
-            state,
-            setState: (nextState: PhiBaseLayoutSlotState) => targetContext.setSlotState(slotIndex, nextState),
-            toggle: () => targetContext.toggleSlotState(slotIndex),
-            expand: () => targetContext.expandSlot(slotIndex),
-            collapse: () => targetContext.collapseSlot(slotIndex),
-            hide: () => targetContext.hideSlot(slotIndex),
-            show: () => targetContext.showSlot(slotIndex),
-          }
-        : null,
-    [targetContext, slotIndex, state],
-  );
-}
 
 function usePhiBaseLayoutSlotStateContext(
   slotCount: number,

@@ -31,7 +31,9 @@ const PHI_FORM_LAYOUT_PANEL_PRESET = {
 
 export const PHI_FLEX_LAYOUT_DEFAULTS: PhiLayoutDefaults = {
     distribution: "anchor",
-    gap: 0,
+    // A fresh row starts left-aligned and vertically centred, its children one base margin apart.
+    anchor: { horizontal: "left", vertical: "middle" },
+    gap: PHI_MARGIN.base,
     verticalSeparators: false,
     separatorBeforeFirst: false,
     separatorSpan: "75%",

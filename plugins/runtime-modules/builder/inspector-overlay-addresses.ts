@@ -32,7 +32,8 @@ export const PHI_BUILDER_INSPECTOR_SECTION_WIDGET_IDS = createPhiPresetCmsInstan
   PHI_BUILDER_INSPECTOR_PRESET_IDENTITY,
   [
     "regionGeometry", "regionViewport", "regionPadding", "regionBackground", "regionBorder", "regionShadow",
-    "layoutSettings", "layoutAnchor", "layoutViewport", "layoutBackground", "layoutBorder", "layoutShadow", "layoutChrome", "layoutSignals",
+    "layoutSettings", "layoutAnchor", "layoutViewport", "layoutBackground", "layoutBorder", "layoutShadow", "layoutSignals",
     "widgetSettings", "widgetGeometry", "widgetViewport", "widgetSignals",
+    "layoutPadding",
   ],
 );

@@ -170,6 +170,11 @@ The site-owned Theme Root Background:
   is viewport-fixed, so `fixed` would be indistinguishable from `static` and is not offered for the Root
   Background; a record that still carries it renders as `static`. Under `parallax` the moving layer owns
   the image and the fixed layer keeps only the fallback ground beneath it
+- takes its picture from the Site's Media library alone (`PHI_ROOT_BACKGROUND_IMAGE_SOURCE_KINDS`): the
+  Theme workspace offers no field for an external image URL, because the ground every Page stands on
+  must not depend on a server outside the Site. A Theme block's inline picture still shows and is what a
+  saved Theme takes over into the library. A Background carries no alt text anywhere: it is painted as
+  CSS, which has none, so the Control shows no such field
 - has no Area-specific override in the v1 target contract
 - reaches the Page unobstructed: the shared page-content scaffold every built-in page preset roots
   on paints no ground of its own, so an unauthored page shows the Root Background behind its
@@ -310,6 +315,8 @@ Inside the shell page-content viewport, the page/layout renderer may define its 
 - anchor positioning
 
 That inner structure is intentionally not part of `shell.css`.
+
+A content Region spans the full page width; the built-in page presets set no reading width on it. A Region that is given a maximum width (`maxSize.width` in its config) is a column in a full-width host and centres itself there, in the live shell and in the Builder canvas alike. Siders are exempt, they size from their own width. There is no separate `margin` or `centered` setting for this.
 
 ## Where the Shell is not drawn
 

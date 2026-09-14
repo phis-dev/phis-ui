@@ -16,6 +16,7 @@ import { PhiLayoutAnchoredOverlay } from "./phi-layout-anchored-overlay";
 import {
   PhiBaseLayoutSlotStateProvider,
   usePhiBaseLayoutSlotStates,
+  PhiBaseLayoutSlotScope,
 } from "./phi-base-layout-client";
 import {
   resolvePhiBaseLayoutChrome,
@@ -468,14 +469,20 @@ function PhiCollapsibleLayoutBody({
                 minWidth: 0,
               }}
             >
-              <PhiLayoutAnchoredOverlay
-                anchor={resolvedSlotAnchor}
-                positionMode="flow"
-                fillAvailableInline
-                fillAvailableBlock={panelMinHeight != null}
-              >
-                {child}
-              </PhiLayoutAnchoredOverlay>
+              {/*
+                The scope wraps the overlay rather than the child: the overlay reads the child's slot
+                sizing off the element it is handed, and a provider in between would hide it.
+              */}
+              <PhiBaseLayoutSlotScope slotIndex={slotIndex}>
+                <PhiLayoutAnchoredOverlay
+                  anchor={resolvedSlotAnchor}
+                  positionMode="flow"
+                  fillAvailableInline
+                  fillAvailableBlock={panelMinHeight != null}
+                >
+                  {child}
+                </PhiLayoutAnchoredOverlay>
+              </PhiBaseLayoutSlotScope>
             </div>
           )
         : null;

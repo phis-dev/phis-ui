@@ -66,6 +66,7 @@ import { PHI_SPACING_TOKEN_KEYS } from "../../../../../components/widgets/config
 import { PhiColorWidget } from "../../../../../components/widgets/client/phi-color-widget";
 import { PhiBackgroundControl, type PhiBackgroundControlProps } from "../../../../../components/controls/phi-background-control";
 import {
+  PHI_ROOT_BACKGROUND_IMAGE_SOURCE_KINDS,
   PHI_ROOT_BACKGROUND_MOTION_MODES,
   resolvePhiRootBackgroundPaintStyle,
 } from "../../../../../components/root/phi-root-background";
@@ -2377,6 +2378,7 @@ export function PhiBuilderBrandBackgroundControlsWidgetClient({
                     key={mode}
                     value={rootBackground}
                     motionModes={PHI_ROOT_BACKGROUND_MOTION_MODES}
+                    imageSourceKinds={PHI_ROOT_BACKGROUND_IMAGE_SOURCE_KINDS}
                     renderMediaPicker={renderPhiThemeRootBackgroundMediaPicker}
                     onChange={(value) => publishDraft(mergeThemeRootBackground(state.draft, mode, value))}
                   />

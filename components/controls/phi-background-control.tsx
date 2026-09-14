@@ -15,6 +15,8 @@ import type {
 } from "../widgets/config/background";
 import {
   PHI_BACKGROUND_BASE_KINDS,
+  PHI_BACKGROUND_IMAGE_SOURCE_KINDS,
+  type PhiBackgroundImageSourceKind,
   PHI_BACKGROUND_MOTION_MODES,
   PHI_BACKGROUND_PARALLAX_DEFAULT_STRENGTH,
   phiBackgroundBaseSupportsGlassEffect,
@@ -82,6 +84,15 @@ export type PhiBackgroundControlProps = {
    * `dim` would take the Header's text with them and only `glass` describes anything there.
    */
   effects?: readonly PhiLayoutEffectId[];
+  /**
+   * Where an image Base may take its picture from, defaulting to the full contract.
+   *
+   * Same rule again. The Theme Root Background is the Site's own ground and takes its picture from the
+   * Site's Media library; an external URL there would tie the look every Page stands on to a server
+   * nobody here controls. A block's inline picture still shows and is still what a saved Theme takes
+   * over -- it is only the field for typing another address that the surface does not offer.
+   */
+  imageSourceKinds?: readonly PhiBackgroundImageSourceKind[];
   /**
    * The Base kinds this surface can actually render, defaulting to the full contract.
    *
@@ -199,6 +210,7 @@ export function PhiBackgroundControl({
   colorPickerPlacement,
   motionModes = PHI_BACKGROUND_MOTION_MODES,
   effects = PHI_LAYOUT_EFFECT_IDS,
+  imageSourceKinds = PHI_BACKGROUND_IMAGE_SOURCE_KINDS,
   baseKinds = PHI_BACKGROUND_BASE_KINDS,
   renderMediaPicker,
   onChange,
@@ -600,7 +612,7 @@ export function PhiBackgroundControl({
   }
 
   function updateImageField(
-    field: "sourceUrl" | "alt" | "position" | "size" | "repeat",
+    field: "sourceUrl" | "position" | "size" | "repeat",
     next: string,
   ) {
     if (currentValue.base.kind !== "image") {
@@ -730,7 +742,6 @@ export function PhiBackgroundControl({
           variantKey: null,
           variantVersion: asset.variantVersion ?? null,
           trusted: true,
-          alt: asset.altText ?? undefined,
           blurDataUrl: undefined,
           resolvedAsset,
           position: undefined,
@@ -753,7 +764,6 @@ export function PhiBackgroundControl({
         variantKey: selectedVariantKey,
         variantVersion: asset.variantVersion ?? null,
         trusted: true,
-        alt: asset.altText ?? currentValue.base.alt ?? undefined,
         blurDataUrl: undefined,
         resolvedAsset,
         position: undefined,
@@ -963,7 +973,7 @@ export function PhiBackgroundControl({
               {labels.motion.usesOriginal}
             </Typography.Text>
           ) : null}
-          {currentValue.base.sourceKind === "url" ? (
+          {currentValue.base.sourceKind === "url" && imageSourceKinds.includes("url") ? (
             <Input
               value={currentValue.base.sourceUrl ?? ""}
               disabled={isDisabled}
@@ -971,12 +981,6 @@ export function PhiBackgroundControl({
               onChange={(event) => updateImageField("sourceUrl", event.target.value)}
             />
           ) : null}
-          <Input
-            value={currentValue.base.alt ?? ""}
-            disabled={isDisabled}
-            placeholder={labels.placeholders.sourceAlt}
-            onChange={(event) => updateImageField("alt", event.target.value)}
-          />
           <div
             style={{
               display: "grid",

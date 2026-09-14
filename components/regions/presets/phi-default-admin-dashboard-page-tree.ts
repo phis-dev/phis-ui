@@ -97,7 +97,7 @@ export async function buildPhiDefaultAdminDashboardPageTree({
   const scaffold = buildPhiBasePageContentScaffold({
     page,
     regionId: SYNTHETIC_ADMIN_DASHBOARD_REGION_IDS.regionContent,
-    regionConfig: { maxSize: { width: 1120 }, margin: "0 auto", border: false },
+    regionConfig: { border: false },
   });
 
   return {
