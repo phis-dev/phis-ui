@@ -14,6 +14,7 @@ import type {
 } from "../types/widget-runtime";
 import type { PhiSiteFontSlots, PhiSiteRemSettings } from "../types/site-theme";
 import {
+  PHI_DEFAULT_THEME_MODE_PREFERENCE,
   readPhiColorSchemeHintFromCookieHeader,
   resolvePhiThemeMode,
 } from "../theme/phi-theme-mode";
@@ -288,11 +289,7 @@ export async function getPhiCmsRuntimeInfo({
     },
     themeRevision: site.themeRevision,
     theme: {
-      /* The widget runtime carries the projection, never the `system` setting behind it. */
-      mode: resolvePhiThemeMode(
-        site.theme?.mode,
-        readPhiColorSchemeHintFromCookieHeader(cookieHeader),
-      ),
+      mode: site.theme?.mode === "dark" ? "dark" : "light",
       ...(site.theme?.preset ? { preset: site.theme.preset } : {}),
       ...(site.theme?.presetVersion != null ? { presetVersion: site.theme.presetVersion } : {}),
       ...(site.theme?.fonts ? { fonts: site.theme.fonts } : {}),
@@ -306,6 +303,16 @@ export async function getPhiCmsRuntimeInfo({
       ...(site.theme?.components ? { components: site.theme.components } : {}),
     },
   };
+
+  /*
+   * The mode this viewer is shown until something overrides it live. It sits beside the viewer's
+   * other preferences rather than in `site.theme`, which stays the Theme record the Theme workspace
+   * builds its draft from. A stored user setting will take the default's place here.
+   */
+  const viewerThemeMode = resolvePhiThemeMode(
+    PHI_DEFAULT_THEME_MODE_PREFERENCE,
+    readPhiColorSchemeHintFromCookieHeader(cookieHeader),
+  );
 
   const response = await fetch(buildApiUrl(resolvedRuntime.apiBaseUrl, "/api/auth/me"), {
     headers: buildApiHeaders({
@@ -335,6 +342,7 @@ export async function getPhiCmsRuntimeInfo({
         authorizationRevision: 0,
         userName: null,
         userEmail: null,
+        themeMode: viewerThemeMode,
       },
     };
   }
@@ -390,6 +398,7 @@ export async function getPhiCmsRuntimeInfo({
         authorizationRevision: 0,
         userName: null,
         userEmail: null,
+        themeMode: viewerThemeMode,
       },
     };
   }
@@ -442,6 +451,7 @@ export async function getPhiCmsRuntimeInfo({
             : 0,
         siteFlags: Number.isInteger(payload.user?.siteFlags) ? (payload.user?.siteFlags as number) : 0,
         newsletterOptIn: payload.user?.newsletterOptIn ?? null,
+        themeMode: viewerThemeMode,
         userName: payload.user?.name ?? null,
         userEmail: payload.user?.email ?? null,
         preferredLocale: payload.user?.preferredLocale ?? null,

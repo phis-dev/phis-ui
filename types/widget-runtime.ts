@@ -108,6 +108,12 @@ export type PhiBlockRuntimeViewer = {
   userName?: string | null;
   userEmail?: string | null;
   preferredLocale?: string | null;
+  /**
+   * The mode this viewer is shown before anything overrides it live: their preference, or the
+   * browser's where they have none, or light. Not the Theme record's `site.theme.mode`, which names
+   * the half of the Theme being authored. Absent on surfaces that never resolve a viewer.
+   */
+  themeMode?: PhiWidgetThemeMode;
   newsletterOptIn?: boolean | null;
   profile?: {
     firstName?: string | null;

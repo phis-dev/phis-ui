@@ -18,7 +18,7 @@ import { resolvePhiThemeRuntimePayload } from "../../theme/phi-theme-runtime";
 import {
   applyPhiThemeModeToDocument,
   writePhiColorSchemeHint,
-  type PhiThemeModeSetting,
+  type PhiThemeModePreference,
 } from "../../theme/phi-theme-mode";
 import { resolvePhiPublishedThemeCustomColors } from "../../theme/phi-theme-palette";
 import { PhiConfigProvider } from "./phi-config-provider";
@@ -43,7 +43,7 @@ export function PhiRootLiveThemeProvider({
   siteTheme,
   locale,
   initialMode,
-  themeModeSetting,
+  themeModePreference,
   initialLocale,
   availableLocales,
   fonts,
@@ -58,8 +58,8 @@ export function PhiRootLiveThemeProvider({
   siteTheme: PhiSiteTheme;
   locale: ConfigProviderProps["locale"];
   initialMode: PhiThemeMode;
-  /** What the Site configured. `system` is the only value that lets the browser have a say. */
-  themeModeSetting: PhiThemeModeSetting;
+  /** How the viewer wants to see the Site. `system` is the only value that lets the browser have a say. */
+  themeModePreference: PhiThemeModePreference;
   initialLocale: string;
   availableLocales: readonly string[];
   fonts: PhiRootThemeFonts;
@@ -123,11 +123,11 @@ export function PhiRootLiveThemeProvider({
   }, [mode]);
 
   /*
-   * A Site on `system` follows the browser for as long as nobody has overridden it live. The hint is
+   * A viewer on `system` follows the browser for as long as nobody has overridden it live. The hint is
    * stored so the next server render starts in the right mode instead of correcting itself.
    */
   useEffect(() => {
-    if (themeModeSetting !== "system") {
+    if (themeModePreference !== "system") {
       return;
     }
 
@@ -143,7 +143,7 @@ export function PhiRootLiveThemeProvider({
     apply();
     query.addEventListener("change", apply);
     return () => query.removeEventListener("change", apply);
-  }, [themeModeSetting]);
+  }, [themeModePreference]);
 
   usePhiSignalListener((signal) => {
     if (signal.receiver !== coreAddress || signal.scope !== "site") {

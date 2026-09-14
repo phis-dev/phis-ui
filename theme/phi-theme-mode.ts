@@ -1,26 +1,27 @@
 import type { PhiThemeMode } from "./phi-theme-presets";
 
 /**
- * What a Site configures, as opposed to what is rendered. `PhiThemeMode` stays the resolved
- * light/dark projection every consumer below the root reads; only the Site record and the
- * resolution in this file know that a third choice exists.
+ * How a viewer wants to see a Site. It is never part of a Theme: a Theme record and its drafts carry
+ * only light or dark, the half of the Theme being authored. `system` exists only here, as a person's
+ * preference - stored in their user settings once those exist - or as the browser speaking for them.
  */
-export type PhiThemeModeSetting = PhiThemeMode | "system";
+export type PhiThemeModePreference = PhiThemeMode | "system";
 
 /**
- * Carries the browser's `prefers-color-scheme` answer from one request to the next, so a Site set
- * to `system` renders the right projection server-side instead of correcting itself after
- * hydration. It holds what the browser reported, never what a person chose - a stored preference
- * belongs to the user profile and outranks this hint once it exists.
+ * The preference of a viewer who has stated none, which today is every viewer: follow the browser.
+ * A stored user setting is meant to replace this value where it is read.
+ */
+export const PHI_DEFAULT_THEME_MODE_PREFERENCE: PhiThemeModePreference = "system";
+
+/**
+ * Carries the browser's `prefers-color-scheme` answer from one request to the next, so a viewer on
+ * `system` is rendered in the right projection server-side instead of correcting itself after
+ * hydration. It holds what the browser reported, never what a person chose.
  */
 export const PHI_COLOR_SCHEME_COOKIE = "phis_color_scheme";
 
-/**
- * `system` has to be stated. A record without a mode - every Theme written before the third choice
- * existed - keeps rendering light, as it always did; new Sites are created with `system` instead.
- */
-export function normalizePhiThemeModeSetting(value: unknown): PhiThemeModeSetting {
-  return value === "dark" || value === "system" ? value : "light";
+export function normalizePhiThemeModePreference(value: unknown): PhiThemeModePreference {
+  return value === "light" || value === "dark" ? value : "system";
 }
 
 /** Reads the cookie value written by the bootstrap script; anything else means "not asked yet". */
@@ -29,16 +30,17 @@ export function normalizePhiColorSchemeHint(value: unknown): PhiThemeMode | null
 }
 
 /**
- * The one place that decides what is painted. A Site on light or dark keeps it; `system` follows
- * the browser, and falls back to light when the browser states no preference or has not been asked
- * yet. A stored user preference is meant to enter here as a fourth argument later, ahead of the
- * Site setting.
+ * The one place that decides what a viewer is shown before anyone overrides it live. A stated light
+ * or dark preference is kept; `system` follows the browser and falls back to light when the browser
+ * states nothing or has not been asked yet. The Theme record's own mode takes no part: a live
+ * `themeMode` or `theme` signal - the Builder's switch, a draft preview - is what overrides this, in
+ * any Area, and only for as long as the page stays open.
  */
 export function resolvePhiThemeMode(
-  setting: unknown,
+  preference: unknown,
   browserHint?: PhiThemeMode | null,
 ): PhiThemeMode {
-  const normalized = normalizePhiThemeModeSetting(setting);
+  const normalized = normalizePhiThemeModePreference(preference);
 
   if (normalized !== "system") {
     return normalized;
@@ -48,13 +50,12 @@ export function resolvePhiThemeMode(
 }
 
 /**
- * Inline script for the document head, emitted only for a Site on `system`. It marks the root
+ * Inline script for the document head, emitted only for a viewer on `system`. It marks the root
  * element before first paint and writes the hint cookie, so the very next request already renders
- * the right projection: the first view of a Site may still swing once, every later navigation
- * within it is quiet.
+ * the right projection: the first view may still swing once, every later navigation is quiet.
  */
-export function buildPhiThemeModeBootstrapScript(setting: PhiThemeModeSetting): string | null {
-  if (setting !== "system") {
+export function buildPhiThemeModeBootstrapScript(preference: PhiThemeModePreference): string | null {
+  if (preference !== "system") {
     return null;
   }
 

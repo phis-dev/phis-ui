@@ -18,9 +18,9 @@ import { loadPhiRootLayoutContext } from "../server-helpers/root-layout";
 import { resolvePhiResolvedRequestLocale } from "../server-helpers/request-locale";
 import {
   PHI_COLOR_SCHEME_COOKIE,
+  PHI_DEFAULT_THEME_MODE_PREFERENCE,
   buildPhiThemeModeBootstrapScript,
   normalizePhiColorSchemeHint,
-  normalizePhiThemeModeSetting,
   resolvePhiThemeMode,
 } from "../theme/phi-theme-mode";
 
@@ -83,17 +83,18 @@ export function createPhiNextRootLayout(siteModules: PhiSiteModuleServerAreaCont
     ]);
     const remRootValue = site.theme?.rem?.rootValue ?? 16;
     /*
-     * The projection is decided here as well as inside PhiRootLayout, because <html> carries the
-     * marker and the colour scheme: without them the document ground and the native controls would
-     * stay light until the layout below mounts. The hint cookie is written by the bootstrap script
-     * on the first view, so every later request already renders the right projection server-side.
+     * What a viewer is shown follows their preference, never the Site Theme record, and it is the
+     * same in every Area: the Builder overrides it live through its switch rather than through a
+     * different starting point. The projection is decided here as well as inside PhiRootLayout,
+     * because <html> carries the marker and the colour scheme: without them the document ground and
+     * the native controls would stay light until the layout below mounts.
      */
-    const themeModeSetting = normalizePhiThemeModeSetting(site.theme?.mode);
+    const themeModePreference = PHI_DEFAULT_THEME_MODE_PREFERENCE;
     const browserColorScheme = normalizePhiColorSchemeHint(
       (await cookies()).get(PHI_COLOR_SCHEME_COOKIE)?.value,
     );
-    const themeMode = resolvePhiThemeMode(themeModeSetting, browserColorScheme);
-    const bootstrapScript = buildPhiThemeModeBootstrapScript(themeModeSetting);
+    const themeMode = resolvePhiThemeMode(themeModePreference, browserColorScheme);
+    const bootstrapScript = buildPhiThemeModeBootstrapScript(themeModePreference);
 
     return (
       <html
@@ -109,6 +110,7 @@ export function createPhiNextRootLayout(siteModules: PhiSiteModuleServerAreaCont
         </head>
         <body>
           <PhiRootLayout
+            themeModePreference={themeModePreference}
             browserColorScheme={browserColorScheme}
             apiBaseUrl={runtimeConfig.phis.apiBaseUrl}
             internalToken={runtimeConfig.phis.internalToken}

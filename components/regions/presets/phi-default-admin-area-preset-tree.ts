@@ -237,7 +237,7 @@ export async function buildPhiDefaultAdminAreaPresetTree({
         visibilityMask: page.visibilityMask,
         label: "Theme mode switch",
         config: {
-          defaultChecked: runtime.site.theme?.mode === "dark",
+          defaultChecked: runtime.viewer.themeMode === "dark",
           checkedChildren: "Dark",
           unCheckedChildren: "Light",
           key: "themeMode",
