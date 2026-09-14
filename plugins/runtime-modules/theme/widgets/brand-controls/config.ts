@@ -4,6 +4,7 @@ import {
   type PhiCmsAreaKey,
 } from "../../../../../constants/cms-areas";
 import { PHI_MEDIA_LIBRARY_DATA_PROVIDER_KEYS } from "../../../../../constants/media-library-provider-keys";
+import { PHI_BUILDER_RUNTIME_DATA_PROVIDER_KEYS } from "../../../builder/ids";
 import { PHI_THEME_SIGNAL_CHANNELS } from "../../../../../plugins/runtime-modules/theme/controller/signals";
 import { createPhiCmsWidgetDefinition } from "../../../../../components/widgets/config/helpers";
 import { readString } from "../../../../../components/widgets/config/parser-primitives";
@@ -44,6 +45,30 @@ export const PHI_BUILDER_BRAND_THEME_CONTROLS_WIDGET_DEFINITION: PhiBuilderBrand
   category: "configuration",
   iconFamily: "theme",
   slotSizePolicy: "fill-inline",
+  fields: [
+    { key: "themeKey", type: "string", label: "Theme Key" },
+    { key: "reviewArea", type: "string", label: "Review Area" },
+  ],
+  parseConfig: parseBuilderBrandWidgetConfig,
+});
+
+export const PHI_BUILDER_BRAND_IDENTITY_CONTROLS_WIDGET_DEFINITION: PhiBuilderBrandWidgetDefinition = createPhiCmsWidgetDefinition({
+  typeKey: "builder-brand-identity-controls",
+  title: "Builder Brand Identity Controls",
+  description: "Logo and Wordmark for the brand Builder workspace.",
+  category: "configuration",
+  iconFamily: "theme",
+  slotSizePolicy: "fill-inline",
+  /*
+   * The Logo is picked from the Media library and the Brand's link from the Page catalogue, and a Page
+   * mounts only the Data Providers its tree asks for. The scan reads this declaration; a Provider a
+   * Widget reaches for from inside its client code is invisible to it. Same reason the Background
+   * panel declares its own.
+   */
+  requiredDataProviders: [
+    PHI_MEDIA_LIBRARY_DATA_PROVIDER_KEYS.collection,
+    PHI_BUILDER_RUNTIME_DATA_PROVIDER_KEYS.builderPages,
+  ],
   fields: [
     { key: "themeKey", type: "string", label: "Theme Key" },
     { key: "reviewArea", type: "string", label: "Review Area" },

@@ -1,5 +1,11 @@
 import type { PhiShellTheme } from "../components/shell/shell-types";
-import type { PhiSiteFontSlots, PhiSiteRemSettings, PhiSiteThemeRoot } from "./site-theme";
+import type {
+  PhiSiteFontSlots,
+  PhiSiteRemSettings,
+  PhiSiteThemeBrand,
+  PhiSiteThemeContact,
+  PhiSiteThemeRoot,
+} from "./site-theme";
 import type { PhiThemeMode, PhiThemePalette } from "../theme/phi-theme-presets";
 import type { PhiThemeBlockSelection } from "../theme/phi-theme-composition";
 import type { PhiThemeDerivation } from "../theme/phi-theme-selection";
@@ -57,29 +63,8 @@ export type PhiBlockRuntimeSite = {
     } | null;
     fonts?: PhiSiteFontSlots | null;
     rem?: PhiSiteRemSettings | null;
-    brand?: {
-      logoAssetId?: number | null;
-      slogan?: {
-        label?: string | null;
-        icon?: string | null;
-      } | null;
-      location?: {
-        label?: string | null;
-        icon?: string | null;
-      } | null;
-      wordmark?: {
-        parts?: Array<{
-          text: string;
-          color?: string | null;
-          fontWeight?: number | string | null;
-        }> | null;
-      } | null;
-    };
-    contact?: {
-      label?: string | null;
-      href?: string | null;
-      icon?: string | null;
-    };
+    brand?: PhiSiteThemeBrand;
+    contact?: PhiSiteThemeContact;
     shell?: PhiShellTheme;
     root?: PhiSiteThemeRoot | null;
     palette?: PhiThemePalette | null;

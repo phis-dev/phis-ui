@@ -4,7 +4,13 @@ import "server-only";
 import { buildApiHeaders, buildApiUrl } from "../helpers/site-api";
 import type { PhiShellTheme } from "../components/shell/shell-types";
 import { getSiteConfigCacheTag } from "./cache-tags";
-import type { PhiSiteFontSlots, PhiSiteRemSettings, PhiSiteThemeRoot } from "../types/site-theme";
+import type {
+  PhiSiteFontSlots,
+  PhiSiteRemSettings,
+  PhiSiteThemeBrand,
+  PhiSiteThemeContact,
+  PhiSiteThemeRoot,
+} from "../types/site-theme";
 import type { PhiThemePalette } from "../theme/phi-theme-presets";
 import type { PhiThemeBlockSelection } from "../theme/phi-theme-composition";
 import type { PhiControlShapeCorners } from "../theme/phi-control-shape";
@@ -22,36 +28,8 @@ export type PhiSiteTheme = {
     controls?: PhiControlShapeCorners | null;
   } | null;
   fonts?: PhiSiteFontSlots;
-  contact?: {
-    label?: string | null;
-    href?: string | null;
-    icon?: string | null;
-  } | null;
-  brand?: {
-    homeHref?: string | null;
-    eyebrow?: string | null;
-    logoAssetId?: number | null;
-    slogan?: {
-      label?: string | null;
-      icon?: string | null;
-    } | null;
-    location?: {
-      label?: string | null;
-      icon?: string | null;
-    } | null;
-    logoUrl?: string | null;
-    logoAlt?: string | null;
-    wordmark?: {
-      fontFamily?: string | null;
-      fontWeight?: number | string | null;
-      letterSpacing?: string | null;
-      parts?: Array<{
-        text: string;
-        color?: string | null;
-        fontWeight?: number | string | null;
-      }>;
-    } | null;
-  } | null;
+  contact?: PhiSiteThemeContact | null;
+  brand?: PhiSiteThemeBrand | null;
   widgets?: {
     locale?: {
       mode?: "label-list" | "compact-pill" | null;

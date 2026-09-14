@@ -114,6 +114,7 @@ const PHI_BUILDER_LAYOUT_NODE_KEYS = [
   "layoutBrandCardsRow",
   "layoutBrandStylePanel",
   "layoutBrandBackgroundPanel",
+  "layoutBrandIdentityPanel",
   "layoutWorkspaceHeader",
 ] as const;
 
@@ -155,6 +156,8 @@ const PHI_BUILDER_WIDGET_NODE_KEYS = [
   "widgetBrandStylePreview",
   "widgetBrandBackgroundControls",
   "widgetBrandBackgroundPreview",
+  "widgetBrandIdentityControls",
+  "widgetBrandIdentityPreview",
 ] as const;
 
 const SYNTHETIC_DEV_WIDGET_IDS = createPhiPresetCmsInstanceIdMap({
@@ -1877,6 +1880,33 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
               flags: 0,
               visibilityMask: page.visibilityMask,
               label: "Background",
+              config: {
+                gap: PHI_SPACE.base,
+                anchor: {
+                  horizontal: "left",
+                  vertical: "top",
+                },
+                wrap: true,
+                padding: 0,
+                paddingLeft: 0,
+                paddingRight: 0,
+                background: "transparent",
+                border: "none",
+                borderRadius: 0,
+              },
+            }),
+            buildPhiCmsLayoutNode({
+              creationPreset: { layoutKind: "flex", preset: "panel" },
+              typeKey: "flex",
+              id: SYNTHETIC_DEV_LAYOUT_IDS.layoutBrandIdentityPanel,
+              siteId: page.siteId,
+              parentLayoutNodeId: SYNTHETIC_DEV_LAYOUT_IDS.layoutBrandStack,
+              slotIndex: PHI_CMS_SEQUENTIAL_LAYOUT_SLOTS[3].slotIndex,
+              sortOrder: 3,
+              status: PhiCmsStatus.Published,
+              flags: 0,
+              visibilityMask: page.visibilityMask,
+              label: "Brand",
               config: {
                 gap: PHI_SPACE.base,
                 anchor: {
@@ -4050,6 +4080,48 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                   flags: 0,
                   visibilityMask: page.visibilityMask,
                   label: "dev brand style preview",
+                  config: {
+                    themeKey: "default",
+                    minSize: { width: 360 },
+                  },
+                  contentId: null,
+                }),
+                buildPhiCmsWidgetNode({
+                  typeKey: "builder-brand-identity-controls",
+                  id: SYNTHETIC_DEV_WIDGET_IDS.widgetBrandIdentityControls,
+                  siteId: page.siteId,
+                  parentLayoutNodeId: SYNTHETIC_DEV_LAYOUT_IDS.layoutBrandIdentityPanel,
+                  slotIndex: PHI_CMS_SEQUENTIAL_LAYOUT_SLOTS[0].slotIndex,
+                  sortOrder: 0,
+                  status: PhiCmsStatus.Published,
+                  flags: 0,
+                  visibilityMask: page.visibilityMask,
+                  label: "dev brand identity controls",
+                  config: {
+                    themeKey: "default",
+                    minSize: { width: 300 },
+                    maxSize: { width: 400 },
+                  },
+                  contentId: null,
+                }),
+                /*
+                 * The fourth instance of the one Preview Widget, not a fourth Preview.
+                 *
+                 * The Stack mounts only its active slot, so exactly one of them is alive at a time; a
+                 * freshly mounted one asks the Controller for the draft rather than waiting for the next
+                 * broadcast. Standing beside its own panel is the whole reason there is more than one.
+                 */
+                buildPhiCmsWidgetNode({
+                  typeKey: "builder-brand-theme-preview",
+                  id: SYNTHETIC_DEV_WIDGET_IDS.widgetBrandIdentityPreview,
+                  siteId: page.siteId,
+                  parentLayoutNodeId: SYNTHETIC_DEV_LAYOUT_IDS.layoutBrandIdentityPanel,
+                  slotIndex: PHI_CMS_SEQUENTIAL_LAYOUT_SLOTS[1].slotIndex,
+                  sortOrder: 1,
+                  status: PhiCmsStatus.Published,
+                  flags: 0,
+                  visibilityMask: page.visibilityMask,
+                  label: "dev brand identity preview",
                   config: {
                     themeKey: "default",
                     minSize: { width: 360 },

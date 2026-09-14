@@ -28,10 +28,17 @@ const PUB_HEADER_MAIN_REGION: PhiCmsResolvedRegion = {
   flags: 0,
   visibilityMask: 0,
   sortOrder: 0,
+  /*
+   * No Effect here, deliberately.
+   *
+   * A Region that authors an Effect paints itself and is locked out of the Shell Chrome Overlay
+   * (`phiRegionUsesShellChromeOverlay`), so the `glass` that used to stand here decided for every Site
+   * following this Preset that its Header would never take the Theme's frame. Glass is a Theme
+   * decision now, made once for all eight Chrome Regions; a Preset that wants it says so in the Theme.
+   */
   config: {
     mode: "light",
     sticky: true,
-    effect: "glass",
     shadow: "none",
     border: false,
     size: { height: "55px" },

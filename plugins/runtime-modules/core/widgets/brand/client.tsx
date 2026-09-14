@@ -12,7 +12,6 @@ import type { PhiClientBlockBaseProps, PhiNoLabels } from "../../../../../types"
 type PhiBrandTheme = NonNullable<PhiSiteTheme["brand"]>;
 type PhiBrandWordmark = NonNullable<PhiBrandTheme["wordmark"]>;
 type PhiBrandWordmarkPart = NonNullable<PhiBrandWordmark["parts"]>[number];
-const PHI_DEFAULT_BRAND_LOGO_URL = "/phis_logo_1024w.png";
 const PHI_FONT_SIZE_XL = "1.25rem";
 const PHI_LINE_HEIGHT_LG = 1.6;
 
@@ -42,17 +41,23 @@ function renderWordmark(
   fallbackTitle?: ReactNode,
   fallbackStyle?: CSSProperties,
 ) {
-  if (!hasWordmarkParts(wordmark?.parts)) {
-    return fallbackTitle ? <strong style={fallbackStyle}>{fallbackTitle}</strong> : null;
-  }
-
   const wordmarkStyle: CSSProperties = {
     ...(fallbackStyle ?? {}),
     ...(wordmark?.fontFamily ? { fontFamily: wordmark.fontFamily } : {}),
     ...(wordmark?.fontWeight ? { fontWeight: wordmark.fontWeight } : {}),
+    ...(wordmark?.fontStyle ? { fontStyle: wordmark.fontStyle } : {}),
     ...(wordmark?.letterSpacing ? { letterSpacing: wordmark.letterSpacing } : {}),
     lineHeight: 1.1,
   };
+
+  /*
+   * The typography applies to the fallback too. Where no part is set the Site's own name IS the
+   * Wordmark, and setting its face, weight or tracking used to do nothing at all until somebody first
+   * added a part -- the controls looked broken for exactly the Sites that had not started yet.
+   */
+  if (!hasWordmarkParts(wordmark?.parts)) {
+    return fallbackTitle ? <strong style={wordmarkStyle}>{fallbackTitle}</strong> : null;
+  }
 
   return (
     <span style={wordmarkStyle}>
@@ -83,7 +88,12 @@ export function PhiBrandWidgetClient({
     fontSize: PHI_FONT_SIZE_XL,
     lineHeight: PHI_LINE_HEIGHT_LG,
   });
-  const logoUrl = brand?.logoUrl?.trim() || PHI_DEFAULT_BRAND_LOGO_URL;
+  /*
+   * No Logo means no Logo. It used to mean the Phi logo, which was a placeholder from before a Site
+   * could set one of its own -- every Site that had not picked a picture wore ours, and there was no
+   * way to say "wordmark only" at all. The Wordmark carries the Brand where nothing is picked.
+   */
+  const logoUrl = brand?.logoUrl?.trim() || null;
   const logoAlt = brand?.logoAlt?.trim() || "Brand logo";
   const homeHref = brand?.homeHref?.trim() || "/";
   const showLogo = config?.showLogo !== false;
@@ -127,7 +137,7 @@ export function PhiBrandWidgetClient({
         </span>
       ) : null}
       <Flex vertical gap={0} justify="center">
-        {false && eyebrow ? (
+        {eyebrow ? (
           <span style={{ display: "block", fontSize: "var(--ant-font-size-sm)", opacity: 0.75 }}>
             {eyebrow}
           </span>

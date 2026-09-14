@@ -2,12 +2,14 @@ import type { PhiCmsWidgetPlugin } from "../../../../../types";
 import { PhiWidgetPreviewFallback } from "../../../../../components/widgets/built-in/widget-preview";
 import {
   PhiBuilderBrandBackgroundControlsWidgetClient,
+  PhiBuilderBrandIdentityControlsWidgetClient,
   PhiBuilderBrandStyleControlsWidgetClient,
   PhiBuilderBrandThemeControlsWidgetClient,
   PhiBuilderBrandThemePreviewWidgetClient,
 } from "./client";
 import {
   PHI_BUILDER_BRAND_BACKGROUND_CONTROLS_WIDGET_DEFINITION,
+  PHI_BUILDER_BRAND_IDENTITY_CONTROLS_WIDGET_DEFINITION,
   PHI_BUILDER_BRAND_STYLE_CONTROLS_WIDGET_DEFINITION,
   PHI_BUILDER_BRAND_THEME_CONTROLS_WIDGET_DEFINITION,
   PHI_BUILDER_BRAND_THEME_PREVIEW_WIDGET_DEFINITION,
@@ -59,6 +61,18 @@ export const PHI_BUILDER_BRAND_BACKGROUND_CONTROLS_WIDGET_PLUGIN: PhiCmsWidgetPl
       widget={widget}
       pluginTitle="Builder Brand Background Controls"
       summary="The Theme Root Background is authored live in the builder."
+    />
+  ),
+};
+
+export const PHI_BUILDER_BRAND_IDENTITY_CONTROLS_WIDGET_PLUGIN: PhiCmsWidgetPlugin<PhiBuilderBrandWidgetConfig> = {
+  ...PHI_BUILDER_BRAND_IDENTITY_CONTROLS_WIDGET_DEFINITION,
+  render: ({ runtime, config }) => <PhiBuilderBrandIdentityControlsWidgetClient runtime={runtime} config={config} />,
+  renderPreview: ({ widget }) => (
+    <PhiWidgetPreviewFallback
+      widget={widget}
+      pluginTitle="Builder Brand Identity Controls"
+      summary="The Logo and the Wordmark are authored live in the builder."
     />
   ),
 };

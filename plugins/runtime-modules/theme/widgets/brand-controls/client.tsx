@@ -2,7 +2,8 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
 
-import { Button, Card, Collapse, ConfigProvider, Divider, Flex, Form, Input, Space, Statistic, Switch, Tag, Typography, theme as antdTheme } from "antd";
+import { Button, Card, Collapse, ConfigProvider, Divider, Flex, Form, Input, Select, Space, Statistic, Switch, Tag, Typography, theme as antdTheme } from "antd";
+import { DeleteOutlined } from "@ant-design/icons";
 import type { AliasToken } from "antd/es/theme/interface";
 import type { PhiColorPickerLabels } from "../../../../../components/widgets/label-types/color-picker";
 
@@ -64,6 +65,7 @@ import {
 } from "../../../../../components/widgets/config/color-picker-presets";
 import { PHI_SPACING_TOKEN_KEYS } from "../../../../../components/widgets/config/spacing-options";
 import { PhiColorWidget } from "../../../../../components/widgets/client/phi-color-widget";
+import { PhiBrandWidgetClient } from "../../../core/widgets/brand/client";
 import { PhiBackgroundControl, type PhiBackgroundControlProps } from "../../../../../components/controls/phi-background-control";
 import {
   PHI_ROOT_BACKGROUND_IMAGE_SOURCE_KINDS,
@@ -84,11 +86,23 @@ import { normalizePhiBackgroundWidgetConfig, type PhiCmsBackgroundWidgetConfig }
 import { PhiMediaPickerBinding } from "../../../../../components/media/phi-media-picker-binding";
 import { PHI_MEDIA_WIDGET_DEFAULT_LABELS } from "../../../../../components/media/media-widget-labels";
 import { PHI_SEARCH_WIDGET_DEFAULT_LABELS } from "../../../../../components/widgets/label-types/search";
-import { PhiMediaKind } from "../../../../../constants/media";
+import { buildPhiMediaAssetContentDeliveryUrl, PhiMediaKind } from "../../../../../constants/media";
 import { createPhiMediaPickerAssetControllerRoutes } from "../../../../../components/media/asset-controller-routes";
 import { PhiPresetSizeControl, type PhiPresetSizeOption } from "../../../../../components/controls/phi-preset-size-control";
+import { PhiButtonControl } from "../../../../../components/controls/phi-button-control";
+import { PhiCascaderControl } from "../../../../../components/controls/phi-cascader-control";
+import { PhiCheckboxControl } from "../../../../../components/controls/phi-checkbox-control";
+import { PhiLabeledControl } from "../../../../../components/controls/phi-labeled-control";
+import { PhiNumberControl } from "../../../../../components/controls/phi-number-control";
+import { PhiColorControl } from "../../../../../components/controls/phi-color-control";
+import { usePhiControlOptionsProvider } from "../../../../../components/controls/phi-options-provider";
+import { PHI_BUILDER_RUNTIME_DATA_PROVIDER_KEYS } from "../../../builder/ids";
 import { PhiShadowControl } from "../../../../../components/controls/phi-shadow-control";
 import type { PhiShadow } from "../../../../../types/layout-style";
+import type {
+  PhiSiteThemeBrand,
+  PhiSiteThemeWordmarkPart,
+} from "../../../../../types/site-theme";
 import type { PhiBuilderBrandWidgetConfig } from "./config";
 import { createPhiHistoryStore } from "../../../../../components/state/history-store";
 import { createPhiCommandToolbarControlAddress } from "../../../../../components/widgets/signals/command-toolbar-address";
@@ -156,6 +170,8 @@ const BRAND_THEME_COLOR_COLLAPSE_STORAGE_KEY = "phi.builder.brand.theme.colorCol
 const BRAND_THEME_STYLE_COLLAPSE_STORAGE_KEY = "phi.builder.brand.theme.styleCollapse.activeKey";
 const BRAND_THEME_BACKGROUND_COLLAPSE_STORAGE_KEY = "phi.builder.brand.theme.backgroundCollapse.activeKey";
 const BRAND_THEME_BACKGROUND_SECTION_KEYS = ["root", "chrome", "shadow"] as const;
+const BRAND_THEME_IDENTITY_COLLAPSE_STORAGE_KEY = "phi.builder.brand.theme.identityCollapse.activeKey";
+const BRAND_THEME_IDENTITY_SECTION_KEYS = ["logo", "wordmark"] as const;
 const BRAND_THEME_STYLE_SECTION_KEYS = [
   "radius",
   "controlHeight",
@@ -799,6 +815,46 @@ function mergeThemeChromeOverlay(
       },
     },
   };
+}
+
+/**
+ * A patch on the Brand block, with the empties taken back out.
+ *
+ * An author who clears a field means the field is not set, not that it is set to "". A stored empty
+ * string reads as authored everywhere downstream -- `resolvePhiBrandWordmarkText` and the Brand Widget
+ * both ask whether a value is there before they ask what it says -- so clearing has to remove the key
+ * rather than blank it, or the Site's own name never comes back.
+ */
+function mergeThemeBrand(theme: ThemePayload, patch: Partial<PhiSiteThemeBrand>): ThemePayload {
+  const brand: Record<string, unknown> = { ...(theme.brand ?? {}), ...patch };
+  for (const [key, value] of Object.entries(brand)) {
+    if (value == null || value === "") delete brand[key];
+  }
+  return { ...theme, brand: brand as PhiSiteThemeBrand };
+}
+
+/**
+ * The Wordmark's parts, written as a whole rather than patched one at a time.
+ *
+ * A part carries no identity of its own -- it is text at a position -- so there is nothing to address
+ * an edit to except the position, and a list rewritten in one go cannot disagree with itself about
+ * what the positions are.
+ *
+ * A blank part is kept, because a part that has just been added is blank and dropping it here meant
+ * "Add part" wrote a list the next render could not see: the row never appeared, and the button looked
+ * like it did nothing but reopen the first part. Only a list that is blank all through clears the
+ * Wordmark, which is what hands the Site's own name back to the fallback.
+ */
+function mergeThemeWordmarkParts(
+  theme: ThemePayload,
+  parts: readonly PhiSiteThemeWordmarkPart[],
+): ThemePayload {
+  const hasText = parts.some((part) => part.text.trim());
+  return mergeThemeBrand(theme, {
+    wordmark: hasText
+      ? { ...(theme.brand?.wordmark ?? {}), parts: parts.map((part) => ({ ...part })) }
+      : null,
+  });
 }
 
 /**
@@ -2280,6 +2336,309 @@ function PhiBrandCopyModeButton({
   );
 }
 
+/*
+ * The Logo's picker has a route set of its own.
+ *
+ * Two senders on one route are indistinguishable to whatever reads it, and the Identity panel can be
+ * mounted while a Background picker still holds the Theme ground routes -- they live in different Stack
+ * slots today, but a route set is cheap and a crossed picker is not.
+ */
+const PHI_THEME_BRAND_LOGO_MEDIA_ROUTES = createPhiMediaPickerAssetControllerRoutes(
+  "theme-brand-logo-media",
+  "area",
+);
+
+/**
+ * The stored tracking as a number the control can hold.
+ *
+ * Reads a bare number as well, because that is what the text field this replaced allowed somebody to
+ * write -- it never rendered, so showing it as the number it was meant to be is how it starts working.
+ */
+function readWordmarkLetterSpacingEm(value: string | null | undefined) {
+  const parsed = Number.parseFloat((value ?? "").trim().replace(/em$/i, ""));
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+/** The weights a Wordmark part is offered, which is the range a name is actually set in. */
+const PHI_THEME_WORDMARK_WEIGHT_OPTIONS = [
+  { value: "", label: "Default" },
+  { value: "300", label: "Light" },
+  { value: "400", label: "Regular" },
+  { value: "500", label: "Medium" },
+  { value: "600", label: "Semibold" },
+  { value: "700", label: "Bold" },
+] as const;
+
+/**
+ * Who the Site says it is: the Logo and the Wordmark.
+ *
+ * The one panel whose values are not a mode value. A Site has one name and one Logo in light and in
+ * dark, so there is no mode switch here and no copy-to-other-mode button -- both would be offering to
+ * duplicate something that was never two things.
+ *
+ * Slogan, Location and Contact are not here. They are lines of text in a Region, and a Region's text is
+ * set where the Region is built; the Theme record still carries them as what a Preset seeds its Widgets
+ * from, which is a different job from authoring them.
+ */
+export function PhiBuilderBrandIdentityControlsWidgetClient({
+  runtime,
+  config,
+}: {
+  runtime: PhiBlockRuntime;
+  config?: PhiBuilderBrandWidgetConfig | null;
+}) {
+  const { token: clientToken } = usePhiConfig();
+  const themeKey = resolveThemeKey(config);
+  const { state, publishDraft } = usePhiBrandThemeDraft(runtime, themeKey);
+  const [activeIdentitySection, changeActiveIdentitySection] = usePhiBrandAccordionSection(
+    BRAND_THEME_IDENTITY_COLLAPSE_STORAGE_KEY,
+    BRAND_THEME_IDENTITY_SECTION_KEYS,
+  );
+
+  const brand = state.draft.brand ?? {};
+  const wordmarkParts: readonly PhiSiteThemeWordmarkPart[] = brand.wordmark?.parts ?? [];
+  /*
+   * A Site with no Wordmark yet still gets a field to type it into.
+   *
+   * The row is what the author came here for; offering only "Add part" made the ordinary case -- one
+   * name, one colour -- start with a button whose name describes the rare case. The blank row is not
+   * stored: writing in it is what creates the first part, and the placeholder says what the frame is
+   * showing meanwhile.
+   */
+  const editableWordmarkParts: readonly PhiSiteThemeWordmarkPart[] = wordmarkParts.length > 0
+    ? wordmarkParts
+    : [{ text: "" }];
+  /*
+   * What the Site falls back to, shown rather than written. An author who has set no Wordmark should
+   * see what the frame is showing instead of an empty field that looks like a missing name.
+   */
+  const fallbackWordmark = runtime.site.name ?? runtime.site.key;
+  /*
+   * The Pages of the public Area, from the same provider the Builder's own Page Cascader reads. The
+   * Widget declares the provider so the Page mounts it; without that the list is simply empty, which
+   * would look like a Site with one Page.
+   */
+  const { options: homePathOptions } = usePhiControlOptionsProvider({
+    optionsProvider: { providerKey: PHI_BUILDER_RUNTIME_DATA_PROVIDER_KEYS.builderPages },
+  });
+
+  function updateWordmarkPart(index: number, patch: Partial<PhiSiteThemeWordmarkPart>) {
+    publishDraft(mergeThemeWordmarkParts(
+      state.draft,
+      editableWordmarkParts.map((part, at) => (at === index ? { ...part, ...patch } : part)),
+    ));
+  }
+
+  return (
+    <Flex vertical gap={clientToken.padding} style={{ width: "100%", minWidth: 0 }}>
+      <Card size="small" styles={{ body: { padding: clientToken.paddingSM } }}>
+        <Collapse
+          accordion
+          bordered={false}
+          size="small"
+          activeKey={activeIdentitySection}
+          onChange={changeActiveIdentitySection}
+          styles={{
+            root: { background: "transparent" },
+            header: { alignItems: "center", paddingInline: 0 },
+            body: { paddingInline: 0 },
+          }}
+          items={[
+            {
+              key: "logo",
+              label: <Typography.Text strong>Logo</Typography.Text>,
+              children: (
+                <Flex vertical gap={clientToken.paddingXS}>
+                  <Typography.Text type="secondary">
+                    A picture from this Site&apos;s own Media library. What it says to somebody who cannot
+                    see it falls back to the asset&apos;s own alt text.
+                  </Typography.Text>
+                  <PhiMediaPickerBinding
+                    config={{
+                      mediaType: PhiMediaKind.Image,
+                      pageSize: 12,
+                      showPagination: true,
+                      showGroupFilter: true,
+                      showSearchBar: true,
+                      signalRoutes: PHI_THEME_BRAND_LOGO_MEDIA_ROUTES,
+                    }}
+                    labels={PHI_MEDIA_WIDGET_DEFAULT_LABELS}
+                    searchLabels={PHI_SEARCH_WIDGET_DEFAULT_LABELS}
+                    value={brand.logoAssetId ?? null}
+                    onAssetSelect={(asset) => publishDraft(mergeThemeBrand(state.draft, {
+                      logoAssetId: asset.id,
+                      /*
+                       * The delivered address alongside the id, because the Preview and the Brand Widget
+                       * both render from the draft long before the Site resolver has seen it. It is the
+                       * same address the resolver writes, so the saved record says one thing either way.
+                       */
+                      logoUrl: buildPhiMediaAssetContentDeliveryUrl(asset.id),
+                    }))}
+                    onAssetClear={() => publishDraft(mergeThemeBrand(state.draft, {
+                      logoAssetId: null,
+                      logoUrl: null,
+                    }))}
+                  />
+                  <Input
+                    value={brand.logoAlt ?? ""}
+                    placeholder="Alt text"
+                    onChange={(event) => publishDraft(mergeThemeBrand(state.draft, {
+                      logoAlt: event.target.value,
+                    }))}
+                  />
+                  {/*
+                    Where the Brand leads, picked from the Pages that exist rather than typed.
+                    A Cascader has no empty value -- its empty is spelled `/` -- which is exactly the
+                    default here, so an author who never touches it has already said the right thing.
+                  */}
+                  <PhiCascaderControl
+                    value={brand.homeHref ?? "/"}
+                    options={homePathOptions}
+                    placeholder="Where the Brand leads"
+                    onChange={(next) => publishDraft(mergeThemeBrand(state.draft, {
+                      homeHref: next === "/" ? null : next,
+                    }))}
+                  />
+                </Flex>
+              ),
+            },
+            {
+              key: "wordmark",
+              label: <Typography.Text strong>Wordmark</Typography.Text>,
+              children: (
+                /*
+                 * Labels in their own column, so the eye reads down one edge instead of hunting for
+                 * where each field starts. `PhiLabeledControl` is already that grid; the two custom
+                 * properties are what make every row agree on one label width.
+                 */
+                <Flex
+                  vertical
+                  gap={clientToken.paddingXS}
+                  style={{
+                    "--phi-labeled-control-label-width": "33.333333%",
+                    "--phi-labeled-control-width": "100%",
+                  } as CSSProperties}
+                >
+                  <Typography.Text type="secondary">
+                    The Site name as it is set. One part per colour: a two-tone name is one word written
+                    in two. With no part at all the frame shows {fallbackWordmark}.
+                  </Typography.Text>
+                  {editableWordmarkParts.map((part, index) => (
+                    <PhiLabeledControl key={index} label={`Part #${index + 1}`} fill>
+                      <Flex gap={clientToken.paddingXXS} align="center" style={{ width: "100%", minWidth: 0 }}>
+                        <Input
+                          value={part.text}
+                          placeholder={index === 0 ? fallbackWordmark : "Part"}
+                          onChange={(event) => updateWordmarkPart(index, { text: event.target.value })}
+                        />
+                        <PhiColorControl
+                          mode="single"
+                          allowClear
+                          value={part.color ?? null}
+                          presets={PHI_COLOR_PICKER_PRESETS}
+                          onChange={(next) => updateWordmarkPart(index, { color: next })}
+                        />
+                        <PhiButtonControl
+                          type="text"
+                          size="small"
+                          danger
+                          disabled={wordmarkParts.length === 0}
+                          icon={<DeleteOutlined />}
+                          ariaLabel="Remove this part of the Wordmark"
+                          onClick={() => publishDraft(mergeThemeWordmarkParts(
+                            state.draft,
+                            editableWordmarkParts.filter((_, at) => at !== index),
+                          ))}
+                        />
+                      </Flex>
+                    </PhiLabeledControl>
+                  ))}
+                  {/* No label of its own: it is an action on the rows above, not another field. */}
+                  <PhiLabeledControl label=" " fill>
+                    <PhiButtonControl
+                      size="small"
+                      label="Add part"
+                      onClick={() => publishDraft(mergeThemeWordmarkParts(
+                        state.draft,
+                        [...editableWordmarkParts, { text: "" }],
+                      ))}
+                    />
+                  </PhiLabeledControl>
+                  <Divider style={{ marginBlock: clientToken.paddingXXS }} />
+                  <PhiLabeledControl label="Weight" fill>
+                    <Flex gap={clientToken.paddingXS} align="center" style={{ width: "100%", minWidth: 0 }}>
+                      <Select
+                        style={{ flex: "1 1 auto", minWidth: 0 }}
+                        value={String(brand.wordmark?.fontWeight ?? "")}
+                        options={[...PHI_THEME_WORDMARK_WEIGHT_OPTIONS]}
+                        onChange={(next) => publishDraft(mergeThemeBrand(state.draft, {
+                          wordmark: {
+                            ...(brand.wordmark ?? {}),
+                            fontWeight: next === "" ? null : Number(next),
+                          },
+                        }))}
+                      />
+                      {/*
+                        Beside the weight rather than inside it: slanting and weight are two axes, and a
+                        name is regularly both. A single list would make "Bold Italic" a fourth entry and
+                        then a fifth the moment a third weight wants it.
+                      */}
+                      <PhiCheckboxControl
+                        checked={brand.wordmark?.fontStyle === "italic"}
+                        label="Italic"
+                        onChange={(checked) => publishDraft(mergeThemeBrand(state.draft, {
+                          wordmark: {
+                            ...(brand.wordmark ?? {}),
+                            fontStyle: checked ? "italic" : null,
+                          },
+                        }))}
+                      />
+                    </Flex>
+                  </PhiLabeledControl>
+                  {/*
+                    Tracking in `em`, and only in `em`.
+
+                    A free text field took "0.02" and CSS dropped it on the floor -- a bare number is
+                    not a length -- so the control looked broken while the record was faithfully
+                    storing what was typed. A number with the unit attached here cannot be written
+                    wrongly, and `em` is the unit tracking belongs in: it scales with the size the name
+                    is set at, which a pixel value does not.
+                  */}
+                  <PhiNumberControl
+                    label="Tracking"
+                    prefix="em"
+                    style={{ width: "100%" }}
+                    value={readWordmarkLetterSpacingEm(brand.wordmark?.letterSpacing)}
+                    step={0.01}
+                    precision={3}
+                    min={-0.2}
+                    max={1}
+                    onChange={(next) => publishDraft(mergeThemeBrand(state.draft, {
+                      wordmark: {
+                        ...(brand.wordmark ?? {}),
+                        letterSpacing: next == null ? null : `${next}em`,
+                      },
+                    }))}
+                  />
+                  <PhiLabeledControl label="Eyebrow" fill>
+                    <Input
+                      value={brand.eyebrow ?? ""}
+                      placeholder="The small line above the name"
+                      onChange={(event) => publishDraft(mergeThemeBrand(state.draft, {
+                        eyebrow: event.target.value,
+                      }))}
+                    />
+                  </PhiLabeledControl>
+                </Flex>
+              ),
+            },
+          ]}
+        />
+      </Card>
+    </Flex>
+  );
+}
+
 /**
  * Whether a copy would change anything, asked of the shape the control renders rather than of the
  * stored record: an absent field and an explicit empty one describe the same ground.
@@ -2493,6 +2852,7 @@ function PhiBrandChromePreviewShell({
   labelColor,
   radius,
   padding,
+  brand,
   children,
 }: {
   overlayStyle: CSSProperties | null;
@@ -2503,9 +2863,14 @@ function PhiBrandChromePreviewShell({
   labelColor: string;
   radius: number;
   padding: number;
+  brand: ReactNode;
   children: ReactNode;
 }) {
-  const header = 34;
+  /*
+   * Tall enough for a Logo. The band was 34 when it carried nothing but its own name; a Brand with a
+   * picture in it needs the room, and the Header of a real Site is taller than a label anyway.
+   */
+  const header = 44;
   const sider = 88;
   const footer = 28;
   const { backdropFilter, WebkitBackdropFilter, ...paintStyle } = overlayStyle ?? {};
@@ -2577,8 +2942,26 @@ function PhiBrandChromePreviewShell({
           style={{ position: "absolute", left: 0, right: 0, bottom: 0, height: footer, boxShadow: paneShadows.footer, pointerEvents: "none" }}
         />
       ) : null}
+      {/*
+        The Brand where a Site puts it: in the Header band, over whatever the Chrome Overlay paints
+        there. It stands in for the band's own label, which would only repeat what the shape says.
+      */}
+      <div
+        style={{
+          position: "absolute",
+          left: sider + 8,
+          right: 8,
+          top: 0,
+          height: header,
+          display: "flex",
+          alignItems: "center",
+          minWidth: 0,
+          overflow: "hidden",
+        }}
+      >
+        {brand}
+      </div>
       <div aria-hidden style={{ position: "absolute", inset: 0, fontSize: 11, color: labelColor, pointerEvents: "none" }}>
-        <span style={{ position: "absolute", left: sider + 8, top: (header - 14) / 2 }}>Header</span>
         <span style={{ position: "absolute", left: 8, top: header + 8 }}>Sider</span>
         <span style={{ position: "absolute", left: sider + 8, bottom: (footer - 14) / 2 }}>Footer</span>
       </div>
@@ -2843,6 +3226,13 @@ export function PhiBuilderBrandThemePreviewWidgetClient({
           labelColor={previewTextSecondaryColor}
           radius={clientToken.paddingXS}
           padding={clientToken.padding}
+          brand={(
+            <PhiBrandWidgetClient
+              config={{ brand: previewThemeResolved.brand ?? null, logoYOffset: -2 }}
+              fallbackTitle={runtime.site.name ?? runtime.site.key}
+              interactive={false}
+            />
+          )}
         >
           <Flex align="center" justify="space-between" gap={clientToken.padding} wrap="wrap">
             <Space orientation="vertical" size={0}>

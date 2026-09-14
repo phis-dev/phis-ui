@@ -1,6 +1,6 @@
 "use client";
 
-import type { CSSProperties, FocusEventHandler, KeyboardEventHandler } from "react";
+import type { CSSProperties, FocusEventHandler, KeyboardEventHandler, ReactNode } from "react";
 import { InputNumber } from "antd";
 import type { PhiControlSize, PhiControlVariant } from "../../types/control";
 import { PhiLabeledControl } from "./phi-labeled-control";
@@ -8,6 +8,14 @@ import { PhiLabeledControl } from "./phi-labeled-control";
 export type PhiNumberControlProps = {
   value?: number | null;
   label?: string;
+  /**
+   * What the number is in, shown inside the field.
+   *
+   * A unit belongs to the value, not to the field's name: a label saying "Tracking (em)" leaves the
+   * number looking unitless the moment the label scrolls out of sight, and it is the reading that
+   * invites somebody to type the unit in as well.
+   */
+  prefix?: ReactNode;
   placeholder?: string;
   min?: number;
   max?: number;
@@ -26,6 +34,7 @@ export type PhiNumberControlProps = {
 export function PhiNumberControl({
   value,
   label,
+  prefix,
   placeholder,
   min,
   max,
@@ -43,6 +52,7 @@ export function PhiNumberControl({
   const control = (
     <InputNumber
       value={value}
+      prefix={prefix}
       placeholder={placeholder}
       min={min}
       max={max}

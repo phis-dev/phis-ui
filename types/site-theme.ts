@@ -46,6 +46,76 @@ export type PhiSiteThemeRoot = {
   } | null;
 };
 
+/**
+ * One piece of the Wordmark.
+ *
+ * The Wordmark is a sequence of parts rather than a string because a two-tone name is one word in two
+ * colours, and there is nowhere in a string to say that. A name in one colour is the same shape with
+ * one part in it.
+ */
+export type PhiSiteThemeWordmarkPart = {
+  text: string;
+  color?: string | null;
+  fontWeight?: number | string | null;
+};
+
+/**
+ * The Site's name as it is set, with the typography that belongs to the name rather than to the text
+ * around it -- a Wordmark is usually not the body face, and it usually does not track like running text.
+ * What each part says for itself wins over what the Wordmark says for all of them.
+ */
+export type PhiSiteThemeWordmark = {
+  fontFamily?: string | null;
+  fontWeight?: number | string | null;
+  /** Slanting, which is its own axis: a name is regularly both bold and italic. */
+  fontStyle?: "normal" | "italic" | null;
+  letterSpacing?: string | null;
+  parts?: PhiSiteThemeWordmarkPart[] | null;
+};
+
+/** A line the Site carries in its frame: what it says, and the icon in front of it. */
+export type PhiSiteThemeBrandLine = {
+  label?: string | null;
+  icon?: string | null;
+};
+
+/**
+ * Who this Site says it is: the Logo, the Wordmark and the two lines that accompany them.
+ *
+ * Site identity, so it lives in the Theme record and never in an Area Preset -- a Preset is shared by
+ * every Site that follows it, and a brand in there would be the brand of all of them. What a Preset
+ * decides is whether and how the Brand Widget appears; what it shows is decided here.
+ */
+export type PhiSiteThemeBrand = {
+  /** Where the Brand Widget leads when it is clicked. The Site root where nothing says otherwise. */
+  homeHref?: string | null;
+  /** The small line above the Wordmark, for Sites whose name needs a word of context. */
+  eyebrow?: string | null;
+  /** The Logo, as an asset of this Site's own Media library. */
+  logoAssetId?: number | null;
+  /**
+   * The delivered form of `logoAssetId`, resolved when the Site config is read and never authored.
+   *
+   * It is part of this shape rather than a second one because every reader wants the resolved record,
+   * and a Brand that carried only the id would make each of them build the URL again. Authoring
+   * surfaces write `logoAssetId` and leave this alone; where they need to show the picture before the
+   * Site has resolved anything, `buildPhiMediaAssetContentDeliveryUrl` builds the same address.
+   */
+  logoUrl?: string | null;
+  /** What the Logo says to somebody who cannot see it. Falls back to the asset's own alt text. */
+  logoAlt?: string | null;
+  slogan?: PhiSiteThemeBrandLine | null;
+  location?: PhiSiteThemeBrandLine | null;
+  wordmark?: PhiSiteThemeWordmark | null;
+};
+
+/** The one way to reach whoever runs this Site, as the frame offers it. */
+export type PhiSiteThemeContact = {
+  label?: string | null;
+  href?: string | null;
+  icon?: string | null;
+};
+
 export type PhiWidgetFontFamilyKey =
   | "inherit"
   | "system"
