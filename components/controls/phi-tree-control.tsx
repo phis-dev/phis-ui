@@ -334,6 +334,7 @@ export function PhiTreeControl({
         background: presentation.bordered ? "transparent" : token.colorBgContainer,
         borderRadius: presentation.bordered ? 0 : undefined,
         "--phi-tree-striped-row-background": token.colorFillAlter,
+        "--phi-tree-drag-handle-color": token.colorText,
       } as CSSProperties}
       blockNode={presentation.blockNode !== false}
       checkable={checking}

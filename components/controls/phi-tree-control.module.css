@@ -1,3 +1,22 @@
 .root [class~="ant-tree-treenode"].stripedRow {
   background-color: var(--phi-tree-striped-row-background);
 }
+
+/*
+ * The drag handle matches the Table's row handle: the text colour of a text Button rather than antd's
+ * quaternary text, and centred on the row, so a node whose title carries a second line does not leave
+ * its handle at the top. antd weighs its handle rule at three classes, hence the repeated root class.
+ */
+.root.root [class~="ant-tree-treenode-draggable"] [class~="ant-tree-draggable-icon"] {
+  align-self: center;
+  color: var(--phi-tree-drag-handle-color);
+}
+
+/*
+ * The expand switcher sits on the row's centre as the handle does. antd stretches it over the whole row
+ * and sets its arrow in the first text line; the stretch is only needed for the connector lines of
+ * `showLine`, which must run unbroken from row to row, so a tree drawing lines keeps it.
+ */
+.root.root:not([class~="ant-tree-show-line"]) [class~="ant-tree-switcher"] {
+  align-self: center;
+}
