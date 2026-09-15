@@ -274,6 +274,15 @@
   transform: var(--phi-layout-scaffold-delete-transform);
 }
 
+/*
+ * A tool bar is as wide as its buttons, also in a slot child that fills: `styles/layout.css` stretches
+ * whatever stands in such a frame, and the bar stands in it out of the flow. Unwrapped, to win over that
+ * rule whichever stylesheet loads last.
+ */
+.phi-slot-child--inline-fill > .phi-layout-scaffold-delete {
+  width: auto;
+}
+
 :where(
   .phi-layout-scaffold-delete[data-phi-builder-node-kind="layout"]
 ),

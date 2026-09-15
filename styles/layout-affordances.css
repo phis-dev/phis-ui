@@ -12,6 +12,11 @@
   min-height: var(--phi-layout-affordance-size);
 }
 
+/* Standing directly in a filling slot child, as the effects preview does, it keeps its size. See `.phi-layout-scaffold-delete`. */
+.phi-slot-child--inline-fill > .phi-layout-affordance {
+  width: var(--phi-layout-affordance-size);
+}
+
 :root[data-phi-structure-drop-accepted],
 :root[data-phi-structure-drop-accepted] * {
   cursor: grabbing !important;
