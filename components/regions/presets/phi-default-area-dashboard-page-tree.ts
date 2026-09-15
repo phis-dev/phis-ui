@@ -2,7 +2,7 @@ import { createPhiPresetCmsInstanceIdMap } from "../../../types/cms-instance-id"
 import { PHI_DASHBOARD_RUNTIME_MODULE_ID } from "../../../plugins/runtime-modules/dashboard/ids";
 import { PHI_CMS_SEQUENTIAL_LAYOUT_SLOTS } from "../../../constants/cms-layout-types";
 import { PhiCmsPageType, PhiCmsStatus } from "../../../constants/phi-cms";
-import { buildPhiCmsWidgetNode } from "../../../helpers/cms-node-factories";
+import { createPhiCmsPresetNodes } from "../../../helpers/cms-preset-nodes";
 import type { PhiCmsPageNode, PhiResolvedCmsPageTree } from "../../../types/cms";
 import { buildPhiBasePageContentScaffold, PHI_BASE_PAGE_LAYOUT_NODE_ID } from "./phi-base-page-layout";
 
@@ -51,6 +51,7 @@ export function buildPhiDefaultAreaDashboardPageTree({
     regionId,
   });
 
+  const nodes = createPhiCmsPresetNodes(page);
   return {
     page: {
       ...page,
@@ -65,16 +66,12 @@ export function buildPhiDefaultAreaDashboardPageTree({
     regions: [scaffold.region],
     layoutNodes: [scaffold.layoutNode],
     contentWidgets: [
-      buildPhiCmsWidgetNode({
+      nodes.widget({
         id: widgetIds.widgetOverview,
-        siteId: page.siteId,
         parentLayoutNodeId: PHI_BASE_PAGE_LAYOUT_NODE_ID,
         typeKey: "card",
         slotIndex: PHI_CMS_SEQUENTIAL_LAYOUT_SLOTS[0].slotIndex,
         sortOrder: 0,
-        status: PhiCmsStatus.Published,
-        flags: 0,
-        visibilityMask: page.visibilityMask,
         label: eyebrow,
         config: {
           eyebrow,

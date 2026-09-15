@@ -10,7 +10,8 @@ import {
 import { PhiCmsFlags, PhiCmsRegionType, PhiCmsStatus } from "../../../constants/phi-cms";
 import { PHI_CMS_AREA_KEYS } from "../../../constants/cms-areas";
 import { PhiMediaKind } from "../../../constants/media";
-import { buildPhiCmsLayoutNode, buildPhiCmsWidgetNode } from "../../../helpers/cms-node-factories";
+import { buildPhiCmsLayoutNode } from "../../../helpers/cms-node-factories";
+import { createPhiCmsPresetNodes } from "../../../helpers/cms-preset-nodes";
 import { PHI_AREA_META_PUBLIC_DEFAULTS } from "../../../helpers/cms-area-config";
 import { remapPhiSignalRoutesInConfig } from "../../../helpers/signal-route-lifecycle";
 import { resolvePhiBrandWordmarkText } from "../../../helpers/brand-wordmark";
@@ -353,6 +354,7 @@ export async function buildPhiDefaultBuilderAreaPresetTree({
   page: PhiCmsPageNode;
   runtime: PhiBlockRuntime;
 }): Promise<PhiResolvedCmsPageTree> {
+  const nodes = createPhiCmsPresetNodes(page);
   const labelOptions = {
     apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
     internalToken: readPhiServerApiCredentials().internalToken,
@@ -486,17 +488,13 @@ export async function buildPhiDefaultBuilderAreaPresetTree({
       },
     ],
     layoutNodes: [
-      buildPhiCmsLayoutNode({
+      nodes.layout({
         creationPreset: { layoutKind: "threecol", preset: "panel" },
         typeKey: "three-column",
         id: SYNTHETIC_DEV_LAYOUT_IDS.layoutHeaderTop,
-        siteId: page.siteId,
         parentLayoutNodeId: null,
         slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
         sortOrder: 0,
-        status: PhiCmsStatus.Published,
-        flags: 0,
-        visibilityMask: page.visibilityMask,
         label: "dev header top three column",
         config: {
           balancedSides: true,
@@ -504,17 +502,13 @@ export async function buildPhiDefaultBuilderAreaPresetTree({
           style: { height: "100%" },
         },
       }),
-      buildPhiCmsLayoutNode({
+      nodes.layout({
         creationPreset: { layoutKind: "threecol", preset: "panel" },
         typeKey: "three-column",
         id: SYNTHETIC_DEV_LAYOUT_IDS.layoutHeaderMain,
-        siteId: page.siteId,
         parentLayoutNodeId: null,
         slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
         sortOrder: 0,
-        status: PhiCmsStatus.Published,
-        flags: 0,
-        visibilityMask: page.visibilityMask,
         label: "dev header main three column",
         config: {
           balancedSides: true,
@@ -522,16 +516,12 @@ export async function buildPhiDefaultBuilderAreaPresetTree({
           style: { height: "100%" },
         },
       }),
-      buildPhiCmsLayoutNode({
+      nodes.layout({
         typeKey: "flex",
         id: SYNTHETIC_DEV_LAYOUT_IDS.layoutHeaderTopActions,
-        siteId: page.siteId,
         parentLayoutNodeId: SYNTHETIC_DEV_LAYOUT_IDS.layoutHeaderTop,
         slotIndex: PHI_CMS_THREE_COLUMN_LAYOUT_SLOT_INDEX.Right,
         sortOrder: 0,
-        status: PhiCmsStatus.Published,
-        flags: 0,
-        visibilityMask: page.visibilityMask,
         label: "dev header top actions",
         config: {
           anchor: { horizontal: "right", vertical: "middle" },
@@ -543,17 +533,13 @@ export async function buildPhiDefaultBuilderAreaPresetTree({
           height: "100%",
         },
       }),
-      buildPhiCmsLayoutNode({
+      nodes.layout({
         creationPreset: { layoutKind: "verticalflex", preset: "panel" },
         typeKey: "flex-vertical",
         id: SYNTHETIC_DEV_LAYOUT_IDS.layoutSiderLeft,
-        siteId: page.siteId,
         parentLayoutNodeId: null,
         slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
         sortOrder: 0,
-        status: PhiCmsStatus.Published,
-        flags: 0,
-        visibilityMask: page.visibilityMask,
         label: "dev sider left flex",
         config: {
           anchor: { horizontal: "center", vertical: "top" },
@@ -564,30 +550,22 @@ export async function buildPhiDefaultBuilderAreaPresetTree({
           paddingTop: 0,
         },
       }),
-      buildPhiCmsLayoutNode({
+      nodes.layout({
         typeKey: "content",
         id: SYNTHETIC_DEV_LAYOUT_IDS.layoutFooterMain,
-        siteId: page.siteId,
         parentLayoutNodeId: null,
         slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
         sortOrder: 0,
-        status: PhiCmsStatus.Published,
-        flags: 0,
-        visibilityMask: page.visibilityMask,
         label: "dev footer main",
         config: { maxWidth: "100%", margin: 0, padding: 0 },
       }),
-      buildPhiCmsLayoutNode({
+      nodes.layout({
         creationPreset: { layoutKind: "flex", preset: "panel" },
         typeKey: "flex",
         id: SYNTHETIC_DEV_LAYOUT_IDS.layoutHeaderMainRightActions,
-        siteId: page.siteId,
         parentLayoutNodeId: SYNTHETIC_DEV_LAYOUT_IDS.layoutHeaderMain,
         slotIndex: PHI_CMS_THREE_COLUMN_LAYOUT_SLOT_INDEX.Right,
         sortOrder: 0,
-        status: PhiCmsStatus.Published,
-        flags: 0,
-        visibilityMask: page.visibilityMask,
         label: "dev header main right actions",
         config: {
           gap: PHI_SPACE.sm,
@@ -603,16 +581,12 @@ export async function buildPhiDefaultBuilderAreaPresetTree({
       }),
     ],
     contentWidgets: [
-      buildPhiCmsWidgetNode({
+      nodes.widget({
         typeKey: "select-box",
         id: SYNTHETIC_DEV_WIDGET_IDS.widgetBuilderAreaSelector,
-        siteId: page.siteId,
         parentLayoutNodeId: SYNTHETIC_DEV_LAYOUT_IDS.layoutHeaderMain,
         slotIndex: PHI_CMS_THREE_COLUMN_LAYOUT_SLOT_INDEX.Left,
         sortOrder: 0,
-        status: PhiCmsStatus.Published,
-        flags: 0,
-        visibilityMask: page.visibilityMask,
         label: "dev builder area selector",
         config: {
           key: "builder-area-selector",
@@ -640,60 +614,39 @@ export async function buildPhiDefaultBuilderAreaPresetTree({
             ],
           },
         },
-        contentId: null,
       }),
-      buildPhiCmsWidgetNode({
+      nodes.widget({
         typeKey: "page-title",
         id: SYNTHETIC_DEV_WIDGET_IDS.widgetBuilderPageTitle,
-        siteId: page.siteId,
         parentLayoutNodeId: SYNTHETIC_DEV_LAYOUT_IDS.layoutHeaderMain,
         slotIndex: PHI_CMS_THREE_COLUMN_LAYOUT_SLOT_INDEX.Middle,
         sortOrder: 0,
-        status: PhiCmsStatus.Published,
-        flags: 0,
-        visibilityMask: page.visibilityMask,
         label: "Page title",
         config: {},
-        contentId: null,
       }),
-      buildPhiCmsWidgetNode({
+      nodes.widget({
         typeKey: "account",
         id: SYNTHETIC_DEV_WIDGET_IDS.widgetHeaderTopAccount,
-        siteId: page.siteId,
         parentLayoutNodeId: SYNTHETIC_DEV_LAYOUT_IDS.layoutHeaderTopActions,
         slotIndex: 1,
         sortOrder: 10,
-        status: PhiCmsStatus.Published,
-        flags: 0,
-        visibilityMask: page.visibilityMask,
         label: "Account",
         config: {},
-        contentId: null,
       }),
-      buildPhiCmsWidgetNode({
+      nodes.widget({
         typeKey: "area-menu",
         id: SYNTHETIC_DEV_WIDGET_IDS.widgetHeaderTopAreaMenu,
-        siteId: page.siteId,
         parentLayoutNodeId: SYNTHETIC_DEV_LAYOUT_IDS.layoutHeaderTopActions,
         slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
         sortOrder: 0,
-        status: PhiCmsStatus.Published,
-        flags: 0,
-        visibilityMask: page.visibilityMask,
         label: "Area menu",
         config: {},
-        contentId: null,
       }),
-      buildPhiCmsWidgetNode({
+      nodes.widget({
         typeKey: "switch",
         id: SYNTHETIC_DEV_WIDGET_IDS.widgetHeaderMainDebugSwitch,
-        siteId: page.siteId,
         parentLayoutNodeId: SYNTHETIC_DEV_LAYOUT_IDS.layoutHeaderMainRightActions,
         slotIndex: 0,
-        sortOrder: 0,
-        status: PhiCmsStatus.Published,
-        flags: 0,
-        visibilityMask: page.visibilityMask,
         label: "Debug switch",
         config: {
           label: labels.themeSwitch.debug,
@@ -731,18 +684,13 @@ export async function buildPhiDefaultBuilderAreaPresetTree({
             ],
           },
         },
-        contentId: null,
       }),
-      buildPhiCmsWidgetNode({
+      nodes.widget({
         typeKey: "switch",
         id: SYNTHETIC_DEV_WIDGET_IDS.widgetHeaderTopThemeModeSwitch,
-        siteId: page.siteId,
         parentLayoutNodeId: SYNTHETIC_DEV_LAYOUT_IDS.layoutHeaderTop,
         slotIndex: PHI_CMS_THREE_COLUMN_LAYOUT_SLOT_INDEX.Left,
         sortOrder: 1,
-        status: PhiCmsStatus.Published,
-        flags: 0,
-        visibilityMask: page.visibilityMask,
         label: "Theme mode switch",
         config: {
           defaultChecked: runtime.viewer.themeMode === "dark",
@@ -763,39 +711,28 @@ export async function buildPhiDefaultBuilderAreaPresetTree({
             ],
           },
         },
-        contentId: null,
       }),
-      buildPhiCmsWidgetNode({
+      nodes.widget({
         typeKey: "sidebar-navigation",
         id: SYNTHETIC_DEV_WIDGET_IDS.widgetSidebarNav,
-        siteId: page.siteId,
         parentLayoutNodeId: SYNTHETIC_DEV_LAYOUT_IDS.layoutSiderLeft,
         slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
         sortOrder: 0,
-        status: PhiCmsStatus.Published,
-        flags: 0,
-        visibilityMask: page.visibilityMask,
         label: "Sidebar navigation",
         config: {
           side: "left",
           width: 224,
           navKey: "builder:sidebar",
         },
-        contentId: null,
       }),
-      buildPhiCmsWidgetNode({
+      nodes.widget({
         typeKey: "simple-text",
         id: SYNTHETIC_DEV_WIDGET_IDS.widgetFooterMainText,
-        siteId: page.siteId,
         parentLayoutNodeId: SYNTHETIC_DEV_LAYOUT_IDS.layoutFooterMain,
         slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
         sortOrder: 0,
-        status: PhiCmsStatus.Published,
-        flags: 0,
-        visibilityMask: page.visibilityMask,
         label: "dev footer main text",
         config: { text: footerMainText, type: "secondary" },
-        contentId: null,
       }),
     ],
   };
@@ -814,6 +751,7 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
   activeModuleKeys: ReadonlySet<string>;
   presetKey: string;
 }): Promise<PhiResolvedCmsPageTree> {
+  const nodes = createPhiCmsPresetNodes(page);
   const labels = await getPhiBuilderChromeWidgetLabels({
     apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
     internalToken: readPhiServerApiCredentials().internalToken,
@@ -1225,17 +1163,13 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
     layoutNodes: [
       ...((isStructurePage || isPagesPage || isMediaPage || isNavigationPage || isRevisionsPage || isThemePage || isModulesPage)
         ? [
-            buildPhiCmsLayoutNode({
+            nodes.layout({
               creationPreset: { layoutKind: "threecol", preset: "panel" },
               typeKey: "three-column",
               id: SYNTHETIC_DEV_LAYOUT_IDS.layoutHeaderBottom,
-              siteId: page.siteId,
               parentLayoutNodeId: null,
               slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
               sortOrder: 0,
-              status: PhiCmsStatus.Published,
-              flags: 0,
-              visibilityMask: page.visibilityMask,
               label: "dev header bottom three column",
               config: isMediaPage
                 ? {
@@ -1421,17 +1355,12 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
       ),
       ...((isStructurePage || isPagesPage)
         ? [
-            buildPhiCmsLayoutNode({
+            nodes.layout({
               creationPreset: { layoutKind: "threecol", preset: "panel" },
               typeKey: "three-column",
               id: SYNTHETIC_DEV_LAYOUT_IDS.layoutWorkspaceHeader,
-              siteId: page.siteId,
               parentLayoutNodeId: SYNTHETIC_DEV_LAYOUT_IDS.layoutContent,
               slotIndex: 0,
-              sortOrder: 0,
-              status: PhiCmsStatus.Published,
-              flags: 0,
-              visibilityMask: page.visibilityMask,
               label: isStructurePage ? "dev shells workspace header" : "dev pages workspace header",
               config: {
                 balancedSides: true,
@@ -1450,17 +1379,13 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
         : []),
       ...(isMediaPage
         ? [
-            buildPhiCmsLayoutNode({
+            nodes.layout({
               creationPreset: { layoutKind: "flex", preset: "panel" },
               typeKey: "flex",
               id: PHI_ASSET_INSPECTOR_LAYOUT_IDS.layoutMediaInspectorHeader,
-              siteId: page.siteId,
               parentLayoutNodeId: null,
               slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
               sortOrder: 0,
-              status: PhiCmsStatus.Published,
-              flags: 0,
-              visibilityMask: page.visibilityMask,
               label: "Asset inspector header",
               config: {
                 anchor: { horizontal: "left", vertical: "middle" },
@@ -1472,16 +1397,12 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                 border: "none",
               },
             }),
-            buildPhiCmsLayoutNode({
+            nodes.layout({
               typeKey: "collapsible",
               id: PHI_ASSET_INSPECTOR_LAYOUT_IDS.layoutMediaInspector,
-              siteId: page.siteId,
               parentLayoutNodeId: null,
               slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
               sortOrder: 0,
-              status: PhiCmsStatus.Published,
-              flags: 0,
-              visibilityMask: page.visibilityMask,
               label: "dev media inspector body",
               config: {
                 ghost: true,
@@ -1496,30 +1417,22 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                 background: "transparent",
               },
             }),
-            buildPhiCmsLayoutNode({
+            nodes.layout({
               creationPreset: { layoutKind: "flex", preset: "overlay-actions" },
               typeKey: "flex",
               id: PHI_ASSET_INSPECTOR_LAYOUT_IDS.layoutMediaInspectorFooter,
-              siteId: page.siteId,
               parentLayoutNodeId: null,
               slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
               sortOrder: 0,
-              status: PhiCmsStatus.Published,
-              flags: 0,
-              visibilityMask: page.visibilityMask,
               label: "dev media inspector footer",
               config: {},
             }),
-            buildPhiCmsLayoutNode({
+            nodes.layout({
               typeKey: "content",
               id: PHI_ASSET_INSPECTOR_LAYOUT_IDS.layoutMediaFocalRectBody,
-              siteId: page.siteId,
               parentLayoutNodeId: null,
               slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
               sortOrder: 0,
-              status: PhiCmsStatus.Published,
-              flags: 0,
-              visibilityMask: page.visibilityMask,
               label: "Asset focal rectangle body",
               config: {
                 width: "100%",
@@ -1531,30 +1444,22 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                 borderRadius: 0,
               },
             }),
-            buildPhiCmsLayoutNode({
+            nodes.layout({
               creationPreset: { layoutKind: "flex", preset: "overlay-actions" },
               typeKey: "flex",
               id: PHI_ASSET_INSPECTOR_LAYOUT_IDS.layoutMediaFocalRectFooter,
-              siteId: page.siteId,
               parentLayoutNodeId: null,
               slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
               sortOrder: 0,
-              status: PhiCmsStatus.Published,
-              flags: 0,
-              visibilityMask: page.visibilityMask,
               label: "Asset focal rectangle footer",
               config: {},
             }),
-            buildPhiCmsLayoutNode({
+            nodes.layout({
               typeKey: "content",
               id: PHI_ASSET_INSPECTOR_LAYOUT_IDS.layoutMediaFolderCreateBody,
-              siteId: page.siteId,
               parentLayoutNodeId: null,
               slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
               sortOrder: 0,
-              status: PhiCmsStatus.Published,
-              flags: 0,
-              visibilityMask: page.visibilityMask,
               label: "Create asset folder body",
               config: {
                 width: "100%",
@@ -1566,34 +1471,26 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                 borderRadius: 0,
               },
             }),
-            buildPhiCmsLayoutNode({
+            nodes.layout({
               creationPreset: { layoutKind: "flex", preset: "overlay-actions" },
               typeKey: "flex",
               id: PHI_ASSET_INSPECTOR_LAYOUT_IDS.layoutMediaFolderCreateFooter,
-              siteId: page.siteId,
               parentLayoutNodeId: null,
               slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
               sortOrder: 0,
-              status: PhiCmsStatus.Published,
-              flags: 0,
-              visibilityMask: page.visibilityMask,
               label: "Create asset folder footer",
               config: {},
             }),
           ]
         : []),
       ...(isModulesPage ? [
-        buildPhiCmsLayoutNode({
+        nodes.layout({
           creationPreset: { layoutKind: "verticalflex", preset: "panel" },
           typeKey: "flex-vertical",
           id: PHI_BUILDER_MODULE_USAGE_LAYOUT_IDS.moduleUsageBody,
-          siteId: page.siteId,
           parentLayoutNodeId: null,
           slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
           sortOrder: 0,
-          status: PhiCmsStatus.Published,
-          flags: 0,
-          visibilityMask: page.visibilityMask,
           label: "Builder module usage body",
           config: {
             gap: PHI_SPACE.base,
@@ -1603,31 +1500,23 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
             border: "none",
           },
         }),
-        buildPhiCmsLayoutNode({
+        nodes.layout({
           creationPreset: { layoutKind: "flex", preset: "overlay-actions" },
           typeKey: "flex",
           id: PHI_BUILDER_MODULE_USAGE_LAYOUT_IDS.moduleUsageFooter,
-          siteId: page.siteId,
           parentLayoutNodeId: null,
           slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
           sortOrder: 0,
-          status: PhiCmsStatus.Published,
-          flags: 0,
-          visibilityMask: page.visibilityMask,
           label: "Builder module usage footer",
           config: {},
         }),
-        buildPhiCmsLayoutNode({
+        nodes.layout({
           creationPreset: { layoutKind: "verticalflex", preset: "panel" },
           typeKey: "flex-vertical",
           id: PHI_BUILDER_PUBLIC_ROUTES_LAYOUT_IDS.publicRoutesBody,
-          siteId: page.siteId,
           parentLayoutNodeId: null,
           slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
           sortOrder: 0,
-          status: PhiCmsStatus.Published,
-          flags: 0,
-          visibilityMask: page.visibilityMask,
           label: "Builder public route collision body",
           config: {
             gap: PHI_SPACE.base,
@@ -1637,31 +1526,23 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
             border: "none",
           },
         }),
-        buildPhiCmsLayoutNode({
+        nodes.layout({
           creationPreset: { layoutKind: "flex", preset: "overlay-actions" },
           typeKey: "flex",
           id: PHI_BUILDER_PUBLIC_ROUTES_LAYOUT_IDS.publicRoutesFooter,
-          siteId: page.siteId,
           parentLayoutNodeId: null,
           slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
           sortOrder: 0,
-          status: PhiCmsStatus.Published,
-          flags: 0,
-          visibilityMask: page.visibilityMask,
           label: "Builder public route collision footer",
           config: {},
         }),
-        buildPhiCmsLayoutNode({
+        nodes.layout({
           creationPreset: { layoutKind: "verticalflex", preset: "panel" },
           typeKey: "flex-vertical",
           id: PHI_BUILDER_MODULE_DETAIL_LAYOUT_IDS.body,
-          siteId: page.siteId,
           parentLayoutNodeId: null,
           slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
           sortOrder: 0,
-          status: PhiCmsStatus.Published,
-          flags: 0,
-          visibilityMask: page.visibilityMask,
           label: "Builder module detail body",
           config: {
             gap: PHI_SPACE.base,
@@ -1679,17 +1560,13 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
          * It states the label column once and everything inside inherits it, which is what makes four
          * labelled Controls read as two columns rather than four differently indented rows.
          */
-        buildPhiCmsLayoutNode({
+        nodes.layout({
           creationPreset: { layoutKind: "verticalflex", preset: "panel" },
           typeKey: "flex-vertical",
           id: PHI_BUILDER_AREA_SETTINGS_LAYOUT_IDS.areaSettingsBody,
-          siteId: page.siteId,
           parentLayoutNodeId: null,
           slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
           sortOrder: 0,
-          status: PhiCmsStatus.Published,
-          flags: 0,
-          visibilityMask: page.visibilityMask,
           label: "Builder area settings body",
           config: {
             padding: PHI_SPACE.base,
@@ -1697,17 +1574,13 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
             border: "none",
           },
         }),
-        buildPhiCmsLayoutNode({
+        nodes.layout({
           creationPreset: { layoutKind: "verticalflex", preset: "panel" },
           typeKey: "flex-vertical",
           id: PHI_BUILDER_AREA_SETTINGS_LAYOUT_IDS.areaSettingsFields,
-          siteId: page.siteId,
           parentLayoutNodeId: PHI_BUILDER_AREA_SETTINGS_LAYOUT_IDS.areaSettingsBody,
           slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
           sortOrder: 0,
-          status: PhiCmsStatus.Published,
-          flags: 0,
-          visibilityMask: page.visibilityMask,
           label: "Builder area settings fields",
           config: {
             gap: PHI_SPACE.base,
@@ -1716,33 +1589,25 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
             border: "none",
           },
         }),
-        buildPhiCmsLayoutNode({
+        nodes.layout({
           creationPreset: { layoutKind: "flex", preset: "overlay-actions" },
           typeKey: "flex",
           id: PHI_BUILDER_AREA_SETTINGS_LAYOUT_IDS.areaSettingsFooter,
-          siteId: page.siteId,
           parentLayoutNodeId: null,
           slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
           sortOrder: 0,
-          status: PhiCmsStatus.Published,
-          flags: 0,
-          visibilityMask: page.visibilityMask,
           label: "Builder area settings footer",
           config: {},
         }),
       ] : []),
       ...(isPagesPage ? [
-        buildPhiCmsLayoutNode({
+        nodes.layout({
           creationPreset: { layoutKind: "verticalflex", preset: "panel" },
           typeKey: "flex-vertical",
           id: PHI_BUILDER_PAGE_META_LAYOUT_IDS.body,
-          siteId: page.siteId,
           parentLayoutNodeId: null,
           slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
           sortOrder: 0,
-          status: PhiCmsStatus.Published,
-          flags: 0,
-          visibilityMask: page.visibilityMask,
           label: "Builder page metadata body",
           config: {
             gap: PHI_SPACE.base,
@@ -1752,34 +1617,25 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
             border: "none",
           },
         }),
-        buildPhiCmsLayoutNode({
+        nodes.layout({
           creationPreset: { layoutKind: "flex", preset: "overlay-actions" },
           typeKey: "flex",
           id: PHI_BUILDER_PAGE_META_LAYOUT_IDS.footer,
-          siteId: page.siteId,
           parentLayoutNodeId: null,
           slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
           sortOrder: 0,
-          status: PhiCmsStatus.Published,
-          flags: 0,
-          visibilityMask: page.visibilityMask,
           label: "Builder page metadata footer",
           config: {},
         }),
       ] : []),
       ...(isThemePage
         ? [
-            buildPhiCmsLayoutNode({
+            nodes.layout({
               creationPreset: { layoutKind: "threecol", preset: "panel" },
               typeKey: "three-column",
               id: SYNTHETIC_DEV_LAYOUT_IDS.layoutBrandControlsHeader,
-              siteId: page.siteId,
               parentLayoutNodeId: SYNTHETIC_DEV_LAYOUT_IDS.layoutContent,
               slotIndex: 0,
-              sortOrder: 0,
-              status: PhiCmsStatus.Published,
-              flags: 0,
-              visibilityMask: page.visibilityMask,
               label: "dev brand controls header",
               config: {
                 balancedSides: true,
@@ -1790,16 +1646,12 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                 paddingRight: 0,
               },
             }),
-            buildPhiCmsLayoutNode({
+            nodes.layout({
               typeKey: "stack",
               id: SYNTHETIC_DEV_LAYOUT_IDS.layoutBrandStack,
-              siteId: page.siteId,
               parentLayoutNodeId: SYNTHETIC_DEV_LAYOUT_IDS.layoutContent,
               slotIndex: PHI_CMS_SEQUENTIAL_LAYOUT_SLOTS[1].slotIndex,
               sortOrder: 1,
-              status: PhiCmsStatus.Published,
-              flags: 0,
-              visibilityMask: page.visibilityMask,
               label: "dev brand stack",
               config: {
                 defaultActiveSlotKey: PHI_CMS_SEQUENTIAL_LAYOUT_SLOTS[0].key,
@@ -1811,17 +1663,13 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                 padding: 0,
               },
             }),
-            buildPhiCmsLayoutNode({
+            nodes.layout({
               creationPreset: { layoutKind: "flex", preset: "panel" },
               typeKey: "flex",
               id: SYNTHETIC_DEV_LAYOUT_IDS.layoutBrandCardsRow,
-              siteId: page.siteId,
               parentLayoutNodeId: SYNTHETIC_DEV_LAYOUT_IDS.layoutBrandStack,
               slotIndex: PHI_CMS_SEQUENTIAL_LAYOUT_SLOTS[0].slotIndex,
               sortOrder: 0,
-              status: PhiCmsStatus.Published,
-              flags: 0,
-              visibilityMask: page.visibilityMask,
               label: "Color",
               config: {
                 gap: PHI_SPACE.base,
@@ -1838,17 +1686,13 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                 borderRadius: 0,
               },
             }),
-            buildPhiCmsLayoutNode({
+            nodes.layout({
               creationPreset: { layoutKind: "flex", preset: "panel" },
               typeKey: "flex",
               id: SYNTHETIC_DEV_LAYOUT_IDS.layoutBrandStylePanel,
-              siteId: page.siteId,
               parentLayoutNodeId: SYNTHETIC_DEV_LAYOUT_IDS.layoutBrandStack,
               slotIndex: PHI_CMS_SEQUENTIAL_LAYOUT_SLOTS[1].slotIndex,
               sortOrder: 1,
-              status: PhiCmsStatus.Published,
-              flags: 0,
-              visibilityMask: page.visibilityMask,
               label: "Style",
               config: {
                 gap: PHI_SPACE.base,
@@ -1869,17 +1713,13 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
              * The label is the Segmented's third entry: it reads the Stack's slots and takes the label
              * of the first child in each, so naming this one is all the Segmented needs.
              */
-            buildPhiCmsLayoutNode({
+            nodes.layout({
               creationPreset: { layoutKind: "flex", preset: "panel" },
               typeKey: "flex",
               id: SYNTHETIC_DEV_LAYOUT_IDS.layoutBrandBackgroundPanel,
-              siteId: page.siteId,
               parentLayoutNodeId: SYNTHETIC_DEV_LAYOUT_IDS.layoutBrandStack,
               slotIndex: PHI_CMS_SEQUENTIAL_LAYOUT_SLOTS[2].slotIndex,
               sortOrder: 2,
-              status: PhiCmsStatus.Published,
-              flags: 0,
-              visibilityMask: page.visibilityMask,
               label: "Background",
               config: {
                 gap: PHI_SPACE.base,
@@ -1896,17 +1736,13 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                 borderRadius: 0,
               },
             }),
-            buildPhiCmsLayoutNode({
+            nodes.layout({
               creationPreset: { layoutKind: "flex", preset: "panel" },
               typeKey: "flex",
               id: SYNTHETIC_DEV_LAYOUT_IDS.layoutBrandIdentityPanel,
-              siteId: page.siteId,
               parentLayoutNodeId: SYNTHETIC_DEV_LAYOUT_IDS.layoutBrandStack,
               slotIndex: PHI_CMS_SEQUENTIAL_LAYOUT_SLOTS[3].slotIndex,
               sortOrder: 3,
-              status: PhiCmsStatus.Published,
-              flags: 0,
-              visibilityMask: page.visibilityMask,
               label: "Brand",
               config: {
                 gap: PHI_SPACE.base,
@@ -1928,16 +1764,11 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
     ],
     contentWidgets: [
       ...(isPagesPage ? [
-        buildPhiCmsWidgetNode({
+        nodes.widget({
           typeKey: "form",
           id: PHI_BUILDER_PAGE_META_WIDGET_IDS.form,
-          siteId: page.siteId,
           parentLayoutNodeId: PHI_BUILDER_PAGE_META_LAYOUT_IDS.body,
           slotIndex: 0,
-          sortOrder: 0,
-          status: PhiCmsStatus.Published,
-          flags: 0,
-          visibilityMask: page.visibilityMask,
           label: "Builder page metadata form",
           config: {
             formId: PHI_BUILDER_PAGE_META_FORM_ID,
@@ -1949,18 +1780,12 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
               listens: [{ routeKey: "builder-page-meta-submit-form", capabilityId: "submit", scope: "page", channel: "submit", action: "activate", valueType: "none", receiver: createPhiSignalAddress("cms", PHI_BUILDER_PAGE_META_WIDGET_IDS.form) }],
             },
           },
-          contentId: null,
         }),
-        buildPhiCmsWidgetNode({
+        nodes.widget({
           typeKey: "command-toolbar",
           id: PHI_BUILDER_PAGE_META_WIDGET_IDS.commands,
-          siteId: page.siteId,
           parentLayoutNodeId: PHI_BUILDER_PAGE_META_LAYOUT_IDS.footer,
           slotIndex: 0,
-          sortOrder: 0,
-          status: PhiCmsStatus.Published,
-          flags: 0,
-          visibilityMask: page.visibilityMask,
           label: "Page metadata commands",
           config: {
             key: "page-meta-commands",
@@ -2001,21 +1826,15 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
               }],
             },
           },
-          contentId: null,
         }),
       ] : []),
       ...(isMediaPage
         ? [
-            buildPhiCmsWidgetNode({
+            nodes.widget({
               typeKey: "collection-view",
               id: PHI_ASSET_MEDIA_PAGE_WIDGET_IDS.widgetMediaPreview,
-              siteId: page.siteId,
               parentLayoutNodeId: SYNTHETIC_DEV_LAYOUT_IDS.layoutContent,
               slotIndex: 0,
-              sortOrder: 0,
-              status: PhiCmsStatus.Published,
-              flags: 0,
-              visibilityMask: page.visibilityMask,
               label: "dev media preview",
               config: {
                 presentation: {
@@ -2111,18 +1930,13 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                   }],
                 },
               },
-              contentId: null,
             }),
-            buildPhiCmsWidgetNode({
+            nodes.widget({
               typeKey: "image-inspector",
               id: PHI_ASSET_MEDIA_PAGE_WIDGET_IDS.widgetMediaInspector,
-              siteId: page.siteId,
               parentLayoutNodeId: PHI_ASSET_INSPECTOR_LAYOUT_IDS.layoutMediaInspector,
               slotIndex: PHI_CMS_SEQUENTIAL_LAYOUT_SLOTS[0].slotIndex,
               sortOrder: 0,
-              status: PhiCmsStatus.Published,
-              flags: 0,
-              visibilityMask: page.visibilityMask,
               label: "dev media inspector",
               config: {
                 section: "preview",
@@ -2138,18 +1952,13 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                   }],
                 },
               },
-              contentId: null,
             }),
-            buildPhiCmsWidgetNode({
+            nodes.widget({
               typeKey: "form",
               id: PHI_ASSET_INSPECTOR_WIDGET_IDS.widgetMediaMetadataForm,
-              siteId: page.siteId,
               parentLayoutNodeId: PHI_ASSET_INSPECTOR_LAYOUT_IDS.layoutMediaInspector,
               slotIndex: PHI_CMS_SEQUENTIAL_LAYOUT_SLOTS[1].slotIndex,
               sortOrder: 1,
-              status: PhiCmsStatus.Published,
-              flags: 0,
-              visibilityMask: page.visibilityMask,
               label: "dev media metadata form",
               config: {
                 formId: PHI_ASSET_METADATA_FORM_ID,
@@ -2200,18 +2009,13 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                   ],
                 },
               },
-              contentId: null,
             }),
-            buildPhiCmsWidgetNode({
+            nodes.widget({
               typeKey: "command-toolbar",
               id: PHI_ASSET_INSPECTOR_WIDGET_IDS.widgetMediaInspectorCommands,
-              siteId: page.siteId,
               parentLayoutNodeId: PHI_ASSET_INSPECTOR_LAYOUT_IDS.layoutMediaInspectorFooter,
               slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
               sortOrder: 0,
-              status: PhiCmsStatus.Published,
-              flags: 0,
-              visibilityMask: page.visibilityMask,
               label: "dev media inspector commands",
               config: {
                 key: "media-inspector-commands",
@@ -2243,18 +2047,13 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                   }],
                 },
               },
-              contentId: null,
             }),
-            buildPhiCmsWidgetNode({
+            nodes.widget({
               typeKey: "asset-focal-rect",
               id: PHI_ASSET_INSPECTOR_WIDGET_IDS.widgetMediaFocalRect,
-              siteId: page.siteId,
               parentLayoutNodeId: PHI_ASSET_INSPECTOR_LAYOUT_IDS.layoutMediaFocalRectBody,
               slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
               sortOrder: 0,
-              status: PhiCmsStatus.Published,
-              flags: 0,
-              visibilityMask: page.visibilityMask,
               label: "Asset focal rectangle editor",
               config: {
                 signalRoutes: {
@@ -2292,18 +2091,13 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                   }],
                 },
               },
-              contentId: null,
             }),
-            buildPhiCmsWidgetNode({
+            nodes.widget({
               typeKey: "form",
               id: PHI_ASSET_INSPECTOR_WIDGET_IDS.widgetMediaFolderCreateForm,
-              siteId: page.siteId,
               parentLayoutNodeId: PHI_ASSET_INSPECTOR_LAYOUT_IDS.layoutMediaFolderCreateBody,
               slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
               sortOrder: 0,
-              status: PhiCmsStatus.Published,
-              flags: 0,
-              visibilityMask: page.visibilityMask,
               label: "Create asset folder form",
               config: {
                 formId: PHI_ASSET_FOLDER_FORM_ID,
@@ -2354,18 +2148,13 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                   ],
                 },
               },
-              contentId: null,
             }),
-            buildPhiCmsWidgetNode({
+            nodes.widget({
               typeKey: "command-toolbar",
               id: PHI_ASSET_INSPECTOR_WIDGET_IDS.widgetMediaFolderCreateCommands,
-              siteId: page.siteId,
               parentLayoutNodeId: PHI_ASSET_INSPECTOR_LAYOUT_IDS.layoutMediaFolderCreateFooter,
               slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
               sortOrder: 0,
-              status: PhiCmsStatus.Published,
-              flags: 0,
-              visibilityMask: page.visibilityMask,
               label: "Create asset folder commands",
               config: {
                 key: "media-folder-create-commands",
@@ -2398,18 +2187,13 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                   }],
                 },
               },
-              contentId: null,
             }),
-            buildPhiCmsWidgetNode({
+            nodes.widget({
               typeKey: "command-toolbar",
               id: PHI_ASSET_INSPECTOR_WIDGET_IDS.widgetMediaFocalRectCommands,
-              siteId: page.siteId,
               parentLayoutNodeId: PHI_ASSET_INSPECTOR_LAYOUT_IDS.layoutMediaFocalRectFooter,
               slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
               sortOrder: 0,
-              status: PhiCmsStatus.Published,
-              flags: 0,
-              visibilityMask: page.visibilityMask,
               label: "Asset focal rectangle commands",
               config: {
                 key: "media-focal-rect-commands",
@@ -2435,22 +2219,17 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                   }],
                 },
               },
-              contentId: null,
             }),
           ]
         : []),
       ...(isStructurePage
         ? [
-            buildPhiCmsWidgetNode({
+            nodes.widget({
               typeKey: "switch",
               id: SYNTHETIC_DEV_WIDGET_IDS.widgetStructureSiderFullHeightSwitch,
-              siteId: page.siteId,
               parentLayoutNodeId: SYNTHETIC_DEV_LAYOUT_IDS.layoutWorkspaceHeader,
               slotIndex: PHI_CMS_THREE_COLUMN_LAYOUT_SLOT_INDEX.Left,
               sortOrder: 0,
-              status: PhiCmsStatus.Published,
-              flags: 0,
-              visibilityMask: page.visibilityMask,
               label: "Sider full height switch",
               config: {
                 label: "Sider full height",
@@ -2481,7 +2260,6 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                   ],
                 },
               },
-              contentId: null,
             }),
             /*
              * Where the Area's `/` goes.
@@ -2492,16 +2270,12 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
              * the Area's own registered Pages plus the two answers that are not a Page, and what a
              * choice stores is a Page reference rather than a path.
              */
-            buildPhiCmsWidgetNode({
+            nodes.widget({
               typeKey: "select-box",
               id: SYNTHETIC_DEV_WIDGET_IDS.widgetAreaRootRoute,
-              siteId: page.siteId,
               parentLayoutNodeId: PHI_BUILDER_AREA_SETTINGS_LAYOUT_IDS.areaSettingsFields,
               slotIndex: PHI_CMS_SEQUENTIAL_LAYOUT_SLOTS[0].slotIndex,
               sortOrder: 0,
-              status: PhiCmsStatus.Published,
-              flags: 0,
-              visibilityMask: page.visibilityMask,
               label: "Area root route select",
               config: {
                 key: "areaRootRoute",
@@ -2530,7 +2304,6 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                   ],
                 },
               },
-              contentId: null,
             }),
             /*
              * Which landing stands at `/`, when a Module offers one.
@@ -2541,16 +2314,12 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
              * applying, and only the ones that say they mean it are candidates. Empty is an answer
              * too: nobody offers one here, and the root then draws the empty tree /pages authors.
              */
-            buildPhiCmsWidgetNode({
+            nodes.widget({
               typeKey: "select-box",
               id: PHI_BUILDER_SHELLS_WIDGET_IDS.widgetAreaLandingPage,
-              siteId: page.siteId,
               parentLayoutNodeId: PHI_BUILDER_AREA_SETTINGS_LAYOUT_IDS.areaSettingsFields,
               slotIndex: PHI_CMS_SEQUENTIAL_LAYOUT_SLOTS[1].slotIndex,
               sortOrder: 1,
-              status: PhiCmsStatus.Published,
-              flags: 0,
-              visibilityMask: page.visibilityMask,
               label: "Area landing page select",
               config: {
                 key: "areaLandingPage",
@@ -2591,7 +2360,6 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                   ],
                 },
               },
-              contentId: null,
             }),
             /*
              * What the Area writes into the title of every Page it draws.
@@ -2603,22 +2371,17 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
              * still gets titles -- which is why the placeholders state the resting value rather than
              * repeating the label.
              */
-            buildPhiCmsWidgetNode({
+            nodes.widget({
               typeKey: "simple-text",
               id: PHI_BUILDER_AREA_SETTINGS_WIDGET_IDS.areaSettingsTitlesTitle,
-              siteId: page.siteId,
               parentLayoutNodeId: PHI_BUILDER_AREA_SETTINGS_LAYOUT_IDS.areaSettingsFields,
               slotIndex: PHI_CMS_SEQUENTIAL_LAYOUT_SLOTS[2].slotIndex,
               sortOrder: 2,
-              status: PhiCmsStatus.Published,
-              flags: 0,
-              visibilityMask: page.visibilityMask,
               label: "Area settings titles title",
               config: {
                 text: labels.areaSettings.titlesTitle,
                 strong: true,
               },
-              contentId: null,
             }),
             ...([
               [
@@ -2638,16 +2401,12 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                 4,
               ],
             ] as const).map(([id, key, channel, label, placeholder, sortOrder]) =>
-              buildPhiCmsWidgetNode({
+              nodes.widget({
                 typeKey: "input",
                 id,
-                siteId: page.siteId,
                 parentLayoutNodeId: PHI_BUILDER_AREA_SETTINGS_LAYOUT_IDS.areaSettingsFields,
                 slotIndex: PHI_CMS_SEQUENTIAL_LAYOUT_SLOTS[sortOrder].slotIndex,
                 sortOrder,
-                status: PhiCmsStatus.Published,
-                flags: 0,
-                visibilityMask: page.visibilityMask,
                 label: `Area settings ${key}`,
                 config: {
                   key,
@@ -2685,7 +2444,6 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                     }],
                   },
                 },
-                contentId: null,
               })),
             /*
              * What the Area says about being found, and who may say it.
@@ -2695,22 +2453,17 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
              * answerable in none but Public -- the controller says which by signal, as it does for the
              * landing Select -- and outside Public they stand at what is actually the case.
              */
-            buildPhiCmsWidgetNode({
+            nodes.widget({
               typeKey: "simple-text",
               id: PHI_BUILDER_AREA_SETTINGS_WIDGET_IDS.areaSettingsSeoTitle,
-              siteId: page.siteId,
               parentLayoutNodeId: PHI_BUILDER_AREA_SETTINGS_LAYOUT_IDS.areaSettingsFields,
               slotIndex: PHI_CMS_SEQUENTIAL_LAYOUT_SLOTS[5].slotIndex,
               sortOrder: 5,
-              status: PhiCmsStatus.Published,
-              flags: 0,
-              visibilityMask: page.visibilityMask,
               label: "Area settings SEO title",
               config: {
                 text: labels.areaSettings.seoTitle,
                 strong: true,
               },
-              contentId: null,
             }),
             ...([
               [
@@ -2730,16 +2483,12 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                 7,
               ],
             ] as const).map(([id, key, channel, label, defaultChecked, sortOrder]) =>
-              buildPhiCmsWidgetNode({
+              nodes.widget({
                 typeKey: "switch",
                 id,
-                siteId: page.siteId,
                 parentLayoutNodeId: PHI_BUILDER_AREA_SETTINGS_LAYOUT_IDS.areaSettingsFields,
                 slotIndex: PHI_CMS_SEQUENTIAL_LAYOUT_SLOTS[sortOrder].slotIndex,
                 sortOrder,
-                status: PhiCmsStatus.Published,
-                flags: 0,
-                visibilityMask: page.visibilityMask,
                 label: `Area settings ${key}`,
                 config: {
                   key,
@@ -2785,7 +2534,6 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                     }],
                   },
                 },
-                contentId: null,
               })),
             /*
              * Where the header's third column went.
@@ -2794,16 +2542,12 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
              * canvas, and everything the Area says about itself is one click away instead of spread
              * across a row that grew every time the Area gained a sentence.
              */
-            buildPhiCmsWidgetNode({
+            nodes.widget({
               typeKey: "command-toolbar",
               id: PHI_BUILDER_AREA_SETTINGS_WIDGET_IDS.areaSettingsAction,
-              siteId: page.siteId,
               parentLayoutNodeId: SYNTHETIC_DEV_LAYOUT_IDS.layoutWorkspaceHeader,
               slotIndex: PHI_CMS_THREE_COLUMN_LAYOUT_SLOT_INDEX.Right,
               sortOrder: 0,
-              status: PhiCmsStatus.Published,
-              flags: 0,
-              visibilityMask: page.visibilityMask,
               label: "dev area settings action",
               config: {
                 key: "areaSettingsAction",
@@ -2829,18 +2573,13 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                   }],
                 },
               },
-              contentId: null,
             }),
-            buildPhiCmsWidgetNode({
+            nodes.widget({
               typeKey: "command-toolbar",
               id: PHI_BUILDER_AREA_SETTINGS_WIDGET_IDS.areaSettingsCommands,
-              siteId: page.siteId,
               parentLayoutNodeId: PHI_BUILDER_AREA_SETTINGS_LAYOUT_IDS.areaSettingsFooter,
               slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
               sortOrder: 0,
-              status: PhiCmsStatus.Published,
-              flags: 0,
-              visibilityMask: page.visibilityMask,
               label: "Area settings commands",
               config: {
                 key: "area-settings-commands",
@@ -2875,35 +2614,25 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                   }],
                 },
               },
-              contentId: null,
             }),
-            buildPhiCmsWidgetNode({
+            nodes.widget({
               typeKey: "command-toolbar",
               id: SYNTHETIC_DEV_WIDGET_IDS.widgetToolbar,
-              siteId: page.siteId,
               parentLayoutNodeId: SYNTHETIC_DEV_LAYOUT_IDS.layoutHeaderBottom,
               slotIndex: PHI_CMS_THREE_COLUMN_LAYOUT_SLOT_INDEX.Middle,
               sortOrder: 0,
-              status: PhiCmsStatus.Published,
-              flags: 0,
-              visibilityMask: page.visibilityMask,
               label: "dev structure toolbar",
               config: builderCommandToolbarConfig,
-              contentId: null,
             }),
           ]
         : isPagesPage
           ? [
-              buildPhiCmsWidgetNode({
+              nodes.widget({
                 typeKey: "cascader",
                 id: SYNTHETIC_DEV_WIDGET_IDS.widgetPagesHeaderSelector,
-                siteId: page.siteId,
                 parentLayoutNodeId: SYNTHETIC_DEV_LAYOUT_IDS.layoutWorkspaceHeader,
                 slotIndex: PHI_CMS_THREE_COLUMN_LAYOUT_SLOT_INDEX.Left,
                 sortOrder: 0,
-                status: PhiCmsStatus.Published,
-                flags: 0,
-                visibilityMask: page.visibilityMask,
                 label: "dev pages select",
                 config: {
                   key: "pageSelect",
@@ -2926,18 +2655,13 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                   },
                   options: [],
                 },
-                contentId: null,
               }),
-              buildPhiCmsWidgetNode({
+              nodes.widget({
                 typeKey: "input",
                 id: SYNTHETIC_DEV_WIDGET_IDS.widgetPagesHeaderTitle,
-                siteId: page.siteId,
                 parentLayoutNodeId: SYNTHETIC_DEV_LAYOUT_IDS.layoutWorkspaceHeader,
                 slotIndex: PHI_CMS_THREE_COLUMN_LAYOUT_SLOT_INDEX.Middle,
                 sortOrder: 0,
-                status: PhiCmsStatus.Published,
-                flags: 0,
-                visibilityMask: page.visibilityMask,
                 label: "Page title input",
                 config: {
                   text: "",
@@ -2960,18 +2684,13 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                   allowClear: false,
                   disabled: true,
                 },
-                contentId: null,
               }),
-              buildPhiCmsWidgetNode({
+              nodes.widget({
                 typeKey: "command-toolbar",
                 id: SYNTHETIC_DEV_WIDGET_IDS.widgetPagesMetaToolbar,
-                siteId: page.siteId,
                 parentLayoutNodeId: SYNTHETIC_DEV_LAYOUT_IDS.layoutWorkspaceHeader,
                 slotIndex: PHI_CMS_THREE_COLUMN_LAYOUT_SLOT_INDEX.Right,
                 sortOrder: 0,
-                status: PhiCmsStatus.Published,
-                flags: 0,
-                visibilityMask: page.visibilityMask,
                 label: "dev pages meta toolbar",
                 config: {
                   key: "pageMetaToolbar",
@@ -3015,49 +2734,34 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                     },
                   ],
                 },
-                contentId: null,
               }),
-              buildPhiCmsWidgetNode({
+              nodes.widget({
                 typeKey: "command-toolbar",
                 id: SYNTHETIC_DEV_WIDGET_IDS.widgetToolbar,
-                siteId: page.siteId,
                 parentLayoutNodeId: SYNTHETIC_DEV_LAYOUT_IDS.layoutHeaderBottom,
                 slotIndex: PHI_CMS_THREE_COLUMN_LAYOUT_SLOT_INDEX.Middle,
                 sortOrder: 0,
-                status: PhiCmsStatus.Published,
-                flags: 0,
-                visibilityMask: page.visibilityMask,
                 label: "dev pages toolbar",
                 config: builderCommandToolbarConfig,
-                contentId: null,
               }),
             ]
         : isThemePage
           ? [
-              buildPhiCmsWidgetNode({
+              nodes.widget({
                 typeKey: "command-toolbar",
                 id: SYNTHETIC_DEV_WIDGET_IDS.widgetToolbar,
-                siteId: page.siteId,
                 parentLayoutNodeId: SYNTHETIC_DEV_LAYOUT_IDS.layoutHeaderBottom,
                 slotIndex: PHI_CMS_THREE_COLUMN_LAYOUT_SLOT_INDEX.Middle,
                 sortOrder: 0,
-                status: PhiCmsStatus.Published,
-                flags: 0,
-                visibilityMask: page.visibilityMask,
                 label: "dev brand toolbar",
                 config: builderCommandToolbarConfig,
-                contentId: null,
               }),
-              buildPhiCmsWidgetNode({
+              nodes.widget({
                 typeKey: "select-box",
                 id: SYNTHETIC_DEV_WIDGET_IDS.widgetBrandContextSelect,
-                siteId: page.siteId,
                 parentLayoutNodeId: SYNTHETIC_DEV_LAYOUT_IDS.layoutHeaderBottom,
                 slotIndex: PHI_CMS_THREE_COLUMN_LAYOUT_SLOT_INDEX.Left,
                 sortOrder: 0,
-                status: PhiCmsStatus.Published,
-                flags: 0,
-                visibilityMask: page.visibilityMask,
                 label: "Brand set select",
                 config: {
                   value: resolvePhiThemeSelectionValue(
@@ -3113,18 +2817,13 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                     ...buildPhiThemeSetSelectOptions(registry, activeModuleKeys),
                   ],
                 },
-                contentId: null,
               }),
-              buildPhiCmsWidgetNode({
+              nodes.widget({
                 typeKey: "switch",
                 id: SYNTHETIC_DEV_WIDGET_IDS.widgetBrandPreviewModeSwitch,
-                siteId: page.siteId,
                 parentLayoutNodeId: SYNTHETIC_DEV_LAYOUT_IDS.layoutBrandControlsHeader,
                 slotIndex: PHI_CMS_THREE_COLUMN_LAYOUT_SLOT_INDEX.Left,
                 sortOrder: 0,
-                status: PhiCmsStatus.Published,
-                flags: 0,
-                visibilityMask: page.visibilityMask,
                 label: "Brand preview mode switch",
                 config: {
                   defaultChecked: runtime.site.theme?.mode === "dark",
@@ -3145,18 +2844,13 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                     ],
                   },
                 },
-                contentId: null,
               }),
-              buildPhiCmsWidgetNode({
+              nodes.widget({
                 typeKey: "segmented",
                 id: SYNTHETIC_DEV_WIDGET_IDS.widgetThemeStackSegmented,
-                siteId: page.siteId,
                 parentLayoutNodeId: SYNTHETIC_DEV_LAYOUT_IDS.layoutBrandControlsHeader,
                 slotIndex: PHI_CMS_THREE_COLUMN_LAYOUT_SLOT_INDEX.Middle,
                 sortOrder: 0,
-                status: PhiCmsStatus.Published,
-                flags: 0,
-                visibilityMask: page.visibilityMask,
                 label: "Theme stack segmented",
                 config: {
                   value: "0",
@@ -3203,35 +2897,24 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
  label: "Style" },
                   ],
                 },
-                contentId: null,
               }),
             ]
         : isModulesPage
           ? [
-              buildPhiCmsWidgetNode({
+              nodes.widget({
                 typeKey: "command-toolbar",
                 id: SYNTHETIC_DEV_WIDGET_IDS.widgetToolbar,
-                siteId: page.siteId,
                 parentLayoutNodeId: SYNTHETIC_DEV_LAYOUT_IDS.layoutHeaderBottom,
                 slotIndex: PHI_CMS_THREE_COLUMN_LAYOUT_SLOT_INDEX.Middle,
                 sortOrder: 0,
-                status: PhiCmsStatus.Published,
-                flags: 0,
-                visibilityMask: page.visibilityMask,
                 label: "dev modules toolbar",
                 config: builderCommandToolbarConfig,
-                contentId: null,
               }),
-              buildPhiCmsWidgetNode({
+              nodes.widget({
                 typeKey: "table",
                 id: PHI_BUILDER_MODULES_TABLE_WIDGET_ID,
-                siteId: page.siteId,
                 parentLayoutNodeId: SYNTHETIC_DEV_LAYOUT_IDS.layoutContent,
                 slotIndex: 0,
-                sortOrder: 0,
-                status: PhiCmsStatus.Published,
-                flags: 0,
-                visibilityMask: page.visibilityMask,
                 label: "dev modules table",
                 config: {
                   source: {
@@ -3350,35 +3033,25 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                     ],
                   },
                 },
-                contentId: null,
               }),
-              buildPhiCmsWidgetNode({
+              nodes.widget({
                 typeKey: "simple-text",
                 id: PHI_BUILDER_MODULE_USAGE_WIDGET_IDS.moduleUsageIntro,
-                siteId: page.siteId,
                 parentLayoutNodeId: PHI_BUILDER_MODULE_USAGE_LAYOUT_IDS.moduleUsageBody,
                 slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
                 sortOrder: 0,
-                status: PhiCmsStatus.Published,
-                flags: 0,
-                visibilityMask: page.visibilityMask,
                 label: "Builder module usage intro",
                 config: {
                   text: modulesLabels?.usage.intro ?? "",
                   type: "secondary",
                 },
-                contentId: null,
               }),
-              buildPhiCmsWidgetNode({
+              nodes.widget({
                 typeKey: "table",
                 id: PHI_BUILDER_MODULE_USAGE_WIDGET_IDS.moduleUsageTable,
-                siteId: page.siteId,
                 parentLayoutNodeId: PHI_BUILDER_MODULE_USAGE_LAYOUT_IDS.moduleUsageBody,
                 slotIndex: PHI_CMS_SEQUENTIAL_LAYOUT_SLOTS[1].slotIndex,
                 sortOrder: 1,
-                status: PhiCmsStatus.Published,
-                flags: 0,
-                visibilityMask: page.visibilityMask,
                 label: "Builder module usage rows",
                 config: {
                   source: {
@@ -3407,18 +3080,13 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                     ],
                   },
                 },
-                contentId: null,
               }),
-              buildPhiCmsWidgetNode({
+              nodes.widget({
                 typeKey: "command-toolbar",
                 id: PHI_BUILDER_MODULE_USAGE_WIDGET_IDS.moduleUsageCommands,
-                siteId: page.siteId,
                 parentLayoutNodeId: PHI_BUILDER_MODULE_USAGE_LAYOUT_IDS.moduleUsageFooter,
                 slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
                 sortOrder: 0,
-                status: PhiCmsStatus.Published,
-                flags: 0,
-                visibilityMask: page.visibilityMask,
                 label: "Builder module usage commands",
                 config: {
                   key: "module-usage-commands",
@@ -3442,35 +3110,25 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                     }],
                   },
                 },
-                contentId: null,
               }),
-              buildPhiCmsWidgetNode({
+              nodes.widget({
                 typeKey: "simple-text",
                 id: PHI_BUILDER_PUBLIC_ROUTES_WIDGET_IDS.publicRoutesIntro,
-                siteId: page.siteId,
                 parentLayoutNodeId: PHI_BUILDER_PUBLIC_ROUTES_LAYOUT_IDS.publicRoutesBody,
                 slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
                 sortOrder: 0,
-                status: PhiCmsStatus.Published,
-                flags: 0,
-                visibilityMask: page.visibilityMask,
                 label: "Builder public route collision intro",
                 config: {
                   text: modulesLabels?.publicRoutes.intro ?? "",
                   type: "secondary",
                 },
-                contentId: null,
               }),
-              buildPhiCmsWidgetNode({
+              nodes.widget({
                 typeKey: "table",
                 id: PHI_BUILDER_PUBLIC_ROUTES_WIDGET_IDS.publicRoutesTable,
-                siteId: page.siteId,
                 parentLayoutNodeId: PHI_BUILDER_PUBLIC_ROUTES_LAYOUT_IDS.publicRoutesBody,
                 slotIndex: PHI_CMS_SEQUENTIAL_LAYOUT_SLOTS[1].slotIndex,
                 sortOrder: 1,
-                status: PhiCmsStatus.Published,
-                flags: 0,
-                visibilityMask: page.visibilityMask,
                 label: "Builder public route collision rows",
                 config: {
                   source: {
@@ -3507,18 +3165,13 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                     ],
                   },
                 },
-                contentId: null,
               }),
-              buildPhiCmsWidgetNode({
+              nodes.widget({
                 typeKey: "command-toolbar",
                 id: PHI_BUILDER_PUBLIC_ROUTES_WIDGET_IDS.publicRoutesCommands,
-                siteId: page.siteId,
                 parentLayoutNodeId: PHI_BUILDER_PUBLIC_ROUTES_LAYOUT_IDS.publicRoutesFooter,
                 slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
                 sortOrder: 0,
-                status: PhiCmsStatus.Published,
-                flags: 0,
-                visibilityMask: page.visibilityMask,
                 label: "Builder public route collision commands",
                 config: {
                   key: "public-routes-commands",
@@ -3542,18 +3195,13 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                     }],
                   },
                 },
-                contentId: null,
               }),
-              buildPhiCmsWidgetNode({
+              nodes.widget({
                 typeKey: "table",
                 id: PHI_BUILDER_MODULE_DETAIL_WIDGET_IDS.fields,
-                siteId: page.siteId,
                 parentLayoutNodeId: PHI_BUILDER_MODULE_DETAIL_LAYOUT_IDS.body,
                 slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
                 sortOrder: 0,
-                status: PhiCmsStatus.Published,
-                flags: 0,
-                visibilityMask: page.visibilityMask,
                 label: "dev module detail fields",
                 config: {
                   source: {
@@ -3586,35 +3234,24 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                     ],
                   },
                 },
-                contentId: null,
               }),
             ]
         : isNavigationPage
           ? [
-              buildPhiCmsWidgetNode({
+              nodes.widget({
                 typeKey: "command-toolbar",
                 id: SYNTHETIC_DEV_WIDGET_IDS.widgetToolbar,
-                siteId: page.siteId,
                 parentLayoutNodeId: SYNTHETIC_DEV_LAYOUT_IDS.layoutHeaderBottom,
                 slotIndex: PHI_CMS_THREE_COLUMN_LAYOUT_SLOT_INDEX.Middle,
                 sortOrder: 0,
-                status: PhiCmsStatus.Published,
-                flags: 0,
-                visibilityMask: page.visibilityMask,
                 label: "dev navigation toolbar",
                 config: builderCommandToolbarConfig,
-                contentId: null,
               }),
-              buildPhiCmsWidgetNode({
+              nodes.widget({
                 typeKey: "tree",
                 id: SYNTHETIC_DEV_WIDGET_IDS.widgetNavigationSource,
-                siteId: page.siteId,
                 parentLayoutNodeId: SYNTHETIC_DEV_LAYOUT_IDS.layoutContent,
                 slotIndex: 0,
-                sortOrder: 0,
-                status: PhiCmsStatus.Published,
-                flags: 0,
-                visibilityMask: page.visibilityMask,
                 label: "dev navigation source",
                 config: {
                   source: {
@@ -3650,18 +3287,12 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                     dnd: { mode: "source", payloadType: PHI_BUILDER_NAVIGATION_DND_TYPE_PAGE },
                   },
                 },
-                contentId: null,
               }),
-              buildPhiCmsWidgetNode({
+              nodes.widget({
                 typeKey: "table",
                 id: SYNTHETIC_DEV_WIDGET_IDS.widgetNavigationItems,
-                siteId: page.siteId,
                 parentLayoutNodeId: SYNTHETIC_DEV_LAYOUT_IDS.layoutContent,
                 slotIndex: 1,
-                sortOrder: 1,
-                status: PhiCmsStatus.Published,
-                flags: 0,
-                visibilityMask: page.visibilityMask,
                 label: "dev navigation items",
                 config: {
                   source: {
@@ -3778,21 +3409,15 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                     },
                   },
                 },
-                contentId: null,
               }),
             ]
         : isRevisionsPage
           ? [
-              buildPhiCmsWidgetNode({
+              nodes.widget({
                 typeKey: "table",
                 id: PHI_BUILDER_REVISIONS_TABLE_WIDGET_ID,
-                siteId: page.siteId,
                 parentLayoutNodeId: SYNTHETIC_DEV_LAYOUT_IDS.layoutContent,
                 slotIndex: 0,
-                sortOrder: 0,
-                status: PhiCmsStatus.Published,
-                flags: 0,
-                visibilityMask: page.visibilityMask,
                 label: "dev revisions table",
                 config: {
                   source: {
@@ -3903,147 +3528,107 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                     ],
                   },
                 },
-                contentId: null,
               }),
             ]
         : []),
       ...((isStructurePage || isPagesPage)
         ? [
-            buildPhiCmsWidgetNode({
+            nodes.widget({
               typeKey: "builder-mode-switch",
               id: SYNTHETIC_DEV_WIDGET_IDS.widgetBuilderModeSwitch,
-              siteId: page.siteId,
               parentLayoutNodeId: SYNTHETIC_DEV_LAYOUT_IDS.layoutHeaderBottom,
               slotIndex: PHI_CMS_THREE_COLUMN_LAYOUT_SLOT_INDEX.Left,
               sortOrder: 0,
-              status: PhiCmsStatus.Published,
-              flags: 0,
-              visibilityMask: page.visibilityMask,
               label: "dev builder mode switch",
               config: {},
-              contentId: null,
             }),
           ]
         : []),
       ...((isStructurePage || isPagesPage || isNavigationPage || isThemePage || isModulesPage)
         ? [
-            buildPhiCmsWidgetNode({
+            nodes.widget({
               typeKey: "builder-draft-status",
               id: SYNTHETIC_DEV_WIDGET_IDS.widgetDraftStatus,
-              siteId: page.siteId,
               parentLayoutNodeId: SYNTHETIC_DEV_LAYOUT_IDS.layoutHeaderBottom,
               slotIndex: PHI_CMS_THREE_COLUMN_LAYOUT_SLOT_INDEX.Right,
               sortOrder: 0,
-              status: PhiCmsStatus.Published,
-              flags: 0,
-              visibilityMask: page.visibilityMask,
               label: isThemePage ? "builder brand draft status" : "builder draft status",
               config: {},
-              contentId: null,
             }),
           ]
         : []),
       ...(isStructurePage
         ? [
-            buildPhiCmsWidgetNode({
+            nodes.widget({
               typeKey: "builder-shells-workspace",
               id: SYNTHETIC_DEV_WIDGET_IDS.widgetCanvas,
-              siteId: page.siteId,
               parentLayoutNodeId: SYNTHETIC_DEV_LAYOUT_IDS.layoutContent,
               slotIndex: 1,
               sortOrder: 0,
-              status: PhiCmsStatus.Published,
-              flags: 0,
-              visibilityMask: page.visibilityMask,
               label: "dev shells workspace",
               config: {},
-              contentId: null,
             }),
           ]
         : isPagesPage
           ? [
-              buildPhiCmsWidgetNode({
+              nodes.widget({
                 typeKey: "builder-pages-workspace",
                 id: SYNTHETIC_DEV_WIDGET_IDS.widgetCanvas,
-                siteId: page.siteId,
                 parentLayoutNodeId: SYNTHETIC_DEV_LAYOUT_IDS.layoutContent,
                 slotIndex: 1,
                 sortOrder: 0,
-                status: PhiCmsStatus.Published,
-                flags: 0,
-                visibilityMask: page.visibilityMask,
                 label: "dev pages workspace",
                 config: {},
-                contentId: null,
               }),
             ]
         : isMediaPage
           ? []
           : isThemePage
             ? [
-                buildPhiCmsWidgetNode({
+                nodes.widget({
                   typeKey: "builder-brand-theme-controls",
                   id: SYNTHETIC_DEV_WIDGET_IDS.widgetBrandThemeControls,
-                  siteId: page.siteId,
                   parentLayoutNodeId: SYNTHETIC_DEV_LAYOUT_IDS.layoutBrandCardsRow,
                   slotIndex: PHI_CMS_SEQUENTIAL_LAYOUT_SLOTS[0].slotIndex,
                   sortOrder: 0,
-                  status: PhiCmsStatus.Published,
-                  flags: 0,
-                  visibilityMask: page.visibilityMask,
                   label: "dev brand theme controls",
                   config: {
                     themeKey: "default",
                     minSize: { width: 300 },
                     maxSize: { width: 400 },
                   },
-                  contentId: null,
                 }),
-                buildPhiCmsWidgetNode({
+                nodes.widget({
                   typeKey: "builder-brand-theme-preview",
                   id: SYNTHETIC_DEV_WIDGET_IDS.widgetBrandThemePreview,
-                  siteId: page.siteId,
                   parentLayoutNodeId: SYNTHETIC_DEV_LAYOUT_IDS.layoutBrandCardsRow,
                   slotIndex: PHI_CMS_SEQUENTIAL_LAYOUT_SLOTS[1].slotIndex,
                   sortOrder: 1,
-                  status: PhiCmsStatus.Published,
-                  flags: 0,
-                  visibilityMask: page.visibilityMask,
                   label: "dev brand theme preview",
                   config: {
                     themeKey: "default",
                     minSize: { width: 360 },
                   },
-                  contentId: null,
                 }),
-                buildPhiCmsWidgetNode({
+                nodes.widget({
                   typeKey: "builder-brand-style-controls",
                   id: SYNTHETIC_DEV_WIDGET_IDS.widgetBrandStyleControls,
-                  siteId: page.siteId,
                   parentLayoutNodeId: SYNTHETIC_DEV_LAYOUT_IDS.layoutBrandStylePanel,
                   slotIndex: PHI_CMS_SEQUENTIAL_LAYOUT_SLOTS[0].slotIndex,
                   sortOrder: 0,
-                  status: PhiCmsStatus.Published,
-                  flags: 0,
-                  visibilityMask: page.visibilityMask,
                   label: "dev brand style controls",
                   config: {
                     themeKey: "default",
                     minSize: { width: 300 },
                     maxSize: { width: 400 },
                   },
-                  contentId: null,
                 }),
-                buildPhiCmsWidgetNode({
+                nodes.widget({
                   typeKey: "builder-brand-background-controls",
                   id: SYNTHETIC_DEV_WIDGET_IDS.widgetBrandBackgroundControls,
-                  siteId: page.siteId,
                   parentLayoutNodeId: SYNTHETIC_DEV_LAYOUT_IDS.layoutBrandBackgroundPanel,
                   slotIndex: PHI_CMS_SEQUENTIAL_LAYOUT_SLOTS[0].slotIndex,
                   sortOrder: 0,
-                  status: PhiCmsStatus.Published,
-                  flags: 0,
-                  visibilityMask: page.visibilityMask,
                   label: "dev brand background controls",
                   config: {
                     themeKey: "default",
@@ -4052,59 +3637,43 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                     minSize: { width: 300 },
                     maxSize: { width: 400 },
                   },
-                  contentId: null,
                 }),
-                buildPhiCmsWidgetNode({
+                nodes.widget({
                   typeKey: "builder-brand-theme-preview",
                   id: SYNTHETIC_DEV_WIDGET_IDS.widgetBrandBackgroundPreview,
-                  siteId: page.siteId,
                   parentLayoutNodeId: SYNTHETIC_DEV_LAYOUT_IDS.layoutBrandBackgroundPanel,
                   slotIndex: PHI_CMS_SEQUENTIAL_LAYOUT_SLOTS[1].slotIndex,
                   sortOrder: 1,
-                  status: PhiCmsStatus.Published,
-                  flags: 0,
-                  visibilityMask: page.visibilityMask,
                   label: "dev brand background preview",
                   config: {
                     themeKey: "default",
                     minSize: { width: 360 },
                   },
-                  contentId: null,
                 }),
-                buildPhiCmsWidgetNode({
+                nodes.widget({
                   typeKey: "builder-brand-theme-preview",
                   id: SYNTHETIC_DEV_WIDGET_IDS.widgetBrandStylePreview,
-                  siteId: page.siteId,
                   parentLayoutNodeId: SYNTHETIC_DEV_LAYOUT_IDS.layoutBrandStylePanel,
                   slotIndex: PHI_CMS_SEQUENTIAL_LAYOUT_SLOTS[1].slotIndex,
                   sortOrder: 1,
-                  status: PhiCmsStatus.Published,
-                  flags: 0,
-                  visibilityMask: page.visibilityMask,
                   label: "dev brand style preview",
                   config: {
                     themeKey: "default",
                     minSize: { width: 360 },
                   },
-                  contentId: null,
                 }),
-                buildPhiCmsWidgetNode({
+                nodes.widget({
                   typeKey: "builder-brand-identity-controls",
                   id: SYNTHETIC_DEV_WIDGET_IDS.widgetBrandIdentityControls,
-                  siteId: page.siteId,
                   parentLayoutNodeId: SYNTHETIC_DEV_LAYOUT_IDS.layoutBrandIdentityPanel,
                   slotIndex: PHI_CMS_SEQUENTIAL_LAYOUT_SLOTS[0].slotIndex,
                   sortOrder: 0,
-                  status: PhiCmsStatus.Published,
-                  flags: 0,
-                  visibilityMask: page.visibilityMask,
                   label: "dev brand identity controls",
                   config: {
                     themeKey: "default",
                     minSize: { width: 300 },
                     maxSize: { width: 400 },
                   },
-                  contentId: null,
                 }),
                 /*
                  * The fourth instance of the one Preview Widget, not a fourth Preview.
@@ -4113,22 +3682,17 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                  * freshly mounted one asks the Controller for the draft rather than waiting for the next
                  * broadcast. Standing beside its own panel is the whole reason there is more than one.
                  */
-                buildPhiCmsWidgetNode({
+                nodes.widget({
                   typeKey: "builder-brand-theme-preview",
                   id: SYNTHETIC_DEV_WIDGET_IDS.widgetBrandIdentityPreview,
-                  siteId: page.siteId,
                   parentLayoutNodeId: SYNTHETIC_DEV_LAYOUT_IDS.layoutBrandIdentityPanel,
                   slotIndex: PHI_CMS_SEQUENTIAL_LAYOUT_SLOTS[1].slotIndex,
                   sortOrder: 1,
-                  status: PhiCmsStatus.Published,
-                  flags: 0,
-                  visibilityMask: page.visibilityMask,
                   label: "dev brand identity preview",
                   config: {
                     themeKey: "default",
                     minSize: { width: 360 },
                   },
-                  contentId: null,
                 }),
               ]
           : []),

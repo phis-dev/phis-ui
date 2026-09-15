@@ -1,6 +1,6 @@
 import { PHI_CMS_DEFAULT_SLOT_INDEX } from "../../../constants/cms-layout-types";
 import { PhiCmsStatus } from "../../../constants/phi-cms";
-import { buildPhiCmsLayoutNode, buildPhiCmsWidgetNode } from "../../../helpers/cms-node-factories";
+import { createPhiCmsPresetNodes } from "../../../helpers/cms-preset-nodes";
 import { PHI_COLOR, PHI_SPACE } from "../../../theme/antd-css-var-contract";
 import type { PhiCmsPageNode, PhiResolvedCmsPageTree } from "../../../types/cms";
 import {
@@ -91,6 +91,7 @@ export async function buildPhiBuilderInspectorAreaOverlayTree({
     getPhiSignalsWidgetLabels(labelOptions),
   ]);
 
+  const nodes = createPhiCmsPresetNodes(page);
   return {
     page,
     regions: [],
@@ -202,17 +203,13 @@ export async function buildPhiBuilderInspectorAreaOverlayTree({
         PHI_BUILDER_INSPECTOR_LAYOUT_IDS.layoutInspectorHeader,
       ], [
         PHI_BUILDER_INSPECTOR_LAYOUT_IDS.widgetInspectorHeader,
-      ]] as const).map(([id]) => buildPhiCmsLayoutNode({
+      ]] as const).map(([id]) => nodes.layout({
         creationPreset: { layoutKind: "flex", preset: "panel" },
         typeKey: "flex",
         id,
-        siteId: page.siteId,
         parentLayoutNodeId: null,
         slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
         sortOrder: 0,
-        status: PhiCmsStatus.Published,
-        flags: 0,
-        visibilityMask: page.visibilityMask,
         label: "Builder inspector header",
         config: {
           anchor: { horizontal: "left", vertical: "middle" },
@@ -232,16 +229,12 @@ export async function buildPhiBuilderInspectorAreaOverlayTree({
       ], [
         PHI_BUILDER_INSPECTOR_LAYOUT_IDS.widgetInspectorBody,
         PHI_BUILDER_INSPECTOR_SECTIONS.widget,
-      ]] as const).map(([id, sections]) => buildPhiCmsLayoutNode({
+      ]] as const).map(([id, sections]) => nodes.layout({
         typeKey: "collapsible",
         id,
-        siteId: page.siteId,
         parentLayoutNodeId: null,
         slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
         sortOrder: 0,
-        status: PhiCmsStatus.Published,
-        flags: 0,
-        visibilityMask: page.visibilityMask,
         label: "Builder inspector sections",
         config: {
           ghost: true,
@@ -254,48 +247,36 @@ export async function buildPhiBuilderInspectorAreaOverlayTree({
           defaultOpenSlotKeys: ["slot_0"],
         },
       })),
-      buildPhiCmsLayoutNode({
+      nodes.layout({
         creationPreset: { layoutKind: "flex", preset: "panel" },
         typeKey: "flex",
         id: PHI_BUILDER_INSPECTOR_LAYOUT_IDS.effectsHeader,
-        siteId: page.siteId,
         parentLayoutNodeId: null,
         slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
         sortOrder: 0,
-        status: PhiCmsStatus.Published,
-        flags: 0,
-        visibilityMask: page.visibilityMask,
         label: "Builder effects header",
         config: { anchor: { horizontal: "center", vertical: "middle" }, gap: 0, padding: 0, width: "100%", background: "transparent", border: "none" },
       }),
-      buildPhiCmsLayoutNode({
+      nodes.layout({
         typeKey: "stack",
         id: PHI_BUILDER_INSPECTOR_LAYOUT_IDS.effectsBody,
-        siteId: page.siteId,
         parentLayoutNodeId: null,
         slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
         sortOrder: 0,
-        status: PhiCmsStatus.Published,
-        flags: 0,
-        visibilityMask: page.visibilityMask,
         label: "Builder effects body",
         config: { mountPolicy: "eager", slotTransition: "fade-over", defaultActiveSlotKey: "slot_0", padding: PHI_SPACE.base, width: "100%", background: PHI_COLOR.bgLayout, border: "none" },
       }),
-      buildPhiCmsLayoutNode({
+      nodes.layout({
         creationPreset: { layoutKind: "flex", preset: "overlay-actions" },
         typeKey: "flex",
         id: PHI_BUILDER_INSPECTOR_LAYOUT_IDS.effectsFooter,
-        siteId: page.siteId,
         parentLayoutNodeId: null,
         slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
         sortOrder: 0,
-        status: PhiCmsStatus.Published,
-        flags: 0,
-        visibilityMask: page.visibilityMask,
         label: "Builder effects footer",
         config: {},
       }),
-      buildPhiCmsLayoutNode({
+      nodes.layout({
         /*
          * The creation preset has to name the Layout's OWN kind. The horizontal Flex panel preset sets
          * `paddingTop: 0` and `paddingBottom: 0` -- right for a row of controls, wrong for a column --
@@ -305,27 +286,19 @@ export async function buildPhiBuilderInspectorAreaOverlayTree({
         creationPreset: { layoutKind: "verticalflex", preset: "panel" },
         typeKey: "flex-vertical",
         id: PHI_BUILDER_INSPECTOR_LAYOUT_IDS.signalWiringBody,
-        siteId: page.siteId,
         parentLayoutNodeId: null,
         slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
         sortOrder: 0,
-        status: PhiCmsStatus.Published,
-        flags: 0,
-        visibilityMask: page.visibilityMask,
         label: "Builder signal wiring body",
         config: { gap: PHI_SPACE.sm, padding: PHI_SPACE.base, width: "100%", background: "transparent", border: "none" },
       }),
-      buildPhiCmsLayoutNode({
+      nodes.layout({
         creationPreset: { layoutKind: "flex", preset: "overlay-actions" },
         typeKey: "flex",
         id: PHI_BUILDER_INSPECTOR_LAYOUT_IDS.signalWiringFooter,
-        siteId: page.siteId,
         parentLayoutNodeId: null,
         slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
         sortOrder: 0,
-        status: PhiCmsStatus.Published,
-        flags: 0,
-        visibilityMask: page.visibilityMask,
         label: "Builder signal wiring footer",
         config: {},
       }),
@@ -340,19 +313,13 @@ export async function buildPhiBuilderInspectorAreaOverlayTree({
       ], [
         PHI_BUILDER_INSPECTOR_WIDGET_IDS.widgetInspectorHeaderWidget,
         PHI_BUILDER_INSPECTOR_LAYOUT_IDS.widgetInspectorHeader,
-      ]] as const).map(([id, parentLayoutNodeId]) => buildPhiCmsWidgetNode({
+      ]] as const).map(([id, parentLayoutNodeId]) => nodes.widget({
         typeKey: "builder-inspector-header",
         id,
-        siteId: page.siteId,
         parentLayoutNodeId,
         slotIndex: 0,
-        sortOrder: 0,
-        status: PhiCmsStatus.Published,
-        flags: 0,
-        visibilityMask: page.visibilityMask,
         label: "Builder inspector header",
         config: {},
-        contentId: null,
       })),
       ...([[
         PHI_BUILDER_INSPECTOR_LAYOUT_IDS.regionInspectorBody,
@@ -363,16 +330,12 @@ export async function buildPhiBuilderInspectorAreaOverlayTree({
       ], [
         PHI_BUILDER_INSPECTOR_LAYOUT_IDS.widgetInspectorBody,
         PHI_BUILDER_INSPECTOR_SECTIONS.widget,
-      ]] as const).flatMap(([parentLayoutNodeId, sections]) => sections.map(([id, typeKey, sectionKey], slotIndex) => buildPhiCmsWidgetNode({
+      ]] as const).flatMap(([parentLayoutNodeId, sections]) => sections.map(([id, typeKey, sectionKey], slotIndex) => nodes.widget({
         typeKey,
         id,
-        siteId: page.siteId,
         parentLayoutNodeId,
         slotIndex,
         sortOrder: 0,
-        status: PhiCmsStatus.Published,
-        flags: 0,
-        visibilityMask: page.visibilityMask,
         label: `Builder ${resolveBuilderInspectorSectionTitle(inspectorLabels, sectionKey)}`,
         config: {
           signalRoutes: {
@@ -388,18 +351,12 @@ export async function buildPhiBuilderInspectorAreaOverlayTree({
             }],
           },
         },
-        contentId: null,
       }))),
-      buildPhiCmsWidgetNode({
+      nodes.widget({
         typeKey: "tab-bar",
         id: PHI_BUILDER_INSPECTOR_WIDGET_IDS.effectsTabs,
-        siteId: page.siteId,
         parentLayoutNodeId: PHI_BUILDER_INSPECTOR_LAYOUT_IDS.effectsHeader,
         slotIndex: 0,
-        sortOrder: 0,
-        status: PhiCmsStatus.Published,
-        flags: 0,
-        visibilityMask: page.visibilityMask,
         label: "Builder effects tabs",
         config: {
           key: "builder-effects-tabs",
@@ -416,20 +373,15 @@ export async function buildPhiBuilderInspectorAreaOverlayTree({
             ],
           },
         },
-        contentId: null,
       }),
       ...PHI_BUILDER_EFFECTS_SECTIONS.map((section, slotIndex) => {
         const id = PHI_BUILDER_EFFECTS_FORM_WIDGET_IDS[section];
-        return buildPhiCmsWidgetNode({
+        return nodes.widget({
           typeKey: "form",
           id,
-          siteId: page.siteId,
           parentLayoutNodeId: PHI_BUILDER_INSPECTOR_LAYOUT_IDS.effectsBody,
           slotIndex,
           sortOrder: 0,
-          status: PhiCmsStatus.Published,
-          flags: 0,
-          visibilityMask: page.visibilityMask,
           label: section === "appearance" ? "Appearance" : section === "transitions" ? "Transitions" : "Viewport",
           config: {
             formId: PHI_BUILDER_EFFECTS_FORM_IDS[section],
@@ -447,19 +399,13 @@ export async function buildPhiBuilderInspectorAreaOverlayTree({
               ],
             },
           },
-          contentId: null,
         });
       }),
-      buildPhiCmsWidgetNode({
+      nodes.widget({
         typeKey: "command-toolbar",
         id: PHI_BUILDER_INSPECTOR_WIDGET_IDS.effectsCommands,
-        siteId: page.siteId,
         parentLayoutNodeId: PHI_BUILDER_INSPECTOR_LAYOUT_IDS.effectsFooter,
         slotIndex: 0,
-        sortOrder: 0,
-        status: PhiCmsStatus.Published,
-        flags: 0,
-        visibilityMask: page.visibilityMask,
         label: "Builder effects commands",
         config: {
           key: "builder-effects-commands",
@@ -484,18 +430,13 @@ export async function buildPhiBuilderInspectorAreaOverlayTree({
             }],
           },
         },
-        contentId: null,
       }),
-      buildPhiCmsWidgetNode({
+      nodes.widget({
         typeKey: "form",
         id: PHI_BUILDER_INSPECTOR_WIDGET_IDS.signalWiringForm,
-        siteId: page.siteId,
         parentLayoutNodeId: PHI_BUILDER_INSPECTOR_LAYOUT_IDS.signalWiringBody,
         slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
         sortOrder: 0,
-        status: PhiCmsStatus.Published,
-        flags: 0,
-        visibilityMask: page.visibilityMask,
         label: "Signal wiring",
         config: {
           formId: PHI_BUILDER_SIGNAL_WIRING_FORM_ID,
@@ -513,21 +454,16 @@ export async function buildPhiBuilderInspectorAreaOverlayTree({
             ],
           },
         },
-        contentId: null,
       }),
-      buildPhiCmsWidgetNode({
+      nodes.widget({
         typeKey: "table",
         id: PHI_BUILDER_INSPECTOR_WIDGET_IDS.signalWiringRoutes,
-        siteId: page.siteId,
         parentLayoutNodeId: PHI_BUILDER_INSPECTOR_LAYOUT_IDS.signalWiringBody,
         // The vertical Flex Layout has sequential slots: one child per slot, so the Table takes the slot
         // after the Form rather than sharing its own. Sharing one displaced the Form entirely, and with
         // it the Form instance the overlay waits for before it opens.
         slotIndex: 1,
         sortOrder: 0,
-        status: PhiCmsStatus.Published,
-        flags: 0,
-        visibilityMask: page.visibilityMask,
         label: "Signal routes",
         config: {
           /*
@@ -586,18 +522,12 @@ export async function buildPhiBuilderInspectorAreaOverlayTree({
             }],
           },
         },
-        contentId: null,
       }),
-      buildPhiCmsWidgetNode({
+      nodes.widget({
         typeKey: "command-toolbar",
         id: PHI_BUILDER_INSPECTOR_WIDGET_IDS.signalWiringCommands,
-        siteId: page.siteId,
         parentLayoutNodeId: PHI_BUILDER_INSPECTOR_LAYOUT_IDS.signalWiringFooter,
         slotIndex: 0,
-        sortOrder: 0,
-        status: PhiCmsStatus.Published,
-        flags: 0,
-        visibilityMask: page.visibilityMask,
         label: "Builder signal wiring commands",
         config: {
           key: "builder-signal-wiring-commands",
@@ -619,7 +549,6 @@ export async function buildPhiBuilderInspectorAreaOverlayTree({
             listens: [],
           },
         },
-        contentId: null,
       }),
     ],
   };

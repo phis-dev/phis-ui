@@ -2,7 +2,7 @@ import {
   PHI_CMS_DEFAULT_SLOT_INDEX,
 } from "../../../constants/cms-layout-types";
 import { PhiCmsPageType, PhiCmsStatus } from "../../../constants/phi-cms";
-import { buildPhiCmsLayoutNode, buildPhiCmsWidgetNode } from "../../../helpers/cms-node-factories";
+import { createPhiCmsPresetNodes } from "../../../helpers/cms-preset-nodes";
 import type { PhiResolvedCmsPageTree, PhiCmsPageNode } from "../../../types/cms";
 import type { PhiBlockRuntime } from "../../../types";
 import { buildPhiBasePageContentScaffold, PHI_BASE_PAGE_LAYOUT_NODE_ID } from "./phi-base-page-layout";
@@ -154,6 +154,7 @@ export async function buildPhiDefaultAdminUsersPageTree({
     regionConfig: { border: false },
   });
 
+  const nodes = createPhiCmsPresetNodes(page);
   return {
     page: {
       ...page,
@@ -196,17 +197,13 @@ export async function buildPhiDefaultAdminUsersPageTree({
         [PHI_USER_MANAGEMENT_PAGE_LAYOUT_IDS.layoutCreate, "admin users create modal content"],
         [PHI_USER_MANAGEMENT_PAGE_LAYOUT_IDS.layoutEdit, "admin users edit modal content"],
         [PHI_USER_MANAGEMENT_PAGE_LAYOUT_IDS.layoutHistory, "admin users history modal content"],
-      ] as const).map(([id, label]) => buildPhiCmsLayoutNode({
+      ] as const).map(([id, label]) => nodes.layout({
         id,
-        siteId: page.siteId,
         parentLayoutNodeId: null,
         creationPreset: { layoutKind: "verticalflex", preset: "panel" },
         typeKey: "flex-vertical",
         slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
         sortOrder: 0,
-        status: PhiCmsStatus.Published,
-        flags: 0,
-        visibilityMask: page.visibilityMask,
         label,
         config: {
           anchor: { horizontal: "left", vertical: "top" },
@@ -222,32 +219,24 @@ export async function buildPhiDefaultAdminUsersPageTree({
       ...([
         [PHI_USER_MANAGEMENT_PAGE_LAYOUT_IDS.layoutCreateFooter, "admin users create modal footer"],
         [PHI_USER_MANAGEMENT_PAGE_LAYOUT_IDS.layoutEditFooter, "admin users edit modal footer"],
-      ] as const).map(([id, label]) => buildPhiCmsLayoutNode({
+      ] as const).map(([id, label]) => nodes.layout({
         id,
-        siteId: page.siteId,
         parentLayoutNodeId: null,
         creationPreset: { layoutKind: "flex", preset: "overlay-actions" },
         typeKey: "flex",
         slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
         sortOrder: 0,
-        status: PhiCmsStatus.Published,
-        flags: 0,
-        visibilityMask: page.visibilityMask,
         label,
         config: {},
       })),
     ],
     contentWidgets: [
-      buildPhiCmsWidgetNode({
+      nodes.widget({
         id: PHI_USER_MANAGEMENT_PAGE_WIDGET_IDS.widgetTable,
-        siteId: page.siteId,
         parentLayoutNodeId: PHI_BASE_PAGE_LAYOUT_NODE_ID,
         typeKey: "table",
         slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
         sortOrder: 0,
-        status: PhiCmsStatus.Published,
-        flags: 0,
-        visibilityMask: page.visibilityMask,
         label: labels.tableLabel,
         config: {
           source: {
@@ -435,16 +424,12 @@ export async function buildPhiDefaultAdminUsersPageTree({
       ...([
         [PHI_USER_MANAGEMENT_PAGE_WIDGET_IDS.widgetCreateForm, PHI_USER_MANAGEMENT_PAGE_LAYOUT_IDS.layoutCreate, PHI_USER_MANAGEMENT_FORM_IDS.create, createFormAddress, "create"],
         [PHI_USER_MANAGEMENT_PAGE_WIDGET_IDS.widgetEditForm, PHI_USER_MANAGEMENT_PAGE_LAYOUT_IDS.layoutEdit, PHI_USER_MANAGEMENT_FORM_IDS.edit, editFormAddress, "edit"],
-      ] as const).map(([id, parentLayoutNodeId, formId, formAddress, mode]) => buildPhiCmsWidgetNode({
+      ] as const).map(([id, parentLayoutNodeId, formId, formAddress, mode]) => nodes.widget({
         id,
-        siteId: page.siteId,
         parentLayoutNodeId,
         typeKey: "form",
         slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
         sortOrder: 0,
-        status: PhiCmsStatus.Published,
-        flags: 0,
-        visibilityMask: page.visibilityMask,
         label: `admin users ${mode} form`,
         config: {
           formId,
@@ -541,16 +526,12 @@ export async function buildPhiDefaultAdminUsersPageTree({
       ...([
         [PHI_USER_MANAGEMENT_PAGE_WIDGET_IDS.widgetCreateCommands, PHI_USER_MANAGEMENT_PAGE_LAYOUT_IDS.layoutCreateFooter, "create", widgetLabels.editor.createButton],
         [PHI_USER_MANAGEMENT_PAGE_WIDGET_IDS.widgetEditCommands, PHI_USER_MANAGEMENT_PAGE_LAYOUT_IDS.layoutEditFooter, "edit", widgetLabels.editor.saveButton],
-      ] as const).map(([id, parentLayoutNodeId, mode, saveLabel]) => buildPhiCmsWidgetNode({
+      ] as const).map(([id, parentLayoutNodeId, mode, saveLabel]) => nodes.widget({
         id,
-        siteId: page.siteId,
         parentLayoutNodeId,
         typeKey: "command-toolbar",
         slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
         sortOrder: 0,
-        status: PhiCmsStatus.Published,
-        flags: 0,
-        visibilityMask: page.visibilityMask,
         label: `admin users ${mode} commands`,
         config: {
           key: `admin-users-${mode}-commands`,
@@ -584,16 +565,12 @@ export async function buildPhiDefaultAdminUsersPageTree({
           },
         },
       })),
-      buildPhiCmsWidgetNode({
+      nodes.widget({
         id: PHI_USER_MANAGEMENT_PAGE_WIDGET_IDS.widgetHistoryTable,
-        siteId: page.siteId,
         parentLayoutNodeId: PHI_USER_MANAGEMENT_PAGE_LAYOUT_IDS.layoutHistory,
         typeKey: "table",
         slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
         sortOrder: 0,
-        status: PhiCmsStatus.Published,
-        flags: 0,
-        visibilityMask: page.visibilityMask,
         label: "admin users login history table",
         config: {
           source: {

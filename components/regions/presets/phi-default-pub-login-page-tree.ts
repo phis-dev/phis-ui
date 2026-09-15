@@ -6,7 +6,7 @@ import {
   PHI_CMS_SPLIT_LAYOUT_SLOT_INDEX,
 } from "../../../constants/cms-layout-types";
 import { PhiCmsPageType, PhiCmsRegionType, PhiCmsStatus } from "../../../constants/phi-cms";
-import { buildPhiCmsLayoutNode, buildPhiCmsWidgetNode } from "../../../helpers/cms-node-factories";
+import { createPhiCmsPresetNodes } from "../../../helpers/cms-preset-nodes";
 import type { PhiCmsPageNode, PhiResolvedCmsPageTree } from "../../../types/cms";
 import {
   buildPhiLoginNodes,
@@ -53,6 +53,7 @@ export async function buildPhiDefaultPubLoginPageTree({
     locale: runtime.locale.current,
     authControllerAddress: createPhiAuthControllerAddress(),
   });
+  const nodes = createPhiCmsPresetNodes(page);
   return {
     page: {
       ...page,
@@ -75,49 +76,37 @@ export async function buildPhiDefaultPubLoginPageTree({
       },
     ],
     layoutNodes: [
-      buildPhiCmsLayoutNode({
+      nodes.layout({
         creationPreset: { layoutKind: "split", preset: "panel" },
         typeKey: "split-card",
         id: SYNTHETIC_LOGIN_LAYOUT_IDS.layoutContent,
-        siteId: page.siteId,
         parentLayoutNodeId: null,
         slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
         sortOrder: 0,
-        status: PhiCmsStatus.Published,
-        flags: 0,
-        visibilityMask: page.visibilityMask,
         label: "pub login page",
         config: {
           gap: PHI_SPACE.base,
         },
       }),
-      buildPhiCmsLayoutNode({
+      nodes.layout({
         creationPreset: { layoutKind: "verticalflex", preset: "panel" },
         typeKey: "flex-vertical",
         id: SYNTHETIC_LOGIN_LAYOUT_IDS.layoutForm,
-        siteId: page.siteId,
         parentLayoutNodeId: SYNTHETIC_LOGIN_LAYOUT_IDS.layoutContent,
         slotIndex: PHI_CMS_SPLIT_LAYOUT_SLOT_INDEX.Right,
         sortOrder: 0,
-        status: PhiCmsStatus.Published,
-        flags: 0,
-        visibilityMask: page.visibilityMask,
         label: "pub login form layout",
         config: { ...PHI_LOGIN_FORM_LAYOUT_CONFIG, padding: 0 },
       }),
       ...login.layoutNodes,
     ],
     contentWidgets: [
-      buildPhiCmsWidgetNode({
+      nodes.widget({
         typeKey: "description",
         id: SYNTHETIC_LOGIN_WIDGET_IDS.widgetDescription,
-        siteId: page.siteId,
         parentLayoutNodeId: SYNTHETIC_LOGIN_LAYOUT_IDS.layoutContent,
         slotIndex: PHI_CMS_SPLIT_LAYOUT_SLOT_INDEX.Left,
         sortOrder: 0,
-        status: PhiCmsStatus.Published,
-        flags: 0,
-        visibilityMask: page.visibilityMask,
         label: "pub login description widget",
         config: {
           eyebrow: "Login",
@@ -131,7 +120,6 @@ export async function buildPhiDefaultPubLoginPageTree({
           ],
           footer: "Use the secure sign-in form to continue to your account area.",
         },
-        contentId: null,
       }),
       // Narrowed on the page alone: the auth overlay builds the same form into a column of its own width.
       ...login.contentWidgets.map((widget) =>

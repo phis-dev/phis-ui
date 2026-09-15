@@ -1,5 +1,5 @@
 import { PhiCmsPageType, PhiCmsStatus } from "../../../constants/phi-cms";
-import { buildPhiCmsWidgetNode } from "../../../helpers/cms-node-factories";
+import { createPhiCmsPresetNodes } from "../../../helpers/cms-preset-nodes";
 import { PHI_AUTH_RUNTIME_MODULE_ID } from "../../../plugins/runtime-modules/auth/ids";
 import type { PhiBlockRuntime } from "../../../types";
 import type { PhiCmsPageNode, PhiResolvedCmsPageTree } from "../../../types/cms";
@@ -21,12 +21,13 @@ export async function buildPhiDefaultAppProfilePageTree({ page, runtime }: { pag
     [widgets.password, "profile-password", labels.password],
   ] as const;
   const scaffold = buildPhiBasePageContentScaffold({ page, regionId: REGION_CONTENT_ID, regionConfig: { border: false } });
+  const nodes = createPhiCmsPresetNodes(page);
   return {
     page: { ...page, pageType: PhiCmsPageType.Standard, status: PhiCmsStatus.Published },
     pageMeta: { title: { msgId: 0, source: "Profile", value: labels.page }, description: null },
     overlays: [],
     regions: [scaffold.region],
     layoutNodes: [scaffold.layoutNode],
-    contentWidgets: definitions.map(([id, typeKey, label], index) => buildPhiCmsWidgetNode({ id, siteId: page.siteId, parentLayoutNodeId: PHI_BASE_PAGE_LAYOUT_NODE_ID, typeKey, slotIndex: index, sortOrder: index, status: PhiCmsStatus.Published, flags: 0, visibilityMask: page.visibilityMask, label, config: {}, contentId: null })),
+    contentWidgets: definitions.map(([id, typeKey, label], index) => nodes.widget({ id, parentLayoutNodeId: PHI_BASE_PAGE_LAYOUT_NODE_ID, typeKey, slotIndex: index, label, config: {} })),
   };
 }

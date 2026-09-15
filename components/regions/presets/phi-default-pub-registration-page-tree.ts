@@ -7,7 +7,7 @@ import {
   PHI_CMS_SPLIT_LAYOUT_SLOT_INDEX,
 } from "../../../constants/cms-layout-types";
 import { PhiCmsPageType, PhiCmsRegionType, PhiCmsStatus } from "../../../constants/phi-cms";
-import { buildPhiCmsLayoutNode, buildPhiCmsWidgetNode } from "../../../helpers/cms-node-factories";
+import { createPhiCmsPresetNodes } from "../../../helpers/cms-preset-nodes";
 import type { PhiCmsPageNode, PhiResolvedCmsPageTree } from "../../../types/cms";
 import { PHI_SHARED_FORM_IDS } from "../../forms/shared-form-ids";
 
@@ -36,6 +36,7 @@ export async function buildPhiDefaultPubRegistrationPageTree({
     ownerModuleId: PHI_AUTH_RUNTIME_MODULE_ID,
     presetKey,
   }, ["widgetDescription", "widgetRegistration", "widgetRegistrationNotice"]);
+  const nodes = createPhiCmsPresetNodes(page);
   return {
     page: {
       ...page,
@@ -58,48 +59,36 @@ export async function buildPhiDefaultPubRegistrationPageTree({
       },
     ],
     layoutNodes: [
-      buildPhiCmsLayoutNode({
+      nodes.layout({
         creationPreset: { layoutKind: "split", preset: "panel" },
         typeKey: "split-card",
         id: SYNTHETIC_REGISTER_LAYOUT_IDS.layoutContent,
-        siteId: page.siteId,
         parentLayoutNodeId: null,
         slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
         sortOrder: 0,
-        status: PhiCmsStatus.Published,
-        flags: 0,
-        visibilityMask: page.visibilityMask,
         label: "pub registration page",
         config: {
           gap: PHI_SPACE.base,
         },
       }),
-      buildPhiCmsLayoutNode({
+      nodes.layout({
         creationPreset: { layoutKind: "verticalflex", preset: "panel" },
         typeKey: "flex-vertical",
         id: SYNTHETIC_REGISTER_LAYOUT_IDS.layoutForm,
-        siteId: page.siteId,
         parentLayoutNodeId: SYNTHETIC_REGISTER_LAYOUT_IDS.layoutContent,
         slotIndex: PHI_CMS_SPLIT_LAYOUT_SLOT_INDEX.Right,
         sortOrder: 0,
-        status: PhiCmsStatus.Published,
-        flags: 0,
-        visibilityMask: page.visibilityMask,
         label: "pub registration form layout",
         config: { padding: 0 },
       }),
     ],
     contentWidgets: [
-      buildPhiCmsWidgetNode({
+      nodes.widget({
         typeKey: "description",
         id: SYNTHETIC_REGISTER_WIDGET_IDS.widgetDescription,
-        siteId: page.siteId,
         parentLayoutNodeId: SYNTHETIC_REGISTER_LAYOUT_IDS.layoutContent,
         slotIndex: PHI_CMS_SPLIT_LAYOUT_SLOT_INDEX.Left,
         sortOrder: 0,
-        status: PhiCmsStatus.Published,
-        flags: 0,
-        visibilityMask: page.visibilityMask,
         label: "pub registration description widget",
         config: {
           eyebrow: "Register",
@@ -113,18 +102,12 @@ export async function buildPhiDefaultPubRegistrationPageTree({
           ],
           footer: "Complete the form and confirm the link in your email to finish registration.",
         },
-        contentId: null,
       }),
-      buildPhiCmsWidgetNode({
+      nodes.widget({
         typeKey: "form",
         id: SYNTHETIC_REGISTER_WIDGET_IDS.widgetRegistration,
-        siteId: page.siteId,
         parentLayoutNodeId: SYNTHETIC_REGISTER_LAYOUT_IDS.layoutForm,
         slotIndex: 0,
-        sortOrder: 0,
-        status: PhiCmsStatus.Published,
-        flags: 0,
-        visibilityMask: page.visibilityMask,
         label: "pub registration widget",
         /*
          * No submit Widget beside it: the Form Widget carries the submit, in the column its inputs
@@ -139,28 +122,21 @@ export async function buildPhiDefaultPubRegistrationPageTree({
             termsHref: localizeAreaPath(runtime.locale.current, "public", "/terms-and-conditions"),
           },
         },
-        contentId: null,
       }),
       /*
        * The small print stands beside the form, not in it: a form describes fields, and this is a
        * sentence about what happens next. A Widget in the next slot is what composition looks like.
        */
-      buildPhiCmsWidgetNode({
+      nodes.widget({
         typeKey: "simple-text",
         id: SYNTHETIC_REGISTER_WIDGET_IDS.widgetRegistrationNotice,
-        siteId: page.siteId,
         parentLayoutNodeId: SYNTHETIC_REGISTER_LAYOUT_IDS.layoutForm,
         slotIndex: 1,
-        sortOrder: 1,
-        status: PhiCmsStatus.Published,
-        flags: 0,
-        visibilityMask: page.visibilityMask,
         label: "pub registration notice",
         config: {
           text: "We only use your details to create and support your account.",
           type: "secondary",
         },
-        contentId: null,
       }),
     ],
   };

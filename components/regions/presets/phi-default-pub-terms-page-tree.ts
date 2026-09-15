@@ -2,7 +2,7 @@ import { createPhiPresetCmsInstanceIdMap } from "../../../types/cms-instance-id"
 import { PHI_PUBLIC_RUNTIME_MODULE_ID } from "../../../plugins/runtime-modules/public/ids";
 import { PHI_CMS_DEFAULT_SLOT_INDEX } from "../../../constants/cms-layout-types";
 import { PhiCmsPageType, PhiCmsRegionType, PhiCmsStatus } from "../../../constants/phi-cms";
-import { buildPhiCmsLayoutNode, buildPhiCmsWidgetNode } from "../../../helpers/cms-node-factories";
+import { createPhiCmsPresetNodes } from "../../../helpers/cms-preset-nodes";
 import type { PhiCmsPageNode, PhiResolvedCmsPageTree } from "../../../types/cms";
 
 /**
@@ -51,6 +51,7 @@ export async function buildPhiDefaultPubTermsPageTree({
 }: {
   page: PhiCmsPageNode;
 }): Promise<PhiResolvedCmsPageTree> {
+  const nodes = createPhiCmsPresetNodes(page);
   return {
     page: {
       ...page,
@@ -73,38 +74,29 @@ export async function buildPhiDefaultPubTermsPageTree({
       },
     ],
     layoutNodes: [
-      buildPhiCmsLayoutNode({
+      nodes.layout({
         typeKey: "content",
         id: SYNTHETIC_TERMS_LAYOUT_IDS.layoutContent,
-        siteId: page.siteId,
         parentLayoutNodeId: null,
         slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
         sortOrder: 0,
-        status: PhiCmsStatus.Published,
-        flags: 0,
-        visibilityMask: page.visibilityMask,
         label: "pub terms and conditions page",
         config: {},
       }),
     ],
     contentWidgets: [
-      buildPhiCmsWidgetNode({
+      nodes.widget({
         typeKey: "markdown",
         id: SYNTHETIC_TERMS_WIDGET_IDS.widgetMarkdown,
-        siteId: page.siteId,
         parentLayoutNodeId: SYNTHETIC_TERMS_LAYOUT_IDS.layoutContent,
         slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
         sortOrder: 0,
-        status: PhiCmsStatus.Published,
-        flags: 0,
-        visibilityMask: page.visibilityMask,
         label: "pub terms and conditions markdown widget",
         config: {
           sourceMode: "inline",
           markdown: PHI_DEFAULT_PUB_TERMS_MARKDOWN,
           translate: true,
         },
-        contentId: null,
       }),
     ],
   };

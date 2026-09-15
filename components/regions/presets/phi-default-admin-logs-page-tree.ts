@@ -2,7 +2,7 @@ import { createPhiPresetCmsInstanceIdMap } from "../../../types/cms-instance-id"
 import { PHI_OBSERVABILITY_RUNTIME_MODULE_ID } from "../../../plugins/runtime-modules/observability/ids";
 import { PHI_CMS_DEFAULT_SLOT_INDEX } from "../../../constants/cms-layout-types";
 import { PhiCmsPageType, PhiCmsStatus } from "../../../constants/phi-cms";
-import { buildPhiCmsLayoutNode, buildPhiCmsWidgetNode } from "../../../helpers/cms-node-factories";
+import { createPhiCmsPresetNodes } from "../../../helpers/cms-preset-nodes";
 import type { PhiCmsPageNode, PhiResolvedCmsPageTree } from "../../../types/cms";
 import type { PhiBlockRuntime } from "../../../types";
 import { buildPhiBasePageContentScaffold, PHI_BASE_PAGE_LAYOUT_NODE_ID } from "./phi-base-page-layout";
@@ -66,6 +66,7 @@ export async function buildPhiDefaultAdminLogsPageTree({
     regionConfig: { border: false },
   });
 
+  const nodes = createPhiCmsPresetNodes(page);
   return {
     page: {
       ...page,
@@ -118,17 +119,13 @@ export async function buildPhiDefaultAdminLogsPageTree({
     regions: [scaffold.region],
     layoutNodes: [
       scaffold.layoutNode,
-      buildPhiCmsLayoutNode({
+      nodes.layout({
         id: SYNTHETIC_ADMIN_LOGS_LAYOUT_IDS.layoutDetail,
-        siteId: page.siteId,
         parentLayoutNodeId: null,
         creationPreset: { layoutKind: "verticalflex", preset: "panel" },
         typeKey: "flex-vertical",
         slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
         sortOrder: 0,
-        status: PhiCmsStatus.Published,
-        flags: 0,
-        visibilityMask: page.visibilityMask,
         label: "observability log detail modal content",
         config: {
           anchor: { horizontal: "left", vertical: "top" },
@@ -143,16 +140,12 @@ export async function buildPhiDefaultAdminLogsPageTree({
       }),
     ],
     contentWidgets: [
-      buildPhiCmsWidgetNode({
+      nodes.widget({
         id: SYNTHETIC_ADMIN_LOGS_WIDGET_IDS.widgetTable,
-        siteId: page.siteId,
         parentLayoutNodeId: PHI_BASE_PAGE_LAYOUT_NODE_ID,
         typeKey: "table",
         slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
         sortOrder: 0,
-        status: PhiCmsStatus.Published,
-        flags: 0,
-        visibilityMask: page.visibilityMask,
         label: labels.tableLabel,
         config: {
           source: {
@@ -269,16 +262,12 @@ export async function buildPhiDefaultAdminLogsPageTree({
           },
         },
       }),
-      buildPhiCmsWidgetNode({
+      nodes.widget({
         id: SYNTHETIC_ADMIN_LOGS_WIDGET_IDS.widgetDetail,
-        siteId: page.siteId,
         parentLayoutNodeId: SYNTHETIC_ADMIN_LOGS_LAYOUT_IDS.layoutDetail,
         typeKey: "observability-log-detail",
         slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
         sortOrder: 0,
-        status: PhiCmsStatus.Published,
-        flags: 0,
-        visibilityMask: page.visibilityMask,
         label: "observability log detail",
         config: {
           source: {

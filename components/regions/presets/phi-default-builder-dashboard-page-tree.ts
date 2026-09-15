@@ -2,7 +2,7 @@ import { createPhiPresetCmsInstanceIdMap } from "../../../types/cms-instance-id"
 import { PHI_DASHBOARD_RUNTIME_MODULE_ID } from "../../../plugins/runtime-modules/dashboard/ids";
 import { PHI_CMS_DEFAULT_SLOT_INDEX } from "../../../constants/cms-layout-types";
 import { PhiCmsPageType, PhiCmsRegionType, PhiCmsStatus } from "../../../constants/phi-cms";
-import { buildPhiCmsLayoutNode, buildPhiCmsWidgetNode } from "../../../helpers/cms-node-factories";
+import { createPhiCmsPresetNodes } from "../../../helpers/cms-preset-nodes";
 
 import type { PhiCmsPageNode, PhiResolvedCmsPageTree } from "../../../types/cms";
 import type { PhiBlockRuntime } from "../../../types";
@@ -50,6 +50,7 @@ export async function buildPhiDefaultBuilderDashboardPageTree({
     regionId: SYNTHETIC_BUILDER_DASHBOARD_REGION_IDS.regionContent,
   });
 
+  const nodes = createPhiCmsPresetNodes(page);
   return {
     page: {
       ...page,
@@ -91,17 +92,13 @@ export async function buildPhiDefaultBuilderDashboardPageTree({
       scaffold.region,
     ],
     layoutNodes: [
-      buildPhiCmsLayoutNode({
+      nodes.layout({
         creationPreset: { layoutKind: "threecol", preset: "panel" },
         typeKey: "three-column",
         id: SYNTHETIC_BUILDER_DASHBOARD_LAYOUT_IDS.layoutHeaderBottom,
-        siteId: page.siteId,
         parentLayoutNodeId: null,
         slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
         sortOrder: 0,
-        status: PhiCmsStatus.Published,
-        flags: 0,
-        visibilityMask: page.visibilityMask,
         label: "builder dashboard header bottom",
         config: {
           balancedSides: true,
@@ -112,23 +109,17 @@ export async function buildPhiDefaultBuilderDashboardPageTree({
       scaffold.layoutNode,
     ],
     contentWidgets: [
-      buildPhiCmsWidgetNode({
+      nodes.widget({
         typeKey: "builder-chrome-controls",
         id: SYNTHETIC_BUILDER_DASHBOARD_WIDGET_IDS.widgetBuilderChromeControls,
-        siteId: page.siteId,
         parentLayoutNodeId: PHI_BASE_PAGE_LAYOUT_NODE_ID,
         slotIndex: 0,
-        sortOrder: 0,
-        status: PhiCmsStatus.Published,
-        flags: 0,
-        visibilityMask: page.visibilityMask,
         label: "builder dashboard header main controls",
         config: {
           editorPreviewDisabled: true,
           actionsDisabled: true,
           debugDisabled: true,
         },
-        contentId: null,
       }),
     ],
   };

@@ -6,7 +6,7 @@ import {
   PHI_CMS_THREE_COLUMN_LAYOUT_SLOT_INDEX,
 } from "../../../constants/cms-layout-types";
 import { PhiCmsRegionType, PhiCmsStatus } from "../../../constants/phi-cms";
-import { buildPhiCmsLayoutNode, buildPhiCmsWidgetNode } from "../../../helpers/cms-node-factories";
+import { createPhiCmsPresetNodes } from "../../../helpers/cms-preset-nodes";
 import { resolvePhiShellMetric } from "../../../helpers/shell-region-style";
 import type { PhiResolvedCmsPageTree, PhiCmsPageNode } from "../../../types/cms";
 import type { PhiBlockRuntime } from "../../../types";
@@ -69,6 +69,7 @@ export async function buildPhiDefaultAdminAreaPresetTree({
   });
   const resolvedShellLeftWidth =
     typeof shellSiderLeftWidth === "number" ? shellSiderLeftWidth : PHI_LAYOUT.sidebarWidth;
+  const nodes = createPhiCmsPresetNodes(page);
   return {
     page: {
       ...page,
@@ -138,17 +139,13 @@ export async function buildPhiDefaultAdminAreaPresetTree({
       },
     ],
     layoutNodes: [
-      buildPhiCmsLayoutNode({
+      nodes.layout({
         creationPreset: { layoutKind: "threecol", preset: "panel" },
         typeKey: "three-column",
         id: SYNTHETIC_ADMIN_LAYOUT_IDS.layoutHeaderMain,
-        siteId: page.siteId,
         parentLayoutNodeId: null,
         slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
         sortOrder: 0,
-        status: PhiCmsStatus.Published,
-        flags: 0,
-        visibilityMask: page.visibilityMask,
         label: "admin header main three column",
         config: {
           balancedSides: true,
@@ -156,17 +153,13 @@ export async function buildPhiDefaultAdminAreaPresetTree({
           style: { height: "100%" },
         },
       }),
-      buildPhiCmsLayoutNode({
+      nodes.layout({
         creationPreset: { layoutKind: "threecol", preset: "panel" },
         typeKey: "three-column",
         id: SYNTHETIC_ADMIN_LAYOUT_IDS.layoutHeaderTop,
-        siteId: page.siteId,
         parentLayoutNodeId: null,
         slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
         sortOrder: 0,
-        status: PhiCmsStatus.Published,
-        flags: 0,
-        visibilityMask: page.visibilityMask,
         label: "admin header top three column",
         config: {
           balancedSides: true,
@@ -176,16 +169,12 @@ export async function buildPhiDefaultAdminAreaPresetTree({
           style: { height: "100%" },
         },
       }),
-      buildPhiCmsLayoutNode({
+      nodes.layout({
         typeKey: "flex",
         id: SYNTHETIC_ADMIN_LAYOUT_IDS.layoutHeaderTopActions,
-        siteId: page.siteId,
         parentLayoutNodeId: SYNTHETIC_ADMIN_LAYOUT_IDS.layoutHeaderTop,
         slotIndex: PHI_CMS_THREE_COLUMN_LAYOUT_SLOT_INDEX.Right,
         sortOrder: 0,
-        status: PhiCmsStatus.Published,
-        flags: 0,
-        visibilityMask: page.visibilityMask,
         label: "admin header top actions",
         config: {
           anchor: {
@@ -200,17 +189,13 @@ export async function buildPhiDefaultAdminAreaPresetTree({
           height: "100%",
         },
       }),
-      buildPhiCmsLayoutNode({
+      nodes.layout({
         creationPreset: { layoutKind: "verticalflex", preset: "panel" },
         typeKey: "flex-vertical",
         id: SYNTHETIC_ADMIN_LAYOUT_IDS.layoutSiderLeft,
-        siteId: page.siteId,
         parentLayoutNodeId: null,
         slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
         sortOrder: 0,
-        status: PhiCmsStatus.Published,
-        flags: 0,
-        visibilityMask: page.visibilityMask,
         label: "admin sider left stack",
         config: {
           anchor: {
@@ -225,16 +210,12 @@ export async function buildPhiDefaultAdminAreaPresetTree({
       }),
     ],
     contentWidgets: [
-      buildPhiCmsWidgetNode({
+      nodes.widget({
         typeKey: "switch",
         id: SYNTHETIC_ADMIN_WIDGET_IDS.widgetHeaderTopThemeModeSwitch,
-        siteId: page.siteId,
         parentLayoutNodeId: SYNTHETIC_ADMIN_LAYOUT_IDS.layoutHeaderTop,
         slotIndex: PHI_CMS_THREE_COLUMN_LAYOUT_SLOT_INDEX.Left,
         sortOrder: 0,
-        status: PhiCmsStatus.Published,
-        flags: 0,
-        visibilityMask: page.visibilityMask,
         label: "Theme mode switch",
         config: {
           defaultChecked: runtime.viewer.themeMode === "dark",
@@ -255,67 +236,46 @@ export async function buildPhiDefaultAdminAreaPresetTree({
             ],
           },
         },
-        contentId: null,
       }),
-      buildPhiCmsWidgetNode({
+      nodes.widget({
         typeKey: "page-title",
         id: SYNTHETIC_ADMIN_WIDGET_IDS.widgetHeaderMainPageTitle,
-        siteId: page.siteId,
         parentLayoutNodeId: SYNTHETIC_ADMIN_LAYOUT_IDS.layoutHeaderMain,
         slotIndex: PHI_CMS_THREE_COLUMN_LAYOUT_SLOT_INDEX.Middle,
         sortOrder: 0,
-        status: PhiCmsStatus.Published,
-        flags: 0,
-        visibilityMask: page.visibilityMask,
         label: "Page title",
         config: {},
-        contentId: null,
       }),
-      buildPhiCmsWidgetNode({
+      nodes.widget({
         typeKey: "area-menu",
         id: SYNTHETIC_ADMIN_WIDGET_IDS.widgetHeaderAreaMenu,
-        siteId: page.siteId,
         parentLayoutNodeId: SYNTHETIC_ADMIN_LAYOUT_IDS.layoutHeaderTopActions,
         slotIndex: PHI_CMS_SEQUENTIAL_LAYOUT_SLOTS[1].slotIndex,
         sortOrder: 15,
-        status: PhiCmsStatus.Published,
-        flags: 0,
-        visibilityMask: page.visibilityMask,
         label: "admin header main area menu",
         config: {},
-        contentId: null,
       }),
-      buildPhiCmsWidgetNode({
+      nodes.widget({
         typeKey: "account",
         id: SYNTHETIC_ADMIN_WIDGET_IDS.widgetHeaderTopAccount,
-        siteId: page.siteId,
         parentLayoutNodeId: SYNTHETIC_ADMIN_LAYOUT_IDS.layoutHeaderTopActions,
         slotIndex: PHI_CMS_SEQUENTIAL_LAYOUT_SLOTS[2].slotIndex,
         sortOrder: 20,
-        status: PhiCmsStatus.Published,
-        flags: 0,
-        visibilityMask: page.visibilityMask,
         label: "admin header top account",
         config: {},
-        contentId: null,
       }),
-      buildPhiCmsWidgetNode({
+      nodes.widget({
         typeKey: "sidebar-navigation",
         id: SYNTHETIC_ADMIN_WIDGET_IDS.widgetSiderLeftNav,
-        siteId: page.siteId,
         parentLayoutNodeId: SYNTHETIC_ADMIN_LAYOUT_IDS.layoutSiderLeft,
         slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
         sortOrder: 0,
-        status: PhiCmsStatus.Published,
-        flags: 0,
-        visibilityMask: page.visibilityMask,
         label: "admin sider left navigation",
         config: {
           side: "left",
           width: resolvedShellLeftWidth,
           navKey: "admin:sidebar",
         },
-        contentId: null,
       }),
     ],
   };

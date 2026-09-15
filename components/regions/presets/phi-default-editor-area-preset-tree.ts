@@ -6,7 +6,7 @@ import {
   PHI_CMS_THREE_COLUMN_LAYOUT_SLOT_INDEX,
 } from "../../../constants/cms-layout-types";
 import { PhiCmsRegionType, PhiCmsStatus } from "../../../constants/phi-cms";
-import { buildPhiCmsLayoutNode, buildPhiCmsWidgetNode } from "../../../helpers/cms-node-factories";
+import { createPhiCmsPresetNodes } from "../../../helpers/cms-preset-nodes";
 import { resolvePhiShellMetric } from "../../../helpers/shell-region-style";
 import type { PhiResolvedCmsPageTree, PhiCmsPageNode } from "../../../types/cms";
 import type { PhiBlockRuntime } from "../../../types";
@@ -75,6 +75,7 @@ export async function buildPhiDefaultEditorAreaPresetTree({
   const resolvedShellLeftWidth =
     typeof shellSiderLeftWidth === "number" ? shellSiderLeftWidth : PHI_LAYOUT.sidebarWidth;
 
+  const nodes = createPhiCmsPresetNodes(page);
   return {
     page,
     runtimeModuleIds: createPhiDefaultAreaRuntimeModuleIds("editor"),
@@ -139,17 +140,13 @@ export async function buildPhiDefaultEditorAreaPresetTree({
       },
     ],
     layoutNodes: [
-      buildPhiCmsLayoutNode({
+      nodes.layout({
         creationPreset: { layoutKind: "threecol", preset: "panel" },
         typeKey: "three-column",
         id: SYNTHETIC_EDITOR_LAYOUT_IDS.layoutHeaderMain,
-        siteId: page.siteId,
         parentLayoutNodeId: null,
         slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
         sortOrder: 0,
-        status: PhiCmsStatus.Published,
-        flags: 0,
-        visibilityMask: page.visibilityMask,
         label: "editor header main three column",
         config: {
           balancedSides: true,
@@ -157,17 +154,13 @@ export async function buildPhiDefaultEditorAreaPresetTree({
           style: { height: "100%" },
         },
       }),
-      buildPhiCmsLayoutNode({
+      nodes.layout({
         creationPreset: { layoutKind: "threecol", preset: "panel" },
         typeKey: "three-column",
         id: SYNTHETIC_EDITOR_LAYOUT_IDS.layoutHeaderTop,
-        siteId: page.siteId,
         parentLayoutNodeId: null,
         slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
         sortOrder: 0,
-        status: PhiCmsStatus.Published,
-        flags: 0,
-        visibilityMask: page.visibilityMask,
         label: "editor header top three column",
         config: {
           balancedSides: true,
@@ -177,16 +170,12 @@ export async function buildPhiDefaultEditorAreaPresetTree({
           style: { height: "100%" },
         },
       }),
-      buildPhiCmsLayoutNode({
+      nodes.layout({
         typeKey: "flex",
         id: SYNTHETIC_EDITOR_LAYOUT_IDS.layoutHeaderTopActions,
-        siteId: page.siteId,
         parentLayoutNodeId: SYNTHETIC_EDITOR_LAYOUT_IDS.layoutHeaderTop,
         slotIndex: PHI_CMS_THREE_COLUMN_LAYOUT_SLOT_INDEX.Right,
         sortOrder: 0,
-        status: PhiCmsStatus.Published,
-        flags: 0,
-        visibilityMask: page.visibilityMask,
         label: "editor header top actions",
         config: {
           anchor: {
@@ -201,17 +190,13 @@ export async function buildPhiDefaultEditorAreaPresetTree({
           height: "100%",
         },
       }),
-      buildPhiCmsLayoutNode({
+      nodes.layout({
         creationPreset: { layoutKind: "verticalflex", preset: "panel" },
         typeKey: "flex-vertical",
         id: SYNTHETIC_EDITOR_LAYOUT_IDS.layoutSiderLeft,
-        siteId: page.siteId,
         parentLayoutNodeId: null,
         slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
         sortOrder: 0,
-        status: PhiCmsStatus.Published,
-        flags: 0,
-        visibilityMask: page.visibilityMask,
         label: "editor sider left stack",
         config: {
           anchor: {
@@ -226,58 +211,39 @@ export async function buildPhiDefaultEditorAreaPresetTree({
       }),
     ],
     contentWidgets: [
-      buildPhiCmsWidgetNode({
+      nodes.widget({
         typeKey: "page-title",
         id: SYNTHETIC_EDITOR_WIDGET_IDS.widgetHeaderMainPageTitle,
-        siteId: page.siteId,
         parentLayoutNodeId: SYNTHETIC_EDITOR_LAYOUT_IDS.layoutHeaderMain,
         slotIndex: PHI_CMS_THREE_COLUMN_LAYOUT_SLOT_INDEX.Middle,
         sortOrder: 0,
-        status: PhiCmsStatus.Published,
-        flags: 0,
-        visibilityMask: page.visibilityMask,
         label: "Page title",
         config: {},
-        contentId: null,
       }),
-      buildPhiCmsWidgetNode({
+      nodes.widget({
         typeKey: "area-menu",
         id: SYNTHETIC_EDITOR_WIDGET_IDS.widgetHeaderTopAreaMenu,
-        siteId: page.siteId,
         parentLayoutNodeId: SYNTHETIC_EDITOR_LAYOUT_IDS.layoutHeaderTopActions,
         slotIndex: PHI_CMS_SEQUENTIAL_LAYOUT_SLOTS[1].slotIndex,
         sortOrder: 10,
-        status: PhiCmsStatus.Published,
-        flags: 0,
-        visibilityMask: page.visibilityMask,
         label: "editor area menu",
         config: {},
-        contentId: null,
       }),
-      buildPhiCmsWidgetNode({
+      nodes.widget({
         typeKey: "account",
         id: SYNTHETIC_EDITOR_WIDGET_IDS.widgetHeaderTopAccount,
-        siteId: page.siteId,
         parentLayoutNodeId: SYNTHETIC_EDITOR_LAYOUT_IDS.layoutHeaderTopActions,
         slotIndex: PHI_CMS_SEQUENTIAL_LAYOUT_SLOTS[2].slotIndex,
         sortOrder: 20,
-        status: PhiCmsStatus.Published,
-        flags: 0,
-        visibilityMask: page.visibilityMask,
         label: "editor account",
         config: {},
-        contentId: null,
       }),
-      buildPhiCmsWidgetNode({
+      nodes.widget({
         typeKey: "sidebar-navigation",
         id: SYNTHETIC_EDITOR_WIDGET_IDS.widgetSiderLeftNav,
-        siteId: page.siteId,
         parentLayoutNodeId: SYNTHETIC_EDITOR_LAYOUT_IDS.layoutSiderLeft,
         slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
         sortOrder: 0,
-        status: PhiCmsStatus.Published,
-        flags: 0,
-        visibilityMask: page.visibilityMask,
         label: "editor sider left navigation",
         config: {
           side: "left",
@@ -310,7 +276,6 @@ export async function buildPhiDefaultEditorAreaPresetTree({
             },
           ],
         },
-        contentId: null,
       }),
     ],
   };

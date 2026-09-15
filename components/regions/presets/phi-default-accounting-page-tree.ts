@@ -2,7 +2,7 @@ import { createPhiPresetCmsInstanceIdMap } from "../../../types/cms-instance-id"
 import { PHI_ACCOUNTING_RUNTIME_MODULE_ID } from "../../../plugins/runtime-modules/accounting/ids";
 import { PHI_CMS_SEQUENTIAL_LAYOUT_SLOTS } from "../../../constants/cms-layout-types";
 import { PhiCmsPageType, PhiCmsStatus } from "../../../constants/phi-cms";
-import { buildPhiCmsWidgetNode } from "../../../helpers/cms-node-factories";
+import { createPhiCmsPresetNodes } from "../../../helpers/cms-preset-nodes";
 import type { PhiResolvedCmsPageTree, PhiCmsPageNode } from "../../../types/cms";
 import type { PhiBlockRuntime } from "../../../types";
 import { buildPhiBasePageContentScaffold, PHI_BASE_PAGE_LAYOUT_NODE_ID } from "./phi-base-page-layout";
@@ -30,6 +30,7 @@ export async function buildPhiDefaultAccountingPageTree({
     regionId: SYNTHETIC_ACCOUNTING_REGION_IDS.regionContent,
   });
 
+  const nodes = createPhiCmsPresetNodes(page);
   return {
     page: {
       ...page,
@@ -40,16 +41,12 @@ export async function buildPhiDefaultAccountingPageTree({
     regions: [scaffold.region],
     layoutNodes: [scaffold.layoutNode],
     contentWidgets: [
-      buildPhiCmsWidgetNode({
+      nodes.widget({
         id: SYNTHETIC_ACCOUNTING_WIDGET_IDS.widgetOverview,
-        siteId: page.siteId,
         parentLayoutNodeId: PHI_BASE_PAGE_LAYOUT_NODE_ID,
         typeKey: "card",
         slotIndex: PHI_CMS_SEQUENTIAL_LAYOUT_SLOTS[0].slotIndex,
         sortOrder: 0,
-        status: PhiCmsStatus.Published,
-        flags: 0,
-        visibilityMask: page.visibilityMask,
         label: "Accounting",
         config: {
           eyebrow: "Accounting",

@@ -354,6 +354,12 @@ descriptors. Each descriptor targets one eligible Area and loads only Area-domai
 Widget nodes. Core composes contributions from active Modules into the resolved Area tree after module
 selection; an optional Module never replaces the locked `areaShells` descriptor or patches a base preset.
 
+A placement says four things: what it is, where it sits, what it is called, how it is configured.
+`createPhiCmsPresetNodes` supplies the rest -- `siteId`, `visibilityMask`, `status`, `flags`,
+`contentId`, and a `sortOrder` that follows the slot unless it is given -- because those repeat for
+every node of a page and are not decisions a Preset makes. Writing them out on each node buried the
+four that matter and gave every node its own chance to carry the wrong page's mask.
+
 Presets are declarative composition, not implementation hosts. They may:
 
 - place generic or Module-owned Widgets and Layouts;
@@ -476,7 +482,11 @@ The Runtime Module verifier must eventually enforce at least:
 - signal capability/route compatibility and closed JSON schemas;
 - route, path-injection, navigation, and preset identity validity;
 - no Skeleton source imports or mutations;
-- no live-only code in Authoring and no Authoring code in live Area graphs.
+- no live-only code in Authoring and no Authoring code in live Area graphs;
+- every Widget a Module runs is also a Widget it can be authored with. The two catalogs are separate
+  files, and a Widget missing from the authoring one fails nowhere until somebody opens a page that
+  places it -- then only as a Builder diagnostic, a long way from the edit that caused it.
+  `scripts/validate-authoring-catalog.mjs` compares them and runs with the other module checks.
 
 Until every check is automated, review and migration work must treat these rules as binding manually.
 

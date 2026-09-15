@@ -1,6 +1,6 @@
 import { PHI_CMS_DEFAULT_SLOT_INDEX } from "../../../constants/cms-layout-types";
 import { PhiCmsRegionType, PhiCmsStatus } from "../../../constants/phi-cms";
-import { buildPhiCmsLayoutNode } from "../../../helpers/cms-node-factories";
+import { createPhiCmsPresetNodes } from "../../../helpers/cms-preset-nodes";
 import { PHI_CORE_RUNTIME_MODULE_ID } from "../../../plugins/runtime-modules/core/ids";
 import type { PhiCmsLayoutNode, PhiCmsPageNode, PhiCmsRegionNode } from "../../../types/cms";
 import { createPhiPresetCmsInstanceId } from "../../../types/cms-instance-id";
@@ -38,17 +38,13 @@ export const PHI_BASE_PAGE_LAYOUT_LABEL = "Page content";
 
 /** The canonical scaffold node; `visibilityMask` and `siteId` are the page's, everything else is fixed. */
 export function buildPhiBasePageLayoutNode(page: PhiCmsPageNode): PhiCmsLayoutNode {
-  return buildPhiCmsLayoutNode({
+  return createPhiCmsPresetNodes(page).layout({
     id: PHI_BASE_PAGE_LAYOUT_NODE_ID,
-    siteId: page.siteId,
     parentLayoutNodeId: null,
     creationPreset: { layoutKind: "verticalflex", preset: "page-base" },
     typeKey: "flex-vertical",
     slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
     sortOrder: 0,
-    status: PhiCmsStatus.Published,
-    flags: 0,
-    visibilityMask: page.visibilityMask,
     label: PHI_BASE_PAGE_LAYOUT_LABEL,
   });
 }

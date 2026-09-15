@@ -3,7 +3,7 @@ import {
   PHI_CMS_SEQUENTIAL_LAYOUT_SLOTS,
 } from "../../../constants/cms-layout-types";
 import { PhiCmsPageType, PhiCmsStatus } from "../../../constants/phi-cms";
-import { buildPhiCmsLayoutNode, buildPhiCmsWidgetNode } from "../../../helpers/cms-node-factories";
+import { createPhiCmsPresetNodes } from "../../../helpers/cms-preset-nodes";
 import type { PhiCmsPageNode, PhiResolvedCmsPageTree } from "../../../types/cms";
 import type { PhiBlockRuntime } from "../../../types";
 import { PHI_SPACE } from "../../../theme/antd-css-var-contract";
@@ -50,6 +50,7 @@ export async function buildPhiDefaultEditorTranslationsPageTree({
     regionId: SYNTHETIC_EDITOR_TRANSLATIONS_REGION_IDS.regionContent,
   });
 
+  const nodes = createPhiCmsPresetNodes(page);
   return {
     page: {
       ...page,
@@ -88,46 +89,34 @@ export async function buildPhiDefaultEditorTranslationsPageTree({
     regions: [scaffold.region],
     layoutNodes: [
       scaffold.layoutNode,
-      buildPhiCmsLayoutNode({
+      nodes.layout({
         id: PHI_EDITOR_TRANSLATION_OVERLAY_LAYOUT_ID,
-        siteId: page.siteId,
         parentLayoutNodeId: null,
         creationPreset: { layoutKind: "verticalflex", preset: "panel" },
         typeKey: "flex-vertical",
         slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
         sortOrder: 0,
-        status: PhiCmsStatus.Published,
-        flags: 0,
-        visibilityMask: page.visibilityMask,
         label: "editor translation modal content",
         config: { anchor: { horizontal: "left", vertical: "top" }, gap: PHI_SPACE.base, width: "100%", padding: 0, border: false },
       }),
-      buildPhiCmsLayoutNode({
+      nodes.layout({
         id: PHI_EDITOR_TRANSLATION_OVERLAY_FOOTER_LAYOUT_ID,
-        siteId: page.siteId,
         parentLayoutNodeId: null,
         creationPreset: { layoutKind: "flex", preset: "overlay-actions" },
         typeKey: "flex",
         slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
         sortOrder: 0,
-        status: PhiCmsStatus.Published,
-        flags: 0,
-        visibilityMask: page.visibilityMask,
         label: "editor translation modal footer",
         config: {},
       }),
     ],
     contentWidgets: [
-      buildPhiCmsWidgetNode({
+      nodes.widget({
         id: PHI_EDITOR_TRANSLATIONS_SOURCE_LOCALE_WIDGET_ID,
-        siteId: page.siteId,
         parentLayoutNodeId: PHI_BASE_PAGE_LAYOUT_NODE_ID,
         typeKey: "input",
         slotIndex: PHI_CMS_SEQUENTIAL_LAYOUT_SLOTS[0].slotIndex,
         sortOrder: 0,
-        status: PhiCmsStatus.Published,
-        flags: 0,
-        visibilityMask: page.visibilityMask,
         label: "editor source locale",
         config: {
           text: "",
@@ -147,18 +136,13 @@ export async function buildPhiDefaultEditorTranslationsPageTree({
             }],
           },
         },
-        contentId: null,
       }),
-      buildPhiCmsWidgetNode({
+      nodes.widget({
         id: PHI_EDITOR_TRANSLATIONS_WIDGET_ID,
-        siteId: page.siteId,
         parentLayoutNodeId: PHI_BASE_PAGE_LAYOUT_NODE_ID,
         typeKey: "table",
         slotIndex: PHI_CMS_SEQUENTIAL_LAYOUT_SLOTS[1].slotIndex,
         sortOrder: 10,
-        status: PhiCmsStatus.Published,
-        flags: 0,
-        visibilityMask: page.visibilityMask,
         label: labels.widgetLabel,
         config: {
           source: {
@@ -290,16 +274,12 @@ export async function buildPhiDefaultEditorTranslationsPageTree({
           },
         },
       }),
-      buildPhiCmsWidgetNode({
+      nodes.widget({
         id: PHI_EDITOR_TRANSLATION_FORM_WIDGET_ID,
-        siteId: page.siteId,
         parentLayoutNodeId: PHI_EDITOR_TRANSLATION_OVERLAY_LAYOUT_ID,
         typeKey: "form",
         slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
         sortOrder: 10,
-        status: PhiCmsStatus.Published,
-        flags: 0,
-        visibilityMask: page.visibilityMask,
         label: "editor translation form",
         config: {
           formId: PHI_LOCALIZATION_FORM_IDS.editorTranslation,
@@ -321,16 +301,12 @@ export async function buildPhiDefaultEditorTranslationsPageTree({
           },
         },
       }),
-      buildPhiCmsWidgetNode({
+      nodes.widget({
         id: PHI_EDITOR_TRANSLATION_COMMANDS_WIDGET_ID,
-        siteId: page.siteId,
         parentLayoutNodeId: PHI_EDITOR_TRANSLATION_OVERLAY_FOOTER_LAYOUT_ID,
         typeKey: "command-toolbar",
         slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
         sortOrder: 0,
-        status: PhiCmsStatus.Published,
-        flags: 0,
-        visibilityMask: page.visibilityMask,
         label: "editor translation commands",
         config: {
           key: "editor-translation-commands",

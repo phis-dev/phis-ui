@@ -2,7 +2,7 @@ import { createPhiPresetCmsInstanceIdMap } from "../../../types/cms-instance-id"
 import { PHI_AUTH_RUNTIME_MODULE_ID } from "../../../plugins/runtime-modules/auth/ids";
 import { PHI_CMS_DEFAULT_SLOT_INDEX } from "../../../constants/cms-layout-types";
 import { PhiCmsPageType, PhiCmsRegionType, PhiCmsStatus } from "../../../constants/phi-cms";
-import { buildPhiCmsLayoutNode, buildPhiCmsWidgetNode } from "../../../helpers/cms-node-factories";
+import { createPhiCmsPresetNodes } from "../../../helpers/cms-preset-nodes";
 import type { PhiCmsPageNode, PhiResolvedCmsPageTree } from "../../../types/cms";
 
 export function buildPhiAuthRuntimePageTree({
@@ -27,6 +27,7 @@ export function buildPhiAuthRuntimePageTree({
     presetKey,
   }, ["widgetMain"]);
 
+  const nodes = createPhiCmsPresetNodes(page);
   return {
     page: { ...page, pageType: PhiCmsPageType.Standard, status: PhiCmsStatus.Published },
     pageMeta: {
@@ -46,33 +47,24 @@ export function buildPhiAuthRuntimePageTree({
       sortOrder: 30,
       config: { border: false },
     }],
-    layoutNodes: [buildPhiCmsLayoutNode({
+    layoutNodes: [nodes.layout({
       id: layouts.layoutRoot,
-      siteId: page.siteId,
       parentLayoutNodeId: null,
       creationPreset: { layoutKind: "content", preset: "panel" },
       typeKey: "content",
       slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
       sortOrder: 0,
-      status: PhiCmsStatus.Published,
-      flags: 0,
-      visibilityMask: page.visibilityMask,
       label,
       config: {},
     })],
-    contentWidgets: [buildPhiCmsWidgetNode({
+    contentWidgets: [nodes.widget({
       typeKey: widgetTypeKey,
       id: widgets.widgetMain,
-      siteId: page.siteId,
       parentLayoutNodeId: layouts.layoutRoot,
       slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
       sortOrder: 0,
-      status: PhiCmsStatus.Published,
-      flags: 0,
-      visibilityMask: page.visibilityMask,
       label,
       config: { translate: false },
-      contentId: null,
     })],
   };
 }

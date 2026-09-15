@@ -6,7 +6,7 @@ import {
   PHI_CMS_SPLIT_LAYOUT_SLOT_INDEX,
 } from "../../../constants/cms-layout-types";
 import { PhiCmsPageType, PhiCmsRegionType, PhiCmsStatus } from "../../../constants/phi-cms";
-import { buildPhiCmsLayoutNode, buildPhiCmsWidgetNode } from "../../../helpers/cms-node-factories";
+import { createPhiCmsPresetNodes } from "../../../helpers/cms-preset-nodes";
 import type { PhiCmsPageNode, PhiResolvedCmsPageTree } from "../../../types/cms";
 import { PHI_SHARED_FORM_IDS } from "../../forms/shared-form-ids";
 
@@ -37,6 +37,7 @@ export async function buildPhiDefaultPubContactPageTree({
 }: {
   page: PhiCmsPageNode;
 }): Promise<PhiResolvedCmsPageTree> {
+  const nodes = createPhiCmsPresetNodes(page);
   return {
     page: {
       ...page,
@@ -59,48 +60,35 @@ export async function buildPhiDefaultPubContactPageTree({
       },
     ],
     layoutNodes: [
-      buildPhiCmsLayoutNode({
+      nodes.layout({
         creationPreset: { layoutKind: "split", preset: "panel" },
         typeKey: "split-card",
         id: SYNTHETIC_CONTACT_LAYOUT_IDS.layoutContent,
-        siteId: page.siteId,
         parentLayoutNodeId: null,
         slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
-        sortOrder: 0,
-        status: PhiCmsStatus.Published,
-        flags: 0,
-        visibilityMask: page.visibilityMask,
         label: "pub contact page",
         config: {
           gap: PHI_SPACE.base,
         },
       }),
-      buildPhiCmsLayoutNode({
+      nodes.layout({
         creationPreset: { layoutKind: "verticalflex", preset: "panel" },
         typeKey: "flex-vertical",
         id: SYNTHETIC_CONTACT_LAYOUT_IDS.layoutForm,
-        siteId: page.siteId,
         parentLayoutNodeId: SYNTHETIC_CONTACT_LAYOUT_IDS.layoutContent,
         slotIndex: PHI_CMS_SPLIT_LAYOUT_SLOT_INDEX.Right,
         sortOrder: 0,
-        status: PhiCmsStatus.Published,
-        flags: 0,
-        visibilityMask: page.visibilityMask,
         label: "pub contact form layout",
         config: { padding: 0 },
       }),
     ],
     contentWidgets: [
-      buildPhiCmsWidgetNode({
+      nodes.widget({
         typeKey: "description",
         id: SYNTHETIC_CONTACT_WIDGET_IDS.widgetDescription,
-        siteId: page.siteId,
         parentLayoutNodeId: SYNTHETIC_CONTACT_LAYOUT_IDS.layoutContent,
         slotIndex: PHI_CMS_SPLIT_LAYOUT_SLOT_INDEX.Left,
         sortOrder: 0,
-        status: PhiCmsStatus.Published,
-        flags: 0,
-        visibilityMask: page.visibilityMask,
         label: "pub contact description widget",
         config: {
           eyebrow: "Contact",
@@ -114,18 +102,12 @@ export async function buildPhiDefaultPubContactPageTree({
           ],
           footer: "Use the contact form to send your message directly to our team.",
         },
-        contentId: null,
       }),
-      buildPhiCmsWidgetNode({
+      nodes.widget({
         typeKey: "form",
         id: SYNTHETIC_CONTACT_WIDGET_IDS.widgetContact,
-        siteId: page.siteId,
         parentLayoutNodeId: SYNTHETIC_CONTACT_LAYOUT_IDS.layoutForm,
         slotIndex: 0,
-        sortOrder: 0,
-        status: PhiCmsStatus.Published,
-        flags: 0,
-        visibilityMask: page.visibilityMask,
         label: "pub contact widget",
         /*
          * No submit Widget beside it: the Form Widget carries the submit, in the column its inputs
@@ -136,7 +118,6 @@ export async function buildPhiDefaultPubContactPageTree({
           formId: PHI_SHARED_FORM_IDS.contact,
           submit: {},
         },
-        contentId: null,
       }),
     ],
   };

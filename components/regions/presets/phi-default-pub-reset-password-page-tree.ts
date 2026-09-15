@@ -6,7 +6,7 @@ import {
   PHI_CMS_SPLIT_LAYOUT_SLOT_INDEX,
 } from "../../../constants/cms-layout-types";
 import { PhiCmsPageType, PhiCmsRegionType, PhiCmsStatus } from "../../../constants/phi-cms";
-import { buildPhiCmsLayoutNode, buildPhiCmsWidgetNode } from "../../../helpers/cms-node-factories";
+import { createPhiCmsPresetNodes } from "../../../helpers/cms-preset-nodes";
 import type { PhiCmsPageNode, PhiResolvedCmsPageTree } from "../../../types/cms";
 import { PHI_SHARED_FORM_IDS } from "../../forms/shared-form-ids";
 
@@ -53,6 +53,7 @@ export async function buildPhiDefaultPubResetPasswordPageTree({
     valuePath: "query.token",
     operator: "truthy",
   } as const;
+  const nodes = createPhiCmsPresetNodes(page);
   return {
     page: {
       ...page,
@@ -75,48 +76,36 @@ export async function buildPhiDefaultPubResetPasswordPageTree({
       },
     ],
     layoutNodes: [
-      buildPhiCmsLayoutNode({
+      nodes.layout({
         creationPreset: { layoutKind: "split", preset: "panel" },
         typeKey: "split-card",
         id: SYNTHETIC_RESET_PASSWORD_LAYOUT_IDS.layoutContent,
-        siteId: page.siteId,
         parentLayoutNodeId: null,
         slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
         sortOrder: 0,
-        status: PhiCmsStatus.Published,
-        flags: 0,
-        visibilityMask: page.visibilityMask,
         label: "pub reset password page",
         config: {
           gap: PHI_SPACE.base,
         },
       }),
-      buildPhiCmsLayoutNode({
+      nodes.layout({
         creationPreset: { layoutKind: "verticalflex", preset: "panel" },
         typeKey: "flex-vertical",
         id: SYNTHETIC_RESET_PASSWORD_LAYOUT_IDS.layoutForm,
-        siteId: page.siteId,
         parentLayoutNodeId: SYNTHETIC_RESET_PASSWORD_LAYOUT_IDS.layoutContent,
         slotIndex: PHI_CMS_SPLIT_LAYOUT_SLOT_INDEX.Right,
         sortOrder: 0,
-        status: PhiCmsStatus.Published,
-        flags: 0,
-        visibilityMask: page.visibilityMask,
         label: "pub reset password form layout",
         config: { padding: 0 },
       }),
     ],
     contentWidgets: [
-      buildPhiCmsWidgetNode({
+      nodes.widget({
         typeKey: "description",
         id: SYNTHETIC_RESET_PASSWORD_WIDGET_IDS.widgetDescription,
-        siteId: page.siteId,
         parentLayoutNodeId: SYNTHETIC_RESET_PASSWORD_LAYOUT_IDS.layoutContent,
         slotIndex: PHI_CMS_SPLIT_LAYOUT_SLOT_INDEX.Left,
         sortOrder: 0,
-        status: PhiCmsStatus.Published,
-        flags: 0,
-        visibilityMask: page.visibilityMask,
         label: "pub reset password description widget",
         config: {
           eyebrow: "Reset password",
@@ -130,62 +119,44 @@ export async function buildPhiDefaultPubResetPasswordPageTree({
           ],
           footer: "If the link expired, request a new reset email from the login page.",
         },
-        contentId: null,
       }),
       /*
        * What the sentence above the first stage says, as a Widget of its own: a form describes fields,
        * and this is a note about what happens after you send it.
        */
-      buildPhiCmsWidgetNode({
+      nodes.widget({
         typeKey: "simple-text",
         id: SYNTHETIC_RESET_PASSWORD_WIDGET_IDS.widgetResetPasswordIntro,
-        siteId: page.siteId,
         parentLayoutNodeId: SYNTHETIC_RESET_PASSWORD_LAYOUT_IDS.layoutForm,
         slotIndex: 0,
-        sortOrder: 0,
-        status: PhiCmsStatus.Published,
-        flags: 0,
-        visibilityMask: page.visibilityMask,
         label: "pub reset password intro",
         config: {
           text: "If the account exists, a reset email is on its way. Open the link in that email to choose a new password.",
           type: "secondary",
           visibleWhen: withoutToken,
         },
-        contentId: null,
       }),
-      buildPhiCmsWidgetNode({
+      nodes.widget({
         typeKey: "form",
         id: SYNTHETIC_RESET_PASSWORD_WIDGET_IDS.widgetResetPassword,
-        siteId: page.siteId,
         parentLayoutNodeId: SYNTHETIC_RESET_PASSWORD_LAYOUT_IDS.layoutForm,
         slotIndex: 1,
-        sortOrder: 1,
-        status: PhiCmsStatus.Published,
-        flags: 0,
-        visibilityMask: page.visibilityMask,
         label: "pub reset password request widget",
         config: {
           formId: PHI_SHARED_FORM_IDS.resetPassword,
           submit: {},
           visibleWhen: withoutToken,
         },
-        contentId: null,
       }),
       /*
        * The second stage submits the `confirm` phase of the reset, and the token it spends comes from
        * the address it was reached by -- the only place that token exists.
        */
-      buildPhiCmsWidgetNode({
+      nodes.widget({
         typeKey: "form",
         id: SYNTHETIC_RESET_PASSWORD_WIDGET_IDS.widgetResetPasswordConfirm,
-        siteId: page.siteId,
         parentLayoutNodeId: SYNTHETIC_RESET_PASSWORD_LAYOUT_IDS.layoutForm,
         slotIndex: 2,
-        sortOrder: 2,
-        status: PhiCmsStatus.Published,
-        flags: 0,
-        visibilityMask: page.visibilityMask,
         label: "pub reset password confirm widget",
         config: {
           formId: PHI_SHARED_FORM_IDS.resetPasswordConfirm,
@@ -194,7 +165,6 @@ export async function buildPhiDefaultPubResetPasswordPageTree({
           formConfig: { initialValuesFromQuery: { token: "token" } },
           visibleWhen: withToken,
         },
-        contentId: null,
       }),
     ],
   };

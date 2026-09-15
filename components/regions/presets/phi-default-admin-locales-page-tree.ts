@@ -4,7 +4,7 @@ import {
   PHI_CMS_DEFAULT_SLOT_INDEX,
 } from "../../../constants/cms-layout-types";
 import { PhiCmsPageType, PhiCmsStatus } from "../../../constants/phi-cms";
-import { buildPhiCmsLayoutNode, buildPhiCmsWidgetNode } from "../../../helpers/cms-node-factories";
+import { createPhiCmsPresetNodes } from "../../../helpers/cms-preset-nodes";
 import type { PhiCmsPageNode, PhiResolvedCmsPageTree } from "../../../types/cms";
 import type { PhiBlockRuntime } from "../../../types";
 import { createPhiSignalAddress, PHI_SIGNAL_VALUE_SCHEMAS } from "../../../types/signals";
@@ -62,6 +62,7 @@ export async function buildPhiDefaultAdminLocalesPageTree({
     regionConfig: { border: false },
   });
 
+  const nodes = createPhiCmsPresetNodes(page);
   return {
     page: {
       ...page,
@@ -77,17 +78,13 @@ export async function buildPhiDefaultAdminLocalesPageTree({
     layoutNodes: [
       scaffold.layoutNode,
       // The base scaffold owns padding and background; this grid only arranges the slots inside it.
-      buildPhiCmsLayoutNode({
+      nodes.layout({
         id: SYNTHETIC_ADMIN_LOCALES_LAYOUT_IDS.layoutGrid,
-        siteId: page.siteId,
         parentLayoutNodeId: PHI_BASE_PAGE_LAYOUT_NODE_ID,
         creationPreset: { layoutKind: "grid", preset: "panel" },
         typeKey: "grid",
         slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
         sortOrder: 0,
-        status: PhiCmsStatus.Published,
-        flags: 0,
-        visibilityMask: page.visibilityMask,
         label: labels.contentLabel,
         config: {
           gap: PHI_SPACE.base,
@@ -106,16 +103,12 @@ export async function buildPhiDefaultAdminLocalesPageTree({
       }),
     ],
     contentWidgets: [
-      buildPhiCmsWidgetNode({
+      nodes.widget({
         id: SYNTHETIC_ADMIN_LOCALES_WIDGET_IDS.widgetSiteLocalesForm,
-        siteId: page.siteId,
         parentLayoutNodeId: SYNTHETIC_ADMIN_LOCALES_LAYOUT_IDS.layoutGrid,
         typeKey: "form",
         slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
         sortOrder: 0,
-        status: PhiCmsStatus.Published,
-        flags: 0,
-        visibilityMask: page.visibilityMask,
         label: "site locale settings form",
         config: {
           formId: PHI_LOCALIZATION_FORM_IDS.siteLocales,
@@ -150,16 +143,11 @@ export async function buildPhiDefaultAdminLocalesPageTree({
           },
         },
       }),
-      buildPhiCmsWidgetNode({
+      nodes.widget({
         id: SYNTHETIC_ADMIN_LOCALES_WIDGET_IDS.widgetSiteLocalesSubmit,
-        siteId: page.siteId,
         parentLayoutNodeId: SYNTHETIC_ADMIN_LOCALES_LAYOUT_IDS.layoutGrid,
         typeKey: "button",
         slotIndex: 1,
-        sortOrder: 1,
-        status: PhiCmsStatus.Published,
-        flags: 0,
-        visibilityMask: page.visibilityMask,
         label: "save site locale settings",
         config: {
           key: "saveLocales",
@@ -176,18 +164,12 @@ export async function buildPhiDefaultAdminLocalesPageTree({
             receiver: createPhiSignalAddress("cms", SYNTHETIC_ADMIN_LOCALES_WIDGET_IDS.widgetSiteLocalesForm),
           }] },
         },
-        contentId: null,
       }),
-      buildPhiCmsWidgetNode({
+      nodes.widget({
         id: SYNTHETIC_ADMIN_LOCALES_WIDGET_IDS.widgetLocales,
-        siteId: page.siteId,
         parentLayoutNodeId: SYNTHETIC_ADMIN_LOCALES_LAYOUT_IDS.layoutGrid,
         typeKey: "table",
         slotIndex: 2,
-        sortOrder: 2,
-        status: PhiCmsStatus.Published,
-        flags: 0,
-        visibilityMask: page.visibilityMask,
         label: labels.widgetLabel,
         config: {
           source: {

@@ -2,7 +2,7 @@ import { createPhiPresetCmsInstanceId } from "../../../types/cms-instance-id";
 import { PHI_PUBLIC_RUNTIME_MODULE_ID } from "../../../plugins/runtime-modules/public/ids";
 import { PHI_CMS_DEFAULT_SLOT_INDEX } from "../../../constants/cms-layout-types";
 import { PhiCmsPageType, PhiCmsRegionType, PhiCmsStatus } from "../../../constants/phi-cms";
-import { buildPhiCmsLayoutNode, buildPhiCmsWidgetNode } from "../../../helpers/cms-node-factories";
+import { createPhiCmsPresetNodes } from "../../../helpers/cms-preset-nodes";
 import type { PhiCmsPageNode, PhiResolvedCmsPageTree } from "../../../types/cms";
 
 export type PhiCmsErrorCode = 401 | 403 | 404 | 500;
@@ -80,6 +80,7 @@ export async function buildPhiDefaultPubErrorPageTree({
     nodeKey: "widgetResult",
   });
 
+  const nodes = createPhiCmsPresetNodes(page);
   return {
     page: {
       ...page,
@@ -102,17 +103,13 @@ export async function buildPhiDefaultPubErrorPageTree({
       },
     ],
     layoutNodes: [
-      buildPhiCmsLayoutNode({
+      nodes.layout({
         typeKey: "content",
         id: layoutContentId,
-        siteId: page.siteId,
         parentLayoutNodeId: null,
         creationPreset: { layoutKind: "content", preset: "panel" },
         slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
         sortOrder: 0,
-        status: PhiCmsStatus.Published,
-        flags: 0,
-        visibilityMask: page.visibilityMask,
         label: `pub error ${code} page`,
         config: {
           anchor: "center",
@@ -120,16 +117,12 @@ export async function buildPhiDefaultPubErrorPageTree({
       }),
     ],
     contentWidgets: [
-      buildPhiCmsWidgetNode({
+      nodes.widget({
         typeKey: "result",
         id: widgetResultId,
-        siteId: page.siteId,
         parentLayoutNodeId: layoutContentId,
         slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
         sortOrder: 0,
-        status: PhiCmsStatus.Published,
-        flags: 0,
-        visibilityMask: page.visibilityMask,
         label: `pub error ${code} result widget`,
         config: {
           status: ERROR_STATUS[code],
@@ -145,7 +138,6 @@ export async function buildPhiDefaultPubErrorPageTree({
            */
           homeLink: code === 404,
         },
-        contentId: null,
       }),
     ],
   };

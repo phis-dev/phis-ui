@@ -1,6 +1,6 @@
 import { PHI_CMS_DEFAULT_SLOT_INDEX } from "../../../constants/cms-layout-types";
 import { PhiCmsStatus } from "../../../constants/phi-cms";
-import { buildPhiCmsLayoutNode } from "../../../helpers/cms-node-factories";
+import { createPhiCmsPresetNodes } from "../../../helpers/cms-preset-nodes";
 import { PHI_COLOR, PHI_SPACE } from "../../../theme/antd-css-var-contract";
 import type { PhiCmsPageNode, PhiResolvedCmsPageTree } from "../../../types/cms";
 import { createPhiSignalAddress, PHI_SIGNAL_VALUE_SCHEMAS } from "../../../types/signals";
@@ -41,6 +41,7 @@ export async function buildPhiAuthAreaLoginOverlayTree({
     locale: runtime.locale.current,
   });
 
+  const nodes = createPhiCmsPresetNodes(page);
   return {
     page,
     regions: [],
@@ -102,9 +103,8 @@ export async function buildPhiAuthAreaLoginOverlayTree({
         },
       },
     }],
-    layoutNodes: [buildPhiCmsLayoutNode({
+    layoutNodes: [nodes.layout({
       id: ids.layoutBody,
-      siteId: page.siteId,
       parentLayoutNodeId: null,
       /*
        * A Form Layout, because what stands in it is a form. It is the node kind that owns the label
@@ -115,9 +115,6 @@ export async function buildPhiAuthAreaLoginOverlayTree({
       typeKey: "flex-vertical",
       slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
       sortOrder: 0,
-      status: PhiCmsStatus.Published,
-      flags: 0,
-      visibilityMask: page.visibilityMask,
       label: `${area} auth login body`,
       config: {
         ...PHI_LOGIN_FORM_LAYOUT_CONFIG,

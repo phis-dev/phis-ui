@@ -6,7 +6,7 @@ import {
 } from "../../../constants/cms-layout-types";
 import { PhiCmsPageType, PhiCmsStatus } from "../../../constants/phi-cms";
 import { getResolvedSiteStats } from "../../../gateway/site-stats";
-import { buildPhiCmsLayoutNode, buildPhiCmsWidgetNode } from "../../../helpers/cms-node-factories";
+import { createPhiCmsPresetNodes } from "../../../helpers/cms-preset-nodes";
 import { formatPhiTranslation } from "../../../helpers/translation-format";
 import { PHI_SPACE } from "../../../theme/antd-css-var-contract";
 import type { PhiCmsPageNode, PhiResolvedCmsPageTree } from "../../../types/cms";
@@ -101,6 +101,7 @@ export async function buildPhiDefaultAdminDashboardPageTree({
     regionConfig: { border: false },
   });
 
+  const nodes = createPhiCmsPresetNodes(page);
   return {
     page: {
       ...page,
@@ -115,17 +116,13 @@ export async function buildPhiDefaultAdminDashboardPageTree({
     regions: [scaffold.region],
     layoutNodes: [
       scaffold.layoutNode,
-      buildPhiCmsLayoutNode({
+      nodes.layout({
         id: SYNTHETIC_ADMIN_DASHBOARD_LAYOUT_IDS.layoutGrid,
-        siteId: page.siteId,
         parentLayoutNodeId: PHI_BASE_PAGE_LAYOUT_NODE_ID,
         creationPreset: { layoutKind: "grid", preset: "panel" },
         typeKey: "grid",
         slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
         sortOrder: 0,
-        status: PhiCmsStatus.Published,
-        flags: 0,
-        visibilityMask: page.visibilityMask,
         label: "admin dashboard grid",
         config: {
           align: "stretch",
@@ -142,16 +139,12 @@ export async function buildPhiDefaultAdminDashboardPageTree({
       }),
     ],
     contentWidgets: [
-      buildPhiCmsWidgetNode({
+      nodes.widget({
         id: SYNTHETIC_ADMIN_DASHBOARD_WIDGET_IDS.widgetUptime,
-        siteId: page.siteId,
         parentLayoutNodeId: SYNTHETIC_ADMIN_DASHBOARD_LAYOUT_IDS.layoutGrid,
         typeKey: "card",
         slotIndex: PHI_CMS_SEQUENTIAL_LAYOUT_SLOTS[0].slotIndex,
         sortOrder: 0,
-        status: PhiCmsStatus.Published,
-        flags: 0,
-        visibilityMask: page.visibilityMask,
         label: labels.uptimeTitle,
         config: {
           eyebrow: labels.runtimeEyebrow,
@@ -163,16 +156,12 @@ export async function buildPhiDefaultAdminDashboardPageTree({
           translate: false,
         },
       }),
-      buildPhiCmsWidgetNode({
+      nodes.widget({
         id: SYNTHETIC_ADMIN_DASHBOARD_WIDGET_IDS.widgetUsers,
-        siteId: page.siteId,
         parentLayoutNodeId: SYNTHETIC_ADMIN_DASHBOARD_LAYOUT_IDS.layoutGrid,
         typeKey: "card",
         slotIndex: PHI_CMS_SEQUENTIAL_LAYOUT_SLOTS[1].slotIndex,
         sortOrder: 0,
-        status: PhiCmsStatus.Published,
-        flags: 0,
-        visibilityMask: page.visibilityMask,
         label: labels.accountsTitle,
         config: {
           eyebrow: labels.accountsEyebrow,
@@ -183,16 +172,12 @@ export async function buildPhiDefaultAdminDashboardPageTree({
           translate: false,
         },
       }),
-      buildPhiCmsWidgetNode({
+      nodes.widget({
         id: SYNTHETIC_ADMIN_DASHBOARD_WIDGET_IDS.widgetDefaultLocale,
-        siteId: page.siteId,
         parentLayoutNodeId: SYNTHETIC_ADMIN_DASHBOARD_LAYOUT_IDS.layoutGrid,
         typeKey: "card",
         slotIndex: PHI_CMS_SEQUENTIAL_LAYOUT_SLOTS[2].slotIndex,
         sortOrder: 0,
-        status: PhiCmsStatus.Published,
-        flags: 0,
-        visibilityMask: page.visibilityMask,
         label: labels.localeTitle,
         config: {
           eyebrow: labels.localeEyebrow,
@@ -203,16 +188,12 @@ export async function buildPhiDefaultAdminDashboardPageTree({
           translate: false,
         },
       }),
-      buildPhiCmsWidgetNode({
+      nodes.widget({
         id: SYNTHETIC_ADMIN_DASHBOARD_WIDGET_IDS.widgetLocales,
-        siteId: page.siteId,
         parentLayoutNodeId: SYNTHETIC_ADMIN_DASHBOARD_LAYOUT_IDS.layoutGrid,
         typeKey: "card",
         slotIndex: PHI_CMS_SEQUENTIAL_LAYOUT_SLOTS[3].slotIndex,
         sortOrder: 0,
-        status: PhiCmsStatus.Published,
-        flags: 0,
-        visibilityMask: page.visibilityMask,
         label: labels.localesTitle,
         config: {
           eyebrow: labels.localesEyebrow,

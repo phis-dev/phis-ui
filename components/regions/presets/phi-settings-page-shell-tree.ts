@@ -3,7 +3,7 @@ import {
   PHI_CMS_DEFAULT_SLOT_INDEX,
 } from "../../../constants/cms-layout-types";
 import { PhiCmsPageType, PhiCmsStatus } from "../../../constants/phi-cms";
-import { buildPhiCmsLayoutNode, buildPhiCmsWidgetNode } from "../../../helpers/cms-node-factories";
+import { createPhiCmsPresetNodes } from "../../../helpers/cms-preset-nodes";
 import { PHI_SPACE } from "../../../theme/antd-css-var-contract";
 import type { PhiCmsPageNode, PhiCmsContentWidgetNode, PhiCmsLayoutNode, PhiResolvedCmsPageTree } from "../../../types/cms";
 import type { PhiRuntimeModuleId } from "../../../types/cms-module-descriptors";
@@ -89,6 +89,7 @@ export function buildPhiSettingsPageShellTree({
   label: string;
   panels: readonly PhiSettingsPageShellPanel[];
 }): PhiResolvedCmsPageTree {
+  const nodes = createPhiCmsPresetNodes(page);
   if (panels.length > PHI_CMS_COLLAPSIBLE_LAYOUT_MAX_SLOTS) {
     throw new Error(
       `Settings page "${presetKey}" declares ${panels.length} panels; the Collapsible Layout supports at most ${PHI_CMS_COLLAPSIBLE_LAYOUT_MAX_SLOTS}.`,
@@ -117,17 +118,13 @@ export function buildPhiSettingsPageShellTree({
   const layoutNodes: PhiCmsLayoutNode[] = [
     scaffold.layoutNode,
     // The base scaffold owns padding and background; the Collapsible only stacks the panels.
-    buildPhiCmsLayoutNode({
+    nodes.layout({
       id: layouts.settingsPanels,
-      siteId: page.siteId,
       parentLayoutNodeId: PHI_BASE_PAGE_LAYOUT_NODE_ID,
       creationPreset: { layoutKind: "collapsible", preset: "panel" },
       typeKey: "collapsible",
       slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
       sortOrder: 0,
-      status: PhiCmsStatus.Published,
-      flags: 0,
-      visibilityMask: page.visibilityMask,
       label,
       config: {
         slotTitles: panels.map((panel) => panel.title),
@@ -143,17 +140,12 @@ export function buildPhiSettingsPageShellTree({
       },
     }),
     ...panels.map((panel, panelIndex) =>
-      buildPhiCmsLayoutNode({
+      nodes.layout({
         id: layouts[panel.nodeKey]!,
-        siteId: page.siteId,
         parentLayoutNodeId: layouts.settingsPanels,
         creationPreset: { layoutKind: "verticalflex", preset: "panel" },
         typeKey: "flex-vertical",
         slotIndex: panelIndex,
-        sortOrder: panelIndex,
-        status: PhiCmsStatus.Published,
-        flags: 0,
-        visibilityMask: page.visibilityMask,
         label: panel.title,
         config: {
           gap: PHI_SPACE.base,
@@ -175,19 +167,14 @@ export function buildPhiSettingsPageShellTree({
         label: string;
         config: Record<string, unknown>;
       }) =>
-        buildPhiCmsWidgetNode({
+        nodes.widget({
           id: input.id,
-          siteId: page.siteId,
           parentLayoutNodeId: panelLayoutId,
           typeKey: input.typeKey,
           slotIndex: panelSlot,
           sortOrder: panelSlot++,
-          status: PhiCmsStatus.Published,
-          flags: 0,
-          visibilityMask: page.visibilityMask,
           label: input.label,
           config: { translate: false, ...input.config },
-          contentId: null,
         });
 
       return [

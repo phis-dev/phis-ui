@@ -1,8 +1,7 @@
 import { localizeAreaPath } from "../../../helpers/locale";
 import { PHI_SHARED_FORM_IDS } from "../../forms/shared-form-ids";
 import { PHI_AUTH_RUNTIME_MODULE_FEATURE_NAMESPACE } from "../../../plugins/runtime-modules/auth/ids";
-import { buildPhiCmsWidgetNode } from "../../../helpers/cms-node-factories";
-import { PhiCmsStatus } from "../../../constants/phi-cms";
+import { createPhiCmsPresetNodes } from "../../../helpers/cms-preset-nodes";
 import {
   createPhiSignalAddress,
   PHI_SIGNAL_VALUE_SCHEMAS,
@@ -92,7 +91,7 @@ export function buildPhiLoginNodes({
   contentWidgets: PhiCmsContentWidgetNode[];
 } {
   const stepAddress = createPhiSignalAddress("cms", ids.widgetStep);
-  const published = { status: PhiCmsStatus.Published, flags: 0, visibilityMask, siteId };
+  const nodes = createPhiCmsPresetNodes({ siteId, visibilityMask });
   /*
    * Both the form and the step report the same way, so the Controller reads one answer rather than two.
    */
@@ -116,8 +115,7 @@ export function buildPhiLoginNodes({
        * The second factor stands first, because when it is running it is the only thing to do. It places
        * itself whether or not it has anything to show and reports which of the two it is.
        */
-      buildPhiCmsWidgetNode({
-        ...published,
+      nodes.widget({
         typeKey: "auth-workflow",
         id: ids.widgetStep,
         parentLayoutNodeId,
@@ -162,15 +160,12 @@ export function buildPhiLoginNodes({
             }],
           },
         },
-        contentId: null,
       }),
-      buildPhiCmsWidgetNode({
-        ...published,
+      nodes.widget({
         typeKey: "form",
         id: ids.widgetLogin,
         parentLayoutNodeId,
         slotIndex: slotIndex + 1,
-        sortOrder: slotIndex + 1,
         label: "login form",
         config: {
           formId: PHI_SHARED_FORM_IDS.login,
@@ -215,15 +210,12 @@ export function buildPhiLoginNodes({
             ],
           },
         },
-        contentId: null,
       }),
-      buildPhiCmsWidgetNode({
-        ...published,
+      nodes.widget({
         typeKey: "auth-methods",
         id: ids.widgetMethods,
         parentLayoutNodeId,
         slotIndex: slotIndex + 2,
-        sortOrder: slotIndex + 2,
         label: "login methods",
         config: {
           visibleWhen: {
@@ -231,19 +223,16 @@ export function buildPhiLoginNodes({
             conditions: [feature("external"), noStepRunning(stepAddress)],
           },
         },
-        contentId: null,
       }),
       /*
        * Only reached by coming back from a provider that recognised an address already in use here.
        * The address says so, which is why this needs nothing from the form beside it.
        */
-      buildPhiCmsWidgetNode({
-        ...published,
+      nodes.widget({
         typeKey: "form",
         id: ids.widgetProviderLink,
         parentLayoutNodeId,
         slotIndex: slotIndex + 3,
-        sortOrder: slotIndex + 3,
         label: "login provider link confirmation",
         config: {
           formId: PHI_SHARED_FORM_IDS.providerLinkConfirmation,
@@ -257,7 +246,6 @@ export function buildPhiLoginNodes({
           },
           signalRoutes: reportResultRoute("login-provider-link-result"),
         },
-        contentId: null,
       }),
     ],
   };

@@ -2,7 +2,7 @@ import { PHI_CMS_DEFAULT_SLOT_INDEX } from "../../../constants/cms-layout-types"
 import { PhiCmsPageType, PhiCmsStatus } from "../../../constants/phi-cms";
 import { PHI_GROUPS_RUNTIME_DATA_PROVIDER_KEYS } from "../../../plugins/runtime-modules/groups/ids";
 import { PhiGroupMembershipFlags } from "../../../constants/site-groups";
-import { buildPhiCmsWidgetNode } from "../../../helpers/cms-node-factories";
+import { createPhiCmsPresetNodes } from "../../../helpers/cms-preset-nodes";
 import type { PhiCmsPageNode, PhiResolvedCmsPageTree } from "../../../types/cms";
 import type { PhiBlockRuntime } from "../../../types";
 import { createPhiSignalAddress, PHI_SIGNAL_VALUE_SCHEMAS } from "../../../types/signals";
@@ -60,6 +60,7 @@ export async function buildPhiDefaultAppGroupsPageTree({
     regionConfig: { border: false },
   });
 
+  const nodes = createPhiCmsPresetNodes(page);
   return {
     page: { ...page, pageType: PhiCmsPageType.Standard, status: PhiCmsStatus.Published },
     pageMeta: {
@@ -70,16 +71,12 @@ export async function buildPhiDefaultAppGroupsPageTree({
     regions: [scaffold.region],
     layoutNodes: [scaffold.layoutNode],
     contentWidgets: [
-      buildPhiCmsWidgetNode({
+      nodes.widget({
         id: PHI_APP_GROUPS_PAGE_WIDGET_IDS.widgetMyGroupsTable,
-        siteId: page.siteId,
         parentLayoutNodeId: PHI_BASE_PAGE_LAYOUT_NODE_ID,
         typeKey: "table",
         slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
         sortOrder: 0,
-        status: PhiCmsStatus.Published,
-        flags: 0,
-        visibilityMask: page.visibilityMask,
         label: labels.mine.title,
         config: {
           title: labels.mine.title,
@@ -186,16 +183,12 @@ export async function buildPhiDefaultAppGroupsPageTree({
           },
         },
       }),
-      buildPhiCmsWidgetNode({
+      nodes.widget({
         id: PHI_APP_GROUPS_PAGE_WIDGET_IDS.widgetMembersTable,
-        siteId: page.siteId,
         parentLayoutNodeId: PHI_BASE_PAGE_LAYOUT_NODE_ID,
         typeKey: "table",
         slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX + 1,
         sortOrder: 1,
-        status: PhiCmsStatus.Published,
-        flags: 0,
-        visibilityMask: page.visibilityMask,
         label: labels.members.title,
         config: {
           title: labels.members.title,
@@ -266,16 +259,12 @@ export async function buildPhiDefaultAppGroupsPageTree({
           },
         },
       }),
-      buildPhiCmsWidgetNode({
+      nodes.widget({
         id: PHI_APP_GROUPS_PAGE_WIDGET_IDS.widgetMembershipForm,
-        siteId: page.siteId,
         parentLayoutNodeId: PHI_BASE_PAGE_LAYOUT_NODE_ID,
         typeKey: "form",
         slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX + 2,
         sortOrder: 2,
-        status: PhiCmsStatus.Published,
-        flags: 0,
-        visibilityMask: page.visibilityMask,
         label: labels.membership.title,
         config: {
           formId: PHI_GROUPS_FORM_IDS.myMembership,
@@ -304,16 +293,12 @@ export async function buildPhiDefaultAppGroupsPageTree({
           },
         },
       }),
-      buildPhiCmsWidgetNode({
+      nodes.widget({
         id: PHI_APP_GROUPS_PAGE_WIDGET_IDS.widgetMembershipCommands,
-        siteId: page.siteId,
         parentLayoutNodeId: PHI_BASE_PAGE_LAYOUT_NODE_ID,
         typeKey: "command-toolbar",
         slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX + 3,
         sortOrder: 3,
-        status: PhiCmsStatus.Published,
-        flags: 0,
-        visibilityMask: page.visibilityMask,
         label: labels.membership.submit,
         config: {
           key: "app-groups-membership-commands",

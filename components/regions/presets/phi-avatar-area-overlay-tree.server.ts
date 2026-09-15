@@ -1,6 +1,6 @@
 import { PHI_CMS_DEFAULT_SLOT_INDEX } from "../../../constants/cms-layout-types";
 import { PhiCmsStatus } from "../../../constants/phi-cms";
-import { buildPhiCmsLayoutNode, buildPhiCmsWidgetNode } from "../../../helpers/cms-node-factories";
+import { createPhiCmsPresetNodes } from "../../../helpers/cms-preset-nodes";
 import { PHI_COLOR, PHI_SPACE } from "../../../theme/antd-css-var-contract";
 import type { PhiCmsPageNode, PhiResolvedCmsPageTree } from "../../../types/cms";
 import { createPhiSignalAddress } from "../../../types/signals";
@@ -31,6 +31,7 @@ export async function buildPhiAvatarAreaPickerOverlayTree({
     locale: runtime.locale.current,
   });
 
+  const nodes = createPhiCmsPresetNodes(page);
   return {
     page,
     regions: [],
@@ -82,17 +83,13 @@ export async function buildPhiAvatarAreaPickerOverlayTree({
         },
       },
     }],
-    layoutNodes: [buildPhiCmsLayoutNode({
+    layoutNodes: [nodes.layout({
       id: ids.layoutBody,
-      siteId: page.siteId,
       parentLayoutNodeId: null,
       creationPreset: { layoutKind: "verticalflex", preset: "panel" },
       typeKey: "flex-vertical",
       slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
       sortOrder: 0,
-      status: PhiCmsStatus.Published,
-      flags: 0,
-      visibilityMask: page.visibilityMask,
       label: "app avatar picker body",
       config: {
         gap: PHI_SPACE.base,
@@ -104,19 +101,14 @@ export async function buildPhiAvatarAreaPickerOverlayTree({
         border: false,
       },
     })],
-    contentWidgets: [buildPhiCmsWidgetNode({
+    contentWidgets: [nodes.widget({
       id: ids.widgetUpload,
-      siteId: page.siteId,
       parentLayoutNodeId: ids.layoutBody,
       typeKey: "account-avatar-picker",
       slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
       sortOrder: 0,
-      status: PhiCmsStatus.Published,
-      flags: 0,
-      visibilityMask: page.visibilityMask,
       label: "app avatar picker upload",
       config: {},
-      contentId: null,
     })],
   };
 }

@@ -10,7 +10,7 @@ import {
   PhiCmsRegionType,
   PhiCmsStatus,
 } from "../../../constants/phi-cms";
-import { buildPhiCmsLayoutNode, buildPhiCmsWidgetNode } from "../../../helpers/cms-node-factories";
+import { createPhiCmsPresetNodes } from "../../../helpers/cms-preset-nodes";
 import type { PhiCmsPageNode, PhiResolvedCmsPageTree } from "../../../types/cms";
 import { PHI_SHARED_FORM_IDS } from "../../forms/shared-form-ids";
 import { createPhiSignalAddress, PHI_SIGNAL_VALUE_SCHEMAS } from "../../../types/signals";
@@ -68,6 +68,7 @@ export async function buildPhiDefaultPubConfirmPageTree({
     valuePath: "query.token",
     operator: "truthy",
   } as const;
+  const nodes = createPhiCmsPresetNodes(page);
   return {
     page: {
       ...page,
@@ -90,48 +91,36 @@ export async function buildPhiDefaultPubConfirmPageTree({
       },
     ],
     layoutNodes: [
-      buildPhiCmsLayoutNode({
+      nodes.layout({
         creationPreset: { layoutKind: "split", preset: "panel" },
         typeKey: "split-card",
         id: SYNTHETIC_CONFIRM_LAYOUT_IDS.layoutContent,
-        siteId: page.siteId,
         parentLayoutNodeId: null,
         slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
         sortOrder: 0,
-        status: PhiCmsStatus.Published,
-        flags: 0,
-        visibilityMask: page.visibilityMask,
         label: "pub confirmation page",
         config: {
           gap: PHI_SPACE.base,
         },
       }),
-      buildPhiCmsLayoutNode({
+      nodes.layout({
         creationPreset: { layoutKind: "verticalflex", preset: "panel" },
         typeKey: "flex-vertical",
         id: SYNTHETIC_CONFIRM_LAYOUT_IDS.layoutForm,
-        siteId: page.siteId,
         parentLayoutNodeId: SYNTHETIC_CONFIRM_LAYOUT_IDS.layoutContent,
         slotIndex: PHI_CMS_SPLIT_LAYOUT_SLOT_INDEX.Right,
         sortOrder: 0,
-        status: PhiCmsStatus.Published,
-        flags: 0,
-        visibilityMask: page.visibilityMask,
         label: "pub confirmation form layout",
         config: { padding: 0 },
       }),
     ],
     contentWidgets: [
-      buildPhiCmsWidgetNode({
+      nodes.widget({
         typeKey: "description",
         id: SYNTHETIC_CONFIRM_WIDGET_IDS.widgetDescription,
-        siteId: page.siteId,
         parentLayoutNodeId: SYNTHETIC_CONFIRM_LAYOUT_IDS.layoutContent,
         slotIndex: PHI_CMS_SPLIT_LAYOUT_SLOT_INDEX.Left,
         sortOrder: 0,
-        status: PhiCmsStatus.Published,
-        flags: 0,
-        visibilityMask: page.visibilityMask,
         label: "pub confirmation description widget",
         config: {
           eyebrow: "Confirm Email",
@@ -145,22 +134,16 @@ export async function buildPhiDefaultPubConfirmPageTree({
           ],
           footer: "If the link is no longer valid, return to registration and request a new verification email.",
         },
-        contentId: null,
       }),
       /*
        * What the link is about, read before anything is confirmed. It reports what it found, and the
        * form beside it appears or stays away on that word.
        */
-      buildPhiCmsWidgetNode({
+      nodes.widget({
         typeKey: "form-preview",
         id: SYNTHETIC_CONFIRM_WIDGET_IDS.widgetConfirmPreview,
-        siteId: page.siteId,
         parentLayoutNodeId: SYNTHETIC_CONFIRM_LAYOUT_IDS.layoutForm,
         slotIndex: 0,
-        sortOrder: 0,
-        status: PhiCmsStatus.Published,
-        flags: 0,
-        visibilityMask: page.visibilityMask,
         label: "pub confirmation preview",
         config: {
           formId: PHI_SHARED_FORM_IDS.confirm,
@@ -180,18 +163,12 @@ export async function buildPhiDefaultPubConfirmPageTree({
             }],
           },
         },
-        contentId: null,
       }),
-      buildPhiCmsWidgetNode({
+      nodes.widget({
         typeKey: "form",
         id: SYNTHETIC_CONFIRM_WIDGET_IDS.widgetConfirm,
-        siteId: page.siteId,
         parentLayoutNodeId: SYNTHETIC_CONFIRM_LAYOUT_IDS.layoutForm,
         slotIndex: 1,
-        sortOrder: 1,
-        status: PhiCmsStatus.Published,
-        flags: 0,
-        visibilityMask: page.visibilityMask,
         label: "pub confirmation widget",
         config: {
           formId: PHI_SHARED_FORM_IDS.confirm,
@@ -199,25 +176,18 @@ export async function buildPhiDefaultPubConfirmPageTree({
           formConfig: { initialValuesFromQuery: { token: "token" } },
           visibleWhen: previewIsPending,
         },
-        contentId: null,
       }),
-      buildPhiCmsWidgetNode({
+      nodes.widget({
         typeKey: "simple-text",
         id: SYNTHETIC_CONFIRM_WIDGET_IDS.widgetConfirmMissingToken,
-        siteId: page.siteId,
         parentLayoutNodeId: SYNTHETIC_CONFIRM_LAYOUT_IDS.layoutForm,
         slotIndex: 2,
-        sortOrder: 2,
-        status: PhiCmsStatus.Published,
-        flags: 0,
-        visibilityMask: page.visibilityMask,
         label: "pub confirmation missing token",
         config: {
           text: "No confirmation token was provided. Open the confirmation link from your email.",
           type: "secondary",
           visibleWhen: withoutToken,
         },
-        contentId: null,
       }),
     ],
   };
