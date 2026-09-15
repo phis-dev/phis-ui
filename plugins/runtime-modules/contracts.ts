@@ -148,6 +148,12 @@ function assertPhiTableProviderResources(
       if (field.type !== "enum" && field.type !== "enum[]" && (field.options || field.optionsProvider)) {
         throw new Error(`${moduleId}: non-enum Table field "${resource.resourceKey}/${field.key}" must not declare options.`);
       }
+      if (field.rowOptionsPath !== undefined && (field.type !== "string" || !field.rowOptionsPath.trim() ||
+        field.rowOptionsPath === field.key)) {
+        throw new Error(
+          `${moduleId}: Table field "${resource.resourceKey}/${field.key}" may take row options only as a string field.`,
+        );
+      }
       if (field.constraints) {
         const expectsNumericBounds = field.type === "number";
         if ((field.type !== "number" && field.type !== "date" && field.type !== "datetime") ||
@@ -170,6 +176,16 @@ function assertPhiTableProviderResources(
       }
       if (field.editor?.fieldProviderKey && !isNamespacedRuntimeKey(field.editor.fieldProviderKey)) {
         throw new Error(`${moduleId}: Table field "${resource.resourceKey}/${field.key}" has an invalid editor key.`);
+      }
+    }
+    for (const field of resource.fields) {
+      const optionsField = field.rowOptionsPath
+        ? resource.fields.find((candidate) => candidate.key === field.rowOptionsPath)
+        : null;
+      if (field.rowOptionsPath && optionsField?.type !== "json") {
+        throw new Error(
+          `${moduleId}: Table field "${resource.resourceKey}/${field.key}" row options must name a declared json field.`,
+        );
       }
     }
     if (!fieldKeys.has(resource.rowIdentityPath)) {
@@ -272,12 +288,28 @@ function assertPhiTreeProviderResources(
         throw new Error(`${moduleId}: Tree resource "${resource.resourceKey}" has an invalid field schema.`);
       }
       fieldKeys.add(field.key);
+      if (field.rowOptionsPath !== undefined && (field.type !== "string" || !field.rowOptionsPath.trim() ||
+        field.rowOptionsPath === field.key)) {
+        throw new Error(
+          `${moduleId}: Tree field "${resource.resourceKey}/${field.key}" may take row options only as a string field.`,
+        );
+      }
       if ((field.type === "enum" || field.type === "enum[]") &&
         ((field.options?.length ?? 0) === 0) === !field.optionsProvider) {
         throw new Error(`${moduleId}: Tree field "${resource.resourceKey}/${field.key}" must declare exactly one option source.`);
       }
       if (field.type !== "enum" && field.type !== "enum[]" && (field.options || field.optionsProvider)) {
         throw new Error(`${moduleId}: non-enum Tree field "${resource.resourceKey}/${field.key}" must not declare options.`);
+      }
+    }
+    for (const field of resource.fields) {
+      const optionsField = field.rowOptionsPath
+        ? resource.fields.find((candidate) => candidate.key === field.rowOptionsPath)
+        : null;
+      if (field.rowOptionsPath && optionsField?.type !== "json") {
+        throw new Error(
+          `${moduleId}: Tree field "${resource.resourceKey}/${field.key}" row options must name a declared json field.`,
+        );
       }
     }
     for (const path of [

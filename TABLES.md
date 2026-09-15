@@ -345,6 +345,16 @@ identity plus `label`, optional `description`, disabled state, and optional icon
 presentations render the option label and expose a non-empty description as its Tooltip. Presentation
 never changes cardinality, serialized values, validation, or mutation behavior.
 
+Row options are for a choice that belongs to the row rather than to the field -- a Navigation container
+choosing among its own children, say. A row that carries options is edited with a Select limited to
+them, and the Binding refuses a value the row does not offer or offers disabled; a row that carries
+`null` or nothing keeps the field's ordinary editor, so one column can be a Select on some rows and free
+text on others. A column may state `control: "select"` for such a field. The reader drops an entry
+without a string `value` and `label` instead of repairing it, and the Provider still validates every
+mutation itself. Row options exist on `string` fields only, never together with `options` or an Options
+Provider. A Tree declares them the same way; its Binding enforces them on write, and a field editor a Tree
+renders uses them.
+
 Provider values and mutation payloads use those serialized forms. Ant Design objects such as Dayjs
 instances and React nodes never cross the Control/Binding boundary. Email, URL, code, badge, tag, and
 similar treatments are string or collection presentation/format constraints, not alternate storage
@@ -360,6 +370,8 @@ A Provider field descriptor owns:
 - validation metadata;
 - for `enum` and `enum[]`, one consistent string or number identity type plus either serializable options
   or one declared Options Provider binding;
+- for a `string` field whose choices differ from row to row, an optional `rowOptionsPath` naming a
+  declared `json` field of the same row that holds `[{ value, label }]`;
 - an optional default editor descriptor using a registered compatible Phi field/Control provider.
 
 Core types resolve to the default Core editors above. A Module may declare a compatible field-provider

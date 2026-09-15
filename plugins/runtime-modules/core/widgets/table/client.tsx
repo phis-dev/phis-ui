@@ -42,6 +42,7 @@ import {
   readPhiTableFilters,
   readPhiTableQuery,
   readPhiTableActionSignalValue,
+  readPhiTableRowOptions,
   validatePhiTableWidgetBinding,
   type PhiTableActionDefinition,
   type PhiTableBindingToolDefinition,
@@ -738,6 +739,12 @@ export function PhiTableWidgetClient({
             const rowIdentity = readRowIdentity(row, resource.rowIdentityPath);
             return rowIdentity != null && isFieldMutationPending(rowIdentity, column.fieldKey);
           }
+        : undefined,
+      resolveEditorOptions: column.editor && features.editing?.mode === "cell"
+        ? (() => {
+            const field = resource?.fields.find((candidate) => candidate.key === column.fieldKey);
+            return field?.rowOptionsPath ? (row: Record<string, unknown>) => readPhiTableRowOptions(row, field) : undefined;
+          })()
         : undefined,
       onCommit: column.editor && features.editing?.mode === "cell" && resource ? (row, originalValue, proposedValue) => {
         const rowIdentity = readRowIdentity(row, resource.rowIdentityPath);

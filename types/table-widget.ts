@@ -439,6 +439,12 @@ export type PhiTableProviderFieldDefinition = {
   };
   options?: readonly PhiControlOption<string | number>[];
   optionsProvider?: PhiControlOptionsProviderConfig;
+  /**
+   * For a `string` field whose choices differ from row to row: the key of a declared `json` field on the
+   * same row holding `[{ value, label }]`. A row that carries options is edited with a Select limited to
+   * them; a row that carries none keeps the ordinary editor. Table only.
+   */
+  rowOptionsPath?: string;
   editor?: {
     fieldProviderKey?: `${string}/${string}`;
     config?: Record<string, unknown>;
@@ -825,13 +831,53 @@ export function readPhiTableProviderMutationResult(value: unknown): PhiTableProv
   };
 }
 
+/**
+ * The choices a row offers for a field that declares `rowOptionsPath`, or null when the row offers none.
+ * A generic reader: an entry without a string value and a string label is dropped, not repaired.
+ */
+export function readPhiTableRowOptions(
+  row: Readonly<Record<string, unknown>> | null | undefined,
+  field: Pick<PhiTableProviderFieldDefinition, "rowOptionsPath">,
+): readonly PhiControlOption<string>[] | null {
+  if (!row || !field.rowOptionsPath) return null;
+  const value = field.rowOptionsPath.split(".").filter(Boolean).reduce<unknown>(
+    (current, segment) => current && typeof current === "object" && !Array.isArray(current)
+      ? (current as Record<string, unknown>)[segment]
+      : undefined,
+    row,
+  );
+  if (!Array.isArray(value)) return null;
+  return value.flatMap((entry): PhiControlOption<string>[] => {
+    if (!entry || typeof entry !== "object" || Array.isArray(entry)) return [];
+    const record = entry as Record<string, unknown>;
+    return typeof record.value === "string" && typeof record.label === "string"
+      ? [{
+          value: record.value,
+          label: record.label,
+          ...(typeof record.description === "string" ? { description: record.description } : {}),
+          ...(record.disabled === true ? { disabled: true } : {}),
+        }]
+      : [];
+  });
+}
+
+/**
+ * Validates a proposed value. Pass the row for a field that declares `rowOptionsPath`: a row that offers
+ * options accepts only one of them, which is what keeps a Select limited to its choices on write.
+ */
 export function validatePhiTableProviderFieldValue(
   field: PhiTableProviderFieldDefinition,
   value: unknown,
+  row?: Readonly<Record<string, unknown>> | null,
 ): string | null {
   if (value == null) return field.required ? `Table field "${field.key}" is required.` : null;
   if (field.type === "string" || field.type === "color" || field.type === "icon") {
-    return typeof value === "string" ? null : `Table field "${field.key}" requires a string value.`;
+    if (typeof value !== "string") return `Table field "${field.key}" requires a string value.`;
+    const rowOptions = readPhiTableRowOptions(row, field);
+    if (rowOptions && !rowOptions.some((option) => option.value === value && option.disabled !== true)) {
+      return `Table field "${field.key}" contains a value this row does not offer.`;
+    }
+    return null;
   }
   if (field.type === "number") {
     if (typeof value !== "number" || !Number.isFinite(value)) return `Table field "${field.key}" requires a finite number.`;
@@ -944,6 +990,7 @@ export function validatePhiTableWidgetBinding(
       (field?.type === "icon" && column.editor.control === "icon-picker") ||
       (field?.type === "enum" && (column.editor.control === "select" || column.editor.control === "radio" ||
         column.editor.control === "segmented")) ||
+      (field?.type === "string" && Boolean(field.rowOptionsPath) && column.editor.control === "select") ||
       (field?.type === "enum[]" && (column.editor.control === "multi-select" ||
         column.editor.control === "checkbox-group"));
     if (column.editor && !editorControlCompatible) {

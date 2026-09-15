@@ -89,7 +89,10 @@ uses the remaining Collection Header width with a `10rem` minimum and wraps only
 longer fits beside the preceding Controls.
 Actions select declared Provider capabilities but Widget config owns label, icon, display, mode,
 confirmation text, placement, and order within the configured action segment. Confirmation policy,
-`undoable`, and the destructive-action rule are the ones `TABLES.md` states for Table actions.
+`undoable`, and the destructive-action rule are the ones `TABLES.md` states for Table actions. Row options
+(`rowOptionsPath`) apply to Tree fields as `TABLES.md` states them. The Tree Binding already refuses a
+value the node does not offer; a Tree edits only its title and icon today, so the Select arrives with the
+first field editor that renders a string field -- the columns a Tree may offer later.
 
 Widget-level `presentation.title` and `presentation.description` use the shared Collection Header;
 description is a tooltip beside a present title and is independent of

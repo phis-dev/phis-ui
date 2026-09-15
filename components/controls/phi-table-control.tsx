@@ -104,6 +104,8 @@ export type PhiTableControlColumn<TRow extends Record<string, unknown>> = {
   editor?: PhiTableControlCellEditor;
   isEditorDisabled?: (row: TRow) => boolean;
   isEditorLoading?: (row: TRow) => boolean;
+  /** Choices this row offers; when present the cell is edited with a Select limited to them. */
+  resolveEditorOptions?: (row: TRow) => readonly PhiControlOption<string | number>[] | null;
   onCommit?: (row: TRow, originalValue: unknown, proposedValue: unknown) => void;
 };
 
@@ -618,6 +620,12 @@ function EditableTableCell({ value, editor, onCommit }: {
       size="small" variant={variant} style={{ width: "100%" }}
       onChange={(next) => { draftRef.current = next; setDraft(next); onCommit(next); }} />;
   }
+  if (editor.type === "string" && editor.control === "select") {
+    // A row that offers its own choices: the value can only be one of them.
+    return <PhiSelectControl value={typeof draft === "string" && draft ? draft : undefined}
+      disabled={disabled} size="small" variant={variant} options={editor.options ?? []} style={{ width: "100%" }}
+      onChange={(next) => { draftRef.current = next; setDraft(next); onCommit(next); }} />;
+  }
   return <PhiTextControl value={typeof draft === "string" ? draft : ""} variant={variant}
     inputRef={textInputRef}
     disabled={disabled} allowClear={!editor.required} size="small" style={{ width: "100%" }}
@@ -964,6 +972,10 @@ export function PhiTableControl<TRow extends Record<string, unknown>>({
               ...column.editor,
               disabled: column.editor.disabled || column.isEditorDisabled?.(row),
               loading: column.editor.loading || column.isEditorLoading?.(row),
+              ...(() => {
+                const rowOptions = column.resolveEditorOptions?.(row);
+                return rowOptions ? { options: rowOptions, control: "select" as const } : {};
+              })(),
             }
           : undefined;
         let content: ReactNode;

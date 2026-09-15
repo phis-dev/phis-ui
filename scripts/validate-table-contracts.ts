@@ -3,6 +3,7 @@ import fs from "node:fs";
 import path from "node:path";
 
 import { PHI_CORE_RUNTIME_DATA_PROVIDER_KEYS } from "../plugins/runtime-modules/core/ids";
+import { createPhiRuntimeModuleCatalog, type PhiRuntimeModuleCatalogEntry } from "../plugins/runtime-modules/contracts";
 import { PHI_BUILDER_RUNTIME_DATA_PROVIDER_KEYS } from "../plugins/runtime-modules/builder/ids";
 import { PHI_BUILDER_RUNTIME_DATA_PROVIDER_DESCRIPTORS } from "../plugins/runtime-modules/builder/data-providers";
 import {
@@ -22,9 +23,11 @@ import {
   readPhiTableProviderMutationResult,
   readPhiTableProviderQueryResult,
   readPhiTableQuery,
+  readPhiTableRowOptions,
   validatePhiTableProviderFieldValue,
   validatePhiTableWidgetBinding,
   type PhiTableProviderActionCapability,
+  type PhiTableProviderFieldDefinition,
   type PhiTableProviderResourceDescriptor,
   type PhiTableWidgetConfig,
 } from "../types/table-widget";
@@ -203,6 +206,133 @@ assert.deepEqual(
   validatePhiTableWidgetBinding(destructiveDeleteConfig, withDeleteCapability({ confirmation: "none", undoable: true })),
   [],
 );
+// A string field may take its choices from the row: a row that offers options accepts only one of them,
+// a row that offers none keeps free text, and the reader drops what does not read as an option.
+const rowOptionsField: PhiTableProviderFieldDefinition = {
+  key: "target",
+  title: "Target",
+  type: "string",
+  mutable: true,
+  rowOptionsPath: "targetOptions",
+};
+const rowWithOptions = {
+  id: "c1",
+  targetOptions: [
+    { value: "guides", label: "/docs/guides" },
+    { value: "api", label: "/docs/api", disabled: true },
+    { value: 7, label: "not a string value" },
+    { label: "no value" },
+  ],
+};
+assert.deepEqual(readPhiTableRowOptions(rowWithOptions, rowOptionsField), [
+  { value: "guides", label: "/docs/guides" },
+  { value: "api", label: "/docs/api", disabled: true },
+]);
+assert.equal(readPhiTableRowOptions({ id: "l1", targetOptions: null }, rowOptionsField), null);
+assert.equal(validatePhiTableProviderFieldValue(rowOptionsField, "guides", rowWithOptions), null);
+assert.match(validatePhiTableProviderFieldValue(rowOptionsField, "bongo", rowWithOptions) ?? "", /does not offer/);
+assert.match(validatePhiTableProviderFieldValue(rowOptionsField, "api", rowWithOptions) ?? "", /does not offer/);
+assert.equal(validatePhiTableProviderFieldValue(rowOptionsField, "https://example.org", { id: "l1" }), null);
+const rowOptionsResource: PhiTableProviderResourceDescriptor = {
+  ...resource,
+  fields: [
+    ...resource.fields,
+    rowOptionsField,
+    { key: "targetOptions", title: "Target options", type: "json" },
+  ],
+};
+const selectOnStringConfig: PhiTableWidgetConfig = {
+  ...config,
+  presentation: {
+    ...config.presentation,
+    columns: [...config.presentation.columns, { key: "target", fieldKey: "target", title: "Target", editor: { control: "select" } }],
+  },
+};
+assert.deepEqual(validatePhiTableWidgetBinding(selectOnStringConfig, rowOptionsResource), []);
+assert.match(
+  validatePhiTableWidgetBinding(selectOnStringConfig, {
+    ...rowOptionsResource,
+    fields: rowOptionsResource.fields.map((field) => field.key === "target" ? { ...field, rowOptionsPath: undefined } : field),
+  }).join("\n"),
+  /editor is incompatible/,
+);
+
+// The descriptor side: row options belong to a string field and name a declared json field on the same
+// row, for a Tree as for a Table -- a Tree's fields are the Table's, and a Tree may grow columns.
+const catalogWithProvider = (provider: Record<string, unknown>) => createPhiRuntimeModuleCatalog([{
+  definition: {
+    moduleId: "@test/pkg/modules/rows",
+    kind: "platform",
+    eligibleAreas: ["public"],
+    serverBinding: { providerId: "@test/pkg", requiredCapabilities: [] },
+    controllerType: "@test/controller",
+    controller: {
+      pluginKey: "@test",
+      key: "controller",
+      title: "Controller",
+      allowedMountScopes: ["area"],
+      runtimeSignals: { emits: [], listens: [] },
+    },
+    title: "Test",
+    description: "Test runtime module.",
+    category: "other",
+    iconFamily: "test",
+    controllerMountPolicy: "demand",
+    dataProviders: [{
+      ownerModuleId: "@test/pkg/modules/rows",
+      executionMode: "live",
+      authoringMode: "none",
+      title: "Rows",
+      description: "Rows.",
+      ...provider,
+    }],
+  },
+  widgets: [],
+  layouts: [],
+  load: async () => {
+    throw new Error("not loaded");
+  },
+} as unknown as PhiRuntimeModuleCatalogEntry], []);
+const tableWithFields = (fields: readonly Record<string, unknown>[]) => catalogWithProvider({
+  key: "@test/tables/rows",
+  kind: "table",
+  resources: [{ resourceKey: "rows", title: "Rows", rowIdentityPath: "id", query: {},
+    fields: [{ key: "id", title: "Id", type: "string" }, ...fields] }],
+});
+assert.doesNotThrow(() => tableWithFields([
+  { key: "target", title: "Target", type: "string", rowOptionsPath: "targetOptions" },
+  { key: "targetOptions", title: "Target options", type: "json" },
+]));
+assert.throws(() => tableWithFields([
+  { key: "target", title: "Target", type: "string", rowOptionsPath: "other" },
+  { key: "other", title: "Other", type: "string" },
+]), /must name a declared json field/);
+assert.throws(() => tableWithFields([
+  { key: "target", title: "Target", type: "string", rowOptionsPath: "missing" },
+]), /must name a declared json field/);
+assert.throws(() => tableWithFields([
+  { key: "target", title: "Target", type: "enum", options: [{ value: "a", label: "A" }], rowOptionsPath: "targetOptions" },
+  { key: "targetOptions", title: "Target options", type: "json" },
+]), /only as a string field/);
+const treeWithFields = (fields: readonly Record<string, unknown>[]) => catalogWithProvider({
+  key: "@test/trees/rows",
+  kind: "tree",
+  resources: [{ resourceKey: "rows", title: "Rows", nodeIdentityPath: "id", parentNodeIdentityPath: "parentId",
+    titleFieldKey: "id", query: {},
+    fields: [{ key: "id", title: "Id", type: "string" }, { key: "parentId", title: "Parent", type: "string" }, ...fields] }],
+});
+assert.doesNotThrow(() => treeWithFields([
+  { key: "target", title: "Target", type: "string", rowOptionsPath: "targetOptions" },
+  { key: "targetOptions", title: "Target options", type: "json" },
+]));
+assert.throws(() => treeWithFields([
+  { key: "target", title: "Target", type: "string", rowOptionsPath: "missing" },
+]), /must name a declared json field/);
+assert.throws(() => treeWithFields([
+  { key: "target", title: "Target", type: "enum", options: [{ value: "a", label: "A" }], rowOptionsPath: "targetOptions" },
+  { key: "targetOptions", title: "Target options", type: "json" },
+]), /only as a string field/);
+
 const builderNavigationActions: readonly PhiTableProviderActionCapability[] = PHI_BUILDER_RUNTIME_DATA_PROVIDER_DESCRIPTORS
   .flatMap((descriptor): readonly PhiTableProviderActionCapability[] =>
     descriptor.kind === "table" && descriptor.key === PHI_BUILDER_RUNTIME_DATA_PROVIDER_KEYS.navigationTable

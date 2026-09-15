@@ -593,7 +593,11 @@ export function usePhiTableBinding({
         `Table field "${request.fieldKey}" is not mutable.`,
       ));
     }
-    const validationError = validatePhiTableProviderFieldValue(field, request.proposedValue);
+    const row = field.rowOptionsPath
+      ? rowsRef.current.find((candidate) =>
+        String(readPhiTableRowIdentity(candidate, resource.rowIdentityPath)) === String(request.rowIdentity))
+      : null;
+    const validationError = validatePhiTableProviderFieldValue(field, request.proposedValue, row);
     if (validationError) {
       const fieldError = new PhiTableProviderError("field-value-invalid", validationError);
       setError(fieldError);
@@ -617,7 +621,11 @@ export function usePhiTableBinding({
         setError(fieldError);
         return Promise.reject(fieldError);
       }
-      const validationError = validatePhiTableProviderFieldValue(field, proposedValue);
+      const row = field.rowOptionsPath
+        ? rowsRef.current.find((candidate) =>
+          String(readPhiTableRowIdentity(candidate, resource.rowIdentityPath)) === String(request.rowIdentity))
+        : null;
+      const validationError = validatePhiTableProviderFieldValue(field, proposedValue, row);
       if (validationError) {
         const fieldError = new PhiTableProviderError("field-value-invalid", validationError);
         setError(fieldError);

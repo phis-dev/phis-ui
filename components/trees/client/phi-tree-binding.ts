@@ -212,9 +212,10 @@ export function usePhiTreeBinding({
     if (!resource) throw new PhiTreeProviderError("resource-unavailable", "Tree resource is unavailable.");
     const field = resource.fields.find((candidate) => candidate.key === fieldKey);
     if (!field?.mutable) throw new PhiTreeProviderError("field-read-only", `Tree field "${fieldKey}" is read-only.`);
-    const validationError = validatePhiTableProviderFieldValue(field, proposedValue);
-    if (validationError) throw new PhiTreeProviderError("invalid-field-value", validationError.replaceAll("Table field", "Tree field"));
     const node = nodesRef.current.find((candidate) => String(readPath(candidate, resource.nodeIdentityPath)) === String(nodeIdentity));
+    // A node that offers its own choices for the field accepts only one of them.
+    const validationError = validatePhiTableProviderFieldValue(field, proposedValue, node);
+    if (validationError) throw new PhiTreeProviderError("invalid-field-value", validationError.replaceAll("Table field", "Tree field"));
     const originalValue = node ? readPath(node, fieldKey) : undefined;
     return mutate({ kind: "field", nodeIdentity, fieldKey, originalValue, proposedValue }, patchNode(nodesRef.current, resource.nodeIdentityPath, nodeIdentity, { [fieldKey]: proposedValue }));
   }, [mutate, resource]);
