@@ -1885,7 +1885,9 @@ Rules:
 - Shared layout/math primitives stay brand-neutral.
 - The base `phi` spacing scale is global across Phi sites.
 - Site themes override from that base; they should not replace it with unrelated spacing systems.
-- Prefer Ant Design layout primitives (`Layout`, `Flex`, `Space`, `Row`, `Col`) before writing custom CSS layout logic.
+- A Widget and a Layout are shells around Ant Design. Inside one, Ant Design is free: a Control wraps an Ant Design component, and a Widget that offers several Controls may arrange them with `Flex`, `Space`, `Row` or `Col` like any other internal detail.
+- Composition of several Widgets belongs to the Layouts and their slots, and to nothing else. Neither an Ant Design layout primitive nor hand-written CSS may take that job, because Ant Design has to stay replaceable and cannot be if the placement of Widgets depends on it. The boundary is not Ant Design against CSS -- it is one shell against more than one Widget.
+- A Widget must not contain another Widget. A Widget that needs a second one beside it is a slot in a Layout, not an import.
 - Prefer Ant Design theme/component token configuration before CSS overrides.
 - Prefer Ant Design token colors, typography tokens, spacing tokens, and component variants before introducing custom visual values in shared code.
 - Special colors or styling settings should be treated as opt-in work and added only after an explicit operator request.
