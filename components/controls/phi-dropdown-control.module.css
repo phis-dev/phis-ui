@@ -26,3 +26,38 @@
   border-color: var(--ant-color-primary-hover);
   color: var(--ant-color-primary-hover);
 }
+
+/*
+ * The sider menu's submenu arrow, pointing down: antd draws it from two rounded bars sized off the
+ * font size (menu/style: size = fontSize / 7 * 5, bars 0.6 x 0.15 of it, shifted by a quarter), and
+ * an icon glyph never matches it. Centred in its box, so it lines up with the label beside it.
+ */
+.chevron {
+  --phi-chevron-size: calc(var(--ant-font-size) / 7 * 5);
+  position: relative;
+  display: inline-block;
+  flex-shrink: 0;
+  width: var(--phi-chevron-size);
+  height: var(--phi-chevron-size);
+  color: currentcolor;
+}
+
+.chevron::before,
+.chevron::after {
+  position: absolute;
+  top: calc(50% - var(--phi-chevron-size) * 0.075 + var(--phi-chevron-size) * 0.1768);
+  left: calc(50% - var(--phi-chevron-size) * 0.3);
+  width: calc(var(--phi-chevron-size) * 0.6);
+  height: calc(var(--phi-chevron-size) * 0.15);
+  border-radius: var(--ant-border-radius);
+  background-color: currentcolor;
+  content: "";
+}
+
+.chevron::before {
+  transform: rotate(-45deg) translateX(calc(var(--phi-chevron-size) * 0.25));
+}
+
+.chevron::after {
+  transform: rotate(45deg) translateX(calc(var(--phi-chevron-size) * -0.25));
+}

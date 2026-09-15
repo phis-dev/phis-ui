@@ -11,7 +11,6 @@ import {
   type ReactNode,
   type Ref,
 } from "react";
-import { DownOutlined } from "@ant-design/icons";
 import { Dropdown } from "antd";
 
 import styles from "./phi-dropdown-control.module.css";
@@ -153,7 +152,7 @@ export function PhiPillDropdownControl({
   style,
 }: PhiPillDropdownControlProps) {
   const canOpen = items.length > 0;
-  const chevron = showChevron && canOpen ? <DownOutlined style={{ fontSize: 12 }} /> : null;
+  const chevron = showChevron && canOpen ? <span className={styles.chevron} aria-hidden /> : null;
   const hasLabel = label != null && label !== false && label !== "";
 
   return (
