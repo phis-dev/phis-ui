@@ -252,11 +252,23 @@ export type PhiCmsNavigationItemPlacement = {
   index: number;
 };
 
+/**
+ * Where a container leads when its folder address is requested; mirrors phis-server
+ * `SiteNavigationFolder`. `address` is the folder the container's direct children share, package
+ * namespace included, or null; `choice` is the direct child it leads to.
+ */
+export type PhiCmsNavigationFolder = {
+  address: string | null;
+  choice: PhiCmsInstanceId;
+};
+
 export type PhiCmsNavigationItemOverride = {
   id: PhiCmsInstanceId;
   label?: string;
   icon?: string | null;
   placement?: PhiCmsNavigationItemPlacement;
+  /** On a Module container. */
+  folder?: PhiCmsNavigationFolder;
 };
 
 export type PhiCmsNavigationCustomItem = {
@@ -269,6 +281,8 @@ export type PhiCmsNavigationCustomItem = {
     | { kind: "external"; href: string };
   newTab?: boolean;
   placement: PhiCmsNavigationItemPlacement;
+  /** Containers only. */
+  folder?: PhiCmsNavigationFolder;
 };
 
 export type PhiCmsNavigationOverlay = {

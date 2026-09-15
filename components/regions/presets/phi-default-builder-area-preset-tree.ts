@@ -3713,7 +3713,6 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                         editor: {},
                         sizing: { mode: "fill", minWidth: 220 },
                         ellipsis: true,
-                        valueMap: { "@phi/deleted-page-target": navigationLabels!.deletedTarget },
                       },
                       {
                         key: "newTab",

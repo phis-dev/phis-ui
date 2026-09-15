@@ -171,6 +171,7 @@ export function buildPhiBuilderNavigationOverlay(
             : {}),
         ...(current.item.newTab === true ? { newTab: true } : {}),
         placement: buildPlacement(current),
+        ...(current.item.kind === "container" && current.item.folder ? { folder: current.item.folder } : {}),
       });
       continue;
     }
@@ -189,7 +190,11 @@ export function buildPhiBuilderNavigationOverlay(
         ...buildPlacement(current),
       };
     }
-    if (override.label !== undefined || override.icon !== undefined || override.placement) {
+    // A Module container's folder is Site-authored; its descriptor never declares one.
+    if (current.item.kind === "container" && current.item.folder) {
+      override.folder = current.item.folder;
+    }
+    if (override.label !== undefined || override.icon !== undefined || override.placement || override.folder) {
       itemOverrides.push(override);
     }
   }

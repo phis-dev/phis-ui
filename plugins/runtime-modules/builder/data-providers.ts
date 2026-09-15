@@ -286,11 +286,18 @@ export const PHI_BUILDER_RUNTIME_DATA_PROVIDER_DESCRIPTORS = [
           title: "Path",
           type: "string",
           mutable: true,
+          /*
+           * What the Path cell holds depends on the row: a Site page link its page reference, a container the
+           * direct child its folder address leads to, an external link its URL. The row says whether it can be
+           * edited and, where the value is a choice, which choices it offers.
+           */
           mutableWhen: { match: "all", conditions: [
-            { source: "row", valuePath: "source", operator: "equals", value: "custom" },
-            { source: "row", valuePath: "navigationType", operator: "equals", value: "external" },
+            { source: "row", valuePath: "hrefEditable", operator: "truthy" },
           ] },
+          rowOptionsPath: "hrefOptions",
         },
+        { key: "hrefOptions", title: "Path choices", type: "json" },
+        { key: "hrefEditable", title: "Path editable", type: "boolean" },
         { key: "source", title: "Source", type: "enum", options: [
           { value: "module", label: "Module" },
           { value: "custom", label: "Site" },

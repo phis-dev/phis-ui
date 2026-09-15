@@ -43,6 +43,13 @@ import {
 } from "../navigation-widget-runtime";
 import { resolvePhiBuilderActivePageCatalog, type PhiPresetPageNode } from "../../../../helpers/cms-page-catalog";
 import { resolvePhiBuilderNavigationTargetPath } from "../../../../helpers/cms-paths";
+import { createPhiBuilderNavigationPathContext } from "../navigation-path-context";
+import {
+  listPhiBuilderNavigationFolderChoices,
+  refreshPhiBuilderNavigationFolderAddresses,
+  resolvePhiBuilderNavigationFolderAddress,
+} from "../navigation-folder-address";
+import type { PhiPageReference } from "../../../../types/references";
 import { PHI_BUILDER_NAVIGATION_DND_TYPE_PAGE } from "../../../../constants/builder-navigation-dnd";
 import { PHI_BUILDER_RUNTIME_DATA_PROVIDER_DESCRIPTORS } from "../../../../plugins/runtime-modules/builder/data-providers";
 import { isPhiExternalHref } from "../../../../helpers/external-href";
@@ -54,7 +61,13 @@ import {
 import { phiWorkspaceCatalogStore } from "../../../../components/workspace/catalog-store";
 
 type LoadedNavigation = { navKey: string; navigation: PhiBuilderNavigationTree };
-const PHI_DELETED_NAVIGATION_PAGE_TARGET = "@phi/deleted-page-target";
+/**
+ * The "404" choice of the Path cell. On a container it is how a folder address is cleared, and what a
+ * choice that is no longer a direct child reads as; on a page link it is what a deleted target reads as,
+ * shown but not chosen, because a link is meant to lead somewhere.
+ */
+const PHI_NAVIGATION_NOT_FOUND_CHOICE = "@phi/not-found";
+const PHI_NAVIGATION_NOT_FOUND_LABEL = "404";
 
 function resolveNavigationTableType(item: PhiBuilderNavigationItem) {
   return item.kind === "link" && item.external === true ? "external" : item.kind;
@@ -64,15 +77,26 @@ function flattenPages(pages: readonly PhiPresetPageNode[]): PhiPresetPageNode[] 
   return pages.flatMap((page) => [page, ...flattenPages(page.children ?? [])]);
 }
 
+type NavigationPathContext = ReturnType<typeof createPhiBuilderNavigationPathContext>;
+
 function flattenNavigationRows(
   items: readonly PhiBuilderNavigationItem[],
   moduleTitles: ReadonlyMap<string, string>,
-  pagePaths: ReadonlyMap<string, { path: string; deleted: boolean }>,
+  paths: NavigationPathContext,
   parentId: PhiTableRowIdentity | null = null,
   hiddenByAncestor = false,
 ): Record<string, unknown>[] {
+  const pagePaths = paths.pagePaths;
   return items.flatMap((item) => {
     const pageTarget = item.targetReference ? pagePaths.get(item.targetReference) : null;
+    const sitePageLink = item.kind === "link" && item.source === "custom" && item.external !== true &&
+      Boolean(item.targetReference);
+    const externalLink = item.kind === "link" && item.source === "custom" && item.external === true;
+    const deletedTarget = Boolean(item.targetReference) &&
+      (item.targetDeleted === true || pageTarget?.deleted === true || !pageTarget);
+    const folderChoices = item.kind === "container"
+      ? listPhiBuilderNavigationFolderChoices(item, paths.resolveLinkPath)
+      : [];
     return [{
     id: item.id,
     parentId,
@@ -81,9 +105,30 @@ function flattenNavigationRows(
     label: item.label,
     navigationType: resolveNavigationTableType(item),
     origin: item.ownerModuleId ? moduleTitles.get(item.ownerModuleId) ?? item.ownerModuleId : "Site",
-    href: item.targetReference && (item.targetDeleted === true || pageTarget?.deleted === true || !pageTarget)
-      ? PHI_DELETED_NAVIGATION_PAGE_TARGET
-      : pageTarget?.path ?? item.href ?? "",
+    href: item.kind === "container"
+      ? folderChoices.some((choice) => choice.value === item.folder?.choice)
+        ? item.folder!.choice
+        : PHI_NAVIGATION_NOT_FOUND_CHOICE
+      : deletedTarget
+        ? PHI_NAVIGATION_NOT_FOUND_CHOICE
+        : sitePageLink
+          ? item.targetReference
+          : pageTarget?.path ?? item.href ?? "",
+    hrefOptions: item.kind === "container"
+      ? [
+          { value: PHI_NAVIGATION_NOT_FOUND_CHOICE, label: PHI_NAVIGATION_NOT_FOUND_LABEL },
+          ...folderChoices.map((choice) => ({ ...choice, label: paths.displayAddress(choice.label) })),
+        ]
+      : sitePageLink
+        ? [
+            ...(deletedTarget
+              ? [{ value: PHI_NAVIGATION_NOT_FOUND_CHOICE, label: PHI_NAVIGATION_NOT_FOUND_LABEL, disabled: true }]
+              : []),
+            ...paths.pageOptions,
+          ]
+        : null,
+    // A deleted target stays editable: choosing a live Page is how the link is repaired.
+    hrefEditable: item.kind === "container" || externalLink || sitePageLink,
     targetDeleted: item.targetDeleted === true || pageTarget?.deleted === true,
     source: item.source,
     hidden: item.hidden,
@@ -94,7 +139,7 @@ function flattenNavigationRows(
   }, ...flattenNavigationRows(
     item.children,
     moduleTitles,
-    pagePaths,
+    paths,
     item.id,
     hiddenByAncestor || item.hidden,
   )];
@@ -270,7 +315,12 @@ export function PhiBuilderNavigationTableProviderClient({ children }: { children
     };
 
     const writeNavigation = (scope: Awaited<ReturnType<typeof readNavigation>>, items: PhiBuilderNavigationItem[]) => {
-      const navigation = { ...scope.navigation, key: requirePhiBuilderNavigationScopeKey(scope.navKey), items };
+      // Every edit can move a container's children, so the stored folder addresses follow them here.
+      const refreshed = refreshPhiBuilderNavigationFolderAddresses(
+        items,
+        createPhiBuilderNavigationPathContext(scope.state).resolveLinkPath,
+      );
+      const navigation = { ...scope.navigation, key: requirePhiBuilderNavigationScopeKey(scope.navKey), items: refreshed };
       loaded.current.delete(scope.navKey);
       setPhiBuilderNavigationDraft(scope.navKey, navigation, {
         historyContext: createPhiBuilderHistoryContext({ workspace: "navigation", area: scope.state.area, navKey: scope.navKey }),
@@ -330,17 +380,7 @@ export function PhiBuilderNavigationTableProviderClient({ children }: { children
       if (request.resourceKey !== "navigationItems") throw new Error("Unknown Navigation Table resource.");
       const scope = await readNavigation(request.params);
       const moduleTitles = new Map(scope.state.runtimeModuleDefinitions.map((module) => [module.moduleId, module.title]));
-      const pages = resolvePhiBuilderActivePageCatalog(
-        scope.state.area,
-        scope.state.modulePresetPagesByArea,
-        scope.state.customPages,
-        scope.state.persistedPageCatalogByArea,
-      );
-      const pagePaths = new Map(flattenPages(pages).flatMap((page) => page.reference ? [[page.reference, {
-        path: resolvePhiBuilderNavigationTargetPath(scope.state.area, page.key, pages),
-        deleted: page.tombstoned === true,
-      }] as const] : []));
-      const rows = flattenNavigationRows(scope.navigation.items, moduleTitles, pagePaths);
+      const rows = flattenNavigationRows(scope.navigation.items, moduleTitles, createPhiBuilderNavigationPathContext(scope.state));
       return {
         rows,
         total: rows.length,
@@ -409,6 +449,30 @@ export function PhiBuilderNavigationTableProviderClient({ children }: { children
           }
           patch.href = request.proposedValue;
           patch.external = true;
+        } else if (request.fieldKey === "href" && request.proposedValue === PHI_NAVIGATION_NOT_FOUND_CHOICE &&
+          item.kind === "container") {
+          // Choosing 404 clears the folder address: nothing is stored, so the address answers 404.
+          patch.folder = null;
+        } else if (request.fieldKey === "href" && typeof request.proposedValue === "string" && item.kind === "container") {
+          // Write strict: a folder address leads only to one of the container's own direct children.
+          const paths = createPhiBuilderNavigationPathContext(scope.state);
+          if (!listPhiBuilderNavigationFolderChoices(item, paths.resolveLinkPath)
+            .some((choice) => choice.value === request.proposedValue)) {
+            return { status: "rejected", invalidation: "none", errorCode: "folder-choice-invalid", message: "A container can lead only to one of its direct children." };
+          }
+          patch.folder = {
+            choice: request.proposedValue as PhiCmsInstanceId,
+            address: resolvePhiBuilderNavigationFolderAddress(item, paths.resolveLinkPath),
+          };
+        } else if (request.fieldKey === "href" && typeof request.proposedValue === "string" &&
+          item.kind === "link" && item.source === "custom" && item.external !== true && item.targetReference) {
+          const target = createPhiBuilderNavigationPathContext(scope.state).pagePaths.get(request.proposedValue);
+          if (!target || target.deleted) {
+            return { status: "rejected", invalidation: "none", errorCode: "page-target-invalid", message: "A page link can point only to a Page of this Area." };
+          }
+          patch.targetReference = request.proposedValue as PhiPageReference;
+          patch.targetDeleted = false;
+          patch.href = target.path;
         } else if (request.fieldKey === "icon" &&
           (typeof request.proposedValue === "string" || request.proposedValue === null)) {
           patch.icon = request.proposedValue || null;
@@ -417,7 +481,10 @@ export function PhiBuilderNavigationTableProviderClient({ children }: { children
           item.kind === "link") patch.newTab = request.proposedValue;
         else return { status: "rejected", invalidation: "none", errorCode: "field-readonly", message: "Navigation field cannot be changed." };
         writeNavigation(scope, updateNavigationItem(scope.navigation.items, id, (current) => ({ ...current, ...patch })));
-        return accepted("none", patch as Record<string, unknown>);
+        // The row holds the choice in `href`, whichever item fields the choice changed.
+        return accepted("none", request.fieldKey === "href"
+          ? { href: request.proposedValue }
+          : patch as Record<string, unknown>);
       }
       if (request.kind === "row-move") {
         const movedId = String(request.movedRowIdentity);
@@ -506,17 +573,7 @@ export function PhiBuilderNavigationTableProviderClient({ children }: { children
             const items = updateNavigationItem(scope.navigation.items, id, (current) => ({ ...current, hidden }));
             writeNavigation(scope, items);
             const moduleTitles = new Map(scope.state.runtimeModuleDefinitions.map((module) => [module.moduleId, module.title]));
-            const pages = resolvePhiBuilderActivePageCatalog(
-              scope.state.area,
-              scope.state.modulePresetPagesByArea,
-              scope.state.customPages,
-              scope.state.persistedPageCatalogByArea,
-            );
-            const pagePaths = new Map(flattenPages(pages).flatMap((page) => page.reference ? [[page.reference, {
-              path: resolvePhiBuilderNavigationTargetPath(scope.state.area, page.key, pages),
-              deleted: page.tombstoned === true,
-            }] as const] : []));
-            const rows = flattenNavigationRows(items, moduleTitles, pagePaths);
+            const rows = flattenNavigationRows(items, moduleTitles, createPhiBuilderNavigationPathContext(scope.state));
             return accepted("none", { hidden }, {
               hidden: rows.filter((row) => row.hidden === true || row.hiddenByAncestor === true).length,
             });

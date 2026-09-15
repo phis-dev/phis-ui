@@ -2,6 +2,7 @@ import { isPhiCmsAreaKey, type PhiCmsAreaKey } from "../constants/cms-areas";
 import { readPhiCmsNavigationTargetPath } from "../helpers/navigation-target";
 import { resolvePhiCmsNavigationOverlay } from "../plugins/runtime-modules/descriptor-compiler";
 import type {
+  PhiCmsNavigationFolder,
   PhiCmsNavigationOverlay,
   PhiCmsResolvedNavigationItem,
   PhiCmsResolvedNavigationSurface,
@@ -24,6 +25,8 @@ export type PhiBuilderNavigationItem = {
   external?: boolean;
   newTab?: boolean;
   hidden: boolean;
+  /** A container's folder address and the direct child it leads to. */
+  folder?: PhiCmsNavigationFolder | null;
   children: PhiBuilderNavigationItem[];
 };
 
@@ -108,9 +111,11 @@ function materializeNavigationItem(
   item: PhiCmsResolvedNavigationItem,
   tombstones: ReadonlySet<string>,
   customItems: ReadonlyMap<string, PhiCmsNavigationOverlay["customItems"][number]>,
+  overrides: ReadonlyMap<string, PhiCmsNavigationOverlay["itemOverrides"][number]>,
 ): PhiBuilderNavigationItem {
   const customItem = customItems.get(item.id);
   const customTarget = customItem?.target;
+  const folder = item.kind === "container" ? customItem?.folder ?? overrides.get(item.id)?.folder : undefined;
   return {
     id: item.id,
     source: item.ownerModuleId === null ? "custom" : "module",
@@ -128,7 +133,8 @@ function materializeNavigationItem(
     ...(customTarget?.kind === "external" ? { external: true } : {}),
     ...(customItem?.newTab === true ? { newTab: true } : {}),
     hidden: tombstones.has(item.id),
-    children: item.children.map((child) => materializeNavigationItem(child, tombstones, customItems)),
+    ...(folder ? { folder } : {}),
+    children: item.children.map((child) => materializeNavigationItem(child, tombstones, customItems, overrides)),
   };
 }
 
@@ -158,11 +164,12 @@ export function materializePhiBuilderNavigationSurface(
     : resolution;
   const tombstones = new Set(overlay?.tombstones ?? []);
   const customItems = new Map((overlay?.customItems ?? []).map((item) => [item.id, item] as const));
+  const overrides = new Map((overlay?.itemOverrides ?? []).map((item) => [item.id, item] as const));
   const { surface } = editorResolution;
   return {
     key: surface.navKey,
     label: surface.label.defaultMessage,
-    items: surface.items.map((item) => materializeNavigationItem(item, tombstones, customItems)),
+    items: surface.items.map((item) => materializeNavigationItem(item, tombstones, customItems, overrides)),
     descriptorSurface,
     diagnostics: resolution.diagnostics.map(({ code, id, referenceId }) =>
       `${code}: ${id}${referenceId ? ` -> ${referenceId}` : ""}`,

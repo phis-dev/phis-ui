@@ -15,7 +15,6 @@ const PHI_BUILDER_NAVIGATION_PAGE_LABEL_SET = definePhiLabelSet({
     column_origin: "Origin",
     column_path: "Path",
     column_new_tab: "New tab",
-    deleted_target: "Deleted target",
     type_link: "Link",
     type_external: "External",
     type_container: "Container",
@@ -54,7 +53,6 @@ export async function getPhiBuilderNavigationPageLabels(options: PhiGlobalTransl
       separator: labels.type_separator,
     },
     emptyTitle: labels.empty_title,
-    deletedTarget: labels.deleted_target,
     navigation: {
       placeholder: labels.navigation_placeholder,
       create: labels.navigation_create,

@@ -72,6 +72,9 @@ import {
 import { usePhiBuilderModuleMetas } from "./plugin-meta-store";
 import { clearPhiBuilderModuleAreasDirty } from "./runtime-module-selection";
 import { phiWorkspaceCatalogStore } from "../../../components/workspace/catalog-store";
+import type { PhiBuilderNavigationItem } from "../../../helpers/cms-navigation-catalog";
+import { refreshPhiBuilderNavigationFolderAddresses } from "./navigation-folder-address";
+import { createPhiBuilderNavigationPathContext } from "./navigation-path-context";
 
 export type PhiDeveloperBuilderToolbarCommand =
   | "save"
@@ -124,7 +127,7 @@ export function usePhiBuilderDraftCommandController({
     }
     const currentDraft = getPhiBuilderNavigationDraftSnapshot(effectiveNavKey);
     if (currentDraft) {
-      return currentDraft;
+      return withCurrentFolderAddresses(currentDraft);
     }
 
     const scope = await loadPhiBuilderNavigationScope(effectiveNavKey, navigationSurface);
@@ -134,7 +137,19 @@ export function usePhiBuilderDraftCommandController({
       area: effectiveArea,
       navKey: effectiveNavKey,
     }));
-    return scope.navigation;
+    return withCurrentFolderAddresses(scope.navigation);
+  }
+
+  /*
+   * A folder address is resolved when the Draft is saved or published (TODOS.md, "Folder addresses"): a
+   * Page moved in /pages since the last Navigation edit has moved the folder its container stands for.
+   */
+  function withCurrentFolderAddresses<TNavigation extends { items: PhiBuilderNavigationItem[] }>(navigation: TNavigation) {
+    const items = refreshPhiBuilderNavigationFolderAddresses(
+      navigation.items,
+      createPhiBuilderNavigationPathContext(state).resolveLinkPath,
+    );
+    return items === navigation.items ? navigation : { ...navigation, items };
   }
 
   function emitDraftStatus(status: "draft" | "published", revisionId: number | null) {
