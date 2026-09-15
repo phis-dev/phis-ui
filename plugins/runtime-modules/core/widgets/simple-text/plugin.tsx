@@ -13,11 +13,14 @@ export const PHI_SIMPLE_TEXT_WIDGET_PLUGIN: PhiCmsServerWidgetPlugin<PhiCmsSimpl
   ...PHI_SIMPLE_TEXT_WIDGET_DEFINITION,
   render: ({ widget, config, runtime }) => {
     const noTranslate = hasPhiFlag(widget.flags, PhiCmsFlags.NoTranslate);
+    // A record's text is already translated; only the Widget's own still has to be.
+    const hasResolvedText = Boolean(widget.resolvedContent?.textFields.text);
 
     return (
       <PhiSimpleTextWidget
         blockId={widget.id}
         key={`widget-${widget.id}`}
+        translate={!noTranslate && !hasResolvedText}
         labels={{
           text: resolvePhiSimpleTextWidgetText(
             {
