@@ -1,22 +1,17 @@
 "use client";
 
 import type { CSSProperties, ReactNode } from "react";
-import Image from "next/image";
 import Link from "next/link";
 
-import { Flex } from "antd";
-
-import type { PhiSiteTheme } from "../../../../../gateway/site-config";
+import type { PhiSiteThemeBrand } from "../../../../../types/site-theme";
 import type { PhiClientBlockBaseProps, PhiNoLabels } from "../../../../../types";
-
-type PhiBrandTheme = NonNullable<PhiSiteTheme["brand"]>;
-type PhiBrandWordmark = NonNullable<PhiBrandTheme["wordmark"]>;
-type PhiBrandWordmarkPart = NonNullable<PhiBrandWordmark["parts"]>[number];
-const PHI_FONT_SIZE_XL = "1.25rem";
-const PHI_LINE_HEIGHT_LG = 1.6;
+import {
+  PhiBrandControl,
+  phiBrandControlIsEmpty,
+} from "../../../../../components/controls/phi-brand-control";
 
 export type PhiBrandWidgetConfig = {
-  brand?: PhiBrandTheme | null;
+  brand?: PhiSiteThemeBrand | null;
   showLogo?: boolean;
   logoYOffset?: number;
 };
@@ -30,52 +25,13 @@ export type PhiBrandWidgetClientProps = PhiClientBlockBaseProps<
   interactive?: boolean;
 };
 
-function hasWordmarkParts(
-  parts: PhiBrandWordmark["parts"] | undefined | null,
-): parts is PhiBrandWordmarkPart[] {
-  return Array.isArray(parts) && parts.some((part) => typeof part?.text === "string" && part.text.trim());
-}
-
-function renderWordmark(
-  wordmark: PhiBrandWordmark | null | undefined,
-  fallbackTitle?: ReactNode,
-  fallbackStyle?: CSSProperties,
-) {
-  const wordmarkStyle: CSSProperties = {
-    ...(fallbackStyle ?? {}),
-    ...(wordmark?.fontFamily ? { fontFamily: wordmark.fontFamily } : {}),
-    ...(wordmark?.fontWeight ? { fontWeight: wordmark.fontWeight } : {}),
-    ...(wordmark?.fontStyle ? { fontStyle: wordmark.fontStyle } : {}),
-    ...(wordmark?.letterSpacing ? { letterSpacing: wordmark.letterSpacing } : {}),
-    lineHeight: 1.1,
-  };
-
-  /*
-   * The typography applies to the fallback too. Where no part is set the Site's own name IS the
-   * Wordmark, and setting its face, weight or tracking used to do nothing at all until somebody first
-   * added a part -- the controls looked broken for exactly the Sites that had not started yet.
-   */
-  if (!hasWordmarkParts(wordmark?.parts)) {
-    return fallbackTitle ? <strong style={wordmarkStyle}>{fallbackTitle}</strong> : null;
-  }
-
-  return (
-    <span style={wordmarkStyle}>
-      {wordmark.parts.map((part, index) => (
-        <span
-          key={`${part.text}-${index}`}
-          style={{
-            ...(part.color ? { color: part.color } : {}),
-            ...(part.fontWeight ? { fontWeight: part.fontWeight } : {}),
-          }}
-        >
-          {part.text}
-        </span>
-      ))}
-    </span>
-  );
-}
-
+/**
+ * The Brand in the Site frame: what `PhiBrandControl` shows, and where clicking it leads.
+ *
+ * The destination is the whole of what this Widget adds. Everything visible belongs to the Control,
+ * because the Theme workspace preview shows the same Brand without being in a frame and without
+ * leading anywhere.
+ */
 export function PhiBrandWidgetClient({
   config,
   fallbackTitle,
@@ -83,70 +39,20 @@ export function PhiBrandWidgetClient({
   interactive = true,
 }: PhiBrandWidgetClientProps) {
   const brand = config?.brand ?? null;
-  const eyebrow = brand?.eyebrow ?? fallbackEyebrow ?? null;
-  const wordmarkNode = renderWordmark(brand?.wordmark, fallbackTitle, {
-    fontSize: PHI_FONT_SIZE_XL,
-    lineHeight: PHI_LINE_HEIGHT_LG,
-  });
-  /*
-   * No Logo means no Logo. It used to mean the Phi logo, which was a placeholder from before a Site
-   * could set one of its own -- every Site that had not picked a picture wore ours, and there was no
-   * way to say "wordmark only" at all. The Wordmark carries the Brand where nothing is picked.
-   */
-  const logoUrl = brand?.logoUrl?.trim() || null;
-  const logoAlt = brand?.logoAlt?.trim() || "Brand logo";
-  const homeHref = brand?.homeHref?.trim() || "/";
   const showLogo = config?.showLogo !== false;
-  const logoYOffset = typeof config?.logoYOffset === "number" ? config.logoYOffset : 0;
+  const presentation = {
+    brand,
+    fallbackTitle,
+    fallbackEyebrow,
+    showLogo,
+    logoYOffset: typeof config?.logoYOffset === "number" ? config.logoYOffset : 0,
+  };
 
-  if (!logoUrl && !wordmarkNode && !eyebrow) {
+  if (phiBrandControlIsEmpty(presentation)) {
     return null;
   }
 
-  const content = (
-      <Flex
-        align="center"
-        justify="flex-start"
-        gap={12}
-        wrap={false}
-        style={{ color: "inherit", width: "100%", height: "100%", fontSize: PHI_FONT_SIZE_XL }}
-      >
-      {showLogo && logoUrl ? (
-        <span
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            height: "100%",
-            flexShrink: 0,
-          }}
-        >
-          <Image
-            src={logoUrl}
-            alt={logoAlt}
-            width={50}
-            height={50}
-            style={{
-              width: 50,
-              height: "auto",
-              objectFit: "contain",
-              display: "block",
-              transform: logoYOffset === 0 ? undefined : `translateY(${logoYOffset}px)`,
-            }}
-          />
-        </span>
-      ) : null}
-      <Flex vertical gap={0} justify="center">
-        {eyebrow ? (
-          <span style={{ display: "block", fontSize: "var(--ant-font-size-sm)", opacity: 0.75 }}>
-            {eyebrow}
-          </span>
-        ) : null}
-        {wordmarkNode}
-      </Flex>
-    </Flex>
-  );
-
+  const homeHref = brand?.homeHref?.trim() || "/";
   const linkStyle: CSSProperties = {
     color: "inherit",
     textDecoration: "none",
@@ -160,14 +66,14 @@ export function PhiBrandWidgetClient({
   if (!interactive) {
     return (
       <span aria-disabled="true" style={linkStyle}>
-        {content}
+        <PhiBrandControl {...presentation} />
       </span>
     );
   }
 
   return (
     <Link href={homeHref} style={linkStyle}>
-      {content}
+      <PhiBrandControl {...presentation} />
     </Link>
   );
 }

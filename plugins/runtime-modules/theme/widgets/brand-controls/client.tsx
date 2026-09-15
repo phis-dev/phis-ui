@@ -65,7 +65,7 @@ import {
 } from "../../../../../components/widgets/config/color-picker-presets";
 import { PHI_SPACING_TOKEN_KEYS } from "../../../../../components/widgets/config/spacing-options";
 import { PhiColorWidget } from "../../../../../components/widgets/client/phi-color-widget";
-import { PhiBrandWidgetClient } from "../../../core/widgets/brand/client";
+import { PhiBrandControl } from "../../../../../components/controls/phi-brand-control";
 import { PhiBackgroundControl, type PhiBackgroundControlProps } from "../../../../../components/controls/phi-background-control";
 import {
   PHI_ROOT_BACKGROUND_IMAGE_SOURCE_KINDS,
@@ -3227,10 +3227,10 @@ export function PhiBuilderBrandThemePreviewWidgetClient({
           radius={clientToken.paddingXS}
           padding={clientToken.padding}
           brand={(
-            <PhiBrandWidgetClient
-              config={{ brand: previewThemeResolved.brand ?? null, logoYOffset: -2 }}
+            <PhiBrandControl
+              brand={previewThemeResolved.brand ?? null}
               fallbackTitle={runtime.site.name ?? runtime.site.key}
-              interactive={false}
+              logoYOffset={-2}
             />
           )}
         >
