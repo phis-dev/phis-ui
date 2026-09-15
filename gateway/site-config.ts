@@ -1,6 +1,7 @@
 import "server-only";
 
 import { buildApiHeaders, buildApiUrl } from "../helpers/site-api";
+import { syncPhiTranslationChangeMarkers } from "../helpers/translation-cache";
 import type { PhiShellTheme } from "../components/shell/shell-types";
 import { readPhiSiteReadCache } from "./site-read-cache";
 import type {
@@ -80,6 +81,11 @@ export type PhiSiteConfig = {
     publishedRevisionId: number | null;
     workingDraftRevisionId: number | null;
   };
+  /** Change markers of the global and this Site's translation store; opaque, compared for equality. */
+  translationMarkers: {
+    global: string;
+    site: string;
+  };
 };
 
 export type GetResolvedSiteConfigOptions = {
@@ -142,5 +148,14 @@ async function fetchSiteConfig({
     throw new Error("Missing site config payload.");
   }
 
+  if (!payload.site.translationMarkers) {
+    throw new Error("Missing translation markers in site config payload.");
+  }
+  // Every fresh answer, cached or not afterwards, is where this process learns a translation changed.
+  syncPhiTranslationChangeMarkers({
+    siteKey,
+    global: payload.site.translationMarkers.global,
+    site: payload.site.translationMarkers.site,
+  });
   return payload.site;
 }

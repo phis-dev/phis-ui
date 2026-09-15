@@ -629,22 +629,21 @@ globalThis.fetch = originalFetch;
 
 {
   /*
-   * A label set is cached by what it holds, not only by where it came from. Keyed by locale and set key
-   * alone, a process that cached a set before a label was added kept serving the old object and the new
-   * keys read as `undefined` -- the Background Travel switch rendered with no label and two blank
-   * options. A deploy restarts the process and never sees it, which is exactly why the key has to
-   * describe the set's contents rather than its name.
+   * A label set is not cached as a whole. A set kept by locale and set key served its old object after a
+   * label was added -- the Background Travel switch rendered with no label and two blank options -- and
+   * held an edited translation, or the source text of a failed request, until the process restarted.
+   * Its texts go through helpers/translation-cache.ts, keyed per message, where a new label is a miss.
    */
   const labelSetSource = await readFile(new URL("../gateway/label-set.ts", import.meta.url), "utf8");
-  assert.match(
+  assert.doesNotMatch(
     labelSetSource,
-    /getLabelSetCacheKey\([\s\S]{0,200}?hashLabelSetShape\(definition\.labels\)/u,
-    "The cache key must carry a fingerprint of the labels themselves.",
+    /^const \w+ = new Map</mu,
+    "A label set must not be cached as a whole; its texts are cached per message.",
   );
   assert.match(
     labelSetSource,
-    /function hashLabelSetShape[\s\S]*?Object\.entries\(labels\)/u,
-    "The fingerprint must cover the keys and their source text, not just the count.",
+    /translator\.trBulk\(/u,
+    "A label set must read its texts through the translator and its per-message cache.",
   );
 }
 

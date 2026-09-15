@@ -2,17 +2,6 @@
 
 This document collects the cache and invalidation touchpoints in `gateway/*`.
 
-## Explicit Clear Functions
-
-- `clearPhiLabelSetCache(options?)`
-  - File: `gateway/label-set.ts`
-  - Clears the in-process shared label-set cache.
-  - Supports:
-    - `clearPhiLabelSetCache()`
-    - `clearPhiLabelSetCache({ locale: "de" })`
-    - `clearPhiLabelSetCache({ setKey: "widget:registration" })`
-    - `clearPhiLabelSetCache({ locale: "de", setKey: "widget:registration" })`
-
 ## Site Read Cache
 
 - `readPhiSiteReadCache(key, load)` / `clearPhiSiteReadCache()`
@@ -37,21 +26,18 @@ If their fetch layer uses `cache: "no-store"`, the underlying request is still d
 
 ## Other In-Process Caches Near Gateway
 
-- `LABEL_SET_CACHE`
-  - File: `gateway/label-set.ts`
-  - Manual clear available through `clearPhiLabelSetCache(...)`.
-
 - `configCache`
   - File: `helpers/site-locale-config.ts`
   - TTL-based helper cache.
   - No explicit clear helper yet.
 
-## Translation Request Caching
+## Translation Caching
 
-- `gateway/tr.ts`
-  - Uses `fetch(..., { cache: process.env.NODE_ENV === "development" ? "no-store" : "force-cache" })`
-  - No standalone clear function.
-  - If tag-based invalidation is needed here, the fetch contract must be moved to tagged Next cache primitives.
+- `readPhiTranslationCache(key)` / `writePhiTranslationCache(key, value, generation?)` / `clearPhiTranslationCache(options?)` / `syncPhiTranslationChangeMarkers(...)`
+  - File: `helpers/translation-cache.ts`
+  - Per-process cache per message, no expiry, at most 5,000 entries (least recently read evicted). Filled by `tr` and `trBulk` in `gateway/tr.ts`, whose requests to `/api/v1/tr` are `no-store`. A failed request and a `provisional` answer are not kept; neither is an answer whose request began before a clear.
+  - Emptied by `getResolvedSiteConfig(...)` whenever Core's `translationMarkers` differ from the ones the process saw last: the global entries for the global marker, the Site's entries for its own. Core moves them on every translation write (phis-server TRANSLATIONS.md, "Change markers").
+  - Label sets (`gateway/label-set.ts`) are not cached as sets; they read their texts through this cache.
 
 ## Form Guard Fetching
 

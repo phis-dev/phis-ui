@@ -13,6 +13,9 @@ export type BuildPhiSiteProxyHandlersOptions = {
  * A write Core accepted may have changed what this Site process keeps in its read cache. Which writes do
  * is not worth listing: config and Navigation carry the theme draft, settings, logo revision and Page
  * paths, and a list would fall behind the next endpoint. Every accepted write clears it.
+ *
+ * Translations are not cleared here. The next Site config read carries their change markers, and
+ * helpers/translation-cache.ts empties only a store whose marker moved.
  */
 function clearingReadCacheOnWrite(handler: PhiNextProxyHandler): PhiNextProxyHandler {
   return async (request, context) => {

@@ -169,7 +169,7 @@ Highlights by group (full list reproducible with the scan below):
   unreferenced.
 - **Site-structure fossils**: `NAV_ITEMS`, `PRODUCT_PANELS` (`helpers/site-structure.ts`),
   `canAccessPage`, `resolveCmsPath`, `isApiV1Path`, `isMedusaApiPath`, `buildLocalProxyPath`.
-- **Misc**: `phisUiLogger` (`net/log.ts`), `clearPhiLabelSetCache`, `matchesPhiCmsVisibility`,
+- **Misc**: `phisUiLogger` (`net/log.ts`), `matchesPhiCmsVisibility`,
   `getPhiSiteLocaleConfig`, `PhiDrawer`/`PhiModal` re-exports, `PhiRuntimeModuleAuthoringHost`,
   `PHI_MOTION`, `PhiCmsRegionStatus`, `PhiCmsRevisionFlags`, and ~50 more single items.
 

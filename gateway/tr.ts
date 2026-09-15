@@ -6,6 +6,7 @@ import { formatPhiTranslation } from "../helpers/translation-format";
 import {
   buildPhiTranslationCacheKey,
   readPhiTranslationCache,
+  readPhiTranslationCacheGeneration,
   writePhiTranslationCache,
 } from "../helpers/translation-cache";
 
@@ -42,12 +43,18 @@ export type PhiSiteTranslatorOptions = PhiGlobalTranslatorOptions & {
   siteKey: string;
 };
 
+/**
+ * `provisional`: at least one answer is source text standing in for a failure on Core's side. Handed on
+ * to the caller, never kept -- the cache has no expiry that would end it.
+ */
 type TranslationResponse = {
   translation?: string;
+  provisional?: boolean;
 };
 
 type TranslationBatchResponse = {
   translations?: string[];
+  provisional?: boolean;
 };
 
 function logTranslationFallback(error: unknown, meta: Record<string, unknown>) {
@@ -133,7 +140,9 @@ async function requestTranslation(
     method: "POST",
     headers: buildTranslatorHeaders(options),
     body: JSON.stringify(payload),
-    cache: process.env.NODE_ENV === "development" ? "no-store" : "force-cache",
+    // Kept by helpers/translation-cache.ts instead, which the change markers empty: Next's data cache
+    // would outlive every edit.
+    cache: "no-store",
   });
 
   if (!response.ok) {
@@ -183,6 +192,7 @@ export async function tr(
   }
 
   try {
+    const generation = readPhiTranslationCacheGeneration();
     const response = await requestTranslation(options, {
       locale,
       ...(sourceLocale ? { sourceLocale } : {}),
@@ -193,7 +203,9 @@ export async function tr(
 
     const payload = (await response.json()) as TranslationResponse;
     const translation = payload.translation ?? normalizedMessage;
-    writePhiTranslationCache(cacheKey, translation);
+    if (payload.provisional !== true) {
+      writePhiTranslationCache(cacheKey, translation, generation);
+    }
     return formatPhiTranslation(translation, params);
   } catch (error) {
     logTranslationFallback(error, {
@@ -259,6 +271,7 @@ export async function trBulk(
   }
 
   try {
+    const generation = readPhiTranslationCacheGeneration();
     const response = await requestTranslation(options, {
       locale,
       ...(sourceLocale ? { sourceLocale } : {}),
@@ -273,8 +286,10 @@ export async function trBulk(
       throw new Error("Translation batch length mismatch.");
     }
 
-    for (const [key, pendingIndex] of pendingIndexByKey) {
-      writePhiTranslationCache(key, translations[pendingIndex] || pending[pendingIndex] || "");
+    if (payload.provisional !== true) {
+      for (const [key, pendingIndex] of pendingIndexByKey) {
+        writePhiTranslationCache(key, translations[pendingIndex] || pending[pendingIndex] || "", generation);
+      }
     }
 
     return normalizedMessages.map((msg, index) => {

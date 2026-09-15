@@ -1,12 +1,13 @@
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
   buildPhiTranslationCacheKey,
   clearPhiTranslationCache,
   getPhiTranslationCacheSize,
   PHI_TRANSLATION_CACHE_MAX_ENTRIES,
-  PHI_TRANSLATION_CACHE_TTL_MS,
   readPhiTranslationCache,
+  readPhiTranslationCacheGeneration,
+  syncPhiTranslationChangeMarkers,
   writePhiTranslationCache,
 } from "./translation-cache";
 
@@ -61,13 +62,22 @@ describe("translation cache", () => {
     expect(readPhiTranslationCache(key({ msg: "Away" }))).toBeNull();
   });
 
-  it("stops answering once the entry is older than the window", () => {
-    const now = 1_000_000;
-    writePhiTranslationCache(key(), "Startseite", now);
-    expect(readPhiTranslationCache(key(), now + PHI_TRANSLATION_CACHE_TTL_MS - 1)).toBe("Startseite");
-    expect(readPhiTranslationCache(key(), now + PHI_TRANSLATION_CACHE_TTL_MS)).toBeNull();
-    // The expired entry is dropped rather than left to be read again.
-    expect(getPhiTranslationCacheSize()).toBe(0);
+  it("keeps an entry however long ago it was written", () => {
+    vi.useFakeTimers();
+    try {
+      writePhiTranslationCache(key(), "Startseite");
+      vi.advanceTimersByTime(24 * 60 * 60 * 1000);
+      expect(readPhiTranslationCache(key())).toBe("Startseite");
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("drops a write whose request began before a clear", () => {
+    const generation = readPhiTranslationCacheGeneration();
+    clearPhiTranslationCache({ scope: "acme" });
+    writePhiTranslationCache(key(), "read before the change", generation);
+    expect(readPhiTranslationCache(key())).toBeNull();
   });
 
   it("evicts what was least recently read, not what was written first", () => {
@@ -107,6 +117,12 @@ describe("clearing", () => {
     expect(readPhiTranslationCache(key({ targetLocale: "fr" }))).toBe("fr-global");
   });
 
+  it("drops the global entries alone for the empty scope", () => {
+    clearPhiTranslationCache({ scope: "" });
+    expect(readPhiTranslationCache(key({ targetLocale: "de" }))).toBeNull();
+    expect(readPhiTranslationCache(key({ scope: "acme", targetLocale: "de" }))).toBe("de-acme");
+  });
+
   it("drops one Site and leaves the global entries", () => {
     clearPhiTranslationCache({ scope: "acme" });
     expect(readPhiTranslationCache(key({ scope: "acme", targetLocale: "de" }))).toBeNull();
@@ -121,5 +137,44 @@ describe("clearing", () => {
   it("empties everything without arguments", () => {
     clearPhiTranslationCache();
     expect(getPhiTranslationCacheSize()).toBe(0);
+  });
+});
+
+describe("change markers", () => {
+  const markers = (global: string, site: string, siteKey = "acme") => ({ siteKey, global, site });
+
+  beforeEach(() => {
+    syncPhiTranslationChangeMarkers(markers("g1", "s1"));
+    writePhiTranslationCache(key({ targetLocale: "de" }), "de-global");
+    writePhiTranslationCache(key({ scope: "acme", targetLocale: "de" }), "de-acme");
+  });
+
+  it("keeps everything while the markers stay the same", () => {
+    syncPhiTranslationChangeMarkers(markers("g1", "s1"));
+    expect(getPhiTranslationCacheSize()).toBe(2);
+  });
+
+  it("empties only the Site's entries when its marker moves", () => {
+    syncPhiTranslationChangeMarkers(markers("g1", "s2"));
+    expect(readPhiTranslationCache(key({ scope: "acme", targetLocale: "de" }))).toBeNull();
+    expect(readPhiTranslationCache(key({ targetLocale: "de" }))).toBe("de-global");
+  });
+
+  it("empties only the global entries when the global marker moves", () => {
+    syncPhiTranslationChangeMarkers(markers("g2", "s1"));
+    expect(readPhiTranslationCache(key({ targetLocale: "de" }))).toBeNull();
+    expect(readPhiTranslationCache(key({ scope: "acme", targetLocale: "de" }))).toBe("de-acme");
+  });
+
+  it("empties both when both markers move", () => {
+    syncPhiTranslationChangeMarkers(markers("g2", "s2"));
+    expect(getPhiTranslationCacheSize()).toBe(0);
+  });
+
+  it("does not empty again for a marker it already followed", () => {
+    syncPhiTranslationChangeMarkers(markers("g1", "s2"));
+    writePhiTranslationCache(key({ scope: "acme", targetLocale: "de" }), "de-acme-new");
+    syncPhiTranslationChangeMarkers(markers("g1", "s2"));
+    expect(readPhiTranslationCache(key({ scope: "acme", targetLocale: "de" }))).toBe("de-acme-new");
   });
 });
