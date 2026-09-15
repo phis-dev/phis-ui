@@ -56,14 +56,19 @@ export {
 } from "./components/forms/form-provider-contract";
 export {
   PHI_FORM_DEFAULT_LAYOUT,
-  PHI_FORM_GRID_COLUMNS,
-  PHI_FORM_RESPONSIVE_BREAKPOINTS,
+  PHI_FORM_GRID_LAST_LINE,
+  PHI_FORM_RESPONSIVE_MIN_WIDTH,
+  PHI_FORM_RESPONSIVE_MODES,
   assertPhiFormLabelSetKey,
   createPhiFormLabelText,
   createPhiFormLiteralText,
-  resolvePhiFormFieldCellPlacement,
+  resolvePhiFormFieldExtent,
+  resolvePhiFormFieldRanges,
+  phiFormGridColumn,
+  resolvePhiFormGridPlacement,
+  phiFormGridRangesOverlap,
   resolvePhiFormLayout,
-  resolvePhiFormResponsiveGridPlacement,
+  resolvePhiFormResponsiveGridRange,
   resolvePhiFormText,
   parsePhiFormDescriptor,
 } from "./components/forms/form-descriptor-contract";
@@ -138,7 +143,7 @@ export type {
 } from "./components/forms/form-provider-registry";
 export type {
   PhiResolvedFormLayout,
-  PhiResolvedFormResponsiveGridPlacement,
+  PhiResolvedFormResponsiveGridRange,
 } from "./components/forms/form-descriptor-contract";
 export type {
   PhiFormControlProps,

@@ -28,34 +28,54 @@ export type PhiFormTextDescriptor =
       fallback: string;
     };
 
-export type PhiFormGridPlacement = {
-  span?: number;
-  offset?: number;
-  order?: number;
+/** The number of tracks every form grid is divided into. */
+export const PHI_FORM_GRID_TRACKS = 24 as const;
+
+/**
+ * Where one element lies on the form grid, written the way CSS Grid writes it: `start` is the line the
+ * element begins at and `end` is the line it stops before, both counted from 1, so the last line is 25.
+ *
+ * A range rather than a width, because a width can only say how much room something takes and never
+ * where the room is. A label at 1-7 with an input at 7-19 leaves 19-25 empty, and a tool button can
+ * then say 21-25 and stand in that gap on the same row -- neither of which a span can express. Ranges
+ * also carry the responsive case without a second concept: a label at 1-25 above an input at 1-25 is
+ * the stacked form, because two elements that both claim the whole width cannot share a row.
+ */
+export type PhiFormGridRange = {
+  /** First line the element occupies, 1 to 24. */
+  start: number;
+  /** Line the element stops before, 2 to 25. Exclusive, as in CSS. */
+  end: number;
 };
 
-export type PhiFormResponsiveGridPlacement =
-  PhiResponsiveValue<PhiFormGridPlacement>;
-
-export type PhiFormColumnCount = 1 | 2 | 3 | 4;
-
-export type PhiFormLabelPlacement = "top" | "side";
+export type PhiFormResponsiveGridRange = PhiResponsiveValue<PhiFormGridRange>;
 
 export type PhiFormLogicalAlignment = "start" | "center" | "end";
 
+/**
+ * What a form's rows look like where a field says nothing of its own.
+ *
+ * There is no `columns` and no `labelPlacement` here any more: a two-column form is fields whose
+ * ranges lie in 1-13 and 13-25, and a stacked form is a label whose range is the full width. One
+ * mechanism decides all of it, and the responsive sets decide it per measured width.
+ */
 export type PhiFormLayoutDescriptor = {
-  columns?: PhiResponsiveValue<PhiFormColumnCount>;
   gap?: PhiResponsiveValue<PhiSpacingToken>;
-  labelPlacement?: PhiFormLabelPlacement;
   labelAlign?: Exclude<PhiFormLogicalAlignment, "center">;
-  labelGrid?: PhiFormResponsiveGridPlacement;
-  controlGrid?: PhiFormResponsiveGridPlacement;
+  label?: PhiFormResponsiveGridRange;
+  control?: PhiFormResponsiveGridRange;
 };
 
+/**
+ * Where this one field's parts lie, overriding the layout's defaults.
+ *
+ * Elements are placed in declaration order and CSS Grid does not go back to fill a gap it has passed,
+ * so a field meant to stand beside the one before it is declared after it and the row fills from the
+ * inline start. That is the whole ordering rule.
+ */
 export type PhiFormFieldPlacementDescriptor = {
-  cell?: PhiFormResponsiveGridPlacement;
-  label?: PhiFormResponsiveGridPlacement;
-  control?: PhiFormResponsiveGridPlacement;
+  label?: PhiFormResponsiveGridRange;
+  control?: PhiFormResponsiveGridRange;
 };
 
 export type PhiFormValidationRuleDescriptor = {

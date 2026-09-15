@@ -1,4 +1,8 @@
 import { PHI_MOTION_EASINGS } from "../../../helpers/motion";
+import {
+  PHI_FORM_STACKED_FULL,
+  phiFormFlowHalfColumns,
+} from "../../../components/forms/form-descriptor-contract";
 import type { PhiFormDescriptor } from "../../../types/form-descriptor";
 import { createPhiFormId } from "../../../types/form-id";
 import { PHI_SHARED_PACKAGE_NAME } from "../../../types/signals";
@@ -48,28 +52,10 @@ const formAny = (valuePath: string, values: readonly string[]) => ({
 } as const);
 
 const formLayout = {
-  columns: { compact: 1, medium: 2, wide: 2 },
   gap: { compact: "sm", medium: "sm", wide: "sm" },
-  labelPlacement: "side",
 } as const;
 
-const fullWidthPlacement = {
-  cell: {
-    compact: { span: 24 },
-    medium: { span: 24 },
-    wide: { span: 24 },
-  },
-  label: {
-    compact: { span: 24 },
-    medium: { span: 24 },
-    wide: { span: 24 },
-  },
-  control: {
-    compact: { span: 24 },
-    medium: { span: 24 },
-    wide: { span: 24 },
-  },
-} as const;
+const fullWidthPlacement = PHI_FORM_STACKED_FULL;
 
 const compoundEditor = (
   type: "number" | "boolean" | "enum",
@@ -104,20 +90,20 @@ const effectsDescriptors = {
   appearance: {
     schemaVersion: 1,
     key: PHI_BUILDER_EFFECTS_FORM_IDS.appearance,
-    fields: [{
+    fields: phiFormFlowHalfColumns([{
       key: "transparency",
       fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.slider,
       label: literal("Amount"),
       initialValue: 0,
       config: { min: 0, max: 100, step: 1, precision: 0, tooltipSuffix: "%", showInput: true },
       placement: fullWidthPlacement,
-    }],
+    }]),
     layout: formLayout,
   },
   transitions: {
     schemaVersion: 1,
     key: PHI_BUILDER_EFFECTS_FORM_IDS.transitions,
-    fields: [
+    fields: phiFormFlowHalfColumns([
       {
         key: "transitionTrigger",
         fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.select,
@@ -284,13 +270,13 @@ const effectsDescriptors = {
           layout: { mode: "auto", overflowX: "auto" },
         },
       },
-    ],
+    ]),
     layout: formLayout,
   },
   viewport: {
     schemaVersion: 1,
     key: PHI_BUILDER_EFFECTS_FORM_IDS.viewport,
-    fields: [
+    fields: phiFormFlowHalfColumns([
       {
         key: "viewportProperty",
         fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.select,
@@ -405,7 +391,7 @@ const effectsDescriptors = {
           layout: { mode: "auto", overflowX: "auto" },
         },
       },
-    ],
+    ]),
     layout: formLayout,
   },
 } as const satisfies Record<(typeof PHI_BUILDER_EFFECTS_SECTIONS)[number], PhiFormDescriptor>;

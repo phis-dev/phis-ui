@@ -65,19 +65,16 @@ export const PHI_ASSET_METADATA_FORM_DESCRIPTOR = {
     },
   ],
   layout: {
-    columns: { compact: 1, medium: 1, wide: 1 },
     gap: { compact: "sm", medium: "base" },
-    labelPlacement: "side",
-    labelAlign: "start",
-    labelGrid: {
-      compact: { span: 8, offset: 0 },
-      medium: { span: 8, offset: 0 },
-      wide: { span: 6, offset: 0 },
+    label: {
+      compact: { start: 1, end: 9 },
+      medium: { start: 1, end: 9 },
+      wide: { start: 1, end: 7 },
     },
-    controlGrid: {
-      compact: { span: 16, offset: 0 },
-      medium: { span: 16, offset: 0 },
-      wide: { span: 18, offset: 0 },
+    control: {
+      compact: { start: 9, end: 25 },
+      medium: { start: 9, end: 25 },
+      wide: { start: 7, end: 25 },
     },
   },
 } as const satisfies PhiFormDescriptor;
@@ -109,19 +106,16 @@ export const PHI_ASSET_FOLDER_FORM_DESCRIPTOR = {
     },
   ],
   layout: {
-    columns: { compact: 1, medium: 1, wide: 1 },
     gap: { compact: "sm", medium: "base" },
-    labelPlacement: "side",
-    labelAlign: "start",
-    labelGrid: {
-      compact: { span: 8, offset: 0 },
-      medium: { span: 8, offset: 0 },
-      wide: { span: 8, offset: 0 },
+    label: {
+      compact: { start: 1, end: 9 },
+      medium: { start: 1, end: 9 },
+      wide: { start: 1, end: 9 },
     },
-    controlGrid: {
-      compact: { span: 16, offset: 0 },
-      medium: { span: 16, offset: 0 },
-      wide: { span: 16, offset: 0 },
+    control: {
+      compact: { start: 9, end: 25 },
+      medium: { start: 9, end: 25 },
+      wide: { start: 9, end: 25 },
     },
   },
 } as const satisfies PhiFormDescriptor;

@@ -1,4 +1,5 @@
 import type { PhiFormDescriptor } from "../../../types/form-descriptor";
+import { phiFormFlowHalfColumns } from "../../../components/forms/form-descriptor-contract";
 import { createPhiFormId } from "../../../types/form-id";
 import { PHI_SHARED_PACKAGE_NAME } from "../../../types/signals";
 import { PHI_BUILDER_RUNTIME_MODULE_ID } from "../../../plugins/runtime-modules/builder/ids";
@@ -30,8 +31,8 @@ const descriptor: PhiFormDescriptor = {
   schemaVersion: 1,
   key: PHI_BUILDER_SIGNAL_WIRING_FORM_ID,
   labelSetKey: PHI_BUILDER_SIGNAL_WIRING_FORM_LABEL_SET_KEY,
-  layout: { columns: { compact: 1, medium: 2 }, gap: { compact: "sm", medium: "base" } },
-  fields: [
+  layout: { gap: { compact: "sm", medium: "base" } },
+  fields: phiFormFlowHalfColumns([
     {
       key: "senderAddress",
       fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.select,
@@ -63,7 +64,7 @@ const descriptor: PhiFormDescriptor = {
       optionsProvider: { providerKey: PHI_BUILDER_RUNTIME_DATA_PROVIDER_KEYS.signalReceiverCapabilities },
       disabledWhen: { source: "form", valuePath: "receiverAddress", operator: "falsy" },
     },
-  ],
+  ]),
 };
 
 /*

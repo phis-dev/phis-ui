@@ -8,6 +8,10 @@ import {
   PHI_FORM_FIELD_PROVIDER_KEYS,
   PHI_FORM_VALIDATION_PROVIDER_KEYS,
 } from "./form-provider-contract";
+import {
+  PHI_FORM_STACKED_FULL,
+  PHI_FORM_STACKED_LAYOUT,
+} from "./form-descriptor-contract";
 import { PHI_SHARED_FORM_IDS } from "./shared-form-ids";
 
 function label(key: string, fallback: string): PhiFormTextDescriptor {
@@ -33,7 +37,6 @@ export const PHI_LOGIN_FORM_DESCRIPTOR = {
   schemaVersion: PHI_FORM_DESCRIPTOR_SCHEMA_VERSION,
   key: PHI_SHARED_FORM_IDS.login,
   labelSetKey: PHI_FORM_LABEL_SET_KEYS.login,
-  layout: { labelPlacement: "side", labelAlign: "start" },
   fields: [
     {
       key: "email",
@@ -63,7 +66,7 @@ export const PHI_PROVIDER_LINK_CONFIRMATION_FORM_DESCRIPTOR = {
   schemaVersion: PHI_FORM_DESCRIPTOR_SCHEMA_VERSION,
   key: PHI_SHARED_FORM_IDS.providerLinkConfirmation,
   labelSetKey: PHI_FORM_LABEL_SET_KEYS.login,
-  layout: { labelPlacement: "top" },
+  layout: PHI_FORM_STACKED_LAYOUT,
   fields: [
     {
       key: "password",
@@ -81,10 +84,7 @@ export const PHI_REGISTRATION_FORM_DESCRIPTOR = {
   schemaVersion: PHI_FORM_DESCRIPTOR_SCHEMA_VERSION,
   key: PHI_SHARED_FORM_IDS.registration,
   labelSetKey: PHI_FORM_LABEL_SET_KEYS.registration,
-  layout: {
-    columns: { compact: 1, medium: 2, wide: 2 },
-    labelPlacement: "top",
-  },
+  layout: PHI_FORM_STACKED_LAYOUT,
   fields: [
     {
       key: "firstName",
@@ -128,7 +128,7 @@ export const PHI_REGISTRATION_FORM_DESCRIPTOR = {
       label: label("fields.email.label", "Email"),
       placeholder: label("fields.email.placeholder", "you@example.com"),
       autoComplete: "email",
-      placement: { cell: { compact: { span: 24 }, medium: { span: 24 }, wide: { span: 24 } } },
+      placement: PHI_FORM_STACKED_FULL,
       validation: [
         required("fields.email.required", "Please enter your email address."),
         {
@@ -177,7 +177,7 @@ export const PHI_REGISTRATION_FORM_DESCRIPTOR = {
     {
       key: "termsAccepted",
       fieldProviderKey: PHI_AUTH_FORM_FIELD_PROVIDER_KEYS.termsConsent,
-      placement: { cell: { compact: { span: 24 }, medium: { span: 24 }, wide: { span: 24 } } },
+      placement: PHI_FORM_STACKED_FULL,
       validation: [required("consent.termsRequired", "You must accept the terms to continue.")],
       config: {
         before: "I agree to the ",
@@ -190,7 +190,7 @@ export const PHI_REGISTRATION_FORM_DESCRIPTOR = {
       key: "newsletter",
       fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.checkbox,
       controlLabel: label("consent.newsletter", "Send me product and platform updates."),
-      placement: { cell: { compact: { span: 24 }, medium: { span: 24 }, wide: { span: 24 } } },
+      placement: PHI_FORM_STACKED_FULL,
     },
   ],
 } as const satisfies PhiFormDescriptor;
@@ -199,7 +199,6 @@ export const PHI_CONTACT_FORM_DESCRIPTOR = {
   schemaVersion: PHI_FORM_DESCRIPTOR_SCHEMA_VERSION,
   key: PHI_SHARED_FORM_IDS.contact,
   labelSetKey: PHI_FORM_LABEL_SET_KEYS.contact,
-  layout: { labelPlacement: "side", labelAlign: "start" },
   fields: [
     {
       key: "name",
@@ -246,7 +245,7 @@ export const PHI_CONFIRM_FORM_DESCRIPTOR = {
   schemaVersion: PHI_FORM_DESCRIPTOR_SCHEMA_VERSION,
   key: PHI_SHARED_FORM_IDS.confirm,
   labelSetKey: PHI_FORM_LABEL_SET_KEYS.confirm,
-  layout: { labelPlacement: "top" },
+  layout: PHI_FORM_STACKED_LAYOUT,
   fields: [
     {
       key: "token",
@@ -260,7 +259,7 @@ export const PHI_RESET_PASSWORD_FORM_DESCRIPTOR = {
   schemaVersion: PHI_FORM_DESCRIPTOR_SCHEMA_VERSION,
   key: PHI_SHARED_FORM_IDS.resetPassword,
   labelSetKey: PHI_FORM_LABEL_SET_KEYS.resetPassword,
-  layout: { labelPlacement: "top" },
+  layout: PHI_FORM_STACKED_LAYOUT,
   fields: [
     {
       key: "email",
@@ -283,7 +282,7 @@ export const PHI_RESET_PASSWORD_CONFIRM_FORM_DESCRIPTOR = {
   schemaVersion: PHI_FORM_DESCRIPTOR_SCHEMA_VERSION,
   key: "reset-password-confirm",
   labelSetKey: PHI_FORM_LABEL_SET_KEYS.resetPassword,
-  layout: { labelPlacement: "top" },
+  layout: PHI_FORM_STACKED_LAYOUT,
   fields: [
     {
       key: "token",

@@ -86,6 +86,27 @@ Theme Root and Shell-backdrop Backgrounds use this same canonical config when th
 implemented; they must not create alternate motion fields. Their host-specific coordinate/clip geometry belongs
 to those existing Root/Shell contracts.
 
+## Form grid
+
+A form is a grid of 24 tracks, and every element in it says which tracks it lies on as a range of grid
+lines: `start` is the line it begins at and `end` is the line it stops before, counted from 1, so the
+last line is 25. This is CSS Grid's own counting and no other counting is used.
+
+- A label at 1-7 with a control at 7-25 is a two-column row. A control at 7-19 leaves 19-25 empty, and
+  a further element may then say 21-25 and stand in that gap on the same row.
+- A label and a control that claim any of the same tracks cannot share a row, so they take two. That is
+  how a stacked field is written; there is no placement mode beside it.
+- Each field is placed as one unit spanning its label and its control together, and lays its parts out
+  inside that unit on the same tracks. Elements are placed in declaration order and the grid never goes
+  back to fill a gap it has passed, so a field meant to stand beside the one before it is declared after
+  it.
+- The Layout a form stands in decides its label column, as `labelEnd` -- a shared Layout field carrying a
+  line on this same grid, never a width. Shared like padding, because any Layout can be the one a form or
+  a panel of labelled Controls stands in. The descriptor decides it where no Layout says anything. A field that departs from those columns says so itself, because that is a
+  statement about the field and not about the form.
+- The same ranges are declared per measured width. A set that is two columns at `wide` and one column
+  at `compact` is the whole of what used to be a column count plus a label placement.
+
 ## Regions
 
 Regions own shell and page placement rather than child topology. They may configure:

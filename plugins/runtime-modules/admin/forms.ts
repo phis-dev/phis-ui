@@ -76,10 +76,7 @@ const PHI_ADMIN_SETTINGS_GENERAL_FORM_DESCRIPTOR: PhiFormDescriptor = {
     },
   ],
   layout: {
-    columns: { compact: 1, medium: 1, wide: 1 },
     gap: { compact: "sm", medium: "base" },
-    labelPlacement: "side",
-    labelAlign: "start",
   },
 };
 

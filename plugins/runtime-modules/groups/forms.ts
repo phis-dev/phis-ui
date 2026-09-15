@@ -60,10 +60,7 @@ const PHI_GROUPS_CREATE_FORM_DESCRIPTOR: PhiFormDescriptor = {
     },
   ],
   layout: {
-    columns: { compact: 1, medium: 1, wide: 1 },
     gap: { compact: "sm", medium: "base" },
-    labelPlacement: "side",
-    labelAlign: "start",
   },
 };
 
@@ -122,10 +119,7 @@ const PHI_GROUPS_MEMBERSHIP_FORM_DESCRIPTOR: PhiFormDescriptor = {
     },
   ],
   layout: {
-    columns: { compact: 1, medium: 1, wide: 1 },
     gap: { compact: "sm", medium: "base" },
-    labelPlacement: "side",
-    labelAlign: "start",
   },
 };
 

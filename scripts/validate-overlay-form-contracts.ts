@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 
-import { parsePhiFormDescriptor, resolvePhiFormEffectiveColumnCount, resolvePhiFormLayout, shouldPhiFormSubmitOnKeyDown } from "../components/forms/form-descriptor-contract";
+import { parsePhiFormDescriptor, phiFormGridRangesOverlap, resolvePhiFormFieldRanges, resolvePhiFormLayout, shouldPhiFormSubmitOnKeyDown } from "../components/forms/form-descriptor-contract";
 import { PHI_FORM_FIELD_PROVIDER_KEYS, PHI_FORM_VALIDATION_PROVIDER_KEYS, PHI_SHARED_FORM_FIELD_TYPE_PROVIDER_DESCRIPTORS, PHI_SHARED_FORM_VALIDATION_PROVIDER_DESCRIPTORS } from "../components/forms/form-provider-contract";
 import {
   PHI_CMS_OVERLAY_MASK_APPEARANCES,
@@ -101,13 +101,30 @@ assert.deepEqual(resolvePhiFormLayout(form.layout).gap, {
   medium: "base",
   wide: "base",
 });
-assert.equal(resolvePhiFormEffectiveColumnCount(4, "compact"), 1);
-assert.equal(resolvePhiFormEffectiveColumnCount(4, "medium"), 2);
-assert.equal(resolvePhiFormEffectiveColumnCount(4, "wide"), 4);
-assert.equal(resolvePhiFormEffectiveColumnCount(3, "wide"), 3);
-assert.equal(resolvePhiFormLayout().labelPlacement, "side");
-assert.deepEqual(resolvePhiFormLayout().labelGrid.compact, { span: 24, offset: 0 });
-assert.deepEqual(resolvePhiFormLayout().labelGrid.medium, { span: 8, offset: 0 });
+// A form that says nothing stacks when it is measured narrow and stands beside its labels when it is
+// not, and both come out of the ranges alone -- there is no placement mode left to get wrong.
+assert.deepEqual(resolvePhiFormLayout().label.compact, { start: 1, end: 25 });
+assert.deepEqual(resolvePhiFormLayout().label.medium, { start: 1, end: 7 });
+assert.deepEqual(resolvePhiFormLayout().control.medium, { start: 7, end: 25 });
+assert.equal(
+  resolvePhiFormFieldRanges(resolvePhiFormLayout(), undefined, "compact", "fields.x").stacked,
+  true,
+);
+assert.equal(
+  resolvePhiFormFieldRanges(resolvePhiFormLayout(), undefined, "wide", "fields.x").stacked,
+  false,
+);
+assert.equal(phiFormGridRangesOverlap({ start: 1, end: 7 }, { start: 7, end: 25 }), false);
+assert.equal(phiFormGridRangesOverlap({ start: 1, end: 9 }, { start: 7, end: 25 }), true);
+assert.throws(
+  () => parsePhiFormDescriptor({
+    schemaVersion: 1,
+    key: "phi/forms/range-check",
+    layout: { label: { compact: { start: 7, end: 7 } } },
+    fields: [],
+  }),
+  /layout\.label\.compact\.end must be greater than/u,
+);
 assert.equal(evaluatePhiRuntimeConditionExpression(disabledWhen, { controllers: {} }), "unavailable");
 assert.equal(matchesPhiRuntimeValueCondition(disabledCondition, {
   controllers: { [controllerAddress]: { permissions: { readOnly: false } } },
@@ -255,8 +272,8 @@ assert.throws(
   ),
   /requires missing owned submit handler "site\.asset\.folder\.create"/u,
 );
-assert.deepEqual(PHI_ASSET_METADATA_FORM_DESCRIPTOR.layout.labelGrid.compact, { span: 8, offset: 0 });
-assert.deepEqual(PHI_ASSET_METADATA_FORM_DESCRIPTOR.layout.controlGrid.compact, { span: 16, offset: 0 });
+assert.deepEqual(PHI_ASSET_METADATA_FORM_DESCRIPTOR.layout.label.compact, { start: 1, end: 9 });
+assert.deepEqual(PHI_ASSET_METADATA_FORM_DESCRIPTOR.layout.control.compact, { start: 9, end: 25 });
 const assetFolderField = PHI_ASSET_METADATA_FORM_DESCRIPTOR.fields.find((field) => field.key === "folderId");
 assert.equal(assetFolderField?.config?.allowClear, true);
 const assetFolderParentField = PHI_ASSET_FOLDER_FORM_DESCRIPTOR.fields.find((field) => field.key === "parentPath");

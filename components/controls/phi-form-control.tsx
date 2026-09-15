@@ -1,13 +1,10 @@
 "use client";
 
-import { forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState } from "react";
+import { Fragment, forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState, type CSSProperties } from "react";
 import {
-  Col,
   Form,
-  Row,
   Tooltip,
   theme as antdTheme,
-  type ColProps,
   type FormProps,
   type FormInstance,
 } from "antd";
@@ -15,8 +12,8 @@ import {
 import type {
   PhiFormDescriptor,
   PhiFormFieldDescriptor,
-  PhiFormResponsiveGridPlacement,
 } from "../../types/form-descriptor";
+import { PHI_FORM_GRID_TRACKS } from "../../types/form-descriptor";
 import { evaluatePhiRuntimeConditionExpression } from "../../types/runtime-condition";
 import type {
   PhiFormFieldProviderProps,
@@ -34,14 +31,14 @@ import {
   PHI_FORM_VALIDATION_PROVIDER_KEYS,
 } from "../forms/form-provider-contract";
 import {
-  resolvePhiFormFieldCellPlacement,
-  resolvePhiFormEffectiveColumnCount,
+  phiFormControlGridColumn,
+  phiFormFieldFollowsLayoutColumns,
+  phiFormLabelGridColumn,
+  resolvePhiFormGridPlacement,
   resolvePhiFormLayout,
-  resolvePhiFormResponsiveGridPlacement,
+  PHI_FORM_RESPONSIVE_MODES,
   resolvePhiFormText,
   shouldPhiFormSubmitOnKeyDown,
-  type PhiFormResponsiveMode,
-  type PhiResolvedFormResponsiveGridPlacement,
 } from "../forms/form-descriptor-contract";
 import { PHI_SHARED_FORM_PROVIDER_REGISTRY } from "../forms/shared-form-provider-registry";
 import {
@@ -79,25 +76,6 @@ export type PhiFormControlHandle = {
 
 function resolveFieldRules(field: PhiFormFieldDescriptor) {
   return [...(field.validation ?? [])];
-}
-
-function resolveResponsivePlacement(
-  placement: PhiResolvedFormResponsiveGridPlacement,
-  mode: PhiFormResponsiveMode,
-): Pick<ColProps, "span" | "offset" | "order"> {
-  return placement[mode];
-}
-
-function resolveFieldGrid(
-  placement: PhiFormResponsiveGridPlacement | undefined,
-  fallback: PhiResolvedFormResponsiveGridPlacement,
-  path: string,
-  mode: PhiFormResponsiveMode,
-) {
-  return resolveResponsivePlacement(
-    resolvePhiFormResponsiveGridPlacement(placement, fallback, path),
-    mode,
-  );
 }
 
 function renderLabel(
@@ -276,25 +254,6 @@ export const PhiFormControl = forwardRef<PhiFormControlHandle, PhiFormControlPro
   }, [form, onFormReady]);
   const [submitting, setSubmitting] = useState(false);
   const { token } = antdTheme.useToken();
-  const containerRef = useRef<HTMLDivElement | null>(null);
-  const [containerWidth, setContainerWidth] = useState<number | null>(null);
-  useEffect(() => {
-    const node = containerRef.current;
-    if (!node || typeof ResizeObserver === "undefined") return;
-    const update = () => setContainerWidth((current) => {
-      const next = node.clientWidth;
-      return current === next ? current : next;
-    });
-    update();
-    const observer = new ResizeObserver(update);
-    observer.observe(node);
-    return () => observer.disconnect();
-  }, []);
-  const responsiveMode: PhiFormResponsiveMode = containerWidth != null && containerWidth >= token.screenLG
-    ? "wide"
-    : containerWidth != null && containerWidth >= token.screenSM
-      ? "medium"
-      : "compact";
   const layout = useMemo(
     () => resolvePhiFormLayout(descriptor.layout),
     [descriptor.layout],
@@ -310,12 +269,20 @@ export const PhiFormControl = forwardRef<PhiFormControlHandle, PhiFormControlPro
     xl: token.paddingXL,
     xxl: token.marginXXL,
   } as const;
-  const currentRowGap = gapByToken[layout.gap[responsiveMode]];
-  const effectiveColumnCount = resolvePhiFormEffectiveColumnCount(
-    layout.columns[responsiveMode],
-    responsiveMode,
-  );
-  const currentColumnGap = effectiveColumnCount > 1 ? currentRowGap : 0;
+  /*
+   * Every width's answer is written at once and CSS picks between them, because the form is not
+   * measured any more.
+   *
+   * It used to measure itself and re-render, which the server cannot do: with no width to go on, every
+   * form was rendered at its narrowest -- labels above their inputs -- and only became what it should
+   * be after hydration had run. What was delivered was never what was meant. A container query asks the
+   * same question about the same element, in CSS, where the answer is already true at first paint.
+   */
+  const rowGapByMode = {
+    compact: gapByToken[layout.gap.compact],
+    medium: gapByToken[layout.gap.medium],
+    wide: gapByToken[layout.gap.wide],
+  } as const;
   const resolvedInitialValues = useMemo(
     () => ({
       ...Object.fromEntries(descriptor.fields.flatMap((field) =>
@@ -362,23 +329,76 @@ export const PhiFormControl = forwardRef<PhiFormControlHandle, PhiFormControlPro
     },
   }), [form, onStateChange, onValuesChange]);
 
+  /*
+   * Where every part of every field lies, at each of the three widths, worked out before anything is
+   * drawn. Labels and controls are direct children of the form's grid and name their own row and
+   * columns; CSS then picks the set that matches the form's measured width.
+   */
+  /*
+   * The last field in flow carries no trailing gap.
+   *
+   * Whatever stands under the form -- a submit, a row of links -- brings its own spacing, and the gap
+   * the last row kept for the next field was added to it, so everything below the form sat twice as far
+   * away as everything inside it.
+   */
+  const lastInFlowFieldKey = useMemo(() => {
+    const inFlow = descriptor.fields.filter((field) =>
+      activeRegistry.fieldTypesByKey.get(field.fieldProviderKey)?.presentation === "control");
+    return inFlow.length === 0 ? null : inFlow[inFlow.length - 1].key;
+  }, [activeRegistry, descriptor.fields]);
+
+  const placementByMode = useMemo(() => {
+    const entries = descriptor.fields.map((field) => ({
+      key: field.key,
+      placement: field.placement,
+      inFlow: activeRegistry.fieldTypesByKey.get(field.fieldProviderKey)?.presentation === "control",
+    }));
+    return {
+      compact: resolvePhiFormGridPlacement(layout, entries, "compact"),
+      medium: resolvePhiFormGridPlacement(layout, entries, "medium"),
+      wide: resolvePhiFormGridPlacement(layout, entries, "wide"),
+    };
+  }, [activeRegistry, descriptor.fields, layout]);
+
   return (
-    <div ref={containerRef} style={{ width: "100%", minWidth: 0 }}>
+    <div style={{ width: "100%", minWidth: 0 }}>
       <Form
       className="phi-form-descriptor"
       form={form}
-      layout={layout.labelPlacement === "top" ? "vertical" : "horizontal"}
+      layout="vertical"
       colon={false}
-      labelAlign={layout.labelAlign === "start" ? "left" : "right"}
-      labelWrap
       initialValues={resolvedInitialValues}
       disabled={disabled}
+      /*
+       * The form is the grid, and its tracks are the twenty-four every range is written against. Labels
+       * and controls are not laid out by Ant Design here: a Form Item carries only its control and its
+       * error, and where the two parts of a field lie is said by the descriptor and the Form Layout.
+       */
+      /*
+       * The structure stays inline and only what changes with the width comes from the stylesheet.
+       *
+       * It was all moved into `:where()` rules once, which have no specificity at all, so a single Ant
+       * Design rule on `.ant-form` was enough to take `display` back and the grid stopped being a grid.
+       * Inline wins against every stylesheet; `grid-column` is deliberately not here, because that is
+       * the one thing the container queries have to be able to decide.
+       */
       style={{
         display: "grid",
-        rowGap: currentRowGap,
+        gridTemplateColumns: `repeat(${PHI_FORM_GRID_TRACKS}, minmax(0, 1fr))`,
+        containerType: "inline-size",
+        containerName: "phi-form",
+        columnGap: 0,
+        alignItems: "start",
         width: "100%",
         minWidth: 0,
-      }}
+        "--phi-form-row-gap-compact": `${rowGapByMode.compact}px`,
+        "--phi-form-row-gap-medium": `${rowGapByMode.medium}px`,
+        "--phi-form-row-gap-wide": `${rowGapByMode.wide}px`,
+        "--phi-form-label-gutter-compact": `${Math.round(rowGapByMode.compact / 2)}px`,
+        "--phi-form-label-gutter-medium": `${Math.round(rowGapByMode.medium / 2)}px`,
+        "--phi-form-label-gutter-wide": `${Math.round(rowGapByMode.wide / 2)}px`,
+        "--phi-form-label-min-height": `${token.controlHeight}px`,
+      } as CSSProperties}
       onValuesChange={(changedValues, allValues) => {
         onValuesChange?.(changedValues, allValues);
       }}
@@ -404,137 +424,160 @@ export const PhiFormControl = forwardRef<PhiFormControlHandle, PhiFormControlPro
       onFinish={submit}
       onFinishFailed={validationFailed}
     >
-      <Row gutter={[currentColumnGap, currentRowGap]}>
-        {descriptor.fields.map((field) => {
-          const provider = activeRegistry.fieldTypesByKey.get(
-            field.fieldProviderKey,
+      {descriptor.fields.map((field) => {
+        const provider = activeRegistry.fieldTypesByKey.get(
+          field.fieldProviderKey,
+        );
+        const cellProperties = (part: "label" | "control") => Object.fromEntries(
+          PHI_FORM_RESPONSIVE_MODES.flatMap((mode) => {
+            const placed = placementByMode[mode].placements.get(field.key);
+            if (!placed) return [];
+            const range = part === "label" ? placed.label : placed.control;
+            const followsLayout = phiFormFieldFollowsLayoutColumns({
+              placement: field.placement,
+              label: placed.label,
+              control: placed.control,
+              stacked: placed.stacked,
+            });
+            return [
+              [`--phi-form-cell-row-${mode}`, String(part === "label" ? placed.labelRow : placed.controlRow)],
+              [`--phi-form-cell-columns-${mode}`, part === "label"
+                ? phiFormLabelGridColumn(range, followsLayout)
+                : phiFormControlGridColumn(range, followsLayout)],
+              [`--phi-form-cell-gap-${mode}`, part === "label"
+                ? (placed.stacked ? `calc(var(--phi-form-row-gap-${mode}) / 4)` : "0px")
+                : field.key === lastInFlowFieldKey ? "0px" : `var(--phi-form-row-gap-${mode})`],
+              [`--phi-form-label-height-${mode}`, placed.stacked
+                ? "auto"
+                : "var(--phi-form-label-min-height)"],
+              [`--phi-form-label-pad-${mode}`, placed.stacked
+                ? "0px"
+                : `var(--phi-form-label-gutter-${mode})`],
+            ];
+          }),
+        ) as CSSProperties;
+
+        if (!provider) {
+          return (
+            <div key={field.key} className="phi-form-cell phi-form-cell--control" style={cellProperties("control")}>
+              <PhiAlertControl
+                level="error"
+                showIcon
+                title={`Form field is not renderable: ${field.key}`}
+                description={`Missing field provider: ${field.fieldProviderKey}`}
+              />
+            </div>
           );
-          const cellPlacement = field.placement?.cell == null
-            ? { span: 24 / effectiveColumnCount }
-            : resolveResponsivePlacement(resolvePhiFormFieldCellPlacement(
-                layout,
-                field.placement.cell,
-              ), responsiveMode);
-          if (!provider) {
-            return (
-              <Col key={field.key} {...cellPlacement}>
-                <PhiAlertControl
-                  level="error"
-                  showIcon
-                  title={`Form field is not renderable: ${field.key}`}
-                  description={`Missing field provider: ${field.fieldProviderKey}`}
-                />
-              </Col>
-            );
+        }
+
+        const rules = resolveFieldRules(field);
+        const labelText = field.label
+          ? resolvePhiFormText(field.label, labels)
+          : field.key;
+        const providerLabel = field.label ? labelText : undefined;
+        const providerDescription = field.description
+          ? resolvePhiFormText(field.description, labels)
+          : undefined;
+        const renderedFieldLabel = labelText
+          ? renderLabel(field, labelText, labels)
+          : null;
+        const dependencies = rules.flatMap((rule) => {
+          const dependency =
+            rule.providerKey ===
+              PHI_FORM_VALIDATION_PROVIDER_KEYS.matchesField &&
+            typeof rule.config?.field === "string"
+              ? rule.config.field
+              : null;
+          return dependency ? [dependency] : [];
+        });
+        const hidden = provider.presentation === "hidden";
+        const honeypot = provider.presentation === "honeypot";
+        const visibility = field.visibleWhen
+          ? evaluatePhiRuntimeConditionExpression(field.visibleWhen, {
+              form: formValues,
+              controllers: conditionControllerStates,
+            })
+          : "matched";
+        if (visibility !== "matched") return null;
+        const fieldDisabled = field.disabledWhen
+          ? evaluatePhiRuntimeConditionExpression(field.disabledWhen, {
+              form: formValues,
+              controllers: conditionControllerStates,
+            })
+          : "not-matched";
+        const resolvedRules = rules.map((rule) => {
+          const validationProvider = activeRegistry.validationRulesByKey.get(
+            rule.providerKey,
+          );
+          if (!validationProvider) {
+            return {
+              async validator() {
+                throw new Error(
+                  `Missing validation provider: ${rule.providerKey}`,
+                );
+              },
+            };
           }
 
-          const rules = resolveFieldRules(field);
-          const labelText = field.label
-            ? resolvePhiFormText(field.label, labels)
-            : field.key;
-          const providerLabel = field.label ? labelText : undefined;
-          const providerDescription = field.description
-            ? resolvePhiFormText(field.description, labels)
-            : undefined;
-          const renderedFieldLabel = labelText
-            ? renderLabel(field, labelText, labels)
-            : null;
-          const dependencies = rules.flatMap((rule) => {
-            const dependency =
-              rule.providerKey ===
-                PHI_FORM_VALIDATION_PROVIDER_KEYS.matchesField &&
-              typeof rule.config?.field === "string"
-                ? rule.config.field
-                : null;
-            return dependency ? [dependency] : [];
+          return validationProvider.createRule({
+            field,
+            rule,
+            message: rule.message
+              ? resolvePhiFormText(rule.message, labels)
+              : undefined,
           });
-          const hidden = provider.presentation === "hidden";
-          const honeypot = provider.presentation === "honeypot";
-          const visibility = field.visibleWhen
-            ? evaluatePhiRuntimeConditionExpression(field.visibleWhen, {
-                form: formValues,
-                controllers: conditionControllerStates,
-              })
-            : "matched";
-          if (visibility !== "matched") return null;
-          const fieldDisabled = field.disabledWhen
-            ? evaluatePhiRuntimeConditionExpression(field.disabledWhen, {
-                form: formValues,
-                controllers: conditionControllerStates,
-              })
-            : "not-matched";
-          const resolvedRules = rules.map((rule) => {
-            const validationProvider = activeRegistry.validationRulesByKey.get(
-              rule.providerKey,
-            );
-            if (!validationProvider) {
-              return {
-                async validator() {
-                  throw new Error(
-                    `Missing validation provider: ${rule.providerKey}`,
-                  );
-                },
-              };
-            }
+        });
+        const required = rules.some(
+          (rule) =>
+            rule.providerKey === PHI_FORM_VALIDATION_PROVIDER_KEYS.required,
+        );
+        /*
+         * A label of its own, not Ant Design's. Its own grid item cannot live inside the Form Item that
+         * would draw it, and a field whose label carries its own range is the entire point of the
+         * contract. What is lost with it -- the required marker and the link to the control -- is drawn
+         * here instead.
+         */
+        const showLabel = !hidden && !honeypot && !field.controlLabel &&
+          field.fieldProviderKey !== PHI_FORM_FIELD_PROVIDER_KEYS.table &&
+          field.fieldProviderKey !== PHI_FORM_FIELD_PROVIDER_KEYS.tree &&
+          renderedFieldLabel != null;
 
-            return validationProvider.createRule({
-              field,
-              rule,
-              message: rule.message
-                ? resolvePhiFormText(rule.message, labels)
-                : undefined,
-            });
-          });
-          const labelCol =
-            layout.labelPlacement === "top"
-              ? undefined
-              : resolveFieldGrid(
-                  field.placement?.label,
-                  layout.labelGrid,
-                  `fields.${field.key}.placement.label`,
-                  responsiveMode,
-                );
-          const wrapperCol =
-            layout.labelPlacement === "top"
-              ? undefined
-              : resolveFieldGrid(
-                  field.placement?.control,
-                  layout.controlGrid,
-                  `fields.${field.key}.placement.control`,
-                  responsiveMode,
-                );
-
-          return (
-            <Col
-              key={field.key}
-              {...cellPlacement}
+        return (
+          <Fragment key={field.key}>
+            {showLabel ? (
+              <label
+                htmlFor={field.key}
+                className="phi-form-cell phi-form-cell--label"
+                style={{
+                  ...cellProperties("label"),
+                  justifyContent: layout.labelAlign === "end" ? "flex-end" : "flex-start",
+                  color: token.colorTextHeading,
+                  textAlign: layout.labelAlign === "end" ? "end" : "start",
+                }}
+              >
+                {required ? (
+                  <span aria-hidden style={{ color: token.colorError, marginInlineEnd: "0.25em" }}>
+                    *
+                  </span>
+                ) : null}
+                {renderedFieldLabel}
+              </label>
+            ) : null}
+            <div
+              className="phi-form-cell phi-form-cell--control"
               aria-hidden={honeypot || undefined}
               style={{
-                minWidth: 0,
-                maxWidth: "100%",
+                ...cellProperties("control"),
                 ...resolveHoneypotStyle(provider.presentation),
               }}
             >
               <Form.Item
                 name={field.key}
-                label={
-                  hidden || honeypot || field.controlLabel ||
-                    field.fieldProviderKey === PHI_FORM_FIELD_PROVIDER_KEYS.table ||
-                    field.fieldProviderKey === PHI_FORM_FIELD_PROVIDER_KEYS.tree
-                    ? undefined
-                    : renderedFieldLabel
-                }
                 messageVariables={{ label: labelText }}
-                labelCol={labelCol}
-                wrapperCol={wrapperCol}
                 hidden={hidden}
                 valuePropName={provider.valuePropName}
                 dependencies={dependencies}
-                required={rules.some(
-                  (rule) =>
-                    rule.providerKey ===
-                    PHI_FORM_VALIDATION_PROVIDER_KEYS.required,
-                )}
+                required={required}
                 rules={resolvedRules.length === 0 ? undefined : resolvedRules}
                 style={{ marginBottom: 0 }}
               >
@@ -555,10 +598,10 @@ export const PhiFormControl = forwardRef<PhiFormControlHandle, PhiFormControlPro
                   formValues={formValues}
                 />
               </Form.Item>
-            </Col>
-          );
-        })}
-      </Row>
+            </div>
+          </Fragment>
+        );
+      })}
       </Form>
     </div>
   );

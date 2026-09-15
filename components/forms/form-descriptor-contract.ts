@@ -1,16 +1,19 @@
 import type {
-  PhiFormColumnCount,
   PhiFormDescriptor,
   PhiFormFieldDescriptor,
-  PhiFormGridPlacement,
+  PhiFormFieldPlacementDescriptor,
+  PhiFormGridRange,
   PhiFormLabelSetKey,
   PhiFormLayoutDescriptor,
   PhiFormOptionDescriptor,
-  PhiFormResponsiveGridPlacement,
+  PhiFormResponsiveGridRange,
   PhiFormTextDescriptor,
   PhiFormValidationRuleDescriptor,
 } from "../../types/form-descriptor";
-import { PHI_FORM_DESCRIPTOR_SCHEMA_VERSION } from "../../types/form-descriptor";
+import {
+  PHI_FORM_DESCRIPTOR_SCHEMA_VERSION,
+  PHI_FORM_GRID_TRACKS,
+} from "../../types/form-descriptor";
 import {
   resolvePhiResponsiveValue,
   type PhiResponsiveValue,
@@ -22,7 +25,8 @@ import {
 import { isPhiSpacingToken, type PhiSpacingToken } from "../../types/spacing";
 import { parsePhiControlOptionsProviderConfig } from "../controls/phi-control-options";
 
-export const PHI_FORM_GRID_COLUMNS = 24;
+/** The last grid line, one past the last track, because `end` is exclusive. */
+export const PHI_FORM_GRID_LAST_LINE = PHI_FORM_GRID_TRACKS + 1;
 
 export function shouldPhiFormSubmitOnKeyDown(input: {
   key: string;
@@ -84,35 +88,36 @@ function readTextDescriptor(value: unknown, path: string): PhiFormTextDescriptor
   throw new Error(`${path}.kind must be "literal" or "label".`);
 }
 
-function readGridPlacement(value: unknown, path: string): PhiFormGridPlacement | undefined {
+function readGridRange(value: unknown, path: string): PhiFormGridRange | undefined {
   if (value == null) {
     return undefined;
   }
   if (!isRecord(value)) {
-    throw new Error(`${path} must be a grid placement object.`);
+    throw new Error(`${path} must be a grid range object.`);
   }
-  const placement = {
-    span: typeof value.span === "number" ? value.span : undefined,
-    offset: typeof value.offset === "number" ? value.offset : undefined,
-    order: typeof value.order === "number" ? value.order : undefined,
-  };
-  return assertGridPlacement(placement, path);
+  return assertGridRange(
+    {
+      start: typeof value.start === "number" ? value.start : Number.NaN,
+      end: typeof value.end === "number" ? value.end : Number.NaN,
+    },
+    path,
+  );
 }
 
-function readResponsiveGridPlacement(
+function readResponsiveGridRange(
   value: unknown,
   path: string,
-): PhiFormResponsiveGridPlacement | undefined {
+): PhiFormResponsiveGridRange | undefined {
   if (value == null) {
     return undefined;
   }
   if (!isRecord(value)) {
-    throw new Error(`${path} must be a responsive grid placement object.`);
+    throw new Error(`${path} must be a responsive grid range object.`);
   }
   return {
-    compact: readGridPlacement(value.compact, `${path}.compact`),
-    medium: readGridPlacement(value.medium, `${path}.medium`),
-    wide: readGridPlacement(value.wide, `${path}.wide`),
+    compact: readGridRange(value.compact, `${path}.compact`),
+    medium: readGridRange(value.medium, `${path}.medium`),
+    wide: readGridRange(value.wide, `${path}.wide`),
   };
 }
 
@@ -140,29 +145,6 @@ function readResponsiveGap(value: unknown, path: string): PhiResponsiveValue<Phi
     compact: readToken(value.compact, `${path}.compact`),
     medium: readToken(value.medium, `${path}.medium`),
     wide: readToken(value.wide, `${path}.wide`),
-  };
-}
-
-function readColumns(value: unknown, path: string) {
-  if (value == null) {
-    return undefined;
-  }
-  if (!isRecord(value)) {
-    throw new Error(`${path} must be a responsive column object.`);
-  }
-  const readColumn = (entry: unknown, entryPath: string): PhiFormColumnCount | undefined => {
-    if (entry == null) {
-      return undefined;
-    }
-    if (entry !== 1 && entry !== 2 && entry !== 3 && entry !== 4) {
-      throw new Error(`${entryPath} must be 1, 2, 3, or 4.`);
-    }
-    return entry;
-  };
-  return {
-    compact: readColumn(value.compact, `${path}.compact`),
-    medium: readColumn(value.medium, `${path}.medium`),
-    wide: readColumn(value.wide, `${path}.wide`),
   };
 }
 
@@ -230,9 +212,8 @@ function readField(value: unknown, path: string): PhiFormFieldDescriptor {
     ? undefined
     : isRecord(value.placement)
       ? {
-          cell: readResponsiveGridPlacement(value.placement.cell, `${path}.placement.cell`),
-          label: readResponsiveGridPlacement(value.placement.label, `${path}.placement.label`),
-          control: readResponsiveGridPlacement(value.placement.control, `${path}.placement.control`),
+          label: readResponsiveGridRange(value.placement.label, `${path}.placement.label`),
+          control: readResponsiveGridRange(value.placement.control, `${path}.placement.control`),
         }
       : (() => { throw new Error(`${path}.placement must be an object.`); })();
 
@@ -274,7 +255,15 @@ export function parsePhiFormDescriptor(value: unknown): PhiFormDescriptor {
     throw new Error("Form descriptor fields must be an array.");
   }
   if ("actions" in value) {
-    throw new Error("Form descriptor actions are forbidden; use external Button Widgets.");
+    /*
+     * A descriptor describes a form's fields, never what is done with them. Where a form is submitted
+     * from is a question about the surface it stands on: a Button Widget beside it, an Overlay footer,
+     * a toolbar -- or the Form Widget's own `submit` option, which is config on the Widget and reaches
+     * the same `submit` capability those do.
+     */
+    throw new Error(
+      "Form descriptor actions are forbidden; use the Form Widget's submit option or an external Button Widget.",
+    );
   }
   if ("presentation" in value) {
     throw new Error("Form descriptor presentation is forbidden; use the owning Layout or Overlay.");
@@ -288,20 +277,14 @@ export function parsePhiFormDescriptor(value: unknown): PhiFormDescriptor {
     ? undefined
     : isRecord(value.layout)
       ? {
-          columns: readColumns(value.layout.columns, "layout.columns"),
           gap: readResponsiveGap(value.layout.gap, "layout.gap"),
-          labelPlacement: value.layout.labelPlacement == null
-            ? undefined
-            : value.layout.labelPlacement === "top" || value.layout.labelPlacement === "side"
-              ? value.layout.labelPlacement
-              : (() => { throw new Error("layout.labelPlacement must be top or side."); })(),
           labelAlign: value.layout.labelAlign == null
             ? undefined
             : value.layout.labelAlign === "start" || value.layout.labelAlign === "end"
               ? value.layout.labelAlign
               : (() => { throw new Error("layout.labelAlign must be start or end."); })(),
-          labelGrid: readResponsiveGridPlacement(value.layout.labelGrid, "layout.labelGrid"),
-          controlGrid: readResponsiveGridPlacement(value.layout.controlGrid, "layout.controlGrid"),
+          label: readResponsiveGridRange(value.layout.label, "layout.label"),
+          control: readResponsiveGridRange(value.layout.control, "layout.control"),
         }
       : (() => { throw new Error("layout must be an object."); })();
   if (layout) {
@@ -316,110 +299,183 @@ export function parsePhiFormDescriptor(value: unknown): PhiFormDescriptor {
   };
 }
 
-export const PHI_FORM_RESPONSIVE_BREAKPOINTS = {
-  compact: "xs",
-  medium: "md",
-  wide: "lg",
+/**
+ * How wide the form itself has to be for each set of ranges, in pixels.
+ *
+ * Its own width, not the window's: a form is measured where it stands, and a 480px dialog on a desk
+ * monitor fell under `screenSM` and stacked its labels on a row with room for three of them. What a
+ * label beside a short input actually needs is about a third of 360px; below that the input is left too
+ * little to type in.
+ *
+ * The comparison itself is made by the container queries in `styles/layout.css`, and these numbers are
+ * the same numbers. They are declared here so the contract states them and the tests can read them --
+ * if one side changes, the other has to be changed with it.
+ */
+export const PHI_FORM_RESPONSIVE_MIN_WIDTH = {
+  medium: 360,
+  wide: 768,
 } as const;
 
+/**
+ * What a form looks like when it says nothing: labels beside their controls at a quarter of the width,
+ * and stacked once the form is measured narrow, which is the one place a label beside a short input
+ * leaves the input no room. Line 7 of 24 is the quarter; the control takes everything after it.
+ */
 export const PHI_FORM_DEFAULT_LAYOUT = {
-  columns: {
-    compact: 1,
-    medium: 1,
-    wide: 1,
-  },
   gap: {
     compact: "sm",
     medium: "base",
     wide: "base",
   },
-  labelPlacement: "side",
   labelAlign: "start",
-  labelGrid: {
-    compact: { span: 24, offset: 0 },
-    medium: { span: 8, offset: 0 },
-    wide: { span: 6, offset: 0 },
+  label: {
+    compact: { start: 1, end: PHI_FORM_GRID_LAST_LINE },
+    medium: { start: 1, end: 7 },
+    wide: { start: 1, end: 7 },
   },
-  controlGrid: {
-    compact: { span: 24, offset: 0 },
-    medium: { span: 16, offset: 0 },
-    wide: { span: 18, offset: 0 },
+  control: {
+    compact: { start: 1, end: PHI_FORM_GRID_LAST_LINE },
+    medium: { start: 7, end: PHI_FORM_GRID_LAST_LINE },
+    wide: { start: 7, end: PHI_FORM_GRID_LAST_LINE },
   },
 } as const satisfies PhiFormLayoutDescriptor;
 
-export type PhiResolvedFormResponsiveGridPlacement = {
-  compact: PhiFormGridPlacement;
-  medium: PhiFormGridPlacement;
-  wide: PhiFormGridPlacement;
-};
+/**
+ * The ranges a form reaches for again and again, named once.
+ *
+ * A field written as the same range for its label and its control is a stacked field, because the two
+ * cannot share a row; the half-width pairs are how a two-column form is said now that `columns` is
+ * gone. All three collapse to the full width when the form is measured narrow, which is the only
+ * width at which two columns of anything are worse than one.
+ */
+export const PHI_FORM_ROW_FULL = {
+  compact: { start: 1, end: PHI_FORM_GRID_LAST_LINE },
+  medium: { start: 1, end: PHI_FORM_GRID_LAST_LINE },
+  wide: { start: 1, end: PHI_FORM_GRID_LAST_LINE },
+} as const satisfies PhiFormResponsiveGridRange;
 
-export type PhiFormResponsiveMode = "compact" | "medium" | "wide";
+export const PHI_FORM_ROW_START_HALF = {
+  compact: { start: 1, end: PHI_FORM_GRID_LAST_LINE },
+  medium: { start: 1, end: 13 },
+  wide: { start: 1, end: 13 },
+} as const satisfies PhiFormResponsiveGridRange;
 
-const PHI_FORM_COLUMN_CEILING_BY_MODE = {
-  compact: 1,
-  medium: 2,
-  wide: 4,
-} as const satisfies Record<PhiFormResponsiveMode, PhiFormColumnCount>;
+export const PHI_FORM_ROW_END_HALF = {
+  compact: { start: 1, end: PHI_FORM_GRID_LAST_LINE },
+  medium: { start: 13, end: PHI_FORM_GRID_LAST_LINE },
+  wide: { start: 13, end: PHI_FORM_GRID_LAST_LINE },
+} as const satisfies PhiFormResponsiveGridRange;
 
-export function resolvePhiFormEffectiveColumnCount(
-  configuredColumns: PhiFormColumnCount,
-  responsiveMode: PhiFormResponsiveMode,
-): PhiFormColumnCount {
-  return Math.min(
-    configuredColumns,
-    PHI_FORM_COLUMN_CEILING_BY_MODE[responsiveMode],
-  ) as PhiFormColumnCount;
+/** Labels above their controls at every width: one range for both parts of every field. */
+export const PHI_FORM_STACKED_LAYOUT = {
+  label: PHI_FORM_ROW_FULL,
+  control: PHI_FORM_ROW_FULL,
+} as const satisfies PhiFormLayoutDescriptor;
+
+/** One field of a two-column form whose labels stand above their controls. */
+export const PHI_FORM_STACKED_START_HALF = {
+  label: PHI_FORM_ROW_START_HALF,
+  control: PHI_FORM_ROW_START_HALF,
+} as const satisfies PhiFormFieldPlacementDescriptor;
+
+export const PHI_FORM_STACKED_END_HALF = {
+  label: PHI_FORM_ROW_END_HALF,
+  control: PHI_FORM_ROW_END_HALF,
+} as const satisfies PhiFormFieldPlacementDescriptor;
+
+/** One field of a two-column form whose labels stand beside their controls. */
+export const PHI_FORM_SIDE_START_HALF = {
+  label: {
+    compact: { start: 1, end: 7 },
+    medium: { start: 1, end: 5 },
+    wide: { start: 1, end: 5 },
+  },
+  control: {
+    compact: { start: 7, end: PHI_FORM_GRID_LAST_LINE },
+    medium: { start: 5, end: 13 },
+    wide: { start: 5, end: 13 },
+  },
+} as const satisfies PhiFormFieldPlacementDescriptor;
+
+export const PHI_FORM_SIDE_END_HALF = {
+  label: {
+    compact: { start: 1, end: 7 },
+    medium: { start: 13, end: 17 },
+    wide: { start: 13, end: 17 },
+  },
+  control: {
+    compact: { start: 7, end: PHI_FORM_GRID_LAST_LINE },
+    medium: { start: 17, end: PHI_FORM_GRID_LAST_LINE },
+    wide: { start: 17, end: PHI_FORM_GRID_LAST_LINE },
+  },
+} as const satisfies PhiFormFieldPlacementDescriptor;
+
+/**
+ * Two columns filled the way a grid fills them, for a form long enough that saying it per field would
+ * be a list of alternations nobody can read or keep correct.
+ *
+ * A field that brings its own placement keeps it and, where it takes the whole width, starts the next
+ * field on a fresh row -- which is what the grid did when the column count decided this and not the
+ * field. Authoring sugar over the contract, never a second contract: what it produces is ordinary
+ * per-field placement.
+ */
+export function phiFormFlowHalfColumns(
+  fields: readonly PhiFormFieldDescriptor[],
+): PhiFormFieldDescriptor[] {
+  let atRowStart = true;
+  return fields.map((field) => {
+    if (field.placement) {
+      const claimsWholeRow =
+        field.placement.control?.medium?.start === 1 &&
+        field.placement.control.medium.end === PHI_FORM_GRID_LAST_LINE;
+      atRowStart = claimsWholeRow ? true : !atRowStart;
+      return field;
+    }
+    const placement = atRowStart ? PHI_FORM_SIDE_START_HALF : PHI_FORM_SIDE_END_HALF;
+    atRowStart = !atRowStart;
+    return { ...field, placement };
+  });
 }
 
+/** A field that takes the whole row in a form that is otherwise two columns. */
+export const PHI_FORM_STACKED_FULL = {
+  label: PHI_FORM_ROW_FULL,
+  control: PHI_FORM_ROW_FULL,
+} as const satisfies PhiFormFieldPlacementDescriptor;
+
+export type PhiResolvedFormResponsiveGridRange = {
+  compact: PhiFormGridRange;
+  medium: PhiFormGridRange;
+  wide: PhiFormGridRange;
+};
+
+export const PHI_FORM_RESPONSIVE_MODES = ["compact", "medium", "wide"] as const;
+
+export type PhiFormResponsiveMode = (typeof PHI_FORM_RESPONSIVE_MODES)[number];
+
 export type PhiResolvedFormLayout = {
-  columns: {
-    compact: 1 | 2 | 3 | 4;
-    medium: 1 | 2 | 3 | 4;
-    wide: 1 | 2 | 3 | 4;
-  };
   gap: {
     compact: PhiSpacingToken;
     medium: PhiSpacingToken;
     wide: PhiSpacingToken;
   };
-  labelPlacement: "top" | "side";
   labelAlign: "start" | "end";
-  labelGrid: PhiResolvedFormResponsiveGridPlacement;
-  controlGrid: PhiResolvedFormResponsiveGridPlacement;
+  label: PhiResolvedFormResponsiveGridRange;
+  control: PhiResolvedFormResponsiveGridRange;
 };
 
-function assertGridPlacement(
-  placement: PhiFormGridPlacement,
-  path: string,
-): PhiFormGridPlacement {
-  const span = placement.span;
-  const offset = placement.offset;
-  const order = placement.order;
-
-  if (
-    span != null &&
-    (!Number.isInteger(span) || span < 1 || span > PHI_FORM_GRID_COLUMNS)
-  ) {
-    throw new Error(`${path}.span must be an integer from 1 to 24.`);
+function assertGridRange(range: PhiFormGridRange, path: string): PhiFormGridRange {
+  const { start, end } = range;
+  if (!Number.isInteger(start) || start < 1 || start > PHI_FORM_GRID_TRACKS) {
+    throw new Error(`${path}.start must be an integer from 1 to ${PHI_FORM_GRID_TRACKS}.`);
   }
-  if (
-    offset != null &&
-    (!Number.isInteger(offset) || offset < 0 || offset >= PHI_FORM_GRID_COLUMNS)
-  ) {
-    throw new Error(`${path}.offset must be an integer from 0 to 23.`);
+  if (!Number.isInteger(end) || end < 2 || end > PHI_FORM_GRID_LAST_LINE) {
+    throw new Error(`${path}.end must be an integer from 2 to ${PHI_FORM_GRID_LAST_LINE}.`);
   }
-  if (order != null && !Number.isInteger(order)) {
-    throw new Error(`${path}.order must be an integer.`);
+  if (end <= start) {
+    throw new Error(`${path}.end must be greater than ${path}.start.`);
   }
-  if (
-    span != null &&
-    offset != null &&
-    span + offset > PHI_FORM_GRID_COLUMNS
-  ) {
-    throw new Error(`${path}.span plus ${path}.offset must not exceed 24.`);
-  }
-
-  return placement;
+  return { start, end };
 }
 
 export function createPhiFormLiteralText(value: string): PhiFormTextDescriptor {
@@ -451,60 +507,203 @@ export function assertPhiFormLabelSetKey(
   }
 }
 
-export function resolvePhiFormResponsiveGridPlacement(
-  value: PhiFormResponsiveGridPlacement | undefined,
-  fallback: PhiResolvedFormResponsiveGridPlacement,
+/**
+ * Whether two ranges claim any of the same tracks.
+ *
+ * Between a field's own label and control this is not a fault but the statement that they stand under
+ * each other: two elements that both want columns 1-25 cannot share a row, and that is exactly how a
+ * stacked field is written. Between two different fields it means they would be drawn on top of each
+ * other, which is why fields are placed as whole units.
+ */
+export function phiFormGridRangesOverlap(a: PhiFormGridRange, b: PhiFormGridRange) {
+  return a.start < b.end && b.start < a.end;
+}
+
+export function resolvePhiFormResponsiveGridRange(
+  value: PhiFormResponsiveGridRange | undefined,
+  fallback: PhiResolvedFormResponsiveGridRange,
   path: string,
-): PhiResolvedFormResponsiveGridPlacement {
+): PhiResolvedFormResponsiveGridRange {
   const resolved = resolvePhiResponsiveValue(value, fallback);
   return {
-    compact: assertGridPlacement(resolved.compact, `${path}.compact`),
-    medium: assertGridPlacement(resolved.medium, `${path}.medium`),
-    wide: assertGridPlacement(resolved.wide, `${path}.wide`),
+    compact: assertGridRange(resolved.compact, `${path}.compact`),
+    medium: assertGridRange(resolved.medium, `${path}.medium`),
+    wide: assertGridRange(resolved.wide, `${path}.wide`),
   };
 }
 
 export function resolvePhiFormLayout(
   layout?: PhiFormLayoutDescriptor,
 ): PhiResolvedFormLayout {
-  const columns = resolvePhiResponsiveValue(
-    layout?.columns,
-    PHI_FORM_DEFAULT_LAYOUT.columns,
-  );
-  const labelGrid = resolvePhiFormResponsiveGridPlacement(
-    layout?.labelGrid,
-    PHI_FORM_DEFAULT_LAYOUT.labelGrid,
-    "layout.labelGrid",
-  );
-  const controlGrid = resolvePhiFormResponsiveGridPlacement(
-    layout?.controlGrid,
-    PHI_FORM_DEFAULT_LAYOUT.controlGrid,
-    "layout.controlGrid",
-  );
   return {
-    columns,
     gap: resolvePhiResponsiveValue(layout?.gap, PHI_FORM_DEFAULT_LAYOUT.gap),
-    labelPlacement:
-      layout?.labelPlacement ?? PHI_FORM_DEFAULT_LAYOUT.labelPlacement,
     labelAlign: layout?.labelAlign ?? PHI_FORM_DEFAULT_LAYOUT.labelAlign,
-    labelGrid,
-    controlGrid,
+    label: resolvePhiFormResponsiveGridRange(
+      layout?.label,
+      PHI_FORM_DEFAULT_LAYOUT.label,
+      "layout.label",
+    ),
+    control: resolvePhiFormResponsiveGridRange(
+      layout?.control,
+      PHI_FORM_DEFAULT_LAYOUT.control,
+      "layout.control",
+    ),
   };
 }
 
-export function resolvePhiFormFieldCellPlacement(
+/**
+ * Where one field's label and control lie, at one measured width.
+ *
+ * A field that says nothing takes the layout's ranges; a field that says something says all of it, so a
+ * control moved to 7-19 does not leave its label behind at a width that no longer suits it.
+ *
+ * `stacked` falls out of the ranges rather than being declared: label and control that want the same
+ * tracks cannot share a row, so they take two. That is what makes the narrow form and the wide form one
+ * contract instead of a layout mode with two branches.
+ */
+export function resolvePhiFormFieldRanges(
   layout: PhiResolvedFormLayout,
-  placement?: PhiFormResponsiveGridPlacement,
-) {
-  const fallback = {
-    compact: { span: PHI_FORM_GRID_COLUMNS / layout.columns.compact },
-    medium: { span: PHI_FORM_GRID_COLUMNS / layout.columns.medium },
-    wide: { span: PHI_FORM_GRID_COLUMNS / layout.columns.wide },
-  };
+  placement: PhiFormFieldPlacementDescriptor | undefined,
+  mode: PhiFormResponsiveMode,
+  path: string,
+): { label: PhiFormGridRange; control: PhiFormGridRange; stacked: boolean } {
+  const label = resolvePhiFormResponsiveGridRange(
+    placement?.label,
+    layout.label,
+    `${path}.label`,
+  )[mode];
+  const control = resolvePhiFormResponsiveGridRange(
+    placement?.control,
+    layout.control,
+    `${path}.control`,
+  )[mode];
 
-  return resolvePhiFormResponsiveGridPlacement(
-    placement,
-    fallback,
-    "field.placement.cell",
-  );
+  return { label, control, stacked: phiFormGridRangesOverlap(label, control) };
+}
+
+/**
+ * The tracks a whole field occupies, label and control together.
+ *
+ * A field is placed as one unit and lays its own parts out inside it, because CSS Grid places items in
+ * declaration order and never goes back: a label and a control handed to the grid separately would let
+ * the next field's label slide into the gap the last control left. As one unit, two fields side by side
+ * are two units side by side, and the order on the page is the order in the descriptor.
+ */
+export function resolvePhiFormFieldExtent(
+  label: PhiFormGridRange,
+  control: PhiFormGridRange,
+): PhiFormGridRange {
+  return {
+    start: Math.min(label.start, control.start),
+    end: Math.max(label.end, control.end),
+  };
+}
+
+/**
+ * Which row each part of each field stands in, worked out here rather than left to the grid.
+ *
+ * CSS places items in declaration order and never goes back to fill a gap it has passed, so a form whose
+ * fields were handed over as loose labels and controls would let one field's label slide into the space
+ * the previous control left. Wrapping each field in a subgrid solved that and cost more than it was
+ * worth: `subgrid` is young, and a browser without it does not fail -- it silently drops the line and
+ * scatters the form. Rows named outright work everywhere and say what was meant.
+ *
+ * A field goes on the current row while its tracks are free, and opens a new one when they are not,
+ * which is what the grid would have done. A stacked field takes two rows, its label above its control.
+ */
+export function resolvePhiFormGridPlacement(
+  layout: PhiResolvedFormLayout,
+  fields: readonly {
+    key: string;
+    placement?: PhiFormFieldPlacementDescriptor;
+    /** A hidden or honeypot field is out of flow and takes no room. */
+    inFlow: boolean;
+  }[],
+  mode: PhiFormResponsiveMode,
+) {
+  const placements = new Map<string, {
+    label: PhiFormGridRange;
+    control: PhiFormGridRange;
+    stacked: boolean;
+    labelRow: number;
+    controlRow: number;
+  }>();
+
+  let rowStart = 1;
+  let lastRow = 1;
+  let taken: PhiFormGridRange[] = [];
+
+  for (const field of fields) {
+    const { label, control, stacked } = resolvePhiFormFieldRanges(
+      layout,
+      field.placement,
+      mode,
+      `fields.${field.key}`,
+    );
+    if (!field.inFlow) {
+      placements.set(field.key, { label, control, stacked, labelRow: rowStart, controlRow: rowStart });
+      continue;
+    }
+
+    const extent = resolvePhiFormFieldExtent(label, control);
+    if (taken.some((other) => phiFormGridRangesOverlap(extent, other))) {
+      rowStart = lastRow + 1;
+      taken = [];
+    }
+    taken.push(extent);
+
+    const controlRow = stacked ? rowStart + 1 : rowStart;
+    lastRow = Math.max(lastRow, controlRow);
+    placements.set(field.key, { label, control, stacked, labelRow: rowStart, controlRow });
+  }
+
+  return { placements, nextRow: lastRow + 1 };
+}
+
+/**
+ * Whether a Form Layout above this form may decide where this field's label column ends.
+ *
+ * Only for a field that is taking the form's own ranges: a field that places itself is saying something
+ * about that field, and a Layout deciding the form's columns has no business overruling it. And only
+ * for a row that is actually two columns running the full width, because that is the only shape whose
+ * single boundary line describes it.
+ */
+export function phiFormFieldFollowsLayoutColumns(input: {
+  placement: PhiFormFieldPlacementDescriptor | undefined;
+  label: PhiFormGridRange;
+  control: PhiFormGridRange;
+  stacked: boolean;
+}) {
+  return !input.stacked &&
+    input.placement?.label == null &&
+    input.placement?.control == null &&
+    input.label.start === 1 &&
+    input.control.end === PHI_FORM_GRID_LAST_LINE;
+}
+
+/**
+ * `grid-column` for the two halves of a row a Form Layout may move the boundary of.
+ *
+ * The line is substituted by CSS rather than by us, through the custom property the Form Layout writes.
+ * It has to be CSS: the Layout renders on the server and hands this form in as an already-rendered
+ * child, so nothing React carries can reach from one to the other. The descriptor's own line stands as
+ * the fallback, which is what a form outside any Form Layout uses.
+ */
+export const PHI_FORM_LABEL_END_PROPERTY = "--phi-form-label-end";
+
+export function phiFormLabelGridColumn(range: PhiFormGridRange, followsLayout: boolean) {
+  return followsLayout
+    ? `1 / var(${PHI_FORM_LABEL_END_PROPERTY}, ${range.end})`
+    : phiFormGridColumn(range);
+}
+
+export function phiFormControlGridColumn(range: PhiFormGridRange, followsLayout: boolean) {
+  return followsLayout
+    ? `var(${PHI_FORM_LABEL_END_PROPERTY}, ${range.start}) / ${PHI_FORM_GRID_LAST_LINE}`
+    : phiFormGridColumn(range);
+}
+
+/** The `grid-column` shorthand for a range, which is the only form CSS accepts. */
+export function phiFormGridColumn(range: PhiFormGridRange) {
+  return `${range.start} / ${range.end}`;
 }
