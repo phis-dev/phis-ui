@@ -179,11 +179,15 @@ const PHI_COLLAPSIBLE_LAYOUT_PANEL_PRESET = {
     padding: PHI_SPACE.base,
 } as const;
 
+/** A split card centres what stands in its cards, on both axes, unless it says otherwise. */
+const PHI_SPLIT_CARD_LAYOUT_DEFAULT_ANCHOR = { horizontal: "center", vertical: "middle" } as const;
 export const PHI_SPLIT_CARD_LAYOUT_DEFAULTS: PhiLayoutDefaults = {
+    anchor: PHI_SPLIT_CARD_LAYOUT_DEFAULT_ANCHOR,
     gap: 0,
 };
 const PHI_SPLIT_CARD_LAYOUT_PANEL_PRESET = {
     ...PHI_LAYOUT_CHROME_PRESET_DEFAULTS,
+    anchor: PHI_SPLIT_CARD_LAYOUT_DEFAULT_ANCHOR,
     gap: PHI_SPACE.base,
     padding: "1.3125rem",
     leftPadding: PHI_SPACE.base,
