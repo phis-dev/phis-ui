@@ -12,7 +12,6 @@ import {
 } from "../../../constants/phi-cms";
 import { buildPhiCmsLayoutNode, buildPhiCmsWidgetNode } from "../../../helpers/cms-node-factories";
 import type { PhiCmsPageNode, PhiResolvedCmsPageTree } from "../../../types/cms";
-import { PHI_PADDING } from "../../../theme/phi-tokens";
 import { PHI_SHARED_FORM_IDS } from "../../forms/shared-form-ids";
 import { createPhiSignalAddress } from "../../../types/signals";
 
@@ -73,7 +72,7 @@ export async function buildPhiDefaultPubConfirmPageTree({
         label: "pub confirmation page",
         config: {
           maxWidth: 1120,
-          gap: PHI_PADDING.lg,
+          gap: PHI_SPACE.base,
         },
       }),
       buildPhiCmsLayoutNode({
@@ -88,7 +87,7 @@ export async function buildPhiDefaultPubConfirmPageTree({
         flags: 0,
         visibilityMask: page.visibilityMask,
         label: "pub confirmation form layout",
-        config: { padding: PHI_SPACE.xl },
+        config: { padding: 0 },
       }),
     ],
     contentWidgets: [

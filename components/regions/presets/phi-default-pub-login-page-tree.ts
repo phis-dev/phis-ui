@@ -8,7 +8,6 @@ import {
 import { PhiCmsPageType, PhiCmsRegionType, PhiCmsStatus } from "../../../constants/phi-cms";
 import { buildPhiCmsLayoutNode, buildPhiCmsWidgetNode } from "../../../helpers/cms-node-factories";
 import type { PhiCmsPageNode, PhiResolvedCmsPageTree } from "../../../types/cms";
-import { PHI_PADDING } from "../../../theme/phi-tokens";
 import {
   buildPhiLoginFormWidgetConfig,
   PHI_LOGIN_FORM_LAYOUT_CONFIG,
@@ -75,7 +74,7 @@ export async function buildPhiDefaultPubLoginPageTree({
         label: "pub login page",
         config: {
           maxWidth: 1120,
-          gap: PHI_PADDING.lg,
+          gap: PHI_SPACE.base,
         },
       }),
       buildPhiCmsLayoutNode({
@@ -90,7 +89,7 @@ export async function buildPhiDefaultPubLoginPageTree({
         flags: 0,
         visibilityMask: page.visibilityMask,
         label: "pub login form layout",
-        config: { ...PHI_LOGIN_FORM_LAYOUT_CONFIG, padding: PHI_SPACE.xl },
+        config: { ...PHI_LOGIN_FORM_LAYOUT_CONFIG, padding: 0 },
       }),
     ],
     contentWidgets: [
