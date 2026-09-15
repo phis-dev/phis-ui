@@ -23,12 +23,13 @@ import {
   normalizePhiColorSchemeHint,
   resolvePhiThemeMode,
 } from "../theme/phi-theme-mode";
+import { readPhiServerApiCredentials } from "../helpers/phis-server-credentials";
 
 async function loadPhiNextRootContract() {
   const runtimeConfig = readPhiSiteRuntimeConfigSync();
   const { site, resolvedLocale } = await loadPhiRootLayoutContext({
-    apiBaseUrl: runtimeConfig.phis.apiBaseUrl,
-    internalToken: runtimeConfig.phis.internalToken,
+    apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
+    internalToken: readPhiServerApiCredentials().internalToken,
     siteKey: runtimeConfig.site.key,
   });
 
@@ -112,8 +113,8 @@ export function createPhiNextRootLayout(siteModules: PhiSiteModuleServerAreaCont
           <PhiRootLayout
             themeModePreference={themeModePreference}
             browserColorScheme={browserColorScheme}
-            apiBaseUrl={runtimeConfig.phis.apiBaseUrl}
-            internalToken={runtimeConfig.phis.internalToken}
+            apiBaseUrl={readPhiServerApiCredentials().apiBaseUrl}
+            internalToken={readPhiServerApiCredentials().internalToken}
             siteKey={runtimeConfig.site.key}
             site={site}
             resolvedLocale={resolvedLocale}
@@ -131,8 +132,8 @@ export function createPhiNextRootLayout(siteModules: PhiSiteModuleServerAreaCont
 export async function PhiNextSiteIndexPage() {
   const runtimeConfig = readPhiSiteRuntimeConfigSync();
   const resolvedLocale = await resolvePhiResolvedRequestLocale({
-    apiBaseUrl: runtimeConfig.phis.apiBaseUrl,
-    internalToken: runtimeConfig.phis.internalToken,
+    apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
+    internalToken: readPhiServerApiCredentials().internalToken,
     siteKey: runtimeConfig.site.key,
   });
   redirect(localizePath(resolvedLocale.locale, "/"));

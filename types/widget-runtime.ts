@@ -123,12 +123,13 @@ export type PhiBlockRuntimePage = {
   noindex?: boolean;
 };
 
+/**
+ * What a Widget knows about the request it renders in. It holds nothing only the server may know: a
+ * runtime is handed to client components, and whatever it carries reaches the browser. Server code that
+ * calls phis-server takes its credentials from `readPhiServerApiCredentials` instead.
+ */
 export type PhiBlockRuntime = {
   site: PhiBlockRuntimeSite;
-  phis: {
-    apiBaseUrl: string;
-    internalToken: string;
-  };
   locale: PhiBlockRuntimeLocale;
   area: PhiBlockRuntimeArea;
   viewer: PhiBlockRuntimeViewer;

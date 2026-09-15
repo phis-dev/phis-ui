@@ -15,6 +15,7 @@ import {
   PHI_AUTH_LOGIN_OVERLAY_IDS,
   type PhiAuthLoginOverlayArea,
 } from "../../runtime/auth-overlay-ids";
+import { readPhiServerApiCredentials } from "../../../helpers/phis-server-credentials";
 
 export async function buildPhiAuthAreaLoginOverlayTree({
   page,
@@ -27,8 +28,8 @@ export async function buildPhiAuthAreaLoginOverlayTree({
 }): Promise<PhiResolvedCmsPageTree> {
   const ids = PHI_AUTH_LOGIN_OVERLAY_IDS[area];
   const labels = await getPhiLoginFormLabels({
-    apiBaseUrl: runtime.phis.apiBaseUrl,
-    internalToken: runtime.phis.internalToken,
+    apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
+    internalToken: readPhiServerApiCredentials().internalToken,
     locale: runtime.locale.current,
   });
 

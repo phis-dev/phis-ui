@@ -43,7 +43,7 @@ export async function getPhiCommonControlLabels(options: PhiGlobalTranslatorOpti
 }
 
 export function getPhiCommonControlLabelsForRuntime(
-  runtime: Pick<PhiBlockRuntime, "phis" | "locale" | "site">,
+  runtime: Pick<PhiBlockRuntime, "locale" | "site">,
 ) {
   return getPhiCommonControlLabels(buildPhiWidgetLabelTranslatorOptions(runtime));
 }

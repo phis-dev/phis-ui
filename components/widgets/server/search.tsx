@@ -4,9 +4,10 @@ import type { PhiSearchWidgetLabels } from "../label-types/search";
 import { getPhiSearchWidgetLabels } from "../label-sets/search";
 import { PhiRuntimeRenderClientType } from "../../../constants/runtime-render-client-types";
 import { PhiRuntimeModuleRenderClientHost } from "../../runtime/runtime-module-render-client-manifest";
+import { readPhiServerApiCredentials } from "../../../helpers/phis-server-credentials";
 
 export type PhiSearchWidgetServerProps = {
-  runtime: Pick<PhiBlockRuntime, "phis" | "locale">;
+  runtime: Pick<PhiBlockRuntime, "locale">;
   config?: PhiCmsSearchWidgetConfig | null;
   query?: string;
   defaultQuery?: string;
@@ -16,11 +17,11 @@ export type PhiSearchWidgetServerProps = {
 };
 
 export async function loadPhiSearchWidgetLabels(
-  runtime: Pick<PhiBlockRuntime, "phis" | "locale">,
+  runtime: Pick<PhiBlockRuntime, "locale">,
 ): Promise<PhiSearchWidgetLabels> {
   return getPhiSearchWidgetLabels({
-    apiBaseUrl: runtime.phis.apiBaseUrl,
-    internalToken: runtime.phis.internalToken,
+    apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
+    internalToken: readPhiServerApiCredentials().internalToken,
     locale: runtime.locale.current,
   });
 }

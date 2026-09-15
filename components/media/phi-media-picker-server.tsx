@@ -4,9 +4,10 @@ import { getPhiSearchWidgetLabels } from "../widgets/label-sets/search";
 import { getPhiMediaWidgetLabels } from "./label-sets/media";
 import { PhiCmsWidgetType } from "../../constants/cms-widget-types";
 import { PhiRuntimeModuleRenderClientHost } from "../runtime/runtime-module-render-client-manifest";
+import { readPhiServerApiCredentials } from "../../helpers/phis-server-credentials";
 
 export type PhiMediaPickerWidgetServerProps = {
-  runtime: Pick<PhiBlockRuntime, "phis" | "locale">;
+  runtime: Pick<PhiBlockRuntime, "locale">;
   config?: PhiCmsMediaPickerWidgetConfig | null;
 };
 
@@ -15,13 +16,13 @@ export async function PhiMediaPickerWidgetServer({
   config,
 }: PhiMediaPickerWidgetServerProps) {
   const labels = await getPhiMediaWidgetLabels({
-    apiBaseUrl: runtime.phis.apiBaseUrl,
-    internalToken: runtime.phis.internalToken,
+    apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
+    internalToken: readPhiServerApiCredentials().internalToken,
     locale: runtime.locale.current,
   });
   const searchLabels = await getPhiSearchWidgetLabels({
-    apiBaseUrl: runtime.phis.apiBaseUrl,
-    internalToken: runtime.phis.internalToken,
+    apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
+    internalToken: readPhiServerApiCredentials().internalToken,
     locale: runtime.locale.current,
   });
 

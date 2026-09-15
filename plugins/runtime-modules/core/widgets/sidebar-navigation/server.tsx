@@ -9,7 +9,7 @@ export type PhiSidebarNavigationWidgetProps = Pick<
   PhiSidebarNavigationWidgetClientProps,
   "config" | "menuTheme"
 > & {
-  runtime: Pick<PhiBlockRuntime, "site" | "locale" | "area" | "phis" | "viewer" | "request">;
+  runtime: Pick<PhiBlockRuntime, "site" | "locale" | "area" | "viewer" | "request">;
   navKey?: string;
 };
 

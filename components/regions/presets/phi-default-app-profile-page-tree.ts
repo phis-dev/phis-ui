@@ -6,11 +6,12 @@ import type { PhiCmsPageNode, PhiResolvedCmsPageTree } from "../../../types/cms"
 import { createPhiPresetCmsInstanceIdMap } from "../../../types/cms-instance-id";
 import { buildPhiBasePageContentScaffold, PHI_BASE_PAGE_LAYOUT_NODE_ID } from "./phi-base-page-layout";
 import { getPhiProfilePageLabels } from "./profile-label-set";
+import { readPhiServerApiCredentials } from "../../../helpers/phis-server-credentials";
 
 const REGION_CONTENT_ID = -286;
 
 export async function buildPhiDefaultAppProfilePageTree({ page, runtime }: { page: PhiCmsPageNode; runtime: PhiBlockRuntime }): Promise<PhiResolvedCmsPageTree> {
-  const labels = await getPhiProfilePageLabels({ apiBaseUrl: runtime.phis.apiBaseUrl, internalToken: runtime.phis.internalToken, locale: runtime.locale.current });
+  const labels = await getPhiProfilePageLabels({ apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl, internalToken: readPhiServerApiCredentials().internalToken, locale: runtime.locale.current });
   const widgets = createPhiPresetCmsInstanceIdMap({ domain: "page", ownerModuleId: PHI_AUTH_RUNTIME_MODULE_ID, presetKey: "app-profile-page" }, ["overview", "name", "locale", "email", "password"]);
   const definitions = [
     [widgets.overview, "profile-overview", labels.overview],

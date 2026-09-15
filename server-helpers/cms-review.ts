@@ -2,6 +2,7 @@ import "server-only";
 
 import { getSiteThemeRevision } from "../gateway/site-theme";
 import type { PhiSiteRequestContext } from "./runtime";
+import { readPhiServerApiCredentials } from "../helpers/phis-server-credentials";
 
 export type PhiCmsReviewKind = "area" | "page" | "navigation" | "theme";
 
@@ -84,8 +85,8 @@ export async function resolvePhiCmsThemeReviewRequestContext({
   }
 
   const theme = await getSiteThemeRevision({
-    apiBaseUrl: requestContext.phis.apiBaseUrl,
-    internalToken: requestContext.phis.internalToken,
+    apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
+    internalToken: readPhiServerApiCredentials().internalToken,
     siteKey: requestContext.site.key,
     themeKey: review?.themeKey ?? "default",
     revisionId: themeRevision,

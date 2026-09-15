@@ -11,6 +11,7 @@ import { PHI_FORM_FIELD_PROVIDER_KEYS, PHI_FORM_VALIDATION_PROVIDER_KEYS } from 
 import { definePhiRuntimeModuleForm } from "../../../components/forms/form-registry";
 import { PHI_BUILDER_EFFECTS_SECTIONS } from "./effects-form-values";
 import type { PhiFormLabelSetLoader } from "../../../components/forms/form-resolution";
+import { readPhiServerApiCredentials } from "../../../helpers/phis-server-credentials";
 
 export const PHI_BUILDER_PAGE_META_FORM_ID = createPhiFormId(PHI_SHARED_PACKAGE_NAME, "builder/page-meta");
 const PHI_BUILDER_PAGE_META_FORM_LABEL_SET_KEY = "@phis/ui/modules/builder/labels/page-meta" as const;
@@ -456,8 +457,8 @@ const descriptor: PhiFormDescriptor = {
 const loadPhiBuilderPageMetaFormLabels: PhiFormLabelSetLoader = async ({ runtime }) => {
   const { getPhiBuilderChromeWidgetLabels } = await import("../../../components/widgets/label-sets/builder-chrome");
   const labels = await getPhiBuilderChromeWidgetLabels({
-    apiBaseUrl: runtime.phis.apiBaseUrl,
-    internalToken: runtime.phis.internalToken,
+    apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
+    internalToken: readPhiServerApiCredentials().internalToken,
     locale: runtime.locale.current,
   });
   return {

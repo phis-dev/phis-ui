@@ -39,7 +39,6 @@ export async function buildPhiDefaultPubContactPageTree({
   page,
 }: {
   page: PhiCmsPageNode;
-  runtime: { phis: { apiBaseUrl: string; internalToken: string } };
 }): Promise<PhiResolvedCmsPageTree> {
   return {
     page: {

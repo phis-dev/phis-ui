@@ -10,6 +10,7 @@ import type { PhiFormDescriptor, PhiFormHandlerProviderDescriptor } from "../../
 import { PHI_LOCALIZATION_RUNTIME_MODULE_ID } from "../../../plugins/runtime-modules/localization/ids";
 import { PHI_SHARED_PACKAGE_NAME } from "../../../types/signals";
 import { PHI_LOCALIZATION_RUNTIME_DATA_PROVIDER_KEYS } from "./ids";
+import { readPhiServerApiCredentials } from "../../../helpers/phis-server-credentials";
 
 export const PHI_LOCALIZATION_FORM_IDS = {
   siteLocales: createPhiFormId(PHI_SHARED_PACKAGE_NAME, "localization/site-locales"),
@@ -64,8 +65,8 @@ function translationDescriptor(formId: string): PhiFormDescriptor {
 async function loadAdminLabels(context: Parameters<NonNullable<ReturnType<typeof definePhiRuntimeModuleForm>["loadLabels"]>>[0]) {
   const { getPhiAdminLocalesWidgetLabels } = await import("../../../components/widgets/label-sets/admin-locales");
   const labels = await getPhiAdminLocalesWidgetLabels({
-    apiBaseUrl: context.runtime.phis.apiBaseUrl,
-    internalToken: context.runtime.phis.internalToken,
+    apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
+    internalToken: readPhiServerApiCredentials().internalToken,
     locale: context.runtime.locale.current,
   });
   return flattenPhiFormLabels({
@@ -88,8 +89,8 @@ async function loadAdminLabels(context: Parameters<NonNullable<ReturnType<typeof
 async function loadEditorLabels(context: Parameters<NonNullable<ReturnType<typeof definePhiRuntimeModuleForm>["loadLabels"]>>[0]) {
   const { getPhiEditorTranslationsWidgetLabels } = await import("../../../components/widgets/label-sets/editor-translations");
   const labels = await getPhiEditorTranslationsWidgetLabels({
-    apiBaseUrl: context.runtime.phis.apiBaseUrl,
-    internalToken: context.runtime.phis.internalToken,
+    apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
+    internalToken: readPhiServerApiCredentials().internalToken,
     locale: context.runtime.locale.current,
   });
   return flattenPhiFormLabels({

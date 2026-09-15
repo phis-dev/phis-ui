@@ -5,9 +5,10 @@ import { resolvePhiNavigationItems } from "../../../../../components/widgets/ser
 import { PhiCmsWidgetType } from "../../../../../constants/cms-widget-types";
 import { PhiRuntimeModuleRenderClientHost } from "../../../../../components/runtime/runtime-module-render-client-manifest";
 import { getPhiFooterWidgetLabels } from "../../../../../components/widgets/label-sets/footer";
+import { readPhiServerApiCredentials } from "../../../../../helpers/phis-server-credentials";
 
 export type PhiFooterWidgetProps = {
-  runtime: Pick<PhiBlockRuntime, "site" | "locale" | "area" | "phis" | "viewer" | "request">;
+  runtime: Pick<PhiBlockRuntime, "site" | "locale" | "area" | "viewer" | "request">;
   brandTitle: ReactNode;
   brandText?: ReactNode;
   contactEmailValue: ReactNode;
@@ -28,8 +29,8 @@ export async function PhiFooterWidget({
   const [fetchedLinks, labels] = await Promise.all([
     resolvePhiNavigationItems(runtime, `${runtime.area}:footer`),
     getPhiFooterWidgetLabels({
-      apiBaseUrl: runtime.phis.apiBaseUrl,
-      internalToken: runtime.phis.internalToken,
+      apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
+      internalToken: readPhiServerApiCredentials().internalToken,
       locale: runtime.locale.current,
     }),
   ]);

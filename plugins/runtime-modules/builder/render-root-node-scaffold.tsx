@@ -1165,10 +1165,6 @@ function resolvePhiRootNodeRenderedBody(
       store: { enabled: false },
       theme: { mode: "light" },
     },
-    phis: {
-      apiBaseUrl: "",
-      internalToken: "",
-    },
     locale: {
       current: "en",
     },

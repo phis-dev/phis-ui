@@ -29,6 +29,7 @@ import {
 import { resolvePhiRuntimeModuleIdsForArea } from "../../../../plugins/runtime-modules/settings";
 import { localizePhiRuntimeModuleDefinitions } from "../../module-labels.server";
 import { getPhiBuilderChromeWidgetLabels } from "../../../../components/widgets/label-sets/builder-chrome";
+import { readPhiServerApiCredentials } from "../../../../helpers/phis-server-credentials";
 
 export const PHI_BUILDER_RUNTIME_CONTROLLER_SERVER_DEFINITION = {
   ...PHI_BUILDER_RUNTIME_CONTROLLER_DEFINITION,
@@ -55,8 +56,8 @@ export const PHI_BUILDER_RUNTIME_CONTROLLER_SERVER_DEFINITION = {
       buildPhiBuilderAreaRootRoutesByArea(runtime, runtimeModuleCatalog),
       buildPhiBuilderAreaMetaByArea(runtime, runtimeModuleCatalog),
       getPhiBuilderChromeWidgetLabels({
-        apiBaseUrl: runtime.phis.apiBaseUrl,
-        internalToken: runtime.phis.internalToken,
+        apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
+        internalToken: readPhiServerApiCredentials().internalToken,
         locale: runtime.locale.current,
       }),
     ]);

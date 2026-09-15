@@ -22,7 +22,7 @@ export function resolvePhiNavigationRevisionFromRuntime(
 }
 
 export async function resolvePhiNavigationItems(
-  runtime: Pick<PhiBlockRuntime, "site" | "locale" | "area" | "phis" | "viewer" | "request">,
+  runtime: Pick<PhiBlockRuntime, "site" | "locale" | "area" | "viewer" | "request">,
   navKey: string,
 ): Promise<PhiNavItem[] | null> {
   const rt = phiRuntime(runtime);

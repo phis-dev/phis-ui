@@ -14,6 +14,7 @@ import { getPhiAdminLocalesWidgetLabels } from "../../widgets/label-sets/admin-l
 import { PHI_SPACE } from "../../../theme/antd-css-var-contract";
 import { PHI_LOCALIZATION_RUNTIME_DATA_PROVIDER_KEYS } from "../../../plugins/runtime-modules/localization/ids";
 import { PHI_LOCALIZATION_FORM_IDS } from "../../../plugins/runtime-modules/localization/forms";
+import { readPhiServerApiCredentials } from "../../../helpers/phis-server-credentials";
 
 const SYNTHETIC_ADMIN_LOCALES_REGION_IDS = {
   regionContent: -461,
@@ -45,13 +46,13 @@ export async function buildPhiDefaultAdminLocalesPageTree({
   runtime: PhiBlockRuntime;
 }): Promise<PhiResolvedCmsPageTree> {
   const labels = await getPhiAdminLocalesPageLabels({
-    apiBaseUrl: runtime.phis.apiBaseUrl,
-    internalToken: runtime.phis.internalToken,
+    apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
+    internalToken: readPhiServerApiCredentials().internalToken,
     locale: runtime.locale.current,
   });
   const widgetLabels = await getPhiAdminLocalesWidgetLabels({
-    apiBaseUrl: runtime.phis.apiBaseUrl,
-    internalToken: runtime.phis.internalToken,
+    apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
+    internalToken: readPhiServerApiCredentials().internalToken,
     locale: runtime.locale.current,
   });
 

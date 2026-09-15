@@ -22,7 +22,6 @@ export async function buildPhiDefaultPubRegistrationPageTree({
 }: {
   page: PhiCmsPageNode;
   presetKey: string;
-  runtime: { phis: { apiBaseUrl: string; internalToken: string } };
 }): Promise<PhiResolvedCmsPageTree> {
   const SYNTHETIC_REGISTER_LAYOUT_IDS = createPhiPresetCmsInstanceIdMap({
     domain: "page",

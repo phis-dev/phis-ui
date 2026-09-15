@@ -10,6 +10,7 @@ import {
 } from "../../../components/forms/form-provider-contract";
 import { definePhiRuntimeModuleForm } from "../../../components/forms/form-registry";
 import type { PhiFormLabelSetLoader } from "../../../components/forms/form-resolution";
+import { readPhiServerApiCredentials } from "../../../helpers/phis-server-credentials";
 
 export const PHI_BUILDER_SIGNAL_WIRING_FORM_ID = createPhiFormId(PHI_SHARED_PACKAGE_NAME, "builder/signal-wiring");
 const PHI_BUILDER_SIGNAL_WIRING_FORM_LABEL_SET_KEY = "@phis/ui/modules/builder/labels/signal-wiring" as const;
@@ -76,8 +77,8 @@ const descriptor: PhiFormDescriptor = {
 const loadPhiBuilderSignalWiringFormLabels: PhiFormLabelSetLoader = async ({ runtime }) => {
   const { getPhiSignalsWidgetLabels } = await import("../../../components/widgets/label-sets/signals");
   const labels = await getPhiSignalsWidgetLabels({
-    apiBaseUrl: runtime.phis.apiBaseUrl,
-    internalToken: runtime.phis.internalToken,
+    apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
+    internalToken: readPhiServerApiCredentials().internalToken,
     locale: runtime.locale.current,
   });
   return {

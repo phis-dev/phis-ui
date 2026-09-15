@@ -21,7 +21,7 @@ import { buildPhiDeveloperBuilderRegionDraftsFromTree } from "./region-hydration
  * Editor and Live then compute byte-identical delivery URLs instead of merely similar ones.
  */
 export async function buildPhiProjectedBuilderRegionDrafts<T extends PhiResolvedCmsRenderableTree>(
-  runtime: Pick<PhiBlockRuntime, "site" | "phis">,
+  runtime: Pick<PhiBlockRuntime, "site">,
   tree: T,
   area: PhiDeveloperBuilderArea,
   /** Null for the Area shell, whose regions are Area-scoped and name no Page. */

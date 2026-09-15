@@ -6,13 +6,14 @@ import {
   PHI_BUILDER_INSPECTOR_HEADER_WIDGET_DEFINITION,
   type PhiBuilderChromeWidgetConfig,
 } from "../chrome/config";
+import { readPhiServerApiCredentials } from "../../../../../helpers/phis-server-credentials";
 
 export const PHI_BUILDER_INSPECTOR_HEADER_WIDGET_PLUGIN: PhiCmsWidgetPlugin<PhiBuilderChromeWidgetConfig> = {
   ...PHI_BUILDER_INSPECTOR_HEADER_WIDGET_DEFINITION,
   render: async ({ runtime }) => {
     const options = {
-      apiBaseUrl: runtime.phis.apiBaseUrl,
-      internalToken: runtime.phis.internalToken,
+      apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
+      internalToken: readPhiServerApiCredentials().internalToken,
       locale: runtime.locale.current,
     };
     const [inspectorLabels, regionLabels] = await Promise.all([

@@ -7,6 +7,7 @@ import {
   type PhiDimensionWidgetConfig,
 } from "./config";
 import { getPhiDimensionWidgetLabels } from "../../../../../components/widgets/label-sets/dimension";
+import { readPhiServerApiCredentials } from "../../../../../helpers/phis-server-credentials";
 
 async function renderDimensionWidget(
   config: PhiDimensionWidgetConfig,
@@ -14,8 +15,8 @@ async function renderDimensionWidget(
   signalsEnabled: boolean,
 ) {
   const labels = await getPhiDimensionWidgetLabels({
-    apiBaseUrl: runtime.phis.apiBaseUrl,
-    internalToken: runtime.phis.internalToken,
+    apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
+    internalToken: readPhiServerApiCredentials().internalToken,
     locale: runtime.locale.current,
   });
 

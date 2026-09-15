@@ -5,7 +5,7 @@ import { phiRuntime } from "../../../../../server-helpers/phi-runtime";
 import { PhiRuntimeModuleRenderClientHost } from "../../../../../components/runtime/runtime-module-render-client-manifest";
 
 export type PhiLocaleWidgetProps = {
-  runtime: Pick<PhiBlockRuntime, "site" | "locale" | "area" | "phis">;
+  runtime: Pick<PhiBlockRuntime, "site" | "locale" | "area">;
   interactive?: boolean;
 };
 

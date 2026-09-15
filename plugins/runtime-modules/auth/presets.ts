@@ -27,9 +27,9 @@ const FORM_ROUTE_TEMPLATES = [
     key: "registration",
     title: "Register",
     path: "/register",
-    loadTree: (presetKey: string, { page, runtime }: PhiCmsDescriptorBuildContext) =>
+    loadTree: (presetKey: string, { page }: PhiCmsDescriptorBuildContext) =>
       import("../../../components/regions/presets/phi-default-pub-registration-page-tree")
-        .then((module) => module.buildPhiDefaultPubRegistrationPageTree({ page, runtime, presetKey })),
+        .then((module) => module.buildPhiDefaultPubRegistrationPageTree({ page, presetKey })),
   },
   {
     key: "login",
@@ -43,17 +43,17 @@ const FORM_ROUTE_TEMPLATES = [
     key: "confirm",
     title: "Confirm",
     path: "/confirm",
-    loadTree: (presetKey: string, { page, runtime }: PhiCmsDescriptorBuildContext) =>
+    loadTree: (presetKey: string, { page }: PhiCmsDescriptorBuildContext) =>
       import("../../../components/regions/presets/phi-default-pub-confirm-page-tree")
-        .then((module) => module.buildPhiDefaultPubConfirmPageTree({ page, runtime, presetKey })),
+        .then((module) => module.buildPhiDefaultPubConfirmPageTree({ page, presetKey })),
   },
   {
     key: "reset-password",
     title: "Reset Password",
     path: "/reset-password",
-    loadTree: (presetKey: string, { page, runtime }: PhiCmsDescriptorBuildContext) =>
+    loadTree: (presetKey: string, { page }: PhiCmsDescriptorBuildContext) =>
       import("../../../components/regions/presets/phi-default-pub-reset-password-page-tree")
-        .then((module) => module.buildPhiDefaultPubResetPasswordPageTree({ page, runtime, presetKey })),
+        .then((module) => module.buildPhiDefaultPubResetPasswordPageTree({ page, presetKey })),
   },
 ] as const;
 

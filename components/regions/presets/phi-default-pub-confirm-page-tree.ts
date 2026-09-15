@@ -26,7 +26,6 @@ export async function buildPhiDefaultPubConfirmPageTree({
 }: {
   page: PhiCmsPageNode;
   presetKey: string;
-  runtime: { phis: { apiBaseUrl: string; internalToken: string } };
 }): Promise<PhiResolvedCmsPageTree> {
   const SYNTHETIC_CONFIRM_LAYOUT_IDS = createPhiPresetCmsInstanceIdMap({
     domain: "page",

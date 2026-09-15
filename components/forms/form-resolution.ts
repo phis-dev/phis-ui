@@ -14,7 +14,7 @@ export type PhiFormRenderOptions = {
 };
 
 export type PhiFormRenderContext = {
-  runtime: Pick<PhiBlockRuntime, "site" | "locale" | "phis"> &
+  runtime: Pick<PhiBlockRuntime, "site" | "locale"> &
     Partial<Pick<PhiBlockRuntime, "area">>;
   resolvedForm: PhiResolvedFormDefinition<PhiFormDefinitionLike> | null;
   options?: PhiFormRenderOptions;

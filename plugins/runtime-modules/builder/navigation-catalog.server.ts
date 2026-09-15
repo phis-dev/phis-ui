@@ -17,6 +17,7 @@ import type {
 } from "../../../types";
 import { fetchSiteNavigationScopes } from "../../../gateway/site-nav";
 import { createPhiBuilderCustomNavigationSurface } from "../../../helpers/cms-navigation-catalog";
+import { readPhiServerApiCredentials } from "../../../helpers/phis-server-credentials";
 
 export type PhiBuilderNavigationSurfacesByArea = Partial<
   Record<PhiBuilderAreaKey, readonly PhiCmsResolvedNavigationSurface[]>
@@ -33,8 +34,8 @@ export async function buildPhiBuilderNavigationSurfacesByArea(
     throw new Error("Builder runtime catalog has no Platform contribution.");
   }
   const persistedScopes = await fetchSiteNavigationScopes({
-    apiBaseUrl: runtime.phis.apiBaseUrl,
-    internalToken: runtime.phis.internalToken,
+    apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
+    internalToken: readPhiServerApiCredentials().internalToken,
     siteKey: runtime.site.key,
   });
   return Object.fromEntries(PHI_BUILDER_AREA_KEYS.map((builderArea) => {

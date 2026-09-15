@@ -7,6 +7,7 @@ import {
   readPhiSiteRuntimeConfigSync,
 } from "../helpers/site-runtime";
 import { PHIS_SITE_KEY_HEADER } from "../constants/http-headers";
+import { readPhiServerApiCredentials } from "../helpers/phis-server-credentials";
 
 const HOP_BY_HOP_HEADERS = new Set(["connection", "content-length", "host"]);
 
@@ -48,8 +49,8 @@ export function buildPhiNextProxyHeaders(
     headers.set(PHIS_SITE_KEY_HEADER, runtimeConfig.site.key);
   }
 
-  if (runtimeConfig.phis.internalToken && options?.internalToken !== false) {
-    headers.set("authorization", `Bearer ${runtimeConfig.phis.internalToken}`);
+  if (readPhiServerApiCredentials().internalToken && options?.internalToken !== false) {
+    headers.set("authorization", `Bearer ${readPhiServerApiCredentials().internalToken}`);
   } else if (options?.internalToken === false) {
     // Whatever the caller sent under this name is theirs, not a claim about this Site, and Core reads
     // it as one. A hook is unauthenticated by construction and stays that way through here.

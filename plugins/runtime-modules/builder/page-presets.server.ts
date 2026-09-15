@@ -35,6 +35,7 @@ import {
   buildPhiBuilderAreaLandingSelection,
   buildPhiBuilderRuntimeModulesConfigForArea,
 } from "./area-shell-presets.server";
+import { readPhiServerApiCredentials } from "../../../helpers/phis-server-credentials";
 
 export type PhiBuilderPageDraftsByScope = Partial<
   Record<PhiDeveloperBuilderArea, Partial<Record<string, PhiDeveloperBuilderRegionDraft | null>>>
@@ -329,8 +330,8 @@ export const buildPhiBuilderPagesDraftsByScope = cache(async function buildPhiBu
       runtime,
       runtime.site.key,
       runtime.locale.current,
-      runtime.phis.apiBaseUrl,
-      runtime.phis.internalToken,
+      readPhiServerApiCredentials().apiBaseUrl,
+      readPhiServerApiCredentials().internalToken,
       area,
       pageKey,
       runtimeModuleCatalog,
@@ -387,8 +388,8 @@ export const buildPhiBuilderCurrentPageDrafts = cache(async function buildPhiBui
     runtime,
     runtime.site.key,
     runtime.locale.current,
-    runtime.phis.apiBaseUrl,
-    runtime.phis.internalToken,
+    readPhiServerApiCredentials().apiBaseUrl,
+    readPhiServerApiCredentials().internalToken,
     area,
     pageKey,
     runtimeModuleCatalog,
@@ -417,8 +418,8 @@ async function buildPageMetaForScope(
   const cookieHeader = (await cookies()).toString();
   const storagePath = presetBinding?.descriptor.path ??
     await resolvePhiBuilderSitePageStoragePath({
-      apiBaseUrl: runtime.phis.apiBaseUrl,
-      internalToken: runtime.phis.internalToken,
+      apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
+      internalToken: readPhiServerApiCredentials().internalToken,
       siteKey: runtime.site.key,
       locale: runtime.locale.current,
       cookieHeader,
@@ -433,8 +434,8 @@ async function buildPageMetaForScope(
       }
     : null;
   const draftPage = await getCurrentCmsPageDraft({
-    apiBaseUrl: runtime.phis.apiBaseUrl,
-    internalToken: runtime.phis.internalToken,
+    apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
+    internalToken: readPhiServerApiCredentials().internalToken,
     siteKey: runtime.site.key,
     area,
     path: storagePath,
@@ -462,8 +463,8 @@ async function buildPageMetaForScope(
   }
 
   const resolvedPage = await getResolvedCmsPage({
-    apiBaseUrl: runtime.phis.apiBaseUrl,
-    internalToken: runtime.phis.internalToken,
+    apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
+    internalToken: readPhiServerApiCredentials().internalToken,
     siteKey: runtime.site.key,
     path: fetchPath,
     locale: runtime.locale.current,

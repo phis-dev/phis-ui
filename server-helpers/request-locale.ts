@@ -9,13 +9,14 @@ import {
 } from "../helpers/site-locale-config";
 import { maybeGetPhiRequestRuntime } from "./request-runtime";
 import { fetchResolvedSiteLocale, type FetchSiteLocaleConfigOptions } from "./site-locale";
+import { readPhiServerApiCredentials } from "../helpers/phis-server-credentials";
 
 function resolveLocaleConfigOptions(options: FetchSiteLocaleConfigOptions) {
   const runtime = maybeGetPhiRequestRuntime();
 
   return {
-    apiBaseUrl: options.apiBaseUrl ?? runtime?.phis.apiBaseUrl,
-    internalToken: options.internalToken ?? runtime?.phis.internalToken,
+    apiBaseUrl: options.apiBaseUrl ?? readPhiServerApiCredentials().apiBaseUrl,
+    internalToken: options.internalToken ?? readPhiServerApiCredentials().internalToken,
     siteKey: options.siteKey ?? runtime?.site.key,
   };
 }

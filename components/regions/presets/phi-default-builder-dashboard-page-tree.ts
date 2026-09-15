@@ -8,6 +8,7 @@ import type { PhiCmsPageNode, PhiResolvedCmsPageTree } from "../../../types/cms"
 import type { PhiBlockRuntime } from "../../../types";
 import { buildPhiBasePageContentScaffold, PHI_BASE_PAGE_LAYOUT_NODE_ID } from "./phi-base-page-layout";
 import { getPhiBuilderChromeWidgetLabels } from "../../widgets/label-sets/builder-chrome";
+import { readPhiServerApiCredentials } from "../../../helpers/phis-server-credentials";
 
 const SYNTHETIC_BUILDER_DASHBOARD_REGION_IDS = {
   regionHeaderBottom: -580,
@@ -38,8 +39,8 @@ export async function buildPhiDefaultBuilderDashboardPageTree({
   runtime: PhiBlockRuntime;
 }): Promise<PhiResolvedCmsPageTree> {
   const labels = await getPhiBuilderChromeWidgetLabels({
-    apiBaseUrl: runtime.phis.apiBaseUrl,
-    internalToken: runtime.phis.internalToken,
+    apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
+    internalToken: readPhiServerApiCredentials().internalToken,
     locale: runtime.locale.current,
   });
   const pageTitleSource = "Dashboard";

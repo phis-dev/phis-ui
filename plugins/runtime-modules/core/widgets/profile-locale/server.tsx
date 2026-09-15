@@ -2,9 +2,10 @@ import type { PhiBlockRuntime } from "../../../../../types";
 import { getPhiProfileLocaleWidgetLabels } from "../../../../../components/widgets/label-sets/profile";
 import { PhiCmsWidgetType } from "../../../../../constants/cms-widget-types";
 import { PhiRuntimeModuleRenderClientHost } from "../../../../../components/runtime/runtime-module-render-client-manifest";
+import { readPhiServerApiCredentials } from "../../../../../helpers/phis-server-credentials";
 
 export type PhiProfileLocaleWidgetProps = {
-  runtime: Pick<PhiBlockRuntime, "site" | "locale" | "viewer" | "area" | "phis">;
+  runtime: Pick<PhiBlockRuntime, "site" | "locale" | "viewer" | "area">;
   config?: {
     padding?: number | string;
   };
@@ -16,8 +17,8 @@ export async function PhiProfileLocaleWidget({ runtime, config }: PhiProfileLoca
   }
 
   const labels = await getPhiProfileLocaleWidgetLabels({
-    apiBaseUrl: runtime.phis.apiBaseUrl,
-    internalToken: runtime.phis.internalToken,
+    apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
+    internalToken: readPhiServerApiCredentials().internalToken,
     locale: runtime.locale.current,
   });
 

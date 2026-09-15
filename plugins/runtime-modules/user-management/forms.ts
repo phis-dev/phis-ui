@@ -15,6 +15,7 @@ import {
 } from "../../../components/forms/form-provider-contract";
 import { definePhiRuntimeModuleForm } from "../../../components/forms/form-registry";
 import { createPhiUserManagementControllerAddress } from "./controller/address";
+import { readPhiServerApiCredentials } from "../../../helpers/phis-server-credentials";
 
 export const PHI_USER_MANAGEMENT_FORM_IDS = {
   create: createPhiFormId(PHI_SHARED_PACKAGE_NAME, "user-management/create"),
@@ -156,8 +157,8 @@ async function loadLabels(
 ) {
   const { getPhiAdminUsersTableWidgetLabels } = await import("../../../components/widgets/label-sets/admin-users");
   const labels = await getPhiAdminUsersTableWidgetLabels({
-    apiBaseUrl: context.runtime.phis.apiBaseUrl,
-    internalToken: context.runtime.phis.internalToken,
+    apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
+    internalToken: readPhiServerApiCredentials().internalToken,
     locale: context.runtime.locale.current,
   });
   return flattenPhiFormLabels({

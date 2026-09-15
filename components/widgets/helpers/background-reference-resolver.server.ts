@@ -18,7 +18,7 @@ export { applyPhiBackgroundAssetProjection } from "../../media/background-asset-
  * different fetch.
  */
 export async function resolvePhiBackgroundAssetProjection(input: {
-  runtime: Pick<PhiBlockRuntime, "site" | "phis">;
+  runtime: Pick<PhiBlockRuntime, "site">;
   trees: readonly (PhiResolvedCmsRenderableTree | null | undefined)[];
 }): Promise<ReadonlyMap<number, PhiImageDeliveryProjection>> {
   const assetIds = collectPhiBackgroundAssetIds(input.trees);

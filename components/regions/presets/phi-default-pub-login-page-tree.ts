@@ -26,7 +26,6 @@ export async function buildPhiDefaultPubLoginPageTree({
   page: PhiCmsPageNode;
   presetKey: string;
   runtime: {
-    phis: { apiBaseUrl: string; internalToken: string };
     locale: { current: string };
   };
 }): Promise<PhiResolvedCmsPageTree> {

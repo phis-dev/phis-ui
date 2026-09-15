@@ -4,6 +4,7 @@ import { readPhiSiteRuntimeConfigSync } from "../helpers/site-runtime";
 import { assertPhiRuntimeModuleCatalog } from "../plugins/runtime-modules/contracts";
 import { loadPhiResolvedCmsRequest } from "../server-helpers/cms-request";
 import type { PhiCmsSiteBridge } from "../types/cms-plugins";
+import { readPhiServerApiCredentials } from "../helpers/phis-server-credentials";
 
 export function createPhiNextCmsSiteBridge({
   runtimeModuleCatalog,
@@ -13,8 +14,8 @@ export function createPhiNextCmsSiteBridge({
   const readRuntime = () => {
     const runtimeConfig = readPhiSiteRuntimeConfigSync();
     return {
-      apiBaseUrl: runtimeConfig.phis.apiBaseUrl,
-      internalToken: runtimeConfig.phis.internalToken,
+      apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
+      internalToken: readPhiServerApiCredentials().internalToken,
       siteKey: runtimeConfig.site.key,
     };
   };

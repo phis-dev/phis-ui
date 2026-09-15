@@ -10,6 +10,7 @@ import {
 import { maybeGetPhiRequestRuntime } from "./request-runtime";
 import { resolvePhiRequestLocale } from "./request-locale";
 import { fetchSiteLocaleConfig, type FetchSiteLocaleConfigOptions } from "./site-locale";
+import { readPhiServerApiCredentials } from "../helpers/phis-server-credentials";
 
 export type PhiResolvedRootRoute = {
   rootKind: "locale" | "area";
@@ -51,8 +52,8 @@ export async function resolveCmsRootRoute(
 ): Promise<PhiResolvedRootRoute> {
   const requestRuntime = maybeGetPhiRequestRuntime();
   const runtimeOptions = {
-    apiBaseUrl: runtime.apiBaseUrl ?? requestRuntime?.phis.apiBaseUrl,
-    internalToken: runtime.internalToken ?? requestRuntime?.phis.internalToken,
+    apiBaseUrl: runtime.apiBaseUrl ?? readPhiServerApiCredentials().apiBaseUrl,
+    internalToken: runtime.internalToken ?? readPhiServerApiCredentials().internalToken,
     siteKey: runtime.siteKey ?? requestRuntime?.site.key,
   };
   const normalizedRoot = root.trim().toLowerCase();

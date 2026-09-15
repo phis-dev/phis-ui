@@ -33,6 +33,7 @@ import {
   PHI_BUILDER_AREA_SEARCH_PARAM,
   normalizePhiBuilderAreaSearchParam,
 } from "../../../helpers/cms-scope-search-params";
+import { readPhiServerApiCredentials } from "../../../helpers/phis-server-credentials";
 
 async function instantiateAreaShellPresetTree(
   runtime: PhiBlockRuntime,
@@ -244,8 +245,8 @@ const buildPhiBuilderAreaPresetConfig = cache(async function buildPhiBuilderArea
   const sourcePreset = resolveAreaPresetSource(area, runtimeModuleCatalog);
   const cookieHeader = (await cookies()).toString();
   const request = {
-    apiBaseUrl: runtime.phis.apiBaseUrl,
-    internalToken: runtime.phis.internalToken,
+    apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
+    internalToken: readPhiServerApiCredentials().internalToken,
     siteKey: runtime.site.key,
     path,
     locale: runtime.locale.current,
@@ -318,8 +319,8 @@ export const buildPhiBuilderCurrentStructureShellDrafts = cache(async function b
       runtime,
       runtime.site.key,
       runtime.locale.current,
-      runtime.phis.apiBaseUrl,
-      runtime.phis.internalToken,
+      readPhiServerApiCredentials().apiBaseUrl,
+      readPhiServerApiCredentials().internalToken,
       area,
       runtimeModuleCatalog,
     ),
@@ -335,8 +336,8 @@ export const buildPhiBuilderStructureShellDraftsForArea = cache(async function b
     runtime,
     runtime.site.key,
     runtime.locale.current,
-    runtime.phis.apiBaseUrl,
-    runtime.phis.internalToken,
+    readPhiServerApiCredentials().apiBaseUrl,
+    readPhiServerApiCredentials().internalToken,
     area,
     runtimeModuleCatalog,
   );
@@ -354,8 +355,8 @@ export async function buildPhiBuilderStructureShellDraftsByArea(
         runtime,
         runtime.site.key,
         runtime.locale.current,
-        runtime.phis.apiBaseUrl,
-        runtime.phis.internalToken,
+        readPhiServerApiCredentials().apiBaseUrl,
+        readPhiServerApiCredentials().internalToken,
         area,
         runtimeModuleCatalog,
       ),
@@ -438,8 +439,8 @@ export function buildPhiBuilderRuntimeModulesConfigForArea(
     runtime,
     runtime.site.key,
     runtime.locale.current,
-    runtime.phis.apiBaseUrl,
-    runtime.phis.internalToken,
+    readPhiServerApiCredentials().apiBaseUrl,
+    readPhiServerApiCredentials().internalToken,
     area,
     runtimeModuleCatalog,
   );

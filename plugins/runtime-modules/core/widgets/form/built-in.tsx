@@ -13,7 +13,7 @@ import type { PhiCmsFormWidgetConfig } from "./config";
 export type PhiFormWidgetConfig = Record<string, unknown>;
 
 export type PhiFormWidgetProps = {
-  runtime: Pick<PhiBlockRuntime, "site" | "locale" | "phis"> &
+  runtime: Pick<PhiBlockRuntime, "site" | "locale"> &
     Partial<Pick<PhiBlockRuntime, "area">>;
   registry: Pick<PhiCmsRuntimeRenderRegistry, "formDefinitionsById" | "uiProvidersByModuleId">;
   formId: PhiFormId;

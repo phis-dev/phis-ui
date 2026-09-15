@@ -5,7 +5,7 @@ import { PhiCmsWidgetType } from "../../../../../constants/cms-widget-types";
 import { PhiRuntimeModuleRenderClientHost } from "../../../../../components/runtime/runtime-module-render-client-manifest";
 
 export type PhiCollectionViewWidgetServerProps = {
-  runtime: Pick<PhiBlockRuntime, "phis" | "locale">;
+  runtime: Pick<PhiBlockRuntime, "locale">;
   config?: PhiCmsCollectionViewWidgetConfig | null;
   widgetId?: PhiCmsInstanceId | null;
   preview?: boolean;

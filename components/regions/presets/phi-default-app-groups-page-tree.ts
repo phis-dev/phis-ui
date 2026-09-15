@@ -13,6 +13,7 @@ import { getPhiGroupFormLabels } from "../../../plugins/runtime-modules/groups/l
 import { canPhiViewerManageSomeGroup } from "../../../plugins/runtime-modules/groups/page-visibility";
 import { canPhiViewerAccess, PHI_VIEWER_ACCESS_DEVELOPER_TOOLS } from "../../../types/access";
 import { PHI_GROUPS_FORM_IDS } from "../../../plugins/runtime-modules/groups/forms";
+import { readPhiServerApiCredentials } from "../../../helpers/phis-server-credentials";
 
 const SYNTHETIC_APP_GROUPS_REGION_IDS = {
   regionContent: -452,
@@ -34,8 +35,8 @@ export async function buildPhiDefaultAppGroupsPageTree({
   runtime: PhiBlockRuntime;
 }): Promise<PhiResolvedCmsPageTree> {
   const labels = await getPhiGroupFormLabels({
-    apiBaseUrl: runtime.phis.apiBaseUrl,
-    internalToken: runtime.phis.internalToken,
+    apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
+    internalToken: readPhiServerApiCredentials().internalToken,
     locale: runtime.locale.current,
   });
   const controllerAddress = createPhiGroupsControllerAddress();

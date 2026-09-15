@@ -8,6 +8,7 @@ import {
   PHI_TR_CTX_WEB_UI_LABEL,
   createGlobalTranslator,
 } from "../../gateway/tr";
+import { readPhiServerApiCredentials } from "../../helpers/phis-server-credentials";
 
 type PhiLocalizedRuntimeModuleLabels = ReadonlyMap<string, Readonly<{ title: string; description: string }>>;
 
@@ -29,7 +30,7 @@ function buildModuleLabelCacheKey(
 }
 
 export async function localizePhiRuntimeModuleDefinitions(
-  runtime: Pick<PhiBlockRuntime, "locale" | "phis">,
+  runtime: Pick<PhiBlockRuntime, "locale">,
   definitions: readonly PhiRuntimeModuleDefinition[],
 ) {
   const cacheKey = buildModuleLabelCacheKey(runtime.locale.current, definitions);
@@ -52,8 +53,8 @@ export async function localizePhiRuntimeModuleDefinitions(
   const localizedLabelsByModuleId = new Map<string, { title: string; description: string }>();
   await Promise.all([...definitionsBySourceLocale].map(async ([sourceLocale, sourceDefinitions]) => {
     const translator = createGlobalTranslator({
-      apiBaseUrl: runtime.phis.apiBaseUrl,
-      internalToken: runtime.phis.internalToken,
+      apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
+      internalToken: readPhiServerApiCredentials().internalToken,
       locale: runtime.locale.current,
       sourceLocale,
     });

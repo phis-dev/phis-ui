@@ -9,7 +9,7 @@ export type PhiBrandWidgetProps = Pick<
   PhiBrandWidgetClientProps,
   "fallbackTitle" | "fallbackEyebrow" | "interactive"
 > & {
-  runtime: Pick<PhiBlockRuntime, "site" | "phis">;
+  runtime: Pick<PhiBlockRuntime, "site">;
   showLogo?: boolean;
   logoYOffset?: number;
 };

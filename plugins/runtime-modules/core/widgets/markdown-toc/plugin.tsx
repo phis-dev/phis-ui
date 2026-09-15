@@ -7,11 +7,12 @@ import {
 } from "./config";
 import { PhiMarkdownTocWidget } from "./server";
 import { getPhiMarkdownTocWidgetDefaultLabels } from "../../../../../components/widgets/label-sets/markdown-toc";
+import { readPhiServerApiCredentials } from "../../../../../helpers/phis-server-credentials";
 
 async function loadDefaultLabels(runtime: Parameters<NonNullable<PhiCmsServerWidgetPlugin<PhiCmsMarkdownTocWidgetConfig>["render"]>>[0]["runtime"]) {
   return getPhiMarkdownTocWidgetDefaultLabels({
-    apiBaseUrl: runtime.phis.apiBaseUrl,
-    internalToken: runtime.phis.internalToken,
+    apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
+    internalToken: readPhiServerApiCredentials().internalToken,
     locale: runtime.locale.current,
   });
 }

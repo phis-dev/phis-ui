@@ -3,9 +3,10 @@ import type { PhiObservabilityLogDetailWidgetConfig } from "./config";
 import { getPhiObservabilityLogsWidgetLabels } from "../../../../../components/widgets/label-sets/observability-logs";
 import { PhiRuntimeRenderClientType } from "../../../../../constants/runtime-render-client-types";
 import { PhiRuntimeModuleRenderClientHost } from "../../../../../components/runtime/runtime-module-render-client-manifest";
+import { readPhiServerApiCredentials } from "../../../../../helpers/phis-server-credentials";
 
 export type PhiObservabilityLogDetailWidgetProps = {
-  runtime: Pick<PhiBlockRuntime, "locale" | "phis">;
+  runtime: Pick<PhiBlockRuntime, "locale">;
   config: PhiObservabilityLogDetailWidgetConfig;
 };
 
@@ -14,8 +15,8 @@ export async function PhiObservabilityLogDetailWidget({
   config,
 }: PhiObservabilityLogDetailWidgetProps) {
   const labels = await getPhiObservabilityLogsWidgetLabels({
-    apiBaseUrl: runtime.phis.apiBaseUrl,
-    internalToken: runtime.phis.internalToken,
+    apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
+    internalToken: readPhiServerApiCredentials().internalToken,
     locale: runtime.locale.current,
   });
 

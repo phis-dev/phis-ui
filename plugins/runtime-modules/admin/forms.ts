@@ -12,6 +12,7 @@ import {
   createPhiSharedFormProviderKey,
 } from "../../../components/forms/form-provider-contract";
 import { definePhiRuntimeModuleForm } from "../../../components/forms/form-registry";
+import { readPhiServerApiCredentials } from "../../../helpers/phis-server-credentials";
 
 export const PHI_ADMIN_SETTINGS_FORM_IDS = {
   general: createPhiFormId(PHI_SHARED_PACKAGE_NAME, "admin/settings-general"),
@@ -85,8 +86,8 @@ async function loadLabels(
 ) {
   const { getPhiAdminSettingsWidgetLabels } = await import("../../../components/widgets/label-sets/admin-settings");
   const labels = await getPhiAdminSettingsWidgetLabels({
-    apiBaseUrl: context.runtime.phis.apiBaseUrl,
-    internalToken: context.runtime.phis.internalToken,
+    apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
+    internalToken: readPhiServerApiCredentials().internalToken,
     locale: context.runtime.locale.current,
   });
   return flattenPhiFormLabels({

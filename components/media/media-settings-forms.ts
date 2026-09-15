@@ -11,6 +11,7 @@ import {
   createPhiSharedFormProviderKey,
 } from "../forms/form-provider-contract";
 import { definePhiRuntimeModuleForm } from "../forms/form-registry";
+import { readPhiServerApiCredentials } from "../../helpers/phis-server-credentials";
 
 export const PHI_MEDIA_SETTINGS_FORM_IDS = {
   general: createPhiFormId(PHI_SHARED_PACKAGE_NAME, "asset/media-settings"),
@@ -87,8 +88,8 @@ async function loadLabels(
 ) {
   const { getPhiMediaSettingsPageLabels } = await import("./media-settings-labels");
   const labels = await getPhiMediaSettingsPageLabels({
-    apiBaseUrl: context.runtime.phis.apiBaseUrl,
-    internalToken: context.runtime.phis.internalToken,
+    apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
+    internalToken: readPhiServerApiCredentials().internalToken,
     locale: context.runtime.locale.current,
   });
   return flattenPhiFormLabels({

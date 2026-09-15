@@ -24,6 +24,7 @@ import { PHI_BUILDER_SIGNAL_WIRING_FORM_ID } from "../../../plugins/runtime-modu
 import { getPhiInspectorWidgetLabels } from "../../widgets/label-sets/inspector";
 import { getPhiSignalsWidgetLabels } from "../../widgets/label-sets/signals";
 import type { PhiInspectorWidgetLabels } from "../../widgets/label-types/inspector";
+import { readPhiServerApiCredentials } from "../../../helpers/phis-server-credentials";
 
 const PHI_BUILDER_INSPECTOR_SECTIONS = {
   region: [
@@ -81,8 +82,8 @@ export async function buildPhiBuilderInspectorAreaOverlayTree({
   runtime: PhiBlockRuntime;
 }): Promise<PhiResolvedCmsPageTree> {
   const labelOptions = {
-    apiBaseUrl: runtime.phis.apiBaseUrl,
-    internalToken: runtime.phis.internalToken,
+    apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
+    internalToken: readPhiServerApiCredentials().internalToken,
     locale: runtime.locale.current,
   };
   const [inspectorLabels, signalsLabels] = await Promise.all([

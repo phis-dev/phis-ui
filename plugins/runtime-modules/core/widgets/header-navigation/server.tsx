@@ -8,7 +8,7 @@ export type PhiHeaderNavigationWidgetProps = Pick<
   PhiHeaderNavigationWidgetClientProps,
   "menuTheme" | "height" | "align" | "interactive"
 > & {
-  runtime: Pick<PhiBlockRuntime, "site" | "locale" | "area" | "phis" | "viewer" | "request">;
+  runtime: Pick<PhiBlockRuntime, "site" | "locale" | "area" | "viewer" | "request">;
   navKey?: string;
 };
 

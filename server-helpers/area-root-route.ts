@@ -13,6 +13,7 @@ import type {
   PhiRuntimeModuleId,
 } from "../types/cms-module-descriptors";
 import { readPhiPageReference, type PhiPageReference } from "../types/references";
+import { readPhiServerApiCredentials } from "../helpers/phis-server-credentials";
 
 /**
  * One Page reference, as the Area-relative path it names.
@@ -49,8 +50,8 @@ export async function resolvePhiAreaPageReferencePath({
   }
 
   const projection = await resolveSiteInternalReferences({
-    apiBaseUrl: runtime.phis.apiBaseUrl,
-    internalToken: runtime.phis.internalToken,
+    apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
+    internalToken: readPhiServerApiCredentials().internalToken,
     siteKey: runtime.site.key,
     area,
     references: [reference],

@@ -14,6 +14,7 @@ import { resolvePhiDescriptorNavigationItems } from "../../../../../components/w
 
 export type { PhiAccountWidgetConfig } from "./client";
 import { getPhiAccountMenuLabels } from "../../../../../components/widgets/label-sets/account";
+import { readPhiServerApiCredentials } from "../../../../../helpers/phis-server-credentials";
 
 export type PhiAccountWidgetGuestState = {
   kind: "guest";
@@ -35,7 +36,7 @@ export type PhiAccountWidgetProps = Pick<
   PhiAccountWidgetClientProps,
   "avatarSrc" | "avatarAlt" | "successAction" | "state" | "config"
 > & {
-  runtime: Pick<PhiBlockRuntime, "site" | "locale" | "viewer" | "area" | "phis" | "authUiProvider">;
+  runtime: Pick<PhiBlockRuntime, "site" | "locale" | "viewer" | "area" | "authUiProvider">;
 };
 
 async function resolveProfileHref(runtime: PhiAccountWidgetProps["runtime"]) {
@@ -45,8 +46,8 @@ async function resolveProfileHref(runtime: PhiAccountWidgetProps["runtime"]) {
 
   const page = await getPhiCmsPage({
     path: "/app/profile",
-    apiBaseUrl: runtime.phis.apiBaseUrl,
-    internalToken: runtime.phis.internalToken,
+    apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
+    internalToken: readPhiServerApiCredentials().internalToken,
     siteKey: runtime.site.key,
     locale: runtime.locale.current,
   }).catch(() => null);

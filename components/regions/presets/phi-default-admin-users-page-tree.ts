@@ -18,6 +18,7 @@ import {
   PHI_USER_MANAGEMENT_PAGE_OVERLAY_IDS,
   PHI_USER_MANAGEMENT_PAGE_WIDGET_IDS,
 } from "../../../plugins/runtime-modules/user-management/addresses";
+import { readPhiServerApiCredentials } from "../../../helpers/phis-server-credentials";
 
 const SYNTHETIC_ADMIN_USERS_REGION_IDS = {
   regionContent: -431,
@@ -31,8 +32,8 @@ export async function buildPhiDefaultAdminUsersPageTree({
   runtime: PhiBlockRuntime;
 }): Promise<PhiResolvedCmsPageTree> {
   const labelOptions = {
-    apiBaseUrl: runtime.phis.apiBaseUrl,
-    internalToken: runtime.phis.internalToken,
+    apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
+    internalToken: readPhiServerApiCredentials().internalToken,
     locale: runtime.locale.current,
   };
   const [labels, widgetLabels] = await Promise.all([

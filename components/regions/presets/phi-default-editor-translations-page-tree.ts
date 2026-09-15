@@ -24,6 +24,7 @@ import { PHI_LOCALIZATION_RUNTIME_DATA_PROVIDER_KEYS } from "../../../plugins/ru
 import { PHI_LOCALIZATION_FORM_IDS } from "../../../plugins/runtime-modules/localization/forms";
 import { PHI_SIGNAL_VALUE_SCHEMAS } from "../../../types/signals";
 import { createPhiLocalizationControllerAddress } from "../../../plugins/runtime-modules/localization/controller/address";
+import { readPhiServerApiCredentials } from "../../../helpers/phis-server-credentials";
 
 const SYNTHETIC_EDITOR_TRANSLATIONS_REGION_IDS = { regionContent: -561 } as const;
 export async function buildPhiDefaultEditorTranslationsPageTree({
@@ -34,13 +35,13 @@ export async function buildPhiDefaultEditorTranslationsPageTree({
   runtime: PhiBlockRuntime;
 }): Promise<PhiResolvedCmsPageTree> {
   const labels = await getPhiEditorTranslationsPageLabels({
-    apiBaseUrl: runtime.phis.apiBaseUrl,
-    internalToken: runtime.phis.internalToken,
+    apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
+    internalToken: readPhiServerApiCredentials().internalToken,
     locale: runtime.locale.current,
   });
   const widgetLabels = await getPhiEditorTranslationsWidgetLabels({
-    apiBaseUrl: runtime.phis.apiBaseUrl,
-    internalToken: runtime.phis.internalToken,
+    apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
+    internalToken: readPhiServerApiCredentials().internalToken,
     locale: runtime.locale.current,
   });
 

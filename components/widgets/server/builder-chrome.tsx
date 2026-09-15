@@ -2,16 +2,17 @@ import type { PhiBlockRuntime } from "../../../types";
 import { getPhiBuilderChromeWidgetLabels } from "../label-sets/builder-chrome";
 import { PhiRuntimeRenderClientType } from "../../../constants/runtime-render-client-types";
 import { PhiRuntimeModuleRenderClientHost } from "../../runtime/runtime-module-render-client-manifest";
+import { readPhiServerApiCredentials } from "../../../helpers/phis-server-credentials";
 
 export type PhiBuilderChromeWidgetProps = {
-  runtime: Pick<PhiBlockRuntime, "locale" | "phis">;
+  runtime: Pick<PhiBlockRuntime, "locale">;
   disabled?: boolean;
 };
 
 async function getLabels(runtime: PhiBuilderChromeWidgetProps["runtime"]) {
   return getPhiBuilderChromeWidgetLabels({
-    apiBaseUrl: runtime.phis.apiBaseUrl,
-    internalToken: runtime.phis.internalToken,
+    apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
+    internalToken: readPhiServerApiCredentials().internalToken,
     locale: runtime.locale.current,
   });
 }

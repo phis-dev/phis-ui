@@ -7,6 +7,7 @@ import type { PhiCmsReviewParams } from "./cms-review";
 import type { PhiResolvedCmsAreaPresetPayload, PhiResolvedCmsPagePayload } from "../types/cms";
 import { maybeGetPhiRequestRuntime } from "./request-runtime";
 import type { PhiCmsPresetIdentity } from "../types/cms-module-descriptors";
+import { readPhiServerApiCredentials } from "../helpers/phis-server-credentials";
 
 export type GetPhiCmsPageOptions = {
   path: string;
@@ -34,8 +35,8 @@ export async function getPhiCmsPage({
   const runtime = maybeGetPhiRequestRuntime();
   const resolvedRuntime = resolvePhiRuntimeConfig(
     {
-      apiBaseUrl: apiBaseUrl ?? runtime?.phis.apiBaseUrl,
-      internalToken: internalToken ?? runtime?.phis.internalToken,
+      apiBaseUrl: apiBaseUrl ?? readPhiServerApiCredentials().apiBaseUrl,
+      internalToken: internalToken ?? readPhiServerApiCredentials().internalToken,
       siteKey: siteKey ?? runtime?.site.key,
     },
     { context: "getPhiCmsPage", requireSiteKey: true },
@@ -72,8 +73,8 @@ export async function getPhiExactSiteArea({
   const runtime = maybeGetPhiRequestRuntime();
   const resolvedRuntime = resolvePhiRuntimeConfig(
     {
-      apiBaseUrl: apiBaseUrl ?? runtime?.phis.apiBaseUrl,
-      internalToken: internalToken ?? runtime?.phis.internalToken,
+      apiBaseUrl: apiBaseUrl ?? readPhiServerApiCredentials().apiBaseUrl,
+      internalToken: internalToken ?? readPhiServerApiCredentials().internalToken,
       siteKey: siteKey ?? runtime?.site.key,
     },
     { context: "getPhiExactSiteArea", requireSiteKey: true },

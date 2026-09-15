@@ -14,6 +14,7 @@ import { PHI_LAYOUT } from "../../../theme/phi-tokens";
 import { PHI_SPACE } from "../../../theme/antd-css-var-contract";
 import { getPhiEditorAreaLabels } from "./editor-label-set";
 import { createPhiDefaultAreaRuntimeModuleIds } from "../../../plugins/runtime-modules/builder/runtime-module-defaults";
+import { readPhiServerApiCredentials } from "../../../helpers/phis-server-credentials";
 
 const SYNTHETIC_EDITOR_REGION_IDS = {
   regionHeaderTop: -140,
@@ -51,8 +52,8 @@ export async function buildPhiDefaultEditorAreaPresetTree({
   runtime: PhiBlockRuntime;
 }): Promise<PhiResolvedCmsPageTree> {
   const labels = await getPhiEditorAreaLabels({
-    apiBaseUrl: runtime.phis.apiBaseUrl,
-    internalToken: runtime.phis.internalToken,
+    apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
+    internalToken: readPhiServerApiCredentials().internalToken,
     locale: runtime.locale.current,
   });
   const shellSiderLeftOffsetTop = resolvePhiShellMetric(runtime.site.theme?.shell, "offsetTop", {

@@ -50,7 +50,7 @@ export async function resolvePhiHtmlReferences(input: {
   html: string;
   sourceMode: "inline" | "url";
   sourceUrl?: string | null;
-  runtime: Pick<PhiBlockRuntime, "site" | "locale" | "area" | "phis" | "viewer">;
+  runtime: Pick<PhiBlockRuntime, "site" | "locale" | "area" | "viewer">;
 }) {
   const document = parseDocument(input.html) as unknown as HtmlNode;
   if (input.sourceMode === "url") {

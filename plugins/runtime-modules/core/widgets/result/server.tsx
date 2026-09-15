@@ -3,6 +3,7 @@ import type { PhiBlockRuntime } from "../../../../../types";
 import { PHI_RESULT_HOME_LINK_SOURCE_LABEL, type PhiCmsResultWidgetConfig } from "./config";
 import { localizeAreaPath } from "../../../../../helpers/locale";
 import { PhiResultWidgetBody } from "../../../../../components/widgets/shared/result-body";
+import { readPhiServerApiCredentials } from "../../../../../helpers/phis-server-credentials";
 
 export type PhiResultWidgetProps = {
   config?: PhiCmsResultWidgetConfig;
@@ -24,8 +25,8 @@ async function resolveResultText({
     config?.translate !== false &&
     config?.renderMode !== "preview" &&
     config?.renderMode !== "editor" &&
-    Boolean(runtime.phis.apiBaseUrl.trim()) &&
-    Boolean(runtime.phis.internalToken.trim()) &&
+    Boolean(readPhiServerApiCredentials().apiBaseUrl.trim()) &&
+    Boolean(readPhiServerApiCredentials().internalToken.trim()) &&
     Boolean(runtime.site.key.trim()) &&
     Boolean(runtime.locale.current.trim());
 
@@ -34,8 +35,8 @@ async function resolveResultText({
   }
 
   const translator = createSiteTranslator({
-    apiBaseUrl: runtime.phis.apiBaseUrl,
-    internalToken: runtime.phis.internalToken,
+    apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
+    internalToken: readPhiServerApiCredentials().internalToken,
     siteKey: runtime.site.key,
     locale: runtime.locale.current,
   });

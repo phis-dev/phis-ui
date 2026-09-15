@@ -77,7 +77,7 @@ function mapResolvedNavigationItem(
 }
 
 export async function resolvePhiDescriptorNavigationItems(
-  runtime: Pick<PhiBlockRuntime, "site" | "locale" | "area" | "phis" | "viewer">,
+  runtime: Pick<PhiBlockRuntime, "site" | "locale" | "area" | "viewer">,
   navKey: string,
   overlay: PhiCmsNavigationOverlay | null = null,
 ): Promise<PhiNavItem[] | null> {

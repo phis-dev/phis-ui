@@ -4,25 +4,26 @@ import { resolvePhiRuntimeConfig, type PhiRuntimeConfigInput } from "../helpers/
 import type { PhiBlockRuntime } from "../types";
 import { getPhiRequestRuntime } from "./request-runtime";
 import { fetchSiteLocaleConfig, type FetchSiteLocaleConfigOptions } from "./site-locale";
+import { readPhiServerApiCredentials } from "../helpers/phis-server-credentials";
 
 type PhiRuntimeSource =
   | PhiRuntimeConfigInput
-  | Pick<PhiBlockRuntime, "phis">
-  | Pick<PhiBlockRuntime, "phis" | "locale">
-  | Pick<PhiBlockRuntime, "phis" | "site">
-  | Pick<PhiBlockRuntime, "phis" | "locale" | "site">;
+  | Pick<PhiBlockRuntime, "locale">
+  | Pick<PhiBlockRuntime, "site">
+  | Pick<PhiBlockRuntime, "locale" | "site">;
 
-function hasPhisRuntime(
+/** A Widget runtime rather than explicit credentials; its credentials come from the Site's configuration. */
+function isBlockRuntimeSource(
   value: PhiRuntimeSource,
 ): value is Exclude<PhiRuntimeSource, PhiRuntimeConfigInput> {
-  return "phis" in value;
+  return "site" in value || "locale" in value;
 }
 
 function toRuntimeOptions(source: PhiRuntimeSource): FetchSiteLocaleConfigOptions {
-  if (hasPhisRuntime(source)) {
+  if (isBlockRuntimeSource(source)) {
     return {
-      apiBaseUrl: source.phis.apiBaseUrl,
-      internalToken: source.phis.internalToken,
+      apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
+      internalToken: readPhiServerApiCredentials().internalToken,
       siteKey: "site" in source ? source.site.key : undefined,
     };
   }
@@ -35,7 +36,7 @@ function toRuntimeOptions(source: PhiRuntimeSource): FetchSiteLocaleConfigOption
 }
 
 function readLocale(source: PhiRuntimeSource) {
-  return hasPhisRuntime(source) && "locale" in source ? source.locale.current : undefined;
+  return isBlockRuntimeSource(source) && "locale" in source ? source.locale.current : undefined;
 }
 
 export function phiRuntime(

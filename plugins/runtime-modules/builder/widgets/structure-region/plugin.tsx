@@ -17,6 +17,7 @@ import {
   PHI_STRUCTURE_REGION_WIDGET_DEFINITION,
   type PhiStructureRegionWidgetConfig,
 } from "./config";
+import { readPhiServerApiCredentials } from "../../../../../helpers/phis-server-credentials";
 
 export const PHI_STRUCTURE_REGION_WIDGET_PLUGIN: PhiCmsWidgetPlugin<PhiStructureRegionWidgetConfig> = {
   ...PHI_STRUCTURE_REGION_WIDGET_DEFINITION,
@@ -39,8 +40,8 @@ export const PHI_STRUCTURE_REGION_WIDGET_PLUGIN: PhiCmsWidgetPlugin<PhiStructure
       ? await buildPhiBuilderCurrentPageDrafts(runtime, registry.runtimeModuleCatalog)
       : undefined;
     const effectsLabels = await getPhiEffectsWidgetLabels({
-      apiBaseUrl: runtime.phis.apiBaseUrl,
-      internalToken: runtime.phis.internalToken,
+      apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
+      internalToken: readPhiServerApiCredentials().internalToken,
       locale: runtime.locale.current,
     });
     const fallbackStructureDraft =

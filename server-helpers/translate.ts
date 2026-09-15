@@ -14,6 +14,7 @@ import {
 } from "../gateway/tr";
 import { getPhiRequestRuntime } from "./request-runtime";
 import { resolvePhiRequestLocale } from "./request-locale";
+import { readPhiServerApiCredentials } from "../helpers/phis-server-credentials";
 
 export { PHI_TR_CTX_WEB_UI_LABEL };
 export type { PhiTranslationParams } from "../helpers/translation-format";
@@ -21,8 +22,8 @@ export type { PhiTranslationParams } from "../helpers/translation-format";
 function buildTranslatorOptions(locale: string, sourceLocale?: string) {
   const requestRuntime = getPhiRequestRuntime();
   const resolvedRuntime = resolvePhiRuntimeConfig({
-    apiBaseUrl: requestRuntime.phis.apiBaseUrl,
-    internalToken: requestRuntime.phis.internalToken,
+    apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
+    internalToken: readPhiServerApiCredentials().internalToken,
     siteKey: requestRuntime.site.key,
   }, {
     context: "trForLocale",
@@ -39,10 +40,9 @@ function buildTranslatorOptions(locale: string, sourceLocale?: string) {
 }
 
 function buildGlobalTranslatorOptions(locale: string) {
-  const requestRuntime = getPhiRequestRuntime();
   const resolvedRuntime = resolvePhiRuntimeConfig({
-    apiBaseUrl: requestRuntime.phis.apiBaseUrl,
-    internalToken: requestRuntime.phis.internalToken,
+    apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
+    internalToken: readPhiServerApiCredentials().internalToken,
   }, {
     context: "trGlobalForLocale",
   });

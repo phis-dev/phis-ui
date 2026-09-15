@@ -9,7 +9,7 @@ import { resolvePhiNavigationItems } from "../../../../../components/widgets/ser
 import { mapPhiNavItemsToQuickLinksItems } from "../../../../../components/widgets/quick-links-items";
 
 export type PhiQuickLinksWidgetProps = {
-  runtime: Pick<PhiBlockRuntime, "site" | "locale" | "area" | "phis" | "viewer" | "request">;
+  runtime: Pick<PhiBlockRuntime, "site" | "locale" | "area" | "viewer" | "request">;
   navKey?: string;
   title?: string;
   columns?: 1 | 2 | 3;

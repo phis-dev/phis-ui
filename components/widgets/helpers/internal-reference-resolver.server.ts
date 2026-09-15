@@ -15,7 +15,7 @@ import { readPhiPageReference, type PhiPageReference } from "../../../types/refe
  * Returns `null` when the id is not a publicly deliverable Site Space Asset.
  */
 export async function resolvePhiPublicAssetReference(input: {
-  runtime: Pick<PhiBlockRuntime, "site" | "phis">;
+  runtime: Pick<PhiBlockRuntime, "site">;
   assetId: number;
 }) {
   const rt = phiRuntime(input.runtime);
@@ -29,7 +29,7 @@ export async function resolvePhiPublicAssetReference(input: {
 }
 
 export async function resolvePhiWidgetInternalReferences(input: {
-  runtime: Pick<PhiBlockRuntime, "site" | "locale" | "area" | "phis" | "viewer">;
+  runtime: Pick<PhiBlockRuntime, "site" | "locale" | "area" | "viewer">;
   pageReferences: readonly PhiPageReference[];
   assetIds: readonly number[];
 }) {

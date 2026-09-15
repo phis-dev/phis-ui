@@ -60,7 +60,7 @@ export async function getPhiColorPickerLabels(options: PhiGlobalTranslatorOption
 }
 
 export function getPhiColorPickerLabelsForRuntime(
-  runtime: Pick<PhiBlockRuntime, "phis" | "locale" | "site">,
+  runtime: Pick<PhiBlockRuntime, "locale" | "site">,
 ) {
   return getPhiColorPickerLabels(buildPhiWidgetLabelTranslatorOptions(runtime));
 }

@@ -22,7 +22,6 @@ export async function buildPhiDefaultPubResetPasswordPageTree({
 }: {
   page: PhiCmsPageNode;
   presetKey: string;
-  runtime: { phis: { apiBaseUrl: string; internalToken: string } };
 }): Promise<PhiResolvedCmsPageTree> {
   const SYNTHETIC_RESET_PASSWORD_LAYOUT_IDS = createPhiPresetCmsInstanceIdMap({
     domain: "page",

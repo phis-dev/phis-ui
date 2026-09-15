@@ -7,6 +7,7 @@ import {
 import { readPhiSiteRuntimeConfigSync } from "../helpers/site-runtime";
 import { fetchResolvedSiteLocale, fetchSiteLocaleConfig } from "../server-helpers/site-locale";
 import { PHIS_REQUEST_PATH_HEADER, PHIS_REQUEST_SEARCH_HEADER } from "../constants/http-headers";
+import { readPhiServerApiCredentials } from "../helpers/phis-server-credentials";
 
 const KNOWN_SPECIAL_ROOTS = new Set<string>(PHI_CMS_SPECIAL_ROOTS);
 const PHI_LOCALE_COOKIE = "phis_locale";
@@ -29,8 +30,8 @@ function readSiteRuntime() {
 
 async function readLocaleConfig(runtimeConfig: ReturnType<typeof readSiteRuntime>) {
   return fetchSiteLocaleConfig({
-    apiBaseUrl: runtimeConfig.phis.apiBaseUrl,
-    internalToken: runtimeConfig.phis.internalToken,
+    apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
+    internalToken: readPhiServerApiCredentials().internalToken,
     siteKey: runtimeConfig.site.key,
   });
 }
@@ -40,8 +41,8 @@ async function resolveRedirectLocale(
   runtimeConfig: ReturnType<typeof readSiteRuntime>,
 ) {
   const resolved = await fetchResolvedSiteLocale({
-    apiBaseUrl: runtimeConfig.phis.apiBaseUrl,
-    internalToken: runtimeConfig.phis.internalToken,
+    apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
+    internalToken: readPhiServerApiCredentials().internalToken,
     siteKey: runtimeConfig.site.key,
     acceptLanguage: request.headers.get("accept-language"),
     cookieHeader: request.headers.get("cookie"),

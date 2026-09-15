@@ -11,6 +11,7 @@ import { getPhiObservabilityLogsWidgetLabels } from "../../widgets/label-sets/ob
 import { PHI_OBSERVABILITY_RUNTIME_DATA_PROVIDER_KEYS } from "../../../plugins/runtime-modules/observability/ids";
 import { createPhiSignalAddress, PHI_SIGNAL_VALUE_SCHEMAS } from "../../../types/signals";
 import { PHI_COLOR, PHI_SPACE } from "../../../theme/antd-css-var-contract";
+import { readPhiServerApiCredentials } from "../../../helpers/phis-server-credentials";
 
 const SYNTHETIC_ADMIN_LOGS_REGION_IDS = {
   regionContent: -441,
@@ -49,13 +50,13 @@ export async function buildPhiDefaultAdminLogsPageTree({
   runtime: PhiBlockRuntime;
 }): Promise<PhiResolvedCmsPageTree> {
   const labels = await getPhiAdminLogsPageLabels({
-    apiBaseUrl: runtime.phis.apiBaseUrl,
-    internalToken: runtime.phis.internalToken,
+    apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
+    internalToken: readPhiServerApiCredentials().internalToken,
     locale: runtime.locale.current,
   });
   const widgetLabels = await getPhiObservabilityLogsWidgetLabels({
-    apiBaseUrl: runtime.phis.apiBaseUrl,
-    internalToken: runtime.phis.internalToken,
+    apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
+    internalToken: readPhiServerApiCredentials().internalToken,
     locale: runtime.locale.current,
   });
 

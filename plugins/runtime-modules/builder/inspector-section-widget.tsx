@@ -23,6 +23,7 @@ import {
 import { PhiRuntimeModuleAuthoringDataProviderHost } from "../../../components/runtime/runtime-module-authoring-host";
 import { PhiRuntimeModuleDataProviderClientHost } from "../../../components/runtime/runtime-module-data-provider-client-manifest";
 import { resolvePhiBuilderAuthoringPickerDataProviderKeysFromCatalog } from "./authoring-provider-keys";
+import { readPhiServerApiCredentials } from "../../../helpers/phis-server-credentials";
 
 export type PhiBuilderInspectorSectionWidgetProps = {
   runtime: PhiBlockRuntime;
@@ -77,23 +78,23 @@ export async function PhiBuilderInspectorSectionWidget({
     colorPickerLabels,
   ] = await Promise.all([
     getPhiBackgroundWidgetLabels({
-      apiBaseUrl: runtime.phis.apiBaseUrl,
-      internalToken: runtime.phis.internalToken,
+      apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
+      internalToken: readPhiServerApiCredentials().internalToken,
       locale: runtime.locale.current,
     }),
     getPhiBorderWidgetLabels({
-      apiBaseUrl: runtime.phis.apiBaseUrl,
-      internalToken: runtime.phis.internalToken,
+      apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
+      internalToken: readPhiServerApiCredentials().internalToken,
       locale: runtime.locale.current,
     }),
     getPhiGeometryWidgetLabels({
-      apiBaseUrl: runtime.phis.apiBaseUrl,
-      internalToken: runtime.phis.internalToken,
+      apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
+      internalToken: readPhiServerApiCredentials().internalToken,
       locale: runtime.locale.current,
     }),
     getPhiSignalsWidgetLabels({
-      apiBaseUrl: runtime.phis.apiBaseUrl,
-      internalToken: runtime.phis.internalToken,
+      apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
+      internalToken: readPhiServerApiCredentials().internalToken,
       locale: runtime.locale.current,
     }),
     getPhiColorPickerLabelsForRuntime(runtime),

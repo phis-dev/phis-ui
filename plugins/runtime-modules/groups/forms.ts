@@ -14,6 +14,7 @@ import {
 import { definePhiRuntimeModuleForm } from "../../../components/forms/form-registry";
 import { PHI_GROUPS_RUNTIME_DATA_PROVIDER_KEYS } from "./ids";
 import { PhiGroupMembershipFlags } from "../../../constants/site-groups";
+import { readPhiServerApiCredentials } from "../../../helpers/phis-server-credentials";
 
 export const PHI_GROUPS_FORM_IDS = {
   create: createPhiFormId(PHI_SHARED_PACKAGE_NAME, "groups/create"),
@@ -143,8 +144,8 @@ async function loadLabels(
 ) {
   const { getPhiGroupFormLabels } = await import("./labels");
   const labels = await getPhiGroupFormLabels({
-    apiBaseUrl: context.runtime.phis.apiBaseUrl,
-    internalToken: context.runtime.phis.internalToken,
+    apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
+    internalToken: readPhiServerApiCredentials().internalToken,
     locale: context.runtime.locale.current,
   });
   return flattenPhiFormLabels({

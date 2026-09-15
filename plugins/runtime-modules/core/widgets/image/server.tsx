@@ -5,17 +5,18 @@ import { PhiCmsWidgetType } from "../../../../../constants/cms-widget-types";
 import { PhiRuntimeModuleRenderClientHost } from "../../../../../components/runtime/runtime-module-render-client-manifest";
 import { getPhiImageWidgetLabels } from "../../../../../components/widgets/label-sets/image";
 import type { PhiImageWidgetLabels } from "../../../../../components/widgets/label-types/image";
+import { readPhiServerApiCredentials } from "../../../../../helpers/phis-server-credentials";
 
 export type PhiImageWidgetServerProps = {
-  runtime: Pick<PhiBlockRuntime, "phis" | "locale" | "site">;
+  runtime: Pick<PhiBlockRuntime, "locale" | "site">;
   widget?: PhiCmsContentWidgetNode | null;
   config?: PhiCmsImageWidgetConfig | null;
 };
 
-async function resolveImageWidgetLabels(runtime: Pick<PhiBlockRuntime, "phis" | "locale">): Promise<PhiImageWidgetLabels> {
+async function resolveImageWidgetLabels(runtime: Pick<PhiBlockRuntime, "locale">): Promise<PhiImageWidgetLabels> {
   return getPhiImageWidgetLabels({
-    apiBaseUrl: runtime.phis.apiBaseUrl,
-    internalToken: runtime.phis.internalToken,
+    apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
+    internalToken: readPhiServerApiCredentials().internalToken,
     locale: runtime.locale.current,
   });
 }

@@ -1,5 +1,8 @@
 import assert from "node:assert/strict";
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { readFile } from "node:fs/promises";
+import os from "node:os";
+import path from "node:path";
 
 import { PhiBaseRole } from "../constants/phi-base-roles";
 import { PHI_FIRST_PARTY_RUNTIME_MODULE_CATALOG } from "../plugins/runtime-modules/catalog";
@@ -235,6 +238,24 @@ type ReferenceRequestBody = { area?: string; references: string[]; assets: numbe
 const referenceRequests: ReferenceRequestBody[] = [];
 const originalFetch = globalThis.fetch;
 
+/*
+ * The resolver takes the Site's phis-server credentials from config/site-runtime.json in the working
+ * directory, as a Site does. This script runs in the package, which has no such file, so it stands one up
+ * for as long as it runs. The fetch stub below never contacts the address.
+ */
+const packageRoot = process.cwd();
+const credentialsRoot = mkdtempSync(path.join(os.tmpdir(), "phis-reference-contracts-"));
+mkdirSync(path.join(credentialsRoot, "config"));
+writeFileSync(path.join(credentialsRoot, "config", "site-runtime.json"), JSON.stringify({
+  site: { key: "reference-contracts" },
+  phis: { apiBaseUrl: "http://phi.test", internalToken: "internal" },
+}));
+process.chdir(credentialsRoot);
+process.on("exit", () => {
+  process.chdir(packageRoot);
+  rmSync(credentialsRoot, { recursive: true, force: true });
+});
+
 function installReferenceProjection(projection: {
   resolved?: readonly unknown[];
   assets?: readonly unknown[];
@@ -261,13 +282,12 @@ function referenceRuntime(area: PhiCmsAreaKey, roleFlags: number, locale = "de")
     site: { key: "reference-contracts" },
     locale: { current: locale },
     area,
-    phis: { apiBaseUrl: "http://phi.test", internalToken: "internal" },
     viewer: viewerWithRoles(roleFlags),
-  } as unknown as Pick<PhiBlockRuntime, "site" | "locale" | "area" | "phis" | "viewer">;
+  } as unknown as Pick<PhiBlockRuntime, "site" | "locale" | "area" | "viewer">;
 }
 
 function withRequestScope<T>(
-  runtime: Pick<PhiBlockRuntime, "site" | "locale" | "area" | "phis" | "viewer">,
+  runtime: Pick<PhiBlockRuntime, "site" | "locale" | "area" | "viewer">,
   activeModuleIds: ReadonlySet<PhiRuntimeModuleId>,
   work: () => Promise<T>,
 ) {

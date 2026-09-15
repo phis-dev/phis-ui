@@ -166,8 +166,8 @@ export const PHI_PUBLIC_FORM_RUNTIME_MODULE_ROUTES = [
         },
       },
     ],
-    loadTree: ({ page, runtime }) =>
+    loadTree: ({ page }) =>
       import("../../components/regions/presets/phi-default-pub-contact-page-tree")
-        .then((module) => module.buildPhiDefaultPubContactPageTree({ page, runtime })),
+        .then((module) => module.buildPhiDefaultPubContactPageTree({ page })),
   },
 ] satisfies readonly PhiCmsRoutePresetDescriptor[];

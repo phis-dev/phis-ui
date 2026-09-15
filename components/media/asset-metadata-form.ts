@@ -12,6 +12,7 @@ import {
 import { definePhiRuntimeModuleForm } from "../forms/form-registry";
 import { flattenPhiFormLabels } from "../forms/form-labels";
 import { PHI_ASSET_FOCAL_RECT_FORM_PROVIDER_KEY } from "./asset-form-field-providers";
+import { readPhiServerApiCredentials } from "../../helpers/phis-server-credentials";
 
 export const PHI_ASSET_METADATA_FORM_ID = createPhiFormId(PHI_SHARED_PACKAGE_NAME, "asset/metadata");
 export const PHI_ASSET_FOLDER_FORM_ID = createPhiFormId(PHI_SHARED_PACKAGE_NAME, "asset/folder-create");
@@ -123,8 +124,8 @@ export const PHI_ASSET_FOLDER_FORM_DESCRIPTOR = {
 async function loadAssetFormLabels(context: Parameters<NonNullable<ReturnType<typeof definePhiRuntimeModuleForm>["loadLabels"]>>[0]) {
   const { getPhiMediaWidgetLabels } = await import("./label-sets/media");
   const labels = await getPhiMediaWidgetLabels({
-    apiBaseUrl: context.runtime.phis.apiBaseUrl,
-    internalToken: context.runtime.phis.internalToken,
+    apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
+    internalToken: readPhiServerApiCredentials().internalToken,
     locale: context.runtime.locale.current,
   });
   return flattenPhiFormLabels({

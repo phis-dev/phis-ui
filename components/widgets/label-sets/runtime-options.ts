@@ -1,12 +1,13 @@
 import type { PhiBlockRuntime } from "../../../types";
 import type { PhiGlobalTranslatorOptions } from "../../../gateway/tr";
+import { readPhiServerApiCredentials } from "../../../helpers/phis-server-credentials";
 
 export function buildPhiWidgetLabelTranslatorOptions(
-  runtime: Pick<PhiBlockRuntime, "phis" | "locale" | "site">,
+  runtime: Pick<PhiBlockRuntime, "locale" | "site">,
 ): PhiGlobalTranslatorOptions {
   return {
-    apiBaseUrl: runtime.phis.apiBaseUrl,
-    internalToken: runtime.phis.internalToken,
+    apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
+    internalToken: readPhiServerApiCredentials().internalToken,
     locale: runtime.locale.current,
   };
 }

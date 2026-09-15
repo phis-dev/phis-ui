@@ -64,6 +64,7 @@ import {
   readPhiAreaPresetRuntimeModuleIds,
   readPhiAreaPublicRoutePaths,
 } from "../helpers/cms-area-config";
+import { readPhiServerApiCredentials } from "../helpers/phis-server-credentials";
 
 type LoadPhiResolvedCmsPage = (
   path: string,
@@ -373,8 +374,8 @@ export async function resolvePhiCmsRequest({
    */
   const folderTargetReference = !loadedPage && areaAllowed && areaOwnedStoragePath && areaOwnedStoragePath !== "/"
     ? await fetchSiteNavigationFolderTarget({
-        apiBaseUrl: runtimeWithAuthProvider.phis.apiBaseUrl,
-        internalToken: runtimeWithAuthProvider.phis.internalToken,
+        apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
+        internalToken: readPhiServerApiCredentials().internalToken,
         siteKey: runtimeWithAuthProvider.site.key,
         area: requestedAreaKey,
         path: areaOwnedStoragePath,

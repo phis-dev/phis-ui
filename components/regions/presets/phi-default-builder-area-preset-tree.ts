@@ -90,6 +90,7 @@ import {
 import { PHI_ASSET_FOLDER_FORM_ID, PHI_ASSET_METADATA_FORM_ID } from "../../media/asset-metadata-form";
 import { createPhiAssetControllerAddress } from "../../media/asset-controller-address";
 import { createPhiRuntimeFormControllerAddress } from "../../forms/runtime-form-controller-address";
+import { readPhiServerApiCredentials } from "../../../helpers/phis-server-credentials";
 
 const SYNTHETIC_DEV_REGION_IDS = {
   regionHeaderTop: -509,
@@ -353,8 +354,8 @@ export async function buildPhiDefaultBuilderAreaPresetTree({
   runtime: PhiBlockRuntime;
 }): Promise<PhiResolvedCmsPageTree> {
   const labelOptions = {
-    apiBaseUrl: runtime.phis.apiBaseUrl,
-    internalToken: runtime.phis.internalToken,
+    apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
+    internalToken: readPhiServerApiCredentials().internalToken,
     locale: runtime.locale.current,
   };
   const labels = await getPhiBuilderChromeWidgetLabels(labelOptions);
@@ -814,8 +815,8 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
   presetKey: string;
 }): Promise<PhiResolvedCmsPageTree> {
   const labels = await getPhiBuilderChromeWidgetLabels({
-    apiBaseUrl: runtime.phis.apiBaseUrl,
-    internalToken: runtime.phis.internalToken,
+    apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
+    internalToken: readPhiServerApiCredentials().internalToken,
     locale: runtime.locale.current,
   });
   /*
@@ -833,13 +834,13 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
   const isMediaPage = presetKey === "builder-media-page";
   const isThemePage = presetKey === "builder-theme-page";
   const revisionsLabels = isRevisionsPage ? await getPhiBuilderRevisionsWidgetLabels({
-    apiBaseUrl: runtime.phis.apiBaseUrl,
-    internalToken: runtime.phis.internalToken,
+    apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
+    internalToken: readPhiServerApiCredentials().internalToken,
     locale: runtime.locale.current,
   }) : null;
   const modulesLabels = isModulesPage ? await getPhiBuilderModulesPageLabels({
-    apiBaseUrl: runtime.phis.apiBaseUrl,
-    internalToken: runtime.phis.internalToken,
+    apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
+    internalToken: readPhiServerApiCredentials().internalToken,
     locale: runtime.locale.current,
   }) : null;
   const modulesDetailLabels = modulesLabels ? {
@@ -854,13 +855,13 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
     no: modulesLabels.detail.no,
   } : null;
   const navigationLabels = isNavigationPage ? await getPhiBuilderNavigationPageLabels({
-    apiBaseUrl: runtime.phis.apiBaseUrl,
-    internalToken: runtime.phis.internalToken,
+    apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
+    internalToken: readPhiServerApiCredentials().internalToken,
     locale: runtime.locale.current,
   }) : null;
   const mediaLabels = isMediaPage ? await getPhiMediaWidgetLabels({
-    apiBaseUrl: runtime.phis.apiBaseUrl,
-    internalToken: runtime.phis.internalToken,
+    apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
+    internalToken: readPhiServerApiCredentials().internalToken,
     locale: runtime.locale.current,
   }) : null;
   const builderCommandToolbarConfig = buildBuilderCommandToolbarConfig(

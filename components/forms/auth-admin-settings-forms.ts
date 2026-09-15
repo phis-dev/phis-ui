@@ -9,6 +9,7 @@ import {
   PHI_FORM_VALIDATION_PROVIDER_KEYS,
 } from "./form-provider-contract";
 import { definePhiRuntimeModuleForm } from "./form-registry";
+import { readPhiServerApiCredentials } from "../../helpers/phis-server-credentials";
 
 export const PHI_AUTH_ADMIN_SETTINGS_FORM_IDS = {
   policy: createPhiFormId(PHI_SHARED_PACKAGE_NAME, "auth/admin-policy"),
@@ -250,8 +251,8 @@ async function loadLabels(
 ) {
   const { getPhiAuthAdminSettingsLabels } = await import("./auth-admin-settings-labels");
   const labels = await getPhiAuthAdminSettingsLabels({
-    apiBaseUrl: context.runtime.phis.apiBaseUrl,
-    internalToken: context.runtime.phis.internalToken,
+    apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
+    internalToken: readPhiServerApiCredentials().internalToken,
     locale: context.runtime.locale.current,
   });
   return flattenPhiFormLabels({

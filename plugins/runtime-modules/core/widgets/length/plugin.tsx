@@ -7,6 +7,7 @@ import {
   type PhiLengthWidgetConfig,
 } from "./config";
 import { getPhiLengthWidgetLabels } from "../../../../../components/widgets/label-sets/length";
+import { readPhiServerApiCredentials } from "../../../../../helpers/phis-server-credentials";
 
 async function renderLengthWidget(
   config: PhiLengthWidgetConfig,
@@ -14,8 +15,8 @@ async function renderLengthWidget(
   signalsEnabled: boolean,
 ) {
   const labels = await getPhiLengthWidgetLabels({
-    apiBaseUrl: runtime.phis.apiBaseUrl,
-    internalToken: runtime.phis.internalToken,
+    apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
+    internalToken: readPhiServerApiCredentials().internalToken,
     locale: runtime.locale.current,
   });
 

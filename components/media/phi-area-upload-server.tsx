@@ -3,9 +3,10 @@ import type { PhiCmsAreaUploadWidgetConfig } from "../../plugins/runtime-modules
 import { getPhiMediaWidgetLabels } from "./label-sets/media";
 import { PhiCmsWidgetType } from "../../constants/cms-widget-types";
 import { PhiRuntimeModuleRenderClientHost } from "../runtime/runtime-module-render-client-manifest";
+import { readPhiServerApiCredentials } from "../../helpers/phis-server-credentials";
 
 export type PhiAreaUploadWidgetServerProps = {
-  runtime: Pick<PhiBlockRuntime, "phis" | "locale">;
+  runtime: Pick<PhiBlockRuntime, "locale">;
   config?: PhiCmsAreaUploadWidgetConfig | null;
 };
 
@@ -14,8 +15,8 @@ export async function PhiAreaUploadWidgetServer({
   config,
 }: PhiAreaUploadWidgetServerProps) {
   const labels = await getPhiMediaWidgetLabels({
-    apiBaseUrl: runtime.phis.apiBaseUrl,
-    internalToken: runtime.phis.internalToken,
+    apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
+    internalToken: readPhiServerApiCredentials().internalToken,
     locale: runtime.locale.current,
   });
 

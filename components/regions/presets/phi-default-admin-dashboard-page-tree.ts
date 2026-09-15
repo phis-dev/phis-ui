@@ -13,6 +13,7 @@ import type { PhiCmsPageNode, PhiResolvedCmsPageTree } from "../../../types/cms"
 import type { PhiBlockRuntime } from "../../../types";
 import { buildPhiBasePageContentScaffold, PHI_BASE_PAGE_LAYOUT_NODE_ID } from "./phi-base-page-layout";
 import { getPhiAdminDashboardPageLabels } from "./admin-dashboard-label-set";
+import { readPhiServerApiCredentials } from "../../../helpers/phis-server-credentials";
 
 const SYNTHETIC_ADMIN_DASHBOARD_REGION_IDS = {
   regionContent: -410,
@@ -81,13 +82,13 @@ export async function buildPhiDefaultAdminDashboardPageTree({
   const currentLocale = runtime.locale.current;
   const availableLocaleCodes = formatLocaleCodes(availableLocales);
   const labels = await getPhiAdminDashboardPageLabels({
-    apiBaseUrl: runtime.phis.apiBaseUrl,
-    internalToken: runtime.phis.internalToken,
+    apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
+    internalToken: readPhiServerApiCredentials().internalToken,
     locale: runtime.locale.current,
   });
   const userCount = (await getResolvedSiteStats({
-    apiBaseUrl: runtime.phis.apiBaseUrl,
-    internalToken: runtime.phis.internalToken,
+    apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
+    internalToken: readPhiServerApiCredentials().internalToken,
     siteKey: runtime.site.key,
   })).userCount;
   const availableLocaleCount = availableLocales.length;

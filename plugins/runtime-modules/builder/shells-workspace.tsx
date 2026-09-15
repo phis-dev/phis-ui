@@ -26,6 +26,7 @@ import {
 } from "../../../helpers/cms-scope-search-params";
 import { getPhiBuilderChromeWidgetLabels } from "../../../components/widgets/label-sets/builder-chrome";
 import { getPhiRegionWidgetLabels } from "../../../components/widgets/label-sets/region";
+import { readPhiServerApiCredentials } from "../../../helpers/phis-server-credentials";
 
 export async function PhiDeveloperBuilderShellsWorkspaceWidget({
   runtime,
@@ -50,13 +51,13 @@ export async function PhiDeveloperBuilderShellsWorkspaceWidget({
     buildPhiBuilderStructureShellDraftsForArea(runtime, targetArea, registry.runtimeModuleCatalog),
     buildPhiBuilderRuntimeModuleIdsForArea(runtime, targetArea, registry.runtimeModuleCatalog),
     getPhiBuilderChromeWidgetLabels({
-      apiBaseUrl: runtime.phis.apiBaseUrl,
-      internalToken: runtime.phis.internalToken,
+      apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
+      internalToken: readPhiServerApiCredentials().internalToken,
       locale: runtime.locale.current,
     }),
     getPhiRegionWidgetLabels({
-      apiBaseUrl: runtime.phis.apiBaseUrl,
-      internalToken: runtime.phis.internalToken,
+      apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
+      internalToken: readPhiServerApiCredentials().internalToken,
       locale: runtime.locale.current,
     }),
   ]);

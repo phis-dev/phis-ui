@@ -6,7 +6,7 @@ import { PhiRuntimeModuleRenderClientHost } from "../runtime/runtime-module-rend
 export function PhiAssetFocalRectWidgetServer({
   config,
 }: {
-  runtime: Pick<PhiBlockRuntime, "phis" | "locale" | "site">;
+  runtime: Pick<PhiBlockRuntime, "locale" | "site">;
   config?: PhiCmsAssetFocalRectWidgetConfig | null;
 }) {
   return (

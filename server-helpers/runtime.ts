@@ -19,6 +19,7 @@ import {
   resolvePhiThemeMode,
 } from "../theme/phi-theme-mode";
 import type { PhiCapabilitySnapshot } from "../types/server-capabilities";
+import { readPhiServerApiCredentials } from "../helpers/phis-server-credentials";
 
 type PhiWidgetSiteTheme = NonNullable<PhiBlockRuntime["site"]["theme"]>;
 
@@ -58,10 +59,6 @@ export type GetPhiCmsRuntimeInfoOptions = {
 
 export type PhiCmsRuntimeInfo = {
   site: PhiResolvedWidgetRuntimeSite;
-  phis: {
-    apiBaseUrl: string;
-    internalToken: string;
-  };
   viewer: PhiViewerState;
 };
 
@@ -224,10 +221,6 @@ export type PhiSiteRequestContext = {
       };
     };
   };
-  phis: {
-    apiBaseUrl: string;
-    internalToken: string;
-  };
   locale: {
     current: string;
   };
@@ -251,7 +244,6 @@ export function buildPhiBlockRuntime({
 }): PhiBlockRuntime {
   return {
     site: requestContext.site,
-    phis: requestContext.phis,
     locale: requestContext.locale,
     area: resolvePhiWidgetAreaKey(areaMask),
     viewer: requestContext.viewer,
@@ -330,10 +322,6 @@ export async function getPhiCmsRuntimeInfo({
   if (response.status === 401) {
     return {
       site: resolvedSite,
-      phis: {
-        apiBaseUrl: resolvedRuntime.apiBaseUrl,
-        internalToken: resolvedRuntime.internalToken,
-      },
       viewer: {
         access: "public",
         resolvedArea: "public",
@@ -386,10 +374,6 @@ export async function getPhiCmsRuntimeInfo({
   if (!payload.authenticated) {
     return {
       site: resolvedSite,
-      phis: {
-        apiBaseUrl: resolvedRuntime.apiBaseUrl,
-        internalToken: resolvedRuntime.internalToken,
-      },
       viewer: {
         access: "public",
         resolvedArea: "public",
@@ -405,10 +389,6 @@ export async function getPhiCmsRuntimeInfo({
 
   return {
     site: resolvedSite,
-    phis: {
-      apiBaseUrl: resolvedRuntime.apiBaseUrl,
-      internalToken: resolvedRuntime.internalToken,
-    },
       viewer: {
         access: "authenticated",
         resolvedArea: payload.area ?? "app",
@@ -476,8 +456,8 @@ export const loadPhiSiteRequestContext = cache(async function loadPhiSiteRequest
   let serverCapabilities: PhiCapabilitySnapshot | null = null;
   try {
     serverCapabilities = await getPhiCapabilitySnapshot({
-      apiBaseUrl: runtimeInfo.phis.apiBaseUrl,
-      internalToken: runtimeInfo.phis.internalToken,
+      apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
+      internalToken: readPhiServerApiCredentials().internalToken,
       siteKey: runtimeInfo.site.key,
     });
   } catch (error) {
@@ -487,7 +467,6 @@ export const loadPhiSiteRequestContext = cache(async function loadPhiSiteRequest
   return {
     serverCapabilities,
     site: runtimeInfo.site,
-    phis: runtimeInfo.phis,
     locale: {
       current: locale,
     },

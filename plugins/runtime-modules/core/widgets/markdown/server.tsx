@@ -144,7 +144,7 @@ function projectExternalMarkdownNodes(nodes: MarkdownNode[] | undefined, sourceU
 
 async function projectInternalMarkdownNodes(
   tree: MarkdownNode,
-  runtime: Pick<PhiBlockRuntime, "site" | "locale" | "area" | "phis" | "viewer">,
+  runtime: Pick<PhiBlockRuntime, "site" | "locale" | "area" | "viewer">,
 ) {
   const pageReferences: PhiPageReference[] = [];
   const assetIds: number[] = [];
@@ -574,7 +574,7 @@ export async function resolveMarkdownSource(
 
 export async function resolveMarkdownRenderData(
   config: PhiCmsMarkdownWidgetConfig | undefined,
-  runtime?: Pick<PhiBlockRuntime, "site" | "locale" | "area" | "phis" | "viewer">,
+  runtime?: Pick<PhiBlockRuntime, "site" | "locale" | "area" | "viewer">,
 ): Promise<MarkdownRenderData | { error: string }> {
   const resolvedSource = await resolveMarkdownSource(config);
 
@@ -614,7 +614,7 @@ async function resolveMarkdownRenderDataFromSource(
   sourceLocale?: string,
   sourceMode: "inline" | "url" = "inline",
   sourceUrl: string | null = null,
-  runtime?: Pick<PhiBlockRuntime, "site" | "locale" | "area" | "phis" | "viewer">,
+  runtime?: Pick<PhiBlockRuntime, "site" | "locale" | "area" | "viewer">,
 ): Promise<MarkdownRenderData> {
   const tree = parseMarkdown(markdown);
   if (sourceMode === "url" && sourceUrl) {
