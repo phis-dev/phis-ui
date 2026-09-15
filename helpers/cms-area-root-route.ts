@@ -1,9 +1,9 @@
 import type { PhiCmsAreaKey } from "../constants/cms-areas";
-import { PhiCmsPageType } from "../constants/phi-cms";
+import { PhiCmsPageType, PhiCmsStatus } from "../constants/phi-cms";
 import { resolvePhiCmsRoutePresetByIdentity } from "../plugins/runtime-modules/descriptor-compiler";
 import type { PhiBlockRuntime } from "../types";
 import { canPhiViewerAccess } from "../types/access";
-import type { PhiResolvedCmsPageTree } from "../types/cms";
+import type { PhiResolvedCmsPagePayload, PhiResolvedCmsPageTree } from "../types/cms";
 import type {
   PhiCmsCompiledDescriptorCatalog,
   PhiRuntimeModuleId,
@@ -69,6 +69,60 @@ export function resolvePhiAreaModulePageReferencePath({
  * changes is only what the page does: `forward` replaces the body with a redirect, and `page` strips
  * one, because a Builder who chose a landing page chose that the root does not forward.
  */
+/**
+ * The answer to a folder address (phis-server TODOS.md, "Folder addresses"): a path no Page answers, whose
+ * Navigation container leads to a Page. There is no Page to take bookkeeping from, so this is a bare
+ * Redirect page -- no regions, no content -- that the Layout answers with a 307 before the shell flushes,
+ * as it does a forwarding Area root. Its access is `anyone` because the Area's own access was checked
+ * before the address was looked up, and the target Page checks its own when it is requested.
+ */
+export function buildPhiFolderAddressRedirectPage({
+  siteId,
+  areaMask,
+  area,
+  path,
+  targetPath,
+}: {
+  siteId: number;
+  areaMask: number;
+  area: PhiCmsAreaKey;
+  path: string;
+  targetPath: string;
+}): PhiResolvedCmsPagePayload {
+  return {
+    areaMask,
+    path,
+    sourcePreset: null,
+    page: {
+      page: {
+        id: 0,
+        siteId,
+        areaMask,
+        path,
+        pageType: PhiCmsPageType.Redirect,
+        status: PhiCmsStatus.Published,
+        flags: 0,
+        visibilityMask: areaMask,
+        accessPolicy: { access: "anyone" },
+        titleMsgId: null,
+        descriptionMsgId: null,
+        heroRootLayoutNodeId: null,
+        headerBottomRootLayoutNodeId: null,
+        siderRightRootLayoutNodeId: null,
+        footerTopRootLayoutNodeId: null,
+        drawerRightRootLayoutNodeId: null,
+        contentRootLayoutNodeId: null,
+        layoutConfig: { redirect: { target: { area, path: targetPath }, status: 307 } },
+      },
+      pageMeta: null,
+      regions: [],
+      overlays: [],
+      layoutNodes: [],
+      contentWidgets: [],
+    },
+  };
+}
+
 export function applyPhiAreaRootRouteDecision<
   TPayload extends { page: PhiResolvedCmsPageTree },
 >(

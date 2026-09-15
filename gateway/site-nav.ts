@@ -22,6 +22,47 @@ export type PhiSiteNavigationScope = {
   hasWorkingDraftRevision: boolean;
 };
 
+/**
+ * Where a folder address of an Area leads on the live Site, as a Page reference, or null when it leads
+ * nowhere. Asked only for a path no Page answers, and never cached: a publish must reach every Site
+ * process at once, and a cache tag would reach only the one that saw it.
+ */
+export async function fetchSiteNavigationFolderTarget({
+  apiBaseUrl,
+  internalToken,
+  siteKey,
+  area,
+  path,
+}: Pick<FetchSiteNavOptions, "apiBaseUrl" | "internalToken" | "siteKey"> & {
+  area: string;
+  path: string;
+}): Promise<string | null> {
+  const url = new URL(buildApiUrl(apiBaseUrl, "/api/v1/site/nav/folder"));
+  url.searchParams.set("area", area);
+  url.searchParams.set("path", path);
+  const response = await fetch(url, {
+    headers: buildApiHeaders({
+      token: internalToken,
+      siteKey,
+      includeToken: true,
+      includeSiteKey: true,
+      extra: {
+        Accept: "application/json",
+        "User-Agent": "phis-ui/1.0",
+      },
+    }),
+    cache: "no-store",
+  });
+  if (response.status === 404) {
+    return null;
+  }
+  if (!response.ok) {
+    throw new Error(`Failed to resolve folder address (${response.status}).`);
+  }
+  const payload = (await response.json()) as { reference?: unknown };
+  return typeof payload.reference === "string" ? payload.reference : null;
+}
+
 export async function fetchSiteNavigationScopes({
   apiBaseUrl,
   internalToken,

@@ -40,8 +40,10 @@ import {
 import type { PhiCapabilitySnapshot } from "../types/server-capabilities";
 import { getPhiCmsPage, getPhiExactSiteArea } from "./cms";
 import { buildPhiLocalCmsAreaPayload } from "./cms-area";
-import { resolvePhiAreaRootRouteDecision } from "./area-root-route";
-import { applyPhiAreaRootRouteDecision } from "../helpers/cms-area-root-route";
+import { resolvePhiAreaPageReferencePath, resolvePhiAreaRootRouteDecision } from "./area-root-route";
+import { fetchSiteNavigationFolderTarget } from "../gateway/site-nav";
+import type { PhiPageReference } from "../types/references";
+import { applyPhiAreaRootRouteDecision, buildPhiFolderAddressRedirectPage } from "../helpers/cms-area-root-route";
 import {
   resolvePhiCmsReviewParams,
   resolvePhiCmsRevisionFromSearchParams,
@@ -364,9 +366,41 @@ export async function resolvePhiCmsRequest({
         activeModuleIds: activeModuleKeys,
       })
     : null;
+  /*
+   * A folder address, asked only where no Page answers: a path such as `/docs` that is no Page may still be
+   * a folder whose Navigation container leads to one. The server follows the published Navigations to a
+   * Page reference, and the reference is resolved here, where Module routes are known.
+   */
+  const folderTargetReference = !loadedPage && areaAllowed && areaOwnedStoragePath && areaOwnedStoragePath !== "/"
+    ? await fetchSiteNavigationFolderTarget({
+        apiBaseUrl: runtimeWithAuthProvider.phis.apiBaseUrl,
+        internalToken: runtimeWithAuthProvider.phis.internalToken,
+        siteKey: runtimeWithAuthProvider.site.key,
+        area: requestedAreaKey,
+        path: areaOwnedStoragePath,
+      })
+    : null;
+  const folderTargetPath = folderTargetReference
+    ? await resolvePhiAreaPageReferencePath({
+        runtime: runtimeWithAuthProvider,
+        reference: folderTargetReference as PhiPageReference,
+        area: requestedAreaKey,
+        catalog,
+        activeModuleIds: activeModuleKeys,
+      })
+    : null;
+  const folderRedirectPage = folderTargetPath && folderTargetPath !== areaOwnedStoragePath
+    ? buildPhiFolderAddressRedirectPage({
+        siteId,
+        areaMask,
+        area: requestedAreaKey,
+        path,
+        targetPath: folderTargetPath,
+      })
+    : null;
   const resolvedPage = loadedPage && rootRouteDecision
     ? applyPhiAreaRootRouteDecision(loadedPage, rootRouteDecision, requestedAreaKey)
-    : loadedPage;
+    : loadedPage ?? folderRedirectPage;
 
   const accessiblePage =
     resolvedPage &&
