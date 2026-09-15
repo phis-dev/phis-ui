@@ -39,7 +39,7 @@ export const PHI_AUTH_RUNTIME_MODULE_WIDGETS = [
   defineFirstPartyWidget({
     definition: PHI_AUTH_WORKFLOW_WIDGET_DEFINITION,
     ownerModuleId: PHI_AUTH_RUNTIME_MODULE_ID,
-    renderPolicies: { runtime: "custom", preview: "custom", authoring: "usePreview" },
+    renderPolicies: { runtime: "custom", preview: "custom", authoring: "custom" },
     loadRuntime: () => import("./widgets/auth-workflow/plugin")
       .then((module) => module.PHI_AUTH_WORKFLOW_WIDGET_PLUGIN),
     loadPreview: () => import("./widgets/auth-workflow/plugin")
@@ -48,7 +48,7 @@ export const PHI_AUTH_RUNTIME_MODULE_WIDGETS = [
   defineFirstPartyWidget({
     definition: PHI_AUTH_METHODS_WIDGET_DEFINITION,
     ownerModuleId: PHI_AUTH_RUNTIME_MODULE_ID,
-    renderPolicies: { runtime: "custom", preview: "custom", authoring: "usePreview" },
+    renderPolicies: { runtime: "custom", preview: "custom", authoring: "custom" },
     loadRuntime: () => import("./widgets/auth-methods/plugin")
       .then((module) => module.PHI_AUTH_METHODS_WIDGET_PLUGIN),
     loadPreview: () => import("./widgets/auth-methods/plugin")

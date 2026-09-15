@@ -278,7 +278,7 @@ export const PHI_RUNTIME_MODULE_WIDGETS: readonly PhiRuntimeModuleWidgetDefiniti
   defineFirstPartyWidget({
     definition: PHI_FORM_PREVIEW_WIDGET_DEFINITION,
     ownerModuleId: PHI_CORE_RUNTIME_MODULE_ID,
-    renderPolicies: { runtime: "custom", preview: "custom", authoring: "usePreview" },
+    renderPolicies: { runtime: "custom", preview: "custom", authoring: "custom" },
     loadRuntime: () => import("./widgets/form-preview/plugin").then((module) => module.PHI_FORM_PREVIEW_WIDGET_PLUGIN),
     loadPreview: () => import("./widgets/form-preview/plugin").then((module) => module.PHI_FORM_PREVIEW_WIDGET_PLUGIN),
   }),
