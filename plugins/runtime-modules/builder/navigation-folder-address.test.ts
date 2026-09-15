@@ -5,6 +5,7 @@ import type { PhiCmsInstanceId } from "../../../types/cms-instance-id";
 import type { PhiRuntimeModuleId } from "../../../types/cms-plugins";
 import { createPhiPageReference, type PhiPageReference } from "../../../types/references";
 import {
+  applyPhiBuilderNavigationFolderTargets,
   findPhiBuilderNavigationFolderChoice,
   listPhiBuilderNavigationFolderChoices,
   refreshPhiBuilderNavigationFolderAddresses,
@@ -123,8 +124,42 @@ describe("refreshPhiBuilderNavigationFolderAddresses", () => {
     expect(refreshed?.folder).toEqual({ address: "/manual", target });
   });
 
+  it("gives a container that has an address a folder without a target, so a carried target can find it", () => {
+    const [refreshed] = refreshPhiBuilderNavigationFolderAddresses([container("docs", [link("a", "/docs/a")])], resolveLinkPath);
+    expect(refreshed?.folder).toEqual({ address: "/docs", target: null });
+  });
+
+  it("drops a folder that has neither an address nor a target any more", () => {
+    const [refreshed] = refreshPhiBuilderNavigationFolderAddresses(
+      [container("mixed", [link("a", "/docs/a"), link("b", "/about/b")], { address: "/docs", target: null })],
+      resolveLinkPath,
+    );
+    expect(refreshed?.folder).toBeNull();
+  });
+
   it("returns the same objects when nothing changed", () => {
     const items = [container("docs", [link("a", "/docs/a")], { address: "/docs", target: { kind: "page", reference: sitePage(1) } })];
     expect(refreshPhiBuilderNavigationFolderAddresses(items, resolveLinkPath)[0]).toBe(items[0]);
+  });
+});
+
+describe("applyPhiBuilderNavigationFolderTargets", () => {
+  it("sets the target on every container standing for the folder, and leaves other folders alone", () => {
+    const target = { kind: "folder" as const, address: "/docs/guides" };
+    const items = [
+      container("header-docs", [], { address: "/docs", target: null }),
+      container("group", [container("nested-docs", [], { address: "/docs", target: null })]),
+      container("manual", [], { address: "/manual", target: null }),
+    ];
+    const applied = applyPhiBuilderNavigationFolderTargets(items, [{ address: "/docs", target }]);
+    expect(applied[0]?.folder).toEqual({ address: "/docs", target });
+    expect(applied[1]?.children[0]?.folder).toEqual({ address: "/docs", target });
+    expect(applied[2]).toBe(items[2]);
+  });
+
+  it("returns the same objects when every container already leads there", () => {
+    const target = { kind: "page" as const, reference: sitePage(2) };
+    const items = [container("docs", [], { address: "/docs", target })];
+    expect(applyPhiBuilderNavigationFolderTargets(items, [{ address: "/docs", target }])).toBe(items);
   });
 });

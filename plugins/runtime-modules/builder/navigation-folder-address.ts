@@ -97,14 +97,16 @@ export function findPhiBuilderNavigationFolderChoice(
   container: PhiBuilderNavigationItem,
   resolveLinkPath: PhiBuilderNavigationLinkPathResolver,
 ): PhiBuilderNavigationFolderChoice | null {
-  if (!container.folder) return null;
+  if (!container.folder?.target) return null;
   const value = encodePhiBuilderNavigationFolderTarget(container.folder.target);
   return listPhiBuilderNavigationFolderChoices(container, resolveLinkPath).find((choice) => choice.value === value) ?? null;
 }
 
 /**
- * Brings every container's stored folder address in line with its children as they are now. The choice
- * is left alone: a choice that is no longer a direct child reads as no target when it is looked up.
+ * Brings every container's stored folder address in line with its children as they are now. A container
+ * that has an address keeps it even without a target, so a target chosen for the same folder in another
+ * Navigation finds it; one with neither carries no folder. The target is left alone: a target no child
+ * stands for any more reads as 404.
  */
 export function refreshPhiBuilderNavigationFolderAddresses<TItems extends readonly PhiBuilderNavigationItem[]>(
   items: TItems,
@@ -113,16 +115,45 @@ export function refreshPhiBuilderNavigationFolderAddresses<TItems extends readon
   let changed = false;
   const refreshed = items.map((item) => {
     const children = refreshPhiBuilderNavigationFolderAddresses(item.children, resolveLinkPath);
-    const next = children === item.children ? item : { ...item, children };
-    const address = item.kind === "container" && item.folder
-      ? resolvePhiBuilderNavigationFolderAddress(next, resolveLinkPath)
-      : undefined;
-    const result = address === undefined || address === item.folder?.address
-      ? next
-      : { ...next, folder: { ...item.folder!, address } };
-    if (result !== item) changed = true;
-    return result;
+    let next = children === item.children ? item : { ...item, children };
+    if (item.kind === "container") {
+      const address = resolvePhiBuilderNavigationFolderAddress(next, resolveLinkPath);
+      const target = item.folder?.target ?? null;
+      if (address == null && target == null) {
+        if (item.folder) next = { ...next, folder: null };
+      } else if (address !== (item.folder?.address ?? null) || !item.folder) {
+        next = { ...next, folder: { address, target } };
+      }
+    }
+    if (next !== item) changed = true;
+    return next;
   });
   // Unchanged trees keep their identity, so a store that compares by reference sees no edit.
   return (changed ? refreshed : items) as TItems;
+}
+
+/**
+ * Sets the given targets on every container whose folder address they name: the same folder holds one
+ * target, within one Navigation as across Navigations.
+ */
+export function applyPhiBuilderNavigationFolderTargets<TItems extends readonly PhiBuilderNavigationItem[]>(
+  items: TItems,
+  folders: readonly { address: string; target: PhiCmsNavigationFolderTarget | null }[],
+): TItems {
+  const targets = new Map(folders.map((folder) => [folder.address, folder.target] as const));
+  let changed = false;
+  const applied = items.map((item) => {
+    const children = applyPhiBuilderNavigationFolderTargets(item.children, folders);
+    let next = children === item.children ? item : { ...item, children };
+    const address = item.folder?.address;
+    if (item.kind === "container" && address && targets.has(address)) {
+      const target = targets.get(address) ?? null;
+      const same = (item.folder?.target ? encodePhiBuilderNavigationFolderTarget(item.folder.target) : "") ===
+        (target ? encodePhiBuilderNavigationFolderTarget(target) : "");
+      if (!same) next = { ...next, folder: { address, target } };
+    }
+    if (next !== item) changed = true;
+    return next;
+  });
+  return (changed ? applied : items) as TItems;
 }

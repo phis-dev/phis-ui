@@ -36,6 +36,7 @@ import { buildPhiBuilderLiveHref,
 import {
   clearPhiBuilderNavigationDraft,
   getPhiBuilderNavigationDraftSnapshot,
+  updatePhiBuilderNavigationDraft,
   restorePhiBuilderNavigationDraft,
   setPhiBuilderNavigationDraft,
 } from "./navigation-store";
@@ -45,6 +46,7 @@ import {
   loadPhiBuilderNavigationScope,
   publishPhiBuilderNavigationDraft,
   savePhiBuilderNavigationDraft,
+  type PhiBuilderNavigationFolderCarry,
 } from "./navigation-persistence";
 import {
   builderWorkspaceStore,
@@ -73,7 +75,10 @@ import { usePhiBuilderModuleMetas } from "./plugin-meta-store";
 import { clearPhiBuilderModuleAreasDirty } from "./runtime-module-selection";
 import { phiWorkspaceCatalogStore } from "../../../components/workspace/catalog-store";
 import type { PhiBuilderNavigationItem } from "../../../helpers/cms-navigation-catalog";
-import { refreshPhiBuilderNavigationFolderAddresses } from "./navigation-folder-address";
+import {
+  applyPhiBuilderNavigationFolderTargets,
+  refreshPhiBuilderNavigationFolderAddresses,
+} from "./navigation-folder-address";
 import { createPhiBuilderNavigationPathContext } from "./navigation-path-context";
 
 export type PhiDeveloperBuilderToolbarCommand =
@@ -138,6 +143,37 @@ export function usePhiBuilderDraftCommandController({
       navKey: effectiveNavKey,
     }));
     return withCurrentFolderAddresses(scope.navigation);
+  }
+
+  /*
+   * A save may have carried folder targets into other Navigations of the Area (TODOS.md, "Folder
+   * addresses"). Their Drafts on the server moved; one open here takes the same targets and the new base
+   * revision, one that is not is loaded, and neither records history -- Undo stays per Navigation.
+   */
+  async function adoptCarriedFolderTargets(carriedOver: readonly PhiBuilderNavigationFolderCarry[]) {
+    if (carriedOver.length === 0) return;
+    const surfaces = state.navigationSurfacesByArea[effectiveArea] ?? [];
+    for (const carry of carriedOver) {
+      if (getPhiBuilderNavigationDraftSnapshot(carry.key)) {
+        updatePhiBuilderNavigationDraft(carry.key, (current) => ({
+          ...current!,
+          items: applyPhiBuilderNavigationFolderTargets(current!.items, carry.folders),
+          draftAllocation: {
+            revisionId: carry.revisionId,
+            nextNodeSequence: Math.max(current!.draftAllocation?.nextNodeSequence ?? 1, carry.nextNodeSequence),
+          },
+        }));
+        continue;
+      }
+      const surface = surfaces.find((candidate) => candidate.navKey === carry.key);
+      if (surface) {
+        setPhiBuilderNavigationDraft(carry.key, (await loadPhiBuilderNavigationScope(carry.key, surface)).navigation);
+      }
+    }
+    showMessage({
+      level: "info",
+      content: `The folder target was also set in ${carriedOver.map((carry) => carry.key).join(", ")}.`,
+    });
   }
 
   /*
@@ -288,6 +324,7 @@ export function usePhiBuilderDraftCommandController({
         },
       });
       showMessage({ level: "success", content: "Saved navigation draft." });
+      await adoptCarriedFolderTargets(result.carriedOver);
       return;
     }
 
@@ -326,7 +363,8 @@ export function usePhiBuilderDraftCommandController({
 
     if (workspaceKind === "navigation") {
       const navigationDraft = await resolveCurrentNavigationDraft();
-      await publishPhiBuilderNavigationDraft(navigationDraft);
+      const published = await publishPhiBuilderNavigationDraft(navigationDraft);
+      await adoptCarriedFolderTargets(published.carriedOver);
     } else {
       await publishPhiDeveloperBuilderDraft(
         state,

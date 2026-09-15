@@ -268,7 +268,8 @@ export type PhiCmsNavigationFolderTarget =
  */
 export type PhiCmsNavigationFolder = {
   address: string | null;
-  target: PhiCmsNavigationFolderTarget;
+  /** Null leads nowhere (404); the address stays, so a target chosen elsewhere can be carried to it. */
+  target: PhiCmsNavigationFolderTarget | null;
 };
 
 export type PhiCmsNavigationItemOverride = {

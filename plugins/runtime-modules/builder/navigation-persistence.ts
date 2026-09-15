@@ -7,6 +7,7 @@ import {
   type PhiBuilderNavigationTree,
 } from "../../../helpers/cms-navigation-catalog";
 import type {
+  PhiCmsNavigationFolderTarget,
   PhiCmsNavigationCustomItem,
   PhiCmsNavigationItemOverride,
   PhiCmsNavigationOverlay,
@@ -222,6 +223,8 @@ export async function savePhiBuilderNavigationDraft(navigation: PhiBuilderNaviga
       key: normalizedKey,
       overlay: buildPhiBuilderNavigationOverlay(navigation),
       nextNodeSequence: requestedNextNodeSequence,
+      // What this state was loaded from, so a folder target carried in since is not taken for a change.
+      baseRevisionId: navigation.draftAllocation?.revisionId ?? null,
     }),
   });
   const body = (await readJson(response)) as NavigationReadPayload | null;
@@ -238,7 +241,44 @@ export async function savePhiBuilderNavigationDraft(navigation: PhiBuilderNaviga
   if (nextNodeSequence == null || nextNodeSequence < 1) {
     throw new Error("Navigation draft save did not return its next node sequence.");
   }
-  return { key: normalizedKey, revisionId, nextNodeSequence };
+  return { key: normalizedKey, revisionId, nextNodeSequence, carriedOver: readPhiBuilderNavigationCarriedOver(body) };
+}
+
+export type PhiBuilderNavigationFolderCarry = {
+  key: string;
+  revisionId: number;
+  nextNodeSequence: number;
+  folders: { address: string; target: PhiCmsNavigationFolderTarget | null }[];
+};
+
+/**
+ * The other Navigations a save carried a folder target into. A generic reader of a server answer: an
+ * entry that does not read is dropped, since the save itself succeeded either way.
+ */
+function readPhiBuilderNavigationCarriedOver(body: unknown): PhiBuilderNavigationFolderCarry[] {
+  const entries = body && typeof body === "object" ? (body as { carriedOver?: unknown }).carriedOver : null;
+  if (!Array.isArray(entries)) return [];
+  return entries.flatMap((entry): PhiBuilderNavigationFolderCarry[] => {
+    if (!entry || typeof entry !== "object") return [];
+    const record = entry as Record<string, unknown>;
+    if (typeof record.key !== "string" || !Number.isInteger(record.revisionId) ||
+      !Number.isInteger(record.nextNodeSequence) || !Array.isArray(record.folders)) return [];
+    const folders = record.folders.flatMap((folder): PhiBuilderNavigationFolderCarry["folders"] => {
+      if (!folder || typeof folder !== "object") return [];
+      const { address, target } = folder as { address?: unknown; target?: unknown };
+      if (typeof address !== "string") return [];
+      if (target === null) return [{ address, target: null }];
+      const candidate = target as { kind?: unknown; reference?: unknown; address?: unknown } | undefined;
+      if (candidate?.kind === "page" && typeof candidate.reference === "string") {
+        return [{ address, target: { kind: "page", reference: candidate.reference } }];
+      }
+      if (candidate?.kind === "folder" && typeof candidate.address === "string") {
+        return [{ address, target: { kind: "folder", address: candidate.address } }];
+      }
+      return [];
+    });
+    return [{ key: record.key, revisionId: record.revisionId as number, nextNodeSequence: record.nextNodeSequence as number, folders }];
+  });
 }
 
 export async function publishPhiBuilderNavigationDraft(
@@ -246,9 +286,10 @@ export async function publishPhiBuilderNavigationDraft(
   revisionId?: number | null,
 ) {
   const normalizedKey = requirePhiBuilderNavigationScopeKey(navigation.key);
-  const savedRevisionId = revisionId != null && Number.isInteger(revisionId) && revisionId > 0
-    ? revisionId
-    : (await savePhiBuilderNavigationDraft(navigation)).revisionId;
+  const saved = revisionId != null && Number.isInteger(revisionId) && revisionId > 0
+    ? null
+    : await savePhiBuilderNavigationDraft(navigation);
+  const savedRevisionId = saved?.revisionId ?? revisionId!;
   const response = await fetch("/api/site/cms/navigation/publish", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -262,7 +303,7 @@ export async function publishPhiBuilderNavigationDraft(
   if (publishedRevisionId == null || publishedRevisionId <= 0) {
     throw new Error("Navigation publish did not return a revision.");
   }
-  return { key: normalizedKey, revisionId: publishedRevisionId };
+  return { key: normalizedKey, revisionId: publishedRevisionId, carriedOver: saved?.carriedOver ?? [] };
 }
 
 export async function deletePhiBuilderNavigationDraft(navKey: string) {
