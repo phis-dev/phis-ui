@@ -480,4 +480,11 @@ export const PHI_COMMON_RUNTIME_MODULE_RENDER_CLIENT_MANIFEST =
           .then((module) => module.PhiSimpleTextWidgetClient),
       ),
     ],
+    [
+      PhiCmsWidgetType.FormPreview,
+      definePhiRuntimeModuleRenderClientLoader(
+        () => import("../core/widgets/form-preview/client")
+          .then((module) => module.PhiFormPreviewWidgetClient),
+      ),
+    ],
   ]);

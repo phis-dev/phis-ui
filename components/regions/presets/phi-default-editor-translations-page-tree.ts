@@ -310,7 +310,7 @@ export async function buildPhiDefaultEditorTranslationsPageTree({
           openActionKey: "edit",
           signalRoutes: {
             emits: [
-              { routeKey: "editor-translations-form-submit-success", capabilityId: "submitSuccess", scope: "page", channel: "submit", action: "activate", valueType: "none", receiver: createPhiLocalizationControllerAddress() },
+              { routeKey: "editor-translations-form-submit-success", capabilityId: "submitSuccess", scope: "page", channel: "submit", action: "activate", valueType: "json", valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.formResult, receiver: createPhiLocalizationControllerAddress() },
               { routeKey: "editor-translations-form-submitting", capabilityId: "submitting", scope: "page", channel: "submitting", action: "change", valueType: "boolean", receiver: createPhiLocalizationControllerAddress() },
             ],
             listens: [

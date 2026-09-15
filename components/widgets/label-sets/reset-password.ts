@@ -17,7 +17,6 @@ const PHI_RESET_PASSWORD_WIDGET_LABEL_SET = definePhiLabelSet({
     request_success_title: "Reset link sent",
     request_error_title: "Reset request failed",
     request_error_text: definePhiMessageLabel("The reset request could not be completed."),
-    confirm_token_label: "Reset token",
     confirm_token_required: definePhiMessageLabel("The reset token is required."),
     confirm_password_label: "New password",
     confirm_password_placeholder: "Choose a secure password",
@@ -36,31 +35,43 @@ const PHI_RESET_PASSWORD_WIDGET_LABEL_SET = definePhiLabelSet({
   },
 });
 
-export async function getPhiResetPasswordWidgetLabels(options: PhiGlobalTranslatorOptions) {
+/*
+ * One set of sentences, read by two forms.
+ *
+ * Asking for a reset and spending the link that arrives are two forms with no field in common, and each
+ * reads its own labels under the same names any other form uses -- `fields`, `actions`, `feedback`. They
+ * share the message set because they are one story told to one person, and translating "Email" twice
+ * would be two msgIds for one word.
+ */
+export async function getPhiResetPasswordRequestFormLabels(options: PhiGlobalTranslatorOptions) {
   const labels = await getPhiLabelSet(options, PHI_RESET_PASSWORD_WIDGET_LABEL_SET);
   return {
-    request: {
+    fields: {
       email: {
         label: labels.request_email_label,
         placeholder: labels.request_email_placeholder,
         required: labels.request_email_required,
         invalid: labels.request_email_invalid,
       },
-      submitLabel: labels.request_submit_label,
-      pendingLabel: labels.request_pending_label,
-      introText: labels.request_intro_text,
-      success: {
-        title: labels.request_success_title,
-        text: labels.request_intro_text,
-      },
-      error: {
-        title: labels.request_error_title,
-        text: labels.request_error_text,
-      },
     },
-    confirm: {
+    actions: {
+      submitLabel: labels.request_submit_label,
+    },
+    feedback: {
+      introText: labels.request_intro_text,
+      successTitle: labels.request_success_title,
+      successText: labels.request_intro_text,
+      errorTitle: labels.request_error_title,
+      errorText: labels.request_error_text,
+    },
+  };
+}
+
+export async function getPhiResetPasswordConfirmFormLabels(options: PhiGlobalTranslatorOptions) {
+  const labels = await getPhiLabelSet(options, PHI_RESET_PASSWORD_WIDGET_LABEL_SET);
+  return {
+    fields: {
       token: {
-        label: labels.confirm_token_label,
         required: labels.confirm_token_required,
       },
       password: {
@@ -75,16 +86,15 @@ export async function getPhiResetPasswordWidgetLabels(options: PhiGlobalTranslat
         required: labels.confirm_password_confirm_required,
         mismatch: labels.confirm_password_mismatch,
       },
+    },
+    actions: {
       submitLabel: labels.confirm_submit_label,
-      pendingLabel: labels.confirm_pending_label,
-      success: {
-        title: labels.confirm_success_title,
-        text: labels.confirm_success_text,
-      },
-      error: {
-        title: labels.confirm_error_title,
-        text: labels.confirm_error_text,
-      },
+    },
+    feedback: {
+      successTitle: labels.confirm_success_title,
+      successText: labels.confirm_success_text,
+      errorTitle: labels.confirm_error_title,
+      errorText: labels.confirm_error_text,
     },
   };
 }

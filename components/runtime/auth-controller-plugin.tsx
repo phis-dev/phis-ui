@@ -9,11 +9,15 @@ import {
   usePhiSignalDispatcher,
   usePhiSignalListener,
 } from "./runtime-signal-bus";
-import { normalizeLoginRedirectTarget } from "../widgets/login-redirect";
+import {
+  normalizeLoginRedirectTarget,
+  resolveSafePostLoginTarget,
+} from "../widgets/login-redirect";
 import { createPhiRuntimeControllerClient } from "./runtime-controller-client-factory";
 import { localizeAreaPath } from "../../helpers/locale";
 import { createPhiSignalAddress, PHI_SIGNAL_VALUE_SCHEMAS, type PhiSignal } from "../../types/signals";
 import { createPhiRuntimeFormControllerAddress } from "../forms/runtime-form-controller-address";
+import { createPhiCoreRuntimeControllerAddress } from "./core-runtime-controller-address";
 import {
   isPhiAuthLoginOverlayArea,
   PHI_AUTH_LOGIN_OVERLAY_IDS,
@@ -74,12 +78,83 @@ function PhiAuthControllerView({
     }
   }, [dispatch, overlayAddress]);
 
+  /*
+   * Every forward this Controller decides is performed by the runtime, never by this component.
+   *
+   * It is the one place that refuses a target which is not a path on this Site, and a sign-in is exactly
+   * where that matters: the address a visitor arrives with, and the one a server hands back, both end up
+   * here.
+   */
+  const forward = useCallback((path: string, replace = false) => {
+    dispatchSignal({
+      scope: "site",
+      channel: "path",
+      action: "activate",
+      value: { path, ...(replace ? { replace: true } : {}) },
+      valueType: "json",
+      valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.runtimeNavigation,
+      receiver: createPhiCoreRuntimeControllerAddress(),
+      sender: address,
+      correlationId: createPhiSignalCorrelationId(),
+      timestamp: Date.now(),
+    });
+  }, [address, dispatchSignal]);
+
   const redirectToPublicLogin = useCallback((target: string) => {
     const loginPath = localizeAreaPath(locale, "public", "/login");
-    window.location.assign(`${loginPath}?${new URLSearchParams({ next: target }).toString()}`);
-  }, [locale]);
+    forward(`${loginPath}?${new URLSearchParams({ next: target }).toString()}`);
+  }, [forward, locale]);
+
+  /*
+   * What a finished sign-in means, read from the handler's own answer.
+   *
+   * `complete: false` is not a failure: the account exists and the password was right, and what follows
+   * is a second step this Controller has yet to be given a surface for. Until it has one, saying so is
+   * better than forwarding somebody into an area they have not finished entering.
+   */
+  const completeLogin = useCallback(async (payload: Record<string, unknown> | null) => {
+    const area = typeof payload?.area === "string" ? payload.area.trim().toLowerCase() : "";
+    /*
+     * Where they were going before they were asked to sign in, if anywhere.
+     *
+     * The answer names it when the handler knows it; otherwise it is still in the address, because that
+     * is how they arrived here -- `/login?next=…` is what a refused page redirects to. Without this a
+     * visitor sent to sign in from somewhere specific lands on the area's front page instead of the page
+     * they asked for.
+     */
+    const next = normalizeLoginRedirectTarget(
+      typeof payload?.next === "string" ? payload.next : null,
+    ) ?? normalizeLoginRedirectTarget(
+      new URLSearchParams(window.location.search).get("next"),
+    );
+    if (!area) {
+      forward(next || "/", true);
+      return;
+    }
+    forward(
+      await resolveSafePostLoginTarget(
+        next ?? `${window.location.pathname}${window.location.search}`,
+        locale,
+        area,
+      ),
+      true,
+    );
+  }, [forward, locale]);
 
   usePhiSignalListener((signal) => {
+    if (
+      signal.channel === "submit" &&
+      signal.action === "activate" &&
+      signal.valueSchema === PHI_SIGNAL_VALUE_SCHEMAS.formResult
+    ) {
+      const result = signal.value as { ok?: boolean; payload?: Record<string, unknown> | null } | null;
+      if (result?.ok !== true) return;
+      const payload = result.payload ?? null;
+      if (payload?.complete === false) return;
+      closeOverlay(signal.correlationId);
+      void completeLogin(payload);
+      return;
+    }
     if (signal.channel === "command" && signal.action === "close") {
       closeOverlay(signal.correlationId);
       setNextPath(null);
@@ -110,8 +185,8 @@ function PhiAuthControllerView({
     setOpenSequence((current) => current + 1);
   }, {
     scopes: ["area"],
-    channels: ["command", "dialog"],
-    actions: ["open", "close"],
+    channels: ["command", "dialog", "submit"],
+    actions: ["open", "close", "activate"],
     receiver: address,
   });
 

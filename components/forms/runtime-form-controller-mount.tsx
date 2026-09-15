@@ -36,7 +36,13 @@ export type PhiRuntimeFormSubmitSignalValue = {
 
 export type PhiRuntimeFormResultSignalValue = {
   ok: boolean;
-  status: number;
+  /**
+   * The transport's answer, where there was a transport.
+   *
+   * A Form kept local -- one that emits its values instead of submitting them -- finished without ever
+   * asking anybody, and reporting a 200 for that would be inventing an answer nobody gave.
+   */
+  status?: number;
   payload: Record<string, unknown> | null;
 };
 

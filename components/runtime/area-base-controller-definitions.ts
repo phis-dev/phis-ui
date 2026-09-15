@@ -62,9 +62,29 @@ export const PHI_AUTH_CONTROLLER_DEFINITION = {
         valueType: "json",
         valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.formValues,
       },
+      /*
+       * Where a completed sign-in sends the visitor.
+       *
+       * Deciding it is this Controller's business -- the area they signed into, the page they were
+       * headed for, whether that page still exists -- and performing it is the runtime's. The Login
+       * form is told none of it: it submits, and what its answer means is read here.
+       */
+      {
+        id: "navigate",
+        action: "activate",
+        valueType: "json",
+        valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.runtimeNavigation,
+      },
     ],
     listens: [
       { id: "loginOpen", channel: "command", action: "open", valueType: "path" },
+      {
+        id: "loginResult",
+        channel: "submit",
+        action: "activate",
+        valueType: "json",
+        valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.formResult,
+      },
       { id: "loginClose", channel: "command", action: "close", valueType: "none" },
       {
         id: "loginOverlayCloseRequest",

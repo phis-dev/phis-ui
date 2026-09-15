@@ -7,7 +7,7 @@ import { PhiCmsPageType, PhiCmsStatus } from "../../../constants/phi-cms";
 import { buildPhiCmsLayoutNode, buildPhiCmsWidgetNode } from "../../../helpers/cms-node-factories";
 import type { PhiCmsPageNode, PhiResolvedCmsPageTree } from "../../../types/cms";
 import type { PhiBlockRuntime } from "../../../types";
-import { createPhiSignalAddress } from "../../../types/signals";
+import { createPhiSignalAddress, PHI_SIGNAL_VALUE_SCHEMAS } from "../../../types/signals";
 import { buildPhiBasePageContentScaffold, PHI_BASE_PAGE_LAYOUT_NODE_ID } from "./phi-base-page-layout";
 import { getPhiAdminLocalesPageLabels } from "./admin-locales-label-set";
 import { getPhiAdminLocalesWidgetLabels } from "../../widgets/label-sets/admin-locales";
@@ -134,7 +134,8 @@ export async function buildPhiDefaultAdminLocalesPageTree({
               scope: "page",
               channel: "reload",
               action: "activate",
-              valueType: "none",
+              valueType: "json",
+              valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.formResult,
               receiver: createPhiSignalAddress("cms", SYNTHETIC_ADMIN_LOCALES_WIDGET_IDS.widgetLocales),
             }],
             listens: [{

@@ -9,9 +9,10 @@ import { PhiCmsPageType, PhiCmsRegionType, PhiCmsStatus } from "../../../constan
 import { buildPhiCmsLayoutNode, buildPhiCmsWidgetNode } from "../../../helpers/cms-node-factories";
 import type { PhiCmsPageNode, PhiResolvedCmsPageTree } from "../../../types/cms";
 import {
-  buildPhiLoginFormWidgetConfig,
+  buildPhiLoginNodes,
   PHI_LOGIN_FORM_LAYOUT_CONFIG,
 } from "./phi-login-form-nodes";
+import { createPhiAuthControllerAddress } from "../../runtime/area-base-controller-addresses";
 
 const SYNTHETIC_LOGIN_REGION_IDS = {
   regionContent: -230,
@@ -37,7 +38,21 @@ export async function buildPhiDefaultPubLoginPageTree({
     domain: "page",
     ownerModuleId: PHI_AUTH_RUNTIME_MODULE_ID,
     presetKey,
-  }, ["widgetDescription", "widgetLogin"]);
+  }, [
+    "widgetDescription",
+    "widgetLogin",
+    "widgetMethods",
+    "widgetStep",
+    "widgetProviderLink",
+  ]);
+  const login = buildPhiLoginNodes({
+    ids: SYNTHETIC_LOGIN_WIDGET_IDS,
+    siteId: page.siteId,
+    visibilityMask: page.visibilityMask,
+    parentLayoutNodeId: SYNTHETIC_LOGIN_LAYOUT_IDS.layoutForm,
+    locale: runtime.locale.current,
+    authControllerAddress: createPhiAuthControllerAddress(),
+  });
   return {
     page: {
       ...page,
@@ -73,7 +88,6 @@ export async function buildPhiDefaultPubLoginPageTree({
         visibilityMask: page.visibilityMask,
         label: "pub login page",
         config: {
-          maxWidth: 1120,
           gap: PHI_SPACE.base,
         },
       }),
@@ -91,6 +105,7 @@ export async function buildPhiDefaultPubLoginPageTree({
         label: "pub login form layout",
         config: { ...PHI_LOGIN_FORM_LAYOUT_CONFIG, padding: 0 },
       }),
+      ...login.layoutNodes,
     ],
     contentWidgets: [
       buildPhiCmsWidgetNode({
@@ -118,22 +133,11 @@ export async function buildPhiDefaultPubLoginPageTree({
         },
         contentId: null,
       }),
-      buildPhiCmsWidgetNode({
-        typeKey: "form",
-        id: SYNTHETIC_LOGIN_WIDGET_IDS.widgetLogin,
-        siteId: page.siteId,
-        parentLayoutNodeId: SYNTHETIC_LOGIN_LAYOUT_IDS.layoutForm,
-        slotIndex: 0,
-        sortOrder: 0,
-        status: PhiCmsStatus.Published,
-        flags: 0,
-        visibilityMask: page.visibilityMask,
-        label: "pub login widget",
-        config: {
-          ...buildPhiLoginFormWidgetConfig(runtime.locale.current),
-        },
-        contentId: null,
-      }),
+      // Narrowed on the page alone: the auth overlay builds the same form into a column of its own width.
+      ...login.contentWidgets.map((widget) =>
+        widget.id === SYNTHETIC_LOGIN_WIDGET_IDS.widgetLogin
+          ? { ...widget, config: { ...widget.config, maxSize: { width: 480 } } }
+          : widget),
     ],
   };
 }

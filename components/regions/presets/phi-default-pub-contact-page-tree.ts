@@ -72,7 +72,6 @@ export async function buildPhiDefaultPubContactPageTree({
         visibilityMask: page.visibilityMask,
         label: "pub contact page",
         config: {
-          maxWidth: 1120,
           gap: PHI_SPACE.base,
         },
       }),

@@ -1,5 +1,4 @@
 import "server-only";
-import type { ReactNode } from "react";
 
 import type { PhiBlockRuntime, PhiSignalAddress } from "../../types";
 import type { PhiFormDescriptor } from "../../types/form-descriptor";
@@ -20,7 +19,6 @@ export type PhiFormRenderContext = {
   options?: PhiFormRenderOptions;
 };
 
-export type PhiFormRenderer = (context: PhiFormRenderContext) => ReactNode | Promise<ReactNode>;
 /**
  * Values a form needs from the server before anyone can fill it in.
  *
@@ -68,7 +66,6 @@ export type PhiFormDefinitionLike = {
   variant: string | null;
   config: Record<string, unknown>;
   previewUpstreamPath: string | null;
-  render?: PhiFormRenderer;
   loadLabels?: PhiFormLabelSetLoader;
   loadInitialValues?: PhiFormInitialValuesLoader;
 };
@@ -174,7 +171,6 @@ export function resolvePhiFormDefinition<TDefinition extends PhiFormDefinitionLi
           deepMergeRecords(presetDefinition.defaultConfig, presetDefinition.config),
           deepMergeRecords(overrideDefinition.defaultConfig, overrideDefinition.config),
         ),
-        render: overrideDefinition.render ?? presetDefinition.render,
         loadLabels: overrideDefinition.loadLabels ?? presetDefinition.loadLabels,
         loadInitialValues:
           overrideDefinition.loadInitialValues ?? presetDefinition.loadInitialValues,

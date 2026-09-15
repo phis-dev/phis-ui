@@ -11,7 +11,6 @@ export * from "./types/form-id";
 export type {
   PhiFormRenderContext,
   PhiFormRenderOptions,
-  PhiFormRenderer,
   PhiFormLabelSetLoader,
 } from "./components/forms/form-resolution";
 export { PHI_FORM_DESCRIPTOR_SCHEMA_VERSION } from "./types/form-descriptor";
@@ -201,9 +200,3 @@ export type {
   PhiMutationResponseShape,
   PhiMutationTransport,
 } from "./gateway/mutation";
-export { LoginForm } from "./components/forms/login-form";
-export type {
-  LoginFormLabels,
-  LoginFormValues,
-  LoginFormProps,
-} from "./components/forms/login-form";

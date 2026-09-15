@@ -7,6 +7,7 @@ import { usePhiControlBadgeController } from "../../../../../components/widgets/
 import { resolvePhiButtonIcon } from "../../../../../components/widgets/client/shared/phi-button-icons";
 import { resolvePhiCommonControlAction } from "../../../../../components/widgets/client/shared/phi-common-controls";
 import { PhiButtonControl } from "../../../../../components/controls/phi-button-control";
+import { findPhiSignalRoutesByCapabilityId } from "../../../../../types/signals";
 
 export function PhiButtonWidget({
   config,
@@ -52,6 +53,14 @@ export function PhiButtonWidget({
       return;
     }
 
+    /*
+     * A wired `navigate` carries the target; the ordinary capability carries whatever this Button is for.
+     * Both can be wired at once -- a Button that records something and then moves on.
+     */
+    if (config?.href && findPhiSignalRoutesByCapabilityId(config.signalRoutes?.emits, "navigate").length > 0) {
+      controlSignals.emitCapability("navigate", { path: config.href });
+    }
+
     controlSignals.emitCapability(config?.signalRoutes?.emits?.[0]?.capabilityId ?? "activate", signalValue);
   }
 
@@ -60,6 +69,7 @@ export function PhiButtonWidget({
   return (
     <PhiButtonControl
       label={label}
+      {...(config?.href && !config.signalRoutes?.emits?.length ? { href: config.href } : {})}
       tooltip={tooltip}
       type={config?.buttonType ?? action?.buttonType ?? "default"}
       danger={config?.danger === true || action?.danger === true}

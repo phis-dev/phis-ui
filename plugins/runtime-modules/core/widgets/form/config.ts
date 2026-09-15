@@ -30,9 +30,27 @@ export type PhiCmsFormWidgetSubmitConfig = {
   align: "start" | "center" | "end";
 };
 
+/**
+ * A way out of the form, standing where its submit stands.
+ *
+ * "Forgot password" and "Create account" are not fields and not commands -- they are the two other
+ * things a person at a sign-in might want. They belong to the Widget for the same reason the submit
+ * does: whether they are offered, and in which column they sit, is the placement's decision. Being in
+ * the Widget is also the only way they can line up under the inputs, because the label column is a
+ * property of the form's own grid and nothing outside it can read where that column ends.
+ */
+export type PhiCmsFormWidgetLinkConfig = {
+  /** Names the link's label in the form's label set, as `actions.<key>Label`. */
+  key: string;
+  href: string;
+  /** A published Module fact this link depends on, such as `auth.registration`. */
+  requiresFeature?: string;
+};
+
 export type PhiCmsFormWidgetConfig = {
   formId: PhiFormId | null;
   submit: PhiCmsFormWidgetSubmitConfig | null;
+  links: readonly PhiCmsFormWidgetLinkConfig[];
   formConfig: Record<string, unknown>;
   execution: {
     mode: "handler" | "signal";
@@ -77,6 +95,21 @@ export function parsePhiFormWidgetConfig(rawConfig: Record<string, unknown>): Ph
         ? submitAlign
         : "start",
     },
+    links: Array.isArray(rawConfig.links)
+      ? rawConfig.links.flatMap((entry) => {
+          const link = readRecord(entry);
+          const key = typeof link.key === "string" ? link.key.trim() : "";
+          const href = typeof link.href === "string" ? link.href.trim() : "";
+          if (!key || !href) return [];
+          return [{
+            key,
+            href,
+            ...(typeof link.requiresFeature === "string" && link.requiresFeature.trim()
+              ? { requiresFeature: link.requiresFeature.trim() }
+              : {}),
+          }];
+        })
+      : [],
     formConfig: readRecord(rawConfig.formConfig),
     execution: {
       mode: execution.mode === "signal" ? "signal" : "handler",
@@ -108,7 +141,20 @@ export const PHI_FORM_WIDGET_DEFINITION = {
   requiredRuntimeControllers: requirePhiRuntimeFormControllerForWidget,
   runtimeSignals: {
     emits: [
-      { id: "submitSuccess", action: "activate", valueType: "none" },
+      /*
+       * One announcement for one event: the Form is through, and here is what came back.
+       *
+       * A receiver that only needs to know that it worked -- an Overlay that closes, a Table that
+       * reloads -- reads nothing but the fact that the signal arrived. One that has to act on the
+       * answer, because the answer says where to go next or which step follows, finds it in the same
+       * message instead of in a second one it would have to correlate with the first.
+       */
+      {
+        id: "submitSuccess",
+        action: "activate",
+        valueType: "json",
+        valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.formResult,
+      },
       { id: "submitting", action: "change", valueType: "boolean" },
       {
         id: "submitError",
@@ -199,6 +245,7 @@ export const PHI_FORM_WIDGET_DEFINITION = {
   ],
   defaultConfig: {
     formId: null,
+    links: [],
     formConfig: {},
     execution: { mode: "handler", phase: "submit" },
     source: null,

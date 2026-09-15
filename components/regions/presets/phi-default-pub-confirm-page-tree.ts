@@ -13,7 +13,7 @@ import {
 import { buildPhiCmsLayoutNode, buildPhiCmsWidgetNode } from "../../../helpers/cms-node-factories";
 import type { PhiCmsPageNode, PhiResolvedCmsPageTree } from "../../../types/cms";
 import { PHI_SHARED_FORM_IDS } from "../../forms/shared-form-ids";
-import { createPhiSignalAddress } from "../../../types/signals";
+import { createPhiSignalAddress, PHI_SIGNAL_VALUE_SCHEMAS } from "../../../types/signals";
 
 const SYNTHETIC_CONFIRM_REGION_IDS = {
   regionContent: -210,
@@ -35,7 +35,39 @@ export async function buildPhiDefaultPubConfirmPageTree({
     domain: "page",
     ownerModuleId: PHI_AUTH_RUNTIME_MODULE_ID,
     presetKey,
-  }, ["widgetDescription", "widgetConfirm", "widgetConfirmSubmit"]);
+  }, [
+    "widgetDescription",
+    "widgetConfirmPreview",
+    "widgetConfirm",
+    "widgetConfirmMissingToken",
+  ]);
+  const previewAddress = createPhiSignalAddress(
+    "cms",
+    SYNTHETIC_CONFIRM_WIDGET_IDS.widgetConfirmPreview,
+  );
+  /*
+   * The form appears once the preview says the link is still worth spending.
+   *
+   * Until then there is nothing to confirm -- an expired or spent link would otherwise show a button
+   * that can only fail -- and the preview beside it says why in its own words.
+   */
+  const previewIsPending = {
+    source: "widget",
+    widgetAddress: previewAddress,
+    valuePath: "status",
+    operator: "equals",
+    value: "pending",
+  } as const;
+  const withoutToken = {
+    source: "page",
+    valuePath: "query.token",
+    operator: "falsy",
+  } as const;
+  const withToken = {
+    source: "page",
+    valuePath: "query.token",
+    operator: "truthy",
+  } as const;
   return {
     page: {
       ...page,
@@ -71,7 +103,6 @@ export async function buildPhiDefaultPubConfirmPageTree({
         visibilityMask: page.visibilityMask,
         label: "pub confirmation page",
         config: {
-          maxWidth: 1120,
           gap: PHI_SPACE.base,
         },
       }),
@@ -116,9 +147,13 @@ export async function buildPhiDefaultPubConfirmPageTree({
         },
         contentId: null,
       }),
+      /*
+       * What the link is about, read before anything is confirmed. It reports what it found, and the
+       * form beside it appears or stays away on that word.
+       */
       buildPhiCmsWidgetNode({
-        typeKey: "form",
-        id: SYNTHETIC_CONFIRM_WIDGET_IDS.widgetConfirm,
+        typeKey: "form-preview",
+        id: SYNTHETIC_CONFIRM_WIDGET_IDS.widgetConfirmPreview,
         siteId: page.siteId,
         parentLayoutNodeId: SYNTHETIC_CONFIRM_LAYOUT_IDS.layoutForm,
         slotIndex: 0,
@@ -126,21 +161,63 @@ export async function buildPhiDefaultPubConfirmPageTree({
         status: PhiCmsStatus.Published,
         flags: 0,
         visibilityMask: page.visibilityMask,
-        label: "pub confirmation widget",
+        label: "pub confirmation preview",
         config: {
           formId: PHI_SHARED_FORM_IDS.confirm,
-          formConfig: {
-            backHref: "/register",
+          tokenParam: "token",
+          // Without a token there is nothing to preview, and the request already says whether there is one.
+          visibleWhen: withToken,
+          signalRoutes: {
+            emits: [{
+              routeKey: "pub-confirm-preview-state",
+              capabilityId: "conditionStateChange",
+              scope: "page",
+              channel: "condition",
+              action: "change",
+              valueType: "json",
+              valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.runtimeConditionState,
+              receiver: createPhiSignalAddress("cms", SYNTHETIC_CONFIRM_WIDGET_IDS.widgetConfirm),
+            }],
           },
-          signalRoutes: { listens: [{ routeKey: "pub-confirm-submit", capabilityId: "submit", scope: "page", channel: "submit", action: "activate", valueType: "none", receiver: createPhiSignalAddress("cms", SYNTHETIC_CONFIRM_WIDGET_IDS.widgetConfirm) }] },
         },
         contentId: null,
       }),
       buildPhiCmsWidgetNode({
-        typeKey: "button", id: SYNTHETIC_CONFIRM_WIDGET_IDS.widgetConfirmSubmit,
-        siteId: page.siteId, parentLayoutNodeId: SYNTHETIC_CONFIRM_LAYOUT_IDS.layoutForm, slotIndex: 1,
-        sortOrder: 1, status: PhiCmsStatus.Published, flags: 0, visibilityMask: page.visibilityMask,
-        label: "pub confirmation submit", config: { key: "submit", label: "Confirm", buttonType: "primary", signalRoutes: { emits: [{ routeKey: "pub-confirm-submit-button", capabilityId: "activate", scope: "page", channel: "submit", action: "activate", valueType: "none", receiver: createPhiSignalAddress("cms", SYNTHETIC_CONFIRM_WIDGET_IDS.widgetConfirm) }] } }, contentId: null,
+        typeKey: "form",
+        id: SYNTHETIC_CONFIRM_WIDGET_IDS.widgetConfirm,
+        siteId: page.siteId,
+        parentLayoutNodeId: SYNTHETIC_CONFIRM_LAYOUT_IDS.layoutForm,
+        slotIndex: 1,
+        sortOrder: 1,
+        status: PhiCmsStatus.Published,
+        flags: 0,
+        visibilityMask: page.visibilityMask,
+        label: "pub confirmation widget",
+        config: {
+          formId: PHI_SHARED_FORM_IDS.confirm,
+          submit: {},
+          formConfig: { initialValuesFromQuery: { token: "token" } },
+          visibleWhen: previewIsPending,
+        },
+        contentId: null,
+      }),
+      buildPhiCmsWidgetNode({
+        typeKey: "simple-text",
+        id: SYNTHETIC_CONFIRM_WIDGET_IDS.widgetConfirmMissingToken,
+        siteId: page.siteId,
+        parentLayoutNodeId: SYNTHETIC_CONFIRM_LAYOUT_IDS.layoutForm,
+        slotIndex: 2,
+        sortOrder: 2,
+        status: PhiCmsStatus.Published,
+        flags: 0,
+        visibilityMask: page.visibilityMask,
+        label: "pub confirmation missing token",
+        config: {
+          text: "No confirmation token was provided. Open the confirmation link from your email.",
+          type: "secondary",
+          visibleWhen: withoutToken,
+        },
+        contentId: null,
       }),
     ],
   };

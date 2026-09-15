@@ -9,7 +9,6 @@ import { PhiCmsPageType, PhiCmsRegionType, PhiCmsStatus } from "../../../constan
 import { buildPhiCmsLayoutNode, buildPhiCmsWidgetNode } from "../../../helpers/cms-node-factories";
 import type { PhiCmsPageNode, PhiResolvedCmsPageTree } from "../../../types/cms";
 import { PHI_SHARED_FORM_IDS } from "../../forms/shared-form-ids";
-import { createPhiSignalAddress } from "../../../types/signals";
 
 const SYNTHETIC_RESET_PASSWORD_REGION_IDS = {
   regionContent: -270,
@@ -31,7 +30,29 @@ export async function buildPhiDefaultPubResetPasswordPageTree({
     domain: "page",
     ownerModuleId: PHI_AUTH_RUNTIME_MODULE_ID,
     presetKey,
-  }, ["widgetDescription", "widgetResetPassword", "widgetResetPasswordSubmit"]);
+  }, [
+    "widgetDescription",
+    "widgetResetPasswordIntro",
+    "widgetResetPassword",
+    "widgetResetPasswordConfirm",
+  ]);
+  /*
+   * Which of the two stages this visit is: asking for a link, or spending one.
+   *
+   * The token in the address is the whole of the distinction, and it is settled before anything renders
+   * -- so each stage is a placement with a condition on it rather than a branch inside a component that
+   * would have to know about both.
+   */
+  const withoutToken = {
+    source: "page",
+    valuePath: "query.token",
+    operator: "falsy",
+  } as const;
+  const withToken = {
+    source: "page",
+    valuePath: "query.token",
+    operator: "truthy",
+  } as const;
   return {
     page: {
       ...page,
@@ -67,7 +88,6 @@ export async function buildPhiDefaultPubResetPasswordPageTree({
         visibilityMask: page.visibilityMask,
         label: "pub reset password page",
         config: {
-          maxWidth: 1120,
           gap: PHI_SPACE.base,
         },
       }),
@@ -112,9 +132,13 @@ export async function buildPhiDefaultPubResetPasswordPageTree({
         },
         contentId: null,
       }),
+      /*
+       * What the sentence above the first stage says, as a Widget of its own: a form describes fields,
+       * and this is a note about what happens after you send it.
+       */
       buildPhiCmsWidgetNode({
-        typeKey: "form",
-        id: SYNTHETIC_RESET_PASSWORD_WIDGET_IDS.widgetResetPassword,
+        typeKey: "simple-text",
+        id: SYNTHETIC_RESET_PASSWORD_WIDGET_IDS.widgetResetPasswordIntro,
         siteId: page.siteId,
         parentLayoutNodeId: SYNTHETIC_RESET_PASSWORD_LAYOUT_IDS.layoutForm,
         slotIndex: 0,
@@ -122,18 +146,55 @@ export async function buildPhiDefaultPubResetPasswordPageTree({
         status: PhiCmsStatus.Published,
         flags: 0,
         visibilityMask: page.visibilityMask,
-        label: "pub reset password widget",
+        label: "pub reset password intro",
         config: {
-          formId: PHI_SHARED_FORM_IDS.resetPassword,
-          signalRoutes: { listens: [{ routeKey: "pub-reset-password-submit", capabilityId: "submit", scope: "page", channel: "submit", action: "activate", valueType: "none", receiver: createPhiSignalAddress("cms", SYNTHETIC_RESET_PASSWORD_WIDGET_IDS.widgetResetPassword) }] },
+          text: "If the account exists, a reset email is on its way. Open the link in that email to choose a new password.",
+          type: "secondary",
+          visibleWhen: withoutToken,
         },
         contentId: null,
       }),
       buildPhiCmsWidgetNode({
-        typeKey: "button", id: SYNTHETIC_RESET_PASSWORD_WIDGET_IDS.widgetResetPasswordSubmit,
-        siteId: page.siteId, parentLayoutNodeId: SYNTHETIC_RESET_PASSWORD_LAYOUT_IDS.layoutForm, slotIndex: 1,
-        sortOrder: 1, status: PhiCmsStatus.Published, flags: 0, visibilityMask: page.visibilityMask,
-        label: "pub reset password submit", config: { key: "submit", label: "Reset password", buttonType: "primary", signalRoutes: { emits: [{ routeKey: "pub-reset-password-submit-button", capabilityId: "activate", scope: "page", channel: "submit", action: "activate", valueType: "none", receiver: createPhiSignalAddress("cms", SYNTHETIC_RESET_PASSWORD_WIDGET_IDS.widgetResetPassword) }] } }, contentId: null,
+        typeKey: "form",
+        id: SYNTHETIC_RESET_PASSWORD_WIDGET_IDS.widgetResetPassword,
+        siteId: page.siteId,
+        parentLayoutNodeId: SYNTHETIC_RESET_PASSWORD_LAYOUT_IDS.layoutForm,
+        slotIndex: 1,
+        sortOrder: 1,
+        status: PhiCmsStatus.Published,
+        flags: 0,
+        visibilityMask: page.visibilityMask,
+        label: "pub reset password request widget",
+        config: {
+          formId: PHI_SHARED_FORM_IDS.resetPassword,
+          submit: {},
+          visibleWhen: withoutToken,
+        },
+        contentId: null,
+      }),
+      /*
+       * The second stage submits the `confirm` phase of the reset, and the token it spends comes from
+       * the address it was reached by -- the only place that token exists.
+       */
+      buildPhiCmsWidgetNode({
+        typeKey: "form",
+        id: SYNTHETIC_RESET_PASSWORD_WIDGET_IDS.widgetResetPasswordConfirm,
+        siteId: page.siteId,
+        parentLayoutNodeId: SYNTHETIC_RESET_PASSWORD_LAYOUT_IDS.layoutForm,
+        slotIndex: 2,
+        sortOrder: 2,
+        status: PhiCmsStatus.Published,
+        flags: 0,
+        visibilityMask: page.visibilityMask,
+        label: "pub reset password confirm widget",
+        config: {
+          formId: PHI_SHARED_FORM_IDS.resetPasswordConfirm,
+          submit: {},
+          execution: { mode: "handler", phase: "confirm" },
+          formConfig: { initialValuesFromQuery: { token: "token" } },
+          visibleWhen: withToken,
+        },
+        contentId: null,
       }),
     ],
   };

@@ -36,7 +36,6 @@ const widgetControlRequirements = new Map([
 const directControlConsumers = [
   "components/forms/shared-form-provider-registry.tsx",
   "components/controls/phi-form-control.tsx",
-  "components/forms/login-form.tsx",
   "components/forms/form-descriptor-runtime-client.tsx",
   "plugins/runtime-modules/builder/clients/inspector-config-field.tsx",
   "plugins/runtime-modules/builder/clients/inspector-signal-section.tsx",

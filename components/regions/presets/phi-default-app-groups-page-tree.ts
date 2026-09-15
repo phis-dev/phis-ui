@@ -288,7 +288,8 @@ export async function buildPhiDefaultAppGroupsPageTree({
               scope: "page",
               channel: "submit",
               action: "activate",
-              valueType: "none",
+              valueType: "json",
+              valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.formResult,
               receiver: controllerAddress,
             }],
             listens: [{

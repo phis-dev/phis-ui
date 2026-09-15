@@ -12,7 +12,14 @@ function createAuthLoginOverlayIds(area: PhiAuthLoginOverlayArea) {
       domain: "area",
       ownerModuleId: PHI_AUTH_RUNTIME_MODULE_ID,
       presetKey,
-    }, ["overlayLogin", "layoutBody", "widgetLogin"]),
+    }, [
+      "overlayLogin",
+      "layoutBody",
+      "widgetLogin",
+      "widgetMethods",
+      "widgetStep",
+      "widgetProviderLink",
+    ]),
   } as const;
 }
 

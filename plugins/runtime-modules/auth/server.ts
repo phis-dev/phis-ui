@@ -7,6 +7,7 @@ import {
   PHI_AUTH_RUNTIME_MODULE_ROUTES,
 } from "./presets";
 import { PHI_AUTH_RUNTIME_MODULE_WIDGETS } from "./widgets";
+import { PHI_AUTH_RUNTIME_MODULE_FEATURE_NAMESPACE } from "./ids";
 
 /**
  * Auth reaches four Areas and shows a different face in each: the Admin carries the settings Forms,
@@ -34,6 +35,11 @@ export function createPhiAuthRuntimeModuleServerAreaContribution() {
       routes: PHI_AUTH_RUNTIME_MODULE_ROUTES,
       loadUiProvider: () => import("../../../components/forms/auth-form-ui-provider")
         .then((module) => module.PhiAuthFormUiProvider),
+      features: {
+        namespace: PHI_AUTH_RUNTIME_MODULE_FEATURE_NAMESPACE,
+        load: () => import("./features")
+          .then((module) => module.resolvePhiAuthRuntimeModuleFeatures),
+      },
       load: () => import("./module").then((module) => module.PHI_AUTH_RUNTIME_MODULE),
     },
   });

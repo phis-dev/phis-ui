@@ -8,6 +8,7 @@ import {
   PHI_LOGIN_FORM_DESCRIPTOR,
   PHI_PROVIDER_LINK_CONFIRMATION_FORM_DESCRIPTOR,
   PHI_REGISTRATION_FORM_DESCRIPTOR,
+  PHI_RESET_PASSWORD_CONFIRM_FORM_DESCRIPTOR,
   PHI_RESET_PASSWORD_FORM_DESCRIPTOR,
 } from "./shared-form-descriptors";
 import { PHI_SHARED_FORM_IDS } from "./shared-form-ids";
@@ -78,8 +79,6 @@ export const PHI_SHARED_FORM_DEFINITIONS: readonly PhiRuntimeModuleFormDefinitio
     variant: "default",
     config: {},
     previewUpstreamPath: null,
-    render: (context) => import("./form-renderers")
-      .then((module) => module.renderPhiLoginForm(context)),
     loadLabels: createLabelLoader(() => import("../widgets/label-sets/account")
       .then((module) => module.getPhiLoginFormLabels)),
   }),
@@ -145,10 +144,8 @@ export const PHI_SHARED_FORM_DEFINITIONS: readonly PhiRuntimeModuleFormDefinitio
     variant: "default",
     config: {},
     previewUpstreamPath: "/api/v1/forms/register/confirm-preview",
-    render: (context) => import("./form-renderers")
-      .then((module) => module.renderPhiConfirmForm(context)),
     loadLabels: createLabelLoader(() => import("../widgets/label-sets/confirm")
-      .then((module) => module.getPhiConfirmWidgetLabels)),
+      .then((module) => module.getPhiConfirmFormLabels)),
   }),
   definePhiRuntimeModuleForm({
     ownerModuleId: PHI_AUTH_RUNTIME_MODULE_ID,
@@ -162,16 +159,35 @@ export const PHI_SHARED_FORM_DEFINITIONS: readonly PhiRuntimeModuleFormDefinitio
     tags: ["preset", "shared"],
     descriptor: PHI_RESET_PASSWORD_FORM_DESCRIPTOR,
     submitHandlerKey: "auth.reset-password",
+    confirmHandlerKey: null,
+    previewHandlerKey: null,
+    defaultConfig: {},
+    variant: "default",
+    config: {},
+    previewUpstreamPath: null,
+    loadLabels: createLabelLoader(() => import("../widgets/label-sets/reset-password")
+      .then((module) => module.getPhiResetPasswordRequestFormLabels)),
+  }),
+  definePhiRuntimeModuleForm({
+    ownerModuleId: PHI_AUTH_RUNTIME_MODULE_ID,
+    areas: ["public", "app"],
+    formId: PHI_SHARED_FORM_IDS.resetPasswordConfirm,
+    version: 1,
+    flags: 0,
+    title: "Reset Password Confirmation",
+    description: "Second stage of a password reset: the token from the link and the new password.",
+    category: "preset",
+    tags: ["preset", "shared"],
+    descriptor: PHI_RESET_PASSWORD_CONFIRM_FORM_DESCRIPTOR,
+    submitHandlerKey: null,
     confirmHandlerKey: "auth.reset-password.confirm",
     previewHandlerKey: null,
     defaultConfig: {},
     variant: "default",
     config: {},
     previewUpstreamPath: null,
-    render: (context) => import("./form-renderers")
-      .then((module) => module.renderPhiResetPasswordForm(context)),
     loadLabels: createLabelLoader(() => import("../widgets/label-sets/reset-password")
-      .then((module) => module.getPhiResetPasswordWidgetLabels)),
+      .then((module) => module.getPhiResetPasswordConfirmFormLabels)),
   }),
   definePhiRuntimeModuleForm({
     ownerModuleId: PHI_AUTH_RUNTIME_MODULE_ID,
@@ -191,6 +207,8 @@ export const PHI_SHARED_FORM_DEFINITIONS: readonly PhiRuntimeModuleFormDefinitio
     variant: "default",
     config: {},
     previewUpstreamPath: null,
+    loadLabels: createLabelLoader(() => import("../widgets/label-sets/account")
+      .then((module) => module.getPhiProviderLinkConfirmationFormLabels)),
   }),
 ];
 

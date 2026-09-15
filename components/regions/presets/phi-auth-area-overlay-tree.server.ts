@@ -1,12 +1,12 @@
 import { PHI_CMS_DEFAULT_SLOT_INDEX } from "../../../constants/cms-layout-types";
 import { PhiCmsStatus } from "../../../constants/phi-cms";
-import { buildPhiCmsLayoutNode, buildPhiCmsWidgetNode } from "../../../helpers/cms-node-factories";
+import { buildPhiCmsLayoutNode } from "../../../helpers/cms-node-factories";
 import { PHI_COLOR, PHI_SPACE } from "../../../theme/antd-css-var-contract";
 import type { PhiCmsPageNode, PhiResolvedCmsPageTree } from "../../../types/cms";
 import { createPhiSignalAddress, PHI_SIGNAL_VALUE_SCHEMAS } from "../../../types/signals";
 import type { PhiBlockRuntime } from "../../../types/widget-runtime";
 import {
-  buildPhiLoginFormWidgetConfig,
+  buildPhiLoginNodes,
   PHI_LOGIN_FORM_LAYOUT_CONFIG,
 } from "./phi-login-form-nodes";
 import { getPhiLoginFormLabels } from "../../widgets/label-sets/account";
@@ -27,6 +27,14 @@ export async function buildPhiAuthAreaLoginOverlayTree({
   area: PhiAuthLoginOverlayArea;
 }): Promise<PhiResolvedCmsPageTree> {
   const ids = PHI_AUTH_LOGIN_OVERLAY_IDS[area];
+  const login = buildPhiLoginNodes({
+    ids,
+    siteId: page.siteId,
+    visibilityMask: page.visibilityMask,
+    parentLayoutNodeId: ids.layoutBody,
+    locale: runtime.locale.current,
+    authControllerAddress: createPhiAuthControllerAddress(),
+  });
   const labels = await getPhiLoginFormLabels({
     apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
     internalToken: readPhiServerApiCredentials().internalToken,
@@ -121,20 +129,7 @@ export async function buildPhiAuthAreaLoginOverlayTree({
         background: PHI_COLOR.bgLayout,
         border: false,
       },
-    })],
-    contentWidgets: [buildPhiCmsWidgetNode({
-      id: ids.widgetLogin,
-      siteId: page.siteId,
-      parentLayoutNodeId: ids.layoutBody,
-      typeKey: "form",
-      slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
-      sortOrder: 0,
-      status: PhiCmsStatus.Published,
-      flags: 0,
-      visibilityMask: page.visibilityMask,
-      label: `${area} auth login form`,
-      config: buildPhiLoginFormWidgetConfig(runtime.locale.current),
-      contentId: null,
-    })],
+    }), ...login.layoutNodes],
+    contentWidgets: login.contentWidgets,
   };
 }

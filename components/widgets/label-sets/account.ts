@@ -34,6 +34,14 @@ const PHI_LOGIN_MODAL_LABEL_SET = definePhiLabelSet({
     error_invalid_credentials: definePhiMessageLabel("Invalid credentials."),
     error_login_failed: definePhiMessageLabel("Login failed."),
     error_network: definePhiMessageLabel("Network error while logging in."),
+    methods_separator: "Or continue with",
+    provider_link_title: "Confirm your existing account",
+    provider_link_text: definePhiMessageLabel("The provider verified an email address that already belongs to an account here. Enter that account's password once to link the two."),
+    provider_link_password_label: "Password",
+    provider_link_password_required: definePhiMessageLabel("Enter your existing account password."),
+    provider_link_submit_label: "Link account and sign in",
+    error_method_failed: definePhiMessageLabel("Authentication could not be started."),
+    error_method_unavailable: definePhiMessageLabel("Could not initialize the sign-in session."),
   },
 });
 
@@ -82,6 +90,35 @@ export async function getPhiLoginFormLabels(options: PhiGlobalTranslatorOptions)
       loginFailed: labels.error_login_failed,
       network: labels.error_network,
     },
+  };
+}
+
+/**
+ * The second form on the Login page, for the visitor an external provider has just identified.
+ *
+ * It is its own form because it asks its own question -- one password, for an account that already
+ * exists -- and it is reached only by coming back from a provider with `?auth=link_required`.
+ */
+export async function getPhiProviderLinkConfirmationFormLabels(options: PhiGlobalTranslatorOptions) {
+  const labels = await getPhiLabelSet(options, PHI_LOGIN_MODAL_LABEL_SET);
+  return {
+    providerLink: {
+      passwordLabel: labels.provider_link_password_label,
+      passwordRequired: labels.provider_link_password_required,
+    },
+    actions: {
+      submitLabel: labels.provider_link_submit_label,
+    },
+  };
+}
+
+/** What the row of external providers says, which is not the form's business and not its label set. */
+export async function getPhiAuthMethodsLabels(options: PhiGlobalTranslatorOptions) {
+  const labels = await getPhiLabelSet(options, PHI_LOGIN_MODAL_LABEL_SET);
+  return {
+    separator: labels.methods_separator,
+    failed: labels.error_method_failed,
+    unavailable: labels.error_method_unavailable,
   };
 }
 

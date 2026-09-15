@@ -55,8 +55,36 @@ import {
   type PhiRuntimeWidgetImplementationMode,
 } from "../../plugins/runtime-modules/render-mode";
 import { filterPhiCmsRenderableTreeForViewer } from "../../helpers/cms-access-policy";
+import {
+  readPhiCmsNodeVisibleWhen,
+  readPhiCmsServerPageConditionState,
+  resolvePhiCmsNodeVisibility,
+} from "../../helpers/cms-node-visibility";
+import type {
+  PhiRuntimeConditionExpression,
+  PhiRuntimeFeatureState,
+  PhiRuntimePageConditionState,
+} from "../../types/runtime-condition";
+import { PhiCmsNodeVisibilityGate } from "./clients/phi-cms-node-visibility-gate";
 import { PhiRuntimeModuleRenderClientHost } from "../runtime/runtime-module-render-client-manifest";
 import { PhiRuntimeRenderClientType } from "../../constants/runtime-render-client-types";
+
+/*
+ * Loaded when a render happens, not when this module is imported.
+ *
+ * The resolver reaches the Site's server credentials and is marked `server-only` for it. Naming it at
+ * the top would put that marker in the import graph of everything that so much as reads a helper out of
+ * this file -- which is how a pure function being unit-tested ended up asserting that it was a Server
+ * Component.
+ */
+async function resolvePhiCmsTreeFeatures(
+  ...args: Parameters<
+    typeof import("../../server-helpers/cms-node-features")["resolvePhiCmsTreeFeatures"]
+  >
+) {
+  const { resolvePhiCmsTreeFeatures: resolve } = await import("../../server-helpers/cms-node-features");
+  return resolve(...args);
+}
 
 function resolvePhiRuntimeWidgetRenderer(
   runtimePlugin: PhiCmsRuntimeWidgetPlugin<unknown> | null,
@@ -148,6 +176,8 @@ type PhiCmsRenderContext = Pick<PhiCmsLayoutRendererProps, "runtime" | "tree"> &
   layoutPluginsByType: ReadonlyMap<string, PhiCmsLayoutPlugin<unknown>>;
   runtimeRegistry: PhiResolvedRuntimeRenderRegistry;
   signalParticipants: ReadonlySet<string>;
+  /** What the active Modules reported for the namespaces this tree asks about, or null if it asks none. */
+  features: PhiRuntimeFeatureState | null;
 };
 
 type PhiRenderedChildEntry = {
@@ -244,7 +274,7 @@ function buildLayoutTree(tree: PhiResolvedCmsRenderableTree) {
     .filter((entry) => entry.root !== null);
 }
 
-export function PhiCmsOverlayRenderer({
+export async function PhiCmsOverlayRenderer({
   tree,
   runtime,
   registry,
@@ -255,6 +285,7 @@ export function PhiCmsOverlayRenderer({
   registry: PhiResolvedRuntimeRenderRegistry;
   signalScope: Extract<PhiSignalScope, "area" | "page">;
 }) {
+  const features = await resolvePhiCmsTreeFeatures(tree, registry, runtime);
   const createNode = buildLayoutNodeResolver(tree);
   const layoutPluginsByType = registry.layoutPluginsByType;
   const signalParticipants = resolvePhiTreeSignalParticipants(tree);
@@ -283,6 +314,7 @@ export function PhiCmsOverlayRenderer({
           layoutPluginsByType,
           runtimeRegistry: registry,
           signalParticipants,
+          features,
         }), {
           kind: "layout",
           blockId: root.id,
@@ -363,6 +395,7 @@ function renderContentWidget(
         regionConfig: context.regionConfig,
         config: widgetPlugin.parseConfig(widget.config),
         registry: context.runtimeRegistry,
+        features: context.features,
       }), {
         kind: "widget",
         id: widget.id,
@@ -508,6 +541,9 @@ function wrapPhiRenderedSlotChild(
     signalScope: Extract<PhiSignalScope, "area" | "page">;
     signalRuntime: PhiRenderableBlockRuntime;
     signalParticipant?: boolean;
+    visibleWhen?: PhiRuntimeConditionExpression | null;
+    page?: PhiRuntimePageConditionState | null;
+    features?: PhiRuntimeFeatureState | null;
   },
 ): ReactNode {
   if (!isRenderableNode(node)) {
@@ -534,7 +570,7 @@ function wrapPhiRenderedSlotChild(
     ) as unknown as ReactNode;
   }
 
-  return (
+  const framed = (
     <PhiSlotChildFrame
       key={options.key}
       kind={options.kind}
@@ -555,18 +591,42 @@ function wrapPhiRenderedSlotChild(
       </PhiCmsRenderErrorBoundary>
     </PhiSlotChildFrame>
   );
+
+  /*
+   * The gate goes outside the slot frame, so a node that stays away takes its frame with it. Inside it,
+   * the frame would still be in the slot -- an empty box between two visible ones, which a Layout with
+   * a gap shows as a hole the size of the node that is not there.
+   */
+  return options.visibleWhen
+    ? (
+      <PhiCmsNodeVisibilityGate
+        key={options.key}
+        visibleWhen={options.visibleWhen}
+        receiver={options.blockId != null ? createPhiSignalAddress("cms", options.blockId) : null}
+        page={options.page ?? null}
+        features={options.features ?? null}
+      >
+        {framed}
+      </PhiCmsNodeVisibilityGate>
+    )
+    : framed;
 }
 
 function buildRenderedChildEntries(
   node: PhiCmsLayoutRenderNode,
   context: PhiCmsRenderContext,
 ): PhiRenderedChildEntry[] {
+  const page = readPhiCmsServerPageConditionState(context.runtime);
+  const features = context.features;
   return [
-    ...node.childLayouts.map((child) => {
+    ...node.childLayouts.flatMap((child) => {
+      const visibleWhen = readPhiCmsNodeVisibleWhen(child.config);
+      const visibility = resolvePhiCmsNodeVisibility(visibleWhen, page, features);
+      if (visibility === "omit") return [];
       const resolvedLayoutPlugin = resolvePhiRuntimeLayoutPluginByTypeKey(child.widgetType, context.layoutPluginsByType);
       const layoutPlugin = resolvedLayoutPlugin;
 
-      return {
+      return [{
         slotIndex: child.slotIndex,
         sortOrder: child.sortOrder,
         id: child.id,
@@ -584,11 +644,17 @@ function buildRenderedChildEntries(
           signalParticipant:
             context.signalParticipants.has(createPhiSignalAddress("cms", child.id)) ||
             layoutPlugin?.runtimeSignals != null,
+          visibleWhen: visibility === "gate" ? visibleWhen : null,
+          page,
+          features,
         }),
-      };
+      }];
     }),
-    ...node.childWidgets.map((child) => {
-      return {
+    ...node.childWidgets.flatMap((child) => {
+      const visibleWhen = readPhiCmsNodeVisibleWhen(child.config);
+      const visibility = resolvePhiCmsNodeVisibility(visibleWhen, page, features);
+      if (visibility === "omit") return [];
+      return [{
         slotIndex: child.slotIndex,
         sortOrder: child.sortOrder,
         id: child.id,
@@ -607,8 +673,11 @@ function buildRenderedChildEntries(
             context.signalParticipants.has(createPhiSignalAddress("cms", child.id)) ||
             context.runtimeRegistry.runtimeWidgetPluginsByType.get(child.widgetType)?.runtimeSignals != null ||
             context.runtimeRegistry.previewWidgetPluginsByType.get(child.widgetType)?.runtimeSignals != null,
+          visibleWhen: visibility === "gate" ? visibleWhen : null,
+          page,
+          features,
         }),
-      };
+      }];
     }),
   ].sort((left, right) => left.sortOrder - right.sortOrder || comparePhiCmsInstanceIds(left.id, right.id));
 }
@@ -814,6 +883,7 @@ export async function PhiCmsLayoutRenderer({
     viewer: runtime.viewer,
     registry,
   });
+  const features = await resolvePhiCmsTreeFeatures(filteredTree, registry, runtime);
   const signalParticipants = resolvePhiTreeSignalParticipants(filteredTree);
   const allowedRegionTypes = regionTypes ? new Set(regionTypes) : null;
   const layoutPluginsByType = registry.layoutPluginsByType;
@@ -848,6 +918,7 @@ export async function PhiCmsLayoutRenderer({
           layoutPluginsByType,
           runtimeRegistry: registry,
           signalParticipants,
+          features,
         }), {
           kind: "layout",
           blockId: root.id,

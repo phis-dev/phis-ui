@@ -2,6 +2,7 @@
 
 import {
   createContext,
+  Fragment,
   useContext,
   useEffect,
   useMemo,
@@ -10,8 +11,9 @@ import {
   type ReactNode,
 } from "react";
 
-import { PHI_SPACE } from "../../theme/antd-css-var-contract";
+import { PHI_COLOR, PHI_SPACE } from "../../theme/antd-css-var-contract";
 import { PhiButtonControl } from "../controls/phi-button-control";
+import { PhiLink } from "../navigation/phi-link";
 import type { PhiCmsFormWidgetSubmitConfig } from "../../plugins/runtime-modules/core/widgets/form/config";
 
 /**
@@ -81,9 +83,18 @@ function resolveSubmitJustification(align: PhiCmsFormWidgetSubmitConfig["align"]
   return align === "start" ? "flex-start" : align === "center" ? "center" : "flex-end";
 }
 
+/** A resolved way out of the form: what it says and where it leads, both already decided. */
+export type PhiFormWidgetLink = {
+  key: string;
+  label: string;
+  href: string;
+};
+
 export type PhiFormWidgetFrameProps = {
   /** The submit the Widget carries, or null where it carries none. */
   submit?: PhiCmsFormWidgetSubmitConfig | null;
+  /** The ways out it offers, drawn in the same column as the submit. */
+  links?: readonly PhiFormWidgetLink[];
   children: ReactNode;
 };
 
@@ -99,7 +110,7 @@ export type PhiFormWidgetFrameProps = {
  * property is all it takes for the button to line up under the inputs and move with the column the Layout
  * decides, because that column is a custom property both of them read.
  */
-export function PhiFormWidgetFrame({ submit, children }: PhiFormWidgetFrameProps) {
+export function PhiFormWidgetFrame({ submit, links, children }: PhiFormWidgetFrameProps) {
   const [registration, setRegistration] = useState<PhiFormWidgetSubmitRegistration | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const slot = useMemo<PhiFormWidgetSubmitSlot>(
@@ -107,7 +118,7 @@ export function PhiFormWidgetFrame({ submit, children }: PhiFormWidgetFrameProps
     [],
   );
 
-  const submitNode = submit && registration ? (
+  const submitButton = submit && registration ? (
     <div className="phi-form-descriptor-actions">
       <div
         className="phi-form-cell phi-form-cell--control"
@@ -123,9 +134,50 @@ export function PhiFormWidgetFrame({ submit, children }: PhiFormWidgetFrameProps
     </div>
   ) : null;
 
+  /*
+   * A row of its own on the same tracks, directly under the submit.
+   *
+   * It reads the label column the way the submit does, which is the whole reason these live in the
+   * Widget rather than beside it: a Widget in the next slot stands in the Layout's box, not on the
+   * form's grid, and no percentage of the outer width lands on that column once the grid has gaps.
+   */
+  const linksRow = links && links.length > 0 ? (
+    <div className="phi-form-descriptor-actions">
+      <div
+        className="phi-form-cell phi-form-cell--control"
+        style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: PHI_SPACE.sm }}
+      >
+        {links.map((link, index) => (
+          <Fragment key={link.key}>
+            {index > 0 ? <span aria-hidden style={{ color: PHI_COLOR.textTertiary }}>|</span> : null}
+            <PhiLink href={link.href}>{link.label}</PhiLink>
+          </Fragment>
+        ))}
+      </div>
+    </div>
+  ) : null;
+
+  /*
+   * The ways out come first, then the button.
+   *
+   * Both belong to the Widget and both stand in the control column, so the only question left is the
+   * order, and it is the reading order: what else there is to do, and then the thing this form is for.
+   * The submit last also keeps it next to the fields it submits.
+   *
+   * They travel together through the outlet rather than being appended here, because the body decides
+   * which of its own parts they follow -- the Login's external methods stand below the password form,
+   * and anything appended to the end of the frame would sit under those.
+   */
+  const actionsNode = linksRow || submitButton ? (
+    <>
+      {linksRow}
+      {submitButton}
+    </>
+  ) : null;
+
   return (
     <PhiFormWidgetSubmitSlotContext.Provider value={slot}>
-      <PhiFormWidgetSubmitNodeContext.Provider value={submitNode}>
+      <PhiFormWidgetSubmitNodeContext.Provider value={actionsNode}>
         <div
           style={{
             display: "grid",

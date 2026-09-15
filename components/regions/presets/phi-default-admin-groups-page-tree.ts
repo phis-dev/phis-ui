@@ -319,7 +319,8 @@ export async function buildPhiDefaultAdminGroupsPageTree({
               scope: "page",
               channel: "submit",
               action: "activate",
-              valueType: "none",
+              valueType: "json",
+              valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.formResult,
               receiver: controllerAddress,
             }],
             listens: [{
@@ -389,7 +390,8 @@ export async function buildPhiDefaultAdminGroupsPageTree({
               scope: "page",
               channel: "submit",
               action: "activate",
-              valueType: "none",
+              valueType: "json",
+              valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.formResult,
               receiver: controllerAddress,
             }],
             listens: [{

@@ -13,24 +13,17 @@ export const PHI_AUTH_RUNTIME_MODULE_RENDER_CLIENT_LOADERS = [
     ),
   ],
   [
-    PhiRuntimeRenderClientType.FormConfirm,
+    PhiRuntimeRenderClientType.AuthWorkflow,
     definePhiRuntimeModuleRenderClientLoader(
-      () => import("../../../components/widgets/client/confirm-body")
-        .then((module) => module.PhiConfirmFormClient),
+      () => import("../auth/widgets/auth-workflow/client")
+        .then((module) => module.PhiAuthWorkflowWidgetClient),
     ),
   ],
   [
-    PhiRuntimeRenderClientType.FormLogin,
+    PhiRuntimeRenderClientType.AuthMethods,
     definePhiRuntimeModuleRenderClientLoader(
-      () => import("../../../components/widgets/client/login-body")
-        .then((module) => module.PhiLoginWidget),
-    ),
-  ],
-  [
-    PhiRuntimeRenderClientType.FormResetPassword,
-    definePhiRuntimeModuleRenderClientLoader(
-      () => import("../../../components/widgets/client/reset-password-body")
-        .then((module) => module.PhiResetPasswordFormClient),
+      () => import("../auth/widgets/auth-methods/client")
+        .then((module) => module.PhiAuthMethodsWidgetClient),
     ),
   ],
 ] as const satisfies ReadonlyArray<readonly [string, PhiRuntimeModuleRenderClientLoader]>;

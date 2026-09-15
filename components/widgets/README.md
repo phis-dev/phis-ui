@@ -1005,6 +1005,18 @@ Theme contract consumed indirectly:
 - `Dropdown`
 - spacing and typography inherited from the surrounding header/menu context
 
+## PhiButtonWidget
+
+A Button is a command, a way somewhere, or both.
+
+- `href` makes it a real anchor. It survives a middle click and a page that never hydrates, which is
+  exactly the case a refusal or error page is, so a target the placement already knows belongs here.
+- A wired `navigate` capability sends `{ path }` to the Runtime Controller instead. That is for the
+  Button that cannot be an anchor -- one in a toolbar, or one whose destination a Controller decides --
+  and it goes through the same refusal as every other forward: nothing but a path on this Site.
+- Wiring both is allowed: a Button that records something and then moves on. A Button with `href` and no
+  wiring at all is the plain link, and is rendered as one.
+
 ## PhiFormWidget
 
 Purpose:

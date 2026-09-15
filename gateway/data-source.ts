@@ -17,6 +17,17 @@ export type PhiDataSourceResponseShape = {
   totalKey?: string;
 };
 
+export type PhiApiDataSource = {
+  kind: "api";
+  upstreamPath: string;
+  endpointKey: string;
+  method?: "GET" | "POST";
+  transport?: PhiDataSourceApiTransport;
+  requestShape?: PhiDataSourceRequestShape;
+  responseShape?: PhiDataSourceResponseShape;
+  cache?: PhiDataSourceCache;
+};
+
 export type PhiDataSource =
   | {
       kind: "api";

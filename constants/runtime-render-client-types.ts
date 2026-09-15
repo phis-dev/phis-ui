@@ -3,7 +3,9 @@ import { PhiCmsWidgetType } from "./cms-widget-types";
 
 export const PhiRuntimeRenderClientType = {
   AuthLogout: "@phis/ui/modules/auth/controller/default#logout",
+  AuthMethods: "@phis/ui/modules/auth/controller/default#methods",
   AuthSecurity: "@phis/ui/modules/auth/controller/default#security",
+  AuthWorkflow: "@phis/ui/modules/auth/controller/default#workflow",
   ObservabilityLogDetail: "@phis/ui/modules/observability/controller/default#log-detail",
   AccountPreview: `${PhiCmsWidgetType.Account}#preview`,
   AreaMenuPreview: `${PhiCmsWidgetType.AreaMenu}#preview`,
@@ -17,7 +19,4 @@ export const PhiRuntimeRenderClientType = {
   OverlayContainer: "@phis/ui/runtime#overlay-container",
   SlotChildFrameEnhancer: "@phis/ui/runtime#slot-child-frame",
   FormDescriptor: "@phis/ui/form#descriptor",
-  FormConfirm: "@phis/ui/modules/auth/forms/confirm",
-  FormLogin: "@phis/ui/modules/auth/forms/login",
-  FormResetPassword: "@phis/ui/modules/auth/forms/reset-password",
 } as const;

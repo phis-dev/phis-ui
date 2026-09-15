@@ -46,7 +46,9 @@ fallback, and does not weaken protected Area/API access checks.
 The first-party Auth Module contributes:
 
 - Public route presets for `/login`, `/logout`, `/register`, `/confirm`, and `/reset-password`;
-- `PhiLoginWidget` and the Auth-owned challenge/enrollment/recovery presentation artifacts;
+- the Login composition -- the `login` Form, the `auth-methods` Widget for configured identity
+  providers, the `auth-workflow` Widget for a second factor, and the provider-link confirmation Form --
+  plus the Auth-owned enrollment and recovery presentation artifacts;
 - one Auth UI provider descriptor plus separate lazy Client implementation;
 - one meaningful Auth Controller type mounted once in each active eligible Area;
 - Auth-owned Form field/handler providers required by its flows;
@@ -111,12 +113,21 @@ workflow capabilities, Admin exposes Site settings, and App exposes account secu
 for in-place session recovery. Admin or another authenticated Area may expose the same reauthentication
 presentation only when its active Area projection explicitly declares `primary-login`.
 
-## 4. Login Widget and Auth Controller
+## 4. Login composition and Auth Controller
 
-`PhiLoginWidget` is the single reusable login presentation primitive. The real `/login` Page and modal
-login host render the same widget/provider flow; modal mode is a container choice, not a second login
-implementation. The localized `/<locale>/login` endpoint is always a real Public Page backed by the
-active Public Auth Module's canonical `/login` route preset. It is never merely a URL that opens a modal.
+A sign-in is not one component. The password Form, the row of configured identity providers, the second
+factor and the confirmation for an account that already exists are four placements that happen to share a
+surface, and each says for itself when it belongs on screen: the Form and the providers appear on the
+`auth.password` and `auth.external` features this Site publishes, the second factor when it reports that
+it is under way, the provider-link confirmation when the address carries `?auth=link_required`. Both
+Logins -- the `/login` Page and the modal the Shell opens -- are built from one description of that
+composition, so they cannot drift; modal mode is a container choice, not a second login implementation.
+The localized `/<locale>/login` endpoint is always a real Public Page backed by the active Public Auth
+Module's canonical `/login` route preset. It is never merely a URL that opens a modal.
+
+No part of it navigates. The Form reports its result, the second factor reports its own the same way, and
+the Auth Controller is the single place that decides where a completed sign-in goes -- then asks the
+Runtime Controller to perform the forward, which refuses any target that is not a path on this Site.
 
 The Auth Module owns one Area-mounted Auth Controller type. It is not a no-op controller:
 

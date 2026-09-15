@@ -47,7 +47,13 @@ export const PHI_USER_MANAGEMENT_RUNTIME_CONTROLLER_DEFINITION = {
         valueType: "json",
         valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.tableAction,
       },
-      { id: "formSuccess", channel: "submit", action: "activate", valueType: "none" },
+      {
+        id: "formSuccess",
+        channel: "submit",
+        action: "activate",
+        valueType: "json",
+        valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.formResult,
+      },
       { id: "formCommand", channel: "command", action: "activate", valueType: "string" },
       { id: "formSubmitting", channel: "submitting", action: "change", valueType: "boolean" },
       {

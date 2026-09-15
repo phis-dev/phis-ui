@@ -2,12 +2,27 @@ import {
   findPhiSignalRoutesByCapabilityId,
   readPhiControllerSignalAddress,
   readPhiControllerSignalAddressParts,
+  readPhiSignalAddress,
   type PhiControllerSignalAddress,
+  type PhiSignalAddress,
   type PhiSignalRouteSet,
 } from "./signals";
 import type { PhiRuntimeControllerRequirement } from "./cms-plugins";
 
-export const PHI_RUNTIME_CONDITION_SOURCES = ["row", "form", "controller"] as const;
+/**
+ * Where a condition reads the value it judges.
+ *
+ * `row`, `form`, `controller` and `widget` are values the page produced: a record under the cursor, what
+ * has been typed, what a Controller holds, what a neighbouring Widget found out. `feature` is what this
+ * Site was configured to have -- a named fact a Module publishes about its own setup, such as whether a
+ * sign-in method is switched on, settled before anything renders and never seen by the browser. `page`
+ * is the one the visitor arrived with --
+ * the address of the page they opened, which is state as much as any of the others and the only kind
+ * that is already settled before the first Widget renders. A confirmation link carries its token there,
+ * an external login returns with its outcome there, and a Widget that should appear only for one of
+ * those can say so without a component of its own to read the query string.
+ */
+export const PHI_RUNTIME_CONDITION_SOURCES = ["row", "form", "controller", "page", "widget", "feature"] as const;
 export const PHI_RUNTIME_CONDITION_OPERATORS = ["truthy", "falsy", "equals", "contains"] as const;
 export const PHI_RUNTIME_CONDITION_GROUP_MATCHES = ["all", "any"] as const;
 
@@ -19,9 +34,27 @@ export type PhiRuntimeConditionValue = string;
 export type PhiRuntimeValueCondition = {
   source: PhiRuntimeConditionSource;
   controllerAddress?: PhiControllerSignalAddress;
+  /**
+   * Which Widget is being asked, for a `widget` condition.
+   *
+   * A Controller is state that outlives the Widgets reading it; a Widget reports only what it found out
+   * for itself. Both answer on the same channel, so a Widget beside another one -- a preview of what a
+   * link will do, next to the form that does it -- needs no Controller of its own to be composed with.
+   */
+  widgetAddress?: PhiSignalAddress;
   valuePath: string;
   operator: PhiRuntimeConditionOperator;
   value?: PhiRuntimeConditionValue;
+  /**
+   * How to read a sender that has not said anything yet. Absent means "not matched".
+   *
+   * Hiding until told is right for a fact that is being fetched: a form that spends a confirmation link
+   * must not appear before the link has been checked. It is wrong for a state that only a later action
+   * can bring about -- nobody is halfway through a second authentication factor when the page opens, so
+   * a Widget standing back "while a step is under way" would stand back forever, waiting for a report
+   * that nothing is happening.
+   */
+  whenUnavailable?: PhiRuntimeConditionResult;
   reason?: string;
 };
 
@@ -33,6 +66,36 @@ export type PhiRuntimeConditionExpression =
     };
 
 export type PhiRuntimeConditionResult = "matched" | "not-matched" | "unavailable";
+
+/**
+ * The address of the page as the visitor opened it, which is what a `page` condition reads.
+ *
+ * A missing query parameter is an answer rather than a gap: `falsy` on `query.token` matches on the
+ * page without one, which is how a form with two stages knows which of them it is on.
+ */
+export type PhiRuntimePageConditionState = {
+  path: string;
+  query: Readonly<Record<string, string>>;
+};
+
+/**
+ * What the active Modules report about this Site's configuration, by namespaced name.
+ *
+ * A Module publishes these the way it publishes signal capabilities: deliberately, under a name it
+ * keeps. A condition reads `auth.password`, not a field of somebody's internal context, so renaming
+ * something inside a Module cannot silently change which Widgets a page shows.
+ */
+export type PhiRuntimeFeatureState = Readonly<Record<string, unknown>>;
+
+export type PhiRuntimeConditionSourceValues = {
+  row?: Record<string, unknown> | null;
+  features?: PhiRuntimeFeatureState | null;
+  form?: Record<string, unknown> | null;
+  controllers?: Readonly<Record<string, Record<string, unknown>>> | null;
+  /** Reported by Widgets, keyed by the address each one sends from. */
+  widgets?: Readonly<Record<string, Record<string, unknown>>> | null;
+  page?: PhiRuntimePageConditionState | null;
+};
 
 export type PhiRuntimeConditionStateSignalValue = {
   state: Record<string, unknown>;
@@ -46,18 +109,28 @@ function readConditionValue(value: unknown): PhiRuntimeConditionValue | undefine
   return typeof value === "string" ? value : undefined;
 }
 
+function readConditionSource(value: unknown): PhiRuntimeConditionSource | null {
+  return PHI_RUNTIME_CONDITION_SOURCES.includes(value as PhiRuntimeConditionSource)
+    ? value as PhiRuntimeConditionSource
+    : null;
+}
+
 export function readPhiRuntimeValueCondition(value: unknown): PhiRuntimeValueCondition | null {
   if (!isRecord(value)) return null;
-  const source = value.source === "row" || value.source === "form" || value.source === "controller"
-    ? value.source
-    : null;
+  const source = readConditionSource(value.source);
   const operator = value.operator === "truthy" || value.operator === "falsy" ||
     value.operator === "equals" || value.operator === "contains"
     ? value.operator
     : null;
   const valuePath = typeof value.valuePath === "string" ? value.valuePath.trim() : "";
+  const whenUnavailable = value.whenUnavailable === "matched" || value.whenUnavailable === "not-matched"
+    ? value.whenUnavailable
+    : undefined;
   const controllerAddress = source === "controller"
     ? readPhiControllerSignalAddress(value.controllerAddress)
+    : undefined;
+  const widgetAddress = source === "widget"
+    ? readPhiSignalAddress(value.widgetAddress)
     : undefined;
   const conditionValue = readConditionValue(value.value);
   if (
@@ -65,6 +138,7 @@ export function readPhiRuntimeValueCondition(value: unknown): PhiRuntimeValueCon
     !operator ||
     !valuePath ||
     (source === "controller" && !controllerAddress) ||
+    (source === "widget" && !widgetAddress) ||
     (operator !== "truthy" && operator !== "falsy" && conditionValue === undefined)
   ) {
     return null;
@@ -72,8 +146,10 @@ export function readPhiRuntimeValueCondition(value: unknown): PhiRuntimeValueCon
   return {
     source,
     controllerAddress,
+    widgetAddress,
     valuePath,
     operator,
+    whenUnavailable,
     value: operator === "truthy" || operator === "falsy" ? undefined : conditionValue,
     reason: typeof value.reason === "string" && value.reason.trim() ? value.reason.trim() : undefined,
   };
@@ -147,24 +223,30 @@ export function readPhiRuntimeConditionValue(input: unknown, valuePath: string):
   return current;
 }
 
+function resolvePhiRuntimeConditionSource(
+  condition: PhiRuntimeValueCondition,
+  sources: PhiRuntimeConditionSourceValues,
+): Record<string, unknown> | null {
+  if (condition.source === "row") return sources.row ?? null;
+  if (condition.source === "form") return sources.form ?? null;
+  if (condition.source === "page") return sources.page ?? null;
+  if (condition.source === "feature") return sources.features ?? null;
+  if (condition.source === "widget") {
+    return condition.widgetAddress ? sources.widgets?.[condition.widgetAddress] ?? null : null;
+  }
+  return condition.controllerAddress
+    ? sources.controllers?.[condition.controllerAddress] ?? null
+    : null;
+}
+
 export function matchesPhiRuntimeValueCondition(
   condition: PhiRuntimeValueCondition,
-  sources: {
-    row?: Record<string, unknown> | null;
-    form?: Record<string, unknown> | null;
-    controllers?: Readonly<Record<string, Record<string, unknown>>> | null;
-  },
+  sources: PhiRuntimeConditionSourceValues,
 ) {
-  const source = condition.source === "row"
-    ? sources.row
-    : condition.source === "form"
-      ? sources.form
-    : condition.controllerAddress
-      ? sources.controllers?.[condition.controllerAddress]
-      : null;
+  const source = resolvePhiRuntimeConditionSource(condition, sources);
   if (source == null) return false;
   const current = readPhiRuntimeConditionValue(source, condition.valuePath);
-  if (condition.source === "controller" && current === undefined) return false;
+  if ((condition.source === "controller" || condition.source === "widget") && current === undefined) return false;
   if (condition.operator === "truthy") return Boolean(current);
   if (condition.operator === "falsy") return !current;
   if (condition.operator === "equals") return Object.is(current, condition.value);
@@ -177,23 +259,16 @@ export function matchesPhiRuntimeValueCondition(
 
 export function evaluatePhiRuntimeConditionExpression(
   expression: PhiRuntimeConditionExpression,
-  sources: {
-    row?: Record<string, unknown> | null;
-    form?: Record<string, unknown> | null;
-    controllers?: Readonly<Record<string, Record<string, unknown>>> | null;
-  },
+  sources: PhiRuntimeConditionSourceValues,
 ): PhiRuntimeConditionResult {
   if ("source" in expression) {
-    const source = expression.source === "row"
-      ? sources.row
-      : expression.source === "form"
-        ? sources.form
-        : expression.controllerAddress
-          ? sources.controllers?.[expression.controllerAddress]
-          : null;
-    if (source == null) return "unavailable";
-    if (expression.source === "controller" && readPhiRuntimeConditionValue(source, expression.valuePath) === undefined) {
-      return "unavailable";
+    const source = resolvePhiRuntimeConditionSource(expression, sources);
+    if (source == null) return expression.whenUnavailable ?? "unavailable";
+    if (
+      (expression.source === "controller" || expression.source === "widget") &&
+      readPhiRuntimeConditionValue(source, expression.valuePath) === undefined
+    ) {
+      return expression.whenUnavailable ?? "unavailable";
     }
     return matchesPhiRuntimeValueCondition(expression, sources) ? "matched" : "not-matched";
   }

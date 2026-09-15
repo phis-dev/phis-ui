@@ -46,8 +46,17 @@ type PhiCmsServerRequest = {
   searchParams?: PhiCmsRequestSearchParams;
 };
 
+/**
+ * The request's query, as far as this render knows it.
+ *
+ * An empty result and no result are different answers and must stay that way: the proxy sets this header
+ * on every page it forwards, so a header that is present and empty means "this page was opened without a
+ * query" -- something a condition can be decided on -- while an absent header means nobody said, and a
+ * condition over it has to wait for the browser. Collapsing the two made every page without a query
+ * indistinguishable from a page rendered outside the proxy.
+ */
 function parseSearchParamsHeader(rawValue: string | null | undefined) {
-  if (!rawValue?.trim()) {
+  if (rawValue == null) {
     return undefined;
   }
 
@@ -58,7 +67,7 @@ function parseSearchParamsHeader(rawValue: string | null | undefined) {
     normalized[key] = value;
   }
 
-  return Object.keys(normalized).length > 0 ? normalized : undefined;
+  return normalized;
 }
 
 function attachRuntimeRequest(

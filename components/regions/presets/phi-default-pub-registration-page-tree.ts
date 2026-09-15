@@ -71,7 +71,6 @@ export async function buildPhiDefaultPubRegistrationPageTree({
         visibilityMask: page.visibilityMask,
         label: "pub registration page",
         config: {
-          maxWidth: 1120,
           gap: PHI_SPACE.base,
         },
       }),

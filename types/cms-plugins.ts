@@ -241,6 +241,13 @@ export type PhiCmsWidgetPluginRenderArgs<TConfig> = {
   regionConfig?: PhiCmsRegionConfig;
   config: TConfig;
   registry?: PhiCmsRuntimeRenderRegistry;
+  /**
+   * What the active Modules published about this Site, resolved once for this render.
+   *
+   * Present only where the page asked for it, which is what keeps a Site whose pages ask nothing from
+   * paying for the reads. A Widget that needs a fact unconditionally should read it itself.
+   */
+  features?: import("./runtime-condition").PhiRuntimeFeatureState | null;
   license?: PhiCmsPluginLicenseState;
 };
 
@@ -447,6 +454,16 @@ export type PhiCmsRuntimeRenderRegistry = {
   widgetSlotSizePoliciesByType: ReadonlyMap<string, PhiSlotSizePolicy | undefined>;
   ownerModuleIdByLayoutType: ReadonlyMap<string, PhiRuntimeModuleId>;
   uiProvidersByModuleId: ReadonlyMap<PhiRuntimeModuleId, PhiRuntimeModuleUiProvider>;
+  /**
+   * How to ask each active Module for the facts it publishes, by the namespace it publishes them under.
+   *
+   * Loaders rather than values: a page that asks nothing never loads one, and one that asks about a
+   * single namespace does not make every other Module answer as well.
+   */
+  featureResolverLoadersByNamespace: ReadonlyMap<
+    string,
+    () => Promise<PhiRuntimeModuleFeatureResolver>
+  >;
   dataProviderDescriptorsByKey: ReadonlyMap<
     PhiRuntimeDataProviderKey,
     PhiRuntimeModuleDataProviderDescriptor
@@ -811,8 +828,31 @@ export type PhiRuntimeModuleCatalogEntry = {
   themes?: readonly PhiCmsThemePresetDescriptor[];
   themeBlocks?: readonly PhiCmsThemeBlockDescriptor[];
   loadUiProvider?: () => Promise<PhiRuntimeModuleUiProvider>;
+  /**
+   * Named facts about this Module's own configuration, for conditions to be written against.
+   *
+   * The namespace is declared statically and the resolver is loaded only when a page actually asks --
+   * a Site whose pages carry no `feature` condition never pays for one. What a resolver returns is a
+   * published contract like a signal capability: `auth.password` stays `auth.password` however the
+   * Module rearranges itself inside.
+   */
+  features?: {
+    namespace: string;
+    load: () => Promise<PhiRuntimeModuleFeatureResolver>;
+  };
   load: PhiRuntimeModuleLoader;
 };
+
+export type PhiRuntimeModuleFeatureContext = {
+  apiBaseUrl: string;
+  internalToken: string;
+  siteKey: string;
+  locale: string;
+};
+
+export type PhiRuntimeModuleFeatureResolver = (
+  context: PhiRuntimeModuleFeatureContext,
+) => Promise<Record<string, unknown>> | Record<string, unknown>;
 export type PhiRuntimeModuleCatalog = ReadonlyMap<
   PhiRuntimeModuleId,
   PhiRuntimeModuleCatalogEntry

@@ -104,7 +104,8 @@ export const PHI_ASSET_RUNTIME_CONTROLLER_DEFINITION = {
         id: "formSuccess",
         channel: PHI_ASSET_SIGNAL_CHANNELS.submit,
         action: "activate",
-        valueType: "none",
+        valueType: "json",
+        valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.formResult,
       },
       {
         id: "formSubmitting",

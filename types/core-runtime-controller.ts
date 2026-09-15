@@ -32,6 +32,22 @@ export type PhiCoreRuntimeNotificationValue = {
   showTimeoutProgress?: boolean | null;
 };
 
+/**
+ * A forward the runtime performs on a Widget's behalf.
+ *
+ * Any Widget can ask for one, which is why the target is a path on this Site and never an address:
+ * a value that came back from a handler, or one an author typed, must not be able to send a visitor to
+ * somewhere else entirely. A protocol-relative `//host` is the shape that looks like a path and is not,
+ * so it is refused along with everything that does not begin at the root.
+ *
+ * `replace` is for a forward the visitor should not be able to walk back into -- the sign-in page they
+ * have just left, a link they have just spent.
+ */
+export type PhiCoreRuntimeNavigateValue = {
+  path: string;
+  replace?: boolean;
+};
+
 export type PhiCoreRuntimeMessageValue = {
   level: PhiCoreRuntimeFeedbackLevel;
   content: string;
@@ -152,6 +168,30 @@ export function readPhiCoreRuntimeNotificationSignalValue(
     signal.valueType === "json" &&
     signal.valueSchema === PHI_SIGNAL_VALUE_SCHEMAS.notification
     ? readPhiCoreRuntimeNotificationValue(signal.value)
+    : null;
+}
+
+export function readPhiCoreRuntimeNavigateValue(
+  value: unknown,
+): PhiCoreRuntimeNavigateValue | null {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return null;
+  const record = value as Record<string, unknown>;
+  const path = typeof record.path === "string" ? record.path.trim() : "";
+  if (!path.startsWith("/") || path.startsWith("//")) return null;
+  return {
+    path,
+    ...(record.replace === true ? { replace: true } : {}),
+  };
+}
+
+export function readPhiCoreRuntimeNavigateSignalValue(signal: PhiSignal) {
+  return signal.scope === "site" &&
+    signal.receiver != null &&
+    signal.channel === "path" &&
+    signal.action === "activate" &&
+    signal.valueType === "json" &&
+    signal.valueSchema === PHI_SIGNAL_VALUE_SCHEMAS.runtimeNavigation
+    ? readPhiCoreRuntimeNavigateValue(signal.value)
     : null;
 }
 

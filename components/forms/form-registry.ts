@@ -1,4 +1,3 @@
-import type { PhiFormRenderer } from "./form-resolution";
 import type { PhiFormInitialValuesLoader, PhiFormLabelSetLoader } from "./form-resolution";
 import type { PhiFormDescriptor } from "../../types/form-descriptor";
 import type { PhiRuntimeModuleId } from "../../types/cms-module-descriptors";
@@ -33,7 +32,6 @@ export type PhiRuntimeModuleFormDefinition = {
   variant: string | null;
   config: Record<string, unknown>;
   previewUpstreamPath: string | null;
-  render?: PhiFormRenderer;
   loadLabels?: PhiFormLabelSetLoader;
   loadInitialValues?: PhiFormInitialValuesLoader;
 };

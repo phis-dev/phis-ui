@@ -365,6 +365,20 @@ Presets are declarative composition, not implementation hosts. They may:
 They may not fetch data, import Client implementations, create local registries, mount Controllers,
 branch on another Module, or encode a missing generic capability in a custom Widget/config string.
 
+A Module may publish named facts about its own configuration, which conditions on a page can be written
+against. The catalog entry states the namespace and a loader; the loader runs only where a page actually
+carries a `feature` condition in that namespace, so a Site whose pages ask nothing pays nothing. What a
+resolver returns is a published contract like a signal capability -- `auth.password` keeps its name
+however the Module rearranges itself -- and it is settled while rendering, so the node it guards is
+either absent from the page or in it, never appearing a moment later. A namespace missing from the
+answer means that Module could not be asked, and the nodes it guards stay away.
+
+Sending a visitor somewhere else is a service of the runtime, not something a Widget does for itself. A
+Widget that has finished and has a destination emits to the Runtime Controller on `path`/`activate` with
+`{ path, replace? }`, and the runtime refuses anything that is not a path on this Site -- an absolute URL
+and a protocol-relative `//host` alike. A Module that improvises its own `location.assign` bypasses that
+check and is the one place an answer from a server could become an open redirect.
+
 Path collisions, mount injection, module-derived path segments, navigation reordering, and tombstones
 follow the central route/navigation contract. A Module never patches Site or Skeleton route source.
 Module configuration surfaces follow the Settings container contract in [SETTINGS.md](./SETTINGS.md);

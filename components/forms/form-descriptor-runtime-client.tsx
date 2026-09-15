@@ -24,6 +24,7 @@ import { PhiFormWidgetSubmitOutlet, usePhiFormWidgetSubmit } from "./phi-form-wi
 import { usePhiRuntimeFormClient } from "./runtime-form-client";
 import { PhiAlertControl } from "../controls/phi-alert-control";
 import { usePhiRuntimeFormBinding } from "./runtime-form-binding";
+import { usePhiRuntimePageConditionState } from "../runtime/runtime-page-condition-state";
 
 const EMPTY_FORM_VALUES: Record<string, unknown> = {};
 
@@ -54,10 +55,35 @@ export function PhiFormDescriptorRuntimeClient({
   const source = widgetConfig?.source ?? null;
   const { provider, resource, bindingError } = usePhiTableProvider(source);
   const initialValuesInput = widgetConfig?.formConfig.initialValues;
+  const initialValuesFromQueryInput = widgetConfig?.formConfig.initialValuesFromQuery;
+  const page = usePhiRuntimePageConditionState();
   /*
-   * What the author wrote, under what the server read. The author's values are placement -- a form
-   * opened with a name already filled in -- while the loaded ones are the form's own precondition, and
-   * a placement cannot be allowed to overwrite the guard token it knows nothing about.
+   * What the address carries, for the fields the placement says it carries them for.
+   *
+   * A confirmation link is the only place a token exists, and the form that spends it must not ask the
+   * visitor to copy it out of the address bar. Which parameter feeds which field is placement, not the
+   * form's own business: the same form is reachable from a link, from an operator's tool, or from a
+   * page that already knows the answer, and only the placement knows which.
+   */
+  const queryInitialValues = useMemo(() => {
+    const mapping = initialValuesFromQueryInput &&
+      typeof initialValuesFromQueryInput === "object" &&
+      !Array.isArray(initialValuesFromQueryInput)
+        ? initialValuesFromQueryInput as Record<string, unknown>
+        : null;
+    if (!mapping) return null;
+    const values: Record<string, unknown> = {};
+    for (const [fieldKey, parameter] of Object.entries(mapping)) {
+      const value = typeof parameter === "string" ? page.query[parameter] : undefined;
+      if (value !== undefined) values[fieldKey] = value;
+    }
+    return Object.keys(values).length > 0 ? values : null;
+  }, [initialValuesFromQueryInput, page.query]);
+  /*
+   * What the author wrote, under what the address carries, under what the server read. The author's
+   * values are placement -- a form opened with a name already filled in -- while the loaded ones are
+   * the form's own precondition, and a placement cannot be allowed to overwrite the guard token it
+   * knows nothing about.
    */
   const configuredInitialValues = useMemo(() => {
     const authored = initialValuesInput &&
@@ -65,11 +91,11 @@ export function PhiFormDescriptorRuntimeClient({
       !Array.isArray(initialValuesInput)
         ? initialValuesInput as Record<string, unknown>
         : null;
-    if (!authored && !loadedInitialValues) {
+    if (!authored && !queryInitialValues && !loadedInitialValues) {
       return EMPTY_FORM_VALUES;
     }
-    return { ...authored, ...loadedInitialValues };
-  }, [initialValuesInput, loadedInitialValues]);
+    return { ...authored, ...queryInitialValues, ...loadedInitialValues };
+  }, [initialValuesInput, loadedInitialValues, queryInitialValues]);
   const [error, setError] = useState<string | null>(null);
   const [succeeded, setSucceeded] = useState(false);
   const [record, setRecord] = useState<Record<string, unknown> | null>(configuredInitialValues);
@@ -343,7 +369,7 @@ export function PhiFormDescriptorRuntimeClient({
           const correlationId = submitCorrelationRef.current;
           if (widgetConfig?.execution.mode === "signal") {
             emitCapability("submitValues", { values }, correlationId);
-            emitCapability("submitSuccess", null, correlationId);
+            emitCapability("submitSuccess", { ok: true, payload: null }, correlationId);
             reportSuccess();
             return;
           }
@@ -366,7 +392,11 @@ export function PhiFormDescriptorRuntimeClient({
                 : "Form submission failed.";
               throw new Error(message);
             }
-            emitCapability("submitSuccess", null, correlationId);
+            emitCapability(
+              "submitSuccess",
+              { ok: result.ok, status: result.status, payload: result.payload ?? null },
+              correlationId,
+            );
             reportSuccess();
             const rowIdentity = recordIdentityRef.current;
             if (source && (rowIdentity != null || !widgetConfig?.openActionKey)) {

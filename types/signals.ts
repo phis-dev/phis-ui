@@ -157,6 +157,7 @@ export const PHI_SIGNAL_VALUE_SCHEMAS = {
   pageMeta: createPhiSharedSignalValueSchema("page-meta"),
   pagination: createPhiSharedSignalValueSchema("pagination"),
   runtimeConditionState: createPhiSharedSignalValueSchema("runtime-condition-state"),
+  runtimeNavigation: createPhiSharedSignalValueSchema("runtime-navigation"),
   runtimeTheme: createPhiSharedSignalValueSchema("runtime-theme"),
   stackMeta: createPhiSharedSignalValueSchema("stack-meta"),
   tableAction: createPhiSharedSignalValueSchema("table-action"),

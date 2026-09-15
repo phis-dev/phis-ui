@@ -11,6 +11,7 @@ function renderForm({
   config,
   runtime,
   registry,
+  features,
 }: Parameters<PhiCmsServerWidgetPlugin<PhiCmsFormWidgetConfig>["render"]>[0]) {
   if (!config.formId) {
     return null;
@@ -27,6 +28,7 @@ function renderForm({
       formId={config.formId}
       formInstanceKey={`widget-${widget.id}`}
       config={config}
+      features={features ?? null}
     />
   );
 }

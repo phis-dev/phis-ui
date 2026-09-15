@@ -8,7 +8,7 @@ const PHI_CONFIRM_WIDGET_LABEL_SET = definePhiLabelSet({
   ctx: PHI_TR_CTX_WEB_UI_LABEL,
   labels: {
     confirm_label: "Confirm",
-    pending_label: "Confirming",
+    token_required: definePhiMessageLabel("Confirmation token is required."),
     success_title: "Confirmed",
     success_text: definePhiMessageLabel("Your registration has been confirmed."),
     already_title: "Already Confirmed",
@@ -23,40 +23,50 @@ const PHI_CONFIRM_WIDGET_LABEL_SET = definePhiLabelSet({
     name_label: "Name",
     email_label: "Email",
     company_label: "Company",
-    pending_intro: definePhiMessageLabel("Review the registration details before confirming."),
-    already_intro: definePhiMessageLabel("This registration has already been confirmed."),
-    missing_token_title: "Missing Token",
-    missing_token_text: definePhiMessageLabel("No confirmation token was provided."),
-    login_label: "Login",
-    back_label: "Back",
   },
 });
 
-export async function getPhiConfirmWidgetLabels(options: PhiGlobalTranslatorOptions) {
+/**
+ * The confirmation, told to two Widgets: the form that confirms and the preview beside it.
+ *
+ * `fields`, `actions` and `feedback` are what every form reads. `preview` is what the Form Preview reads
+ * -- a label per field the preview phase returns, and a title and text per outcome it can report, under
+ * the outcome's own name so that no translation stands between the answer and the label for it.
+ */
+export async function getPhiConfirmFormLabels(options: PhiGlobalTranslatorOptions) {
   const labels = await getPhiLabelSet(options, PHI_CONFIRM_WIDGET_LABEL_SET);
 
   return {
-    confirmLabel: labels.confirm_label,
-    pendingLabel: labels.pending_label,
-    successTitle: labels.success_title,
-    successText: labels.success_text,
-    alreadyTitle: labels.already_title,
-    alreadyText: labels.already_text,
-    invalidTitle: labels.invalid_title,
-    invalidText: labels.invalid_text,
-    expiredTitle: labels.expired_title,
-    expiredText: labels.expired_text,
-    genericErrorTitle: labels.generic_error_title,
-    genericErrorText: labels.generic_error_text,
-    detailsTitle: labels.details_title,
-    nameLabel: labels.name_label,
-    emailLabel: labels.email_label,
-    companyLabel: labels.company_label,
-    pendingIntro: labels.pending_intro,
-    alreadyIntro: labels.already_intro,
-    missingTokenTitle: labels.missing_token_title,
-    missingTokenText: labels.missing_token_text,
-    loginLabel: labels.login_label,
-    backLabel: labels.back_label,
+    fields: {
+      token: {
+        required: labels.token_required,
+      },
+    },
+    actions: {
+      submitLabel: labels.confirm_label,
+    },
+    feedback: {
+      successTitle: labels.success_title,
+      successText: labels.success_text,
+      errorTitle: labels.generic_error_title,
+      errorText: labels.generic_error_text,
+    },
+    preview: {
+      title: labels.details_title,
+      fields: {
+        fullName: labels.name_label,
+        firstName: labels.name_label,
+        lastName: labels.name_label,
+        email: labels.email_label,
+        companyName: labels.company_label,
+      },
+      status: {
+        already_confirmed: { title: labels.already_title, text: labels.already_text },
+        expired: { title: labels.expired_title, text: labels.expired_text },
+        invalid_token: { title: labels.invalid_title, text: labels.invalid_text },
+        invalid_state: { title: labels.invalid_title, text: labels.invalid_text },
+        error: { title: labels.generic_error_title, text: labels.generic_error_text },
+      },
+    },
   };
 }

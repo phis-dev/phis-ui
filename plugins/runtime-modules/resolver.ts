@@ -867,6 +867,18 @@ export async function resolvePhiRuntimeRenderRegistry({
     ),
     ownerModuleIdByLayoutType: new Map(layoutEntries.map(([type, entry]) => [type, entry.ownerModuleId])),
     uiProvidersByModuleId,
+    /*
+     * Every active Module's published facts, whether or not its Widgets happen to be on this page.
+     *
+     * The Module that owns the Login form is not the one that owns the Widget rendering it, so keying
+     * this off what the tree uses would leave the Site's own sign-in configuration unanswerable.
+     */
+    featureResolverLoadersByNamespace: new Map(
+      [...moduleSet.moduleDefinitionsById.keys()].flatMap((moduleId) => {
+        const features = catalog.get(moduleId)?.features;
+        return features ? [[features.namespace, features.load] as const] : [];
+      }),
+    ),
     dataProviderDescriptorsByKey,
     formDefinitionsById: moduleSet.formDefinitionsById,
   };

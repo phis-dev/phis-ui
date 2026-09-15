@@ -488,6 +488,12 @@ The Form Widget can route `submitting`, `validationFailed`, `submitSuccess`, and
 a Button, Overlay, or domain Controller. An Overlay closes only after the correlated `submitSuccess`, not
 when Save is clicked. A simple inline Form that needs no external feedback may omit those output routes.
 
+`submitSuccess` carries `{ ok, status?, payload }` -- the handler's answer, not just the fact that there
+was one. A receiver that only closes or reloads ignores it; a Controller that has to act on what came
+back reads it there rather than correlating a second signal. Where the answer says the visitor should go
+somewhere else, that Controller asks the Runtime Controller for the forward (`path`/`activate` with
+`{ path, replace? }`); the Form itself never navigates.
+
 The generic Form Widget may select `execution.mode = signal` for a local control Form. In that mode the
 standard submit input emits the complete `formValues` payload and reset restores and emits the configured
 initial values. The owning Module controller transforms those generic Form signals into domain signals.

@@ -50,6 +50,7 @@ import {
 import {
   PHI_FORM_WIDGET_DEFINITION,
 } from "./widgets/form/config";
+import { PHI_FORM_PREVIEW_WIDGET_DEFINITION } from "./widgets/form-preview/config";
 import {
   PHI_HEADER_NAVIGATION_WIDGET_DEFINITION,
 } from "./widgets/header-navigation/config";
@@ -273,6 +274,13 @@ export const PHI_RUNTIME_MODULE_WIDGETS: readonly PhiRuntimeModuleWidgetDefiniti
     renderPolicies: { runtime: "custom", preview: "custom", authoring: "custom" },
     loadRuntime: () => import("./widgets/form/plugin").then((module) => module.PHI_FORM_WIDGET_PLUGIN),
     loadPreview: () => import("./widgets/form/plugin").then((module) => module.PHI_FORM_WIDGET_PLUGIN),
+  }),
+  defineFirstPartyWidget({
+    definition: PHI_FORM_PREVIEW_WIDGET_DEFINITION,
+    ownerModuleId: PHI_CORE_RUNTIME_MODULE_ID,
+    renderPolicies: { runtime: "custom", preview: "custom", authoring: "usePreview" },
+    loadRuntime: () => import("./widgets/form-preview/plugin").then((module) => module.PHI_FORM_PREVIEW_WIDGET_PLUGIN),
+    loadPreview: () => import("./widgets/form-preview/plugin").then((module) => module.PHI_FORM_PREVIEW_WIDGET_PLUGIN),
   }),
   defineFirstPartyWidget({
     definition: PHI_HEADER_NAVIGATION_WIDGET_DEFINITION,

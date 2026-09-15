@@ -10,6 +10,10 @@ import { PhiRuntimeModuleRenderClientHost } from "../../../../../components/runt
 import { PhiRuntimeRenderClientType } from "../../../../../constants/runtime-render-client-types";
 import type { PhiFormId } from "../../../../../types/form-id";
 import type { PhiCmsFormWidgetConfig } from "./config";
+import {
+  readPhiRuntimeConditionValue,
+  type PhiRuntimeFeatureState,
+} from "../../../../../types/runtime-condition";
 
 export type PhiFormWidgetConfig = Record<string, unknown>;
 
@@ -20,6 +24,8 @@ export type PhiFormWidgetProps = {
   formId: PhiFormId;
   formInstanceKey?: string | number | null;
   config?: PhiCmsFormWidgetConfig;
+  /** What the active Modules published about this Site, as the renderer already resolved it. */
+  features?: PhiRuntimeFeatureState | null;
 };
 
 function normalizeFormId(value: string) {
@@ -32,6 +38,7 @@ export async function PhiFormWidget({
   formId,
   formInstanceKey,
   config,
+  features = null,
 }: PhiFormWidgetProps) {
   const normalizedFormId = normalizeFormId(formId);
   if (!normalizedFormId) {
@@ -60,23 +67,6 @@ export async function PhiFormWidget({
   };
 
   const Provider = registry.uiProvidersByModuleId.get(resolvedForm.definition.ownerModuleId);
-  /*
-   * Every form body is wrapped the same way, whether it draws itself from a descriptor or brings its own
-   * component. The submit belongs to the Widget, so no body may carry one: a body offers a way to submit
-   * and this frame decides whether there is a button at all, what it says and where it sits.
-   */
-  const wrapFormUiProvider = (node: ReactNode) => {
-    const framed = <PhiFormWidgetFrame submit={config?.submit ?? null}>{node}</PhiFormWidgetFrame>;
-    return Provider ? <Provider>{framed}</Provider> : framed;
-  };
-
-  if (resolvedForm.definition.render) {
-    return wrapFormUiProvider(await resolvedForm.definition.render({
-      runtime,
-      resolvedForm,
-      options: renderOptions,
-    }));
-  }
 
   /*
    * Both reads happen here, on the server, and both are the form's own: what it is called, and what it
@@ -88,6 +78,33 @@ export async function PhiFormWidget({
     resolvePhiFormLabels(renderContext),
     resolvedForm.definition.loadInitialValues?.(renderContext) ?? null,
   ]);
+
+  /*
+   * A link is offered only where it leads somewhere that exists: a Site with registration switched off
+   * has no account to create. The fact is read from the same published Module state a node condition
+   * reads, so the two cannot disagree about what this Site offers.
+   */
+  const resolvedLinks = (config?.links ?? []).flatMap((link) => {
+    if (link.requiresFeature && !readPhiRuntimeConditionValue(features, link.requiresFeature)) {
+      return [];
+    }
+    const label = labels[`actions.${link.key}Label`];
+    return label ? [{ key: link.key, label, href: link.href }] : [];
+  });
+
+  /*
+   * Every form body is wrapped the same way. The submit and the ways out belong to the Widget, so no
+   * body may carry either: a body offers a way to submit, and this frame decides whether there is a
+   * button at all, what it says, and which column it and the links stand in.
+   */
+  const wrapFormUiProvider = (node: ReactNode) => {
+    const framed = (
+      <PhiFormWidgetFrame submit={config?.submit ?? null} links={resolvedLinks}>
+        {node}
+      </PhiFormWidgetFrame>
+    );
+    return Provider ? <Provider>{framed}</Provider> : framed;
+  };
 
   return wrapFormUiProvider(
     <PhiRuntimeModuleRenderClientHost

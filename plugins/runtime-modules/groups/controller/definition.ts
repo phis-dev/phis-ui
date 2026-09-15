@@ -48,7 +48,13 @@ export const PHI_GROUPS_RUNTIME_CONTROLLER_DEFINITION = {
       // A Widget asking for the condition state is also what declares it needs this Controller, which
       // is how a `demand` Controller comes to be mounted at all.
       { id: "conditionStateRequest", channel: "condition", action: "reload", valueType: "none" },
-      { id: "formSuccess", channel: "submit", action: "activate", valueType: "none" },
+      {
+        id: "formSuccess",
+        channel: "submit",
+        action: "activate",
+        valueType: "json",
+        valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.formResult,
+      },
       { id: "formCommand", channel: "command", action: "activate", valueType: "string" },
     ],
   },

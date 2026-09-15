@@ -263,6 +263,10 @@ export const PHI_CONFIRM_FORM_DESCRIPTOR = {
       validation: [required("fields.token.required", "Confirmation token is required.")],
     },
   ],
+  success: {
+    title: label("feedback.successTitle", "Confirmed"),
+    text: label("feedback.successText", "Your registration has been confirmed."),
+  },
 } as const satisfies PhiFormDescriptor;
 
 export const PHI_RESET_PASSWORD_FORM_DESCRIPTOR = {
@@ -274,43 +278,50 @@ export const PHI_RESET_PASSWORD_FORM_DESCRIPTOR = {
     {
       key: "email",
       fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.email,
-      label: label("request.email.label", "Email"),
-      placeholder: label("request.email.placeholder", "you@example.com"),
+      label: label("fields.email.label", "Email"),
+      placeholder: label("fields.email.placeholder", "you@example.com"),
       autoComplete: "email",
       validation: [
-        required("request.email.required", "Please enter your email address."),
+        required("fields.email.required", "Please enter your email address."),
         {
           providerKey: PHI_FORM_VALIDATION_PROVIDER_KEYS.email,
-          message: label("request.email.invalid", "Please enter a valid email address."),
+          message: label("fields.email.invalid", "Please enter a valid email address."),
         },
       ],
     },
   ],
+  success: {
+    title: label("feedback.successTitle", "Check your email"),
+    text: label("feedback.successText", "If an account exists for that address, a reset link is on its way."),
+  },
 } as const satisfies PhiFormDescriptor;
 
 export const PHI_RESET_PASSWORD_CONFIRM_FORM_DESCRIPTOR = {
   schemaVersion: PHI_FORM_DESCRIPTOR_SCHEMA_VERSION,
-  key: "reset-password-confirm",
+  key: PHI_SHARED_FORM_IDS.resetPasswordConfirm,
   labelSetKey: PHI_FORM_LABEL_SET_KEYS.resetPassword,
   layout: PHI_FORM_STACKED_LAYOUT,
   fields: [
+    /*
+     * Hidden, because it is not a question: the token arrived in the link and the placement puts it
+     * here. A field nobody should have to type is one nobody should be shown typing.
+     */
     {
       key: "token",
-      fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.text,
-      label: label("confirm.token.label", "Reset token"),
-      validation: [required("confirm.token.required", "The reset token is required.")],
+      fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.hidden,
+      validation: [required("fields.token.required", "The reset token is required.")],
     },
     {
       key: "password",
       fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.password,
-      label: label("confirm.password.label", "New password"),
-      placeholder: label("confirm.password.placeholder", "Choose a secure password"),
+      label: label("fields.password.label", "New password"),
+      placeholder: label("fields.password.placeholder", "Choose a secure password"),
       autoComplete: "new-password",
       validation: [
-        required("confirm.password.required", "Please enter a new password."),
+        required("fields.password.required", "Please enter a new password."),
         {
           providerKey: PHI_FORM_VALIDATION_PROVIDER_KEYS.minLength,
-          message: label("confirm.password.minLength", "Use at least 10 characters."),
+          message: label("fields.password.minLength", "Use at least 10 characters."),
           config: { min: 10 },
         },
       ],
@@ -318,17 +329,21 @@ export const PHI_RESET_PASSWORD_CONFIRM_FORM_DESCRIPTOR = {
     {
       key: "confirmPassword",
       fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.password,
-      label: label("confirm.confirmPassword.label", "Confirm new password"),
-      placeholder: label("confirm.confirmPassword.placeholder", "Repeat your new password"),
+      label: label("fields.confirmPassword.label", "Confirm new password"),
+      placeholder: label("fields.confirmPassword.placeholder", "Repeat your new password"),
       autoComplete: "new-password",
       validation: [
-        required("confirm.confirmPassword.required", "Please confirm the new password."),
+        required("fields.confirmPassword.required", "Please confirm the new password."),
         {
           providerKey: PHI_FORM_VALIDATION_PROVIDER_KEYS.matchesField,
-          message: label("confirm.confirmPassword.mismatch", "The passwords do not match."),
+          message: label("fields.confirmPassword.mismatch", "The passwords do not match."),
           config: { field: "password" },
         },
       ],
     },
   ],
+  success: {
+    title: label("feedback.successTitle", "Password updated"),
+    text: label("feedback.successText", "You can now sign in with your new password."),
+  },
 } as const satisfies PhiFormDescriptor;

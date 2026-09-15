@@ -40,9 +40,23 @@ This document defines the public form-building-block contract in `@phis/ui`.
   - the wrapper collects runtime data and translation keys
   - the wrapper uses `trBulk` with a plugin-defined source locale
   - the client inner renders the actual form UI
-- Token-driven bootstrap flows, such as confirm forms, may add a preview/bootstrap phase before the submit phase; that state belongs to the form definition and renderer contract, not to the widget shell
-- `PhiFormWidget` always resolves a complete versioned descriptor. An optional code renderer may wrap
-  that same descriptor for domain orchestration, but it must not define a second field tree.
+- A flow is composed, not branched. A form describes fields and nothing else, so a stage that asks
+  different questions is a different form, and what decides between them is a condition on the
+  placement rather than a branch inside a component:
+  - `visibleWhen` on a node in the page tree decides whether that node appears at all. It reads the
+    same `PhiRuntimeConditionExpression` a field does, with `page` for the address the visitor arrived
+    with (`query.token`, `path`) and `widget` for what a neighbouring Widget reported about itself.
+    It is settled in two stages: whatever the request already answers is decided while rendering, so
+    the node is either absent or present with no client boundary and no second paint; only a condition
+    that reads browser state is handed to a gate around the node.
+  - `formConfig.initialValuesFromQuery` maps a query parameter onto a field, which is how a token from
+    a link reaches the form that spends it without anyone being asked to type it.
+  - A reading that precedes the form -- what a confirmation link is about -- is the `form-preview`
+    Widget beside it, which reports the form's own `status` word for the placement to condition on.
+- `PhiFormWidget` resolves a complete versioned descriptor and renders it. There is no second branch: a
+  form definition cannot bring a render function, because everything the Widget offers -- signals,
+  execution mode, submit, initial values -- was lost with that branch, and a Preset placing a Button
+  beside such a form wired it to something that was not listening.
 - `PhiFormWidget.execution.mode` is a closed choice:
   - `handler` executes the resolved server submit handler and requires `submitHandlerKey`.
   - `signal` keeps the Form local and emits its submitted or reset values through the declared
@@ -61,6 +75,12 @@ This document defines the public form-building-block contract in `@phis/ui`.
   the same request the capability calls, so it shows the loading state of a submit somebody else started.
   `align` places it within the control column -- `start` is the default, `center` centres it over the
   inputs, `end` puts it at their right edge. The descriptor still refuses `actions`.
+- Ways out of a form belong to the Widget as well. `links: [{ key, href, requiresFeature? }]` draws them
+  in the same column as the submit, directly beneath it, each taking its wording from
+  `actions.<key>Label` of the form's own label set. They are in the Widget because that is the only
+  place that can line them up: the label column is a property of the form's own grid, and a Widget in
+  the next slot stands in the Layout's box instead -- no percentage of the outer width lands on that
+  column once the grid has gaps between its tracks.
 - Every Form Widget listens to the standard `submit` and `reset` inputs. Submit always calls the mounted
   Ant Design Form instance and therefore runs the normal client validation before handler or signal-mode
   execution. Reset restores the resolved initial record through the same runtime Form lifecycle.
@@ -68,6 +88,14 @@ This document defines the public form-building-block contract in `@phis/ui`.
   and `resetComplete` feedback. `stateChange` contains only `{ dirty, valid }`; complete values remain on
   the existing explicit Form-value capabilities. A Controller closes an Overlay only after the matching
   submit-success signal, never on the original Save click.
+- `submitSuccess` carries the normalized result `{ ok, status?, payload }`. There is one announcement for
+  one event: a receiver that only needs to know it worked reads nothing but the arrival, and one that has
+  to act on the answer finds it in the same message. `status` is absent where there was no transport,
+  which is the case for `execution.mode = signal`.
+- A Form never navigates. A Widget that has somewhere to send the visitor asks the Runtime Controller,
+  which listens on `path`/`activate` for `{ path, replace? }` and refuses anything that is not a path on
+  this Site. The Controller that owns the decision -- which is domain knowledge, such as where a sign-in
+  goes next -- reads `submitSuccess` and asks for the forward.
 - The same external action path applies to inline and Overlay Forms. Forms do not detect Overlay ancestry,
   inject buttons into Layout or Overlay chrome, or expose a second callback submit path. Apart from the
   declared `submit`, a Form-internal Button is permitted only as a field-local command Control; it cannot

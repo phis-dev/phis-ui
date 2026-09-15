@@ -55,6 +55,21 @@ export const PHI_CORE_RUNTIME_CONTROLLER_DEFINITION = {
       },
       { id: "themeMode", channel: "themeMode", action: "change", valueType: "boolean" },
       { id: "locale", channel: "locale", action: "change", valueType: "string" },
+      /*
+       * Forwarding, as a service of the runtime rather than a thing each Widget does for itself.
+       *
+       * Any Widget that finishes something and has somewhere to send the visitor asks here -- a form
+       * whose answer names the next page, a module that has nothing more to show. Keeping it in one
+       * place is also what makes the target checkable: the runtime refuses anything that is not a path
+       * on this Site, which a Widget improvising its own `location.assign` would not.
+       */
+      {
+        id: "navigate",
+        channel: "path",
+        action: "activate",
+        valueType: "json",
+        valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.runtimeNavigation,
+      },
       {
         id: "notification",
         channel: "notification",

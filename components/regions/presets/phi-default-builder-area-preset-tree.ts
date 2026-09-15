@@ -2164,7 +2164,8 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                       scope: "area",
                       channel: "assetInspectorSubmit",
                       action: "activate",
-                      valueType: "none",
+                      valueType: "json",
+                      valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.formResult,
                       receiver: createPhiAssetControllerAddress(),
                     },
                     {
@@ -2317,7 +2318,8 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                       scope: "area",
                       channel: "assetFolderSubmit",
                       action: "activate",
-                      valueType: "none",
+                      valueType: "json",
+                      valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.formResult,
                       receiver: createPhiAssetControllerAddress(),
                     },
                     {
