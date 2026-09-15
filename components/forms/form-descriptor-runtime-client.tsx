@@ -19,6 +19,7 @@ import { readPhiRuntimeConditionStateSignalValue } from "../../types/runtime-con
 import { collectPhiRuntimeValueConditions } from "../../types/runtime-condition";
 import { usePhiTableProvider } from "../widgets/client/shared/phi-table-provider";
 import { PhiFormControl, type PhiFormControlFormInstance } from "../controls/phi-form-control";
+import { PhiButtonControl } from "../controls/phi-button-control";
 import { usePhiRuntimeFormClient } from "./runtime-form-client";
 import { PhiAlertControl } from "../controls/phi-alert-control";
 import { usePhiRuntimeFormBinding } from "./runtime-form-binding";
@@ -42,6 +43,7 @@ export function PhiFormDescriptorRuntimeClient({
 }: PhiFormDescriptorRuntimeClientProps) {
   const formClient = usePhiRuntimeFormClient({ controllerAddress: formControllerAddress });
   const formRef = useRef<PhiFormControlFormInstance | null>(null);
+  const [submitting, setSubmitting] = useState(false);
   const submitCorrelationRef = useRef<string | null>(null);
   const recordIdentityRef = useRef<string | number | null>(null);
   const identity = usePhiSignalIdentity();
@@ -213,8 +215,57 @@ export function PhiFormDescriptorRuntimeClient({
     }
   }, [conditionControllerAddresses, emitCapability]);
 
+  /*
+   * The form's own submit goes through `requestSubmit`, the same call the `submit` capability makes when
+   * a Button Widget outside asks for one. One path, so the two cannot disagree about what submitting
+   * means: the button shows the loading state of a submit somebody else started, because there is only
+   * one submit to be in.
+   */
+  const submitAction = widgetConfig?.submit == null ? null : (
+    /*
+     * The same twenty-four tracks as the form above it, opened again for one row.
+     *
+     * Its own grid rather than a row inside the form: the form describes fields, and a submit is not
+     * one. Sharing the track count and the label-column property is all that is needed for the button
+     * to line up under the inputs, and it moves with the column the Layout decides because that column
+     * is a custom property both of them read.
+     */
+    <div className="phi-form-descriptor-actions">
+      <div
+        className="phi-form-cell phi-form-cell--control"
+        style={{
+          display: "flex",
+          justifyContent: widgetConfig.submit.align === "start"
+            ? "flex-start"
+            : widgetConfig.submit.align === "center" ? "center" : "flex-end",
+        }}
+      >
+        <PhiButtonControl
+          type="primary"
+          label={widgetConfig.submit.label ?? labels?.["actions.submitLabel"] ?? "Submit"}
+          loading={submitting}
+          onClick={() => requestSubmit()}
+        />
+      </div>
+    </div>
+  );
+
   const content = loading ? <Skeleton active paragraph={{ rows: 4 }} /> : (
-    <div style={{ display: "grid", gap: "var(--ant-padding-sm)", width: "100%", minWidth: 0 }}>
+    /*
+     * The query container sits here, around the form and its actions together, because a container
+     * cannot answer a question about itself: the actions row opens its own grid beside the form and
+     * still has to know how wide the form is. Both are the width of this element.
+     */
+    <div
+      style={{
+        display: "grid",
+        gap: "var(--ant-padding-sm)",
+        width: "100%",
+        minWidth: 0,
+        containerType: "inline-size",
+        containerName: "phi-form",
+      }}
+    >
       {error ? <PhiAlertControl level="error" showIcon title={error} /> : null}
       <PhiFormControl
         key={recordKey}
@@ -228,6 +279,7 @@ export function PhiFormDescriptorRuntimeClient({
         onValuesChange={runtimeBinding.onValuesChange}
         onBlurCapture={runtimeBinding.onBlurCapture}
         onSubmittingChange={(submitting) => {
+          setSubmitting(submitting);
           emitCapability("submitting", submitting, submitCorrelationRef.current);
           if (!submitting) submitCorrelationRef.current = null;
         }}
@@ -271,6 +323,7 @@ export function PhiFormDescriptorRuntimeClient({
           }
         }}
       />
+      {submitAction}
     </div>
   );
 

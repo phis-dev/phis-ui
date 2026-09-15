@@ -8,8 +8,23 @@ import { PHI_SIGNAL_VALUE_SCHEMAS, readPhiSignalRouteSet } from "../../../../../
 import { requirePhiRuntimeFormControllerForWidget } from "../../../../../components/forms/runtime-form-controller-requirement";
 import { PHI_BUILDER_RUNTIME_DATA_PROVIDER_KEYS } from "../../../builder/ids";
 
+/**
+ * A submit the form carries itself, instead of a Button Widget beside it.
+ *
+ * Optional, and never the only way in: a form is submitted by whoever holds its `submit` capability,
+ * which is how an external Button, an Overlay footer or a toolbar drives one today. This adds a second
+ * sender on the same channel, not a second path -- a form with its own submit still answers the signal,
+ * and one that has none is unchanged.
+ */
+export type PhiCmsFormWidgetSubmitConfig = {
+  /** What it says. The form's own label set decides where this is absent. */
+  label: string | null;
+  align: "start" | "center" | "end";
+};
+
 export type PhiCmsFormWidgetConfig = {
   formId: PhiFormId | null;
+  submit: PhiCmsFormWidgetSubmitConfig | null;
   formConfig: Record<string, unknown>;
   execution: {
     mode: "handler" | "signal";
@@ -35,8 +50,17 @@ export function parsePhiFormWidgetConfig(rawConfig: Record<string, unknown>): Ph
   const providerKey = typeof source.providerKey === "string" ? source.providerKey : "";
   const resourceKey = typeof source.resourceKey === "string" ? source.resourceKey.trim() : "";
 
+  const submit = readRecord(rawConfig.submit);
+  const submitAlign = submit.align;
+
   return {
     formId: isPhiFormId(normalizedFormId) ? normalizedFormId : null,
+    submit: rawConfig.submit == null ? null : {
+      label: typeof submit.label === "string" && submit.label.trim() ? submit.label.trim() : null,
+      align: submitAlign === "start" || submitAlign === "center" || submitAlign === "end"
+        ? submitAlign
+        : "end",
+    },
     formConfig: readRecord(rawConfig.formConfig),
     execution: {
       mode: execution.mode === "signal" ? "signal" : "handler",
@@ -124,6 +148,12 @@ export const PHI_FORM_WIDGET_DEFINITION = {
         providerKey: PHI_BUILDER_RUNTIME_DATA_PROVIDER_KEYS.forms,
       },
     },
+    { key: "submit.label", type: "string", label: "Submit Label" },
+    { key: "submit.align", type: "choice", label: "Submit Alignment", options: [
+      { value: "start", label: "Start" },
+      { value: "center", label: "Center" },
+      { value: "end", label: "End" },
+    ] },
     {
       key: "execution.mode",
       type: "choice",
