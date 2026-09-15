@@ -13,24 +13,19 @@ This document collects the cache and invalidation touchpoints in `gateway/*`.
     - `clearPhiLabelSetCache({ setKey: "widget:registration" })`
     - `clearPhiLabelSetCache({ locale: "de", setKey: "widget:registration" })`
 
-## Cache Tags
+## Site Read Cache
 
-- `getSiteConfigCacheTag(siteKey)`
-  - File: `gateway/cache-tags.ts`
-  - Used by `gateway/site-config.ts`.
-
-- `getSiteNavigationCacheTag(siteKey, navKey, locale?)`
-  - File: `gateway/cache-tags.ts`
-  - Used by `gateway/site-nav.ts`.
-
-These tags are intended for Next.js cache invalidation via `revalidateTag(...)`.
+- `readPhiSiteReadCache(key, load)` / `clearPhiSiteReadCache()`
+  - File: `gateway/site-read-cache.ts`
+  - Per-process cache of what a Site reads from Core on every render, with a 60 s TTL. Used outside development by:
+    - `getResolvedSiteConfig(...)` in `gateway/site-config.ts`
+    - `fetchSiteNavigationOverlay(...)` in `gateway/site-nav.ts` (not for `revision` or review requests)
+  - Cleared by `buildPhiSiteProxyHandlers(...)` (`gateway/site-proxy.ts`) after every accepted POST/PUT/PATCH/DELETE through `/api/site`.
+  - The underlying fetches are `no-store`. Next cache tags are not used: `revalidateTag` reaches only the Site process that ran it, so other processes of the Site catch up within the TTL instead.
 
 ## React `cache(...)` Wrappers
 
 These helpers use React server cache and currently do not expose a manual clear function:
-
-- `getResolvedSiteConfig(...)`
-  - File: `gateway/site-config.ts`
 
 - `getResolvedCmsPage(...)`
   - File: `gateway/site-page.ts`
@@ -63,23 +58,6 @@ If their fetch layer uses `cache: "no-store"`, the underlying request is still d
 - `gateway/form-guard.ts`
   - Always `no-store`, and never cached anywhere else: each render needs a fresh `issuedAt`/`formToken`, which phis-server refuses once `maxSubmitMs` has passed.
 
-## Recommended Pattern
+## Rule
 
-When both Next cache invalidation and local in-process cache reset are needed, do both in the same server-side function:
-
-```ts
-"use server";
-
-import { revalidateTag } from "next/cache";
-import { clearPhiLabelSetCache } from "@phis/ui/gateway/label-set";
-
-export async function invalidateRegistrationLabels() {
-  revalidateTag("your-tag");
-  clearPhiLabelSetCache({ setKey: "widget:registration" });
-}
-```
-
-## Current Limitation
-
-- `revalidateTag(...)` does not automatically clear custom `Map` caches.
-- Custom `Map` caches must be cleared explicitly.
+Published data a Site reads from Core is not kept in Next's data cache (`force-cache`, `revalidateTag`): no invalidation reaches every Site process. Keep it in a per-process cache with a TTL, and clear that cache where the write passes through the Site, as `gateway/site-read-cache.ts` does.

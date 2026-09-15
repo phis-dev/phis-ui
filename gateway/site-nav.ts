@@ -3,7 +3,7 @@ import "server-only";
 import { buildApiHeaders, buildApiUrl } from "../helpers/site-api";
 import type { PhiCmsReviewParams } from "../server-helpers/cms-review";
 import type { PhiCmsNavigationOverlay } from "../types/cms-module-descriptors";
-import { getSiteNavigationCacheTag } from "./cache-tags";
+import { readPhiSiteReadCache } from "./site-read-cache";
 
 export type FetchSiteNavOptions = {
   apiBaseUrl: string;
@@ -145,30 +145,33 @@ export async function fetchSiteNavigationOverlay({
     search.set("reviewRevision", String(review.revisionId));
   }
 
-  const useDevNoStore = process.env.NODE_ENV === "development";
-  const response = await fetch(
-    buildApiUrl(apiBaseUrl, `/api/v1/site/nav?${search.toString()}`),
-    {
-      headers: buildApiHeaders({
-        token: internalToken,
-        siteKey,
-        includeToken: true,
-        includeSiteKey: true,
-        extra: {
-          Accept: "application/json",
-          "User-Agent": "phis-ui/1.0",
-        },
-      }),
-      cache: useDevNoStore ? "no-store" : "force-cache",
-      ...(useDevNoStore
-        ? {}
-        : {
-            next: {
-              tags: [getSiteNavigationCacheTag(siteKey, locale)],
-            },
-          }),
-    } as RequestInit & { next?: { tags: string[] } },
-  );
+  const url = buildApiUrl(apiBaseUrl, `/api/v1/site/nav?${search.toString()}`);
+  const load = () => fetchNavigationOverlay(url, internalToken, siteKey);
+  // A revision or a review asks for a draft the author is looking at, never what visitors get.
+  if (process.env.NODE_ENV === "development" || search.has("revision") || search.has("reviewKind")) {
+    return load();
+  }
+  return readPhiSiteReadCache(`site-nav:${siteKey.trim().toLowerCase()}:${search.toString()}`, load);
+}
+
+async function fetchNavigationOverlay(
+  url: string,
+  internalToken: string,
+  siteKey: string,
+): Promise<PhiCmsNavigationOverlay | null> {
+  const response = await fetch(url, {
+    headers: buildApiHeaders({
+      token: internalToken,
+      siteKey,
+      includeToken: true,
+      includeSiteKey: true,
+      extra: {
+        Accept: "application/json",
+        "User-Agent": "phis-ui/1.0",
+      },
+    }),
+    cache: "no-store",
+  });
 
   if (response.status === 404) {
     return null;

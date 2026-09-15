@@ -1,9 +1,8 @@
-import { cache } from "react";
 import "server-only";
 
 import { buildApiHeaders, buildApiUrl } from "../helpers/site-api";
 import type { PhiShellTheme } from "../components/shell/shell-types";
-import { getSiteConfigCacheTag } from "./cache-tags";
+import { readPhiSiteReadCache } from "./site-read-cache";
 import type {
   PhiSiteFontSlots,
   PhiSiteRemSettings,
@@ -89,7 +88,11 @@ export type GetResolvedSiteConfigOptions = {
   siteKey: string;
 };
 
-export const getResolvedSiteConfig = cache(async function getResolvedSiteConfig({
+/**
+ * The Site's config as Core publishes it. Kept in the Site process's read cache outside development
+ * (gateway/site-read-cache.ts), never in Next's data cache.
+ */
+export async function getResolvedSiteConfig({
   apiBaseUrl,
   internalToken,
   siteKey,
@@ -104,7 +107,18 @@ export const getResolvedSiteConfig = cache(async function getResolvedSiteConfig(
     throw new Error("Missing siteKey for getResolvedSiteConfig.");
   }
 
-  const useDevNoStore = process.env.NODE_ENV === "development";
+  const load = () => fetchSiteConfig({ apiBaseUrl, internalToken, siteKey });
+  if (process.env.NODE_ENV === "development") {
+    return load();
+  }
+  return readPhiSiteReadCache(`site-config:${siteKey.trim().toLowerCase()}`, load);
+}
+
+async function fetchSiteConfig({
+  apiBaseUrl,
+  internalToken,
+  siteKey,
+}: GetResolvedSiteConfigOptions): Promise<PhiSiteConfig> {
   const response = await fetch(buildApiUrl(apiBaseUrl, "/api/v1/site"), {
     headers: buildApiHeaders({
       token: internalToken,
@@ -116,15 +130,8 @@ export const getResolvedSiteConfig = cache(async function getResolvedSiteConfig(
         "User-Agent": "phis-ui/1.0",
       },
     }),
-    cache: useDevNoStore ? "no-store" : "force-cache",
-    ...(useDevNoStore
-      ? {}
-      : {
-          next: {
-            tags: [getSiteConfigCacheTag(siteKey)],
-          },
-        }),
-  } as RequestInit & { next?: { tags: string[] } });
+    cache: "no-store",
+  });
 
   if (!response.ok) {
     throw new Error(`Failed to fetch site config (${response.status}).`);
@@ -136,4 +143,4 @@ export const getResolvedSiteConfig = cache(async function getResolvedSiteConfig(
   }
 
   return payload.site;
-});
+}
