@@ -40,6 +40,7 @@ export type PhiThreeColumnLayoutProps = {
   shadow?: PhiShadow | null;
   effect?: PhiLayoutEffectId;
   layoutKind?: PhiLayoutKind;
+  labelEnd?: number;
   padding?: CSSProperties["padding"];
   paddingTop?: CSSProperties["paddingTop"];
   paddingRight?: CSSProperties["paddingRight"];
@@ -202,6 +203,7 @@ export function PhiThreeColumnLayout({
     borderRadius,
     effect,
     shadow,
+    labelEnd,
   } = layoutProps;
   const resolvedRenderMode = renderMode ?? "live";
   const resolvedLeftWidth = normalizePhiCssSize(leftWidth);
@@ -215,6 +217,7 @@ export function PhiThreeColumnLayout({
     style: resolvedLayoutStyle,
     hasExplicitLayoutBackground,
   } = resolvePhiBaseLayoutChrome({
+    labelEnd,
     padding,
     paddingTop,
     paddingRight,

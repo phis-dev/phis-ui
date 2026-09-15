@@ -28,6 +28,18 @@ For title-bearing families such as `PhiCollapsibleLayout`, the title belongs to 
 It is not derived from the child label and does not move with child DnD. Empty live panels may be omitted
 while their configured titles remain persisted for later reuse.
 
+## Forms
+
+There is no Form Layout. A form is a Form Widget, and it stands in whichever Layout suits the page --
+commonly a vertical flex in slot 0. What the Layout contributes is `labelEnd`, a shared Layout field on
+the 24-track form grid, written the two ways it is read: the grid line a descriptor form places its
+labels on, and the share of the width derived for labelled Controls, which know nothing of the grid.
+Nothing authors that share, so the two cannot drift.
+
+A Layout kind of its own existed once and was a content Layout with this one extra number. It bought no
+topology, which the contract above forbids as a reason for a kind, and it gave "form" a second meaning
+beside the Widget that already had the name. The range contract is in [`LAYOUTING.md`](../../LAYOUTING.md).
+
 ## Regions
 
 `PhiStructureRegionLayout` and `PhiPageRegionLayout` are Builder/preview adapters for Region-owned

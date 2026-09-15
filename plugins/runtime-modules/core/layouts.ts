@@ -7,7 +7,6 @@ import {
   PHI_CONTENT_LAYOUT_DEFINITION,
   PHI_FLEX_LAYOUT_DEFINITION,
   PHI_FLEX_VERTICAL_LAYOUT_DEFINITION,
-  PHI_FORM_LAYOUT_DEFINITION,
   PHI_GRID_LAYOUT_DEFINITION,
   PHI_MASONRY_LAYOUT_DEFINITION,
   PHI_SPLIT_CARD_LAYOUT_DEFINITION,
@@ -35,7 +34,6 @@ function defineCoreLayout<TConfig>(
 
 export const PHI_RUNTIME_MODULE_LAYOUTS: readonly PhiRuntimeModuleLayoutDefinition[] = [
   defineCoreLayout(PHI_CONTENT_LAYOUT_DEFINITION, () => import("../../../components/layouts/plugins/content-layout-plugin").then((module) => module.PHI_CONTENT_LAYOUT_PLUGIN)),
-  defineCoreLayout(PHI_FORM_LAYOUT_DEFINITION, () => import("../../../components/layouts/plugins/form-layout-plugin").then((module) => module.PHI_FORM_LAYOUT_PLUGIN)),
   defineCoreLayout(PHI_FLEX_LAYOUT_DEFINITION, () => import("../../../components/layouts/plugins/flex-layout-plugin").then((module) => module.PHI_FLEX_LAYOUT_PLUGIN)),
   defineCoreLayout(PHI_FLEX_VERTICAL_LAYOUT_DEFINITION, () => import("../../../components/layouts/plugins/flex-vertical-layout-plugin").then((module) => module.PHI_FLEX_VERTICAL_LAYOUT_PLUGIN)),
   defineCoreLayout(PHI_COLLAPSIBLE_LAYOUT_DEFINITION, () => import("../../../components/layouts/plugins/collapsible-layout-plugin").then((module) => module.PHI_COLLAPSIBLE_LAYOUT_PLUGIN)),

@@ -78,6 +78,7 @@ export const PHI_STACK_LAYOUT_PLUGIN: PhiCmsLayoutPlugin<PhiCmsStackLayoutConfig
       background={config.background}
       border={config.border}
       borderRadius={config.borderRadius}
+      labelEnd={config.labelEnd}
       size={config.size}
       minSize={config.minSize}
       maxSize={config.maxSize}

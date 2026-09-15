@@ -21,9 +21,11 @@ const PHI_LOGIN_MODAL_LABEL_SET = definePhiLabelSet({
   ctx: PHI_TR_CTX_WEB_UI_LABEL,
   labels: {
     title: "Login",
+    submit_label: "Sign in",
     email_label: "Email",
     password_label: "Password",
-    forgot_password_label: "Forgot password?",
+    forgot_password_label: "Forgot password",
+    register_label: "Create account",
     email_required: definePhiMessageLabel("Please enter your email."),
     email_invalid: definePhiMessageLabel("Please enter a valid email address."),
     password_required: definePhiMessageLabel("Please enter your password."),
@@ -58,8 +60,9 @@ export async function getPhiLoginFormLabels(options: PhiGlobalTranslatorOptions)
   return {
     title: labels.title,
     actions: {
-      submitLabel: labels.title,
+      submitLabel: labels.submit_label,
       forgotPasswordLabel: labels.forgot_password_label,
+      registerLabel: labels.register_label,
     },
     fields: {
       email: {

@@ -1,4 +1,5 @@
 import type { CSSProperties, ReactNode } from "react";
+import { PHI_FORM_GRID_TRACKS } from "../../types/form-descriptor";
 
 import {
   resolvePhiLayoutStyle,
@@ -40,6 +41,8 @@ export type PhiBaseLayoutProps = PhiLayoutProps & {
   ) => void;
   editSlotTitleAction?: (slotIndex: number, title: string) => void;
   layoutKind?: PhiLayoutKind;
+  /** Shared Layout field: the grid line the label column inside this Layout ends at. */
+  labelEnd?: number;
   editFrameBackground?: CSSProperties["background"];
   style?: CSSProperties;
 };
@@ -77,8 +80,10 @@ export function resolvePhiBaseLayoutChrome({
   borderRadius,
   effect,
   shadow,
+  labelEnd,
 }: Pick<
   PhiBaseLayoutProps,
+  | "labelEnd"
   | "padding"
   | "paddingTop"
   | "paddingRight"
@@ -108,6 +113,22 @@ export function resolvePhiBaseLayoutChrome({
   const style: CSSProperties = {
     ...composePhiLayoutEffectStyle(layoutStyle, effectStyle),
     ...(resolvedBoxShadow == null ? {} : { boxShadow: resolvedBoxShadow }),
+    /*
+     * The label column, written the two ways it is read: as the grid line a descriptor form places its
+     * labels on, and as the share of the width a labelled Control needs, which knows nothing of the
+     * grid. Custom properties because they have to cross a server/client boundary -- a Layout renders on
+     * the server and its slots arrive as already-rendered children, so nothing React carries gets there.
+     *
+     * Here rather than in one Layout, because every Layout resolves its chrome through this: a form or a
+     * panel of labelled Controls can stand in any of them. It used to be a Layout kind of its own, which
+     * bought nothing and gave the word "form" a second meaning beside the Widget.
+     */
+    ...(labelEnd == null ? {} : {
+      "--phi-form-label-end": labelEnd,
+      "--phi-labeled-control-label-width":
+        `${Number((((labelEnd - 1) / PHI_FORM_GRID_TRACKS) * 100).toFixed(4))}%`,
+      "--phi-labeled-control-width": "100%",
+    } as CSSProperties),
   };
   const hasExplicitLayoutBackground =
     style.background != null ||

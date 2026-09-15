@@ -88,6 +88,7 @@ export const PHI_CAROUSEL_LAYOUT_PLUGIN: PhiCmsLayoutPlugin<PhiCmsCarouselLayout
       background={config.background}
       border={config.border}
       borderRadius={config.borderRadius}
+      labelEnd={config.labelEnd}
       size={config.size}
       minSize={config.minSize}
       maxSize={config.maxSize}

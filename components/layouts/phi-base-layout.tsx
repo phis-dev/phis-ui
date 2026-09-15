@@ -19,6 +19,7 @@ import {
 
 export type { PhiBaseLayoutProps } from "./phi-layout-view-model";
 
+
 function resolvePhiRenderableBlockStyleValue(value: number | string | null | undefined) {
   return value == null || value === 0 || value === "0" || value === "0px" ? undefined : value;
 }
@@ -27,6 +28,7 @@ export function PhiBaseLayout({
   slots,
   editSlotLabels,
   layoutKind,
+  labelEnd,
   padding,
   paddingTop,
   paddingRight,
@@ -153,6 +155,7 @@ export function PhiBaseLayout({
     style: resolvedLayoutStyle,
     hasExplicitLayoutBackground,
   } = resolvePhiBaseLayoutChrome({
+    labelEnd,
     padding,
     paddingTop,
     paddingRight,

@@ -1,4 +1,5 @@
 import { createPhiPresetCmsInstanceIdMap } from "../../../types/cms-instance-id";
+import { PHI_SPACE } from "../../../theme/antd-css-var-contract";
 import { PHI_PUBLIC_RUNTIME_MODULE_ID } from "../../../plugins/runtime-modules/public/ids";
 import {
   PHI_CMS_DEFAULT_SLOT_INDEX,
@@ -80,8 +81,8 @@ export async function buildPhiDefaultPubContactPageTree({
         },
       }),
       buildPhiCmsLayoutNode({
-        creationPreset: { layoutKind: "form", preset: "panel" },
-        typeKey: "form",
+        creationPreset: { layoutKind: "verticalflex", preset: "panel" },
+        typeKey: "flex-vertical",
         id: SYNTHETIC_CONTACT_LAYOUT_IDS.layoutForm,
         siteId: page.siteId,
         parentLayoutNodeId: SYNTHETIC_CONTACT_LAYOUT_IDS.layoutContent,
@@ -91,7 +92,7 @@ export async function buildPhiDefaultPubContactPageTree({
         flags: 0,
         visibilityMask: page.visibilityMask,
         label: "pub contact form layout",
-        config: {},
+        config: { padding: PHI_SPACE.xl },
       }),
     ],
     contentWidgets: [
@@ -125,7 +126,7 @@ export async function buildPhiDefaultPubContactPageTree({
         id: SYNTHETIC_CONTACT_WIDGET_IDS.widgetContact,
         siteId: page.siteId,
         parentLayoutNodeId: SYNTHETIC_CONTACT_LAYOUT_IDS.layoutForm,
-        slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
+        slotIndex: 0,
         sortOrder: 0,
         status: PhiCmsStatus.Published,
         flags: 0,
@@ -139,7 +140,7 @@ export async function buildPhiDefaultPubContactPageTree({
       }),
       buildPhiCmsWidgetNode({
         typeKey: "button", id: SYNTHETIC_CONTACT_WIDGET_IDS.widgetContactSubmit,
-        siteId: page.siteId, parentLayoutNodeId: SYNTHETIC_CONTACT_LAYOUT_IDS.layoutForm, slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
+        siteId: page.siteId, parentLayoutNodeId: SYNTHETIC_CONTACT_LAYOUT_IDS.layoutForm, slotIndex: 1,
         sortOrder: 1, status: PhiCmsStatus.Published, flags: 0, visibilityMask: page.visibilityMask,
         label: "pub contact submit", config: { key: "submit", label: "Send message", buttonType: "primary", signalRoutes: { emits: [{ routeKey: "pub-contact-submit-button", capabilityId: "activate", scope: "page", channel: "submit", action: "activate", valueType: "none", receiver: createPhiSignalAddress("cms", SYNTHETIC_CONTACT_WIDGET_IDS.widgetContact) }] } }, contentId: null,
       }),

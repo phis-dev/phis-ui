@@ -149,6 +149,7 @@ export function PhiSplitCardLayout({
   editSlotAnchor = "center",
   renderMode = "live",
   layoutKind = "split",
+  labelEnd,
   padding,
   paddingTop,
   paddingRight,
@@ -170,6 +171,7 @@ export function PhiSplitCardLayout({
     style: resolvedLayoutStyle,
     hasExplicitLayoutBackground,
   } = resolvePhiBaseLayoutChrome({
+    labelEnd,
     padding,
     paddingTop,
     paddingRight,

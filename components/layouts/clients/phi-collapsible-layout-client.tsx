@@ -218,6 +218,7 @@ function PhiCollapsibleLayoutBody({
     editSlotLabels,
     editSlotTitleAction,
     style,
+    labelEnd,
   } = layoutProps;
   const resolvedRenderMode = renderMode ?? "live";
   const isEditMode = resolvedRenderMode === "editor";
@@ -415,6 +416,7 @@ function PhiCollapsibleLayoutBody({
     style: resolvedLayoutStyle,
     hasExplicitLayoutBackground,
   } = resolvePhiBaseLayoutChrome({
+    labelEnd,
     padding,
     paddingTop,
     paddingRight,

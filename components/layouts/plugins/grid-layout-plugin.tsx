@@ -40,6 +40,7 @@ export const PHI_GRID_LAYOUT_PLUGIN: PhiCmsLayoutPlugin<PhiCmsGridLayoutConfig> 
       background={config.background}
       border={config.border}
       borderRadius={config.borderRadius}
+      labelEnd={config.labelEnd}
     />
   )),
 };

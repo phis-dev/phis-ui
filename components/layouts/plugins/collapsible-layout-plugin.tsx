@@ -83,6 +83,7 @@ export const PHI_COLLAPSIBLE_LAYOUT_PLUGIN: PhiCmsLayoutPlugin<PhiCmsCollapsible
       background={config.background}
       border={config.border}
       borderRadius={config.borderRadius}
+      labelEnd={config.labelEnd}
       size={config.size}
       minSize={config.minSize}
       maxSize={config.maxSize}

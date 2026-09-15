@@ -20,15 +20,6 @@ const PHI_CONTENT_LAYOUT_PANEL_PRESET = {
     padding: PHI_SPACE.base,
 } as const;
 
-export const PHI_FORM_LAYOUT_DEFAULTS: PhiLayoutDefaults = {
-    margin: 0,
-};
-const PHI_FORM_LAYOUT_PANEL_PRESET = {
-    ...PHI_LAYOUT_CHROME_PRESET_DEFAULTS,
-    margin: 0,
-    padding: PHI_SPACE.xl,
-} as const;
-
 export const PHI_FLEX_LAYOUT_DEFAULTS: PhiLayoutDefaults = {
     distribution: "anchor",
     // A fresh row starts left-aligned and vertically centred, its children one base margin apart.
@@ -245,7 +236,6 @@ const PHI_THREE_COLUMN_LAYOUT_PANEL_PRESET = {
 
 const PHI_LAYOUT_DEFAULTS_BY_KIND: Record<PhiLayoutKind, PhiLayoutDefaults> = {
   content: PHI_CONTENT_LAYOUT_DEFAULTS,
-  form: PHI_FORM_LAYOUT_DEFAULTS,
   flex: PHI_FLEX_LAYOUT_DEFAULTS,
   stack: PHI_STACK_LAYOUT_DEFAULTS,
   carousel: PHI_CAROUSEL_LAYOUT_DEFAULTS,
@@ -281,7 +271,6 @@ export function resolvePhiLayoutDefaults(
 
 const PHI_LAYOUT_PANEL_PRESETS_BY_KIND: Record<PhiLayoutKind, JsonRecord> = {
   content: PHI_CONTENT_LAYOUT_PANEL_PRESET,
-  form: PHI_FORM_LAYOUT_PANEL_PRESET,
   flex: PHI_FLEX_LAYOUT_PANEL_PRESET,
   stack: PHI_STACK_LAYOUT_PANEL_PRESET,
   carousel: PHI_CAROUSEL_LAYOUT_PANEL_PRESET,

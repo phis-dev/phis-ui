@@ -39,6 +39,7 @@ export const PHI_THREE_COLUMN_LAYOUT_PLUGIN: PhiCmsLayoutPlugin<PhiCmsThreeColum
       background={config.background}
       border={config.border}
       borderRadius={config.borderRadius}
+      labelEnd={config.labelEnd}
       size={config.size}
       minSize={config.minSize}
       maxSize={config.maxSize}

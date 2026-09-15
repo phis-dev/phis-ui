@@ -26,6 +26,7 @@ const PhiAuthWorkflowBody = lazy(
 
 export type PhiLoginWidgetConfig = {
   forgotPasswordHref?: string;
+  registerHref?: string;
 };
 
 export type PhiLoginWidgetProps = PhiClientBlockBaseProps<
@@ -34,6 +35,7 @@ export type PhiLoginWidgetProps = PhiClientBlockBaseProps<
   Pick<PhiBlockRuntime, "site" | "locale">
 > & {
   forgotPasswordHref?: string;
+  registerHref?: string;
   onSuccess?: (payload: { area?: string | null }) => void;
   formId?: string;
   formControllerAddress?: PhiSignalAddress | null;
@@ -104,6 +106,7 @@ export function PhiLoginWidget({
   labels,
   config,
   forgotPasswordHref,
+  registerHref,
   onSuccess,
   formId,
   formControllerAddress,
@@ -355,6 +358,7 @@ export function PhiLoginWidget({
           descriptor={descriptor}
           labels={labels}
           forgotPasswordHref={forgotPasswordHref ?? config?.forgotPasswordHref}
+          registerHref={registerHref ?? config?.registerHref}
           initialValues={loginInitialValues}
           onSubmit={handleSubmit}
         />

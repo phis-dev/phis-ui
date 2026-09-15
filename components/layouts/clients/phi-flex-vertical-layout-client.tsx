@@ -58,6 +58,7 @@ export function PhiFlexVerticalLayout({
     editRenderInsertControl,
     editSlotLabels,
     style,
+    labelEnd,
   } = layoutProps;
   const resolvedVertical = true;
   const resolvedSlotStates = resolvePhiBaseLayoutSlotStates(slots.length, layoutProps.initialSlotStates);
@@ -69,6 +70,7 @@ export function PhiFlexVerticalLayout({
     style: resolvedLayoutStyle,
     hasExplicitLayoutBackground,
   } = resolvePhiBaseLayoutChrome({
+    labelEnd,
     padding,
     paddingTop,
     paddingRight,

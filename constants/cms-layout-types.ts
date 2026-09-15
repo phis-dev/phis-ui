@@ -38,7 +38,6 @@ const PHI_CMS_LAYOUT_MODULE_BY_TYPE_KEY: Readonly<Record<string, keyof typeof PH
   "content": "core",
   "flex": "core",
   "flex-vertical": "core",
-  "form": "core",
   "grid": "core",
   "masonry": "core",
   "page-region": "builder",
@@ -219,7 +218,6 @@ export const PHI_CMS_SPLIT_LAYOUT_SLOTS = [
 
 export const PhiCmsLayoutType = {
   Content: defineLayoutType(resolvePhiCmsLayoutPluginKey("content"), "content"),
-  Form: defineLayoutType(resolvePhiCmsLayoutPluginKey("form"), "form"),
   Flex: defineLayoutType(resolvePhiCmsLayoutPluginKey("flex"), "flex"),
   FlexVertical: defineLayoutType(resolvePhiCmsLayoutPluginKey("flex-vertical"), "flex-vertical"),
   Stack: defineLayoutType(resolvePhiCmsLayoutPluginKey("stack"), "stack"),
@@ -240,14 +238,6 @@ const PHI_CMS_LAYOUT_REGISTRY_RAW = [
     pluginKey: resolvePhiCmsLayoutPluginKey("content"),
     typeKey: "content",
     namespacedTypeKey: PhiCmsLayoutType.Content,
-    slots: PHI_CMS_DEFAULT_LAYOUT_SLOTS,
-  },
-  {
-    key: "form",
-    exportName: "PhiFormLayout",
-    pluginKey: resolvePhiCmsLayoutPluginKey("form"),
-    typeKey: "form",
-    namespacedTypeKey: PhiCmsLayoutType.Form,
     slots: PHI_CMS_DEFAULT_LAYOUT_SLOTS,
   },
   {

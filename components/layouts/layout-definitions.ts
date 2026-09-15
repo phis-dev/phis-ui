@@ -31,7 +31,6 @@ import type {
   PhiCmsContentLayoutConfig,
   PhiCmsFlexLayoutConfig,
   PhiCmsFlexVerticalLayoutConfig,
-  PhiCmsFormLayoutConfig,
   PhiCmsGridLayoutConfig,
   PhiCmsMasonryLayoutConfig,
   PhiCmsSplitCardLayoutConfig,
@@ -74,23 +73,6 @@ export const PHI_CONTENT_LAYOUT_DEFINITION = {
   fields: [...PHI_LAYOUT_PADDING_FIELDS],
   slots: [...PHI_CMS_DEFAULT_LAYOUT_SLOTS],
 } satisfies PhiCmsLayoutPluginDefinition<PhiCmsContentLayoutConfig>;
-
-export const PHI_FORM_LAYOUT_DEFINITION = {
-  kind: "layout",
-  pluginKey: resolvePhiCmsLayoutPluginKey("form"),
-  typeKey: "form",
-  layoutKind: "form",
-  title: "Form",
-  description: "Single-slot form layout for form-oriented content.",
-  category: "structure",
-  iconName: "content",
-  defaultConfig: resolvePhiLayoutDefaults("form"),
-  fields: [
-    ...PHI_LAYOUT_PADDING_FIELDS,
-    { key: "labelWidth", type: "length", label: "Label Width", min: 0 },
-  ],
-  slots: [...PHI_CMS_DEFAULT_LAYOUT_SLOTS],
-} satisfies PhiCmsLayoutPluginDefinition<PhiCmsFormLayoutConfig>;
 
 export const PHI_FLEX_LAYOUT_DEFINITION = {
   kind: "layout",
@@ -489,7 +471,6 @@ export const PHI_PAGE_REGION_LAYOUT_DEFINITION = {
 
 export const PHI_CORE_LAYOUT_DEFINITIONS = [
   PHI_CONTENT_LAYOUT_DEFINITION,
-  PHI_FORM_LAYOUT_DEFINITION,
   PHI_FLEX_LAYOUT_DEFINITION,
   PHI_FLEX_VERTICAL_LAYOUT_DEFINITION,
   PHI_COLLAPSIBLE_LAYOUT_DEFINITION,

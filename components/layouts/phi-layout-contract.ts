@@ -83,7 +83,6 @@ export type PhiLayoutKind =
   | "masonry"
   | "content"
   | "verticalflex"
-  | "form"
   | "collapsible";
 export type PhiLayoutSlotPolicy = "fill" | "hug" | "fill-inline" | "fill-block" | "fixed" | "intrinsic";
 

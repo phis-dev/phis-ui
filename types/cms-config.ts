@@ -58,6 +58,16 @@ export type PhiCmsRenderableBlockConfigBase = PhiCmsPluginConfigBase & PhiRender
 // Layout configs add shared composition chrome on top of the renderable block base.
 export type PhiCmsLayerBase = PhiCmsRenderableBlockConfigBase & {
   initialSlotStates?: PhiBaseLayoutSlotStates;
+  /**
+   * The grid line the label column of anything inside this Layout ends at, on the 24-track form grid
+   * (LAYOUTING.md, "Form grid"). Line 7 is a quarter of the width.
+   *
+   * Shared like padding and background rather than the property of one Layout kind, because any Layout
+   * can be the one a form or a panel of labelled Controls stands in. It was a kind of its own once --
+   * a content Layout with this single extra number -- which bought nothing and cost a second meaning
+   * for the word "form", the Widget already being called that.
+   */
+  labelEnd?: number;
   padding?: CSSProperties["padding"];
   paddingTop?: CSSProperties["paddingTop"];
   paddingRight?: CSSProperties["paddingRight"];
@@ -291,10 +301,6 @@ export type PhiCmsContentLayoutConfig = PhiCmsLayerBase & {
  * through the same CSS variable the media inspector uses, and that is what turns a stack of labelled
  * Controls into a two-column form.
  */
-export type PhiCmsFormLayoutConfig = PhiCmsContentLayoutConfig & {
-  labelWidth?: string | number;
-};
-
 export type PhiCmsFlexLayoutDistribution = "anchor" | "between" | "around" | "evenly";
 
 export type PhiCmsFlexLayoutConfig = PhiCmsSequentialLayoutConfigBase & {
@@ -510,6 +516,17 @@ function readGridSlotPlacement(value: unknown, slotIndexFromArray?: number): Phi
   return { slotIndex, span, offset };
 }
 
+/**
+ * A shared Layout field, read the same way wherever it appears: a line on the 24-track form grid, so
+ * anything outside 2..24 is not a narrower column but a mistake, and is dropped rather than clamped.
+ */
+export function readPhiLayoutLabelEnd(value: unknown): number | undefined {
+  const labelEnd = readNumber(value);
+  return labelEnd !== undefined && Number.isInteger(labelEnd) && labelEnd >= 2 && labelEnd <= 24
+    ? labelEnd
+    : undefined;
+}
+
 export function parsePhiCmsContentLayoutConfig(
   config: Record<string, unknown>,
 ): PhiCmsContentLayoutConfig {
@@ -521,6 +538,7 @@ export function parsePhiCmsContentLayoutConfig(
         height: readCssSize(config.height),
       },
       margin: readCssSize(config.margin),
+      labelEnd: readPhiLayoutLabelEnd(config.labelEnd),
       padding: readCssSize(config.padding),
       paddingLeft: readCssSize(config.paddingLeft),
       paddingRight: readCssSize(config.paddingRight),
@@ -536,26 +554,13 @@ export function parsePhiCmsContentLayoutConfig(
 }
 
 
-export function parsePhiCmsFormLayoutConfig(
-  config: Record<string, unknown>,
-): PhiCmsFormLayoutConfig {
-  const labelWidth = readCssSize(config.labelWidth);
-  return applyPhiLayoutDefaults(
-    {
-      ...parsePhiCmsContentLayoutConfig(config),
-      ...(labelWidth === undefined ? null : { labelWidth }),
-    },
-    resolvePhiLayoutDefaults("form"),
-  );
-}
-
-
 export function parsePhiCmsFlexLayoutConfig(config: Record<string, unknown>): PhiCmsFlexLayoutConfig {
   const distribution = readString(config.distribution);
 
   return applyPhiLayoutDefaults(
     {
       ...readRenderableBlockConfig(config),
+      labelEnd: readPhiLayoutLabelEnd(config.labelEnd),
       initialSlotStates: readInitialSlotStates(config.initialSlotStates),
       padding: readCssSize(config.padding),
       paddingLeft: readCssSize(config.paddingLeft),
@@ -590,6 +595,7 @@ export function parsePhiCmsFlexVerticalLayoutConfig(
   return applyPhiLayoutDefaults(
     {
       ...readRenderableBlockConfig(config),
+      labelEnd: readPhiLayoutLabelEnd(config.labelEnd),
       initialSlotStates: readInitialSlotStates(config.initialSlotStates),
       padding: readCssSize(config.padding),
       paddingLeft: readCssSize(config.paddingLeft),
@@ -613,6 +619,7 @@ export function parsePhiCmsMasonryLayoutConfig(
   return applyPhiLayoutDefaults(
     {
       ...readRenderableBlockConfig(config),
+      labelEnd: readPhiLayoutLabelEnd(config.labelEnd),
       padding: readCssSize(config.padding),
       background: readString(config.background),
       border: readString(config.border),
@@ -636,6 +643,7 @@ export function parsePhiCmsStackLayoutConfig(
   return applyPhiLayoutDefaults(
     {
       ...readRenderableBlockConfig(config),
+      labelEnd: readPhiLayoutLabelEnd(config.labelEnd),
       padding: readCssSize(config.padding),
       background: readString(config.background),
       border: readString(config.border),
@@ -709,6 +717,7 @@ export function parsePhiCmsCarouselLayoutConfig(
   return applyPhiLayoutDefaults(
     {
       ...readRenderableBlockConfig(config),
+      labelEnd: readPhiLayoutLabelEnd(config.labelEnd),
       padding: readCssSize(config.padding),
       background: readString(config.background),
       border: readString(config.border),
@@ -771,6 +780,7 @@ export function parsePhiCmsCollapsibleLayoutConfig(
   return applyPhiLayoutDefaults(
     {
       ...readRenderableBlockConfig(config),
+      labelEnd: readPhiLayoutLabelEnd(config.labelEnd),
       initialSlotStates: readInitialSlotStates(config.initialSlotStates),
       padding: readCssSize(config.padding),
       paddingLeft: readCssSize(config.paddingLeft),
@@ -806,6 +816,7 @@ export function parsePhiCmsGridLayoutConfig(
   return applyPhiLayoutDefaults(
     {
       ...readRenderableBlockConfig(config),
+      labelEnd: readPhiLayoutLabelEnd(config.labelEnd),
       padding: readCssSize(config.padding),
       background: readString(config.background),
       border: readString(config.border),
@@ -841,6 +852,7 @@ export function parsePhiCmsThreeColumnLayoutConfig(
   return applyPhiLayoutDefaults(
     {
       ...readRenderableBlockConfig(config),
+      labelEnd: readPhiLayoutLabelEnd(config.labelEnd),
       padding: readCssSize(config.padding),
       paddingLeft: readCssSize(config.paddingLeft),
       paddingRight: readCssSize(config.paddingRight),
@@ -874,6 +886,7 @@ export function parsePhiCmsSplitCardLayoutConfig(
   return applyPhiLayoutDefaults(
     {
       ...readRenderableBlockConfig(config),
+      labelEnd: readPhiLayoutLabelEnd(config.labelEnd),
       gap: readCssSize(config.gap),
       padding: readCssSize(config.padding),
       paddingTop: readCssSize(config.paddingTop),

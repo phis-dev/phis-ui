@@ -18,5 +18,3 @@ export { PhiThreeColumnLayout } from "./components/layouts/phi-three-column-layo
 export type { PhiThreeColumnLayoutProps } from "./components/layouts/phi-three-column-layout";
 export { PhiSplitCardLayout } from "./components/layouts/phi-split-card-layout";
 export type { PhiSplitCardLayoutProps } from "./components/layouts/phi-split-card-layout";
-export { PhiFormLayout } from "./components/layouts/phi-form-layout";
-export type { PhiFormLayoutProps } from "./components/layouts/phi-form-layout";

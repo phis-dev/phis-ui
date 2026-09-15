@@ -30,6 +30,7 @@ export type PhiContentLayoutProps = {
   effect?: PhiLayoutEffectId;
   shadow?: PhiShadow | null;
   layoutKind?: PhiLayoutKind;
+  labelEnd?: number;
   padding?: CSSProperties["padding"];
   paddingTop?: CSSProperties["paddingTop"];
   paddingRight?: CSSProperties["paddingRight"];
@@ -58,6 +59,7 @@ export function PhiContentLayout({
   renderMode = "live",
   margin = 0,
   layoutKind = "content",
+  labelEnd,
   padding,
   paddingTop,
   paddingRight,
@@ -83,6 +85,7 @@ export function PhiContentLayout({
     style: resolvedLayoutStyle,
     hasExplicitLayoutBackground,
   } = resolvePhiBaseLayoutChrome({
+    labelEnd,
     padding,
     paddingTop,
     paddingRight,

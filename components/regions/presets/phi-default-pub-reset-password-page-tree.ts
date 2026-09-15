@@ -1,4 +1,5 @@
 import { createPhiPresetCmsInstanceIdMap } from "../../../types/cms-instance-id";
+import { PHI_SPACE } from "../../../theme/antd-css-var-contract";
 import { PHI_AUTH_RUNTIME_MODULE_ID } from "../../../plugins/runtime-modules/auth/ids";
 import {
   PHI_CMS_DEFAULT_SLOT_INDEX,
@@ -73,8 +74,8 @@ export async function buildPhiDefaultPubResetPasswordPageTree({
         },
       }),
       buildPhiCmsLayoutNode({
-        creationPreset: { layoutKind: "form", preset: "panel" },
-        typeKey: "form",
+        creationPreset: { layoutKind: "verticalflex", preset: "panel" },
+        typeKey: "flex-vertical",
         id: SYNTHETIC_RESET_PASSWORD_LAYOUT_IDS.layoutForm,
         siteId: page.siteId,
         parentLayoutNodeId: SYNTHETIC_RESET_PASSWORD_LAYOUT_IDS.layoutContent,
@@ -84,7 +85,7 @@ export async function buildPhiDefaultPubResetPasswordPageTree({
         flags: 0,
         visibilityMask: page.visibilityMask,
         label: "pub reset password form layout",
-        config: {},
+        config: { padding: PHI_SPACE.xl },
       }),
     ],
     contentWidgets: [
@@ -118,7 +119,7 @@ export async function buildPhiDefaultPubResetPasswordPageTree({
         id: SYNTHETIC_RESET_PASSWORD_WIDGET_IDS.widgetResetPassword,
         siteId: page.siteId,
         parentLayoutNodeId: SYNTHETIC_RESET_PASSWORD_LAYOUT_IDS.layoutForm,
-        slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
+        slotIndex: 0,
         sortOrder: 0,
         status: PhiCmsStatus.Published,
         flags: 0,
@@ -132,7 +133,7 @@ export async function buildPhiDefaultPubResetPasswordPageTree({
       }),
       buildPhiCmsWidgetNode({
         typeKey: "button", id: SYNTHETIC_RESET_PASSWORD_WIDGET_IDS.widgetResetPasswordSubmit,
-        siteId: page.siteId, parentLayoutNodeId: SYNTHETIC_RESET_PASSWORD_LAYOUT_IDS.layoutForm, slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
+        siteId: page.siteId, parentLayoutNodeId: SYNTHETIC_RESET_PASSWORD_LAYOUT_IDS.layoutForm, slotIndex: 1,
         sortOrder: 1, status: PhiCmsStatus.Published, flags: 0, visibilityMask: page.visibilityMask,
         label: "pub reset password submit", config: { key: "submit", label: "Reset password", buttonType: "primary", signalRoutes: { emits: [{ routeKey: "pub-reset-password-submit-button", capabilityId: "activate", scope: "page", channel: "submit", action: "activate", valueType: "none", receiver: createPhiSignalAddress("cms", SYNTHETIC_RESET_PASSWORD_WIDGET_IDS.widgetResetPassword) }] } }, contentId: null,
       }),

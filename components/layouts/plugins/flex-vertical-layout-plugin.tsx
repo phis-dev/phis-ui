@@ -37,6 +37,7 @@ export const PHI_FLEX_VERTICAL_LAYOUT_PLUGIN: PhiCmsLayoutPlugin<PhiCmsFlexVerti
       background={config.background}
       border={config.border}
       borderRadius={config.borderRadius}
+      labelEnd={config.labelEnd}
       size={config.size}
       minSize={config.minSize}
       maxSize={config.maxSize}

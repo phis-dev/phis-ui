@@ -145,6 +145,7 @@ export function PhiBaseLayout({
   slots,
   editSlotLabels,
   layoutKind,
+  labelEnd,
   padding,
   paddingTop,
   paddingRight,
@@ -277,6 +278,7 @@ export function PhiBaseLayout({
     style: resolvedLayoutStyle,
     hasExplicitLayoutBackground,
   } = resolvePhiBaseLayoutChrome({
+    labelEnd,
     padding,
     paddingTop,
     paddingRight,

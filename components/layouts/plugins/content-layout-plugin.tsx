@@ -33,6 +33,7 @@ export const PHI_CONTENT_LAYOUT_PLUGIN: PhiCmsLayoutPlugin<PhiCmsContentLayoutCo
       background={config.background}
       border={config.border}
       borderRadius={config.borderRadius}
+      labelEnd={config.labelEnd}
       editSlotAnchor={config.anchor ?? "center"}
     />
   )),

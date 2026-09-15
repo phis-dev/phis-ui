@@ -1679,8 +1679,8 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
          * labelled Controls read as two columns rather than four differently indented rows.
          */
         buildPhiCmsLayoutNode({
-          creationPreset: { layoutKind: "form", preset: "panel" },
-          typeKey: "form",
+          creationPreset: { layoutKind: "verticalflex", preset: "panel" },
+          typeKey: "flex-vertical",
           id: PHI_BUILDER_AREA_SETTINGS_LAYOUT_IDS.areaSettingsBody,
           siteId: page.siteId,
           parentLayoutNodeId: null,

@@ -30,6 +30,7 @@ export const PHI_SPLIT_CARD_LAYOUT_PLUGIN: PhiCmsLayoutPlugin<PhiCmsSplitCardLay
       background={config.background}
       border={config.border}
       borderRadius={config.borderRadius}
+      labelEnd={config.labelEnd}
       effect={config.effect}
       editSlotAnchor={config.anchor ? resolvePhiAnchorPlacement(config.anchor) : undefined}
       leftPadding={config.leftPadding}

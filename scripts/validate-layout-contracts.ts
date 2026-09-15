@@ -33,7 +33,6 @@ import {
 
 const layoutKinds: readonly PhiLayoutKind[] = [
   "content",
-  "form",
   "flex",
   "stack",
   "carousel",

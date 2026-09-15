@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import { PhiAlertControl } from "../controls/phi-alert-control";
 
+import { PHI_COLOR, PHI_SPACE } from "../../theme/antd-css-var-contract";
 import type { PhiFormDescriptor } from "../../types/form-descriptor";
 import { PhiLink } from "../navigation/phi-link";
 import type { PhiSubmitFormProps } from "./contracts";
@@ -13,7 +14,7 @@ import { PHI_LOGIN_FORM_DESCRIPTOR } from "./shared-form-descriptors";
 
 export type LoginFormLabels = {
   title?: string;
-  actions?: { submitLabel?: string; forgotPasswordLabel?: string };
+  actions?: { submitLabel?: string; forgotPasswordLabel?: string; registerLabel?: string };
   fields?: {
     email?: { label?: string; required?: string; invalid?: string };
     password?: { label?: string; required?: string };
@@ -32,6 +33,8 @@ export type LoginFormValues = { email: string; password: string; next?: string }
 export type LoginFormProps = PhiSubmitFormProps<LoginFormValues, LoginFormLabels> & {
   descriptor?: PhiFormDescriptor;
   forgotPasswordHref?: string;
+  /** Where somebody who has no account goes. Rendered beside the password link, never on its own. */
+  registerHref?: string;
   onForgotPassword?: () => void;
   initialValues?: Partial<LoginFormValues>;
 };
@@ -44,6 +47,7 @@ export function LoginForm({
   descriptor = PHI_LOGIN_FORM_DESCRIPTOR,
   labels,
   forgotPasswordHref,
+  registerHref,
   onForgotPassword,
   initialValues,
   onSubmit,
@@ -51,10 +55,23 @@ export function LoginForm({
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const formRef = useRef<PhiFormControlHandle | null>(null);
-  const forgotPasswordLabel = labels?.actions?.forgotPasswordLabel ?? "Forgot password?";
+  const forgotPasswordLabel = labels?.actions?.forgotPasswordLabel ?? "Forgot password";
+  const registerLabel = labels?.actions?.registerLabel ?? "Create account";
 
   return (
-    <div style={{ display: "grid", gap: "var(--ant-padding-sm)" }}>
+    /*
+     * The query container for the rows below the form, which stand beside it rather than in it: a
+     * container cannot answer a question about its own width, and the submit and the links have to know
+     * where the label column ends to line up under the inputs.
+     */
+    <div
+      style={{
+        display: "grid",
+        gap: PHI_SPACE.sm,
+        containerType: "inline-size",
+        containerName: "phi-form",
+      }}
+    >
       {errorMessage ? <PhiAlertControl level="error" showIcon title={errorMessage} /> : null}
       <PhiFormControl
         ref={formRef}
@@ -85,25 +102,42 @@ export function LoginForm({
           }
         }}
       />
-      <PhiButtonControl
-        type="primary"
-        label={labels?.actions?.submitLabel ?? "Login"}
-        loading={submitting}
-        onClick={() => formRef.current?.submit()}
-      />
-      {forgotPasswordHref ? (
-        <PhiLink href={forgotPasswordHref}>{forgotPasswordLabel}</PhiLink>
-      ) : (
-        <PhiLink
-          href="#"
-          onClick={(event) => {
-            event.preventDefault();
-            onForgotPassword?.();
-          }}
+      <div className="phi-form-descriptor-actions">
+        <div
+          className="phi-form-cell phi-form-cell--control"
+          style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: PHI_SPACE.sm }}
         >
-          {forgotPasswordLabel}
-        </PhiLink>
-      )}
+          {forgotPasswordHref ? (
+            <PhiLink href={forgotPasswordHref}>{forgotPasswordLabel}</PhiLink>
+          ) : (
+            <PhiLink
+              href="#"
+              onClick={(event) => {
+                event.preventDefault();
+                onForgotPassword?.();
+              }}
+            >
+              {forgotPasswordLabel}
+            </PhiLink>
+          )}
+          {registerHref ? (
+            <>
+              <span aria-hidden style={{ color: PHI_COLOR.textTertiary }}>|</span>
+              <PhiLink href={registerHref}>{registerLabel}</PhiLink>
+            </>
+          ) : null}
+        </div>
+      </div>
+      <div className="phi-form-descriptor-actions">
+        <div className="phi-form-cell phi-form-cell--control">
+          <PhiButtonControl
+            type="primary"
+            label={labels?.actions?.submitLabel ?? "Sign in"}
+            loading={submitting}
+            onClick={() => formRef.current?.submit()}
+          />
+        </div>
+      </div>
     </div>
   );
 }

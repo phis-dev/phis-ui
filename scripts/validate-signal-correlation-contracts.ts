@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
 import ts from "typescript";
@@ -52,7 +52,14 @@ assert.match(
 
 const sourcePaths = execFileSync("git", ["ls-files", "*.ts", "*.tsx"], { cwd: packageRoot, encoding: "utf8" })
   .split("\n")
-  .filter((path) => path && !path.startsWith("scripts/") && !path.includes(".test."));
+  .filter((path) => path && !path.startsWith("scripts/") && !path.includes(".test."))
+  /*
+   * `git ls-files` lists what the index tracks, which still includes a file that has been deleted on
+   * disk and not yet staged. Reading one crashed the whole check with an ENOENT naming a file that was
+   * meant to be gone -- so deleting anything broke validation until it was committed. A path with no
+   * file has no contract to check.
+   */
+  .filter((path) => existsSync(resolve(path)));
 
 type CorrelationParameter = { index: number; asOption: boolean };
 type Helper = {
