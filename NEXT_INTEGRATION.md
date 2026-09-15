@@ -20,7 +20,8 @@ with [THIRD_PARTY_MODULES.md](./THIRD_PARTY_MODULES.md).
 
 The Site Skeleton owns only deployment and App Router registration:
 
-- `config/site-runtime.json`;
+- `config/site-runtime.json`, read once per Site process: a changed Site key, API base or internal token
+  takes effect when the Site restarts, and tooling that rewrites the file restarts the Site's services;
 - the physical Next.js `app` directory and its required parallel-route directories;
 - `dynamic`, `runtime`, and statically analyzable route configuration exports;
 - thin API, media, and proxy entrypoints;

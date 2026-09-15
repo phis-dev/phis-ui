@@ -57,7 +57,21 @@ export function resolvePhiSiteRuntimeConfigPath() {
   throw new Error(`Missing config/site-runtime.json at ${runtimePath}.`);
 }
 
+let siteRuntimeConfig: { configPath: string; value: PhiSiteRuntimeConfig } | null = null;
+
+/**
+ * The Site's deployment configuration, read once per process.
+ *
+ * The phis CLI writes `config/site-runtime.json` when it scaffolds a Site and preserves it on reconcile;
+ * nothing changes it while a Site runs. It used to be read again on every call -- the proxy alone does so
+ * on every request -- for a file that does not move. A change takes effect when the Site process restarts,
+ * and whatever rewrites the file restarts the Site's services.
+ */
 export function readPhiSiteRuntimeConfigSync(): PhiSiteRuntimeConfig {
+  const expectedPath = path.join(path.resolve(/* turbopackIgnore: true */ process.cwd()), "config", "site-runtime.json");
+  if (siteRuntimeConfig?.configPath === expectedPath) {
+    return siteRuntimeConfig.value;
+  }
   const configPath = resolvePhiSiteRuntimeConfigPath();
   const raw = readFileSync(configPath, "utf-8");
   const parsed = JSON.parse(raw) as unknown;
@@ -66,7 +80,7 @@ export function readPhiSiteRuntimeConfigSync(): PhiSiteRuntimeConfig {
   const phis = asObject(asObject(parsed).phis);
   const network = asObject(asObject(parsed).network);
 
-  return {
+  const value = {
     site: {
       key: asTrimmedString(site.key),
       publicUrl: asTrimmedString(site.publicUrl) || undefined,
@@ -79,6 +93,8 @@ export function readPhiSiteRuntimeConfigSync(): PhiSiteRuntimeConfig {
       internalApiTimeoutMs: asPositiveNumber(network.internalApiTimeoutMs, DEFAULT_TIMEOUT_MS),
     },
   };
+  siteRuntimeConfig = { configPath, value };
+  return value;
 }
 
 export function getPhiInternalApiTimeoutMs() {

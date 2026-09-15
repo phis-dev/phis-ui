@@ -6,15 +6,7 @@ export type PhiServerApiCredentials = {
   internalToken: string;
 };
 
-let serverApiCredentials: {
-  configPath: string;
-  mtimeMs: number;
-  checkedAt: number;
-  value: PhiServerApiCredentials;
-} | null = null;
-
-/** A configuration edit is noticed within this long; server code asks for credentials many times per render. */
-const SERVER_API_CREDENTIALS_RECHECK_MS = 1000;
+let serverApiCredentials: { configPath: string; value: PhiServerApiCredentials } | null = null;
 
 /**
  * Node's own modules, fetched when asked for rather than imported. Presets, label sets and form
@@ -37,30 +29,24 @@ function nodeBuiltin<TModule>(id: string): TModule {
  * They are the Site's own configuration, `config/site-runtime.json` -- the file `readPhiSiteRuntimeConfigSync`
  * reads -- and they stay on the server. They used to travel inside the Widget runtime, and a runtime handed
  * to a client component was serialised into the browser's payload together with the token. Nothing that
- * renders carries them any more; server code asks here. The file is looked at again at most once a second
- * and read again only when it changed.
+ * renders carries them any more; server code asks here. Read once per process, like the rest of that file:
+ * a changed token or API base takes effect when the Site restarts.
  */
 export function readPhiServerApiCredentials(): PhiServerApiCredentials {
-  const now = Date.now();
-  if (serverApiCredentials && now - serverApiCredentials.checkedAt < SERVER_API_CREDENTIALS_RECHECK_MS) {
+  const path = nodeBuiltin<typeof NodePath>("node:path");
+  const configPath = path.join(path.resolve(/* turbopackIgnore: true */ process.cwd()), "config", "site-runtime.json");
+  if (serverApiCredentials?.configPath === configPath) {
     return serverApiCredentials.value;
   }
   const fs = nodeBuiltin<typeof NodeFs>("node:fs");
-  const path = nodeBuiltin<typeof NodePath>("node:path");
-  const configPath = path.join(path.resolve(/* turbopackIgnore: true */ process.cwd()), "config", "site-runtime.json");
   if (!fs.existsSync(configPath)) {
     throw new Error(`Missing config/site-runtime.json at ${configPath}.`);
-  }
-  const { mtimeMs } = fs.statSync(configPath);
-  if (serverApiCredentials?.configPath === configPath && serverApiCredentials.mtimeMs === mtimeMs) {
-    serverApiCredentials.checkedAt = now;
-    return serverApiCredentials.value;
   }
   const parsed = JSON.parse(fs.readFileSync(configPath, "utf-8")) as { phis?: { apiBaseUrl?: unknown; internalToken?: unknown } };
   const value = {
     apiBaseUrl: typeof parsed.phis?.apiBaseUrl === "string" ? parsed.phis.apiBaseUrl.trim().replace(/\/$/, "") : "",
     internalToken: typeof parsed.phis?.internalToken === "string" ? parsed.phis.internalToken.trim() : "",
   };
-  serverApiCredentials = { configPath, mtimeMs, checkedAt: now, value };
+  serverApiCredentials = { configPath, value };
   return value;
 }
