@@ -475,6 +475,26 @@ function withLayoutRenderKey(node: ReactNode, key: string) {
   return isValidElement(node) ? cloneElement(node as ReactElement<Record<string, unknown>>, { key } as never) : node;
 }
 
+/** What a Widget that threw while rendering on the server reports in its place. */
+export function buildPhiRenderFailureIssue(
+  error: unknown,
+  options: {
+    kind: PhiSlotChildKind;
+    typeKey?: string | null;
+    blockId?: PhiCmsInstanceId | null;
+    moduleId?: PhiCmsRenderIssue["moduleId"];
+  },
+): PhiCmsRenderIssue {
+  return {
+    code: "render-failed",
+    kind: options.kind,
+    type: options.typeKey ?? "unknown",
+    blockId: options.blockId,
+    moduleId: options.moduleId,
+    detail: error instanceof Error ? error.message : String(error),
+  };
+}
+
 function wrapPhiRenderedSlotChild(
   node: ReactNode,
   options: {
@@ -495,7 +515,23 @@ function wrapPhiRenderedSlotChild(
   }
 
   if (isThenable(node)) {
-    return node.then((resolvedNode) => wrapPhiRenderedSlotChild(resolvedNode, options)) as unknown as ReactNode;
+    /*
+     * A Widget that fails while rendering on the server fails alone.
+     *
+     * The Error Boundary below is a Client Component, and a Client Boundary cannot catch what is thrown
+     * inside an async Server Component: the rejection travels up the RSC stream, React abandons the
+     * server render and Next falls back to rendering the entire route in the browser. One Widget losing
+     * a `fetch` took the whole page's server rendering with it, and the page then said nothing about
+     * which Widget it was. Caught here, where the rejection is, it becomes the same diagnostic the
+     * Client Boundary shows -- and everything else on the page still renders on the server.
+     */
+    return node.then(
+      (resolvedNode) => wrapPhiRenderedSlotChild(resolvedNode, options),
+      (error: unknown) => wrapPhiRenderedSlotChild(
+        <PhiCmsRenderDiagnostic issue={buildPhiRenderFailureIssue(error, options)} />,
+        options,
+      ),
+    ) as unknown as ReactNode;
   }
 
   return (
