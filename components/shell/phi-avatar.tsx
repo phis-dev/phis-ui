@@ -1,15 +1,11 @@
 "use client";
 
 import type { CSSProperties, ReactNode, Ref } from "react";
-import { DownOutlined, UserOutlined } from "@ant-design/icons";
+import { UserOutlined } from "@ant-design/icons";
 import Link from "next/link";
 import { Avatar, Space } from "antd";
 
-import {
-  PHI_DROPDOWN_TRIGGER_CLASS_NAME,
-  PHI_PILL_TRIGGER_CLASS_NAME,
-  PhiDropdownControl,
-} from "../controls/phi-dropdown-control";
+import { PhiPillDropdownControl } from "../controls/phi-dropdown-control";
 import type { PhiMenuControlItem } from "../controls/phi-menu-control";
 
 export type PhiAvatarProps = {
@@ -89,66 +85,29 @@ export function PhiAvatar({
       {initials}
     </Avatar>
   );
-  const hasMenu = Boolean(menuItems && menuItems.length > 0);
-  const showLabelPill = labelPill && showLabel && Boolean(label);
-
-  const labelNode = showLabelPill ? (
-    <span className={PHI_PILL_TRIGGER_CLASS_NAME}>
-      <Space size={5}>
-        <span>{label}</span>
-        {showChevron && hasMenu ? <DownOutlined style={{ fontSize: 12 }} /> : null}
-      </Space>
-    </span>
-  ) : showLabel && label ? (
-    <span>{label}</span>
-  ) : null;
-
-  const trigger = (
-    <button
-      ref={triggerRef}
-      type="button"
-      className={[PHI_DROPDOWN_TRIGGER_CLASS_NAME, className].filter(Boolean).join(" ")}
-      style={{
-        fontSize: "inherit",
-        color: "inherit",
-        background: "transparent",
-        border: 0,
-        padding: 0,
-        cursor: "pointer",
-        ...style,
-      }}
-      aria-haspopup={hasMenu ? "menu" : undefined}
-    >
-      <Space size={8}>
-        {href ? <Link href={href}>{avatarNode}</Link> : avatarNode}
-        {labelNode}
-        {!showLabelPill && showChevron && hasMenu ? <DownOutlined style={{ fontSize: 12 }} /> : null}
-      </Space>
-    </button>
-  );
-
-  if (hasMenu) {
+  if (!href || (menuItems && menuItems.length > 0)) {
     return (
-      <PhiDropdownControl
+      <PhiPillDropdownControl
         items={menuItems ?? []}
         open={open}
         onOpenChange={onOpenChange}
-      >
-        {trigger}
-      </PhiDropdownControl>
+        leading={href ? <Link href={href}>{avatarNode}</Link> : avatarNode}
+        label={showLabel ? label : null}
+        pill={labelPill}
+        showChevron={showChevron}
+        triggerRef={triggerRef}
+        className={className}
+        style={style}
+      />
     );
   }
 
-  if (href) {
-    return (
-      <Link href={href} className={className} style={style}>
-        <Space size={8}>
-          {avatarNode}
-          {showLabel && label ? <span>{label}</span> : null}
-        </Space>
-      </Link>
-    );
-  }
-
-  return trigger;
+  return (
+    <Link href={href} className={className} style={style}>
+      <Space size={8}>
+        {avatarNode}
+        {showLabel && label ? <span>{label}</span> : null}
+      </Space>
+    </Link>
+  );
 }

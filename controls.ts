@@ -31,12 +31,11 @@ export { PhiPaginationControl } from "./components/controls/phi-pagination-contr
 export type { PhiPaginationControlProps, PhiPaginationControlValue } from "./components/controls/phi-pagination-control";
 export { PhiTabsControl } from "./components/controls/phi-tabs-control";
 export type { PhiTabsControlItem, PhiTabsControlProps } from "./components/controls/phi-tabs-control";
-export {
-  PHI_DROPDOWN_TRIGGER_CLASS_NAME,
-  PHI_PILL_TRIGGER_CLASS_NAME,
-  PhiDropdownControl,
+export { PhiDropdownControl, PhiPillDropdownControl } from "./components/controls/phi-dropdown-control";
+export type {
+  PhiDropdownControlProps,
+  PhiPillDropdownControlProps,
 } from "./components/controls/phi-dropdown-control";
-export type { PhiDropdownControlProps } from "./components/controls/phi-dropdown-control";
 export { PhiMenuControl } from "./components/controls/phi-menu-control";
 export type {
   PhiMenuControlDivider,

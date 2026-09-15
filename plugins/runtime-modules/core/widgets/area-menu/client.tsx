@@ -1,18 +1,11 @@
 "use client";
 
-import { DownOutlined } from "@ant-design/icons";
-import { Typography } from "antd";
-import { useRef, useState, type MouseEvent } from "react";
+import { useRef, useState } from "react";
 
 import type { PhiClientBlockBaseProps, PhiBlockRuntime, PhiNoLabels } from "../../../../../types";
-import {
-  PHI_PILL_TRIGGER_CLASS_NAME,
-  PhiDropdownControl,
-} from "../../../../../components/controls/phi-dropdown-control";
+import { PhiPillDropdownControl } from "../../../../../components/controls/phi-dropdown-control";
 import type { PhiMenuControlItem } from "../../../../../components/controls/phi-menu-control";
 import { PhiNavLink } from "../../../../../components/shell/phi-nav-link";
-
-const PHI_ICON_SIZE = "0.75rem";
 
 export type PhiAreaMenuItem = {
   key: PhiBlockRuntime["area"];
@@ -98,30 +91,12 @@ export function PhiAreaMenuWidgetClient({
     ),
   }));
 
-  function handleTriggerClick(event: MouseEvent<HTMLElement>) {
-    event.preventDefault();
-    resolveDestinations();
-  }
-
   return (
-    <PhiDropdownControl items={menuItems} selectedKeys={[currentArea]}>
-      <Typography.Link
-        className={PHI_PILL_TRIGGER_CLASS_NAME}
-        onClick={handleTriggerClick}
-        onMouseEnter={resolveDestinations}
-        onFocus={resolveDestinations}
-      >
-        <span
-          style={{
-            display: "inline-flex",
-            alignItems: "center",
-            gap: "var(--ant-padding-xs)",
-          }}
-        >
-          <span>{currentItem.label}</span>
-          <DownOutlined style={{ fontSize: PHI_ICON_SIZE }} />
-        </span>
-      </Typography.Link>
-    </PhiDropdownControl>
+    <PhiPillDropdownControl
+      items={menuItems}
+      selectedKeys={[currentArea]}
+      label={currentItem.label}
+      onIntent={resolveDestinations}
+    />
   );
 }

@@ -1,16 +1,11 @@
 "use client";
 
-import { DownOutlined } from "@ant-design/icons";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
-import { Space, Typography } from "antd";
 
 import { isKnownSpecialCmsRoot } from "../../helpers/cms-routing";
 import { localizeAreaPath, stripLocaleAndAreaFromPathname } from "../../helpers/locale";
-import {
-  PHI_PILL_TRIGGER_CLASS_NAME,
-  PhiDropdownControl,
-} from "../controls/phi-dropdown-control";
+import { PhiPillDropdownControl } from "../controls/phi-dropdown-control";
 import type { PhiMenuControlItem } from "../controls/phi-menu-control";
 
 export type PhiLocaleOption = {
@@ -76,29 +71,12 @@ export function PhiLocaleSwitch({
     ? currentOption.label
     : currentOption.code.trim().toUpperCase();
 
-  function handleTriggerClick(event: React.MouseEvent<HTMLElement>) {
-    event.preventDefault();
-  }
-
   return (
-    <PhiDropdownControl
+    <PhiPillDropdownControl
       items={interactive ? items : []}
       selectedKeys={[currentLocale]}
-    >
-      <Typography.Link
-        className={compactPill ? PHI_PILL_TRIGGER_CLASS_NAME : undefined}
-        onClick={interactive ? handleTriggerClick : undefined}
-        style={
-          compactPill
-            ? undefined
-            : { fontSize: "inherit", color: "inherit", textDecoration: "none" }
-        }
-      >
-        <Space size={5}>
-          <span>{compactPill ? currentOption.code.trim().toUpperCase() : currentLabel}</span>
-          {interactive && items.length > 0 ? <DownOutlined style={{ fontSize: 12 }} /> : null}
-        </Space>
-      </Typography.Link>
-    </PhiDropdownControl>
+      label={compactPill ? currentOption.code.trim().toUpperCase() : currentLabel}
+      pill={compactPill}
+    />
   );
 }

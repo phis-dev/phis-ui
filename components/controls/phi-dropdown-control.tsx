@@ -6,8 +6,12 @@ import {
   useCallback,
   useRef,
   useState,
+  type CSSProperties,
   type ReactElement,
+  type ReactNode,
+  type Ref,
 } from "react";
+import { DownOutlined } from "@ant-design/icons";
 import { Dropdown } from "antd";
 
 import styles from "./phi-dropdown-control.module.css";
@@ -20,10 +24,6 @@ import { toPhiAntdMenuItems, type PhiMenuControlItem } from "./phi-menu-control"
  */
 const PHI_TRIGGER_REOPEN_GUARD_MS = 250;
 
-/** Put on the pill itself. */
-export const PHI_PILL_TRIGGER_CLASS_NAME = styles.pillTrigger;
-/** Put on a trigger that *contains* a pill, so hovering the trigger lights the pill inside it. */
-export const PHI_DROPDOWN_TRIGGER_CLASS_NAME = styles.trigger;
 
 export type PhiDropdownControlProps = {
   items: readonly PhiMenuControlItem[];
@@ -43,7 +43,7 @@ export type PhiDropdownControlProps = {
  * The canonical dropdown menu presentation: this Control owns the Ant Design `Dropdown` primitive
  * and the trigger mechanics every Phi dropdown shares. Callers describe entries as
  * `PhiMenuControlItem`s — the same description the navigation menus use — and pass their own trigger
- * element, styled with the exported class names.
+ * element. A menu that opens from a pill takes `PhiPillDropdownControl` below instead.
  *
  * With no entries the trigger renders alone: a dropdown that cannot open must not present itself as
  * one.
@@ -112,5 +112,93 @@ export function PhiDropdownControl({
     >
       {trigger}
     </Dropdown>
+  );
+}
+
+export type PhiPillDropdownControlProps = Pick<
+  PhiDropdownControlProps,
+  "items" | "selectedKeys" | "open" | "onOpenChange"
+> & {
+  /** What the trigger names: the entry the surface is on, or the viewer. */
+  label?: ReactNode;
+  /** Stands before the label inside the same trigger, and lights the pill on hover: the account avatar. */
+  leading?: ReactNode;
+  /** `false` sets the label as plain text instead of a pill. */
+  pill?: boolean;
+  /** Shown only while the menu can open. */
+  showChevron?: boolean;
+  /** Hover, focus or press on the trigger -- the moment to fetch what the entries link to. */
+  onIntent?: () => void;
+  triggerRef?: Ref<HTMLButtonElement>;
+  className?: string;
+  style?: CSSProperties;
+};
+
+/**
+ * The one trigger every pill dropdown uses -- the account, Area and locale menus: a bare button
+ * holding the pill, so hover, border and chevron look the same wherever a menu opens from a pill.
+ */
+export function PhiPillDropdownControl({
+  items,
+  selectedKeys,
+  open,
+  onOpenChange,
+  label,
+  leading,
+  pill = true,
+  showChevron = true,
+  onIntent,
+  triggerRef,
+  className,
+  style,
+}: PhiPillDropdownControlProps) {
+  const canOpen = items.length > 0;
+  const chevron = showChevron && canOpen ? <DownOutlined style={{ fontSize: 12 }} /> : null;
+  const hasLabel = label != null && label !== false && label !== "";
+
+  return (
+    <PhiDropdownControl
+      items={items}
+      selectedKeys={selectedKeys}
+      open={open}
+      onOpenChange={onOpenChange}
+    >
+      <button
+        ref={triggerRef}
+        type="button"
+        className={[styles.trigger, className].filter(Boolean).join(" ")}
+        style={{
+          display: "inline-flex",
+          alignItems: "center",
+          gap: 8,
+          fontSize: "inherit",
+          color: "inherit",
+          background: "transparent",
+          border: 0,
+          padding: 0,
+          cursor: canOpen ? "pointer" : "default",
+          ...style,
+        }}
+        aria-haspopup={canOpen ? "menu" : undefined}
+        onMouseEnter={onIntent}
+        onFocus={onIntent}
+        onClick={onIntent}
+      >
+        {leading}
+        {hasLabel && pill ? (
+          <span className={styles.pillTrigger}>
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
+              <span>{label}</span>
+              {chevron}
+            </span>
+          </span>
+        ) : (
+          <>
+            {hasLabel ? <span>{label}</span> : null}
+            {chevron}
+          </>
+        )}
+      </button>
+    </PhiDropdownControl>
   );
 }
