@@ -61,8 +61,7 @@ If their fetch layer uses `cache: "no-store"`, the underlying request is still d
 ## Form Guard Fetching
 
 - `gateway/form-guard.ts`
-  - Uses `no-store` in development and `force-cache` otherwise.
-  - No explicit clear helper.
+  - Always `no-store`, and never cached anywhere else: each render needs a fresh `issuedAt`/`formToken`, which phis-server refuses once `maxSubmitMs` has passed.
 
 ## Recommended Pattern
 

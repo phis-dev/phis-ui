@@ -44,8 +44,10 @@ export async function fetchFormGuard({
         form: "form",
       },
     },
+    // Every render needs its own issuedAt: a cached guard freezes the token for all visitors, and
+    // phis-server refuses it as expired once maxSubmitMs has passed since the first fetch.
     cache: {
-      mode: process.env.NODE_ENV === "development" ? "no-store" : "force-cache",
+      mode: "no-store",
     },
   };
 
