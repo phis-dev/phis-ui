@@ -145,7 +145,15 @@
   height: 100%;
 }
 
-:where(.phi-slot-child--inline-fill > .phi-layout) {
+/*
+ * Everything in an inline-fill slot fills it, not only a nested Layout.
+ *
+ * The slot child is a flex row, so a child that may not grow is laid out at its content width: a login
+ * form in a 509px slot stood at 220px and every form inside it measured itself narrow and stacked its
+ * labels. Widgets that looked right were the ones setting `width: 100%` for themselves, one at a time,
+ * for a slot that already says it fills.
+ */
+:where(.phi-slot-child--inline-fill > *) {
   width: 100%;
 }
 
