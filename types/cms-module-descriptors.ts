@@ -253,13 +253,22 @@ export type PhiCmsNavigationItemPlacement = {
 };
 
 /**
+ * What a folder address leads to; mirrors phis-server `SiteNavigationFolderTarget`. A Page by reference, or
+ * a sub-folder by address. It names the target, not a child of one Navigation, so the same folder in
+ * another Navigation can take it over unchanged.
+ */
+export type PhiCmsNavigationFolderTarget =
+  | { kind: "page"; reference: string }
+  | { kind: "folder"; address: string };
+
+/**
  * Where a container leads when its folder address is requested; mirrors phis-server
  * `SiteNavigationFolder`. `address` is the folder the container's direct children share, package
- * namespace included, or null; `choice` is the direct child it leads to.
+ * namespace included, or null; `target` is what one of those children stands for.
  */
 export type PhiCmsNavigationFolder = {
   address: string | null;
-  choice: PhiCmsInstanceId;
+  target: PhiCmsNavigationFolderTarget;
 };
 
 export type PhiCmsNavigationItemOverride = {

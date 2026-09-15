@@ -1,4 +1,6 @@
 import type { PhiBuilderNavigationItem } from "../../../helpers/cms-navigation-catalog";
+import type { PhiCmsNavigationFolderTarget } from "../../../types/cms-module-descriptors";
+import { createPhiPageReference } from "../../../types/references";
 
 /**
  * The Area-relative path a link leads to, package namespace included -- the form a request for a folder
@@ -39,16 +41,65 @@ export function resolvePhiBuilderNavigationFolderAddress(
   return folders.size === 1 && only !== "/" ? only : null;
 }
 
-/** The direct children a container can lead to, each with the path it stands for. */
+export type PhiBuilderNavigationFolderChoice = {
+  /** A stable key for the target, usable as a Select value. */
+  value: string;
+  /** The Area-relative path the child stands for. */
+  label: string;
+  target: PhiCmsNavigationFolderTarget;
+};
+
+export function encodePhiBuilderNavigationFolderTarget(target: PhiCmsNavigationFolderTarget) {
+  return target.kind === "page" ? `page:${target.reference}` : `folder:${target.address}`;
+}
+
+/** What a direct child stands for as a folder target: a Page by reference, a sub-container by address. */
+function resolveChildTarget(
+  child: PhiBuilderNavigationItem,
+  resolveLinkPath: PhiBuilderNavigationLinkPathResolver,
+): PhiBuilderNavigationFolderChoice | null {
+  const path = resolveChildPath(child, resolveLinkPath);
+  if (!path) return null;
+  if (child.kind === "container") {
+    const target = { kind: "folder" as const, address: path };
+    return { value: encodePhiBuilderNavigationFolderTarget(target), label: path, target };
+  }
+  const reference = child.targetReference ??
+    (child.targetPreset ? createPhiPageReference({ kind: "module", ...child.targetPreset }) : null);
+  if (!reference) return null;
+  const target = { kind: "page" as const, reference };
+  return { value: encodePhiBuilderNavigationFolderTarget(target), label: path, target };
+}
+
+/**
+ * The targets a container can lead to: what each of its direct children stands for. Two children that
+ * stand for the same target are offered once.
+ */
 export function listPhiBuilderNavigationFolderChoices(
   container: PhiBuilderNavigationItem,
   resolveLinkPath: PhiBuilderNavigationLinkPathResolver,
-): { value: string; label: string }[] {
+): PhiBuilderNavigationFolderChoice[] {
   if (container.kind !== "container") return [];
+  const seen = new Set<string>();
   return container.children.flatMap((child) => {
-    const path = resolveChildPath(child, resolveLinkPath);
-    return path ? [{ value: child.id, label: path }] : [];
+    const choice = resolveChildTarget(child, resolveLinkPath);
+    if (!choice || seen.has(choice.value)) return [];
+    seen.add(choice.value);
+    return [choice];
   });
+}
+
+/**
+ * The choice a container's stored target matches among its children now, or null -- which reads as 404:
+ * the target another Navigation carried over, or one a child no longer stands for.
+ */
+export function findPhiBuilderNavigationFolderChoice(
+  container: PhiBuilderNavigationItem,
+  resolveLinkPath: PhiBuilderNavigationLinkPathResolver,
+): PhiBuilderNavigationFolderChoice | null {
+  if (!container.folder) return null;
+  const value = encodePhiBuilderNavigationFolderTarget(container.folder.target);
+  return listPhiBuilderNavigationFolderChoices(container, resolveLinkPath).find((choice) => choice.value === value) ?? null;
 }
 
 /**

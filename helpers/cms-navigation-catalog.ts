@@ -2,6 +2,7 @@ import { isPhiCmsAreaKey, type PhiCmsAreaKey } from "../constants/cms-areas";
 import { readPhiCmsNavigationTargetPath } from "../helpers/navigation-target";
 import { resolvePhiCmsNavigationOverlay } from "../plugins/runtime-modules/descriptor-compiler";
 import type {
+  PhiCmsPresetIdentity,
   PhiCmsNavigationFolder,
   PhiCmsNavigationOverlay,
   PhiCmsResolvedNavigationItem,
@@ -25,7 +26,9 @@ export type PhiBuilderNavigationItem = {
   external?: boolean;
   newTab?: boolean;
   hidden: boolean;
-  /** A container's folder address and the direct child it leads to. */
+  /** A Module link's Page, so a container's folder address can lead to it by reference. */
+  targetPreset?: PhiCmsPresetIdentity;
+  /** A container's folder address and what it leads to. */
   folder?: PhiCmsNavigationFolder | null;
   children: PhiBuilderNavigationItem[];
 };
@@ -130,6 +133,9 @@ function materializeNavigationItem(
       targetDeleted: customTarget.deleted === true,
     } : {}),
     icon: item.icon ?? null,
+    ...(item.target?.kind === "module"
+      ? { targetPreset: { ownerModuleId: item.target.ownerModuleId, presetKey: item.target.presetKey } }
+      : {}),
     ...(customTarget?.kind === "external" ? { external: true } : {}),
     ...(customItem?.newTab === true ? { newTab: true } : {}),
     hidden: tombstones.has(item.id),

@@ -2,16 +2,23 @@ import { describe, expect, it } from "vitest";
 
 import type { PhiBuilderNavigationItem } from "../../../helpers/cms-navigation-catalog";
 import type { PhiCmsInstanceId } from "../../../types/cms-instance-id";
+import type { PhiRuntimeModuleId } from "../../../types/cms-plugins";
+import { createPhiPageReference, type PhiPageReference } from "../../../types/references";
 import {
+  findPhiBuilderNavigationFolderChoice,
   listPhiBuilderNavigationFolderChoices,
   refreshPhiBuilderNavigationFolderAddresses,
   resolvePhiBuilderNavigationFolderAddress,
 } from "./navigation-folder-address";
 
 const id = (value: string) => value as PhiCmsInstanceId;
+const sitePage = (scopeId: number) => createPhiPageReference({ kind: "site", pageScopeId: scopeId });
 
-function link(key: string, path: string | null): PhiBuilderNavigationItem {
-  return { id: id(key), source: "custom", ownerModuleId: null, kind: "link", label: key, href: path, hidden: false, children: [] };
+function link(key: string, path: string | null, reference?: PhiPageReference): PhiBuilderNavigationItem {
+  return {
+    id: id(key), source: "custom", ownerModuleId: null, kind: "link", label: key, href: path, hidden: false,
+    ...(reference ? { targetReference: reference } : {}), children: [],
+  };
 }
 
 function container(key: string, children: PhiBuilderNavigationItem[], folder?: PhiBuilderNavigationItem["folder"]): PhiBuilderNavigationItem {
@@ -55,28 +62,69 @@ describe("resolvePhiBuilderNavigationFolderAddress", () => {
 });
 
 describe("listPhiBuilderNavigationFolderChoices", () => {
-  it("offers the direct children, links and sub-containers, by the path each stands for", () => {
+  it("offers what each direct child stands for: a Page by reference, a sub-container by address", () => {
     const docs = container("docs", [
-      container("guides", [link("a", "/docs/guides/a")]),
-      link("api", "/docs/api"),
+      container("guides", [link("a", "/docs/guides/a", sitePage(3))]),
+      link("api", "/docs/api", sitePage(4)),
       link("external", null),
     ]);
     expect(listPhiBuilderNavigationFolderChoices(docs, resolveLinkPath)).toEqual([
-      { value: "guides", label: "/docs/guides" },
-      { value: "api", label: "/docs/api" },
+      { value: "folder:/docs/guides", label: "/docs/guides", target: { kind: "folder", address: "/docs/guides" } },
+      { value: `page:${sitePage(4)}`, label: "/docs/api", target: { kind: "page", reference: sitePage(4) } },
     ]);
+  });
+
+  it("offers a Module link by the reference of its Page", () => {
+    const moduleLink: PhiBuilderNavigationItem = {
+      ...link("start", "/phis/docs/start"),
+      source: "module",
+      ownerModuleId: "@phis/ui/modules/docs" as PhiRuntimeModuleId,
+      targetPreset: { ownerModuleId: "@phis/ui/modules/docs" as PhiRuntimeModuleId, presetKey: "start" },
+    };
+    const [choice] = listPhiBuilderNavigationFolderChoices(container("docs", [moduleLink]), resolveLinkPath);
+    expect(choice?.target).toEqual({
+      kind: "page",
+      reference: createPhiPageReference({ kind: "module", ownerModuleId: "@phis/ui/modules/docs", presetKey: "start" }),
+    });
+  });
+
+  it("offers a target once when two children stand for it", () => {
+    const docs = container("docs", [link("a", "/docs/a", sitePage(5)), link("again", "/docs/a", sitePage(5))]);
+    expect(listPhiBuilderNavigationFolderChoices(docs, resolveLinkPath)).toHaveLength(1);
+  });
+});
+
+describe("findPhiBuilderNavigationFolderChoice", () => {
+  it("matches a stored target to the child that stands for it, whichever Navigation wrote it", () => {
+    const docs = container(
+      "docs",
+      [link("header-api", "/docs/api", sitePage(4)), container("header-guides", [link("x", "/docs/guides/x", sitePage(9))])],
+      { address: "/docs", target: { kind: "folder", address: "/docs/guides" } },
+    );
+    expect(findPhiBuilderNavigationFolderChoice(docs, resolveLinkPath)?.value).toBe("folder:/docs/guides");
+  });
+
+  it("finds nothing, which reads as 404, when no child stands for the stored target", () => {
+    const docs = container("docs", [link("api", "/docs/api", sitePage(4))], {
+      address: "/docs",
+      target: { kind: "page", reference: sitePage(99) },
+    });
+    expect(findPhiBuilderNavigationFolderChoice(docs, resolveLinkPath)).toBeNull();
   });
 });
 
 describe("refreshPhiBuilderNavigationFolderAddresses", () => {
-  it("updates a stored address to the children as they are now, and leaves the choice alone", () => {
-    const items = [container("docs", [link("a", "/manual/a")], { address: "/docs", choice: id("gone") })];
-    const [refreshed] = refreshPhiBuilderNavigationFolderAddresses(items, resolveLinkPath);
-    expect(refreshed?.folder).toEqual({ address: "/manual", choice: "gone" });
+  it("updates a stored address to the children as they are now, and leaves the target alone", () => {
+    const target = { kind: "page" as const, reference: sitePage(7) };
+    const [refreshed] = refreshPhiBuilderNavigationFolderAddresses(
+      [container("docs", [link("a", "/manual/a")], { address: "/docs", target })],
+      resolveLinkPath,
+    );
+    expect(refreshed?.folder).toEqual({ address: "/manual", target });
   });
 
   it("returns the same objects when nothing changed", () => {
-    const items = [container("docs", [link("a", "/docs/a")], { address: "/docs", choice: id("a") })];
+    const items = [container("docs", [link("a", "/docs/a")], { address: "/docs", target: { kind: "page", reference: sitePage(1) } })];
     expect(refreshPhiBuilderNavigationFolderAddresses(items, resolveLinkPath)[0]).toBe(items[0]);
   });
 });

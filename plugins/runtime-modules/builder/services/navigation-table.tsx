@@ -45,6 +45,7 @@ import { resolvePhiBuilderActivePageCatalog, type PhiPresetPageNode } from "../.
 import { resolvePhiBuilderNavigationTargetPath } from "../../../../helpers/cms-paths";
 import { createPhiBuilderNavigationPathContext } from "../navigation-path-context";
 import {
+  findPhiBuilderNavigationFolderChoice,
   listPhiBuilderNavigationFolderChoices,
   refreshPhiBuilderNavigationFolderAddresses,
   resolvePhiBuilderNavigationFolderAddress,
@@ -106,9 +107,7 @@ function flattenNavigationRows(
     navigationType: resolveNavigationTableType(item),
     origin: item.ownerModuleId ? moduleTitles.get(item.ownerModuleId) ?? item.ownerModuleId : "Site",
     href: item.kind === "container"
-      ? folderChoices.some((choice) => choice.value === item.folder?.choice)
-        ? item.folder!.choice
-        : PHI_NAVIGATION_NOT_FOUND_CHOICE
+      ? findPhiBuilderNavigationFolderChoice(item, paths.resolveLinkPath)?.value ?? PHI_NAVIGATION_NOT_FOUND_CHOICE
       : deletedTarget
         ? PHI_NAVIGATION_NOT_FOUND_CHOICE
         : sitePageLink
@@ -117,7 +116,7 @@ function flattenNavigationRows(
     hrefOptions: item.kind === "container"
       ? [
           { value: PHI_NAVIGATION_NOT_FOUND_CHOICE, label: PHI_NAVIGATION_NOT_FOUND_LABEL },
-          ...folderChoices.map((choice) => ({ ...choice, label: paths.displayAddress(choice.label) })),
+          ...folderChoices.map((choice) => ({ value: choice.value, label: paths.displayAddress(choice.label) })),
         ]
       : sitePageLink
         ? [
@@ -454,15 +453,16 @@ export function PhiBuilderNavigationTableProviderClient({ children }: { children
           // Choosing 404 clears the folder address: nothing is stored, so the address answers 404.
           patch.folder = null;
         } else if (request.fieldKey === "href" && typeof request.proposedValue === "string" && item.kind === "container") {
-          // Write strict: a folder address leads only to one of the container's own direct children.
+          // Write strict: a folder address leads only to what one of the container's direct children stands for.
           const paths = createPhiBuilderNavigationPathContext(scope.state);
-          if (!listPhiBuilderNavigationFolderChoices(item, paths.resolveLinkPath)
-            .some((choice) => choice.value === request.proposedValue)) {
+          const choice = listPhiBuilderNavigationFolderChoices(item, paths.resolveLinkPath)
+            .find((candidate) => candidate.value === request.proposedValue);
+          if (!choice) {
             return { status: "rejected", invalidation: "none", errorCode: "folder-choice-invalid", message: "A container can lead only to one of its direct children." };
           }
           patch.folder = {
-            choice: request.proposedValue as PhiCmsInstanceId,
             address: resolvePhiBuilderNavigationFolderAddress(item, paths.resolveLinkPath),
+            target: choice.target,
           };
         } else if (request.fieldKey === "href" && typeof request.proposedValue === "string" &&
           item.kind === "link" && item.source === "custom" && item.external !== true && item.targetReference) {
