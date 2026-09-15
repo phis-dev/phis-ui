@@ -39,6 +39,8 @@ export type PhiFormFieldProviderProps = {
     getValues(): Record<string, unknown>;
     setValues(values: Record<string, unknown>): void;
   };
+  /** What the Widget was placed with, for text a field takes from its placement rather than its form. */
+  formConfig?: Readonly<Record<string, unknown>>;
 };
 
 export type PhiFormFieldTypeProvider = PhiFormFieldTypeProviderDescriptor & {

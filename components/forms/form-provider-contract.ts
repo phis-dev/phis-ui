@@ -54,9 +54,8 @@ export const PHI_AUTH_FORM_FIELD_TYPE_PROVIDER_DESCRIPTORS = [
     valueType: "boolean",
     presentation: "control",
     settingsFields: [
-      { key: "before", type: "string", label: "Text before link" },
+      { key: "text", type: "string", label: "Consent sentence, with %1 where the link goes" },
       { key: "linkLabel", type: "string", label: "Link label" },
-      { key: "after", type: "string", label: "Text after link" },
       { key: "href", type: "url", label: "Link URL", required: true },
     ],
   },

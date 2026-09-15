@@ -18,8 +18,6 @@ export const PhiRuntimeRenderClientType = {
   SlotChildFrameEnhancer: "@phis/ui/runtime#slot-child-frame",
   FormDescriptor: "@phis/ui/form#descriptor",
   FormConfirm: "@phis/ui/modules/auth/forms/confirm",
-  FormContact: "@phis/ui/modules/public/forms/contact",
   FormLogin: "@phis/ui/modules/auth/forms/login",
-  FormRegistration: "@phis/ui/modules/auth/forms/registration",
   FormResetPassword: "@phis/ui/modules/auth/forms/reset-password",
 } as const;

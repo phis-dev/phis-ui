@@ -51,9 +51,16 @@ This document defines the public form-building-block contract in `@phis/ui`.
 - A signal-mode Form may omit `submitHandlerKey`. Its standard `submit` input is the apply boundary;
   `reset` restores its initial values and emits them. Descriptors never contain callbacks or controller
   addresses.
-- Visible submit, apply, save, reset, cancel, and close actions are never part of `PhiFormDescriptor` or
+- Visible apply, save, reset, cancel, and close actions are never part of `PhiFormDescriptor` or
   `PhiFormWidget`. They are ordinary Phi Button Widgets in a sibling Layout or Overlay Footer Layout and
   communicate with the owning Controller through declared routes.
+- A submit belongs to the Form Widget, never to the form. No form component draws a button: a form body
+  offers a way to submit and the word it would use, and the Widget decides whether there is a button at
+  all, what it says and where it sits. The Widget declares it as `submit: { label, align }` in its config,
+  absent by default. It is a second sender on the standard `submit` channel, never a second path: it calls
+  the same request the capability calls, so it shows the loading state of a submit somebody else started.
+  `align` places it within the control column -- `start` is the default, `center` centres it over the
+  inputs, `end` puts it at their right edge. The descriptor still refuses `actions`.
 - Every Form Widget listens to the standard `submit` and `reset` inputs. Submit always calls the mounted
   Ant Design Form instance and therefore runs the normal client validation before handler or signal-mode
   execution. Reset restores the resolved initial record through the same runtime Form lifecycle.
@@ -62,9 +69,9 @@ This document defines the public form-building-block contract in `@phis/ui`.
   the existing explicit Form-value capabilities. A Controller closes an Overlay only after the matching
   submit-success signal, never on the original Save click.
 - The same external action path applies to inline and Overlay Forms. Forms do not detect Overlay ancestry,
-  inject buttons into Layout or Overlay chrome, or expose a second callback submit path. A Form-internal
-  Button is permitted only as a field-local command Control; it cannot submit, reset, close an Overlay, or
-  execute an independent business transaction.
+  inject buttons into Layout or Overlay chrome, or expose a second callback submit path. Apart from the
+  declared `submit`, a Form-internal Button is permitted only as a field-local command Control; it cannot
+  submit, reset, close an Overlay, or execute an independent business transaction.
 - `formKind` and hybrid/rendered fallback modes are not part of the v1 ABI. The complete namespaced
   `formId` in the shape `<npm-package>/forms/<form-key>` is the only Form identity.
 - Shared remote data loading should use the same normalized data-source contract as widgets when a form needs bootstrap reads or lookup data.

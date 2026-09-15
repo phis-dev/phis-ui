@@ -19,6 +19,14 @@ import { PHI_BUILDER_RUNTIME_DATA_PROVIDER_KEYS } from "../../../builder/ids";
 export type PhiCmsFormWidgetSubmitConfig = {
   /** What it says. The form's own label set decides where this is absent. */
   label: string | null;
+  /**
+   * Where in the control column the button sits -- not where in the form.
+   *
+   * The submit stands on the same twenty-four tracks as the fields, in the span the inputs occupy, so
+   * `start` puts it under the first input rather than at the form's left edge and `center` centres it
+   * over the inputs rather than over label and input together. `start` is the default because that is
+   * where the eye already is when the last field has been filled in.
+   */
   align: "start" | "center" | "end";
 };
 
@@ -28,6 +36,14 @@ export type PhiCmsFormWidgetConfig = {
   formConfig: Record<string, unknown>;
   execution: {
     mode: "handler" | "signal";
+    /**
+     * Which closed handler phase this Widget submits.
+     *
+     * `submit` for the ordinary case. A flow composed of several Form Widgets -- a request and then a
+     * confirmation -- says so here, so the second stage is a placement of the same form rather than a
+     * second form or a second code path.
+     */
+    phase: "submit" | "confirm";
   };
   source: PhiTableSourceBinding | null;
   openActionKey?: string;
@@ -57,13 +73,14 @@ export function parsePhiFormWidgetConfig(rawConfig: Record<string, unknown>): Ph
     formId: isPhiFormId(normalizedFormId) ? normalizedFormId : null,
     submit: rawConfig.submit == null ? null : {
       label: typeof submit.label === "string" && submit.label.trim() ? submit.label.trim() : null,
-      align: submitAlign === "start" || submitAlign === "center" || submitAlign === "end"
+      align: submitAlign === "center" || submitAlign === "end"
         ? submitAlign
-        : "end",
+        : "start",
     },
     formConfig: readRecord(rawConfig.formConfig),
     execution: {
       mode: execution.mode === "signal" ? "signal" : "handler",
+      phase: execution.phase === "confirm" ? "confirm" : "submit",
     },
     source: isPhiRuntimeDataProviderKey(providerKey) && resourceKey
       ? {
@@ -164,6 +181,15 @@ export const PHI_FORM_WIDGET_DEFINITION = {
       ],
     },
     {
+      key: "execution.phase",
+      type: "choice",
+      label: "Submit phase",
+      options: [
+        { value: "submit", label: "Submit" },
+        { value: "confirm", label: "Confirm" },
+      ],
+    },
+    {
       key: "source",
       type: "data-provider",
       providerKind: "table",
@@ -174,7 +200,7 @@ export const PHI_FORM_WIDGET_DEFINITION = {
   defaultConfig: {
     formId: null,
     formConfig: {},
-    execution: { mode: "handler" },
+    execution: { mode: "handler", phase: "submit" },
     source: null,
     openActionKey: "edit",
     signalRoutes: null,

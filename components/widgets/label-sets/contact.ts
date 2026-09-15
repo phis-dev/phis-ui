@@ -21,7 +21,7 @@ const PHI_CONTACT_FORM_LABEL_SET = definePhiLabelSet({
     message_placeholder: "Your message",
     message_required: definePhiMessageLabel("Please enter your message."),
     generic_error: definePhiMessageLabel("Could not send message."),
-    submit_label: "Send",
+    submit_label: "Send message",
     success_title: "Message sent",
     success_text: definePhiMessageLabel("Your message has been submitted successfully. We will get back to you as soon as possible."),
   },

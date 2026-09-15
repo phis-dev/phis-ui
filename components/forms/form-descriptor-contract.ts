@@ -7,6 +7,7 @@ import type {
   PhiFormLayoutDescriptor,
   PhiFormOptionDescriptor,
   PhiFormResponsiveGridRange,
+  PhiFormSuccessDescriptor,
   PhiFormTextDescriptor,
   PhiFormValidationRuleDescriptor,
 } from "../../types/form-descriptor";
@@ -78,14 +79,14 @@ function readTextDescriptor(value: unknown, path: string): PhiFormTextDescriptor
   if (value.kind === "literal") {
     return { kind: "literal", value: typeof value.value === "string" ? value.value : "" };
   }
-  if (value.kind === "label") {
+  if (value.kind === "label" || value.kind === "config") {
     return {
-      kind: "label",
+      kind: value.kind,
       key: readRequiredString(value.key, `${path}.key`),
       fallback: typeof value.fallback === "string" ? value.fallback : "",
     };
   }
-  throw new Error(`${path}.kind must be "literal" or "label".`);
+  throw new Error(`${path}.kind must be "literal", "label" or "config".`);
 }
 
 function readGridRange(value: unknown, path: string): PhiFormGridRange | undefined {
@@ -290,12 +291,25 @@ export function parsePhiFormDescriptor(value: unknown): PhiFormDescriptor {
   if (layout) {
     resolvePhiFormLayout(layout);
   }
+  const success: PhiFormSuccessDescriptor | undefined = value.success == null
+    ? undefined
+    : isRecord(value.success)
+      ? {
+          title: readTextDescriptor(value.success.title, "success.title"),
+          text: value.success.text == null
+            ? undefined
+            : readTextDescriptor(value.success.text, "success.text"),
+          reset: value.success.reset == null ? undefined : value.success.reset === true,
+        }
+      : (() => { throw new Error("success must be an object."); })();
   return {
     schemaVersion: PHI_FORM_DESCRIPTOR_SCHEMA_VERSION,
     key: readRequiredString(value.key, "key"),
     labelSetKey,
     fields,
     layout,
+    success,
+    persistDraft: value.persistDraft == null ? undefined : value.persistDraft === true,
   };
 }
 
@@ -492,8 +506,16 @@ export function createPhiFormLabelText(
 export function resolvePhiFormText(
   text: PhiFormTextDescriptor,
   labels?: Readonly<Record<string, string>>,
+  formConfig?: Readonly<Record<string, unknown>>,
 ) {
-  return text.kind === "literal" ? text.value : labels?.[text.key] ?? text.fallback;
+  if (text.kind === "literal") {
+    return text.value;
+  }
+  if (text.kind === "config") {
+    const value = formConfig?.[text.key];
+    return typeof value === "string" && value.trim() ? value : text.fallback;
+  }
+  return labels?.[text.key] ?? text.fallback;
 }
 
 export function assertPhiFormLabelSetKey(
@@ -618,6 +640,14 @@ export function resolvePhiFormGridPlacement(
     placement?: PhiFormFieldPlacementDescriptor;
     /** A hidden or honeypot field is out of flow and takes no room. */
     inFlow: boolean;
+    /**
+     * Whether a label cell is drawn for this field at all.
+     *
+     * A consent whose sentence is the control, or a checkbox that carries its own wording, has nothing
+     * to put beside or above itself. Such a field takes its control's tracks and one row -- reserving
+     * the label's row would leave an empty band in the middle of the form.
+     */
+    hasLabel: boolean;
   }[],
   mode: PhiFormResponsiveMode,
 ) {
@@ -634,12 +664,16 @@ export function resolvePhiFormGridPlacement(
   let taken: PhiFormGridRange[] = [];
 
   for (const field of fields) {
-    const { label, control, stacked } = resolvePhiFormFieldRanges(
+    const ranges = resolvePhiFormFieldRanges(
       layout,
       field.placement,
       mode,
       `fields.${field.key}`,
     );
+    const control = ranges.control;
+    // A field with no label cell is its control, and nothing overlaps a cell that is never drawn.
+    const label = field.hasLabel ? ranges.label : control;
+    const stacked = field.hasLabel && ranges.stacked;
     if (!field.inFlow) {
       placements.set(field.key, { label, control, stacked, labelRow: rowStart, controlRow: rowStart });
       continue;

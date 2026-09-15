@@ -1,6 +1,7 @@
 import { createPhiPresetCmsInstanceIdMap } from "../../../types/cms-instance-id";
 import { PHI_SPACE } from "../../../theme/antd-css-var-contract";
 import { PHI_AUTH_RUNTIME_MODULE_ID } from "../../../plugins/runtime-modules/auth/ids";
+import { localizeAreaPath } from "../../../helpers/locale";
 import {
   PHI_CMS_DEFAULT_SLOT_INDEX,
   PHI_CMS_SPLIT_LAYOUT_SLOT_INDEX,
@@ -10,7 +11,6 @@ import { buildPhiCmsLayoutNode, buildPhiCmsWidgetNode } from "../../../helpers/c
 import type { PhiCmsPageNode, PhiResolvedCmsPageTree } from "../../../types/cms";
 import { PHI_PADDING } from "../../../theme/phi-tokens";
 import { PHI_SHARED_FORM_IDS } from "../../forms/shared-form-ids";
-import { createPhiSignalAddress } from "../../../types/signals";
 
 const SYNTHETIC_REGISTER_REGION_IDS = {
   regionContent: -200,
@@ -19,9 +19,13 @@ const SYNTHETIC_REGISTER_REGION_IDS = {
 export async function buildPhiDefaultPubRegistrationPageTree({
   page,
   presetKey,
+  runtime,
 }: {
   page: PhiCmsPageNode;
   presetKey: string;
+  runtime: {
+    locale: { current: string };
+  };
 }): Promise<PhiResolvedCmsPageTree> {
   const SYNTHETIC_REGISTER_LAYOUT_IDS = createPhiPresetCmsInstanceIdMap({
     domain: "page",
@@ -32,7 +36,7 @@ export async function buildPhiDefaultPubRegistrationPageTree({
     domain: "page",
     ownerModuleId: PHI_AUTH_RUNTIME_MODULE_ID,
     presetKey,
-  }, ["widgetDescription", "widgetRegistration", "widgetRegistrationSubmit"]);
+  }, ["widgetDescription", "widgetRegistration", "widgetRegistrationNotice"]);
   return {
     page: {
       ...page,
@@ -124,20 +128,41 @@ export async function buildPhiDefaultPubRegistrationPageTree({
         flags: 0,
         visibilityMask: page.visibilityMask,
         label: "pub registration widget",
+        /*
+         * No submit Widget beside it: the Form Widget carries the submit, in the column its inputs
+         * stand in. Unnamed, so the Registration's own label set says what it says -- including the
+         * word it changes to while an account is being created.
+         */
         config: {
           formId: PHI_SHARED_FORM_IDS.registration,
+          submit: {},
           formConfig: {
-            termsHref: "/terms-and-conditions",
+            // Localized here, where the locale is known: the consent link is a path on this Site.
+            termsHref: localizeAreaPath(runtime.locale.current, "public", "/terms-and-conditions"),
           },
-          signalRoutes: { listens: [{ routeKey: "pub-registration-submit", capabilityId: "submit", scope: "page", channel: "submit", action: "activate", valueType: "none", receiver: createPhiSignalAddress("cms", SYNTHETIC_REGISTER_WIDGET_IDS.widgetRegistration) }] },
         },
         contentId: null,
       }),
+      /*
+       * The small print stands beside the form, not in it: a form describes fields, and this is a
+       * sentence about what happens next. A Widget in the next slot is what composition looks like.
+       */
       buildPhiCmsWidgetNode({
-        typeKey: "button", id: SYNTHETIC_REGISTER_WIDGET_IDS.widgetRegistrationSubmit,
-        siteId: page.siteId, parentLayoutNodeId: SYNTHETIC_REGISTER_LAYOUT_IDS.layoutForm, slotIndex: 1,
-        sortOrder: 1, status: PhiCmsStatus.Published, flags: 0, visibilityMask: page.visibilityMask,
-        label: "pub registration submit", config: { key: "submit", label: "Create account", buttonType: "primary", signalRoutes: { emits: [{ routeKey: "pub-registration-submit-button", capabilityId: "activate", scope: "page", channel: "submit", action: "activate", valueType: "none", receiver: createPhiSignalAddress("cms", SYNTHETIC_REGISTER_WIDGET_IDS.widgetRegistration) }] } }, contentId: null,
+        typeKey: "simple-text",
+        id: SYNTHETIC_REGISTER_WIDGET_IDS.widgetRegistrationNotice,
+        siteId: page.siteId,
+        parentLayoutNodeId: SYNTHETIC_REGISTER_LAYOUT_IDS.layoutForm,
+        slotIndex: 1,
+        sortOrder: 1,
+        status: PhiCmsStatus.Published,
+        flags: 0,
+        visibilityMask: page.visibilityMask,
+        label: "pub registration notice",
+        config: {
+          text: "We only use your details to create and support your account.",
+          type: "secondary",
+        },
+        contentId: null,
       }),
     ],
   };

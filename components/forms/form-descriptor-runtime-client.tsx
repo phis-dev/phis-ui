@@ -19,7 +19,8 @@ import { readPhiRuntimeConditionStateSignalValue } from "../../types/runtime-con
 import { collectPhiRuntimeValueConditions } from "../../types/runtime-condition";
 import { usePhiTableProvider } from "../widgets/client/shared/phi-table-provider";
 import { PhiFormControl, type PhiFormControlFormInstance } from "../controls/phi-form-control";
-import { PhiButtonControl } from "../controls/phi-button-control";
+import { resolvePhiFormText } from "./form-descriptor-contract";
+import { PhiFormWidgetSubmitOutlet, usePhiFormWidgetSubmit } from "./phi-form-widget-frame";
 import { usePhiRuntimeFormClient } from "./runtime-form-client";
 import { PhiAlertControl } from "../controls/phi-alert-control";
 import { usePhiRuntimeFormBinding } from "./runtime-form-binding";
@@ -29,6 +30,8 @@ const EMPTY_FORM_VALUES: Record<string, unknown> = {};
 export type PhiFormDescriptorRuntimeClientProps = {
   descriptor: PhiFormDescriptor;
   labels?: Readonly<Record<string, string>>;
+  /** What the form already knows, read on the server for this render. Guard tokens arrive this way. */
+  loadedInitialValues?: Record<string, unknown> | null;
   formId: string;
   formControllerAddress: PhiSignalAddress;
   widgetConfig?: PhiCmsFormWidgetConfig;
@@ -37,13 +40,13 @@ export type PhiFormDescriptorRuntimeClientProps = {
 export function PhiFormDescriptorRuntimeClient({
   descriptor,
   labels,
+  loadedInitialValues,
   formId,
   formControllerAddress,
   widgetConfig,
 }: PhiFormDescriptorRuntimeClientProps) {
   const formClient = usePhiRuntimeFormClient({ controllerAddress: formControllerAddress });
   const formRef = useRef<PhiFormControlFormInstance | null>(null);
-  const [submitting, setSubmitting] = useState(false);
   const submitCorrelationRef = useRef<string | null>(null);
   const recordIdentityRef = useRef<string | number | null>(null);
   const identity = usePhiSignalIdentity();
@@ -51,12 +54,24 @@ export function PhiFormDescriptorRuntimeClient({
   const source = widgetConfig?.source ?? null;
   const { provider, resource, bindingError } = usePhiTableProvider(source);
   const initialValuesInput = widgetConfig?.formConfig.initialValues;
-  const configuredInitialValues = initialValuesInput &&
-    typeof initialValuesInput === "object" &&
-    !Array.isArray(initialValuesInput)
-      ? initialValuesInput as Record<string, unknown>
-      : EMPTY_FORM_VALUES;
+  /*
+   * What the author wrote, under what the server read. The author's values are placement -- a form
+   * opened with a name already filled in -- while the loaded ones are the form's own precondition, and
+   * a placement cannot be allowed to overwrite the guard token it knows nothing about.
+   */
+  const configuredInitialValues = useMemo(() => {
+    const authored = initialValuesInput &&
+      typeof initialValuesInput === "object" &&
+      !Array.isArray(initialValuesInput)
+        ? initialValuesInput as Record<string, unknown>
+        : null;
+    if (!authored && !loadedInitialValues) {
+      return EMPTY_FORM_VALUES;
+    }
+    return { ...authored, ...loadedInitialValues };
+  }, [initialValuesInput, loadedInitialValues]);
   const [error, setError] = useState<string | null>(null);
+  const [succeeded, setSucceeded] = useState(false);
   const [record, setRecord] = useState<Record<string, unknown> | null>(configuredInitialValues);
   const [loading, setLoading] = useState(source !== null);
   const [recordKey, setRecordKey] = useState("inline");
@@ -216,70 +231,103 @@ export function PhiFormDescriptorRuntimeClient({
   }, [conditionControllerAddresses, emitCapability]);
 
   /*
-   * The form's own submit goes through `requestSubmit`, the same call the `submit` capability makes when
-   * a Button Widget outside asks for one. One path, so the two cannot disagree about what submitting
-   * means: the button shows the loading state of a submit somebody else started, because there is only
-   * one submit to be in.
+   * What the Widget presses when it draws a submit: `requestSubmit`, the same call the `submit`
+   * capability makes when a Button Widget outside asks for one. One path, so the two cannot disagree
+   * about what submitting means -- the button shows the loading state of a submit somebody else
+   * started, because there is only one submit to be in.
    */
-  const submitAction = widgetConfig?.submit == null ? null : (
-    /*
-     * The same twenty-four tracks as the form above it, opened again for one row.
-     *
-     * Its own grid rather than a row inside the form: the form describes fields, and a submit is not
-     * one. Sharing the track count and the label-column property is all that is needed for the button
-     * to line up under the inputs, and it moves with the column the Layout decides because that column
-     * is a custom property both of them read.
-     */
-    <div className="phi-form-descriptor-actions">
-      <div
-        className="phi-form-cell phi-form-cell--control"
-        style={{
-          display: "flex",
-          justifyContent: widgetConfig.submit.align === "start"
-            ? "flex-start"
-            : widgetConfig.submit.align === "center" ? "center" : "flex-end",
-        }}
-      >
-        <PhiButtonControl
-          type="primary"
-          label={widgetConfig.submit.label ?? labels?.["actions.submitLabel"] ?? "Submit"}
-          loading={submitting}
-          onClick={() => requestSubmit()}
-        />
-      </div>
-    </div>
+  const submitSlot = usePhiFormWidgetSubmit(
+    () => requestSubmit(),
+    labels?.["actions.submitLabel"],
   );
 
+  /*
+   * What has been typed, kept for as long as the tab is open, where the form asks for it.
+   *
+   * The long form is the case: somebody following the consent link to read the terms comes back to an
+   * empty form otherwise. Session storage can be refused outright -- a private window, blocked site
+   * data -- and a draft is a convenience, so every access is allowed to fail silently.
+   */
+  const draftStorageKey = descriptor.persistDraft ? `phi.form.draft:${descriptor.key}` : null;
+  const clearDraft = useCallback(() => {
+    if (!draftStorageKey) return;
+    try {
+      window.sessionStorage.removeItem(draftStorageKey);
+    } catch {
+      // A draft nobody can store is a draft nobody has to clear.
+    }
+  }, [draftStorageKey]);
+
+  /*
+   * Written into the mounted form rather than into this component's state: the server rendered the form
+   * empty, and what is in session storage is known only to the browser. Handing it to React as state
+   * would make the first client render disagree with the server's.
+   */
+  useEffect(() => {
+    if (!draftStorageKey) return;
+    try {
+      const raw = window.sessionStorage.getItem(draftStorageKey);
+      if (!raw) return;
+      const parsed: unknown = JSON.parse(raw);
+      if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+        formRef.current?.setFieldsValue(parsed as Record<string, unknown>);
+      }
+    } catch {
+      // Unreadable or unparseable: the form simply opens empty.
+    }
+  }, [draftStorageKey]);
+
+  /*
+   * What the form says for itself when a submit is accepted, and nothing where it declares no success:
+   * a form inside an Overlay that closes on `submitSuccess` would otherwise announce a result nobody
+   * stays to read.
+   */
+  const success = descriptor.success;
+  const reportSuccess = useCallback(() => {
+    clearDraft();
+    if (!success) {
+      return;
+    }
+    setSucceeded(true);
+    if (success.reset) {
+      formRef.current?.resetFields();
+    }
+  }, [clearDraft, success]);
+
   const content = loading ? <Skeleton active paragraph={{ rows: 4 }} /> : (
-    /*
-     * The query container sits here, around the form and its actions together, because a container
-     * cannot answer a question about itself: the actions row opens its own grid beside the form and
-     * still has to know how wide the form is. Both are the width of this element.
-     */
-    <div
-      style={{
-        display: "grid",
-        gap: "var(--ant-padding-sm)",
-        width: "100%",
-        minWidth: 0,
-        containerType: "inline-size",
-        containerName: "phi-form",
-      }}
-    >
+    <>
       {error ? <PhiAlertControl level="error" showIcon title={error} /> : null}
+      {succeeded && success ? (
+        <PhiAlertControl
+          level="success"
+          showIcon
+          title={resolvePhiFormText(success.title, labels)}
+          description={success.text ? resolvePhiFormText(success.text, labels) : undefined}
+        />
+      ) : null}
       <PhiFormControl
         key={recordKey}
         descriptor={descriptor}
         labels={labels}
+        formConfig={widgetConfig?.formConfig}
         initialValues={record ?? undefined}
         onFormReady={(activeForm) => {
           formRef.current = activeForm;
         }}
         conditionControllerStates={conditionControllerStates}
-        onValuesChange={runtimeBinding.onValuesChange}
+        onValuesChange={(changed, all) => {
+          runtimeBinding.onValuesChange(changed, all);
+          if (draftStorageKey) {
+            try {
+              window.sessionStorage.setItem(draftStorageKey, JSON.stringify(all));
+            } catch {
+              // Storage refused; what was typed simply is not kept.
+            }
+          }
+        }}
         onBlurCapture={runtimeBinding.onBlurCapture}
         onSubmittingChange={(submitting) => {
-          setSubmitting(submitting);
+          submitSlot?.setSubmitting(submitting);
           emitCapability("submitting", submitting, submitCorrelationRef.current);
           if (!submitting) submitCorrelationRef.current = null;
         }}
@@ -291,10 +339,12 @@ export function PhiFormDescriptorRuntimeClient({
         onSubmit={async (values) => {
           runtimeBinding.publishSnapshot();
           setError(null);
+          setSucceeded(false);
           const correlationId = submitCorrelationRef.current;
           if (widgetConfig?.execution.mode === "signal") {
             emitCapability("submitValues", { values }, correlationId);
             emitCapability("submitSuccess", null, correlationId);
+            reportSuccess();
             return;
           }
           if (!formId) {
@@ -304,7 +354,12 @@ export function PhiFormDescriptorRuntimeClient({
             return;
           }
           try {
-            const result = await formClient.submit({ formId, values, correlationId: correlationId ?? undefined });
+            const result = await formClient.submit({
+              formId,
+              values,
+              phase: widgetConfig?.execution.phase ?? "submit",
+              correlationId: correlationId ?? undefined,
+            });
             if (!result.ok) {
               const message = typeof result.payload?.error === "string"
                 ? result.payload.error
@@ -312,6 +367,7 @@ export function PhiFormDescriptorRuntimeClient({
               throw new Error(message);
             }
             emitCapability("submitSuccess", null, correlationId);
+            reportSuccess();
             const rowIdentity = recordIdentityRef.current;
             if (source && (rowIdentity != null || !widgetConfig?.openActionKey)) {
               void loadRecord(rowIdentity);
@@ -323,8 +379,8 @@ export function PhiFormDescriptorRuntimeClient({
           }
         }}
       />
-      {submitAction}
-    </div>
+      <PhiFormWidgetSubmitOutlet />
+    </>
   );
 
   return content;

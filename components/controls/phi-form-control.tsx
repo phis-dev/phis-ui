@@ -50,6 +50,8 @@ export type PhiFormControlProps = {
   descriptor: PhiFormDescriptor;
   registry?: PhiFormProviderRegistry;
   labels?: Readonly<Record<string, string>>;
+  /** What the Widget was placed with, for text a field takes from its placement rather than its form. */
+  formConfig?: Readonly<Record<string, unknown>>;
   initialValues?: Record<string, unknown>;
   disabled?: boolean;
   readOnly?: boolean;
@@ -82,12 +84,13 @@ function renderLabel(
   field: PhiFormFieldDescriptor,
   label: string,
   labels?: Readonly<Record<string, string>>,
+  formConfig?: Readonly<Record<string, unknown>>,
 ) {
   if (!field.description) {
     return label;
   }
 
-  const description = resolvePhiFormText(field.description, labels);
+  const description = resolvePhiFormText(field.description, labels, formConfig);
   return (
     <span style={{ display: "inline-flex", alignItems: "center", gap: "0.35em" }}>
       <span>{label}</span>
@@ -125,6 +128,7 @@ function PhiResolvedFormFieldControl({
   label,
   description,
   labels,
+  formConfig,
   placeholder,
   disabled,
   readOnly,
@@ -141,6 +145,7 @@ function PhiResolvedFormFieldControl({
   label?: string;
   description?: string;
   labels?: Readonly<Record<string, string>>;
+  formConfig?: Readonly<Record<string, unknown>>;
   placeholder?: string;
   disabled?: boolean;
   readOnly?: boolean;
@@ -148,12 +153,12 @@ function PhiResolvedFormFieldControl({
   const staticOptions = useMemo(
     () => field.options?.map((option) => ({
       ...option,
-      label: resolvePhiFormText(option.label, labels),
+      label: resolvePhiFormText(option.label, labels, formConfig),
       description: option.description
-        ? resolvePhiFormText(option.description, labels)
+        ? resolvePhiFormText(option.description, labels, formConfig)
         : undefined,
     })),
-    [field.options, labels],
+    [field.options, formConfig, labels],
   );
   // Raw text only: how long it has to be, whether it is used at all, and who filters is declared on
   // the field and applied by the hook, so every control that resolves options obeys the same rules.
@@ -188,7 +193,7 @@ function PhiResolvedFormFieldControl({
   }, [onChange, requiredDependencyKey, value]);
   const Control = provider.Control;
   const controlLabel = field.controlLabel
-    ? resolvePhiFormText(field.controlLabel, labels)
+    ? resolvePhiFormText(field.controlLabel, labels, formConfig)
     : undefined;
 
   return (
@@ -199,6 +204,7 @@ function PhiResolvedFormFieldControl({
         description={description}
         controlLabel={controlLabel}
         labels={labels}
+        formConfig={formConfig}
         placeholder={placeholder}
         options={resolvedOptions.options}
         onSearch={resolvedOptions.search.enabled ? setSearchDraft : undefined}
@@ -221,6 +227,7 @@ export const PhiFormControl = forwardRef<PhiFormControlHandle, PhiFormControlPro
   descriptor,
   registry,
   labels,
+  formConfig,
   initialValues,
   disabled = false,
   readOnly = false,
@@ -352,6 +359,7 @@ export const PhiFormControl = forwardRef<PhiFormControlHandle, PhiFormControlPro
       key: field.key,
       placement: field.placement,
       inFlow: activeRegistry.fieldTypesByKey.get(field.fieldProviderKey)?.presentation === "control",
+      hasLabel: field.label != null && field.controlLabel == null,
     }));
     return {
       compact: resolvePhiFormGridPlacement(layout, entries, "compact"),
@@ -471,15 +479,20 @@ export const PhiFormControl = forwardRef<PhiFormControlHandle, PhiFormControlPro
         }
 
         const rules = resolveFieldRules(field);
+        /*
+         * A field says what its label is, or it has none. The key was standing in for one that was
+         * never declared, so a consent field announced itself as "termsAccepted" -- an identifier read
+         * by whoever had to fill the form in.
+         */
         const labelText = field.label
-          ? resolvePhiFormText(field.label, labels)
-          : field.key;
-        const providerLabel = field.label ? labelText : undefined;
+          ? resolvePhiFormText(field.label, labels, formConfig)
+          : undefined;
+        const providerLabel = labelText;
         const providerDescription = field.description
-          ? resolvePhiFormText(field.description, labels)
+          ? resolvePhiFormText(field.description, labels, formConfig)
           : undefined;
         const renderedFieldLabel = labelText
-          ? renderLabel(field, labelText, labels)
+          ? renderLabel(field, labelText, labels, formConfig)
           : null;
         const dependencies = rules.flatMap((rule) => {
           const dependency =
@@ -523,7 +536,7 @@ export const PhiFormControl = forwardRef<PhiFormControlHandle, PhiFormControlPro
             field,
             rule,
             message: rule.message
-              ? resolvePhiFormText(rule.message, labels)
+              ? resolvePhiFormText(rule.message, labels, formConfig)
               : undefined,
           });
         });
@@ -573,7 +586,7 @@ export const PhiFormControl = forwardRef<PhiFormControlHandle, PhiFormControlPro
             >
               <Form.Item
                 name={field.key}
-                messageVariables={{ label: labelText }}
+                messageVariables={{ label: labelText ?? field.key }}
                 hidden={hidden}
                 valuePropName={provider.valuePropName}
                 dependencies={dependencies}
@@ -587,9 +600,10 @@ export const PhiFormControl = forwardRef<PhiFormControlHandle, PhiFormControlPro
                   label={providerLabel}
                   description={providerDescription}
                   labels={labels}
+                  formConfig={formConfig}
                   placeholder={
                     field.placeholder
-                      ? resolvePhiFormText(field.placeholder, labels)
+                      ? resolvePhiFormText(field.placeholder, labels, formConfig)
                       : undefined
                   }
                   disabled={disabled || submitting || readOnly || field.config?.disabled === true || fieldDisabled !== "not-matched"}

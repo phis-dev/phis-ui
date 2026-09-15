@@ -17,6 +17,15 @@ export type PhiFormLabelSetKey = `${string}/${string}`;
 
 export const PHI_FORM_DESCRIPTOR_SCHEMA_VERSION = 1 as const;
 
+/**
+ * Where a piece of a form's wording comes from.
+ *
+ * `literal` is the word itself. `label` is a key into the form's label set, which is how anything a
+ * visitor reads gets translated. `config` is a value the Widget was placed with -- the target of a
+ * consent link, say, which is a property of where the form stands rather than of the form: the same
+ * registration form points at one site's terms in one Area and another's elsewhere, and only the
+ * placement knows which, and in which language's path.
+ */
 export type PhiFormTextDescriptor =
   | {
       kind: "literal";
@@ -24,6 +33,11 @@ export type PhiFormTextDescriptor =
     }
   | {
       kind: "label";
+      key: string;
+      fallback: string;
+    }
+  | {
+      kind: "config";
       key: string;
       fallback: string;
     };
@@ -110,12 +124,38 @@ export type PhiFormFieldDescriptor = {
   config?: Record<string, unknown>;
 };
 
+/**
+ * What a form shows when a submit is accepted.
+ *
+ * Declared rather than coded, because every form that submits to a handler has this moment and each of
+ * them used to answer it in its own component: the Contact form with a toast, the Registration with an
+ * alert, each with its own wording and its own idea of whether the fields stay filled in.
+ *
+ * Absent means the form says nothing of its own. That is the right answer wherever something else is
+ * listening -- a Controller that closes an Overlay on `submitSuccess`, a page that navigates away.
+ */
+export type PhiFormSuccessDescriptor = {
+  title: PhiFormTextDescriptor;
+  text?: PhiFormTextDescriptor;
+  /** Whether the fields go back to their initial values, ready for another entry. */
+  reset?: boolean;
+};
+
 export type PhiFormDescriptor = {
   schemaVersion: typeof PHI_FORM_DESCRIPTOR_SCHEMA_VERSION;
   key: string;
   labelSetKey?: PhiFormLabelSetKey;
   fields: readonly PhiFormFieldDescriptor[];
   layout?: PhiFormLayoutDescriptor;
+  success?: PhiFormSuccessDescriptor;
+  /**
+   * Whether what has been typed survives leaving the page, for as long as the tab is open.
+   *
+   * For the long form somebody fills in once and would have to fill in again after following a link to
+   * read the terms. Session storage, never local: a half-finished registration on a shared machine is
+   * not something to leave behind, and it is cleared the moment the form is accepted.
+   */
+  persistDraft?: boolean;
 };
 
 export type PhiFormHandlerPhase = "submit" | "confirm" | "preview";

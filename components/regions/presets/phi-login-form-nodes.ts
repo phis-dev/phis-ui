@@ -24,10 +24,12 @@ export const PHI_LOGIN_FORM_LAYOUT_CONFIG = {
   labelEnd: 9,
 } as const;
 
-/** The Login form Widget's config: which form, and where its two links lead. */
+/** The Login form Widget's config: which form, the submit it carries, and where its two links lead. */
 export function buildPhiLoginFormWidgetConfig(locale: string) {
   return {
     formId: PHI_SHARED_FORM_IDS.login,
+    // Declared, unnamed: the Login's own label set says "Sign in", in the language it is read in.
+    submit: {},
     formConfig: {
       forgotPasswordHref: localizeAreaPath(locale, "public", "/reset-password"),
       registerHref: localizeAreaPath(locale, "public", "/register"),

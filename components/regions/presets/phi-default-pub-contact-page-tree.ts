@@ -10,7 +10,6 @@ import { buildPhiCmsLayoutNode, buildPhiCmsWidgetNode } from "../../../helpers/c
 import type { PhiCmsPageNode, PhiResolvedCmsPageTree } from "../../../types/cms";
 import { PHI_PADDING } from "../../../theme/phi-tokens";
 import { PHI_SHARED_FORM_IDS } from "../../forms/shared-form-ids";
-import { createPhiSignalAddress } from "../../../types/signals";
 
 const SYNTHETIC_CONTACT_REGION_IDS = {
   regionContent: -250,
@@ -32,7 +31,6 @@ const SYNTHETIC_CONTACT_WIDGET_IDS = createPhiPresetCmsInstanceIdMap({
 }, [
   "widgetDescription",
   "widgetContact",
-  "widgetContactSubmit",
 ]);
 
 export async function buildPhiDefaultPubContactPageTree({
@@ -131,17 +129,16 @@ export async function buildPhiDefaultPubContactPageTree({
         flags: 0,
         visibilityMask: page.visibilityMask,
         label: "pub contact widget",
+        /*
+         * No submit Widget beside it: the Form Widget carries the submit, in the column its inputs
+         * stand in. Unnamed, so the Contact form's own label set says what it says, in the language
+         * it is read in.
+         */
         config: {
           formId: PHI_SHARED_FORM_IDS.contact,
-          signalRoutes: { listens: [{ routeKey: "pub-contact-submit", capabilityId: "submit", scope: "page", channel: "submit", action: "activate", valueType: "none", receiver: createPhiSignalAddress("cms", SYNTHETIC_CONTACT_WIDGET_IDS.widgetContact) }] },
+          submit: {},
         },
         contentId: null,
-      }),
-      buildPhiCmsWidgetNode({
-        typeKey: "button", id: SYNTHETIC_CONTACT_WIDGET_IDS.widgetContactSubmit,
-        siteId: page.siteId, parentLayoutNodeId: SYNTHETIC_CONTACT_LAYOUT_IDS.layoutForm, slotIndex: 1,
-        sortOrder: 1, status: PhiCmsStatus.Published, flags: 0, visibilityMask: page.visibilityMask,
-        label: "pub contact submit", config: { key: "submit", label: "Send message", buttonType: "primary", signalRoutes: { emits: [{ routeKey: "pub-contact-submit-button", capabilityId: "activate", scope: "page", channel: "submit", action: "activate", valueType: "none", receiver: createPhiSignalAddress("cms", SYNTHETIC_CONTACT_WIDGET_IDS.widgetContact) }] } }, contentId: null,
       }),
     ],
   };

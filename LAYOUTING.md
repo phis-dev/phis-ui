@@ -182,6 +182,11 @@ Form-signal, validation, and result lifecycle. A preset that aligns such a Butto
 column declares matching responsive values on both independent contracts; no Form-specific Layout family,
 implicit action row, margin compensation, or ancestry detection is permitted.
 
+A Form Widget's declared `submit` is not such an action. It belongs to the Widget, not to the form inside
+it, opens its own row of the same twenty-four tracks, and lines up under the inputs because it reads the
+same label-column property the fields read -- not because the Grid arranged it. The Grid still sees one
+Widget.
+
 ### Stack slot mounting
 
 `PhiStackLayout` declares `mountPolicy: "active" | "keep"`. `active` mounts only the selected slot and is

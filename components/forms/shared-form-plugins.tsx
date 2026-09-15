@@ -11,7 +11,7 @@ import {
   PHI_RESET_PASSWORD_FORM_DESCRIPTOR,
 } from "./shared-form-descriptors";
 import { PHI_SHARED_FORM_IDS } from "./shared-form-ids";
-import type { PhiFormLabelSetLoader } from "./form-resolution";
+import type { PhiFormInitialValuesLoader, PhiFormLabelSetLoader } from "./form-resolution";
 import { PHI_PUBLIC_RUNTIME_MODULE_ID } from "../../plugins/runtime-modules/public/ids";
 import { PHI_AUTH_RUNTIME_MODULE_ID } from "../../plugins/runtime-modules/auth/ids";
 
@@ -32,6 +32,30 @@ function createLabelLoader(
       internalToken: rt.internalToken,
       locale: runtime.locale.current,
     }));
+  };
+}
+
+/**
+ * The guard token a public form needs before anyone can fill it in.
+ *
+ * Minted per render and per form, so it cannot be a constant and cannot be asked for from the browser.
+ * It reaches the fields the way any other known value does -- as an initial value for the hidden fields
+ * that carry it -- which is why a public form no longer needs a component of its own to be rendered.
+ */
+function createFormGuardLoader(form: string): PhiFormInitialValuesLoader {
+  return async ({ runtime }) => {
+    const [{ fetchFormGuard }, { phiRuntime }] = await Promise.all([
+      import("../../gateway/form-guard"),
+      import("../../server-helpers/phi-runtime"),
+    ]);
+    const rt = phiRuntime(runtime);
+    const guard = await fetchFormGuard({
+      apiBaseUrl: rt.apiBaseUrl,
+      internalToken: rt.internalToken,
+      siteKey: rt.siteKey,
+      form,
+    });
+    return { issuedAt: guard.issuedAt, formToken: guard.formToken };
   };
 }
 
@@ -77,8 +101,7 @@ export const PHI_SHARED_FORM_DEFINITIONS: readonly PhiRuntimeModuleFormDefinitio
     variant: "default",
     config: {},
     previewUpstreamPath: null,
-    render: (context) => import("./form-renderers")
-      .then((module) => module.renderPhiRegistrationForm(context)),
+    loadInitialValues: createFormGuardLoader(PHI_SHARED_FORM_IDS.registration),
     loadLabels: createLabelLoader(() => import("../widgets/label-sets/registration")
       .then((module) => module.getPhiRegistrationFormLabels)),
   }),
@@ -100,8 +123,7 @@ export const PHI_SHARED_FORM_DEFINITIONS: readonly PhiRuntimeModuleFormDefinitio
     variant: "default",
     config: {},
     previewUpstreamPath: null,
-    render: (context) => import("./form-renderers")
-      .then((module) => module.renderPhiContactForm(context)),
+    loadInitialValues: createFormGuardLoader(PHI_SHARED_FORM_IDS.contact),
     loadLabels: createLabelLoader(() => import("../widgets/label-sets/contact")
       .then((module) => module.getPhiContactFormLabels)),
   }),

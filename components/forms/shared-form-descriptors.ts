@@ -84,7 +84,6 @@ export const PHI_REGISTRATION_FORM_DESCRIPTOR = {
   schemaVersion: PHI_FORM_DESCRIPTOR_SCHEMA_VERSION,
   key: PHI_SHARED_FORM_IDS.registration,
   labelSetKey: PHI_FORM_LABEL_SET_KEYS.registration,
-  layout: PHI_FORM_STACKED_LAYOUT,
   fields: [
     {
       key: "firstName",
@@ -128,7 +127,6 @@ export const PHI_REGISTRATION_FORM_DESCRIPTOR = {
       label: label("fields.email.label", "Email"),
       placeholder: label("fields.email.placeholder", "you@example.com"),
       autoComplete: "email",
-      placement: PHI_FORM_STACKED_FULL,
       validation: [
         required("fields.email.required", "Please enter your email address."),
         {
@@ -180,10 +178,10 @@ export const PHI_REGISTRATION_FORM_DESCRIPTOR = {
       placement: PHI_FORM_STACKED_FULL,
       validation: [required("consent.termsRequired", "You must accept the terms to continue.")],
       config: {
-        before: "I agree to the ",
-        linkLabel: "Terms & Conditions",
-        after: "",
-        href: "/terms-and-conditions",
+        text: label("consent.termsText", "I agree to the %1"),
+        linkLabel: label("consent.termsLinkLabel", "Terms & Conditions"),
+        // Where the terms live is a property of the placement: the Area, and the language's path.
+        href: { kind: "config", key: "termsHref", fallback: "/terms-and-conditions" },
       },
     },
     {
@@ -193,6 +191,13 @@ export const PHI_REGISTRATION_FORM_DESCRIPTOR = {
       placement: PHI_FORM_STACKED_FULL,
     },
   ],
+  success: {
+    title: label("feedback.successTitle", "Account created"),
+    text: label("feedback.successText", "Check your inbox to confirm your email address."),
+    reset: true,
+  },
+  // Long enough that somebody who leaves to read the terms should not come back to an empty form.
+  persistDraft: true,
 } as const satisfies PhiFormDescriptor;
 
 export const PHI_CONTACT_FORM_DESCRIPTOR = {
@@ -239,6 +244,11 @@ export const PHI_CONTACT_FORM_DESCRIPTOR = {
     { key: "issuedAt", fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.hidden },
     { key: "formToken", fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.hidden },
   ],
+  success: {
+    title: label("feedback.successTitle", "Message sent"),
+    text: label("feedback.successText", "Your message has been submitted successfully."),
+    reset: true,
+  },
 } as const satisfies PhiFormDescriptor;
 
 export const PHI_CONFIRM_FORM_DESCRIPTOR = {

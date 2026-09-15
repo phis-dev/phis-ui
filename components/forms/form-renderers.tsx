@@ -6,13 +6,10 @@ import {
   fetchPhiAuthWorkflow,
   fetchPhiPublicAuthManifest,
 } from "../../gateway/auth-public-manifest";
-import { fetchFormGuard } from "../../gateway/form-guard";
 import {
   getPhiLoginFormLabels,
 } from "../widgets/label-sets/account";
 import { getPhiConfirmWidgetLabels } from "../widgets/label-sets/confirm";
-import { getPhiContactFormLabels } from "../widgets/label-sets/contact";
-import { getPhiRegistrationFormLabels } from "../widgets/label-sets/registration";
 import { getPhiResetPasswordWidgetLabels } from "../widgets/label-sets/reset-password";
 import type { PhiLoginWidgetConfig } from "../widgets/client/login-body";
 import { PhiRuntimeRenderClientType } from "../../constants/runtime-render-client-types";
@@ -23,7 +20,6 @@ import {
 import type { PhiDataSource } from "../../gateway/data-source";
 import type { PhiFormRenderContext } from "./form-resolution";
 import { flattenPhiFormLabels } from "./form-labels";
-import { PHI_SHARED_FORM_IDS } from "./shared-form-ids";
 
 function resolveAreaKey(runtime: PhiFormRenderContext["runtime"]) {
   return runtime.area ?? "public";
@@ -116,104 +112,6 @@ export async function renderPhiLoginForm({ runtime, resolvedForm, options }: Phi
           readFormOption(options, "registerHref") ??
           resolvedRegisterHref ??
           localizeAreaPath(runtime.locale.current, resolveAreaKey(runtime), "/register"),
-      }}
-    />
-  );
-}
-
-export async function renderPhiContactForm({ runtime, resolvedForm, options }: PhiFormRenderContext) {
-  const rt = phiRuntime(runtime);
-  const [formGuard, labels] = await Promise.all([
-    fetchFormGuard({
-      apiBaseUrl: rt.apiBaseUrl,
-      internalToken: rt.internalToken,
-      siteKey: rt.siteKey,
-      form: PHI_SHARED_FORM_IDS.contact,
-    }),
-    getPhiContactFormLabels({
-      apiBaseUrl: rt.apiBaseUrl,
-      internalToken: rt.internalToken,
-      locale: runtime.locale.current,
-    }),
-  ]);
-
-  return (
-    <PhiRuntimeModuleRenderClientHost
-      type={PhiRuntimeRenderClientType.FormContact}
-      componentProps={{
-        runtime,
-        issuedAt: formGuard.issuedAt,
-        formToken: formGuard.formToken,
-        formId: resolvedForm?.definition.formId,
-        formControllerAddress: options?.formControllerAddress,
-        labels,
-        descriptor: resolvedForm?.definition.descriptor,
-      }}
-    />
-  );
-}
-
-export async function renderPhiRegistrationForm({
-  runtime,
-  resolvedForm,
-  options,
-}: PhiFormRenderContext) {
-  const rt = phiRuntime(runtime);
-  const [formGuard, labels] = await Promise.all([
-    fetchFormGuard({
-      apiBaseUrl: rt.apiBaseUrl,
-      internalToken: rt.internalToken,
-      siteKey: rt.siteKey,
-      form: PHI_SHARED_FORM_IDS.registration,
-    }),
-    getPhiRegistrationFormLabels({
-      apiBaseUrl: rt.apiBaseUrl,
-      internalToken: rt.internalToken,
-      locale: runtime.locale.current,
-    }),
-  ]);
-
-  const [termsBeforeLink, termsAfterLink] = labels.consent.termsText.split("%1");
-  const resolvedTermsHref =
-    typeof resolvedForm?.effectiveConfig.termsHref === "string"
-      ? resolvedForm.effectiveConfig.termsHref
-      : undefined;
-  const termsHref = readFormOption(options, "termsHref") ?? resolvedTermsHref ?? "/terms-and-conditions";
-  const localizedTermsHref = localizeAreaPath(
-    runtime.locale.current,
-    resolveAreaKey(runtime),
-    termsHref,
-  );
-  const descriptor = resolvedForm
-    ? {
-        ...resolvedForm.definition.descriptor,
-        fields: resolvedForm.definition.descriptor.fields.map((field) =>
-          field.key === "termsAccepted"
-            ? {
-                ...field,
-                config: {
-                  ...field.config,
-                  before: termsBeforeLink ?? "",
-                  linkLabel: labels.consent.termsLinkLabel,
-                  after: termsAfterLink ?? "",
-                  href: localizedTermsHref,
-                },
-              }
-            : field),
-      }
-    : undefined;
-
-  return (
-    <PhiRuntimeModuleRenderClientHost
-      type={PhiRuntimeRenderClientType.FormRegistration}
-      componentProps={{
-        runtime: { locale: runtime.locale },
-        issuedAt: formGuard.issuedAt,
-        formToken: formGuard.formToken,
-        formId: resolvedForm?.definition.formId,
-        formControllerAddress: options?.formControllerAddress,
-        labels,
-        descriptor,
       }}
     />
   );

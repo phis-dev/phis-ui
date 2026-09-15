@@ -27,9 +27,9 @@ const FORM_ROUTE_TEMPLATES = [
     key: "registration",
     title: "Register",
     path: "/register",
-    loadTree: (presetKey: string, { page }: PhiCmsDescriptorBuildContext) =>
+    loadTree: (presetKey: string, { page, runtime }: PhiCmsDescriptorBuildContext) =>
       import("../../../components/regions/presets/phi-default-pub-registration-page-tree")
-        .then((module) => module.buildPhiDefaultPubRegistrationPageTree({ page, presetKey })),
+        .then((module) => module.buildPhiDefaultPubRegistrationPageTree({ page, runtime, presetKey })),
   },
   {
     key: "login",

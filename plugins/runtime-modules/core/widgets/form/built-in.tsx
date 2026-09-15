@@ -5,6 +5,7 @@ import { getResolvedFormDefinition } from "../../../../../gateway/form-registry"
 import type { PhiFormRenderOptions } from "../../../../../components/forms/form-resolution";
 import { resolvePhiFormLabels } from "../../../../../components/forms/form-resolution";
 import { createPhiRuntimeFormControllerAddress } from "../../../../../components/forms/runtime-form-controller-address";
+import { PhiFormWidgetFrame } from "../../../../../components/forms/phi-form-widget-frame";
 import { PhiRuntimeModuleRenderClientHost } from "../../../../../components/runtime/runtime-module-render-client-manifest";
 import { PhiRuntimeRenderClientType } from "../../../../../constants/runtime-render-client-types";
 import type { PhiFormId } from "../../../../../types/form-id";
@@ -59,8 +60,15 @@ export async function PhiFormWidget({
   };
 
   const Provider = registry.uiProvidersByModuleId.get(resolvedForm.definition.ownerModuleId);
-  const wrapFormUiProvider = (node: ReactNode) =>
-    Provider ? <Provider>{node}</Provider> : node;
+  /*
+   * Every form body is wrapped the same way, whether it draws itself from a descriptor or brings its own
+   * component. The submit belongs to the Widget, so no body may carry one: a body offers a way to submit
+   * and this frame decides whether there is a button at all, what it says and where it sits.
+   */
+  const wrapFormUiProvider = (node: ReactNode) => {
+    const framed = <PhiFormWidgetFrame submit={config?.submit ?? null}>{node}</PhiFormWidgetFrame>;
+    return Provider ? <Provider>{framed}</Provider> : framed;
+  };
 
   if (resolvedForm.definition.render) {
     return wrapFormUiProvider(await resolvedForm.definition.render({
@@ -70,7 +78,16 @@ export async function PhiFormWidget({
     }));
   }
 
-  const labels = await resolvePhiFormLabels({ runtime, resolvedForm, options: renderOptions });
+  /*
+   * Both reads happen here, on the server, and both are the form's own: what it is called, and what it
+   * already knows. Asking for either after hydration is a blank card for as long as the page takes to
+   * become interactive, which is the wait a visitor reads as a slow site.
+   */
+  const renderContext = { runtime, resolvedForm, options: renderOptions };
+  const [labels, loadedInitialValues] = await Promise.all([
+    resolvePhiFormLabels(renderContext),
+    resolvedForm.definition.loadInitialValues?.(renderContext) ?? null,
+  ]);
 
   return wrapFormUiProvider(
     <PhiRuntimeModuleRenderClientHost
@@ -78,6 +95,7 @@ export async function PhiFormWidget({
       componentProps={{
         descriptor: resolvedForm.definition.descriptor,
         labels,
+        loadedInitialValues,
         formId: resolvedForm.definition.formId,
         formControllerAddress: renderOptions.formControllerAddress,
         widgetConfig: config,

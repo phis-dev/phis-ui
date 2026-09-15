@@ -21,6 +21,17 @@ export type PhiFormRenderContext = {
 };
 
 export type PhiFormRenderer = (context: PhiFormRenderContext) => ReactNode | Promise<ReactNode>;
+/**
+ * Values a form needs from the server before anyone can fill it in.
+ *
+ * A guard token is the case that made this a contract: it is minted per render, it cannot be asked for
+ * from the browser without giving away what it protects, and the form is worthless without it. Reading
+ * it used to mean the form brought its own render function, and everything the Form Widget offers --
+ * signals, execution mode, submit -- was lost with that branch. This reads the values and nothing else.
+ */
+export type PhiFormInitialValuesLoader = (
+  context: PhiFormRenderContext,
+) => Record<string, unknown> | Promise<Record<string, unknown>>;
 export type PhiFormLabelSetLoader = (
   context: PhiFormRenderContext,
 ) => Readonly<Record<string, string>> | Promise<Readonly<Record<string, string>>>;
@@ -59,6 +70,7 @@ export type PhiFormDefinitionLike = {
   previewUpstreamPath: string | null;
   render?: PhiFormRenderer;
   loadLabels?: PhiFormLabelSetLoader;
+  loadInitialValues?: PhiFormInitialValuesLoader;
 };
 
 export type PhiFormRenderTarget = {
@@ -164,6 +176,8 @@ export function resolvePhiFormDefinition<TDefinition extends PhiFormDefinitionLi
         ),
         render: overrideDefinition.render ?? presetDefinition.render,
         loadLabels: overrideDefinition.loadLabels ?? presetDefinition.loadLabels,
+        loadInitialValues:
+          overrideDefinition.loadInitialValues ?? presetDefinition.loadInitialValues,
         previewUpstreamPath:
           overrideDefinition.previewUpstreamPath ?? presetDefinition.previewUpstreamPath,
         status: overrideDefinition.status,

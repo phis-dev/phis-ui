@@ -201,18 +201,6 @@ export type {
   PhiMutationResponseShape,
   PhiMutationTransport,
 } from "./gateway/mutation";
-export { RegistrationForm } from "./components/forms/registration-form";
-export type {
-  RegistrationFormLabels,
-  RegistrationFormValues,
-  RegistrationFormProps,
-} from "./components/forms/registration-form";
-export { ContactForm } from "./components/forms/contact-form";
-export type {
-  ContactFormLabels,
-  ContactFormValues,
-  ContactFormProps,
-} from "./components/forms/contact-form";
 export { LoginForm } from "./components/forms/login-form";
 export type {
   LoginFormLabels,

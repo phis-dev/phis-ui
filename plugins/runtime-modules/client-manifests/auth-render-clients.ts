@@ -27,13 +27,6 @@ export const PHI_AUTH_RUNTIME_MODULE_RENDER_CLIENT_LOADERS = [
     ),
   ],
   [
-    PhiRuntimeRenderClientType.FormRegistration,
-    definePhiRuntimeModuleRenderClientLoader(
-      () => import("../../../components/widgets/client/registration-body")
-        .then((module) => module.PhiRegistrationFormClient),
-    ),
-  ],
-  [
     PhiRuntimeRenderClientType.FormResetPassword,
     definePhiRuntimeModuleRenderClientLoader(
       () => import("../../../components/widgets/client/reset-password-body")
@@ -47,13 +40,5 @@ export const PHI_AUTH_SECURITY_RENDER_CLIENT_LOADER = [
   definePhiRuntimeModuleRenderClientLoader(
     () => import("../auth/widgets/security/client")
       .then((module) => module.PhiAuthSecurityWidgetClient),
-  ),
-] as const satisfies readonly [string, PhiRuntimeModuleRenderClientLoader];
-
-export const PHI_CONTACT_FORM_RENDER_CLIENT_LOADER = [
-  PhiRuntimeRenderClientType.FormContact,
-  definePhiRuntimeModuleRenderClientLoader(
-    () => import("../../../components/widgets/client/contact-body")
-      .then((module) => module.PhiContactFormClient),
   ),
 ] as const satisfies readonly [string, PhiRuntimeModuleRenderClientLoader];

@@ -8,7 +8,7 @@ import type { PhiFormDescriptor } from "../../types/form-descriptor";
 import { PhiLink } from "../navigation/phi-link";
 import type { PhiSubmitFormProps } from "./contracts";
 import { PhiFormControl, type PhiFormControlHandle } from "../controls/phi-form-control";
-import { PhiButtonControl } from "../controls/phi-button-control";
+import { PhiFormWidgetSubmitOutlet, usePhiFormWidgetSubmit } from "./phi-form-widget-frame";
 import { flattenPhiFormLabels } from "./form-labels";
 import { PHI_LOGIN_FORM_DESCRIPTOR } from "./shared-form-descriptors";
 
@@ -53,32 +53,24 @@ export function LoginForm({
   onSubmit,
 }: LoginFormProps) {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [submitting, setSubmitting] = useState(false);
   const formRef = useRef<PhiFormControlHandle | null>(null);
   const forgotPasswordLabel = labels?.actions?.forgotPasswordLabel ?? "Forgot password";
   const registerLabel = labels?.actions?.registerLabel ?? "Create account";
+  // The button is the Form Widget's, so what this form offers is the way to press it.
+  const submitSlot = usePhiFormWidgetSubmit(
+    () => formRef.current?.submit(),
+    labels?.actions?.submitLabel ?? "Sign in",
+  );
 
   return (
-    /*
-     * The query container for the rows below the form, which stand beside it rather than in it: a
-     * container cannot answer a question about its own width, and the submit and the links have to know
-     * where the label column ends to line up under the inputs.
-     */
-    <div
-      style={{
-        display: "grid",
-        gap: PHI_SPACE.sm,
-        containerType: "inline-size",
-        containerName: "phi-form",
-      }}
-    >
+    <>
       {errorMessage ? <PhiAlertControl level="error" showIcon title={errorMessage} /> : null}
       <PhiFormControl
         ref={formRef}
         descriptor={descriptor}
         labels={flattenPhiFormLabels(labels)}
         initialValues={initialValues}
-        onSubmittingChange={setSubmitting}
+        onSubmittingChange={(submitting) => submitSlot?.setSubmitting(submitting)}
         onSubmit={async (values) => {
           setErrorMessage(null);
           try {
@@ -128,16 +120,7 @@ export function LoginForm({
           ) : null}
         </div>
       </div>
-      <div className="phi-form-descriptor-actions">
-        <div className="phi-form-cell phi-form-cell--control">
-          <PhiButtonControl
-            type="primary"
-            label={labels?.actions?.submitLabel ?? "Sign in"}
-            loading={submitting}
-            onClick={() => formRef.current?.submit()}
-          />
-        </div>
-      </div>
-    </div>
+      <PhiFormWidgetSubmitOutlet />
+    </>
   );
 }
