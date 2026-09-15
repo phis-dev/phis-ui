@@ -25,7 +25,12 @@ import {
 import {
   createPhiDeveloperBuilderInitialPageDrafts,
   createPhiDeveloperBuilderPageDraft,
+  PhiBuilderPageExistsError,
 } from "./persistence";
+import {
+  describePhiBuilderPageAddressConflict,
+  findPhiBuilderSitePageAddressConflict,
+} from "./page-address-rule";
 import {
   PHI_BUILDER_AREA_SEARCH_PARAM,
   PHI_BUILDER_PAGE_SEARCH_PARAM,
@@ -311,6 +316,13 @@ export function usePhiBuilderPageController({
         showMessage({ level: "error", content: "Page path changes require a persisted Site Page." });
         return;
       }
+      const moveConflict = pathChanged
+        ? findPhiBuilderSitePageAddressConflict(requestedPath, currentPageTree, { exceptPath: currentPath })
+        : null;
+      if (moveConflict) {
+        showMessage({ level: "error", content: describePhiBuilderPageAddressConflict(moveConflict) });
+        return;
+      }
       setPageMetaDialogSaving(true);
       try {
         const pathResult = pathChanged
@@ -413,6 +425,12 @@ export function usePhiBuilderPageController({
       return;
     }
 
+    const createConflict = findPhiBuilderSitePageAddressConflict(requestedStoragePath, currentPageTree);
+    if (createConflict) {
+      showMessage({ level: "error", content: describePhiBuilderPageAddressConflict(createConflict) });
+      return;
+    }
+
     setPageMetaDialogSaving(true);
     const nextDrafts = createPhiDeveloperBuilderInitialPageDrafts({
       area: effectiveArea,
@@ -466,7 +484,28 @@ export function usePhiBuilderPageController({
       dispatchPageMetaOverlay("close", correlationId);
       showMessage({ level: "success", content: "Page draft created." });
     } catch (error) {
-      showMessage({ level: "error", content: error instanceof Error ? error.message : "Failed to create page." });
+      if (error instanceof PhiBuilderPageExistsError && !error.tombstoned) {
+        // Somebody created it meanwhile: open that Page rather than failing on the path it holds.
+        await reloadPersistedPageCatalog(effectiveArea);
+        const refreshed = getPhiDeveloperBuilderStateSnapshot(defaultArea);
+        const refreshedPages = resolvePhiBuilderActivePageCatalog(
+          effectiveArea,
+          refreshed.modulePresetPagesByArea,
+          refreshed.customPages,
+          refreshed.persistedPageCatalogByArea,
+        );
+        const existingKey = resolvePhiBuilderPageKeyFromCatalogPath(effectiveArea, error.path, refreshedPages);
+        if (existingKey) navigateToBuilderPage(existingKey);
+        dispatchPageMetaOverlay("close", correlationId);
+        showMessage({ level: "info", content: `A Page at ${error.path} already exists, so it has been opened.` });
+        return;
+      }
+      showMessage({
+        level: "error",
+        content: error instanceof PhiBuilderPageExistsError
+          ? `A deleted Page still holds ${error.path}.`
+          : error instanceof Error ? error.message : "Failed to create page.",
+      });
     } finally {
       setPageMetaDialogSaving(false);
     }

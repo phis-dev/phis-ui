@@ -53,18 +53,12 @@ async function buildNodeItems(
   const children = node.children ?? [];
 
   if (isPhiBuilderNavigablePage(node)) {
-    if (!children.some(hasPhiBuilderNavigableContent)) {
-      const item = factory.createPageItem(await factory.allocateId(), node);
-      return item ? [item] : [];
-    }
     /*
-     * Only a container holds children, so a Page with Pages beneath it becomes one, named after it, with
-     * a link to the Page itself first: the level survives and the Page stays reachable.
+     * A Page is never a folder, so a Page is always a link. A catalog written before that rule may still
+     * hang Pages beneath one; they are not dropped, they follow it as siblings.
      */
-    const containerId = await factory.allocateId();
-    const link = factory.createPageItem(await factory.allocateId(), node);
-    const nested = await buildItems(children, factory);
-    return [factory.createContainerItem(containerId, node.title, [...(link ? [link] : []), ...nested])];
+    const item = factory.createPageItem(await factory.allocateId(), node);
+    return [...(item ? [item] : []), ...await buildItems(children, factory)];
   }
 
   if (node.reference) {

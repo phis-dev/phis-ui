@@ -73,18 +73,15 @@ describe("buildPhiBuilderNavigationContainerFromCatalogFolder", () => {
     });
   });
 
-  it("wraps a Page with Pages beneath it in a container that links the Page first", async () => {
+  it("keeps a Page a link, and lets Pages an older catalog hung beneath it follow as siblings", async () => {
     const docs = folder("docs", "Docs", [page("docs/api", "API", [page("docs/api/v1", "v1")])]);
 
     expect(shape(await buildPhiBuilderNavigationContainerFromCatalogFolder(docs, createFactory()))).toEqual({
       id: "id-1", kind: "container", label: "Docs",
-      children: [{
-        id: "id-2", kind: "container", label: "API",
-        children: [
-          { id: "id-3", kind: "link", label: "API" },
-          { id: "id-4", kind: "link", label: "v1" },
-        ],
-      }],
+      children: [
+        { id: "id-2", kind: "link", label: "API" },
+        { id: "id-3", kind: "link", label: "v1" },
+      ],
     });
   });
 

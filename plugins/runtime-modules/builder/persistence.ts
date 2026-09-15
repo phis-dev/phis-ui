@@ -140,6 +140,21 @@ export type PhiDeveloperBuilderWorkspaceKind = "structure" | "pages";
  */
 class CmsDraftConflictError extends Error {}
 
+/**
+ * Creating a Page at a path a Page already holds. The server wrote nothing; the Builder opens the Page
+ * that is there instead of the blank one it meant to create.
+ */
+export class PhiBuilderPageExistsError extends Error {
+  constructor(
+    readonly path: string,
+    readonly reference: string,
+    readonly tombstoned: boolean,
+  ) {
+    super("A Page already exists at this path.");
+    this.name = "PhiBuilderPageExistsError";
+  }
+}
+
 function assertPersistableAreaRuntimeModuleIds(
   moduleIds: readonly PhiRuntimeModuleId[],
   moduleDefinitions: readonly PhiRuntimeModuleDefinition[],
@@ -402,6 +417,9 @@ async function postCmsDraft(
   const body = (await response.json().catch(() => null)) as
     | {
         error?: string;
+        /** Set beside a coded `error` such as `path_nested`, which is a code rather than a sentence. */
+        message?: string;
+        page?: { path?: unknown; reference?: unknown; tombstoned?: unknown };
         details?: string[];
         revisionId?: number | null;
         version?: number | null;
@@ -410,9 +428,14 @@ async function postCmsDraft(
       }
     | null;
   if (!response.ok) {
+    if (body?.error === "page_exists" && typeof body.page?.path === "string" && typeof body.page.reference === "string") {
+      throw new PhiBuilderPageExistsError(body.page.path, body.page.reference, body.page.tombstoned === true);
+    }
     const detail = body?.details?.length ? ` ${body.details.join(" ")}` : "";
-    const message = `${body?.error ?? "CMS draft save failed."}${detail}`;
-    throw response.status === 409 ? new CmsDraftConflictError(message) : new Error(message);
+    const message = `${body?.message ?? body?.error ?? "CMS draft save failed."}${detail}`;
+    // An address the server refused is not a stale Draft, so it must not take the conflict recovery path.
+    const addressRefused = body?.error === "path_collision" || body?.error === "path_nested";
+    throw response.status === 409 && !addressRefused ? new CmsDraftConflictError(message) : new Error(message);
   }
 
   if (
@@ -1231,7 +1254,7 @@ export async function createPhiDeveloperBuilderPageDraft(input: {
     ]),
   ) as Record<string, unknown>;
 
-  const result = await postCmsDraft("/api/site/cms/page", {
+  const result = await postCmsDraft("/api/site/cms/page/create", {
     area: cmsArea,
     path: pagePath,
     sourcePreset: null,
