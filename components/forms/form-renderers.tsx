@@ -90,6 +90,10 @@ export async function renderPhiLoginForm({ runtime, resolvedForm, options }: Phi
     typeof resolvedForm?.effectiveConfig.forgotPasswordHref === "string"
       ? resolvedForm.effectiveConfig.forgotPasswordHref
       : undefined;
+  const resolvedRegisterHref =
+    typeof resolvedForm?.effectiveConfig.registerHref === "string"
+      ? resolvedForm.effectiveConfig.registerHref
+      : undefined;
 
   return (
     <PhiRuntimeModuleRenderClientHost
@@ -108,6 +112,10 @@ export async function renderPhiLoginForm({ runtime, resolvedForm, options }: Phi
           readFormOption(options, "forgotPasswordHref") ??
           resolvedForgotPasswordHref ??
           localizeAreaPath(runtime.locale.current, resolveAreaKey(runtime), "/reset-password"),
+        registerHref:
+          readFormOption(options, "registerHref") ??
+          resolvedRegisterHref ??
+          localizeAreaPath(runtime.locale.current, resolveAreaKey(runtime), "/register"),
       }}
     />
   );
