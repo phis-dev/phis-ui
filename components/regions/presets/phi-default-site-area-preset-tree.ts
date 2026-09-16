@@ -17,7 +17,7 @@ import { PHI_PADDING } from "../../../theme/phi-tokens";
 import { buildPhiCmsWidgetTypeKey } from "../../../helpers/cms-node-factories";
 import { resolvePhiBrandContact } from "../../../helpers/brand-contact";
 import { resolvePhiBrandWordmarkText } from "../../../helpers/brand-wordmark";
-import { resolvePhiShellMetric } from "../../../helpers/shell-region-style";
+import { resolvePhiShellHeaderHeight, resolvePhiShellMetric } from "../../../helpers/shell-region-style";
 import { resolvePhiLayoutCreationPreset } from "../../../helpers/cms-layout-defaults";
 import { PHI_DEFAULT_PUB_AREA_PRESET } from "./pub";
 import { createPhiDefaultAreaRuntimeModuleIds } from "../../../plugins/runtime-modules/builder/runtime-module-defaults";
@@ -100,26 +100,17 @@ export async function buildPhiDefaultSiteAreaPresetTree({
     [new Date().getUTCFullYear(), brandWordmarkText],
     PHI_TR_CTX_WEB_UI_LABEL,
   );
-  const shellHeaderTopHeight = resolvePhiShellMetric(runtime.site.theme?.shell, "height", {
-    family: "header",
-    region: "top",
-  });
+  const shellHeaderTopHeight = resolvePhiShellHeaderHeight(runtime.site.theme?.shell, "top");
   const shellHeaderTopOffsetTop = resolvePhiShellMetric(runtime.site.theme?.shell, "offsetTop", {
     family: "header",
     region: "top",
   });
-  const shellHeaderMainHeight = resolvePhiShellMetric(runtime.site.theme?.shell, "height", {
-    family: "header",
-    region: "main",
-  });
+  const shellHeaderMainHeight = resolvePhiShellHeaderHeight(runtime.site.theme?.shell, "main");
   const shellHeaderMainOffsetTop = resolvePhiShellMetric(runtime.site.theme?.shell, "offsetTop", {
     family: "header",
     region: "main",
   });
-  const shellHeaderBottomHeight = resolvePhiShellMetric(runtime.site.theme?.shell, "height", {
-    family: "header",
-    region: "bottom",
-  });
+  const shellHeaderBottomHeight = resolvePhiShellHeaderHeight(runtime.site.theme?.shell, "bottom");
   const shellHeaderBottomOffsetTop = resolvePhiShellMetric(runtime.site.theme?.shell, "offsetTop", {
     family: "header",
     region: "bottom",
@@ -163,10 +154,7 @@ export async function buildPhiDefaultSiteAreaPresetTree({
               sortOrder: headerTopRegion.sortOrder,
               config: {
                 ...headerTopRegion.config,
-                mode: runtime.site.theme?.mode ?? "light",
-                ...(typeof shellHeaderTopHeight === "number"
-                  ? { size: { ...(headerTopRegion.config.size ?? {}), height: `${shellHeaderTopHeight}px` } }
-                  : {}),
+                size: { ...(headerTopRegion.config.size ?? {}), height: `${shellHeaderTopHeight}px` },
                 ...(typeof shellHeaderTopOffsetTop === "number" ? { offsetTop: shellHeaderTopOffsetTop } : {}),
               },
             },
@@ -186,10 +174,7 @@ export async function buildPhiDefaultSiteAreaPresetTree({
               sortOrder: headerMainRegion.sortOrder,
               config: {
                 ...headerMainRegion.config,
-                mode: runtime.site.theme?.mode ?? "light",
-                ...(typeof shellHeaderMainHeight === "number"
-                  ? { size: { ...(headerMainRegion.config.size ?? {}), height: `${shellHeaderMainHeight}px` } }
-                  : {}),
+                size: { ...(headerMainRegion.config.size ?? {}), height: `${shellHeaderMainHeight}px` },
                 ...(typeof shellHeaderMainOffsetTop === "number" ? { offsetTop: shellHeaderMainOffsetTop } : {}),
               },
             },
@@ -209,10 +194,7 @@ export async function buildPhiDefaultSiteAreaPresetTree({
               sortOrder: headerBottomRegion.sortOrder,
               config: {
                 ...headerBottomRegion.config,
-                mode: runtime.site.theme?.mode ?? "light",
-                ...(typeof shellHeaderBottomHeight === "number"
-                  ? { size: { ...(headerBottomRegion.config.size ?? {}), height: `${shellHeaderBottomHeight}px` } }
-                  : {}),
+                size: { ...(headerBottomRegion.config.size ?? {}), height: `${shellHeaderBottomHeight}px` },
                 ...(typeof shellHeaderBottomOffsetTop === "number" ? { offsetTop: shellHeaderBottomOffsetTop } : {}),
               },
             },
@@ -232,7 +214,6 @@ export async function buildPhiDefaultSiteAreaPresetTree({
               sortOrder: siderRightRegion.sortOrder,
               config: {
                 ...siderRightRegion.config,
-                mode: runtime.site.theme?.mode ?? "light",
                 ...(typeof shellSiderRightWidth === "number"
                   ? { size: { ...(siderRightRegion.config.size ?? {}), width: `${shellSiderRightWidth}px` } }
                   : {}),
@@ -255,7 +236,6 @@ export async function buildPhiDefaultSiteAreaPresetTree({
               sortOrder: footerTopRegion.sortOrder,
               config: {
                 ...footerTopRegion.config,
-                mode: footerTopRegion.config.mode ?? runtime.site.theme?.mode ?? "light",
                 ...(typeof shellFooterTopHeight === "number"
                   ? { size: { ...(footerTopRegion.config.size ?? {}), height: `${shellFooterTopHeight}px` } }
                   : {}),
@@ -277,7 +257,6 @@ export async function buildPhiDefaultSiteAreaPresetTree({
               sortOrder: footerMainRegion.sortOrder,
               config: {
                 ...footerMainRegion.config,
-                mode: footerMainRegion.config.mode ?? runtime.site.theme?.mode ?? "light",
                 ...(typeof shellFooterMainHeight === "number"
                   ? { size: { ...(footerMainRegion.config.size ?? {}), height: `${shellFooterMainHeight}px` } }
                   : {}),
@@ -299,7 +278,6 @@ export async function buildPhiDefaultSiteAreaPresetTree({
               sortOrder: footerBottomRegion.sortOrder,
               config: {
                 ...footerBottomRegion.config,
-                mode: footerBottomRegion.config.mode ?? runtime.site.theme?.mode ?? "light",
                 ...(typeof shellFooterBottomHeight === "number"
                   ? { size: { ...(footerBottomRegion.config.size ?? {}), height: `${shellFooterBottomHeight}px` } }
                   : {}),

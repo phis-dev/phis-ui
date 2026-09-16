@@ -1,6 +1,7 @@
 import type { CSSProperties } from "react";
 import type { PhiCssLength } from "../types/length";
 import { PHI_COLOR } from "../theme/antd-css-var-contract";
+import { PHI_LAYOUT } from "../theme/phi-tokens";
 import type { PhiShadow, PhiLayoutEffectId } from "../types/layout-style";
 import { resolvePhiShadow, resolvePhiLayoutEffectStyle } from "./layout-style";
 
@@ -209,6 +210,22 @@ export function resolvePhiShellMetric(
     readMetricValue(familyConfig, key) ??
     readMetricValue(rootConfig, key)
   );
+}
+
+/**
+ * A Header band's height: the Shell record's, or the one default every Area shares.
+ *
+ * An Area shell preset states which bands exist, not how tall they are. Writing `55px` into each preset
+ * made the height a decision of every preset at once, and one a Site's Shell record could only reach
+ * where a preset remembered to ask for it. The Chrome Overlay needs a pixel height for every band above
+ * the first sticky one, so this always answers one.
+ */
+export function resolvePhiShellHeaderHeight(
+  shellTheme: PhiShellRegionTheme | undefined,
+  region: "top" | "main" | "bottom",
+): number {
+  const height = resolvePhiShellMetric(shellTheme, "height", { family: "header", region });
+  return typeof height === "number" && Number.isFinite(height) && height > 0 ? height : PHI_LAYOUT.headerHeight;
 }
 
 export function resolvePhiShellRegionTypography(

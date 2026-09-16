@@ -890,7 +890,21 @@ export function compilePhiCmsActiveRouteTable({
         ] as const)
       : [],
   );
-  for (const declared of catalog.routesByArea.get(area) ?? []) {
+  /*
+   * The Public base Module's Pages are a floor, and a package Module that declares one of their paths
+   * covers it (MODULES.md, "Who owns an address"). An address answers with its first claim, so the
+   * covering is nothing more than who claims first: every other Module ahead of the base Module. The
+   * base route still enters `byPageId` below, so its identity stays active and everything pointing at
+   * it reaches the covering Page through the path. Outside Public no package can declare a base path.
+   */
+  const declaredRoutes = catalog.routesByArea.get(area) ?? [];
+  const orderedRoutes = area === "public"
+    ? [
+        ...declaredRoutes.filter((declared) => declared.descriptor.ownerModuleId !== areaDefinition.baseModuleId),
+        ...declaredRoutes.filter((declared) => declared.descriptor.ownerModuleId === areaDefinition.baseModuleId),
+      ]
+    : declaredRoutes;
+  for (const declared of orderedRoutes) {
     if (!activeModuleIds.has(declared.descriptor.ownerModuleId)) {
       continue;
     }

@@ -32,6 +32,7 @@ import type {
 
 const OFFEROR_ID = "@acme/welcome/modules/site" as unknown as PhiRuntimeModuleId;
 const OFFERED_PRESET_KEY = "acme-welcome-page";
+const BASE_LANDING_PRESET_KEY = "public-welcome-page";
 
 const catalogEntries = createPhiPublicRuntimeModuleCatalog();
 const appCatalogEntries = createPhiAppRuntimeModuleCatalog();
@@ -98,14 +99,13 @@ function chose(identity: PhiCmsPresetIdentity): PhiAreaLandingSelection {
 }
 
 describe("the Area root slot", () => {
-  it("is empty when nobody applies", () => {
+  it("is the base landing when nobody offers one", () => {
     /*
-     * The Public base Module owns no Page at `/`: the landing is the Site package's, and a Site
-     * without one has no front door rather than a built-in stand-in. That is also what keeps the
-     * adoption rule honest -- a built-in applicant would occupy the table on every Site, and a single
-     * offer from a Site package would never be the single one.
+     * The Public base Module stands at `/` without offering itself, so a Site without a package still
+     * has a front door -- and the adoption rule stays honest: the base landing is not an offer, so a
+     * single offer from a Site package is still the single one.
      */
-    expect(resolvePhiCmsRoutePreset(compile(), "/")).toBeNull();
+    expect(resolvePhiCmsRoutePreset(compile(), "/")?.descriptor.presetKey).toBe(BASE_LANDING_PRESET_KEY);
   });
 
   it("goes to a single applicant unasked, so an installed Site package is live at once", () => {
@@ -113,17 +113,18 @@ describe("the Area root slot", () => {
     expect(root?.descriptor.ownerModuleId).toBe(OFFEROR_ID);
   });
 
-  it("leaves the slot empty when the Site answered it with nobody", () => {
+  it("leaves the base landing standing when the Site answered it with nobody", () => {
     /*
      * "Landing, no applicant" is a decision and outranks the adoption: the Builder is looking at an
-     * empty applicant Select and authors the root themselves. Reading it as "never asked" is what used
-     * to hand the front door to a Module while the Select still showed blank.
+     * empty applicant Select and authors the root themselves, on the base landing they take over.
+     * Reading it as "never asked" is what used to hand the front door to a Module while the Select
+     * still showed blank.
      */
     const root = resolvePhiCmsRoutePreset(
       compile({ entries: withOfferor(), landingSelection: { kind: "empty" } }),
       "/",
     );
-    expect(root).toBeNull();
+    expect(root?.descriptor.presetKey).toBe(BASE_LANDING_PRESET_KEY);
   });
 
   it("goes to the applicant the Site chose", () => {
@@ -163,14 +164,14 @@ describe("the Area root slot", () => {
     expect(resolvePhiCmsRoutePreset(table, "/")?.descriptor.ownerModuleId).toBe(OFFEROR_ID);
   });
 
-  it("empties the slot when the chosen applicant is switched off", () => {
-    // The front door goes with the Module rather than breaking the table: nothing else applied.
+  it("falls back to the base landing when the chosen applicant is switched off", () => {
+    // The front door goes with the Module rather than breaking the table: the floor is still there.
     const table = compile({
       entries: withOfferor(),
       activeModuleIds: baseModuleIds,
       landingSelection: chose({ ownerModuleId: OFFEROR_ID, presetKey: OFFERED_PRESET_KEY }),
     });
-    expect(resolvePhiCmsRoutePreset(table, "/")).toBeNull();
+    expect(resolvePhiCmsRoutePreset(table, "/")?.descriptor.presetKey).toBe(BASE_LANDING_PRESET_KEY);
   });
 
   it("adopts the replacement when the chosen applicant was swapped for another package", () => {

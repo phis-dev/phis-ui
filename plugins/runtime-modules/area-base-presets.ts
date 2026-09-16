@@ -69,6 +69,25 @@ export const PHI_AREA_BASE_RUNTIME_MODULE_AREA_SHELLS = [
 ] satisfies readonly PhiCmsAreaShellPresetDescriptor[];
 
 export const PHI_AREA_BASE_RUNTIME_MODULE_ROUTES = [
+  {
+    ownerModuleId: PHI_PUBLIC_RUNTIME_MODULE_ID,
+    presetKey: "public-welcome-page",
+    presetVersion: 1,
+    area: "public",
+    title: "Home",
+    path: "/",
+    /*
+     * It stands at `/` without offering itself for it.
+     *
+     * The base landing is what the root slot falls back to, which the base-Module rung of
+     * `choosePhiAreaRootApplicant` already says. Declaring it an offer as well would put one offer on
+     * the table for every Site, so a Site package offering a landing would arrive as the second and
+     * would no longer cover this one on activation.
+     */
+    loadTree: ({ page }: PhiCmsDescriptorBuildContext) =>
+      import("../../components/regions/presets/phi-default-pub-welcome-page-tree")
+        .then((module) => module.buildPhiDefaultPubWelcomePageTree({ page })),
+  },
   buildPhiAreaRootRoutePresetDescriptor({
     ownerModuleId: PHI_APP_RUNTIME_MODULE_ID,
     area: "app",

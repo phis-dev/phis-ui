@@ -183,11 +183,12 @@ export function resolvePhiAreaLandingSelection(
  * author editing a Page nobody is served.
  *
  * The chain: the applicant the Site named, while it is still there. Otherwise the single offer, which
- * is what lets a Site package ship a front door that is live on install. Otherwise the Area's own base
- * Module, which holds the slot as a fallback rather than as an application. Otherwise whatever else
- * applied -- unless the Site answered "landing, nobody", which means it authors the root itself and no
- * code Page may stand in. `applicants` is expected to be narrowed to what is active and permitted before
- * it gets here; this decides only which of them.
+ * is what lets a Site package ship a front door that is live on install and covers the base landing.
+ * Otherwise the Area's own base Module, which holds the slot as a fallback rather than as an
+ * application. Otherwise whatever else applied. "Landing, nobody" adopts no offer: the base landing
+ * stands, and the Site authors the root by taking that Page over; where there is no base landing,
+ * nothing else may stand in. `applicants` is expected to be narrowed to what is active and permitted
+ * before it gets here; this decides only which of them.
  */
 export type PhiAreaRootApplicant = {
   ownerModuleId: PhiRuntimeModuleId;

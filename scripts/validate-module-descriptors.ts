@@ -224,11 +224,12 @@ const publicBaseRoutes = compilePhiCmsActiveRouteTable({
   activeModuleIds: publicBaseModuleIds,
 });
 /*
- * The base Module owns the error Pages, the terms and the contact page. The landing is the Site
- * package's, so with nothing but the base active the root slot has no applicant -- not a fault, but
- * what a Site without a Site package looks like.
+ * The base Module owns the landing, the error Pages, the terms and the contact page: the floor a Site
+ * without a Site package stands on, and what a package Module covers (MODULES.md, "Who owns an
+ * address").
  */
-assert.equal(resolvePhiCmsRoutePreset(publicBaseRoutes, "/"), null);
+assert.equal(resolvePhiCmsRoutePreset(publicBaseRoutes, "/")?.descriptor.presetKey, "public-welcome-page");
+assert.equal(resolvePhiCmsRoutePreset(publicBaseRoutes, "/")?.descriptor.landingPage, undefined);
 assert.equal(resolvePhiCmsRoutePreset(publicBaseRoutes, "/contact")?.descriptor.ownerModuleId, PHI_PUBLIC_RUNTIME_MODULE_ID);
 assert.equal(resolvePhiCmsRoutePreset(publicBaseRoutes, "/terms-and-conditions")?.descriptor.ownerModuleId, PHI_PUBLIC_RUNTIME_MODULE_ID);
 const publicError404Id = createPhiPresetCmsPageId({

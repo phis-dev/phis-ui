@@ -15,7 +15,7 @@ import { createPhiCmsPresetNodes } from "../../../helpers/cms-preset-nodes";
 import { PHI_AREA_META_PUBLIC_DEFAULTS } from "../../../helpers/cms-area-config";
 import { remapPhiSignalRoutesInConfig } from "../../../helpers/signal-route-lifecycle";
 import { resolvePhiBrandWordmarkText } from "../../../helpers/brand-wordmark";
-import { resolvePhiShellMetric } from "../../../helpers/shell-region-style";
+import { resolvePhiShellHeaderHeight, resolvePhiShellMetric } from "../../../helpers/shell-region-style";
 import type { PhiCmsPageNode, PhiResolvedCmsPageTree } from "../../../types/cms";
 import type {
   PhiCmsCompiledDescriptorCatalog,
@@ -367,6 +367,8 @@ export async function buildPhiDefaultBuilderAreaPresetTree({
     "dashboard",
     builderPageTitleSource,
   );
+  const headerTopHeight = resolvePhiShellHeaderHeight(runtime.site.theme?.shell, "top");
+  const headerMainHeight = resolvePhiShellHeaderHeight(runtime.site.theme?.shell, "main");
   const shellSiderLeftWidth = resolvePhiShellMetric(runtime.site.theme?.shell, "width", {
     family: "sider",
     region: "left",
@@ -400,19 +402,16 @@ export async function buildPhiDefaultBuilderAreaPresetTree({
         visibilityMask: page.visibilityMask,
         sortOrder: -10,
         config: {
-          mode: runtime.site.theme?.mode ?? "dark",
           sticky: false,
           /*
-           * No Effect of its own, like the ground it does not paint either.
+           * No Effect, Shadow, border, or ground of its own (SHELL.md, Shell Chrome Overlay).
            *
-           * An Effect here is authoring, and authoring is exactly what takes a Region out of the Shell
+           * Any of them is authoring, and authoring is exactly what takes a Region out of the Shell
            * Chrome Overlay. A `glass` in this preset made the Builder's own Headers frost while the
            * Sider and Footer beside them took the Site's overlay, which is how one frame came to show
            * two unrelated colour families. What the frame looks like belongs to the Theme.
            */
-          shadow: "none",
-          border: false,
-          size: { height: "55px" },
+          size: { height: `${headerTopHeight}px` },
           offsetTop: 0,
         },
       },
@@ -427,12 +426,9 @@ export async function buildPhiDefaultBuilderAreaPresetTree({
         visibilityMask: page.visibilityMask,
         sortOrder: 0,
         config: {
-          mode: runtime.site.theme?.mode ?? "dark",
           sticky: true,
-          // No Effect of its own, for the reason given on `header_top` above.
-          shadow: "none",
-          border: false,
-          size: { height: "55px" },
+          // No chrome of its own, for the reason given on `header_top` above.
+          size: { height: `${headerMainHeight}px` },
           offsetTop: 0,
         },
       },
@@ -447,7 +443,6 @@ export async function buildPhiDefaultBuilderAreaPresetTree({
         visibilityMask: page.visibilityMask,
         sortOrder: 10,
         config: {
-          mode: runtime.site.theme?.mode ?? "dark",
           sticky: true,
           fullHeight: true,
           collapsible: true,
@@ -480,11 +475,8 @@ export async function buildPhiDefaultBuilderAreaPresetTree({
         flags: 0,
         visibilityMask: page.visibilityMask,
         sortOrder: 30,
-        config: {
-          mode: runtime.site.theme?.mode ?? "dark",
-          shadow: "none",
-          border: false,
-        },
+        // No chrome of its own, for the reason given on `header_top` above.
+        config: {},
       },
     ],
     layoutNodes: [
@@ -1128,14 +1120,11 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
               visibilityMask: page.visibilityMask,
               sortOrder: 5,
               config: {
-                mode: runtime.site.theme?.mode ?? "dark",
                 sticky: true,
-                // No Effect of its own, for the reason given on `header_top` above.
-                shadow: "soft",
-                border: false,
+                // No chrome of its own, for the reason given on `header_top` above.
                 flags: isStructurePage ? PhiCmsFlags.Collapsed : 0,
-                size: { height: "55px" },
-                offsetTop: 55,
+                size: { height: `${resolvePhiShellHeaderHeight(runtime.site.theme?.shell, "bottom")}px` },
+                offsetTop: resolvePhiShellHeaderHeight(runtime.site.theme?.shell, "main"),
               },
             },
           ]

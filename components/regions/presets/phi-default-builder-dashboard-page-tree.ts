@@ -3,6 +3,7 @@ import { PHI_DASHBOARD_RUNTIME_MODULE_ID } from "../../../plugins/runtime-module
 import { PHI_CMS_DEFAULT_SLOT_INDEX } from "../../../constants/cms-layout-types";
 import { PhiCmsPageType, PhiCmsRegionType, PhiCmsStatus } from "../../../constants/phi-cms";
 import { createPhiCmsPresetNodes } from "../../../helpers/cms-preset-nodes";
+import { resolvePhiShellHeaderHeight } from "../../../helpers/shell-region-style";
 
 import type { PhiCmsPageNode, PhiResolvedCmsPageTree } from "../../../types/cms";
 import type { PhiBlockRuntime } from "../../../types";
@@ -80,13 +81,12 @@ export async function buildPhiDefaultBuilderDashboardPageTree({
         config: {
           sticky: true,
           /*
-           * No Effect of its own, like every other Builder Header. A `glass` authored here frosts this
-           * one Region against the Site's Shell Chrome Overlay, so the Dashboard's Header stopped
-           * matching the Sider and Footer beside it. What the frame looks like belongs to the Theme.
+           * No Effect or Shadow of its own, like every other Builder Header. A `glass` authored here
+           * frosts this one Region against the Site's Shell Chrome Overlay, so the Dashboard's Header
+           * stopped matching the Sider and Footer beside it. What the frame looks like belongs to the Theme.
            */
-          shadow: "soft",
-          size: { height: "55px" },
-          offsetTop: 55,
+          size: { height: `${resolvePhiShellHeaderHeight(runtime.site.theme?.shell, "bottom")}px` },
+          offsetTop: resolvePhiShellHeaderHeight(runtime.site.theme?.shell, "main"),
         },
       },
       scaffold.region,

@@ -23,9 +23,9 @@ export const PHI_PUBLIC_RUNTIME_MODULE_SERVER_AREA_CONTRIBUTION =
         (descriptor) => descriptor.ownerModuleId === PHI_PUBLIC_RUNTIME_MODULE_DEFINITION.moduleId,
       ),
       /*
-       * The error Pages, the terms, and the contact page: what no Site can do without. The landing is
-       * the one Public page that is not Core's -- it travels with the Site package (`@phis/example` in
-       * this workspace) and applies for the root slot like any other Module's would.
+       * The landing, the error Pages, the terms, and the contact page: what no Site can do without. Each
+       * is a floor a package Module may cover (MODULES.md, "Who owns an address") -- the landing through
+       * the root slot, the others through their path.
        */
       routes: PHI_AREA_BASE_RUNTIME_MODULE_ROUTES.filter(
         (descriptor) => descriptor.ownerModuleId === PHI_PUBLIC_RUNTIME_MODULE_DEFINITION.moduleId,

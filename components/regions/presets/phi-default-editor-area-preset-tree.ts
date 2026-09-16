@@ -7,7 +7,7 @@ import {
 } from "../../../constants/cms-layout-types";
 import { PhiCmsRegionType, PhiCmsStatus } from "../../../constants/phi-cms";
 import { createPhiCmsPresetNodes } from "../../../helpers/cms-preset-nodes";
-import { resolvePhiShellMetric } from "../../../helpers/shell-region-style";
+import { resolvePhiShellHeaderHeight, resolvePhiShellMetric } from "../../../helpers/shell-region-style";
 import type { PhiResolvedCmsPageTree, PhiCmsPageNode } from "../../../types/cms";
 import type { PhiBlockRuntime } from "../../../types";
 import { PHI_LAYOUT } from "../../../theme/phi-tokens";
@@ -60,10 +60,6 @@ export async function buildPhiDefaultEditorAreaPresetTree({
     family: "sider",
     region: "left",
   });
-  const shellHeaderMainHeight = resolvePhiShellMetric(runtime.site.theme?.shell, "height", {
-    family: "header",
-    region: "main",
-  });
   const shellHeaderMainOffsetTop = resolvePhiShellMetric(runtime.site.theme?.shell, "offsetTop", {
     family: "header",
     region: "main",
@@ -91,10 +87,10 @@ export async function buildPhiDefaultEditorAreaPresetTree({
         flags: 0,
         visibilityMask: page.visibilityMask,
         sortOrder: 10,
+        // Structure only: the frame's look is the Theme's (SHELL.md, Shell Chrome Overlay).
         config: {
-          mode: runtime.site.theme?.mode ?? "light",
           sticky: false,
-          size: { height: "55px" },
+          size: { height: `${resolvePhiShellHeaderHeight(runtime.site.theme?.shell, "top")}px` },
         },
       },
       {
@@ -108,14 +104,8 @@ export async function buildPhiDefaultEditorAreaPresetTree({
         visibilityMask: page.visibilityMask,
         sortOrder: 20,
         config: {
-          mode: runtime.site.theme?.mode ?? "light",
           sticky: true,
-          effect: "glass",
-          shadow: "soft",
-          border: false,
-          size: {
-            height: `${typeof shellHeaderMainHeight === "number" ? shellHeaderMainHeight : 55}px`,
-          },
+          size: { height: `${resolvePhiShellHeaderHeight(runtime.site.theme?.shell, "main")}px` },
           offsetTop: typeof shellHeaderMainOffsetTop === "number" ? shellHeaderMainOffsetTop : 0,
         },
       },
@@ -130,7 +120,6 @@ export async function buildPhiDefaultEditorAreaPresetTree({
         visibilityMask: page.visibilityMask,
         sortOrder: 25,
         config: {
-          mode: runtime.site.theme?.mode ?? "light",
           sticky: true,
           fullHeight: true,
           size: { width: `${resolvedShellLeftWidth}px` },

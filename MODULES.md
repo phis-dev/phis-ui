@@ -442,9 +442,9 @@ front door. Which Page answers `/` is settled in this order:
 - the offer the Site named in its Area config, while that Module is still active;
 - otherwise the single package Module offering `/`, which covers the base landing exactly as a package
   `/contact` covers the base contact Page -- live on activation, with nobody choosing;
-- otherwise the base landing: no package offers `/`, or several do and the Site has not chosen;
-- unless the Site answered "landing, nobody", which means it authors the root itself and no Module Page
-  stands in.
+- otherwise the base landing: no package offers `/`, several do and the Site has not chosen, or the
+  Site answered "landing, nobody" -- which adopts no offer and leaves the root to the base landing, for
+  the Site to take over and author as its own.
 
 The choice is what `/` has beyond a named address: the Site can switch between every offer, the base
 landing included, without switching a Module off. A named offer whose Module goes away falls back

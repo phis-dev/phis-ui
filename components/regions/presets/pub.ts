@@ -9,11 +9,7 @@ const PUB_HEADER_TOP_REGION: PhiCmsResolvedRegion = {
   visibilityMask: 0,
   sortOrder: -10,
   config: {
-    mode: "light",
     sticky: false,
-    shadow: "none",
-    border: false,
-    size: { height: "55px" },
     offsetTop: 0,
   },
   rootLayoutNodeId: null,
@@ -29,19 +25,16 @@ const PUB_HEADER_MAIN_REGION: PhiCmsResolvedRegion = {
   visibilityMask: 0,
   sortOrder: 0,
   /*
-   * No Effect here, deliberately.
+   * Structure only: no Effect, Shadow, border, colour mode, or height (SHELL.md, Shell Chrome Overlay).
    *
-   * A Region that authors an Effect paints itself and is locked out of the Shell Chrome Overlay
+   * A Region that authors chrome paints itself and is locked out of the Shell Chrome Overlay
    * (`phiRegionUsesShellChromeOverlay`), so the `glass` that used to stand here decided for every Site
    * following this Preset that its Header would never take the Theme's frame. Glass is a Theme
-   * decision now, made once for all eight Chrome Regions; a Preset that wants it says so in the Theme.
+   * decision, made once for all eight Chrome Regions. The height comes from the Shell record when the
+   * tree is built (`resolvePhiShellHeaderHeight`).
    */
   config: {
-    mode: "light",
     sticky: true,
-    shadow: "none",
-    border: false,
-    size: { height: "55px" },
     offsetTop: 0,
   },
   rootLayoutNodeId: null,
@@ -62,10 +55,7 @@ const PUB_FOOTER_MAIN_REGION: PhiCmsResolvedRegion = {
   flags: 0,
   visibilityMask: 0,
   sortOrder: 10,
-  config: {
-    mode: "dark",
-    shadow: "none",
-  },
+  config: {},
   rootLayoutNodeId: null,
   rootLayoutNode: null,
   source: "fallback",
@@ -78,9 +68,7 @@ const PUB_FOOTER_TOP_REGION: PhiCmsResolvedRegion = {
   flags: 0,
   visibilityMask: 0,
   sortOrder: 5,
-  config: {
-    mode: "dark",
-  },
+  config: {},
   rootLayoutNodeId: null,
   rootLayoutNode: null,
   source: "fallback",
@@ -99,9 +87,7 @@ const PUB_FOOTER_BOTTOM_REGION: PhiCmsResolvedRegion = {
   flags: 0,
   visibilityMask: 0,
   sortOrder: 20,
-  config: {
-    mode: "dark",
-  },
+  config: {},
   rootLayoutNodeId: null,
   rootLayoutNode: null,
   source: "fallback",
