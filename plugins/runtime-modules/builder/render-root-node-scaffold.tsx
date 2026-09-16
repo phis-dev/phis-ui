@@ -449,6 +449,9 @@ function PhiEffectsPreviewButton({
         left: "50%",
         zIndex: 4,
         transform: "translate(-50%, -50%)",
+        // Its own size, for the same reason the tool bar states its width inline: it stands in a frame
+        // whose children `styles/layout.css` stretches, and a stylesheet answer did not hold there.
+        width: "var(--ant-control-height)",
         "--phi-layout-affordance-size": "var(--ant-control-height)",
       } as CSSProperties & Record<`--${string}`, string>}
     />

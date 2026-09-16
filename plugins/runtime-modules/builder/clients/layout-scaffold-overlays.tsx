@@ -135,6 +135,16 @@ export function PhiLayoutDeleteButtonOverlay({
       onPointerDown={(event) => event.stopPropagation()}
       onKeyDown={(event) => event.stopPropagation()}
       style={{
+        /*
+         * The bar is as wide as its buttons, and it says so itself.
+         *
+         * It stands out of the flow in a frame whose every child `styles/layout.css` stretches, and a
+         * stylesheet answer to that turned out not to hold: an authoring rule of higher specificity left
+         * the bar at full width in the running Builder. Inline, the declaration cannot be outvoted by
+         * load order, chunking, or which stylesheet a page happens to have -- and it sits with the
+         * element that has this width rather than in a file that has to find it again by selector.
+         */
+        width: "auto",
         "--phi-layout-scaffold-delete-top": typeof resolvedTop === "number" ? `${resolvedTop}px` : String(resolvedTop),
         "--phi-layout-scaffold-delete-right": typeof resolvedRight === "number" ? `${resolvedRight}px` : String(resolvedRight),
         "--phi-layout-scaffold-delete-bottom": typeof resolvedBottom === "number" ? `${resolvedBottom}px` : String(resolvedBottom),
