@@ -118,6 +118,11 @@ export async function materializePhiThemeModuleBlocks<T extends { root?: PhiSite
   const modes = ["light", "dark"] as const;
   const nextBackground: Record<string, unknown> = { ...background };
   const uploadedBySource = new Map<string, number>();
+  const moduleSources = modes.map((mode) => {
+    const base = background[mode]?.base as ThemeImageBase | undefined;
+    return isPhiThemeModuleImage(base) && base ? String(base.sourceUrl) : null;
+  });
+  const sharedPicture = moduleSources[0] !== null && moduleSources[0] === moduleSources[1];
 
   for (const mode of modes) {
     const entry = background[mode];
@@ -128,9 +133,13 @@ export async function materializePhiThemeModuleBlocks<T extends { root?: PhiSite
     /*
      * The same picture in both modes is one upload. The server would recognise the duplicate by its
      * checksum anyway, but sending it twice to be told so is a waste of the author's wait.
+     *
+     * Named after the ground it came from, because that is how somebody looking for it in the Media
+     * library will think of it: "mountain-forest-bg", or "-light" and "-dark" where the two modes are
+     * two pictures. A name that only said "theme ground" would fit every picture this ever uploads.
      */
     const assetId = uploadedBySource.get(source)
-      ?? await uploadPhiThemeImage(source, `theme-ground-${mode}`);
+      ?? await uploadPhiThemeImage(source, `${composition.ground.key}-bg${sharedPicture ? "" : `-${mode}`}`);
     if (!uploadedBySource.has(source)) {
       uploadedBySource.set(source, assetId);
       assetIds.push(assetId);
