@@ -1889,6 +1889,63 @@ function usePhiBrandAccordionSection(storageKey: string, sectionKeys: readonly s
  * variable points at are global, though -- only the variable is scoped -- so the resolved value works
  * anywhere. Read after mount, because the server renders no styles to read.
  */
+/**
+ * The `font-family` each font slot of a draft resolves to, the way the Site resolves it.
+ *
+ * A slot holds a catalogue family, a `phis:asset` reference to a typeface the Site owns, or any other
+ * name. A catalogue family is reached through its variable, a Site typeface through its own face and
+ * the substitute proportioned for it, and anything else is taken as written. Reading the raw slot value
+ * as a `font-family` -- what the preview used to do -- rendered every catalogue family and every Site
+ * typeface in the fallback, because neither is a name the browser knows.
+ *
+ * The roles fall back as the widgets' font helper does: accent to body, display to serif. The faces of
+ * the Site typefaces in use come back as CSS, since nothing else declares them until the Theme is saved.
+ */
+function usePhiThemeFontStacks(fonts: PhiSiteFontSlots | null | undefined) {
+  const { fontFamilies } = usePhiConfig();
+  const usesSiteTypeface = Object.values(fonts ?? {}).some(
+    (value) => typeof value === "string" && value.trim().startsWith("phis:asset/"),
+  );
+  const siteFontAssets = usePhiSiteFontAssets(usesSiteTypeface);
+  return useMemo(() => {
+    const catalogue = new Map(fontFamilies.map((entry) => [entry.family, entry.cssVariable]));
+    const assets = new Map(siteFontAssets.options.map((option) => [option.value, option]));
+    const faces = new Set<string>();
+    const resolve = (value: string | null | undefined) => {
+      const trimmed = value?.trim();
+      if (!trimmed) return { stack: undefined, label: undefined };
+      const asset = assets.get(trimmed);
+      if (asset) {
+        const source = {
+          family: asset.label,
+          url: asset.deliveryUrl,
+          contentType: asset.contentType,
+          metrics: asset.metrics,
+        };
+        const css = buildPhiFontFaceCss(source);
+        if (css) faces.add(css);
+        return { stack: buildPhiFontFamilyStack(source) ?? undefined, label: asset.label };
+      }
+      // A Site typeface the library has not answered for yet has no name to render in.
+      if (trimmed.startsWith("phis:asset/")) return { stack: undefined, label: undefined };
+      return { stack: catalogue.get(trimmed) ?? trimmed, label: trimmed };
+    };
+    const body = resolve(fonts?.body);
+    const serif = resolve(fonts?.serif);
+    const mono = resolve(fonts?.mono);
+    const accent = resolve(fonts?.accent);
+    const display = resolve(fonts?.display);
+    return {
+      body,
+      serif,
+      mono,
+      accent: accent.stack ? accent : body,
+      display: display.stack ? display : serif,
+      faceCss: [...faces].join(""),
+    };
+  }, [fontFamilies, fonts, siteFontAssets.options]);
+}
+
 function usePhiResolvedCatalogueFontFamilies(
   families: readonly { family: string; cssVariable: string }[],
 ) {
@@ -3340,7 +3397,7 @@ export function PhiBuilderBrandThemePreviewWidgetClient({
 }) {
   // The sample field is typed into like a real one, so what the Theme does to a filled field shows too.
   const [previewInput, setPreviewInput] = useState("");
-  const { fonts, presets: themePresets, themeBlocks, token: clientToken } = usePhiConfig();
+  const { presets: themePresets, themeBlocks, token: clientToken } = usePhiConfig();
   const fallbackTheme = useMemo(() => resolveInitialTheme(runtime), [runtime]);
   const [previewTheme, setPreviewTheme] = useState<ThemePayload>(fallbackTheme);
   /*
@@ -3366,10 +3423,14 @@ export function PhiBuilderBrandThemePreviewWidgetClient({
   }, [dispatchSignal, selfAddress]);
   const mode = usePhiBrandPreviewMode(resolveThemePayloadMode(fallbackTheme));
   const previewPreset = resolveThemePayloadPreset(previewThemeResolved, themePresets);
+  const previewFontStacks = usePhiThemeFontStacks(previewThemeResolved.fonts);
   const previewTokenInput = {
     ...buildPhiEffectiveNonColorThemeTokens(previewThemeResolved),
     ...resolvePhiThemeColorTokens(previewPreset, previewThemeResolved.palette, mode),
     ...(previewThemeResolved.style?.token ?? {}),
+    // The draft's lettering, applied as the root theme applies the Site's: body text and code.
+    ...(previewFontStacks.body.stack ? { fontFamily: previewFontStacks.body.stack } : {}),
+    ...(previewFontStacks.mono.stack ? { fontFamilyCode: previewFontStacks.mono.stack } : {}),
   };
   const previewEffectiveToken = resolvePhiAntdAliasTokens(mode, previewTokenInput);
   type PreviewRow = { key: string; name: string; status: string } & Record<string, unknown>;
@@ -3493,36 +3554,36 @@ export function PhiBuilderBrandThemePreviewWidgetClient({
     {
       key: "body",
       label: "Body",
-      family: previewTheme.fonts?.body ?? fonts.body ?? clientToken.fontFamily,
-      value: previewTheme.fonts?.body,
+      family: previewFontStacks.body.stack ?? clientToken.fontFamily,
+      value: previewFontStacks.body.label,
       sample: "The quick brand text renders in the body font.",
     },
     {
       key: "serif",
       label: "Serif",
-      family: previewTheme.fonts?.serif ?? fonts.serif ?? clientToken.fontFamily,
-      value: previewTheme.fonts?.serif,
+      family: previewFontStacks.serif.stack ?? clientToken.fontFamily,
+      value: previewFontStacks.serif.label,
       sample: "A short editorial sentence renders in the serif font.",
     },
     {
       key: "mono",
       label: "Mono",
-      family: previewTheme.fonts?.mono ?? fonts.mono ?? clientToken.fontFamilyCode,
-      value: previewTheme.fonts?.mono,
+      family: previewFontStacks.mono.stack ?? clientToken.fontFamilyCode,
+      value: previewFontStacks.mono.label,
       sample: "const brand = \"phi\";",
     },
     {
       key: "accent",
       label: "Accent",
-      family: previewTheme.fonts?.accent ?? fonts.accent ?? clientToken.fontFamily,
-      value: previewTheme.fonts?.accent,
+      family: previewFontStacks.accent.stack ?? clientToken.fontFamily,
+      value: previewFontStacks.accent.label,
       sample: "Accent copy for compact highlights.",
     },
     {
       key: "display",
       label: "Display",
-      family: previewTheme.fonts?.display ?? fonts.display ?? fonts.serif ?? clientToken.fontFamily,
-      value: previewTheme.fonts?.display,
+      family: previewFontStacks.display.stack ?? clientToken.fontFamily,
+      value: previewFontStacks.display.label,
       sample: "Display headline sample",
     },
   ];
@@ -3564,6 +3625,9 @@ export function PhiBuilderBrandThemePreviewWidgetClient({
 
   return (
     <ConfigProvider theme={previewAntdTheme}>
+      {previewFontStacks.faceCss ? (
+        <style href="phi-theme-preview-faces" precedence="default" dangerouslySetInnerHTML={{ __html: previewFontStacks.faceCss }} />
+      ) : null}
       <Card
         size="small"
         style={{
