@@ -1,22 +1,52 @@
 "use client";
 
-import { createPhiFormProviderRegistry } from "./form-provider-registry";
+import { lazy, Suspense, type ComponentType } from "react";
+
+import { createPhiFormProviderRegistry, type PhiFormFieldProviderProps } from "./form-provider-registry";
 import {
   PHI_SHARED_FORM_FIELD_TYPE_PROVIDER_DESCRIPTORS,
   PHI_SHARED_FORM_VALIDATION_PROVIDER_DESCRIPTORS,
 } from "./form-provider-contract";
 import { PhiTextControl } from "../controls/phi-text-control";
 import { PhiNumberControl } from "../controls/phi-number-control";
-import { PhiSliderControl } from "../controls/phi-slider-control";
 import { PhiSelectControl } from "../controls/phi-select-control";
 import { PhiMultiSelectControl } from "../controls/phi-multi-select-control";
 import { PhiCheckboxControl } from "../controls/phi-checkbox-control";
 import { PhiCheckboxGroupControl } from "../controls/phi-checkbox-group-control";
 import { PhiSwitchControl } from "../controls/phi-switch-control";
 import { PhiSegmentedControl } from "../controls/phi-segmented-control";
-import { PhiCascaderControl } from "../controls/phi-cascader-control";
-import { PhiCompoundTableFormControl, PhiCompoundTreeFormControl } from "./compound-form-controls";
-import { PhiDateTimeFormControl } from "./datetime-form-control";
+
+/**
+ * A field Control whose code loads when a field of its kind is first rendered.
+ *
+ * The kinds below are rare in a form and heavy to ship: the slider and the cascader, the date and time
+ * picker, and the compound Table and Tree fields, which bring the Table and Tree Controls with an editor
+ * for every column kind. Text, choice and toggle fields stay in the registry itself, because nearly every
+ * form has them and a round trip per field would cost more than it saves.
+ */
+function lazyPhiFormFieldControl(
+  load: () => Promise<ComponentType<PhiFormFieldProviderProps>>,
+): ComponentType<PhiFormFieldProviderProps> {
+  const LazyControl = lazy(async () => ({ default: await load() }));
+  return function PhiLazyFormFieldControl(props: PhiFormFieldProviderProps) {
+    return (
+      <Suspense fallback={null}>
+        <LazyControl {...props} />
+      </Suspense>
+    );
+  };
+}
+
+const PhiLazySliderFormControl = lazyPhiFormFieldControl(() =>
+  import("./extended-form-field-controls").then((module) => module.PhiSliderFormControl));
+const PhiLazyCascaderFormControl = lazyPhiFormFieldControl(() =>
+  import("./extended-form-field-controls").then((module) => module.PhiCascaderFormControl));
+const PhiLazyDateTimeFormControl = lazyPhiFormFieldControl(() =>
+  import("./datetime-form-control").then((module) => module.PhiDateTimeFormControl));
+const PhiLazyCompoundTableFormControl = lazyPhiFormFieldControl(() =>
+  import("./compound-form-controls").then((module) => module.PhiCompoundTableFormControl));
+const PhiLazyCompoundTreeFormControl = lazyPhiFormFieldControl(() =>
+  import("./compound-form-controls").then((module) => module.PhiCompoundTreeFormControl));
 
 export const PHI_SHARED_FORM_PROVIDER_REGISTRY = createPhiFormProviderRegistry({
   fieldTypes: [
@@ -185,49 +215,7 @@ export const PHI_SHARED_FORM_PROVIDER_REGISTRY = createPhiFormProviderRegistry({
     },
     {
       ...PHI_SHARED_FORM_FIELD_TYPE_PROVIDER_DESCRIPTORS[11],
-      Control: ({ field, value, onChange, disabled, readOnly }) => {
-        const numericValue = typeof value === "number" ? value : undefined;
-        const min = typeof field.config?.min === "number" ? field.config.min : undefined;
-        const max = typeof field.config?.max === "number" ? field.config.max : undefined;
-        const step = typeof field.config?.step === "number" ? field.config.step : undefined;
-        const slider = (
-          <PhiSliderControl
-            value={numericValue}
-            min={min}
-            max={max}
-            step={step}
-            dots={field.config?.dots === true}
-            included={field.config?.included !== false}
-            reverse={field.config?.reverse === true}
-            tooltipMode={
-              field.config?.tooltipMode === "always" || field.config?.tooltipMode === "hidden"
-                ? field.config.tooltipMode
-                : "auto"
-            }
-            tooltipSuffix={typeof field.config?.tooltipSuffix === "string" ? field.config.tooltipSuffix : undefined}
-            disabled={disabled}
-            readOnly={readOnly}
-            style={{ width: "100%" }}
-            onChange={(nextValue) => onChange?.(nextValue)}
-          />
-        );
-        return field.config?.showInput === true ? (
-          <div style={{ display: "grid", gridTemplateColumns: "minmax(96px, 1fr) minmax(0, 2fr)", gap: "var(--ant-padding-sm)", alignItems: "center", minWidth: 0 }}>
-            <PhiNumberControl
-              value={numericValue ?? null}
-              min={min}
-              max={max}
-              step={step}
-              precision={typeof field.config?.precision === "number" ? field.config.precision : undefined}
-              disabled={disabled}
-              readOnly={readOnly}
-              style={{ width: "100%" }}
-              onChange={(nextValue) => onChange?.(nextValue)}
-            />
-            {slider}
-          </div>
-        ) : slider;
-      },
+      Control: PhiLazySliderFormControl,
     },
     {
       ...PHI_SHARED_FORM_FIELD_TYPE_PROVIDER_DESCRIPTORS[12],
@@ -282,33 +270,19 @@ export const PHI_SHARED_FORM_PROVIDER_REGISTRY = createPhiFormProviderRegistry({
     },
     {
       ...PHI_SHARED_FORM_FIELD_TYPE_PROVIDER_DESCRIPTORS[16],
-      Control: ({ field, value, onChange, options, placeholder, disabled, readOnly }) => (
-        <PhiCascaderControl
-          value={typeof value === "string" ? value : undefined}
-          placeholder={placeholder}
-          disabled={disabled}
-          readOnly={readOnly}
-          options={options ?? []}
-          allowRoot={field.config?.allowRoot !== false}
-          allowClear={field.config?.allowClear === true}
-          separator={typeof field.config?.separator === "string" ? field.config.separator : "/"}
-          rootValue={typeof field.config?.rootValue === "string" ? field.config.rootValue : "/"}
-          normalize={field.config?.normalize === "path" ? "path" : "raw"}
-          onChange={(nextValue) => onChange?.(nextValue)}
-        />
-      ),
+      Control: PhiLazyCascaderFormControl,
     },
     {
       ...PHI_SHARED_FORM_FIELD_TYPE_PROVIDER_DESCRIPTORS[17],
-      Control: PhiCompoundTableFormControl,
+      Control: PhiLazyCompoundTableFormControl,
     },
     {
       ...PHI_SHARED_FORM_FIELD_TYPE_PROVIDER_DESCRIPTORS[18],
-      Control: PhiCompoundTreeFormControl,
+      Control: PhiLazyCompoundTreeFormControl,
     },
     {
       ...PHI_SHARED_FORM_FIELD_TYPE_PROVIDER_DESCRIPTORS[19],
-      Control: PhiDateTimeFormControl,
+      Control: PhiLazyDateTimeFormControl,
     },
   ],
   validationRules: [

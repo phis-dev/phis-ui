@@ -6,23 +6,23 @@ import { PHI_AUTH_RUNTIME_MODULE_ID } from "../auth/ids";
 import { PHI_GROUPS_RUNTIME_MODULE_ID } from "../groups/ids";
 import { PHI_COMMON_RUNTIME_MODULE_CONTROLLER_CLIENT_AREA_CONTRIBUTIONS } from "./common";
 import { PHI_DASHBOARD_RUNTIME_MODULE_CONTROLLER_CLIENT_AREA_CONTRIBUTION } from "../dashboard/client";
+import { loadPhiAuthRuntimeControllerClient } from "../auth/client";
+import { loadPhiGroupsRuntimeControllerClient } from "../groups/client";
+import { loadPhiAppRuntimeControllerClient } from "../app/client";
 
 export const PHI_APP_RUNTIME_MODULE_CONTROLLER_CLIENT_AREA_CONTRIBUTIONS = [
   ...PHI_COMMON_RUNTIME_MODULE_CONTROLLER_CLIENT_AREA_CONTRIBUTIONS,
   PHI_DASHBOARD_RUNTIME_MODULE_CONTROLLER_CLIENT_AREA_CONTRIBUTION,
   definePhiRuntimeModuleControllerClientAreaContribution({
     moduleId: PHI_AUTH_RUNTIME_MODULE_ID,
-    loadController: () => import("../auth/client")
-      .then((module) => module.loadPhiAuthRuntimeControllerClient()),
+    loadController: loadPhiAuthRuntimeControllerClient,
   }),
   definePhiRuntimeModuleControllerClientAreaContribution({
     moduleId: PHI_GROUPS_RUNTIME_MODULE_ID,
-    loadController: () => import("../groups/client")
-      .then((module) => module.loadPhiGroupsRuntimeControllerClient()),
+    loadController: loadPhiGroupsRuntimeControllerClient,
   }),
   definePhiRuntimeModuleControllerClientAreaContribution({
     moduleId: PHI_APP_RUNTIME_MODULE_ID,
-    loadController: () => import("../app/client")
-      .then((module) => module.loadPhiAppRuntimeControllerClient()),
+    loadController: loadPhiAppRuntimeControllerClient,
   }),
 ] as const;

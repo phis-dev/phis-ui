@@ -1,0 +1,34 @@
+/* Wide tables scroll inside their own box instead of widening the Page. */
+.scroll {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--ant-font-size);
+  line-height: var(--ant-line-height);
+  color: var(--ant-color-text);
+}
+
+.table th,
+.table td {
+  padding: var(--ant-padding-xs) var(--ant-padding-sm);
+  text-align: start;
+  vertical-align: top;
+}
+
+.table th {
+  font-weight: var(--ant-font-weight-strong);
+  color: var(--ant-color-text-heading);
+  border-block-end: 1px solid var(--ant-color-border-secondary);
+}
+
+.table td {
+  border-block-end: 1px solid var(--ant-color-split);
+}
+
+.table tbody tr:last-child td {
+  border-block-end: none;
+}

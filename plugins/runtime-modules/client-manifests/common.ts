@@ -9,6 +9,7 @@ import { PhiRuntimeRenderClientType } from "../../../constants/runtime-render-cl
 import { PHI_ASSET_RUNTIME_MODULE_ID } from "../asset/ids";
 import { createPhiRuntimeModuleCalendarAdapterClientManifest } from "../../../components/runtime/runtime-module-calendar-adapter-client-manifest";
 import { PHI_CORE_CALENDAR_ADAPTER_CLIENT_DEFINITIONS } from "../client-calendar-adapters/core";
+import { loadPhiAssetRuntimeControllerClient } from "../asset/client";
 
 export const PHI_COMMON_RUNTIME_MODULE_CALENDAR_ADAPTER_CLIENT_MANIFEST =
   createPhiRuntimeModuleCalendarAdapterClientManifest(
@@ -18,8 +19,7 @@ export const PHI_COMMON_RUNTIME_MODULE_CALENDAR_ADAPTER_CLIENT_MANIFEST =
 export const PHI_COMMON_RUNTIME_MODULE_CONTROLLER_CLIENT_LOADERS = [
   [
     PHI_ASSET_RUNTIME_MODULE_ID,
-    () => import("../asset/client")
-      .then((module) => module.loadPhiAssetRuntimeControllerClient()),
+    loadPhiAssetRuntimeControllerClient,
   ],
 ] as const satisfies ReadonlyArray<readonly [string, PhiRuntimeModuleControllerClientLoader]>;
 

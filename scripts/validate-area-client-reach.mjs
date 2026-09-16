@@ -20,7 +20,15 @@ import process from "node:process";
 //   1. the root layout reaches exactly the client references listed below -- a new one is a
 //      decision somebody has to make here, whatever it is and wherever it came from;
 //   2. a live Area host reaches no Client file of a Module that Area does not carry, and no
-//      Authoring implementation.
+//      Authoring implementation;
+//   3. a Widget that only shows content loads no editing Control with its Client. The Markdown
+//      Widget rendered its tables through the Table Control, and with it the editors for every
+//      column kind and drag reordering -- seventeen chunks after hydration on the Public landing;
+//   4. a Form loads only the field Controls nearly every form has; the rare and heavy kinds (slider,
+//      cascader, date, compound Table and Tree) load where a field of that kind is rendered;
+//   5. a Client manifest does not load a loader. `import()` of a Module's client.ts, which holds
+//      nothing but `import()` itself, cost every Controller a nearly empty chunk and a second round
+//      trip before the Controller's own chunk was even requested.
 // The Builder is exempt; it carries every Area's Modules on purpose.
 
 const repositoryRoot = process.cwd();
@@ -43,6 +51,37 @@ const ROOT_CLIENT_REFERENCES = [
 ];
 
 const LIVE_AREAS = ["public", "app", "admin", "editor", "accounting"];
+
+/**
+ * Widgets that show content and take no input, by their Client file.
+ *
+ * Listed rather than recognised: nothing in a Widget's name says whether it edits. A Widget that starts
+ * taking input leaves this list in the same change, and says why.
+ */
+const DISPLAY_WIDGET_CLIENTS = [
+  "account",
+  "area-menu",
+  "brand",
+  "breadcrumb",
+  "card",
+  "description",
+  "footer",
+  "gallery",
+  "header-navigation",
+  "icon",
+  "image",
+  "markdown",
+  "markdown-toc",
+  "page-title",
+  "quick-links",
+  "sidebar-navigation",
+  "simple-text",
+  "spacer",
+].map((widget) => `plugins/runtime-modules/core/widgets/${widget}/client.tsx`);
+
+/** Controls that exist to take input; a Widget that only shows content has no use for any of them. */
+const EDITING_CONTROL_PATTERN =
+  /^components\/controls\/phi-(?:table|tree|icon-picker|color|date-picker|cascader|form|multi-select|select|slider|number|text|switch|segmented|checkbox|checkbox-group|radio-group)-control\.tsx$/;
 
 /** Modules every Area carries (area-contributions/common.ts). */
 const COMMON_AREA_CONTRIBUTIONS = "plugins/runtime-modules/area-contributions/common.ts";
@@ -297,6 +336,79 @@ for (const area of LIVE_AREAS) {
   }
 }
 
+// --- 3. Widgets that only show content -------------------------------------------------------
+
+for (const widgetClient of DISPLAY_WIDGET_CLIENTS) {
+  const file = path.join(repositoryRoot, widgetClient);
+  if (!existsSync(file)) {
+    failures.push(`DISPLAY_WIDGET_CLIENTS lists ${widgetClient}, which does not exist -- remove it.`);
+    continue;
+  }
+  const { eager, chain } = collectEagerClientFiles([file]);
+  for (const reached of [...eager].sort()) {
+    if (!EDITING_CONTROL_PATTERN.test(relative(reached))) {
+      continue;
+    }
+    failures.push(
+      [
+        `${widgetClient} only shows content but loads an editing Control:`,
+        `    ${relative(reached)}`,
+        "    reached through:",
+        formatChain(chain(reached)),
+      ].join("\n"),
+    );
+  }
+}
+
+// --- 4. Forms ship the common field kinds only -------------------------------------------------
+
+const FORM_CLIENT = "components/forms/form-descriptor-runtime-client.tsx";
+const RARE_FIELD_CONTROL_PATTERN =
+  /^components\/controls\/phi-(?:table|tree|cascader|slider|date-picker|color|icon-picker)-control\.tsx$/;
+{
+  const { eager, chain } = collectEagerClientFiles([path.join(repositoryRoot, FORM_CLIENT)]);
+  for (const reached of [...eager].sort()) {
+    if (!RARE_FIELD_CONTROL_PATTERN.test(relative(reached))) {
+      continue;
+    }
+    failures.push(
+      [
+        `every Form loads ${relative(reached)}, a Control for a rare field kind:`,
+        "    reached through:",
+        formatChain(chain(reached)),
+        "    Register the field kind through lazyPhiFormFieldControl in shared-form-provider-registry.tsx.",
+      ].join("\n"),
+    );
+  }
+}
+
+// --- 5. manifests load implementations, not loaders --------------------------------------------
+
+const manifestDirectories = ["client-area-contributions", "client-manifests"]
+  .map((directory) => path.join(runtimeModulesDirectory, directory));
+let manifestLoaders = 0;
+for (const directory of manifestDirectories) {
+  for (const entry of readdirSync(directory, { withFileTypes: true })) {
+    if (!entry.isFile() || !/\.tsx?$/.test(entry.name)) {
+      continue;
+    }
+    const manifest = path.join(directory, entry.name);
+    for (const target of readDynamicImports(manifest)) {
+      manifestLoaders += 1;
+      const onlyDispatches = readStaticImports(target).length === 0 && readDynamicImports(target).length > 0;
+      if (onlyDispatches) {
+        failures.push(
+          [
+            `${relative(manifest)} loads a loader: ${relative(target)} holds nothing but import() itself.`,
+            "    Import its loader statically and hand it over; the chunk and the round trip in between",
+            "    carry no code.",
+          ].join("\n"),
+        );
+      }
+    }
+  }
+}
+
 if (failures.length > 0) {
   console.error("Area Client reach violations:");
   for (const failure of failures) {
@@ -308,5 +420,7 @@ if (failures.length > 0) {
 console.log(
   `Area Client reach validated: the root layout reaches ${root.clientReferences.size} allowed Client ` +
     `references (${root.eager.size} files); ${LIVE_AREAS.length} live Areas ship ${liveAreaEagerFiles} ` +
-    "Client files, none of a Module they do not carry.",
+    `Client files, none of a Module they do not carry; ${DISPLAY_WIDGET_CLIENTS.length} display Widgets ` +
+    `load no editing Control; Forms ship the common field kinds only; ${manifestLoaders} manifest ` +
+      "loaders load implementations.",
 );

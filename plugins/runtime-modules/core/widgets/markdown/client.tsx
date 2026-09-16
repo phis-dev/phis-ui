@@ -10,7 +10,7 @@ import { usePhiSignalEmitter } from "../../../../../components/runtime/runtime-s
 import { usePhiConfig, type PhiConfig } from "../../../../../components/root/phi-config-provider";
 import type { PhiMarkdownSpacingKey } from "./config";
 import type { PhiMarkdownTocHeading } from "../markdown-toc/config";
-import { PhiTableControl, type PhiTableControlColumn } from "../../../../../components/controls/phi-table-control";
+import { PhiPlainTable } from "../../../../../components/tables/phi-plain-table";
 
 export type PhiMarkdownInline =
   | { kind: "text"; text: string }
@@ -195,24 +195,25 @@ function renderBlocks(
         );
       case "divider":
         return <Divider key={key} style={{ margin: 0 }} />;
-      case "table": {
-        type MarkdownTableRow = Record<string, unknown> & { key: string };
-        const columns: PhiTableControlColumn<MarkdownTableRow>[] = block.header.map((header, columnIndex) => ({
-          key: `column-${columnIndex}`,
-          title: renderInlineNodes(header),
-          fieldPath: `column-${columnIndex}`,
-          sizing: { mode: "fill" },
-          align: block.align[columnIndex] ?? undefined,
-          render: (value) => Array.isArray(value) ? renderInlineNodes(value as PhiMarkdownInline[]) : null,
-        }));
-        const rows: MarkdownTableRow[] = block.rows.map((cells, rowIndex) => ({
-          key: `row-${rowIndex}`,
-          ...Object.fromEntries(cells.map((cell, columnIndex) => [`column-${columnIndex}`, cell])),
-        }));
-        return <PhiTableControl key={key} rows={rows} rowIdentityPath="key" columns={columns}
-          columnOrder={columns.map((column) => column.key)} sortingMode="none" sorts={[]}
-          pagination={false} size="small" layout={{ mode: "auto", overflowX: "auto" }} />;
-      }
+      case "table":
+        /*
+         * A plain table, not the Table Control: Markdown only shows rows, and the Control's editors,
+         * sorting and drag reordering put some twenty chunks on every page with a Markdown Widget.
+         */
+        return (
+          <PhiPlainTable
+            key={key}
+            columns={block.header.map((header, columnIndex) => ({
+              key: `column-${columnIndex}`,
+              title: renderInlineNodes(header),
+              align: block.align[columnIndex] ?? null,
+            }))}
+            rows={block.rows.map((cells, rowIndex) => ({
+              key: `row-${rowIndex}`,
+              cells: cells.map((cell) => renderInlineNodes(cell)),
+            }))}
+          />
+        );
     }
   });
 }
