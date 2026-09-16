@@ -212,6 +212,7 @@ function isPhiMediaKindValue(value: unknown): value is PhiMediaKindValue {
     value === PhiMediaKind.Markdown ||
     value === PhiMediaKind.Document ||
     value === PhiMediaKind.Archive ||
+    value === PhiMediaKind.Font ||
     value === PhiMediaKind.Binary ||
     value === PhiMediaKind.Other
   );

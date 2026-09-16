@@ -10,6 +10,7 @@ import {
   FileUnknownTwoTone,
   FileZipTwoTone,
   HddTwoTone,
+  HighlightTwoTone,
   VideoCameraTwoTone,
 } from "@ant-design/icons";
 
@@ -47,6 +48,8 @@ export function PhiMediaKindIcon({ kind, size = 32, style, className }: PhiMedia
       return <FileTextTwoTone className={className} style={iconStyle} twoToneColor={PHI_COLOR_PRIMARY} />;
     case PhiMediaKind.Archive:
       return <FileZipTwoTone className={className} style={iconStyle} twoToneColor={PHI_COLOR_PRIMARY} />;
+    case PhiMediaKind.Font:
+      return <HighlightTwoTone className={className} style={iconStyle} twoToneColor={PHI_COLOR_PRIMARY} />;
     case PhiMediaKind.Binary:
       return <HddTwoTone className={className} style={iconStyle} twoToneColor={PHI_COLOR_PRIMARY} />;
     default:

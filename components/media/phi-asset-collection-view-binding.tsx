@@ -236,6 +236,7 @@ export function PhiAssetCollectionViewBinding({
                 { value: PhiMediaKind.Markdown, label: labels.tool.markdownKindLabel },
                 { value: PhiMediaKind.Document, label: labels.tool.documentKindLabel },
                 { value: PhiMediaKind.Archive, label: labels.tool.archiveKindLabel },
+                { value: PhiMediaKind.Font, label: labels.tool.fontKindLabel },
                 { value: PhiMediaKind.Binary, label: labels.tool.binaryKindLabel },
                 { value: PhiMediaKind.Other, label: labels.tool.otherKindLabel },
               ]}

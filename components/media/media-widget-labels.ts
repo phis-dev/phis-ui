@@ -16,6 +16,7 @@ export type PhiAssetPreviewToolWidgetLabels = {
   markdownKindLabel: string;
   documentKindLabel: string;
   archiveKindLabel: string;
+  fontKindLabel: string;
   binaryKindLabel: string;
   otherKindLabel: string;
 };
@@ -146,6 +147,7 @@ export const PHI_MEDIA_WIDGET_DEFAULT_LABELS: PhiAssetWidgetLabels = {
     markdownKindLabel: "markdown",
     documentKindLabel: "document",
     archiveKindLabel: "archive",
+    fontKindLabel: "font",
     binaryKindLabel: "binary",
     otherKindLabel: "other",
   },

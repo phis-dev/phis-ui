@@ -167,10 +167,88 @@ Two things follow from the section above and are not negotiable by the design:
   files are downloaded and hosted; only the `@font-face` rule, a few hundred bytes, reaches the page.
   A Site pays for a Module's lettering in deploy size, never in fetches.
 
+### Draft: what a Site keeps when the Module leaves
+
+A family a Module contributes is the Module's for as long as it is installed. Switch it off and a Theme
+that named it is left pointing at nothing -- the record still says the family, the catalogue no longer
+has it, and `resolveThemeFont` hands the bare name to the browser, which renders whatever the viewer
+happens to have. The look a Site decided on would depend on a package staying installed.
+
+The answer is the one pictures already have. `plugins/runtime-modules/theme/materialize-images.ts`
+copies a ground a Module shipped into the Site's own Media library at the moment the Theme is saved,
+and the draft then points at the Asset. Saving is the moment somebody decides to keep what they see, so
+it is the moment ownership moves. Lettering should travel the same way, in the same act: the Theme is
+saved, the family the draft names is copied into the library, and `fonts.body` stops naming a Module's
+family and starts naming an Asset.
+
+`media_assets` now has a `font` kind for exactly that, with the file signatures to go with it -- an
+uploaded typeface is stored as `font/woff2` rather than falling through to arbitrary bytes, so what the
+Theme has to find again is a query and not a guess.
+
+Two things this forces on the Module side, and they are worth stating before anybody builds it:
+
+- **The Module must ship the file, not only the declaration.** `next/font` returns a class name, a
+  style, and a variable -- never a URL -- so there is nothing for an adoption step to read. A family
+  that is meant to survive its Module has to arrive the way a ground does: as a file in the package,
+  declared through `next/font/local` for the fast path while the Module is installed, and readable as
+  bytes when the Theme is saved. A Google family declared through `next/font/google` can be offered,
+  but it cannot be adopted, and a Site that picks one keeps it only as a name.
+- **After adoption the fast path ends.** An Asset cannot go back through a build-time loader. What
+  renders it is an `@font-face` written into the Theme's style against the Asset's delivery URL, and
+  that forgoes the `size-adjust` fallback metrics `next/font` computes, so the swap shifts the page.
+  The metrics can be read out of the file at upload time and kept in the Asset's `meta`, which is the
+  cheapest place to fix it and the reason to decide it before the first font is adopted.
+
+Delivery needs no change for this: a font is not in `PHI_MEDIA_INLINE_SAFE_CONTENT_TYPES` and is served
+as an attachment, which a stylesheet's own fetch ignores -- `Content-Disposition` governs navigations
+and downloads, not subresource loads. The same argument the delivery code already makes for `<img>`.
+
+### Draft: what happens when a font is uploaded
+
+**Designed, not built**, and deliberately in two steps that do not depend on each other.
+
+**First, the metrics.** A font that is not loaded through `next/font` has no fallback face, and the
+browser paints in the substitute until the file arrives. Next writes one per family -- measured in this
+Skeleton's build: `Fira Sans Fallback` with `size-adjust: 102.74%` over Arial, `Lora Fallback` with
+`115.2%` over Times New Roman, and `Fira Mono Fallback` with `134.59%`, which is how far off a
+substitute is when nobody corrects it. The numbers come out of the file's own `head`, `hhea` and `OS/2`
+tables, so they are read once at upload and kept in the Asset's `meta`; the Theme's `@font-face` then
+carries a matching fallback face and the swap stops moving the page. This is worth doing on its own,
+before any pipeline exists, because it fixes the one thing a viewer actually sees.
+
+**Second, the ranges.** An uploaded font is whatever somebody uploaded -- a full family with Cyrillic
+and Greek where the Site needed Latin. The answer is not one subset but several faces with
+`unicode-range`, which is what Google serves and therefore what `next/font` already gives us: this
+build carries 18 to 24 files per family, and a page fetches the one or two it renders from.
+
+Deriving that cut from the Site's languages would be the obvious mistake. Locales describe the
+interface, not the content: a customer's name, an address, a quoted line will carry a glyph outside
+them, and the failure is a hole in one word, data-dependent, months after the upload. Nor is a language
+a set of codepoints -- typographic quotes, dashes, currency and arrows belong to none of them. And the
+list changes; a cut made at upload would be wrong the day an operator adds a locale, and redoing it
+needs the original anyway. So the Site's languages decide which range is **preloaded**, never which
+glyphs survive.
+
+The shape this takes is one the Media library already has. `ensureImageAssetVariant` produces a
+rendition on first request, stores it beside the Asset under `<key>.__variants/<n>`, and leaves the
+original untouched as the thing every later derivation reads. A `unicode-range` cut is the same shape
+with a different producer, and the same version counter throws every cut away when the rule changes.
+`image_asset_variants` carries a width and a height that a font cut does not have, so the table either
+generalizes or gains a sibling -- a schema decision, and a cheap one before v1.
+
+The tools are all permissive, which matters because the core is Apache-2.0 so that Add-ons may stay
+closed: HarfBuzz is under the Old MIT license and reachable from Node as `harfbuzzjs` (MIT) or
+`subset-font` (BSD-3-Clause), woff2 packing as `wawoff2` (MIT), and the metrics through `fontkit` or
+`@capsizecss/unpack` (both MIT). fontTools is MIT as well but is Python, which would put a second
+runtime in the server for something WASM does in-process. Subsetting modifies the file, and while most
+webfont licenses permit that, a few commercial ones do not -- worth saying once where an operator
+uploads.
+
 Open, and for the operator to decide: whether a font becomes a block kind of its own in the Theme
 catalog or a field on the style block; whether the Builder's font slots then offer the contributed
-families as a list rather than free text; and whether a Site may override a preset's family with one
-of its own.
+families as a list rather than free text; whether a Site may override a preset's family with one of its
+own; and whether adoption copies every family a Module contributed or only the ones the saved draft
+actually names.
 
 ## Required Skeleton entrypoint shape
 
