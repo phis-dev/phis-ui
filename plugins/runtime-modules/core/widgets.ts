@@ -67,6 +67,9 @@ import {
   PHI_INPUT_WIDGET_DEFINITION,
 } from "./widgets/input/config";
 import {
+  PHI_OTP_WIDGET_DEFINITION,
+} from "./widgets/otp/config";
+import {
   PHI_NUMBER_INPUT_WIDGET_DEFINITION,
 } from "./widgets/number-input/config";
 import {
@@ -316,6 +319,13 @@ export const PHI_RUNTIME_MODULE_WIDGETS: readonly PhiRuntimeModuleWidgetDefiniti
     renderPolicies: {"runtime":"custom","preview":"custom","authoring":"custom"},
     loadRuntime: () => import("./widgets/input/plugin").then((module) => module.PHI_INPUT_WIDGET_PLUGIN),
     loadPreview: () => import("./widgets/input/plugin").then((module) => module.PHI_INPUT_WIDGET_PLUGIN),
+  }),
+  defineFirstPartyWidget({
+    definition: PHI_OTP_WIDGET_DEFINITION,
+    ownerModuleId: PHI_CORE_RUNTIME_MODULE_ID,
+    renderPolicies: {"runtime":"custom","preview":"custom","authoring":"custom"},
+    loadRuntime: () => import("./widgets/otp/plugin").then((module) => module.PHI_OTP_WIDGET_PLUGIN),
+    loadPreview: () => import("./widgets/otp/plugin").then((module) => module.PHI_OTP_WIDGET_PLUGIN),
   }),
   defineFirstPartyWidget({
     definition: PHI_NUMBER_INPUT_WIDGET_DEFINITION,

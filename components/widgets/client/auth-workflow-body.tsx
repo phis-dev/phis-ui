@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Flex, QRCode, Typography } from "antd";
 import { PhiTextControl } from "../../controls/phi-text-control";
+import { PhiOtpControl } from "../../controls/phi-otp-control";
 import { PhiButtonControl } from "../../controls/phi-button-control";
 import { PhiAlertControl } from "../../controls/phi-alert-control";
 import type { PhiAuthWorkflow } from "../../../types/auth-manifest";
@@ -147,12 +148,11 @@ export function PhiAuthWorkflowBody({
           <>
             <QRCode value={enrollment.otpauthUri} type="svg" />
             <Typography.Text copyable code>{enrollment.manualKey}</Typography.Text>
-            <PhiTextControl
-              presentation="otp"
-              otpLength={6}
+            <PhiOtpControl
               ariaLabel="Authenticator code"
+              length={6}
               value={code}
-              onChange={(nextValue) => setCode(nextValue ?? "")}
+              onChange={setCode}
               disabled={busy}
             />
             <PhiButtonControl

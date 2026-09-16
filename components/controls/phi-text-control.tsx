@@ -17,13 +17,7 @@ import type { PhiControlSize, PhiControlVariant } from "../../types/control";
 import type { PhiTextInputType } from "./phi-text-types";
 import { PhiLabeledControl } from "./phi-labeled-control";
 
-/**
- * How the value is entered.
- *
- * `otp` is a row of single-character cells for a code of known length -- the shape an authenticator
- * code is recognised by, and one that makes a mistyped digit visible where it happened.
- */
-export type PhiTextControlPresentation = "input" | "password" | "textarea" | "hidden" | "otp";
+export type PhiTextControlPresentation = "input" | "password" | "textarea" | "hidden";
 
 export type PhiTextControlProps = {
   value?: string | null;
@@ -43,8 +37,6 @@ export type PhiTextControlProps = {
   minLength?: number;
   maxLength?: number;
   rows?: number;
-  /** How many cells an `otp` presentation draws; six, the length authenticator apps use, unless stated. */
-  otpLength?: number;
   autoSize?: boolean | { minRows?: number; maxRows?: number };
   tabIndex?: number;
   size?: PhiControlSize;
@@ -111,7 +103,6 @@ export function PhiTextControl({
   minLength,
   maxLength,
   rows,
-  otpLength = 6,
   autoSize,
   tabIndex,
   size,
@@ -161,21 +152,7 @@ export function PhiTextControl({
   }
 
   let control: ReactNode;
-  if (presentation === "otp") {
-    control = (
-      <Input.OTP
-        aria-label={ariaLabel}
-        autoFocus={autoFocus}
-        disabled={disabled || (!onChange && !readOnly)}
-        length={otpLength}
-        size={size}
-        variant={variant}
-        value={value ?? ""}
-        onChange={(nextValue) => onChange?.(nextValue)}
-        style={style}
-      />
-    );
-  } else if (presentation === "textarea") {
+  if (presentation === "textarea") {
     control = (
       <Input.TextArea
         {...commonProps}

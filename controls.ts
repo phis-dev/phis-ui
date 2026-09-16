@@ -107,6 +107,12 @@ export { PhiMultiSelectControl } from "./components/controls/phi-multi-select-co
 export type { PhiMultiSelectControlProps } from "./components/controls/phi-multi-select-control";
 export { PhiSegmentedControl } from "./components/controls/phi-segmented-control";
 export type { PhiSegmentedControlProps } from "./components/controls/phi-segmented-control";
+export { PhiOtpControl } from "./components/controls/phi-otp-control";
+export type {
+  PhiOtpControlCharacters,
+  PhiOtpControlHandle,
+  PhiOtpControlProps,
+} from "./components/controls/phi-otp-control";
 export { PhiSwitchControl } from "./components/controls/phi-switch-control";
 export type { PhiSwitchControlProps } from "./components/controls/phi-switch-control";
 export { PhiCheckboxControl } from "./components/controls/phi-checkbox-control";

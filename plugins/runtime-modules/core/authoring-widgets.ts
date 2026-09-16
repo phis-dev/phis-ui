@@ -65,6 +65,9 @@ import {
   PHI_INPUT_WIDGET_DEFINITION,
 } from "./widgets/input/config";
 import {
+  PHI_OTP_WIDGET_DEFINITION,
+} from "./widgets/otp/config";
+import {
   PHI_NUMBER_INPUT_WIDGET_DEFINITION,
 } from "./widgets/number-input/config";
 import {
@@ -241,6 +244,10 @@ export default createPhiAuthoringWidgetModule([
   definePhiAuthoringWidgetModuleLoader(
     PHI_INPUT_WIDGET_DEFINITION,
     () => import("./widgets/input/authoring").then((module) => module.PHI_INPUT_WIDGET_BUILDER_PLUGIN),
+  ),
+  definePhiAuthoringWidgetModuleLoader(
+    PHI_OTP_WIDGET_DEFINITION,
+    () => import("./widgets/otp/authoring").then((module) => module.PHI_OTP_WIDGET_BUILDER_PLUGIN),
   ),
   definePhiAuthoringWidgetModuleLoader(
     PHI_NUMBER_INPUT_WIDGET_DEFINITION,

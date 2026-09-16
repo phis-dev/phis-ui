@@ -96,6 +96,13 @@ export const PHI_COMMON_RUNTIME_MODULE_RENDER_CLIENT_MANIFEST =
       ),
     ],
     [
+      PhiCmsWidgetType.Otp,
+      definePhiRuntimeModuleRenderClientLoader(
+        () => import("../core/widgets/otp/client")
+          .then((module) => module.PhiOtpWidget),
+      ),
+    ],
+    [
       PhiCmsWidgetType.NumberInput,
       definePhiRuntimeModuleRenderClientLoader(
         () => import("../core/widgets/number-input/client")

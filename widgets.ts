@@ -37,6 +37,8 @@ export type { PhiLengthWidgetProps } from "./plugins/runtime-modules/core/widget
 export { PhiInputWidget } from "./plugins/runtime-modules/core/widgets/input/client";
 export type { PhiInputWidgetProps } from "./plugins/runtime-modules/core/widgets/input/client";
 export { PhiNumberInputWidget } from "./plugins/runtime-modules/core/widgets/number-input/client";
+export { PhiOtpWidget } from "./plugins/runtime-modules/core/widgets/otp/client";
+export type { PhiOtpWidgetProps } from "./plugins/runtime-modules/core/widgets/otp/client";
 export { PhiSliderWidget } from "./plugins/runtime-modules/core/widgets/slider/client";
 export type { PhiSliderWidgetProps } from "./plugins/runtime-modules/core/widgets/slider/client";
 export { PhiRateWidget } from "./plugins/runtime-modules/core/widgets/rate/client";

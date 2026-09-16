@@ -19,6 +19,7 @@ const inputPrimitives = new Set([
 const widgetControlRequirements = new Map([
   ["plugins/runtime-modules/core/widgets/input/client.tsx", "PhiTextControl"],
   ["plugins/runtime-modules/core/widgets/number-input/client.tsx", "PhiNumberControl"],
+  ["plugins/runtime-modules/core/widgets/otp/client.tsx", "PhiOtpControl"],
   ["plugins/runtime-modules/core/widgets/slider/client.tsx", "PhiSliderControl"],
   ["plugins/runtime-modules/core/widgets/select-box/client.tsx", "PhiSelectControl"],
   ["plugins/runtime-modules/core/widgets/multi-select/client.tsx", "PhiMultiSelectControl"],
