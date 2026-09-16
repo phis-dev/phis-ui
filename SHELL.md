@@ -212,8 +212,14 @@ The site-owned Shell Chrome Overlay is its counterpart in front of the scrolling
   again: a gradient runs from the Header into the Sider and a Pattern keeps its grid across the seam
 - is not painted by a Region that authored any chrome of its own. Every carrier counts: the structured
   Background config, the plain ground string a Region or the Shell record can set, and the Region's own
-  Effect. Such a Region paints over the Theme, which is how an Area keeps its own chrome, and it is why
-  the Builder's own Sider and Header stay on their authored look rather than following the Site's Theme
+  Effect. Such a Region paints over the Theme, which is how a Site gives one Region its own chrome
+- is never locked out by a shipped Area shell. Area shell presets -- Public, App, Accounting, Admin,
+  Editor, and the Builder alike -- author no Background, Effect, Shadow, border, or colour mode on their
+  Regions, and no fixed Region height: those come from the Site's Theme and `site.theme.shell`. A preset
+  states structure only -- which Regions exist, what they hold, whether they stick, and which slots a Page
+  may inject into. Every Area, the Builder's working surface included, therefore starts on the Site's
+  Theme; out of the box that is the core Set `phis`, glass frame over the `phis` ground. A look of its own
+  is something a Site authors, never something a preset decides for every Site that follows it
 - reads "authored" as painting something, not as the field being present. Builder persistence writes a
   Background config onto every Region draft it stores, so a config whose Base is `none` and that carries
   no Overlay counts as no ground at all. Otherwise switching a Region's own Effect off would lock it out

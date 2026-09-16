@@ -246,8 +246,18 @@ Page the Site authored. So:
   `/login`. The way to your own Page is the `(ownerModuleId, presetKey)` reference, resolved through the
   current route table -- the same reference navigation persists.
 - **A taken address is not a fault.** On a Site that has grown it is the ordinary case.
-- **Yielding an address costs nothing else.** A renamed route, like a declined landing offer, leaves
-  every other route your Module has standing.
+- **Yielding an address costs nothing else.** A renamed route, like a landing offer the Site did not
+  choose, leaves every other route your Module has standing.
+- **A Public base Page is yours to replace.** Declare `/contact`, `/terms-and-conditions`, or
+  `/error/404` and your Page is served there, as long as no other package Module declares the same path;
+  the base Page steps aside and comes back when your Module is switched off. Links and navigation that
+  point at the base Page reach yours through the path, so you do not need a navigation item of your own.
+  You may still bring one: the Site then hides whichever of the two it does not want. This holds for the
+  Public base Module only -- Pages of the Auth Module or any other Module are ordinary holders.
+- **A landing is an offer.** A Page that declares `/` offers the Site a front door. As the only package
+  Module offering one it replaces the base landing on activation, like a replaced `/contact`; next to
+  other offers it waits until the Site chooses. It is never offered another address, and the Site can
+  switch between the offers at any time.
 
 One case runs the other way, and it is worth knowing because your Module cannot resolve it. A Page the
 Site authored before your package was installed can sit on your package path outside Public. There your

@@ -407,6 +407,50 @@ yield with. A Site Page authored before a package was installed can sit on that 
 activation is then refused -- naming the occupied path -- until the Site moves the Page. A Site Page may
 not be moved onto the path of a package active in its Area, so the case can only arise in that one order.
 
+One holder yields instead of keeping: the Public base Module, `@phis/ui/modules/public`. Its Pages --
+the error Pages, `/terms-and-conditions`, `/contact` -- are there so that a Site is never without them,
+not because the Site chose them, so a Module that brings its own is not a newcomer to be sent elsewhere
+but the reason the floor can step aside. The rule is exact:
+
+- A package Module whose Public route declares the path a Public base route holds takes that path while
+  it is the only active package Module declaring it. Its Page is served there; the base Page is not
+  renamed, it is covered.
+- A second package Module declaring the same path meets the first as an ordinary holder and is offered
+  another address. The base Module stays covered.
+- A covered base route stays in the active route table under its own identity, and its path answers with
+  the covering Page. Everything that points at the base Page -- a navigation item, a structured internal
+  link -- keeps pointing at it and reaches the covering Page through the path. Nothing is rewritten, and
+  nothing waits for a publish, because those targets are resolved when they are read. A navigation item a
+  Site placed, relabelled or hid stays exactly as it was.
+- The covering Module may contribute navigation items of its own for the same Page. Two entries then lead
+  to one address, which is an authoring choice, not a fault: the Site hides whichever it does not want.
+- Switching the covering Module off uncovers the base Page, with nothing to restore. A Module that was
+  renamed away from the path while it was held keeps its granted address: a rename is the operator's
+  decision and does not fall back on its own.
+- Error Pages are covered the same way, because an error is rendered by resolving `/error/<code>` through
+  the route table; a Module covers one by declaring exactly that path.
+- Only the Public base Module yields. Every other holder keeps what it has, Core-owned or not: the Auth
+  Module's `/login`, `/register`, and `/reset-password` are replaced by switching the Auth Module off, never
+  by covering them.
+
+The Public root `/` follows the same floor-and-cover rule, and adds a choice. `@phis/ui/modules/public`
+holds `/` with a landing of its own, so a Site is never without a front door either. A package Module
+that declares `/` does not claim the address, it offers a landing, and offers never collide: activating
+a second one asks nothing and renames nothing, because a front door somewhere other than `/` is not a
+front door. Which Page answers `/` is settled in this order:
+
+- the offer the Site named in its Area config, while that Module is still active;
+- otherwise the single package Module offering `/`, which covers the base landing exactly as a package
+  `/contact` covers the base contact Page -- live on activation, with nobody choosing;
+- otherwise the base landing: no package offers `/`, or several do and the Site has not chosen;
+- unless the Site answered "landing, nobody", which means it authors the root itself and no Module Page
+  stands in.
+
+The choice is what `/` has beyond a named address: the Site can switch between every offer, the base
+landing included, without switching a Module off. A named offer whose Module goes away falls back
+through the order above rather than leaving the root empty. Outside Public the root stays the Area base
+Module's route, which no package can declare because every package route lives under its package path.
+
 Two consequences bind every Module. Its declared Public path is not necessarily the path it runs under,
 so no Module code may spell out its own address: the way to its own Page is the
 `(ownerModuleId, presetKey)` reference resolved through the current route table. And a Module route path
