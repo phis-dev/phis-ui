@@ -20,6 +20,11 @@ const file = (type: string, size = 10) =>
   assert.equal(resolvePhiMediaUploadAccept(undefined), "*/*");
   assert.equal(resolvePhiMediaUploadAccept({ kinds: [PhiMediaKind.Image] }), "image/*");
   assert.equal(resolvePhiMediaUploadAccept({ kinds: [PhiMediaKind.Pdf] }), "application/pdf");
+  // A font dialog offers the suffixes too: a desktop that names no type would otherwise grey them out.
+  assert.equal(
+    resolvePhiMediaUploadAccept({ kinds: [PhiMediaKind.Font] }),
+    "font/*,.woff2,.woff,.ttf,.otf,.ttc",
+  );
   assert.equal(
     resolvePhiMediaUploadAccept({ kinds: [PhiMediaKind.Image], contentTypes: ["application/pdf"] }),
     "application/pdf,image/*",
@@ -39,6 +44,13 @@ const file = (type: string, size = 10) =>
   assert.equal(readPhiMediaUploadRejection(file("image/png"), { kinds: [PhiMediaKind.Image] }, labels), null);
   assert.equal(
     readPhiMediaUploadRejection(file("text/plain"), { kinds: [PhiMediaKind.Image] }, labels),
+    labels.errorTypeNotAllowed,
+  );
+  // A font the desktop could not name reaches the server, which reads the bytes instead of the label.
+  assert.equal(readPhiMediaUploadRejection(file(""), { kinds: [PhiMediaKind.Font] }, labels), null);
+  assert.equal(readPhiMediaUploadRejection(file("font/woff2"), { kinds: [PhiMediaKind.Font] }, labels), null);
+  assert.equal(
+    readPhiMediaUploadRejection(file("image/png"), { kinds: [PhiMediaKind.Font] }, labels),
     labels.errorTypeNotAllowed,
   );
   assert.equal(

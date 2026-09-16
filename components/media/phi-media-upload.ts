@@ -70,7 +70,15 @@ export function resolvePhiMediaUploadAccept(acceptance: PhiMediaUploadAcceptance
         : kind === PhiMediaKind.Audio ? ["audio/*"]
           : kind === PhiMediaKind.Pdf ? ["application/pdf"]
             : kind === PhiMediaKind.Markdown ? ["text/markdown"]
-              : []);
+              /*
+               * Fonts carry their suffixes as well as their family, because a file dialog is the one
+               * place where the type is the operating system's opinion: plenty of desktops hand a
+               * `.woff2` over with no type at all, and a dialog narrowed to `font/*` alone would grey
+               * out exactly the files somebody opened it for.
+               */
+              : kind === PhiMediaKind.Font
+                ? ["font/*", ".woff2", ".woff", ".ttf", ".otf", ".ttc"]
+                : []);
   const merged = [...new Set([...types, ...fromKinds])];
   return merged.length > 0 ? merged.join(",") : "*/*";
 }
@@ -98,7 +106,16 @@ export function readPhiMediaUploadRejection(
   if (acceptance?.contentTypes?.length && !matchesContentType(file.type, acceptance.contentTypes)) {
     return labels.errorTypeNotAllowed;
   }
-  if (acceptance?.kinds?.length && !acceptance.kinds.includes(resolvePhiMediaKindFromContentType(file.type))) {
+  /*
+   * A file the browser could not name is not a file this can refuse.
+   *
+   * The kind is derived from the type the browser states, and for a font it often states nothing --
+   * the check would then read `other` and turn away the very file the dialog was opened for. Refusing
+   * on the absence of evidence is worse than sending it: the server reads the bytes, and that is the
+   * answer that binds anyway.
+   */
+  if (acceptance?.kinds?.length && file.type.trim()
+    && !acceptance.kinds.includes(resolvePhiMediaKindFromContentType(file.type))) {
     return labels.errorTypeNotAllowed;
   }
   return null;
