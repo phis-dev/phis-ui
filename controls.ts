@@ -107,6 +107,13 @@ export { PhiMultiSelectControl } from "./components/controls/phi-multi-select-co
 export type { PhiMultiSelectControlProps } from "./components/controls/phi-multi-select-control";
 export { PhiSegmentedControl } from "./components/controls/phi-segmented-control";
 export type { PhiSegmentedControlProps } from "./components/controls/phi-segmented-control";
+export { PhiDragHandleControl } from "./components/controls/phi-drag-handle-control";
+export type {
+  PhiDragHandleActivator,
+  PhiDragHandleAttributes,
+  PhiDragHandleControlProps,
+  PhiDragHandleListeners,
+} from "./components/controls/phi-drag-handle-control";
 export { PhiOtpControl } from "./components/controls/phi-otp-control";
 export type {
   PhiOtpControlCharacters,

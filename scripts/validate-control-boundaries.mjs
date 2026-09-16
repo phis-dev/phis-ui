@@ -134,15 +134,6 @@ const primitiveAdapterOwners = new Map([
  */
 const pendingControlAdoptions = new Map([
   [
-    "plugins/runtime-modules/builder/clients/layout-scaffold-buttons.tsx",
-    {
-      primitives: new Set(["Button"]),
-      reason:
-        "the drag handle spreads the drag-and-drop listeners onto its button; PhiButtonControl takes no "
-        + "listeners, and whether they move to a wrapper or become a Control capability is undecided",
-    },
-  ],
-  [
     "plugins/runtime-modules/theme/widgets/brand-controls/client.tsx",
     {
       primitives: new Set(["Button", "Form", "Input", "Select", "Switch", "Tag"]),

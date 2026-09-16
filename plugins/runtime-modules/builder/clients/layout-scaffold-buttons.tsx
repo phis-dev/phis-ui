@@ -1,8 +1,8 @@
 "use client";
 
-import { Button } from "antd";
 import { PhiButtonControl } from "../../../../components/controls/phi-button-control";
-import { DeleteOutlined, HolderOutlined, PlusOutlined, SettingOutlined } from "@ant-design/icons";
+import { PhiDragHandleControl } from "../../../../components/controls/phi-drag-handle-control";
+import { DeleteOutlined, PlusOutlined, SettingOutlined } from "@ant-design/icons";
 import { useMemo, useRef, type CSSProperties, type ReactNode, type SyntheticEvent } from "react";
 import {
   usePhiStructureDraggable,
@@ -96,7 +96,7 @@ export function PhiLayoutDragButtonWidget({
   dragData,
   ariaLabel = "Move node",
 }: PhiLayoutScaffoldDragButtonProps) {
-  const buttonRef = useRef<HTMLButtonElement | HTMLAnchorElement | null>(null);
+  const buttonRef = useRef<HTMLElement | null>(null);
   const resolvedData = useMemo<PhiStructureDragData>(
     () => ({
       ...dragData,
@@ -117,26 +117,20 @@ export function PhiLayoutDragButtonWidget({
     );
 
   return (
-    <Button
-      ref={(node) => {
-        buttonRef.current = node;
-        setNodeRef(node);
+    <PhiDragHandleControl
+      ariaLabel={ariaLabel}
+      activator={{
+        setActivatorRef: (node) => {
+          buttonRef.current = node;
+          setNodeRef(node);
+        },
+        listeners,
+        attributes,
       }}
+      dragging={isDragging}
       className="phi-layout-affordance phi-layout-affordance--drag"
-      aria-label={ariaLabel}
-      icon={<HolderOutlined />}
-      type="text"
-      size="small"
-      {...attributes}
-      {...listeners}
-      onClick={(event) => {
-        event.preventDefault();
-        event.stopPropagation();
-      }}
       style={
         {
-          cursor: "grab",
-          opacity: isDragging ? 0.45 : undefined,
           "--phi-layout-affordance-size": "var(--ant-control-height-sm)",
         } as CSSProperties & Record<`--${string}`, string>
       }
