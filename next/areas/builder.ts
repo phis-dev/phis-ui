@@ -1,6 +1,8 @@
 import "server-only";
 
 import { createPhiBuilderRuntimeModuleCatalog } from "../../plugins/runtime-modules/catalog";
+import { loadPhiThemeBlockCatalog } from "../../plugins/runtime-modules/theme/block-catalog";
+import type { PhiThemeBlockCatalog } from "../../theme/phi-theme-composition";
 import { createPhiNextCmsSiteBridge } from "../site-bridge";
 import type { PhiSiteModuleServerAreaContributions } from "../../plugins/runtime-modules/site-modules";
 
@@ -13,8 +15,12 @@ import type { PhiSiteModuleServerAreaContributions } from "../../plugins/runtime
 export function createPhiBuilderCmsSiteBridge(
   siteModules: PhiSiteModuleServerAreaContributions = {},
 ) {
+  const runtimeModuleCatalog = createPhiBuilderRuntimeModuleCatalog(siteModules);
+  // Composed once per bridge, as the root composes its own: nothing in it changes between requests.
+  let themeBlockCatalog: Promise<PhiThemeBlockCatalog> | null = null;
   return createPhiNextCmsSiteBridge({
-    runtimeModuleCatalog: createPhiBuilderRuntimeModuleCatalog(siteModules),
+    runtimeModuleCatalog,
+    loadThemeBlockCatalog: () => (themeBlockCatalog ??= loadPhiThemeBlockCatalog(runtimeModuleCatalog)),
   });
 }
 

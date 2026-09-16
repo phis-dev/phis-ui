@@ -101,6 +101,24 @@ for (const filePath of emittedJavaScriptFiles) {
     await assertRelativeImportExists(filePath, specifier);
     validatedRelativeImports += 1;
   }
+
+  // A file named by `new URL(..., import.meta.url)` is no import, but a Site build fails just the same
+  // when the copy step left it behind.
+  const fileReferences = [
+    ...source.matchAll(/new URL\(\s*["'](\.[^"']+)["']\s*,\s*import\.meta\.url\s*\)/g),
+  ].map((match) => match[1]);
+  for (const specifier of fileReferences) {
+    const resolved = path.resolve(path.dirname(filePath), specifier);
+    if (!resolved.startsWith(`${distDirectory}${path.sep}`)) {
+      throw new Error(`File reference "${specifier}" escapes package dist from "${filePath}".`);
+    }
+    try {
+      await access(resolved);
+    } catch {
+      throw new Error(`File reference "${specifier}" from "${filePath}" does not resolve inside package dist.`);
+    }
+    validatedRelativeImports += 1;
+  }
 }
 
 /*

@@ -37,6 +37,7 @@ import {
   resolvePhiThemePresetCustomColors,
 } from "../../../../../theme/phi-theme-palette";
 import { usePhiConfig } from "../../../../../components/root/phi-config-provider";
+import { usePhiThemeBlockCatalog } from "../../../../../components/root/phi-theme-block-catalog-provider";
 import {
   resolvePhiThemeComposition,
   resolvePhiThemeEffectiveFonts,
@@ -1316,7 +1317,8 @@ export function PhiBuilderBrandThemeControllerWidgetClient({
 }) {
   const dispatchSignal = usePhiSignalDispatcher();
   const { showMessage } = usePhiApplicationFeedback();
-  const { presets: themePresets, themeBlocks } = usePhiConfig();
+  const { presets: themePresets } = usePhiConfig();
+  const themeBlocks = usePhiThemeBlockCatalog();
   const themeKey = resolveThemeKey(config);
   const siteKey = runtime.site.key;
   const historyScope = `theme:${siteKey}:${themeKey}`;
@@ -1678,7 +1680,8 @@ export function PhiBuilderBrandThemeControllerWidgetClient({
         ...baseTheme,
         mode: nextMode,
       } satisfies ThemePayload;
-      emitRootThemeState(dispatchSignal, nextTheme, signal.correlationId);
+      // Resolved here, where the catalogue is: the root applies what it receives and holds no blocks.
+      emitRootThemeState(dispatchSignal, resolvePhiThemeRuntimePayload(nextTheme, themeBlocks).theme, signal.correlationId);
       return;
     }
 
@@ -2026,7 +2029,8 @@ export function PhiBuilderBrandThemeControlsWidgetClient({
   config?: PhiBuilderBrandWidgetConfig | null;
   colorPickerLabels?: PhiColorPickerLabels;
 }) {
-  const { presets: themePresets, themeBlocks, token: clientToken } = usePhiConfig();
+  const { presets: themePresets, token: clientToken } = usePhiConfig();
+  const themeBlocks = usePhiThemeBlockCatalog();
   const sectionLabelWidth = clientToken.controlHeight * 3;
   const colorControlWidth = clientToken.controlHeight * 5.5;
   const themeKey = resolveThemeKey(config);
@@ -2280,7 +2284,8 @@ export function PhiBuilderBrandStyleControlsWidgetClient({
   runtime: PhiBlockRuntime;
   config?: PhiBuilderBrandWidgetConfig | null;
 }) {
-  const { fonts, fontFamilies, themeBlocks, token: clientToken } = usePhiConfig();
+  const { fonts, fontFamilies, token: clientToken } = usePhiConfig();
+  const themeBlocks = usePhiThemeBlockCatalog();
   const fieldLabelWidth = clientToken.controlHeight * 4;
   const themeKey = resolveThemeKey(config);
   const { state, publishDraft } = usePhiBrandThemeDraft(runtime, themeKey);
@@ -3118,7 +3123,8 @@ export function PhiBuilderBrandBackgroundControlsWidgetClient({
   runtime: PhiBlockRuntime;
   config?: PhiBuilderBrandWidgetConfig | null;
 }) {
-  const { token: clientToken, themeBlocks } = usePhiConfig();
+  const { token: clientToken } = usePhiConfig();
+  const themeBlocks = usePhiThemeBlockCatalog();
   const themeKey = resolveThemeKey(config);
   const { state, publishDraft, editTransaction } = usePhiBrandThemeDraft(runtime, themeKey);
   const mode = usePhiBrandPreviewMode(resolveThemePayloadMode(state.draft));
@@ -3442,7 +3448,8 @@ export function PhiBuilderBrandThemePreviewWidgetClient({
 }) {
   // The sample field is typed into like a real one, so what the Theme does to a filled field shows too.
   const [previewInput, setPreviewInput] = useState("");
-  const { presets: themePresets, themeBlocks, token: clientToken } = usePhiConfig();
+  const { presets: themePresets, token: clientToken } = usePhiConfig();
+  const themeBlocks = usePhiThemeBlockCatalog();
   const fallbackTheme = useMemo(() => resolveInitialTheme(runtime), [runtime]);
   const [previewTheme, setPreviewTheme] = useState<ThemePayload>(fallbackTheme);
   /*

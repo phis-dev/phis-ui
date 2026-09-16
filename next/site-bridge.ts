@@ -8,7 +8,8 @@ import { readPhiServerApiCredentials } from "../helpers/phis-server-credentials"
 
 export function createPhiNextCmsSiteBridge({
   runtimeModuleCatalog,
-}: Pick<PhiCmsSiteBridge, "runtimeModuleCatalog">): PhiCmsSiteBridge {
+  loadThemeBlockCatalog,
+}: Pick<PhiCmsSiteBridge, "runtimeModuleCatalog" | "loadThemeBlockCatalog">): PhiCmsSiteBridge {
   assertPhiRuntimeModuleCatalog(runtimeModuleCatalog);
 
   const readRuntime = () => {
@@ -22,6 +23,7 @@ export function createPhiNextCmsSiteBridge({
 
   return {
     runtimeModuleCatalog,
+    loadThemeBlockCatalog,
     runtime: readRuntime(),
     loadResolvedRequest: async ({
       siteKey,

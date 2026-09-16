@@ -16,6 +16,7 @@ import {
   type PhiCmsAreaChrome,
 } from "../components/cms/phi-cms-root-layout";
 import { PhiCmsRootPage } from "../components/cms/phi-cms-root-page";
+import { PhiThemeBlockCatalogProvider } from "../components/root/phi-theme-block-catalog-provider";
 import { PhiCmsRootSlotPage } from "../components/cms/phi-cms-root-slot-page";
 import { isPhiCmsGatewayAuthError } from "../gateway/errors";
 import { loadPhiCmsRootRequest } from "../server-helpers/cms-root";
@@ -52,13 +53,18 @@ export function createPhiNextStaticAreaBoundary(
   cmsBridge: PhiCmsSiteBridge,
   Provider?: React.ComponentType<{ children: React.ReactNode }>,
 ) {
-  return function PhiNextStaticAreaBoundary({ children }: { children: React.ReactNode }) {
+  return async function PhiNextStaticAreaBoundary({ children }: { children: React.ReactNode }) {
     const content = (
       <PhiCmsAreaBoundary root={root} cmsBridge={cmsBridge}>
         {children}
       </PhiCmsAreaBoundary>
     );
-    return Provider ? <Provider>{content}</Provider> : content;
+    const bounded = Provider ? <Provider>{content}</Provider> : content;
+    // Only an Area whose bridge offers the Theme block catalogue ships it -- today the Builder alone.
+    const themeBlockCatalog = await cmsBridge.loadThemeBlockCatalog?.();
+    return themeBlockCatalog ? (
+      <PhiThemeBlockCatalogProvider catalog={themeBlockCatalog}>{bounded}</PhiThemeBlockCatalogProvider>
+    ) : bounded;
   };
 }
 

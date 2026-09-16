@@ -30,13 +30,20 @@ function resolveTypesTarget(target) {
     : normalized.replace(/\.(?:tsx?|jsx?)$/, ".d.ts")}`;
 }
 
-async function copyRuntimeCssAssets(sourceDirectory, targetDirectory) {
+/*
+ * What `tsc` does not emit but the emitted code still reaches: stylesheets it imports, and the pictures
+ * it names through `new URL("./picture.jpg", import.meta.url)` -- a Theme ground's image, which the Site
+ * build serves as a file of its own.
+ */
+const RUNTIME_FILE_ASSET_EXTENSIONS = [".css", ".jpg", ".jpeg", ".png", ".webp", ".avif", ".svg"];
+
+async function copyRuntimeFileAssets(sourceDirectory, targetDirectory) {
   for (const entry of await readdir(sourceDirectory, { withFileTypes: true })) {
     const source = path.join(sourceDirectory, entry.name);
     const target = path.join(targetDirectory, entry.name);
     if (entry.isDirectory()) {
-      await copyRuntimeCssAssets(source, target);
-    } else if (entry.isFile() && entry.name.endsWith(".css")) {
+      await copyRuntimeFileAssets(source, target);
+    } else if (entry.isFile() && RUNTIME_FILE_ASSET_EXTENSIONS.some((extension) => entry.name.endsWith(extension))) {
       await mkdir(targetDirectory, { recursive: true });
       await copyFile(source, target);
     }
@@ -107,9 +114,13 @@ await cp(
   path.join(distDirectory, "styles"),
   { recursive: true },
 );
-await copyRuntimeCssAssets(
+await copyRuntimeFileAssets(
   path.join(packageRoot, "components"),
   path.join(distDirectory, "components"),
+);
+await copyRuntimeFileAssets(
+  path.join(packageRoot, "plugins"),
+  path.join(distDirectory, "plugins"),
 );
 await writeFile(
   path.join(distDirectory, "package.json"),

@@ -212,7 +212,6 @@ export async function PhiRootLayout({
             fonts={themeFonts}
             fontFamilies={fontCatalogue.entries.map(({ family, cssVariable }) => ({ family, cssVariable }))}
             presets={themePresets}
-            themeBlocks={themeBlocks}
             rootClassName={fontCatalogue.className}
             rootStyle={headingFontFamily
               ? { ...publishedRootTheme.style, [PHI_THEME_HEADING_FONT_VARIABLE]: headingFontFamily }

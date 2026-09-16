@@ -13,8 +13,6 @@ import type {
   PhiThemeMode,
   PhiThemePresetPlugin,
 } from "../../theme/phi-theme-presets";
-import { PHI_CORE_THEME_BLOCK_CATALOG, type PhiThemeBlockCatalog } from "../../theme/phi-theme-composition";
-import { resolvePhiThemeRuntimePayload } from "../../theme/phi-theme-runtime";
 import {
   applyPhiThemeModeToDocument,
   writePhiColorSchemeHint,
@@ -49,7 +47,6 @@ export function PhiRootLiveThemeProvider({
   fonts,
   fontFamilies,
   presets,
-  themeBlocks,
   rootClassName,
   rootStyle,
   remRootValue,
@@ -67,8 +64,6 @@ export function PhiRootLiveThemeProvider({
   /** The families an author may choose from: this package's plus the installed Modules'. */
   fontFamilies: readonly PhiFontCatalogueFamily[];
   presets: readonly PhiThemePresetPlugin[];
-  /** Style, ground and set blocks; palettes arrive as `presets`. */
-  themeBlocks?: Partial<Omit<PhiThemeBlockCatalog, "palettes">>;
   rootClassName: string;
   rootStyle: CSSProperties & Record<`--${string}`, string>;
   remRootValue: number;
@@ -189,15 +184,12 @@ export function PhiRootLiveThemeProvider({
       !Array.isArray(signal.value)
     ) {
       /*
-       * A draft states what its author chose, not what it resolves to. Folding the blocks in here is
-       * what makes the live preview show the same Theme the Site will render, including the parts a
-       * Module contributed and the parts that fell back to the core.
+       * The Theme arrives resolved: whoever sends it folded the blocks in, against the catalogue only
+       * the Builder holds. The root keeps no catalogue of its own -- it would have to ship every
+       * installed Module's palettes, styles and grounds, pictures included, to every page for the one
+       * moment somebody in the Builder flips the mode switch.
        */
-      const nextTheme = resolvePhiThemeRuntimePayload(signal.value as PhiSiteTheme, {
-        ...PHI_CORE_THEME_BLOCK_CATALOG,
-        ...themeBlocks,
-        palettes: presets,
-      }).theme;
+      const nextTheme = signal.value as PhiSiteTheme;
       setLiveSiteTheme(nextTheme);
       liveModeOverride.current = true;
       setMode(nextTheme.mode === "dark" ? "dark" : "light");
@@ -257,7 +249,6 @@ export function PhiRootLiveThemeProvider({
         controlShape={resolvePhiControlShape(liveSiteTheme.shape?.controls)}
         theme={resolvedTheme.theme}
         presets={presets}
-        themeBlocks={themeBlocks}
         rootClassName={rootClassName}
         rootStyle={chromeOverlayStyle}
         remRootValue={remRootValue}

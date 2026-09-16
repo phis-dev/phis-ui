@@ -720,9 +720,16 @@ export const STATUS_THEME_BLOCKS = [{
 }] as const satisfies readonly PhiCmsThemeBlockDescriptor[];
 ```
 
-A ground may carry a picture. The package build copies no files, so the picture travels inline as a
-`data:image/...` URL. A Site that only follows the ground stores its key and nothing else, and the
-Module delivers the look. The first time the Site saves a Theme that resolves to a Module's ground, the
+A ground may carry a picture. A photograph ships as a file beside the module that names it, through
+`new URL("./ground.jpg", import.meta.url).href`, and the package build copies the file into `dist` next
+to the compiled module. The Site build serves it as `/_next/static/media/ground.<hash>.jpg` with an
+immutable cache, so a page fetches the picture only where the ground is shown. Not a static image import:
+Node cannot load one, and scripts that read the catalogue run on Node, where the expression is a `file:`
+URL. A small SVG drawn from the palette's colours may stay an inline `data:image/svg+xml` URL. The block
+catalogue itself reaches the browser only in the Builder, which is the one Area that chooses among
+blocks; every other page receives the one Theme the root resolved on the server. A Site that only follows
+the ground stores its key and nothing else, and the Module delivers the look.
+The first time the Site saves a Theme that resolves to a Module's ground, the
 Builder takes the whole ground over: background, Chrome and Shadow of both modes become the Site's own
 values and every picture becomes a Site Asset in the Media library. From then on the Site owns the look,
 switching the Module off changes nothing, and a Module update no longer reaches it; the key stays as

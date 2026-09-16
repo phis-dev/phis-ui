@@ -55,6 +55,7 @@ export type { PhiRuntimeModuleFormDefinition } from "../components/forms/form-re
 import type { PhiBuilderAreaKey } from "../constants/cms-areas";
 import type { PhiBuilderNavigationTree } from "../helpers/cms-navigation-catalog";
 import type { PhiBuilderActivePageCatalog } from "../helpers/cms-page-catalog";
+import type { PhiThemeBlockCatalog } from "../theme/phi-theme-composition";
 
 type PhiBivariantCallback<TArgs extends unknown[], TResult> = {
   bivarianceHack(...args: TArgs): TResult;
@@ -888,6 +889,13 @@ export type PhiResolvedRuntimeRenderRegistry = PhiCmsRuntimeRenderRegistry;
 
 export type PhiCmsSiteBridge = {
   runtimeModuleCatalog: PhiRuntimeModuleCatalog;
+  /**
+   * The Theme blocks this Site can follow, for an Area whose Widgets choose among them.
+   *
+   * Only the Builder's bridge offers it. The Area boundary hands it to the browser, so an Area without
+   * it ships no catalogue -- every page renders the one Theme the root resolved on the server.
+   */
+  loadThemeBlockCatalog?: () => Promise<PhiThemeBlockCatalog>;
   runtime?: PhiCmsSiteRuntime;
   loadResolvedRequest?: (
     args: PhiCmsResolvedRequestLoaderArgs,
