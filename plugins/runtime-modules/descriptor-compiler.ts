@@ -37,7 +37,9 @@ import type {
   PhiCmsResolvedNavigationSurface,
   PhiCmsRoutePresetBinding,
   PhiCmsRoutePresetDescriptor,
+  PhiCmsCompiledThemeDescriptors,
   PhiCmsThemeBlockBinding,
+  PhiCmsThemeDescriptorContribution,
   PhiCmsThemePresetBinding,
   PhiRuntimeModuleId,
 } from "../../types/cms-module-descriptors";
@@ -477,38 +479,11 @@ export function compilePhiCmsDescriptorCatalog({
       routesByArea.set(descriptor.area, areaRoutes);
     }
 
-    for (const descriptor of entry.themes ?? []) {
-      if (descriptor.ownerModuleId !== moduleId) {
-        throw new Error(`${moduleId}: theme preset "${descriptor.presetKey}" has a different owner.`);
-      }
-      assertPositiveVersion(descriptor.presetVersion, `${moduleId}/${descriptor.presetKey} presetVersion`);
-      normalizeRequiredKey(descriptor.themeKey, `${moduleId}/${descriptor.presetKey} theme key`);
-      normalizeRequiredKey(descriptor.title, `${moduleId}/${descriptor.presetKey} title`);
-      registerIdentity(descriptor.presetKey);
-      if (themeByKey.has(descriptor.themeKey)) {
-        throw new Error(`Duplicate theme preset key "${descriptor.themeKey}".`);
-      }
-      themeByKey.set(descriptor.themeKey, { descriptor });
-    }
-
-    /*
-     * Style, ground and Set blocks. Keyed by kind and key together, because the three kinds are three
-     * namespaces: a "forest" ground and a "forest" Set are different things and both are wanted.
-     */
-    for (const descriptor of entry.themeBlocks ?? []) {
-      if (descriptor.ownerModuleId !== moduleId) {
-        throw new Error(`${moduleId}: theme block "${descriptor.presetKey}" has a different owner.`);
-      }
-      assertPositiveVersion(descriptor.presetVersion, `${moduleId}/${descriptor.presetKey} presetVersion`);
-      normalizeRequiredKey(descriptor.blockKey, `${moduleId}/${descriptor.presetKey} block key`);
-      normalizeRequiredKey(descriptor.title, `${moduleId}/${descriptor.presetKey} title`);
-      registerIdentity(descriptor.presetKey);
-      const blockIdentity = `${descriptor.blockKind}:${descriptor.blockKey}`;
-      if (themeBlockByKey.has(blockIdentity)) {
-        throw new Error(`Duplicate theme block "${blockIdentity}".`);
-      }
-      themeBlockByKey.set(blockIdentity, { descriptor });
-    }
+    registerPhiCmsThemeDescriptors(
+      { moduleId, themes: entry.themes, themeBlocks: entry.themeBlocks },
+      registerIdentity,
+      { themeByKey, themeBlockByKey },
+    );
   }
 
   for (const [area, definition] of definitionsByArea) {
@@ -798,6 +773,85 @@ const descriptorCatalogByRuntimeCatalog = new WeakMap<
   PhiRuntimeModuleCatalog,
   PhiCmsCompiledDescriptorCatalog
 >();
+
+/**
+ * One Module's Theme presets and blocks, checked and filed into the site-wide maps.
+ *
+ * Shared by the full catalog compile and by `compilePhiCmsThemeDescriptors`, so the document shell --
+ * which reads Themes without a runtime catalog -- refuses exactly what the Builder refuses.
+ */
+function registerPhiCmsThemeDescriptors(
+  { moduleId, themes, themeBlocks }: PhiCmsThemeDescriptorContribution,
+  registerIdentity: (presetKey: string) => unknown,
+  maps: {
+    themeByKey: Map<string, PhiCmsThemePresetBinding>;
+    themeBlockByKey: Map<string, PhiCmsThemeBlockBinding>;
+  },
+) {
+  for (const descriptor of themes ?? []) {
+    if (descriptor.ownerModuleId !== moduleId) {
+      throw new Error(`${moduleId}: theme preset "${descriptor.presetKey}" has a different owner.`);
+    }
+    assertPositiveVersion(descriptor.presetVersion, `${moduleId}/${descriptor.presetKey} presetVersion`);
+    normalizeRequiredKey(descriptor.themeKey, `${moduleId}/${descriptor.presetKey} theme key`);
+    normalizeRequiredKey(descriptor.title, `${moduleId}/${descriptor.presetKey} title`);
+    registerIdentity(descriptor.presetKey);
+    if (maps.themeByKey.has(descriptor.themeKey)) {
+      throw new Error(`Duplicate theme preset key "${descriptor.themeKey}".`);
+    }
+    maps.themeByKey.set(descriptor.themeKey, { descriptor });
+  }
+
+  /*
+   * Style, ground and Set blocks. Keyed by kind and key together, because the three kinds are three
+   * namespaces: a "forest" ground and a "forest" Set are different things and both are wanted.
+   */
+  for (const descriptor of themeBlocks ?? []) {
+    if (descriptor.ownerModuleId !== moduleId) {
+      throw new Error(`${moduleId}: theme block "${descriptor.presetKey}" has a different owner.`);
+    }
+    assertPositiveVersion(descriptor.presetVersion, `${moduleId}/${descriptor.presetKey} presetVersion`);
+    normalizeRequiredKey(descriptor.blockKey, `${moduleId}/${descriptor.presetKey} block key`);
+    normalizeRequiredKey(descriptor.title, `${moduleId}/${descriptor.presetKey} title`);
+    registerIdentity(descriptor.presetKey);
+    const blockIdentity = `${descriptor.blockKind}:${descriptor.blockKey}`;
+    if (maps.themeBlockByKey.has(blockIdentity)) {
+      throw new Error(`Duplicate theme block "${blockIdentity}".`);
+    }
+    maps.themeBlockByKey.set(blockIdentity, { descriptor });
+  }
+}
+
+/**
+ * The Theme half of a descriptor catalog, compiled from the Theme descriptors alone.
+ *
+ * A Theme is site-wide, so whoever reads it -- the document shell above every Area -- needs every
+ * installed Module's Theme descriptors and nothing else of theirs. Compiling a runtime catalog for it
+ * would reach every Widget plugin, and with them their Client halves onto every route.
+ */
+export function compilePhiCmsThemeDescriptors(
+  contributions: readonly PhiCmsThemeDescriptorContribution[],
+): PhiCmsCompiledThemeDescriptors {
+  const themeByKey = new Map<string, PhiCmsThemePresetBinding>();
+  const themeBlockByKey = new Map<string, PhiCmsThemeBlockBinding>();
+  const presetKeysByModule = new Map<PhiRuntimeModuleId, Set<string>>();
+  for (const contribution of contributions) {
+    const presetKeys = presetKeysByModule.get(contribution.moduleId) ?? new Set<string>();
+    presetKeysByModule.set(contribution.moduleId, presetKeys);
+    registerPhiCmsThemeDescriptors(
+      contribution,
+      (presetKey) => {
+        normalizeRequiredKey(presetKey, `${contribution.moduleId} preset key`);
+        if (presetKeys.has(presetKey)) {
+          throw new Error(`${contribution.moduleId}: duplicate preset key "${presetKey}".`);
+        }
+        presetKeys.add(presetKey);
+      },
+      { themeByKey, themeBlockByKey },
+    );
+  }
+  return { themeByKey, themeBlockByKey };
+}
 
 export function resolvePhiCmsDescriptorCatalog(catalog: PhiRuntimeModuleCatalog) {
   const current = descriptorCatalogByRuntimeCatalog.get(catalog);
@@ -1520,7 +1574,7 @@ export async function instantiatePhiCmsThemePreset(binding: PhiCmsThemePresetBin
 }
 
 export async function instantiatePhiCmsThemePresets(
-  catalog: PhiCmsCompiledDescriptorCatalog,
+  catalog: PhiCmsCompiledThemeDescriptors,
   activeModuleIds: ReadonlySet<PhiRuntimeModuleId>,
 ) {
   return Promise.all(
@@ -1538,7 +1592,7 @@ export async function instantiatePhiCmsThemePresets(
  * that resolves to something else.
  */
 export async function instantiatePhiCmsThemeBlocks(
-  catalog: PhiCmsCompiledDescriptorCatalog,
+  catalog: PhiCmsCompiledThemeDescriptors,
   activeModuleIds: ReadonlySet<PhiRuntimeModuleId>,
 ) {
   const bindings = [...catalog.themeBlockByKey.values()].filter(

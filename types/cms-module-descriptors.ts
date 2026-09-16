@@ -341,6 +341,18 @@ export type PhiCmsThemeBlockBinding = {
   descriptor: PhiCmsThemeBlockDescriptor;
 };
 
+/** One Module's Theme descriptors, apart from the rest of its catalog entry. */
+export type PhiCmsThemeDescriptorContribution = {
+  moduleId: PhiRuntimeModuleId;
+  themes?: readonly PhiCmsThemePresetDescriptor[];
+  themeBlocks?: readonly PhiCmsThemeBlockDescriptor[];
+};
+
+export type PhiCmsCompiledThemeDescriptors = Pick<
+  PhiCmsCompiledDescriptorCatalog,
+  "themeByKey" | "themeBlockByKey"
+>;
+
 export type PhiCmsCompiledRoutePattern = {
   descriptor: PhiCmsRoutePresetDescriptor;
   segments: readonly string[];

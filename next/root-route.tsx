@@ -6,9 +6,9 @@ import { redirect } from "next/navigation";
 
 import { PhiRootLayout } from "../components/root/phi-root-layout";
 import type { PhiModuleFontContributions } from "../module";
-import { createPhiBuilderRuntimeModuleCatalog } from "../plugins/runtime-modules/catalog";
 import type { PhiSiteModuleServerAreaContributions } from "../plugins/runtime-modules/site-modules";
 import { loadPhiThemeBlockCatalog } from "../plugins/runtime-modules/theme/block-catalog";
+import { collectPhiThemeDescriptorContributions } from "../plugins/runtime-modules/theme/theme-descriptors";
 import type { PhiThemeBlockCatalog } from "../theme/phi-theme-composition";
 import { composePhiFontCatalogue } from "../theme/phi-font-catalogue";
 import { buildPhiRootMetadata } from "../helpers/phi-metadata";
@@ -69,8 +69,11 @@ export async function generatePhiNextRootMetadata(): Promise<Metadata> {
  * cannot redirect an import that happens inside `@phis/ui`, so the Skeleton hands it in once and never
  * changes again when a Module is added. The root needs it for one thing -- the Theme blocks this Site
  * can follow are the core ones plus what every installed Module ships, and a Theme is site-wide: the
- * same record has to resolve the same way on every page, so the catalog asked here is the installed
- * union rather than one Area's set, the same union the Builder composes.
+ * same record has to resolve the same way on every page, so what is read here is the installed union
+ * rather than one Area's set, the same union the Builder composes. It is read as Theme descriptors and
+ * never as a runtime catalog: a catalog carries every Area's Widget plugins, and this layout is under
+ * every route, so each Client half those plugins reach would load on the Public landing page
+ * (scripts/validate-area-client-reach.mjs).
  *
  * The typefaces arrive as a second argument for a reason of their own: a font declaration is a
  * `next/font` call that only a Next build may evaluate, so Modules export them from a boundary the
@@ -84,7 +87,7 @@ export function createPhiNextRootLayout(
   const fontCatalogue = composePhiFontCatalogue(fonts.flatMap((contribution) => contribution.families));
   let themeBlocks: Promise<PhiThemeBlockCatalog> | null = null;
   const loadThemeBlocks = () => {
-    themeBlocks ??= loadPhiThemeBlockCatalog(createPhiBuilderRuntimeModuleCatalog(siteModules));
+    themeBlocks ??= loadPhiThemeBlockCatalog(collectPhiThemeDescriptorContributions(siteModules));
     return themeBlocks;
   };
 

@@ -9,9 +9,11 @@ import { hasPhiFlag } from "../helpers/flags";
 import { PHI_FIRST_PARTY_RUNTIME_MODULE_CATALOG } from "../plugins/runtime-modules/catalog";
 import { PHI_PUBLIC_RUNTIME_MODULE_CATALOG } from "../plugins/runtime-modules/area-catalogs/public";
 import { PHI_APP_RUNTIME_MODULE_CATALOG } from "../plugins/runtime-modules/area-catalogs/app";
+import { collectPhiThemeDescriptorContributions } from "../plugins/runtime-modules/theme/theme-descriptors";
 import {
   compilePhiCmsActiveRouteTable,
   compilePhiCmsRoutePattern,
+  compilePhiCmsThemeDescriptors,
   resolvePhiCmsNavigationOverlay,
   resolvePhiCmsActiveNavigationSurfaces,
   resolvePhiCmsDescriptorCatalog,
@@ -609,6 +611,27 @@ assert.equal(
   )?.descriptor.presetKey,
   "article-slug",
 );
+
+/*
+ * The document shell reads Themes from the descriptor lists, not from this catalog, so the two have to
+ * name the same presets and blocks. A first-party Module that starts shipping a Theme without being
+ * added to PHI_FIRST_PARTY_THEME_DESCRIPTOR_CONTRIBUTIONS fails here instead of vanishing from the Site.
+ */
+{
+  const shell = compilePhiCmsThemeDescriptors(collectPhiThemeDescriptorContributions());
+  const identities = (bindings: Iterable<{ descriptor: { ownerModuleId: string; presetKey: string } }>) =>
+    [...bindings].map(({ descriptor }) => `${descriptor.ownerModuleId}/${descriptor.presetKey}`).sort();
+  assert.deepEqual(
+    identities(shell.themeByKey.values()),
+    identities(catalog.themeByKey.values()),
+    "the document shell's Theme presets must be the Builder catalog's",
+  );
+  assert.deepEqual(
+    identities(shell.themeBlockByKey.values()),
+    identities(catalog.themeBlockByKey.values()),
+    "the document shell's Theme blocks must be the Builder catalog's",
+  );
+}
 
 console.log(
   `Module descriptors valid: ${catalog.areaDefinitions.size} Areas, ` +

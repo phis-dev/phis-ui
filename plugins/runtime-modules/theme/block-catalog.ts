@@ -1,11 +1,14 @@
 import {
+  compilePhiCmsThemeDescriptors,
   instantiatePhiCmsThemeBlocks,
   instantiatePhiCmsThemePresets,
-  resolvePhiCmsDescriptorCatalog,
 } from "../descriptor-compiler";
 import { PHI_CORE_THEME_BLOCK_CATALOG } from "../../../theme/phi-theme-composition";
 import type { PhiThemeBlockCatalog } from "../../../theme/phi-theme-composition";
-import type { PhiRuntimeModuleCatalog, PhiRuntimeModuleId } from "../../../types/cms-plugins";
+import type {
+  PhiCmsThemeDescriptorContribution,
+  PhiRuntimeModuleId,
+} from "../../../types/cms-module-descriptors";
 
 /**
  * Every Theme block a Site can choose from: the core ones, plus what its Modules ship.
@@ -20,10 +23,10 @@ import type { PhiRuntimeModuleCatalog, PhiRuntimeModuleId } from "../../../types
  * compiled.
  */
 export async function loadPhiThemeBlockCatalog(
-  runtimeCatalog: PhiRuntimeModuleCatalog,
+  contributions: readonly PhiCmsThemeDescriptorContribution[],
 ): Promise<PhiThemeBlockCatalog> {
-  const descriptors = resolvePhiCmsDescriptorCatalog(runtimeCatalog);
-  const moduleIds = new Set<PhiRuntimeModuleId>(runtimeCatalog.keys());
+  const descriptors = compilePhiCmsThemeDescriptors(contributions);
+  const moduleIds = new Set<PhiRuntimeModuleId>(contributions.map((contribution) => contribution.moduleId));
   const [palettes, blocks] = await Promise.all([
     instantiatePhiCmsThemePresets(descriptors, moduleIds),
     instantiatePhiCmsThemeBlocks(descriptors, moduleIds),
