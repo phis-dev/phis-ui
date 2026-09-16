@@ -10,7 +10,15 @@ import { PHIS_REQUEST_PATH_HEADER, PHIS_REQUEST_SEARCH_HEADER } from "../constan
 import { readPhiServerApiCredentials } from "../helpers/phis-server-credentials";
 
 const KNOWN_SPECIAL_ROOTS = new Set<string>(PHI_CMS_SPECIAL_ROOTS);
-const PHI_LOCALE_COOKIE = "phis_locale";
+
+/*
+ * The proxy writes no locale cookie.
+ *
+ * `phis_locale` is the viewer's own choice, and it outranks the browser's Accept-Language. Writing it on
+ * every prefixed request and on every redirect turned any visit to `/en/...` -- a link, a Builder
+ * preview -- into a choice nobody made, and from then on `/` sent a German browser to `/en/`. The
+ * cookie is written where a viewer chooses: the locale switch.
+ */
 
 function isAssetOrBackendPath(pathname: string) {
   return (
@@ -66,29 +74,18 @@ export async function proxyPhiNextSiteRequest(request: NextRequest) {
     requestHeaders.set("x-locale", prefixedLocale);
     requestHeaders.set(PHIS_REQUEST_PATH_HEADER, pathname);
     requestHeaders.set(PHIS_REQUEST_SEARCH_HEADER, search);
-    const response = NextResponse.next({
+    return NextResponse.next({
       request: {
         headers: requestHeaders,
       },
     });
-    response.cookies.set(PHI_LOCALE_COOKIE, prefixedLocale, {
-      path: "/",
-      sameSite: "lax",
-    });
-    return response;
   }
 
   const firstSegment = pathname.split("/").filter(Boolean)[0]?.toLowerCase() ?? "";
   if (firstSegment === "public") {
     const preferredLocale = await resolveRedirectLocale(request, runtimeConfig);
     const publicPath = pathname.replace(/^\/public(?=\/|$)/i, "") || "/";
-    const localizedUrl = new URL(`/${preferredLocale}${publicPath}${search}`, request.url);
-    const response = NextResponse.redirect(localizedUrl, 307);
-    response.cookies.set(PHI_LOCALE_COOKIE, preferredLocale, {
-      path: "/",
-      sameSite: "lax",
-    });
-    return response;
+    return NextResponse.redirect(new URL(`/${preferredLocale}${publicPath}${search}`, request.url), 307);
   }
 
   if (KNOWN_SPECIAL_ROOTS.has(firstSegment)) {
@@ -110,11 +107,5 @@ export async function proxyPhiNextSiteRequest(request: NextRequest) {
   }
 
   const preferredLocale = await resolveRedirectLocale(request, runtimeConfig);
-  const localizedUrl = new URL(`/${preferredLocale}${pathname}${search}`, request.url);
-  const response = NextResponse.redirect(localizedUrl, 307);
-  response.cookies.set(PHI_LOCALE_COOKIE, preferredLocale, {
-    path: "/",
-    sameSite: "lax",
-  });
-  return response;
+  return NextResponse.redirect(new URL(`/${preferredLocale}${pathname}${search}`, request.url), 307);
 }

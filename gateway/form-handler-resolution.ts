@@ -16,6 +16,7 @@ import { buildPhiBlockRuntime, loadPhiSiteRequestContext } from "../server-helpe
 import { runWithPhiRequestRuntime } from "../server-helpers/request-runtime";
 import type { PhiFormHandlerPhase, PhiFormHandlerProviderDescriptor } from "../types/form-descriptor";
 import { readPhiAreaPresetRuntimeModuleIds } from "../helpers/cms-area-config";
+import { fetchResolvedSiteLocale } from "../server-helpers/site-locale";
 
 export type PhiResolvedServerFormHandler = {
   formId: string;
@@ -23,7 +24,17 @@ export type PhiResolvedServerFormHandler = {
   provider: PhiFormHandlerProviderDescriptor;
 };
 
-function resolveRequestArea(request: NextRequest): { area: PhiCmsAreaKey; locale: string } | null {
+/**
+ * The Area the Form was submitted from, and the locale it was drawn in.
+ *
+ * Public carries its locale in the path. Every other Area does not, and there the locale is what the
+ * Site resolves for this request -- the viewer's choice, then the browser, then the Site default -- the
+ * same answer the page itself was drawn with.
+ */
+async function resolveRequestArea(
+  request: NextRequest,
+  site: { upstreamBaseUrl: string; internalToken: string; siteKey: string },
+): Promise<{ area: PhiCmsAreaKey; locale: string } | null> {
   const referer = request.headers.get("referer")?.trim();
   if (!referer) return null;
   let pathname = "";
@@ -40,14 +51,20 @@ function resolveRequestArea(request: NextRequest): { area: PhiCmsAreaKey; locale
     return null;
   }
   const firstSegment = pathname.split("/").filter(Boolean)[0]?.trim().toLowerCase() ?? "";
-  const cookieLocale = request.cookies.get("phis_locale")?.value?.trim().toLowerCase() || "en";
+  const resolveLocale = async () => (await fetchResolvedSiteLocale({
+    apiBaseUrl: site.upstreamBaseUrl,
+    internalToken: site.internalToken,
+    siteKey: site.siteKey,
+    acceptLanguage: request.headers.get("accept-language"),
+    cookieHeader: request.headers.get("cookie"),
+  })).locale;
   if (isKnownSpecialCmsRoot(firstSegment)) {
-    return { area: firstSegment as PhiCmsAreaKey, locale: cookieLocale };
+    return { area: firstSegment as PhiCmsAreaKey, locale: await resolveLocale() };
   }
-  if (firstSegment === "public") {
-    return { area: "public", locale: cookieLocale };
+  if (firstSegment === "public" || !firstSegment) {
+    return { area: "public", locale: await resolveLocale() };
   }
-  return { area: "public", locale: firstSegment || cookieLocale };
+  return { area: "public", locale: firstSegment };
 }
 
 function resolveAreaPath(area: PhiCmsAreaKey) {
@@ -76,7 +93,7 @@ export async function resolvePhiServerFormHandler(options: {
    */
   loadRuntimeModuleCatalog: (area: PhiCmsAreaKey) => Promise<PhiRuntimeModuleCatalog | null>;
 }): Promise<PhiResolvedServerFormHandler | null> {
-  const requestContext = resolveRequestArea(options.request);
+  const requestContext = await resolveRequestArea(options.request, options);
   if (!requestContext) return null;
   const catalog = await options.loadRuntimeModuleCatalog(requestContext.area);
   if (!catalog) return null;

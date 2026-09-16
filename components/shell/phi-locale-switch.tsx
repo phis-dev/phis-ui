@@ -8,6 +8,16 @@ import { localizeAreaPath, stripLocaleAndAreaFromPathname } from "../../helpers/
 import { PhiPillDropdownControl } from "../controls/phi-dropdown-control";
 import type { PhiMenuControlItem } from "../controls/phi-menu-control";
 
+/**
+ * Remembers the locale a viewer picked, for every page that carries no locale of its own.
+ *
+ * Written here and nowhere else: the cookie outranks the browser's Accept-Language, so it must only ever
+ * hold a choice somebody made. Visiting a localized address is not one.
+ */
+function rememberPhiLocaleChoice(locale: string) {
+  document.cookie = `phis_locale=${encodeURIComponent(locale)}; Path=/; Max-Age=31536000; SameSite=Lax`;
+}
+
 export type PhiLocaleOption = {
   code: string;
   label: string;
@@ -55,7 +65,10 @@ export function PhiLocaleSwitch({
         label: localeOption.code === currentLocale ? (
           <span>{localeOption.label}</span>
         ) : (
-          <Link href={localizeAreaPath(localeOption.code, areaSegment, currentPathWithQuery)}>
+          <Link
+            href={localizeAreaPath(localeOption.code, areaSegment, currentPathWithQuery)}
+            onClick={() => rememberPhiLocaleChoice(localeOption.code)}
+          >
             {localeOption.label}
           </Link>
         ),

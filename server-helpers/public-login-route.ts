@@ -6,7 +6,7 @@ import { cookies } from "next/headers";
 import { PHI_CANONICAL_SOURCE_LOCALE, localizeAreaPath } from "../helpers/locale";
 import { getPhiExactSiteArea } from "./cms";
 import { getPhiCapabilitySnapshot } from "../gateway/server-capabilities";
-import { fetchSiteLocaleConfig } from "./site-locale";
+import { resolvePhiRequestLocale } from "./request-locale";
 import {
   readPhiAreaLandingSelection,
   readPhiAreaPublicRoutePaths,
@@ -97,25 +97,17 @@ export async function resolvePhiUnauthenticatedLoginHref(
   cmsBridge: PhiCmsSiteBridge,
   root: string,
 ): Promise<string | null> {
-  const cookieStore = await cookies();
   /*
-   * The viewer's own choice, then the Site's default, and only then the language this software is
-   * written in.
-   *
-   * The last of those used to be the only fallback, which sent a Site with no English at all to a
-   * login page in a language it does not publish. The Site is asked only when there is no cookie, and
-   * its locale config is cached; if even that cannot be reached, the source language is the one
-   * string this process is certain to have text for.
+   * The locale the Site resolves for this request: the viewer's own choice, then the browser, then the
+   * Site's default -- the same chain every page is drawn with, so a refusal sends a German browser to the
+   * German login. Only if the Site cannot be reached is it the language this software is written in,
+   * the one this process is certain to have text for.
    */
-  const cookieLocale = cookieStore.get("phis_locale")?.value?.trim();
-  const siteLocaleConfig = cookieLocale
-    ? null
-    : await fetchSiteLocaleConfig({
-        apiBaseUrl: cmsBridge.runtime?.apiBaseUrl ?? "",
-        internalToken: cmsBridge.runtime?.internalToken ?? "",
-        siteKey: cmsBridge.runtime?.siteKey ?? "",
-      }).catch(() => null);
-  const locale = cookieLocale || siteLocaleConfig?.defaultLocale || PHI_CANONICAL_SOURCE_LOCALE;
+  const locale = await resolvePhiRequestLocale({
+    apiBaseUrl: cmsBridge.runtime?.apiBaseUrl ?? "",
+    internalToken: cmsBridge.runtime?.internalToken ?? "",
+    siteKey: cmsBridge.runtime?.siteKey ?? "",
+  }).catch(() => PHI_CANONICAL_SOURCE_LOCALE);
   // The snapshot has to be loaded here rather than defaulted to null: a module whose server binding
   // cannot be checked resolves as unavailable, which would drop the Auth Module and make every refusal
   // look like "no login configured".
