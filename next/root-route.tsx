@@ -5,10 +5,12 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
 import { PhiRootLayout } from "../components/root/phi-root-layout";
+import type { PhiModuleFontContributions } from "../module";
 import { createPhiBuilderRuntimeModuleCatalog } from "../plugins/runtime-modules/catalog";
 import type { PhiSiteModuleServerAreaContributions } from "../plugins/runtime-modules/site-modules";
 import { loadPhiThemeBlockCatalog } from "../plugins/runtime-modules/theme/block-catalog";
 import type { PhiThemeBlockCatalog } from "../theme/phi-theme-composition";
+import { composePhiFontCatalogue } from "../theme/phi-font-catalogue";
 import { buildPhiRootMetadata } from "../helpers/phi-metadata";
 import { localizePath } from "../helpers/locale";
 import {
@@ -69,8 +71,17 @@ export async function generatePhiNextRootMetadata(): Promise<Metadata> {
  * can follow are the core ones plus what every installed Module ships, and a Theme is site-wide: the
  * same record has to resolve the same way on every page, so the catalog asked here is the installed
  * union rather than one Area's set, the same union the Builder composes.
+ *
+ * The typefaces arrive as a second argument for a reason of their own: a font declaration is a
+ * `next/font` call that only a Next build may evaluate, so Modules export them from a boundary the
+ * Server one never imports (module.ts), and the root is the one place that reads that boundary. The
+ * catalogue is composed once, here, because nothing in it changes between requests.
  */
-export function createPhiNextRootLayout(siteModules: PhiSiteModuleServerAreaContributions = {}) {
+export function createPhiNextRootLayout(
+  siteModules: PhiSiteModuleServerAreaContributions = {},
+  fonts: PhiModuleFontContributions = [],
+) {
+  const fontCatalogue = composePhiFontCatalogue(fonts.flatMap((contribution) => contribution.families));
   let themeBlocks: Promise<PhiThemeBlockCatalog> | null = null;
   const loadThemeBlocks = () => {
     themeBlocks ??= loadPhiThemeBlockCatalog(createPhiBuilderRuntimeModuleCatalog(siteModules));
@@ -120,6 +131,7 @@ export function createPhiNextRootLayout(siteModules: PhiSiteModuleServerAreaCont
             resolvedLocale={resolvedLocale}
             themePresets={blocks.palettes}
             themeBlocks={blocks}
+            fontCatalogue={fontCatalogue}
           >
             {children}
           </PhiRootLayout>

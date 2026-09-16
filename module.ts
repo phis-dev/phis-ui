@@ -3,6 +3,11 @@ import {
   type PhiRuntimeModuleServerAreaContribution,
 } from "./plugins/runtime-modules/area-contributions";
 import type { PhiRuntimeModuleDefinition } from "./types/cms-plugins";
+import {
+  PHI_CORE_FONT_FAMILIES,
+  PHI_MODULE_FONT_CSS_VARIABLE_PATTERN,
+  type PhiFontCatalogueEntry,
+} from "./theme/phi-font-catalogue-contract";
 
 /**
  * What a Module package exports, and under which names.
@@ -18,6 +23,7 @@ import type { PhiRuntimeModuleDefinition } from "./types/cms-plugins";
  *   ./server            phiModuleServerContributions
  *   ./client            phiModuleClientContributions
  *   ./authoring-client  phiModuleAuthoringContributions
+ *   ./fonts             phiModuleFontContributions      (only a Module that declares typefaces)
  *
  * Each export is a list keyed by Module, because one package may carry several Modules. A Module never
  * names an Area: where its contributions belong follows from `eligibleAreas` on its own definition, which
@@ -66,4 +72,59 @@ export function definePhiModuleDefinitions(
     seen.add(definition.moduleId);
   }
   return definitions;
+}
+
+/**
+ * The typefaces a package declares, exported from `./fonts` as `phiModuleFontContributions`.
+ *
+ * A boundary of its own, and the only one the Server boundary must not import. A declaration is a
+ * `next/font/local` call at module scope, which is what lets Next host the files from this origin and
+ * compute the fallback metrics; outside a Next build the same call throws. The Server boundary is read
+ * by tools that are not Next -- a package's own verify script, a test -- so the declarations live where
+ * only the Site's root layout imports them, and the generated projection hands them in there.
+ *
+ * What a Module contributes is the catalogue entry, not the loader's result: a family name a fonts
+ * block may write in a slot, the variable that name resolves to, and the class that puts the variable
+ * in scope. The variable sits in the Module's own namespace, so two Modules can declare a family each
+ * without either taking the other's; the family name itself must be unique across the Site, and that
+ * is refused where the catalogue is composed rather than here, because only the Site sees both.
+ */
+export type PhiModuleFontContribution = {
+  moduleId: `${string}/${string}`;
+  families: readonly PhiFontCatalogueEntry[];
+};
+
+export type PhiModuleFontContributions = readonly PhiModuleFontContribution[];
+
+export function definePhiModuleFontContributions(
+  contributions: PhiModuleFontContributions,
+): PhiModuleFontContributions {
+  const seen = new Set<string>();
+  for (const contribution of contributions) {
+    for (const entry of contribution.families) {
+      const family = entry.family.trim();
+      if (!family) {
+        throw new Error(`Module "${contribution.moduleId}" declares a font family without a name.`);
+      }
+      if (seen.has(family)) {
+        throw new Error(`Module "${contribution.moduleId}" declares the font family "${family}" twice.`);
+      }
+      if (PHI_CORE_FONT_FAMILIES.includes(family)) {
+        throw new Error(
+          `Module "${contribution.moduleId}" declares "${family}", which phis-ui already declares; name it, do not declare it.`,
+        );
+      }
+      if (!PHI_MODULE_FONT_CSS_VARIABLE_PATTERN.test(entry.cssVariable)) {
+        throw new Error(
+          `Module "${contribution.moduleId}" declares "${family}" with the variable "${entry.cssVariable}"; ` +
+          "a contributed family uses var(--phi-font-<module>-<family>).",
+        );
+      }
+      if (!entry.className.trim()) {
+        throw new Error(`Module "${contribution.moduleId}" declares "${family}" without the class that scopes its variable.`);
+      }
+      seen.add(family);
+    }
+  }
+  return contributions;
 }

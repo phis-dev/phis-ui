@@ -4,9 +4,10 @@ import {
   PHI_CORE_THEME_BLOCK_CATALOG,
   readPhiThemeBlockSelection,
   resolvePhiThemeComposition,
+  resolvePhiThemeEffectiveFonts,
   resolvePhiThemeEffectiveRoot,
 } from "./phi-theme-composition";
-import { PHI_CORE_THEME_GROUND_BLOCKS } from "./phi-theme-blocks";
+import { PHI_CORE_THEME_FONTS_BLOCKS, PHI_CORE_THEME_GROUND_BLOCKS, type PhiThemeFontsBlock } from "./phi-theme-blocks";
 
 const groundOf = (key: string) => {
   const block = PHI_CORE_THEME_GROUND_BLOCKS.find((candidate) => candidate.key === key);
@@ -28,7 +29,7 @@ describe("theme block selection", () => {
 
   it("fills the parts a Set names", () => {
     const selection = readPhiThemeBlockSelection({ blocks: { set: { key: "phis" } } });
-    expect(selection).toEqual({ set: "phis", palette: "phis", style: "phis", ground: "phis" });
+    expect(selection).toEqual({ set: "phis", palette: "phis", style: "phis", ground: "phis", fonts: "phis" });
   });
 
   it("lets an explicit part win over the Set it follows", () => {
@@ -75,6 +76,39 @@ describe("theme composition", () => {
     expect(composition.palette.key).toBe("phis");
     expect(composition.style.key).toBe("phis");
     expect(composition.ground.key).toBe("phis");
+    expect(composition.fonts.key).toBe("phis");
+  });
+
+  it("resolves the fonts block a Set names, and reports one that is gone", () => {
+    const catalog = {
+      ...PHI_CORE_THEME_BLOCK_CATALOG,
+      fonts: [...PHI_CORE_THEME_FONTS_BLOCKS, { key: "@acme/ui/fonts/dunes", version: 1, title: "Dunes", fonts: { body: "Mulish", display: "Marcellus" } }],
+      sets: [...PHI_CORE_THEME_BLOCK_CATALOG.sets, { key: "@acme/ui/sets/dunes", version: 1, title: "Dunes", palette: "phis", style: "phis", ground: "phis", fonts: "@acme/ui/fonts/dunes" }],
+    };
+    expect(resolvePhiThemeComposition({ blocks: { set: { key: "@acme/ui/sets/dunes" } } }, catalog).fonts.fonts.display).toBe("Marcellus");
+    const gone = resolvePhiThemeComposition({ blocks: { fonts: { key: "@acme/ui/fonts/dunes" } } });
+    expect(gone.fonts.key).toBe("phis");
+    expect(gone.unavailable.fonts).toBe("@acme/ui/fonts/dunes");
+  });
+});
+
+/**
+ * Slot by slot, like the ground mode by mode: the author's body face survives a block that changes its
+ * display face, and a cleared slot shows the block rather than naming nothing.
+ */
+describe("effective fonts", () => {
+  const block: PhiThemeFontsBlock = { key: "@acme/ui/fonts/dunes", version: 1, title: "Dunes", fonts: { body: "Mulish", display: "Marcellus", mono: "Fira Mono" } };
+
+  it("takes the block's families where nothing was authored", () => {
+    expect(resolvePhiThemeEffectiveFonts(null, block)).toEqual({ body: "Mulish", display: "Marcellus", mono: "Fira Mono" });
+  });
+
+  it("keeps the author's slot and fills the rest from the block", () => {
+    expect(resolvePhiThemeEffectiveFonts({ body: "Inter" }, block)).toEqual({ body: "Inter", display: "Marcellus", mono: "Fira Mono" });
+  });
+
+  it("reads an empty slot as no choice", () => {
+    expect(resolvePhiThemeEffectiveFonts({ body: "  ", display: "" }, block).body).toBe("Mulish");
   });
 });
 

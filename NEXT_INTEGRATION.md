@@ -145,18 +145,27 @@ through `next/font` at all. It would be an `@font-face` rule generated into the 
 at the Asset's delivery URL, and it would forgo the fallback metrics `next/font` computes, so the swap
 would shift layout. Nothing of that is built.
 
-### Draft: Modules bring their own families
+### Modules bring their own families
 
-**Designed, not built.** What follows is the intended shape, recorded so the next change does not have
-to rediscover the constraint above.
+A Theme preset that ships its own look can ship its own lettering, in two parts that live at two
+different times.
 
-A Theme preset that ships its own look cannot ship its own lettering today: the catalogue is a fixed
-list in this package, and a preset can only *name* a family, which then resolves to whatever the
-viewer happens to have installed. The seam that fixes it is the one the catalogue already has. A
-Module declares `next/font` at module scope in its own file -- which is legal, because that file is
-statically imported like every other Module file -- and contributes a `PhiFontCatalogueEntry` the way
-it already contributes palettes, grounds and sets to the Theme block catalog. The Root Layout then
-stops knowing about Fira or Lora and applies whatever the active Modules contributed.
+**The choice is a Theme block.** `fonts` is the fourth block kind beside palette, style and ground
+(theme/phi-theme-blocks.ts): a key, a title, and the family each of the five slots names. A Set names
+one, the composition resolves it like the others and falls back to the core block -- Fira Sans, Fira
+Mono, Lora -- when the Module that shipped it is gone, and the runtime payload folds it under the
+author's `fonts` slot by slot, so the root layout never learns which of the two named a family. A block
+kind of its own rather than a field on the style block, because every Theme of the example package
+reuses the core style and would otherwise have needed a near-empty copy of it to name two typefaces.
+
+**The declaration is a package boundary.** A Module exports `phiModuleFontContributions` from `./fonts`
+(THIRD_PARTY_MODULES.md section 8a): `next/font/local` calls at module scope in a file nothing else in
+the package imports, because the call throws outside a Next build and the Server boundary is read by
+tools that are not one. Each contribution is a `PhiFontCatalogueEntry` -- family name, the variable in
+the Module's own namespace, the scoping class -- and `composePhiFontCatalogue` in
+theme/phi-font-catalogue.ts lays them after the core families, refusing a name declared twice. The root
+route composes the catalogue once from the generated list of installed `./fonts` boundaries and hands it
+to the root layout, which stops knowing about Fira or Lora and puts every class on the root element.
 
 Two things follow from the section above and are not negotiable by the design:
 
@@ -166,6 +175,11 @@ Two things follow from the section above and are not negotiable by the design:
 - A Module that is installed but switched off still contributes its declaration to the build. The
   files are downloaded and hosted; only the `@font-face` rule, a few hundred bytes, reaches the page.
   A Site pays for a Module's lettering in deploy size, never in fetches.
+
+What is left for the generator: `phis module` has to emit `site-modules-fonts.ts` beside the other
+projections -- one import per package that exports `./fonts`, gathered into the second argument of
+`createPhiNextRootLayout` -- and a package installed from a tarball rather than a workspace link has to
+be listed in `transpilePackages`, because the font loader runs only over modules Next compiles.
 
 ### Draft: what a Site keeps when the Module leaves
 
@@ -177,9 +191,10 @@ happens to have. The look a Site decided on would depend on a package staying in
 The answer is the one pictures already have. `plugins/runtime-modules/theme/materialize-images.ts`
 copies a ground a Module shipped into the Site's own Media library at the moment the Theme is saved,
 and the draft then points at the Asset. Saving is the moment somebody decides to keep what they see, so
-it is the moment ownership moves. Lettering should travel the same way, in the same act: the Theme is
-saved, the family the draft names is copied into the library, and `fonts.body` stops naming a Module's
-family and starts naming an Asset.
+it is the moment ownership moves. Lettering travels the same way, in the same act. The first half is
+built: `adoptPhiThemeModuleFonts` copies the family names of a Module's fonts block into the record on
+save, slot by slot under the author's. The second half -- the file into the library, and `fonts.body`
+naming an Asset instead of a family -- is open, and needs the Module to say where its files are.
 
 `media_assets` now has a `font` kind for exactly that, with the file signatures to go with it -- an
 uploaded typeface is stored as `font/woff2` rather than falling through to arbitrary bytes, so what the
@@ -250,11 +265,11 @@ runtime in the server for something WASM does in-process. Subsetting modifies th
 webfont licenses permit that, a few commercial ones do not -- worth saying once where an operator
 uploads.
 
-Open, and for the operator to decide: whether a font becomes a block kind of its own in the Theme
-catalog or a field on the style block; whether the Builder's font slots then offer the contributed
-families as a list rather than free text; whether a Site may override a preset's family with one of its
-own; and whether adoption copies every family a Module contributed or only the ones the saved draft
-actually names.
+Decided: a font is a block kind of its own (above), a Site overrides a block's family per slot the way
+it overrides a palette's colour, and adoption copies only the families the saved draft names. Open, and
+for the operator to decide: whether the Builder's font slots offer the catalogue's families as a list
+rather than free text -- a name outside the catalogue reaches the browser bare and fails without a
+sound, which argues for the list.
 
 ## Required Skeleton entrypoint shape
 

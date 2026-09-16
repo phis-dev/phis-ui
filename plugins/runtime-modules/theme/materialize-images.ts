@@ -16,8 +16,8 @@ import type { PhiSiteThemeRoot } from "../../../types/site-theme";
  * Saving the Theme is the moment that changes. Somebody who saves has decided to keep what they see,
  * and a look somebody decided on should not depend on a package staying installed. So a draft that
  * resolves to a Module's blocks takes them over on the way to the server -- `adoptPhiThemeModuleBlocks`
- * copies palette, style tokens, and the ground's background, Chrome and Shadow of both modes into the
- * record -- and every picture that is still the Module's goes into the Media library, with the draft
+ * copies palette, style tokens, the font families and the ground's background, Chrome and Shadow of
+ * both modes into the record -- and every picture that is still the Module's goes into the Media library, with the draft
  * pointing at the Asset from then on. The Site owns it; the Module is out of the picture. Copying the
  * frame and the colour along with the picture is what keeps the look from coming apart halfway when the
  * Module is switched off.
@@ -101,7 +101,7 @@ async function uploadPhiThemeImage(source: string, hint: string) {
  */
 export async function materializePhiThemeModuleBlocks<T extends { root?: PhiSiteThemeRoot | null }>(
   source: T,
-  composition: Pick<PhiThemeComposition, "palette" | "style" | "ground">,
+  composition: Pick<PhiThemeComposition, "palette" | "style" | "ground" | "fonts">,
 ): Promise<PhiThemeImageMaterializeResult<T>> {
   const theme = adoptPhiThemeModuleBlocks(source, composition);
   /*

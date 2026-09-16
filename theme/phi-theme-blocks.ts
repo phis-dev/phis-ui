@@ -1,21 +1,22 @@
 import { PHI_CORE_THEME_PRESET_PLUGINS, type PhiThemePresetPlugin } from "./phi-theme-presets";
-import type { PhiSiteThemeRoot } from "../types/site-theme";
+import type { PhiSiteFontSlots, PhiSiteThemeRoot } from "../types/site-theme";
 import { createPhiControlShapeCorners, type PhiControlShapeCorners } from "./phi-control-shape";
 import { PHI_THEME_PHIS_GROUND_IMAGE_DARK, PHI_THEME_PHIS_GROUND_IMAGE_LIGHT } from "./phi-theme-ground-image";
 
 /**
- * A Theme as three parts, each of them something a Module can ship.
+ * A Theme as four parts, each of them something a Module can ship.
  *
  * A Site Theme used to be one preset carrying colours and nothing else, while the style tokens and the
  * ground were authored per Site and could not be handed over at all. Naming a look -- "Forest" -- then
  * meant naming a palette and rebuilding the rest by hand on every Site that wanted it.
  *
- * The three parts are the three tabs an author already sees: Palette is colour, Style is everything
- * that is not colour, Ground is the Root Background together with the Chrome Overlay and its Shadow.
- * They are separate because they are separately reusable: a palette suits a brand, a ground suits a
- * picture, and mixing one brand with another ground is a normal thing to want.
+ * The parts are the tabs an author already sees: Palette is colour, Style is proportion and shape,
+ * Ground is the Root Background together with the Chrome Overlay and its Shadow, and Fonts is the
+ * lettering -- which family each of the five font slots names. They are separate because they are
+ * separately reusable: a palette suits a brand, a ground suits a picture, a pair of typefaces suits a
+ * voice, and mixing one brand with another ground is a normal thing to want.
  *
- * A Set is only a name and three keys. It composes, it does not contain, so a Module that ships a Set
+ * A Set is only a name and four keys. It composes, it does not contain, so a Module that ships a Set
  * can point at blocks somebody else shipped, and an author who follows a Set can still swap one part.
  *
  * What a Site stores stays small: which blocks it follows, and the values its author changed. The
@@ -66,11 +67,26 @@ export type PhiThemeGroundBlock = PhiThemeBlockIdentity & {
   root: PhiSiteThemeRoot;
 };
 
-/** A named composition of the three, by key. It points; it does not carry. */
+/**
+ * The lettering: which family each font slot names.
+ *
+ * Names, not files. A block says "Fraunces" for the display slot; whether the browser can draw Fraunces
+ * depends on the font catalogue (theme/phi-font-catalogue.ts) having a declaration for it, which a
+ * Module contributes alongside its block. The two are kept apart because they live at different times:
+ * the declaration is fixed when the Site is built, the choice is read per request. `body` is stated
+ * always -- it is the one slot every page renders from -- and the rest may fall back the way the font
+ * helpers already do: accent to body, display to serif.
+ */
+export type PhiThemeFontsBlock = PhiThemeBlockIdentity & {
+  fonts: PhiSiteFontSlots & { body: string };
+};
+
+/** A named composition of the four, by key. It points; it does not carry. */
 export type PhiThemeSetBlock = PhiThemeBlockIdentity & {
   palette: string;
   style: string;
   ground: string;
+  fonts: string;
 };
 
 /**
@@ -85,6 +101,7 @@ export type PhiThemeSetBlock = PhiThemeBlockIdentity & {
 export const PHI_CORE_THEME_PALETTE_BLOCK_KEY = "phis";
 export const PHI_CORE_THEME_STYLE_BLOCK_KEY = "phis";
 export const PHI_CORE_THEME_GROUND_BLOCK_KEY = "phis";
+export const PHI_CORE_THEME_FONTS_BLOCK_KEY = "phis";
 export const PHI_CORE_THEME_SET_KEY = "phis";
 
 export const PHI_CORE_THEME_PALETTE_BLOCKS: readonly PhiThemePaletteBlock[] =
@@ -162,6 +179,21 @@ export const PHI_CORE_THEME_GROUND_BLOCKS: readonly PhiThemeGroundBlock[] = [
   },
 ];
 
+/*
+ * The lettering every Site starts on, and the families the core catalogue declares: nothing named here
+ * may be a family the floor cannot draw. `accent` and `display` are left open on purpose, so that they
+ * fall back to body and serif rather than fixing a second sans and a second serif nobody chose.
+ */
+export const PHI_CORE_THEME_FONTS_BLOCKS: readonly PhiThemeFontsBlock[] = [
+  {
+    key: "phis",
+    version: 1,
+    title: "Phis",
+    description: "Fira Sans for text, Fira Mono for code, Lora where a serif is asked for.",
+    fonts: { body: "Fira Sans", mono: "Fira Mono", serif: "Lora" },
+  },
+];
+
 export const PHI_CORE_THEME_SETS: readonly PhiThemeSetBlock[] = [
   {
     key: "phis",
@@ -171,6 +203,7 @@ export const PHI_CORE_THEME_SETS: readonly PhiThemeSetBlock[] = [
     palette: "phis",
     style: "phis",
     ground: "phis",
+    fonts: "phis",
   },
 ];
 
@@ -212,7 +245,7 @@ export function resolvePhiThemeBlock<T extends PhiThemeBlockIdentity>(
 }
 
 /**
- * The three keys a Set stands for, or the core keys where it names nothing available.
+ * The four keys a Set stands for, or the core keys where it names nothing available.
  *
  * A Set is resolved one part at a time rather than as a unit: a Module that ships a ground can be
  * switched off without taking the palette of a Set that used both with it.

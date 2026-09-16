@@ -2,12 +2,21 @@ import { describe, expect, it } from "vitest";
 
 import {
   adoptPhiThemeModuleBlocks,
+  adoptPhiThemeModuleFonts,
   adoptPhiThemeModuleGround,
   adoptPhiThemeModulePalette,
   adoptPhiThemeModuleStyle,
   isPhiCoreThemeGround,
 } from "./phi-theme-adoption";
-import { PHI_CORE_THEME_GROUND_BLOCKS, PHI_CORE_THEME_STYLE_BLOCKS, type PhiThemeGroundBlock, type PhiThemeStyleBlock } from "./phi-theme-blocks";
+import {
+  PHI_CORE_THEME_FONTS_BLOCKS,
+  PHI_CORE_THEME_GROUND_BLOCKS,
+  PHI_CORE_THEME_STYLE_BLOCKS,
+  type PhiThemeFontsBlock,
+  type PhiThemeGroundBlock,
+  type PhiThemeStyleBlock,
+} from "./phi-theme-blocks";
+import type { PhiSiteFontSlots } from "../types/site-theme";
 import { resolvePhiThemeEffectiveRoot } from "./phi-theme-composition";
 import { PHI_CORE_THEME_PRESET_PLUGINS, resolvePhiThemeColorTokens, type PhiThemePresetPlugin } from "./phi-theme-presets";
 import type { PhiSiteThemeRoot } from "../types/site-theme";
@@ -17,6 +26,7 @@ import { createPhiControlShapeCorners, type PhiControlShapeCorners } from "./phi
 type Theme = {
   blocks?: { ground?: { key: string } };
   root: PhiSiteThemeRoot | null;
+  fonts?: PhiSiteFontSlots | null;
   palette?: PhiThemePresetPlugin["palette"] | null;
   style?: { token?: Record<string, unknown> } | null;
   shape?: { controls?: PhiControlShapeCorners | null } | null;
@@ -24,6 +34,14 @@ type Theme = {
 
 const phiPalette = PHI_CORE_THEME_PRESET_PLUGINS[0];
 const phiStyle = PHI_CORE_THEME_STYLE_BLOCKS[0];
+const phiFonts = PHI_CORE_THEME_FONTS_BLOCKS[0];
+
+const moduleFonts: PhiThemeFontsBlock = {
+  key: "@acme/ui/fonts/dunes",
+  version: 1,
+  title: "Dunes",
+  fonts: { body: "Mulish", display: "Marcellus", serif: "Marcellus" },
+};
 
 /** A palette the way a Module ships one: shared seeds, and the two base seeds per mode. */
 const modulePalette: PhiThemePresetPlugin = {
@@ -166,9 +184,27 @@ describe("adopting a Module palette and style on save", () => {
       palette: modulePalette,
       style: moduleStyle,
       ground: moduleGround,
+      fonts: moduleFonts,
     });
     expect(adopted.palette).toEqual(modulePalette.palette);
     expect(adopted.style?.token).toEqual(moduleStyle.style.token);
     expect(adopted.root?.chrome?.light?.effect).toBe("glass");
+    expect(adopted.fonts).toEqual(moduleFonts.fonts);
+  });
+});
+
+/**
+ * The family names move into the record on save, slot by slot under the author's; the files follow
+ * on the same save once a Module can say where they are. A core block is followed, never copied.
+ */
+describe("adopting a Module fonts block on save", () => {
+  it("leaves the core block followed", () => {
+    const theme: Theme = { root: null };
+    expect(adoptPhiThemeModuleFonts(theme, phiFonts)).toBe(theme);
+  });
+
+  it("copies the families and keeps the author's slot", () => {
+    const adopted = adoptPhiThemeModuleFonts({ root: null, fonts: { body: "Inter" } } as Theme, moduleFonts);
+    expect(adopted.fonts).toEqual({ body: "Inter", display: "Marcellus", serif: "Marcellus" });
   });
 });

@@ -39,8 +39,10 @@ import {
 import { usePhiConfig } from "../../../../../components/root/phi-config-provider";
 import {
   resolvePhiThemeComposition,
+  resolvePhiThemeEffectiveFonts,
   resolvePhiThemeEffectiveRoot,
 } from "../../../../../theme/phi-theme-composition";
+import type { PhiThemeFontsBlock } from "../../../../../theme/phi-theme-blocks";
 import { resolvePhiThemeRuntimePayload } from "../../../../../theme/phi-theme-runtime";
 import { materializePhiThemeModuleBlocks } from "../../materialize-images";
 import {
@@ -1679,16 +1681,23 @@ function usePhiBrandAccordionSection(storageKey: string, sectionKeys: readonly s
   return [activeSection, changeActiveSection] as const;
 }
 
+/**
+ * What each slot shows: the draft's own family over the block it follows, and the resolved stack the
+ * page renders with only where neither names one. Read through the block rather than the draft alone,
+ * so trying a Set on shows its typefaces before anything is saved.
+ */
 function resolveThemeFontSlots(
   theme: ThemePayload,
   fonts: ReturnType<typeof usePhiConfig>["fonts"],
+  block: PhiThemeFontsBlock,
 ) {
+  const effective = resolvePhiThemeEffectiveFonts(theme.fonts, block);
   return [
-    { key: "body", label: "Body", value: theme.fonts?.body ?? fonts.body ?? "" },
-    { key: "serif", label: "Serif", value: theme.fonts?.serif ?? fonts.serif ?? "" },
-    { key: "mono", label: "Mono", value: theme.fonts?.mono ?? fonts.mono ?? "" },
-    { key: "accent", label: "Accent", value: theme.fonts?.accent ?? fonts.accent ?? "" },
-    { key: "display", label: "Display", value: theme.fonts?.display ?? fonts.display ?? "" },
+    { key: "body", label: "Body", value: effective.body ?? fonts.body ?? "" },
+    { key: "serif", label: "Serif", value: effective.serif ?? fonts.serif ?? "" },
+    { key: "mono", label: "Mono", value: effective.mono ?? fonts.mono ?? "" },
+    { key: "accent", label: "Accent", value: effective.accent ?? fonts.accent ?? "" },
+    { key: "display", label: "Display", value: effective.display ?? fonts.display ?? "" },
   ] as const;
 }
 
@@ -1979,7 +1988,6 @@ export function PhiBuilderBrandStyleControlsWidgetClient({
     controlHeightLG: readEffectiveTokenNumber(styleTokenInput, "controlHeightLG", PHI_CONTROL_HEIGHTS.lg),
   };
   const wireframe = readEffectiveTokenBoolean(styleTokenInput, "wireframe", true);
-  const fontSlots = resolveThemeFontSlots(state.draft, fonts);
   const remRootValue = state.draft.rem?.rootValue ?? 16;
   const baseFontSize = readEffectiveTokenNumber(styleTokenInput, "fontSize", 12);
 
@@ -1988,6 +1996,7 @@ export function PhiBuilderBrandStyleControlsWidgetClient({
   }
 
   const themeComposition = resolvePhiThemeComposition(state.draft, themeBlocks);
+  const fontSlots = resolveThemeFontSlots(state.draft, fonts, themeComposition.fonts);
 
   return (
     <Flex vertical gap={clientToken.padding} style={{ width: "100%", minWidth: 0, opacity: loading ? 0.65 : 1 }}>
@@ -2194,10 +2203,15 @@ function mergeThemeSetChoice(
   theme: ThemePayload,
   set: { key: string; version: number },
 ): ThemePayload {
-  return clearThemeAuthoredGround(clearThemeControlShape(clearThemeStyleTokens({
+  return clearThemeAuthoredFonts(clearThemeAuthoredGround(clearThemeControlShape(clearThemeStyleTokens({
     ...theme,
     blocks: { set: { key: set.key, version: set.version } },
-  })));
+  }))));
+}
+
+/** Every font slot an author set, so the Set's fonts block is what shows. */
+function clearThemeAuthoredFonts(theme: ThemePayload): ThemePayload {
+  return Object.fromEntries(Object.entries(theme).filter(([key]) => key !== "fonts")) as ThemePayload;
 }
 
 function formatShapeLabel(shape: PhiControlShape) {

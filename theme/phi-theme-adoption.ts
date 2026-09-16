@@ -1,7 +1,14 @@
-import { PHI_CORE_THEME_GROUND_BLOCKS, PHI_CORE_THEME_STYLE_BLOCKS, type PhiThemeGroundBlock, type PhiThemeStyleBlock } from "./phi-theme-blocks";
-import { resolvePhiThemeEffectiveRoot, type PhiThemeComposition } from "./phi-theme-composition";
+import {
+  PHI_CORE_THEME_FONTS_BLOCKS,
+  PHI_CORE_THEME_GROUND_BLOCKS,
+  PHI_CORE_THEME_STYLE_BLOCKS,
+  type PhiThemeFontsBlock,
+  type PhiThemeGroundBlock,
+  type PhiThemeStyleBlock,
+} from "./phi-theme-blocks";
+import { resolvePhiThemeEffectiveFonts, resolvePhiThemeEffectiveRoot, type PhiThemeComposition } from "./phi-theme-composition";
 import { mergePhiThemePalettes, PHI_CORE_THEME_PRESET_PLUGINS, type PhiThemePalette, type PhiThemePresetPlugin } from "./phi-theme-presets";
-import type { PhiSiteThemeRoot } from "../types/site-theme";
+import type { PhiSiteFontSlots, PhiSiteThemeRoot } from "../types/site-theme";
 import type { PhiControlShapeCorners } from "./phi-control-shape";
 
 /**
@@ -22,9 +29,14 @@ export function isPhiCoreThemeStyle(style: Pick<PhiThemeStyleBlock, "key">) {
   return PHI_CORE_THEME_STYLE_BLOCKS.some((block) => block.key === style.key);
 }
 
+export function isPhiCoreThemeFonts(fonts: Pick<PhiThemeFontsBlock, "key">) {
+  return PHI_CORE_THEME_FONTS_BLOCKS.some((block) => block.key === fonts.key);
+}
+
 /** The slice of a Site Theme the adoption reads and writes. */
 export type PhiThemeAdoptionSource = {
   root?: PhiSiteThemeRoot | null;
+  fonts?: PhiSiteFontSlots | null;
   palette?: PhiThemePalette | null;
   style?: { token?: Record<string, unknown> } | null;
   shape?: { controls?: PhiControlShapeCorners | null } | null;
@@ -90,17 +102,40 @@ export function adoptPhiThemeModuleStyle<T extends PhiThemeAdoptionSource>(
 }
 
 /**
+ * Taking a Module's lettering over: its families under the author's, slot by slot. A core block is
+ * left followed.
+ *
+ * What is copied is the family *name*. That is deliberately half the job: a name the Site owns still
+ * resolves against a declaration the Module carries, and the day the Module goes the browser is handed
+ * a bare name. The other half -- copying the file into the Media library and pointing the slot at the
+ * Asset -- runs in the Client on the same save, the way a ground's pictures do, once a Module can say
+ * where its files are. Until then a saved Theme owns the choice and follows the declaration.
+ */
+export function adoptPhiThemeModuleFonts<T extends PhiThemeAdoptionSource>(
+  theme: T,
+  fonts: PhiThemeFontsBlock,
+): T {
+  if (isPhiCoreThemeFonts(fonts)) {
+    return theme;
+  }
+  return { ...theme, fonts: resolvePhiThemeEffectiveFonts(theme.fonts, fonts) };
+}
+
+/**
  * Every Module block a saved Theme resolves to, taken over at once.
  *
- * One call for the three parts so a save cannot leave the record owning the ground of a Module and
+ * One call for the four parts so a save cannot leave the record owning the ground of a Module and
  * still following its palette: a Site that saved is independent of every Module its Theme came from.
  */
 export function adoptPhiThemeModuleBlocks<T extends PhiThemeAdoptionSource>(
   theme: T,
-  composition: Pick<PhiThemeComposition, "palette" | "style" | "ground">,
+  composition: Pick<PhiThemeComposition, "palette" | "style" | "ground" | "fonts">,
 ): T {
-  return adoptPhiThemeModuleGround(
-    adoptPhiThemeModuleStyle(adoptPhiThemeModulePalette(theme, composition.palette), composition.style),
-    composition.ground,
+  return adoptPhiThemeModuleFonts(
+    adoptPhiThemeModuleGround(
+      adoptPhiThemeModuleStyle(adoptPhiThemeModulePalette(theme, composition.palette), composition.style),
+      composition.ground,
+    ),
+    composition.fonts,
   );
 }

@@ -1,4 +1,6 @@
 import {
+  PHI_CORE_THEME_FONTS_BLOCKS,
+  PHI_CORE_THEME_FONTS_BLOCK_KEY,
   PHI_CORE_THEME_GROUND_BLOCKS,
   PHI_CORE_THEME_GROUND_BLOCK_KEY,
   PHI_CORE_THEME_PALETTE_BLOCKS,
@@ -8,17 +10,18 @@ import {
   PHI_CORE_THEME_STYLE_BLOCK_KEY,
   resolvePhiThemeBlockSelection,
   resolvePhiThemeSetSelection,
+  type PhiThemeFontsBlock,
   type PhiThemeGroundBlock,
   type PhiThemePaletteBlock,
   type PhiThemeSetBlock,
   type PhiThemeStyleBlock,
 } from "./phi-theme-blocks";
-import type { PhiSiteThemeRoot } from "../types/site-theme";
+import type { PhiSiteFontSlots, PhiSiteThemeRoot } from "../types/site-theme";
 
 /**
  * What a Site follows, and what its author changed on top of it.
  *
- * The stored Theme keeps three keys and the values somebody edited. Everything else is worked out from
+ * The stored Theme keeps four keys and the values somebody edited. Everything else is worked out from
  * the blocks, every time. That is the whole reason a Module can improve its own look and a reset can
  * show the real thing: nothing was ever copied into the Site that would now be standing in the way.
  *
@@ -36,12 +39,14 @@ export type PhiThemeBlockSelection = {
   palette?: PhiThemeBlockReference | null;
   style?: PhiThemeBlockReference | null;
   ground?: PhiThemeBlockReference | null;
+  fonts?: PhiThemeBlockReference | null;
 };
 
 export type PhiThemeBlockCatalog = {
   palettes: readonly PhiThemePaletteBlock[];
   styles: readonly PhiThemeStyleBlock[];
   grounds: readonly PhiThemeGroundBlock[];
+  fonts: readonly PhiThemeFontsBlock[];
   sets: readonly PhiThemeSetBlock[];
 };
 
@@ -49,6 +54,7 @@ export const PHI_CORE_THEME_BLOCK_CATALOG: PhiThemeBlockCatalog = {
   palettes: PHI_CORE_THEME_PALETTE_BLOCKS,
   styles: PHI_CORE_THEME_STYLE_BLOCKS,
   grounds: PHI_CORE_THEME_GROUND_BLOCKS,
+  fonts: PHI_CORE_THEME_FONTS_BLOCKS,
   sets: PHI_CORE_THEME_SETS,
 };
 
@@ -59,6 +65,7 @@ export type PhiThemeCompositionSource = {
   preset?: string | null;
   presetVersion?: number | null;
   root?: PhiSiteThemeRoot | null;
+  fonts?: PhiSiteFontSlots | null;
 };
 
 /**
@@ -74,7 +81,7 @@ export type PhiThemeCompositionSource = {
 export function readPhiThemeBlockSelection(
   theme: PhiThemeCompositionSource | null | undefined,
   catalog: PhiThemeBlockCatalog = PHI_CORE_THEME_BLOCK_CATALOG,
-): { palette: string | null; style: string | null; ground: string | null; set: string | null } {
+): { palette: string | null; style: string | null; ground: string | null; fonts: string | null; set: string | null } {
   const blocks = theme?.blocks ?? null;
   const setKey = blocks?.set?.key?.trim() || null;
   const set = setKey ? catalog.sets.find((candidate) => candidate.key === setKey) ?? null : null;
@@ -84,6 +91,7 @@ export function readPhiThemeBlockSelection(
     palette: blocks?.palette?.key?.trim() || set?.palette || theme?.preset?.trim() || null,
     style: blocks?.style?.key?.trim() || set?.style || null,
     ground: blocks?.ground?.key?.trim() || set?.ground || null,
+    fonts: blocks?.fonts?.key?.trim() || set?.fonts || null,
   };
 }
 
@@ -91,18 +99,20 @@ export type PhiThemeComposition = {
   palette: PhiThemePaletteBlock;
   style: PhiThemeStyleBlock;
   ground: PhiThemeGroundBlock;
+  fonts: PhiThemeFontsBlock;
   set: PhiThemeSetBlock | null;
   /** The parts whose selection could not be resolved and are running on the core block instead. */
   unavailable: {
     palette: string | null;
     style: string | null;
     ground: string | null;
+    fonts: string | null;
     set: string | null;
   };
 };
 
 /**
- * The three blocks a Theme actually runs on.
+ * The four blocks a Theme actually runs on.
  *
  * Resolved one part at a time, never as a Set: switching off the Module that shipped a ground must not
  * take the palette of a Set that used both with it. Each part that could not be resolved names what it
@@ -130,19 +140,47 @@ export function resolvePhiThemeComposition(
     selection.ground,
     PHI_CORE_THEME_GROUND_BLOCK_KEY,
   );
+  const fonts = resolvePhiThemeBlockSelection(
+    catalog.fonts,
+    selection.fonts,
+    PHI_CORE_THEME_FONTS_BLOCK_KEY,
+  );
 
   return {
     palette: palette.block,
     style: style.block,
     ground: ground.block,
+    fonts: fonts.block,
     set: set?.available ? set.set : null,
     unavailable: {
       palette: palette.available ? null : palette.requested,
       style: style.available ? null : style.requested,
       ground: ground.available ? null : ground.requested,
+      fonts: fonts.available ? null : fonts.requested,
       set: set && !set.available ? set.requested : null,
     },
   };
+}
+
+/**
+ * The families a Site renders with: the block's, with whatever its author set on top.
+ *
+ * Slot by slot, the same way the ground merges mode by mode. An author who picked a body face keeps
+ * it when the block below changes its display face, and a slot the author never touched follows the
+ * block. An empty string is no choice: the workspace writes one when a slot is cleared, and the block
+ * must show through it rather than leaving the slot naming nothing.
+ */
+export function resolvePhiThemeEffectiveFonts(
+  authored: PhiSiteFontSlots | null | undefined,
+  fonts: PhiThemeFontsBlock,
+): PhiSiteFontSlots {
+  const merged: PhiSiteFontSlots = { ...fonts.fonts };
+  for (const [slot, family] of Object.entries(authored ?? {}) as [keyof PhiSiteFontSlots, string | null | undefined][]) {
+    if (typeof family === "string" && family.trim()) {
+      merged[slot] = family;
+    }
+  }
+  return merged;
 }
 
 /**

@@ -38,6 +38,7 @@ export async function loadPhiThemeBlockCatalog(
     palettes: merge(PHI_CORE_THEME_BLOCK_CATALOG.palettes, palettes),
     styles: merge(PHI_CORE_THEME_BLOCK_CATALOG.styles, blocks.styles),
     grounds: merge(PHI_CORE_THEME_BLOCK_CATALOG.grounds, blocks.grounds),
+    fonts: merge(PHI_CORE_THEME_BLOCK_CATALOG.fonts, blocks.fonts),
     sets: merge(PHI_CORE_THEME_BLOCK_CATALOG.sets, blocks.sets),
   };
 }

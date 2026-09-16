@@ -1,11 +1,12 @@
 import {
   PHI_CORE_THEME_BLOCK_CATALOG,
   resolvePhiThemeComposition,
+  resolvePhiThemeEffectiveFonts,
   resolvePhiThemeEffectiveRoot,
   type PhiThemeBlockCatalog,
   type PhiThemeComposition,
 } from "./phi-theme-composition";
-import type { PhiSiteThemeRoot } from "../types/site-theme";
+import type { PhiSiteFontSlots, PhiSiteThemeRoot } from "../types/site-theme";
 import type { PhiThemePalette } from "./phi-theme-presets";
 import { readPhiControlShapeCorners, type PhiControlShapeCorners } from "./phi-control-shape";
 
@@ -13,7 +14,7 @@ import { readPhiControlShapeCorners, type PhiControlShapeCorners } from "./phi-c
  * The Theme as everything downstream should see it: blocks resolved, author values on top.
  *
  * Every consumer of a Site Theme -- the Ant Design tokens, the Root Background layer, the Chrome
- * Overlay variables, the server-side token snapshot -- reads the same three fields it always read.
+ * Overlay variables, the server-side token snapshot, the font slots -- reads the same fields it always read.
  * Rather than teaching each of them about blocks, the blocks are folded in once, here, and what comes
  * out is an ordinary Theme record.
  *
@@ -26,6 +27,7 @@ export type PhiThemeRuntimeSource = {
   preset?: string | null;
   presetVersion?: number | null;
   root?: PhiSiteThemeRoot | null;
+  fonts?: PhiSiteFontSlots | null;
   palette?: PhiThemePalette | null;
   style?: { token?: Record<string, unknown> } | null;
   shape?: { controls?: PhiControlShapeCorners | null } | null;
@@ -40,7 +42,7 @@ export type PhiThemeRuntimeResult<T> = {
 /**
  * Folds the blocks a Theme follows into the record itself.
  *
- * Three moves, one per part:
+ * Four moves, one per part:
  *
  * - the palette becomes `preset`, because that is the field every colour consumer already resolves
  *   against the preset plugins; a Theme that names a palette block and one that names the old preset
@@ -50,6 +52,8 @@ export type PhiThemeRuntimeResult<T> = {
  *   it while the ones they never touched follow the block; the block's Control shape stands wherever
  *   the author picked none
  * - the ground is merged part by part into `root`
+ * - the fonts block's families go under the author's `fonts`, slot by slot, so the root layout that
+ *   turns a family name into a font stack never has to know which of the two named it
  *
  * The composition comes back alongside, because the workspace needs to know which parts are running on
  * a core block after the Module that shipped theirs was switched off.
@@ -73,6 +77,7 @@ export function resolvePhiThemeRuntimePayload<T extends PhiThemeRuntimeSource>(
       preset: composition.palette.key,
       presetVersion: composition.palette.version,
       root: resolvePhiThemeEffectiveRoot(theme?.root, composition.ground),
+      fonts: resolvePhiThemeEffectiveFonts(theme?.fonts, composition.fonts),
       style: {
         ...(theme?.style ?? {}),
         token: { ...styleToken, ...authoredToken },

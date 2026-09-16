@@ -22,10 +22,7 @@ import {
 } from "../../theme/phi-theme-presets";
 import { resolvePhiPublishedRootTheme } from "../../theme/phi-published-root-style";
 import { resolvePhiSiteThemeFonts } from "../../theme/phi-theme-fonts.server";
-import {
-  PHI_FONT_CATALOGUE_CLASS_NAME,
-  PHI_FONT_CATALOGUE_FAMILY_VARIABLES,
-} from "../../theme/phi-font-catalogue";
+import { composePhiFontCatalogue, type PhiFontCatalogue } from "../../theme/phi-font-catalogue";
 import {
   PHI_DEFAULT_THEME_MODE_PREFERENCE,
   resolvePhiThemeMode,
@@ -44,10 +41,16 @@ export type PhiRootLayoutProps = {
   resolvedLocale?: PhiResolvedLocale | null;
   themePresets?: readonly PhiThemePresetPlugin[];
   /**
-   * Style, ground and set blocks the active Modules contribute. Palettes arrive as `themePresets`,
+   * Style, ground, fonts and set blocks the active Modules contribute. Palettes arrive as `themePresets`,
    * which is the field Modules have always shipped them in.
    */
   themeBlocks?: Partial<Omit<PhiThemeBlockCatalog, "palettes">>;
+  /**
+   * The families a Theme may name: the core ones plus what the installed Modules declared, composed
+   * once by the root route. Absent, the core catalogue alone -- which is what a Site without Module
+   * typefaces renders with anyway.
+   */
+  fontCatalogue?: PhiFontCatalogue;
   /** How the viewer wants to see the Site; `system` when they have stated nothing. */
   themeModePreference?: PhiThemeModePreference;
   /**
@@ -67,7 +70,11 @@ type PhiRemSelection = {
   rootValue?: number | null;
 } | null | undefined;
 
-function resolveThemeFont(fontName: string | null | undefined, fallbackFont: string): FontSelection {
+function resolveThemeFont(
+  fontName: string | null | undefined,
+  fallbackFont: string,
+  familyVariables: ReadonlyMap<string, string>,
+): FontSelection {
   const trimmed = typeof fontName === "string" ? fontName.trim() : "";
   if (!trimmed) {
     return {
@@ -76,7 +83,7 @@ function resolveThemeFont(fontName: string | null | undefined, fallbackFont: str
   }
 
   return {
-    fontFamily: PHI_FONT_CATALOGUE_FAMILY_VARIABLES.get(trimmed) ?? trimmed,
+    fontFamily: familyVariables.get(trimmed) ?? trimmed,
   };
 }
 
@@ -97,6 +104,7 @@ export async function PhiRootLayout({
   resolvedLocale,
   themePresets = PHI_CORE_THEME_PRESET_PLUGINS,
   themeBlocks,
+  fontCatalogue = composePhiFontCatalogue(),
   themeModePreference = PHI_DEFAULT_THEME_MODE_PREFERENCE,
   browserColorScheme,
 }: PhiRootLayoutProps) {
@@ -126,15 +134,15 @@ export async function PhiRootLayout({
     siteKey,
   });
   const bodyFont = assetFonts.families.body
-    ?? resolveThemeFont(siteThemeRecord?.fonts?.body, "var(--phi-font-source-body)").fontFamily;
+    ?? resolveThemeFont(siteThemeRecord?.fonts?.body, "var(--phi-font-source-body)", fontCatalogue.familyVariables).fontFamily;
   const monoFont = assetFonts.families.mono
-    ?? resolveThemeFont(siteThemeRecord?.fonts?.mono, "var(--phi-font-source-mono)").fontFamily;
+    ?? resolveThemeFont(siteThemeRecord?.fonts?.mono, "var(--phi-font-source-mono)", fontCatalogue.familyVariables).fontFamily;
   const serifFont = assetFonts.families.serif
-    ?? resolveThemeFont(siteThemeRecord?.fonts?.serif, "var(--phi-font-source-serif)").fontFamily;
+    ?? resolveThemeFont(siteThemeRecord?.fonts?.serif, "var(--phi-font-source-serif)", fontCatalogue.familyVariables).fontFamily;
   const accentFont = assetFonts.families.accent
-    ?? resolveThemeFont(siteThemeRecord?.fonts?.accent, "").fontFamily;
+    ?? resolveThemeFont(siteThemeRecord?.fonts?.accent, "", fontCatalogue.familyVariables).fontFamily;
   const displayFont = assetFonts.families.display
-    ?? resolveThemeFont(siteThemeRecord?.fonts?.display, "").fontFamily;
+    ?? resolveThemeFont(siteThemeRecord?.fonts?.display, "", fontCatalogue.familyVariables).fontFamily;
   const remSettings: PhiRemSelection = siteThemeRecord?.rem;
   const remRootValue = resolveFinitePositiveNumber(remSettings?.rootValue, 16);
   const themeFonts = {
@@ -185,7 +193,7 @@ export async function PhiRootLayout({
             fonts={themeFonts}
             presets={themePresets}
             themeBlocks={themeBlocks}
-            rootClassName={PHI_FONT_CATALOGUE_CLASS_NAME}
+            rootClassName={fontCatalogue.className}
             rootStyle={publishedRootTheme.style}
             remRootValue={remRootValue}
           >

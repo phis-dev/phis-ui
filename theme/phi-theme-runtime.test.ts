@@ -73,14 +73,17 @@ describe("theme runtime payload", () => {
     expect(composition.ground.key).toBe("phis");
   });
 
+  it("puts the fonts block under the author's slots", () => {
+    const { theme } = resolvePhiThemeRuntimePayload({ blocks: { set: { key: "phis" } }, fonts: { body: "Inter" } });
+    expect(theme.fonts).toEqual({ body: "Inter", mono: "Fira Mono", serif: "Lora" });
+  });
+
   it("keeps every other field of the record untouched", () => {
     const { theme } = resolvePhiThemeRuntimePayload({
       mode: "dark",
-      fonts: { body: "Inter" },
       brand: { logoAssetId: 7 },
     } as Record<string, unknown>);
     expect(theme.mode).toBe("dark");
-    expect(theme.fonts).toEqual({ body: "Inter" });
     expect(theme.brand).toEqual({ logoAssetId: 7 });
   });
 });

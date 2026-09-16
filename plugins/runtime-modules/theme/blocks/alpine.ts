@@ -75,4 +75,5 @@ export const PHI_THEME_ALPINE_SET: PhiThemeSetBlock = {
   palette: "phis",
   style: "phis",
   ground: "alpine",
+  fonts: "phis",
 };

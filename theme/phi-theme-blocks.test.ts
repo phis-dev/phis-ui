@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  PHI_CORE_THEME_FONTS_BLOCKS,
   PHI_CORE_THEME_GROUND_BLOCKS,
   PHI_CORE_THEME_GROUND_BLOCK_KEY,
   PHI_CORE_THEME_PALETTE_BLOCKS,
@@ -53,7 +54,7 @@ describe("theme block selection", () => {
 });
 
 /**
- * A Set points at three keys. Every key it names must exist in the core, or following a core Set would
+ * A Set points at four keys. Every key it names must exist in the core, or following a core Set would
  * silently land on the fallback.
  */
 describe("core theme sets", () => {
@@ -62,6 +63,7 @@ describe("core theme sets", () => {
       expect(PHI_CORE_THEME_PALETTE_BLOCKS.some((block) => block.key === set.palette)).toBe(true);
       expect(PHI_CORE_THEME_STYLE_BLOCKS.some((block) => block.key === set.style)).toBe(true);
       expect(PHI_CORE_THEME_GROUND_BLOCKS.some((block) => block.key === set.ground)).toBe(true);
+      expect(PHI_CORE_THEME_FONTS_BLOCKS.some((block) => block.key === set.fonts)).toBe(true);
     }
   });
 

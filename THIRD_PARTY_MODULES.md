@@ -157,7 +157,8 @@ Authoring implementations:
     "./authoring-client": {
       "types": "./dist/authoring-client.d.ts",
       "import": "./dist/authoring-client.js"
-    }
+    },
+    "./fonts": { "types": "./dist/fonts.d.ts", "import": "./dist/fonts.js" }
   },
   "dependencies": {
     "@phis/ui": "^0.1.0",
@@ -922,10 +923,24 @@ Server Add-on artifact has exactly one export called `phisAddon`:
 ./server            phiModuleServerContributions   @phis/ui/module
 ./client            phiModuleClientContributions   @phis/ui/module/client
 ./authoring-client  phiModuleAuthoringContributions @phis/ui/module/authoring-client
+./fonts             phiModuleFontContributions     @phis/ui/module        (optional)
 ```
 
 Each is a list keyed by Module id, because one package may carry several Modules. The boundaries are the
 ones this document already requires; only the names are new.
+
+**`./fonts` exists only for a package that declares typefaces, and nothing else in the package imports
+it.** A declaration is a `next/font/local` call at module scope: the Site's build evaluates it, hosts the
+files from the Site's origin and computes the fallback metrics, and outside a Next build the same call
+throws. The Server boundary is read by tools that are not Next -- the package's own verify script, a
+test -- so the declarations get a boundary of their own that only the Site's root layout imports. What
+the boundary exports is the catalogue entry, not the loader's result: the family name a fonts block may
+write in a slot, the CSS variable that name resolves to, in the Module's own namespace
+(`var(--phi-font-<module>-<family>)`), and the class that puts the variable in scope. Every declaration
+says `preload: false`; which family a page uses is decided per request by the Theme, and a preload for
+every family a Module carries would be paid on every page. The files travel in `dist` beside the
+compiled boundary, under a licence that permits redistribution and subsetting. The boundary does not
+begin with `"use client"`.
 
 **A Module never names an Area.** Where its contributions land follows from `eligibleAreas` on its own
 definition, which is also what decides whether a Site may select it for an Area. One statement, read in

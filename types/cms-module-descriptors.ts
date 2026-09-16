@@ -4,6 +4,7 @@ import type { PhiCmsPageNode, PhiResolvedCmsPageTree } from "./cms";
 import type { PhiBlockRuntime } from "./widget-runtime";
 import type { PhiThemePresetPlugin } from "../theme/phi-theme-presets";
 import type {
+  PhiThemeFontsBlock,
   PhiThemeGroundBlock,
   PhiThemeSetBlock,
   PhiThemeStyleBlock,
@@ -127,17 +128,17 @@ export type PhiCmsThemePresetDescriptor = PhiCmsPresetIdentity & {
 };
 
 /**
- * A style, a ground or a Set a Module contributes (theme/phi-theme-blocks.ts).
+ * A style, a ground, a fonts block or a Set a Module contributes (theme/phi-theme-blocks.ts).
  *
  * The palette has its own descriptor above, kept as it is because Modules already ship palettes
- * through it. The other three arrive here, one descriptor shape for all of them: they differ in what
- * they carry, not in how they are announced, and a single shape keeps the catalog and its duplicate
- * check from growing three near-identical copies.
+ * through it. The others arrive here, one descriptor shape for all of them: they differ in what they
+ * carry, not in how they are announced, and a single shape keeps the catalog and its duplicate check
+ * from growing near-identical copies.
  *
  * `loadBlock` is called only for an active Module, which is what lets a ground carry an image the
  * bundler resolves: nothing is loaded on a Site that does not use it.
  */
-export type PhiCmsThemeBlockKind = "style" | "ground" | "set";
+export type PhiCmsThemeBlockKind = "style" | "ground" | "fonts" | "set";
 
 export type PhiCmsThemeBlockDescriptor = PhiCmsPresetIdentity & {
   presetVersion: number;
@@ -148,8 +149,9 @@ export type PhiCmsThemeBlockDescriptor = PhiCmsPresetIdentity & {
   loadBlock: () =>
     | PhiThemeStyleBlock
     | PhiThemeGroundBlock
+    | PhiThemeFontsBlock
     | PhiThemeSetBlock
-    | Promise<PhiThemeStyleBlock | PhiThemeGroundBlock | PhiThemeSetBlock>;
+    | Promise<PhiThemeStyleBlock | PhiThemeGroundBlock | PhiThemeFontsBlock | PhiThemeSetBlock>;
 };
 
 export type PhiCmsNavigationLabel = {

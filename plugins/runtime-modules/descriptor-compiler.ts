@@ -13,6 +13,7 @@ import {
   type PhiCmsInstanceId,
 } from "../../types/cms-instance-id";
 import type {
+  PhiThemeFontsBlock,
   PhiThemeGroundBlock,
   PhiThemeSetBlock,
   PhiThemeStyleBlock,
@@ -1516,7 +1517,7 @@ export async function instantiatePhiCmsThemePresets(
 }
 
 /**
- * The blocks the active Modules contribute, sorted into the three kinds.
+ * The blocks the active Modules contribute, sorted into their kinds.
  *
  * Each block is checked against the descriptor that announced it, the same way a palette is: a
  * mismatch means the catalog says one thing and the code another, and a Site would then follow a key
@@ -1542,6 +1543,7 @@ export async function instantiatePhiCmsThemeBlocks(
   return {
     styles: blocks.filter((entry) => entry.kind === "style").map((entry) => entry.block as PhiThemeStyleBlock),
     grounds: blocks.filter((entry) => entry.kind === "ground").map((entry) => entry.block as PhiThemeGroundBlock),
+    fonts: blocks.filter((entry) => entry.kind === "fonts").map((entry) => entry.block as PhiThemeFontsBlock),
     sets: blocks.filter((entry) => entry.kind === "set").map((entry) => entry.block as PhiThemeSetBlock),
   };
 }
