@@ -10,10 +10,11 @@ import { PHI_THEME_SIGNAL_CHANNELS } from "./signals";
 export type PhiThemeRuntimeControllerConfig = Record<string, never>;
 
 /**
- * The Sets this Area offers, worked out on the server where the active Modules are known.
+ * The Sets this Site offers, worked out on the server where the installed Modules are known.
  *
  * The Controller restates the Set select's options whenever the stored Theme changes, and it replaces
- * the whole list; the client knows the installed blocks but not which Modules are active here.
+ * the whole list, so it is the same list the Page tree drew (set-options.ts): a Theme is site-wide, and
+ * the Sets are read from what is installed, not from what this Area switched on.
  */
 export type PhiThemeRuntimeControllerPreload = {
   setOptions: PhiControlOption[];

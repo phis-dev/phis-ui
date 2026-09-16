@@ -31,13 +31,12 @@ const BUILDER_WORKSPACE_ROUTES = BUILDER_ROUTE_PRESETS.map((route) => ({
   area: "builder" as const,
   title: route.title,
   path: route.path,
-  loadTree: ({ page, runtime, catalog, activeModuleIds }) =>
+  loadTree: ({ page, runtime, catalog }) =>
     import("../../../components/regions/presets/phi-default-builder-area-preset-tree")
       .then((module) => module.buildPhiDefaultBuilderPagePresetTree({
         page,
         runtime,
         registry: catalog,
-        activeModuleKeys: activeModuleIds,
         ownerModuleId: PHI_BUILDER_RUNTIME_MODULE_ID,
         presetKey: route.presetKey,
       })),

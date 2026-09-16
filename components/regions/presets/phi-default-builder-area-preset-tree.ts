@@ -742,13 +742,11 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
   page,
   runtime,
   registry,
-  activeModuleKeys,
   presetKey,
 }: {
   page: PhiCmsPageNode;
   runtime: PhiBlockRuntime;
   registry: PhiCmsCompiledDescriptorCatalog;
-  activeModuleKeys: ReadonlySet<string>;
   presetKey: string;
 }): Promise<PhiResolvedCmsPageTree> {
   const nodes = createPhiCmsPresetNodes(page);
@@ -2814,7 +2812,7 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                       siteName: runtime.site.name,
                       theme: runtime.site.theme,
                     }),
-                    ...buildPhiThemeSetSelectOptions(registry, activeModuleKeys),
+                    ...buildPhiThemeSetSelectOptions(registry),
                   ],
                 },
               }),
@@ -3704,14 +3702,12 @@ export async function buildPhiDefaultBuilderPagePresetTree({
   page,
   runtime,
   registry,
-  activeModuleKeys,
   ownerModuleId,
   presetKey,
 }: {
   page: PhiCmsPageNode;
   runtime: PhiBlockRuntime;
   registry: PhiCmsCompiledDescriptorCatalog;
-  activeModuleKeys: ReadonlySet<string>;
   ownerModuleId: PhiRuntimeModuleId;
   presetKey: string;
 }) {
@@ -3720,7 +3716,6 @@ export async function buildPhiDefaultBuilderPagePresetTree({
       page,
       runtime,
       registry,
-      activeModuleKeys,
       presetKey,
     }),
     ownerModuleId,

@@ -12,9 +12,6 @@ import {
 export const PHI_THEME_RUNTIME_CONTROLLER_SERVER_DEFINITION = {
   ...PHI_THEME_RUNTIME_CONTROLLER_DEFINITION,
   serverPreload: ({ runtimeModuleCatalog }) => ({
-    setOptions: buildPhiThemeSetSelectOptions(
-      resolvePhiCmsDescriptorCatalog(runtimeModuleCatalog),
-      new Set(runtimeModuleCatalog.keys()),
-    ),
+    setOptions: buildPhiThemeSetSelectOptions(resolvePhiCmsDescriptorCatalog(runtimeModuleCatalog)),
   }),
 } satisfies PhiRuntimeControllerDefinition<PhiThemeRuntimeControllerConfig, PhiThemeRuntimeControllerPreload>;

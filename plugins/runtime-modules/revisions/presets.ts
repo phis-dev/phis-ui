@@ -20,13 +20,12 @@ export const PHI_REVISIONS_RUNTIME_MODULE_ROUTES = [{
       routePresetKey: "builder-revisions-page",
     },
   }],
-  loadTree: ({ page, runtime, catalog, activeModuleIds }) =>
+  loadTree: ({ page, runtime, catalog }) =>
     import("../../../components/regions/presets/phi-default-builder-area-preset-tree")
       .then((module) => module.buildPhiDefaultBuilderPagePresetTree({
         page,
         runtime,
         registry: catalog,
-        activeModuleKeys: activeModuleIds,
         ownerModuleId: PHI_REVISIONS_RUNTIME_MODULE_ID,
         presetKey: "builder-revisions-page",
       })),
