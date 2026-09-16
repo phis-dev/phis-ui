@@ -10,6 +10,7 @@ import type { PhiThemeMode, PhiThemePalette } from "../theme/phi-theme-presets";
 import type { PhiThemeBlockSelection } from "../theme/phi-theme-composition";
 import type { PhiThemeDerivation } from "../theme/phi-theme-selection";
 import type { PhiControlShapeCorners } from "../theme/phi-control-shape";
+import type { PhiThemeButtons } from "../theme/phi-button-shadow";
 import type { PhiViewerAddonRoleClaim, PhiViewerGroupClaim, PhiViewerRoleClaim } from "./access";
 import type { PhiControllerSignalAddress } from "./signals";
 
@@ -71,6 +72,7 @@ export type PhiBlockRuntimeSite = {
     style?: {
       token?: Record<string, unknown>;
     } | null;
+    buttons?: PhiThemeButtons | null;
     components?: Record<string, Record<string, unknown>> | null;
   };
 };

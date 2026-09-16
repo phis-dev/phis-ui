@@ -55,10 +55,11 @@ import {
   buildPhiThemeStructuralTokens,
 } from "../../../../../theme/phi-theme";
 import {
-  buildPhiSiteThemeSelectOption,
+  buildPhiSiteThemeSelectOptions,
+  createPhiSiteThemeSelectionValue,
   createPhiThemeDerivation,
   ensurePhiThemeDerivation,
-  isPhiSiteThemeSelectionValue,
+  readPhiSiteThemeSelectionState,
   resolvePhiThemeSelectionValue,
 } from "../../../../../theme/phi-theme-selection";
 import type { PhiControlOption } from "../../../../../components/controls/phi-control-options";
@@ -113,6 +114,12 @@ import { createPhiCommandToolbarControlAddress } from "../../../../../components
 import { PHI_THEME_RUNTIME_MODULE_ID } from "../../../../../plugins/runtime-modules/theme/ids";
 import { PhiTableControl, type PhiTableControlColumn } from "../../../../../components/controls/phi-table-control";
 import { PhiSegmentedControl } from "../../../../../components/controls/phi-segmented-control";
+import {
+  applyPhiButtonShadowComponentTokens,
+  isPhiButtonShadowStep,
+  type PhiButtonShadowKind,
+  type PhiButtonShadowStep,
+} from "../../../../../theme/phi-button-shadow";
 import { PhiSelectControl } from "../../../../../components/controls/phi-select-control";
 import { PhiTextControl } from "../../../../../components/controls/phi-text-control";
 import {
@@ -161,7 +168,7 @@ type BrandThemeState = {
   draft: ThemePayload;
   revisionId: number | null;
   hasPublishedThemeRevision: boolean;
-  hasSiteThemeRevision: boolean;
+  publishedRevisionId: number | null;
 };
 
 const DEFAULT_THEME_KEY = "default";
@@ -177,12 +184,36 @@ const BRAND_THEME_BACKGROUND_SECTION_KEYS = ["root", "chrome", "shadow"] as cons
 const BRAND_THEME_IDENTITY_COLLAPSE_STORAGE_KEY = "phi.builder.brand.theme.identityCollapse.activeKey";
 const BRAND_THEME_IDENTITY_SECTION_KEYS = ["logo", "wordmark"] as const;
 const BRAND_THEME_STYLE_SECTION_KEYS = [
+  "controls",
+  "buttonShadow",
   "radius",
   "controlHeight",
   "fontFamily",
   "fontSize",
   "wireframe",
 ] as const;
+
+/*
+ * The shadow under each kind of Button (theme/phi-button-shadow.ts). "Theme" is no step at all -- the
+ * shadow the Theme draws, today Ant Design's tinted line -- the same word the Controls shape uses for
+ * following.
+ */
+const PHI_THEME_BUTTON_SHADOW_KINDS: readonly { key: PhiButtonShadowKind; label: string }[] = [
+  { key: "default", label: "Default" },
+  { key: "primary", label: "Primary" },
+  { key: "danger", label: "Danger" },
+];
+type PhiThemeButtonShadowChoice = "theme" | PhiButtonShadowStep;
+const PHI_THEME_BUTTON_SHADOW_OPTIONS: readonly {
+  value: PhiThemeButtonShadowChoice;
+  label: string;
+  description?: string;
+}[] = [
+  { value: "theme", label: "Theme", description: "Ant Design's tinted line" },
+  { value: "none", label: "None" },
+  { value: "soft", label: "Soft" },
+  { value: "strong", label: "Strong" },
+];
 const PHI_STYLE_SIZE_PRESET_KEYS = PHI_SPACING_TOKEN_KEYS;
 type PhiStyleSizePresetKey = (typeof PHI_STYLE_SIZE_PRESET_KEYS)[number];
 type PhiStyleSizePresetMap = Record<PhiStyleSizePresetKey, number>;
@@ -492,6 +523,35 @@ function resolveInitialTheme(runtime: PhiBlockRuntime): ThemePayload {
   } as ThemePayload);
 }
 
+function readThemeButtonShadowChoice(
+  theme: ThemePayload,
+  kind: PhiButtonShadowKind,
+): PhiThemeButtonShadowChoice {
+  const step = theme.buttons?.shadow?.[kind];
+  return isPhiButtonShadowStep(step) ? step : "theme";
+}
+
+/**
+ * One Button shadow set, or handed back to the Theme by removing the step -- and with it an empty
+ * `shadow` or `buttons` entry, so a Theme that sets no shadow stores none.
+ */
+function mergeThemeButtonShadow(
+  theme: ThemePayload,
+  kind: PhiButtonShadowKind,
+  choice: PhiThemeButtonShadowChoice,
+): ThemePayload {
+  const shadow = Object.fromEntries(
+    Object.entries(theme.buttons?.shadow ?? {}).filter(([key]) => key !== kind),
+  ) as Partial<Record<PhiButtonShadowKind, PhiButtonShadowStep>>;
+  if (choice !== "theme") {
+    shadow[kind] = choice;
+  }
+  const withoutButtons = omitThemeFields(theme, "buttons");
+  return Object.keys(shadow).length > 0
+    ? { ...withoutButtons, buttons: { ...(theme.buttons ?? {}), shadow } }
+    : withoutButtons;
+}
+
 /** A structural token the author set, laid over the style block under `style.token`. */
 function mergeThemeToken(theme: ThemePayload, tokenPatch: Record<string, unknown>): ThemePayload {
   return {
@@ -637,14 +697,14 @@ function applyThemePreset(theme: ThemePayload, preset: PhiThemePresetPlugin): Th
   };
 }
 
-/** Back to the blocks alone: the palette, the proportions and the component overrides all go. */
+/** Back to the blocks alone: the palette, the proportions, the Button shadows and the component overrides all go. */
 function resetThemeToPreset(
   theme: ThemePayload,
   presets: readonly PhiThemePresetPlugin[],
   preset = resolveThemePayloadPreset(theme, presets),
 ): ThemePayload {
   return {
-    ...omitThemeFields(theme, "palette", "style", "components"),
+    ...omitThemeFields(theme, "palette", "style", "buttons", "components"),
     preset: preset.key,
     presetVersion: preset.version,
   };
@@ -896,7 +956,7 @@ function createInitialBrandThemeState(themeKey: string, fallbackTheme: ThemePayl
     draft: fallbackTheme,
     revisionId: null,
     hasPublishedThemeRevision: false,
-    hasSiteThemeRevision: false,
+    publishedRevisionId: null,
   };
 }
 
@@ -1053,10 +1113,22 @@ function emitThemeStateTo(
   });
 }
 
+/**
+ * Where a draft stands in a continuous edit.
+ *
+ * A colour picker or a slider sends a draft for every value it passes over, and none of those is a
+ * decision: the decision is taking the value -- closing the picker, letting go of the slider -- or
+ * putting it back with Escape.
+ * `live` is a step shown in the preview and kept out of the history; `commit` ends the edit with one
+ * entry from where it started; `discard` ends it with none and the Theme as it was before it opened.
+ */
+type PhiThemeDraftEdit = "live" | "commit" | "discard";
+
 function emitThemeDraftRequest(
   dispatchSignal: ReturnType<typeof usePhiSignalDispatcher>,
   theme: ThemePayload,
   revisionId: number | null,
+  edit?: PhiThemeDraftEdit,
 ) {
   dispatchSignal({
     scope: "area",
@@ -1067,6 +1139,7 @@ function emitThemeDraftRequest(
       revisionId,
       draftStatus: "draft",
       themeKey: DEFAULT_THEME_KEY,
+      ...(edit ? { edit } : {}),
     },
     valueType: "json",
     valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.brandTheme,
@@ -1128,11 +1201,43 @@ function usePhiBrandThemeDraft(runtime: PhiBlockRuntime, themeKey: string) {
     }
   }, [dispatchSignal, selfAddress]);
 
+  /* Whether a picker of this Widget is open or a slider held; every draft sent meanwhile is a step of its edit. */
+  const pickerOpenRef = useRef(false);
+
   const publishDraft = useCallback((nextTheme: ThemePayload) => {
     draftRef.current = nextTheme;
     setState((current) => ({ ...current, draft: nextTheme }));
-    emitThemeDraftRequest(dispatchSignal, nextTheme, state.revisionId);
+    emitThemeDraftRequest(dispatchSignal, nextTheme, state.revisionId, pickerOpenRef.current ? "live" : undefined);
   }, [dispatchSignal, state.revisionId]);
+
+  /*
+   * The callbacks a picker takes to make its edit one history entry. Escape first hands the original
+   * value back through `onChange`, which is still a live step; `onDiscard` then ends the edit and the
+   * Controller restores the Theme it held when the edit began, exactly.
+   */
+  const editTransaction = useMemo(() => {
+    const endEdit = (edit: "commit" | "discard") => {
+      if (!pickerOpenRef.current) return;
+      pickerOpenRef.current = false;
+      emitThemeDraftRequest(dispatchSignal, draftRef.current, state.revisionId, edit);
+    };
+    return {
+      onBegin: () => {
+        pickerOpenRef.current = true;
+      },
+      onCommit: () => endEdit("commit"),
+      onDiscard: () => endEdit("discard"),
+    };
+  }, [dispatchSignal, state.revisionId]);
+
+  /* The same edit in the shape a picker Control takes it. */
+  const pickerTransaction = useMemo(() => ({
+    onOpenChange: (open: boolean) => {
+      if (open) editTransaction.onBegin();
+    },
+    onCommit: editTransaction.onCommit,
+    onDiscard: editTransaction.onDiscard,
+  }), [editTransaction]);
 
   usePhiSignalListener((signal) => {
     if (
@@ -1155,7 +1260,7 @@ function usePhiBrandThemeDraft(runtime: PhiBlockRuntime, themeKey: string) {
     setState((current) => ({ ...current, draft: nextTheme, revisionId }));
   }, undefined, selfAddress);
 
-  return { state, draftRef, publishDraft };
+  return { state, draftRef, publishDraft, pickerTransaction, editTransaction };
 }
 
 function usePhiBrandPreviewMode(initialMode: "light" | "dark") {
@@ -1197,12 +1302,54 @@ export function PhiBuilderBrandThemeControllerWidgetClient({
   const initialState = useMemo(() => createInitialBrandThemeState(themeKey, fallbackTheme), [fallbackTheme, themeKey]);
   const [state, setState] = useState<BrandThemeState>(initialState);
   const stateRef = useRef<BrandThemeState>(initialState);
+  /*
+   * The Theme being worked on -- the Draft entry of the Set select. Trying on a Set or the Published
+   * Theme leaves it alone, so picking Draft again takes the try-on back; any edit moves it.
+   */
   const siteThemeRef = useRef<ThemePayload>(initialState.draft);
+  /* The options last sent, so a draft that changes nothing in the select does not send them again. */
+  const sentSelectOptionsRef = useRef<string | null>(null);
+  /* The draft a picker edit started from, while one is open; see `PhiThemeDraftEdit`. */
+  const pickerEditBeforeRef = useRef<ThemePayload | null>(null);
   const [saving, setSaving] = useState(false);
 
   /*
+   * A draft exists once one was saved, or once the Theme being worked on is no longer the published one.
+   * Undoing back to the published Theme takes an unsaved draft away again.
+   */
+  const hasDraft = useCallback(() => {
+    const current = stateRef.current;
+    return current.revisionId != null || !isSameThemePayload(siteThemeRef.current, current.published);
+  }, []);
+
+  const resolveSelectionValue = useCallback(() => resolvePhiThemeSelectionValue(siteKey, {
+    published: stateRef.current.hasPublishedThemeRevision,
+    draft: hasDraft(),
+  }), [hasDraft, siteKey]);
+
+  const emitSelectOptions = useCallback((correlationId?: string) => {
+    const current = stateRef.current;
+    const options = [
+      ...buildPhiSiteThemeSelectOptions({
+        siteKey,
+        published: current.hasPublishedThemeRevision
+          ? { theme: current.published, revisionId: current.publishedRevisionId }
+          : null,
+        draft: hasDraft() ? { theme: siteThemeRef.current, revisionId: current.revisionId } : null,
+      }),
+      ...setOptions,
+    ];
+    const serialized = JSON.stringify(options);
+    if (serialized === sentSelectOptionsRef.current) {
+      return;
+    }
+    sentSelectOptionsRef.current = serialized;
+    emitThemeSelectOptions(dispatchSignal, options, correlationId);
+  }, [dispatchSignal, hasDraft, setOptions, siteKey]);
+
+  /*
    * Every draft states the Set it was derived from. A Theme that never named one gets the core Set on
-   * its first draft, so the Site Theme entry is never without a name.
+   * its first draft, so the Draft entry is never without a name.
    */
   const publishDraft = useCallback((
     draftTheme: ThemePayload,
@@ -1210,7 +1357,7 @@ export function PhiBuilderBrandThemeControllerWidgetClient({
       history?: boolean;
       updateSiteSnapshot?: boolean;
       correlationId?: string;
-      /** What the Set select shows for this draft; the Site Theme entry unless a Set is being tried. */
+      /** What the Set select shows for this draft; a Site entry unless a Set is being tried. */
       selectionValue?: string;
     },
   ) => {
@@ -1237,18 +1384,12 @@ export function PhiBuilderBrandThemeControllerWidgetClient({
       dispatchSignal,
       nextTheme,
       nextState.revisionId,
-      options?.selectionValue ?? resolvePhiThemeSelectionValue(siteKey, nextState.hasSiteThemeRevision),
+      options?.selectionValue ?? resolveSelectionValue(),
       "draft",
       options?.correlationId,
     );
-  }, [dispatchSignal, historyScope, siteKey]);
-
-  const emitSelectOptionsFor = useCallback((storedTheme: ThemePayload, correlationId?: string) => {
-    emitThemeSelectOptions(dispatchSignal, [
-      buildPhiSiteThemeSelectOption({ siteKey, siteName: runtime.site.name, theme: storedTheme }),
-      ...setOptions,
-    ], correlationId);
-  }, [dispatchSignal, runtime.site.name, setOptions, siteKey]);
+    emitSelectOptions(options?.correlationId);
+  }, [dispatchSignal, emitSelectOptions, historyScope, resolveSelectionValue]);
 
   useEffect(() => {
     const emitAvailability = () => {
@@ -1304,17 +1445,13 @@ export function PhiBuilderBrandThemeControllerWidgetClient({
           typeof body?.publishedRevisionId === "number" && Number.isInteger(body.publishedRevisionId)
             ? body.publishedRevisionId
             : null;
-        const workingDraftRevisionId =
-          typeof body?.workingDraftRevisionId === "number" && Number.isInteger(body.workingDraftRevisionId)
-            ? body.workingDraftRevisionId
-            : null;
         const nextState = {
           key: body?.key?.trim() || themeKey,
           published,
           draft,
           revisionId,
           hasPublishedThemeRevision: publishedRevisionId != null,
-          hasSiteThemeRevision: publishedRevisionId != null || workingDraftRevisionId != null,
+          publishedRevisionId,
         };
         stateRef.current = nextState;
         siteThemeRef.current = draft;
@@ -1324,10 +1461,10 @@ export function PhiBuilderBrandThemeControllerWidgetClient({
           dispatchSignal,
           draft,
           revisionId,
-          resolvePhiThemeSelectionValue(siteKey, nextState.hasSiteThemeRevision),
+          resolveSelectionValue(),
           revisionId == null ? "published" : "draft",
         );
-        emitSelectOptionsFor(draft);
+        emitSelectOptions();
       })
       .catch((error) => {
         if (!cancelled) {
@@ -1338,7 +1475,7 @@ export function PhiBuilderBrandThemeControllerWidgetClient({
     return () => {
       cancelled = true;
     };
-  }, [dispatchSignal, emitSelectOptionsFor, fallbackTheme, historyScope, showMessage, siteKey, themeKey]);
+  }, [dispatchSignal, emitSelectOptions, fallbackTheme, historyScope, resolveSelectionValue, showMessage, siteKey, themeKey]);
 
   async function saveTheme(
     draftTheme = stateRef.current.draft,
@@ -1381,8 +1518,6 @@ export function PhiBuilderBrandThemeControllerWidgetClient({
         ...stateRef.current,
         draft: savedTheme,
         revisionId,
-        hasPublishedThemeRevision: stateRef.current.hasPublishedThemeRevision,
-        hasSiteThemeRevision: true,
       };
       stateRef.current = nextState;
       siteThemeRef.current = savedTheme;
@@ -1391,11 +1526,11 @@ export function PhiBuilderBrandThemeControllerWidgetClient({
         dispatchSignal,
         savedTheme,
         revisionId,
-        resolvePhiThemeSelectionValue(siteKey, true),
+        resolveSelectionValue(),
         "draft",
         options?.correlationId,
       );
-      emitSelectOptionsFor(savedTheme, options?.correlationId);
+      emitSelectOptions(options?.correlationId);
       if (options?.notify !== false) {
         showMessage(
           { level: "success", content: "Saved theme draft." },
@@ -1435,7 +1570,7 @@ export function PhiBuilderBrandThemeControllerWidgetClient({
       draft: published,
       revisionId: null,
       hasPublishedThemeRevision: true,
-      hasSiteThemeRevision: true,
+      publishedRevisionId: current.revisionId,
     };
     stateRef.current = nextState;
     siteThemeRef.current = published;
@@ -1444,11 +1579,11 @@ export function PhiBuilderBrandThemeControllerWidgetClient({
       dispatchSignal,
       published,
       null,
-      resolvePhiThemeSelectionValue(siteKey, true),
+      resolveSelectionValue(),
       "published",
       correlationId,
     );
-    emitSelectOptionsFor(published, correlationId);
+    emitSelectOptions(correlationId);
     showMessage({ level: "success", content: "Published theme." }, { correlationId: correlationId ?? null });
   }
 
@@ -1468,7 +1603,7 @@ export function PhiBuilderBrandThemeControllerWidgetClient({
       signal.sender !== createPhiThemeControllerAddress()
     ) {
       const value = signal.value && typeof signal.value === "object"
-        ? signal.value as { theme?: unknown; revisionId?: unknown }
+        ? signal.value as { theme?: unknown; revisionId?: unknown; edit?: unknown }
         : null;
       const current = stateRef.current;
       const nextTheme = normalizeTheme(value?.theme, current.draft);
@@ -1476,6 +1611,26 @@ export function PhiBuilderBrandThemeControllerWidgetClient({
       if (revisionId !== current.revisionId) {
         stateRef.current = { ...current, revisionId };
       }
+      const edit = value?.edit;
+      if (edit === "live") {
+        pickerEditBeforeRef.current ??= current.draft;
+        publishDraft(nextTheme, { history: false, correlationId: signal.correlationId });
+        return;
+      }
+      if (edit === "commit" || edit === "discard") {
+        const before = pickerEditBeforeRef.current;
+        pickerEditBeforeRef.current = null;
+        if (edit === "discard") {
+          publishDraft(before ?? nextTheme, { history: false, correlationId: signal.correlationId });
+          return;
+        }
+        publishDraft(nextTheme, { history: false, correlationId: signal.correlationId });
+        if (before && !isSameThemePayload(before, nextTheme)) {
+          phiThemeHistory.record(historyScope, { label: "Update theme", before, after: nextTheme });
+        }
+        return;
+      }
+      pickerEditBeforeRef.current = null;
       publishDraft(nextTheme, { correlationId: signal.correlationId });
       return;
     }
@@ -1511,10 +1666,24 @@ export function PhiBuilderBrandThemeControllerWidgetClient({
         typeof signal.value === "string" &&
         signal.value.trim().length > 0
       ) {
-        if (isPhiSiteThemeSelectionValue(signal.value, siteKey)) {
-          const nextTheme = siteThemeRef.current;
-          if (!isSameThemePayload(stateRef.current.draft, nextTheme)) {
-            publishDraft(nextTheme, { updateSiteSnapshot: false, correlationId: signal.correlationId });
+        /*
+         * Draft goes back to the Theme being worked on; Published is tried on the way a Set is -- it
+         * replaces what is shown, the Draft entry keeps what was there, and only a save or an edit on
+         * top makes it the draft. Both are one history entry.
+         */
+        const siteState = readPhiSiteThemeSelectionState(signal.value, siteKey);
+        if (siteState) {
+          const current = stateRef.current;
+          if (siteState === "published" && !current.hasPublishedThemeRevision) {
+            return;
+          }
+          const nextTheme = siteState === "draft" ? siteThemeRef.current : current.published;
+          if (!isSameThemePayload(current.draft, nextTheme)) {
+            publishDraft(nextTheme, {
+              updateSiteSnapshot: false,
+              correlationId: signal.correlationId,
+              selectionValue: createPhiSiteThemeSelectionValue(siteKey, siteState),
+            });
           }
           return;
         }
@@ -1635,6 +1804,7 @@ export function PhiBuilderBrandThemeControllerWidgetClient({
     }
 
     if (commandValue === "undo") {
+      pickerEditBeforeRef.current = null;
       phiThemeHistory.undo(historyScope, (previous) => {
         publishDraft(previous, { history: false, correlationId: signal.correlationId });
       });
@@ -1642,6 +1812,7 @@ export function PhiBuilderBrandThemeControllerWidgetClient({
     }
 
     if (commandValue === "redo") {
+      pickerEditBeforeRef.current = null;
       phiThemeHistory.redo(historyScope, (next) => {
         publishDraft(next, { history: false, correlationId: signal.correlationId });
       });
@@ -1749,7 +1920,7 @@ export function PhiBuilderBrandThemeControlsWidgetClient({
   const sectionLabelWidth = clientToken.controlHeight * 3;
   const colorControlWidth = clientToken.controlHeight * 5.5;
   const themeKey = resolveThemeKey(config);
-  const { state, draftRef, publishDraft } = usePhiBrandThemeDraft(runtime, themeKey);
+  const { state, draftRef, publishDraft, pickerTransaction } = usePhiBrandThemeDraft(runtime, themeKey);
   const previewMode = usePhiBrandPreviewMode(resolveThemePayloadMode(state.draft));
   const loading = false;
   const saving = false;
@@ -1844,6 +2015,7 @@ export function PhiBuilderBrandThemeControlsWidgetClient({
                       }}
                     >
                       <PhiColorWidget
+                        {...pickerTransaction}
                         tokenKey="custom6"
                         value={customPalette.custom6}
                         defaultValue={resolvePhiThemePresetCustomColors(selectedPreset, previewMode).custom6}
@@ -1872,6 +2044,7 @@ export function PhiBuilderBrandThemeControlsWidgetClient({
                           }}
                         >
                           <PhiColorWidget
+                            {...pickerTransaction}
                             label={item.label}
                             tokenKey={item.key}
                             value={item.value}
@@ -1918,6 +2091,7 @@ export function PhiBuilderBrandThemeControlsWidgetClient({
                       }}
                     >
                       <PhiColorWidget
+                        {...pickerTransaction}
                         tokenKey={section.key}
                         value={seedValue}
                         defaultValue={seedDefaultValue}
@@ -1948,6 +2122,7 @@ export function PhiBuilderBrandThemeControlsWidgetClient({
                         >
                           <Flex vertical gap={clientToken.paddingXXS}>
                             <PhiColorWidget
+                              {...pickerTransaction}
                               label={item.label}
                               tokenKey={item.key}
                               value={overridden ? readTokenColor(colorToken, item.key, fallback) : fallback}
@@ -2058,33 +2233,6 @@ export function PhiBuilderBrandStyleControlsWidgetClient({
   return (
     <Flex vertical gap={clientToken.padding} style={{ width: "100%", minWidth: 0, opacity: loading ? 0.65 : 1 }}>
       <Card size="small" styles={{ body: { padding: clientToken.paddingSM } }}>
-        {/*
-          The style comes with the Set; what an author decides here is the Control shape. "Theme" hands
-          the shape, the radii and the Control heights back to that style in one step, because they are
-          one scale and handing back half of it would leave a shape nobody chose.
-        */}
-        <PhiSegmentedControl<PhiBrandShapeChoice>
-          label="Controls"
-          value={resolveThemeShapeChoice(state.draft)}
-          options={[
-            {
-              value: "theme",
-              label: "Theme",
-              description: `${themeComposition.style.title}: ${formatShapeLabel(
-                resolvePhiUniformControlShape(themeComposition.style.shape.controls),
-              )}`,
-            },
-            ...PHI_CONTROL_SHAPES.map((value) => ({ value, label: formatShapeLabel(value) })),
-          ]}
-          block
-          disabled={saving}
-          onChange={(value) => publishDraft(
-            value === "theme"
-              ? clearThemeShapeScale(state.draft)
-              : mergeThemeControlShape(state.draft, createPhiControlShapeCorners(value)),
-          )}
-        />
-        <Divider style={{ marginBlock: clientToken.paddingXS }} />
         <Collapse
           accordion
           bordered={false}
@@ -2097,6 +2245,63 @@ export function PhiBuilderBrandStyleControlsWidgetClient({
             body: { paddingInline: 0 },
           }}
           items={[
+            {
+              key: "controls",
+              label: <Typography.Text strong>Controls</Typography.Text>,
+              children: (
+                <Flex vertical gap={clientToken.paddingXS}>
+                  {/*
+                    The style comes with the Set; what an author decides here is the Control shape.
+                    "Theme" hands the shape, the radii and the Control heights back to that style in one
+                    step, because they are one scale and handing back half of it would leave a shape
+                    nobody chose.
+                  */}
+                  <PhiSegmentedControl<PhiBrandShapeChoice>
+                    label="Shape"
+                    value={resolveThemeShapeChoice(state.draft)}
+                    options={[
+                      {
+                        value: "theme",
+                        label: "Theme",
+                        description: `${themeComposition.style.title}: ${formatShapeLabel(
+                          resolvePhiUniformControlShape(themeComposition.style.shape.controls),
+                        )}`,
+                      },
+                      ...PHI_CONTROL_SHAPES.map((value) => ({ value, label: formatShapeLabel(value) })),
+                    ]}
+                    block
+                    disabled={saving}
+                    onChange={(value) => publishDraft(
+                      value === "theme"
+                        ? clearThemeShapeScale(state.draft)
+                        : mergeThemeControlShape(state.draft, createPhiControlShapeCorners(value)),
+                    )}
+                  />
+                </Flex>
+              ),
+            },
+            {
+              key: "buttonShadow",
+              label: <Typography.Text strong>Button Shadow</Typography.Text>,
+              children: (
+                <Flex vertical gap={clientToken.paddingSM}>
+                  <Typography.Text type="secondary">
+                    Under each kind of Button. Theme keeps the tinted line; applies to both modes.
+                  </Typography.Text>
+                  {PHI_THEME_BUTTON_SHADOW_KINDS.map((item) => (
+                    <PhiSegmentedControl<PhiThemeButtonShadowChoice>
+                      key={item.key}
+                      label={item.label}
+                      value={readThemeButtonShadowChoice(state.draft, item.key)}
+                      options={PHI_THEME_BUTTON_SHADOW_OPTIONS}
+                      block
+                      disabled={saving}
+                      onChange={(choice) => publishDraft(mergeThemeButtonShadow(state.draft, item.key, choice))}
+                    />
+                  ))}
+                </Flex>
+              ),
+            },
             {
               key: "radius",
               label: <Typography.Text strong>Border Radius</Typography.Text>,
@@ -2744,7 +2949,7 @@ export function PhiBuilderBrandBackgroundControlsWidgetClient({
 }) {
   const { token: clientToken, themeBlocks } = usePhiConfig();
   const themeKey = resolveThemeKey(config);
-  const { state, publishDraft } = usePhiBrandThemeDraft(runtime, themeKey);
+  const { state, publishDraft, editTransaction } = usePhiBrandThemeDraft(runtime, themeKey);
   const mode = usePhiBrandPreviewMode(resolveThemePayloadMode(state.draft));
   const composition = resolvePhiThemeComposition(state.draft, themeBlocks);
   const [activeBackgroundSection, changeActiveBackgroundSection] = usePhiBrandAccordionSection(
@@ -2826,6 +3031,7 @@ export function PhiBuilderBrandBackgroundControlsWidgetClient({
                     motionModes={PHI_ROOT_BACKGROUND_MOTION_MODES}
                     imageSourceKinds={PHI_ROOT_BACKGROUND_IMAGE_SOURCE_KINDS}
                     renderMediaPicker={renderPhiThemeRootBackgroundMediaPicker}
+                    editTransaction={editTransaction}
                     onChange={(value) => publishDraft(mergeThemeRootBackground(state.draft, mode, value))}
                   />
                 </Flex>
@@ -2863,6 +3069,7 @@ export function PhiBuilderBrandBackgroundControlsWidgetClient({
                     baseKinds={PHI_SHELL_CHROME_OVERLAY_BASE_KINDS}
                     imageSourceKinds={PHI_SHELL_CHROME_OVERLAY_IMAGE_SOURCE_KINDS}
                     renderMediaPicker={renderPhiThemeRootBackgroundMediaPicker}
+                    editTransaction={editTransaction}
                     onChange={(value) => publishDraft(mergeThemeChromeOverlay(state.draft, mode, value))}
                   />
                 </Flex>
@@ -3130,7 +3337,7 @@ export function PhiBuilderBrandThemePreviewWidgetClient({
    * serve each other from cache.
    */
   const previewShapedComponents = applyPhiControlShapeComponentTokens(
-    { ...(previewThemeResolved.components ?? {}) },
+    { ...(applyPhiButtonShadowComponentTokens(previewThemeResolved.components, previewThemeResolved.buttons, mode) ?? {}) },
     resolvePhiControlShape(previewThemeResolved.shape?.controls),
     previewEffectiveToken,
   );

@@ -16,6 +16,12 @@ export type PhiControlOption<TValue extends string | number = string> = {
   description?: string;
   icon?: string;
   preview?: PhiControlOptionPreview;
+  /**
+   * The heading this option is listed under, where the Control can group -- a Select shows consecutive
+   * options with the same group under one heading. A Control that cannot group lists the options as they
+   * come, so the order has to make sense without the headings.
+   */
+  group?: string;
 };
 
 export type PhiControlOptionPreview = {
@@ -168,6 +174,7 @@ export function readPhiControlOptions(value: unknown): PhiControlOption[] {
           description: readString(record.description),
           icon: readString(record.icon),
           preview: readOptionPreview(record.preview),
+          group: readString(record.group),
         };
       })
       .filter((item): item is PhiControlOption => item != null);

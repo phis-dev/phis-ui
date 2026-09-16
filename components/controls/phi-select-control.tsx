@@ -44,6 +44,43 @@ export type PhiSelectControlProps<TValue extends string | number = string> = {
   onChange: (value: TValue) => void;
 };
 
+type PhiResolvedSelectOption<TValue extends string | number> = {
+  value: TValue;
+  label: ReactNode;
+  searchLabel: string;
+  disabled?: boolean;
+  option: PhiControlOption<TValue>;
+};
+
+/*
+ * Consecutive options that name the same group, under one heading. Options without a group stay at the
+ * top level, and a list that names no group at all comes back unchanged.
+ */
+function groupPhiSelectOptions<TValue extends string | number>(
+  resolved: PhiResolvedSelectOption<TValue>[],
+) {
+  if (!resolved.some((entry) => entry.option.group)) {
+    return resolved;
+  }
+  const grouped: Array<PhiResolvedSelectOption<TValue> | {
+    label: ReactNode;
+    title: string;
+    options: PhiResolvedSelectOption<TValue>[];
+  }> = [];
+  for (const entry of resolved) {
+    const group = entry.option.group;
+    const last = grouped.at(-1);
+    if (!group) {
+      grouped.push(entry);
+    } else if (last && "options" in last && last.title === group) {
+      last.options.push(entry);
+    } else {
+      grouped.push({ label: <>{group}</>, title: group, options: [entry] });
+    }
+  }
+  return grouped;
+}
+
 export function PhiSelectControl<TValue extends string | number = string>({
   value,
   label,
@@ -70,7 +107,7 @@ export function PhiSelectControl<TValue extends string | number = string>({
   filterOptionsLocally = true,
   onChange,
 }: PhiSelectControlProps<TValue>) {
-  const resolvedOptions = options.map((option) => ({
+  const resolvedOptions = groupPhiSelectOptions(options.map((option) => ({
     value: option.value,
     // rc-select synthesizes native HTML title attributes from primitive labels.
     // Phi owns option descriptions through PhiControlOptionContent instead.
@@ -78,7 +115,7 @@ export function PhiSelectControl<TValue extends string | number = string>({
     searchLabel: option.label,
     disabled: option.disabled,
     option,
-  }));
+  })));
   const controlDisabled = disabled || readOnly;
 
   const canUseTextEntry = (presentation === "autocomplete" || allowCustom) &&
@@ -96,7 +133,7 @@ export function PhiSelectControl<TValue extends string | number = string>({
         options={resolvedOptions}
         optionRender={(resolvedOption) => (
           <PhiControlOptionContent
-            option={resolvedOption.data.option as PhiControlOption<TValue>}
+            option={(resolvedOption.data as PhiResolvedSelectOption<TValue>).option}
             presentation="dropdown"
           />
         )}
@@ -108,10 +145,13 @@ export function PhiSelectControl<TValue extends string | number = string>({
         styles={popupZIndex == null ? undefined : { popup: { root: { zIndex: popupZIndex } } }}
         filterOption={!filterOptionsLocally
           ? false
-          : (inputValue, option) =>
-            String(option?.searchLabel ?? option?.value ?? "")
+          : (inputValue, option) => {
+            // A group heading has no search label of its own; antd filters the options inside it.
+            const entry = option as Partial<PhiResolvedSelectOption<TValue>> | undefined;
+            return String(entry?.searchLabel ?? entry?.value ?? "")
               .toLowerCase()
-              .includes(inputValue.toLowerCase())
+              .includes(inputValue.toLowerCase());
+          }
         }
         onSearch={onSearch}
         onFocus={onFocus}
@@ -134,7 +174,7 @@ export function PhiSelectControl<TValue extends string | number = string>({
       options={resolvedOptions}
       optionRender={(resolvedOption) => (
         <PhiControlOptionContent
-          option={resolvedOption.data.option as PhiControlOption<TValue>}
+          option={(resolvedOption.data as PhiResolvedSelectOption<TValue>).option}
           presentation="dropdown"
         />
       )}

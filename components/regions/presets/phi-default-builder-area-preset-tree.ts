@@ -30,7 +30,7 @@ import {
 import { PHI_LAYOUT } from "../../../theme/phi-tokens";
 import { PHI_COLOR, PHI_SPACE } from "../../../theme/antd-css-var-contract";
 import {
-  buildPhiSiteThemeSelectOption,
+  buildPhiSiteThemeSelectOptions,
   resolvePhiThemeSelectionValue,
 } from "../../../theme/phi-theme-selection";
 import { buildPhiThemeSetSelectOptions } from "../../../plugins/runtime-modules/theme/set-options";
@@ -2762,11 +2762,10 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                 sortOrder: 0,
                 label: "Brand set select",
                 config: {
-                  value: resolvePhiThemeSelectionValue(
-                    runtime.site.key,
-                    runtime.site.themeRevision?.publishedRevisionId != null ||
-                      runtime.site.themeRevision?.workingDraftRevisionId != null,
-                  ),
+                  value: resolvePhiThemeSelectionValue(runtime.site.key, {
+                    published: runtime.site.themeRevision?.publishedRevisionId != null,
+                    draft: runtime.site.themeRevision?.workingDraftRevisionId != null,
+                  }),
                   key: "brand-theme-preset",
                   signalRoutes: {
                     emits: [
@@ -2791,8 +2790,9 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                         receiver: "broadcast",
                       },
                       /*
-                       * The Site Theme entry names the Set the stored Theme was derived from; a save
-                       * stores another Theme, so the Controller states the list again.
+                       * The Published and Draft entries name the Set each was derived from and whether
+                       * a draft exists at all; the Controller states the list again whenever either
+                       * changes. What the tree states is only what the Site record knows before that.
                        */
                       {
                         routeKey: "brand-theme-select-options",
@@ -2807,10 +2807,14 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                     ],
                   },
                   options: [
-                    buildPhiSiteThemeSelectOption({
+                    ...buildPhiSiteThemeSelectOptions({
                       siteKey: runtime.site.key,
-                      siteName: runtime.site.name,
-                      theme: runtime.site.theme,
+                      published: runtime.site.themeRevision?.publishedRevisionId != null
+                        ? { theme: runtime.site.theme, revisionId: runtime.site.themeRevision.publishedRevisionId }
+                        : null,
+                      draft: runtime.site.themeRevision?.workingDraftRevisionId != null
+                        ? { theme: runtime.site.theme, revisionId: runtime.site.themeRevision.workingDraftRevisionId }
+                        : null,
                     }),
                     ...buildPhiThemeSetSelectOptions(registry),
                   ],

@@ -66,6 +66,12 @@ import { PhiSelectControl } from "./phi-select-control";
 import { PHI_COLOR_PICKER_DEFAULT_LABELS } from "../widgets/label-types/color-picker";
 import { usePhiColorControlPresets } from "./use-phi-color-control-presets";
 
+export type PhiBackgroundEditTransaction = {
+  onBegin?: () => void;
+  onCommit?: () => void;
+  onDiscard?: () => void;
+};
+
 export type PhiBackgroundControlProps = {
   value?: PhiCmsBackgroundWidgetConfig | null;
   config?: PhiCmsBackgroundWidgetConfig | null;
@@ -119,6 +125,14 @@ export type PhiBackgroundControlProps = {
     onAssetSelect: (asset: PhiMediaAssetTile) => void;
     onAssetClear: () => void;
   }) => ReactNode;
+  /**
+   * Told where a continuous edit starts and how it ends: a colour picker opened, then taken or put back
+   * with Escape, or a slider grabbed and let go.
+   *
+   * Both emit `onChange` for every value they pass over; those are steps of one decision, and a surface
+   * that keeps a history needs to know where the decision starts and how it ends.
+   */
+  editTransaction?: PhiBackgroundEditTransaction;
   onChange?: (value: PhiCmsBackgroundWidgetConfig) => void;
 };
 
@@ -219,12 +233,32 @@ export function PhiBackgroundControl({
   imageSourceKinds = PHI_BACKGROUND_IMAGE_SOURCE_KINDS,
   baseKinds = PHI_BACKGROUND_BASE_KINDS,
   renderMediaPicker,
+  editTransaction,
   onChange,
 }: PhiBackgroundControlProps) {
   const { token } = theme.useToken();
   const colorPickerPresets = usePhiColorControlPresets({ labels: colorPickerLabels });
   const currentValue = useMemo(() => normalizePhiBackgroundWidgetConfig(value ?? config ?? null), [value, config]);
   const isDisabled = disabled || !onChange;
+  const colorPickerTransaction = {
+    onOpenChange: (open: boolean) => {
+      if (open) editTransaction?.onBegin?.();
+    },
+    onCommit: () => editTransaction?.onCommit?.(),
+    onDiscard: () => editTransaction?.onDiscard?.(),
+  };
+  /* Whether a slider is being dragged: the first value it emits begins the edit, letting go ends it. */
+  const sliderEditingRef = useRef(false);
+  const beginSliderEdit = () => {
+    if (sliderEditingRef.current) return;
+    sliderEditingRef.current = true;
+    editTransaction?.onBegin?.();
+  };
+  const commitSliderEdit = () => {
+    if (!sliderEditingRef.current) return;
+    sliderEditingRef.current = false;
+    editTransaction?.onCommit?.();
+  };
   /*
    * The mode this Control shows and acts on, which is the stored one only while the surface offers it.
    * A value narrowed out of the offer -- a Root Background still carrying `fixed` -- reads as `static`,
@@ -885,6 +919,7 @@ export function PhiBackgroundControl({
     if (currentValue.base.kind === "color") {
       return (
         <PhiColorControl
+          {...colorPickerTransaction}
           mode="single"
           value={derivedPickerValue}
           disabled={isDisabled}
@@ -902,6 +937,7 @@ export function PhiBackgroundControl({
     if (currentValue.base.kind === "gradient") {
       return (
         <PhiColorControl
+          {...colorPickerTransaction}
           mode="gradient"
           value={derivedPickerValue}
           disabled={isDisabled}
@@ -1070,7 +1106,11 @@ export function PhiBackgroundControl({
                     disabled={isDisabled}
                     tooltipSuffix="×"
                     style={{ width: "100%" }}
-                    onChange={(strength) => updateParallaxMotion({ strength })}
+                    onChange={(strength) => {
+                      beginSliderEdit();
+                      updateParallaxMotion({ strength });
+                    }}
+                    onChangeComplete={commitSliderEdit}
                   />
                   <Typography.Text>{labels.motion.direction}</Typography.Text>
                   <PhiSegmentedControl<PhiBackgroundMotionDirection>
@@ -1099,6 +1139,7 @@ export function PhiBackgroundControl({
             <Flex align="center" justify="space-between" gap={token.paddingSM} wrap="wrap">
               <Typography.Text>{labels.base.color}</Typography.Text>
               <PhiColorControl
+                {...colorPickerTransaction}
                 value={currentValue.base.color}
                 disabled={isDisabled}
                 presets={colorPickerPresets}
@@ -1112,6 +1153,7 @@ export function PhiBackgroundControl({
             <Flex align="center" justify="space-between" gap={token.paddingSM} wrap="wrap">
               <Typography.Text>{labels.base.gradient}</Typography.Text>
               <PhiColorControl
+                {...colorPickerTransaction}
                 mode="gradient"
                 value={derivedPickerValue}
                 disabled={isDisabled}
@@ -1209,6 +1251,7 @@ export function PhiBackgroundControl({
                   * what lets a wash fade rather than only cover.
                   */}
                 <PhiColorControl
+                  {...colorPickerTransaction}
                   mode="both"
                   value={serializePhiBackgroundPatternInkCss(
                     currentValue.overlay.ink ?? (currentValue.overlay.kind === "color"

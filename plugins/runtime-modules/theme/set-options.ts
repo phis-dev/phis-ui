@@ -1,5 +1,6 @@
 import type { PhiControlOption } from "../../../components/controls/phi-control-options";
 import { PHI_CORE_THEME_SETS } from "../../../theme/phi-theme-blocks";
+import { PHI_THEME_SELECT_SETS_GROUP } from "../../../theme/phi-theme-selection";
 import type { PhiCmsCompiledDescriptorCatalog } from "../../../types/cms-module-descriptors";
 
 /**
@@ -26,11 +27,17 @@ export function buildPhiThemeSetSelectOptions(catalog: PhiCmsCompiledDescriptorC
     );
 
   return [
-    ...PHI_CORE_THEME_SETS.map((set) => ({ value: set.key, label: set.title, description: set.description })),
+    ...PHI_CORE_THEME_SETS.map((set) => ({
+      value: set.key,
+      label: set.title,
+      description: set.description,
+      group: PHI_THEME_SELECT_SETS_GROUP,
+    })),
     ...contributed.map((descriptor) => ({
       value: descriptor.blockKey,
       label: descriptor.title,
       description: descriptor.description,
+      group: PHI_THEME_SELECT_SETS_GROUP,
     })),
   ];
 }

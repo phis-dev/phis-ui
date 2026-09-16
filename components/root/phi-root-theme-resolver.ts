@@ -17,6 +17,7 @@ import {
   type PhiThemeMode,
   type PhiThemePresetPlugin,
 } from "../../theme/phi-theme-presets";
+import { applyPhiButtonShadowComponentTokens } from "../../theme/phi-button-shadow";
 import {
   applyPhiControlShapeComponentTokens,
   resolvePhiControlShape,
@@ -126,7 +127,7 @@ export function resolvePhiRootTheme({
   });
   const components = applyPhiControlShapeComponentTokens(mergeComponentThemes(
     sharedComponentDefaults,
-    siteTheme?.components ?? undefined,
+    applyPhiButtonShadowComponentTokens(siteTheme?.components, siteTheme?.buttons, mode),
   ), resolvePhiControlShape(siteTheme.shape?.controls), effectiveThemeTokens);
   const token = {
     ...effectiveThemeTokens,

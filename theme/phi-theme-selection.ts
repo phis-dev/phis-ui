@@ -4,24 +4,40 @@ import { PHI_DEFAULT_THEME_PRESET_KEY } from "./phi-theme-presets";
 
 const PHI_SITE_THEME_SELECTION_PREFIX = "site:";
 
-export function createPhiSiteThemeSelectionValue(siteKey: string) {
+/**
+ * The two Site entries of the Theme workspace's Set select: what the Site shows, and what is being
+ * worked on. They are not revisions to browse -- the revisions have their own view -- but the two
+ * states a Theme is always in, each one pick away.
+ */
+export type PhiSiteThemeSelectionState = "published" | "draft";
+
+export function createPhiSiteThemeSelectionValue(siteKey: string, state: PhiSiteThemeSelectionState) {
   const normalizedSiteKey = siteKey.trim();
   if (!normalizedSiteKey) {
     throw new Error("Site theme selection requires a site key.");
   }
-  return `${PHI_SITE_THEME_SELECTION_PREFIX}${normalizedSiteKey}`;
+  return `${PHI_SITE_THEME_SELECTION_PREFIX}${normalizedSiteKey}:${state}`;
 }
 
-export function isPhiSiteThemeSelectionValue(value: string, siteKey: string) {
-  return value === createPhiSiteThemeSelectionValue(siteKey);
+export function readPhiSiteThemeSelectionState(value: string, siteKey: string): PhiSiteThemeSelectionState | null {
+  if (value === createPhiSiteThemeSelectionValue(siteKey, "published")) return "published";
+  if (value === createPhiSiteThemeSelectionValue(siteKey, "draft")) return "draft";
+  return null;
 }
 
+/**
+ * The entry a Theme that is not trying on a Set stands at: the draft while there is one, the published
+ * Theme otherwise, and the core Set for a Site that has neither.
+ */
 export function resolvePhiThemeSelectionValue(
   siteKey: string,
-  hasSiteThemeRevision: boolean,
+  available: { published: boolean; draft: boolean },
 ) {
-  if (hasSiteThemeRevision) {
-    return createPhiSiteThemeSelectionValue(siteKey);
+  if (available.draft) {
+    return createPhiSiteThemeSelectionValue(siteKey, "draft");
+  }
+  if (available.published) {
+    return createPhiSiteThemeSelectionValue(siteKey, "published");
   }
   return PHI_DEFAULT_THEME_PRESET_KEY;
 }
@@ -94,22 +110,49 @@ export function ensurePhiThemeDerivation<T extends { derivedFrom?: PhiThemeDeriv
   return { ...theme, derivedFrom: resolvePhiThemeDerivation(null) };
 }
 
+export const PHI_THEME_SELECT_SITE_GROUP = "Site";
+export const PHI_THEME_SELECT_SETS_GROUP = "Sets";
+
 /**
- * The Site Theme entry of the Theme workspace's Set select: the stored Theme, with the Set it was
- * derived from in its description.
+ * The Published and the Draft entry, the Set each was derived from in its description.
+ *
+ * Both are always listed, so the select keeps its shape; one that does not exist is disabled and says
+ * why. A draft exists once somebody saved one or changed the Theme away from what is published.
  */
-export function buildPhiSiteThemeSelectOption({
+export function buildPhiSiteThemeSelectOptions({
   siteKey,
-  siteName,
-  theme,
+  published,
+  draft,
 }: {
   siteKey: string;
-  siteName: string | null | undefined;
-  theme: { derivedFrom?: unknown } | null | undefined;
-}): PhiControlOption {
-  return {
-    value: createPhiSiteThemeSelectionValue(siteKey),
-    label: siteName?.trim() || siteKey,
-    description: `Derived from ${resolvePhiThemeDerivation(theme).set.title}`,
-  };
+  published: {
+    theme: { derivedFrom?: unknown } | null | undefined;
+    revisionId: number | null;
+  } | null;
+  draft: {
+    theme: { derivedFrom?: unknown } | null | undefined;
+    revisionId: number | null;
+  } | null;
+}): PhiControlOption[] {
+  const describe = (entry: { theme: { derivedFrom?: unknown } | null | undefined; revisionId: number | null }, unsaved: string) =>
+    `${entry.revisionId != null ? `Revision #${entry.revisionId}` : unsaved} · Derived from ${resolvePhiThemeDerivation(entry.theme).set.title}`;
+
+  return [
+    {
+      value: createPhiSiteThemeSelectionValue(siteKey, "published"),
+      label: "Published",
+      group: PHI_THEME_SELECT_SITE_GROUP,
+      ...(published
+        ? { description: describe(published, "Published") }
+        : { disabled: true, description: "Not published yet" }),
+    },
+    {
+      value: createPhiSiteThemeSelectionValue(siteKey, "draft"),
+      label: "Draft",
+      group: PHI_THEME_SELECT_SITE_GROUP,
+      ...(draft
+        ? { description: describe(draft, "Unsaved") }
+        : { disabled: true, description: "No changes to the published Theme" }),
+    },
+  ];
 }

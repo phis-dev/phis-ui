@@ -14,6 +14,7 @@ import type {
 import type { PhiThemePalette } from "../theme/phi-theme-presets";
 import type { PhiThemeBlockSelection } from "../theme/phi-theme-composition";
 import type { PhiControlShapeCorners } from "../theme/phi-control-shape";
+import type { PhiThemeButtons } from "../theme/phi-button-shadow";
 
 export type PhiSiteTheme = {
   mode?: "light" | "dark" | null;
@@ -56,6 +57,8 @@ export type PhiSiteTheme = {
   style?: {
     token?: Record<string, unknown>;
   } | null;
+  /** The shadow under each kind of Button, as a step the root theme turns into CSS per mode. */
+  buttons?: PhiThemeButtons | null;
   /** Site-level component overrides, merged per component over the shared component defaults. */
   components?: Record<string, Record<string, unknown>> | null;
 };
