@@ -37,17 +37,14 @@ export type PhiDragHandleAttributes = {
   "aria-describedby"?: string;
 };
 
-/** What a drag library supplies for the element a drag starts from. */
-export type PhiDragHandleActivator = {
-  /** Registers the handle's element; compose it with a ref of your own before passing it in. */
-  setActivatorRef: (element: HTMLElement | null) => void;
-  listeners?: Partial<Record<string, unknown>> | PhiDragHandleListeners;
-  attributes?: Partial<Record<string, unknown>> | PhiDragHandleAttributes;
-};
-
 export type PhiDragHandleControlProps = {
   ariaLabel: string;
-  activator: PhiDragHandleActivator;
+  /** Registers the handle's element with the drag library; compose it with a ref of your own first. */
+  setActivatorRef: (element: HTMLElement | null) => void;
+  /** The listeners a drag library hands out for its activator; only the four named ones are used. */
+  listeners?: Partial<Record<string, unknown>> | PhiDragHandleListeners;
+  /** The attributes a drag library hands out for its activator; only the named ones are used. */
+  attributes?: Partial<Record<string, unknown>> | PhiDragHandleAttributes;
   /** Whether the node is on its way; the handle fades so the drop target reads as the focus. */
   dragging?: boolean;
   disabled?: boolean;
@@ -79,7 +76,9 @@ function pick<TKey extends string>(source: Partial<Record<string, unknown>> | un
 
 export function PhiDragHandleControl({
   ariaLabel,
-  activator,
+  setActivatorRef,
+  listeners: libraryListeners,
+  attributes: libraryAttributes,
   dragging = false,
   disabled = false,
   icon,
@@ -90,16 +89,16 @@ export function PhiDragHandleControl({
   // Picked by name, then typed by name: the keys are the contract, whatever else the library returned.
   const listeners = (disabled
     ? {}
-    : pick(activator.listeners as Partial<Record<string, unknown>> | undefined, PHI_DRAG_HANDLE_LISTENER_KEYS)
+    : pick(libraryListeners as Partial<Record<string, unknown>> | undefined, PHI_DRAG_HANDLE_LISTENER_KEYS)
   ) as PhiDragHandleListeners;
   const attributes = pick(
-    activator.attributes as Partial<Record<string, unknown>> | undefined,
+    libraryAttributes as Partial<Record<string, unknown>> | undefined,
     PHI_DRAG_HANDLE_ATTRIBUTE_KEYS,
   ) as PhiDragHandleAttributes;
 
   return (
     <Button
-      ref={activator.setActivatorRef}
+      ref={setActivatorRef}
       className={className}
       aria-label={ariaLabel}
       icon={icon ?? <HolderOutlined />}

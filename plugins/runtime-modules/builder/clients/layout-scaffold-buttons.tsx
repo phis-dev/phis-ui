@@ -119,14 +119,12 @@ export function PhiLayoutDragButtonWidget({
   return (
     <PhiDragHandleControl
       ariaLabel={ariaLabel}
-      activator={{
-        setActivatorRef: (node) => {
-          buttonRef.current = node;
-          setNodeRef(node);
-        },
-        listeners,
-        attributes,
+      setActivatorRef={(node) => {
+        buttonRef.current = node;
+        setNodeRef(node);
       }}
+      listeners={listeners}
+      attributes={attributes}
       dragging={isDragging}
       className="phi-layout-affordance phi-layout-affordance--drag"
       style={

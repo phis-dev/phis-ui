@@ -109,7 +109,6 @@ export { PhiSegmentedControl } from "./components/controls/phi-segmented-control
 export type { PhiSegmentedControlProps } from "./components/controls/phi-segmented-control";
 export { PhiDragHandleControl } from "./components/controls/phi-drag-handle-control";
 export type {
-  PhiDragHandleActivator,
   PhiDragHandleAttributes,
   PhiDragHandleControlProps,
   PhiDragHandleListeners,
