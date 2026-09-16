@@ -1,7 +1,7 @@
 "use client";
 
 import { lazy, Suspense, useCallback, useEffect, useState } from "react";
-import { Button, Card, Flex, List, Skeleton, Typography } from "antd";
+import { Card, Flex, List, Skeleton, Typography } from "antd";
 import { PhiTagControl } from "../../../../../components/controls/phi-tag-control";
 import { PhiButtonControl } from "../../../../../components/controls/phi-button-control";
 import { PhiAlertControl } from "../../../../../components/controls/phi-alert-control";
@@ -156,9 +156,8 @@ export function PhiAuthSecurityWidgetClient({ apiPath = "/api/auth/account/secur
                   title="Remove this authenticator?"
                   onConfirm={() => void removeFactor(factor.id)}
                   danger
-                >
-                  <Button danger type="link">Remove</Button>
-                </PhiConfirmControl>,
+                  trigger={{ label: "Remove", type: "link", danger: true }}
+                />,
               ]}
             >
               <List.Item.Meta
@@ -192,9 +191,8 @@ export function PhiAuthSecurityWidgetClient({ apiPath = "/api/auth/account/secur
                   title="Revoke this session?"
                   onConfirm={() => void revokeSession(session.id)}
                   danger
-                >
-                  <Button danger type="link">Revoke</Button>
-                </PhiConfirmControl>,
+                  trigger={{ label: "Revoke", type: "link", danger: true }}
+                />,
               ] : undefined}
             >
               <List.Item.Meta

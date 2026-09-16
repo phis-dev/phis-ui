@@ -1,6 +1,7 @@
 "use client";
 
-import { Card, Button, Typography } from "antd";
+import { Card, Typography } from "antd";
+import { PhiButtonControl } from "../../../../../components/controls/phi-button-control";
 
 import type { PhiClientBlockBaseProps } from "../../../../../types";
 import { PhiLink } from "../../../../../components/navigation/phi-link";
@@ -182,15 +183,13 @@ export function PhiCardWidgetClient({
 
       {hasAction ? (
         <div>
-          <Button
+          <PhiButtonControl
             type={cardHighlight ? "primary" : "default"}
             size={variant === "compact" ? "small" : "medium"}
             href={config!.actionHref}
-            target={config?.actionNewTab ? "_blank" : undefined}
-            rel={config?.actionNewTab ? "noreferrer" : undefined}
-          >
-            {labels.actionLabel}
-          </Button>
+            newTab={config?.actionNewTab}
+            label={labels.actionLabel}
+          />
         </div>
       ) : null}
     </Card>

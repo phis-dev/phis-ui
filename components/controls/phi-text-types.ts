@@ -4,4 +4,9 @@ export type PhiTextInputType =
   | "phone"
   | "email"
   | "password"
-  | "search";
+  | "search"
+  /*
+   * A code sent to a device or read off an authenticator: typed as text, so a leading zero survives, but
+   * offered with the digit keypad on a phone, which is what a person entering six digits wants.
+   */
+  | "one-time-code";

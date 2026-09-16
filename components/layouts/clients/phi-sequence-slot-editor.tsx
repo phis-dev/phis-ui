@@ -1,6 +1,7 @@
 "use client";
 
-import { Button, Space, Typography } from "antd";
+import { Space, Typography } from "antd";
+import { PhiButtonControl } from "../../controls/phi-button-control";
 import { LeftOutlined, RightOutlined } from "@ant-design/icons";
 import type { CSSProperties, ReactNode } from "react";
 
@@ -141,31 +142,34 @@ export function PhiSequenceSlotEditor({
           paddingBottom: "var(--ant-padding-xs)",
         }}
       >
-        <Button
-          aria-label={`Previous ${slotNoun}`}
-          icon={<LeftOutlined />}
-          size="small"
-          type="text"
-          disabled={!hasPreviousSlot}
-          onClick={(event) => {
-            event.stopPropagation();
-            onActiveIndexChange(currentIndex - 1);
-          }}
-        />
+        {/*
+          * Paging through slots must not also select the Layout underneath, so the click stops here,
+          * around the button, rather than inside it: the button reports that it was pressed and the
+          * element that knows it sits on a selectable surface decides how far that travels.
+          */}
+        <span onClick={(event) => event.stopPropagation()}>
+          <PhiButtonControl
+            ariaLabel={`Previous ${slotNoun}`}
+            icon={<LeftOutlined />}
+            size="small"
+            type="text"
+            disabled={!hasPreviousSlot}
+            onClick={() => onActiveIndexChange(currentIndex - 1)}
+          />
+        </span>
         <Typography.Text type="secondary" style={{ fontSize: 12, minWidth: 64, textAlign: "center" }}>
           {currentIndex + 1} / {editableSlotCount}
         </Typography.Text>
-        <Button
-          aria-label={`Next ${slotNoun}`}
-          icon={<RightOutlined />}
-          size="small"
-          type="text"
-          disabled={!hasNextSlot}
-          onClick={(event) => {
-            event.stopPropagation();
-            onActiveIndexChange(currentIndex + 1);
-          }}
-        />
+        <span onClick={(event) => event.stopPropagation()}>
+          <PhiButtonControl
+            ariaLabel={`Next ${slotNoun}`}
+            icon={<RightOutlined />}
+            size="small"
+            type="text"
+            disabled={!hasNextSlot}
+            onClick={() => onActiveIndexChange(currentIndex + 1)}
+          />
+        </span>
         {editSlotAction && editRenderInsertControl
           ? editRenderInsertControl({
             presentation: "inline",

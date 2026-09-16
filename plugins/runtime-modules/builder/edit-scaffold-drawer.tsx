@@ -2,7 +2,8 @@
 
 import type { CSSProperties, KeyboardEvent, ReactNode } from "react";
 
-import { Button, theme as antdTheme } from "antd";
+import { theme as antdTheme } from "antd";
+import { PhiButtonControl } from "../../../components/controls/phi-button-control";
 import { PlusOutlined } from "@ant-design/icons";
 
 import type { PhiCmsInstanceId } from "../../../types/cms-instance-id";
@@ -110,16 +111,15 @@ export function PhiEditScaffoldDrawer({
               boxShadow: `inset 0 0 0 1px ${token.colorError}`,
               borderRadius: 0,
             }}
+            // The drawer is selectable; inserting into it must not select it as well.
+            onClick={(event) => event.stopPropagation()}
           >
-            <Button
+            <PhiButtonControl
               type="dashed"
               size="small"
               icon={<PlusOutlined />}
-              aria-label="Insert child"
-              onClick={(event) => {
-                event.stopPropagation();
-                onOpenInsert?.();
-              }}
+              ariaLabel="Insert child"
+              onClick={() => onOpenInsert?.()}
             />
           </div>
         )}

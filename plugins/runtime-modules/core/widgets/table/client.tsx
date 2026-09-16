@@ -4,7 +4,7 @@ import { ReloadOutlined, UndoOutlined } from "@ant-design/icons";
 import type { PhiTableWidgetLabels } from "../../../../../components/widgets/label-types/table";
 import { PHI_TABLE_WIDGET_DEFAULT_LABELS } from "../../../../../components/widgets/label-types/table";
 import { formatPhiTableWidgetLabel } from "../../../../../components/widgets/label-types/table";
-import { App, Button, Flex, Space, Tooltip, Typography } from "antd";
+import { App, Flex, Space, Tooltip, Typography } from "antd";
 import { PhiTagControl } from "../../../../../components/controls/phi-tag-control";
 import { Fragment, useCallback, useEffect, useEffectEvent, useMemo, useState, type ReactNode } from "react";
 
@@ -1138,22 +1138,27 @@ function TableAction({ action, disabled = false, disabledReason, templateValue, 
   const showLabel = display !== "icon";
   const buttonType = action.mode === "primary" ? "primary" : "default";
   const danger = action.mode === "danger";
+  /*
+   * A row is clickable, and an action inside it must not also activate the row, so the click stops at
+   * the element around the button. A confirmed action still gets a handler of its own: the button is
+   * what opens the confirmation, and a button with nothing to call renders disabled.
+   */
   const content = (
-    <Button
-      size={size}
-      type={buttonType}
-      danger={danger}
-      disabled={disabled}
-      style={PHI_TABLE_ACTION_BUTTON_STYLE}
-      icon={showIcon ? icon ?? undefined : undefined}
-      aria-label={action.label}
-      onClick={(event) => {
-        event.stopPropagation();
-        if (!action.confirm) onActivate();
-      }}
-    >
-      {showLabel ? action.label : null}
-    </Button>
+    <span onClick={(event) => event.stopPropagation()}>
+      <PhiButtonControl
+        size={size}
+        type={buttonType}
+        danger={danger}
+        disabled={disabled}
+        style={PHI_TABLE_ACTION_BUTTON_STYLE}
+        icon={showIcon ? icon ?? undefined : undefined}
+        ariaLabel={action.label}
+        label={showLabel ? action.label : null}
+        onClick={() => {
+          if (!action.confirm) onActivate();
+        }}
+      />
+    </span>
   );
   if (action.execution === "link" && action.href) {
     const labelled = display === "icon" || disabledReason

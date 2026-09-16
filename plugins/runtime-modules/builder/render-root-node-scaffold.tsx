@@ -2,7 +2,7 @@
 
 import { cloneElement, isValidElement, Suspense, useCallback, useEffect, useRef, useState, type CSSProperties, type KeyboardEvent, type ReactElement, type ReactNode } from "react";
 import { NodeIndexOutlined, ShareAltOutlined, WarningOutlined } from "@ant-design/icons";
-import { Button, theme as antdTheme } from "antd";
+import { theme as antdTheme } from "antd";
 
 import { PhiEditScaffoldDrawer } from "./edit-scaffold-drawer";
 import type { PhiCmsContentWidgetNode, PhiCmsLayoutRenderNode, PhiResolvedCmsRenderableTree } from "../../../types/cms";
@@ -32,6 +32,7 @@ import {
   type PhiStructureDropTargetData,
 } from "./structure-dnd";
 import { PhiInlineTextEditor } from "./clients/inline-text-editor";
+import { PhiButtonControl } from "../../../components/controls/phi-button-control";
 import {
   usePhiAuthoringLayoutDefinition,
   usePhiRuntimeModuleAuthoringRegistration,
@@ -155,8 +156,8 @@ function renderPhiLayoutTitleControl(control: PhiLayoutEditTitleControl) {
       onChange={control.onChange}
       onCommit={control.onCommit}
       onCancel={control.onCancel}
-      data-phi-collapsible-title-control="true"
-      aria-label={control.ariaLabel}
+      collapsibleTitleControl
+      ariaLabel={control.ariaLabel}
       style={control.style}
     />
   );
@@ -427,60 +428,68 @@ function PhiEffectsPreviewButton({
   const previewLabel = formatEffectsPreviewLabel(config, blockKind);
 
   return (
-    <Button
-      className="phi-layout-affordance phi-layout-affordance--effects-preview"
-      aria-label={previewLabel}
-      title={previewLabel}
-      icon={<NodeIndexOutlined />}
-      type="text"
-      size="small"
+    /*
+     * The preview sits on the widget it previews, which selects on a press; the press stops at the
+     * element around the button and never takes focus from what is being edited. `display: contents`
+     * leaves the button positioned against the scaffold exactly as before.
+     */
+    <span
+      style={{ display: "contents" }}
       onMouseDown={(event) => {
         event.preventDefault();
         event.stopPropagation();
       }}
-      onClick={(event) => {
-        event.preventDefault();
-        event.stopPropagation();
-        onRun();
-      }}
-      style={{
-        position: "absolute",
-        top: "50%",
-        left: "50%",
-        zIndex: 4,
-        transform: "translate(-50%, -50%)",
-        // Its own size, for the same reason the tool bar states its width inline: it stands in a frame
-        // whose children `styles/layout.css` stretches, and a stylesheet answer did not hold there.
-        width: "var(--ant-control-height)",
-        "--phi-layout-affordance-size": "var(--ant-control-height)",
-      } as CSSProperties & Record<`--${string}`, string>}
-    />
+      onClick={(event) => event.stopPropagation()}
+    >
+      <PhiButtonControl
+        className="phi-layout-affordance phi-layout-affordance--effects-preview"
+        ariaLabel={previewLabel}
+        tooltip={previewLabel}
+        icon={<NodeIndexOutlined />}
+        type="text"
+        size="small"
+        onClick={onRun}
+        style={{
+          position: "absolute",
+          top: "50%",
+          left: "50%",
+          zIndex: 4,
+          transform: "translate(-50%, -50%)",
+          // Its own size, for the same reason the tool bar states its width inline: it stands in a frame
+          // whose children `styles/layout.css` stretches, and a stylesheet answer did not hold there.
+          width: "var(--ant-control-height)",
+          "--phi-layout-affordance-size": "var(--ant-control-height)",
+        } as CSSProperties & Record<`--${string}`, string>}
+      />
+    </span>
   );
 }
 
 function PhiSignalWiringToolButton({ onOpen }: { onOpen: () => void }) {
   return (
-    <Button
-      type="text"
-      size="small"
-      aria-label="Wire signals"
-      title="Wire signals"
-      /*
-       * Not a chain link: that glyph is the Rich Text Widget's own tool for an embedded link, and the
-       * two sat side by side in the same toolbar meaning entirely different things. The flow-graph glyph
-       * is taken by the effects editor, so wiring gets the connected-nodes one.
-       */
-      icon={<ShareAltOutlined />}
+    // A tool in the widget's own toolbar: the press stops around the button and keeps focus where it was.
+    <span
+      style={{ display: "contents" }}
       onPointerDown={(event) => {
         event.preventDefault();
         event.stopPropagation();
       }}
-      onClick={(event) => {
-        event.preventDefault();
-        event.stopPropagation();
-        onOpen();
-      }}
-    />
+      onClick={(event) => event.stopPropagation()}
+    >
+      <PhiButtonControl
+        type="text"
+        size="small"
+        ariaLabel="Wire signals"
+        tooltip="Wire signals"
+        /*
+         * Not a chain link: that glyph is the Rich Text Widget's own tool for an embedded link, and the
+         * two sat side by side in the same toolbar meaning entirely different things. The flow-graph
+         * glyph is taken by the effects editor, so wiring gets the connected-nodes one.
+         */
+        icon={<ShareAltOutlined />}
+        onClick={onOpen}
+      />
+    </span>
   );
 }
 

@@ -3,6 +3,10 @@
 import type { ReactNode } from "react";
 import { Popconfirm } from "antd";
 
+import type { PhiControlSize } from "../../types/control";
+import type { PhiButtonType } from "./phi-button-types";
+import { PhiButtonControl } from "./phi-button-control";
+
 export const PHI_CONFIRM_PLACEMENTS = [
   "top",
   "topLeft",
@@ -30,7 +34,25 @@ export type PhiConfirmControlProps = {
   placement?: PhiConfirmPlacement;
   onConfirm: () => void | Promise<void>;
   onCancel?: () => void;
-  children: ReactNode;
+  /**
+   * The button that opens the confirmation, drawn by this Control.
+   *
+   * A consumer used to hand in an Ant Design Button with no `onClick`, because the confirmation is what
+   * reacts to the press. `PhiButtonControl` renders such a button disabled -- a button that calls
+   * nothing is not a control -- so the trigger belongs here, where the thing it opens is known.
+   */
+  trigger?: PhiConfirmControlTrigger;
+  /** Any element that opens the confirmation, for a trigger that is not a plain button. */
+  children?: ReactNode;
+};
+
+export type PhiConfirmControlTrigger = {
+  label: ReactNode;
+  ariaLabel?: string;
+  icon?: ReactNode;
+  type?: PhiButtonType;
+  danger?: boolean;
+  size?: PhiControlSize;
 };
 
 export function PhiConfirmControl({
@@ -43,6 +65,7 @@ export function PhiConfirmControl({
   placement,
   onConfirm,
   onCancel,
+  trigger,
   children,
 }: PhiConfirmControlProps) {
   return (
@@ -57,7 +80,19 @@ export function PhiConfirmControl({
       onConfirm={onConfirm}
       onCancel={onCancel}
     >
-      {children}
+      {trigger ? (
+        <PhiButtonControl
+          label={trigger.label}
+          ariaLabel={trigger.ariaLabel}
+          icon={trigger.icon}
+          type={trigger.type}
+          danger={trigger.danger}
+          size={trigger.size}
+          disabled={disabled}
+          // The confirmation reacts to the press; this only keeps the button a live one.
+          onClick={() => undefined}
+        />
+      ) : children}
     </Popconfirm>
   );
 }

@@ -21,14 +21,14 @@
   opacity: 0.72;
 }
 
-.phi-layout-affordance.ant-btn.phi-layout-affordance--insert[data-phi-structure-drop-state="accepted"] {
+.phi-layout-affordance.ant-btn.phi-layout-affordance--insert.phi-layout-affordance--drop-accepted {
   opacity: 1;
   color: var(--ant-color-success);
   border-color: var(--ant-color-success);
   box-shadow: 0 0 0 2px var(--ant-color-success-bg);
 }
 
-.phi-layout-affordance.ant-btn.phi-layout-affordance--insert[data-phi-structure-drop-state="rejected"] {
+.phi-layout-affordance.ant-btn.phi-layout-affordance--insert.phi-layout-affordance--drop-rejected {
   opacity: 1;
   color: var(--ant-color-error);
   border-color: var(--ant-color-error);

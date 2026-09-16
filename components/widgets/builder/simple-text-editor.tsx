@@ -209,8 +209,7 @@ export function PhiSimpleTextWidgetEditor({
           }
         }}
         onCancel={() => setEditedText(null)}
-        styles={{
-          input: {
+        inputStyle={{
             borderBottom: "1px solid var(--ant-color-border, rgba(0, 0, 0, 0.15))",
             borderRadius: 0,
             paddingInline: 0,
@@ -222,8 +221,7 @@ export function PhiSimpleTextWidgetEditor({
             textDecoration: textDecoration || undefined,
             color: config?.color ?? undefined,
             fontFamily: resolvedFontFamily,
-            backgroundColor: config?.code ? "var(--ant-color-fill-secondary, rgba(0, 0, 0, 0.04))" : undefined,
-          },
+          backgroundColor: config?.code ? "var(--ant-color-fill-secondary, rgba(0, 0, 0, 0.04))" : undefined,
         }}
         style={{
           width: `${inputWidthCh}ch`,

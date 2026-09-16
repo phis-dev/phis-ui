@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Flex, Input, QRCode, Typography } from "antd";
+import { Flex, QRCode, Typography } from "antd";
+import { PhiTextControl } from "../../controls/phi-text-control";
 import { PhiButtonControl } from "../../controls/phi-button-control";
 import { PhiAlertControl } from "../../controls/phi-alert-control";
 import type { PhiAuthWorkflow } from "../../../types/auth-manifest";
@@ -146,7 +147,14 @@ export function PhiAuthWorkflowBody({
           <>
             <QRCode value={enrollment.otpauthUri} type="svg" />
             <Typography.Text copyable code>{enrollment.manualKey}</Typography.Text>
-            <Input.OTP length={6} value={code} onChange={setCode} disabled={busy} />
+            <PhiTextControl
+              presentation="otp"
+              otpLength={6}
+              ariaLabel="Authenticator code"
+              value={code}
+              onChange={(nextValue) => setCode(nextValue ?? "")}
+              disabled={busy}
+            />
             <PhiButtonControl
               type="primary"
               loading={busy}
@@ -164,13 +172,14 @@ export function PhiAuthWorkflowBody({
     <Flex vertical gap="middle">
       <Typography.Title level={4}>Two-factor authentication</Typography.Title>
       {error ? <PhiAlertControl level="error" showIcon title={error} /> : null}
-      <Input
+      <PhiTextControl
         value={code}
-        inputMode={methodKey === "totp" ? "numeric" : "text"}
+        inputType={methodKey === "totp" ? "one-time-code" : "text"}
         autoComplete="one-time-code"
         maxLength={methodKey === "totp" ? 6 : 11}
         placeholder={methodKey === "totp" ? "6-digit code" : "Recovery code"}
-        onChange={(event) => setCode(event.target.value)}
+        allowClear={false}
+        onChange={(nextValue) => setCode(nextValue ?? "")}
         disabled={busy}
       />
       <PhiButtonControl type="primary" loading={busy} onClick={() => void submit()} label="Verify and continue" />

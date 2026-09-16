@@ -1,9 +1,9 @@
 "use client";
 
 import { DeleteOutlined, UploadOutlined } from "@ant-design/icons";
-import { Button, Flex, List, Progress, Typography, Upload } from "antd";
+import { Flex, List, Progress, Typography } from "antd";
 import { PhiButtonControl } from "../../../../../components/controls/phi-button-control";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { usePhiMediaUpload } from "../../../../../components/media/phi-media-upload";
 import {
@@ -190,6 +190,7 @@ export function PhiSlotUploadWidgetClient({ config }: PhiSlotUploadWidgetClientP
     return { asset: { id: view.mediaAssetId } };
   }, [base, ownerId, read, slotName]);
 
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const upload = usePhiMediaUpload({
     labels: PHI_MEDIA_UPLOAD_DEFAULT_LABELS,
     ...(slot
@@ -223,14 +224,31 @@ export function PhiSlotUploadWidgetClient({ config }: PhiSlotUploadWidgetClientP
       {ownerId === null ? (
         <Typography.Text type="secondary">Nothing selected.</Typography.Text>
       ) : (
-        <Upload
-          multiple={slot?.cardinality === "many"}
-          accept={slot?.contentTypes.join(",")}
-          showUploadList={false}
-          beforeUpload={(file) => { void upload.upload(file); return false; }}
-        >
-          <Button icon={<UploadOutlined />}>Choose a file</Button>
-        </Upload>
+        <>
+          {/*
+            * The file dialog is a plain input the button opens, rather than an Upload wrapper that reacts
+            * to a press on its child: that child would have been a button with nothing of its own to
+            * call, which `PhiButtonControl` renders disabled. The upload itself never went through the
+            * wrapper -- `usePhiMediaUpload` sends every file -- so nothing is lost by leaving it out.
+            */}
+          <input
+            ref={fileInputRef}
+            type="file"
+            hidden
+            multiple={slot?.cardinality === "many"}
+            accept={slot?.contentTypes.join(",")}
+            onChange={(event) => {
+              for (const file of Array.from(event.target.files ?? [])) void upload.upload(file);
+              // Cleared so choosing the same file again is a change, and uploads again.
+              event.target.value = "";
+            }}
+          />
+          <PhiButtonControl
+            icon={<UploadOutlined />}
+            label="Choose a file"
+            onClick={() => fileInputRef.current?.click()}
+          />
+        </>
       )}
       {upload.items.filter((item) => item.status === "uploading").map((item) => (
         <Progress key={item.localId} percent={item.progress} size="small" />

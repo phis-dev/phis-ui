@@ -17,7 +17,13 @@ import type { PhiControlSize, PhiControlVariant } from "../../types/control";
 import type { PhiTextInputType } from "./phi-text-types";
 import { PhiLabeledControl } from "./phi-labeled-control";
 
-export type PhiTextControlPresentation = "input" | "password" | "textarea" | "hidden";
+/**
+ * How the value is entered.
+ *
+ * `otp` is a row of single-character cells for a code of known length -- the shape an authenticator
+ * code is recognised by, and one that makes a mistyped digit visible where it happened.
+ */
+export type PhiTextControlPresentation = "input" | "password" | "textarea" | "hidden" | "otp";
 
 export type PhiTextControlProps = {
   value?: string | null;
@@ -37,6 +43,8 @@ export type PhiTextControlProps = {
   minLength?: number;
   maxLength?: number;
   rows?: number;
+  /** How many cells an `otp` presentation draws; six, the length authenticator apps use, unless stated. */
+  otpLength?: number;
   autoSize?: boolean | { minRows?: number; maxRows?: number };
   tabIndex?: number;
   size?: PhiControlSize;
@@ -50,11 +58,19 @@ export type PhiTextControlProps = {
   onBlur?: FocusEventHandler<HTMLInputElement | HTMLTextAreaElement>;
   onClear?: () => void;
   style?: CSSProperties;
+  /**
+   * The style of the field's own text, where `style` places the control as a whole.
+   *
+   * Text that is edited where it is read -- a heading typed into in place -- has to look like the text
+   * it replaces, in its size, weight and colour. That styling belongs to the field and not to the box
+   * around it, and an Ant Design input draws those as two elements once it has a clear button.
+   */
+  inputStyle?: CSSProperties;
 };
 
 type ResolvedTextInputKind = {
   type: "text" | "url" | "tel" | "email" | "password" | "search";
-  inputMode?: "text" | "url" | "tel" | "email" | "search";
+  inputMode?: "text" | "url" | "tel" | "email" | "search" | "numeric";
 };
 
 function resolveTextInputKind(inputType: PhiTextInputType | null | undefined): ResolvedTextInputKind {
@@ -69,6 +85,8 @@ function resolveTextInputKind(inputType: PhiTextInputType | null | undefined): R
       return { type: "password", inputMode: "text" };
     case "search":
       return { type: "search", inputMode: "search" };
+    case "one-time-code":
+      return { type: "text", inputMode: "numeric" };
     case "text":
     default:
       return { type: "text", inputMode: "text" };
@@ -93,6 +111,7 @@ export function PhiTextControl({
   minLength,
   maxLength,
   rows,
+  otpLength = 6,
   autoSize,
   tabIndex,
   size,
@@ -106,6 +125,7 @@ export function PhiTextControl({
   onBlur,
   onClear,
   style,
+  inputStyle,
 }: PhiTextControlProps) {
   const resolvedKind = resolveTextInputKind(inputType);
   const stableAllowClear = {
@@ -141,10 +161,25 @@ export function PhiTextControl({
   }
 
   let control: ReactNode;
-  if (presentation === "textarea") {
+  if (presentation === "otp") {
+    control = (
+      <Input.OTP
+        aria-label={ariaLabel}
+        autoFocus={autoFocus}
+        disabled={disabled || (!onChange && !readOnly)}
+        length={otpLength}
+        size={size}
+        variant={variant}
+        value={value ?? ""}
+        onChange={(nextValue) => onChange?.(nextValue)}
+        style={style}
+      />
+    );
+  } else if (presentation === "textarea") {
     control = (
       <Input.TextArea
         {...commonProps}
+        styles={inputStyle ? { textarea: inputStyle } : undefined}
         ref={textareaRef}
         allowClear={stableAllowClear}
         autoSize={autoSize}
@@ -156,6 +191,7 @@ export function PhiTextControl({
     control = (
       <Input.Password
         {...commonProps}
+        styles={inputStyle ? { input: inputStyle } : undefined}
         allowClear={stableAllowClear}
         prefix={prefix}
         onPressEnter={onPressEnter}
@@ -165,6 +201,7 @@ export function PhiTextControl({
     control = (
       <Input
         {...commonProps}
+        styles={inputStyle ? { input: inputStyle } : undefined}
         allowClear={stableAllowClear}
         inputMode={resolvedKind.inputMode}
         prefix={prefix}

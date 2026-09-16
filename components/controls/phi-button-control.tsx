@@ -1,6 +1,6 @@
 "use client";
 
-import type { ReactNode } from "react";
+import type { ReactNode, Ref } from "react";
 import Link from "next/link";
 import { Badge, Button, Tooltip } from "antd";
 import type { ButtonProps } from "antd";
@@ -28,6 +28,14 @@ export type PhiButtonControlProps = {
    * which is exactly the case a refusal page is.
    */
   href?: string;
+  /**
+   * Opens `href` in a new tab, and only ever together with `rel="noreferrer"`.
+   *
+   * A flag rather than `target` and `rel` of its own: the two are one decision, and a new tab without
+   * `noreferrer` hands the opened page a handle back to this one. Making them separate props would make
+   * that mistake the easy one.
+   */
+  newTab?: boolean;
   tooltip?: ReactNode;
   icon?: ReactNode;
   type?: PhiButtonType;
@@ -41,6 +49,18 @@ export type PhiButtonControlProps = {
   size?: PhiControlSize;
   style?: ButtonProps["style"];
   badge?: PhiControlBadgePresentation;
+  /**
+   * A styling hook, for a surface that places the button with its own stylesheet.
+   *
+   * Authoring chrome is the case: its affordances are sized and positioned by the scaffold stylesheets,
+   * which find them by class. A class carries no behaviour, so it stays inside what a Control may accept.
+   */
+  className?: string;
+  /**
+   * The button element itself, for something that has to measure or register it -- a drop target, the
+   * scaffold a preview is taken from. Never a way to reach the element's own handlers.
+   */
+  ref?: Ref<HTMLButtonElement | HTMLAnchorElement>;
   onClick?: () => void;
 };
 
@@ -48,6 +68,7 @@ export function PhiButtonControl({
   label,
   ariaLabel,
   href,
+  newTab,
   tooltip,
   icon,
   type = "default",
@@ -60,6 +81,8 @@ export function PhiButtonControl({
   size,
   style,
   badge,
+  className,
+  ref,
   onClick,
 }: PhiButtonControlProps) {
   const visibleTooltip = typeof label === "string" && typeof tooltip === "string" && label === tooltip
@@ -67,6 +90,8 @@ export function PhiButtonControl({
     : tooltip;
   const button = (
     <Button
+      ref={ref}
+      className={className}
       aria-label={ariaLabel}
       type={type}
       shape={shape}
@@ -89,7 +114,16 @@ export function PhiButtonControl({
    * home link is made of, it buys a request for the Area root that the visitor never asked for. An Area
    * root that forwards turns that into two.
    */
-  const linked = href && !disabled ? <Link href={href} prefetch={false}>{button}</Link> : button;
+  const linked = href && !disabled ? (
+    <Link
+      href={href}
+      prefetch={false}
+      target={newTab ? "_blank" : undefined}
+      rel={newTab ? "noreferrer" : undefined}
+    >
+      {button}
+    </Link>
+  ) : button;
   const badged = badge?.enabled ? (
     <Badge
       color={badge.color}
