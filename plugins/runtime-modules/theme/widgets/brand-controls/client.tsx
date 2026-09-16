@@ -86,7 +86,7 @@ import { normalizePhiBackgroundWidgetConfig, type PhiCmsBackgroundWidgetConfig }
 import { PhiMediaPickerBinding } from "../../../../../components/media/phi-media-picker-binding";
 import { PHI_MEDIA_WIDGET_DEFAULT_LABELS } from "../../../../../components/media/media-widget-labels";
 import { PHI_SEARCH_WIDGET_DEFAULT_LABELS } from "../../../../../components/widgets/label-types/search";
-import { buildPhiMediaAssetContentDeliveryUrl, PhiMediaKind } from "../../../../../constants/media";
+import { buildPhiMediaAssetContentDeliveryUrl, PhiMediaAssetFlags, PhiMediaKind } from "../../../../../constants/media";
 import { createPhiMediaPickerAssetControllerRoutes } from "../../../../../components/media/asset-controller-routes";
 import { PhiPresetSizeControl, type PhiPresetSizeOption } from "../../../../../components/controls/phi-preset-size-control";
 import { PhiButtonControl } from "../../../../../components/controls/phi-button-control";
@@ -743,6 +743,7 @@ const renderPhiThemeRootBackgroundMediaPicker: NonNullable<PhiBackgroundControlP
       <PhiMediaPickerBinding
         config={{
           mediaType: PhiMediaKind.Image,
+          presentationFlags: PhiMediaAssetFlags.Background,
           pageSize: 12,
           showPagination: true,
           showGroupFilter: true,

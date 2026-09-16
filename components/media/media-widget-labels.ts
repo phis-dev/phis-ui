@@ -91,12 +91,10 @@ export type PhiAssetInspectorEditorWidgetLabels = {
   savingLabel: string;
   saveSuccessText: string;
   saveFailedText: string;
-  privateFlagLabel: string;
-  archivedFlagLabel: string;
-  downloadFlagLabel: string;
   featuredFlagLabel: string;
   lockedFlagLabel: string;
   maskFlagLabel: string;
+  backgroundFlagLabel: string;
 };
 
 export type PhiAssetWidgetLabels = {
@@ -218,12 +216,10 @@ export const PHI_MEDIA_WIDGET_DEFAULT_LABELS: PhiAssetWidgetLabels = {
     savingLabel: "Saving...",
     saveSuccessText: "Asset saved.",
     saveFailedText: "Save failed.",
-    privateFlagLabel: "private",
-    archivedFlagLabel: "archived",
-    downloadFlagLabel: "restricted",
     featuredFlagLabel: "featured",
     lockedFlagLabel: "locked",
     maskFlagLabel: "mask",
+    backgroundFlagLabel: "background",
   },
   picker: {
     triggerLabel: "Mediathek",

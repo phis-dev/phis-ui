@@ -29,6 +29,7 @@ const flagOptions = [
   [PhiMediaAssetFlags.Featured, "featuredFlagLabel", "Featured"],
   [PhiMediaAssetFlags.Locked, "lockedFlagLabel", "Locked"],
   [PhiMediaAssetFlags.Mask, "maskFlagLabel", "Mask"],
+  [PhiMediaAssetFlags.Background, "backgroundFlagLabel", "Background"],
 ] as const;
 
 export const PHI_ASSET_METADATA_FORM_DESCRIPTOR = {
@@ -140,12 +141,10 @@ async function loadAssetFormLabels(context: Parameters<NonNullable<ReturnType<ty
     folderNameRequired: labels.editor.folderNameRequired,
     parentFolderLabel: labels.editor.parentFolderLabel,
     topLevelFolderLabel: labels.editor.topLevelFolderLabel,
-    privateFlagLabel: labels.editor.privateFlagLabel,
-    archivedFlagLabel: labels.editor.archivedFlagLabel,
-    downloadFlagLabel: labels.editor.downloadFlagLabel,
     featuredFlagLabel: labels.editor.featuredFlagLabel,
     lockedFlagLabel: labels.editor.lockedFlagLabel,
     maskFlagLabel: labels.editor.maskFlagLabel,
+    backgroundFlagLabel: labels.editor.backgroundFlagLabel,
   });
 }
 

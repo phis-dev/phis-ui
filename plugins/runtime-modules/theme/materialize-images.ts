@@ -1,5 +1,6 @@
 "use client";
 
+import { PhiMediaAssetFlags, PhiMediaAssetSource } from "../../../constants/media";
 import { runPhiMediaUploadSession } from "../../../components/media/media-upload-flow";
 import { adoptPhiThemeModuleBlocks } from "../../../theme/phi-theme-adoption";
 import type { PhiThemeComposition } from "../../../theme/phi-theme-composition";
@@ -74,8 +75,17 @@ async function uploadPhiThemeImage(source: string, hint: string) {
   const blob = await response.blob();
   const contentType = blob.type || readPhiDataUrlContentType(source);
   const file = new File([blob], buildPhiThemeImageFileName(contentType, hint), { type: contentType });
+  /*
+   * Flagged as a background here rather than by whoever saved the Theme.
+   *
+   * This is the one moment the library gains a picture nobody picked out of it: a ground arrives because
+   * a Theme was saved, and it is a background by the only use it has ever had. The Background Control
+   * lists what carries the flag, so a ground that arrived without it would be invisible in the very
+   * place it belongs -- and the Control has no upload of its own to put it right.
+   */
   const result = await runPhiMediaUploadSession(file, undefined, {
-    meta: { origin: "theme-ground" },
+    presentationFlags: PhiMediaAssetFlags.Background,
+    meta: { source: PhiMediaAssetSource.ThemeGround },
   });
   return result.asset.id;
 }

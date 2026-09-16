@@ -215,6 +215,43 @@ mark them, decide per item for the rest. Scan script:
 > Resolved by the module-folder migration of 2026-08-29; the layout is now normative in
 > [MODULES.md](./MODULES.md).
 
+> **Follow-up 2026-09-16 — the same blind spot, one level up.**
+>
+> The Media vocabulary stood twice: `constants/media.ts` here and `src/lib/constants/media.ts` in
+> phis, byte for byte the same kinds, Folder flags, variant keys and resolvers. The copies had
+> already drifted. phis still carried `Private`, `Archived` and `Restricted` in
+> `PhiMediaAssetFlags` long after lifecycle and delivery had become columns of their own, so the set
+> of flag values its metadata route accepted was not the set this package offered. Nothing failed
+> loudly; a drifting copy of a number never does.
+>
+> Three reasons it was not found, and none of them is inattention:
+>
+> The measurement was the **bundle graph of this package**. A copy living in another repository is
+> not a node in it, so a cross-repository twin is structurally unreachable by that method, not merely
+> overlooked.
+>
+> The question was redundancy again. One vocabulary written twice in two packages is not two ways to
+> do one thing — every call site had exactly one import, and the 2026-08-29 note above says why that
+> search comes back empty. The question that finds it is about the **package seam**: which values does
+> a request carry that the other side then judges, and does anything make the two sides read them from
+> one place?
+>
+> And the one cross-repository mirror this audit did examine, it waved through: the
+> `types/references.ts` ≙ `internal-references.ts` codec twin, below, correctly, as an intentional
+> mirror documented in REFERENCES.md. That verdict is the precedent under which an undeclared copy
+> passes unnoticed. The distinction the section never drew: a mirror a document names is carried along
+> when it changes, a copy nobody declared drifts.
+>
+> Resolved 2026-09-16 by moving the vocabulary into `@phis/contracts/media` — flags, kinds, Folder
+> flags, variant keys, and the lifecycle and delivery vocabularies — with an admission rule for the
+> subpath in that package's README: what crosses the wire as a value and is judged on the other side.
+> What remains twice is what genuinely differs per side (delivery URL shapes), and it is no longer a
+> question of discipline that it stays right.
+>
+> **For the next audit:** run it across package boundaries at least once. For every constant a request
+> carries, ask which package owns it. A twin that no document names is a finding, whatever the bundle
+> graph says.
+
 
 - **Gateway layer is thin**: 27 files, 2,874 lines total; site-key headers, URL building and
   envelope reading go through the shared `data-source-fetch.ts` / `mutation-fetch.ts` helpers.

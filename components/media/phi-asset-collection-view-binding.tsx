@@ -46,6 +46,7 @@ const ASSET_FLAG_VALUES = [
   PhiMediaAssetFlags.Featured,
   PhiMediaAssetFlags.Locked,
   PhiMediaAssetFlags.Mask,
+  PhiMediaAssetFlags.Background,
 ] as const;
 
 function readAssetFlagValues(presentationFlags: number | null) {
@@ -260,6 +261,7 @@ export function PhiAssetCollectionViewBinding({
                 { value: PhiMediaAssetFlags.Featured, label: labels.editor.featuredFlagLabel },
                 { value: PhiMediaAssetFlags.Locked, label: labels.editor.lockedFlagLabel },
                 { value: PhiMediaAssetFlags.Mask, label: labels.editor.maskFlagLabel },
+                { value: PhiMediaAssetFlags.Background, label: labels.editor.backgroundFlagLabel },
               ]}
               allowClear
               maxTagCount={1}

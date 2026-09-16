@@ -3,7 +3,7 @@
 import { useCallback, useState, type ReactNode } from "react";
 import { StarOutlined } from "@ant-design/icons";
 
-import { PhiMediaAssetFlags, PhiMediaKind } from "../../../../constants/media";
+import { PhiMediaAssetFlags, PhiMediaAssetSource, PhiMediaKind } from "../../../../constants/media";
 import { normalizePhiImagePreviewTile } from "../../../media/phi-image-preview-data";
 import { bumpPhiImagePreviewRefreshToken } from "../../../media/phi-image-preview-store";
 import { usePhiMediaPickerBinding } from "../../../media/phi-media-picker-binding";
@@ -180,7 +180,7 @@ export function PhiMaskPickerButton({
         return runPhiMediaUploadSession(file, setUploadProgress, {
           presentationFlags: PhiMediaAssetFlags.Mask,
           meta: {
-            source: "iconify",
+            source: PhiMediaAssetSource.Iconify,
             iconify: {
               iconSet: icon.iconSet,
               iconName: icon.iconName,

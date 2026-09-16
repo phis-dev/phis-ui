@@ -209,6 +209,7 @@ export const PhiMediaAssetFlagNames = {
   Featured: PhiMediaAssetFlags.Featured,
   Locked: PhiMediaAssetFlags.Locked,
   Mask: PhiMediaAssetFlags.Mask,
+  Background: PhiMediaAssetFlags.Background,
 } as const;
 
 export const PhiMediaFolderFlagNames = {

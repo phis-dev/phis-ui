@@ -5,7 +5,7 @@ import type { PhiBackgroundControlProps } from "../../../../components/controls/
 import { PhiMediaPickerBinding } from "../../../../components/media/phi-media-picker-binding";
 import { PHI_MEDIA_WIDGET_DEFAULT_LABELS } from "../../../../components/media/media-widget-labels";
 import { PHI_SEARCH_WIDGET_DEFAULT_LABELS } from "../../../../components/widgets/label-types/search";
-import { PhiMediaKind } from "../../../../constants/media";
+import { PhiMediaAssetFlags, PhiMediaKind } from "../../../../constants/media";
 
 import type { PhiBuilderContainerMeta } from "../../../../types/builder";
 import {
@@ -317,6 +317,7 @@ function usePhiBuilderInspectorSectionState(signalRoutes?: PhiSignalRouteSet) {
     <PhiMediaPickerBinding
       config={{
         mediaType: PhiMediaKind.Image,
+        presentationFlags: PhiMediaAssetFlags.Background,
         pageSize: 12,
         showPagination: true,
         showGroupFilter: true,
