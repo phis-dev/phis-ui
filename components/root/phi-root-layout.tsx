@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { preload } from "react-dom";
 import { AntdRegistry } from "@ant-design/nextjs-registry";
 import AntdApp from "antd/es/app";
 import "antd/dist/reset.css";
@@ -136,7 +137,16 @@ export async function PhiRootLayout({
     apiBaseUrl,
     internalToken,
     siteKey,
+    locale: resolvedLocale?.locale ?? site.defaultLocale,
   });
+  /*
+   * `preload` rather than a `<link>` element: React hoists it into the head and keeps one per URL.
+   * `crossOrigin` is not optional for a font -- `@font-face` fetches in CORS mode even on this origin,
+   * and a preload made without it is a different request the browser downloads and then throws away.
+   */
+  for (const href of assetFonts.preloads) {
+    preload(href, { as: "font", type: "font/woff2", crossOrigin: "anonymous" });
+  }
   const bodyFont = assetFonts.families.body
     ?? resolveThemeFont(siteThemeRecord?.fonts?.body, "var(--phi-font-source-body)", fontCatalogue.familyVariables).fontFamily;
   const monoFont = assetFonts.families.mono

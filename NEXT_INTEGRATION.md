@@ -264,8 +264,9 @@ request: `meta.font.coverage` lists the named ranges the font maps at least one 
 font's own codepoints outside all of them as a `rest` cut (key `15`), so a font with glyphs no Google
 range names does not lose them. `buildPhiFontSubsetFaces` writes one `@font-face` per listed cut against
 `/api/site/media/[id]/subsets/[key]`; a font without `coverage` -- everything uploaded before the reader
-learned it -- still gets the single face over the whole file. Preloading the range a Site's locales
-need is not built.
+learned it -- still gets the single face over the whole file. The page's locale picks what is
+preloaded: the body slot's `Latin` cut always, and the cut its script needs beside it -- `Cyrillic`
+for `ru`, `LatinExt` for `pl` or `sr-Latn` (`resolvePhiFontPreloadSubsetKeys`).
 
 The tools are all permissive, which matters because the core is Apache-2.0 so that Add-ons may stay
 closed: HarfBuzz is under the Old MIT license and reachable from Node as `harfbuzzjs` (MIT) or

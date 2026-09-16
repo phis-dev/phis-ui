@@ -1,5 +1,8 @@
 import "server-only";
 
+import { resolvePhiFontPreloadSubsetKeys } from "@phis/contracts/media";
+
+import { buildPhiFontSubsetDeliveryUrl } from "../constants/media";
 import { resolveSiteInternalReferences } from "../gateway/internal-references";
 import { readPhiInternalReference } from "../types/references";
 import {
@@ -41,9 +44,17 @@ export type PhiResolvedThemeFonts = {
   css: string;
   /** Per slot, the stack to declare -- absent where the slot names no Asset. */
   families: Partial<Record<PhiThemeFontSlot, string>>;
+  /**
+   * The cut files a page should fetch before it paints: the body slot's, for the page's language.
+   *
+   * Only the body, for the reason the catalogue preloads only its body family -- a serif or a code face
+   * is paid for where something uses it, not on every page. And only cuts: a font without `coverage`
+   * is one whole file, and preloading an unsubset upload would put the full family ahead of first paint.
+   */
+  preloads: string[];
 };
 
-const PHI_NO_THEME_FONTS: PhiResolvedThemeFonts = { css: "", families: {} };
+const PHI_NO_THEME_FONTS: PhiResolvedThemeFonts = { css: "", families: {}, preloads: [] };
 
 export async function resolvePhiSiteThemeFonts(
   fonts: Partial<Record<PhiThemeFontSlot, string | null>> | null | undefined,
@@ -51,7 +62,8 @@ export async function resolvePhiSiteThemeFonts(
     apiBaseUrl,
     internalToken,
     siteKey,
-  }: { apiBaseUrl: string; internalToken: string; siteKey: string },
+    locale,
+  }: { apiBaseUrl: string; internalToken: string; siteKey: string; locale?: string | null },
 ): Promise<PhiResolvedThemeFonts> {
   if (!fonts) return PHI_NO_THEME_FONTS;
 
@@ -72,6 +84,7 @@ export async function resolvePhiSiteThemeFonts(
 
   const rules = new Map<number, string>();
   const families: Partial<Record<PhiThemeFontSlot, string>> = {};
+  const preloads: string[] = [];
   for (const { slot, assetId } of slots) {
     const asset = projection.assets.get(assetId);
     if (!asset || asset.kind !== "font") continue;
@@ -94,7 +107,13 @@ export async function resolvePhiSiteThemeFonts(
     // One Asset in two slots is one pair of rules; the stack is the same string either way.
     rules.set(assetId, css);
     families[slot] = stack;
+    if (slot === "body" && asset.font?.coverage) {
+      for (const key of resolvePhiFontPreloadSubsetKeys(locale, asset.font.coverage)) {
+        const url = buildPhiFontSubsetDeliveryUrl(asset.id, key, asset.deliveryRevision);
+        if (url) preloads.push(url);
+      }
+    }
   }
 
-  return { css: [...rules.values()].join(""), families };
+  return { css: [...rules.values()].join(""), families, preloads };
 }
