@@ -68,9 +68,143 @@ const menuInterfaceOwner = "components/controls/phi-menu-control.tsx";
 
 const coreApplicationAdapterPath = "components/runtime/core-runtime-application-adapter.tsx";
 
+/*
+ * Every Ant Design primitive a Phi Control encapsulates, and the Control a consumer uses instead.
+ *
+ * AGENTS.md states the rule: when a Phi Control exists for a function, nobody imports the matching
+ * primitive directly, and a capability the Control lacks is a Core extension, not an escape hatch. The
+ * checks above predate it and name files -- fourteen Widgets, seven consumers, a walk over `components/`
+ * for a handful of primitives -- so everything outside those names passed, every Module under `plugins/`
+ * included. This is the rule itself, over the whole tree.
+ *
+ * Layout and typography primitives (`Flex`, `Space`, `Typography`, `Card`) are deliberately absent:
+ * AGENTS.md has styling default to them, and no Control stands in for them.
+ */
+const controlledPrimitives = new Map([
+  ["Alert", "PhiAlertControl"],
+  ["AutoComplete", "PhiSelectControl"],
+  ["Button", "PhiButtonControl"],
+  ["Calendar", "PhiCalendarControl"],
+  ["Cascader", "PhiCascaderControl"],
+  ["Checkbox", "PhiCheckboxControl"],
+  ["ColorPicker", "PhiColorControl"],
+  ["DatePicker", "PhiDatePickerControl"],
+  ["Drawer", "PhiDrawerControl"],
+  ["Dropdown", "PhiDropdownControl"],
+  ["Form", "PhiFormControl"],
+  ["Input", "PhiTextControl"],
+  ["InputNumber", "PhiNumberControl"],
+  ["Menu", "PhiMenuControl"],
+  ["Modal", "PhiModalControl"],
+  ["Pagination", "PhiPaginationControl"],
+  ["Popconfirm", "PhiConfirmControl"],
+  ["Popover", "PhiPopoverControl"],
+  ["Radio", "PhiRadioGroupControl"],
+  ["Rate", "PhiRateControl"],
+  ["Segmented", "PhiSegmentedControl"],
+  ["Select", "PhiSelectControl"],
+  ["Slider", "PhiSliderControl"],
+  ["Switch", "PhiSwitchControl"],
+  ["Table", "PhiTableControl"],
+  ["Tabs", "PhiTabsControl"],
+  ["Tag", "PhiTagControl"],
+  ["Tree", "PhiTreeControl"],
+]);
+
+/** Where the Controls live, and therefore where their primitives may be imported. */
+const controlDirectory = "components/controls/";
+
+/*
+ * Implementations a Control plugs in rather than consumers of one. `PhiCalendarControl` and
+ * `PhiDatePickerControl` render through the active calendar adapter, so the adapter is where the
+ * primitive belongs -- one layer below the Control, not beside it. Named, so an addition is a decision.
+ */
+const primitiveAdapterOwners = new Map([
+  ["components/calendar/gregory-calendar-adapter-client.tsx", new Set(["Calendar", "DatePicker"])],
+]);
+
+/*
+ * Imports that still stand between a primitive and its Control, each with what is missing.
+ *
+ * A list that may only shrink. A file not on it fails the moment it imports a controlled primitive,
+ * so nothing new joins; and an entry whose file no longer needs it fails as well, so a converted file
+ * cannot leave its exemption behind. What made the checks above blind was not an open list but a scope
+ * drawn by name -- this one is the rule everywhere, with the remaining debts written down.
+ */
+const pendingControlAdoptions = new Map([
+  [
+    "plugins/runtime-modules/builder/clients/layout-scaffold-buttons.tsx",
+    {
+      primitives: new Set(["Button"]),
+      reason:
+        "the drag handle spreads the drag-and-drop listeners onto its button; PhiButtonControl takes no "
+        + "listeners, and whether they move to a wrapper or become a Control capability is undecided",
+    },
+  ],
+  [
+    "plugins/runtime-modules/theme/widgets/brand-controls/client.tsx",
+    {
+      primitives: new Set(["Button", "Form", "Input", "Select", "Switch", "Tag"]),
+      reason: "open in another session when the rule landed; converted once that work is committed",
+    },
+  ],
+]);
+
+/** `import Select from "antd/es/select"` reaches the same primitive by another door. */
+function readAntdComponentPathImports(source) {
+  const names = [];
+  for (const match of source.matchAll(/import\s+\w+\s+from\s*["']antd\/(?:es|lib)\/([\w-]+)["']/gu)) {
+    names.push(match[1].replace(/(?:^|-)(\w)/gu, (_, letter) => letter.toUpperCase()));
+  }
+  return names;
+}
+
+/** `import * as antd from "antd"` and then `antd.Select` -- rare, and exactly as direct. */
+function readAntdNamespaceUses(source) {
+  const names = [];
+  for (const match of source.matchAll(/import\s+\*\s+as\s+(\w+)\s+from\s*["']antd["']/gu)) {
+    for (const use of source.matchAll(new RegExp(`\\b${match[1]}\\.(\\w+)`, "gu"))) {
+      names.push(use[1]);
+    }
+  }
+  return names;
+}
+
+/** Value imports only: a `type` import renders nothing, and prop-type leaks have their own check. */
+function readAntdValueImports(source) {
+  const names = [];
+  for (const match of source.matchAll(/import\s+\{([^}]*)\}\s*from\s*["']antd["']/gu)) {
+    for (const item of match[1].split(",")) {
+      const trimmed = item.trim();
+      if (!trimmed || trimmed.startsWith("type ")) continue;
+      names.push(trimmed.split(/\s+as\s+/u)[0].trim());
+    }
+  }
+  return [...names, ...readAntdComponentPathImports(source), ...readAntdNamespaceUses(source)];
+}
+
+async function listRepositorySources(relativeDirectory = ".") {
+  const skipped = new Set(["node_modules", ".next", "dist", ".git", "scripts"]);
+  const entries = await readdir(path.join(repositoryRoot, relativeDirectory), { withFileTypes: true });
+  const files = [];
+  for (const entry of entries) {
+    if (skipped.has(entry.name)) continue;
+    const relativePath = relativeDirectory === "." ? entry.name : path.join(relativeDirectory, entry.name);
+    if (entry.isDirectory()) {
+      files.push(...await listRepositorySources(relativePath));
+    } else if (/\.[cm]?[jt]sx?$/u.test(entry.name) && !/\.test\.[cm]?[jt]sx?$/u.test(entry.name)) {
+      files.push(relativePath);
+    }
+  }
+  return files;
+}
+
 function readAntdNamedImports(source) {
   const names = [];
-  for (const match of source.matchAll(/import\s+(?:type\s+)?\{([\s\S]*?)\}\s*from\s*["']antd["']/gu)) {
+  // `[^}]*`, not a lazy `[\s\S]*?`: the lazy form starts at the first `import {` in the file and runs on
+  // through the previous import's closing brace, so the first name of an antd import that follows any
+  // other braced import was swallowed. That is how a `Button` stayed invisible to every check below.
+  for (const match of source.matchAll(/import\s+(?:type\s+)?\{([^}]*)\}\s*from\s*["']antd["']/gu)) {
     for (const item of match[1].split(",")) {
       const name = item.trim().split(/\s+as\s+/u)[0]?.trim();
       if (name) {
@@ -247,11 +381,58 @@ for (const relativePath of await listTypeScriptSources("components")) {
   }
 }
 
+/*
+ * The rule points at Controls; a Control it names has to exist, or a consumer would be told to use
+ * something that is not there and the only way through would be the primitive again.
+ */
+const controlSources = new Map();
+for (const relativePath of await listTypeScriptSources("components/controls")) {
+  controlSources.set(relativePath, await readSource(relativePath));
+}
+for (const [primitive, control] of controlledPrimitives) {
+  const exported = [...controlSources.values()].some((source) =>
+    new RegExp(`export\\s+(?:function|const)\\s+${control}\\b`, "u").test(source));
+  if (!exported) {
+    failures.push(`${primitive} is reserved for ${control}, but no Control under ${controlDirectory} exports it.`);
+  }
+}
+
+const pendingStillNeeded = new Map();
+for (const relativePath of await listRepositorySources()) {
+  if (relativePath.startsWith(controlDirectory)) continue;
+  const source = await readSource(relativePath);
+  const adapterOwned = primitiveAdapterOwners.get(relativePath) ?? new Set();
+  const pending = pendingControlAdoptions.get(relativePath)?.primitives ?? new Set();
+  const direct = [...new Set(readAntdValueImports(source))]
+    .filter((name) => controlledPrimitives.has(name) && !adapterOwned.has(name));
+  for (const primitive of direct) {
+    if (pending.has(primitive)) {
+      pendingStillNeeded.set(relativePath, (pendingStillNeeded.get(relativePath) ?? new Set()).add(primitive));
+      continue;
+    }
+    failures.push(
+      `${relativePath} imports ${primitive} from Ant Design directly; use ${controlledPrimitives.get(primitive)}.`,
+    );
+  }
+}
+for (const [relativePath, { primitives }] of pendingControlAdoptions) {
+  const stillNeeded = pendingStillNeeded.get(relativePath) ?? new Set();
+  for (const primitive of primitives) {
+    if (!stillNeeded.has(primitive)) {
+      failures.push(
+        `${relativePath} no longer imports ${primitive}; remove it from pendingControlAdoptions so the list keeps shrinking.`,
+      );
+    }
+  }
+}
+
 if (failures.length > 0) {
   console.error(`Control boundary validation failed:\n- ${failures.join("\n- ")}`);
   process.exit(1);
 }
 
 console.log(
-  `Control boundaries valid (${widgetControlRequirements.size} Widgets, ${directControlConsumers.length} direct consumers).`,
+  `Control boundaries valid (${widgetControlRequirements.size} Widgets, ${directControlConsumers.length} direct consumers, `
+    + `${controlledPrimitives.size} controlled primitives across the tree, `
+    + `${[...pendingControlAdoptions.values()].reduce((count, entry) => count + entry.primitives.size, 0)} pending).`,
 );
