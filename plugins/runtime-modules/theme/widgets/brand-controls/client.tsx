@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
 
-import { Button, Card, Collapse, ConfigProvider, Divider, Flex, Form, Input, Select, Space, Statistic, Switch, Tag, Typography, theme as antdTheme } from "antd";
+import { Card, Collapse, ConfigProvider, Divider, Flex, Space, Statistic, Typography, theme as antdTheme } from "antd";
 import { DeleteOutlined } from "@ant-design/icons";
 import type { AliasToken } from "antd/es/theme/interface";
 import type { PhiColorPickerLabels } from "../../../../../components/widgets/label-types/color-picker";
@@ -45,6 +45,7 @@ import {
 import type { PhiThemeFontsBlock } from "../../../../../theme/phi-theme-blocks";
 import type { PhiSiteFontSlots } from "../../../../../types/site-theme";
 import { usePhiSiteFontAssets } from "../../../../../components/media/phi-site-font-assets";
+import { buildPhiFontFaceCss, buildPhiFontFamilyStack } from "../../../../../theme/phi-font-face";
 import { resolvePhiThemeRuntimePayload } from "../../../../../theme/phi-theme-runtime";
 import { materializePhiThemeModuleBlocks } from "../../materialize-images";
 import {
@@ -122,6 +123,8 @@ import {
 } from "../../../../../theme/phi-button-shadow";
 import { PhiSelectControl } from "../../../../../components/controls/phi-select-control";
 import { PhiTextControl } from "../../../../../components/controls/phi-text-control";
+import { PhiSwitchControl } from "../../../../../components/controls/phi-switch-control";
+import { PhiTagControl } from "../../../../../components/controls/phi-tag-control";
 import {
   PHI_CONTROL_SHAPES,
   applyPhiControlShapeComponentTokens,
@@ -1878,6 +1881,34 @@ function usePhiBrandAccordionSection(storageKey: string, sectionKeys: readonly s
  * page renders with only where neither names one. Read through the block rather than the draft alone,
  * so trying a Set on shows its typefaces before anything is saved.
  */
+/**
+ * What each catalogue family's variable resolves to, read where the variables are in scope.
+ *
+ * A catalogue family is reached through a CSS variable that `next/font` sets on the page root, and a
+ * select's popup is drawn outside that root, where the variable does not exist. The family names the
+ * variable points at are global, though -- only the variable is scoped -- so the resolved value works
+ * anywhere. Read after mount, because the server renders no styles to read.
+ */
+function usePhiResolvedCatalogueFontFamilies(
+  families: readonly { family: string; cssVariable: string }[],
+) {
+  const [resolved, setResolved] = useState<ReadonlyMap<string, string>>(() => new Map());
+  useEffect(() => {
+    const root = document.querySelector<HTMLElement>("[data-phi-root-layout='true']") ?? document.documentElement;
+    const style = getComputedStyle(root);
+    const next = new Map<string, string>();
+    for (const { family, cssVariable } of families) {
+      const name = /^var\((--[\w-]+)\)$/u.exec(cssVariable.trim())?.[1];
+      const value = name ? style.getPropertyValue(name).trim() : "";
+      if (value) next.set(family, value);
+    }
+    // Reading the computed style is the external state this mirrors, so it lands after the render.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setResolved(next);
+  }, [families]);
+  return resolved;
+}
+
 function resolveThemeFontSlots(
   theme: ThemePayload,
   fonts: ReturnType<typeof usePhiConfig>["fonts"],
@@ -2138,15 +2169,14 @@ export function PhiBuilderBrandThemeControlsWidgetClient({
                               }}
                             />
                             {overridden ? (
-                              <Button
+                              <PhiButtonControl
                                 size="small"
                                 type="link"
                                 disabled={saving}
                                 style={{ alignSelf: "flex-start", paddingInline: 0, height: clientToken.controlHeightSM }}
                                 onClick={() => publishDraft(omitThemeColorOverride(state.draft, item.key, previewMode))}
-                              >
-                                Reset override
-                              </Button>
+                                label="Reset override"
+                              />
                             ) : null}
                           </Flex>
                         </div>
@@ -2208,30 +2238,57 @@ export function PhiBuilderBrandStyleControlsWidgetClient({
   const themeComposition = resolvePhiThemeComposition(state.draft, themeBlocks);
   const fontSlots = resolveThemeFontSlots(state.draft, fonts, themeComposition.fonts);
   const siteFontAssets = usePhiSiteFontAssets();
+  const resolvedCatalogueFamilies = usePhiResolvedCatalogueFontFamilies(fontFamilies);
   /*
-   * Where a typeface comes from decides what happens to it, so every option says so. A catalogue
+   * The Site's own typefaces are declared nowhere unless the Theme already uses them, so the faces a
+   * preview needs are written here -- the same rules the page would write, harmless twice.
+   */
+  const siteFontFaceCss = useMemo(
+    () => siteFontAssets.options
+      .map((option) => buildPhiFontFaceCss({
+        family: option.label,
+        url: option.deliveryUrl,
+        contentType: option.contentType,
+        metrics: option.metrics,
+      }))
+      .filter(Boolean)
+      .join(""),
+    [siteFontAssets.options],
+  );
+  /*
+   * Where a typeface comes from decides what happens to it, so the list is grouped by it. A catalogue
    * family is declared by this package or by an installed Module, and switching that Module off takes
-   * it away; a typeface from the library belongs to the Site and stays.
-   *
-   * Said in the description of a flat list rather than as option groups, and with plain text labels:
-   * the shared select control renders exactly that shape, and a hand-built Select with grouped,
-   * node-labelled options is what left this list unreadable and unselectable in the Builder.
+   * it away; a typeface from the library belongs to the Site and stays. Each option is set in its own
+   * face, so choosing a font is looking at fonts.
    */
   const fontOptions = useMemo<PhiControlOption[]>(() => [
     ...fontFamilies.map(({ family }) => ({
       value: family,
       label: family,
-      description: "Installed",
+      group: "Installed",
+      preview: { kind: "font" as const, fontFamily: resolvedCatalogueFamilies.get(family) ?? family },
     })),
     ...siteFontAssets.options.map((option) => ({
       value: option.value,
       label: option.label,
-      description: "This Site",
+      group: "This Site",
+      preview: {
+        kind: "font" as const,
+        fontFamily: buildPhiFontFamilyStack({
+          family: option.label,
+          url: option.deliveryUrl,
+          contentType: option.contentType,
+          metrics: option.metrics,
+        }) ?? option.label,
+      },
     })),
-  ], [fontFamilies, siteFontAssets.options]);
+  ], [fontFamilies, resolvedCatalogueFamilies, siteFontAssets.options]);
 
   return (
     <Flex vertical gap={clientToken.padding} style={{ width: "100%", minWidth: 0, opacity: loading ? 0.65 : 1 }}>
+      {siteFontFaceCss ? (
+        <style href="phi-theme-font-picker-faces" precedence="default" dangerouslySetInnerHTML={{ __html: siteFontFaceCss }} />
+      ) : null}
       <Card size="small" styles={{ body: { padding: clientToken.paddingSM } }}>
         <Collapse
           accordion
@@ -2408,7 +2465,7 @@ export function PhiBuilderBrandStyleControlsWidgetClient({
               children: (
                 <Flex align="center" justify="space-between" gap={clientToken.paddingSM} wrap="wrap">
                   <Typography.Text type="secondary">Dividing lines in dialogs and popovers, outlined steps and radios</Typography.Text>
-                  <Switch
+                  <PhiSwitchControl
                     checked={wireframe}
                     disabled={saving}
                     checkedChildren="On"
@@ -2542,9 +2599,7 @@ function PhiBrandBlockResetButton({
   onReset: () => void;
 }) {
   return (
-    <Button size="small" type="text" disabled={disabled} onClick={onReset}>
-      {`Follow ${blockTitle}`}
-    </Button>
+    <PhiButtonControl size="small" type="text" disabled={disabled} onClick={onReset} label={`Follow ${blockTitle}`} />
   );
 }
 
@@ -2620,9 +2675,13 @@ function PhiBrandCopyModeButton({
   onCopy: () => void;
 }) {
   return (
-    <Button size="small" style={{ flexShrink: 0 }} disabled={disabled} onClick={onCopy}>
-      {`Copy to ${mode === "dark" ? "light" : "dark"}`}
-    </Button>
+    <PhiButtonControl
+      size="small"
+      style={{ flexShrink: 0 }}
+      disabled={disabled}
+      onClick={onCopy}
+      label={`Copy to ${mode === "dark" ? "light" : "dark"}`}
+    />
   );
 }
 
@@ -2650,6 +2709,9 @@ function readWordmarkLetterSpacingEm(value: string | null | undefined) {
 }
 
 /** The weights a Wordmark part is offered, which is the range a name is actually set in. */
+/** What a sample button in the Theme preview does when pressed: nothing, while staying a live one. */
+function previewNoop() {}
+
 const PHI_THEME_WORDMARK_WEIGHT_OPTIONS = [
   { value: "", label: "Default" },
   { value: "300", label: "Light" },
@@ -2769,11 +2831,13 @@ export function PhiBuilderBrandIdentityControlsWidgetClient({
                       logoUrl: null,
                     }))}
                   />
-                  <Input
+                  <PhiTextControl
                     value={brand.logoAlt ?? ""}
                     placeholder="Alt text"
-                    onChange={(event) => publishDraft(mergeThemeBrand(state.draft, {
-                      logoAlt: event.target.value,
+                    ariaLabel="Logo alt text"
+                    allowClear={false}
+                    onChange={(next) => publishDraft(mergeThemeBrand(state.draft, {
+                      logoAlt: next ?? "",
                     }))}
                   />
                   {/*
@@ -2816,10 +2880,12 @@ export function PhiBuilderBrandIdentityControlsWidgetClient({
                   {editableWordmarkParts.map((part, index) => (
                     <PhiLabeledControl key={index} label={`Part #${index + 1}`} fill>
                       <Flex gap={clientToken.paddingXXS} align="center" style={{ width: "100%", minWidth: 0 }}>
-                        <Input
+                        <PhiTextControl
                           value={part.text}
                           placeholder={index === 0 ? fallbackWordmark : "Part"}
-                          onChange={(event) => updateWordmarkPart(index, { text: event.target.value })}
+                          ariaLabel={`Wordmark part ${index + 1}`}
+                          allowClear={false}
+                          onChange={(next) => updateWordmarkPart(index, { text: next ?? "" })}
                         />
                         <PhiColorControl
                           mode="single"
@@ -2857,7 +2923,8 @@ export function PhiBuilderBrandIdentityControlsWidgetClient({
                   <Divider style={{ marginBlock: clientToken.paddingXXS }} />
                   <PhiLabeledControl label="Weight" fill>
                     <Flex gap={clientToken.paddingXS} align="center" style={{ width: "100%", minWidth: 0 }}>
-                      <Select
+                      <PhiSelectControl
+                        ariaLabel="Wordmark weight"
                         style={{ flex: "1 1 auto", minWidth: 0 }}
                         value={String(brand.wordmark?.fontWeight ?? "")}
                         options={[...PHI_THEME_WORDMARK_WEIGHT_OPTIONS]}
@@ -2911,11 +2978,13 @@ export function PhiBuilderBrandIdentityControlsWidgetClient({
                     }))}
                   />
                   <PhiLabeledControl label="Eyebrow" fill>
-                    <Input
+                    <PhiTextControl
                       value={brand.eyebrow ?? ""}
                       placeholder="The small line above the name"
-                      onChange={(event) => publishDraft(mergeThemeBrand(state.draft, {
-                        eyebrow: event.target.value,
+                      ariaLabel="Eyebrow"
+                      allowClear={false}
+                      onChange={(next) => publishDraft(mergeThemeBrand(state.draft, {
+                        eyebrow: next ?? "",
                       }))}
                     />
                   </PhiLabeledControl>
@@ -3269,6 +3338,8 @@ export function PhiBuilderBrandThemePreviewWidgetClient({
 }: {
   runtime: PhiBlockRuntime;
 }) {
+  // The sample field is typed into like a real one, so what the Theme does to a filled field shows too.
+  const [previewInput, setPreviewInput] = useState("");
   const { fonts, presets: themePresets, themeBlocks, token: clientToken } = usePhiConfig();
   const fallbackTheme = useMemo(() => resolveInitialTheme(runtime), [runtime]);
   const [previewTheme, setPreviewTheme] = useState<ThemePayload>(fallbackTheme);
@@ -3304,7 +3375,7 @@ export function PhiBuilderBrandThemePreviewWidgetClient({
   type PreviewRow = { key: string; name: string; status: string } & Record<string, unknown>;
   const columns: readonly PhiTableControlColumn<PreviewRow>[] = [
     { title: "Name", key: "name", fieldPath: "name", sizing: { mode: "fill" } },
-    { title: "Status", key: "status", fieldPath: "status", sizing: { mode: "content" }, render: (value) => <Tag color="processing">{String(value)}</Tag> },
+    { title: "Status", key: "status", fieldPath: "status", sizing: { mode: "content" }, render: (value) => <PhiTagControl color="processing">{String(value)}</PhiTagControl> },
   ];
   const previewTableRows: readonly PreviewRow[] = [
     { key: "1", name: "Landing page", status: "Ready" },
@@ -3535,10 +3606,14 @@ export function PhiBuilderBrandThemePreviewWidgetClient({
                 Buttons, form fields, tables and status colors use the current draft tokens.
               </Typography.Text>
             </Space>
+            {/*
+              * Samples, drawn with the Controls a Site renders -- and live ones: a button with nothing to
+              * call renders disabled, and a preview of disabled buttons would show the wrong Theme.
+              */}
             <Space size="middle" wrap>
-              <Button type="primary">Primary</Button>
-              <Button>Default</Button>
-              <Button danger>Danger</Button>
+              <PhiButtonControl type="primary" label="Primary" onClick={previewNoop} />
+              <PhiButtonControl label="Default" onClick={previewNoop} />
+              <PhiButtonControl danger label="Danger" onClick={previewNoop} />
             </Space>
           </Flex>
           <Divider style={{ margin: 0 }} />
@@ -3548,18 +3623,22 @@ export function PhiBuilderBrandThemePreviewWidgetClient({
             </Typography.Title>
             <Flex gap={clientToken.paddingXS} wrap="wrap" align="end">
               {controlHeightPreviewItems.map((item) => (
-                <Button key={item.key} style={{ height: item.value }}>
-                  {item.label}
-                </Button>
+                <PhiButtonControl
+                  key={item.key}
+                  style={{ height: item.value }}
+                  label={item.label}
+                  onClick={previewNoop}
+                />
               ))}
             </Flex>
             <Typography.Text type="secondary">Wireframe {wireframeEnabled ? "on" : "off"}</Typography.Text>
           </Flex>
-          <Form layout="vertical">
-            <Form.Item label="Campaign" style={{ marginBottom: 0 }}>
-              <Input placeholder="Preview input" />
-            </Form.Item>
-          </Form>
+          <PhiTextControl
+            label="Campaign"
+            placeholder="Preview input"
+            value={previewInput}
+            onChange={(next) => setPreviewInput(next ?? "")}
+          />
           <Divider style={{ margin: 0 }} />
           <Flex gap={clientToken.padding} wrap="wrap">
             <Flex vertical gap={clientToken.paddingXS} style={{ flex: "1 1 260px", minWidth: 0 }}>

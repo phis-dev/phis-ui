@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 
 import { PhiMediaKind } from "../../constants/media";
 import { createPhiAssetUri } from "../../types/references";
-import type { PhiMediaAssetTile } from "../../types/media";
+import type { PhiFontMetrics, PhiMediaAssetTile } from "../../types/media";
 import { usePhiCollectionProvider } from "../widgets/client/shared/phi-collection-provider";
 import { PHI_ASSET_COLLECTION_DATA_SOURCE } from "./asset-collection-runtime";
 
@@ -29,13 +29,22 @@ export type PhiSiteFontAssetOption = {
   value: string;
   /** The family the file states, or the best name there is for it. */
   label: string;
+  /** Where the file is and what it says about itself, for a surface that wants to show the face. */
+  deliveryUrl: string;
+  contentType: string;
+  metrics: PhiFontMetrics | null;
 };
 
-function readFontAssetLabel(asset: PhiMediaAssetTile) {
+function readFontAssetMetrics(asset: PhiMediaAssetTile): PhiFontMetrics | null {
   const meta = asset.meta?.font;
-  const family = meta && typeof meta === "object" && !Array.isArray(meta)
-    ? (meta as Record<string, unknown>).familyName
-    : null;
+  if (!meta || typeof meta !== "object" || Array.isArray(meta)) return null;
+  const record = meta as Record<string, unknown>;
+  // The management tile carries `meta` as stored; only a shape with its unit grid is worth drawing from.
+  return typeof record.unitsPerEm === "number" && record.unitsPerEm > 0 ? (record as unknown as PhiFontMetrics) : null;
+}
+
+function readFontAssetLabel(asset: PhiMediaAssetTile) {
+  const family = readFontAssetMetrics(asset)?.familyName;
   if (typeof family === "string" && family.trim()) return family.trim();
   return asset.title?.trim() || asset.originalName.trim();
 }
@@ -48,6 +57,8 @@ export function usePhiSiteFontAssets(enabled = true) {
   useEffect(() => {
     if (!enabled || !provider) return;
     const abortController = new AbortController();
+    // The request is the external state this mirrors; loading starts with it, inside the same effect.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setLoading(true);
     void provider.query({
       resourceKey: PHI_ASSET_COLLECTION_DATA_SOURCE.resourceKey,
@@ -78,6 +89,9 @@ export function usePhiSiteFontAssets(enabled = true) {
         assetId: asset.id,
         value: createPhiAssetUri(asset.id),
         label: readFontAssetLabel(asset),
+        deliveryUrl: asset.deliveryUrl,
+        contentType: asset.contentType,
+        metrics: readFontAssetMetrics(asset),
       })),
     [assets],
   );

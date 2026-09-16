@@ -24,7 +24,21 @@ export type PhiControlOption<TValue extends string | number = string> = {
   group?: string;
 };
 
-export type PhiControlOptionPreview = {
+export type PhiControlOptionPreview = PhiControlOptionBackgroundPreview | PhiControlOptionFontPreview;
+
+/**
+ * The option's label set in the typeface it names, so a list of fonts shows the fonts.
+ *
+ * `fontFamily` is a complete `font-family` value -- a family, its fallback, a generic -- because the
+ * option is drawn in a popup outside the page's root, where a variable that names a font is not in
+ * scope. Whoever builds the option resolves the variable first.
+ */
+export type PhiControlOptionFontPreview = {
+  kind: "font";
+  fontFamily: string;
+};
+
+export type PhiControlOptionBackgroundPreview = {
   kind: "background";
   backgroundColor?: string;
   backgroundImage?: string;
@@ -122,6 +136,10 @@ function readDependencies(value: unknown): readonly PhiControlOptionsProviderDep
 
 function readOptionPreview(value: unknown): PhiControlOptionPreview | undefined {
   const record = readRecord(value);
+  if (record?.kind === "font") {
+    const fontFamily = readString(record.fontFamily);
+    return fontFamily ? { kind: "font", fontFamily } : undefined;
+  }
   if (record?.kind !== "background") return undefined;
   return {
     kind: "background",

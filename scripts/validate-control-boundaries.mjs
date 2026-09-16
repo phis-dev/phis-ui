@@ -132,15 +132,7 @@ const primitiveAdapterOwners = new Map([
  * cannot leave its exemption behind. What made the checks above blind was not an open list but a scope
  * drawn by name -- this one is the rule everywhere, with the remaining debts written down.
  */
-const pendingControlAdoptions = new Map([
-  [
-    "plugins/runtime-modules/theme/widgets/brand-controls/client.tsx",
-    {
-      primitives: new Set(["Button", "Form", "Input", "Select", "Switch", "Tag"]),
-      reason: "open in another session when the rule landed; converted once that work is committed",
-    },
-  ],
-]);
+const pendingControlAdoptions = new Map([]);
 
 /** `import Select from "antd/es/select"` reaches the same primitive by another door. */
 function readAntdComponentPathImports(source) {

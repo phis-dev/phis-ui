@@ -59,7 +59,15 @@ export function PhiControlOptionContent<TValue extends string | number>({
       ) : option.icon ? (
         <PhiIcon name={option.icon} size={14} />
       ) : null}
-      <span style={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+      <span
+        style={{
+          minWidth: 0,
+          overflow: "hidden",
+          textOverflow: "ellipsis",
+          whiteSpace: "nowrap",
+          ...(option.preview?.kind === "font" ? { fontFamily: option.preview.fontFamily } : {}),
+        }}
+      >
         {option.label}
       </span>
     </span>
