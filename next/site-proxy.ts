@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { PHI_CMS_SPECIAL_ROOTS } from "../helpers/cms-routing";
+import { localizePath } from "../helpers/locale";
 import {
   extractLocalePrefix,
 } from "../helpers/site-locale-config";
@@ -85,7 +86,7 @@ export async function proxyPhiNextSiteRequest(request: NextRequest) {
   if (firstSegment === "public") {
     const preferredLocale = await resolveRedirectLocale(request, runtimeConfig);
     const publicPath = pathname.replace(/^\/public(?=\/|$)/i, "") || "/";
-    return NextResponse.redirect(new URL(`/${preferredLocale}${publicPath}${search}`, request.url), 307);
+    return NextResponse.redirect(new URL(localizePath(preferredLocale, publicPath) + search, request.url), 307);
   }
 
   if (KNOWN_SPECIAL_ROOTS.has(firstSegment)) {
@@ -107,5 +108,9 @@ export async function proxyPhiNextSiteRequest(request: NextRequest) {
   }
 
   const preferredLocale = await resolveRedirectLocale(request, runtimeConfig);
-  return NextResponse.redirect(new URL(`/${preferredLocale}${pathname}${search}`, request.url), 307);
+  /*
+   * Through localizePath, which writes the root as `/en` rather than `/en/`: the trailing slash made
+   * Next answer the first redirect with a second one, a 308 to `/en`, on every visit to `/`.
+   */
+  return NextResponse.redirect(new URL(localizePath(preferredLocale, pathname) + search, request.url), 307);
 }
