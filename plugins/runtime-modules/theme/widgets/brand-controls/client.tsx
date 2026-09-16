@@ -2113,7 +2113,8 @@ export function PhiBuilderBrandStyleControlsWidgetClient({
                     <Typography.Text code>{baseFontSize}px</Typography.Text>
                   </Flex>
                   <Typography.Text type="secondary">
-                    Root value controls rem conversion; font size is the Ant Design typography seed.
+                    Root value controls rem conversion; font size is the seed every other type size is
+                    derived from.
                   </Typography.Text>
                 </Flex>
               ),
@@ -2123,7 +2124,7 @@ export function PhiBuilderBrandStyleControlsWidgetClient({
               label: <Typography.Text strong>Wireframe</Typography.Text>,
               children: (
                 <Flex align="center" justify="space-between" gap={clientToken.paddingSM} wrap="wrap">
-                  <Typography.Text type="secondary">Ant Design wireframe token</Typography.Text>
+                  <Typography.Text type="secondary">Dividing lines in dialogs and popovers, outlined steps and radios</Typography.Text>
                   <Switch
                     checked={wireframe}
                     disabled={saving}

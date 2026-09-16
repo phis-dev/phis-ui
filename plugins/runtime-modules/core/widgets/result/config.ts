@@ -69,7 +69,7 @@ export const PHI_RESULT_WIDGET_DEFINITION = {
   typeKey: "result",
   title: "Result",
   category: "content",
-  description: "Render a compact Ant Design result state.",
+  description: "Render a compact result state.",
   iconFamily: "content",
   /*
    * A Result is as wide as what it says.

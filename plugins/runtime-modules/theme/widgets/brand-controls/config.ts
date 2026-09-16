@@ -41,7 +41,7 @@ type PhiBuilderBrandWidgetDefinition = Pick<
 export const PHI_BUILDER_BRAND_THEME_CONTROLS_WIDGET_DEFINITION: PhiBuilderBrandWidgetDefinition = createPhiCmsWidgetDefinition({
   typeKey: "builder-brand-theme-controls",
   title: "Builder Brand Theme Controls",
-  description: "Ant Design theme controls for the brand Builder workspace.",
+  description: "Palette and seed controls for the brand Builder workspace.",
   category: "configuration",
   iconFamily: "theme",
   slotSizePolicy: "fill-inline",
@@ -79,7 +79,7 @@ export const PHI_BUILDER_BRAND_IDENTITY_CONTROLS_WIDGET_DEFINITION: PhiBuilderBr
 export const PHI_BUILDER_BRAND_STYLE_CONTROLS_WIDGET_DEFINITION: PhiBuilderBrandWidgetDefinition = createPhiCmsWidgetDefinition({
   typeKey: "builder-brand-style-controls",
   title: "Builder Brand Style Controls",
-  description: "Ant Design style controls for the brand Builder workspace.",
+  description: "Type, spacing and surface controls for the brand Builder workspace.",
   category: "configuration",
   iconFamily: "theme",
   slotSizePolicy: "fill-inline",
@@ -127,7 +127,7 @@ export const PHI_BUILDER_BRAND_BACKGROUND_CONTROLS_WIDGET_DEFINITION: PhiBuilder
 export const PHI_BUILDER_BRAND_THEME_PREVIEW_WIDGET_DEFINITION: PhiBuilderBrandWidgetDefinition = createPhiCmsWidgetDefinition({
   typeKey: "builder-brand-theme-preview",
   title: "Builder Brand Theme Preview",
-  description: "Ant Design live preview for the brand Builder workspace.",
+  description: "Live Theme preview for the brand Builder workspace.",
   category: "configuration",
   iconFamily: "theme",
   slotSizePolicy: "fill-inline",
