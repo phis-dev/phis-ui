@@ -31,6 +31,7 @@ export type PhiSiteFontAssetOption = {
   label: string;
   /** Where the file is and what it says about itself, for a surface that wants to show the face. */
   deliveryUrl: string;
+  deliveryRevision: number;
   contentType: string;
   metrics: PhiFontMetrics | null;
 };
@@ -90,6 +91,7 @@ export function usePhiSiteFontAssets(enabled = true) {
         value: createPhiAssetUri(asset.id),
         label: readFontAssetLabel(asset),
         deliveryUrl: asset.deliveryUrl,
+        deliveryRevision: asset.deliveryRevision,
         contentType: asset.contentType,
         metrics: readFontAssetMetrics(asset),
       })),

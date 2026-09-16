@@ -1942,6 +1942,7 @@ function usePhiThemeFontStacks(fonts: PhiSiteFontSlots | null | undefined) {
           url: asset.deliveryUrl,
           contentType: asset.contentType,
           metrics: asset.metrics,
+          asset: { id: asset.assetId, deliveryRevision: asset.deliveryRevision },
         };
         const css = buildPhiFontFaceCss(source);
         if (css) faces.add(css);
@@ -2328,6 +2329,7 @@ export function PhiBuilderBrandStyleControlsWidgetClient({
         url: option.deliveryUrl,
         contentType: option.contentType,
         metrics: option.metrics,
+        asset: { id: option.assetId, deliveryRevision: option.deliveryRevision },
       }))
       .filter(Boolean)
       .join(""),
@@ -2357,6 +2359,7 @@ export function PhiBuilderBrandStyleControlsWidgetClient({
           url: option.deliveryUrl,
           contentType: option.contentType,
           metrics: option.metrics,
+          asset: { id: option.assetId, deliveryRevision: option.deliveryRevision },
         }) ?? option.label,
       },
     })),

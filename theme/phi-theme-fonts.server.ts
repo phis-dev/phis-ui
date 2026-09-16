@@ -86,6 +86,7 @@ export async function resolvePhiSiteThemeFonts(
       contentType: asset.contentType,
       metrics: asset.font,
       fallbackCategory: PHI_THEME_FONT_SLOT_CATEGORIES[slot],
+      asset: { id: asset.id, deliveryRevision: asset.deliveryRevision },
     };
     const css = buildPhiFontFaceCss(source);
     const stack = buildPhiFontFamilyStack(source);

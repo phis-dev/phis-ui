@@ -1,4 +1,10 @@
-import type { PhiFontMetrics } from "@phis/contracts/media";
+import {
+  formatPhiUnicodeRange,
+  resolvePhiFontSubsetRanges,
+  type PhiFontMetrics,
+} from "@phis/contracts/media";
+
+import { buildPhiFontSubsetDeliveryUrl } from "../constants/media";
 
 /**
  * The two `@font-face` rules a Site-owned typeface needs, and the family stack that uses them.
@@ -35,6 +41,11 @@ export type PhiFontFaceSource = {
   metrics: PhiFontMetrics | null;
   /** What to stand in with where the file does not classify itself. */
   fallbackCategory?: PhiFontFaceCategory;
+  /**
+   * The Asset behind `url`, for a font whose unicode cuts are known. With it, the face is declared once
+   * per cut with `unicode-range`, and a page fetches only the cuts it renders; without it, whole.
+   */
+  asset?: { id: number; deliveryRevision?: number | null };
 };
 
 /**
@@ -103,6 +114,28 @@ export function resolvePhiFontFaceCategory(source: PhiFontFaceSource): PhiFontFa
 }
 
 /**
+ * One face per unicode cut the font was recorded to have, or null to declare it whole.
+ *
+ * Every cut is woff2 whatever was uploaded, and every range is written from numbers the contract or the
+ * upload reader produced -- so nothing a file said reaches this rule but the family name, which is
+ * reduced before it gets here.
+ */
+function buildPhiFontSubsetFaces(source: PhiFontFaceSource, family: string) {
+  const coverage = source.metrics?.coverage;
+  if (!source.asset || !coverage || coverage.subsets.length === 0) return null;
+  const faces = coverage.subsets.flatMap((key) => {
+    const url = buildPhiFontSubsetDeliveryUrl(source.asset!.id, key, source.asset!.deliveryRevision);
+    const ranges = resolvePhiFontSubsetRanges(key, coverage);
+    if (!url || ranges.length === 0) return [];
+    return [
+      `@font-face{font-family:"${family}";src:url("${cssSafeUrl(url)}") format("woff2");`
+        + `unicode-range:${formatPhiUnicodeRange(ranges)};font-display:swap}`,
+    ];
+  });
+  return faces.length > 0 ? faces.join("") : null;
+}
+
+/**
  * Both rules for one Site-owned face, or nothing where the file is not one we can name a format for.
  *
  * `font-display: swap` rather than `block`: the substitute below is proportioned to stand in, so
@@ -113,9 +146,10 @@ export function buildPhiFontFaceCss(source: PhiFontFaceSource) {
   const url = cssSafeUrl(source.url);
   const format = fontFormat(source.contentType);
   if (!family || !url || !format) return null;
-  const face = `@font-face{font-family:"${family}";src:url("${url}") format("${format}");font-display:swap}`;
   const fallback = buildFallbackFace({ ...source, family }, resolvePhiFontFaceCategory(source));
-  return fallback ? `${face}${fallback}` : face;
+  const faces = buildPhiFontSubsetFaces(source, family)
+    ?? `@font-face{font-family:"${family}";src:url("${url}") format("${format}");font-display:swap}`;
+  return fallback ? `${faces}${fallback}` : faces;
 }
 
 /**

@@ -28,7 +28,7 @@ export const PhiMediaAssetSource = {
   Iconify: "iconify",
 } as const;
 
-import { PhiMediaDeliveryPolicy, PhiMediaLifecycleStatus } from "@phis/contracts/media";
+import { PHI_FONT_SUBSET_VERSION, PhiMediaDeliveryPolicy, PhiMediaLifecycleStatus } from "@phis/contracts/media";
 
 export { PhiMediaDeliveryPolicy, PhiMediaLifecycleStatus } from "@phis/contracts/media";
 
@@ -101,6 +101,18 @@ export function buildPhiImageAssetVariantDeliveryUrl(
   return `/api/site/media/${assetId}/variants/${variantKey}?v=${normalizedVersion}${
     normalizedDeliveryRevision == null ? "" : `&r=${normalizedDeliveryRevision}`
   }`;
+}
+
+/**
+ * Where one unicode cut of a font Asset is delivered.
+ *
+ * The version travels so a changed cutting rule changes the address; the delivery revision so a cut
+ * cached while the Asset was delivered under another policy stops being served, as for a rendition.
+ */
+export function buildPhiFontSubsetDeliveryUrl(assetId: number, subsetKey: number, deliveryRevision?: number | null) {
+  if (!Number.isInteger(assetId) || assetId <= 0 || !Number.isInteger(subsetKey) || subsetKey < 0) return null;
+  const revision = Number.isInteger(deliveryRevision) && (deliveryRevision as number) >= 0 ? `&r=${deliveryRevision}` : "";
+  return `/api/site/media/${assetId}/subsets/${subsetKey}?v=${PHI_FONT_SUBSET_VERSION}${revision}`;
 }
 
 export function buildPhiMediaAssetContentDeliveryUrl(assetId: number) {

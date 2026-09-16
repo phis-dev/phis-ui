@@ -97,6 +97,30 @@ describe("Site-owned font faces", () => {
     expect(css).toMatch(/font-family:"[\w \-.]+";src:url\("[\w\-./?&=:%~+]+"\)/u);
   });
 
+  /*
+   * A font whose cuts are known is declared once per cut, so a Latin page fetches the Latin cut and
+   * nothing else -- and the rest cut names only what the font itself has outside the named ranges.
+   */
+  it("declares one face per recorded unicode cut, each with its range", () => {
+    const css = buildPhiFontFaceCss(source({
+      asset: { id: 42, deliveryRevision: 7 },
+      metrics: { ...FIRA_SANS, coverage: { subsets: [0, 2, 15], restRanges: [[0x3041, 0x3096]] } },
+    }))!;
+    expect(css.match(/@font-face\{font-family:"Fira Sans";/gu)).toHaveLength(3);
+    expect(css).toContain('src:url("/api/site/media/42/subsets/0?v=1&r=7") format("woff2");unicode-range:U+0000-00FF,');
+    expect(css).toContain('src:url("/api/site/media/42/subsets/2?v=1&r=7") format("woff2");unicode-range:U+0301, U+0400-045F');
+    expect(css).toContain('src:url("/api/site/media/42/subsets/15?v=1&r=7") format("woff2");unicode-range:U+3041-3096;');
+    // The whole file is not declared beside the cuts, and the substitute stays one face.
+    expect(css).not.toContain("/content");
+    expect(css.match(/Fira Sans Fallback/gu)).toHaveLength(1);
+  });
+
+  it("declares the whole file for a font uploaded before its cuts were recorded", () => {
+    const css = buildPhiFontFaceCss(source({ asset: { id: 42, deliveryRevision: 7 } }))!;
+    expect(css).toContain('src:url("/api/site/media/42/content") format("woff2");font-display:swap}');
+    expect(css).not.toContain("unicode-range");
+  });
+
   it("puts the adjusted substitute between the face and the generic", () => {
     expect(buildPhiFontFamilyStack(source())).toBe('"Fira Sans", "Fira Sans Fallback", sans-serif');
   });

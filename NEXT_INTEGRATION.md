@@ -257,6 +257,16 @@ its `variant_key` is a closed vocabulary where `0` is a thumbnail -- sharing it 
 one thing or another depending on a column in a different table. phis-server's `TODOS.md` carries the
 column list and the rest of that decision.
 
+Built that way. `lib/font-subsets.ts` in phis-server cuts with the raw `harfbuzz-subset.wasm` from
+`harfbuzzjs` -- no Emscripten glue, no imports -- after unpacking woff through its own table walk and
+woff2 through `wawoff2`, and packs every cut as woff2. Which cuts exist is read at upload, not at
+request: `meta.font.coverage` lists the named ranges the font maps at least one codepoint in, plus the
+font's own codepoints outside all of them as a `rest` cut (key `15`), so a font with glyphs no Google
+range names does not lose them. `buildPhiFontSubsetFaces` writes one `@font-face` per listed cut against
+`/api/site/media/[id]/subsets/[key]`; a font without `coverage` -- everything uploaded before the reader
+learned it -- still gets the single face over the whole file. Preloading the range a Site's locales
+need is not built.
+
 The tools are all permissive, which matters because the core is Apache-2.0 so that Add-ons may stay
 closed: HarfBuzz is under the Old MIT license and reachable from Node as `harfbuzzjs` (MIT) or
 `subset-font` (BSD-3-Clause), woff2 packing as `wawoff2` (MIT), and the metrics through `fontkit` or
