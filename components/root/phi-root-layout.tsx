@@ -191,6 +191,7 @@ export async function PhiRootLayout({
             initialLocale={resolvedLocale?.locale ?? site.defaultLocale}
             availableLocales={site.availableLocales.map((option) => option.code)}
             fonts={themeFonts}
+            fontFamilies={fontCatalogue.entries.map(({ family, cssVariable }) => ({ family, cssVariable }))}
             presets={themePresets}
             themeBlocks={themeBlocks}
             rootClassName={fontCatalogue.className}

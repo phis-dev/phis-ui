@@ -43,6 +43,8 @@ import {
   resolvePhiThemeEffectiveRoot,
 } from "../../../../../theme/phi-theme-composition";
 import type { PhiThemeFontsBlock } from "../../../../../theme/phi-theme-blocks";
+import type { PhiSiteFontSlots } from "../../../../../types/site-theme";
+import { usePhiSiteFontAssets } from "../../../../../components/media/phi-site-font-assets";
 import { resolvePhiThemeRuntimePayload } from "../../../../../theme/phi-theme-runtime";
 import { materializePhiThemeModuleBlocks } from "../../materialize-images";
 import {
@@ -502,6 +504,25 @@ function mergeThemeToken(theme: ThemePayload, tokenPatch: Record<string, unknown
       },
     },
   };
+}
+
+/**
+ * One slot, set or handed back.
+ *
+ * Handing it back means removing the key rather than writing an empty string: an absent slot follows
+ * the fonts block, and a slot holding "" would be an author deciding on nothing.
+ */
+function mergeThemeFontSlot(
+  theme: ThemePayload,
+  slot: keyof PhiSiteFontSlots,
+  family: string | null,
+): ThemePayload {
+  const fonts = { ...(theme.fonts ?? {}) };
+  if (family) fonts[slot] = family;
+  else delete fonts[slot];
+  return Object.keys(fonts).length > 0
+    ? { ...theme, fonts }
+    : Object.fromEntries(Object.entries(theme).filter(([key]) => key !== "fonts")) as ThemePayload;
 }
 
 function mergeThemeControlShape(theme: ThemePayload, controls: PhiControlShapeCorners): ThemePayload {
@@ -1692,13 +1713,27 @@ function resolveThemeFontSlots(
   block: PhiThemeFontsBlock,
 ) {
   const effective = resolvePhiThemeEffectiveFonts(theme.fonts, block);
+  const authored = theme.fonts ?? {};
+  /*
+   * Two answers per slot, and the control needs both: what this Theme decided, which is what the
+   * select holds and what clearing gives back, and what the slot resolves to without it, which is what
+   * the field shows while nothing is decided. Collapsing them would make "follows the Set" and "is set
+   * to the same family the Set names" look identical, and only one of the two survives a Set change.
+   */
   return [
-    { key: "body", label: "Body", value: effective.body ?? fonts.body ?? "" },
-    { key: "serif", label: "Serif", value: effective.serif ?? fonts.serif ?? "" },
-    { key: "mono", label: "Mono", value: effective.mono ?? fonts.mono ?? "" },
-    { key: "accent", label: "Accent", value: effective.accent ?? fonts.accent ?? "" },
-    { key: "display", label: "Display", value: effective.display ?? fonts.display ?? "" },
-  ] as const;
+    { key: "body", label: "Body" },
+    { key: "serif", label: "Serif" },
+    { key: "mono", label: "Mono" },
+    { key: "accent", label: "Accent" },
+    { key: "display", label: "Display" },
+  ].map(({ key, label }) => ({
+    key: key as keyof PhiSiteFontSlots,
+    label,
+    authored: authored[key as keyof PhiSiteFontSlots]?.trim() || null,
+    inherited: effective[key as keyof PhiSiteFontSlots]
+      ?? fonts[key as keyof typeof fonts]
+      ?? "",
+  }));
 }
 
 export function PhiBuilderBrandThemeControlsWidgetClient({
@@ -1961,7 +1996,7 @@ export function PhiBuilderBrandStyleControlsWidgetClient({
   runtime: PhiBlockRuntime;
   config?: PhiBuilderBrandWidgetConfig | null;
 }) {
-  const { fonts, themeBlocks, token: clientToken } = usePhiConfig();
+  const { fonts, fontFamilies, themeBlocks, token: clientToken } = usePhiConfig();
   const fieldLabelWidth = clientToken.controlHeight * 4;
   const themeKey = resolveThemeKey(config);
   const { state, publishDraft } = usePhiBrandThemeDraft(runtime, themeKey);
@@ -1997,6 +2032,32 @@ export function PhiBuilderBrandStyleControlsWidgetClient({
 
   const themeComposition = resolvePhiThemeComposition(state.draft, themeBlocks);
   const fontSlots = resolveThemeFontSlots(state.draft, fonts, themeComposition.fonts);
+  const siteFontAssets = usePhiSiteFontAssets();
+  /*
+   * Two groups, because where a typeface comes from decides what happens to it. A catalogue family is
+   * declared by this package or by an installed Module, and switching that Module off takes it with
+   * it. A typeface from the library belongs to the Site and stays.
+   */
+  const fontOptions = useMemo(() => [
+    {
+      label: "Installed",
+      options: fontFamilies.map(({ family, cssVariable }) => ({
+        value: family,
+        // In its own face: the name alone would render in whatever the panel is set in, because a
+        // catalogue family is hosted under a generated name and the variable is what reaches it.
+        label: <span style={{ fontFamily: cssVariable }}>{family}</span>,
+        title: family,
+      })),
+    },
+    ...(siteFontAssets.options.length > 0 ? [{
+      label: "This Site",
+      options: siteFontAssets.options.map((option) => ({
+        value: option.value,
+        label: option.label,
+        title: option.label,
+      })),
+    }] : []),
+  ], [fontFamilies, siteFontAssets.options]);
 
   return (
     <Flex vertical gap={clientToken.padding} style={{ width: "100%", minWidth: 0, opacity: loading ? 0.65 : 1 }}>
@@ -2096,13 +2157,26 @@ export function PhiBuilderBrandStyleControlsWidgetClient({
                   {fontSlots.map((item) => (
                     <Flex key={item.key} align="center" gap={clientToken.paddingSM} wrap="nowrap">
                       <Typography.Text style={{ flex: `0 0 ${fieldLabelWidth}px` }}>{item.label}</Typography.Text>
-                      <Typography.Text
-                        code
-                        ellipsis
-                        style={{ minWidth: 0, flex: "1 1 auto", fontFamily: item.value || undefined }}
-                      >
-                        {item.value || "Not installed"}
-                      </Typography.Text>
+                      {/*
+                        * Empty means the slot follows the Set, and the placeholder says what that
+                        * currently is -- so clearing reads as handing the decision back rather than as
+                        * leaving the slot blank.
+                        */}
+                      <Select
+                        value={item.authored ?? undefined}
+                        placeholder={item.inherited || "Not installed"}
+                        options={fontOptions}
+                        loading={siteFontAssets.loading}
+                        allowClear
+                        showSearch
+                        optionFilterProp="title"
+                        disabled={saving}
+                        size="small"
+                        style={{ minWidth: 0, flex: "1 1 auto" }}
+                        onChange={(value) => publishDraft(
+                          mergeThemeFontSlot(state.draft, item.key, value ?? null),
+                        )}
+                      />
                     </Flex>
                   ))}
                 </Flex>

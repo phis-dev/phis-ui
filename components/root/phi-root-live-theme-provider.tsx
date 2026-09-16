@@ -21,7 +21,7 @@ import {
   type PhiThemeModePreference,
 } from "../../theme/phi-theme-mode";
 import { resolvePhiPublishedThemeCustomColors } from "../../theme/phi-theme-palette";
-import { PhiConfigProvider } from "./phi-config-provider";
+import { PhiConfigProvider, type PhiFontCatalogueFamily } from "./phi-config-provider";
 import { PhiRootBackgroundLayer } from "./phi-root-background";
 import { resolvePhiShellChromeOverlayVariables } from "./phi-shell-chrome-overlay";
 import { resolvePhiControlShape } from "../../theme/phi-control-shape";
@@ -47,6 +47,7 @@ export function PhiRootLiveThemeProvider({
   initialLocale,
   availableLocales,
   fonts,
+  fontFamilies,
   presets,
   themeBlocks,
   rootClassName,
@@ -63,6 +64,8 @@ export function PhiRootLiveThemeProvider({
   initialLocale: string;
   availableLocales: readonly string[];
   fonts: PhiRootThemeFonts;
+  /** The families an author may choose from: this package's plus the installed Modules'. */
+  fontFamilies: readonly PhiFontCatalogueFamily[];
   presets: readonly PhiThemePresetPlugin[];
   /** Style, ground and set blocks; palettes arrive as `presets`. */
   themeBlocks?: Partial<Omit<PhiThemeBlockCatalog, "palettes">>;
@@ -248,6 +251,7 @@ export function PhiRootLiveThemeProvider({
       <PhiConfigProvider
         customColors={customColors}
         fonts={fonts}
+        fontFamilies={fontFamilies}
         locale={locale}
         mode={mode}
         controlShape={resolvePhiControlShape(liveSiteTheme.shape?.controls)}

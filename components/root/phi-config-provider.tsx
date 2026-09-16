@@ -34,6 +34,15 @@ import {
 export type PhiConfig = {
   customColors: PhiThemeCustomColorPalette;
   fonts: PhiRootThemeFonts;
+  /**
+   * The families a Theme may name: the ones this package declares plus what the installed Modules
+   * contributed. The stacks above are what a page renders with; this is what an author may choose.
+   *
+   * The variable comes along because a family name alone does not render: `next/font` hosts a face
+   * under a generated name and the variable is what points at it, so a field that wants to show a
+   * family in its own face has to ask for the variable.
+   */
+  fontFamilies: readonly PhiFontCatalogueFamily[];
   layout: {
     heroHeight: number | string;
   };
@@ -48,12 +57,15 @@ export type PhiConfig = {
   token: GlobalToken;
 };
 
+export type PhiFontCatalogueFamily = { family: string; cssVariable: string };
+
 const PhiConfigContext = createContext<PhiConfig | null>(null);
 
 function PhiConfigValueProvider({
   children,
   customColors,
   fonts,
+  fontFamilies,
   heroHeight,
   mode,
   controlShape,
@@ -67,6 +79,7 @@ function PhiConfigValueProvider({
   children: ReactNode;
   customColors: PhiThemeCustomColorPalette;
   fonts: PhiRootThemeFonts;
+  fontFamilies: readonly PhiFontCatalogueFamily[];
   heroHeight: number | string;
   mode: PhiThemeMode;
   controlShape: PhiControlShape;
@@ -112,13 +125,14 @@ function PhiConfigValueProvider({
   const value = useMemo<PhiConfig>(() => ({
     customColors,
     fonts,
+    fontFamilies,
     layout: { heroHeight },
     mode,
     controlShape,
     presets,
     themeBlocks: blockCatalog,
     token,
-  }), [blockCatalog, controlShape, customColors, fonts, heroHeight, mode, presets, token]);
+  }), [blockCatalog, controlShape, customColors, fonts, fontFamilies, heroHeight, mode, presets, token]);
 
   return (
     <PhiConfigContext.Provider value={value}>
@@ -144,6 +158,7 @@ export function PhiConfigProvider({
   children,
   locale,
   fonts,
+  fontFamilies,
   mode,
   theme,
   presets,
@@ -157,6 +172,7 @@ export function PhiConfigProvider({
   children: ReactNode;
   locale: ConfigProviderProps["locale"];
   fonts: PhiRootThemeFonts;
+  fontFamilies: readonly PhiFontCatalogueFamily[];
   mode: PhiThemeMode;
   theme: ThemeConfig;
   presets: readonly PhiThemePresetPlugin[];
@@ -182,6 +198,7 @@ export function PhiConfigProvider({
       <PhiConfigValueProvider
         customColors={customColors}
         fonts={fonts}
+        fontFamilies={fontFamilies}
         heroHeight={heroHeight}
         mode={mode}
         controlShape={controlShape}
