@@ -21,6 +21,7 @@ import {
   type PhiThemePresetPlugin,
 } from "../../theme/phi-theme-presets";
 import { resolvePhiPublishedRootTheme } from "../../theme/phi-published-root-style";
+import { resolvePhiSiteThemeFonts } from "../../theme/phi-theme-fonts.server";
 import {
   PHI_FONT_CATALOGUE_CLASS_NAME,
   PHI_FONT_CATALOGUE_FAMILY_VARIABLES,
@@ -114,19 +115,34 @@ export async function PhiRootLayout({
   const resolvedThemeMode = resolvePhiThemeMode(themeModePreference, browserColorScheme);
 
   // Keep the basiset explicit and self-hosted; accent/display stay as open slots for later.
-  const bodyFont = resolveThemeFont(siteThemeRecord?.fonts?.body, "var(--phi-font-source-body)");
-  const monoFont = resolveThemeFont(siteThemeRecord?.fonts?.mono, "var(--phi-font-source-mono)");
-  const serifFont = resolveThemeFont(siteThemeRecord?.fonts?.serif, "var(--phi-font-source-serif)");
-  const accentFont = resolveThemeFont(siteThemeRecord?.fonts?.accent, "");
-  const displayFont = resolveThemeFont(siteThemeRecord?.fonts?.display, "");
+  /*
+   * A slot naming an Asset is answered before the catalogue is consulted: that is a typeface the Site
+   * owns, it arrives with its own `@font-face` rules, and the stack those rules need is not a family
+   * name the catalogue could map.
+   */
+  const assetFonts = await resolvePhiSiteThemeFonts(siteThemeRecord?.fonts, {
+    apiBaseUrl,
+    internalToken,
+    siteKey,
+  });
+  const bodyFont = assetFonts.families.body
+    ?? resolveThemeFont(siteThemeRecord?.fonts?.body, "var(--phi-font-source-body)").fontFamily;
+  const monoFont = assetFonts.families.mono
+    ?? resolveThemeFont(siteThemeRecord?.fonts?.mono, "var(--phi-font-source-mono)").fontFamily;
+  const serifFont = assetFonts.families.serif
+    ?? resolveThemeFont(siteThemeRecord?.fonts?.serif, "var(--phi-font-source-serif)").fontFamily;
+  const accentFont = assetFonts.families.accent
+    ?? resolveThemeFont(siteThemeRecord?.fonts?.accent, "").fontFamily;
+  const displayFont = assetFonts.families.display
+    ?? resolveThemeFont(siteThemeRecord?.fonts?.display, "").fontFamily;
   const remSettings: PhiRemSelection = siteThemeRecord?.rem;
   const remRootValue = resolveFinitePositiveNumber(remSettings?.rootValue, 16);
   const themeFonts = {
-      body: bodyFont.fontFamily,
-      mono: monoFont.fontFamily,
-      serif: serifFont.fontFamily,
-      accent: accentFont.fontFamily,
-      display: displayFont.fontFamily,
+      body: bodyFont,
+      mono: monoFont,
+      serif: serifFont,
+      accent: accentFont,
+      display: displayFont,
   };
   const publishedRootTheme = resolvePhiPublishedRootTheme({
     siteTheme: siteThemeRecord,
@@ -137,6 +153,21 @@ export async function PhiRootLayout({
 
   return (
     <PhiRootRemProvider rootValue={remRootValue}>
+      {/*
+        * The rules for the Site's own typefaces, hoisted into the head by React.
+        *
+        * They cannot come from a stylesheet in this package: the URLs are the Site's Assets, and which
+        * Assets they are is a per-request answer out of the Theme record. `precedence` is what tells
+        * React to lift the element and keep one copy; `@font-face` is order-independent, so where among
+        * the other styles it lands does not matter.
+        */}
+      {assetFonts.css ? (
+        <style
+          href={`phi-site-fonts:${site.key}`}
+          precedence="default"
+          dangerouslySetInnerHTML={{ __html: assetFonts.css }}
+        />
+      ) : null}
       <AntdRegistry>
         <PhiSignalRuntimePartitionProvider
           id={`site:${site.key}`}

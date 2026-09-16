@@ -44,7 +44,8 @@ export type PhiMediaAssetFolder = {
   updatedAt?: string;
 };
 
-export type { PhiMediaSpaceKind } from "@phis/contracts/media";
+export type { PhiFontMetrics, PhiMediaSpaceKind } from "@phis/contracts/media";
+import type { PhiFontMetrics } from "@phis/contracts/media";
 import type { PhiMediaSpaceKind } from "@phis/contracts/media";
 
 /**
@@ -242,4 +243,6 @@ export type PhiPublicMediaAssetReference = {
   thumbnailUrl: string | null;
   previewUrl: string | null;
   focalRect: { x: number; y: number; width: number; height: number } | null;
+  /** Present for a font, and the reason a Theme can build a fallback face without opening the file. */
+  font: PhiFontMetrics | null;
 };
