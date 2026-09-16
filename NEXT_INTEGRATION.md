@@ -233,8 +233,14 @@ The shape this takes is one the Media library already has. `ensureImageAssetVari
 rendition on first request, stores it beside the Asset under `<key>.__variants/<n>`, and leaves the
 original untouched as the thing every later derivation reads. A `unicode-range` cut is the same shape
 with a different producer, and the same version counter throws every cut away when the rule changes.
-`image_asset_variants` carries a width and a height that a font cut does not have, so the table either
-generalizes or gains a sibling -- a schema decision, and a cheap one before v1.
+
+The pattern is what gets reused, not the table: cuts go in a `font_asset_subsets` table of their own,
+with a `subset_key` vocabulary in `@phis/contracts/media` and a delivery route beside the variant one.
+`image_asset_variants` states in its own contract that renditions are images and that other kinds must
+not create rows in it, its `width` and `height` are `NOT NULL` for a reason `next/image` depends on, and
+its `variant_key` is a closed vocabulary where `0` is a thumbnail -- sharing it would make a number mean
+one thing or another depending on a column in a different table. phis-server's `TODOS.md` carries the
+column list and the rest of that decision.
 
 The tools are all permissive, which matters because the core is Apache-2.0 so that Add-ons may stay
 closed: HarfBuzz is under the Old MIT license and reachable from Node as `harfbuzzjs` (MIT) or
