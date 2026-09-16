@@ -26,11 +26,27 @@ import { PhiSegmentedControl } from "../controls/phi-segmented-control";
  */
 function lazyPhiFormFieldControl(
   load: () => Promise<ComponentType<PhiFormFieldProviderProps>>,
+  /** How many control rows the field occupies once loaded, so the form keeps its height meanwhile. */
+  placeholderRows = 1,
 ): ComponentType<PhiFormFieldProviderProps> {
   const LazyControl = lazy(async () => ({ default: await load() }));
+  /*
+   * Only shown where the browser renders the field before its chunk arrived -- a navigation without a
+   * server render. On a server-rendered page React keeps the server HTML until the chunk is there.
+   */
+  const placeholder = (
+    <div
+      aria-busy="true"
+      style={{
+        blockSize: `calc(var(--ant-control-height) * ${placeholderRows} + var(--ant-padding-sm) * ${placeholderRows - 1})`,
+        borderRadius: "var(--ant-border-radius)",
+        background: "var(--ant-color-fill-quaternary)",
+      }}
+    />
+  );
   return function PhiLazyFormFieldControl(props: PhiFormFieldProviderProps) {
     return (
-      <Suspense fallback={null}>
+      <Suspense fallback={placeholder}>
         <LazyControl {...props} />
       </Suspense>
     );
@@ -43,10 +59,11 @@ const PhiLazyCascaderFormControl = lazyPhiFormFieldControl(() =>
   import("./extended-form-field-controls").then((module) => module.PhiCascaderFormControl));
 const PhiLazyDateTimeFormControl = lazyPhiFormFieldControl(() =>
   import("./datetime-form-control").then((module) => module.PhiDateTimeFormControl));
+// Collection header, then the Table's or Tree's head and at least one row.
 const PhiLazyCompoundTableFormControl = lazyPhiFormFieldControl(() =>
-  import("./compound-form-controls").then((module) => module.PhiCompoundTableFormControl));
+  import("./compound-form-controls").then((module) => module.PhiCompoundTableFormControl), 3);
 const PhiLazyCompoundTreeFormControl = lazyPhiFormFieldControl(() =>
-  import("./compound-form-controls").then((module) => module.PhiCompoundTreeFormControl));
+  import("./compound-form-controls").then((module) => module.PhiCompoundTreeFormControl), 3);
 
 export const PHI_SHARED_FORM_PROVIDER_REGISTRY = createPhiFormProviderRegistry({
   fieldTypes: [
