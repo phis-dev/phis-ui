@@ -2034,29 +2034,25 @@ export function PhiBuilderBrandStyleControlsWidgetClient({
   const fontSlots = resolveThemeFontSlots(state.draft, fonts, themeComposition.fonts);
   const siteFontAssets = usePhiSiteFontAssets();
   /*
-   * Two groups, because where a typeface comes from decides what happens to it. A catalogue family is
-   * declared by this package or by an installed Module, and switching that Module off takes it with
-   * it. A typeface from the library belongs to the Site and stays.
+   * Where a typeface comes from decides what happens to it, so every option says so. A catalogue
+   * family is declared by this package or by an installed Module, and switching that Module off takes
+   * it away; a typeface from the library belongs to the Site and stays.
+   *
+   * Said in the description of a flat list rather than as option groups, and with plain text labels:
+   * the shared select control renders exactly that shape, and a hand-built Select with grouped,
+   * node-labelled options is what left this list unreadable and unselectable in the Builder.
    */
-  const fontOptions = useMemo(() => [
-    {
-      label: "Installed",
-      options: fontFamilies.map(({ family, cssVariable }) => ({
-        value: family,
-        // In its own face: the name alone would render in whatever the panel is set in, because a
-        // catalogue family is hosted under a generated name and the variable is what reaches it.
-        label: <span style={{ fontFamily: cssVariable }}>{family}</span>,
-        title: family,
-      })),
-    },
-    ...(siteFontAssets.options.length > 0 ? [{
-      label: "This Site",
-      options: siteFontAssets.options.map((option) => ({
-        value: option.value,
-        label: option.label,
-        title: option.label,
-      })),
-    }] : []),
+  const fontOptions = useMemo<PhiControlOption[]>(() => [
+    ...fontFamilies.map(({ family }) => ({
+      value: family,
+      label: family,
+      description: "Installed",
+    })),
+    ...siteFontAssets.options.map((option) => ({
+      value: option.value,
+      label: option.label,
+      description: "This Site",
+    })),
   ], [fontFamilies, siteFontAssets.options]);
 
   return (
@@ -2162,19 +2158,18 @@ export function PhiBuilderBrandStyleControlsWidgetClient({
                         * currently is -- so clearing reads as handing the decision back rather than as
                         * leaving the slot blank.
                         */}
-                      <Select
+                      <PhiSelectControl
+                        ariaLabel={`${item.label} font`}
                         value={item.authored ?? undefined}
                         placeholder={item.inherited || "Not installed"}
                         options={fontOptions}
-                        loading={siteFontAssets.loading}
                         allowClear
-                        showSearch
-                        optionFilterProp="title"
                         disabled={saving}
-                        size="small"
+                        size="medium"
                         style={{ minWidth: 0, flex: "1 1 auto" }}
                         onChange={(value) => publishDraft(
-                          mergeThemeFontSlot(state.draft, item.key, value ?? null),
+                          // A cleared select reports nothing, which hands the slot back to the Set.
+                          mergeThemeFontSlot(state.draft, item.key, (value as string | undefined) ?? null),
                         )}
                       />
                     </Flex>
