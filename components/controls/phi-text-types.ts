@@ -6,7 +6,8 @@ export type PhiTextInputType =
   | "password"
   | "search"
   /*
-   * A code sent to a device or read off an authenticator: typed as text, so a leading zero survives, but
-   * offered with the digit keypad on a phone, which is what a person entering six digits wants.
+   * A string of digits -- a code read off an authenticator, a postcode, an account number. Typed as
+   * text, so a leading zero survives and nothing is summed or rounded, but offered with the digit keypad
+   * on a phone. Named for what is entered rather than for one thing it is used for.
    */
-  | "one-time-code";
+  | "digits";

@@ -174,7 +174,7 @@ export function PhiAuthWorkflowBody({
       {error ? <PhiAlertControl level="error" showIcon title={error} /> : null}
       <PhiTextControl
         value={code}
-        inputType={methodKey === "totp" ? "one-time-code" : "text"}
+        inputType={methodKey === "totp" ? "digits" : "text"}
         autoComplete="one-time-code"
         maxLength={methodKey === "totp" ? 6 : 11}
         placeholder={methodKey === "totp" ? "6-digit code" : "Recovery code"}

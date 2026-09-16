@@ -77,7 +77,7 @@ function resolveTextInputKind(inputType: PhiTextInputType | null | undefined): R
       return { type: "password", inputMode: "text" };
     case "search":
       return { type: "search", inputMode: "search" };
-    case "one-time-code":
+    case "digits":
       return { type: "text", inputMode: "numeric" };
     case "text":
     default:
