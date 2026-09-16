@@ -1,7 +1,6 @@
 import type { ReactNode } from "react";
 import { AntdRegistry } from "@ant-design/nextjs-registry";
 import AntdApp from "antd/es/app";
-import { Fira_Mono, Fira_Sans, Lora } from "next/font/google";
 import "antd/dist/reset.css";
 import "../../styles/root.css";
 import "../../styles/layout.css";
@@ -23,6 +22,10 @@ import {
 } from "../../theme/phi-theme-presets";
 import { resolvePhiPublishedRootTheme } from "../../theme/phi-published-root-style";
 import {
+  PHI_FONT_CATALOGUE_CLASS_NAME,
+  PHI_FONT_CATALOGUE_FAMILY_VARIABLES,
+} from "../../theme/phi-font-catalogue";
+import {
   PHI_DEFAULT_THEME_MODE_PREFERENCE,
   resolvePhiThemeMode,
   type PhiThemeModePreference,
@@ -30,24 +33,6 @@ import {
 import { PHI_CORE_THEME_BLOCK_CATALOG, type PhiThemeBlockCatalog } from "../../theme/phi-theme-composition";
 import { resolvePhiThemeRuntimePayload } from "../../theme/phi-theme-runtime";
 import { projectPhiSiteThemeRootBackground } from "../../theme/phi-root-background.server";
-
-const firaSans = Fira_Sans({
-  variable: "--phi-font-source-body",
-  weight: ["400", "600", "700"],
-  subsets: ["latin"],
-});
-
-const firaMono = Fira_Mono({
-  variable: "--phi-font-source-mono",
-  weight: ["400", "500", "700"],
-  subsets: ["latin"],
-});
-
-const lora = Lora({
-  variable: "--phi-font-source-serif",
-  weight: ["400", "500", "600", "700"],
-  subsets: ["latin"],
-});
 
 export type PhiRootLayoutProps = {
   children: ReactNode;
@@ -76,15 +61,6 @@ type FontSelection = {
   fontFamily?: string;
 };
 
-const PHI_ROOT_FONT_CLASS_NAME = [firaSans.variable, firaMono.variable, lora.variable]
-  .filter(Boolean)
-  .join(" ");
-
-const PHI_NEXT_FONT_FAMILY_MAP = new Map<string, string>([
-  ["Fira Sans", "var(--phi-font-source-body)"],
-  ["Fira Mono", "var(--phi-font-source-mono)"],
-  ["Lora", "var(--phi-font-source-serif)"],
-]);
 
 type PhiRemSelection = {
   rootValue?: number | null;
@@ -99,7 +75,7 @@ function resolveThemeFont(fontName: string | null | undefined, fallbackFont: str
   }
 
   return {
-    fontFamily: PHI_NEXT_FONT_FAMILY_MAP.get(trimmed) ?? trimmed,
+    fontFamily: PHI_FONT_CATALOGUE_FAMILY_VARIABLES.get(trimmed) ?? trimmed,
   };
 }
 
@@ -178,7 +154,7 @@ export async function PhiRootLayout({
             fonts={themeFonts}
             presets={themePresets}
             themeBlocks={themeBlocks}
-            rootClassName={PHI_ROOT_FONT_CLASS_NAME}
+            rootClassName={PHI_FONT_CATALOGUE_CLASS_NAME}
             rootStyle={publishedRootTheme.style}
             remRootValue={remRootValue}
           >

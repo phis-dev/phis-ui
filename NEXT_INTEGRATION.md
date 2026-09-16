@@ -112,6 +112,66 @@ the Page: every Area but Public is authenticated and is `noindex` whatever is st
 follows its stored switch. A Site that never opened the Area settings dialog still keeps its Admin
 out of the index.
 
+## Fonts
+
+`next/font` is a build-time loader, and that is the whole shape of the problem. The call stands at
+module scope with literal arguments; Next evaluates it while compiling, fetches the files once, and
+serves them from this origin. A font named by a Theme record can therefore never be *loaded* by it.
+
+What a Theme does decide, per request, is which of the declared families a page **uses** -- that is a
+`font-family` resolving to a CSS variable, and nothing about it is static. Declaration is build time,
+selection is request time, and the two are easy to confuse because they usually sit in the same file.
+They do not have to: any module may declare fonts, not only the Root Layout.
+
+`theme/phi-font-catalogue.ts` is that module. It declares the families a Site may name, exports the
+class names that put their variables in scope, and maps a family name to its variable for
+`resolveThemeFont`. Every class goes on the root element of every page, which costs nothing: a class
+says where a variable may be read, not that bytes must be fetched.
+
+### Preload is the part that cannot be deferred
+
+`next/font` returns a class name, a style object, and a variable -- never a file URL. A
+`<link rel="preload">` for the family a Theme happened to pick can therefore not be written by hand,
+and preload stays a per-declaration, build-time decision.
+
+So it is taken by what a page needs before it paints. The body family preloads; the code face and the
+serif do not, and arrive with `font-display: swap` instead. Measured in the Skeleton's build, that is
+236 KB of preloaded Latin faces before the split and 53 KB after -- the 183 KB difference was two
+families that a Site running on the body font alone never names. Both are still built and self-hosted;
+what falls away is the browser being told to fetch them before anything asks.
+
+A font file that only exists at runtime -- one an operator uploads into the Media library -- cannot go
+through `next/font` at all. It would be an `@font-face` rule generated into the Theme's style, pointing
+at the Asset's delivery URL, and it would forgo the fallback metrics `next/font` computes, so the swap
+would shift layout. Nothing of that is built.
+
+### Draft: Modules bring their own families
+
+**Designed, not built.** What follows is the intended shape, recorded so the next change does not have
+to rediscover the constraint above.
+
+A Theme preset that ships its own look cannot ship its own lettering today: the catalogue is a fixed
+list in this package, and a preset can only *name* a family, which then resolves to whatever the
+viewer happens to have installed. The seam that fixes it is the one the catalogue already has. A
+Module declares `next/font` at module scope in its own file -- which is legal, because that file is
+statically imported like every other Module file -- and contributes a `PhiFontCatalogueEntry` the way
+it already contributes palettes, grounds and sets to the Theme block catalog. The Root Layout then
+stops knowing about Fira or Lora and applies whatever the active Modules contributed.
+
+Two things follow from the section above and are not negotiable by the design:
+
+- A contributed family carries `preload: false`. The active Theme is known per request, the preload
+  link is not writable per request, and preloading every family a Module might contribute would undo
+  exactly what the catalogue split just bought.
+- A Module that is installed but switched off still contributes its declaration to the build. The
+  files are downloaded and hosted; only the `@font-face` rule, a few hundred bytes, reaches the page.
+  A Site pays for a Module's lettering in deploy size, never in fetches.
+
+Open, and for the operator to decide: whether a font becomes a block kind of its own in the Theme
+catalog or a field on the style block; whether the Builder's font slots then offer the contributed
+families as a list rather than free text; and whether a Site may override a preset's family with one
+of its own.
+
 ## Required Skeleton entrypoint shape
 
 An Area's own layout is limited to static registration:
