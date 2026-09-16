@@ -137,6 +137,18 @@
   max-height: 100%;
 }
 
+/*
+ * A page's headings take the font slot the Theme names for them (theme/phi-theme-typography.ts).
+ *
+ * `h1` to `h3` only: those are the page's headings, and nothing in the Builder or Admin interfaces uses
+ * them. Wrapped in `:where` so a widget that sets its own family still wins. And no fallback in the
+ * `var()`: a Theme that leaves headings on the body font sets no variable, the declaration is invalid at
+ * computed-value time, and an inherited property then simply inherits -- the body font, unchanged.
+ */
+:where(h1, h2, h3) {
+  font-family: var(--phi-font-heading);
+}
+
 :where(.phi-slot-child--inline-fill) {
   width: 100%;
 }

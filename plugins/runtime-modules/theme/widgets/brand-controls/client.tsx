@@ -46,6 +46,12 @@ import type { PhiThemeFontsBlock } from "../../../../../theme/phi-theme-blocks";
 import type { PhiSiteFontSlots } from "../../../../../types/site-theme";
 import { usePhiSiteFontAssets } from "../../../../../components/media/phi-site-font-assets";
 import { buildPhiFontFaceCss, buildPhiFontFamilyStack } from "../../../../../theme/phi-font-face";
+import {
+  PHI_THEME_HEADING_FONT_VARIABLE,
+  readPhiThemeHeadingFont,
+  resolvePhiThemeHeadingFontFamily,
+  type PhiThemeHeadingFont,
+} from "../../../../../theme/phi-theme-typography";
 import { resolvePhiThemeRuntimePayload } from "../../../../../theme/phi-theme-runtime";
 import { materializePhiThemeModuleBlocks } from "../../materialize-images";
 import {
@@ -586,6 +592,21 @@ function mergeThemeFontSlot(
   return Object.keys(fonts).length > 0
     ? { ...theme, fonts }
     : Object.fromEntries(Object.entries(theme).filter(([key]) => key !== "fonts")) as ThemePayload;
+}
+
+/**
+ * The heading font chosen, or handed back to the body font by removing it.
+ *
+ * Body is the absence of a choice rather than a value stored, so a Theme that never picked and one that
+ * picked body and went back store the same thing -- and an empty `typography` goes with it.
+ */
+function mergeThemeHeadingFont(theme: ThemePayload, heading: PhiThemeHeadingFont): ThemePayload {
+  const typography = { ...(theme.typography ?? {}) };
+  if (heading === "body") delete typography.headings;
+  else typography.headings = heading;
+  return Object.keys(typography).length > 0
+    ? { ...theme, typography }
+    : Object.fromEntries(Object.entries(theme).filter(([key]) => key !== "typography")) as ThemePayload;
 }
 
 function mergeThemeControlShape(theme: ThemePayload, controls: PhiControlShapeCorners): ThemePayload {
@@ -1898,7 +1919,7 @@ function usePhiBrandAccordionSection(storageKey: string, sectionKeys: readonly s
  * as a `font-family` -- what the preview used to do -- rendered every catalogue family and every Site
  * typeface in the fallback, because neither is a name the browser knows.
  *
- * The roles fall back as the widgets' font helper does: accent to body, display to serif. The faces of
+ * The roles fall back as the widgets' font helper does: accent to body, display to body. The faces of
  * the Site typefaces in use come back as CSS, since nothing else declares them until the Theme is saved.
  */
 function usePhiThemeFontStacks(fonts: PhiSiteFontSlots | null | undefined) {
@@ -1940,7 +1961,7 @@ function usePhiThemeFontStacks(fonts: PhiSiteFontSlots | null | undefined) {
       serif,
       mono,
       accent: accent.stack ? accent : body,
-      display: display.stack ? display : serif,
+      display: display.stack ? display : body,
       faceCss: [...faces].join(""),
     };
   }, [fontFamilies, fonts, siteFontAssets.options]);
@@ -2493,6 +2514,21 @@ export function PhiBuilderBrandStyleControlsWidgetClient({
                       />
                     </Flex>
                   ))}
+                  <Divider style={{ marginBlock: clientToken.paddingXXS }} />
+                  {/*
+                    * Which of the families above the page's headings wear. Only `h1` to `h3` follow it:
+                    * the headings of a page, not the titles of an interface.
+                    */}
+                  <Flex align="center" gap={clientToken.paddingSM} wrap="nowrap">
+                    <Typography.Text style={{ flex: `0 0 ${fieldLabelWidth}px` }}>Headings</Typography.Text>
+                    <PhiSegmentedControl<PhiThemeHeadingFont>
+                      value={readPhiThemeHeadingFont(state.draft.typography)}
+                      options={PHI_THEME_HEADING_FONT_OPTIONS}
+                      disabled={saving}
+                      size="small"
+                      onChange={(heading) => publishDraft(mergeThemeHeadingFont(state.draft, heading))}
+                    />
+                  </Flex>
                 </Flex>
               ),
             },
@@ -2768,6 +2804,12 @@ function readWordmarkLetterSpacingEm(value: string | null | undefined) {
 /** The weights a Wordmark part is offered, which is the range a name is actually set in. */
 /** What a sample button in the Theme preview does when pressed: nothing, while staying a live one. */
 function previewNoop() {}
+
+const PHI_THEME_HEADING_FONT_OPTIONS = [
+  { value: "body", label: "Body" },
+  { value: "serif", label: "Serif" },
+  { value: "display", label: "Display" },
+] as const satisfies readonly PhiControlOption<PhiThemeHeadingFont>[];
 
 const PHI_THEME_WORDMARK_WEIGHT_OPTIONS = [
   { value: "", label: "Default" },
@@ -3424,6 +3466,10 @@ export function PhiBuilderBrandThemePreviewWidgetClient({
   const mode = usePhiBrandPreviewMode(resolveThemePayloadMode(fallbackTheme));
   const previewPreset = resolveThemePayloadPreset(previewThemeResolved, themePresets);
   const previewFontStacks = usePhiThemeFontStacks(previewThemeResolved.fonts);
+  const previewHeadingFontFamily = resolvePhiThemeHeadingFontFamily(previewThemeResolved.typography, {
+    serif: previewFontStacks.serif.stack,
+    display: previewFontStacks.display.stack,
+  });
   const previewTokenInput = {
     ...buildPhiEffectiveNonColorThemeTokens(previewThemeResolved),
     ...resolvePhiThemeColorTokens(previewPreset, previewThemeResolved.palette, mode),
@@ -3635,6 +3681,14 @@ export function PhiBuilderBrandThemePreviewWidgetClient({
           background: previewCardBackground,
           color: previewTextColor,
           /*
+           * The heading family is stated even when the draft leaves headings on the body font: the
+           * variable is inherited, and the Builder's own Root carries the published Theme's.
+           */
+          ...({
+            [PHI_THEME_HEADING_FONT_VARIABLE]:
+              previewHeadingFontFamily ?? readEffectiveTokenString(previewEffectiveToken, "fontFamily", clientToken.fontFamily),
+          } as Record<`--${string}`, string>),
+          /*
            * Small and large Control radii are inherited custom properties, so the preview declares its
            * own here and overrides whatever the surrounding Builder shape put on the Root.
            */
@@ -3706,6 +3760,10 @@ export function PhiBuilderBrandThemePreviewWidgetClient({
           <Divider style={{ margin: 0 }} />
           <Flex gap={clientToken.padding} wrap="wrap">
             <Flex vertical gap={clientToken.paddingXS} style={{ flex: "1 1 260px", minWidth: 0 }}>
+              {/* An `h3`, so the same rule that sets a page's headings sets this one. */}
+              <Typography.Title level={3} style={{ margin: 0, color: previewTextColor }}>
+                Heading
+              </Typography.Title>
               <Typography.Title level={5} style={{ margin: 0, color: previewTextColor }}>
                 Header
               </Typography.Title>

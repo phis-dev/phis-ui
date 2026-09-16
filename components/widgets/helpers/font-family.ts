@@ -20,7 +20,8 @@ export function resolvePhiWidgetFontFamily(
     case "accent":
       return fonts.accent ?? fonts.body ?? token.fontFamily;
     case "display":
-      return fonts.display ?? fonts.serif ?? token.fontFamily;
+      // Display without a family is the body font, as it is for headings (theme/phi-theme-typography.ts).
+      return fonts.display ?? fonts.body ?? token.fontFamily;
     default:
       return undefined;
   }

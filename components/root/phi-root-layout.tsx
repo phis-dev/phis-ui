@@ -22,6 +22,10 @@ import {
 } from "../../theme/phi-theme-presets";
 import { resolvePhiPublishedRootTheme } from "../../theme/phi-published-root-style";
 import { resolvePhiSiteThemeFonts } from "../../theme/phi-theme-fonts.server";
+import {
+  PHI_THEME_HEADING_FONT_VARIABLE,
+  resolvePhiThemeHeadingFontFamily,
+} from "../../theme/phi-theme-typography";
 import { composePhiFontCatalogue, type PhiFontCatalogue } from "../../theme/phi-font-catalogue";
 import {
   PHI_DEFAULT_THEME_MODE_PREFERENCE,
@@ -152,6 +156,11 @@ export async function PhiRootLayout({
       accent: accentFont,
       display: displayFont,
   };
+  // The family the page's headings take, when the Theme gives them one; otherwise they inherit the body.
+  const headingFontFamily = resolvePhiThemeHeadingFontFamily(siteThemeRecord?.typography, {
+    serif: serifFont,
+    display: displayFont,
+  });
   const publishedRootTheme = resolvePhiPublishedRootTheme({
     siteTheme: siteThemeRecord,
     mode: resolvedThemeMode,
@@ -195,7 +204,9 @@ export async function PhiRootLayout({
             presets={themePresets}
             themeBlocks={themeBlocks}
             rootClassName={fontCatalogue.className}
-            rootStyle={publishedRootTheme.style}
+            rootStyle={headingFontFamily
+              ? { ...publishedRootTheme.style, [PHI_THEME_HEADING_FONT_VARIABLE]: headingFontFamily }
+              : publishedRootTheme.style}
             remRootValue={remRootValue}
           >
             <AntdApp>
