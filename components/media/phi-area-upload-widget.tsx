@@ -1,7 +1,9 @@
 "use client";
 
 import { DeleteOutlined, UploadOutlined } from "@ant-design/icons";
-import { Button, Flex, Progress, Space, Spin, Tag, Typography, Upload } from "antd";
+import { Flex, Progress, Space, Spin, Typography, Upload } from "antd";
+import { PhiTagControl } from "../controls/phi-tag-control";
+import { PhiButtonControl } from "../controls/phi-button-control";
 import type { UploadProps } from "antd";
 import NextImage from "next/image";
 import { useMemo, useRef, useState } from "react";
@@ -519,8 +521,8 @@ export function PhiAreaUploadBinding({ config, labels, onUploadComplete, collect
                     {resolveAssetTypeLabel(item.kind, item.contentType, item.originalName)}
                   </Typography.Text>
                   {allowDelete && item.assetId > 0 ? (
-                    <Button
-                      aria-label={labels.deleteLabel}
+                    <PhiButtonControl
+                      ariaLabel={labels.deleteLabel}
                       icon={<DeleteOutlined />}
                       type="text"
                       size="small"
@@ -532,19 +534,18 @@ export function PhiAreaUploadBinding({ config, labels, onUploadComplete, collect
                   ) : null}
                 </Flex>
                 <Flex align="center" gap={6} wrap>
-                  <Tag color={item.status === "error" ? "red" : item.status === "uploading" ? "blue" : "green"}>
+                  <PhiTagControl color={item.status === "error" ? "red" : item.status === "uploading" ? "blue" : "green"}>
                     {resolveUploadStatusLabel(item, labels)}
-                  </Tag>
+                  </PhiTagControl>
                   {item.status === "error" && item.file ? (
-                    <Button
+                    <PhiButtonControl
                       type="primary"
                       size="small"
                       onClick={() => {
                         void uploadFileToWallItem(item.file as File, item.localId);
                       }}
-                    >
-                      {labels.retryLabel}
-                    </Button>
+                      label={labels.retryLabel}
+                    />
                   ) : null}
                 </Flex>
               </Flex>

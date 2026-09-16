@@ -8,7 +8,7 @@ import {
   PlusOutlined,
   UnorderedListOutlined,
 } from "@ant-design/icons";
-import { Button, Flex, Space, Tooltip } from "antd";
+import { Flex, Space, Tooltip } from "antd";
 import { useCallback, useMemo, useRef, useState, type Dispatch, type ReactNode, type SetStateAction } from "react";
 
 import {
@@ -198,13 +198,15 @@ function PhiStaticOptionsTable({ disabled }: { disabled: boolean }) {
       render: (_value, row) => (
         <Space size={0} align="center">
           <Tooltip title={row.disabled ? "Enable option" : "Disable option"}>
-            <Button type="text" size="small" icon={row.disabled ? <EyeInvisibleOutlined /> : <EyeOutlined />}
-              aria-label={row.disabled ? `Enable ${String(row.label)}` : `Disable ${String(row.label)}`} disabled={disabled}
-              onClick={() => { void binding.executeAction({ kind: "action", actionKey: "toggle", rowIdentity: String(row.rowId), selectedRowIdentities: [], query: binding.resolvedQuery }); }} />
+            <PhiButtonControl type="text" size="small" icon={row.disabled ? <EyeInvisibleOutlined /> : <EyeOutlined />}
+              ariaLabel={row.disabled ? `Enable ${String(row.label)}` : `Disable ${String(row.label)}`} disabled={disabled}
+              onClick={() => { void binding.executeAction({ kind: "action", actionKey: "toggle", rowIdentity: String(row.rowId), selectedRowIdentities: [], query: binding.resolvedQuery }); }}
+            />
           </Tooltip>
           <Tooltip title="Delete option">
-            <Button type="text" danger size="small" icon={<DeleteOutlined />} aria-label={`Delete ${String(row.label || row.value)}`} disabled={disabled}
-              onClick={() => { void binding.executeAction({ kind: "action", actionKey: "delete", rowIdentity: String(row.rowId), selectedRowIdentities: [], query: binding.resolvedQuery }); }} />
+            <PhiButtonControl type="text" danger size="small" icon={<DeleteOutlined />} ariaLabel={`Delete ${String(row.label || row.value)}`} disabled={disabled}
+              onClick={() => { void binding.executeAction({ kind: "action", actionKey: "delete", rowIdentity: String(row.rowId), selectedRowIdentities: [], query: binding.resolvedQuery }); }}
+            />
           </Tooltip>
         </Space>
       ),
@@ -221,7 +223,8 @@ function PhiStaticOptionsTable({ disabled }: { disabled: boolean }) {
     />
     <Flex justify="flex-end">
       <PhiButtonControl label="Add option" icon={<PlusOutlined />} size="small" disabled={disabled}
-        onClick={() => { void binding.executeAction({ kind: "action", actionKey: "add", selectedRowIdentities: [], query: binding.resolvedQuery }); }} />
+        onClick={() => { void binding.executeAction({ kind: "action", actionKey: "add", selectedRowIdentities: [], query: binding.resolvedQuery }); }}
+      />
     </Flex>
   </>;
 }

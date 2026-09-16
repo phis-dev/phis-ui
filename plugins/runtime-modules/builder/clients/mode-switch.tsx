@@ -1,6 +1,7 @@
 "use client";
 
-import { Flex, Segmented } from "antd";
+import { Flex } from "antd";
+import { PhiSegmentedControl } from "../../../../components/controls/phi-segmented-control";
 
 import {
   createDefaultBuilderChromeControls,
@@ -52,7 +53,7 @@ export function PhiBuilderModeSwitchWidgetClient({
 
   return (
     <Flex align="center" gap={token.paddingXS} style={{ minWidth: 0 }}>
-      <Segmented
+      <PhiSegmentedControl
         value={builderMode}
         disabled={controlSignals.disabled}
         options={[

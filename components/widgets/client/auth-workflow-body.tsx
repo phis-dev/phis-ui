@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Button, Flex, Input, QRCode, Typography } from "antd";
+import { Flex, Input, QRCode, Typography } from "antd";
+import { PhiButtonControl } from "../../controls/phi-button-control";
 import { PhiAlertControl } from "../../controls/phi-alert-control";
 import type { PhiAuthWorkflow } from "../../../types/auth-manifest";
 
@@ -122,12 +123,11 @@ export function PhiAuthWorkflowBody({
             <Typography.Text key={recoveryCode} copyable code>{recoveryCode}</Typography.Text>
           ))}
         </Flex>
-        <Button
+        <PhiButtonControl
           type="primary"
           onClick={() => void onComplete({ area: recovery.area, next: recovery.next })}
-        >
-          I saved the recovery codes
-        </Button>
+          label="I saved the recovery codes"
+        />
       </Flex>
     );
   }
@@ -141,22 +141,19 @@ export function PhiAuthWorkflowBody({
         </Typography.Paragraph>
         {error ? <PhiAlertControl level="error" showIcon title={error} /> : null}
         {!enrollment ? (
-          <Button type="primary" loading={busy} onClick={() => void startEnrollment()}>
-            Start setup
-          </Button>
+          <PhiButtonControl type="primary" loading={busy} onClick={() => void startEnrollment()} label="Start setup" />
         ) : (
           <>
             <QRCode value={enrollment.otpauthUri} type="svg" />
             <Typography.Text copyable code>{enrollment.manualKey}</Typography.Text>
             <Input.OTP length={6} value={code} onChange={setCode} disabled={busy} />
-            <Button
+            <PhiButtonControl
               type="primary"
               loading={busy}
               disabled={!/^\d{6}$/.test(code)}
               onClick={() => void submit()}
-            >
-              Verify and continue
-            </Button>
+              label="Verify and continue"
+            />
           </>
         )}
       </Flex>
@@ -176,18 +173,15 @@ export function PhiAuthWorkflowBody({
         onChange={(event) => setCode(event.target.value)}
         disabled={busy}
       />
-      <Button type="primary" loading={busy} onClick={() => void submit()}>
-        Verify and continue
-      </Button>
-      <Button
+      <PhiButtonControl type="primary" loading={busy} onClick={() => void submit()} label="Verify and continue" />
+      <PhiButtonControl
         type="link"
         onClick={() => {
           setMethodKey((current) => current === "totp" ? "recovery-code" : "totp");
           setCode("");
         }}
-      >
-        {methodKey === "totp" ? "Use a recovery code" : "Use authenticator code"}
-      </Button>
+        label={methodKey === "totp" ? "Use a recovery code" : "Use authenticator code"}
+      />
     </Flex>
   );
 }

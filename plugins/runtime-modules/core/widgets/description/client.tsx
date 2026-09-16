@@ -1,6 +1,7 @@
 "use client";
 
-import { Space, Tag, Typography } from "antd";
+import { Space, Typography } from "antd";
+import { PhiTagControl } from "../../../../../components/controls/phi-tag-control";
 
 import type { PhiClientBlockBaseProps } from "../../../../../types";
 import { usePhiConfig } from "../../../../../components/root/phi-config-provider";
@@ -31,7 +32,7 @@ export function PhiDescriptionWidgetClient({
   return (
     <Space orientation="vertical" size={0} style={{ width: "100%", gap: token.paddingLG }}>
       {labels.eyebrow ? (
-        <Tag
+        <PhiTagControl
           color="default"
           style={{
             width: "fit-content",
@@ -46,7 +47,7 @@ export function PhiDescriptionWidgetClient({
           }}
         >
           {labels.eyebrow}
-        </Tag>
+        </PhiTagControl>
       ) : null}
       {labels.title || labels.description ? (
         <div>

@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Button, Flex, Spin, Typography } from "antd";
+import { Flex, Spin, Typography } from "antd";
+import { PhiButtonControl } from "../../../../../components/controls/phi-button-control";
 import { PhiAlertControl } from "../../../../../components/controls/phi-alert-control";
 import type { PhiBlockRuntime, PhiClientBlockBaseProps } from "../../../../../types";
 import { PHIS_SITE_KEY_HEADER } from "../../../../../constants/http-headers";
@@ -56,7 +57,7 @@ export function PhiAuthLogoutWidgetClient({
       {error ? (
         <>
           <PhiAlertControl level="error" showIcon title={error} />
-          <Button onClick={() => window.location.reload()}>Try again</Button>
+          <PhiButtonControl onClick={() => window.location.reload()} label="Try again" />
         </>
       ) : (
         <>

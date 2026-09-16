@@ -1,7 +1,9 @@
 "use client";
 
 import { lazy, Suspense, useCallback, useEffect, useState } from "react";
-import { Button, Card, Flex, List, Skeleton, Tag, Typography } from "antd";
+import { Button, Card, Flex, List, Skeleton, Typography } from "antd";
+import { PhiTagControl } from "../../../../../components/controls/phi-tag-control";
+import { PhiButtonControl } from "../../../../../components/controls/phi-button-control";
 import { PhiAlertControl } from "../../../../../components/controls/phi-alert-control";
 import { PhiConfirmControl } from "../../../../../components/controls/phi-confirm-control";
 
@@ -141,7 +143,7 @@ export function PhiAuthSecurityWidgetClient({ apiPath = "/api/auth/account/secur
       {error ? <PhiAlertControl level="error" showIcon title={error} dismissible onDismiss={() => setError(null)} /> : null}
       <Card
         title="Authenticator apps"
-        extra={<Button type="primary" onClick={() => setEnrolling(true)}>Add authenticator</Button>}
+        extra={<PhiButtonControl type="primary" onClick={() => setEnrolling(true)} label="Add authenticator" />}
       >
         <List
           locale={{ emptyText: "No authenticator configured." }}
@@ -163,7 +165,7 @@ export function PhiAuthSecurityWidgetClient({ apiPath = "/api/auth/account/secur
                 title={factor.label ?? "Authenticator app"}
                 description={factor.lastUsedAt ? `Last used ${new Date(factor.lastUsedAt).toLocaleString()}` : "Not used yet"}
               />
-              {payload.policy.factor?.requiredMethod === "totp" ? <Tag color="blue">Required</Tag> : null}
+              {payload.policy.factor?.requiredMethod === "totp" ? <PhiTagControl color="blue">Required</PhiTagControl> : null}
             </List.Item>
           )}
         />
@@ -199,7 +201,7 @@ export function PhiAuthSecurityWidgetClient({ apiPath = "/api/auth/account/secur
                 title={session.id === payload.currentSessionId ? "Current session" : "Session"}
                 description={[session.ipAddress, session.userAgent].filter(Boolean).join(" · ") || "No device details"}
               />
-              {session.revokedAt ? <Tag>Revoked</Tag> : <Tag color="green">Active</Tag>}
+              {session.revokedAt ? <PhiTagControl>Revoked</PhiTagControl> : <PhiTagControl color="green">Active</PhiTagControl>}
             </List.Item>
           )}
         />

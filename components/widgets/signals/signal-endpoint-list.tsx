@@ -1,6 +1,7 @@
 "use client";
 
-import { Space, Tag, Typography } from "antd";
+import { Space, Typography } from "antd";
+import { PhiTagControl } from "../../controls/phi-tag-control";
 import { PhiTableControl, type PhiTableControlColumn } from "../../controls/phi-table-control";
 
 import type {
@@ -70,7 +71,7 @@ export function PhiSignalCapabilityList({
       sizing: { mode: "fill" },
       render: (valueType, row) => (
         <Space size={4} wrap>
-          <Tag style={{ marginInlineEnd: 0 }}>{String(valueType)}</Tag>
+          <PhiTagControl style={{ marginInlineEnd: 0 }}>{String(valueType)}</PhiTagControl>
           {row.capability.valueSchema ? <Typography.Text type="secondary">{row.capability.valueSchema}</Typography.Text> : null}
         </Space>
       ),

@@ -4,7 +4,8 @@ import { ReloadOutlined, UndoOutlined } from "@ant-design/icons";
 import type { PhiTableWidgetLabels } from "../../../../../components/widgets/label-types/table";
 import { PHI_TABLE_WIDGET_DEFAULT_LABELS } from "../../../../../components/widgets/label-types/table";
 import { formatPhiTableWidgetLabel } from "../../../../../components/widgets/label-types/table";
-import { App, Button, Flex, Space, Tag, Tooltip, Typography } from "antd";
+import { App, Button, Flex, Space, Tooltip, Typography } from "antd";
+import { PhiTagControl } from "../../../../../components/controls/phi-tag-control";
 import { Fragment, useCallback, useEffect, useEffectEvent, useMemo, useState, type ReactNode } from "react";
 
 import { PhiMultiSelectControl } from "../../../../../components/controls/phi-multi-select-control";
@@ -137,13 +138,13 @@ function renderTableValueContent(value: unknown, column: PhiTableColumnDefinitio
         {values.map((entry, index) => {
           const normalizedEntry = normalizeTextValue(entry);
           return (
-            <Tag
+            <PhiTagControl
               color={resolveTableTagColor(column.tagColorMap?.[normalizedEntry])}
               key={`${normalizedEntry}:${index}`}
               variant={column.tagVariant ?? "outlined"}
             >
               {column.valueMap?.[normalizedEntry] ?? normalizedEntry}
-            </Tag>
+            </PhiTagControl>
           );
         })}
       </Space>
@@ -155,9 +156,9 @@ function renderTableValueContent(value: unknown, column: PhiTableColumnDefinitio
   if (column.renderer === "json" || column.renderer === "code") return <Typography.Text code>{displayValue}</Typography.Text>;
   if (column.renderer === "badge") {
     return (
-      <Tag color={resolveTableTagColor(column.tagColorMap?.[normalizedValue])} variant={column.tagVariant ?? "outlined"}>
+      <PhiTagControl color={resolveTableTagColor(column.tagColorMap?.[normalizedValue])} variant={column.tagVariant ?? "outlined"}>
         {displayValue}
-      </Tag>
+      </PhiTagControl>
     );
   }
   if (column.renderer === "switch") return <PhiSwitchControl checked={value === true} readOnly />;
@@ -911,7 +912,8 @@ export function PhiTableWidgetClient({
       {features.search?.enabled ? (
         <PhiTextControl inputType="search" allowClear placeholder={features.search.placeholder ?? labels.search}
           value={searchDraft} size={resolvedControlSize}
-          onChange={(value) => setSearchDraft(value ?? "")} style={{ width: 260 }} />
+          onChange={(value) => setSearchDraft(value ?? "")} style={{ width: 260 }}
+        />
       ) : null}
     </Flex>
   ) : null;
@@ -971,7 +973,8 @@ export function PhiTableWidgetClient({
                 onActivate={() => activateAction(action, undefined, selectedRowIdentities)} />;
             })}</Space>
           </Flex>
-        )} />
+        )}
+      />
       ) : null}
       {bindingError || contractError || error ? (
         <PhiAlertControl level="error" showIcon title={bindingError ?? contractError ?? error?.message} />
@@ -1347,11 +1350,13 @@ function TableFilter({ filter, field, sourceConfig, value, size, onChange, label
     return filter.multiple ? (
       <PhiMultiSelectControl allowClear value={Array.isArray(value) ? value.filter((entry): entry is string => typeof entry === "string") : []}
         disabled={Boolean(resolvedOptions.warning)} options={resolvedOptions.options} size={size}
-        placeholder={hiddenLabelPlaceholder} onChange={onChange} style={{ minWidth: 180 }} />
+        placeholder={hiddenLabelPlaceholder} onChange={onChange} style={{ minWidth: 180 }}
+      />
     ) : (
       <PhiSelectControl allowClear value={typeof value === "string" ? value : undefined}
         disabled={Boolean(resolvedOptions.warning)} options={resolvedOptions.options} size={size}
-        placeholder={hiddenLabelPlaceholder} onChange={onChange} style={{ minWidth: 180 }} />
+        placeholder={hiddenLabelPlaceholder} onChange={onChange} style={{ minWidth: 180 }}
+      />
     );
   }
   if (filter.type === "boolean") {
@@ -1370,9 +1375,11 @@ function TableFilter({ filter, field, sourceConfig, value, size, onChange, label
     const range = isRecord(value) ? value : {};
     return <Space.Compact>
       <PhiTextControl value={typeof range.start === "string" ? range.start : ""} placeholder={filter.startPlaceholder}
-        size={size} onChange={(next) => onChange({ ...range, start: next ?? "" })} />
+        size={size} onChange={(next) => onChange({ ...range, start: next ?? "" })}
+      />
       <PhiTextControl value={typeof range.end === "string" ? range.end : ""} placeholder={filter.endPlaceholder}
-        size={size} onChange={(next) => onChange({ ...range, end: next ?? "" })} />
+        size={size} onChange={(next) => onChange({ ...range, end: next ?? "" })}
+      />
     </Space.Compact>;
   }
   return <PhiTextControl value={typeof value === "string" ? value : ""}

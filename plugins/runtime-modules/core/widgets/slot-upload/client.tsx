@@ -2,6 +2,7 @@
 
 import { DeleteOutlined, UploadOutlined } from "@ant-design/icons";
 import { Button, Flex, List, Progress, Typography, Upload } from "antd";
+import { PhiButtonControl } from "../../../../../components/controls/phi-button-control";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { usePhiMediaUpload } from "../../../../../components/media/phi-media-upload";
@@ -242,12 +243,11 @@ export function PhiSlotUploadWidgetClient({ config }: PhiSlotUploadWidgetClientP
         renderItem={(file) => (
           <List.Item
             actions={[
-              <Button
+              <PhiButtonControl
                 key="remove"
                 size="small"
                 icon={<DeleteOutlined />}
-                onClick={() => { void remove(file.id).catch(() => setFailure("That file stayed.")); }}
-              />,
+                onClick={() => { void remove(file.id).catch(() => setFailure("That file stayed.")); }} />,
             ]}
           >
             <Typography.Text>{file.contentType} — {file.byteSize} bytes</Typography.Text>

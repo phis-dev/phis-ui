@@ -1,7 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Descriptions, Flex, Skeleton, Tag, Typography } from "antd";
+import { Descriptions, Flex, Skeleton, Typography } from "antd";
+import { PhiTagControl } from "../../../../../components/controls/phi-tag-control";
 
 import { formatPhiDateTime } from "../../../../../helpers/format-date-time";
 import {
@@ -209,10 +210,10 @@ export function PhiObservabilityLogDetailWidgetClient({ config, labels }: Props)
                 {formatPhiDateTime(selectedRow.ts)}
               </Descriptions.Item>
               <Descriptions.Item label={labels.columns.level}>
-                <Tag color={levelColor(selectedRow.level)}>{labels.levelOptions[selectedRow.level]}</Tag>
+                <PhiTagControl color={levelColor(selectedRow.level)}>{labels.levelOptions[selectedRow.level]}</PhiTagControl>
               </Descriptions.Item>
               <Descriptions.Item label={labels.columns.service}>
-                <Tag>{selectedRow.service}</Tag>
+                <PhiTagControl>{selectedRow.service}</PhiTagControl>
               </Descriptions.Item>
               <Descriptions.Item label={labels.columns.event}>
                 <Typography.Text code>{selectedRow.event}</Typography.Text>

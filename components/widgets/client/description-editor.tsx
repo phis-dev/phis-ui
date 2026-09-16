@@ -2,7 +2,8 @@
 
 import { useMemo, useState } from "react";
 
-import { Flex, Tag } from "antd";
+import { Flex } from "antd";
+import { PhiTagControl } from "../../controls/phi-tag-control";
 
 import type { PhiCmsDescriptionWidgetConfig } from "../../../plugins/runtime-modules/core/widgets/description/config";
 import { PhiTextControl } from "../../controls/phi-text-control";
@@ -121,7 +122,7 @@ export function PhiDescriptionWidgetEditor({
     >
       <Flex vertical gap={10} style={{ width: "100%", minWidth: 0 }}>
         {previewLabels.eyebrow ? (
-          <Tag
+          <PhiTagControl
             color="default"
             style={{
               width: "fit-content",
@@ -146,7 +147,7 @@ export function PhiDescriptionWidgetEditor({
               onBlur={() => commitField("eyebrow")}
               style={{ ...EDITOR_TEXTAREA_STYLE, borderBottom: "none", paddingBlock: 0 }}
             />
-          </Tag>
+          </PhiTagControl>
         ) : (
           <PhiTextControl
             presentation="textarea"

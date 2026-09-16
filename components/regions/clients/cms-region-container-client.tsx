@@ -2,7 +2,8 @@
 
 import type { CSSProperties, ReactNode } from "react";
 import { useState } from "react";
-import { Button, Flex } from "antd";
+import { Flex } from "antd";
+import { PhiButtonControl } from "../../controls/phi-button-control";
 import { MenuFoldOutlined, MenuUnfoldOutlined } from "@ant-design/icons";
 import { resolvePhiBorderWidgetStyle } from "../../../helpers/border-widget-style";
 import {
@@ -522,9 +523,9 @@ export function PhiCmsRegionContainerClient({
                     zIndex: 1,
                   } as CSSProperties}
                 >
-                  <Button
+                  <PhiButtonControl
                     type="text"
-                    aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+                    ariaLabel={collapsed ? "Expand sidebar" : "Collapse sidebar"}
                     icon={
                       resolvedCollapseIcon ? (
                         <PhiIcon name={resolvedCollapseIcon} />
