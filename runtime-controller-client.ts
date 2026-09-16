@@ -11,7 +11,7 @@ export type {
   PhiRuntimeModuleControllerClientAreaContribution,
 } from "./plugins/runtime-modules/area-contributions-controller-client";
 export type {
-  PhiRuntimeModuleControllerClientLoader,
+  PhiRuntimeModuleControllerClient,
   PhiRuntimeModuleControllerClientManifest,
 } from "./components/runtime/runtime-module-controller-client-manifest";
 export type { PhiRuntimeModuleControllerClientProps } from "./types/cms-plugins";

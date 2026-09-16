@@ -1,7 +1,11 @@
 "use client";
 
+import dynamic from "next/dynamic";
 
-export const loadPhiGroupsRuntimeControllerClient = () =>
-  import("../../../plugins/runtime-modules/groups/controller/client")
-    .then((module) => module.PhiGroupsRuntimeControllerClient);
+/*
+ * next/dynamic rather than a loader: rendered during the server render, it names its chunks in the
+ * route's loadable manifest, and the HTML asks for them before hydration instead of after it.
+ */
+export const PhiLazyGroupsRuntimeControllerClient = dynamic(() =>
+  import("../../../plugins/runtime-modules/groups/controller/client").then((module) => module.PhiGroupsRuntimeControllerClient));
 

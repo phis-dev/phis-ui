@@ -2,13 +2,13 @@
 
 import type { PhiRuntimeModuleId } from "../../types/cms-plugins";
 import type {
-  PhiRuntimeModuleControllerClientLoader,
+  PhiRuntimeModuleControllerClient,
   PhiRuntimeModuleControllerClientManifest,
 } from "../../components/runtime/runtime-module-controller-client-manifest";
 
 export type PhiRuntimeModuleControllerClientAreaContribution = {
   moduleId: PhiRuntimeModuleId;
-  loadController: PhiRuntimeModuleControllerClientLoader;
+  Controller: PhiRuntimeModuleControllerClient;
 };
 
 export function definePhiRuntimeModuleControllerClientAreaContribution(
@@ -39,7 +39,7 @@ export function extendPhiRuntimeModuleControllerClientManifest(
       );
     }
     moduleIds.add(contribution.moduleId);
-    manifest.set(contribution.moduleId, contribution.loadController);
+    manifest.set(contribution.moduleId, contribution.Controller);
   }
   return manifest;
 }

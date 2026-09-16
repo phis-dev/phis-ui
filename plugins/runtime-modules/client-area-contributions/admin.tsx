@@ -8,33 +8,33 @@ import { PHI_LOCALIZATION_RUNTIME_MODULE_ID } from "../localization/ids";
 import { PHI_USER_MANAGEMENT_RUNTIME_MODULE_ID } from "../user-management/ids";
 import { PHI_DASHBOARD_RUNTIME_MODULE_CONTROLLER_CLIENT_AREA_CONTRIBUTION } from "../dashboard/client";
 import { PHI_COMMON_RUNTIME_MODULE_CONTROLLER_CLIENT_AREA_CONTRIBUTIONS } from "./common";
-import { loadPhiAuthRuntimeControllerClient } from "../auth/client";
-import { loadPhiGroupsRuntimeControllerClient } from "../groups/client";
-import { loadPhiLocalizationRuntimeControllerClient } from "../localization/client";
-import { loadPhiUserManagementRuntimeControllerClient } from "../user-management/client";
-import { loadPhiAdminRuntimeControllerClient } from "../admin/client";
+import { PhiLazyAuthRuntimeControllerClient } from "../auth/client";
+import { PhiLazyGroupsRuntimeControllerClient } from "../groups/client";
+import { PhiLazyLocalizationRuntimeControllerClient } from "../localization/client";
+import { PhiLazyUserManagementRuntimeControllerClient } from "../user-management/client";
+import { PhiLazyAdminRuntimeControllerClient } from "../admin/client";
 
 export const PHI_ADMIN_RUNTIME_MODULE_CONTROLLER_CLIENT_AREA_CONTRIBUTIONS = [
   ...PHI_COMMON_RUNTIME_MODULE_CONTROLLER_CLIENT_AREA_CONTRIBUTIONS,
   definePhiRuntimeModuleControllerClientAreaContribution({
     moduleId: PHI_AUTH_RUNTIME_MODULE_ID,
-    loadController: loadPhiAuthRuntimeControllerClient,
+    Controller: PhiLazyAuthRuntimeControllerClient,
   }),
   PHI_DASHBOARD_RUNTIME_MODULE_CONTROLLER_CLIENT_AREA_CONTRIBUTION,
   definePhiRuntimeModuleControllerClientAreaContribution({
     moduleId: PHI_GROUPS_RUNTIME_MODULE_ID,
-    loadController: loadPhiGroupsRuntimeControllerClient,
+    Controller: PhiLazyGroupsRuntimeControllerClient,
   }),
   definePhiRuntimeModuleControllerClientAreaContribution({
     moduleId: PHI_LOCALIZATION_RUNTIME_MODULE_ID,
-    loadController: loadPhiLocalizationRuntimeControllerClient,
+    Controller: PhiLazyLocalizationRuntimeControllerClient,
   }),
   definePhiRuntimeModuleControllerClientAreaContribution({
     moduleId: PHI_USER_MANAGEMENT_RUNTIME_MODULE_ID,
-    loadController: loadPhiUserManagementRuntimeControllerClient,
+    Controller: PhiLazyUserManagementRuntimeControllerClient,
   }),
   definePhiRuntimeModuleControllerClientAreaContribution({
     moduleId: PHI_ADMIN_RUNTIME_MODULE_ID,
-    loadController: loadPhiAdminRuntimeControllerClient,
+    Controller: PhiLazyAdminRuntimeControllerClient,
   }),
 ];

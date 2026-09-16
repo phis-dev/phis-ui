@@ -76,7 +76,7 @@ not an extension boundary.
 
 ### `runtime-modules/client-area-contributions/*`
 
-Area-scoped Controller Client projections contain only `loadController`. They pair 1:1 with the Server
+Area-scoped Controller Client projections contain only `Controller`, a `next/dynamic` component. They pair 1:1 with the Server
 Area contributions and are the only module implementation edges imported by normal live routes. Public
 must therefore remain physically unable to reach Builder, Admin, Editor, Theme, or Authoring Clients.
 

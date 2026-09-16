@@ -1,14 +1,14 @@
 "use client";
 
-import { lazy, Suspense } from "react";
+import dynamic from "next/dynamic";
+import { Suspense } from "react";
 
 import { PHI_FORM_CONTROLLER_TYPE } from "../forms/runtime-form-controller-address";
 import type { PhiRuntimeModuleControllerClientProps } from "../../types/cms-plugins";
 
-const PhiRuntimeFormControllerClient = lazy(async () => ({
-  default: await import("../forms/runtime-form-controller-plugin")
-    .then((module) => module.PhiRuntimeFormControllerClient),
-}));
+// next/dynamic so the server render preloads the Form Controller's chunks; see PhiRuntimeModuleControllerClient.
+const PhiRuntimeFormControllerClient = dynamic(() =>
+  import("../forms/runtime-form-controller-plugin").then((module) => module.PhiRuntimeFormControllerClient));
 
 export function PhiPlatformRuntimeControllerClientHost({
   controllers,

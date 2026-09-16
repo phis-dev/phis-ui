@@ -1,7 +1,7 @@
 "use client";
 
 import type { PhiCmsAreaKey } from "../../constants/cms-areas";
-import type { PhiRuntimeModuleRenderClientLoader } from "../../components/runtime/runtime-module-render-client-manifest";
+import type { PhiRuntimeModuleRenderClient } from "../../components/runtime/runtime-module-render-client-manifest";
 import type {
   PhiRuntimeModuleCalendarAdapterClientDefinition,
   PhiRuntimeModuleDataProviderClientDefinition,
@@ -32,7 +32,7 @@ import type { PhiRuntimeModuleControllerClientAreaContribution } from "./area-co
  */
 export type PhiSiteModuleClientAreaContributions = {
   controllers?: readonly PhiRuntimeModuleControllerClientAreaContribution[];
-  renderLoaders?: ReadonlyArray<readonly [string, PhiRuntimeModuleRenderClientLoader]>;
+  renderClients?: ReadonlyArray<readonly [string, PhiRuntimeModuleRenderClient]>;
   dataProviders?: readonly PhiRuntimeModuleDataProviderClientDefinition[];
 };
 

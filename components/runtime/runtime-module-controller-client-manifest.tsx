@@ -7,12 +7,19 @@ import type {
   PhiRuntimeModuleId,
 } from "../../types/cms-plugins";
 
-export type PhiRuntimeModuleControllerClientLoader =
-  () => Promise<ComponentType<PhiRuntimeModuleControllerClientProps>>;
+/**
+ * A Module's Controller Client, as the manifest holds it.
+ *
+ * A component made with `next/dynamic(() => import(...))` at the Module's client entry, not a loader
+ * function. Controllers render during the server render, and only a literal `dynamic()` call is entered
+ * into the route's loadable manifest: the server then writes a preload hint for the Controller's chunks
+ * into the HTML, where a loader behind `React.lazy` was only requested once hydration reached it.
+ */
+export type PhiRuntimeModuleControllerClient = ComponentType<PhiRuntimeModuleControllerClientProps>;
 
 export type PhiRuntimeModuleControllerClientManifest = ReadonlyMap<
   PhiRuntimeModuleId,
-  PhiRuntimeModuleControllerClientLoader
+  PhiRuntimeModuleControllerClient
 >;
 
 const PhiRuntimeModuleControllerClientManifestContext =

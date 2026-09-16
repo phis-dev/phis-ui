@@ -373,8 +373,8 @@ not belong in the address. Declare signal capabilities through `runtimeSignals`;
 the Phi signal bus, not a module-global store or a second event bus.
 
 For a controllerless Module, `controllerType`, `controller`, `controllerMountPolicy`,
-`controllerDefinition`, and `loadController` are all absent. These fields form one atomic contract:
-either every required Controller field and loader is present, or none is. A controllerless Module
+`controllerDefinition`, and the `Controller` Client are all absent. These fields form one atomic contract:
+either every required Controller field and the Client are present, or none is. A controllerless Module
 cannot materialize Controller instances, and its Widgets, Layouts, Forms, and providers cannot declare
 requirements for a Controller it does not own or for an unavailable external Controller.
 
@@ -846,12 +846,15 @@ import {
   extendPhiRuntimeModuleControllerClientManifest,
   type PhiRuntimeModuleControllerClientManifest,
 } from "@phis/ui/runtime/controller-client";
+import dynamic from "next/dynamic";
 import { STATUS_MODULE_ID } from "./constants";
 
+// A literal next/dynamic call: the server render then preloads the Controller's chunks. A loader
+// function passed through here would only be requested once hydration reached the Controller.
 const contribution = definePhiRuntimeModuleControllerClientAreaContribution({
   moduleId: STATUS_MODULE_ID,
-  loadController: () => import("./controller/client")
-    .then((module) => module.PhiStatusControllerClient),
+  Controller: dynamic(() =>
+    import("./controller/client").then((module) => module.PhiStatusControllerClient)),
 });
 
 export function extendStatusControllerClientManifest(
@@ -861,15 +864,18 @@ export function extendStatusControllerClientManifest(
 }
 ```
 
-A controllerless Module contributes no Controller Client loader and does not need a Controller Client
+A controllerless Module contributes no Controller Client and does not need a Controller Client
 manifest extension. Its Render, data-provider, Calendar-adapter, and Authoring contributions remain
 independent immutable manifests and are included only when the Module actually owns those artifacts.
 Server and Client contribution parity is validated by `moduleId`; Controller presence is not the
 identity of a Module.
 
-If Widget Server renderers use `PhiRuntimeModuleRenderClientHost`, export matching loaders through
-`definePhiRuntimeModuleRenderClientLoader(...)` and `extendPhiRuntimeModuleRenderClientManifest(...)`
-from `@phis/ui/runtime/render-client`. Pure Server-rendered Widgets need no Render Client entry.
+If Widget Server renderers use `PhiRuntimeModuleRenderClientHost`, export matching Clients through
+`definePhiRuntimeModuleRenderClient(dynamic(() => import("...").then(...)))` and
+`extendPhiRuntimeModuleRenderClientManifest(...)` from `@phis/ui/runtime/render-client`, or as
+`renderClients` in `definePhiModuleClientContributions`. The `dynamic` call must be literal and come
+from `next/dynamic`: only then does the server render preload the chunks of the Clients a page renders,
+so a package lists `next` as a peer dependency. Pure Server-rendered Widgets need no Render Client entry.
 
 Calendar-system implementations use the same split. The Server definition declares only serializable
 `calendarAdapters` descriptors. The separate Client entrypoint extends the immutable Area manifest
@@ -1156,7 +1162,7 @@ installs or enables that Add-on.
 - No registry is populated by import side effects or mutable module globals.
 - No database value is passed to an unrestricted dynamic import.
 - Every persisted identity and provider key is package-namespaced and stable.
-- Controller fields and `loadController` are either complete as one group or absent as one group.
+- Controller fields and the `Controller` Client are either complete as one group or absent as one group.
 - Every controllerless Module contributes at least one meaningful owned artifact and no no-op Controller.
 - Widgets use Phi Controls, providers, signaling, and the shared Canvas scaffold contracts.
 - Server handlers revalidate Form input and enforce authorization independently of Client validation.

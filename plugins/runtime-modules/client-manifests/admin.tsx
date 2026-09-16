@@ -1,10 +1,11 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { createPhiRuntimeModuleControllerClientManifestFromAreaContributions } from "../area-contributions-controller-client";
 import { PHI_ADMIN_RUNTIME_MODULE_CONTROLLER_CLIENT_AREA_CONTRIBUTIONS } from "../client-area-contributions/admin";
 import { PHI_COMMON_RUNTIME_MODULE_RENDER_CLIENT_MANIFEST } from "./common";
 import {
-  definePhiRuntimeModuleRenderClientLoader,
+  definePhiRuntimeModuleRenderClient,
   extendPhiRuntimeModuleRenderClientManifest,
 } from "../../../components/runtime/runtime-module-render-client-manifest";
 import { PhiRuntimeRenderClientType } from "../../../constants/runtime-render-client-types";
@@ -28,10 +29,9 @@ export const PHI_ADMIN_RUNTIME_MODULE_RENDER_CLIENT_MANIFEST =
     [
       [
         PhiRuntimeRenderClientType.ObservabilityLogDetail,
-        definePhiRuntimeModuleRenderClientLoader(
-          () => import("../observability/widgets/log-detail/client")
-            .then((module) => module.PhiObservabilityLogDetailWidgetClient),
-        ),
+        definePhiRuntimeModuleRenderClient(
+        dynamic(() => import("../observability/widgets/log-detail/client").then((module) => module.PhiObservabilityLogDetailWidgetClient)),
+      ),
       ],
     ],
   );

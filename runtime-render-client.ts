@@ -2,11 +2,11 @@ export {
   PhiRuntimeModuleRenderClientHost,
   PhiRuntimeModuleRenderClientManifestProvider,
   createPhiRuntimeModuleRenderClientManifest,
-  definePhiRuntimeModuleRenderClientLoader,
+  definePhiRuntimeModuleRenderClient,
   extendPhiRuntimeModuleRenderClientManifest,
 } from "./components/runtime/runtime-module-render-client-manifest";
 export type {
-  PhiRuntimeModuleRenderClientLoader,
+  PhiRuntimeModuleRenderClient,
   PhiRuntimeModuleRenderClientManifest,
   PhiRuntimeModuleRenderClientProps,
 } from "./components/runtime/runtime-module-render-client-manifest";

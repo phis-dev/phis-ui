@@ -28,7 +28,11 @@ import process from "node:process";
 //      cascader, date, compound Table and Tree) load where a field of that kind is rendered;
 //   5. a Client manifest does not load a loader. `import()` of a Module's client.ts, which holds
 //      nothing but `import()` itself, cost every Controller a nearly empty chunk and a second round
-//      trip before the Controller's own chunk was even requested.
+//      trip before the Controller's own chunk was even requested;
+//   6. every registered Controller Client, and every Render Client in a manifest, is a literal
+//      `dynamic(() => import(...))`. Only that shape enters the route's loadable manifest, and only
+//      then does the server render preload the chunks instead of the browser asking for them once
+//      hydration reaches the Controller or the Widget.
 // The Builder is exempt; it carries every Area's Modules on purpose.
 
 const repositoryRoot = process.cwd();
@@ -409,6 +413,56 @@ for (const directory of manifestDirectories) {
   }
 }
 
+// --- 6. Controller Clients are next/dynamic ----------------------------------------------------
+
+const controllerRegistrationFiles = [
+  ...manifestDirectories.flatMap((directory) =>
+    readdirSync(directory).filter((name) => /\.tsx?$/.test(name)).map((name) => path.join(directory, name))),
+  ...[...moduleDirectories].map((directory) => path.join(runtimeModulesDirectory, directory, "client.ts"))
+    .filter((file) => existsSync(file)),
+];
+const literalDynamic = (name) => new RegExp(`export const ${name} = dynamic\\(\\(\\) =>\\s*import\\(`);
+let registeredControllers = 0;
+for (const file of controllerRegistrationFiles) {
+  const { code } = readSource(file);
+  const names = [
+    ...[...code.matchAll(/\bController:\s*(\w+)/g)].map((match) => match[1]),
+    ...[...code.matchAll(/\[\s*PHI_\w+_RUNTIME_MODULE_ID,\s*(\w+),?\s*\]/g)].map((match) => match[1]),
+  ].filter((name) => name !== "Controller");
+  for (const name of names) {
+    registeredControllers += 1;
+    const importMatch = code.match(new RegExp(`import\\s*\\{[^}]*\\b${name}\\b[^}]*\\}\\s*from\\s*["']([^"']+)["']`));
+    const definingFile = importMatch ? resolveSpecifier(importMatch[1], file) : file;
+    if (definingFile && literalDynamic(name).test(readSource(definingFile).code)) {
+      continue;
+    }
+    failures.push(
+      [
+        `${relative(file)} registers ${name}, which is not a literal next/dynamic Controller Client.`,
+        `    Define it as \`export const ${name} = dynamic(() => import("...").then(...))\` so the server render`,
+        "    preloads its chunks.",
+      ].join("\n"),
+    );
+  }
+}
+
+let renderClients = 0;
+for (const directory of manifestDirectories) {
+  for (const name of readdirSync(directory).filter((entry) => /\.tsx?$/.test(entry))) {
+    const file = path.join(directory, name);
+    const { code } = readSource(file);
+    const imports = [...code.matchAll(/\bimport\(/g)].length;
+    const literal = [...code.matchAll(/\bdynamic\(\(\) =>\s*import\(/g)].length;
+    renderClients += literal;
+    if (imports !== literal) {
+      failures.push(
+        `${relative(file)} has ${imports - literal} import() outside a literal next/dynamic call; ` +
+          "the server render cannot preload what it loads.",
+      );
+    }
+  }
+}
+
 if (failures.length > 0) {
   console.error("Area Client reach violations:");
   for (const failure of failures) {
@@ -422,5 +476,6 @@ console.log(
     `references (${root.eager.size} files); ${LIVE_AREAS.length} live Areas ship ${liveAreaEagerFiles} ` +
     `Client files, none of a Module they do not carry; ${DISPLAY_WIDGET_CLIENTS.length} display Widgets ` +
     `load no editing Control; Forms ship the common field kinds only; ${manifestLoaders} manifest ` +
-      "loaders load implementations.",
+      `loaders load implementations; ${registeredControllers} Controller Clients and ${renderClients} manifest ` +
+      "Clients are next/dynamic.",
 );

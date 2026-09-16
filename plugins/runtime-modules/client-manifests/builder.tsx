@@ -1,10 +1,11 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { createPhiRuntimeModuleControllerClientManifestFromAreaContributions } from "../area-contributions-controller-client";
 import { PHI_BUILDER_RUNTIME_MODULE_CONTROLLER_CLIENT_AREA_CONTRIBUTIONS } from "../client-area-contributions/builder";
 import { PHI_COMMON_RUNTIME_MODULE_RENDER_CLIENT_MANIFEST } from "./common";
 import {
-  definePhiRuntimeModuleRenderClientLoader,
+  definePhiRuntimeModuleRenderClient,
   extendPhiRuntimeModuleRenderClientManifest,
 } from "../../../components/runtime/runtime-module-render-client-manifest";
 import { PhiRuntimeRenderClientType } from "../../../constants/runtime-render-client-types";
@@ -31,31 +32,27 @@ export const PHI_BUILDER_RUNTIME_MODULE_RENDER_CLIENT_MANIFEST =
       ...PHI_AUTH_RUNTIME_MODULE_RENDER_CLIENT_LOADERS,
       [
         PhiCmsWidgetType.AssetFocalRect,
-        definePhiRuntimeModuleRenderClientLoader(
-          () => import("../../../components/media/phi-asset-focal-rect-widget")
-            .then((module) => module.PhiAssetFocalRectWidget),
-        ),
+        definePhiRuntimeModuleRenderClient(
+        dynamic(() => import("../../../components/media/phi-asset-focal-rect-widget").then((module) => module.PhiAssetFocalRectWidget)),
+      ),
       ],
       [
         PhiRuntimeRenderClientType.BuilderChromeControls,
-        definePhiRuntimeModuleRenderClientLoader(
-          () => import("../builder/widgets/chrome-controls/client")
-            .then((module) => module.PhiBuilderChromeControlsWidgetClient),
-        ),
+        definePhiRuntimeModuleRenderClient(
+        dynamic(() => import("../builder/widgets/chrome-controls/client").then((module) => module.PhiBuilderChromeControlsWidgetClient)),
+      ),
       ],
       [
         PhiRuntimeRenderClientType.BuilderDraftStatus,
-        definePhiRuntimeModuleRenderClientLoader(
-          () => import("../builder/widgets/draft-status/authoring")
-            .then((module) => module.PhiDeveloperBuilderDraftStatusWidgetClient),
-        ),
+        definePhiRuntimeModuleRenderClient(
+        dynamic(() => import("../builder/widgets/draft-status/authoring").then((module) => module.PhiDeveloperBuilderDraftStatusWidgetClient)),
+      ),
       ],
       [
         PhiRuntimeRenderClientType.BuilderModeSwitch,
-        definePhiRuntimeModuleRenderClientLoader(
-          () => import("../../../plugins/runtime-modules/builder/clients/mode-switch")
-            .then((module) => module.PhiBuilderModeSwitchWidgetClient),
-        ),
+        definePhiRuntimeModuleRenderClient(
+        dynamic(() => import("../../../plugins/runtime-modules/builder/clients/mode-switch").then((module) => module.PhiBuilderModeSwitchWidgetClient)),
+      ),
       ],
     ],
   );

@@ -1,7 +1,7 @@
 "use client";
 
-import type { PhiRuntimeModuleControllerClientLoader } from "./components/runtime/runtime-module-controller-client-manifest";
-import type { PhiRuntimeModuleRenderClientLoader } from "./components/runtime/runtime-module-render-client-manifest";
+import type { PhiRuntimeModuleControllerClient } from "./components/runtime/runtime-module-controller-client-manifest";
+import type { PhiRuntimeModuleRenderClient } from "./components/runtime/runtime-module-render-client-manifest";
 import type { PhiRuntimeModuleId } from "./types/cms-module-descriptors";
 import type {
   PhiRuntimeModuleCalendarAdapterClientDefinition,
@@ -17,7 +17,7 @@ import type {
  * be nothing to distribute them by -- a package-wide list would have to be delivered to the union of
  * every Module's Areas, loading a Module's Client code where the Module itself is not eligible.
  *
- * A Module has at most one Controller, as the live Controller projection holds exactly one static loader.
+ * A Module has at most one Controller, as the live Controller projection holds exactly one per Module.
  *
  * Calendar adapters sit beside the Modules rather than inside them: they are resolved by their type
  * wherever a Widget renders, and no Area holds a different set. They are stated here so a package has one
@@ -25,8 +25,9 @@ import type {
  */
 export type PhiModuleClientContribution = {
   moduleId: PhiRuntimeModuleId;
-  loadController?: PhiRuntimeModuleControllerClientLoader;
-  renderLoaders?: ReadonlyArray<readonly [string, PhiRuntimeModuleRenderClientLoader]>;
+  /** Made with `next/dynamic(() => import(...))`, so the server render preloads its chunks. */
+  Controller?: PhiRuntimeModuleControllerClient;
+  renderClients?: ReadonlyArray<readonly [string, PhiRuntimeModuleRenderClient]>;
   dataProviders?: readonly PhiRuntimeModuleDataProviderClientDefinition[];
 };
 

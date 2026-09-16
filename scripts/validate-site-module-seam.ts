@@ -92,8 +92,8 @@ assert.deepEqual(PHI_NO_SITE_MODULE_CLIENT_CONTRIBUTIONS.calendarAdapters, []);
 const clientInstalled: PhiSiteModuleClientContributions = {
   areas: {
     public: {
-      controllers: [{ moduleId: "@acme/shop/modules/storefront", loadController: async () => null }],
-      renderLoaders: [["@acme/shop/cart", async () => null]],
+      controllers: [{ moduleId: "@acme/shop/modules/storefront", Controller: () => null }],
+      renderClients: [["@acme/shop/cart", () => null]],
       dataProviders: [{ key: "@acme/shop/orders" }],
     },
     admin: {
@@ -200,7 +200,7 @@ const projectedClient = collectPhiSiteModuleClientContributions({
   definitions,
   clients: [{
     modules: [
-      { moduleId: storefront, renderLoaders: [["@acme/shop/cart", async () => null]] },
+      { moduleId: storefront, renderClients: [["@acme/shop/cart", () => null]] },
       { moduleId: orders, dataProviders: [{ key: "@acme/shop/orders" }] },
       // A Module the package never defined: dropped rather than registered nowhere.
       { moduleId: "@acme/shop/modules/ghost", dataProviders: [{ key: "@acme/shop/ghost" }] },
@@ -217,8 +217,8 @@ const projectedAuthoring = collectPhiSiteModuleAuthoringContributions({
   ],
 } as unknown as Parameters<typeof collectPhiSiteModuleAuthoringContributions>[0]);
 
-assert.deepEqual(projectedClient.areas.public?.renderLoaders?.map(([type]) => type), ["@acme/shop/cart"]);
-assert.deepEqual(projectedClient.areas.admin?.renderLoaders?.map(([type]) => type), ["@acme/shop/cart"]);
+assert.deepEqual(projectedClient.areas.public?.renderClients?.map(([type]) => type), ["@acme/shop/cart"]);
+assert.deepEqual(projectedClient.areas.admin?.renderClients?.map(([type]) => type), ["@acme/shop/cart"]);
 assert.deepEqual(projectedClient.areas.admin?.dataProviders?.map((entry) => entry.key), ["@acme/shop/orders"]);
 assert.deepEqual(projectedClient.areas.public?.dataProviders, [], "orders is not eligible for public");
 // A Module in two Areas is held once, not once per Area, so nothing has to be de-duplicated later.

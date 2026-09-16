@@ -63,7 +63,7 @@ export function extendWithPhiSiteModuleClientManifests(
     ),
     render: extendPhiRuntimeModuleRenderClientManifest(
       base.render,
-      areaContributions.renderLoaders ?? [],
+      areaContributions.renderClients ?? [],
     ),
     dataProvider: extendPhiRuntimeModuleDataProviderClientManifest(
       base.dataProvider,

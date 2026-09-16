@@ -1448,7 +1448,7 @@ Lazy-loader boundaries must follow the framework execution graph:
 - every eligible Module package exports paired immutable Server and Controller Client Area projections
   sharing one `moduleId`; `phis-cli` validates and composes them without patching Skeleton source. The
   Server projection contains the catalog entry; the
-  Controller Client projection contains only its static `loadController` edge. They validate as a 1:1
+  Controller Client projection contains only its `Controller`, made with `next/dynamic`. They validate as a 1:1
   Area pair. Builder additionally declares the complete Authoring Client projection with one
   `loadAuthoring` edge per installed target-Area module. Missing, extra, or duplicate projections are hard
   build-time contract errors; no route may silently widen its graph

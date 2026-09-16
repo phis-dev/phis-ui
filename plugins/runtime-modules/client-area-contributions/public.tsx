@@ -4,17 +4,17 @@ import { definePhiRuntimeModuleControllerClientAreaContribution } from "../area-
 import { PHI_PUBLIC_RUNTIME_MODULE_ID } from "../public/ids";
 import { PHI_AUTH_RUNTIME_MODULE_ID } from "../auth/ids";
 import { PHI_COMMON_RUNTIME_MODULE_CONTROLLER_CLIENT_AREA_CONTRIBUTIONS } from "./common";
-import { loadPhiPublicRuntimeControllerClient } from "../public/client";
-import { loadPhiAuthRuntimeControllerClient } from "../auth/client";
+import { PhiLazyPublicRuntimeControllerClient } from "../public/client";
+import { PhiLazyAuthRuntimeControllerClient } from "../auth/client";
 
 export const PHI_PUBLIC_RUNTIME_MODULE_CONTROLLER_CLIENT_AREA_CONTRIBUTIONS = [
   ...PHI_COMMON_RUNTIME_MODULE_CONTROLLER_CLIENT_AREA_CONTRIBUTIONS,
   definePhiRuntimeModuleControllerClientAreaContribution({
     moduleId: PHI_PUBLIC_RUNTIME_MODULE_ID,
-    loadController: loadPhiPublicRuntimeControllerClient,
+    Controller: PhiLazyPublicRuntimeControllerClient,
   }),
   definePhiRuntimeModuleControllerClientAreaContribution({
     moduleId: PHI_AUTH_RUNTIME_MODULE_ID,
-    loadController: loadPhiAuthRuntimeControllerClient,
+    Controller: PhiLazyAuthRuntimeControllerClient,
   }),
 ] as const;

@@ -172,7 +172,7 @@ Their internal filenames are not ABI, but the same physical Server/live/Controls
 
 3. **Add a Controller only if the Module needs runtime coordination.** Then `controller/address.ts`
    (plugin key and address factory), `controller/definition.ts` (its signals — server-safe), and
-   `controller/client.tsx`. Controller fields and `loadController` are complete as one group or absent
+   `controller/client.tsx`. Controller fields and the `Controller` Client are complete as one group or absent
    as one group; a no-op Controller is worse than none.
 
 4. **Write `module.ts`** — the definition plus the Controller definition, nothing else.

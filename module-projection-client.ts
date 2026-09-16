@@ -1,7 +1,7 @@
 "use client";
 
 import type { PhiCmsAreaKey } from "./constants/cms-areas";
-import type { PhiRuntimeModuleRenderClientLoader } from "./components/runtime/runtime-module-render-client-manifest";
+import type { PhiRuntimeModuleRenderClient } from "./components/runtime/runtime-module-render-client-manifest";
 import type { PhiModuleClientContributions } from "./module-client";
 import type { PhiModuleDefinitions } from "./module";
 import type { PhiRuntimeModuleControllerClientAreaContribution } from "./plugins/runtime-modules/area-contributions-controller-client";
@@ -27,7 +27,7 @@ import type { PhiSiteModuleClientContributions } from "./plugins/runtime-modules
 
 type CollectedArea = {
   controllers: PhiRuntimeModuleControllerClientAreaContribution[];
-  renderLoaders: Array<readonly [string, PhiRuntimeModuleRenderClientLoader]>;
+  renderClients: Array<readonly [string, PhiRuntimeModuleRenderClient]>;
   dataProviders: PhiRuntimeModuleDataProviderClientDefinition[];
 };
 
@@ -47,7 +47,7 @@ export function collectPhiSiteModuleClientContributions(input: {
     }
     const created: CollectedArea = {
       controllers: [],
-      renderLoaders: [],
+      renderClients: [],
       dataProviders: [],
     };
     collected.set(area, created);
@@ -56,13 +56,13 @@ export function collectPhiSiteModuleClientContributions(input: {
 
   for (const client of input.clients) {
     for (const contribution of client.modules) {
-      const { loadController, renderLoaders, dataProviders, moduleId } = contribution;
+      const { Controller, renderClients, dataProviders, moduleId } = contribution;
       for (const area of areasByModuleId.get(moduleId) ?? []) {
         const target = areaFor(area);
-        if (loadController) {
-          target.controllers.push({ moduleId, loadController });
+        if (Controller) {
+          target.controllers.push({ moduleId, Controller });
         }
-        target.renderLoaders.push(...(renderLoaders ?? []));
+        target.renderClients.push(...(renderClients ?? []));
         target.dataProviders.push(...(dataProviders ?? []));
       }
     }
