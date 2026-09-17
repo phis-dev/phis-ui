@@ -1,5 +1,4 @@
 import { cache } from "react";
-import { headers } from "next/headers";
 import { unified } from "unified";
 import remarkParse from "remark-parse";
 import remarkGfm from "remark-gfm";
@@ -13,6 +12,7 @@ import type { PhiMarkdownTocHeading } from "../markdown-toc/config";
 import type { PhiMarkdownBlock, PhiMarkdownInline, PhiMarkdownTableAlign } from "./client";
 import { readPhiInternalReference, type PhiPageReference } from "../../../../../types/references";
 import { resolvePhiWidgetInternalReferences } from "../../../../../components/widgets/helpers/internal-reference-resolver.server";
+import { resolvePhiWidgetSourceUrl } from "../../../../../components/widgets/helpers/widget-source-url";
 
 type MarkdownNode = {
   type: string;
@@ -46,25 +46,8 @@ type MarkdownMapContext = {
   headingIdPrefix: string | null;
 };
 
-async function normalizeMarkdownSourceUrl(sourceUrl: string) {
-  const trimmed = sourceUrl.trim();
-  if (trimmed.startsWith("/")) {
-    const requestHeaders = await headers();
-    const host =
-      requestHeaders.get("x-forwarded-host") ??
-      requestHeaders.get("host") ??
-      "";
-    const protocol =
-      requestHeaders.get("x-forwarded-proto") ??
-      (host.includes("localhost") || host.startsWith("127.0.0.1") ? "http" : "https");
-
-    if (!host) {
-      throw new Error(`Cannot resolve relative markdown source without request host: ${sourceUrl}`);
-    }
-
-    return `${protocol}://${host}${trimmed}`;
-  }
-
+function normalizeMarkdownSourceUrl(sourceUrl: string, publicUrl: string | null | undefined) {
+  const trimmed = resolvePhiWidgetSourceUrl(sourceUrl, publicUrl);
   const githubBlobMatch = trimmed.match(
     /^https:\/\/github\.com\/([^/]+)\/([^/]+)\/blob\/([^/]+)\/(.+)$/,
   );
@@ -78,10 +61,9 @@ async function normalizeMarkdownSourceUrl(sourceUrl: string) {
 }
 
 const loadRemoteMarkdown = cache(async function loadRemoteMarkdown(
-  sourceUrl: string,
+  resolvedUrl: string,
   revalidateSeconds: number,
 ) {
-  const resolvedUrl = await normalizeMarkdownSourceUrl(sourceUrl);
   const response = await fetch(resolvedUrl, {
     ...(revalidateSeconds > 0
       ? { next: { revalidate: revalidateSeconds } }
@@ -536,6 +518,7 @@ type ResolvedMarkdownSource =
 
 export async function resolveMarkdownSource(
   config: PhiCmsMarkdownWidgetConfig | undefined,
+  publicUrl: string | null | undefined,
 ): Promise<ResolvedMarkdownSource> {
   if (!config) {
     return { ok: true, markdown: "" };
@@ -552,7 +535,7 @@ export async function resolveMarkdownSource(
 
     try {
       const markdown = await loadRemoteMarkdown(
-        sourceUrl,
+        normalizeMarkdownSourceUrl(sourceUrl, publicUrl),
         config.revalidateSeconds ?? MARKDOWN_DEFAULT_REVALIDATE_SECONDS,
       );
       return { ok: true, markdown };
@@ -576,7 +559,7 @@ export async function resolveMarkdownRenderData(
   config: PhiCmsMarkdownWidgetConfig | undefined,
   runtime?: Pick<PhiBlockRuntime, "site" | "locale" | "area" | "viewer">,
 ): Promise<MarkdownRenderData | { error: string }> {
-  const resolvedSource = await resolveMarkdownSource(config);
+  const resolvedSource = await resolveMarkdownSource(config, runtime?.site.publicUrl);
 
   if (!resolvedSource.ok) {
     return { error: resolvedSource.message };
@@ -601,7 +584,7 @@ export async function resolveMarkdownRenderData(
     sourceMode === "url" ? config?.sourceLocale?.trim() : undefined,
     sourceMode,
     sourceMode === "url" && config?.sourceUrl
-      ? await normalizeMarkdownSourceUrl(config.sourceUrl)
+      ? normalizeMarkdownSourceUrl(config.sourceUrl, runtime?.site.publicUrl)
       : null,
     runtime,
   );

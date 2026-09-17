@@ -1,5 +1,4 @@
 import { cache } from "react";
-import { headers } from "next/headers";
 
 import type { PhiCmsInstanceId, PhiNoLabels, PhiRenderableBlockBase, PhiServerBlockBaseProps } from "../../../../../types";
 import type { PhiHtmlWidgetClientConfig } from "./client";
@@ -9,6 +8,7 @@ import { PhiRuntimeModuleRenderClientHost } from "../../../../../components/runt
 import { translateSemanticHtml } from "../../../../../components/widgets/helpers/semantic-html-translation";
 import { resolvePhiHtmlReferences } from "../../../../../components/widgets/helpers/html-internal-references.server";
 import { sanitizePhiHtmlWidgetMarkup } from "../../../../../components/widgets/helpers/html-content";
+import { resolvePhiWidgetSourceUrl } from "../../../../../components/widgets/helpers/widget-source-url";
 
 export type PhiHtmlWidgetLabels = PhiNoLabels;
 
@@ -32,19 +32,7 @@ export type PhiHtmlWidgetProps = PhiServerBlockBaseProps<
 
 const HTML_DEFAULT_REVALIDATE_SECONDS = 14400;
 
-async function normalizeHtmlSourceUrl(sourceUrl: string) {
-  const trimmed = sourceUrl.trim();
-  if (!trimmed.startsWith("/")) return trimmed;
-  const requestHeaders = await headers();
-  const host = requestHeaders.get("x-forwarded-host") ?? requestHeaders.get("host") ?? "";
-  const protocol = requestHeaders.get("x-forwarded-proto") ??
-    (host.includes("localhost") || host.startsWith("127.0.0.1") ? "http" : "https");
-  if (!host) throw new Error(`Cannot resolve relative HTML source without request host: ${sourceUrl}`);
-  return `${protocol}://${host}${trimmed}`;
-}
-
-const loadRemoteHtml = cache(async function loadRemoteHtml(sourceUrl: string, revalidateSeconds: number) {
-  const resolvedUrl = await normalizeHtmlSourceUrl(sourceUrl);
+const loadRemoteHtml = cache(async function loadRemoteHtml(resolvedUrl: string, revalidateSeconds: number) {
   const response = await fetch(resolvedUrl, {
     ...(revalidateSeconds > 0
       ? { next: { revalidate: revalidateSeconds } }
@@ -62,10 +50,21 @@ export async function PhiHtmlWidget({
 }: PhiHtmlWidgetProps) {
   const sourceMode = config?.sourceMode ?? (config?.sourceUrl?.trim() ? "url" : "inline");
   const sourceUrl = config?.sourceUrl?.trim() ?? "";
+  const resolvedSourceUrl = sourceMode === "url" && sourceUrl
+    ? (() => {
+        try {
+          return resolvePhiWidgetSourceUrl(sourceUrl, runtime.site.publicUrl);
+        } catch {
+          return null;
+        }
+      })()
+    : null;
   const resolvedHtml = sourceMode === "url" && sourceUrl
-    ? await loadRemoteHtml(sourceUrl, config?.revalidateSeconds ?? HTML_DEFAULT_REVALIDATE_SECONDS)
-      .then((html) => resolvePhiHtmlWidgetMarkup({ html }, { preferConfigHtml: true }))
-      .catch(() => "")
+    ? resolvedSourceUrl
+      ? await loadRemoteHtml(resolvedSourceUrl, config?.revalidateSeconds ?? HTML_DEFAULT_REVALIDATE_SECONDS)
+        .then((html) => resolvePhiHtmlWidgetMarkup({ html }, { preferConfigHtml: true }))
+        .catch(() => "")
+      : ""
     : resolvePhiHtmlWidgetMarkup(config, {
         preferSource: config?.preferSource === true,
         preferConfigHtml: config?.renderMode === "preview" || config?.renderMode === "editor",
@@ -75,7 +74,7 @@ export async function PhiHtmlWidget({
     ? sanitizePhiHtmlWidgetMarkup(await resolvePhiHtmlReferences({
         html: resolvedHtml,
         sourceMode,
-        sourceUrl: sourceMode === "url" ? await normalizeHtmlSourceUrl(sourceUrl) : null,
+        sourceUrl: resolvedSourceUrl,
         runtime,
       }))
     : "";
