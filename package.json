@@ -2,6 +2,14 @@
   "name": "@phis/ui",
   "version": "0.1.0",
   "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/phis-dev/phis-ui.git"
+  },
+  "homepage": "https://github.com/phis-dev/phis-ui#readme",
+  "bugs": {
+    "url": "https://github.com/phis-dev/phis-ui/issues"
+  },
   "publishConfig": {
     "access": "public"
   },

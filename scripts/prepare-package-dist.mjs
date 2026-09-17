@@ -109,6 +109,11 @@ const distManifest = {
   // A scoped package is restricted unless it says otherwise, and the tarball is what npm reads: the
   // workspace manifest never reaches the registry, so the answer has to travel with the artifact.
   publishConfig: sourceManifest.publishConfig,
+  // npm resolves the README's relative links against the repository; without it every link on the
+  // package page points nowhere.
+  repository: sourceManifest.repository,
+  homepage: sourceManifest.homepage,
+  bugs: sourceManifest.bugs,
   type: "module",
   main: "./index.js",
   module: "./index.js",

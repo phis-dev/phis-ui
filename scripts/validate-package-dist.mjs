@@ -51,6 +51,14 @@ for (const legalFile of ["LICENSE", "NOTICE"]) {
   }
 }
 
+// The README links to the contract documents relatively, and npm resolves those links against this.
+if (
+  typeof distManifest.repository?.url !== "string" ||
+  !distManifest.repository.url.includes("github.com/")
+) {
+  throw new Error("Built package must name its GitHub repository, or the README's links break on npm.");
+}
+
 for (const [name, range] of Object.entries(distManifest.dependencies ?? {})) {
   if (range.startsWith("workspace:")) {
     throw new Error(`Built package dependency "${name}" still names the workspace: ${range}.`);
