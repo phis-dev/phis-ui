@@ -79,7 +79,7 @@ assert.equal(
 
 // Without an explicit path the endpoint key resolves under its category prefix.
 for (const [category, prefix] of [
-  ["auth", "/api/auth"],
+  ["auth", "/api/v1/auth"],
   ["account", "/api/account"],
   ["forms", "/api/forms"],
   ["site", "/api/site/forms"],
@@ -132,7 +132,7 @@ assert.equal(
     formId: "f",
     submitHandlerKey: "auth.login",
   })).routeTarget,
-  "auth:/api/auth",
+  "auth:/api/v1/auth",
 );
 
 // ---------------------------------------------------------------------------
@@ -146,6 +146,7 @@ const AUTH_CAPABILITY = { id: "@phis/server/authentication:v1", interfaceDigest:
 const FORM_IDS = {
   contact: "@phis/ui/modules/public/forms/contact",
   login: "@phis/ui/modules/auth/forms/login",
+  confirm: "@phis/ui/modules/auth/forms/confirm",
   providerLink: "@phis/ui/modules/auth/forms/provider-link-confirmation",
   adminPolicy: "@phis/ui/modules/auth/forms/admin-policy",
   addOn: "@test/pkg/modules/add-on/forms/subscribe",
@@ -488,10 +489,10 @@ assert.equal(dispatchCall()?.headers.cookie, undefined, "A `none` policy forward
 const loginDispatch = await submit({ body: { formId: FORM_IDS.login, phase: "submit", values: {} } });
 assert.equal(loginDispatch.response.status, 200);
 assert.equal(calls.length, 2);
-assert.equal(calls[0]?.url, `${UPSTREAM}/api/auth/csrf`);
+assert.equal(calls[0]?.url, `${UPSTREAM}/api/v1/auth/csrf`);
 assert.equal(calls[0]?.method, "GET");
 assert.equal(calls[0]?.headers.cookie, undefined);
-assert.equal(calls[1]?.url, `${UPSTREAM}/api/auth/login`);
+assert.equal(calls[1]?.url, `${UPSTREAM}/api/v1/auth/password/login`);
 assert.equal(calls[1]?.headers["x-csrf-token"], "csrf-token-1");
 assert.deepEqual(cookiesOf(calls[1]), ["phis_csrf=csrf-token-1"]);
 
@@ -624,6 +625,31 @@ assert.equal(calls.length, 0);
 const addOnUnknown = await submit({ body: { formId: FORM_IDS.addOn, phase: "submit", values: {} } });
 assert.equal(addOnUnknown.response.status, 404);
 assert.equal(calls.length, 0);
+
+// --- Previews -----------------------------------------------------------------
+
+/**
+ * A preview is relayed under the same credential rule as a submit: the browser's cookies are dropped and
+ * only the one the handler Provider's policy names is added back. The confirmation preview declares
+ * `none`, so a signed-in visitor's session must not travel with it.
+ */
+activeModuleIds = [PHI_AUTH_RUNTIME_MODULE_ID];
+providerCapabilities = [AUTH_CAPABILITY];
+{
+  calls.length = 0;
+  const search = new URLSearchParams({ phase: "preview", formId: FORM_IDS.confirm, token: "confirm-token" });
+  const response = await buildHandlers().GET(new NextRequest(`http://${SITE_HOST}/api/site/forms?${search.toString()}`, {
+    headers: {
+      host: SITE_HOST,
+      referer: `http://${SITE_HOST}/en/confirm`,
+      cookie: "phis_session=session-1; phis_auth_link=link-1; other=keep",
+    },
+  }));
+  assert.equal(response.status, 200);
+  assert.equal(calls.length, 1);
+  assert.equal(dispatchCall()?.url, `${UPSTREAM}/api/v1/forms/register/confirm-preview?token=confirm-token`);
+  assert.equal(dispatchCall()?.headers.cookie, undefined, "A preview under a `none` policy forwards no cookie.");
+}
 
 // --- Guard tokens ------------------------------------------------------------
 

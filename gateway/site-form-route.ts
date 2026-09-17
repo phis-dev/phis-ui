@@ -154,14 +154,12 @@ async function readRequestBody(request: NextRequest): Promise<SiteFormSubmitBody
 }
 
 async function proxyJson(
-  request: NextRequest,
   path: string,
-  buildHeaders: (request: NextRequest) => Headers,
+  proxyHeaders: Headers,
   upstreamBaseUrl: string,
   timeoutMs: number,
   init: RequestInit = {},
 ) {
-  const proxyHeaders = buildHeaders(request);
   proxyHeaders.set("content-type", "application/json");
 
   const response = await fetch(`${upstreamBaseUrl}${path}`, {
@@ -277,10 +275,17 @@ export function buildPhiSiteFormRouteHandlers({
       );
     }
 
-    return proxyJson(
+    // A preview carries the credentials its Provider declares and no others -- the same rule a submit
+    // follows. Forwarding the browser's cookies whole handed a Site session to a handler that asked for none.
+    const previewHeaders = buildRelayHeaders(request, buildHeaders);
+    appendCredentialCookieForPolicy(
+      previewHeaders,
       request,
+      buildPhiFormSubmitDescriptorFromHandlerProvider(resolved.formId, resolved.provider).credentialPolicy,
+    );
+    return proxyJson(
       `${resolved.provider.upstreamPath}?token=${encodeURIComponent(token)}`,
-      buildHeaders,
+      previewHeaders,
       upstreamBaseUrl,
       timeoutMs,
       { method: "GET" },
