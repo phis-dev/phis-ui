@@ -27,6 +27,9 @@ This page is the front door every Site starts with. It stands at the root until 
 landing of its own, or until the Site takes this page over in the Builder and makes it its own.
 `;
 
+/** How wide the welcome copy is allowed to get, in pixels. Roughly sixty characters at the base size. */
+const PHI_DEFAULT_PUB_WELCOME_MEASURE = 480;
+
 const SYNTHETIC_WELCOME_REGION_IDS = {
   regionHeaderBottom: -301,
   regionContent: -300,
@@ -200,6 +203,23 @@ export async function buildPhiDefaultPubWelcomePageTree({
           sourceMode: "inline",
           markdown: PHI_DEFAULT_PUB_WELCOME_MARKDOWN,
           translate: true,
+          textAlign: "center",
+          /*
+           * A measure, not a column: the copy stops at 480 so a line stays readable on a wide screen,
+           * and `min(100%, 480px)` on the frame lets it shrink to a phone.
+           */
+          maxSize: { width: PHI_DEFAULT_PUB_WELCOME_MEASURE },
+          effects: {
+            /*
+             * Held until the page has arrived: this Widget's own copy is streamed, and the button below
+             * it would otherwise stand in the gap and be pushed down when the copy lands.
+             */
+            transitionTrigger: "on_ready",
+            transitions: [
+              { type: "fade", mode: "in", durationMs: 900, easing: "ease-out" },
+              { type: "slide", mode: "in", direction: "top", distance: 48, durationMs: 900, easing: "ease-out" },
+            ],
+          },
         },
       }),
       nodes.widget({
@@ -215,6 +235,14 @@ export async function buildPhiDefaultPubWelcomePageTree({
           buttonType: "primary",
           /* A link, not a command: it renders a real anchor, which works before hydration. */
           href: localizeAreaPath(runtime.locale.current, "public", "/home"),
+          /* A beat behind the copy, so the page reads before it offers the way on. */
+          effects: {
+            transitionTrigger: "on_ready",
+            transitions: [
+              { type: "fade", mode: "in", durationMs: 700, delayMs: 450, easing: "ease-out" },
+              { type: "slide", mode: "in", direction: "bottom", distance: 24, durationMs: 700, delayMs: 450, easing: "ease-out" },
+            ],
+          },
         },
       }),
     ],

@@ -47,8 +47,10 @@ export function PhiCmsRegionContainer({
     isPhiCmsPageOwnedRegion(regionKey) ? "page" : "area";
   const effectsConfig = config?.effects == null ? undefined : { effects: config.effects };
   const effectsAttributes = resolveRenderableBlockEffectsAttributes(effectsConfig);
+  const effectsTrigger = effectsAttributes?.["data-phi-effects-trigger"];
   const requiresEffectsObserver =
-    effectsAttributes?.["data-phi-effects-trigger"] === "on_visible" ||
+    effectsTrigger === "on_visible" ||
+    effectsTrigger === "on_ready" ||
     resolveRenderableBlockViewportEffects(effectsConfig).length > 0;
   const requiresClientEnhancement =
     signalParticipant ||

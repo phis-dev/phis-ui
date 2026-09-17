@@ -246,7 +246,9 @@ export function resolveRenderableBlockEffectsAttributes(
           "data-phi-effects-transition": "composite",
           "data-phi-effects-trigger": block.effects?.transitionTrigger ?? "on_mount",
           "data-phi-effects-once": block.effects?.transitionOnce === false ? "false" : "true",
-          ...(block.effects?.transitionTrigger === "on_visible" ? { "data-phi-effects-state": "idle" } : {}),
+          ...(block.effects?.transitionTrigger === "on_visible" || block.effects?.transitionTrigger === "on_ready"
+            ? { "data-phi-effects-state": "idle" }
+            : {}),
         }
       : {}),
     ...(hasViewportEffects

@@ -7,6 +7,7 @@ import {
   resolveRenderableBlockEffectsAttributes,
   resolveRenderableBlockViewportEffects,
 } from "../../helpers/renderable-block-effects";
+import { PhiEffectsReadyTrigger } from "./phi-effects-ready-trigger";
 import { PhiSlotChildEffectsVisibilityObserver } from "./phi-slot-child-effects-visibility-observer";
 import { PhiSlotChildViewportEffectsObserver } from "./phi-slot-child-viewport-effects-observer";
 import {
@@ -93,7 +94,9 @@ export function PhiSlotChildFrameClient({
   const viewportEffects = viewProps.disableEffects
     ? []
     : resolveRenderableBlockViewportEffects(resolvedConfig);
-  const shouldObserveVisibility = effectsAttributes?.["data-phi-effects-trigger"] === "on_visible";
+  const effectsTrigger = effectsAttributes?.["data-phi-effects-trigger"];
+  const shouldObserveVisibility = effectsTrigger === "on_visible";
+  const shouldWaitForReady = effectsTrigger === "on_ready";
 
   const enhancedChildren = (
     <PhiSignalIdentityProvider
@@ -112,6 +115,7 @@ export function PhiSlotChildFrameClient({
           once={effectsAttributes?.["data-phi-effects-once"] !== "false"}
         />
       ) : null}
+      {shouldWaitForReady ? <PhiEffectsReadyTrigger /> : null}
       {viewportEffects.length > 0 ? (
         <PhiSlotChildViewportEffectsObserver effects={viewportEffects} />
       ) : null}

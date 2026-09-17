@@ -126,6 +126,30 @@ samp {
   animation-play-state: running;
 }
 
+/*
+ * On ready, the whole rule inside the query that asks whether anything can release it.
+ *
+ * The animation is held at its first frame until the page has finished arriving, so a Widget whose
+ * content the server streams in a segment of its own can land, and everything below it can settle,
+ * behind an entrance that has not started. Only scripting sets the state that releases it; where there
+ * is none the Block would stand at that first frame for good, which for a fade in means invisible. So
+ * without scripting there is no animation at all and the Block is simply there.
+ */
+@media (scripting: enabled) {
+  :where([data-phi-renderable-block="true"][data-phi-effects-transition="composite"][data-phi-effects-trigger="on_ready"]) {
+    animation-composition: var(--phi-effects-animation-composition, replace);
+    animation-delay: var(--phi-effects-animation-delay, 0ms);
+    animation-duration: var(--phi-effects-animation-duration, 1000ms);
+    animation-name: var(--phi-effects-animation-name);
+    animation-play-state: paused;
+    animation-timing-function: var(--phi-effects-animation-easing, ease-out);
+  }
+
+  :where([data-phi-renderable-block="true"][data-phi-effects-transition="composite"][data-phi-effects-trigger="on_ready"][data-phi-effects-state="running"]) {
+    animation-play-state: running;
+  }
+}
+
 :where([data-phi-renderable-block="true"][data-phi-effects-transition="composite"][data-phi-effects-trigger="on_hover"]:hover),
 :where([data-phi-renderable-block="true"][data-phi-effects-transition="composite"][data-phi-effects-trigger="on_focus"]:focus-within) {
   animation-composition: var(--phi-effects-animation-composition, replace);

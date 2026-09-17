@@ -162,6 +162,7 @@ function normalizeRenderableBlockTransitionEasing(value: unknown): PhiRenderable
 
 function normalizeRenderableBlockTransitionTrigger(value: unknown): PhiRenderableBlockTransitionTrigger | undefined {
   return value === "on_mount" ||
+    value === "on_ready" ||
     value === "on_visible" ||
     value === "on_hover" ||
     value === "on_focus" ||

@@ -47,6 +47,7 @@ import {
   usePhiRenderableBlockRuntime,
 } from "../../runtime/renderable-block-runtime";
 import { usePhiConfig } from "../../root/phi-config-provider";
+import { PhiEffectsReadyTrigger } from "../../../plugins/runtime/phi-effects-ready-trigger";
 import { PhiSlotChildEffectsVisibilityObserver } from "../../../plugins/runtime/phi-slot-child-effects-visibility-observer";
 import { PhiSlotChildViewportEffectsObserver } from "../../../plugins/runtime/phi-slot-child-viewport-effects-observer";
 import { resolvePhiPaddingStyle } from "../../layouts/phi-layout-contract";
@@ -373,7 +374,9 @@ export function PhiCmsRegionContainerClient({
   const effectsStyle = resolveRenderableBlockEffectsStyle(renderableConfig);
   const effectsAttributes = resolveRenderableBlockEffectsAttributes(renderableConfig);
   const viewportEffects = resolveRenderableBlockViewportEffects(renderableConfig);
-  const shouldObserveVisibility = effectsAttributes?.["data-phi-effects-trigger"] === "on_visible";
+  const effectsTrigger = effectsAttributes?.["data-phi-effects-trigger"];
+  const shouldObserveVisibility = effectsTrigger === "on_visible";
+  const shouldWaitForReady = effectsTrigger === "on_ready";
   /*
    * A Region with a maximum width is a column in a full-width host, and the column sits in the middle:
    * the block-level inline margins carry the centring, because the shell forces `margin: 0` below and
@@ -415,6 +418,7 @@ export function PhiCmsRegionContainerClient({
           once={effectsAttributes?.["data-phi-effects-once"] !== "false"}
         />
       ) : null}
+      {shouldWaitForReady ? <PhiEffectsReadyTrigger /> : null}
       {viewportEffects.length > 0 ? (
         <PhiSlotChildViewportEffectsObserver effects={viewportEffects} />
       ) : null}

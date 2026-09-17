@@ -28,6 +28,7 @@ const transitionTypeOptions = ["fade", "slide", "flip", "rotate", "scale"].map((
 const transitionModeOptions = ["in", "out"].map((value) => option(value));
 const transitionTriggerOptions = [
   option("on_mount", "On mount"),
+  option("on_ready", "On ready"),
   option("on_visible", "On visible"),
   option("on_hover", "On hover"),
   option("on_focus", "On focus"),

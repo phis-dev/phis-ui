@@ -59,6 +59,12 @@ export type PhiRenderableBlockTransitionOrigin =
 
 export type PhiRenderableBlockTransitionTrigger =
   | "on_mount"
+  /*
+   * When the page has finished arriving: the document is parsed, so every Widget whose content the
+   * server streamed in its own segment stands where it belongs. A Block waiting for this is held at the
+   * start of its entrance until then, and what settles into place while it waits settles unseen.
+   */
+  | "on_ready"
   | "on_visible"
   | "on_hover"
   | "on_focus"

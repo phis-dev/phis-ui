@@ -57,6 +57,7 @@ export type PhiEffectsWidgetLabels = {
     in: string;
     out: string;
     onMount: string;
+    onReady: string;
     onVisible: string;
     onHover: string;
     onFocus: string;
@@ -163,6 +164,7 @@ export const PHI_EFFECTS_WIDGET_DEFAULT_LABELS: PhiEffectsWidgetLabels = {
     in: "In",
     out: "Out",
     onMount: "On mount",
+    onReady: "On ready",
     onVisible: "On visible",
     onHover: "On hover",
     onFocus: "On focus",

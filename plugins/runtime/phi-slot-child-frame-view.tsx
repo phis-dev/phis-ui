@@ -93,8 +93,10 @@ export function requiresPhiSlotChildEffectsObserver(
     return false;
   }
   const effectsAttributes = resolveRenderableBlockEffectsAttributes(config);
+  const trigger = effectsAttributes?.["data-phi-effects-trigger"];
   return (
-    effectsAttributes?.["data-phi-effects-trigger"] === "on_visible" ||
+    trigger === "on_visible" ||
+    trigger === "on_ready" ||
     resolveRenderableBlockViewportEffects(config).length > 0
   );
 }
