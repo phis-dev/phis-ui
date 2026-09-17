@@ -268,9 +268,8 @@ Do not duplicate those values across server and builder plugins.
 ## Module composition
 
 The complete normative logical and first-party physical structure is defined in
-[MODULES.md](../MODULES.md). Existing flat first-party manifests remain migration input; new modules and
-materially reworked Phi-owned modules use the standard owner folder and its Server/live/Authoring
-projections.
+[MODULES.md](../MODULES.md). Every first-party module uses the standard owner folder and its
+Server/live/Authoring projections.
 
 Third-party packages contribute one statically analyzable loader per runtime module to the site
 bridge's `runtimeModuleCatalog`. A module is keyed by namespaced module id and owns at most one
@@ -332,10 +331,9 @@ Each Theme descriptor declares a required `themeKey` and `title` plus an optiona
 discovery and materialization use only active module descriptor bindings; mutable registries and import
 side effects are forbidden.
 
-The current first-party migration has moved Area shell selection, stable live route selection, and
-Builder Page title/path discovery to this descriptor catalog. First-party legacy builders still return concrete trees
-and must be converted to local-key templates before the central instantiator is the sole node-construction
-authority; this is a tracked migration boundary, not a supported third-party authoring pattern.
+Area shell selection, stable live route selection, and Builder Page title/path discovery use this
+descriptor catalog. Presets are local-key templates resolved by the central instantiator; a preset
+builder that returns a concrete tree is not a supported authoring pattern.
 
 Builder Canvas module resolution is server-owned, so its target area and page are canonical URL scope.
 When a Builder workspace route is entered without either scope parameter, the Builder controller writes

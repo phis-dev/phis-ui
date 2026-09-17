@@ -24,7 +24,7 @@ function resolveChildPath(child: PhiBuilderNavigationItem, resolveLinkPath: PhiB
 }
 
 /**
- * The folder a container's direct children share (TODOS.md, "Folder addresses"). Each child contributes
+ * The folder a container's direct children share (phis-server REFERENCES.md, "Folder addresses"). Each child contributes
  * the folder it lies in: `/docs/a` and the container `/docs/guides` both contribute `/docs`. Children
  * from different folders, or only from the Area root, which is a slot and no folder, give no address.
  */

@@ -5,10 +5,6 @@ contract. Global users, credentials, provider validation, account linking, Site 
 recovery are owned by `@phis/server` and defined in the sibling `phis-server/AUTHENTICATION.md`. This package
 must not create a second identity, policy, or session model.
 
-The migration is an ABI break. Legacy area-agnostic Auth presentation, globally unioned provider
-capabilities, direct Account Widget login-form ownership, and unversioned endpoint assumptions are not
-compatibility paths to retain.
-
 ## 1. One optional multi-Area Module
 
 The first-party authentication feature is one logical optional Runtime Module:
@@ -320,8 +316,7 @@ registered callback. The active installation travels inside the encrypted Auth t
 carries the installation key), so the callback route resolves the installation from the transaction and
 installations of the same provider share the provider's callback URI.
 
-The catalog ABI replaced the monolithic `/api/v1/auth/admin` route entirely; the Settings surface
-presents the catalog through the generic Table and Form contracts on the Settings page shell (the
+The Settings surface presents the catalog through the generic Table and Form contracts on the Settings page shell (the
 auth-installations data provider with inline enablement edits plus test and guarded delete row
 actions, and descriptor create/edit Forms).
 

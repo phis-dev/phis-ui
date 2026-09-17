@@ -3,7 +3,7 @@
 This document is the normative target v1 contract for viewer access and responsive visibility in
 `@phis/ui`. `phis-server/AUTHORIZATION.md` owns role and group-claim persistence and server-side
 authorization; `phis-server/GROUPS_AND_STORAGE.md` owns general group membership and Media Space
-semantics; `phis-server/DIRECTORY_PROVIDERS.md` owns provider authority, Directory bindings, and external
+semantics; `phis-server/design/DIRECTORY_PROVIDERS.md` owns provider authority, Directory bindings, and external
 membership provenance. Shared UI must consume those contracts rather than inventing Page-, Widget-,
 Navigation-, Collection-, or Module-specific access paths.
 
@@ -309,22 +309,6 @@ For Regions, Layouts, Surfaces, and Widgets the concrete instance policy is the 
 serializer. A malformed explicitly persisted policy is denied rather than interpreted as `anyone`.
 Module artifact definitions expose their minimum as `accessPolicy`; concrete instances may only
 restrict the inherited Area/Page/artifact result.
-
-## 10. Removed target-v1 contracts
-
-The completed migration removes:
-
-- `viewer.roleFlags`;
-- the public-runtime distinction between `baseRoleFlags` and `customRoleFlags`;
-- `requiredBaseRoleFlags` and `requiredCustomRoleFlags`;
-- direct Area compatibility checks based on one `resolvedArea`;
-- scattered role-specific rendering branches;
-- independent role allowlists inside API guards;
-- `MobileOnly` and `DesktopOnly` special flags;
-- JavaScript or user-agent device classification for visibility.
-- the `dev` Area and `/dev` route host.
-
-No compatibility alias or fallback may keep these paths authoritative in parallel.
 
 ## Contract governance
 

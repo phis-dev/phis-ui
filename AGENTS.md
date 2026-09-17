@@ -16,8 +16,9 @@
   `phis-server/AUTHORIZATION.md` and `phis-server/GROUPS_AND_STORAGE.md`; shared UI must not persist or
   infer a second ownership, quota, Folder, delivery, or Storage model.
 - Provider-neutral user/group authority, operation capabilities, Directory bindings, and future
-  LDAP/SCIM/Entra providers must consume `phis-server/DIRECTORY_PROVIDERS.md`. The optional management UI
-  belongs to the separate `@phis/groups` package and must not be added to `@phis/ui`.
+  LDAP/SCIM/Entra providers must consume `phis-server/design/DIRECTORY_PROVIDERS.md`. The optional management UI
+  is the Runtime Module `@phis/ui/modules/groups`; whether it moves to a separate package is open
+  (`TODOS.md`).
 - Auth Module ownership, replacement, Account Widget delegation, Admin settings, and CLI preset recovery
   must follow the normative `AUTHENTICATION.md` target v1 contract.
 - Runtime Module ownership, physical projections, presets, providers, Forms, signaling, generalization,
@@ -33,8 +34,8 @@
 - Mutable Site Page paths, stable internal Page/Asset targets, navigation selection, Markdown/HTML Phi
   references, and the external-document trust boundary must follow the normative `REFERENCES.md` target
   v1 contract.
-- Guided Tours, visual target addresses, Runtime anchor resolution, Tour signaling, and user progress
-  must follow the normative `TOURS.md` target v1 contract.
+- Guided Tours are not built. Their design is `design/TOURS.md`; implementing it requires operator
+  approval first.
 - Use `pnpm` for local commands in this workspace.
 - Delete files with `rm -- <explicit-path>`, not with an `apply_patch` delete operation. Resolve every
   target first and do not use recursive deletion, globs, or unresolved variables for individual source
@@ -79,8 +80,7 @@
   Add-on or to Core. A Module must never install, enable, import, or dynamically discover server code,
   and Site/React entrypoints must stay physically separate module graphs from the `addon/` ones.
 - Phi-owned Modules are reference implementations and must converge on the one owner-folder and
-  Server/live/Authoring projection structure defined in `MODULES.md`. Existing flat first-party manifests
-  are migration input, not a template for new Modules or another contribution path.
+  Server/live/Authoring projection structure defined in `MODULES.md`.
 - A Module preset must use generic Core Widgets, Provider bindings, Form ids, and declared signal routes
   whenever those contracts can express the feature. Domain-named wrappers that only inject a Provider,
   Form, labels, bootstrap state, actions, dialogs, or missing generic capability are forbidden.
@@ -171,9 +171,8 @@
   - Core Runtime Controller receive-and-mount-snapshot channels are `pageTitle/change:string`, `pageDescription/change:string`, `openGraphImage/change:image`, `canonicalUrl/change:string`, `theme/change:json`, `themeMode/change:boolean`, and `locale/change:string`; optional description, image, and canonical metadata additionally support `clear:none`. Theme JSON requires a namespaced runtime-theme schema; `themeMode` selects only the live light/dark projection and does not persist Theme configuration; locale values must be validated against the resolved Site locale set
   - Core Runtime Controller receive-only transient channels are `notification/activate:json` and `message/activate:json`. Message values contain only `level`, `content`, and optional non-negative `durationSeconds`; Notification values additionally allow the closed `placement` and `showTimeoutProgress` fields. They invoke the shared application UI service and are never persisted, rebroadcast as state, or exposed as free Ant Design props. Inline Alerts and anchored Confirms remain local presentation Controls and never use those global channels. Its only Page-context snapshot projection is `pageMeta/change:json` through the current Page partition
   - Phi Controls encapsulate supported Ant Design primitives. When a Phi Control exists for a function, first-party and third-party consumers must use it instead of importing the matching Ant Design primitive directly. `PhiAlertControl` owns inline status presentation; `PhiConfirmControl` owns local anchored confirmation and may await an asynchronous confirm callback. Neither is a Widget, provider, controller, persisted config, or Runtime signal endpoint. Missing reusable presentation capability requires operator-approved Core contract extension, not a direct Ant Design escape hatch or arbitrary prop passthrough
-  - guided UI learning uses `PhiTourControl` and the `TOURS.md` target contract; feature code must not
-    import Ant Design `Tour`, resolve targets through DOM selectors, or introduce Tour-specific address
-    and event families
+  - feature code must not import Ant Design `Tour`; guided UI learning is designed in `design/TOURS.md`
+    and not built
   - Builder Pages and Shells canvases are module sandboxes: they resolve exactly the target Area base module plus its persisted optional modules, never inherit or union the outer Builder Area's active module registry, and replace their active registry when the target area changes
   - Canvas sandbox module resolution is server-owned and catalog-driven; the Builder controller may select the target area and trigger refresh, but must not import modules itself. Target controller instances, when a render mode needs them, mount only inside an isolated sandbox runtime/signal context
   - runtime renderers must not own fallback/default registries; a missing provider, disallowed type, missing loader, or failed node renderer must stay localized to the affected CMS node and render the shared non-renderable diagnostic block and log the issue, never import or borrow a global registry; `missing-module` is represented only by that block and log, while other renderer failures may additionally raise a deduplicated notification
@@ -355,7 +354,7 @@
   - a full interaction-covering editor layer is valid for Widget leaves only; Layout scaffolds must keep nested slots and descendant scaffolds reachable
 - Plugin infrastructure is not a widget implementation concern.
   - owner modules and lazy descriptors belong under root-level `plugins/runtime-modules/*`
-  - metadata-only registries belong under root-level `plugins/registries/*` while their consumers are migrated to active module metadata; they are not implementation extension points
+  - metadata-only registries belong under root-level `plugins/registries/*`; they are not implementation extension points
   - shared slot/render runtime helpers belong under root-level `plugins/runtime/*`
   - shared plugin adapter/factory helpers belong under root-level `plugins/factories/*`
   - do not place builder/server implementation registries inside `components/widgets/*`
@@ -512,7 +511,7 @@
 - Runtime constants, enums, and flag definitions belong in `constants/*`, not in `types/*`.
 - Pure helper functions belong in `helpers/*`.
 - `types/*` is reserved for type-only definitions.
-- `gateway/*` is internal-only in `@phis/ui`; it contains the internal Phi-server adapter layer used by shared widgets, regions, and shells. Public runtime APIs must live in their own non-gateway namespace such as `constants/*`, `helpers/*`, or `net/*`.
+- `gateway/*` is internal-only in `@phis/ui` and has no package export (Site route handlers are re-exported from `@phis/ui/next/route-handlers`, Label Set helpers from `@phis/ui/server-helpers`); it contains the internal Phi-server adapter layer used by shared widgets, regions, and shells. Public runtime APIs must live in their own non-gateway namespace such as `constants/*`, `helpers/*`, or `net/*`.
 - Shared root CSS may own:
   - Ant Design reset
   - global `phi` CSS variables

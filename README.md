@@ -30,8 +30,6 @@ The normative target v1 visual Collection View, Collection Provider, self-contai
 and integrated tool-panel ABI lives in [COLLECTIONS.md](./COLLECTIONS.md).
 The normative target v1 Area-/Page-owned Modal and Drawer Overlay ABI lives in
 [OVERLAYS.md](./OVERLAYS.md).
-The normative target v1 guided Tour, visual-anchor resolution, signaling, and user-progress ABI lives in
-[TOURS.md](./TOURS.md).
 The normative target v1 mutable Page path and structured Page/Asset reference ABI lives in
 [REFERENCES.md](./REFERENCES.md).
 The normative target v1 Settings container, Settings page shell, and Module configuration ABI lives in
@@ -40,10 +38,12 @@ General Site groups, Media Spaces, folders, quotas, Storage Profiles, and protec
 server-owned by `phis-server/GROUPS_AND_STORAGE.md`; this package consumes that contract only through the
 shared access snapshot and registered Asset Providers.
 Provider-neutral user/group administration and future LDAP, Active Directory, SCIM, or Entra bindings
-are server-owned by `phis-server/DIRECTORY_PROVIDERS.md`. The optional feature UI is the separate P2
-package `@phis/groups`, not a `@phis/ui` Runtime Module.
+are server-owned by `phis-server/design/DIRECTORY_PROVIDERS.md`. The optional Groups administration UI is the
+Runtime Module `@phis/ui/modules/groups` in `plugins/runtime-modules/groups/`.
 The normative Next.js Site/Skeleton ownership and static entrypoint contract lives in
 [NEXT_INTEGRATION.md](./NEXT_INTEGRATION.md).
+Designs and plans that are not contracts live in [design/](./design/README.md); open work is listed in
+[TODOS.md](./TODOS.md).
 
 The package is intended as the reusable business-logic and UI composition layer for the workspace:
 
@@ -357,7 +357,7 @@ Use CLI findings as the local source of truth for Ant Design implementation deci
 - `helpers/site-runtime`: server-only site runtime loader for repo-local `config/site-runtime.json`.
 - `server-helpers`: public server-only helpers.
 - `net`: public network/proxy helpers.
-- `gateway`: internal-only Phi-server adapter layer for site config, navigation, generic label-set infrastructure, form guards, form registry resolution, translation requests, and the shared data-source contract.
+- `gateway`: internal Phi-server adapter layer, not exported (a Site mounts its route handlers from `@phis/ui/next/route-handlers`) for site config, navigation, generic label-set infrastructure, form guards, form registry resolution, translation requests, and the shared data-source contract.
 
 Practical meaning of the main rendering layers:
 
@@ -430,10 +430,7 @@ Server/client boundary for those layers:
   explicitly permitted transient prompt/editor boundary. Immediate Pickers use only their canonical
   `Phi*Control`; that Control privately adapts a native UI-library primitive or composes
   `PhiPopoverControl`. Pickers never use Modal or Drawer presentation.
-- Guided learning follows [TOURS.md](./TOURS.md). `PhiTourControl` is the provider-free presentation
-  adapter; the owning Tour Controller uses ordinary Phi signaling and resolves existing visual signal
-  addresses through the active Runtime partition. Tours do not occupy hidden CMS slots, expose Ant Design
-  target refs, or resolve targets through global DOM selectors.
+- Guided Tours are not built; their design is [design/TOURS.md](./design/TOURS.md).
 - Public `Phi*Layout` components should usually be server components.
 - Naming contract:
   - `*Layout` means structural composition plus optional configured visual treatment
@@ -1591,8 +1588,8 @@ Form controller split:
   - `controller:@phis/ui/form-builder:default`
   - It owns editing form definitions, adding/removing/reordering fields, selecting registered field types, selecting handlers, configuring validation rules, previewing definitions, and saving form definition changes.
   - It operates on form definitions, not on public runtime form submissions.
-  - The module is optional, client-only, Area-mounted, and deferred to P2. Until its canvas and request
-    contract are implemented, its headless controller declares no save/publish capabilities.
+  - The module is optional, client-only, and Area-mounted. Its canvas and request contract are not built,
+    so its headless controller declares no save/publish capabilities.
 - Builder inspector forms belong to the Builder module and its single controller:
   - `controller:@phis/ui/builder:default`
   - It owns Layout, Widget, Region, and object setting forms, Inspector field changes, and
@@ -1750,7 +1747,7 @@ import { ContactForm } from "@phis/ui/forms";
 import { PhiBaseRole } from "@phis/ui/constants";
 import { hasPhiFlag, buildApiUrl } from "@phis/ui/helpers";
 import { phiRuntime, tr } from "@phis/ui/server-helpers";
-import { buildPhiAuthProxyHandlers } from "@phis/ui/gateway";
+import { buildPhiAuthProxyHandlers } from "@phis/ui/next/route-handlers";
 ```
 
 For CMS-driven sites, use the narrow `@phis/ui/cms/*` entry matching the App Router boundary.
@@ -1770,7 +1767,7 @@ Current public namespaces:
 - `@phis/ui/helpers`
 - `@phis/ui/server-helpers`
 - `@phis/ui/net`
-- `@phis/ui/gateway`
+- `@phis/ui/next/route-handlers` (the proxy and Form gateway route handlers a Site mounts)
 - `@phis/ui/modals`
 
 The root package export is not the preferred integration surface.

@@ -70,7 +70,7 @@ export function resolvePhiAreaModulePageReferencePath({
  * one, because a Builder who chose a landing page chose that the root does not forward.
  */
 /**
- * The answer to a folder address (phis-server TODOS.md, "Folder addresses"): a path no Page answers, whose
+ * The answer to a folder address (phis-server REFERENCES.md, "Folder addresses"): a path no Page answers, whose
  * Navigation container leads to a Page. There is no Page to take bookkeeping from, so this is a bare
  * Redirect page -- no regions, no content -- that the Layout answers with a 307 before the shell flushes,
  * as it does a forwarding Area root. Its access is `anyone` because the Area's own access was checked

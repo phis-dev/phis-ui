@@ -1,4 +1,7 @@
-# Tour and visual-anchor contract
+# Tour and visual-anchor design
+
+This is a design, not a contract: none of it is built. There is no `PhiTourControl` and no Tour
+Controller yet.
 
 This document defines the target v1 contract for guided Phi UI Tours. Changing, extending,
 reinterpreting, or bypassing this contract requires explicit prior operator approval. A feature-local

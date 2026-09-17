@@ -146,7 +146,7 @@ export function usePhiBuilderDraftCommandController({
   }
 
   /*
-   * A save may have carried folder targets into other Navigations of the Area (TODOS.md, "Folder
+   * A save may have carried folder targets into other Navigations of the Area (phis-server REFERENCES.md, "Folder
    * addresses"). Their Drafts on the server moved; one open here takes the same targets and the new base
    * revision, one that is not is loaded, and neither records history -- Undo stays per Navigation.
    */
@@ -177,7 +177,7 @@ export function usePhiBuilderDraftCommandController({
   }
 
   /*
-   * A folder address is resolved when the Draft is saved or published (TODOS.md, "Folder addresses"): a
+   * A folder address is resolved when the Draft is saved or published (phis-server REFERENCES.md, "Folder addresses"): a
    * Page moved in /pages since the last Navigation edit has moved the folder its container stands for.
    */
   function withCurrentFolderAddresses<TNavigation extends { items: PhiBuilderNavigationItem[] }>(navigation: TNavigation) {

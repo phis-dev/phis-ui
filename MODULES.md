@@ -148,6 +148,10 @@ export function createPhi<Name>RuntimeModuleServerAreaContribution(area?: PhiCms
 Omitting `area` contributes everything the Module owns — the Builder case, since the Builder edits the
 other Areas instead of being one.
 
+Each Widget lives in its owning Module as `widgets/<widget>/` with `config`, `client`, `server`, `plugin`,
+and `authoring` files as it needs them. A Widget whose Client has a façade in front of its implementation
+keeps both: `index.tsx` re-exports, `client.tsx` implements.
+
 Third-party packages use the equivalent public export layout documented in `THIRD_PARTY_MODULES.md`.
 Their internal filenames are not ABI, but the same physical Server/live/Controls/Authoring separation is.
 
@@ -545,26 +549,6 @@ The Runtime Module verifier must eventually enforce at least:
   `scripts/validate-authoring-catalog.mjs` compares them and runs with the other module checks.
 
 Until every check is automated, review and migration work must treat these rules as binding manually.
-
-## Migration status
-
-The owner-folder layout is no longer a target: all eighteen first-party Modules live in it, and the
-collection directories that preceded it are gone — `modules/`, `module-definitions/`, `client-loaders/`,
-`client-authoring-modules/`, `client-authoring-widgets/`, `client-data-providers/`, and the shared
-`ids.ts` from which seventeen Modules once drew their id.
-
-`components/` now holds only what belongs to no Module: `controls`, `forms`, `layouts`, `regions`,
-`root`, `runtime`, `widgets`, and the other shared families.
-
-All seventy Widgets live in their owning Module as `widgets/<widget>/{config,client,server,plugin,
-authoring}`. `components/widgets/` keeps only what belongs to no single Widget: `label-sets`,
-`label-types`, `helpers`, `signals`, `shared`, and the shared configuration building blocks such as
-`parser-primitives`, `mask` and the background patterns.
-
-A Widget whose Client has a façade in front of its implementation keeps both: `index.tsx` re-exports,
-`client.tsx` implements.
-
-There is no second contribution path any more, and adding one is a contract change, not a shortcut.
 
 ## Contract governance
 

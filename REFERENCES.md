@@ -56,8 +56,7 @@ source/resolver contract.
 Changing a Site Page path therefore does not rewrite structured internal links. Navigation, Markdown,
 HTML, and other typed reference consumers resolve the same identity to the new canonical path. The path
 command must still consult the reference index and return affected-reference counts for audit and
-operator feedback. Legacy internal path strings are migration input: v1 migration resolves them to one
-unambiguous target or reports them for operator repair; runtime path fallbacks are forbidden.
+operator feedback. Runtime path fallbacks are forbidden.
 
 Deleting a referenced Site Page is a logical tombstone operation: it retains the Page Scope, its
 immutable id, and its canonical `(Site, Area, path)` ownership. It does not rewrite or discard the stable

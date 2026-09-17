@@ -115,7 +115,7 @@ type PhiTableSourceBinding = {
 };
 ```
 
-`resourceKey` replaces the Table-only term `tableKey`. `params` is serializable, provider-owned binding
+`params` is serializable, provider-owned binding
 configuration. The generic Widget and Builder treat it as opaque data validated and edited only through
 the selected Provider descriptor.
 
@@ -851,6 +851,11 @@ An editable static resource has:
 - a package-owned preset baseline and optional Site-owned override where applicable;
 - explicit create, update, delete, move, and schema-edit capabilities declared by its Provider.
 
+Core provides immutable static-resource querying plus a versioned static Provider factory. Live clients
+resolve Published snapshots; Authoring clients resolve and mutate only Working Draft snapshots through an
+injected owner store. A concrete Module or Add-on supplies persistence and optimistic concurrency; Core
+never invents an endpoint or stores Draft rows in Widget config.
+
 Builder Preview reads the Working Draft. Live runtime reads Published. Builder editing must never mutate
 Published resource data directly. Shared resources keep the same identity when referenced by several
 Widgets or Markdown embeds; publishing and deletion must validate all references.
@@ -891,7 +896,8 @@ A reusable Provider-backed Table embedded in Markdown uses a closed Phi embed de
 validated Provider/resource reference plus approved presentation data. Markdown must not execute
 arbitrary Provider keys, URLs, callbacks, React components, or module code. The embed is resolved through
 the same active Module registry, access checks, Provider contract, and Table renderer as a normal
-`PhiTableWidget`.
+`PhiTableWidget`. Provider-backed embeds are not built; arbitrary JSON or code-fence Provider discovery is
+rejected rather than kept as a late-loading path.
 
 ## Module and preset obligations
 
@@ -915,34 +921,8 @@ the same active Module registry, access checks, Provider contract, and Table ren
 - Missing Provider, resource, capability, field, action, or signal compatibility is a visible contract
   error. No direct-fetch, local business-mutation, duplicated Form, or legacy Widget fallback is permitted.
 
-## Current migration boundary
-
-The generic runtime now follows the documented `PhiTableWidget -> PhiTableBinding -> PhiTableControl`
-path. The Binding owns Provider and editor-option resolution, normalized query/loading/error state,
-accepted/rejected mutation reconciliation, optimistic field/row edits, and identity-based row movement.
-The provider-free Control renders typed cell/row editors and accessible drag/move interactions. Columns
-select required Provider `fieldKey` values and use presentation-only renderers; the former `valuePath`,
-`valueType`, and cell-action column ABI is removed.
-
-Admin Locales, Admin Logs, Admin Users, Editor Translations, Builder Revisions, Builder Signal Wiring,
-Navigation Drafts, editable Effects, and editable Static Options use the same Provider/Binding path.
-Immutable signal-capability metadata, read-only Brand preview data, and native Markdown tables may use
-provider-free `PhiTableControl` only while they satisfy the strict immutable static-row exception above.
-The contract audit rejects direct Ant Design Table imports outside `PhiTableControl`, domain Table Widget
-aliases, Provider-identity branches in generic Table hosts, and mutable domain hosts that call
-`PhiTableControl` without `PhiTableBinding` unless they are the explicit controlled compound-value Form
-field adapter defined above.
-
-Core provides immutable static-resource querying plus a versioned static Provider factory. Live clients
-resolve Published snapshots; Authoring clients resolve and mutate only Working Draft snapshots through an
-injected owner store. The generic Authoring resource editor composes the canonical Table path and remains
-Provider-neutral. A concrete Module/Add-on supplies persistence and optimistic concurrency; Core never
-invents an endpoint or stores Draft rows in Widget config.
-
-Native Markdown tables use `PhiTableControl`. Provider-backed Markdown embeds remain unavailable until a
-concrete embed parser supplies the closed descriptor documented above early enough for normal active-module
-demand resolution. Arbitrary JSON/code-fence Provider discovery is intentionally rejected rather than kept as
-a compatibility or late-loading path.
+`scripts/validate-table-contracts.ts` and `scripts/validate-control-boundaries.mjs` reject direct Ant
+Design Table imports outside `PhiTableControl` and domain Table Widget aliases.
 
 ## Contract governance
 

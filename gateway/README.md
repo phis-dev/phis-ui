@@ -4,7 +4,8 @@ This directory contains the internal `phi-server` adapter layer for `@phis/ui`.
 
 ## Scope
 
-- `gateway/*` is internal-only.
+- `gateway/*` is internal-only and has no package export. The route handlers a Site mounts are re-exported from
+  `@phis/ui/next/route-handlers`; the Label Set helpers a Module uses from `@phis/ui/server-helpers`.
 - It is allowed to talk to `phi-server`.
 - It is not public package surface for consuming sites.
 

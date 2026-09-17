@@ -97,7 +97,7 @@ buttons, routes, commands, or Controller behavior. A preset normally places one 
 medium `PhiCommandToolbarWidget` in the first slot, but may use further normal slots for Buttons or
 additional Toolbars. A non-compact `PhiToolbarControl` uses `xs` gap between its controls.
 
-The former generic `footerActions` list is not part of the v1 Overlay contract. Actions are normal Phi
+There is no generic Overlay actions list. Actions are normal Phi
 Widgets in the Footer Layout and use their declared signal routes. A Form rendered anywhere in an Overlay
 remains an ordinary inline `PhiFormWidget`; Forms must not open a private Modal or Drawer, inject their
 actions into Overlay chrome, render a private submit/reset row, or discover Overlay ancestry. A footer
@@ -175,9 +175,7 @@ Overlay runtime must not add another implicit content padding.
 Header, Body, and custom Footer Layouts retain the neutral Layout default of no padding and presets opt
 into Layout padding independently. An actions Footer receives its canonical padding only from the
 explicit `overlay-actions` root Layout. A missing Header or `none` Footer does not cause fallback padding.
-Changing Overlay type, placement, mount policy, or ownership must not change this behavior. The earlier
-Drawer container-padding fields and adapter-owned Header padding are migration input and are not a second
-v1 padding path.
+Changing Overlay type, placement, mount policy, or ownership must not change this behavior.
 
 ### Shared container chrome
 
@@ -215,8 +213,7 @@ Modal uses the shared `PhiControlSize` vocabulary through `controlSize`: `small`
 Core maps those values to globally defined Modal widths and always clamps the result to the available
 viewport with one `base` spacing token on both inline sides, including below Ant Design's small-screen
 breakpoint. Presets do not persist Ant Design breakpoint names or reproduce responsive Modal sizing
-through Body Layout widths. Existing scalar or responsive `width` values are migration input for Modal
-presets that have not yet received their explicit contract pass, not a second v1 sizing path.
+through Body Layout widths.
 
 Every Modal exposes the generic `controlSize` listen capability. A connected listen route uses `action: "change"`,
 `valueType: "string"`, and accepts only the existing `PhiControlSize` values `small`, `medium`, or
@@ -279,8 +276,7 @@ Close behavior continues through `closeMode`: an immediate Overlay closes direct
 Overlay emits its normal correlated `closeRequest`. Mask configuration never bypasses that transaction.
 
 Core derives Ant Design's current `destroyOnHidden` and `forceRender` behavior from `mountPolicy`; neither
-Ant Design field is persisted directly. Modal and Drawer use the structured `mask` API. Deprecated
-`destroyOnClose`, `destroyInactivePanel`, and `maskClosable` compatibility fields are not part of v1.
+Ant Design field is persisted directly. Modal and Drawer use the structured `mask` API.
 Focus trapping, focus restoration, scroll locking, and portal ownership default to accessible Core
 behavior and are not disabled by ordinary presets.
 
@@ -307,7 +303,7 @@ operation, and only a development build traces it.
 Mount policy therefore remains a rendering decision -- what exists in the DOM and what survives a close --
 and is no longer a delivery decision.
 
-Runtime, preview, and future authoring must resolve the same Overlay config and all declared zone trees.
+Runtime, preview, and authoring must resolve the same Overlay config and all declared zone trees.
 Provider demand, Widget/Controller materialization, access filtering, signal-route validation, and
 media/reference scans must include every reachable Overlay subtree exactly like reachable Region subtrees.
 
@@ -368,10 +364,7 @@ other Builder workflows; that orchestration is not a CMS Widget responsibility.
 The Region/Layout/Widget section nodes remain ordinary Builder-Module Widgets in their declared
 Collapsible slots. They may share internal server label/provider preparation and Client hooks, but they
 must not render through a workspace-host Widget, mount another Drawer, or receive a host-owned render
-callback. Removing the transitional host removes its CMS definition, runtime/preview/authoring loader,
-synthetic Region/Layout/Widget ids, preset nodes, and private workspace Drawer/Pages/Signal-Wiring render
-branch together. It does not remove the three Inspector Overlay nodes, their Header/Body Layouts, their
-section Widgets, or the Builder Controller state that those Widgets consume.
+callback.
 
 Each Collapsible slot contains a normal Builder-Module Widget. Presentation-only editors such as
 background, border, shadow, padding, geometry, viewport, and placement are Phi Controls composed by their
@@ -456,17 +449,9 @@ specialized focal-rectangle Control.
 
 ## Authoring boundary
 
-Full Builder authoring is deferred. Its target behavior is:
+Builder has no Overlay authoring; its design is [design/OVERLAY_AUTHORING.md](./design/OVERLAY_AUTHORING.md).
 
-- list Area- and Page-owned Overlays separately from Regions;
-- force the selected Overlay open in editor mode without persisting `open`;
-- edit Overlay config through a generic Overlay Inspector;
-- expose Header, Body, and Footer as named zones and edit every declared root and descendant through the
-  normal Layout/Widget canvas;
-- include Overlay create/delete, named-root assignment, DnD, history, preview, and publish validation;
-- permit Region/Overlay subtree moves only inside the same Area or Page ownership scope.
-
-Until that work lands, code-owned and persisted presets may declare complete Overlay instances and explicit
+Code-owned and persisted presets declare complete Overlay instances and explicit
 named zone Layouts, and runtime/preview render them through the canonical path. No preset-local Modal/Drawer
 renderer is allowed.
 

@@ -1,6 +1,6 @@
 # Builder Contract
 
-This document defines the contract for the future `developer` builder area. It is intentionally stepwise and must stay ahead of implementation. If a detail is not defined here yet, it is still open.
+This document defines the contract for the `builder` Area. Its sidebar lists Modules, Shells, Pages, Navigation, and Settings, and optional Modules add their own workspaces such as Media, Revisions, Theme, and Dashboard. Designs for Builder surfaces that do not exist are in [design/BUILDER.md](./design/BUILDER.md).
 
 ## 1. Purpose
 
@@ -68,8 +68,8 @@ The builder area is the workspace for composing site structure, page trees, bran
 
 Structure-authoring canvases use one shared scaffold for every widget leaf.
 
-- The scaffold owns default inertness, selection, hover, debug boundaries, common tools, and the future
-  widget DnD handle.
+- The scaffold owns default inertness, selection, hover, debug boundaries, common tools, and the widget DnD
+  move handle.
 - Widget content remains visually live-like. Editor safety must not be implemented by setting every
   input/control to its runtime-disabled state.
 - The editor runtime centrally suppresses live signal emissions from normal widget bodies while still
@@ -150,65 +150,26 @@ The outer shell must not be repurposed as a preview of the target site navigatio
 
 ### Header
 
-The builder header is for global workspace actions, not for editing the target site navigation directly.
-
-Expected controls:
-
-- active builder area selector
-- dark mode switch
-- page selector entry point
-- save
-- publish
-- preview
-- undo
-- redo
-- dirty/saving/synced state
+The builder header is for global workspace context, not for editing the target site navigation directly.
+It carries the target Area selector, the current workspace title, the theme mode switch, the debug
+switch, the account menu, and the Area menu. Save, preview, publish, undo, and redo are the Builder
+command toolbar in the workspace's `header_bottom` (see "Builder chrome and `header_bottom` ownership").
 
 The header must not contain a site/project selector. The active site is already known from the current context.
 
 ### Left sider
 
-The left sider is the builder navigation and tool area.
+The left sider holds the `builder:sidebar` navigation surface: Modules, Shells, Pages, Navigation, and
+Settings from the Builder base Module, plus the items optional Modules inject into it. The sider is not
+the final site navigation. It is builder chrome.
 
-Expected content:
+## 6. Workspaces contract
 
-- pages
-- templates
-- media
-- brand
-- blocks
-- styles
-- settings
-
-The sider is not the final site navigation. It is builder chrome.
-
-## 6. Pages contract
-
-`Pages` is the primary entry point for page structure editing.
-
-Current workspace note:
-
-- `/builder/phis/ui/shells` and `/builder/phis/ui/pages` are different workspaces and must not silently share one editor model
-- `/builder/phis/ui/shells` is the area-shell workspace
-- `/builder/phis/ui/pages` is the page workspace
-- the current `/builder/phis/ui/pages` path is still only a partial idea and does not yet define the final page-selection flow
-- missing selectors or unfinished page tooling must not be papered over by reusing `/builder/phis/ui/shells` ownership rules
-
-Expected behavior:
-
-- clicking `Pages` opens a drawer with a tree view
-- clicking `Pages` opens a drawer with a tree view
-- the tree shows the current target area only
-- the active page is highlighted
-- selecting a page opens its canvas
-- `+` actions create pages; a page is never a folder, so a page cannot be created beneath another page
-- `+` on a folder node can create a page inside that folder or a submenu entry
-
-The page tree must mirror the target site structure as closely as possible. The contract should not introduce a second independent navigation model.
+`/builder/phis/ui/shells` and `/builder/phis/ui/pages` are different workspaces and must not silently share one editor model.
 
 ### Workspace path contract
 
-The developer builder currently uses two different routes with different ownership:
+The builder uses two different routes with different ownership:
 
 - `/builder/phis/ui/shells`
   - edits area-owned shell regions
@@ -218,7 +179,7 @@ The developer builder currently uses two different routes with different ownersh
 - `/builder/phis/ui/pages`
   - edits page-owned regions
   - is keyed by `area + page/path`
-  - will later need its own explicit page/path selector
+  - selects its page through the page selector in its workspace `header_bottom`
   - must not implicitly inherit `/builder/phis/ui/shells` save or hydration behavior just because both live inside the same editor shell
   - owns its own workspace chrome above the selected page canvas
   - that workspace chrome is not the same thing as the selected page's CMS region tree
@@ -440,46 +401,6 @@ Rules:
 - when a widget participates in cross-widget or cross-region drops, it must also declare `runtimeSignals.dragDrop`
 - new builder widgets must not invent separate ad hoc DnD props or registries when the shared DnD contract is sufficient
 
-### Menu and submenu contract
-
-The pages tree also acts as the source for navigation structure where the area contract allows it.
-
-Rules:
-
-- a page may own navigation children when the current shell profile exposes that capability
-- a submenu entry is a navigation child, not a page by default
-- a page tree node may represent:
-  - a real page
-  - a navigation container
-  - both, if the area contract allows it
-- submenu creation must respect the active area and the active shell profile
-- the tree should clearly distinguish page nodes from pure navigation nodes
-- if the shell profile does not support submenus, the tree must hide or disable submenu creation
-
-The builder must not assume that every navigation node is also a page node.
-The builder must not assume that every page node is also a navigation parent.
-
-### Pages tree interaction contract
-
-The pages tree is the primary navigator for page selection.
-
-Interaction rules:
-
-- clicking a page node selects that page in the canvas
-- double-clicking a page node may open a focused edit state if the implementation supports it
-- expanding a folder node reveals the pages and folders inside it, or its submenu entries
-- creating a page from the tree must immediately insert it into the active area structure
-- moving or reordering nodes must update the canvas selection if the active node changed
-- deleting a page node must clear or replace the current selection in a predictable way
-- the tree must never silently edit shell-owned regions
-- the tree must never expose page-owned content as if it were a shell region
-
-Drawer contract:
-
-- the tree should be rendered in a drawer by default
-- the contract only requires that it be an explicit, separate selection surface
-- the tree must allow searching or filtering once the structure becomes large enough
-
 ## 7. Canvas contract
 
 The canvas is the editable preview of the target site shell.
@@ -487,7 +408,7 @@ The canvas is the editable preview of the target site shell.
 The contract is:
 
 - the canvas renders the target page in its target area
-- the canvas contains the future site header and future site sider structure
+- the canvas contains the target site header and sider structure
 - nav items in the canvas are edited in place
 - the canvas is where page-level and menu-level structure is manipulated
 
@@ -499,8 +420,8 @@ The target-site navigation is edited inside the canvas, not inside the builder c
 
 Contract rules:
 
-- the canvas may expose the future header navigation
-- the canvas may expose the future sider navigation
+- the canvas may expose the target header navigation
+- the canvas may expose the target sider navigation
 - the chrome may expose the `Pages` entry point only
 - the chrome may not become a second editor for the same navigation tree
 - package descriptor `itemKey` values are compile/injection anchors and never persisted as resolved item identity
@@ -640,50 +561,7 @@ The area selector must filter:
 
 The area selector must not be treated as a global site switcher.
 
-## 11. Shell selector contract
-
-The builder also needs a shell selector for the current target area.
-
-The shell selector decides which shell regions and shell behaviors are active for the canvas preview.
-
-Examples of shell-level choices:
-
-- whether `sider_left` is visible
-- whether `sider_left` uses `fullHeight`
-- which header regions are active
-- whether a footer is present
-- which content-width constraints apply
-- whether the canvas should show a compact, standard, or editor shell mode
-
-The shell selector must not be a random styling panel. It is a structural contract chooser.
-
-Required shell selector responsibilities:
-
-- select the shell preset for the active area
-- select the active region set for that preset
-- expose region-level behaviors such as sticky, full height, width, and offsets
-- show which regions are editable in the canvas
-- keep the builder chrome separate from the shell being configured
-
-The shell selector should operate on explicit shell profiles rather than ad hoc toggles when possible.
-
-Example shell profiles:
-
-- `compact`
-- `standard`
-- `editor`
-- `fullHeightSider`
-- `headerOnly`
-
-The exact names are open, but the contract must support:
-
-- region visibility
-- region sizing
-- region height mode
-- shell-specific composition presets
-- area-specific shell overrides
-
-## 12. Inspector contract
+## 11. Inspector contract
 
 The inspector is workspace UI, not a separate forms system.
 
@@ -832,21 +710,7 @@ Renderable block contract:
 - `className` is the supported CSS extension hook for third-party styling
 - `size` is the canonical public preferred geometry form; `minSize`, `maxSize`, and `collapsedSizeHint` are the semantic geometry constraints
 
-## 13. Entity contract
-
-The builder will eventually need first-class entities for:
-
-- pages
-- menus
-- layouts
-- blocks
-- media assets
-- brand assets
-- theme defaults
-
-The canonical model should stay site-scoped and area-aware.
-
-### Plugin meta contract
+## 12. Plugin meta contract
 
 The builder treats registry entries as a discriminated contract by `kind`.
 
@@ -885,7 +749,7 @@ Rules:
 - widgets must not define slots or children in the current contract.
 - a future composite-widget contract would need an explicit new kind or extension instead of silently reusing `widget`.
 
-## 14. Slot contract
+## 13. Slot contract
 
 Slots are explicit placement targets inside Layouts.
 
@@ -908,7 +772,7 @@ Slot behaviors:
 - slots are placement targets, not first-class editable nodes
 - slots do not need a dedicated slot inspector unless a future contract explicitly introduces one
 
-## 15. Placement contract
+## 14. Placement contract
 
 Every Layout and Widget from the active target-Area module set is insertable unless the
 receiving slot rejects its structural kind.
@@ -929,13 +793,7 @@ Rules:
   Package/module ownership is an independent Picker filter and must not be encoded as a category.
 - technical implementation details that must never be inserted are not registered as CMS Widgets
 
-Optional future placement fields:
-
-- `requiredFlags`
-- `excludedAreas`
-- `excludedRegionTypes`
-
-## 16. Insert picker contract
+## 15. Insert picker contract
 
 The builder should not expose the full registry as one undifferentiated list.
 
@@ -992,126 +850,8 @@ Rules:
 - incompatible items must not appear as normal choices
 - the picker may still show disabled or hidden items only when an explicit debug mode requires it
 - the picker should support search
-- the picker should support sorting by relevance and recency
 
-## 17. Media, brand, and theme contract
-
-The builder must treat media, brand, and theme as first-class workspace domains.
-
-### Media
-
-- The builder must be able to browse site-scoped media assets.
-- Assets should be organized by groups or collections.
-- The media view must support selection, upload, replace, delete, and reuse.
-- Uploaded media must be referenceable from pages, widgets, and brand config.
-
-### Brand
-
-- Brand editing is a developer concern, not an admin settings concern.
-- Brand data may include logo, wordmark, slogan, colors, and presentation defaults.
-- The builder should expose brand assets and brand preview in a dedicated workspace mode.
-- Brand edits should be able to reference media assets instead of raw file paths.
-
-### Theme
-
-- Theme editing should be treated as a structured workspace domain.
-- Theme controls should expose the site shell, color tokens, spacing tokens, and visible defaults.
-- Theme editing must not silently rewrite unrelated site content.
-
-### Asset references
-
-- Pages, layouts, widgets, and brand settings should reference media by asset identity or stable URL.
-- The builder must not couple visual references to a local filesystem path contract.
-
-## 18. Area shell profiles
-
-Each editable area must map to a shell profile that defines which regions are present and how the canvas should behave.
-
-### `public`
-
-- Public browsing shell
-- Typical regions: header, content, footer, optional sider
-- Focus on marketing and information pages
-- Navigation is usually visible and structured
-
-### `app`
-
-- Authenticated Site application shell
-- Typical regions: header, content, optional sider, footer
-- Auth, commerce, and site-specific modules contribute routes and navigation without introducing Areas
-
-Every shell profile must define:
-
-- active regions
-- region visibility
-- region sizing behavior
-- whether the canvas uses full-height sidebars
-- whether the preview is compact or expanded
-- which regions are editable in the builder
-
-## 19. Standard region sets
-
-Each shell profile must map to a concrete default region set.
-
-### `public`
-
-- `header_top`
-- `header_main`
-- `footer_main`
-- `footer_bottom`
-- optional `sider_left`
-- one shell-owned page-content viewport for page regions
-
-### `app`
-
-- `header_top`
-- `header_main`
-- `footer_main`
-- `footer_bottom`
-- optional `sider_left`
-- one shell-owned page-content viewport for page regions
-
-Region-set rules:
-
-- the builder must show only the regions that belong to the active shell profile
-- optional regions must be clearly marked as optional or disabled when absent
-- shell-profile changes may change region visibility, selection, and the canvas tree
-- region set changes must be reflected in the builder chrome and the canvas immediately
-
-## 20. Developer shell layout
-
-The `developer` workspace uses a dedicated shell arrangement:
-
-- `header_main`
-  - global builder actions
-  - area selector
-  - dark mode switch
-  - save / publish / preview
-  - undo / redo
-  - workspace status
-- `sider_left`
-  - builder chrome navigation
-  - shell / area organized workspace navigation
-  - Pages entry point
-  - media, brand, theme, blocks, settings
-- `content`
-  - editable target-site canvas viewport
-  - host surface for either the `/builder/phis/ui/shells` shell editor or the `/builder/phis/ui/pages` page editor
-- `sider_right`
-  - optional inspector
-  - page organized context panel
-  - initially hidden unless the workspace mode requires it
-
-Developer shell rules:
-
-- the outer shell must stay visibly different from the edited target site
-- the builder chrome must not be reused as the target navigation preview
-- the canvas must be the only place where the target shell is edited
-- the shell must support a compact workspace mode and an expanded workspace mode
-- the shell must support a full-height editor mode when the canvas needs the whole viewport
-- the `content` slot of the developer shell is only the workspace viewport and must not be confused with the page-owned CMS region named `content`
-
-## 21. Canvas region ownership contract
+## 16. Canvas region ownership contract
 
 The canvas must visually distinguish shell-owned regions from page-owned regions.
 
@@ -1141,7 +881,7 @@ Rules:
 - the inspector must show ownership clearly
 - the canvas should preserve the difference even when the visual style is subtle
 
-## 22. Visual representation contract
+## 17. Visual representation contract
 
 The builder must visually distinguish the structural layers of the canvas.
 
@@ -1172,97 +912,7 @@ Additional rules:
 
 The exact visual language is open, but the layer distinction is not.
 
-## 23. Create / plus-action contract
-
-The builder must expose explicit creation actions.
-
-Required creation targets:
-
-- `+ page`
-- `+ submenu`
-- `+ layout`
-- `+ widget`
-- `+ slot`
-- `+ media asset`
-- `+ brand asset`
-
-Rules:
-
-- `+` actions must always respect the active area and shell selector.
-- `+` actions must only appear where the current contract allows creation.
-- `+ page` may appear in the pages tree and in a folder's context menu. There is no `+ child page`: a
-  page is never a folder (see phis-server `TODOS.md`, "Folder addresses").
-- `+ submenu` may appear when the selected node can own navigation children.
-- `+ layout` and `+ widget` may appear inside the Canvas and slot context.
-- `+ slot` may appear only on Layouts that explicitly own named or sequential slots.
-- `+ media asset` and `+ brand asset` may appear in media and branding contexts.
-
-The builder must not invent creation affordances for entities that are not part of the current contract.
-
-## 24. Selection, breadcrumbs, and inspector contract
-
-The builder must keep selection and editing context explicit.
-
-### Selection
-
-The builder must support at least these selection levels:
-
-- area
-- shell profile
-- page
-- layout node
-- widget node
-- slot
-- media asset
-- brand asset
-
-Selection rules:
-
-- only one primary selection should be active at a time
-- selection must be visible in the canvas and in the side controls
-- selection changes should update the inspector context immediately
-- selecting a page should load that page into the canvas
-- selecting a node should focus the corresponding canvas element
-
-### Breadcrumbs
-
-The builder should expose a breadcrumb trail for the current selection path.
-
-Expected breadcrumb examples:
-
-- area > shell profile > page
-- Area > Page > Layout > Widget
-- area > media > asset
-
-Breadcrumbs should support:
-
-- quick back-navigation
-- clear display of the current context
-- optional jump targets for parent entities
-
-### Inspector
-
-The inspector is the edit panel for the current selection.
-
-Inspector responsibilities:
-
-- render editable fields for the active selection
-- show read-only metadata when the selection is not editable
-- expose slot assignment when the selected node can own slots
-- expose creation actions only when the current selection allows them
-- stay in sync with the current area and shell selector
-
-The inspector is the edit panel for the current selection.
-
-- The active node is the single source of truth.
-- Inspector UI must rehydrate from the selected node on every open.
-- Any field edited in the inspector must update the selected node directly.
-- Transient draft state is allowed only for incomplete UI input, not as a second source of truth.
-
-The inspector must not become a second page tree or a second navigation system.
-Slot selection should open the insert picker, not a separate slot editor.
-
-## 25. Draft, save, publish, and history contract
+## 18. Draft, save, publish, and history contract
 
 The builder must support a clear change lifecycle.
 
@@ -1346,9 +996,8 @@ The builder must support a clear change lifecycle.
 
 - Changes should be traceable to a page, area, or workspace context.
 - Revision metadata should include selection scope and area.
-- The contract should later allow diffing between draft and published state.
 
-## 26. Workspace signal contract
+## 19. Workspace signal contract
 
 The Builder uses the same v1 signal ABI as every live runtime. The binding definitions live in
 `types/signals.ts`, `AGENTS.md`, and `components/widgets/README.md`; this section describes only the
@@ -1383,27 +1032,7 @@ Builder-owned configuration flow.
 - Canvas runtime signal emission stays disabled. Wiring changes instance config through the Builder
   controller; target-Area controllers are not mounted merely to configure their endpoints.
 
-## 27. Contract ordering
-
-This is the intended implementation order:
-
-1. Define the builder shell regions.
-2. Define the page tree contract.
-3. Define the canvas contract.
-4. Define the area selector contract.
-5. Define the navigation edit contract.
-6. Define the media and brand contracts.
-7. Define save/publish/revision behavior.
-
-## 28. Open questions
-
-- Should the pages tree be a drawer or an embedded tree panel?
-- Should menus be separate from pages in the builder model, or derived from page structure?
-- Which builder operations require draft state and which require immediate persistence?
-- Should the future inspector live in `sider_right` or inside the canvas?
-- How much of the future public shell should be editable before the builder reaches its first useful version?
-
-## 29. Contract rule
+## 20. Contract rule
 
 Until a decision is written here, the builder implementation must not invent its own contract.
 Only the contracts documented in this file are stable.

@@ -311,10 +311,8 @@ export const SUPPORT_RUNTIME_MODULE_DEFINITION = {
 The Form definition and handler descriptor must use the same `handlerKey` and phase. The handler
 Provider's namespaced `key` is catalog identity only; it is never stored in `submitHandlerKey`.
 
-The handler example above shows the approved target ABI. The P0 migration adds its target, CSRF, and
-credential fields to `PhiFormHandlerProviderDescriptor`; until that lands, current package source still
-uses the shorter transitional Provider ABI plus exact Shared-owned credential tuples. Do not put these
-fields back into editable Form config or add another credential-forwarding allowlist.
+Target, CSRF, and credential fields belong to `PhiFormHandlerProviderDescriptor`. Do not put them into
+editable Form config or add another credential-forwarding allowlist.
 
 Handler mode posts only `formId`, the closed phase (`submit` or `confirm`), and validated values to the
 Site-local `/api/site/forms` gateway. The gateway resolves the Published Form from the active target-Area
@@ -538,7 +536,7 @@ the Builder Effects workflow does.
 `submitHandlerKey`, `confirmHandlerKey`, and `previewHandlerKey` select server behavior when present; they are not
 controller addresses. A module adds its own controller only for a genuinely different domain lifecycle,
 such as a payment state machine or server-backed wizard. The optional visual Form Builder has a separate
-authoring controller and is deferred to P2.
+authoring controller and is not built.
 
 ## Labels, validation, and security
 

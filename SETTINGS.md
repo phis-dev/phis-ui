@@ -122,32 +122,7 @@ Settings sections are built exclusively on the shared Form and control basis:
 Secrets in Settings surfaces are write-only and follow the secret-handling rules of the owning server
 contract (see [AUTHENTICATION.md](./AUTHENTICATION.md) section 8 for the Auth precedent).
 
-## 7. Migration boundary
-
-The Admin area container is implemented: General is the Admin base Module's mounted page on the
-descriptor Form basis, the container root redirects per section 2, and the Asset Module's Media
-Settings page is the first surface built directly on this contract (Space kind enablement and default
-quotas against the Admin media configuration endpoint).
-
-The Auth Authentication page's policy, password, and two-factor sections live on the descriptor Form
-basis against flat per-section Auth Admin endpoints with server-side derivations (role bitmask, grace
-clearing, required-TOTP/method coupling); the shared datetime field provider was added for the grace
-deadline.
-
-The Auth provider installations are presented through the AUTHENTICATION.md section 8 installation
-catalog: a generic Table over the auth-installations data provider (inline enablement edits, test and
-guarded delete row actions) with descriptor create/edit Forms wired over the standard table/form
-signal channels — the whole Authentication page now runs on generic contracts.
-
-The Builder area container is implemented on the same shape: the container root redirects per section
-2 and the base Module's General page is mounted, not routed absolutely. The Builder base Module owns
-no configuration of its own yet, so its General page carries only the read-only Technical panel;
-further panels are added to that page when Builder configuration exists, and Modules contribute their
-own Builder Settings pages through the same mount meanwhile.
-
-No surface predating this contract remains.
-
-## 8. Contract governance
+## 7. Contract governance
 
 Changing, extending, replacing, reinterpreting, or widening this contract requires explicit prior
 operator approval after the exact gap and affected ABI have been presented. This contract must not be
