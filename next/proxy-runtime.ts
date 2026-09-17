@@ -11,6 +11,9 @@ import { readPhiServerApiCredentials } from "../helpers/phis-server-credentials"
 
 const HOP_BY_HOP_HEADERS = new Set(["connection", "content-length", "host"]);
 
+/** Headers Core reads as statements about the Site or the caller's standing. None may come from outside. */
+const PHIS_HEADER_PREFIX = "x-phis-";
+
 export function getPhiNextUpstreamBaseUrl() {
   return readPhiSiteRuntimeConfigSync().phis.apiBaseUrl;
 }
@@ -39,22 +42,29 @@ export function buildPhiNextProxyHeaders(
   const runtimeConfig = readPhiSiteRuntimeConfigSync();
   const headers = new Headers();
 
+  /*
+   * Nothing a caller sends may speak for this Site. Core reads the Site from `x-phis-site-key` and the
+   * caller's standing from the token headers, and one internal token serves every Site of an installation
+   * -- so a forwarded `x-phis-site-key` made this Site's door a door to any other Site, carrying the
+   * internal token with it. Every `x-phis-*` header and `authorization` are therefore dropped here and
+   * only this Site's own values are set below.
+   */
   request.headers.forEach((value, key) => {
-    if (!HOP_BY_HOP_HEADERS.has(key.toLowerCase())) {
+    const name = key.toLowerCase();
+    if (!HOP_BY_HOP_HEADERS.has(name) && !name.startsWith(PHIS_HEADER_PREFIX) && name !== "authorization") {
       headers.set(key, value);
     }
   });
 
-  if (runtimeConfig.site.key && !headers.has(PHIS_SITE_KEY_HEADER)) {
-    headers.set(PHIS_SITE_KEY_HEADER, runtimeConfig.site.key);
+  if (!runtimeConfig.site.key) {
+    throw new Error("The Site runtime config names no site.key; a proxy cannot say which Site it serves.");
   }
+  headers.set(PHIS_SITE_KEY_HEADER, runtimeConfig.site.key);
 
+  // A hook door faces outward and forwards no token: a request from the open internet must not pick up
+  // the claim "this came from inside" on the way through.
   if (readPhiServerApiCredentials().internalToken && options?.internalToken !== false) {
     headers.set("authorization", `Bearer ${readPhiServerApiCredentials().internalToken}`);
-  } else if (options?.internalToken === false) {
-    // Whatever the caller sent under this name is theirs, not a claim about this Site, and Core reads
-    // it as one. A hook is unauthenticated by construction and stays that way through here.
-    headers.delete("authorization");
   }
 
   headers.set("x-forwarded-host", request.headers.get("host") ?? "localhost");
