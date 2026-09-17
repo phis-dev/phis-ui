@@ -549,7 +549,6 @@ export async function buildPhiDefaultSiteAreaPresetTree({
         label: "pub header main brand",
         config: {
           fallbackTitle: brandWordmarkText,
-                logoYOffset: -4,
         },
         contentId: null,
       },

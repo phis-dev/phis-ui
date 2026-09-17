@@ -1,7 +1,6 @@
 "use client";
 
 import type { CSSProperties, ReactNode } from "react";
-import Image from "next/image";
 
 import { Flex } from "antd";
 
@@ -30,7 +29,7 @@ export type PhiBrandControlProps = {
 };
 
 /** How tall a Logo is drawn. Its width follows the artwork, so a wordmark reads as well as a signet. */
-const PHI_BRAND_LOGO_HEIGHT = 50;
+const PHI_BRAND_LOGO_HEIGHT = 32;
 
 /**
  * The address a mode's Logo is drawn from, or none.
@@ -170,15 +169,15 @@ export function PhiBrandControl({
           }}
         >
           {/*
-            Unoptimized: a Logo is regularly an SVG, which the image optimizer refuses, and a Set's Logo
-            is a data URL, which it cannot fetch. A picture drawn this small gains nothing from it.
+            A plain image rather than `next/image`: a Logo is regularly an SVG, which the optimizer refuses,
+            or a Set's data URL, which it cannot fetch, so nothing would be optimized -- and its fixed
+            width and height attributes fought the one rule a Logo needs, a height with the width following.
           */}
-          <Image
+          <img
             src={logoUrl}
             alt={logoAlt}
-            width={PHI_BRAND_LOGO_HEIGHT}
             height={PHI_BRAND_LOGO_HEIGHT}
-            unoptimized
+            decoding="async"
             style={{
               width: "auto",
               height: PHI_BRAND_LOGO_HEIGHT,

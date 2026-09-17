@@ -3817,7 +3817,6 @@ export function PhiBuilderBrandThemePreviewWidgetClient({
             <PhiBrandControl
               brand={previewThemeResolved.brand ?? null}
               fallbackTitle={runtime.site.name ?? runtime.site.key}
-              logoYOffset={-2}
               mode={mode}
             />
           )}
