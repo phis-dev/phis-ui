@@ -112,6 +112,24 @@ async function resolvePhiStaticRenderUrl(request: NextRequest, runtimeConfig: Re
   return new URL(`${PHI_STATIC_RENDER_PREFIX}/${marker}/${mode}${request.nextUrl.pathname}`, request.url);
 }
 
+const PHI_STATIC_RENDER_PASS_HEADER = "x-phis-static-render";
+const PHI_STATIC_RENDER_PASS_KEY = Symbol.for("phis-ui.static-render-pass");
+
+/**
+ * What lets a rewrite into the static tree through when it comes back to this proxy.
+ *
+ * It does come back whenever the server was told an address to listen on (`next start -H`, or `HOSTNAME`
+ * for the standalone server): Next compares a rewrite's origin with that address, while the URL it hands
+ * the proxy always says `localhost`, so it counts the rewrite as external and fetches it from itself over
+ * HTTP -- through this proxy, which refuses the static tree's own address. The rewrite carries this
+ * process's pass in a request header; a visitor who types the address cannot know it.
+ */
+function readPhiStaticRenderPass() {
+  const holder = globalThis as typeof globalThis & { [PHI_STATIC_RENDER_PASS_KEY]?: string };
+  holder[PHI_STATIC_RENDER_PASS_KEY] ??= crypto.randomUUID();
+  return holder[PHI_STATIC_RENDER_PASS_KEY];
+}
+
 export async function proxyPhiNextSiteRequest(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
   /*
@@ -119,7 +137,9 @@ export async function proxyPhiNextSiteRequest(request: NextRequest) {
    * anybody can type would let them fill every process's cache with renders nobody else will ask for.
    */
   if (pathname === PHI_STATIC_RENDER_PREFIX || pathname.startsWith(`${PHI_STATIC_RENDER_PREFIX}/`)) {
-    return new NextResponse(null, { status: 404 });
+    return request.headers.get(PHI_STATIC_RENDER_PASS_HEADER) === readPhiStaticRenderPass()
+      ? NextResponse.next()
+      : new NextResponse(null, { status: 404 });
   }
   if (isAssetOrBackendPath(pathname)) {
     return NextResponse.next();
@@ -135,7 +155,11 @@ export async function proxyPhiNextSiteRequest(request: NextRequest) {
     // The static tree names the locale by its own segment, so only an exact one goes there.
     const localeSegment = pathname.split("/").filter(Boolean)[0]?.toLowerCase();
     if (localeSegment === prefixedLocale && isPhiStaticRenderRequest(request)) {
-      return NextResponse.rewrite(await resolvePhiStaticRenderUrl(request, runtimeConfig));
+      const passHeaders = new Headers(request.headers);
+      passHeaders.set(PHI_STATIC_RENDER_PASS_HEADER, readPhiStaticRenderPass());
+      return NextResponse.rewrite(await resolvePhiStaticRenderUrl(request, runtimeConfig), {
+        request: { headers: passHeaders },
+      });
     }
     requestHeaders.set("x-locale", prefixedLocale);
     requestHeaders.set(PHIS_REQUEST_PATH_HEADER, pathname);
