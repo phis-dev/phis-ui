@@ -276,3 +276,19 @@ export function PhiRootLiveThemeProvider({
     </>
   );
 }
+
+/**
+ * The colour-scheme bootstrap script, written into the server's HTML and nowhere else.
+ *
+ * It has to run before the first paint, so it is an inline script in the document head. React never runs
+ * a script it renders in the browser and warns about each one -- which it did on every 404, where Next
+ * renders the whole document in the browser. Rendering nothing there is correct rather than evasive: the
+ * script already ran from the HTML, and React passes over an unexpected script in the head when it
+ * hydrates.
+ */
+export function PhiThemeModeBootstrapScript({ source }: { source: string }) {
+  if (typeof window !== "undefined") {
+    return null;
+  }
+  return <script dangerouslySetInnerHTML={{ __html: source }} />;
+}

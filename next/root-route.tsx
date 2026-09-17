@@ -5,6 +5,7 @@ import { cookies } from "next/headers";
 import { notFound, redirect } from "next/navigation";
 
 import { PhiRootLayout } from "../components/root/phi-root-layout";
+import { PhiThemeModeBootstrapScript } from "../components/root/phi-root-live-theme-provider";
 import type { PhiModuleFontContributions } from "../module";
 import type { PhiSiteModuleServerAreaContributions } from "../plugins/runtime-modules/site-modules";
 import { loadPhiThemeBlockCatalog } from "../plugins/runtime-modules/theme/block-catalog";
@@ -214,9 +215,7 @@ function createPhiNextRootDocument(
         suppressHydrationWarning
       >
         <head>
-          {bootstrapScript ? (
-            <script dangerouslySetInnerHTML={{ __html: bootstrapScript }} />
-          ) : null}
+          {bootstrapScript ? <PhiThemeModeBootstrapScript source={bootstrapScript} /> : null}
         </head>
         <body>
           <PhiRootLayout
