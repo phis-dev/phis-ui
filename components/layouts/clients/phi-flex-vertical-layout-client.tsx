@@ -131,6 +131,13 @@ export function PhiFlexVerticalLayout({
           alignSelf: shouldFillCrossAxis ? "stretch" : undefined,
           display: "flex",
           flexDirection: "column",
+          /*
+           * The slot carries the Layout's own cross-axis alignment, because the slot is scaffolding and
+           * the anchor is about the content. A slot is as wide as what it holds wants to be, and a child
+           * that caps its width -- a column of copy at a readable measure -- is narrower than that: it
+           * then stands at the left edge of a centred slot, which reads as "not centred" and is.
+           */
+          alignItems: shouldFillCrossAxis ? "stretch" : resolvedFlowAlignment.alignItems,
         }}
       >
         {child}
