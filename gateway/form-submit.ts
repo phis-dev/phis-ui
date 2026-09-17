@@ -163,7 +163,7 @@ function resolveEndpointKey(
 function resolveCategoryPrefix(category: PhiFormSubmitCategory) {
   switch (category) {
     case "auth":
-      return "/api/auth";
+      return "/api/v1/auth";
     case "account":
       return "/api/account";
     case "forms":

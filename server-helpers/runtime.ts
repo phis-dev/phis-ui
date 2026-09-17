@@ -306,8 +306,10 @@ export async function getPhiCmsRuntimeInfo({
     readPhiColorSchemeHintFromCookieHeader(cookieHeader),
   );
 
-  const response = await fetch(buildApiUrl(resolvedRuntime.apiBaseUrl, "/api/auth/me"), {
+  const response = await fetch(buildApiUrl(resolvedRuntime.apiBaseUrl, "/api/v1/auth/me"), {
     headers: buildApiHeaders({
+      token: resolvedRuntime.internalToken,
+      includeToken: true,
       siteKey: resolvedRuntime.siteKey as string,
       includeSiteKey: true,
       extra: {
