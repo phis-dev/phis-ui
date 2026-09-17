@@ -169,8 +169,6 @@ export const PHI_REGISTRATION_FORM_DESCRIPTOR = {
       key: "website",
       fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.honeypot,
     },
-    { key: "issuedAt", fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.hidden },
-    { key: "formToken", fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.hidden },
     { key: "locale", fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.hidden },
     {
       key: "termsAccepted",
@@ -198,6 +196,7 @@ export const PHI_REGISTRATION_FORM_DESCRIPTOR = {
   },
   // Long enough that somebody who leaves to read the terms should not come back to an empty form.
   persistDraft: true,
+  guard: true,
 } as const satisfies PhiFormDescriptor;
 
 export const PHI_CONTACT_FORM_DESCRIPTOR = {
@@ -241,14 +240,13 @@ export const PHI_CONTACT_FORM_DESCRIPTOR = {
       config: { rows: 6 },
     },
     { key: "website", fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.honeypot },
-    { key: "issuedAt", fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.hidden },
-    { key: "formToken", fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.hidden },
   ],
   success: {
     title: label("feedback.successTitle", "Message sent"),
     text: label("feedback.successText", "Your message has been submitted successfully."),
     reset: true,
   },
+  guard: true,
 } as const satisfies PhiFormDescriptor;
 
 export const PHI_CONFIRM_FORM_DESCRIPTOR = {

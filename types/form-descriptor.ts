@@ -156,6 +156,15 @@ export type PhiFormDescriptor = {
    * not something to leave behind, and it is cleared the moment the form is accepted.
    */
   persistDraft?: boolean;
+  /**
+   * That the server accepts this form only with a guard token: `issuedAt` and `formToken`, signed by
+   * phis-server when the form was shown and refused if it comes back too fast or too late.
+   *
+   * The browser asks for the token when the form mounts (`/api/site/forms?phase=guard`) and adds it to
+   * what it submits. It is not rendered into the page, so a page with a guarded form is the same for
+   * every visitor and can be cached.
+   */
+  guard?: boolean;
 };
 
 export type PhiFormHandlerPhase = "submit" | "confirm" | "preview";

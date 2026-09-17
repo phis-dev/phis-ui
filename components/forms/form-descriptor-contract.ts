@@ -310,6 +310,7 @@ export function parsePhiFormDescriptor(value: unknown): PhiFormDescriptor {
     layout,
     success,
     persistDraft: value.persistDraft == null ? undefined : value.persistDraft === true,
+    guard: value.guard == null ? undefined : value.guard === true,
   };
 }
 

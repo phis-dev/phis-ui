@@ -625,6 +625,54 @@ const addOnUnknown = await submit({ body: { formId: FORM_IDS.addOn, phase: "subm
 assert.equal(addOnUnknown.response.status, 404);
 assert.equal(calls.length, 0);
 
+// --- Guard tokens ------------------------------------------------------------
+
+/**
+ * A guarded Form asks for its token from the browser. The relay issues one only for a Form whose submit
+ * handler is active in the Area the referer names -- the gate a submit passes -- and never forwards a
+ * cookie: the same page is served to everybody, and a guard belongs to nobody.
+ */
+async function requestGuard(formId: string, referer: string | null = `http://${SITE_HOST}/en/contact`) {
+  calls.length = 0;
+  const headers = new Headers({
+    host: SITE_HOST,
+    cookie: "phis_session=session-1; phis_auth_link=link-1",
+  });
+  if (referer !== null) headers.set("referer", referer);
+  const search = new URLSearchParams({ phase: "guard", formId });
+  const response = await buildHandlers().GET(
+    new NextRequest(`http://${SITE_HOST}/api/site/forms?${search.toString()}`, { headers }),
+  );
+  return { response, payload: (await response.json()) as Record<string, unknown> };
+}
+
+activeModuleIds = [];
+upstreamPayload = { form: FORM_IDS.contact, siteKey: "site", issuedAt: "1700000000000", formToken: "a".repeat(64) };
+const issuedGuard = await requestGuard(`  ${FORM_IDS.contact.toUpperCase()} `);
+assert.equal(issuedGuard.response.status, 200);
+assert.deepEqual(issuedGuard.payload, { issuedAt: "1700000000000", formToken: "a".repeat(64) });
+assert.equal(calls.length, 1);
+assert.equal(dispatchCall()?.url, `${UPSTREAM}/api/v1/forms/guard?form=${encodeURIComponent(FORM_IDS.contact)}`);
+assert.equal(dispatchCall()?.method, "GET");
+assert.equal(dispatchCall()?.headers.cookie, undefined, "A guard request forwards no cookie.");
+
+for (const referer of [null, "http://evil.test/en/contact"]) {
+  const { response } = await requestGuard(FORM_IDS.contact, referer);
+  assert.equal(response.status, 404, `Referer ${String(referer)} must not be issued a guard.`);
+  assert.equal(calls.length, 0);
+}
+const inactiveGuard = await requestGuard(FORM_IDS.login);
+assert.equal(inactiveGuard.response.status, 404, "A Form whose module is inactive gets no guard.");
+assert.equal(calls.length, 0);
+
+upstreamStatus = 400;
+upstreamPayload = { error: "Unsupported form." };
+const refusedGuard = await requestGuard(FORM_IDS.contact);
+assert.equal(refusedGuard.response.status, 400);
+assert.equal(refusedGuard.payload.error, "Could not issue a form guard.");
+upstreamStatus = 200;
+upstreamPayload = { ok: true };
+
 globalThis.fetch = originalFetch;
 
 {

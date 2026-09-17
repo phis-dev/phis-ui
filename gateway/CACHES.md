@@ -43,8 +43,8 @@ If their fetch layer uses `cache: "no-store"`, the underlying request is still d
 
 ## Form Guard Fetching
 
-- `gateway/form-guard.ts`
-  - Always `no-store`, and never cached anywhere else: each render needs a fresh `issuedAt`/`formToken`, which phis-server refuses once `maxSubmitMs` has passed.
+- `GET /api/site/forms?phase=guard` (`gateway/site-form-route.ts`), called by the browser when a form whose descriptor declares `guard` mounts (`components/forms/form-guard-client.ts`).
+  - Always `no-store`, and never part of a render: each visitor needs their own `issuedAt`/`formToken`, which phis-server refuses once `maxSubmitMs` has passed. A page with a guarded form is therefore the same for every visitor.
 
 ## Rule
 

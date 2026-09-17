@@ -35,7 +35,10 @@ This document defines the public form-building-block contract in `@phis/ui`.
 - Public form components may own transient orchestration such as submitting, success, error, guard,
   bootstrap, and draft UI state. Field rendering, validation, and placement always come from one
   `PhiFormDescriptor` rendered by `PhiFormControl`.
-- Public form components must receive labels, submit handlers, and guard tokens through props.
+- Public form components must receive labels and submit handlers through props.
+- A guard token is never rendered into the page. A descriptor that declares `guard` has the descriptor
+  runtime ask `/api/site/forms?phase=guard` when the form mounts and add `issuedAt`/`formToken` to the
+  submitted values, so the page stays the same for every visitor.
 - Form plugins may follow a server-wrapper/client-inner split:
   - the wrapper collects runtime data and translation keys
   - the wrapper uses `trBulk` with a plugin-defined source locale

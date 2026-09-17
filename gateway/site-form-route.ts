@@ -186,11 +186,65 @@ export function buildPhiSiteFormRouteHandlers({
   missingBaseUrlMessage = "Missing apiBaseUrl for /api/site/forms proxy.",
   loadRuntimeModuleCatalog,
 }: BuildPhiSiteFormRouteHandlersOptions) {
+  /*
+   * The guard token of a Form that declares one, asked for by the browser when the Form mounts.
+   *
+   * It used to be minted during the server render, which tied every page with a public Form to the
+   * request: the token carries the moment it was issued, so no two visitors may share a render. Issued
+   * here, the page is the same for everybody. Only a Form whose submit handler is active in the Area the
+   * referer names gets one -- the same gate a submit passes -- and no cookie goes along: a guard is not
+   * anybody's.
+   */
+  async function guard(request: NextRequest, formId: string) {
+    const relayHeaders = buildHeaders(request);
+    const resolved = await resolvePhiServerFormHandler({
+      request,
+      upstreamBaseUrl,
+      internalToken: readBearerToken(relayHeaders),
+      siteKey: relayHeaders.get(PHIS_SITE_KEY_HEADER)?.trim() ?? "",
+      formId,
+      phase: "submit",
+      loadRuntimeModuleCatalog,
+    });
+    if (!resolved) {
+      return toJsonResponse({ ok: false, error: "Form handler is not active for this Area." }, 404);
+    }
+    const response = await fetch(
+      `${upstreamBaseUrl}/api/v1/forms/guard?form=${encodeURIComponent(resolved.formId)}`,
+      {
+        method: "GET",
+        headers: headersToPlainObject(buildRelayHeaders(request, buildHeaders)),
+        cache: "no-store",
+        signal: AbortSignal.timeout(timeoutMs),
+      },
+    );
+    const payload = (await response.json().catch(() => null)) as Record<string, unknown> | null;
+    if (!response.ok || typeof payload?.issuedAt !== "string" || typeof payload.formToken !== "string") {
+      return toJsonResponse(
+        { ok: false, error: "Could not issue a form guard." },
+        response.status >= 400 ? response.status : 502,
+      );
+    }
+    return toJsonResponse({ issuedAt: payload.issuedAt, formToken: payload.formToken }, 200);
+  }
+
   async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const phase = searchParams.get("phase")?.trim().toLowerCase() ?? "";
     const formId = searchParams.get("formId")?.trim().toLowerCase() ?? "";
     const token = searchParams.get("token")?.trim() ?? "";
+
+    if (phase === "guard" && formId) {
+      if (!upstreamBaseUrl) {
+        return toJsonResponse({ ok: false, error: missingBaseUrlMessage }, 500);
+      }
+      try {
+        return await guard(request, formId);
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "Form guard request failed.";
+        return toJsonResponse({ ok: false, error: message }, 502);
+      }
+    }
 
     if (phase !== "preview" || !formId || !token) {
       return toJsonResponse(

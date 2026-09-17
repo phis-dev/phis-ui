@@ -25,13 +25,15 @@ import { usePhiRuntimeFormClient } from "./runtime-form-client";
 import { PhiAlertControl } from "../controls/phi-alert-control";
 import { usePhiRuntimeFormBinding } from "./runtime-form-binding";
 import { usePhiRuntimePageConditionState } from "../runtime/runtime-page-condition-state";
+import type { PhiFormGuardProps } from "./contracts";
+import { requestPhiFormGuard } from "./form-guard-client";
 
 const EMPTY_FORM_VALUES: Record<string, unknown> = {};
 
 export type PhiFormDescriptorRuntimeClientProps = {
   descriptor: PhiFormDescriptor;
   labels?: Readonly<Record<string, string>>;
-  /** What the form already knows, read on the server for this render. Guard tokens arrive this way. */
+  /** What the form already knows, read on the server for this render. */
   loadedInitialValues?: Record<string, unknown> | null;
   formId: string;
   formControllerAddress: PhiSignalAddress;
@@ -82,8 +84,7 @@ export function PhiFormDescriptorRuntimeClient({
   /*
    * What the author wrote, under what the address carries, under what the server read. The author's
    * values are placement -- a form opened with a name already filled in -- while the loaded ones are
-   * the form's own precondition, and a placement cannot be allowed to overwrite the guard token it
-   * knows nothing about.
+   * the form's own, and a placement cannot be allowed to overwrite what it knows nothing about.
    */
   const configuredInitialValues = useMemo(() => {
     const authored = initialValuesInput &&
@@ -257,6 +258,27 @@ export function PhiFormDescriptorRuntimeClient({
   }, [conditionControllerAddresses, emitCapability]);
 
   /*
+   * The guard token of a form that declares one, asked for as soon as the form is in the browser.
+   *
+   * Its `issuedAt` is the moment the visitor was shown the form, which is what the server measures a
+   * submit against: too fast is a bot, too late is expired. It is added to the values when they are
+   * submitted rather than kept in hidden fields, so resetting the form after a success cannot empty it.
+   * A request that failed is forgotten, and the next submit asks again.
+   */
+  const guardRef = useRef<Promise<PhiFormGuardProps> | null>(null);
+  const readGuard = useCallback(() => {
+    const pending = guardRef.current ?? requestPhiFormGuard(formId);
+    guardRef.current = pending;
+    pending.catch(() => {
+      if (guardRef.current === pending) guardRef.current = null;
+    });
+    return pending;
+  }, [formId]);
+  useEffect(() => {
+    if (descriptor.guard && formId) void readGuard().catch(() => undefined);
+  }, [descriptor.guard, formId, readGuard]);
+
+  /*
    * What the Widget presses when it draws a submit: `requestSubmit`, the same call the `submit`
    * capability makes when a Button Widget outside asks for one. One path, so the two cannot disagree
    * about what submitting means -- the button shows the loading state of a submit somebody else
@@ -380,9 +402,10 @@ export function PhiFormDescriptorRuntimeClient({
             return;
           }
           try {
+            const guard = descriptor.guard ? await readGuard() : null;
             const result = await formClient.submit({
               formId,
-              values,
+              values: guard ? { ...values, ...guard } : values,
               phase: widgetConfig?.execution.phase ?? "submit",
               correlationId: correlationId ?? undefined,
             });
