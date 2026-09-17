@@ -25,7 +25,7 @@ The Site Skeleton owns only deployment and App Router registration:
   takes effect when the Site restarts, and tooling that rewrites the file restarts the Site's services;
 - the physical Next.js `app` directory and its required parallel-route directories;
 - `dynamic`, `runtime`, and statically analyzable route configuration exports;
-- thin API, media, and proxy entrypoints;
+- thin API and proxy entrypoints;
 - deployment assets and global CSS.
 
 The Skeleton must not copy shared CMS resolution, locale selection, metadata derivation, proxy policy,
@@ -311,6 +311,11 @@ export default createPhiNextStaticAreaLayout("admin", PHI_ADMIN_CMS_SITE_BRIDGE,
 
 The `(root)` branch passes `"none"`. Route handlers a Site mounts (proxy and Form relay) come from
 `@phis/ui/next/route-handlers`; `/sitemap.xml` and `/robots.txt` come from `@phis/ui/next/seo-routes`.
+
+Asset bytes need no route of their own. Every delivery address this package builds is
+`/api/site/media/{id}/content|variants|subsets`, which the Site's `/api/site` proxy already forwards, and
+`images.localPatterns` admits exactly that prefix. A Site mounting a shorter public media address would be
+mounting a second thing to keep pointing at Core.
 
 The Skeleton may adapt a Next route parameter name or provide route-specific logging labels and user
 agents. Such adapters must remain transport-only and must not interpret CMS, role, module, or locale
