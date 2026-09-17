@@ -21,6 +21,7 @@ import { PhiCmsRootSlotPage } from "../components/cms/phi-cms-root-slot-page";
 import { isPhiCmsGatewayAuthError } from "../gateway/errors";
 import { loadPhiCmsRootRequest } from "../server-helpers/cms-root";
 import type { PhiCmsSiteBridge } from "../types/cms-plugins";
+import { toPhiStaticCmsSiteBridge } from "../server-helpers/static-render";
 
 type PhiNextStaticAreaLayoutProps = {
   children: React.ReactNode;
@@ -356,5 +357,86 @@ export function createPhiNextDynamicRootSlotPage(
         regionType={regionType}
       />
     );
+  };
+}
+
+/*
+ * The static route tree of the Public Area.
+ *
+ * The proxy sends an anonymous GET without a query here instead of to the dynamic tree above, under
+ * `static-render/<marker>/<mode>/<root>/...`, and Next keeps what these render: one result per page,
+ * locale and colour scheme for every visitor it matches. Nothing below reads the request -- the Bridge
+ * each factory renders with is the static one (`toPhiStaticCmsSiteBridge`), which takes the path from
+ * the route's segments and sends no cookie and no query to Core.
+ *
+ * The Layouts sit inside the catch-all rather than above it. The dynamic tree's Layouts are given no
+ * segments and derive them from a request header the static tree may not read; placed inside, they are
+ * given the path, at the price of rendering the Shell again on each client navigation between pages --
+ * which, for a page served from the cache, is a read.
+ */
+
+type PhiNextStaticPublicLayoutProps = PhiNextStaticAreaLayoutProps & {
+  params: Promise<{ root: string; path?: string[] }>;
+};
+
+/** One branch of the static tree: the Area boundary and the Shell, for the page its segments name. */
+export function createPhiNextStaticPublicLayout(
+  cmsBridge: PhiCmsSiteBridge,
+  chrome: PhiCmsAreaChrome = "shell",
+) {
+  const staticBridge = toPhiStaticCmsSiteBridge(cmsBridge);
+
+  return async function PhiNextStaticPublicLayout({
+    children,
+    headerBottom,
+    hero,
+    siderRight,
+    footerTop,
+    drawer,
+    params,
+  }: PhiNextStaticPublicLayoutProps) {
+    const { root, path } = await params;
+    return (
+      <PhiCmsAreaBoundary root={root} cmsBridge={staticBridge} pagePath={path}>
+        <PhiCmsAreaShell
+          root={root}
+          cmsBridge={staticBridge}
+          chrome={chrome}
+          pagePath={path}
+          headerBottom={headerBottom}
+          hero={hero}
+          siderRight={siderRight}
+          footerTop={footerTop}
+          drawer={drawer}
+        >
+          {children}
+        </PhiCmsAreaShell>
+      </PhiCmsAreaBoundary>
+    );
+  };
+}
+
+export function createPhiNextStaticPublicPage(cmsBridge: PhiCmsSiteBridge) {
+  return createPhiNextDynamicRootPage(toPhiStaticCmsSiteBridge(cmsBridge));
+}
+
+export function createPhiNextStaticPublicSlotPage(
+  cmsBridge: PhiCmsSiteBridge,
+  regionType: PhiNextStaticAreaRegionType,
+) {
+  return createPhiNextDynamicRootSlotPage(toPhiStaticCmsSiteBridge(cmsBridge), regionType);
+}
+
+/**
+ * The static tree's refusal page.
+ *
+ * Next gives a `not-found.tsx` no params, so the Site's file reads the locale from `next/root-params` --
+ * a module whose getters Next generates from that Site's own segment names -- and hands it in.
+ */
+export function createPhiNextStaticPublicNotFound(cmsBridge: PhiCmsSiteBridge) {
+  const staticBridge = toPhiStaticCmsSiteBridge(cmsBridge);
+
+  return function PhiNextStaticPublicNotFound({ locale }: { locale: string }) {
+    return <PhiCmsErrorPage code={404} cmsBridge={staticBridge} area="public" locale={locale} />;
   };
 }

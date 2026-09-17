@@ -21,12 +21,21 @@ import {
 } from "./phi-cms-runtime-registry";
 import { PhiRuntimeModuleDataProviderHost } from "../runtime/runtime-module-data-provider-host";
 import { readPhiAreaPresetRuntimeModuleIds } from "../../helpers/cms-area-config";
+import { isPhiStaticCmsSiteBridge } from "../../server-helpers/static-render";
 
 export type PhiCmsErrorPageProps = {
   code: PhiCmsErrorCode;
   cmsBridge: PhiCmsSiteBridge;
   /** The Area whose route refused the request; its error page is the one to render. */
   area: PhiCmsAreaKey;
+  /**
+   * The locale to render in, for a static Bridge.
+   *
+   * A static route reads nothing from the request, and a refusal route is not given the segments of the
+   * page that was refused, so the static tree reads its locale from the root params and passes it here.
+   * A request-reading Bridge resolves the locale from the request instead and ignores this.
+   */
+  locale?: string;
 };
 
 const ERROR_COPY: Record<PhiCmsErrorCode, { title: string; text: string }> = {
@@ -74,8 +83,12 @@ export function isPhiCmsErrorCode(value: string | number | null | undefined): va
   return parsePhiCmsErrorCode(value) != null;
 }
 
-export async function PhiCmsErrorPage({ code, cmsBridge, area }: PhiCmsErrorPageProps) {
-  const cookieHeader = (await cookies()).toString();
+export async function PhiCmsErrorPage({ code, cmsBridge, area, locale: staticLocale }: PhiCmsErrorPageProps) {
+  const isStatic = isPhiStaticCmsSiteBridge(cmsBridge);
+  if (isStatic && !staticLocale) {
+    throw new Error("A static error page needs the locale of its route.");
+  }
+  const cookieHeader = isStatic ? "" : (await cookies()).toString();
   const bridgeRuntime = cmsBridge.runtime;
   const siteKey = bridgeRuntime?.siteKey?.trim() ?? "";
 
@@ -86,7 +99,7 @@ export async function PhiCmsErrorPage({ code, cmsBridge, area }: PhiCmsErrorPage
   let resolvedRequest: Awaited<ReturnType<typeof loadPhiResolvedCmsRequest>> | null = null;
 
   try {
-    const locale = await resolvePhiRequestLocale({
+    const locale = isStatic && staticLocale ? staticLocale : await resolvePhiRequestLocale({
       apiBaseUrl: bridgeRuntime?.apiBaseUrl,
       internalToken: bridgeRuntime?.internalToken,
       siteKey,

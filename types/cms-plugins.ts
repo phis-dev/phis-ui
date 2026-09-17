@@ -900,4 +900,13 @@ export type PhiCmsSiteBridge = {
   loadResolvedRequest?: (
     args: PhiCmsResolvedRequestLoaderArgs,
   ) => Promise<PhiResolvedCmsRequest | null>;
+  /**
+   * Where a render learns about the request it answers.
+   *
+   * `request`, the default, reads it: the path and query the proxy forwarded, and the visitor's cookies.
+   * `static` reads nothing. It renders a page once for every anonymous visitor -- the path comes from the
+   * route's own segments, there is no query and no cookie -- so the result can be cached and served to
+   * all of them. Only the static route tree hands such a Bridge in (`toPhiStaticCmsSiteBridge`).
+   */
+  renderSource?: "request" | "static";
 };

@@ -32,6 +32,7 @@ import {
   resolvePhiBackgroundAssetProjection,
 } from "../components/widgets/helpers/background-reference-resolver.server";
 import { PHIS_REQUEST_PATH_HEADER, PHIS_REQUEST_SEARCH_HEADER } from "../constants/http-headers";
+import { isPhiStaticCmsSiteBridge } from "./static-render";
 
 export type LoadPhiCmsRootRequestArgs = {
   root: string;
@@ -93,10 +94,29 @@ export function hasPhiCmsRevisionPreview(
   return resolvePhiCmsRevisionFromSearchParams(searchParams) != null || resolvePhiCmsReviewParams(searchParams) != null;
 }
 
-async function loadPhiCmsServerRequest(): Promise<{
+/*
+ * A static render answers every anonymous visitor with one result, so it must not read what differs
+ * between them. Its path is the route's own -- the proxy sends only requests without a query and without
+ * a session there -- and the query is present and empty: a condition over it is decided, not deferred.
+ */
+async function loadPhiCmsServerRequest(
+  cmsBridge: PhiCmsSiteBridge,
+  root: string,
+  path: readonly string[] | undefined,
+): Promise<{
   request: PhiCmsServerRequest;
   cookieHeader: string;
 }> {
+  if (isPhiStaticCmsSiteBridge(cmsBridge)) {
+    return {
+      request: {
+        pathname: `/${[root, ...(path ?? [])].join("/")}`,
+        searchParams: {},
+      },
+      cookieHeader: "",
+    };
+  }
+
   const requestHeaders = await headers();
   const cookieStore = await cookies();
 
@@ -121,8 +141,8 @@ const loadPhiCmsRootScopeCached = cache(async function loadPhiCmsRootScopeCached
     throw new Error("PhiCmsSiteBridge.runtime.siteKey is required for CMS root rendering.");
   }
 
-  const { request, cookieHeader } = await loadPhiCmsServerRequest();
   const path = pathKey.length > 0 ? pathKey.split("\u0000") : undefined;
+  const { request, cookieHeader } = await loadPhiCmsServerRequest(cmsBridge, root, path);
   const effectivePath =
     path && path.length > 0 ? path : derivePathSegmentsFromRequestPath(root, request.pathname);
   const resolvedRoute = await resolveCmsRootRoute(root, effectivePath, bridgeRuntime);
@@ -238,12 +258,20 @@ const loadPhiCmsRootScopeCached = cache(async function loadPhiCmsRootScopeCached
  * different cache entry for the same request and resolved it twice. Sharing the entry is what lets the
  * Layout decide -- 404, refusal, redirect -- before the shell flushes and the status line commits.
  */
-async function resolvePhiCmsRootPathKey(root: string, path: readonly string[] | undefined) {
+async function resolvePhiCmsRootPathKey(
+  root: string,
+  path: readonly string[] | undefined,
+  cmsBridge: PhiCmsSiteBridge,
+) {
   if (path?.length) {
     return path.join("\u0000");
   }
+  // A static route always names its segments, so no segments is the root and nothing is derived.
+  if (isPhiStaticCmsSiteBridge(cmsBridge)) {
+    return "";
+  }
 
-  const { request } = await loadPhiCmsServerRequest();
+  const { request } = await loadPhiCmsServerRequest(cmsBridge, root, path);
   const derived = derivePathSegmentsFromRequestPath(root, request.pathname);
   return derived?.length ? derived.join("\u0000") : "";
 }
@@ -253,7 +281,7 @@ export async function loadPhiCmsRootScope({
   path,
   cmsBridge,
 }: LoadPhiCmsRootRequestArgs) {
-  return loadPhiCmsRootScopeCached(root, await resolvePhiCmsRootPathKey(root, path), cmsBridge);
+  return loadPhiCmsRootScopeCached(root, await resolvePhiCmsRootPathKey(root, path, cmsBridge), cmsBridge);
 }
 
 const loadPhiCmsRootRequestCached = cache(async function loadPhiCmsRootRequestCached(
@@ -313,7 +341,7 @@ export async function loadPhiCmsRootRequest({
   path,
   cmsBridge,
 }: LoadPhiCmsRootRequestArgs) {
-  return loadPhiCmsRootRequestCached(root, await resolvePhiCmsRootPathKey(root, path), cmsBridge);
+  return loadPhiCmsRootRequestCached(root, await resolvePhiCmsRootPathKey(root, path, cmsBridge), cmsBridge);
 }
 function normalizeRequestPathname(rawValue: string | null | undefined) {
   if (!rawValue?.trim()) {

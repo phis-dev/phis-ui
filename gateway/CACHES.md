@@ -14,6 +14,18 @@ This document collects the cache and invalidation touchpoints in `gateway/*`.
   - The TTL ends what the marker does not see, such as a Logo Asset whose content was replaced under the same id.
   - The underlying fetches are `no-store`. Next cache tags are not used: `revalidateTag` reaches only the Site process that ran it.
 
+## Rendered Public Pages
+
+- `next/cache-handler.mjs`, wired by a Site as `cacheHandler` with `cacheMaxMemorySize: 0`
+  - Per-process memory, bounded (128 MB, `PHIS_RENDER_CACHE_MB`), least recently read first out. Never the filesystem: several processes run from one build directory.
+  - Holds what the static route tree renders: `static-render/<marker>/<mode>/<locale>/<path>`. `next/site-proxy.ts` rewrites a Public read there when it is a GET or HEAD, carries no `phis_session` cookie and no query other than `utm_*`, `gclid`, `fbclid` and `_rsc`, and names its locale exactly. Everything else renders dynamically as before.
+  - The render reads nothing of the request (`server-helpers/static-render.ts`): the path from the route's segments, no query, no cookie, so Core sees an anonymous visitor.
+  - `<marker>` joins the config's `readMarker` with both translation markers. A publish or a translation write names a new address in every process within the config refresh; entries under the old one are never asked for again and leave by the bound. Nothing is invalidated.
+  - `<mode>` is the colour scheme from the `phis_color_scheme` hint cookie, `light` until the browser has reported one: one entry per mode, so a dark visitor is not served a light page.
+  - `revalidate = 60` renders a page again after a minute for what the marker does not see, such as an Asset replaced under the same id or a Module switched on.
+  - The browser keeps a page it navigated to for `staleTimes.static` (30 s), so an open tab sees a publish after at most that long; a reload sees it at once.
+  - Only in production. `next dev` keeps no rendered pages, so the proxy sends nothing to the static tree there.
+
 ## React `cache(...)` Wrappers
 
 These helpers use React server cache and currently do not expose a manual clear function:

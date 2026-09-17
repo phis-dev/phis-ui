@@ -2,7 +2,7 @@ import "server-only";
 
 import type { Metadata } from "next";
 import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 
 import { PhiRootLayout } from "../components/root/phi-root-layout";
 import type { PhiModuleFontContributions } from "../module";
@@ -26,6 +26,10 @@ import {
   resolvePhiThemeMode,
 } from "../theme/phi-theme-mode";
 import { readPhiServerApiCredentials } from "../helpers/phis-server-credentials";
+import { getResolvedSiteConfig, type PhiSiteConfig } from "../gateway/site-config";
+import type { PhiResolvedLocale } from "../helpers/site-locale-config";
+import { fetchResolvedSiteLocale } from "../server-helpers/site-locale";
+import type { PhiThemeMode } from "../theme/phi-theme-presets";
 
 async function loadPhiNextRootContract() {
   const runtimeConfig = readPhiSiteRuntimeConfigSync();
@@ -44,7 +48,24 @@ async function loadPhiNextRootContract() {
 
 export async function generatePhiNextRootMetadata(): Promise<Metadata> {
   const { runtimeConfig, site } = await loadPhiNextRootContract();
+  return buildPhiNextRootMetadata(runtimeConfig, site);
+}
 
+/** The static tree's counterpart: the published Site, never a Theme under review. */
+export async function generatePhiNextStaticRootMetadata(): Promise<Metadata> {
+  const runtimeConfig = readPhiSiteRuntimeConfigSync();
+  const site = await getResolvedSiteConfig({
+    apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
+    internalToken: readPhiServerApiCredentials().internalToken,
+    siteKey: runtimeConfig.site.key,
+  });
+  return buildPhiNextRootMetadata(runtimeConfig, site);
+}
+
+function buildPhiNextRootMetadata(
+  runtimeConfig: ReturnType<typeof readPhiSiteRuntimeConfigSync>,
+  site: PhiSiteConfig,
+): Metadata {
   return buildPhiRootMetadata({
     metadataBase: site.publicUrl ?? runtimeConfig.site.publicUrl ?? undefined,
     applicationName: site.name,
@@ -62,8 +83,83 @@ export async function generatePhiNextRootMetadata(): Promise<Metadata> {
   });
 }
 
+/** The document shell of every dynamic route: the request decides the locale and the colour scheme. */
+export function createPhiNextRootLayout(
+  siteModules: PhiSiteModuleServerAreaContributions = {},
+  fonts: PhiModuleFontContributions = [],
+) {
+  const document = createPhiNextRootDocument(siteModules, fonts);
+
+  return async function PhiNextRootLayout({ children }: { children: React.ReactNode }) {
+    const { runtimeConfig, site, resolvedLocale } = await loadPhiNextRootContract();
+    /*
+     * What a viewer is shown follows their preference, never the Site Theme record, and it is the
+     * same in every Area: the Builder overrides it live through its switch rather than through a
+     * different starting point. The projection is decided here as well as inside PhiRootLayout,
+     * because <html> carries the marker and the colour scheme: without them the document ground and
+     * the native controls would stay light until the layout below mounts.
+     */
+    const browserColorScheme = normalizePhiColorSchemeHint(
+      (await cookies()).get(PHI_COLOR_SCHEME_COOKIE)?.value,
+    );
+    return document({ runtimeConfig, site, resolvedLocale, browserColorScheme, children });
+  };
+}
+
 /**
- * The document shell, given what this Site installed.
+ * The document shell of the static route tree: one anonymous render per locale and colour scheme.
+ *
+ * It reads nothing from the request. The locale is the route's `root` segment and the colour scheme its
+ * `mode` segment -- the proxy fills that one from the browser's hint cookie, so a dark visitor is served
+ * the dark render instead of a light one the bootstrap script would have to swing. The Site is the
+ * published one; a Theme under review is a query, and a request with a query never reaches this tree.
+ */
+export function createPhiNextStaticRootLayout(
+  siteModules: PhiSiteModuleServerAreaContributions = {},
+  fonts: PhiModuleFontContributions = [],
+  /** The Client boundary of the Public Area, which the dynamic tree mounts in its `[root]` Layout. */
+  Boundary?: React.ComponentType<{ children: React.ReactNode }>,
+) {
+  const document = createPhiNextRootDocument(siteModules, fonts);
+
+  return async function PhiNextStaticRootLayout({
+    children,
+    params,
+  }: {
+    children: React.ReactNode;
+    params: Promise<{ root: string; mode: string }>;
+  }) {
+    const { root, mode } = await params;
+    const runtimeConfig = readPhiSiteRuntimeConfigSync();
+    const credentials = readPhiServerApiCredentials();
+    const [site, resolvedLocale] = await Promise.all([
+      getResolvedSiteConfig({
+        apiBaseUrl: credentials.apiBaseUrl,
+        internalToken: credentials.internalToken,
+        siteKey: runtimeConfig.site.key,
+      }),
+      fetchResolvedSiteLocale({
+        apiBaseUrl: credentials.apiBaseUrl,
+        internalToken: credentials.internalToken,
+        siteKey: runtimeConfig.site.key,
+        requestedLocale: root,
+      }),
+    ]);
+    if (resolvedLocale.locale !== root.toLowerCase()) {
+      notFound();
+    }
+    return document({
+      runtimeConfig,
+      site,
+      resolvedLocale,
+      browserColorScheme: normalizePhiColorSchemeHint(mode),
+      children: Boundary ? <Boundary>{children}</Boundary> : children,
+    });
+  };
+}
+
+/**
+ * The document itself, given what a root decided about the request.
  *
  * The projection arrives as an argument for the same reason it does at every Area host: a Site build
  * cannot redirect an import that happens inside `@phis/ui`, so the Skeleton hands it in once and never
@@ -80,9 +176,9 @@ export async function generatePhiNextRootMetadata(): Promise<Metadata> {
  * Server one never imports (module.ts), and the root is the one place that reads that boundary. The
  * catalogue is composed once, here, because nothing in it changes between requests.
  */
-export function createPhiNextRootLayout(
-  siteModules: PhiSiteModuleServerAreaContributions = {},
-  fonts: PhiModuleFontContributions = [],
+function createPhiNextRootDocument(
+  siteModules: PhiSiteModuleServerAreaContributions,
+  fonts: PhiModuleFontContributions,
 ) {
   const fontCatalogue = composePhiFontCatalogue(fonts.flatMap((contribution) => contribution.families));
   let themeBlocks: Promise<PhiThemeBlockCatalog> | null = null;
@@ -91,23 +187,22 @@ export function createPhiNextRootLayout(
     return themeBlocks;
   };
 
-  return async function PhiNextRootLayout({ children }: { children: React.ReactNode }) {
-    const [{ runtimeConfig, site, resolvedLocale }, blocks] = await Promise.all([
-      loadPhiNextRootContract(),
-      loadThemeBlocks(),
-    ]);
+  return async function PhiNextRootDocument({
+    runtimeConfig,
+    site,
+    resolvedLocale,
+    browserColorScheme,
+    children,
+  }: {
+    runtimeConfig: ReturnType<typeof readPhiSiteRuntimeConfigSync>;
+    site: PhiSiteConfig;
+    resolvedLocale: PhiResolvedLocale;
+    browserColorScheme: PhiThemeMode | null;
+    children: React.ReactNode;
+  }) {
+    const blocks = await loadThemeBlocks();
     const remRootValue = site.theme?.rem?.rootValue ?? 16;
-    /*
-     * What a viewer is shown follows their preference, never the Site Theme record, and it is the
-     * same in every Area: the Builder overrides it live through its switch rather than through a
-     * different starting point. The projection is decided here as well as inside PhiRootLayout,
-     * because <html> carries the marker and the colour scheme: without them the document ground and
-     * the native controls would stay light until the layout below mounts.
-     */
     const themeModePreference = PHI_DEFAULT_THEME_MODE_PREFERENCE;
-    const browserColorScheme = normalizePhiColorSchemeHint(
-      (await cookies()).get(PHI_COLOR_SCHEME_COOKIE)?.value,
-    );
     const themeMode = resolvePhiThemeMode(themeModePreference, browserColorScheme);
     const bootstrapScript = buildPhiThemeModeBootstrapScript(themeModePreference);
 

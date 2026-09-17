@@ -52,6 +52,14 @@ export type PhiCmsAreaBoundaryProps = {
    * nor canonical form: both were already answered by the render that refused.
    */
   path?: string[];
+  /**
+   * The Page's segments, for a Layout that is given them.
+   *
+   * A Layout above the catch-all receives none and derives them from the request; the static route tree
+   * reads nothing from the request and places its Layouts inside the catch-all instead. Unlike `path`,
+   * this resolves the page that was asked for and answers existence and canonical form as usual.
+   */
+  pagePath?: string[];
 };
 
 export type PhiCmsAreaShellProps = {
@@ -60,6 +68,8 @@ export type PhiCmsAreaShellProps = {
   children: React.ReactNode;
   chrome?: PhiCmsAreaChrome;
   path?: string[];
+  /** See `PhiCmsAreaBoundaryProps.pagePath`. */
+  pagePath?: string[];
   headerBottom?: React.ReactNode;
   hero?: React.ReactNode;
   siderRight?: React.ReactNode;
@@ -106,10 +116,11 @@ export async function PhiCmsAreaBoundary({
   cmsBridge,
   children,
   path,
+  pagePath,
 }: PhiCmsAreaBoundaryProps) {
   let scope: Awaited<ReturnType<typeof loadPhiCmsAreaRenderScope>>;
   try {
-    scope = await loadPhiCmsAreaRenderScope({ root, path, cmsBridge });
+    scope = await loadPhiCmsAreaRenderScope({ root, path: path ?? pagePath, cmsBridge });
   } catch (error) {
     if (isPhiCmsGatewayAuthError(error)) {
       if (error.status === 401) {
@@ -263,6 +274,7 @@ export async function PhiCmsAreaShell({
   children,
   chrome = "shell",
   path,
+  pagePath,
   headerBottom,
   hero,
   siderRight,
@@ -277,7 +289,7 @@ export async function PhiCmsAreaShell({
 
   let scope: Awaited<ReturnType<typeof loadPhiCmsAreaRenderScope>>;
   try {
-    scope = await loadPhiCmsAreaRenderScope({ root, path, cmsBridge });
+    scope = await loadPhiCmsAreaRenderScope({ root, path: path ?? pagePath, cmsBridge });
   } catch (error) {
     if (isPhiCmsGatewayAuthError(error)) {
       return <PhiCmsShell content={children} {...slots} />;
