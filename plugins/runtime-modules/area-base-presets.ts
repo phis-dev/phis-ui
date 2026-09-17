@@ -84,9 +84,20 @@ export const PHI_AREA_BASE_RUNTIME_MODULE_ROUTES = [
      * the table for every Site, so a Site package offering a landing would arrive as the second and
      * would no longer cover this one on activation.
      */
-    loadTree: ({ page }: PhiCmsDescriptorBuildContext) =>
+    loadTree: ({ page, runtime }: PhiCmsDescriptorBuildContext) =>
       import("../../components/regions/presets/phi-default-pub-welcome-page-tree")
-        .then((module) => module.buildPhiDefaultPubWelcomePageTree({ page })),
+        .then((module) => module.buildPhiDefaultPubWelcomePageTree({ page, runtime })),
+  },
+  {
+    ownerModuleId: PHI_PUBLIC_RUNTIME_MODULE_ID,
+    presetKey: "public-home-page",
+    presetVersion: 1,
+    area: "public",
+    title: "Home",
+    path: "/home",
+    loadTree: ({ page }: PhiCmsDescriptorBuildContext) =>
+      import("../../components/regions/presets/phi-default-pub-home-page-tree")
+        .then((module) => module.buildPhiDefaultPubHomePageTree({ page })),
   },
   buildPhiAreaRootRoutePresetDescriptor({
     ownerModuleId: PHI_APP_RUNTIME_MODULE_ID,

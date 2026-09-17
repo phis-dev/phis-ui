@@ -3,6 +3,7 @@ import { PHI_PUBLIC_RUNTIME_MODULE_ID } from "../../../plugins/runtime-modules/p
 import { PHI_CMS_DEFAULT_SLOT_INDEX } from "../../../constants/cms-layout-types";
 import { PhiCmsPageType, PhiCmsRegionType, PhiCmsStatus } from "../../../constants/phi-cms";
 import { createPhiCmsPresetNodes } from "../../../helpers/cms-preset-nodes";
+import { localizeAreaPath } from "../../../helpers/locale";
 import type { PhiCmsPageNode, PhiResolvedCmsPageTree } from "../../../types/cms";
 
 /**
@@ -36,6 +37,7 @@ const SYNTHETIC_WELCOME_WIDGET_IDS = createPhiPresetCmsInstanceIdMap({
   presetKey: "pub-welcome-page",
 }, [
   "widgetMarkdown",
+  "widgetReadMore",
 ]);
 
 /**
@@ -44,12 +46,16 @@ const SYNTHETIC_WELCOME_WIDGET_IDS = createPhiPresetCmsInstanceIdMap({
  *
  * An Area root is drawn without the Shell around it, and that is the whole point of a landing page:
  * the fonts and the root CSS arrive, nothing of the Area chrome does. So this tree is its Content Region
- * and nothing else.
+ * and nothing else -- with one way on, to the home page that does wear the Shell.
  */
 export async function buildPhiDefaultPubWelcomePageTree({
   page,
+  runtime,
 }: {
   page: PhiCmsPageNode;
+  runtime: {
+    locale: { current: string };
+  };
 }): Promise<PhiResolvedCmsPageTree> {
   const nodes = createPhiCmsPresetNodes(page);
   return {
@@ -96,6 +102,21 @@ export async function buildPhiDefaultPubWelcomePageTree({
           sourceMode: "inline",
           markdown: PHI_DEFAULT_PUB_WELCOME_MARKDOWN,
           translate: true,
+        },
+      }),
+      nodes.widget({
+        typeKey: "button",
+        id: SYNTHETIC_WELCOME_WIDGET_IDS.widgetReadMore,
+        parentLayoutNodeId: SYNTHETIC_WELCOME_LAYOUT_IDS.layoutContent,
+        slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
+        sortOrder: 1,
+        label: "pub welcome read more button",
+        config: {
+          key: "read-more",
+          label: "Read more...",
+          buttonType: "primary",
+          /* A link, not a command: it renders a real anchor, which works before hydration. */
+          href: localizeAreaPath(runtime.locale.current, "public", "/home"),
         },
       }),
     ],
