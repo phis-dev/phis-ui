@@ -1,6 +1,13 @@
 # Builder Contract
 
-This document defines the contract for the `builder` Area. Its sidebar lists Modules, Shells, Pages, Navigation, and Settings, and optional Modules add their own workspaces such as Media, Revisions, Theme, and Dashboard. Designs for Builder surfaces that do not exist are in [design/BUILDER.md](./design/BUILDER.md).
+This document defines the contract for the `builder` Area. The Builder base Module is
+`@phis/ui/modules/builder`; its routes live under its package, so its workspaces answer at
+`/builder/phis/ui/<workspace>`. Its sidebar lists Modules, Shells, Pages, Navigation, and Settings, and
+optional Modules add their own workspaces: Media (`@phis/ui/modules/asset`), Revisions
+(`@phis/ui/modules/revisions`), Theme (`@phis/ui/modules/theme`), and Dashboard
+(`@phis/ui/modules/dashboard`). The signal contract the Builder uses is in [SIGNALS.md](./SIGNALS.md);
+Overlays are in [OVERLAYS.md](./OVERLAYS.md). Designs for Builder surfaces that do not exist are in
+[design/BUILDER.md](./design/BUILDER.md).
 
 ## 1. Purpose
 
@@ -13,33 +20,12 @@ The builder area is the workspace for composing site structure, page trees, bran
 - Do not use the builder to manage unrelated staff or system administration tasks.
 - Do not hardcode implementation details for third-party plugins into the contract.
 
-## 2.1 Contract hygiene
-
-- Any change, extension, replacement, reinterpretation, or widening of this contract requires explicit
-  prior operator approval after the exact gap and affected ABI have been presented.
-- Analysis, implementation work in an adjacent domain, or approval of another contract does not grant
-  permission to change this contract.
-- Before introducing a new interface, type, contract shape, or config family, first check whether an existing shared one can be reused, extended, or composed.
-- Prefer extending the existing contract over adding a parallel family just because it is convenient for a single feature.
-- This contract must not be bypassed through a parallel, shadow, local, Module-specific,
-  Provider-specific, or compatibility contract. If it cannot express a requirement, stop and ask the
-  operator before implementing another path.
-- v1 should use one clear contract path and update callers directly instead of preserving old and new shapes in parallel.
-- Prefer explicit contract changes over compatibility shims. ABI breaks are acceptable when they keep the target model coherent.
-- If the reuse path is not obvious, stop and ask before adding a new surface.
-
 ## 2.2 State contract
 
 - Builder transient state should use the shared scoped store basis from `components/state/scoped-state-store.ts` whenever possible.
 - The builder should keep one scoped state family per active area, using the area as the `scopeKey` for the top-level workspace state.
 - Builder orchestration, signal handling, and selection semantics stay in the builder wrapper layer.
-- The shared scoped store contract is intentionally small:
-  - `useStore(scopeKey)`
-  - `getSnapshot(scopeKey)`
-  - `patch(scopeKey, updater)`
-  - `replace(scopeKey, nextState)`
-  - `reset(scopeKey)`
-  - `deleteScope(scopeKey)`
+- The scoped store API is described in [components/state/README.md](./components/state/README.md).
 - Region draft state may use the same shared scoped store basis when a separate transient slice is needed.
 - The builder must not move persistent CMS data into the scoped store.
 - Root Layout drafts keep `rootNodeConfig` so editor draft, Inspector, and preview snapshot normalize the same Layout contract before any explicit override is applied.
@@ -47,16 +33,16 @@ The builder area is the workspace for composing site structure, page trees, bran
 - For `simple-text`, builder draft state may keep a local `text` value for immediate editor input and preview, but the long-term persisted source text for normal CMS-backed nodes should live in `site_content(type=text)` behind `content_id`.
 - A future rich-text widget should not overload that path; its long-term persisted source should use a dedicated `site_content(type=html)` record.
 - Shared preset trees are the explicit exception and may keep `simple-text` copy directly in `config.text` without first creating `content_id`.
-- Widget `renderPreview()` and `renderEditor()` implementations must stay render-only and must not import widget registries or resolve `WIDGETS_BY_TYPE` internally. If a widget needs a portable preview/editor body, it should render from the already passed config and labels only.
+- Widget `renderPreview()` and `renderEditor()` implementations must stay render-only and must not import widget registries. If a widget needs a portable preview/editor body, it renders from the already passed config and labels only.
 - `renderPreview()` may be SSR-safe and may use server helpers such as `tr()`. It should stay inert, but it is not required to be client-only.
-- `renderEditor()` remains client-side editor chrome for structure-authoring surfaces. In the builder this path is used when `/builder/phis/ui/shells` or `/builder/phis/ui/pages` edits the actual shell/page composition tree. Other builder workspaces such as `/builder/phis/ui/navigation`, `/builder/phis/ui/revisions`, `/builder/phis/ui/media`, and `/builder/phis/ui/brand` render their workspace widgets through the normal live/server widget path unless those pages are themselves being edited from `/builder/phis/ui/pages`.
+- `renderEditor()` remains client-side editor chrome for structure-authoring surfaces. In the builder this path is used when `/builder/phis/ui/shells` or `/builder/phis/ui/pages` edits the actual shell/page composition tree. Other builder workspaces such as `/builder/phis/ui/navigation`, `/builder/phis/ui/revisions`, `/builder/phis/ui/media`, and `/builder/phis/ui/theme` render their workspace widgets through the normal live/server widget path unless those pages are themselves being edited from `/builder/phis/ui/pages`.
 - Internal builder widgets that appear on live-rendered builder pages must therefore provide a live/server render path; a `renderEditor()` implementation alone is not sufficient for those workspaces.
 - `renderMode` stays a runtime concern and must not be stored inside the root config blob.
 - Switching from editor to server-rendered preview sends the materialized transient snapshot through the
   Builder API and navigates with only its opaque preview id. The Site Skeleton owns one stable
   `/builder/api/[[...path]]` App Router entrypoint; endpoint dispatch, payload validation, and preview semantics
   belong to `@phis/ui`.
-- The current preview store is a process-local, TTL-bound handoff and is valid only while one Node.js process
+- The preview store (`plugins/runtime-modules/builder/preview-store.ts`) is a process-local, TTL-bound handoff and is valid only while one Node.js process
   handles both the snapshot POST and the following preview render. `globalThis` and `Symbol.for(...)` share the
   store only inside that process; they do not provide cross-worker, cross-instance, restart, or serverless
   persistence.
@@ -179,7 +165,7 @@ The builder uses two different routes with different ownership:
 - `/builder/phis/ui/pages`
   - edits page-owned regions
   - is keyed by `area + page/path`
-  - selects its page through the page selector in its workspace `header_bottom`
+  - selects its page through the page selector in its canvas-local workspace header
   - must not implicitly inherit `/builder/phis/ui/shells` save or hydration behavior just because both live inside the same editor shell
   - owns its own workspace chrome above the selected page canvas
   - that workspace chrome is not the same thing as the selected page's CMS region tree
@@ -236,47 +222,39 @@ Load and save rules:
 - module item placement is only the initial position; an editor placement override stores the exact
   `parentId + index` and takes precedence in Draft, Preview, and Live resolution
 
-Selector contract:
+Workspace layout:
 
-- `/builder/phis/ui/navigation` uses an autocomplete selector of the current Area's declared and Site-owned surfaces in
-  `header_bottom.left`
-- the separate Area tag carries the Area context, so the input displays and accepts only the local surface key
-- entering a valid unused local key creates a Site-owned navigation surface in the current Area
-- clearing the selector removes the explicit URL scope and returns to the Area's default surface
-- selector values and labels omit the Area prefix because the adjacent tag already identifies the Area
-- switching the target Area replaces the available surface set
-- the selector owns the active navigation-tree scope for the workspace
+- `header_bottom` uses the shared three-column Layout: the Builder command toolbar in the middle slot and
+  the draft status in the right slot, as on the Shells and Pages workspaces
+- the `content` Region holds two provider-backed Widgets: a Tree of the Area's Pages
+  (`@phis/ui/modules/builder/trees/page-source`) and a tree-structured Table of navigation items
+  (`@phis/ui/modules/builder/tables/navigation`)
+- the navigation surface is a Table binding field `navKey` in the Table's Collection Header: a select of
+  the current Area's declared and Site-owned surfaces with a create tool; creating a valid unused local key
+  creates a Site-owned surface in the current Area, and switching the target Area replaces the available
+  surface set
+- the Table emits its binding params to the Builder Controller, which owns the active navigation scope
 
-`header_bottom` contract:
+Item contract:
 
-- left:
-  - closed Area navigation-surface selector
-- center:
-  - empty
-- right:
-  - reset
-
-`save` and `publish` stay global builder actions in the builder header and must not be duplicated in `/builder/phis/ui/navigation/header_bottom`.
-Draft/published status also stays in the shared builder chrome and must not be duplicated in the navigation workspace header.
-
-Canvas/content contract:
-
-- the `content` region hosts the Page-source and navigation editor widgets
 - the editor materializes the Area base tree plus injections from active modules
-- the Page-source panel may create Site-owned internal links by dropping a Page into the tree
-- the Add control may create Site-owned links, containers, and separators; a link is internal when its
-  href starts with `/` and external when it uses a supported absolute scheme such as `https://`
-- deleting a Site-owned container removes only that structural level and promotes its children into the parent at
-  the container's former position
-- containers are structural and cannot define an href
+- an internal link is created only by dropping a Page from the Page source Tree; it persists the stable
+  Page reference defined in [REFERENCES.md](./REFERENCES.md#stable-internal-targets), and its Path cell
+  shows the resolved current path
+- the Add tools create an external link (an absolute URL), a container, or a separator; an external link's
+  href is editable and must be an external URL
+- a container has no href of its own; its Path cell may choose one of its direct children as the address
+  the container leads to, or `404`
+- deleting a Site-owned container removes only that level and promotes its children into the parent at
+  the container's former position; module items cannot be deleted, only hidden
 - module route hrefs and contribution provenance are immutable descriptor data
-- Site-owned link hrefs remain editable
-- the Type column describes the item shape (`Link`, `Container`, or `Separator`), while Origin
-  separately identifies the contributing module or the Site
-- every link exposes an `Open in new tab` presentation override; contributed module hrefs remain immutable
-- the right-fixed Ant Design Actions column remains visible while the table width changes or scrolls
-- module items stay in the editor table when tombstoned; the row is muted and its eye action toggles visibility
-- label, icon, and new-tab overrides, reordering/reparenting, and module-item visibility are editable
+- the Type column shows `Link`, `External`, `Container`, or `Separator`, while Origin separately
+  identifies the contributing module or the Site
+- every link exposes an `Open in new tab` override
+- module items stay in the editor table when hidden; the row is muted and its eye action toggles
+  visibility
+- label, icon, and new-tab overrides, reordering/reparenting, and module-item visibility are editable;
+  a delete has no confirmation because the workspace has Undo
 
 The builder must not assume that every navigation item resolves to a page path.
 
@@ -291,115 +269,52 @@ Scope rules:
 - `area` scope uses the current builder area
 - `page` scope resolves to a CMS storage path, not a navigation item
 - `navigation` scope resolves to a navigation key
-- `theme` scope resolves to a theme key; `default` is the only required key for v1
-
-`header_bottom` contract:
-
-- left:
-  - revision kind selector for Area, Page, Navigation, and Theme
-- center:
-  - revision status/count widget
-- right:
-  - delete selected revisions action
+- `theme` scope resolves to a theme key; the Site Theme uses `default`
 
 Content contract:
 
-- the `content` Region root is a vertical flex Layout
-- slot 0 is a `three-column` Layout with left/right padding set to none
-- slot 0 middle hosts the concrete revision scope selector
-- slot 1 hosts the revisions table
-- page scope uses a cascader that includes shared preset pages and DB-backed pages
-- navigation scope uses a flat navigation selector
-- theme scope uses a theme key selector, currently `default`
-- area scope may hide or disable the concrete scope selector
+- the `content` Region holds one provider-backed Table Widget
+  (`@phis/ui/modules/revisions/tables/revisions`, resource `history`)
+- the Table's Collection Header carries two binding fields: `kind` (a select of Area, Page, Navigation,
+  and Theme) and `scopeKey` (a cascader, disabled while `kind` is `area`)
+- row actions review, restore, and delete a revision; a selection action deletes selected revisions
+- the Table emits binding params and mutation results to the Revisions Controller
 
-The revision table reads the selected scope. It must not own the header-bottom kind selector and must not construct extra layout around itself.
-It renders through the shared provider-backed Table widget. The Revisions module provider owns history
-loading, derived row state, review links, restore, deletion, and active-revision guards; the thin
-workspace Client owns only scope resolution and coordination with the header controls.
+The revision table reads the selected scope from its binding params. The Revisions Provider owns history
+loading, derived row state, review links, restore, deletion, and active-revision guards.
 
 Dynamic selector options should come from generic option providers where the selector can be modeled as a normal select, cascader, segmented control, or similar generic widget. A specialized workspace selector is acceptable only when the visible control type itself depends on the selected revision kind.
 
-### `/editor/translations` workspace contract
+### `/editor/phis/ui/translations` workspace contract
 
-`/editor/translations` is the site-content translation workspace.
+`/editor/phis/ui/translations` is the site-content translation workspace, contributed by the Editor
+Module (`@phis/ui/modules/editor`). The Editor Area has no other workspace route.
 
 It is distinct from admin locale configuration:
 
-- `/admin` owns default locale and available locale configuration
-- `/editor/translations` owns editing translation values for existing site messages
-- `/editor/translations` must not delete source messages
-- deleting in `/editor/translations` deletes only one translated locale variant
+- `/admin/phis/ui/locales` (Localization Module) owns default locale and available locale configuration
+- `/editor/phis/ui/translations` owns editing translation values for existing site messages
+- it must not delete source messages; deleting deletes only one translated locale variant
 
-Workspace navigation:
-
-- `/editor/text` edits textual site content
-- `/editor/translations` edits translations for collected site messages
-- `/editor/media` edits site media assets when the editor area exposes media
-
-Selector contract:
-
-- target locale is selected from the current site's available locales
-- source locale is the current site's default locale
-- context filtering uses `tr_site_msg.ctx`
-- status filtering uses `all`, `missing`, and `translated`
-- search filters source text, context, and translation text
-
-Table row contract:
-
-- each row represents one `tr_site_msg` source message in the current site scope
-- each row may have zero or one `tr_site_lang` translation for the selected target locale
-- missing rows must be visible through a `LEFT JOIN` style read model
-- edited rows are saved by `msgId`, `locale`, and `translation`
-- the editor may use inline edit, expandable text, or a focused row editor, but the persisted model is always one translated locale variant
-
-Server endpoint contract:
-
-- `GET /api/site/editor/translations?locale=&ctx=&status=&search=&page=&pageSize=` returns site locale metadata, contexts, and a paged row list including missing translations
-- `PATCH /api/site/editor/translations` with `action: "translation"` upserts one translated variant
-- `PATCH /api/site/editor/translations` with `action: "translations"` may upsert multiple translated variants
-- `DELETE /api/site/editor/translations?msgId=&locale=` deletes only the translated variant for that source message and locale
-- locale writes are constrained to the current site's available locales
-- source messages are never created by this endpoint; they are collected by normal rendering/content extraction flows
+The workspace renders a provider-backed Table over the Localization Table Provider's
+`editorTranslations` resource. Rows are source messages of the current Site, each with zero or one
+translation for the selected target locale, so missing translations are visible. The Provider reads and
+writes through the Site route `/api/site/editor/translations` (`GET`, `PATCH`, `DELETE`); the endpoint
+contract belongs to `@phis/server` ([phis-server docs/API.md](../phis-server/docs/API.md)). Source messages
+are never created here; they are collected by normal rendering and content extraction.
 
 ### Builder drag and drop contract
 
-Builder DnD must reuse the shared block and signal contracts. It must not define a second standalone drag/drop model just because the builder happens to use `dnd-kit`.
+Builder DnD uses the shared semantic drag and drop contract in
+[SIGNALS.md](./SIGNALS.md#drag-and-drop): `capabilities.draggable`/`droppable`,
+`runtimeSignals.dragDrop` sources and targets, the drop modes including `swap`, and the `drag`/`drop`
+channels. The Builder-specific rules are:
 
-Rules:
-
-- local drag interaction may use `dnd-kit`
-- in the builder, `dnd-kit` is the preferred default engine for new DnD work
-- the low-level drag engine is implementation detail only
-- semantic DnD capability is declared through:
-  - `RenderableBlock.capabilities.draggable`
-  - `RenderableBlock.capabilities.droppable`
-  - `runtimeSignals.dragDrop`
-- semantic DnD lifecycle uses the shared runtime signal bus
-- the builder must not send pointer coordinates or other high-frequency movement data through the signal bus
-- the builder may send semantic state and outcomes through signals:
-  - `state + dragging`
-  - `event + drag`
-  - `event + drop`
-- `runtimeSignals.dragDrop.sources[*]` declares which payload types a plugin or subpart can originate
-- `runtimeSignals.dragDrop.targets[*]` declares which payload types a plugin or subpart accepts, and which drop modes are valid
-- stable drop modes are:
-  - `before`
-  - `after`
-  - `child`
-  - `replace`
-  - `append`
-  - `swap`
-- payload types must be stable, shared, and namespaced strings, for example:
-  - `navigation:item`
-  - `navigation:page`
-  - `cms:widget`
-  - `cms:layout`
-  - `cms:slot`
-  - `media:asset`
-- when a widget only needs drag state for chrome, it should stop at `capabilities + state.dragging`
-- when a widget participates in cross-widget or cross-region drops, it must also declare `runtimeSignals.dragDrop`
-- new builder widgets must not invent separate ad hoc DnD props or registries when the shared DnD contract is sufficient
+- `dnd-kit` is the Builder's interaction engine; it stays an implementation detail
+- the Builder never sends pointer coordinates or continuous movement through the signal bus
+- the Builder Controller emits `dragStart`, `dragChange`, `dragEnd` (actions `start`, `change`, `stop`)
+  and `drop` (action `drop`), all with the `drag-drop` value schema
+- structure moves are described in "Structure drag and drop" below
 
 ## 7. Canvas contract
 
@@ -497,13 +412,14 @@ The contract must preserve this distinction in the canvas tree, the inspector, a
 
 Builder workspaces may render their own controls, but they must not bypass the normal Region, Layout, and Widget composition model.
 
-The global workspace chrome for `/builder/phis/ui/shells`, `/builder/phis/ui/pages`, `/builder/phis/ui/navigation`, `/builder/phis/ui/revisions`, `/builder/phis/ui/media`, and `/builder/phis/ui/brand` should be represented by the builder page's normal `header_bottom` region when that workspace exposes such chrome. A typical shape is:
+The global workspace chrome for `/builder/phis/ui/shells`, `/builder/phis/ui/pages`, `/builder/phis/ui/navigation`, `/builder/phis/ui/revisions`, `/builder/phis/ui/media`, `/builder/phis/ui/theme`, and `/builder/phis/ui/modules` is the builder page's normal `header_bottom` region. Its shape is:
 
 - `header_bottom` region
 - one root `three-column` Layout
-- left slot: workspace context widget, such as page selector, shell scope, navigation key, or theme scope
-- middle slot: builder toolbar widget
-- right slot: draft status widget
+- left slot: a workspace context widget where the workspace has one -- the mode switch on Shells and
+  Pages, the Theme selector on Theme
+- middle slot: the Builder command toolbar, on Shells, Pages, Navigation, Theme, and Modules
+- right slot: the draft status widget, on the same workspaces
 
 These are still live-rendered widgets on the builder page. They coordinate through runtime signals; the shell, page, or workspace renderer must not wire toolbar behavior through route-specific props when the signal contract can express the interaction.
 
@@ -565,26 +481,57 @@ The area selector must not be treated as a global site switcher.
 
 The inspector is workspace UI, not a separate forms system.
 
-The canonical workspace structure is three Builder-Module Drawer Overlays: one Region Inspector, one
-Layout Inspector, and one Widget Inspector. They are Area-owned because the same instances serve both
-`/builder/phis/ui/shells` and `/builder/phis/ui/pages`. They are not Page-owned duplicates, normal `drawer_right` Regions,
-or imperative Drawers mounted by an Inspector host Widget.
+### Inspector Overlays
 
-The Builder Module contributes them as Area Overlays rather than declaring them in its Area shell preset.
-Saving `/builder/phis/ui/shells` for the Builder Area itself would otherwise take them with it: the saved
-snapshot replaces the code preset, and the Drawers the Controller opens would no longer exist.
+The Builder Region, Layout, and Widget Inspectors are persistent workspace composition, not transient
+prompts. They are three separate Area-owned Drawer Overlays -- the Region, Layout, and Widget Inspector
+Drawers -- contributed by the Builder Module. The Effects editor Modal and the Signal wiring Modal are
+contributed beside them. Area ownership is required because the same instances serve both
+`/builder/phis/ui/shells` and `/builder/phis/ui/pages` and follow the Builder Controller lifecycle. Page
+presets must not duplicate them, and they are not normal `drawer_right` Regions or imperative Drawers
+mounted by an Inspector host Widget.
 
-Each Drawer declares exactly one direct Body root, its own n-slot `PhiCollapsibleLayout`. Every slot
-contains one normal Builder-Module Widget for that Inspector section. There is no Stack above the root,
-no runtime topology switch, and no client-created Collapsible Layout inside a section host. The Builder
-Controller opens exactly the Drawer matching the current `region`, `layout`, or `widget` selection and
-closes the other two through Area-scoped Overlay routes.
+They are contributed through the `areaOverlays` descriptor family
+(`components/regions/presets/phi-builder-inspector-area-overlay-tree.ts`), not declared in the Builder
+Area shell preset. A shell preset is a starting point an operator may save over, after which the saved
+snapshot is the only source of truth for that Area; an Overlay declared there would disappear with that
+save. The Inspectors are the tool doing the authoring rather than content being authored, so they are
+composed onto whatever Area tree resolves, code preset or saved snapshot alike. Inspector content consumes
+current Builder Controller/workspace state and does not retain a Page-render snapshot.
 
-The resolved Builder Area mounts these Overlay instances directly and independently of Region occupancy.
-There is no `drawer_right` Region, host Layout, `builder-workspace-host` Widget, private Drawer Control, or
-other invisible slot whose presence activates the Inspector. The Builder Controller owns selection and
-Overlay orchestration. Each section Widget reads that Controller/workspace state and renders only its own
-declared Inspector section in the Collapsible slot that owns it.
+Each Inspector Drawer has exactly one direct Body root, an explicitly declared n-slot
+`PhiCollapsibleLayout`, and a Flex Header Layout. There is no Stack above the root, no runtime topology
+switch, no nested Collapsible, and no hidden Drawer Region. The Builder Controller opens exactly the Drawer
+matching the selected `region`, `layout`, or `widget` kind and closes the other two through Area-scoped
+Overlay routes (`dialog/activate` and `dialog/close`); each Drawer reports its open state to the Builder
+Controller on `inspectorVisibility/change`.
+
+The resolved Builder Area mounts these Overlays independently of Region occupancy. It does not require a
+`drawer_right` Region, a host Layout, a `builder-workspace-host` Widget, or a private `PhiDrawerControl`
+to keep Overlay receivers alive.
+
+Each Collapsible slot contains one Builder-Module section Widget. The sections are:
+
+- Region Inspector: geometry, viewport, padding, background, border, shadow
+- Layout Inspector: settings, anchor, padding, viewport, background, border, shadow, signals
+- Widget Inspector: settings, geometry, viewport, signals
+
+Section Widgets use the `fill-inline` slot-size policy so each occupies the complete panel width. They
+may share internal label/provider preparation and Client hooks, but they do not render through a host
+Widget, mount another Drawer, or receive a host-owned render callback. Presentation-only editors
+(background, border, shadow, padding, geometry, viewport, placement) are Phi Controls composed by the
+section Widgets; a Control is never inserted directly as a CMS node. The selected node and its Draft remain
+Controller/workspace state.
+
+The code-owned configuration of the three Drawers is: right placement, `mountPolicy: "lazy-keep"`, the
+`glass` effect, and a transparent, outside-blocking, closable mask, so a pointer action on the Canvas is
+consumed by the mask and closes the Inspector without selecting anything underneath. On first mount only
+`slot_0` is open (Geometry for the Region Inspector, Settings for the Layout and Widget Inspectors); later
+open state is transient Collapsible state. The Collapsible Body roots use `sm` outer and `sm` inner panel
+padding; the Header Flex roots use `lg` inline-start padding. None of these come from Drawer adapter
+padding.
+
+### Selection and state
 
 The active selection is the source of truth.
 
@@ -595,7 +542,8 @@ The active selection is the source of truth.
 
 It reacts to:
 
-- `selection/change:json` with `valueSchema: @phis/ui/builder-node-selection`
+- `selection/change:json` with the `builder-node-selection` value schema
+  (`PHI_SIGNAL_VALUE_SCHEMAS.builderNodeSelection`)
 - `builderMode/change:string`
 
 The `builderMode` channel is Builder workspace state. It is separate from renderable-block
@@ -606,47 +554,6 @@ It renders for the currently selected:
 - `region`
 - `layout`
 - `widget`
-
-Inspector categories:
-
-- `region`
-- `layout`
-- `widget`
-
-Category rules:
-
-- `region`
-  - `sticky`
-  - `offsetTop`
-  - `width`
-  - `height`
-  - `zIndex`
-  - `backgroundColor`
-  - `backgroundGradient`
-  - `glass`
-  - `padding`
-  - optional `fullHeight`
-
-- `layout`
-  - `width`
-  - `height`
-  - `minWidth`
-  - `maxWidth`
-  - `minHeight`
-  - `maxHeight`
-  - `zIndex`
-  - `gap`
-  - `padding`
-  - `backgroundColor`
-  - `backgroundGradient`
-  - `rounded`
-  - `border`
-  - `shadow`
-  - `glass`
-
-- `widget`
-  - plugin-specific fields
-  - plus existing widget contract fields
 
 Behavior:
 
@@ -668,7 +575,7 @@ Preview rendering boundary:
 
 Control rules:
 
-- use AntD `ColorPicker` for single colors and gradients
+- colors and gradients are edited through Phi Controls (`PhiColorControl` and the background Control)
 - use presentation-only Phi Controls for background, border, shadow, padding, geometry, viewport,
   placement, gap, radius, and asset/image selection; the established viewport and placement contracts
   remain `PhiViewportVisibilityControl` and `PhiPlacementMatrixControl`
@@ -704,8 +611,8 @@ Renderable block contract:
 - `hidden` means no layout participation
 - `collapsed` means reduced participation with a collapsed size hint
 - `visible` means normal layout participation
-- `setVisibility`, `setEnabled`, `setSize`, `expand`, `collapse`, `show`, `hide`, and `toggle` are block-level commands
-- those commands target a renderable block id
+- block commands are the standard renderable-block channels in
+  [SIGNALS.md](./SIGNALS.md#renderable-block-channels), addressed to a concrete `cms:` or `region:` receiver
 - `style` is not part of the public block contract; renderer-specific inline styling stays in the component implementation
 - `className` is the supported CSS extension hook for third-party styling
 - `size` is the canonical public preferred geometry form; `minSize`, `maxSize`, and `collapsedSizeHint` are the semantic geometry constraints
@@ -733,12 +640,13 @@ Shared builder metadata:
 Icon contract:
 
 - plugins provide local `iconName` and optional `iconFamily`
-- the resolver composes a fully qualified `iconKey` as `pluginKey:iconName`
-- the `pluginKey` namespace is expected to be package-scoped, for example `@phis/ui/layouts` or `@phis/ui/widgets`
+- the resolver composes a fully qualified `iconKey` as `pluginKey:iconName` when `iconName` is set
+- `pluginKey` is the owning Module's widget or layout namespace, for example
+  `@phis/ui/modules/core/widgets` or `@phis/ui/modules/builder/layouts`
 - Layout icons use the plugin motif inside one rectangular Layout frame.
 - the plugin itself must not decide the frame geometry
 - `widget` icons may use a plugin-local icon name or fall back to the type family
-- widget families are resolver-owned and may fall back to `basic`, `navigation`, `form`, `content`, `commerce`, `auth`, `admin`, `developer`, or `internal`
+- a widget without `iconFamily` uses its `category` as family, with `other` mapped to `content`
 - the builder picker may use the resolved `iconKey` when a plugin-specific icon exists, otherwise it may fall back to the shared `icon`
 
 Rules:
@@ -907,8 +815,7 @@ Additional rules:
 - nested slots should remain visually readable at all depths
 - slot names should stay visible when the slot is empty or when debugging is enabled
 - the visual system should still work when widgets are collapsed, empty, or hidden
-- `hidden` means the region stays structurally present and may still reserve space.
-- `collapsed` means the region is visually off and should release its reserved space.
+- `hidden` and `collapsed` follow the renderable-block visibility values in section 11.
 
 The exact visual language is open, but the layer distinction is not.
 
@@ -999,9 +906,8 @@ The builder must support a clear change lifecycle.
 
 ## 19. Workspace signal contract
 
-The Builder uses the same v1 signal ABI as every live runtime. The binding definitions live in
-`types/signals.ts`, `AGENTS.md`, and `components/widgets/README.md`; this section describes only the
-Builder-owned configuration flow.
+The Builder uses the same signal contract as every live runtime, defined in [SIGNALS.md](./SIGNALS.md);
+this section describes only the Builder-owned configuration flow.
 
 - Plugins declare immutable capabilities through `runtimeSignals.emits` and `runtimeSignals.listens`.
 - Concrete CMS instances persist routes through `signalRoutes.emits` and `signalRoutes.listens` in
@@ -1020,8 +926,9 @@ Builder-owned configuration flow.
 - Regions expose concrete `region:<region-key>` receiver endpoints and inherit the standard
   renderable-block inputs. Shell-owned Regions derive `scope: "area"`; page-owned Regions derive
   `scope: "page"`. Region endpoints do not invent additional outputs or Region-specific channels.
-- Controller endpoints use `controller:<npm-package>/<controller-key>:<instance-key>`. Active
-  area-mounted controllers expose `default`; demand instances require concrete materialized settings.
+- Controller endpoints use the controller address grammar in [SIGNALS.md](./SIGNALS.md#addresses), for
+  example `controller:@phis/ui/modules/builder/controller/default:default`. Active area-mounted controllers
+  expose `default`; demand instances require concrete materialized settings.
 - The Wiring modal uses the selected sender's declared outputs to filter compatible receiver inputs by
   action, value type, and JSON schema. Route scope and receiver channel need not match a sender-side
   channel because outputs do not declare one.
@@ -1032,9 +939,3 @@ Builder-owned configuration flow.
 - Canvas runtime signal emission stays disabled. Wiring changes instance config through the Builder
   controller; target-Area controllers are not mounted merely to configure their endpoints.
 
-## 20. Contract rule
-
-Until a decision is written here, the builder implementation must not invent its own contract.
-Only the contracts documented in this file are stable.
-Changes to those contracts require the explicit prior operator approval defined in section 2.1 and must
-not be introduced through a parallel implementation contract.

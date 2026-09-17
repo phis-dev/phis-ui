@@ -1,9 +1,9 @@
 # Internal Reference and Page Path Contract
 
-This document defines the normative target-v1 `@phis/ui` contract for mutable Site Page paths,
+This document defines the `@phis/ui` contract for mutable Site Page paths,
 structured internal Page and Asset references, navigation targets, and references embedded in Markdown
 or HTML. Persistence, authorization, reference indexing, and authoritative resolution are owned by
-`@phis/server` and must remain compatible with this contract.
+`@phis/server`; see [phis-server REFERENCES.md](../phis-server/REFERENCES.md).
 
 ## Identity and canonical Page paths
 
@@ -36,14 +36,14 @@ Site-authored Page; this presentation is not authorization and the server repeat
 ## Stable internal targets
 
 All Phi-owned controls that select an internal Page persist a stable Page reference rather than a path.
-The canonical logical reference variants are:
+The canonical logical reference variants (`PhiPageTarget` in `types/references.ts`) are:
 
 - Site Page: the current Site plus Area and positive Page Scope id;
 - Module Page: the current Site plus Area and `(ownerModuleId, presetKey)`.
 
 The Site and Area are validated resolution context and must not be accepted as authority from arbitrary
 browser input. A serialized reference value is opaque to Controls and Widgets: it is issued and parsed by
-the central reference contract and must not be assembled from labels, paths, package titles, or indexes.
+`createPhiPageReference` and its parser in `types/references.ts` and must not be assembled from labels, paths, package titles, or indexes.
 
 Navigation authoring creates an internal link only by inserting or dragging a Page from the active
 Area's Page source Tree. That source node supplies the stable Page reference; its displayed path and
@@ -92,7 +92,7 @@ not created.
 
 The server parses references into structured nodes, validates same-Site ownership and Area resolution,
 and resolves only the referenced targets in bulk before serializing the render model. A Client never
-receives an unresolved `phi:` URI. Page resolution produces the current locale-/Area-correct href. Asset
+receives an unresolved `phis:` URI. Page resolution produces the current locale-/Area-correct href. Asset
 resolution applies the Asset's current lifecycle, delivery policy, and delivery revision and produces
 its authorized public or signed delivery URL; possession of an Asset id never bypasses access checks.
 User- and Group-Space Assets require explicit authorized promotion into the Site Space before they are
@@ -110,7 +110,7 @@ absolute external URLs remain allowed under the HTML/Markdown sanitizer policy.
 
 External Markdown/HTML (`sourceMode: "url"`) and provider-produced documents are untrusted and must never
 address Site-local Phi references. The source classification comes from trusted Widget/provider config,
-not from document markup. Server sanitization rejects every `phi:` scheme occurrence before translation
+not from document markup. Server sanitization rejects every `phis:` scheme occurrence before translation
 and rendering, including case, whitespace, character-reference, percent-encoding, redirect, and nested
 URL forms that normalize to the reserved scheme.
 
@@ -121,7 +121,7 @@ For an external document:
 - Authoring may render a non-interactive diagnostic for either removal;
 - relative and root-relative HTTP references resolve against the external document's source URL and
   never against the current Phi Site;
-- an unresolved or forbidden Phi URI must never reach a browser DOM attribute or translation provider.
+- an unresolved or forbidden `phis:` URI must never reach a browser DOM attribute or translation provider.
 
 The same rule applies when an external document happens to originate from a hostname also used by the
 Site. Only internally persisted trusted content may contain resolvable Phi references.
@@ -146,10 +146,3 @@ An unresolved internal Page reference renders non-interactive text; an unresolve
 renders no media. Authoring receives a typed diagnostic containing the owner scope and source location.
 Resolvers must batch references per render/request and must not fetch the complete Page or Asset catalog
 for Public/App rendering.
-
-## Contract governance
-
-Changing, extending, replacing, reinterpreting, or widening this contract requires explicit prior
-operator approval after the exact gap and affected ABI have been presented. This contract must not be
-bypassed through raw path fallbacks, comments attached to Markdown links, Widget-local URI parsers,
-Module-specific target shapes, copied Asset URLs, Client-only resolution, or compatibility aliases.

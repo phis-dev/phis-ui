@@ -1,32 +1,28 @@
 # Third-party Site Module guide
 
-This guide is the practical entry point for building a Site/client Module against
-`@phis/ui`. It covers package structure, Module ownership, Controllers, Widgets, Theme presets,
-Preset Forms, client manifests, Site composition, and verification.
+This guide is the practical entry point for building a Site Module package against `@phis/ui`: package
+structure, identifiers, Controllers, Widgets, Theme presets, Preset Forms, the fixed package exports,
+building, installing, and verification.
 
-The normative low-level contracts remain in:
+The contracts it applies are:
 
-- [MODULES.md](./MODULES.md) for the common first-party and third-party Module contribution shape;
-- [TABLES.md](./TABLES.md) for generic Tables, Table Providers, editable static resources, and signaling;
-- [README.md](./README.md#runtime-modules-and-area-activation) for Module ownership and activation;
-- [plugins/README.md](./plugins/README.md) for registries, lazy loaders, and authoring boundaries;
-- [components/widgets/README.md](./components/widgets/README.md) for Widget and signaling behavior;
-- [components/forms/PRESET_FORMS_HOWTO.md](./components/forms/PRESET_FORMS_HOWTO.md) for Preset Forms;
-- [NEXT_INTEGRATION.md](./NEXT_INTEGRATION.md) for the consuming Next.js Site boundary;
-- [STATIC_RENDERING.md](./STATIC_RENDERING.md) for how Public pages are rendered once for every
-  anonymous visitor, and what that forbids in a Widget's server half;
-- [ACCESS.md](./ACCESS.md) for viewer access policies and third-party roles.
-- [AUTHENTICATION.md](./AUTHENTICATION.md) for Auth UI replacement, multi-Area activation, Account Widget
-  delegation, and the server trust boundary.
+- [MODULES.md](./MODULES.md) -- Module ownership, activation, loading, presets and addresses;
+- [SIGNALS.md](./SIGNALS.md) -- signal capabilities, routes, and addresses;
+- [FORMS.md](./FORMS.md) and [components/forms/PRESET_FORMS_HOWTO.md](./components/forms/PRESET_FORMS_HOWTO.md)
+  -- Forms;
+- [TABLES.md](./TABLES.md), [TREES.md](./TREES.md), [COLLECTIONS.md](./COLLECTIONS.md) -- Provider-backed
+  data Widgets;
+- [THEME.md](./THEME.md) -- Theme presets and blocks;
+- [NEXT_INTEGRATION.md](./NEXT_INTEGRATION.md) -- the consuming Next.js Site;
+- [STATIC_RENDERING.md](./STATIC_RENDERING.md) -- how Public pages are rendered once for every
+  anonymous visitor;
+- [ACCESS.md](./ACCESS.md) and [AUTHENTICATION.md](./AUTHENTICATION.md) -- viewer access, Add-on roles,
+  and Auth replacement.
 
-This guide cannot extend, reinterpret, or replace those contracts. Any such change requires explicit
-prior operator approval after the exact gap and affected ABI have been presented. A Module must not work
-around a missing capability through a local, parallel, shadow, Provider-specific, fallback, or
-compatibility contract; implementation stops and asks the operator first.
-
-`@phis/support` in the Phi workspace is the canonical working reference package. It demonstrates a
-separately built Module with routes, navigation injections, two Widgets, one Controller, Server,
-Controller Client, Render Client, and Authoring Client contributions.
+`@phis/example` in the Phi workspace (`phis-example`) is the reference package. It follows every rule
+here: one Module with routes, a navigation injection, Theme presets and blocks, a `./fonts` boundary, and
+all fixed exports. It owns no Widget and no Controller; the Widget and Controller examples below show
+those parts.
 
 ## Before you start: Public pages are rendered once for everybody
 
@@ -49,7 +45,7 @@ Signed-in visitors, requests with a query, the Builder and every staff Area rend
 ## Terminology and hard boundaries
 
 - A **Module** is a Site/client extension compiled into a Site application.
-- An **Add-on** is a server extension compiled into `@phis/server` by `phis-cli`.
+- An **Add-on** is a server extension installed into `phis` (`@phis/server`) with `phis addon`.
 - One package carries one product. `@scope/name` is the Module half; the Add-on half of the same
   package lives under `@scope/name/addon/…`, and the logical Add-on id is `@scope/name`.
 - A Module binds to Core or exactly one Add-on and declares required versioned server capabilities.
@@ -102,78 +98,63 @@ reject their own identifiers when they do not follow it.
 
 ## Required package boundary structure
 
+A Module package has four fixed entrypoints and an optional fifth. Source filenames are the package's
+own; a layout like `@phis/example`'s works well:
+
 ```text
 @acme/status/
 ├── package.json
 └── src/
-    ├── constants.ts
-    ├── module-definition.ts
+    ├── index.ts              .                  phiModuleDefinitions
+    ├── server.ts             ./server           phiModuleServerContributions
+    ├── client.ts             ./client           phiModuleClientContributions ("use client")
+    ├── authoring-client.ts   ./authoring-client phiModuleAuthoringContributions ("use client")
+    ├── fonts.ts              ./fonts            phiModuleFontContributions (optional)
+    ├── ids.ts
+    ├── definition.ts
     ├── module.ts
-    ├── contracts.ts
-    ├── controls.ts
-    ├── widgets.ts
-    ├── routes.ts
+    ├── presets.ts
     ├── themes.ts
-    ├── forms.ts
-    ├── server.ts
-    ├── client.ts
-    ├── authoring-client.ts
     ├── controller/
     │   ├── definition.ts
     │   └── client.tsx
-    ├── adapters/
-    │   └── calendar-system.tsx
-    ├── config/
-    │   └── status-card.ts
-    ├── plugins/
-    │   └── status-card-widget-plugin.tsx
-    ├── client/
-    │   └── status-card.tsx
-    └── authoring/
-        ├── status-card.tsx
-        ├── widgets.ts
-        └── module.tsx
+    └── widgets/
+        └── card/
+            ├── config.ts
+            ├── plugin.tsx
+            └── authoring.tsx
 ```
 
-The exact source filenames are package-local, but these Server, live Client, Controls, and Authoring
-boundaries are required and must be structurally equivalent to `MODULES.md`.
+`controller/` is optional. Include it only when the Module coordinates runtime state, signals, or several
+mounted artifacts; a Module never adds a no-op Controller to satisfy package shape.
 
-`controller/` is optional. Include it only when the Module coordinates runtime state, signals, or
-several mounted artifacts. Adapter-, provider-, preset-, Theme-, and otherwise self-contained Widget
-Modules must not add a no-op Controller merely to satisfy package shape.
-
-The Module's `server.ts` export above is a server-safe Site/Next catalog contribution. It is not code
-that runs inside `@phis/server`. If the Module needs server routes, hooks, jobs, migrations, secrets, or
-provider adapters, those live in the Add-on half of the same package, under its own entrypoints:
+`./server` is the Module's server-safe Site catalog contribution -- code that runs in the *Site* process.
+It is not code that runs inside `phis`. Server routes, hooks, jobs, migrations, secrets, and provider
+adapters live in the Add-on half of the same package, under its own entrypoints:
 
 ```text
 Package:            @acme/status
-Module entrypoints: @acme/status, @acme/status/client, @acme/status/server
+Module entrypoints: @acme/status, /server, /client, /authoring-client, /fonts
 Add-on entrypoints: @acme/status/addon/manifest, @acme/status/addon/runtime
 Logical Add-on id:  @acme/status
 ```
 
-Note that `./server` is the Module's own React Server Components -- code that runs in the *Site*
-process. The Add-on runs in `@phis/server`, which is why its entrypoints carry the `addon/` prefix rather
-than the name they would otherwise both want.
-
-The Module half never imports the Add-on half, and the Add-on half never imports React or
-`@phis/ui`.
-
-Use physically separate package exports so a Server import cannot accidentally retain Client or
-Authoring implementations:
+The Module half never imports the Add-on half, and the Add-on half never imports React or `@phis/ui`.
 
 ```json
 {
   "name": "@acme/status",
+  "version": "0.1.0",
   "type": "module",
   "sideEffects": false,
+  "phis": {
+    "sourceLocale": "en",
+    "modules": [{ "moduleId": "@acme/status/modules/status", "category": "operations" }]
+  },
   "exports": {
     ".": { "types": "./dist/index.d.ts", "import": "./dist/index.js" },
     "./server": { "types": "./dist/server.d.ts", "import": "./dist/server.js" },
     "./client": { "types": "./dist/client.d.ts", "import": "./dist/client.js" },
-    "./contracts": { "types": "./dist/contracts.d.ts", "import": "./dist/contracts.js" },
-    "./controls": { "types": "./dist/controls.d.ts", "import": "./dist/controls.js" },
     "./authoring-client": {
       "types": "./dist/authoring-client.d.ts",
       "import": "./dist/authoring-client.js"
@@ -181,24 +162,31 @@ Authoring implementations:
     "./fonts": { "types": "./dist/fonts.d.ts", "import": "./dist/fonts.js" }
   },
   "dependencies": {
-    "@phis/ui": "^0.1.0",
     "server-only": "^0.0.1"
   },
   "peerDependencies": {
-    "react": "^19",
-    "react-dom": "^19"
+    "@phis/ui": "^0.1.0",
+    "next": "^16.2.11",
+    "react": "^19.2.8"
   }
 }
 ```
 
-React, Next.js, and `@phis/ui` must not be bundled into the published Module. Third-party
-Modules use Phi Controls for supported presentation behavior and must not import Ant Design directly
-when a matching Phi Control exists. In particular, inline feedback uses `PhiAlertControl`, anchored
-confirmation uses `PhiConfirmControl`, and application Message/Notification feedback is emitted with
-`usePhiApplicationFeedback`. These contracts deliberately do not expose arbitrary Ant Design props.
-If a reusable capability is missing, propose an operator-approved Core contract extension instead of
-adding a package-local Ant Design path. A package that has an independently approved, uncovered Ant
-Design use may declare it as a peer, but that exception does not widen any Phi Control contract.
+- `@phis/ui`, `react`, and `next` are peer dependencies. A second copy of `@phis/ui` is a second set of
+  React contexts, and `next` is needed for the `next/dynamic` calls in the Client boundaries and for
+  `next/font` in `./fonts`.
+- The `phis` block declares every Module the package carries with its category
+  (`PHI_RUNTIME_MODULE_CATEGORIES` in `@phis/contracts/catalog`: `foundation`, `workspace`, `content`,
+  `media`, `commerce`, `identity`, `communication`, `events`, `analytics`, `integration`, `operations`,
+  `other`) and the language of the Modules' titles. A catalogue reads it without running the package;
+  `phis module check` reports a missing or malformed declaration.
+- CSS shipped by the package needs `"sideEffects": ["**/*.css"]` instead of `false`.
+
+Modules use Phi Controls for supported presentation and do not import Ant Design directly where a Phi
+Control exists: inline feedback is `PhiAlertControl`, anchored confirmation `PhiConfirmControl`, and
+application messages and notifications are sent with `usePhiApplicationFeedback`
+(`@phis/ui/runtime/signal-client`). A missing reusable capability is a Core contract extension, not a
+package-local Ant Design path.
 
 ## Distribution and commercial Modules
 
@@ -245,10 +233,9 @@ Module has nothing to yield with -- that path is its identity -- so activation i
 occupied path, until the Site moves the Page. It needs an operator, and there is nothing to build
 against it: no Module code can avoid or detect it.
 
-The Public dialog is built: enabling a Module for Public checks its declared paths against Site Pages and
-other Modules and asks for another address where one is taken
-(`plugins/runtime-modules/builder/public-route-collisions.ts`). The refusal outside Public is not built:
-nothing yet checks a Site Page against a Module's package path.
+Enabling a Module for Public checks its declared paths against Site Pages and other Modules and asks for
+another address where one is taken (`plugins/runtime-modules/builder/public-route-collisions.ts`).
+Nothing checks a Site Page against a Module's package path outside Public.
 
 ## 1. Define stable ids
 
@@ -288,7 +275,7 @@ export const STATUS_CARD_WIDGET_TYPE = createPhiModuleIdentifier(
 );
 ```
 
-`@phis/support` in this workspace is written exactly this way and is the reference to read.
+`@phis/example` (`src/ids.ts`) is written this way.
 
 Persisted keys must remain stable across releases. Labels, paths, and implementation filenames may
 change; ABI keys must not be silently renamed.
@@ -302,7 +289,7 @@ therefore declares one:
 ```ts
 // controller/definition.ts
 import type { PhiRuntimeControllerDefinition } from "@phis/ui/types";
-import { STATUS_CONTROLLER_KEY, STATUS_CONTROLLER_PLUGIN_KEY } from "../constants";
+import { STATUS_CONTROLLER_KEY, STATUS_CONTROLLER_PLUGIN_KEY } from "../ids";
 
 export type StatusControllerConfig = Record<string, never>;
 
@@ -347,9 +334,9 @@ Choose the mount policy on the Module definition:
 - `demand`: expose the Controller type and materialize concrete instances only from CMS requirements;
 - `site`: reserved for the `core` Module and unavailable to normal Modules.
 
-Controller addresses are always
-`controller:<npm-package>/<controller-key>:<instance-key>`. Handler keys, Area names, and Widget types do
-not belong in the address. Declare signal capabilities through `runtimeSignals`; communicate only via
+The Controller's address is `controller:<pluginKey>/<controllerKey>:<instanceKey>`; for the example
+above that is `controller:@acme/status/modules/status/controller/default:default`. Handler keys, Area
+names, and Widget types do not belong in the address ([SIGNALS.md](./SIGNALS.md#addresses)). Declare signal capabilities through `runtimeSignals`; communicate only via
 the Phi signal bus, not a module-global store or a second event bus.
 
 For a controllerless Module, `controllerType`, `controller`, `controllerMountPolicy`,
@@ -365,13 +352,13 @@ Empty Modules and artificial no-op Controllers are invalid.
 ## 3. Define the Module
 
 ```ts
-// module-definition.ts
+// definition.ts
 import {
   buildPhiRuntimeModuleControllerDescriptor,
   type PhiRuntimeModuleDefinition,
 } from "@phis/ui/cms/plugins";
 import { createPhiCoreServerBinding } from "@phis/ui/types";
-import { STATUS_CONTROLLER_TYPE, STATUS_MODULE_ID } from "./constants";
+import { STATUS_CONTROLLER_TYPE, STATUS_MODULE_ID } from "./ids";
 import { STATUS_CONTROLLER_DEFINITION } from "./controller/definition";
 
 export const STATUS_MODULE_DEFINITION = {
@@ -386,7 +373,7 @@ export const STATUS_MODULE_DEFINITION = {
   sourceLocale: "en",
   title: "Status",
   description: "Service status presentation.",
-  category: "data",
+  category: "operations",
   icon: "antd:dashboard",
   controllerMountPolicy: "area",
 } satisfies PhiRuntimeModuleDefinition;
@@ -398,7 +385,8 @@ presets, or navigation contributions. Define Module-owned Label Sets with
 `definePhiRuntimeModuleLabelSet(STATUS_MODULE_DEFINITION, ...)` from `@phis/ui/server-helpers`; this
 binds their global translation source language and stable Label-Set namespace to the owner Module.
 
-`title`, `description`, and `category` are required non-empty Module metadata. Every Module must also
+`title`, `description`, and `category` are required non-empty Module metadata; `category` is one of the
+Module categories listed above and is the same value the package's `phis` block declares. Every Module must also
 declare at least one non-empty visual source: an exact `icon`, a semantic `iconFamily`, or both. The
 Server catalog validates these rules at runtime in addition to the TypeScript contract, so JavaScript
 packages and cast values cannot bypass them.
@@ -425,7 +413,7 @@ definition:
 // module.ts
 import type { PhiRuntimeModule } from "@phis/ui/cms/plugins";
 import { STATUS_CONTROLLER_DEFINITION } from "./controller/definition";
-import { STATUS_MODULE_DEFINITION } from "./module-definition";
+import { STATUS_MODULE_DEFINITION } from "./definition";
 
 export const STATUS_RUNTIME_MODULE = {
   ...STATUS_MODULE_DEFINITION,
@@ -453,9 +441,9 @@ server-safe definition
 ### Definition and config parser
 
 ```ts
-// config/status-card.ts
+// widgets/card/config.ts
 import type { PhiCmsWidgetPlugin } from "@phis/ui/types";
-import { STATUS_CARD_WIDGET_KEY, STATUS_WIDGETS_PLUGIN_KEY } from "../constants";
+import { STATUS_CARD_WIDGET_KEY, STATUS_WIDGETS_PLUGIN_KEY } from "../../ids";
 
 export type StatusCardConfig = { title: string };
 
@@ -472,7 +460,7 @@ export const STATUS_CARD_WIDGET_DEFINITION = {
   typeKey: STATUS_CARD_WIDGET_KEY,
   title: "Status Card",
   description: "Displays the current service state.",
-  category: "operations",
+  category: "data",
   slotSizePolicy: "intrinsic",
   fields: [{ key: "title", type: "string", label: "Title", required: true }],
   parseConfig: parseStatusCardConfig,
@@ -492,18 +480,21 @@ export const STATUS_CARD_WIDGET_DEFINITION = {
 
 `fields` is the complete Inspector-editable config surface. Do not add Widget-specific Inspector
 branches. Use generic Phi field types, option/data providers, and declarative signal capabilities.
-Widget and Layout `category` values come from the closed semantic CMS plugin category set documented
-in [BUILDER.md](./BUILDER.md); package identity remains a separate Picker filter.
+Widget and Layout `category` values come from `PHI_CMS_PLUGIN_CATEGORIES` (`content`, `navigation`,
+`form`, `data`, `media`, `commerce`, `account`, `configuration`, `structure`, `workspace`, `developer`,
+`other`) -- a different list from the Module categories. Package identity is a separate Picker filter.
+Config parsing uses the primitives from `@phis/ui/widget-config`, so a package does not reproduce the
+renderable base parser.
 
 ### Runtime and Preview plugin
 
 ```tsx
-// plugins/status-card-widget-plugin.tsx
+// widgets/card/plugin.tsx
 import type { PhiCmsServerWidgetPlugin } from "@phis/ui/types";
 import {
   STATUS_CARD_WIDGET_DEFINITION,
   type StatusCardConfig,
-} from "../config/status-card";
+} from "./config";
 
 export const STATUS_CARD_WIDGET_PLUGIN = {
   ...STATUS_CARD_WIDGET_DEFINITION,
@@ -514,24 +505,24 @@ export const STATUS_CARD_WIDGET_PLUGIN = {
 
 Runtime/Preview code may load server data and translated labels. Browser interaction belongs in a
 small Client component. If that component is selected through
-`PhiRuntimeModuleRenderClientHost`, export its lazy loader from the Module's Render Client manifest;
-never add it to a global Client map.
+`PhiRuntimeModuleRenderClientHost`, list it in `renderClients` of the package's
+`phiModuleClientContributions` ([section 8](#8-export-the-client-and-authoring-contributions)).
 
 ### Server Widget loader descriptor
 
 ```ts
 // widgets.ts
 import type { PhiRuntimeModuleWidgetDefinition } from "@phis/ui/cms/plugins";
-import { STATUS_CARD_WIDGET_DEFINITION } from "./config/status-card";
-import { STATUS_MODULE_ID } from "./constants";
+import { STATUS_CARD_WIDGET_DEFINITION } from "./widgets/card/config";
+import { STATUS_MODULE_ID } from "./ids";
 
 export const STATUS_WIDGETS = [{
   definition: STATUS_CARD_WIDGET_DEFINITION,
   ownerModuleId: STATUS_MODULE_ID,
   renderPolicies: { runtime: "custom", preview: "custom", authoring: "custom" },
-  loadRuntime: () => import("./plugins/status-card-widget-plugin")
+  loadRuntime: () => import("./widgets/card/plugin")
     .then((module) => module.STATUS_CARD_WIDGET_PLUGIN),
-  loadPreview: () => import("./plugins/status-card-widget-plugin")
+  loadPreview: () => import("./widgets/card/plugin")
     .then((module) => module.STATUS_CARD_WIDGET_PLUGIN),
 }] as const satisfies readonly PhiRuntimeModuleWidgetDefinition[];
 ```
@@ -541,14 +532,14 @@ The descriptor must not statically import the plugin implementation.
 ### Authoring adapter
 
 ```tsx
-// authoring/status-card.tsx
+// widgets/card/authoring.tsx
 "use client";
 
 import type { PhiCmsBuilderWidgetPlugin } from "@phis/ui/types";
 import {
   STATUS_CARD_WIDGET_DEFINITION,
   type StatusCardConfig,
-} from "../config/status-card";
+} from "./config";
 
 export const STATUS_CARD_BUILDER_PLUGIN = {
   ...STATUS_CARD_WIDGET_DEFINITION,
@@ -556,37 +547,30 @@ export const STATUS_CARD_BUILDER_PLUGIN = {
 } satisfies PhiCmsBuilderWidgetPlugin<StatusCardConfig>;
 ```
 
-Register the adapter only in the owner Module's Authoring Client:
+Register the adapter only in the owner Module's Authoring Client, which section 8 exports:
 
 ```tsx
-// authoring/widgets.ts
+// authoring-client.ts (excerpt)
 "use client";
 
 import {
   createPhiAuthoringWidgetModule,
+  createPhiRuntimeModuleAuthoringClient,
   definePhiAuthoringWidgetModuleLoader,
 } from "@phis/ui/runtime/authoring-client";
-import { STATUS_CARD_WIDGET_DEFINITION } from "../config/status-card";
+import { STATUS_MODULE_ID } from "./ids";
+import { STATUS_CARD_WIDGET_DEFINITION } from "./widgets/card/config";
 
-export const STATUS_AUTHORING_WIDGET_MODULE = createPhiAuthoringWidgetModule([
+const StatusAuthoringWidgetModule = createPhiAuthoringWidgetModule([
   definePhiAuthoringWidgetModuleLoader(
     STATUS_CARD_WIDGET_DEFINITION,
-    () => import("./status-card").then((module) => module.STATUS_CARD_BUILDER_PLUGIN),
+    () => import("./widgets/card/authoring").then((module) => module.STATUS_CARD_BUILDER_PLUGIN),
   ),
 ]);
-```
-
-```tsx
-// authoring/module.tsx
-"use client";
-
-import { createPhiRuntimeModuleAuthoringClient } from "@phis/ui/runtime/authoring-client";
-import { STATUS_MODULE_ID } from "../constants";
-import { STATUS_AUTHORING_WIDGET_MODULE } from "./widgets";
 
 export const PhiStatusAuthoringClient = createPhiRuntimeModuleAuthoringClient({
   moduleId: STATUS_MODULE_ID,
-  WidgetModule: STATUS_AUTHORING_WIDGET_MODULE,
+  WidgetModule: StatusAuthoringWidgetModule,
 });
 ```
 
@@ -651,7 +635,7 @@ export const STATUS_THEME_PRESET = {
 ```ts
 // themes.ts
 import type { PhiCmsThemePresetDescriptor } from "@phis/ui/cms/plugins";
-import { STATUS_MODULE_ID } from "./constants";
+import { STATUS_MODULE_ID } from "./ids";
 
 export const STATUS_THEMES = [{
   ownerModuleId: STATUS_MODULE_ID,
@@ -671,13 +655,11 @@ share; `modes.light` / `modes.dark` carry the two base seeds, explicit colour to
 and the ten custom colours under `customColors`. A Site's own `theme.palette` has exactly this shape and
 is laid over the preset field by field.
 
-A palette is one of three Theme blocks. A Module may also ship a **style** (structural tokens under
-`style.token`, and a Control shape under `shape.controls` that every style must state; see
-`SITE-CONFIG.md`), a **ground** (the Root Background, the Chrome Overlay and its Shadow, one value per
-mode), and a **Set** that names a palette, a style and a ground by key. A style reaches a Site only through
-a Set: the Builder offers no style picker, and its Style tab overrides shape and scale on top. All three are
-announced through `themeBlocks` on the same catalog entry, with the
-`PhiCmsThemeBlockDescriptor` shape from `@phis/ui/types` and the block types from `@phis/ui/theme`:
+Palettes travel through `themes`. The other parts of a look are Theme blocks announced through
+`themeBlocks` on the same catalog entry, with the `PhiCmsThemeBlockDescriptor` shape from `@phis/ui/types`
+and the block types from `@phis/ui/theme`: a **style**, a **ground**, a **fonts** block, and a **Set** that
+names the parts by key. What each block holds and how a Site follows or adopts it is
+[THEME.md](./THEME.md#theme-blocks).
 
 ```ts
 // themes.ts
@@ -709,13 +691,7 @@ URL. A small SVG drawn from the palette's colours may stay an inline `data:image
 catalogue itself reaches the browser only in the Builder, which is the one Area that chooses among
 blocks; every other page receives the one Theme the root resolved on the server. A Site that only follows
 the ground stores its key and nothing else, and the Module delivers the look.
-The first time the Site saves a Theme that resolves to a Module's ground, the
-Builder takes the whole ground over: background, Chrome and Shadow of both modes become the Site's own
-values and every picture becomes a Site Asset in the Media library. From then on the Site owns the look,
-switching the Module off changes nothing, and a Module update no longer reaches it; the key stays as
-provenance so a reset can show the Module's current version again. A Module's palette and style are
-taken over the same way, into `theme.palette`, `theme.style` and, where the author picked none,
-`theme.shape.controls`; core blocks are followed, never copied.
+When a Site saves a Theme that follows a Module's block, the Site adopts it: the values and pictures become the Site's own and later Module updates no longer reach it ([THEME.md](./THEME.md#adoption-on-save)).
 A Theme is site-wide, so palettes and blocks are read from the
 installed union -- what `phis module add` projected -- rather than from the Areas the Module is
 enabled in. `@phis/example` in this workspace ships a complete palette, ground and Set.
@@ -727,303 +703,198 @@ one lazy module UI provider scoped to its own subtree.
 
 ## 6. Add a Preset Form
 
-Use the dedicated [Preset Form guide](./components/forms/PRESET_FORMS_HOWTO.md). In summary:
+The Form contract is [FORMS.md](./FORMS.md); the step-by-step guide is
+[components/forms/PRESET_FORMS_HOWTO.md](./components/forms/PRESET_FORMS_HOWTO.md). In summary:
 
-- create `<npm-package>/forms/<form-key>` with `createPhiFormId(...)`;
-- define it with `definePhiRuntimeModuleForm(...)`;
-- declare every referenced field, validation, and phase-specific handler provider;
-- contribute it through the same `catalogEntry.forms` array;
-- keep every phase-specific handler Provider in the same owner Module as the Form; normal catalog
-  construction rejects a missing or mismatched `submit`, `confirm`, or `preview` handler before runtime;
+- create the id with `createPhiFormId(STATUS_MODULE_ID, "incident-report")`, which yields
+  `@acme/status/modules/status/forms/incident-report`; catalog construction requires the prefix to be
+  the owner Module id;
+- define the Form with `definePhiRuntimeModuleForm(...)` from `@phis/ui/forms`;
+- declare every referenced field, validation, and handler Provider in the Module definition's
+  `formProviders`; a handler Provider declares its `credentialPolicy` and an `endpointKey` or
+  `upstreamPath` ([FORMS.md](./FORMS.md#handler-providers));
+- contribute the Form through `catalogEntry.forms`; catalog construction rejects a missing or
+  mismatched phase handler;
 - render fields through Phi Controls, not CMS Widgets;
-- place it in CMS trees through the generic `@phis/ui/widgets/form` Widget with its `formId`;
-- do not register a Contact/Login/etc. CMS Widget alias for the Form;
-- use the demand-materialized Core Form Controller unless the Module has a genuinely different
-  lifecycle.
+- place the Form in CMS trees with the generic Form Widget (`@phis/ui/modules/core/widgets/form`) and its
+  `formId`; never register a domain Form Widget;
+- use the demand-materialized Core Form controller
+  (`controller:@phis/ui/modules/core/controller/form:<instanceKey>`) unless the Module has a genuinely
+  different lifecycle.
 
-Preset Forms are package-published defaults. Runtime reads only Published Site overrides. The v1
-database already reserves Working Draft, Published, and archived Published revisions so a future visual
-Form Builder requires APIs, not a new schema.
+## 7. Export the Server contributions
 
-## 7. Build the Server catalog
+A package hands its Modules over under fixed names, one per boundary. The root entrypoint exports the
+definitions; `./server` exports the catalog contributions. Both helpers come from `@phis/ui/module`:
+
+```ts
+// index.ts
+import { definePhiModuleDefinitions } from "@phis/ui/module";
+import { STATUS_MODULE_DEFINITION } from "./definition";
+
+export const phiModuleDefinitions = definePhiModuleDefinitions([STATUS_MODULE_DEFINITION]);
+```
 
 ```ts
 // server.ts
 import "server-only";
 
-import {
-  createPhiRuntimeModuleCatalog,
-  extendPhiRuntimeModuleCatalog,
-  type PhiRuntimeModuleCatalog,
-} from "@phis/ui/cms/plugins";
-import { STATUS_MODULE_DEFINITION } from "./module-definition";
-import { STATUS_WIDGETS } from "./widgets";
+import { definePhiModuleServerContributions } from "@phis/ui/module";
+import { STATUS_MODULE_DEFINITION } from "./definition";
+import { STATUS_ROUTES } from "./presets";
 import { STATUS_THEMES } from "./themes";
+import { STATUS_WIDGETS } from "./widgets";
 
-export const STATUS_MODULE_CATALOG = createPhiRuntimeModuleCatalog([{
-  definition: STATUS_MODULE_DEFINITION,
-  widgets: STATUS_WIDGETS,
-  layouts: [],
-  themes: STATUS_THEMES,
-  forms: [],
-  routes: [],
-  load: () => import("./module")
-    .then((module) => module.STATUS_RUNTIME_MODULE),
-}], []);
-
-export function extendStatusRuntimeModuleCatalog(
-  base: PhiRuntimeModuleCatalog,
-): PhiRuntimeModuleCatalog {
-  return extendPhiRuntimeModuleCatalog(base, STATUS_MODULE_CATALOG);
-}
+export const phiModuleServerContributions = definePhiModuleServerContributions([{
+  moduleId: STATUS_MODULE_DEFINITION.moduleId,
+  catalogEntry: {
+    definition: STATUS_MODULE_DEFINITION,
+    widgets: STATUS_WIDGETS,
+    layouts: [],
+    routes: STATUS_ROUTES,
+    themes: STATUS_THEMES,
+    load: () => import("./module").then((module) => module.STATUS_RUNTIME_MODULE),
+  },
+}]);
 ```
 
-The catalog above is what the package hands over; the name it hands it over under is fixed in section 8a,
-and the Areas it reaches follow from `eligibleAreas` rather than from anything written here.
+- `definePhiModuleDefinitions` rejects a duplicate Module id and a definition without `eligibleAreas`.
+- `definePhiModuleServerContributions` validates each contribution where the package is built: the
+  `moduleId` must match the definition, and every Area-addressed descriptor (route, shell, overlay,
+  navigation injection) must address an Area the definition lists.
+- A contribution never names an Area. `phis module` generates a projection that places each Module into
+  the Areas of its `eligibleAreas` (`collectPhiSiteModuleServerAreaContributions` in
+  `@phis/ui/module/projection`), and each Area catalog keeps the descriptors addressed to it.
+- `createPhiNextCmsSiteBridge` validates the combined catalog with `assertPhiRuntimeModuleCatalog`, so
+  invalid ownership, missing loaders, unsupported render policies, or malformed signal metadata fail at
+  Site assembly.
 
-`createPhiNextCmsSiteBridge(...)` validates the complete combined catalog through the public
-`assertPhiRuntimeModuleCatalog(...)` contract. Invalid ownership, missing loaders, unsupported render
-policies, malformed signal metadata, or inconsistent declarative artifacts therefore fail at Site
-assembly rather than becoming a request-time fallback.
+Routes, Area shells, overlays, navigation injections, and Themes are descriptors on the same catalog
+entry ([MODULES.md](./MODULES.md#descriptor-identity-and-instantiation)). Modules never create physical
+Next.js routes. Outside Public, a route answers under its package: `/orders` in `@acme/shop` is served
+at `/acme/shop/orders` -- the scope loses its `@`, and the module key is not part of it. Public carries no
+namespace, and `/` is an application for the Area root slot. An Area may export a route mount such as
+`settings`; a route opts in with `mount: { mountKey: "settings" }`. A Module references its own Pages
+through `(ownerModuleId, presetKey)`, never through a literal path.
 
-Area-shell and route contributions use the same catalog entry. Routes own immutable effective normalized
-paths, optional navigation injections, and lazy tree loaders. Modules
-do not create physical Next.js routes in the Site Skeleton.
+## 8. Export the Client and Authoring contributions
 
-Outside Public, a Module's routes answer under its own package. A route declaring `/orders` in `@acme/shop`
-is served at `/acme/shop/orders` within its Area — the scope loses its `@`, the module key is not part of
-it, and how the package arranges its routes underneath is the package's own business. Two packages
-therefore cannot contest an address, and a package can only collide with itself. These Areas are
-authenticated and never indexed, so the extra segments cost nothing.
-
-Public is the exception in both directions: it carries no namespace, because it is the Site's own address
-space and the only indexed one. A Module writes `/contact` there and `/contact` is what answers — which
-also makes it the one place where two Modules can want the same address. That is settled when a Module is
-enabled for an Area, not at compile time.
-
-`/` is an exception in either case: it is an application for the Area root slot rather than a route of the
-Module's own, so it keeps the address it asks for.
-
-An Area can export a route mount such as `settings`. A Module opts in with `mount: { mountKey: "settings" }`
-and thereby hangs its navigation entry inside that container, without having to know the container's item
-key. A mount says nothing about paths — the address is already unique under the package — and must be
-declared by the target Area. Moving the item in Builder changes presentation only, never the route path.
-
-A Module must not treat its effective path as derivable from its own id, and must reference its own pages
-through `presetKey` rather than through a literal path.
-
-## 8. Export Client and Authoring manifests
-
-For a Controller-bearing Module, the live Controller projection contains exactly one static Controller
-loader:
+`./client` exports the live Client contributions, one entry per Module:
 
 ```tsx
 // client.ts
 "use client";
 
-import {
-  definePhiRuntimeModuleControllerClientAreaContribution,
-  extendPhiRuntimeModuleControllerClientManifest,
-  type PhiRuntimeModuleControllerClientManifest,
-} from "@phis/ui/runtime/controller-client";
 import dynamic from "next/dynamic";
-import { STATUS_MODULE_ID } from "./constants";
+import { definePhiModuleClientContributions } from "@phis/ui/module/client";
+import { STATUS_MODULE_ID } from "./ids";
 
-// A literal next/dynamic call: the server render then preloads the Controller's chunks. A loader
-// function passed through here would only be requested once hydration reached the Controller.
-const contribution = definePhiRuntimeModuleControllerClientAreaContribution({
-  moduleId: STATUS_MODULE_ID,
-  Controller: dynamic(() =>
-    import("./controller/client").then((module) => module.PhiStatusControllerClient)),
+export const phiModuleClientContributions = definePhiModuleClientContributions({
+  modules: [{
+    moduleId: STATUS_MODULE_ID,
+    // A literal next/dynamic call, so the server render preloads the Controller's chunks.
+    Controller: dynamic(() =>
+      import("./controller/client").then((module) => module.PhiStatusControllerClient)),
+    renderClients: [],
+    dataProviders: [],
+  }],
 });
-
-export function extendStatusControllerClientManifest(
-  base: PhiRuntimeModuleControllerClientManifest,
-) {
-  return extendPhiRuntimeModuleControllerClientManifest(base, [contribution]);
-}
 ```
 
-A controllerless Module contributes no Controller Client and does not need a Controller Client
-manifest extension. Its Render, data-provider, Calendar-adapter, and Authoring contributions remain
-independent immutable manifests and are included only when the Module actually owns those artifacts.
-Server and Client contribution parity is validated by `moduleId`; Controller presence is not the
-identity of a Module.
+- `Controller` is present exactly when the Module owns a Controller. A controllerless Module omits it.
+- `renderClients` pairs a namespaced Widget type with a Client made by
+  `definePhiRuntimeModuleRenderClient(dynamic(() => import(...)))` from `@phis/ui/runtime/render-client`,
+  for Widgets whose Server renderer uses `PhiRuntimeModuleRenderClientHost`. Pure Server-rendered Widgets
+  need no entry. The `dynamic` call must be literal and come from `next/dynamic`.
+- `dataProviders` lists `{ key, ownerModuleId, loadLive, loadAuthoring? }` for the Provider descriptors in
+  the definition. `loadAuthoring` exists only for providers whose `authoringMode` is `read` or `edit`.
+- `calendarAdapters` (beside `modules`) lists Calendar adapter Clients. Their Server descriptors are
+  `calendarAdapters` in the definition, keyed `<owner>/calendars/<key>`.
+- `definePhiModuleClientContributions` rejects a duplicate Module id.
 
-If Widget Server renderers use `PhiRuntimeModuleRenderClientHost`, export matching Clients through
-`definePhiRuntimeModuleRenderClient(dynamic(() => import("...").then(...)))` and
-`extendPhiRuntimeModuleRenderClientManifest(...)` from `@phis/ui/runtime/render-client`, or as
-`renderClients` in `definePhiModuleClientContributions`. The `dynamic` call must be literal and come
-from `next/dynamic`: only then does the server render preload the chunks of the Clients a page renders,
-so a package lists `next` as a peer dependency. Pure Server-rendered Widgets need no Render Client entry.
-
-Calendar-system implementations use the same split. The Server definition declares only serializable
-`calendarAdapters` descriptors. The separate Client entrypoint extends the immutable Area manifest
-with `extendPhiRuntimeModuleCalendarAdapterClientManifest(...)`; each lazy loader returns a
-`PhiCalendarAdapterClient`. The descriptor key uses `<npm-package>/calendars/<adapter-key>`, and its
-Server and Client owners must match. The generic Inspector selector receives only adapters from the
-active target-Area module set, and live Controls reject loaders whose owner Module is not active.
-
-A package that contributes only a Calendar adapter is a valid controllerless Module. It still needs
-its own stable `moduleId`, Area eligibility, Core/Add-on binding, Server catalog contribution, and
-Client adapter manifest extension. It does not declare or export Controller artifacts. A domain
-Module imports generic date/time Controls from `@phis/ui/controls/date-time`; Core always owns
-the Gregorian adapter and the CMS-visible `Date Picker` Widget. The optional `@phis/calendar` Module
-adds event-calendar presentation and additional calendar systems. Depending on that package does not
-activate the Calendar Module or any adapter Module; `phis-cli` must install the required packages into
-external build state, and the Site must explicitly enable the required Modules for the Area.
-
-Public Calendar values remain serializable adapter-neutral records from `@phis/ui/types`.
-Do not persist or signal JavaScript `Date`, Dayjs, Luxon, Temporal polyfill, or adapter-private
-objects. Date-only values carry an ISO date plus a calendar id; instants use ISO strings; local date
-times additionally carry an IANA time zone; ranges and periods use explicit start/end fields.
-Scalar signal `valueType` values `date` and `time` carry `YYYY-MM-DD` and
-`HH:mm[:ss[.fraction]]` strings respectively. Calendar-aware selections, ranges, date-times, periods,
-viewports, and events use `valueType: "json"` with a package-namespaced `valueSchema`.
-
-Authoring is a separate manifest and must never be imported by a normal live Area:
+`./authoring-client` exports the Authoring contributions. Every Module brings one, including a Module
+with nothing to author: the Builder wraps each active Module's Authoring Client around the Canvas, and
+a missing loader is a hard failure.
 
 ```tsx
 // authoring-client.ts
 "use client";
 
-import {
-  definePhiRuntimeModuleAuthoringClientContribution,
-  extendPhiRuntimeModuleAuthoringClientManifest,
-  type PhiRuntimeModuleAuthoringClientManifest,
-} from "@phis/ui/runtime/authoring-manifest-client";
-import { STATUS_MODULE_ID } from "./constants";
+import { definePhiModuleAuthoringContributions } from "@phis/ui/module/authoring-client";
+import { STATUS_MODULE_ID } from "./ids";
 
-const contribution = definePhiRuntimeModuleAuthoringClientContribution({
-  moduleId: STATUS_MODULE_ID,
-  loadAuthoring: () => import("./authoring/module")
-    .then((module) => module.PhiStatusAuthoringClient),
-});
-
-export function extendStatusAuthoringClientManifest(
-  base: PhiRuntimeModuleAuthoringClientManifest,
-) {
-  return extendPhiRuntimeModuleAuthoringClientManifest(base, [contribution]);
-}
-```
-
-The Client and Authoring projections are exported under the fixed names in section 8a. The example names
-above describe the shape a package builds internally, not what the generator looks for.
-
-Data providers follow the same split: serializable provider descriptors stay in the Server Module
-definition; executable `loadLive` and optional side-effect-free `loadAuthoring` edges stay in immutable
-Area-local Data Provider Client manifests. `options`, `table`, and `collection` are the shared provider
-kinds. Do not create Widget-specific fetch or option registries.
-
-## 8a. What a Module package exports
-
-A generator cannot guess an export it was never told about. `package.json#exports` says where an
-entrypoint is and nothing about what is inside it, so the names are fixed -- one per boundary, the way a
-Server Add-on artifact has exactly one export called `phisAddon`:
-
-```text
-.                   phiModuleDefinitions           @phis/ui/module
-./server            phiModuleServerContributions   @phis/ui/module
-./client            phiModuleClientContributions   @phis/ui/module/client
-./authoring-client  phiModuleAuthoringContributions @phis/ui/module/authoring-client
-./fonts             phiModuleFontContributions     @phis/ui/module        (optional)
-```
-
-Each is a list keyed by Module id, because one package may carry several Modules. The boundaries are the
-ones this document already requires; only the names are new.
-
-**`./fonts` exists only for a package that declares typefaces, and nothing else in the package imports
-it.** A declaration is a `next/font/local` call at module scope: the Site's build evaluates it, hosts the
-files from the Site's origin and computes the fallback metrics, and outside a Next build the same call
-throws. The Server boundary is read by tools that are not Next -- the package's own verify script, a
-test -- so the declarations get a boundary of their own that only the Site's root layout imports. What
-the boundary exports is the catalogue entry, not the loader's result: the family name a fonts block may
-write in a slot, the CSS variable that name resolves to, in the Module's own namespace
-(`var(--phi-font-<module>-<family>)`), and the class that puts the variable in scope. Every declaration
-says `preload: false`; which family a page uses is decided per request by the Theme, and a preload for
-every family a Module carries would be paid on every page. The files travel in `dist` beside the
-compiled boundary, under a licence that permits redistribution and subsetting. The boundary does not
-begin with `"use client"`.
-
-**A Module never names an Area.** Where its contributions land follows from `eligibleAreas` on its own
-definition, which is also what decides whether a Site may select it for an Area. One statement, read in
-both places, rather than two lists that can disagree. This is why the definitions sit at the package root:
-they are shared serializable contract, and the Client projection reads the Areas from there instead of
-importing the Server boundary.
-
-**Every Module brings an Authoring contribution, including one that owns nothing to author.** The Builder
-wraps each active Module's Authoring Client around the canvas, so a missing loader is a hard failure at
-render time rather than an absence. A Module with nothing to author registers an empty Widget module:
-
-```ts
-// authoring-client.ts
-const WidgetModule = createPhiAuthoringWidgetModule([]);
 export const phiModuleAuthoringContributions = definePhiModuleAuthoringContributions([{
   moduleId: STATUS_MODULE_ID,
-  loadAuthoring: () => Promise.resolve(createPhiRuntimeModuleAuthoringClient({
-    moduleId: STATUS_MODULE_ID,
-    WidgetModule,
-  })),
+  loadAuthoring: () => Promise.resolve(PhiStatusAuthoringClient),
 }]);
 ```
 
-`collectPhiSiteModuleClientContributions` refuses a definition without one, so the mistake surfaces where
-the package is composed and not in the Builder.
+`PhiStatusAuthoringClient` is the Client built in [section 4](#authoring-adapter); a Module without
+Widgets passes `createPhiAuthoringWidgetModule([])`. `collectPhiSiteModuleClientContributions` refuses a
+definition without an Authoring contribution, so the mistake surfaces where the package is composed.
 
-**`@phis/ui` is a peer dependency, never a normal one.** A Module consumes its functions and components
-directly, and that is exactly why it must receive the Site's instance: a second copy means a second set of
-React contexts, so the manifest providers the Site renders are invisible to the Module's own components.
-`react` and `react-dom` follow the same rule. The peer range doubles as the compatibility statement a
-source's package list carries.
+Public calendar values are serializable adapter-neutral records from `@phis/ui/types`. Do not persist or
+signal `Date`, Dayjs, Luxon, Temporal, or adapter-private objects. Scalar `date` and `time` signals carry
+`YYYY-MM-DD` and `HH:mm[:ss[.fraction]]` strings; calendar-aware selections, ranges, and events use
+`json` with a package-namespaced value schema. Core owns the Gregorian adapter and the Date Picker
+Widget; `@phis/calendar` is an optional Module package with event calendars and further calendar systems.
+
+## 8a. What a Module package exports
+
+```text
+.                   phiModuleDefinitions             definePhiModuleDefinitions            @phis/ui/module
+./server            phiModuleServerContributions     definePhiModuleServerContributions    @phis/ui/module
+./client            phiModuleClientContributions     definePhiModuleClientContributions    @phis/ui/module/client
+./authoring-client  phiModuleAuthoringContributions  definePhiModuleAuthoringContributions @phis/ui/module/authoring-client
+./fonts             phiModuleFontContributions       definePhiModuleFontContributions      @phis/ui/module   (optional)
+```
+
+A generator cannot guess an export it was never told about, so these names are fixed (`module.ts`). Each
+is keyed by Module id, because one package may carry several Modules.
+
+**`./fonts` exists only for a package that declares typefaces, and nothing else in the package imports
+it.** A declaration is a `next/font/local` call at module scope: the Site's build evaluates it, hosts the
+files from the Site's origin, and computes fallback metrics; outside a Next build the call throws. The
+boundary exports catalogue entries, not loader results: the family name a fonts block may write in a
+slot, the CSS variable in the Module's own namespace (`var(--phi-font-<module>-<family>)`), and the class
+that puts the variable in scope. `definePhiModuleFontContributions` rejects an unnamed or duplicate
+family, a family `@phis/ui` already declares, and a variable outside that namespace. Declarations say
+`preload: false`, because the Theme decides per request which family a page uses. The files travel in
+`dist` under a licence that permits redistribution and subsetting. The boundary does not begin with
+`"use client"`. Font delivery is described in [NEXT_INTEGRATION.md](./NEXT_INTEGRATION.md#fonts).
 
 **A Widget names itself from its own package.** `resolvePhiCmsWidgetPluginKey` maps a bare type key to a
-first-party module and refuses an unknown one, which is what stops an outside package claiming a
-first-party Widget. A Module package composes its own plugin key -- `@acme/status/modules/status/widgets`
--- and builds the namespaced type with `buildPhiCmsWidgetNamespacedTypeKey`. That namespaced type is what
-crosses the boundary: the Server manifest carries it, and the Render Client manifest the Area host
-composed resolves it. Config parsing uses the primitives from `@phis/ui/widget-config`, so a package does
-not reproduce the renderable base parser. The authoring editor is built from Controls in
-`@phis/ui/controls`; a Module contributes Widgets and does not bring its own control vocabulary.
+first-party Module and refuses an unknown one. A Module package composes its own plugin key
+(`@acme/status/modules/status/widgets`) and builds the namespaced type with
+`buildPhiCmsWidgetNamespacedTypeKey`; the namespaced type is what the Server manifest and the Render
+Client manifest carry. The authoring editor is built from Controls in `@phis/ui/controls`.
 
-**A Module may contribute a navigation entry to any declared surface.** An entry that names no anchor
-lands at the end of its surface, ordered by `ownerModuleId`, `presetKey`, and `itemKey` -- deterministic,
-and not dependent on which Module happened to be composed first. Nothing has to be opened for this.
-
-What does need opening is a **reference**. `before`, `after`, and `parentItemKey` name someone else's item,
-and a named item becomes public API its owner has to keep. Those three must therefore point at an item the
-surface exports through `exportedItemKeys`, or at one the Module itself injects. Contributing to a surface
-and depending on a particular item in it are separate permissions.
+**Navigation.** An injection that names no anchor lands at the end of its surface, ordered by
+`ownerModuleId`, `presetKey`, and `itemKey`. `before`, `after`, and `parentItemKey` must point at an item
+the surface exports through `exportedItemKeys` or at one the Module injects itself.
 
 ## 8b. How the package is built
 
-A Module package ships compiled, not as source. That is what lets a vendor keep it closed, and it is what
-`@phis/ui` itself does -- `dist` holds transpiled ESM with `"use client"` intact, `.d.ts` beside each file,
-and CSS copied in. Turbopack consumes modules, not TSX; it never sees which of the two it got.
+A Module package ships compiled. `dist` holds transpiled ESM with `"use client"` intact, `.d.ts` beside
+each file, and copied assets (CSS, fonts, pictures). Use `tsc`, not a bundler: `tsc` emits one file per
+source file and leaves the directive and the bare imports of `react` and `@phis/ui` alone, while bundlers
+tend to drop the directive and inline peer dependencies. `@phis/example`'s `build` script is
+`tsc -p tsconfig.build.json` plus copying its font and picture files.
 
-Use `tsc`, not a bundler. `tsc` emits one file per source file and leaves both the directive and the bare
-imports of `react` and `@phis/ui` alone. Bundlers that merge modules tend to hoist or drop the directive and
-will happily inline a peer dependency, and both faults surface at runtime in a browser rather than at the
-Site's build.
+`phis module check` inspects the installed package without loading it
+(`phis-server/src/cli/module-package.mts`):
 
-Four things have to hold in the built package, and `phis module check` looks at all four:
+- `.`, `./server`, `./client`, and `./authoring-client` are exported and point at existing files;
+- `./client` and `./authoring-client` begin with `"use client"`; `.` and `./server` do not;
+- `react` and `@phis/ui` are not ordinary dependencies, and the package carries no copy of its own;
+- a package that ships CSS states CSS side effects;
+- the `phis` block declares the package's Modules, each id belongs to the package, and each category is
+  known.
 
-- **`./client` and `./authoring-client` begin with `"use client"`,** as the first statement, past comments
-  and nothing else. `.` and `./server` must not.
-- **`react` and `@phis/ui` are peer dependencies,** never ordinary ones, and the package carries no copy of
-  its own. Two Reacts mean broken hooks; two `@phis/ui` mean two sets of contexts, so the Builder store a
-  Module reads is not the one the Builder writes.
-- **`.d.ts` ship beside the JavaScript.** The generated projection imports the package by name, and the
-  Site's build typechecks it.
-- **CSS is stated as a side effect.** A package that ships CSS and declares `sideEffects: false` invites a
-  bundler to drop the imports. `sideEffects: ["**/*.css"]` instead. This one does not fail -- it renders
-  unstyled, which is why it is checked rather than waited for.
-
-What compiling does not buy is a hot install: a package with Widgets still triggers a Site build, because
-its Client code has to enter the bundle graph. What it buys is that the vendor's source stays the vendor's.
-
-Note the trade this makes. With source, the Site's build typechecks a Module against the `@phis/ui` actually
-installed. Compiled, only the declared surface in the `.d.ts` is checked; a changed prop inside a compiled
-body surfaces at runtime. That is what the version range in the package listing is for.
+`.d.ts` files are not checked there, but the generated projection imports the package by name and the
+Site's build typechecks it. A package with Widgets still needs a Site build after installation, because
+its Client code enters the bundle graph. Compiled, only the declared `.d.ts` surface is typechecked
+against the installed `@phis/ui`; the peer range states compatibility.
 
 ## 8c. Gating a surface on a Server Add-on's role
 
@@ -1051,75 +922,51 @@ have acted on; it does not make the page safe. What the link leads to is decided
 the handler, against `roles:v1`. A Module that gates only in the client has hidden a door, not locked it.
 
 Like the other provider-scoped policies, this one is owner-checked: a Module may name its own Add-on and
-Core, and not somebody else's.
+Core, and not somebody else's. The policy is part of [ACCESS.md](./ACCESS.md); Add-on roles are declared
+as described in [phis-server AUTHORIZATION.md, "Add-on roles"](../phis-server/AUTHORIZATION.md#5-add-on-roles).
 
 ## 9. Install without patching the Skeleton
 
-The canonical Skeleton is the reusable, versioned basis for Sites. A Module installation must not add or
-rewrite Area composition files, route handlers, `src/runtime-modules/*`, `src/app/*`, or any other
-Skeleton source. The Module package is the only owner of its optional Site code.
+Installing a Module never adds or rewrites Skeleton source. `phis module` records the installation and
+generates a projection, which the Skeleton hands to the generic hosts from the files under
+`src/runtime-modules/` -- each Area host, each Area's Client boundary, and the root. Those files do not
+change when a Module is installed or removed; placement by `eligibleAreas`, collision checks, and the
+Builder's union across Areas stay in `@phis/ui`.
 
-`phis-cli` owns build-time installation. It installs package versions and generates an immutable,
-statically analyzable projection into build state: a list of imports and one call, which places each
-Module's contributions into the Areas its definition names.
-
-The projection is **passed into** the generic Area hosts rather than imported by them. A Site build cannot
-redirect an import that happens inside `@phis/ui` -- a bundler alias matches the request string, and a
-package's own internal request is not one a Site can name. This was measured rather than assumed: an alias
-on the seam module leaves the empty value in the bundle. So the Skeleton hands the projection to the host
-factories once, in the thirteen files under `src/runtime-modules` -- one per Area host, one Client
-boundary per Area, and the document shell -- and those files are never touched again
-when a Module is installed or removed. All composition stays in `@phis/ui`: placement by `eligibleAreas`,
-collision checks against first-party ids, and the Builder's union across Areas.
-
-```sh
-phis module add  --site <key> --package @acme/status [--spec <version or workspace:*>]
-phis module del  --site <key> --package @acme/status
-phis module list [--site <key>]
-phis module sync --site <key>
+```text
+phis module list  [--site <site key>]
+phis module add   --site <site key> --package <@scope/name> [--spec <version or workspace:*>] [--path <site root>]
+phis module del   --site <site key> --package <@scope/name> [--force] [--path <site root>]
+phis module sync  --site <site key> [--path <site root>]
+phis module check --site <site key> [--package <@scope/name>] [--path <site root>]
 ```
 
-`add` and `del` record the installation in `config/phis-modules.json` and rewrite the projection in the
-same step: for a Module the generated file *is* the application, so there is no separate reconcile the way
-an Add-on artifact needs one. `sync` regenerates from the recorded state, for when the two have drifted.
+(`phis-server/src/cli/phis.mts`)
 
-Nothing is fetched. With `--spec` the package is written into the Site's dependencies and the package
-manager resolves it; without one it has to be resolvable already. Acquisition is a separate step, and
-folding it in would make an install look as though it had verified something it never saw.
+- `--path` names the Site root when it is not the Site's configured source path.
+- `add` records the package in `config/phis-modules.json`, rewrites the projection, and runs the package
+  check. With `--spec` it writes the package into the Site's dependencies; without one the package must
+  already resolve. Nothing is fetched.
+- `del` refuses while the package still draws blocks on published pages of the Site and lists them;
+  `--force` removes it anyway. The blocks stay in their pages and stop being drawn. It also removes the
+  dependency and rewrites the projection.
+- `sync` regenerates the projection from the recorded state.
+- `check` runs the package check from [section 8b](#8b-how-the-package-is-built).
 
-The projection is preserved by `phis reconcile`, like `config/site-runtime.json`. Regenerating a Site's
-Skeleton must not silently uninstall its Modules.
+A recorded entry is exactly `{ packageName, origin, spec? }` (`phis-server/src/cli/modules.mts`).
+`origin` is `resolved` when `add` was given a `--spec` and `local` otherwise; the type also admits
+`source`.
 
-The build manifest is deployment state, not a hand-maintained extension surface. It must be regenerated
-atomically and must not be assembled from request, database, or environment package names. Module removal
-removes its manifest projection and package from the next build; it does not edit the Skeleton back.
+The projection is three generated files: `src/generated/site-modules.ts`,
+`site-modules-client.ts`, and `site-modules-authoring-client.ts`. The Site scaffold also creates
+`src/generated/site-modules-fonts.ts` empty, but `phis module` does not write it: a package's `./fonts`
+boundary has to be added to that file by hand. All four files are preserved when the Skeleton is
+reconciled, so regenerating a Site does not uninstall its Modules.
 
-Each entry also records what the build cannot otherwise be asked afterwards: the package name and
-version it came from, the minimum `phisVersion` it declares, and its origin. A Module reaches a build
-three ways, and the manifest keeps them apart: **local**, built here and stamped only by its own
-`package.json` version; **resolved**, an ordinary dependency the package manager fetched from a registry,
-stamped by the lockfile integrity; **source**, fetched by `phis-cli` and stamped by the package digest
-the source's list stated. A private registry therefore remains a perfectly good way for a company to
-distribute its own Modules -- it is the resolved door, and Core neither performs nor duplicates that
-acquisition. The minimum `phisVersion` is checked against `config/phis-instance.json` before the build,
-so an incompatible Module is refused rather than shipped as a broken Site.
-
-The Builder projection receives the complete installed target-Area Authoring union. This makes the Module
-available inside an isolated target-Area Canvas without activating or mounting it in the outer Builder Area.
-The Site's persisted Area `runtimeModules` activates only eligible ids already present in the build manifest.
-Installation must not silently enable a Module, and a Module must not enable itself.
-
-Site verification must also cover the package-owned Area shell baseline before the first Area revision is
-persisted. The effective selection is the exact persisted Area override when one exists and otherwise the
-code-owned shell preset. Page rendering, provider/controller resolution, Form discovery, and Form handler
-dispatch must all consume that same effective Area selection. A missing database override is not an empty
-module list.
-
-If the Module requires code in `@phis/server`, that Add-on travels in the same package: one repository
-delivers one package, which may carry a Module half, an Add-on half, or both under a single version and
-a single digest. `phis-cli` installs the Add-on half through the Add-on workflow first, because it is
-hot-pluggable while the Module half waits for a build; removal runs in reverse. Module activation never
-installs or enables that Add-on.
+After installation, rebuild the Site. Installing never enables a Module: the Site selects it per Area
+in the Builder, and only ids present in the build can be selected. If the package also carries an
+Add-on half, install and enable the Add-on through `phis addon` ([phis-server
+SERVER_ADDONS.md](../phis-server/SERVER_ADDONS.md)); Module activation never installs or enables it.
 
 ## 10. Access, server capabilities, and errors
 
@@ -1154,36 +1001,32 @@ installs or enables that Add-on.
 
 ## Verification
 
-Run the Module package's own checks first:
+Run the package's own checks:
 
 ```bash
 pnpm typecheck
-pnpm lint
 pnpm build
 ```
 
-Then verify the consuming Site and the `@phis/ui` runtime boundary:
+A package may add its own script; `@phis/example` has `pnpm verify`, which checks that its catalog
+contributions resolve. Then, against a Site:
 
 ```bash
-pnpm verify runtime
-pnpm verify package
+phis module add --site <site key> --package @acme/status --spec workspace:* --path <site root>
+phis module check --site <site key> --package @acme/status --path <site root>
 ```
 
-Finally test at least:
+Rebuild the Site and test at least:
 
+- one Area with the Module inactive and the same Area with it active;
 - the code-owned Area baseline on a Site with no persisted Area revision;
-- a persisted Area override, including the expected inactive-Module rejection when its `runtimeModules`
-  omits the Module;
-- one live Area with the Module inactive;
-- the same Area with the Module active;
-- Runtime and Preview rendering for every contributed Widget;
+- Runtime and Preview rendering of every contributed Widget;
 - Builder Picker, Inspector, Canvas, and Authoring output;
-- Controller mounting and declared signal routes;
-- missing/incompatible server capability diagnostics;
-- package graph isolation so Public does not download unrelated Builder or optional-module code;
-- every Widget on a Public page in a **production build, signed out and without a query**: the response
-  carries `x-nextjs-cache` (static), a second request shows the same, and the same page with `?check=1`
-  (dynamic) shows the same again. `next dev` never renders statically (STATIC_RENDERING.md).
+- Controller mounting and the declared signal routes;
+- the diagnostics for a missing or incompatible server capability;
+- that Public does not download Builder or unrelated optional-Module code;
+- every Widget on a Public page in a production build, signed out and without a query
+  ([STATIC_RENDERING.md](./STATIC_RENDERING.md#checking-a-page)).
 
-Use the actual production browser resource list for payload evidence. Development Turbopack/HMR chunks
-are not a production bundle measurement.
+Measure payload from the production browser resource list; development Turbopack chunks are not a
+production bundle.

@@ -63,7 +63,7 @@ built. Remove an entry when it is done.
   (THIRD_PARTY_MODULES.md, "Addresses are granted, not owned").
 - **Optional visual Form Builder.** Define the canvas and its Draft/Publish request shape (selection,
   field insertion and reordering, responsive placement, preview, Undo/Redo) before adding persistence
-  capabilities to `controller:@phis/ui/form-builder:default`. Reuse the `form_definitions` revision
+  capabilities to `controller:@phis/ui/modules/form-builder/controller/default:default`. Reuse the `form_definitions` revision
   statuses; do not add another Form table.
 
 ## Media and Theme

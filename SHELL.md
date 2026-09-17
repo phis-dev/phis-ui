@@ -385,6 +385,7 @@ Page-owned regions are mounted inside the shell page-content viewport and includ
 - `content`
 - `sider_right`
 - `footer_top`
+- `drawer_right`
 
 The important distinction is:
 
@@ -401,10 +402,3 @@ Those two concepts must not share the same persistence or hydration key just bec
 - AntD tokens = source of truth for standard runtime design values
 - shell bridge variables = explicit shell-specific values only
 - shell containers stay plain HTML/CSS; Ant Design is reserved for inner widgets and other explicitly client-bounded UI
-
-## Contract governance
-
-Changing, extending, replacing, reinterpreting, or widening this contract requires explicit prior
-operator approval after the exact gap and affected ABI have been presented. This contract must not be
-bypassed through a parallel, shadow, local, Module-specific, Provider-specific, fallback, or compatibility
-contract. If it cannot express a requirement, implementation stops and asks the operator first.

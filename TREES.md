@@ -1,6 +1,9 @@
-# Tree Contract (target v1)
+# Tree Contract
 
-This document is normative for every provider-backed hierarchical Tree rendered by Phi.
+This document is normative for every provider-backed hierarchical Tree rendered by Phi. Trees share the
+Collection Header, action presentation, and condition contracts with Tables; those are defined once in
+[TABLES.md](./TABLES.md) and only Tree-specific differences are stated here. The generic signal contract
+is in [SIGNALS.md](./SIGNALS.md).
 
 ## Ownership
 
@@ -78,37 +81,26 @@ Widget config contains only:
 - initial query/selection/expansion/check state;
 - standard signal routes.
 
-Self-contained tools follow the exact Collection Header contract in `TABLES.md`: optional strong title
-plus description `(i)` tooltip on the left, binding fields/search in the flexible middle zone, and one
-right-aligned compact Toolbar. Without a title, query Controls begin at the left edge. Built-in toolbar
-order is Add, configured resource/selection actions, Reset, Reload. All Controls default to `small`.
-Binding Controls may omit `label` when the surrounding context already names the value; omission removes
-the label region rather than rendering an empty placeholder. Icon-only built-in tools expose their
-localized description as a tooltip. A Binding Control may declare its token-compatible `width`; Search
-uses the remaining Collection Header width with a `10rem` minimum and wraps only when that minimum no
-longer fits beside the preceding Controls.
-Actions select declared Provider capabilities but Widget config owns label, icon, display, mode,
-confirmation text, placement, and order within the configured action segment. Confirmation policy,
-`undoable`, and the destructive-action rule are the ones `TABLES.md` states for Table actions. Row options
-(`rowOptionsPath`) apply to Tree fields as `TABLES.md` states them. The Tree Binding already refuses a
-value the node does not offer; a Tree edits only its title and icon today, so the Select arrives with the
-first field editor that renders a string field -- the columns a Tree may offer later.
+Self-contained tools use the Collection Header defined in
+[TABLES.md](./TABLES.md#presentation-and-content-are-separate). Tree-specific: a Binding Control may
+declare its token-compatible `width`, and Search takes the remaining header width with a `10rem` minimum.
+Actions and their confirmation follow [TABLES.md](./TABLES.md#actions-and-signaling). Widget-level
+`presentation.description` is independent of `presentation.node.descriptionFieldKey`.
 
-Widget-level `presentation.title` and `presentation.description` use the shared Collection Header;
-description is a tooltip beside a present title and is independent of
-`presentation.node.descriptionFieldKey`. In external tools mode, title and tooltip may remain without
-the integrated query/toolbar zones.
-`presentation.bordered` applies only to the rendered Tree Control and never wraps the Widget header,
-tools, diagnostics, or an external host. A bordered Tree uses the same global `borderRadiusLG` outer
+Inline editing (`features.editing.enabled`) edits the node title field and, when
+`presentation.node.iconEditor.enabled` is set, the icon field. A Tree renders no other field editor, so
+row options declared on a Tree resource (`rowOptionsPath`) are validated by the catalog but not used.
+
+`presentation.bordered` applies only to the rendered Tree Control. A bordered Tree uses the same global `borderRadiusLG` outer
 radius as a bordered Table, clips its background and node presentation to that radius, and uses
 `paddingSM` as its inner padding. An unbordered Tree adds no implicit inner padding.
 `presentation.row.striped` alternates the currently visible, depth-first node order using the global Ant
 Design fill token. Collapsing or expanding a branch recomputes presentation order without changing
 Provider nodes or their hierarchy.
 
-Provider and Widget action availability uses the same recursive runtime-condition expression as Tables
-and Forms. Groups use `match: "all" | "any"`; Tree leaves may read the current node through `source:
-"row"` or one concrete active Controller. `source: "form"` is valid only for a controlled field inside
+Provider and Widget action availability uses the runtime-condition expression defined in
+[TABLES.md](./TABLES.md#disabled-conditions); Tree leaves read the current node through `source: "row"` or
+one concrete active Controller. `source: "form"` is valid only for a controlled field inside
 `PhiFormControl`, never for a provider-backed `PhiTreeWidget`. Unavailable Controller state is fail-closed.
 
 ## Selection, checking, and expansion
@@ -133,27 +125,31 @@ details and are never persisted or sent as Provider business data.
 
 ## Standard signals
 
-The generic Tree capabilities are:
+Declared in `plugins/runtime-modules/core/widgets/tree/config.ts`. Inputs:
 
 ```text
 search/change:string
 search/clear:none
 reload/activate:none
-bindingParams/change:json
+bindingParams/change:json<tree-binding-params>
 selection/change:string[]
 checking/change:string[]
 expansion/change:string[]
-action/activate:json
-state/change:json
-mutation/change:json
+action/activate:json<tree-action>
 ```
 
-All JSON values use centralized namespaced schemas. Controllers may coordinate these states, but direct
+Outputs, by capability id (the channel is chosen by each route):
+
+```text
+selectionChange      change:string[]
+checkingChange       change:string[]
+expansionChange      change:string[]
+actionActivate       activate:json<tree-action>
+bindingParamsChange  change:json<tree-binding-params>
+stateChange          change:json<tree-state>
+mutationChange       change:json<tree-mutation>
+```
+
+A Tree has no condition-state request capability. Controllers may coordinate these states, but direct
 Provider transactions remain typed Binding calls rather than a parallel signal transaction path.
 
-## Contract governance
-
-Changing, extending, replacing, reinterpreting, or widening this contract requires explicit prior
-operator approval after the exact gap and affected ABI have been presented. This contract must not be
-bypassed through a parallel, shadow, local, Module-specific, Provider-specific, fallback, or compatibility
-contract. If it cannot express a requirement, implementation stops and asks the operator first.

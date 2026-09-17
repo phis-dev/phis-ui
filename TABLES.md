@@ -1,8 +1,8 @@
 # Table and Table-Provider Contract
 
-This document defines the normative target v1 ABI for tables in `@phis/ui`. It applies to
-Core, every first-party Runtime Module, third-party Modules, live rendering, Preview, and Builder
-Authoring.
+This document defines tables in `@phis/ui`. It applies to Core, every first-party Runtime Module,
+third-party Modules, live rendering, Preview, and Builder Authoring. The generic signal contract (scopes,
+addresses, routes, correlation) is in [SIGNALS.md](./SIGNALS.md); Forms are in [FORMS.md](./FORMS.md).
 
 ## One rendering path
 
@@ -41,11 +41,13 @@ Ant Design Table and shared Phi Controls
 - a Runtime Module owns its domain Provider, Forms, Controller, and preset wiring. It must not wrap the
   generic Table Widget merely to add a missing generic capability.
 
-Only immutable, already-resolved static rows, including native Markdown table rows and read-only preview
-data, may render through `PhiTableControl` directly. This exception has no query, asynchronous loading,
-editable cell, row/selection/resource action, row or column reordering, drag/drop, optimistic state,
-Draft, persistence, or Provider lifecycle. The first such capability makes the data a Table resource and
-requires `PhiTableBinding` plus a declared Provider. A domain-owned state store is not an alternative
+Immutable, already-resolved rows that are only read, such as native Markdown tables, render through
+`PhiPlainTable` (`components/tables/phi-plain-table.tsx`): a plain `<table>` without hooks or a Client
+directive, styled from Ant Design's CSS variables. Read-only preview data may render through
+`PhiTableControl` directly. Neither exception has a query, asynchronous loading, editable cell,
+row/selection/resource action, row or column reordering, drag/drop, optimistic state, Draft, persistence,
+or Provider lifecycle. The first such capability makes the data a Table resource and requires
+`PhiTableBinding` plus a declared Provider. A domain-owned state store is not an alternative
 Binding and does not make mutable rows "static" or "transient".
 
 The only mutable provider-free exception is a controlled compound value inside `PhiFormControl`. A Form
@@ -69,8 +71,7 @@ PhiTableControl`. A `NavigationTableWidget`, direct domain callbacks around `Phi
 Navigation-local implementation of editable cells or drag/drop is forbidden.
 
 Domain-named Table Widget aliases, provider-key branches in Core, direct-fetch fallbacks, and
-module-specific Table render paths are not part of v1. If a Module requirement cannot be expressed by
-this contract, implementation stops until the operator approves a central contract extension.
+module-specific Table render paths are forbidden.
 
 ## Presentation and content are separate
 
@@ -303,7 +304,7 @@ the column rather than introducing per-value presentation branches.
 
 ### Provider field schema and cell editors
 
-Every field exposed by a Provider resource has one stable `key` and one closed semantic `type`. The v1
+Every field exposed by a Provider resource has one stable `key` and one closed semantic `type`. The
 field types and their default Core editors are:
 
 | Provider field type | Canonical serialized value | Default editable Control |
@@ -352,8 +353,8 @@ them, and the Binding refuses a value the row does not offer or offers disabled;
 text on others. A column may state `control: "select"` for such a field. The reader drops an entry
 without a string `value` and `label` instead of repairing it, and the Provider still validates every
 mutation itself. Row options exist on `string` fields only, never together with `options` or an Options
-Provider. A Tree declares them the same way; its Binding enforces them on write, and a field editor a Tree
-renders uses them.
+Provider. A Tree resource may declare them the same way and the catalog validates the declaration, but
+the Tree Binding does not enforce them and the Tree Control has no string-field editor that uses them.
 
 Provider values and mutation payloads use those serialized forms. Ant Design objects such as Dayjs
 instances and React nodes never cross the Control/Binding boundary. Email, URL, code, badge, tag, and
@@ -454,8 +455,10 @@ is evaluated against the current `row` where a row scope exists or state supplie
 Controller and uses `truthy`, `falsy`, `equals`, or `contains`; the latter two compare string values.
 `source: "form"` is invalid outside a Form. Controller conditions are fail-closed until state arrives.
 
-Controller state is requested and returned only through explicit `conditionStateRequest` and
-`conditionStateChange` routes. A request route may materialize a Page-demanded Controller owned by an
+Controller state is requested and returned only through explicit routes on the `conditionStateRequest`
+emit capability (`reload:none`) and the `conditionStateChange` listen capability
+(`condition/change:json<runtime-condition-state>`). The Widget emits the request when its routes name
+condition Controllers. A request route may materialize a Page-demanded Controller owned by an
 already active Module, but never activates a Module. The Table remains presentation and query state: it
 does not interpret role names, derive permissions, or call a permission endpoint. Providers independently
 enforce every mutation authorization.
@@ -787,22 +790,29 @@ reload/activate:none
 selection/clear:none
 columns/change:json<table-column-order>
 expansion/change:json<table-expansion>
-action/activate:json<table-action-request>
+action/activate:json<table-action>
+condition/change:json<runtime-condition-state>
 ```
 
-The closed generic Table output capabilities are:
+The closed generic Table output capabilities are listed by capability id; the channel is chosen by each
+route:
 
 ```text
-query/change:json<table-query>
-bindingParams/change:json<table-binding-params>
-selection/change:json<table-selection>
-action/activate:json<table-action>
-state/change:json<table-state>
-columns/change:json<table-column-order>
-expansion/change:json<table-expansion>
+queryChange            change:json<table-query>
+selectionChange        change:json<table-selection>
+actionActivate         activate:json<table-action>
+bindingParamsChange    change:json<table-binding-params>
+stateChange            change:json<table-state>
+mutationChange         change:json<table-mutation>
+columnsChange          change:json<table-column-order>
+expansionChange        change:json<table-expansion>
+conditionStateRequest  reload:none
 ```
 
-All JSON capabilities use centralized namespaced value schemas and strict readers. Table state signals
+`mutationChange` carries every Provider mutation result the Binding reconciled, accepted or rejected.
+
+All JSON capabilities use the value schemas in `PHI_SIGNAL_VALUE_SCHEMAS` (`types/signals.ts`) and
+strict readers; the declaration lives in `plugins/runtime-modules/core/widgets/table/config.ts`. Table state signals
 contain query, binding params, total/page information, loading, a stable error code where applicable, selection, column
 order, and expansion state. They do not broadcast complete rows. Table action signals carry action and
 row identities, selection, and an optional declared primitive action value; complete row snapshots are
@@ -870,8 +880,8 @@ Ant Design supports both hierarchical Table rows and a standalone Tree. Phi keep
 separate:
 
 - a **tree table** has columns and uses `PhiTableWidget` with `structure.mode: "tree"`;
-- a **Tree Widget** represents hierarchy without tabular columns and requires its own generic Widget
-  contract before use.
+- a **Tree Widget** represents hierarchy without tabular columns and uses `PhiTreeWidget`, defined in
+  [TREES.md](./TREES.md).
 
 The public tree-table contract uses semantic fields such as parent row identity, default expansion,
 expand-on-row activation, and semantic indentation. It does not persist Ant Design's nested `children`
@@ -889,8 +899,8 @@ that move in its Working Draft.
 
 ## Markdown reuse
 
-Native Markdown tables render their parsed rows through `PhiTableControl`; they do not introduce a
-second visual Table implementation.
+Native Markdown tables render their parsed rows through `PhiPlainTable`, which has no query, editing, or
+Provider lifecycle.
 
 A reusable Provider-backed Table embedded in Markdown uses a closed Phi embed descriptor containing a
 validated Provider/resource reference plus approved presentation data. Markdown must not execute
@@ -924,9 +934,3 @@ rejected rather than kept as a late-loading path.
 `scripts/validate-table-contracts.ts` and `scripts/validate-control-boundaries.mjs` reject direct Ant
 Design Table imports outside `PhiTableControl` and domain Table Widget aliases.
 
-## Contract governance
-
-Changing, extending, replacing, reinterpreting, or widening this contract requires explicit prior
-operator approval after the exact gap and affected ABI have been presented. This contract must not be
-bypassed through a parallel, shadow, local, Module-specific, Provider-specific, fallback, or compatibility
-contract. If it cannot express a requirement, implementation stops and asks the operator first.

@@ -22,28 +22,22 @@ This document collects the cache and invalidation touchpoints in `gateway/*`.
   - The render reads nothing of the request (`server-helpers/static-render.ts`): the path from the route's segments, no query, no cookie, so Core sees an anonymous visitor.
   - `<marker>` joins the config's `readMarker` with both translation markers. A publish or a translation write names a new address in every process within the config refresh; entries under the old one are never asked for again and leave by the bound. Nothing is invalidated.
   - `<mode>` is the colour scheme from the `phis_color_scheme` hint cookie, `light` until the browser has reported one: one entry per mode, so a dark visitor is not served a light page.
-  - `revalidate = 60` renders a page again after a minute for what the marker does not see, such as an Asset replaced under the same id or a Module switched on.
+  - The Site's static route layouts declare `revalidate = 60`, which renders a page again after a minute for what the marker does not see, such as an Asset replaced under the same id or a Module switched on.
   - The browser keeps a page it navigated to for `staleTimes.static` (30 s), so an open tab sees a publish after at most that long; a reload sees it at once.
   - Only in production. `next dev` keeps no rendered pages, so the proxy sends nothing to the static tree there.
 
 ## React `cache(...)` Wrappers
 
-These helpers use React server cache and currently do not expose a manual clear function:
+These helpers are wrapped in React server `cache(...)` for request-level memoization and have no clear
+function:
 
-- `getResolvedCmsPage(...)`
+- `getResolvedCmsPage(...)` and `getCurrentCmsPageDraft(...)`
   - File: `gateway/site-page.ts`
 
-- `getExactSiteArea(...)`
+- `getExactSiteArea(...)` and `getCurrentSiteAreaDraft(...)`
   - File: `gateway/site-area.ts`
 
 If their fetch layer uses `cache: "no-store"`, the underlying request is still dynamic, but the function itself remains wrapped in `cache(...)` for request-level memoization.
-
-## Other In-Process Caches Near Gateway
-
-- `configCache`
-  - File: `helpers/site-locale-config.ts`
-  - TTL-based helper cache.
-  - No explicit clear helper yet.
 
 ## Translation Caching
 

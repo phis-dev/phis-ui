@@ -1,7 +1,6 @@
 # Settings Container Contract
 
-This document defines the normative target-v1 `@phis/ui` contract for Module configuration
-surfaces: the Area-owned Settings container, its routing and navigation shape, the shared Settings page
+This document defines the `@phis/ui` contract for Module configuration surfaces: the Area-owned Settings container, its routing and navigation shape, the shared Settings page
 shell, and the Form basis every Settings section must use. Route compilation, mount injection,
 module-derived path segments, and navigation overlays follow the central contracts in
 [MODULES.md](./MODULES.md); access policies follow [ACCESS.md](./ACCESS.md).
@@ -31,25 +30,29 @@ without the Module having to know the container's item key.
 A Settings page addresses itself like any other route outside Public: under its own package.
 
 ```text
-/<scope>/<package><the path the route declares>
+/<area>/<scope>/<package><the path the route declares>
 ```
 
-`@phis/ui/modules/admin` declaring `/settings/general` is therefore served at `/phis/ui/settings/general`.
+`@phis/ui/modules/admin` declaring `/settings/general` in the Admin Area is therefore served at
+`/admin/phis/ui/settings/general`, and the Auth Module's `/settings/authentication` at
+`/admin/phis/ui/settings/authentication`.
 Collisions between packages are impossible by construction, and the mount says nothing about the path -- it
 places the navigation entry, nothing more.
 
 Each mounted Settings route declares its own access policy. Access is enforced per route; the Settings
 container itself adds no access of its own.
 
-The container has no address of its own. It is a navigation node whose children are ordinary pages under
-their packages, so there is no `/settings` page to answer, and nothing to decide when no child is visible:
-a container with no visible child hides, the way a navigation item with an unrouted target hides.
+The container has no address of its own and no redirect. It is a navigation node whose children are
+ordinary pages under their packages, so there is no `/settings` page to answer, and nothing to decide when
+no child is visible: a container with no visible child hides, the way a navigation item with an unrouted
+target hides.
 
 ## 3. Navigation
 
-Settings navigation lives in the Area sidebar: the sidebar declares one exported "Settings" container
-item, and the `settings` route mount targets the sidebar surface with that container as its parent
-item. There is no separate `<area>:settings` navigation surface and no in-content Settings navigation.
+Settings navigation lives in the Area sidebar: the sidebar surface (`admin:sidebar`,
+`builder:sidebar`) declares one exported "Settings" container item, and the `settings` route mount
+(`routeMounts` in `plugins/runtime-modules/area-definitions.ts`) targets that surface with the container
+as its `parentItemKey`. There is no separate `<area>:settings` navigation surface and no in-content Settings navigation.
 
 The sidebar is rendered by the persistent Area shell (the root layout), which survives client-side
 navigation between pages. This placement is deliberate and normative: per-path content (content
@@ -73,9 +76,10 @@ Every mounted Settings page composes its tree through the one shared Settings pa
 by this package. Modules pass their content panels; they do not build Settings layout themselves. The
 shell guarantees that all Settings pages of all Modules look and behave identically.
 
-The shell renders content only (navigation is the sidebar's job, section 3): the page content region
-roots directly on one Collapsible Layout carrying the page chrome (`bgLayout`, base padding). There
-is no page-level heading block above it — the page title is already in the header, and the panel
+The shell (`buildPhiSettingsPageShellTree`, `components/regions/presets/phi-settings-page-shell-tree.ts`)
+renders content only (navigation is the sidebar's job, section 3): the page content region roots on the
+shared base page scaffold, which owns padding and background, and one Collapsible Layout fills its slot.
+There is no page-level heading block above it — the page title is already in the header, and the panel
 titles name the sections.
 
 Each Settings panel is one Collapsible slot: the panel title is the slot title, an optional
@@ -90,8 +94,7 @@ Panels wrap their sections in a vertical Layout because a sequential Layout slot
 child node, while a Form panel is always at least the Form plus its Save Button.
 
 Each Form panel carries its own primary Save button, wired by the shell over the standard submit
-signal channel. Per-panel save is the accepted v1 model (operator decision 2026-08-19); a shared
-page-level save action is explicitly not part of this contract.
+signal channel. Save is per panel; a shared page-level save action is not part of this contract.
 
 Cross-Module aggregation must never be built as in-page tabs or slot contributions; Modules always
 switch via routes through the sidebar container.
@@ -101,7 +104,7 @@ switch via routes through the sidebar container.
 The base Area Module contributes the Area's "General" Settings page through the same mount, the same
 shell, and the same rules as every other Module — first-party and third-party Modules are treated
 identically. The only distinction is position: the Area definition declares the General entry statically
-as the first item of the `<area>:settings` surface.
+as the first child of the sidebar's Settings container.
 
 The Public Area has no Settings container. Viewer preferences (theme selection, cookie consent) are
 per-visitor presentation state owned by Widgets and Overlays with local persistence; they are not Site
@@ -111,9 +114,9 @@ configuration and must not be modeled as Settings routes.
 
 Settings sections are built exclusively on the shared Form and control basis:
 
-- Field sections use the Form descriptor stack: a `PhiFormDescriptor` with a label set, provider-based
-  validation, and submission through a registered Form gateway handler (site-session credential policy,
-  CSRF per the handler descriptor). Responses follow the converged error envelope.
+- Field sections use the Form descriptor stack ([FORMS.md](./FORMS.md)): a `PhiFormDescriptor` with a
+  label set, provider-based validation, and submission through a registered handler Provider with
+  `credentialPolicy: "site-session"`, relayed by the Site Form gateway.
 - List- or collection-shaped configuration uses the generic Table/Collection contracts
   ([TABLES.md](./TABLES.md), [COLLECTIONS.md](./COLLECTIONS.md)).
 - Hand-rolled `fetch` calls, ad-hoc antd forms, hardcoded copy, and per-surface envelope parsing are not
@@ -121,11 +124,3 @@ Settings sections are built exclusively on the shared Form and control basis:
 
 Secrets in Settings surfaces are write-only and follow the secret-handling rules of the owning server
 contract (see [AUTHENTICATION.md](./AUTHENTICATION.md) section 8 for the Auth precedent).
-
-## 7. Contract governance
-
-Changing, extending, replacing, reinterpreting, or widening this contract requires explicit prior
-operator approval after the exact gap and affected ABI have been presented. This contract must not be
-bypassed through a parallel, shadow, local, Module-specific, Provider-specific, fallback, or
-compatibility contract. If it cannot express a requirement, implementation stops and asks the operator
-first.

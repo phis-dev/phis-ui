@@ -43,12 +43,12 @@ Browser -> web server -> Site proxy (next/site-proxy.ts)
   changes.
 - **A request with a query is never static**, so reading `searchParams`, `visibleWhen` conditions on the
   query, confirmation tokens in a link and review or revision parameters all keep working on the server.
-  Only `utm_*`, `gclid` and `fbclid` are ignored, and a static render does not see them.
+  Only `utm_*`, `gclid`, `fbclid` and Next's own `_rsc` are ignored, and a static render does not see them.
 - **`<marker>`** joins the Site's read marker with its translation markers. It moves when the Site record
   changes, when a Page, Area, Navigation or Theme is published or removed, and when a translation is
   written (phis-server `DB.md`, `phis.site_read_marker`). Each Site process reads it at most every two
   seconds; a new marker is a new address, so the next request renders fresh. Nothing is purged.
-- **`revalidate = 60`** renders a kept page again after a minute, in the background: the first request
+- **`revalidate = 60`**, declared by the Site's static route layouts, renders a kept page again after a minute, in the background: the first request
   after that minute still gets the kept page, the next one the new render. This is the ceiling for
   everything the marker does not see.
 - **`<light|dark>`** comes from the browser's colour-scheme hint cookie. Each mode is its own entry.
@@ -117,5 +117,5 @@ same page opened with `?check=1`, which renders dynamically. They must show the 
 | Rendering without the request | `server-helpers/static-render.ts`, `server-helpers/cms-root.ts` |
 | Route factories of the static tree | `next/area-route.tsx` (`createPhiNextStaticPublic*`), `next/root-route.tsx` (`createPhiNextStaticRootLayout`) |
 | The memory cache | `next/cache-handler.mjs` |
-| The Site's route tree | `NEXT_INTEGRATION.md`, "Area route graph" |
-| The marker | `gateway/site-config.ts`, `gateway/CACHES.md`, phis-server `DB.md` |
+| The Site's route tree | [NEXT_INTEGRATION.md](./NEXT_INTEGRATION.md#area-route-graph) |
+| The marker | `gateway/site-config.ts`, [gateway/CACHES.md](./gateway/CACHES.md), [phis-server DB.md](../phis-server/DB.md) |

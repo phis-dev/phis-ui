@@ -1,8 +1,9 @@
 # Phi Shared Authentication Module Contract
 
-This document is the normative target v1 frontend/runtime-module projection of the Site authentication
-contract. Global users, credentials, provider validation, account linking, Site policy, sessions, and CLI
-recovery are owned by `@phis/server` and defined in the sibling `phis-server/AUTHENTICATION.md`. This package
+This document is the frontend Runtime Module projection of the Site authentication contract. Global
+users, credentials, provider validation, account linking, Site policy, sessions, server endpoints, and CLI
+recovery are owned by `@phis/server` and defined in
+[phis-server AUTHENTICATION.md](../phis-server/AUTHENTICATION.md). This package
 must not create a second identity, policy, or session model.
 
 ## 1. One optional multi-Area Module
@@ -10,7 +11,7 @@ must not create a second identity, policy, or session model.
 The first-party authentication feature is one logical optional Runtime Module:
 
 ```text
-@phis/ui/auth
+@phis/ui/modules/auth
 ```
 
 It is eligible in exactly `public`, `admin`, and `app`:
@@ -49,8 +50,8 @@ The first-party Auth Module contributes:
 - one meaningful Auth Controller type mounted once in each active eligible Area;
 - Auth-owned Form field/handler providers required by its flows;
 - one Admin Site Auth settings route and navigation contribution;
-- one App `/security` route, its composed security-management widget, and an Account Widget menu
-  contribution targeting the effective `/app/security` surface;
+- one App `/security` route (served at `/app/phis/ui/security`) with its `auth-security` Widget, and the
+  `accountSecurityPath` the Account Widget links to;
 - an App-area in-place reauthentication presentation for a document that was rendered under a complete
   session and subsequently receives Core's expired/invalid-session result.
 
@@ -62,7 +63,7 @@ The Admin route opts into the Area-owned `settings` route mount, which places it
 the Settings container. Its path comes from its package, as every route outside Public does:
 
 ```text
-/phis/ui/settings/authentication
+/admin/phis/ui/settings/authentication
 ```
 
 Navigation overlays may reorder, reparent, or tombstone the presentation item without changing this
@@ -91,7 +92,7 @@ kind, and submit a response, but it never decides that a provider token is valid
 factor may be skipped, or a session exists.
 
 A third party replaces the UI by activating its Auth Module and deactivating
-`@phis/ui/auth`. Tooling should offer an atomic Public, Admin, and App replacement. Area activation
+`@phis/ui/modules/auth`. Tooling should offer an atomic Public, Admin, and App replacement. Area activation
 nevertheless remains independent, so a Site may replace Public presentation and retain the first-party
 Admin configuration or App security surface when all active providers target the compatible Core/Auth
 Add-on contract.
@@ -198,7 +199,9 @@ assurance level, or required next factor.
 When Core returns `link_required`, the Login Widget renders a closed existing-account confirmation state.
 The validated provider identity remains only in Core's encrypted, expiring, one-use transaction; a
 host-bound HttpOnly cookie carries its opaque confirmation token. The UI submits only the proof requested
-by Core to `POST /api/auth/providers/link/confirm` and never receives the provider claims, matching email,
+by Core, through the provider-link confirmation Form: the Browser posts to the Site Form relay
+`/api/site/forms` ([FORMS.md](./FORMS.md)), whose `auth.provider-link.confirm` handler Provider relays to
+Core's `POST /api/v1/auth/providers/link/confirm`. The UI never receives the provider claims, matching email,
 or candidate user id. A failed or expired confirmation requires a fresh provider transaction before
 another link attempt. The initial v1 presentation returns to the normal Login Widget with a
 non-enumerating error after consuming a failed proof, preserves the validated `next` destination, and
@@ -280,59 +283,28 @@ Secrets are write-only. Reads expose only configured/missing/invalid/rotation-ne
 not enter Theme state, generic Module Storage, CMS trees, Controller config, signals, Flight payloads, or
 browser logs.
 
-### Provider installation catalog ABI
+### Provider installations
 
-The installation catalog is served by flat, Site-Admin-session plus CSRF guarded endpoints under
-`/api/v1/auth/admin/installations`. Like the flat policy section endpoints, they accept exactly the
-Settings Form values of one installation; issuer and discovery derivation stays server-side.
-
-- `GET /installations` lists the Site's installations (non-secret identifiers, secret status, derived
-  callback URI, validation status) together with the server-owned provider catalog (provider key,
-  label, tenant mode, and per-provider test capability).
-- `POST /installations` creates an installation from `{installationKey, providerKey, clientId,
-  clientSecret?, tenant?, callbackOrigin?, enabled}`. The installation key is a Site-chosen stable
-  slug, unique per Site; more than one installation per provider is a first-class state.
-- `PATCH /installations/<installationKey>` updates the same flat fields plus the coupled login
-  presentation (`loginEnabled`, `sortOrder`). The primary login method row for an installation is
-  owned and coupled server-side; it is never a separate client concern.
-- `POST /installations/<installationKey>/test` validates the installation according to the provider's
-  declared test capability and persists the validation status and timestamp. The capability is
-  per-provider server metadata: a provider that supports a real credential round trip is tested with
-  one; otherwise the test is a discovery/issuer/configuration check; a provider without a usable
-  probe reports not-testable rather than a fake pass.
-- Disable is the primary removal action and fully reversible. `DELETE /installations/<installationKey>`
-  exists as a deliberate secondary action: it removes the installation, its coupled method, and its
-  stored secret. The server refuses a delete or disable that would leave the Site without any enabled
-  primary login method, and a delete response is preceded by a confirmation that reports the number of
-  user identities linked through this installation.
-- An internal-token read (`/api/v1/site/auth/installations`) serves server-side composition without
-  secrets.
-
-Callback URIs are per Site and per provider: the effective redirect URI is
-`<callback origin>/api/auth/providers/<providerKey>/callback`, where the callback origin defaults to
-the Site's public base URL and may be overridden per installation with an origin from the Site's
-`allowedCallbackOrigins` policy — several domains serving the same CMS may deliberately share one
-registered callback. The active installation travels inside the encrypted Auth transaction (it already
-carries the installation key), so the callback route resolves the installation from the transaction and
-installations of the same provider share the provider's callback URI.
-
-The Settings surface presents the catalog through the generic Table and Form contracts on the Settings page shell (the
-auth-installations data provider with inline enablement edits plus test and guarded delete row
-actions, and descriptor create/edit Forms).
+The installation catalog endpoints, their fields, test capability, disable/delete rules, and callback URI
+derivation are server-owned; see
+[phis-server AUTHENTICATION.md section 6](../phis-server/AUTHENTICATION.md#6-provider-installation-and-callback-flow).
+The Settings page presents the catalog through the generic Table and Form contracts on the Settings page
+shell: the `auth-installations` Table data provider with inline enablement edits plus test and guarded
+delete row actions, and descriptor create/edit Forms.
 
 The Site Auth settings route may disappear when the Module is disabled in Admin. That is intentional;
 out-of-band CLI recovery remains available.
 
 ## 9. Disablement and preset recovery
 
-Disabling `@phis/ui/auth` removes only its active Area contributions. Existing Site sessions,
+Disabling `@phis/ui/modules/auth` removes only its active Area contributions. Existing Site sessions,
 Core access evaluation, the generic viewer snapshot, and Core logout remain operational. Builder may warn
 that an Area has no Auth UI provider but must not silently reactivate one.
 
 The semantic recovery operation is:
 
 ```text
-phis-cli auth restore-preset --site <site-key>
+phis auth restore-preset --site <site key>
 ```
 
 It restores the first-party Auth Module activation and code-owned route/navigation presets in Public,
@@ -342,10 +314,3 @@ Page snapshots fall back to their installed code presets and Auth-owned navigati
 are removed; unrelated navigation customization and historical Page revisions remain intact. An already
 identical effective preset is idempotent. The command does not enable methods, overwrite Site policy or
 provider secrets, create users, relink identities, or mutate sessions.
-
-## Contract governance
-
-Changing, extending, replacing, reinterpreting, or widening this contract requires explicit prior
-operator approval after the exact gap and affected ABI have been presented. This contract must not be
-bypassed through a parallel, shadow, local, Module-specific, Provider-specific, fallback, or compatibility
-contract. If it cannot express a requirement, implementation stops and asks the operator first.

@@ -35,8 +35,8 @@ assert.equal(resolvePhiControlShapeRadius("rounded", { borderRadiusSM: 2, border
 assert.equal(resolvePhiControlShapeRadius("pill", { borderRadiusSM: 2, borderRadius: 8 }), 9999);
 
 /**
- * `SITE-CONFIG.md` has the adapter resolve the preset "for the active `controlSize`", so a shape is a
- * scale and not a single number. The authored scale below is deliberately irregular so a resolver that
+ * A shape applies at every Control size (THEME.md, "Control shape"), so it is a scale and not a single
+ * number. The authored scale below is deliberately irregular so a resolver that
  * silently reused one step would fail here.
  */
 const AUTHORED_SCALE = { borderRadiusXS: 1, borderRadiusSM: 5, borderRadius: 8, borderRadiusLG: 13 };
@@ -100,7 +100,7 @@ assert.equal(components.Table?.borderRadius, 13, "Container surface radius remai
 
 /**
  * Cascader's own stylesheet contains nothing but the dropdown panel and its columns, so shaping its
- * component token would round a POPUP -- which `SITE-CONFIG.md` reserves for the surface scale. Its
+ * component token would round a POPUP -- which THEME.md, "Control shape", leaves on the surface scale. Its
  * trigger renders as `.ant-select` and is already covered by the Select entry. AutoComplete, TimePicker,
  * and TreeSelect are inert for the same structural reason.
  */
@@ -113,7 +113,7 @@ for (const key of ["Cascader", "AutoComplete", "TimePicker", "TreeSelect"]) {
 }
 
 /**
- * `SITE-CONFIG.md`: the semantic shape outranks a raw adapter-level component radius so there is one
+ * THEME.md, "Control shape": the semantic shape outranks a raw adapter-level component radius so there is one
  * effective source of truth. `Button` above carried a configured `borderRadius: 1` and still resolves
  * to the shape. Overriding a single corner is a Widget-level concern and never reaches here.
  */

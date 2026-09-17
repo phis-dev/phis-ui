@@ -1,7 +1,8 @@
 # Next.js Site Integration Contract
 
-This document defines the target v1 ownership boundary between `@phis/ui` and a generated or
-deployed Next.js Site Skeleton.
+This document defines the ownership boundary between `@phis/ui` and a generated or deployed Next.js
+Site Skeleton (`phis init`, `phis-site-skeleton`). Areas, the CMS tree, and node identity are
+[CMS.md](./CMS.md).
 
 For the complete package and Site-composition walkthrough for an installed third-party Module, start
 with [THIRD_PARTY_MODULES.md](./THIRD_PARTY_MODULES.md).
@@ -47,18 +48,21 @@ Each Area has separate Server and Client package entrypoints:
 ...
 ```
 
+A Site builds with Next's default bundler, Turbopack, for both `next dev` and `next build`.
+
 These entrypoints must remain physically separate. A generic Area switch, namespace import, or shared
 index that statically reaches every manifest would merge Admin/Builder implementations back into the
 Public Client graph under App Router and Turbopack.
 
 Third-party Modules contribute all optional code through their own physically separated package exports.
-`phis-cli` installs those packages and produces one immutable, statically analyzable build manifest outside
-the versioned Skeleton source. The stable generic Module host consumes that manifest and projects each
-installed Module into its eligible Area Server catalog, Client manifests, and Builder authoring union.
+`phis module` records installed packages and generates the projection files under `src/generated/`, which
+the Skeleton's `src/runtime-modules/` files hand to the package factories. The generic Module host places
+each installed Module into its eligible Area Server catalogs, Client manifests, and the Builder authoring
+union.
 
-The Skeleton and Site source therefore never import an optional package name, reconstruct Module manifests,
-or gain Module-specific routes. Request/database values may select only ids already present in the immutable
-build manifest; they never become package import targets. Builder alone may consume the installed target-Area
+Apart from that generated projection, Site source never imports an optional package name, reconstructs
+Module manifests, or gains Module-specific routes. Request and database values may select only Module ids
+already present in the build; they never become package import targets. Builder alone may consume the installed target-Area
 authoring union for its isolated Canvas, without activating those Modules in the outer Builder runtime.
 
 ## Area route graph
@@ -67,6 +71,9 @@ Every Area is routed through two branches, because the root of an Area draws no 
 landing page -- whose point is to arrive without the Area's chrome and the cost of resolving it -- or a
 redirect, which draws nothing at all. The Public Area is addressed by locale rather than by an Area
 segment, so `/de` is its root exactly as `/builder` is the Builder's; there is no separate rule for it.
+
+`<area>` is the Area key for every Area but Public, which is routed as `[root]` (its locale). `<slot>` is
+each of the five page-owned slots: `@headerBottom`, `@hero`, `@siderRight`, `@footerTop`, and `@drawer`.
 
 ```text
 src/app/(site)/layout.tsx                     the request-reading document shell
@@ -128,6 +135,31 @@ that is the whole reason a template and a default are two answers and not one.
 the Page: every Area but Public is authenticated and is `noindex` whatever is stored, and Public
 follows its stored switch. A Site that never opened the Area settings dialog still keeps its Admin
 out of the index.
+
+## Page metadata, indexing, and sitemap
+
+- A Page's title and description come from its record (`titleMsgId`, `descriptionMsgId`). A code-owned
+  route preset returns them through `pageMeta`; without a title label its descriptor title is translated
+  through the Site-scoped path. The Area's defaults fill in where the Page states nothing, as described
+  above; the Site name is the last fallback.
+- Whether a Page may be indexed is the `PhiCmsFlags.NoIndex` bit on the Page record, set in the Builder's
+  page-meta dialog. A route preset only states what a new Page starts as, through `defaultPageFlags`,
+  which is copied onto the Page when it is instantiated. Area and Page only add up: every authenticated
+  Area is `noindex`, and inside Public a Page may withdraw itself but never reopen an Area that is off.
+- An indexable Public Page states `alternates.canonical` (its own absolute URL in its own locale) and
+  `alternates.languages` (one entry per Site locale with the same path, plus `x-default` for the default
+  locale). A language version is never canonical to another (`helpers/phi-seo.ts`). A Site without an
+  absolute public base (`site.publicUrl`, else `config/site-runtime.json`) states no canonical, no
+  alternates, and has no sitemap.
+- `/sitemap.xml` and `/robots.txt` are route handlers from `@phis/ui/next/seo-routes`, answered from the
+  Public bridge. The sitemap exists when the Site has a public base and the Public Area has `index` and
+  `sitemap` on; otherwise it answers `404`. Its candidates are the Area root, exact Module routes, and the
+  published Public Pages; each is listed only when its anonymous view is not a redirect, not refused, and
+  not `noindex`, once per locale with the full hreflang set.
+- The finished sitemap is cached per Site process and rebuilt when its fingerprint changes (live revision
+  ids, Area preset, active Modules, locales, public base), which every request reads.
+- `robots.txt` allows everything and names the sitemap when there is one. It lists no staff Area --
+  those stay out of the index through `noindex` -- and answers even when the Site cannot be read.
 
 ## Fonts
 
@@ -227,12 +259,36 @@ stylesheet's fetch: `Content-Disposition` governs navigations and downloads, not
 
 ## Required Skeleton entrypoint shape
 
-An Area's own layout is limited to static registration:
+A Site binds each Area once, in `src/runtime-modules/`, handing the generated Module projection to the
+package factories:
+
+```ts
+// src/runtime-modules/admin.ts
+import { createPhiAdminCmsSiteBridge } from "@phis/ui/next/areas/admin";
+import { PHI_SITE_MODULES } from "@/generated/site-modules";
+
+export const PHI_ADMIN_CMS_SITE_BRIDGE = createPhiAdminCmsSiteBridge(PHI_SITE_MODULES);
+```
 
 ```tsx
+// src/runtime-modules/admin-client.tsx
+"use client";
+
+import { createPhiAdminRuntimeModuleClientBoundary } from "@phis/ui/next/areas/admin-client";
+import { PHI_SITE_MODULES_CLIENT } from "@/generated/site-modules-client";
+
+export const PhiAdminRuntimeModuleClientBoundary =
+  createPhiAdminRuntimeModuleClientBoundary(PHI_SITE_MODULES_CLIENT);
+```
+
+An Area's own layout is then limited to static registration, importing the bridge and boundary from
+`@/runtime-modules/<area>`:
+
+```tsx
+// src/app/(site)/admin/layout.tsx
 import { createPhiNextStaticAreaBoundary } from "@phis/ui/next/area-route";
-import { PHI_ADMIN_CMS_SITE_BRIDGE } from "@phis/ui/next/areas/admin";
-import { PhiAdminRuntimeModuleClientBoundary } from "@phis/ui/next/areas/admin-client";
+import { PHI_ADMIN_CMS_SITE_BRIDGE } from "@/runtime-modules/admin";
+import { PhiAdminRuntimeModuleClientBoundary } from "@/runtime-modules/admin-client";
 
 export const dynamic = "force-dynamic";
 export default createPhiNextStaticAreaBoundary(
@@ -245,12 +301,16 @@ export default createPhiNextStaticAreaBoundary(
 Each branch layout registers the same factory and differs only in how much it draws:
 
 ```tsx
+// src/app/(site)/admin/(pages)/layout.tsx
 import { createPhiNextStaticAreaLayout } from "@phis/ui/next/area-route";
-import { PHI_ADMIN_CMS_SITE_BRIDGE } from "@phis/ui/next/areas/admin";
+import { PHI_ADMIN_CMS_SITE_BRIDGE } from "@/runtime-modules/admin";
 
 export const dynamic = "force-dynamic";
 export default createPhiNextStaticAreaLayout("admin", PHI_ADMIN_CMS_SITE_BRIDGE, "shell");
 ```
+
+The `(root)` branch passes `"none"`. Route handlers a Site mounts (proxy and Form relay) come from
+`@phis/ui/next/route-handlers`; `/sitemap.xml` and `/robots.txt` come from `@phis/ui/next/seo-routes`.
 
 The Skeleton may adapt a Next route parameter name or provide route-specific logging labels and user
 agents. Such adapters must remain transport-only and must not interpret CMS, role, module, or locale
@@ -259,17 +319,10 @@ semantics. A Module installation must not change this entrypoint shape.
 ## Patchability
 
 Behavioral fixes belong in `@phis/ui` so a package update patches deployed Sites without
-regenerating their Skeleton. Module behavior belongs in its Module package. `phis-cli` may update packages,
+regenerating their Skeleton. Module behavior belongs in its Module package. `phis` may update packages,
 the external immutable build manifest, and deployment artifacts, but it must not edit Skeleton source as an
 installation mechanism. A Skeleton source update is reserved for an explicitly approved change to the
 physical Next.js route graph, deployment configuration, or another genuinely Site-owned entrypoint.
 
 If a Module needs `@phis/server` implementation code, that implementation is the Add-on half of the same
 package, under `@scope/name/addon/…`. The Site never imports those entrypoints.
-
-## Contract governance
-
-Changing, extending, replacing, reinterpreting, or widening this contract requires explicit prior
-operator approval after the exact gap and affected ABI have been presented. This contract must not be
-bypassed through a parallel, shadow, local, Module-specific, Provider-specific, fallback, or compatibility
-contract. If it cannot express a requirement, implementation stops and asks the operator first.

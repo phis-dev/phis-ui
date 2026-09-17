@@ -1,6 +1,6 @@
 # Runtime Module Contract
 
-This document defines the normative target v1 structure for Runtime Modules in `@phis/ui`.
+This document defines the structure of Runtime Modules in `@phis/ui`.
 First-party Phi Modules must follow it. Third-party packages may choose different source filenames, but
 their exported contribution graph must be structurally equivalent.
 
@@ -10,6 +10,12 @@ A Runtime Module is the one Site/client installation, ownership, activation, and
 for a coherent feature. It is identified by one stable namespaced `moduleId`, belongs to declared Areas,
 binds to Core or exactly one server Add-on, and owns every artifact it contributes.
 
+A Module id is `<npm-package>/modules/<module>` (`createPhiRuntimeModuleId`, `isPhiRuntimeModuleId` in
+`constants/module-identity.ts`). Everything the Module owns is named
+`<npm-package>/modules/<module>/<namespace>/<leaf>` (`createPhiModuleIdentifier`). The leaf never
+repeats the Module's name. The grammar is described for third parties in
+[THIRD_PARTY_MODULES.md](./THIRD_PARTY_MODULES.md#terminology-and-hard-boundaries).
+
 A Module may own at most one Controller type. A controllerless Module is valid only when its Widgets,
 Forms, Providers, presets, adapters, or other declared artifacts are independently meaningful; no-op
 Controllers are forbidden.
@@ -17,6 +23,40 @@ Controllers are forbidden.
 Generic cross-domain infrastructure belongs in the Foundation (see below), domain behavior in its
 Module. A direct server counterpart is the Add-on half of the same package, reached through its
 `addon/` entrypoints.
+
+Terminology across the Site/server boundary is strict:
+
+- a **Module** is a Site/client extension compiled into a Site application;
+- an **Add-on** is a server extension installed into `phis` (`@phis/server`);
+- **Core** is the built-in `phis` capability provider.
+
+## First-party Modules
+
+`@phis/ui` ships these Modules, one folder each under `plugins/runtime-modules/<module>/`:
+
+| Module id | Kind | Eligible Areas | Owns |
+| --- | --- | --- | --- |
+| `@phis/ui/modules/core` | platform, required | all | runtime infrastructure, Core Widgets and Layouts, generic Form primitives, the Core Runtime Controller |
+| `@phis/ui/modules/public` | Area base | `public` | Public shell, navigation surfaces, root routes, public Form handlers |
+| `@phis/ui/modules/app` | Area base | `app` | App shell, navigation surfaces, authenticated application routes |
+| `@phis/ui/modules/admin` | Area base | `admin` | Admin shell, navigation surface, root route, Admin settings |
+| `@phis/ui/modules/editor` | Area base | `editor` | Editor shell, content editor Widgets and workflows |
+| `@phis/ui/modules/accounting` | Area base | `accounting` | Accounting shell, navigation surface, workspace route |
+| `@phis/ui/modules/builder` | Area base | `builder` | Builder shell, workspaces, Canvas, drafts, Inspector, wiring |
+| `@phis/ui/modules/asset` | optional | all | Media, upload, asset picking, asset data |
+| `@phis/ui/modules/auth` | optional | `public`, `admin`, `app` | Site login and authentication workflows ([AUTHENTICATION.md](./AUTHENTICATION.md)) |
+| `@phis/ui/modules/avatar` | optional | `app` | a personal picture in the person's own Media Space |
+| `@phis/ui/modules/dashboard` | optional | `app`, `accounting`, `admin`, `builder`, `editor` | Area Dashboard routes |
+| `@phis/ui/modules/form-builder` | optional | `builder` | Form-definition authoring lifecycle |
+| `@phis/ui/modules/groups` | optional | `admin`, `app` | Site groups and their Media Spaces |
+| `@phis/ui/modules/localization` | optional | `admin`, `editor` | locale and translation administration |
+| `@phis/ui/modules/observability` | optional | `admin` | Site-runtime log administration |
+| `@phis/ui/modules/revisions` | optional | `builder` | revision history, restore, deletion |
+| `@phis/ui/modules/theme` | optional | `builder` | Theme and brand editing ([THEME.md](./THEME.md)) |
+| `@phis/ui/modules/user-management` | optional | `admin` | users, roles, invites |
+
+The source of this table is each Module's `ids.ts` and `definition.ts`; the Area base Modules come from
+`plugins/runtime-modules/area-definitions.ts`.
 
 ## Module, Core module, Foundation
 
@@ -98,7 +138,7 @@ plugins/runtime-modules/<module>/
 ├── server.ts                 Server Area contribution        ─┐ the bundle boundary:
 ├── client.ts                 Controller Client contribution  ─┤ "use client" separates
 ├── client-data-providers.ts  data provider Clients           ─┤ these graphs
-├── authoring.tsx             Authoring Client contribution   ─┘
+├── authoring.tsx             Authoring Client                ─┘ (or authoring-client.tsx)
 │
 ├── widgets.ts                Widget register (server-safe)
 ├── authoring-widgets.ts      Authoring Widget register
@@ -125,6 +165,11 @@ a controllerless Module no `controller/`. Four are mandatory and checked by
 `validate-runtime-module-manifests`: `ids.ts`, `definition.ts`, `module.ts`, `server.ts` — plus
 `client.ts` as soon as the Module owns a Controller, and `authoring-widgets.ts` as soon as it owns
 Widgets.
+
+`authoring.tsx` exports the Module's Authoring Client, and the Area's `client-authoring-providers/`
+aggregator wraps it into a contribution. `authoring-client.tsx` (for example in `dashboard/` and
+`revisions/`) exports the Authoring Client together with its own contribution; a Module has one of the
+two.
 
 **Why the Client files are split three ways.** `client.ts` carries the Controller Client and must not
 reach Authoring code; `authoring.tsx` carries the Authoring Client and must not reach Controller code;
@@ -198,9 +243,10 @@ Their internal filenames are not ABI, but the same physical Server/live/Controls
    half must not read cookies, headers or the viewer or render a per-visitor value, and the Module's own
    data may be up to 60 seconds old there. `next dev` hides both; check in a production build, signed out.
 
-9. **Run `pnpm runtime-modules:check` and `pnpm typecheck`.** Twenty-five contract verifiers run; they
-   catch what typecheck cannot — route grammar, ownership collisions, Area synchronisation, projection
-   boundaries, provider/loader pairing.
+9. **Run `pnpm runtime-modules:check` and `pnpm typecheck`.** `runtime-modules:check` runs every
+   contract verifier listed in `package.json` (the `scripts/validate-*` files); they catch what
+   typecheck cannot — route grammar, ownership collisions, Area synchronisation, projection boundaries,
+   provider/loader pairing, signal wiring and correlation.
 
 ## Identity and ownership rules
 
@@ -213,6 +259,65 @@ Their internal filenames are not ABI, but the same physical Server/live/Controls
 - Module activation never follows a Controller address, route request, Widget occurrence, Provider
   demand, or import side effect.
 - A reusable generic artifact belongs to Core or a separate Module; it must not have several owners.
+
+## Activation
+
+Installation is build-time; activation is per Site and Area.
+
+- The `core` Module is the catalog's single `kind: "platform"` entry. It is always active and never
+  selected or persisted.
+- Every Area has exactly one locked base Module and one versioned shell preset
+  (`plugins/runtime-modules/area-definitions.ts`). The base Module is always active in its Area, is shown
+  locked in the Module selector, and is never persisted.
+- Optional Modules are persisted per Area as `runtimeModules`: a unique array of Module ids, selection
+  only. Controller types, instance keys, addresses, and config do not belong in it. A duplicate id or a
+  selected locked Module is an error (`plugins/runtime-modules/settings.ts`, `resolver.ts`).
+- `eligibleAreas` on the definition is the only statement of where a Module may be selected. A Module never
+  enables itself, and installing a package never selects it.
+- A selected Module activates only when its server binding is available (see
+  [Add-on boundary](#add-on-boundary)). An unavailable Module is left out of route, Controller, Widget,
+  Layout, and Provider resolution while its selection stays persisted, and produces a scoped diagnostic.
+- Controller requirements, Module dependencies, signal routes, Widget occurrences, and Provider demand
+  never activate a Module.
+
+Implementation loading needs two gates: the owner Module is active in the Area, and the resolved shell
+or Page tree in the current render mode demands the concrete type. The host collects the distinct
+demanded types, loads them in parallel, and caches loader promises by Module, type, and mode.
+
+A Controller-bearing Module declares `controllerMountPolicy`:
+
+- `site` -- reserved for the `core` Module; mounted once by the Root Layout;
+- `area` -- the `default` instance mounts while the Module is active in the Area;
+- `demand` -- instances are materialized only from CMS instances that require them
+  (`requiredRuntimeControllers`), with `mountScope` `area` for shell-owned and `page` for Page-owned
+  instances. The Form controller works this way.
+
+Additional instances never reload the Module. The generic runtime controller host is the only mount path;
+Widgets, Layouts, and Controllers never mount a Controller themselves. A Controller definition may declare
+an optional server-only `serverPreload` whose serializable, request-scoped result is handed to its Client;
+it never handles browser signals.
+
+## Render modes and diagnostics
+
+A rendered artifact runs in one of these modes: `runtime` (normal mounted rendering in any Area),
+`preview` (non-authoring previews), `authoring` (editor renderers and inline tools in the Canvas), and
+`workspace` (Canvas, Inspector, and other Builder infrastructure).
+
+Every placeable Widget and Layout declares `renderPolicies` (`PhiRuntimeModuleRenderPolicies`):
+
+- `runtime` is `custom`;
+- `preview` is `custom`, `runtimeReadOnly`, `visualSkeleton`, or `visualPlaceholder`;
+- `authoring` is `custom` or `usePreview`.
+
+Nothing falls back implicitly. A workspace Widget renders its real workspace only in `runtime`; its
+`preview` and `authoring` policies use a side-effect-free skeleton that mounts no Controller, emits no
+signal, mutates no Draft, and renders no nested Canvas.
+
+An unavailable type, inactive owner Module, missing renderer, failed loader, or failed node renderer is a
+node-local error: the node renders the shared "not renderable" diagnostic block
+(`components/cms/phi-cms-render-diagnostic-client.tsx`) and logs a warning. `missing-module` shows only
+the block; other failures also raise one deduplicated notification. Invalid manifests, duplicate
+ownership, and invalid Area selections are hard errors before rendering starts.
 
 ## Definition and Controller
 
@@ -408,6 +513,47 @@ working-surface routes and navigation entries remain ordinary contributions unde
 Mutable Site Page paths and typed internal Page/Asset targets follow [REFERENCES.md](./REFERENCES.md).
 Module route paths remain descriptor-owned and cannot be changed by a Site Page Meta Form.
 
+### Descriptor identity and instantiation
+
+Area-shell, Area-Overlay, route, navigation, Theme, and Theme-block descriptors are separate families
+(`types/cms-module-descriptors.ts`). Each preset has one stable `(ownerModuleId, presetKey)` identity and
+a positive integer version. A route preset belongs to exactly one Area and one normalized path. The
+Builder addresses a Module Page by `createPhiPresetCmsPageId({ ownerModuleId, presetKey })`, a hash of
+that pair: recomputable, unique across Modules, and unchanged when the path is reassigned. A Site Page is
+addressed by its path.
+
+- Route paths are exact or contain at most one whole-segment parameter (`/news/:id`). Catch-alls,
+  optional segments, regexes, match callbacks, and several dynamic segments are rejected.
+- `compilePhiCmsDescriptorCatalog` validates the installed descriptor set -- ownership, versions, route
+  syntax, route-mount exports, Theme identity, shell composition -- without running a tree loader.
+  `compilePhiCmsActiveRouteTable` builds one Area's active route table. Building it never refuses: where
+  two active routes want one address, the first claim answers and the second is absent, which hides its
+  navigation entry. Requests resolve the table by path; Builder targets resolve it by Page id.
+- An Area may export a route mount such as `settings`: a `mountKey` bound to an href-less navigation
+  container. A route that opts in with `mount: { mountKey }` places its navigation entry there. A mount
+  composes navigation, never paths.
+- Navigation descriptors inject only into surfaces an Area declares. `before`, `after`, and
+  `parentItemKey` may reference only items the surface exports through `exportedItemKeys` or items the
+  Module injects itself. Reordering or reparenting an item never changes a route path; a tombstoned
+  container hides its remaining subtree at runtime and shows it disabled in Builder navigation authoring.
+- Area-shell composition names `(ownerModuleId, presetKey)` sources; `omitRegionTypes` removes whole
+  Region subtrees and `omitNodeKeys` may name only `exportedNodeKeys` of the source. Cycles, unresolved
+  sources, duplicate Regions, and unresolved references are errors.
+- A Theme descriptor declares `themeKey` and `title` and an optional `description`; Theme blocks are
+  described in [THEME.md](./THEME.md#theme-blocks).
+
+Preset templates carry no instance ids. Nodes use preset-local `nodeKey` values, and the central
+instantiator derives each canonical id from `(version, domain, ownerModuleId, presetKey, nodeKey)`
+(`createPhiPresetCmsInstanceId` in `@phis/contracts/cms`). Preset version, Site, Area, path, node type,
+and catalog order never participate. Preset authors never create ids or concrete CMS nodes; raw node
+keys never cross contribution boundaries. See [CMS.md](./CMS.md#instance-identity) for the codec.
+
+Instantiation is in memory and needs no Draft. Once an Area or route tree is saved, its Draft and
+Published snapshots are independent of later descriptor versions; an untouched route uses the installed
+descriptor. Persistence belongs to the concrete target -- `(site, area)` for an Area, `(site, area, page
+scope)` for a Page -- and drafting, publishing, or resetting one target never changes another target of
+the same preset.
+
 ### Who owns an address
 
 Outside Public a Module's route path is its package path -- `/acme/shop/...`, derived from the Module id
@@ -490,18 +636,92 @@ The Module exports five independently analyzable projections:
   Builder target-Area sandbox.
 
 Area aggregators select these projections by immutable module id. They do not contain Module-specific
-logic beyond listing applicable contributions. `phis-cli` composes installed manifests into external
-immutable build state; neither installation nor activation patches Skeleton source.
+logic beyond listing applicable contributions. For installed packages, `phis module` generates the projection the
+Site hands to the Area hosts ([THIRD_PARTY_MODULES.md](./THIRD_PARTY_MODULES.md#9-install-without-patching-the-skeleton));
+neither installation nor activation patches Skeleton source.
 
 No projection may synthesize an artifact missing from the owner Module. Duplicate ids, owner mismatch,
 missing lazy implementations, invalid Area eligibility, cross-Area base references, and live/Authoring
 graph leakage are hard validation errors.
+
+### Catalog and lazy loading
+
+- A package builds its catalog entries with `createPhiRuntimeModuleCatalog`; a Site combines catalogs
+  with `extendPhiRuntimeModuleCatalog`. Both reject duplicate Module ids and ownership.
+  `assertPhiRuntimeModuleCatalog` is the complete-catalog gate, and `createPhiNextCmsSiteBridge` applies
+  it after Site composition, so installed packages get the same validation as first-party Modules.
+- A catalog entry (`PhiRuntimeModuleCatalogEntry`) declares the definition, complete lightweight Widget
+  and Layout definitions with their lazy Server loaders, Forms, `areaShells`, `areaOverlays`, `routes`,
+  `navigation`, `themes`, `themeBlocks`, an optional `loadUiProvider`, optional `features`, and `load`.
+  Ownership is derived from these entries; there is no parallel ownership list.
+- A Widget descriptor has separate mandatory `loadRuntime` and `loadPreview` edges; the render mode
+  selects one per occurrence. Descriptors never statically import implementations. A package name read
+  from data is never passed to `import()`.
+- Server loaders are native, statically analyzable `import()` functions. Server manifests contain no
+  Client component; the Server host passes active Module ids and serializable mount data to the generic
+  Client host.
+- Each live Area boundary receives immutable Client manifests -- Controller Clients (made with
+  `next/dynamic`), Render Clients, Data Provider Clients (`loadLive`), Calendar adapters -- containing only
+  the Modules eligible for that Area and no other Area's base Module or Authoring code. Server and
+  Controller Client projections pair 1:1 by `moduleId`.
+- The Builder additionally receives the Authoring manifest (`loadAuthoring` per installed target-Area
+  Module) and Data Provider `loadAuthoring` edges for providers whose `authoringMode` is `read` or `edit`.
+  Live-only providers stay unavailable in authoring.
+- Client lazy declarations (`next/dynamic`, `React.lazy`) are created at module scope, never during
+  render. A Server Component does not dynamically import a Client Component to get a split.
+- Data Provider descriptors declare `kind` (`options`, `table`, `tree`, or `collection`),
+  `executionMode` (`static | live`), and `authoringMode` (`none | read | edit`).
+
+### Module UI provider
+
+A Module may use Ant Design, another component library, or its own controls internally; the library is
+not cross-module ABI. When a library needs React context, a theme, a CSS cache, locale setup, or a portal
+root, the catalog entry declares one lazy `loadUiProvider`. The host mounts it only around the Module's
+own render subtree, and the Builder mounts it inside the Canvas sandbox. The provider:
+
+- never wraps the application root or another Module's subtree;
+- installs no signal bus, Controller registry, or renderer;
+- scopes resets, generated styles, variables, and portal containers to the Module root or sandbox;
+- is disposed with its subtree.
+
+Modules interoperate through signals and shared value contracts, never through each other's React
+context. The Auth Module's `loadUiProvider` is the first-party example.
+
+### Builder Canvas sandbox
+
+The Builder Pages and Shells Canvases are isolated Module sandboxes
+(`plugins/runtime-modules/builder/runtime-module-sandbox.server.ts`). Each Canvas resolves the exact
+Module set of the edited target Area -- `core`, the target Area's base Module, and its persisted optional
+`runtimeModules` -- and only the implementations its tree demands. It never inherits or accumulates the
+outer Builder Area's registry; switching the target Area replaces the sandbox registry. Loader promises
+may stay cached, but cached code is not active unless it belongs to the new set.
+
+Module resolution for the Canvas is server-owned. The Builder controller selects the target Area and
+triggers the refresh; it never imports Modules itself. Canvas authoring mounts no target-Area live
+Controller and no live-only Provider, and its signal partition cannot reach the live Site
+([SIGNALS.md](./SIGNALS.md#delivery-and-correlation)).
 
 ## Add-on boundary
 
 A Module binds to Core or exactly one logical Add-on. Both halves ship as one package under one name
 and one version: the Module is `@scope/name`, the Add-on half is `@scope/name/addon/…`, and the logical
 Add-on id is `@scope/name`.
+
+The binding is mandatory definition metadata (`types/server-capabilities.ts`):
+
+```ts
+type PhiRuntimeModuleServerBinding = {
+  providerId: PhiCapabilityProviderId;
+  requiredCapabilities: readonly PhiCapabilityId[];
+};
+```
+
+A Module without server requirements binds to Core with `PHI_CORE_SERVER_BINDING` (provider
+`@phis/server/core`); `createPhiCoreServerBinding(...capabilities)` adds required Core capabilities such
+as `@phis/server/authentication:v1`. During request resolution the Site reads the Site's capability
+snapshot from `phis`; a selected Module activates only when its provider is available and every required
+capability is present. The server side of this contract is
+[phis-server SERVER_ADDONS.md](../phis-server/SERVER_ADDONS.md).
 
 The Site Module never imports Add-on code. The Add-on never imports React or the Site Module. Versioned,
 React-free wire contracts may be shared through a neutral package. Module activation cannot install,
@@ -549,10 +769,3 @@ The Runtime Module verifier must eventually enforce at least:
   `scripts/validate-authoring-catalog.mjs` compares them and runs with the other module checks.
 
 Until every check is automated, review and migration work must treat these rules as binding manually.
-
-## Contract governance
-
-Changing, extending, replacing, reinterpreting, or widening this contract requires explicit prior
-operator approval after the exact gap and affected ABI have been presented. This contract must not be
-bypassed through a parallel, shadow, local, Module-specific, Provider-specific, fallback, or compatibility
-contract. If it cannot express a requirement, implementation stops and asks the operator first.

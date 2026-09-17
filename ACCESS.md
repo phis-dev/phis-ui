@@ -1,14 +1,18 @@
 # Phi Access and Visibility Contract
 
-This document is the normative target v1 contract for viewer access and responsive visibility in
-`@phis/ui`. `phis-server/AUTHORIZATION.md` owns role and group-claim persistence and server-side
-authorization; `phis-server/GROUPS_AND_STORAGE.md` owns general group membership and Media Space
-semantics; `phis-server/design/DIRECTORY_PROVIDERS.md` owns provider authority, Directory bindings, and external
-membership provenance. Shared UI must consume those contracts rather than inventing Page-, Widget-,
-Navigation-, Collection-, or Module-specific access paths.
+This document is the contract for viewer access and responsive visibility in `@phis/ui`.
+[phis-server AUTHORIZATION.md](../phis-server/AUTHORIZATION.md) owns role and group-claim persistence and
+server-side authorization; [phis-server AUTHORIZATION.md, "Add-on roles"](../phis-server/AUTHORIZATION.md#5-add-on-roles) and
+[phis-server SERVER_ADDONS.md](../phis-server/SERVER_ADDONS.md) own Add-on roles;
+[phis-server GROUPS_AND_STORAGE.md](../phis-server/GROUPS_AND_STORAGE.md) owns general group membership and
+Media Space semantics; [phis-server design/DIRECTORY_PROVIDERS.md](../phis-server/design/DIRECTORY_PROVIDERS.md)
+describes provider authority, Directory bindings, and external membership provenance. Shared UI consumes
+those contracts rather than inventing Page-, Widget-, Navigation-, Collection-, or Module-specific access
+paths.
 
-The migration is an ABI break. Old role fields, special guards, and responsive-only CMS flags must not
-remain as compatibility fallbacks.
+The claim shapes, the policy union, and the evaluator live in `@phis/contracts/access`, which
+`@phis/server` compiles as well, so both processes answer the same question from one source.
+`types/access.ts` re-exports them and adds the UI viewer projection and the named Core policies.
 
 ## 1. Viewer role and group claims
 
@@ -16,30 +20,41 @@ The runtime carries compact provider-scoped claims:
 
 ```ts
 type PhiRoleProviderId = `@${string}/${string}`;
+type PhiGroupProviderId = `@${string}/${string}`;
 
 type PhiViewerRoleClaim = {
   providerId: PhiRoleProviderId;
   flags: number;
 };
 
-type PhiGroupProviderId = `@${string}/${string}`;
-
 type PhiViewerGroupClaim = {
   providerId: PhiGroupProviderId;
-  groupKeys: readonly string[];
+  key: string;
+  flags: number;
 };
 
-type PhiRuntimeViewer = {
+type PhiViewerAddonRoleClaim = {
+  providerId: PhiRoleProviderId;
+  roles: readonly string[];
+};
+
+type PhiBlockRuntimeViewer = {
   access: "public" | "authenticated";
+  resolvedArea?: PhiWidgetAreaKey | null;
   roleClaims: readonly PhiViewerRoleClaim[];
   groupClaims: readonly PhiViewerGroupClaim[];
-  resolvedArea: PhiCmsAreaKey | null;
+  addonRoleClaims?: readonly PhiViewerAddonRoleClaim[];
   authorizationRevision: number;
+  // plus presentation fields such as userName, preferredLocale, themeMode, profile
 };
 ```
 
-The Core claim provider is `@phis/server/core`. Role bit spaces are isolated by provider id.
-`resolvedArea` selects a landing destination only; it is not an authorization boundary.
+`PhiBlockRuntimeViewer` is declared in `types/widget-runtime.ts`. The Core claim provider is
+`@phis/server/core`. Core role bit spaces are isolated by provider id. Add-on roles are carried by name,
+because an Add-on declares them in its own manifest and a bit position would change meaning when the
+manifest is reordered; Core never interprets those names. `addonRoleClaims` absent means none are known
+on that surface, which denies an `addon-roles` policy rather than granting it. `resolvedArea` selects a
+landing destination only; it is not an authorization boundary.
 
 The runtime does not transport expanded permission lists, role catalogs, group labels, member lists, or
 domain group metadata. Group keys are stable provider-local audience identities, not roles.
@@ -62,26 +77,40 @@ type PhiViewerAccessPolicy =
       access: "groups";
       providerId: PhiGroupProviderId;
       allowedGroupKeys: readonly string[];
+    }
+  | {
+      access: "addon-roles";
+      providerId: PhiRoleProviderId;
+      allowedRoles: readonly string[];
     };
 ```
 
-`allowedRoleFlags` is always an OR mask. `allowedGroupKeys` is also OR and contains at least one stable
-key. A matching viewer needs at least one listed role or group for the selected policy variant. There are
+`allowedRoleFlags` is always a non-zero OR mask. `allowedGroupKeys` and `allowedRoles` are also OR and
+contain at least one entry; `readPhiViewerAccessPolicy` rejects anything else. A matching viewer needs at
+least one listed role, group, or Add-on role for the selected policy variant. There are
 no `allFlags`, deny flags, arbitrary boolean policy trees, or feature-permission arrays in v1.
 
-The public helpers are conceptually:
+The helpers from `@phis/contracts/access` (re-exported by `types/access.ts`):
 
 ```ts
 getPhiViewerRoleFlags(viewer, providerId)
 hasProviderRole(viewer, providerId, roleFlag)
 hasPhiBaseRole(viewer, coreRoleFlag)
 hasProviderGroup(viewer, providerId, groupKey)
-canPhiViewerAccess(viewer, policy)
-canPhiViewerAccessOwnedPolicy(viewer, policy, ownerProviderId)
+hasProviderAddonRole(viewer, providerId, role)
+readPhiViewerAccessPolicy(value)
 ```
 
-`hasProviderRole` and `hasPhiBaseRole` report factual role assignment. They do not apply inheritance or
-the Admin override. `hasProviderGroup` follows the same factual-helper rule.
+The UI evaluators in `types/access.ts`:
+
+```ts
+canPhiViewerAccess(viewer, policy)
+canPhiViewerAccessOwnedPolicy(viewer, policy, ownerProviderId)
+isPhiViewerAccessPolicyProviderOwned(policy, ownerProviderId)
+```
+
+`hasProviderRole`, `hasPhiBaseRole`, `hasProviderGroup`, and `hasProviderAddonRole` report factual
+assignment. They do not apply inheritance or the Admin override.
 
 `canPhiViewerAccess` implements the normative policy:
 
@@ -91,14 +120,21 @@ the Admin override. `hasProviderGroup` follows the same factual-helper rule.
 - `roles`: Core Admin first grants Site-superuser access, otherwise at least one allowed provider role
   must match;
 - `groups`: Core Admin first grants Site-superuser access, otherwise at least one allowed provider group
-  must match.
+  must match;
+- `addon-roles`: Core Admin first grants Site-superuser access, otherwise the viewer must hold at least
+  one allowed role of that Add-on provider.
+
+A missing policy is `anyone`.
 
 Core Admin does not override `anonymous`, Server capability state, Add-on enablement, external-provider
 authorization, operator authority, or cross-Site boundaries.
 
 ## 3. Core access matrices
 
-Frequently reused Core matrices are exported centrally:
+Frequently reused Core matrices are exported from `types/access.ts` as `PHI_VIEWER_ACCESS_SITE_ADMIN`,
+`PHI_VIEWER_ACCESS_DEVELOPER_TOOLS`, `PHI_VIEWER_ACCESS_STRUCTURE_AUTHORING`,
+`PHI_VIEWER_ACCESS_CONTENT_EDITING`, `PHI_VIEWER_ACCESS_PUBLISHING`, `PHI_VIEWER_ACCESS_SUPPORT`, and
+`PHI_VIEWER_ACCESS_ACCOUNTING`:
 
 ```text
 Site administration  = Admin only
@@ -130,7 +166,7 @@ AND viewer access policy satisfied
 ```
 
 Every Module may reference Core roles and Core groups, regardless of its bound Add-on. A Module may also
-reference roles or groups belonging to its own `serverBinding.providerId`. It must not reference claims
+reference roles, groups, or Add-on roles belonging to its own `serverBinding.providerId`. It must not reference claims
 of another third-party provider.
 
 `createPhiRuntimeModuleCatalog(...)` enforces this ownership for Module policies, Widget/Layout
@@ -198,18 +234,18 @@ Surface     binds disabledWhen conditions to permissions.<name>
 ```
 
 The controller is the only place that evaluates the policy. A Widget receives a boolean, never a role.
-That is what keeps scattered role-specific rendering branches (section 10) removed: a Widget asking
+That is what keeps role-specific rendering branches out of Widgets: a Widget asking
 for a role reimplements an authorization decision it does not own, in a place the server cannot
 mirror.
 
 Projections state a policy, not a role. `!canPhiViewerAccess(viewer, PHI_VIEWER_ACCESS_SITE_ADMIN)`
-and `!hasPhiBaseRole(viewer, Admin)` answer identically today, but only the first keeps answering
-correctly if the matrix widens.
+and `!hasPhiBaseRole(viewer, Admin)` give the same answer for the current matrix, but only the first
+keeps answering correctly if the matrix widens.
 
 A projection is presentation. The server stays authoritative and enforces the same split on its own
 routes; a disabled control is a courtesy, never the boundary.
 
-User management is the worked example. `/users` carries the Developer-tools policy, so a Developer
+User management is the worked example. Its `/users` route (`/admin/phis/ui/users`) carries the Developer-tools policy, so a Developer
 enters and reads. The controller projects `permissions.readOnly`, and the page binds cell editing, the
 create toolbar action, and the edit and delete row actions to it. `@phis/server` mirrors the split per
 method: GET behind the Developer guard, every mutating method behind the Admin-only one.
@@ -236,7 +272,7 @@ configuration. It is parsed, serialized, inherited, and rendered centrally for e
 Pages and Navigation are not renderable blocks; when they need responsive presentation they reuse a
 separate shared visibility fragment rather than pretending to be renderable blocks.
 
-Suggested initial ranges are:
+The ranges, applied as container queries on the `phi-render-viewport` container (`styles/shell.css`), are:
 
 ```text
 Compact: below 768 px
@@ -309,10 +345,3 @@ For Regions, Layouts, Surfaces, and Widgets the concrete instance policy is the 
 serializer. A malformed explicitly persisted policy is denied rather than interpreted as `anyone`.
 Module artifact definitions expose their minimum as `accessPolicy`; concrete instances may only
 restrict the inherited Area/Page/artifact result.
-
-## Contract governance
-
-Changing, extending, replacing, reinterpreting, or widening this contract requires explicit prior
-operator approval after the exact gap and affected ABI have been presented. This contract must not be
-bypassed through a parallel, shadow, local, Module-specific, Provider-specific, fallback, or compatibility
-contract. If it cannot express a requirement, implementation stops and asks the operator first.

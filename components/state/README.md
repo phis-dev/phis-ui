@@ -1,37 +1,23 @@
 # State
 
-This directory contains the shared transient UI state primitives for `@phis/ui`.
+Shared transient UI state primitives for `@phis/ui`. All files here are Client modules.
 
 ## Scoped state store
 
-`components/state/scoped-state-store.ts` is the common in-memory store basis for runtime-only UI state.
+`scoped-state-store.ts` (`createScopedStateStore(storeId, createDefaultState)`) is the in-memory store
+basis for runtime-only UI state. Buckets live on `globalThis`, so every bundle of the page shares them.
 
-The contract is intentionally small:
+- `storeId` separates store families; `scopeKey` separates instances inside one family (an empty key is
+  `default`).
+- The store offers `useStore`, `useStoreSelector`, `subscribe`, `getSnapshot`, `getHydrationSnapshot`,
+  `patch`, `replace`, `reset`, and `deleteScope`, each by `scopeKey`.
+- State is transient and shared only within the current JS runtime. It is not persistence and not a
+  source of truth for server data.
+- Feature code owns the domain logic; the store provides only the state mechanism.
 
-- `useStore(scopeKey)`
-- `getSnapshot(scopeKey)`
-- `patch(scopeKey, updater)`
-- `replace(scopeKey, nextState)`
-- `reset(scopeKey)`
-- `deleteScope(scopeKey)`
+## Plugin-state facade
 
-Rules:
-
-- `storeId` separates store families.
-- `scopeKey` separates instances inside one family.
-- State is transient and shared only within the current JS runtime.
-- The store must not be treated as persistence or as a server-source-of-truth.
-- Feature wrappers own the domain logic; the scoped store only provides the state mechanism.
-
-## Public plugin-state facade
-
-`components/state/plugin-state-store.ts` is the public first-class facade for shared plugin/runtime state.
-
-- it wraps `scoped-state-store` internally
-- it keeps the public contract small and stable
-- it is the preferred entry point for widgets or plugins that need a shared transient scope
-
-Example:
+`plugin-state-store.ts` is the public entry, exported as `@phis/ui/state`:
 
 ```ts
 const store = createPhiPluginStateStore("@phis/example", (scopeKey) => ({
@@ -42,9 +28,11 @@ const store = createPhiPluginStateStore("@phis/example", (scopeKey) => ({
 const state = store.useStore("default");
 ```
 
-## Current consumers
+Its `storeId` defaults to `@phis/ui/plugin-state/<pluginKey>`. `history-store.ts` builds undo/redo history
+on the same facade.
 
-- builder workspace state
-- builder region drafts
-- media preview state, including the dedicated `searchQuery` slice used by the media preview toolbar
-- other widget-local runtime state slices that need a shared in-memory bucket
+## Consumers
+
+Builder workspace, navigation, plugin-meta, and demand-controller stores
+(`plugins/runtime-modules/builder/*-store.ts`), the workspace catalog store, and the media image preview
+store.

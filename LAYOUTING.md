@@ -1,6 +1,8 @@
 # Layout contract
 
-This document defines the v1 contract for CMS Regions, Layouts, and slots.
+This document defines the contract for CMS Regions, Layouts, and slots. Shell topology and shell CSS are
+owned by [SHELL.md](./SHELL.md); the signal channels a Layout receives are owned by
+[SIGNALS.md](./SIGNALS.md).
 
 ## Core model
 
@@ -9,6 +11,14 @@ The render tree has three structural levels:
 1. A Region is an Area- or Page-owned placement container.
 2. A Layout is a persisted CMS node that owns child topology and optional visual treatment.
 3. A slot is a typed child position owned by its Layout.
+
+The tree rules are strict:
+
+- A Region never contains a Widget directly. A Region node points to exactly one root Layout
+  (`rootLayoutNodeId`); a Region whose root Layout does not resolve is not rendered and leaves no wrapper.
+- A Layout may contain Layouts and Widgets. Widgets are leaves.
+- A slot holds at most one direct child, which is either one Layout or one Widget. A Layout's flexibility
+  comes from how many slots it exposes, never from several children in one slot.
 
 There is exactly one Layout node kind, one Layout plugin registration, and one renderer path per
 topology. Visual treatment is ordinary Layout config; it never creates another node kind, registry
@@ -20,7 +30,7 @@ entry, type-key suffix, renderer, parser, serializer, Builder category, or signa
 - A Layout instance has one canonical `PhiCmsInstanceId`.
 - Layout receivers use `cms:<instanceId>` and the mounted Area/Page scope.
 - Persisted v1 data using a third presentation segment is invalid. There is no compatibility reader.
-- A Region points to at most one root Layout. Nested Layouts use the same contract as root Layouts.
+- Nested Layouts use the same identity, signaling, sizing, and Inspector contract as root Layouts.
 
 ## Layout config
 
@@ -42,14 +52,18 @@ The shared fields are:
 Layout-family plugins add only topology-specific or explicitly family-specific fields. A family must
 not duplicate shared parsing or serialization.
 
-Canonical defaults are neutral: no padding, no visible background, no border, no radius, no shadow,
-and no effect. A first-party creation preset may provide an initial visible-container configuration,
+Canonical defaults are neutral: no margin, no padding, no visible background, no border, no radius, no
+shadow, and no effect. A Layout never adds implicit inner padding around its slot content; a Region that
+needs padded composition configures padding on its Layout or on the Region itself. A first-party creation preset may provide an initial visible-container configuration,
 but creation presets are input to the node factory only. Their values are materialized as normal
 Layout config and the preset name is never persisted or interpreted at render time.
 
-Effects and standard shadows are selected by semantic ids and resolved globally. Presets store the
-chosen id, not CSS implementations. A custom shadow is the sole exception and stores its explicit
-value through the documented custom-shadow shape.
+Effects and standard shadows are selected by semantic ids and resolved globally (`types/layout-style.ts`):
+effects are exactly `glass`, `haze`, `blur`, and `dim`; shadows are exactly `none`, `soft`, and `strong`.
+Presets store the chosen id, not CSS implementations. A custom shadow is the sole exception and persists
+as `{ kind: "custom", value: "<box-shadow>" }`; arbitrary effect parameters and arbitrary strings in the
+shadow field are invalid. `borderRadius` given as one value is shown by the Border control as four equal
+corner radii; explicit per-corner values override it.
 
 ### Background motion
 
@@ -63,10 +77,10 @@ motion?: {
 }
 ```
 
-`static` is the default. In v1, `fixed` and `parallax` are valid only when the same Background config owns an
+`static` is the default. `fixed` and `parallax` are valid only when the same Background config owns an
 image base; neither mode may implicitly read, inherit, or reuse the Theme Root image or another ancestor's
 Background. `strength` is normalized to `0..1` and defaults to the shared Phi Parallax strength. Motion follows
-the logical block/scroll axis in v1. The runtime derives required image overscan and clipping; those mechanics
+the logical block/scroll axis. The runtime derives required image overscan and clipping; those mechanics
 are not persisted presentation fields.
 
 Background motion is visual treatment, not Layout topology and not a semantic Effect. It therefore does not
@@ -79,14 +93,18 @@ The motion implementation is one shared, UI-library-independent Background rende
 the owning Region/Layout box relative to the active scroll viewport, clips inside that owner, uses a central
 scroll/frame coordinator rather than React state or one scroll listener per instance, and stops work for
 off-screen instances. `prefers-reduced-motion` renders the same image statically. SSR, no-motion Backgrounds,
-and the Layout/Region child tree remain server-renderable; only an actively configured moving Background may
-mount the small Client enhancement.
+and the Layout/Region child tree remain server-renderable; only an actively configured moving Background
+mounts the lazy Client layer (`components/cms/clients/phi-background-motion-layer-client.tsx`), which Layouts,
+Regions, and the Theme Root Background share.
 
-Theme Root and Shell-backdrop Backgrounds use this same canonical config when their deferred renderer work is
-implemented; they must not create alternate motion fields. Their host-specific coordinate/clip geometry belongs
-to those existing Root/Shell contracts.
+The Theme Root Background (`components/root/phi-root-background.tsx`) uses the same config but offers only
+`static` and `parallax`: it is viewport-fixed, so `fixed` would be indistinguishable from `static`, and a
+stored `fixed` resolves to no motion. Its host geometry belongs to [SHELL.md](./SHELL.md).
 
 ## Form grid
+
+A form is a Form Widget and stands in whichever Layout suits the page, commonly a vertical flex in slot 0.
+No Layout kind is dedicated to forms. What the Layout contributes is `labelEnd` (below).
 
 A form is a grid of 24 tracks, and every element in it says which tracks it lies on as a range of grid
 lines: `start` is the line it begins at and `end` is the line it stops before, counted from 1, so the
@@ -101,7 +119,9 @@ last line is 25. This is CSS Grid's own counting and no other counting is used.
   back to fill a gap it has passed, so a field meant to stand beside the one before it is declared after
   it.
 - The Layout a form stands in decides its label column, as `labelEnd` -- a shared Layout field carrying a
-  line on this same grid, never a width. Shared like padding, because any Layout can be the one a form or
+  line on this same grid, never a width. It is read two ways: as the grid line a descriptor form places its
+  labels on, and as the share of the width derived for labelled Controls, which know nothing of the grid.
+  Nothing authors that share, so the two cannot drift. Shared like padding, because any Layout can be the one a form or
   a panel of labelled Controls stands in. The descriptor decides it where no Layout says anything. A field that departs from those columns says so itself, because that is a
   statement about the field and not about the form.
 - The same ranges are declared per measured width. A set that is two columns at `wide` and one column
@@ -120,16 +140,29 @@ Region padding is applied to the Region root and is independent of root-Layout p
 flat in the Region config, parsed through the shared padding value rules, and edited as a Region
 property. The Builder must not synthesize a Layout solely to represent Region padding.
 
+A Region without a configured `border` renders no border: header, footer, and sider separators are never
+implicit, and Canvas outlines belong to Builder scaffold chrome only. Static and client-enhanced Region
+renderers resolve chrome through the same Region-shell resolver.
+
+`PhiStructureRegionLayout` and `PhiPageRegionLayout` are Builder/preview adapters for Region-owned
+composition, not alternate Layout kinds.
+
 ## Slots
 
 - A Layout plugin declares its slots and their stable semantic keys.
 - The ordered runtime representation uses `slotIndex`; authoring maps it to the declared slot key.
+  Semantic slot names of a fixed-slot family resolve from stable indexes such as `0`, `1`, `2`.
+- Sequential flow Layouts (every slot `sequential`) compact their `slotIndex` order after a delete;
+  sparse slot Layouts keep their positions.
 - A slot declares accepted child kinds, multiplicity, size policy, and optional default anchor.
-- Layouts receive `slots` as the primary child API; free-form children are not the public placement API.
+- Layouts receive ordered `slots` as the primary child API; free-form `children` is not the public
+  placement API.
 - Empty, occupied, preview, and edit rendering use the same slot topology.
 - Slot state belongs to the owning Layout receiver. `slot:` is not a public v1 receiver family.
 - A title-bearing Layout family stores slot titles as Layout presentation config keyed by its declared
   slot order. A child Widget/Layout label is not a fallback source for that title.
+- Titles live on the owning Layout (for example `slotTitles` on `PhiCollapsibleLayout`) and do not move
+  with child drag and drop.
 - Moving, replacing, or deleting a child does not move, rewrite, or delete either the source or target
   slot title. Authoring exposes title editing as an explicit Layout operation.
 - A title-bearing live renderer may omit an empty slot panel without deleting its configured title;
@@ -143,7 +176,12 @@ The parent slot policy is authoritative; child defaults cannot override it.
 
 ## Rendering and authoring
 
-- Runtime, preview, and authoring resolve the same Layout plugin and parser.
+- Runtime, preview, and authoring resolve the same Layout plugin, parser, and slot definitions.
+- `PhiBaseLayout` owns shared renderable-block behavior and the common visual config. Family renderers
+  own topology and explicit slots and do not add a second generic wrapper to apply padding, background,
+  border, radius, shadow, or effect.
+- Optional creation presets are resolved by the node factory and materialized into ordinary config; no
+  preset identity reaches persistence or rendering.
 - A Layout's configured visual treatment is rendered on the same root that owns its topology.
 - Editor scaffolding is an authoring overlay and must not change persisted topology or runtime depth.
 - Insert, select, drag, delete, and title controls operate on the Layout instance and its declared slots.
@@ -189,15 +227,18 @@ Widget.
 
 ### Stack slot mounting
 
-`PhiStackLayout` declares `mountPolicy: "active" | "keep"`. `active` mounts only the selected slot and is
-the default for ordinary content. `keep` mounts every populated slot with the Stack and hides every
-inactive slot from layout, focus, pointer interaction, and the accessibility tree. It is required for
-tabbed workflows whose Controls must retain draft state while another slot is active. The policy changes
+`PhiStackLayout` declares `mountPolicy` from the shared mount vocabulary in `types/cms-mount-policy.ts`
+(also used by Overlays): `remount` (default) mounts the active slot and takes a slot down when it stops
+being active, `lazy-keep` mounts a slot when it first becomes active and keeps it, and `eager` mounts every
+populated slot with the Stack. A kept inactive slot is `inert` and `aria-hidden`, so it is out of focus,
+pointer interaction, and the accessibility tree. `lazy-keep` or `eager` is required for tabbed workflows
+whose Controls must retain draft state while another slot is active. The policy changes
 only mounting; `activeSlotKey`, runtime slot signals, and persisted child topology remain unchanged.
 
 The presentation option `slotTransition: "none" | "fade-over"` controls visual changes between active
 slots and defaults to `none`. `fade-over` places the inert outgoing slot temporarily above the new
-active slot and fades only that outgoing surface with the global Ant Design slow-motion tokens. The
+active slot and fades only that outgoing surface, for `slotTransitionDurationMs` or by default the Ant
+Design `motionDurationSlow` token. The
 new slot always remains in normal flow and therefore owns the Stack's natural size. Rapid changes
 replace the current outgoing surface instead of queueing transitions; reduced-motion preferences and
 Builder edit rendering use an immediate switch.
@@ -218,10 +259,3 @@ A Layout plugin provides one topology under one type key and must use the common
 Third-party code may add Layout families, fields, slots, and render policies, but may not reintroduce a
 parallel presentation kind or compatibility suffix. Phi-owned modules must use the same registry,
 factory, parser, renderer, Inspector, persistence, and signaling paths as third-party modules.
-
-## Contract governance
-
-Changing, extending, replacing, reinterpreting, or widening this contract requires explicit prior
-operator approval after the exact gap and affected ABI have been presented. This contract must not be
-bypassed through a parallel, shadow, local, Module-specific, Provider-specific, fallback, or compatibility
-contract. If it cannot express a requirement, implementation stops and asks the operator first.

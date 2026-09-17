@@ -3,9 +3,8 @@
 This is a design, not a contract: none of it is built. There is no `PhiTourControl` and no Tour
 Controller yet.
 
-This document defines the target v1 contract for guided Phi UI Tours. Changing, extending,
-reinterpreting, or bypassing this contract requires explicit prior operator approval. A feature-local
-Tour renderer, DOM-selector convention, address family, or signal protocol is not an allowed fallback.
+A feature-local Tour renderer, DOM-selector convention, address family, or signal protocol is not an
+allowed substitute for this design.
 
 ## Core model
 

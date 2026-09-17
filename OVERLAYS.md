@@ -1,6 +1,9 @@
 # Overlay contract
 
-This document defines the v1 contract for CMS Modal and Drawer overlays.
+This document defines the contract for CMS Modal and Drawer overlays. The generic signal contract
+(addresses, scopes, routes, correlation, delivery to unmounted receivers) is in
+[SIGNALS.md](./SIGNALS.md). The Builder's own Inspector, Effects, and Signal wiring Overlays are described
+in [BUILDER.md](./BUILDER.md#11-inspector-contract).
 
 ## Core model
 
@@ -111,7 +114,8 @@ Stable button keys provide stable signal subcontrol addresses; generic subcontro
 enabled, visibility, loading, badge, icon, and label. The Overlay must not synthesize a hidden action row
 or domain-specific loading state.
 
-One Overlay workflow may place one Form Widget in each slot of a `mountPolicy: "keep"` Stack. A single
+One Overlay workflow may place one Form Widget in each slot of a `mountPolicy: "eager"` Stack, so every
+Form is mounted before the first submit. A single
 footer command may then ask the owning Controller to submit all concrete Forms with one correlation id.
 The Controller commits only after every Form has validated successfully, merges their form payloads into
 the workflow payload, and closes the Overlay once. The Overlay and Stack never interpret or merge Form
@@ -197,12 +201,15 @@ color. Solid colors including alpha, gradients, images, borders, standard/custom
 effects follow the existing shared Region-compatible resolvers. The mask remains independently configured
 and does not become transparent merely because the Overlay container is transparent.
 
-`mountPolicy` is one of:
+`mountPolicy` uses the shared CMS mount-policy vocabulary (`types/cms-mount-policy.ts`), which Stack
+Layouts and the Gallery Widget use as well. For an Overlay the window is "open":
 
-- `on-open` (default): mount all declared zone subtrees when opening and unmount them after closing;
-- `keep-alive`: mount all declared zone subtrees on first open and retain them while subsequently closed;
-- `eager`: mount all declared zone subtrees after hydration, before the first open; this is reserved for
-  workflows that explicitly require closed signal consumers.
+- `remount` (default, `types/cms-overlay.ts`): mount all declared zone subtrees when opening and unmount
+  them after closing;
+- `lazy-keep`: mount all declared zone subtrees on first open and retain them while subsequently closed;
+- `eager`: mount all declared zone subtrees from the start, before the first open.
+
+A stored value outside these three is a read error, not a fallback.
 
 Transient `open`, `hasOpened`, loading, pending, focus, and resize-interaction state is never persisted. Callback
 functions, portals, raw Ant Design render callbacks, raw semantic-DOM styles/class names, `forceRender`,
@@ -287,18 +294,18 @@ vocabulary for `open`, `close`, and `toggle`; open-state feedback uses an explic
 The Overlay matches only its persisted listen routes and concrete `cms:<instanceId>` receiver.
 
 Business payloads remain owned by a Widget, Provider, or Controller. A generic Overlay must not parse a
-Table row identity, Form payload, User id, or domain command. With the default `on-open` policy, an active
+Table row identity, Form payload, User id, or domain command. With the default `remount` policy, an active
 Widget, Provider, or Controller outside the closed Overlay addresses the zone Widget directly and sends a
 separate generic open command to the Overlay. A Widget inside an initially unmounted Overlay must not be
 required to open its own Overlay, and must not read the selection out of a Module store -- see the Widget
 contract in `MODULES.md`.
 
-Signal delivery into a zone that has not mounted yet is guaranteed for every mount policy. An addressed
-signal whose receiver is absent is held by the bus and delivered once that address becomes usable, which
-is registration plus a listener. The write and publish paths refuse a route whose receiver is not in the
-revision, so an absent receiver is a promise not yet kept rather than a wrong address. What is still
-waiting when the partition goes away is discarded without complaint: a never-opened Overlay is ordinary
-operation, and only a development build traces it.
+Signal delivery into a zone that has not mounted yet is guaranteed for every mount policy: the bus holds
+a signal addressed to an absent receiver until the address is registered and has a listener (see
+[SIGNALS.md](./SIGNALS.md#delivery-and-correlation)). The write and publish paths refuse a route whose
+receiver is not in the revision, so an absent receiver is a promise not yet kept rather than a wrong
+address. What is still waiting when the partition goes away is discarded without complaint: a
+never-opened Overlay is ordinary operation, and only a development build traces it.
 
 Mount policy therefore remains a rendering decision -- what exists in the DOM and what survives a close --
 and is no longer a delivery decision.
@@ -325,71 +332,6 @@ Ant Design Modal or Drawer components.
 Imperative confirmation dialogs used for one application transaction are not CMS Overlays. Builder-only
 workspace prompts may use shared Core React wrappers but do not become persisted Overlay instances unless
 their content is intentionally represented in an Area or Page preset.
-
-## Builder Inspector Overlay baseline
-
-The Builder Region, Layout, and Widget Inspectors are persistent workspace composition, not transient
-prompts. They use three separate Area-owned Drawer Overlay instances contributed by the Builder Module:
-
-- the Region Inspector Drawer;
-- the Layout Inspector Drawer; and
-- the Widget Inspector Drawer.
-
-Area ownership is required because the same Inspector set serves both `/builder/shells` and
-`/builder/pages` and follows the Builder Area Controller lifecycle. Page presets must not duplicate the
-instances.
-
-They are contributed through the `areaOverlays` descriptor family, not declared in the Builder Area
-shell preset, and the same holds for the Effects editor and the Signal wiring Modal beside them. A shell
-preset is a starting point an operator may save over, after which the saved snapshot is the only source
-of truth for that Area; an Overlay declared there disappears with that save. The Inspectors are the tool
-doing the authoring rather than content being authored, so they are composed onto whatever Area tree
-resolves, code preset or saved snapshot alike. The Inspector content must consume current Area Controller/workspace state and must not retain
-a Page-render snapshot that becomes stale when navigation changes the active Builder workspace.
-
-Every Inspector Drawer has exactly one direct Body root, an explicitly declared n-slot
-`PhiCollapsibleLayout` specialized by its preset content. A shared Stack root, a dynamically substituted
-root Layout, three nested Collapsible Layouts, an imperative Collapsible host, and a normal hidden Drawer
-Region are all forbidden alternative paths. The Builder Controller opens exactly the Drawer matching the
-selected `region`, `layout`, or `widget` kind and closes the other two through ordinary Area-scoped Overlay
-routes.
-
-The Builder Area runtime mounts the normal resolved `overlays[]` collection independently of Region
-occupancy. It must not require a `drawer_right` Region, a host Layout, a `builder-workspace-host` Widget,
-or a private `PhiDrawerControl` to keep Overlay receivers alive. Overlay receiver registration and the
-selected mount policy determine when the declared zone subtree exists. The Builder Controller owns
-workspace selection, opens and closes the three Inspector Overlay addresses, and coordinates Effects and
-other Builder workflows; that orchestration is not a CMS Widget responsibility.
-
-The Region/Layout/Widget section nodes remain ordinary Builder-Module Widgets in their declared
-Collapsible slots. They may share internal server label/provider preparation and Client hooks, but they
-must not render through a workspace-host Widget, mount another Drawer, or receive a host-owned render
-callback.
-
-Each Collapsible slot contains a normal Builder-Module Widget. Presentation-only editors such as
-background, border, shadow, padding, geometry, viewport, and placement are Phi Controls composed by their
-Builder Widget counterparts; a Control is never inserted directly as a CMS node. The Builder Widgets own
-only CMS identity, presentation config, and declared Controller signal adaptation. The selected node and
-its editable Draft remain Controller/workspace state.
-
-Inspector section Widgets use the existing `fill-inline` slot-size policy so every section occupies the
-complete Collapsible panel width. Inner Controls may use their own semantic label/control composition but
-must not determine the width of the CMS Widget frame through intrinsic sizing. On the first mount only
-`slot_0` is open: this is Settings for Layout and Widget Inspectors and Geometry for the Region Inspector.
-Subsequent open/close state remains transient Collapsible state for the keep-alive Drawer lifecycle.
-
-The code-owned Builder preset uses the shared `glass` effect for these Drawers. Mask behavior remains
-explicit ordinary Overlay config and is not derived from Inspector ownership or effect. Header, Body, and
-Footer Layout chrome remains transparent unless a preset explicitly chooses another visible surface.
-The selected zone root Layout is the sole content-padding owner, and the Overlay Body remains the only
-block-axis scroll owner.
-
-The three Builder Inspector Drawers use a transparent, outside-blocking, closable mask. A pointer action
-on the visible Canvas is therefore consumed by the mask and closes the Inspector without selecting or
-activating the Canvas underneath it. Their Collapsible Body roots use `sm` outer Layout padding and `sm`
-inner panel padding; neither value comes from Drawer adapter padding. Their Header Flex roots use `lg`
-inline-start padding and retain the complete Header zone width. The absolute close-button offset remains
-independent Drawer chrome.
 
 ## Picker boundary
 
@@ -440,9 +382,10 @@ a Modal or Drawer workflow rather than a Picker.
 A domain trigger for a Modal Editor is a normal canonical Phi Control, usually `PhiButtonControl`; it
 must not privately mount or own the Modal. The owning Area or Page declares the Overlay and its named
 roots. Domain content is a Module-owned Widget placed in the Body root, while declarative commands are a
-normal Command Toolbar in the Footer root. For the Asset Focal Rectangle Editor, the Page-owned Modal is
-mounted `on-open`, its Body is a Content Layout providing zero padding and the secondary background,
-and its Asset-owned spatial-editor Widget is projected only into the Builder runtime Client manifest.
+normal Command Toolbar in the Footer root. For the Asset Focal Rectangle Editor, the Builder Area preset
+declares the Modal with `mountPolicy: "remount"`, its Body is a Content Layout providing zero padding and
+the secondary background, and its Asset-owned spatial-editor Widget is projected only into the Builder
+runtime Client manifest.
 Apply emits the controlled Form-field value and then closes with the originating correlation; Cancel or
 Escape discards the local draft. The opening Preview action is therefore a `PhiButtonControl`, not a
 specialized focal-rectangle Control.
@@ -455,11 +398,3 @@ Code-owned and persisted presets declare complete Overlay instances and explicit
 named zone Layouts, and runtime/preview render them through the canonical path. No preset-local Modal/Drawer
 renderer is allowed.
 
-## Contract governance
-
-Any change, extension, replacement, reinterpretation, or widening of this contract requires explicit
-prior operator approval after the exact contract gap and affected ABI have been presented. Analysis,
-implementation work in an adjacent domain, or approval of another contract does not grant that approval.
-The contract must not be bypassed through a parallel, shadow, local, Module-specific, Provider-specific,
-or compatibility contract. When this contract cannot express a requirement, implementation stops and
-asks the operator before types, fields, values, render paths, or fallbacks are introduced.

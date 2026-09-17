@@ -1,31 +1,34 @@
 # Helpers
 
-This directory contains public runtime helper functions for `@phis/ui`.
-
-## Scope
-
-- `helpers/*` is public package surface.
-- Helpers should be pure, narrowly scoped utility functions.
-- Helpers may be shared by consuming sites and shared UI internals.
-- Helpers must not contain backend adapter logic, hidden network fetches, or mutable singleton state.
+Runtime helper functions for `@phis/ui`. The `@phis/ui/helpers` entry point (`helpers.ts`) re-exports a
+selected subset; the other files are internal and imported by path inside the package.
 
 ## What belongs here
 
-- flag and mask evaluation helpers
-- area/access helpers
-- value normalization helpers
-- small data-shaping helpers that are not tied to React rendering
+- flag, mask, and path helpers (`flags.ts`, `cms-paths.ts`, `cms-routing.ts`, `locale.ts`)
+- value normalization and config serialization (`renderable-block-*.ts`, `cms-config-serialization.ts`,
+  `layout-style.ts`)
+- small data-shaping helpers that are not tied to React rendering, such as preset node factories
+  (`cms-node-factories.ts`, `cms-preset-nodes.ts`)
+- metadata and SEO builders (`phi-metadata.ts`, `phi-seo.ts`)
+
+Viewer access is not decided here: use `canPhiViewerAccess` from `types/access.ts` ([ACCESS.md](../ACCESS.md)).
 
 ## What does not belong here
 
-- site-config loading
-- translation gateways
-- raw `phi-server` API adapters
-- widget registries
-- React components
+- reads from `@phis/server` and translation requests (`gateway/*`)
+- Widget registries and React components
 
-## Current contracts
+## Server-only and stateful files
 
-- CMS visibility and area matching helpers belong here.
-- Access helpers such as `resolveAreaFromPath()` and `canAccessPage()` belong here when they are runtime-safe and UI-consumable.
-- If a helper becomes server-only, move it into a dedicated server namespace instead of keeping it in `helpers/*`.
+Most helpers are pure. The exceptions are explicit:
+
+- `site-runtime.ts` (which imports `server-only`) and `phis-server-credentials.ts` read the Site's local
+  config files and memoize them in module state. `site-runtime.ts` is not re-exported through `helpers.ts`.
+- `translation-cache.ts` is a mutable per-process singleton kept on `globalThis`; its behavior is described
+  in [gateway/CACHES.md](../gateway/CACHES.md).
+- `phi-sitemap-cache.ts` creates a fingerprint cache; the instance that holds the finished sitemap is
+  per process and rebuilds when the Public read fingerprint changes.
+
+A new helper with module state or a server-only import names that in its file header; anything that
+fetches belongs in `gateway/*` or `server-helpers/*`.

@@ -71,8 +71,8 @@ export function resolvePhiControlShape(value: unknown): PhiControlShape {
 }
 
 /**
- * Radius scale a Control shape resolves to. `SITE-CONFIG.md` requires the adapter to resolve the
- * preset "for the active `controlSize`", so a shape is a scale rather than a single number.
+ * Radius scale a Control shape resolves to. A shape applies at every Control size (THEME.md, "Control
+ * shape"), so it is a scale rather than a single number.
  *
  * - `square` and `pill` are ABSOLUTE statements about geometry. No size can make "no rounding" or
  *   "capsule" partially true, so both flatten every step: a small pill Button that is not a pill is
@@ -104,7 +104,7 @@ export type PhiControlShapeRadiusTokens = {
 
 /**
  * A capsule is derived from the rendered Control height, not persisted as `border-radius: 50%` --
- * `SITE-CONFIG.md` rejects the percentage because it produces ellipses on a rectangular box. A radius
+ * THEME.md, "Control shape", rejects the percentage because it produces ellipses on a rectangular box. A radius
  * far above any Control height clamps to exactly half the height in every browser, which is the
  * implementation-native full radius the contract asks for.
  */
@@ -189,7 +189,7 @@ export function buildPhiControlShapeCssVars(
  * of their own and render as `.ant-select` / `.ant-picker`, so the Select and DatePicker entries
  * already cover their triggers, while Cascader's and TreeSelect's own stylesheets contain nothing but
  * the dropdown panel. Cascader was worse than inert: its token reads the panel radius, so shaping it
- * would round the POPUP, which `SITE-CONFIG.md` reserves for the surface scale.
+ * would round the POPUP, which THEME.md, "Control shape", leaves on the surface scale.
  */
 const PHI_SHAPED_ANTD_COMPONENTS = [
   "Button",
@@ -205,8 +205,8 @@ const PHI_SHAPED_ANTD_COMPONENTS = [
 /**
  * Applies the shape to the Control components, outranking a raw adapter-level radius override.
  *
- * `SITE-CONFIG.md` requires this direction: "the resolved semantic Control shape takes precedence over
- * conflicting raw adapter-level component-radius overrides so there is one effective source of truth."
+ * THEME.md, "Control shape", requires this direction: for Phi Controls the shape wins over conflicting
+ * component radius overrides, so there is one effective source of truth.
  * Overriding a single corner is a different layer and never conflicts -- antd carries only scalar radius
  * tokens, so a Widget config such as `borderTopLeftRadius` owns that case.
  *

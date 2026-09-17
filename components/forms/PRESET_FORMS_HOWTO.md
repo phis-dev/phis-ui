@@ -7,19 +7,15 @@ visual Form Builder.
 Following this guide produces one functional Form that:
 
 - is discoverable only while its owner Runtime Module is active in the target Area;
-- renders through the one generic `@phis/ui/widgets/form` Widget;
+- renders through the one generic Form Widget, `@phis/ui/modules/core/widgets/form`;
 - validates through `PhiFormControl` and the canonical Phi field Controls;
 - either submits through the Core Form controller and Site gateway or emits validated values to a
   domain Controller; and
 - can be replaced by a Published Site override without changing its `formId` or CMS placement.
 
-Changing, extending, replacing, reinterpreting, or widening the Preset Form contract requires explicit
-prior operator approval after the exact gap and affected ABI have been presented. A Module must not bypass
-it through a local, parallel, shadow, Provider-specific, fallback, or compatibility contract; if the
-contract cannot express a requirement, implementation stops and asks the operator first.
-
-For package layout, Module, Controller, manifest, and consuming-Site composition around the Form, start
-with [THIRD_PARTY_MODULES.md](../../THIRD_PARTY_MODULES.md).
+The contract this guide applies is [FORMS.md](../../FORMS.md); where the two seem to differ, FORMS.md
+is right. For package layout, Module, Controller, manifest, and consuming-Site composition around the
+Form, start with [THIRD_PARTY_MODULES.md](../../THIRD_PARTY_MODULES.md).
 
 ## Terminology: there is no single Form Provider
 
@@ -27,7 +23,7 @@ These similarly named objects have separate responsibilities:
 
 | Object | Responsibility | Executable? |
 | --- | --- | --- |
-| Form definition | Versioned package preset selected by `formId`; carries descriptor and execution metadata. | Server callbacks for labels or an optional wrapper only. |
+| Form definition | Versioned package preset selected by `formId`; carries the descriptor, its Areas, and handler keys. | Only its Server `loadLabels` and `loadInitialValues` callbacks. |
 | `PhiFormDescriptor` | Serializable fields, labels, conditions, validation, and responsive grid. | No. |
 | Field provider | Maps a `fieldProviderKey` to a controlled `Phi*Control`. | Yes, in the scoped UI registry. |
 | Validation provider | Maps a validation key to the canonical client validation rule. | Yes, in the scoped UI registry. |
@@ -48,20 +44,20 @@ separate:
 
 ```text
 src/
-├── constants.ts                  # module id, form id, handler keys
+├── ids.ts                        # module id, form id, handler keys
+├── definition.ts                 # module definition incl. formProviders metadata
+├── server.ts                     # phiModuleServerContributions (catalogEntry.forms)
 ├── forms/
-│   ├── request-form.server.ts    # descriptor + definePhiRuntimeModuleForm
-│   ├── labels.server.ts          # optional label-set loader
+│   ├── request-form.ts           # descriptor + definePhiRuntimeModuleForm (Server only)
+│   ├── labels.ts                 # optional label-set loader (Server only)
 │   └── ui-provider.tsx           # optional custom field/validation providers
-├── runtime/
-│   ├── module-definition.ts      # formProviders metadata
-│   ├── area-contribution.server.ts
-│   └── controller.tsx            # only when a domain lifecycle is required
-├── server/
-│   └── request-handler.ts        # site or Add-on implementation
-└── presets/
-    └── request-page.server.ts    # generic Form Widget + external actions
+├── controller.tsx                # only when a domain lifecycle is required
+└── presets.ts                    # generic Form Widget + external actions
+addon/                            # the handler, when the Module has an Add-on half
 ```
+
+The fixed entrypoints and export names of a Module package are in
+[THIRD_PARTY_MODULES.md](../../THIRD_PARTY_MODULES.md).
 
 Do not put server handlers in the client UI provider, Ant Design components in the descriptor, or a
 domain-specific Form Widget beside the generic Form Widget.
@@ -91,8 +87,8 @@ register a Form globally or mutate shared process state.
 A Form being installed is not the same as its owner Module being active. All of these links must agree:
 
 1. the Module definition lists the target Area in `eligibleAreas`;
-2. that Area's Server contribution includes the Form in `catalogEntry.forms` and includes the matching
-   phase-specific handler Provider in the same Module definition;
+2. the Form is in `catalogEntry.forms`, names the target Area in its `areas`, and the same Module
+   definition declares a handler Provider for each handler key and phase the Form uses;
 3. the effective Area preset selects the optional owner Module in `runtimeModules` (locked Area base
    modules are derived and must not be listed there); and
 4. the Site build manifest contains the Module's Server and applicable Client projections for that Area.
@@ -122,8 +118,11 @@ execution integration. Business persistence remains behind the Site gateway or a
 
 ## CMS placement
 
+`createPhiSignalAddress` and `PHI_SIGNAL_VALUE_SCHEMAS` in the examples below come from `@phis/ui/types`;
+the route fields are defined in [SIGNALS.md](../../SIGNALS.md#capabilities-and-routes).
+
 Forms are not CMS Widget types. A CMS tree places the one generic
-`@phis/ui/widgets/form` Widget and stores the selected namespaced `formId` in its config:
+`@phis/ui/modules/core/widgets/form` Widget and stores the selected namespaced `formId` in its config:
 
 ```ts
 const REQUEST_FORM_WIDGET_ID = SUPPORT_REQUEST_PRESET_IDS.form;
@@ -131,7 +130,7 @@ const REQUEST_FORM_WIDGET_ID = SUPPORT_REQUEST_PRESET_IDS.form;
 config: {
   formId: SUPPORT_REQUEST_FORM_ID,
   formConfig: {},
-  execution: { mode: "handler" },
+  execution: { mode: "handler", phase: "submit" },
   source: null,
   signalRoutes: {
     listens: [{
@@ -189,19 +188,19 @@ validation before either execution mode continues. Reset works the same way with
 
 ## Identity and ownership
 
-A Form has one stable, package-namespaced identity:
+A Form has one stable identity in its owner Module's namespace:
 
 ```ts
 import { createPhiFormId } from "@phis/ui/forms";
 
-export const SUPPORT_REQUEST_FORM_ID = createPhiFormId(
-  "@acme/support",
-  "request",
-);
-// @acme/support/forms/request
+export const SUPPORT_MODULE_ID = "@acme/support/modules/requests" as const;
+
+export const SUPPORT_REQUEST_FORM_ID = createPhiFormId(SUPPORT_MODULE_ID, "request");
+// @acme/support/modules/requests/forms/request
 ```
 
-- The package portion of `formId` must match the package portion of the owner Runtime Module id.
+- Everything before `/forms/` must be exactly the owner Module id; catalog construction rejects a Form
+  namespaced by the bare package name.
 - `descriptor.key` must equal `formId`.
 - `ownerModuleId` records lifecycle ownership; it is not a second Form identity.
 - Bare ids, numeric preset ids, `pluginKey/typeKey` Form identity, and compatibility aliases are not
@@ -209,38 +208,38 @@ export const SUPPORT_REQUEST_FORM_ID = createPhiFormId(
 
 ## Define the preset
 
-Keep the definition in a server entry without `"use client"`. The descriptor is serializable. Optional
-`render` and `loadLabels` callbacks remain on the server side.
+Keep the definition in a Server entry without `"use client"`. The descriptor is serializable. The
+optional `loadLabels` and `loadInitialValues` callbacks run on the Server.
 
 ```tsx
 import {
-  createPhiFormId,
   definePhiRuntimeModuleForm,
+  PHI_FORM_FIELD_PROVIDER_KEYS,
+  PHI_FORM_VALIDATION_PROVIDER_KEYS,
   type PhiFormDescriptor,
 } from "@phis/ui/forms";
-import type { PhiRuntimeModuleId } from "@phis/ui/cms/plugins";
+import { SUPPORT_MODULE_ID, SUPPORT_REQUEST_FORM_ID } from "../ids";
 import { loadSupportFormLabels } from "./labels";
-
-export const SUPPORT_MODULE_ID = "@acme/support/runtime" as PhiRuntimeModuleId;
-export const SUPPORT_REQUEST_FORM_ID = createPhiFormId("@acme/support", "request");
 
 const descriptor = {
   schemaVersion: 1,
   key: SUPPORT_REQUEST_FORM_ID,
-  labelSetKey: "@acme/support/form-labels:request",
+  labelSetKey: "@acme/support/modules/requests/labels/request",
   layout: {
-    columns: { compact: 1, medium: 2, wide: 2 },
-    gap: { compact: "sm", medium: "base", wide: "base" },
-    labelPlacement: "top",
+    gap: { compact: "sm", medium: "base" },
+    // labels above their controls at every width
+    label: { compact: { start: 1, end: 25 } },
+    control: { compact: { start: 1, end: 25 } },
   },
   fields: [
     {
       key: "email",
-      fieldProviderKey: "@phis/ui/form-field:email",
+      // @phis/ui/modules/core/form-field/email
+      fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.email,
       label: { kind: "label", key: "email.label", fallback: "Email" },
       validation: [
-        { providerKey: "@phis/ui/form-validation:required" },
-        { providerKey: "@phis/ui/form-validation:email" },
+        { providerKey: PHI_FORM_VALIDATION_PROVIDER_KEYS.required },
+        { providerKey: PHI_FORM_VALIDATION_PROVIDER_KEYS.email },
       ],
     },
   ],
@@ -248,6 +247,7 @@ const descriptor = {
 
 export const SUPPORT_REQUEST_FORM = definePhiRuntimeModuleForm({
   ownerModuleId: SUPPORT_MODULE_ID,
+  areas: ["app"],
   formId: SUPPORT_REQUEST_FORM_ID,
   version: 1,
   flags: 0,
@@ -268,8 +268,9 @@ export const SUPPORT_REQUEST_FORM = definePhiRuntimeModuleForm({
 ```
 
 All field, validation, and handler keys referenced by the Form must be declared by active Runtime
-Modules. Runtime resolution fails early when a provider is unavailable or its phase does not match the
-Form reference.
+Modules. Catalog construction rejects a handler key without a phase-matching Provider of the same Module,
+and resolving the active Module set rejects a field or validation key no active Module declares. The
+descriptor grid and text rules are in [FORMS.md](../../FORMS.md#descriptor).
 
 ## Declare handler availability and implement the server side
 
@@ -281,11 +282,12 @@ import type {
   PhiFormHandlerProviderDescriptor,
   PhiFormProviderKey,
 } from "@phis/ui/forms";
+import type { PhiRuntimeModuleDefinition } from "@phis/ui/types";
 
 export const SUPPORT_REQUEST_HANDLER_KEY = "support.request.create";
 
 export const SUPPORT_REQUEST_HANDLER_PROVIDER = {
-  key: "@acme/support/form-handler:request-create" as PhiFormProviderKey,
+  key: "@acme/support/modules/requests/form-handler/request-create" as PhiFormProviderKey,
   ownerModuleId: SUPPORT_MODULE_ID,
   title: "Create support request",
   phase: "submit",
@@ -293,6 +295,7 @@ export const SUPPORT_REQUEST_HANDLER_PROVIDER = {
   category: "site",
   transport: "relay",
   method: "POST",
+  endpointKey: null,
   upstreamPath: "/api/support/requests",
   csrfPath: null,
   requiresCsrf: false,
@@ -309,7 +312,10 @@ export const SUPPORT_RUNTIME_MODULE_DEFINITION = {
 ```
 
 The Form definition and handler descriptor must use the same `handlerKey` and phase. The handler
-Provider's namespaced `key` is catalog identity only; it is never stored in `submitHandlerKey`.
+Provider's namespaced `key` is catalog identity only; it is never stored in `submitHandlerKey`. Every
+descriptor field is required: `endpointKey` and `upstreamPath` may be `null`, but not both, and a
+`requiresCsrf` Provider needs a `csrfPath`. How the relay turns them into a target is in
+[FORMS.md](../../FORMS.md#handler-providers).
 
 Target, CSRF, and credential fields belong to `PhiFormHandlerProviderDescriptor`. Do not put them into
 editable Form config or add another credential-forwarding allowlist.
@@ -318,12 +324,12 @@ Handler mode posts only `formId`, the closed phase (`submit` or `confirm`), and 
 Site-local `/api/site/forms` gateway. The gateway resolves the Published Form from the active target-Area
 module catalog, resolves the handler Provider on the Server, constructs the execution target from that
 immutable Provider, and rejects Client-carried routing or credential overrides. A third-party feature that
-needs a reusable server counterpart ships that route in its Add-on half; a Site-local feature may
-implement it in the Site dispatcher. Catalog metadata alone does not implement persistence. Without the
+needs a server counterpart ships that route in its Add-on half. Catalog metadata alone does not implement persistence. Without the
 server Provider mapping and actual handler, the Form renders and validates but cannot submit successfully.
 
 `credentialPolicy` is mandatory and closed: `none` forwards no Browser cookie, `site-session` forwards
-only `phis_session`, and Core-only `auth-link` forwards only `phis_auth_link` for the closed link workflow.
+only `phis_session`, and `auth-link` forwards only `phis_auth_link` and may be declared only by the
+first-party Auth Module (`@phis/ui/modules/auth`).
 No Provider, Form config, Site override, Widget config, signal, or Browser payload may name a cookie.
 `none` remains a Site-scoped server request through the trusted gateway and is intended for anonymous
 login, registration, password-reset, and public-contact handlers; it does not disable Site resolution,
@@ -336,21 +342,26 @@ hidden fields, a trusted `formId`, and a declared handler provider never replace
 
 ## Contribute the Form from the Runtime Module
 
-Add the Form explicitly to each Server Area contribution in which the module may be active:
+Add the Form to the Module's Server contribution. The contribution names no Area; each Area receives
+the Forms whose `areas` name it:
 
 ```ts
-definePhiRuntimeModuleServerAreaContribution({
+// server.ts
+import "server-only";
+import { definePhiModuleServerContributions } from "@phis/ui/module";
+
+export const phiModuleServerContributions = definePhiModuleServerContributions([{
   moduleId: SUPPORT_MODULE_ID,
   catalogEntry: {
     definition: SUPPORT_RUNTIME_MODULE_DEFINITION,
     widgets: SUPPORT_RUNTIME_MODULE_WIDGETS,
     layouts: [],
     forms: [SUPPORT_REQUEST_FORM],
-    loadUiProvider: () => import("../forms/ui-provider")
+    loadUiProvider: () => import("./forms/ui-provider")
       .then((module) => module.SupportFormUiProvider), // omit when only Core fields are used
-    load: () => import("./runtime").then((module) => module.SUPPORT_RUNTIME_MODULE),
+    load: () => import("./module").then((module) => module.SUPPORT_RUNTIME_MODULE),
   },
-});
+}]);
 ```
 
 The module definition declares serializable provider metadata through `formProviders`. A custom field
@@ -365,7 +376,7 @@ field type, declare serializable metadata on the module and compose its executab
 ```ts
 // fields/ticket-reference.ts -- server-safe metadata
 export const SUPPORT_TICKET_FIELD = {
-  key: "@acme/support/form-field:ticket-reference" as PhiFormProviderKey,
+  key: "@acme/support/modules/requests/form-field/ticket-reference" as PhiFormProviderKey,
   ownerModuleId: SUPPORT_MODULE_ID,
   title: "Ticket reference",
   valueType: "string",
@@ -377,6 +388,12 @@ export const SUPPORT_TICKET_FIELD = {
 // forms/ui-provider.tsx
 "use client";
 
+import type { ReactNode } from "react";
+import { PhiTextControl } from "@phis/ui/controls";
+import {
+  createPhiFormProviderRegistry,
+  PhiFormProviderRegistryProvider,
+} from "@phis/ui/forms";
 import { SUPPORT_TICKET_FIELD } from "../fields/ticket-reference";
 
 const registry = createPhiFormProviderRegistry({
@@ -453,8 +470,8 @@ explicit reload signal.
 
 ## Controller and signaling boundary
 
-Standard runtime Forms use the demand-materialized Core controller
-`controller:@phis/ui/form:<instance-key>`. It owns values, touched/dirty/valid state, submit,
+Standard runtime Forms use the demand-materialized Core Form controller
+`controller:@phis/ui/modules/core/controller/form:<instance-key>` ([FORMS.md](../../FORMS.md#form-controller)). It owns values, touched/dirty/valid state, submit,
 confirm, reset, result, and error signals. The module does not mount a second Form controller.
 
 Keep these three addresses distinct:
@@ -462,8 +479,8 @@ Keep these three addresses distinct:
 | Address | Purpose | Who creates it? |
 | --- | --- | --- |
 | `cms:<form-widget-id>` | Public signal surface of the placed Form Widget; external buttons target its `submit` or `reset` input. | The CMS preset. |
-| `controller:@phis/ui/form:widget-<form-widget-id>` | Internal runtime state and handler execution for exactly that mounted Form. | Automatically demanded from the Form Widget; never added as a preset node. |
-| `controller:<module>:<instance>` | Optional domain workflow, for example a wizard, coordinated modal, or several Forms committed together. | The owning Runtime Module, only when needed. |
+| `controller:@phis/ui/modules/core/controller/form:widget-<form-widget-id>` | Internal runtime state and handler execution for exactly that mounted Form. | Automatically demanded from the Form Widget; never added as a preset node. |
+| `controller:<module id>/controller/<controller key>:<instance>`, for example `controller:@acme/support/modules/requests/controller/default:default` | Optional domain workflow, for example a wizard, coordinated modal, or several Forms committed together. | The owning Runtime Module, only when needed. |
 
 The Form Widget derives its Core controller instance key from its CMS widget id. A basic handler Form
 therefore needs no controller node, controller address, or controller import in its preset. Persisted
@@ -501,7 +518,7 @@ No submit gateway is called, and the Form definition may therefore omit `submitH
 config: {
   formId: SUPPORT_FILTER_FORM_ID,
   formConfig: { initialValues: { status: "open" } },
-  execution: { mode: "signal" },
+  execution: { mode: "signal", phase: "submit" },
   source: null,
   signalRoutes: {
     listens: [{
@@ -547,8 +564,8 @@ authoring controller and is not built.
 - Honeypot, CSRF, credential forwarding, authorization, rate limiting, and secrets are server concerns
   selected by the resolved immutable handler Provider. Descriptors must not contain callbacks, secrets,
   route targets, credential policy, or arbitrary executable code.
-- A browser never calls an add-on or `phi-server` directly; the site-local Form gateway validates and
-  relays the request.
+- A browser never calls an Add-on or phis-server directly; the Site's `/api/site/forms` relay resolves
+  and forwards the request ([FORMS.md](../../FORMS.md#relay)).
 
 ## Published runtime now, Draft-ready storage later
 
@@ -556,10 +573,9 @@ A package release acts as the Published preset baseline. A Site may store a Publ
 same active module-owned `formId`; the preset remains the fallback. Runtime resolution never exposes a
 Working Draft.
 
-The v1 `form_definitions` table already stores revision rows and reserves exactly one status slot per
-Site/Form for Working Draft (`0`), Published (`1`), and archived Published revisions (`2`). Future visual
-authoring can add Draft create/update/preview/publish APIs and optimistic version checks without a schema
-change. It must not mutate the package preset itself.
+phis-server's `form_definitions` rows carry a status: Working Draft (`0`), Published (`1`), and archived
+Published (`2`). Only Published rows are read; there is no Draft API. A stored override never changes the
+package preset itself.
 
 ## Failure guide
 
@@ -577,8 +593,8 @@ change. It must not mutate the package preset itself.
 
 ## Checklist
 
-- Use `createPhiFormId(packageName, formKey)` and keep `descriptor.key` identical.
-- Export one pure `definePhiRuntimeModuleForm(...)` definition from a server entry.
+- Use `createPhiFormId(ownerModuleId, formKey)` and keep `descriptor.key` identical.
+- Export one pure `definePhiRuntimeModuleForm(...)` definition from a Server entry and name its `areas`.
 - Choose `handler` or `signal` execution explicitly; do not combine them.
 - Declare every referenced field, validation, options, record, and phase-specific handler provider on
   active modules.
