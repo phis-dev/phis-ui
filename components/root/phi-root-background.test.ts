@@ -1,8 +1,9 @@
 import { describe, expect, it } from "vitest";
 
 import {
-  resolvePhiRootBackgroundLayerStyle,
+  resolvePhiRootBackgroundFrameStyle,
   resolvePhiRootBackgroundMotion,
+  resolvePhiRootBackgroundPicture,
 } from "./phi-root-background";
 
 /**
@@ -11,11 +12,12 @@ import {
  */
 describe("root background layer style", () => {
   it("falls back to the layout background when nothing is configured", () => {
-    const style = resolvePhiRootBackgroundLayerStyle(null, "light");
+    const style = resolvePhiRootBackgroundFrameStyle();
     expect(style.backgroundColor).toBe("var(--ant-color-bg-layout)");
     expect(style.position).toBe("fixed");
     expect(style.zIndex).toBe(-1);
     expect(style.pointerEvents).toBe("none");
+    expect(resolvePhiRootBackgroundPicture(null, "light").paint).toEqual({});
   });
 
   it("resolves the configured mode and leaves the other on the fallback", () => {
@@ -33,28 +35,55 @@ describe("root background layer style", () => {
         },
       },
     };
-    const light = resolvePhiRootBackgroundLayerStyle(root, "light");
-    expect(light.backgroundImage).toBe("linear-gradient(to bottom, #ffffff 0%, #e0e0ff 100%)");
-    const dark = resolvePhiRootBackgroundLayerStyle(root, "dark");
-    expect(dark.backgroundImage).toBeUndefined();
-    expect(dark.backgroundColor).toBe("var(--ant-color-bg-layout)");
+    const light = resolvePhiRootBackgroundPicture(root, "light");
+    expect(light.paint.backgroundImage).toBe("linear-gradient(to bottom, #ffffff 0%, #e0e0ff 100%)");
+    expect(light.imageUrl).toBeNull();
+    const dark = resolvePhiRootBackgroundPicture(root, "dark");
+    expect(dark.paint.backgroundImage).toBeUndefined();
+    expect(dark.key).not.toBe(light.key);
   });
 
   it("keeps the fallback ground under an explicit \"none\" base", () => {
-    const style = resolvePhiRootBackgroundLayerStyle(
+    const { paint } = resolvePhiRootBackgroundPicture(
       { background: { light: { base: { kind: "none" as const } } } },
       "light",
     );
-    expect(style.backgroundColor).toBe("var(--ant-color-bg-layout)");
-    expect(style.backgroundImage).toBeUndefined();
+    expect(paint.backgroundColor).toBeUndefined();
+    expect(paint.backgroundImage).toBeUndefined();
   });
 
   it("paints a configured color over the fallback", () => {
-    const style = resolvePhiRootBackgroundLayerStyle(
+    const { paint } = resolvePhiRootBackgroundPicture(
       { background: { dark: { base: { kind: "color" as const, color: "#101018" } } } },
       "dark",
     );
-    expect(style.backgroundColor).toBe("#101018");
+    expect(paint.backgroundColor).toBe("#101018");
+  });
+
+  it("waits for a fetched picture over the Asset's placeholder", () => {
+    const picture = resolvePhiRootBackgroundPicture({
+      background: {
+        light: {
+          base: {
+            kind: "image" as const,
+            sourceKind: "asset" as const,
+            assetId: 12,
+            resolvedAsset: { deliveryUrl: "/api/site/media/12/content", deliveryRevision: 3, blurDataUrl: "data:image/webp;base64,AAAA" },
+          },
+        },
+      },
+    }, "light");
+    expect(picture.imageUrl).toMatch(/^\/api\/site\/media\/12\/content/);
+    expect(picture.placeholder?.backgroundImage).toBe('url("data:image/webp;base64,AAAA")');
+  });
+
+  it("has nothing to wait for with an inline picture", () => {
+    const picture = resolvePhiRootBackgroundPicture({
+      background: { light: { base: { kind: "image" as const, sourceKind: "url" as const, sourceUrl: "data:image/svg+xml;base64,AAAA" } } },
+    }, "light");
+    expect(picture.paint.backgroundImage).toBe('url("data:image/svg+xml;base64,AAAA")');
+    expect(picture.imageUrl).toBeNull();
+    expect(picture.placeholder).toBeNull();
   });
 });
 
@@ -81,19 +110,19 @@ describe("root background motion", () => {
   it("ignores a stored fixed mode and keeps painting the static ground", () => {
     const root = { background: { light: { base: image, motion: { mode: "fixed" as const } } } };
     expect(resolvePhiRootBackgroundMotion(root, "light")).toBeNull();
-    expect(resolvePhiRootBackgroundLayerStyle(root, "light").backgroundImage).toBe(
-      'url("https://example.test/ground.jpg")',
-    );
+    const picture = resolvePhiRootBackgroundPicture(root, "light");
+    expect(picture.paint.backgroundImage).toBe('url("https://example.test/ground.jpg")');
+    expect(picture.motion).toBeNull();
   });
 
   it("hands the image to the motion layer and keeps only the fallback ground", () => {
-    const style = resolvePhiRootBackgroundLayerStyle(
+    const picture = resolvePhiRootBackgroundPicture(
       { background: { dark: { base: image, motion: { mode: "parallax" as const } } } },
       "dark",
     );
-    expect(style.backgroundImage).toBeUndefined();
-    expect(style.backgroundColor).toBe("var(--ant-color-bg-layout)");
-    expect(style.position).toBe("fixed");
+    expect(picture.paint.backgroundImage).toBeUndefined();
+    expect(picture.motion).not.toBeNull();
+    expect(picture.imageUrl).toBe("https://example.test/ground.jpg");
   });
 
   it("keeps motion out of a mode that has no image", () => {

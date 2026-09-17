@@ -184,6 +184,7 @@ function readBackgroundResolvedAsset(value: unknown): PhiImageDeliveryProjection
     focalRect: raw.focalRect ?? null,
     width: readNumber(raw.width) ?? null,
     height: readNumber(raw.height) ?? null,
+    blurDataUrl: readString(raw.blurDataUrl) ?? null,
   };
 }
 

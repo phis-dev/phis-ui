@@ -1,7 +1,10 @@
-import type { CSSProperties } from "react";
+"use client";
+
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 
 import { PhiBackgroundMotionLayer } from "../cms/clients/phi-background-motion-layer-lazy";
 import {
+  normalizePhiBackgroundWidgetConfig,
   resolvePhiBackgroundMotion,
   resolvePhiBackgroundMotionHostStyle,
   resolvePhiBackgroundWidgetStyle,
@@ -25,6 +28,17 @@ import type { PhiThemeMode } from "../../theme/phi-theme-presets";
  * Motion is the one part this layer resolves differently from a Region: it is the canonical Background
  * contract throughout, but only `parallax` describes something this layer can do. See
  * `PHI_ROOT_BACKGROUND_MOTION_MODES`.
+ *
+ * A picture does not arrive at once. So the layer is a frame holding one Picture at a time, and a Picture
+ * that has to be fetched is painted over the Asset's placeholder -- a few hundred bytes of the picture,
+ * scaled up, which is soft enough to read as a blur without a filter, and a filter is what Safari
+ * mis-stacks -- and fades in once the browser has it. A picture the cache already holds shows at once,
+ * and so does one carried inline. A new Picture -- the other mode, or a Theme draft -- joins on top of
+ * the one on screen and fades in over it when its picture is there, so a mode switch cross-fades.
+ *
+ * Waiting is script's business, and the ground must never depend on script: styles/root.css holds a
+ * pending picture back only where scripting is enabled, and shows it by itself after a few seconds in
+ * case script never gets to it -- a page that failed to hydrate still gets its ground.
  */
 
 /**
@@ -87,36 +101,98 @@ export function resolvePhiRootBackgroundMotion(
   return motion && PHI_ROOT_BACKGROUND_MOTION_MODES.includes(motion.mode) ? motion : null;
 }
 
-export function resolvePhiRootBackgroundLayerStyle(
-  root: PhiSiteThemeRoot | null | undefined,
-  mode: PhiThemeMode,
-): CSSProperties {
-  const motion = resolvePhiRootBackgroundMotion(root, mode);
+/** The frame every Picture is painted into: fixed to the viewport, behind everything, on the fallback ground. */
+export function resolvePhiRootBackgroundFrameStyle(): CSSProperties {
   return {
     position: "fixed",
     inset: 0,
     zIndex: -1,
     pointerEvents: "none",
     /*
-     * The fallback ground as a longhand, never as the `background` shorthand.
-     *
-     * The paint spread in below emits longhands, and React warns when a rerender has to drop one of
-     * those from an element whose shorthand is still set: switching a Root Background from an image to
-     * a colour removes `background-image` while `background` stands, which is exactly the warning. The
-     * value is a colour, so the longhand says the same thing without the shorthand's silent resets.
+     * The fallback ground as a longhand, never as the `background` shorthand: it is the colour under
+     * every Picture, including the moment before the first one shows.
      */
     backgroundColor: "var(--ant-color-bg-layout)",
-    /*
-     * Under motion the image belongs to the moving layer alone. Painting it here as well would leave a
-     * second, still copy of the same picture underneath the one that moves. The fallback ground stays:
-     * the motion layer is a negative-z child of this fixed, z-indexed box, so it paints above this
-     * element's own background and below everything in the Page.
-     */
-    ...(motion
-      ? resolvePhiBackgroundMotionHostStyle(readPhiRootBackgroundConfig(root, mode))
-      : resolvePhiRootBackgroundPaintStyle(root, mode) ?? {}),
   };
 }
+
+/** What one mode's ground paints, and what it has to wait for before it can show. */
+export type PhiRootBackgroundPicture = {
+  /** Identity of the painting. Two modes that paint the same thing share it and never cross-fade. */
+  key: string;
+  /** The paint of the picture layer, or under motion the host style the moving layer sits in. */
+  paint: CSSProperties;
+  motion: PhiCmsBackgroundWidgetConfig | null;
+  /** The picture the browser has to fetch first. `null` for a colour, a gradient or an inline picture. */
+  imageUrl: string | null;
+  /** The blurred placeholder of an Asset, shown while `imageUrl` loads. */
+  placeholder: CSSProperties | null;
+};
+
+/** The last `url(...)` of a background, which is the base picture: overlays are listed before it. */
+function readPhiBackgroundBaseImageUrl(style: CSSProperties) {
+  const matches = [...String(style.backgroundImage ?? "").matchAll(/url\("([^"]+)"\)/g)];
+  return matches.at(-1)?.[1] ?? null;
+}
+
+export function resolvePhiRootBackgroundPicture(
+  root: PhiSiteThemeRoot | null | undefined,
+  mode: PhiThemeMode,
+): PhiRootBackgroundPicture {
+  const configured = readPhiRootBackgroundConfig(root, mode);
+  const motion = resolvePhiRootBackgroundMotion(root, mode);
+  const normalized = configured ? normalizePhiBackgroundWidgetConfig(configured) : null;
+  const base = normalized?.base.kind === "image" ? normalized.base : null;
+  /*
+   * Under motion the moving layer draws the original, never a variant, so that is the picture to wait
+   * for; and the image belongs to the moving layer alone, or a still copy would sit under the one that
+   * moves.
+   */
+  const pictureStyle = normalized && base && motion
+    ? resolvePhiBackgroundWidgetStyle({
+      ...normalized,
+      base: { ...base, variantKey: null, variantVersion: null },
+      effect: null,
+      motion: null,
+    })
+    : resolvePhiRootBackgroundPaintStyle(root, mode) ?? {};
+  const url = base ? readPhiBackgroundBaseImageUrl(pictureStyle) : null;
+  const blurDataUrl = base?.resolvedAsset?.blurDataUrl ?? null;
+
+  return {
+    key: JSON.stringify(configured ?? null),
+    paint: motion ? resolvePhiBackgroundMotionHostStyle(configured) : pictureStyle,
+    motion: motion && configured ? configured : null,
+    imageUrl: url && !url.startsWith("data:") ? url : null,
+    placeholder: url && blurDataUrl && !url.startsWith("data:")
+      ? {
+        backgroundImage: `url("${blurDataUrl}")`,
+        backgroundSize: base?.size ?? "cover",
+        backgroundPosition: "center",
+        backgroundRepeat: base?.repeat ?? "no-repeat",
+      }
+      : null,
+  };
+}
+
+type PhiRootBackgroundEntry = {
+  id: number;
+  picture: PhiRootBackgroundPicture;
+  /** The picture is there: shown, or waiting. */
+  loaded: boolean;
+  /** Whether it appears at once -- from the cache, or a Theme draft edited in place with nothing to fetch. */
+  instant: boolean;
+  /**
+   * What waits for the picture: the picture over its placeholder, for the first Picture, which the
+   * server rendered; the whole layer over the Picture beneath it, for a later one.
+   */
+  waits: "picture" | "layer";
+};
+
+/** How long a covered Picture stays under the one fading in over it: the fade in root.css and a margin. */
+const PHI_ROOT_BACKGROUND_FADE_MS = 450;
+
+const PHI_ROOT_BACKGROUND_FILL: CSSProperties = { position: "absolute", inset: 0 };
 
 export function PhiRootBackgroundLayer({
   root,
@@ -125,16 +201,114 @@ export function PhiRootBackgroundLayer({
   root: PhiSiteThemeRoot | null | undefined;
   mode: PhiThemeMode;
 }) {
-  const configured = readPhiRootBackgroundConfig(root, mode);
-  const motion = resolvePhiRootBackgroundMotion(root, mode);
+  const picture = resolvePhiRootBackgroundPicture(root, mode);
+  const [entries, setEntries] = useState<PhiRootBackgroundEntry[]>(() => [{
+    id: 0,
+    picture,
+    loaded: picture.imageUrl == null,
+    instant: picture.imageUrl == null,
+    waits: "picture",
+  }]);
+  const nextId = useRef(1);
+  const lastMode = useRef(mode);
+  const top = entries[entries.length - 1];
+
+  /* A different painting joins on top and waits there for its picture. */
+  useEffect(() => {
+    if (top.picture.key === picture.key) return;
+    const modeChanged = lastMode.current !== mode;
+    lastMode.current = mode;
+    const id = nextId.current++;
+    setEntries((current) => [...current, {
+      id,
+      picture,
+      loaded: false,
+      instant: !modeChanged && picture.imageUrl == null,
+      waits: "layer",
+    }]);
+    // `picture` is derived from `root` and `mode` on every render; its key is what identifies it.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [picture.key, top.picture.key, mode]);
+
+  /*
+   * Every picture still waiting is fetched, not only the one on top: one that joined before the one
+   * beneath had arrived must not leave that one waiting. The load is marked a frame later, so a picture
+   * the browser has only just decoded is painted before its fade starts; one the cache already holds is
+   * marked at once and skips the fade.
+   */
+  const waiting = entries
+    .filter((entry) => !entry.loaded)
+    .map((entry) => [entry.id, entry.picture.imageUrl] as const);
+  const waitingKey = JSON.stringify(waiting);
+  useEffect(() => {
+    const frames: number[] = [];
+    const images = (JSON.parse(waitingKey) as [number, string | null][]).map(([id, url]) => {
+      const markLoaded = (instant: boolean) => setEntries((current) => current.map((entry) => (
+        entry.id === id ? { ...entry, loaded: true, instant: entry.instant || instant } : entry
+      )));
+      const markNextFrame = () => {
+        frames.push(window.requestAnimationFrame(() => {
+          frames.push(window.requestAnimationFrame(() => markLoaded(false)));
+        }));
+      };
+      if (!url) {
+        markNextFrame();
+        return null;
+      }
+      const image = new Image();
+      image.src = url;
+      if (image.complete && image.naturalWidth > 0) {
+        markLoaded(true);
+        return image;
+      }
+      /* A picture that fails shows anyway: the layer then paints exactly what a plain background would. */
+      image.onload = markNextFrame;
+      image.onerror = markNextFrame;
+      return image;
+    });
+    return () => {
+      frames.forEach((frame) => window.cancelAnimationFrame(frame));
+      for (const image of images) {
+        if (image) image.onload = image.onerror = null;
+      }
+    };
+  }, [waitingKey]);
+
+  /* What the entry on top covers goes once it has faded in over it. */
+  useEffect(() => {
+    if (entries.length === 1 || !top.loaded) return;
+    const id = top.id;
+    const timer = window.setTimeout(
+      () => setEntries((current) => current.filter((entry) => entry.id >= id)),
+      top.instant ? 0 : PHI_ROOT_BACKGROUND_FADE_MS,
+    );
+    return () => window.clearTimeout(timer);
+  }, [entries.length, top.id, top.loaded, top.instant]);
 
   return (
-    <div
-      aria-hidden
-      data-phi-root-background="true"
-      style={resolvePhiRootBackgroundLayerStyle(root, mode)}
-    >
-      {motion && configured ? <PhiBackgroundMotionLayer config={configured} /> : null}
+    <div aria-hidden data-phi-root-background="true" style={resolvePhiRootBackgroundFrameStyle()}>
+      {entries.map((entry) => {
+        const state = entry.loaded ? "shown" : "pending";
+        const instant = entry.instant ? "true" : undefined;
+        return (
+          <div
+            key={entry.id}
+            data-phi-root-background-layer="true"
+            data-phi-state={entry.waits === "layer" ? state : undefined}
+            data-phi-instant={entry.waits === "layer" ? instant : undefined}
+            style={{ ...PHI_ROOT_BACKGROUND_FILL, ...entry.picture.placeholder }}
+          >
+            <div
+              data-phi-root-background-picture="true"
+              data-phi-state={entry.waits === "picture" ? state : undefined}
+              data-phi-instant={entry.waits === "picture" ? instant : undefined}
+              style={{ ...PHI_ROOT_BACKGROUND_FILL, isolation: "isolate", ...entry.picture.paint }}
+            >
+              {entry.picture.motion ? <PhiBackgroundMotionLayer config={entry.picture.motion} /> : null}
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 }

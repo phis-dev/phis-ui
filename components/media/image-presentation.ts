@@ -47,6 +47,8 @@ export type PhiImageDeliveryProjection = {
   focalRect?: unknown;
   width?: number | null;
   height?: number | null;
+  /** A few hundred bytes of the picture, blurred, for a surface to show while the original loads. */
+  blurDataUrl?: string | null;
 };
 
 export type PhiImagePresentationInput = {

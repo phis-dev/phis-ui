@@ -174,3 +174,40 @@ samp {
     animation: none;
   }
 }
+
+/* The Theme Root Background fades a Picture in once script has seen it arrive
+   (components/root/phi-root-background.tsx): the first one over its placeholder, a later one over the
+   Picture it replaces. A pending Picture is held back only where scripting is enabled, and even there
+   it shows itself after a few seconds, so a page whose script never runs still gets its ground. */
+[data-phi-root-background-layer],
+[data-phi-root-background-picture] {
+  transition: opacity 400ms ease;
+}
+
+@media (scripting: enabled) {
+  [data-phi-root-background-layer][data-phi-state="pending"],
+  [data-phi-root-background-picture][data-phi-state="pending"] {
+    opacity: 0;
+    animation: phi-root-background-reveal 400ms ease 3000ms forwards;
+  }
+}
+
+@keyframes phi-root-background-reveal {
+  to {
+    opacity: 1;
+  }
+}
+
+[data-phi-root-background-layer][data-phi-instant],
+[data-phi-root-background-picture][data-phi-instant] {
+  transition: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-phi-root-background-layer],
+  [data-phi-root-background-picture] {
+    transition: none;
+    animation-duration: 0s !important;
+    animation-delay: 0s !important;
+  }
+}

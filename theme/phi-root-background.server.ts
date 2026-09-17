@@ -51,6 +51,7 @@ export async function projectPhiSiteThemeRootBackground(
       focalRect: asset.focalRect,
       width: asset.width,
       height: asset.height,
+      blurDataUrl: asset.blurDataUrl,
     }] as const),
   );
 
