@@ -72,9 +72,11 @@ built. Remove an entry when it is done.
   (`components/media/phi-asset-inspector-section.tsx`) and never shows the generated variant. Decide
   whether that stays and the contract says so, or whether unsaved focal edits get an owner and the preview
   switches to the regenerated variant after save.
-- **Module fonts: `phis module` does not write the fonts projection.** The Site scaffold writes
-  `src/generated/site-modules-fonts.ts`, but `phis module add/del/sync` does not update it, and packages
-  installed from a tarball are not added to `transpilePackages`.
+- **Module fonts: a package from a tarball is not compiled.** `phis module` writes the fonts projection,
+  but nothing names an installed package in the Site's `next.config.ts`. A Module linked from a workspace
+  resolves outside `node_modules` and Next compiles it either way; one installed from a tarball is not
+  compiled, so its `./fonts` boundary contributes no typefaces and says nothing. Tracked with the shape of
+  a fix in [phis-server TODOS.md](../phis-server/TODOS.md), "Site bootstrap and releases".
 - **Module font adoption into the Media library.** Designed in [design/FONTS.md](./design/FONTS.md).
 
 ## Translations and preferences

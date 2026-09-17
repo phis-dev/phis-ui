@@ -224,8 +224,8 @@ Two things follow from the section above and are not negotiable by the design:
   A Site pays for a Module's lettering in deploy size, never in fetches.
 
 The generated list is `src/generated/site-modules-fonts.ts`: one import per installed package that
-exports `./fonts`, gathered into the second argument of `createPhiNextRootLayout`. The Site scaffold
-writes it. A package installed from a tarball rather than a workspace link has to be listed in
+exports `./fonts`, gathered into the second argument of `createPhiNextRootLayout`. `phis module` writes
+it with the rest of the projection, from the `exports` of the packages installed in the Site. A package installed from a tarball rather than a workspace link has to be listed in
 `transpilePackages`, because the font loader runs only over modules Next compiles.
 
 On save, `adoptPhiThemeModuleFonts` (theme/phi-theme-adoption.ts) copies the family names of a Module's

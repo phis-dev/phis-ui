@@ -957,11 +957,13 @@ A recorded entry is exactly `{ packageName, origin, spec? }` (`phis-server/src/c
 `origin` is `resolved` when `add` was given a `--spec` and `local` otherwise; the type also admits
 `source`.
 
-The projection is three generated files: `src/generated/site-modules.ts`,
-`site-modules-client.ts`, and `site-modules-authoring-client.ts`. The Site scaffold also creates
-`src/generated/site-modules-fonts.ts` empty, but `phis module` does not write it: a package's `./fonts`
-boundary has to be added to that file by hand. All four files are preserved when the Skeleton is
-reconciled, so regenerating a Site does not uninstall its Modules.
+The projection is four generated files, written together: `src/generated/site-modules.ts`,
+`site-modules-client.ts`, `site-modules-authoring-client.ts`, and `site-modules-fonts.ts`. The fourth
+lists only the packages that export `./fonts`, read from each package's `exports` in the Site's
+`node_modules` -- the boundary itself calls `next/font/local` and throws outside a Next build, so the
+manifest is what decides it. A package the install has not brought in yet reads as one without
+typefaces, so run `phis module sync` after installing what `add --spec` recorded. All four files are
+preserved when the Skeleton is reconciled, so regenerating a Site does not uninstall its Modules.
 
 After installation, rebuild the Site. Installing never enables a Module: the Site selects it per Area
 in the Builder, and only ids present in the build can be selected. If the package also carries an
