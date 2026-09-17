@@ -16,7 +16,7 @@ import {
   type PhiThemeSetBlock,
   type PhiThemeStyleBlock,
 } from "./phi-theme-blocks";
-import type { PhiSiteFontSlots, PhiSiteThemeRoot } from "../types/site-theme";
+import type { PhiSiteFontSlots, PhiSiteThemeBrandLogos, PhiSiteThemeRoot } from "../types/site-theme";
 
 /**
  * What a Site follows, and what its author changed on top of it.
@@ -101,6 +101,11 @@ export type PhiThemeComposition = {
   ground: PhiThemeGroundBlock;
   fonts: PhiThemeFontsBlock;
   set: PhiThemeSetBlock | null;
+  /**
+   * The Set whose Logo the Theme is offered: the one it names, or the core Set where it names none or
+   * one that is not available -- the same floor every part falls back to.
+   */
+  logoSet: PhiThemeSetBlock;
   /** The parts whose selection could not be resolved and are running on the core block instead. */
   unavailable: {
     palette: string | null;
@@ -125,6 +130,7 @@ export function resolvePhiThemeComposition(
 ): PhiThemeComposition {
   const selection = readPhiThemeBlockSelection(theme, catalog);
   const set = selection.set ? resolvePhiThemeSetSelection(catalog.sets, selection.set) : null;
+  const logoSet = set?.set ?? resolvePhiThemeSetSelection(catalog.sets, null).set;
   const palette = resolvePhiThemeBlockSelection(
     catalog.palettes,
     selection.palette,
@@ -152,6 +158,7 @@ export function resolvePhiThemeComposition(
     ground: ground.block,
     fonts: fonts.block,
     set: set?.available ? set.set : null,
+    logoSet,
     unavailable: {
       palette: palette.available ? null : palette.requested,
       style: style.available ? null : style.requested,
@@ -181,6 +188,22 @@ export function resolvePhiThemeEffectiveFonts(
     }
   }
   return merged;
+}
+
+/**
+ * The Logo a Site shows: its own per mode, the Set's where the record says nothing about a mode.
+ *
+ * Per mode, the way the ground merges: a Site that uploaded a light Logo and never opened the dark mode
+ * still wears the Set's dark one. An explicit "none" is something the record says, so it stands.
+ */
+export function resolvePhiThemeEffectiveLogo(
+  authored: PhiSiteThemeBrandLogos | null | undefined,
+  set: PhiThemeSetBlock,
+): PhiSiteThemeBrandLogos {
+  return {
+    light: authored?.light ?? set.logo?.light ?? null,
+    dark: authored?.dark ?? set.logo?.dark ?? null,
+  };
 }
 
 /**

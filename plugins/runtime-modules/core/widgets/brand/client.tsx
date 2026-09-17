@@ -3,15 +3,15 @@
 import type { CSSProperties, ReactNode } from "react";
 import Link from "next/link";
 
-import type { PhiSiteThemeBrand } from "../../../../../types/site-theme";
 import type { PhiClientBlockBaseProps, PhiNoLabels } from "../../../../../types";
 import {
   PhiBrandControl,
   phiBrandControlIsEmpty,
 } from "../../../../../components/controls/phi-brand-control";
+import { usePhiConfig } from "../../../../../components/root/phi-config-provider";
+import { usePhiSiteBrand } from "../../../../../components/root/phi-root-live-theme-provider";
 
 export type PhiBrandWidgetConfig = {
-  brand?: PhiSiteThemeBrand | null;
   showLogo?: boolean;
   logoYOffset?: number;
 };
@@ -38,10 +38,12 @@ export function PhiBrandWidgetClient({
   fallbackEyebrow,
   interactive = true,
 }: PhiBrandWidgetClientProps) {
-  const brand = config?.brand ?? null;
+  const brand = usePhiSiteBrand();
+  const { mode } = usePhiConfig();
   const showLogo = config?.showLogo !== false;
   const presentation = {
     brand,
+    mode,
     fallbackTitle,
     fallbackEyebrow,
     showLogo,

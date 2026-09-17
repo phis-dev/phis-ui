@@ -24,6 +24,8 @@ export const PhiMediaAssetSource = {
    * anybody choosing it.
    */
   ThemeGround: "theme-ground",
+  /** A Logo a Theme Set offered, taken over when the Theme was saved. */
+  ThemeBrandLogo: "theme-brand-logo",
   /** Fetched from the Iconify catalogue by the Mask picker. */
   Iconify: "iconify",
 } as const;

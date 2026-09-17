@@ -1,6 +1,7 @@
 import { PHI_CORE_THEME_PRESET_PLUGINS, type PhiThemePresetPlugin } from "./phi-theme-presets";
-import type { PhiSiteFontSlots, PhiSiteThemeRoot } from "../types/site-theme";
+import type { PhiSiteFontSlots, PhiSiteThemeBrandLogos, PhiSiteThemeRoot } from "../types/site-theme";
 import { createPhiControlShapeCorners, type PhiControlShapeCorners } from "./phi-control-shape";
+import { PHI_THEME_PHIS_BRAND_LOGO_DARK, PHI_THEME_PHIS_BRAND_LOGO_LIGHT } from "./phi-theme-brand-logo";
 import { PHI_THEME_PHIS_GROUND_IMAGE_DARK, PHI_THEME_PHIS_GROUND_IMAGE_LIGHT } from "./phi-theme-ground-image";
 
 /**
@@ -81,12 +82,20 @@ export type PhiThemeFontsBlock = PhiThemeBlockIdentity & {
   fonts: PhiSiteFontSlots & { body: string };
 };
 
-/** A named composition of the four, by key. It points; it does not carry. */
+/**
+ * A named composition of the four, by key. It points; the one thing it carries is the Logo.
+ *
+ * The Logo is not a fifth part, because nobody mixes it: a wordmark belongs to the look it was drawn
+ * for, not to a palette or a ground on its own. It is an offer rather than a value -- a Site shows it
+ * until its record says otherwise, and the first save takes it into the record and the Media library,
+ * so a Site keeps the Logo it saved whichever Set it follows later.
+ */
 export type PhiThemeSetBlock = PhiThemeBlockIdentity & {
   palette: string;
   style: string;
   ground: string;
   fonts: string;
+  logo?: PhiSiteThemeBrandLogos | null;
 };
 
 /**
@@ -204,6 +213,10 @@ export const PHI_CORE_THEME_SETS: readonly PhiThemeSetBlock[] = [
     style: "phis",
     ground: "phis",
     fonts: "phis",
+    logo: {
+      light: { sourceKind: "url", sourceUrl: PHI_THEME_PHIS_BRAND_LOGO_LIGHT },
+      dark: { sourceKind: "url", sourceUrl: PHI_THEME_PHIS_BRAND_LOGO_DARK },
+    },
   },
 ];
 

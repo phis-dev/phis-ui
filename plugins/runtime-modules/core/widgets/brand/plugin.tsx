@@ -8,20 +8,18 @@ import {
 
 export const PHI_BRAND_WIDGET_PLUGIN: PhiCmsServerWidgetPlugin<PhiCmsBrandWidgetConfig> = {
   ...PHI_BRAND_WIDGET_DEFINITION,
-  render: ({ widget, runtime, config }) => (
+  render: ({ widget, config }) => (
     <PhiBrandWidget
       key={`widget-${widget.id}`}
-      runtime={runtime}
       fallbackTitle={config.fallbackTitle}
       fallbackEyebrow={config.fallbackEyebrow}
       showLogo={config.showLogo}
       logoYOffset={config.logoYOffset}
     />
   ),
-  renderPreview: ({ widget, runtime, config }) => (
+  renderPreview: ({ widget, config }) => (
     <PhiBrandWidget
       key={`widget-${widget.id}`}
-      runtime={runtime}
       fallbackTitle={config.fallbackTitle}
       fallbackEyebrow={config.fallbackEyebrow}
       showLogo={config.showLogo}

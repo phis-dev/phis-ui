@@ -2,11 +2,12 @@ import {
   PHI_CORE_THEME_BLOCK_CATALOG,
   resolvePhiThemeComposition,
   resolvePhiThemeEffectiveFonts,
+  resolvePhiThemeEffectiveLogo,
   resolvePhiThemeEffectiveRoot,
   type PhiThemeBlockCatalog,
   type PhiThemeComposition,
 } from "./phi-theme-composition";
-import type { PhiSiteFontSlots, PhiSiteThemeRoot } from "../types/site-theme";
+import type { PhiSiteFontSlots, PhiSiteThemeBrand, PhiSiteThemeRoot } from "../types/site-theme";
 import type { PhiThemePalette } from "./phi-theme-presets";
 import { readPhiControlShapeCorners, type PhiControlShapeCorners } from "./phi-control-shape";
 
@@ -28,6 +29,7 @@ export type PhiThemeRuntimeSource = {
   presetVersion?: number | null;
   root?: PhiSiteThemeRoot | null;
   fonts?: PhiSiteFontSlots | null;
+  brand?: PhiSiteThemeBrand | null;
   palette?: PhiThemePalette | null;
   style?: { token?: Record<string, unknown> } | null;
   shape?: { controls?: PhiControlShapeCorners | null } | null;
@@ -42,7 +44,7 @@ export type PhiThemeRuntimeResult<T> = {
 /**
  * Folds the blocks a Theme follows into the record itself.
  *
- * Four moves, one per part:
+ * Four moves, one per part, and the Set's Logo:
  *
  * - the palette becomes `preset`, because that is the field every colour consumer already resolves
  *   against the preset plugins; a Theme that names a palette block and one that names the old preset
@@ -54,6 +56,8 @@ export type PhiThemeRuntimeResult<T> = {
  * - the ground is merged part by part into `root`
  * - the fonts block's families go under the author's `fonts`, slot by slot, so the root layout that
  *   turns a family name into a font stack never has to know which of the two named it
+ * - the Set's Logo goes under the Brand's, mode by mode, so the Brand Widget renders one Logo per mode
+ *   without knowing whether the Site or its Set drew it
  *
  * The composition comes back alongside, because the workspace needs to know which parts are running on
  * a core block after the Module that shipped theirs was switched off.
@@ -78,6 +82,10 @@ export function resolvePhiThemeRuntimePayload<T extends PhiThemeRuntimeSource>(
       presetVersion: composition.palette.version,
       root: resolvePhiThemeEffectiveRoot(theme?.root, composition.ground),
       fonts: resolvePhiThemeEffectiveFonts(theme?.fonts, composition.fonts),
+      brand: {
+        ...(theme?.brand ?? {}),
+        logo: resolvePhiThemeEffectiveLogo(theme?.brand?.logo, composition.logoSet),
+      },
       style: {
         ...(theme?.style ?? {}),
         token: { ...styleToken, ...authoredToken },

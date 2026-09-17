@@ -1,10 +1,11 @@
 "use client";
 
-import { PhiMediaAssetFlags, PhiMediaAssetSource } from "../../../constants/media";
+import { buildPhiMediaAssetContentDeliveryUrl, PhiMediaAssetFlags, PhiMediaAssetSource } from "../../../constants/media";
 import { runPhiMediaUploadSession } from "../../../components/media/media-upload-flow";
 import { adoptPhiThemeModuleBlocks } from "../../../theme/phi-theme-adoption";
-import type { PhiThemeComposition } from "../../../theme/phi-theme-composition";
-import type { PhiSiteThemeRoot } from "../../../types/site-theme";
+import { resolvePhiThemeEffectiveLogo, type PhiThemeComposition } from "../../../theme/phi-theme-composition";
+import type { PhiThemeSetBlock } from "../../../theme/phi-theme-blocks";
+import type { PhiSiteThemeBrand, PhiSiteThemeBrandLogo, PhiSiteThemeRoot } from "../../../types/site-theme";
 
 /**
  * Taking a ground a Module brought over into the Site's own record, pictures included.
@@ -52,8 +53,11 @@ export type PhiThemeImageMaterializeResult<T> = {
  */
 function isPhiThemeModuleImage(base: ThemeImageBase | null | undefined) {
   if (!base || base.kind !== "image" || base.sourceKind === "asset") return false;
-  const source = typeof base.sourceUrl === "string" ? base.sourceUrl : "";
-  return source.startsWith("data:image/") || source.startsWith("/");
+  return isPhiThemeCarriedSource(base.sourceUrl);
+}
+
+function isPhiThemeCarriedSource(source: unknown) {
+  return typeof source === "string" && (source.startsWith("data:image/") || source.startsWith("/"));
 }
 
 function readPhiDataUrlContentType(source: string) {
@@ -67,14 +71,18 @@ function buildPhiThemeImageFileName(contentType: string, hint: string) {
   return `${stem || "theme-ground"}.${extension === "jpeg" ? "jpg" : extension}`;
 }
 
-async function uploadPhiThemeImage(source: string, hint: string) {
+async function readPhiThemeImageFile(source: string, hint: string) {
   const response = await fetch(source);
   if (!response.ok) {
     throw new Error(`Could not read the Theme picture (${response.status}).`);
   }
   const blob = await response.blob();
   const contentType = blob.type || readPhiDataUrlContentType(source);
-  const file = new File([blob], buildPhiThemeImageFileName(contentType, hint), { type: contentType });
+  return new File([blob], buildPhiThemeImageFileName(contentType, hint), { type: contentType });
+}
+
+async function uploadPhiThemeImage(source: string, hint: string) {
+  const file = await readPhiThemeImageFile(source, hint);
   /*
    * Flagged as a background here rather than by whoever saved the Theme.
    *
@@ -159,4 +167,51 @@ export async function materializePhiThemeModuleBlocks<T extends { root?: PhiSite
       root: { ...(theme.root ?? {}), background: nextBackground },
     } as T,
   };
+}
+
+/**
+ * Takes the Logo a Theme shows into the Site's record, every picture into the Media library.
+ *
+ * Unlike a ground, a Set's Logo is taken from core as well: the core Set offers the house wordmark, and
+ * a Site that saved a Theme showing it has decided to keep it. Both modes are taken, including one the
+ * author never switched to -- a Site that kept only the light Logo would change its dark one the day
+ * its Set does. What the record already holds stays; a mode set to "none" stays none.
+ *
+ * Only a picture still carried inline or served from this origin is uploaded, the same rule the ground
+ * follows. The same picture in both modes is one upload.
+ */
+export async function materializePhiThemeBrandLogo<T extends { brand?: PhiSiteThemeBrand | null }>(
+  theme: T,
+  logoSet: PhiThemeSetBlock,
+): Promise<T> {
+  const logos = resolvePhiThemeEffectiveLogo(theme.brand?.logo, logoSet);
+  if (!logos.light && !logos.dark) return theme;
+
+  const uploadedBySource = new Map<string, number>();
+  const sharedPicture = logos.light?.sourceKind === "url" && logos.dark?.sourceKind === "url"
+    && logos.light.sourceUrl === logos.dark.sourceUrl;
+  const next: { light?: PhiSiteThemeBrandLogo; dark?: PhiSiteThemeBrandLogo } = {};
+
+  for (const mode of ["light", "dark"] as const) {
+    const logo = logos[mode];
+    if (!logo) continue;
+    if (logo.sourceKind !== "url" || !isPhiThemeCarriedSource(logo.sourceUrl)) {
+      next[mode] = logo;
+      continue;
+    }
+
+    const source = logo.sourceUrl;
+    let assetId = uploadedBySource.get(source);
+    if (assetId === undefined) {
+      const file = await readPhiThemeImageFile(source, `${logoSet.key}-logo${sharedPicture ? "" : `-${mode}`}`);
+      const result = await runPhiMediaUploadSession(file, undefined, {
+        meta: { source: PhiMediaAssetSource.ThemeBrandLogo },
+      });
+      assetId = result.asset.id;
+      uploadedBySource.set(source, assetId);
+    }
+    next[mode] = { sourceKind: "asset", assetId, url: buildPhiMediaAssetContentDeliveryUrl(assetId) };
+  }
+
+  return { ...theme, brand: { ...(theme.brand ?? {}), logo: next } };
 }

@@ -1,7 +1,4 @@
-import { getResolvedSiteConfig } from "../../../../../gateway/site-config";
 import { PhiCmsWidgetType } from "../../../../../constants/cms-widget-types";
-import type { PhiBlockRuntime } from "../../../../../types";
-import { phiRuntime } from "../../../../../server-helpers/phi-runtime";
 import { PhiRuntimeModuleRenderClientHost } from "../../../../../components/runtime/runtime-module-render-client-manifest";
 import type { PhiBrandWidgetClientProps, PhiBrandWidgetConfig } from "./client";
 
@@ -9,27 +6,22 @@ export type PhiBrandWidgetProps = Pick<
   PhiBrandWidgetClientProps,
   "fallbackTitle" | "fallbackEyebrow" | "interactive"
 > & {
-  runtime: Pick<PhiBlockRuntime, "site">;
   showLogo?: boolean;
   logoYOffset?: number;
 };
 
-export async function PhiBrandWidget({
-  runtime,
+/*
+ * The Brand itself is not read here. It comes from the root on the Client (`usePhiSiteBrand`), which
+ * holds it with the Theme Set's Logo folded in and follows a live Theme draft.
+ */
+export function PhiBrandWidget({
   fallbackTitle,
   fallbackEyebrow,
   interactive,
   showLogo,
   logoYOffset,
 }: PhiBrandWidgetProps) {
-  const rt = phiRuntime(runtime);
-  const site = await getResolvedSiteConfig({
-    apiBaseUrl: rt.apiBaseUrl,
-    internalToken: rt.internalToken,
-    siteKey: rt.siteKey,
-  });
   const config: PhiBrandWidgetConfig = {
-    brand: site.theme?.brand ?? null,
     showLogo,
     logoYOffset,
   };

@@ -5,6 +5,9 @@ import Image from "next/image";
 
 import { Flex } from "antd";
 
+import { buildPhiMediaAssetContentDeliveryUrl } from "../../constants/media";
+
+import type { PhiThemeMode } from "../../theme/phi-theme-presets";
 import type {
   PhiSiteThemeBrand,
   PhiSiteThemeWordmark,
@@ -22,7 +25,33 @@ export type PhiBrandControlProps = {
   showLogo?: boolean;
   /** Optical correction for a Logo whose artwork does not sit on its own baseline. */
   logoYOffset?: number;
+  /** The mode whose Logo is drawn: a Logo is artwork in fixed colours, one picture per mode. */
+  mode: PhiThemeMode;
 };
+
+/** How tall a Logo is drawn. Its width follows the artwork, so a wordmark reads as well as a signet. */
+const PHI_BRAND_LOGO_HEIGHT = 50;
+
+/**
+ * The address a mode's Logo is drawn from, or none.
+ *
+ * An Asset's is the delivered address the resolver or the picker wrote; before either has, it is built
+ * from the id, which is the same address without its revision.
+ */
+export function resolvePhiBrandLogoUrl(
+  brand: PhiSiteThemeBrand | null | undefined,
+  mode: PhiThemeMode,
+): string | null {
+  const logo = brand?.logo?.[mode];
+  if (!logo) return null;
+  if (logo.sourceKind === "asset") {
+    return logo.url?.trim() || buildPhiMediaAssetContentDeliveryUrl(logo.assetId);
+  }
+  if (logo.sourceKind === "url") {
+    return logo.sourceUrl.trim() || null;
+  }
+  return null;
+}
 
 function hasWordmarkParts(
   parts: PhiSiteThemeWordmark["parts"] | undefined | null,
@@ -81,8 +110,9 @@ export function phiBrandControlIsEmpty({
   fallbackTitle,
   fallbackEyebrow,
   showLogo = true,
+  mode,
 }: PhiBrandControlProps): boolean {
-  const hasLogo = showLogo !== false && Boolean(brand?.logoUrl?.trim());
+  const hasLogo = showLogo !== false && Boolean(resolvePhiBrandLogoUrl(brand, mode));
   const hasWordmark = hasWordmarkParts(brand?.wordmark?.parts) || Boolean(fallbackTitle);
   const hasEyebrow = Boolean(brand?.eyebrow ?? fallbackEyebrow);
   return !hasLogo && !hasWordmark && !hasEyebrow;
@@ -102,6 +132,7 @@ export function PhiBrandControl({
   fallbackEyebrow,
   showLogo = true,
   logoYOffset = 0,
+  mode,
 }: PhiBrandControlProps) {
   const eyebrow = brand?.eyebrow ?? fallbackEyebrow ?? null;
   const wordmarkNode = renderWordmark(brand?.wordmark, fallbackTitle, {
@@ -113,7 +144,7 @@ export function PhiBrandControl({
    * could set one of its own -- every Site that had not picked a picture wore ours, and there was no
    * way to say "wordmark only" at all. The Wordmark carries the Brand where nothing is picked.
    */
-  const logoUrl = brand?.logoUrl?.trim() || null;
+  const logoUrl = resolvePhiBrandLogoUrl(brand, mode);
   const logoAlt = brand?.logoAlt?.trim() || "Brand logo";
 
   if (!logoUrl && !wordmarkNode && !eyebrow) {
@@ -138,14 +169,19 @@ export function PhiBrandControl({
             flexShrink: 0,
           }}
         >
+          {/*
+            Unoptimized: a Logo is regularly an SVG, which the image optimizer refuses, and a Set's Logo
+            is a data URL, which it cannot fetch. A picture drawn this small gains nothing from it.
+          */}
           <Image
             src={logoUrl}
             alt={logoAlt}
-            width={50}
-            height={50}
+            width={PHI_BRAND_LOGO_HEIGHT}
+            height={PHI_BRAND_LOGO_HEIGHT}
+            unoptimized
             style={{
-              width: 50,
-              height: "auto",
+              width: "auto",
+              height: PHI_BRAND_LOGO_HEIGHT,
               objectFit: "contain",
               display: "block",
               transform: logoYOffset === 0 ? undefined : `translateY(${logoYOffset}px)`,

@@ -103,12 +103,14 @@ Used as the runtime bridge for rem scaling.
 
 - `homeHref?: string`
 - `eyebrow?: string`
-- `logoAssetId?: number`
+- `logo.light?` / `logo.dark?`: one Logo per mode, each one of
+  - `{ sourceKind: "asset", assetId: number, url?: string }` (`url` is resolved on read)
+  - `{ sourceKind: "url", sourceUrl: string }` (a Theme Set's inline Logo until a save uploads it)
+  - `{ sourceKind: "none" }`
 - `slogan.label?: string`
 - `slogan.icon?: string`
 - `location.label?: string`
 - `location.icon?: string`
-- `logoUrl?: string`
 - `logoAlt?: string`
 - `wordmark.fontFamily?: string`
 - `wordmark.fontWeight?: number | string`
@@ -118,7 +120,8 @@ Used as the runtime bridge for rem scaling.
   - `color?: string`
   - `fontWeight?: number | string`
 
-Used by `PhiBrandWidget`.
+Used by `PhiBrandWidget`. A mode the record leaves unset shows the Logo of the Theme Set
+(`PhiThemeSetBlock.logo`); the first Theme save uploads it and stores the Asset.
 
 Current fallback usage:
 - `pub.header_top.left` uses `theme.brand.slogan`

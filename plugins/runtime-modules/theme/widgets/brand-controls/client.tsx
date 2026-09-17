@@ -40,11 +40,12 @@ import { usePhiConfig } from "../../../../../components/root/phi-config-provider
 import { usePhiThemeBlockCatalog } from "../../../../../components/root/phi-theme-block-catalog-provider";
 import {
   resolvePhiThemeComposition,
+  resolvePhiThemeEffectiveLogo,
   resolvePhiThemeEffectiveFonts,
   resolvePhiThemeEffectiveRoot,
 } from "../../../../../theme/phi-theme-composition";
 import type { PhiThemeFontsBlock } from "../../../../../theme/phi-theme-blocks";
-import type { PhiSiteFontSlots } from "../../../../../types/site-theme";
+import type { PhiSiteFontSlots, PhiSiteThemeBrandLogo } from "../../../../../types/site-theme";
 import { usePhiSiteFontAssets } from "../../../../../components/media/phi-site-font-assets";
 import { buildPhiFontFaceCss, buildPhiFontFamilyStack } from "../../../../../theme/phi-font-face";
 import {
@@ -54,7 +55,7 @@ import {
   type PhiThemeHeadingFont,
 } from "../../../../../theme/phi-theme-typography";
 import { resolvePhiThemeRuntimePayload } from "../../../../../theme/phi-theme-runtime";
-import { materializePhiThemeModuleBlocks } from "../../materialize-images";
+import { materializePhiThemeBrandLogo, materializePhiThemeModuleBlocks } from "../../materialize-images";
 import {
   createPhiAntdThemeCssVarKey,
   resolvePhiAntdAliasTokens,
@@ -943,6 +944,23 @@ function mergeThemeBrand(theme: ThemePayload, patch: Partial<PhiSiteThemeBrand>)
 }
 
 /**
+ * One mode's Logo, or the record's silence about it when `logo` is undefined -- which is what lets the
+ * Set's Logo show through again. `null` is never written: "no Logo" is `{ sourceKind: "none" }`.
+ */
+function mergeThemeBrandLogo(
+  theme: ThemePayload,
+  mode: "light" | "dark",
+  logo: PhiSiteThemeBrandLogo | undefined,
+): ThemePayload {
+  const logos: Record<string, PhiSiteThemeBrandLogo> = {};
+  for (const key of ["light", "dark"] as const) {
+    const value = key === mode ? logo : theme.brand?.logo?.[key];
+    if (value) logos[key] = value;
+  }
+  return mergeThemeBrand(theme, { logo: Object.keys(logos).length > 0 ? logos : null });
+}
+
+/**
  * The Wordmark's parts, written as a whole rather than patched one at a time.
  *
  * A part carries no identity of its own -- it is text at a position -- so there is nothing to address
@@ -1522,7 +1540,14 @@ export function PhiBuilderBrandThemeControllerWidgetClient({
         nextTheme,
         resolvePhiThemeComposition(nextTheme, themeBlocks),
       );
-      nextTheme = materialized.theme;
+      /*
+       * The Logo is taken the same way, from every Set, core included: a Set offers it, and a Site that
+       * saved has decided to keep it -- as a picture in its own library, not as a data URL in its record.
+       */
+      nextTheme = await materializePhiThemeBrandLogo(
+        materialized.theme,
+        resolvePhiThemeComposition(materialized.theme, themeBlocks).logoSet,
+      );
       const response = await fetch("/api/site/cms/theme", {
         method: "POST",
         headers: {
@@ -2831,9 +2856,9 @@ const PHI_THEME_WORDMARK_WEIGHT_OPTIONS = [
 /**
  * Who the Site says it is: the Logo and the Wordmark.
  *
- * The one panel whose values are not a mode value. A Site has one name and one Logo in light and in
- * dark, so there is no mode switch here and no copy-to-other-mode button -- both would be offering to
- * duplicate something that was never two things.
+ * A Site has one name in light and in dark, so the Wordmark has no mode switch and no copy-to-other-mode
+ * button. The Logo does: it is artwork in fixed colours, one picture per mode, and it follows the
+ * workspace's light and dark switch the way the Background does.
  *
  * Slogan, Location and Contact are not here. They are lines of text in a Region, and a Region's text is
  * set where the Region is built; the Theme record still carries them as what a Preset seeds its Widgets
@@ -2847,14 +2872,24 @@ export function PhiBuilderBrandIdentityControlsWidgetClient({
   config?: PhiBuilderBrandWidgetConfig | null;
 }) {
   const { token: clientToken } = usePhiConfig();
+  const themeBlocks = usePhiThemeBlockCatalog();
   const themeKey = resolveThemeKey(config);
   const { state, publishDraft } = usePhiBrandThemeDraft(runtime, themeKey);
+  const mode = usePhiBrandPreviewMode(resolveThemePayloadMode(state.draft));
   const [activeIdentitySection, changeActiveIdentitySection] = usePhiBrandAccordionSection(
     BRAND_THEME_IDENTITY_COLLAPSE_STORAGE_KEY,
     BRAND_THEME_IDENTITY_SECTION_KEYS,
   );
 
   const brand = state.draft.brand ?? {};
+  /*
+   * The Logo shows what the Site draws, which is the Set's wherever the record says nothing about the
+   * mode. Picking one takes the mode over; the reset hands it back to the Set.
+   */
+  const logoSet = resolvePhiThemeComposition(state.draft, themeBlocks).logoSet;
+  const logos = resolvePhiThemeEffectiveLogo(brand.logo, logoSet);
+  const otherMode = mode === "dark" ? "light" : "dark";
+  const logo = logos[mode] ?? null;
   const wordmarkParts: readonly PhiSiteThemeWordmarkPart[] = brand.wordmark?.parts ?? [];
   /*
    * A Site with no Wordmark yet still gets a field to type it into.
@@ -2908,11 +2943,27 @@ export function PhiBuilderBrandIdentityControlsWidgetClient({
               label: <Typography.Text strong>Logo</Typography.Text>,
               children: (
                 <Flex vertical gap={clientToken.paddingXS}>
-                  <Typography.Text type="secondary">
-                    A picture from this Site&apos;s own Media library. What it says to somebody who cannot
-                    see it falls back to the asset&apos;s own alt text.
-                  </Typography.Text>
+                  <Flex align="center" justify="space-between" gap={clientToken.paddingXS}>
+                    <Typography.Text type="secondary">
+                      {mode === "dark" ? "Dark mode" : "Light mode"}. A picture from this Site&apos;s own
+                      Media library. What it says to somebody who cannot see it falls back to the
+                      asset&apos;s own alt text.
+                    </Typography.Text>
+                    <Flex align="center" gap={clientToken.paddingXXS} style={{ flexShrink: 0 }}>
+                      <PhiBrandBlockResetButton
+                        disabled={brand.logo?.[mode] == null}
+                        blockTitle={logoSet.title}
+                        onReset={() => publishDraft(mergeThemeBrandLogo(state.draft, mode, undefined))}
+                      />
+                      <PhiBrandCopyModeButton
+                        mode={mode}
+                        disabled={JSON.stringify(logo) === JSON.stringify(logos[otherMode] ?? null)}
+                        onCopy={() => publishDraft(mergeThemeBrandLogo(state.draft, otherMode, logo ?? { sourceKind: "none" }))}
+                      />
+                    </Flex>
+                  </Flex>
                   <PhiMediaPickerBinding
+                    key={mode}
                     config={{
                       mediaType: PhiMediaKind.Image,
                       pageSize: 12,
@@ -2923,21 +2974,25 @@ export function PhiBuilderBrandIdentityControlsWidgetClient({
                     }}
                     labels={PHI_MEDIA_WIDGET_DEFAULT_LABELS}
                     searchLabels={PHI_SEARCH_WIDGET_DEFAULT_LABELS}
-                    value={brand.logoAssetId ?? null}
-                    onAssetSelect={(asset) => publishDraft(mergeThemeBrand(state.draft, {
-                      logoAssetId: asset.id,
+                    value={logo?.sourceKind === "asset" ? logo.assetId : null}
+                    onAssetSelect={(asset) => publishDraft(mergeThemeBrandLogo(state.draft, mode, {
+                      sourceKind: "asset",
+                      assetId: asset.id,
                       /*
                        * The delivered address alongside the id, because the Preview and the Brand Widget
                        * both render from the draft long before the Site resolver has seen it. It is the
                        * same address the resolver writes, so the saved record says one thing either way.
                        */
-                      logoUrl: buildPhiMediaAssetContentDeliveryUrl(asset.id),
+                      url: buildPhiMediaAssetContentDeliveryUrl(asset.id),
                     }))}
-                    onAssetClear={() => publishDraft(mergeThemeBrand(state.draft, {
-                      logoAssetId: null,
-                      logoUrl: null,
-                    }))}
+                    onAssetClear={() => publishDraft(mergeThemeBrandLogo(state.draft, mode, { sourceKind: "none" }))}
                   />
+                  {logo?.sourceKind === "url" ? (
+                    <Typography.Text type="secondary">
+                      The {logoSet.title} Logo, carried inline until the Theme is saved; saving takes it into
+                      the Media library.
+                    </Typography.Text>
+                  ) : null}
                   <PhiTextControl
                     value={brand.logoAlt ?? ""}
                     placeholder="Alt text"
@@ -3722,6 +3777,7 @@ export function PhiBuilderBrandThemePreviewWidgetClient({
               brand={previewThemeResolved.brand ?? null}
               fallbackTitle={runtime.site.name ?? runtime.site.key}
               logoYOffset={-2}
+              mode={mode}
             />
           )}
         >

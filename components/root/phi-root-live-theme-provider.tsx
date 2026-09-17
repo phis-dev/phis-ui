@@ -1,9 +1,10 @@
 "use client";
 
 import type { ConfigProviderProps } from "antd";
-import { useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
 
 import type { PhiSiteTheme } from "../../gateway/site-config";
+import type { PhiSiteThemeBrand } from "../../types/site-theme";
 import { usePhiSignalListener } from "../runtime/runtime-signal-bus";
 import {
   resolvePhiRootTheme,
@@ -30,6 +31,20 @@ import {
 import { createPhiCoreRuntimeControllerAddress } from "../runtime/core-runtime-controller-address";
 import { registerPhiSignalInstance } from "../runtime/runtime-signal-registry";
 import { usePhiSignalRuntimePartition } from "../runtime/runtime-signal-partition";
+
+/**
+ * The Brand as the root holds it: blocks folded in, and following a live Theme draft.
+ *
+ * The Brand Widget reads it here rather than fetching the Site config itself, for two reasons. The Logo
+ * a Site shows may be its Set's, and only the root folds the Sets in -- against the catalogue of every
+ * installed Module. And a Theme draft in the Builder reaches the root as a signal, so a Brand read from
+ * here shows the Logo being authored in the frame around it, in the mode that frame is switched to.
+ */
+const PhiSiteBrandContext = createContext<PhiSiteThemeBrand | null>(null);
+
+export function usePhiSiteBrand(): PhiSiteThemeBrand | null {
+  return useContext(PhiSiteBrandContext);
+}
 
 function resolveStringSignalValue(signal: PhiSignal) {
   return typeof signal.value === "string" ? signal.value.trim() : "";
@@ -254,7 +269,9 @@ export function PhiRootLiveThemeProvider({
         remRootValue={remRootValue}
       >
         <PhiRootBackgroundLayer root={liveSiteTheme.root} mode={mode} />
-        {children}
+        <PhiSiteBrandContext.Provider value={liveSiteTheme.brand ?? null}>
+          {children}
+        </PhiSiteBrandContext.Provider>
       </PhiConfigProvider>
     </>
   );

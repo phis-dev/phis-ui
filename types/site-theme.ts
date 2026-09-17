@@ -73,6 +73,32 @@ export type PhiSiteThemeWordmark = {
   parts?: PhiSiteThemeWordmarkPart[] | null;
 };
 
+/**
+ * One mode's Logo.
+ *
+ * Per mode because a Logo is artwork in fixed colours: ink that reads on a light ground vanishes on a
+ * dark one. The three sources are the three states a mode can be in -- a picture of the Site's own Media
+ * library, a picture still carried inline (a Theme Set's, until a save takes it into the library), or
+ * no Logo at all, which is said explicitly so a Set's Logo does not show through a choice to have none.
+ */
+export type PhiSiteThemeBrandLogo =
+  | { sourceKind: "none" }
+  | {
+    sourceKind: "asset";
+    assetId: number;
+    /**
+     * The delivered address, resolved when the Site config is read and written alongside the id by the
+     * picker, because the Brand renders from a draft long before the resolver has seen it.
+     */
+    url?: string | null;
+  }
+  | { sourceKind: "url"; sourceUrl: string };
+
+export type PhiSiteThemeBrandLogos = {
+  light?: PhiSiteThemeBrandLogo | null;
+  dark?: PhiSiteThemeBrandLogo | null;
+};
+
 /** A line the Site carries in its frame: what it says, and the icon in front of it. */
 export type PhiSiteThemeBrandLine = {
   label?: string | null;
@@ -91,17 +117,8 @@ export type PhiSiteThemeBrand = {
   homeHref?: string | null;
   /** The small line above the Wordmark, for Sites whose name needs a word of context. */
   eyebrow?: string | null;
-  /** The Logo, as an asset of this Site's own Media library. */
-  logoAssetId?: number | null;
-  /**
-   * The delivered form of `logoAssetId`, resolved when the Site config is read and never authored.
-   *
-   * It is part of this shape rather than a second one because every reader wants the resolved record,
-   * and a Brand that carried only the id would make each of them build the URL again. Authoring
-   * surfaces write `logoAssetId` and leave this alone; where they need to show the picture before the
-   * Site has resolved anything, `buildPhiMediaAssetContentDeliveryUrl` builds the same address.
-   */
-  logoUrl?: string | null;
+  /** The Logo, one picture per mode. A mode the record says nothing about wears the Theme Set's. */
+  logo?: PhiSiteThemeBrandLogos | null;
   /** What the Logo says to somebody who cannot see it. Falls back to the asset's own alt text. */
   logoAlt?: string | null;
   slogan?: PhiSiteThemeBrandLine | null;

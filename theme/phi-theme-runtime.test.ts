@@ -81,9 +81,21 @@ describe("theme runtime payload", () => {
   it("keeps every other field of the record untouched", () => {
     const { theme } = resolvePhiThemeRuntimePayload({
       mode: "dark",
-      brand: { logoAssetId: 7 },
+      brand: { eyebrow: "Welcome", logo: { light: { sourceKind: "asset", assetId: 7 } } },
     } as Record<string, unknown>);
     expect(theme.mode).toBe("dark");
-    expect(theme.brand).toEqual({ logoAssetId: 7 });
+    expect(theme.brand?.eyebrow).toBe("Welcome");
+    expect(theme.brand?.logo?.light).toEqual({ sourceKind: "asset", assetId: 7 });
+  });
+
+  it("puts the Set's Logo under the Brand's, mode by mode", () => {
+    const { theme } = resolvePhiThemeRuntimePayload({
+      brand: { logo: { light: { sourceKind: "none" } } },
+    });
+    expect(theme.brand?.logo?.light).toEqual({ sourceKind: "none" });
+    expect(theme.brand?.logo?.dark).toEqual({
+      sourceKind: "url",
+      sourceUrl: expect.stringMatching(/^data:image\/svg\+xml;base64,/),
+    });
   });
 });
