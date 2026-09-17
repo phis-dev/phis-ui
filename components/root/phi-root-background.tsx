@@ -32,8 +32,9 @@ import type { PhiThemeMode } from "../../theme/phi-theme-presets";
  * A picture does not arrive at once. So the layer is a frame holding one Picture at a time, and a Picture
  * that has to be fetched is painted over the Asset's placeholder -- a few hundred bytes of the picture,
  * scaled up, which is soft enough to read as a blur without a filter, and a filter is what Safari
- * mis-stacks -- and fades in once the browser has it. A picture the cache already holds shows at once,
- * and so does one carried inline. A new Picture -- the other mode, or a Theme draft -- joins on top of
+ * mis-stacks -- and fades in once the browser has it. That holds for a picture from the cache too:
+ * until script shows it nobody has seen it, and one that appears at hydration without a fade is exactly
+ * the cut this avoids. One carried inline has nothing to wait for and shows at once. A new Picture -- the other mode, or a Theme draft -- joins on top of
  * the one on screen and fades in over it when its picture is there, so a mode switch cross-fades.
  *
  * Waiting is script's business, and the ground must never depend on script: styles/root.css holds a
@@ -180,7 +181,7 @@ type PhiRootBackgroundEntry = {
   picture: PhiRootBackgroundPicture;
   /** The picture is there: shown, or waiting. */
   loaded: boolean;
-  /** Whether it appears at once -- from the cache, or a Theme draft edited in place with nothing to fetch. */
+  /** Whether it appears at once: a Theme draft edited in place with nothing to fetch, or an inline picture. */
   instant: boolean;
   /**
    * What waits for the picture: the picture over its placeholder, for the first Picture, which the
@@ -232,9 +233,8 @@ export function PhiRootBackgroundLayer({
 
   /*
    * Every picture still waiting is fetched, not only the one on top: one that joined before the one
-   * beneath had arrived must not leave that one waiting. The load is marked a frame later, so a picture
-   * the browser has only just decoded is painted before its fade starts; one the cache already holds is
-   * marked at once and skips the fade.
+   * beneath had arrived must not leave that one waiting. The load is marked two frames later, so the
+   * picture is painted, still hidden, before its fade starts.
    */
   const waiting = entries
     .filter((entry) => !entry.loaded)
@@ -243,12 +243,11 @@ export function PhiRootBackgroundLayer({
   useEffect(() => {
     const frames: number[] = [];
     const images = (JSON.parse(waitingKey) as [number, string | null][]).map(([id, url]) => {
-      const markLoaded = (instant: boolean) => setEntries((current) => current.map((entry) => (
-        entry.id === id ? { ...entry, loaded: true, instant: entry.instant || instant } : entry
-      )));
       const markNextFrame = () => {
         frames.push(window.requestAnimationFrame(() => {
-          frames.push(window.requestAnimationFrame(() => markLoaded(false)));
+          frames.push(window.requestAnimationFrame(() => setEntries((current) => current.map((entry) => (
+            entry.id === id ? { ...entry, loaded: true } : entry
+          )))));
         }));
       };
       if (!url) {
@@ -258,7 +257,7 @@ export function PhiRootBackgroundLayer({
       const image = new Image();
       image.src = url;
       if (image.complete && image.naturalWidth > 0) {
-        markLoaded(true);
+        markNextFrame();
         return image;
       }
       /* A picture that fails shows anyway: the layer then paints exactly what a plain background would. */
