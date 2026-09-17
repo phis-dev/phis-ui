@@ -189,7 +189,12 @@ Their internal filenames are not ABI, but the same physical Server/live/Controls
    matching Client and Authoring contributions. The Server and Controller Client contributions must
    name the same Modules per Area — the verifier compares them.
 
-8. **Run `pnpm runtime-modules:check` and `pnpm typecheck`.** Twenty-five contract verifiers run; they
+8. **Check every Public Widget against the static render.** In production a Public page is rendered
+   once for every anonymous visitor ([STATIC_RENDERING.md](./STATIC_RENDERING.md)): a Widget's server
+   half must not read cookies, headers or the viewer or render a per-visitor value, and the Module's own
+   data may be up to 60 seconds old there. `next dev` hides both; check in a production build, signed out.
+
+9. **Run `pnpm runtime-modules:check` and `pnpm typecheck`.** Twenty-five contract verifiers run; they
    catch what typecheck cannot — route grammar, ownership collisions, Area synchronisation, projection
    boundaries, provider/loader pairing.
 
@@ -258,6 +263,13 @@ condition state is never authorization: Add-ons, Form handlers, and Providers in
 same permission.
 
 ## Widgets, Layouts, and Controls
+
+> **Public pages are rendered once for every anonymous visitor.** The server half of a Widget or Layout on
+> a Public page runs in a render shared by all of them: `cookies()` and `headers()` are empty there
+> without an error, the viewer is anonymous, there is no query, and data that is not published through
+> the Builder can be up to 60 seconds old. Per-visitor values and data that must be live are loaded in the
+> browser. The full contract is [STATIC_RENDERING.md](./STATIC_RENDERING.md); `next dev` does not render
+> statically, so it cannot show a violation.
 
 Module Widgets and Layouts follow the same shared config, render-mode, signal, access, slot-size,
 Preview, and Authoring contracts as Core artifacts. Their lightweight definitions are the only Picker

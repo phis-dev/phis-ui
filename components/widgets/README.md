@@ -11,6 +11,12 @@ All Table Widgets and Table Providers additionally follow the normative
 
 ## General rules
 
+- **A Public Widget's server half renders once for every anonymous visitor** ([STATIC_RENDERING.md](../../STATIC_RENDERING.md)).
+  It must not read `cookies()`, `headers()` or the viewer -- they are empty or anonymous there, without an
+  error -- nor render a per-visitor value such as a token, nonce, timestamp or random value; those load
+  in the browser. Data that is not published through the Builder can be up to 60 seconds old on a Public
+  page. `next dev` never renders statically; check Public Widgets in a production build, signed out.
+
 - Widgets are intended to be self-contained integration surfaces.
 - Core owns the adapter-backed `Date Picker` Widget, Gregorian calendar adapter, and generic date/time
   Controls exported from `@phis/ui/controls/date-time`. Event calendars, booking, and additional

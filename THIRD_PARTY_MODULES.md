@@ -13,6 +13,8 @@ The normative low-level contracts remain in:
 - [components/widgets/README.md](./components/widgets/README.md) for Widget and signaling behavior;
 - [components/forms/PRESET_FORMS_HOWTO.md](./components/forms/PRESET_FORMS_HOWTO.md) for Preset Forms;
 - [NEXT_INTEGRATION.md](./NEXT_INTEGRATION.md) for the consuming Next.js Site boundary;
+- [STATIC_RENDERING.md](./STATIC_RENDERING.md) for how Public pages are rendered once for every
+  anonymous visitor, and what that forbids in a Widget's server half;
 - [ACCESS.md](./ACCESS.md) for viewer access policies and third-party roles.
 - [AUTHENTICATION.md](./AUTHENTICATION.md) for Auth UI replacement, multi-Area activation, Account Widget
   delegation, and the server trust boundary.
@@ -25,6 +27,24 @@ compatibility contract; implementation stops and asks the operator first.
 `@phis/support` in the Phi workspace is the canonical working reference package. It demonstrates a
 separately built Module with routes, navigation injections, two Widgets, one Controller, Server,
 Controller Client, Render Client, and Authoring Client contributions.
+
+## Before you start: Public pages are rendered once for everybody
+
+Read [STATIC_RENDERING.md](./STATIC_RENDERING.md) before building anything that renders on a Public page.
+In production a Public page is rendered once for every anonymous visitor and served from memory; your
+Widget's server half is part of that render. In short:
+
+1. **Nothing your Widget renders on the server may depend on the visitor.** There `cookies()` and
+   `headers()` are empty without an error, the viewer is always anonymous and there is no query. Tokens,
+   greetings, carts, random values and anything else per visitor are loaded in the browser.
+2. **Your Module's own data can be up to 60 seconds old on a Public page.** Only published Pages, Areas,
+   Navigation, Themes, Site settings and translations reach it within seconds. News entries, events,
+   prices, stock and whatever your Add-on stores wait for the next render at most a minute later. What
+   must be current to the second is loaded in the browser.
+3. **`next dev` never renders statically**, so development hides both mistakes. Check every Public
+   Widget once in a production build, signed out.
+
+Signed-in visitors, requests with a query, the Builder and every staff Area render dynamically as before.
 
 ## Terminology and hard boundaries
 
@@ -1166,6 +1186,9 @@ installs or enables that Add-on.
 - Every controllerless Module contributes at least one meaningful owned artifact and no no-op Controller.
 - Widgets use Phi Controls, providers, signaling, and the shared Canvas scaffold contracts.
 - Server handlers revalidate Form input and enforce authorization independently of Client validation.
+- No Public Widget's server half reads cookies, headers or the viewer, or renders a per-visitor value
+  (token, nonce, timestamp, random value); those are loaded in the browser (STATIC_RENDERING.md).
+- Module data a Public page must show without delay is loaded in the browser, not rendered on the server.
 - Every handler-mode Form has an owned phase-matching handler Provider, and the owner Module is selected in
   every intended effective Area preset.
 
@@ -1197,7 +1220,10 @@ Finally test at least:
 - Builder Picker, Inspector, Canvas, and Authoring output;
 - Controller mounting and declared signal routes;
 - missing/incompatible server capability diagnostics;
-- package graph isolation so Public does not download unrelated Builder or optional-module code.
+- package graph isolation so Public does not download unrelated Builder or optional-module code;
+- every Widget on a Public page in a **production build, signed out and without a query**: the response
+  carries `x-nextjs-cache` (static), a second request shows the same, and the same page with `?check=1`
+  (dynamic) shows the same again. `next dev` never renders statically (STATIC_RENDERING.md).
 
 Use the actual production browser resource list for payload evidence. Development Turbopack/HMR chunks
 are not a production bundle measurement.

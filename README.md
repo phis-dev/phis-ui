@@ -11,6 +11,11 @@ Third-party authors should start with [THIRD_PARTY_MODULES.md](./THIRD_PARTY_MOD
 the end-to-end package guide for Modules, Controllers, Widgets, Theme presets, Preset Forms, manifests,
 Site composition, and verification.
 
+Public pages are rendered once for every anonymous visitor and served from memory. What that forbids in
+a Widget's server half, and how fresh a Module's data is on such a page, is in
+[STATIC_RENDERING.md](./STATIC_RENDERING.md) -- required reading before building anything for the Public
+Area.
+
 The normative target v1 viewer-access, provider-role, and responsive-visibility ABI lives in
 [ACCESS.md](./ACCESS.md).
 The normative target v1 Auth Module, Auth UI provider, Account Widget, and Admin settings ABI lives in

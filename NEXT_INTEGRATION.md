@@ -69,14 +69,31 @@ redirect, which draws nothing at all. The Public Area is addressed by locale rat
 segment, so `/de` is its root exactly as `/builder` is the Builder's; there is no separate rule for it.
 
 ```text
-src/app/<area>/layout.tsx              guards, providers, Area Overlays, Client boundary
-src/app/<area>/(root)/layout.tsx       chrome "none"   -- the Area root
-src/app/<area>/(root)/page.tsx
-src/app/<area>/(root)/@<slot>/page.tsx
-src/app/<area>/(pages)/layout.tsx      chrome "shell"  -- everything below it
-src/app/<area>/(pages)/[...path]/page.tsx
-src/app/<area>/(pages)/@<slot>/[...path]/page.tsx
+src/app/(site)/layout.tsx                     the request-reading document shell
+src/app/(site)/<area>/layout.tsx              guards, providers, Area Overlays, Client boundary
+src/app/(site)/<area>/(root)/layout.tsx       chrome "none"   -- the Area root
+src/app/(site)/<area>/(root)/page.tsx
+src/app/(site)/<area>/(root)/@<slot>/page.tsx
+src/app/(site)/<area>/(pages)/layout.tsx      chrome "shell"  -- everything below it
+src/app/(site)/<area>/(pages)/[...path]/page.tsx
+src/app/(site)/<area>/(pages)/@<slot>/[...path]/page.tsx
 ```
+
+The Public Area is routed a second time, for anonymous visitors, in a tree that reads nothing of the
+request and whose renders Next keeps ([STATIC_RENDERING.md](./STATIC_RENDERING.md)). It has its own
+root Layout, which is why both trees sit in route groups:
+
+```text
+src/app/(static)/static-render/[marker]/[mode]/[root]/layout.tsx          document shell, Public Client boundary
+src/app/(static)/static-render/[marker]/[mode]/[root]/not-found.tsx       locale from next/root-params
+src/app/(static)/static-render/[marker]/[mode]/[root]/(root)/layout.tsx   boundary and chrome "none"
+src/app/(static)/static-render/[marker]/[mode]/[root]/(root)/page.tsx, @<slot>/page.tsx
+src/app/(static)/static-render/[marker]/[mode]/[root]/(pages)/[...path]/layout.tsx   boundary and chrome "shell"
+src/app/(static)/static-render/[marker]/[mode]/[root]/(pages)/[...path]/page.tsx, @<slot>/page.tsx
+```
+
+Its Layouts sit inside the catch-all, where they are given the page's segments; the dynamic tree's
+Layouts derive them from a request header the static tree may not read. Only the proxy reaches this tree.
 
 Two properties of that shape are load-bearing and must not be flattened back:
 
