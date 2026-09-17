@@ -1,6 +1,7 @@
 import "server-only";
 
 import { buildApiHeaders, buildApiUrl } from "../helpers/site-api";
+import { throwPhiCmsGatewayError } from "./errors";
 import type { PhiCmsReviewParams } from "../server-helpers/cms-review";
 import type { PhiCmsNavigationOverlay } from "../types/cms-module-descriptors";
 import { readPhiSiteReadCache } from "./site-read-cache";
@@ -13,6 +14,8 @@ export type FetchSiteNavOptions = {
   locale?: string;
   revision?: number | null;
   review?: PhiCmsReviewParams | null;
+  /** The visitor's cookies. Core serves a revision only to a session that may preview, so a draft read carries them. */
+  cookieHeader?: string;
 };
 
 export type PhiSiteNavigationScope = {
@@ -116,6 +119,7 @@ export async function fetchSiteNavigationOverlay({
   locale,
   revision,
   review,
+  cookieHeader,
 }: FetchSiteNavOptions): Promise<PhiCmsNavigationOverlay | null> {
   if (!apiBaseUrl.trim()) {
     throw new Error("Missing apiBaseUrl for fetchSiteNavigationOverlay.");
@@ -146,9 +150,10 @@ export async function fetchSiteNavigationOverlay({
   }
 
   const url = buildApiUrl(apiBaseUrl, `/api/v1/site/nav?${search.toString()}`);
-  const load = () => fetchNavigationOverlay(url, internalToken, siteKey);
   // A revision or a review asks for a draft the author is looking at, never what visitors get.
-  if (process.env.NODE_ENV === "development" || search.has("revision") || search.has("reviewKind")) {
+  const readsDraft = search.has("revision") || search.has("reviewKind");
+  const load = () => fetchNavigationOverlay(url, internalToken, siteKey, readsDraft ? cookieHeader : undefined);
+  if (process.env.NODE_ENV === "development" || readsDraft) {
     return load();
   }
   return readPhiSiteReadCache(`site-nav:${siteKey.trim().toLowerCase()}:${search.toString()}`, load);
@@ -158,6 +163,7 @@ async function fetchNavigationOverlay(
   url: string,
   internalToken: string,
   siteKey: string,
+  cookieHeader: string | undefined,
 ): Promise<PhiCmsNavigationOverlay | null> {
   const response = await fetch(url, {
     headers: buildApiHeaders({
@@ -168,6 +174,7 @@ async function fetchNavigationOverlay(
       extra: {
         Accept: "application/json",
         "User-Agent": "phis-ui/1.0",
+        ...(cookieHeader?.trim() ? { Cookie: cookieHeader } : {}),
       },
     }),
     cache: "no-store",
@@ -178,7 +185,7 @@ async function fetchNavigationOverlay(
   }
 
   if (!response.ok) {
-    throw new Error(`Failed to fetch site nav (${response.status}).`);
+    throwPhiCmsGatewayError(`Failed to fetch site nav (${response.status}).`, response.status);
   }
 
   const payload = (await response.json()) as { overlay?: PhiCmsNavigationOverlay };

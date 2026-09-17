@@ -1,5 +1,9 @@
 import "server-only";
 
+import { cookies } from "next/headers";
+import { forbidden, unauthorized } from "next/navigation";
+
+import { isPhiCmsGatewayAuthError } from "../../../gateway/errors";
 import { fetchSiteNavigationOverlay } from "../../../gateway/site-nav";
 import { phiRuntime } from "../../../server-helpers/phi-runtime";
 import { resolvePhiCmsReviewParams } from "../../../server-helpers/cms-review";
@@ -28,15 +32,29 @@ export async function resolvePhiNavigationItems(
   const rt = phiRuntime(runtime);
   const navRevision = resolvePhiNavigationRevisionFromRuntime(runtime);
   const review = resolvePhiCmsReviewParams(runtime.request?.searchParams);
-  const overlay = await fetchSiteNavigationOverlay({
-    apiBaseUrl: rt.apiBaseUrl,
-    internalToken: rt.internalToken,
-    siteKey: rt.siteKey,
-    navKey,
-    locale: runtime.locale.current,
-    revision: navRevision,
-    review,
-  });
+  // A revision or a navigation review can be a draft: Core decides from the visitor's own session.
+  const readsDraft = navRevision != null || review?.kind === "navigation";
+  let overlay: Awaited<ReturnType<typeof fetchSiteNavigationOverlay>>;
+  try {
+    overlay = await fetchSiteNavigationOverlay({
+      apiBaseUrl: rt.apiBaseUrl,
+      internalToken: rt.internalToken,
+      siteKey: rt.siteKey,
+      navKey,
+      locale: runtime.locale.current,
+      revision: navRevision,
+      review,
+      cookieHeader: readsDraft ? (await cookies()).toString() : undefined,
+    });
+  } catch (error) {
+    if (isPhiCmsGatewayAuthError(error)) {
+      if (error.status === 401) {
+        unauthorized();
+      }
+      forbidden();
+    }
+    throw error;
+  }
   if (navRevision != null && overlay == null) {
     return null;
   }
