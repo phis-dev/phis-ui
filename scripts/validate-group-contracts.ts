@@ -62,14 +62,18 @@ assert.equal(
     const resource = resources.find((entry) => entry.resourceKey === resourceKey);
     assert.ok(resource, `The ${resourceKey} resource stays declared.`);
     const mutable = (resource.fields ?? []).filter((field) => field.mutable).map((field) => field.key);
-    assert.deepEqual(mutable, ["showMemberCompany"],
-      `Only the company display is editable on a ${resourceKey} row.`);
-    const gate = (resource.fields ?? []).find((field) => field.key === "showMemberCompany")?.mutableWhen;
-    assert.deepEqual(
-      gate,
-      { match: "all", conditions: [{ source: "row", valuePath: "manages", operator: "truthy" }] },
-      "The switch follows what the control plane said about this row.",
-    );
+    // The group's own flags and nothing else: what the member list discloses, and what the group does
+    // with conversations. A name, a key and a membership are not edited from a cell.
+    assert.deepEqual(mutable, ["showMemberCompany", "threads", "crossGroupThreads"],
+      `Only the group flags are editable on a ${resourceKey} row.`);
+    for (const key of mutable) {
+      const gate: unknown = (resource.fields ?? []).find((field) => field.key === key)?.mutableWhen;
+      assert.deepEqual(
+        gate,
+        { match: "all", conditions: [{ source: "row", valuePath: "manages", operator: "truthy" }] },
+        `The ${key} switch follows what the control plane said about this row.`,
+      );
+    }
   }
 
   const members = resources.find((entry) => entry.resourceKey === "groupMembers");

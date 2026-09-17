@@ -184,27 +184,42 @@ async function mutateGroups(request: PhiTableProviderMutationRequest) {
       return { status: "accepted" as const, invalidation: "view" as const };
     }
     /*
-     * The only editable thing about a group row is what its member list shows. It is a display
-     * decision, so it goes to the group rather than to a membership -- and the row says whether this
-     * actor may make it.
+     * What is editable about a group row is its flags: what the member list discloses, and what the
+     * group does with conversations. All three go to the group rather than to a membership, and the row
+     * says whether this actor may make the change.
+     *
+     * The names are the body's, one per call, because Core takes exactly one change at a time -- and
+     * `crossGroupThreads` implies `threads` there rather than here, so a second surface cannot come to
+     * a different conclusion about it. That is also why the two thread flags invalidate the view:
+     * turning one on may have turned the other on, and the cell would otherwise keep showing what the
+     * caller proposed instead of what Core wrote.
      */
-    if (request.kind !== "field" || request.fieldKey !== "showMemberCompany") {
+    const EDITABLE_GROUP_FLAGS = ["showMemberCompany", "threads", "crossGroupThreads"] as const;
+    // The kind first: only a field mutation has a `fieldKey` to look up at all.
+    const fieldKey = request.kind === "field"
+      ? EDITABLE_GROUP_FLAGS.find((key) => key === request.fieldKey)
+      : undefined;
+    if (request.kind !== "field" || !fieldKey) {
       throw new PhiTableProviderError(
         "mutation-not-supported",
-        "Only the company display is editable here; retirement is an action.",
+        "Only the group flags are editable here; retirement is an action.",
       );
     }
     await readApiResponse(await fetch(`${API_PATH}?groupId=${readPositiveInteger(request.rowIdentity)}`, {
       ...init,
       method: "PATCH",
       headers: { ...init.headers, "content-type": "application/json" },
-      body: JSON.stringify({ showMemberCompany: request.proposedValue === true }),
+      body: JSON.stringify({ [fieldKey]: request.proposedValue === true }),
     }));
-    return {
-      status: "accepted" as const,
-      invalidation: "none" as const,
-      canonicalValue: request.proposedValue === true,
-    };
+    if (fieldKey === "showMemberCompany") {
+      return {
+        status: "accepted" as const,
+        invalidation: "none" as const,
+        canonicalValue: request.proposedValue === true,
+      };
+    }
+    PHI_GROUPS_OPTIONS_REVISION.bump();
+    return { status: "accepted" as const, invalidation: "view" as const };
   }
 
   if (request.resourceKey !== "groupMembers") {

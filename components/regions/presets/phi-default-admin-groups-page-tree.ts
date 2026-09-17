@@ -107,6 +107,24 @@ export async function buildPhiDefaultAdminGroupsPageTree({
                 editor: { control: "switch" },
                 sizing: { mode: "content" },
               },
+              {
+                key: "threads",
+                fieldKey: "threads",
+                title: labels.columns.threads,
+                description: labels.columns.threadsHint,
+                renderer: "switch",
+                editor: { control: "switch" },
+                sizing: { mode: "content" },
+              },
+              {
+                key: "crossGroupThreads",
+                fieldKey: "crossGroupThreads",
+                title: labels.columns.crossGroupThreads,
+                description: labels.columns.crossGroupThreadsHint,
+                renderer: "switch",
+                editor: { control: "switch" },
+                sizing: { mode: "content" },
+              },
               { key: "providerId", fieldKey: "providerId", title: labels.columns.source, renderer: "badge", sizing: { mode: "content" } },
               // A retired group is listed here and nowhere else, so this is where its state is read.
               {

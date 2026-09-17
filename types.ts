@@ -38,6 +38,7 @@ export {
   validatePhiTreeWidgetBinding,
 } from "./types/tree-widget";
 export type * from "./types/media";
+export type * from "./types/threads";
 export type * from "./types/tree";
 export type * from "./types/widget-runtime";
 export * from "./types/runtime-module-locale";

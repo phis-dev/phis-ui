@@ -45,5 +45,14 @@ export const PHI_GROUPS_RUNTIME_MODULE_DEFINITION = {
   mediaSpaces: {
     group: { kinds: ["image", "video", "audio", "pdf", "markdown", "document", "archive"] },
   },
+  /*
+   * A Site with groups is a Site where a group can hold a conversation.
+   *
+   * Both kinds are declared, and neither is a permission. Availability says the kind exists here at
+   * all; which groups actually thread is the group's own `Threads` flag, and which of those may address
+   * another group is `CrossGroupThreads` -- per group, administered below, where somebody can see which
+   * group they are answering for. A Module setting would have made it one answer for all of them.
+   */
+  threadKinds: ["group", "crossGroup"],
   formProviders: { handlers: PHI_GROUPS_FORM_HANDLER_PROVIDER_DESCRIPTORS },
 } satisfies PhiRuntimeModuleDefinition;

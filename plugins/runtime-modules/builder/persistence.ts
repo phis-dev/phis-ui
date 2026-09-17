@@ -31,6 +31,7 @@ import type { PhiRuntimeModuleDefinition, PhiRuntimeModuleId } from "../../../ty
 import {
   resolvePhiAuthUiProviderModuleId,
   resolvePhiDeclaredMediaSpaces,
+  resolvePhiDeclaredThreadKinds,
   resolvePhiRuntimeModuleIdsForArea,
 } from "../../../plugins/runtime-modules/settings";
 import { isPhiRuntimeAreaBaseModuleId } from "../../../plugins/runtime-modules/area-definitions";
@@ -780,6 +781,12 @@ export async function savePhiDeveloperBuilderModulesDraft(
         // Derived from the selection, never authored: the control plane holds no Module metadata, so
         // the Area preset is what carries which Spaces its Modules need and what may go in them.
         mediaSpaces: resolvePhiDeclaredMediaSpaces(
+          optionalRuntimeModuleIds,
+          state.runtimeModuleDefinitions,
+        ),
+        // The same derivation for conversations: which kinds a Site offers is the union of what its
+        // Modules need, and the control plane -- which holds no Module metadata -- reads it from here.
+        threadKinds: resolvePhiDeclaredThreadKinds(
           optionalRuntimeModuleIds,
           state.runtimeModuleDefinitions,
         ),

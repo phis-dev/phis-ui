@@ -66,6 +66,33 @@ export const PHI_GROUPS_RUNTIME_DATA_PROVIDER_DESCRIPTORS = [
               { source: "row", valuePath: "manages", operator: "truthy" },
             ] },
           },
+          /*
+           * What this group does with conversations.
+           *
+           * Whether the Site offers group threads at all is the Modules' declaration, not a cell here.
+           * These two say which groups use what is offered -- so a Site can run the Modules and still
+           * have most of its groups be what they always were. `crossGroupThreads` brings `threads`
+           * with it and clearing `threads` takes it away; the rule lives in Core, and this surface
+           * shows the result rather than reproducing it.
+           */
+          {
+            key: "threads",
+            title: "Group threads",
+            type: "boolean",
+            mutable: true,
+            mutableWhen: { match: "all", conditions: [
+              { source: "row", valuePath: "manages", operator: "truthy" },
+            ] },
+          },
+          {
+            key: "crossGroupThreads",
+            title: "Threads with other groups",
+            type: "boolean",
+            mutable: true,
+            mutableWhen: { match: "all", conditions: [
+              { source: "row", valuePath: "manages", operator: "truthy" },
+            ] },
+          },
           { key: "providerId", title: "Source", type: "string" },
           // Whether the group is Core-owned. A group a Directory contributes has no state to write
           // here: it stops being asserted at its source.
@@ -133,6 +160,26 @@ export const PHI_GROUPS_RUNTIME_DATA_PROVIDER_DESCRIPTORS = [
             type: "boolean",
             mutable: true,
             // A display decision the group's own Manager owns, and only for a group they manage.
+            mutableWhen: { match: "all", conditions: [
+              { source: "row", valuePath: "manages", operator: "truthy" },
+            ] },
+          },
+          // The same two flags the administration list carries, for the Manager of one group rather
+          // than for somebody looking at all of them.
+          {
+            key: "threads",
+            title: "Group threads",
+            type: "boolean",
+            mutable: true,
+            mutableWhen: { match: "all", conditions: [
+              { source: "row", valuePath: "manages", operator: "truthy" },
+            ] },
+          },
+          {
+            key: "crossGroupThreads",
+            title: "Threads with other groups",
+            type: "boolean",
+            mutable: true,
             mutableWhen: { match: "all", conditions: [
               { source: "row", valuePath: "manages", operator: "truthy" },
             ] },

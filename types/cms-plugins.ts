@@ -717,6 +717,18 @@ export type PhiRuntimeModuleDefinition = {
       readonly kinds: readonly import("./media").PhiMediaKindValue[];
     };
   };
+  /**
+   * The kinds of conversation this Module needs a Site to offer.
+   *
+   * A declaration, on the same terms as `mediaSpaces`: the Site's availability is the union across its
+   * active Modules, two Modules declaring the same kind do not collide, and a kind that stops being
+   * declared hides its threads rather than deleting them. No administrator switches one on -- a Site
+   * gains Support conversations by running a Support Module, not by being configured to.
+   *
+   * It says which kinds exist on the Site, never who may open one. That stays with the people and the
+   * groups: a group carries its own thread flags, and Staff is what Core's roles make somebody.
+   */
+  threadKinds?: readonly import("./threads").PhisDeclarableThreadKind[];
   calendarAdapters?: readonly PhiCalendarAdapterDescriptor[];
   formProviders?: PhiRuntimeModuleFormProviderDescriptors;
   authUiProvider?: {

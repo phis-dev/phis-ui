@@ -8,6 +8,8 @@ import {
   type PhiDeclarableMediaSpaceKind,
   type PhiMediaKindValue,
 } from "../../types/media";
+import { PHIS_DECLARABLE_THREAD_KINDS } from "../../constants/threads";
+import type { PhisDeclarableThreadKind } from "../../types/threads";
 import type { PhiRuntimeModuleDefinition, PhiRuntimeModuleId } from "./contracts";
 import { isPhiRuntimeAreaBaseModuleId } from "./area-definitions";
 
@@ -223,4 +225,32 @@ export function resolvePhiDeclaredMediaSpaces(
     resolved[spaceKind] = { kinds: PHI_MEDIA_KIND_ORDER.filter((kind) => contentKinds.has(kind)) };
   }
   return resolved;
+}
+
+/**
+ * Derives which kinds of conversation an Area's Modules need, the way it derives their Media Spaces.
+ *
+ * Same shape, same reasoning, and deliberately the same place: availability is a capability the Modules
+ * need, the result travels with the Area preset, and the control plane materializes the Site-wide
+ * availability as the union across published Areas. A Site that activates a Support Module gains Support
+ * threads; deactivating it hides them and deletes nothing.
+ *
+ * Ordering follows the declarable list rather than module order, so an unchanged selection serializes
+ * byte-identically and a save that changed nothing is a save the Area does not record.
+ */
+export function resolvePhiDeclaredThreadKinds(
+  moduleIds: readonly PhiRuntimeModuleId[],
+  moduleDefinitions: readonly PhiRuntimeModuleDefinition[],
+): PhisDeclarableThreadKind[] {
+  const selected = new Set(moduleIds);
+  const declared = new Set<PhisDeclarableThreadKind>();
+  for (const definition of moduleDefinitions) {
+    if (!selected.has(definition.moduleId)) {
+      continue;
+    }
+    for (const kind of definition.threadKinds ?? []) {
+      declared.add(kind);
+    }
+  }
+  return PHIS_DECLARABLE_THREAD_KINDS.filter((kind) => declared.has(kind));
 }
