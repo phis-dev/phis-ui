@@ -10,6 +10,16 @@ export {
   PHI_TR_CTX_WEB_UI_LABEL,
 } from "./server-helpers/translate";
 export { phiRuntime } from "./server-helpers/phi-runtime";
+export {
+  definePhiLabelSet,
+  definePhiMessageLabel,
+  definePhiRuntimeModuleLabelSet,
+  getPhiLabelSet,
+  type PhiLabelSetDefinition,
+  type PhiLabelSetEntry,
+  type PhiLabelSetLabels,
+  type PhiLabelSetTexts,
+} from "./gateway/label-set";
 export { resolvePhiRequestLocale } from "./server-helpers/request-locale";
 export { loadPhiResolvedCmsRequest } from "./server-helpers/cms-request";
 export { loadPhiCmsRootRequest } from "./server-helpers/cms-root";

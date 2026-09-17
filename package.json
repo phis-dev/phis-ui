@@ -122,6 +122,12 @@
       "require": "./next/cache-handler.mjs",
       "default": "./next/cache-handler.mjs"
     },
+    "./next/route-handlers": {
+      "import": "./next/route-handlers.ts",
+      "require": "./next/route-handlers.ts",
+      "types": "./next/route-handlers.ts",
+      "default": "./next/route-handlers.ts"
+    },
     "./next/site-proxy": {
       "import": "./next/site-proxy.ts",
       "require": "./next/site-proxy.ts",
@@ -511,60 +517,6 @@
       "require": "./net.ts",
       "types": "./net.ts",
       "default": "./net.ts"
-    },
-    "./gateway": {
-      "import": "./gateway.ts",
-      "require": "./gateway.ts",
-      "types": "./gateway.ts",
-      "default": "./gateway.ts"
-    },
-    "./gateway/auth-proxy": {
-      "import": "./gateway/auth-proxy.ts",
-      "require": "./gateway/auth-proxy.ts",
-      "types": "./gateway/auth-proxy.ts",
-      "default": "./gateway/auth-proxy.ts"
-    },
-    "./gateway/site-form-route": {
-      "import": "./gateway/site-form-route.ts",
-      "require": "./gateway/site-form-route.ts",
-      "types": "./gateway/site-form-route.ts",
-      "default": "./gateway/site-form-route.ts"
-    },
-    "./gateway/media-proxy": {
-      "import": "./gateway/media-proxy.ts",
-      "require": "./gateway/media-proxy.ts",
-      "types": "./gateway/media-proxy.ts",
-      "default": "./gateway/media-proxy.ts"
-    },
-    "./gateway/site-proxy": {
-      "import": "./gateway/site-proxy.ts",
-      "require": "./gateway/site-proxy.ts",
-      "types": "./gateway/site-proxy.ts",
-      "default": "./gateway/site-proxy.ts"
-    },
-    "./gateway/data-source": {
-      "import": "./gateway/data-source.ts",
-      "require": "./gateway/data-source.ts",
-      "types": "./gateway/data-source.ts",
-      "default": "./gateway/data-source.ts"
-    },
-    "./gateway/data-source-fetch": {
-      "import": "./gateway/data-source-fetch.ts",
-      "require": "./gateway/data-source-fetch.ts",
-      "types": "./gateway/data-source-fetch.ts",
-      "default": "./gateway/data-source-fetch.ts"
-    },
-    "./gateway/mutation": {
-      "import": "./gateway/mutation.ts",
-      "require": "./gateway/mutation.ts",
-      "types": "./gateway/mutation.ts",
-      "default": "./gateway/mutation.ts"
-    },
-    "./gateway/mutation-fetch": {
-      "import": "./gateway/mutation-fetch.ts",
-      "require": "./gateway/mutation-fetch.ts",
-      "types": "./gateway/mutation-fetch.ts",
-      "default": "./gateway/mutation-fetch.ts"
     }
   },
   "devDependencies": {
