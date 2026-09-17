@@ -31,6 +31,34 @@ describe("readPhiSiteReadCache", () => {
     expect(load).toHaveBeenCalledTimes(2);
   });
 
+  it("keeps an entry for the TTL it was read with", async () => {
+    vi.useFakeTimers();
+    const load = vi.fn(async () => "value");
+
+    await readPhiSiteReadCache("key", load, 2_000);
+    vi.advanceTimersByTime(1_999);
+    await readPhiSiteReadCache("key", load, 2_000);
+    expect(load).toHaveBeenCalledTimes(1);
+
+    vi.advanceTimersByTime(2);
+    await readPhiSiteReadCache("key", load, 2_000);
+    expect(load).toHaveBeenCalledTimes(2);
+  });
+
+  it("spares the one entry a clear is asked to keep", async () => {
+    const kept = vi.fn(async () => "kept");
+    const other = vi.fn(async () => "other");
+
+    await readPhiSiteReadCache("kept", kept);
+    await readPhiSiteReadCache("other", other);
+    clearPhiSiteReadCache({ keep: "kept" });
+    await readPhiSiteReadCache("kept", kept);
+    await readPhiSiteReadCache("other", other);
+
+    expect(kept).toHaveBeenCalledTimes(1);
+    expect(other).toHaveBeenCalledTimes(2);
+  });
+
   it("does not keep a failed load", async () => {
     const load = vi.fn()
       .mockRejectedValueOnce(new Error("down"))

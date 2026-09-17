@@ -4,8 +4,9 @@
  *
  * Next's data cache is not used for these, because nothing could clear it everywhere: `revalidateTag`
  * reaches only the Site process that ran it. This cache is cleared by the same process whenever a write
- * passes its `/api/site` proxy (gateway/site-proxy.ts), so the author sees the change at once, and every
- * other process of the Site catches up within the TTL.
+ * passes its `/api/site` proxy (gateway/site-proxy.ts), so the author sees the change at once. Every other
+ * process of the Site refreshes its config every few seconds and clears the rest once the config's read
+ * marker moved (gateway/site-config.ts). The TTL ends what the marker does not see.
  *
  * Kept on `globalThis`: the proxy's Route Handler and the pages that read the cache can be bundled
  * separately, and a module-level Map would then not be the same Map in both.
@@ -30,7 +31,11 @@ function readStore(): Map<string, PhiSiteReadCacheEntry> {
  * The cached value under `key`, or what `load` produces. Concurrent readers share one load; a load that
  * fails is not kept, so the next reader asks Core again.
  */
-export function readPhiSiteReadCache<T>(key: string, load: () => Promise<T>): Promise<T> {
+export function readPhiSiteReadCache<T>(
+  key: string,
+  load: () => Promise<T>,
+  ttlMs: number = PHI_SITE_READ_CACHE_TTL_MS,
+): Promise<T> {
   const store = readStore();
   const now = Date.now();
   const cached = store.get(key);
@@ -39,7 +44,7 @@ export function readPhiSiteReadCache<T>(key: string, load: () => Promise<T>): Pr
   }
 
   const entry: PhiSiteReadCacheEntry = {
-    expiresAt: now + PHI_SITE_READ_CACHE_TTL_MS,
+    expiresAt: now + ttlMs,
     value: load(),
   };
   store.set(key, entry);
@@ -51,6 +56,16 @@ export function readPhiSiteReadCache<T>(key: string, load: () => Promise<T>): Pr
   return entry.value as Promise<T>;
 }
 
-export function clearPhiSiteReadCache() {
-  readStore().clear();
+/** Empties the cache; `keep` spares one entry, such as the load that found out the rest is stale. */
+export function clearPhiSiteReadCache(options: { keep?: string } = {}) {
+  const store = readStore();
+  if (options.keep === undefined) {
+    store.clear();
+    return;
+  }
+  for (const key of [...store.keys()]) {
+    if (key !== options.keep) {
+      store.delete(key);
+    }
+  }
 }

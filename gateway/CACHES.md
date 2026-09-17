@@ -6,11 +6,13 @@ This document collects the cache and invalidation touchpoints in `gateway/*`.
 
 - `readPhiSiteReadCache(key, load)` / `clearPhiSiteReadCache()`
   - File: `gateway/site-read-cache.ts`
-  - Per-process cache of what a Site reads from Core on every render, with a 60 s TTL. Used outside development by:
-    - `getResolvedSiteConfig(...)` in `gateway/site-config.ts`
-    - `fetchSiteNavigationOverlay(...)` in `gateway/site-nav.ts` (not for `revision` or review requests)
-  - Cleared by `buildPhiSiteProxyHandlers(...)` (`gateway/site-proxy.ts`) after every accepted POST/PUT/PATCH/DELETE through `/api/site`.
-  - The underlying fetches are `no-store`. Next cache tags are not used: `revalidateTag` reaches only the Site process that ran it, so other processes of the Site catch up within the TTL instead.
+  - Per-process cache of what a Site reads from Core on every render. Used outside development by:
+    - `getResolvedSiteConfig(...)` in `gateway/site-config.ts`, refreshed every `PHI_SITE_CONFIG_REFRESH_MS` (2 s)
+    - `fetchSiteNavigationOverlay(...)` in `gateway/site-nav.ts` (not for `revision` or review requests), with the 60 s TTL
+  - Cleared by `buildPhiSiteProxyHandlers(...)` (`gateway/site-proxy.ts`) after every accepted POST/PUT/PATCH/DELETE through `/api/site`, so the author sees the change at once in the process the write passed through.
+  - Cleared in every other process when a config refresh finds that `readMarker` moved: everything but the fresh config goes. Core moves the marker on any change to the Site row and on every publish of a Page, Area, Navigation or Theme; drafts do not move it (phis-server DB.md, `phis.site_read_marker`). A publish through any process thus reaches all of them within about the refresh interval.
+  - The TTL ends what the marker does not see, such as a Logo Asset whose content was replaced under the same id.
+  - The underlying fetches are `no-store`. Next cache tags are not used: `revalidateTag` reaches only the Site process that ran it.
 
 ## React `cache(...)` Wrappers
 
@@ -46,4 +48,4 @@ If their fetch layer uses `cache: "no-store"`, the underlying request is still d
 
 ## Rule
 
-Published data a Site reads from Core is not kept in Next's data cache (`force-cache`, `revalidateTag`): no invalidation reaches every Site process. Keep it in a per-process cache with a TTL, and clear that cache where the write passes through the Site, as `gateway/site-read-cache.ts` does.
+Published data a Site reads from Core is not kept in Next's data cache (`force-cache`, `revalidateTag`): no invalidation reaches every Site process. Keep it in the per-process read cache, which the config's `readMarker` empties in every process and the `/api/site` proxy in the one a write passed through, with a TTL for what the marker does not see.

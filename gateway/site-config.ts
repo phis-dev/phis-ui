@@ -3,7 +3,7 @@ import "server-only";
 import { buildApiHeaders, buildApiUrl } from "../helpers/site-api";
 import { syncPhiTranslationChangeMarkers } from "../helpers/translation-cache";
 import type { PhiShellTheme } from "../components/shell/shell-types";
-import { readPhiSiteReadCache } from "./site-read-cache";
+import { clearPhiSiteReadCache, readPhiSiteReadCache } from "./site-read-cache";
 import type {
   PhiSiteFontSlots,
   PhiSiteRemSettings,
@@ -92,6 +92,8 @@ export type PhiSiteConfig = {
     global: string;
     site: string;
   };
+  /** Moves with every published change a Site's read caches hold; opaque, compared for equality. */
+  readMarker: string;
 };
 
 export type GetResolvedSiteConfigOptions = {
@@ -101,8 +103,24 @@ export type GetResolvedSiteConfigOptions = {
 };
 
 /**
+ * How long a Site process keeps its config before asking Core again. The config is small and carries the
+ * change markers, so this is also how long a process can go on showing what another process's publish
+ * already replaced: it asks at most this often however many renders it serves, and not while it serves none.
+ */
+export const PHI_SITE_CONFIG_REFRESH_MS = 2_000;
+
+const READ_MARKERS_KEY = Symbol.for("phis-ui.site-read-markers");
+
+/** The read marker this process last saw per Site, on `globalThis` for the reason the read cache is. */
+function readSeenMarkers(): Map<string, string> {
+  const holder = globalThis as typeof globalThis & { [READ_MARKERS_KEY]?: Map<string, string> };
+  holder[READ_MARKERS_KEY] ??= new Map();
+  return holder[READ_MARKERS_KEY];
+}
+
+/**
  * The Site's config as Core publishes it. Kept in the Site process's read cache outside development
- * (gateway/site-read-cache.ts), never in Next's data cache.
+ * (gateway/site-read-cache.ts) for `PHI_SITE_CONFIG_REFRESH_MS`, never in Next's data cache.
  */
 export async function getResolvedSiteConfig({
   apiBaseUrl,
@@ -119,18 +137,18 @@ export async function getResolvedSiteConfig({
     throw new Error("Missing siteKey for getResolvedSiteConfig.");
   }
 
-  const load = () => fetchSiteConfig({ apiBaseUrl, internalToken, siteKey });
+  const cacheKey = `site-config:${siteKey.trim().toLowerCase()}`;
+  const load = () => fetchSiteConfig({ apiBaseUrl, internalToken, siteKey }, cacheKey);
   if (process.env.NODE_ENV === "development") {
     return load();
   }
-  return readPhiSiteReadCache(`site-config:${siteKey.trim().toLowerCase()}`, load);
+  return readPhiSiteReadCache(cacheKey, load, PHI_SITE_CONFIG_REFRESH_MS);
 }
 
-async function fetchSiteConfig({
-  apiBaseUrl,
-  internalToken,
-  siteKey,
-}: GetResolvedSiteConfigOptions): Promise<PhiSiteConfig> {
+async function fetchSiteConfig(
+  { apiBaseUrl, internalToken, siteKey }: GetResolvedSiteConfigOptions,
+  cacheKey: string,
+): Promise<PhiSiteConfig> {
   const response = await fetch(buildApiUrl(apiBaseUrl, "/api/v1/site"), {
     headers: buildApiHeaders({
       token: internalToken,
@@ -163,5 +181,17 @@ async function fetchSiteConfig({
     global: payload.site.translationMarkers.global,
     site: payload.site.translationMarkers.site,
   });
+  // ... and that something published changed, possibly through another process: the rest of the read
+  // cache goes, this answer stays.
+  if (!payload.site.readMarker) {
+    throw new Error("Missing read marker in site config payload.");
+  }
+  const seen = readSeenMarkers();
+  const markerKey = siteKey.trim().toLowerCase();
+  const previous = seen.get(markerKey);
+  seen.set(markerKey, payload.site.readMarker);
+  if (previous !== undefined && previous !== payload.site.readMarker) {
+    clearPhiSiteReadCache({ keep: cacheKey });
+  }
   return payload.site;
 }
