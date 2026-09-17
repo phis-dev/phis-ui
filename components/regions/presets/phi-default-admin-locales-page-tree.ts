@@ -153,6 +153,8 @@ export async function buildPhiDefaultAdminLocalesPageTree({
           key: "saveLocales",
           actionKey: "save",
           label: widgetLabels.saveLocalesLabel,
+          // Translated already, from the page's global label set.
+          translate: false,
           buttonType: "primary",
           signalRoutes: { emits: [{
             routeKey: "admin-locales-settings-submit-button",

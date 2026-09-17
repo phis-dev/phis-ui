@@ -233,6 +233,8 @@ export function buildPhiSettingsPageShellTree({
               config: {
                 key: "submit",
                 label: section.submitLabel,
+                // Translated already, from the settings page's global label set.
+                translate: false,
                 buttonType: "primary",
                 signalRoutes: {
                   emits: [{
