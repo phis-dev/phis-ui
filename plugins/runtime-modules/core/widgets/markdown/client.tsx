@@ -8,7 +8,7 @@ import type { PhiClientBlockBaseProps, PhiNoLabels } from "../../../../../types"
 import { PHI_SIGNAL_VALUE_SCHEMAS } from "../../../../../types/signals";
 import { usePhiSignalEmitter } from "../../../../../components/runtime/runtime-signal-identity";
 import { usePhiConfig, type PhiConfig } from "../../../../../components/root/phi-config-provider";
-import type { PhiMarkdownSpacingKey } from "./config";
+import type { PhiMarkdownSpacingKey, PhiMarkdownTextAlign } from "./config";
 import type { PhiMarkdownTocHeading } from "../markdown-toc/config";
 import { PhiPlainTable } from "../../../../../components/tables/phi-plain-table";
 
@@ -47,6 +47,7 @@ export type PhiMarkdownWidgetClientProps = PhiClientBlockBaseProps<
     widgetId?: string | number | null;
     tocKey?: string;
     headings?: PhiMarkdownTocHeading[];
+    textAlign?: PhiMarkdownTextAlign;
     textBlockSpacingBefore?: PhiMarkdownSpacingKey;
     textBlockSpacingAfter?: PhiMarkdownSpacingKey;
     headingBlockSpacingBefore?: PhiMarkdownSpacingKey;
@@ -269,7 +270,7 @@ export function PhiMarkdownWidgetClient({ config }: PhiMarkdownWidgetClientProps
   };
 
   return (
-    <div style={{ display: "grid", gap: 0, width: "100%" }}>
+    <div style={{ display: "grid", gap: 0, width: "100%", textAlign: config?.textAlign }}>
       {renderBlocks(blocks, token, paragraphBlockStyle, headingBlockStyle)}
     </div>
   );

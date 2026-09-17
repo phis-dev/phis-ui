@@ -12,6 +12,9 @@ import {
 
 export type PhiMarkdownSpacingKey = "none" | "xxs" | "xs" | "sm" | "base" | "md" | "lg" | "xl" | "xxl";
 
+/** Logical, not left and right: a Site in an RTL locale reads "start" as the right-hand edge. */
+export type PhiMarkdownTextAlign = "start" | "center" | "end";
+
 export type PhiCmsMarkdownWidgetConfig = PhiCmsWidgetConfigBase & {
   sourceMode?: "inline" | "url";
   markdown?: string;
@@ -20,6 +23,7 @@ export type PhiCmsMarkdownWidgetConfig = PhiCmsWidgetConfigBase & {
   sourceLocale?: string;
   revalidateSeconds?: number;
   translate?: boolean;
+  textAlign?: PhiMarkdownTextAlign;
   textBlockSpacingBefore?: PhiMarkdownSpacingKey;
   textBlockSpacingAfter?: PhiMarkdownSpacingKey;
   headingBlockSpacingBefore?: PhiMarkdownSpacingKey;
@@ -28,6 +32,12 @@ export type PhiCmsMarkdownWidgetConfig = PhiCmsWidgetConfigBase & {
   resolvedContent?: PhiCmsResolvedContent | null;
   preferSource?: boolean;
 };
+
+const PHI_MARKDOWN_TEXT_ALIGN_OPTIONS: Array<{ value: PhiMarkdownTextAlign; label: string }> = [
+  { value: "start", label: "Start" },
+  { value: "center", label: "Center" },
+  { value: "end", label: "End" },
+];
 
 const PHI_MARKDOWN_SPACING_OPTIONS: Array<{ value: PhiMarkdownSpacingKey; label: string }> = [
   { value: "none", label: "None" },
@@ -43,6 +53,12 @@ const PHI_MARKDOWN_SPACING_OPTIONS: Array<{ value: PhiMarkdownSpacingKey; label:
 
 function readMarkdownSourceMode(value: unknown): PhiCmsMarkdownWidgetConfig["sourceMode"] | undefined {
   return value === "inline" || value === "url" ? value : undefined;
+}
+
+function readMarkdownTextAlign(value: unknown): PhiMarkdownTextAlign | undefined {
+  return PHI_MARKDOWN_TEXT_ALIGN_OPTIONS.some((option) => option.value === value)
+    ? (value as PhiMarkdownTextAlign)
+    : undefined;
 }
 
 function readMarkdownSpacingKey(value: unknown): PhiMarkdownSpacingKey | undefined {
@@ -61,6 +77,7 @@ export function parsePhiCmsMarkdownWidgetConfig(config: Record<string, unknown>)
     sourceLocale: readString(config.sourceLocale),
     revalidateSeconds: readNumber(config.revalidateSeconds),
     translate: readBoolean(config.translate) ?? true,
+    textAlign: readMarkdownTextAlign(config.textAlign),
     textBlockSpacingBefore: readMarkdownSpacingKey(config.textBlockSpacingBefore),
     textBlockSpacingAfter: readMarkdownSpacingKey(config.textBlockSpacingAfter),
     headingBlockSpacingBefore: readMarkdownSpacingKey(config.headingBlockSpacingBefore),
@@ -120,6 +137,12 @@ export const PHI_MARKDOWN_WIDGET_DEFINITION = {
       visibleWhen: { field: "sourceMode", equals: "url" },
     },
     { key: "translate", type: "boolean", label: "Translate" },
+    {
+      key: "textAlign",
+      type: "choice",
+      label: "Align",
+      options: PHI_MARKDOWN_TEXT_ALIGN_OPTIONS,
+    },
     {
       key: "textBlockSpacingBefore",
       type: "choice",
