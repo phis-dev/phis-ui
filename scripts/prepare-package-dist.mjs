@@ -50,8 +50,20 @@ async function copyRuntimeFileAssets(sourceDirectory, targetDirectory) {
   }
 }
 
+/*
+ * An export written as plain JavaScript (`.mjs`) is shipped as written: `tsc` neither emits nor declares
+ * it. The render cache handler is one -- Next loads it by path at runtime, outside any bundler, so it
+ * cannot be TypeScript.
+ */
+const plainJavaScriptExports = Object.entries(sourceManifest.exports)
+  .filter(([, sourceTarget]) => (sourceTarget.import ?? sourceTarget.default).endsWith(".mjs"));
+
 const packageExports = Object.fromEntries(
   Object.entries(sourceManifest.exports).map(([exportKey, sourceTarget]) => {
+    const sourceRuntimeTarget = sourceTarget.import ?? sourceTarget.default;
+    if (sourceRuntimeTarget.endsWith(".mjs")) {
+      return [exportKey, { import: sourceRuntimeTarget, default: sourceRuntimeTarget }];
+    }
     const runtimeTarget = resolveRuntimeTarget(
       sourceTarget.import ?? sourceTarget.default,
     );
@@ -70,6 +82,26 @@ const packageExports = Object.fromEntries(
   }),
 );
 
+/*
+ * The tarball is packed from `dist`, which is not a workspace member, so a `workspace:` range there cannot
+ * be resolved -- and a published manifest must not carry one anyway. It becomes the exact version of the
+ * workspace package this build was made against, which is what `pnpm publish` would have written.
+ */
+async function resolveWorkspaceDependencies(dependencies) {
+  const resolved = {};
+  for (const [name, range] of Object.entries(dependencies ?? {})) {
+    if (!range.startsWith("workspace:")) {
+      resolved[name] = range;
+      continue;
+    }
+    const installed = JSON.parse(
+      await readFile(path.join(packageRoot, "node_modules", name, "package.json"), "utf8"),
+    );
+    resolved[name] = installed.version;
+  }
+  return resolved;
+}
+
 const distManifest = {
   name: sourceManifest.name,
   version: sourceManifest.version,
@@ -85,7 +117,7 @@ const distManifest = {
   files: ["**/*"],
   sideEffects: ["**/*.css"],
   peerDependencies: sourceManifest.peerDependencies,
-  dependencies: sourceManifest.dependencies,
+  dependencies: await resolveWorkspaceDependencies(sourceManifest.dependencies),
 };
 
 await copyFile(
@@ -122,13 +154,18 @@ await copyRuntimeFileAssets(
   path.join(packageRoot, "plugins"),
   path.join(distDirectory, "plugins"),
 );
+for (const [, sourceTarget] of plainJavaScriptExports) {
+  const target = sourceTarget.import ?? sourceTarget.default;
+  await mkdir(path.dirname(path.join(distDirectory, target)), { recursive: true });
+  await copyFile(path.join(packageRoot, target), path.join(distDirectory, target));
+}
 await writeFile(
   path.join(distDirectory, "package.json"),
   `${JSON.stringify(distManifest, null, 2)}\n`,
 );
 
 for (const [exportKey, target] of Object.entries(packageExports)) {
-  for (const condition of ["types", "import"]) {
+  for (const condition of ["types", "import"].filter((key) => target[key] != null)) {
     try {
       await access(path.resolve(distDirectory, target[condition]));
     } catch {

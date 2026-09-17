@@ -51,6 +51,12 @@ for (const legalFile of ["LICENSE", "NOTICE"]) {
   }
 }
 
+for (const [name, range] of Object.entries(distManifest.dependencies ?? {})) {
+  if (range.startsWith("workspace:")) {
+    throw new Error(`Built package dependency "${name}" still names the workspace: ${range}.`);
+  }
+}
+
 if (distManifest.dependencies?.["server-only"] == null) {
   throw new Error('Built package must declare "server-only" as a runtime dependency.');
 }
@@ -68,14 +74,16 @@ for (const [exportKey, target] of Object.entries(distManifest.exports)) {
     throw new Error(`ESM package export "${exportKey}" must not declare a require target.`);
   }
 
-  for (const condition of ["types", "import", "default"]) {
+  // A plain JavaScript export ships as written and declares no types (prepare-package-dist.mjs).
+  const plainJavaScript = typeof target.import === "string" && target.import.endsWith(".mjs");
+  for (const condition of plainJavaScript ? ["import", "default"] : ["types", "import", "default"]) {
     const relativeTarget = target[condition];
     if (
       typeof relativeTarget !== "string" ||
       !relativeTarget.startsWith("./") ||
       (condition === "types"
         ? !relativeTarget.endsWith(".d.ts")
-        : !relativeTarget.endsWith(".js"))
+        : !relativeTarget.endsWith(plainJavaScript ? ".mjs" : ".js"))
     ) {
       throw new Error(
         `Invalid ${condition} target for package export "${exportKey}": ` +
