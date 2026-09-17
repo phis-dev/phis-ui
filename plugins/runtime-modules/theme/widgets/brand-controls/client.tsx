@@ -79,7 +79,7 @@ import {
 } from "../../../../../components/widgets/config/color-picker-presets";
 import { PHI_SPACING_TOKEN_KEYS } from "../../../../../components/widgets/config/spacing-options";
 import { PhiColorWidget } from "../../../../../components/widgets/client/phi-color-widget";
-import { PhiBrandControl } from "../../../../../components/controls/phi-brand-control";
+import { PhiBrandControl, resolvePhiBrandLogoUrl } from "../../../../../components/controls/phi-brand-control";
 import { PhiBackgroundControl, type PhiBackgroundControlProps } from "../../../../../components/controls/phi-background-control";
 import {
   PHI_ROOT_BACKGROUND_IMAGE_SOURCE_KINDS,
@@ -2890,6 +2890,7 @@ export function PhiBuilderBrandIdentityControlsWidgetClient({
   const logos = resolvePhiThemeEffectiveLogo(brand.logo, logoSet);
   const otherMode = mode === "dark" ? "light" : "dark";
   const logo = logos[mode] ?? null;
+  const logoPreviewUrl = resolvePhiBrandLogoUrl({ logo: logos }, mode);
   const wordmarkParts: readonly PhiSiteThemeWordmarkPart[] = brand.wordmark?.parts ?? [];
   /*
    * A Site with no Wordmark yet still gets a field to type it into.
@@ -2944,11 +2945,42 @@ export function PhiBuilderBrandIdentityControlsWidgetClient({
               children: (
                 <Flex vertical gap={clientToken.paddingXS}>
                   <Flex align="center" justify="space-between" gap={clientToken.paddingXS}>
-                    <Typography.Text type="secondary">
-                      {mode === "dark" ? "Dark mode" : "Light mode"}. A picture from this Site&apos;s own
-                      Media library. What it says to somebody who cannot see it falls back to the
-                      asset&apos;s own alt text.
-                    </Typography.Text>
+                    {/*
+                      The Logo of the mode being authored, on a ground of that mode: a dark mode Logo
+                      is drawn for a dark ground and would not read on the panel's own.
+                    */}
+                    <Flex
+                      align="center"
+                      aria-label={`${mode === "dark" ? "Dark" : "Light"} mode Logo preview`}
+                      role="img"
+                      style={{
+                        flex: "1 1 auto",
+                        minWidth: 0,
+                        height: 48,
+                        paddingInline: clientToken.paddingSM,
+                        borderRadius: clientToken.borderRadius,
+                        border: `1px solid ${clientToken.colorBorderSecondary}`,
+                        background: mode === "dark" ? "#141414" : "#ffffff",
+                      }}
+                    >
+                      {logoPreviewUrl ? (
+                        <span
+                          style={{
+                            display: "block",
+                            width: "100%",
+                            height: 32,
+                            backgroundImage: `url("${logoPreviewUrl}")`,
+                            backgroundSize: "contain",
+                            backgroundRepeat: "no-repeat",
+                            backgroundPosition: "left center",
+                          }}
+                        />
+                      ) : (
+                        <Typography.Text type="secondary" style={{ color: mode === "dark" ? "rgba(255, 255, 255, 0.45)" : undefined }}>
+                          No Logo
+                        </Typography.Text>
+                      )}
+                    </Flex>
                     <Flex align="center" gap={clientToken.paddingXXS} style={{ flexShrink: 0 }}>
                       <PhiBrandBlockResetButton
                         disabled={brand.logo?.[mode] == null}
@@ -2987,34 +3019,43 @@ export function PhiBuilderBrandIdentityControlsWidgetClient({
                     }))}
                     onAssetClear={() => publishDraft(mergeThemeBrandLogo(state.draft, mode, { sourceKind: "none" }))}
                   />
-                  {logo?.sourceKind === "url" ? (
-                    <Typography.Text type="secondary">
-                      The {logoSet.title} Logo, carried inline until the Theme is saved; saving takes it into
-                      the Media library.
-                    </Typography.Text>
-                  ) : null}
-                  <PhiTextControl
-                    value={brand.logoAlt ?? ""}
-                    placeholder="Alt text"
-                    ariaLabel="Logo alt text"
-                    allowClear={false}
-                    onChange={(next) => publishDraft(mergeThemeBrand(state.draft, {
-                      logoAlt: next ?? "",
-                    }))}
-                  />
-                  {/*
-                    Where the Brand leads, picked from the Pages that exist rather than typed.
-                    A Cascader has no empty value -- its empty is spelled `/` -- which is exactly the
-                    default here, so an author who never touches it has already said the right thing.
-                  */}
-                  <PhiCascaderControl
-                    value={brand.homeHref ?? "/"}
-                    options={homePathOptions}
-                    placeholder="Where the Brand leads"
-                    onChange={(next) => publishDraft(mergeThemeBrand(state.draft, {
-                      homeHref: next === "/" ? null : next,
-                    }))}
-                  />
+                  {/* One labelled row each, the labels in one column the way the Wordmark rows are. */}
+                  <Flex
+                    vertical
+                    gap={clientToken.paddingXS}
+                    style={{
+                      "--phi-labeled-control-label-width": "33.333333%",
+                      "--phi-labeled-control-width": "100%",
+                    } as CSSProperties}
+                  >
+                    {/* What the Logo says to somebody who cannot see it; the asset's own alt text where empty. */}
+                    <PhiLabeledControl label="Alt" fill>
+                      <PhiTextControl
+                        value={brand.logoAlt ?? ""}
+                        placeholder="Alt text"
+                        ariaLabel="Logo alt text"
+                        allowClear={false}
+                        onChange={(next) => publishDraft(mergeThemeBrand(state.draft, {
+                          logoAlt: next ?? "",
+                        }))}
+                      />
+                    </PhiLabeledControl>
+                    {/*
+                      Where the Brand leads, picked from the Pages that exist rather than typed.
+                      A Cascader has no empty value -- its empty is spelled `/` -- which is exactly the
+                      default here, so an author who never touches it has already said the right thing.
+                    */}
+                    <PhiLabeledControl label="Forward" fill>
+                      <PhiCascaderControl
+                        value={brand.homeHref ?? "/"}
+                        options={homePathOptions}
+                        placeholder="Where the Brand leads"
+                        onChange={(next) => publishDraft(mergeThemeBrand(state.draft, {
+                          homeHref: next === "/" ? null : next,
+                        }))}
+                      />
+                    </PhiLabeledControl>
+                  </Flex>
                 </Flex>
               ),
             },

@@ -9,8 +9,9 @@ import { LETTERS, SLASH } from "./phis-wordmark.mjs";
  *
  * The wordmark "phi/s" in two tones, the drawing in scripts/phis-wordmark.mjs sheared by 14 degrees:
  * the letters in the text base of the mode, the slash in the brand orange. The frame is the drawing's
- * own bounds with half a stroke to spare on every side, so round caps are never clipped and the picture
- * sits flush wherever it is placed.
+ * own bounds, round caps included, measured on the sheared strokes with a unit to spare: the shear moves
+ * the top of the s far past where the letters stand upright, and a frame taken from the upright drawing
+ * cut it off. So the picture sits flush wherever it is placed, with nothing clipped and nothing empty.
  *
  * Run with `node scripts/generate-theme-brand-logo.mjs` after changing the drawing or the colours.
  */
@@ -23,7 +24,7 @@ function stroke(d, color) {
 }
 
 function logo(ink) {
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="-36 -436 1040.909697228254 592" width="1041" height="592"><g transform="translate(107.7 0) skewX(-14)">${stroke(LETTERS, ink)}${stroke(SLASH, ACCENT)}</g></svg>`;
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="44 -433 1007 586" width="1007" height="586"><g transform="translate(107.7 0) skewX(-14)">${stroke(LETTERS, ink)}${stroke(SLASH, ACCENT)}</g></svg>`;
 }
 
 const light = logo("#223A61");
