@@ -24,6 +24,13 @@ export const PHI_CORE_RUNTIME_CONTROLLER_DEFINITION = {
         valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.pageMeta,
       },
       { id: "pageTitle", action: "change", valueType: "string" },
+      /*
+       * The mode the Site is shown in, whenever it changes: after the page wakes up in the mode the
+       * browser prefers, when that preference changes, and when something switches it. `true` is dark,
+       * the way the `themeMode` input reads it. A Control that offers the switch listens for it, so it
+       * shows the mode on screen rather than the one the server rendered it in.
+       */
+      { id: "themeMode", action: "change", valueType: "boolean" },
       { id: "pageDescription", action: "change", valueType: "string" },
       { id: "pageDescriptionClear", action: "clear", valueType: "none" },
       { id: "openGraphImage", action: "change", valueType: "image" },

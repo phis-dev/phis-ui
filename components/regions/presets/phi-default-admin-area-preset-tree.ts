@@ -7,6 +7,7 @@ import {
 } from "../../../constants/cms-layout-types";
 import { PhiCmsRegionType, PhiCmsStatus } from "../../../constants/phi-cms";
 import { createPhiCmsPresetNodes } from "../../../helpers/cms-preset-nodes";
+import { createPhiSignalAddress } from "../../../types/signals";
 import { resolvePhiShellHeaderHeight, resolvePhiShellMetric } from "../../../helpers/shell-region-style";
 import type { PhiResolvedCmsPageTree, PhiCmsPageNode } from "../../../types/cms";
 import type { PhiBlockRuntime } from "../../../types";
@@ -219,6 +220,17 @@ export async function buildPhiDefaultAdminAreaPresetTree({
                 action: "change",
                 valueType: "boolean",
                 receiver: createPhiCoreRuntimeControllerAddress(),
+              },
+            ],
+            listens: [
+              {
+                routeKey: "admin-header-theme-mode-follow",
+                capabilityId: "themeMode",
+                scope: "page",
+                channel: "themeMode",
+                action: "change",
+                valueType: "boolean",
+                receiver: createPhiSignalAddress("cms", SYNTHETIC_ADMIN_WIDGET_IDS.widgetHeaderTopThemeModeSwitch),
               },
             ],
           },

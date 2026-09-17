@@ -45,6 +45,14 @@ export const PHI_SWITCH_WIDGET_DEFINITION = {
   slotSizePolicy: "intrinsic",
   runtimeSignals: {
     ...PHI_BOOLEAN_CONTROL_SIGNALS,
+    listens: [
+      ...PHI_BOOLEAN_CONTROL_SIGNALS.listens,
+      /*
+       * The mode the Site is shown in, as the Core Runtime Controller tells it: a switch that offers
+       * light and dark follows the mode on screen instead of keeping the one it was rendered with.
+       */
+      { id: "themeMode", channel: "themeMode", action: "change", valueType: "boolean" },
+    ],
   },
   fields: [
     { key: "label", type: "string", label: "Label" },

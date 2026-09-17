@@ -701,6 +701,17 @@ export async function buildPhiDefaultBuilderAreaPresetTree({
                 receiver: createPhiCoreRuntimeControllerAddress(),
               },
             ],
+            listens: [
+              {
+                routeKey: "builder-header-theme-mode-follow",
+                capabilityId: "themeMode",
+                scope: "page",
+                channel: "themeMode",
+                action: "change",
+                valueType: "boolean",
+                receiver: createPhiSignalAddress("cms", SYNTHETIC_DEV_WIDGET_IDS.widgetHeaderTopThemeModeSwitch),
+              },
+            ],
           },
         },
       }),

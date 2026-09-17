@@ -23,6 +23,7 @@ import { PhiRuntimeControllerServerHost } from "../runtime/runtime-controller-se
 import { PhiRuntimeModuleProvider } from "../runtime/runtime-module-context";
 import { PhiRuntimeModuleDataProviderHost } from "../runtime/runtime-module-data-provider-host";
 import { PhiSignalRuntimePartitionProvider } from "../runtime/runtime-signal-partition";
+import { PhiCoreRuntimeThemeModeRelay } from "../runtime/core-runtime-theme-mode-relay";
 import { canPhiViewerAccess } from "../../types/access";
 import { resolvePhiCmsDescriptorCatalog } from "../../plugins/runtime-modules/descriptor-compiler";
 
@@ -220,6 +221,7 @@ export async function PhiCmsAreaBoundary({
       kind="area"
       context={{ siteKey: runtime.site.key, area: runtime.area }}
     >
+      <PhiCoreRuntimeThemeModeRelay />
       <PhiRuntimeModuleProvider
         moduleIds={[...runtimeModuleScope.moduleSet.activeModuleIds]}
         widgetTypes={[...runtimeModuleScope.moduleSet.widgetDefinitionsByType.keys()]}

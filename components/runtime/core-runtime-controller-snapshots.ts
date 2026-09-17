@@ -18,3 +18,23 @@ export function emitPhiCoreRuntimePageSnapshot(input: {
     receiver: "broadcast",
   });
 }
+
+/**
+ * The mode on screen, told to everyone. A broadcast rather than a route, like the page snapshot: the
+ * Controller does not know which Controls show the mode, and each of them says it listens.
+ */
+export function emitPhiCoreRuntimeThemeMode(input: {
+  emitSignal: PhiSignalDispatch;
+  mode: "light" | "dark";
+}) {
+  input.emitSignal({
+    // Page scope, like the page snapshot: the Site scope admits nothing addressed to everyone.
+    scope: "page",
+    channel: "themeMode",
+    action: "change",
+    value: input.mode === "dark",
+    valueType: "boolean",
+    sender: createPhiCoreRuntimeControllerAddress(),
+    receiver: "broadcast",
+  });
+}
