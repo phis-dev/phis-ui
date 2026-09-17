@@ -1,5 +1,4 @@
 import { getResolvedSiteConfig } from "../../../../../gateway/site-config";
-import { localizeAreaPath } from "../../../../../helpers/locale";
 import { phiRuntime } from "../../../../../server-helpers/phi-runtime";
 import { getPhiCmsPage } from "../../../../../server-helpers/cms";
 import type { PhiBlockRuntime } from "../../../../../types";
@@ -39,20 +38,32 @@ export type PhiAccountWidgetProps = Pick<
   runtime: Pick<PhiBlockRuntime, "site" | "locale" | "viewer" | "area" | "authUiProvider">;
 };
 
+/*
+ * Where the Profile Page is, asked of whoever owns it.
+ *
+ * Core has no Profile Page of its own; the active Auth provider contributes one and says so in its
+ * projection, already at the address it is served at. Naming `/app/profile` here guessed both the Area
+ * and the Module's package, and guessed the package wrong -- the Page answers at `/app/phis/ui/profile`,
+ * so the lookup never found it and the entry never appeared.
+ *
+ * The lookup stays: a Site may have tombstoned the Page, and a menu entry to a Page that is not routed
+ * is worse than no entry. Lookup and link use the one address, so they cannot drift apart again.
+ */
 async function resolveProfileHref(runtime: PhiAccountWidgetProps["runtime"]) {
-  if (runtime.viewer.access !== "authenticated") {
+  const profilePath = runtime.authUiProvider?.accountProfilePath;
+  if (runtime.viewer.access !== "authenticated" || !profilePath) {
     return undefined;
   }
 
   const page = await getPhiCmsPage({
-    path: "/app/profile",
+    path: profilePath,
     apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
     internalToken: readPhiServerApiCredentials().internalToken,
     siteKey: runtime.site.key,
     locale: runtime.locale.current,
   }).catch(() => null);
 
-  return page ? localizeAreaPath(runtime.locale.current, "app", "/profile") : undefined;
+  return page ? profilePath : undefined;
 }
 
 export async function PhiAccountWidget({
@@ -111,29 +122,22 @@ export async function PhiAccountWidget({
   const labels: PhiAccountWidgetLabels = {
     menu: accountLabels,
   };
+  /*
+   * The security entry needs both halves of the provider's answer: the capability says this Area's
+   * provider can render the surface at all, the path says where it put it. The path arrives ready to
+   * link -- Area and package already in front -- so nothing is added to it here.
+   */
+  const accountSecurityHref = runtime.authUiProvider?.capabilities.includes("account-security")
+    ? runtime.authUiProvider.accountSecurityPath
+    : undefined;
   const resolvedState: PhiAccountWidgetState =
-    state.kind === "authenticated" && !state.profileHref
+    state.kind === "authenticated"
       ? {
           ...state,
-          profileHref,
-          settingsHref: state.settingsHref ?? (
-            runtime.authUiProvider?.capabilities.includes("account-security") &&
-            runtime.authUiProvider.accountSecurityPath
-              ? localizeAreaPath(runtime.locale.current, "app", runtime.authUiProvider.accountSecurityPath)
-              : undefined
-          ),
+          profileHref: state.profileHref ?? profileHref,
+          settingsHref: state.settingsHref ?? accountSecurityHref,
         }
-      : state.kind === "authenticated"
-        ? {
-            ...state,
-            settingsHref: state.settingsHref ?? (
-              runtime.authUiProvider?.capabilities.includes("account-security") &&
-              runtime.authUiProvider.accountSecurityPath
-                ? localizeAreaPath(runtime.locale.current, "app", runtime.authUiProvider.accountSecurityPath)
-                : undefined
-            ),
-          }
-        : state;
+      : state;
 
   return (
     <PhiRuntimeModuleRenderClientHost

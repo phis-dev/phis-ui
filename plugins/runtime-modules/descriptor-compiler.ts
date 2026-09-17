@@ -60,7 +60,7 @@ import {
   mergePhiCmsShellTrees,
   omitPhiCmsShellCompositionNodes,
 } from "./shell-tree-composition";
-import { buildPhiRuntimeModulePackageRoutePrefix } from "../../helpers/runtime-module-route-path";
+import { resolvePhiRuntimeModuleAreaRoutePath } from "../../helpers/runtime-module-route-path";
 import {
   choosePhiAreaRootApplicant,
   isPhiAssignablePublicRoutePath,
@@ -109,7 +109,7 @@ export function buildPhiCmsPresetIdentityKey(
   return `${ownerModuleId}\u001f${presetKey}`;
 }
 
-export function normalizePhiCmsRoutePath(value: string) {
+export function normalizePhiCmsRoutePath(value: string): `/${string}` {
   const trimmed = value.trim();
   if (!trimmed || trimmed === "/") {
     return "/";
@@ -128,6 +128,10 @@ export function normalizePhiCmsRoutePath(value: string) {
  *
  * `/` is the exception in either case. It is an application for the Area root slot rather than a route of
  * the Module's own, so it keeps the address it asks for.
+ *
+ * The rule itself is `resolvePhiRuntimeModuleAreaRoutePath`, shared with everything that links to a
+ * Module route rather than serves one; what this function adds is the Area mount check and the
+ * insistence that a declared path arrives normalized.
  */
 function resolvePhiCmsNamespacedRouteDescriptor(
   descriptor: PhiCmsRoutePresetDescriptor,
@@ -156,7 +160,7 @@ function resolvePhiCmsNamespacedRouteDescriptor(
   }
   return {
     ...descriptor,
-    path: `${buildPhiRuntimeModulePackageRoutePrefix(descriptor.ownerModuleId)}${path}`,
+    path: resolvePhiRuntimeModuleAreaRoutePath(descriptor.ownerModuleId, descriptor.area, path),
   };
 }
 

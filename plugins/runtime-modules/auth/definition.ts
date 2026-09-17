@@ -37,6 +37,7 @@ export const PHI_AUTH_RUNTIME_MODULE_DEFINITION = {
       app: ["primary-login", "account-security"],
     },
     accountSecurityPath: "/security",
+    accountProfilePath: "/profile",
   },
   formProviders: {
     fieldTypes: PHI_AUTH_FORM_FIELD_TYPE_PROVIDER_DESCRIPTORS,

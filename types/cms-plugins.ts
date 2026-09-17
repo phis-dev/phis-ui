@@ -730,7 +730,15 @@ export type PhiRuntimeModuleDefinition = {
       | "account-security"
       | "site-settings"
     )[]>>;
+    /**
+     * The App Pages the Account menu offers, as the Module writes them for itself.
+     *
+     * Module-relative, exactly like a route preset's `path`: the Module says `/security`, and the
+     * address the Page is served at -- `/app/phis/ui/security` -- is what the resolved projection
+     * carries. A consumer links to the projection and never to what is declared here.
+     */
     accountSecurityPath?: `/${string}`;
+    accountProfilePath?: `/${string}`;
   };
 } & PhiRuntimeModuleIconMetadata;
 

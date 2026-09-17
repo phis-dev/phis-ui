@@ -42,8 +42,14 @@ export const PHI_ACCOUNT_WIDGET_PLUGIN: PhiCmsServerWidgetPlugin<PhiAccountWidge
               }
           : {
               kind: "guest",
-              registerHref: localizeAreaPath(runtime.locale.current, runtime.area, "/register"),
-              forgotPasswordHref: localizeAreaPath(runtime.locale.current, runtime.area, "/reset-password"),
+              /*
+               * Registering and recovering a password happen before there is a session, so both Pages are
+               * Public's wherever the menu is drawn -- the same way the signed-in entries point into App.
+               * Built from the Area the Widget happens to render in, a menu in App offered `/app/register`,
+               * which is no route at all.
+               */
+              registerHref: localizeAreaPath(runtime.locale.current, "public", "/register"),
+              forgotPasswordHref: localizeAreaPath(runtime.locale.current, "public", "/reset-password"),
             }
       }
     />

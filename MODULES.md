@@ -559,6 +559,14 @@ the same preset.
 Outside Public a Module's route path is its package path -- `/acme/shop/...`, derived from the Module id
 -- and nothing can contest it: two packages never meet, and a package only ever collides with itself.
 
+A descriptor states the path relative to the Module, and the package prefix is put in front of it when
+the route table is compiled. Anything that *links* to a Module route rather than serving one has to apply
+the same rule, `resolvePhiRuntimeModuleAreaRoutePath`; a descriptor that offers an address to a consumer
+resolves it before handing it over, so no consumer is left to reconstruct it. The Account menu once got
+this wrong in the one place it is easy to: the Auth provider handed out `/security` unchanged, the Widget
+put only the Area in front, and the entry pointed at `/app/security` for a Page that answers at
+`/app/phis/ui/security`.
+
 In Public there is no such namespace, so the path a route descriptor declares is an application and not
 a title. The Site settles it when the Module is enabled, and whoever asks second bears the cost: the
 newcomer is offered another address and cannot be enabled without taking one, while the holder keeps what

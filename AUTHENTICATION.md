@@ -50,8 +50,15 @@ The first-party Auth Module contributes:
 - one meaningful Auth Controller type mounted once in each active eligible Area;
 - Auth-owned Form field/handler providers required by its flows;
 - one Admin Site Auth settings route and navigation contribution;
-- one App `/security` route (served at `/app/phis/ui/security`) with its `auth-security` Widget, and the
-  `accountSecurityPath` the Account Widget links to;
+- one App `/security` route (served at `/app/phis/ui/security`) with its `auth-security` Widget, and one
+  App `/profile` route (served at `/app/phis/ui/profile`);
+- the `accountSecurityPath` and `accountProfilePath` the Account Widget links to. A Module declares them
+  relative to itself, exactly as it declares a route's `path`, and the resolved Area projection carries
+  the address the Page is served at -- package and Area already in front. A consumer links to the
+  projection and never to the declared path: adding only the Area to `/security` addresses
+  `/app/security`, which is no route of any Module. The addresses are App's in every Area's projection,
+  because the Public shell's Account menu links into App rather than growing a second copy of the Pages;
+  which Area is being asked decides only which capabilities are on offer;
 - an App-area in-place reauthentication presentation for a document that was rendered under a complete
   session and subsequently receives Core's expired/invalid-session result.
 

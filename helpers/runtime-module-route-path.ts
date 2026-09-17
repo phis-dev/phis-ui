@@ -38,5 +38,29 @@ export function readPhiRuntimeModulePackageRouteParts(moduleId: PhiRuntimeModule
 }
 
 export function buildPhiRuntimeModulePackageRoutePrefix(moduleId: PhiRuntimeModuleId) {
-  return `/${readPhiRuntimeModulePackageRouteParts(moduleId).join("/")}`;
+  return `/${readPhiRuntimeModulePackageRouteParts(moduleId).join("/")}` as `/${string}`;
+}
+
+/**
+ * The address one of a Module's own routes answers on, inside an Area.
+ *
+ * The rule the route table applies, written once so that everything which *links* to a Module route
+ * applies the same one. A Module declares a route relative to itself -- `/security` -- and the address
+ * it is served at is that path under the Module's package in every Area but Public, which is the Site's
+ * own address space and hands the path straight through. `/` is nobody's route, it is an application for
+ * the Area root slot, so it keeps its address either way.
+ *
+ * A link built from the declared path alone points at an address no Area serves. That is how the Account
+ * Widget came to offer `/app/security` for a page that lives at `/app/phis/ui/security`.
+ */
+export function resolvePhiRuntimeModuleAreaRoutePath(
+  moduleId: PhiRuntimeModuleId,
+  area: string,
+  path: `/${string}`,
+): `/${string}` {
+  if (area === "public" || path === "/") {
+    return path;
+  }
+
+  return `${buildPhiRuntimeModulePackageRoutePrefix(moduleId)}${path}`;
 }
