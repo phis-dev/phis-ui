@@ -1,0 +1,60 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: read
+  # Mints the OIDC token that npm trades for a short-lived publish credential.
+  id-token: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    # Holds the job until a reviewer releases it, and narrows which runs npm will
+    # accept an OIDC token from. The name must match the trusted publisher on npmjs.com.
+    environment: npm-publish
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+
+      # Trusted publishing needs npm 11.5.1 or newer; the npm bundled with Node trails it.
+      - name: Use an npm that can publish without a token
+        run: npm install -g npm@latest
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11
+
+      - name: Refuse a tag that disagrees with package.json
+        run: |
+          tag="${GITHUB_REF_NAME#v}"
+          pkg="$(node -p "require('./package.json').version")"
+          if [ "$tag" != "$pkg" ]; then
+            echo "Tag $GITHUB_REF_NAME carries $tag, package.json says $pkg" >&2
+            exit 1
+          fi
+
+      # The repository is a member of a larger workspace and carries no lockfile or workspace file of its
+      # own, so a release writes the two settings it needs from that workspace: the dependencies whose
+      # build scripts may run, and the @phis siblings exempt from the minimum release age -- one may have
+      # been released minutes ago.
+      - name: Install as a package of its own
+        run: |
+          printf 'allowBuilds:\n  esbuild: true\n  unrs-resolver: true\nminimumReleaseAgeExclude:\n  - "@phis/*"\n' > pnpm-workspace.yaml
+          pnpm install --no-frozen-lockfile
+
+      - run: pnpm typecheck
+
+      # Whitespace, ESLint, the runtime module contracts, the Ant Design doctor and the distribution
+      # build with its validation: the package is published from what this step built.
+      - run: pnpm verify all
+
+      - name: Publish
+        working-directory: dist
+        run: npm publish

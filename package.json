@@ -611,7 +611,7 @@
     "@lexical/rich-text": "0.50.0",
     "@lexical/selection": "0.50.0",
     "@lexical/utils": "0.50.0",
-    "@phis/contracts": "workspace:*",
+    "@phis/contracts": "^0.3.1",
     "dayjs": "^1.11.23",
     "dom-serializer": "^2.0.0",
     "htmlparser2": "^10.1.0",
