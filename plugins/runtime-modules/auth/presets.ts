@@ -7,7 +7,7 @@ import { PhiCmsFlags } from "../../../constants/phi-cms";
 import { PHI_BASE_PAGE_LAYOUT_VERSION } from "../../../components/regions/presets/phi-base-page-layout";
 import { PHI_AUTH_LOGIN_OVERLAY_IDS } from "../../../components/runtime/auth-overlay-ids";
 import { PHI_VIEWER_ACCESS_SITE_ADMIN } from "../../../types/access";
-import { PHI_ADMIN_SETTINGS_NAV_ITEM_KEY } from "../area-definitions";
+import { PHI_ADMIN_SETTINGS_NAV_ITEM_KEY, PHI_APP_SETTINGS_NAV_ITEM_KEY } from "../area-definitions";
 import { PHI_AUTH_RUNTIME_MODULE_ID } from "./ids";
 
 /**
@@ -112,25 +112,33 @@ export const PHI_AUTH_RUNTIME_MODULE_ROUTES = [
    * of the index wherever the request lands, so a default here would restate a decision that is
    * already made and would read as though it could be switched off.
    */
-  {
-    ownerModuleId: PHI_AUTH_RUNTIME_MODULE_ID,
-    presetKey: "app-profile-page",
-    presetVersion: 1 + PHI_BASE_PAGE_LAYOUT_VERSION,
-    area: "app",
-    title: "Profile",
-    path: "/profile",
-    navigation: [],
-    loadTree: ({ page, runtime }) => import("../../../components/regions/presets/phi-default-app-profile-page-tree")
-      .then((module) => module.buildPhiDefaultAppProfilePageTree({ page, runtime })),
-  },
+  /*
+   * Everything about the credentials themselves, in the App Settings container.
+   *
+   * It is configuration of an account like the profile beside it, so it hangs from the same mount --
+   * the first time a Module other than the Area's own uses App's. What keeps it here rather than
+   * there is the subject: a password, a second factor, a linked identity and a session are how a
+   * person proves who they are, and that is this Module's whether the Site signs people in with
+   * passwords, a directory, or something not written yet.
+   */
   {
     ownerModuleId: PHI_AUTH_RUNTIME_MODULE_ID,
     presetKey: "app-auth-security-page",
     presetVersion: 1,
     area: "app",
     title: "Security",
-    path: "/security",
-    navigation: [],
+    path: "/settings/security",
+    mount: { mountKey: "settings" },
+    navigation: [{
+      navKey: "app:sidebar",
+      parentItemKey: PHI_APP_SETTINGS_NAV_ITEM_KEY,
+      item: {
+        itemKey: "@phis/ui/modules/auth/nav/app/security",
+        label: { defaultMessage: "Security" },
+        icon: "antd:safety-certificate",
+        routePresetKey: "app-auth-security-page",
+      },
+    }],
     loadTree: ({ page }) => import("../../../components/regions/presets/phi-auth-runtime-page-tree")
       .then((module) => module.buildPhiAuthRuntimePageTree({
         page,

@@ -49,8 +49,8 @@ describe("the Account menu's own addresses", () => {
     );
     const table = appRouteTable(entries);
 
-    expect(projection?.accountSecurityPath).toBe("/app/phis/ui/security");
-    expect(projection?.accountProfilePath).toBe("/app/phis/ui/profile");
+    expect(projection?.accountSecurityPath).toBe("/app/phis/ui/settings/security");
+    expect(projection?.accountProfilePath).toBe("/app/phis/ui/settings/profile");
 
     expect(
       resolvePhiCmsRoutePreset(table, areaLocalPath(projection!.accountSecurityPath!))?.descriptor.presetKey,
@@ -70,10 +70,10 @@ describe("the Account menu's own addresses", () => {
     const table = appRouteTable(entries);
 
     // What the Module declares, with only the Area in front of it -- the address the menu used to build.
-    expect(resolvePhiCmsRoutePreset(table, "/security")).toBeNull();
-    expect(resolvePhiCmsRoutePreset(table, "/profile")).toBeNull();
-    expect(projection?.accountSecurityPath).not.toBe("/app/security");
-    expect(projection?.accountProfilePath).not.toBe("/app/profile");
+    expect(resolvePhiCmsRoutePreset(table, "/settings/security")).toBeNull();
+    expect(resolvePhiCmsRoutePreset(table, "/settings/profile")).toBeNull();
+    expect(projection?.accountSecurityPath).not.toBe("/app/settings/security");
+    expect(projection?.accountProfilePath).not.toBe("/app/settings/profile");
   });
 
   it("names the same App Pages from a Public Area's projection", () => {
@@ -86,7 +86,7 @@ describe("the Account menu's own addresses", () => {
       "public",
     );
 
-    expect(projection?.accountSecurityPath).toBe("/app/phis/ui/security");
-    expect(projection?.accountProfilePath).toBe("/app/phis/ui/profile");
+    expect(projection?.accountSecurityPath).toBe("/app/phis/ui/settings/security");
+    expect(projection?.accountProfilePath).toBe("/app/phis/ui/settings/profile");
   });
 });

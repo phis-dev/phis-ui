@@ -146,6 +146,30 @@ export const PHI_AREA_BASE_RUNTIME_MODULE_ROUTES = [
     area: "app",
     title: "App",
   }),
+  /*
+   * What a person has settled about their own account: their name, the language they read in.
+   *
+   * It sat with the Auth Module, which owned the route while Core owned every Widget on it. Nothing
+   * about a name or a language depends on how somebody signs in -- a Site that switches to a
+   * directory, or switches Auth off while sessions keep working, would have lost the Page that says
+   * what they are called. AUTHENTICATION.md section 5 already said so: profile administration does
+   * not become Auth's merely by appearing in its menu.
+   *
+   * The Area's own Settings child, so it is declared here rather than injected -- SETTINGS.md section
+   * 5, the same standing Admin and Builder give their General page.
+   */
+  {
+    ownerModuleId: PHI_APP_RUNTIME_MODULE_ID,
+    presetKey: "app-profile-page",
+    presetVersion: 1 + PHI_BASE_PAGE_LAYOUT_VERSION,
+    area: "app" as const,
+    title: "Profile",
+    path: "/settings/profile",
+    mount: { mountKey: "settings" },
+    loadTree: ({ page, runtime }: PhiCmsDescriptorBuildContext) =>
+      import("../../components/regions/presets/phi-default-app-profile-page-tree")
+        .then((module) => module.buildPhiDefaultAppProfilePageTree({ page, runtime })),
+  },
   ...([401, 403, 404, 500] as const).map((code) => ({
     ownerModuleId: PHI_PUBLIC_RUNTIME_MODULE_ID,
     presetKey: `public-error-${code}-page`,

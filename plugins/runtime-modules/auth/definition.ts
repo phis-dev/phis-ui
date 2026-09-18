@@ -36,8 +36,14 @@ export const PHI_AUTH_RUNTIME_MODULE_DEFINITION = {
       admin: ["site-settings"],
       app: ["primary-login", "account-security"],
     },
-    accountSecurityPath: "/security",
-    accountProfilePath: "/profile",
+    accountSecurityPath: "/settings/security",
+    /*
+     * The profile is no longer this Module's, and this line goes with the Account Widget's own entry
+     * for it: once the menu reads the `app:account` surface, the entry names its route preset like
+     * any other and nothing has to be told an address. Kept until then so the entry does not vanish
+     * for the length of one step; it resolves to the same Page either way, both being `@phis/ui`.
+     */
+    accountProfilePath: "/settings/profile",
   },
   formProviders: {
     fieldTypes: PHI_AUTH_FORM_FIELD_TYPE_PROVIDER_DESCRIPTORS,

@@ -109,6 +109,14 @@ export const PHI_APP_RUNTIME_AREA_DEFINITIONS = [
           itemKey: PHI_APP_SETTINGS_NAV_ITEM_KEY,
           label: label("Settings"),
           icon: "antd:setting",
+          // The Area's own child stands first and is stated here; every other Module reaches the
+          // container through the mount and is ordered after it (SETTINGS.md section 3).
+          children: [{
+            itemKey: "@phis/ui/modules/app/nav/settings/profile",
+            label: label("Profile"),
+            icon: "antd:user",
+            routePresetKey: "app-profile-page",
+          }],
         }],
         exportedItemKeys: [PHI_APP_SETTINGS_NAV_ITEM_KEY],
       },

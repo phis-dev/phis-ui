@@ -1,6 +1,6 @@
 import { PhiCmsPageType, PhiCmsStatus } from "../../../constants/phi-cms";
 import { createPhiCmsPresetNodes } from "../../../helpers/cms-preset-nodes";
-import { PHI_AUTH_RUNTIME_MODULE_ID } from "../../../plugins/runtime-modules/auth/ids";
+import { PHI_APP_RUNTIME_MODULE_ID } from "../../../plugins/runtime-modules/app/ids";
 import type { PhiBlockRuntime } from "../../../types";
 import type { PhiCmsPageNode, PhiResolvedCmsPageTree } from "../../../types/cms";
 import { createPhiPresetCmsInstanceIdMap } from "../../../types/cms-instance-id";
@@ -12,7 +12,7 @@ const REGION_CONTENT_ID = -286;
 
 export async function buildPhiDefaultAppProfilePageTree({ page, runtime }: { page: PhiCmsPageNode; runtime: PhiBlockRuntime }): Promise<PhiResolvedCmsPageTree> {
   const labels = await getPhiProfilePageLabels({ apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl, internalToken: readPhiServerApiCredentials().internalToken, locale: runtime.locale.current });
-  const widgets = createPhiPresetCmsInstanceIdMap({ domain: "page", ownerModuleId: PHI_AUTH_RUNTIME_MODULE_ID, presetKey: "app-profile-page" }, ["overview", "name", "locale", "email", "password"]);
+  const widgets = createPhiPresetCmsInstanceIdMap({ domain: "page", ownerModuleId: PHI_APP_RUNTIME_MODULE_ID, presetKey: "app-profile-page" }, ["overview", "name", "locale", "email", "password"]);
   const definitions = [
     [widgets.overview, "profile-overview", labels.overview],
     [widgets.name, "profile-name", labels.name],

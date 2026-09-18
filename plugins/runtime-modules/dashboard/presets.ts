@@ -4,6 +4,7 @@ import type {
   PhiCmsDescriptorBuildContext,
   PhiCmsRoutePresetDescriptor,
 } from "../../../types/cms-module-descriptors";
+import { PHI_APP_SETTINGS_NAV_ITEM_KEY } from "../area-definitions";
 import { PHI_DASHBOARD_RUNTIME_MODULE_ID } from "./ids";
 
 /**
@@ -16,7 +17,7 @@ import { PHI_DASHBOARD_RUNTIME_MODULE_ID } from "./ids";
 type PhiDashboardRouteTemplate = {
   area: PhiCmsAreaKey;
   navKey: `${PhiCmsAreaKey}:${string}`;
-  /** Absent where the Area declares no intrinsic entry to sit before, as the App does not. */
+  /** Absent only where an Area declares no intrinsic entry at all to sit before. */
   before?: string;
   eyebrow: string;
   description: string;
@@ -26,6 +27,15 @@ const GENERIC_DASHBOARDS = [
   {
     area: "app",
     navKey: "app:sidebar",
+    /*
+     * Before the Settings container, which is App's one intrinsic entry.
+     *
+     * Not a matter of taste: intrinsic entries come before every injected one, so without this the
+     * container would stand at the top and the Area root -- which forwards to the first entry a
+     * viewer can see -- would open the Settings instead of the Dashboard. Settings is where a person
+     * goes to change something, not where they arrive.
+     */
+    before: PHI_APP_SETTINGS_NAV_ITEM_KEY,
     eyebrow: "App",
     description: "Everything this site makes available to you once you are signed in.",
   },
