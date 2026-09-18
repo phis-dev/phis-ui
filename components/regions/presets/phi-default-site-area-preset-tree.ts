@@ -16,7 +16,6 @@ import { PHI_TR_CTX_WEB_UI_LABEL } from "../../../gateway/tr";
 import { PHI_PADDING } from "../../../theme/phi-tokens";
 import { buildPhiCmsWidgetTypeKey } from "../../../helpers/cms-node-factories";
 import { resolvePhiBrandContact } from "../../../helpers/brand-contact";
-import { resolvePhiBrandWordmarkText } from "../../../helpers/brand-wordmark";
 import { resolvePhiShellHeaderHeight, resolvePhiShellMetric } from "../../../helpers/shell-region-style";
 import { resolvePhiLayoutCreationPreset } from "../../../helpers/cms-layout-defaults";
 import { PHI_DEFAULT_PUB_AREA_PRESET } from "./pub";
@@ -82,24 +81,21 @@ export async function buildPhiDefaultSiteAreaPresetTree({
     (region) => region.key === "footer_bottom",
   );
   const includeHeaderTop = page.path === "/";
-  const brandWordmarkText = resolvePhiBrandWordmarkText(runtime);
-  const sloganLabel =
-    runtime.site.theme?.brand?.slogan?.label?.trim() ||
-    (await trGlobal("Trusted digital solutions", 0, PHI_TR_CTX_WEB_UI_LABEL));
-  const sloganIcon = runtime.site.theme?.brand?.slogan?.icon?.trim() || "antd:star";
-  const locationLabel = runtime.site.theme?.brand?.location?.label?.trim() || brandWordmarkText;
-  const locationIcon = runtime.site.theme?.brand?.location?.icon?.trim() || "antd:location";
   const {
     label: contactLabel,
     href: contactHref,
     icon: contactIcon,
   } = resolvePhiBrandContact(runtime);
   const defaultQuickLinksTitle = await trGlobal("Quick Links", 0, PHI_TR_CTX_WEB_UI_LABEL);
-  const footerBottomText = await trGlobal(
-    "© %1 %2. All rights reserved.",
-    [new Date().getUTCFullYear(), brandWordmarkText],
-    PHI_TR_CTX_WEB_UI_LABEL,
-  );
+  /*
+   * A template rather than a finished sentence, and left untranslated here.
+   *
+   * The Widget translates what it holds and fills the names in afterwards, which is the only order in
+   * which a Site adopting this Preset keeps a copyright line that is about itself: resolving them here
+   * wrote this Site's name and the year of the adoption into everybody's footer, where they stayed.
+   * `helpers/text-placeholders.ts` has the names it may use.
+   */
+  const footerBottomText = "© {year} {site.name}. All rights reserved.";
   const shellHeaderTopHeight = resolvePhiShellHeaderHeight(runtime.site.theme?.shell, "top");
   const shellHeaderTopOffsetTop = resolvePhiShellMetric(runtime.site.theme?.shell, "offsetTop", {
     family: "header",
@@ -481,11 +477,19 @@ export async function buildPhiDefaultSiteAreaPresetTree({
     contentWidgets: [
       ...(headerTopRegion && includeHeaderTop
         ? [
+            /*
+             * The Brand's own two lines, drawn by the Brand Widget rather than copied into a Text one.
+             *
+             * They say what the Site says about itself, so they are read from the Theme record when the
+             * page renders and are set where the rest of the Brand is set, in the Theme workspace. A
+             * Site that has stated neither shows neither: the strip keeps its shape, and an invented
+             * slogan in everybody's header was never this Preset's to write.
+             */
             {
               id: PHI_DEFAULT_PUB_AREA_WIDGET_IDS.widgetHeaderTopLeft,
               siteId: page.siteId,
               parentLayoutNodeId: PHI_DEFAULT_PUB_AREA_LAYOUT_IDS.layoutHeaderTop,
-              widgetType: buildPhiCmsWidgetTypeKey(resolvePhiCmsWidgetPluginKey("simple-text"), "simple-text"),
+              widgetType: buildPhiCmsWidgetTypeKey(resolvePhiCmsWidgetPluginKey("brand"), "brand"),
               slotIndex: PHI_CMS_THREE_COLUMN_LAYOUT_SLOT_INDEX.Left,
               sortOrder: 0,
               status: 1,
@@ -493,9 +497,8 @@ export async function buildPhiDefaultSiteAreaPresetTree({
               visibilityMask: page.visibilityMask,
               label: "pub header top left",
               config: {
-                text: sloganLabel,
-                icon: sloganIcon,
-                type: "secondary",
+                mode: "line",
+                line: "slogan",
               },
               contentId: null,
             },
@@ -503,7 +506,7 @@ export async function buildPhiDefaultSiteAreaPresetTree({
               id: PHI_DEFAULT_PUB_AREA_WIDGET_IDS.widgetHeaderTopMiddle,
               siteId: page.siteId,
               parentLayoutNodeId: PHI_DEFAULT_PUB_AREA_LAYOUT_IDS.layoutHeaderTop,
-              widgetType: buildPhiCmsWidgetTypeKey(resolvePhiCmsWidgetPluginKey("simple-text"), "simple-text"),
+              widgetType: buildPhiCmsWidgetTypeKey(resolvePhiCmsWidgetPluginKey("brand"), "brand"),
               slotIndex: PHI_CMS_THREE_COLUMN_LAYOUT_SLOT_INDEX.Middle,
               sortOrder: 10,
               status: 1,
@@ -511,8 +514,8 @@ export async function buildPhiDefaultSiteAreaPresetTree({
               visibilityMask: page.visibilityMask,
               label: "pub header top middle",
               config: {
-                text: locationLabel,
-                icon: locationIcon,
+                mode: "line",
+                line: "location",
               },
               contentId: null,
             },
@@ -547,9 +550,8 @@ export async function buildPhiDefaultSiteAreaPresetTree({
         flags: 0,
         visibilityMask: page.visibilityMask,
         label: "pub header main brand",
-        config: {
-          fallbackTitle: brandWordmarkText,
-        },
+        /* What it says is the Widget's to resolve: the Theme's Wordmark, else this Site's name. */
+        config: {},
         contentId: null,
       },
       {
@@ -618,7 +620,6 @@ export async function buildPhiDefaultSiteAreaPresetTree({
               visibilityMask: page.visibilityMask,
               label: "pub footer main left",
               config: {
-                fallbackTitle: brandWordmarkText,
                 showLogo: false,
               },
               contentId: null,
