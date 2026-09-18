@@ -21,6 +21,12 @@ The boundary between the two is intent:
 A Module may have both, either, or neither. A Module without configuration simply does not appear in the
 Settings container and loses nothing.
 
+Whose configuration it is follows from the Area. In a staff Area the subject is the Site: how a Module
+behaves for everyone who visits it. In the App Area the subject is the account of the person signed in --
+their name, the language they read in, what the Site sends them, how it is presented to them. Both are
+configuration in the sense above: both are decided once and stored, rather than held for the length of a
+visit. What differs is only whose record is written, and the container treats them the same.
+
 ## 2. Routing
 
 An Area that offers Module configuration declares exactly one Area-owned `settings` route mount. Modules
@@ -106,9 +112,15 @@ shell, and the same rules as every other Module — first-party and third-party 
 identically. The only distinction is position: the Area definition declares the General entry statically
 as the first child of the sidebar's Settings container.
 
-The Public Area has no Settings container. Viewer preferences (theme selection, cookie consent) are
-per-visitor presentation state owned by Widgets and Overlays with local persistence; they are not Site
-configuration and must not be modeled as Settings routes.
+The Public Area has no Settings container. A visitor who has not signed in has no record to write to, so
+what they prefer -- the theme they picked, the cookies they accepted -- stays in their browser, owned by
+Widgets and Overlays with local persistence, and must not be modeled as Settings routes.
+
+The line is drawn by where a value is kept, not by what it is about. The same theme choice, stored on the
+account of somebody signed in, is configuration like any other: it survives the visit, it survives the
+device, and it belongs in the App container with a Save of its own. A Widget may still offer the choice
+outside the container -- that is how a guest makes it at all -- and writes the account only when there is
+one to write.
 
 ## 6. Sections and the Form basis
 
