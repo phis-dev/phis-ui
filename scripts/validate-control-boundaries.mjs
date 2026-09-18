@@ -80,9 +80,10 @@ const coreApplicationAdapterPath = "components/runtime/core-runtime-application-
  *
  * This map is a denylist, so **every primitive not named here is permitted by omission** -- roughly
  * twenty are still imported somewhere in the tree, from `Upload` and `Progress` down to `List` and
- * `Spin`. `Flex` and `Typography`, the two that reached furthest, are done. That is where things stand rather than where they are meant to end: wrapping them
- * is planned work, because Ant Design is replaceable in principle and every direct import turns that
- * from a Control-adapter change into a tree-wide edit. When the Controls land, the primitives belong in
+ * `Spin`. `Flex` and `Typography`, the two that reached furthest, are done, and five more are closed
+ * by `soleOwnerPrimitives` below. That is where things stand rather than where they are meant to end:
+ * wrapping the rest is planned work, because Ant Design is replaceable in principle and every direct
+ * import turns that from a Control-adapter change into a tree-wide edit. When the Controls land, the primitives belong in
  * the map below and this check should end up refusing by default instead -- an allowlist of what may be
  * imported directly -- so the next primitive somebody reaches for is not permitted again by omission.
  * See TODOS.md, "Wrap the uncontrolled Ant Design primitives in Phi Controls".
@@ -130,6 +131,38 @@ const controlDirectory = "components/controls/";
  */
 const primitiveAdapterOwners = new Map([
   ["components/calendar/gregory-calendar-adapter-client.tsx", new Set(["Calendar", "DatePicker"])],
+]);
+
+/*
+ * Primitives that belong to exactly one file, with no Control standing in for them.
+ *
+ * The third answer to "how is a primitive closed", beside a Control and a deletion. For these the thing
+ * around the primitive is already the contract: the markdown table of contents *is* an `Anchor`, the
+ * image Widget's whole job is choosing between `next/image` and Ant Design's preview, and a Control
+ * could not take that decision without taking the Widget with it. Wrapping them would produce a file
+ * with one caller that adds nothing, which is the outcome TODOS.md calls "a contract without
+ * consumers".
+ *
+ * So the primitive is closed by naming where it lives rather than by writing a wrapper. That is worth
+ * as much as a Control for the reason the whole effort exists: swapping Ant Design out means visiting
+ * these files, and they are named here instead of being found by grep.
+ *
+ * Unlike `primitiveAdapterOwners` above, which exempts a file from a rule that applies elsewhere, this
+ * *is* the rule for these primitives -- and it is checked both ways: nobody else may import one, and an
+ * owner that stops importing it fails too, so a stale entry cannot sit here looking like a decision.
+ */
+const soleOwnerPrimitives = new Map([
+  ["Anchor", "plugins/runtime-modules/core/widgets/markdown-toc/client.tsx"],
+  ["Breadcrumb", "plugins/runtime-modules/core/widgets/breadcrumb/client.tsx"],
+  ["Image", "plugins/runtime-modules/core/widgets/image/client.tsx"],
+  ["Result", "components/widgets/shared/result-body-client.tsx"],
+  /*
+   * `Badge` is the odd one: its other site is `phi-button-control.tsx`, where the badge is part of the
+   * button's own contract. That file is under `components/controls/` and exempt by directory, so the
+   * one entry here is the calendar adapter -- which is also in `primitiveAdapterOwners`, because the
+   * badge it draws belongs to the Calendar primitive it owns.
+   */
+  ["Badge", "components/calendar/gregory-calendar-adapter-client.tsx"],
 ]);
 
 /*
@@ -390,12 +423,28 @@ for (const [primitive, control] of controlledPrimitives) {
 }
 
 const pendingStillNeeded = new Map();
+/** Owners seen importing what they own, so an entry that has gone stale can be told from a live one. */
+const soleOwnersSeen = new Set();
 for (const relativePath of await listRepositorySources()) {
   if (relativePath.startsWith(controlDirectory)) continue;
   const source = await readSource(relativePath);
+  const imported = new Set(readAntdValueImports(source));
+
+  for (const [primitive, owner] of soleOwnerPrimitives) {
+    if (!imported.has(primitive)) continue;
+    if (relativePath === owner) {
+      soleOwnersSeen.add(primitive);
+      continue;
+    }
+    failures.push(
+      `${relativePath} imports ${primitive} from Ant Design; it belongs to ${owner} and nowhere else. `
+        + "Reuse that surface, or make the case for a second owner in soleOwnerPrimitives.",
+    );
+  }
+
   const adapterOwned = primitiveAdapterOwners.get(relativePath) ?? new Set();
   const pending = pendingControlAdoptions.get(relativePath)?.primitives ?? new Set();
-  const direct = [...new Set(readAntdValueImports(source))]
+  const direct = [...imported]
     .filter((name) => controlledPrimitives.has(name) && !adapterOwned.has(name));
   for (const primitive of direct) {
     if (pending.has(primitive)) {
@@ -404,6 +453,14 @@ for (const relativePath of await listRepositorySources()) {
     }
     failures.push(
       `${relativePath} imports ${primitive} from Ant Design directly; use ${controlledPrimitives.get(primitive)}.`,
+    );
+  }
+}
+for (const [primitive, owner] of soleOwnerPrimitives) {
+  if (!soleOwnersSeen.has(primitive)) {
+    failures.push(
+      `${owner} no longer imports ${primitive}; remove it from soleOwnerPrimitives rather than leaving `
+        + "an owner named for a primitive nobody uses.",
     );
   }
 }
@@ -426,5 +483,6 @@ if (failures.length > 0) {
 console.log(
   `Control boundaries valid (${widgetControlRequirements.size} Widgets, ${directControlConsumers.length} direct consumers, `
     + `${controlledPrimitives.size} controlled primitives across the tree, `
+    + `${soleOwnerPrimitives.size} owned by a single file, `
     + `${[...pendingControlAdoptions.values()].reduce((count, entry) => count + entry.primitives.size, 0)} pending).`,
 );

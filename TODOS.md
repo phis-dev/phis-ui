@@ -57,13 +57,13 @@ built. Remove an entry when it is done.
     `Upload`, `Progress`, `Skeleton`, `Empty`, `Tooltip`, `Collapse`, `Descriptions`, `Card`, `Avatar`,
     and `Space.Compact` (which is a different thing from `Space`, see below).
   - **A thin pass-through**, where there is nothing to decide and the wrapper exists only so the import
-    points at us: `PhiTypographyControl` (~63 files), `Flex` (~60), `Divider`, `Spin`, `QRCode`,
-    `Statistic`.
-  - **An owner entry only** -- the Widget that already wraps the primitive *is* the contract, so no new
-    file is needed, just a `primitiveAdapterOwners`-style entry naming it: `Anchor` (markdown-toc),
-    `Breadcrumb`, `Image` (the image Widget chooses between `next/image` and antd's preview), `Result`,
-    and `Badge` (both uses are already adapter layers). **Five primitives off the list at no cost, and
-    the right first move after the two big pass-throughs.**
+    points at us: ~~`PhiTypographyControl` (~63 files), `Flex` (~60)~~ done; `Divider`, `Spin`,
+    `QRCode`, `Statistic` remain.
+  - ~~**An owner entry only** -- the Widget that already wraps the primitive *is* the contract, so no
+    new file is needed, just an entry naming it: `Anchor`, `Breadcrumb`, `Image`, `Result`, `Badge`.~~
+    Done, as `soleOwnerPrimitives` in the validator. It is checked both ways: nobody else may import
+    one, and an owner that stops importing it fails too, so a stale entry cannot sit there looking like
+    a decision.
   - **Deletion**, where the direct use should stop rather than be wrapped -- see the next entry.
 
   Specifics worth not rediscovering:
