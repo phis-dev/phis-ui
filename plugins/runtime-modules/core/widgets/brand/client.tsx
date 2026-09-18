@@ -6,14 +6,24 @@ import Link from "next/link";
 import type { PhiClientBlockBaseProps, PhiNoLabels } from "../../../../../types";
 import {
   PhiBrandControl,
+  PhiBrandLineControl,
   phiBrandControlIsEmpty,
 } from "../../../../../components/controls/phi-brand-control";
+import type { PhiBrandWidgetLine, PhiBrandWidgetMode } from "./config";
 import { usePhiConfig } from "../../../../../components/root/phi-config-provider";
 import { usePhiSiteBrand } from "../../../../../components/root/phi-root-live-theme-provider";
 
 export type PhiBrandWidgetConfig = {
+  mode?: PhiBrandWidgetMode;
+  line?: PhiBrandWidgetLine;
   showLogo?: boolean;
   logoYOffset?: number;
+};
+
+/** What a line shows in front of itself where the Brand names no icon for it. */
+const PHI_BRAND_LINE_FALLBACK_ICONS: Record<PhiBrandWidgetLine, string> = {
+  slogan: "antd:star",
+  location: "antd:location",
 };
 
 export type PhiBrandWidgetClientProps = PhiClientBlockBaseProps<
@@ -39,11 +49,28 @@ export function PhiBrandWidgetClient({
   interactive = true,
 }: PhiBrandWidgetClientProps) {
   const brand = usePhiSiteBrand();
-  const { mode } = usePhiConfig();
+  // The Theme's mode, not the Widget's: one picks the Logo's picture, the other what is drawn at all.
+  const { mode: themeMode } = usePhiConfig();
+
+  /*
+   * A line leads nowhere, deliberately. The Wordmark is the way home and is drawn as a link; a Site's
+   * slogan or the town it sits in is a statement, and wrapping it in an anchor to the front page would
+   * offer a destination nobody was looking for.
+   */
+  if (config?.mode === "line") {
+    const line = config.line ?? "slogan";
+    return (
+      <PhiBrandLineControl
+        line={line === "location" ? brand?.location : brand?.slogan}
+        fallbackIcon={PHI_BRAND_LINE_FALLBACK_ICONS[line]}
+      />
+    );
+  }
+
   const showLogo = config?.showLogo !== false;
   const presentation = {
     brand,
-    mode,
+    mode: themeMode,
     fallbackTitle,
     fallbackEyebrow,
     showLogo,

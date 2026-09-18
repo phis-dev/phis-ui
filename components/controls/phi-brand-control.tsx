@@ -6,9 +6,12 @@ import { Flex } from "antd";
 
 import { buildPhiMediaAssetContentDeliveryUrl } from "../../constants/media";
 
+import { PhiIcon } from "../shell/phi-icon";
+
 import type { PhiThemeMode } from "../../theme/phi-theme-presets";
 import type {
   PhiSiteThemeBrand,
+  PhiSiteThemeBrandLine,
   PhiSiteThemeWordmark,
   PhiSiteThemeWordmarkPart,
 } from "../../types/site-theme";
@@ -95,6 +98,37 @@ function renderWordmark(
         </span>
       ))}
     </span>
+  );
+}
+
+export type PhiBrandLineControlProps = {
+  line?: PhiSiteThemeBrandLine | null;
+  /** Drawn when the line names no icon of its own. */
+  fallbackIcon?: string;
+};
+
+/**
+ * One of the two lines a Brand carries: what it says, with its icon in front of it.
+ *
+ * A line is Brand, which is why it is drawn here beside the Wordmark rather than by whatever Widget
+ * happens to stand in that slot. A Simple Text used to hold a copy of the sentence, written in when
+ * the Preset was built; what it showed was therefore whatever the Brand said that day.
+ *
+ * Nothing set means nothing drawn. The frame keeps its shape without the line, and an empty line with
+ * an icon in front of it would say that something is missing rather than that nothing was asked for.
+ */
+export function PhiBrandLineControl({ line, fallbackIcon }: PhiBrandLineControlProps) {
+  const label = line?.label?.trim();
+  if (!label) {
+    return null;
+  }
+
+  const icon = line?.icon?.trim() || fallbackIcon;
+  return (
+    <Flex align="center" gap={8} wrap={false} style={{ color: "inherit", minWidth: 0 }}>
+      {icon ? <PhiIcon name={icon} size="inherit" /> : null}
+      <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{label}</span>
+    </Flex>
   );
 }
 

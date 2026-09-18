@@ -1,11 +1,14 @@
 import { PhiCmsWidgetType } from "../../../../../constants/cms-widget-types";
 import { PhiRuntimeModuleRenderClientHost } from "../../../../../components/runtime/runtime-module-render-client-manifest";
 import type { PhiBrandWidgetClientProps, PhiBrandWidgetConfig } from "./client";
+import type { PhiBrandWidgetLine, PhiBrandWidgetMode } from "./config";
 
 export type PhiBrandWidgetProps = Pick<
   PhiBrandWidgetClientProps,
   "fallbackTitle" | "fallbackEyebrow" | "interactive"
 > & {
+  mode?: PhiBrandWidgetMode;
+  line?: PhiBrandWidgetLine;
   showLogo?: boolean;
   logoYOffset?: number;
 };
@@ -18,10 +21,14 @@ export function PhiBrandWidget({
   fallbackTitle,
   fallbackEyebrow,
   interactive,
+  mode,
+  line,
   showLogo,
   logoYOffset,
 }: PhiBrandWidgetProps) {
   const config: PhiBrandWidgetConfig = {
+    mode,
+    line,
     showLogo,
     logoYOffset,
   };
