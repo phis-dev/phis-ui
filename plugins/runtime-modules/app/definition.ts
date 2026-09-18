@@ -6,6 +6,7 @@ import {
 } from "../../../components/runtime/area-base-controller-addresses";
 import { buildPhiRuntimeModuleControllerDescriptor } from "../contracts";
 import { definePhiAreaBaseRuntimeModuleDefinition } from "../area-base-definition";
+import { PHI_APP_FORM_HANDLER_PROVIDER_DESCRIPTORS } from "./forms";
 import { PHI_APP_RUNTIME_MODULE_ID } from "./ids";
 import {
   PHI_CORE_SERVER_BINDING,
@@ -21,4 +22,7 @@ export const PHI_APP_RUNTIME_MODULE_DEFINITION = definePhiAreaBaseRuntimeModuleD
   category: "foundation",
   icon: "antd:appstore",
   controllerMountPolicy: "area",
+  formProviders: {
+    handlers: PHI_APP_FORM_HANDLER_PROVIDER_DESCRIPTORS,
+  },
 });

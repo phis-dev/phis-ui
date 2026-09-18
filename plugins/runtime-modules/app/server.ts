@@ -4,6 +4,7 @@ import {
 } from "../area-base-presets";
 import { definePhiRuntimeModuleServerAreaContribution } from "../area-contributions";
 import { PHI_APP_RUNTIME_MODULE_DEFINITION } from "../app/definition";
+import { PHI_APP_RUNTIME_MODULE_FORMS } from "./forms";
 
 /**
  * The unselectable base module of its Area. Shells and routes come from the shared Area-base preset
@@ -15,6 +16,7 @@ export const PHI_APP_RUNTIME_MODULE_SERVER_AREA_CONTRIBUTION =
     catalogEntry: {
       definition: PHI_APP_RUNTIME_MODULE_DEFINITION,
       widgets: [],
+      forms: PHI_APP_RUNTIME_MODULE_FORMS,
       layouts: [],
 
       areaShells: PHI_AREA_BASE_RUNTIME_MODULE_AREA_SHELLS.filter(

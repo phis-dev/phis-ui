@@ -25,13 +25,12 @@ export type PhiSettingsPageShellWidgetSection = {
  * mode and wires a primary submit Button to it over the standard submit signal channel, so
  * every Settings form saves the same way without per-Module signal plumbing.
  */
-export type PhiSettingsPageShellFormSection = {
+type PhiSettingsPageShellFormSectionBase = {
   kind: "form";
   /** Preset-locally unique node key; the submit Button derives `<nodeKey>Submit`. */
   nodeKey: string;
   formId: string;
   label: string;
-  submitLabel: string;
   initialValues?: Record<string, unknown>;
   /**
    * Extra form Widget config keys (for example a `source` binding plus `openActionKey` for a
@@ -45,6 +44,23 @@ export type PhiSettingsPageShellFormSection = {
     };
   };
 };
+
+/**
+ * A panel saves in one of two ways, and which one is a question about its contents.
+ *
+ * Several fields are a thought somebody finishes before it is written down, so they are saved
+ * together with a Button. One switch is the whole thought: flipping it is the decision, and a Save
+ * beside it would only ask a second time.
+ *
+ * The switch is still an ordinary Form -- same descriptor, same handler Provider, same gateway. What
+ * differs is one route, which the shell states because only it knows the Form's address: the Form's
+ * own `stateChange` comes back to its `submit` channel, so a change submits. A Route decides the
+ * channel, the action and the value type it sends under, which is why no Widget needed a new ability
+ * for this.
+ */
+export type PhiSettingsPageShellFormSection =
+  | (PhiSettingsPageShellFormSectionBase & { submitLabel: string; submitOnChange?: never })
+  | (PhiSettingsPageShellFormSectionBase & { submitOnChange: true; submitLabel?: never });
 
 export type PhiSettingsPageShellSection =
   | PhiSettingsPageShellWidgetSection
@@ -105,7 +121,7 @@ export function buildPhiSettingsPageShellTree({
     ...panels.flatMap((panel) => [
       ...(panel.description !== undefined ? [`${panel.nodeKey}Description`] : []),
       ...panel.sections.flatMap((section) => section.kind === "form"
-        ? [section.nodeKey, `${section.nodeKey}Submit`]
+        ? (section.submitOnChange ? [section.nodeKey] : [section.nodeKey, `${section.nodeKey}Submit`])
         : [section.nodeKey]),
     ]),
   ]);
@@ -210,7 +226,18 @@ export function buildPhiSettingsPageShellTree({
                 source: null,
                 ...configOverrides,
                 signalRoutes: {
-                  emits: [...(extraSignalRoutes?.emits ?? [])],
+                  emits: [
+                    ...(section.submitOnChange ? [{
+                      routeKey: `${section.nodeKey}-change-submit`,
+                      capabilityId: "stateChange",
+                      scope: "page",
+                      channel: "submit",
+                      action: "activate",
+                      valueType: "none",
+                      receiver: formAddress,
+                    }] : []),
+                    ...(extraSignalRoutes?.emits ?? []),
+                  ],
                   listens: [
                     {
                       routeKey: `${section.nodeKey}-submit`,
@@ -226,7 +253,7 @@ export function buildPhiSettingsPageShellTree({
                 },
               },
             }),
-            buildPanelWidget({
+            ...(section.submitOnChange ? [] : [buildPanelWidget({
               id: widgets[`${section.nodeKey}Submit`]!,
               typeKey: "button",
               label: section.submitLabel,
@@ -248,7 +275,7 @@ export function buildPhiSettingsPageShellTree({
                   }],
                 },
               },
-            }),
+            })]),
           ];
         }),
       ];
