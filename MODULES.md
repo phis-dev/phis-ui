@@ -53,6 +53,7 @@ Terminology across the Site/server boundary is strict:
 | `@phis/ui/modules/observability` | optional | `admin` | Site-runtime log administration |
 | `@phis/ui/modules/revisions` | optional | `builder` | revision history, restore, deletion |
 | `@phis/ui/modules/theme` | optional | `builder` | Theme and brand editing ([THEME.md](./THEME.md)) |
+| `@phis/ui/modules/threads` | optional | `app` | conversations a person is in, and the one composer every Module writing into one reuses |
 | `@phis/ui/modules/user-management` | optional | `admin` | users, roles, invites |
 
 The source of this table is each Module's `ids.ts` and `definition.ts`; the Area base Modules come from

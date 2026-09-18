@@ -7,6 +7,7 @@ import { PHI_ASSET_RUNTIME_DATA_PROVIDER_DESCRIPTORS } from "../plugins/runtime-
 import { PHI_ASSET_RUNTIME_MODULE_DEFINITION } from "../plugins/runtime-modules/asset/definition";
 import { PHI_AVATAR_RUNTIME_MODULE_DEFINITION } from "../plugins/runtime-modules/avatar/definition";
 import { PHI_GROUPS_RUNTIME_MODULE_DEFINITION } from "../plugins/runtime-modules/groups/definition";
+import { PHI_THREADS_RUNTIME_MODULE_DEFINITION } from "../plugins/runtime-modules/threads/definition";
 import { PHI_FIRST_PARTY_RUNTIME_MODULE_CATALOG } from "../plugins/runtime-modules/catalog";
 import { PHI_PUBLIC_RUNTIME_MODULE_ID } from "../plugins/runtime-modules/public/ids";
 import { PHI_ASSET_RUNTIME_MODULE_ID } from "../plugins/runtime-modules/asset/ids";
@@ -1003,13 +1004,22 @@ await assert.rejects(
   const declaring = [...PHI_FIRST_PARTY_RUNTIME_MODULE_CATALOG.values()]
     .filter((entry) => Object.keys(entry.definition.mediaSpaces ?? {}).length > 0)
     .map((entry) => entry.definition.moduleId);
+  /*
+   * An inventory rather than a rule: a Module that starts declaring a Space kind turns Spaces on for
+   * every Site that activates it, so it should be a line somebody changed on purpose.
+   *
+   * Threads is here because its composer uploads an attachment into the writer's own User Space before
+   * the message names it. A composer offering a file on a Site with no User Spaces would be offering
+   * something the control plane is about to refuse.
+   */
   assert.deepEqual(
     declaring.slice().sort(),
     [
       PHI_AVATAR_RUNTIME_MODULE_DEFINITION.moduleId,
       PHI_GROUPS_RUNTIME_MODULE_DEFINITION.moduleId,
+      PHI_THREADS_RUNTIME_MODULE_DEFINITION.moduleId,
     ].slice().sort(),
-    "Groups and Avatar are the first-party Modules declaring a Space kind.",
+    "Groups, Avatar and Threads are the first-party Modules declaring a Space kind.",
   );
 }
 

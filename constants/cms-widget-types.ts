@@ -21,6 +21,7 @@ export const PHI_CMS_WIDGET_PLUGIN_KEYS = {
   "core": `${PHI_CMS_WIDGET_PLUGIN_KEY_BASE}/core/widgets`,
   "observability": `${PHI_CMS_WIDGET_PLUGIN_KEY_BASE}/observability/widgets`,
   "theme": `${PHI_CMS_WIDGET_PLUGIN_KEY_BASE}/theme/widgets`,
+  "threads": `${PHI_CMS_WIDGET_PLUGIN_KEY_BASE}/threads/widgets`,
 } as const;
 
 const PHI_CMS_WIDGET_MODULE_BY_TYPE_KEY: Readonly<Record<string, keyof typeof PHI_CMS_WIDGET_PLUGIN_KEYS>> = {
@@ -119,6 +120,7 @@ const PHI_CMS_WIDGET_MODULE_BY_TYPE_KEY: Readonly<Record<string, keyof typeof PH
   "tab-bar": "core",
   "table": "core",
   "test-block": "builder",
+  "thread-composer": "threads",
   "tree": "core",
 };
 
@@ -172,6 +174,7 @@ export const PhiCmsWidgetType = {
   MediaPicker: defineWidgetType(resolvePhiCmsWidgetPluginKey("media-picker"), "media-picker"),
   AccountAvatar: defineWidgetType(resolvePhiCmsWidgetPluginKey("account-avatar"), "account-avatar"),
   AccountAvatarPicker: defineWidgetType(resolvePhiCmsWidgetPluginKey("account-avatar-picker"), "account-avatar-picker"),
+  ThreadComposer: defineWidgetType(resolvePhiCmsWidgetPluginKey("thread-composer"), "thread-composer"),
   ProfileEmail: defineWidgetType(resolvePhiCmsWidgetPluginKey("profile-email"), "profile-email"),
   ProfileOverview: defineWidgetType(resolvePhiCmsWidgetPluginKey("profile-overview"), "profile-overview"),
   ProfileName: defineWidgetType(resolvePhiCmsWidgetPluginKey("profile-name"), "profile-name"),
