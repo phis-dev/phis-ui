@@ -36,6 +36,10 @@ built. Remove an entry when it is done.
 - **Control badge adoption from real use cases.** The badge contract exists for button and toolbar.
   Evaluate basket, support inbox, and similar domain buttons one by one; migrate only where the generic
   receiver contract fits without losing domain semantics.
+- **A Statistic Widget.** `PhiStatisticControl` exists and has one caller, the Theme inspector. The
+  second is a Widget of its own, so a Site can put a figure on a page -- a count, a total, a rate --
+  with `title` and `value` as config and the Control deciding presentation. Placing it is the point:
+  the Theme inspector's three are a fixed internal readout, where a Widget is the general case.
 - **Normalize Preset Content roots to vertical Flex.** Audit first-party Page presets and use a vertical
   Flex Layout as the Content Region root, keeping another root only where the Page has a semantic reason.
   The legacy Content Layout path is still registered.
@@ -61,9 +65,10 @@ built. Remove an entry when it is done.
     and `Space.Compact` (which is a different thing from `Space`, see below).
   - **A thin pass-through**, where there is nothing to decide and the wrapper exists only so the import
     points at us: ~~`PhiTypographyControl` (~63 files), `Flex` (~60), `Divider`, `Spin`, `QRCode`,
-    `Statistic`~~ -- all done. `PhiSpinControl` is the one to revisit: `Skeleton` answers the same
-    question where the shape of what is coming is known, so the loading Control below may absorb it
-    into a single contract rather than leaving two names for "wait".
+    `Statistic`~~ -- all done. `PhiSpinControl` stays beside `PhiSkeletonControl` rather than being
+    folded into it: a Skeleton draws the shape of what is coming and is only usable where that shape is
+    known, and a guess that turns out wrong rearranges the page under somebody already reading it. A
+    spinner claims nothing, which is the whole of what recommends it.
   - ~~**An owner entry only** -- the Widget that already wraps the primitive *is* the contract, so no
     new file is needed, just an entry naming it: `Anchor`, `Breadcrumb`, `Image`, `Result`, `Badge`.~~
     Done, as `soleOwnerPrimitives` in the validator. It is checked both ways: nobody else may import
@@ -107,9 +112,10 @@ built. Remove an entry when it is done.
   (`GlobalToken`, `AliasToken`) stay exempt as part of the theme adapter.
 
   Order: ~~the two big pass-throughs (`Flex`, `PhiTypographyControl`), the five owner entries, the
-  trivial wrappers~~ -- done. Next `PhiFileDropControl` with `Progress`, then the loading family
-  (`Skeleton`, absorbing `PhiSpinControl`), then `Empty`/`Tooltip`/`Card`/`Collapse`/`Descriptions`,
-  then the deletions, then `Listy`, and the allowlist last.
+  trivial wrappers~~ -- done. Next `PhiFileDropControl` with `Progress`, then `Skeleton` (its own
+  Control, beside `PhiSpinControl` rather than over it), then
+  `Empty`/`Tooltip`/`Card`/`Collapse`/`Descriptions`, then the deletions, then `Listy`, and the
+  allowlist last.
 
   Until the Controls exist, direct use in a Widget or Layout stays correct and the validator keeps
   permitting it: this is a planned narrowing, not a rule being broken today. Update the validator's own

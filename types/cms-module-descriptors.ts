@@ -159,10 +159,24 @@ export type PhiCmsNavigationLabel = {
   messageId?: string;
 };
 
+/**
+ * Where an Area's own entry stands among the ones Modules contribute.
+ *
+ * An Area states its entries and every Module adds to them, so the Area's come first -- which is right
+ * for what a person works with and wrong for the one entry they visit to change something. "last" puts
+ * it after everything contributed, wherever the Area happens to declare it.
+ *
+ * Only an Area's own entry may say it. A contribution orders itself with `before` and `after` against
+ * an exported anchor, and an entry standing last is no anchor: everything is before it by definition,
+ * so naming it would say nothing that its own standing does not already say.
+ */
+export type PhiCmsNavigationItemStanding = "last";
+
 export type PhiCmsNavigationBaseItemDescriptor = {
   itemKey: string;
   label: PhiCmsNavigationLabel;
   icon?: string;
+  standing?: PhiCmsNavigationItemStanding;
   routePresetKey?: string;
   /**
    * An Area-owned Overlay of the same Module, named by its preset and the node key inside it.

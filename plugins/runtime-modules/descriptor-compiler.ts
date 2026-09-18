@@ -1001,6 +1001,7 @@ export function compilePhiCmsActiveRouteTable({
 type ResolvedNavigationNode = {
   item: PhiCmsResolvedNavigationItem;
   definitionItemKey: string;
+  standsLast: boolean;
   intrinsicChildren: ResolvedNavigationNode[];
   isUnrouted: boolean;
   injection: {
@@ -1088,6 +1089,8 @@ function buildResolvedNavigationNode(
       children: [],
     },
     definitionItemKey: descriptor.itemKey,
+    // Only an Area's own entry carries it; a contribution orders itself with `before`/`after`.
+    standsLast: "standing" in descriptor && descriptor.standing === "last",
     // An item that named a route and got nothing back. A container never is one: it named nothing.
     isUnrouted: Boolean(descriptor.routePresetKey) && !target,
     intrinsicChildren,
@@ -1100,7 +1103,16 @@ function orderNavigationSiblings(
   injected: readonly ResolvedNavigationNode[],
   parentItemKey: string | null,
 ) {
-  const ordered = [...intrinsic];
+  /*
+   * An Area's entries first, the contributed ones after -- except the entries that said they stand
+   * last, which are held back and put on the end once everything else has found its place.
+   *
+   * They are held out of the list the anchoring pass inserts into, not out of the anchoring: an entry
+   * that stands last is exported like any other and Modules do anchor against it. What changes is
+   * only where that lands, which the pass below says.
+   */
+  const trailing = intrinsic.filter((node) => node.standsLast);
+  const ordered = intrinsic.filter((node) => !node.standsLast);
   const pending = [...injected].sort((left, right) =>
     left.injection!.sortKey.localeCompare(right.injection!.sortKey),
   );
@@ -1127,6 +1139,24 @@ function orderNavigationSiblings(
     for (const [anchor, group] of [...anchors].sort(([left], [right]) => left.localeCompare(right))) {
       let anchorIndex = ordered.findIndex((node) => node.definitionItemKey === anchor);
       if (anchorIndex < 0) {
+        /*
+         * An anchor on an entry that stands last still means what it says.
+         *
+         * Such an entry is exported like any other -- Modules anchor their Admin pages before the
+         * Settings container today -- so refusing it here would break a published anchor over an
+         * ordering detail. "Before" is the end of everything standing ahead of it, "after" is behind
+         * it, which is the end of the surface.
+         */
+        const trailingIndex = trailing.findIndex((node) => node.definitionItemKey === anchor);
+        if (trailingIndex < 0) {
+          continue;
+        }
+        ordered.push(...group.before);
+        trailing.splice(trailingIndex + 1, 0, ...group.after);
+        for (const node of [...group.before, ...group.after]) {
+          pending.splice(pending.indexOf(node), 1);
+        }
+        inserted = true;
         continue;
       }
       ordered.splice(anchorIndex, 0, ...group.before);
@@ -1157,7 +1187,7 @@ function orderNavigationSiblings(
     }
   }
 
-  return ordered;
+  return [...ordered, ...trailing];
 }
 
 export function resolvePhiCmsActiveNavigationSurfaces({

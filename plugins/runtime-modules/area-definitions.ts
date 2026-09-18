@@ -109,6 +109,7 @@ export const PHI_APP_RUNTIME_AREA_DEFINITIONS = [
           itemKey: PHI_APP_SETTINGS_NAV_ITEM_KEY,
           label: label("Settings"),
           icon: "antd:setting",
+          standing: "last",
           // The Area's own child stands first and is stated here; every other Module reaches the
           // container through the mount and is ordered after it (SETTINGS.md section 3).
           children: [{
@@ -200,6 +201,7 @@ export const PHI_ADMIN_RUNTIME_AREA_DEFINITIONS = [
             itemKey: PHI_ADMIN_SETTINGS_NAV_ITEM_KEY,
             label: label("Settings"),
             icon: "antd:setting",
+            standing: "last",
             children: [{
               itemKey: "@phis/ui/modules/admin/nav/settings/general",
               label: label("General"),
@@ -257,6 +259,7 @@ export const PHI_BUILDER_RUNTIME_AREA_DEFINITIONS = [
           itemKey: PHI_BUILDER_SETTINGS_NAV_ITEM_KEY,
           label: label("Settings"),
           icon: "antd:setting",
+          standing: "last",
           children: [{
             itemKey: "@phis/ui/builder/nav/settings/general",
             label: label("General"),

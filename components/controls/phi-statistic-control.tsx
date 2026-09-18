@@ -6,13 +6,13 @@ import type { StatisticProps } from "antd";
 /**
  * A labelled number.
  *
- * The thinnest of the four, and the one with the weakest case: three neighbouring uses in the Theme
- * inspector, all `title` plus `value`. It is here because the alternative was leaving one primitive
- * permitted by omission for the sake of three lines -- and a rule with an exception nobody can name is
- * the thing this whole effort is undoing.
+ * A pass-through. Its three uses today are neighbouring lines in the Theme inspector, all `title` plus
+ * `value`.
  *
- * If the Theme inspector is ever reworked, dissolving these into a heading and a line of text would be
- * a fair outcome and this file can go with them.
+ * It has a second caller coming: a Widget of its own, so a Site can put a figure on a page. That is why
+ * the Control is worth having rather than dissolving these three into a heading and a line of text --
+ * the Widget would have had to decide the same things, and deciding them here means it inherits them
+ * instead of inventing them a second time.
  */
 export type PhiStatisticControlProps = StatisticProps;
 
