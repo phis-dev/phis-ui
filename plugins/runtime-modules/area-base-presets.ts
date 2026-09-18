@@ -39,15 +39,36 @@ export const PHI_AREA_BASE_RUNTIME_MODULE_AREA_SHELLS = [
     presetKey: "app-area-preset",
     shellPresetVersion: 1,
     area: "app",
-    loadTree: ({ page, runtime }: PhiCmsDescriptorBuildContext) =>
-      import("../../components/regions/presets/phi-default-site-area-preset-tree")
-        .then((module) => module.buildPhiDefaultSiteAreaPresetTree({
+    /*
+     * The Site shell with a left sider added, rather than a shell of its own.
+     *
+     * App's header and footer are Public's -- one Brand, one account trigger, one description of both.
+     * What App has that Public does not is somewhere for the Modules a signed-in person works with,
+     * and that is the whole of the overlay. Nothing is omitted from the base, so the two trees cannot
+     * disagree about a Region: composition refuses a Region type stated twice.
+     */
+    loadTree: async ({ page, runtime }: PhiCmsDescriptorBuildContext) => {
+      const [
+        { buildPhiDefaultSiteAreaPresetTree },
+        { buildPhiDefaultAppAreaPresetTree },
+        { mergePhiCmsShellTrees },
+      ] = await Promise.all([
+        import("../../components/regions/presets/phi-default-site-area-preset-tree"),
+        import("../../components/regions/presets/phi-default-app-area-preset-tree"),
+        import("./shell-tree-composition"),
+      ]);
+      const [base, overlay] = await Promise.all([
+        buildPhiDefaultSiteAreaPresetTree({
           page,
           runtime,
           presetKey: "app-area-preset",
           ownerModuleId: PHI_APP_RUNTIME_MODULE_ID,
           runtimeModuleArea: "app",
-        })),
+        }),
+        buildPhiDefaultAppAreaPresetTree({ page, runtime }),
+      ]);
+      return mergePhiCmsShellTrees(base, overlay);
+    },
   },
   ...([
     ["accounting", PHI_ACCOUNTING_RUNTIME_MODULE_ID],
