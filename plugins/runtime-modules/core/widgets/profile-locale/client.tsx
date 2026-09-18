@@ -2,7 +2,6 @@
 
 import { usePathname, useSearchParams } from "next/navigation";
 import { useMemo, useRef, useState } from "react";
-import { Flex, Typography } from "antd";
 
 import { stripLocaleFromPathname } from "../../../../../helpers/locale";
 import type { PhiClientBlockBaseProps, PhiBlockRuntime } from "../../../../../types";
@@ -12,6 +11,8 @@ import { PhiFormControl, type PhiFormControlHandle } from "../../../../../compon
 import { PhiButtonControl } from "../../../../../components/controls/phi-button-control";
 import { PHI_FORM_FIELD_PROVIDER_KEYS, PHI_FORM_VALIDATION_PROVIDER_KEYS } from "../../../../../components/forms/form-provider-contract";
 import type { PhiFormDescriptor, PhiFormTextDescriptor } from "../../../../../types/form-descriptor";
+import { PhiFlexControl } from "../../../../../components/controls/phi-flex-control";
+import { PhiTypographyControl } from "../../../../../components/controls/phi-typography-control";
 
 const literal = (value: string): PhiFormTextDescriptor => ({ kind: "literal", value });
 
@@ -171,13 +172,13 @@ export function PhiProfileLocaleWidgetClient({
   }
 
   return (
-    <Flex vertical gap={16} style={{ width: "100%", maxWidth: sectionMaxWidth }}>
-        <Flex vertical gap={4}>
-          <Typography.Title level={4} style={{ margin: 0 }}>
+    <PhiFlexControl vertical gap={16} style={{ width: "100%", maxWidth: sectionMaxWidth }}>
+        <PhiFlexControl vertical gap={4}>
+          <PhiTypographyControl presentation="title" level={4} style={{ margin: 0 }}>
             {labels.title}
-          </Typography.Title>
-          <Typography.Text type="secondary">{labels.description}</Typography.Text>
-        </Flex>
+          </PhiTypographyControl>
+          <PhiTypographyControl type="secondary">{labels.description}</PhiTypographyControl>
+        </PhiFlexControl>
 
         {error ? (
           <PhiAlertControl
@@ -195,14 +196,14 @@ export function PhiProfileLocaleWidgetClient({
           onSubmit={(values) => handleSubmit(values as PhiProfileLocaleWidgetFormValues)}
         />
         <PhiButtonControl type="primary" loading={saving} label={labels.submitLabel} onClick={() => formRef.current?.submit()} />
-          <Typography.Text type="secondary" style={{ display: "block", marginTop: 8 }}>
+          <PhiTypographyControl type="secondary" style={{ display: "block", marginTop: 8 }}>
             {labels.currentLabel}:{" "}
             {
               availableLocales.find(
                 (option) => normalizeLocaleCode(option.code) === normalizeLocaleCode(currentLocale),
               )?.label ?? currentLocale
             }
-          </Typography.Text>
-      </Flex>
+          </PhiTypographyControl>
+      </PhiFlexControl>
   );
 }

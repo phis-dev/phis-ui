@@ -2,15 +2,15 @@
 
 import type { ReactNode, CSSProperties } from "react";
 import Link from "next/link";
-import { Col, Divider, Layout, Row, Typography } from "antd";
+import { Col, Divider, Layout, Row } from "antd";
 
 import { resolvePhiNavHref } from "../../../../../helpers/locale";
 import type { PhiClientBlockBaseProps, PhiBlockRuntime } from "../../../../../types";
 import { usePhiConfig } from "../../../../../components/root/phi-config-provider";
 import type { PhiNavItem } from "../../../../../components/shell/shell-types";
+import { PhiTypographyControl } from "../../../../../components/controls/phi-typography-control";
 
 const { Footer } = Layout;
-const { Paragraph, Text, Title } = Typography;
 
 const linkStyle = {
   display: "inline-flex",
@@ -66,17 +66,17 @@ export function PhiFooterWidgetClient({
     >
       <Row gutter={[16, 16]}>
         <Col xs={24} md={8}>
-          <Title level={5} style={{ color: token.colorText }}>
+          <PhiTypographyControl presentation="title" level={5} style={{ color: token.colorText }}>
             {brandTitle}
-          </Title>
+          </PhiTypographyControl>
           {brandText ? (
-            <Paragraph style={{ color: token.colorText }}>{brandText}</Paragraph>
+            <PhiTypographyControl presentation="paragraph" style={{ color: token.colorText }}>{brandText}</PhiTypographyControl>
           ) : null}
         </Col>
         <Col xs={24} md={8}>
-          <Title level={5} style={{ color: token.colorText }}>
+          <PhiTypographyControl presentation="title" level={5} style={{ color: token.colorText }}>
             {labels.linksTitle}
-          </Title>
+          </PhiTypographyControl>
           <div
             style={{
               display: "grid",
@@ -100,21 +100,21 @@ export function PhiFooterWidgetClient({
           </div>
         </Col>
         <Col xs={24} md={8}>
-          <Title level={5} style={{ color: token.colorText }}>
+          <PhiTypographyControl presentation="title" level={5} style={{ color: token.colorText }}>
             {labels.contactTitle}
-          </Title>
+          </PhiTypographyControl>
           <div style={{ display: "grid", gap: 12 }}>
             {contactItems.map((item) => (
-              <Paragraph key={item.key} style={{ marginBottom: 0, color: token.colorText }}>
-                <Text style={{ color: token.colorText }}>{item.label}: </Text>
+              <PhiTypographyControl presentation="paragraph" key={item.key} style={{ marginBottom: 0, color: token.colorText }}>
+                <PhiTypographyControl style={{ color: token.colorText }}>{item.label}: </PhiTypographyControl>
                 {item.href ? (
                   <Link href={item.href} style={linkStyle}>
                     {item.value}
                   </Link>
                 ) : (
-                  <Text style={{ color: token.colorText }}>{item.value}</Text>
+                  <PhiTypographyControl style={{ color: token.colorText }}>{item.value}</PhiTypographyControl>
                 )}
-              </Paragraph>
+              </PhiTypographyControl>
             ))}
           </div>
         </Col>
@@ -122,7 +122,7 @@ export function PhiFooterWidgetClient({
       {note ? (
         <>
           <Divider style={{ borderColor: token.colorBorderSecondary }} />
-          <Text style={{ color: token.colorTextTertiary }}>{note}</Text>
+          <PhiTypographyControl style={{ color: token.colorTextTertiary }}>{note}</PhiTypographyControl>
         </>
       ) : null}
     </Footer>

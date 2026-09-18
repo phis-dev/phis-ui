@@ -2,13 +2,13 @@
 
 import { useState } from "react";
 
-import { Flex, Typography } from "antd";
-
 import { usePhiConfig } from "../../../../../components/root/phi-config-provider";
 import type { PhiPaginationValue, PhiPaginationWidgetConfig } from "./config";
 import { usePhiControlSignalController } from "../../../../../components/widgets/client/shared/phi-control-signals";
 import { usePhiWidgetScaffoldPopup } from "../../../../../components/widgets/client/shared/phi-widget-scaffold-popup";
 import { PhiPaginationControl } from "../../../../../components/controls/phi-pagination-control";
+import { PhiFlexControl } from "../../../../../components/controls/phi-flex-control";
+import { PhiTypographyControl } from "../../../../../components/controls/phi-typography-control";
 
 function normalizePaginationValue(value: Partial<PhiPaginationValue>, fallback: PhiPaginationValue): PhiPaginationValue {
   const page = Number.isInteger(value.page) && value.page != null && value.page > 0 ? value.page : fallback.page;
@@ -79,11 +79,11 @@ export function PhiPaginationWidget({
   }
 
   return (
-    <Flex align="center" gap={token.paddingXS} style={{ minWidth: 0 }}>
+    <PhiFlexControl align="center" gap={token.paddingXS} style={{ minWidth: 0 }}>
       {config?.label ? (
-        <Typography.Text type="secondary" style={{ fontSize: token.fontSizeSM, whiteSpace: "nowrap" }}>
+        <PhiTypographyControl type="secondary" style={{ fontSize: token.fontSizeSM, whiteSpace: "nowrap" }}>
           {config.label}
-        </Typography.Text>
+        </PhiTypographyControl>
       ) : null}
       <PhiPaginationControl
         page={value.page}
@@ -99,6 +99,6 @@ export function PhiPaginationWidget({
         size={config?.controlSize}
         onChange={(nextValue) => publish(nextValue.page, nextValue.pageSize)}
       />
-    </Flex>
+    </PhiFlexControl>
   );
 }

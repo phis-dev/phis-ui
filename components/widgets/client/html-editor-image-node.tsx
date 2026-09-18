@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 
-import { Flex } from "antd";
 import {
   $applyNodeReplacement,
   $getNodeByKey,
@@ -32,6 +31,7 @@ import { PhiPopoverControl } from "../../controls/phi-popover-control";
 import { PhiTextControl } from "../../controls/phi-text-control";
 import { PHI_Z_INDEX } from "../../../theme/phi-tokens";
 import { usePhiWidgetScaffoldPopup } from "./shared/phi-widget-scaffold-popup";
+import { PhiFlexControl } from "../../controls/phi-flex-control";
 
 export type SerializedPhiHtmlImageNode = Spread<{
   src: string;
@@ -397,7 +397,7 @@ function PhiHtmlImageDecorator({
                 }}
               />
             </PhiLabeledControl>
-            <Flex justify="flex-end">
+            <PhiFlexControl justify="flex-end">
               <PhiButtonControl
                 size="small"
                 danger
@@ -412,7 +412,7 @@ function PhiHtmlImageDecorator({
                   });
                 }}
               />
-            </Flex>
+            </PhiFlexControl>
           </div>
         }
       >

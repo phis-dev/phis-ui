@@ -1,6 +1,6 @@
 "use client";
 
-import { Empty, Flex, Image as AntImage, Typography } from "antd";
+import { Empty, Image as AntImage } from "antd";
 import NextImage from "next/image";
 
 import type { PhiClientBlockBaseProps } from "../../../../../types";
@@ -11,6 +11,8 @@ import { resolvePhiImagePresentation } from "../../../../../components/media/ima
 import type { PhiImageWidgetLabels } from "../../../../../components/widgets/label-types/image";
 import { usePhiConfig } from "../../../../../components/root/phi-config-provider";
 import { resolvePhiMaskStyle } from "../../../../../components/widgets/config/mask";
+import { PhiFlexControl } from "../../../../../components/controls/phi-flex-control";
+import { PhiTypographyControl } from "../../../../../components/controls/phi-typography-control";
 
 function formatImageSize(value: number | string | null | undefined) {
   if (typeof value === "number" && Number.isFinite(value)) {
@@ -119,7 +121,7 @@ export function PhiImageWidget({
 
   if (!renderUrl) {
     return (
-      <Flex
+      <PhiFlexControl
         align="center"
         justify="center"
         vertical
@@ -137,11 +139,11 @@ export function PhiImageWidget({
         }}
       >
         <Empty description={false} />
-        <Typography.Text type="secondary" strong={false}>
+        <PhiTypographyControl type="secondary" strong={false}>
           {labels.emptyTitle}
-        </Typography.Text>
-        <Typography.Text type="secondary">{labels.emptyDescription}</Typography.Text>
-      </Flex>
+        </PhiTypographyControl>
+        <PhiTypographyControl type="secondary">{labels.emptyDescription}</PhiTypographyControl>
+      </PhiFlexControl>
     );
   }
 

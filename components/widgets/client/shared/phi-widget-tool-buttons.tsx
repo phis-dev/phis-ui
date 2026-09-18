@@ -13,7 +13,6 @@ import {
   MenuOutlined,
 } from "@ant-design/icons";
 import { formatUrl } from "@lexical/link";
-import { Flex, Typography } from "antd";
 
 import type { PhiWidgetFontFamilyKey, PhiWidgetFontSizeKey } from "../../../../types/site-theme";
 import type { PhiCmsInstanceId } from "../../../../types/cms-instance-id";
@@ -44,6 +43,8 @@ import {
 import { usePhiWidgetScaffoldPopup } from "./phi-widget-scaffold-popup";
 import { PhiInternalAssetReferencePickerButton } from "./phi-widget-image-tool-button";
 import { PHI_Z_INDEX } from "../../../../theme/phi-tokens";
+import { PhiFlexControl } from "../../../controls/phi-flex-control";
+import { PhiTypographyControl } from "../../../controls/phi-typography-control";
 
 function stopOverlayEvent(event: { stopPropagation: () => void }) {
   event.stopPropagation();
@@ -206,7 +207,7 @@ export function PhiWidgetTypographyToolButton({
       onOpenChange={popup.setOpen}
       zIndex={PHI_Z_INDEX.authoringPopup}
       content={
-        <Flex
+        <PhiFlexControl
           vertical
           gap={8}
           style={{ minWidth: 220 }}
@@ -215,9 +216,9 @@ export function PhiWidgetTypographyToolButton({
           onPointerDown={stopOverlayEvent}
         >
           <label>
-            <Typography.Text style={{ display: "block", marginBottom: 4 }}>
+            <PhiTypographyControl style={{ display: "block", marginBottom: 4 }}>
               Font
-            </Typography.Text>
+            </PhiTypographyControl>
             <PhiSelectControl<PhiWidgetFontFamilyKey>
               value={currentFontFamily}
               options={PHI_FONT_FAMILY_OPTIONS}
@@ -233,9 +234,9 @@ export function PhiWidgetTypographyToolButton({
             />
           </label>
           <label>
-            <Typography.Text style={{ display: "block", marginBottom: 4 }}>
+            <PhiTypographyControl style={{ display: "block", marginBottom: 4 }}>
               Size
-            </Typography.Text>
+            </PhiTypographyControl>
             <PhiSelectControl<PhiWidgetFontSizeKey>
               value={currentFontSize}
               options={PHI_FONT_SIZE_OPTIONS}
@@ -250,7 +251,7 @@ export function PhiWidgetTypographyToolButton({
               style={{ width: "100%" }}
             />
           </label>
-        </Flex>
+        </PhiFlexControl>
       }
     >
       <span
@@ -379,7 +380,7 @@ export function PhiHtmlWidgetToolbarTools({
         onOpenChange={alignmentPopup.setOpen}
         zIndex={PHI_WIDGET_OVERLAY_Z_INDEX}
         content={
-          <Flex
+          <PhiFlexControl
             gap={4}
             onClick={stopOverlayEvent}
             onMouseDown={preserveEditorSelectionMouseEvent}
@@ -400,7 +401,7 @@ export function PhiHtmlWidgetToolbarTools({
                 }}
               />
             ))}
-          </Flex>
+          </PhiFlexControl>
         }
       >
         <span
@@ -428,7 +429,7 @@ export function PhiHtmlWidgetToolbarTools({
         onOpenChange={stylePopup.setOpen}
         zIndex={PHI_Z_INDEX.authoringPopup}
         content={
-          <Flex
+          <PhiFlexControl
             vertical
             gap={8}
             onClick={stopOverlayEvent}
@@ -456,7 +457,7 @@ export function PhiHtmlWidgetToolbarTools({
                 />
               </div>
             ))}
-          </Flex>
+          </PhiFlexControl>
         }
       >
         <span
@@ -508,7 +509,7 @@ export function PhiHtmlWidgetToolbarTools({
         rootClassName={linkPopup.rootClassName}
         zIndex={PHI_WIDGET_OVERLAY_Z_INDEX}
         content={
-          <Flex
+          <PhiFlexControl
             vertical
             gap={8}
             onClick={stopOverlayEvent}
@@ -529,7 +530,7 @@ export function PhiHtmlWidgetToolbarTools({
               onChange={(nextValue) => setLinkDraft(nextValue ?? "")}
               onKeyDown={stopOverlayEvent}
             />
-            <Flex gap={8} justify="space-between">
+            <PhiFlexControl gap={8} justify="space-between">
               <PhiButtonControl
                 size="small"
                 disabled={!bridge || !state?.linkUrl}
@@ -556,8 +557,8 @@ export function PhiHtmlWidgetToolbarTools({
                   handleLinkPopoverOpenChange(false);
                 }}
               />
-            </Flex>
-          </Flex>
+            </PhiFlexControl>
+          </PhiFlexControl>
         }
       >
         <span
@@ -635,14 +636,14 @@ export function PhiDescriptionWidgetItemsToolButton({
       onOpenChange={popup.setOpen}
       zIndex={PHI_Z_INDEX.authoringPopup}
       content={
-        <Flex
+        <PhiFlexControl
           vertical
           gap={8}
           onClick={stopOverlayEvent}
           onMouseDown={stopOverlayMouseEvent}
           onPointerDown={stopOverlayEvent}
         >
-          <Typography.Text type="secondary">Items</Typography.Text>
+          <PhiTypographyControl type="secondary">Items</PhiTypographyControl>
           <PhiNumberControl
             min={0}
             max={12}
@@ -655,7 +656,7 @@ export function PhiDescriptionWidgetItemsToolButton({
             }}
             onKeyDown={stopOverlayEvent}
           />
-        </Flex>
+        </PhiFlexControl>
       }
     >
       <span

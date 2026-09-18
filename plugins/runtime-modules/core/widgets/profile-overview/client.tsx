@@ -2,12 +2,13 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { Flex, Typography } from "antd";
 
 import type { PhiClientBlockBaseProps, PhiBlockRuntime } from "../../../../../types";
 import { PhiSwitchControl } from "../../../../../components/controls/phi-switch-control";
 import { PhiAlertControl } from "../../../../../components/controls/phi-alert-control";
 import { usePhiApplicationFeedback } from "../../../../../components/runtime/use-phi-application-feedback";
+import { PhiFlexControl } from "../../../../../components/controls/phi-flex-control";
+import { PhiTypographyControl } from "../../../../../components/controls/phi-typography-control";
 
 export type PhiProfileOverviewWidgetLabels = {
   title: string;
@@ -111,31 +112,31 @@ export function PhiProfileOverviewWidgetClient({
   }
 
   return (
-      <Flex vertical gap={12} style={{ width: "100%", maxWidth: sectionMaxWidth }}>
-        <Flex vertical gap={4}>
-          <Typography.Title level={4} style={{ margin: 0 }}>
+      <PhiFlexControl vertical gap={12} style={{ width: "100%", maxWidth: sectionMaxWidth }}>
+        <PhiFlexControl vertical gap={4}>
+          <PhiTypographyControl presentation="title" level={4} style={{ margin: 0 }}>
             {labels.title}
-          </Typography.Title>
-          <Typography.Text type="secondary">{labels.description}</Typography.Text>
-        </Flex>
+          </PhiTypographyControl>
+          <PhiTypographyControl type="secondary">{labels.description}</PhiTypographyControl>
+        </PhiFlexControl>
 
         {error ? (
           <PhiAlertControl level="error" showIcon title={labels.feedback.errorTitle} description={error} />
         ) : null}
 
-        <Flex vertical gap={4}>
-          <Typography.Text type="secondary">
+        <PhiFlexControl vertical gap={4}>
+          <PhiTypographyControl type="secondary">
             {labels.accountLabel}: {currentTitle}
-          </Typography.Text>
-        </Flex>
+          </PhiTypographyControl>
+        </PhiFlexControl>
 
-        <Flex align="center" gap={12} wrap>
+        <PhiFlexControl align="center" gap={12} wrap>
           <PhiSwitchControl checked={newsletterOptIn} loading={saving} onChange={(checked) => void handleNewsletterChange(checked)} />
-          <Flex vertical gap={2}>
-            <Typography.Text strong>{labels.newsletterLabel}</Typography.Text>
-            <Typography.Text type="secondary">{labels.newsletterDescription}</Typography.Text>
-          </Flex>
-        </Flex>
-      </Flex>
+          <PhiFlexControl vertical gap={2}>
+            <PhiTypographyControl strong>{labels.newsletterLabel}</PhiTypographyControl>
+            <PhiTypographyControl type="secondary">{labels.newsletterDescription}</PhiTypographyControl>
+          </PhiFlexControl>
+        </PhiFlexControl>
+      </PhiFlexControl>
   );
 }

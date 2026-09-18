@@ -1,12 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { Anchor, Empty, Typography } from "antd";
+import { Anchor, Empty } from "antd";
 
 import type { PhiClientBlockBaseProps, PhiNoLabels } from "../../../../../types";
 import { usePhiSignalListener } from "../../../../../components/runtime/runtime-signal-bus";
 import { usePhiConfig } from "../../../../../components/root/phi-config-provider";
 import type { PhiCmsMarkdownTocWidgetConfig, PhiMarkdownTocHeading } from "./config";
+import { PhiTypographyControl } from "../../../../../components/controls/phi-typography-control";
 
 export type PhiMarkdownTocWidgetClientProps = PhiClientBlockBaseProps<
   PhiNoLabels,
@@ -97,9 +98,9 @@ export function PhiMarkdownTocWidgetClient({ config }: PhiMarkdownTocWidgetClien
     >
       <div style={{ display: "grid", gap: token.paddingSM, width: "100%", minWidth: 0 }}>
         {showTitle ? (
-          <Typography.Text strong style={{ color: token.colorTextHeading }}>
+          <PhiTypographyControl strong style={{ color: token.colorTextHeading }}>
             {title}
-          </Typography.Text>
+          </PhiTypographyControl>
         ) : null}
         {headings.length > 0 ? (
           <Anchor

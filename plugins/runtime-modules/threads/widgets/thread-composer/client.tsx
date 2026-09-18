@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
-import { Flex, Progress, Typography, Upload } from "antd";
+import { Progress, Upload } from "antd";
 
 import type { PhiBlockRuntime, PhiClientBlockBaseProps } from "../../../../../types";
 import { PhiAlertControl } from "../../../../../components/controls/phi-alert-control";
@@ -16,6 +16,8 @@ import {
 import type { PhiSignalFilter } from "../../../../../types/signals";
 import { PHI_THREADS_RUNTIME_MODULE_DEFINITION } from "../../definition";
 import type { PhiThreadComposerLabels } from "../../../../../components/widgets/label-sets/threads";
+import { PhiFlexControl } from "../../../../../components/controls/phi-flex-control";
+import { PhiTypographyControl } from "../../../../../components/controls/phi-typography-control";
 
 export type PhiThreadComposerWidgetClientProps = PhiClientBlockBaseProps<
   PhiThreadComposerLabels,
@@ -150,14 +152,14 @@ export function PhiThreadComposerWidgetClient({
 
   if (threadId == null) {
     return (
-      <Typography.Text type="secondary" style={{ padding: config?.padding }}>
+      <PhiTypographyControl type="secondary" style={{ padding: config?.padding }}>
         {labels.noThreadText}
-      </Typography.Text>
+      </PhiTypographyControl>
     );
   }
 
   return (
-    <Flex vertical gap="small" style={{ padding: config?.padding }}>
+    <PhiFlexControl vertical gap="small" style={{ padding: config?.padding }}>
       {error ? (
         <PhiAlertControl level="error" title={labels.feedback.errorTitle} description={error} />
       ) : null}
@@ -170,16 +172,16 @@ export function PhiThreadComposerWidgetClient({
         disabled={sending}
       />
       {attached.length > 0 ? (
-        <Flex wrap gap="small">
+        <PhiFlexControl wrap gap="small">
           {attached.map((item) => (
             <PhiTagControl key={item.localId}>{item.file.name}</PhiTagControl>
           ))}
-        </Flex>
+        </PhiFlexControl>
       ) : null}
       {uploading.map((item) => (
         <Progress key={item.localId} percent={Math.round(item.progress)} size="small" />
       ))}
-      <Flex justify="space-between" align="center" gap="small">
+      <PhiFlexControl justify="space-between" align="center" gap="small">
         <Upload
           accept={accept}
           multiple
@@ -202,8 +204,8 @@ export function PhiThreadComposerWidgetClient({
           disabled={!canSend}
           onClick={() => void send()}
         />
-      </Flex>
-      <Typography.Text type="secondary">{labels.attachHint}</Typography.Text>
-    </Flex>
+      </PhiFlexControl>
+      <PhiTypographyControl type="secondary">{labels.attachHint}</PhiTypographyControl>
+    </PhiFlexControl>
   );
 }

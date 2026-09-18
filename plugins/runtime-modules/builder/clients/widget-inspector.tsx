@@ -1,7 +1,5 @@
 "use client";
 
-import { Typography } from "antd";
-
 import { PhiGeometryControl } from "../../../../components/controls/phi-geometry-control";
 import { PhiViewportVisibilityControl } from "../../../../components/controls/phi-viewport-visibility-control";
 import type { PhiGeometryWidgetLabels } from "../../../../components/widgets/label-types/geometry";
@@ -39,6 +37,7 @@ import {
   resolvePhiInspectorDimensionValue,
   type PhiInspectorWidgetReferenceOption,
 } from "./inspector-config-field";
+import { PhiTypographyControl } from "../../../../components/controls/phi-typography-control";
 
 const PHI_GAP_SM = "var(--ant-padding-sm)";
 
@@ -123,7 +122,7 @@ export function PhiDeveloperBuilderWidgetInspectorWidgetClient({
   return (
     <div style={{ display: "grid", gap: PHI_GAP_SM, width: "100%" }}>
       {!isTargetKind || !currentDraft ? (
-        <Typography.Text type="secondary">Select a widget to edit its geometry.</Typography.Text>
+        <PhiTypographyControl type="secondary">Select a widget to edit its geometry.</PhiTypographyControl>
       ) : (
         <div style={{ display: "grid", gap: PHI_GAP_SM, width: "100%" }}>
           <PhiInspectorSectionContent
@@ -133,13 +132,13 @@ export function PhiDeveloperBuilderWidgetInspectorWidgetClient({
                 key: "settings",
                 title: "Settings",
                 children: selectedStructureWidgetMeta == null ? (
-                  <Typography.Text type="danger">
+                  <PhiTypographyControl type="danger">
                     Widget metadata for {selectedStructureNodeKey ?? selectedStructureNodeTitle ?? "this widget"} is not available from the active Canvas modules.
-                  </Typography.Text>
+                  </PhiTypographyControl>
                 ) : settingsFields.length === 0 ? (
-                  <Typography.Text type="secondary">
+                  <PhiTypographyControl type="secondary">
                     This widget does not declare configurable settings.
-                  </Typography.Text>
+                  </PhiTypographyControl>
                 ) : (
                   <div style={{ display: "grid", gap: PHI_GAP_SM, width: "100%" }}>
                     {settingsFields.map((field) =>

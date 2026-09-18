@@ -1,6 +1,5 @@
 "use client";
 
-import { Flex, Typography } from "antd";
 import { useState } from "react";
 
 import {
@@ -14,6 +13,8 @@ import { resolvePhiWidgetFontFamily } from "../../../../../components/widgets/he
 import { resolvePhiWidgetFontSize } from "../../../../../components/widgets/helpers/font-size";
 import type { PhiClientBlockBaseProps, PhiCmsInstanceId, PhiRenderableBlockRenderMode } from "../../../../../types";
 import type { PhiWidgetFontFamilyKey, PhiWidgetFontSizeKey } from "../../../../../types/site-theme";
+import { PhiFlexControl } from "../../../../../components/controls/phi-flex-control";
+import { PhiTypographyControl } from "../../../../../components/controls/phi-typography-control";
 
 const PHI_LINE_HEIGHT_LG = 1.6;
 
@@ -51,7 +52,6 @@ export function PhiSimpleTextWidgetClient({
   labels,
   config,
 }: PhiSimpleTextWidgetClientProps) {
-  const { Text } = Typography;
   const { fonts, token } = usePhiConfig();
   const [textOverride, setTextOverride] = useState<string | null>(null);
   const [iconOverride, setIconOverride] = useState<{ active: boolean; value?: string }>({
@@ -181,7 +181,7 @@ export function PhiSimpleTextWidgetClient({
   });
 
   const contentNode = (
-    <Flex
+    <PhiFlexControl
       align="center"
       gap={8}
       style={{
@@ -195,7 +195,7 @@ export function PhiSimpleTextWidgetClient({
       }}
     >
       {iconValue ? <PhiIcon name={iconValue} size="1.25em" /> : null}
-      <Text
+      <PhiTypographyControl
         type={config?.type}
         strong={styleValue.strong}
         italic={styleValue.italic}
@@ -211,8 +211,8 @@ export function PhiSimpleTextWidgetClient({
         }}
       >
         {textValue}
-      </Text>
-    </Flex>
+      </PhiTypographyControl>
+    </PhiFlexControl>
   );
 
   if (!hasHref) {

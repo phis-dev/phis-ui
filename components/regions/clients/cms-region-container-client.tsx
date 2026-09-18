@@ -2,7 +2,7 @@
 
 import type { CSSProperties, ReactNode } from "react";
 import { useState } from "react";
-import { Flex } from "antd";
+
 import { PhiButtonControl } from "../../controls/phi-button-control";
 import { MenuFoldOutlined, MenuUnfoldOutlined } from "@ant-design/icons";
 import { resolvePhiBorderWidgetStyle } from "../../../helpers/border-widget-style";
@@ -51,6 +51,7 @@ import { PhiEffectsReadyTrigger } from "../../../plugins/runtime/phi-effects-rea
 import { PhiSlotChildEffectsVisibilityObserver } from "../../../plugins/runtime/phi-slot-child-effects-visibility-observer";
 import { PhiSlotChildViewportEffectsObserver } from "../../../plugins/runtime/phi-slot-child-viewport-effects-observer";
 import { resolvePhiPaddingStyle } from "../../layouts/phi-layout-contract";
+import { PhiFlexControl } from "../../controls/phi-flex-control";
 
 function normalizeCssLength(value: unknown) {
   return typeof value === "string" || typeof value === "number" ? value : undefined;
@@ -515,7 +516,7 @@ export function PhiCmsRegionContainerClient({
               }}
             >
               {resolvedCollapsible ? (
-                <Flex
+                <PhiFlexControl
                   align="center"
                   justify={collapsed ? "center" : isRightSider ? "flex-end" : "flex-start"}
                   style={{
@@ -551,7 +552,7 @@ export function PhiCmsRegionContainerClient({
                     } as CSSProperties}
                     onClick={() => setCollapsed((value) => !value)}
                   />
-                </Flex>
+                </PhiFlexControl>
               ) : null}
               <div
                 style={{

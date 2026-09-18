@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
 
-import { Card, Collapse, ConfigProvider, Divider, Flex, Space, Statistic, Typography, theme as antdTheme } from "antd";
+import { Card, Collapse, ConfigProvider, Divider, Space, Statistic, theme as antdTheme } from "antd";
 import { DeleteOutlined } from "@ant-design/icons";
 import type { AliasToken } from "antd/es/theme/interface";
 import type { PhiColorPickerLabels } from "../../../../../components/widgets/label-types/color-picker";
@@ -147,6 +147,8 @@ import {
   type PhiControlShape,
   type PhiControlShapeCorners,
 } from "../../../../../theme/phi-control-shape";
+import { PhiFlexControl } from "../../../../../components/controls/phi-flex-control";
+import { PhiTypographyControl } from "../../../../../components/controls/phi-typography-control";
 
 type ThemePayload = NonNullable<PhiBlockRuntime["site"]["theme"]>;
 const phiThemeHistory = createPhiHistoryStore<ThemePayload>(
@@ -987,7 +989,7 @@ function PhiBrandLineFields({
 }) {
   return (
     <PhiLabeledControl label={label} fill>
-      <Flex align="center" gap={8} style={{ width: "100%" }}>
+      <PhiFlexControl align="center" gap={8} style={{ width: "100%" }}>
         <PhiIconPickerControl
           value={line?.icon ?? null}
           buttonAriaLabel={`${label} icon`}
@@ -1004,7 +1006,7 @@ function PhiBrandLineFields({
             onChange={(next) => onChange(normalizeThemeBrandLine({ ...(line ?? {}), label: next ?? "" }))}
           />
         </div>
-      </Flex>
+      </PhiFlexControl>
     </PhiLabeledControl>
   );
 }
@@ -2169,9 +2171,9 @@ export function PhiBuilderBrandThemeControlsWidgetClient({
   });
 
   return (
-    <Flex vertical gap={clientToken.padding} style={{ width: "100%", minWidth: 0, opacity: loading ? 0.65 : 1 }}>
+    <PhiFlexControl vertical gap={clientToken.padding} style={{ width: "100%", minWidth: 0, opacity: loading ? 0.65 : 1 }}>
       <Card size="small" styles={{ body: { padding: clientToken.paddingSM } }}>
-        <Flex vertical gap={clientToken.paddingSM}>
+        <PhiFlexControl vertical gap={clientToken.paddingSM}>
           {/*
             The palette, over the Set chosen in the workspace header. The Set decides all three parts at
             once; picking a palette here is what somebody does who wants the Set's ground with another
@@ -2206,10 +2208,10 @@ export function PhiBuilderBrandThemeControlsWidgetClient({
               {
                 key: "custom",
                 label: (
-                  <Flex align="center" gap={clientToken.paddingSM} wrap="wrap" style={{ minWidth: 0 }}>
-                    <Typography.Text strong style={{ width: sectionLabelWidth }}>
+                  <PhiFlexControl align="center" gap={clientToken.paddingSM} wrap="wrap" style={{ minWidth: 0 }}>
+                    <PhiTypographyControl strong style={{ width: sectionLabelWidth }}>
                       {colorPickerLabels?.custom ?? "Custom"}
-                    </Typography.Text>
+                    </PhiTypographyControl>
                     <div
                       onClick={(event) => event.stopPropagation()}
                       onKeyDown={(event) => event.stopPropagation()}
@@ -2233,10 +2235,10 @@ export function PhiBuilderBrandThemeControlsWidgetClient({
                         }}
                       />
                     </div>
-                  </Flex>
+                  </PhiFlexControl>
                 ),
                 children: (
-                  <Flex wrap="wrap" style={{ minWidth: 0, columnGap: clientToken.paddingXXS, rowGap: clientToken.paddingSM }}>
+                  <PhiFlexControl wrap="wrap" style={{ minWidth: 0, columnGap: clientToken.paddingXXS, rowGap: clientToken.paddingSM }}>
                     {customColorOptions
                       .filter((item) => item.key !== "custom6")
                       .map((item) => (
@@ -2267,7 +2269,7 @@ export function PhiBuilderBrandThemeControlsWidgetClient({
                           />
                         </div>
                       ))}
-                  </Flex>
+                  </PhiFlexControl>
                 ),
               },
               ...THEME_COLOR_SEED_SECTIONS.map((section) => {
@@ -2282,10 +2284,10 @@ export function PhiBuilderBrandThemeControlsWidgetClient({
               return {
                 key: section.key,
                 label: (
-                  <Flex align="center" gap={clientToken.paddingSM} wrap="wrap" style={{ minWidth: 0 }}>
-                    <Typography.Text strong style={{ width: sectionLabelWidth }}>
+                  <PhiFlexControl align="center" gap={clientToken.paddingSM} wrap="wrap" style={{ minWidth: 0 }}>
+                    <PhiTypographyControl strong style={{ width: sectionLabelWidth }}>
                       {section.label}
-                    </Typography.Text>
+                    </PhiTypographyControl>
                     <div
                       onClick={(event) => event.stopPropagation()}
                       onKeyDown={(event) => event.stopPropagation()}
@@ -2309,10 +2311,10 @@ export function PhiBuilderBrandThemeControlsWidgetClient({
                         }}
                       />
                     </div>
-                  </Flex>
+                  </PhiFlexControl>
                 ),
                 children: (
-                  <Flex wrap="wrap" style={{ minWidth: 0, columnGap: clientToken.paddingXXS, rowGap: clientToken.paddingSM }}>
+                  <PhiFlexControl wrap="wrap" style={{ minWidth: 0, columnGap: clientToken.paddingXXS, rowGap: clientToken.paddingSM }}>
                     {section.derived.map((item) => {
                       const overridden = Object.prototype.hasOwnProperty.call(ownOverrides, item.key);
                       const fallback = readComputedTokenColor(computedToken, item.key, section.fallback);
@@ -2325,7 +2327,7 @@ export function PhiBuilderBrandThemeControlsWidgetClient({
                             maxWidth: "100%",
                           }}
                         >
-                          <Flex vertical gap={clientToken.paddingXXS}>
+                          <PhiFlexControl vertical gap={clientToken.paddingXXS}>
                             <PhiColorWidget
                               {...pickerTransaction}
                               label={item.label}
@@ -2352,19 +2354,19 @@ export function PhiBuilderBrandThemeControlsWidgetClient({
                                 label="Reset override"
                               />
                             ) : null}
-                          </Flex>
+                          </PhiFlexControl>
                         </div>
                       );
                     })}
-                  </Flex>
+                  </PhiFlexControl>
                 ),
               };
             }),
             ]}
           />
-        </Flex>
+        </PhiFlexControl>
       </Card>
-    </Flex>
+    </PhiFlexControl>
   );
 }
 
@@ -2462,7 +2464,7 @@ export function PhiBuilderBrandStyleControlsWidgetClient({
   ], [fontFamilies, resolvedCatalogueFamilies, siteFontAssets.options]);
 
   return (
-    <Flex vertical gap={clientToken.padding} style={{ width: "100%", minWidth: 0, opacity: loading ? 0.65 : 1 }}>
+    <PhiFlexControl vertical gap={clientToken.padding} style={{ width: "100%", minWidth: 0, opacity: loading ? 0.65 : 1 }}>
       {siteFontFaceCss ? (
         <style href="phi-theme-font-picker-faces" precedence="default" dangerouslySetInnerHTML={{ __html: siteFontFaceCss }} />
       ) : null}
@@ -2481,9 +2483,9 @@ export function PhiBuilderBrandStyleControlsWidgetClient({
           items={[
             {
               key: "controls",
-              label: <Typography.Text strong>Controls</Typography.Text>,
+              label: <PhiTypographyControl strong>Controls</PhiTypographyControl>,
               children: (
-                <Flex vertical gap={clientToken.paddingXS}>
+                <PhiFlexControl vertical gap={clientToken.paddingXS}>
                   {/*
                     The style comes with the Set; what an author decides here is the Control shape.
                     "Theme" hands the shape, the radii and the Control heights back to that style in one
@@ -2511,17 +2513,17 @@ export function PhiBuilderBrandStyleControlsWidgetClient({
                         : mergeThemeControlShape(state.draft, createPhiControlShapeCorners(value)),
                     )}
                   />
-                </Flex>
+                </PhiFlexControl>
               ),
             },
             {
               key: "buttonShadow",
-              label: <Typography.Text strong>Button Shadow</Typography.Text>,
+              label: <PhiTypographyControl strong>Button Shadow</PhiTypographyControl>,
               children: (
-                <Flex vertical gap={clientToken.paddingSM}>
-                  <Typography.Text type="secondary">
+                <PhiFlexControl vertical gap={clientToken.paddingSM}>
+                  <PhiTypographyControl type="secondary">
                     Under each kind of Button. Theme keeps the tinted line; applies to both modes.
-                  </Typography.Text>
+                  </PhiTypographyControl>
                   {PHI_THEME_BUTTON_SHADOW_KINDS.map((item) => (
                     <PhiSegmentedControl<PhiThemeButtonShadowChoice>
                       key={item.key}
@@ -2533,21 +2535,21 @@ export function PhiBuilderBrandStyleControlsWidgetClient({
                       onChange={(choice) => publishDraft(mergeThemeButtonShadow(state.draft, item.key, choice))}
                     />
                   ))}
-                </Flex>
+                </PhiFlexControl>
               ),
             },
             {
               key: "radius",
-              label: <Typography.Text strong>Border Radius</Typography.Text>,
+              label: <PhiTypographyControl strong>Border Radius</PhiTypographyControl>,
               children: (
-                <Flex vertical gap={clientToken.paddingXS}>
+                <PhiFlexControl vertical gap={clientToken.paddingXS}>
                   {[
                     { key: "borderRadiusSM", label: "Small", value: radiusValues.borderRadiusSM, fallbackPreset: "xs" },
                     { key: "borderRadius", label: "Base", value: radiusValues.borderRadius, fallbackPreset: "sm" },
                     { key: "borderRadiusLG", label: "Large", value: radiusValues.borderRadiusLG, fallbackPreset: "base" },
                   ].map((item) => (
-                    <Flex key={item.key} align="center" gap={clientToken.paddingSM} wrap="nowrap">
-                      <Typography.Text style={{ flex: `0 0 ${fieldLabelWidth}px` }}>{item.label}</Typography.Text>
+                    <PhiFlexControl key={item.key} align="center" gap={clientToken.paddingSM} wrap="nowrap">
+                      <PhiTypographyControl style={{ flex: `0 0 ${fieldLabelWidth}px` }}>{item.label}</PhiTypographyControl>
                       <PhiPresetSizeControl<PhiStyleSizePresetKey>
                         disabled={saving}
                         value={item.value}
@@ -2555,23 +2557,23 @@ export function PhiBuilderBrandStyleControlsWidgetClient({
                         options={PHI_STYLE_RADIUS_PRESET_OPTIONS}
                         onChange={(value) => updateToken({ [item.key]: value })}
                       />
-                    </Flex>
+                    </PhiFlexControl>
                   ))}
-                </Flex>
+                </PhiFlexControl>
               ),
             },
             {
               key: "controlHeight",
-              label: <Typography.Text strong>Control Height</Typography.Text>,
+              label: <PhiTypographyControl strong>Control Height</PhiTypographyControl>,
               children: (
-                <Flex vertical gap={clientToken.paddingXS}>
+                <PhiFlexControl vertical gap={clientToken.paddingXS}>
                   {[
                     { key: "controlHeightSM", label: "Small", value: controlHeightValues.controlHeightSM, fallbackPreset: "base" },
                     { key: "controlHeight", label: "Base", value: controlHeightValues.controlHeight, fallbackPreset: "md" },
                     { key: "controlHeightLG", label: "Large", value: controlHeightValues.controlHeightLG, fallbackPreset: "lg" },
                   ].map((item) => (
-                    <Flex key={item.key} align="center" gap={clientToken.paddingSM} wrap="nowrap">
-                      <Typography.Text style={{ flex: `0 0 ${fieldLabelWidth}px` }}>{item.label}</Typography.Text>
+                    <PhiFlexControl key={item.key} align="center" gap={clientToken.paddingSM} wrap="nowrap">
+                      <PhiTypographyControl style={{ flex: `0 0 ${fieldLabelWidth}px` }}>{item.label}</PhiTypographyControl>
                       <PhiPresetSizeControl<PhiStyleSizePresetKey>
                         disabled={saving}
                         value={item.value}
@@ -2579,19 +2581,19 @@ export function PhiBuilderBrandStyleControlsWidgetClient({
                         options={PHI_STYLE_CONTROL_HEIGHT_PRESET_OPTIONS}
                         onChange={(value) => updateToken({ [item.key]: value })}
                       />
-                    </Flex>
+                    </PhiFlexControl>
                   ))}
-                </Flex>
+                </PhiFlexControl>
               ),
             },
             {
               key: "fontFamily",
-              label: <Typography.Text strong>Font Family</Typography.Text>,
+              label: <PhiTypographyControl strong>Font Family</PhiTypographyControl>,
               children: (
-                <Flex vertical gap={clientToken.paddingXS}>
+                <PhiFlexControl vertical gap={clientToken.paddingXS}>
                   {fontSlots.map((item) => (
-                    <Flex key={item.key} align="center" gap={clientToken.paddingSM} wrap="nowrap">
-                      <Typography.Text style={{ flex: `0 0 ${fieldLabelWidth}px` }}>{item.label}</Typography.Text>
+                    <PhiFlexControl key={item.key} align="center" gap={clientToken.paddingSM} wrap="nowrap">
+                      <PhiTypographyControl style={{ flex: `0 0 ${fieldLabelWidth}px` }}>{item.label}</PhiTypographyControl>
                       {/*
                         * Empty means the slot follows the Set, and the placeholder says what that
                         * currently is -- so clearing reads as handing the decision back rather than as
@@ -2611,15 +2613,15 @@ export function PhiBuilderBrandStyleControlsWidgetClient({
                           mergeThemeFontSlot(state.draft, item.key, (value as string | undefined) ?? null),
                         )}
                       />
-                    </Flex>
+                    </PhiFlexControl>
                   ))}
                   <Divider style={{ marginBlock: clientToken.paddingXXS }} />
                   {/*
                     * Which of the families above the page's headings wear. Only `h1` to `h3` follow it:
                     * the headings of a page, not the titles of an interface.
                     */}
-                  <Flex align="center" gap={clientToken.paddingSM} wrap="nowrap">
-                    <Typography.Text style={{ flex: `0 0 ${fieldLabelWidth}px` }}>Headings</Typography.Text>
+                  <PhiFlexControl align="center" gap={clientToken.paddingSM} wrap="nowrap">
+                    <PhiTypographyControl style={{ flex: `0 0 ${fieldLabelWidth}px` }}>Headings</PhiTypographyControl>
                     <PhiSegmentedControl<PhiThemeHeadingFont>
                       value={readPhiThemeHeadingFont(state.draft.typography)}
                       options={PHI_THEME_HEADING_FONT_OPTIONS}
@@ -2627,36 +2629,36 @@ export function PhiBuilderBrandStyleControlsWidgetClient({
                       size="small"
                       onChange={(heading) => publishDraft(mergeThemeHeadingFont(state.draft, heading))}
                     />
-                  </Flex>
-                </Flex>
+                  </PhiFlexControl>
+                </PhiFlexControl>
               ),
             },
             {
               key: "fontSize",
-              label: <Typography.Text strong>Base Font Size</Typography.Text>,
+              label: <PhiTypographyControl strong>Base Font Size</PhiTypographyControl>,
               children: (
-                <Flex vertical gap={clientToken.paddingXS}>
-                  <Flex align="center" gap={clientToken.paddingSM} wrap="nowrap">
-                    <Typography.Text style={{ flex: `0 0 ${fieldLabelWidth}px` }}>Root value</Typography.Text>
-                    <Typography.Text code>{remRootValue}px</Typography.Text>
-                  </Flex>
-                  <Flex align="center" gap={clientToken.paddingSM} wrap="nowrap">
-                    <Typography.Text style={{ flex: `0 0 ${fieldLabelWidth}px` }}>Font size</Typography.Text>
-                    <Typography.Text code>{baseFontSize}px</Typography.Text>
-                  </Flex>
-                  <Typography.Text type="secondary">
+                <PhiFlexControl vertical gap={clientToken.paddingXS}>
+                  <PhiFlexControl align="center" gap={clientToken.paddingSM} wrap="nowrap">
+                    <PhiTypographyControl style={{ flex: `0 0 ${fieldLabelWidth}px` }}>Root value</PhiTypographyControl>
+                    <PhiTypographyControl code>{remRootValue}px</PhiTypographyControl>
+                  </PhiFlexControl>
+                  <PhiFlexControl align="center" gap={clientToken.paddingSM} wrap="nowrap">
+                    <PhiTypographyControl style={{ flex: `0 0 ${fieldLabelWidth}px` }}>Font size</PhiTypographyControl>
+                    <PhiTypographyControl code>{baseFontSize}px</PhiTypographyControl>
+                  </PhiFlexControl>
+                  <PhiTypographyControl type="secondary">
                     Root value controls rem conversion; font size is the seed every other type size is
                     derived from.
-                  </Typography.Text>
-                </Flex>
+                  </PhiTypographyControl>
+                </PhiFlexControl>
               ),
             },
             {
               key: "wireframe",
-              label: <Typography.Text strong>Wireframe</Typography.Text>,
+              label: <PhiTypographyControl strong>Wireframe</PhiTypographyControl>,
               children: (
-                <Flex align="center" justify="space-between" gap={clientToken.paddingSM} wrap="wrap">
-                  <Typography.Text type="secondary">Dividing lines in dialogs and popovers, outlined steps and radios</Typography.Text>
+                <PhiFlexControl align="center" justify="space-between" gap={clientToken.paddingSM} wrap="wrap">
+                  <PhiTypographyControl type="secondary">Dividing lines in dialogs and popovers, outlined steps and radios</PhiTypographyControl>
                   <PhiSwitchControl
                     checked={wireframe}
                     disabled={saving}
@@ -2664,13 +2666,13 @@ export function PhiBuilderBrandStyleControlsWidgetClient({
                     unCheckedChildren="Off"
                     onChange={(checked) => updateToken({ wireframe: checked })}
                   />
-                </Flex>
+                </PhiFlexControl>
               ),
             },
           ]}
         />
       </Card>
-    </Flex>
+    </PhiFlexControl>
   );
 }
 
@@ -2828,9 +2830,9 @@ function PhiBrandBlockPicker({
 }) {
   const { token: clientToken } = usePhiConfig();
   return (
-    <Flex vertical gap={clientToken.paddingXXS} style={{ minWidth: 0 }}>
-      <Flex align="center" justify="space-between" gap={clientToken.paddingXS}>
-        <Typography.Text strong>{label}</Typography.Text>
+    <PhiFlexControl vertical gap={clientToken.paddingXXS} style={{ minWidth: 0 }}>
+      <PhiFlexControl align="center" justify="space-between" gap={clientToken.paddingXS}>
+        <PhiTypographyControl strong>{label}</PhiTypographyControl>
         <PhiSelectControl
           ariaLabel={label}
           size="medium"
@@ -2839,13 +2841,13 @@ function PhiBrandBlockPicker({
           onChange={onChange}
           options={options.map((option) => ({ value: option.key, label: option.title }))}
         />
-      </Flex>
+      </PhiFlexControl>
       {unavailable ? (
-        <Typography.Text type="warning">
+        <PhiTypographyControl type="warning">
           {`Not available: ${unavailable}. Showing the built-in block until its Module is switched on again.`}
-        </Typography.Text>
+        </PhiTypographyControl>
       ) : null}
-    </Flex>
+    </PhiFlexControl>
   );
 }
 
@@ -2991,7 +2993,7 @@ export function PhiBuilderBrandIdentityControlsWidgetClient({
   }
 
   return (
-    <Flex vertical gap={clientToken.padding} style={{ width: "100%", minWidth: 0 }}>
+    <PhiFlexControl vertical gap={clientToken.padding} style={{ width: "100%", minWidth: 0 }}>
       <Card size="small" styles={{ body: { padding: clientToken.paddingSM } }}>
         <Collapse
           accordion
@@ -3007,15 +3009,15 @@ export function PhiBuilderBrandIdentityControlsWidgetClient({
           items={[
             {
               key: "logo",
-              label: <Typography.Text strong>Logo</Typography.Text>,
+              label: <PhiTypographyControl strong>Logo</PhiTypographyControl>,
               children: (
-                <Flex vertical gap={clientToken.paddingXS}>
-                  <Flex align="center" justify="space-between" gap={clientToken.paddingXS}>
+                <PhiFlexControl vertical gap={clientToken.paddingXS}>
+                  <PhiFlexControl align="center" justify="space-between" gap={clientToken.paddingXS}>
                     {/*
                       The Logo of the mode being authored, on a ground of that mode: a dark mode Logo
                       is drawn for a dark ground and would not read on the panel's own.
                     */}
-                    <Flex
+                    <PhiFlexControl
                       align="center"
                       aria-label={`${mode === "dark" ? "Dark" : "Light"} mode Logo preview`}
                       role="img"
@@ -3042,12 +3044,12 @@ export function PhiBuilderBrandIdentityControlsWidgetClient({
                           }}
                         />
                       ) : (
-                        <Typography.Text type="secondary" style={{ color: mode === "dark" ? "rgba(255, 255, 255, 0.45)" : undefined }}>
+                        <PhiTypographyControl type="secondary" style={{ color: mode === "dark" ? "rgba(255, 255, 255, 0.45)" : undefined }}>
                           No Logo
-                        </Typography.Text>
+                        </PhiTypographyControl>
                       )}
-                    </Flex>
-                    <Flex align="center" gap={clientToken.paddingXXS} style={{ flexShrink: 0 }}>
+                    </PhiFlexControl>
+                    <PhiFlexControl align="center" gap={clientToken.paddingXXS} style={{ flexShrink: 0 }}>
                       <PhiBrandBlockResetButton
                         disabled={brand.logo?.[mode] == null}
                         blockTitle={logoSet.title}
@@ -3058,8 +3060,8 @@ export function PhiBuilderBrandIdentityControlsWidgetClient({
                         disabled={JSON.stringify(logo) === JSON.stringify(logos[otherMode] ?? null)}
                         onCopy={() => publishDraft(mergeThemeBrandLogo(state.draft, otherMode, logo ?? { sourceKind: "none" }))}
                       />
-                    </Flex>
-                  </Flex>
+                    </PhiFlexControl>
+                  </PhiFlexControl>
                   <PhiMediaPickerBinding
                     key={mode}
                     config={{
@@ -3086,7 +3088,7 @@ export function PhiBuilderBrandIdentityControlsWidgetClient({
                     onAssetClear={() => publishDraft(mergeThemeBrandLogo(state.draft, mode, { sourceKind: "none" }))}
                   />
                   {/* One labelled row each, the labels in one column the way the Wordmark rows are. */}
-                  <Flex
+                  <PhiFlexControl
                     vertical
                     gap={clientToken.paddingXS}
                     style={{
@@ -3121,20 +3123,20 @@ export function PhiBuilderBrandIdentityControlsWidgetClient({
                         }))}
                       />
                     </PhiLabeledControl>
-                  </Flex>
-                </Flex>
+                  </PhiFlexControl>
+                </PhiFlexControl>
               ),
             },
             {
               key: "wordmark",
-              label: <Typography.Text strong>Wordmark</Typography.Text>,
+              label: <PhiTypographyControl strong>Wordmark</PhiTypographyControl>,
               children: (
                 /*
                  * Labels in their own column, so the eye reads down one edge instead of hunting for
                  * where each field starts. `PhiLabeledControl` is already that grid; the two custom
                  * properties are what make every row agree on one label width.
                  */
-                <Flex
+                <PhiFlexControl
                   vertical
                   gap={clientToken.paddingXS}
                   style={{
@@ -3142,13 +3144,13 @@ export function PhiBuilderBrandIdentityControlsWidgetClient({
                     "--phi-labeled-control-width": "100%",
                   } as CSSProperties}
                 >
-                  <Typography.Text type="secondary">
+                  <PhiTypographyControl type="secondary">
                     The Site name as it is set. One part per colour: a two-tone name is one word written
                     in two. With no part at all the frame shows {fallbackWordmark}.
-                  </Typography.Text>
+                  </PhiTypographyControl>
                   {editableWordmarkParts.map((part, index) => (
                     <PhiLabeledControl key={index} label={`Part #${index + 1}`} fill>
-                      <Flex gap={clientToken.paddingXXS} align="center" style={{ width: "100%", minWidth: 0 }}>
+                      <PhiFlexControl gap={clientToken.paddingXXS} align="center" style={{ width: "100%", minWidth: 0 }}>
                         <PhiTextControl
                           value={part.text}
                           placeholder={index === 0 ? fallbackWordmark : "Part"}
@@ -3175,7 +3177,7 @@ export function PhiBuilderBrandIdentityControlsWidgetClient({
                             editableWordmarkParts.filter((_, at) => at !== index),
                           ))}
                         />
-                      </Flex>
+                      </PhiFlexControl>
                     </PhiLabeledControl>
                   ))}
                   {/* No label of its own: it is an action on the rows above, not another field. */}
@@ -3191,7 +3193,7 @@ export function PhiBuilderBrandIdentityControlsWidgetClient({
                   </PhiLabeledControl>
                   <Divider style={{ marginBlock: clientToken.paddingXXS }} />
                   <PhiLabeledControl label="Weight" fill>
-                    <Flex gap={clientToken.paddingXS} align="center" style={{ width: "100%", minWidth: 0 }}>
+                    <PhiFlexControl gap={clientToken.paddingXS} align="center" style={{ width: "100%", minWidth: 0 }}>
                       <PhiSelectControl
                         ariaLabel="Wordmark weight"
                         style={{ flex: "1 1 auto", minWidth: 0 }}
@@ -3219,7 +3221,7 @@ export function PhiBuilderBrandIdentityControlsWidgetClient({
                           },
                         }))}
                       />
-                    </Flex>
+                    </PhiFlexControl>
                   </PhiLabeledControl>
                   {/*
                     Tracking in `em`, and only in `em`.
@@ -3257,7 +3259,7 @@ export function PhiBuilderBrandIdentityControlsWidgetClient({
                       }))}
                     />
                   </PhiLabeledControl>
-                </Flex>
+                </PhiFlexControl>
               ),
             },
             {
@@ -3268,11 +3270,11 @@ export function PhiBuilderBrandIdentityControlsWidgetClient({
                * all to say it -- the record held the fields and the workspace showed none of them.
                */
               key: "lines",
-              label: <Typography.Text strong>Lines</Typography.Text>,
+              label: <PhiTypographyControl strong>Lines</PhiTypographyControl>,
               children: (
                 /* The same label column the Logo and the Wordmark rows stand in, so all of the Brand's
                    fields start at one edge rather than each at the width of its own word. */
-                <Flex
+                <PhiFlexControl
                   vertical
                   gap={clientToken.paddingXS}
                   style={{
@@ -3294,13 +3296,13 @@ export function PhiBuilderBrandIdentityControlsWidgetClient({
                     line={brand.location}
                     onChange={(next) => publishDraft(mergeThemeBrand(state.draft, { location: next }))}
                   />
-                </Flex>
+                </PhiFlexControl>
               ),
             },
           ]}
         />
       </Card>
-    </Flex>
+    </PhiFlexControl>
   );
 }
 
@@ -3348,7 +3350,7 @@ export function PhiBuilderBrandBackgroundControlsWidgetClient({
     resolvePhiShellChromeOverlayConfig(effectiveRoot.chrome?.[otherMode] ?? null);
 
   return (
-    <Flex vertical gap={clientToken.padding} style={{ width: "100%", minWidth: 0 }}>
+    <PhiFlexControl vertical gap={clientToken.padding} style={{ width: "100%", minWidth: 0 }}>
       <Card size="small" styles={{ body: { padding: clientToken.paddingSM } }}>
         {/*
           Which ground this Site follows. The block is what shows wherever the author set nothing, so
@@ -3380,14 +3382,14 @@ export function PhiBuilderBrandBackgroundControlsWidgetClient({
           items={[
             {
               key: "root",
-              label: <Typography.Text strong>Root Background</Typography.Text>,
+              label: <PhiTypographyControl strong>Root Background</PhiTypographyControl>,
               children: (
-                <Flex vertical gap={clientToken.paddingXS}>
-                  <Flex align="center" justify="space-between" gap={clientToken.paddingXS}>
-                    <Typography.Text type="secondary">
+                <PhiFlexControl vertical gap={clientToken.paddingXS}>
+                  <PhiFlexControl align="center" justify="space-between" gap={clientToken.paddingXS}>
+                    <PhiTypographyControl type="secondary">
                       {modeLabel}. One layer behind the whole Site, fixed to the viewport.
-                    </Typography.Text>
-                    <Flex align="center" gap={clientToken.paddingXXS} style={{ flexShrink: 0 }}>
+                    </PhiTypographyControl>
+                    <PhiFlexControl align="center" gap={clientToken.paddingXXS} style={{ flexShrink: 0 }}>
                       <PhiBrandBlockResetButton
                         disabled={state.draft.root?.background?.[mode] == null}
                         blockTitle={composition.ground.title}
@@ -3399,8 +3401,8 @@ export function PhiBuilderBrandBackgroundControlsWidgetClient({
                         onCopy={() =>
                           publishDraft(mergeThemeRootBackground(state.draft, otherMode, rootBackground))}
                       />
-                    </Flex>
-                  </Flex>
+                    </PhiFlexControl>
+                  </PhiFlexControl>
                   <PhiBackgroundControl
                     key={mode}
                     value={rootBackground}
@@ -3410,20 +3412,20 @@ export function PhiBuilderBrandBackgroundControlsWidgetClient({
                     editTransaction={editTransaction}
                     onChange={(value) => publishDraft(mergeThemeRootBackground(state.draft, mode, value))}
                   />
-                </Flex>
+                </PhiFlexControl>
               ),
             },
             {
               key: "chrome",
-              label: <Typography.Text strong>Chrome Overlay</Typography.Text>,
+              label: <PhiTypographyControl strong>Chrome Overlay</PhiTypographyControl>,
               children: (
-                <Flex vertical gap={clientToken.paddingXS}>
-                  <Flex align="center" justify="space-between" gap={clientToken.paddingXS}>
-                    <Typography.Text type="secondary">
+                <PhiFlexControl vertical gap={clientToken.paddingXS}>
+                  <PhiFlexControl align="center" justify="space-between" gap={clientToken.paddingXS}>
+                    <PhiTypographyControl type="secondary">
                       {modeLabel}. Shared by the Header, Sider and Footer Regions. Content and Hero never
                       take it, and a Region that authors its own Background or Effect paints over it.
-                    </Typography.Text>
-                    <Flex align="center" gap={clientToken.paddingXXS} style={{ flexShrink: 0 }}>
+                    </PhiTypographyControl>
+                    <PhiFlexControl align="center" gap={clientToken.paddingXXS} style={{ flexShrink: 0 }}>
                       <PhiBrandBlockResetButton
                         disabled={state.draft.root?.chrome?.[mode] == null}
                         blockTitle={composition.ground.title}
@@ -3435,8 +3437,8 @@ export function PhiBuilderBrandBackgroundControlsWidgetClient({
                         onCopy={() =>
                           publishDraft(mergeThemeChromeOverlay(state.draft, otherMode, chromeOverlay))}
                       />
-                    </Flex>
-                  </Flex>
+                    </PhiFlexControl>
+                  </PhiFlexControl>
                   <PhiBackgroundControl
                     key={`chrome-${mode}`}
                     value={chromeOverlay}
@@ -3448,49 +3450,49 @@ export function PhiBuilderBrandBackgroundControlsWidgetClient({
                     editTransaction={editTransaction}
                     onChange={(value) => publishDraft(mergeThemeChromeOverlay(state.draft, mode, value))}
                   />
-                </Flex>
+                </PhiFlexControl>
               ),
             },
             {
               key: "shadow",
-              label: <Typography.Text strong>Chrome Shadow</Typography.Text>,
+              label: <PhiTypographyControl strong>Chrome Shadow</PhiTypographyControl>,
               children: (
-                <Flex vertical gap={clientToken.paddingXS}>
+                <PhiFlexControl vertical gap={clientToken.paddingXS}>
                   {/*
                     A section of its own rather than a tail on the Chrome Overlay: the ground above is a
                     mode value and switches with light and dark, while an edge is the same in both. One
                     entry per family, because a Shadow cannot point three ways at once, and both Siders
                     share theirs -- the same edge seen from two sides.
                   */}
-                  <Flex align="center" justify="space-between" gap={clientToken.paddingXS}>
-                    <Typography.Text type="secondary">
+                  <PhiFlexControl align="center" justify="space-between" gap={clientToken.paddingXS}>
+                    <PhiTypographyControl type="secondary">
                       Cast at the outside edge of each pane, once for the whole visible stack. Applies to
                       both modes.
-                    </Typography.Text>
+                    </PhiTypographyControl>
                     <PhiBrandBlockResetButton
                       disabled={state.draft.root?.chrome?.shadow == null}
                       blockTitle={composition.ground.title}
                       onReset={() => publishDraft(clearThemeRootSurface(state.draft, "shadow", mode))}
                     />
-                  </Flex>
+                  </PhiFlexControl>
                   {PHI_THEME_CHROME_SHADOW_EDGES.map(({ family, label }) => (
-                    <Flex key={family} vertical gap={clientToken.paddingXXS}>
-                      <Typography.Text>{label}</Typography.Text>
+                    <PhiFlexControl key={family} vertical gap={clientToken.paddingXXS}>
+                      <PhiTypographyControl>{label}</PhiTypographyControl>
                       <PhiShadowControl
                         value={effectiveRoot.chrome?.shadow?.[family] ?? "none"}
                         resolvePreview={(shadow) =>
                           resolvePhiShellChromePaneShadow(shadow, family === "sider" ? "sider-left" : family)}
                         onChange={(value) => publishDraft(mergeThemeChromeShadow(state.draft, family, value))}
                       />
-                    </Flex>
+                    </PhiFlexControl>
                   ))}
-                </Flex>
+                </PhiFlexControl>
               ),
             },
           ]}
         />
       </Card>
-    </Flex>
+    </PhiFlexControl>
   );
 }
 
@@ -3924,14 +3926,14 @@ export function PhiBuilderBrandThemePreviewWidgetClient({
             />
           )}
         >
-          <Flex align="center" justify="space-between" gap={clientToken.padding} wrap="wrap">
+          <PhiFlexControl align="center" justify="space-between" gap={clientToken.padding} wrap="wrap">
             <Space orientation="vertical" size={0}>
-              <Typography.Title level={4} style={{ margin: 0 }}>
+              <PhiTypographyControl presentation="title" level={4} style={{ margin: 0 }}>
                 Theme Preview
-              </Typography.Title>
-              <Typography.Text type="secondary">
+              </PhiTypographyControl>
+              <PhiTypographyControl type="secondary">
                 Buttons, form fields, tables and status colors use the current draft tokens.
-              </Typography.Text>
+              </PhiTypographyControl>
             </Space>
             {/*
               * Samples, drawn with the Controls a Site renders -- and live ones: a button with nothing to
@@ -3942,13 +3944,13 @@ export function PhiBuilderBrandThemePreviewWidgetClient({
               <PhiButtonControl label="Default" onClick={previewNoop} />
               <PhiButtonControl danger label="Danger" onClick={previewNoop} />
             </Space>
-          </Flex>
+          </PhiFlexControl>
           <Divider style={{ margin: 0 }} />
-          <Flex vertical gap={clientToken.paddingSM} style={{ minWidth: 0 }}>
-            <Typography.Title level={5} style={{ margin: 0, color: previewTextColor }}>
+          <PhiFlexControl vertical gap={clientToken.paddingSM} style={{ minWidth: 0 }}>
+            <PhiTypographyControl presentation="title" level={5} style={{ margin: 0, color: previewTextColor }}>
               Control Height
-            </Typography.Title>
-            <Flex gap={clientToken.paddingXS} wrap="wrap" align="end">
+            </PhiTypographyControl>
+            <PhiFlexControl gap={clientToken.paddingXS} wrap="wrap" align="end">
               {controlHeightPreviewItems.map((item) => (
                 <PhiButtonControl
                   key={item.key}
@@ -3957,9 +3959,9 @@ export function PhiBuilderBrandThemePreviewWidgetClient({
                   onClick={previewNoop}
                 />
               ))}
-            </Flex>
-            <Typography.Text type="secondary">Wireframe {wireframeEnabled ? "on" : "off"}</Typography.Text>
-          </Flex>
+            </PhiFlexControl>
+            <PhiTypographyControl type="secondary">Wireframe {wireframeEnabled ? "on" : "off"}</PhiTypographyControl>
+          </PhiFlexControl>
           <PhiTextControl
             label="Campaign"
             placeholder="Preview input"
@@ -3967,24 +3969,24 @@ export function PhiBuilderBrandThemePreviewWidgetClient({
             onChange={(next) => setPreviewInput(next ?? "")}
           />
           <Divider style={{ margin: 0 }} />
-          <Flex gap={clientToken.padding} wrap="wrap">
-            <Flex vertical gap={clientToken.paddingXS} style={{ flex: "1 1 260px", minWidth: 0 }}>
+          <PhiFlexControl gap={clientToken.padding} wrap="wrap">
+            <PhiFlexControl vertical gap={clientToken.paddingXS} style={{ flex: "1 1 260px", minWidth: 0 }}>
               {/* An `h3`, so the same rule that sets a page's headings sets this one. */}
-              <Typography.Title level={3} style={{ margin: 0, color: previewTextColor }}>
+              <PhiTypographyControl presentation="title" level={3} style={{ margin: 0, color: previewTextColor }}>
                 Heading
-              </Typography.Title>
-              <Typography.Title level={5} style={{ margin: 0, color: previewTextColor }}>
+              </PhiTypographyControl>
+              <PhiTypographyControl presentation="title" level={5} style={{ margin: 0, color: previewTextColor }}>
                 Header
-              </Typography.Title>
-              <Typography.Text style={{ color: previewTextColor }}>Text</Typography.Text>
-              <Typography.Text style={{ color: previewTextSecondaryColor }}>Text secondary</Typography.Text>
-              <Typography.Text style={{ color: previewTextTertiaryColor }}>Text tertiary</Typography.Text>
+              </PhiTypographyControl>
+              <PhiTypographyControl style={{ color: previewTextColor }}>Text</PhiTypographyControl>
+              <PhiTypographyControl style={{ color: previewTextSecondaryColor }}>Text secondary</PhiTypographyControl>
+              <PhiTypographyControl style={{ color: previewTextTertiaryColor }}>Text tertiary</PhiTypographyControl>
               <span style={{ display: "inline-flex", flexWrap: "wrap", gap: clientToken.paddingSM }}>
-                <Typography.Link style={{ color: previewLinkColor }}>Link</Typography.Link>
-                <Typography.Link style={{ color: previewLinkHoverColor }}>Link Hover</Typography.Link>
-                <Typography.Link style={{ color: previewLinkActiveColor }}>Link Active</Typography.Link>
+                <PhiTypographyControl presentation="link" style={{ color: previewLinkColor }}>Link</PhiTypographyControl>
+                <PhiTypographyControl presentation="link" style={{ color: previewLinkHoverColor }}>Link Hover</PhiTypographyControl>
+                <PhiTypographyControl presentation="link" style={{ color: previewLinkActiveColor }}>Link Active</PhiTypographyControl>
               </span>
-            </Flex>
+            </PhiFlexControl>
             <div
               style={{
                 display: "grid",
@@ -4013,24 +4015,24 @@ export function PhiBuilderBrandThemePreviewWidgetClient({
                     transition: "background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease",
                   }}
                 >
-                  <Typography.Text strong style={{ color: hoveredStatusKey === item.key ? item.hoverColor : item.color }}>
+                  <PhiTypographyControl strong style={{ color: hoveredStatusKey === item.key ? item.hoverColor : item.color }}>
                     {item.label}
-                  </Typography.Text>
+                  </PhiTypographyControl>
                 </div>
               ))}
             </div>
-          </Flex>
+          </PhiFlexControl>
           <Divider style={{ margin: 0 }} />
-          <Flex gap={clientToken.padding} wrap="wrap">
+          <PhiFlexControl gap={clientToken.padding} wrap="wrap">
             <Statistic title="Draft colors" value={countThemePaletteLeaves(previewTheme.palette)} />
             <Statistic title="Preset" value={previewPreset.title} />
             <Statistic title="Mode" value={mode} />
-          </Flex>
+          </PhiFlexControl>
           <Divider style={{ margin: 0 }} />
-          <Flex vertical gap={clientToken.paddingSM}>
-            <Typography.Title level={5} style={{ margin: 0, color: previewTextColor }}>
+          <PhiFlexControl vertical gap={clientToken.paddingSM}>
+            <PhiTypographyControl presentation="title" level={5} style={{ margin: 0, color: previewTextColor }}>
               Font Slots
-            </Typography.Title>
+            </PhiTypographyControl>
             <div
               style={{
                 display: "grid",
@@ -4050,27 +4052,27 @@ export function PhiBuilderBrandThemePreviewWidgetClient({
                     padding: clientToken.paddingXS,
                   }}
                 >
-                  <Typography.Text type="secondary" style={{ display: "block" }}>
+                  <PhiTypographyControl type="secondary" style={{ display: "block" }}>
                     {item.label}
-                  </Typography.Text>
-                  <Typography.Text style={{ display: "block", color: previewTextColor, fontFamily: item.family }}>
+                  </PhiTypographyControl>
+                  <PhiTypographyControl style={{ display: "block", color: previewTextColor, fontFamily: item.family }}>
                     {item.sample}
-                  </Typography.Text>
+                  </PhiTypographyControl>
                   {item.value ? (
-                    <Typography.Text type="secondary" style={{ display: "block", fontFamily: item.family }}>
+                    <PhiTypographyControl type="secondary" style={{ display: "block", fontFamily: item.family }}>
                       {item.value}
-                    </Typography.Text>
+                    </PhiTypographyControl>
                   ) : null}
                 </div>
               ))}
             </div>
-          </Flex>
-          <Flex gap={clientToken.padding} wrap="wrap">
-            <Flex vertical gap={clientToken.paddingSM} style={{ flex: "1 1 260px", minWidth: 0 }}>
-              <Typography.Title level={5} style={{ margin: 0, color: previewTextColor }}>
+          </PhiFlexControl>
+          <PhiFlexControl gap={clientToken.padding} wrap="wrap">
+            <PhiFlexControl vertical gap={clientToken.paddingSM} style={{ flex: "1 1 260px", minWidth: 0 }}>
+              <PhiTypographyControl presentation="title" level={5} style={{ margin: 0, color: previewTextColor }}>
                 Border Radius
-              </Typography.Title>
-              <Flex gap={clientToken.paddingXS} wrap="wrap">
+              </PhiTypographyControl>
+              <PhiFlexControl gap={clientToken.paddingXS} wrap="wrap">
                 {radiusPreviewItems.map((item) => (
                   <div
                     key={item.key}
@@ -4083,18 +4085,18 @@ export function PhiBuilderBrandThemePreviewWidgetClient({
                       padding: clientToken.paddingXS,
                     }}
                   >
-                    <Typography.Text strong style={{ display: "block", color: previewTextColor }}>
+                    <PhiTypographyControl strong style={{ display: "block", color: previewTextColor }}>
                       {item.label}
-                    </Typography.Text>
-                    <Typography.Text type="secondary">{item.value}px</Typography.Text>
+                    </PhiTypographyControl>
+                    <PhiTypographyControl type="secondary">{item.value}px</PhiTypographyControl>
                   </div>
                 ))}
-              </Flex>
-            </Flex>
-          </Flex>
+              </PhiFlexControl>
+            </PhiFlexControl>
+          </PhiFlexControl>
           {/* The search field and footer the Table Widget draws around its Control, so both follow the draft too. */}
-          <Flex vertical gap={clientToken.paddingXS} style={{ minWidth: 0 }}>
-            <Flex justify="end">
+          <PhiFlexControl vertical gap={clientToken.paddingXS} style={{ minWidth: 0 }}>
+            <PhiFlexControl justify="end">
               <PhiTextControl
                 inputType="search"
                 allowClear
@@ -4104,7 +4106,7 @@ export function PhiBuilderBrandThemePreviewWidgetClient({
                 onChange={(value) => setPreviewTableSearch(value ?? "")}
                 style={{ width: 260, maxWidth: "100%" }}
               />
-            </Flex>
+            </PhiFlexControl>
             <PhiTableControl<PreviewRow>
               size="small"
               pagination={false}
@@ -4117,7 +4119,7 @@ export function PhiBuilderBrandThemePreviewWidgetClient({
               rows={previewTableRows}
               footer={{ content: `${previewTableRows.length} of 2 rows`, align: "start" }}
             />
-          </Flex>
+          </PhiFlexControl>
         </PhiBrandChromePreviewShell>
       </Card>
     </ConfigProvider>

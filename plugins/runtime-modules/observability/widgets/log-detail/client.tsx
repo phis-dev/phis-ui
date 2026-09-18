@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Descriptions, Flex, Skeleton, Typography } from "antd";
+import { Descriptions, Skeleton } from "antd";
 import { PhiTagControl } from "../../../../../components/controls/phi-tag-control";
 
 import { formatPhiDateTime } from "../../../../../helpers/format-date-time";
@@ -14,6 +14,8 @@ import { usePhiSignalListener } from "../../../../../components/runtime/runtime-
 import { usePhiSignalIdentity } from "../../../../../components/runtime/runtime-signal-identity";
 import { readPhiTableActionSignalValue } from "../../../../../types/table-widget";
 import { PhiAlertControl } from "../../../../../components/controls/phi-alert-control";
+import { PhiFlexControl } from "../../../../../components/controls/phi-flex-control";
+import { PhiTypographyControl } from "../../../../../components/controls/phi-typography-control";
 
 type LogLevel = "debug" | "info" | "warn" | "error";
 
@@ -200,11 +202,11 @@ export function PhiObservabilityLogDetailWidgetClient({ config, labels }: Props)
   }, [loadRecord, selectedRowIdentity]);
 
   return (
-    <Flex vertical gap={16} style={{ minWidth: 0, width: "100%" }}>
+    <PhiFlexControl vertical gap={16} style={{ minWidth: 0, width: "100%" }}>
         {loading ? <Skeleton active paragraph={{ rows: 7 }} /> : null}
         {error ? <PhiAlertControl level="error" showIcon title={error} /> : null}
         {!loading && !error && selectedRow ? (
-          <Flex vertical gap={16}>
+          <PhiFlexControl vertical gap={16}>
             <Descriptions size="small" column={2} bordered>
               <Descriptions.Item label={labels.columns.time}>
                 {formatPhiDateTime(selectedRow.ts)}
@@ -216,7 +218,7 @@ export function PhiObservabilityLogDetailWidgetClient({ config, labels }: Props)
                 <PhiTagControl>{selectedRow.service}</PhiTagControl>
               </Descriptions.Item>
               <Descriptions.Item label={labels.columns.event}>
-                <Typography.Text code>{selectedRow.event}</Typography.Text>
+                <PhiTypographyControl code>{selectedRow.event}</PhiTypographyControl>
               </Descriptions.Item>
               <Descriptions.Item label={labels.columns.area}>
                 {formatValue(selectedRow.area)}
@@ -229,23 +231,23 @@ export function PhiObservabilityLogDetailWidgetClient({ config, labels }: Props)
               </Descriptions.Item>
             </Descriptions>
 
-            <Flex vertical gap={8}>
-              <Typography.Text strong>{labels.detail.meta}</Typography.Text>
+            <PhiFlexControl vertical gap={8}>
+              <PhiTypographyControl strong>{labels.detail.meta}</PhiTypographyControl>
               <pre style={{ margin: 0, whiteSpace: "pre-wrap" }}>
                 {JSON.stringify(selectedRow.meta ?? {}, null, 2)}
               </pre>
-            </Flex>
+            </PhiFlexControl>
 
             {selectedRow.error ? (
-              <Flex vertical gap={8}>
-                <Typography.Text strong>{labels.detail.error}</Typography.Text>
+              <PhiFlexControl vertical gap={8}>
+                <PhiTypographyControl strong>{labels.detail.error}</PhiTypographyControl>
                 <pre style={{ margin: 0, whiteSpace: "pre-wrap" }}>
                   {JSON.stringify(selectedRow.error, null, 2)}
                 </pre>
-              </Flex>
+              </PhiFlexControl>
             ) : null}
-          </Flex>
+          </PhiFlexControl>
         ) : null}
-    </Flex>
+    </PhiFlexControl>
   );
 }

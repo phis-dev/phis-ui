@@ -1,7 +1,7 @@
 "use client";
 
 import { DeleteOutlined, UploadOutlined } from "@ant-design/icons";
-import { Flex, List, Progress, Typography } from "antd";
+import { List, Progress } from "antd";
 import { PhiButtonControl } from "../../../../../components/controls/phi-button-control";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
@@ -16,6 +16,8 @@ import { usePhiSignalIdentity } from "../../../../../components/runtime/runtime-
 import { readPhiTableBindingParamsSignalValue } from "../../../../../types/table-widget";
 import type { PhiSignal, PhiSignalRoute } from "../../../../../types/signals";
 import type { PhiSlotUploadWidgetConfig } from "./config";
+import { PhiFlexControl } from "../../../../../components/controls/phi-flex-control";
+import { PhiTypographyControl } from "../../../../../components/controls/phi-typography-control";
 
 /**
  * A file on a row, through the door Core opens under every Add-on's own root.
@@ -216,13 +218,13 @@ export function PhiSlotUploadWidgetClient({ config }: PhiSlotUploadWidgetClientP
   }, [base, ownerId, read, reload]);
 
   if (!base || !slotName) {
-    return <Typography.Text type="secondary">This field names no Add-on, table or slot.</Typography.Text>;
+    return <PhiTypographyControl type="secondary">This field names no Add-on, table or slot.</PhiTypographyControl>;
   }
 
   return (
-    <Flex vertical gap={8} data-phis-slot-upload={slotName}>
+    <PhiFlexControl vertical gap={8} data-phis-slot-upload={slotName}>
       {ownerId === null ? (
-        <Typography.Text type="secondary">Nothing selected.</Typography.Text>
+        <PhiTypographyControl type="secondary">Nothing selected.</PhiTypographyControl>
       ) : (
         <>
           {/*
@@ -253,7 +255,7 @@ export function PhiSlotUploadWidgetClient({ config }: PhiSlotUploadWidgetClientP
       {upload.items.filter((item) => item.status === "uploading").map((item) => (
         <Progress key={item.localId} percent={item.progress} size="small" />
       ))}
-      {failure ? <Typography.Text type="danger" role="alert">{failure}</Typography.Text> : null}
+      {failure ? <PhiTypographyControl type="danger" role="alert">{failure}</PhiTypographyControl> : null}
       <List
         size="small"
         dataSource={[...files]}
@@ -268,10 +270,10 @@ export function PhiSlotUploadWidgetClient({ config }: PhiSlotUploadWidgetClientP
                 onClick={() => { void remove(file.id).catch(() => setFailure("That file stayed.")); }} />,
             ]}
           >
-            <Typography.Text>{file.contentType} — {file.byteSize} bytes</Typography.Text>
+            <PhiTypographyControl>{file.contentType} — {file.byteSize} bytes</PhiTypographyControl>
           </List.Item>
         )}
       />
-    </Flex>
+    </PhiFlexControl>
   );
 }

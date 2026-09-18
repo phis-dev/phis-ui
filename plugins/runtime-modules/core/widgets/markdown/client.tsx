@@ -1,7 +1,7 @@
 "use client";
 
 import { Fragment, useEffect, useMemo, type CSSProperties, type ReactNode } from "react";
-import { Divider, Typography } from "antd";
+import { Divider } from "antd";
 
 import { PhiLink } from "../../../../../components/navigation/phi-link";
 import type { PhiClientBlockBaseProps, PhiNoLabels } from "../../../../../types";
@@ -11,6 +11,7 @@ import { usePhiConfig, type PhiConfig } from "../../../../../components/root/phi
 import type { PhiMarkdownSpacingKey, PhiMarkdownTextAlign } from "./config";
 import type { PhiMarkdownTocHeading } from "../markdown-toc/config";
 import { PhiPlainTable } from "../../../../../components/tables/phi-plain-table";
+import { PhiTypographyControl } from "../../../../../components/controls/phi-typography-control";
 
 export type PhiMarkdownInline =
   | { kind: "text"; text: string }
@@ -98,9 +99,9 @@ function renderInlineNodes(inlines: PhiMarkdownInline[]): ReactNode[] {
         return <del key={key}>{renderInlineNodes(inline.children)}</del>;
       case "inline_code":
         return (
-          <Typography.Text key={key} code>
+          <PhiTypographyControl key={key} code>
             {inline.text}
-          </Typography.Text>
+          </PhiTypographyControl>
         );
       case "link":
         return (
@@ -136,15 +137,15 @@ function renderBlocks(
     switch (block.kind) {
       case "heading":
         return (
-          <Typography.Title key={key} id={block.id} level={block.level} style={headingBlockStyle}>
+          <PhiTypographyControl presentation="title" key={key} id={block.id} level={block.level} style={headingBlockStyle}>
             {renderInlineNodes(block.inlines)}
-          </Typography.Title>
+          </PhiTypographyControl>
         );
       case "paragraph":
         return (
-          <Typography.Paragraph key={key} style={paragraphBlockStyle}>
+          <PhiTypographyControl presentation="paragraph" key={key} style={paragraphBlockStyle}>
             {renderInlineNodes(block.inlines)}
-          </Typography.Paragraph>
+          </PhiTypographyControl>
         );
       case "blockquote":
         return (
@@ -248,9 +249,9 @@ export function PhiMarkdownWidgetClient({ config }: PhiMarkdownWidgetClientProps
 
   if (config?.error) {
     return (
-      <Typography.Paragraph type="danger" style={{ marginBottom: 0 }}>
+      <PhiTypographyControl presentation="paragraph" type="danger" style={{ marginBottom: 0 }}>
         {config.error}
-      </Typography.Paragraph>
+      </PhiTypographyControl>
     );
   }
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { Badge, Calendar, DatePicker, Flex, Typography } from "antd";
+import { Badge, Calendar, DatePicker } from "antd";
 import type { CalendarProps } from "antd";
 import dayjs, { type Dayjs } from "dayjs";
 import quarterOfYear from "dayjs/plugin/quarterOfYear";
@@ -16,6 +16,8 @@ import {
   type PhiCalendarPrecision,
   type PhiTemporalValue,
 } from "../../types/calendar";
+import { PhiFlexControl } from "../controls/phi-flex-control";
+import { PhiTypographyControl } from "../controls/phi-typography-control";
 
 dayjs.extend(quarterOfYear);
 dayjs.extend(utc);
@@ -181,9 +183,9 @@ function renderCalendar(props: Parameters<PhiCalendarAdapterClient["renderCalend
     if (info.type !== "date") return info.originNode;
     const events = props.events.filter((event) => eventFallsOnDate(event, value, props.timeZone));
     return (
-      <Flex vertical gap={2}>
+      <PhiFlexControl vertical gap={2}>
         {events.map((event) => (
-          <Typography.Link
+          <PhiTypographyControl presentation="link"
             key={`${event.id}:${event.occurrenceId ?? "single"}`}
             onClick={(mouseEvent) => {
               mouseEvent.stopPropagation();
@@ -191,9 +193,9 @@ function renderCalendar(props: Parameters<PhiCalendarAdapterClient["renderCalend
             }}
           >
             <Badge color={event.color} status={event.color ? undefined : "default"} text={event.title} />
-          </Typography.Link>
+          </PhiTypographyControl>
         ))}
-      </Flex>
+      </PhiFlexControl>
     );
   };
   return (

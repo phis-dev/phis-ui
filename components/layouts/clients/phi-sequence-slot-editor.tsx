@@ -1,6 +1,6 @@
 "use client";
 
-import { Space, Typography } from "antd";
+import { Space } from "antd";
 import { PhiButtonControl } from "../../controls/phi-button-control";
 import { LeftOutlined, RightOutlined } from "@ant-design/icons";
 import type { CSSProperties, ReactNode } from "react";
@@ -25,6 +25,7 @@ import {
   phiLayoutSlotContentMarker,
   type PhiLayoutAuthoringSignal,
 } from "../../../helpers/layout-authoring-markers";
+import { PhiTypographyControl } from "../../controls/phi-typography-control";
 
 /**
  * Authoring a sequence, one slot at a time.
@@ -157,9 +158,9 @@ export function PhiSequenceSlotEditor({
             onClick={() => onActiveIndexChange(currentIndex - 1)}
           />
         </span>
-        <Typography.Text type="secondary" style={{ fontSize: 12, minWidth: 64, textAlign: "center" }}>
+        <PhiTypographyControl type="secondary" style={{ fontSize: 12, minWidth: 64, textAlign: "center" }}>
           {currentIndex + 1} / {editableSlotCount}
-        </Typography.Text>
+        </PhiTypographyControl>
         <span onClick={(event) => event.stopPropagation()}>
           <PhiButtonControl
             ariaLabel={`Next ${slotNoun}`}

@@ -1,6 +1,5 @@
 "use client";
 
-import { Flex } from "antd";
 import { PhiSegmentedControl } from "../../../../components/controls/phi-segmented-control";
 
 import {
@@ -14,6 +13,7 @@ import {
 import { usePhiControlSignalController } from "../../../../components/widgets/client/shared/phi-control-signals";
 import { usePhiConfig } from "../../../../components/root/phi-config-provider";
 import { createPhiBuilderControllerAddress } from "../controller/address";
+import { PhiFlexControl } from "../../../../components/controls/phi-flex-control";
 
 export function PhiBuilderModeSwitchWidgetClient({
   disabled = false,
@@ -52,7 +52,7 @@ export function PhiBuilderModeSwitchWidgetClient({
   });
 
   return (
-    <Flex align="center" gap={token.paddingXS} style={{ minWidth: 0 }}>
+    <PhiFlexControl align="center" gap={token.paddingXS} style={{ minWidth: 0 }}>
       <PhiSegmentedControl
         value={builderMode}
         disabled={controlSignals.disabled}
@@ -66,6 +66,6 @@ export function PhiBuilderModeSwitchWidgetClient({
         onFocus={controlSignals.emitFocus}
         onBlur={controlSignals.emitBlur}
       />
-    </Flex>
+    </PhiFlexControl>
   );
 }

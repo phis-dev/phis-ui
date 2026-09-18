@@ -7,13 +7,15 @@ import {
   MenuOutlined,
   PlusOutlined,
 } from "@ant-design/icons";
-import { Flex, Space, Typography } from "antd";
+import { Space } from "antd";
 
 import { PhiButtonControl } from "../../controls/phi-button-control";
 import { PhiPopoverControl } from "../../controls/phi-popover-control";
 import { usePhiConfig } from "../../root/phi-config-provider";
 import type { PhiCommandToolbarButtonConfig } from "../../../plugins/runtime-modules/core/widgets/command-toolbar/config";
 import { usePhiWidgetScaffoldPopup } from "../client/shared/phi-widget-scaffold-popup";
+import { PhiFlexControl } from "../../controls/phi-flex-control";
+import { PhiTypographyControl } from "../../controls/phi-typography-control";
 
 function stopToolEvent(event: { stopPropagation: () => void }) {
   event.stopPropagation();
@@ -81,7 +83,7 @@ export function PhiCommandToolbarAuthoringTools({
         rootClassName={popup.rootClassName}
         onOpenChange={popup.setOpen}
         content={(
-          <Flex
+          <PhiFlexControl
             vertical
             gap={token.paddingXXS}
             style={{ minWidth: 240 }}
@@ -89,12 +91,12 @@ export function PhiCommandToolbarAuthoringTools({
             onPointerDown={stopToolEvent}
           >
             {buttons.length === 0 ? (
-              <Typography.Text type="secondary">No buttons</Typography.Text>
+              <PhiTypographyControl type="secondary">No buttons</PhiTypographyControl>
             ) : buttons.map((button, index) => (
-              <Flex key={button.key} align="center" gap={token.paddingXXS}>
-                <Typography.Text ellipsis style={{ flex: "1 1 auto", minWidth: 0 }}>
+              <PhiFlexControl key={button.key} align="center" gap={token.paddingXXS}>
+                <PhiTypographyControl ellipsis style={{ flex: "1 1 auto", minWidth: 0 }}>
                   {button.label ?? button.actionKey ?? button.key}
-                </Typography.Text>
+                </PhiTypographyControl>
                 <PhiButtonControl
                   type="text"
                   size="small"
@@ -119,9 +121,9 @@ export function PhiCommandToolbarAuthoringTools({
                   icon={<DeleteOutlined />}
                   onClick={() => onChange(buttons.filter((_, candidateIndex) => candidateIndex !== index))}
                 />
-              </Flex>
+              </PhiFlexControl>
             ))}
-          </Flex>
+          </PhiFlexControl>
         )}
       >
         <span onClick={stopToolEvent} onPointerDown={stopToolEvent} style={{ display: "inline-flex" }}>

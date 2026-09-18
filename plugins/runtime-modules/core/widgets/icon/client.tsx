@@ -1,6 +1,5 @@
 "use client";
 
-import { Flex } from "antd";
 import { useState } from "react";
 
 import { PhiIcon } from "../../../../../components/shell/phi-icon";
@@ -9,6 +8,7 @@ import {
   createPhiRenderableBlockReceiver,
   usePhiRenderableBlockSignalListener,
 } from "../../../../../components/runtime/renderable-block-runtime";
+import { PhiFlexControl } from "../../../../../components/controls/phi-flex-control";
 
 const PHI_ICON_FALLBACK = "antd:question-circle-outlined";
 const PHI_ICON_DEFAULT_SIZE = 24;
@@ -72,7 +72,7 @@ export function PhiIconWidgetClient({
   });
 
   return (
-    <Flex
+    <PhiFlexControl
       align="center"
       justify="center"
       style={{
@@ -85,6 +85,6 @@ export function PhiIconWidgetClient({
       }}
     >
       <PhiIcon name={iconValue ?? PHI_ICON_FALLBACK} size={resolveIconSize(config)} />
-    </Flex>
+    </PhiFlexControl>
   );
 }

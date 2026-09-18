@@ -1,10 +1,11 @@
 "use client";
 
-import { Space, Typography } from "antd";
+import { Space } from "antd";
 import { PhiTagControl } from "../../../../../components/controls/phi-tag-control";
 
 import type { PhiClientBlockBaseProps } from "../../../../../types";
 import { usePhiConfig } from "../../../../../components/root/phi-config-provider";
+import { PhiTypographyControl } from "../../../../../components/controls/phi-typography-control";
 const PHI_LINE_HEIGHT_BASE = 1.5;
 const PHI_LINE_HEIGHT_LG = 1.6;
 const PHI_FONT_WEIGHT_STRONG = 600;
@@ -52,12 +53,12 @@ export function PhiDescriptionWidgetClient({
       {labels.title || labels.description ? (
         <div>
           {labels.title ? (
-            <Typography.Title level={2} style={{ marginBottom: labels.description ? token.paddingXS : 0 }}>
+            <PhiTypographyControl presentation="title" level={2} style={{ marginBottom: labels.description ? token.paddingXS : 0 }}>
               {labels.title}
-            </Typography.Title>
+            </PhiTypographyControl>
           ) : null}
           {labels.description ? (
-            <Typography.Paragraph
+            <PhiTypographyControl presentation="paragraph"
               style={{
                 marginBottom: 0,
                 color: token.colorTextSecondary,
@@ -66,14 +67,14 @@ export function PhiDescriptionWidgetClient({
               }}
             >
               {labels.description}
-            </Typography.Paragraph>
+            </PhiTypographyControl>
           ) : null}
         </div>
       ) : null}
       {labels.asideTitle || asideItems.length > 0 ? (
         <Space orientation="vertical" size={0} style={{ width: "100%", gap: token.paddingMD }}>
           {labels.asideTitle ? (
-            <Typography.Text
+            <PhiTypographyControl
               strong
               style={{
                 fontSize: token.fontSize,
@@ -82,7 +83,7 @@ export function PhiDescriptionWidgetClient({
               }}
             >
               {labels.asideTitle}
-            </Typography.Text>
+            </PhiTypographyControl>
           ) : null}
           <Space orientation="vertical" size={0} style={{ width: "100%", gap: token.paddingSM }}>
             {asideItems.map((item, index) => (
@@ -109,7 +110,7 @@ export function PhiDescriptionWidgetClient({
                     flexShrink: 0,
                   }}
                 />
-                <Typography.Text
+                <PhiTypographyControl
                   style={{
                     color: token.colorText,
                     fontSize: token.fontSize,
@@ -117,16 +118,16 @@ export function PhiDescriptionWidgetClient({
                   }}
                 >
                   {item}
-                </Typography.Text>
+                </PhiTypographyControl>
               </div>
             ))}
           </Space>
         </Space>
       ) : null}
       {labels.footer ? (
-        <Typography.Paragraph style={{ marginBottom: 0, color: token.colorTextTertiary }}>
+        <PhiTypographyControl presentation="paragraph" style={{ marginBottom: 0, color: token.colorTextTertiary }}>
           {labels.footer}
-        </Typography.Paragraph>
+        </PhiTypographyControl>
       ) : null}
     </Space>
   );

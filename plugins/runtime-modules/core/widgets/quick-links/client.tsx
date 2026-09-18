@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState } from "react";
 
 import { usePathname } from "next/navigation";
-import { Flex, Typography } from "antd";
 
 import { PhiLink } from "../../../../../components/navigation/phi-link";
 import { PhiIcon } from "../../../../../components/shell/phi-icon";
@@ -13,6 +12,8 @@ import {
   PHI_CONTAINER_BREAKPOINT_COL2,
   PHI_CONTAINER_BREAKPOINT_COL3,
 } from "../../../../../theme/phi-container-breakpoints";
+import { PhiFlexControl } from "../../../../../components/controls/phi-flex-control";
+import { PhiTypographyControl } from "../../../../../components/controls/phi-typography-control";
 
 export type PhiQuickLinksWidgetItem = {
   label: string;
@@ -97,7 +98,6 @@ export function PhiQuickLinksWidgetClient({
   config,
 }: PhiQuickLinksWidgetClientProps) {
   const { token } = usePhiConfig();
-  const { Text } = Typography;
   const { ref, width, breakpoints } = useQuickLinksContainerWidth();
   const pathname = usePathname() ?? "/";
 
@@ -120,9 +120,9 @@ export function PhiQuickLinksWidgetClient({
 
   return (
     <div ref={ref} style={{ width: "100%", minWidth: 0 }}>
-      <Flex vertical style={{ width: "100%", minWidth: 0, gap: token.paddingLG }}>
+      <PhiFlexControl vertical style={{ width: "100%", minWidth: 0, gap: token.paddingLG }}>
       {labels.title ? (
-        <Text
+        <PhiTypographyControl
           strong
           style={{
             display: "block",
@@ -134,7 +134,7 @@ export function PhiQuickLinksWidgetClient({
           }}
         >
           {labels.title}
-        </Text>
+        </PhiTypographyControl>
       ) : null}
       <div
         style={{
@@ -145,7 +145,7 @@ export function PhiQuickLinksWidgetClient({
         }}
       >
         {groupedItems.map((group, groupIndex) => (
-          <Flex
+          <PhiFlexControl
             key={`column-${groupIndex}`}
             vertical
             style={{
@@ -165,10 +165,10 @@ export function PhiQuickLinksWidgetClient({
               (() => {
                 const isCurrent = !item.external && item.href === pathname;
                 const content = (
-                  <Flex align="center" style={{ minWidth: 0, gap: token.paddingSM }}>
+                  <PhiFlexControl align="center" style={{ minWidth: 0, gap: token.paddingSM }}>
                     {item.icon ? <PhiIcon name={item.icon} /> : null}
                     <span>{item.label}</span>
-                  </Flex>
+                  </PhiFlexControl>
                 );
 
                 if (isCurrent || !interactive) {
@@ -208,10 +208,10 @@ export function PhiQuickLinksWidgetClient({
                 );
               })()
             ))}
-          </Flex>
+          </PhiFlexControl>
         ))}
       </div>
-      </Flex>
+      </PhiFlexControl>
     </div>
   );
 }

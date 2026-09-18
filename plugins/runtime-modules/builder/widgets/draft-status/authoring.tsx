@@ -3,7 +3,7 @@
 import { readPhiDeveloperBuilderWorkspaceKey } from "../../route-scope";
 import { useEffect, useState } from "react";
 
-import { Flex, Space, Typography } from "antd";
+import { Space } from "antd";
 import { PhiTagControl } from "../../../../../components/controls/phi-tag-control";
 import { usePathname, useSearchParams } from "next/navigation";
 
@@ -22,6 +22,8 @@ import {
 import { PHI_BUILDER_CHROME_WIDGET_DEFAULT_LABELS } from "../../../../../components/widgets/label-types/builder-chrome";
 import { formatPhiBuilderDraftRevisionLabel } from "../../../../../components/widgets/label-types/builder-chrome";
 import { resolvePhiBuilderRevisionNavScopeKey } from "../../../../../helpers/cms-navigation-scope-key";
+import { PhiFlexControl } from "../../../../../components/controls/phi-flex-control";
+import { PhiTypographyControl } from "../../../../../components/controls/phi-typography-control";
 
 type PhiBuilderDraftStatusState = {
   requestKey: string;
@@ -328,18 +330,18 @@ export function PhiDeveloperBuilderDraftStatusWidgetClient({
     effectiveDraftState.status === "draft" ? "gold" : effectiveDraftState.status === "published" ? "green" : "red";
 
   return (
-    <Flex align="center" justify="space-between" gap={12} wrap="wrap" style={{ width: "100%" }}>
+    <PhiFlexControl align="center" justify="space-between" gap={12} wrap="wrap" style={{ width: "100%" }}>
       <Space size={8} wrap>
         <PhiTagControl color={statusColor}>{buildStatusLabel(effectiveDraftState, labels.draftStatus)}</PhiTagControl>
-        <Typography.Text code style={{ fontSize: 12 }}>
+        <PhiTypographyControl code style={{ fontSize: 12 }}>
           {scopePath}
-        </Typography.Text>
+        </PhiTypographyControl>
       </Space>
       {effectiveDraftState.error ? (
-        <Typography.Text type="danger" style={{ fontSize: 12 }}>
+        <PhiTypographyControl type="danger" style={{ fontSize: 12 }}>
           {effectiveDraftState.error}
-        </Typography.Text>
+        </PhiTypographyControl>
       ) : null}
-    </Flex>
+    </PhiFlexControl>
   );
 }

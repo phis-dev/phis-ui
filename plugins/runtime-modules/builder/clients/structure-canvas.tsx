@@ -1,6 +1,6 @@
 "use client";
 
-import { Flex, Typography, theme as antdTheme } from "antd";
+import { theme as antdTheme } from "antd";
 import type { CSSProperties, ReactNode } from "react";
 
 import { PhiCmsRegionType } from "../../../../constants/phi-cms";
@@ -28,6 +28,8 @@ import {
   type PhiRegionWidgetLabels,
 } from "../../../../components/widgets/label-types/region";
 import { PhiStructureRegionScaffold } from "../widgets/structure-region/built-in";
+import { PhiFlexControl } from "../../../../components/controls/phi-flex-control";
+import { PhiTypographyControl } from "../../../../components/controls/phi-typography-control";
 
 type PhiBuilderCanvasPickerLabels = PhiBuilderChromeWidgetLabels["canvas"]["picker"];
 
@@ -377,18 +379,18 @@ export function PhiDeveloperBuilderStructureCanvas({
               {isPreviewMode ? null : node.children && node.children.length > 0 ? (
                 node.children.map(renderWorkspaceNode)
               ) : (
-                <Flex
+                <PhiFlexControl
                   vertical
                   align="center"
                   justify="center"
                   gap={6}
                   style={{ minHeight: "var(--phi-builder-content-body-min-height)", padding: 24, textAlign: "center" }}
                 >
-                  <Typography.Text strong>{regionLabels.structure.surface.contentTitle}</Typography.Text>
-                  <Typography.Text type="secondary">
+                  <PhiTypographyControl strong>{regionLabels.structure.surface.contentTitle}</PhiTypographyControl>
+                  <PhiTypographyControl type="secondary">
                     {regionLabels.structure.surface.contentDescription}
-                  </Typography.Text>
-                </Flex>
+                  </PhiTypographyControl>
+                </PhiFlexControl>
               )}
             </div>
           </div>
@@ -413,7 +415,7 @@ export function PhiDeveloperBuilderStructureCanvas({
         "--phi-builder-structure-canvas-outer-gap": "0px",
       })}
     >
-      <Flex
+      <PhiFlexControl
         vertical
         className="phi-builder-structure-canvas__stack"
         style={{
@@ -439,7 +441,7 @@ export function PhiDeveloperBuilderStructureCanvas({
         >
           {workspaceSpec.map(renderWorkspaceNode)}
         </div>
-      </Flex>
+      </PhiFlexControl>
       </div>
     </PhiStructureDndProvider>
   );

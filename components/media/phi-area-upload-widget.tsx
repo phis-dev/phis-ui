@@ -1,7 +1,7 @@
 "use client";
 
 import { DeleteOutlined, UploadOutlined } from "@ant-design/icons";
-import { Flex, Progress, Space, Spin, Typography, Upload } from "antd";
+import { Progress, Space, Spin, Upload } from "antd";
 import { PhiTagControl } from "../controls/phi-tag-control";
 import { PhiButtonControl } from "../controls/phi-button-control";
 import type { UploadProps } from "antd";
@@ -41,6 +41,8 @@ import { PhiFileDropGuard } from "./phi-file-drop-guard";
 import { usePhiApplicationFeedback } from "../runtime/use-phi-application-feedback";
 import { usePhiConfig } from "../root/phi-config-provider";
 import { usePhiCollectionProviderAction } from "../widgets/client/shared/phi-collection-provider";
+import { PhiFlexControl } from "../controls/phi-flex-control";
+import { PhiTypographyControl } from "../controls/phi-typography-control";
 
 type UploadWallItem = {
   localId: string;
@@ -352,7 +354,7 @@ export function PhiAreaUploadBinding({ config, labels, onUploadComplete, collect
   };
 
   return (
-    <Flex vertical gap={12} style={{ width: "100%" }}>
+    <PhiFlexControl vertical gap={12} style={{ width: "100%" }}>
       <PhiFileDropGuard />
       <div
         data-phi-media-dropzone="true"
@@ -398,8 +400,8 @@ export function PhiAreaUploadBinding({ config, labels, onUploadComplete, collect
             }}
           >
             <UploadOutlined style={{ fontSize: uploadTileIconSize, color: token.colorTextSecondary }} />
-            <Typography.Text strong>{labels.dropTitle}</Typography.Text>
-            <Typography.Text type="secondary">{labels.dropHint}</Typography.Text>
+            <PhiTypographyControl strong>{labels.dropTitle}</PhiTypographyControl>
+            <PhiTypographyControl type="secondary">{labels.dropHint}</PhiTypographyControl>
           </Space>
         </Upload.Dragger>
       </div>
@@ -440,12 +442,12 @@ export function PhiAreaUploadBinding({ config, labels, onUploadComplete, collect
                     style={{ objectFit: "cover" }}
                   />
                 ) : (
-                  <Flex align="center" justify="center" style={{ width: "100%", height: "100%" }}>
+                  <PhiFlexControl align="center" justify="center" style={{ width: "100%", height: "100%" }}>
                     <PhiMediaKindIcon kind={item.kind} size={32} />
-                  </Flex>
+                  </PhiFlexControl>
                 )}
                 {item.kind === "image" && displayDimensions ? (
-                  <Typography.Text
+                  <PhiTypographyControl
                     style={{
                       position: "absolute",
                       left: 6,
@@ -458,7 +460,7 @@ export function PhiAreaUploadBinding({ config, labels, onUploadComplete, collect
                     }}
                   >
                     {displayDimensions.width}x{displayDimensions.height}
-                  </Typography.Text>
+                  </PhiTypographyControl>
                 ) : null}
                 {item.status === "uploading" ? (
                   <div
@@ -489,9 +491,9 @@ export function PhiAreaUploadBinding({ config, labels, onUploadComplete, collect
                       textAlign: "center",
                     }}
                   >
-                    <Typography.Text style={{ color: token.colorTextLightSolid }}>
+                    <PhiTypographyControl style={{ color: token.colorTextLightSolid }}>
                       {item.error ?? labels.uploadFailedText}
-                    </Typography.Text>
+                    </PhiTypographyControl>
                   </div>
                 ) : null}
                 {item.deleting ? (
@@ -510,16 +512,16 @@ export function PhiAreaUploadBinding({ config, labels, onUploadComplete, collect
                   </div>
                 ) : null}
               </div>
-              <Flex vertical gap={6} style={{ padding: token.paddingSM }}>
-                <Flex align="center" justify="space-between" gap={8}>
-                  <Typography.Text strong ellipsis title={item.title ?? item.originalName} style={{ minWidth: 0 }}>
+              <PhiFlexControl vertical gap={6} style={{ padding: token.paddingSM }}>
+                <PhiFlexControl align="center" justify="space-between" gap={8}>
+                  <PhiTypographyControl strong ellipsis title={item.title ?? item.originalName} style={{ minWidth: 0 }}>
                     {item.title ?? item.originalName}
-                  </Typography.Text>
-                </Flex>
-                <Flex align="center" justify="space-between" gap={8} wrap>
-                  <Typography.Text type="secondary" ellipsis style={{ display: "block", minWidth: 0 }}>
+                  </PhiTypographyControl>
+                </PhiFlexControl>
+                <PhiFlexControl align="center" justify="space-between" gap={8} wrap>
+                  <PhiTypographyControl type="secondary" ellipsis style={{ display: "block", minWidth: 0 }}>
                     {resolveAssetTypeLabel(item.kind, item.contentType, item.originalName)}
-                  </Typography.Text>
+                  </PhiTypographyControl>
                   {allowDelete && item.assetId > 0 ? (
                     <PhiButtonControl
                       ariaLabel={labels.deleteLabel}
@@ -532,8 +534,8 @@ export function PhiAreaUploadBinding({ config, labels, onUploadComplete, collect
                       }}
                     />
                   ) : null}
-                </Flex>
-                <Flex align="center" gap={6} wrap>
+                </PhiFlexControl>
+                <PhiFlexControl align="center" gap={6} wrap>
                   <PhiTagControl color={item.status === "error" ? "red" : item.status === "uploading" ? "blue" : "green"}>
                     {resolveUploadStatusLabel(item, labels)}
                   </PhiTagControl>
@@ -547,13 +549,13 @@ export function PhiAreaUploadBinding({ config, labels, onUploadComplete, collect
                       label={labels.retryLabel}
                     />
                   ) : null}
-                </Flex>
-              </Flex>
+                </PhiFlexControl>
+              </PhiFlexControl>
             </div>
           );
         })}
       />
-    </Flex>
+    </PhiFlexControl>
   );
 }
 

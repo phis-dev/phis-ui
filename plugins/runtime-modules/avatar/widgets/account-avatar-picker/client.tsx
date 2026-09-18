@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useMemo } from "react";
-import { Flex, Progress, Typography, Upload } from "antd";
+import { Progress, Upload } from "antd";
 
 import type { PhiBlockRuntime, PhiClientBlockBaseProps } from "../../../../../types";
 import { PhiAlertControl } from "../../../../../components/controls/phi-alert-control";
@@ -16,6 +16,8 @@ import {
   usePhiSignalDispatcher,
 } from "../../../../../components/runtime/runtime-signal-bus";
 import type { PhiAvatarWidgetLabels } from "../account-avatar/client";
+import { PhiFlexControl } from "../../../../../components/controls/phi-flex-control";
+import { PhiTypographyControl } from "../../../../../components/controls/phi-typography-control";
 
 export type PhiAccountAvatarPickerWidgetClientProps = PhiClientBlockBaseProps<
   PhiAvatarWidgetLabels,
@@ -93,8 +95,8 @@ export function PhiAccountAvatarPickerWidgetClient({
   const busy = active?.status === "uploading";
 
   return (
-    <Flex vertical gap="small" style={{ padding: config?.padding }}>
-      <Typography.Text type="secondary">{labels.uploadHint}</Typography.Text>
+    <PhiFlexControl vertical gap="small" style={{ padding: config?.padding }}>
+      <PhiTypographyControl type="secondary">{labels.uploadHint}</PhiTypographyControl>
       {active?.error
         ? <PhiAlertControl level="error" title={labels.feedback.errorTitle} description={active.error} />
         : null}
@@ -106,9 +108,9 @@ export function PhiAccountAvatarPickerWidgetClient({
         // Never hand the file to Ant Design's own uploader: the transport is the Provider-issued plan.
         beforeUpload={(file) => { void upload(file as File); return false; }}
       >
-        <Typography.Text>{labels.uploadLabel}</Typography.Text>
+        <PhiTypographyControl>{labels.uploadLabel}</PhiTypographyControl>
       </Upload.Dragger>
       {busy ? <Progress percent={Math.round(active?.progress ?? 0)} size="small" /> : null}
-    </Flex>
+    </PhiFlexControl>
   );
 }

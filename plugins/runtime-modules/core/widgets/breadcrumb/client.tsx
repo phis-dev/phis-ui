@@ -1,10 +1,11 @@
 "use client";
 
-import { Breadcrumb, Flex } from "antd";
+import { Breadcrumb } from "antd";
 import { usePathname } from "next/navigation";
 
 import type { PhiClientBlockBaseProps, PhiBlockRuntime, PhiNoLabels } from "../../../../../types";
 import type { PhiCmsBreadcrumbWidgetConfig } from "./config";
+import { PhiFlexControl } from "../../../../../components/controls/phi-flex-control";
 
 export type { PhiCmsBreadcrumbWidgetConfig as PhiBreadcrumbWidgetConfig } from "./config";
 
@@ -25,8 +26,8 @@ export function PhiBreadcrumbWidget({ config, runtime }: PhiBreadcrumbWidgetProp
   ].filter(Boolean) as Array<{ title: string }>;
 
   return (
-    <Flex align={config?.align ?? "center"} justify={config?.justify ?? "flex-start"} gap={12} wrap="wrap">
+    <PhiFlexControl align={config?.align ?? "center"} justify={config?.justify ?? "flex-start"} gap={12} wrap="wrap">
       <Breadcrumb items={breadcrumbItems} separator={config?.separator} />
-    </Flex>
+    </PhiFlexControl>
   );
 }

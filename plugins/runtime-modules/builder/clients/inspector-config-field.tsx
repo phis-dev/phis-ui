@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState, type ReactNode } from "react";
-import { Flex, Typography, theme } from "antd";
+import { theme } from "antd";
 
 import type {
   PhiCmsConfigField,
@@ -46,6 +46,8 @@ import {
   readInspectorChoiceMultiValue,
   readInspectorChoiceSingleValue,
 } from "./inspector-choice-values";
+import { PhiFlexControl } from "../../../../components/controls/phi-flex-control";
+import { PhiTypographyControl } from "../../../../components/controls/phi-typography-control";
 
 export type PhiInspectorWidgetReferenceOption = {
   value: string;
@@ -69,19 +71,19 @@ export function renderPhiInspectorSettingsRow(label: string, control: ReactNode,
 
 function renderPhiInspectorSettingsBlock(label: string, control: ReactNode, key?: string) {
   return (
-    <Flex key={key} vertical gap={8} style={{ width: "100%", minWidth: 0 }}>
-      <Typography.Text>{label}</Typography.Text>
+    <PhiFlexControl key={key} vertical gap={8} style={{ width: "100%", minWidth: 0 }}>
+      <PhiTypographyControl>{label}</PhiTypographyControl>
       {control}
-    </Flex>
+    </PhiFlexControl>
   );
 }
 
 function renderPhiInspectorConfigFieldControl(field: PhiCmsConfigField, control: ReactNode) {
   const resolvedControl = field.description ? (
-    <Flex vertical gap={2} style={{ minWidth: 0, width: "100%" }}>
+    <PhiFlexControl vertical gap={2} style={{ minWidth: 0, width: "100%" }}>
       {control}
-      <Typography.Text type="secondary">{field.description}</Typography.Text>
-    </Flex>
+      <PhiTypographyControl type="secondary">{field.description}</PhiTypographyControl>
+    </PhiFlexControl>
   ) : control;
 
   return renderPhiInspectorSettingsRow(
@@ -95,10 +97,10 @@ function renderPhiInspectorConfigFieldBlock(field: PhiCmsConfigField, control: R
   return renderPhiInspectorSettingsBlock(
     field.required ? `${field.label} *` : field.label,
     field.description ? (
-      <Flex vertical gap={2} style={{ minWidth: 0, width: "100%" }}>
-        <Typography.Text type="secondary">{field.description}</Typography.Text>
+      <PhiFlexControl vertical gap={2} style={{ minWidth: 0, width: "100%" }}>
+        <PhiTypographyControl type="secondary">{field.description}</PhiTypographyControl>
         {control}
-      </Flex>
+      </PhiFlexControl>
     ) : control,
     field.key,
   );
@@ -373,12 +375,12 @@ function PhiInspectorChoiceFieldControl({
 
   const renderChoiceRow = (control: ReactNode) => renderPhiInspectorConfigFieldControl(
     field,
-    <Flex vertical gap={4} style={{ minWidth: 0, width: "100%" }}>
+    <PhiFlexControl vertical gap={4} style={{ minWidth: 0, width: "100%" }}>
       {control}
       {providerResult.warning ? (
-        <Typography.Text type="warning">{providerResult.warning}</Typography.Text>
+        <PhiTypographyControl type="warning">{providerResult.warning}</PhiTypographyControl>
       ) : null}
-    </Flex>,
+    </PhiFlexControl>,
   );
 
   const resolvedOptions = useMemo(
@@ -491,9 +493,9 @@ function PhiInspectorCollectionFieldControl({
 
   return renderPhiInspectorConfigFieldBlock(
     field,
-    <Flex vertical gap={8} style={{ width: "100%", minWidth: 0 }}>
+    <PhiFlexControl vertical gap={8} style={{ width: "100%", minWidth: 0 }}>
       {items.length === 0 ? (
-        <Typography.Text type="secondary">{field.emptyLabel ?? "No items"}</Typography.Text>
+        <PhiTypographyControl type="secondary">{field.emptyLabel ?? "No items"}</PhiTypographyControl>
       ) : null}
       {items.map((item, index) => {
         const itemIdentity = item[field.itemKeyField];
@@ -504,7 +506,7 @@ function PhiInspectorCollectionFieldControl({
         const defaultItem = defaultItems[index] ?? field.defaultItem ?? {};
 
         return (
-          <Flex
+          <PhiFlexControl
             key={typeof itemIdentity === "string" && itemIdentity ? itemIdentity : `${field.key}-${index}`}
             vertical
             gap={8}
@@ -517,11 +519,11 @@ function PhiInspectorCollectionFieldControl({
               background: token.colorBgContainer,
             }}
           >
-            <Flex align="center" justify="space-between" gap={4} style={{ width: "100%" }}>
-              <Typography.Text strong ellipsis style={{ minWidth: 0 }} title={itemLabel}>
+            <PhiFlexControl align="center" justify="space-between" gap={4} style={{ width: "100%" }}>
+              <PhiTypographyControl strong ellipsis style={{ minWidth: 0 }} title={itemLabel}>
                 {itemLabel}
-              </Typography.Text>
-              <Flex align="center" gap={2}>
+              </PhiTypographyControl>
+              <PhiFlexControl align="center" gap={2}>
                 {field.reorderable !== false ? (
                   <>
                     <PhiButtonControl
@@ -555,9 +557,9 @@ function PhiInspectorCollectionFieldControl({
                   disabled={disabled || items.length <= minItems}
                   onClick={() => publish(items.filter((_, itemIndex) => itemIndex !== index))}
                 />
-              </Flex>
-            </Flex>
-            <Flex vertical gap={8} style={{ width: "100%", minWidth: 0 }}>
+              </PhiFlexControl>
+            </PhiFlexControl>
+            <PhiFlexControl vertical gap={8} style={{ width: "100%", minWidth: 0 }}>
               {field.itemFields
                 .filter((itemField) => isPhiInspectorConfigFieldVisible(itemField, item))
                 .map((itemField) => renderPhiInspectorConfigField({
@@ -583,8 +585,8 @@ function PhiInspectorCollectionFieldControl({
                     publish(nextItems);
                   },
                 }))}
-            </Flex>
-          </Flex>
+            </PhiFlexControl>
+          </PhiFlexControl>
         );
       })}
       <PhiButtonControl
@@ -593,7 +595,7 @@ function PhiInspectorCollectionFieldControl({
         disabled={disabled || items.length >= maxItems}
         onClick={() => publish([...items, createPhiInspectorCollectionItem(field, items)])}
       />
-    </Flex>,
+    </PhiFlexControl>,
   );
 }
 
@@ -668,7 +670,7 @@ export function renderPhiInspectorConfigField({
 
     return renderPhiInspectorConfigFieldControl(
       field,
-      <Flex vertical gap={8} style={{ width: "100%" }}>
+      <PhiFlexControl vertical gap={8} style={{ width: "100%" }}>
         <PhiSelectControl
           options={options}
           placeholder="Select a data provider"
@@ -714,7 +716,7 @@ export function renderPhiInspectorConfigField({
             })}
           />
         ) : null}
-      </Flex>,
+      </PhiFlexControl>,
     );
   }
 
@@ -849,7 +851,7 @@ export function renderPhiInspectorConfigField({
      */
     return renderPhiInspectorConfigFieldControl(
       field,
-      <Flex align="center" style={{ minHeight: "var(--ant-control-height)" }}>
+      <PhiFlexControl align="center" style={{ minHeight: "var(--ant-control-height)" }}>
         <PhiSwitchControl
           checked={
             typeof value === "boolean"
@@ -861,7 +863,7 @@ export function renderPhiInspectorConfigField({
           disabled={disabled || !onChange}
           onChange={(checked) => onChange?.({ [field.key]: checked })}
         />
-      </Flex>,
+      </PhiFlexControl>,
     );
   }
 

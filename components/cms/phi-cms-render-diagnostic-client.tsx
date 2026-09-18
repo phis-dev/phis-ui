@@ -1,11 +1,11 @@
 "use client";
 
 import { useEffect } from "react";
-import { Typography } from "antd";
 
 import type { PhiCmsRenderIssue } from "../../types/cms-plugins";
 import { PhiAlertControl } from "../controls/phi-alert-control";
 import { usePhiApplicationFeedback } from "../runtime/use-phi-application-feedback";
+import { PhiTypographyControl } from "../controls/phi-typography-control";
 
 const notifiedIssueKeys = new Set<string>();
 
@@ -74,9 +74,9 @@ export function PhiCmsRenderDiagnostic({ issue }: { issue: PhiCmsRenderIssue }) 
         title={title}
         description={(
           <div>
-            <Typography.Text code>{issue.type}</Typography.Text>
+            <PhiTypographyControl code>{issue.type}</PhiTypographyControl>
             <br />
-            <Typography.Text>
+            <PhiTypographyControl>
               {issue.code === "missing-module"
                 ? issue.moduleId
                   ? `Missing module: ${issue.moduleId}`
@@ -84,11 +84,11 @@ export function PhiCmsRenderDiagnostic({ issue }: { issue: PhiCmsRenderIssue }) 
                 : issue.moduleId
                   ? `Module: ${issue.moduleId}`
                   : "Required renderer unavailable"}
-            </Typography.Text>
+            </PhiTypographyControl>
             {issue.detail ? (
               <>
                 <br />
-                <Typography.Text type="secondary">{issue.detail}</Typography.Text>
+                <PhiTypographyControl type="secondary">{issue.detail}</PhiTypographyControl>
               </>
             ) : null}
           </div>

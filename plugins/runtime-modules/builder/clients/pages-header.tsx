@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 
-import { Flex, Typography } from "antd";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 import {
@@ -36,6 +35,8 @@ import {
   type PhiPageTitleWidgetLabels,
 } from "../../../../components/widgets/label-types/page-title";
 import { emitPhiPageTitleInputSignal } from "../page-title-signal";
+import { PhiFlexControl } from "../../../../components/controls/phi-flex-control";
+import { PhiTypographyControl } from "../../../../components/controls/phi-typography-control";
 
 function findPageNodePath(
   nodes: PhiPresetPageNode[],
@@ -81,8 +82,8 @@ function PhiDeveloperBuilderPagesHeaderTitleField({
 
   return (
     <div style={{ minWidth: 260, flex: "1 1 260px", maxWidth: "100%" }}>
-      <Flex align="center" gap={8} wrap={false} style={{ width: "100%", minWidth: 0 }}>
-        <Typography.Text style={{ whiteSpace: "nowrap" }}>{labels.editorPlaceholder}</Typography.Text>
+      <PhiFlexControl align="center" gap={8} wrap={false} style={{ width: "100%", minWidth: 0 }}>
+        <PhiTypographyControl style={{ whiteSpace: "nowrap" }}>{labels.editorPlaceholder}</PhiTypographyControl>
         <PhiTextControl
           value={pageTitleDraft}
           disabled={disabled}
@@ -102,7 +103,7 @@ function PhiDeveloperBuilderPagesHeaderTitleField({
           }}
           style={{ width: "100%" }}
         />
-      </Flex>
+      </PhiFlexControl>
     </div>
   );
 }
@@ -253,8 +254,8 @@ export function PhiDeveloperBuilderPagesHeaderSection({
   }
 
   return (
-    <Flex align="center" gap={12} wrap={false} style={{ width: "100%", minWidth: 0 }}>
+    <PhiFlexControl align="center" gap={12} wrap={false} style={{ width: "100%", minWidth: 0 }}>
       {titleInput}
-    </Flex>
+    </PhiFlexControl>
   );
 }

@@ -1,11 +1,13 @@
 "use client";
 
 import { lazy, Suspense, useCallback, useEffect, useState } from "react";
-import { Card, Flex, List, Skeleton, Typography } from "antd";
+import { Card, List, Skeleton } from "antd";
 import { PhiTagControl } from "../../../../../components/controls/phi-tag-control";
 import { PhiButtonControl } from "../../../../../components/controls/phi-button-control";
 import { PhiAlertControl } from "../../../../../components/controls/phi-alert-control";
 import { PhiConfirmControl } from "../../../../../components/controls/phi-confirm-control";
+import { PhiFlexControl } from "../../../../../components/controls/phi-flex-control";
+import { PhiTypographyControl } from "../../../../../components/controls/phi-typography-control";
 
 const PhiAuthWorkflowBody = lazy(
   () => import("../../../../../components/widgets/client/auth-workflow-body")
@@ -133,12 +135,12 @@ export function PhiAuthSecurityWidgetClient({ apiPath = "/api/auth/account/secur
   if (!payload) return <PhiAlertControl level="error" showIcon title={error ?? "Account security is unavailable."} />;
 
   return (
-    <Flex vertical gap="large">
+    <PhiFlexControl vertical gap="large">
       <div>
-        <Typography.Title level={3}>Security</Typography.Title>
-        <Typography.Paragraph type="secondary">
+        <PhiTypographyControl presentation="title" level={3}>Security</PhiTypographyControl>
+        <PhiTypographyControl presentation="paragraph" type="secondary">
           Manage authenticator apps, linked login providers, and sessions for this site.
-        </Typography.Paragraph>
+        </PhiTypographyControl>
       </div>
       {error ? <PhiAlertControl level="error" showIcon title={error} dismissible onDismiss={() => setError(null)} /> : null}
       <Card
@@ -204,6 +206,6 @@ export function PhiAuthSecurityWidgetClient({ apiPath = "/api/auth/account/secur
           )}
         />
       </Card>
-    </Flex>
+    </PhiFlexControl>
   );
 }

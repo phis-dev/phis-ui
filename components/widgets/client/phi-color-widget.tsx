@@ -2,8 +2,6 @@
 
 import { type ReactNode } from "react";
 
-import { Flex, Typography } from "antd";
-
 import { usePhiConfig } from "../../root/phi-config-provider";
 import type { PhiColorWidgetConfig } from "../../../plugins/runtime-modules/core/widgets/color/config";
 import { createPhiColorPickerPresets } from "../config/color-picker-presets";
@@ -21,6 +19,8 @@ import {
   usePhiColorControlPresets,
 } from "../../controls/use-phi-color-control-presets";
 import { usePhiControlSignalController } from "./shared/phi-control-signals";
+import { PhiFlexControl } from "../../controls/phi-flex-control";
+import { PhiTypographyControl } from "../../controls/phi-typography-control";
 
 export type PhiColorWidgetProps = {
   config?: PhiColorWidgetConfig | null;
@@ -108,16 +108,16 @@ export function PhiColorWidget({
   }
 
   return (
-    <Flex
+    <PhiFlexControl
       vertical
       gap={token.paddingXXS}
       align="flex-start"
       style={{ width: children ? "auto" : "100%", minWidth: 0, maxWidth: "100%" }}
     >
       {label ? (
-        <Typography.Text type="secondary" style={{ fontSize: token.fontSizeSM }}>
+        <PhiTypographyControl type="secondary" style={{ fontSize: token.fontSizeSM }}>
           {label}
-        </Typography.Text>
+        </PhiTypographyControl>
       ) : null}
       <PhiColorControl
         mode={mode ?? config?.mode ?? "single"}
@@ -138,6 +138,6 @@ export function PhiColorWidget({
       >
         {children}
       </PhiColorControl>
-    </Flex>
+    </PhiFlexControl>
   );
 }

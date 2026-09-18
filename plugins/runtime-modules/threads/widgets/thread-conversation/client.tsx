@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { Flex, Typography } from "antd";
 
 import type { PhiBlockRuntime, PhiClientBlockBaseProps } from "../../../../../types";
 import type { PhisThreadDetail, PhisThreadMessage } from "../../../../../types/threads";
@@ -16,6 +15,8 @@ import {
 } from "../../../../../components/runtime/runtime-signal-bus";
 import type { PhiSignalFilter } from "../../../../../types/signals";
 import type { PhiThreadConversationLabels } from "../../../../../components/widgets/label-sets/threads";
+import { PhiFlexControl } from "../../../../../components/controls/phi-flex-control";
+import { PhiTypographyControl } from "../../../../../components/controls/phi-typography-control";
 
 export type PhiThreadConversationWidgetClientProps = PhiClientBlockBaseProps<
   PhiThreadConversationLabels,
@@ -266,9 +267,9 @@ export function PhiThreadConversationWidgetClient({
 
   if (threadId == null) {
     return (
-      <Typography.Text type="secondary" style={{ padding: config?.padding }}>
+      <PhiTypographyControl type="secondary" style={{ padding: config?.padding }}>
         {labels.noThreadText}
-      </Typography.Text>
+      </PhiTypographyControl>
     );
   }
 
@@ -282,22 +283,22 @@ export function PhiThreadConversationWidgetClient({
 
   if (!detail) {
     return (
-      <Typography.Text type="secondary" style={{ padding: config?.padding }}>
+      <PhiTypographyControl type="secondary" style={{ padding: config?.padding }}>
         {labels.loadingText}
-      </Typography.Text>
+      </PhiTypographyControl>
     );
   }
 
   return (
-    <Flex vertical gap="large" style={{ padding: config?.padding }}>
-      <Flex align="center" gap="small" wrap>
-        <Typography.Title level={4} style={{ margin: 0 }}>
+    <PhiFlexControl vertical gap="large" style={{ padding: config?.padding }}>
+      <PhiFlexControl align="center" gap="small" wrap>
+        <PhiTypographyControl presentation="title" level={4} style={{ margin: 0 }}>
           {readThreadTitle(detail, labels)}
-        </Typography.Title>
+        </PhiTypographyControl>
         {detail.thread.status === PhisThreadStatus.Archived ? (
           <PhiTagControl>{labels.archivedLabel}</PhiTagControl>
         ) : null}
-      </Flex>
+      </PhiFlexControl>
 
       {detail.hasMoreMessages ? (
         <PhiButtonControl
@@ -309,9 +310,9 @@ export function PhiThreadConversationWidgetClient({
       ) : null}
 
       {detail.messages.length === 0 ? (
-        <Typography.Text type="secondary">{labels.emptyText}</Typography.Text>
+        <PhiTypographyControl type="secondary">{labels.emptyText}</PhiTypographyControl>
       ) : (
-        <Flex vertical gap="middle">
+        <PhiFlexControl vertical gap="middle">
           {detail.messages.map((message) => (
             <PhiThreadMessageRow
               key={message.id}
@@ -320,10 +321,10 @@ export function PhiThreadConversationWidgetClient({
               formatTime={formatTime}
             />
           ))}
-        </Flex>
+        </PhiFlexControl>
       )}
 
-    </Flex>
+    </PhiFlexControl>
   );
 }
 
@@ -383,30 +384,30 @@ function PhiThreadMessageRow({
   const redacted = (message.flags & PhisThreadMessageFlag.Redacted) !== 0;
 
   return (
-    <Flex vertical gap={4}>
-      <Flex align="center" gap="small" wrap>
-        <Typography.Text strong>{readAuthorName(message.author, labels)}</Typography.Text>
+    <PhiFlexControl vertical gap={4}>
+      <PhiFlexControl align="center" gap="small" wrap>
+        <PhiTypographyControl strong>{readAuthorName(message.author, labels)}</PhiTypographyControl>
         {message.author.kind === "integration" ? (
           <PhiTagControl>{message.author.providerId}</PhiTagControl>
         ) : null}
         {/* On the message, because which of the two a note is must never be in doubt while writing. */}
         {internal ? <PhiTagControl color="orange">{labels.internalLabel}</PhiTagControl> : null}
-        <Typography.Text type="secondary">{formatTime(message.createdAt)}</Typography.Text>
-      </Flex>
+        <PhiTypographyControl type="secondary">{formatTime(message.createdAt)}</PhiTypographyControl>
+      </PhiFlexControl>
 
       {message.bodyText == null ? (
-        <Typography.Text type="secondary" italic>
+        <PhiTypographyControl type="secondary" italic>
           {redacted ? labels.redactedText : labels.withheldText}
-        </Typography.Text>
+        </PhiTypographyControl>
       ) : (
         // `white-space: pre-wrap` so the line breaks somebody typed are the ones they see back.
-        <Typography.Paragraph style={{ margin: 0, whiteSpace: "pre-wrap" }}>
+        <PhiTypographyControl presentation="paragraph" style={{ margin: 0, whiteSpace: "pre-wrap" }}>
           {message.bodyText}
-        </Typography.Paragraph>
+        </PhiTypographyControl>
       )}
 
       {message.assets.length > 0 ? (
-        <Flex wrap gap="small">
+        <PhiFlexControl wrap gap="small">
           {message.assets.map((asset) => (
             /*
              * The address the message carries, and the only one there is.
@@ -423,8 +424,8 @@ function PhiThreadMessageRow({
               newTab
             />
           ))}
-        </Flex>
+        </PhiFlexControl>
       ) : null}
-    </Flex>
+    </PhiFlexControl>
   );
 }

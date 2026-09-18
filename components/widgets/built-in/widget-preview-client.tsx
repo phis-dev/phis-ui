@@ -1,10 +1,11 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { Skeleton, Typography } from "antd";
+import { Skeleton } from "antd";
 
 import type { PhiCmsContentWidgetNode } from "../../../types/cms";
 import { usePhiConfig } from "../../root/phi-config-provider";
+import { PhiTypographyControl } from "../../controls/phi-typography-control";
 
 function splitNamespacedType(widgetType: string) {
   const slashIndex = widgetType.lastIndexOf("/");
@@ -51,14 +52,14 @@ export function PhiWidgetPreviewFallback({
       }}
     >
       <div style={{ display: "grid", gap: 2, minWidth: 0 }}>
-        <Typography.Text strong style={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+        <PhiTypographyControl strong style={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
           {widget.label ?? pluginTitle ?? typeKey}
-        </Typography.Text>
-        <Typography.Text type="secondary" style={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+        </PhiTypographyControl>
+        <PhiTypographyControl type="secondary" style={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
           {pluginKey ? `${pluginKey}/${typeKey}` : typeKey}
-        </Typography.Text>
+        </PhiTypographyControl>
       </div>
-      {summary ? <Typography.Text type="secondary">{summary}</Typography.Text> : null}
+      {summary ? <PhiTypographyControl type="secondary">{summary}</PhiTypographyControl> : null}
       {children ? null : (
         <Skeleton
           active={false}

@@ -1,6 +1,6 @@
 "use client";
 
-import { Space, Typography } from "antd";
+import { Space } from "antd";
 import { PhiTagControl } from "../../controls/phi-tag-control";
 import { PhiTableControl, type PhiTableControlColumn } from "../../controls/phi-table-control";
 
@@ -8,6 +8,7 @@ import type {
   PhiSignalInputCapability,
   PhiSignalOutputCapability,
 } from "../../../types/signals";
+import { PhiTypographyControl } from "../../controls/phi-typography-control";
 
 function readSignalCapabilityTableKey(capability: PhiSignalInputCapability | PhiSignalOutputCapability) {
   return [
@@ -34,7 +35,7 @@ export function PhiSignalCapabilityList({
   sortByChannel?: boolean;
 }) {
   if (!capabilities || capabilities.length === 0) {
-    return <Typography.Text type="secondary">{emptyLabel}</Typography.Text>;
+    return <PhiTypographyControl type="secondary">{emptyLabel}</PhiTypographyControl>;
   }
 
   type CapabilityRow = Record<string, unknown> & {
@@ -72,7 +73,7 @@ export function PhiSignalCapabilityList({
       render: (valueType, row) => (
         <Space size={4} wrap>
           <PhiTagControl style={{ marginInlineEnd: 0 }}>{String(valueType)}</PhiTagControl>
-          {row.capability.valueSchema ? <Typography.Text type="secondary">{row.capability.valueSchema}</Typography.Text> : null}
+          {row.capability.valueSchema ? <PhiTypographyControl type="secondary">{row.capability.valueSchema}</PhiTypographyControl> : null}
         </Space>
       ),
     },

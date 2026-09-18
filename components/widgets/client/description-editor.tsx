@@ -2,11 +2,11 @@
 
 import { useMemo, useState } from "react";
 
-import { Flex } from "antd";
 import { PhiTagControl } from "../../controls/phi-tag-control";
 
 import type { PhiCmsDescriptionWidgetConfig } from "../../../plugins/runtime-modules/core/widgets/description/config";
 import { PhiTextControl } from "../../controls/phi-text-control";
+import { PhiFlexControl } from "../../controls/phi-flex-control";
 
 type PhiDescriptionEditorConfig = {
   eyebrow: string;
@@ -115,12 +115,12 @@ export function PhiDescriptionWidgetEditor({
   }
 
   return (
-    <Flex
+    <PhiFlexControl
       vertical
       gap={16}
       style={{ width: "100%", minWidth: 0 }}
     >
-      <Flex vertical gap={10} style={{ width: "100%", minWidth: 0 }}>
+      <PhiFlexControl vertical gap={10} style={{ width: "100%", minWidth: 0 }}>
         {previewLabels.eyebrow ? (
           <PhiTagControl
             color="default"
@@ -199,7 +199,7 @@ export function PhiDescriptionWidgetEditor({
           </div>
         ) : null}
         {previewLabels.asideTitle || previewLabels.asideItems?.length ? (
-          <Flex vertical gap={12} style={{ width: "100%" }}>
+          <PhiFlexControl vertical gap={12} style={{ width: "100%" }}>
             <PhiTextControl
               presentation="textarea"
               value={draft.asideTitle}
@@ -215,7 +215,7 @@ export function PhiDescriptionWidgetEditor({
                 fontWeight: 600,
               }}
             />
-            <Flex vertical gap={8} style={{ width: "100%" }}>
+            <PhiFlexControl vertical gap={8} style={{ width: "100%" }}>
               {draft.asideItems.map((item, index) => (
                 <div
                   key={index}
@@ -260,8 +260,8 @@ export function PhiDescriptionWidgetEditor({
                   />
                 </div>
               ))}
-            </Flex>
-          </Flex>
+            </PhiFlexControl>
+          </PhiFlexControl>
         ) : null}
         <PhiTextControl
           presentation="textarea"
@@ -277,7 +277,7 @@ export function PhiDescriptionWidgetEditor({
             color: "var(--ant-color-text-tertiary)",
           }}
         />
-      </Flex>
-    </Flex>
+      </PhiFlexControl>
+    </PhiFlexControl>
   );
 }

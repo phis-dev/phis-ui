@@ -1,11 +1,12 @@
 "use client";
 
-import { Card, Typography } from "antd";
+import { Card } from "antd";
 import { PhiButtonControl } from "../../../../../components/controls/phi-button-control";
 
 import type { PhiClientBlockBaseProps } from "../../../../../types";
 import { PhiLink } from "../../../../../components/navigation/phi-link";
 import { usePhiConfig } from "../../../../../components/root/phi-config-provider";
+import { PhiTypographyControl } from "../../../../../components/controls/phi-typography-control";
 
 export type PhiCardWidgetClientLabels = {
   eyebrow?: string;
@@ -76,17 +77,17 @@ export function PhiCardWidgetClient({
   const titleNode = labels.title ? (
     hasPrimaryLink ? (
       <PhiLink href={config!.href!} newTab={config?.newTab} style={{ color: "inherit" }}>
-        <Typography.Title
+        <PhiTypographyControl presentation="title"
           level={variant === "featured" ? 3 : 4}
           style={{ margin: 0, color: token.colorTextHeading }}
         >
           {labels.title}
-        </Typography.Title>
+        </PhiTypographyControl>
       </PhiLink>
     ) : (
-      <Typography.Title level={variant === "featured" ? 3 : 4} style={{ margin: 0, color: token.colorTextHeading }}>
+      <PhiTypographyControl presentation="title" level={variant === "featured" ? 3 : 4} style={{ margin: 0, color: token.colorTextHeading }}>
         {labels.title}
-      </Typography.Title>
+      </PhiTypographyControl>
     )
   ) : null;
 
@@ -139,7 +140,7 @@ export function PhiCardWidgetClient({
           />
         ) : null}
         {labels.eyebrow ? (
-          <Typography.Text
+          <PhiTypographyControl
             type="secondary"
             style={{
               fontSize: token.fontSizeSM,
@@ -150,13 +151,13 @@ export function PhiCardWidgetClient({
             }}
           >
             {labels.eyebrow}
-          </Typography.Text>
+          </PhiTypographyControl>
         ) : null}
         {titleNode}
       </div>
 
       {labels.description ? (
-        <Typography.Paragraph
+        <PhiTypographyControl presentation="paragraph"
           style={{
             marginBottom: 0,
             color: token.colorTextSecondary,
@@ -165,11 +166,11 @@ export function PhiCardWidgetClient({
           }}
         >
           {labels.description}
-        </Typography.Paragraph>
+        </PhiTypographyControl>
       ) : null}
 
       {labels.meta ? (
-        <Typography.Text
+        <PhiTypographyControl
           type="secondary"
           style={{
             fontSize: token.fontSizeSM,
@@ -178,7 +179,7 @@ export function PhiCardWidgetClient({
           }}
         >
           {labels.meta}
-        </Typography.Text>
+        </PhiTypographyControl>
       ) : null}
 
       {hasAction ? (

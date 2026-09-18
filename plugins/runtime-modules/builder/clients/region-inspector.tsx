@@ -1,7 +1,5 @@
 "use client";
 
-import { Typography } from "antd";
-
 import { PhiBackgroundControl, type PhiBackgroundControlProps } from "../../../../components/controls/phi-background-control";
 import { PhiBorderControl } from "../../../../components/controls/phi-border-control";
 import { PhiGeometryControl } from "../../../../components/controls/phi-geometry-control";
@@ -26,6 +24,7 @@ import {
   normalizePhiPaddingWidgetConfig,
   type PhiCmsPaddingWidgetConfig,
 } from "../../../../types/cms-config";
+import { PhiTypographyControl } from "../../../../components/controls/phi-typography-control";
 const PHI_GAP_SM = "var(--ant-padding-sm)";
 
 const REGION_PADDING_KEYS = [
@@ -96,7 +95,7 @@ export function PhiDeveloperBuilderRegionInspectorWidgetClient({
   return (
     <div style={{ display: "grid", gap: PHI_GAP_SM, width: "100%" }}>
       {!selectedRegionKey || !effectiveDraft || selectedStructureNodeKind !== "region" ? (
-        <Typography.Text type="secondary">Select a region to edit its shell properties.</Typography.Text>
+        <PhiTypographyControl type="secondary">Select a region to edit its shell properties.</PhiTypographyControl>
       ) : (
         <div style={{ display: "grid", gap: PHI_GAP_SM, width: "100%" }}>
           <PhiInspectorSectionContent

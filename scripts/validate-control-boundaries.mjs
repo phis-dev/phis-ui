@@ -78,9 +78,9 @@ const coreApplicationAdapterPath = "components/runtime/core-runtime-application-
  * for a handful of primitives -- so everything outside those names passed, every Module under `plugins/`
  * included. This is the rule itself, over the whole tree.
  *
- * This map is a denylist, so **every primitive not named here is permitted by omission** -- about 25 of
- * them are imported somewhere in the tree, from `Flex` and `Typography` down to `Upload`, `Progress`,
- * `List` and `Spin`. That is where things stand rather than where they are meant to end: wrapping them
+ * This map is a denylist, so **every primitive not named here is permitted by omission** -- roughly
+ * twenty are still imported somewhere in the tree, from `Upload` and `Progress` down to `List` and
+ * `Spin`. `Flex` and `Typography`, the two that reached furthest, are done. That is where things stand rather than where they are meant to end: wrapping them
  * is planned work, because Ant Design is replaceable in principle and every direct import turns that
  * from a Control-adapter change into a tree-wide edit. When the Controls land, the primitives belong in
  * the map below and this check should end up refusing by default instead -- an allowlist of what may be
@@ -98,6 +98,7 @@ const controlledPrimitives = new Map([
   ["DatePicker", "PhiDatePickerControl"],
   ["Drawer", "PhiDrawerControl"],
   ["Dropdown", "PhiDropdownControl"],
+  ["Flex", "PhiFlexControl"],
   ["Form", "PhiFormControl"],
   ["Input", "PhiTextControl"],
   ["InputNumber", "PhiNumberControl"],
@@ -116,6 +117,7 @@ const controlledPrimitives = new Map([
   ["Tabs", "PhiTabsControl"],
   ["Tag", "PhiTagControl"],
   ["Tree", "PhiTreeControl"],
+  ["Typography", "PhiTypographyControl"],
 ]);
 
 /** Where the Controls live, and therefore where their primitives may be imported. */

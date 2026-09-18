@@ -1,12 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { Flex, QRCode, Typography } from "antd";
+import { QRCode } from "antd";
 import { PhiTextControl } from "../../controls/phi-text-control";
 import { PhiOtpControl } from "../../controls/phi-otp-control";
 import { PhiButtonControl } from "../../controls/phi-button-control";
 import { PhiAlertControl } from "../../controls/phi-alert-control";
 import type { PhiAuthWorkflow } from "../../../types/auth-manifest";
+import { PhiFlexControl } from "../../controls/phi-flex-control";
+import { PhiTypographyControl } from "../../controls/phi-typography-control";
 
 type Enrollment = {
   factorId: string;
@@ -113,41 +115,41 @@ export function PhiAuthWorkflowBody({
 
   if (recovery) {
     return (
-      <Flex vertical gap="middle">
+      <PhiFlexControl vertical gap="middle">
         <PhiAlertControl
           level="success"
           showIcon
           title="Authenticator configured"
           description="Save these recovery codes now. They are shown only once."
         />
-        <Flex vertical gap="small">
+        <PhiFlexControl vertical gap="small">
           {recovery.codes.map((recoveryCode) => (
-            <Typography.Text key={recoveryCode} copyable code>{recoveryCode}</Typography.Text>
+            <PhiTypographyControl key={recoveryCode} copyable code>{recoveryCode}</PhiTypographyControl>
           ))}
-        </Flex>
+        </PhiFlexControl>
         <PhiButtonControl
           type="primary"
           onClick={() => void onComplete({ area: recovery.area, next: recovery.next })}
           label="I saved the recovery codes"
         />
-      </Flex>
+      </PhiFlexControl>
     );
   }
 
   if (workflow.state === "factor-enrollment-required") {
     return (
-      <Flex vertical gap="middle" align="center">
-        <Typography.Title level={4}>Set up an authenticator app</Typography.Title>
-        <Typography.Paragraph type="secondary">
+      <PhiFlexControl vertical gap="middle" align="center">
+        <PhiTypographyControl presentation="title" level={4}>Set up an authenticator app</PhiTypographyControl>
+        <PhiTypographyControl presentation="paragraph" type="secondary">
           Two-factor authentication is required before this site can be opened.
-        </Typography.Paragraph>
+        </PhiTypographyControl>
         {error ? <PhiAlertControl level="error" showIcon title={error} /> : null}
         {!enrollment ? (
           <PhiButtonControl type="primary" loading={busy} onClick={() => void startEnrollment()} label="Start setup" />
         ) : (
           <>
             <QRCode value={enrollment.otpauthUri} type="svg" />
-            <Typography.Text copyable code>{enrollment.manualKey}</Typography.Text>
+            <PhiTypographyControl copyable code>{enrollment.manualKey}</PhiTypographyControl>
             <PhiOtpControl
               ariaLabel="Authenticator code"
               length={6}
@@ -164,13 +166,13 @@ export function PhiAuthWorkflowBody({
             />
           </>
         )}
-      </Flex>
+      </PhiFlexControl>
     );
   }
 
   return (
-    <Flex vertical gap="middle">
-      <Typography.Title level={4}>Two-factor authentication</Typography.Title>
+    <PhiFlexControl vertical gap="middle">
+      <PhiTypographyControl presentation="title" level={4}>Two-factor authentication</PhiTypographyControl>
       {error ? <PhiAlertControl level="error" showIcon title={error} /> : null}
       <PhiTextControl
         value={code}
@@ -191,6 +193,6 @@ export function PhiAuthWorkflowBody({
         }}
         label={methodKey === "totp" ? "Use a recovery code" : "Use authenticator code"}
       />
-    </Flex>
+    </PhiFlexControl>
   );
 }

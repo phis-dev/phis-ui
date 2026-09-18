@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { Flex, Typography } from "antd";
+
 import { PhiAlertControl } from "../../controls/phi-alert-control";
+import { PhiFlexControl } from "../../controls/phi-flex-control";
+import { PhiTypographyControl } from "../../controls/phi-typography-control";
 
 export type PhiExternalDocumentEditorProps = {
   format: "markdown" | "html";
@@ -49,14 +51,14 @@ export function PhiExternalDocumentEditor({
         showIcon
         title={`External ${format} source`}
         description={
-          <Flex vertical gap="var(--ant-padding-xs)" style={{ width: "100%", minWidth: 0 }}>
-            <Typography.Text>
+          <PhiFlexControl vertical gap="var(--ant-padding-xs)" style={{ width: "100%", minWidth: 0 }}>
+            <PhiTypographyControl>
               This widget renders the configured external document. Edit its URL and source locale in the widget settings.
-            </Typography.Text>
-            <Typography.Text code copyable={{ text: sourceUrl }} style={{ wordBreak: "break-all" }}>
+            </PhiTypographyControl>
+            <PhiTypographyControl code copyable={{ text: sourceUrl }} style={{ wordBreak: "break-all" }}>
               {sourceUrl || "No Source URL configured."}
-            </Typography.Text>
-          </Flex>
+            </PhiTypographyControl>
+          </PhiFlexControl>
         }
       />
     </div>

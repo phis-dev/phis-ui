@@ -2,8 +2,6 @@
 
 import { useEffect, useRef } from "react";
 
-import { Typography } from "antd";
-
 import {
   normalizePhiImageAssetVariantKey,
   resolvePhiImageAssetVariantSpec,
@@ -16,6 +14,7 @@ import { PhiMaskPickerButton } from "./shared/phi-mask-picker";
 import { PhiWidgetImageToolButton } from "./shared/phi-widget-image-tool-button";
 import { PhiImageWidget } from "../../../plugins/runtime-modules/core/widgets/image/client";
 import { usePhiAuthoringAssetDetails } from "../../media/use-authoring-asset-details";
+import { PhiTypographyControl } from "../../controls/phi-typography-control";
 
 export type PhiImageWidgetEditorProps = {
   config?: PhiCmsImageWidgetConfig | null;
@@ -122,7 +121,7 @@ export function PhiImageWidgetEditor({ config, onChange }: PhiImageWidgetEditorP
         focalRect={resolvedAssetDetails?.meta?.focalRect ?? null}
       />
       {assetId != null ? (
-        <Typography.Text
+        <PhiTypographyControl
           style={{
             position: "absolute",
             top: "0.375rem",
@@ -135,10 +134,10 @@ export function PhiImageWidgetEditor({ config, onChange }: PhiImageWidgetEditorP
           }}
         >
           #{assetId}
-        </Typography.Text>
+        </PhiTypographyControl>
       ) : null}
       {overlaySize ? (
-        <Typography.Text
+        <PhiTypographyControl
           style={{
             position: "absolute",
             left: "0.375rem",
@@ -151,7 +150,7 @@ export function PhiImageWidgetEditor({ config, onChange }: PhiImageWidgetEditorP
           }}
         >
           {overlaySize}
-        </Typography.Text>
+        </PhiTypographyControl>
       ) : null}
     </div>
   );

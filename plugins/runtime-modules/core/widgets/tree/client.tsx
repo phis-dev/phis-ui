@@ -2,7 +2,7 @@
 
 import { ReloadOutlined, UndoOutlined } from "@ant-design/icons";
 import type { PhiTreeWidgetLabels } from "../../../../../components/widgets/label-types/tree";
-import { Typography } from "antd";
+
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import type {
@@ -32,6 +32,7 @@ import {
 import { usePhiSignalListener } from "../../../../../components/runtime/runtime-signal-bus";
 import { usePhiSignalEmitter, usePhiSignalIdentity } from "../../../../../components/runtime/runtime-signal-identity";
 import { findPhiSignalRoutesByCapabilityId, type PhiSignalValue } from "../../../../../types/signals";
+import { PhiTypographyControl } from "../../../../../components/controls/phi-typography-control";
 
 function readPath(value: Record<string, unknown>, path: string): unknown {
   return path.split(".").reduce<unknown>((current, key) =>
@@ -320,7 +321,7 @@ export function PhiTreeWidgetClient({ config, labels }: { config: PhiTreeWidgetC
         />
       ) : null}
       {!binding.loading && !binding.bindingError && !binding.error && !contractError && binding.nodes.length === 0 ? (
-        <Typography.Text type="secondary">{labels.empty}</Typography.Text>
+        <PhiTypographyControl type="secondary">{labels.empty}</PhiTypographyControl>
       ) : null}
       <PhiTreeControl
         nodes={binding.nodes}

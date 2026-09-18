@@ -2,8 +2,6 @@
 
 import { useEffect, useState } from "react";
 
-import { Flex, Typography } from "antd";
-
 import { usePhiBaseLayoutOwnSlotController } from "../../../../components/layouts/phi-layout-slot-state";
 import { PhiBackgroundControl, type PhiBackgroundControlProps } from "../../../../components/controls/phi-background-control";
 import { PhiBorderControl } from "../../../../components/controls/phi-border-control";
@@ -58,6 +56,8 @@ import {
   PhiInspectorSignalSection,
 } from "./inspector-signal-section";
 import type { PhiBuilderContainerMeta } from "../../../../types/builder";
+import { PhiFlexControl } from "../../../../components/controls/phi-flex-control";
+import { PhiTypographyControl } from "../../../../components/controls/phi-typography-control";
 
 const PHI_GAP_SM = "var(--ant-padding-sm)";
 
@@ -83,7 +83,6 @@ function isCanonicalPaddingField(field: Extract<PhiCmsConfigField, { type: "padd
     && (field.paddingLeftKey ?? "paddingLeft") === "paddingLeft"
   );
 }
-
 
 type PhiDeveloperBuilderLayoutInspectorWidgetClientProps = {
   section?: string;
@@ -367,7 +366,7 @@ export function PhiDeveloperBuilderLayoutInspectorWidgetClient({
   return (
     <div style={{ display: "grid", gap: PHI_GAP_SM, width: "100%" }}>
       {!isTargetKind ? (
-        <Typography.Text type="secondary">Select a layout to edit its geometry.</Typography.Text>
+        <PhiTypographyControl type="secondary">Select a layout to edit its geometry.</PhiTypographyControl>
       ) : (
         <div style={{ display: "grid", gap: PHI_GAP_SM, width: "100%" }}>
           <PhiInspectorSectionContent
@@ -465,10 +464,10 @@ export function PhiDeveloperBuilderLayoutInspectorWidgetClient({
                               )
                             : null}
                           {declaredCardSections.map((entry) => (
-                            <Flex key={entry.section.key} vertical gap={8} style={{ width: "100%", minWidth: 0 }}>
-                              <Typography.Text>{entry.section.title}</Typography.Text>
+                            <PhiFlexControl key={entry.section.key} vertical gap={8} style={{ width: "100%", minWidth: 0 }}>
+                              <PhiTypographyControl>{entry.section.title}</PhiTypographyControl>
                               {entry.section.children}
-                            </Flex>
+                            </PhiFlexControl>
                           ))}
                         </div>
                       ),

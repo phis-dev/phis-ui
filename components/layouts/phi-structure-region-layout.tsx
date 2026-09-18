@@ -2,10 +2,11 @@
 
 import type { CSSProperties, ReactNode } from "react";
 
-import { Typography, theme } from "antd";
+import { theme } from "antd";
 import type { PhiRegionWidgetLabels } from "../widgets/label-types/region";
 import { PHI_LAYOUT } from "../../theme/phi-tokens";
 import { usePhiAuthoringRegionOverrides } from "../runtime/authoring-region-overrides";
+import { PhiTypographyControl } from "../controls/phi-typography-control";
 
 const PHI_PADDING = "var(--ant-padding)";
 const PHI_PADDING_XS = "var(--ant-padding-xs)";
@@ -94,11 +95,11 @@ export function PhiStructureRegionLayout({
           <div key="content" style={{ gridColumn: 2, gridRow: 3, ...contentPreviewStyle }}>
             {isPreviewMode ? null : (
               <>
-                <Typography.Text strong>{labels?.structure?.surface?.contentTitle ?? "Page body viewport"}</Typography.Text>
-                <Typography.Text type="secondary">
+                <PhiTypographyControl strong>{labels?.structure?.surface?.contentTitle ?? "Page body viewport"}</PhiTypographyControl>
+                <PhiTypographyControl type="secondary">
                   {labels?.structure?.surface?.contentDescription ??
                     "Placeholder for the page body rendered by the selected page."}
-                </Typography.Text>
+                </PhiTypographyControl>
               </>
             )}
           </div>
@@ -125,11 +126,11 @@ export function PhiStructureRegionLayout({
           <div key="content" style={{ gridColumn: 2, gridRow: 3, ...contentPreviewStyle }}>
             {isPreviewMode ? null : (
               <>
-                <Typography.Text strong>{labels?.structure?.surface?.contentTitle ?? "Page body viewport"}</Typography.Text>
-                <Typography.Text type="secondary">
+                <PhiTypographyControl strong>{labels?.structure?.surface?.contentTitle ?? "Page body viewport"}</PhiTypographyControl>
+                <PhiTypographyControl type="secondary">
                   {labels?.structure?.surface?.contentDescription ??
                     "Placeholder for the page body rendered by the selected page."}
-                </Typography.Text>
+                </PhiTypographyControl>
               </>
             )}
           </div>

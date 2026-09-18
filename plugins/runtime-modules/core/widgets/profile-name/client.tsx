@@ -2,7 +2,6 @@
 
 import { useRouter } from "next/navigation";
 import { useMemo, useRef, useState } from "react";
-import { Flex, Typography } from "antd";
 
 import type { PhiClientBlockBaseProps, PhiBlockRuntime } from "../../../../../types";
 import { PhiAlertControl } from "../../../../../components/controls/phi-alert-control";
@@ -11,6 +10,8 @@ import { PhiFormControl, type PhiFormControlHandle } from "../../../../../compon
 import { PhiButtonControl } from "../../../../../components/controls/phi-button-control";
 import { PHI_FORM_FIELD_PROVIDER_KEYS, PHI_FORM_VALIDATION_PROVIDER_KEYS } from "../../../../../components/forms/form-provider-contract";
 import type { PhiFormDescriptor, PhiFormTextDescriptor } from "../../../../../types/form-descriptor";
+import { PhiFlexControl } from "../../../../../components/controls/phi-flex-control";
+import { PhiTypographyControl } from "../../../../../components/controls/phi-typography-control";
 
 const literal = (value: string): PhiFormTextDescriptor => ({ kind: "literal", value });
 
@@ -145,21 +146,21 @@ export function PhiProfileNameWidgetClient({
   }
 
   return (
-    <Flex vertical gap={16} style={{ width: "100%", maxWidth: sectionMaxWidth }}>
-        <Flex vertical gap={4}>
-          <Typography.Title level={4} style={{ margin: 0 }}>
+    <PhiFlexControl vertical gap={16} style={{ width: "100%", maxWidth: sectionMaxWidth }}>
+        <PhiFlexControl vertical gap={4}>
+          <PhiTypographyControl presentation="title" level={4} style={{ margin: 0 }}>
             {labels.title}
-          </Typography.Title>
-          <Typography.Text type="secondary">{labels.description}</Typography.Text>
-        </Flex>
+          </PhiTypographyControl>
+          <PhiTypographyControl type="secondary">{labels.description}</PhiTypographyControl>
+        </PhiFlexControl>
 
         {error ? (
           <PhiAlertControl level="error" showIcon title={labels.feedback.errorTitle} description={error} />
         ) : null}
 
-        <Typography.Text type="secondary">
+        <PhiTypographyControl type="secondary">
           {labels.currentLabel}: {buildCurrentNameText(profile)}
-        </Typography.Text>
+        </PhiTypographyControl>
 
         <PhiFormControl
           ref={formRef}
@@ -172,6 +173,6 @@ export function PhiProfileNameWidgetClient({
           onSubmit={(values) => handleSubmit(values as PhiProfileNameWidgetFormValues)}
         />
         <PhiButtonControl type="primary" loading={saving} label={labels.submitLabel} onClick={() => formRef.current?.submit()} />
-      </Flex>
+      </PhiFlexControl>
   );
 }

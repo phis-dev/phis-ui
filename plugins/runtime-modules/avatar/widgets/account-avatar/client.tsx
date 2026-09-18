@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from "react";
-import { Flex, Typography } from "antd";
+
 import { UserOutlined } from "@ant-design/icons";
 import { Avatar } from "antd";
 
@@ -20,6 +20,8 @@ import {
   createPhiSignalCorrelationId,
   usePhiSignalDispatcher,
 } from "../../../../../components/runtime/runtime-signal-bus";
+import { PhiFlexControl } from "../../../../../components/controls/phi-flex-control";
+import { PhiTypographyControl } from "../../../../../components/controls/phi-typography-control";
 /**
  * Declared here rather than imported from the label set, which is `server-only`: the client needs the
  * shape, not the loader. The server component's labels satisfy it structurally.
@@ -114,22 +116,22 @@ export function PhiAccountAvatarWidgetClient({ labels, config }: PhiAccountAvata
   const src = avatar?.thumbnailUrl ?? avatar?.previewUrl ?? avatar?.deliveryUrl ?? undefined;
 
   return (
-    <Flex vertical gap="small" style={{ padding: config?.padding }}>
-      <Typography.Title level={5} style={{ margin: 0 }}>{labels.title}</Typography.Title>
-      <Typography.Text type="secondary">{labels.description}</Typography.Text>
+    <PhiFlexControl vertical gap="small" style={{ padding: config?.padding }}>
+      <PhiTypographyControl presentation="title" level={5} style={{ margin: 0 }}>{labels.title}</PhiTypographyControl>
+      <PhiTypographyControl type="secondary">{labels.description}</PhiTypographyControl>
       {error ? <PhiAlertControl level="error" title={labels.feedback.errorTitle} description={error} /> : null}
-      <Flex align="center" gap="middle">
+      <PhiFlexControl align="center" gap="middle">
         <Avatar size={64} src={src} icon={<UserOutlined />} alt={avatar?.altText ?? labels.title} />
-        <Flex vertical gap="small">
-          {!avatar ? <Typography.Text type="secondary">{labels.emptyText}</Typography.Text> : null}
-          <Flex gap="small" wrap>
+        <PhiFlexControl vertical gap="small">
+          {!avatar ? <PhiTypographyControl type="secondary">{labels.emptyText}</PhiTypographyControl> : null}
+          <PhiFlexControl gap="small" wrap>
             <PhiButtonControl type="primary" label={labels.changeLabel} onClick={openPicker} disabled={busy} />
             {avatar ? (
               <PhiButtonControl label={labels.removeLabel} onClick={removePicture} disabled={busy} />
             ) : null}
-          </Flex>
-        </Flex>
-      </Flex>
-    </Flex>
+          </PhiFlexControl>
+        </PhiFlexControl>
+      </PhiFlexControl>
+    </PhiFlexControl>
   );
 }

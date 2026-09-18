@@ -4,7 +4,7 @@ import { ReloadOutlined, UndoOutlined } from "@ant-design/icons";
 import type { PhiTableWidgetLabels } from "../../../../../components/widgets/label-types/table";
 import { PHI_TABLE_WIDGET_DEFAULT_LABELS } from "../../../../../components/widgets/label-types/table";
 import { formatPhiTableWidgetLabel } from "../../../../../components/widgets/label-types/table";
-import { App, Flex, Space, Tooltip, Typography } from "antd";
+import { App, Space, Tooltip } from "antd";
 import { PhiTagControl } from "../../../../../components/controls/phi-tag-control";
 import { Fragment, useCallback, useEffect, useEffectEvent, useMemo, useState, type ReactNode } from "react";
 
@@ -77,6 +77,8 @@ import {
   type PhiSignalValue,
 } from "../../../../../types/signals";
 import { resolvePhiButtonIcon } from "../../../../../components/widgets/client/shared/phi-button-icons";
+import { PhiFlexControl } from "../../../../../components/controls/phi-flex-control";
+import { PhiTypographyControl } from "../../../../../components/controls/phi-typography-control";
 
 type TableRow = Record<string, unknown>;
 type DateRangeValue = { start?: string; end?: string };
@@ -153,7 +155,7 @@ function renderTableValueContent(value: unknown, column: PhiTableColumnDefinitio
   if (column.renderer === "date" || column.renderer === "datetime") {
     return column.renderer === "date" ? formatPhiDate(normalizedValue) : formatPhiDateTime(normalizedValue);
   }
-  if (column.renderer === "json" || column.renderer === "code") return <Typography.Text code>{displayValue}</Typography.Text>;
+  if (column.renderer === "json" || column.renderer === "code") return <PhiTypographyControl code>{displayValue}</PhiTypographyControl>;
   if (column.renderer === "badge") {
     return (
       <PhiTagControl color={resolveTableTagColor(column.tagColorMap?.[normalizedValue])} variant={column.tagVariant ?? "outlined"}>
@@ -215,10 +217,10 @@ function buildTableColumnTitle(column: PhiTableColumnDefinition) {
     );
   }
   return (
-    <Flex align="center" gap={4} wrap={false}>
+    <PhiFlexControl align="center" gap={4} wrap={false}>
       {icon}
       <span>{column.title}</span>
-    </Flex>
+    </PhiFlexControl>
   );
 }
 
@@ -850,7 +852,7 @@ export function PhiTableWidgetClient({
     }));
   };
   const collectionFilters = hasSelfContainedTools && (configuredBindingFields.length > 0 || hasQueryTools) ? (
-    <Flex align="end" gap={token.paddingSM} wrap>
+    <PhiFlexControl align="end" gap={token.paddingSM} wrap>
       {configuredBindingFields.map(({ field, tool }) => (
         <TableBindingTool
           key={field.key}
@@ -904,7 +906,7 @@ export function PhiTableWidgetClient({
         }
         return (
           <Space key={filter.key} orientation="vertical" size="small">
-            <Typography.Text type="secondary">{filter.label}</Typography.Text>
+            <PhiTypographyControl type="secondary">{filter.label}</PhiTypographyControl>
             {control}
           </Space>
         );
@@ -915,7 +917,7 @@ export function PhiTableWidgetClient({
           onChange={(value) => setSearchDraft(value ?? "")} style={{ width: 260 }}
         />
       ) : null}
-    </Flex>
+    </PhiFlexControl>
   ) : null;
   const collectionToolbar = hasSelfContainedTools && (
     toolbarActions.length > 0 ||
@@ -963,7 +965,7 @@ export function PhiTableWidgetClient({
       />
       {!selfContainedTools && bulkActions.length && selectedRowIdentities.length > 0 ? (
         <PhiAlertControl level="info" title={(
-          <Flex align="center" justify="space-between" gap="small" wrap>
+          <PhiFlexControl align="center" justify="space-between" gap="small" wrap>
             <span>{formatPhiTableWidgetLabel(labels.selected, selectedRowIdentities.length)}</span>
             <Space size="small">{bulkActions.map((action) => {
               if (!matchesAllConditions(null, action.visibleWhen, conditionControllerStates)) return null;
@@ -972,7 +974,7 @@ export function PhiTableWidgetClient({
                 disabled={Boolean(disabled)} disabledReason={disabled && "reason" in disabled ? disabled.reason : undefined}
                 onActivate={() => activateAction(action, undefined, selectedRowIdentities)} />;
             })}</Space>
-          </Flex>
+          </PhiFlexControl>
         )}
       />
       ) : null}
@@ -1112,8 +1114,8 @@ export function PhiTableWidgetClient({
         size={resolvedControlSize}
         emptyText={(
           <Space orientation="vertical" size="small">
-            <Typography.Text strong>{presentation.emptyState?.title ?? labels.emptyTitle}</Typography.Text>
-            <Typography.Text type="secondary">{presentation.emptyState?.description ?? labels.emptyDescription}</Typography.Text>
+            <PhiTypographyControl strong>{presentation.emptyState?.title ?? labels.emptyTitle}</PhiTypographyControl>
+            <PhiTypographyControl type="secondary">{presentation.emptyState?.description ?? labels.emptyDescription}</PhiTypographyControl>
           </Space>
         )}
         layout={presentation.layout}

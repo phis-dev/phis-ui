@@ -3,7 +3,6 @@
 import { useState } from "react";
 
 import { FormatPainterOutlined } from "@ant-design/icons";
-import { Flex } from "antd";
 
 import { PhiInlineTextEditor } from "../../../plugins/runtime-modules/builder/clients/inline-text-editor";
 import { PhiButtonControl } from "../../controls/phi-button-control";
@@ -23,6 +22,7 @@ import { resolvePhiWidgetFontFamily } from "../helpers/font-family";
 import type { PhiCmsInstanceId } from "../../../types/cms-instance-id";
 import { resolvePhiWidgetFontSize } from "../helpers/font-size";
 import { PHI_Z_INDEX } from "../../../theme/phi-tokens";
+import { PhiFlexControl } from "../../controls/phi-flex-control";
 
 export type PhiSimpleTextWidgetEditorProps = {
   text: string;
@@ -67,7 +67,7 @@ export function PhiSimpleTextWidgetStyleButton({
       rootClassName={popup.rootClassName}
       zIndex={PHI_Z_INDEX.authoringPopup}
       content={
-        <Flex
+        <PhiFlexControl
           vertical
           gap={8}
         >
@@ -79,7 +79,7 @@ export function PhiSimpleTextWidgetStyleButton({
               onChange={(checked) => onChange({ [toggle.key]: checked })}
             />
           ))}
-        </Flex>
+        </PhiFlexControl>
       }
     >
       <span style={{ display: "inline-flex" }}>
@@ -177,7 +177,7 @@ export function PhiSimpleTextWidgetEditor({
   const resolvedFontSize = resolvePhiWidgetFontSize(config?.fontSize, token, "lg");
 
   return (
-    <Flex
+    <PhiFlexControl
       align="center"
       gap={8}
       style={{
@@ -230,7 +230,7 @@ export function PhiSimpleTextWidgetEditor({
           maxWidth: "100%",
         }}
       />
-    </Flex>
+    </PhiFlexControl>
   );
 }
 
@@ -258,7 +258,6 @@ export function renderPhiSimpleTextWidgetBody(
   const text = resolvePhiSimpleTextWidgetText(config, { preferConfigText: true }, fallbackText);
   return <PhiSimpleTextWidgetClient blockId={blockId} labels={{ text }} config={config} />;
 }
-
 
 export function PhiSimpleTextWidgetEditorPluginBody({
   label,

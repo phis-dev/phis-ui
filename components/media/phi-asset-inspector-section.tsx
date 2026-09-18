@@ -1,7 +1,7 @@
 "use client";
 
 import { CopyOutlined } from "@ant-design/icons";
-import { Flex, Typography } from "antd";
+
 import NextImage from "next/image";
 import type { CSSProperties } from "react";
 
@@ -22,6 +22,8 @@ import type { PhiAssetWidgetLabels } from "./media-widget-labels";
 import type { MediaFocalRect } from "./focal-rect";
 import { resolveFocalRectCoverImageStyle } from "./focal-rect";
 import { resolvePhiImagePresentation } from "./image-presentation";
+import { PhiFlexControl } from "../controls/phi-flex-control";
+import { PhiTypographyControl } from "../controls/phi-typography-control";
 
 function formatBytes(bytes: number | null | undefined) {
   if (typeof bytes !== "number" || !Number.isFinite(bytes) || bytes <= 0) return null;
@@ -114,17 +116,17 @@ export function PhiAssetInspectorSection({
       [labels.inspector.originalNameLabel, asset.originalName],
     ] as const;
     return (
-      <Flex vertical gap="small" style={{ width: "100%", minWidth: 0 }}>
+      <PhiFlexControl vertical gap="small" style={{ width: "100%", minWidth: 0 }}>
         {technicalValues.map(([label, value]) => (
-          <Flex key={label} vertical gap={2} style={{ minWidth: 0 }}>
-            <Typography.Text type="secondary">{label}</Typography.Text>
-            <Flex align="center" gap="small" style={{ minWidth: 0 }}>
-              <Typography.Text code ellipsis style={{ flex: "1 1 auto", minWidth: 0 }}>{value}</Typography.Text>
+          <PhiFlexControl key={label} vertical gap={2} style={{ minWidth: 0 }}>
+            <PhiTypographyControl type="secondary">{label}</PhiTypographyControl>
+            <PhiFlexControl align="center" gap="small" style={{ minWidth: 0 }}>
+              <PhiTypographyControl code ellipsis style={{ flex: "1 1 auto", minWidth: 0 }}>{value}</PhiTypographyControl>
               <PhiButtonControl ariaLabel={labels.inspector.copyLabelTemplate.replace("%1", label)} type="text" size="small" icon={<CopyOutlined />} onClick={() => copy(value)} />
-            </Flex>
-          </Flex>
+            </PhiFlexControl>
+          </PhiFlexControl>
         ))}
-      </Flex>
+      </PhiFlexControl>
     );
   }
 
@@ -162,7 +164,7 @@ export function PhiAssetInspectorSection({
    */
   const unoptimizedPreview = !isPhiMediaAssetOriginalOptimizable(asset);
   return (
-    <Flex
+    <PhiFlexControl
       vertical
       gap="small"
       style={{
@@ -257,7 +259,7 @@ export function PhiAssetInspectorSection({
             </div>
           )
         ) : (
-          <Flex align="center" justify="center" style={{ width: "100%", height: "100%" }}><PhiMediaKindIcon kind={asset.kind} size={40} /></Flex>
+          <PhiFlexControl align="center" justify="center" style={{ width: "100%", height: "100%" }}><PhiMediaKindIcon kind={asset.kind} size={40} /></PhiFlexControl>
         )}
         {previewFrame?.kindLabel ? (
           <PhiTagControl style={{ position: "absolute", insetInlineStart: 10, top: 10, ...overlayTagStyle }}>
@@ -285,7 +287,7 @@ export function PhiAssetInspectorSection({
           </div>
         ) : null}
       </div>
-      <Typography.Text strong ellipsis>{asset.originalName}</Typography.Text>
+      <PhiTypographyControl strong ellipsis>{asset.originalName}</PhiTypographyControl>
       {asset.kind === PhiMediaKind.Image && onVariantKeyChange ? (
         <PhiSelectControl
           label={labels.inspector.variantsLabel}
@@ -301,6 +303,6 @@ export function PhiAssetInspectorSection({
           style={{ width: "100%" }}
         />
       ) : null}
-    </Flex>
+    </PhiFlexControl>
   );
 }

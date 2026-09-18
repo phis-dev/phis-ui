@@ -8,7 +8,7 @@ import {
   PlusOutlined,
   UnorderedListOutlined,
 } from "@ant-design/icons";
-import { Flex, Space, Tooltip } from "antd";
+import { Space, Tooltip } from "antd";
 import { useCallback, useMemo, useRef, useState, type Dispatch, type ReactNode, type SetStateAction } from "react";
 
 import {
@@ -26,6 +26,7 @@ import type { PhiTableProviderMutationRequest, PhiTableProviderResourceDescripto
 import { PhiTableProviderClient, type PhiTableProviderRegistration } from "../client/shared/phi-table-provider";
 import { usePhiTableBinding } from "../../tables/client/phi-table-binding";
 import { PhiTableBindingControl } from "../../tables/client/phi-table-binding-control";
+import { PhiFlexControl } from "../../controls/phi-flex-control";
 
 type PhiStaticOptionEditorRow = PhiControlOption & {
   rowId: string;
@@ -221,11 +222,11 @@ function PhiStaticOptionsTable({ disabled }: { disabled: boolean }) {
       layout={{ mode: "fixed", overflowX: "auto" }} loading={binding.loading}
       rowReordering={{ enabled: !disabled, onMove: (move) => { void binding.moveRow({ kind: "row-move", ...move }); } }}
     />
-    <Flex justify="flex-end">
+    <PhiFlexControl justify="flex-end">
       <PhiButtonControl label="Add option" icon={<PlusOutlined />} size="small" disabled={disabled}
         onClick={() => { void binding.executeAction({ kind: "action", actionKey: "add", selectedRowIdentities: [], query: binding.resolvedQuery }); }}
       />
-    </Flex>
+    </PhiFlexControl>
   </>;
 }
 
@@ -267,7 +268,6 @@ export function PhiStaticOptionsToolButton({
     closePicker();
   };
 
-
   return (
     <>
       <PhiButtonControl
@@ -292,16 +292,16 @@ export function PhiStaticOptionsToolButton({
         mountPolicy="remount"
         rootClassName={popup.rootClassName}
         onDismiss={discardPicker}
-        footer={<Flex justify="end" gap={12}>
+        footer={<PhiFlexControl justify="end" gap={12}>
           <PhiButtonControl label="Cancel" onClick={discardPicker} />
           <PhiButtonControl label="Apply" type="primary" onClick={applyPicker} />
-        </Flex>}
-        body={<Flex vertical gap={12} onClick={stopOverlayEvent} onPointerDown={stopOverlayEvent}>
+        </PhiFlexControl>}
+        body={<PhiFlexControl vertical gap={12} onClick={stopOverlayEvent} onPointerDown={stopOverlayEvent}>
           {error ? <PhiAlertControl level="error" showIcon title={error} /> : null}
           <PhiStaticOptionsTableProvider rows={rows} setRows={setRows} nextRowId={nextRowId}>
             <PhiStaticOptionsTable disabled={disabled} />
           </PhiStaticOptionsTableProvider>
-        </Flex>}
+        </PhiFlexControl>}
       />
     </>
   );
