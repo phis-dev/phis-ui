@@ -39,6 +39,19 @@ built. Remove an entry when it is done.
 - **Normalize Preset Content roots to vertical Flex.** Audit first-party Page presets and use a vertical
   Flex Layout as the Content Region root, keeping another root only where the Page has a semantic reason.
   The legacy Content Layout path is still registered.
+- **Wrap `Flex`, `Space`, `Typography` and `Card` in Phi Controls.** These four are the only Ant Design
+  primitives feature code still imports directly, and `scripts/validate-control-boundaries.mjs` lets them
+  through on the grounds that no Control stands in for them. That is a statement about today, not a
+  decision: **the reason to close it is that Ant Design is replaceable in principle and every direct
+  import makes replacing it harder.** Swapping the library out is a Control-adapter change where a
+  Control exists and a tree-wide edit where one does not, and layout and typography are exactly the
+  primitives that reach everywhere -- roughly 60 files import `Flex`, 63 `Typography`, 18 `Space` and 3
+  `Card`.
+  Wrapping them is not free and the Controls must not become a second styling vocabulary: each one
+  passes its primitive's contract through rather than inventing props, which is what keeps the migration
+  mechanical. Until they exist, direct use in a Widget or Layout stays correct and the validator keeps
+  permitting it -- so this is a planned narrowing, not a rule being broken today. Update the validator's
+  own comment and the AGENTS.md line when it lands, since both currently read as settled.
 
 ## Regions and Overlays
 

@@ -78,8 +78,12 @@ const coreApplicationAdapterPath = "components/runtime/core-runtime-application-
  * for a handful of primitives -- so everything outside those names passed, every Module under `plugins/`
  * included. This is the rule itself, over the whole tree.
  *
- * Layout and typography primitives (`Flex`, `Space`, `Typography`, `Card`) are deliberately absent:
- * AGENTS.md has styling default to them, and no Control stands in for them.
+ * Layout and typography primitives (`Flex`, `Space`, `Typography`, `Card`) are absent because no Control
+ * stands in for them yet, and AGENTS.md has styling default to them meanwhile. That is where things
+ * stand rather than where they are meant to end: wrapping the four is planned work, because Ant Design
+ * is replaceable in principle and every direct import turns that from a Control-adapter change into a
+ * tree-wide edit. See TODOS.md, "Wrap `Flex`, `Space`, `Typography` and `Card` in Phi Controls" -- and
+ * when they land, they belong in the map below and this paragraph goes away.
  */
 const controlledPrimitives = new Map([
   ["Alert", "PhiAlertControl"],

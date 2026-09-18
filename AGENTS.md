@@ -105,7 +105,12 @@ change. If a contract is unclear, stop and ask instead of guessing.
   `contentBinding`, `slotSizePolicy`); no `if` or `switch` on Widget type, key, or plugin identity.
 - Ant Design is imported only inside the canonical `Phi*Control` adapters and root/theme adapters. When a
   Phi Control exists, first-party and third-party code uses it. Feature code never imports Ant Design
-  `Tour`.
+  `Tour`. The exceptions are `Flex`, `Space`, `Typography` and `Card`, which no Control wraps yet and
+  which a Widget or Layout may import directly today. That exception is on its way out -- see
+  [TODOS.md](./TODOS.md), "Wrap `Flex`, `Space`, `Typography` and `Card` in Phi Controls": Ant Design is
+  replaceable in principle, and each direct import turns that from a Control-adapter change into a
+  tree-wide edit. Prefer a Control wherever one already fits, and do not reach for these four where a
+  Layout slot would have done the same work.
 - Shell and Region infrastructure in the RSC path stays plain React and HTML and imports no Ant Design
   module that needs client context.
 - Use the Layout and slot contracts as they are. Do not add wrapper `<div>` layers, alignment shims, or
