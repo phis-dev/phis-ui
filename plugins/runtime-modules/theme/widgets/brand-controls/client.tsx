@@ -3270,7 +3270,16 @@ export function PhiBuilderBrandIdentityControlsWidgetClient({
               key: "lines",
               label: <Typography.Text strong>Lines</Typography.Text>,
               children: (
-                <Flex vertical gap={clientToken.paddingXS}>
+                /* The same label column the Logo and the Wordmark rows stand in, so all of the Brand's
+                   fields start at one edge rather than each at the width of its own word. */
+                <Flex
+                  vertical
+                  gap={clientToken.paddingXS}
+                  style={{
+                    "--phi-labeled-control-label-width": "33.333333%",
+                    "--phi-labeled-control-width": "100%",
+                  } as CSSProperties}
+                >
                   <PhiBrandLineFields
                     label="Slogan"
                     placeholder="What the Site says about itself"
