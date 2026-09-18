@@ -9,7 +9,10 @@ import { PhiButtonControl } from "../../../../../components/controls/phi-button-
 import { PhiTagControl } from "../../../../../components/controls/phi-tag-control";
 import { PhiTextControl } from "../../../../../components/controls/phi-text-control";
 import { usePhiMediaUpload } from "../../../../../components/media/phi-media-upload";
-import { usePhiSignalListener } from "../../../../../components/runtime/runtime-signal-bus";
+import {
+  usePhiSignalDispatcher,
+  usePhiSignalListener,
+} from "../../../../../components/runtime/runtime-signal-bus";
 import type { PhiSignalFilter } from "../../../../../types/signals";
 import { PHI_THREADS_RUNTIME_MODULE_DEFINITION } from "../../definition";
 import type { PhiThreadComposerLabels } from "../../../../../components/widgets/label-sets/threads";
@@ -47,6 +50,7 @@ export function PhiThreadComposerWidgetClient({
   labels,
   config,
 }: PhiThreadComposerWidgetClientProps) {
+  const dispatchSignal = usePhiSignalDispatcher();
   const [threadId, setThreadId] = useState<number | null>(null);
   const [message, setMessage] = useState("");
   const [sending, setSending] = useState(false);
@@ -121,12 +125,28 @@ export function PhiThreadComposerWidgetClient({
       setMessage("");
       // The files are the message's now; what the composer holds is only the list it offered.
       reset();
+      /*
+       * Said out loud, because a conversation that does not show what you just wrote looks broken.
+       *
+       * `reload` and not `change`: the conversation is the same one, only its contents moved. A
+       * `change` would put every listener through switching threads -- and this composer is one of
+       * them, so it would clear the next message somebody had already started.
+       */
+      dispatchSignal({
+        scope: "page",
+        sender: null,
+        receiver: "broadcast",
+        channel: "thread",
+        action: "reload",
+        value: threadId,
+        valueType: "number",
+      });
     } catch {
       setError(labels.feedback.errorNetwork);
     } finally {
       setSending(false);
     }
-  }, [attached, labels, message, reset, threadId]);
+  }, [attached, dispatchSignal, labels, message, reset, threadId]);
 
   if (threadId == null) {
     return (

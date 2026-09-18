@@ -25,6 +25,62 @@ const PHI_THREAD_COMPOSER_LABEL_SET = definePhiLabelSet({
   },
 });
 
+const PHI_THREAD_CONVERSATION_LABEL_SET = definePhiLabelSet({
+  key: "widget:thread-conversation",
+  ctx: PHI_TR_CTX_WEB_UI_LABEL,
+  labels: {
+    no_thread_text: definePhiMessageLabel("Choose a conversation to read."),
+    loading_text: definePhiMessageLabel("Loading the conversation."),
+    empty_text: definePhiMessageLabel("Nothing has been said here yet."),
+    subject_fallback: "Conversation",
+    older_label: "Show earlier messages",
+    archived_label: "Archived",
+    /*
+     * Said on the note itself rather than in a legend somewhere.
+     *
+     * Staff write internal notes in the same place they write to the requester, and the one thing that
+     * must never be in doubt is which of the two a message is. A marker on the message is the only
+     * place a person actually looks while writing the next one.
+     */
+    internal_label: "Internal note",
+    redacted_text: definePhiMessageLabel("This message was withdrawn."),
+    withheld_text: definePhiMessageLabel("This message is not shown to you."),
+    system_author_label: "System",
+    /* A projection carries a display name or nothing; nothing is still somebody. */
+    unnamed_author_label: "Someone",
+    error_title: "That did not work",
+    error_generic: definePhiMessageLabel("The conversation could not be loaded."),
+    error_network: definePhiMessageLabel("The site could not be reached."),
+    error_not_found: definePhiMessageLabel("This conversation is not there, or is not yours to read."),
+  },
+});
+
+export async function getPhiThreadConversationLabels(options: PhiGlobalTranslatorOptions) {
+  const labels = await getPhiLabelSet(options, PHI_THREAD_CONVERSATION_LABEL_SET);
+  return {
+    noThreadText: labels.no_thread_text,
+    loadingText: labels.loading_text,
+    emptyText: labels.empty_text,
+    subjectFallback: labels.subject_fallback,
+    olderLabel: labels.older_label,
+    archivedLabel: labels.archived_label,
+    internalLabel: labels.internal_label,
+    redactedText: labels.redacted_text,
+    withheldText: labels.withheld_text,
+    systemAuthorLabel: labels.system_author_label,
+    unnamedAuthorLabel: labels.unnamed_author_label,
+    feedback: {
+      errorTitle: labels.error_title,
+      errorGeneric: labels.error_generic,
+      errorNetwork: labels.error_network,
+      errorNotFound: labels.error_not_found,
+    },
+  };
+}
+
+export type PhiThreadConversationLabels =
+  Awaited<ReturnType<typeof getPhiThreadConversationLabels>>;
+
 export async function getPhiThreadComposerLabels(options: PhiGlobalTranslatorOptions) {
   const labels = await getPhiLabelSet(options, PHI_THREAD_COMPOSER_LABEL_SET);
   return {

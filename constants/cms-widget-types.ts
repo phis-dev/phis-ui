@@ -121,6 +121,7 @@ const PHI_CMS_WIDGET_MODULE_BY_TYPE_KEY: Readonly<Record<string, keyof typeof PH
   "table": "core",
   "test-block": "builder",
   "thread-composer": "threads",
+  "thread-conversation": "threads",
   "tree": "core",
 };
 
@@ -175,6 +176,7 @@ export const PhiCmsWidgetType = {
   AccountAvatar: defineWidgetType(resolvePhiCmsWidgetPluginKey("account-avatar"), "account-avatar"),
   AccountAvatarPicker: defineWidgetType(resolvePhiCmsWidgetPluginKey("account-avatar-picker"), "account-avatar-picker"),
   ThreadComposer: defineWidgetType(resolvePhiCmsWidgetPluginKey("thread-composer"), "thread-composer"),
+  ThreadConversation: defineWidgetType(resolvePhiCmsWidgetPluginKey("thread-conversation"), "thread-conversation"),
   ProfileEmail: defineWidgetType(resolvePhiCmsWidgetPluginKey("profile-email"), "profile-email"),
   ProfileOverview: defineWidgetType(resolvePhiCmsWidgetPluginKey("profile-overview"), "profile-overview"),
   ProfileName: defineWidgetType(resolvePhiCmsWidgetPluginKey("profile-name"), "profile-name"),

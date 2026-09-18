@@ -16,6 +16,7 @@ export type {
   PhisThreadDetail,
   PhisThreadKindValue,
   PhisThreadMessage,
+  PhisThreadMessageAsset,
   PhisThreadMessageAuthor,
   PhisThreadParticipant,
   PhisThreadStatusValue,
