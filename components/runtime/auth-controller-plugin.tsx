@@ -32,7 +32,6 @@ function PhiAuthControllerView({
   runtime,
 }: Pick<PhiAuthControllerRenderArgs, "address" | "runtime">) {
   const dispatchSignal = usePhiSignalDispatcher();
-  const [nextPath, setNextPath] = useState<string | null>(null);
   const pendingOpenRef = useRef<{ correlationId: string; nextPath: string } | null>(null);
   const [openSequence, setOpenSequence] = useState(0);
   const locale = runtime.locale.current;
@@ -155,17 +154,25 @@ function PhiAuthControllerView({
       void completeLogin(payload);
       return;
     }
-    if (signal.channel === "command" && signal.action === "close") {
+    /*
+     * Dismissed is dismissed: the Page the login was opened over is where the viewer stays.
+     *
+     * Leaving for the Public `/login` on close is the reauthentication rule (AUTHENTICATION.md section
+     * 4), and it is right where it belongs: there the surface behind the modal was rendered under a
+     * session that has since expired, so it is masked and inert, and staying would leave somebody
+     * looking at a page nothing on it still works. Applied to every close, it answered "not now" with
+     * the very form that was just closed -- a guest choosing Login in the Account Widget over a Public
+     * Page, then changing their mind, was carried off the Page they were reading.
+     *
+     * Reauthentication is not wired to this Controller yet. When it is, the caller that opens the
+     * modal says why, and this is where the two are told apart -- not in the close itself, which
+     * cannot know what it is closing.
+     */
+    if (
+      (signal.channel === "command" || signal.channel === "dialog") &&
+      signal.action === "close"
+    ) {
       closeOverlay(signal.correlationId);
-      setNextPath(null);
-      return;
-    }
-    if (signal.channel === "dialog" && signal.action === "close") {
-      const target = nextPath ?? normalizeLoginRedirectTarget(
-        `${window.location.pathname}${window.location.search}`,
-      ) ?? "/";
-      closeOverlay(signal.correlationId);
-      redirectToPublicLogin(target);
       return;
     }
     if (signal.channel !== "command" || signal.action !== "open") return;
@@ -180,7 +187,6 @@ function PhiAuthControllerView({
       redirectToPublicLogin(next);
       return;
     }
-    setNextPath(next);
     pendingOpenRef.current = { correlationId: signal.correlationId, nextPath: next };
     setOpenSequence((current) => current + 1);
   }, {
