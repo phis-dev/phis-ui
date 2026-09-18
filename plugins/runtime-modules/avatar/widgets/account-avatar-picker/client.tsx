@@ -1,9 +1,10 @@
 "use client";
 
 import { useCallback, useMemo } from "react";
-import { Progress, Upload } from "antd";
 
 import type { PhiBlockRuntime, PhiClientBlockBaseProps } from "../../../../../types";
+import { PhiFileDropControl } from "../../../../../components/controls/phi-file-drop-control";
+import { PhiProgressControl } from "../../../../../components/controls/phi-progress-control";
 import { PhiAlertControl } from "../../../../../components/controls/phi-alert-control";
 import { usePhiMediaUpload } from "../../../../../components/media/phi-media-upload";
 import { PHI_AVATAR_RUNTIME_MODULE_DEFINITION } from "../../../../../plugins/runtime-modules/avatar/definition";
@@ -100,17 +101,16 @@ export function PhiAccountAvatarPickerWidgetClient({
       {active?.error
         ? <PhiAlertControl level="error" title={labels.feedback.errorTitle} description={active.error} />
         : null}
-      <Upload.Dragger
+      <PhiFileDropControl
+        dropZone
         accept={accept}
         multiple={false}
-        showUploadList={false}
         disabled={busy}
-        // Never hand the file to Ant Design's own uploader: the transport is the Provider-issued plan.
-        beforeUpload={(file) => { void upload(file as File); return false; }}
+        onFile={(file) => void upload(file)}
       >
         <PhiTypographyControl>{labels.uploadLabel}</PhiTypographyControl>
-      </Upload.Dragger>
-      {busy ? <Progress percent={Math.round(active?.progress ?? 0)} size="small" /> : null}
+      </PhiFileDropControl>
+      {busy ? <PhiProgressControl percent={Math.round(active?.progress ?? 0)} size="small" /> : null}
     </PhiFlexControl>
   );
 }

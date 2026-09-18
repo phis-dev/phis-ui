@@ -79,12 +79,14 @@ const coreApplicationAdapterPath = "components/runtime/core-runtime-application-
  * included. This is the rule itself, over the whole tree.
  *
  * This map is a denylist, so **every primitive not named here is permitted by omission** -- roughly
- * fourteen are still imported somewhere in the tree, from `Upload` and `Progress` down to `List` and
- * `Card`. `Flex` and `Typography`, the two that reached furthest, are done, as are the four that had
- * nothing to decide; five more are closed by `soleOwnerPrimitives` below. That is where things stand rather than where they are meant to end:
- * wrapping the rest is planned work, because Ant Design is replaceable in principle and every direct
- * import turns that from a Control-adapter change into a tree-wide edit. When the Controls land, the primitives belong in
- * the map below and this check should end up refusing by default instead -- an allowlist of what may be
+ * twelve are still imported somewhere in the tree, from `Space` and `Card` down to `List` and
+ * `Tooltip`. `Flex` and `Typography`, the two that reached furthest, are done, as are the four that had
+ * nothing to decide and the file-choosing pair; five more are closed by `soleOwnerPrimitives` below.
+ *
+ * That is where things stand rather than where they are meant to end: wrapping the rest is planned
+ * work, because Ant Design is replaceable in principle and every direct import turns that from a
+ * Control-adapter change into a tree-wide edit. When the Controls land, the primitives belong in the
+ * map below and this check should end up refusing by default instead -- an allowlist of what may be
  * imported directly -- so the next primitive somebody reaches for is not permitted again by omission.
  * See TODOS.md, "Wrap the uncontrolled Ant Design primitives in Phi Controls".
  */
@@ -108,6 +110,7 @@ const controlledPrimitives = new Map([
   ["Modal", "PhiModalControl"],
   ["Pagination", "PhiPaginationControl"],
   ["Popconfirm", "PhiConfirmControl"],
+  ["Progress", "PhiProgressControl"],
   ["Popover", "PhiPopoverControl"],
   ["QRCode", "PhiQrCodeControl"],
   ["Radio", "PhiRadioGroupControl"],
@@ -123,6 +126,7 @@ const controlledPrimitives = new Map([
   ["Tag", "PhiTagControl"],
   ["Tree", "PhiTreeControl"],
   ["Typography", "PhiTypographyControl"],
+  ["Upload", "PhiFileDropControl"],
 ]);
 
 /** Where the Controls live, and therefore where their primitives may be imported. */

@@ -2,7 +2,7 @@
 
 import { useRef, useState, type ReactNode } from "react";
 import { DeleteOutlined, StarOutlined, UploadOutlined } from "@ant-design/icons";
-import { Flex, Typography, Upload } from "antd";
+import { Flex, Typography } from "antd";
 
 import {
   mergePhiMaskConfigDefaults,
@@ -12,6 +12,7 @@ import {
   type PhiMaskPreset,
 } from "../widgets/config/mask";
 import { PhiIcon } from "../shell/phi-icon";
+import { PhiFileDropControl } from "./phi-file-drop-control";
 import { PhiButtonControl } from "./phi-button-control";
 import { PhiIconPickerControl } from "./phi-icon-picker-control";
 import { PhiMediaPickerControl, type PhiMediaPickerControlProps } from "./phi-media-picker-control";
@@ -187,13 +188,9 @@ export function PhiMaskPickerControl({
                 </span>
               }
             />
-            <Upload
+            <PhiFileDropControl
               accept=".svg,.png,image/svg+xml,image/png"
-              showUploadList={false}
-              beforeUpload={(file) => {
-                onUploadFile?.(file as File);
-                return Upload.LIST_IGNORE;
-              }}
+              onFile={(file) => onUploadFile?.(file)}
               style={{ width: "100%" }}
             >
               <span style={{ display: "block", width: "100%" }}>
@@ -205,7 +202,7 @@ export function PhiMaskPickerControl({
                   onClick={() => undefined}
                 />
               </span>
-            </Upload>
+            </PhiFileDropControl>
             <PhiIconPickerControl
               value={selectedIcon}
               onChange={onIconSelect}

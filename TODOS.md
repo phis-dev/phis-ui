@@ -49,9 +49,9 @@ built. Remove an entry when it is done.
   and every direct import makes replacing it harder:** with a Control it is an adapter change, without
   one it is a tree-wide edit.
 
-  It started at 28 named primitives against about 25 uncontrolled ones. It now names 34, closes five
-  more to a single owner file, and leaves fourteen: `Avatar`, `Card`, `Col`, `Collapse`, `Descriptions`,
-  `Empty`, `Layout`, `List`, `Progress`, `Row`, `Skeleton`, `Space`, `Tooltip`, `Upload`.
+  It started at 28 named primitives against about 25 uncontrolled ones. It now names 36, closes five
+  more to a single owner file, and leaves twelve: `Avatar`, `Card`, `Col`, `Collapse`, `Descriptions`,
+  `Empty`, `Layout`, `List`, `Row`, `Skeleton`, `Space`, `Tooltip`.
 
   `App`, `ConfigProvider` and `theme` stay direct: they are the root and theme adapters AGENTS.md
   already exempts, not feature surface.
@@ -61,8 +61,9 @@ built. Remove an entry when it is done.
 
   - **A Control**, where there is platform semantics to own -- a normalized contract, defaults the
     platform should decide once rather than at each call site:
-    `Upload`, `Progress`, `Skeleton`, `Empty`, `Tooltip`, `Collapse`, `Descriptions`, `Card`, `Avatar`,
-    and `Space.Compact` (which is a different thing from `Space`, see below).
+    ~~`Upload`, `Progress`~~ done as `PhiFileDropControl` and `PhiProgressControl`; `Skeleton`,
+    `Empty`, `Tooltip`, `Collapse`, `Descriptions`, `Card`, `Avatar` and `Space.Compact` (which is a
+    different thing from `Space`, see below) remain.
   - **A thin pass-through**, where there is nothing to decide and the wrapper exists only so the import
     points at us: ~~`PhiTypographyControl` (~63 files), `Flex` (~60), `Divider`, `Spin`, `QRCode`,
     `Statistic`~~ -- all done. `PhiSpinControl` stays beside `PhiSkeletonControl` rather than being
@@ -77,13 +78,15 @@ built. Remove an entry when it is done.
   - **Deletion**, where the direct use should stop rather than be wrapped -- see the next entry.
 
   Specifics worth not rediscovering:
-  - `Upload`: **Ant Design never transports anything.** Two uses return `false` from `beforeUpload`, one
-    returns `Upload.LIST_IGNORE`, and `components/media/phi-area-upload-widget.tsx` overrides
-    `customRequest` to call `runPhiMediaUploadSession`. What is left is a file dialog and a drop target,
-    so the Control is `PhiFileDropControl` -- named for what it does, since it does not upload --
-    carrying `accept`, `multiple`, `disabled`, `dropZone`, `onFiles`, `children`, and nothing of
-    `fileList`, `showUploadList`, `beforeUpload`, `customRequest` or `LIST_IGNORE`. `Progress` comes
-    with it: all four uses render an upload percentage, three linear and one circular.
+  - ~~`Upload`~~ built as `PhiFileDropControl`, the one Control with a deliberately **smaller** surface
+    than its primitive: `accept`, `multiple`, `disabled`, `dropZone`, `onFile`, `children`, and nothing
+    of `fileList`, `showUploadList`, `beforeUpload`, `customRequest` or `LIST_IGNORE`. `onFile` rather
+    than the `onFiles` sketched here, because every caller handled one file at a time and a batch prop
+    would have made each of them loop. Two findings kept: Ant Design never transported a byte, and the
+    three sites disagreed on `false` versus `LIST_IGNORE` -- only the latter also keeps the file out of
+    the hidden list, so the Control settles it the strict way. `PhiProgressControl` came with it as a
+    plain pass-through; an upload-specific `shape` prop would have been inventing props, and nothing
+    about a percentage is specific to uploading.
   - `Empty` before the `Listy` migration: both `List` sites set `locale.emptyText`, and migrating turns
     those into explicit empty states. Six `Empty` sites make the image/label choice six different ways
     today.
@@ -112,7 +115,7 @@ built. Remove an entry when it is done.
   (`GlobalToken`, `AliasToken`) stay exempt as part of the theme adapter.
 
   Order: ~~the two big pass-throughs (`Flex`, `PhiTypographyControl`), the five owner entries, the
-  trivial wrappers~~ -- done. Next `PhiFileDropControl` with `Progress`, then `Skeleton` (its own
+  trivial wrappers, `PhiFileDropControl` with `Progress`~~ -- done. Next `Skeleton` (its own
   Control, beside `PhiSpinControl` rather than over it), then
   `Empty`/`Tooltip`/`Card`/`Collapse`/`Descriptions`, then the deletions, then `Listy`, and the
   allowlist last.

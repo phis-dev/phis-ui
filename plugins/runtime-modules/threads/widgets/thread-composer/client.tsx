@@ -1,9 +1,10 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
-import { Progress, Upload } from "antd";
 
 import type { PhiBlockRuntime, PhiClientBlockBaseProps } from "../../../../../types";
+import { PhiFileDropControl } from "../../../../../components/controls/phi-file-drop-control";
+import { PhiProgressControl } from "../../../../../components/controls/phi-progress-control";
 import { PhiAlertControl } from "../../../../../components/controls/phi-alert-control";
 import { PhiButtonControl } from "../../../../../components/controls/phi-button-control";
 import { PhiTagControl } from "../../../../../components/controls/phi-tag-control";
@@ -179,16 +180,14 @@ export function PhiThreadComposerWidgetClient({
         </PhiFlexControl>
       ) : null}
       {uploading.map((item) => (
-        <Progress key={item.localId} percent={Math.round(item.progress)} size="small" />
+        <PhiProgressControl key={item.localId} percent={Math.round(item.progress)} size="small" />
       ))}
       <PhiFlexControl justify="space-between" align="center" gap="small">
-        <Upload
+        <PhiFileDropControl
           accept={accept}
           multiple
-          showUploadList={false}
           disabled={sending}
-          // Never hand the file to Ant Design's own uploader: the transport is the Provider-issued plan.
-          beforeUpload={(file) => { void upload(file as File); return false; }}
+          onFile={(file) => void upload(file)}
         >
           {/*
             * The click belongs to the uploader wrapped around it, which opens the file dialog. The
@@ -196,7 +195,7 @@ export function PhiThreadComposerWidgetClient({
             * purpose, and this one is not.
             */}
           <PhiButtonControl label={labels.attachLabel} disabled={sending} onClick={() => {}} />
-        </Upload>
+        </PhiFileDropControl>
         <PhiButtonControl
           label={labels.sendLabel}
           type="primary"

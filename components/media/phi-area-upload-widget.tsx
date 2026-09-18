@@ -1,10 +1,9 @@
 "use client";
 
 import { DeleteOutlined, UploadOutlined } from "@ant-design/icons";
-import { Progress, Space, Upload } from "antd";
+import { Space } from "antd";
 import { PhiTagControl } from "../controls/phi-tag-control";
 import { PhiButtonControl } from "../controls/phi-button-control";
-import type { UploadProps } from "antd";
 import NextImage from "next/image";
 import { useMemo, useRef, useState } from "react";
 
@@ -41,6 +40,8 @@ import { PhiFileDropGuard } from "./phi-file-drop-guard";
 import { usePhiApplicationFeedback } from "../runtime/use-phi-application-feedback";
 import { usePhiConfig } from "../root/phi-config-provider";
 import { usePhiCollectionProviderAction } from "../widgets/client/shared/phi-collection-provider";
+import { PhiFileDropControl } from "../controls/phi-file-drop-control";
+import { PhiProgressControl } from "../controls/phi-progress-control";
 import { PhiFlexControl } from "../controls/phi-flex-control";
 import { PhiTypographyControl } from "../controls/phi-typography-control";
 import { PhiSpinControl } from "../controls/phi-spin-control";
@@ -306,15 +307,18 @@ export function PhiAreaUploadBinding({ config, labels, onUploadComplete, collect
     }
   }
 
-  const customRequest: UploadProps["customRequest"] = async (options) => {
-    const uploadOptions = options as Parameters<NonNullable<UploadProps["customRequest"]>>[0];
-    const { file, onProgress, onSuccess, onError } = uploadOptions;
-    const uploadFile = file as File;
+  /*
+   * One file, transported by us.
+   *
+   * This was `customRequest`, whose `onProgress`, `onSuccess` and `onError` fed an Ant Design file
+   * list that `showUploadList={false}` never rendered -- every visible part of the progress already
+   * came from `uploadWall` below. Dropping the primitive dropped that second, invisible copy with it.
+   */
+  const receiveFile = async (uploadFile: File) => {
     let localId = "";
     try {
       localId = await Promise.resolve(startUploadWallItem(uploadFile));
       const payload = await runPhiMediaUploadSession(uploadFile, (progress) => {
-        onProgress?.({ percent: progress });
         setUploadWall((current) =>
           current.map((item) =>
             item.localId === localId ? { ...item, progress, status: "uploading" } : item,
@@ -328,9 +332,7 @@ export function PhiAreaUploadBinding({ config, labels, onUploadComplete, collect
         ),
       );
       onUploadComplete?.();
-      onSuccess?.(payload.asset);
     } catch (error) {
-      onError?.(error as Error);
       showUploadMessage("error", resolveUploadErrorMessage(error, labels));
       setUploadWall((current) =>
         current.map((item) =>
@@ -345,13 +347,6 @@ export function PhiAreaUploadBinding({ config, labels, onUploadComplete, collect
         ),
       );
     }
-  };
-
-  const uploadProps: UploadProps = {
-    multiple,
-    showUploadList: false,
-    accept,
-    customRequest,
   };
 
   return (
@@ -380,8 +375,11 @@ export function PhiAreaUploadBinding({ config, labels, onUploadComplete, collect
         }}
         style={{ width: "100%" }}
       >
-        <Upload.Dragger
-          {...uploadProps}
+        <PhiFileDropControl
+          dropZone
+          multiple={multiple}
+          accept={accept}
+          onFile={(file) => void receiveFile(file)}
           style={{
             padding: 0,
             width: "100%",
@@ -404,7 +402,7 @@ export function PhiAreaUploadBinding({ config, labels, onUploadComplete, collect
             <PhiTypographyControl strong>{labels.dropTitle}</PhiTypographyControl>
             <PhiTypographyControl type="secondary">{labels.dropHint}</PhiTypographyControl>
           </Space>
-        </Upload.Dragger>
+        </PhiFileDropControl>
       </div>
 
       <PhiCollectionLayoutControl
@@ -475,7 +473,7 @@ export function PhiAreaUploadBinding({ config, labels, onUploadComplete, collect
                       color: token.colorText,
                     }}
                   >
-                    <Progress type="circle" percent={item.progress} size={48} />
+                    <PhiProgressControl type="circle" percent={item.progress} size={48} />
                   </div>
                 ) : null}
                 {item.status === "error" ? (

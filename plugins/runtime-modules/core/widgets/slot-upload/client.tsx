@@ -1,7 +1,8 @@
 "use client";
 
 import { DeleteOutlined, UploadOutlined } from "@ant-design/icons";
-import { List, Progress } from "antd";
+import { List } from "antd";
+import { PhiProgressControl } from "../../../../../components/controls/phi-progress-control";
 import { PhiButtonControl } from "../../../../../components/controls/phi-button-control";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
@@ -253,7 +254,7 @@ export function PhiSlotUploadWidgetClient({ config }: PhiSlotUploadWidgetClientP
         </>
       )}
       {upload.items.filter((item) => item.status === "uploading").map((item) => (
-        <Progress key={item.localId} percent={item.progress} size="small" />
+        <PhiProgressControl key={item.localId} percent={item.progress} size="small" />
       ))}
       {failure ? <PhiTypographyControl type="danger" role="alert">{failure}</PhiTypographyControl> : null}
       <List
