@@ -2,10 +2,10 @@ import "server-only";
 
 import type { NextRequest } from "next/server";
 
-import { PHI_CMS_AREA_KEYS, type PhiCmsAreaKey } from "../constants/cms-areas";
-import { getPhiCapabilitySnapshot } from "../gateway/server-capabilities";
+import type { PhiCmsAreaKey } from "../constants/cms-areas";
+import { getPhiCapabilitySnapshot } from "./server-capabilities";
+import { loadPhiSiteAreaBridges, type PhiSiteAreaBridgeLoader } from "./site-area-bridges";
 import { resolvePhiRuntimeModuleServerBinding } from "../plugins/runtime-modules/server-capabilities";
-import type { PhiCmsSiteBridge } from "../types/cms-plugins";
 import { PHIS_TOKEN_HEADER } from "../constants/http-headers";
 
 /**
@@ -23,10 +23,6 @@ import { PHIS_TOKEN_HEADER } from "../constants/http-headers";
  * This reports the running Site, not a future one. It is the check to run after an update, not a
  * prediction of whether an update will be safe.
  */
-
-export type PhiSiteModuleDiagnosticsBridges = Partial<
-  Readonly<Record<PhiCmsAreaKey, PhiCmsSiteBridge>>
->;
 
 export type PhiSiteModuleDiagnostic = {
   area: PhiCmsAreaKey;
@@ -52,16 +48,17 @@ function json(body: unknown, status = 200) {
 }
 
 export function buildPhiSiteModuleDiagnosticsRouteHandler({
-  bridgesByArea,
+  loadAreaBridge,
 }: {
-  bridgesByArea: PhiSiteModuleDiagnosticsBridges;
+  loadAreaBridge: PhiSiteAreaBridgeLoader;
 }) {
   return async function GET(request: NextRequest) {
-    const anyBridge = Object.values(bridgesByArea).find((bridge) => bridge?.runtime);
-    if (!anyBridge?.runtime) {
+    const bridges = await loadPhiSiteAreaBridges(loadAreaBridge);
+    const anyRuntime = bridges.find(([, bridge]) => bridge.runtime)?.[1].runtime;
+    if (!anyRuntime) {
       return json({ error: "no_site_runtime" }, 503);
     }
-    const { apiBaseUrl, internalToken, siteKey } = anyBridge.runtime;
+    const { apiBaseUrl, internalToken, siteKey } = anyRuntime;
 
     // An operator's check, not a public one: it names which Modules a Site lost and why.
     if (!internalToken || request.headers.get(PHIS_TOKEN_HEADER)?.trim() !== internalToken) {
@@ -78,12 +75,8 @@ export function buildPhiSiteModuleDiagnosticsRouteHandler({
 
     const unavailable: PhiSiteModuleDiagnostic[] = [];
     const seen = new Set<string>();
-    for (const area of PHI_CMS_AREA_KEYS) {
-      const catalog = bridgesByArea[area]?.runtimeModuleCatalog;
-      if (!catalog) {
-        continue;
-      }
-      for (const [moduleId, entry] of catalog) {
+    for (const [area, bridge] of bridges) {
+      for (const [moduleId, entry] of bridge.runtimeModuleCatalog) {
         const resolution = resolvePhiRuntimeModuleServerBinding(
           entry.definition.serverBinding,
           snapshot,

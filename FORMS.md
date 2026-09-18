@@ -404,11 +404,15 @@ Other Form-shaped surfaces are separate Controllers:
 
 ## Relay
 
-The browser never calls phis-server for a Form. A Site mounts one route, `src/app/api/site/forms/route.ts`,
-built with `buildPhiSiteFormRouteHandlers` from `@phis/ui/next/route-handlers`
-(`gateway/site-form-route.ts`). Its options are `upstreamBaseUrl`, `buildHeaders`, `timeoutMs`, optional
-`logLabel` and `missingBaseUrlMessage`, and `loadRuntimeModuleCatalog(area)`, which returns the catalog of
-one Area.
+The browser never calls phis-server for a Form. `/api/site/forms` is answered by the Site's own
+`/api/site` door rather than proxied: `buildPhiSiteProxyHandlers` recognises the path and builds
+`buildPhiSiteFormRouteHandlers` (`gateway/site-form-route.ts`) on first use. A Site mounts no route of its
+own for it, because a Site's route files are written at installation and belong to it from then on, while
+`@phis/ui` arrives through the dependency.
+
+The relay's options are `upstreamBaseUrl`, `buildHeaders`, `timeoutMs`, optional `logLabel` and
+`missingBaseUrlMessage`, and `loadAreaBridge(area)`, the Site's Bridge loader, whose
+`runtimeModuleCatalog` is the catalog of that one Area.
 
 Requests:
 

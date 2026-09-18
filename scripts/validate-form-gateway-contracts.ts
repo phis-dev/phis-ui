@@ -13,7 +13,7 @@ import { PHI_FIRST_PARTY_RUNTIME_MODULE_CATALOG } from "../plugins/runtime-modul
 import { createPhiRuntimeModuleCatalog } from "../plugins/runtime-modules/contracts";
 import { PHI_AUTH_RUNTIME_MODULE_ID } from "../plugins/runtime-modules/auth/ids";
 import type { PhiFormHandlerProviderDescriptor } from "../types/form-descriptor";
-import type { PhiRuntimeModuleCatalogEntry } from "../types/cms-plugins";
+import type { PhiCmsSiteBridge, PhiRuntimeModuleCatalogEntry } from "../types/cms-plugins";
 import { PHIS_SITE_KEY_HEADER } from "../constants/http-headers";
 
 // ---------------------------------------------------------------------------
@@ -311,9 +311,13 @@ function buildHandlers(options?: { upstreamBaseUrl?: string; withAddOn?: boolean
       [PHIS_SITE_KEY_HEADER]: "site",
     }),
     timeoutMs: 2000,
-    // The Area is the argument now, so a validator hands back one catalog for whichever Area asks.
-    loadRuntimeModuleCatalog: async () =>
-      options?.withAddOn ? catalogWithAddOn : PHI_FIRST_PARTY_RUNTIME_MODULE_CATALOG,
+    // The Area is the argument now, so a validator hands back one Bridge for whichever Area asks, and
+    // only the catalog on it is ever read here.
+    loadAreaBridge: async () => ({
+      runtimeModuleCatalog: options?.withAddOn
+        ? catalogWithAddOn
+        : PHI_FIRST_PARTY_RUNTIME_MODULE_CATALOG,
+    } as PhiCmsSiteBridge),
   });
 }
 

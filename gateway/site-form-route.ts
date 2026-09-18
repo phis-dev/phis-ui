@@ -8,14 +8,18 @@ import { resolvePhiServerFormHandler } from "./form-handler-resolution";
 import type { PhiCmsAreaKey } from "../constants/cms-areas";
 import type { PhiRuntimeModuleCatalog } from "../plugins/runtime-modules/contracts";
 import { PHIS_SITE_KEY_HEADER } from "../constants/http-headers";
+import type { PhiSiteAreaBridgeLoader } from "./site-area-bridges";
 
 /**
- * How a Site hands over the catalog of the Area a Form was submitted from.
+ * How the catalog of the Area a Form was submitted from is reached.
  *
  * A loader, because the Area is only known once the request is read, and importing all of them would
  * put every Area's Widget plugins into this graph. An Area the Site does not host answers null.
+ *
+ * It is derived from the Site's Bridge loader rather than injected beside it: the catalog is part of a
+ * Bridge, and one thing to hand over is one thing to keep pointing at the right place.
  */
-export type PhiSiteAreaRuntimeModuleCatalogLoader =
+type PhiSiteAreaRuntimeModuleCatalogLoader =
   (area: PhiCmsAreaKey) => Promise<PhiRuntimeModuleCatalog | null>;
 
 export type BuildPhiSiteFormRouteHandlersOptions = {
@@ -24,8 +28,8 @@ export type BuildPhiSiteFormRouteHandlersOptions = {
   timeoutMs: number;
   logLabel?: string;
   missingBaseUrlMessage?: string;
-  /** The catalog of the Area a Form was submitted from. See `resolvePhiServerFormHandler`. */
-  loadRuntimeModuleCatalog: PhiSiteAreaRuntimeModuleCatalogLoader;
+  /** The Bridge of the Area a Form was submitted from. See `resolvePhiServerFormHandler`. */
+  loadAreaBridge: PhiSiteAreaBridgeLoader;
 };
 
 type SiteFormSubmitBody = {
@@ -182,8 +186,11 @@ export function buildPhiSiteFormRouteHandlers({
   buildHeaders,
   timeoutMs,
   missingBaseUrlMessage = "Missing apiBaseUrl for /api/site/forms proxy.",
-  loadRuntimeModuleCatalog,
+  loadAreaBridge,
 }: BuildPhiSiteFormRouteHandlersOptions) {
+  const loadRuntimeModuleCatalog: PhiSiteAreaRuntimeModuleCatalogLoader = async (area) =>
+    (await loadAreaBridge(area))?.runtimeModuleCatalog ?? null;
+
   /*
    * The guard token of a Form that declares one, asked for by the browser when the Form mounts.
    *

@@ -33,10 +33,7 @@ import {
 import { runWithPhiRequestRuntime } from "../server-helpers/request-runtime";
 import { resolvePhiCmsPageRedirect } from "../components/cms/phi-cms-page-redirect";
 import type { PhiCmsSiteBridge } from "../types/cms-plugins";
-
-export type PhiNavigationTargetBridges = Partial<
-  Readonly<Record<PhiCmsAreaKey, PhiCmsSiteBridge>>
->;
+import type { PhiSiteAreaBridgeLoader } from "./site-area-bridges";
 
 function readInternalPath(value: string | null, requestUrl: string) {
   const normalized = value?.trim() ?? "";
@@ -89,8 +86,8 @@ function json(payload: unknown, status = 200) {
  * A client navigation onto a forwarding root races the streamed forward against the Area switch's
  * lazy shell refetches -- measured at dozens of round trips before it settles -- while a link that
  * already names the destination costs one settled navigation. The question can only be answered
- * here: each Area's render bundle deliberately carries only its own Module catalog, and this route
- * is where every Area's bridge is present at once.
+ * here: each Area's render bundle deliberately carries only its own Module catalog, and this route can
+ * reach any Area's Bridge -- one at a time, the one the request names.
  *
  * The resolution is the request resolution itself -- same routing table, same access checks, same
  * Builder-configured root route -- run as a lookup so it binds no request state. `null` means "link
@@ -171,9 +168,9 @@ async function resolveAreaRootDestinationHref({
 }
 
 export function buildPhiNavigationTargetRouteHandler({
-  bridgesByArea,
+  loadAreaBridge,
 }: {
-  bridgesByArea: PhiNavigationTargetBridges;
+  loadAreaBridge: PhiSiteAreaBridgeLoader;
 }) {
   return async function GET(request: NextRequest) {
     const requestUrl = new URL(request.url);
@@ -184,7 +181,7 @@ export function buildPhiNavigationTargetRouteHandler({
       return json({ available: false }, 400);
     }
 
-    const bridge = bridgesByArea[area];
+    const bridge = await loadAreaBridge(area);
     const target = splitTargetPath(pathname);
     if (!bridge?.runtime || !target) {
       return json({ available: false });

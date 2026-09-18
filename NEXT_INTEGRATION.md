@@ -309,8 +309,16 @@ export const dynamic = "force-dynamic";
 export default createPhiNextStaticAreaLayout("admin", PHI_ADMIN_CMS_SITE_BRIDGE, "shell");
 ```
 
-The `(root)` branch passes `"none"`. Route handlers a Site mounts (proxy and Form relay) come from
+The `(root)` branch passes `"none"`. Route handlers a Site mounts come from
 `@phis/ui/next/route-handlers`; `/sitemap.xml` and `/robots.txt` come from `@phis/ui/next/seo-routes`.
+
+One door per kind of traffic, and never one per address. A Site's route files are written when it is
+installed and belong to the installation from then on, so an address spelled as a file there is one that
+can never be revised, while this package arrives through the dependency and is replaced with it. The
+paths under `/api/site` whose answer is in the Site rather than in Core -- `forms`, `module-diagnostics`,
+`navigation-target` -- are therefore not mounted: `buildPhiSiteProxyHandlers` recognises them and answers
+them from the Site's own Modules. The Site hands it `loadAreaBridge`, a loader for one Area's Bridge, and
+that is the whole of what it contributes; adding another such path adds nothing to a Site.
 
 Asset bytes need no route of their own. Every delivery address this package builds is
 `/api/site/media/{id}/content|variants|subsets`, which the Site's `/api/site` proxy already forwards, and

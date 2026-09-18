@@ -1,6 +1,11 @@
 /**
- * The route handlers a Site mounts to reach Core: its doors for auth, site, Add-on and hook traffic, and
- * the Form gateway.
+ * The route handlers a Site mounts to reach Core: its doors for auth, site, Add-on and hook traffic.
+ *
+ * One door per kind of traffic, and never one per address. A Site's route files are written when it is
+ * installed and then belong to the installation, so every address spelled as a file there is an address
+ * that can never be revised, while `@phis/ui` arrives through the dependency and is replaced with it.
+ * Forms, Module diagnostics and navigation targets are therefore not mounted: they live under
+ * `/api/site`, and `buildPhiSiteProxyHandlers` answers them from the Site instead of forwarding them.
  *
  * Assets are not among them. An Asset is delivered from `/api/site/media/{id}/content|variants|subsets`,
  * which the Site's `/api/site` proxy already forwards; a second short address in front of it would be one
@@ -24,11 +29,7 @@ export {
   type BuildPhiAuthProxyHandlersOptions,
 } from "../gateway/auth-proxy";
 export {
-  buildPhiSiteFormRouteHandlers,
-  type BuildPhiSiteFormRouteHandlersOptions,
-  type PhiSiteAreaRuntimeModuleCatalogLoader,
-} from "../gateway/site-form-route";
-export {
   buildPhiSiteProxyHandlers,
   type BuildPhiSiteProxyHandlersOptions,
 } from "../gateway/site-proxy";
+export type { PhiSiteAreaBridgeLoader } from "../gateway/site-area-bridges";
