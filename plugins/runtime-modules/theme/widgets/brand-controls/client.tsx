@@ -115,8 +115,11 @@ import { PhiShadowControl } from "../../../../../components/controls/phi-shadow-
 import type { PhiShadow } from "../../../../../types/layout-style";
 import type {
   PhiSiteThemeBrand,
+  PhiSiteThemeBrandLine,
   PhiSiteThemeWordmarkPart,
 } from "../../../../../types/site-theme";
+import { PhiIcon } from "../../../../../components/shell/phi-icon";
+import { PhiIconPickerControl } from "../../../../../components/controls/phi-icon-picker-control";
 import type { PhiBuilderBrandWidgetConfig } from "./config";
 import { createPhiHistoryStore } from "../../../../../components/state/history-store";
 import { createPhiCommandToolbarControlAddress } from "../../../../../components/widgets/signals/command-toolbar-address";
@@ -193,7 +196,7 @@ const BRAND_THEME_STYLE_COLLAPSE_STORAGE_KEY = "phi.builder.brand.theme.styleCol
 const BRAND_THEME_BACKGROUND_COLLAPSE_STORAGE_KEY = "phi.builder.brand.theme.backgroundCollapse.activeKey";
 const BRAND_THEME_BACKGROUND_SECTION_KEYS = ["root", "chrome", "shadow"] as const;
 const BRAND_THEME_IDENTITY_COLLAPSE_STORAGE_KEY = "phi.builder.brand.theme.identityCollapse.activeKey";
-const BRAND_THEME_IDENTITY_SECTION_KEYS = ["logo", "wordmark"] as const;
+const BRAND_THEME_IDENTITY_SECTION_KEYS = ["logo", "wordmark", "lines"] as const;
 const BRAND_THEME_STYLE_SECTION_KEYS = [
   "controls",
   "buttonShadow",
@@ -941,6 +944,69 @@ function mergeThemeBrand(theme: ThemePayload, patch: Partial<PhiSiteThemeBrand>)
     if (value == null || value === "") delete brand[key];
   }
   return { ...theme, brand: brand as PhiSiteThemeBrand };
+}
+
+/**
+ * A line as the record should hold it, or nothing at all.
+ *
+ * An icon without a sentence is not a line -- the Brand Widget draws nothing for it, and storing it
+ * would leave the workspace showing a setting that no page can act on. Cleared on both counts is
+ * therefore `null`, which `mergeThemeBrand` takes back out of the record entirely.
+ */
+function normalizeThemeBrandLine(line: PhiSiteThemeBrandLine | null | undefined) {
+  const label = line?.label?.trim();
+  const icon = line?.icon?.trim();
+  if (!label && !icon) {
+    return null;
+  }
+  return {
+    ...(label ? { label } : {}),
+    ...(icon ? { icon } : {}),
+  } satisfies PhiSiteThemeBrandLine;
+}
+
+/**
+ * One of the Brand's two lines, as the workspace sets it: the icon in front, then what it says.
+ *
+ * The icon button shows the line's own icon, or the one the Brand Widget would draw in its place, so
+ * the button is never empty and what it shows is what a page shows. Both fields write the whole line,
+ * because a line is one value in the record and half of it is not a state worth storing.
+ */
+function PhiBrandLineFields({
+  label,
+  placeholder,
+  fallbackIcon,
+  line,
+  onChange,
+}: {
+  label: string;
+  placeholder: string;
+  fallbackIcon: string;
+  line?: PhiSiteThemeBrandLine | null;
+  onChange: (next: PhiSiteThemeBrandLine | null) => void;
+}) {
+  return (
+    <PhiLabeledControl label={label} fill>
+      <Flex align="center" gap={8} style={{ width: "100%" }}>
+        <PhiIconPickerControl
+          value={line?.icon ?? null}
+          buttonAriaLabel={`${label} icon`}
+          buttonIcon={<PhiIcon name={line?.icon?.trim() || fallbackIcon} size={16} />}
+          buttonType="default"
+          onChange={(next) => onChange(normalizeThemeBrandLine({ ...(line ?? {}), icon: next }))}
+        />
+        <div style={{ flex: "1 1 auto", minWidth: 0 }}>
+          <PhiTextControl
+            value={line?.label ?? ""}
+            placeholder={placeholder}
+            ariaLabel={label}
+            allowClear={false}
+            onChange={(next) => onChange(normalizeThemeBrandLine({ ...(line ?? {}), label: next ?? "" }))}
+          />
+        </div>
+      </Flex>
+    </PhiLabeledControl>
+  );
 }
 
 /**
@@ -3191,6 +3257,34 @@ export function PhiBuilderBrandIdentityControlsWidgetClient({
                       }))}
                     />
                   </PhiLabeledControl>
+                </Flex>
+              ),
+            },
+            {
+              /*
+               * The two sentences that travel with the Brand, set here because they are the Brand
+               * speaking. A Preset decides whether a frame carries them and where; what they say is
+               * one Site's own, the way its name and its Logo are, and until now there was nowhere at
+               * all to say it -- the record held the fields and the workspace showed none of them.
+               */
+              key: "lines",
+              label: <Typography.Text strong>Lines</Typography.Text>,
+              children: (
+                <Flex vertical gap={clientToken.paddingXS}>
+                  <PhiBrandLineFields
+                    label="Slogan"
+                    placeholder="What the Site says about itself"
+                    fallbackIcon="antd:star"
+                    line={brand.slogan}
+                    onChange={(next) => publishDraft(mergeThemeBrand(state.draft, { slogan: next }))}
+                  />
+                  <PhiBrandLineFields
+                    label="Location"
+                    placeholder="Where the Site says it is"
+                    fallbackIcon="antd:location"
+                    line={brand.location}
+                    onChange={(next) => publishDraft(mergeThemeBrand(state.draft, { location: next }))}
+                  />
                 </Flex>
               ),
             },
