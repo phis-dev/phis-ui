@@ -2,6 +2,7 @@ import {
   trGlobal,
   trGlobalForLocale,
 } from "../../../../../server-helpers/translate";
+import { resolvePhiTextPlaceholders } from "../../../../../helpers/text-placeholders";
 import type { PhiCmsInstanceId, PhiRenderableBlockBase, PhiServerBlockBaseProps } from "../../../../../types";
 import { PhiCmsWidgetType } from "../../../../../constants/cms-widget-types";
 import { PhiRuntimeModuleRenderClientHost } from "../../../../../components/runtime/runtime-module-render-client-manifest";
@@ -38,9 +39,14 @@ export async function PhiSimpleTextWidget({
   runtime,
 }: PhiSimpleTextWidgetProps) {
   const locale = runtime?.locale.current;
-  const text = translate && labels.text
+  const translated = translate && labels.text
     ? locale ? await trGlobalForLocale(locale, labels.text) : await trGlobal(labels.text)
     : labels.text;
+  /*
+   * After the translation, because a translator may move `{year}` to the other end of the sentence and
+   * the value belongs to where it ended up. See `resolvePhiTextPlaceholders`.
+   */
+  const text = resolvePhiTextPlaceholders(translated, runtime);
 
   return (
     <PhiRuntimeModuleRenderClientHost
