@@ -32,6 +32,7 @@ const PLATFORM_MODULE_ID = "@test/pkg/modules/platform" as const;
 const BASE_MODULE_ID = "@test/pkg/modules/base" as const;
 const MODULE_A_ID = "@test/pkg/modules/module-a" as const;
 const MODULE_B_ID = "@test/pkg/modules/module-b" as const;
+const MODULE_D_ID = "@test/pkg/modules/module-d" as const;
 const MOUNTED_MODULE_ID = "@test/package/modules/module-c" as const;
 const SETTINGS_ITEM_KEY = "@test/pkg/modules/base/nav/settings";
 const SETTINGS_GENERAL_ITEM_KEY = "@test/pkg/modules/base/nav/settings/general";
@@ -39,6 +40,7 @@ const PRIVATE_ITEM_KEY = "@test/pkg/modules/base/nav/private";
 const EMPTY_CONTAINER_ITEM_KEY = "@test/pkg/modules/base/nav/empty";
 const MODULE_A_ITEM_KEY = "@test/pkg/modules/module-a/nav/page";
 const MODULE_B_ITEM_KEY = "@test/pkg/modules/module-b/nav/page";
+const MODULE_D_ITEM_KEY = "@test/pkg/modules/module-d/nav/page";
 const MOUNTED_MODULE_ITEM_KEY = "@test/package/modules/module-c/nav/settings";
 const navigationPresetId = (ownerModuleId: string, itemKey: string) => createPhiPresetCmsInstanceId({
   domain: "navigation",
@@ -52,6 +54,7 @@ const PRIVATE_ID = navigationPresetId(BASE_MODULE_ID, PRIVATE_ITEM_KEY);
 const EMPTY_CONTAINER_ID = navigationPresetId(BASE_MODULE_ID, EMPTY_CONTAINER_ITEM_KEY);
 const MODULE_A_IDENTITY = navigationPresetId(MODULE_A_ID, MODULE_A_ITEM_KEY);
 const MODULE_B_IDENTITY = navigationPresetId(MODULE_B_ID, MODULE_B_ITEM_KEY);
+const MODULE_D_IDENTITY = navigationPresetId(MODULE_D_ID, MODULE_D_ITEM_KEY);
 const MOUNTED_MODULE_IDENTITY = navigationPresetId(MOUNTED_MODULE_ID, MOUNTED_MODULE_ITEM_KEY);
 const REMOVED_ITEM_ID = navigationPresetId("@test/pkg/modules/removed", "@test/pkg/modules/removed/nav/item");
 const REMOVED_TOMBSTONE_ID = navigationPresetId("@test/pkg/modules/removed", "@test/pkg/modules/removed/nav/tombstone");
@@ -86,6 +89,7 @@ const areaDefinition: PhiCmsAreaDefinition = {
         itemKey: SETTINGS_ITEM_KEY,
         label: { defaultMessage: "Settings" },
         icon: "antd:setting",
+        standing: "last",
         children: [{
           itemKey: SETTINGS_GENERAL_ITEM_KEY,
           label: { defaultMessage: "General" },
@@ -182,6 +186,14 @@ const validRouteB = createRoute({
   itemKey: MODULE_B_ITEM_KEY,
   injection: { parentItemKey: null, before: SETTINGS_ITEM_KEY },
 });
+/* Anchored at nothing, to show where a contribution lands against an entry standing last. */
+const unanchoredRoute = createRoute({
+  moduleId: MODULE_D_ID,
+  presetKey: "module-d-page",
+  path: "/d",
+  itemKey: MODULE_D_ITEM_KEY,
+  injection: { parentItemKey: null },
+});
 const mountedRoute = createRoute({
   moduleId: MOUNTED_MODULE_ID,
   presetKey: "module-c-settings",
@@ -246,6 +258,7 @@ function createCatalog(
     base,
     createEntry(createDefinition(MODULE_A_ID, "module", "module-a"), routesA),
     createEntry(createDefinition(MODULE_B_ID, "module", "module-b"), routesB),
+    createEntry(createDefinition(MODULE_D_ID, "module", "module-d"), [unanchoredRoute]),
     createEntry(createDefinition(MOUNTED_MODULE_ID, "module", "module-c"), [mountedRoute]),
   ], [areaDefinition]);
 }
@@ -259,13 +272,20 @@ const [surface] = resolvePhiCmsActiveNavigationSurfaces({
     BASE_MODULE_ID,
     MODULE_A_ID,
     MODULE_B_ID,
+    MODULE_D_ID,
     MOUNTED_MODULE_ID,
   ]),
 });
 assert(surface);
+/*
+ * The Area's own entry first, the contributed ones after it, and the Settings container behind all of
+ * them because it said it stands last -- whether a Module anchored itself before it (A, B) or named no
+ * anchor at all (D). Without that standing the container would sit where it is declared, which is
+ * second here, and the Area root would forward into the Settings rather than to the first Page.
+ */
 assert.deepEqual(
   surface.items.map((item) => item.id),
-  [PRIVATE_ID, MODULE_A_IDENTITY, MODULE_B_IDENTITY, SETTINGS_ID],
+  [PRIVATE_ID, MODULE_A_IDENTITY, MODULE_B_IDENTITY, MODULE_D_IDENTITY, SETTINGS_ID],
 );
 // A container is judged by its children: this one has none and is not in the surface at all.
 assert.equal(surface.items.some((item) => item.id === EMPTY_CONTAINER_ID), false);
@@ -314,7 +334,7 @@ const overlay = resolvePhiCmsNavigationOverlay(surface, {
 assert.equal(overlay.surface.label.defaultMessage, "Primary");
 assert.deepEqual(
   overlay.surface.items.map((item) => item.id),
-  [MODULE_B_IDENTITY, MODULE_A_IDENTITY, SETTINGS_ID],
+  [MODULE_B_IDENTITY, MODULE_A_IDENTITY, MODULE_D_IDENTITY, SETTINGS_ID],
 );
 assert.equal(overlay.surface.items[1]?.label.defaultMessage, "A renamed");
 assert.equal(overlay.surface.items[1]?.icon, "antd:star");
