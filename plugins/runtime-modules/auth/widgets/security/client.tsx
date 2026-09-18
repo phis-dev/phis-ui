@@ -137,12 +137,10 @@ export function PhiAuthSecurityWidgetClient({ apiPath = "/api/auth/account/secur
 
   return (
     <PhiFlexControl vertical gap="large">
-      <div>
-        <PhiTypographyControl presentation="title" level={3}>Security</PhiTypographyControl>
-        <PhiTypographyControl presentation="paragraph" type="secondary">
-          Manage authenticator apps, linked login providers, and sessions for this site.
-        </PhiTypographyControl>
-      </div>
+      {/* No heading: the Settings panel this stands in is titled with what it is. */}
+      <PhiTypographyControl presentation="paragraph" type="secondary">
+        Manage authenticator apps, linked login providers, and sessions for this site.
+      </PhiTypographyControl>
       {error ? <PhiAlertControl level="error" showIcon title={error} dismissible onDismiss={() => setError(null)} /> : null}
       <Card
         title="Authenticator apps"

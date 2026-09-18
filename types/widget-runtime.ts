@@ -148,6 +148,8 @@ export type PhiBlockRuntime = {
      */
     accountSecurityPath?: `/${string}`;
     accountProfilePath?: `/${string}`;
+    /** Where signing out happens -- a Public address, so it carries no Area in front of it. */
+    logoutPath?: `/${string}`;
   } | null;
   page?: PhiBlockRuntimePage;
   request?: {

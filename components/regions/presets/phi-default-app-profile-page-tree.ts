@@ -17,9 +17,9 @@ const REGION_CONTENT_ID = -286;
  * a newsletter switch that now has a panel of its own.
  *
  * Name and newsletter are registered Forms reaching the server through their handler Providers.
- * Language, email and password are still the old Widgets, each with a `fetch` of its own: the first
- * needs an options Provider for the Site's locales that does not exist yet, and the other two belong
- * on the security page, which is the next step. They stand here as Widget sections until then.
+ * Language is still the old Widget with a `fetch` of its own, because it needs an options Provider for
+ * the Site's locales that does not exist yet; it stands here as a Widget section until then. Email and
+ * password have moved to the security page, where credentials belong.
  */
 export async function buildPhiDefaultAppProfilePageTree({
   page,
@@ -74,36 +74,16 @@ export async function buildPhiDefaultAppProfilePageTree({
       },
       {
         nodeKey: "panelNewsletter",
-        title: labels.overview,
+        title: labels.newsletter,
         sections: [{
           kind: "form",
           nodeKey: "widgetNewsletter",
           formId: PHI_APP_FORM_IDS.profileNewsletter,
-          label: labels.overview,
+          label: labels.newsletter,
           submitOnChange: true,
           initialValues: {
             newsletterOptIn: Boolean(runtime.viewer.newsletterOptIn),
           },
-        }],
-      },
-      {
-        nodeKey: "panelEmail",
-        title: labels.email,
-        sections: [{
-          nodeKey: "widgetEmail",
-          typeKey: "profile-email",
-          label: labels.email,
-          config: {},
-        }],
-      },
-      {
-        nodeKey: "panelPassword",
-        title: labels.password,
-        sections: [{
-          nodeKey: "widgetPassword",
-          typeKey: "profile-password",
-          label: labels.password,
-          config: {},
         }],
       },
     ],

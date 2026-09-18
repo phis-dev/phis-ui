@@ -5,7 +5,7 @@ import { PhiRuntimeModuleRenderClientHost } from "../../../../../components/runt
 import { readPhiServerApiCredentials } from "../../../../../helpers/phis-server-credentials";
 
 export type PhiProfilePasswordWidgetProps = {
-  runtime: Pick<PhiBlockRuntime, "site" | "locale" | "viewer" | "area">;
+  runtime: Pick<PhiBlockRuntime, "site" | "locale" | "viewer" | "area" | "authUiProvider">;
   config?: {
     padding?: number | string;
   };

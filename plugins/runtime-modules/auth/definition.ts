@@ -44,6 +44,7 @@ export const PHI_AUTH_RUNTIME_MODULE_DEFINITION = {
      * for the length of one step; it resolves to the same Page either way, both being `@phis/ui`.
      */
     accountProfilePath: "/settings/profile",
+    logoutPath: "/logout",
   },
   formProviders: {
     fieldTypes: PHI_AUTH_FORM_FIELD_TYPE_PROVIDER_DESCRIPTORS,

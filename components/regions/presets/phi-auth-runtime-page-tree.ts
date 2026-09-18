@@ -13,7 +13,7 @@ export function buildPhiAuthRuntimePageTree({
 }: {
   page: PhiCmsPageNode;
   presetKey: string;
-  widgetTypeKey: "auth-logout" | "auth-security";
+  widgetTypeKey: "auth-logout";
   label: string;
 }): PhiResolvedCmsPageTree {
   const layouts = createPhiPresetCmsInstanceIdMap({
@@ -36,7 +36,7 @@ export function buildPhiAuthRuntimePageTree({
     },
     overlays: [],
     regions: [{
-      id: widgetTypeKey === "auth-security" ? -484 : -483,
+      id: -483,
       pageId: page.id,
       areaPresetId: null,
       regionType: PhiCmsRegionType.Content,

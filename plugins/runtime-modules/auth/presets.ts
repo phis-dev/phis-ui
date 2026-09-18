@@ -139,13 +139,9 @@ export const PHI_AUTH_RUNTIME_MODULE_ROUTES = [
         routePresetKey: "app-auth-security-page",
       },
     }],
-    loadTree: ({ page }) => import("../../../components/regions/presets/phi-auth-runtime-page-tree")
-      .then((module) => module.buildPhiAuthRuntimePageTree({
-        page,
-        presetKey: "app-auth-security-page",
-        widgetTypeKey: "auth-security",
-        label: "Security",
-      })),
+    loadTree: ({ page, runtime }) =>
+      import("../../../components/regions/presets/phi-default-app-security-page-tree")
+        .then((module) => module.buildPhiDefaultAppSecurityPageTree({ page, runtime })),
   },
   {
     ownerModuleId: PHI_AUTH_RUNTIME_MODULE_ID,

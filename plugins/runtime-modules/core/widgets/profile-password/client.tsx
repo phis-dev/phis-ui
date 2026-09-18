@@ -11,6 +11,7 @@ import { PHI_FORM_FIELD_PROVIDER_KEYS, PHI_FORM_VALIDATION_PROVIDER_KEYS } from 
 import type { PhiFormDescriptor, PhiFormTextDescriptor } from "../../../../../types/form-descriptor";
 import { PhiFlexControl } from "../../../../../components/controls/phi-flex-control";
 import { PhiTypographyControl } from "../../../../../components/controls/phi-typography-control";
+import { localizePath } from "../../../../../helpers/locale";
 
 const literal = (value: string): PhiFormTextDescriptor => ({ kind: "literal", value });
 
@@ -48,7 +49,7 @@ export type PhiProfilePasswordWidgetClientProps = PhiClientBlockBaseProps<
   {
     padding?: number | string;
   },
-  Pick<PhiBlockRuntime, "site" | "locale" | "viewer">
+  Pick<PhiBlockRuntime, "site" | "locale" | "viewer" | "authUiProvider">
 >;
 
 export function PhiProfilePasswordWidgetClient({
@@ -130,9 +131,19 @@ export function PhiProfilePasswordWidgetClient({
         placement: "bottomRight",
         durationSeconds: 2,
       });
-      window.setTimeout(() => {
-        window.location.assign(`/${runtime?.locale.current ?? "en"}/login?login=1`);
-      }, 900);
+      /*
+       * A changed password revokes every session the account had, this one included, so the cookie the
+       * browser still holds is dead the moment the answer arrives. Sign-out is where that is settled --
+       * it clears what is left and decides where somebody with no session belongs -- so the Widget asks
+       * the active Auth provider for its address instead of naming one. A provider that declares none
+       * signs people out some other way, and the Widget has nothing to say about it.
+       */
+      const logoutPath = runtime?.authUiProvider?.logoutPath;
+      if (logoutPath) {
+        window.setTimeout(() => {
+          window.location.assign(localizePath(runtime?.locale.current ?? "en", logoutPath));
+        }, 900);
+      }
       return;
     } catch (submitError) {
       setError(submitError instanceof Error ? submitError.message : labels.feedback.errorGeneric);
@@ -143,12 +154,8 @@ export function PhiProfilePasswordWidgetClient({
 
   return (
     <PhiFlexControl vertical gap={16} style={{ width: "100%", maxWidth: sectionMaxWidth }}>
-        <PhiFlexControl vertical gap={4}>
-          <PhiTypographyControl presentation="title" level={4} style={{ margin: 0 }}>
-            {labels.title}
-          </PhiTypographyControl>
-          <PhiTypographyControl type="secondary">{labels.description}</PhiTypographyControl>
-        </PhiFlexControl>
+        {/* No heading: the Settings panel this stands in is titled with what it is. */}
+        <PhiTypographyControl type="secondary">{labels.description}</PhiTypographyControl>
 
         {error ? (
           <PhiAlertControl level="error" showIcon title={labels.feedback.errorTitle} description={error} />

@@ -173,12 +173,8 @@ export function PhiProfileLocaleWidgetClient({
 
   return (
     <PhiFlexControl vertical gap={16} style={{ width: "100%", maxWidth: sectionMaxWidth }}>
-        <PhiFlexControl vertical gap={4}>
-          <PhiTypographyControl presentation="title" level={4} style={{ margin: 0 }}>
-            {labels.title}
-          </PhiTypographyControl>
-          <PhiTypographyControl type="secondary">{labels.description}</PhiTypographyControl>
-        </PhiFlexControl>
+        {/* No heading: the Settings panel this stands in is titled with what it is. */}
+        <PhiTypographyControl type="secondary">{labels.description}</PhiTypographyControl>
 
         {error ? (
           <PhiAlertControl

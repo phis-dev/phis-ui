@@ -464,13 +464,14 @@ function assertPhiRuntimeModuleMetadata(definition: PhiRuntimeModuleDefinition) 
       }
     }
     /*
-     * Both Account addresses are Module-relative, so neither may carry an Area or a host of its own:
-     * the projection puts the Module's package and the Area in front of what is declared here, and a
-     * path that already names one would be prefixed twice.
+     * Every declared Account address is Module-relative, so none may carry an Area or a host of its
+     * own: the projection puts the Module's package and the Area in front of what is declared here,
+     * and a path that already names one would be prefixed twice.
      */
     for (const [label, declaredPath] of [
       ["account security", definition.authUiProvider.accountSecurityPath],
       ["account profile", definition.authUiProvider.accountProfilePath],
+      ["logout", definition.authUiProvider.logoutPath],
     ] as const) {
       if (declaredPath && (!declaredPath.startsWith("/") || declaredPath.startsWith("//"))) {
         throw new Error(`${definition.moduleId}: Auth ${label} path must be Site-relative.`);

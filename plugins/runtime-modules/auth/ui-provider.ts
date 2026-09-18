@@ -19,6 +19,15 @@ import { phiAreaPath } from "../../../helpers/locale";
 const PHI_ACCOUNT_PAGE_AREA = "app";
 
 /**
+ * The Area a sign-out answers in.
+ *
+ * Public, and not because the Page happens to live there: somebody on their way out of a session has
+ * no Area to be in by the time the Page has done its work. Public is the Site's own address space, so
+ * the declared path is also the served one -- no package, no Area in front of it.
+ */
+const PHI_LOGOUT_PAGE_AREA = "public";
+
+/**
  * One of the Account Pages, as an address a link can use.
  *
  * A Module declares these the way it declares a route -- relative to itself -- so the projection owes its
@@ -79,12 +88,21 @@ export function resolvePhiAuthUiRuntimeProjection(
     resolved.provider.accountProfilePath,
   );
 
+  const logoutPath = resolved.provider.logoutPath
+    ? resolvePhiRuntimeModuleAreaRoutePath(
+        resolved.moduleId,
+        PHI_LOGOUT_PAGE_AREA,
+        resolved.provider.logoutPath,
+      )
+    : undefined;
+
   return {
     moduleId: resolved.moduleId,
     providerKey: resolved.provider.providerKey,
     capabilities: resolved.capabilities,
     ...(accountSecurityPath ? { accountSecurityPath } : {}),
     ...(accountProfilePath ? { accountProfilePath } : {}),
+    ...(logoutPath ? { logoutPath } : {}),
     controllerAddress: createPhiControllerSignalAddress(
       resolved.controller.pluginKey,
       resolved.controller.key,

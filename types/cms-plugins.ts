@@ -789,6 +789,15 @@ export type PhiRuntimeModuleDefinition = {
      */
     accountSecurityPath?: `/${string}`;
     accountProfilePath?: `/${string}`;
+    /**
+     * Where signing out happens, declared the same way and resolved against Public.
+     *
+     * Ending a session is the one account address that is not an App Page: a visitor who is being
+     * signed out is on their way to having no Area to be in. Whoever needs to send somebody out --
+     * a password change, the Account menu -- asks for this rather than naming a path, so a Module
+     * that signs people out differently answers for all of them at once.
+     */
+    logoutPath?: `/${string}`;
   };
 } & PhiRuntimeModuleIconMetadata;
 

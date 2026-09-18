@@ -89,4 +89,22 @@ describe("the Account menu's own addresses", () => {
     expect(projection?.accountSecurityPath).toBe("/app/phis/ui/settings/security");
     expect(projection?.accountProfilePath).toBe("/app/phis/ui/settings/profile");
   });
+
+  it("hands the sign-out address through as the Public address it is", () => {
+    // Signing out is the one account address that is not an App Page, and Public is the Site's own
+    // address space: neither the package nor an Area goes in front of what the Module declared.
+    const entries = createPhiPublicRuntimeModuleCatalog();
+    const activeModuleIds = new Set<PhiRuntimeModuleId>([...entries.keys()]);
+    const projection = resolvePhiAuthUiRuntimeProjection(entries, activeModuleIds, "public");
+    const table = compilePhiCmsActiveRouteTable({
+      catalog: resolvePhiCmsDescriptorCatalog(entries),
+      area: "public",
+      activeModuleIds,
+    });
+
+    expect(projection?.logoutPath).toBe("/logout");
+    expect(
+      resolvePhiCmsRoutePreset(table, projection!.logoutPath!)?.descriptor.presetKey,
+    ).toBe("public-logout-page");
+  });
 });
