@@ -79,9 +79,9 @@ const coreApplicationAdapterPath = "components/runtime/core-runtime-application-
  * included. This is the rule itself, over the whole tree.
  *
  * This map is a denylist, so **every primitive not named here is permitted by omission** -- roughly
- * twenty are still imported somewhere in the tree, from `Upload` and `Progress` down to `List` and
- * `Spin`. `Flex` and `Typography`, the two that reached furthest, are done, and five more are closed
- * by `soleOwnerPrimitives` below. That is where things stand rather than where they are meant to end:
+ * fourteen are still imported somewhere in the tree, from `Upload` and `Progress` down to `List` and
+ * `Card`. `Flex` and `Typography`, the two that reached furthest, are done, as are the four that had
+ * nothing to decide; five more are closed by `soleOwnerPrimitives` below. That is where things stand rather than where they are meant to end:
  * wrapping the rest is planned work, because Ant Design is replaceable in principle and every direct
  * import turns that from a Control-adapter change into a tree-wide edit. When the Controls land, the primitives belong in
  * the map below and this check should end up refusing by default instead -- an allowlist of what may be
@@ -97,6 +97,7 @@ const controlledPrimitives = new Map([
   ["Checkbox", "PhiCheckboxControl"],
   ["ColorPicker", "PhiColorControl"],
   ["DatePicker", "PhiDatePickerControl"],
+  ["Divider", "PhiDividerControl"],
   ["Drawer", "PhiDrawerControl"],
   ["Dropdown", "PhiDropdownControl"],
   ["Flex", "PhiFlexControl"],
@@ -108,11 +109,14 @@ const controlledPrimitives = new Map([
   ["Pagination", "PhiPaginationControl"],
   ["Popconfirm", "PhiConfirmControl"],
   ["Popover", "PhiPopoverControl"],
+  ["QRCode", "PhiQrCodeControl"],
   ["Radio", "PhiRadioGroupControl"],
   ["Rate", "PhiRateControl"],
   ["Segmented", "PhiSegmentedControl"],
   ["Select", "PhiSelectControl"],
   ["Slider", "PhiSliderControl"],
+  ["Spin", "PhiSpinControl"],
+  ["Statistic", "PhiStatisticControl"],
   ["Switch", "PhiSwitchControl"],
   ["Table", "PhiTableControl"],
   ["Tabs", "PhiTabsControl"],

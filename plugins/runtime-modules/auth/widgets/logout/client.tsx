@@ -1,13 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Spin } from "antd";
+
 import { PhiButtonControl } from "../../../../../components/controls/phi-button-control";
 import { PhiAlertControl } from "../../../../../components/controls/phi-alert-control";
 import type { PhiBlockRuntime, PhiClientBlockBaseProps } from "../../../../../types";
 import { PHIS_SITE_KEY_HEADER } from "../../../../../constants/http-headers";
 import { PhiFlexControl } from "../../../../../components/controls/phi-flex-control";
 import { PhiTypographyControl } from "../../../../../components/controls/phi-typography-control";
+import { PhiSpinControl } from "../../../../../components/controls/phi-spin-control";
 
 export function PhiAuthLogoutWidgetClient({
   runtime,
@@ -63,7 +64,7 @@ export function PhiAuthLogoutWidgetClient({
         </>
       ) : (
         <>
-          <Spin />
+          <PhiSpinControl />
           <PhiTypographyControl type="secondary">Signing out…</PhiTypographyControl>
         </>
       )}

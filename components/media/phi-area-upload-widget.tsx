@@ -1,7 +1,7 @@
 "use client";
 
 import { DeleteOutlined, UploadOutlined } from "@ant-design/icons";
-import { Progress, Space, Spin, Upload } from "antd";
+import { Progress, Space, Upload } from "antd";
 import { PhiTagControl } from "../controls/phi-tag-control";
 import { PhiButtonControl } from "../controls/phi-button-control";
 import type { UploadProps } from "antd";
@@ -43,6 +43,7 @@ import { usePhiConfig } from "../root/phi-config-provider";
 import { usePhiCollectionProviderAction } from "../widgets/client/shared/phi-collection-provider";
 import { PhiFlexControl } from "../controls/phi-flex-control";
 import { PhiTypographyControl } from "../controls/phi-typography-control";
+import { PhiSpinControl } from "../controls/phi-spin-control";
 
 type UploadWallItem = {
   localId: string;
@@ -508,7 +509,7 @@ export function PhiAreaUploadBinding({ config, labels, onUploadComplete, collect
                       color: "#fff",
                     }}
                   >
-                    <Spin />
+                    <PhiSpinControl />
                   </div>
                 ) : null}
               </div>

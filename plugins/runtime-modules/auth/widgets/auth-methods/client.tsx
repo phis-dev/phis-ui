@@ -1,12 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { Divider } from "antd";
+
 import { PhiButtonControl } from "../../../../../components/controls/phi-button-control";
 import { PhiAlertControl } from "../../../../../components/controls/phi-alert-control";
 import { usePhiRuntimePageConditionState } from "../../../../../components/runtime/runtime-page-condition-state";
 import { normalizeLoginRedirectTarget } from "../../../../../components/widgets/login-redirect";
 import type { PhiPublicAuthManifest } from "../../../../../types/auth-manifest";
+import { PhiDividerControl } from "../../../../../components/controls/phi-divider-control";
 
 export type PhiAuthMethodsWidgetClientProps = {
   methods: PhiPublicAuthManifest["methods"];
@@ -80,7 +81,7 @@ export function PhiAuthMethodsWidgetClient({
   return (
     <>
       {error ? <PhiAlertControl level="error" showIcon title={error} /> : null}
-      {withSeparator ? <Divider plain>{labels.separator}</Divider> : null}
+      {withSeparator ? <PhiDividerControl plain>{labels.separator}</PhiDividerControl> : null}
       {methods.map((method) => (
         <PhiButtonControl
           key={method.methodKey}

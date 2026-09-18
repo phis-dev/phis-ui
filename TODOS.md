@@ -40,11 +40,14 @@ built. Remove an entry when it is done.
   Flex Layout as the Content Region root, keeping another root only where the Page has a semantic reason.
   The legacy Content Layout path is still registered.
 - **Wrap the uncontrolled Ant Design primitives in Phi Controls.** `scripts/validate-control-boundaries.mjs`
-  names 28 controlled primitives and **permits everything it does not name**, so the exception is not a
-  short list somebody chose -- it is whatever nobody has got to yet. The tree actually imports about 25
-  uncontrolled ones. **The reason to close it is that Ant Design is replaceable in principle and every
-  direct import makes replacing it harder:** with a Control it is an adapter change, without one it is a
-  tree-wide edit.
+  **permits everything it does not name**, so the exception is not a short list somebody chose -- it is
+  whatever nobody has got to yet. **The reason to close it is that Ant Design is replaceable in principle
+  and every direct import makes replacing it harder:** with a Control it is an adapter change, without
+  one it is a tree-wide edit.
+
+  It started at 28 named primitives against about 25 uncontrolled ones. It now names 34, closes five
+  more to a single owner file, and leaves fourteen: `Avatar`, `Card`, `Col`, `Collapse`, `Descriptions`,
+  `Empty`, `Layout`, `List`, `Progress`, `Row`, `Skeleton`, `Space`, `Tooltip`, `Upload`.
 
   `App`, `ConfigProvider` and `theme` stay direct: they are the root and theme adapters AGENTS.md
   already exempts, not feature surface.
@@ -57,8 +60,10 @@ built. Remove an entry when it is done.
     `Upload`, `Progress`, `Skeleton`, `Empty`, `Tooltip`, `Collapse`, `Descriptions`, `Card`, `Avatar`,
     and `Space.Compact` (which is a different thing from `Space`, see below).
   - **A thin pass-through**, where there is nothing to decide and the wrapper exists only so the import
-    points at us: ~~`PhiTypographyControl` (~63 files), `Flex` (~60)~~ done; `Divider`, `Spin`,
-    `QRCode`, `Statistic` remain.
+    points at us: ~~`PhiTypographyControl` (~63 files), `Flex` (~60), `Divider`, `Spin`, `QRCode`,
+    `Statistic`~~ -- all done. `PhiSpinControl` is the one to revisit: `Skeleton` answers the same
+    question where the shape of what is coming is known, so the loading Control below may absorb it
+    into a single contract rather than leaving two names for "wait".
   - ~~**An owner entry only** -- the Widget that already wraps the primitive *is* the contract, so no
     new file is needed, just an entry naming it: `Anchor`, `Breadcrumb`, `Image`, `Result`, `Badge`.~~
     Done, as `soleOwnerPrimitives` in the validator. It is checked both ways: nobody else may import
@@ -101,10 +106,10 @@ built. Remove an entry when it is done.
   so all seven `antd/es/*` sites in the tree are type-only and therefore invisible. The theme types
   (`GlobalToken`, `AliasToken`) stay exempt as part of the theme adapter.
 
-  Order: the two big pass-throughs first (`Flex`, `PhiTypographyControl` -- mechanical, and together most
-  of the sites), then the five owner entries, then the trivial wrappers, then `PhiFileDropControl` with
-  `Progress`, then the loading family (`Skeleton`, `Spin`), then `Empty`/`Tooltip`/`Card`/`Collapse`/
-  `Descriptions`, then the deletions, then `Listy`, and the allowlist last.
+  Order: ~~the two big pass-throughs (`Flex`, `PhiTypographyControl`), the five owner entries, the
+  trivial wrappers~~ -- done. Next `PhiFileDropControl` with `Progress`, then the loading family
+  (`Skeleton`, absorbing `PhiSpinControl`), then `Empty`/`Tooltip`/`Card`/`Collapse`/`Descriptions`,
+  then the deletions, then `Listy`, and the allowlist last.
 
   Until the Controls exist, direct use in a Widget or Layout stays correct and the validator keeps
   permitting it: this is a planned narrowing, not a rule being broken today. Update the validator's own

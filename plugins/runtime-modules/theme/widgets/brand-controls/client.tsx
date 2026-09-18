@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
 
-import { Card, Collapse, ConfigProvider, Divider, Space, Statistic, theme as antdTheme } from "antd";
+import { Card, Collapse, ConfigProvider, Space, theme as antdTheme } from "antd";
 import { DeleteOutlined } from "@ant-design/icons";
 import type { AliasToken } from "antd/es/theme/interface";
 import type { PhiColorPickerLabels } from "../../../../../components/widgets/label-types/color-picker";
@@ -149,6 +149,8 @@ import {
 } from "../../../../../theme/phi-control-shape";
 import { PhiFlexControl } from "../../../../../components/controls/phi-flex-control";
 import { PhiTypographyControl } from "../../../../../components/controls/phi-typography-control";
+import { PhiDividerControl } from "../../../../../components/controls/phi-divider-control";
+import { PhiStatisticControl } from "../../../../../components/controls/phi-statistic-control";
 
 type ThemePayload = NonNullable<PhiBlockRuntime["site"]["theme"]>;
 const phiThemeHistory = createPhiHistoryStore<ThemePayload>(
@@ -2192,7 +2194,7 @@ export function PhiBuilderBrandThemeControlsWidgetClient({
               );
             }}
           />
-          <Divider style={{ marginBlock: 0 }} />
+          <PhiDividerControl style={{ marginBlock: 0 }} />
           <Collapse
             accordion
             bordered={false}
@@ -2615,7 +2617,7 @@ export function PhiBuilderBrandStyleControlsWidgetClient({
                       />
                     </PhiFlexControl>
                   ))}
-                  <Divider style={{ marginBlock: clientToken.paddingXXS }} />
+                  <PhiDividerControl style={{ marginBlock: clientToken.paddingXXS }} />
                   {/*
                     * Which of the families above the page's headings wear. Only `h1` to `h3` follow it:
                     * the headings of a page, not the titles of an interface.
@@ -3191,7 +3193,7 @@ export function PhiBuilderBrandIdentityControlsWidgetClient({
                       ))}
                     />
                   </PhiLabeledControl>
-                  <Divider style={{ marginBlock: clientToken.paddingXXS }} />
+                  <PhiDividerControl style={{ marginBlock: clientToken.paddingXXS }} />
                   <PhiLabeledControl label="Weight" fill>
                     <PhiFlexControl gap={clientToken.paddingXS} align="center" style={{ width: "100%", minWidth: 0 }}>
                       <PhiSelectControl
@@ -3367,7 +3369,7 @@ export function PhiBuilderBrandBackgroundControlsWidgetClient({
             if (block) publishDraft(mergeThemeBlockChoice(state.draft, "ground", block));
           }}
         />
-        <Divider style={{ marginBlock: clientToken.paddingXS }} />
+        <PhiDividerControl style={{ marginBlock: clientToken.paddingXS }} />
         <Collapse
           accordion
           bordered={false}
@@ -3945,7 +3947,7 @@ export function PhiBuilderBrandThemePreviewWidgetClient({
               <PhiButtonControl danger label="Danger" onClick={previewNoop} />
             </Space>
           </PhiFlexControl>
-          <Divider style={{ margin: 0 }} />
+          <PhiDividerControl style={{ margin: 0 }} />
           <PhiFlexControl vertical gap={clientToken.paddingSM} style={{ minWidth: 0 }}>
             <PhiTypographyControl presentation="title" level={5} style={{ margin: 0, color: previewTextColor }}>
               Control Height
@@ -3968,7 +3970,7 @@ export function PhiBuilderBrandThemePreviewWidgetClient({
             value={previewInput}
             onChange={(next) => setPreviewInput(next ?? "")}
           />
-          <Divider style={{ margin: 0 }} />
+          <PhiDividerControl style={{ margin: 0 }} />
           <PhiFlexControl gap={clientToken.padding} wrap="wrap">
             <PhiFlexControl vertical gap={clientToken.paddingXS} style={{ flex: "1 1 260px", minWidth: 0 }}>
               {/* An `h3`, so the same rule that sets a page's headings sets this one. */}
@@ -4022,13 +4024,13 @@ export function PhiBuilderBrandThemePreviewWidgetClient({
               ))}
             </div>
           </PhiFlexControl>
-          <Divider style={{ margin: 0 }} />
+          <PhiDividerControl style={{ margin: 0 }} />
           <PhiFlexControl gap={clientToken.padding} wrap="wrap">
-            <Statistic title="Draft colors" value={countThemePaletteLeaves(previewTheme.palette)} />
-            <Statistic title="Preset" value={previewPreset.title} />
-            <Statistic title="Mode" value={mode} />
+            <PhiStatisticControl title="Draft colors" value={countThemePaletteLeaves(previewTheme.palette)} />
+            <PhiStatisticControl title="Preset" value={previewPreset.title} />
+            <PhiStatisticControl title="Mode" value={mode} />
           </PhiFlexControl>
-          <Divider style={{ margin: 0 }} />
+          <PhiDividerControl style={{ margin: 0 }} />
           <PhiFlexControl vertical gap={clientToken.paddingSM}>
             <PhiTypographyControl presentation="title" level={5} style={{ margin: 0, color: previewTextColor }}>
               Font Slots

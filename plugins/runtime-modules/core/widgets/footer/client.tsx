@@ -2,13 +2,14 @@
 
 import type { ReactNode, CSSProperties } from "react";
 import Link from "next/link";
-import { Col, Divider, Layout, Row } from "antd";
+import { Col, Layout, Row } from "antd";
 
 import { resolvePhiNavHref } from "../../../../../helpers/locale";
 import type { PhiClientBlockBaseProps, PhiBlockRuntime } from "../../../../../types";
 import { usePhiConfig } from "../../../../../components/root/phi-config-provider";
 import type { PhiNavItem } from "../../../../../components/shell/shell-types";
 import { PhiTypographyControl } from "../../../../../components/controls/phi-typography-control";
+import { PhiDividerControl } from "../../../../../components/controls/phi-divider-control";
 
 const { Footer } = Layout;
 
@@ -121,7 +122,7 @@ export function PhiFooterWidgetClient({
       </Row>
       {note ? (
         <>
-          <Divider style={{ borderColor: token.colorBorderSecondary }} />
+          <PhiDividerControl style={{ borderColor: token.colorBorderSecondary }} />
           <PhiTypographyControl style={{ color: token.colorTextTertiary }}>{note}</PhiTypographyControl>
         </>
       ) : null}

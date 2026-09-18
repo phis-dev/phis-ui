@@ -1,7 +1,6 @@
 "use client";
 
 import { Fragment, useEffect, useMemo, type CSSProperties, type ReactNode } from "react";
-import { Divider } from "antd";
 
 import { PhiLink } from "../../../../../components/navigation/phi-link";
 import type { PhiClientBlockBaseProps, PhiNoLabels } from "../../../../../types";
@@ -12,6 +11,7 @@ import type { PhiMarkdownSpacingKey, PhiMarkdownTextAlign } from "./config";
 import type { PhiMarkdownTocHeading } from "../markdown-toc/config";
 import { PhiPlainTable } from "../../../../../components/tables/phi-plain-table";
 import { PhiTypographyControl } from "../../../../../components/controls/phi-typography-control";
+import { PhiDividerControl } from "../../../../../components/controls/phi-divider-control";
 
 export type PhiMarkdownInline =
   | { kind: "text"; text: string }
@@ -196,7 +196,7 @@ function renderBlocks(
           </pre>
         );
       case "divider":
-        return <Divider key={key} style={{ margin: 0 }} />;
+        return <PhiDividerControl key={key} style={{ margin: 0 }} />;
       case "table":
         /*
          * A plain table, not the Table Control: Markdown only shows rows, and the Control's editors,

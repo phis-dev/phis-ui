@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { QRCode } from "antd";
+
 import { PhiTextControl } from "../../controls/phi-text-control";
 import { PhiOtpControl } from "../../controls/phi-otp-control";
 import { PhiButtonControl } from "../../controls/phi-button-control";
@@ -9,6 +9,7 @@ import { PhiAlertControl } from "../../controls/phi-alert-control";
 import type { PhiAuthWorkflow } from "../../../types/auth-manifest";
 import { PhiFlexControl } from "../../controls/phi-flex-control";
 import { PhiTypographyControl } from "../../controls/phi-typography-control";
+import { PhiQrCodeControl } from "../../controls/phi-qr-code-control";
 
 type Enrollment = {
   factorId: string;
@@ -148,7 +149,7 @@ export function PhiAuthWorkflowBody({
           <PhiButtonControl type="primary" loading={busy} onClick={() => void startEnrollment()} label="Start setup" />
         ) : (
           <>
-            <QRCode value={enrollment.otpauthUri} type="svg" />
+            <PhiQrCodeControl value={enrollment.otpauthUri} type="svg" />
             <PhiTypographyControl copyable code>{enrollment.manualKey}</PhiTypographyControl>
             <PhiOtpControl
               ariaLabel="Authenticator code"
