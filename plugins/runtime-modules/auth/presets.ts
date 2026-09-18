@@ -58,21 +58,22 @@ const FORM_ROUTE_TEMPLATES = [
 ] as const;
 
 function buildFormRouteNavigation(template: (typeof FORM_ROUTE_TEMPLATES)[number]) {
-  const item = {
-    itemKey: `@phis/ui/modules/auth/nav/public/${template.key}`,
-    label: { defaultMessage: template.title },
-    routePresetKey: `public-${template.key}-page`,
-  } as const;
-
-  if (template.key === "registration") {
-    // Unanchored: the Public header exports no base item, so the entry lands at the end of the surface.
-    return [{
-      navKey: "public:header",
-      parentItemKey: null,
-      item,
-    }] as const;
+  if (template.key !== "registration") {
+    return [];
   }
-  return [];
+
+  // Unanchored: the Public header exports no base item, so the entry lands at the end of the surface.
+  return [{
+    navKey: "public:header",
+    parentItemKey: null,
+    item: {
+      itemKey: `@phis/ui/modules/auth/nav/public/${template.key}`,
+      label: { defaultMessage: template.title },
+      /* Signing up, not signing in: the account trigger beside it carries the way back. */
+      icon: "antd:user-add",
+      routePresetKey: `public-${template.key}-page`,
+    },
+  }] as const;
 }
 
 export const PHI_AUTH_RUNTIME_MODULE_ROUTES = [

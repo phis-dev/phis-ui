@@ -95,6 +95,27 @@ export const PHI_AREA_BASE_RUNTIME_MODULE_ROUTES = [
     area: "public",
     title: "Home",
     path: "/home",
+    /*
+     * The one Page Core brings that a visitor is meant to arrive at, so it stands first in the header.
+     *
+     * A Site package that contributes its own landing places a Home entry of its own before the terms
+     * (`@phis/example`), and then the header names two. That is the Site's to sort out in the Builder,
+     * and the lesser of the two problems: the Welcome Page sends people to `/home` from its first
+     * render, and a destination nothing links to is the one nobody finds their way back to.
+     */
+    navigation: [
+      {
+        navKey: "public:header",
+        parentItemKey: null,
+        before: "@phis/ui/modules/public/nav/terms",
+        item: {
+          itemKey: "@phis/ui/modules/public/nav/home",
+          label: { defaultMessage: "Home" },
+          icon: "antd:home",
+          routePresetKey: "public-home-page",
+        },
+      },
+    ],
     loadTree: ({ page }: PhiCmsDescriptorBuildContext) =>
       import("../../components/regions/presets/phi-default-pub-home-page-tree")
         .then((module) => module.buildPhiDefaultPubHomePageTree({ page })),

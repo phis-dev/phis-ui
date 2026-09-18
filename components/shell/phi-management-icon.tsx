@@ -25,6 +25,7 @@ import {
   TableOutlined,
   TeamOutlined,
   TranslationOutlined,
+  UserAddOutlined,
 } from "@ant-design/icons";
 
 const PHI_MANAGEMENT_ICON_REGISTRY = {
@@ -78,6 +79,8 @@ const PHI_MANAGEMENT_ICON_REGISTRY = {
   "team-outlined": TeamOutlined,
   translation: TranslationOutlined,
   "translation-outlined": TranslationOutlined,
+  "user-add": UserAddOutlined,
+  "user-add-outlined": UserAddOutlined,
 } as const;
 
 export function PhiManagementIcon({
