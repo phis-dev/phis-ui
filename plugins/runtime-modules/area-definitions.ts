@@ -66,6 +66,7 @@ export const PHI_PUBLIC_RUNTIME_AREA_DEFINITIONS = [
 ] satisfies readonly PhiCmsAreaDefinition[];
 
 export const PHI_APP_ACCOUNT_NAV_ITEM_KEY = "@phis/ui/modules/app/nav/account";
+export const PHI_APP_SETTINGS_NAV_ITEM_KEY = "@phis/ui/modules/app/nav/settings";
 
 export const PHI_APP_RUNTIME_AREA_DEFINITIONS = [
   {
@@ -73,6 +74,18 @@ export const PHI_APP_RUNTIME_AREA_DEFINITIONS = [
     baseModuleId: PHI_APP_RUNTIME_MODULE_ID,
     shellPresetKey: "app-area-preset",
     accessPolicy: PHI_VIEWER_ACCESS_AUTHENTICATED,
+    /*
+     * The one place a Module offers what a signed-in person can decide about their own account.
+     *
+     * Same mount as Admin and Builder declare, and the same container with no address of its own
+     * (SETTINGS.md sections 2 and 3). What differs is the subject: there a Module says how it behaves
+     * for everybody who visits the Site, here what this one person has settled for themselves.
+     */
+    routeMounts: [{
+      mountKey: "settings",
+      navKey: "app:sidebar",
+      parentItemKey: PHI_APP_SETTINGS_NAV_ITEM_KEY,
+    }],
     navigationSurfaces: [
       {
         navKey: "app:header",
@@ -81,12 +94,23 @@ export const PHI_APP_RUNTIME_AREA_DEFINITIONS = [
         exportedItemKeys: [],
       },
       {
-        // No intrinsic entry: the App root forwards to the first Module entry a viewer can see, and a
-        // Home page beside a root that already forwards was one door too many.
+        /*
+         * No entry of its own for the Area: the App root forwards to the first Module entry a viewer
+         * can see, and a Home page beside a root that already forwards was one door too many.
+         *
+         * The Settings container is not such an entry. It is an address-less container that hides
+         * until something hangs under it, so a Site with no Module configuration sees exactly what it
+         * saw before -- and it stands last, because it is where one goes to settle something rather
+         * than to work.
+         */
         navKey: "app:sidebar",
         label: label("App sidebar navigation"),
-        items: [],
-        exportedItemKeys: [],
+        items: [{
+          itemKey: PHI_APP_SETTINGS_NAV_ITEM_KEY,
+          label: label("Settings"),
+          icon: "antd:setting",
+        }],
+        exportedItemKeys: [PHI_APP_SETTINGS_NAV_ITEM_KEY],
       },
       {
         navKey: "app:footer",
