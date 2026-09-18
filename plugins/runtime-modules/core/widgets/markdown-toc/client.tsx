@@ -1,12 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { Anchor, Empty } from "antd";
+import { Anchor } from "antd";
 
 import type { PhiClientBlockBaseProps, PhiNoLabels } from "../../../../../types";
 import { usePhiSignalListener } from "../../../../../components/runtime/runtime-signal-bus";
 import { usePhiConfig } from "../../../../../components/root/phi-config-provider";
 import type { PhiCmsMarkdownTocWidgetConfig, PhiMarkdownTocHeading } from "./config";
+import { PhiEmptyControl } from "../../../../../components/controls/phi-empty-control";
 import { PhiTypographyControl } from "../../../../../components/controls/phi-typography-control";
 
 export type PhiMarkdownTocWidgetClientProps = PhiClientBlockBaseProps<
@@ -110,7 +111,7 @@ export function PhiMarkdownTocWidgetClient({ config }: PhiMarkdownTocWidgetClien
             style={{ width: "100%" }}
           />
         ) : (
-          <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="No markdown headings" />
+          <PhiEmptyControl description="No markdown headings" />
         )}
       </div>
     </nav>

@@ -1,6 +1,6 @@
 "use client";
 
-import { Empty, Image as AntImage } from "antd";
+import { Image as AntImage } from "antd";
 import NextImage from "next/image";
 
 import type { PhiClientBlockBaseProps } from "../../../../../types";
@@ -11,6 +11,7 @@ import { resolvePhiImagePresentation } from "../../../../../components/media/ima
 import type { PhiImageWidgetLabels } from "../../../../../components/widgets/label-types/image";
 import { usePhiConfig } from "../../../../../components/root/phi-config-provider";
 import { resolvePhiMaskStyle } from "../../../../../components/widgets/config/mask";
+import { PhiEmptyControl } from "../../../../../components/controls/phi-empty-control";
 import { PhiFlexControl } from "../../../../../components/controls/phi-flex-control";
 import { PhiTypographyControl } from "../../../../../components/controls/phi-typography-control";
 
@@ -138,7 +139,8 @@ export function PhiImageWidget({
           textAlign: "center",
         }}
       >
-        <Empty description={false} />
+        {/* The picture alone: the two lines below are this Widget's own wording, not an empty state's. */}
+        <PhiEmptyControl />
         <PhiTypographyControl type="secondary" strong={false}>
           {labels.emptyTitle}
         </PhiTypographyControl>

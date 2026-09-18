@@ -3,7 +3,7 @@
 import { useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
 
 import { AppstoreOutlined } from "@ant-design/icons";
-import { Empty, Flex, Typography } from "antd";
+import { Flex, Typography } from "antd";
 import type { PhiControlSize } from "../../types/control";
 
 import { PhiIcon } from "../shell/phi-icon";
@@ -17,6 +17,7 @@ import type {
   PhiPickerPlacement,
   PhiPickerTransactionCallbacks,
 } from "./phi-picker-control-contract";
+import { PhiEmptyControl } from "./phi-empty-control";
 import { PhiPopoverControl } from "./phi-popover-control";
 import { PhiButtonControl } from "./phi-button-control";
 import { PhiSegmentedControl } from "./phi-segmented-control";
@@ -498,7 +499,7 @@ export function PhiIconPickerControl({
                       })}
                     </div>
                   ) : (
-                    <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={labels.empty.curated} />
+                    <PhiEmptyControl description={labels.empty.curated} />
                   )}
                 </>
               ) : (
@@ -540,9 +541,9 @@ export function PhiIconPickerControl({
                       <Typography.Text type="secondary">{labels.status.loading}</Typography.Text>
                     </Flex>
                   ) : iconifySearchError ? (
-                    <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={iconifySearchError} />
+                    <PhiEmptyControl description={iconifySearchError} />
                   ) : (
-                    <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={labels.empty.search} />
+                    <PhiEmptyControl description={labels.empty.search} />
                   )}
                   {iconifySearchLoading && iconifySearchResults.length > 0 ? (
                     <Flex justify="center" style={{ paddingBlock: 12 }}>

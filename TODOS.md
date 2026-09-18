@@ -49,9 +49,9 @@ built. Remove an entry when it is done.
   and every direct import makes replacing it harder:** with a Control it is an adapter change, without
   one it is a tree-wide edit.
 
-  It started at 28 named primitives against about 25 uncontrolled ones. It now names 37, closes five
-  more to a single owner file, and leaves eleven: `Avatar`, `Card`, `Col`, `Collapse`, `Descriptions`,
-  `Empty`, `Layout`, `List`, `Row`, `Space`, `Tooltip`.
+  It started at 28 named primitives against about 25 uncontrolled ones. It now names 38, closes five
+  more to a single owner file, and leaves ten: `Avatar`, `Card`, `Col`, `Collapse`, `Descriptions`,
+  `Layout`, `List`, `Row`, `Space`, `Tooltip`.
 
   `App`, `ConfigProvider` and `theme` stay direct: they are the root and theme adapters AGENTS.md
   already exempts, not feature surface.
@@ -61,7 +61,7 @@ built. Remove an entry when it is done.
 
   - **A Control**, where there is platform semantics to own -- a normalized contract, defaults the
     platform should decide once rather than at each call site:
-    ~~`Upload`, `Progress`, `Skeleton`~~ done; `Empty`, `Tooltip`, `Collapse`, `Descriptions`, `Card`,
+    ~~`Upload`, `Progress`, `Skeleton`, `Empty`~~ done; `Tooltip`, `Collapse`, `Descriptions`, `Card`,
     `Avatar` and `Space.Compact` (which is a different thing from `Space`, see below) remain.
   - **A thin pass-through**, where there is nothing to decide and the wrapper exists only so the import
     points at us: ~~`PhiTypographyControl` (~63 files), `Flex` (~60), `Divider`, `Spin`, `QRCode`,
@@ -93,9 +93,25 @@ built. Remove an entry when it is done.
     `.Button` and `.Node`. `active` defaults to true, and the one site that passes `false` means
     something else by it -- a Builder preview saying the Widget has nothing to show, where a shimmer
     would promise an arrival that never comes.
-  - `Empty` before the `Listy` migration: both `List` sites set `locale.emptyText`, and migrating turns
-    those into explicit empty states. Six `Empty` sites make the image/label choice six different ways
-    today.
+  - ~~`Empty`~~ built as `PhiEmptyControl`, before the `Listy` migration, because both `List` sites set
+    `locale.emptyText` and migrating turns those into explicit empty states. Eight sites, not the six
+    counted here. **One prop, `description`** -- the picture is not a call-site choice. Ant Design ships
+    two and the eight sites split five to three with no rule behind it, two sibling collection bindings
+    drawing different ones into the same slot of the same `PhiCollectionViewControl`; the quiet line is
+    now the only one. An empty list is the most ordinary thing a page can report, and the large
+    illustration spends the vertical space and the attention of an event. Absence is stated, not
+    announced.
+
+    An **omitted `description` means no text**, where Ant Design distinguishes a missing prop -- which
+    draws a hard-coded English "No Data" -- from `description={false}`, which draws the picture alone.
+    Two spellings of absence, one of them an untranslated string in a product where every other label
+    comes from a label set, so the Control keeps one.
+
+    One thing found and deliberately **not** settled in the migration, because it is a behaviour change
+    rather than a wrapping: `phi-icon-picker-control.tsx` uses an empty state to report an Iconify
+    **search failure** (`description={iconifySearchError}`). A failure is not an absence -- it can be
+    retried, and drawing it as "no results" tells somebody their search was fine when the call broke.
+    `PhiAlertControl` is what that wants, inside a 240px scroll area.
   - `Typography` is `PhiTypographyControl`, decided. `PhiTextControl` is **taken** -- it is antd `Input`.
     So is `PhiAnchorControl`: `components/controls/phi-anchor-control-contract.ts` is about placement
     anchors (`topLeft`…`bottomRight`), not antd `Anchor`. Both names are settled before the first commit,
@@ -121,8 +137,8 @@ built. Remove an entry when it is done.
   (`GlobalToken`, `AliasToken`) stay exempt as part of the theme adapter.
 
   Order: ~~the two big pass-throughs (`Flex`, `PhiTypographyControl`), the five owner entries, the
-  trivial wrappers, `PhiFileDropControl` with `Progress`, `PhiSkeletonControl`~~ -- done. Next
-  `Empty`/`Tooltip`/`Card`/`Collapse`/`Descriptions`, then the deletions, then `Listy`, and the
+  trivial wrappers, `PhiFileDropControl` with `Progress`, `PhiSkeletonControl`, `PhiEmptyControl`~~ --
+  done. Next `Tooltip`/`Card`/`Collapse`/`Descriptions`, then the deletions, then `Listy`, and the
   allowlist last.
 
   Until the Controls exist, direct use in a Widget or Layout stays correct and the validator keeps
@@ -149,7 +165,8 @@ built. Remove an entry when it is done.
   `List.Item.Meta` and `actions`) and `core/widgets/slot-upload/client.tsx`.
   `Listy` is not a renamed `List`: `dataSource` becomes `items`, `renderItem` becomes `itemRender`,
   `rowKey` is required with no default, and `List.Item.Meta`/`actions`/`extra` are rebuilt as plain JSX
-  rather than preset structures. `locale.emptyText` has no equivalent, which is why `Empty` comes first.
+  rather than preset structures. `locale.emptyText` has no equivalent, which is why `PhiEmptyControl`
+  came first -- each `emptyText` becomes an explicit `<PhiEmptyControl description=… />`.
   Neither site uses `grid`, `pagination` or `loadMore`, so nothing here hits the parts the antd FAQ
   advises against migrating. **A `PhiListControl` that passes the old `List` API through would be the
   wrong investment** -- if it is wrapped at all, it is cut against `Listy`.

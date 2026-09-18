@@ -1,6 +1,5 @@
 "use client";
 
-import { Empty } from "antd";
 import { useEffect, useMemo, useState } from "react";
 
 import type { PhiCmsInstanceId } from "../../../../types/cms-instance-id";
@@ -11,6 +10,7 @@ import type {
 } from "../../../../plugins/runtime-modules/core/widgets/collection-view/config";
 import { PhiAlertControl } from "../../../controls/phi-alert-control";
 import { PhiCollectionViewControl } from "../../../controls/phi-collection-view-control";
+import { PhiEmptyControl } from "../../../controls/phi-empty-control";
 import { PhiTextControl } from "../../../controls/phi-text-control";
 import { PhiCardWidgetClient } from "../../../../plugins/runtime-modules/core/widgets/card/client";
 import { normalizePhiCssSize } from "../../../layouts/phi-layout-contract";
@@ -149,7 +149,7 @@ export function PhiCardCollectionViewBinding({
         <PhiAlertControl level="error" title={binding.error} />
       ) : null}
       body={items.length === 0 && !binding.loading ? (
-        <Empty description={presentation.emptyDescription ?? "Nothing here yet."} />
+        <PhiEmptyControl description={presentation.emptyDescription ?? "Nothing here yet."} />
       ) : undefined}
       items={cards}
       pagination={features.pagination?.enabled === false ? null : {

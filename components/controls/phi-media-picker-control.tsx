@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { Empty, Flex, Typography } from "antd";
+import { Flex, Typography } from "antd";
 import { PictureOutlined, ReloadOutlined } from "@ant-design/icons";
 
 import type { PhiMediaAssetTile } from "../../types/media";
@@ -9,6 +9,7 @@ import { usePhiConfig } from "../root/phi-config-provider";
 import type { PhiControlOption } from "./phi-control-options";
 import { PhiButtonControl } from "./phi-button-control";
 import { PhiCascaderControl } from "./phi-cascader-control";
+import { PhiEmptyControl } from "./phi-empty-control";
 import { PhiSelectControl } from "./phi-select-control";
 import { PhiCollectionLayoutControl } from "./phi-collection-layout-control";
 import {
@@ -218,7 +219,7 @@ export function PhiMediaPickerControl({
             size="small"
           />
         ) : assets.length === 0 ? (
-          <Empty description={labels?.empty ?? "No media"} />
+          <PhiEmptyControl description={labels?.empty ?? "No media"} />
         ) : (
           <PhiCollectionLayoutControl
             mode="grid"

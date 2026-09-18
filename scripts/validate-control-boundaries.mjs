@@ -78,10 +78,11 @@ const coreApplicationAdapterPath = "components/runtime/core-runtime-application-
  * for a handful of primitives -- so everything outside those names passed, every Module under `plugins/`
  * included. This is the rule itself, over the whole tree.
  *
- * This map is a denylist, so **every primitive not named here is permitted by omission** -- roughly
- * eleven are still imported somewhere in the tree, from `Space` and `Card` down to `List` and
- * `Tooltip`. `Flex` and `Typography`, the two that reached furthest, are done, as are the four that had
- * nothing to decide and the file-choosing pair; five more are closed by `soleOwnerPrimitives` below.
+ * This map is a denylist, so **every primitive not named here is permitted by omission** -- ten are
+ * still imported somewhere in the tree, from `Space` and `Card` down to `List` and `Tooltip`. `Flex`
+ * and `Typography`, the two that reached furthest, are done, as are the four that had nothing to decide,
+ * the file-choosing pair and the two that say "waiting" and "none"; five more are closed by
+ * `soleOwnerPrimitives` below.
  *
  * That is where things stand rather than where they are meant to end: wrapping the rest is planned
  * work, because Ant Design is replaceable in principle and every direct import turns that from a
@@ -102,6 +103,7 @@ const controlledPrimitives = new Map([
   ["Divider", "PhiDividerControl"],
   ["Drawer", "PhiDrawerControl"],
   ["Dropdown", "PhiDropdownControl"],
+  ["Empty", "PhiEmptyControl"],
   ["Flex", "PhiFlexControl"],
   ["Form", "PhiFormControl"],
   ["Input", "PhiTextControl"],

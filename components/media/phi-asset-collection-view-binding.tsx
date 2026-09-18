@@ -1,6 +1,5 @@
 "use client";
 
-import { Empty } from "antd";
 import { useEffect, useMemo, useState } from "react";
 
 import { PhiMediaAssetFlags, PhiMediaKind } from "../../constants/media";
@@ -12,6 +11,7 @@ import { normalizePhiCssSize } from "../layouts/phi-layout-contract";
 import { PhiAlertControl } from "../controls/phi-alert-control";
 import { PhiButtonControl } from "../controls/phi-button-control";
 import { PhiCollectionViewControl } from "../controls/phi-collection-view-control";
+import { PhiEmptyControl } from "../controls/phi-empty-control";
 import { PhiMultiSelectControl } from "../controls/phi-multi-select-control";
 import { PhiSelectControl } from "../controls/phi-select-control";
 import { PhiTextControl } from "../controls/phi-text-control";
@@ -376,7 +376,7 @@ export function PhiAssetCollectionViewBinding({
   const body = state.error ? null : awaitingInitialPayload ? (
     <PhiMediaAssetCollectionSkeletonControl mode={mode} gap={gap} minColumnWidth={minColumnWidth} />
   ) : state.assets.length === 0 ? (
-    <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={presentation.emptyDescription ?? labels.grid.emptyDescription} />
+    <PhiEmptyControl description={presentation.emptyDescription ?? labels.grid.emptyDescription} />
   ) : undefined;
 
   return (
