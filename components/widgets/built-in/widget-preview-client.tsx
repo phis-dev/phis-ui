@@ -1,11 +1,11 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { Skeleton } from "antd";
 
 import type { PhiCmsContentWidgetNode } from "../../../types/cms";
 import { usePhiConfig } from "../../root/phi-config-provider";
 import { PhiTypographyControl } from "../../controls/phi-typography-control";
+import { PhiSkeletonControl } from "../../controls/phi-skeleton-control";
 
 function splitNamespacedType(widgetType: string) {
   const slashIndex = widgetType.lastIndexOf("/");
@@ -61,13 +61,12 @@ export function PhiWidgetPreviewFallback({
       </div>
       {summary ? <PhiTypographyControl type="secondary">{summary}</PhiTypographyControl> : null}
       {children ? null : (
-        <Skeleton
+        <PhiSkeletonControl
+          // Still on purpose: this says the Widget has nothing to preview, not that something is on
+          // its way, and a shimmer would promise an arrival that never comes.
           active={false}
-          title={false}
-          paragraph={{
-            rows: 2,
-            width: ["86%", "54%"],
-          }}
+          lines={2}
+          lineWidths={["86%", "54%"]}
         />
       )}
       {children}

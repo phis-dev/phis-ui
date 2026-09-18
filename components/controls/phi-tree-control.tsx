@@ -1,7 +1,7 @@
 "use client";
 
 import { HolderOutlined } from "@ant-design/icons";
-import { Button, Flex, Skeleton, Tree, Typography, theme as antdTheme } from "antd";
+import { Button, Flex, Tree, Typography, theme as antdTheme } from "antd";
 import type { DataNode, EventDataNode } from "antd/es/tree";
 import { useMemo, useState, type CSSProperties, type DragEvent as ReactDragEvent } from "react";
 
@@ -18,6 +18,7 @@ import { PhiConfirmControl } from "./phi-confirm-control";
 import { PhiExpandIndicator } from "./phi-expand-indicator";
 import { PhiLink } from "../navigation/phi-link";
 import styles from "./phi-tree-control.module.css";
+import { PhiSkeletonControl } from "./phi-skeleton-control";
 
 type TreeRecord = Record<string, unknown>;
 type PhiTreeControlNode = DataNode & {
@@ -323,7 +324,7 @@ export function PhiTreeControl({
     () => decorateVisibleTreeRows(treeData, expandedIdentitySet, presentation.row?.striped === true),
     [expandedIdentitySet, presentation.row?.striped, treeData],
   );
-  if (loading && nodes.length === 0) return <Skeleton active paragraph={{ rows: 6 }} title={false} />;
+  if (loading && nodes.length === 0) return <PhiSkeletonControl lines={6} />;
 
   const readEventNode = (value: EventDataNode<DataNode>) => value as unknown as PhiTreeControlNode;
   const tree = (

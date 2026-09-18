@@ -1,6 +1,5 @@
 "use client";
 
-import { Skeleton } from "antd";
 import type { ReactNode } from "react";
 
 import type { PhiControlSize } from "../../types/control";
@@ -8,6 +7,7 @@ import { usePhiConfig } from "../root/phi-config-provider";
 import { PhiCollectionHeaderControl } from "./phi-collection-header-control";
 import { PhiCollectionLayoutControl } from "./phi-collection-layout-control";
 import { PhiPaginationControl } from "./phi-pagination-control";
+import { PhiSkeletonControl } from "./phi-skeleton-control";
 
 export type PhiCollectionViewControlProps = {
   title?: ReactNode;
@@ -95,7 +95,7 @@ export function PhiCollectionViewSkeletonControl({
       gap={gap ?? token.paddingSM}
       minColumnWidth={minColumnWidth ?? 102}
       items={Array.from({ length: count }, (_, index) => (
-        <Skeleton.Node key={index} active={active} style={{ width: "100%", minHeight: token.controlHeight * 3 }} />
+        <PhiSkeletonControl presentation="node" key={index} active={active} style={{ width: "100%", minHeight: token.controlHeight * 3 }} />
       ))}
     />
   );

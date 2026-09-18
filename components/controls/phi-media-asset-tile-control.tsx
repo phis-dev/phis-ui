@@ -1,7 +1,7 @@
 "use client";
 
 import { DeleteOutlined } from "@ant-design/icons";
-import { Flex, Skeleton, Typography } from "antd";
+import { Flex, Typography } from "antd";
 import NextImage from "next/image";
 import type { CSSProperties } from "react";
 
@@ -17,6 +17,7 @@ import {
   PhiCollectionLayoutControl,
   type PhiCollectionLayoutControlProps,
 } from "./phi-collection-layout-control";
+import { PhiSkeletonControl } from "./phi-skeleton-control";
 
 function resolveAssetTypeLabel(kind: string, contentType: string, originalName: string) {
   const normalizedContentType = contentType.trim().toLowerCase();
@@ -296,7 +297,8 @@ export function PhiMediaAssetCollectionSkeletonControl({
           aspectRatio: "1 / 1",
         }}
       >
-        <Skeleton.Input
+        <PhiSkeletonControl
+          presentation="input"
           active={active}
           block
           style={{
@@ -319,7 +321,8 @@ export function PhiMediaAssetCollectionSkeletonControl({
         justify="space-between"
         gap={token.paddingXS}
       >
-        <Skeleton.Input
+        <PhiSkeletonControl
+          presentation="input"
           active={active}
           size="small"
           style={{
@@ -328,7 +331,8 @@ export function PhiMediaAssetCollectionSkeletonControl({
             height: token.fontSize * token.lineHeight,
           }}
         />
-        <Skeleton.Button
+        <PhiSkeletonControl
+          presentation="button"
           active={active}
           size="small"
           shape="circle"

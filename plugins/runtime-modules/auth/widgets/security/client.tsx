@@ -1,13 +1,14 @@
 "use client";
 
 import { lazy, Suspense, useCallback, useEffect, useState } from "react";
-import { Card, List, Skeleton } from "antd";
+import { Card, List } from "antd";
 import { PhiTagControl } from "../../../../../components/controls/phi-tag-control";
 import { PhiButtonControl } from "../../../../../components/controls/phi-button-control";
 import { PhiAlertControl } from "../../../../../components/controls/phi-alert-control";
 import { PhiConfirmControl } from "../../../../../components/controls/phi-confirm-control";
 import { PhiFlexControl } from "../../../../../components/controls/phi-flex-control";
 import { PhiTypographyControl } from "../../../../../components/controls/phi-typography-control";
+import { PhiSkeletonControl } from "../../../../../components/controls/phi-skeleton-control";
 
 const PhiAuthWorkflowBody = lazy(
   () => import("../../../../../components/widgets/client/auth-workflow-body")
@@ -120,7 +121,7 @@ export function PhiAuthSecurityWidgetClient({ apiPath = "/api/auth/account/secur
 
   if (enrolling) {
     return (
-      <Suspense fallback={<Skeleton active title={false} paragraph={{ rows: 4 }} />}>
+      <Suspense fallback={<PhiSkeletonControl lines={4} />}>
         <PhiAuthWorkflowBody
           workflow={{ state: "factor-enrollment-required", methodKey: "totp", next: "/app/security" }}
           onComplete={async () => {
@@ -131,7 +132,7 @@ export function PhiAuthSecurityWidgetClient({ apiPath = "/api/auth/account/secur
       </Suspense>
     );
   }
-  if (loading) return <Skeleton active paragraph={{ rows: 8 }} />;
+  if (loading) return <PhiSkeletonControl lines={8} withTitle />;
   if (!payload) return <PhiAlertControl level="error" showIcon title={error ?? "Account security is unavailable."} />;
 
   return (

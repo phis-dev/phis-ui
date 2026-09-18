@@ -79,7 +79,7 @@ const coreApplicationAdapterPath = "components/runtime/core-runtime-application-
  * included. This is the rule itself, over the whole tree.
  *
  * This map is a denylist, so **every primitive not named here is permitted by omission** -- roughly
- * twelve are still imported somewhere in the tree, from `Space` and `Card` down to `List` and
+ * eleven are still imported somewhere in the tree, from `Space` and `Card` down to `List` and
  * `Tooltip`. `Flex` and `Typography`, the two that reached furthest, are done, as are the four that had
  * nothing to decide and the file-choosing pair; five more are closed by `soleOwnerPrimitives` below.
  *
@@ -118,6 +118,7 @@ const controlledPrimitives = new Map([
   ["Segmented", "PhiSegmentedControl"],
   ["Select", "PhiSelectControl"],
   ["Slider", "PhiSliderControl"],
+  ["Skeleton", "PhiSkeletonControl"],
   ["Spin", "PhiSpinControl"],
   ["Statistic", "PhiStatisticControl"],
   ["Switch", "PhiSwitchControl"],

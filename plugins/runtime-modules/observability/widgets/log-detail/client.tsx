@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Descriptions, Skeleton } from "antd";
+import { Descriptions } from "antd";
 import { PhiTagControl } from "../../../../../components/controls/phi-tag-control";
 
 import { formatPhiDateTime } from "../../../../../helpers/format-date-time";
@@ -16,6 +16,7 @@ import { readPhiTableActionSignalValue } from "../../../../../types/table-widget
 import { PhiAlertControl } from "../../../../../components/controls/phi-alert-control";
 import { PhiFlexControl } from "../../../../../components/controls/phi-flex-control";
 import { PhiTypographyControl } from "../../../../../components/controls/phi-typography-control";
+import { PhiSkeletonControl } from "../../../../../components/controls/phi-skeleton-control";
 
 type LogLevel = "debug" | "info" | "warn" | "error";
 
@@ -203,7 +204,7 @@ export function PhiObservabilityLogDetailWidgetClient({ config, labels }: Props)
 
   return (
     <PhiFlexControl vertical gap={16} style={{ minWidth: 0, width: "100%" }}>
-        {loading ? <Skeleton active paragraph={{ rows: 7 }} /> : null}
+        {loading ? <PhiSkeletonControl lines={7} withTitle /> : null}
         {error ? <PhiAlertControl level="error" showIcon title={error} /> : null}
         {!loading && !error && selectedRow ? (
           <PhiFlexControl vertical gap={16}>

@@ -49,9 +49,9 @@ built. Remove an entry when it is done.
   and every direct import makes replacing it harder:** with a Control it is an adapter change, without
   one it is a tree-wide edit.
 
-  It started at 28 named primitives against about 25 uncontrolled ones. It now names 36, closes five
-  more to a single owner file, and leaves twelve: `Avatar`, `Card`, `Col`, `Collapse`, `Descriptions`,
-  `Empty`, `Layout`, `List`, `Row`, `Skeleton`, `Space`, `Tooltip`.
+  It started at 28 named primitives against about 25 uncontrolled ones. It now names 37, closes five
+  more to a single owner file, and leaves eleven: `Avatar`, `Card`, `Col`, `Collapse`, `Descriptions`,
+  `Empty`, `Layout`, `List`, `Row`, `Space`, `Tooltip`.
 
   `App`, `ConfigProvider` and `theme` stay direct: they are the root and theme adapters AGENTS.md
   already exempts, not feature surface.
@@ -61,9 +61,8 @@ built. Remove an entry when it is done.
 
   - **A Control**, where there is platform semantics to own -- a normalized contract, defaults the
     platform should decide once rather than at each call site:
-    ~~`Upload`, `Progress`~~ done as `PhiFileDropControl` and `PhiProgressControl`; `Skeleton`,
-    `Empty`, `Tooltip`, `Collapse`, `Descriptions`, `Card`, `Avatar` and `Space.Compact` (which is a
-    different thing from `Space`, see below) remain.
+    ~~`Upload`, `Progress`, `Skeleton`~~ done; `Empty`, `Tooltip`, `Collapse`, `Descriptions`, `Card`,
+    `Avatar` and `Space.Compact` (which is a different thing from `Space`, see below) remain.
   - **A thin pass-through**, where there is nothing to decide and the wrapper exists only so the import
     points at us: ~~`PhiTypographyControl` (~63 files), `Flex` (~60), `Divider`, `Spin`, `QRCode`,
     `Statistic`~~ -- all done. `PhiSpinControl` stays beside `PhiSkeletonControl` rather than being
@@ -87,6 +86,13 @@ built. Remove an entry when it is done.
     the hidden list, so the Control settles it the strict way. `PhiProgressControl` came with it as a
     plain pass-through; an upload-specific `shape` prop would have been inventing props, and nothing
     about a percentage is specific to uploading.
+  - `Skeleton` normalizes the vocabulary and not the measurements. Every site wrote
+    `paragraph={{ rows: n }}`, the same nested object twelve times, so that became `lines`; the number
+    itself stays per-site, because three lines for a form preview and eight for a security page are two
+    different pages rather than a value nobody centralized. `presentation` covers `Skeleton.Input`,
+    `.Button` and `.Node`. `active` defaults to true, and the one site that passes `false` means
+    something else by it -- a Builder preview saying the Widget has nothing to show, where a shimmer
+    would promise an arrival that never comes.
   - `Empty` before the `Listy` migration: both `List` sites set `locale.emptyText`, and migrating turns
     those into explicit empty states. Six `Empty` sites make the image/label choice six different ways
     today.
@@ -115,8 +121,7 @@ built. Remove an entry when it is done.
   (`GlobalToken`, `AliasToken`) stay exempt as part of the theme adapter.
 
   Order: ~~the two big pass-throughs (`Flex`, `PhiTypographyControl`), the five owner entries, the
-  trivial wrappers, `PhiFileDropControl` with `Progress`~~ -- done. Next `Skeleton` (its own
-  Control, beside `PhiSpinControl` rather than over it), then
+  trivial wrappers, `PhiFileDropControl` with `Progress`, `PhiSkeletonControl`~~ -- done. Next
   `Empty`/`Tooltip`/`Card`/`Collapse`/`Descriptions`, then the deletions, then `Listy`, and the
   allowlist last.
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Descriptions, Skeleton } from "antd";
+import { Descriptions } from "antd";
 import { buildPhiDataSourceUrl, type PhiApiDataSource } from "../../../../../gateway/data-source";
 import type { PhiCmsInstanceId } from "../../../../../types";
 import type { PhiSignalRouteSet, PhiSignalValue } from "../../../../../types/signals";
@@ -9,6 +9,7 @@ import { findPhiSignalRoutesByCapabilityId } from "../../../../../types/signals"
 import { usePhiSignalEmitter, usePhiSignalIdentity } from "../../../../../components/runtime/runtime-signal-identity";
 import { usePhiRuntimePageConditionState } from "../../../../../components/runtime/runtime-page-condition-state";
 import { PhiAlertControl } from "../../../../../components/controls/phi-alert-control";
+import { PhiSkeletonControl } from "../../../../../components/controls/phi-skeleton-control";
 
 const PHI_LABEL_WIDTH = "7.5rem";
 
@@ -132,7 +133,7 @@ export function PhiFormPreviewWidgetClient({
   }
 
   if (loading || !state) {
-    return <Skeleton key={`preview-${blockId}`} active title={false} paragraph={{ rows: 3 }} />;
+    return <PhiSkeletonControl key={`preview-${blockId}`} lines={3} />;
   }
 
   if (!state.ok) {

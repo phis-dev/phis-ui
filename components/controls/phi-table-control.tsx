@@ -1,7 +1,7 @@
 "use client";
 
 import { CloseOutlined, DownOutlined, EditOutlined, HolderOutlined, LeftOutlined, RightOutlined, SaveOutlined, UpOutlined } from "@ant-design/icons";
-import { Button, Flex, Skeleton, Table, Tooltip } from "antd";
+import { Button, Flex, Table, Tooltip } from "antd";
 import type { TableColumnsType } from "antd";
 import type { TableRowSelection } from "antd/es/table/interface";
 import type { InputRef } from "antd/es/input";
@@ -70,6 +70,7 @@ import { PhiTextControl } from "./phi-text-control";
 import { PhiExpandIndicator } from "./phi-expand-indicator";
 import styles from "./phi-table-control.module.css";
 import { usePhiConfig } from "../root/phi-config-provider";
+import { PhiSkeletonControl } from "./phi-skeleton-control";
 
 export type PhiTableControlCellEditor = {
   type: Exclude<PhiTableProviderFieldType, "json">;
@@ -1169,8 +1170,8 @@ export function PhiTableControl<TRow extends Record<string, unknown>>({
           const width = columnKey == null
             ? column.width
             : loadingSkeletonWidths.get(columnKey) ?? column.width;
-          return <Skeleton.Input
-            active
+          return <PhiSkeletonControl
+            presentation="input"
             size="small"
             style={buildLoadingSkeletonStyle(width, cellPaddingInline)}
           />;

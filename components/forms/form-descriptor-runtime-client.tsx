@@ -1,6 +1,5 @@
 "use client";
 
-import { Skeleton } from "antd";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import type { PhiSignalAddress, PhiSignalValue } from "../../types/signals";
@@ -27,6 +26,7 @@ import { usePhiRuntimeFormBinding } from "./runtime-form-binding";
 import { usePhiRuntimePageConditionState } from "../runtime/runtime-page-condition-state";
 import type { PhiFormGuardProps } from "./contracts";
 import { requestPhiFormGuard } from "./form-guard-client";
+import { PhiSkeletonControl } from "../controls/phi-skeleton-control";
 
 const EMPTY_FORM_VALUES: Record<string, unknown> = {};
 
@@ -342,7 +342,7 @@ export function PhiFormDescriptorRuntimeClient({
     }
   }, [clearDraft, success]);
 
-  const content = loading ? <Skeleton active paragraph={{ rows: 4 }} /> : (
+  const content = loading ? <PhiSkeletonControl lines={4} withTitle /> : (
     <>
       {error ? <PhiAlertControl level="error" showIcon title={error} /> : null}
       {succeeded && success ? (
