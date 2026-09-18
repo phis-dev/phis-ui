@@ -9,6 +9,7 @@ import type {
 } from "../components/controls/phi-control-options";
 
 import type { PhiRenderableBlockAnchor } from "./renderable-block";
+import type { PhiCmsRegionOwnership } from "../helpers/cms-region-keys";
 import type { PhiSlotSizePolicy } from "./slot-size-policy";
 import type { PhiLayoutKind } from "../components/layouts/phi-layout-contract";
 import type {
@@ -341,6 +342,19 @@ export type PhiCmsWidgetPlugin<TConfig> = {
   requiredDataProviders?: readonly PhiRuntimeDataProviderKey[];
   contentBinding?: PhiCmsWidgetContentBinding | null;
   slotSizePolicy?: PhiSlotSizePolicy;
+  /**
+   * The kind of Region this Widget needs, where standing in the other kind would break it.
+   *
+   * Declared by the few Widgets it matters to and left out by the rest, which stand anywhere. "shell"
+   * says the Widget needs a Region that survives a move between Pages -- Area navigation is the case
+   * it exists for, because a Page-owned Region is built again for every Page and the navigation would
+   * visibly rebuild itself under the hand that used it.
+   *
+   * Read while authoring and by the checks that run before a build, never while rendering: a
+   * placement can only be made in the Builder or written into a preset, so a live Page paying for the
+   * question on every request would pay for a decision that was already taken.
+   */
+  requiredRegionOwnership?: PhiCmsRegionOwnership;
   defaultConfig?: Partial<TConfig>;
   fields: PhiCmsConfigField[];
   parseConfig: (raw: Record<string, unknown>) => TConfig;
@@ -367,6 +381,7 @@ export type PhiCmsWidgetPluginDefinition<TConfig> = Pick<
   | "requiredDataProviders"
   | "contentBinding"
   | "slotSizePolicy"
+  | "requiredRegionOwnership"
   | "defaultConfig"
   | "fields"
   | "parseConfig"

@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import type { CSSProperties, ReactElement, ReactNode } from "react";
 
-import { Flex, Space, Typography, theme as antdTheme } from "antd";
+import { Space, theme as antdTheme } from "antd";
 import { PlusOutlined } from "@ant-design/icons";
 import {
   buildPhiCmsLayoutNamespacedTypeKey,
@@ -38,7 +38,7 @@ import {
   type PhiSignalScope,
 } from "../../../../../types/signals";
 import { resolvePhiShellRegionTypography, resolvePhiShellRegionZIndex } from "../../../../../helpers/shell-region-style";
-import { resolvePhiCmsRegionType } from "../../../../../helpers/cms-region-keys";
+import { phiCmsRegionAcceptsWidget, resolvePhiCmsRegionType } from "../../../../../helpers/cms-region-keys";
 import { usePhiRuntimeModuleState } from "../../../../../components/runtime/runtime-module-context";
 import { renderPhiRootNodeScaffold } from "../../../../../plugins/runtime-modules/builder/render-root-node-scaffold";
 import { PhiBuilderInsertPickerControl } from "../../../../../components/controls/phi-builder-insert-picker-control";
@@ -87,6 +87,8 @@ import { usePhiBuilderModuleMetas } from "../../../../../plugins/runtime-modules
 import type { PhiBuilderContainerMeta, PhiBuilderPluginMeta } from "../../../../../types/builder";
 import { resolvePhiPaddingStyle } from "../../../../../components/layouts/phi-layout-contract";
 import { usePhiBuilderAuthoringCanvas } from "../../authoring-canvas";
+import { PhiFlexControl } from "../../../../../components/controls/phi-flex-control";
+import { PhiTypographyControl } from "../../../../../components/controls/phi-typography-control";
 
 export type PhiStructureRegionWidgetConfig = {
   slotKind?: "structure" | "content";
@@ -1801,9 +1803,18 @@ export function PhiStructureRegionScaffold({
     isOver: rootDropIsOver,
     setNodeRef: setRootDropNodeRef,
   } = usePhiStructureDroppable(rootDropTarget);
+  /*
+   * What may be inserted here: an active Module's artifact that this Region can hold.
+   *
+   * The second half is the Widget's own answer, not a rule kept here. A Widget that needs a Region
+   * outlasting a move between Pages -- Area navigation -- is simply not offered in a Page-owned
+   * Region, which is the whole of the enforcement a person meets. Nothing asks the question again
+   * while rendering: the placement was already decided here or in a preset.
+   */
   const availablePickItems = (config.pickItems ?? []).filter((item) => {
     if (item.kind === "widget") {
-      return activeModules.widgetTypes.has(item.key);
+      return activeModules.widgetTypes.has(item.key)
+        && phiCmsRegionAcceptsWidget(config.regionKey, item.requiredRegionOwnership);
     }
 
     const { pluginKey, typeKey } = splitPhiCmsLayoutNamespacedTypeKey(item.key);
@@ -2332,18 +2343,18 @@ export function PhiStructureRegionScaffold({
     >
       {isPreviewMode ? null : (
         <Space orientation="vertical" size={0} style={{ minWidth: 0, width: "100%" }}>
-          <Flex align="center" gap={6} wrap={false} style={{ minWidth: 0, width: "100%", whiteSpace: "nowrap" }}>
-            <Typography.Text strong style={{ minWidth: 0, whiteSpace: "nowrap" }}>
+          <PhiFlexControl align="center" gap={6} wrap={false} style={{ minWidth: 0, width: "100%", whiteSpace: "nowrap" }}>
+            <PhiTypographyControl strong style={{ minWidth: 0, whiteSpace: "nowrap" }}>
               {config.title}
-            </Typography.Text>
-            <Typography.Text type="secondary" style={{ minWidth: 0, whiteSpace: "nowrap" }}>
+            </PhiTypographyControl>
+            <PhiTypographyControl type="secondary" style={{ minWidth: 0, whiteSpace: "nowrap" }}>
               · {config.regionKey}
-            </Typography.Text>
-          </Flex>
+            </PhiTypographyControl>
+          </PhiFlexControl>
           {config.subtitle ? (
-            <Typography.Text type="secondary" style={{ display: "block", whiteSpace: "normal", overflowWrap: "anywhere" }}>
+            <PhiTypographyControl type="secondary" style={{ display: "block", whiteSpace: "normal", overflowWrap: "anywhere" }}>
               {config.subtitle}
-            </Typography.Text>
+            </PhiTypographyControl>
           ) : null}
         </Space>
       )}

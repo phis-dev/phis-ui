@@ -53,6 +53,15 @@ export const PHI_SIDEBAR_NAVIGATION_WIDGET_DEFINITION = {
   category: "navigation",
   iconFamily: "navigation",
   slotSizePolicy: "fill-inline",
+  /*
+   * The Area's own navigation, and therefore the Area's shell.
+   *
+   * It names a whole navigation surface and stands still while a person walks through the Pages under
+   * it. A Page-owned Region is built again for every Page, so the same menu would rebuild itself on
+   * each step -- visibly, under the hand that just used it. SETTINGS.md section 3 says the same thing
+   * about the Settings container for the same reason; this is where a Builder is told.
+   */
+  requiredRegionOwnership: "shell",
   fields: [{
     key: "navKey",
     type: "choice",
@@ -80,6 +89,7 @@ export const PHI_SIDEBAR_NAVIGATION_WIDGET_DEFINITION = {
   | "iconFamily"
 
   | "slotSizePolicy"
+  | "requiredRegionOwnership"
   | "fields"
   | "parseConfig"
 >;

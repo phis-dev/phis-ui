@@ -1,6 +1,7 @@
 import { resolvePhiCmsWidgetPluginKey } from "../../../../../constants/cms-widget-types";
 import type { PhiCmsWidgetPlugin } from "../../../../../types";
 import type { PhiAnchorWidgetPlacement } from "../../../../../components/controls/phi-anchor-control-contract";
+import type { PhiCmsRegionOwnership } from "../../../../../helpers/cms-region-keys";
 import { isPhiCmsPluginCategory, type PhiCmsPluginCategory } from "../../../../../constants/cms-plugin-categories";
 
 export type PhiStructureRegionPickItem = {
@@ -13,6 +14,8 @@ export type PhiStructureRegionPickItem = {
   category: PhiCmsPluginCategory | null;
   tags: string[] | null;
   icon: string | null;
+  /** The Region kind the Widget asked for, carried so the Region slot can leave it out where it does not fit. */
+  requiredRegionOwnership?: PhiCmsRegionOwnership | null;
   defaultAnchor?: PhiAnchorWidgetPlacement | null;
   defaultConfig?: Record<string, unknown> | null;
 };
@@ -74,6 +77,10 @@ function readPickItems(value: unknown): PhiStructureRegionPickItem[] | undefined
           ? record.tags.filter((tag): tag is string => typeof tag === "string" && tag.trim().length > 0)
           : null,
         icon: readString(record.icon) ?? null,
+        requiredRegionOwnership:
+          record.requiredRegionOwnership === "shell" || record.requiredRegionOwnership === "page"
+            ? record.requiredRegionOwnership
+            : null,
         defaultAnchor:
           typeof record.defaultAnchor === "string"
             ? (record.defaultAnchor as PhiAnchorWidgetPlacement)

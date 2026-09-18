@@ -385,6 +385,15 @@ Module Widgets and Layouts follow the same shared config, render-mode, signal, a
 Preview, and Authoring contracts as Core artifacts. Their lightweight definitions are the only Picker
 and Inspector metadata source.
 
+A Widget that only works in one kind of Region says so with `requiredRegionOwnership`, and nothing else
+in it enforces that. `shell` means the Widget needs a Region that outlives a move between Pages: Area
+navigation is the case it exists for, because a Page-owned Region is built again for every Page and the
+menu would rebuild itself under the hand that just used it. Almost no Widget declares it, and one that
+declares nothing stands anywhere. The declaration is read while authoring -- the insert picker leaves
+the Widget out of a Region that cannot hold it -- and never while rendering: a placement is made in the
+Builder or written into a preset, so a live Page must not pay for a question that was answered before
+it was asked.
+
 A Widget owns no space that it later reads back. What a Widget shows arrives through its declared
 contracts -- config, a Provider binding, and its `signalRoutes.listens` -- and never by importing a
 Module store and subscribing to it. A Widget that reaches for state is no longer described by its

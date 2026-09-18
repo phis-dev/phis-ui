@@ -41,6 +41,45 @@ export function isPhiCmsPageOwnedRegion(regionKey: string): regionKey is (typeof
   return (PHI_CMS_PAGE_OWNED_REGION_KEYS as readonly string[]).includes(regionKey);
 }
 
+/**
+ * Which of the two a Region is, as one value rather than two questions.
+ *
+ * A shell-owned Region belongs to the Area and outlives a move between its Pages; a page-owned one is
+ * built again for the Page being opened. That difference is what a Widget means when it says where it
+ * can stand: navigation that rebuilds itself on every step is navigation that flickers.
+ */
+export type PhiCmsRegionOwnership = "shell" | "page";
+
+export function resolvePhiCmsRegionOwnership(
+  regionKey: string | null | undefined,
+): PhiCmsRegionOwnership | undefined {
+  if (!regionKey) {
+    return undefined;
+  }
+  if (isPhiCmsShellOwnedRegion(regionKey)) {
+    return "shell";
+  }
+  return isPhiCmsPageOwnedRegion(regionKey) ? "page" : undefined;
+}
+
+/**
+ * Whether a Widget asking for one kind of Region may stand in this one.
+ *
+ * A Widget that asks for nothing stands anywhere, which is what nearly all of them do. An unknown
+ * Region key answers yes as well: the question is asked while authoring, and a key this build does not
+ * know is not a placement anybody chose -- refusing it would hide Widgets over a typo.
+ */
+export function phiCmsRegionAcceptsWidget(
+  regionKey: string | null | undefined,
+  required: PhiCmsRegionOwnership | null | undefined,
+): boolean {
+  if (!required) {
+    return true;
+  }
+  const ownership = resolvePhiCmsRegionOwnership(regionKey);
+  return ownership === undefined || ownership === required;
+}
+
 export const PHI_CMS_REGION_KEY_BY_TYPE = Object.fromEntries(
   Object.entries(PHI_CMS_REGION_TYPE_BY_KEY).map(([key, type]) => [type, key]),
 ) as Record<number, PhiCmsRegionKey>;

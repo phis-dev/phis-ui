@@ -50,6 +50,8 @@ export function buildPhiBuilderPluginMeta(plugin: PhiAnyCmsBuilderPlugin): PhiBu
       contentBinding: "contentBinding" in plugin ? plugin.contentBinding ?? null : null,
       signalSubcontrols: plugin.signalSubcontrols,
       slotSizePolicy: plugin.slotSizePolicy ?? null,
+      requiredRegionOwnership:
+        "requiredRegionOwnership" in plugin ? plugin.requiredRegionOwnership ?? null : null,
       defaultConfig,
       resolvedDefaultConfig,
       leaf: true,

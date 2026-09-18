@@ -36,6 +36,7 @@ export function buildPhiStructureRegionPickItems(
       category: meta.category ?? null,
       tags: meta.tags ?? null,
       icon: meta.icon ?? null,
+      requiredRegionOwnership: meta.requiredRegionOwnership ?? null,
       defaultAnchor: null,
       defaultConfig: meta.defaultConfig ?? null,
     });

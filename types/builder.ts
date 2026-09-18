@@ -11,6 +11,7 @@ import type {
   PhiCmsWidgetSignalSubcontrolCollection,
 } from "./cms-plugins";
 import type { PhiRenderableBlockAnchor } from "./renderable-block";
+import type { PhiCmsRegionOwnership } from "../helpers/cms-region-keys";
 import type { PhiSlotSizePolicy } from "./slot-size-policy";
 import type { PhiSignalPluginMeta } from "./signals";
 import type { PhiCmsPluginCategory } from "../constants/cms-plugin-categories";
@@ -48,6 +49,8 @@ export type PhiBuilderContainerMeta = PhiBuilderPluginMetaBase & {
 export type PhiBuilderWidgetMeta = PhiBuilderPluginMetaBase & {
   kind: "widget";
   leaf: true;
+  /** What the Widget declared about where it can stand; the insert picker is what reads it. */
+  requiredRegionOwnership?: PhiCmsRegionOwnership | null;
   contentBinding?: PhiCmsWidgetContentBinding | null;
   signalSubcontrols?: readonly PhiCmsWidgetSignalSubcontrolCollection[];
   fields: readonly PhiCmsConfigField[];
