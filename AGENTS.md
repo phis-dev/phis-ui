@@ -113,7 +113,8 @@ change. If a contract is unclear, stop and ask instead of guessing.
   tree-wide edit. So prefer a Control wherever one already fits, do not reach for a layout primitive
   where a Layout slot would have done the same work, and treat a new direct import as something to
   mention rather than something the validator silently blessed. `App`, `ConfigProvider` and `theme` are
-  the root and theme adapters and stay direct.
+  the root and theme adapters and stay direct. antd `List` is deprecated in favour of `Listy` and takes
+  no new callers.
 - Shell and Region infrastructure in the RSC path stays plain React and HTML and imports no Ant Design
   module that needs client context.
 - Use the Layout and slot contracts as they are. Do not add wrapper `<div>` layers, alignment shims, or

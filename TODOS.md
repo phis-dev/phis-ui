@@ -46,30 +46,94 @@ built. Remove an entry when it is done.
   direct import makes replacing it harder:** with a Control it is an adapter change, without one it is a
   tree-wide edit.
 
-  In rough order of reach:
-  - `Flex` (~60 files), `Typography` (~63), `Space` (~18), `Card` (3) -- layout and typography, which go
-    everywhere and are therefore the worst to leave open.
-  - `Upload` (4) and `Progress` (4) -- both belong to transferring a file. `Progress` only ever renders
-    an upload percentage. `Upload` is more pointed: **three of its four uses return `false` from
-    `beforeUpload` and the fourth overrides `customRequest`, so Ant Design never transports anything.**
-    It is a file dialog and a drop target, and a Control could be exactly that and drop the rest.
-  - The rest, each in one or two places: `Avatar`, `Badge`, `Breadcrumb`, `Collapse`, `Descriptions`,
-    `Divider`, `Empty`, `List`, `QRCode`, `Result`, `Skeleton`, `Spin`, `Statistic`, `Tooltip`,
-    `Col`/`Row`/`Layout`.
-
   `App`, `ConfigProvider` and `theme` stay direct: they are the root and theme adapters AGENTS.md
   already exempts, not feature surface.
+
+  **Not every primitive wants the same answer.** Four outcomes, and picking the wrong one is how a
+  wrapper ends up being written for something that should have been deleted:
+
+  - **A Control**, where there is platform semantics to own -- a normalized contract, defaults the
+    platform should decide once rather than at each call site:
+    `Upload`, `Progress`, `Skeleton`, `Empty`, `Tooltip`, `Collapse`, `Descriptions`, `Card`, `Avatar`,
+    and `Space.Compact` (which is a different thing from `Space`, see below).
+  - **A thin pass-through**, where there is nothing to decide and the wrapper exists only so the import
+    points at us: `PhiTypographyControl` (~63 files), `Flex` (~60), `Divider`, `Spin`, `QRCode`,
+    `Statistic`.
+  - **An owner entry only** -- the Widget that already wraps the primitive *is* the contract, so no new
+    file is needed, just a `primitiveAdapterOwners`-style entry naming it: `Anchor` (markdown-toc),
+    `Breadcrumb`, `Image` (the image Widget chooses between `next/image` and antd's preview), `Result`,
+    and `Badge` (both uses are already adapter layers). **Five primitives off the list at no cost, and
+    the right first move after the two big pass-throughs.**
+  - **Deletion**, where the direct use should stop rather than be wrapped -- see the next entry.
+
+  Specifics worth not rediscovering:
+  - `Upload`: **Ant Design never transports anything.** Two uses return `false` from `beforeUpload`, one
+    returns `Upload.LIST_IGNORE`, and `components/media/phi-area-upload-widget.tsx` overrides
+    `customRequest` to call `runPhiMediaUploadSession`. What is left is a file dialog and a drop target,
+    so the Control is `PhiFileDropControl` -- named for what it does, since it does not upload --
+    carrying `accept`, `multiple`, `disabled`, `dropZone`, `onFiles`, `children`, and nothing of
+    `fileList`, `showUploadList`, `beforeUpload`, `customRequest` or `LIST_IGNORE`. `Progress` comes
+    with it: all four uses render an upload percentage, three linear and one circular.
+  - `Empty` before the `Listy` migration: both `List` sites set `locale.emptyText`, and migrating turns
+    those into explicit empty states. Six `Empty` sites make the image/label choice six different ways
+    today.
+  - `Typography` is `PhiTypographyControl`, decided. `PhiTextControl` is **taken** -- it is antd `Input`.
+    So is `PhiAnchorControl`: `components/controls/phi-anchor-control-contract.ts` is about placement
+    anchors (`topLeft`…`bottomRight`), not antd `Anchor`. Both names are settled before the first commit,
+    not during it.
+  - `Descriptions` has to move off the `Descriptions.Item` children form (deprecated since antd 5.8) in
+    `observability/widgets/log-detail`; `core/widgets/form-preview` already uses `items`.
 
   Two conditions, or the work makes things worse rather than better. **A Control passes its primitive's
   contract through rather than inventing props**, which is what keeps the migration mechanical and keeps
   the Controls from becoming a second styling vocabulary. And **the validator should end up refusing by
   default** -- an allowlist of what may be imported directly, rather than today's list of what may not --
   because otherwise the next primitive somebody reaches for is permitted again by omission and this
-  entry has to be rewritten a third time.
+  entry has to be rewritten a third time. `pendingControlAdoptions` is the tool for getting there before
+  all the Controls exist: a primitive joins `controlledPrimitives` together with its remaining sites, and
+  the sites are cleared one at a time.
+
+  **The validator has a hole that the allowlist must close.** Type imports are skipped deliberately, so
+  `UploadProps`, `CollapseProps` (including `CollapseProps["items"]` as a return type), `DataNode`,
+  `InputRef` and `TextAreaRef` reach past it today. A type import costs a library swap exactly as much as
+  a value import, and a rule that checks only values moves the workaround from `import {` to
+  `import type {`. The deep-path check has the same gap: its pattern matches only a default value import,
+  so all seven `antd/es/*` sites in the tree are type-only and therefore invisible. The theme types
+  (`GlobalToken`, `AliasToken`) stay exempt as part of the theme adapter.
+
+  Order: the two big pass-throughs first (`Flex`, `PhiTypographyControl` -- mechanical, and together most
+  of the sites), then the five owner entries, then the trivial wrappers, then `PhiFileDropControl` with
+  `Progress`, then the loading family (`Skeleton`, `Spin`), then `Empty`/`Tooltip`/`Card`/`Collapse`/
+  `Descriptions`, then the deletions, then `Listy`, and the allowlist last.
 
   Until the Controls exist, direct use in a Widget or Layout stays correct and the validator keeps
   permitting it: this is a planned narrowing, not a rule being broken today. Update the validator's own
-  comment and the AGENTS.md line when it lands, since both currently read as settled.
+  comment, the AGENTS.md line and `components/widgets/README.md` when it lands, since all three currently
+  read as settled.
+- **Delete the footer Widget, and three antd primitives with it.**
+  `plugins/runtime-modules/core/widgets/footer/` is the only place in the tree that imports `Row`, `Col`
+  and `Layout`, because it builds its own three-column responsive grid (`<Row gutter={[16,16]}>` with
+  three `<Col xs={24} md={8}>`) and a `Layout.Footer`. It also carries a `Divider` and a
+  `const { Text } = Typography`.
+  **It is placed nowhere.** `PhiCmsWidgetType.Footer` appears only in the Widget's own files and in the
+  client manifest; the default preset tree builds the footer from the `footer_top`, `footer_main` and
+  `footer_bottom` Regions (`components/regions/presets/`, `family: "footer"`) with ordinary Widgets. So
+  the Widget is a second way to do what the Regions already do -- and the way that reimplements layout
+  inside a leaf, which the Widget contract forbids in every other case.
+  A three-column Layout placed in the footer Region is the whole replacement. Remove the Widget, its
+  registrations and its labels; the `Divider` goes too, since a Region draws its own separator through
+  `border` ([LAYOUTING.md](./LAYOUTING.md)). Four primitives leave the list without a wrapper being
+  written for any of them.
+- **Migrate off antd `List`, which is deprecated.** antd 6.6.4 warns at runtime: *"The `List` component
+  is deprecated and will be removed in the next major version. If you're using version 6.6.0 or later,
+  please use `Listy` instead."* Two sites: `auth/widgets/security/client.tsx` (three lists, each with
+  `List.Item.Meta` and `actions`) and `core/widgets/slot-upload/client.tsx`.
+  `Listy` is not a renamed `List`: `dataSource` becomes `items`, `renderItem` becomes `itemRender`,
+  `rowKey` is required with no default, and `List.Item.Meta`/`actions`/`extra` are rebuilt as plain JSX
+  rather than preset structures. `locale.emptyText` has no equivalent, which is why `Empty` comes first.
+  Neither site uses `grid`, `pagination` or `loadMore`, so nothing here hits the parts the antd FAQ
+  advises against migrating. **A `PhiListControl` that passes the old `List` API through would be the
+  wrong investment** -- if it is wrapped at all, it is cut against `Listy`.
 
 ## Regions and Overlays
 

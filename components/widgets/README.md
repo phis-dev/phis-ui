@@ -28,8 +28,12 @@ and loading are [MODULES.md](../../MODULES.md); signal capabilities, routes, and
 - A `Phi*Widget` is a complete CMS Widget with identity, config, signals, and registered Runtime,
   Preview, and Authoring projections. Presentation-only editors are `Phi*Control` components.
 - A Widget must not contain another Widget. Composition of several Widgets belongs to Layouts and their
-  slots ([LAYOUTING.md](../../LAYOUTING.md)). Inside one Widget, Ant Design is free, but interactive
-  primitives come from the canonical Phi Controls.
+  slots ([LAYOUTING.md](../../LAYOUTING.md)). Inside one Widget, Ant Design primitives the validator does
+  not yet name may still be imported directly, and interactive primitives come from the canonical Phi
+  Controls. "Free" is what this said before and it was already too generous: the set of uncontrolled
+  primitives is a leftover rather than a grant, and it is being closed --
+  [TODOS.md](../../TODOS.md), "Wrap the uncontrolled Ant Design primitives in Phi Controls". Reach for a
+  Control where one fits, and for a Layout slot rather than a layout primitive.
 - Widgets are leaves. They share the renderable-block contract with Layouts (`visibility`, `enabled`,
   `size`, `minSize`, `maxSize`, `zIndex`, `opacity`, `effects`) and never implement their own
   hide/show/collapse receivers; the shared slot child frame (`plugins/runtime/phi-slot-child-frame.tsx`)
