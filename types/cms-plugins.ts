@@ -729,6 +729,29 @@ export type PhiRuntimeModuleDefinition = {
    * groups: a group carries its own thread flags, and Staff is what Core's roles make somebody.
    */
   threadKinds?: readonly import("./threads").PhisDeclarableThreadKind[];
+  /**
+   * The rows this Module needs a Site to have before any of it works.
+   *
+   * Not a third declaration of the two above, whatever the placement suggests. Those declare
+   * availability: the Site's is the union across its Modules, it is recomputed from that union on every
+   * publish, and withdrawing one hides what it offered without losing anything. These are rows other
+   * rows point at -- a ticket names its queue and its type -- so they are found by the key the Module
+   * gives them, created when absent, never rewritten afterwards, and never deleted. Two Modules asking
+   * for "an entry queue" do not merge into one, and a second publish finds the first one's.
+   *
+   * What it is for is the Site that has just switched a Module on and can do nothing with it: Support
+   * needs one queue marked `Entry` and one ticket type to exist before anybody can open a ticket, and
+   * nobody should have to know that. The name each row is given is a starting value; once the row is
+   * there it is the Site's, and administration renames it without the next publish undoing that.
+   *
+   * Keys are resolved within one Module's own declaration -- a queue names its group by key, because the
+   * group has no id until the same publish gives it one.
+   */
+  seed?: {
+    readonly groups?: readonly import("./seed").PhisDeclaredSiteGroup[];
+    readonly supportQueues?: readonly import("./seed").PhisDeclaredSupportQueue[];
+    readonly supportTicketTypes?: readonly import("./seed").PhisDeclaredSupportTicketType[];
+  };
   calendarAdapters?: readonly PhiCalendarAdapterDescriptor[];
   formProviders?: PhiRuntimeModuleFormProviderDescriptors;
   authUiProvider?: {

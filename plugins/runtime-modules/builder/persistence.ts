@@ -31,6 +31,7 @@ import type { PhiRuntimeModuleDefinition, PhiRuntimeModuleId } from "../../../ty
 import {
   resolvePhiAuthUiProviderModuleId,
   resolvePhiDeclaredMediaSpaces,
+  resolvePhiDeclaredSeeds,
   resolvePhiDeclaredThreadKinds,
   resolvePhiRuntimeModuleIdsForArea,
 } from "../../../plugins/runtime-modules/settings";
@@ -787,6 +788,13 @@ export async function savePhiDeveloperBuilderModulesDraft(
         // The same derivation for conversations: which kinds a Site offers is the union of what its
         // Modules need, and the control plane -- which holds no Module metadata -- reads it from here.
         threadKinds: resolvePhiDeclaredThreadKinds(
+          optionalRuntimeModuleIds,
+          state.runtimeModuleDefinitions,
+        ),
+        // Derived like the two above and read from the same place, but not a union: these are rows the
+        // Modules need written once, kept apart by the Module that asked, because a group records who
+        // that was and a queue names its group by a key only its own declaration gives meaning to.
+        seed: resolvePhiDeclaredSeeds(
           optionalRuntimeModuleIds,
           state.runtimeModuleDefinitions,
         ),

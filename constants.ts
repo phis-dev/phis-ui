@@ -6,6 +6,7 @@ export * from "./constants/cms-plugin-categories";
 export * from "./constants/runtime-module-categories";
 export * from "./constants/http-headers";
 export * from "./constants/media";
+export * from "./constants/support";
 export * from "./constants/threads";
 export * from "./constants/media-library-provider-keys";
 export * from "./constants/package";

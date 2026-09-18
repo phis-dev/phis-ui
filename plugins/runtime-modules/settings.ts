@@ -10,6 +10,7 @@ import {
 } from "../../types/media";
 import { PHIS_DECLARABLE_THREAD_KINDS } from "../../constants/threads";
 import type { PhisDeclarableThreadKind } from "../../types/threads";
+import type { PhiDeclaredModuleSeed } from "../../types/seed";
 import type { PhiRuntimeModuleDefinition, PhiRuntimeModuleId } from "./contracts";
 import { isPhiRuntimeAreaBaseModuleId } from "./area-definitions";
 
@@ -253,4 +254,40 @@ export function resolvePhiDeclaredThreadKinds(
     }
   }
   return PHIS_DECLARABLE_THREAD_KINDS.filter((kind) => declared.has(kind));
+}
+
+/**
+ * Collects the rows an Area's Modules need a Site to have, and keeps them apart by Module.
+ *
+ * Not a union, which is the whole difference from the two above. Availability is one answer the Site
+ * arrives at from all its Modules together; a seed is each Module's own list of rows, and merging them
+ * would lose the two things the materialization needs. It needs the Module id, because a group records
+ * who asked for it and a Module must not be able to claim another's. And it needs the grouping, because
+ * a queue names its group by key rather than by an id that does not exist yet, and that key is only
+ * meaningful inside the declaration it came from.
+ *
+ * A Module declaring nothing contributes nothing, and ordering is by Module id so that an unchanged
+ * selection serializes byte-identically and a save that changed nothing is not recorded as a change.
+ */
+export function resolvePhiDeclaredSeeds(
+  moduleIds: readonly PhiRuntimeModuleId[],
+  moduleDefinitions: readonly PhiRuntimeModuleDefinition[],
+): PhiDeclaredModuleSeed[] {
+  const selected = new Set(moduleIds);
+  const seeds: PhiDeclaredModuleSeed[] = [];
+  for (const definition of moduleDefinitions) {
+    const seed = definition.seed;
+    if (!selected.has(definition.moduleId) || !seed) {
+      continue;
+    }
+    const declared: PhiDeclaredModuleSeed = { moduleId: definition.moduleId };
+    if (seed.groups?.length) declared.groups = seed.groups;
+    if (seed.supportQueues?.length) declared.supportQueues = seed.supportQueues;
+    if (seed.supportTicketTypes?.length) declared.supportTicketTypes = seed.supportTicketTypes;
+    // A `seed: {}` is a Module that declares nothing, not a Module that declares emptiness.
+    if (Object.keys(declared).length > 1) {
+      seeds.push(declared);
+    }
+  }
+  return seeds.sort((left, right) => left.moduleId.localeCompare(right.moduleId));
 }
