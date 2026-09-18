@@ -14,8 +14,8 @@ import type {
 } from "../types/widget-runtime";
 import type { PhiSiteFontSlots, PhiSiteRemSettings } from "../types/site-theme";
 import {
-  PHI_DEFAULT_THEME_MODE_PREFERENCE,
   readPhiColorSchemeHintFromCookieHeader,
+  readPhiThemeModePreferenceFromCookieHeader,
   resolvePhiThemeMode,
 } from "../theme/phi-theme-mode";
 import type { PhiCapabilitySnapshot } from "../types/server-capabilities";
@@ -299,10 +299,11 @@ export async function getPhiCmsRuntimeInfo({
   /*
    * The mode this viewer is shown until something overrides it live. It sits beside the viewer's
    * other preferences rather than in `site.theme`, which stays the Theme record the Theme workspace
-   * builds its draft from. A stored user setting will take the default's place here.
+   * builds its draft from. What they last chose comes from their own cookie; a stored user setting
+   * will take its place for a viewer who is signed in and carries their preference between browsers.
    */
   const viewerThemeMode = resolvePhiThemeMode(
-    PHI_DEFAULT_THEME_MODE_PREFERENCE,
+    readPhiThemeModePreferenceFromCookieHeader(cookieHeader),
     readPhiColorSchemeHintFromCookieHeader(cookieHeader),
   );
 

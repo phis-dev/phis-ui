@@ -17,6 +17,7 @@ import type {
 import {
   applyPhiThemeModeToDocument,
   writePhiColorSchemeHint,
+  writePhiThemeModePreference,
   type PhiThemeModePreference,
 } from "../../theme/phi-theme-mode";
 import { resolvePhiPublishedThemeCustomColors } from "../../theme/phi-theme-palette";
@@ -211,13 +212,23 @@ export function PhiRootLiveThemeProvider({
       return;
     }
 
+    /*
+     * The mode switch is a viewer choosing, so the choice is kept rather than held until they leave.
+     *
+     * This is the one live channel that is a person stating a preference: the `theme` signal above is
+     * the Builder previewing a Theme, which is about the Site and belongs to nobody's browser. Written
+     * here rather than in the switch Control, because the Controls that offer it are several -- the
+     * Welcome Page, the Builder, Admin -- and every one of them would otherwise have to remember.
+     */
     if (
       signal.channel === "themeMode" &&
       signal.action === "change" &&
       signal.valueType === "boolean"
     ) {
+      const next = signal.value ? "dark" : "light";
       liveModeOverride.current = true;
-      setMode(signal.value ? "dark" : "light");
+      setMode(next);
+      writePhiThemeModePreference(next);
       return;
     }
 

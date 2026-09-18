@@ -10,7 +10,13 @@ import { fetchResolvedSiteLocale, fetchSiteLocaleConfig } from "../server-helper
 import { PHIS_REQUEST_PATH_HEADER, PHIS_REQUEST_SEARCH_HEADER } from "../constants/http-headers";
 import { readPhiServerApiCredentials } from "../helpers/phis-server-credentials";
 import { getResolvedSiteConfig } from "../gateway/site-config";
-import { PHI_COLOR_SCHEME_COOKIE, normalizePhiColorSchemeHint } from "../theme/phi-theme-mode";
+import {
+  PHI_COLOR_SCHEME_COOKIE,
+  PHI_THEME_MODE_COOKIE,
+  normalizePhiColorSchemeHint,
+  normalizePhiThemeModePreference,
+  resolvePhiThemeMode,
+} from "../theme/phi-theme-mode";
 
 /** Where the static route tree lives. Only the proxy may send a request there; see below. */
 export const PHI_STATIC_RENDER_PREFIX = "/static-render";
@@ -94,8 +100,12 @@ function isPhiStaticRenderRequest(request: NextRequest) {
  *
  * The marker is what makes a publish visible. It joins the Site's read marker with its translation
  * markers, so any published change, or any translation, names a new address -- a page cached under the
- * old one is never asked for again, in this process or any other, without anybody telling them. The
- * mode is the colour scheme the browser reported through its hint cookie, light until it has.
+ * old one is never asked for again, in this process or any other, without anybody telling them.
+ *
+ * The mode is what this viewer chose, and the colour scheme their browser reported where they chose
+ * nothing -- the same question `resolvePhiThemeMode` answers for a dynamic render, asked here so both
+ * trees agree. It stays two renders per page either way: the preference decides which of the two a
+ * viewer is handed, never how many there are.
  */
 async function resolvePhiStaticRenderUrl(request: NextRequest, runtimeConfig: ReturnType<typeof readSiteRuntime>) {
   const credentials = readPhiServerApiCredentials();
@@ -107,7 +117,10 @@ async function resolvePhiStaticRenderUrl(request: NextRequest, runtimeConfig: Re
   const marker = [site.readMarker, site.translationMarkers.global, site.translationMarkers.site]
     .map((part) => String(part).replace(/[^A-Za-z0-9-]/g, "_"))
     .join(".");
-  const mode = normalizePhiColorSchemeHint(request.cookies.get(PHI_COLOR_SCHEME_COOKIE)?.value) ?? "light";
+  const mode = resolvePhiThemeMode(
+    normalizePhiThemeModePreference(request.cookies.get(PHI_THEME_MODE_COOKIE)?.value),
+    normalizePhiColorSchemeHint(request.cookies.get(PHI_COLOR_SCHEME_COOKIE)?.value),
+  );
   return new URL(`${PHI_STATIC_RENDER_PREFIX}/${marker}/${mode}${request.nextUrl.pathname}`, request.url);
 }
 

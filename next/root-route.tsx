@@ -22,9 +22,12 @@ import { resolvePhiResolvedRequestLocale } from "../server-helpers/request-local
 import {
   PHI_COLOR_SCHEME_COOKIE,
   PHI_DEFAULT_THEME_MODE_PREFERENCE,
+  PHI_THEME_MODE_COOKIE,
   buildPhiThemeModeBootstrapScript,
   normalizePhiColorSchemeHint,
+  normalizePhiThemeModePreference,
   resolvePhiThemeMode,
+  type PhiThemeModePreference,
 } from "../theme/phi-theme-mode";
 import { readPhiServerApiCredentials } from "../helpers/phis-server-credentials";
 import { getResolvedSiteConfig, type PhiSiteConfig } from "../gateway/site-config";
@@ -100,10 +103,21 @@ export function createPhiNextRootLayout(
      * because <html> carries the marker and the colour scheme: without them the document ground and
      * the native controls would stay light until the layout below mounts.
      */
+    const requestCookies = await cookies();
     const browserColorScheme = normalizePhiColorSchemeHint(
-      (await cookies()).get(PHI_COLOR_SCHEME_COOKIE)?.value,
+      requestCookies.get(PHI_COLOR_SCHEME_COOKIE)?.value,
     );
-    return document({ runtimeConfig, site, resolvedLocale, browserColorScheme, children });
+    const themeModePreference = normalizePhiThemeModePreference(
+      requestCookies.get(PHI_THEME_MODE_COOKIE)?.value,
+    );
+    return document({
+      runtimeConfig,
+      site,
+      resolvedLocale,
+      browserColorScheme,
+      themeModePreference,
+      children,
+    });
   };
 }
 
@@ -193,17 +207,23 @@ function createPhiNextRootDocument(
     site,
     resolvedLocale,
     browserColorScheme,
+    /*
+     * The static tree states none: it is one document per locale and mode for everybody it answers,
+     * and a preference is one viewer's. The proxy has already used it to pick which of the two that
+     * viewer gets, and the bootstrap script below sees the cookie for itself.
+     */
+    themeModePreference = PHI_DEFAULT_THEME_MODE_PREFERENCE,
     children,
   }: {
     runtimeConfig: ReturnType<typeof readPhiSiteRuntimeConfigSync>;
     site: PhiSiteConfig;
     resolvedLocale: PhiResolvedLocale;
     browserColorScheme: PhiThemeMode | null;
+    themeModePreference?: PhiThemeModePreference;
     children: React.ReactNode;
   }) {
     const blocks = await loadThemeBlocks();
     const remRootValue = site.theme?.rem?.rootValue ?? 16;
-    const themeModePreference = PHI_DEFAULT_THEME_MODE_PREFERENCE;
     const themeMode = resolvePhiThemeMode(themeModePreference, browserColorScheme);
     const bootstrapScript = buildPhiThemeModeBootstrapScript(themeModePreference);
 
