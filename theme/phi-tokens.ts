@@ -47,7 +47,16 @@ export const PHI_Z_INDEX = {
 } as const;
 
 export const PHI_LAYOUT = {
-  headerHeight: 55,
+  /*
+   * The one measure off the sequence, and deliberately so.
+   *
+   * 55 is `PHI_CONTROL_HEIGHTS.lg` exactly, which is why a header that tall reads as one: it is a large
+   * control's worth of height with nothing to spare around what actually stands in it -- a brand, a few
+   * links, a switch, all of them medium. 34 is the next step down and is a medium control exactly,
+   * flush against both edges. 44 is that control with 5 above and below, the sequence's own numbers on
+   * either side of it.
+   */
+  headerHeight: 44,
   sidebarWidth: 233,
   contentMaxNarrow: 144,
   contentMax: 233,
