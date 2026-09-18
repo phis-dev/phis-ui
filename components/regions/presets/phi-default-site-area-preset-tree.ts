@@ -583,13 +583,14 @@ export async function buildPhiDefaultSiteAreaPresetTree({
         contentId: null,
       },
       /*
-       * The account trigger, in the authenticated Areas that share this preset.
+       * The account trigger, in every Area that shares this preset.
        *
-       * Admin, Editor and Builder have carried one all along; App did not, which left the one Area a
-       * person actually lives in without a way to reach their own account. Public keeps none: an
-       * anonymous header offering an account menu is a different decision, and this is not it.
+       * Admin, Editor and Builder have carried one all along; App and Public did not. The Widget has a
+       * guest state and shows the way in, so an anonymous header is the one place it earns its keep
+       * most: without it a visitor has to find `/login` on their own, and somebody who did sign in has
+       * no way back to their own account from the Public side.
        */
-      ...(runtimeModuleArea === "public" ? [] : [{
+      {
         id: PHI_DEFAULT_PUB_AREA_WIDGET_IDS.widgetAccount,
         siteId: page.siteId,
         parentLayoutNodeId: PHI_DEFAULT_PUB_AREA_LAYOUT_IDS.layoutHeaderActions,
@@ -602,7 +603,7 @@ export async function buildPhiDefaultSiteAreaPresetTree({
         label: "pub header main account",
         config: {},
         contentId: null,
-      }]),
+      },
       ...(footerMainRegion
         ? [
             {
