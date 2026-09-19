@@ -78,8 +78,8 @@ const coreApplicationAdapterPath = "components/runtime/core-runtime-application-
  * for a handful of primitives -- so everything outside those names passed, every Module under `plugins/`
  * included. This is the rule itself, over the whole tree.
  *
- * This map is a denylist, so **every primitive not named here is permitted by omission** -- six are
- * still imported somewhere in the tree, from `Space` and `Layout` down to `List` and `Descriptions`. `Flex`
+ * This map is a denylist, so **every primitive not named here is permitted by omission** -- five are
+ * still imported somewhere in the tree, from `Space` and `Layout` down to `List` and `Row`. `Flex`
  * and `Typography`, the two that reached furthest, are done, as are the four that had nothing to decide,
  * the file-choosing pair and the two that say "waiting" and "none"; five more are closed by
  * `soleOwnerPrimitives` below.
@@ -103,6 +103,7 @@ const controlledPrimitives = new Map([
   ["Collapse", "PhiAccordionControl"],
   ["ColorPicker", "PhiColorControl"],
   ["DatePicker", "PhiDatePickerControl"],
+  ["Descriptions", "PhiDescriptionListControl"],
   ["Divider", "PhiDividerControl"],
   ["Drawer", "PhiDrawerControl"],
   ["Dropdown", "PhiDropdownControl"],

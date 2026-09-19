@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Descriptions } from "antd";
 import { buildPhiDataSourceUrl, type PhiApiDataSource } from "../../../../../gateway/data-source";
 import type { PhiCmsInstanceId } from "../../../../../types";
 import type { PhiSignalRouteSet, PhiSignalValue } from "../../../../../types/signals";
@@ -9,9 +8,9 @@ import { findPhiSignalRoutesByCapabilityId } from "../../../../../types/signals"
 import { usePhiSignalEmitter, usePhiSignalIdentity } from "../../../../../components/runtime/runtime-signal-identity";
 import { usePhiRuntimePageConditionState } from "../../../../../components/runtime/runtime-page-condition-state";
 import { PhiAlertControl } from "../../../../../components/controls/phi-alert-control";
+import { PhiDescriptionListControl } from "../../../../../components/controls/phi-description-list-control";
 import { PhiSkeletonControl } from "../../../../../components/controls/phi-skeleton-control";
 
-const PHI_LABEL_WIDTH = "7.5rem";
 
 export type PhiFormPreviewWidgetClientProps = {
   blockId: PhiCmsInstanceId;
@@ -151,21 +150,14 @@ export function PhiFormPreviewWidgetClient({
   const entries = Object.entries(state.fields);
 
   return (
-    <Descriptions
+    <PhiDescriptionListControl
       key={`preview-${blockId}`}
       title={labels?.["preview.title"]}
-      column={1}
-      size="small"
-      styles={{
-        label: { width: PHI_LABEL_WIDTH, color: "var(--ant-color-text-secondary)", fontWeight: 500 },
-        content: { color: "var(--ant-color-text)" },
-      }}
-    >
-      {entries.map(([key, value]) => (
-        <Descriptions.Item key={key} label={labels?.[`preview.fields.${key}`] ?? key}>
-          {value}
-        </Descriptions.Item>
-      ))}
-    </Descriptions>
+      items={entries.map(([key, value]) => ({
+        key,
+        label: labels?.[`preview.fields.${key}`] ?? key,
+        value,
+      }))}
+    />
   );
 }

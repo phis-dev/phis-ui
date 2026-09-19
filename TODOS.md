@@ -40,6 +40,26 @@ built. Remove an entry when it is done.
   second is a Widget of its own, so a Site can put a figure on a page -- a count, a total, a rate --
   with `title` and `value` as config and the Control deciding presentation. Placing it is the point:
   the Theme inspector's three are a fixed internal readout, where a Widget is the general case.
+- **A record Widget, over one row of a table Provider.** `PhiDescriptionListControl` exists and has two
+  callers. The Widget is the general case of what `observability/widgets/log-detail` already is: it
+  listens for a row identity on the signal bus, calls `provider.readRecord({ resourceKey, rowIdentity,
+  params, signal })`, and draws the record as named values. Nothing in that is missing -- `recordRead`
+  is part of the table Provider contract, `executionMode: "static"` is available to table Providers with
+  their `resources` declared in the descriptor, so a Site can have a record without a server, and the
+  resource's `fields` carry the labels through the label set the way column titles already travel.
+
+  **The field definition is `PhiTableColumnDefinition` minus sorting, width and sticky**, and that is the
+  point: `renderer` (`text`, `datetime`, `tags`, `code`, `json`, `link`, …) with `valueMap`,
+  `tagColorMap` and `tagVariant` already covers every value `log-detail` draws by hand -- and the
+  `<pre>{JSON.stringify(meta, null, 2)}</pre>` under it is the `json` renderer, written out. No new
+  vocabulary, half an existing one.
+
+  **The author picks the fields**, the way the table Widget lets an author pick columns, rather than the
+  Widget showing whatever the resource declares. That needs a field picker in the Builder Inspector,
+  which is the real work in this entry.
+
+  Afterwards `log-detail` is the Widget plus a `json` field, and its `record as LogRow` cast goes -- the
+  Widget claiming a shape the Provider never promised it is what this replaces.
 - **Normalize Preset Content roots to vertical Flex.** Audit first-party Page presets and use a vertical
   Flex Layout as the Content Region root, keeping another root only where the Page has a semantic reason.
   The legacy Content Layout path is still registered.
@@ -49,8 +69,8 @@ built. Remove an entry when it is done.
   and every direct import makes replacing it harder:** with a Control it is an adapter change, without
   one it is a tree-wide edit.
 
-  It started at 28 named primitives against about 25 uncontrolled ones. It now names 42, closes five
-  more to a single owner file, and leaves six: `Col`, `Descriptions`, `Layout`, `List`, `Row`, `Space`.
+  It started at 28 named primitives against about 25 uncontrolled ones. It now names 43, closes five
+  more to a single owner file, and leaves five: `Col`, `Layout`, `List`, `Row`, `Space`.
 
   `App`, `ConfigProvider` and `theme` stay direct: they are the root and theme adapters AGENTS.md
   already exempts, not feature surface.
@@ -60,8 +80,8 @@ built. Remove an entry when it is done.
 
   - **A Control**, where there is platform semantics to own -- a normalized contract, defaults the
     platform should decide once rather than at each call site:
-    ~~`Upload`, `Progress`, `Skeleton`, `Empty`, `Tooltip`, `Avatar`, `Card`, `Collapse`~~ done;
-    `Descriptions` and `Space.Compact` (which is a different thing from `Space`, see below) remain.
+    ~~`Upload`, `Progress`, `Skeleton`, `Empty`, `Tooltip`, `Avatar`, `Card`, `Collapse`,
+    `Descriptions`~~ done; `Space.Compact` (which is a different thing from `Space`, see below) remains.
   - **A thin pass-through**, where there is nothing to decide and the wrapper exists only so the import
     points at us: ~~`PhiTypographyControl` (~63 files), `Flex` (~60), `Divider`, `Spin`, `QRCode`,
     `Statistic`~~ -- all done. `PhiSpinControl` stays beside `PhiSkeletonControl` rather than being
@@ -216,8 +236,24 @@ built. Remove an entry when it is done.
     So is `PhiAnchorControl`: `components/controls/phi-anchor-control-contract.ts` is about placement
     anchors (`topLeft`…`bottomRight`), not antd `Anchor`. Both names are settled before the first commit,
     not during it.
-  - `Descriptions` has to move off the `Descriptions.Item` children form (deprecated since antd 5.8) in
-    `observability/widgets/log-detail`; `core/widgets/form-preview` already uses `items`.
+  - ~~`Descriptions`~~ built as `PhiDescriptionListControl`. Both sites were on the `Descriptions.Item`
+    children form, deprecated since antd 5.8 -- the note here claimed `core/widgets/form-preview` was
+    already on `items` and it was not, so the debt was twice what was written down.
+
+    **A missing value is a dash, everywhere.** The primitive draws an empty cell, which reads as a field
+    nobody thought about rather than one with nothing in it. `log-detail` had written that dash itself,
+    in a local `formatValue`, and applied it to four of its nine entries -- so in one grid an empty
+    `path` said "--" and an empty `message` said nothing, and `message` is the widest thing on the view.
+
+    **The label is legible.** Ant Design draws it tertiary at normal weight, which is faint for the thing
+    you read in order to know what the value beside it means. `form-preview` had already moved it to
+    secondary at 500 and `log-detail` had not: the same divergence as the Card padding and the Tooltip
+    name, one site noticing and fixing it locally.
+
+    **One column on a phone.** `columns` is what stands side by side from `md` up; the primitive takes a
+    fixed number and would have kept two columns of short facts on a narrow screen. `presentation` is the
+    one axis left to the caller and the only one the code could not settle -- a grid is a record read
+    closely, a list is a summary read once.
 
   Two conditions, or the work makes things worse rather than better. **A Control passes its primitive's
   contract through rather than inventing props**, which is what keeps the migration mechanical and keeps
@@ -238,8 +274,9 @@ built. Remove an entry when it is done.
 
   Order: ~~the two big pass-throughs (`Flex`, `PhiTypographyControl`), the five owner entries, the
   trivial wrappers, `PhiFileDropControl` with `Progress`, `PhiSkeletonControl`, `PhiEmptyControl`,
-  `PhiNameControl`, `PhiAvatarControl`, `PhiCardControl`, `PhiAccordionControl`~~ -- done. Next
-  `Descriptions`, then the deletions, then `Listy`, and the allowlist last.
+  `PhiNameControl`, `PhiAvatarControl`, `PhiCardControl`, `PhiAccordionControl`,
+  `PhiDescriptionListControl`~~ -- done. Next the record Widget below, then the deletions, then `Listy`,
+  and the allowlist last.
 
   Until the Controls exist, direct use in a Widget or Layout stays correct and the validator keeps
   permitting it: this is a planned narrowing, not a rule being broken today. Update the validator's own

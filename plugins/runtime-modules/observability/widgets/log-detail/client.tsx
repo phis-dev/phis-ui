@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Descriptions } from "antd";
+import { PhiDescriptionListControl } from "../../../../../components/controls/phi-description-list-control";
 import { PhiTagControl } from "../../../../../components/controls/phi-tag-control";
 
 import { formatPhiDateTime } from "../../../../../helpers/format-date-time";
@@ -89,20 +89,6 @@ type Props = {
   config: PhiObservabilityLogDetailWidgetConfig;
   labels: ObservabilityLogsWidgetLabels;
 };
-
-function formatValue(value: unknown) {
-  if (value === null || value === undefined || value === "") {
-    return "—";
-  }
-  if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") {
-    return String(value);
-  }
-  try {
-    return JSON.stringify(value);
-  } catch {
-    return "—";
-  }
-}
 
 function levelColor(level: LogLevel) {
   switch (level) {
@@ -208,29 +194,33 @@ export function PhiObservabilityLogDetailWidgetClient({ config, labels }: Props)
         {error ? <PhiAlertControl level="error" showIcon title={error} /> : null}
         {!loading && !error && selectedRow ? (
           <PhiFlexControl vertical gap={16}>
-            <Descriptions size="small" column={2} bordered>
-              <Descriptions.Item label={labels.columns.time}>
-                {formatPhiDateTime(selectedRow.ts)}
-              </Descriptions.Item>
-              <Descriptions.Item label={labels.columns.level}>
-                <PhiTagControl color={levelColor(selectedRow.level)}>{labels.levelOptions[selectedRow.level]}</PhiTagControl>
-              </Descriptions.Item>
-              <Descriptions.Item label={labels.columns.service}>
-                <PhiTagControl>{selectedRow.service}</PhiTagControl>
-              </Descriptions.Item>
-              <Descriptions.Item label={labels.columns.event}>
-                <PhiTypographyControl code>{selectedRow.event}</PhiTypographyControl>
-              </Descriptions.Item>
-              <Descriptions.Item label={labels.columns.area}>
-                {formatValue(selectedRow.area)}
-              </Descriptions.Item>
-              <Descriptions.Item label={labels.detail.method}>{formatValue(selectedRow.method)}</Descriptions.Item>
-              <Descriptions.Item label={labels.detail.path}>{formatValue(selectedRow.path)}</Descriptions.Item>
-              <Descriptions.Item label={labels.detail.status}>{formatValue(selectedRow.status)}</Descriptions.Item>
-              <Descriptions.Item label={labels.columns.message} span={2}>
-                {selectedRow.message}
-              </Descriptions.Item>
-            </Descriptions>
+            <PhiDescriptionListControl
+              presentation="grid"
+              columns={2}
+              items={[
+                { key: "time", label: labels.columns.time, value: formatPhiDateTime(selectedRow.ts) },
+                {
+                  key: "level",
+                  label: labels.columns.level,
+                  value: (
+                    <PhiTagControl color={levelColor(selectedRow.level)}>
+                      {labels.levelOptions[selectedRow.level]}
+                    </PhiTagControl>
+                  ),
+                },
+                { key: "service", label: labels.columns.service, value: <PhiTagControl>{selectedRow.service}</PhiTagControl> },
+                {
+                  key: "event",
+                  label: labels.columns.event,
+                  value: <PhiTypographyControl code>{selectedRow.event}</PhiTypographyControl>,
+                },
+                { key: "area", label: labels.columns.area, value: selectedRow.area },
+                { key: "method", label: labels.detail.method, value: selectedRow.method },
+                { key: "path", label: labels.detail.path, value: selectedRow.path },
+                { key: "status", label: labels.detail.status, value: selectedRow.status },
+                { key: "message", label: labels.columns.message, value: selectedRow.message, span: 2 },
+              ]}
+            />
 
             <PhiFlexControl vertical gap={8}>
               <PhiTypographyControl strong>{labels.detail.meta}</PhiTypographyControl>
