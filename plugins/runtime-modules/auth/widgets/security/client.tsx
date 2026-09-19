@@ -10,17 +10,25 @@ import { PhiConfirmControl } from "../../../../../components/controls/phi-confir
 import { PhiFlexControl } from "../../../../../components/controls/phi-flex-control";
 import { PhiTypographyControl } from "../../../../../components/controls/phi-typography-control";
 import { PhiSkeletonControl } from "../../../../../components/controls/phi-skeleton-control";
+import {
+  formatPhiAuthSecurityWidgetLabel,
+  type PhiAuthSecurityWidgetLabels,
+} from "../../../../../components/widgets/label-types/security";
 
 const PhiAuthWorkflowBody = lazy(
   () => import("../../../../../components/widgets/client/auth-workflow-body")
     .then((module) => ({ default: module.PhiAuthWorkflowBody })),
 );
 
-async function getCsrfToken() {
+/**
+ * The sentence is passed in rather than written here, because it is the one the visitor reads and every
+ * other one on this surface comes from the label set.
+ */
+async function getCsrfToken(unavailableMessage: string) {
   const response = await fetch("/api/auth/csrf", { credentials: "include", cache: "no-store" });
   const payload = await response.json().catch(() => null) as { token?: unknown } | null;
   const token = typeof payload?.token === "string" ? payload.token : "";
-  if (!response.ok || !token) throw new Error("Could not initialize authentication session.");
+  if (!response.ok || !token) throw new Error(unavailableMessage);
   return token;
 }
 
@@ -54,7 +62,13 @@ type SecurityPayload = {
   currentSessionId: string;
 };
 
-export function PhiAuthSecurityWidgetClient({ apiPath = "/api/auth/account/security" }: { apiPath?: string }) {
+export function PhiAuthSecurityWidgetClient({
+  apiPath = "/api/auth/account/security",
+  labels,
+}: {
+  apiPath?: string;
+  labels: PhiAuthSecurityWidgetLabels;
+}) {
   const [payload, setPayload] = useState<SecurityPayload | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -70,15 +84,15 @@ export function PhiAuthSecurityWidgetClient({ apiPath = "/api/auth/account/secur
         signal,
       });
       const next = await response.json().catch(() => null) as SecurityPayload | null;
-      if (!response.ok || !next?.ok) throw new Error("Account security could not be loaded.");
+      if (!response.ok || !next?.ok) throw new Error(labels.errors.loadFailed);
       setPayload(next);
       setError(null);
     } catch (caught) {
-      if (!signal?.aborted) setError(caught instanceof Error ? caught.message : "Account security could not be loaded.");
+      if (!signal?.aborted) setError(caught instanceof Error ? caught.message : labels.errors.loadFailed);
     } finally {
       if (!signal?.aborted) setLoading(false);
     }
-  }, [apiPath]);
+  }, [apiPath, labels.errors.loadFailed]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -88,7 +102,7 @@ export function PhiAuthSecurityWidgetClient({ apiPath = "/api/auth/account/secur
 
   async function removeFactor(factorId: string) {
     try {
-      const token = await getCsrfToken();
+      const token = await getCsrfToken(labels.errors.csrfFailed);
       const response = await fetch(`/api/auth/account/factors/${encodeURIComponent(factorId)}`, {
         method: "DELETE",
         credentials: "include",
@@ -96,16 +110,16 @@ export function PhiAuthSecurityWidgetClient({ apiPath = "/api/auth/account/secur
         headers: { accept: "application/json", "x-csrf-token": token },
       });
       const body = await response.json().catch(() => null) as { error?: string } | null;
-      if (!response.ok) throw new Error(body?.error ?? "Authentication factor could not be removed.");
+      if (!response.ok) throw new Error(body?.error ?? labels.errors.factorRemoveFailed);
       await load();
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : "Authentication factor could not be removed.");
+      setError(caught instanceof Error ? caught.message : labels.errors.factorRemoveFailed);
     }
   }
 
   async function revokeSession(sessionId: string) {
     try {
-      const token = await getCsrfToken();
+      const token = await getCsrfToken(labels.errors.csrfFailed);
       const response = await fetch(`/api/auth/account/sessions/${encodeURIComponent(sessionId)}`, {
         method: "DELETE",
         credentials: "include",
@@ -113,10 +127,10 @@ export function PhiAuthSecurityWidgetClient({ apiPath = "/api/auth/account/secur
         headers: { accept: "application/json", "x-csrf-token": token },
       });
       const body = await response.json().catch(() => null) as { error?: string } | null;
-      if (!response.ok) throw new Error(body?.error ?? "Session could not be revoked.");
+      if (!response.ok) throw new Error(body?.error ?? labels.errors.sessionRevokeFailed);
       await load();
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : "Session could not be revoked.");
+      setError(caught instanceof Error ? caught.message : labels.errors.sessionRevokeFailed);
     }
   }
 
@@ -134,46 +148,49 @@ export function PhiAuthSecurityWidgetClient({ apiPath = "/api/auth/account/secur
     );
   }
   if (loading) return <PhiSkeletonControl lines={8} withTitle />;
-  if (!payload) return <PhiAlertControl level="error" showIcon title={error ?? "Account security is unavailable."} />;
+  if (!payload) return <PhiAlertControl level="error" showIcon title={error ?? labels.errors.unavailable} />;
 
   return (
     <PhiFlexControl vertical gap="large">
       {/* No heading: the Settings panel this stands in is titled with what it is. */}
       <PhiTypographyControl presentation="paragraph" type="secondary">
-        Manage authenticator apps, linked login providers, and sessions for this site.
+        {labels.intro}
       </PhiTypographyControl>
       {error ? <PhiAlertControl level="error" showIcon title={error} dismissible onDismiss={() => setError(null)} /> : null}
       <PhiCardControl
-        title="Authenticator apps"
-        toolbar={<PhiButtonControl type="primary" onClick={() => setEnrolling(true)} label="Add authenticator" />}
+        title={labels.authenticators.title}
+        toolbar={<PhiButtonControl type="primary" onClick={() => setEnrolling(true)} label={labels.authenticators.add} />}
       >
         <PhiEntryListControl
-          emptyDescription="No authenticator configured."
+          emptyDescription={labels.authenticators.empty}
           entries={payload.factors
             .filter((factor) => factor.type === 2 && factor.confirmedAt)
             .map((factor) => ({
               key: String(factor.id),
-              title: factor.label ?? "Authenticator app",
+              title: factor.label ?? labels.authenticators.unnamed,
               description: factor.lastUsedAt
-                ? `Last used ${new Date(factor.lastUsedAt).toLocaleString()}`
-                : "Not used yet",
+                ? formatPhiAuthSecurityWidgetLabel(
+                    labels.authenticators.lastUsed,
+                    new Date(factor.lastUsedAt).toLocaleString(),
+                  )
+                : labels.authenticators.neverUsed,
               status: payload.policy.factor?.requiredMethod === "totp"
-                ? <PhiTagControl color="blue">Required</PhiTagControl>
+                ? <PhiTagControl color="blue">{labels.authenticators.required}</PhiTagControl>
                 : null,
               action: (
                 <PhiConfirmControl
-                  title="Remove this authenticator?"
+                  title={labels.authenticators.removeConfirm}
                   onConfirm={() => void removeFactor(factor.id)}
                   danger
-                  trigger={{ label: "Remove", type: "link", danger: true }}
+                  trigger={{ label: labels.authenticators.remove, type: "link", danger: true }}
                 />
               ),
             }))}
         />
       </PhiCardControl>
-      <PhiCardControl title="Linked login providers">
+      <PhiCardControl title={labels.providers.title}>
         <PhiEntryListControl
-          emptyDescription="No external login provider linked."
+          emptyDescription={labels.providers.empty}
           entries={payload.identities.map((identity) => ({
             key: identity.providerKey,
             title: identity.providerKey,
@@ -181,23 +198,24 @@ export function PhiAuthSecurityWidgetClient({ apiPath = "/api/auth/account/secur
           }))}
         />
       </PhiCardControl>
-      <PhiCardControl title="Sessions">
+      <PhiCardControl title={labels.sessions.title}>
         <PhiEntryListControl
-          emptyDescription="No sessions recorded."
+          emptyDescription={labels.sessions.empty}
           entries={payload.sessions.map((session) => ({
             key: String(session.id),
-            title: session.id === payload.currentSessionId ? "Current session" : "Session",
-            description: [session.ipAddress, session.userAgent].filter(Boolean).join(" · ") || "No device details",
+            title: session.id === payload.currentSessionId ? labels.sessions.current : labels.sessions.other,
+            description: [session.ipAddress, session.userAgent].filter(Boolean).join(" · ")
+              || labels.sessions.noDeviceDetails,
             status: session.revokedAt
-              ? <PhiTagControl>Revoked</PhiTagControl>
-              : <PhiTagControl color="green">Active</PhiTagControl>,
+              ? <PhiTagControl>{labels.sessions.revoked}</PhiTagControl>
+              : <PhiTagControl color="green">{labels.sessions.active}</PhiTagControl>,
             action: session.id !== payload.currentSessionId && !session.revokedAt
               ? (
                 <PhiConfirmControl
-                  title="Revoke this session?"
+                  title={labels.sessions.revokeConfirm}
                   onConfirm={() => void revokeSession(session.id)}
                   danger
-                  trigger={{ label: "Revoke", type: "link", danger: true }}
+                  trigger={{ label: labels.sessions.revoke, type: "link", danger: true }}
                 />
               )
               : null,
