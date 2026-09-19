@@ -218,7 +218,7 @@ export function PhiObservabilityLogDetailWidgetClient({ config, labels }: Props)
                 { key: "method", label: labels.detail.method, value: selectedRow.method },
                 { key: "path", label: labels.detail.path, value: selectedRow.path },
                 { key: "status", label: labels.detail.status, value: selectedRow.status },
-                { key: "message", label: labels.columns.message, value: selectedRow.message, span: 2 },
+                { key: "message", label: labels.columns.message, value: selectedRow.message, full: true },
               ]}
             />
 

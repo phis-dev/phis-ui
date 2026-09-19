@@ -31,6 +31,11 @@ const PHI_DESCRIPTION_LABEL_WIDTH = "7.5rem";
  * one, because two columns of short facts on a narrow screen is two columns of wrapped fragments. The
  * primitive takes a fixed number and would have kept the two.
  *
+ * That is why a long entry says `full` rather than how many columns it takes. A number would have to
+ * agree with a count this Control decides and changes by viewport -- `span={2}` against a single column
+ * is a contradiction the primitive reports at runtime and no type can catch. `full` is the sentence the
+ * caller actually means: give this one the rest of the line, however many that is.
+ *
  * `presentation` is the one axis left to the caller, and the only one this could not settle from the
  * code: a `grid` is a record read closely, with cells and rules -- a log line in an inspector -- and a
  * `list` is a summary read once, under a title, where the ruling would be noise.
@@ -39,8 +44,8 @@ export type PhiDescriptionListItem = {
   key: string;
   label: ReactNode;
   value: ReactNode;
-  /** How many columns this entry takes. A long value -- a message, a note -- wants the full width. */
-  span?: number;
+  /** The rest of the line, for a value too long to share it -- a message, a note. */
+  full?: boolean;
 };
 
 export type PhiDescriptionListControlProps = {
@@ -76,7 +81,7 @@ export function PhiDescriptionListControl({
       items={items.map((item) => ({
         key: item.key,
         label: item.label,
-        span: item.span,
+        span: item.full ? "filled" : undefined,
         children: item.value == null || item.value === "" ? "—" : item.value,
       }))}
     />
