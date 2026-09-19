@@ -104,9 +104,6 @@ import {
   PHI_PAGINATION_WIDGET_DEFINITION,
 } from "./widgets/pagination/config";
 import {
-  PHI_PROFILE_LOCALE_WIDGET_DEFINITION,
-} from "./widgets/profile-locale/config";
-import {
   PHI_PROFILE_NAME_WIDGET_DEFINITION,
 } from "./widgets/profile-name/config";
 import {
@@ -406,13 +403,6 @@ export const PHI_RUNTIME_MODULE_WIDGETS: readonly PhiRuntimeModuleWidgetDefiniti
     renderPolicies: {"runtime":"custom","preview":"custom","authoring":"custom"},
     loadRuntime: () => import("./widgets/pagination/plugin").then((module) => module.PHI_PAGINATION_WIDGET_PLUGIN),
     loadPreview: () => import("./widgets/pagination/plugin").then((module) => module.PHI_PAGINATION_WIDGET_PLUGIN),
-  }),
-  defineFirstPartyWidget({
-    definition: PHI_PROFILE_LOCALE_WIDGET_DEFINITION,
-    ownerModuleId: PHI_CORE_RUNTIME_MODULE_ID,
-    renderPolicies: {"runtime":"custom","preview":"custom","authoring":"custom"},
-    loadRuntime: () => import("./widgets/profile-locale/plugin").then((module) => module.PHI_PROFILE_LOCALE_WIDGET_PLUGIN),
-    loadPreview: () => import("./widgets/profile-locale/plugin").then((module) => module.PHI_PROFILE_LOCALE_WIDGET_PLUGIN),
   }),
   defineFirstPartyWidget({
     definition: PHI_PROFILE_NAME_WIDGET_DEFINITION,

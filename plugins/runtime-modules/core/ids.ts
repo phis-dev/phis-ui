@@ -8,5 +8,6 @@ export const PHI_CORE_RUNTIME_MODULE_ID =
 
 export const PHI_CORE_RUNTIME_DATA_PROVIDER_KEYS = {
   spacingScale: createPhiSharedRuntimeDataProviderKey("options", "spacing-scale"),
+  siteLocales: createPhiSharedRuntimeDataProviderKey("options", "core-site-locales"),
   contentTable: createPhiSharedRuntimeDataProviderKey("tables", "content"),
 } as const;

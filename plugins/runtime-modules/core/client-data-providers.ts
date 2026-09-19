@@ -14,6 +14,16 @@ export const PHI_CORE_RUNTIME_DATA_PROVIDER_CLIENT_DEFINITIONS = [
         .PhiSpacingScaleOptionsProviderClient,
   },
   {
+    key: PHI_CORE_RUNTIME_DATA_PROVIDER_KEYS.siteLocales,
+    ownerModuleId: PHI_CORE_RUNTIME_MODULE_ID,
+    loadLive: async () =>
+      (await import("../../../components/widgets/client/shared/core-options-providers"))
+        .PhiSiteLocalesOptionsProviderClient,
+    loadAuthoring: async () =>
+      (await import("../../../components/widgets/client/shared/core-options-providers"))
+        .PhiSiteLocalesOptionsProviderClient,
+  },
+  {
     key: PHI_CORE_RUNTIME_DATA_PROVIDER_KEYS.contentTable,
     ownerModuleId: PHI_CORE_RUNTIME_MODULE_ID,
     loadLive: async () =>

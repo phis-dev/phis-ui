@@ -297,12 +297,6 @@ export const PHI_COMMON_RUNTIME_MODULE_RENDER_CLIENT_MANIFEST =
       ),
     ],
     [
-      PhiCmsWidgetType.ProfileLocale,
-      definePhiRuntimeModuleRenderClient(
-        dynamic(() => import("../core/widgets/profile-locale/client").then((module) => module.PhiProfileLocaleWidgetClient)),
-      ),
-    ],
-    [
       PhiCmsWidgetType.ProfileName,
       definePhiRuntimeModuleRenderClient(
         dynamic(() => import("../core/widgets/profile-name/client").then((module) => module.PhiProfileNameWidgetClient)),

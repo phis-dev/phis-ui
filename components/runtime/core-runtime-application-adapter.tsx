@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { App } from "antd";
 
 import {
@@ -20,6 +21,7 @@ const PHI_CORE_RUNTIME_APPLICATION_SIGNAL_FILTER = {
 
 export function PhiCoreRuntimeApplicationAdapter() {
   const { message, notification } = App.useApp();
+  const router = useRouter();
   const partition = usePhiSignalRuntimePartition();
   const address = createPhiCoreRuntimeControllerAddress();
 
@@ -41,6 +43,18 @@ export function PhiCoreRuntimeApplicationAdapter() {
       } else {
         window.location.assign(navigateValue.path);
       }
+      return;
+    }
+
+    /*
+     * The same Page, asked for again.
+     *
+     * `router.refresh()` rather than `location.reload()`: it re-renders the route's Server components
+     * with the cookies the browser now holds, which is the whole point, and leaves the visitor where
+     * they were -- the panel they had open stays open, which a document reload would close.
+     */
+    if (signal.channel === "reload" && signal.action === "activate") {
+      router.refresh();
       return;
     }
 

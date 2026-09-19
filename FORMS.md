@@ -123,6 +123,11 @@ type PhiFormTextDescriptor =
 - Required state is the `required` validation rule; there is no `required` boolean on a field.
 - Static `options` and an `optionsProvider` follow the options contract of the Controls. A field whose
   options depend on another value declares `optionsProvider.dependencies`.
+- Options resolution reads the field's own `config` with the placement's `formConfig` layered over it,
+  the placement winning where both name a key. A descriptor is registered once and reads the same on
+  every Site; a list that varies by Site is what the placement knows, and it belongs there. Because this
+  resolves during the render, a provider fed this way answers in the HTML the Server sends, while one
+  that asks a route answers after hydration.
 - The Options Providers named anywhere in the descriptor of a placed Form are part of that page's data
   Provider demand (`collectPhiRuntimeDataProviderKeys`); a Form that is not placed loads none.
 
@@ -297,7 +302,7 @@ the only way a Form is placed. There are no domain Form Widgets. Its config:
 | `formId` | The Form to render. |
 | `submit` | `{ label, align }` or absent. A submit button drawn by the Widget in the control column; `align` is `start` (default), `center`, or `end`. |
 | `links` | `[{ key, href, requiresFeature? }]`, drawn below the submit. The text is `actions.<key>Label` of the Form's label set; a link whose `requiresFeature` is not published by an active Module is left out. |
-| `formConfig` | Placement config: `initialValues`, `initialValuesFromQuery`, and values read by `config` text. |
+| `formConfig` | Placement config: `initialValues`, `initialValuesFromQuery`, values read by `config` text, and values an `optionsProvider` reads (see [Fields](#fields)). |
 | `execution` | `{ mode: "handler" \| "signal", phase: "submit" \| "confirm" }`, default `handler` / `submit`. |
 | `source` | Optional Table Provider binding `{ providerKey, resourceKey, params }` whose resource declares `recordRead: true`. |
 | `openActionKey` | The Table action key that opens a record, default `edit`. |

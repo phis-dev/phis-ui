@@ -112,6 +112,12 @@ contract. A panel whose whole content is one switch states `submitOnChange` inst
 button at all — flipping the switch is the submit, routed from the Form's own `stateChange` back to its
 `submit` channel.
 
+A panel may hand its Form what only this Site knows -- the languages it publishes, for one. That travels
+in the Form Widget's placement config, where the options resolution reads it under the field's own
+([FORMS.md](./FORMS.md)), so the list is in the HTML the Server sends. A panel whose save changes
+something only the Server applies asks the runtime for the Page again on `reload/activate`
+([SIGNALS.md](./SIGNALS.md)); the Form itself never navigates or reloads.
+
 Cross-Module aggregation must never be built as in-page tabs or slot contributions; Modules always
 switch via routes through the sidebar container.
 

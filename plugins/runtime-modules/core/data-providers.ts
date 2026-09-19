@@ -13,6 +13,15 @@ export const PHI_CORE_RUNTIME_DATA_PROVIDER_DESCRIPTORS = [
     description: "Shared padding and margin token options.",
   },
   {
+    key: PHI_CORE_RUNTIME_DATA_PROVIDER_KEYS.siteLocales,
+    ownerModuleId: PHI_CORE_RUNTIME_MODULE_ID,
+    kind: "options",
+    executionMode: "static",
+    authoringMode: "read",
+    title: "Site locales",
+    description: "The locales this site offers, as the placement handed them to the field.",
+  },
+  {
     key: PHI_CORE_RUNTIME_DATA_PROVIDER_KEYS.contentTable,
     ownerModuleId: PHI_CORE_RUNTIME_MODULE_ID,
     kind: "table",

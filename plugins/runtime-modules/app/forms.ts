@@ -7,8 +7,10 @@ import { PHI_SHARED_PACKAGE_NAME } from "../../../types/signals";
 import { flattenPhiFormLabels } from "../../../components/forms/form-labels";
 import {
   PHI_FORM_FIELD_PROVIDER_KEYS,
+  PHI_FORM_VALIDATION_PROVIDER_KEYS,
   createPhiSharedFormProviderKey,
 } from "../../../components/forms/form-provider-contract";
+import { PHI_CORE_RUNTIME_DATA_PROVIDER_KEYS } from "../core/ids";
 import { definePhiRuntimeModuleForm } from "../../../components/forms/form-registry";
 import { readPhiServerApiCredentials } from "../../../helpers/phis-server-credentials";
 import { PHI_APP_RUNTIME_MODULE_ID } from "./ids";
@@ -28,15 +30,18 @@ import { PHI_APP_RUNTIME_MODULE_ID } from "./ids";
 export const PHI_APP_FORM_IDS = {
   profileName: createPhiFormId(PHI_SHARED_PACKAGE_NAME, "app/profile-name"),
   profileNewsletter: createPhiFormId(PHI_SHARED_PACKAGE_NAME, "app/profile-newsletter"),
+  profileLocale: createPhiFormId(PHI_SHARED_PACKAGE_NAME, "app/profile-locale"),
 } as const;
 
 export const PHI_APP_FORM_HANDLER_KEYS = {
   profileName: "site.app.profile-name",
   profileNewsletter: "site.app.profile-newsletter",
+  profileLocale: "site.app.profile-locale",
 } as const;
 
 const NAME_LABEL_SET_KEY = "@phis/ui/modules/app/labels/profile-name" as const;
 const NEWSLETTER_LABEL_SET_KEY = "@phis/ui/modules/app/labels/profile-newsletter" as const;
+const LOCALE_LABEL_SET_KEY = "@phis/ui/modules/app/labels/profile-locale" as const;
 
 const label = (key: string, fallback: string) => ({ kind: "label", key, fallback } as const);
 
@@ -100,6 +105,38 @@ const newsletterDescriptor: PhiFormDescriptor = {
   layout: { gap: { compact: "sm", medium: "base" } },
 };
 
+/**
+ * The one language question, whose answers only the Site knows.
+ *
+ * The options are not in this descriptor, because a registered Form is the same on every Site and the
+ * languages are not. They arrive through the placement -- the Page preset writes them into the Form
+ * Widget's config and the Core options provider reads them back during the render -- so the select is
+ * complete in the HTML the Server sends. A provider that fetched them would leave it empty until the
+ * browser caught up, for a list the Page had in its hand all along.
+ */
+const localeDescriptor: PhiFormDescriptor = {
+  schemaVersion: 1,
+  key: PHI_APP_FORM_IDS.profileLocale,
+  labelSetKey: LOCALE_LABEL_SET_KEY,
+  fields: [
+    {
+      key: "locale",
+      fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.select,
+      label: label("fieldLabel", "Default language"),
+      optionsProvider: { providerKey: PHI_CORE_RUNTIME_DATA_PROVIDER_KEYS.siteLocales },
+      validation: [{
+        providerKey: PHI_FORM_VALIDATION_PROVIDER_KEYS.required,
+        message: label("errorInvalidLocale", "Please choose a language that is available on this site."),
+      }],
+    },
+  ],
+  /*
+   * It says nothing on success, because the Page says it: the answer sets the account's language and
+   * the Preset asks the runtime for this Page again, which comes back written in it.
+   */
+  layout: { gap: { compact: "sm", medium: "base" } },
+};
+
 async function loadNameLabels(
   context: Parameters<NonNullable<ReturnType<typeof definePhiRuntimeModuleForm>["loadLabels"]>>[0],
 ) {
@@ -132,6 +169,23 @@ async function loadNewsletterLabels(
   return flattenPhiFormLabels({
     newsletter: labels.newsletterLabel,
     newsletterDescription: labels.newsletterDescription,
+  });
+}
+
+async function loadLocaleLabels(
+  context: Parameters<NonNullable<ReturnType<typeof definePhiRuntimeModuleForm>["loadLabels"]>>[0],
+) {
+  const { getPhiProfileLocaleWidgetLabels } = await import("../../../components/widgets/label-sets/profile");
+  const labels = await getPhiProfileLocaleWidgetLabels({
+    apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
+    internalToken: readPhiServerApiCredentials().internalToken,
+    locale: context.runtime.locale.current,
+  });
+  return flattenPhiFormLabels({
+    fieldLabel: labels.fieldLabel,
+    errorInvalidLocale: labels.feedback.errorInvalidLocale,
+    save: labels.submitLabel,
+    saving: labels.submitLabel,
   });
 }
 
@@ -176,6 +230,26 @@ export const PHI_APP_RUNTIME_MODULE_FORMS = [
     previewUpstreamPath: null,
     loadLabels: loadNewsletterLabels,
   }),
+  definePhiRuntimeModuleForm({
+    ownerModuleId: PHI_APP_RUNTIME_MODULE_ID,
+    areas: ["app"],
+    formId: PHI_APP_FORM_IDS.profileLocale,
+    version: 1,
+    flags: 0,
+    title: "Language",
+    description: "Which of the site's languages this account reads it in.",
+    category: "forms",
+    tags: ["profile", "account"],
+    descriptor: localeDescriptor,
+    submitHandlerKey: PHI_APP_FORM_HANDLER_KEYS.profileLocale,
+    confirmHandlerKey: null,
+    previewHandlerKey: null,
+    defaultConfig: {},
+    variant: "default",
+    config: {},
+    previewUpstreamPath: null,
+    loadLabels: loadLocaleLabels,
+  }),
 ] as const;
 
 /*
@@ -212,6 +286,21 @@ export const PHI_APP_FORM_HANDLER_PROVIDER_DESCRIPTORS = [
     method: "PATCH",
     endpointKey: null,
     upstreamPath: "/api/v1/auth/profile/newsletter",
+    csrfPath: "/api/v1/auth/csrf",
+    requiresCsrf: true,
+    credentialPolicy: "site-session",
+  },
+  {
+    key: createPhiSharedFormProviderKey("handler", "app-profile-locale"),
+    ownerModuleId: PHI_APP_RUNTIME_MODULE_ID,
+    title: "Profile language",
+    phase: "submit",
+    handlerKey: PHI_APP_FORM_HANDLER_KEYS.profileLocale,
+    category: "site",
+    transport: "relay",
+    method: "PATCH",
+    endpointKey: null,
+    upstreamPath: "/api/v1/auth/profile/locale",
     csrfPath: "/api/v1/auth/csrf",
     requiresCsrf: true,
     credentialPolicy: "site-session",

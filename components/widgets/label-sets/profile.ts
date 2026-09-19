@@ -7,15 +7,10 @@ const PHI_PROFILE_LOCALE_WIDGET_LABEL_SET = definePhiLabelSet({
   key: "widget:profile-locale",
   ctx: PHI_TR_CTX_WEB_UI_LABEL,
   labels: {
-    title: "Language",
     description: definePhiMessageLabel("Choose your preferred language for this site."),
     field_label: "Default language",
-    current_label: "Current language",
     submit_label: "Save",
-    error_title: "Language update failed",
-    error_network: definePhiMessageLabel("Network error while updating your language."),
     error_invalid_locale: definePhiMessageLabel("Please choose a language that is available on this site."),
-    error_generic: definePhiMessageLabel("The language update could not be completed."),
     success_title: "Language updated",
     success_text: definePhiMessageLabel("Your preferred language has been saved."),
   },
@@ -62,16 +57,11 @@ const PHI_PROFILE_OVERVIEW_WIDGET_LABEL_SET = definePhiLabelSet({
 export async function getPhiProfileLocaleWidgetLabels(options: PhiGlobalTranslatorOptions) {
   const labels = await getPhiLabelSet(options, PHI_PROFILE_LOCALE_WIDGET_LABEL_SET);
   return {
-    title: labels.title,
     description: labels.description,
     fieldLabel: labels.field_label,
-    currentLabel: labels.current_label,
     submitLabel: labels.submit_label,
     feedback: {
-      errorTitle: labels.error_title,
-      errorNetwork: labels.error_network,
       errorInvalidLocale: labels.error_invalid_locale,
-      errorGeneric: labels.error_generic,
       successTitle: labels.success_title,
       successText: labels.success_text,
     },

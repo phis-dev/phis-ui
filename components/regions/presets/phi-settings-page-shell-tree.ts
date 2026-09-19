@@ -33,6 +33,14 @@ type PhiSettingsPageShellFormSectionBase = {
   label: string;
   initialValues?: Record<string, unknown>;
   /**
+   * What this placement knows and the registered descriptor cannot.
+   *
+   * A Form is the same on every Site; which languages a Site offers is not, and the Page holds that
+   * answer while it renders. It travels in the Form Widget's own config, where the options resolution
+   * reads it under the field's own config -- so a list the Page had is in the HTML it sends.
+   */
+  formConfig?: Record<string, unknown>;
+  /**
    * Extra form Widget config keys (for example a `source` binding plus `openActionKey` for a
    * record-editing Settings form). `signalRoutes` entries are appended to whatever the shell
    * wires itself instead of replacing it.
@@ -224,7 +232,10 @@ export function buildPhiSettingsPageShellTree({
               label: section.label,
               config: {
                 formId: section.formId,
-                formConfig: section.initialValues ? { initialValues: section.initialValues } : {},
+                formConfig: {
+                  ...(section.initialValues ? { initialValues: section.initialValues } : {}),
+                  ...section.formConfig,
+                },
                 // Already translated, from the page's own label set, so the Widget states it outright.
                 ...(section.submitOnChange ? {} : { submit: { label: section.submitLabel } }),
                 execution: { mode: "handler" },

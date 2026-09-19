@@ -158,10 +158,25 @@ function PhiResolvedFormFieldControl({
   // Raw text only: how long it has to be, whether it is used at all, and who filters is declared on
   // the field and applied by the hook, so every control that resolves options obeys the same rules.
   const [searchDraft, setSearchDraft] = useState("");
+  /*
+   * What the field says about itself, under what the placement says about this one form.
+   *
+   * The field's config is in the registered descriptor and reads the same on every Site; the
+   * placement's is what this Page knows and the registry cannot -- which locales this Site offers, for
+   * one. The more specific wins, as everywhere else in the cascade.
+   *
+   * It matters that both arrive here rather than through a route or a store: this resolves during the
+   * render, the server's included, so a list the Page already holds is in the HTML it sends instead of
+   * appearing once the browser has caught up.
+   */
+  const sourceConfig = useMemo(
+    () => ({ ...field.config, ...formConfig }),
+    [field.config, formConfig],
+  );
   const resolvedOptions = usePhiControlOptionsProvider({
     options: staticOptions,
     optionsProvider: field.optionsProvider,
-    sourceConfig: field.config,
+    sourceConfig,
     searchDraft,
     formValues,
   });

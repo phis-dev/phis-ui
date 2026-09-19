@@ -77,6 +77,19 @@ export const PHI_CORE_RUNTIME_CONTROLLER_DEFINITION = {
         valueType: "json",
         valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.runtimeNavigation,
       },
+      /*
+       * Ask the Server for this Page again, because what it renders has changed underneath it.
+       *
+       * The case is a Form that wrote something only the Server applies -- the language the account
+       * reads in, the mode it is shown in -- where the answer is not another Page but the same one,
+       * rendered again now that the account says something else. So it carries no value: there is
+       * nothing to say beyond "again", and the request that follows brings the new cookie with it.
+       *
+       * Staff Areas are routed by their own segment and carry no locale in the address, so the same
+       * address really is the right one. Public is localized in its path; a Page there that changes
+       * the language is a forward on `path`, not this.
+       */
+      { id: "reload", channel: "reload", action: "activate", valueType: "none" },
       {
         id: "notification",
         channel: "notification",

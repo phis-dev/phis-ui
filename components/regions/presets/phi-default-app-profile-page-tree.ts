@@ -4,6 +4,9 @@ import type { PhiBlockRuntime } from "../../../types";
 import type { PhiCmsPageNode, PhiResolvedCmsPageTree } from "../../../types/cms";
 import { buildPhiSettingsPageShellTree } from "./phi-settings-page-shell-tree";
 import { getPhiProfilePageLabels } from "./profile-label-set";
+import { getPhiProfileLocaleWidgetLabels } from "../../widgets/label-sets/profile";
+import { PHI_SITE_LOCALES_CONFIG_KEY } from "../../forms/site-locales-config";
+import { createPhiCoreRuntimeControllerAddress } from "../../runtime/core-runtime-controller-address";
 import { readPhiServerApiCredentials } from "../../../helpers/phis-server-credentials";
 
 const REGION_CONTENT_ID = -286;
@@ -28,11 +31,23 @@ export async function buildPhiDefaultAppProfilePageTree({
   page: PhiCmsPageNode;
   runtime: PhiBlockRuntime;
 }): Promise<PhiResolvedCmsPageTree> {
-  const labels = await getPhiProfilePageLabels({
+  const labelOptions = {
     apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
     internalToken: readPhiServerApiCredentials().internalToken,
     locale: runtime.locale.current,
-  });
+  };
+  const [labels, localeLabels] = await Promise.all([
+    getPhiProfilePageLabels(labelOptions),
+    getPhiProfileLocaleWidgetLabels(labelOptions),
+  ]);
+  const availableLocales = runtime.site.availableLocales.map(
+    (option) => ({ code: option.code, label: option.label }),
+  );
+  /*
+   * What the account reads in today: its own preference where it has one, and otherwise the language
+   * this request resolved to, which is the answer the Site gave when nobody had said anything.
+   */
+  const preferredLocale = runtime.viewer.preferredLocale?.trim() || runtime.locale.current;
 
   const tree = buildPhiSettingsPageShellTree({
     page,
@@ -65,11 +80,41 @@ export async function buildPhiDefaultAppProfilePageTree({
       {
         nodeKey: "panelLanguage",
         title: labels.language,
+        description: localeLabels.description,
         sections: [{
+          kind: "form",
           nodeKey: "widgetLanguage",
-          typeKey: "profile-locale",
+          formId: PHI_APP_FORM_IDS.profileLocale,
           label: labels.language,
-          config: {},
+          submitLabel: localeLabels.submitLabel,
+          initialValues: { locale: preferredLocale },
+          /*
+           * The Site's languages, handed to the field because this Page knows them and the registered
+           * Form cannot. See the Core `site-locales` options provider for why they travel this way.
+           */
+          formConfig: { [PHI_SITE_LOCALES_CONFIG_KEY]: availableLocales },
+          /*
+           * Saved, and then this Page again.
+           *
+           * The language lives on the account, so only the Server can show the choice being applied.
+           * The Form does not navigate and has nothing to navigate to -- App addresses carry no locale
+           * segment, so the same address is the right one -- it just says "again", and the runtime asks
+           * for it. The route carries no value: `submitSuccess` is a result, and a reload is not about
+           * one.
+           */
+          configOverrides: {
+            signalRoutes: {
+              emits: [{
+                routeKey: "app-profile-locale-reload",
+                capabilityId: "submitSuccess",
+                scope: "site",
+                channel: "reload",
+                action: "activate",
+                valueType: "none",
+                receiver: createPhiCoreRuntimeControllerAddress(),
+              }],
+            },
+          },
         }],
       },
       {

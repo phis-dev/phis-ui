@@ -289,12 +289,19 @@ It listens to exactly these inputs, all in Site scope:
 | `themeMode/change` | `boolean` | `true` shows dark, `false` light; nothing is persisted |
 | `locale/change` | `string` | applies a locale from the Site's available locales |
 | `path/activate` | `json` (`runtimeNavigation`) | forwards the browser |
+| `reload/activate` | `none` | asks the Server for the current Page again |
 | `notification/activate` | `json` (`notification`) | shows an application notification |
 | `message/activate` | `json` (`message`) | shows an application message |
 
 - `path/activate` carries `{ path: string; replace?: boolean }`. The path must start with `/` and not
   with `//`; anything else is refused. `replace: true` replaces the history entry. A Widget that needs to
   send the visitor somewhere asks here instead of calling `location` itself.
+- `reload/activate` carries no value and is the answer to "what this Page renders has changed
+  underneath it": a Form wrote something only the Server applies, such as the language the account reads
+  in, and what follows is the same Page rendered again. It is `router.refresh()`, so the route's Server
+  components are re-rendered with the cookies the browser now holds and the visitor keeps their place.
+  A Page whose address itself would change is a `path/activate` instead -- Public is localized in its
+  path, while a staff Area is routed by its own segment and carries no locale to change.
 - Notification values are `{ level, title, description?, durationSeconds?, placement?,
   showTimeoutProgress? }`; message values are `{ level, content, durationSeconds? }`
   (`types/core-runtime-controller.ts`). `level` is `success`, `info`, `warning`, or `error`; `title`,

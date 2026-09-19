@@ -102,9 +102,6 @@ import {
   PHI_PAGINATION_WIDGET_DEFINITION,
 } from "./widgets/pagination/config";
 import {
-  PHI_PROFILE_LOCALE_WIDGET_DEFINITION,
-} from "./widgets/profile-locale/config";
-import {
   PHI_PROFILE_NAME_WIDGET_DEFINITION,
 } from "./widgets/profile-name/config";
 import {
@@ -291,10 +288,6 @@ export default createPhiAuthoringWidgetModule([
   definePhiAuthoringWidgetModuleLoader(
     PHI_PAGINATION_WIDGET_DEFINITION,
     () => import("./widgets/pagination/authoring").then((module) => module.PHI_PAGINATION_WIDGET_BUILDER_PLUGIN),
-  ),
-  definePhiAuthoringWidgetModuleLoader(
-    PHI_PROFILE_LOCALE_WIDGET_DEFINITION,
-    () => import("./widgets/profile-locale/authoring").then((module) => module.PHI_PROFILE_LOCALE_WIDGET_BUILDER_PLUGIN),
   ),
   definePhiAuthoringWidgetModuleLoader(
     PHI_PROFILE_NAME_WIDGET_DEFINITION,
