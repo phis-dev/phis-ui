@@ -55,8 +55,12 @@ built. Remove an entry when it is done.
   vocabulary, half an existing one.
 
   **The author picks the fields**, the way the table Widget lets an author pick columns, rather than the
-  Widget showing whatever the resource declares. That needs a field picker in the Builder Inspector,
-  which is the real work in this entry.
+  Widget showing whatever the resource declares. That needed a field picker in the Builder Inspector, and
+  it now exists for every collection at once: the `collection` field type takes
+  `presentation: "overlay"`, so a collection whose items carry more than two or three fields is edited in
+  an Overlay instead of down the narrow Inspector column. Eleven collections already use it -- the table's
+  columns, filters and three action lists among them. The record Widget declares its fields against that
+  and needs no picker of its own.
 
   Afterwards `log-detail` is the Widget plus a `json` field, and its `record as LogRow` cast goes -- the
   Widget claiming a shape the Provider never promised it is what this replaces.

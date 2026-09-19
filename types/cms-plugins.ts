@@ -84,6 +84,21 @@ export type PhiCmsConfigFieldChoicePresentation =
   | "autocomplete"
   | "radio";
 
+/**
+ * Where a collection is edited.
+ *
+ * `inline` stacks the entries down the Inspector column, which is right for as long as an entry is two
+ * or three short fields.
+ *
+ * `overlay` leaves only what is in the collection at the field's place and opens an Overlay to edit it.
+ * That is not a matter of taste: the Inspector column is narrow, and an entry carrying half a dozen
+ * fields -- a table column with a key, a provider field, a title, a renderer, a width, an alignment --
+ * becomes a column of truncated Controls in it. Which of the two a collection needs is known by the
+ * collection and by nothing else, which is why it is declared here rather than decided by the Inspector
+ * from the Widget type.
+ */
+export type PhiCmsConfigFieldCollectionPresentation = "inline" | "overlay";
+
 export type PhiCmsConfigFieldChoiceMode = "single" | "multiple";
 
 export type PhiCmsConfigFieldChoiceValueType = "string" | "string[]";
@@ -185,6 +200,9 @@ export type PhiCmsConfigField =
       minItems?: number;
       maxItems?: number;
       reorderable?: boolean;
+      presentation?: PhiCmsConfigFieldCollectionPresentation;
+      /** What the button that opens the Overlay says. */
+      editLabel?: string;
     })
   | (PhiCmsConfigFieldBase & {
       type: "background";
@@ -777,18 +795,8 @@ export type PhiRuntimeModuleDefinition = {
       | "factor-challenge"
       | "factor-enrollment"
       | "recovery"
-      | "account-security"
       | "site-settings"
     )[]>>;
-    /**
-     * The App Pages the Account menu offers, as the Module writes them for itself.
-     *
-     * Module-relative, exactly like a route preset's `path`: the Module says `/security`, and the
-     * address the Page is served at -- `/app/phis/ui/security` -- is what the resolved projection
-     * carries. A consumer links to the projection and never to what is declared here.
-     */
-    accountSecurityPath?: `/${string}`;
-    accountProfilePath?: `/${string}`;
   };
 } & PhiRuntimeModuleIconMetadata;
 

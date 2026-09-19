@@ -34,6 +34,8 @@ import { PhiSelectControl } from "../../../../components/controls/phi-select-con
 import { PhiSwitchControl } from "../../../../components/controls/phi-switch-control";
 import { PhiButtonControl } from "../../../../components/controls/phi-button-control";
 import { PhiWidgetIconPickerButton } from "../../../../components/widgets/client/shared/phi-widget-icon-picker";
+import { usePhiWidgetScaffoldPopup } from "../../../../components/widgets/client/shared/phi-widget-scaffold-popup";
+import { PhiModalControl } from "../../../../components/controls/phi-modal-control";
 import { PhiIcon } from "../../../../components/shell/phi-icon";
 import { PhiPaddingControl } from "../../../../components/controls/phi-padding-control";
 import type { PhiPaddingWidgetLabels } from "../../../../components/widgets/label-types/padding";
@@ -481,6 +483,8 @@ function PhiInspectorCollectionFieldControl({
   onChange?: (next: Record<string, unknown>) => void;
 }) {
   const { token } = theme.useToken();
+  const popup = usePhiWidgetScaffoldPopup();
+  const [overlayOpen, setOverlayOpen] = useState(false);
   const configuredItems = readPhiInspectorCollectionItems(value);
   const defaultItems = readPhiInspectorCollectionItems(defaultValue);
   const items = value == null ? defaultItems : configuredItems;
@@ -491,18 +495,21 @@ function PhiInspectorCollectionFieldControl({
     onChange?.({ [field.key]: nextItems });
   };
 
-  return renderPhiInspectorConfigFieldBlock(
-    field,
+  const readItemLabel = (item: Record<string, unknown>, index: number) => {
+    const itemLabelValue = item[field.itemLabelField ?? field.itemKeyField];
+    return typeof itemLabelValue === "string" && itemLabelValue.trim()
+      ? itemLabelValue
+      : `${field.label} ${index + 1}`;
+  };
+
+  const editor = (
     <PhiFlexControl vertical gap={8} style={{ width: "100%", minWidth: 0 }}>
       {items.length === 0 ? (
         <PhiTypographyControl type="secondary">{field.emptyLabel ?? "No items"}</PhiTypographyControl>
       ) : null}
       {items.map((item, index) => {
         const itemIdentity = item[field.itemKeyField];
-        const itemLabelValue = item[field.itemLabelField ?? field.itemKeyField];
-        const itemLabel = typeof itemLabelValue === "string" && itemLabelValue.trim()
-          ? itemLabelValue
-          : `${field.label} ${index + 1}`;
+        const itemLabel = readItemLabel(item, index);
         const defaultItem = defaultItems[index] ?? field.defaultItem ?? {};
 
         return (
@@ -551,7 +558,7 @@ function PhiInspectorCollectionFieldControl({
                 <PhiButtonControl
                   ariaLabel="Remove"
                   tooltip="Remove"
-                  icon={<PhiIcon name="trash" />}
+                  icon={<PhiIcon name="delete" />}
                   type="text"
                   danger
                   disabled={disabled || items.length <= minItems}
@@ -595,7 +602,47 @@ function PhiInspectorCollectionFieldControl({
         disabled={disabled || items.length >= maxItems}
         onClick={() => publish([...items, createPhiInspectorCollectionItem(field, items)])}
       />
-    </PhiFlexControl>,
+    </PhiFlexControl>
+  );
+
+  if (field.presentation !== "overlay") {
+    return renderPhiInspectorConfigFieldBlock(field, editor);
+  }
+
+  /*
+   * The same editor in a wider box, and deliberately without a draft: every change publishes as it is
+   * made, exactly as it does inline, so closing the Overlay decides nothing. The static options picker
+   * has its Cancel and Apply because it edits rows with identities and a validity rule of their own and
+   * has something to hold back; here a second copy of the value would only be a second truth, and the
+   * Builder's undo is already the way back.
+   */
+  return renderPhiInspectorConfigFieldBlock(
+    field,
+    <>
+      <PhiFlexControl align="center" justify="space-between" gap={8} style={{ width: "100%", minWidth: 0 }}>
+        <PhiTypographyControl type="secondary" ellipsis style={{ minWidth: 0 }}>
+          {items.length === 0
+            ? field.emptyLabel ?? "No items"
+            : items.map(readItemLabel).join(", ")}
+        </PhiTypographyControl>
+        <PhiButtonControl
+          label={field.editLabel ?? "Edit"}
+          icon={<PhiIcon name="edit" />}
+          size="small"
+          disabled={disabled}
+          onClick={() => setOverlayOpen(true)}
+        />
+      </PhiFlexControl>
+      <PhiModalControl
+        open={overlayOpen}
+        title={field.label}
+        width={720}
+        mountPolicy="remount"
+        rootClassName={popup.rootClassName}
+        onDismiss={() => setOverlayOpen(false)}
+        body={editor}
+      />
+    </>,
   );
 }
 

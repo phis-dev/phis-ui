@@ -760,6 +760,7 @@ export const PHI_TABLE_WIDGET_DEFINITION = {
     {
       key: "presentation.columns",
       type: "collection",
+      presentation: "overlay",
       label: "Columns",
       itemKeyField: "key",
       itemLabelField: "title",
@@ -888,6 +889,7 @@ export const PHI_TABLE_WIDGET_DEFINITION = {
     {
       key: "features.filters",
       type: "collection",
+      presentation: "overlay",
       label: "Filters",
       itemKeyField: "key",
       itemLabelField: "key",
@@ -988,6 +990,7 @@ export const PHI_TABLE_WIDGET_DEFINITION = {
     {
       key: "features.actions.toolbar",
       type: "collection",
+      presentation: "overlay",
       label: "Toolbar Actions",
       itemKeyField: "key",
       itemLabelField: "label",
@@ -1008,6 +1011,7 @@ export const PHI_TABLE_WIDGET_DEFINITION = {
     {
       key: "features.actions.row",
       type: "collection",
+      presentation: "overlay",
       label: "Row Actions",
       itemKeyField: "key",
       itemLabelField: "label",
@@ -1019,6 +1023,7 @@ export const PHI_TABLE_WIDGET_DEFINITION = {
     {
       key: "features.actions.bulk",
       type: "collection",
+      presentation: "overlay",
       label: "Bulk Actions",
       itemKeyField: "key",
       itemLabelField: "label",
@@ -1042,6 +1047,7 @@ export const PHI_TABLE_WIDGET_DEFINITION = {
     {
       key: "features.tools.bindingFields",
       type: "collection",
+      presentation: "overlay",
       label: "Binding Tools",
       itemKeyField: "key",
       itemLabelField: "key",

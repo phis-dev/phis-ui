@@ -234,7 +234,7 @@ export const PHI_TREE_WIDGET_DEFINITION = {
     { key: "features.tools.mode", type: "choice", label: "Tools", options: [
       { value: "self-contained", label: "Self-contained" }, { value: "external", label: "External" },
     ] },
-    { key: "features.tools.bindingFields", type: "collection", label: "Binding tools", itemKeyField: "key", itemLabelField: "key",
+    { key: "features.tools.bindingFields", type: "collection", presentation: "overlay", label: "Binding tools", itemKeyField: "key", itemLabelField: "key",
       defaultItem: { key: "binding", label: "Binding", control: "select" }, itemFields: [
         { key: "key", type: "string", label: "Provider binding field", required: true },
         { key: "label", type: "string", label: "Label" },
@@ -247,8 +247,8 @@ export const PHI_TREE_WIDGET_DEFINITION = {
       { value: "none", label: "None" }, { value: "source", label: "Source" },
       { value: "reorder", label: "Reorder" }, { value: "source-reorder", label: "Source and reorder" },
     ] },
-    { key: "features.actions.toolbar", type: "collection", label: "Toolbar actions", itemKeyField: "key", itemLabelField: "label", defaultItem: { key: "action", label: "Action" }, itemFields: ACTION_FIELDS },
-    { key: "features.actions.node", type: "collection", label: "Node actions", itemKeyField: "key", itemLabelField: "label", defaultItem: { key: "action", label: "Action" }, itemFields: ACTION_FIELDS },
+    { key: "features.actions.toolbar", type: "collection", presentation: "overlay", label: "Toolbar actions", itemKeyField: "key", itemLabelField: "label", defaultItem: { key: "action", label: "Action" }, itemFields: ACTION_FIELDS },
+    { key: "features.actions.node", type: "collection", presentation: "overlay", label: "Node actions", itemKeyField: "key", itemLabelField: "label", defaultItem: { key: "action", label: "Action" }, itemFields: ACTION_FIELDS },
   ],
   defaultConfig: {
     presentation: { blockNode: true, showIcon: true, bordered: false, row: { striped: false }, node: { titleFieldKey: "title" } },

@@ -329,6 +329,7 @@ export const PHI_COLLECTION_VIEW_WIDGET_DEFINITION = {
     {
       key: "features.filters",
       type: "collection",
+      presentation: "overlay",
       label: "Filters",
       itemKeyField: "key",
       itemLabelField: "key",
@@ -391,6 +392,7 @@ export const PHI_COLLECTION_VIEW_WIDGET_DEFINITION = {
     {
       key: "features.actions.toolbar",
       type: "collection",
+      presentation: "overlay",
       label: "Toolbar Actions",
       itemKeyField: "key",
       itemLabelField: "label",
