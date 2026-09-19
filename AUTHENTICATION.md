@@ -52,13 +52,12 @@ The first-party Auth Module contributes:
 - one Admin Site Auth settings route and navigation contribution;
 - one App `/security` route (served at `/app/phis/ui/security`) with its `auth-security` Widget, and one
   App `/profile` route (served at `/app/phis/ui/profile`);
-- the `accountSecurityPath` and `accountProfilePath` the Account Widget links to. A Module declares them
-  relative to itself, exactly as it declares a route's `path`, and the resolved Area projection carries
-  the address the Page is served at -- package and Area already in front. A consumer links to the
-  projection and never to the declared path: adding only the Area to `/security` addresses
-  `/app/security`, which is no route of any Module. The addresses are App's in every Area's projection,
-  because the Public shell's Account menu links into App rather than growing a second copy of the Pages;
-  which Area is being asked decides only which capabilities are on offer;
+- a navigation contribution putting the security Page into `app:account`, the surface the Account menu
+  reads. The entry names its route preset, like every other entry, so its address is whatever the App
+  route table serves; the projection carries no Page addresses at all. Both account Pages are App's and
+  belong to the App surface alone -- an entry names a route of its own Area -- so a person standing in a
+  staff Area reaches them through the Area list the Account menu offers, and the Public shell's Account
+  menu does not grow a second copy of the Pages;
 - an App-area in-place reauthentication presentation for a document that was rendered under a complete
   session and subsequently receives Core's expired/invalid-session result.
 
@@ -105,8 +104,8 @@ Admin configuration or App security surface when all active providers target the
 Add-on contract.
 
 Every resolved Area projection of an Auth UI provider declares which closed Core workflow kinds it can
-render, including the applicable primary-login, factor-challenge, factor-enrollment, recovery,
-account-security, and site-settings capabilities. Capabilities are resolved per Area and must never be
+render, including the applicable primary-login, factor-challenge, factor-enrollment, recovery, and
+site-settings capabilities. Capabilities are resolved per Area and must never be
 copied as one global union onto every eligible Area. Area eligibility does not imply a capability. A Site
 policy may become effective only when the active providers expose every presentation capability needed
 to complete that policy. A provider may submit a response to Core, but it cannot mark a workflow, factor,

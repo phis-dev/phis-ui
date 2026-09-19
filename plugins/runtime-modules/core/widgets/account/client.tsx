@@ -13,6 +13,7 @@ import {
 import { createPhiSignalAddress } from "../../../../../types/signals";
 import type { PhiCmsInstanceId } from "../../../../../types/cms-instance-id";
 import type { PhiNavItem } from "../../../../../components/shell/shell-types";
+import type { PhiAccountAreaEntry } from "../../../../../components/widgets/area-menu-items";
 import { fetchPhiViewerAvatar } from "../../../../../components/account/avatar-client";
 import { PHI_AVATAR_REVISION } from "../../../../../components/account/avatar-revision";
 
@@ -34,6 +35,7 @@ export type PhiAccountWidgetClientProps = PhiClientBlockBaseProps<
   avatarSrc?: string;
   avatarAlt?: string;
   contributedItems?: readonly PhiNavItem[];
+  areaEntries?: readonly PhiAccountAreaEntry[];
   successAction?: "reload" | "none";
   state: PhiAccountWidgetState;
 };
@@ -43,6 +45,7 @@ export function PhiAccountWidgetClient({
   avatarSrc,
   avatarAlt,
   contributedItems,
+  areaEntries,
   state,
   labels,
   config,
@@ -152,12 +155,11 @@ export function PhiAccountWidgetClient({
               }
             : {
                 kind: "authenticated",
-                profileHref: state.profileHref,
-                settingsHref: state.settingsHref,
                 displayName: state.displayName,
               }
         }
         contributedItems={contributedItems}
+        areaEntries={areaEntries}
         onOpenOverlay={openOverlay}
         onEmit={emitFromItem}
         avatarSrc={resolvedAvatarSrc}

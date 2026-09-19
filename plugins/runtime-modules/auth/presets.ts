@@ -7,7 +7,11 @@ import { PhiCmsFlags } from "../../../constants/phi-cms";
 import { PHI_BASE_PAGE_LAYOUT_VERSION } from "../../../components/regions/presets/phi-base-page-layout";
 import { PHI_AUTH_LOGIN_OVERLAY_IDS } from "../../../components/runtime/auth-overlay-ids";
 import { PHI_VIEWER_ACCESS_SITE_ADMIN } from "../../../types/access";
-import { PHI_ADMIN_SETTINGS_NAV_ITEM_KEY, PHI_APP_SETTINGS_NAV_ITEM_KEY } from "../area-definitions";
+import {
+  PHI_ADMIN_SETTINGS_NAV_ITEM_KEY,
+  PHI_APP_ACCOUNT_NAV_ITEM_KEY,
+  PHI_APP_SETTINGS_NAV_ITEM_KEY,
+} from "../area-definitions";
 import { PHI_AUTH_RUNTIME_MODULE_ID } from "./ids";
 
 /**
@@ -134,6 +138,24 @@ export const PHI_AUTH_RUNTIME_MODULE_ROUTES = [
       parentItemKey: PHI_APP_SETTINGS_NAV_ITEM_KEY,
       item: {
         itemKey: "@phis/ui/modules/auth/nav/app/security",
+        label: { defaultMessage: "Security" },
+        icon: "antd:safety-certificate",
+        routePresetKey: "app-auth-security-page",
+      },
+    }, {
+      /*
+       * And in the account menu, beside the profile it belongs next to.
+       *
+       * The Account Widget used to put it there from a path in this Module's UI projection, which is
+       * how a menu came to carry an address nobody had declared as an entry. It is an entry now: the
+       * same Page, named by its route preset, docked under the Area's anchor -- so a Site reorders or
+       * hides it like anything else in that menu, and the projection is rid of a second way to say
+       * where a Page is.
+       */
+      navKey: "app:account",
+      parentItemKey: PHI_APP_ACCOUNT_NAV_ITEM_KEY,
+      item: {
+        itemKey: "@phis/ui/modules/auth/nav/app/account-security",
         label: { defaultMessage: "Security" },
         icon: "antd:safety-certificate",
         routePresetKey: "app-auth-security-page",

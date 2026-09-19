@@ -5,6 +5,7 @@ import type { ReactNode, Ref } from "react";
 
 import type { PhiMenuControlItem } from "../controls/phi-menu-control";
 import type { PhiNavItem } from "../shell/shell-types";
+import type { PhiAccountAreaEntry } from "../widgets/area-menu-items";
 import { PhiAvatar } from "../shell/phi-avatar";
 
 export type PhiAccountMenuLabels = {
@@ -14,10 +15,6 @@ export type PhiAccountMenuLabels = {
   guest: {
     login: string;
     register: string;
-  };
-  authenticated: {
-    profile: string;
-    settings: string;
   };
 };
 
@@ -30,10 +27,7 @@ export type PhiAccountMenuState =
     }
   | {
       kind: "authenticated";
-      profileHref?: string;
-      settingsHref?: string;
       displayName?: string;
-      onProfile?: () => void;
     };
 
 export type PhiAccountMenuProps = {
@@ -48,6 +42,14 @@ export type PhiAccountMenuProps = {
    * is an ordinary link.
    */
   contributedItems?: readonly PhiNavItem[];
+  /**
+   * The Areas this person may enter, the one they are standing in among them.
+   *
+   * They head the menu rather than trail it: the first thing it says is where the reader is, and the
+   * entries below are about the account, ending in signing out. No surface can carry this list -- an
+   * Area's address is its own segment and the list is a property of the person, not of the Page.
+   */
+  areaEntries?: readonly PhiAccountAreaEntry[];
   onOpenOverlay?: (overlayInstanceId: string) => void;
   /** Sends what an entry carries, for an entry that sends rather than goes. */
   onEmit?: (item: PhiNavItem) => void;
@@ -66,6 +68,7 @@ export function PhiAccountMenu({
   labels,
   state,
   contributedItems,
+  areaEntries,
   onOpenOverlay,
   onEmit,
   avatarSrc,
@@ -141,11 +144,22 @@ export function PhiAccountMenu({
   const contributedMenuItems: PhiMenuControlItem[] = (contributedItems ?? []).map(toContributedMenuItem);
 
   /*
-   * Signing out is not here any more.
+   * The Area the reader is in is shown and not offered: a link back to the page you are on is an
+   * invitation to a round trip that changes nothing, and leaving it out would drop the one entry that
+   * says where you are. An Area root forwards to wherever this viewer lands, so the segment is enough.
+   */
+  const areaMenuItems: PhiMenuControlItem[] = (areaEntries ?? []).map((entry) => ({
+    key: `area-${entry.area}`,
+    label: entry.current ? entry.label : <Link href={entry.href}>{entry.label}</Link>,
+    disabled: entry.current,
+  }));
+
+  /*
+   * Nothing about the account is drawn here any more.
    *
-   * It is an entry of the `<area>:account` surface like the ones a Module contributes, so it arrives
-   * through `contributedItems` and is moved, renamed or removed in the Builder like any other entry.
-   * A menu that drew it last, itself, was the one entry nobody could rearrange.
+   * Profile, account security and signing out are entries of the `<area>:account` surface like the ones
+   * a Module contributes, so they arrive through `contributedItems` and are moved, renamed or removed in
+   * the Builder like any other entry. What the menu drew itself was the part nobody could rearrange.
    */
   const menuItems: PhiMenuControlItem[] =
     state.kind === "guest"
@@ -159,26 +173,8 @@ export function PhiAccountMenu({
             : []),
         ]
       : [
-          ...(state.profileHref || state.onProfile
-            ? [
-                {
-                  key: "profile",
-                  label: state.profileHref
-                    ? <Link href={state.profileHref}>{labels.authenticated.profile}</Link>
-                    : labels.authenticated.profile,
-                  onClick: state.profileHref ? undefined : state.onProfile,
-                },
-              ]
-            : []),
-          ...(state.settingsHref
-            ? [
-                {
-                  key: "settings",
-                  label: <Link href={state.settingsHref}>{labels.authenticated.settings}</Link>,
-                },
-              ]
-            : []),
-          ...((state.profileHref || state.onProfile || state.settingsHref) && contributedMenuItems.length > 0
+          ...areaMenuItems,
+          ...(areaMenuItems.length > 0 && contributedMenuItems.length > 0
             ? [{ key: "contributed-divider", type: "divider" as const }]
             : []),
           ...contributedMenuItems,

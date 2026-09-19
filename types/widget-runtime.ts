@@ -142,12 +142,6 @@ export type PhiBlockRuntime = {
     providerKey: `${string}/${string}`;
     controllerAddress: PhiControllerSignalAddress;
     capabilities: readonly string[];
-    /**
-     * Where the Account menu's own Pages are served -- Area and package already in front, ready to link.
-     * Absent when the active provider offers no such Page.
-     */
-    accountSecurityPath?: `/${string}`;
-    accountProfilePath?: `/${string}`;
   } | null;
   page?: PhiBlockRuntimePage;
   request?: {

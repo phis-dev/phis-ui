@@ -1,5 +1,6 @@
 import type {
   PhiCmsAreaDefinition,
+  PhiCmsNavigationBaseItemDescriptor,
   PhiCmsNavigationSurfaceDescriptor,
 } from "../../types/cms-module-descriptors";
 import type { PhiCmsAreaKey } from "../../constants/cms-areas";
@@ -26,8 +27,10 @@ const label = (defaultMessage: string) => ({ defaultMessage });
  * The account trigger's menu, as a surface every Area declares.
  *
  * It exists so a Module can contribute an entry to a menu it does not own -- the Avatar Module is the
- * first, with an entry that opens its Overlay. The Area's own account entries stay in the Widget for
- * now; what the surface adds is the place to dock.
+ * first, with an entry that opens its Overlay -- and it is where the Area's own account entries are
+ * declared: the App's profile hangs under the anchor here, the way its Settings child hangs in the
+ * sidebar. Nothing about the menu is built into the Widget any more, so every entry in it is one an
+ * operator can reorder, rename or remove.
  *
  * Every Area that draws the trigger has one, which is every Area: the same Widget stands in the Admin,
  * Builder, Editor and Accounting shells as in App and Public. While four of them declared no surface,
@@ -36,8 +39,7 @@ const label = (defaultMessage: string) => ({ defaultMessage });
  *
  * The anchor is the place to dock, not an entry: a Module attaches under it, and what belongs in the
  * menu are its children. Operator editing is allowed here on the same terms as every other surface --
- * removing an entry is their call, `phis-cli auth restore-preset` is the way back, and logout survives
- * regardless because the Account Widget falls back to calling its route directly.
+ * removing an entry is their call, and `phis-cli auth restore-preset` is the way back.
  */
 /**
  * Signing out, which every Area offers and no Module owns.
@@ -75,6 +77,8 @@ function accountSignOutItem(area: PhiCmsAreaKey) {
 function accountNavigationSurface(
   anchorItemKey: string,
   navKey: `${PhiCmsAreaKey}:account`,
+  /** The Area's own entries, under the anchor and ahead of what other Modules dock there. */
+  anchorChildren?: readonly PhiCmsNavigationBaseItemDescriptor[],
 ): PhiCmsNavigationSurfaceDescriptor {
   const [area] = navKey.split(":") as [PhiCmsAreaKey];
   return {
@@ -85,11 +89,12 @@ function accountNavigationSurface(
         itemKey: anchorItemKey,
         label: label("Account"),
         icon: "antd:user",
+        ...(anchorChildren?.length ? { children: anchorChildren } : {}),
       },
       accountSignOutItem(area),
     ],
     exportedItemKeys: [anchorItemKey],
-  } as const;
+  };
 }
 
 export const PHI_ACCOUNTING_ACCOUNT_NAV_ITEM_KEY = "@phis/ui/modules/accounting/nav/account";
@@ -215,7 +220,21 @@ export const PHI_APP_RUNTIME_AREA_DEFINITIONS = [
         items: [],
         exportedItemKeys: [],
       },
-      accountNavigationSurface(PHI_APP_ACCOUNT_NAV_ITEM_KEY, "app:account"),
+      /*
+       * The profile, in the menu the trigger opens as well as in the sidebar.
+       *
+       * Two entries for one Page, because they answer two different questions -- where a person
+       * configures the App, and where they get at their own account from wherever they are. The Widget
+       * used to add this one itself, from an address the Auth projection carried; naming the route
+       * preset says the same thing in the way every other entry says it, and it is App's to say,
+       * because the Page is App's.
+       */
+      accountNavigationSurface(PHI_APP_ACCOUNT_NAV_ITEM_KEY, "app:account", [{
+        itemKey: "@phis/ui/modules/app/nav/account/profile",
+        label: label("Profile"),
+        icon: "antd:user",
+        routePresetKey: "app-profile-page",
+      }]),
     ],
   },
 ] satisfies readonly PhiCmsAreaDefinition[];

@@ -10,8 +10,6 @@ const PHI_ACCOUNT_MENU_LABEL_SET = definePhiLabelSet({
     account: "Account",
     login: "Login",
     register: "Register",
-    profile: "Profile",
-    settings: "Settings",
   },
 });
 
@@ -53,10 +51,6 @@ export async function getPhiAccountMenuLabels(options: PhiGlobalTranslatorOption
     guest: {
       login: labels.login,
       register: labels.register,
-    },
-    authenticated: {
-      profile: labels.profile,
-      settings: labels.settings,
     },
   };
 }

@@ -1,6 +1,5 @@
 import { getResolvedSiteConfig } from "../../../../../gateway/site-config";
 import { phiRuntime } from "../../../../../server-helpers/phi-runtime";
-import { getPhiCmsPage } from "../../../../../server-helpers/cms";
 import type { PhiBlockRuntime } from "../../../../../types";
 import type {
   PhiAccountWidgetLabels,
@@ -10,10 +9,12 @@ import type {
 import { PhiCmsWidgetType } from "../../../../../constants/cms-widget-types";
 import { PhiRuntimeModuleRenderClientHost } from "../../../../../components/runtime/runtime-module-render-client-manifest";
 import { resolvePhiNavigationItems } from "../../../../../components/widgets/server/navigation-request";
+import { buildPhiAccountAreaEntries } from "../../../../../components/widgets/area-menu-items";
+import { resolvePhiNavHref } from "../../../../../helpers/locale";
+import type { PhiNavItem } from "../../../../../components/shell/shell-types";
 
 export type { PhiAccountWidgetConfig } from "./client";
 import { getPhiAccountMenuLabels } from "../../../../../components/widgets/label-sets/account";
-import { readPhiServerApiCredentials } from "../../../../../helpers/phis-server-credentials";
 
 export type PhiAccountWidgetGuestState = {
   kind: "guest";
@@ -23,8 +24,6 @@ export type PhiAccountWidgetGuestState = {
 
 export type PhiAccountWidgetAuthenticatedState = {
   kind: "authenticated";
-  profileHref?: string;
-  settingsHref?: string;
   displayName?: string;
 };
 
@@ -37,32 +36,26 @@ export type PhiAccountWidgetProps = Pick<
   runtime: Pick<PhiBlockRuntime, "site" | "locale" | "viewer" | "area" | "request" | "authUiProvider">;
 };
 
-/*
- * Where the Profile Page is, asked of whoever owns it.
+/**
+ * A resolved entry's `href` is the route's own path, Area-local; what a link needs is the address.
  *
- * Core has no Profile Page of its own; the active Auth provider contributes one and says so in its
- * projection, already at the address it is served at. Naming `/app/profile` here guessed both the Area
- * and the Module's package, and guessed the package wrong -- the Page answers at `/app/phis/ui/profile`,
- * so the lookup never found it and the entry never appeared.
- *
- * The lookup stays: a Site may have tombstoned the Page, and a menu entry to a Page that is not routed
- * is worse than no entry. Lookup and link use the one address, so they cannot drift apart again.
+ * Every other menu applies `resolvePhiNavHref` where it renders, and the account menu got away without
+ * it for as long as nothing in it was a link -- the first contribution opened an Overlay. The profile
+ * entry is a link, and unresolved it would offer `/phis/ui/settings/profile`, which is no route in any
+ * Area. Resolved once here, because this is where the Area and the locale are known.
  */
-async function resolveProfileHref(runtime: PhiAccountWidgetProps["runtime"]) {
-  const profilePath = runtime.authUiProvider?.accountProfilePath;
-  if (runtime.viewer.access !== "authenticated" || !profilePath) {
-    return undefined;
-  }
-
-  const page = await getPhiCmsPage({
-    path: profilePath,
-    apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
-    internalToken: readPhiServerApiCredentials().internalToken,
-    siteKey: runtime.site.key,
-    locale: runtime.locale.current,
-  }).catch(() => null);
-
-  return page ? profilePath : undefined;
+function withLinkableHref(
+  item: PhiNavItem,
+  locale: string,
+  area: PhiBlockRuntime["area"],
+): PhiNavItem {
+  return {
+    ...item,
+    ...(item.href && !item.external ? { href: resolvePhiNavHref(locale, area, item.href) } : {}),
+    ...(item.children?.length
+      ? { children: item.children.map((child) => withLinkableHref(child, locale, area)) }
+      : {}),
+  };
 }
 
 export async function PhiAccountWidget({
@@ -82,7 +75,6 @@ export async function PhiAccountWidget({
   const [
     site,
     accountLabels,
-    profileHref,
     contributedItems,
   ] = await Promise.all([
     getResolvedSiteConfig({
@@ -91,9 +83,6 @@ export async function PhiAccountWidget({
       siteKey: rt.siteKey,
     }),
     getPhiAccountMenuLabels(labelOptions),
-    state.kind === "authenticated" && !state.profileHref
-      ? resolveProfileHref(runtime)
-      : Promise.resolve(undefined),
     /*
      * What Modules contributed to this Area's account menu, and what the Site made of it.
      *
@@ -118,7 +107,23 @@ export async function PhiAccountWidget({
    * is a group said so, and flattening it here would decide for it.
    */
   const contributedEntries = (contributedItems ?? []).flatMap((item) =>
-    item.href || item.emits?.length || item.overlayInstanceId ? [item] : (item.children ?? []));
+    item.href || item.emits?.length || item.overlayInstanceId ? [item] : (item.children ?? []))
+    .map((item) => withLinkableHref(item, runtime.locale.current, runtime.area));
+  /*
+   * Where else this person may go, which no surface can say.
+   *
+   * Profile and account security are App Pages and are entries of `app:account` alone -- a navigation
+   * entry names a route of its own Area, so an Admin surface cannot point at them. What reaches them
+   * from a staff shell is this list: the Areas the viewer is allowed into, the current one shown but
+   * not offered. It is the same everywhere because it describes the person and not the Page.
+   */
+  const areaEntries = state.kind === "authenticated"
+    ? buildPhiAccountAreaEntries({
+        viewer: runtime.viewer,
+        currentArea: runtime.area,
+        locale: runtime.locale.current,
+      })
+    : [];
   const config: PhiAccountWidgetConfig = {
     variant: widgetConfig?.variant ?? site.theme?.widgets?.account?.variant ?? undefined,
     showLabel: widgetConfig?.showLabel ?? site.theme?.widgets?.account?.showLabel ?? undefined,
@@ -127,22 +132,6 @@ export async function PhiAccountWidget({
   const labels: PhiAccountWidgetLabels = {
     menu: accountLabels,
   };
-  /*
-   * The security entry needs both halves of the provider's answer: the capability says this Area's
-   * provider can render the surface at all, the path says where it put it. The path arrives ready to
-   * link -- Area and package already in front -- so nothing is added to it here.
-   */
-  const accountSecurityHref = runtime.authUiProvider?.capabilities.includes("account-security")
-    ? runtime.authUiProvider.accountSecurityPath
-    : undefined;
-  const resolvedState: PhiAccountWidgetState =
-    state.kind === "authenticated"
-      ? {
-          ...state,
-          profileHref: state.profileHref ?? profileHref,
-          settingsHref: state.settingsHref ?? accountSecurityHref,
-        }
-      : state;
 
   return (
     <PhiRuntimeModuleRenderClientHost
@@ -152,10 +141,11 @@ export async function PhiAccountWidget({
         avatarSrc,
         avatarAlt,
         successAction,
-        state: resolvedState,
+        state,
         labels,
         config,
         contributedItems: contributedEntries.length > 0 ? contributedEntries : undefined,
+        areaEntries: areaEntries.length > 0 ? areaEntries : undefined,
       }}
     />
   );

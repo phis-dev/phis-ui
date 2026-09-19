@@ -440,7 +440,7 @@ assert.deepEqual(
     ]),
     "app",
   )?.capabilities,
-  ["primary-login", "account-security"],
+  ["primary-login"],
 );
 const competingAuthModuleId = "@test/pkg/modules/alternate-auth" as const;
 const competingAuthCatalog = createPhiRuntimeModuleCatalog([

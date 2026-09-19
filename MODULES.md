@@ -550,7 +550,12 @@ addressed by its path.
   and no target of its own. A Module docks its account entry under that anchor; the menu shows the
   anchor's children, with their own children as submenus, and every other item of the surface as itself.
   Like every other surface it is read through the Site's navigation overlay, so an operator's reordering
-  applies.
+  applies. The Area's own account entries are declared here too rather than drawn by the Widget -- the
+  App's profile and, injected by Auth, its security Page -- so nothing in that menu is beyond an
+  operator's reach. Both are App routes and belong to `app:account` alone, because an entry names a route
+  of its own Area; what reaches them from a staff Area is the list of Areas the Widget appends, which is
+  no surface at all: an Area's address is its own segment, and which Areas are in the list is a property
+  of the viewer rather than of the Page.
 - A navigation item may declare `signalRoutes.emits` instead of a target. It is already addressable --
   every resolved item has an instance id, and a signal address is `cms:<instanceId>` -- so an item that
   emits is a sender like a Button Widget, and a renderer that finds routes draws a button. Signing out is
@@ -586,7 +591,9 @@ the same rule, `resolvePhiRuntimeModuleAreaRoutePath`; a descriptor that offers 
 resolves it before handing it over, so no consumer is left to reconstruct it. The Account menu once got
 this wrong in the one place it is easy to: the Auth provider handed out `/security` unchanged, the Widget
 put only the Area in front, and the entry pointed at `/app/security` for a Page that answers at
-`/app/phis/ui/security`.
+`/app/phis/ui/security`. The surest fix is to hand out no address: both account Pages are navigation
+entries now, naming a route preset the way every entry does, and an entry that names a preset cannot
+name a wrong path.
 
 In Public there is no such namespace, so the path a route descriptor declares is an application and not
 a title. The Site settles it when the Module is enabled, and whoever asks second bears the cost: the
