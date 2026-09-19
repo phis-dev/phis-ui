@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
 
-import { Card, Collapse, ConfigProvider, Space, theme as antdTheme } from "antd";
+import { Collapse, ConfigProvider, Space, theme as antdTheme } from "antd";
 import { DeleteOutlined } from "@ant-design/icons";
 import type { AliasToken } from "antd/es/theme/interface";
 import type { PhiColorPickerLabels } from "../../../../../components/widgets/label-types/color-picker";
@@ -147,6 +147,7 @@ import {
   type PhiControlShape,
   type PhiControlShapeCorners,
 } from "../../../../../theme/phi-control-shape";
+import { PhiCardControl } from "../../../../../components/controls/phi-card-control";
 import { PhiFlexControl } from "../../../../../components/controls/phi-flex-control";
 import { PhiTypographyControl } from "../../../../../components/controls/phi-typography-control";
 import { PhiDividerControl } from "../../../../../components/controls/phi-divider-control";
@@ -2174,7 +2175,7 @@ export function PhiBuilderBrandThemeControlsWidgetClient({
 
   return (
     <PhiFlexControl vertical gap={clientToken.padding} style={{ width: "100%", minWidth: 0, opacity: loading ? 0.65 : 1 }}>
-      <Card size="small" styles={{ body: { padding: clientToken.paddingSM } }}>
+      <PhiCardControl size="small">
         <PhiFlexControl vertical gap={clientToken.paddingSM}>
           {/*
             The palette, over the Set chosen in the workspace header. The Set decides all three parts at
@@ -2367,7 +2368,7 @@ export function PhiBuilderBrandThemeControlsWidgetClient({
             ]}
           />
         </PhiFlexControl>
-      </Card>
+      </PhiCardControl>
     </PhiFlexControl>
   );
 }
@@ -2470,7 +2471,7 @@ export function PhiBuilderBrandStyleControlsWidgetClient({
       {siteFontFaceCss ? (
         <style href="phi-theme-font-picker-faces" precedence="default" dangerouslySetInnerHTML={{ __html: siteFontFaceCss }} />
       ) : null}
-      <Card size="small" styles={{ body: { padding: clientToken.paddingSM } }}>
+      <PhiCardControl size="small">
         <Collapse
           accordion
           bordered={false}
@@ -2673,7 +2674,7 @@ export function PhiBuilderBrandStyleControlsWidgetClient({
             },
           ]}
         />
-      </Card>
+      </PhiCardControl>
     </PhiFlexControl>
   );
 }
@@ -2996,7 +2997,7 @@ export function PhiBuilderBrandIdentityControlsWidgetClient({
 
   return (
     <PhiFlexControl vertical gap={clientToken.padding} style={{ width: "100%", minWidth: 0 }}>
-      <Card size="small" styles={{ body: { padding: clientToken.paddingSM } }}>
+      <PhiCardControl size="small">
         <Collapse
           accordion
           bordered={false}
@@ -3303,7 +3304,7 @@ export function PhiBuilderBrandIdentityControlsWidgetClient({
             },
           ]}
         />
-      </Card>
+      </PhiCardControl>
     </PhiFlexControl>
   );
 }
@@ -3353,7 +3354,7 @@ export function PhiBuilderBrandBackgroundControlsWidgetClient({
 
   return (
     <PhiFlexControl vertical gap={clientToken.padding} style={{ width: "100%", minWidth: 0 }}>
-      <Card size="small" styles={{ body: { padding: clientToken.paddingSM } }}>
+      <PhiCardControl size="small">
         {/*
           Which ground this Site follows. The block is what shows wherever the author set nothing, so
           switching it changes the untouched surfaces and leaves the edited ones alone. The reset beside
@@ -3493,7 +3494,7 @@ export function PhiBuilderBrandBackgroundControlsWidgetClient({
             },
           ]}
         />
-      </Card>
+      </PhiCardControl>
     </PhiFlexControl>
   );
 }
@@ -3887,7 +3888,7 @@ export function PhiBuilderBrandThemePreviewWidgetClient({
       {previewFontStacks.faceCss ? (
         <style href="phi-theme-preview-faces" precedence="default" dangerouslySetInnerHTML={{ __html: previewFontStacks.faceCss }} />
       ) : null}
-      <Card
+      <PhiCardControl
         size="small"
         style={{
           width: "100%",
@@ -4123,7 +4124,7 @@ export function PhiBuilderBrandThemePreviewWidgetClient({
             />
           </PhiFlexControl>
         </PhiBrandChromePreviewShell>
-      </Card>
+      </PhiCardControl>
     </ConfigProvider>
   );
 }

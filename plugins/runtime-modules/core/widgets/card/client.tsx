@@ -1,9 +1,9 @@
 "use client";
 
-import { Card } from "antd";
 import { PhiButtonControl } from "../../../../../components/controls/phi-button-control";
 
 import type { PhiClientBlockBaseProps } from "../../../../../types";
+import { PhiCardControl } from "../../../../../components/controls/phi-card-control";
 import { PhiLink } from "../../../../../components/navigation/phi-link";
 import { usePhiConfig } from "../../../../../components/root/phi-config-provider";
 import { PhiTypographyControl } from "../../../../../components/controls/phi-typography-control";
@@ -92,107 +92,108 @@ export function PhiCardWidgetClient({
   ) : null;
 
   return (
-    <Card
+    <PhiCardControl
       size={size}
-      variant="outlined"
       hoverable={hasPrimaryLink || hasAction}
       cover={cover}
       style={{
         width: "100%",
         borderColor: cardHighlight ? token.colorPrimary : token.colorBorderSecondary,
+        /*
+         * Depth from the Theme, not from three colours typed in by hand. A card sits on the page rather
+         * than over it, so the ordinary one is the quiet shadow and a featured one is the next step up;
+         * a highlighted card keeps its ring, which is a border rather than depth.
+         */
         boxShadow: cardHighlight
-          ? `0 0 0 1px ${token.colorPrimary} inset, 0 4px 14px rgba(17, 24, 39, 0.08)`
-        : variant === "featured"
-            ? "0 10px 28px rgba(17, 24, 39, 0.10)"
-            : "0 4px 14px rgba(17, 24, 39, 0.08)",
+          ? `0 0 0 1px ${token.colorPrimary} inset, ${token.boxShadowTertiary}`
+          : variant === "featured"
+            ? token.boxShadowSecondary
+            : token.boxShadowTertiary,
         background: variant === "featured" ? token.colorFillQuaternary : token.colorBgContainer,
       }}
-      styles={{
-        body: {
-          display: "grid",
-          gap: variant === "compact" ? token.paddingSM : token.paddingLG,
-        },
-      }}
     >
-      <div
-        style={{
-          display: "grid",
-          gap: variant === "compact" ? token.paddingSM : token.paddingLG,
-        }}
-      >
-        {config?.iconUrl ? (
-          <img
-            alt={config.iconAlt ?? labels.title ?? ""}
-            src={config.iconUrl}
-            loading="lazy"
-            width={40}
-            height={40}
+      {/* The Card is a box; arranging what is in it belongs to this Widget, not to the primitive's body. */}
+      <div style={{ display: "grid", gap: variant === "compact" ? token.paddingSM : token.paddingLG }}>
+        <div
+          style={{
+            display: "grid",
+            gap: variant === "compact" ? token.paddingSM : token.paddingLG,
+          }}
+        >
+          {config?.iconUrl ? (
+            <img
+              alt={config.iconAlt ?? labels.title ?? ""}
+              src={config.iconUrl}
+              loading="lazy"
+              width={40}
+              height={40}
+              style={{
+                display: "block",
+                width: 40,
+                height: 40,
+                borderRadius: token.borderRadius,
+                objectFit: "contain",
+                // Marks are drawn to their own edges, so one is given room rather than cropped: what a
+                // cover may lose at the sides, a logo may not.
+                background: token.colorFillQuaternary,
+              }}
+            />
+          ) : null}
+          {labels.eyebrow ? (
+            <PhiTypographyControl
+              type="secondary"
+              style={{
+                fontSize: token.fontSizeSM,
+                lineHeight: 1.5715,
+                letterSpacing: "0.04em",
+                textTransform: "uppercase",
+                color: cardHighlight ? token.colorPrimary : token.colorTextTertiary,
+              }}
+            >
+              {labels.eyebrow}
+            </PhiTypographyControl>
+          ) : null}
+          {titleNode}
+        </div>
+
+        {labels.description ? (
+          <PhiTypographyControl presentation="paragraph"
             style={{
-              display: "block",
-              width: 40,
-              height: 40,
-              borderRadius: token.borderRadius,
-              objectFit: "contain",
-              // Marks are drawn to their own edges, so one is given room rather than cropped: what a
-              // cover may lose at the sides, a logo may not.
-              background: token.colorFillQuaternary,
+              marginBottom: 0,
+              color: token.colorTextSecondary,
+              fontSize: variant === "compact" ? token.fontSize : token.fontSizeLG,
+              lineHeight: variant === "compact" ? token.lineHeight : token.lineHeightLG,
             }}
-          />
+          >
+            {labels.description}
+          </PhiTypographyControl>
         ) : null}
-        {labels.eyebrow ? (
+
+        {labels.meta ? (
           <PhiTypographyControl
             type="secondary"
             style={{
               fontSize: token.fontSizeSM,
               lineHeight: 1.5715,
-              letterSpacing: "0.04em",
-              textTransform: "uppercase",
-              color: cardHighlight ? token.colorPrimary : token.colorTextTertiary,
+              color: token.colorTextTertiary,
             }}
           >
-            {labels.eyebrow}
+            {labels.meta}
           </PhiTypographyControl>
         ) : null}
-        {titleNode}
+
+        {hasAction ? (
+          <div>
+            <PhiButtonControl
+              type={cardHighlight ? "primary" : "default"}
+              size={variant === "compact" ? "small" : "medium"}
+              href={config!.actionHref}
+              newTab={config?.actionNewTab}
+              label={labels.actionLabel}
+            />
+          </div>
+        ) : null}
       </div>
-
-      {labels.description ? (
-        <PhiTypographyControl presentation="paragraph"
-          style={{
-            marginBottom: 0,
-            color: token.colorTextSecondary,
-            fontSize: variant === "compact" ? token.fontSize : token.fontSizeLG,
-            lineHeight: variant === "compact" ? token.lineHeight : token.lineHeightLG,
-          }}
-        >
-          {labels.description}
-        </PhiTypographyControl>
-      ) : null}
-
-      {labels.meta ? (
-        <PhiTypographyControl
-          type="secondary"
-          style={{
-            fontSize: token.fontSizeSM,
-            lineHeight: 1.5715,
-            color: token.colorTextTertiary,
-          }}
-        >
-          {labels.meta}
-        </PhiTypographyControl>
-      ) : null}
-
-      {hasAction ? (
-        <div>
-          <PhiButtonControl
-            type={cardHighlight ? "primary" : "default"}
-            size={variant === "compact" ? "small" : "medium"}
-            href={config!.actionHref}
-            newTab={config?.actionNewTab}
-            label={labels.actionLabel}
-          />
-        </div>
-      ) : null}
-    </Card>
+    </PhiCardControl>
   );
 }

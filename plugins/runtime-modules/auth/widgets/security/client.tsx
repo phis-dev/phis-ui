@@ -1,9 +1,10 @@
 "use client";
 
 import { lazy, Suspense, useCallback, useEffect, useState } from "react";
-import { Card, List } from "antd";
+import { List } from "antd";
 import { PhiTagControl } from "../../../../../components/controls/phi-tag-control";
 import { PhiButtonControl } from "../../../../../components/controls/phi-button-control";
+import { PhiCardControl } from "../../../../../components/controls/phi-card-control";
 import { PhiAlertControl } from "../../../../../components/controls/phi-alert-control";
 import { PhiConfirmControl } from "../../../../../components/controls/phi-confirm-control";
 import { PhiFlexControl } from "../../../../../components/controls/phi-flex-control";
@@ -142,9 +143,9 @@ export function PhiAuthSecurityWidgetClient({ apiPath = "/api/auth/account/secur
         Manage authenticator apps, linked login providers, and sessions for this site.
       </PhiTypographyControl>
       {error ? <PhiAlertControl level="error" showIcon title={error} dismissible onDismiss={() => setError(null)} /> : null}
-      <Card
+      <PhiCardControl
         title="Authenticator apps"
-        extra={<PhiButtonControl type="primary" onClick={() => setEnrolling(true)} label="Add authenticator" />}
+        toolbar={<PhiButtonControl type="primary" onClick={() => setEnrolling(true)} label="Add authenticator" />}
       >
         <List
           locale={{ emptyText: "No authenticator configured." }}
@@ -169,8 +170,8 @@ export function PhiAuthSecurityWidgetClient({ apiPath = "/api/auth/account/secur
             </List.Item>
           )}
         />
-      </Card>
-      <Card title="Linked login providers">
+      </PhiCardControl>
+      <PhiCardControl title="Linked login providers">
         <List
           locale={{ emptyText: "No external login provider linked." }}
           dataSource={payload.identities}
@@ -180,8 +181,8 @@ export function PhiAuthSecurityWidgetClient({ apiPath = "/api/auth/account/secur
             </List.Item>
           )}
         />
-      </Card>
-      <Card title="Sessions">
+      </PhiCardControl>
+      <PhiCardControl title="Sessions">
         <List
           dataSource={payload.sessions}
           renderItem={(session) => (
@@ -204,7 +205,7 @@ export function PhiAuthSecurityWidgetClient({ apiPath = "/api/auth/account/secur
             </List.Item>
           )}
         />
-      </Card>
+      </PhiCardControl>
     </PhiFlexControl>
   );
 }

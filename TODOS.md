@@ -49,9 +49,9 @@ built. Remove an entry when it is done.
   and every direct import makes replacing it harder:** with a Control it is an adapter change, without
   one it is a tree-wide edit.
 
-  It started at 28 named primitives against about 25 uncontrolled ones. It now names 40, closes five
-  more to a single owner file, and leaves eight: `Card`, `Col`, `Collapse`, `Descriptions`, `Layout`,
-  `List`, `Row`, `Space`.
+  It started at 28 named primitives against about 25 uncontrolled ones. It now names 41, closes five
+  more to a single owner file, and leaves seven: `Col`, `Collapse`, `Descriptions`, `Layout`, `List`,
+  `Row`, `Space`.
 
   `App`, `ConfigProvider` and `theme` stay direct: they are the root and theme adapters AGENTS.md
   already exempts, not feature surface.
@@ -61,9 +61,8 @@ built. Remove an entry when it is done.
 
   - **A Control**, where there is platform semantics to own -- a normalized contract, defaults the
     platform should decide once rather than at each call site:
-    ~~`Upload`, `Progress`, `Skeleton`, `Empty`, `Tooltip`, `Avatar`~~ done; `Collapse`,
-    `Descriptions`, `Card` and `Space.Compact` (which is a different thing from `Space`, see below)
-    remain.
+    ~~`Upload`, `Progress`, `Skeleton`, `Empty`, `Tooltip`, `Avatar`, `Card`~~ done; `Collapse`,
+    `Descriptions` and `Space.Compact` (which is a different thing from `Space`, see below) remain.
   - **A thin pass-through**, where there is nothing to decide and the wrapper exists only so the import
     points at us: ~~`PhiTypographyControl` (~63 files), `Flex` (~60), `Divider`, `Spin`, `QRCode`,
     `Statistic`~~ -- all done. `PhiSpinControl` stays beside `PhiSkeletonControl` rather than being
@@ -161,6 +160,28 @@ built. Remove an entry when it is done.
     "avatar" and means "account menu trigger", which is worth a rename it cannot have yet: it is public
     API in `navigation.ts`. Its `<Space size={8}>` became `PhiFlexControl`, one site off the `Space`
     sweep below.
+  - ~~`Card`~~ built as `PhiCardControl`. Eleven sites in three files, doing three different jobs with
+    one primitive: a card on a page (the Card Widget), four inspector panels, a Theme preview frame, and
+    three headed sections in the security Widget.
+
+    **What it holds is the padding.** Ant Design hard-codes the small Card's body padding to 12 and
+    reaches for `paddingLG` otherwise, and on this Fibonacci scale neither is right: `paddingSM` is 13,
+    and `paddingLG` is 55, which made the security Widget's three ordinary sections look like features.
+    Four of the five small Cards had noticed the first half and written the same one-line override by
+    hand. The fifth had not, and it was the Theme preview: the one box whose entire job is to show what a
+    Theme looks like was the one drawn off the Theme's own scale. `PhiCardControl` decides both sizes
+    once, from `paddingSM` and `padding`.
+
+    `extra` is `toolbar`, the word `PhiCollectionHeaderControl` already uses for the same thing, and it
+    passes straight through -- a toolbar with no title still draws the heading bar, because that is the
+    primitive's behaviour and a rule against it here would only hide it. **There is no body style**: a
+    card is a box, and arranging what is inside it belongs to the caller's own element. The Card Widget's
+    body grid moved into a `div` of its own.
+
+    The Card Widget's three hand-written `rgba(17, 24, 39, …)` shadows are gone with it: depth now comes
+    from `boxShadowTertiary` for an ordinary card and `boxShadowSecondary` for a featured one, and a
+    highlighted card keeps its primary-coloured ring, which is a border rather than depth. A card sits on
+    the page rather than over it, so the quiet shadow is the ordinary one.
   - `Typography` is `PhiTypographyControl`, decided. `PhiTextControl` is **taken** -- it is antd `Input`.
     So is `PhiAnchorControl`: `components/controls/phi-anchor-control-contract.ts` is about placement
     anchors (`topLeft`…`bottomRight`), not antd `Anchor`. Both names are settled before the first commit,
@@ -187,8 +208,8 @@ built. Remove an entry when it is done.
 
   Order: ~~the two big pass-throughs (`Flex`, `PhiTypographyControl`), the five owner entries, the
   trivial wrappers, `PhiFileDropControl` with `Progress`, `PhiSkeletonControl`, `PhiEmptyControl`,
-  `PhiNameControl`, `PhiAvatarControl`~~ -- done. Next `Card`/`Collapse`/`Descriptions`, then the
-  deletions, then `Listy`, and the allowlist last.
+  `PhiNameControl`, `PhiAvatarControl`, `PhiCardControl`~~ -- done. Next `Collapse`/`Descriptions`,
+  then the deletions, then `Listy`, and the allowlist last.
 
   Until the Controls exist, direct use in a Widget or Layout stays correct and the validator keeps
   permitting it: this is a planned narrowing, not a rule being broken today. Update the validator's own
