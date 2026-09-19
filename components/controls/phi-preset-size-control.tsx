@@ -1,9 +1,9 @@
 "use client";
 
-import { Space } from "antd";
 
 import { PhiSelectControl } from "./phi-select-control";
 import { PhiTextControl } from "./phi-text-control";
+import { PhiCompactGroupControl } from "./phi-compact-group-control";
 
 export type PhiPresetSizeOption = {
   key: string;
@@ -41,7 +41,7 @@ export function PhiPresetSizeControl<TKey extends string = string>({
   }));
 
   return (
-    <Space.Compact style={{ width: "100%" }}>
+    <PhiCompactGroupControl style={{ width: "100%" }}>
       <PhiSelectControl
         disabled={disabled}
         value={selectedKey}
@@ -55,6 +55,6 @@ export function PhiPresetSizeControl<TKey extends string = string>({
         style={{ width: "58%" }}
       />
       <PhiTextControl readOnly allowClear={false} value={`${value}px`} style={{ width: "42%" }} />
-    </Space.Compact>
+    </PhiCompactGroupControl>
   );
 }

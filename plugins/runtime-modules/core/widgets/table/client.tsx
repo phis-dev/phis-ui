@@ -4,7 +4,7 @@ import { ReloadOutlined, UndoOutlined } from "@ant-design/icons";
 import type { PhiTableWidgetLabels } from "../../../../../components/widgets/label-types/table";
 import { PHI_TABLE_WIDGET_DEFAULT_LABELS } from "../../../../../components/widgets/label-types/table";
 import { formatPhiTableWidgetLabel } from "../../../../../components/widgets/label-types/table";
-import { App, Space } from "antd";
+import { App } from "antd";
 import { PhiNameControl } from "../../../../../components/controls/phi-name-control";
 import { PhiTagControl } from "../../../../../components/controls/phi-tag-control";
 import { Fragment, useCallback, useEffect, useEffectEvent, useMemo, useState, type ReactNode } from "react";
@@ -80,6 +80,7 @@ import {
 import { resolvePhiButtonIcon } from "../../../../../components/widgets/client/shared/phi-button-icons";
 import { PhiFlexControl } from "../../../../../components/controls/phi-flex-control";
 import { PhiTypographyControl } from "../../../../../components/controls/phi-typography-control";
+import { PhiCompactGroupControl } from "../../../../../components/controls/phi-compact-group-control";
 
 type TableRow = Record<string, unknown>;
 type DateRangeValue = { start?: string; end?: string };
@@ -788,7 +789,7 @@ export function PhiTableWidgetClient({
             });
           return features.actions?.rowLayout === "spaced"
             ? <PhiFlexControl align="center" gap="small" style={{ display: "inline-flex" }}>{renderedActions}</PhiFlexControl>
-            : <Space.Compact>{renderedActions}</Space.Compact>;
+            : <PhiCompactGroupControl>{renderedActions}</PhiCompactGroupControl>;
         },
       });
     }
@@ -1238,7 +1239,7 @@ function TableBindingTool({ field, tool, sourceConfig, value, size, onChange, on
       onOpenChange={setPopoverOpen}
       trigger="click"
       content={(
-        <Space.Compact>
+        <PhiCompactGroupControl>
           <PhiTextControl
             value={draft}
             placeholder={createConfig.placeholder}
@@ -1272,7 +1273,7 @@ function TableBindingTool({ field, tool, sourceConfig, value, size, onChange, on
               }).finally(() => setCreating(false));
             }}
           />
-        </Space.Compact>
+        </PhiCompactGroupControl>
       )}
     >
       <span style={{ display: "inline-flex" }}>
@@ -1288,7 +1289,7 @@ function TableBindingTool({ field, tool, sourceConfig, value, size, onChange, on
     </PhiPopoverControl>
   ) : null;
   return (
-    <Space.Compact>
+    <PhiCompactGroupControl>
       {tool.control === "cascader" ? (
         <PhiCascaderControl
           label={tool.label}
@@ -1321,7 +1322,7 @@ function TableBindingTool({ field, tool, sourceConfig, value, size, onChange, on
         />
       )}
       {create}
-    </Space.Compact>
+    </PhiCompactGroupControl>
   );
 }
 
@@ -1374,14 +1375,14 @@ function TableFilter({ filter, field, sourceConfig, value, size, onChange, label
   }
   if (filter.type === "dateRange") {
     const range = isRecord(value) ? value : {};
-    return <Space.Compact>
+    return <PhiCompactGroupControl>
       <PhiTextControl value={typeof range.start === "string" ? range.start : ""} placeholder={filter.startPlaceholder}
         size={size} onChange={(next) => onChange({ ...range, start: next ?? "" })}
       />
       <PhiTextControl value={typeof range.end === "string" ? range.end : ""} placeholder={filter.endPlaceholder}
         size={size} onChange={(next) => onChange({ ...range, end: next ?? "" })}
       />
-    </Space.Compact>;
+    </PhiCompactGroupControl>;
   }
   return <PhiTextControl value={typeof value === "string" ? value : ""}
     placeholder={filter.placeholder ?? hiddenLabelPlaceholder}

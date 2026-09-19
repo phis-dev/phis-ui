@@ -70,7 +70,13 @@ built. Remove an entry when it is done.
   one it is a tree-wide edit.
 
   It started at 28 named primitives against about 25 uncontrolled ones. It now names 43, closes five
-  more to a single owner file, and leaves one still imported: `Space`, for `Space.Compact` alone.
+  more to a single owner file, and leaves none: no file in the tree imports an Ant Design primitive past
+  it any more.
+
+  **That is not the same as closed.** `Row`, `Col` and `Layout` are the proof -- imported nowhere, and
+  unprotectable by this map, which demands a Control exporting the named symbol where a three-column grid
+  is a Layout. A denylist nothing violates still permits by omission, so the next primitive somebody
+  reaches for is permitted again exactly as the last thirty were. The allowlist below is what remains.
 
   `Row`, `Col` and `Layout` are imported nowhere any more -- the footer Widget went and took them -- but
   the validator cannot say so. `controlledPrimitives` requires a Control that exports the named symbol,
@@ -295,14 +301,22 @@ built. Remove an entry when it is done.
   permitting it: this is a planned narrowing, not a rule being broken today. Update the validator's own
   comment, the AGENTS.md line and `components/widgets/README.md` when it lands, since all three currently
   read as settled.
-- **`Space.Compact` in seven files is what keeps `Space` imported.** Plain `<Space>` is gone -- 29 sites
-  in twelve files became `PhiFlexControl` -- but `Space.Compact` is a different component and no `gap`
-  expresses it: it joins adjacent Controls into one shape with shared borders and collapsed radii.
-  `plugins/runtime-modules/core/widgets/table/client.tsx`, `phi-length-control`, `phi-preset-size-control`,
-  `phi-toolbar-control`, `phi-background-control`, `phi-border-control` and
-  `command-toolbar-authoring-tools`. Whether that wants a Control of its own -- a joined group of
-  Controls is a real shape with a real rule about which corners round -- or whether the sites want
-  something else, is the open question.
+- ~~**`Space.Compact`**~~ built as `PhiCompactGroupControl`. **It had to be a wrapper and could not be
+  written ourselves:** Ant Design joins Controls through a React context, not CSS -- `Space.Compact` puts
+  `isFirstItem`, `isLastItem`, the size and the direction around each child, and ten of its components
+  read that context and emit their own border-collapsing class names. Negative margins of our own would
+  reach eighty per cent and break on the focus ring, an error state, a disabled edge, an open Select --
+  per Control, separately.
+
+  Ten sites, two meanings, one rendering. A **compound field** is several Controls holding one value and
+  joined so they read as one input (a number and its unit, a width and its style, a range); a **button
+  group** is separate commands drawn as one bar. Seven to three. They are not two Controls, because the
+  seam is the same seam and the primitive has one contract -- the distinction lives in the doc comment so
+  that nobody reaches for it to build a layout.
+
+  Left out deliberately: a `label` prop for `role="group"` plus `aria-label`. No site needs it today, the
+  parts carry their own names, and `SpaceCompactProps` extends `HTMLAttributes`, so a real case can pass
+  both itself.
 
   **Two differences between `Space` and `Flex` no typechecker sees**, found while sweeping and worth not
   rediscovering. A horizontal `Space` centres its children (`align === undefined && !vertical ? 'center'`

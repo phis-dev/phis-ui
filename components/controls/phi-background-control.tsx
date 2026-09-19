@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 
-import { Button, Divider, Flex, Input, InputNumber, Select, Space, Typography, theme } from "antd";
+import { Button, Divider, Flex, Input, InputNumber, Select, Typography, theme } from "antd";
 import type { DefaultOptionType } from "antd/es/select";
 
 import { PhiFlexControl } from "./phi-flex-control";
@@ -67,6 +67,7 @@ import { PhiSliderControl } from "./phi-slider-control";
 import { PhiSelectControl } from "./phi-select-control";
 import { PHI_COLOR_PICKER_DEFAULT_LABELS } from "../widgets/label-types/color-picker";
 import { usePhiColorControlPresets } from "./use-phi-color-control-presets";
+import { PhiCompactGroupControl } from "./phi-compact-group-control";
 
 export type PhiBackgroundEditTransaction = {
   onBegin?: () => void;
@@ -632,7 +633,7 @@ export function PhiBackgroundControl({
     return (
       <Flex key={key} vertical gap={token.paddingXS} style={{ width: "100%" }}>
         <Typography.Text>{label}</Typography.Text>
-        <Space.Compact block style={{ width: "100%" }}>
+        <PhiCompactGroupControl block style={{ width: "100%" }}>
           {renderDirectionButtons(value, onDirectionChange)}
           <InputNumber
             min={0}
@@ -649,7 +650,7 @@ export function PhiBackgroundControl({
               width: 0,
             }}
           />
-        </Space.Compact>
+        </PhiCompactGroupControl>
       </Flex>
     );
   }

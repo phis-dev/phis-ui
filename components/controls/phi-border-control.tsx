@@ -1,6 +1,6 @@
 "use client";
 
-import { InputNumber, Select, Space, Typography, theme } from "antd";
+import { InputNumber, Select, Typography, theme } from "antd";
 
 import { resolvePhiBorderWidgetStyle } from "../../helpers/border-widget-style";
 import {
@@ -17,6 +17,7 @@ import { ConfigPreviewShell } from "./config-preview-shell";
 import { PhiBoundRadiusControl } from "./phi-bound-radius-control";
 import { PhiColorControl } from "./phi-color-control";
 import type { PhiPickerPlacement } from "./phi-picker-control-contract";
+import { PhiCompactGroupControl } from "./phi-compact-group-control";
 
 export type PhiBorderControlProps = {
   value?: PhiCmsBorderWidgetConfig | null;
@@ -126,7 +127,7 @@ export function PhiBorderControl({
           }}
         >
           <Typography.Text>{labels.fields.style}</Typography.Text>
-          <Space.Compact style={{ width: "100%" }}>
+          <PhiCompactGroupControl style={{ width: "100%" }}>
             <InputNumber
               disabled={isDisabled}
               value={resolvedValue.borderWidth}
@@ -155,7 +156,7 @@ export function PhiBorderControl({
               }}
               style={{ width: "58%" }}
             />
-          </Space.Compact>
+          </PhiCompactGroupControl>
 
           <Typography.Text>{labels.fields.color}</Typography.Text>
           <PhiColorControl

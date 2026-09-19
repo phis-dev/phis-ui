@@ -7,7 +7,6 @@ import {
   MenuOutlined,
   PlusOutlined,
 } from "@ant-design/icons";
-import { Space } from "antd";
 
 import { PhiButtonControl } from "../../controls/phi-button-control";
 import { PhiPopoverControl } from "../../controls/phi-popover-control";
@@ -16,6 +15,7 @@ import type { PhiCommandToolbarButtonConfig } from "../../../plugins/runtime-mod
 import { usePhiWidgetScaffoldPopup } from "../client/shared/phi-widget-scaffold-popup";
 import { PhiFlexControl } from "../../controls/phi-flex-control";
 import { PhiTypographyControl } from "../../controls/phi-typography-control";
+import { PhiCompactGroupControl } from "../../controls/phi-compact-group-control";
 
 function stopToolEvent(event: { stopPropagation: () => void }) {
   event.stopPropagation();
@@ -63,7 +63,7 @@ export function PhiCommandToolbarAuthoringTools({
   const popup = usePhiWidgetScaffoldPopup();
 
   return (
-    <Space.Compact>
+    <PhiCompactGroupControl>
       <span onClick={stopToolEvent} onPointerDown={stopToolEvent} style={{ display: "inline-flex" }}>
         <PhiButtonControl
           type="text"
@@ -138,6 +138,6 @@ export function PhiCommandToolbarAuthoringTools({
           />
         </span>
       </PhiPopoverControl>
-    </Space.Compact>
+    </PhiCompactGroupControl>
   );
 }

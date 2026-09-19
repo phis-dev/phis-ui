@@ -1,6 +1,6 @@
 "use client";
 
-import { InputNumber, Select, Space } from "antd";
+import { InputNumber, Select } from "antd";
 import { useState, type CSSProperties } from "react";
 
 import {
@@ -12,6 +12,7 @@ import {
   type PhiCssLengthUnit,
 } from "../../types";
 import { PhiLabeledControl } from "./phi-labeled-control";
+import { PhiCompactGroupControl } from "./phi-compact-group-control";
 
 export type PhiLengthControlProps = {
   value?: PhiCssLength | null;
@@ -58,7 +59,7 @@ export function PhiLengthControl({
   const unit = part?.unit ?? pendingUnit ?? "px";
   const controlDisabled = disabled || readOnly || !onChange;
   const control = (
-    <Space.Compact block size={size} style={{ width: "100%", minWidth: 0, ...style }}>
+    <PhiCompactGroupControl block size={size} style={{ width: "100%", minWidth: 0, ...style }}>
       <InputNumber
         aria-label={placeholder ?? label ?? "Length"}
         controls={false}
@@ -96,7 +97,7 @@ export function PhiLengthControl({
           }
         }}
       />
-    </Space.Compact>
+    </PhiCompactGroupControl>
   );
 
   return <PhiLabeledControl label={label} fill>{control}</PhiLabeledControl>;

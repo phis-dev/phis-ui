@@ -1,12 +1,13 @@
 "use client";
 
 import type { CSSProperties, ReactNode } from "react";
-import { Flex, Space } from "antd";
+import { Flex } from "antd";
 
 import type { PhiControlSize } from "../../types/control";
 import { PHI_SPACE } from "../../theme/antd-css-var-contract";
 import { PhiButtonControl, type PhiControlBadgePresentation } from "./phi-button-control";
 import type { PhiButtonType } from "./phi-button-types";
+import { PhiCompactGroupControl } from "./phi-compact-group-control";
 
 export type PhiToolbarControlItem = {
   key: string;
@@ -66,7 +67,7 @@ export function PhiToolbarControl({
     ));
 
   if (compact && !wrap) {
-    return <Space.Compact style={style}>{controls}{children}</Space.Compact>;
+    return <PhiCompactGroupControl style={style}>{controls}{children}</PhiCompactGroupControl>;
   }
 
   return (

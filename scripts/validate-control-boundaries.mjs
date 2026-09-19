@@ -78,18 +78,19 @@ const coreApplicationAdapterPath = "components/runtime/core-runtime-application-
  * for a handful of primitives -- so everything outside those names passed, every Module under `plugins/`
  * included. This is the rule itself, over the whole tree.
  *
- * This map is a denylist, so **every primitive not named here is permitted by omission**, though only
- * `Space` still is, and only for `Space.Compact`. `Flex`
- * and `Typography`, the two that reached furthest, are done, as are the four that had nothing to decide,
- * the file-choosing pair and the two that say "waiting" and "none"; five more are closed by
- * `soleOwnerPrimitives` below.
+ * This map is a denylist, so **every primitive not named here is permitted by omission** -- and with
+ * `Space` there is nothing left in the tree that reaches past it. That took every route: a Control for
+ * what had something to decide, a plain pass-through where nothing did, an owner entry where the Widget
+ * around the primitive already was the contract, an adapter file for a Layout that owns its own, and a
+ * deletion for the footer Widget, which took `Row`, `Col` and `Layout` with it.
  *
- * That is where things stand rather than where they are meant to end: wrapping the rest is planned
- * work, because Ant Design is replaceable in principle and every direct import turns that from a
- * Control-adapter change into a tree-wide edit. When the Controls land, the primitives belong in the
- * map below and this check should end up refusing by default instead -- an allowlist of what may be
- * imported directly -- so the next primitive somebody reaches for is not permitted again by omission.
- * See TODOS.md, "Wrap the uncontrolled Ant Design primitives in Phi Controls".
+ * **Empty is not closed.** A denylist that nothing violates still permits by omission, and `Row`, `Col`
+ * and `Layout` are the proof: imported nowhere, and unprotectable here, because this map demands a
+ * Control that exports the named symbol and a three-column grid is a Layout rather than a Control. So
+ * the next primitive somebody reaches for is permitted again, exactly as the last thirty were. This
+ * check has to end up refusing by default -- an allowlist of what may be imported directly -- and that
+ * is now the only thing left to do. See TODOS.md, "Wrap the uncontrolled Ant Design primitives in Phi
+ * Controls".
  */
 const controlledPrimitives = new Map([
   ["Alert", "PhiAlertControl"],
@@ -133,6 +134,12 @@ const controlledPrimitives = new Map([
   ["Segmented", "PhiSegmentedControl"],
   ["Select", "PhiSelectControl"],
   ["Slider", "PhiSliderControl"],
+  /*
+   * `Space` is the whole component, `Space.Compact` included: the member is reached through the import,
+   * so naming the import is what closes both. Plain `Space` is gone from the tree -- a gap does the same
+   * spacing without an element around every child -- and `Space.Compact` is `PhiCompactGroupControl`.
+   */
+  ["Space", "PhiCompactGroupControl"],
   ["Skeleton", "PhiSkeletonControl"],
   ["Spin", "PhiSpinControl"],
   ["Statistic", "PhiStatisticControl"],
