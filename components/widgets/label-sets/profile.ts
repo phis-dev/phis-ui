@@ -16,6 +16,23 @@ const PHI_PROFILE_LOCALE_WIDGET_LABEL_SET = definePhiLabelSet({
   },
 });
 
+const PHI_PROFILE_THEME_WIDGET_LABEL_SET = definePhiLabelSet({
+  key: "widget:profile-theme",
+  ctx: PHI_TR_CTX_WEB_UI_LABEL,
+  labels: {
+    description: definePhiMessageLabel("Choose whether this site appears light or dark for you."),
+    field_label: "Appearance",
+    /*
+     * "System" is what the third option answers, and it is deliberately not called "Automatic": what
+     * follows is a setting on the person's own device, and saying so is what makes the option findable
+     * when somebody wonders why the site changed at sunset.
+     */
+    mode_system: "System",
+    mode_light: "Light",
+    mode_dark: "Dark",
+  },
+});
+
 const PHI_PROFILE_NAME_WIDGET_LABEL_SET = definePhiLabelSet({
   key: "widget:profile-name",
   ctx: PHI_TR_CTX_WEB_UI_LABEL,
@@ -64,6 +81,19 @@ export async function getPhiProfileLocaleWidgetLabels(options: PhiGlobalTranslat
       errorInvalidLocale: labels.error_invalid_locale,
       successTitle: labels.success_title,
       successText: labels.success_text,
+    },
+  };
+}
+
+export async function getPhiProfileThemeWidgetLabels(options: PhiGlobalTranslatorOptions) {
+  const labels = await getPhiLabelSet(options, PHI_PROFILE_THEME_WIDGET_LABEL_SET);
+  return {
+    description: labels.description,
+    fieldLabel: labels.field_label,
+    modes: {
+      system: labels.mode_system,
+      light: labels.mode_light,
+      dark: labels.mode_dark,
     },
   };
 }

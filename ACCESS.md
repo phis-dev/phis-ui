@@ -45,7 +45,8 @@ type PhiBlockRuntimeViewer = {
   groupClaims: readonly PhiViewerGroupClaim[];
   addonRoleClaims?: readonly PhiViewerAddonRoleClaim[];
   authorizationRevision: number;
-  // plus presentation fields such as userName, preferredLocale, themeMode, profile
+  // plus presentation fields such as userName, preferredLocale, themeMode (resolved),
+  // preferredThemeMode (chosen, may be "system"), profile
 };
 ```
 

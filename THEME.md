@@ -89,6 +89,20 @@ sparse: readers normalize absent values.
   `prefers-color-scheme` carried in the `phis_color_scheme` cookie, falling back to `light`. A live
   `themeMode` or `theme` signal to the Core Runtime Controller overrides the projection for as long as the
   page stays open ([SIGNALS.md](./SIGNALS.md#site-core-runtime-controller)).
+- Where that preference lives, and why in two places at once: on the account, as `user_accounts.theme_mode`
+  (NULL means `system`, and the endpoint is `PATCH /api/v1/auth/profile/theme`), and mirrored into the
+  `phis_theme_mode` cookie, which is what `resolvePhiThemeMode` actually reads. The mirror is not a
+  convenience -- the static proxy picks a render, and the bootstrap script decides before the first paint,
+  and neither of them can resolve a session. The server writes the cookie on login and on every change, so
+  the account is what follows a person between browsers and the cookie is what this request can see.
+  `system` is the absence of the cookie rather than a third value in it.
+- The account's own answer also travels as `runtime.viewer.preferredThemeMode`, which is the choice and may
+  say `system`. `runtime.viewer.themeMode` beside it is the resolution and always names a half. A Settings
+  panel reads the first: shown the second, it would tell somebody they chose "Light" when they chose to be
+  asked. The pair stands to each other as `preferredLocale` does to `locale.current`.
+- The Header switch and the Settings panel are the same setting. The switch states two halves and writes
+  the account where there is one (`storePhiThemeModePreferenceOnAccount`); the panel is where the third
+  answer lives, because no switch can state "System".
 
 ### Blocks
 

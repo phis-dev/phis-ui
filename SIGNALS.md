@@ -294,7 +294,7 @@ It listens to exactly these inputs, all in Site scope:
 | `openGraphImage/change`, `openGraphImage/clear` | `image`, `none` | sets or removes `og:image` |
 | `canonicalUrl/change`, `canonicalUrl/clear` | `string`, `none` | sets or removes the canonical link |
 | `theme/change` | `json` (`runtimeTheme`) | applies a resolved Theme live |
-| `themeMode/change` | `boolean` | `true` shows dark, `false` light; nothing is persisted |
+| `themeMode/change` | `boolean` | `true` shows dark, `false` light. The Controller persists it: the `phis_theme_mode` cookie always, and the account (`PATCH profile/theme`) for a viewer who has one. The channel stays `boolean` because it names the half to show, not the preference -- "follow the browser" is not a thing a receiver can display, and it is chosen in Settings ([THEME.md](./THEME.md)) |
 | `locale/change` | `string` | applies a locale from the Site's available locales |
 | `path/activate` | `json` (`runtimeNavigation`) | forwards the browser |
 | `reload/activate` | `none` | asks the Server for the current Page again |

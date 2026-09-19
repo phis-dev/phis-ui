@@ -3,13 +3,17 @@ import type { PhiThemeMode } from "./phi-theme-presets";
 /**
  * How a viewer wants to see a Site. It is never part of a Theme: a Theme record and its drafts carry
  * only light or dark, the half of the Theme being authored. `system` exists only here, as a person's
- * preference - stored in their user settings once those exist - or as the browser speaking for them.
+ * preference - stored on their account as `user_accounts.theme_mode`, where it is the absence of a
+ * value - or as the browser speaking for them.
  */
 export type PhiThemeModePreference = PhiThemeMode | "system";
 
 /**
- * The preference of a viewer who has stated none, which today is every viewer: follow the browser.
- * A stored user setting is meant to replace this value where it is read.
+ * The preference of a viewer who has stated none: follow the browser.
+ *
+ * It is what the cookie's absence means, and the cookie mirrors the account, so this is also what an
+ * account with no stored mode resolves to. Somebody who chooses "System" in Settings is choosing this
+ * rather than storing something else.
  */
 export const PHI_DEFAULT_THEME_MODE_PREFERENCE: PhiThemeModePreference = "system";
 
@@ -153,4 +157,49 @@ export function readPhiThemeModePreferenceFromCookieHeader(
   cookieHeader?: string | null,
 ): PhiThemeModePreference {
   return normalizePhiThemeModePreference(readCookieValue(cookieHeader, PHI_THEME_MODE_COOKIE));
+}
+
+/**
+ * The account's copy of the choice, where there is an account to write it to.
+ *
+ * The switch in a Header is the same setting as the Settings panel, offered in one gesture instead of
+ * three, so it stores in the same place: a signed-in person changing it here should find it changed on
+ * their next browser too (SETTINGS.md, "the same theme choice, stored on the account"). Without a
+ * session the endpoint answers 401 and the cookie written beside this call is the whole answer, which
+ * is the right one for somebody who has no account to remember it in.
+ *
+ * Nothing is awaited by the caller and nothing is reported: the mode is already on screen, the cookie
+ * already carries it, and a failed write means only that the next browser will not know. Saying so
+ * where nobody asked would make a stated preference look like a failed action.
+ */
+export async function storePhiThemeModePreferenceOnAccount(
+  preference: PhiThemeModePreference,
+): Promise<void> {
+  try {
+    const csrfResponse = await fetch("/api/auth/csrf", {
+      method: "GET",
+      credentials: "include",
+      cache: "no-store",
+    });
+    if (!csrfResponse.ok) {
+      return;
+    }
+    const csrfPayload = (await csrfResponse.json().catch(() => ({}))) as { token?: string };
+    const csrfToken = csrfPayload.token?.trim() ?? "";
+    if (!csrfToken) {
+      return;
+    }
+    await fetch("/api/auth/profile/theme", {
+      method: "PATCH",
+      credentials: "include",
+      cache: "no-store",
+      headers: {
+        "content-type": "application/json",
+        "x-csrf-token": csrfToken,
+      },
+      body: JSON.stringify({ themeMode: preference }),
+    });
+  } catch {
+    // Offline, or no session. The cookie stands; see above for why this stays quiet.
+  }
 }

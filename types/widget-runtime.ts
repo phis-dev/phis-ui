@@ -7,6 +7,7 @@ import type {
   PhiSiteThemeRoot,
 } from "./site-theme";
 import type { PhiThemeMode, PhiThemePalette } from "../theme/phi-theme-presets";
+import type { PhiThemeModePreference } from "../theme/phi-theme-mode";
 import type { PhiThemeBlockSelection } from "../theme/phi-theme-composition";
 import type { PhiThemeDerivation } from "../theme/phi-theme-selection";
 import type { PhiControlShapeCorners } from "../theme/phi-control-shape";
@@ -103,6 +104,16 @@ export type PhiBlockRuntimeViewer = {
    * the half of the Theme being authored. Absent on surfaces that never resolve a viewer.
    */
   themeMode?: PhiWidgetThemeMode;
+  /**
+   * What this account asked for, which is a different question from what it is being shown.
+   *
+   * `themeMode` above is the resolution and always names a half; this is the choice and may say
+   * `system`, meaning the browser answers. The pair stands to each other as `preferredLocale` does to
+   * `locale.current`, and a Settings panel needs this one: it has to show "System" as chosen rather
+   * than as whichever half the browser happened to resolve it to. Absent for a viewer without an
+   * account, who has no stored choice to read.
+   */
+  preferredThemeMode?: PhiThemeModePreference | null;
   newsletterOptIn?: boolean | null;
   profile?: {
     firstName?: string | null;

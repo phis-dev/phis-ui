@@ -17,6 +17,7 @@ import type {
 import {
   applyPhiThemeModeToDocument,
   writePhiColorSchemeHint,
+  storePhiThemeModePreferenceOnAccount,
   writePhiThemeModePreference,
   type PhiThemeModePreference,
 } from "../../theme/phi-theme-mode";
@@ -229,6 +230,12 @@ export function PhiRootLiveThemeProvider({
       liveModeOverride.current = true;
       setMode(next);
       writePhiThemeModePreference(next);
+      /*
+       * And on the account, for whoever has one. The cookie above is what this browser reads next; this
+       * is what every other browser reads. Not awaited, because the mode is already on screen and the
+       * person is not waiting for a round trip to see what they just chose.
+       */
+      void storePhiThemeModePreferenceOnAccount(next);
       return;
     }
 

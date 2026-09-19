@@ -10,6 +10,7 @@ const PHI_PROFILE_PAGE_LABEL_SET = definePhiLabelSet({
     page: "Profile",
     name: "Name",
     language: "Language",
+    appearance: "Appearance",
     newsletter: "Newsletter",
     save: "Save",
     /*
@@ -27,6 +28,7 @@ export async function getPhiProfilePageLabels(options: PhiGlobalTranslatorOption
     page: labels.page,
     name: labels.name,
     language: labels.language,
+    appearance: labels.appearance,
     newsletter: labels.newsletter,
     save: labels.save,
     saved: labels.saved,

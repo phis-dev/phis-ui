@@ -14,6 +14,7 @@ import type {
 } from "../types/widget-runtime";
 import type { PhiSiteFontSlots, PhiSiteRemSettings } from "../types/site-theme";
 import {
+  normalizePhiThemeModePreference,
   readPhiColorSchemeHintFromCookieHeader,
   readPhiThemeModePreferenceFromCookieHeader,
   resolvePhiThemeMode,
@@ -299,8 +300,14 @@ export async function getPhiCmsRuntimeInfo({
   /*
    * The mode this viewer is shown until something overrides it live. It sits beside the viewer's
    * other preferences rather than in `site.theme`, which stays the Theme record the Theme workspace
-   * builds its draft from. What they last chose comes from their own cookie; a stored user setting
-   * will take its place for a viewer who is signed in and carries their preference between browsers.
+   * builds its draft from.
+   *
+   * It still reads the cookie, and for a signed-in viewer that cookie is no longer the choice itself
+   * but a mirror of the account: the server writes it on login and whenever the choice changes, so it
+   * follows the person between browsers. Reading it here rather than the account keeps this agreeing
+   * with the two readers that cannot see an account at all -- the static proxy and the script that
+   * runs before the first paint. The account's own answer travels separately as `preferredThemeMode`,
+   * because a panel has to show what was chosen, not what it resolved to.
    */
   const viewerThemeMode = resolvePhiThemeMode(
     readPhiThemeModePreferenceFromCookieHeader(cookieHeader),
@@ -366,6 +373,7 @@ export async function getPhiCmsRuntimeInfo({
       siteFlags?: number | null;
       newsletterOptIn?: boolean | null;
       preferredLocale?: string | null;
+      themeMode?: string | null;
       profile?: {
         firstName?: string | null;
         lastName?: string | null;
@@ -438,6 +446,13 @@ export async function getPhiCmsRuntimeInfo({
         userName: payload.user?.name ?? null,
         userEmail: payload.user?.email ?? null,
         preferredLocale: payload.user?.preferredLocale ?? null,
+        /*
+         * The stored choice, kept beside the resolution above rather than folded into it. The server
+         * answers `system` for an account that has chosen nothing, and that has to survive the trip:
+         * a Settings panel showing "Light" because the browser is light would be telling the person
+         * they decided something they never did.
+         */
+        preferredThemeMode: normalizePhiThemeModePreference(payload.user?.themeMode),
         profile: payload.user?.profile ?? null,
       },
     };

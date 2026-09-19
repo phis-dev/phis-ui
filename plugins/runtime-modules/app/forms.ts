@@ -31,17 +31,20 @@ export const PHI_APP_FORM_IDS = {
   profileName: createPhiFormId(PHI_SHARED_PACKAGE_NAME, "app/profile-name"),
   profileNewsletter: createPhiFormId(PHI_SHARED_PACKAGE_NAME, "app/profile-newsletter"),
   profileLocale: createPhiFormId(PHI_SHARED_PACKAGE_NAME, "app/profile-locale"),
+  profileTheme: createPhiFormId(PHI_SHARED_PACKAGE_NAME, "app/profile-theme"),
 } as const;
 
 export const PHI_APP_FORM_HANDLER_KEYS = {
   profileName: "site.app.profile-name",
   profileNewsletter: "site.app.profile-newsletter",
   profileLocale: "site.app.profile-locale",
+  profileTheme: "site.app.profile-theme",
 } as const;
 
 const NAME_LABEL_SET_KEY = "@phis/ui/modules/app/labels/profile-name" as const;
 const NEWSLETTER_LABEL_SET_KEY = "@phis/ui/modules/app/labels/profile-newsletter" as const;
 const LOCALE_LABEL_SET_KEY = "@phis/ui/modules/app/labels/profile-locale" as const;
+const THEME_LABEL_SET_KEY = "@phis/ui/modules/app/labels/profile-theme" as const;
 
 const label = (key: string, fallback: string) => ({ kind: "label", key, fallback } as const);
 
@@ -137,6 +140,40 @@ const localeDescriptor: PhiFormDescriptor = {
   layout: { gap: { compact: "sm", medium: "base" } },
 };
 
+/**
+ * Which half of the Theme this account asks for, including asking for neither.
+ *
+ * Segmented rather than a switch, because the answer has three states and the third is not "off": a
+ * switch would have to hide "follow my device" behind one of the two halves, which is the one thing it
+ * is not. The values are the names the endpoint takes, so nothing translates them on the way.
+ *
+ * It says nothing on success by itself -- the Page asks the runtime for itself again and comes back
+ * written in the chosen mode, which is a better answer than a sentence about it.
+ */
+const themeDescriptor: PhiFormDescriptor = {
+  schemaVersion: 1,
+  key: PHI_APP_FORM_IDS.profileTheme,
+  labelSetKey: THEME_LABEL_SET_KEY,
+  fields: [
+    {
+      key: "themeMode",
+      fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.segmented,
+      label: label("fieldLabel", "Appearance"),
+      options: [
+        { value: "system", label: label("modeSystem", "System") },
+        { value: "light", label: label("modeLight", "Light") },
+        { value: "dark", label: label("modeDark", "Dark") },
+      ],
+      /*
+       * No `required` rule: a segmented control always holds one of its options, so the rule could
+       * only ever pass -- and a rule that cannot fail is a rule nobody can read the purpose of. The
+       * endpoint refuses a name it does not know, which is where that answer belongs anyway.
+       */
+    },
+  ],
+  layout: { gap: { compact: "sm", medium: "base" } },
+};
+
 async function loadNameLabels(
   context: Parameters<NonNullable<ReturnType<typeof definePhiRuntimeModuleForm>["loadLabels"]>>[0],
 ) {
@@ -186,6 +223,23 @@ async function loadLocaleLabels(
     errorInvalidLocale: labels.feedback.errorInvalidLocale,
     save: labels.submitLabel,
     saving: labels.submitLabel,
+  });
+}
+
+async function loadThemeLabels(
+  context: Parameters<NonNullable<ReturnType<typeof definePhiRuntimeModuleForm>["loadLabels"]>>[0],
+) {
+  const { getPhiProfileThemeWidgetLabels } = await import("../../../components/widgets/label-sets/profile");
+  const labels = await getPhiProfileThemeWidgetLabels({
+    apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
+    internalToken: readPhiServerApiCredentials().internalToken,
+    locale: context.runtime.locale.current,
+  });
+  return flattenPhiFormLabels({
+    fieldLabel: labels.fieldLabel,
+    modeSystem: labels.modes.system,
+    modeLight: labels.modes.light,
+    modeDark: labels.modes.dark,
   });
 }
 
@@ -250,6 +304,26 @@ export const PHI_APP_RUNTIME_MODULE_FORMS = [
     previewUpstreamPath: null,
     loadLabels: loadLocaleLabels,
   }),
+  definePhiRuntimeModuleForm({
+    ownerModuleId: PHI_APP_RUNTIME_MODULE_ID,
+    areas: ["app"],
+    formId: PHI_APP_FORM_IDS.profileTheme,
+    version: 1,
+    flags: 0,
+    title: "Appearance",
+    description: "Which half of the Theme this account is shown, or neither.",
+    category: "forms",
+    tags: ["profile", "account"],
+    descriptor: themeDescriptor,
+    submitHandlerKey: PHI_APP_FORM_HANDLER_KEYS.profileTheme,
+    confirmHandlerKey: null,
+    previewHandlerKey: null,
+    defaultConfig: {},
+    variant: "default",
+    config: {},
+    previewUpstreamPath: null,
+    loadLabels: loadThemeLabels,
+  }),
 ] as const;
 
 /*
@@ -286,6 +360,21 @@ export const PHI_APP_FORM_HANDLER_PROVIDER_DESCRIPTORS = [
     method: "PATCH",
     endpointKey: null,
     upstreamPath: "/api/v1/auth/profile/newsletter",
+    csrfPath: "/api/v1/auth/csrf",
+    requiresCsrf: true,
+    credentialPolicy: "site-session",
+  },
+  {
+    key: createPhiSharedFormProviderKey("handler", "app-profile-theme"),
+    ownerModuleId: PHI_APP_RUNTIME_MODULE_ID,
+    title: "Profile appearance",
+    phase: "submit",
+    handlerKey: PHI_APP_FORM_HANDLER_KEYS.profileTheme,
+    category: "site",
+    transport: "relay",
+    method: "PATCH",
+    endpointKey: null,
+    upstreamPath: "/api/v1/auth/profile/theme",
     csrfPath: "/api/v1/auth/csrf",
     requiresCsrf: true,
     credentialPolicy: "site-session",

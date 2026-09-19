@@ -4,7 +4,10 @@ import type { PhiBlockRuntime } from "../../../types";
 import type { PhiCmsPageNode, PhiResolvedCmsPageTree } from "../../../types/cms";
 import { buildPhiSettingsPageShellTree } from "./phi-settings-page-shell-tree";
 import { getPhiProfilePageLabels } from "./profile-label-set";
-import { getPhiProfileLocaleWidgetLabels } from "../../widgets/label-sets/profile";
+import {
+  getPhiProfileLocaleWidgetLabels,
+  getPhiProfileThemeWidgetLabels,
+} from "../../widgets/label-sets/profile";
 import { PHI_SITE_LOCALES_CONFIG_KEY } from "../../forms/site-locales-config";
 import { createPhiCoreRuntimeControllerAddress } from "../../runtime/core-runtime-controller-address";
 import { readPhiServerApiCredentials } from "../../../helpers/phis-server-credentials";
@@ -19,10 +22,13 @@ const REGION_CONTENT_ID = -286;
  * decide. The overview panel is gone -- it showed the name that the panel below it already holds and
  * a newsletter switch that now has a panel of its own.
  *
- * Name and newsletter are registered Forms reaching the server through their handler Providers.
- * Language is still the old Widget with a `fetch` of its own, because it needs an options Provider for
- * the Site's locales that does not exist yet; it stands here as a Widget section until then. Email and
- * password have moved to the security page, where credentials belong.
+ * Every panel is a registered Form reaching the server through its handler Provider. Language carries
+ * the Site's locales in its placement config, because a registered Form is the same on every Site and
+ * the languages are not. Email and password have moved to the security page, where credentials belong.
+ *
+ * Appearance is the one panel whose answer is also readable without an account: the Header switch sets
+ * the same mode for whoever is looking, and writes the account when there is one. This panel is where
+ * the third answer lives -- "System", which no switch can state.
  */
 export async function buildPhiDefaultAppProfilePageTree({
   page,
@@ -36,9 +42,10 @@ export async function buildPhiDefaultAppProfilePageTree({
     internalToken: readPhiServerApiCredentials().internalToken,
     locale: runtime.locale.current,
   };
-  const [labels, localeLabels] = await Promise.all([
+  const [labels, localeLabels, themeLabels] = await Promise.all([
     getPhiProfilePageLabels(labelOptions),
     getPhiProfileLocaleWidgetLabels(labelOptions),
+    getPhiProfileThemeWidgetLabels(labelOptions),
   ]);
   const availableLocales = runtime.site.availableLocales.map(
     (option) => ({ code: option.code, label: option.label }),
@@ -107,6 +114,46 @@ export async function buildPhiDefaultAppProfilePageTree({
             signalRoutes: {
               emits: [{
                 routeKey: "app-profile-locale-reload",
+                capabilityId: "submitSuccess",
+                scope: "site",
+                channel: "reload",
+                action: "activate",
+                valueType: "none",
+                receiver: createPhiCoreRuntimeControllerAddress(),
+              }],
+            },
+          },
+        }],
+      },
+      {
+        nodeKey: "panelTheme",
+        title: labels.appearance,
+        description: themeLabels.description,
+        sections: [{
+          kind: "form",
+          nodeKey: "widgetTheme",
+          formId: PHI_APP_FORM_IDS.profileTheme,
+          label: labels.appearance,
+          submitOnChange: true,
+          savedMessage: labels.saved,
+          /*
+           * The choice, not the resolution. `viewer.themeMode` would name a half even for somebody who
+           * asked for neither, and the panel would then show "Light" as their decision because their
+           * device happens to be light.
+           */
+          initialValues: { themeMode: runtime.viewer.preferredThemeMode ?? "system" },
+          /*
+           * Saved, and then this Page again.
+           *
+           * The same reason the language panel reloads: the mode lives on the account, the Server wrote
+           * it, and only the Server can show it being applied -- the cookie it mirrors is what the next
+           * render reads. Reloading is also the whole answer here, which is why this Form says nothing
+           * else on success.
+           */
+          configOverrides: {
+            signalRoutes: {
+              emits: [{
+                routeKey: "app-profile-theme-reload",
                 capabilityId: "submitSuccess",
                 scope: "site",
                 channel: "reload",
