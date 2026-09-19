@@ -31,6 +31,8 @@ export const PHI_FORM_LABEL_SET_KEYS = {
   contact: "@phis/ui/modules/public/labels/contact",
   confirm: "@phis/ui/modules/auth/labels/confirm",
   resetPassword: "@phis/ui/modules/auth/labels/reset-password",
+  profilePassword: "@phis/ui/modules/auth/labels/profile-password",
+  profileEmail: "@phis/ui/modules/auth/labels/profile-email",
 } as const;
 
 export const PHI_LOGIN_FORM_DESCRIPTOR = {
@@ -343,5 +345,114 @@ export const PHI_RESET_PASSWORD_CONFIRM_FORM_DESCRIPTOR = {
   success: {
     title: label("feedback.successTitle", "Password updated"),
     text: label("feedback.successText", "You can now sign in with your new password."),
+  },
+} as const satisfies PhiFormDescriptor;
+
+/**
+ * Changing a password, which is three questions and not one.
+ *
+ * The current one is asked because the server asks for it: possession of the session is not possession
+ * of the password, and a tab left open on a shared machine is exactly the case that distinction is for.
+ * The repeat is asked because a password is typed blind, and `matchesField` is the same rule the reset
+ * form uses -- one place decides what "the passwords do not match" means.
+ *
+ * The ten-character minimum is stated here as well as on the server. Not instead of: the server's is
+ * the rule, this one only spares somebody a round trip to be told what could have been said at once.
+ */
+export const PHI_PROFILE_PASSWORD_FORM_DESCRIPTOR = {
+  schemaVersion: PHI_FORM_DESCRIPTOR_SCHEMA_VERSION,
+  key: PHI_SHARED_FORM_IDS.profilePassword,
+  labelSetKey: PHI_FORM_LABEL_SET_KEYS.profilePassword,
+  fields: [
+    {
+      key: "currentPassword",
+      fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.password,
+      label: label("fields.currentPassword", "Current password"),
+      autoComplete: "current-password",
+      validation: [
+        required("feedback.errorMissingCurrentPassword", "Please enter your current password."),
+      ],
+    },
+    {
+      key: "newPassword",
+      fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.password,
+      label: label("fields.newPassword", "New password"),
+      autoComplete: "new-password",
+      validation: [
+        required("feedback.errorMissingNewPassword", "Please enter a new password."),
+        {
+          providerKey: PHI_FORM_VALIDATION_PROVIDER_KEYS.minLength,
+          message: label("feedback.errorPasswordShort", "Password is too short."),
+          config: { min: 10 },
+        },
+      ],
+    },
+    {
+      key: "confirmPassword",
+      fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.password,
+      label: label("fields.confirmPassword", "Confirm new password"),
+      autoComplete: "new-password",
+      validation: [
+        required("feedback.errorPasswordMismatch", "Passwords do not match."),
+        {
+          providerKey: PHI_FORM_VALIDATION_PROVIDER_KEYS.matchesField,
+          message: label("feedback.errorPasswordMismatch", "Passwords do not match."),
+          config: { field: "newPassword" },
+        },
+      ],
+    },
+  ],
+  /*
+   * The fields go back to empty. Three password boxes still holding what was typed are three boxes
+   * somebody has to clear before the next person sits down, and nothing here is worth keeping.
+   */
+  success: {
+    title: label("feedback.successTitle", "Password updated"),
+    text: label("feedback.successText", "Your password has been changed."),
+    reset: true,
+  },
+} as const satisfies PhiFormDescriptor;
+
+/**
+ * Changing the address the account is reached at, which the server does in two steps.
+ *
+ * It asks for the current password for the same reason the password form does, and it changes nothing
+ * on submit: a link goes to the new address and the account moves when that link is followed. So the
+ * success says what was set in motion and not what was done -- and says it in a form that is also true
+ * when somebody typed the address they already have, which the server answers with "unchanged" and
+ * which no form can tell in advance.
+ */
+export const PHI_PROFILE_EMAIL_FORM_DESCRIPTOR = {
+  schemaVersion: PHI_FORM_DESCRIPTOR_SCHEMA_VERSION,
+  key: PHI_SHARED_FORM_IDS.profileEmail,
+  labelSetKey: PHI_FORM_LABEL_SET_KEYS.profileEmail,
+  fields: [
+    {
+      key: "email",
+      fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.email,
+      label: label("fields.email", "New email"),
+      autoComplete: "email",
+      validation: [
+        required("feedback.errorInvalidEmail", "Please enter a valid email address."),
+        {
+          providerKey: PHI_FORM_VALIDATION_PROVIDER_KEYS.email,
+          message: label("feedback.errorInvalidEmail", "Please enter a valid email address."),
+        },
+      ],
+    },
+    {
+      key: "currentPassword",
+      fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.password,
+      label: label("fields.password", "Current password"),
+      autoComplete: "current-password",
+      validation: [
+        required("feedback.errorMissingPassword", "Please enter your current password."),
+      ],
+    },
+  ],
+  success: {
+    title: label("feedback.successTitle", "Verification email sent"),
+    text: label("feedback.successText", "Check the new email address and confirm the link to activate it."),
+    reset: true,
   },
 } as const satisfies PhiFormDescriptor;

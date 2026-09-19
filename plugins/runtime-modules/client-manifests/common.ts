@@ -273,12 +273,6 @@ export const PHI_COMMON_RUNTIME_MODULE_RENDER_CLIENT_MANIFEST =
       ),
     ],
     [
-      PhiCmsWidgetType.ProfileEmail,
-      definePhiRuntimeModuleRenderClient(
-        dynamic(() => import("../core/widgets/profile-email/client").then((module) => module.PhiProfileEmailWidgetClient)),
-      ),
-    ],
-    [
       PhiCmsWidgetType.AccountAvatar,
       definePhiRuntimeModuleRenderClient(
         dynamic(() => import("../avatar/widgets/account-avatar/client").then((module) => module.PhiAccountAvatarWidgetClient)),
@@ -318,12 +312,6 @@ export const PHI_COMMON_RUNTIME_MODULE_RENDER_CLIENT_MANIFEST =
       PhiCmsWidgetType.ProfileOverview,
       definePhiRuntimeModuleRenderClient(
         dynamic(() => import("../core/widgets/profile-overview/client").then((module) => module.PhiProfileOverviewWidgetClient)),
-      ),
-    ],
-    [
-      PhiCmsWidgetType.ProfilePassword,
-      definePhiRuntimeModuleRenderClient(
-        dynamic(() => import("../core/widgets/profile-password/client").then((module) => module.PhiProfilePasswordWidgetClient)),
       ),
     ],
     [

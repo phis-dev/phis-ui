@@ -6,6 +6,8 @@ import {
   PHI_CONFIRM_FORM_DESCRIPTOR,
   PHI_CONTACT_FORM_DESCRIPTOR,
   PHI_LOGIN_FORM_DESCRIPTOR,
+  PHI_PROFILE_EMAIL_FORM_DESCRIPTOR,
+  PHI_PROFILE_PASSWORD_FORM_DESCRIPTOR,
   PHI_PROVIDER_LINK_CONFIRMATION_FORM_DESCRIPTOR,
   PHI_REGISTRATION_FORM_DESCRIPTOR,
   PHI_RESET_PASSWORD_CONFIRM_FORM_DESCRIPTOR,
@@ -183,6 +185,52 @@ export const PHI_SHARED_FORM_DEFINITIONS: readonly PhiRuntimeModuleFormDefinitio
     previewUpstreamPath: null,
     loadLabels: createLabelLoader(() => import("../widgets/label-sets/account")
       .then((module) => module.getPhiProviderLinkConfirmationFormLabels)),
+  }),
+  /*
+   * App only, and that is the whole of the access rule: the Area is authenticated, and a Form that
+   * changes a credential has nobody to change it for until somebody is signed in.
+   */
+  definePhiRuntimeModuleForm({
+    ownerModuleId: PHI_AUTH_RUNTIME_MODULE_ID,
+    areas: ["app"],
+    formId: PHI_SHARED_FORM_IDS.profilePassword,
+    version: 1,
+    flags: 0,
+    title: "Password",
+    description: "Change the password of the signed-in account.",
+    category: "preset",
+    tags: ["account", "security"],
+    descriptor: PHI_PROFILE_PASSWORD_FORM_DESCRIPTOR,
+    submitHandlerKey: "auth.profile.password",
+    confirmHandlerKey: null,
+    previewHandlerKey: null,
+    defaultConfig: {},
+    variant: "default",
+    config: {},
+    previewUpstreamPath: null,
+    loadLabels: createLabelLoader(() => import("../widgets/label-sets/profile")
+      .then((module) => module.getPhiProfilePasswordFormLabels)),
+  }),
+  definePhiRuntimeModuleForm({
+    ownerModuleId: PHI_AUTH_RUNTIME_MODULE_ID,
+    areas: ["app"],
+    formId: PHI_SHARED_FORM_IDS.profileEmail,
+    version: 1,
+    flags: 0,
+    title: "Email",
+    description: "Ask for the account's email address to be moved to another one.",
+    category: "preset",
+    tags: ["account", "security"],
+    descriptor: PHI_PROFILE_EMAIL_FORM_DESCRIPTOR,
+    submitHandlerKey: "auth.profile.email",
+    confirmHandlerKey: null,
+    previewHandlerKey: null,
+    defaultConfig: {},
+    variant: "default",
+    config: {},
+    previewUpstreamPath: null,
+    loadLabels: createLabelLoader(() => import("../widgets/label-sets/profile")
+      .then((module) => module.getPhiProfileEmailFormLabels)),
   }),
 ];
 

@@ -89,6 +89,8 @@ export const PHI_FORM_HANDLER_PROVIDER_KEYS = {
   authResetPassword: createPhiSharedFormProviderKey("handler", "auth-reset-password"),
   authResetPasswordConfirm: createPhiSharedFormProviderKey("handler", "auth-reset-password-confirm"),
   authProviderLinkConfirm: createPhiSharedFormProviderKey("handler", "auth-provider-link-confirm"),
+  authProfilePassword: createPhiSharedFormProviderKey("handler", "auth-profile-password"),
+  authProfileEmail: createPhiSharedFormProviderKey("handler", "auth-profile-email"),
   contact: createPhiSharedFormProviderKey("handler", "contact"),
 } as const;
 
@@ -253,6 +255,16 @@ export const PHI_AUTH_FORM_HANDLER_PROVIDER_DESCRIPTORS = [
   { key: PHI_FORM_HANDLER_PROVIDER_KEYS.authResetPassword, ownerModuleId: PHI_AUTH_RUNTIME_MODULE_ID, title: "Reset Password", phase: "submit", handlerKey: "auth.reset-password", category: "auth", transport: "relay", method: "POST", endpointKey: null, upstreamPath: "/api/v1/auth/password/reset/request", csrfPath: null, requiresCsrf: false, credentialPolicy: "none" },
   { key: PHI_FORM_HANDLER_PROVIDER_KEYS.authResetPasswordConfirm, ownerModuleId: PHI_AUTH_RUNTIME_MODULE_ID, title: "Reset Password Confirm", phase: "confirm", handlerKey: "auth.reset-password.confirm", category: "auth", transport: "relay", method: "POST", endpointKey: null, upstreamPath: "/api/v1/auth/password/reset/confirm", csrfPath: null, requiresCsrf: false, credentialPolicy: "none" },
   { key: PHI_FORM_HANDLER_PROVIDER_KEYS.authProviderLinkConfirm, ownerModuleId: PHI_AUTH_RUNTIME_MODULE_ID, title: "Provider Link Confirm", phase: "confirm", handlerKey: "auth.provider-link.confirm", category: "auth", transport: "relay", method: "POST", endpointKey: null, upstreamPath: "/api/v1/auth/providers/link/confirm", csrfPath: "/api/v1/auth/csrf", requiresCsrf: true, credentialPolicy: "auth-link" },
+  /*
+   * The two account credentials, reached with the session and nothing else.
+   *
+   * `site-session` is what makes them the asking person's own: the relay forwards the Site session
+   * cookie, so the server answers about whoever is asking and no account id is ever sent. The email
+   * one posts to `/request` because that is all a submit does -- the address moves when the link in
+   * the mail is followed, through the registration confirm handler that already exists.
+   */
+  { key: PHI_FORM_HANDLER_PROVIDER_KEYS.authProfilePassword, ownerModuleId: PHI_AUTH_RUNTIME_MODULE_ID, title: "Account password", phase: "submit", handlerKey: "auth.profile.password", category: "auth", transport: "relay", method: "PATCH", endpointKey: null, upstreamPath: "/api/v1/auth/profile/password", csrfPath: "/api/v1/auth/csrf", requiresCsrf: true, credentialPolicy: "site-session" },
+  { key: PHI_FORM_HANDLER_PROVIDER_KEYS.authProfileEmail, ownerModuleId: PHI_AUTH_RUNTIME_MODULE_ID, title: "Account email", phase: "submit", handlerKey: "auth.profile.email", category: "auth", transport: "relay", method: "POST", endpointKey: null, upstreamPath: "/api/v1/auth/profile/email/request", csrfPath: "/api/v1/auth/csrf", requiresCsrf: true, credentialPolicy: "site-session" },
 ] as const;
 
 export const PHI_PUBLIC_FORM_HANDLER_PROVIDER_DESCRIPTORS = [

@@ -102,9 +102,6 @@ import {
   PHI_PAGINATION_WIDGET_DEFINITION,
 } from "./widgets/pagination/config";
 import {
-  PHI_PROFILE_EMAIL_WIDGET_DEFINITION,
-} from "./widgets/profile-email/config";
-import {
   PHI_PROFILE_LOCALE_WIDGET_DEFINITION,
 } from "./widgets/profile-locale/config";
 import {
@@ -113,9 +110,6 @@ import {
 import {
   PHI_PROFILE_OVERVIEW_WIDGET_DEFINITION,
 } from "./widgets/profile-overview/config";
-import {
-  PHI_PROFILE_PASSWORD_WIDGET_DEFINITION,
-} from "./widgets/profile-password/config";
 import {
   PHI_QUICK_LINKS_WIDGET_DEFINITION,
 } from "./widgets/quick-links/config";
@@ -299,10 +293,6 @@ export default createPhiAuthoringWidgetModule([
     () => import("./widgets/pagination/authoring").then((module) => module.PHI_PAGINATION_WIDGET_BUILDER_PLUGIN),
   ),
   definePhiAuthoringWidgetModuleLoader(
-    PHI_PROFILE_EMAIL_WIDGET_DEFINITION,
-    () => import("./widgets/profile-email/authoring").then((module) => module.PHI_PROFILE_EMAIL_WIDGET_BUILDER_PLUGIN),
-  ),
-  definePhiAuthoringWidgetModuleLoader(
     PHI_PROFILE_LOCALE_WIDGET_DEFINITION,
     () => import("./widgets/profile-locale/authoring").then((module) => module.PHI_PROFILE_LOCALE_WIDGET_BUILDER_PLUGIN),
   ),
@@ -313,10 +303,6 @@ export default createPhiAuthoringWidgetModule([
   definePhiAuthoringWidgetModuleLoader(
     PHI_PROFILE_OVERVIEW_WIDGET_DEFINITION,
     () => import("./widgets/profile-overview/authoring").then((module) => module.PHI_PROFILE_OVERVIEW_WIDGET_BUILDER_PLUGIN),
-  ),
-  definePhiAuthoringWidgetModuleLoader(
-    PHI_PROFILE_PASSWORD_WIDGET_DEFINITION,
-    () => import("./widgets/profile-password/authoring").then((module) => module.PHI_PROFILE_PASSWORD_WIDGET_BUILDER_PLUGIN),
   ),
   definePhiAuthoringWidgetModuleLoader(
     PHI_QUICK_LINKS_WIDGET_DEFINITION,

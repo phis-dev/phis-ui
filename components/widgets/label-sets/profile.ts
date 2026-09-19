@@ -124,30 +124,21 @@ const PHI_PROFILE_EMAIL_WIDGET_LABEL_SET = definePhiLabelSet({
   key: "widget:profile-email",
   ctx: PHI_TR_CTX_WEB_UI_LABEL,
   labels: {
-    title: "Email",
     description: definePhiMessageLabel("Change your email address. We will send a verification link to the new address."),
     current_label: "Current email",
     email_label: "New email",
     password_label: "Current password",
     submit_label: "Save",
-    error_title: "Email update failed",
-    error_network: definePhiMessageLabel("Network error while updating your email."),
     error_invalid_email: definePhiMessageLabel("Please enter a valid email address."),
     error_missing_password: definePhiMessageLabel("Please enter your current password."),
-    error_invalid_credentials: definePhiMessageLabel("Invalid credentials."),
-    error_conflict: definePhiMessageLabel("This email address is already in use."),
-    error_generic: definePhiMessageLabel("The email update could not be completed."),
     success_title: "Verification email sent",
-    success_text: definePhiMessageLabel("Check the new email address and confirm the link to activate it."),
-    success_unchanged_title: "Email unchanged",
-    success_unchanged_text: definePhiMessageLabel("The entered email is already your current email address."),
+    success_text: definePhiMessageLabel("If that address differs from your current one, a confirmation link is on its way to it."),
   },
 });
 
 export async function getPhiProfileEmailWidgetLabels(options: PhiGlobalTranslatorOptions) {
   const labels = await getPhiLabelSet(options, PHI_PROFILE_EMAIL_WIDGET_LABEL_SET);
   return {
-    title: labels.title,
     description: labels.description,
     currentLabel: labels.current_label,
     fields: {
@@ -156,17 +147,31 @@ export async function getPhiProfileEmailWidgetLabels(options: PhiGlobalTranslato
     },
     submitLabel: labels.submit_label,
     feedback: {
-      errorTitle: labels.error_title,
-      errorNetwork: labels.error_network,
       errorInvalidEmail: labels.error_invalid_email,
       errorMissingPassword: labels.error_missing_password,
-      errorInvalidCredentials: labels.error_invalid_credentials,
-      errorConflict: labels.error_conflict,
-      errorGeneric: labels.error_generic,
       successTitle: labels.success_title,
       successText: labels.success_text,
-      successUnchangedTitle: labels.success_unchanged_title,
-      successUnchangedText: labels.success_unchanged_text,
+    },
+  };
+}
+
+/**
+ * The same labels, shaped for the Form that renders them.
+ *
+ * A Form descriptor names its labels by path -- `fields.email`, `feedback.successTitle` -- and reads
+ * them from one flattened set, so what the Widget returned as nested objects is what the Form asks for
+ * under those names. Nothing is translated twice: one label set, two readers.
+ */
+export async function getPhiProfileEmailFormLabels(options: PhiGlobalTranslatorOptions) {
+  const labels = await getPhiProfileEmailWidgetLabels(options);
+  return {
+    fields: labels.fields,
+    actions: { submitLabel: labels.submitLabel },
+    feedback: {
+      errorInvalidEmail: labels.feedback.errorInvalidEmail,
+      errorMissingPassword: labels.feedback.errorMissingPassword,
+      successTitle: labels.feedback.successTitle,
+      successText: labels.feedback.successText,
     },
   };
 }
@@ -175,29 +180,23 @@ const PHI_PROFILE_PASSWORD_WIDGET_LABEL_SET = definePhiLabelSet({
   key: "widget:profile-password",
   ctx: PHI_TR_CTX_WEB_UI_LABEL,
   labels: {
-    title: "Password",
     description: definePhiMessageLabel("Change your password by confirming your current one first."),
     current_label: "Current password",
     new_label: "New password",
     confirm_label: "Confirm new password",
     submit_label: "Save",
-    error_title: "Password update failed",
-    error_network: definePhiMessageLabel("Network error while updating your password."),
     error_missing_current_password: definePhiMessageLabel("Please enter your current password."),
     error_missing_new_password: definePhiMessageLabel("Please enter a new password."),
-    error_invalid_credentials: definePhiMessageLabel("Invalid credentials."),
     error_password_short: definePhiMessageLabel("Password is too short."),
     error_password_mismatch: definePhiMessageLabel("Passwords do not match."),
-    error_generic: definePhiMessageLabel("The password update could not be completed."),
     success_title: "Password updated",
-    success_text: definePhiMessageLabel("Your password has been changed. Please sign in again with the new password."),
+    success_text: definePhiMessageLabel("Your password has been changed. Everywhere else you were signed in has been signed out."),
   },
 });
 
 export async function getPhiProfilePasswordWidgetLabels(options: PhiGlobalTranslatorOptions) {
   const labels = await getPhiLabelSet(options, PHI_PROFILE_PASSWORD_WIDGET_LABEL_SET);
   return {
-    title: labels.title,
     description: labels.description,
     fields: {
       currentPassword: labels.current_label,
@@ -206,16 +205,22 @@ export async function getPhiProfilePasswordWidgetLabels(options: PhiGlobalTransl
     },
     submitLabel: labels.submit_label,
     feedback: {
-      errorTitle: labels.error_title,
-      errorNetwork: labels.error_network,
       errorMissingCurrentPassword: labels.error_missing_current_password,
       errorMissingNewPassword: labels.error_missing_new_password,
-      errorInvalidCredentials: labels.error_invalid_credentials,
       errorPasswordShort: labels.error_password_short,
       errorPasswordMismatch: labels.error_password_mismatch,
-      errorGeneric: labels.error_generic,
       successTitle: labels.success_title,
       successText: labels.success_text,
     },
+  };
+}
+
+/** The password labels under the paths its Form descriptor names them by. See the email one above. */
+export async function getPhiProfilePasswordFormLabels(options: PhiGlobalTranslatorOptions) {
+  const labels = await getPhiProfilePasswordWidgetLabels(options);
+  return {
+    fields: labels.fields,
+    actions: { submitLabel: labels.submitLabel },
+    feedback: labels.feedback,
   };
 }

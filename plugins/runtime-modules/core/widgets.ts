@@ -104,9 +104,6 @@ import {
   PHI_PAGINATION_WIDGET_DEFINITION,
 } from "./widgets/pagination/config";
 import {
-  PHI_PROFILE_EMAIL_WIDGET_DEFINITION,
-} from "./widgets/profile-email/config";
-import {
   PHI_PROFILE_LOCALE_WIDGET_DEFINITION,
 } from "./widgets/profile-locale/config";
 import {
@@ -115,9 +112,6 @@ import {
 import {
   PHI_PROFILE_OVERVIEW_WIDGET_DEFINITION,
 } from "./widgets/profile-overview/config";
-import {
-  PHI_PROFILE_PASSWORD_WIDGET_DEFINITION,
-} from "./widgets/profile-password/config";
 import {
   PHI_QUICK_LINKS_WIDGET_DEFINITION,
 } from "./widgets/quick-links/config";
@@ -414,13 +408,6 @@ export const PHI_RUNTIME_MODULE_WIDGETS: readonly PhiRuntimeModuleWidgetDefiniti
     loadPreview: () => import("./widgets/pagination/plugin").then((module) => module.PHI_PAGINATION_WIDGET_PLUGIN),
   }),
   defineFirstPartyWidget({
-    definition: PHI_PROFILE_EMAIL_WIDGET_DEFINITION,
-    ownerModuleId: PHI_CORE_RUNTIME_MODULE_ID,
-    renderPolicies: {"runtime":"custom","preview":"custom","authoring":"custom"},
-    loadRuntime: () => import("./widgets/profile-email/plugin").then((module) => module.PHI_PROFILE_EMAIL_WIDGET_PLUGIN),
-    loadPreview: () => import("./widgets/profile-email/plugin").then((module) => module.PHI_PROFILE_EMAIL_WIDGET_PLUGIN),
-  }),
-  defineFirstPartyWidget({
     definition: PHI_PROFILE_LOCALE_WIDGET_DEFINITION,
     ownerModuleId: PHI_CORE_RUNTIME_MODULE_ID,
     renderPolicies: {"runtime":"custom","preview":"custom","authoring":"custom"},
@@ -440,13 +427,6 @@ export const PHI_RUNTIME_MODULE_WIDGETS: readonly PhiRuntimeModuleWidgetDefiniti
     renderPolicies: {"runtime":"custom","preview":"custom","authoring":"custom"},
     loadRuntime: () => import("./widgets/profile-overview/plugin").then((module) => module.PHI_PROFILE_OVERVIEW_WIDGET_PLUGIN),
     loadPreview: () => import("./widgets/profile-overview/plugin").then((module) => module.PHI_PROFILE_OVERVIEW_WIDGET_PLUGIN),
-  }),
-  defineFirstPartyWidget({
-    definition: PHI_PROFILE_PASSWORD_WIDGET_DEFINITION,
-    ownerModuleId: PHI_CORE_RUNTIME_MODULE_ID,
-    renderPolicies: {"runtime":"custom","preview":"custom","authoring":"custom"},
-    loadRuntime: () => import("./widgets/profile-password/plugin").then((module) => module.PHI_PROFILE_PASSWORD_WIDGET_PLUGIN),
-    loadPreview: () => import("./widgets/profile-password/plugin").then((module) => module.PHI_PROFILE_PASSWORD_WIDGET_PLUGIN),
   }),
   defineFirstPartyWidget({
     definition: PHI_QUICK_LINKS_WIDGET_DEFINITION,
