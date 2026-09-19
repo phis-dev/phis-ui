@@ -17,6 +17,7 @@ import type {
   PhiPickerPlacement,
   PhiPickerTransactionCallbacks,
 } from "./phi-picker-control-contract";
+import { PhiAlertControl } from "./phi-alert-control";
 import { PhiEmptyControl } from "./phi-empty-control";
 import { PhiPopoverControl } from "./phi-popover-control";
 import { PhiButtonControl } from "./phi-button-control";
@@ -293,7 +294,17 @@ export function PhiIconPickerControl({
           setIconifySearchStart(0);
           setIconifySearchHasMore(false);
         }
-        setIconifySearchError(error instanceof Error ? error.message : "Iconify search failed.");
+        /*
+         * A search that could not run is not a search that found nothing, and the two had been drawn
+         * the same. An empty state says "there is nothing here", which sends the author back to the
+         * search field to try other words -- for a network that is down, other words never help.
+         */
+        console.warn("[phi-icon-picker-control] Iconify search failed.", {
+          set: nextSet,
+          query: normalizedQuery,
+          error,
+        });
+        setIconifySearchError(labels.errors.search);
       })
       .finally(() => {
         if (iconifySearchRequestKeyRef.current === requestKey) {
@@ -541,7 +552,7 @@ export function PhiIconPickerControl({
                       <Typography.Text type="secondary">{labels.status.loading}</Typography.Text>
                     </Flex>
                   ) : iconifySearchError ? (
-                    <PhiEmptyControl description={iconifySearchError} />
+                    <PhiAlertControl level="error" showIcon title={iconifySearchError} />
                   ) : (
                     <PhiEmptyControl description={labels.empty.search} />
                   )}

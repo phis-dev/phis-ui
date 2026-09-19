@@ -20,6 +20,9 @@ export type PhiIconPickerControlLabels = {
     loadingMore: string;
     scrollMore: string;
   };
+  errors: {
+    search: string;
+  };
   actions: {
     clear: string;
   };
@@ -46,6 +49,11 @@ export const PHI_ICON_PICKER_CONTROL_DEFAULT_LABELS: PhiIconPickerControlLabels 
     loading: "Loading icons…",
     loadingMore: "Loading more…",
     scrollMore: "Scroll to load more",
+  },
+  errors: {
+    // What went wrong, not how: the status code is for whoever reads the console, not for whoever
+    // was looking for an icon.
+    search: "Iconify could not be reached. The curated icons are still available.",
   },
   actions: {
     clear: "Clear",
