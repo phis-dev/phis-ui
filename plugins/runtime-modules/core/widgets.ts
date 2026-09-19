@@ -6,9 +6,6 @@ import {
   PHI_ACCOUNT_WIDGET_DEFINITION,
 } from "./widgets/account/config";
 import {
-  PHI_AREA_MENU_WIDGET_DEFINITION,
-} from "./widgets/area-menu/config";
-import {
   PHI_BRAND_WIDGET_DEFINITION,
 } from "./widgets/brand/config";
 import {
@@ -170,13 +167,6 @@ export const PHI_RUNTIME_MODULE_WIDGETS: readonly PhiRuntimeModuleWidgetDefiniti
     renderPolicies: {"runtime":"custom","preview":"custom","authoring":"custom"},
     loadRuntime: () => import("./widgets/account/plugin").then((module) => module.PHI_ACCOUNT_WIDGET_PLUGIN),
     loadPreview: () => import("./widgets/account/plugin").then((module) => module.PHI_ACCOUNT_WIDGET_PLUGIN),
-  }),
-  defineFirstPartyWidget({
-    definition: PHI_AREA_MENU_WIDGET_DEFINITION,
-    ownerModuleId: PHI_CORE_RUNTIME_MODULE_ID,
-    renderPolicies: {"runtime":"custom","preview":"custom","authoring":"custom"},
-    loadRuntime: () => import("./widgets/area-menu/plugin").then((module) => module.PHI_AREA_MENU_WIDGET_PLUGIN),
-    loadPreview: () => import("./widgets/area-menu/plugin").then((module) => module.PHI_AREA_MENU_WIDGET_PLUGIN),
   }),
   defineFirstPartyWidget({
     definition: PHI_BRAND_WIDGET_DEFINITION,

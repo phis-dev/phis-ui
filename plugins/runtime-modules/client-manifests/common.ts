@@ -207,18 +207,6 @@ export const PHI_COMMON_RUNTIME_MODULE_RENDER_CLIENT_MANIFEST =
       ),
     ],
     [
-      PhiCmsWidgetType.AreaMenu,
-      definePhiRuntimeModuleRenderClient(
-        dynamic(() => import("../core/widgets/area-menu/client").then((module) => module.PhiAreaMenuWidgetClient)),
-      ),
-    ],
-    [
-      PhiRuntimeRenderClientType.AreaMenuPreview,
-      definePhiRuntimeModuleRenderClient(
-        dynamic(() => import("../../../components/widgets/client/area-menu-preview").then((module) => module.PhiAreaMenuWidgetPreview)),
-      ),
-    ],
-    [
       PhiCmsWidgetType.Breadcrumb,
       definePhiRuntimeModuleRenderClient(
         dynamic(() => import("../core/widgets/breadcrumb/client").then((module) => module.PhiBreadcrumbWidget)),

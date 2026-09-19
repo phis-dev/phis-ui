@@ -39,7 +39,6 @@ const SYNTHETIC_ADMIN_WIDGET_IDS = createPhiPresetCmsInstanceIdMap({
   presetKey: "admin-area-preset",
 }, [
   "widgetSiderLeftNav",
-  "widgetHeaderAreaMenu",
   "widgetHeaderTopAccount",
   "widgetHeaderTopThemeModeSwitch",
   "widgetHeaderMainPageTitle",
@@ -243,15 +242,6 @@ export async function buildPhiDefaultAdminAreaPresetTree({
         slotIndex: PHI_CMS_THREE_COLUMN_LAYOUT_SLOT_INDEX.Middle,
         sortOrder: 0,
         label: "Page title",
-        config: {},
-      }),
-      nodes.widget({
-        typeKey: "area-menu",
-        id: SYNTHETIC_ADMIN_WIDGET_IDS.widgetHeaderAreaMenu,
-        parentLayoutNodeId: SYNTHETIC_ADMIN_LAYOUT_IDS.layoutHeaderTopActions,
-        slotIndex: PHI_CMS_SEQUENTIAL_LAYOUT_SLOTS[1].slotIndex,
-        sortOrder: 15,
-        label: "admin header main area menu",
         config: {},
       }),
       nodes.widget({

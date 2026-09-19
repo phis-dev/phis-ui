@@ -4,8 +4,7 @@ import Link from "next/link";
 import type { ReactNode, Ref } from "react";
 
 import type { PhiMenuControlItem } from "../controls/phi-menu-control";
-import type { PhiNavItem } from "../shell/shell-types";
-import type { PhiAccountAreaEntry } from "../widgets/area-menu-items";
+import type { PhiAccountAreaEntry, PhiNavItem } from "../shell/shell-types";
 import { PhiAvatar } from "../shell/phi-avatar";
 
 export type PhiAccountMenuLabels = {
@@ -45,9 +44,9 @@ export type PhiAccountMenuProps = {
   /**
    * The Areas this person may enter, the one they are standing in among them.
    *
-   * They head the menu rather than trail it: the first thing it says is where the reader is, and the
-   * entries below are about the account, ending in signing out. No surface can carry this list -- an
-   * Area's address is its own segment and the list is a property of the person, not of the Page.
+   * A group of their own at the foot of the menu: everything above is about the account, and this is
+   * about where to go with it. No surface can carry the list -- an Area's address is its own segment
+   * and which Areas are in it is a property of the person, not of the Page.
    */
   areaEntries?: readonly PhiAccountAreaEntry[];
   onOpenOverlay?: (overlayInstanceId: string) => void;
@@ -141,7 +140,21 @@ export function PhiAccountMenu({
     };
   }
 
-  const contributedMenuItems: PhiMenuControlItem[] = (contributedItems ?? []).map(toContributedMenuItem);
+  /*
+   * Where a contributed entry leads is one kind of thing; what it does is another.
+   *
+   * An entry that emits goes nowhere -- signing out is the first of them -- and it is told apart here
+   * by that property rather than by its key, the same way the anchor is. So the destinations stand
+   * together at the top, the acts below them, and the reader never hunts for the one entry that ends
+   * their session among the ones that merely take them somewhere.
+   */
+  const contributed = contributedItems ?? [];
+  const destinationMenuItems: PhiMenuControlItem[] = contributed
+    .filter((item) => !item.emits?.length)
+    .map(toContributedMenuItem);
+  const actionMenuItems: PhiMenuControlItem[] = contributed
+    .filter((item) => item.emits?.length)
+    .map(toContributedMenuItem);
 
   /*
    * The Area the reader is in is shown and not offered: a link back to the page you are on is an
@@ -160,7 +173,12 @@ export function PhiAccountMenu({
    * Profile, account security and signing out are entries of the `<area>:account` surface like the ones
    * a Module contributes, so they arrive through `contributedItems` and are moved, renamed or removed in
    * the Builder like any other entry. What the menu drew itself was the part nobody could rearrange.
+   *
+   * What it still decides is the grouping: what a Module contributed, then what acts, then where else
+   * this person may go, each set off from the next. A divider appears only between two groups that both
+   * have something in them, so a menu missing a group has no rule hanging in the air.
    */
+  const groups = [destinationMenuItems, actionMenuItems, areaMenuItems].filter((group) => group.length > 0);
   const menuItems: PhiMenuControlItem[] =
     state.kind === "guest"
       ? [
@@ -172,13 +190,9 @@ export function PhiAccountMenu({
               }]
             : []),
         ]
-      : [
-          ...areaMenuItems,
-          ...(areaMenuItems.length > 0 && contributedMenuItems.length > 0
-            ? [{ key: "contributed-divider", type: "divider" as const }]
-            : []),
-          ...contributedMenuItems,
-        ];
+      : groups.flatMap((group, index) => index === 0
+        ? group
+        : [{ key: `account-group-divider-${index}`, type: "divider" as const }, ...group]);
 
   return (
     <PhiAvatar

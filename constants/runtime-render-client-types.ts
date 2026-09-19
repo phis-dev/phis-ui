@@ -7,7 +7,6 @@ export const PhiRuntimeRenderClientType = {
   AuthSecurity: "@phis/ui/modules/auth/controller/default#security",
   AuthWorkflow: "@phis/ui/modules/auth/controller/default#workflow",
   AccountPreview: `${PhiCmsWidgetType.Account}#preview`,
-  AreaMenuPreview: `${PhiCmsWidgetType.AreaMenu}#preview`,
   BuilderChromeControls: `${PhiCmsWidgetType.CommandToolbar}#builder-chrome-controls`,
   BuilderDraftStatus: `${PhiCmsWidgetType.Description}#builder-draft-status`,
   BuilderModeSwitch: `${PhiCmsWidgetType.Switch}#builder-mode`,

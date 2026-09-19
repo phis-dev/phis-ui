@@ -4,9 +4,6 @@ import {
   PHI_ACCOUNT_WIDGET_DEFINITION,
 } from "./widgets/account/config";
 import {
-  PHI_AREA_MENU_WIDGET_DEFINITION,
-} from "./widgets/area-menu/config";
-import {
   PHI_BRAND_WIDGET_DEFINITION,
 } from "./widgets/brand/config";
 import {
@@ -155,10 +152,6 @@ export default createPhiAuthoringWidgetModule([
   definePhiAuthoringWidgetModuleLoader(
     PHI_ACCOUNT_WIDGET_DEFINITION,
     () => import("./widgets/account/authoring").then((module) => module.PHI_ACCOUNT_WIDGET_BUILDER_PLUGIN),
-  ),
-  definePhiAuthoringWidgetModuleLoader(
-    PHI_AREA_MENU_WIDGET_DEFINITION,
-    () => import("./widgets/area-menu/authoring").then((module) => module.PHI_AREA_MENU_WIDGET_BUILDER_PLUGIN),
   ),
   definePhiAuthoringWidgetModuleLoader(
     PHI_BRAND_WIDGET_DEFINITION,

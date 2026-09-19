@@ -140,7 +140,6 @@ const PHI_BUILDER_WIDGET_NODE_KEYS = [
   "widgetBuilderModeSwitch",
   "widgetHeaderMainDebugSwitch",
   "widgetHeaderTopThemeModeSwitch",
-  "widgetHeaderTopAreaMenu",
   "widgetHeaderTopAccount",
   "widgetBuilderPageTitle",
   "widgetMediaQuery",
@@ -623,15 +622,6 @@ export async function buildPhiDefaultBuilderAreaPresetTree({
         slotIndex: 1,
         sortOrder: 10,
         label: "Account",
-        config: {},
-      }),
-      nodes.widget({
-        typeKey: "area-menu",
-        id: SYNTHETIC_DEV_WIDGET_IDS.widgetHeaderTopAreaMenu,
-        parentLayoutNodeId: SYNTHETIC_DEV_LAYOUT_IDS.layoutHeaderTopActions,
-        slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
-        sortOrder: 0,
-        label: "Area menu",
         config: {},
       }),
       nodes.widget({

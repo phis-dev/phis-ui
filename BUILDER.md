@@ -138,8 +138,12 @@ The outer shell must not be repurposed as a preview of the target site navigatio
 
 The builder header is for global workspace context, not for editing the target site navigation directly.
 It carries the target Area selector, the current workspace title, the theme mode switch, the debug
-switch, the account menu, and the Area menu. Save, preview, publish, undo, and redo are the Builder
+switch, and the account menu. Save, preview, publish, undo, and redo are the Builder
 command toolbar in the workspace's `header_bottom` (see "Builder chrome and `header_bottom` ownership").
+
+Switching to another Area is in the account menu, which stands in every Area; the header carried a
+second switcher for it while three of the six shells had none. The target Area selector above is a
+different thing entirely: it says which Area this workspace is editing, not which one you are in.
 
 The header must not contain a site/project selector. The active site is already known from the current context.
 

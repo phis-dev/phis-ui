@@ -3,7 +3,7 @@ import { resolvePhiCmsAreaLabel } from "../../constants/cms-areas";
 import { localizeAreaPath } from "../../helpers/locale";
 import { PHI_ALL_RUNTIME_AREA_DEFINITIONS } from "../../plugins/runtime-modules/area-definitions";
 import { canPhiViewerAccess, type PhiAccessViewer } from "../../types/access";
-import type { PhiAreaMenuItem } from "../../plugins/runtime-modules/core/widgets/area-menu/client";
+import type { PhiAccountAreaEntry } from "../shell/shell-types";
 
 /**
  * Which Areas this person may enter, asked the same way the Area routing asks it: every declared Area,
@@ -22,28 +22,6 @@ export function listPhiAccessibleAreas(viewer: PhiAccessViewer): readonly PhiCms
     .filter((definition) => canPhiViewerAccess(viewer, definition.accessPolicy))
     .map((definition) => definition.area);
 }
-
-/**
- * The Area menu Widget's list. Public is left out: the Widget is placed in the staff shells, where it
- * reads as "which workspace", and the way back to the Site is the brand in the header.
- */
-export function buildPhiVisibleAreaMenuItems(viewer: PhiAccessViewer): PhiAreaMenuItem[] {
-  return listPhiAccessibleAreas(viewer)
-    .filter((area) => area !== "public")
-    .map((area) => ({
-      key: area,
-      label: resolvePhiCmsAreaLabel(area),
-      href: `/${area}`,
-    }));
-}
-
-export type PhiAccountAreaEntry = {
-  area: PhiCmsAreaKey;
-  label: string;
-  href: string;
-  /** The one the reader is standing in: shown, so the menu says where they are, and not a link. */
-  current: boolean;
-};
 
 /**
  * The same list in the account menu, which is the one menu that stands in every Area.

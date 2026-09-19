@@ -28,7 +28,6 @@ const PHI_CMS_WIDGET_MODULE_BY_TYPE_KEY: Readonly<Record<string, keyof typeof PH
   "account": "core",
   "account-avatar": "avatar",
   "account-avatar-picker": "avatar",
-  "area-menu": "core",
   "area-upload": "asset",
   "slot-upload": "core",
   "asset-focal-rect": "asset",
@@ -131,7 +130,6 @@ export function resolvePhiCmsWidgetPluginKey(typeKey: string): string {
 
 export const PhiCmsWidgetType = {
   Account: defineWidgetType(resolvePhiCmsWidgetPluginKey("account"), "account"),
-  AreaMenu: defineWidgetType(resolvePhiCmsWidgetPluginKey("area-menu"), "area-menu"),
   Brand: defineWidgetType(resolvePhiCmsWidgetPluginKey("brand"), "brand"),
   Card: defineWidgetType(resolvePhiCmsWidgetPluginKey("card"), "card"),
   Breadcrumb: defineWidgetType(resolvePhiCmsWidgetPluginKey("breadcrumb"), "breadcrumb"),

@@ -39,7 +39,6 @@ const SYNTHETIC_EDITOR_WIDGET_IDS = createPhiPresetCmsInstanceIdMap({
   presetKey: "editor-area-preset",
 }, [
   "widgetHeaderMainPageTitle",
-  "widgetHeaderTopAreaMenu",
   "widgetHeaderTopAccount",
   "widgetSiderLeftNav",
 ]);
@@ -207,15 +206,6 @@ export async function buildPhiDefaultEditorAreaPresetTree({
         slotIndex: PHI_CMS_THREE_COLUMN_LAYOUT_SLOT_INDEX.Middle,
         sortOrder: 0,
         label: "Page title",
-        config: {},
-      }),
-      nodes.widget({
-        typeKey: "area-menu",
-        id: SYNTHETIC_EDITOR_WIDGET_IDS.widgetHeaderTopAreaMenu,
-        parentLayoutNodeId: SYNTHETIC_EDITOR_LAYOUT_IDS.layoutHeaderTopActions,
-        slotIndex: PHI_CMS_SEQUENTIAL_LAYOUT_SLOTS[1].slotIndex,
-        sortOrder: 10,
-        label: "editor area menu",
         config: {},
       }),
       nodes.widget({

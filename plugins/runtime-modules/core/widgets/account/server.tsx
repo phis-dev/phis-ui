@@ -9,7 +9,7 @@ import type {
 import { PhiCmsWidgetType } from "../../../../../constants/cms-widget-types";
 import { PhiRuntimeModuleRenderClientHost } from "../../../../../components/runtime/runtime-module-render-client-manifest";
 import { resolvePhiNavigationItems } from "../../../../../components/widgets/server/navigation-request";
-import { buildPhiAccountAreaEntries } from "../../../../../components/widgets/area-menu-items";
+import { buildPhiAccountAreaEntries } from "../../../../../components/widgets/accessible-areas";
 import { resolvePhiNavHref } from "../../../../../helpers/locale";
 import type { PhiNavItem } from "../../../../../components/shell/shell-types";
 

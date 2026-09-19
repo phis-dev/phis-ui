@@ -12,8 +12,7 @@ import {
 } from "../../../../../components/runtime/runtime-signal-bus";
 import { createPhiSignalAddress } from "../../../../../types/signals";
 import type { PhiCmsInstanceId } from "../../../../../types/cms-instance-id";
-import type { PhiNavItem } from "../../../../../components/shell/shell-types";
-import type { PhiAccountAreaEntry } from "../../../../../components/widgets/area-menu-items";
+import type { PhiAccountAreaEntry, PhiNavItem } from "../../../../../components/shell/shell-types";
 import { fetchPhiViewerAvatar } from "../../../../../components/account/avatar-client";
 import { PHI_AVATAR_REVISION } from "../../../../../components/account/avatar-revision";
 

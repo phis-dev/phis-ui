@@ -64,7 +64,6 @@ const LIVE_AREAS = ["public", "app", "admin", "editor", "accounting"];
  */
 const DISPLAY_WIDGET_CLIENTS = [
   "account",
-  "area-menu",
   "brand",
   "breadcrumb",
   "card",

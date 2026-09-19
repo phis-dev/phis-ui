@@ -1,4 +1,21 @@
+import type { PhiCmsAreaKey } from "../../constants/cms-areas";
 import type { PhiSignalRoute } from "../../types/signals";
+
+/**
+ * One Area in the account menu's list of the Areas this person may enter.
+ *
+ * It lives with the other menu shapes rather than beside the function that builds it: that function
+ * reads every Area definition, and a Client menu importing its type would pull the whole Module graph
+ * across the Server boundary with it -- a type import that is meant to disappear, from a module that
+ * cannot.
+ */
+export type PhiAccountAreaEntry = {
+  area: PhiCmsAreaKey;
+  label: string;
+  href: string;
+  /** The one the reader is standing in: shown, so the menu says where they are, and not a link. */
+  current: boolean;
+};
 
 export type PhiNavItem = {
   key: string;

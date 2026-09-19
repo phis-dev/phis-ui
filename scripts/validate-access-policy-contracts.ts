@@ -16,7 +16,7 @@ import type {
   PhiRuntimeModuleDefinition,
 } from "../types/cms-plugins";
 import { filterPhiCommandToolbarButtonsForViewer } from "../plugins/runtime-modules/core/widgets/command-toolbar/config";
-import { buildPhiVisibleAreaMenuItems } from "../components/widgets/area-menu-items";
+import { listPhiAccessibleAreas } from "../components/widgets/accessible-areas";
 
 const CORE_PROVIDER = "@phis/server/core" as const;
 const MODULE_PROVIDER = "@test/pkg/modules/add-on" as const;
@@ -236,38 +236,37 @@ assert.throws(
 );
 
 /**
- * The Area menu presents Area access, so it must agree with the Area policies exactly. It used to
- * re-derive visibility from base roles and from `viewer.resolvedArea`, which disagreed: a Developer
- * saw only App and Admin although the `Structure authoring`, `Content editing` and `Accounting`
- * masks all include Developer.
+ * The account menu offers the Areas a person may enter, so the list must agree with the Area policies
+ * exactly. It used to re-derive visibility from base roles and from `viewer.resolvedArea`, which
+ * disagreed: a Developer saw only App and Admin although the `Structure authoring`, `Content editing`
+ * and `Accounting` masks all include Developer.
+ *
+ * Public is in the list. It is the Area anyone may enter, and from a staff shell it is the way back to
+ * the Site -- the Area menu Widget that left it out was placed in staff shells only, and it is gone.
  */
-const areaMenuKeysFor = (roleFlags: number) =>
-  buildPhiVisibleAreaMenuItems({
+const accessibleAreasFor = (roleFlags: number) =>
+  listPhiAccessibleAreas({
     access: "authenticated",
     roleClaims: [{ providerId: CORE_PROVIDER, flags: roleFlags }],
     groupClaims: [],
-  }).map((item) => item.key);
+  });
 
 assert.deepEqual(
-  areaMenuKeysFor(PhiBaseRole.Developer),
-  ["app", "accounting", "admin", "editor", "builder"],
+  accessibleAreasFor(PhiBaseRole.Developer),
+  ["public", "app", "accounting", "admin", "editor", "builder"],
 );
-assert.deepEqual(areaMenuKeysFor(PhiBaseRole.Builder), ["app", "builder"]);
-assert.deepEqual(areaMenuKeysFor(PhiBaseRole.Author), ["app", "editor"]);
-assert.deepEqual(areaMenuKeysFor(PhiBaseRole.Publisher), ["app", "editor"]);
-assert.deepEqual(areaMenuKeysFor(PhiBaseRole.Accountant), ["app", "accounting"]);
+assert.deepEqual(accessibleAreasFor(PhiBaseRole.Builder), ["public", "app", "builder"]);
+assert.deepEqual(accessibleAreasFor(PhiBaseRole.Author), ["public", "app", "editor"]);
+assert.deepEqual(accessibleAreasFor(PhiBaseRole.Publisher), ["public", "app", "editor"]);
+assert.deepEqual(accessibleAreasFor(PhiBaseRole.Accountant), ["public", "app", "accounting"]);
 // The Site superuser rule carries the Admin, who appears in no ordinary Area mask.
 assert.deepEqual(
-  areaMenuKeysFor(PhiBaseRole.Admin),
-  ["app", "accounting", "admin", "editor", "builder"],
+  accessibleAreasFor(PhiBaseRole.Admin),
+  ["public", "app", "accounting", "admin", "editor", "builder"],
 );
-assert.deepEqual(areaMenuKeysFor(0), ["app"]);
-assert.deepEqual(buildPhiVisibleAreaMenuItems(publicViewer).map((item) => item.key), []);
-// Public is the Area a viewer is already in, never a switch target.
-assert.equal(
-  buildPhiVisibleAreaMenuItems({ access: "authenticated", roleClaims: [], groupClaims: [] })
-    .some((item) => item.key === "public"),
-  false,
-);
+// A signed-in account with no role holds App, which is authenticated rather than role-gated.
+assert.deepEqual(accessibleAreasFor(0), ["public", "app"]);
+// A guest reaches Public and nothing else, which is why the menu offers them no list at all.
+assert.deepEqual(listPhiAccessibleAreas(publicViewer), ["public"]);
 
 console.log("Access-policy contracts validated.");
