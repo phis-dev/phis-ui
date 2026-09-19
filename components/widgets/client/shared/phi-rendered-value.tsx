@@ -8,9 +8,7 @@ import type {
   PhiTableTagVariant,
   PhiTableValueRenderer,
 } from "../../../../types/table-widget";
-import { PhiCheckboxControl } from "../../../controls/phi-checkbox-control";
 import { PhiFlexControl } from "../../../controls/phi-flex-control";
-import { PhiSwitchControl } from "../../../controls/phi-switch-control";
 import { PhiTagControl } from "../../../controls/phi-tag-control";
 import { PhiTypographyControl } from "../../../controls/phi-typography-control";
 import { PhiLink } from "../../../navigation/phi-link";
@@ -43,6 +41,20 @@ export type PhiRenderedValueDefinition = {
  * it could not have simply called the table's renderer.
  */
 export type PhiRenderedValuePresentation = "cell" | "block";
+
+/**
+ * **A flag being read is a mark, not a switch.**
+ *
+ * `switch` and `checkbox` drew the Controls of those names with `readOnly`, which cost twice. A switch
+ * nobody can throw still looks like one, and a screen reader announces it as an operable widget; and the
+ * import put two editing Controls into the bundle of every Widget that shows a value, which is why
+ * `validate-area-client-reach.mjs` could not list the record Widget among the ones that only display.
+ *
+ * The two renderers draw the same mark here, and that is the truth rather than a loss: read-only, a
+ * switch and a checkbox both say the same thing -- this flag is set. Their difference is how you operate
+ * them, and where a cell can be operated the table hands it to `EditableTableCell`, which still draws the
+ * Control the author asked for.
+ */
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
@@ -113,8 +125,9 @@ export function renderPhiValueContent(
       </PhiTagControl>
     );
   }
-  if (definition.renderer === "switch") return <PhiSwitchControl checked={value === true} readOnly />;
-  if (definition.renderer === "checkbox") return <PhiCheckboxControl checked={value === true} readOnly />;
+  if (definition.renderer === "switch" || definition.renderer === "checkbox") {
+    return <PhiIcon name={value === true ? "check" : "close"} />;
+  }
   if (definition.renderer === "icon") return typeof value === "string" && value.trim() ? <PhiIcon name={value} /> : null;
   return displayValue;
 }

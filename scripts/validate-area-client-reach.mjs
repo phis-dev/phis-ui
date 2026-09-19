@@ -76,6 +76,7 @@ const DISPLAY_WIDGET_CLIENTS = [
   "markdown-toc",
   "page-title",
   "quick-links",
+  "record",
   "sidebar-navigation",
   "simple-text",
   "spacer",
