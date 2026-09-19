@@ -471,7 +471,6 @@ function assertPhiRuntimeModuleMetadata(definition: PhiRuntimeModuleDefinition) 
     for (const [label, declaredPath] of [
       ["account security", definition.authUiProvider.accountSecurityPath],
       ["account profile", definition.authUiProvider.accountProfilePath],
-      ["logout", definition.authUiProvider.logoutPath],
     ] as const) {
       if (declaredPath && (!declaredPath.startsWith("/") || declaredPath.startsWith("//"))) {
         throw new Error(`${definition.moduleId}: Auth ${label} path must be Site-relative.`);

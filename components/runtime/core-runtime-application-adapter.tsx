@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { App } from "antd";
 
@@ -13,13 +13,14 @@ import { usePhiSignalListener } from "./runtime-signal-bus";
 import { usePhiSignalRuntimePartition } from "./runtime-signal-partition";
 import { registerPhiSignalInstance } from "./runtime-signal-registry";
 import { createPhiCoreRuntimeControllerAddress } from "./core-runtime-controller-address";
+import { PHIS_SITE_KEY_HEADER } from "../../constants/http-headers";
 
 const PHI_CORE_RUNTIME_APPLICATION_SIGNAL_FILTER = {
   scopes: ["site"],
   receiver: createPhiCoreRuntimeControllerAddress(),
 } as const;
 
-export function PhiCoreRuntimeApplicationAdapter() {
+export function PhiCoreRuntimeApplicationAdapter({ siteKey }: { siteKey?: string } = {}) {
   const { message, notification } = App.useApp();
   const router = useRouter();
   const partition = usePhiSignalRuntimePartition();
@@ -35,6 +36,40 @@ export function PhiCoreRuntimeApplicationAdapter() {
    */
   useEffect(() => registerPhiSignalInstance(partition, { address, scope: "site" }), [address, partition]);
 
+  const signOut = useCallback(async () => {
+    const csrfResponse = await fetch("/api/auth/csrf", {
+      method: "GET",
+      credentials: "include",
+      cache: "no-store",
+    });
+    const csrfPayload = (await csrfResponse.json().catch(() => ({}))) as { token?: string };
+    const csrfToken = csrfPayload.token?.trim() ?? "";
+    if (!csrfResponse.ok || !csrfToken) {
+      return;
+    }
+
+    const headers = new Headers({ "x-csrf-token": csrfToken });
+    const normalizedSiteKey = siteKey?.trim().toLowerCase();
+    if (normalizedSiteKey) {
+      headers.set(PHIS_SITE_KEY_HEADER, normalizedSiteKey);
+    }
+
+    const response = await fetch("/api/auth/logout", {
+      method: "POST",
+      headers,
+      credentials: "include",
+      cache: "no-store",
+    });
+    if (response.ok) {
+      /*
+       * The Page is asked for again rather than replaced with one chosen here. Whoever is now nobody
+       * may not be allowed where they stood, and the Area answers that -- with its own redirect, its
+       * own sign-in Page -- which is a decision that belongs to it and not to this adapter.
+       */
+      router.refresh();
+    }
+  }, [router, siteKey]);
+
   usePhiSignalListener((signal) => {
     const navigateValue = readPhiCoreRuntimeNavigateSignalValue(signal);
     if (navigateValue) {
@@ -43,6 +78,19 @@ export function PhiCoreRuntimeApplicationAdapter() {
       } else {
         window.location.assign(navigateValue.path);
       }
+      return;
+    }
+
+    /*
+     * Out, and then back to where anybody may be.
+     *
+     * The door is the Site's own `/api/auth/logout`, mounted by every Site regardless of which Modules
+     * it installs, so this works in an Area no Auth Module ever enters. A failed call leaves the
+     * session alone and the page where it is: signing out half way and forwarding anyway would tell
+     * somebody they are out while they are not.
+     */
+    if (signal.channel === "session" && signal.action === "clear") {
+      void signOut();
       return;
     }
 

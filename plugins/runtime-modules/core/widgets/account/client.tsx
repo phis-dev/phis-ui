@@ -15,7 +15,6 @@ import type { PhiCmsInstanceId } from "../../../../../types/cms-instance-id";
 import type { PhiNavItem } from "../../../../../components/shell/shell-types";
 import { fetchPhiViewerAvatar } from "../../../../../components/account/avatar-client";
 import { PHI_AVATAR_REVISION } from "../../../../../components/account/avatar-revision";
-import { PHIS_SITE_KEY_HEADER } from "../../../../../constants/http-headers";
 
 export type PhiAccountWidgetConfig = {
   variant?: "full" | "compact" | "icon-only";
@@ -74,42 +73,27 @@ export function PhiAccountWidgetClient({
     });
   }
 
-  async function handleLogout() {
-    try {
-      const csrfResponse = await fetch("/api/auth/csrf", {
-        method: "GET",
-        credentials: "include",
-        cache: "no-store",
-      });
-      const csrfPayload = (await csrfResponse.json().catch(() => ({}))) as { token?: string };
-      const csrfToken = csrfPayload.token?.trim() ?? "";
-
-      if (!csrfResponse.ok || !csrfToken) {
-        return;
+  const emitFromItem = useCallback((item: PhiNavItem) => {
+    const sender = createPhiSignalAddress("cms", item.key as PhiCmsInstanceId);
+    for (const route of item.emits ?? []) {
+      if (route.receiver == null || (route.valueType === "json" && !route.valueSchema)) {
+        continue;
       }
-
-      const headers = new Headers({
-        "x-csrf-token": csrfToken,
+      dispatchSignal({
+        scope: route.scope,
+        channel: route.channel,
+        action: route.action,
+        value: null,
+        valueType: route.valueType,
+        valueSchema: route.valueSchema ?? null,
+        receiver: route.receiver,
+        sender,
+        correlationId: createPhiSignalCorrelationId(),
+        timestamp: Date.now(),
       });
-
-      if (runtime?.site.key?.trim()) {
-        headers.set(PHIS_SITE_KEY_HEADER, runtime.site.key.trim().toLowerCase());
-      }
-
-      const logoutResponse = await fetch("/api/auth/logout", {
-        method: "POST",
-        headers,
-        credentials: "include",
-        cache: "no-store",
-      });
-
-      if (logoutResponse.ok) {
-        window.location.reload();
-      }
-    } finally {
-      setMenuOpen(false);
     }
-  }
+    setMenuOpen(false);
+  }, [dispatchSignal]);
 
   const openOverlay = useCallback((overlayInstanceId: string) => {
     dispatchSignal({
@@ -170,13 +154,12 @@ export function PhiAccountWidgetClient({
                 kind: "authenticated",
                 profileHref: state.profileHref,
                 settingsHref: state.settingsHref,
-                logoutHref: state.logoutHref,
                 displayName: state.displayName,
-                onLogout: state.logoutHref ? undefined : handleLogout,
               }
         }
         contributedItems={contributedItems}
         onOpenOverlay={openOverlay}
+        onEmit={emitFromItem}
         avatarSrc={resolvedAvatarSrc}
         avatarAlt={avatarAlt}
         open={state.kind === "guest" ? menuOpen : undefined}

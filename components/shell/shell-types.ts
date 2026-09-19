@@ -1,3 +1,5 @@
+import type { PhiSignalRoute } from "../../types/signals";
+
 export type PhiNavItem = {
   key: string;
   label: string;
@@ -16,6 +18,14 @@ export type PhiNavItem = {
    * carries no path.
    */
   overlayInstanceId?: string;
+  /**
+   * What this entry sends when it is chosen, instead of going somewhere.
+   *
+   * The entry is the sender: its `key` is the resolved instance id, and a signal address is
+   * `cms:<instanceId>`. A renderer that finds these draws a button and dispatches them; one that does
+   * not understand them draws a label that leads nowhere, which is what an entry with no href is.
+   */
+  emits?: readonly PhiSignalRoute[];
   children?: PhiNavItem[];
 };
 

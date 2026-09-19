@@ -10,6 +10,7 @@ import type {
   PhiThemeStyleBlock,
 } from "../theme/phi-theme-blocks";
 import type { PhiViewerAccessPolicy } from "./access";
+import type { PhiSignalRoute } from "./signals";
 import type { PhiCmsInstanceId } from "./cms-instance-id";
 
 export type PhiRuntimeModuleId = `${string}/${string}`;
@@ -185,6 +186,18 @@ export type PhiCmsNavigationBaseItemDescriptor = {
   overlayPresetKey?: string;
   overlayNodeKey?: string;
   accessPolicy?: PhiViewerAccessPolicy;
+  /**
+   * What this entry sends when it is chosen, instead of going somewhere.
+   *
+   * A navigation entry is already addressable -- every resolved item has an instance id, and a signal
+   * address is `cms:<instanceId>` -- so an entry that emits is not a new kind of thing, it is a sender
+   * like a Button Widget. Signing out is the first: there is no Page to go to, the act belongs to the
+   * runtime, and what it means lives in the route rather than in a word on the entry. That is the
+   * difference from an `action` field, which would make navigation a list of commands.
+   *
+   * Mutually exclusive with a target in practice: an entry that emits has nowhere to go.
+   */
+  signalRoutes?: { emits?: readonly PhiSignalRoute[] };
   children?: readonly PhiCmsNavigationBaseItemDescriptor[];
 };
 
@@ -207,6 +220,8 @@ export type PhiCmsNavigationInjectionItemDescriptor = {
   overlayPresetKey?: string;
   overlayNodeKey?: string;
   accessPolicy?: PhiViewerAccessPolicy;
+  /** What this entry sends when it is chosen; see the base item descriptor. */
+  signalRoutes?: { emits?: readonly PhiSignalRoute[] };
   children?: readonly PhiCmsNavigationInjectionItemDescriptor[];
 };
 
@@ -253,6 +268,8 @@ export type PhiCmsResolvedNavigationItem = {
   icon?: string;
   target: PhiCmsResolvedNavigationTarget | null;
   accessPolicy?: PhiViewerAccessPolicy;
+  /** The routes this entry sends on when it is chosen, carried through from its descriptor. */
+  emits?: readonly PhiSignalRoute[];
   children: readonly PhiCmsResolvedNavigationItem[];
 };
 

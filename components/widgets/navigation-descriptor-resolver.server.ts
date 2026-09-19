@@ -66,6 +66,7 @@ function mapResolvedNavigationItem(
         }),
       }
       : {}),
+    ...(item.emits?.length ? { emits: item.emits } : {}),
     ...(item.target?.kind === "custom" && item.target.external === true ? { external: true } : {}),
     ...(item.target?.kind === "custom" && item.target.newTab === true ? { newTab: true } : {}),
     ...(item.kind === "separator" ? { separator: true } : {}),

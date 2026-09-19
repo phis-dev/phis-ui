@@ -273,8 +273,10 @@ receiver.
 The Core module mounts exactly one Core Runtime Controller in the Root Layout, above every Area, at
 `controller:@phis/ui/modules/core/controller/default:default` (`PHI_CORE_RUNTIME_CONTROLLER_ADDRESS`).
 Its `mountScope` is `site`; it is not selectable and stays mounted during client navigation between
-Areas under the same Root Layout. It applies already-resolved Site and Page state to the browser; it is
-not the source of Theme, Page metadata, Locale, or any persisted state. Its definition is
+Areas under the same Root Layout. It applies already-resolved Site and Page state to the browser and
+performs the acts that belong to the browser rather than to a Page; it is not the source of Theme, Page
+metadata, Locale, or any persisted state -- those are decided elsewhere and arrive here resolved. Acts
+are its own: forwarding, asking for the Page again, and ending the session. Its definition is
 `components/runtime/core-runtime-controller-definition.ts`.
 
 It listens to exactly these inputs, all in Site scope:
@@ -290,12 +292,19 @@ It listens to exactly these inputs, all in Site scope:
 | `locale/change` | `string` | applies a locale from the Site's available locales |
 | `path/activate` | `json` (`runtimeNavigation`) | forwards the browser |
 | `reload/activate` | `none` | asks the Server for the current Page again |
+| `session/clear` | `none` | ends the session this browser holds |
 | `notification/activate` | `json` (`notification`) | shows an application notification |
 | `message/activate` | `json` (`message`) | shows an application message |
 
 - `path/activate` carries `{ path: string; replace?: boolean }`. The path must start with `/` and not
   with `//`; anything else is refused. `replace: true` replaces the history entry. A Widget that needs to
   send the visitor somewhere asks here instead of calling `location` itself.
+- `session/clear` carries no value and is the only input here that reaches the Server: it posts to the
+  Site's own `/api/auth/logout`, which every Site mounts whether or not an Auth Module is installed, and
+  then asks for the Page again so the Area answers what somebody with no session may see. Site scope,
+  because a session belongs to the account on this Site and not to the Area it was ended from -- an Area
+  that models its own sign-out would be one of six copies of one act. A failed call changes nothing and
+  forwards nobody.
 - `reload/activate` carries no value and is the answer to "what this Page renders has changed
   underneath it": a Form wrote something only the Server applies, such as the language the account reads
   in, and what follows is the same Page rendered again. It is `router.refresh()`, so the route's Server

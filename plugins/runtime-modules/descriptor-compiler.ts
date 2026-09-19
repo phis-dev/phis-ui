@@ -1081,10 +1081,15 @@ function buildResolvedNavigationNode(
         nodeKey: descriptor.itemKey,
       }),
       ownerModuleId,
-      kind: target ? "link" : "container",
+      // An entry that sends is a link in the sense that matters here: it is chosen, and something
+      // happens. Only an entry that neither goes nor sends is a container.
+      kind: target || descriptor.signalRoutes?.emits?.length ? "link" : "container",
       label: descriptor.label,
       ...(descriptor.icon ? { icon: descriptor.icon } : {}),
       ...(descriptor.accessPolicy ? { accessPolicy: descriptor.accessPolicy } : {}),
+      ...(descriptor.signalRoutes?.emits?.length
+        ? { emits: descriptor.signalRoutes.emits }
+        : {}),
       target,
       children: [],
     },

@@ -10,7 +10,6 @@ import type {
 import { PhiCmsWidgetType } from "../../../../../constants/cms-widget-types";
 import { PhiRuntimeModuleRenderClientHost } from "../../../../../components/runtime/runtime-module-render-client-manifest";
 import { resolvePhiNavigationItems } from "../../../../../components/widgets/server/navigation-request";
-import { localizeAreaPath } from "../../../../../helpers/locale";
 
 export type { PhiAccountWidgetConfig } from "./client";
 import { getPhiAccountMenuLabels } from "../../../../../components/widgets/label-sets/account";
@@ -26,7 +25,6 @@ export type PhiAccountWidgetAuthenticatedState = {
   kind: "authenticated";
   profileHref?: string;
   settingsHref?: string;
-  logoutHref?: string;
   displayName?: string;
 };
 
@@ -111,15 +109,16 @@ export async function PhiAccountWidget({
       : Promise.resolve(null),
   ]);
   /*
-   * The exported anchor is the place to dock, not an entry.
+   * The exported anchor is the place to dock, not an entry; everything else in the surface is one.
    *
-   * A Module attaches under it, so what belongs in the menu are its children. Rendering the anchor
-   * itself would put a label in the menu that goes nowhere and means nothing to a reader. What those
-   * children carry below them travels with them: a Module whose contribution is a group of entries is
-   * saying so, and flattening it here would decide for it.
+   * An anchor is told from an entry by what it is, not by its key: it goes nowhere, sends nothing and
+   * opens nothing, so what belongs in the menu are its children. Rendering it would put a label there
+   * that means nothing to a reader. An Area's own entry -- signing out -- stands beside the anchor and
+   * is itself. What a contributed entry carries below it travels with it: a Module whose contribution
+   * is a group said so, and flattening it here would decide for it.
    */
-  const contributedEntries = (contributedItems ?? [])
-    .flatMap((item) => item.children ?? []);
+  const contributedEntries = (contributedItems ?? []).flatMap((item) =>
+    item.href || item.emits?.length || item.overlayInstanceId ? [item] : (item.children ?? []));
   const config: PhiAccountWidgetConfig = {
     variant: widgetConfig?.variant ?? site.theme?.widgets?.account?.variant ?? undefined,
     showLabel: widgetConfig?.showLabel ?? site.theme?.widgets?.account?.showLabel ?? undefined,
@@ -136,22 +135,12 @@ export async function PhiAccountWidget({
   const accountSecurityHref = runtime.authUiProvider?.capabilities.includes("account-security")
     ? runtime.authUiProvider.accountSecurityPath
     : undefined;
-  /*
-   * Signing out, at the address the active provider declared for it.
-   *
-   * A Public address like the sign-in Pages, so it takes the locale in front and nothing else. Where a
-   * provider declares none, the Widget signs out by calling the route itself -- that is the Client's
-   * business and the menu simply carries no link.
-   */
-  const logoutPath = runtime.authUiProvider?.logoutPath;
   const resolvedState: PhiAccountWidgetState =
     state.kind === "authenticated"
       ? {
           ...state,
           profileHref: state.profileHref ?? profileHref,
           settingsHref: state.settingsHref ?? accountSecurityHref,
-          logoutHref: state.logoutHref
-            ?? (logoutPath ? localizeAreaPath(runtime.locale.current, "public", logoutPath) : undefined),
         }
       : state;
 

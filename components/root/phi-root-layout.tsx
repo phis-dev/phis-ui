@@ -219,7 +219,7 @@ export async function PhiRootLayout({
             remRootValue={remRootValue}
           >
             <AntdApp>
-              <PhiCoreRuntimeApplicationAdapter />
+              <PhiCoreRuntimeApplicationAdapter siteKey={site.key} />
               <PhiDayjsLocale locale={resolvedLocale?.locale ?? resolvedLocale?.intlLocale}>
                 {children}
               </PhiDayjsLocale>

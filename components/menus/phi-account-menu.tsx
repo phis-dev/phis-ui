@@ -18,7 +18,6 @@ export type PhiAccountMenuLabels = {
   authenticated: {
     profile: string;
     settings: string;
-    logout: string;
   };
 };
 
@@ -33,10 +32,8 @@ export type PhiAccountMenuState =
       kind: "authenticated";
       profileHref?: string;
       settingsHref?: string;
-      logoutHref?: string;
       displayName?: string;
       onProfile?: () => void;
-      onLogout?: () => void;
     };
 
 export type PhiAccountMenuProps = {
@@ -52,6 +49,8 @@ export type PhiAccountMenuProps = {
    */
   contributedItems?: readonly PhiNavItem[];
   onOpenOverlay?: (overlayInstanceId: string) => void;
+  /** Sends what an entry carries, for an entry that sends rather than goes. */
+  onEmit?: (item: PhiNavItem) => void;
   avatarSrc?: string;
   avatarAlt?: string;
   icon?: ReactNode;
@@ -68,6 +67,7 @@ export function PhiAccountMenu({
   state,
   contributedItems,
   onOpenOverlay,
+  onEmit,
   avatarSrc,
   avatarAlt,
   icon,
@@ -114,6 +114,14 @@ export function PhiAccountMenu({
     if (children && children.length > 0) {
       return { key: item.key, label: item.label, children };
     }
+    if (item.emits?.length) {
+      return {
+        key: item.key,
+        label: item.label,
+        onClick: onEmit ? () => onEmit(item) : undefined,
+        disabled: !onEmit,
+      };
+    }
     if (item.overlayInstanceId) {
       const overlayInstanceId = item.overlayInstanceId;
       return {
@@ -132,6 +140,13 @@ export function PhiAccountMenu({
 
   const contributedMenuItems: PhiMenuControlItem[] = (contributedItems ?? []).map(toContributedMenuItem);
 
+  /*
+   * Signing out is not here any more.
+   *
+   * It is an entry of the `<area>:account` surface like the ones a Module contributes, so it arrives
+   * through `contributedItems` and is moved, renamed or removed in the Builder like any other entry.
+   * A menu that drew it last, itself, was the one entry nobody could rearrange.
+   */
   const menuItems: PhiMenuControlItem[] =
     state.kind === "guest"
       ? [
@@ -144,10 +159,6 @@ export function PhiAccountMenu({
             : []),
         ]
       : [
-          ...contributedMenuItems,
-          ...(contributedMenuItems.length > 0
-            ? [{ key: "contributed-divider", type: "divider" as const }]
-            : []),
           ...(state.profileHref || state.onProfile
             ? [
                 {
@@ -167,24 +178,10 @@ export function PhiAccountMenu({
                 },
               ]
             : []),
-          ...((state.profileHref || state.onProfile || state.settingsHref)
-            ? [
-                {
-                  key: "account-divider",
-                  type: "divider" as const,
-                },
-              ]
+          ...((state.profileHref || state.onProfile || state.settingsHref) && contributedMenuItems.length > 0
+            ? [{ key: "contributed-divider", type: "divider" as const }]
             : []),
-          state.logoutHref
-            ? {
-                key: "logout",
-                label: <Link href={state.logoutHref}>{labels.authenticated.logout}</Link>,
-              }
-            : {
-                key: "logout",
-                label: labels.authenticated.logout,
-                onClick: state.onLogout,
-              },
+          ...contributedMenuItems,
         ];
 
   return (

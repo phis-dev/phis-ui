@@ -90,6 +90,19 @@ export const PHI_CORE_RUNTIME_CONTROLLER_DEFINITION = {
        * the language is a forward on `path`, not this.
        */
       { id: "reload", channel: "reload", action: "activate", valueType: "none" },
+      /*
+       * End the session this browser holds.
+       *
+       * Site scope, because that is what a session is: the cookie belongs to the account on this Site
+       * and not to the Area somebody happened to be in, and signing out of the Admin signs the same
+       * person out of App. Modelling it per Area would be six copies of one act that must never differ.
+       *
+       * It reaches the Site's own auth door, which every Site mounts whether or not an Auth Module is
+       * installed -- so an Area that Auth never enters can still offer a way out. That makes this the
+       * one input here that writes: everything else applies what was already decided, and the note in
+       * SIGNALS.md says which is which.
+       */
+      { id: "signOut", channel: "session", action: "clear", valueType: "none" },
       {
         id: "notification",
         channel: "notification",

@@ -3,6 +3,7 @@ import type {
   PhiCmsNavigationSurfaceDescriptor,
 } from "../../types/cms-module-descriptors";
 import type { PhiCmsAreaKey } from "../../constants/cms-areas";
+import { createPhiCoreRuntimeControllerAddress } from "../../components/runtime/core-runtime-controller-address";
 import { PHI_ADMIN_RUNTIME_MODULE_ID } from "./admin/ids";
 import { PHI_ACCOUNTING_RUNTIME_MODULE_ID } from "./accounting/ids";
 import { PHI_APP_RUNTIME_MODULE_ID } from "./app/ids";
@@ -38,18 +39,55 @@ const label = (defaultMessage: string) => ({ defaultMessage });
  * removing an entry is their call, `phis-cli auth restore-preset` is the way back, and logout survives
  * regardless because the Account Widget falls back to calling its route directly.
  */
+/**
+ * Signing out, which every Area offers and no Module owns.
+ *
+ * It sends rather than goes: there is no Page to reach, the act ends a session, and a session belongs
+ * to the account on this Site rather than to the Area somebody happened to be in -- so the signal is
+ * Site-scoped and the Site Core Runtime Controller performs it, through the auth door every Site mounts
+ * whether or not an Auth Module is installed. That is why the entry is the Area's own and not Auth's:
+ * the Editor and the Accounting Area have no Auth Module in their catalogs, and a person standing in
+ * one of them still has a session to end.
+ *
+ * As an entry rather than something the Account Widget draws last, so that an operator rearranging the
+ * menu is rearranging entries -- one that is not in the surface cannot be moved, renamed or removed.
+ */
+function accountSignOutItem(area: PhiCmsAreaKey) {
+  return {
+    itemKey: `@phis/ui/modules/${area}/nav/account/sign-out`,
+    label: label("Sign out"),
+    icon: "antd:logout",
+    accessPolicy: PHI_VIEWER_ACCESS_AUTHENTICATED,
+    signalRoutes: {
+      emits: [{
+        routeKey: `${area}-account-sign-out`,
+        capabilityId: "activate",
+        scope: "site",
+        channel: "session",
+        action: "clear",
+        valueType: "none",
+        receiver: createPhiCoreRuntimeControllerAddress(),
+      }],
+    },
+  } as const;
+}
+
 function accountNavigationSurface(
   anchorItemKey: string,
   navKey: `${PhiCmsAreaKey}:account`,
 ): PhiCmsNavigationSurfaceDescriptor {
+  const [area] = navKey.split(":") as [PhiCmsAreaKey];
   return {
     navKey,
     label: label("Account menu"),
-    items: [{
-      itemKey: anchorItemKey,
-      label: label("Account"),
-      icon: "antd:user",
-    }],
+    items: [
+      {
+        itemKey: anchorItemKey,
+        label: label("Account"),
+        icon: "antd:user",
+      },
+      accountSignOutItem(area),
+    ],
     exportedItemKeys: [anchorItemKey],
   } as const;
 }
