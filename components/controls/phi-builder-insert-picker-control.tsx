@@ -1,10 +1,11 @@
 "use client";
 
 import { useMemo, useState, type ReactElement } from "react";
-import { Flex, Input, Segmented, Select, Space, Tag, Tooltip, Typography, theme as antdTheme } from "antd";
+import { Flex, Input, Segmented, Select, Tag, Tooltip, Typography, theme as antdTheme } from "antd";
 
 import { PhiIcon } from "../shell/phi-icon";
 import type { PhiPickerPlacement } from "./phi-picker-control-contract";
+import { PhiFlexControl } from "./phi-flex-control";
 import { PhiPopoverControl } from "./phi-popover-control";
 import { usePhiImmediatePicker } from "./use-phi-immediate-picker";
 import {
@@ -280,7 +281,7 @@ export function PhiBuilderInsertPickerControl<TItem extends PhiBuilderInsertPick
             >
               <div style={{ display: "flex", flexDirection: "column", gap: token.paddingXS, width: "100%" }}>
                 <Typography.Text type="secondary">{section === "widget" ? labels.widgets : labels.layouts}</Typography.Text>
-                <Space orientation="vertical" size={0} style={{ width: "100%" }}>
+                <PhiFlexControl vertical gap={0} style={{ width: "100%" }}>
                   {visibleItems.map((item, index) => {
                     const isLast = index === visibleItems.length - 1;
                     const isActive = picker.value?.key === item.key;
@@ -329,29 +330,29 @@ export function PhiBuilderInsertPickerControl<TItem extends PhiBuilderInsertPick
                               <PhiIcon name={resolveItemIcon(item)} size={itemIconSize} />
                             </Tooltip>
                           </span>
-                          <Space orientation="vertical" size={0} style={{ minWidth: 0 }}>
+                          <PhiFlexControl vertical gap={0} style={{ minWidth: 0 }}>
                             <Typography.Text strong ellipsis>{item.title}</Typography.Text>
                             {resolveItemPackageName(item) ? (
                               <Typography.Text type="secondary">{resolveItemPackageName(item)}</Typography.Text>
                             ) : null}
-                          </Space>
-                          <Space orientation="vertical" size={2} style={{ alignItems: "flex-end" }}>
+                          </PhiFlexControl>
+                          <PhiFlexControl vertical gap={2} align="flex-end">
                             {item.kind === "widget" && item.category ? (
                               <Tag color={resolveItemCategoryTagColor(item.category)} style={{ marginInlineEnd: 0 }}>
                                 {item.category}
                               </Tag>
                             ) : null}
                             {(item.tags ?? []).length > 0 ? (
-                              <Space size={4} wrap style={{ justifyContent: "flex-end" }}>
+                              <PhiFlexControl align="center" gap={4} wrap justify="flex-end">
                                 {(item.tags ?? []).map((tag) => <Tag key={tag} color="blue">{tag}</Tag>)}
-                              </Space>
+                              </PhiFlexControl>
                             ) : null}
-                          </Space>
+                          </PhiFlexControl>
                         </div>
                       </div>
                     );
                   })}
-                </Space>
+                </PhiFlexControl>
               </div>
             </div>
           ) : (

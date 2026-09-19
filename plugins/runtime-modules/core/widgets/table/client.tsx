@@ -137,7 +137,7 @@ function renderTableValueContent(value: unknown, column: PhiTableColumnDefinitio
   if (column.renderer === "tags") {
     const values = Array.isArray(value) ? value : [value];
     return (
-      <Space size={[4, 4]} wrap>
+      <PhiFlexControl align="center" gap={4} wrap style={{ display: "inline-flex" }}>
         {values.map((entry, index) => {
           const normalizedEntry = normalizeTextValue(entry);
           return (
@@ -150,7 +150,7 @@ function renderTableValueContent(value: unknown, column: PhiTableColumnDefinitio
             </PhiTagControl>
           );
         })}
-      </Space>
+      </PhiFlexControl>
     );
   }
   if (column.renderer === "date" || column.renderer === "datetime") {
@@ -184,10 +184,10 @@ function renderTableValue(
     return content;
   }
   return (
-    <Space size={6}>
+    <PhiFlexControl align="center" gap={6} style={{ display: "inline-flex" }}>
       <PhiIcon name={iconName} />
       {content}
-    </Space>
+    </PhiFlexControl>
   );
 }
 
@@ -787,7 +787,7 @@ export function PhiTableWidgetClient({
               );
             });
           return features.actions?.rowLayout === "spaced"
-            ? <Space size="small">{renderedActions}</Space>
+            ? <PhiFlexControl align="center" gap="small" style={{ display: "inline-flex" }}>{renderedActions}</PhiFlexControl>
             : <Space.Compact>{renderedActions}</Space.Compact>;
         },
       });
@@ -904,10 +904,10 @@ export function PhiTableWidgetClient({
           return <PhiLabeledControl key={filter.key} label={filter.label}>{control}</PhiLabeledControl>;
         }
         return (
-          <Space key={filter.key} orientation="vertical" size="small">
+          <PhiFlexControl key={filter.key} vertical gap="small">
             <PhiTypographyControl type="secondary">{filter.label}</PhiTypographyControl>
             {control}
-          </Space>
+          </PhiFlexControl>
         );
       })}
       {features.search?.enabled ? (
@@ -951,9 +951,9 @@ export function PhiTableWidgetClient({
   ) : null;
 
   return (
-    <Space
-      orientation="vertical"
-      size={selfContainedTools ? token.paddingSM : token.padding}
+    <PhiFlexControl
+      vertical
+      gap={selfContainedTools ? token.paddingSM : token.padding}
       style={{ minWidth: 0, width: "100%" }}
     >
       <PhiCollectionHeaderControl
@@ -966,13 +966,13 @@ export function PhiTableWidgetClient({
         <PhiAlertControl level="info" title={(
           <PhiFlexControl align="center" justify="space-between" gap="small" wrap>
             <span>{formatPhiTableWidgetLabel(labels.selected, selectedRowIdentities.length)}</span>
-            <Space size="small">{bulkActions.map((action) => {
+            <PhiFlexControl align="center" gap="small">{bulkActions.map((action) => {
               if (!matchesAllConditions(null, action.visibleWhen, conditionControllerStates)) return null;
               const disabled = findMatchingCondition(null, action.disabledWhen, conditionControllerStates);
               return <TableAction key={action.key} action={action} size={resolvedControlSize}
                 disabled={Boolean(disabled)} disabledReason={disabled && "reason" in disabled ? disabled.reason : undefined}
                 onActivate={() => activateAction(action, undefined, selectedRowIdentities)} />;
-            })}</Space>
+            })}</PhiFlexControl>
           </PhiFlexControl>
         )}
       />
@@ -1112,16 +1112,16 @@ export function PhiTableWidgetClient({
         showHeader={presentation.showHeader}
         size={resolvedControlSize}
         emptyText={(
-          <Space orientation="vertical" size="small">
+          <PhiFlexControl vertical gap="small">
             <PhiTypographyControl strong>{presentation.emptyState?.title ?? labels.emptyTitle}</PhiTypographyControl>
             <PhiTypographyControl type="secondary">{presentation.emptyState?.description ?? labels.emptyDescription}</PhiTypographyControl>
-          </Space>
+          </PhiFlexControl>
         )}
         layout={presentation.layout}
         footer={footer}
         summary={tableSummary}
       />
-    </Space>
+    </PhiFlexControl>
   );
 }
 
@@ -1168,7 +1168,7 @@ function TableAction({ action, disabled = false, disabledReason, templateValue, 
   return action.confirm && !disabled ? (
     <PhiConfirmControl title={formatTableActionTemplate(action.confirm.title, templateValue)}
       description={action.confirm.alert ? (
-        <Space orientation="vertical" size="small">
+        <PhiFlexControl vertical gap="small">
           {action.confirm.description ? (
             <span>{formatTableActionTemplate(action.confirm.description, templateValue)}</span>
           ) : null}
@@ -1177,7 +1177,7 @@ function TableAction({ action, disabled = false, disabledReason, templateValue, 
             title={formatTableActionTemplate(action.confirm.alert.title, templateValue)}
             description={formatTableActionTemplate(action.confirm.alert.description, templateValue)}
           />
-        </Space>
+        </PhiFlexControl>
       ) : formatTableActionTemplate(action.confirm.description, templateValue)}
       confirmLabel={action.confirm.okText} cancelLabel={action.confirm.cancelText}
       danger={danger} placement="left" onConfirm={onActivate}>

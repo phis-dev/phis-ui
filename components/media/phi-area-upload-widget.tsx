@@ -1,7 +1,6 @@
 "use client";
 
 import { DeleteOutlined, UploadOutlined } from "@ant-design/icons";
-import { Space } from "antd";
 import { PhiTagControl } from "../controls/phi-tag-control";
 import { PhiButtonControl } from "../controls/phi-button-control";
 import NextImage from "next/image";
@@ -387,10 +386,10 @@ export function PhiAreaUploadBinding({ config, labels, onUploadComplete, collect
             background: isDragActive ? token.colorFillQuaternary : undefined,
           }}
         >
-          <Space
-            orientation="vertical"
+          <PhiFlexControl
+            vertical
             align="center"
-            size={4}
+            gap={4}
             style={{
               width: "100%",
               minHeight: uploadTileMinHeight,
@@ -401,7 +400,7 @@ export function PhiAreaUploadBinding({ config, labels, onUploadComplete, collect
             <UploadOutlined style={{ fontSize: uploadTileIconSize, color: token.colorTextSecondary }} />
             <PhiTypographyControl strong>{labels.dropTitle}</PhiTypographyControl>
             <PhiTypographyControl type="secondary">{labels.dropHint}</PhiTypographyControl>
-          </Space>
+          </PhiFlexControl>
         </PhiFileDropControl>
       </div>
 

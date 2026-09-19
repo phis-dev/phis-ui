@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
 
-import { ConfigProvider, Space, theme as antdTheme } from "antd";
+import { ConfigProvider, theme as antdTheme } from "antd";
 import { DeleteOutlined } from "@ant-design/icons";
 import type { AliasToken } from "antd/es/theme/interface";
 import type { PhiColorPickerLabels } from "../../../../../components/widgets/label-types/color-picker";
@@ -3898,23 +3898,23 @@ export function PhiBuilderBrandThemePreviewWidgetClient({
           )}
         >
           <PhiFlexControl align="center" justify="space-between" gap={clientToken.padding} wrap="wrap">
-            <Space orientation="vertical" size={0}>
+            <PhiFlexControl vertical gap={0}>
               <PhiTypographyControl presentation="title" level={4} style={{ margin: 0 }}>
                 Theme Preview
               </PhiTypographyControl>
               <PhiTypographyControl type="secondary">
                 Buttons, form fields, tables and status colors use the current draft tokens.
               </PhiTypographyControl>
-            </Space>
+            </PhiFlexControl>
             {/*
               * Samples, drawn with the Controls a Site renders -- and live ones: a button with nothing to
               * call renders disabled, and a preview of disabled buttons would show the wrong Theme.
               */}
-            <Space size="middle" wrap>
+            <PhiFlexControl align="center" gap="middle" wrap>
               <PhiButtonControl type="primary" label="Primary" onClick={previewNoop} />
               <PhiButtonControl label="Default" onClick={previewNoop} />
               <PhiButtonControl danger label="Danger" onClick={previewNoop} />
-            </Space>
+            </PhiFlexControl>
           </PhiFlexControl>
           <PhiDividerControl style={{ margin: 0 }} />
           <PhiFlexControl vertical gap={clientToken.paddingSM} style={{ minWidth: 0 }}>

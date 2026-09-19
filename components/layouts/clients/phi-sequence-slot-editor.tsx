@@ -1,7 +1,7 @@
 "use client";
 
-import { Space } from "antd";
 import { PhiButtonControl } from "../../controls/phi-button-control";
+import { PhiFlexControl } from "../../controls/phi-flex-control";
 import { LeftOutlined, RightOutlined } from "@ant-design/icons";
 import type { CSSProperties, ReactNode } from "react";
 
@@ -131,9 +131,9 @@ export function PhiSequenceSlotEditor({
       }}
     >
       {backgroundLayer}
-      <Space
+      <PhiFlexControl
         align="center"
-        size={8}
+        gap={8}
         style={{
           position: "relative",
           zIndex: 2,
@@ -185,7 +185,7 @@ export function PhiSequenceSlotEditor({
               }),
           })
           : null}
-      </Space>
+      </PhiFlexControl>
       <div
         className={phiLayoutSlotClassName(isAuthoringRender)}
         data-phi-layout-has-content={phiLayoutSlotContentMarker(isAuthoringRender, hasCurrentSlot)}

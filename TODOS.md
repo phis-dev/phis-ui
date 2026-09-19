@@ -70,7 +70,8 @@ built. Remove an entry when it is done.
   one it is a tree-wide edit.
 
   It started at 28 named primitives against about 25 uncontrolled ones. It now names 43, closes five
-  more to a single owner file, and leaves two that are still imported: `List` and `Space`.
+  more to a single owner file, and leaves two that are still imported: `List`, and `Space` for
+  `Space.Compact` alone.
 
   `Row`, `Col` and `Layout` are imported nowhere any more -- the footer Widget went and took them -- but
   the validator cannot say so. `controlledPrimitives` requires a Control that exports the named symbol,
@@ -99,8 +100,8 @@ built. Remove an entry when it is done.
     Done, as `soleOwnerPrimitives` in the validator. It is checked both ways: nobody else may import
     one, and an owner that stops importing it fails too, so a stale entry cannot sit there looking like
     a decision.
-  - ~~**Deletion**, where the direct use should stop rather than be wrapped: the footer Widget, with
-    `Row`, `Col` and `Layout`.~~ Done. `Space` is the deletion that remains, seventeen files of it.
+  - ~~**Deletion**, where the direct use should stop rather than be wrapped: the footer Widget with
+    `Row`, `Col` and `Layout`, and plain `Space` in twelve files.~~ Done.
 
   Specifics worth not rediscovering:
   - ~~`Upload`~~ built as `PhiFileDropControl`, the one Control with a deliberately **smaller** surface
@@ -262,6 +263,12 @@ built. Remove an entry when it is done.
     one axis left to the caller and the only one the code could not settle -- a grid is a record read
     closely, a list is a summary read once.
 
+    A long entry says `full`, not how many columns it takes. That was a correction: `span={2}` shipped
+    first and contradicted the responsive column count the moment the viewport dropped below `md`, which
+    antd reports at runtime -- *"Sum of column `span` in a line not match `column`"* -- and no type can
+    catch. A number has to agree with a count this Control decides and changes by viewport; `full` is
+    what the caller means anyway.
+
   Two conditions, or the work makes things worse rather than better. **A Control passes its primitive's
   contract through rather than inventing props**, which is what keeps the migration mechanical and keeps
   the Controls from becoming a second styling vocabulary. And **the validator should end up refusing by
@@ -289,13 +296,26 @@ built. Remove an entry when it is done.
   permitting it: this is a planned narrowing, not a rule being broken today. Update the validator's own
   comment, the AGENTS.md line and `components/widgets/README.md` when it lands, since all three currently
   read as settled.
-- **Replace antd `Space` with `PhiFlexControl`.** Seventeen files, and the only remaining deletion.
-  `Space` is a flex row that inserts a wrapper element per child, which is what makes it the wrong
-  default: a Flex gap does the same spacing without the extra elements, and the wrappers are what break
-  a child that needs to stretch. Two sites came off it in passing already, in `phi-avatar.tsx` and the
-  static options picker.
-  **`Space.Compact` is a different component** and does not go with it: it joins adjacent Controls into
-  one shape with shared borders, which no gap can express. Its sites need looking at on their own.
+- **`Space.Compact` in seven files is what keeps `Space` imported.** Plain `<Space>` is gone -- 29 sites
+  in twelve files became `PhiFlexControl` -- but `Space.Compact` is a different component and no `gap`
+  expresses it: it joins adjacent Controls into one shape with shared borders and collapsed radii.
+  `plugins/runtime-modules/core/widgets/table/client.tsx`, `phi-length-control`, `phi-preset-size-control`,
+  `phi-toolbar-control`, `phi-background-control`, `phi-border-control` and
+  `command-toolbar-authoring-tools`. Whether that wants a Control of its own -- a joined group of
+  Controls is a real shape with a real rule about which corners round -- or whether the sites want
+  something else, is the open question.
+
+  **Two differences between `Space` and `Flex` no typechecker sees**, found while sweeping and worth not
+  rediscovering. A horizontal `Space` centres its children (`align === undefined && !vertical ? 'center'`
+  in antd's source) where `Flex` stretches, so every horizontal site needed an explicit `align="center"`.
+  And `Space` is `display: inline-flex` where `Flex` is `flex`: inside a table cell an inline box follows
+  the cell's `text-align` and a block box fills the cell and leaves its content on the left, so the five
+  sites that render inside a cell kept `display: inline-flex` deliberately. Everywhere else the parent is
+  itself a flex container, where an inline child is blockified anyway, or a `width: 100%` was already
+  there.
+
+  Three sites in the description Widget wrote `size={0}` and then set the real spacing in
+  `style={{ gap: … }}` beside it -- a way around `Space`'s size scale that `gap` takes directly.
 - **Migrate off antd `List`, which is deprecated.** antd 6.6.4 warns at runtime: *"The `List` component
   is deprecated and will be removed in the next major version. If you're using version 6.6.0 or later,
   please use `Listy` instead."* Two sites: `auth/widgets/security/client.tsx` (three lists, each with

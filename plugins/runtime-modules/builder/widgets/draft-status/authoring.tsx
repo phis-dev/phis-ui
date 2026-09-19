@@ -3,7 +3,6 @@
 import { readPhiDeveloperBuilderWorkspaceKey } from "../../route-scope";
 import { useEffect, useState } from "react";
 
-import { Space } from "antd";
 import { PhiTagControl } from "../../../../../components/controls/phi-tag-control";
 import { usePathname, useSearchParams } from "next/navigation";
 
@@ -331,12 +330,12 @@ export function PhiDeveloperBuilderDraftStatusWidgetClient({
 
   return (
     <PhiFlexControl align="center" justify="space-between" gap={12} wrap="wrap" style={{ width: "100%" }}>
-      <Space size={8} wrap>
+      <PhiFlexControl align="center" gap={8} wrap>
         <PhiTagControl color={statusColor}>{buildStatusLabel(effectiveDraftState, labels.draftStatus)}</PhiTagControl>
         <PhiTypographyControl code style={{ fontSize: 12 }}>
           {scopePath}
         </PhiTypographyControl>
-      </Space>
+      </PhiFlexControl>
       {effectiveDraftState.error ? (
         <PhiTypographyControl type="danger" style={{ fontSize: 12 }}>
           {effectiveDraftState.error}

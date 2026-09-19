@@ -1,6 +1,6 @@
 "use client";
 
-import { Space } from "antd";
+import { PhiFlexControl } from "../../../../../components/controls/phi-flex-control";
 import { PhiTagControl } from "../../../../../components/controls/phi-tag-control";
 
 import type { PhiClientBlockBaseProps } from "../../../../../types";
@@ -31,7 +31,7 @@ export function PhiDescriptionWidgetClient({
   const asideItems = (labels.asideItems ?? []).filter(Boolean);
 
   return (
-    <Space orientation="vertical" size={0} style={{ width: "100%", gap: token.paddingLG }}>
+    <PhiFlexControl vertical gap={token.paddingLG} style={{ width: "100%" }}>
       {labels.eyebrow ? (
         <PhiTagControl
           color="default"
@@ -72,7 +72,7 @@ export function PhiDescriptionWidgetClient({
         </div>
       ) : null}
       {labels.asideTitle || asideItems.length > 0 ? (
-        <Space orientation="vertical" size={0} style={{ width: "100%", gap: token.paddingMD }}>
+        <PhiFlexControl vertical gap={token.paddingMD} style={{ width: "100%" }}>
           {labels.asideTitle ? (
             <PhiTypographyControl
               strong
@@ -85,7 +85,7 @@ export function PhiDescriptionWidgetClient({
               {labels.asideTitle}
             </PhiTypographyControl>
           ) : null}
-          <Space orientation="vertical" size={0} style={{ width: "100%", gap: token.paddingSM }}>
+          <PhiFlexControl vertical gap={token.paddingSM} style={{ width: "100%" }}>
             {asideItems.map((item, index) => (
               <div
                 key={index}
@@ -121,14 +121,14 @@ export function PhiDescriptionWidgetClient({
                 </PhiTypographyControl>
               </div>
             ))}
-          </Space>
-        </Space>
+          </PhiFlexControl>
+        </PhiFlexControl>
       ) : null}
       {labels.footer ? (
         <PhiTypographyControl presentation="paragraph" style={{ marginBottom: 0, color: token.colorTextTertiary }}>
           {labels.footer}
         </PhiTypographyControl>
       ) : null}
-    </Space>
+    </PhiFlexControl>
   );
 }

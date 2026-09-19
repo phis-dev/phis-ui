@@ -1,6 +1,6 @@
 "use client";
 
-import { Space } from "antd";
+import { PhiFlexControl } from "../../controls/phi-flex-control";
 import { PhiTagControl } from "../../controls/phi-tag-control";
 import { PhiTableControl, type PhiTableControlColumn } from "../../controls/phi-table-control";
 
@@ -71,10 +71,10 @@ export function PhiSignalCapabilityList({
       fieldPath: "valueType",
       sizing: { mode: "fill" },
       render: (valueType, row) => (
-        <Space size={4} wrap>
+        <PhiFlexControl align="center" gap={4} wrap style={{ display: "inline-flex" }}>
           <PhiTagControl style={{ marginInlineEnd: 0 }}>{String(valueType)}</PhiTagControl>
           {row.capability.valueSchema ? <PhiTypographyControl type="secondary">{row.capability.valueSchema}</PhiTypographyControl> : null}
-        </Space>
+        </PhiFlexControl>
       ),
     },
   ];

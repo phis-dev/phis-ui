@@ -8,7 +8,6 @@ import {
   PlusOutlined,
   UnorderedListOutlined,
 } from "@ant-design/icons";
-import { Space } from "antd";
 import { useCallback, useMemo, useRef, useState, type Dispatch, type ReactNode, type SetStateAction } from "react";
 
 import {
@@ -197,7 +196,7 @@ function PhiStaticOptionsTable({ disabled }: { disabled: boolean }) {
     {
       title: "Actions", key: "actions", role: "actions", fieldPath: "rowId", sizing: { mode: "fixed", width: 72 }, fixed: "right",
       render: (_value, row) => (
-        <Space size={0} align="center">
+        <PhiFlexControl align="center" gap={0} style={{ display: "inline-flex" }}>
           <PhiButtonControl type="text" size="small" icon={row.disabled ? <EyeInvisibleOutlined /> : <EyeOutlined />}
             ariaLabel={row.disabled ? `Enable ${String(row.label)}` : `Disable ${String(row.label)}`} disabled={disabled}
             tooltip={row.disabled ? "Enable option" : "Disable option"}
@@ -207,7 +206,7 @@ function PhiStaticOptionsTable({ disabled }: { disabled: boolean }) {
             tooltip="Delete option"
             onClick={() => { void binding.executeAction({ kind: "action", actionKey: "delete", rowIdentity: String(row.rowId), selectedRowIdentities: [], query: binding.resolvedQuery }); }}
           />
-        </Space>
+        </PhiFlexControl>
       ),
     },
   ], [binding, disabled]);

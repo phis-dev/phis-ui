@@ -5,6 +5,8 @@ import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Button, Divider, Flex, Input, InputNumber, Select, Space, Typography, theme } from "antd";
 import type { DefaultOptionType } from "antd/es/select";
 
+import { PhiFlexControl } from "./phi-flex-control";
+
 import type {
   PhiBackgroundDirection,
   PhiBackgroundMotionDirection,
@@ -980,7 +982,7 @@ export function PhiBackgroundControl({
   const showPreview = mode !== "config";
 
   return (
-    <Space orientation="vertical" size={12} style={{ width: "100%" }}>
+    <PhiFlexControl vertical gap={12} style={{ width: "100%" }}>
       {showPreview ? (
         <ConfigPreviewShell expanded={canOpenPreview}>
           {renderPreviewPicker()}
@@ -1178,7 +1180,7 @@ export function PhiBackgroundControl({
 
       <Divider dashed size="small" />
 
-      <Space orientation="vertical" size={8} style={{ width: "100%" }}>
+      <PhiFlexControl vertical gap={8} style={{ width: "100%" }}>
         <Typography.Text>{labels.sections.overlay}</Typography.Text>
         <PhiSegmentedControl
           block
@@ -1188,7 +1190,7 @@ export function PhiBackgroundControl({
         />
 
         {currentValue.overlay ? (
-          <Space orientation="vertical" size={8} style={{ width: "100%" }}>
+          <PhiFlexControl vertical gap={8} style={{ width: "100%" }}>
             {currentValue.overlay.kind === "pattern" ? (
               <Flex align="center" justify="space-between" gap={token.paddingSM} wrap="wrap">
                 <Typography.Text>{labels.overlay.pattern}</Typography.Text>
@@ -1351,15 +1353,15 @@ export function PhiBackgroundControl({
                   );
                 })
               : null}
-          </Space>
+          </PhiFlexControl>
         ) : null}
-      </Space>
+      </PhiFlexControl>
 
       {effectKindOptions.length > 1 ? (
         <>
           <Divider dashed size="small" />
 
-          <Space orientation="vertical" size={8} style={{ width: "100%" }}>
+          <PhiFlexControl vertical gap={8} style={{ width: "100%" }}>
             <Typography.Text>{labels.sections.effect}</Typography.Text>
             <PhiSegmentedControl
               block
@@ -1367,9 +1369,9 @@ export function PhiBackgroundControl({
               options={effectKindOptions}
               onChange={(next) => updateEffectKind(next as PhiLayoutEffectId | "none")}
             />
-          </Space>
+          </PhiFlexControl>
         </>
       ) : null}
-    </Space>
+    </PhiFlexControl>
   );
 }

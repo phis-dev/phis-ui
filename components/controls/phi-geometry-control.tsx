@@ -1,6 +1,6 @@
 "use client";
 
-import { Divider, Flex, Space, Typography } from "antd";
+import { Divider, Flex, Typography } from "antd";
 
 import type { PhiRenderableBlockSize } from "../../types/renderable-block";
 import {
@@ -12,6 +12,7 @@ import {
   type PhiGeometryWidgetLabels,
 } from "../widgets/label-types/geometry";
 import { PhiDimensionControl } from "./phi-dimension-control";
+import { PhiFlexControl } from "./phi-flex-control";
 import { PhiLengthControl } from "./phi-length-control";
 import { PhiNumberControl } from "./phi-number-control";
 import { PhiViewportVisibilityControl } from "./phi-viewport-visibility-control";
@@ -99,7 +100,7 @@ export function PhiGeometryControl({
 
   if (mode === "preview") {
     return (
-      <Space orientation="vertical" size={8} style={{ width: "100%" }}>
+      <PhiFlexControl vertical gap={8} style={{ width: "100%" }}>
         {showSticky ? (
           <Flex align="center" justify="space-between" gap={12} wrap="wrap">
             <Typography.Text>{labels.fields.sticky}</Typography.Text>
@@ -141,12 +142,12 @@ export function PhiGeometryControl({
               />,
             )
           : null}
-      </Space>
+      </PhiFlexControl>
     );
   }
 
   return (
-    <Space orientation="vertical" size={10} style={{ width: "100%" }}>
+    <PhiFlexControl vertical gap={10} style={{ width: "100%" }}>
       {showSticky
         ? renderGeometryRow(
             labels.fields.sticky,
@@ -258,6 +259,6 @@ export function PhiGeometryControl({
             />,
           )
         : null}
-    </Space>
+    </PhiFlexControl>
   );
 }

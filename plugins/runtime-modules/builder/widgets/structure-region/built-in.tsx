@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import type { CSSProperties, ReactElement, ReactNode } from "react";
 
-import { Space, theme as antdTheme } from "antd";
+import { theme as antdTheme } from "antd";
 import { PlusOutlined } from "@ant-design/icons";
 import {
   buildPhiCmsLayoutNamespacedTypeKey,
@@ -2342,7 +2342,7 @@ export function PhiStructureRegionScaffold({
       }}
     >
       {isPreviewMode ? null : (
-        <Space orientation="vertical" size={0} style={{ minWidth: 0, width: "100%" }}>
+        <PhiFlexControl vertical gap={0} style={{ minWidth: 0, width: "100%" }}>
           <PhiFlexControl align="center" gap={6} wrap={false} style={{ minWidth: 0, width: "100%", whiteSpace: "nowrap" }}>
             <PhiTypographyControl strong style={{ minWidth: 0, whiteSpace: "nowrap" }}>
               {config.title}
@@ -2356,7 +2356,7 @@ export function PhiStructureRegionScaffold({
               {config.subtitle}
             </PhiTypographyControl>
           ) : null}
-        </Space>
+        </PhiFlexControl>
       )}
 
       {renderRegionPicker(
