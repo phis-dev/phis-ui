@@ -58,7 +58,6 @@ export type * from "./plugins/runtime-modules/core/widgets/command-toolbar/confi
 export type * from "./plugins/runtime-modules/core/widgets/description/config";
 export type * from "./plugins/runtime-modules/core/widgets/dimension/config";
 export type * from "./plugins/runtime-modules/core/widgets/length/config";
-export type * from "./plugins/runtime-modules/core/widgets/footer/config";
 export type * from "./components/widgets/config/geometry";
 export type * from "./plugins/runtime-modules/core/widgets/header-navigation/config";
 export type * from "./components/widgets/label-sets/hello-world";

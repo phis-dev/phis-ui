@@ -237,12 +237,6 @@ export const PHI_COMMON_RUNTIME_MODULE_RENDER_CLIENT_MANIFEST =
       ),
     ],
     [
-      PhiCmsWidgetType.Footer,
-      definePhiRuntimeModuleRenderClient(
-        dynamic(() => import("../core/widgets/footer/client").then((module) => module.PhiFooterWidgetClient)),
-      ),
-    ],
-    [
       PhiCmsWidgetType.Html,
       definePhiRuntimeModuleRenderClient(
         dynamic(() => import("../core/widgets/html/client").then((module) => module.PhiHtmlWidgetClient)),

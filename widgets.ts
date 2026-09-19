@@ -2,8 +2,6 @@ export { PhiAccountWidget } from "./plugins/runtime-modules/core/widgets/account
 export type { PhiAccountWidgetProps } from "./plugins/runtime-modules/core/widgets/account/server";
 export { PhiCardWidget } from "./plugins/runtime-modules/core/widgets/card/server";
 export type { PhiCardWidgetProps } from "./plugins/runtime-modules/core/widgets/card/server";
-export { PhiFooterWidget } from "./plugins/runtime-modules/core/widgets/footer/server";
-export type { PhiFooterWidgetProps } from "./plugins/runtime-modules/core/widgets/footer/server";
 export { PhiLocaleWidget } from "./plugins/runtime-modules/core/widgets/locale/server";
 export type { PhiLocaleWidgetProps } from "./plugins/runtime-modules/core/widgets/locale/server";
 export { PhiMarkdownWidget } from "./plugins/runtime-modules/core/widgets/markdown/server";

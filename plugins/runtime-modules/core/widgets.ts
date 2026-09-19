@@ -45,9 +45,6 @@ import {
   PHI_LENGTH_WIDGET_DEFINITION,
 } from "./widgets/length/config";
 import {
-  PHI_FOOTER_WIDGET_DEFINITION,
-} from "./widgets/footer/config";
-import {
   PHI_FORM_WIDGET_DEFINITION,
 } from "./widgets/form/config";
 import { PHI_FORM_PREVIEW_WIDGET_DEFINITION } from "./widgets/form-preview/config";
@@ -254,13 +251,6 @@ export const PHI_RUNTIME_MODULE_WIDGETS: readonly PhiRuntimeModuleWidgetDefiniti
     renderPolicies: {"runtime":"custom","preview":"custom","authoring":"custom"},
     loadRuntime: () => import("./widgets/length/plugin").then((module) => module.PHI_LENGTH_WIDGET_PLUGIN),
     loadPreview: () => import("./widgets/length/plugin").then((module) => module.PHI_LENGTH_WIDGET_PLUGIN),
-  }),
-  defineFirstPartyWidget({
-    definition: PHI_FOOTER_WIDGET_DEFINITION,
-    ownerModuleId: PHI_CORE_RUNTIME_MODULE_ID,
-    renderPolicies: {"runtime":"custom","preview":"custom","authoring":"custom"},
-    loadRuntime: () => import("./widgets/footer/plugin").then((module) => module.PHI_FOOTER_WIDGET_PLUGIN),
-    loadPreview: () => import("./widgets/footer/plugin").then((module) => module.PHI_FOOTER_WIDGET_PLUGIN),
   }),
   defineFirstPartyWidget({
     definition: PHI_FORM_WIDGET_DEFINITION,

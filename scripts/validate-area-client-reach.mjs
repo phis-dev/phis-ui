@@ -69,7 +69,6 @@ const DISPLAY_WIDGET_CLIENTS = [
   "breadcrumb",
   "card",
   "description",
-  "footer",
   "gallery",
   "header-navigation",
   "icon",

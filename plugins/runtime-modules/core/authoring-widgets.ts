@@ -43,9 +43,6 @@ import {
   PHI_LENGTH_WIDGET_DEFINITION,
 } from "./widgets/length/config";
 import {
-  PHI_FOOTER_WIDGET_DEFINITION,
-} from "./widgets/footer/config";
-import {
   PHI_FORM_WIDGET_DEFINITION,
 } from "./widgets/form/config";
 import { PHI_FORM_PREVIEW_WIDGET_DEFINITION } from "./widgets/form-preview/config";
@@ -203,10 +200,6 @@ export default createPhiAuthoringWidgetModule([
   definePhiAuthoringWidgetModuleLoader(
     PHI_LENGTH_WIDGET_DEFINITION,
     () => import("./widgets/length/authoring").then((module) => module.PHI_LENGTH_WIDGET_BUILDER_PLUGIN),
-  ),
-  definePhiAuthoringWidgetModuleLoader(
-    PHI_FOOTER_WIDGET_DEFINITION,
-    () => import("./widgets/footer/authoring").then((module) => module.PHI_FOOTER_WIDGET_BUILDER_PLUGIN),
   ),
   definePhiAuthoringWidgetModuleLoader(
     PHI_FORM_WIDGET_DEFINITION,

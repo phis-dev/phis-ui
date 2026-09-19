@@ -70,7 +70,13 @@ built. Remove an entry when it is done.
   one it is a tree-wide edit.
 
   It started at 28 named primitives against about 25 uncontrolled ones. It now names 43, closes five
-  more to a single owner file, and leaves five: `Col`, `Layout`, `List`, `Row`, `Space`.
+  more to a single owner file, and leaves two that are still imported: `List` and `Space`.
+
+  `Row`, `Col` and `Layout` are imported nowhere any more -- the footer Widget went and took them -- but
+  the validator cannot say so. `controlledPrimitives` requires a Control that exports the named symbol,
+  and there is none: a three-column grid is a Layout, not a Control. So the three sit in the gap this
+  whole entry is about, permitted by omission and reachable again by anyone who types the import. That is
+  the allowlist's job, and it is now the clearest argument for it.
 
   `App`, `ConfigProvider` and `theme` stay direct: they are the root and theme adapters AGENTS.md
   already exempts, not feature surface.
@@ -93,7 +99,8 @@ built. Remove an entry when it is done.
     Done, as `soleOwnerPrimitives` in the validator. It is checked both ways: nobody else may import
     one, and an owner that stops importing it fails too, so a stale entry cannot sit there looking like
     a decision.
-  - **Deletion**, where the direct use should stop rather than be wrapped -- see the next entry.
+  - ~~**Deletion**, where the direct use should stop rather than be wrapped: the footer Widget, with
+    `Row`, `Col` and `Layout`.~~ Done. `Space` is the deletion that remains, seventeen files of it.
 
   Specifics worth not rediscovering:
   - ~~`Upload`~~ built as `PhiFileDropControl`, the one Control with a deliberately **smaller** surface
@@ -282,20 +289,13 @@ built. Remove an entry when it is done.
   permitting it: this is a planned narrowing, not a rule being broken today. Update the validator's own
   comment, the AGENTS.md line and `components/widgets/README.md` when it lands, since all three currently
   read as settled.
-- **Delete the footer Widget, and three antd primitives with it.**
-  `plugins/runtime-modules/core/widgets/footer/` is the only place in the tree that imports `Row`, `Col`
-  and `Layout`, because it builds its own three-column responsive grid (`<Row gutter={[16,16]}>` with
-  three `<Col xs={24} md={8}>`) and a `Layout.Footer`. It also carries a `Divider` and a
-  `const { Text } = Typography`.
-  **It is placed nowhere.** `PhiCmsWidgetType.Footer` appears only in the Widget's own files and in the
-  client manifest; the default preset tree builds the footer from the `footer_top`, `footer_main` and
-  `footer_bottom` Regions (`components/regions/presets/`, `family: "footer"`) with ordinary Widgets. So
-  the Widget is a second way to do what the Regions already do -- and the way that reimplements layout
-  inside a leaf, which the Widget contract forbids in every other case.
-  A three-column Layout placed in the footer Region is the whole replacement. Remove the Widget, its
-  registrations and its labels; the `Divider` goes too, since a Region draws its own separator through
-  `border` ([LAYOUTING.md](./LAYOUTING.md)). Four primitives leave the list without a wrapper being
-  written for any of them.
+- **Replace antd `Space` with `PhiFlexControl`.** Seventeen files, and the only remaining deletion.
+  `Space` is a flex row that inserts a wrapper element per child, which is what makes it the wrong
+  default: a Flex gap does the same spacing without the extra elements, and the wrappers are what break
+  a child that needs to stretch. Two sites came off it in passing already, in `phi-avatar.tsx` and the
+  static options picker.
+  **`Space.Compact` is a different component** and does not go with it: it joins adjacent Controls into
+  one shape with shared borders, which no gap can express. Its sites need looking at on their own.
 - **Migrate off antd `List`, which is deprecated.** antd 6.6.4 warns at runtime: *"The `List` component
   is deprecated and will be removed in the next major version. If you're using version 6.6.0 or later,
   please use `Listy` instead."* Two sites: `auth/widgets/security/client.tsx` (three lists, each with
