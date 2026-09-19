@@ -211,6 +211,17 @@ export function PhiFormDescriptorRuntimeClient({
 
   usePhiSignalListener(useCallback((signal) => {
     if (signal.receiver !== identity.receiver && signal.receiver !== "broadcast") return;
+    /*
+     * What this form's own Controller says back is not an instruction to this form.
+     *
+     * Every form is bound to a Form Controller, and that Controller answers a command by sending it on
+     * to the form it belongs to -- same channel, same action, addressed here. The binding applies those
+     * answers; this listener is for what a Preset wired. Reading them as Preset signals made `reset`
+     * into a loop with no end: the route called `requestReset`, which tells the Controller, which sent
+     * the reset back here, which called `requestReset` again. Thousands of deliveries a second, one
+     * blocked main thread -- the Users Page froze on Cancel and its edit form never left its skeleton.
+     */
+    if (signal.sender === formControllerAddress) return;
     const route = widgetConfig?.signalRoutes?.listens?.find((candidate) =>
       candidate.channel === signal.channel &&
       candidate.action === signal.action &&
@@ -242,7 +253,7 @@ export function PhiFormDescriptorRuntimeClient({
         setConditionControllerStates((current) => ({ ...current, [signal.sender!]: next.state }));
       }
     }
-  }, [conditionControllerAddresses, emitCapability, identity.receiver, loadRecord, requestReset, requestSubmit, widgetConfig]), useMemo(() => {
+  }, [conditionControllerAddresses, emitCapability, formControllerAddress, identity.receiver, loadRecord, requestReset, requestSubmit, widgetConfig]), useMemo(() => {
     const listenRoutes = widgetConfig?.signalRoutes?.listens ?? [];
     return listenRoutes.length === 0 ? null : {
       scopes: Array.from(new Set(listenRoutes.map((route) => route.scope))),

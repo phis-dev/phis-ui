@@ -317,6 +317,12 @@ the only way a Form is placed. There are no domain Form Widgets. Its config:
   the Form (a sibling Layout, an Overlay footer, a toolbar) reach the Widget through its `submit` and
   `reset` inputs. A Form-internal Button is only a field-local command and cannot submit, reset, or close.
   A Form does not detect whether it stands in an Overlay and adds nothing to Layout or Overlay chrome.
+- Every Form is bound to a Form Controller, and that Controller answers a command by sending it on to the
+  Form it belongs to -- same channel, same action, addressed to the Widget. The binding applies those
+  answers; the Widget's route inputs are for what a Preset wired, so what arrives from the Form's own
+  Controller is never read as one. Reading it as one makes a loop with no end: the `reset` input tells
+  the Controller, the Controller sends the reset back, the input fires again. It blocked the main thread
+  on the Admin Users Page -- Cancel froze the Overlay and the edit Form never left its skeleton.
 - Initial values layer from weakest to strongest: field `initialValue`, `formConfig.initialValues`,
   `formConfig.initialValuesFromQuery` (maps a field key to a query parameter), and the definition's
   `loadInitialValues`. A record read through `source` replaces the configured values. With `source` and an `openActionKey`, a Table action with a row identity
