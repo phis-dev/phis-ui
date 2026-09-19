@@ -225,11 +225,66 @@ function withPhiSignalReceiverScope(partition: PhiSignalRuntimePartition, signal
     : signal;
 }
 
+/*
+ * How much of one route in one second is no longer anybody's doing.
+ *
+ * Somebody typing produces about ten signals a second on a field, something tied to the frame rate
+ * sixty. A circle reaches several hundred in the time it takes to notice the page has stopped
+ * responding, so there is an order of magnitude between the two and nothing to tune.
+ */
+const PHI_SIGNAL_CIRCULATION_WINDOW_MS = 1_000;
+const PHI_SIGNAL_CIRCULATION_LIMIT = 200;
+
+let phiSignalCirculationWindowStartedAt = 0;
+const phiSignalCirculationCounts = new Map<string, number>();
+const reportedCirculatingPhiSignals = new Set<string>();
+
+/**
+ * A signal that keeps setting itself off, said out loud.
+ *
+ * The third thing that can go wrong with a delivery, after an address nobody answers to and a receiver
+ * that hears nothing: it arrives, something it reaches sends it again, and the two go round. Nothing is
+ * dropped and nothing is held, so neither of the other two notices -- what happens is that the main
+ * thread stops. On the Admin Users Page the same two routes were delivered thousands of times in a few
+ * seconds because a Form read its own Controller's answer as an instruction; Cancel froze the Overlay,
+ * the edit Form never left its skeleton, and the console said nothing at all.
+ *
+ * It reports and does not intervene. A circle is a fault in the wiring, and a runtime that quietly
+ * dropped the signal it decided was one too many would be deciding which wirings are real.
+ *
+ * Development only, and the call is guarded at its site so the bundler takes the whole thing out of a
+ * production build: this counts every delivery, and a page in production must not pay for it.
+ */
+function reportPhiSignalCirculation(signal: PhiSignal) {
+  const now = Date.now();
+  if (now - phiSignalCirculationWindowStartedAt > PHI_SIGNAL_CIRCULATION_WINDOW_MS) {
+    phiSignalCirculationWindowStartedAt = now;
+    phiSignalCirculationCounts.clear();
+  }
+  const key = `${signal.scope}|${signal.channel}/${signal.action}|` +
+    `${signal.sender ?? "anonymous"} -> ${signal.receiver ?? "unaddressed"}`;
+  const count = (phiSignalCirculationCounts.get(key) ?? 0) + 1;
+  phiSignalCirculationCounts.set(key, count);
+  if (count < PHI_SIGNAL_CIRCULATION_LIMIT || reportedCirculatingPhiSignals.has(key)) {
+    return;
+  }
+  reportedCirculatingPhiSignals.add(key);
+  console.error(
+    `[phi-signals] ${key} was delivered ${count} times within a second, so this signal is setting ` +
+    "itself off: something it reaches sends it again. Look for a route wired in a circle, or for a " +
+    "receiver answering a Controller that sends the same command back to it. Nothing is being dropped.",
+    { correlationId: signal.correlationId },
+  );
+}
+
 function deliverPhiSignal(partition: PhiSignalRuntimePartition, input: PhiSignal) {
   const signal = withPhiSignalReceiverScope(partition, input);
   const deliveryPartition = resolvePhiSignalDeliveryPartition(partition, signal);
   const deliverability = resolvePhiSignalDeliverability(partition, signal);
   if (deliverability === "deliverable") {
+    if (process.env.NODE_ENV !== "production") {
+      reportPhiSignalCirculation(signal);
+    }
     deliverPhiSignalNow(deliveryPartition, signal);
     return;
   }

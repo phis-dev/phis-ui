@@ -222,6 +222,12 @@ Subscriptions and registrations are destroyed with their provider. Browser tabs 
   delivered at all -- a scope violation, an inactive receiver, a receiver outside the current context --
   is `undeliverable`: it is dropped and reported once on the console as `[phi-signals] Dropped ...`
   (`resolvePhiSignalDeliverability`).
+- A signal that arrives and is sent again by something it reaches is neither of those: nothing is
+  dropped, nothing is held, and the main thread stops. In development the bus counts deliveries per
+  route in a one-second window and reports once past 200 -- an order of magnitude above anything a
+  person or a frame rate produces. It reports and does not intervene: a circle is a fault in the
+  wiring, and dropping the signal that was one too many would decide which wirings are real. The count
+  is guarded so a production build does not carry it.
 - A listener that reads signals addressed to an address names that address: the third argument of
   `usePhiSignalListener`, or `receiver` in its filter. Delivery counts listeners per address, so a
   listener that only compares `signal.receiver` in its body leaves those signals held. Listening in on an
