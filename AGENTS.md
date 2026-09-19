@@ -105,16 +105,14 @@ change. If a contract is unclear, stop and ask instead of guessing.
   `contentBinding`, `slotSizePolicy`); no `if` or `switch` on Widget type, key, or plugin identity.
 - Ant Design is imported only inside the canonical `Phi*Control` adapters and root/theme adapters. When a
   Phi Control exists, first-party and third-party code uses it. Feature code never imports Ant Design
-  `Tour`. The validator names 46 controlled primitives and closes five more to a single owner file
-  (`soleOwnerPrimitives`); nothing in the tree imports an Ant Design primitive past it any more. It still
-  permits by omission, which is the last thing left to change -- see [TODOS.md](./TODOS.md). That exception is closed in practice and
-  not yet in the rule: see [TODOS.md](./TODOS.md), "Wrap the uncontrolled Ant Design primitives in Phi
-  Controls". Ant Design is
-  replaceable in principle, and each direct import turns that from a Control-adapter change into a
-  tree-wide edit. So prefer a Control wherever one already fits, do not reach for a layout primitive
-  where a Layout slot would have done the same work, and treat a new direct import as something to
-  mention rather than something the validator silently blessed. `App`, `ConfigProvider` and `theme` are
-  the root and theme adapters and stay direct. antd `List` is deprecated and `Listy` is deliberately not
+  `Tour`. The validator **refuses by default**: `antdImportAllowance` names every Ant Design import made
+  outside `components/controls/` -- values, types and deep paths alike -- with the reason for each, and
+  anything absent fails. A primitive nobody has thought of is refused rather than permitted, so adding
+  one is a decision written down rather than an import nobody noticed. Ant Design is replaceable in
+  principle, and each direct import turns that from a Control-adapter change into a tree-wide edit. So
+  prefer a Control wherever one already fits, and do not reach for a layout primitive where a Layout slot
+  would have done the same work. `App`, `ConfigProvider` and `theme` are the root and theme adapters and
+  stay direct, each named in the allowance with the file that may hold it. antd `List` is deprecated and `Listy` is deliberately not
   adopted in its place; both point at `PhiEntryListControl`.
 - Shell and Region infrastructure in the RSC path stays plain React and HTML and imports no Ant Design
   module that needs client context.

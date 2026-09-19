@@ -283,24 +283,34 @@ built. Remove an entry when it is done.
   all the Controls exist: a primitive joins `controlledPrimitives` together with its remaining sites, and
   the sites are cleared one at a time.
 
-  **The validator has a hole that the allowlist must close.** Type imports are skipped deliberately, so
-  `UploadProps`, `CollapseProps` (including `CollapseProps["items"]` as a return type), `DataNode`,
-  `InputRef` and `TextAreaRef` reach past it today. A type import costs a library swap exactly as much as
-  a value import, and a rule that checks only values moves the workaround from `import {` to
-  `import type {`. The deep-path check has the same gap: its pattern matches only a default value import,
-  so all seven `antd/es/*` sites in the tree are type-only and therefore invisible. The theme types
-  (`GlobalToken`, `AliasToken`) stay exempt as part of the theme adapter.
+  ~~**The validator has a hole that the allowlist must close.**~~ Closed. `antdImportAllowance` names
+  every Ant Design import outside `components/controls/` -- 27 files, values, types and deep paths, each
+  with its reason -- and anything absent fails. It is checked both ways, so a permission nobody needs any
+  more fails as loudly as an import nobody allowed.
+
+  **The deep-path reader was worse than recorded.** It matched one path segment, so `antd/es/select`
+  would have been caught and `antd/es/theme/util/alias` never was. `theme/phi-antd-token-resolver.ts`
+  imports four **value** paths into Ant Design's internal theme machinery -- `theme/themes/dark`,
+  `theme/themes/default`, `theme/themes/seed`, `theme/util/alias`, of which the last two are not public
+  exports. That is the deepest coupling to Ant Design in the tree, deeper than any `import { Button }`
+  this entry ever removed, and no check had seen it. It is allowed now, with the reason written down,
+  which is the difference between a decision and an oversight.
+
+  Found with it: **ten surfaces read design tokens through antd's `theme` hook** rather than through
+  `usePhiConfig()`, which returns the same set. Not wrong, but a Control adoption still open; they are
+  listed in the allowance so the number shrinks in the open.
 
   Order: ~~the two big pass-throughs (`Flex`, `PhiTypographyControl`), the five owner entries, the
   trivial wrappers, `PhiFileDropControl` with `Progress`, `PhiSkeletonControl`, `PhiEmptyControl`,
   `PhiNameControl`, `PhiAvatarControl`, `PhiCardControl`, `PhiAccordionControl`,
-  `PhiDescriptionListControl`~~ -- done. Next the record Widget below, then the deletions, then `Listy`,
-  and the allowlist last.
+  `PhiDescriptionListControl`, `PhiEntryListControl`, `PhiCompactGroupControl`, the deletions, and the
+  allowlist~~ -- **done, all of it.** What is left is not wrapping: the record Widget below, and the ten
+  `theme` readers above.
 
-  Until the Controls exist, direct use in a Widget or Layout stays correct and the validator keeps
-  permitting it: this is a planned narrowing, not a rule being broken today. Update the validator's own
-  comment, the AGENTS.md line and `components/widgets/README.md` when it lands, since all three currently
-  read as settled.
+  `pendingControlAdoptions` is gone with the denylist: it existed to let a primitive join
+  `controlledPrimitives` before its last sites were converted, and there are no unconverted sites left.
+  The allowance entry with its reason does the same job better, because it says why rather than only
+  how long.
 - ~~**`Space.Compact`**~~ built as `PhiCompactGroupControl`. **It had to be a wrapper and could not be
   written ourselves:** Ant Design joins Controls through a React context, not CSS -- `Space.Compact` puts
   `isFirstItem`, `isLastItem`, the size and the direction around each child, and ten of its components

@@ -78,19 +78,16 @@ const coreApplicationAdapterPath = "components/runtime/core-runtime-application-
  * for a handful of primitives -- so everything outside those names passed, every Module under `plugins/`
  * included. This is the rule itself, over the whole tree.
  *
- * This map is a denylist, so **every primitive not named here is permitted by omission** -- and with
- * `Space` there is nothing left in the tree that reaches past it. That took every route: a Control for
- * what had something to decide, a plain pass-through where nothing did, an owner entry where the Widget
- * around the primitive already was the contract, an adapter file for a Layout that owns its own, and a
- * deletion for the footer Widget, which took `Row`, `Col` and `Layout` with it.
+ * **This map no longer decides anything; `antdImportAllowance` below does.** What is left here is the
+ * advice: when a file imports a primitive it may not, this says which Control to use instead, so the
+ * failure names the way out rather than only the way in. Reaching the whole tree took every route -- a
+ * Control where there was something to decide, a plain pass-through where there was not, an owner entry
+ * where the Widget around the primitive already was the contract, an adapter file for a Layout that owns
+ * its own, and a deletion for the footer Widget, which took `Row`, `Col` and `Layout` with it.
  *
- * **Empty is not closed.** A denylist that nothing violates still permits by omission, and `Row`, `Col`
- * and `Layout` are the proof: imported nowhere, and unprotectable here, because this map demands a
- * Control that exports the named symbol and a three-column grid is a Layout rather than a Control. So
- * the next primitive somebody reaches for is permitted again, exactly as the last thirty were. This
- * check has to end up refusing by default -- an allowlist of what may be imported directly -- and that
- * is now the only thing left to do. See TODOS.md, "Wrap the uncontrolled Ant Design primitives in Phi
- * Controls".
+ * Those three are why the denylist had to go. They are imported nowhere, and this map could never have
+ * protected them: it demands a Control that exports the named symbol, and a three-column grid is a
+ * Layout. A list of what may not be imported is silent about everything nobody has thought of yet.
  */
 const controlledPrimitives = new Map([
   ["Alert", "PhiAlertControl"],
@@ -204,22 +201,137 @@ const soleOwnerPrimitives = new Map([
 ]);
 
 /*
- * Imports that still stand between a primitive and its Control, each with what is missing.
+ * Every Ant Design import this repository makes outside `components/controls/`, and why.
  *
- * A list that may only shrink. A file not on it fails the moment it imports a controlled primitive,
- * so nothing new joins; and an entry whose file no longer needs it fails as well, so a converted file
- * cannot leave its exemption behind. What made the checks above blind was not an open list but a scope
- * drawn by name -- this one is the rule everywhere, with the remaining debts written down.
+ * **This is the allowlist, and it is the whole rule.** Everything above it says what may not be
+ * imported; this says what may, so a primitive nobody thought about is refused rather than permitted.
+ * That reversal is the point: `Row`, `Col` and `Layout` left the tree with the footer Widget and the
+ * denylist still could not protect them, because it demands a Control exporting the named symbol and a
+ * three-column grid is a Layout. Under an allowlist they are simply absent, which is the same as closed.
+ *
+ * It covers **type imports and deep paths too**, which the denylist never did. A type costs a library
+ * swap exactly what a value costs -- `CollapseProps["items"]` is the `Collapse` contract whatever the
+ * keyword in front of it -- and a rule that reads only `import {` moves the workaround to
+ * `import type {`. The deep-path reader used to match one path segment, so `antd/es/select` was seen and
+ * `antd/es/theme/util/alias` was not: four value imports into Ant Design's internal theme machinery,
+ * the deepest coupling in the tree, invisible to every check for as long as they have been there.
+ *
+ * Checked both ways. A file importing what no entry permits fails, and an entry naming an import its
+ * file no longer makes fails too, so this cannot drift into a list of old permissions nobody reads.
+ * `soleOwnerPrimitives` and `primitiveAdapterOwners` grant what they name on top of this, so ownership
+ * is written down once rather than twice.
  */
-const pendingControlAdoptions = new Map([]);
+const antdImportAllowance = new Map([
+  ["components/calendar/gregory-calendar-adapter-client.tsx", {
+    types: ["CalendarProps"],
+    reason: "The calendar adapter owns Calendar and DatePicker; the prop type comes with them.",
+  }],
+  ["components/layouts/clients/phi-collapsible-layout-client.tsx", {
+    types: ["CollapseProps"],
+    reason: "The CollapsibleLayout is the Collapse adapter; `items` and `styles` are that primitive's own shapes.",
+  }],
+  ["components/root/phi-config-provider.tsx", {
+    values: ["ConfigProvider", "theme"],
+    types: ["ConfigProviderProps", "ThemeConfig"],
+    paths: ["antd/es/theme/interface"],
+    reason: "The root adapter. Everything Ant Design is configured with enters here and nowhere else.",
+  }],
+  ["components/root/phi-root-live-theme-provider.tsx", {
+    types: ["ConfigProviderProps"],
+    reason: "Hands the root adapter a theme at runtime, in the shape the root adapter takes.",
+  }],
+  ["components/root/phi-root-layout.tsx", {
+    paths: ["antd/es/app"],
+    reason: "Mounts the App context the Core application adapter reads from.",
+  }],
+  ["components/runtime/core-runtime-application-adapter.tsx", {
+    values: ["App"],
+    reason: "The one file allowed to reach message and notification; everything else emits Core feedback.",
+  }],
+  ["plugins/runtime-modules/builder/draft-command-controller.tsx", {
+    values: ["App"],
+    reason: "Builder draft commands report through the same App context.",
+  }],
+  ["plugins/runtime-modules/core/widgets/table/client.tsx", {
+    values: ["App"],
+    reason: "Table actions report through the same App context.",
+  }],
+  ["plugins/runtime-modules/theme/widgets/brand-controls/client.tsx", {
+    values: ["ConfigProvider", "theme"],
+    paths: ["antd/es/theme/interface"],
+    reason: "The Theme preview renders a draft Theme, so it configures Ant Design a second time on purpose.",
+  }],
+  ["theme/phi-antd-token-resolver.ts", {
+    paths: [
+      "antd/es/theme/interface",
+      "antd/es/theme/themes/dark",
+      "antd/es/theme/themes/default",
+      "antd/es/theme/themes/seed",
+      "antd/es/theme/util/alias",
+    ],
+    reason:
+      "Resolves the full token set without a React render, which needs the algorithms and the alias "
+      + "formatter. `themes/seed` and `util/alias` are not public exports -- the deepest coupling in the "
+      + "tree, and the reason the deep-path reader now matches more than one segment.",
+  }],
+  ["components/forms/form-provider-registry.tsx", {
+    paths: ["antd/es/form"],
+    reason: "Rule types for the Form primitive PhiFormControl wraps.",
+  }],
+  ["components/widgets/client/markdown-editor.tsx", {
+    paths: ["antd/es/input/TextArea"],
+    reason: "A ref to the textarea it has to place a cursor in. A leak, and the smallest one available.",
+  }],
+  ["components/widgets/helpers/font-family.ts", {
+    paths: ["antd/es/theme/interface"],
+    reason: "Token names, as part of the theme adapter.",
+  }],
+  ["components/widgets/helpers/font-size.ts", {
+    paths: ["antd/es/theme/interface"],
+    reason: "Token names, as part of the theme adapter.",
+  }],
+  ["helpers/antd-locale.ts", {
+    paths: ["antd/es/locale"],
+    reason: "Maps a Phi locale onto the primitive locale bundle the root adapter takes.",
+  }],
+  ["plugins/runtime-modules/builder/tree-options.tsx", {
+    paths: ["antd/es/tree"],
+    reason: "`DataNode` is the Tree primitive's node shape, and PhiTreeControl passes it through.",
+  }],
+  ["plugins/runtime-modules/core/widgets/input/client.tsx", {
+    paths: ["antd/es/input"],
+    reason: "`InputRef` for focus handling. The Widget renders PhiTextControl and types against the ref alone.",
+  }],
+  /*
+   * Ten surfaces read design tokens through the primitive's own hook rather than through
+   * `usePhiConfig()`, which returns the same token set. That is a Control adoption still open rather
+   * than a decision -- see TODOS.md -- and it is listed here so that it shrinks in the open.
+   */
+  ["components/layouts/clients/phi-carousel-layout-client.tsx", { values: ["theme"], reason: "Reads tokens." }],
+  ["components/layouts/clients/phi-grid-layout-client.tsx", { values: ["theme"], reason: "Reads tokens." }],
+  ["components/layouts/phi-structure-region-layout.tsx", { values: ["theme"], reason: "Reads tokens." }],
+  ["plugins/runtime-modules/builder/clients/inspector-config-field.tsx", { values: ["theme"], reason: "Reads tokens." }],
+  ["plugins/runtime-modules/builder/clients/layout-scaffold-overlays.tsx", { values: ["theme"], reason: "Reads tokens." }],
+  ["plugins/runtime-modules/builder/clients/structure-canvas.tsx", { values: ["theme"], reason: "Reads tokens." }],
+  ["plugins/runtime-modules/builder/edit-scaffold-drawer.tsx", { values: ["theme"], reason: "Reads tokens." }],
+  ["plugins/runtime-modules/builder/render-root-node-scaffold.tsx", { values: ["theme"], reason: "Reads tokens." }],
+  ["plugins/runtime-modules/builder/widgets/structure-region/built-in.tsx", { values: ["theme"], reason: "Reads tokens." }],
+  ["plugins/runtime-modules/core/widgets/gallery/client.tsx", { values: ["theme"], reason: "Reads tokens." }],
+]);
 
-/** `import Select from "antd/es/select"` reaches the same primitive by another door. */
-function readAntdComponentPathImports(source) {
-  const names = [];
-  for (const match of source.matchAll(/import\s+\w+\s+from\s*["']antd\/(?:es|lib)\/([\w-]+)["']/gu)) {
-    names.push(match[1].replace(/(?:^|-)(\w)/gu, (_, letter) => letter.toUpperCase()));
+/** What a file may import: its own entry, plus whatever it is named the owner or adapter of. */
+function readAllowance(relativePath) {
+  const entry = antdImportAllowance.get(relativePath);
+  const values = new Set(entry?.values ?? []);
+  const types = new Set(entry?.types ?? []);
+  const paths = new Set(entry?.paths ?? []);
+  for (const [primitive, owner] of soleOwnerPrimitives) {
+    if (owner === relativePath) values.add(primitive);
   }
-  return names;
+  for (const primitive of primitiveAdapterOwners.get(relativePath) ?? []) {
+    values.add(primitive);
+  }
+  return { values, types, paths };
 }
 
 /** `import * as antd from "antd"` and then `antd.Select` -- rare, and exactly as direct. */
@@ -243,7 +355,43 @@ function readAntdValueImports(source) {
       names.push(trimmed.split(/\s+as\s+/u)[0].trim());
     }
   }
-  return [...names, ...readAntdComponentPathImports(source), ...readAntdNamespaceUses(source)];
+  return [...names, ...readAntdNamespaceUses(source)];
+}
+
+/**
+ * Every `antd/es/...` or `antd/lib/...` path a file imports from, value or type, kept whole.
+ *
+ * Whole, because folding a path into a component name is what hid the worst of them: the old reader
+ * matched one segment, so `antd/es/select` was seen and `antd/es/theme/util/alias` was not.
+ */
+function readAntdDeepPaths(source) {
+  const paths = [];
+  for (const match of source.matchAll(
+    /import\s+(?:type\s+)?(?:[\w*]+(?:\s+as\s+\w+)?|\{[^}]*\})\s*from\s*["']antd\/(?:es|lib)\/([\w/.-]+)["']/gu,
+  )) {
+    paths.push(`antd/es/${match[1]}`);
+  }
+  return paths;
+}
+
+/**
+ * Named type imports from the package root.
+ *
+ * A type costs a library swap exactly what a value costs, and a rule that reads only `import {` moves
+ * the workaround to `import type {`.
+ */
+function readAntdTypeImports(source) {
+  const names = [];
+  for (const match of source.matchAll(/import\s+(type\s+)?\{([^}]*)\}\s*from\s*["']antd["']/gu)) {
+    const blockIsType = Boolean(match[1]);
+    for (const item of match[2].split(",")) {
+      const trimmed = item.trim();
+      if (!trimmed) continue;
+      if (!blockIsType && !trimmed.startsWith("type ")) continue;
+      names.push(trimmed.replace(/^type\s+/u, "").split(/\s+as\s+/u)[0].trim());
+    }
+  }
+  return names;
 }
 
 async function listRepositorySources(relativeDirectory = ".") {
@@ -460,40 +608,66 @@ for (const [primitive, control] of controlledPrimitives) {
   }
 }
 
-const pendingStillNeeded = new Map();
 /** Owners seen importing what they own, so an entry that has gone stale can be told from a live one. */
 const soleOwnersSeen = new Set();
+/** Allowances seen used, for the same reason: a permission nobody needs is one nobody rereads. */
+const allowanceSeen = new Map();
+
+function noteAllowanceUse(relativePath, field, name) {
+  const seen = allowanceSeen.get(relativePath) ?? { values: new Set(), types: new Set(), paths: new Set() };
+  seen[field].add(name);
+  allowanceSeen.set(relativePath, seen);
+}
+
 for (const relativePath of await listRepositorySources()) {
   if (relativePath.startsWith(controlDirectory)) continue;
   const source = await readSource(relativePath);
-  const imported = new Set(readAntdValueImports(source));
+  const allowed = readAllowance(relativePath);
 
-  for (const [primitive, owner] of soleOwnerPrimitives) {
-    if (!imported.has(primitive)) continue;
-    if (relativePath === owner) {
-      soleOwnersSeen.add(primitive);
+  for (const name of new Set(readAntdValueImports(source))) {
+    if (allowed.values.has(name)) {
+      noteAllowanceUse(relativePath, "values", name);
+      if (soleOwnerPrimitives.get(name) === relativePath) soleOwnersSeen.add(name);
+      continue;
+    }
+    const owner = soleOwnerPrimitives.get(name);
+    if (owner) {
+      failures.push(
+        `${relativePath} imports ${name} from Ant Design; it belongs to ${owner} and nowhere else. `
+          + "Reuse that surface, or make the case for a second owner in soleOwnerPrimitives.",
+      );
+      continue;
+    }
+    const control = controlledPrimitives.get(name);
+    failures.push(control
+      ? `${relativePath} imports ${name} from Ant Design directly; use ${control}.`
+      : `${relativePath} imports ${name} from Ant Design, which no entry in antdImportAllowance permits. `
+        + "Add the entry with the reason, or reach the primitive through a Control.");
+  }
+
+  for (const name of new Set(readAntdTypeImports(source))) {
+    if (allowed.types.has(name)) {
+      noteAllowanceUse(relativePath, "types", name);
       continue;
     }
     failures.push(
-      `${relativePath} imports ${primitive} from Ant Design; it belongs to ${owner} and nowhere else. `
-        + "Reuse that surface, or make the case for a second owner in soleOwnerPrimitives.",
+      `${relativePath} imports the Ant Design type ${name}, which no entry in antdImportAllowance permits. `
+        + "A type costs a library swap what a value costs.",
     );
   }
 
-  const adapterOwned = primitiveAdapterOwners.get(relativePath) ?? new Set();
-  const pending = pendingControlAdoptions.get(relativePath)?.primitives ?? new Set();
-  const direct = [...imported]
-    .filter((name) => controlledPrimitives.has(name) && !adapterOwned.has(name));
-  for (const primitive of direct) {
-    if (pending.has(primitive)) {
-      pendingStillNeeded.set(relativePath, (pendingStillNeeded.get(relativePath) ?? new Set()).add(primitive));
+  for (const importPath of new Set(readAntdDeepPaths(source))) {
+    if (allowed.paths.has(importPath)) {
+      noteAllowanceUse(relativePath, "paths", importPath);
       continue;
     }
     failures.push(
-      `${relativePath} imports ${primitive} from Ant Design directly; use ${controlledPrimitives.get(primitive)}.`,
+      `${relativePath} imports from ${importPath}, which no entry in antdImportAllowance permits. `
+        + "A deep path reaches the same library by another door, and sometimes past its public exports.",
     );
   }
 }
+
 for (const [primitive, owner] of soleOwnerPrimitives) {
   if (!soleOwnersSeen.has(primitive)) {
     failures.push(
@@ -502,12 +676,19 @@ for (const [primitive, owner] of soleOwnerPrimitives) {
     );
   }
 }
-for (const [relativePath, { primitives }] of pendingControlAdoptions) {
-  const stillNeeded = pendingStillNeeded.get(relativePath) ?? new Set();
-  for (const primitive of primitives) {
-    if (!stillNeeded.has(primitive)) {
+
+for (const [relativePath, entry] of antdImportAllowance) {
+  const seen = allowanceSeen.get(relativePath) ?? { values: new Set(), types: new Set(), paths: new Set() };
+  for (const [field, listed] of [
+    ["values", entry.values ?? []],
+    ["types", entry.types ?? []],
+    ["paths", entry.paths ?? []],
+  ]) {
+    for (const name of listed) {
+      if (seen[field].has(name)) continue;
       failures.push(
-        `${relativePath} no longer imports ${primitive}; remove it from pendingControlAdoptions so the list keeps shrinking.`,
+        `antdImportAllowance lets ${relativePath} import ${name}, which it no longer does. `
+          + "Remove the entry rather than leaving a permission nobody rereads.",
       );
     }
   }
@@ -522,5 +703,5 @@ console.log(
   `Control boundaries valid (${widgetControlRequirements.size} Widgets, ${directControlConsumers.length} direct consumers, `
     + `${controlledPrimitives.size} controlled primitives across the tree, `
     + `${soleOwnerPrimitives.size} owned by a single file, `
-    + `${[...pendingControlAdoptions.values()].reduce((count, entry) => count + entry.primitives.size, 0)} pending).`,
+    + `${antdImportAllowance.size} files allowed an Ant Design import outside ${controlDirectory}).`,
 );
