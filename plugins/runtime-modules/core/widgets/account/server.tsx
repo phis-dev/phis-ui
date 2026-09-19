@@ -9,7 +9,8 @@ import type {
 } from "./client";
 import { PhiCmsWidgetType } from "../../../../../constants/cms-widget-types";
 import { PhiRuntimeModuleRenderClientHost } from "../../../../../components/runtime/runtime-module-render-client-manifest";
-import { resolvePhiDescriptorNavigationItems } from "../../../../../components/widgets/navigation-descriptor-resolver.server";
+import { resolvePhiNavigationItems } from "../../../../../components/widgets/server/navigation-request";
+import { localizeAreaPath } from "../../../../../helpers/locale";
 
 export type { PhiAccountWidgetConfig } from "./client";
 import { getPhiAccountMenuLabels } from "../../../../../components/widgets/label-sets/account";
@@ -35,7 +36,7 @@ export type PhiAccountWidgetProps = Pick<
   PhiAccountWidgetClientProps,
   "avatarSrc" | "avatarAlt" | "successAction" | "state" | "config"
 > & {
-  runtime: Pick<PhiBlockRuntime, "site" | "locale" | "viewer" | "area" | "authUiProvider">;
+  runtime: Pick<PhiBlockRuntime, "site" | "locale" | "viewer" | "area" | "request" | "authUiProvider">;
 };
 
 /*
@@ -96,21 +97,26 @@ export async function PhiAccountWidget({
       ? resolveProfileHref(runtime)
       : Promise.resolve(undefined),
     /*
-     * What Modules contributed to this Area's account menu.
+     * What Modules contributed to this Area's account menu, and what the Site made of it.
      *
-     * Only for a signed-in viewer: the entries are about the person, and a guest has none. `null` when
-     * the Area declares no such surface -- Admin, Builder and Editor render the same Widget and do not,
-     * so they keep exactly the menu they had.
+     * Through the same resolver every other navigation surface uses, so the Site's own navigation
+     * overlay applies here too: an operator who reorders or hides an account entry in the Builder is
+     * editing the surface this reads. It used to read descriptors alone, which meant their editing was
+     * accepted, saved, published -- and then ignored by the one menu it was about.
+     *
+     * Only for a signed-in viewer: the entries are about the person, and a guest has none.
      */
     state.kind === "authenticated"
-      ? resolvePhiDescriptorNavigationItems(runtime, `${runtime.area}:account`).catch(() => null)
+      ? resolvePhiNavigationItems(runtime, `${runtime.area}:account`)
       : Promise.resolve(null),
   ]);
   /*
    * The exported anchor is the place to dock, not an entry.
    *
    * A Module attaches under it, so what belongs in the menu are its children. Rendering the anchor
-   * itself would put a label in the menu that goes nowhere and means nothing to a reader.
+   * itself would put a label in the menu that goes nowhere and means nothing to a reader. What those
+   * children carry below them travels with them: a Module whose contribution is a group of entries is
+   * saying so, and flattening it here would decide for it.
    */
   const contributedEntries = (contributedItems ?? [])
     .flatMap((item) => item.children ?? []);
@@ -130,12 +136,22 @@ export async function PhiAccountWidget({
   const accountSecurityHref = runtime.authUiProvider?.capabilities.includes("account-security")
     ? runtime.authUiProvider.accountSecurityPath
     : undefined;
+  /*
+   * Signing out, at the address the active provider declared for it.
+   *
+   * A Public address like the sign-in Pages, so it takes the locale in front and nothing else. Where a
+   * provider declares none, the Widget signs out by calling the route itself -- that is the Client's
+   * business and the menu simply carries no link.
+   */
+  const logoutPath = runtime.authUiProvider?.logoutPath;
   const resolvedState: PhiAccountWidgetState =
     state.kind === "authenticated"
       ? {
           ...state,
           profileHref: state.profileHref ?? profileHref,
           settingsHref: state.settingsHref ?? accountSecurityHref,
+          logoutHref: state.logoutHref
+            ?? (logoutPath ? localizeAreaPath(runtime.locale.current, "public", logoutPath) : undefined),
         }
       : state;
 

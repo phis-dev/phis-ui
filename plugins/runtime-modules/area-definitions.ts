@@ -1,4 +1,8 @@
-import type { PhiCmsAreaDefinition } from "../../types/cms-module-descriptors";
+import type {
+  PhiCmsAreaDefinition,
+  PhiCmsNavigationSurfaceDescriptor,
+} from "../../types/cms-module-descriptors";
+import type { PhiCmsAreaKey } from "../../constants/cms-areas";
 import { PHI_ADMIN_RUNTIME_MODULE_ID } from "./admin/ids";
 import { PHI_ACCOUNTING_RUNTIME_MODULE_ID } from "./accounting/ids";
 import { PHI_APP_RUNTIME_MODULE_ID } from "./app/ids";
@@ -16,6 +20,45 @@ import {
 } from "../../types/access";
 
 const label = (defaultMessage: string) => ({ defaultMessage });
+
+/**
+ * The account trigger's menu, as a surface every Area declares.
+ *
+ * It exists so a Module can contribute an entry to a menu it does not own -- the Avatar Module is the
+ * first, with an entry that opens its Overlay. The Area's own account entries stay in the Widget for
+ * now; what the surface adds is the place to dock.
+ *
+ * Every Area that draws the trigger has one, which is every Area: the same Widget stands in the Admin,
+ * Builder, Editor and Accounting shells as in App and Public. While four of them declared no surface,
+ * a Module's contribution was resolved to nothing there and vanished without a word -- the entry simply
+ * was not in the menu, on shells where the same Module's entry was in the menu next door.
+ *
+ * The anchor is the place to dock, not an entry: a Module attaches under it, and what belongs in the
+ * menu are its children. Operator editing is allowed here on the same terms as every other surface --
+ * removing an entry is their call, `phis-cli auth restore-preset` is the way back, and logout survives
+ * regardless because the Account Widget falls back to calling its route directly.
+ */
+function accountNavigationSurface(
+  anchorItemKey: string,
+  navKey: `${PhiCmsAreaKey}:account`,
+): PhiCmsNavigationSurfaceDescriptor {
+  return {
+    navKey,
+    label: label("Account menu"),
+    items: [{
+      itemKey: anchorItemKey,
+      label: label("Account"),
+      icon: "antd:user",
+    }],
+    exportedItemKeys: [anchorItemKey],
+  } as const;
+}
+
+export const PHI_ACCOUNTING_ACCOUNT_NAV_ITEM_KEY = "@phis/ui/modules/accounting/nav/account";
+export const PHI_ADMIN_ACCOUNT_NAV_ITEM_KEY = "@phis/ui/modules/admin/nav/account";
+export const PHI_BUILDER_ACCOUNT_NAV_ITEM_KEY = "@phis/ui/builder/nav/account";
+export const PHI_EDITOR_ACCOUNT_NAV_ITEM_KEY = "@phis/ui/modules/editor/nav/account";
+export const PHI_PUBLIC_ACCOUNT_NAV_ITEM_KEY = "@phis/ui/modules/public/nav/account";
 
 export const PHI_ADMIN_SETTINGS_NAV_ITEM_KEY = "@phis/ui/modules/admin/nav/settings";
 export const PHI_BUILDER_SETTINGS_NAV_ITEM_KEY = "@phis/ui/builder/nav/settings";
@@ -53,6 +96,7 @@ const publicNavigationSurfaces = [
     items: [publicTermsItem],
     exportedItemKeys: [publicTermsItem.itemKey],
   },
+  accountNavigationSurface(PHI_PUBLIC_ACCOUNT_NAV_ITEM_KEY, "public:account"),
 ] as const;
 
 export const PHI_PUBLIC_RUNTIME_AREA_DEFINITIONS = [
@@ -133,30 +177,7 @@ export const PHI_APP_RUNTIME_AREA_DEFINITIONS = [
         items: [],
         exportedItemKeys: [],
       },
-      /*
-       * The account trigger's menu, as a surface rather than a closed set of props.
-       *
-       * It exists so a Module can contribute an entry to a menu it does not own -- the Avatar Module is
-       * the first, with an entry that opens its Overlay. The Area's own account entries stay in the
-       * Widget for now; what the surface adds is the place to dock, not a rewrite of what is already
-       * there.
-       *
-       * `PHI_APP_ACCOUNT_NAV_ITEM_KEY` is the exported anchor: a Module places its entry relative to
-       * that and nowhere else, so the shape of the menu stays the Area's decision. Operator editing is
-       * deliberately allowed here, on the same terms as every other surface -- removing an entry is
-       * their call, `phis-cli auth restore-preset` is the way back, and logout survives regardless
-       * because the Account Widget falls back to calling its route directly.
-       */
-      {
-        navKey: "app:account",
-        label: label("App account menu"),
-        items: [{
-          itemKey: PHI_APP_ACCOUNT_NAV_ITEM_KEY,
-          label: label("Account"),
-          icon: "antd:user",
-        }],
-        exportedItemKeys: [PHI_APP_ACCOUNT_NAV_ITEM_KEY],
-      },
+      accountNavigationSurface(PHI_APP_ACCOUNT_NAV_ITEM_KEY, "app:account"),
     ],
   },
 ] satisfies readonly PhiCmsAreaDefinition[];
@@ -177,7 +198,7 @@ export const PHI_ACCOUNTING_RUNTIME_AREA_DEFINITIONS = [
         routePresetKey: "accounting-overview-page",
       }],
       exportedItemKeys: ["@phis/ui/modules/accounting/nav/home"],
-    }],
+    }, accountNavigationSurface(PHI_ACCOUNTING_ACCOUNT_NAV_ITEM_KEY, "accounting:account")],
   },
 ] satisfies readonly PhiCmsAreaDefinition[];
 
@@ -212,6 +233,7 @@ export const PHI_ADMIN_RUNTIME_AREA_DEFINITIONS = [
         ],
         exportedItemKeys: [PHI_ADMIN_SETTINGS_NAV_ITEM_KEY],
       },
+      accountNavigationSurface(PHI_ADMIN_ACCOUNT_NAV_ITEM_KEY, "admin:account"),
     ],
   },
 ] satisfies readonly PhiCmsAreaDefinition[];
@@ -232,7 +254,7 @@ export const PHI_EDITOR_RUNTIME_AREA_DEFINITIONS = [
         routePresetKey: "editor-translations-page",
       }],
       exportedItemKeys: ["@phis/ui/modules/editor/nav/translations"],
-    }],
+    }, accountNavigationSurface(PHI_EDITOR_ACCOUNT_NAV_ITEM_KEY, "editor:account")],
   },
 ] satisfies readonly PhiCmsAreaDefinition[];
 
@@ -274,7 +296,7 @@ export const PHI_BUILDER_RUNTIME_AREA_DEFINITIONS = [
         "@phis/ui/builder/nav/navigation",
         PHI_BUILDER_SETTINGS_NAV_ITEM_KEY,
       ],
-    }],
+    }, accountNavigationSurface(PHI_BUILDER_ACCOUNT_NAV_ITEM_KEY, "builder:account")],
   },
 ] satisfies readonly PhiCmsAreaDefinition[];
 

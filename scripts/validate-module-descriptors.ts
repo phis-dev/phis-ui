@@ -508,11 +508,13 @@ assert.equal(
   resolvePhiCmsRoutePreset(builderFeatureRoutes, "/phis/ui/revisions")?.descriptor.ownerModuleId,
   PHI_REVISIONS_RUNTIME_MODULE_ID,
 );
+// Named rather than taken by position: an Area declares several surfaces, and which one is written
+// first is not a fact about the sidebar.
 const builderNavigationItems = resolvePhiCmsActiveNavigationSurfaces({
   catalog,
   area: "builder",
   activeModuleIds: builderFeatureModuleIds,
-})[0]?.items;
+}).find((surface) => surface.navKey === "builder:sidebar")?.items;
 // Every Area but Public puts a Module's routes under its package, so these read `/phis/ui/...` and a
 // second package could not reach them however it named its own pages.
 assert.deepEqual(

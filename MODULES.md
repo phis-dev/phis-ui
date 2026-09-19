@@ -546,6 +546,11 @@ addressed by its path.
   `parentItemKey` may reference only items the surface exports through `exportedItemKeys` or items the
   Module injects itself. Reordering or reparenting an item never changes a route path; a tombstoned
   container hides its remaining subtree at runtime and shows it disabled in Builder navigation authoring.
+- Every Area declares `<area>:account`, the surface behind the account trigger, with one exported anchor
+  and no target of its own. A Module docks its account entry under that anchor; what the menu shows are
+  the anchor's children, with their own children as submenus. The Area's own entries -- profile,
+  security, sign-out -- are still the Account Widget's and are not part of the surface. Like every other
+  surface it is read through the Site's navigation overlay, so an operator's reordering applies.
 - Area-shell composition names `(ownerModuleId, presetKey)` sources; `omitRegionTypes` removes whole
   Region subtrees and `omitNodeKeys` may name only `exportedNodeKeys` of the source. Cycles, unresolved
   sources, duplicate Regions, and unresolved references are errors.

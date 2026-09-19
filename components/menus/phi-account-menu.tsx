@@ -101,8 +101,19 @@ export function PhiAccountMenu({
    * A contributed entry is a link when it names a path and a button when it names an Overlay. The menu
    * control takes both shapes already -- `label` may be an anchor, or plain text with an `onClick` --
    * so nothing new is needed to render an opener, only to tell the two apart.
+   *
+   * An entry that has entries below it is a submenu and keeps them. A Module contributing a group said
+   * it was a group; flattening it here, or dropping what was under it, would answer for the Module. A
+   * group is a heading and not a destination, so it carries no link even where the resolver found one.
    */
-  const contributedMenuItems: PhiMenuControlItem[] = (contributedItems ?? []).map((item) => {
+  function toContributedMenuItem(item: PhiNavItem): PhiMenuControlItem {
+    if (item.separator) {
+      return { key: item.key, type: "divider" as const };
+    }
+    const children = item.children?.map(toContributedMenuItem);
+    if (children && children.length > 0) {
+      return { key: item.key, label: item.label, children };
+    }
     if (item.overlayInstanceId) {
       const overlayInstanceId = item.overlayInstanceId;
       return {
@@ -117,7 +128,9 @@ export function PhiAccountMenu({
       label: item.href ? <Link href={item.href}>{item.label}</Link> : item.label,
       disabled: !item.href,
     };
-  });
+  }
+
+  const contributedMenuItems: PhiMenuControlItem[] = (contributedItems ?? []).map(toContributedMenuItem);
 
   const menuItems: PhiMenuControlItem[] =
     state.kind === "guest"
