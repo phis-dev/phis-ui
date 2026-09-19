@@ -105,8 +105,8 @@ change. If a contract is unclear, stop and ask instead of guessing.
   `contentBinding`, `slotSizePolicy`); no `if` or `switch` on Widget type, key, or plugin identity.
 - Ant Design is imported only inside the canonical `Phi*Control` adapters and root/theme adapters. When a
   Phi Control exists, first-party and third-party code uses it. Feature code never imports Ant Design
-  `Tour`. The validator names 39 controlled primitives, closes five more to a single owner file
-  (`soleOwnerPrimitives`), and permits everything it does not name -- so nine others, `Space`,
+  `Tour`. The validator names 40 controlled primitives, closes five more to a single owner file
+  (`soleOwnerPrimitives`), and permits everything it does not name -- so eight others, `Space`,
   `Card`, `List`, `Collapse` and the rest, may still be imported directly today. That exception is on its way out: see
   [TODOS.md](./TODOS.md), "Wrap the uncontrolled Ant Design primitives in Phi Controls". Ant Design is
   replaceable in principle, and each direct import turns that from a Control-adapter change into a

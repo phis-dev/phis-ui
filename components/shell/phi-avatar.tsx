@@ -1,10 +1,10 @@
 "use client";
 
 import type { CSSProperties, ReactNode, Ref } from "react";
-import { UserOutlined } from "@ant-design/icons";
 import Link from "next/link";
-import { Avatar, Space } from "antd";
 
+import { PhiAvatarControl } from "../controls/phi-avatar-control";
+import { PhiFlexControl } from "../controls/phi-flex-control";
 import { PhiPillDropdownControl } from "../controls/phi-dropdown-control";
 import type { PhiMenuControlItem } from "../controls/phi-menu-control";
 
@@ -13,13 +13,7 @@ export type PhiAvatarProps = {
   href?: string;
   src?: string;
   alt?: string;
-  /**
-   * The name the initials are taken from when there is no picture.
-   *
-   * Three steps, in this order: the picture, then initials, then the generic icon. Initials matter
-   * because "no picture" is the ordinary state -- most people never choose one -- and a row of
-   * identical grey silhouettes tells a reader nothing, while two letters tell them who.
-   */
+  /** The name the initials are taken from when there is no picture; see `PhiAvatarControl`. */
   initialsFrom?: string | null;
   icon?: ReactNode;
   size?: number;
@@ -33,25 +27,6 @@ export type PhiAvatarProps = {
   showChevron?: boolean;
   labelPill?: boolean;
 };
-
-/**
- * Two letters from a name: the first of the first two words, or the first two of a single word.
- *
- * Works on what it is given rather than on a first/last name pair, because the callers hold different
- * shapes -- a display name, a full name, sometimes an address local part -- and none of them should
- * have to split it themselves.
- */
-export function readPhiAvatarInitials(value: string | null | undefined) {
-  const words = (value ?? "").trim().split(/\s+/).filter(Boolean);
-  if (words.length === 0) {
-    return null;
-  }
-  const letters = words.length === 1
-    ? [...words[0]!].slice(0, 2)
-    : [words[0]!, words[1]!].map((word) => [...word][0]!);
-  const initials = letters.join("").toLocaleUpperCase();
-  return initials || null;
-}
 
 export function PhiAvatar({
   label,
@@ -71,19 +46,8 @@ export function PhiAvatar({
   showChevron = true,
   labelPill = false,
 }: PhiAvatarProps) {
-  const initials = src ? null : readPhiAvatarInitials(initialsFrom);
   const avatarNode = (
-    <Avatar
-      size={size}
-      src={src}
-      alt={alt}
-      // Ant Design draws `children` only when `src` is absent or fails, which is exactly the fallback
-      // order wanted here -- a broken picture lands on the initials rather than on nothing.
-      icon={src || initials ? icon : icon ?? <UserOutlined />}
-      style={{ flexShrink: 0 }}
-    >
-      {initials}
-    </Avatar>
+    <PhiAvatarControl size={size} src={src} alt={alt} initialsFrom={initialsFrom} icon={icon} />
   );
   if (!href || (menuItems && menuItems.length > 0)) {
     return (
@@ -104,10 +68,10 @@ export function PhiAvatar({
 
   return (
     <Link href={href} className={className} style={style}>
-      <Space size={8}>
+      <PhiFlexControl align="center" gap={8}>
         {avatarNode}
         {showLabel && label ? <span>{label}</span> : null}
-      </Space>
+      </PhiFlexControl>
     </Link>
   );
 }

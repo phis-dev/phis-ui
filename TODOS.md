@@ -49,9 +49,9 @@ built. Remove an entry when it is done.
   and every direct import makes replacing it harder:** with a Control it is an adapter change, without
   one it is a tree-wide edit.
 
-  It started at 28 named primitives against about 25 uncontrolled ones. It now names 39, closes five
-  more to a single owner file, and leaves nine: `Avatar`, `Card`, `Col`, `Collapse`, `Descriptions`,
-  `Layout`, `List`, `Row`, `Space`.
+  It started at 28 named primitives against about 25 uncontrolled ones. It now names 40, closes five
+  more to a single owner file, and leaves eight: `Card`, `Col`, `Collapse`, `Descriptions`, `Layout`,
+  `List`, `Row`, `Space`.
 
   `App`, `ConfigProvider` and `theme` stay direct: they are the root and theme adapters AGENTS.md
   already exempts, not feature surface.
@@ -61,8 +61,9 @@ built. Remove an entry when it is done.
 
   - **A Control**, where there is platform semantics to own -- a normalized contract, defaults the
     platform should decide once rather than at each call site:
-    ~~`Upload`, `Progress`, `Skeleton`, `Empty`, `Tooltip`~~ done; `Collapse`, `Descriptions`, `Card`,
-    `Avatar` and `Space.Compact` (which is a different thing from `Space`, see below) remain.
+    ~~`Upload`, `Progress`, `Skeleton`, `Empty`, `Tooltip`, `Avatar`~~ done; `Collapse`,
+    `Descriptions`, `Card` and `Space.Compact` (which is a different thing from `Space`, see below)
+    remain.
   - **A thin pass-through**, where there is nothing to decide and the wrapper exists only so the import
     points at us: ~~`PhiTypographyControl` (~63 files), `Flex` (~60), `Divider`, `Spin`, `QRCode`,
     `Statistic`~~ -- all done. `PhiSpinControl` stays beside `PhiSkeletonControl` rather than being
@@ -142,6 +143,24 @@ built. Remove an entry when it is done.
 
     One behaviour change worth knowing: the colour swatches in `PhiColorControl` carried a native `title`
     *and* an antd Tooltip with two different strings. They now say one thing, the fuller of the two.
+  - ~~`Avatar`~~ built as `PhiAvatarControl`. Two importers, and they answered the same question
+    differently: **picture, then initials, then the generic silhouette** was written down once, in
+    `PhiAvatar` for the account menu, while the account page's own avatar Widget went from picture
+    straight to the silhouette. A person with a name and no picture therefore looked different depending
+    on which surface was drawing them, and "no picture" is the ordinary state -- most people never choose
+    one. How people are identified is a platform decision, so the chain lives in the Control and
+    `readPhiAvatarInitials` stopped being exported.
+
+    The account avatar Widget still draws the silhouette, but now because no name reaches it rather than
+    because it decided not to look. That is a data gap: `fetchPhiViewerAvatar` returns the asset and
+    nothing about the viewer. Worth closing, and mild where it is -- on your own account page you know
+    who you are.
+
+    `PhiAvatar` in `components/shell/` keeps the navigation job it actually does -- the account-menu
+    trigger, with the dropdown, the link and the label -- and hands the picture over. Its name says
+    "avatar" and means "account menu trigger", which is worth a rename it cannot have yet: it is public
+    API in `navigation.ts`. Its `<Space size={8}>` became `PhiFlexControl`, one site off the `Space`
+    sweep below.
   - `Typography` is `PhiTypographyControl`, decided. `PhiTextControl` is **taken** -- it is antd `Input`.
     So is `PhiAnchorControl`: `components/controls/phi-anchor-control-contract.ts` is about placement
     anchors (`topLeft`…`bottomRight`), not antd `Anchor`. Both names are settled before the first commit,
@@ -168,8 +187,8 @@ built. Remove an entry when it is done.
 
   Order: ~~the two big pass-throughs (`Flex`, `PhiTypographyControl`), the five owner entries, the
   trivial wrappers, `PhiFileDropControl` with `Progress`, `PhiSkeletonControl`, `PhiEmptyControl`,
-  `PhiNameControl`~~ -- done. Next `Card`/`Collapse`/`Descriptions`, then the deletions, then `Listy`,
-  and the allowlist last.
+  `PhiNameControl`, `PhiAvatarControl`~~ -- done. Next `Card`/`Collapse`/`Descriptions`, then the
+  deletions, then `Listy`, and the allowlist last.
 
   Until the Controls exist, direct use in a Widget or Layout stays correct and the validator keeps
   permitting it: this is a planned narrowing, not a rule being broken today. Update the validator's own

@@ -2,11 +2,10 @@
 
 import { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from "react";
 
-import { UserOutlined } from "@ant-design/icons";
-import { Avatar } from "antd";
 
 import type { PhiBlockRuntime, PhiClientBlockBaseProps } from "../../../../../types";
 import { PhiAlertControl } from "../../../../../components/controls/phi-alert-control";
+import { PhiAvatarControl } from "../../../../../components/controls/phi-avatar-control";
 import { PhiButtonControl } from "../../../../../components/controls/phi-button-control";
 import {
   clearPhiViewerAvatar,
@@ -121,7 +120,7 @@ export function PhiAccountAvatarWidgetClient({ labels, config }: PhiAccountAvata
       <PhiTypographyControl type="secondary">{labels.description}</PhiTypographyControl>
       {error ? <PhiAlertControl level="error" title={labels.feedback.errorTitle} description={error} /> : null}
       <PhiFlexControl align="center" gap="middle">
-        <Avatar size={64} src={src} icon={<UserOutlined />} alt={avatar?.altText ?? labels.title} />
+        <PhiAvatarControl size={64} src={src} alt={avatar?.altText ?? labels.title} />
         <PhiFlexControl vertical gap="small">
           {!avatar ? <PhiTypographyControl type="secondary">{labels.emptyText}</PhiTypographyControl> : null}
           <PhiFlexControl gap="small" wrap>
