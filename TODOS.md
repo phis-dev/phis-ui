@@ -70,8 +70,7 @@ built. Remove an entry when it is done.
   one it is a tree-wide edit.
 
   It started at 28 named primitives against about 25 uncontrolled ones. It now names 43, closes five
-  more to a single owner file, and leaves two that are still imported: `List`, and `Space` for
-  `Space.Compact` alone.
+  more to a single owner file, and leaves one still imported: `Space`, for `Space.Compact` alone.
 
   `Row`, `Col` and `Layout` are imported nowhere any more -- the footer Widget went and took them -- but
   the validator cannot say so. `controlledPrimitives` requires a Control that exports the named symbol,
@@ -316,17 +315,36 @@ built. Remove an entry when it is done.
 
   Three sites in the description Widget wrote `size={0}` and then set the real spacing in
   `style={{ gap: … }}` beside it -- a way around `Space`'s size scale that `gap` takes directly.
-- **Migrate off antd `List`, which is deprecated.** antd 6.6.4 warns at runtime: *"The `List` component
-  is deprecated and will be removed in the next major version. If you're using version 6.6.0 or later,
-  please use `Listy` instead."* Two sites: `auth/widgets/security/client.tsx` (three lists, each with
-  `List.Item.Meta` and `actions`) and `core/widgets/slot-upload/client.tsx`.
-  `Listy` is not a renamed `List`: `dataSource` becomes `items`, `renderItem` becomes `itemRender`,
-  `rowKey` is required with no default, and `List.Item.Meta`/`actions`/`extra` are rebuilt as plain JSX
-  rather than preset structures. `locale.emptyText` has no equivalent, which is why `PhiEmptyControl`
-  came first -- each `emptyText` becomes an explicit `<PhiEmptyControl description=… />`.
-  Neither site uses `grid`, `pagination` or `loadMore`, so nothing here hits the parts the antd FAQ
-  advises against migrating. **A `PhiListControl` that passes the old `List` API through would be the
-  wrong investment** -- if it is wrapped at all, it is cut against `Listy`.
+- ~~**Migrate off antd `List`, which is deprecated.**~~ Done, and **not** onto `Listy`.
+
+  `List` was a kit: a responsive card grid on `Row` and `Col`, pagination, a spinner, an empty state,
+  borders, and two fixed row templates in `Item` and `Item.Meta`. `Listy` keeps none of it -- `items`,
+  `rowKey`, `itemRender`, grouping, virtualisation -- because that is what a list of ten thousand rows
+  needs and what `List` structurally could not do: a grid of variable heights cannot say where row four
+  hundred is without drawing the first three hundred and ninety-nine.
+
+  **Nothing here has that list, and the contracts are why.** Provider-backed data pages by contract
+  (`query: { pagination: "offset" }` on the resource), and every client-held list is bounded by the thing
+  it describes -- one document's headings, the installed Widget catalogue, a palette's colours. The one
+  candidate that could have been unbounded, the icon picker's Iconify results, already pages with
+  `start`/`limit`/`total`. A third-party Module with ten thousand rows should publish a Provider and get
+  search, sorting, paging, authorization and the Builder binding with it; handing it `Listy` would make
+  bypassing that comfortable.
+
+  So the four sites became `PhiEntryListControl`: a name, a line about it, a state, and the one thing you
+  can do to it. What they used from `List` was the row template, which is exactly the part `Listy` drops
+  -- the deprecation was the occasion, not the instruction. `List` and `Listy` both point at the new
+  Control in `controlledPrimitives`, so reaching for either is a conversation rather than an import.
+
+  Found on the way: the sessions list passed no `emptyText` at all and fell back to Ant Design's
+  hard-coded English, the same trap `PhiEmptyControl` closes one level down. It says "No sessions
+  recorded." now -- another hardcoded English string in a Widget that has no label set, which the whole
+  security Widget still needs.
+
+  **When `Listy` would earn its place:** a continuous history read upwards rather than a page at a time,
+  a message thread being the case in [THREADS.md](./THREADS.md). Even there the first answer is loading
+  on scroll by cursor; virtualisation only pays once thousands of rows stay mounted. That surface makes
+  the case with its own numbers.
 
 ## Regions and Overlays
 

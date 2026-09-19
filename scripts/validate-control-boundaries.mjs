@@ -78,8 +78,8 @@ const coreApplicationAdapterPath = "components/runtime/core-runtime-application-
  * for a handful of primitives -- so everything outside those names passed, every Module under `plugins/`
  * included. This is the rule itself, over the whole tree.
  *
- * This map is a denylist, so **every primitive not named here is permitted by omission** -- five are
- * still imported somewhere in the tree, from `Space` and `Layout` down to `List` and `Row`. `Flex`
+ * This map is a denylist, so **every primitive not named here is permitted by omission**, though only
+ * `Space` still is, and only for `Space.Compact`. `Flex`
  * and `Typography`, the two that reached furthest, are done, as are the four that had nothing to decide,
  * the file-choosing pair and the two that say "waiting" and "none"; five more are closed by
  * `soleOwnerPrimitives` below.
@@ -112,6 +112,15 @@ const controlledPrimitives = new Map([
   ["Form", "PhiFormControl"],
   ["Input", "PhiTextControl"],
   ["InputNumber", "PhiNumberControl"],
+  /*
+   * `List` is deprecated in Ant Design and `Listy` is deliberately not adopted in its place. `Listy` is
+   * virtualisation and grouping, which is what a list of ten thousand rows needs -- and nothing here has
+   * one, because Provider-backed data pages by contract and every client-held list is bounded by the
+   * thing it describes. Both names point at `PhiEntryListControl` so that reaching for either is a
+   * conversation rather than an import.
+   */
+  ["List", "PhiEntryListControl"],
+  ["Listy", "PhiEntryListControl"],
   ["Menu", "PhiMenuControl"],
   ["Modal", "PhiModalControl"],
   ["Pagination", "PhiPaginationControl"],

@@ -1,10 +1,10 @@
 "use client";
 
 import { lazy, Suspense, useCallback, useEffect, useState } from "react";
-import { List } from "antd";
 import { PhiTagControl } from "../../../../../components/controls/phi-tag-control";
 import { PhiButtonControl } from "../../../../../components/controls/phi-button-control";
 import { PhiCardControl } from "../../../../../components/controls/phi-card-control";
+import { PhiEntryListControl } from "../../../../../components/controls/phi-entry-list-control";
 import { PhiAlertControl } from "../../../../../components/controls/phi-alert-control";
 import { PhiConfirmControl } from "../../../../../components/controls/phi-confirm-control";
 import { PhiFlexControl } from "../../../../../components/controls/phi-flex-control";
@@ -147,63 +147,61 @@ export function PhiAuthSecurityWidgetClient({ apiPath = "/api/auth/account/secur
         title="Authenticator apps"
         toolbar={<PhiButtonControl type="primary" onClick={() => setEnrolling(true)} label="Add authenticator" />}
       >
-        <List
-          locale={{ emptyText: "No authenticator configured." }}
-          dataSource={payload.factors.filter((factor) => factor.type === 2 && factor.confirmedAt)}
-          renderItem={(factor) => (
-            <List.Item
-              actions={[
+        <PhiEntryListControl
+          emptyDescription="No authenticator configured."
+          entries={payload.factors
+            .filter((factor) => factor.type === 2 && factor.confirmedAt)
+            .map((factor) => ({
+              key: String(factor.id),
+              title: factor.label ?? "Authenticator app",
+              description: factor.lastUsedAt
+                ? `Last used ${new Date(factor.lastUsedAt).toLocaleString()}`
+                : "Not used yet",
+              status: payload.policy.factor?.requiredMethod === "totp"
+                ? <PhiTagControl color="blue">Required</PhiTagControl>
+                : null,
+              action: (
                 <PhiConfirmControl
-                  key="remove"
                   title="Remove this authenticator?"
                   onConfirm={() => void removeFactor(factor.id)}
                   danger
                   trigger={{ label: "Remove", type: "link", danger: true }}
-                />,
-              ]}
-            >
-              <List.Item.Meta
-                title={factor.label ?? "Authenticator app"}
-                description={factor.lastUsedAt ? `Last used ${new Date(factor.lastUsedAt).toLocaleString()}` : "Not used yet"}
-              />
-              {payload.policy.factor?.requiredMethod === "totp" ? <PhiTagControl color="blue">Required</PhiTagControl> : null}
-            </List.Item>
-          )}
+                />
+              ),
+            }))}
         />
       </PhiCardControl>
       <PhiCardControl title="Linked login providers">
-        <List
-          locale={{ emptyText: "No external login provider linked." }}
-          dataSource={payload.identities}
-          renderItem={(identity) => (
-            <List.Item>
-              <List.Item.Meta title={identity.providerKey} description={identity.issuer} />
-            </List.Item>
-          )}
+        <PhiEntryListControl
+          emptyDescription="No external login provider linked."
+          entries={payload.identities.map((identity) => ({
+            key: identity.providerKey,
+            title: identity.providerKey,
+            description: identity.issuer,
+          }))}
         />
       </PhiCardControl>
       <PhiCardControl title="Sessions">
-        <List
-          dataSource={payload.sessions}
-          renderItem={(session) => (
-            <List.Item
-              actions={session.id !== payload.currentSessionId && !session.revokedAt ? [
+        <PhiEntryListControl
+          emptyDescription="No sessions recorded."
+          entries={payload.sessions.map((session) => ({
+            key: String(session.id),
+            title: session.id === payload.currentSessionId ? "Current session" : "Session",
+            description: [session.ipAddress, session.userAgent].filter(Boolean).join(" · ") || "No device details",
+            status: session.revokedAt
+              ? <PhiTagControl>Revoked</PhiTagControl>
+              : <PhiTagControl color="green">Active</PhiTagControl>,
+            action: session.id !== payload.currentSessionId && !session.revokedAt
+              ? (
                 <PhiConfirmControl
-                  key="revoke"
                   title="Revoke this session?"
                   onConfirm={() => void revokeSession(session.id)}
                   danger
                   trigger={{ label: "Revoke", type: "link", danger: true }}
-                />,
-              ] : undefined}
-            >
-              <List.Item.Meta
-                title={session.id === payload.currentSessionId ? "Current session" : "Session"}
-                description={[session.ipAddress, session.userAgent].filter(Boolean).join(" · ") || "No device details"}
-              />
-              {session.revokedAt ? <PhiTagControl>Revoked</PhiTagControl> : <PhiTagControl color="green">Active</PhiTagControl>}
-            </List.Item>
-          )}
+                />
+              )
+              : null,
+          }))}
         />
       </PhiCardControl>
     </PhiFlexControl>

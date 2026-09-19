@@ -1,7 +1,7 @@
 "use client";
 
 import { DeleteOutlined, UploadOutlined } from "@ant-design/icons";
-import { List } from "antd";
+import { PhiEntryListControl } from "../../../../../components/controls/phi-entry-list-control";
 import { PhiProgressControl } from "../../../../../components/controls/phi-progress-control";
 import { PhiButtonControl } from "../../../../../components/controls/phi-button-control";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -257,23 +257,21 @@ export function PhiSlotUploadWidgetClient({ config }: PhiSlotUploadWidgetClientP
         <PhiProgressControl key={item.localId} percent={item.progress} size="small" />
       ))}
       {failure ? <PhiTypographyControl type="danger" role="alert">{failure}</PhiTypographyControl> : null}
-      <List
-        size="small"
-        dataSource={[...files]}
-        locale={{ emptyText: "Nothing here yet." }}
-        renderItem={(file) => (
-          <List.Item
-            actions={[
-              <PhiButtonControl
-                key="remove"
-                size="small"
-                icon={<DeleteOutlined />}
-                onClick={() => { void remove(file.id).catch(() => setFailure("That file stayed.")); }} />,
-            ]}
-          >
-            <PhiTypographyControl>{file.contentType} — {file.byteSize} bytes</PhiTypographyControl>
-          </List.Item>
-        )}
+      <PhiEntryListControl
+        emptyDescription="Nothing here yet."
+        entries={[...files].map((file) => ({
+          key: String(file.id),
+          title: `${file.contentType} — ${file.byteSize} bytes`,
+          action: (
+            <PhiButtonControl
+              size="small"
+              icon={<DeleteOutlined />}
+              ariaLabel="Remove this file"
+              tooltip="Remove this file"
+              onClick={() => { void remove(file.id).catch(() => setFailure("That file stayed.")); }}
+            />
+          ),
+        }))}
       />
     </PhiFlexControl>
   );
