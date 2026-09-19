@@ -13,6 +13,7 @@ import { PhiPopoverControl } from "../../controls/phi-popover-control";
 import { usePhiConfig } from "../../root/phi-config-provider";
 import type { PhiCommandToolbarButtonConfig } from "../../../plugins/runtime-modules/core/widgets/command-toolbar/config";
 import { usePhiWidgetScaffoldPopup } from "../client/shared/phi-widget-scaffold-popup";
+import { usePhiAuthoringToolsLabels } from "../client/shared/phi-authoring-tools-labels";
 import { PhiFlexControl } from "../../controls/phi-flex-control";
 import { PhiTypographyControl } from "../../controls/phi-typography-control";
 import { PhiCompactGroupControl } from "../../controls/phi-compact-group-control";
@@ -59,6 +60,7 @@ export function PhiCommandToolbarAuthoringTools({
   buttons: readonly PhiCommandToolbarButtonConfig[];
   onChange: (buttons: PhiCommandToolbarButtonConfig[]) => void;
 }) {
+  const labels = usePhiAuthoringToolsLabels();
   const { token } = usePhiConfig();
   const popup = usePhiWidgetScaffoldPopup();
 
@@ -68,8 +70,8 @@ export function PhiCommandToolbarAuthoringTools({
         <PhiButtonControl
           type="text"
           size="small"
-          ariaLabel="Add button"
-          tooltip="Add button"
+          ariaLabel={labels.commands.addButton}
+          tooltip={labels.commands.addButton}
           icon={<PlusOutlined />}
           onClick={() => {
             onChange([...buttons, createNextButton(buttons)]);
@@ -130,8 +132,8 @@ export function PhiCommandToolbarAuthoringTools({
           <PhiButtonControl
             type="text"
             size="small"
-            ariaLabel="Manage buttons"
-            tooltip="Manage buttons"
+            ariaLabel={labels.commands.manageButtons}
+            tooltip={labels.commands.manageButtons}
             disabled={buttons.length === 0}
             icon={<MenuOutlined />}
             onClick={() => undefined}

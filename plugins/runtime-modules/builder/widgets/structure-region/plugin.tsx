@@ -1,6 +1,7 @@
 import type { PhiCmsWidgetPlugin } from "../../../../../types";
 import { renderPhiWidgetPreviewPlaceholder } from "../../../../../plugins/factories/widget-renderers";
 import { getPhiEffectsWidgetLabels } from "../../../../../components/widgets/label-sets/effects";
+import { getPhiAuthoringToolsLabelsForRuntime } from "../../../../../components/widgets/label-sets/authoring-tools";
 import {
   PHI_BUILDER_PREVIEW_SEARCH_PARAM,
 } from "../../../../../plugins/runtime-modules/builder/preview-transport";
@@ -39,11 +40,14 @@ export const PHI_STRUCTURE_REGION_WIDGET_PLUGIN: PhiCmsWidgetPlugin<PhiStructure
     const currentPageDrafts = isPhiBuilderPageScopedRegion(regionKey)
       ? await buildPhiBuilderCurrentPageDrafts(runtime, registry.runtimeModuleCatalog)
       : undefined;
-    const effectsLabels = await getPhiEffectsWidgetLabels({
-      apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
-      internalToken: readPhiServerApiCredentials().internalToken,
-      locale: runtime.locale.current,
-    });
+    const [effectsLabels, authoringToolsLabels] = await Promise.all([
+      getPhiEffectsWidgetLabels({
+        apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
+        internalToken: readPhiServerApiCredentials().internalToken,
+        locale: runtime.locale.current,
+      }),
+      getPhiAuthoringToolsLabelsForRuntime(runtime),
+    ]);
     const fallbackStructureDraft =
       currentStructureDrafts.drafts[`${currentStructureDrafts.area}:${regionKey}`] ?? null;
     const fallbackPageDraft =
@@ -97,6 +101,7 @@ export const PHI_STRUCTURE_REGION_WIDGET_PLUGIN: PhiCmsWidgetPlugin<PhiStructure
         structureDraftsByArea={structureDraftsByArea}
         pageDraftsByScope={pageDraftsByScope}
         effectsLabels={effectsLabels}
+        authoringToolsLabels={authoringToolsLabels}
         serverPreview={
           <PhiBuilderRegionServerPreview
             snapshot={snapshot}

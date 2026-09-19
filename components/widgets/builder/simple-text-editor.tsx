@@ -16,6 +16,7 @@ import {
   PhiWidgetTypographyToolButton,
 } from "../../widgets/client/shared/phi-widget-tool-buttons";
 import { usePhiWidgetScaffoldPopup } from "../../widgets/client/shared/phi-widget-scaffold-popup";
+import { usePhiAuthoringToolsLabels } from "../../widgets/client/shared/phi-authoring-tools-labels";
 import { resolvePhiSimpleTextWidgetText, type PhiSimpleTextWidgetRenderableConfig } from "../../../plugins/runtime-modules/core/widgets/simple-text/config";
 import { PhiSimpleTextWidgetClient } from "../../../plugins/runtime-modules/core/widgets/simple-text/client";
 import { resolvePhiWidgetFontFamily } from "../helpers/font-family";
@@ -49,6 +50,7 @@ export function PhiSimpleTextWidgetStyleButton({
   config,
   onChange,
 }: PhiSimpleTextWidgetStyleButtonProps) {
+  const labels = usePhiAuthoringToolsLabels();
   const [open, setOpen] = useState(false);
   const popup = usePhiWidgetScaffoldPopup();
 
@@ -86,7 +88,7 @@ export function PhiSimpleTextWidgetStyleButton({
         <PhiButtonControl
           type="text"
           size="small"
-          ariaLabel="Text styles"
+          ariaLabel={labels.text.styles}
           icon={<FormatPainterOutlined />}
           onClick={() => undefined}
         />
@@ -104,8 +106,9 @@ export function PhiSimpleTextWidgetColorButton({
   config,
   onChange,
 }: PhiSimpleTextWidgetColorButtonProps) {
+  const labels = usePhiAuthoringToolsLabels();
   return (
-    <PhiWidgetColorToolButton value={config?.color ?? null} ariaLabel="Text color" onChange={onChange} />
+    <PhiWidgetColorToolButton value={config?.color ?? null} ariaLabel={labels.text.color} onChange={onChange} />
   );
 }
 
@@ -118,8 +121,9 @@ export function PhiSimpleTextWidgetIconButton({
   config,
   onChange,
 }: PhiSimpleTextWidgetIconButtonProps) {
+  const labels = usePhiAuthoringToolsLabels();
   return (
-    <PhiWidgetIconToolButton value={config?.icon ?? null} ariaLabel="Text icon" onChange={onChange} />
+    <PhiWidgetIconToolButton value={config?.icon ?? null} ariaLabel={labels.text.icon} onChange={onChange} />
   );
 }
 
@@ -132,12 +136,13 @@ export function PhiSimpleTextWidgetTypographyButton({
   config,
   onChange,
 }: PhiSimpleTextWidgetTypographyButtonProps) {
+  const labels = usePhiAuthoringToolsLabels();
   return (
     <PhiWidgetTypographyToolButton
       fontFamily={config?.fontFamily}
       fontSize={config?.fontSize}
       defaultFontSize="lg"
-      ariaLabel="Text typography"
+      ariaLabel={labels.text.typography}
       onChange={({ fontFamily, fontSize }) => onChange({
         ...(fontFamily !== undefined ? { fontFamily: fontFamily ?? undefined } : {}),
         ...(fontSize !== undefined ? { fontSize: fontSize ?? undefined } : {}),
@@ -151,6 +156,7 @@ export function PhiSimpleTextWidgetEditor({
   config,
   onChangeText,
 }: PhiSimpleTextWidgetEditorProps) {
+  const labels = usePhiAuthoringToolsLabels();
   const { fonts, token } = usePhiConfig();
   /*
    * What is being typed, held here and nowhere else until the field is left.
@@ -194,7 +200,7 @@ export function PhiSimpleTextWidgetEditor({
       <PhiInlineTextEditor
         value={draftText}
         variant="borderless"
-        placeholder="Text"
+        placeholder={labels.text.placeholder}
         readOnly={!onChangeText}
         onFocus={() => {
           setIsFocused(true);
@@ -282,9 +288,10 @@ export function PhiSimpleTextWidgetEditorPluginTools({
   config: PhiSimpleTextWidgetRenderableConfig;
   onChange: (patch: Partial<PhiSimpleTextWidgetRenderableConfig>) => void;
 }) {
+  const labels = usePhiAuthoringToolsLabels();
   return (
     <>
-      <PhiWidgetIconToolButton value={config.icon ?? null} ariaLabel="Text icon" onChange={(icon) => onChange({ icon: icon ?? undefined })} />
+      <PhiWidgetIconToolButton value={config.icon ?? null} ariaLabel={labels.text.icon} onChange={(icon) => onChange({ icon: icon ?? undefined })} />
       <PhiSimpleTextWidgetColorButton config={config} onChange={(color) => onChange({ color: color ?? undefined })} />
       <PhiSimpleTextWidgetTypographyButton config={config} onChange={onChange} />
       <PhiSimpleTextWidgetStyleButton config={config} onChange={onChange} />

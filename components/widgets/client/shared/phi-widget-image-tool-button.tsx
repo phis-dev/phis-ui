@@ -16,6 +16,7 @@ import { PhiMediaPickerBinding } from "../../../media/phi-media-picker-binding";
 import { PHI_MEDIA_WIDGET_DEFAULT_LABELS } from "../../../media/media-widget-labels";
 import { PHI_SEARCH_WIDGET_DEFAULT_LABELS } from "../../label-types/search";
 import { usePhiWidgetScaffoldPopup } from "./phi-widget-scaffold-popup";
+import { usePhiAuthoringToolsLabels } from "./phi-authoring-tools-labels";
 import { PhiButtonControl } from "../../../controls/phi-button-control";
 import { createPhiMediaPickerAssetControllerRoutes } from "../../../media/asset-controller-routes";
 
@@ -42,7 +43,7 @@ export type PhiWidgetImageToolButtonPatch = PhiWidgetImageToolButtonCommonPatch 
 
 export function PhiInternalAssetReferencePickerButton({
   blockId,
-  ariaLabel = "Select image",
+  ariaLabel,
   onSelect,
   onClear,
 }: {
@@ -51,6 +52,7 @@ export function PhiInternalAssetReferencePickerButton({
   onSelect: (asset: PhiMediaAssetTile) => void;
   onClear?: () => void;
 }) {
+  const labels = usePhiAuthoringToolsLabels();
   const popup = usePhiWidgetScaffoldPopup();
 
   return (
@@ -77,7 +79,7 @@ export function PhiInternalAssetReferencePickerButton({
             type="text"
             size="small"
             icon={<PictureOutlined />}
-            ariaLabel={ariaLabel}
+            ariaLabel={ariaLabel ?? labels.fallbacks.selectImage}
             style={{ width: 24, minWidth: 24, height: 24, padding: 0 }}
             onClick={() => undefined}
           />

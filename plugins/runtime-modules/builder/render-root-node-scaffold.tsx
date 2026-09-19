@@ -43,6 +43,8 @@ import { PhiCmsRenderDiagnostic } from "../../../components/cms/phi-cms-render-d
 import { PhiCmsRenderErrorBoundary } from "../../../components/cms/phi-cms-render-error-boundary";
 import { isPhiAnchorWidgetPlacement, type PhiAnchorWidgetPlacement } from "../../../components/controls/phi-anchor-control-contract";
 import type { PhiEffectsWidgetLabels } from "../../../components/widgets/label-types/effects";
+import type { PhiAuthoringToolsLabels } from "../../../components/widgets/label-types/authoring-tools";
+import { PhiAuthoringToolsLabelsProvider } from "../../../components/widgets/client/shared/phi-authoring-tools-labels";
 import type {
   PhiCmsBuilderWidgetEditorInteraction,
   PhiCmsBuilderWidgetPlugin,
@@ -1431,6 +1433,7 @@ export function renderPhiRootNodeScaffold(
     fallbackBlockSize?: string | null;
     fallbackMinBlockSize?: string | null;
     effectsLabels?: PhiEffectsWidgetLabels;
+    authoringToolsLabels?: PhiAuthoringToolsLabels;
     demandControllerContext?: PhiBuilderDemandControllerContextInput;
     authoringCanvas?: PhiCmsWidgetAuthoringCanvas;
     inheritedViewportFlags?: number | null;
@@ -1689,7 +1692,7 @@ export function renderPhiRootNodeScaffold(
     );
   };
 
-  return (
+  const scaffold = (
     <PhiAuthoringLayoutLoader
       type={normalizedRootNode.typeKey}
       kind="layout"
@@ -1797,6 +1800,12 @@ export function renderPhiRootNodeScaffold(
         );
       }}
     </PhiAuthoringLayoutLoader>
+  );
+
+  return (
+    <PhiAuthoringToolsLabelsProvider labels={options?.authoringToolsLabels}>
+      {scaffold}
+    </PhiAuthoringToolsLabelsProvider>
   );
 }
 

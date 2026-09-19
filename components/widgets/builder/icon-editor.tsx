@@ -7,6 +7,7 @@ import {
   PhiWidgetColorToolButton,
   PhiWidgetIconToolButton,
 } from "../client/shared/phi-widget-tool-buttons";
+import { usePhiAuthoringToolsLabels } from "../client/shared/phi-authoring-tools-labels";
 
 export function PhiIconWidgetEditor({
   blockId,
@@ -25,16 +26,17 @@ export function PhiIconWidgetEditorTools({
   config: PhiCmsIconWidgetConfig;
   onChange: (patch: Partial<PhiCmsIconWidgetConfig>) => void;
 }) {
+  const labels = usePhiAuthoringToolsLabels();
   return (
     <>
       <PhiWidgetIconToolButton
         value={config.icon ?? null}
-        ariaLabel="Icon widget icon"
+        ariaLabel={labels.icon.widgetIcon}
         onChange={(icon) => onChange({ icon: icon ?? undefined })}
       />
       <PhiWidgetColorToolButton
         value={config.color ?? null}
-        ariaLabel="Icon widget color"
+        ariaLabel={labels.icon.widgetColor}
         onChange={(color) => onChange({ color: color ?? undefined })}
       />
     </>

@@ -20,6 +20,8 @@ import type { PhiControlOption } from "../../controls/phi-control-options";
 import { PhiIcon } from "../../shell/phi-icon";
 import { PhiWidgetIconPickerButton } from "../client/shared/phi-widget-icon-picker";
 import { usePhiWidgetScaffoldPopup } from "../client/shared/phi-widget-scaffold-popup";
+import { usePhiAuthoringToolsLabels } from "../client/shared/phi-authoring-tools-labels";
+import { formatPhiAuthoringToolsLabel, type PhiAuthoringToolsLabels } from "../label-types/authoring-tools";
 import { createPhiSharedRuntimeDataProviderKey } from "../../../constants/runtime-data-provider-key";
 import type { PhiTableProviderMutationRequest, PhiTableProviderResourceDescriptor } from "../../../types/table-widget";
 import { PhiTableProviderClient, type PhiTableProviderRegistration } from "../client/shared/phi-table-provider";
@@ -74,16 +76,19 @@ function normalizeEditorOption(row: PhiStaticOptionEditorRow): PhiControlOption 
   };
 }
 
-function validateEditorRows(rows: readonly PhiStaticOptionEditorRow[]) {
+function validateEditorRows(
+  rows: readonly PhiStaticOptionEditorRow[],
+  labels: PhiAuthoringToolsLabels["staticOptions"],
+) {
   if (rows.some((row) => !row.value.trim())) {
-    return "Every option requires a value.";
+    return labels.valueRequired;
   }
   if (rows.some((row) => !row.label.trim())) {
-    return "Every option requires a label.";
+    return labels.labelRequired;
   }
   const values = rows.map((row) => row.value.trim());
   if (new Set(values).size !== values.length) {
-    return "Option values must be unique.";
+    return labels.valuesUnique;
   }
   return null;
 }
@@ -163,6 +168,7 @@ function PhiStaticOptionsTableProvider({
 }
 
 function PhiStaticOptionsTable({ disabled }: { disabled: boolean }) {
+  const labels = usePhiAuthoringToolsLabels().staticOptions;
   const source = useMemo(() => ({
     providerKey: PHI_STATIC_OPTIONS_TABLE_PROVIDER_KEY,
     resourceKey: PHI_STATIC_OPTIONS_TABLE_RESOURCE.resourceKey,
@@ -170,7 +176,7 @@ function PhiStaticOptionsTable({ disabled }: { disabled: boolean }) {
   const binding = usePhiTableBinding({ source, defaultPageSize: 100 });
   const columns = useMemo<readonly PhiTableControlColumn<Record<string, unknown>>[]>(() => [
     {
-      title: "Icon", key: "icon", fieldPath: "icon", sizing: { mode: "fixed", width: 48 },
+      title: labels.columnIcon, key: "icon", fieldPath: "icon", sizing: { mode: "fixed", width: 48 },
       render: (_value, row) => (
         <PhiWidgetIconPickerButton
           value={typeof row.icon === "string" ? row.icon : undefined}
@@ -184,43 +190,43 @@ function PhiStaticOptionsTable({ disabled }: { disabled: boolean }) {
         />
       ),
     },
-    { title: "Label", key: "label", fieldPath: "label", sizing: { mode: "fixed", width: 176 }, editor: { type: "string", required: true },
+    { title: labels.columnLabel, key: "label", fieldPath: "label", sizing: { mode: "fixed", width: 176 }, editor: { type: "string", required: true },
       isEditorDisabled: (row) => disabled || row.disabled === true,
       onCommit: (row, originalValue, proposedValue) => { void binding.commitField({ kind: "field", rowIdentity: String(row.rowId), fieldKey: "label", originalValue, proposedValue }); } },
-    { title: "Value", key: "value", fieldPath: "value", sizing: { mode: "fixed", width: 176 }, editor: { type: "string", required: true },
+    { title: labels.columnValue, key: "value", fieldPath: "value", sizing: { mode: "fixed", width: 176 }, editor: { type: "string", required: true },
       isEditorDisabled: (row) => disabled || row.disabled === true,
       onCommit: (row, originalValue, proposedValue) => { void binding.commitField({ kind: "field", rowIdentity: String(row.rowId), fieldKey: "value", originalValue, proposedValue }); } },
-    { title: "Description", key: "description", fieldPath: "description", sizing: { mode: "fill" }, editor: { type: "string" },
+    { title: labels.columnDescription, key: "description", fieldPath: "description", sizing: { mode: "fill" }, editor: { type: "string" },
       isEditorDisabled: (row) => disabled || row.disabled === true,
       onCommit: (row, originalValue, proposedValue) => { void binding.commitField({ kind: "field", rowIdentity: String(row.rowId), fieldKey: "description", originalValue, proposedValue }); } },
     {
-      title: "Actions", key: "actions", role: "actions", fieldPath: "rowId", sizing: { mode: "fixed", width: 72 }, fixed: "right",
+      title: labels.columnActions, key: "actions", role: "actions", fieldPath: "rowId", sizing: { mode: "fixed", width: 72 }, fixed: "right",
       render: (_value, row) => (
         <PhiFlexControl align="center" gap={0} style={{ display: "inline-flex" }}>
           <PhiButtonControl type="text" size="small" icon={row.disabled ? <EyeInvisibleOutlined /> : <EyeOutlined />}
-            ariaLabel={row.disabled ? `Enable ${String(row.label)}` : `Disable ${String(row.label)}`} disabled={disabled}
-            tooltip={row.disabled ? "Enable option" : "Disable option"}
+            ariaLabel={formatPhiAuthoringToolsLabel(row.disabled ? labels.enableRow : labels.disableRow, String(row.label))} disabled={disabled}
+            tooltip={row.disabled ? labels.enableOption : labels.disableOption}
             onClick={() => { void binding.executeAction({ kind: "action", actionKey: "toggle", rowIdentity: String(row.rowId), selectedRowIdentities: [], query: binding.resolvedQuery }); }}
           />
-          <PhiButtonControl type="text" danger size="small" icon={<DeleteOutlined />} ariaLabel={`Delete ${String(row.label || row.value)}`} disabled={disabled}
-            tooltip="Delete option"
+          <PhiButtonControl type="text" danger size="small" icon={<DeleteOutlined />} ariaLabel={formatPhiAuthoringToolsLabel(labels.deleteRow, String(row.label || row.value))} disabled={disabled}
+            tooltip={labels.deleteOption}
             onClick={() => { void binding.executeAction({ kind: "action", actionKey: "delete", rowIdentity: String(row.rowId), selectedRowIdentities: [], query: binding.resolvedQuery }); }}
           />
         </PhiFlexControl>
       ),
     },
-  ], [binding, disabled]);
+  ], [binding, disabled, labels]);
   return <>
     {binding.error ? <PhiAlertControl level="error" showIcon title={binding.error.message} /> : null}
     <PhiTableBindingControl
       rows={binding.rows} fields={binding.resource?.fields ?? []} columns={columns}
       rowIdentityPath="rowId" columnOrder={["icon", "label", "value", "description", "actions"]}
-      sortingMode="none" sorts={[]} pagination={false} size="small" emptyText="No static options"
+      sortingMode="none" sorts={[]} pagination={false} size="small" emptyText={labels.empty}
       layout={{ mode: "fixed", overflowX: "auto" }} loading={binding.loading}
       rowReordering={{ enabled: !disabled, onMove: (move) => { void binding.moveRow({ kind: "row-move", ...move }); } }}
     />
     <PhiFlexControl justify="flex-end">
-      <PhiButtonControl label="Add option" icon={<PlusOutlined />} size="small" disabled={disabled}
+      <PhiButtonControl label={labels.addOption} icon={<PlusOutlined />} size="small" disabled={disabled}
         onClick={() => { void binding.executeAction({ kind: "action", actionKey: "add", selectedRowIdentities: [], query: binding.resolvedQuery }); }}
       />
     </PhiFlexControl>
@@ -236,6 +242,7 @@ export function PhiStaticOptionsToolButton({
   disabled?: boolean;
   onApply: (options: PhiControlOption[]) => void;
 }) {
+  const labels = usePhiAuthoringToolsLabels().staticOptions;
   const popup = usePhiWidgetScaffoldPopup();
   const rowSequenceRef = useRef(options.length);
   const [open, setOpen] = useState(false);
@@ -256,7 +263,7 @@ export function PhiStaticOptionsToolButton({
     closePicker();
   };
   const applyPicker = () => {
-    const nextError = validateEditorRows(rows);
+    const nextError = validateEditorRows(rows, labels);
     if (nextError) {
       setError(nextError);
       return;
@@ -268,7 +275,7 @@ export function PhiStaticOptionsToolButton({
   return (
     <>
       <PhiButtonControl
-        ariaLabel="Edit static options"
+        ariaLabel={labels.edit}
         icon={<UnorderedListOutlined />}
         type="text"
         size="small"
@@ -283,15 +290,15 @@ export function PhiStaticOptionsToolButton({
       />
       <PhiModalControl
         open={open}
-        title="Static options"
+        title={labels.title}
         width={920}
         mask={{ appearance: "normal", allowOutsideInteraction: false, closable: false }}
         mountPolicy="remount"
         rootClassName={popup.rootClassName}
         onDismiss={discardPicker}
         footer={<PhiFlexControl justify="end" gap={12}>
-          <PhiButtonControl label="Cancel" onClick={discardPicker} />
-          <PhiButtonControl label="Apply" type="primary" onClick={applyPicker} />
+          <PhiButtonControl label={labels.cancel} onClick={discardPicker} />
+          <PhiButtonControl label={labels.apply} type="primary" onClick={applyPicker} />
         </PhiFlexControl>}
         body={<PhiFlexControl vertical gap={12} onClick={stopOverlayEvent} onPointerDown={stopOverlayEvent}>
           {error ? <PhiAlertControl level="error" showIcon title={error} /> : null}

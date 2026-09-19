@@ -18,7 +18,7 @@ import type { PhiWidgetFontFamilyKey, PhiWidgetFontSizeKey } from "../../../../t
 import type { PhiCmsInstanceId } from "../../../../types/cms-instance-id";
 import { createPhiAssetUri, createPhiPageUri } from "../../../../types/references";
 import { PhiBuilderPageReferencePicker } from "../../../../plugins/runtime-modules/builder/page-reference-picker";
-import { PHI_ICON_PICKER_CONTROL_DEFAULT_LABELS } from "../../label-types/icon-picker";
+import { usePhiAuthoringToolsLabels } from "./phi-authoring-tools-labels";
 import { PhiButtonControl } from "../../../controls/phi-button-control";
 import { PhiCheckboxControl } from "../../../controls/phi-checkbox-control";
 import { PhiNumberControl } from "../../../controls/phi-number-control";
@@ -86,14 +86,15 @@ export type PhiWidgetIconToolButtonProps = {
 
 export function PhiWidgetIconToolButton({
   value,
-  ariaLabel = "Widget icon",
+  ariaLabel,
   onChange,
 }: PhiWidgetIconToolButtonProps) {
+  const labels = usePhiAuthoringToolsLabels();
   return (
     <PhiWidgetIconPickerButton
       value={value ?? null}
-      buttonAriaLabel={ariaLabel}
-      labels={PHI_ICON_PICKER_CONTROL_DEFAULT_LABELS}
+      buttonAriaLabel={ariaLabel ?? labels.iconPicker.buttonAriaLabel}
+      labels={labels.iconPicker}
       onChange={onChange}
     />
   );
@@ -107,9 +108,10 @@ export type PhiWidgetColorToolButtonProps = {
 
 export function PhiWidgetColorToolButton({
   value,
-  ariaLabel = "Widget color",
+  ariaLabel,
   onChange,
 }: PhiWidgetColorToolButtonProps) {
+  const labels = usePhiAuthoringToolsLabels();
   const currentColor = typeof value === "string" && value.trim().length > 0 ? value : undefined;
   const popup = usePhiWidgetScaffoldPopup();
 
@@ -148,7 +150,7 @@ export function PhiWidgetColorToolButton({
         <PhiButtonControl
           type="text"
           size="small"
-          ariaLabel={ariaLabel}
+          ariaLabel={ariaLabel ?? labels.fallbacks.widgetColor}
           icon={<BgColorsOutlined style={currentColor ? { color: currentColor } : undefined} />}
           onClick={() => undefined}
         />
@@ -191,9 +193,10 @@ export function PhiWidgetTypographyToolButton({
   fontFamily,
   fontSize,
   defaultFontSize = "inherit",
-  ariaLabel = "Widget typography",
+  ariaLabel,
   onChange,
 }: PhiWidgetTypographyToolButtonProps) {
+  const labels = usePhiAuthoringToolsLabels();
   const currentFontFamily = fontFamily ?? "inherit";
   const currentFontSize = fontSize ?? defaultFontSize;
   const popup = usePhiWidgetScaffoldPopup();
@@ -263,7 +266,7 @@ export function PhiWidgetTypographyToolButton({
         <PhiButtonControl
           type="text"
           size="small"
-          ariaLabel={ariaLabel}
+          ariaLabel={ariaLabel ?? labels.fallbacks.widgetTypography}
           icon={<FontSizeOutlined />}
           onClick={() => undefined}
         />
@@ -330,6 +333,7 @@ export type PhiHtmlWidgetToolbarToolsProps = {
 export function PhiHtmlWidgetToolbarTools({
   blockId,
 }: PhiHtmlWidgetToolbarToolsProps) {
+  const labels = usePhiAuthoringToolsLabels();
   const { bridge, state } = usePhiHtmlWidgetEditorState(blockId);
   const blockPopup = usePhiWidgetScaffoldPopup();
   const alignmentPopup = usePhiWidgetScaffoldPopup();
@@ -413,8 +417,8 @@ export function PhiHtmlWidgetToolbarTools({
           <PhiButtonControl
             type="text"
             size="small"
-            ariaLabel="Text alignment"
-            tooltip="Text alignment"
+            ariaLabel={labels.richText.alignment}
+            tooltip={labels.richText.alignment}
             icon={resolvePhiHtmlWidgetAlignmentIcon(state?.alignment ?? PHI_HTML_WIDGET_EDITOR_EMPTY_STATE.alignment)}
             disabled={!bridge}
             onClick={() => undefined}
@@ -469,7 +473,7 @@ export function PhiHtmlWidgetToolbarTools({
           <PhiButtonControl
             type={hasActiveTextStyle ? "primary" : "text"}
             size="small"
-            ariaLabel="Rich text styles"
+            ariaLabel={labels.richText.styles}
             icon={<FormatPainterOutlined />}
             disabled={!bridge}
             onClick={() => undefined}
@@ -483,7 +487,7 @@ export function PhiHtmlWidgetToolbarTools({
         */}
       <PhiWidgetColorToolButton
         value={state?.textColor ?? null}
-        ariaLabel="Rich text color"
+        ariaLabel={labels.richText.color}
         onChange={(color) => {
           bridge?.setTextColor(color);
           bridge?.focus();
@@ -491,7 +495,7 @@ export function PhiHtmlWidgetToolbarTools({
       />
       <PhiInternalAssetReferencePickerButton
         blockId={blockId}
-        ariaLabel="Insert Site Asset"
+        ariaLabel={labels.richText.insertAsset}
         onSelect={(asset) => {
           bridge?.insertImage(
             createPhiAssetUri(asset.id),
@@ -534,7 +538,7 @@ export function PhiHtmlWidgetToolbarTools({
               <PhiButtonControl
                 size="small"
                 disabled={!bridge || !state?.linkUrl}
-                label="Remove"
+                label={labels.richText.linkRemove}
                 onClick={() => {
                   bridge?.setLink(null);
                   bridge?.focus();
@@ -545,7 +549,7 @@ export function PhiHtmlWidgetToolbarTools({
                 size="small"
                 type="primary"
                 disabled={!bridge}
-                label="Apply"
+                label={labels.richText.linkApply}
                 onClick={() => {
                   const nextUrl = resolveExternalOrFragmentLink(linkDraft);
                   if (!nextUrl) {
@@ -570,7 +574,7 @@ export function PhiHtmlWidgetToolbarTools({
           <PhiButtonControl
             type={state?.linkUrl ? "primary" : "text"}
             size="small"
-            ariaLabel="Rich text link"
+            ariaLabel={labels.richText.link}
             icon={<LinkOutlined />}
             disabled={!bridge}
             onClick={() => undefined}
@@ -586,6 +590,7 @@ export function PhiMarkdownWidgetToolbarTools({
 }: {
   blockId: PhiCmsInstanceId;
 }) {
+  const labels = usePhiAuthoringToolsLabels();
   const [, setRegistryVersion] = useState(0);
 
   useEffect(() => subscribePhiMarkdownWidgetEditorBridge(
@@ -604,7 +609,7 @@ export function PhiMarkdownWidgetToolbarTools({
       />
       <PhiInternalAssetReferencePickerButton
         blockId={blockId}
-        ariaLabel="Insert Site Asset"
+        ariaLabel={labels.richText.insertAsset}
         onSelect={(asset) => {
           const alt = (asset.altText?.trim() || asset.title?.trim() || asset.originalName)
             .replaceAll("]", "\\]");
@@ -624,6 +629,7 @@ export function PhiDescriptionWidgetItemsToolButton({
   value,
   onChange,
 }: PhiDescriptionWidgetItemsToolButtonProps) {
+  const labels = usePhiAuthoringToolsLabels();
   const itemCount = Array.isArray(value) ? value.length : 0;
   const popup = usePhiWidgetScaffoldPopup();
 
@@ -668,8 +674,8 @@ export function PhiDescriptionWidgetItemsToolButton({
         <PhiButtonControl
           type="text"
           size="small"
-          ariaLabel="Description items"
-          tooltip="Description items"
+          ariaLabel={labels.descriptions.items}
+          tooltip={labels.descriptions.items}
           label={itemCount}
           onClick={() => undefined}
         />

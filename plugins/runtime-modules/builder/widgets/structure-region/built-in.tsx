@@ -73,6 +73,7 @@ import {
 } from "../../../../../plugins/runtime-modules/builder/region-keys";
 import type { PhiBuilderPageDraftsByScope } from "../../page-presets.server";
 import type { PhiStructureRegionPickItem } from "./config";
+import type { PhiAuthoringToolsLabels } from "../../../../../components/widgets/label-types/authoring-tools";
 import type { PhiEffectsWidgetLabels } from "../../../../../components/widgets/label-types/effects";
 import type { PhiBuilderChromeWidgetLabels } from "../../../../../components/widgets/label-types/builder-chrome";
 import { isPhiAnchorWidgetPlacement } from "../../../../../components/controls/phi-anchor-control-contract";
@@ -108,6 +109,7 @@ type PhiStructureRegionWidgetProps = {
   structureDraftsByArea?: Partial<Record<PhiDeveloperBuilderArea, PhiDeveloperBuilderRegionDraft | null>>;
   pageDraftsByScope?: PhiBuilderPageDraftsByScope;
   effectsLabels?: PhiEffectsWidgetLabels;
+  authoringToolsLabels?: PhiAuthoringToolsLabels;
   pickerLabels?: PhiBuilderChromeWidgetLabels["canvas"]["picker"];
   containerStyle?: CSSProperties;
   containerClassName?: string;
@@ -674,6 +676,7 @@ export function PhiStructureRegionScaffold({
   structureDraftsByArea,
   pageDraftsByScope,
   effectsLabels,
+  authoringToolsLabels,
   pickerLabels,
   containerStyle,
   containerClassName,
@@ -1842,6 +1845,7 @@ export function PhiStructureRegionScaffold({
       fallbackBlockSize: resolvedRootBodyHeight ?? null,
       fallbackMinBlockSize: resolvedRootBodyMinHeight ?? null,
       effectsLabels,
+      authoringToolsLabels,
       authoringCanvas,
       demandControllerContext: {
         area: builderState.area,
