@@ -100,6 +100,17 @@ function assertPhiTableProviderRegistration(registration: PhiTableProviderRegist
       throw new Error(`Table provider "${registration.key}" has an empty or duplicate resource key.`);
     }
     keys.add(resource.resourceKey);
+    /*
+     * A capability that answers nothing is worse than one that was never offered: the record Widget
+     * binds, the author sees a Provider that says it can do this, and the failure arrives later and
+     * reads like missing data. The static Table Provider carried exactly that shape until the Widget
+     * asked, so the registration says it here instead.
+     */
+    if (resource.recordRead === true && !registration.readRecord) {
+      throw new Error(
+        `Table provider "${registration.key}" declares recordRead on resource "${resource.resourceKey}" but has no readRecord.`,
+      );
+    }
   }
 }
 

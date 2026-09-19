@@ -77,6 +77,24 @@ export type PhiTableQuery = {
   expandedRowIdentities?: readonly PhiTableRowIdentity[];
 };
 
+/**
+ * How a Provider value is drawn. Named rather than written into the column, because a record of the
+ * same rows draws the same values and must mean the same thing by `datetime` as the table does.
+ */
+export type PhiTableValueRenderer =
+  | "text"
+  | "email"
+  | "date"
+  | "datetime"
+  | "badge"
+  | "tags"
+  | "link"
+  | "code"
+  | "json"
+  | "switch"
+  | "checkbox"
+  | "icon";
+
 export type PhiTableColumnDefinition = {
   key: string;
   title: string;
@@ -99,7 +117,7 @@ export type PhiTableColumnDefinition = {
    */
   titleIcon?: string;
   titleDisplay?: "icon-label" | "icon";
-  renderer?: "text" | "email" | "date" | "datetime" | "badge" | "tags" | "link" | "code" | "json" | "switch" | "checkbox" | "icon";
+  renderer?: PhiTableValueRenderer;
   editor?: {
     control?: PhiTableColumnEditorControl;
     disabledWhen?: PhiRuntimeConditionExpression;

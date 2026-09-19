@@ -110,6 +110,9 @@ import {
   PHI_QUICK_LINKS_WIDGET_DEFINITION,
 } from "./widgets/quick-links/config";
 import {
+  PHI_RECORD_WIDGET_DEFINITION,
+} from "./widgets/record/config";
+import {
   PHI_RESULT_WIDGET_DEFINITION,
 } from "./widgets/result/config";
 import {
@@ -414,6 +417,13 @@ export const PHI_RUNTIME_MODULE_WIDGETS: readonly PhiRuntimeModuleWidgetDefiniti
     renderPolicies: {"runtime":"custom","preview":"custom","authoring":"custom"},
     loadRuntime: () => import("./widgets/quick-links/plugin").then((module) => module.PHI_QUICK_LINKS_WIDGET_PLUGIN),
     loadPreview: () => import("./widgets/quick-links/plugin").then((module) => module.PHI_QUICK_LINKS_WIDGET_PLUGIN),
+  }),
+  defineFirstPartyWidget({
+    definition: PHI_RECORD_WIDGET_DEFINITION,
+    ownerModuleId: PHI_CORE_RUNTIME_MODULE_ID,
+    renderPolicies: {"runtime":"custom","preview":"custom","authoring":"custom"},
+    loadRuntime: () => import("./widgets/record/plugin").then((module) => module.PHI_RECORD_WIDGET_PLUGIN),
+    loadPreview: () => import("./widgets/record/plugin").then((module) => module.PHI_RECORD_WIDGET_PLUGIN),
   }),
   defineFirstPartyWidget({
     definition: PHI_RESULT_WIDGET_DEFINITION,

@@ -95,13 +95,13 @@ const PHI_CMS_WIDGET_MODULE_BY_TYPE_KEY: Readonly<Record<string, keyof typeof PH
   "media-picker": "asset",
   "multi-select": "core",
   "number-input": "core",
-  "observability-log-detail": "observability",
   "otp": "core",
   "page-title": "core",
   "pagination": "core",
   "profile-name": "core",
   "profile-overview": "core",
   "quick-links": "core",
+  "record": "core",
   "rate": "core",
   "result": "core",
   "segmented": "core",
@@ -188,6 +188,7 @@ export const PhiCmsWidgetType = {
   SimpleText: defineWidgetType(resolvePhiCmsWidgetPluginKey("simple-text"), "simple-text"),
   PageTitle: defineWidgetType(resolvePhiCmsWidgetPluginKey("page-title"), "page-title"),
   QuickLinks: defineWidgetType(resolvePhiCmsWidgetPluginKey("quick-links"), "quick-links"),
+  Record: defineWidgetType(resolvePhiCmsWidgetPluginKey("record"), "record"),
 } as const;
 
 export function buildPhiCmsWidgetNamespacedTypeKey(pluginKey: string, typeKey: string) {

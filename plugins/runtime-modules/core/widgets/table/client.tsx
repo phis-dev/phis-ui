@@ -6,12 +6,10 @@ import { PHI_TABLE_WIDGET_DEFAULT_LABELS } from "../../../../../components/widge
 import { formatPhiTableWidgetLabel } from "../../../../../components/widgets/label-types/table";
 import { App } from "antd";
 import { PhiNameControl } from "../../../../../components/controls/phi-name-control";
-import { PhiTagControl } from "../../../../../components/controls/phi-tag-control";
 import { Fragment, useCallback, useEffect, useEffectEvent, useMemo, useState, type ReactNode } from "react";
 
 import { PhiMultiSelectControl } from "../../../../../components/controls/phi-multi-select-control";
 import { PhiAlertControl } from "../../../../../components/controls/phi-alert-control";
-import { PhiCheckboxControl } from "../../../../../components/controls/phi-checkbox-control";
 import { PhiCascaderControl } from "../../../../../components/controls/phi-cascader-control";
 import { PhiCollectionHeaderControl } from "../../../../../components/controls/phi-collection-header-control";
 import { PhiButtonControl } from "../../../../../components/controls/phi-button-control";
@@ -35,7 +33,7 @@ import { usePhiSignalEmitter, usePhiSignalIdentity } from "../../../../../compon
 import { usePhiTableBinding } from "../../../../../components/tables/client/phi-table-binding";
 import { PhiTableBindingControl } from "../../../../../components/tables/client/phi-table-binding-control";
 import { clearPhiDataDragPayload, readPhiDataDragPayload } from "../../../../../components/runtime/client/phi-data-dnd";
-import { formatPhiDate, formatPhiDateTime } from "../../../../../helpers/format-date-time";
+import { renderPhiValueContent } from "../../../../../components/widgets/client/shared/phi-rendered-value";
 import { formatPhiTranslation } from "../../../../../helpers/translation-format";
 import {
   readPhiTableColumnOrderSignalValue,
@@ -59,7 +57,6 @@ import {
   type PhiTableRowIdentity,
   type PhiTableSummaryItemDefinition,
   type PhiTableSummaryValue,
-  type PhiTableTagColor,
   type PhiTableWidgetConfig,
   type PhiTableWidgetState,
 } from "../../../../../types/table-widget";
@@ -109,13 +106,6 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
 }
 
-function normalizeTextValue(value: unknown): string {
-  if (value == null) return "";
-  if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") return String(value);
-  if (Array.isArray(value)) return value.map(normalizeTextValue).filter(Boolean).join(", ");
-  return isRecord(value) ? JSON.stringify(value) : "";
-}
-
 function formatTableActionTemplate(
   value: string | undefined,
   templateValue: PhiTableRowIdentity | null | undefined,
@@ -123,60 +113,12 @@ function formatTableActionTemplate(
   return value && templateValue != null ? formatPhiTableWidgetLabel(value, templateValue) : value;
 }
 
-function resolveTableTagColor(color: PhiTableTagColor | undefined) {
-  return typeof color === "object" ? color.value : color;
-}
-
-function renderTableValueContent(value: unknown, column: PhiTableColumnDefinition): ReactNode {
-  if (value == null || value === "") return null;
-  const normalizedValue = normalizeTextValue(value);
-  const displayValue = column.valueMap?.[normalizedValue] ?? normalizedValue;
-  if (column.renderer === "email" || column.renderer === "link") {
-    const href = String(value);
-    return <PhiLink href={column.renderer === "email" ? `mailto:${href}` : href}>{displayValue}</PhiLink>;
-  }
-  if (column.renderer === "tags") {
-    const values = Array.isArray(value) ? value : [value];
-    return (
-      <PhiFlexControl align="center" gap={4} wrap style={{ display: "inline-flex" }}>
-        {values.map((entry, index) => {
-          const normalizedEntry = normalizeTextValue(entry);
-          return (
-            <PhiTagControl
-              color={resolveTableTagColor(column.tagColorMap?.[normalizedEntry])}
-              key={`${normalizedEntry}:${index}`}
-              variant={column.tagVariant ?? "outlined"}
-            >
-              {column.valueMap?.[normalizedEntry] ?? normalizedEntry}
-            </PhiTagControl>
-          );
-        })}
-      </PhiFlexControl>
-    );
-  }
-  if (column.renderer === "date" || column.renderer === "datetime") {
-    return column.renderer === "date" ? formatPhiDate(normalizedValue) : formatPhiDateTime(normalizedValue);
-  }
-  if (column.renderer === "json" || column.renderer === "code") return <PhiTypographyControl code>{displayValue}</PhiTypographyControl>;
-  if (column.renderer === "badge") {
-    return (
-      <PhiTagControl color={resolveTableTagColor(column.tagColorMap?.[normalizedValue])} variant={column.tagVariant ?? "outlined"}>
-        {displayValue}
-      </PhiTagControl>
-    );
-  }
-  if (column.renderer === "switch") return <PhiSwitchControl checked={value === true} readOnly />;
-  if (column.renderer === "checkbox") return <PhiCheckboxControl checked={value === true} readOnly />;
-  if (column.renderer === "icon") return typeof value === "string" && value.trim() ? <PhiIcon name={value} /> : null;
-  return displayValue;
-}
-
 function renderTableValue(
   value: unknown,
   column: PhiTableColumnDefinition,
   row: Record<string, unknown> | undefined,
 ): ReactNode {
-  const content = renderTableValueContent(value, column);
+  const content = renderPhiValueContent(value, column);
   if (!column.iconFieldKey) {
     return content;
   }

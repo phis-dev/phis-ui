@@ -177,6 +177,12 @@ export const PHI_COMMON_RUNTIME_MODULE_RENDER_CLIENT_MANIFEST =
       ),
     ],
     [
+      PhiCmsWidgetType.Record,
+      definePhiRuntimeModuleRenderClient(
+        dynamic(() => import("../core/widgets/record/client").then((module) => module.PhiRecordWidgetClient)),
+      ),
+    ],
+    [
       PhiCmsWidgetType.Table,
       definePhiRuntimeModuleRenderClient(
         dynamic(() => import("../core/widgets/table/client").then((module) => module.PhiTableWidgetClient)),

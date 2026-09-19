@@ -2,6 +2,7 @@ import type { PhiRuntimeDataProviderKey } from "../../../../types/runtime-data-p
 import {
   PhiTableProviderError,
   type PhiTableProviderMutationRequest,
+  type PhiTableProviderRecordRequest,
   type PhiTableProviderMutationResult,
   type PhiTableProviderQueryRequest,
   type PhiTableProviderResourceDescriptor,
@@ -100,6 +101,36 @@ function orderHierarchyRows(
   return ordered;
 }
 
+/**
+ * One row by its identity.
+ *
+ * **The rows are already here, so the only thing this ever lacked was the method.** A Provider declaring
+ * `recordRead` without a `readRecord` is a capability that answers nothing, and until the record Widget
+ * asked for it no static resource had a reason to notice -- which is why the contract says a Site can
+ * read a record without a server and, for the static path, it could not.
+ */
+export function readPhiStaticTableRecord(
+  resource: PhiStaticTableResource,
+  request: PhiTableProviderRecordRequest,
+) {
+  const identity = request.rowIdentity;
+  if (identity == null) {
+    throw new PhiTableProviderError(
+      "row-not-found",
+      `Static Table resource "${request.resourceKey}" was asked for a record without a row identity.`,
+    );
+  }
+  const row = resource.rows.find((candidate) =>
+    String(readValue(candidate, resource.descriptor.rowIdentityPath) ?? "") === String(identity));
+  if (!row) {
+    throw new PhiTableProviderError(
+      "row-not-found",
+      `Static Table resource "${request.resourceKey}" has no row "${identity}".`,
+    );
+  }
+  return { ...row };
+}
+
 export function queryPhiStaticTableResource(
   resource: PhiStaticTableResource,
   request: PhiTableProviderQueryRequest,
@@ -169,6 +200,17 @@ export function createPhiStaticTableProviderRegistration({
       }
       return queryPhiStaticTableResource(resource, request);
     },
+    readRecord: async (request) => {
+      const resource = resources.find((candidate) =>
+        candidate.descriptor.resourceKey === request.resourceKey);
+      if (!resource) {
+        throw new PhiTableProviderError(
+          "resource-not-found",
+          `Unknown static Table resource "${request.resourceKey}".`,
+        );
+      }
+      return readPhiStaticTableRecord(resource, request);
+    },
   };
 }
 
@@ -227,6 +269,16 @@ export function createPhiVersionedStaticTableProviderRegistration({
         signal: request.signal,
       });
       return queryPhiStaticTableResource({ descriptor, rows: snapshot.rows }, request);
+    },
+    readRecord: async (request) => {
+      const descriptor = findResource(request.resourceKey);
+      const snapshot = await store.read({
+        resourceKey: request.resourceKey,
+        status: mode === "authoring" ? "draft" : "published",
+        params: request.params,
+        signal: request.signal,
+      });
+      return readPhiStaticTableRecord({ descriptor, rows: snapshot.rows }, request);
     },
     ...(mode === "authoring"
       ? {

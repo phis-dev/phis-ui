@@ -265,16 +265,46 @@ export async function buildPhiDefaultAdminLogsPageTree({
       nodes.widget({
         id: SYNTHETIC_ADMIN_LOGS_WIDGET_IDS.widgetDetail,
         parentLayoutNodeId: SYNTHETIC_ADMIN_LOGS_LAYOUT_IDS.layoutDetail,
-        typeKey: "observability-log-detail",
+        typeKey: "record",
         slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
         sortOrder: 0,
-        label: "observability log detail",
+        label: "observability log record",
         config: {
           source: {
             providerKey: PHI_OBSERVABILITY_RUNTIME_DATA_PROVIDER_KEYS.table,
             resourceKey: "logs",
           },
           openActionKey: "view",
+          presentation: {
+            appearance: "grid",
+            columns: 2,
+            fields: [
+              { key: "ts", fieldKey: "ts", label: widgetLabels.columns.time, renderer: "datetime" },
+              {
+                key: "level",
+                fieldKey: "level",
+                label: widgetLabels.columns.level,
+                renderer: "badge",
+                valueMap: widgetLabels.levelOptions,
+                // The same map the column above uses, so a debug line is not green in one place and grey in the other.
+                tagColorMap: {
+                  debug: "success",
+                  info: "processing",
+                  warn: "warning",
+                  error: "error",
+                },
+              },
+              { key: "service", fieldKey: "service", label: widgetLabels.columns.service, renderer: "badge" },
+              { key: "event", fieldKey: "event", label: widgetLabels.columns.event, renderer: "code" },
+              { key: "area", fieldKey: "area", label: widgetLabels.columns.area },
+              { key: "method", fieldKey: "method", label: widgetLabels.detail.method },
+              { key: "path", fieldKey: "path", label: widgetLabels.detail.path },
+              { key: "status", fieldKey: "status", label: widgetLabels.detail.status },
+              { key: "message", fieldKey: "message", label: widgetLabels.columns.message, full: true },
+              { key: "meta", fieldKey: "meta", label: widgetLabels.detail.meta, renderer: "json", full: true },
+              { key: "error", fieldKey: "error", label: widgetLabels.detail.error, renderer: "json", full: true },
+            ],
+          },
           signalRoutes: {
             listens: [{
               routeKey: "admin-logs-detail-record-open",

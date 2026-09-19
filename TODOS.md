@@ -40,30 +40,6 @@ built. Remove an entry when it is done.
   second is a Widget of its own, so a Site can put a figure on a page -- a count, a total, a rate --
   with `title` and `value` as config and the Control deciding presentation. Placing it is the point:
   the Theme inspector's three are a fixed internal readout, where a Widget is the general case.
-- **A record Widget, over one row of a table Provider.** `PhiDescriptionListControl` exists and has two
-  callers. The Widget is the general case of what `observability/widgets/log-detail` already is: it
-  listens for a row identity on the signal bus, calls `provider.readRecord({ resourceKey, rowIdentity,
-  params, signal })`, and draws the record as named values. Nothing in that is missing -- `recordRead`
-  is part of the table Provider contract, `executionMode: "static"` is available to table Providers with
-  their `resources` declared in the descriptor, so a Site can have a record without a server, and the
-  resource's `fields` carry the labels through the label set the way column titles already travel.
-
-  **The field definition is `PhiTableColumnDefinition` minus sorting, width and sticky**, and that is the
-  point: `renderer` (`text`, `datetime`, `tags`, `code`, `json`, `link`, …) with `valueMap`,
-  `tagColorMap` and `tagVariant` already covers every value `log-detail` draws by hand -- and the
-  `<pre>{JSON.stringify(meta, null, 2)}</pre>` under it is the `json` renderer, written out. No new
-  vocabulary, half an existing one.
-
-  **The author picks the fields**, the way the table Widget lets an author pick columns, rather than the
-  Widget showing whatever the resource declares. That needed a field picker in the Builder Inspector, and
-  it now exists for every collection at once: the `collection` field type takes
-  `presentation: "overlay"`, so a collection whose items carry more than two or three fields is edited in
-  an Overlay instead of down the narrow Inspector column. Eleven collections already use it -- the table's
-  columns, filters and three action lists among them. The record Widget declares its fields against that
-  and needs no picker of its own.
-
-  Afterwards `log-detail` is the Widget plus a `json` field, and its `record as LogRow` cast goes -- the
-  Widget claiming a shape the Provider never promised it is what this replaces.
 - **Normalize Preset Content roots to vertical Flex.** Audit first-party Page presets and use a vertical
   Flex Layout as the Content Region root, keeping another root only where the Page has a semantic reason.
   The legacy Content Layout path is still registered.
@@ -308,8 +284,7 @@ built. Remove an entry when it is done.
   trivial wrappers, `PhiFileDropControl` with `Progress`, `PhiSkeletonControl`, `PhiEmptyControl`,
   `PhiNameControl`, `PhiAvatarControl`, `PhiCardControl`, `PhiAccordionControl`,
   `PhiDescriptionListControl`, `PhiEntryListControl`, `PhiCompactGroupControl`, the deletions, and the
-  allowlist~~ -- **done, all of it.** What is left is not wrapping: the record Widget below, and the ten
-  `theme` readers above.
+  allowlist~~ -- **done, all of it.** What is left is not wrapping: the ten `theme` readers above.
 
   `pendingControlAdoptions` is gone with the denylist: it existed to let a primitive join
   `controlledPrimitives` before its last sites were converted, and there are no unconverted sites left.

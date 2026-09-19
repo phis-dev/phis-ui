@@ -18,8 +18,8 @@ export { PhiBrandWidget } from "./plugins/runtime-modules/core/widgets/brand/ser
 export type { PhiBrandWidgetProps } from "./plugins/runtime-modules/core/widgets/brand/server";
 export { PhiTableWidget } from "./plugins/runtime-modules/core/widgets/table/server";
 export type { PhiTableWidgetProps } from "./plugins/runtime-modules/core/widgets/table/server";
-export { PhiObservabilityLogDetailWidget } from "./plugins/runtime-modules/observability/widgets/log-detail/server";
-export type { PhiObservabilityLogDetailWidgetProps } from "./plugins/runtime-modules/observability/widgets/log-detail/server";
+export { PhiRecordWidget } from "./plugins/runtime-modules/core/widgets/record/server";
+export type { PhiRecordWidgetProps } from "./plugins/runtime-modules/core/widgets/record/server";
 export { PhiIconWidget } from "./plugins/runtime-modules/core/widgets/icon/server";
 export type { PhiIconWidgetProps } from "./plugins/runtime-modules/core/widgets/icon/server";
 export { PhiHtmlWidget } from "./plugins/runtime-modules/core/widgets/html/server";

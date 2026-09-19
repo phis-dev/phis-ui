@@ -108,6 +108,9 @@ import {
   PHI_QUICK_LINKS_WIDGET_DEFINITION,
 } from "./widgets/quick-links/config";
 import {
+  PHI_RECORD_WIDGET_DEFINITION,
+} from "./widgets/record/config";
+import {
   PHI_RESULT_WIDGET_DEFINITION,
 } from "./widgets/result/config";
 import {
@@ -293,6 +296,10 @@ export default createPhiAuthoringWidgetModule([
   definePhiAuthoringWidgetModuleLoader(
     PHI_QUICK_LINKS_WIDGET_DEFINITION,
     () => import("./widgets/quick-links/authoring").then((module) => module.PHI_QUICK_LINKS_WIDGET_BUILDER_PLUGIN),
+  ),
+  definePhiAuthoringWidgetModuleLoader(
+    PHI_RECORD_WIDGET_DEFINITION,
+    () => import("./widgets/record/authoring").then((module) => module.PHI_RECORD_WIDGET_BUILDER_PLUGIN),
   ),
   definePhiAuthoringWidgetModuleLoader(
     PHI_RESULT_WIDGET_DEFINITION,
