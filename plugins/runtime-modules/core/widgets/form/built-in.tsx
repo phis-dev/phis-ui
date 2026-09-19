@@ -99,7 +99,11 @@ export async function PhiFormWidget({
    */
   const wrapFormUiProvider = (node: ReactNode) => {
     const framed = (
-      <PhiFormWidgetFrame submit={config?.submit ?? null} links={resolvedLinks}>
+      <PhiFormWidgetFrame
+        submit={config?.submit ?? null}
+        links={resolvedLinks}
+        layout={resolvedForm.definition.descriptor.layout}
+      >
         {node}
       </PhiFormWidgetFrame>
     );

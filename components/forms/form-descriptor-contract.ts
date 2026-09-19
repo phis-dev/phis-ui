@@ -742,3 +742,29 @@ export function phiFormControlGridColumn(range: PhiFormGridRange, followsLayout:
 export function phiFormGridColumn(range: PhiFormGridRange) {
   return `${range.start} / ${range.end}`;
 }
+
+/** The custom properties the Form Widget writes for the row its submit and links stand in. */
+export const PHI_FORM_ACTIONS_COLUMNS_PROPERTY = "--phi-form-actions-columns";
+
+/**
+ * Which columns the Widget's submit and its links stand in, at one measured width.
+ *
+ * `start` means under the inputs and not at the form's left edge, so the row takes the layout's own
+ * control range -- the same tracks a field that says nothing about itself puts its control on, read the
+ * same way, including the label column a Form Layout may have moved. A form whose labels stand above
+ * their controls puts those controls on line 1, and the button goes there with them: the row cannot
+ * name the label column outright, because in that form there is none to stand after.
+ */
+export function phiFormActionsGridColumn(
+  layout: PhiResolvedFormLayout,
+  mode: PhiFormResponsiveMode,
+) {
+  const label = layout.label[mode];
+  const control = layout.control[mode];
+  return phiFormControlGridColumn(control, phiFormFieldFollowsLayoutColumns({
+    placement: undefined,
+    label,
+    control,
+    stacked: phiFormGridRangesOverlap(label, control),
+  }));
+}

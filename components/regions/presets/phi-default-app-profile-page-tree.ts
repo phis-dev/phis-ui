@@ -49,7 +49,7 @@ export async function buildPhiDefaultAppProfilePageTree({
           nodeKey: "widgetName",
           formId: PHI_APP_FORM_IDS.profileName,
           label: labels.name,
-          submitLabel: labels.name,
+          submitLabel: labels.save,
           /*
            * What the account says today, read from the viewer the page was rendered for. The Form
            * asks the server for nothing: whoever is asking is who the answer is about, which is what

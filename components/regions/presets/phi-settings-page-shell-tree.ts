@@ -22,20 +22,20 @@ export type PhiSettingsPageShellWidgetSection = {
 
 /**
  * A descriptor-Form section: the shell places the generic `form` Widget in handler execution
- * mode and wires a primary submit Button to it over the standard submit signal channel, so
- * every Settings form saves the same way without per-Module signal plumbing.
+ * mode and lets it carry its own submit, so every Settings form saves the same way without
+ * per-Module signal plumbing.
  */
 type PhiSettingsPageShellFormSectionBase = {
   kind: "form";
-  /** Preset-locally unique node key; the submit Button derives `<nodeKey>Submit`. */
+  /** Preset-locally unique node key for the section's Form Widget instance id. */
   nodeKey: string;
   formId: string;
   label: string;
   initialValues?: Record<string, unknown>;
   /**
    * Extra form Widget config keys (for example a `source` binding plus `openActionKey` for a
-   * record-editing Settings form). `signalRoutes` entries are appended to the shell's standard
-   * submit wiring instead of replacing it.
+   * record-editing Settings form). `signalRoutes` entries are appended to whatever the shell
+   * wires itself instead of replacing it.
    */
   configOverrides?: Record<string, unknown> & {
     signalRoutes?: {
@@ -51,6 +51,11 @@ type PhiSettingsPageShellFormSectionBase = {
  * Several fields are a thought somebody finishes before it is written down, so they are saved
  * together with a Button. One switch is the whole thought: flipping it is the decision, and a Save
  * beside it would only ask a second time.
+ *
+ * The Button is the Form Widget's own (`submit: { label }`), not a Button Widget in the slot below:
+ * only the Widget knows where the form's label column ends, so only a submit it draws lines up under
+ * the inputs. A Form itself carries no submit -- that is the contract in FORMS.md, and the reason the
+ * label is stated here rather than in the descriptor.
  *
  * The switch is still an ordinary Form -- same descriptor, same handler Provider, same gateway. What
  * differs is one route, which the shell states because only it knows the Form's address: the Form's
@@ -88,7 +93,7 @@ export type PhiSettingsPageShellPanel = {
  * themselves.
  *
  * Each panel wraps its sections in a vertical Layout because a sequential slot renders exactly one
- * child node, while a Form panel is always at least the Form plus its Save Button.
+ * child node, while a panel is a description and then what it is about, or several sections at once.
  */
 export function buildPhiSettingsPageShellTree({
   page,
@@ -120,9 +125,7 @@ export function buildPhiSettingsPageShellTree({
   const widgets = createPhiPresetCmsInstanceIdMap(identity, [
     ...panels.flatMap((panel) => [
       ...(panel.description !== undefined ? [`${panel.nodeKey}Description`] : []),
-      ...panel.sections.flatMap((section) => section.kind === "form"
-        ? (section.submitOnChange ? [section.nodeKey] : [section.nodeKey, `${section.nodeKey}Submit`])
-        : [section.nodeKey]),
+      ...panel.sections.map((section) => section.nodeKey),
     ]),
   ]);
 
@@ -222,6 +225,8 @@ export function buildPhiSettingsPageShellTree({
               config: {
                 formId: section.formId,
                 formConfig: section.initialValues ? { initialValues: section.initialValues } : {},
+                // Already translated, from the page's own label set, so the Widget states it outright.
+                ...(section.submitOnChange ? {} : { submit: { label: section.submitLabel } }),
                 execution: { mode: "handler" },
                 source: null,
                 ...configOverrides,
@@ -239,7 +244,12 @@ export function buildPhiSettingsPageShellTree({
                     ...(extraSignalRoutes?.emits ?? []),
                   ],
                   listens: [
-                    {
+                    /*
+                     * Only the switch listens for a submit, because only the switch is sent one. A
+                     * Form Widget's own Button presses the form directly -- one call, no channel --
+                     * so a Settings form that carries its own Save has nothing to hear.
+                     */
+                    ...(section.submitOnChange ? [{
                       routeKey: `${section.nodeKey}-submit`,
                       capabilityId: "submit",
                       scope: "page",
@@ -247,35 +257,12 @@ export function buildPhiSettingsPageShellTree({
                       action: "activate",
                       valueType: "none",
                       receiver: formAddress,
-                    },
+                    }] : []),
                     ...(extraSignalRoutes?.listens ?? []),
                   ],
                 },
               },
             }),
-            ...(section.submitOnChange ? [] : [buildPanelWidget({
-              id: widgets[`${section.nodeKey}Submit`]!,
-              typeKey: "button",
-              label: section.submitLabel,
-              config: {
-                key: "submit",
-                label: section.submitLabel,
-                // Translated already, from the settings page's global label set.
-                translate: false,
-                buttonType: "primary",
-                signalRoutes: {
-                  emits: [{
-                    routeKey: `${section.nodeKey}-submit-button`,
-                    capabilityId: "activate",
-                    scope: "page",
-                    channel: "submit",
-                    action: "activate",
-                    valueType: "none",
-                    receiver: formAddress,
-                  }],
-                },
-              },
-            })]),
           ];
         }),
       ];

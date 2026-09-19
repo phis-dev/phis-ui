@@ -11,6 +11,7 @@ const PHI_PROFILE_PAGE_LABEL_SET = definePhiLabelSet({
     name: "Name",
     language: "Language",
     newsletter: "Newsletter",
+    save: "Save",
   },
 });
 
@@ -21,5 +22,6 @@ export async function getPhiProfilePageLabels(options: PhiGlobalTranslatorOption
     name: labels.name,
     language: labels.language,
     newsletter: labels.newsletter,
+    save: labels.save,
   };
 }

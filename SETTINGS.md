@@ -103,10 +103,14 @@ Layout supports at most 12 slots ([LAYOUTING.md](./LAYOUTING.md)), which is ther
 budget; a Module exceeding it splits into multiple mounted pages.
 
 Panels wrap their sections in a vertical Layout because a sequential Layout slot renders exactly one
-child node, while a Form panel is always at least the Form plus its Save Button.
+child node, while a panel is a description and then what it is about, or several sections at once.
 
-Each Form panel carries its own primary Save button, wired by the shell over the standard submit
-signal channel. Save is per panel; a shared page-level save action is not part of this contract.
+Each Form panel carries its own primary Save button: the shell states it as the Form Widget's `submit`
+([FORMS.md](./FORMS.md)), so it is drawn in the control column under the inputs rather than placed as a
+Button Widget in the slot below. Save is per panel; a shared page-level save action is not part of this
+contract. A panel whose whole content is one switch states `submitOnChange` instead and carries no
+button at all — flipping the switch is the submit, routed from the Form's own `stateChange` back to its
+`submit` channel.
 
 Cross-Module aggregation must never be built as in-page tabs or slot contributions; Modules always
 switch via routes through the sidebar container.

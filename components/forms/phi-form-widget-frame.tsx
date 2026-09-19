@@ -8,6 +8,7 @@ import {
   useMemo,
   useRef,
   useState,
+  type CSSProperties,
   type ReactNode,
 } from "react";
 
@@ -15,6 +16,13 @@ import { PHI_COLOR, PHI_SPACE } from "../../theme/antd-css-var-contract";
 import { PhiButtonControl } from "../controls/phi-button-control";
 import { PhiLink } from "../navigation/phi-link";
 import type { PhiCmsFormWidgetSubmitConfig } from "../../plugins/runtime-modules/core/widgets/form/config";
+import {
+  PHI_FORM_ACTIONS_COLUMNS_PROPERTY,
+  PHI_FORM_RESPONSIVE_MODES,
+  phiFormActionsGridColumn,
+  resolvePhiFormLayout,
+} from "./form-descriptor-contract";
+import type { PhiFormLayoutDescriptor } from "../../types/form-descriptor";
 
 /**
  * What a form body offers the Widget above it, so the Widget can draw a submit for it.
@@ -95,6 +103,12 @@ export type PhiFormWidgetFrameProps = {
   submit?: PhiCmsFormWidgetSubmitConfig | null;
   /** The ways out it offers, drawn in the same column as the submit. */
   links?: readonly PhiFormWidgetLink[];
+  /**
+   * The form's own layout, read for one thing only: which tracks its inputs stand on, so the submit
+   * can stand on the same ones. The body is rendered on the Client and cannot tell the frame, and the
+   * frame is the element both are inside, so this is where the answer has to arrive.
+   */
+  layout?: PhiFormLayoutDescriptor;
   children: ReactNode;
 };
 
@@ -106,17 +120,24 @@ export type PhiFormWidgetFrameProps = {
  * column ends to line up under the inputs, and only an element above both can tell them.
  *
  * The submit opens its own row of the same twenty-four tracks. Its own grid rather than a row inside the
- * form: the form describes fields, and a submit is not one. Sharing the track count and the label-column
- * property is all it takes for the button to line up under the inputs and move with the column the Layout
- * decides, because that column is a custom property both of them read.
+ * form: the form describes fields, and a submit is not one. Which of those tracks it takes is written
+ * here, from the form's layout, so it lines up under the inputs at each width and still moves with the
+ * column a Form Layout decides -- that column is a custom property both of them read.
  */
-export function PhiFormWidgetFrame({ submit, links, children }: PhiFormWidgetFrameProps) {
+export function PhiFormWidgetFrame({ submit, links, layout, children }: PhiFormWidgetFrameProps) {
   const [registration, setRegistration] = useState<PhiFormWidgetSubmitRegistration | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const slot = useMemo<PhiFormWidgetSubmitSlot>(
     () => ({ register: setRegistration, setSubmitting }),
     [],
   );
+  const actionsColumns = useMemo(() => {
+    const resolved = resolvePhiFormLayout(layout);
+    return Object.fromEntries(PHI_FORM_RESPONSIVE_MODES.map((mode) => [
+      `${PHI_FORM_ACTIONS_COLUMNS_PROPERTY}-${mode}`,
+      phiFormActionsGridColumn(resolved, mode),
+    ]));
+  }, [layout]);
 
   const submitButton = submit && registration ? (
     <div className="phi-form-descriptor-actions">
@@ -186,7 +207,8 @@ export function PhiFormWidgetFrame({ submit, links, children }: PhiFormWidgetFra
             minWidth: 0,
             containerType: "inline-size",
             containerName: "phi-form",
-          }}
+            ...actionsColumns,
+          } as CSSProperties}
         >
           {children}
         </div>
