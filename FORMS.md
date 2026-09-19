@@ -301,6 +301,7 @@ the only way a Form is placed. There are no domain Form Widgets. Its config:
 | --- | --- |
 | `formId` | The Form to render. |
 | `submit` | `{ label, align }` or absent. A submit button drawn by the Widget in the control column; `align` is `start` (default), `center`, or `end`. |
+| `feedback` | `{ mode, successText? }` or absent. Absent is silent. `mode` is `message` (a transient message) or `notification`; `successText` is what a success says where the descriptor's `success` says nothing. |
 | `links` | `[{ key, href, requiresFeature? }]`, drawn below the submit. The text is `actions.<key>Label` of the Form's label set; a link whose `requiresFeature` is not published by an active Module is left out. |
 | `formConfig` | Placement config: `initialValues`, `initialValuesFromQuery`, values read by `config` text, and values an `optionsProvider` reads (see [Fields](#fields)). |
 | `execution` | `{ mode: "handler" \| "signal", phase: "submit" \| "confirm" }`, default `handler` / `submit`. |
@@ -332,6 +333,14 @@ the only way a Form is placed. There are no domain Form Widgets. Its config:
   `visibleWhen` in the page tree decides whether it is shown, and the Form Preview Widget
   (`@phis/ui/modules/core/widgets/form-preview`) reads what a link token is about through the relay and
   reports `{ status, ok }` as condition state for neighbouring nodes to condition on.
+- Where it says what happened is a question about the placement, not about the Form. In place is the
+  default: an error above the fields, and the descriptor's `success` panel where it has one. That is
+  enough on a Page somebody opened in order to submit it. A Settings panel is not that case -- it may be
+  collapsed, it is one of several, and a panel that saves on change has no success panel at all -- so
+  the Settings shell gives every Form section `feedback`, and the Widget reports the outcome to the Site
+  Core Runtime Controller as well ([SIGNALS.md](./SIGNALS.md)). A success says the descriptor's own
+  wording where it has some, otherwise the placement's `successText`; a failure says what the answer
+  said, which is the only wording that exists for it.
 - A Form never navigates. A Controller that reads `submitSuccess` and knows where the visitor goes next
   asks the Site Core Runtime Controller on `path`/`activate` (see [SIGNALS.md](./SIGNALS.md)).
 

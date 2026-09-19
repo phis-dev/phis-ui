@@ -41,6 +41,14 @@ type PhiSettingsPageShellFormSectionBase = {
    */
   formConfig?: Record<string, unknown>;
   /**
+   * What a saved panel says, for a Form whose descriptor says nothing on success.
+   *
+   * Settings panels report through the application feedback rather than only in place: a panel is one
+   * of several, and a switch that saves on change has no success panel to show. Where the Form's own
+   * descriptor has success wording, that wins -- it is more specific than "Saved" ever is.
+   */
+  savedMessage?: string;
+  /**
    * Extra form Widget config keys (for example a `source` binding plus `openActionKey` for a
    * record-editing Settings form). `signalRoutes` entries are appended to whatever the shell
    * wires itself instead of replacing it.
@@ -238,6 +246,14 @@ export function buildPhiSettingsPageShellTree({
                 },
                 // Already translated, from the page's own label set, so the Widget states it outright.
                 ...(section.submitOnChange ? {} : { submit: { label: section.submitLabel } }),
+                /*
+                 * Every Settings panel reports what a save did, because nothing else here does: the
+                 * panel may be collapsed, it may be one of six, and a switch has no success panel.
+                 */
+                feedback: {
+                  mode: "message",
+                  ...(section.savedMessage ? { successText: section.savedMessage } : {}),
+                },
                 execution: { mode: "handler" },
                 source: null,
                 ...configOverrides,

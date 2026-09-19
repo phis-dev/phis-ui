@@ -87,6 +87,7 @@ export async function buildPhiDefaultAppProfilePageTree({
           formId: PHI_APP_FORM_IDS.profileLocale,
           label: labels.language,
           submitLabel: localeLabels.submitLabel,
+          savedMessage: labels.saved,
           initialValues: { locale: preferredLocale },
           /*
            * The Site's languages, handed to the field because this Page knows them and the registered
@@ -126,6 +127,7 @@ export async function buildPhiDefaultAppProfilePageTree({
           formId: PHI_APP_FORM_IDS.profileNewsletter,
           label: labels.newsletter,
           submitOnChange: true,
+          savedMessage: labels.saved,
           initialValues: {
             newsletterOptIn: Boolean(runtime.viewer.newsletterOptIn),
           },

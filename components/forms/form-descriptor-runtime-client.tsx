@@ -24,6 +24,7 @@ import { usePhiRuntimeFormClient } from "./runtime-form-client";
 import { PhiAlertControl } from "../controls/phi-alert-control";
 import { usePhiRuntimeFormBinding } from "./runtime-form-binding";
 import { usePhiRuntimePageConditionState } from "../runtime/runtime-page-condition-state";
+import { usePhiApplicationFeedback } from "../runtime/use-phi-application-feedback";
 import type { PhiFormGuardProps } from "./contracts";
 import { requestPhiFormGuard } from "./form-guard-client";
 import { PhiSkeletonControl } from "../controls/phi-skeleton-control";
@@ -342,8 +343,40 @@ export function PhiFormDescriptorRuntimeClient({
    * stays to read.
    */
   const success = descriptor.success;
-  const reportSuccess = useCallback(() => {
+  /*
+   * The same outcome, said a second time where the reader is looking.
+   *
+   * Only where the placement asked for it: a Form on a Page of its own has the reader's attention and
+   * says everything it needs to say in place, while a Settings panel is one of several and a switch
+   * that saves on change shows nothing at all. What a success says is the descriptor's own words where
+   * it has them, and otherwise the placement's; a failure says what went wrong, which only the answer
+   * knows.
+   */
+  const feedback = widgetConfig?.feedback ?? null;
+  const { showMessage, showNotification } = usePhiApplicationFeedback();
+  const report = useCallback((
+    level: "success" | "error",
+    content: string,
+    correlationId: string | null,
+  ) => {
+    if (!feedback || !content) {
+      return;
+    }
+    const options = correlationId ? { correlationId } : undefined;
+    if (feedback.mode === "notification") {
+      showNotification({ level, title: content }, options);
+      return;
+    }
+    showMessage({ level, content }, options);
+  }, [feedback, showMessage, showNotification]);
+
+  const reportSuccess = useCallback((correlationId: string | null = null) => {
     clearDraft();
+    report(
+      "success",
+      (success ? resolvePhiFormText(success.title, labels) : null) ?? feedback?.successText ?? "",
+      correlationId,
+    );
     if (!success) {
       return;
     }
@@ -351,7 +384,7 @@ export function PhiFormDescriptorRuntimeClient({
     if (success.reset) {
       formRef.current?.resetFields();
     }
-  }, [clearDraft, success]);
+  }, [clearDraft, feedback?.successText, labels, report, success]);
 
   const content = loading ? <PhiSkeletonControl lines={4} withTitle /> : (
     <>
@@ -403,12 +436,13 @@ export function PhiFormDescriptorRuntimeClient({
           if (widgetConfig?.execution.mode === "signal") {
             emitCapability("submitValues", { values }, correlationId);
             emitCapability("submitSuccess", { ok: true, payload: null }, correlationId);
-            reportSuccess();
+            reportSuccess(correlationId);
             return;
           }
           if (!formId) {
             const message = "Form submit handler is not configured.";
             setError(message);
+            report("error", message, correlationId);
             emitCapability("submitError", { message }, correlationId);
             return;
           }
@@ -431,7 +465,7 @@ export function PhiFormDescriptorRuntimeClient({
               { ok: result.ok, status: result.status, payload: result.payload ?? null },
               correlationId,
             );
-            reportSuccess();
+            reportSuccess(correlationId);
             const rowIdentity = recordIdentityRef.current;
             if (source && (rowIdentity != null || !widgetConfig?.openActionKey)) {
               void loadRecord(rowIdentity);
@@ -439,6 +473,7 @@ export function PhiFormDescriptorRuntimeClient({
           } catch (submitError) {
             const message = submitError instanceof Error ? submitError.message : "Form submission failed.";
             setError(message);
+            report("error", message, correlationId);
             emitCapability("submitError", { message }, correlationId);
           }
         }}

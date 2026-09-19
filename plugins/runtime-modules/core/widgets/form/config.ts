@@ -47,9 +47,28 @@ export type PhiCmsFormWidgetLinkConfig = {
   requiresFeature?: string;
 };
 
+/**
+ * Whether a submit is worth saying out loud, and how.
+ *
+ * A Form already shows what happened where it stands: an error above the fields, and a success panel
+ * where its descriptor has one. That is enough on a Page somebody came to in order to submit it. It is
+ * not enough in Settings, where a panel is one of several and a switch that saves on change has nothing
+ * to show at all -- the Widget that used to own the profile name reported through the application
+ * feedback, and the registered Form that replaced it said nothing.
+ *
+ * So the placement decides, the way it decides whether there is a submit button: a Form on a Page of
+ * its own stays quiet, a Form in a Settings panel reports. `successText` is what a success says where
+ * the descriptor says nothing, already translated by whoever placed it.
+ */
+export type PhiCmsFormWidgetFeedbackConfig = {
+  mode: "message" | "notification";
+  successText?: string;
+};
+
 export type PhiCmsFormWidgetConfig = {
   formId: PhiFormId | null;
   submit: PhiCmsFormWidgetSubmitConfig | null;
+  feedback: PhiCmsFormWidgetFeedbackConfig | null;
   links: readonly PhiCmsFormWidgetLinkConfig[];
   formConfig: Record<string, unknown>;
   execution: {
@@ -86,6 +105,10 @@ export function parsePhiFormWidgetConfig(rawConfig: Record<string, unknown>): Ph
 
   const submit = readRecord(rawConfig.submit);
   const submitAlign = submit.align;
+  const feedback = readRecord(rawConfig.feedback);
+  const feedbackSuccessText = typeof feedback.successText === "string" && feedback.successText.trim()
+    ? feedback.successText.trim()
+    : null;
 
   return {
     formId: isPhiFormId(normalizedFormId) ? normalizedFormId : null,
@@ -94,6 +117,11 @@ export function parsePhiFormWidgetConfig(rawConfig: Record<string, unknown>): Ph
       align: submitAlign === "center" || submitAlign === "end"
         ? submitAlign
         : "start",
+    },
+    // Absent means silent, so a Form that says nothing about feedback keeps reporting where it stands.
+    feedback: rawConfig.feedback == null ? null : {
+      mode: feedback.mode === "notification" ? "notification" : "message",
+      ...(feedbackSuccessText ? { successText: feedbackSuccessText } : {}),
     },
     links: Array.isArray(rawConfig.links)
       ? rawConfig.links.flatMap((entry) => {
