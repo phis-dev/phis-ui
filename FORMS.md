@@ -350,12 +350,19 @@ Inputs (`runtimeSignals.listens`):
 
 | Capability | Channel / action | Value |
 | --- | --- | --- |
-| `submit` | `submit/activate` | `none` |
+| `submit` | `submit/activate` | `none`; ignored while the values in the form are ones validation has already refused (see below) |
 | `reset` | `reset/activate` | `none` |
 | `recordOpen` | `action/activate` | `json`, `table-action` schema |
 | `close` | `dialog/close` | `none`; resets the Form and emits `cancel` |
 | `reload` | `reload/activate` | `none`; reloads the open record |
 | `conditionStateChange` | `condition/change` | `json`, `runtime-condition-state` schema |
+
+- A `submit` signal is dropped while the form holds values validation has already refused and nothing has
+  moved since. It is the same submit arriving twice, not a second one: validation writes its errors onto
+  the fields, Ant Design reports that as a field change, `stateChange` says so, and a placement that
+  reads `stateChange` as "save this" -- which is what `submitOnChange` does -- asks again, as fast as the
+  browser allows. The block lifts on the next value change. A person pressing the Form's own Save is
+  never blocked: they are asking to see the reason again.
 
 Outputs (`runtimeSignals.emits`):
 

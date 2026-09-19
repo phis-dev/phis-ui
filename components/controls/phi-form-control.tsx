@@ -329,7 +329,17 @@ export const PhiFormControl = forwardRef<PhiFormControlHandle, PhiFormControlPro
       const fieldKey = String(name[0] ?? "");
       return fieldKey && messages.length > 0 ? [[fieldKey, messages]] : [];
     }));
-    onStateChange?.({ dirty: form.isFieldsTouched(), valid: false });
+    /*
+     * A failed submit reports itself and nothing else.
+     *
+     * It used to also say the state had changed, which was a third way of saying what
+     * `onValidationFailed` says here and what `onFieldsChange` says when the errors land on the
+     * fields. Unlike those two it fired unconditionally, on every attempt, whether anything had
+     * changed or not -- and a placement is free to read "the state changed" as "the person changed
+     * something, save it". One such placement exists: a Settings panel that submits on change. There,
+     * a rule that rejects the value turned into a submit that failed, said the state had changed, and
+     * was submitted again, two hundred times a second.
+     */
     onValidationFailed?.({ valid: false, errors });
   };
 

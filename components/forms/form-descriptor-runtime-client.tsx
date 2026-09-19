@@ -140,6 +140,16 @@ export function PhiFormDescriptorRuntimeClient({
     }
   }, [emitSignal, widgetConfig]);
 
+  /*
+   * That the values now in the form have already been rejected, and nothing has changed since.
+   *
+   * It exists because a submit changes the state it is triggered by: validation writes its errors onto
+   * the fields, Ant Design reports that as a field change, and a placement that reads "the state
+   * changed" as "save this" asks for the same submit again -- which fails again, for the same reason,
+   * as fast as the browser can manage. Set when validation refuses, cleared as soon as a value moves.
+   */
+  const rejectedRef = useRef(false);
+
   const requestSubmit = useCallback((correlationId = createPhiSignalCorrelationId()) => {
     submitCorrelationRef.current = correlationId;
     formRef.current?.submit();
@@ -241,7 +251,13 @@ export function PhiFormDescriptorRuntimeClient({
       const rowIdentity = recordIdentityRef.current;
       if (rowIdentity != null) void loadRecord(rowIdentity);
     } else if (route.capabilityId === "submit") {
-      requestSubmit(signal.correlationId);
+      /*
+       * Asked again for values already refused, with nothing changed since, this is not a second
+       * submit -- it is the first one arriving twice, and answering it is how the loop above spins. A
+       * person pressing Save is not filtered here: they are asking to be shown the reason again, and
+       * `requestSubmit` runs for them either way.
+       */
+      if (!rejectedRef.current) requestSubmit(signal.correlationId);
     } else if (route.capabilityId === "reset") {
       requestReset(signal.correlationId);
     } else if (
@@ -415,6 +431,8 @@ export function PhiFormDescriptorRuntimeClient({
         }}
         conditionControllerStates={conditionControllerStates}
         onValuesChange={(changed, all) => {
+          // A value moved, so whatever validation refused before is no longer what is being asked.
+          rejectedRef.current = false;
           runtimeBinding.onValuesChange(changed, all);
           if (draftStorageKey) {
             try {
@@ -431,6 +449,7 @@ export function PhiFormDescriptorRuntimeClient({
           if (!submitting) submitCorrelationRef.current = null;
         }}
         onValidationFailed={(value) => {
+          rejectedRef.current = true;
           emitCapability("validationFailed", value, submitCorrelationRef.current);
           submitCorrelationRef.current = null;
         }}
