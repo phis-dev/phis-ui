@@ -1,7 +1,7 @@
 "use client";
 
 import { CloseOutlined, DownOutlined, EditOutlined, HolderOutlined, LeftOutlined, RightOutlined, SaveOutlined, UpOutlined } from "@ant-design/icons";
-import { Button, Flex, Table, Tooltip } from "antd";
+import { Button, Flex, Table } from "antd";
 import type { TableColumnsType } from "antd";
 import type { TableRowSelection } from "antd/es/table/interface";
 import type { InputRef } from "antd/es/input";
@@ -59,6 +59,7 @@ import { PhiColorControl } from "./phi-color-control";
 import { PhiCheckboxControl } from "./phi-checkbox-control";
 import { PhiCheckboxGroupControl } from "./phi-checkbox-group-control";
 import { PhiDatePickerControl } from "./phi-date-picker-control";
+import { PhiButtonControl } from "./phi-button-control";
 import { PhiMultiSelectControl } from "./phi-multi-select-control";
 import { PhiIconPickerControl } from "./phi-icon-picker-control";
 import { PhiNumberControl } from "./phi-number-control";
@@ -919,32 +920,29 @@ export function PhiTableControl<TRow extends Record<string, unknown>>({
     const title = canReorder ? (
       <Flex align="center" gap={4}>
         <span>{column.title}</span>
-        <Tooltip title="Move column left">
-          <Button
+        {/* The header sorts when it is clicked, so the reorder click has to stop at the element around it. */}
+        <span onClick={(event) => event.stopPropagation()}>
+          <PhiButtonControl
             type="text"
             size="small"
             icon={<LeftOutlined />}
             disabled={reorderIndex === 0}
-            aria-label="Move column left"
-            onClick={(event) => {
-              event.stopPropagation();
-              onColumnOrderChange?.(moveColumn(columnOrder, column.key, -1));
-            }}
+            ariaLabel="Move column left"
+            tooltip="Move column left"
+            onClick={() => onColumnOrderChange?.(moveColumn(columnOrder, column.key, -1))}
           />
-        </Tooltip>
-        <Tooltip title="Move column right">
-          <Button
+        </span>
+        <span onClick={(event) => event.stopPropagation()}>
+          <PhiButtonControl
             type="text"
             size="small"
             icon={<RightOutlined />}
             disabled={reorderIndex === columnOrder.length - 1}
-            aria-label="Move column right"
-            onClick={(event) => {
-              event.stopPropagation();
-              onColumnOrderChange?.(moveColumn(columnOrder, column.key, 1));
-            }}
+            ariaLabel="Move column right"
+            tooltip="Move column right"
+            onClick={() => onColumnOrderChange?.(moveColumn(columnOrder, column.key, 1))}
           />
-        </Tooltip>
+        </span>
       </Flex>
     ) : column.title;
     return {
@@ -1071,29 +1069,26 @@ export function PhiTableControl<TRow extends Record<string, unknown>>({
       const active = identity != null && String(identity) === String(editingRowIdentity);
       const disabled = editing.isRowDisabled?.(row) ?? false;
       if (!active) {
-        return <Tooltip title={editing.editLabel ?? "Edit row"}>
-          <Button type="text" size="small" icon={<EditOutlined />} aria-label={editing.editLabel ?? "Edit row"}
-            disabled={disabled || identity == null || editingRowIdentity != null}
-            onClick={() => { setEditingRowIdentity(identity); setRowEditPatch({}); }} />
-        </Tooltip>;
+        return <PhiButtonControl type="text" size="small" icon={<EditOutlined />}
+          ariaLabel={editing.editLabel ?? "Edit row"} tooltip={editing.editLabel ?? "Edit row"}
+          disabled={disabled || identity == null || editingRowIdentity != null}
+          onClick={() => { setEditingRowIdentity(identity); setRowEditPatch({}); }} />;
       }
       return <Flex align="center" gap={2}>
-        <Tooltip title={editing.saveLabel ?? "Save row"}>
-          <Button type="text" size="small" icon={<SaveOutlined />} aria-label={editing.saveLabel ?? "Save row"}
-            disabled={disabled}
-            onClick={() => {
-              const originalValues = Object.fromEntries(
-                editableColumns.map((column) => [column.fieldPath, readPhiTableControlValue(row, column.fieldPath)]),
-              );
-              editing.onCommit(row, originalValues, rowEditPatch);
-              setEditingRowIdentity(null);
-              setRowEditPatch({});
-            }} />
-        </Tooltip>
-        <Tooltip title={editing.cancelLabel ?? "Cancel row editing"}>
-          <Button type="text" size="small" icon={<CloseOutlined />} aria-label={editing.cancelLabel ?? "Cancel row editing"}
-            onClick={() => { setEditingRowIdentity(null); setRowEditPatch({}); }} />
-        </Tooltip>
+        <PhiButtonControl type="text" size="small" icon={<SaveOutlined />}
+          ariaLabel={editing.saveLabel ?? "Save row"} tooltip={editing.saveLabel ?? "Save row"}
+          disabled={disabled}
+          onClick={() => {
+            const originalValues = Object.fromEntries(
+              editableColumns.map((column) => [column.fieldPath, readPhiTableControlValue(row, column.fieldPath)]),
+            );
+            editing.onCommit(row, originalValues, rowEditPatch);
+            setEditingRowIdentity(null);
+            setRowEditPatch({});
+          }} />
+        <PhiButtonControl type="text" size="small" icon={<CloseOutlined />}
+          ariaLabel={editing.cancelLabel ?? "Cancel row editing"} tooltip={editing.cancelLabel ?? "Cancel row editing"}
+          onClick={() => { setEditingRowIdentity(null); setRowEditPatch({}); }} />
       </Flex>;
     },
   }] : [], [editableColumns, editing, editingRowIdentity, rowEditPatch, rowIdentityPath]);

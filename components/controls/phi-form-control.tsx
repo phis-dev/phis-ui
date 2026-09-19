@@ -3,7 +3,6 @@
 import { Fragment, forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState, type CSSProperties } from "react";
 import {
   Form,
-  Tooltip,
   theme as antdTheme,
   type FormProps,
   type FormInstance,
@@ -25,7 +24,7 @@ import {
   usePhiFormProviderRegistry,
 } from "../forms/form-provider-registry";
 import { PhiAlertControl } from "./phi-alert-control";
-import { PHI_DESCRIPTION_TOOLTIP_ICON } from "./phi-description-tooltip-icon";
+import { PhiDescriptionHint } from "./phi-description-tooltip-icon";
 import {
   PHI_FORM_FIELD_PROVIDER_KEYS,
   PHI_FORM_VALIDATION_PROVIDER_KEYS,
@@ -94,11 +93,7 @@ function renderLabel(
   return (
     <span style={{ display: "inline-flex", alignItems: "center", gap: "0.35em" }}>
       <span>{label}</span>
-      <Tooltip title={description}>
-        <span role="img" aria-label={description} style={{ display: "inline-flex", cursor: "help" }}>
-          {PHI_DESCRIPTION_TOOLTIP_ICON}
-        </span>
-      </Tooltip>
+      <PhiDescriptionHint description={description} />
     </span>
   );
 }

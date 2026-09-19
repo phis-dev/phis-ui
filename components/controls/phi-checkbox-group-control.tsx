@@ -1,9 +1,9 @@
 "use client";
 
-import { Checkbox, Flex, Tooltip } from "antd";
+import { Checkbox, Flex } from "antd";
 
-import { PhiIcon } from "../shell/phi-icon";
 import type { PhiControlOption } from "./phi-control-options";
+import { PhiControlOptionContent } from "./phi-control-option-content";
 
 export type PhiCheckboxGroupControlProps<TValue extends string | number = string> = {
   value?: readonly TValue[];
@@ -30,19 +30,11 @@ export function PhiCheckboxGroupControl<TValue extends string | number = string>
       style={{ width: "100%" }}
     >
       <Flex vertical={vertical} gap="small" wrap={vertical ? false : "wrap"}>
-        {options.map((option) => {
-          const content = (
-            <span style={{ display: "inline-flex", alignItems: "center", gap: "var(--ant-padding-xxs)" }}>
-              {option.icon ? <PhiIcon name={option.icon} size={14} /> : null}
-              {option.label}
-            </span>
-          );
-          return (
-            <Checkbox key={option.value} value={option.value} disabled={option.disabled}>
-              {option.description ? <Tooltip title={option.description}>{content}</Tooltip> : content}
-            </Checkbox>
-          );
-        })}
+        {options.map((option) => (
+          <Checkbox key={option.value} value={option.value} disabled={option.disabled}>
+            <PhiControlOptionContent option={option} presentation="option" />
+          </Checkbox>
+        ))}
       </Flex>
     </Checkbox.Group>
   );

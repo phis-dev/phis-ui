@@ -49,9 +49,9 @@ built. Remove an entry when it is done.
   and every direct import makes replacing it harder:** with a Control it is an adapter change, without
   one it is a tree-wide edit.
 
-  It started at 28 named primitives against about 25 uncontrolled ones. It now names 38, closes five
-  more to a single owner file, and leaves ten: `Avatar`, `Card`, `Col`, `Collapse`, `Descriptions`,
-  `Layout`, `List`, `Row`, `Space`, `Tooltip`.
+  It started at 28 named primitives against about 25 uncontrolled ones. It now names 39, closes five
+  more to a single owner file, and leaves nine: `Avatar`, `Card`, `Col`, `Collapse`, `Descriptions`,
+  `Layout`, `List`, `Row`, `Space`.
 
   `App`, `ConfigProvider` and `theme` stay direct: they are the root and theme adapters AGENTS.md
   already exempts, not feature surface.
@@ -61,7 +61,7 @@ built. Remove an entry when it is done.
 
   - **A Control**, where there is platform semantics to own -- a normalized contract, defaults the
     platform should decide once rather than at each call site:
-    ~~`Upload`, `Progress`, `Skeleton`, `Empty`~~ done; `Tooltip`, `Collapse`, `Descriptions`, `Card`,
+    ~~`Upload`, `Progress`, `Skeleton`, `Empty`, `Tooltip`~~ done; `Collapse`, `Descriptions`, `Card`,
     `Avatar` and `Space.Compact` (which is a different thing from `Space`, see below) remain.
   - **A thin pass-through**, where there is nothing to decide and the wrapper exists only so the import
     points at us: ~~`PhiTypographyControl` (~63 files), `Flex` (~60), `Divider`, `Spin`, `QRCode`,
@@ -112,6 +112,36 @@ built. Remove an entry when it is done.
     **search failure** (`description={iconifySearchError}`). A failure is not an absence -- it can be
     retried, and drawing it as "no results" tells somebody their search was fine when the call broke.
     `PhiAlertControl` is what that wants, inside a 240px scroll area.
+  - ~~`Tooltip`~~ built as `PhiNameControl`, which is **not** a tooltip wrapper. A tooltip is never the
+    thing; it is an attribute of a thing, and a wrapper anyone may hang on anything is what produced the
+    divergence below. The Control instead **names a graphic that shows no text** -- an icon standing in
+    for a column header, an information glyph, a swatch -- and may therefore render `aria-label`, because
+    an accessible name cannot be handed to a child from outside the element it belongs to. That is the
+    line: something that names itself and wants only the hover text uses `PhiButtonControl`'s `tooltip`
+    or `PhiLabeledControl`'s `description` with no label, which is the house's tooltip-only shape and was
+    already there.
+
+    **Five hand-written copies of "named graphic", four different answers.** The spoken name was the
+    description at one site, the literal word "Information" at another and "Option description" at a
+    third; one took focus and four did not, so four hints were unreachable without a pointer; one drew
+    the help cursor. Nothing chose any of it. `PhiNameControl` settles all four, and `PhiDescriptionHint`
+    composes it with the information glyph for the four surfaces that carry a `description`.
+
+    **`option.description` had a rule already and nobody had written it down.** In a list a person scans,
+    pointing at a row is already the cursor, so the description needs a deliberate target of its own; a
+    standing option -- a checkbox, a radio -- is pointed at on purpose, so the option itself carries it.
+    Both were being followed; what was duplicated was the rendering, and it had drifted: the checkbox and
+    radio groups drew an option's icon but not its preview swatch. Both now go through
+    `PhiControlOptionContent`, whose `presentation` gained `option` beside `dropdown` and `selection`.
+
+    **`PhiButtonControl` now catches the pointer when it is disabled.** The primitive hangs the tooltip on
+    the button, a disabled button emits no pointer events, and a disabled button is exactly when the hover
+    text matters most -- it is the only place the reason it is off can be read. The table Widget had been
+    working around this by wrapping the whole action; the wrapper now lives in the Control and only
+    appears when the button is actually inert.
+
+    One behaviour change worth knowing: the colour swatches in `PhiColorControl` carried a native `title`
+    *and* an antd Tooltip with two different strings. They now say one thing, the fuller of the two.
   - `Typography` is `PhiTypographyControl`, decided. `PhiTextControl` is **taken** -- it is antd `Input`.
     So is `PhiAnchorControl`: `components/controls/phi-anchor-control-contract.ts` is about placement
     anchors (`topLeft`…`bottomRight`), not antd `Anchor`. Both names are settled before the first commit,
@@ -137,9 +167,9 @@ built. Remove an entry when it is done.
   (`GlobalToken`, `AliasToken`) stay exempt as part of the theme adapter.
 
   Order: ~~the two big pass-throughs (`Flex`, `PhiTypographyControl`), the five owner entries, the
-  trivial wrappers, `PhiFileDropControl` with `Progress`, `PhiSkeletonControl`, `PhiEmptyControl`~~ --
-  done. Next `Tooltip`/`Card`/`Collapse`/`Descriptions`, then the deletions, then `Listy`, and the
-  allowlist last.
+  trivial wrappers, `PhiFileDropControl` with `Progress`, `PhiSkeletonControl`, `PhiEmptyControl`,
+  `PhiNameControl`~~ -- done. Next `Card`/`Collapse`/`Descriptions`, then the deletions, then `Listy`,
+  and the allowlist last.
 
   Until the Controls exist, direct use in a Widget or Layout stays correct and the validator keeps
   permitting it: this is a planned narrowing, not a rule being broken today. Update the validator's own

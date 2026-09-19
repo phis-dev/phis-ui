@@ -1,10 +1,10 @@
 "use client";
 
-import { Tooltip, Typography } from "antd";
+import { Typography } from "antd";
 import type { ReactNode } from "react";
 
 import { usePhiConfig } from "../root/phi-config-provider";
-import { PHI_DESCRIPTION_TOOLTIP_ICON } from "./phi-description-tooltip-icon";
+import { PhiDescriptionHint } from "./phi-description-tooltip-icon";
 
 export type PhiCollectionHeaderControlProps = {
   title?: ReactNode;
@@ -50,24 +50,7 @@ export function PhiCollectionHeaderControl({
           <Typography.Text strong ellipsis style={{ minWidth: 0 }}>
             {title}
           </Typography.Text>
-          {description ? (
-            <Tooltip title={description}>
-              <span
-                role="img"
-                aria-label="Information"
-                tabIndex={0}
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  color: token.colorTextSecondary,
-                  cursor: "help",
-                  flex: "none",
-                }}
-              >
-                {PHI_DESCRIPTION_TOOLTIP_ICON}
-              </span>
-            </Tooltip>
-          ) : null}
+          {description ? <PhiDescriptionHint description={description} /> : null}
         </div>
       ) : null}
       {hasFilters ? (

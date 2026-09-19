@@ -4,8 +4,18 @@ import type { ReactNode } from "react";
 import { Tooltip, Typography } from "antd";
 
 import { usePhiConfig } from "../root/phi-config-provider";
-import { PHI_DESCRIPTION_TOOLTIP_ICON } from "./phi-description-tooltip-icon";
+import { PhiDescriptionHint } from "./phi-description-tooltip-icon";
 
+/**
+ * A Control with the words around it: a label beside it, a description behind an information glyph.
+ *
+ * **A description without a label is the hover text on its own**, and that is the shape to reach for
+ * when a Control shows no words but still has to say what it is -- a colour swatch, one cell of a
+ * padding grid. It is not a second way to write a tooltip: the Control inside still names itself with
+ * its own `aria-label`, because an accessible name cannot be handed to a child from outside it. A
+ * graphic that has no name of its own is `PhiNameControl` instead, which renders the named element and
+ * can therefore give it both from one string.
+ */
 export function PhiLabeledControl({
   label,
   description,
@@ -57,17 +67,7 @@ export function PhiLabeledControl({
         <Typography.Text ellipsis style={{ minWidth: 0, whiteSpace: "nowrap" }}>
           {label}
         </Typography.Text>
-        {hasDescription ? (
-          <Tooltip title={description}>
-            <span
-              role="img"
-              aria-label={typeof description === "string" ? description : "Information"}
-              style={{ display: "inline-flex", alignItems: "center" }}
-            >
-              {PHI_DESCRIPTION_TOOLTIP_ICON}
-            </span>
-          </Tooltip>
-        ) : null}
+        {hasDescription ? <PhiDescriptionHint description={description} /> : null}
       </span>
       <div
         style={{

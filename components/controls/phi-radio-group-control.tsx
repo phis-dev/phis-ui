@@ -1,10 +1,10 @@
 "use client";
 
-import { Flex, Radio, Tooltip } from "antd";
+import { Flex, Radio } from "antd";
 
-import { PhiIcon } from "../shell/phi-icon";
 import type { PhiControlSize } from "../../types/control";
 import type { PhiControlOption } from "./phi-control-options";
+import { PhiControlOptionContent } from "./phi-control-option-content";
 
 export type PhiRadioGroupControlProps<TValue extends string | number = string> = {
   value?: TValue;
@@ -34,19 +34,11 @@ export function PhiRadioGroupControl<TValue extends string | number = string>({
       style={{ width: "100%" }}
     >
       <Flex vertical={vertical} gap="small" wrap={vertical ? false : "wrap"}>
-        {options.map((option) => {
-          const content = (
-            <span style={{ display: "inline-flex", alignItems: "center", gap: "var(--ant-padding-xxs)" }}>
-              {option.icon ? <PhiIcon name={option.icon} size={14} /> : null}
-              {option.label}
-            </span>
-          );
-          return (
-            <Radio key={option.value} value={option.value} disabled={option.disabled}>
-              {option.description ? <Tooltip title={option.description}>{content}</Tooltip> : content}
-            </Radio>
-          );
-        })}
+        {options.map((option) => (
+          <Radio key={option.value} value={option.value} disabled={option.disabled}>
+            <PhiControlOptionContent option={option} presentation="option" />
+          </Radio>
+        ))}
       </Flex>
     </Radio.Group>
   );

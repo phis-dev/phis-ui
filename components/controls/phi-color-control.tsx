@@ -2,7 +2,7 @@
 
 import { useMemo, useState, type ReactNode } from "react";
 
-import { ColorPicker, Flex, Tooltip, theme } from "antd";
+import { ColorPicker, Flex, theme } from "antd";
 import type { ColorPickerProps } from "antd/es/color-picker";
 import type { ColorValueType, LineGradientType } from "antd/es/color-picker/interface";
 
@@ -11,6 +11,7 @@ import type {
   PhiPickerPlacement,
   PhiPickerTransactionCallbacks,
 } from "./phi-picker-control-contract";
+import { PhiLabeledControl } from "./phi-labeled-control";
 import { PhiSelectControl } from "./phi-select-control";
 import { usePhiImmediatePicker } from "./use-phi-immediate-picker";
 
@@ -242,28 +243,28 @@ export function PhiColorControl({
                     const swatchLabel = selectedPalette.colorLabels?.[index]
                       ?? `${selectedPaletteLabel} ${index + 1}`;
                     return (
-                      <Tooltip key={`${index}-${presetColor}`} title={swatchLabel}>
-                        <span style={{ display: "inline-flex" }}>
-                          <button
-                            type="button"
-                            aria-label={`${swatchLabel}: ${presetColor}`}
-                            aria-pressed={selected}
-                            title={`${swatchLabel}: ${presetColor}`}
-                            disabled={disabled}
-                            onClick={() => picker.changeValue(presetColor)}
-                            style={{
-                              width: 22,
-                              height: 22,
-                              padding: 0,
-                              border: `1px solid ${selected ? token.colorPrimary : token.colorBorder}`,
-                              borderRadius: token.borderRadiusSM,
-                              background: presetColor,
-                              boxShadow: selected ? `0 0 0 2px ${token.colorPrimaryBorder}` : undefined,
-                              cursor: disabled ? "not-allowed" : "pointer",
-                            }}
-                          />
-                        </span>
-                      </Tooltip>
+                      <PhiLabeledControl
+                        key={`${index}-${presetColor}`}
+                        description={`${swatchLabel}: ${presetColor}`}
+                      >
+                        <button
+                          type="button"
+                          aria-label={`${swatchLabel}: ${presetColor}`}
+                          aria-pressed={selected}
+                          disabled={disabled}
+                          onClick={() => picker.changeValue(presetColor)}
+                          style={{
+                            width: 22,
+                            height: 22,
+                            padding: 0,
+                            border: `1px solid ${selected ? token.colorPrimary : token.colorBorder}`,
+                            borderRadius: token.borderRadiusSM,
+                            background: presetColor,
+                            boxShadow: selected ? `0 0 0 2px ${token.colorPrimaryBorder}` : undefined,
+                            cursor: disabled ? "not-allowed" : "pointer",
+                          }}
+                        />
+                      </PhiLabeledControl>
                     );
                   })}
                 </div>

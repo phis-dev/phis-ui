@@ -88,6 +88,7 @@ export function PhiButtonControl({
   const visibleTooltip = typeof label === "string" && typeof tooltip === "string" && label === tooltip
     ? null
     : tooltip;
+  const inert = disabled || (!onClick && !href && htmlType !== "submit");
   const button = (
     <Button
       ref={ref}
@@ -96,7 +97,7 @@ export function PhiButtonControl({
       type={type}
       shape={shape}
       danger={danger}
-      disabled={disabled || (!onClick && !href && htmlType !== "submit")}
+      disabled={inert}
       loading={loading}
       htmlType={htmlType}
       block={block}
@@ -136,5 +137,18 @@ export function PhiButtonControl({
     </Badge>
   ) : linked;
 
-  return visibleTooltip ? <Tooltip title={visibleTooltip}>{badged}</Tooltip> : badged;
+  if (!visibleTooltip) return badged;
+  /*
+   * A disabled button emits no pointer events, so the tooltip the primitive hangs on it never opens --
+   * and a disabled button is exactly when the hover text matters most, because it is the only place the
+   * reason it is off can be read. The wrapper is what catches the pointer instead, and it exists only
+   * for that: an enabled button keeps the plain shape it always had.
+   */
+  return (
+    <Tooltip title={visibleTooltip}>
+      {inert
+        ? <span style={{ display: "inline-flex", cursor: "not-allowed" }}>{badged}</span>
+        : badged}
+    </Tooltip>
+  );
 }

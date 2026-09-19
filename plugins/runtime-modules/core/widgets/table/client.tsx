@@ -4,7 +4,8 @@ import { ReloadOutlined, UndoOutlined } from "@ant-design/icons";
 import type { PhiTableWidgetLabels } from "../../../../../components/widgets/label-types/table";
 import { PHI_TABLE_WIDGET_DEFAULT_LABELS } from "../../../../../components/widgets/label-types/table";
 import { formatPhiTableWidgetLabel } from "../../../../../components/widgets/label-types/table";
-import { App, Space, Tooltip } from "antd";
+import { App, Space } from "antd";
+import { PhiNameControl } from "../../../../../components/controls/phi-name-control";
 import { PhiTagControl } from "../../../../../components/controls/phi-tag-control";
 import { Fragment, useCallback, useEffect, useEffectEvent, useMemo, useState, type ReactNode } from "react";
 
@@ -211,9 +212,7 @@ function buildTableColumnTitle(column: PhiTableColumnDefinition) {
   const icon = <PhiIcon name={column.titleIcon} />;
   if (column.titleDisplay === "icon") {
     return (
-      <Tooltip title={column.title}>
-        <span role="img" aria-label={column.title}>{icon}</span>
-      </Tooltip>
+      <PhiNameControl name={column.title}>{icon}</PhiNameControl>
     );
   }
   return (
@@ -1156,6 +1155,7 @@ function TableAction({ action, disabled = false, disabledReason, templateValue, 
         icon={showIcon ? icon ?? undefined : undefined}
         ariaLabel={action.label}
         label={showLabel ? action.label : null}
+        tooltip={disabledReason ?? (display === "icon" ? action.label : undefined)}
         onClick={() => {
           if (!action.confirm) onActivate();
         }}
@@ -1163,12 +1163,9 @@ function TableAction({ action, disabled = false, disabledReason, templateValue, 
     </span>
   );
   if (action.execution === "link" && action.href) {
-    const labelled = display === "icon" || disabledReason
-      ? <Tooltip title={disabledReason ?? action.label}>{content}</Tooltip>
-      : content;
-    return disabled ? labelled : <PhiLink href={action.href} external={action.newTab} newTab={action.newTab}>{labelled}</PhiLink>;
+    return disabled ? content : <PhiLink href={action.href} external={action.newTab} newTab={action.newTab}>{content}</PhiLink>;
   }
-  const confirmed = action.confirm && !disabled ? (
+  return action.confirm && !disabled ? (
     <PhiConfirmControl title={formatTableActionTemplate(action.confirm.title, templateValue)}
       description={action.confirm.alert ? (
         <Space orientation="vertical" size="small">
@@ -1187,9 +1184,6 @@ function TableAction({ action, disabled = false, disabledReason, templateValue, 
       {content}
     </PhiConfirmControl>
   ) : content;
-  return display === "icon" || disabledReason
-    ? <Tooltip title={disabledReason ?? action.label}>{confirmed}</Tooltip>
-    : confirmed;
 }
 
 function TableBindingTool({ field, tool, sourceConfig, value, size, onChange, onCreate }: {

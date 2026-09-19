@@ -8,7 +8,7 @@ import {
   PlusOutlined,
   UnorderedListOutlined,
 } from "@ant-design/icons";
-import { Space, Tooltip } from "antd";
+import { Space } from "antd";
 import { useCallback, useMemo, useRef, useState, type Dispatch, type ReactNode, type SetStateAction } from "react";
 
 import {
@@ -198,17 +198,15 @@ function PhiStaticOptionsTable({ disabled }: { disabled: boolean }) {
       title: "Actions", key: "actions", role: "actions", fieldPath: "rowId", sizing: { mode: "fixed", width: 72 }, fixed: "right",
       render: (_value, row) => (
         <Space size={0} align="center">
-          <Tooltip title={row.disabled ? "Enable option" : "Disable option"}>
-            <PhiButtonControl type="text" size="small" icon={row.disabled ? <EyeInvisibleOutlined /> : <EyeOutlined />}
-              ariaLabel={row.disabled ? `Enable ${String(row.label)}` : `Disable ${String(row.label)}`} disabled={disabled}
-              onClick={() => { void binding.executeAction({ kind: "action", actionKey: "toggle", rowIdentity: String(row.rowId), selectedRowIdentities: [], query: binding.resolvedQuery }); }}
-            />
-          </Tooltip>
-          <Tooltip title="Delete option">
-            <PhiButtonControl type="text" danger size="small" icon={<DeleteOutlined />} ariaLabel={`Delete ${String(row.label || row.value)}`} disabled={disabled}
-              onClick={() => { void binding.executeAction({ kind: "action", actionKey: "delete", rowIdentity: String(row.rowId), selectedRowIdentities: [], query: binding.resolvedQuery }); }}
-            />
-          </Tooltip>
+          <PhiButtonControl type="text" size="small" icon={row.disabled ? <EyeInvisibleOutlined /> : <EyeOutlined />}
+            ariaLabel={row.disabled ? `Enable ${String(row.label)}` : `Disable ${String(row.label)}`} disabled={disabled}
+            tooltip={row.disabled ? "Enable option" : "Disable option"}
+            onClick={() => { void binding.executeAction({ kind: "action", actionKey: "toggle", rowIdentity: String(row.rowId), selectedRowIdentities: [], query: binding.resolvedQuery }); }}
+          />
+          <PhiButtonControl type="text" danger size="small" icon={<DeleteOutlined />} ariaLabel={`Delete ${String(row.label || row.value)}`} disabled={disabled}
+            tooltip="Delete option"
+            onClick={() => { void binding.executeAction({ kind: "action", actionKey: "delete", rowIdentity: String(row.rowId), selectedRowIdentities: [], query: binding.resolvedQuery }); }}
+          />
         </Space>
       ),
     },

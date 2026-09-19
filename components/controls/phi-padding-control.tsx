@@ -1,6 +1,6 @@
 "use client";
 
-import { Select, Tooltip } from "antd";
+import { Select } from "antd";
 import { useMemo, useState, type CSSProperties, type ReactNode } from "react";
 
 import { normalizePhiPaddingWidgetConfig, type PhiCmsPaddingWidgetConfig } from "../../types/cms-config";
@@ -9,6 +9,7 @@ import {
   type PhiPaddingWidgetLabels,
 } from "../widgets/label-types/padding";
 import { usePhiConfig } from "../root/phi-config-provider";
+import { PhiLabeledControl } from "./phi-labeled-control";
 import type { PhiWidgetControlMode } from "../../types/widget-ui";
 import {
   PHI_SPACING_SCALE_KEY_OPTIONS,
@@ -93,7 +94,7 @@ function renderPaddingInput(
   onChange: (nextValue: PhiPaddingScaleKey) => void,
 ) {
   return (
-    <Tooltip title={label} placement="top">
+    <PhiLabeledControl description={label} fill>
       <Select<PhiPaddingScaleKey>
         aria-label={label}
         disabled={disabled}
@@ -102,7 +103,7 @@ function renderPaddingInput(
         options={[...PHI_SPACING_SCALE_KEY_OPTIONS]}
         style={{ width: "100%", minWidth: 0 }}
       />
-    </Tooltip>
+    </PhiLabeledControl>
   );
 }
 
