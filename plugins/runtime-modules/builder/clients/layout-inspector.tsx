@@ -21,6 +21,7 @@ import type { PhiPaddingWidgetLabels } from "../../../../components/widgets/labe
 import type { PhiAnchorWidgetPlacement } from "../../../../components/controls/phi-anchor-control-contract";
 import type { PhiSignalsWidgetLabels } from "../../../../components/widgets/label-types/signals";
 import type { PhiColorPickerLabels } from "../../../../components/widgets/label-types/color-picker";
+import type { PhiIconPickerControlLabels } from "../../../../components/widgets/label-types/icon-picker";
 import type {
   PhiCmsBorderWidgetConfig,
   PhiCmsGridLayoutSlotPlacementConfig,
@@ -106,6 +107,7 @@ type PhiDeveloperBuilderLayoutInspectorWidgetClientProps = {
   borderLabels?: PhiBorderWidgetLabels;
   signalsLabels?: PhiSignalsWidgetLabels;
   colorPickerLabels?: PhiColorPickerLabels;
+  iconPickerLabels?: PhiIconPickerControlLabels;
   dataProviderDescriptors?: readonly PhiRuntimeModuleDataProviderDescriptor[];
   calendarAdapterDescriptors?: readonly PhiCalendarAdapterDescriptor[];
   renderMediaPicker?: PhiBackgroundControlProps["renderMediaPicker"];
@@ -132,6 +134,7 @@ export function PhiDeveloperBuilderLayoutInspectorWidgetClient({
   borderLabels,
   signalsLabels,
   colorPickerLabels,
+  iconPickerLabels,
   dataProviderDescriptors = [],
   calendarAdapterDescriptors = [],
   renderMediaPicker,
@@ -388,6 +391,7 @@ export function PhiDeveloperBuilderLayoutInspectorWidgetClient({
                               defaultConfig: layoutDefaultConfigRecord,
                               disabled: isPreviewMode,
                               colorPickerLabels,
+                              iconPickerLabels,
                               dataProviderDescriptors,
                               calendarAdapterDescriptors,
                               onChange: onConfigChange

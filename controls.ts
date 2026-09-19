@@ -129,8 +129,8 @@ export { PhiIconPickerControl } from "./components/controls/phi-icon-picker-cont
 export type { PhiIconPickerControlProps } from "./components/controls/phi-icon-picker-control";
 export {
   PHI_ICON_PICKER_CONTROL_DEFAULT_LABELS,
-} from "./components/controls/phi-icon-picker-labels";
-export type { PhiIconPickerControlLabels } from "./components/controls/phi-icon-picker-labels";
+} from "./components/widgets/label-types/icon-picker";
+export type { PhiIconPickerControlLabels } from "./components/widgets/label-types/icon-picker";
 export { PhiRadioGroupControl } from "./components/controls/phi-radio-group-control";
 export type { PhiRadioGroupControlProps } from "./components/controls/phi-radio-group-control";
 export { PhiButtonControl } from "./components/controls/phi-button-control";

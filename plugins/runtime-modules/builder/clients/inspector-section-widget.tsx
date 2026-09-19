@@ -21,6 +21,7 @@ import type { PhiBorderWidgetLabels } from "../../../../components/widgets/label
 import type { PhiGeometryWidgetLabels } from "../../../../components/widgets/label-types/geometry";
 import type { PhiPaddingWidgetLabels } from "../../../../components/widgets/label-types/padding";
 import type { PhiColorPickerLabels } from "../../../../components/widgets/label-types/color-picker";
+import type { PhiIconPickerControlLabels } from "../../../../components/widgets/label-types/icon-picker";
 import type { PhiSignalsWidgetLabels } from "../../../../components/widgets/label-types/signals";
 import {
   isPhiAnchorWidgetPlacement,
@@ -232,6 +233,7 @@ type PhiBuilderInspectorSectionWidgetClientProps = {
   backgroundLabels?: PhiBackgroundWidgetLabels;
   borderLabels?: PhiBorderWidgetLabels;
   colorPickerLabels?: PhiColorPickerLabels;
+  iconPickerLabels?: PhiIconPickerControlLabels;
 };
 
 function usePhiBuilderInspectorSectionState(signalRoutes?: PhiSignalRouteSet) {
@@ -378,9 +380,10 @@ export function PhiBuilderLayoutInspectorSectionWidgetClient({
   backgroundLabels,
   borderLabels,
   colorPickerLabels,
+  iconPickerLabels,
 }: PhiBuilderInspectorSectionWidgetClientProps) {
   const state = usePhiBuilderInspectorSectionState(signalRoutes);
-  return <PhiDeveloperBuilderLayoutInspectorWidgetClient section={section} builderMode={state.builderMode} selectedStructureNodeKind={state.nodeKind} selectedStructureNodeTitle={state.selectedStructureNodeTitle} selectedStructurePlugin={state.selectedStructurePlugin?.kind !== "widget" ? state.selectedStructurePlugin : null} selectedStructureDefaultConfig={resolvePhiBuilderPluginDefaultConfig(state.selectedStructurePlugin) ?? null} currentDraft={state.selectedStructureDraft} currentShadow={state.selectedStructureDraft?.rootNodeShadow ?? null} signalRouteScope={state.selectedSignalRouteScope} selectedLayoutAnchor={state.selectedLayoutAnchor} onLayoutAnchorChange={(selectedLayoutAnchor) => state.emitInspectorControllerAction({ kind: "patchSelectedLayoutAnchor", selectedLayoutAnchor })} onPaddingChange={(padding) => state.emitInspectorControllerAction({ kind: "patchSelectedLayoutPadding", padding })} onBackgroundChange={(background) => state.emitInspectorControllerAction({ kind: "patchSelectedLayoutBackground", background })} onBorderChange={(border) => state.emitInspectorControllerAction({ kind: "patchSelectedLayoutBorder", border })} onShadowChange={(shadow) => state.emitInspectorControllerAction({ kind: "patchSelectedLayoutShadow", shadow })} onConfigChange={(key, value) => state.emitInspectorControllerAction({ kind: "patchSelectedLayoutConfig", key, value: value ?? undefined })} borderLabels={borderLabels} paddingLabels={paddingLabels} backgroundLabels={backgroundLabels} signalsLabels={signalsLabels} colorPickerLabels={colorPickerLabels} dataProviderDescriptors={state.activeDataProviderDescriptors} calendarAdapterDescriptors={state.activeCalendarAdapterDescriptors} renderMediaPicker={state.renderBackgroundMediaPicker} />;
+  return <PhiDeveloperBuilderLayoutInspectorWidgetClient section={section} builderMode={state.builderMode} selectedStructureNodeKind={state.nodeKind} selectedStructureNodeTitle={state.selectedStructureNodeTitle} selectedStructurePlugin={state.selectedStructurePlugin?.kind !== "widget" ? state.selectedStructurePlugin : null} selectedStructureDefaultConfig={resolvePhiBuilderPluginDefaultConfig(state.selectedStructurePlugin) ?? null} currentDraft={state.selectedStructureDraft} currentShadow={state.selectedStructureDraft?.rootNodeShadow ?? null} signalRouteScope={state.selectedSignalRouteScope} selectedLayoutAnchor={state.selectedLayoutAnchor} onLayoutAnchorChange={(selectedLayoutAnchor) => state.emitInspectorControllerAction({ kind: "patchSelectedLayoutAnchor", selectedLayoutAnchor })} onPaddingChange={(padding) => state.emitInspectorControllerAction({ kind: "patchSelectedLayoutPadding", padding })} onBackgroundChange={(background) => state.emitInspectorControllerAction({ kind: "patchSelectedLayoutBackground", background })} onBorderChange={(border) => state.emitInspectorControllerAction({ kind: "patchSelectedLayoutBorder", border })} onShadowChange={(shadow) => state.emitInspectorControllerAction({ kind: "patchSelectedLayoutShadow", shadow })} onConfigChange={(key, value) => state.emitInspectorControllerAction({ kind: "patchSelectedLayoutConfig", key, value: value ?? undefined })} borderLabels={borderLabels} paddingLabels={paddingLabels} backgroundLabels={backgroundLabels} signalsLabels={signalsLabels} colorPickerLabels={colorPickerLabels} iconPickerLabels={iconPickerLabels} dataProviderDescriptors={state.activeDataProviderDescriptors} calendarAdapterDescriptors={state.activeCalendarAdapterDescriptors} renderMediaPicker={state.renderBackgroundMediaPicker} />;
 }
 
 export function PhiBuilderWidgetInspectorSectionWidgetClient({
@@ -389,7 +392,8 @@ export function PhiBuilderWidgetInspectorSectionWidgetClient({
   geometryLabels,
   signalsLabels,
   colorPickerLabels,
+  iconPickerLabels,
 }: PhiBuilderInspectorSectionWidgetClientProps) {
   const state = usePhiBuilderInspectorSectionState(signalRoutes);
-  return <PhiDeveloperBuilderWidgetInspectorWidgetClient section={section} builderMode={state.builderMode} selectedStructureNodeKey={state.nodeKey} selectedStructureNodeKind={state.nodeKind} selectedStructureNodeTitle={state.selectedStructureNodeTitle} selectedStructureWidgetMeta={state.selectedStructurePlugin?.kind === "widget" ? state.selectedStructurePlugin : null} currentDraft={state.selectedWidgetNode} widgetReferenceOptions={state.widgetReferenceOptions} signalRouteScope={state.selectedSignalRouteScope} onConfigChange={(nextConfig) => state.emitInspectorControllerAction({ kind: "patchSelectedWidgetConfig", patch: nextConfig })} geometryLabels={geometryLabels} signalsLabels={signalsLabels} colorPickerLabels={colorPickerLabels} dataProviderDescriptors={state.activeDataProviderDescriptors} calendarAdapterDescriptors={state.activeCalendarAdapterDescriptors} onGeometryChange={(geometry: PhiCmsGeometryWidgetConfig) => state.emitInspectorControllerAction({ kind: "patchSelectedWidgetGeometry", geometry })} />;
+  return <PhiDeveloperBuilderWidgetInspectorWidgetClient section={section} builderMode={state.builderMode} selectedStructureNodeKey={state.nodeKey} selectedStructureNodeKind={state.nodeKind} selectedStructureNodeTitle={state.selectedStructureNodeTitle} selectedStructureWidgetMeta={state.selectedStructurePlugin?.kind === "widget" ? state.selectedStructurePlugin : null} currentDraft={state.selectedWidgetNode} widgetReferenceOptions={state.widgetReferenceOptions} signalRouteScope={state.selectedSignalRouteScope} onConfigChange={(nextConfig) => state.emitInspectorControllerAction({ kind: "patchSelectedWidgetConfig", patch: nextConfig })} geometryLabels={geometryLabels} signalsLabels={signalsLabels} colorPickerLabels={colorPickerLabels} iconPickerLabels={iconPickerLabels} dataProviderDescriptors={state.activeDataProviderDescriptors} calendarAdapterDescriptors={state.activeCalendarAdapterDescriptors} onGeometryChange={(geometry: PhiCmsGeometryWidgetConfig) => state.emitInspectorControllerAction({ kind: "patchSelectedWidgetGeometry", geometry })} />;
 }

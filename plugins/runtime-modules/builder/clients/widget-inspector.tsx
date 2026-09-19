@@ -5,6 +5,7 @@ import { PhiViewportVisibilityControl } from "../../../../components/controls/ph
 import type { PhiGeometryWidgetLabels } from "../../../../components/widgets/label-types/geometry";
 import type { PhiSignalsWidgetLabels } from "../../../../components/widgets/label-types/signals";
 import type { PhiColorPickerLabels } from "../../../../components/widgets/label-types/color-picker";
+import type { PhiIconPickerControlLabels } from "../../../../components/widgets/label-types/icon-picker";
 import type { PhiDeveloperBuilderMode, PhiDeveloperBuilderNodeKind } from "../developer-workspace-types";
 import type { PhiCmsContentWidgetNode } from "../../../../types/cms";
 import type { PhiCmsGeometryWidgetConfig } from "../../../../components/widgets/config/geometry";
@@ -56,6 +57,7 @@ type PhiDeveloperBuilderWidgetInspectorWidgetClientProps = {
   geometryLabels?: PhiGeometryWidgetLabels;
   signalsLabels?: PhiSignalsWidgetLabels;
   colorPickerLabels?: PhiColorPickerLabels;
+  iconPickerLabels?: PhiIconPickerControlLabels;
   dataProviderDescriptors?: readonly PhiRuntimeModuleDataProviderDescriptor[];
   calendarAdapterDescriptors?: readonly PhiCalendarAdapterDescriptor[];
 };
@@ -75,6 +77,7 @@ export function PhiDeveloperBuilderWidgetInspectorWidgetClient({
   geometryLabels,
   signalsLabels,
   colorPickerLabels,
+  iconPickerLabels,
   dataProviderDescriptors = [],
   calendarAdapterDescriptors = [],
 }: PhiDeveloperBuilderWidgetInspectorWidgetClientProps) {
@@ -151,6 +154,7 @@ export function PhiDeveloperBuilderWidgetInspectorWidgetClient({
                         disabled: isPreviewMode,
                         widgetReferenceOptions,
                         colorPickerLabels,
+                        iconPickerLabels,
                         dataProviderDescriptors,
                         calendarAdapterDescriptors,
                         onChange: (next) => {

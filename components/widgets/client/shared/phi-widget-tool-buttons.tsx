@@ -18,7 +18,7 @@ import type { PhiWidgetFontFamilyKey, PhiWidgetFontSizeKey } from "../../../../t
 import type { PhiCmsInstanceId } from "../../../../types/cms-instance-id";
 import { createPhiAssetUri, createPhiPageUri } from "../../../../types/references";
 import { PhiBuilderPageReferencePicker } from "../../../../plugins/runtime-modules/builder/page-reference-picker";
-import { PHI_ICON_PICKER_CONTROL_DEFAULT_LABELS } from "../../../controls/phi-icon-picker-labels";
+import { PHI_ICON_PICKER_CONTROL_DEFAULT_LABELS } from "../../label-types/icon-picker";
 import { PhiButtonControl } from "../../../controls/phi-button-control";
 import { PhiCheckboxControl } from "../../../controls/phi-checkbox-control";
 import { PhiNumberControl } from "../../../controls/phi-number-control";

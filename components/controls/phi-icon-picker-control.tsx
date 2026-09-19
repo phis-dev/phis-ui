@@ -11,7 +11,7 @@ import { usePhiConfig } from "../root/phi-config-provider";
 import {
   PHI_ICON_PICKER_CONTROL_DEFAULT_LABELS,
   type PhiIconPickerControlLabels,
-} from "./phi-icon-picker-labels";
+} from "../widgets/label-types/icon-picker";
 import type { PhiButtonType } from "./phi-button-types";
 import type {
   PhiPickerPlacement,

@@ -5,6 +5,7 @@ import { getPhiBackgroundWidgetLabels } from "../../../components/widgets/label-
 import { getPhiGeometryWidgetLabels } from "../../../components/widgets/label-sets/geometry";
 import { getPhiSignalsWidgetLabels } from "../../../components/widgets/label-sets/signals";
 import { getPhiColorPickerLabelsForRuntime } from "../../../components/widgets/label-sets/color-picker";
+import { getPhiIconPickerLabelsForRuntime } from "../../../components/widgets/label-sets/icon-picker";
 import {
   PhiBuilderLayoutInspectorSectionWidgetClient,
   PhiBuilderRegionInspectorSectionWidgetClient,
@@ -76,6 +77,7 @@ export async function PhiBuilderInspectorSectionWidget({
     geometryLabels,
     signalsLabels,
     colorPickerLabels,
+    iconPickerLabels,
   ] = await Promise.all([
     getPhiBackgroundWidgetLabels({
       apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
@@ -98,6 +100,7 @@ export async function PhiBuilderInspectorSectionWidget({
       locale: runtime.locale.current,
     }),
     getPhiColorPickerLabelsForRuntime(runtime),
+    getPhiIconPickerLabelsForRuntime(runtime),
   ]);
 
   return (
@@ -127,6 +130,7 @@ export async function PhiBuilderInspectorSectionWidget({
             backgroundLabels={backgroundLabels}
             borderLabels={borderLabels}
             colorPickerLabels={colorPickerLabels}
+            iconPickerLabels={iconPickerLabels}
           />
         ) : (
           <PhiBuilderWidgetInspectorSectionWidgetClient
@@ -135,6 +139,7 @@ export async function PhiBuilderInspectorSectionWidget({
             geometryLabels={geometryLabels}
             signalsLabels={signalsLabels}
             colorPickerLabels={colorPickerLabels}
+            iconPickerLabels={iconPickerLabels}
           />
         )}
       </PhiRuntimeModuleDataProviderClientHost>

@@ -18,6 +18,7 @@ import { PhiBackgroundControl } from "../../../../components/controls/phi-backgr
 import { PhiBorderControl } from "../../../../components/controls/phi-border-control";
 import { PhiColorWidget } from "../../../../components/widgets/client/phi-color-widget";
 import type { PhiColorPickerLabels } from "../../../../components/widgets/label-types/color-picker";
+import type { PhiIconPickerControlLabels } from "../../../../components/widgets/label-types/icon-picker";
 import { PHI_RADIUS_CONTROL_DEFAULT_LABELS, PhiBoundRadiusControl } from "../../../../components/controls/phi-bound-radius-control";
 import { PhiDimensionControl } from "../../../../components/controls/phi-dimension-control";
 import { PhiLengthControl } from "../../../../components/controls/phi-length-control";
@@ -466,6 +467,7 @@ function PhiInspectorCollectionFieldControl({
   backgroundLabels,
   borderLabels,
   colorPickerLabels,
+  iconPickerLabels,
   dataProviderDescriptors,
   calendarAdapterDescriptors,
   onChange,
@@ -479,6 +481,7 @@ function PhiInspectorCollectionFieldControl({
   backgroundLabels?: PhiBackgroundWidgetLabels;
   borderLabels?: PhiBorderWidgetLabels;
   colorPickerLabels?: PhiColorPickerLabels;
+  iconPickerLabels?: PhiIconPickerControlLabels;
   dataProviderDescriptors: readonly PhiRuntimeModuleDataProviderDescriptor[];
   calendarAdapterDescriptors: readonly PhiCalendarAdapterDescriptor[];
   onChange?: (next: Record<string, unknown>) => void;
@@ -582,6 +585,7 @@ function PhiInspectorCollectionFieldControl({
                   backgroundLabels,
                   borderLabels,
                   colorPickerLabels,
+                  iconPickerLabels,
                   dataProviderDescriptors,
                   calendarAdapterDescriptors,
                   onChange: (patch) => {
@@ -669,6 +673,7 @@ export function renderPhiInspectorConfigField({
   backgroundLabels,
   borderLabels,
   colorPickerLabels,
+  iconPickerLabels,
   dataProviderDescriptors = [],
   calendarAdapterDescriptors = [],
 }: {
@@ -683,6 +688,7 @@ export function renderPhiInspectorConfigField({
   backgroundLabels?: PhiBackgroundWidgetLabels;
   borderLabels?: PhiBorderWidgetLabels;
   colorPickerLabels?: PhiColorPickerLabels;
+  iconPickerLabels?: PhiIconPickerControlLabels;
   dataProviderDescriptors?: readonly PhiRuntimeModuleDataProviderDescriptor[];
   calendarAdapterDescriptors?: readonly PhiCalendarAdapterDescriptor[];
   onChange?: (next: Record<string, unknown>) => void;
@@ -952,6 +958,7 @@ export function renderPhiInspectorConfigField({
         backgroundLabels={backgroundLabels}
         borderLabels={borderLabels}
         colorPickerLabels={colorPickerLabels}
+        iconPickerLabels={iconPickerLabels}
         dataProviderDescriptors={dataProviderDescriptors}
         calendarAdapterDescriptors={calendarAdapterDescriptors}
         onChange={onChange}
@@ -1048,6 +1055,7 @@ export function renderPhiInspectorConfigField({
     return renderPhiInspectorConfigFieldControl(
       field,
       <PhiWidgetIconPickerButton
+        labels={iconPickerLabels}
         value={iconValue}
         disabled={disabled || !onChange}
         buttonBlock
