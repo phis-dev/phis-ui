@@ -49,9 +49,8 @@ built. Remove an entry when it is done.
   and every direct import makes replacing it harder:** with a Control it is an adapter change, without
   one it is a tree-wide edit.
 
-  It started at 28 named primitives against about 25 uncontrolled ones. It now names 41, closes five
-  more to a single owner file, and leaves seven: `Col`, `Collapse`, `Descriptions`, `Layout`, `List`,
-  `Row`, `Space`.
+  It started at 28 named primitives against about 25 uncontrolled ones. It now names 42, closes five
+  more to a single owner file, and leaves six: `Col`, `Descriptions`, `Layout`, `List`, `Row`, `Space`.
 
   `App`, `ConfigProvider` and `theme` stay direct: they are the root and theme adapters AGENTS.md
   already exempts, not feature surface.
@@ -61,7 +60,7 @@ built. Remove an entry when it is done.
 
   - **A Control**, where there is platform semantics to own -- a normalized contract, defaults the
     platform should decide once rather than at each call site:
-    ~~`Upload`, `Progress`, `Skeleton`, `Empty`, `Tooltip`, `Avatar`, `Card`~~ done; `Collapse`,
+    ~~`Upload`, `Progress`, `Skeleton`, `Empty`, `Tooltip`, `Avatar`, `Card`, `Collapse`~~ done;
     `Descriptions` and `Space.Compact` (which is a different thing from `Space`, see below) remain.
   - **A thin pass-through**, where there is nothing to decide and the wrapper exists only so the import
     points at us: ~~`PhiTypographyControl` (~63 files), `Flex` (~60), `Divider`, `Spin`, `QRCode`,
@@ -182,6 +181,37 @@ built. Remove an entry when it is done.
     from `boxShadowTertiary` for an ordinary card and `boxShadowSecondary` for a featured one, and a
     highlighted card keeps its primary-coloured ring, which is a border rather than depth. A card sits on
     the page rather than over it, so the quiet shadow is the ordinary one.
+  - ~~`Collapse`~~ answered twice, because the two importers are two contracts rather than one.
+
+    **The CollapsibleLayout is the adapter** and keeps the primitive, named in `primitiveAdapterOwners`.
+    It uses nearly the whole surface -- `accordion`, `activeKey`, `bordered`, `ghost`, `collapsible`,
+    `destroyOnHidden`, `expandIconPlacement`, `size`, `items`, `onChange`, `styles` -- and a Control
+    between the two would only hand a Layout its own props back.
+
+    **The Theme inspector's four became `PhiAccordionControl`.** They were identical byte for byte apart
+    from the state they were bound to, and the whole of what they repeated was an undoing: three `styles`
+    overrides taking the panel look back off the primitive, because an inspector section is a heading
+    with things under it and the box around it belongs to whatever the inspector already stands in. One
+    open at a time is the shape rather than a prop -- sections fold so a long inspector stays short, which
+    only works if opening one closes the last.
+
+    `collapseStyles?: CollapseProps["styles"]` is gone from the Layout's props. It was dead -- declared,
+    threaded through a merge that handled a function form nobody used, and passed by nobody -- and it was
+    the one thing dragging `CollapseProps` into the Layout's public shape.
+
+    **The leak worth more than the two import lines** was in the DOM, not in an import: the Layout tested
+    an editor-scaffold click against `.ant-collapse-header` and `.ant-collapse-expand-icon`. Class names
+    are not imports, so no validator can see them, and a library swap would have left the check compiling
+    and matching nothing -- every header click in the Builder selecting the block instead of folding the
+    slot, silently. The primitive takes a `classNames.header`, so the element is the same one and the name
+    is ours. No behaviour changes with it: same element, same geometry, same hit area. The expand-icon
+    test went with it, because Ant Design draws the icon inside the header and `closest` had already
+    passed it on the way up.
+
+    Marking the label instead would have been the tempting answer and the wrong one: the header is a
+    full-width row and the label sits inside it, so clicking the empty strip beside the label would have
+    stopped folding the slot and started dragging the block -- and that strip is the easiest thing in the
+    header to hit.
   - `Typography` is `PhiTypographyControl`, decided. `PhiTextControl` is **taken** -- it is antd `Input`.
     So is `PhiAnchorControl`: `components/controls/phi-anchor-control-contract.ts` is about placement
     anchors (`topLeft`…`bottomRight`), not antd `Anchor`. Both names are settled before the first commit,
@@ -208,8 +238,8 @@ built. Remove an entry when it is done.
 
   Order: ~~the two big pass-throughs (`Flex`, `PhiTypographyControl`), the five owner entries, the
   trivial wrappers, `PhiFileDropControl` with `Progress`, `PhiSkeletonControl`, `PhiEmptyControl`,
-  `PhiNameControl`, `PhiAvatarControl`, `PhiCardControl`~~ -- done. Next `Collapse`/`Descriptions`,
-  then the deletions, then `Listy`, and the allowlist last.
+  `PhiNameControl`, `PhiAvatarControl`, `PhiCardControl`, `PhiAccordionControl`~~ -- done. Next
+  `Descriptions`, then the deletions, then `Listy`, and the allowlist last.
 
   Until the Controls exist, direct use in a Widget or Layout stays correct and the validator keeps
   permitting it: this is a planned narrowing, not a rule being broken today. Update the validator's own

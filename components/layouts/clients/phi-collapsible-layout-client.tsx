@@ -58,7 +58,6 @@ export type PhiCollapsibleLayoutProps = Omit<PhiBaseLayoutProps, "slots"> & {
   titleStrong?: boolean;
   headerPadding?: CSSProperties["padding"];
   innerPadding?: CSSProperties["padding"];
-  collapseStyles?: CollapseProps["styles"];
   style?: CSSProperties;
 };
 
@@ -100,60 +99,44 @@ function readCollapseKeys(value: string | string[]) {
   return Array.isArray(value) ? value : value ? [value] : [];
 }
 
+/**
+ * The header's own class, put there by this adapter rather than read off Ant Design.
+ *
+ * A click in the header belongs to the header -- it folds the slot -- and in edit mode the scaffold
+ * around this Layout is listening for the same click to select and drag the block, so the one has to be
+ * told from the other. The test used to be `.ant-collapse-header`, which is a name the library owns: no
+ * import names it, no validator sees it, and swapping Ant Design out would have left the check compiling
+ * and silently matching nothing, so every header click in the Builder would have selected the block
+ * instead of folding the slot. The primitive takes a class for that element, so the name is ours and the
+ * element is the same one.
+ */
+const PHI_COLLAPSIBLE_HEADER_CLASS = "phi-collapsible-header";
+
 function shouldStopCollapsibleEditorScaffoldEvent(event: MouseEvent<HTMLElement>) {
   const target = event.target;
   if (!(target instanceof Element)) {
     return false;
   }
 
+  /*
+   * The expand icon needs no test of its own: Ant Design draws it inside the header, so `closest` has
+   * already passed it on the way up.
+   */
   return Boolean(
-    target.closest(".ant-collapse-header") ||
-    target.closest(".ant-collapse-expand-icon") ||
+    target.closest(`.${PHI_COLLAPSIBLE_HEADER_CLASS}`) ||
     target.closest("[data-phi-collapsible-title-control='true']"),
   );
 }
 
 function resolveCollapsibleStyles(
-  styles: CollapseProps["styles"],
   titleStrong: boolean,
   headerPadding: CSSProperties["padding"] | undefined,
   innerPadding: CSSProperties["padding"] | undefined,
 ): CollapseProps["styles"] {
-  if (typeof styles === "function") {
-    return (info) => {
-      const resolved = styles(info);
-      return {
-        ...resolved,
-        header: {
-          ...(headerPadding == null ? null : { padding: headerPadding }),
-          ...resolved?.header,
-        },
-        title: {
-          ...(titleStrong ? { fontWeight: 600 } : null),
-          ...resolved?.title,
-        },
-        body: {
-          ...(innerPadding == null ? null : { padding: innerPadding }),
-          ...resolved?.body,
-        },
-      };
-    };
-  }
-
   return {
-    ...styles,
-    header: {
-      ...(headerPadding == null ? null : { padding: headerPadding }),
-      ...styles?.header,
-    },
-    title: {
-      ...(titleStrong ? { fontWeight: 600 } : null),
-      ...styles?.title,
-    },
-    body: {
-      ...(innerPadding == null ? null : { padding: innerPadding }),
-      ...styles?.body,
-    },
+    header: headerPadding == null ? undefined : { padding: headerPadding },
+    title: titleStrong ? { fontWeight: 600 } : undefined,
+    body: innerPadding == null ? undefined : { padding: innerPadding },
   };
 }
 
@@ -183,7 +166,6 @@ function PhiCollapsibleLayoutBody({
   titleStrong = true,
   headerPadding,
   innerPadding,
-  collapseStyles,
   ...layoutProps
 }: PhiCollapsibleLayoutProps) {
   // Named fields rather than the rest object: handing the compiler a whole rest object makes every
@@ -614,10 +596,10 @@ function PhiCollapsibleLayoutBody({
           destroyOnHidden={false}
           expandIconPlacement={expandIconPlacement}
           size={collapseSize}
+          classNames={{ header: PHI_COLLAPSIBLE_HEADER_CLASS }}
           items={items}
           onChange={(nextKeys) => setOpenKeys(readCollapseKeys(nextKeys))}
           styles={resolveCollapsibleStyles(
-            collapseStyles,
             titleStrong,
             resolvedHeaderPadding,
             resolvedInnerPadding,

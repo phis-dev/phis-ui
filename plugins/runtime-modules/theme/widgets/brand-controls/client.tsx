@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
 
-import { Collapse, ConfigProvider, Space, theme as antdTheme } from "antd";
+import { ConfigProvider, Space, theme as antdTheme } from "antd";
 import { DeleteOutlined } from "@ant-design/icons";
 import type { AliasToken } from "antd/es/theme/interface";
 import type { PhiColorPickerLabels } from "../../../../../components/widgets/label-types/color-picker";
@@ -147,6 +147,7 @@ import {
   type PhiControlShape,
   type PhiControlShapeCorners,
 } from "../../../../../theme/phi-control-shape";
+import { PhiAccordionControl } from "../../../../../components/controls/phi-accordion-control";
 import { PhiCardControl } from "../../../../../components/controls/phi-card-control";
 import { PhiFlexControl } from "../../../../../components/controls/phi-flex-control";
 import { PhiTypographyControl } from "../../../../../components/controls/phi-typography-control";
@@ -1982,8 +1983,7 @@ function usePhiBrandAccordionSection(storageKey: string, sectionKeys: readonly s
     });
   }, [sectionKeys, storageKey]);
 
-  const changeActiveSection = useCallback((keys: string | readonly string[]) => {
-    const nextSection = Array.isArray(keys) ? keys[0] ?? "" : String(keys ?? "");
+  const changeActiveSection = useCallback((nextSection: string) => {
     setActiveSection(nextSection);
 
     try {
@@ -2196,18 +2196,10 @@ export function PhiBuilderBrandThemeControlsWidgetClient({
             }}
           />
           <PhiDividerControl style={{ marginBlock: 0 }} />
-          <Collapse
-            accordion
-            bordered={false}
-            size="small"
-            activeKey={activeColorSection}
-            onChange={changeActiveColorSection}
-            styles={{
-              root: { background: "transparent" },
-              header: { alignItems: "center", paddingInline: 0 },
-              body: { paddingInline: 0 },
-            }}
-            items={[
+          <PhiAccordionControl
+            openSection={activeColorSection}
+            onOpenSectionChange={changeActiveColorSection}
+            sections={[
               {
                 key: "custom",
                 label: (
@@ -2472,18 +2464,10 @@ export function PhiBuilderBrandStyleControlsWidgetClient({
         <style href="phi-theme-font-picker-faces" precedence="default" dangerouslySetInnerHTML={{ __html: siteFontFaceCss }} />
       ) : null}
       <PhiCardControl size="small">
-        <Collapse
-          accordion
-          bordered={false}
-          size="small"
-          activeKey={activeStyleSection}
-          onChange={changeActiveStyleSection}
-          styles={{
-            root: { background: "transparent" },
-            header: { alignItems: "center", paddingInline: 0 },
-            body: { paddingInline: 0 },
-          }}
-          items={[
+        <PhiAccordionControl
+          openSection={activeStyleSection}
+          onOpenSectionChange={changeActiveStyleSection}
+          sections={[
             {
               key: "controls",
               label: <PhiTypographyControl strong>Controls</PhiTypographyControl>,
@@ -2998,18 +2982,10 @@ export function PhiBuilderBrandIdentityControlsWidgetClient({
   return (
     <PhiFlexControl vertical gap={clientToken.padding} style={{ width: "100%", minWidth: 0 }}>
       <PhiCardControl size="small">
-        <Collapse
-          accordion
-          bordered={false}
-          size="small"
-          activeKey={activeIdentitySection}
-          onChange={changeActiveIdentitySection}
-          styles={{
-            root: { background: "transparent" },
-            header: { alignItems: "center", paddingInline: 0 },
-            body: { paddingInline: 0 },
-          }}
-          items={[
+        <PhiAccordionControl
+          openSection={activeIdentitySection}
+          onOpenSectionChange={changeActiveIdentitySection}
+          sections={[
             {
               key: "logo",
               label: <PhiTypographyControl strong>Logo</PhiTypographyControl>,
@@ -3371,18 +3347,10 @@ export function PhiBuilderBrandBackgroundControlsWidgetClient({
           }}
         />
         <PhiDividerControl style={{ marginBlock: clientToken.paddingXS }} />
-        <Collapse
-          accordion
-          bordered={false}
-          size="small"
-          activeKey={activeBackgroundSection}
-          onChange={changeActiveBackgroundSection}
-          styles={{
-            root: { background: "transparent" },
-            header: { alignItems: "center", paddingInline: 0 },
-            body: { paddingInline: 0 },
-          }}
-          items={[
+        <PhiAccordionControl
+          openSection={activeBackgroundSection}
+          onOpenSectionChange={changeActiveBackgroundSection}
+          sections={[
             {
               key: "root",
               label: <PhiTypographyControl strong>Root Background</PhiTypographyControl>,

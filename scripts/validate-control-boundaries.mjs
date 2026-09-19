@@ -78,8 +78,8 @@ const coreApplicationAdapterPath = "components/runtime/core-runtime-application-
  * for a handful of primitives -- so everything outside those names passed, every Module under `plugins/`
  * included. This is the rule itself, over the whole tree.
  *
- * This map is a denylist, so **every primitive not named here is permitted by omission** -- seven are
- * still imported somewhere in the tree, from `Space` and `Layout` down to `List` and `Collapse`. `Flex`
+ * This map is a denylist, so **every primitive not named here is permitted by omission** -- six are
+ * still imported somewhere in the tree, from `Space` and `Layout` down to `List` and `Descriptions`. `Flex`
  * and `Typography`, the two that reached furthest, are done, as are the four that had nothing to decide,
  * the file-choosing pair and the two that say "waiting" and "none"; five more are closed by
  * `soleOwnerPrimitives` below.
@@ -100,6 +100,7 @@ const controlledPrimitives = new Map([
   ["Card", "PhiCardControl"],
   ["Cascader", "PhiCascaderControl"],
   ["Checkbox", "PhiCheckboxControl"],
+  ["Collapse", "PhiAccordionControl"],
   ["ColorPicker", "PhiColorControl"],
   ["DatePicker", "PhiDatePickerControl"],
   ["Divider", "PhiDividerControl"],
@@ -145,6 +146,12 @@ const controlDirectory = "components/controls/";
  */
 const primitiveAdapterOwners = new Map([
   ["components/calendar/gregory-calendar-adapter-client.tsx", new Set(["Calendar", "DatePicker"])],
+  /*
+   * The CollapsibleLayout is the adapter for the general collapsible region, and a Control between it
+   * and the primitive would only hand a Layout its own props back. `PhiAccordionControl` is the narrow
+   * case beside it -- one section open at a time, nothing to decide -- and everything else goes there.
+   */
+  ["components/layouts/clients/phi-collapsible-layout-client.tsx", new Set(["Collapse"])],
 ]);
 
 /*
