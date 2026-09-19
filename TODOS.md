@@ -388,6 +388,22 @@ built. Remove an entry when it is done.
 
 ## Builder
 
+- **Author a table where the table is.** A collection field in an Overlay is better than a collection
+  field down a narrow column, but for a table it is still describing a thing from beside it. The thing is
+  on screen: a `+` in the header row adds a column and opens a picker with that column's settings, a `+`
+  at the end adds a row. The Inspector's collection stays -- it is the general case, and a Widget with no
+  visible shape has nothing to click -- but wherever the configured thing is already drawn, that is where
+  it should be reachable.
+
+  **Two rules this raised, both wider than the table.** *Not everything belongs in the Builder*: some
+  settings should be reachable only through the Module that declares them, so the Inspector is not the
+  union of every config field that exists. Which ones is not decided yet, and the field contract has no
+  way to say it. And *a real Overlay is not a picker*: it carries its normal paddings, where a picker may
+  be dense. `PhiModalControl` zeroes container, header, body and footer by contract and leaves the
+  padding to whoever fills it -- the Overlay container path supplies it through its Regions, the static
+  options picker supplies none, and the collection Overlay now supplies `PHI_SPACE.base` itself. That is
+  three callers each deciding separately what a Modal's inside looks like, which is the shape of a Control
+  that should be deciding it.
 - **Move transient Builder previews to shared storage** before running more than one Skeleton process.
   `plugins/runtime-modules/builder/preview-store.ts` keeps snapshots in a process-local `globalThis` Map.
   Replace it with a shared TTL store bound to the Site and the authorized Builder session, keep the opaque
