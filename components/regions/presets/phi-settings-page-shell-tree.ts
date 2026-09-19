@@ -43,8 +43,8 @@ type PhiSettingsPageShellFormSectionBase = {
   /**
    * What a saved panel says, for a Form whose descriptor says nothing on success.
    *
-   * Settings panels report through the application feedback rather than only in place: a panel is one
-   * of several, and a switch that saves on change has no success panel to show. Where the Form's own
+   * Settings panels report through the application feedback instead of in place: a panel is one of
+   * several, and a switch that saves on change has no success panel to show. Where the Form's own
    * descriptor has success wording, that wins -- it is more specific than "Saved" ever is.
    */
   savedMessage?: string;

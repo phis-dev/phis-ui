@@ -301,7 +301,7 @@ the only way a Form is placed. There are no domain Form Widgets. Its config:
 | --- | --- |
 | `formId` | The Form to render. |
 | `submit` | `{ label, align }` or absent. A submit button drawn by the Widget in the control column; `align` is `start` (default), `center`, or `end`. |
-| `feedback` | `{ mode, successText? }` or absent. Absent is silent. `mode` is `message` (a transient message) or `notification`; `successText` is what a success says where the descriptor's `success` says nothing. |
+| `feedback` | `{ mode, successText? }` or absent. Absent answers in place. `mode` is `message` (a transient message) or `notification`; `successText` is what a success says where the descriptor's `success` says nothing. Set, it moves the answer out of the Form rather than adding one. |
 | `links` | `[{ key, href, requiresFeature? }]`, drawn below the submit. The text is `actions.<key>Label` of the Form's label set; a link whose `requiresFeature` is not published by an active Module is left out. |
 | `formConfig` | Placement config: `initialValues`, `initialValuesFromQuery`, values read by `config` text, and values an `optionsProvider` reads (see [Fields](#fields)). |
 | `execution` | `{ mode: "handler" \| "signal", phase: "submit" \| "confirm" }`, default `handler` / `submit`. |
@@ -338,9 +338,11 @@ the only way a Form is placed. There are no domain Form Widgets. Its config:
   enough on a Page somebody opened in order to submit it. A Settings panel is not that case -- it may be
   collapsed, it is one of several, and a panel that saves on change has no success panel at all -- so
   the Settings shell gives every Form section `feedback`, and the Widget reports the outcome to the Site
-  Core Runtime Controller as well ([SIGNALS.md](./SIGNALS.md)). A success says the descriptor's own
-  wording where it has some, otherwise the placement's `successText`; a failure says what the answer
-  said, which is the only wording that exists for it.
+  Core Runtime Controller instead ([SIGNALS.md](./SIGNALS.md)). Naming a place chooses it: a Form with
+  `feedback` draws neither the error nor the success panel in place, because two answers to one submit
+  read as two things having happened. A success says the descriptor's own wording where it has some,
+  otherwise the placement's `successText`; a failure says what the answer said, which is the only
+  wording that exists for it. Field validation is unaffected -- it answers a field, not a submit.
 - A Form never navigates. A Controller that reads `submitSuccess` and knows where the visitor goes next
   asks the Site Core Runtime Controller on `path`/`activate` (see [SIGNALS.md](./SIGNALS.md)).
 

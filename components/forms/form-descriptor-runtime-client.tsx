@@ -386,10 +386,17 @@ export function PhiFormDescriptorRuntimeClient({
     }
   }, [clearDraft, feedback?.successText, labels, report, success]);
 
+  /*
+   * Where the answer belongs is the placement's decision, and naming a place is choosing it: a Form
+   * with a `feedback` config says it there and not also in place, because two answers to one submit
+   * read as two things having happened. Field validation is untouched -- that is not an answer to a
+   * submit, it is a question about a field, and it belongs next to the field either way.
+   */
+  const answersInPlace = feedback == null;
   const content = loading ? <PhiSkeletonControl lines={4} withTitle /> : (
     <>
-      {error ? <PhiAlertControl level="error" showIcon title={error} /> : null}
-      {succeeded && success ? (
+      {answersInPlace && error ? <PhiAlertControl level="error" showIcon title={error} /> : null}
+      {answersInPlace && succeeded && success ? (
         <PhiAlertControl
           level="success"
           showIcon
