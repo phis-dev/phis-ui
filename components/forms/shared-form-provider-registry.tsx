@@ -262,9 +262,10 @@ export const PHI_SHARED_FORM_PROVIDER_REGISTRY = createPhiFormProviderRegistry({
     },
     {
       ...PHI_SHARED_FORM_FIELD_TYPE_PROVIDER_DESCRIPTORS[14],
-      Control: ({ checked, onChange, disabled, readOnly }) => (
+      Control: ({ checked, controlLabel, onChange, disabled, readOnly }) => (
         <PhiSwitchControl
           checked={checked}
+          label={controlLabel}
           disabled={disabled}
           readOnly={readOnly}
           onChange={(nextChecked) => onChange?.(nextChecked)}
