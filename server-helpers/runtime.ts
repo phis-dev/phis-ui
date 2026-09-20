@@ -370,7 +370,6 @@ export async function getPhiCmsRuntimeInfo({
         roles?: unknown;
       }>;
       authorizationRevision?: number | null;
-      siteFlags?: number | null;
       newsletterOptIn?: boolean | null;
       preferredLocale?: string | null;
       themeMode?: string | null;
@@ -440,7 +439,6 @@ export async function getPhiCmsRuntimeInfo({
           (payload.user?.authorizationRevision ?? 0) >= 0
             ? (payload.user?.authorizationRevision as number)
             : 0,
-        siteFlags: Number.isInteger(payload.user?.siteFlags) ? (payload.user?.siteFlags as number) : 0,
         newsletterOptIn: payload.user?.newsletterOptIn ?? null,
         themeMode: viewerThemeMode,
         userName: payload.user?.name ?? null,

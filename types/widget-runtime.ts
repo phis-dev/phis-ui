@@ -94,7 +94,6 @@ export type PhiBlockRuntimeViewer = {
   /** Absent where a surface never carried them, which denies an `addon-roles` policy. */
   addonRoleClaims?: readonly PhiViewerAddonRoleClaim[];
   authorizationRevision: number;
-  siteFlags?: number;
   userName?: string | null;
   userEmail?: string | null;
   preferredLocale?: string | null;
