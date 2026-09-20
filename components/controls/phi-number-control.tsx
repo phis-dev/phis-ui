@@ -3,6 +3,7 @@
 import type { CSSProperties, FocusEventHandler, KeyboardEventHandler, ReactNode } from "react";
 import { InputNumber } from "antd";
 import type { PhiControlSize, PhiControlVariant } from "../../types/control";
+import { PHI_LAYOUT } from "../../theme/phi-tokens";
 import { PhiLabeledControl } from "./phi-labeled-control";
 
 export type PhiNumberControlProps = {
@@ -62,7 +63,11 @@ export function PhiNumberControl({
       readOnly={readOnly}
       size={size}
       variant={variant}
-      style={style}
+      /*
+       * The ceiling first, so a caller's own `maxWidth` replaces it rather than fighting it. A field
+       * that needs to be wider than a number ever is says so, and says it in one place.
+       */
+      style={{ maxWidth: PHI_LAYOUT.numberControlMax, ...style }}
       onChange={onChange}
       onBlur={onBlur}
       onKeyDown={onKeyDown}

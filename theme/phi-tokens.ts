@@ -59,6 +59,19 @@ export const PHI_LAYOUT = {
   headerHeight: 44,
   sidebarWidth: 233,
   /*
+   * How wide a field holding a number is allowed to get.
+   *
+   * A number is a handful of characters and does not become more readable with room after it. In the
+   * house label column a Control takes two thirds of the form, which is right for a sentence and
+   * absurd for four digits: the figure sits at the left edge of a field stretching past the end of
+   * the label above it. This is the same 233 the sidebar is, and it holds an eight-digit figure with
+   * a unit in front of it and the stepper beside it.
+   *
+   * A maximum and not a width. A number field still fills a column narrower than this -- in an
+   * Inspector, a toolbar or a table cell nothing changes at all.
+   */
+  numberControlMax: 233,
+  /*
    * How wide a column of content is allowed to get, in three steps of the same sequence.
    *
    * `narrow` is a single column of Controls without a label beside them -- a sign-in, a confirmation.
