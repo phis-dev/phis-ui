@@ -5,6 +5,7 @@ import {
 import { PhiCmsPageType, PhiCmsStatus } from "../../../constants/phi-cms";
 import { createPhiCmsPresetNodes } from "../../../helpers/cms-preset-nodes";
 import { PHI_SPACE } from "../../../theme/antd-css-var-contract";
+import { PHI_LAYOUT } from "../../../theme/phi-tokens";
 import type { PhiCmsPageNode, PhiCmsContentWidgetNode, PhiCmsLayoutNode, PhiResolvedCmsPageTree } from "../../../types/cms";
 import type { PhiRuntimeModuleId } from "../../../types/cms-module-descriptors";
 import { createPhiPresetCmsInstanceIdMap } from "../../../types/cms-instance-id";
@@ -167,8 +168,15 @@ export function buildPhiSettingsPageShellTree({
         accordion: true,
         defaultOpenSlotKeys: ["slot_0"],
         titleStrong: true,
-        width: "100%",
-        maxWidth: "100%",
+        /*
+         * Where the Settings column stops. Set here rather than on each Form: the panels are what a
+         * reader's eye follows down the page, and a panel running the full width of a wide screen with
+         * a narrow form inside it reads as two columns that do not line up. One maximum on the
+         * Collapsible holds titles, descriptions and forms in the same column.
+         *
+         * A maximum, not a width -- the Collapsible still fills a narrow screen edge to edge.
+         */
+        maxSize: { width: PHI_LAYOUT.contentMax },
         margin: 0,
         padding: 0,
         border: false,

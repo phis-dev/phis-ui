@@ -58,8 +58,18 @@ export const PHI_LAYOUT = {
    */
   headerHeight: 44,
   sidebarWidth: 233,
-  contentMaxNarrow: 144,
-  contentMax: 233,
-  contentMaxWide: 233,
+  /*
+   * How wide a column of content is allowed to get, in three steps of the same sequence.
+   *
+   * `narrow` is a single column of Controls without a label beside them -- a sign-in, a confirmation.
+   * `contentMax` is the one a labelled form wants: the 24-track grid puts labels left of their
+   * Controls, and at 377 a label column of 8 tracks leaves the Control too little to show what is in
+   * it. `wide` is for what is read across rather than filled in, such as a table.
+   *
+   * They are maxima and not widths. A block still fills its slot; these only say where it stops.
+   */
+  contentMaxNarrow: 377,
+  contentMax: 610,
+  contentMaxWide: 987,
   heroHeight: 377,
 } as const;

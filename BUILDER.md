@@ -620,6 +620,13 @@ Renderable block contract:
 - `style` is not part of the public block contract; renderer-specific inline styling stays in the component implementation
 - `className` is the supported CSS extension hook for third-party styling
 - `size` is the canonical public preferred geometry form; `minSize`, `maxSize`, and `collapsedSizeHint` are the semantic geometry constraints
+- geometry is stated as `size`/`minSize`/`maxSize` only; flat `width`, `maxWidth`, `height` and their
+  siblings are the last step of turning a block into CSS and are never part of a config a preset or the
+  Inspector writes
+- a Layout fills the slot it stands in, so the Inspector offers it no geometry section: what a Layout is
+  given comes from the preset of the Module that builds it, and spacing between blocks is the Spacer's
+  job. A constraint (`maxSize`) is still meaningful there and says where the filling stops; a preferred
+  `size` is not, because the slot decides
 
 ## 12. Plugin meta contract
 
