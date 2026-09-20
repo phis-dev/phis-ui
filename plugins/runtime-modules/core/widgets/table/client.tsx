@@ -30,6 +30,7 @@ import { PhiIcon } from "../../../../../components/shell/phi-icon";
 import { usePhiConfig } from "../../../../../components/root/phi-config-provider";
 import { usePhiSignalListener } from "../../../../../components/runtime/runtime-signal-bus";
 import { usePhiSignalEmitter, usePhiSignalIdentity } from "../../../../../components/runtime/runtime-signal-identity";
+import { usePhiApplicationFeedback } from "../../../../../components/runtime/use-phi-application-feedback";
 import { usePhiTableBinding } from "../../../../../components/tables/client/phi-table-binding";
 import { PhiTableBindingControl } from "../../../../../components/tables/client/phi-table-binding-control";
 import { clearPhiDataDragPayload, readPhiDataDragPayload } from "../../../../../components/runtime/client/phi-data-dnd";
@@ -307,6 +308,7 @@ export function PhiTableWidgetClient({
 }: PhiTableWidgetClientProps) {
   const { modal } = App.useApp();
   const { token } = usePhiConfig();
+  const { showMessage } = usePhiApplicationFeedback();
   const configKey = JSON.stringify(inputConfig);
   const config = useMemo(() => JSON.parse(configKey) as PhiTableWidgetConfig, [configKey]);
   const { presentation, features, source } = config;
@@ -384,6 +386,20 @@ export function PhiTableWidgetClient({
     onData,
     onMutation: (result) => {
       onMutation?.(result);
+      /*
+       * What the Provider has to say about what it just did.
+       *
+       * A rejected mutation already speaks -- its message becomes the Table's error. An accepted one
+       * had no way to, so an action whose whole purpose is to find something out (test a connection,
+       * check a reference) finished in silence and left the reader guessing whether it ran.
+       *
+       * The Provider decides whether there is anything to say: no `message`, no announcement. That is
+       * also why this hangs on the mutation and not on the reload that may follow it -- a Table that
+       * spoke every time it refetched would say nothing worth reading.
+       */
+      if (result.status === "accepted" && result.message?.trim()) {
+        showMessage({ level: "info", content: result.message.trim() });
+      }
       emitCapability("mutationChange", result as unknown as Record<string, unknown>);
     },
     validateResource,

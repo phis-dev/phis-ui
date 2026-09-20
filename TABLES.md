@@ -710,6 +710,13 @@ For an inline field edit:
    replaces the optimistic draft with that canonical result and refreshes only as declared.
 6. A rejected result supplies a stable error code and optional field message. The Binding restores the
    original canonical value and exposes the rejection state to the Control.
+7. An accepted result may also carry a `message`, and the Widget announces it once as application
+   feedback. This is how an action whose purpose is to find something out reports the finding: a
+   connection test, a reference check, anything whose answer is not already visible in the row it
+   changed. The Provider decides whether there is anything to say, and an omitted `message` stays
+   silent — a result the reader can already see does not need repeating. The announcement belongs to
+   the mutation and never to a refresh that follows it; a Table that spoke whenever it refetched would
+   say nothing worth reading.
 
 Mutation pending state is target-scoped and is not Table query loading. A pending cell mutation may set
 loading or disabled presentation only on that cell editor; it must not clear the resolved rows, render a

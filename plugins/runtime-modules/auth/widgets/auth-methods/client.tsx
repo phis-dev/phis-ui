@@ -8,6 +8,8 @@ import { usePhiRuntimePageConditionState } from "../../../../../components/runti
 import { normalizeLoginRedirectTarget } from "../../../../../components/widgets/login-redirect";
 import type { PhiPublicAuthManifest } from "../../../../../types/auth-manifest";
 import { PhiDividerControl } from "../../../../../components/controls/phi-divider-control";
+import { PhiFlexControl } from "../../../../../components/controls/phi-flex-control";
+import { PHI_SPACE } from "../../../../../theme/antd-css-var-contract";
 
 export type PhiAuthMethodsWidgetClientProps = {
   methods: PhiPublicAuthManifest["methods"];
@@ -78,8 +80,16 @@ export function PhiAuthMethodsWidgetClient({
     return null;
   }
 
+  /*
+   * One slot, several things in it, so this Widget says how they stack.
+   *
+   * It used to hand the separator and the buttons to the slot as loose siblings and take whatever
+   * direction the surrounding wrapper happened to have -- which put the first provider's button beside
+   * the rule instead of under it. A Widget owns the arrangement inside its own leaf; the Layout owns
+   * where the leaf goes ([LAYOUTING.md](../../../../../LAYOUTING.md)).
+   */
   return (
-    <>
+    <PhiFlexControl vertical gap={PHI_SPACE.sm} style={{ width: "100%", minWidth: 0 }}>
       {error ? <PhiAlertControl level="error" showIcon title={error} /> : null}
       {withSeparator ? <PhiDividerControl plain>{labels.separator}</PhiDividerControl> : null}
       {methods.map((method) => (
@@ -92,6 +102,6 @@ export function PhiAuthMethodsWidgetClient({
           label={method.label}
         />
       ))}
-    </>
+    </PhiFlexControl>
   );
 }

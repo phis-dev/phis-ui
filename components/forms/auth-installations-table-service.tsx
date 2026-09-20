@@ -154,12 +154,35 @@ async function mutateInstallation(request: PhiTableProviderMutationRequest) {
     throw new PhiTableProviderError("invalid-action-value", "This action requires an installation row.");
   }
   if (request.actionKey === "test") {
-    await readApiResponse(await fetch(`${API_PATH}/${encodeURIComponent(installationKey)}/test`, {
+    const result = await readApiResponse(await fetch(`${API_PATH}/${encodeURIComponent(installationKey)}/test`, {
       ...init,
       method: "POST",
       headers: baseHeaders,
     }));
-    return { status: "accepted" as const, invalidation: "view" as const };
+    /*
+     * The test's answer is the answer, so it goes back into the row it is about.
+     *
+     * This used to ask for a refetch and throw the response away, which made the one thing the action
+     * produces arrive late and by a detour -- and when the outcome was the same as last time, nothing
+     * moved at all. The row carries `validationStatus`, `validationDetail` and `validationTestedAt`,
+     * which is what the server just returned.
+     */
+    const validation = flattenValidation({ validation: result?.validation });
+    return {
+      status: "accepted" as const,
+      invalidation: "none" as const,
+      rowPatch: {
+        validationStatus: validation.validationStatus,
+        validationDetail: validation.validationDetail,
+        validationTestedAt: validation.validationTestedAt,
+      },
+      /*
+       * The finding itself, said out loud. The server already writes a sentence for both outcomes --
+       * "Discovery verified.", "Discovery failed (404)." -- and a provider it cannot test at all
+       * returns none, which is the case where saying nothing is right.
+       */
+      ...(validation.validationDetail ? { message: validation.validationDetail } : {}),
+    };
   }
   if (request.actionKey === "delete") {
     await readApiResponse(await fetch(`${API_PATH}/${encodeURIComponent(installationKey)}`, {
