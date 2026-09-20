@@ -42,6 +42,14 @@ export type PhiButtonControlProps = {
   /** A round button is what an icon on its own wants, over a picture or in a toolbar. */
   shape?: ButtonProps["shape"];
   danger?: boolean;
+  /**
+   * Draws the button transparent with a coloured outline, for a surface the Theme's own fills fight.
+   *
+   * A hero over an image, a coloured band: there a filled button states a second background nobody
+   * asked for. This is Ant Design's own flag rather than a `PhiButtonType` of its own, because it is
+   * not a kind of button -- it is any kind of button, drawn for a background it does not own.
+   */
+  ghost?: boolean;
   disabled?: boolean;
   loading?: boolean;
   htmlType?: ButtonProps["htmlType"];
@@ -74,6 +82,7 @@ export function PhiButtonControl({
   type = "default",
   shape,
   danger,
+  ghost,
   disabled,
   loading,
   htmlType,
@@ -97,6 +106,7 @@ export function PhiButtonControl({
       type={type}
       shape={shape}
       danger={danger}
+      ghost={ghost}
       disabled={inert}
       loading={loading}
       htmlType={htmlType}

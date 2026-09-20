@@ -3927,13 +3927,28 @@ export function PhiBuilderBrandThemePreviewWidgetClient({
               </PhiTypographyControl>
             </PhiFlexControl>
             {/*
-              * Samples, drawn with the Controls a Site renders -- and live ones: a button with nothing to
-              * call renders disabled, and a preview of disabled buttons would show the wrong Theme.
+              * Samples, drawn with the Controls a Site renders. The live ones carry `previewNoop`
+              * because a button with nothing to call renders disabled, and a Primary that only looks
+              * disabled because nobody wired it would show the wrong Theme.
+              *
+              * The disabled pair says `disabled` outright for the same reason read the other way: the
+              * off state is a Theme colour like any other and wants showing, and stating it is what
+              * separates a sample that means it from one that forgot its handler.
+              *
+              * The order is the five button types, then the two flags that redraw any of them, then
+              * the off state. Every type a Theme colours is here, because a token that no sample
+              * shows is one an author changes blind.
               */}
             <PhiFlexControl align="center" gap="middle" wrap>
               <PhiButtonControl type="primary" label="Primary" onClick={previewNoop} />
               <PhiButtonControl label="Default" onClick={previewNoop} />
+              <PhiButtonControl type="dashed" label="Dashed" onClick={previewNoop} />
+              <PhiButtonControl type="text" label="Text" onClick={previewNoop} />
+              <PhiButtonControl type="link" label="Link" onClick={previewNoop} />
               <PhiButtonControl danger label="Danger" onClick={previewNoop} />
+              <PhiButtonControl ghost label="Ghost" onClick={previewNoop} />
+              <PhiButtonControl type="primary" disabled label="Primary disabled" />
+              <PhiButtonControl disabled label="Default disabled" />
             </PhiFlexControl>
           </PhiFlexControl>
           <PhiDividerControl style={{ margin: 0 }} />
