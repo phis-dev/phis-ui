@@ -2,7 +2,7 @@
 
 import { buildPhiMediaAssetContentDeliveryUrl, PhiMediaAssetFlags, PhiMediaAssetSource } from "../../../constants/media";
 import { runPhiMediaUploadSession } from "../../../components/media/media-upload-flow";
-import { adoptPhiThemeModuleBlocks } from "../../../theme/phi-theme-adoption";
+import { adoptPhiThemeModuleBlocks, isPhiCoreThemeSet } from "../../../theme/phi-theme-adoption";
 import { resolvePhiThemeEffectiveLogo, type PhiThemeComposition } from "../../../theme/phi-theme-composition";
 import type { PhiThemeSetBlock } from "../../../theme/phi-theme-blocks";
 import type { PhiSiteThemeBrand, PhiSiteThemeBrandLogo, PhiSiteThemeRoot } from "../../../types/site-theme";
@@ -172,10 +172,16 @@ export async function materializePhiThemeModuleBlocks<T extends { root?: PhiSite
 /**
  * Takes the Logo a Theme shows into the Site's record, every picture into the Media library.
  *
- * Unlike a ground, a Set's Logo is taken from core as well: the core Set offers the house wordmark, and
- * a Site that saved a Theme showing it has decided to keep it. Both modes are taken, including one the
- * author never switched to -- a Site that kept only the light Logo would change its dark one the day
- * its Set does. What the record already holds stays; a mode set to "none" stays none.
+ * A Module's Set is taken over; the core Set is followed and never copied, the same rule every other
+ * part already follows. The Logo used to be the exception, because the core Set carried the house
+ * wordmark and a Site that saved a Theme showing it had decided to keep it. What it carries now is a
+ * placeholder reading "your logo", and taking that over would upload a blank into the Media library and
+ * nail it to the record as an Asset -- a Site would own a picture nobody chose, and would keep it the
+ * day it followed a Set that has a real one.
+ *
+ * Both modes are taken, including one the author never switched to -- a Site that kept only the light
+ * Logo would change its dark one the day its Set does. What the record already holds stays; a mode set
+ * to "none" stays none.
  *
  * Only a picture still carried inline or served from this origin is uploaded, the same rule the ground
  * follows. The same picture in both modes is one upload.
@@ -184,7 +190,9 @@ export async function materializePhiThemeBrandLogo<T extends { brand?: PhiSiteTh
   theme: T,
   logoSet: PhiThemeSetBlock,
 ): Promise<T> {
-  const logos = resolvePhiThemeEffectiveLogo(theme.brand?.logo, logoSet);
+  // A core Set offers nothing to take, so only its Logo drops out here; what the author set is still theirs.
+  const offered = isPhiCoreThemeSet(logoSet) ? { ...logoSet, logo: null } : logoSet;
+  const logos = resolvePhiThemeEffectiveLogo(theme.brand?.logo, offered);
   if (!logos.light && !logos.dark) return theme;
 
   const uploadedBySource = new Map<string, number>();

@@ -1,9 +1,11 @@
 import {
   PHI_CORE_THEME_FONTS_BLOCKS,
   PHI_CORE_THEME_GROUND_BLOCKS,
+  PHI_CORE_THEME_SETS,
   PHI_CORE_THEME_STYLE_BLOCKS,
   type PhiThemeFontsBlock,
   type PhiThemeGroundBlock,
+  type PhiThemeSetBlock,
   type PhiThemeStyleBlock,
 } from "./phi-theme-blocks";
 import { resolvePhiThemeEffectiveFonts, resolvePhiThemeEffectiveRoot, type PhiThemeComposition } from "./phi-theme-composition";
@@ -31,6 +33,10 @@ export function isPhiCoreThemeStyle(style: Pick<PhiThemeStyleBlock, "key">) {
 
 export function isPhiCoreThemeFonts(fonts: Pick<PhiThemeFontsBlock, "key">) {
   return PHI_CORE_THEME_FONTS_BLOCKS.some((block) => block.key === fonts.key);
+}
+
+export function isPhiCoreThemeSet(set: Pick<PhiThemeSetBlock, "key">) {
+  return PHI_CORE_THEME_SETS.some((block) => block.key === set.key);
 }
 
 /** The slice of a Site Theme the adoption reads and writes. */

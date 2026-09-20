@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { createPhiControlShapeCorners } from "./phi-control-shape";
 import { PHI_CORE_THEME_BLOCK_CATALOG } from "./phi-theme-composition";
+import { PHI_THEME_PLACEHOLDER_LOGO_DARK } from "./phi-theme-placeholder-logo";
 import { resolvePhiThemeRuntimePayload } from "./phi-theme-runtime";
 
 /**
@@ -95,7 +96,9 @@ describe("theme runtime payload", () => {
     expect(theme.brand?.logo?.light).toEqual({ sourceKind: "none" });
     expect(theme.brand?.logo?.dark).toEqual({
       sourceKind: "url",
-      sourceUrl: expect.stringMatching(/^data:image\/svg\+xml;base64,/),
+      // The core Set's own Logo, named rather than pattern-matched: which picture comes through is the
+      // claim, and a pattern for "some inline SVG" passed for whichever one happened to be there.
+      sourceUrl: PHI_THEME_PLACEHOLDER_LOGO_DARK,
     });
   });
 });

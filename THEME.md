@@ -35,7 +35,9 @@ A **Set** (`PhiThemeSetBlock`) names one block of each part by key and may carry
 (`PhiSiteThemeBrandLogos`). It composes, it does not contain.
 
 Every block has `key`, positive integer `version`, `title`, and optional `description`. Core ships exactly one
-block of each kind plus one Set, all keyed `phis`; they are the floor every selection falls back to.
+block of each kind plus one Set, all keyed `phis`; they are the floor every selection falls back to. The core
+Set's Logo is a placeholder -- a dashed frame reading "your logo" -- because that Set dresses every
+installation that has stated nothing, and what stands there must be nobody's mark.
 
 Modules contribute blocks through their Server catalog entry (`types/cms-module-descriptors.ts`):
 
@@ -63,7 +65,8 @@ registries and registration side effects are invalid.
 Saving a Theme that resolves to a Module's palette, style (with its Control shape), ground, or fonts copies
 that block into the Site's own fields (`theme/phi-theme-adoption.ts`). Parts the author already set are kept;
 the block key stays in `blocks` as provenance. A picture a Module ground carries inline is uploaded into the
-Site's Media library by the same save. Core blocks are followed, never copied.
+Site's Media library by the same save, and so is a Module Set's Logo. Core blocks are followed, never
+copied -- the Set included, so the placeholder Logo never becomes a Site's own Asset.
 
 ### Theme workspace selection
 
@@ -170,8 +173,9 @@ preset.
   - `{ sourceKind: "url", sourceUrl: string }` (a Set's inline Logo until a save uploads it),
   - `{ sourceKind: "none" }` (explicitly no Logo, so a Set's Logo does not show through).
 
-  A mode the record leaves unset shows the followed Set's Logo; the first save takes it into the Media
-  library.
+  A mode the record leaves unset shows the followed Set's Logo; where that Set is a Module's, the first
+  save takes it into the Media library. The core Set's is followed and never copied, like every other
+  core block -- its Logo is the "your logo" placeholder, and a Site must not come to own a blank.
 - `logoAlt?: string` -- falls back to the Asset's own alt text.
 - `logoYOffset?: number` -- pixels the Logo is nudged against the Wordmark, to correct the artwork's own
   whitespace. Applied only where the Logo is drawn. Absent means none.

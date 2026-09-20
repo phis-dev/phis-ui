@@ -1,7 +1,7 @@
 import { PHI_CORE_THEME_PRESET_PLUGINS, type PhiThemePresetPlugin } from "./phi-theme-presets";
 import type { PhiSiteFontSlots, PhiSiteThemeBrandLogos, PhiSiteThemeRoot } from "../types/site-theme";
 import { createPhiControlShapeCorners, type PhiControlShapeCorners } from "./phi-control-shape";
-import { PHI_THEME_PHIS_BRAND_LOGO_DARK, PHI_THEME_PHIS_BRAND_LOGO_LIGHT } from "./phi-theme-brand-logo";
+import { PHI_THEME_PLACEHOLDER_LOGO_DARK, PHI_THEME_PLACEHOLDER_LOGO_LIGHT } from "./phi-theme-placeholder-logo";
 import { PHI_THEME_PHIS_GROUND_IMAGE_DARK, PHI_THEME_PHIS_GROUND_IMAGE_LIGHT } from "./phi-theme-ground-image";
 
 /**
@@ -128,8 +128,8 @@ export const PHI_CORE_THEME_STYLE_BLOCKS: readonly PhiThemeStyleBlock[] = [
 ];
 
 /*
- * The ground: soft colour fields in the Phis palette under the outlined wordmark, as an inline SVG per
- * mode, with a frosted frame over it.
+ * The ground: soft colour fields in the Phis palette, as an inline SVG per mode, with a frosted frame
+ * over it.
  *
  * Inline is the condition. The floor every Site falls back to may depend on nothing that can go
  * missing -- no Asset, no static file -- and a data URL meets that the way a gradient does. Both modes
@@ -141,7 +141,7 @@ export const PHI_CORE_THEME_GROUND_BLOCKS: readonly PhiThemeGroundBlock[] = [
     key: "phis",
     version: 1,
     title: "Phis",
-    description: "Soft colour fields under the outlined phi/s wordmark, with a frosted frame over it.",
+    description: "Soft colour fields in the house palette, with a frosted frame over them.",
     root: {
       background: {
         light: {
@@ -213,9 +213,14 @@ export const PHI_CORE_THEME_SETS: readonly PhiThemeSetBlock[] = [
     style: "phis",
     ground: "phis",
     fonts: "phis",
+    /*
+     * A blank, not a mark. This Set dresses every installation that has stated nothing, so a Logo drawn
+     * here would be worn by Sites that never chose it; what belongs there is the sign that it is theirs
+     * to fill (theme/phi-theme-placeholder-logo.ts).
+     */
     logo: {
-      light: { sourceKind: "url", sourceUrl: PHI_THEME_PHIS_BRAND_LOGO_LIGHT },
-      dark: { sourceKind: "url", sourceUrl: PHI_THEME_PHIS_BRAND_LOGO_DARK },
+      light: { sourceKind: "url", sourceUrl: PHI_THEME_PLACEHOLDER_LOGO_LIGHT },
+      dark: { sourceKind: "url", sourceUrl: PHI_THEME_PLACEHOLDER_LOGO_DARK },
     },
   },
 ];
