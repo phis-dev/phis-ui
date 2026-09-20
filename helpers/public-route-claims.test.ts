@@ -21,17 +21,17 @@ import type { PhiRuntimeModuleId } from "../types";
  */
 
 const AUTH = "@phis/ui/modules/auth" as PhiRuntimeModuleId;
-const DEV = "@phis/dev/modules/site" as PhiRuntimeModuleId;
+const SITE = "@phis/example/modules/site" as PhiRuntimeModuleId;
 
 const claims: PhiPublicRouteClaim[] = [
   { ownerModuleId: AUTH, presetKey: "auth-login-page", title: "Login", declaredPath: "/login" },
-  { ownerModuleId: DEV, presetKey: "dev-login-page", title: "Sign in", declaredPath: "/login" },
-  { ownerModuleId: DEV, presetKey: "dev-contracts-page", title: "Contracts", declaredPath: "/contracts" },
+  { ownerModuleId: SITE, presetKey: "example-login-page", title: "Sign in", declaredPath: "/login" },
+  { ownerModuleId: SITE, presetKey: "example-contracts-page", title: "Contracts", declaredPath: "/contracts" },
 ];
 
 describe("what a Site may write down about a Public address", () => {
   it("takes an address that is a fixed path", () => {
-    expect(isPhiAssignablePublicRoutePath("/dev/login")).toBe(true);
+    expect(isPhiAssignablePublicRoutePath("/example/login")).toBe(true);
     expect(isPhiAssignablePublicRoutePath("/terms-and-conditions")).toBe(true);
   });
 
@@ -50,33 +50,33 @@ describe("what a Site may write down about a Public address", () => {
       modules: {
         runtimeModules: [AUTH],
         publicRoutePaths: [
-          { ownerModuleId: DEV, presetKey: "dev-login-page", path: "/dev/login" },
-          { ownerModuleId: DEV, presetKey: "dev-login-page", path: "/second-answer" },
-          { ownerModuleId: DEV, presetKey: "broken", path: "not-a-path" },
+          { ownerModuleId: SITE, presetKey: "example-login-page", path: "/example/login" },
+          { ownerModuleId: SITE, presetKey: "example-login-page", path: "/second-answer" },
+          { ownerModuleId: SITE, presetKey: "broken", path: "not-a-path" },
           "nonsense",
         ],
       },
     });
     expect(assignments).toEqual([
-      { ownerModuleId: DEV, presetKey: "dev-login-page", path: "/dev/login" },
+      { ownerModuleId: SITE, presetKey: "example-login-page", path: "/example/login" },
     ]);
   });
 
   it("says so on the way in", () => {
     expect(() => normalizePhiAreaPublicRoutePaths([
-      { ownerModuleId: DEV, presetKey: "dev-login-page", path: "/orders/:id" },
+      { ownerModuleId: SITE, presetKey: "example-login-page", path: "/orders/:id" },
     ])).toThrow(/not an address/);
     expect(() => normalizePhiAreaPublicRoutePaths([
-      { ownerModuleId: DEV, presetKey: "dev-login-page", path: "/one" },
-      { ownerModuleId: DEV, presetKey: "dev-login-page", path: "/two" },
+      { ownerModuleId: SITE, presetKey: "example-login-page", path: "/one" },
+      { ownerModuleId: SITE, presetKey: "example-login-page", path: "/two" },
     ])).toThrow(/two addresses/);
   });
 
   it("sorts by route identity -- Module first, then preset -- so an unchanged list serializes identically", () => {
     expect(normalizePhiAreaPublicRoutePaths([
-      { ownerModuleId: DEV, presetKey: "dev-login-page", path: "/dev/login" },
+      { ownerModuleId: SITE, presetKey: "example-login-page", path: "/example/login" },
       { ownerModuleId: AUTH, presetKey: "auth-login-page", path: "/sign-in" },
-    ]).map((assignment) => assignment.presetKey)).toEqual(["dev-login-page", "auth-login-page"]);
+    ]).map((assignment) => assignment.presetKey)).toEqual(["example-login-page", "auth-login-page"]);
   });
 });
 
@@ -93,7 +93,7 @@ describe("which addresses are free", () => {
 
   it("reports the address a Module would not get", () => {
     const collisions = findPhiPublicRoutePathCollisions({
-      moduleId: DEV,
+      moduleId: SITE,
       claims,
       addresses: buildPhiPublicRouteAddressMap({
         claims,
@@ -104,14 +104,14 @@ describe("which addresses are free", () => {
     });
     expect(collisions).toHaveLength(1);
     expect(collisions[0]?.path).toBe("/login");
-    expect(collisions[0]?.claim.presetKey).toBe("dev-login-page");
+    expect(collisions[0]?.claim.presetKey).toBe("example-login-page");
   });
 
   it("stops asking once the Site answered", () => {
-    const assignments = [{ ownerModuleId: DEV, presetKey: "dev-login-page", path: "/dev/login" }];
-    expect(resolvePhiPublicRoutePath(claims[1]!, assignments)).toBe("/dev/login");
+    const assignments = [{ ownerModuleId: SITE, presetKey: "example-login-page", path: "/example/login" }];
+    expect(resolvePhiPublicRoutePath(claims[1]!, assignments)).toBe("/example/login");
     expect(findPhiPublicRoutePathCollisions({
-      moduleId: DEV,
+      moduleId: SITE,
       claims,
       addresses: buildPhiPublicRouteAddressMap({
         claims,
@@ -124,7 +124,7 @@ describe("which addresses are free", () => {
 
   it("counts a Site Page as the holder of its address", () => {
     const collisions = findPhiPublicRoutePathCollisions({
-      moduleId: DEV,
+      moduleId: SITE,
       claims,
       addresses: buildPhiPublicRouteAddressMap({
         claims,
@@ -141,10 +141,10 @@ describe("which addresses are free", () => {
   it("does not contest the Area root, which is an application rather than a route", () => {
     const rootClaims: PhiPublicRouteClaim[] = [
       { ownerModuleId: AUTH, presetKey: "auth-root", title: "Home", declaredPath: "/" },
-      { ownerModuleId: DEV, presetKey: "dev-root", title: "Landing", declaredPath: "/" },
+      { ownerModuleId: SITE, presetKey: "example-root", title: "Landing", declaredPath: "/" },
     ];
     expect(findPhiPublicRoutePathCollisions({
-      moduleId: DEV,
+      moduleId: SITE,
       claims: rootClaims,
       addresses: buildPhiPublicRouteAddressMap({
         claims: rootClaims,
