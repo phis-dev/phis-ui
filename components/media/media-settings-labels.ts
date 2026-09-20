@@ -32,6 +32,8 @@ const PHI_MEDIA_SETTINGS_PAGE_LABEL_SET = definePhiLabelSet({
     max_object_size_label: "Maximum file size",
     max_object_size_hint: definePhiMessageLabel("The largest single file this site accepts. Every upload is refused against it, whatever the Space still has room for."),
     max_object_size_required: definePhiMessageLabel("A maximum file size is required."),
+    // What an empty quota field means, said in the field instead of only in its description.
+    unlimited_placeholder: "Unlimited",
     addon_spaces_title: "Add-on stores",
     addon_spaces_empty: definePhiMessageLabel("No Add-on holds files on this site."),
     submit_label: "Save",
@@ -73,6 +75,7 @@ export async function getPhiMediaSettingsPageLabels(options: PhiGlobalTranslator
       maxObjectSize: labels.max_object_size_label,
       maxObjectSizeHint: labels.max_object_size_hint,
       maxObjectSizeRequired: labels.max_object_size_required,
+      unlimited: labels.unlimited_placeholder,
     },
     addonSpaces: {
       title: labels.addon_spaces_title,

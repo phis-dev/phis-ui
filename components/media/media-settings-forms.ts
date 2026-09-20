@@ -5,6 +5,7 @@ import type {
 } from "../../types";
 import { createPhiFormId } from "../../types/form-id";
 import { PHI_SHARED_PACKAGE_NAME } from "../../types/signals";
+import { PHI_FORM_GRID_LAST_LINE } from "../forms/form-descriptor-contract";
 import { flattenPhiFormLabels } from "../forms/form-labels";
 import {
   PHI_FORM_FIELD_PROVIDER_KEYS,
@@ -37,12 +38,14 @@ const PHI_MEDIA_SETTINGS_FORM_DESCRIPTOR: PhiFormDescriptor = {
       fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.storageSize,
       label: label("defaultUserQuota", "Default User Space quota"),
       description: label("defaultUserQuotaHint", "Applies to User Spaces without an override. Empty means no limit."),
+      placeholder: label("unlimited", "Unlimited"),
     },
     {
       key: "defaultGroupQuotaBytes",
       fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.storageSize,
       label: label("defaultGroupQuota", "Default Group Space quota"),
       description: label("defaultGroupQuotaHint", "Applies to Group Spaces without an override. Empty means no limit."),
+      placeholder: label("unlimited", "Unlimited"),
     },
     // The fourth kind, on the same rails. An Add-on Space has no owner: no page showing the figure and
     // no Manager to notice it filling, so the Site default is the only thing that bounds it.
@@ -51,6 +54,7 @@ const PHI_MEDIA_SETTINGS_FORM_DESCRIPTOR: PhiFormDescriptor = {
       fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.storageSize,
       label: label("defaultAddonQuota", "Default Add-on Space quota"),
       description: label("defaultAddonQuotaHint", "Applies to each Add-on's own store. An Add-on Space has no owner to notice it filling, so a limit here is what bounds it."),
+      placeholder: label("unlimited", "Unlimited"),
     },
     /*
      * The ceilings, which the API has always carried and this form never offered.
@@ -65,18 +69,21 @@ const PHI_MEDIA_SETTINGS_FORM_DESCRIPTOR: PhiFormDescriptor = {
       fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.storageSize,
       label: label("maxUserQuota", "Maximum User Space quota"),
       description: label("maxUserQuotaHint", "The ceiling an override may not exceed. Empty means no ceiling."),
+      placeholder: label("unlimited", "Unlimited"),
     },
     {
       key: "maxGroupQuotaBytes",
       fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.storageSize,
       label: label("maxGroupQuota", "Maximum Group Space quota"),
       description: label("maxGroupQuotaHint", "The ceiling a group Manager may not exceed for their own group. Empty means no ceiling."),
+      placeholder: label("unlimited", "Unlimited"),
     },
     {
       key: "maxAddonQuotaBytes",
       fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.storageSize,
       label: label("maxAddonQuota", "Maximum Add-on Space quota"),
       description: label("maxAddonQuotaHint", "The ceiling an override may not exceed. Empty means no ceiling."),
+      placeholder: label("unlimited", "Unlimited"),
     },
     /*
      * The limit that actually stops an upload, which this page used to only report.
@@ -100,8 +107,26 @@ const PHI_MEDIA_SETTINGS_FORM_DESCRIPTOR: PhiFormDescriptor = {
       }],
     },
   ],
+  /*
+   * Wide labels, narrow fields, against the house third.
+   *
+   * Every label here is a sentence naming a Space kind and which of the two instruments it is --
+   * "Maximum Add-on Space quota" -- and the shared third wraps all six onto two lines. What stands
+   * opposite is a storage size: four or five characters, which needs a third of the width far less
+   * than the label needs two thirds. Line 17 of 24 is where that lands.
+   */
   layout: {
     gap: { compact: "sm", medium: "base" },
+    label: {
+      compact: { start: 1, end: PHI_FORM_GRID_LAST_LINE },
+      medium: { start: 1, end: 17 },
+      wide: { start: 1, end: 17 },
+    },
+    control: {
+      compact: { start: 1, end: PHI_FORM_GRID_LAST_LINE },
+      medium: { start: 17, end: PHI_FORM_GRID_LAST_LINE },
+      wide: { start: 17, end: PHI_FORM_GRID_LAST_LINE },
+    },
   },
 };
 
@@ -130,6 +155,7 @@ async function loadLabels(
     maxObjectSize: labels.fields.maxObjectSize,
     maxObjectSizeHint: labels.fields.maxObjectSizeHint,
     maxObjectSizeRequired: labels.fields.maxObjectSizeRequired,
+    unlimited: labels.fields.unlimited,
   });
 }
 

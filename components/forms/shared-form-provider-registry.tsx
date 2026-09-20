@@ -28,7 +28,6 @@ import { PhiCheckboxGroupControl } from "../controls/phi-checkbox-group-control"
 import { PhiSwitchControl } from "../controls/phi-switch-control";
 import { PhiSegmentedControl } from "../controls/phi-segmented-control";
 import {
-  PHI_STORAGE_SIZE_PRECISION,
   PHI_STORAGE_SIZE_UNIT_LABEL,
   phiBytesToStorageSize,
   phiStorageSizeToBytes,
@@ -341,20 +340,27 @@ export const PHI_SHARED_FORM_PROVIDER_REGISTRY = createPhiFormProviderRegistry({
      * and no submit handler, validator or API payload learns that a unit was ever involved.
      */
     phiSharedFieldType(PHI_FORM_FIELD_PROVIDER_KEYS.storageSize, {
-      Control: ({ value, onChange, placeholder, disabled, readOnly }) => (
-        <PhiNumberControl
-          value={phiBytesToStorageSize(value)}
-          prefix={PHI_STORAGE_SIZE_UNIT_LABEL}
-          min={0}
-          step={1}
-          precision={PHI_STORAGE_SIZE_PRECISION}
-          disabled={disabled}
-          readOnly={readOnly}
-          placeholder={placeholder}
-          style={{ width: "100%" }}
-          onChange={(nextValue) => onChange?.(phiStorageSizeToBytes(nextValue))}
-        />
-      ),
+      Control: ({ value, onChange, placeholder, disabled, readOnly }) => {
+        const size = phiBytesToStorageSize(value);
+        return (
+          <PhiNumberControl
+            value={size}
+            /*
+             * A unit belongs to a value, so an empty field has none: the field says what it means by
+             * being empty -- "Unlimited", or whatever its placeholder states -- and a lone "MB" in
+             * front of that reads like the start of an answer nobody gave.
+             */
+            prefix={size == null ? undefined : PHI_STORAGE_SIZE_UNIT_LABEL}
+            min={0}
+            step={1}
+            disabled={disabled}
+            readOnly={readOnly}
+            placeholder={placeholder}
+            style={{ width: "100%" }}
+            onChange={(nextValue) => onChange?.(phiStorageSizeToBytes(nextValue))}
+          />
+        );
+      },
     }),
   ],
   validationRules: [
