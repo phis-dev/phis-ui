@@ -236,7 +236,12 @@ Table and Tree contracts are [TABLES.md](./TABLES.md) and [TREES.md](./TREES.md)
   given; it never keeps a second value state and never renders a Widget or Layout.
 - Core field providers: `text`, `email`, `password`, `textarea`, `hidden`, `honeypot`, `checkbox`,
   `select`, `url`, `tel`, `number`, `slider`, `multi-select`, `checkbox-group`, `datetime`, `switch`,
-  `segmented`, `cascader`, `table`, `tree`.
+  `segmented`, `cascader`, `table`, `tree`, `storage-size`.
+- `storage-size` is a byte count shown in megabytes. The value the form carries is bytes at every
+  moment -- the Control converts on the way in and on the way out (`components/forms/storage-size.ts`),
+  so a handler, a validator and an API payload see the unit a limit is stored and enforced in, and a
+  label never has to carry one. A megabyte is 1 048 576 bytes here, which is what every tool that
+  enforces an upload limit means by it.
 - Core validation providers: `required`, `email`, `min-length`, `max-length`, `exact-length`,
   `min-letters`, `matches-field`, `url`, `tel`, `pattern`, `number`. They build Ant Design rules inside
   `PhiFormControl`. `pattern` takes `source` (at most 512 characters) and `flags` from `i`, `m`, `s`, `u`.

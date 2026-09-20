@@ -55,6 +55,7 @@ export async function buildPhiDefaultAdminMediaSettingsPageTree({
             maxUserQuotaBytes: settings.maxUserQuotaBytes,
             maxGroupQuotaBytes: settings.maxGroupQuotaBytes,
             maxAddonQuotaBytes: settings.maxAddonQuotaBytes,
+            maxObjectBytes: settings.maxObjectBytes,
           },
         }],
       },
@@ -71,7 +72,6 @@ export async function buildPhiDefaultAdminMediaSettingsPageTree({
               // Reported, not offered: availability follows from the Modules this Site activates.
               `${labels.fields.userSpacesEnabled}: ${settings.userSpacesEnabled ? labels.availability.available : labels.availability.unavailable}`,
               `${labels.fields.groupSpacesEnabled}: ${settings.groupSpacesEnabled ? labels.availability.available : labels.availability.unavailable}`,
-              `${labels.fields.maxObjectBytes}: ${settings.maxObjectBytes}`,
               /*
                * The Add-on stores, named so they can be sized.
                *

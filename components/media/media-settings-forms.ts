@@ -8,6 +8,7 @@ import { PHI_SHARED_PACKAGE_NAME } from "../../types/signals";
 import { flattenPhiFormLabels } from "../forms/form-labels";
 import {
   PHI_FORM_FIELD_PROVIDER_KEYS,
+  PHI_FORM_VALIDATION_PROVIDER_KEYS,
   createPhiSharedFormProviderKey,
 } from "../forms/form-provider-contract";
 import { definePhiRuntimeModuleForm } from "../forms/form-registry";
@@ -33,22 +34,22 @@ const PHI_MEDIA_SETTINGS_FORM_DESCRIPTOR: PhiFormDescriptor = {
     // activates, so it is reported next to the technical values rather than switched here.
     {
       key: "defaultUserQuotaBytes",
-      fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.number,
-      label: label("defaultUserQuota", "Default User Space quota (bytes)"),
+      fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.storageSize,
+      label: label("defaultUserQuota", "Default User Space quota"),
       description: label("defaultUserQuotaHint", "Applies to User Spaces without an override. Empty means no limit."),
     },
     {
       key: "defaultGroupQuotaBytes",
-      fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.number,
-      label: label("defaultGroupQuota", "Default Group Space quota (bytes)"),
+      fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.storageSize,
+      label: label("defaultGroupQuota", "Default Group Space quota"),
       description: label("defaultGroupQuotaHint", "Applies to Group Spaces without an override. Empty means no limit."),
     },
     // The fourth kind, on the same rails. An Add-on Space has no owner: no page showing the figure and
     // no Manager to notice it filling, so the Site default is the only thing that bounds it.
     {
       key: "defaultAddonQuotaBytes",
-      fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.number,
-      label: label("defaultAddonQuota", "Default Add-on Space quota (bytes)"),
+      fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.storageSize,
+      label: label("defaultAddonQuota", "Default Add-on Space quota"),
       description: label("defaultAddonQuotaHint", "Applies to each Add-on's own store. An Add-on Space has no owner to notice it filling, so a limit here is what bounds it."),
     },
     /*
@@ -61,21 +62,42 @@ const PHI_MEDIA_SETTINGS_FORM_DESCRIPTOR: PhiFormDescriptor = {
      */
     {
       key: "maxUserQuotaBytes",
-      fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.number,
-      label: label("maxUserQuota", "Maximum User Space quota (bytes)"),
+      fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.storageSize,
+      label: label("maxUserQuota", "Maximum User Space quota"),
       description: label("maxUserQuotaHint", "The ceiling an override may not exceed. Empty means no ceiling."),
     },
     {
       key: "maxGroupQuotaBytes",
-      fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.number,
-      label: label("maxGroupQuota", "Maximum Group Space quota (bytes)"),
+      fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.storageSize,
+      label: label("maxGroupQuota", "Maximum Group Space quota"),
       description: label("maxGroupQuotaHint", "The ceiling a group Manager may not exceed for their own group. Empty means no ceiling."),
     },
     {
       key: "maxAddonQuotaBytes",
-      fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.number,
-      label: label("maxAddonQuota", "Maximum Add-on Space quota (bytes)"),
+      fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.storageSize,
+      label: label("maxAddonQuota", "Maximum Add-on Space quota"),
       description: label("maxAddonQuotaHint", "The ceiling an override may not exceed. Empty means no ceiling."),
+    },
+    /*
+     * The limit that actually stops an upload, which this page used to only report.
+     *
+     * A quota is how much a Space may hold in total; this is how much one file may weigh, and it is the
+     * one an author meets -- the upload route refuses the file against it before any quota is consulted.
+     * Reporting it beside the read-only runtime values said it was derived from something. It is not:
+     * it is capacity, decided here, like every other figure on this page.
+     *
+     * It alone cannot be emptied. An empty quota means no limit, which is a coherent thing for a Space
+     * to say; a Site that accepts files of no maximum size has said nothing, and the schema refuses it.
+     */
+    {
+      key: "maxObjectBytes",
+      fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.storageSize,
+      label: label("maxObjectSize", "Maximum file size"),
+      description: label("maxObjectSizeHint", "The largest single file this site accepts. Every upload is refused against it, whatever the Space still has room for."),
+      validation: [{
+        providerKey: PHI_FORM_VALIDATION_PROVIDER_KEYS.required,
+        message: label("maxObjectSizeRequired", "A maximum file size is required."),
+      }],
     },
   ],
   layout: {
@@ -105,6 +127,9 @@ async function loadLabels(
     maxGroupQuotaHint: labels.fields.maxGroupQuotaHint,
     maxAddonQuota: labels.fields.maxAddonQuota,
     maxAddonQuotaHint: labels.fields.maxAddonQuotaHint,
+    maxObjectSize: labels.fields.maxObjectSize,
+    maxObjectSizeHint: labels.fields.maxObjectSizeHint,
+    maxObjectSizeRequired: labels.fields.maxObjectSizeRequired,
   });
 }
 
@@ -115,7 +140,7 @@ export const PHI_MEDIA_SETTINGS_RUNTIME_MODULE_FORM = definePhiRuntimeModuleForm
   version: 1,
   flags: 0,
   title: "Media settings",
-  description: "Default Media Space quotas and per-Space ceilings for the current site.",
+  description: "Default Media Space quotas, per-Space ceilings, and the largest file the site accepts.",
   category: "forms",
   tags: ["settings", "media", "admin"],
   descriptor: PHI_MEDIA_SETTINGS_FORM_DESCRIPTOR,

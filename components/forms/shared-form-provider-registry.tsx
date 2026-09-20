@@ -15,6 +15,12 @@ import { PhiCheckboxControl } from "../controls/phi-checkbox-control";
 import { PhiCheckboxGroupControl } from "../controls/phi-checkbox-group-control";
 import { PhiSwitchControl } from "../controls/phi-switch-control";
 import { PhiSegmentedControl } from "../controls/phi-segmented-control";
+import {
+  PHI_STORAGE_SIZE_PRECISION,
+  PHI_STORAGE_SIZE_UNIT_LABEL,
+  phiBytesToStorageSize,
+  phiStorageSizeToBytes,
+} from "./storage-size";
 
 /**
  * A field Control whose code loads when a field of its kind is first rendered.
@@ -301,6 +307,28 @@ export const PHI_SHARED_FORM_PROVIDER_REGISTRY = createPhiFormProviderRegistry({
     {
       ...PHI_SHARED_FORM_FIELD_TYPE_PROVIDER_DESCRIPTORS[19],
       Control: PhiLazyDateTimeFormControl,
+    },
+    /*
+     * The field holds bytes and shows megabytes, so both conversions sit on this one Control: the
+     * value a form carries is bytes before it reaches here and bytes again the moment it leaves,
+     * and no submit handler, validator or API payload learns that a unit was ever involved.
+     */
+    {
+      ...PHI_SHARED_FORM_FIELD_TYPE_PROVIDER_DESCRIPTORS[20],
+      Control: ({ value, onChange, placeholder, disabled, readOnly }) => (
+        <PhiNumberControl
+          value={phiBytesToStorageSize(value)}
+          prefix={PHI_STORAGE_SIZE_UNIT_LABEL}
+          min={0}
+          step={1}
+          precision={PHI_STORAGE_SIZE_PRECISION}
+          disabled={disabled}
+          readOnly={readOnly}
+          placeholder={placeholder}
+          style={{ width: "100%" }}
+          onChange={(nextValue) => onChange?.(phiStorageSizeToBytes(nextValue))}
+        />
+      ),
     },
   ],
   validationRules: [

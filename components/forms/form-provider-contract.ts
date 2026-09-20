@@ -31,6 +31,7 @@ export const PHI_FORM_FIELD_PROVIDER_KEYS = {
   url: createPhiSharedFormProviderKey("field", "url"),
   tel: createPhiSharedFormProviderKey("field", "tel"),
   number: createPhiSharedFormProviderKey("field", "number"),
+  storageSize: createPhiSharedFormProviderKey("field", "storage-size"),
   slider: createPhiSharedFormProviderKey("field", "slider"),
   multiSelect: createPhiSharedFormProviderKey("field", "multi-select"),
   checkboxGroup: createPhiSharedFormProviderKey("field", "checkbox-group"),
@@ -180,6 +181,18 @@ export const PHI_SHARED_FORM_FIELD_TYPE_PROVIDER_DESCRIPTORS = [
     valueType: "string",
     presentation: "control",
     settingsFields: [{ key: "timeZone", type: "string", label: "Time zone" }],
+  },
+  /*
+   * A byte count an administrator reads in megabytes. Appended rather than placed beside Number,
+   * which is where it belongs by subject, because the registry pairs each descriptor with its Control
+   * by position in this list and an insertion in the middle would silently re-pair everything after it.
+   */
+  {
+    key: PHI_FORM_FIELD_PROVIDER_KEYS.storageSize,
+    ownerModuleId: PHI_CORE_RUNTIME_MODULE_ID,
+    title: "Storage size",
+    valueType: "number",
+    presentation: "control",
   },
 ] as const;
 
