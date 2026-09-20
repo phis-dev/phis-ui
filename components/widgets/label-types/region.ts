@@ -7,7 +7,11 @@ export type PhiRegionWidgetLabels = {
   structure: {
     surface: {
       title: string;
+      /** The caption on the switch that decides it. */
       siderFullHeight: string;
+      /** What the left Sider is doing right now, one of the two, under its title on the canvas. */
+      siderSpansShell: string;
+      siderBesideContent: string;
       selectedPageHeaderBand: string;
       pageSidebar: string;
       contentTitle: string;
@@ -33,6 +37,8 @@ export const PHI_REGION_WIDGET_DEFAULT_LABELS: PhiRegionWidgetLabels = {
     surface: {
       title: "Structure",
       siderFullHeight: "Sider full height",
+      siderSpansShell: "Spans header to footer",
+      siderBesideContent: "Beside the content only",
       selectedPageHeaderBand: "Selected page header band",
       pageSidebar: "Page sidebar beside hero and content",
       contentTitle: "Page body viewport",

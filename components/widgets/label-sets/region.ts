@@ -13,6 +13,8 @@ const PHI_REGION_WIDGET_LABEL_SET = definePhiLabelSet({
   labels: {
     structure_surface_title: PHI_REGION_WIDGET_DEFAULT_LABELS.structure.surface.title,
     structure_surface_sider_full_height: PHI_REGION_WIDGET_DEFAULT_LABELS.structure.surface.siderFullHeight,
+    structure_surface_sider_spans_shell: PHI_REGION_WIDGET_DEFAULT_LABELS.structure.surface.siderSpansShell,
+    structure_surface_sider_beside_content: PHI_REGION_WIDGET_DEFAULT_LABELS.structure.surface.siderBesideContent,
     structure_surface_selected_page_header_band: PHI_REGION_WIDGET_DEFAULT_LABELS.structure.surface.selectedPageHeaderBand,
     structure_surface_page_sidebar: PHI_REGION_WIDGET_DEFAULT_LABELS.structure.surface.pageSidebar,
     structure_surface_content_title: PHI_REGION_WIDGET_DEFAULT_LABELS.structure.surface.contentTitle,
@@ -47,6 +49,8 @@ export async function getPhiRegionWidgetLabels(options: PhiGlobalTranslatorOptio
       surface: {
         title: labels.structure_surface_title,
         siderFullHeight: labels.structure_surface_sider_full_height,
+        siderSpansShell: labels.structure_surface_sider_spans_shell,
+        siderBesideContent: labels.structure_surface_sider_beside_content,
         selectedPageHeaderBand: labels.structure_surface_selected_page_header_band,
         pageSidebar: labels.structure_surface_page_sidebar,
         contentTitle: labels.structure_surface_content_title,

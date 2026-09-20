@@ -55,6 +55,8 @@ import { getPhiBuilderChromeWidgetLabels } from "../../widgets/label-sets/builde
 import { PHI_BUILDER_CHROME_WIDGET_DEFAULT_LABELS } from "../../widgets/label-types/builder-chrome";
 import type { PhiBuilderChromeWidgetLabels } from "../../widgets/label-types/builder-chrome";
 import { getPhiBuilderRevisionsWidgetLabels } from "../../widgets/label-sets/revisions";
+import { getPhiRegionWidgetLabels } from "../../widgets/label-sets/region";
+import { PHI_REGION_WIDGET_DEFAULT_LABELS } from "../../widgets/label-types/region";
 import { getPhiBuilderModulesPageLabels } from "../../widgets/label-sets/builder-modules";
 import { PHI_REVISIONS_RUNTIME_DATA_PROVIDER_KEYS } from "../../../plugins/runtime-modules/revisions/ids";
 import { createPhiRevisionsControllerAddress } from "../../../plugins/runtime-modules/revisions/controller/address";
@@ -750,6 +752,20 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
   const isModulesPage = presetKey === "builder-modules-page";
   const isMediaPage = presetKey === "builder-media-page";
   const isThemePage = presetKey === "builder-theme-page";
+  /*
+   * The Sider switch says what the canvas beside it says, so it reads it from the same place.
+   *
+   * It carried its own copy of the caption -- a literal in this tree -- which went out in English while
+   * the Region titles above it were translated. `structure.surface.siderFullHeight` is that caption, and
+   * a second key holding the same words would have been the same sentence translated twice.
+   */
+  const structureLabels = isStructurePage ? await getPhiRegionWidgetLabels({
+    apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
+    internalToken: readPhiServerApiCredentials().internalToken,
+    locale: runtime.locale.current,
+  }) : null;
+  const siderFullHeightLabel = structureLabels?.structure.surface.siderFullHeight
+    ?? PHI_REGION_WIDGET_DEFAULT_LABELS.structure.surface.siderFullHeight;
   const revisionsLabels = isRevisionsPage ? await getPhiBuilderRevisionsWidgetLabels({
     apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
     internalToken: readPhiServerApiCredentials().internalToken,
@@ -2208,7 +2224,7 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
               sortOrder: 0,
               label: "Sider full height switch",
               config: {
-                label: "Sider full height",
+                label: siderFullHeightLabel,
                 defaultChecked: true,
                 key: "dev-structure-sider-full-height-switch",
                 signalRoutes: {

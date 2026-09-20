@@ -101,6 +101,19 @@ export function PhiDeveloperBuilderShellsWorkspaceWidgetClient({
     }
   }, [area, builderMode, pageKey, previewRegionDrafts, regionDrafts, structureShellDrafts]);
 
+  /*
+   * What the left Sider is doing, read the same way the controller reads it.
+   *
+   * The canvas said "Sider full height" under the Sider whichever way the switch stood, so half the time
+   * it named the state the Sider was not in. It is the switch's caption, not a description -- and the
+   * switch is right there beside it, saying the same words while meaning the choice rather than the
+   * state.
+   */
+  const siderLeftDraftKey = getPhiBuilderRegionDraftKey(area, "sider_left", pageKey);
+  const siderLeftFullHeight = (
+    regionDrafts[siderLeftDraftKey] ?? structureShellDrafts?.[siderLeftDraftKey]
+  )?.regionConfig?.fullHeight === true;
+
   const renderStructureRegion = (
     regionKey: "header_top" | "header_main" | "sider_left" | "footer_main" | "footer_bottom",
     title: string,
@@ -141,7 +154,9 @@ export function PhiDeveloperBuilderShellsWorkspaceWidgetClient({
         siderLeft={renderStructureRegion(
           "sider_left",
           regionLabels.regions.siderLeft.title,
-          regionLabels.structure.surface.siderFullHeight,
+          siderLeftFullHeight
+            ? regionLabels.structure.surface.siderSpansShell
+            : regionLabels.structure.surface.siderBesideContent,
         )}
         footerMain={renderStructureRegion("footer_main", regionLabels.regions.footerMain.title)}
         footerBottom={renderStructureRegion("footer_bottom", regionLabels.regions.footerBottom.title)}
