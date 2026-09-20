@@ -5,6 +5,7 @@ import { createContext, useContext, useEffect, useMemo, useRef, useState, type C
 
 import type { PhiSiteTheme } from "../../gateway/site-config";
 import type { PhiSiteThemeBrand } from "../../types/site-theme";
+import { resolvePhiBrandWordmarkTextFrom } from "../../helpers/brand-wordmark";
 import { usePhiSignalListener } from "../runtime/runtime-signal-bus";
 import {
   resolvePhiRootTheme,
@@ -48,6 +49,21 @@ export function usePhiSiteBrand(): PhiSiteThemeBrand | null {
   return useContext(PhiSiteBrandContext);
 }
 
+/**
+ * What the Site is called in writing, held beside the Brand because the two answer together.
+ *
+ * The Wordmark falls back to the Site's name, and the name lives on the runtime -- which the Builder
+ * canvas does not have. Every authoring half there is handed a stub Site called "Preview", so a Widget
+ * that resolved the Wordmark from its runtime wrote "Preview" on the canvas while the Logo next to it,
+ * read from the Brand above, was the Site's own. Held here, both halves answer from the same place, and
+ * both follow a live Theme draft: clearing the last Wordmark part shows the name, at once.
+ */
+const PhiSiteWordmarkTextContext = createContext<string>("");
+
+export function usePhiSiteWordmarkText(): string {
+  return useContext(PhiSiteWordmarkTextContext);
+}
+
 function resolveStringSignalValue(signal: PhiSignal) {
   return typeof signal.value === "string" ? signal.value.trim() : "";
 }
@@ -55,6 +71,7 @@ function resolveStringSignalValue(signal: PhiSignal) {
 export function PhiRootLiveThemeProvider({
   children,
   siteKey,
+  siteName,
   siteTheme,
   locale,
   initialMode,
@@ -70,6 +87,8 @@ export function PhiRootLiveThemeProvider({
 }: {
   children: ReactNode;
   siteKey: string;
+  /** The name the Site is filed under, which is what its Wordmark says where none is set. */
+  siteName?: string | null;
   siteTheme: PhiSiteTheme;
   locale: ConfigProviderProps["locale"];
   initialMode: PhiThemeMode;
@@ -88,6 +107,7 @@ export function PhiRootLiveThemeProvider({
   const signalPartition = usePhiSignalRuntimePartition();
   const coreAddress = createPhiCoreRuntimeControllerAddress();
   const [liveSiteTheme, setLiveSiteTheme] = useState(siteTheme);
+  const wordmarkText = resolvePhiBrandWordmarkTextFrom(liveSiteTheme.brand, siteName, siteKey);
   const [mode, setMode] = useState<PhiThemeMode>(initialMode);
   /*
    * A live Theme signal - the Builder's dark mode switch, or a Theme draft preview - states what the
@@ -288,7 +308,9 @@ export function PhiRootLiveThemeProvider({
       >
         <PhiRootBackgroundLayer root={liveSiteTheme.root} mode={mode} />
         <PhiSiteBrandContext.Provider value={liveSiteTheme.brand ?? null}>
-          {children}
+          <PhiSiteWordmarkTextContext.Provider value={wordmarkText}>
+            {children}
+          </PhiSiteWordmarkTextContext.Provider>
         </PhiSiteBrandContext.Provider>
       </PhiConfigProvider>
     </>

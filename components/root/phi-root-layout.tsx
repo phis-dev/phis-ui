@@ -203,6 +203,7 @@ export async function PhiRootLayout({
         >
           <PhiRootLiveThemeProvider
             siteKey={site.key}
+            siteName={site.name}
             siteTheme={siteTheme}
             locale={antdLocale}
             initialMode={resolvedThemeMode}

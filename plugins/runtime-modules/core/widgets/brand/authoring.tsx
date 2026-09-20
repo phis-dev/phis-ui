@@ -1,9 +1,11 @@
 "use client";
 
 import type { PhiCmsBuilderWidgetPlugin, PhiCmsBuilderWidgetRenderArgs } from "../../../../../types";
-import { resolvePhiBrandWordmarkText } from "../../../../../helpers/brand-wordmark";
 import { PhiBrandLineControl } from "../../../../../components/controls/phi-brand-control";
-import { usePhiSiteBrand } from "../../../../../components/root/phi-root-live-theme-provider";
+import {
+  usePhiSiteBrand,
+  usePhiSiteWordmarkText,
+} from "../../../../../components/root/phi-root-live-theme-provider";
 import { PHI_BRAND_LINE_FALLBACK_ICONS, PhiBrandWidgetClient } from "./client";
 import {
   PHI_BRAND_WIDGET_DEFINITION,
@@ -33,8 +35,9 @@ const PHI_BRAND_LINE_UNSET_LABELS: Record<PhiBrandWidgetLineMode, string> = {
  * the Site's name and then its key, so there is always something to draw; a Logo mode with the Logo
  * explicitly set to none is somebody saying no, not somebody who has not answered yet.
  */
-function PhiBrandWidgetEditor({ config, runtime }: PhiCmsBuilderWidgetRenderArgs<PhiCmsBrandWidgetConfig>) {
+function PhiBrandWidgetEditor({ config }: PhiCmsBuilderWidgetRenderArgs<PhiCmsBrandWidgetConfig>) {
   const brand = usePhiSiteBrand();
+  const wordmarkText = usePhiSiteWordmarkText();
   const mode = config.mode;
 
   if (isPhiBrandWidgetLineMode(mode)) {
@@ -52,13 +55,15 @@ function PhiBrandWidgetEditor({ config, runtime }: PhiCmsBuilderWidgetRenderArgs
   /*
    * `mode` is passed on, which it was not before: a Widget set to a line, or to the Logo alone, drew the
    * full lockup here while it was being placed -- the editor disagreed with the page about the only
-   * setting this Widget has. The fallback reads through the same resolver as the server half for the
-   * same reason: `site.name` skips a Wordmark the Theme has already set.
+   * setting this Widget has.
+   *
+   * The Wordmark comes from the root and not from `runtime`, which on this canvas is a stub Site called
+   * "Preview" -- and that is what the Wordmark said here, beside a Logo that was the Site's own.
    */
   return (
     <PhiBrandWidgetClient
       config={{ mode }}
-      fallbackTitle={resolvePhiBrandWordmarkText(runtime)}
+      fallbackTitle={wordmarkText}
       interactive={false}
     />
   );
