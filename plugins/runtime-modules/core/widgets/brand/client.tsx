@@ -22,7 +22,7 @@ export type PhiBrandWidgetConfig = {
 };
 
 /** What a line shows in front of itself where the Brand names no icon for it. */
-const PHI_BRAND_LINE_FALLBACK_ICONS: Record<PhiBrandWidgetLineMode, string> = {
+export const PHI_BRAND_LINE_FALLBACK_ICONS: Record<PhiBrandWidgetLineMode, string> = {
   slogan: "antd:star",
   location: "antd:location",
 };

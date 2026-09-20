@@ -1,25 +1,70 @@
 "use client";
 
-import type { PhiCmsBuilderWidgetPlugin } from "../../../../../types";
+import type { PhiCmsBuilderWidgetPlugin, PhiCmsBuilderWidgetRenderArgs } from "../../../../../types";
 import { resolvePhiBrandWordmarkText } from "../../../../../helpers/brand-wordmark";
-import { PhiBrandWidgetClient } from "./client";
-import { PHI_BRAND_WIDGET_DEFINITION, type PhiCmsBrandWidgetConfig } from "./config";
+import { PhiBrandLineControl } from "../../../../../components/controls/phi-brand-control";
+import { usePhiSiteBrand } from "../../../../../components/root/phi-root-live-theme-provider";
+import { PHI_BRAND_LINE_FALLBACK_ICONS, PhiBrandWidgetClient } from "./client";
+import {
+  PHI_BRAND_WIDGET_DEFINITION,
+  isPhiBrandWidgetLineMode,
+  type PhiBrandWidgetLineMode,
+  type PhiCmsBrandWidgetConfig,
+} from "./config";
 
-/*
- * The editor shows what the page will show, which it did not before.
+/** What an unset line says instead of its sentence, which is also where to go and write one. */
+const PHI_BRAND_LINE_UNSET_LABELS: Record<PhiBrandWidgetLineMode, string> = {
+  slogan: "Slogan not set in the Theme",
+  location: "Location not set in the Theme",
+};
+
+/**
+ * The Brand as it will look, and for an unset line the shape it will take.
  *
- * `mode` was the one thing this preview did not pass on, so a Widget set to a line or to the Logo alone
- * still drew the full lockup while it was being placed -- the Builder disagreed with the Site about the
- * only setting this Widget has. The fallback reads through the same resolver as the server half for the
- * same reason: `site.name` skips a Wordmark the Theme has already set.
+ * A line the Theme has not written draws nothing, which is right on the page: the strip keeps its shape
+ * and no slogan is invented for anybody's header. In the Builder it is not -- the slot is taken, so it
+ * offers no `+` either, and a column of two invisible Widgets reads as broken rather than as unset.
+ *
+ * So the line is drawn as itself, with its own fallback icon in front, saying what is missing. Not a
+ * generic placeholder card: what the author needs to see here is the shape the line will have and how
+ * much room it takes beside its neighbours, which a card in its place would misreport.
+ *
+ * The mark modes need none of this. Their Wordmark falls back through `resolvePhiBrandWordmarkText` to
+ * the Site's name and then its key, so there is always something to draw; a Logo mode with the Logo
+ * explicitly set to none is somebody saying no, not somebody who has not answered yet.
  */
-export const PHI_BRAND_WIDGET_BUILDER_PLUGIN: PhiCmsBuilderWidgetPlugin<PhiCmsBrandWidgetConfig> = {
-  ...PHI_BRAND_WIDGET_DEFINITION,
-  renderEditor: ({ runtime, config }) => (
+function PhiBrandWidgetEditor({ config, runtime }: PhiCmsBuilderWidgetRenderArgs<PhiCmsBrandWidgetConfig>) {
+  const brand = usePhiSiteBrand();
+  const mode = config.mode;
+
+  if (isPhiBrandWidgetLineMode(mode)) {
+    const line = mode === "location" ? brand?.location : brand?.slogan;
+    if (!line?.label?.trim()) {
+      return (
+        <PhiBrandLineControl
+          line={{ label: PHI_BRAND_LINE_UNSET_LABELS[mode] }}
+          fallbackIcon={PHI_BRAND_LINE_FALLBACK_ICONS[mode]}
+        />
+      );
+    }
+  }
+
+  /*
+   * `mode` is passed on, which it was not before: a Widget set to a line, or to the Logo alone, drew the
+   * full lockup here while it was being placed -- the editor disagreed with the page about the only
+   * setting this Widget has. The fallback reads through the same resolver as the server half for the
+   * same reason: `site.name` skips a Wordmark the Theme has already set.
+   */
+  return (
     <PhiBrandWidgetClient
-      config={{ mode: config.mode }}
+      config={{ mode }}
       fallbackTitle={resolvePhiBrandWordmarkText(runtime)}
       interactive={false}
     />
-  ),
+  );
+}
+
+export const PHI_BRAND_WIDGET_BUILDER_PLUGIN: PhiCmsBuilderWidgetPlugin<PhiCmsBrandWidgetConfig> = {
+  ...PHI_BRAND_WIDGET_DEFINITION,
+  renderEditor: (args) => <PhiBrandWidgetEditor {...args} />,
 };
