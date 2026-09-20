@@ -2,7 +2,7 @@ import {
   trGlobal,
   trGlobalForLocale,
 } from "../../../../../server-helpers/translate";
-import { resolvePhiTextPlaceholders } from "../../../../../helpers/text-placeholders";
+import { maskPhiTextPlaceholders, resolvePhiTextPlaceholders } from "../../../../../helpers/text-placeholders";
 import type { PhiCmsInstanceId, PhiRenderableBlockBase, PhiServerBlockBaseProps } from "../../../../../types";
 import { PhiCmsWidgetType } from "../../../../../constants/cms-widget-types";
 import { PhiRuntimeModuleRenderClientHost } from "../../../../../components/runtime/runtime-module-render-client-manifest";
@@ -39,14 +39,18 @@ export async function PhiSimpleTextWidget({
   runtime,
 }: PhiSimpleTextWidgetProps) {
   const locale = runtime?.locale.current;
-  const translated = translate && labels.text
-    ? locale ? await trGlobalForLocale(locale, labels.text) : await trGlobal(labels.text)
-    : labels.text;
   /*
-   * After the translation, because a translator may move `{year}` to the other end of the sentence and
-   * the value belongs to where it ended up. See `resolvePhiTextPlaceholders`.
+   * Masked before the translation and filled after it.
+   *
+   * Before, because a translator translates `{year}` and hands back `{Jahr}`, which nothing answers.
+   * After, because a translator may move the placeholder to the other end of the sentence and the
+   * value belongs to where it ended up. See `helpers/text-placeholders.ts`.
    */
-  const text = resolvePhiTextPlaceholders(translated, runtime);
+  const masked = maskPhiTextPlaceholders(labels.text);
+  const translated = translate && masked.text
+    ? locale ? await trGlobalForLocale(locale, masked.text) : await trGlobal(masked.text)
+    : masked.text;
+  const text = resolvePhiTextPlaceholders(translated, masked.names, runtime);
 
   return (
     <PhiRuntimeModuleRenderClientHost

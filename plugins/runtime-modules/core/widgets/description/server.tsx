@@ -3,7 +3,8 @@ import {
   trGlobal,
   trGlobalForLocale,
 } from "../../../../../server-helpers/translate";
-import type { PhiServerBlockBaseProps } from "../../../../../types";
+import type { PhiBlockRuntime, PhiServerBlockBaseProps } from "../../../../../types";
+import { maskPhiTextPlaceholders, resolvePhiTextPlaceholders } from "../../../../../helpers/text-placeholders";
 import type { PhiCmsDescriptionWidgetConfig } from "./config";
 import {
   PHI_COLOR,
@@ -27,17 +28,27 @@ export type PhiDescriptionWidgetProps = PhiServerBlockBaseProps<
   PhiCmsDescriptionWidgetConfig
 >;
 
+/**
+ * Masked, translated, filled -- the order `helpers/text-placeholders.ts` sets out.
+ *
+ * Seven fields here take a sentence a Preset wrote, and a Preset writes `{site.name}` rather than any
+ * one Site's name. Translating first and never filling left the braces standing; masking first keeps
+ * `{year}` out of the translator's hands, which would otherwise hand back `{Jahr}`.
+ */
 async function translateLabel(
   locale: string | undefined,
   value: string | undefined,
+  runtime: PhiBlockRuntime | undefined,
 ) {
   if (!value) {
     return undefined;
   }
 
-  return locale
-    ? trGlobalForLocale(locale, value)
-    : trGlobal(value);
+  const masked = maskPhiTextPlaceholders(value);
+  const translated = locale
+    ? await trGlobalForLocale(locale, masked.text)
+    : await trGlobal(masked.text);
+  return resolvePhiTextPlaceholders(translated, masked.names, runtime);
 }
 
 export async function PhiDescriptionWidget({
@@ -46,14 +57,14 @@ export async function PhiDescriptionWidget({
   runtime,
 }: PhiDescriptionWidgetProps) {
   const locale = runtime?.locale.current;
-  const eyebrow = await translateLabel(locale, labels.eyebrow ?? config?.eyebrow);
-  const title = await translateLabel(locale, labels.title ?? config?.title);
-  const description = await translateLabel(locale, labels.description ?? config?.description);
-  const asideTitle = await translateLabel(locale, labels.asideTitle ?? config?.asideTitle);
+  const eyebrow = await translateLabel(locale, labels.eyebrow ?? config?.eyebrow, runtime);
+  const title = await translateLabel(locale, labels.title ?? config?.title, runtime);
+  const description = await translateLabel(locale, labels.description ?? config?.description, runtime);
+  const asideTitle = await translateLabel(locale, labels.asideTitle ?? config?.asideTitle, runtime);
   const asideItems = await Promise.all(
-    (labels.asideItems ?? config?.asideItems ?? []).map((item) => translateLabel(locale, item)),
+    (labels.asideItems ?? config?.asideItems ?? []).map((item) => translateLabel(locale, item, runtime)),
   );
-  const footer = await translateLabel(locale, labels.footer ?? config?.footer);
+  const footer = await translateLabel(locale, labels.footer ?? config?.footer, runtime);
   const resolvedAsideItems = asideItems.filter((item): item is string => Boolean(item));
   const stackStyle: CSSProperties = {
     display: "grid",
