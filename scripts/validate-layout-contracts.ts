@@ -18,7 +18,7 @@ import {
 } from "../components/layouts/phi-layout-contract";
 import { PhiCmsRegionStatic } from "../components/regions/phi-cms-region-static";
 import { resolvePhiBuilderPreviewRegionConfig } from "../plugins/runtime-modules/builder/render-root-node-preview.server";
-import { parsePhiCmsGridLayoutConfig } from "../types/cms-config";
+import { parsePhiCmsContentLayoutConfig, parsePhiCmsGridLayoutConfig } from "../types/cms-config";
 import { resolvePhiGridSlotPlacement } from "../components/layouts/phi-grid-contract";
 import {
   resolvePhiSlotChildSizing,
@@ -71,6 +71,24 @@ assert.deepEqual(
   splitPhiCmsLayoutNamespacedTypeKey(`${resolvePhiCmsLayoutPluginKey("content")}/content`),
   { pluginKey: resolvePhiCmsLayoutPluginKey("content"), typeKey: "content" },
 );
+/*
+ * A Layout states its geometry in `size`, and a flat `width` is not a second way to say it.
+ *
+ * The parser used to fall back to `config.width` when `size` was absent, which gave a Module two
+ * spellings for one thing. The flat ones are what a block becomes on its way to CSS; a config
+ * carrying them says nothing, and this is what makes that silence a rule rather than an accident.
+ */
+assert.equal(
+  parsePhiCmsContentLayoutConfig({ width: 400, height: 200, maxWidth: 600 }).size,
+  undefined,
+  "A Layout config must not take geometry from flat width/height; `size` is the only spelling read.",
+);
+assert.deepEqual(
+  parsePhiCmsContentLayoutConfig({ size: { width: 400 } }).size,
+  { width: 400, height: undefined },
+  "A Layout config states geometry as `size`.",
+);
+
 const responsiveGridConfig = parsePhiCmsGridLayoutConfig({
   slotPlacements: [{
     slotIndex: 1,

@@ -97,7 +97,7 @@ export async function buildPhiDefaultEditorTranslationsPageTree({
         slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
         sortOrder: 0,
         label: "editor translation modal content",
-        config: { anchor: { horizontal: "left", vertical: "top" }, gap: PHI_SPACE.base, width: "100%", padding: 0, border: false },
+        config: { anchor: { horizontal: "left", vertical: "top" }, gap: PHI_SPACE.base, padding: 0, border: false },
       }),
       nodes.layout({
         id: PHI_EDITOR_TRANSLATION_OVERLAY_FOOTER_LAYOUT_ID,

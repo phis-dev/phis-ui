@@ -550,7 +550,7 @@ export async function buildPhiDefaultBuilderAreaPresetTree({
         slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
         sortOrder: 0,
         label: "dev footer main",
-        config: { maxWidth: "100%", margin: 0, padding: 0 },
+        config: { margin: 0, padding: 0 },
       }),
       nodes.layout({
         creationPreset: { layoutKind: "flex", preset: "panel" },

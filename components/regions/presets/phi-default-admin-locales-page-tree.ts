@@ -94,8 +94,6 @@ export async function buildPhiDefaultAdminLocalesPageTree({
             { slotIndex: 1, span: { compact: 24, medium: 16, wide: 18 }, offset: { compact: 0, medium: 8, wide: 6 } },
             { slotIndex: 2, span: { compact: 24, medium: 24, wide: 24 }, offset: { compact: 0, medium: 0, wide: 0 } },
           ],
-          width: "100%",
-          maxWidth: "100%",
           margin: 0,
           padding: 0,
           border: false,
