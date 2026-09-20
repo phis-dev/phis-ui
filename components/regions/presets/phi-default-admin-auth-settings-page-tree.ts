@@ -34,15 +34,23 @@ export async function buildPhiDefaultAdminAuthSettingsPageTree({
     }),
   ]);
 
-  // The shell derives Widget instance ids from these node keys; the same derivation here yields
-  // the deterministic signal addresses for the table/form wiring.
+  // The shell derives Overlay, Layout and Widget instance ids from these node keys; the same derivation
+  // here yields the deterministic signal addresses for the table/dialog wiring. A dialog's Form is
+  // `<nodeKey>Form`, which is the address the Table's edit action loads a row into.
   const widgetIds = createPhiPresetCmsInstanceIdMap({
     domain: "page",
     ownerModuleId: PHI_AUTH_RUNTIME_MODULE_ID,
     presetKey: "admin-auth-settings-page",
-  }, ["widgetInstallationsTable", "widgetInstallationEditForm"]);
+  }, [
+    "widgetInstallationsTable",
+    "overlayInstallationCreate",
+    "overlayInstallationEdit",
+    "overlayInstallationEditForm",
+  ]);
   const tableAddress = createPhiSignalAddress("cms", widgetIds.widgetInstallationsTable);
-  const editFormAddress = createPhiSignalAddress("cms", widgetIds.widgetInstallationEditForm);
+  const editFormAddress = createPhiSignalAddress("cms", widgetIds.overlayInstallationEditForm);
+  const createOverlayAddress = createPhiSignalAddress("cms", widgetIds.overlayInstallationCreate);
+  const editOverlayAddress = createPhiSignalAddress("cms", widgetIds.overlayInstallationEdit);
 
   const tree = buildPhiSettingsPageShellTree({
     page,
@@ -159,6 +167,19 @@ export async function buildPhiDefaultAdminAuthSettingsPageTree({
               editing: { mode: "cell" },
               tools: { mode: "self-contained", reset: false, reload: true },
               actions: {
+                toolbar: [
+                  {
+                    /*
+                     * Adding a provider belongs where the providers are, not in a panel of its own below
+                     * them. The action carries no row, so the dialog it opens starts empty.
+                     */
+                    key: "create",
+                    label: labels.installations.createTitle,
+                    icon: "plus",
+                    display: "icon",
+                    execution: "signal",
+                  },
+                ],
                 row: [
                   {
                     key: "edit",
@@ -196,6 +217,11 @@ export async function buildPhiDefaultAdminAuthSettingsPageTree({
               },
             },
             signalRoutes: {
+              /*
+               * One announcement, three listeners. The Table names the action in the message, so each
+               * receiver decides for itself whether it was meant: the edit Form by `openActionKey`, and
+               * each Overlay by the same field on its own config.
+               */
               emits: [{
                 routeKey: "auth-installations-table-action",
                 capabilityId: "actionActivate",
@@ -205,6 +231,24 @@ export async function buildPhiDefaultAdminAuthSettingsPageTree({
                 valueType: "json",
                 valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.tableAction,
                 receiver: editFormAddress,
+              }, {
+                routeKey: "auth-installations-table-action-create-dialog",
+                capabilityId: "actionActivate",
+                scope: "page",
+                channel: "action",
+                action: "activate",
+                valueType: "json",
+                valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.tableAction,
+                receiver: createOverlayAddress,
+              }, {
+                routeKey: "auth-installations-table-action-edit-dialog",
+                capabilityId: "actionActivate",
+                scope: "page",
+                channel: "action",
+                action: "activate",
+                valueType: "json",
+                valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.tableAction,
+                receiver: editOverlayAddress,
               }],
               listens: [{
                 routeKey: "auth-installations-table-reload",
@@ -219,72 +263,75 @@ export async function buildPhiDefaultAdminAuthSettingsPageTree({
           },
         }],
       },
+    ],
+    overlays: [
       {
-        nodeKey: "panelInstallationEdit",
-        title: labels.installations.editTitle,
-        description: labels.installations.editDescription,
-        sections: [{
-          kind: "form",
-          nodeKey: "widgetInstallationEditForm",
-          formId: PHI_AUTH_ADMIN_SETTINGS_FORM_IDS.installationEdit,
-          label: labels.installations.editTitle,
-          submitLabel: labels.submitLabel,
-          configOverrides: {
-            source: {
-              providerKey: PHI_AUTH_RUNTIME_DATA_PROVIDER_KEYS.installations,
-              resourceKey: "installations",
-            },
-            openActionKey: "edit",
-            signalRoutes: {
-              emits: [{
-                routeKey: "auth-installation-edit-success",
-                capabilityId: "submitSuccess",
-                scope: "page",
-                channel: "reload",
-                action: "activate",
-                valueType: "json",
-                valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.formResult,
-                receiver: tableAddress,
-              }],
-              listens: [{
-                routeKey: "auth-installation-edit-open",
-                capabilityId: "recordOpen",
-                scope: "page",
-                channel: "action",
-                action: "activate",
-                valueType: "json",
-                valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.tableAction,
-                receiver: editFormAddress,
-              }],
-            },
+        /*
+         * Creating and editing a provider are two dialogs, not two panels. A panel describes a part of
+         * the page; an installation is a row, and the way to a row is the Table it sits in.
+         */
+        nodeKey: "overlayInstallationCreate",
+        title: labels.installations.createTitle,
+        openActionKey: "create",
+        formId: PHI_AUTH_ADMIN_SETTINGS_FORM_IDS.installationCreate,
+        label: labels.installations.createTitle,
+        submitLabel: labels.submitLabel,
+        cancelLabel: labels.installations.confirmCancel,
+        configOverrides: {
+          signalRoutes: {
+            emits: [{
+              routeKey: "auth-installation-create-success",
+              capabilityId: "submitSuccess",
+              scope: "page",
+              channel: "reload",
+              action: "activate",
+              // The Table's reload listener takes no value, and a listener matches on the value type
+              // too -- a `formResult` sent here matched nothing, so nothing ever reloaded.
+              valueType: "none",
+              receiver: tableAddress,
+            }],
           },
-        }],
+        },
       },
       {
-        nodeKey: "panelInstallationCreate",
-        title: labels.installations.createTitle,
-        description: labels.installations.createDescription,
-        sections: [{
-          kind: "form",
-          nodeKey: "widgetInstallationCreateForm",
-          formId: PHI_AUTH_ADMIN_SETTINGS_FORM_IDS.installationCreate,
-          label: labels.installations.createTitle,
-          submitLabel: labels.submitLabel,
-          configOverrides: {
-            signalRoutes: {
-              emits: [{
-                routeKey: "auth-installation-create-success",
-                capabilityId: "submitSuccess",
-                scope: "page",
-                channel: "reload",
-                action: "activate",
-                valueType: "json",
-                valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.formResult,
-                receiver: tableAddress,
-              }],
-            },
+        nodeKey: "overlayInstallationEdit",
+        title: labels.installations.editTitle,
+        openActionKey: "edit",
+        formId: PHI_AUTH_ADMIN_SETTINGS_FORM_IDS.installationEdit,
+        label: labels.installations.editTitle,
+        submitLabel: labels.submitLabel,
+        cancelLabel: labels.installations.confirmCancel,
+        configOverrides: {
+          source: {
+            providerKey: PHI_AUTH_RUNTIME_DATA_PROVIDER_KEYS.installations,
+            resourceKey: "installations",
           },
-        }],
+          // The Form loads the row the same action opened the dialog with; both filter on this key.
+          openActionKey: "edit",
+          signalRoutes: {
+            emits: [{
+              routeKey: "auth-installation-edit-success",
+              capabilityId: "submitSuccess",
+              scope: "page",
+              channel: "reload",
+              action: "activate",
+              // The Table's reload listener takes no value, and a listener matches on the value type
+              // too -- a `formResult` sent here matched nothing, so nothing ever reloaded.
+              valueType: "none",
+              receiver: tableAddress,
+            }],
+            listens: [{
+              routeKey: "auth-installation-edit-open",
+              capabilityId: "recordOpen",
+              scope: "page",
+              channel: "action",
+              action: "activate",
+              valueType: "json",
+              valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.tableAction,
+              receiver: editFormAddress,
+            }],
+          },
+        },
       },
     ],
   });

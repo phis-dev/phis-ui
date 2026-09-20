@@ -55,6 +55,21 @@ export type PhiCmsOverlayConfig = PhiOverlayChromeConfig & {
   resizable: boolean;
   push: boolean | { distance: string | number };
   closeMode: "immediate" | "request";
+  /**
+   * Which Table action this Overlay opens for, when it is opened by one.
+   *
+   * A Table announces every action on one channel and names the action in the message. An Overlay that
+   * subscribes to that channel would otherwise open for all of them -- test and delete included -- so
+   * the only way to point a row at a dialog was a Controller whose whole job was to forward one signal.
+   *
+   * The Form and Record Widgets already answer this question with a field of this name and read it the
+   * same way: the `open` route fires only when `actionKey` matches. An Overlay filling itself from a
+   * Table sits beside a Widget doing the same thing, so it asks in the same words.
+   *
+   * Only an `open` route carried on the Table's own action channel is filtered. An Overlay opened the
+   * ordinary way -- a `dialog` route with no value -- never consults this.
+   */
+  openActionKey: string | null;
   signalRoutes: PhiSignalRouteSet | null;
 };
 
@@ -153,6 +168,9 @@ export function parsePhiCmsOverlayConfig(
     resizable: readBoolean(rawConfig.resizable, false),
     push: readPush(rawConfig.push),
     closeMode: rawConfig.closeMode === "request" ? "request" : "immediate",
+    openActionKey: typeof rawConfig.openActionKey === "string" && rawConfig.openActionKey.trim()
+      ? rawConfig.openActionKey.trim()
+      : null,
     background: typeof rawConfig.background === "string" && rawConfig.background.trim()
       ? rawConfig.background.trim()
       : undefined,

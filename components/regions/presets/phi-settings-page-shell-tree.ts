@@ -9,7 +9,7 @@ import { PHI_LAYOUT } from "../../../theme/phi-tokens";
 import type { PhiCmsPageNode, PhiCmsContentWidgetNode, PhiCmsLayoutNode, PhiResolvedCmsPageTree } from "../../../types/cms";
 import type { PhiRuntimeModuleId } from "../../../types/cms-module-descriptors";
 import { createPhiPresetCmsInstanceIdMap } from "../../../types/cms-instance-id";
-import { createPhiSignalAddress } from "../../../types/signals";
+import { PHI_SIGNAL_VALUE_SCHEMAS, createPhiSignalAddress } from "../../../types/signals";
 import { buildPhiBasePageContentScaffold, PHI_BASE_PAGE_LAYOUT_NODE_ID } from "./phi-base-page-layout";
 
 export type PhiSettingsPageShellWidgetSection = {
@@ -89,6 +89,52 @@ export type PhiSettingsPageShellSection =
   | PhiSettingsPageShellFormSection;
 
 /**
+ * One dialog of a Settings page: a Form in a Modal, opened by a Table action.
+ *
+ * A Settings page states its parts in panels, but a record that is created and edited is not a part of
+ * the page -- it is a row, and the place to reach it is the Table it is in. A panel per Form turns one
+ * section into three, two of which are empty most of the time and describe a thing the reader is not
+ * looking at. So `+` in the Table's toolbar opens one, the row's edit action opens the other, and the
+ * page keeps one panel for the providers.
+ *
+ * **The buttons are the Overlay's, not the Form's.** A Form Widget can draw its own submit, and every
+ * panel Form does, because only the Widget knows where its label column ends. In a dialog that argument
+ * is gone and a worse one takes its place: a dialog whose button sits in the body next to one whose
+ * button sits in the footer are two different dialogs to a reader. So the Footer carries a Command
+ * Toolbar, and it presses the Form through its `submit` capability -- which `form/config.ts` calls the
+ * ordinary way in: "a form is submitted by whoever holds its `submit` capability".
+ */
+export type PhiSettingsPageShellOverlay = {
+  /**
+   * Preset-locally unique node key. The Overlay, its Body and Footer Layouts, the Form Widget and the
+   * Footer's Command Toolbar all derive from it, so one key names the whole dialog.
+   */
+  nodeKey: string;
+  title: string;
+  /**
+   * The Table action that opens it.
+   *
+   * A Table names the action in the message rather than on the channel, so the Overlay is told which
+   * one is its own (`openActionKey` in [OVERLAYS.md](../../../OVERLAYS.md)). Without it the only way to
+   * point a row at a dialog is a Controller that forwards one signal.
+   *
+   * The route in the other direction is the Table's: it addresses this Overlay by the id the shell
+   * derives from `nodeKey`, which the caller derives the same way -- the preset identity is shared.
+   */
+  openActionKey: string;
+  formId: string;
+  label: string;
+  formConfig?: Record<string, unknown>;
+  /** What the Form Widget's config says beyond the shell's defaults, its routes included. */
+  configOverrides?: PhiSettingsPageShellFormSectionBase["configOverrides"];
+  savedMessage?: string;
+  submitLabel: string;
+  cancelLabel: string;
+  /** Responsive Modal width, for a Form that needs more or less than the Modal's own default. */
+  width?: Record<string, unknown> | number | string;
+};
+
+/**
  * One Collapsible panel of a Settings page: the panel title becomes the Collapsible slot title,
  * the optional description renders as the panel's leading text, and the sections stack vertically
  * inside the panel.
@@ -119,6 +165,7 @@ export function buildPhiSettingsPageShellTree({
   regionId,
   label,
   panels,
+  overlays = [],
 }: {
   page: PhiCmsPageNode;
   ownerModuleId: PhiRuntimeModuleId;
@@ -126,6 +173,7 @@ export function buildPhiSettingsPageShellTree({
   regionId: number;
   label: string;
   panels: readonly PhiSettingsPageShellPanel[];
+  overlays?: readonly PhiSettingsPageShellOverlay[];
 }): PhiResolvedCmsPageTree {
   const nodes = createPhiCmsPresetNodes(page);
   if (panels.length > PHI_CMS_COLLAPSIBLE_LAYOUT_MAX_SLOTS) {
@@ -138,13 +186,20 @@ export function buildPhiSettingsPageShellTree({
   const layouts = createPhiPresetCmsInstanceIdMap(identity, [
     "settingsPanels",
     ...panels.map((panel) => panel.nodeKey),
+    // An Overlay zone Layout is a top-level node, not a child of the page: it belongs to the dialog.
+    ...overlays.flatMap((overlay) => [`${overlay.nodeKey}Body`, `${overlay.nodeKey}Footer`]),
   ]);
   const widgets = createPhiPresetCmsInstanceIdMap(identity, [
     ...panels.flatMap((panel) => [
       ...(panel.description !== undefined ? [`${panel.nodeKey}Description`] : []),
       ...panel.sections.map((section) => section.nodeKey),
     ]),
+    ...overlays.flatMap((overlay) => [`${overlay.nodeKey}Form`, `${overlay.nodeKey}Commands`]),
   ]);
+  const overlayIds = createPhiPresetCmsInstanceIdMap(
+    identity,
+    overlays.map((overlay) => overlay.nodeKey),
+  );
 
   const scaffold = buildPhiBasePageContentScaffold({
     page,
@@ -197,6 +252,38 @@ export function buildPhiSettingsPageShellTree({
         },
       }),
     ),
+    /*
+     * The dialogs' zones. Top-level Layout nodes with no parent, because they belong to the Overlay and
+     * not to the page -- and because they are the padding owners the Modal shell deliberately has none
+     * of (OVERLAYS.md, "Padding ownership").
+     */
+    ...overlays.flatMap((overlay) => [
+      nodes.layout({
+        id: layouts[`${overlay.nodeKey}Body`]!,
+        parentLayoutNodeId: null,
+        creationPreset: { layoutKind: "verticalflex", preset: "panel" },
+        typeKey: "flex-vertical",
+        slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
+        sortOrder: 0,
+        label: overlay.title,
+        config: {
+          gap: PHI_SPACE.base,
+          padding: PHI_SPACE.base,
+          border: false,
+        },
+      }),
+      nodes.layout({
+        id: layouts[`${overlay.nodeKey}Footer`]!,
+        parentLayoutNodeId: null,
+        // Empty config on purpose: the actions Footer takes its canonical padding from this preset alone.
+        creationPreset: { layoutKind: "flex", preset: "overlay-actions" },
+        typeKey: "flex",
+        slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
+        sortOrder: 0,
+        label: overlay.title,
+        config: {},
+      }),
+    ]),
   ];
 
   const contentWidgets: PhiCmsContentWidgetNode[] = [
@@ -302,6 +389,107 @@ export function buildPhiSettingsPageShellTree({
         }),
       ];
     }),
+    ...overlays.flatMap((overlay): PhiCmsContentWidgetNode[] => {
+      const overlayAddress = createPhiSignalAddress("cms", overlayIds[overlay.nodeKey]!);
+      const formAddress = createPhiSignalAddress("cms", widgets[`${overlay.nodeKey}Form`]!);
+      const { signalRoutes: extraSignalRoutes, ...configOverrides } = overlay.configOverrides ?? {};
+      return [
+        nodes.widget({
+          id: widgets[`${overlay.nodeKey}Form`]!,
+          parentLayoutNodeId: layouts[`${overlay.nodeKey}Body`]!,
+          typeKey: "form",
+          slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
+          sortOrder: 0,
+          label: overlay.label,
+          config: {
+            translate: false,
+            formId: overlay.formId,
+            formConfig: { ...overlay.formConfig },
+            /*
+             * No `submit` of its own. The Footer's Command Toolbar presses this Form through its
+             * `submit` capability, and a second button inside the body would be a second way to do the
+             * same thing in the same dialog.
+             */
+            feedback: {
+              mode: "message",
+              ...(overlay.savedMessage ? { successText: overlay.savedMessage } : {}),
+            },
+            execution: { mode: "handler" },
+            source: null,
+            ...configOverrides,
+            signalRoutes: {
+              emits: [
+                // A dialog that saved is a dialog that is finished; what else the save means is the
+                // caller's route, which is how the Table hears that it should reload.
+                {
+                  routeKey: `${overlay.nodeKey}-success-close`,
+                  capabilityId: "submitSuccess",
+                  scope: "page",
+                  channel: "dialog",
+                  action: "close",
+                  valueType: "none",
+                  receiver: overlayAddress,
+                },
+                ...(extraSignalRoutes?.emits ?? []),
+              ],
+              listens: [
+                {
+                  routeKey: `${overlay.nodeKey}-submit`,
+                  capabilityId: "submit",
+                  scope: "page",
+                  channel: "submit",
+                  action: "activate",
+                  valueType: "none",
+                  receiver: formAddress,
+                },
+                ...(extraSignalRoutes?.listens ?? []),
+              ],
+            },
+          },
+        }),
+        nodes.widget({
+          id: widgets[`${overlay.nodeKey}Commands`]!,
+          parentLayoutNodeId: layouts[`${overlay.nodeKey}Footer`]!,
+          typeKey: "command-toolbar",
+          slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
+          sortOrder: 0,
+          label: overlay.title,
+          config: {
+            translate: false,
+            key: `${overlay.nodeKey}-commands`,
+            compact: true,
+            wrap: false,
+            showLabels: true,
+            buttons: [
+              { key: "cancel", emits: [{ capabilityId: "close", value: null }], label: overlay.cancelLabel },
+              { key: "submit", emits: [{ capabilityId: "submit", value: null }], label: overlay.submitLabel, buttonType: "primary" },
+            ],
+            signalRoutes: {
+              emits: [
+                {
+                  routeKey: `${overlay.nodeKey}-cancel`,
+                  capabilityId: "close",
+                  scope: "page",
+                  channel: "dialog",
+                  action: "close",
+                  valueType: "none",
+                  receiver: overlayAddress,
+                },
+                {
+                  routeKey: `${overlay.nodeKey}-commands-submit`,
+                  capabilityId: "submit",
+                  scope: "page",
+                  channel: "submit",
+                  action: "activate",
+                  valueType: "none",
+                  receiver: formAddress,
+                },
+              ],
+            },
+          },
+        }),
+      ];
+    }),
   ];
 
   return {
@@ -310,7 +498,58 @@ export function buildPhiSettingsPageShellTree({
       title: { msgId: 0, source: label, value: label },
       description: null,
     },
-    overlays: [],
+    overlays: overlays.map((overlay, overlayIndex) => ({
+      id: overlayIds[overlay.nodeKey]!,
+      overlayType: "modal" as const,
+      headerLayoutNodeId: null,
+      bodyLayoutNodeId: layouts[`${overlay.nodeKey}Body`]!,
+      footerPresentation: "actions" as const,
+      footerLayoutNodeId: layouts[`${overlay.nodeKey}Footer`]!,
+      status: PhiCmsStatus.Published,
+      flags: 0,
+      visibilityMask: page.visibilityMask,
+      sortOrder: overlayIndex,
+      label: overlay.title,
+      config: {
+        title: overlay.title,
+        ...(overlay.width === undefined ? {} : { width: overlay.width }),
+        /*
+         * `remount` rather than `lazy-keep`: a dialog that creates a record and one that edits a row
+         * both start from what they were given, and a body kept from the last time would open showing
+         * the provider somebody looked at before.
+         */
+        mountPolicy: "remount",
+        closeMode: "immediate",
+        openActionKey: overlay.openActionKey,
+        signalRoutes: {
+          listens: [
+            /*
+             * The Table's own action channel, filtered by `openActionKey`. Without the filter this
+             * Overlay would open for every action the Table announces, delete included.
+             */
+            {
+              routeKey: `${overlay.nodeKey}-open`,
+              capabilityId: "open",
+              scope: "page",
+              channel: "action",
+              action: "activate",
+              valueType: "json",
+              valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.tableAction,
+              receiver: createPhiSignalAddress("cms", overlayIds[overlay.nodeKey]!),
+            },
+            {
+              routeKey: `${overlay.nodeKey}-close`,
+              capabilityId: "close",
+              scope: "page",
+              channel: "dialog",
+              action: "close",
+              valueType: "none",
+              receiver: createPhiSignalAddress("cms", overlayIds[overlay.nodeKey]!),
+            },
+          ],
+        },
+      },
+    })),
     regions: [scaffold.region],
     layoutNodes,
     contentWidgets,

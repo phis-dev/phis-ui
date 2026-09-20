@@ -17,9 +17,11 @@ import type { PhiRenderableBlockSize } from "../../types/renderable-block";
 import { resolvePhiCmsContainerChromeStyle } from "../../helpers/cms-container-chrome";
 import type { PhiSignal, PhiSignalRoute, PhiSignalScope } from "../../types/signals";
 import {
+  PHI_SIGNAL_VALUE_SCHEMAS,
   createPhiSignalAddress,
   findPhiSignalRoutesByCapabilityId,
 } from "../../types/signals";
+import { readPhiTableActionSignalValue } from "../../types/table-widget";
 import { usePhiSignalEmitter, PhiSignalIdentityProvider } from "../runtime/runtime-signal-identity";
 import { usePhiSignalListener } from "../runtime/runtime-signal-bus";
 import { registerPhiSignalInstance } from "../runtime/runtime-signal-registry";
@@ -36,6 +38,23 @@ export type PhiOverlayContainerClientProps = {
   body: ReactNode;
   footer: ReactNode;
 };
+
+/**
+ * Whether an `open` carried on a Table's action channel is meant for this Overlay.
+ *
+ * A Table announces every action on one channel and names the action in the message, so an Overlay
+ * subscribed to it hears `test` and `delete` as loudly as the one it is for. `openActionKey` is the
+ * filter, and it is the same field the Form and Record Widgets read for the same reason.
+ *
+ * Every other `open` passes untouched: a `dialog` route carries no value and has nothing to match on.
+ * A Table-shaped `open` without a key opens for nothing rather than for everything -- the quiet failure
+ * is a dialog that will not come up, not one that comes up whenever a row is deleted.
+ */
+function matchesOpenAction(signal: PhiSignal, route: PhiSignalRoute, openActionKey: string | null) {
+  if (route.valueSchema !== PHI_SIGNAL_VALUE_SCHEMAS.tableAction) return true;
+  if (!openActionKey) return false;
+  return readPhiTableActionSignalValue(signal.value)?.actionKey === openActionKey;
+}
 
 function matchesRoute(signal: PhiSignal, route: PhiSignalRoute) {
   return route.receiver === signal.receiver &&
@@ -151,6 +170,7 @@ export function PhiOverlayContainerClient({
     const route = listenRoutes.find((candidate) => matchesRoute(signal, candidate));
     if (!route) return;
     if (route.capabilityId === "open") {
+      if (!matchesOpenAction(signal, route, config.openActionKey)) return;
       updateOpen(true);
     } else if (route.capabilityId === "close") {
       updateOpen(false);
