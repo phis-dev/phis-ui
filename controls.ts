@@ -94,11 +94,19 @@ export {
   normalizePhiRateCount,
   normalizePhiRateValue,
 } from "./components/controls/phi-rate-control-contract";
-export { PhiModalControl } from "./components/controls/phi-modal-control";
-export type { PhiModalControlProps } from "./components/controls/phi-modal-control";
-export { PhiDrawerControl } from "./components/controls/phi-drawer-control";
-export type { PhiDrawerControlProps } from "./components/controls/phi-drawer-control";
-export type { PhiOverlayControlCommonProps } from "./components/controls/phi-overlay-control-contract";
+/*
+ * The Dialog, and deliberately not the shells under it.
+ *
+ * `PhiModalControl` and `PhiDrawerControl` zero every zone, because the Overlay container path fills them
+ * with Layout nodes. Handing those out is handing out a surface whose inside the caller then has to
+ * invent, which is the mistake this Control exists to end -- and a Module that wants a Dialog with a
+ * place in a tree declares an Overlay node in its preset instead (OVERLAYS.md).
+ */
+export { PhiDialogControl } from "./components/controls/phi-dialog-control";
+export type {
+  PhiDialogControlAction,
+  PhiDialogControlProps,
+} from "./components/controls/phi-dialog-control";
 export { PHI_SLIDER_TOOLTIP_MODES } from "./components/controls/phi-slider-control-contract";
 export type { PhiSliderTooltipMode } from "./components/controls/phi-slider-control-contract";
 export { PhiSelectControl } from "./components/controls/phi-select-control";

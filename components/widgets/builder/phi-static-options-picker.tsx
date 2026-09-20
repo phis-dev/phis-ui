@@ -15,7 +15,7 @@ import {
 } from "../../controls/phi-table-control";
 import { PhiButtonControl } from "../../controls/phi-button-control";
 import { PhiAlertControl } from "../../controls/phi-alert-control";
-import { PhiModalControl } from "../../controls/phi-modal-control";
+import { PhiDialogControl } from "../../controls/phi-dialog-control";
 import type { PhiControlOption } from "../../controls/phi-control-options";
 import { PhiIcon } from "../../shell/phi-icon";
 import { PhiWidgetIconPickerButton } from "../client/shared/phi-widget-icon-picker";
@@ -288,25 +288,32 @@ export function PhiStaticOptionsToolButton({
           setOpen(true);
         }}
       />
-      <PhiModalControl
+      <PhiDialogControl
         open={open}
         title={labels.title}
-        width={920}
+        controlSize="large"
         mask={{ appearance: "normal", allowOutsideInteraction: false, closable: false }}
         mountPolicy="remount"
         rootClassName={popup.rootClassName}
         onDismiss={discardPicker}
-        footer={<PhiFlexControl justify="end" gap={12}>
-          <PhiButtonControl label={labels.cancel} onClick={discardPicker} />
-          <PhiButtonControl label={labels.apply} type="primary" onClick={applyPicker} />
-        </PhiFlexControl>}
-        body={<PhiFlexControl vertical gap={12} onClick={stopOverlayEvent} onPointerDown={stopOverlayEvent}>
-          {error ? <PhiAlertControl level="error" showIcon title={error} /> : null}
+        alert={error ? { level: "error", showIcon: true, title: error } : null}
+        actions={[
+          { key: "cancel", label: labels.cancel, onClick: discardPicker },
+          { key: "apply", label: labels.apply, type: "primary", onClick: applyPicker },
+        ]}
+      >
+        {/*
+          * The picker sits inside a Widget's own popup container, so a click that reaches past the table
+          * lands on the Widget behind it and takes the selection with it. The Modal's shell stops mouse
+          * and click at its root; pointer events are not among them, which is why this stays a wrapper of
+          * its own rather than something the Dialog does for every caller.
+          */}
+        <div onClick={stopOverlayEvent} onPointerDown={stopOverlayEvent} style={{ minWidth: 0 }}>
           <PhiStaticOptionsTableProvider rows={rows} setRows={setRows} nextRowId={nextRowId}>
             <PhiStaticOptionsTable disabled={disabled} />
           </PhiStaticOptionsTableProvider>
-        </PhiFlexControl>}
-      />
+        </div>
+      </PhiDialogControl>
     </>
   );
 }

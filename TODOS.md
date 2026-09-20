@@ -370,15 +370,16 @@ built. Remove an entry when it is done.
   visible shape has nothing to click -- but wherever the configured thing is already drawn, that is where
   it should be reachable.
 
-  **Two rules this raised, both wider than the table.** *Not everything belongs in the Builder*: some
-  settings should be reachable only through the Module that declares them, so the Inspector is not the
-  union of every config field that exists. Which ones is not decided yet, and the field contract has no
-  way to say it. And *a real Overlay is not a picker*: it carries its normal paddings, where a picker may
-  be dense. `PhiModalControl` zeroes container, header, body and footer by contract and leaves the
-  padding to whoever fills it -- the Overlay container path supplies it through its Regions, the static
-  options picker supplies none, and the collection Overlay now supplies `PHI_SPACE.base` itself. That is
-  three callers each deciding separately what a Modal's inside looks like, which is the shape of a Control
-  that should be deciding it.
+  **One rule this raised, wider than the table.** *Not everything belongs in the Builder*: some settings
+  should be reachable only through the Module that declares them, so the Inspector is not the union of
+  every config field that exists. Which ones is not decided yet, and the field contract has no way to say
+  it.
+
+  The second one is answered: `PhiDialogControl` now owns what a code-built Dialog looks like inside, and
+  both callers use it (OVERLAYS.md, "Dialogs that are Controls"). The open remainder is small -- whether
+  *dense* is a real case at all. The static options picker was the only argument for it and it turned out
+  to be an omission, not a decision; if a table really should bleed to the Dialog's edge, that arrives as
+  one named `density` with a reason, not as three callers quietly disagreeing again.
 - **Move transient Builder previews to shared storage** before running more than one Skeleton process.
   `plugins/runtime-modules/builder/preview-store.ts` keeps snapshots in a process-local `globalThis` Map.
   Replace it with a shared TTL store bound to the Site and the authorized Builder session, keep the opaque

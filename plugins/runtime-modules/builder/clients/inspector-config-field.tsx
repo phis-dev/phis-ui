@@ -36,8 +36,7 @@ import { PhiSwitchControl } from "../../../../components/controls/phi-switch-con
 import { PhiButtonControl } from "../../../../components/controls/phi-button-control";
 import { PhiWidgetIconPickerButton } from "../../../../components/widgets/client/shared/phi-widget-icon-picker";
 import { usePhiWidgetScaffoldPopup } from "../../../../components/widgets/client/shared/phi-widget-scaffold-popup";
-import { PhiModalControl } from "../../../../components/controls/phi-modal-control";
-import { PHI_SPACE } from "../../../../theme/antd-css-var-contract";
+import { PhiDialogControl } from "../../../../components/controls/phi-dialog-control";
 import { PhiIcon } from "../../../../components/shell/phi-icon";
 import { PhiPaddingControl } from "../../../../components/controls/phi-padding-control";
 import type { PhiPaddingWidgetLabels } from "../../../../components/widgets/label-types/padding";
@@ -619,12 +618,7 @@ function PhiInspectorCollectionFieldControl({
    * made, exactly as it does inline, so closing the Overlay decides nothing. The static options picker
    * has its Cancel and Apply because it edits rows with identities and a validity rule of their own and
    * has something to hold back; here a second copy of the value would only be a second truth, and the
-   * Builder's undo is already the way back.
-   *
-   * The padding is the caller's. PhiModalControl zeroes container, header, body and footer by contract,
-   * because the Overlay container path fills them with Regions that carry their own -- so an Overlay
-   * that is not a picker has to bring it, and PHI_SPACE.base is what the Modal's own title is already
-   * indented by, which is what the entries line up under.
+   * Builder's undo is already the way back. No actions, therefore, and so no Footer either.
    */
   return renderPhiInspectorConfigFieldBlock(
     field,
@@ -643,19 +637,16 @@ function PhiInspectorCollectionFieldControl({
           onClick={() => setOverlayOpen(true)}
         />
       </PhiFlexControl>
-      <PhiModalControl
+      <PhiDialogControl
         open={overlayOpen}
         title={field.label}
-        width={720}
+        controlSize="medium"
         mountPolicy="remount"
         rootClassName={popup.rootClassName}
         onDismiss={() => setOverlayOpen(false)}
-        body={
-          <PhiFlexControl vertical style={{ padding: PHI_SPACE.base, width: "100%", minWidth: 0 }}>
-            {editor}
-          </PhiFlexControl>
-        }
-      />
+      >
+        {editor}
+      </PhiDialogControl>
     </>,
   );
 }

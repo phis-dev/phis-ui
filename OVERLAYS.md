@@ -330,6 +330,9 @@ semantic DOM styles, and user-dismiss reason reporting. They receive already ren
 and Footer content and do not own CMS identity, revisions, Layout ids, Providers, Controllers, or signal
 routes.
 
+`PhiDialogControl` is the only other Control that may render either of them. Nothing else imports
+`PhiModalControl` or `PhiDrawerControl` directly -- see [Dialogs that are Controls](#dialogs-that-are-controls).
+
 `PhiModal` and `PhiDrawer` are the Core CMS renderers for resolved Overlay nodes. They adapt serializable
 Phi config to the Controls, resolve the optional Header and Footer Layouts plus required Body Layout, and
 map Control interaction reasons into the Overlay signal contract. Modal and Drawer share this logical
@@ -375,6 +378,25 @@ through the normal `enabled` channel from whatever in the body decides it.
 A Builder-only prompt is not exempt for being Builder-only. `mountPolicy` and the Area preset are where a
 workspace dialog belongs just as much as a public one; "it only shows up in the Builder" describes who
 sees it, not what it is.
+
+### Dialogs that are Controls
+
+There is one place a structured body may be assembled in code, and it is not an exemption from the rule
+above -- it is the case the rule cannot reach. A Control has no position in a CMS tree. Authoring chrome
+that a Widget draws inside its own scaffold popup has none either: there is no preset that could declare
+an Overlay for it, because the thing it belongs to is a Control, not a node. The Inspector's collection
+editor and the static options picker are that case.
+
+Those render `PhiDialogControl` (`components/controls/phi-dialog-control.tsx`), which is the code-side
+counterpart of the Body and Footer Layouts and exists for exactly the reason
+[Padding ownership](#padding-ownership) gives: a hand-assembled body has no padding owner, so the spacing
+gets typed in by hand and answers to nothing. It takes a title, an optional alert, the subject, and the
+Footer's actions, and it renders the same shape the tree produces -- Body one `base` apart and one `base`
+in from every edge, actions anchored right, `xs` apart, `xs` from the fold and `base` from the sides.
+
+The boundary is therefore: **has this thing a place in a tree?** If a preset could declare it, the preset
+declares it and the answer is an Overlay node. If the only thing that could own it is a Control, the
+answer is `PhiDialogControl`. "It was easier in code" is not a reading of that question.
 
 ## Picker boundary
 

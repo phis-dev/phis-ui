@@ -54,6 +54,29 @@ const overlayPrimitiveOwners = new Map([
   ["Drawer", "components/controls/phi-drawer-control.tsx"],
 ]);
 
+/*
+ * Who may mount an Overlay shell, and why the list is this short.
+ *
+ * Both shells zero their container, header, body and footer by contract, because the Overlay container
+ * path fills those zones with Layout nodes that bring their own padding (OVERLAYS.md, "Padding
+ * ownership"). A Dialog assembled in code has no Layout nodes -- so reaching for a shell directly means
+ * reinventing its inside, and the three callers that did disagreed about every number in it.
+ *
+ * `PhiDialogControl` is that inside, and it is the only other door. This is not an antd rule, which is
+ * why it does not live in `antdImportAllowance`: the primitive is already owned one layer down. It is the
+ * house's own layering, and a list of names is the only thing that can hold it -- the mistake looks
+ * exactly like correct code at the import line.
+ */
+const overlayShellConsumers = new Map([
+  ["PhiModalControl", new Set([
+    "components/controls/phi-dialog-control.tsx",
+    "components/overlays/phi-overlay-container-client.tsx",
+  ])],
+  ["PhiDrawerControl", new Set([
+    "components/overlays/phi-overlay-container-client.tsx",
+  ])],
+]);
+
 const exclusiveInputPrimitiveOwners = new Map([
   ["Slider", "components/controls/phi-slider-control.tsx"],
 ]);
@@ -668,6 +691,38 @@ for (const relativePath of await listRepositorySources()) {
   }
 }
 
+const overlayShellConsumersSeen = new Map(
+  [...overlayShellConsumers.keys()].map((control) => [control, new Set()]),
+);
+for (const relativePath of await listRepositorySources()) {
+  const source = await readSource(relativePath);
+  for (const [control, consumers] of overlayShellConsumers) {
+    if (relativePath === `components/controls/${control.replace(/^Phi/u, "phi-").replace(/([a-z])([A-Z])/gu, "$1-$2").toLowerCase()}.tsx`) {
+      continue;
+    }
+    if (!new RegExp(String.raw`import\s*(?:type\s*)?\{[^}]*\b${control}\b[^}]*\}`, "u").test(source)) {
+      continue;
+    }
+    if (consumers.has(relativePath)) {
+      overlayShellConsumersSeen.get(control).add(relativePath);
+      continue;
+    }
+    failures.push(
+      `${relativePath} imports ${control} directly; a Dialog built in code uses PhiDialogControl, and a `
+        + "Dialog with a place in a tree is an Overlay node its preset declares.",
+    );
+  }
+}
+for (const [control, consumers] of overlayShellConsumers) {
+  for (const consumer of consumers) {
+    if (overlayShellConsumersSeen.get(control).has(consumer)) continue;
+    failures.push(
+      `overlayShellConsumers lets ${consumer} import ${control}, which it no longer does. `
+        + "Remove the entry rather than leaving a permission nobody rereads.",
+    );
+  }
+}
+
 for (const [primitive, owner] of soleOwnerPrimitives) {
   if (!soleOwnersSeen.has(primitive)) {
     failures.push(
@@ -703,5 +758,6 @@ console.log(
   `Control boundaries valid (${widgetControlRequirements.size} Widgets, ${directControlConsumers.length} direct consumers, `
     + `${controlledPrimitives.size} controlled primitives across the tree, `
     + `${soleOwnerPrimitives.size} owned by a single file, `
+    + `${overlayShellConsumers.size} Overlay shells reachable from ${new Set([...overlayShellConsumers.values()].flatMap((consumers) => [...consumers])).size} files, `
     + `${antdImportAllowance.size} files allowed an Ant Design import outside ${controlDirectory}).`,
 );
