@@ -497,8 +497,7 @@ export async function buildPhiDefaultSiteAreaPresetTree({
               visibilityMask: page.visibilityMask,
               label: "pub header top left",
               config: {
-                mode: "line",
-                line: "slogan",
+                mode: "slogan",
               },
               contentId: null,
             },
@@ -514,8 +513,7 @@ export async function buildPhiDefaultSiteAreaPresetTree({
               visibilityMask: page.visibilityMask,
               label: "pub header top middle",
               config: {
-                mode: "line",
-                line: "location",
+                mode: "location",
               },
               contentId: null,
             },
@@ -620,7 +618,7 @@ export async function buildPhiDefaultSiteAreaPresetTree({
               visibilityMask: page.visibilityMask,
               label: "pub footer main left",
               config: {
-                showLogo: false,
+                mode: "wordmark",
               },
               contentId: null,
             },

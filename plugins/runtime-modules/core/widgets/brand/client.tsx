@@ -9,19 +9,20 @@ import {
   PhiBrandLineControl,
   phiBrandControlIsEmpty,
 } from "../../../../../components/controls/phi-brand-control";
-import type { PhiBrandWidgetLine, PhiBrandWidgetMode } from "./config";
+import {
+  isPhiBrandWidgetLineMode,
+  type PhiBrandWidgetLineMode,
+  type PhiBrandWidgetMode,
+} from "./config";
 import { usePhiConfig } from "../../../../../components/root/phi-config-provider";
 import { usePhiSiteBrand } from "../../../../../components/root/phi-root-live-theme-provider";
 
 export type PhiBrandWidgetConfig = {
   mode?: PhiBrandWidgetMode;
-  line?: PhiBrandWidgetLine;
-  showLogo?: boolean;
-  logoYOffset?: number;
 };
 
 /** What a line shows in front of itself where the Brand names no icon for it. */
-const PHI_BRAND_LINE_FALLBACK_ICONS: Record<PhiBrandWidgetLine, string> = {
+const PHI_BRAND_LINE_FALLBACK_ICONS: Record<PhiBrandWidgetLineMode, string> = {
   slogan: "antd:star",
   location: "antd:location",
 };
@@ -31,7 +32,6 @@ export type PhiBrandWidgetClientProps = PhiClientBlockBaseProps<
   PhiBrandWidgetConfig
 > & {
   fallbackTitle?: ReactNode;
-  fallbackEyebrow?: ReactNode;
   interactive?: boolean;
 };
 
@@ -45,7 +45,6 @@ export type PhiBrandWidgetClientProps = PhiClientBlockBaseProps<
 export function PhiBrandWidgetClient({
   config,
   fallbackTitle,
-  fallbackEyebrow,
   interactive = true,
 }: PhiBrandWidgetClientProps) {
   const brand = usePhiSiteBrand();
@@ -57,24 +56,25 @@ export function PhiBrandWidgetClient({
    * slogan or the town it sits in is a statement, and wrapping it in an anchor to the front page would
    * offer a destination nobody was looking for.
    */
-  if (config?.mode === "line") {
-    const line = config.line ?? "slogan";
+  if (isPhiBrandWidgetLineMode(config?.mode)) {
     return (
       <PhiBrandLineControl
-        line={line === "location" ? brand?.location : brand?.slogan}
-        fallbackIcon={PHI_BRAND_LINE_FALLBACK_ICONS[line]}
+        line={config.mode === "location" ? brand?.location : brand?.slogan}
+        fallbackIcon={PHI_BRAND_LINE_FALLBACK_ICONS[config.mode]}
       />
     );
   }
 
-  const showLogo = config?.showLogo !== false;
+  /*
+   * A Widget that never stated a mode shows the lockup, which is what it showed before there was one to
+   * state. Only the three mark modes reach here; the Control is told which of them, and reads the rest
+   * of what it draws -- the Logo, its offset, the Wordmark's type, the Eyebrow -- from the Theme.
+   */
   const presentation = {
     brand,
     mode: themeMode,
     fallbackTitle,
-    fallbackEyebrow,
-    showLogo,
-    logoYOffset: typeof config?.logoYOffset === "number" ? config.logoYOffset : 0,
+    shows: config?.mode ?? "lockup",
   };
 
   if (phiBrandControlIsEmpty(presentation)) {

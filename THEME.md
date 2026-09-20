@@ -173,12 +173,21 @@ preset.
   A mode the record leaves unset shows the followed Set's Logo; the first save takes it into the Media
   library.
 - `logoAlt?: string` -- falls back to the Asset's own alt text.
+- `logoYOffset?: number` -- pixels the Logo is nudged against the Wordmark, to correct the artwork's own
+  whitespace. Applied only where the Logo is drawn. Absent means none.
 - `slogan?: { label?, icon? }`, `location?: { label?, icon? }` -- the two frame lines.
 - `wordmark?: { fontFamily?, fontWeight?, fontStyle?: "normal" | "italic", letterSpacing?, parts? }` with
   `parts[]` of `{ text, color?, fontWeight? }`. What a part states wins over the Wordmark.
 
-The default Public preset uses `slogan` (defaults: icon `antd:star`, label `tr("Trusted digital solutions")`)
-and `location` (defaults: icon `antd:location`, label the Wordmark text).
+A placement never restates any of this. The Brand Widget is asked one thing -- `mode`, which of
+`lockup` | `logo` | `wordmark` | `slogan` | `location` it draws here -- and reads the rest from the
+record. There is no per-instance title, eyebrow, logo toggle or offset; a Brand that differs between two
+places in a Site would be two Brands.
+
+The default Public preset places the Widget four times: `slogan` and `location` in the header top,
+`lockup` in the header main, `wordmark` in the footer. Line defaults are icon `antd:star` with label
+`tr("Trusted digital solutions")` for the slogan, and icon `antd:location` with the Wordmark text for the
+location.
 
 ### Contact
 

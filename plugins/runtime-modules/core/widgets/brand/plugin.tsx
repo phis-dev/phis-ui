@@ -21,23 +21,15 @@ export const PHI_BRAND_WIDGET_PLUGIN: PhiCmsServerWidgetPlugin<PhiCmsBrandWidget
   render: ({ widget, config, runtime }) => (
     <PhiBrandWidget
       key={`widget-${widget.id}`}
-      fallbackTitle={config.fallbackTitle ?? resolvePhiBrandWordmarkText(runtime)}
-      fallbackEyebrow={config.fallbackEyebrow}
+      fallbackTitle={resolvePhiBrandWordmarkText(runtime)}
       mode={config.mode}
-      line={config.line}
-      showLogo={config.showLogo}
-      logoYOffset={config.logoYOffset}
     />
   ),
   renderPreview: ({ widget, config, runtime }) => (
     <PhiBrandWidget
       key={`widget-${widget.id}`}
-      fallbackTitle={config.fallbackTitle ?? resolvePhiBrandWordmarkText(runtime)}
-      fallbackEyebrow={config.fallbackEyebrow}
+      fallbackTitle={resolvePhiBrandWordmarkText(runtime)}
       mode={config.mode}
-      line={config.line}
-      showLogo={config.showLogo}
-      logoYOffset={config.logoYOffset}
       interactive={false}
     />
   ),

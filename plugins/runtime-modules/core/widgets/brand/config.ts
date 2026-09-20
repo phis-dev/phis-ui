@@ -2,61 +2,68 @@ import { resolvePhiCmsWidgetPluginKey } from "../../../../../constants/cms-widge
 import { PhiCmsWidgetType } from "../../../../../constants/cms-widget-types";
 import type { PhiCmsWidgetPlugin } from "../../../../../types";
 import {
-  readBoolean,
-  readNumber,
   readRenderableBlockConfig,
-  readString,
   type PhiCmsWidgetConfigBase,
 } from "../../../../../components/widgets/config/parser-primitives";
 
 /**
- * Which part of the Brand this Widget stands for.
+ * Which part of the Brand this Widget stands for, and the only thing it is asked.
  *
- * `mark` is the Logo and the Wordmark, the Brand as a destination. `line` is one of the two sentences
- * that travel with it -- the slogan, the place -- which are Brand as much as the Wordmark is
- * (`PhiSiteThemeBrand`) and were drawn by a Simple Text holding a copy of them until now.
+ * What the Brand *is* -- the Logo, the Wordmark's parts and their type, the eyebrow, the two lines --
+ * is stated once in the Theme (`PhiSiteThemeBrand`). A placement never restates it; it picks which part
+ * of it to draw here, and reads the rest. That is why there is one field and no overrides beside it.
+ *
+ * `lockup` is the Logo and the Wordmark set together, which is what the trade calls that pairing. It is
+ * deliberately not named `mark`: a mark is the picture and a wordmark is the name in type, so a `mark`
+ * that meant "both" left `mark` and `wordmark` reading like a typo for one another.
+ *
+ * The lines are modes rather than a second field. They were `mode: "line"` plus `line: "slogan"`, which
+ * is one question asked twice -- and a Widget that had answered only the first was guessed at.
  */
-export type PhiBrandWidgetMode = "mark" | "line";
+export type PhiBrandWidgetMode =
+  | "lockup"
+  | "logo"
+  | "wordmark"
+  | "slogan"
+  | "location";
 
-/** Which of the Brand's lines, when this Widget is one. */
-export type PhiBrandWidgetLine = "slogan" | "location";
+/** The modes that draw one of the Brand's sentences rather than the Brand itself. */
+const PHI_BRAND_WIDGET_LINE_MODES = ["slogan", "location"] as const;
+
+export type PhiBrandWidgetLineMode = (typeof PHI_BRAND_WIDGET_LINE_MODES)[number];
+
+export function isPhiBrandWidgetLineMode(
+  mode: PhiBrandWidgetMode | undefined,
+): mode is PhiBrandWidgetLineMode {
+  return mode === "slogan" || mode === "location";
+}
 
 export type PhiCmsBrandWidgetConfig = PhiCmsWidgetConfigBase & {
   mode?: PhiBrandWidgetMode;
-  line?: PhiBrandWidgetLine;
-  fallbackTitle?: string;
-  fallbackEyebrow?: string;
-  showLogo?: boolean;
-  logoYOffset?: number;
 };
 
 const PHI_BRAND_WIDGET_MODE_OPTIONS = [
-  { value: "mark", label: "Logo and wordmark" },
-  { value: "line", label: "A brand line" },
-];
-
-const PHI_BRAND_WIDGET_LINE_OPTIONS = [
+  { value: "lockup", label: "Logo and wordmark" },
+  { value: "logo", label: "Logo only" },
+  { value: "wordmark", label: "Wordmark only" },
   { value: "slogan", label: "Slogan" },
   { value: "location", label: "Location" },
 ];
 
 function readBrandWidgetMode(value: unknown): PhiBrandWidgetMode | undefined {
-  return value === "mark" || value === "line" ? value : undefined;
-}
-
-function readBrandWidgetLine(value: unknown): PhiBrandWidgetLine | undefined {
-  return value === "slogan" || value === "location" ? value : undefined;
+  return value === "lockup"
+    || value === "logo"
+    || value === "wordmark"
+    || value === "slogan"
+    || value === "location"
+    ? value
+    : undefined;
 }
 
 export function parsePhiCmsBrandWidgetConfig(config: Record<string, unknown>): PhiCmsBrandWidgetConfig {
   return {
     ...readRenderableBlockConfig(config),
     mode: readBrandWidgetMode(config.mode),
-    line: readBrandWidgetLine(config.line),
-    fallbackTitle: readString(config.fallbackTitle),
-    fallbackEyebrow: readString(config.fallbackEyebrow),
-    showLogo: readBoolean(config.showLogo) ?? true,
-    logoYOffset: readNumber(config.logoYOffset) ?? 0,
   };
 }
 
@@ -68,39 +75,8 @@ export const PHI_BRAND_WIDGET_DEFINITION = {
   category: "content",
   description: "Site brand mark and wordmark.",
   iconFamily: "brand",
-  /*
-   * `notEquals` on the mark's own fields rather than `equals: "mark"`, because the rule is read against
-   * the stored config and a Widget that never stated a mode has none stored: `equals` would hide the
-   * four fields of the default until somebody picked the default by hand.
-   */
   fields: [
     { key: "mode", type: "choice", label: "Shows", options: PHI_BRAND_WIDGET_MODE_OPTIONS },
-    {
-      key: "line",
-      type: "choice",
-      label: "Line",
-      options: PHI_BRAND_WIDGET_LINE_OPTIONS,
-      visibleWhen: { field: "mode", equals: "line" },
-    },
-    {
-      key: "fallbackTitle",
-      type: "string",
-      label: "Fallback Title",
-      visibleWhen: { field: "mode", notEquals: "line" },
-    },
-    {
-      key: "fallbackEyebrow",
-      type: "string",
-      label: "Fallback Eyebrow",
-      visibleWhen: { field: "mode", notEquals: "line" },
-    },
-    { key: "showLogo", type: "boolean", label: "Show Logo", visibleWhen: { field: "mode", notEquals: "line" } },
-    {
-      key: "logoYOffset",
-      type: "number",
-      label: "Logo Y Offset",
-      visibleWhen: { field: "mode", notEquals: "line" },
-    },
   ],
   parseConfig: parsePhiCmsBrandWidgetConfig,
 } satisfies Pick<

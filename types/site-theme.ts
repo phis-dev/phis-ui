@@ -121,6 +121,14 @@ export type PhiSiteThemeBrand = {
   logo?: PhiSiteThemeBrandLogos | null;
   /** What the Logo says to somebody who cannot see it. Falls back to the asset's own alt text. */
   logoAlt?: string | null;
+  /**
+   * How far the Logo is nudged against the Wordmark, in pixels, to correct its own artwork.
+   *
+   * A picture rarely sits on the baseline its file claims; what it needs is one correction, true of the
+   * Logo itself and therefore stated once here. It applied per Widget instance until now, which meant
+   * the same artwork was aligned by hand in the header and again in the footer.
+   */
+  logoYOffset?: number | null;
   slogan?: PhiSiteThemeBrandLine | null;
   location?: PhiSiteThemeBrandLine | null;
   wordmark?: PhiSiteThemeWordmark | null;

@@ -19,14 +19,20 @@ import type {
 const PHI_FONT_SIZE_XL = "1.25rem";
 const PHI_LINE_HEIGHT_LG = 1.6;
 
+/**
+ * Which parts of the Brand are drawn here.
+ *
+ * `lockup` is the pairing of the two, which is what the trade calls it. The Eyebrow belongs to the
+ * Wordmark and travels with it: it is the line above the name, and above a bare Logo it would sit over
+ * nothing.
+ */
+export type PhiBrandControlShows = "lockup" | "logo" | "wordmark";
+
 export type PhiBrandControlProps = {
   brand?: PhiSiteThemeBrand | null;
   /** The Site's own name, for a Brand that has no Wordmark parts of its own. */
   fallbackTitle?: ReactNode;
-  fallbackEyebrow?: ReactNode;
-  showLogo?: boolean;
-  /** Optical correction for a Logo whose artwork does not sit on its own baseline. */
-  logoYOffset?: number;
+  shows?: PhiBrandControlShows;
   /** The mode whose Logo is drawn: a Logo is artwork in fixed colours, one picture per mode. */
   mode: PhiThemeMode;
 };
@@ -141,13 +147,13 @@ export function PhiBrandLineControl({ line, fallbackIcon }: PhiBrandLineControlP
 export function phiBrandControlIsEmpty({
   brand,
   fallbackTitle,
-  fallbackEyebrow,
-  showLogo = true,
+  shows = "lockup",
   mode,
 }: PhiBrandControlProps): boolean {
-  const hasLogo = showLogo !== false && Boolean(resolvePhiBrandLogoUrl(brand, mode));
-  const hasWordmark = hasWordmarkParts(brand?.wordmark?.parts) || Boolean(fallbackTitle);
-  const hasEyebrow = Boolean(brand?.eyebrow ?? fallbackEyebrow);
+  const hasLogo = shows !== "wordmark" && Boolean(resolvePhiBrandLogoUrl(brand, mode));
+  const hasWordmark = shows !== "logo"
+    && (hasWordmarkParts(brand?.wordmark?.parts) || Boolean(fallbackTitle));
+  const hasEyebrow = shows !== "logo" && Boolean(brand?.eyebrow);
   return !hasLogo && !hasWordmark && !hasEyebrow;
 }
 
@@ -162,22 +168,30 @@ export function phiBrandControlIsEmpty({
 export function PhiBrandControl({
   brand,
   fallbackTitle,
-  fallbackEyebrow,
-  showLogo = true,
-  logoYOffset = 0,
+  shows = "lockup",
   mode,
 }: PhiBrandControlProps) {
-  const eyebrow = brand?.eyebrow ?? fallbackEyebrow ?? null;
-  const wordmarkNode = renderWordmark(brand?.wordmark, fallbackTitle, {
-    fontSize: PHI_FONT_SIZE_XL,
-    lineHeight: PHI_LINE_HEIGHT_LG,
-  });
+  const eyebrow = shows === "logo" ? null : brand?.eyebrow ?? null;
+  const wordmarkNode = shows === "logo"
+    ? null
+    : renderWordmark(brand?.wordmark, fallbackTitle, {
+      fontSize: PHI_FONT_SIZE_XL,
+      lineHeight: PHI_LINE_HEIGHT_LG,
+    });
+  /*
+   * The Logo's own correction, read from the Brand and not from the placement.
+   *
+   * What it corrects is whitespace inside the artwork -- how the picture sits against type -- so it is
+   * true of the Logo wherever it is drawn, and was set per Widget instance until now: the same picture
+   * was aligned by hand in the header and again in the footer, and the two drifted.
+   */
+  const logoYOffset = brand?.logoYOffset ?? 0;
   /*
    * No Logo means no Logo. It used to mean the Phi logo, which was a placeholder from before a Site
    * could set one of its own -- every Site that had not picked a picture wore ours, and there was no
    * way to say "wordmark only" at all. The Wordmark carries the Brand where nothing is picked.
    */
-  const logoUrl = resolvePhiBrandLogoUrl(brand, mode);
+  const logoUrl = shows === "wordmark" ? null : resolvePhiBrandLogoUrl(brand, mode);
   const logoAlt = brand?.logoAlt?.trim() || "Brand logo";
 
   if (!logoUrl && !wordmarkNode && !eyebrow) {
@@ -192,7 +206,7 @@ export function PhiBrandControl({
       wrap={false}
       style={{ color: "inherit", width: "100%", height: "100%", fontSize: PHI_FONT_SIZE_XL }}
     >
-      {showLogo && logoUrl ? (
+      {logoUrl ? (
         <span
           style={{
             display: "flex",

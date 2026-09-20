@@ -3088,6 +3088,26 @@ export function PhiBuilderBrandIdentityControlsWidgetClient({
                       />
                     </PhiLabeledControl>
                     {/*
+                      What the artwork's own whitespace costs it against the Wordmark, corrected once.
+                      Stated with the Logo because it is true of the picture wherever it is drawn; it sat
+                      on the Brand Widget until now, so the same Logo was aligned by hand in the header
+                      and again in the footer and the two drifted apart.
+                    */}
+                    <PhiLabeledControl label="Offset" fill>
+                      <PhiNumberControl
+                        prefix="px"
+                        style={{ width: "100%" }}
+                        value={brand.logoYOffset ?? 0}
+                        step={1}
+                        min={-16}
+                        max={16}
+                        onChange={(next) => publishDraft(mergeThemeBrand(state.draft, {
+                          // No offset is no key, the way `Forward` spells its default away below.
+                          logoYOffset: next ? next : null,
+                        }))}
+                      />
+                    </PhiLabeledControl>
+                    {/*
                       Where the Brand leads, picked from the Pages that exist rather than typed.
                       A Cascader has no empty value -- its empty is spelled `/` -- which is exactly the
                       default here, so an author who never touches it has already said the right thing.
