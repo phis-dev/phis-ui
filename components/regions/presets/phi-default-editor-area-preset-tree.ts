@@ -175,7 +175,6 @@ export async function buildPhiDefaultEditorAreaPresetTree({
           separatorBeforeFirst: true,
           separatorSpan: "50%",
           wrap: false,
-          height: "100%",
         },
       }),
       nodes.layout({
@@ -194,7 +193,6 @@ export async function buildPhiDefaultEditorAreaPresetTree({
           gap: 0,
           padding: PHI_SPACE.xs,
           paddingTop: 0,
-          maxWidth: resolvedShellLeftWidth,
         },
       }),
     ],

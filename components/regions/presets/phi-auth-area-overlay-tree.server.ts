@@ -120,8 +120,6 @@ export async function buildPhiAuthAreaLoginOverlayTree({
         ...PHI_LOGIN_FORM_LAYOUT_CONFIG,
         gap: PHI_SPACE.base,
         padding: PHI_SPACE.base,
-        width: "100%",
-        maxWidth: "100%",
         margin: 0,
         background: PHI_COLOR.bgLayout,
         border: false,

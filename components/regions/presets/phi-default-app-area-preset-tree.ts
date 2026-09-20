@@ -98,7 +98,6 @@ export async function buildPhiDefaultAppAreaPresetTree({
           gap: 0,
           padding: PHI_SPACE.xs,
           paddingTop: 0,
-          maxWidth: resolvedShellLeftWidth,
         },
       }),
     ],

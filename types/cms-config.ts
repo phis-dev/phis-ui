@@ -533,10 +533,13 @@ export function parsePhiCmsContentLayoutConfig(
   return applyPhiLayoutDefaults(
     {
       ...readRenderableBlockConfig(config),
-      size: readRenderableBlockSize(config.size) ?? {
-        width: readCssSize(config.width),
-        height: readCssSize(config.height),
-      },
+      /*
+       * Geometry is read from `size` alone. A config saying `width` was read here as well, which gave
+       * a Module two ways to say one thing and the reader two places to look; flat `width` and its
+       * siblings are what a block turns into on its way to CSS, not something a preset writes. The
+       * constraints never had the second way at all -- nothing has ever read a flat `maxWidth`.
+       */
+      size: readRenderableBlockSize(config.size),
       margin: readCssSize(config.margin),
       labelEnd: readPhiLayoutLabelEnd(config.labelEnd),
       padding: readCssSize(config.padding),

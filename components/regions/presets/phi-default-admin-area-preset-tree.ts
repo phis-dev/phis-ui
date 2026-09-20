@@ -173,7 +173,6 @@ export async function buildPhiDefaultAdminAreaPresetTree({
           separatorBeforeFirst: true,
           separatorSpan: "50%",
           wrap: false,
-          height: "100%",
         },
       }),
       nodes.layout({
@@ -192,7 +191,6 @@ export async function buildPhiDefaultAdminAreaPresetTree({
           gap: 0,
           padding: PHI_SPACE.xs,
           paddingTop: 0,
-          maxWidth: resolvedShellLeftWidth,
         },
       }),
     ],

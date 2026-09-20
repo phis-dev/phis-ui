@@ -47,6 +47,11 @@ type BuilderPersistedRegionConfig = {
   size?: PhiRenderableBlockSize;
   minSize?: PhiRenderableBlockSize;
   maxSize?: PhiRenderableBlockSize;
+  /*
+   * Not an offer, an inventory. Geometry is stated in the three above; these are what older stored
+   * configs still carry, and they are declared here so that the sweep further down -- which deletes
+   * every one of them on each save -- can name them. They go when no stored config has them left.
+   */
   width?: number | string;
   height?: number | string;
   minWidth?: number | string;

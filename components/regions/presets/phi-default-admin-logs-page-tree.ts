@@ -130,8 +130,6 @@ export async function buildPhiDefaultAdminLogsPageTree({
         config: {
           anchor: { horizontal: "left", vertical: "top" },
           gap: PHI_SPACE.base,
-          width: "100%",
-          maxWidth: "100%",
           margin: 0,
           padding: PHI_SPACE.base,
           background: PHI_COLOR.bgLayout,

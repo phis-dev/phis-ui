@@ -203,7 +203,7 @@ function resolveBuilderPageTitleSource(pageKey: string) {
  */
 function buildBuilderCommandToolbarConfig(
   receiver = createPhiBuilderControllerAddress(),
-  options?: { restorePresetLabel?: string | null },
+  options?: { restorePresetLabel?: string | null; disableReset?: boolean },
 ) {
   return {
     key: "builder-command-toolbar",
@@ -257,7 +257,12 @@ function buildBuilderCommandToolbarConfig(
       { key: "publish", emits: [{ capabilityId: "command", value: "publish" }], actionKey: "publish", buttonType: "default" },
       { key: "undo", emits: [{ capabilityId: "command", value: "undo" }], actionKey: "undo" },
       { key: "redo", emits: [{ capabilityId: "command", value: "redo" }], actionKey: "redo" },
-      { key: "reset", emits: [{ capabilityId: "command", value: "reset" }], actionKey: "reset" },
+      {
+        key: "reset",
+        emits: [{ capabilityId: "command", value: "reset" }],
+        actionKey: "reset",
+        ...(options?.disableReset ? { disabled: true } : {}),
+      },
       ...(options?.restorePresetLabel
         ? [{
             key: "restorePreset",
@@ -520,7 +525,6 @@ export async function buildPhiDefaultBuilderAreaPresetTree({
           separatorBeforeFirst: true,
           separatorSpan: "50%",
           wrap: false,
-          height: "100%",
         },
       }),
       nodes.layout({
@@ -534,7 +538,6 @@ export async function buildPhiDefaultBuilderAreaPresetTree({
         config: {
           anchor: { horizontal: "center", vertical: "top" },
           gap: 0,
-          maxWidth: "100%",
           margin: 0,
           padding: PHI_SPACE.xs,
           paddingTop: 0,
@@ -801,7 +804,22 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
     isThemePage
       ? createPhiThemeControllerAddress()
       : createPhiBuilderControllerAddress(),
-    { restorePresetLabel: isStructurePage ? labels.toolbar.restorePreset : null },
+    {
+      restorePresetLabel: isStructurePage ? labels.toolbar.restorePreset : null,
+      /*
+       * Held shut on the Modules page while what it means there is decided.
+       *
+       * Everywhere else `reset` now says "start again from what the Module ships". On Modules it means
+       * something else entirely -- delete the selection drafts and apply the shared default selection --
+       * and that default is not shown anywhere: not as a column, a tag or a tooltip, and not even by the
+       * command that applies it. `createPhiDefaultAreaRuntimeModuleIds` is the only place it exists, and
+       * a destructive button that silently applies a list nobody can read is worse than no button.
+       *
+       * Disabled rather than removed, because the choice is between showing the default and dropping the
+       * idea from this workspace, and that is not settled.
+       */
+      disableReset: isModulesPage,
+    },
   );
   /*
    * The label key, read off the preset rather than off the path for the same reason. `builder-pages-page`
@@ -1204,8 +1222,6 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                   vertical: "top",
                 },
                 gap: PHI_SPACE.base,
-                maxWidth: "100%",
-                width: "100%",
                 margin: 0,
                 padding: PHI_SPACE.base,
                 background: "transparent",
@@ -1233,8 +1249,6 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                   },
                   gap: PHI_SPACE.base,
                   wrap: true,
-                  width: "100%",
-                  maxWidth: "100%",
                   margin: 0,
                   padding: PHI_SPACE.base,
                   paddingTop: PHI_SPACE.base,
@@ -1263,7 +1277,6 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                     vertical: "top",
                   },
                   gap: PHI_SPACE.base,
-                  maxWidth: "100%",
                   margin: 0,
                   background: "transparent",
                   border: "none",
@@ -1289,8 +1302,6 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                     vertical: "top",
                   },
                   gap: PHI_SPACE.base,
-                  width: "100%",
-                  maxWidth: "100%",
                   margin: 0,
                   padding: PHI_SPACE.base,
                   background: "transparent",
@@ -1317,8 +1328,6 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                     vertical: "top",
                   },
                   gap: PHI_SPACE.base,
-                  width: "100%",
-                  maxWidth: "100%",
                   margin: 0,
                   padding: PHI_SPACE.base,
                   background: "transparent",
@@ -1338,7 +1347,6 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
               visibilityMask: page.visibilityMask,
               label: "dev content",
               config: {
-                maxWidth: "100%",
                 margin: 0,
                 padding: 0,
                 background: "transparent",
@@ -1363,8 +1371,8 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                 paddingRight: 0,
                 border: "none",
                 borderRadius: 0,
-                height: "auto",
-                minHeight: "auto",
+                // A header as tall as its content, against the Layout default of filling its slot.
+                size: { height: "auto" },
               },
             }),
           ]
@@ -1384,7 +1392,6 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                 gap: 0,
                 padding: 0,
                 paddingLeft: PHI_SPACE.lg,
-                width: "100%",
                 background: "transparent",
                 border: "none",
               },
@@ -1427,8 +1434,6 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
               sortOrder: 0,
               label: "Asset focal rectangle body",
               config: {
-                width: "100%",
-                maxWidth: "100%",
                 margin: 0,
                 padding: 0,
                 background: PHI_COLOR.bgLayout,
@@ -1454,8 +1459,6 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
               sortOrder: 0,
               label: "Create asset folder body",
               config: {
-                width: "100%",
-                maxWidth: "100%",
                 margin: 0,
                 padding: PHI_SPACE.base,
                 background: PHI_COLOR.bgLayout,
@@ -1487,7 +1490,6 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
           config: {
             gap: PHI_SPACE.base,
             padding: PHI_SPACE.base,
-            width: "100%",
             background: PHI_COLOR.bgLayout,
             border: "none",
           },
@@ -1513,7 +1515,6 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
           config: {
             gap: PHI_SPACE.base,
             padding: PHI_SPACE.base,
-            width: "100%",
             background: PHI_COLOR.bgLayout,
             border: "none",
           },
@@ -1539,7 +1540,6 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
           config: {
             gap: PHI_SPACE.base,
             padding: PHI_SPACE.base,
-            width: "100%",
             background: PHI_COLOR.bgLayout,
             border: "none",
           },
@@ -1576,7 +1576,6 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
           label: "Builder area settings fields",
           config: {
             gap: PHI_SPACE.base,
-            width: "100%",
             background: "transparent",
             border: "none",
           },
@@ -1604,7 +1603,6 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
           config: {
             gap: PHI_SPACE.base,
             padding: PHI_SPACE.base,
-            width: "100%",
             background: PHI_COLOR.bgLayout,
             border: "none",
           },
