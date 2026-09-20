@@ -332,9 +332,12 @@ export const PHI_FORM_RESPONSIVE_MIN_WIDTH = {
 } as const;
 
 /**
- * What a form looks like when it says nothing: labels beside their controls at a quarter of the width,
+ * What a form looks like when it says nothing: labels beside their controls at a third of the width,
  * and stacked once the form is measured narrow, which is the one place a label beside a short input
- * leaves the input no room. Line 7 of 24 is the quarter; the control takes everything after it.
+ * leaves the input no room. Line 9 of 24 is the third; the control takes everything after it.
+ *
+ * A third is the house column, the one the Login states for itself in `PHI_LOGIN_FORM_LAYOUT_CONFIG`:
+ * eight tracks hold a two-word label without wrapping it, and sixteen still read as the wider half.
  */
 export const PHI_FORM_DEFAULT_LAYOUT = {
   gap: {
@@ -345,13 +348,13 @@ export const PHI_FORM_DEFAULT_LAYOUT = {
   labelAlign: "start",
   label: {
     compact: { start: 1, end: PHI_FORM_GRID_LAST_LINE },
-    medium: { start: 1, end: 7 },
-    wide: { start: 1, end: 7 },
+    medium: { start: 1, end: 9 },
+    wide: { start: 1, end: 9 },
   },
   control: {
     compact: { start: 1, end: PHI_FORM_GRID_LAST_LINE },
-    medium: { start: 7, end: PHI_FORM_GRID_LAST_LINE },
-    wide: { start: 7, end: PHI_FORM_GRID_LAST_LINE },
+    medium: { start: 9, end: PHI_FORM_GRID_LAST_LINE },
+    wide: { start: 9, end: PHI_FORM_GRID_LAST_LINE },
   },
 } as const satisfies PhiFormLayoutDescriptor;
 

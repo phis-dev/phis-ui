@@ -188,7 +188,8 @@ type PhiFormFieldPlacementDescriptor = {
 - A responsive value cascades from the nearest smaller mode that is set; an unset section uses the
   defaults.
 - Defaults (`PHI_FORM_DEFAULT_LAYOUT`): gap `sm` / `base` / `base`; `labelAlign: "start"`; label 1-25 in
-  `compact` and 1-7 otherwise; control 1-25 in `compact` and 7-25 otherwise.
+  `compact` and 1-9 otherwise; control 1-25 in `compact` and 9-25 otherwise -- a third of the width for
+  the labels, the same column the Login states for itself.
 - A field with no `placement` uses the layout ranges. A field that sets a placement states it for both
   parts.
 - When a field's label and control ranges overlap they stack on two rows; otherwise they share one. There

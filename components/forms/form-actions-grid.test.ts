@@ -31,12 +31,12 @@ describe("the row the Widget's submit stands in", () => {
 
     // Compact is one column for every form: the labels are on top there too.
     expect(phiFormActionsGridColumn(layout, "compact")).toBe("1 / 25");
-    expect(phiFormActionsGridColumn(layout, "medium")).toBe("var(--phi-form-label-end, 7) / 25");
-    expect(phiFormActionsGridColumn(layout, "wide")).toBe("var(--phi-form-label-end, 7) / 25");
+    expect(phiFormActionsGridColumn(layout, "medium")).toBe("var(--phi-form-label-end, 9) / 25");
+    expect(phiFormActionsGridColumn(layout, "wide")).toBe("var(--phi-form-label-end, 9) / 25");
   });
 
   it("takes a form's own control range when that form places its columns itself", () => {
-    // Half the width for the labels, so the button is not under the inputs at line 7 either.
+    // Half the width for the labels, so the button is not under the inputs at line 9 either.
     const layout = resolvePhiFormLayout({
       label: { compact: { start: 1, end: 25 }, medium: { start: 1, end: 13 }, wide: { start: 1, end: 13 } },
       control: { compact: { start: 1, end: 25 }, medium: { start: 13, end: 25 }, wide: { start: 13, end: 25 } },
