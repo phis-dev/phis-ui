@@ -11,7 +11,6 @@ export type PhiBuilderChromeWidgetLabels = {
     undo: string;
     redo: string;
     reset: string;
-    restorePreset: string;
   };
   modeSwitch: {
     editor: string;
@@ -105,7 +104,6 @@ export const PHI_BUILDER_CHROME_WIDGET_DEFAULT_LABELS: PhiBuilderChromeWidgetLab
     undo: "Undo",
     redo: "Redo",
     reset: "Reset",
-    restorePreset: "Restore preset",
   },
   modeSwitch: {
     editor: "Editor",

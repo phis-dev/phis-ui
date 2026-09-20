@@ -17,7 +17,6 @@ const PHI_BUILDER_CHROME_WIDGET_LABEL_SET = definePhiLabelSet({
     toolbar_undo: PHI_BUILDER_CHROME_WIDGET_DEFAULT_LABELS.toolbar.undo,
     toolbar_redo: PHI_BUILDER_CHROME_WIDGET_DEFAULT_LABELS.toolbar.redo,
     toolbar_reset: PHI_BUILDER_CHROME_WIDGET_DEFAULT_LABELS.toolbar.reset,
-    toolbar_restore_preset: PHI_BUILDER_CHROME_WIDGET_DEFAULT_LABELS.toolbar.restorePreset,
     mode_editor: PHI_BUILDER_CHROME_WIDGET_DEFAULT_LABELS.modeSwitch.editor,
     mode_preview: PHI_BUILDER_CHROME_WIDGET_DEFAULT_LABELS.modeSwitch.preview,
     mode_preview_snapshot_failed: definePhiMessageLabel(PHI_BUILDER_CHROME_WIDGET_DEFAULT_LABELS.modeSwitch.previewSnapshotFailed),
@@ -97,7 +96,6 @@ export async function getPhiBuilderChromeWidgetLabels(
       undo: labels.toolbar_undo,
       redo: labels.toolbar_redo,
       reset: labels.toolbar_reset,
-      restorePreset: labels.toolbar_restore_preset,
     },
     modeSwitch: {
       editor: labels.mode_editor,

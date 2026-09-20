@@ -47,6 +47,23 @@ export const PHI_REVISIONS_RUNTIME_CONTROLLER_DEFINITION = {
       channel: "areaSelection",
       action: "change",
       valueType: "string",
+    }, {
+      /*
+       * The Builder's toolbar used to carry `restorePreset` beside its everyday commands, where the one
+       * irreversible act in the workspace sat one button away from "undo". It lives here instead,
+       * because this is where a Site's stored history is looked at and thrown away.
+       */
+      id: "command",
+      channel: "command",
+      action: "activate",
+      valueType: "string",
+    }, {
+      /* The typed Area key, handed over by the delete Form in signal mode rather than a gateway. */
+      id: "formValues",
+      channel: "formValues",
+      action: "change",
+      valueType: "json",
+      valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.formValues,
     }],
   },
   defaultConfig: {},

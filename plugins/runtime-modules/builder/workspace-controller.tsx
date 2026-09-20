@@ -198,8 +198,7 @@ function readPhiDeveloperBuilderToolbarCommand(value: unknown): PhiDeveloperBuil
     value === "publish" ||
     value === "undo" ||
     value === "redo" ||
-    value === "reset" ||
-    value === "restorePreset"
+    value === "reset"
   ) {
     return value;
   }

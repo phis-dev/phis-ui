@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { App } from "antd";
 
 import { PhiCmsRegionType } from "../../../constants/phi-cms";
@@ -88,8 +87,7 @@ export type PhiDeveloperBuilderToolbarCommand =
   | "publish"
   | "undo"
   | "redo"
-  | "reset"
-  | "restorePreset";
+  | "reset";
 
 export function usePhiBuilderDraftCommandController({
   commandWorkspace,
@@ -111,7 +109,6 @@ export function usePhiBuilderDraftCommandController({
   state: PhiDeveloperBuilderWorkspaceState;
 }) {
   const { modal } = App.useApp();
-  const router = useRouter();
   const { showMessage } = usePhiApplicationFeedback();
   const dispatchSignal = usePhiSignalDispatcher();
   const builderModuleMetas = usePhiBuilderModuleMetas(effectiveArea);
@@ -499,67 +496,6 @@ export function usePhiBuilderDraftCommandController({
   }
 
   /**
-   * Gives the Area back to the Module preset by removing the Site's own shell entirely.
-   *
-   * The reset above discards a draft and leaves what is published standing, which is right when an edit
-   * went wrong and wrong when the shell itself should no longer exist: an Area published once kept its
-   * snapshot forever, and every later preset improvement stopped at it, invisibly, because the Area
-   * still rendered. This is the way back, and it is a separate command because it also takes the live
-   * chrome with it.
-   */
-  function confirmRestoreShellPreset() {
-    const presetDrafts = shellPresetDraftsByArea[effectiveArea] ?? null;
-    const sourcePreset = state.areaPresetSourcesByArea[effectiveArea] ?? null;
-    if (!presetDrafts || !sourcePreset) {
-      showMessage({ level: "warning", content: "No shell preset found for the current area." });
-      return;
-    }
-
-    modal.confirm({
-      title: "Restore the Module preset?",
-      content:
-        "This deletes this Area's own shell, drafts and published alike, and puts the Module preset back. " +
-        "It cannot be undone.",
-      okText: "Delete shell and restore",
-      okButtonProps: { danger: true },
-      cancelText: "Cancel",
-      centered: true,
-      onOk: async () => {
-        setActiveDraftAction("restorePreset");
-        try {
-          await deleteCmsDraft("/api/site/cms/area/override", {
-            area: effectiveArea,
-            ownerModuleId: sourcePreset.ownerModuleId,
-            presetKey: sourcePreset.presetKey,
-          });
-          clearPhiDeveloperBuilderDraftAllocation({
-            area: effectiveArea,
-            pageKey: effectivePageKey,
-            workspaceKind: "structure",
-          });
-          mergePhiDeveloperRegionDrafts(presetDrafts);
-          phiBuilderHistory.clear(createPhiBuilderHistoryContext({
-            workspace: "structure",
-            area: effectiveArea,
-          }));
-          // What the deleted shell said about itself -- its root route, its SEO answers -- went with it,
-          // and what stands now is the preset's own. Only the server knows that, so the session drops
-          // its copies and asks again, exactly as the draft reset does.
-          setPhiDeveloperBuilderAreaRootRoute(effectiveArea, undefined);
-          restorePhiDeveloperBuilderAreaMeta(effectiveArea, undefined);
-          router.refresh();
-          showMessage({ level: "success", content: "Restored the Module preset." });
-        } catch (error) {
-          showMessage({ level: "error", content: error instanceof Error ? error.message : "Preset restore failed." });
-          throw error;
-        } finally {
-          setActiveDraftAction(null);
-        }
-      },
-    });
-  }
-
-  /**
    * Discards the Area's Module draft and puts the selection back to what a fresh Area would run with.
    *
    * Deliberately the code-owned default rather than a re-fetch of the published selection. The Shell
@@ -822,14 +758,6 @@ export function usePhiBuilderDraftCommandController({
 
     if (command === "reset") {
       runResetCommand(workspaceKind);
-      return;
-    }
-
-    if (command === "restorePreset") {
-      // Only the shell workspace owns an Area preset to restore; elsewhere the command is not offered.
-      if (workspaceKind === "structure") {
-        confirmRestoreShellPreset();
-      }
       return;
     }
 

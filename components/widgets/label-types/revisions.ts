@@ -48,6 +48,17 @@ export type PhiBuilderRevisionsWidgetLabels = {
     restore: string;
     delete: string;
     deleteSelected: string;
+    /** The Builder's one irreversible command, offered on the Revisions page. */
+    deleteArea: string;
+  };
+  /** The dialog that deletes an Area's own shell, and the field that has to be written out. */
+  deleteArea: {
+    title: string;
+    survives: string;
+    field: string;
+    fieldRequired: string;
+    confirm: string;
+    cancel: string;
   };
   confirm: {
     restoreTitle: string;
@@ -108,6 +119,15 @@ export const PHI_BUILDER_REVISIONS_WIDGET_DEFAULT_LABELS: PhiBuilderRevisionsWid
     restore: "Restore",
     delete: "Delete",
     deleteSelected: "Delete selected",
+    deleteArea: "Delete Area",
+  },
+  deleteArea: {
+    title: "Delete this Area's shell?",
+    survives: "The Area keeps its Pages, its Navigation and its Theme. Only the shell goes.",
+    field: "Type the Area key to confirm",
+    fieldRequired: "Write the Area key out to confirm.",
+    confirm: "Delete Area",
+    cancel: "Cancel",
   },
   confirm: {
     restoreTitle: "Restore revision #%1?",

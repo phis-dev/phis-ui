@@ -79,7 +79,11 @@ import {
   PHI_BUILDER_MODULE_USAGE_OVERLAY_IDS,
   PHI_BUILDER_MODULE_USAGE_LAYOUT_IDS,
   PHI_BUILDER_MODULE_USAGE_WIDGET_IDS,
+  PHI_BUILDER_DELETE_AREA_OVERLAY_IDS,
+  PHI_BUILDER_DELETE_AREA_LAYOUT_IDS,
+  PHI_BUILDER_DELETE_AREA_WIDGET_IDS,
 } from "../../../helpers/cms-page-addresses";
+import { PHI_REVISIONS_FORM_IDS } from "../../../plugins/runtime-modules/revisions/forms";
 import { PHI_BUILDER_PAGE_META_FORM_ID } from "../../../plugins/runtime-modules/builder/page-meta-form";
 import { getPhiBuilderNavigationPageLabels } from "./builder-navigation-label-set";
 import { getPhiMediaWidgetLabels } from "../../media/label-sets/media";
@@ -135,6 +139,7 @@ const PHI_BUILDER_WIDGET_NODE_KEYS = [
   "widgetCanvas",
   "widgetNavigationItems",
   "widgetNavigationSource",
+  "widgetRevisionsAreaShellDelete",
   "widgetBuilderAreaSelector",
   "widgetAreaRootRoute",
   "widgetBuilderModeSwitch",
@@ -195,15 +200,15 @@ function resolveBuilderPageTitleSource(pageKey: string) {
 }
 
 /**
- * The Builder's command toolbar.
+ * The Builder's command toolbar: save, preview, publish, and the steps back.
  *
- * `restorePreset` is offered only where there is an Area shell to restore, which is the Shells
- * workspace: it deletes the Site's own shell rather than a draft of it, and a command that destructive
- * has no business sitting on a Page or a Theme where it would mean nothing.
+ * Deleting an Area's own shell used to sit here too, one button from undo. It is the only act in this
+ * workspace that cannot be taken back, and it now lives on the Revisions page, where a Site's stored
+ * history is what is being looked at.
  */
 function buildBuilderCommandToolbarConfig(
   receiver = createPhiBuilderControllerAddress(),
-  options?: { restorePresetLabel?: string | null; disableReset?: boolean },
+  options?: { disableReset?: boolean },
 ) {
   return {
     key: "builder-command-toolbar",
@@ -263,16 +268,6 @@ function buildBuilderCommandToolbarConfig(
         actionKey: "reset",
         ...(options?.disableReset ? { disabled: true } : {}),
       },
-      ...(options?.restorePresetLabel
-        ? [{
-            key: "restorePreset",
-            emits: [{ capabilityId: "command", value: "restorePreset" }],
-            actionKey: "restore" as const,
-            label: options.restorePresetLabel,
-            tooltip: options.restorePresetLabel,
-            danger: true,
-          }]
-        : []),
     ],
   };
 }
@@ -805,7 +800,6 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
       ? createPhiThemeControllerAddress()
       : createPhiBuilderControllerAddress(),
     {
-      restorePresetLabel: isStructurePage ? labels.toolbar.restorePreset : null,
       /*
        * Held shut on the Modules page while what it means there is decided.
        *
@@ -931,6 +925,36 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
             listens: [
               { routeKey: "builder-module-detail-open", capabilityId: "open", scope: "page", channel: "dialog", action: "activate", valueType: "none", receiver: createPhiSignalAddress("cms", PHI_BUILDER_MODULE_DETAIL_OVERLAY_IDS.overlayModuleDetail) },
               { routeKey: "builder-module-detail-close", capabilityId: "close", scope: "page", channel: "dialog", action: "close", valueType: "none", receiver: createPhiSignalAddress("cms", PHI_BUILDER_MODULE_DETAIL_OVERLAY_IDS.overlayModuleDetail) },
+            ],
+          },
+        },
+      }] : []),
+      ...(isRevisionsPage ? [{
+        id: PHI_BUILDER_DELETE_AREA_OVERLAY_IDS.overlayDeleteArea,
+        overlayType: "modal" as const,
+        headerLayoutNodeId: null,
+        bodyLayoutNodeId: PHI_BUILDER_DELETE_AREA_LAYOUT_IDS.deleteAreaBody,
+        footerPresentation: "actions" as const,
+        footerLayoutNodeId: PHI_BUILDER_DELETE_AREA_LAYOUT_IDS.deleteAreaFooter,
+        status: PhiCmsStatus.Published,
+        flags: 0,
+        visibilityMask: page.visibilityMask,
+        sortOrder: 0,
+        label: "Builder delete area",
+        config: {
+          title: revisionsLabels?.deleteArea.title ?? "Delete this Area's shell?",
+          width: { compact: "calc(100vw - 32px)", medium: 520, wide: 560 },
+          /*
+           * `remount` rather than `lazy-keep`: the field is the confirmation, and a dialog that kept a
+           * half-typed Area key from the last time it was opened would carry an answer across to a
+           * question nobody asked again.
+           */
+          mountPolicy: "remount",
+          closeMode: "immediate",
+          signalRoutes: {
+            listens: [
+              { routeKey: "builder-delete-area-open", capabilityId: "open", scope: "area", channel: "dialog", action: "activate", valueType: "none", receiver: createPhiSignalAddress("cms", PHI_BUILDER_DELETE_AREA_OVERLAY_IDS.overlayDeleteArea) },
+              { routeKey: "builder-delete-area-close", capabilityId: "close", scope: "area", channel: "dialog", action: "close", valueType: "none", receiver: createPhiSignalAddress("cms", PHI_BUILDER_DELETE_AREA_OVERLAY_IDS.overlayDeleteArea) },
             ],
           },
         },
@@ -1478,6 +1502,33 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
             }),
           ]
         : []),
+      ...(isRevisionsPage ? [
+        nodes.layout({
+          creationPreset: { layoutKind: "verticalflex", preset: "panel" },
+          typeKey: "flex-vertical",
+          id: PHI_BUILDER_DELETE_AREA_LAYOUT_IDS.deleteAreaBody,
+          parentLayoutNodeId: null,
+          slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
+          sortOrder: 0,
+          label: "Builder delete area body",
+          config: {
+            gap: PHI_SPACE.base,
+            padding: PHI_SPACE.base,
+            background: PHI_COLOR.bgLayout,
+            border: "none",
+          },
+        }),
+        nodes.layout({
+          creationPreset: { layoutKind: "flex", preset: "overlay-actions" },
+          typeKey: "flex",
+          id: PHI_BUILDER_DELETE_AREA_LAYOUT_IDS.deleteAreaFooter,
+          parentLayoutNodeId: null,
+          slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
+          sortOrder: 0,
+          label: "Builder delete area footer",
+          config: {},
+        }),
+      ] : []),
       ...(isModulesPage ? [
         nodes.layout({
           creationPreset: { layoutKind: "verticalflex", preset: "panel" },
@@ -3407,6 +3458,134 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
             ]
         : isRevisionsPage
           ? [
+              /*
+               * The one irreversible act in the Builder, put where stored history is looked at.
+               *
+               * It used to sit in the Shells toolbar beside undo and redo, which is the wrong company: a
+               * command that deletes every revision of an Area, live included, should not be one button
+               * away from the ones that take a step back. Its own slot, on its own, in red.
+               */
+              nodes.widget({
+                typeKey: "command-toolbar",
+                id: SYNTHETIC_DEV_WIDGET_IDS.widgetRevisionsAreaShellDelete,
+                parentLayoutNodeId: SYNTHETIC_DEV_LAYOUT_IDS.layoutHeaderBottom,
+                slotIndex: PHI_CMS_THREE_COLUMN_LAYOUT_SLOT_INDEX.Right,
+                sortOrder: 0,
+                label: "dev revisions area shell delete",
+                config: {
+                  key: "revisions-area-shell-delete",
+                  compact: true,
+                  wrap: false,
+                  showLabels: true,
+                  buttons: [
+                    {
+                      key: "deleteArea",
+                      emits: [{ capabilityId: "command", value: "deleteArea" }],
+                      label: revisionsLabels?.actions.deleteArea ?? "Delete Area",
+                      tooltip: revisionsLabels?.actions.deleteArea ?? "Delete Area",
+                      icon: "antd:delete",
+                      display: "icon-label",
+                      danger: true,
+                    },
+                  ],
+                  signalRoutes: {
+                    emits: [
+                      {
+                        routeKey: "builder-revisions-area-shell-delete",
+                        capabilityId: "command",
+                        scope: "area",
+                        channel: "command",
+                        action: "activate",
+                        valueType: "string",
+                        receiver: createPhiRevisionsControllerAddress(),
+                      },
+                    ],
+                  },
+                },
+              }),
+              /*
+               * The Overlay's Body and Footer, as ordinary Widgets in ordinary slots (OVERLAYS.md).
+               *
+               * The warning names the Area, which no config can hold: the Revisions Controller writes it
+               * in through `text/change` when the command arrives, and sends the Overlay its `open`
+               * separately. Nothing here knows which Area it is about until it is asked about one.
+               */
+              nodes.widget({
+                typeKey: "simple-text",
+                id: PHI_BUILDER_DELETE_AREA_WIDGET_IDS.deleteAreaWarning,
+                parentLayoutNodeId: PHI_BUILDER_DELETE_AREA_LAYOUT_IDS.deleteAreaBody,
+                slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
+                sortOrder: 0,
+                label: "Builder delete area warning",
+                config: { text: "", type: "danger" },
+              }),
+              nodes.widget({
+                typeKey: "simple-text",
+                id: PHI_BUILDER_DELETE_AREA_WIDGET_IDS.deleteAreaSurvives,
+                parentLayoutNodeId: PHI_BUILDER_DELETE_AREA_LAYOUT_IDS.deleteAreaBody,
+                slotIndex: PHI_CMS_SEQUENTIAL_LAYOUT_SLOTS[1].slotIndex,
+                sortOrder: 1,
+                label: "Builder delete area survives",
+                config: {
+                  text: revisionsLabels?.deleteArea.survives ?? "",
+                  type: "secondary",
+                },
+              }),
+              nodes.widget({
+                typeKey: "form",
+                id: PHI_BUILDER_DELETE_AREA_WIDGET_IDS.deleteAreaForm,
+                parentLayoutNodeId: PHI_BUILDER_DELETE_AREA_LAYOUT_IDS.deleteAreaBody,
+                slotIndex: PHI_CMS_SEQUENTIAL_LAYOUT_SLOTS[2].slotIndex,
+                sortOrder: 2,
+                label: "Builder delete area form",
+                config: {
+                  formId: PHI_REVISIONS_FORM_IDS.deleteArea,
+                  /*
+                   * Signal mode, not handler mode: there is no gateway call behind this Form. What it
+                   * produces is one validated value, handed to the Revisions Controller, which is the
+                   * only place that knows which Area the value has to match.
+                   */
+                  execution: { mode: "signal", phase: "submit" },
+                  signalRoutes: {
+                    emits: [
+                      { routeKey: "builder-delete-area-values", capabilityId: "submitValues", scope: "area", channel: "formValues", action: "change", valueType: "json", valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.formValues, receiver: createPhiRevisionsControllerAddress() },
+                    ],
+                  },
+                },
+              }),
+              nodes.widget({
+                typeKey: "command-toolbar",
+                id: PHI_BUILDER_DELETE_AREA_WIDGET_IDS.deleteAreaCommands,
+                parentLayoutNodeId: PHI_BUILDER_DELETE_AREA_LAYOUT_IDS.deleteAreaFooter,
+                slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
+                sortOrder: 0,
+                label: "Builder delete area commands",
+                config: {
+                  key: "delete-area-commands",
+                  compact: true,
+                  wrap: false,
+                  showLabels: true,
+                  buttons: [
+                    {
+                      key: "cancel",
+                      emits: [{ capabilityId: "close", value: null }],
+                      label: revisionsLabels?.deleteArea.cancel ?? "Cancel",
+                    },
+                    {
+                      key: "confirm",
+                      emits: [{ capabilityId: "submit", value: null }],
+                      label: revisionsLabels?.deleteArea.confirm ?? "Delete Area",
+                      danger: true,
+                    },
+                  ],
+                  signalRoutes: {
+                    emits: [
+                      { routeKey: "builder-delete-area-cancel", capabilityId: "close", scope: "area", channel: "dialog", action: "close", valueType: "none", receiver: createPhiSignalAddress("cms", PHI_BUILDER_DELETE_AREA_OVERLAY_IDS.overlayDeleteArea) },
+                      { routeKey: "builder-delete-area-submit", capabilityId: "submit", scope: "area", channel: "submit", action: "activate", valueType: "none", receiver: createPhiSignalAddress("cms", PHI_BUILDER_DELETE_AREA_WIDGET_IDS.deleteAreaForm) },
+                    ],
+                  },
+                },
+              }),
               nodes.widget({
                 typeKey: "table",
                 id: PHI_BUILDER_REVISIONS_TABLE_WIDGET_ID,

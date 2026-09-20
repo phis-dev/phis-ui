@@ -5,7 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import type { PhiRuntimeControllerPlugin, PhiSignalAddress } from "../../../../types";
 import { createPhiSignalAddress, PHI_SIGNAL_VALUE_SCHEMAS } from "../../../../types/signals";
 import { readPhiTableBindingParamsSignalValue } from "../../../../types/table-widget";
-import { isPhiBuilderAreaKey } from "../../../../constants/cms-areas";
+import { isPhiBuilderAreaKey, type PhiBuilderAreaKey } from "../../../../constants/cms-areas";
 import { createPhiRuntimeControllerClient } from "../../../../components/runtime/runtime-controller-client-factory";
 import { usePhiSignalDispatcher, usePhiSignalListener } from "../../../../components/runtime/runtime-signal-bus";
 import { usePhiApplicationFeedback } from "../../../../components/runtime/use-phi-application-feedback";
@@ -38,6 +38,11 @@ import {
   type PhiRevisionsControllerConfig,
 } from "../controller/definition";
 import { resolvePhiBuilderRevisionNavScopeKey } from "../../../../helpers/cms-navigation-scope-key";
+import { deleteCmsDraft } from "../../builder/persistence";
+import {
+  PHI_BUILDER_DELETE_AREA_OVERLAY_IDS,
+  PHI_BUILDER_DELETE_AREA_WIDGET_IDS,
+} from "../../../../helpers/cms-page-addresses";
 
 const PHI_REVISIONS_TABLE_ADDRESS = createPhiSignalAddress(
   "cms",
@@ -118,6 +123,42 @@ function PhiRevisionsControllerMount({ address }: { address: PhiSignalAddress })
     persistedPageCatalogByArea,
   ]);
 
+  /*
+   * Deletes the Area's own shell, then asks the workspace for everything again.
+   *
+   * What stands afterwards is the Module preset, and this client holds none of it -- not the Regions,
+   * not the root route, not the SEO answers. Every one of them is now a value only the server knows.
+   */
+  const deleteAreaShell = useCallback(async (area: PhiBuilderAreaKey, correlationId?: string) => {
+    const source = getPhiWorkspaceCatalogSnapshot(PHI_WORKSPACE_CATALOG_SCOPE)
+      .areaPresetSourcesByArea?.[area] ?? null;
+    try {
+      await deleteCmsDraft("/api/site/cms/area/override", {
+        area,
+        ownerModuleId: source?.ownerModuleId,
+        presetKey: source?.presetKey,
+      });
+      dispatchSignal({
+        scope: "area",
+        channel: "dialog",
+        action: "close",
+        value: null,
+        valueType: "none",
+        sender: address,
+        receiver: createPhiSignalAddress("cms", PHI_BUILDER_DELETE_AREA_OVERLAY_IDS.overlayDeleteArea),
+        ...(correlationId ? { correlationId } : {}),
+        timestamp: Date.now(),
+      });
+      showMessage({ level: "success", content: `Deleted the ${area} shell.` });
+      router.refresh();
+    } catch (error) {
+      showMessage({
+        level: "error",
+        content: error instanceof Error ? error.message : "Deleting the shell failed.",
+      });
+    }
+  }, [address, dispatchSignal, router, showMessage]);
+
   usePhiSignalListener(useCallback((signal) => {
     if (
       signal.channel === "areaSelection" &&
@@ -145,6 +186,60 @@ function PhiRevisionsControllerMount({ address }: { address: PhiSignalAddress })
     }
 
     if (signal.receiver !== address) return;
+
+    if (
+      signal.channel === "command" &&
+      signal.action === "activate" &&
+      signal.value === "deleteArea"
+    ) {
+      /*
+       * Two signals, as the Overlay contract requires: the Body's Widget is addressed directly with what
+       * it has to say, and the Overlay is told to open. The Area comes from the workspace rather than
+       * from the signal -- the button names a command, and what it acts on is whatever the Builder is
+       * pointed at when it is pressed.
+       */
+      const area = getPhiWorkspaceCatalogSnapshot(PHI_WORKSPACE_CATALOG_SCOPE).area;
+      dispatchSignal({
+        scope: "area",
+        channel: "text",
+        action: "change",
+        value: `Everything this Site stored for ${area} is deleted, drafts and published alike. What is live changes at once, the Module preset takes the Area back, and no revision is left to restore it from. It cannot be undone.`,
+        valueType: "string",
+        sender: address,
+        receiver: createPhiSignalAddress("cms", PHI_BUILDER_DELETE_AREA_WIDGET_IDS.deleteAreaWarning),
+        correlationId: signal.correlationId,
+        timestamp: Date.now(),
+      });
+      dispatchSignal({
+        scope: "area",
+        channel: "dialog",
+        action: "activate",
+        value: null,
+        valueType: "none",
+        sender: address,
+        receiver: createPhiSignalAddress("cms", PHI_BUILDER_DELETE_AREA_OVERLAY_IDS.overlayDeleteArea),
+        correlationId: signal.correlationId,
+        timestamp: Date.now(),
+      });
+      return;
+    }
+
+    if (signal.channel === "formValues" && signal.action === "change") {
+      const payload = isRecord(signal.value) ? signal.value as Record<string, unknown> : null;
+      const values = isRecord(payload?.values) ? payload.values : null;
+      const typed = typeof values?.areaKey === "string" ? values.areaKey.trim() : "";
+      const area = getPhiWorkspaceCatalogSnapshot(PHI_WORKSPACE_CATALOG_SCOPE).area;
+      if (typed !== area) {
+        // The Overlay stays open: what is wrong is the answer, not the question.
+        showMessage(
+          { level: "error", content: "That is not the Area key." },
+          { correlationId: signal.correlationId },
+        );
+        return;
+      }
+      void deleteAreaShell(area, signal.correlationId);
+      return;
+    }
 
     if (signal.channel === "bindingParams" && signal.action === "change") {
       const binding = readPhiTableBindingParamsSignalValue(signal.value);
@@ -244,9 +339,9 @@ function PhiRevisionsControllerMount({ address }: { address: PhiSignalAddress })
         { correlationId: signal.correlationId },
       );
     }
-  }, [address, dispatchSignal, pathname, router, showMessage]), {
+  }, [address, deleteAreaShell, dispatchSignal, pathname, router, showMessage]), {
     scopes: ["area", "page"],
-    channels: ["areaSelection", "bindingParams", "mutation"],
+    channels: ["areaSelection", "bindingParams", "command", "formValues", "mutation"],
   },
   /*
    * The address this listener answers for.
@@ -256,6 +351,7 @@ function PhiRevisionsControllerMount({ address }: { address: PhiSignalAddress })
    * its own listener, and this is where it says so.
    */
   address);
+
   return null;
 }
 

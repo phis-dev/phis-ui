@@ -116,6 +116,20 @@ export const PHI_BUILDER_MODULE_USAGE_WIDGET_IDS = createPhiPresetCmsInstanceIdM
   ["moduleUsageIntro", "moduleUsageTable", "moduleUsageCommands"],
 );
 
+/** The Revisions page's one irreversible command: deleting an Area's own shell. */
+export const PHI_BUILDER_DELETE_AREA_OVERLAY_IDS = createPhiPresetCmsInstanceIdMap(
+  MODULES_DETAIL_ID_CONTEXT,
+  ["overlayDeleteArea"],
+);
+export const PHI_BUILDER_DELETE_AREA_LAYOUT_IDS = createPhiPresetCmsInstanceIdMap(
+  MODULES_DETAIL_ID_CONTEXT,
+  ["deleteAreaBody", "deleteAreaFooter"],
+);
+export const PHI_BUILDER_DELETE_AREA_WIDGET_IDS = createPhiPresetCmsInstanceIdMap(
+  MODULES_DETAIL_ID_CONTEXT,
+  ["deleteAreaWarning", "deleteAreaSurvives", "deleteAreaForm", "deleteAreaCommands"],
+);
+
 const PAGE_META_ID_CONTEXT = {
   domain: "page" as const,
   ownerModuleId: PHI_BUILDER_RUNTIME_MODULE_ID,
