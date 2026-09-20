@@ -502,14 +502,21 @@ Presets are declarative composition, not implementation hosts. They may:
 They may not fetch data, import Client implementations, create local registries, mount Controllers,
 branch on another Module, or encode a missing generic capability in a custom Widget/config string.
 
-**Every icon a preset names is an `antd:*` one.** `PhiIcon` also resolves `iconify:*` and `asset:*`, and
-both stay available to a Builder choosing an icon for their own Widget -- but a preset is not a choice.
-It ships with the Module, to every Site that activates it, and nobody along the way agreed to what it
-names. An Iconify icon is fetched from Iconify's API by the visitor's browser, which turns a default into
-a third-party request on someone else's page; an `asset:` icon names a file that a fresh Site does not
-have. The `antd:*` set is bundled, so it resolves offline, on the first paint, and asks nobody. Where the
-set is missing a mark a preset needs, it gains one in the icon registry
-(`components/shell/phi-icon.tsx`) -- that is a decision made once, in the open, rather than per preset.
+**An icon a preset names is already resolved when it names it.** `PhiIcon` also resolves `iconify:*` and
+`asset:*`, and both stay available to a Builder choosing an icon for their own Widget -- but a preset is
+not a choice. It ships with the Module, to every Site that activates it, and nobody along the way agreed
+to what it names. An Iconify icon is fetched from Iconify's API by the visitor's browser, which turns a
+default into a third-party request on someone else's page; an `asset:` icon names a file that a fresh
+Site does not have. Both are lookups against something that may be elsewhere or absent, and that is the
+whole of the objection.
+
+The `antd:*` set is bundled, so it resolves offline, on the first paint, and asks nobody. A mark a Module
+ships in its own source -- an inline SVG, a glyph -- is bundled the same way and is as welcome: it is
+there whenever the Module is, and a package that brings its own identity is usually bringing the point of
+itself. Inline rather than a path the build emits, so the mark arrives in the same paint as what carries
+it, and drawn in `currentColor`, so it follows the theme. Where the bundled set is missing a mark that
+several presets would share, it gains one in the icon registry (`components/shell/phi-icon.tsx`) -- a
+decision made once, in the open, rather than per preset.
 
 A Module may publish named facts about its own configuration, which conditions on a page can be written
 against. The catalog entry states the namespace and a loader; the loader runs only where a page actually

@@ -3,17 +3,19 @@ import path from "node:path";
 import process from "node:process";
 
 /**
- * A preset names bundled icons only.
+ * An icon a preset names is already resolved when it names it.
  *
  * `PhiIcon` resolves three kinds of icon string, and all three stay available to a Builder choosing an
  * icon for their own Widget. A preset is not a choice: it ships with its Module to every Site that
  * activates it, and nobody along the way agreed to what it names. An `iconify:` icon is fetched from
  * Iconify's API by the visitor's browser, which turns a default into a third-party request on someone
- * else's page; an `asset:` icon names a file a fresh Site does not have. `antd:` is bundled, so it
- * resolves offline and on the first paint (MODULES.md, "Presets, paths, and navigation").
+ * else's page; an `asset:` icon names a file a fresh Site does not have. Both are lookups against
+ * something that may be elsewhere or absent, and that is the whole of the objection (MODULES.md,
+ * "Presets, paths, and navigation").
  *
- * Where the bundled set lacks a mark a preset needs, it gains one in `components/shell/phi-icon.tsx` --
- * once, in the open, rather than per preset.
+ * What is bundled is fine, and `antd:` is not the only bundled thing: a mark a Module ships in its own
+ * source -- an inline SVG, a glyph -- is there whenever the Module is. Only the two lookup prefixes are
+ * named below, which is why this reads string literals and not markup.
  *
  * Only preset sources are read, and only string literals in them. A Widget Client that has to recognise
  * the other prefixes writes them too, and it is out of reach here by where it lives rather than by a
@@ -59,8 +61,9 @@ for (const file of presetFiles) {
     let match = pattern.exec(source);
     while (match) {
       failures.push(
-        `${file}:${lineOf(source, match.index)} names a \`${prefix}\` icon. A preset names \`antd:\` `
-          + `icons only -- this one is ${reason}. Add the mark to components/shell/phi-icon.tsx instead.`,
+        `${file}:${lineOf(source, match.index)} names a \`${prefix}\` icon, which is ${reason}. A preset `
+          + "names icons that are already resolved: the bundled `antd:` set, a mark added once to "
+          + "components/shell/phi-icon.tsx, or an inline SVG in the Module's own source.",
       );
       match = pattern.exec(source);
     }
