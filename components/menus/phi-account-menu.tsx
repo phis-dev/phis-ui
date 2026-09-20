@@ -15,6 +15,13 @@ export type PhiAccountMenuLabels = {
     login: string;
     register: string;
   };
+  /*
+   * Only the heading. Each Area entry arrives carrying its own name, so the six names have no second
+   * home here -- one copy crossing to the browser, in the place that renders it.
+   */
+  areas: {
+    title: string;
+  };
 };
 
 export type PhiAccountMenuState =
@@ -160,12 +167,22 @@ export function PhiAccountMenu({
    * The Area the reader is in is shown and not offered: a link back to the page you are on is an
    * invitation to a round trip that changes nothing, and leaving it out would drop the one entry that
    * says where you are. An Area root forwards to wherever this viewer lands, so the segment is enough.
+   *
+   * They stand in a titled group rather than as entries after a rule. What is above the rule is this
+   * account -- the profile, the password, signing out -- and what is below it is somewhere else
+   * entirely. A rule says only that something changes here; the heading says what, which is worth a
+   * line in the one menu that has to make sense from inside every Area.
    */
-  const areaMenuItems: PhiMenuControlItem[] = (areaEntries ?? []).map((entry) => ({
-    key: `area-${entry.area}`,
-    label: entry.current ? entry.label : <Link href={entry.href}>{entry.label}</Link>,
-    disabled: entry.current,
-  }));
+  const areaMenuItems: PhiMenuControlItem[] = (areaEntries ?? []).length === 0 ? [] : [{
+    type: "group",
+    key: "account-areas",
+    label: labels.areas.title,
+    children: (areaEntries ?? []).map((entry) => ({
+      key: `area-${entry.area}`,
+      label: entry.current ? entry.label : <Link href={entry.href}>{entry.label}</Link>,
+      disabled: entry.current,
+    })),
+  }];
 
   /*
    * Nothing about the account is drawn here any more.
@@ -176,7 +193,9 @@ export function PhiAccountMenu({
    *
    * What it still decides is the grouping: what a Module contributed, then what acts, then where else
    * this person may go, each set off from the next. A divider appears only between two groups that both
-   * have something in them, so a menu missing a group has no rule hanging in the air.
+   * have something in them, so a menu missing a group has no rule hanging in the air. The Areas carry
+   * a heading of their own, so the rule before them says where the account ends and the heading says
+   * what begins.
    */
   const groups = [destinationMenuItems, actionMenuItems, areaMenuItems].filter((group) => group.length > 0);
   const menuItems: PhiMenuControlItem[] =

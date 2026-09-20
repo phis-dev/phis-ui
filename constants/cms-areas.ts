@@ -52,15 +52,6 @@ const BUILDER_AREA_TO_CMS_AREA_KEY: Record<PhiBuilderAreaKey, PhiCmsAreaKey> = {
   accounting: "accounting",
 };
 
-const CMS_AREA_LABEL_BY_KEY: Record<PhiCmsAreaKey, string> = {
-  public: "Public",
-  app: "App",
-  admin: "Admin",
-  builder: "Builder",
-  editor: "Editor",
-  accounting: "Accounting",
-};
-
 const BUILDER_AREA_LABEL_BY_KEY: Record<PhiBuilderAreaKey, string> = {
   public: "Public",
   app: "App",
@@ -101,10 +92,6 @@ export function resolvePhiBuilderAreaMask(area: PhiBuilderAreaKey) {
 
 export function resolvePhiBuilderAreaAsCmsArea(area: PhiBuilderAreaKey): PhiCmsAreaKey {
   return BUILDER_AREA_TO_CMS_AREA_KEY[area];
-}
-
-export function resolvePhiCmsAreaLabel(area: PhiCmsAreaKey) {
-  return CMS_AREA_LABEL_BY_KEY[area];
 }
 
 export function resolvePhiBuilderAreaLabel(area: PhiBuilderAreaKey) {

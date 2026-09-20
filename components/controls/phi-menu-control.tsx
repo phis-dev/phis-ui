@@ -22,7 +22,22 @@ export type PhiMenuControlEntry = {
   children?: readonly PhiMenuControlItem[];
 };
 
-export type PhiMenuControlItem = PhiMenuControlDivider | PhiMenuControlEntry;
+/**
+ * A titled set of entries, drawn under a heading rather than behind a parent.
+ *
+ * Different from an entry with `children`, which is a submenu: a submenu hides what is in it behind a
+ * step, which is right where the entries are many or secondary. A group shows them and says what they
+ * have in common, which is right where the set is short, fixed, and worth naming -- the Areas a person
+ * may enter, for one. The title is not a destination and cannot be chosen.
+ */
+export type PhiMenuControlGroup = {
+  type: "group";
+  key: string;
+  label: ReactNode;
+  children: readonly PhiMenuControlItem[];
+};
+
+export type PhiMenuControlItem = PhiMenuControlDivider | PhiMenuControlGroup | PhiMenuControlEntry;
 
 export type PhiMenuControlProps = {
   /**
@@ -46,8 +61,11 @@ export type PhiMenuControlProps = {
 
 export function toPhiAntdMenuItems(items: readonly PhiMenuControlItem[]): ItemType[] {
   return items.map((item) => {
-    if ("type" in item) {
+    if ("type" in item && item.type === "divider") {
       return { type: "divider", ...(item.key ? { key: item.key } : {}) };
+    }
+    if ("type" in item && item.type === "group") {
+      return { type: "group", key: item.key, label: item.label, children: toPhiAntdMenuItems(item.children) };
     }
 
     const { children, ...entry } = item;

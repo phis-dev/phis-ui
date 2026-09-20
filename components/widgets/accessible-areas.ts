@@ -1,5 +1,4 @@
 import type { PhiCmsAreaKey } from "../../constants/cms-areas";
-import { resolvePhiCmsAreaLabel } from "../../constants/cms-areas";
 import { localizeAreaPath } from "../../helpers/locale";
 import { PHI_ALL_RUNTIME_AREA_DEFINITIONS } from "../../plugins/runtime-modules/area-definitions";
 import { canPhiViewerAccess, type PhiAccessViewer } from "../../types/access";
@@ -23,13 +22,23 @@ export function listPhiAccessibleAreas(viewer: PhiAccessViewer): readonly PhiCms
     .map((definition) => definition.area);
 }
 
+/** What each Area is called in the reader's language; Public has no entry, so it has no name here. */
+export type PhiAccountAreaLabels = Readonly<Record<Exclude<PhiCmsAreaKey, "public">, string>>;
+
 /**
  * The same list in the account menu, which is the one menu that stands in every Area.
  *
  * It is here rather than in a navigation surface because there is nothing to resolve: an Area's address
  * is its own segment, the list is the same everywhere, and which entries it has is a property of the
- * person rather than of the Page. Public is included -- from a staff shell it is the way back to the
- * Site, and it is the Area a signed-in person is most likely to want next.
+ * person rather than of the Page.
+ *
+ * Public is left out. It is the one Area nobody needs a way to reach from here: signing out lands
+ * there, and it is where a visitor who never signed in already is. Listing it put the Site beside the
+ * staff Areas as though it were one of them, in a menu whose subject is where this person may work.
+ *
+ * The labels are passed in rather than read from `constants/cms-areas`, where they are English
+ * constants a translator never sees. This menu stands in every Area and is read by people who did not
+ * choose the interface language.
  *
  * Since the account Pages are App's and are entries of `app:account` alone, this list is also how
  * somebody standing in the Admin reaches their own profile: one step, named for what it is.
@@ -38,16 +47,20 @@ export function buildPhiAccountAreaEntries({
   viewer,
   currentArea,
   locale,
+  labels,
 }: {
   viewer: PhiAccessViewer;
   currentArea: PhiCmsAreaKey;
   locale: string;
+  labels: PhiAccountAreaLabels;
 }): PhiAccountAreaEntry[] {
-  return listPhiAccessibleAreas(viewer).map((area) => ({
-    area,
-    label: resolvePhiCmsAreaLabel(area),
-    // An Area root forwards to wherever this viewer lands; only Public carries the locale in its path.
-    href: localizeAreaPath(locale, area, "/"),
-    current: area === currentArea,
-  }));
+  return listPhiAccessibleAreas(viewer)
+    .filter((area): area is Exclude<PhiCmsAreaKey, "public"> => area !== "public")
+    .map((area) => ({
+      area,
+      label: labels[area],
+      // An Area root forwards to wherever this viewer lands.
+      href: localizeAreaPath(locale, area, "/"),
+      current: area === currentArea,
+    }));
 }

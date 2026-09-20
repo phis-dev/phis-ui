@@ -10,6 +10,13 @@ const PHI_ACCOUNT_MENU_LABEL_SET = definePhiLabelSet({
     account: "Account",
     login: "Login",
     register: "Register",
+    // The Areas, named here because the menu is where a person reads them rather than routes by them.
+    areas_title: "Go to",
+    area_app: "App",
+    area_admin: "Admin",
+    area_builder: "Builder",
+    area_editor: "Editor",
+    area_accounting: "Accounting",
   },
 });
 
@@ -51,6 +58,18 @@ export async function getPhiAccountMenuLabels(options: PhiGlobalTranslatorOption
     guest: {
       login: labels.login,
       register: labels.register,
+    },
+    /*
+     * Public is absent on purpose, and so is its name: the menu does not offer it, so a translated
+     * label for it would be a string nothing renders. See `buildPhiAccountAreaEntries`.
+     */
+    areas: {
+      title: labels.areas_title,
+      app: labels.area_app,
+      admin: labels.area_admin,
+      builder: labels.area_builder,
+      editor: labels.area_editor,
+      accounting: labels.area_accounting,
     },
   };
 }

@@ -151,6 +151,7 @@ export async function PhiAccountWidget({
         viewer: runtime.viewer,
         currentArea: runtime.area,
         locale: runtime.locale.current,
+        labels: accountLabels.areas,
       })
     : [];
   const config: PhiAccountWidgetConfig = {
@@ -159,7 +160,13 @@ export async function PhiAccountWidget({
     showChevron: widgetConfig?.showChevron ?? site.theme?.widgets?.account?.showChevron ?? undefined,
   };
   const labels: PhiAccountWidgetLabels = {
-    menu: accountLabels,
+    menu: {
+      trigger: accountLabels.trigger,
+      guest: accountLabels.guest,
+      // The heading alone: the Area names went into the entries above, and sending them twice would
+      // put the same six strings in two places for one menu to read one of them.
+      areas: { title: accountLabels.areas.title },
+    },
   };
   /*
    * A Site with registration switched off keeps the entry out of the menu instead of leading to a form
