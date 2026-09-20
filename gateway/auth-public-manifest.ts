@@ -68,6 +68,18 @@ export async function fetchPhiPublicAuthManifest(
 }
 
 /**
+ * Whether this Site lets somebody create an account.
+ *
+ * The manifest names a mode, and every reader wanting the plain answer would have to know that
+ * `disabled` is the one value that means no. Two readers knowing it are two places to correct when a
+ * third mode arrives, so the reading lives here: the Login form's link and the account menu's entry
+ * cannot come to different conclusions about the same Site.
+ */
+export function phiPublicAuthManifestOffersRegistration(manifest: PhiPublicAuthManifest): boolean {
+  return manifest.registrationMode !== "disabled";
+}
+
+/**
  * The authentication already in progress for this request, or null when there is none.
  *
  * Needs the viewer's cookies, because an unfinished authentication is held in their Session. A visitor

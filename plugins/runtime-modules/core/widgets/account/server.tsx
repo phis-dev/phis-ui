@@ -1,4 +1,8 @@
 import { getResolvedSiteConfig } from "../../../../../gateway/site-config";
+import {
+  fetchPhiPublicAuthManifest,
+  phiPublicAuthManifestOffersRegistration,
+} from "../../../../../gateway/auth-public-manifest";
 import { phiRuntime } from "../../../../../server-helpers/phi-runtime";
 import type { PhiBlockRuntime } from "../../../../../types";
 import type {
@@ -18,7 +22,14 @@ import { getPhiAccountMenuLabels } from "../../../../../components/widgets/label
 
 export type PhiAccountWidgetGuestState = {
   kind: "guest";
-  registerHref: string;
+  /**
+   * Where to create an account, or absent on a Site that does not let anybody.
+   *
+   * Optional because the Widget decides it: the caller hands over the address the Area makes of it, and
+   * whether the Site offers the Page at all is read here. Both readers below already treated it as
+   * optional, so nothing new has to be remembered.
+   */
+  registerHref?: string;
   forgotPasswordHref?: string;
 };
 
@@ -76,6 +87,7 @@ export async function PhiAccountWidget({
     site,
     accountLabels,
     contributedItems,
+    offersRegistration,
   ] = await Promise.all([
     getResolvedSiteConfig({
       apiBaseUrl: rt.apiBaseUrl,
@@ -96,6 +108,23 @@ export async function PhiAccountWidget({
     state.kind === "authenticated"
       ? resolvePhiNavigationItems(runtime, `${runtime.area}:account`)
       : Promise.resolve(null),
+    /*
+     * Whether this Site lets anybody create an account, read here rather than handed down.
+     *
+     * A page is given the Modules' published facts only where it asks for them, and this menu stands in
+     * a Region on every page -- including all the ones that ask nothing. So it reads for itself, which
+     * is what `PhiCmsWidgetPluginRenderArgs.features` says a Widget needing a fact unconditionally
+     * should do.
+     *
+     * Only for a guest: a signed-in person is offered no way to register, so nobody pays for the read.
+     */
+    state.kind === "guest"
+      ? fetchPhiPublicAuthManifest({
+          apiBaseUrl: rt.apiBaseUrl,
+          internalToken: rt.internalToken,
+          siteKey: rt.siteKey,
+        }).then(phiPublicAuthManifestOffersRegistration)
+      : Promise.resolve(false),
   ]);
   /*
    * The exported anchor is the place to dock, not an entry; everything else in the surface is one.
@@ -132,6 +161,17 @@ export async function PhiAccountWidget({
   const labels: PhiAccountWidgetLabels = {
     menu: accountLabels,
   };
+  /*
+   * A Site with registration switched off keeps the entry out of the menu instead of leading to a form
+   * the server refuses. The Login page's own link has always been conditional on this; the menu was the
+   * last place still inviting people in, and it is the one a visitor sees on every page rather than only
+   * on `/login`.
+   *
+   * Dropped rather than disabled: a menu entry that cannot be used says nothing a reader can act on.
+   */
+  const resolvedState: PhiAccountWidgetState = state.kind === "guest" && !offersRegistration
+    ? { kind: "guest", forgotPasswordHref: state.forgotPasswordHref }
+    : state;
 
   return (
     <PhiRuntimeModuleRenderClientHost
@@ -141,7 +181,7 @@ export async function PhiAccountWidget({
         avatarSrc,
         avatarAlt,
         successAction,
-        state,
+        state: resolvedState,
         labels,
         config,
         contributedItems: contributedEntries.length > 0 ? contributedEntries : undefined,

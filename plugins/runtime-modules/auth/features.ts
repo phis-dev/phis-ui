@@ -1,6 +1,9 @@
 import "server-only";
 
-import { fetchPhiPublicAuthManifest } from "../../../gateway/auth-public-manifest";
+import {
+  fetchPhiPublicAuthManifest,
+  phiPublicAuthManifestOffersRegistration,
+} from "../../../gateway/auth-public-manifest";
 import type { PhiRuntimeModuleFeatureContext } from "../../../types/cms-plugins";
 
 /**
@@ -25,6 +28,6 @@ export async function resolvePhiAuthRuntimeModuleFeatures(context: PhiRuntimeMod
   return {
     password: primary.some((method) => method.methodKey === "password"),
     external: primary.some((method) => method.methodKey !== "password"),
-    registration: manifest.registrationMode !== "disabled",
+    registration: phiPublicAuthManifestOffersRegistration(manifest),
   };
 }
