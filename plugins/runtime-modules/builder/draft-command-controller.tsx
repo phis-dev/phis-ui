@@ -57,6 +57,7 @@ import {
   restorePhiDeveloperBuilderAreaMeta,
   restorePhiDeveloperRegionDrafts,
   setPhiDeveloperBuilderAreaRootRoute,
+  setPhiDeveloperRegionDraftsWithHistory,
 } from "./developer-workspace-store";
 import type {
   PhiDeveloperBuilderArea,
@@ -451,6 +452,24 @@ export function usePhiBuilderDraftCommandController({
     window.open(href, "_blank", "noopener,noreferrer");
   }
 
+  /**
+   * Puts the Module's shell back into the draft, as an edit rather than as an erasure.
+   *
+   * It used to delete the draft on the server and clear the history behind it, which made "start over"
+   * the one gesture in this workspace that could not be taken back -- and it promised the wrong thing
+   * twice over: the dialog said what is published stays live while the editor came back showing the
+   * preset, two different answers that only agreed while nobody had published.
+   *
+   * Nothing is deleted now. The preset's Regions are written into the draft as one recorded step, so
+   * undo returns what was there, the previous draft stays in the revision history, and what is live
+   * stays live until somebody publishes. That also makes this the only way back to where a Module
+   * started: revisions know the states this Site has been in, and if it was customised before it was
+   * first published, the Module's own starting point was never one of them.
+   *
+   * The Area's root route and its SEO answers are deliberately untouched. They say where the Area lives
+   * and how it describes itself, which is not what its shell looks like; the old command dropped them
+   * only because it had deleted the draft that held them.
+   */
   function confirmResetShell() {
     const presetDrafts = shellPresetDraftsByArea[effectiveArea] ?? null;
     if (!presetDrafts) {
@@ -459,51 +478,22 @@ export function usePhiBuilderDraftCommandController({
     }
 
     modal.confirm({
-      title: "Discard shell draft?",
-      content: "This discards the unpublished shell draft for this Area. What is published stays live.",
-      okText: "Discard draft",
-      okButtonProps: { danger: true },
+      title: "Start from the Module's shell?",
+      content:
+        "This puts the Module's shell into the draft, replacing what the editor is showing. " +
+        "Nothing is deleted -- undo takes it back, and what is published stays live until you publish.",
+      okText: "Start from the preset",
       cancelText: "Cancel",
       centered: true,
-      onOk: async () => {
-        setActiveDraftAction("reset");
-        try {
-          await deleteCmsDraft("/api/site/cms/area", {
-            area: effectiveArea,
-            ownerModuleId: state.areaPresetSourcesByArea[effectiveArea]?.ownerModuleId,
-            presetKey: state.areaPresetSourcesByArea[effectiveArea]?.presetKey,
-          });
-          clearPhiDeveloperBuilderDraftAllocation({
-            area: effectiveArea,
-            pageKey: effectivePageKey,
-            workspaceKind: "structure",
-          });
-          mergePhiDeveloperRegionDrafts(presetDrafts);
-          phiBuilderHistory.clear(createPhiBuilderHistoryContext({
+      onOk: () => {
+        setPhiDeveloperRegionDraftsWithHistory(presetDrafts, {
+          historyContext: createPhiBuilderHistoryContext({
             workspace: "structure",
             area: effectiveArea,
-          }));
-          /*
-           * What the Shell said about itself went with the draft, and only the server knows what is
-           * left.
-           *
-           * The Region tree above can be put back from the preset this client already holds; the root
-           * route and the SEO answers cannot -- what stands after the override is deleted is whatever
-           * was published, and that is a value nobody here has. So the session's answers are dropped
-           * and the workspace is asked for again: `/pages` reads the stored root route to decide which
-           * Pages it may open, and leaving the deleted draft's answer in place would have it offering
-           * a `/` that no longer exists.
-           */
-          setPhiDeveloperBuilderAreaRootRoute(effectiveArea, undefined);
-          restorePhiDeveloperBuilderAreaMeta(effectiveArea, undefined);
-          router.refresh();
-          showMessage({ level: "success", content: "Reset shell draft." });
-        } catch (error) {
-          showMessage({ level: "error", content: error instanceof Error ? error.message : "Shell reset failed." });
-          throw error;
-        } finally {
-          setActiveDraftAction(null);
-        }
+          }),
+          historyLabel: "Start from the Module's shell",
+        });
+        showMessage({ level: "success", content: "The Module's shell is in the draft." });
       },
     });
   }
