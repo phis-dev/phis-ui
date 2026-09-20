@@ -9,6 +9,9 @@ import {
 } from "react";
 
 import {
+  AppleOutlined,
+  GithubOutlined,
+  GoogleOutlined,
   HomeOutlined,
   InfoCircleOutlined,
   LogoutOutlined,
@@ -19,6 +22,7 @@ import {
   ShoppingOutlined,
   StarOutlined,
   UserOutlined,
+  WindowsOutlined,
 } from "@ant-design/icons";
 import Image from "next/image";
 
@@ -68,6 +72,22 @@ const ANTD_ICON_REGISTRY = {
   "logout-outlined": LogoutOutlined,
   user: UserOutlined,
   "user-outlined": UserOutlined,
+  /*
+   * The sign-in providers' marks.
+   *
+   * Bundled rather than `iconify:`, although that prefix is supported and would have shorter names.
+   * These are Core defaults on a public Login page, so every Site would ship them without anyone
+   * choosing them -- and an Iconify icon is fetched from Iconify's API by the visitor's browser. A
+   * Builder picking one for their own Widget opts into that; a default may not opt in on their behalf.
+   */
+  google: GoogleOutlined,
+  "google-outlined": GoogleOutlined,
+  apple: AppleOutlined,
+  "apple-outlined": AppleOutlined,
+  github: GithubOutlined,
+  "github-outlined": GithubOutlined,
+  windows: WindowsOutlined,
+  "windows-outlined": WindowsOutlined,
 } as const;
 
 const LazyPhiManagementIcon = lazy(

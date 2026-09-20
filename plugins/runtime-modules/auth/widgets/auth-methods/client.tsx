@@ -10,6 +10,8 @@ import type { PhiPublicAuthManifest } from "../../../../../types/auth-manifest";
 import { PhiDividerControl } from "../../../../../components/controls/phi-divider-control";
 import { PhiFlexControl } from "../../../../../components/controls/phi-flex-control";
 import { PHI_SPACE } from "../../../../../theme/antd-css-var-contract";
+import { PHI_LAYOUT } from "../../../../../theme/phi-tokens";
+import { PhiIcon } from "../../../../../components/shell/phi-icon";
 
 export type PhiAuthMethodsWidgetClientProps = {
   methods: PhiPublicAuthManifest["methods"];
@@ -96,10 +98,18 @@ export function PhiAuthMethodsWidgetClient({
         <PhiButtonControl
           key={method.methodKey}
           block
+          icon={method.icon ? <PhiIcon name={method.icon} /> : undefined}
           loading={startingMethod === method.methodKey}
           disabled={startingMethod !== null && startingMethod !== method.methodKey}
           onClick={() => void startMethod(method)}
           label={method.label}
+          /*
+           * One width for every provider, centred under the rule. A row of sign-in buttons is read as a
+           * set, and one of them wider than the next says they are different kinds of thing. The margin
+           * centres rather than the stack does, because the rule and the error above want the column's
+           * full width and would shrink to their own content if the stack centred everything.
+           */
+          style={{ maxWidth: PHI_LAYOUT.contentMaxNarrow, marginInline: "auto" }}
         />
       ))}
     </PhiFlexControl>
