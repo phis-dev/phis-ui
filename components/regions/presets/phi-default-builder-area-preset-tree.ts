@@ -14,7 +14,6 @@ import { buildPhiCmsLayoutNode } from "../../../helpers/cms-node-factories";
 import { createPhiCmsPresetNodes } from "../../../helpers/cms-preset-nodes";
 import { PHI_AREA_META_PUBLIC_DEFAULTS } from "../../../helpers/cms-area-config";
 import { remapPhiSignalRoutesInConfig } from "../../../helpers/signal-route-lifecycle";
-import { resolvePhiBrandWordmarkText } from "../../../helpers/brand-wordmark";
 import { resolvePhiShellHeaderHeight, resolvePhiShellMetric } from "../../../helpers/shell-region-style";
 import type { PhiCmsPageNode, PhiResolvedCmsPageTree } from "../../../types/cms";
 import type {
@@ -134,7 +133,6 @@ const PHI_BUILDER_WIDGET_NODE_KEYS = [
   "widgetCanvas",
   "widgetNavigationItems",
   "widgetNavigationSource",
-  "widgetFooterMainText",
   "widgetBuilderAreaSelector",
   "widgetAreaRootRoute",
   "widgetBuilderModeSwitch",
@@ -372,7 +370,6 @@ export async function buildPhiDefaultBuilderAreaPresetTree({
     family: "sider",
     region: "left",
   });
-  const footerMainText = `© ${new Date().getUTCFullYear()} ${resolvePhiBrandWordmarkText(runtime)}. All rights reserved.`;
 
   return {
     page: {
@@ -717,15 +714,6 @@ export async function buildPhiDefaultBuilderAreaPresetTree({
           width: 224,
           navKey: "builder:sidebar",
         },
-      }),
-      nodes.widget({
-        typeKey: "simple-text",
-        id: SYNTHETIC_DEV_WIDGET_IDS.widgetFooterMainText,
-        parentLayoutNodeId: SYNTHETIC_DEV_LAYOUT_IDS.layoutFooterMain,
-        slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
-        sortOrder: 0,
-        label: "dev footer main text",
-        config: { text: footerMainText, type: "secondary" },
       }),
     ],
   };

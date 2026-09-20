@@ -1,4 +1,5 @@
 import type { PhiBlockRuntime } from "../types";
+import { resolvePhiBrandWordmarkText } from "./brand-wordmark";
 
 const PHI_TEXT_PLACEHOLDER_PATTERN = /\{([A-Za-z][\w.]*)\}/g;
 const PHI_TEXT_PLACEHOLDER_TOKEN_PATTERN = /%(\d+)/g;
@@ -13,12 +14,18 @@ const PHI_TEXT_PLACEHOLDER_TOKEN_PATTERN = /%(\d+)/g;
  *
  * Deliberately a handful of names rather than a path into the runtime. Anything addressable turns Site
  * copy into a template language, with its escaping, its error cases and its reach into whatever the
- * runtime happens to carry; these three are the ones sentences actually need. A name nothing answers
- * is left standing -- `{jahr}` renders as `{jahr}`, which is how a typo gets noticed and found.
+ * runtime happens to carry; these are the ones sentences actually need. A name nothing answers is left
+ * standing -- `{jahr}` renders as `{jahr}`, which is how a typo gets noticed and found.
+ *
+ * `site.wordmark` and `site.name` are not the same answer and both are worth having. The wordmark is
+ * what the Site calls itself in writing, the name is what it is filed under, and a Site that has set a
+ * wordmark means the first one when it writes its own name into a sentence. Where none is set the
+ * wordmark resolver falls back to the name, so asking for it is never the emptier question.
  */
 export function buildPhiTextPlaceholders(runtime: PhiBlockRuntime): Record<string, string | number> {
   const placeholders: Record<string, string | number> = {
     "site.name": runtime.site.name?.trim() || runtime.site.key,
+    "site.wordmark": resolvePhiBrandWordmarkText(runtime),
     year: new Date().getUTCFullYear(),
   };
   const host = runtime.site.hostname?.trim();

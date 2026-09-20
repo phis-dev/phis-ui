@@ -58,6 +58,23 @@ describe("Text placeholders", () => {
     expect(resolvePhiTextPlaceholders(masked.text, masked.names, keyOnly)).toBe("acme");
   });
 
+  it("writes the wordmark the Site set, not the name it is filed under", () => {
+    const branded = {
+      site: {
+        key: "acme",
+        name: "Acme Holdings AG",
+        theme: { brand: { wordmark: { parts: [{ text: "ACME" }, { text: "corp" }] } } },
+      },
+    } as PhiBlockRuntime;
+    const masked = maskPhiTextPlaceholders("{site.wordmark}");
+    expect(resolvePhiTextPlaceholders(masked.text, masked.names, branded)).toBe("ACMEcorp");
+  });
+
+  it("answers the wordmark with the name when the Site set none, so the sentence still reads", () => {
+    const masked = maskPhiTextPlaceholders("{site.wordmark}");
+    expect(resolvePhiTextPlaceholders(masked.text, masked.names, runtime)).toBe("Acme");
+  });
+
   it("gives the host back as a name when the Site has none, rather than as an empty line", () => {
     const hostless = { site: { key: "acme", name: "Acme" } } as PhiBlockRuntime;
     const masked = maskPhiTextPlaceholders("{site.host}");

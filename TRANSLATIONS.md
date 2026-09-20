@@ -71,6 +71,28 @@ Phi-owned UI copy is loaded through Label Sets (`gateway/label-set.ts`, exported
 - Semantic commands such as save, publish, review, restore, reset, reload, and upload are Phi copy from
   the common-controls Label Set (`components/widgets/label-sets/common-controls.ts`).
 
+## Site copy placeholders
+
+Copy written into a Widget's config -- by a Preset, or by whoever is authoring -- may name a few facts
+about the Site instead of spelling them out (`helpers/text-placeholders.ts`):
+
+- The names are `{site.name}`, `{site.wordmark}`, `{year}` and `{site.host}`. That list is the whole
+  language; a placeholder is not a path into the runtime, and a name nothing answers is left standing so
+  that `{jahr}` renders as `{jahr}` and reads as the typo it is.
+- `{site.wordmark}` is what the Site calls itself in writing and `{site.name}` is what it is filed
+  under. Where no wordmark is set the wordmark resolves to the name, so it is never the emptier ask.
+- The order is mask, translate, fill, and never translate then fill. `{year}` is a word and a machine
+  translator translates words: it comes back as `{Jahr}`, which nothing answers. `maskPhiTextPlaceholders`
+  turns every name into a `%n` token first -- the same token this contract already uses for values -- and
+  `resolvePhiTextPlaceholders` fills them in afterwards, where the translator left them.
+- Filling afterwards is also what makes a translation reusable. The stored translation is keyed on the
+  source text, so `© %1 %2. All rights reserved.` is one row per locale for every Site that adopts the
+  Preset, and the same row after New Year.
+- A Preset never resolves a placeholder while building its tree. That writes one Site's name and the
+  year of the adoption into everybody's copy, where they stay.
+- Widgets that carry short config copy resolve them; long-form Markdown and HTML bodies deliberately do
+  not, because a brace there is more likely to be a code sample than a placeholder.
+
 ## Ant Design and date formatting
 
 Ant Design's own copy (pagination, empty states, picker text, validation templates, modal buttons) and
