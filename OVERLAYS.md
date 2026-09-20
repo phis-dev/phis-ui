@@ -296,7 +296,15 @@ The Overlay matches only its persisted listen routes and concrete `cms:<instance
 Business payloads remain owned by a Widget, Provider, or Controller. A generic Overlay must not parse a
 Table row identity, Form payload, User id, or domain command. With the default `remount` policy, an active
 Widget, Provider, or Controller outside the closed Overlay addresses the zone Widget directly and sends a
-separate generic open command to the Overlay. A Widget inside an initially unmounted Overlay must not be
+separate generic open command to the Overlay.
+
+"Addresses the zone Widget directly" means the ordinary `cms:<instanceId>` receiver, on whatever channel
+that Widget answers. A sentence naming what the Overlay is about goes to a `simple-text` in the Body as
+`text/change`; it needs no route declared on either end, because content channels belong to the shared
+renderable-block runtime rather than to `runtimeSignals`
+([SIGNALS.md](./SIGNALS.md#content-channels-and-what-actually-answers-them) -- which also lists what each
+Widget answers, and warns that the list is a reading of their clients). This is the supported way to put a
+runtime value into an Overlay Body, and not knowing it is a common reason a Body gets hand-assembled. A Widget inside an initially unmounted Overlay must not be
 required to open its own Overlay, and must not read the selection out of a Module store -- see the Widget
 contract in `MODULES.md`.
 
@@ -329,9 +337,44 @@ composition; Ant Design `title`, Drawer `extra`, and their differing semantic DO
 details. Domain components render ordinary Widget or Control content only and must not wrap themselves in
 Ant Design Modal or Drawer components.
 
-Imperative confirmation dialogs used for one application transaction are not CMS Overlays. Builder-only
-workspace prompts may use shared Core React wrappers but do not become persisted Overlay instances unless
-their content is intentionally represented in an Area or Page preset.
+### The imperative exemption, and how narrow it is
+
+One kind of dialog is not a CMS Overlay: a prompt whose whole content is a sentence and the two answers
+to it. `modal.confirm` with a title, a line of text, an OK and a Cancel. Nothing else qualifies, and this
+paragraph is the only licence -- it has been read as a general one three times, which is what these rules
+answer.
+
+The exemption ends the moment the body has **structure**. A field to fill in, an alert beside a form, two
+things stacked with a gap between them, anything a Widget would otherwise render: that is a Body Layout
+with Widgets in it, and building it by hand builds a Region without declaring one. The test is not how
+important the dialog is, how long it lives, or whether the Builder is the only place it appears. It is
+whether you are arranging content. If you are reaching for a Flex to lay the body out, you have left the
+exemption.
+
+What that costs when it is ignored is not style. A zone's padding owner is its root Layout
+([Padding ownership](#padding-ownership)); a hand-assembled body has no root Layout, so it has no padding
+owner, and the spacing gets typed in by hand -- differently each time, answering to nothing.
+
+The shape a structured dialog takes is the ordinary one, because an Overlay is a Region with named zones:
+
+```text
+overlays[]
+└── one Overlay node          title, width, mountPolicy, closeMode, signal routes
+    ├── bodyLayoutNodeId   -> flex-vertical, `panel`         gap + padding + background
+    │   ├── Widget                                            an alert, a message, a table
+    │   └── Widget                                            a Form
+    └── footerLayoutNodeId -> flex, `overlay-actions`         canonical padding, no config
+        └── Widget                                            a Command Toolbar
+```
+
+Both Layouts are declared as ordinary top-level Layout nodes by the same preset that declares the
+Overlay, and the Widgets sit in their slots at sequential slot indexes. The footer's commands are a
+Command Toolbar, not buttons the container draws; a button that must wait for the body enables itself
+through the normal `enabled` channel from whatever in the body decides it.
+
+A Builder-only prompt is not exempt for being Builder-only. `mountPolicy` and the Area preset are where a
+workspace dialog belongs just as much as a public one; "it only shows up in the Builder" describes who
+sees it, not what it is.
 
 ## Picker boundary
 

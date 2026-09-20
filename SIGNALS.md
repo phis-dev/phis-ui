@@ -274,6 +274,40 @@ receiver.
   `activeSlotKey` (`components/layouts/stack-signals.ts`).
 - `renderMode` is a transient render hint and never a signal channel.
 
+### Content channels, and what actually answers them
+
+The table above is the shared set: every block honours it, through the runtime, with nothing to declare.
+The runtime accepts a second group on the same path -- `text`, `content`, `html`, `markdown`,
+`markdownToc`, `descriptionConfig`, `icon`, `imageConfig`, `color`, `textColor`, `style`, `fontFamily`,
+`fontSize`, `textStyle` -- and these are **not** shared. Each is answered by whichever Widget decided to,
+in its own `client.tsx`, and by no other.
+
+What answers them today:
+
+| Widget | Channels it answers |
+| --- | --- |
+| `simple-text` | `text`, `icon`, `textColor`, `fontFamily`, `fontSize`, `textStyle` |
+| `html` | `fontFamily`, `fontSize` |
+| `icon` | `icon`, `textColor` |
+
+Nothing else subscribes at all, and `content`, `markdown`, `markdownToc`, `descriptionConfig`,
+`imageConfig`, `color` and `style` are names the runtime will deliver that no block acts on yet.
+
+Three things follow, and each of them is a dead end somebody has walked into:
+
+- **These are not `runtimeSignals`.** A Widget answering `text/change` declares nothing for it: the
+  capability lives in the shared runtime, and the receiver is the ordinary `cms:<instanceId>` address. So
+  a Widget definition with no `runtimeSignals` at all may still answer half this table -- `simple-text`
+  does. Reading the definition and concluding "it cannot" is wrong, and declaring these channels as
+  `runtimeSignals.listens` is wrong the other way: it states a second contract over the same channel, and
+  the plugin-meta check rejects it at the first one needing a `valueSchema`.
+- **Acceptance is not agreement.** `isPhiRenderableBlockSignalChannel`
+  (`components/runtime/renderable-block-runtime.tsx`) is the list the runtime will route. Whether the
+  block at the other end does anything is decided in that block's client and nowhere else.
+- **So check the client, not the config.** `grep 'signal.channel ===' <widget>/client.tsx` answers in one
+  line what no definition, no type and no table can promise on the client's behalf -- including this one,
+  which is a reading of those clients and goes stale the moment one of them changes.
+
 ## Site Core Runtime Controller
 
 The Core module mounts exactly one Core Runtime Controller in the Root Layout, above every Area, at
