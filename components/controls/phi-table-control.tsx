@@ -451,9 +451,29 @@ function normalizeSelectedKeys(keys: readonly Key[]) {
   );
 }
 
+/**
+ * The floor under a column that yields.
+ *
+ * `content` columns never shrink -- they carry `width: 1%` and `nowrap`, in the header cell as much as in
+ * the data cell. So in a container narrower than the titles, the whole shortfall lands on the `fill`
+ * columns, and an unfloored one can be squeezed past its own title. The title then wraps, and because a
+ * header row is as tall as the tallest cell in it, the Table's header height ends up being decided by the
+ * one column nobody gave a width. That is drift with no contract behind it: nothing else on the page
+ * agrees to a height either, so two Tables that differ only in their columns look unrelated.
+ *
+ * 120 sits under every `minWidth` anyone has chosen deliberately -- the smallest in the house is 200 --
+ * so it cannot argue with an authored decision. It says one thing: a column that yields is still a
+ * column. Where a column needs room to be read rather than merely seen, that is a `minWidth` of its own.
+ */
+const PHI_TABLE_FILL_COLUMN_MIN_WIDTH = 120;
+
 function buildColumnStyle(sizing: PhiTableColumnSizing | undefined): CSSProperties | undefined {
-  if (!sizing || sizing.mode === "fill") {
-    return sizing ? { minWidth: sizing.minWidth, maxWidth: sizing.maxWidth } : undefined;
+  if (!sizing) return undefined;
+  if (sizing.mode === "fill") {
+    return {
+      minWidth: sizing.minWidth ?? PHI_TABLE_FILL_COLUMN_MIN_WIDTH,
+      maxWidth: sizing.maxWidth,
+    };
   }
   if (sizing.mode === "content") {
     return {

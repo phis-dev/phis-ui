@@ -391,7 +391,7 @@ fixed
 └── required width
 
 fill
-└── optional minWidth and maxWidth
+└── optional minWidth and maxWidth, and a default floor when minWidth is omitted
 ```
 
 - `content` keeps the column intrinsic and does not consume deliberate remaining width.
@@ -399,6 +399,11 @@ fill
 - `fill` participates in the browser-distributed remaining Table width and grows with its container.
 - several `fill` columns may share the remaining width; their exact ratio is intentionally not persisted.
 - `minWidth` and `maxWidth` constrain `content` and `fill`; they are not alternate fixed widths.
+- a `fill` column without `minWidth` still has one. `content` columns never yield, so a narrow container
+  puts the whole shortfall on the `fill` columns, and an unfloored one can be squeezed past its own
+  title: the title wraps, and the header row grows to the tallest cell in it. The generic Control
+  therefore applies a default floor below every deliberately chosen `minWidth`, so an explicit one always
+  wins. The floor keeps a column a column; a column that must be *read* still states its own width.
 - omitted column sizing resolves to `content`; `fixed` requires an explicit width and `fill` must always
   be selected explicitly.
 
