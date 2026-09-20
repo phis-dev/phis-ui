@@ -2,11 +2,23 @@
 
 import { lazy, Suspense, type ComponentType } from "react";
 
-import { createPhiFormProviderRegistry, type PhiFormFieldProviderProps } from "./form-provider-registry";
 import {
+  createPhiFormProviderRegistry,
+  type PhiFormFieldProviderProps,
+  type PhiFormFieldTypeProvider,
+  type PhiFormValidationProvider,
+} from "./form-provider-registry";
+import {
+  PHI_FORM_FIELD_PROVIDER_KEYS,
+  PHI_FORM_VALIDATION_PROVIDER_KEYS,
   PHI_SHARED_FORM_FIELD_TYPE_PROVIDER_DESCRIPTORS,
   PHI_SHARED_FORM_VALIDATION_PROVIDER_DESCRIPTORS,
 } from "./form-provider-contract";
+import type {
+  PhiFormFieldTypeProviderDescriptor,
+  PhiFormProviderKey,
+  PhiFormValidationProviderDescriptor,
+} from "../../types/form-descriptor";
 import { PhiTextControl } from "../controls/phi-text-control";
 import { PhiNumberControl } from "../controls/phi-number-control";
 import { PhiSelectControl } from "../controls/phi-select-control";
@@ -71,10 +83,44 @@ const PhiLazyCompoundTableFormControl = lazyPhiFormFieldControl(() =>
 const PhiLazyCompoundTreeFormControl = lazyPhiFormFieldControl(() =>
   import("./compound-form-controls").then((module) => module.PhiCompoundTreeFormControl), 3);
 
+/**
+ * What a field type is, named by its key, joined to how it renders.
+ *
+ * The two halves live apart on purpose: the descriptor says what a field type is and travels to the
+ * server and the authoring catalogs, while the Control is browser code this file is the only holder
+ * of. Joining them used to be a matter of counting -- `...DESCRIPTORS[10]` beside the number Control --
+ * and a position is not a name. Inserting a field type in the middle of that list re-paired every
+ * entry after it: a Control would be registered under its neighbour's key, one field type would be
+ * missing and another duplicated, and nothing in the repository noticed. Typecheck could not: all
+ * descriptors have the same shape and `key` is not a literal type. The contract validators walk
+ * catalogs rather than this file, and the unit suite is Node-only by design, so it never imports it.
+ *
+ * Naming the key makes the pairing readable, and makes a wrong one a thrown error at module load
+ * rather than a form that quietly renders the wrong control.
+ * `scripts/validate-form-provider-registry.mjs` keeps the positional spelling from coming back.
+ */
+function phiSharedFieldType(
+  key: PhiFormProviderKey,
+  provider: Omit<PhiFormFieldTypeProvider, keyof PhiFormFieldTypeProviderDescriptor>,
+): PhiFormFieldTypeProvider {
+  const descriptor = PHI_SHARED_FORM_FIELD_TYPE_PROVIDER_DESCRIPTORS.find((entry) => entry.key === key);
+  if (!descriptor) throw new Error(`No shared form field type descriptor for "${key}".`);
+  return { ...descriptor, ...provider };
+}
+
+/** The same pairing for a validation rule, whose descriptor list had drifted from its keys too. */
+function phiSharedValidationRule(
+  key: PhiFormProviderKey,
+  provider: Omit<PhiFormValidationProvider, keyof PhiFormValidationProviderDescriptor>,
+): PhiFormValidationProvider {
+  const descriptor = PHI_SHARED_FORM_VALIDATION_PROVIDER_DESCRIPTORS.find((entry) => entry.key === key);
+  if (!descriptor) throw new Error(`No shared form validation provider descriptor for "${key}".`);
+  return { ...descriptor, ...provider };
+}
+
 export const PHI_SHARED_FORM_PROVIDER_REGISTRY = createPhiFormProviderRegistry({
   fieldTypes: [
-    {
-      ...PHI_SHARED_FORM_FIELD_TYPE_PROVIDER_DESCRIPTORS[0],
+    phiSharedFieldType(PHI_FORM_FIELD_PROVIDER_KEYS.text, {
       Control: ({ field, value, onChange, placeholder, disabled, readOnly }) => (
         <PhiTextControl
           value={typeof value === "string" ? value : ""}
@@ -89,9 +135,8 @@ export const PHI_SHARED_FORM_PROVIDER_REGISTRY = createPhiFormProviderRegistry({
           onChange={(nextValue) => onChange?.(nextValue)}
         />
       ),
-    },
-    {
-      ...PHI_SHARED_FORM_FIELD_TYPE_PROVIDER_DESCRIPTORS[1],
+    }),
+    phiSharedFieldType(PHI_FORM_FIELD_PROVIDER_KEYS.email, {
       Control: ({ field, value, onChange, placeholder, disabled, readOnly }) => (
         <PhiTextControl
           value={typeof value === "string" ? value : ""}
@@ -105,9 +150,8 @@ export const PHI_SHARED_FORM_PROVIDER_REGISTRY = createPhiFormProviderRegistry({
           onChange={(nextValue) => onChange?.(nextValue)}
         />
       ),
-    },
-    {
-      ...PHI_SHARED_FORM_FIELD_TYPE_PROVIDER_DESCRIPTORS[2],
+    }),
+    phiSharedFieldType(PHI_FORM_FIELD_PROVIDER_KEYS.password, {
       Control: ({ field, value, onChange, placeholder, disabled, readOnly }) => (
         <PhiTextControl
           presentation="password"
@@ -121,9 +165,8 @@ export const PHI_SHARED_FORM_PROVIDER_REGISTRY = createPhiFormProviderRegistry({
           onChange={(nextValue) => onChange?.(nextValue)}
         />
       ),
-    },
-    {
-      ...PHI_SHARED_FORM_FIELD_TYPE_PROVIDER_DESCRIPTORS[3],
+    }),
+    phiSharedFieldType(PHI_FORM_FIELD_PROVIDER_KEYS.textarea, {
       Control: ({ field, value, onChange, placeholder, disabled, readOnly }) => (
         <PhiTextControl
           presentation="textarea"
@@ -138,9 +181,8 @@ export const PHI_SHARED_FORM_PROVIDER_REGISTRY = createPhiFormProviderRegistry({
           onChange={(nextValue) => onChange?.(nextValue)}
         />
       ),
-    },
-    {
-      ...PHI_SHARED_FORM_FIELD_TYPE_PROVIDER_DESCRIPTORS[4],
+    }),
+    phiSharedFieldType(PHI_FORM_FIELD_PROVIDER_KEYS.hidden, {
       Control: ({ value, onChange }) => (
         <PhiTextControl
           presentation="hidden"
@@ -149,9 +191,8 @@ export const PHI_SHARED_FORM_PROVIDER_REGISTRY = createPhiFormProviderRegistry({
         />
       ),
       valuePropName: "value",
-    },
-    {
-      ...PHI_SHARED_FORM_FIELD_TYPE_PROVIDER_DESCRIPTORS[5],
+    }),
+    phiSharedFieldType(PHI_FORM_FIELD_PROVIDER_KEYS.checkbox, {
       Control: ({ checked, controlLabel, onChange, disabled }) => (
         <PhiCheckboxControl
           checked={checked}
@@ -161,9 +202,8 @@ export const PHI_SHARED_FORM_PROVIDER_REGISTRY = createPhiFormProviderRegistry({
         />
       ),
       valuePropName: "checked",
-    },
-    {
-      ...PHI_SHARED_FORM_FIELD_TYPE_PROVIDER_DESCRIPTORS[6],
+    }),
+    phiSharedFieldType(PHI_FORM_FIELD_PROVIDER_KEYS.select, {
       Control: ({ value, onChange, options, placeholder, disabled, readOnly, onSearch, filterOptionsLocally }) => (
         <PhiSelectControl
           value={typeof value === "string" ? value : undefined}
@@ -177,9 +217,8 @@ export const PHI_SHARED_FORM_PROVIDER_REGISTRY = createPhiFormProviderRegistry({
           style={{ width: "100%" }}
         />
       ),
-    },
-    {
-      ...PHI_SHARED_FORM_FIELD_TYPE_PROVIDER_DESCRIPTORS[7],
+    }),
+    phiSharedFieldType(PHI_FORM_FIELD_PROVIDER_KEYS.honeypot, {
       Control: ({ value, onChange, disabled }) => (
         <PhiTextControl
           presentation="hidden"
@@ -190,9 +229,8 @@ export const PHI_SHARED_FORM_PROVIDER_REGISTRY = createPhiFormProviderRegistry({
           onChange={(nextValue) => onChange?.(nextValue)}
         />
       ),
-    },
-    {
-      ...PHI_SHARED_FORM_FIELD_TYPE_PROVIDER_DESCRIPTORS[8],
+    }),
+    phiSharedFieldType(PHI_FORM_FIELD_PROVIDER_KEYS.url, {
       Control: ({ field, value, onChange, placeholder, disabled, readOnly }) => (
         <PhiTextControl
           value={typeof value === "string" ? value : ""}
@@ -204,9 +242,8 @@ export const PHI_SHARED_FORM_PROVIDER_REGISTRY = createPhiFormProviderRegistry({
           onChange={(nextValue) => onChange?.(nextValue)}
         />
       ),
-    },
-    {
-      ...PHI_SHARED_FORM_FIELD_TYPE_PROVIDER_DESCRIPTORS[9],
+    }),
+    phiSharedFieldType(PHI_FORM_FIELD_PROVIDER_KEYS.tel, {
       Control: ({ field, value, onChange, placeholder, disabled, readOnly }) => (
         <PhiTextControl
           value={typeof value === "string" ? value : ""}
@@ -218,9 +255,8 @@ export const PHI_SHARED_FORM_PROVIDER_REGISTRY = createPhiFormProviderRegistry({
           onChange={(nextValue) => onChange?.(nextValue)}
         />
       ),
-    },
-    {
-      ...PHI_SHARED_FORM_FIELD_TYPE_PROVIDER_DESCRIPTORS[10],
+    }),
+    phiSharedFieldType(PHI_FORM_FIELD_PROVIDER_KEYS.number, {
       Control: ({ field, value, onChange, placeholder, disabled, readOnly }) => (
         <PhiNumberControl
           value={typeof value === "number" ? value : null}
@@ -235,13 +271,11 @@ export const PHI_SHARED_FORM_PROVIDER_REGISTRY = createPhiFormProviderRegistry({
           onChange={(nextValue) => onChange?.(nextValue)}
         />
       ),
-    },
-    {
-      ...PHI_SHARED_FORM_FIELD_TYPE_PROVIDER_DESCRIPTORS[11],
+    }),
+    phiSharedFieldType(PHI_FORM_FIELD_PROVIDER_KEYS.slider, {
       Control: PhiLazySliderFormControl,
-    },
-    {
-      ...PHI_SHARED_FORM_FIELD_TYPE_PROVIDER_DESCRIPTORS[12],
+    }),
+    phiSharedFieldType(PHI_FORM_FIELD_PROVIDER_KEYS.multiSelect, {
       Control: ({ value, onChange, options, placeholder, disabled, readOnly }) => (
         <PhiMultiSelectControl
           value={Array.isArray(value) ? value.map(String) : []}
@@ -253,9 +287,8 @@ export const PHI_SHARED_FORM_PROVIDER_REGISTRY = createPhiFormProviderRegistry({
           onChange={(nextValue) => onChange?.(nextValue)}
         />
       ),
-    },
-    {
-      ...PHI_SHARED_FORM_FIELD_TYPE_PROVIDER_DESCRIPTORS[13],
+    }),
+    phiSharedFieldType(PHI_FORM_FIELD_PROVIDER_KEYS.checkboxGroup, {
       Control: ({ value, onChange, options, disabled, readOnly }) => (
         <PhiCheckboxGroupControl
           value={Array.isArray(value) ? value.map(String) : []}
@@ -265,9 +298,8 @@ export const PHI_SHARED_FORM_PROVIDER_REGISTRY = createPhiFormProviderRegistry({
           onChange={(nextValue) => onChange?.(nextValue)}
         />
       ),
-    },
-    {
-      ...PHI_SHARED_FORM_FIELD_TYPE_PROVIDER_DESCRIPTORS[14],
+    }),
+    phiSharedFieldType(PHI_FORM_FIELD_PROVIDER_KEYS.switch, {
       Control: ({ checked, controlLabel, onChange, disabled, readOnly }) => (
         <PhiSwitchControl
           checked={checked}
@@ -278,9 +310,8 @@ export const PHI_SHARED_FORM_PROVIDER_REGISTRY = createPhiFormProviderRegistry({
         />
       ),
       valuePropName: "checked",
-    },
-    {
-      ...PHI_SHARED_FORM_FIELD_TYPE_PROVIDER_DESCRIPTORS[15],
+    }),
+    phiSharedFieldType(PHI_FORM_FIELD_PROVIDER_KEYS.segmented, {
       Control: ({ value, onChange, options, disabled, readOnly }) => (
         <PhiSegmentedControl
           value={typeof value === "string" ? value : undefined}
@@ -291,30 +322,25 @@ export const PHI_SHARED_FORM_PROVIDER_REGISTRY = createPhiFormProviderRegistry({
           onChange={(nextValue) => onChange?.(nextValue)}
         />
       ),
-    },
-    {
-      ...PHI_SHARED_FORM_FIELD_TYPE_PROVIDER_DESCRIPTORS[16],
+    }),
+    phiSharedFieldType(PHI_FORM_FIELD_PROVIDER_KEYS.cascader, {
       Control: PhiLazyCascaderFormControl,
-    },
-    {
-      ...PHI_SHARED_FORM_FIELD_TYPE_PROVIDER_DESCRIPTORS[17],
+    }),
+    phiSharedFieldType(PHI_FORM_FIELD_PROVIDER_KEYS.table, {
       Control: PhiLazyCompoundTableFormControl,
-    },
-    {
-      ...PHI_SHARED_FORM_FIELD_TYPE_PROVIDER_DESCRIPTORS[18],
+    }),
+    phiSharedFieldType(PHI_FORM_FIELD_PROVIDER_KEYS.tree, {
       Control: PhiLazyCompoundTreeFormControl,
-    },
-    {
-      ...PHI_SHARED_FORM_FIELD_TYPE_PROVIDER_DESCRIPTORS[19],
+    }),
+    phiSharedFieldType(PHI_FORM_FIELD_PROVIDER_KEYS.datetime, {
       Control: PhiLazyDateTimeFormControl,
-    },
+    }),
     /*
      * The field holds bytes and shows megabytes, so both conversions sit on this one Control: the
      * value a form carries is bytes before it reaches here and bytes again the moment it leaves,
      * and no submit handler, validator or API payload learns that a unit was ever involved.
      */
-    {
-      ...PHI_SHARED_FORM_FIELD_TYPE_PROVIDER_DESCRIPTORS[20],
+    phiSharedFieldType(PHI_FORM_FIELD_PROVIDER_KEYS.storageSize, {
       Control: ({ value, onChange, placeholder, disabled, readOnly }) => (
         <PhiNumberControl
           value={phiBytesToStorageSize(value)}
@@ -329,26 +355,22 @@ export const PHI_SHARED_FORM_PROVIDER_REGISTRY = createPhiFormProviderRegistry({
           onChange={(nextValue) => onChange?.(phiStorageSizeToBytes(nextValue))}
         />
       ),
-    },
+    }),
   ],
   validationRules: [
-    {
-      ...PHI_SHARED_FORM_VALIDATION_PROVIDER_DESCRIPTORS[0],
+    phiSharedValidationRule(PHI_FORM_VALIDATION_PROVIDER_KEYS.required, {
       createRule: ({ message }) => ({ required: true, message }),
-    },
-    {
-      ...PHI_SHARED_FORM_VALIDATION_PROVIDER_DESCRIPTORS[1],
+    }),
+    phiSharedValidationRule(PHI_FORM_VALIDATION_PROVIDER_KEYS.email, {
       createRule: ({ message }) => ({ type: "email", message }),
-    },
-    {
-      ...PHI_SHARED_FORM_VALIDATION_PROVIDER_DESCRIPTORS[2],
+    }),
+    phiSharedValidationRule(PHI_FORM_VALIDATION_PROVIDER_KEYS.minLength, {
       createRule: ({ rule, message }) => {
         const min = typeof rule.config?.min === "number" ? rule.config.min : 0;
         return { type: "string", min, message };
       },
-    },
-    {
-      ...PHI_SHARED_FORM_VALIDATION_PROVIDER_DESCRIPTORS[3],
+    }),
+    phiSharedValidationRule(PHI_FORM_VALIDATION_PROVIDER_KEYS.minLetters, {
       createRule: ({ rule, message }) => {
         const min = typeof rule.config?.min === "number" ? Math.max(1, Math.trunc(rule.config.min)) : 1;
         return {
@@ -361,23 +383,20 @@ export const PHI_SHARED_FORM_PROVIDER_REGISTRY = createPhiFormProviderRegistry({
           },
         };
       },
-    },
-    {
-      ...PHI_SHARED_FORM_VALIDATION_PROVIDER_DESCRIPTORS[4],
+    }),
+    phiSharedValidationRule(PHI_FORM_VALIDATION_PROVIDER_KEYS.maxLength, {
       createRule: ({ rule, message }) => {
         const max = typeof rule.config?.max === "number" ? rule.config.max : Number.MAX_SAFE_INTEGER;
         return { type: "string", max, message };
       },
-    },
-    {
-      ...PHI_SHARED_FORM_VALIDATION_PROVIDER_DESCRIPTORS[5],
+    }),
+    phiSharedValidationRule(PHI_FORM_VALIDATION_PROVIDER_KEYS.exactLength, {
       createRule: ({ rule, message }) => {
         const length = typeof rule.config?.length === "number" ? rule.config.length : 0;
         return { type: "string", len: length, message };
       },
-    },
-    {
-      ...PHI_SHARED_FORM_VALIDATION_PROVIDER_DESCRIPTORS[6],
+    }),
+    phiSharedValidationRule(PHI_FORM_VALIDATION_PROVIDER_KEYS.matchesField, {
       createRule: ({ rule, message }) => {
         const field = typeof rule.config?.field === "string" ? rule.config.field : "";
         if (!message) {
@@ -392,13 +411,11 @@ export const PHI_SHARED_FORM_PROVIDER_REGISTRY = createPhiFormProviderRegistry({
           },
         });
       },
-    },
-    {
-      ...PHI_SHARED_FORM_VALIDATION_PROVIDER_DESCRIPTORS[7],
+    }),
+    phiSharedValidationRule(PHI_FORM_VALIDATION_PROVIDER_KEYS.url, {
       createRule: ({ message }) => ({ type: "url", message }),
-    },
-    {
-      ...PHI_SHARED_FORM_VALIDATION_PROVIDER_DESCRIPTORS[8],
+    }),
+    phiSharedValidationRule(PHI_FORM_VALIDATION_PROVIDER_KEYS.tel, {
       createRule: ({ message }) => {
         if (!message) {
           throw new Error(
@@ -407,9 +424,8 @@ export const PHI_SHARED_FORM_PROVIDER_REGISTRY = createPhiFormProviderRegistry({
         }
         return { type: "tel", message };
       },
-    },
-    {
-      ...PHI_SHARED_FORM_VALIDATION_PROVIDER_DESCRIPTORS[9],
+    }),
+    phiSharedValidationRule(PHI_FORM_VALIDATION_PROVIDER_KEYS.pattern, {
       createRule: ({ rule, message }) => {
         const source =
           typeof rule.config?.source === "string" ? rule.config.source : "";
@@ -423,9 +439,8 @@ export const PHI_SHARED_FORM_PROVIDER_REGISTRY = createPhiFormProviderRegistry({
         }
         return { pattern: new RegExp(source, flags), message };
       },
-    },
-    {
-      ...PHI_SHARED_FORM_VALIDATION_PROVIDER_DESCRIPTORS[10],
+    }),
+    phiSharedValidationRule(PHI_FORM_VALIDATION_PROVIDER_KEYS.number, {
       createRule: ({ rule, message }) => ({
         async validator(_, value) {
           if (value === undefined || value === null || value === "") return;
@@ -445,6 +460,6 @@ export const PHI_SHARED_FORM_PROVIDER_REGISTRY = createPhiFormProviderRegistry({
           }
         },
       }),
-    },
+    }),
   ],
 });
