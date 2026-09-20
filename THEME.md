@@ -175,7 +175,10 @@ preset.
 - `logoAlt?: string` -- falls back to the Asset's own alt text.
 - `logoYOffset?: number` -- pixels the Logo is nudged against the Wordmark, to correct the artwork's own
   whitespace. Applied only where the Logo is drawn. Absent means none.
-- `slogan?: { label?, icon? }`, `location?: { label?, icon? }` -- the two frame lines.
+- `slogan?: { label?, icon? }`, `location?: { label?, icon? }` -- the two frame lines. A line with no
+  `label` draws nothing at all, icon included; only the icon has a default (`antd:star`, `antd:location`,
+  `PHI_BRAND_LINE_FALLBACK_ICONS`), and an icon in front of an empty line would report something missing
+  rather than something not asked for.
 - `wordmark?: { fontFamily?, fontWeight?, fontStyle?: "normal" | "italic", letterSpacing?, parts? }` with
   `parts[]` of `{ text, color?, fontWeight? }`. What a part states wins over the Wordmark.
 
@@ -185,9 +188,19 @@ record. There is no per-instance title, eyebrow, logo toggle or offset; a Brand 
 places in a Site would be two Brands.
 
 The default Public preset places the Widget four times: `slogan` and `location` in the header top,
-`lockup` in the header main, `wordmark` in the footer. Line defaults are icon `antd:star` with label
-`tr("Trusted digital solutions")` for the slogan, and icon `antd:location` with the Wordmark text for the
-location.
+`lockup` in the header main, `wordmark` in the footer. It writes no text for any of them. A Preset is
+followed by every Site that adopts it, so a slogan written there would be in everybody's header, and a
+Site that has stated neither line shows neither -- the strip keeps its shape.
+
+What a Site gets without stating anything is therefore one thing and not four: the followed Set's Logo.
+A Set points at a palette, a style, a ground and a pair of fonts, and the only value it carries is that
+Logo (`theme/phi-theme-blocks.ts`); a Wordmark belongs to the look it was drawn for and a slogan belongs
+to the Site, so neither is a Set's to offer. Where nothing is set, the Wordmark falls back to the Site's
+name and then to its key, and the lines fall back to nothing.
+
+In the Builder canvas an unwritten line is drawn as itself -- its fallback icon, and a sentence naming
+which part of the Theme is empty -- because there a Widget has to be visible to be worked with, and the
+slot it occupies offers no `+` of its own.
 
 ### Contact
 
