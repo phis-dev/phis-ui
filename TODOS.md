@@ -404,6 +404,12 @@ built. Remove an entry when it is done.
   compiled, so its `./fonts` boundary contributes no typefaces and says nothing. Tracked with the shape of
   a fix in [phis-server TODOS.md](../phis-server/TODOS.md), "Site bootstrap and releases".
 - **Module font adoption into the Media library.** Designed in [design/FONTS.md](./design/FONTS.md).
+- **A Tour for the Theme workspace.** The one thing `/builder/theme` does not say out loud is that a
+  Module's Theme is offered and never taken: installing a package that ships a look changes nothing until
+  somebody picks it here, and the "your logo" placeholder in the header is the sign that nobody has. That
+  is written in [THEME.md](./THEME.md#selection-and-resolution) for whoever reads contracts, and it wants
+  saying once in the workspace itself, for whoever does not. A Tour is the shape for it; the design is
+  [design/TOURS.md](./design/TOURS.md) and nothing of it is built, so this waits on that.
 
 ## Translations and preferences
 

@@ -60,6 +60,26 @@ registries and registration side effects are invalid.
 - A resolved composition reports which parts are unavailable, so the Theme workspace can say that a Module
   is gone instead of presenting the core block as a choice.
 
+**A Module's Theme is offered, never taken.** Installing a Module that ships blocks changes nothing a
+visitor sees; its blocks join the list the Theme workspace shows, and somebody chooses. This is the one
+place where a Module contribution does *not* displace the shipped default, and the difference from a
+Public address is worth stating, because the rule there runs the other way ("A landing is an offer", in
+[THIRD_PARTY_MODULES.md](./THIRD_PARTY_MODULES.md#addresses-are-granted-not-owned)): an address can be held by
+exactly one Module, so somebody has to win and activation decides. A look is one value among many
+candidates -- `@phis/example` alone ships thirteen Sets -- so "the Module wins" answers nothing, and
+installing a second Module with a Theme would silently repaint a Site that never asked.
+
+Three consequences make the explicit choice the cheaper one:
+
+- **A Theme is a stored record, not a declaration.** It carries the author's own values, it is drafted and
+  published like a Page, and it survives its Module: a selection whose block is gone falls back to core and
+  comes back when the Module returns. An automatic selection would overwrite a decision that was made.
+- **Adoption is one-way.** The moment a Theme resolving to a Module's blocks is saved, those blocks become
+  the Site's own and the pictures land in its Media library (see [Adoption on save](#adoption-on-save)).
+  A look that was never chosen would become permanent the first time anybody saved anything.
+- **Nothing chosen is visible.** The core Set's Logo is the "your logo" placeholder, so a Site that has
+  made no choice says so in its own header. That is the prompt; an automatic Theme would remove it.
+
 ### Adoption on save
 
 Saving a Theme that resolves to a Module's palette, style (with its Control shape), ground, or fonts copies

@@ -696,6 +696,14 @@ A Theme is site-wide, so palettes and blocks are read from the
 installed union -- what `phis module add` projected -- rather than from the Areas the Module is
 enabled in. `@phis/example` in this workspace ships a complete palette, ground and Set.
 
+**Installing your Module does not apply your Theme.** Unlike a Public address, which your Module takes on
+activation when nobody else holds it, a Theme is offered: your blocks join the list the Theme workspace
+shows, and the Site chooses. Nothing a visitor sees changes until somebody does. Ship the look, say what
+it is in the descriptor's title and description -- that is what an author picks from -- and do not build
+a side channel that selects it. The reasoning is in [THEME.md](./THEME.md#selection-and-resolution); the
+short of it is that a Site can hold only one Theme, several Modules offer one, and the choice is the
+Site's to draft and publish like any other.
+
 Client components consume Ant Design semantics through `usePhiConfig().token` and module-specific
 custom colors through the approved Phi config contract. Do not create parallel `--phi-*` variables for
 Ant Design tokens or install another root Theme provider. A Module using another UI library may expose
