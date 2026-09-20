@@ -28,9 +28,7 @@ export type PhiBrandWidgetMode =
   | "location";
 
 /** The modes that draw one of the Brand's sentences rather than the Brand itself. */
-const PHI_BRAND_WIDGET_LINE_MODES = ["slogan", "location"] as const;
-
-export type PhiBrandWidgetLineMode = (typeof PHI_BRAND_WIDGET_LINE_MODES)[number];
+export type PhiBrandWidgetLineMode = Extract<PhiBrandWidgetMode, "slogan" | "location">;
 
 export function isPhiBrandWidgetLineMode(
   mode: PhiBrandWidgetMode | undefined,
