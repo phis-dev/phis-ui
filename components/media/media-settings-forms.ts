@@ -33,6 +33,29 @@ const PHI_MEDIA_SETTINGS_FORM_DESCRIPTOR: PhiFormDescriptor = {
   fields: [
     // Availability is deliberately absent: which Space kinds exist follows from the Modules the Site
     // activates, so it is reported next to the technical values rather than switched here.
+    /*
+     * The limit that actually stops an upload, and so the first thing this page states.
+     *
+     * A quota is how much a Space may hold in total; this is how much one file may weigh, and it is the
+     * one an author meets -- the upload route refuses the file against it before any quota is consulted.
+     * Reporting it beside the read-only runtime values said it was derived from something. It is not:
+     * it is capacity, decided here, like every other figure on this page.
+     *
+     * It alone cannot be emptied. An empty quota means no limit, which is a coherent thing for a Space
+     * to say; a Site that accepts files of no maximum size has said nothing, and the schema refuses it.
+     * That is the second reason it stands first: of the seven figures here it is the only one that has
+     * to be answered, and the six below it may all be left open.
+     */
+    {
+      key: "maxObjectBytes",
+      fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.storageSize,
+      label: label("maxObjectSize", "Maximum file size"),
+      description: label("maxObjectSizeHint", "The largest single file this site accepts. Every upload is refused against it, whatever the Space still has room for."),
+      validation: [{
+        providerKey: PHI_FORM_VALIDATION_PROVIDER_KEYS.required,
+        message: label("maxObjectSizeRequired", "A maximum file size is required."),
+      }],
+    },
     {
       key: "defaultUserQuotaBytes",
       fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.storageSize,
@@ -84,27 +107,6 @@ const PHI_MEDIA_SETTINGS_FORM_DESCRIPTOR: PhiFormDescriptor = {
       label: label("maxAddonQuota", "Maximum Add-on Space quota"),
       description: label("maxAddonQuotaHint", "The ceiling an override may not exceed. Empty means no ceiling, zero holds every Space at nothing."),
       placeholder: label("unlimited", "Unlimited"),
-    },
-    /*
-     * The limit that actually stops an upload, which this page used to only report.
-     *
-     * A quota is how much a Space may hold in total; this is how much one file may weigh, and it is the
-     * one an author meets -- the upload route refuses the file against it before any quota is consulted.
-     * Reporting it beside the read-only runtime values said it was derived from something. It is not:
-     * it is capacity, decided here, like every other figure on this page.
-     *
-     * It alone cannot be emptied. An empty quota means no limit, which is a coherent thing for a Space
-     * to say; a Site that accepts files of no maximum size has said nothing, and the schema refuses it.
-     */
-    {
-      key: "maxObjectBytes",
-      fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.storageSize,
-      label: label("maxObjectSize", "Maximum file size"),
-      description: label("maxObjectSizeHint", "The largest single file this site accepts. Every upload is refused against it, whatever the Space still has room for."),
-      validation: [{
-        providerKey: PHI_FORM_VALIDATION_PROVIDER_KEYS.required,
-        message: label("maxObjectSizeRequired", "A maximum file size is required."),
-      }],
     },
   ],
   /*
