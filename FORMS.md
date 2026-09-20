@@ -53,7 +53,7 @@ kept in a Server entry. Fields:
 | `flags`, `title`, `description`, `category`, `tags` | Catalog metadata. |
 | `descriptor` | The `PhiFormDescriptor`, parsed on definition. |
 | `submitHandlerKey`, `confirmHandlerKey`, `previewHandlerKey` | Logical handler names such as `auth.login`, or `null`. |
-| `defaultConfig`, `config`, `variant` | Placement configuration merged with a Site override. |
+| `defaultConfig`, `config`, `variant` | Carried on the definition and deep-merged with a Site override into `effectiveConfig`; nothing reads the result yet. Prepared for the Form Builder, where an author assembles a Form instead of placing a preset. A placed Form Widget is configured by its node, not from here. |
 | `previewUpstreamPath` | Carried on the definition; the relay does not read it (see [Relay](#relay)). |
 | `loadLabels` | Optional Server loader for the descriptor's `labelSetKey`. |
 | `loadInitialValues` | Optional Server loader for values the Form needs before it can be filled in. |

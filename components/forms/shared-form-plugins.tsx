@@ -53,7 +53,7 @@ export const PHI_SHARED_FORM_DEFINITIONS: readonly PhiRuntimeModuleFormDefinitio
     submitHandlerKey: "auth.login",
     confirmHandlerKey: null,
     previewHandlerKey: null,
-    defaultConfig: { forgotPasswordHref: "/reset-password", registerHref: "/register" },
+    defaultConfig: {},
     variant: "default",
     config: {},
     previewUpstreamPath: null,
