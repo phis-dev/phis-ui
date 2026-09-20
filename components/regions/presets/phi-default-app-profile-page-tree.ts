@@ -167,7 +167,7 @@ export async function buildPhiDefaultAppProfilePageTree({
       },
       {
         nodeKey: "panelNewsletter",
-        title: labels.newsletter,
+        title: labels.subscriptions,
         sections: [{
           kind: "form",
           nodeKey: "widgetNewsletter",

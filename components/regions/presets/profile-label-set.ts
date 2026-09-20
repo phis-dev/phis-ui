@@ -11,6 +11,14 @@ const PHI_PROFILE_PAGE_LABEL_SET = definePhiLabelSet({
     name: "Name",
     language: "Language",
     appearance: "Appearance",
+    /*
+     * The panel is named after what it collects, not after the one switch in it today. A panel titled
+     * "Newsletter" holding a switch labelled "Newsletter" says the same word twice and has room for
+     * nothing else; named for the subject, a second thing somebody can subscribe to moves in beside
+     * the first without renaming anything.
+     */
+    subscriptions: "Subscriptions",
+    /** The switch's own subject, and the authoring name of the Form that holds it. */
     newsletter: "Newsletter",
     save: "Save",
     /*
@@ -29,6 +37,7 @@ export async function getPhiProfilePageLabels(options: PhiGlobalTranslatorOption
     name: labels.name,
     language: labels.language,
     appearance: labels.appearance,
+    subscriptions: labels.subscriptions,
     newsletter: labels.newsletter,
     save: labels.save,
     saved: labels.saved,
