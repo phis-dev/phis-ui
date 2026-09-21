@@ -269,15 +269,9 @@ const antdImportAllowance = new Map([
   }],
   ["components/runtime/core-runtime-application-adapter.tsx", {
     values: ["App"],
-    reason: "The one file allowed to reach message and notification; everything else emits Core feedback.",
-  }],
-  ["plugins/runtime-modules/builder/draft-command-controller.tsx", {
-    values: ["App"],
-    reason: "Builder draft commands report through the same App context.",
-  }],
-  ["plugins/runtime-modules/core/widgets/table/client.tsx", {
-    values: ["App"],
-    reason: "Table actions report through the same App context.",
+    reason: "The one file that reaches message and notification, and now the only one that reaches App at"
+      + " all: a confirmation with nothing to anchor to is a PhiDialogControl, not an imperative modal."
+      + " Everything else emits Core feedback.",
   }],
   ["plugins/runtime-modules/theme/widgets/brand-controls/client.tsx", {
     values: ["ConfigProvider", "theme"],

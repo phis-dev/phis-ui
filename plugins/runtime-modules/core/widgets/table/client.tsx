@@ -4,12 +4,12 @@ import { ReloadOutlined, UndoOutlined } from "@ant-design/icons";
 import type { PhiTableWidgetLabels } from "../../../../../components/widgets/label-types/table";
 import { PHI_TABLE_WIDGET_DEFAULT_LABELS } from "../../../../../components/widgets/label-types/table";
 import { formatPhiTableWidgetLabel } from "../../../../../components/widgets/label-types/table";
-import { App } from "antd";
 import { PhiNameControl } from "../../../../../components/controls/phi-name-control";
 import { Fragment, useCallback, useEffect, useEffectEvent, useMemo, useState, type ReactNode } from "react";
 
 import { PhiMultiSelectControl } from "../../../../../components/controls/phi-multi-select-control";
 import { PhiAlertControl } from "../../../../../components/controls/phi-alert-control";
+import { usePhiConfirmDialog } from "../../../../../components/controls/phi-confirm-dialog";
 import { PhiCascaderControl } from "../../../../../components/controls/phi-cascader-control";
 import { PhiCollectionHeaderControl } from "../../../../../components/controls/phi-collection-header-control";
 import { PhiButtonControl } from "../../../../../components/controls/phi-button-control";
@@ -306,9 +306,15 @@ export function PhiTableWidgetClient({
   labels = PHI_TABLE_WIDGET_DEFAULT_LABELS,
   onAction,
 }: PhiTableWidgetClientProps) {
-  const { modal } = App.useApp();
   const { token } = usePhiConfig();
   const { showMessage } = usePhiApplicationFeedback();
+  /*
+   * A signal can ask this Table to run an action that wants an answer first, and a signal has no
+   * button on screen to hang a Popconfirm on. The Dialog is drawn by this Widget rather than asked
+   * of `App.useApp()`, so that no page pays for Ant Design's message, notification and modal
+   * runtimes just in case somebody one day asks a question.
+   */
+  const { confirm, confirmDialog } = usePhiConfirmDialog();
   const configKey = JSON.stringify(inputConfig);
   const config = useMemo(() => JSON.parse(configKey) as PhiTableWidgetConfig, [configKey]);
   const { presentation, features, source } = config;
@@ -595,13 +601,13 @@ export function PhiTableWidgetClient({
       );
       if (action.confirm) {
         const templateValue = request.rowIdentity ?? request.selectedRowIdentities.length;
-        modal.confirm({
+        confirm({
           title: formatTableActionTemplate(action.confirm.title, templateValue),
           content: formatTableActionTemplate(action.confirm.description, templateValue),
-          okText: action.confirm.okText,
-          cancelText: action.confirm.cancelText,
-          okButtonProps: { danger: action.mode === "danger" },
-          onOk: execute,
+          confirmLabel: action.confirm.okText,
+          cancelLabel: action.confirm.cancelText,
+          danger: action.mode === "danger",
+          onConfirm: execute,
         });
       } else {
         execute();
@@ -616,7 +622,7 @@ export function PhiTableWidgetClient({
         setConditionControllerStates((current) => ({ ...current, [signal.sender!]: next.state }));
       }
     }
-  }, [activateAction, bindingParams, bulkActions, conditionControllerAddresses, listenRoutes, modal, reload, resource, rowActions, rows, setQuery, signalIdentity.receiver, toolbarActions, updateBindingParams, updateColumnOrder, updateExpandedRows, updateSelection]), useMemo(() => {
+  }, [activateAction, bindingParams, bulkActions, conditionControllerAddresses, confirm, listenRoutes, reload, resource, rowActions, rows, setQuery, signalIdentity.receiver, toolbarActions, updateBindingParams, updateColumnOrder, updateExpandedRows, updateSelection]), useMemo(() => {
     if (listenRoutes.length === 0) return null;
     return {
       scopes: Array.from(new Set(listenRoutes.map((route) => route.scope))),
@@ -915,6 +921,7 @@ export function PhiTableWidgetClient({
       gap={selfContainedTools ? token.paddingSM : token.padding}
       style={{ minWidth: 0, width: "100%" }}
     >
+      {confirmDialog}
       <PhiCollectionHeaderControl
         title={presentation.title}
         description={presentation.description}

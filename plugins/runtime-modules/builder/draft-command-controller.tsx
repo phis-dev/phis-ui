@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { App } from "antd";
 
+import { usePhiConfirmDialog } from "../../../components/controls/phi-confirm-dialog";
 import { PhiCmsRegionType } from "../../../constants/phi-cms";
 import { PHI_SIGNAL_VALUE_SCHEMAS } from "../../../types/signals";
 import { usePhiSignalDispatcher } from "../../../components/runtime/runtime-signal-bus";
@@ -108,7 +108,13 @@ export function usePhiBuilderDraftCommandController({
   shellPresetDraftsByArea: Record<string, Record<string, PhiDeveloperBuilderRegionDraft>>;
   state: PhiDeveloperBuilderWorkspaceState;
 }) {
-  const { modal } = App.useApp();
+  /*
+   * Every one of these is a command from a toolbar somewhere else, so there is nothing on screen to
+   * hang a Popconfirm on. Drawn as a Dialog by this Controller rather than asked of Ant Design's
+   * `App`, whose provider would otherwise sit in every page's first load for the sake of questions
+   * only the Builder asks.
+   */
+  const { confirm, confirmDialog } = usePhiConfirmDialog();
   const { showMessage } = usePhiApplicationFeedback();
   const dispatchSignal = usePhiSignalDispatcher();
   const builderModuleMetas = usePhiBuilderModuleMetas(effectiveArea);
@@ -474,15 +480,14 @@ export function usePhiBuilderDraftCommandController({
       return;
     }
 
-    modal.confirm({
+    confirm({
       title: "Start from the Module's shell?",
       content:
         "This puts the Module's shell into the draft, replacing what the editor is showing. " +
         "Nothing is deleted -- undo takes it back, and what is published stays live until you publish.",
-      okText: "Start from the preset",
-      cancelText: "Cancel",
-      centered: true,
-      onOk: () => {
+      confirmLabel: "Start from the preset",
+      cancelLabel: "Cancel",
+      onConfirm: () => {
         setPhiDeveloperRegionDraftsWithHistory(presetDrafts, {
           historyContext: createPhiBuilderHistoryContext({
             workspace: "structure",
@@ -514,14 +519,13 @@ export function usePhiBuilderDraftCommandController({
       showMessage({ level: "info", content: "No module selection changes to reset." });
       return;
     }
-    modal.confirm({
+    confirm({
       title: "Delete Module drafts?",
       content: "This removes the open DB Module drafts and restores the shared default selection for every touched area.",
-      okText: "Delete and reset",
-      okButtonProps: { danger: true },
-      cancelText: "Cancel",
-      centered: true,
-      onOk: async () => {
+      confirmLabel: "Delete and reset",
+      danger: true,
+      cancelLabel: "Cancel",
+      onConfirm: async () => {
         setActiveDraftAction("reset");
         try {
           for (const area of areas) {
@@ -563,16 +567,15 @@ export function usePhiBuilderDraftCommandController({
     );
     const hasPreset = Object.keys(presetDrafts).length > 0;
 
-    modal.confirm({
+    confirm({
       title: hasPreset ? "Delete page override?" : "Delete page?",
       content: hasPreset
         ? "This removes the current DB page override and restores the shared preset."
         : "This prepares a delete draft. The live page returns 404 after the draft is published.",
-      okText: hasPreset ? "Delete and reset" : "Create delete draft",
-      okButtonProps: { danger: true },
-      cancelText: "Cancel",
-      centered: true,
-      onOk: async () => {
+      confirmLabel: hasPreset ? "Delete and reset" : "Create delete draft",
+      danger: true,
+      cancelLabel: "Cancel",
+      onConfirm: async () => {
         setActiveDraftAction("reset");
         try {
           if (!hasPreset) {
@@ -681,14 +684,13 @@ export function usePhiBuilderDraftCommandController({
   }
 
   function confirmResetNavigation() {
-    modal.confirm({
+    confirm({
       title: "Delete navigation draft?",
       content: "This removes the current navigation draft and restores the published navigation tree.",
-      okText: "Delete and reset",
-      okButtonProps: { danger: true },
-      cancelText: "Cancel",
-      centered: true,
-      onOk: async () => {
+      confirmLabel: "Delete and reset",
+      danger: true,
+      cancelLabel: "Cancel",
+      onConfirm: async () => {
         setActiveDraftAction("reset");
         try {
           await deletePhiBuilderNavigationDraft(effectiveNavKey);
@@ -845,5 +847,5 @@ export function usePhiBuilderDraftCommandController({
       });
   }
 
-  return { confirmResetPage, confirmResetModules, runBuilderCommand };
+  return { confirmResetPage, confirmResetModules, runBuilderCommand, confirmDialog };
 }

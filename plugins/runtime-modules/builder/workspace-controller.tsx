@@ -378,7 +378,7 @@ function usePhiDeveloperBuilderWorkspaceController(
     pageMetaLabels,
     state,
   });
-  const { confirmResetPage, runBuilderCommand } = usePhiBuilderDraftCommandController({
+  const { confirmResetPage, runBuilderCommand, confirmDialog } = usePhiBuilderDraftCommandController({
     commandWorkspace,
     defaultArea,
     effectiveArea,
@@ -2459,7 +2459,11 @@ function usePhiDeveloperBuilderWorkspaceController(
     });
   }, [debugSwitchArmed, debugSwitchAddress, dispatchSignal]);
 
-  return pageMetaDialog;
+  /*
+   * Two Dialogs, one return. The workspace Controller renders nothing of its own except the dialogs its
+   * commands need: the Page-meta editor, and the confirmation a reset command asks for.
+   */
+  return <>{pageMetaDialog}{confirmDialog}</>;
 }
 
 export type PhiDeveloperBuilderWorkspaceControllerProps = {
