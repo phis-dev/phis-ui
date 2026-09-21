@@ -723,6 +723,8 @@ export function PhiStructureRegionScaffold({
     defaultPickSection: "layout" | "widget";
     allowLayoutSection: boolean;
     allowWidgetSection: boolean;
+    /* What decided `allowLayoutSection`, carried so a refusal can name its reason rather than its result. */
+    targetDepth: number;
     slotIndex: number | null;
     targetNodeId: PhiCmsInstanceId | null;
   } | null>(null);
@@ -1944,6 +1946,33 @@ export function PhiStructureRegionScaffold({
         insertionSlotIndex,
         resolveNextSlotSortOrder(insertionSlotIndex),
       );
+      /*
+       * An append that cannot find its parent returns the tree it was given, unchanged and without
+       * complaint -- the picker closes, the draft is written, and the slot is as empty as before. That
+       * is indistinguishable from a refusal, so say which of the two happened.
+       */
+      if (!targetsRootLayout) {
+        const countNodes = (nodes: readonly PhiCmsLayoutRenderNode[]): number =>
+          nodes.reduce((total, node) => total + 1 + countNodes(node.childLayouts ?? []), 0);
+        const appended = appendLayoutChildById(
+          rootNodeChildLayouts,
+          parentLayoutNodeId,
+          nextLayout,
+          compactSequential,
+        );
+        if (countNodes(appended) === countNodes(rootNodeChildLayouts)) {
+          console.error(
+            "Phi Builder: the Layout was built but its parent slot was not found, so nothing was added.",
+            {
+              parentLayoutNodeId,
+              insertionSlotIndex,
+              compactSequential,
+              parentLayoutKind: parentLayoutDefinition?.layoutKind ?? null,
+              knownRootChildIds: rootNodeChildLayouts.map((node) => node.id),
+            },
+          );
+        }
+      }
       updateDraft(
         !targetsRootLayout
           ? {
@@ -1987,6 +2016,42 @@ export function PhiStructureRegionScaffold({
         rootNodeChildWidgets: [],
       });
     } else {
+      /*
+       * Nothing matched, and a pick that does nothing must at least say so.
+       *
+       * The picker closes on every pick, so a refused insertion and a successful one look the same:
+       * the panel goes away and the slot is unchanged. Four conditions can refuse it -- no root node,
+       * no slot index, a section the context does not allow, or a target that could not be read -- and
+       * from outside they are one symptom. The Builder is authoring, so this goes to the console with
+       * the state that decided it rather than to the author as a message they cannot act on.
+       */
+      console.error(
+        "Phi Builder: the picked item was not inserted.",
+        {
+          item: { key: item.key, kind: item.kind, title: item.title },
+          isSlotInsertion,
+          hasRootNode,
+          insertionSlotIndex,
+          targetLayoutNodeId,
+          targetsRootLayout,
+          parentLayoutKind: parentLayoutDefinition?.layoutKind ?? null,
+          slotPickerContext: currentSlotPickerContext
+            ? {
+              allowWidgetSection: currentSlotPickerContext.allowWidgetSection,
+              allowLayoutSection: currentSlotPickerContext.allowLayoutSection,
+              targetDepth: currentSlotPickerContext.targetDepth,
+              maxSublayoutDepth: PHI_CMS_MAX_LAYOUT_SUBLAYOUT_DEPTH,
+              slotIndex: currentSlotPickerContext.slotIndex,
+              targetNodeId: currentSlotPickerContext.targetNodeId,
+            }
+            : null,
+          // The condition each branch wanted, so the failing one names itself.
+          wantedByWidgetBranch: isSlotInsertion && item.kind === "widget"
+            && currentSlotPickerContext?.allowWidgetSection === true,
+          wantedByLayoutBranch: isSlotInsertion && item.kind !== "widget"
+            && currentSlotPickerContext?.allowLayoutSection === true,
+        },
+      );
       return;
     }
   }
@@ -2106,6 +2171,7 @@ export function PhiStructureRegionScaffold({
       defaultPickSection: nextDefaultPickSection,
       allowLayoutSection: nextAllowLayoutSection,
       allowWidgetSection: nextAllowWidgetSection,
+      targetDepth,
       slotIndex: nextSlotIndex,
       targetNodeId: nextTargetNodeId,
     };
