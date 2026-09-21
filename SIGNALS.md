@@ -134,6 +134,14 @@ Every `json` capability and route names a value schema; non-JSON signals carry n
   `createPhiSharedSignalValueSchema(key)`, which resolves the owning module:
   `PHI_SIGNAL_VALUE_SCHEMAS.backgroundConfig` is `@phis/ui/modules/core/signals/background-config`.
   Code never spells the prefix by hand.
+- **A new first-party schema is registered before it resolves.** `createPhiSharedSignalValueSchema`
+  reads the owner out of `constants/runtime-module-ownership.ts` (`"signals/<key>": [module, leaf]`,
+  where the leaf drops the module's own name), and a key with no entry throws
+  `Unowned first-party identifier` when the module is imported -- which reads as a broken import rather
+  than as a missing line, because it is raised at module scope. This is
+  [MODULES.md](./MODULES.md)'s registration rule reaching a case that is not about creating a Module:
+  an existing Module gaining one schema registers it the same way. A third-party package composes its
+  key from its own name and never passes through this table.
 - A third-party package builds its schemas with `createPhiSignalValueSchema(packageName, schemaKey)` or
   its own module-scoped key.
 - JSON routes match only when scope, channel, action, value type, and value schema are all compatible.
