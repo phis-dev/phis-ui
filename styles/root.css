@@ -14,8 +14,9 @@ body {
 }
 
 /* The ground is painted by the Theme Root Background layer (data-phi-root-background), fixed
-   behind the content; .ant-app stays transparent so that layer shows through. */
-[data-phi-root-layout="true"] > .ant-app {
+   behind the content; the ground stays transparent so that layer shows through. It used to be Ant
+   Design's `.ant-app` element, which only ever happened to sit here. */
+[data-phi-root-layout="true"] > [data-phi-app-ground="true"] {
   min-height: inherit;
   background: transparent;
   color: var(--ant-color-text);

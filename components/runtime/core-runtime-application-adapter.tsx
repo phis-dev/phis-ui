@@ -1,8 +1,8 @@
 "use client";
 
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { App } from "antd";
+import dynamic from "next/dynamic";
 
 import {
   readPhiCoreRuntimeMessageSignalValue,
@@ -14,6 +14,18 @@ import { usePhiSignalRuntimePartition } from "./runtime-signal-partition";
 import { registerPhiSignalInstance } from "./runtime-signal-registry";
 import { createPhiCoreRuntimeControllerAddress } from "./core-runtime-controller-address";
 import { PHIS_SITE_KEY_HEADER } from "../../constants/http-headers";
+import type { PhiApplicationFeedbackRequest } from "./application-feedback-host";
+
+/*
+ * Fetched the first time this Site has something to say, and not before.
+ *
+ * `ssr: false` because there is nothing to render on the server: a queue that is empty during the
+ * server render is empty in the HTML too, and the host exists only to play what arrives afterwards.
+ */
+const PhiLazyApplicationFeedbackHost = dynamic(
+  () => import("./application-feedback-host").then((module) => module.PhiApplicationFeedbackHost),
+  { ssr: false },
+);
 
 const PHI_CORE_RUNTIME_APPLICATION_SIGNAL_FILTER = {
   scopes: ["site"],
@@ -21,8 +33,25 @@ const PHI_CORE_RUNTIME_APPLICATION_SIGNAL_FILTER = {
 } as const;
 
 export function PhiCoreRuntimeApplicationAdapter({ siteKey }: { siteKey?: string } = {}) {
-  const { message, notification } = App.useApp();
   const router = useRouter();
+  /*
+   * Armed once and never disarmed: the host owns the toast that is on screen, so unmounting it when
+   * the queue runs dry would take the announcement down with it. What empties is the queue.
+   */
+  const [armed, setArmed] = useState(false);
+  const [requests, setRequests] = useState<readonly PhiApplicationFeedbackRequest[]>([]);
+  const nextRequestKey = useRef(0);
+
+  const enqueue = useCallback((request: Omit<PhiApplicationFeedbackRequest, "key">) => {
+    const key = (nextRequestKey.current += 1);
+    setArmed(true);
+    setRequests((current) => [...current, { ...request, key } as PhiApplicationFeedbackRequest]);
+  }, []);
+
+  const handlePlayed = useCallback((keys: readonly number[]) => {
+    const played = new Set(keys);
+    setRequests((current) => current.filter((request) => !played.has(request.key)));
+  }, []);
   const partition = usePhiSignalRuntimePartition();
   const address = createPhiCoreRuntimeControllerAddress();
 
@@ -106,36 +135,24 @@ export function PhiCoreRuntimeApplicationAdapter({ siteKey }: { siteKey?: string
       return;
     }
 
+    /*
+     * Queued rather than shown. What draws a toast is Ant Design's `App`, and it is fetched the first
+     * time a Site actually has something to say -- so the announcement waits for its host instead of
+     * every page waiting for the announcement.
+     */
     const notificationValue = readPhiCoreRuntimeNotificationSignalValue(signal);
     if (notificationValue) {
-      notification[notificationValue.level]({
-        title: notificationValue.title,
-        ...(notificationValue.description ? { description: notificationValue.description } : {}),
-        ...(notificationValue.durationSeconds != null
-          ? { duration: notificationValue.durationSeconds }
-          : {}),
-        ...(notificationValue.placement ? { placement: notificationValue.placement } : {}),
-        ...(notificationValue.showTimeoutProgress != null
-          ? { showProgress: notificationValue.showTimeoutProgress }
-          : {}),
-        role: notificationValue.level === "error" || notificationValue.level === "warning"
-          ? "alert"
-          : "status",
-      });
+      enqueue({ kind: "notification", value: notificationValue });
       return;
     }
 
     const messageValue = readPhiCoreRuntimeMessageSignalValue(signal);
     if (messageValue) {
-      message.open({
-        type: messageValue.level,
-        content: messageValue.content,
-        ...(messageValue.durationSeconds != null
-          ? { duration: messageValue.durationSeconds }
-          : {}),
-      });
+      enqueue({ kind: "message", value: messageValue });
     }
   }, PHI_CORE_RUNTIME_APPLICATION_SIGNAL_FILTER, address);
 
-  return null;
+  return armed
+    ? <PhiLazyApplicationFeedbackHost requests={requests} onPlayed={handlePlayed} />
+    : null;
 }

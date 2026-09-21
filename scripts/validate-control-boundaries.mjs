@@ -90,7 +90,12 @@ const navigationPrimitiveOwners = new Map([
 /** The Menu item interface is part of the Menu primitive: only its Control may describe items in it. */
 const menuInterfaceOwner = "components/controls/phi-menu-control.tsx";
 
-const coreApplicationAdapterPath = "components/runtime/core-runtime-application-adapter.tsx";
+/*
+ * The one file that may draw a toast. It used to be the Core application adapter itself; the adapter
+ * now only queues what was asked for, and this host -- fetched the first time a Site announces
+ * anything -- is what mounts Ant Design's `App` and plays the queue.
+ */
+const applicationFeedbackHostPath = "components/runtime/application-feedback-host.tsx";
 
 /*
  * Every Ant Design primitive a Phi Control encapsulates, and the Control a consumer uses instead.
@@ -263,15 +268,11 @@ const antdImportAllowance = new Map([
     types: ["ConfigProviderProps"],
     reason: "Hands the root adapter a theme at runtime, in the shape the root adapter takes.",
   }],
-  ["components/root/phi-root-layout.tsx", {
-    paths: ["antd/es/app"],
-    reason: "Mounts the App context the Core application adapter reads from.",
-  }],
-  ["components/runtime/core-runtime-application-adapter.tsx", {
+  ["components/runtime/application-feedback-host.tsx", {
     values: ["App"],
-    reason: "The one file that reaches message and notification, and now the only one that reaches App at"
-      + " all: a confirmation with nothing to anchor to is a PhiDialogControl, not an imperative modal."
-      + " Everything else emits Core feedback.",
+    reason: "The one file that reaches App at all, and it is fetched only once a Site announces"
+      + " something. Everything else emits Core feedback, and a confirmation with nothing to anchor to"
+      + " is a PhiDialogControl rather than an imperative modal.",
   }],
   ["plugins/runtime-modules/theme/widgets/brand-controls/client.tsx", {
     values: ["ConfigProvider", "theme"],
@@ -596,13 +597,13 @@ for (const relativePath of await listTypeScriptSources("components")) {
     );
   }
   if (
-    relativePath !== coreApplicationAdapterPath &&
+    relativePath !== applicationFeedbackHostPath &&
     /const\s*\{[^}]*\b(?:message|notification)\b[^}]*\}\s*=\s*App\.useApp\(\)/su.test(source)
   ) {
     failures.push(`${relativePath} accesses Ant Design Message/Notification directly; emit Core application feedback.`);
   }
   if (
-    relativePath !== coreApplicationAdapterPath &&
+    relativePath !== applicationFeedbackHostPath &&
     antdImports.some((name) => name === "message" || name === "notification")
   ) {
     failures.push(`${relativePath} imports Ant Design Message/Notification directly; emit Core application feedback.`);

@@ -21,9 +21,9 @@ import type { PhiThemeMode } from "../../theme/phi-theme-presets";
  *
  * Painted exactly once, fixed to the viewport so it does not scroll with Page content, and behind
  * everything else in the Root Layout: `z-index: -1` keeps it under the in-flow content, and the
- * `.ant-app` ground above it is transparent (styles/root.css) so this layer owns the page ground.
- * An unconfigured mode falls back to the resolved Ant Design layout background, which is what the
- * `.ant-app` rule painted before this layer existed -- the fallback look is unchanged.
+ * ground above it is transparent (styles/root.css) so this layer owns the page ground. An
+ * unconfigured mode falls back to the resolved Ant Design layout background, which is what the
+ * ground's own rule painted before this layer existed -- the fallback look is unchanged.
  *
  * Motion is the one part this layer resolves differently from a Region: it is the canonical Background
  * contract throughout, but only `parallax` describes something this layer can do. See

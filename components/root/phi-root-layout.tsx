@@ -1,7 +1,6 @@
 import type { ReactNode } from "react";
 import { preload } from "react-dom";
 import { AntdRegistry } from "@ant-design/nextjs-registry";
-import AntdApp from "antd/es/app";
 import "antd/dist/reset.css";
 import "../../styles/root.css";
 import "../../styles/layout.css";
@@ -219,12 +218,20 @@ export async function PhiRootLayout({
               : publishedRootTheme.style}
             remRootValue={remRootValue}
           >
-            <AntdApp>
+            {/*
+              * The page's ground, which used to be Ant Design's `App` element by accident.
+              *
+              * `styles/root.css` gives this child the page's minimum height, its text colour and its
+              * font, and none of that was ever Ant Design's to provide -- `App` simply happened to be
+              * the element in that position. Now that the message and notification runtimes are
+              * fetched only when something is announced, the ground is named for what it is.
+              */}
+            <div data-phi-app-ground="true">
               <PhiCoreRuntimeApplicationAdapter siteKey={site.key} />
               <PhiDayjsLocale locale={resolvedLocale?.locale ?? resolvedLocale?.intlLocale}>
                 {children}
               </PhiDayjsLocale>
-            </AntdApp>
+            </div>
           </PhiRootLiveThemeProvider>
         </PhiSignalRuntimePartitionProvider>
       </AntdRegistry>
