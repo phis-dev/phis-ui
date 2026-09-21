@@ -55,6 +55,39 @@ const PHI_THREAD_CONVERSATION_LABEL_SET = definePhiLabelSet({
   },
 });
 
+/**
+ * What the Page around the three surfaces says.
+ *
+ * Its own set rather than a corner of the conversation's: this is the Page's title in a navigation
+ * menu and in a browser tab, and a Site that renames the Page renames one thing.
+ */
+const PHI_THREAD_PAGE_LABEL_SET = definePhiLabelSet({
+  key: "page:threads",
+  ctx: PHI_TR_CTX_WEB_UI_LABEL,
+  labels: {
+    title: "Conversations",
+    description: definePhiMessageLabel("Everything you are part of, and where to answer it."),
+    inbox_title: "Conversations",
+    inbox_empty: definePhiMessageLabel("Nothing yet. Start one."),
+    new_conversation_label: "New conversation",
+    composer_label: "Your answer",
+  },
+});
+
+export async function getPhiThreadPageLabels(options: PhiGlobalTranslatorOptions) {
+  const labels = await getPhiLabelSet(options, PHI_THREAD_PAGE_LABEL_SET);
+  return {
+    title: labels.title,
+    description: labels.description,
+    inboxTitle: labels.inbox_title,
+    inboxEmpty: labels.inbox_empty,
+    newConversationLabel: labels.new_conversation_label,
+    composerLabel: labels.composer_label,
+  };
+}
+
+export type PhiThreadPageLabels = Awaited<ReturnType<typeof getPhiThreadPageLabels>>;
+
 export async function getPhiThreadConversationLabels(options: PhiGlobalTranslatorOptions) {
   const labels = await getPhiLabelSet(options, PHI_THREAD_CONVERSATION_LABEL_SET);
   return {
