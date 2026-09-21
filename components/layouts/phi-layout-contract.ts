@@ -262,6 +262,38 @@ export function resolvePhiLayoutAnchor(
   return effective ? resolvePhiAnchorWidgetPlacement(effective) : null;
 }
 
+/**
+ * The custom properties a slot hands its children, so a stretched one can still be placed.
+ *
+ * Two, not one shorthand. React expands a `marginInline` shorthand into two longhands when it renders
+ * on the server and leaves it whole in the browser, so the two trees disagree on an attribute that is
+ * never patched up -- a hydration mismatch for a margin that was only ever `auto` or `0`.
+ */
+export const PHI_SLOT_CROSS_MARGIN_START_PROPERTY = "--phi-slot-cross-margin-start";
+export const PHI_SLOT_CROSS_MARGIN_END_PROPERTY = "--phi-slot-cross-margin-end";
+
+/**
+ * How a child that fills the cross axis is placed on it, given where the Layout wanted it.
+ *
+ * Stretching and placing are two different jobs that `align-items` cannot do at once. A child that
+ * fills has to be stretched, or its own `width: 100%` has nothing to measure against and collapses to
+ * nothing. A child that fills *up to a cap* is stretched as well -- and then leaves room over, which is
+ * where the Layout's anchor gets its say again: an auto margin pulls it into the middle or to the end
+ * of the room the cap left, and a child that fills edge to edge has no room to be moved in, so the
+ * auto margins come to nothing.
+ *
+ * Handed down as custom properties rather than applied here, because the child is not always the slot's
+ * own element -- a Visibility Gate sits between them as `display: contents`, and custom properties
+ * inherit straight through that while a child selector would stop at it. Every slot states them, `0`
+ * included, so a nested Layout never inherits the placement of the one above it.
+ */
+export function resolvePhiSlotCrossMargin(alignItems: CSSProperties["alignItems"]) {
+  return {
+    start: alignItems === "center" || alignItems === "flex-end" ? "auto" : "0",
+    end: alignItems === "center" ? "auto" : "0",
+  };
+}
+
 export function resolvePhiFlexAxisAlignment(
   anchor: PhiAnchorWidgetPlacement | null | undefined,
   vertical: boolean,

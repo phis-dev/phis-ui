@@ -11,9 +11,28 @@ import {
 } from "../../../types/runtime-condition";
 import { PHI_SIGNAL_VALUE_SCHEMAS, type PhiSignalAddress } from "../../../types/signals";
 import { usePhiSignalListener } from "../../runtime/runtime-signal-bus";
+import type { PhiSlotChildSizing } from "../../../plugins/runtime/slot-size-policy";
 
 export type PhiCmsNodeVisibilityGateProps = {
   visibleWhen: PhiRuntimeConditionExpression;
+  /**
+   * How the node inside sizes, carried through and never read here.
+   *
+   * `display: contents` takes this wrapper out of the Layout so a slot behaves as if the node sat in it
+   * directly -- but only for CSS. The slot reads its child's sizing off the React element it holds, and
+   * that element is this gate, whose own props say nothing about the node behind it. So the sizing rides
+   * along: `resolvePhiSlotChildSizing` looks for exactly this prop first.
+   *
+   * It has to be handed down rather than worked out here. A slot cannot see through a Client Component
+   * to what it will render, and it cannot ask the component either -- across a client boundary the
+   * element's type is a reference, not the function. The renderer that builds both the frame and this
+   * gate is the one place that knows both.
+   *
+   * Left out while it did not matter: an unanchored Layout stretches its slots, so a child wrongly read
+   * as "does not fill" was stretched anyway. The moment a Layout centred its slots instead, the node had
+   * nothing to measure its own `width: 100%` against and collapsed to nothing.
+   */
+  slotChildSizing?: PhiSlotChildSizing | null;
   /**
    * The address the wrapped node answers at, which the gate answers at while the node is away.
    *
@@ -105,6 +124,7 @@ export function PhiCmsNodeVisibilityGate({
   features,
   children,
 }: PhiCmsNodeVisibilityGateProps) {
+  // `slotChildSizing` is deliberately not destructured: it is read off this element, never in it.
   const reported = usePhiRuntimeConditionReportedStates(visibleWhen, receiver);
   const visible = evaluatePhiRuntimeConditionExpression(visibleWhen, {
     page,
@@ -124,3 +144,4 @@ export function PhiCmsNodeVisibilityGate({
    */
   return <div style={{ display: visible ? "contents" : "none" }}>{children}</div>;
 }
+

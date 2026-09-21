@@ -314,6 +314,19 @@ export function resolvePhiSlotChildBaseStyle(policy: PhiNormalizedSlotSizePolicy
      * with no anchor asks for.
      */
     alignSelf: "auto",
+    /*
+     * And where a Layout stretched this child in order to give it a width, this is how it is still
+     * placed: the slot hands down `--phi-slot-cross-margin`, which is `auto` on the side the anchor
+     * pulls towards and `0` everywhere else. A child that fills edge to edge has no room to be moved
+     * in and the auto margins come to nothing; a child that caps itself has, and lands where it was
+     * asked to. `0` by default, so a child whose slot says nothing keeps the margins it always had.
+     *
+     * Two longhands rather than the `marginInline` shorthand: React writes a shorthand out as two
+     * longhands on the server and keeps it whole in the browser, and the two trees then disagree on an
+     * attribute React will not patch up.
+     */
+    marginInlineStart: "var(--phi-slot-cross-margin-start, 0)",
+    marginInlineEnd: "var(--phi-slot-cross-margin-end, 0)",
     ...(policy.inline === "fill" ? { width: "100%" } : policy.inline === "intrinsic" ? { width: "fit-content" } : {}),
     ...(policy.block === "fill" ? { height: "100%" } : policy.block === "intrinsic" ? { height: "fit-content" } : {}),
   };

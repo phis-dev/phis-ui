@@ -19,6 +19,7 @@ import type {
 } from "../../types/cms-plugins";
 import { PhiFlexVerticalLayout } from "../layouts/phi-flex-vertical-layout";
 import {
+  resolvePhiSlotChildSizingForConfig,
   type PhiSlotChildKind,
 } from "../../plugins/runtime/slot-size-policy";
 import { PhiSlotChildFrame } from "../../plugins/runtime/phi-slot-child-frame";
@@ -601,6 +602,16 @@ function wrapPhiRenderedSlotChild(
     ? (
       <PhiCmsNodeVisibilityGate
         key={options.key}
+        /*
+         * What the frame inside sizes like, said out here where the slot can read it. Resolved from the
+         * three values rather than from the frame element, so nothing of the frame's props is shared
+         * into a second element -- see `resolvePhiSlotChildSizingForConfig`.
+         */
+        slotChildSizing={resolvePhiSlotChildSizingForConfig(
+          options.kind,
+          options.slotSizePolicy,
+          options.config,
+        )}
         visibleWhen={options.visibleWhen}
         receiver={options.blockId != null ? createPhiSignalAddress("cms", options.blockId) : null}
         page={options.page ?? null}

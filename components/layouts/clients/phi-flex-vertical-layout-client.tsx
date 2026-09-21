@@ -1,7 +1,10 @@
 import { type CSSProperties, type ReactNode } from "react";
 import {
   normalizePhiCssSize,
+  PHI_SLOT_CROSS_MARGIN_END_PROPERTY,
+  PHI_SLOT_CROSS_MARGIN_START_PROPERTY,
   resolvePhiFlexAxisAlignment,
+  resolvePhiSlotCrossMargin,
 } from "../phi-layout-contract";
 import { resolvePhiLayoutSlotChildSizing } from "./phi-layout-anchored-overlay";
 import { resolvePhiLayoutDefaults } from "../../../helpers/cms-layout-defaults";
@@ -137,14 +140,20 @@ export function PhiFlexVerticalLayout({
            * that caps its width -- a column of copy at a readable measure -- is narrower than that: it
            * then stands at the left edge of a centred slot, which reads as "not centred" and is.
            *
-           * Always, and not only where the slot is not stretching. A filling child states its own width
-           * of 100% and fills whatever this says, so the alignment costs it nothing; a child that fills
-           * up to a maximum is exactly the case the paragraph above describes, and forcing stretch here
-           * was what kept it in the corner. With no anchor the alignment is "stretch" anyway, so a
-           * Layout that has not been anchored is unchanged.
+           * Except where the child fills, which has to be stretched: `width: 100%` inside a shrink-to-fit
+           * box is circular and resolves to zero, and a centred flex item is shrink-to-fit. That is not
+           * a reason to give up the placement, though -- a filling child that also caps itself leaves
+           * room over, and `resolvePhiSlotCrossMargin` puts it in the middle of that room by margin
+           * instead. Stretching and placing are two jobs, and `align-items` can only do one of them.
            */
-          alignItems: resolvedFlowAlignment.alignItems,
-        }}
+          alignItems: shouldFillCrossAxis ? "stretch" : resolvedFlowAlignment.alignItems,
+          [PHI_SLOT_CROSS_MARGIN_START_PROPERTY]: shouldFillCrossAxis
+            ? resolvePhiSlotCrossMargin(resolvedFlowAlignment.alignItems).start
+            : "0",
+          [PHI_SLOT_CROSS_MARGIN_END_PROPERTY]: shouldFillCrossAxis
+            ? resolvePhiSlotCrossMargin(resolvedFlowAlignment.alignItems).end
+            : "0",
+        } as CSSProperties}
       >
         {child}
       </div>
