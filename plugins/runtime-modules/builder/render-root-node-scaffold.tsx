@@ -1349,21 +1349,41 @@ function resolvePhiRootNodeRenderedBody(
     );
   };
 
-  const renderSequentialSlotChildren = () => {
-    return [...syntheticRootNode.childLayouts, ...syntheticRootNode.childWidgets]
+  /**
+   * The node's children, both kinds, in the order they were added.
+   *
+   * One collection with two shapes over it, the way the Site renderer already does it
+   * (`buildRenderedChildEntries` in components/cms/phi-cms-layout-renderer.tsx). It was two
+   * independent walks here, and they drifted: the flat one listed the Widgets only, so a Layout
+   * dropped into the one kind that renders flat -- Content -- was written to the draft and never
+   * drawn. Collecting once is what keeps the two answers about the same children the same.
+   *
+   * A Layout is drawn by the scaffold's own child renderer where there is one, and falls back to a
+   * plain preview where there is not; that is what tells this apart from the Site renderer, which
+   * always has the full runtime to hand.
+   */
+  const buildRenderedChildEntries = () =>
+    [...syntheticRootNode.childLayouts, ...syntheticRootNode.childWidgets]
       .sort((left, right) => left.sortOrder - right.sortOrder || comparePhiCmsInstanceIds(left.id, right.id))
-      .reduce<ReactNode[]>((slots, entry) => {
-        const rendered =
+      .map((entry) => ({
+        slotIndex: entry.slotIndex,
+        rendered:
           "contentId" in entry
             ? renderWidgetNode(entry)
             : renderChildLayoutNode
               ? renderChildLayoutNode(entry)
-              : renderPhiRootNodePreview(resolveLayoutNodeRootProps(entry));
+              : renderPhiRootNodePreview(resolveLayoutNodeRootProps(entry)),
+      }));
 
-        slots[entry.slotIndex] = rendered;
-        return slots;
-      }, []);
-  };
+  /** Flat, for a Layout with one content area rather than numbered slots. */
+  const renderChildren = () => buildRenderedChildEntries().map((entry) => entry.rendered);
+
+  /** Placed by slot, for a Layout whose slots are positions it draws into. */
+  const renderSequentialSlotChildren = () =>
+    buildRenderedChildEntries().reduce<ReactNode[]>((slots, entry) => {
+      slots[entry.slotIndex] = entry.rendered;
+      return slots;
+    }, []);
   const rootRenderMode = renderMode === "preview" ? "preview" : renderMode === "editor" ? "editor" : "live";
   const renderRootNode = resolvePhiAuthoringLayoutRenderer(plugin, definition, rootRenderMode);
   const parseRootConfig = resolvePhiAuthoringLayoutConfigParser(plugin);
@@ -1388,7 +1408,7 @@ function resolvePhiRootNodeRenderedBody(
       config:
         (parseRootConfig?.(buildPhiBuilderRootNodeRenderConfig(normalizedRootNode, rootRenderMode)) ??
           plugin.parseConfig(buildPhiBuilderRootNodeRenderConfig(normalizedRootNode, rootRenderMode))),
-      renderChildren: () => syntheticRootNode.childWidgets.map((widget) => renderWidgetNode(widget)),
+      renderChildren,
       renderSequentialSlotChildren,
     });
   } catch (error) {
