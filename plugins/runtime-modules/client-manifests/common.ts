@@ -9,7 +9,6 @@ import { PhiCmsLayoutType } from "../../../constants/cms-layout-types";
 import { PhiRuntimeRenderClientType } from "../../../constants/runtime-render-client-types";
 import { PHI_ASSET_RUNTIME_MODULE_ID } from "../asset/ids";
 import { PHI_MEDIA_LIBRARY_ITEM_RENDERER_KEY } from "../../../constants/media-library-provider-keys";
-import { PHI_THREAD_LIBRARY_ITEM_RENDERER_KEY } from "../../../constants/thread-library-provider-keys";
 import { createPhiRuntimeModuleCalendarAdapterClientManifest } from "../../../components/runtime/runtime-module-calendar-adapter-client-manifest";
 import { PHI_CORE_CALENDAR_ADAPTER_CLIENT_DEFINITIONS } from "../client-calendar-adapters/core";
 import { PhiLazyAssetRuntimeControllerClient } from "../asset/client";
@@ -228,12 +227,6 @@ export const PHI_COMMON_RUNTIME_MODULE_RENDER_CLIENT_MANIFEST =
     ],
     // An item renderer, not a Widget: the Collection View hosts it by the key its bound resource names,
     // or by the key a Site named instead. Nothing about this entry says it belongs to the Asset Module.
-    [
-      PHI_THREAD_LIBRARY_ITEM_RENDERER_KEY,
-      definePhiRuntimeModuleRenderClient(
-        dynamic(() => import("../threads/services/collection-view").then((module) => module.PhiThreadCollectionViewBinding)),
-      ),
-    ],
     [
       PHI_MEDIA_LIBRARY_ITEM_RENDERER_KEY,
       definePhiRuntimeModuleRenderClient(

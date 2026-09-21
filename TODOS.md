@@ -421,6 +421,17 @@ built. Remove an entry when it is done.
 
 ## Tables and Markdown
 
+- **A Table row opens what it names.** Selecting a row is the radio column and nothing else: the Table
+  Control already takes an `onRowActivate`, and the Table Widget never passes one. Everywhere a selection
+  means "show me this" -- the groups page, the conversations page -- a person clicks a control beside the
+  thing they meant instead of the thing itself. Wiring the Widget's `updateSelection` to a row click is
+  one line and reaches every Table; the reason it has not happened is that nobody wrote down that it was
+  missing.
+- **A Controller addresses its Page by hard-coded Widget id.** Both the groups and the conversations
+  Controller name the Page's Widgets from a preset id map. It works because the same code owns both ends,
+  and it is exactly the coupling routes exist to remove: a Site that rearranges the Page keeps the routes
+  and loses the Controller. A Controller should dispatch to the receivers its own mounted configuration
+  names, the way a Widget emits to the receivers in its route set.
 - **Provider-backed Markdown table embeds.** TABLES.md defines the closed embed descriptor; no embed parser
   exists yet.
 
