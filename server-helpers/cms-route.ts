@@ -1,6 +1,7 @@
 import "server-only";
 
 import {
+  canonicalHrefUnlessCurrent,
   isKnownSpecialCmsRoot,
   normalizePhiCmsRouteSegment,
 } from "../helpers/cms-routing";
@@ -79,9 +80,9 @@ export async function resolveCmsRootRoute(
     locale: normalizedLocale,
     area: "public",
     cmsPath: buildCmsPathFromSegments(normalizedSegments),
-    canonicalHref:
-      normalizedRoot === normalizedLocale
-        ? null
-        : buildCanonicalHref(normalizedLocale, normalizedSegments),
+    canonicalHref: canonicalHrefUnlessCurrent(
+      buildCanonicalHref(normalizedLocale, normalizedSegments),
+      buildCanonicalHref(normalizedRoot, normalizedSegments),
+    ),
   };
 }
