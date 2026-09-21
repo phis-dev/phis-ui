@@ -16,6 +16,7 @@ const PHI_RUNTIME_MODULE_OWNERSHIP: Readonly<Record<string, readonly [module: st
   "background-patterns/stripes": ["core", "stripes"],
   "calendars/gregory": ["core", "gregory"],
   "collections/media": ["asset", "media"],
+  "renderers/media-asset": ["asset", "media-asset"],
   "controller/accounting-base": ["accounting", "base"],
   "controller/admin": ["admin", "default"],
   "controller/app-base": ["app", "base"],

@@ -1,4 +1,7 @@
-import { createPhiSharedRuntimeDataProviderKey } from "./runtime-data-provider-key";
+import {
+  createPhiSharedRuntimeDataProviderKey,
+  createPhiSharedRuntimeItemRendererKey,
+} from "./runtime-data-provider-key";
 
 /**
  * The Media library as a Foundation contract.
@@ -22,3 +25,14 @@ export const PHI_MEDIA_LIBRARY_DATA_PROVIDER_KEYS = {
   collection: createPhiSharedRuntimeDataProviderKey("collections", "media"),
   folders: createPhiSharedRuntimeDataProviderKey("options", "media-folders"),
 } as const;
+
+/**
+ * The card that draws a media asset, named on the same terms as the Providers above.
+ *
+ * A Module that wants to show media its own way registers another Render Client under its own key and a
+ * Site names that one in the Widget's `itemRendererKey`. It cites this one to say which items it is
+ * replacing -- and cites it from here, so offering an alternative never means importing the Asset
+ * Module.
+ */
+export const PHI_MEDIA_LIBRARY_ITEM_RENDERER_KEY =
+  createPhiSharedRuntimeItemRendererKey("media-asset");

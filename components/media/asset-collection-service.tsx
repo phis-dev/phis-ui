@@ -1,6 +1,7 @@
 "use client";
 
 import { PHI_ASSET_RUNTIME_DATA_PROVIDER_KEYS } from "../../plugins/runtime-modules/asset/ids";
+import { PHI_MEDIA_LIBRARY_ITEM_RENDERER_KEY } from "../../constants/media-library-provider-keys";
 import type {
   PhiCollectionProviderActionRequest,
   PhiCollectionProviderQuery,
@@ -9,7 +10,6 @@ import type {
 import { createPhiCollectionProviderClient } from "../widgets/client/shared/phi-collection-provider";
 import { buildPhiMediaRequestHeaders } from "./phi-media-request-headers";
 import { readPhiImagePreviewResponse } from "./phi-image-preview-data";
-import { PhiAssetCollectionViewBinding } from "./phi-asset-collection-view-binding";
 
 function readFilter(query: PhiCollectionProviderQuery, key: string) {
   return query.filters?.[key];
@@ -164,5 +164,5 @@ export const PhiAssetCollectionProviderClient = createPhiCollectionProviderClien
   key: PHI_ASSET_RUNTIME_DATA_PROVIDER_KEYS.mediaCollection,
   query: queryMediaCollection,
   action: runMediaCollectionAction,
-  resources: [{ resourceKey: "assets", View: PhiAssetCollectionViewBinding }],
+  resources: [{ resourceKey: "assets", itemRendererKey: PHI_MEDIA_LIBRARY_ITEM_RENDERER_KEY }],
 });

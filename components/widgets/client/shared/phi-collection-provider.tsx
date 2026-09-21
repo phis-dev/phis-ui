@@ -9,10 +9,8 @@ import {
   type ReactNode,
 } from "react";
 
-import type { PhiCmsInstanceId } from "../../../../types/cms-instance-id";
-import type { PhiCmsCollectionViewWidgetConfig } from "../../../../plugins/runtime-modules/core/widgets/collection-view/config";
-
 import {
+  isPhiNamespacedRuntimeKey,
   isPhiRuntimeDataProviderKey,
   type PhiRuntimeDataProviderKey,
 } from "../../../../types/runtime-data-provider";
@@ -21,7 +19,6 @@ import type {
   PhiCollectionProviderData,
   PhiCollectionProviderDataSource,
   PhiCollectionProviderQueryRequest,
-  PhiCollectionViewBindingModel,
 } from "../../../../types/collection-provider";
 
 export type PhiCollectionProviderRegistration = {
@@ -30,12 +27,15 @@ export type PhiCollectionProviderRegistration = {
   action?: (request: PhiCollectionProviderActionRequest) => Promise<PhiCollectionProviderData>;
   resources: readonly {
     resourceKey: string;
-    View: ComponentType<{
-      config: PhiCmsCollectionViewWidgetConfig;
-      binding: PhiCollectionViewBindingModel;
-      labels?: unknown;
-      widgetId?: PhiCmsInstanceId | null;
-    }>;
+    /**
+     * The Render Client that draws this resource's items.
+     *
+     * A key rather than the component itself, so the renderer is one entry in the Area's Render Client
+     * manifest like every other Client -- which is what lets a Module that does not own this resource
+     * register another one for the same items, and a Site choose it. The provider names the one it
+     * ships; `PhiCmsCollectionViewWidgetConfig.itemRendererKey` names a different one.
+     */
+    itemRendererKey: `${string}/${string}`;
   }[];
 };
 
@@ -55,7 +55,8 @@ export function createPhiCollectionProviderClient(
   }
   if (registration.resources.length === 0 ||
     new Set(registration.resources.map((resource) => resource.resourceKey)).size !== registration.resources.length ||
-    registration.resources.some((resource) => !resource.resourceKey.trim())) {
+    registration.resources.some((resource) =>
+      !resource.resourceKey.trim() || !isPhiNamespacedRuntimeKey(resource.itemRendererKey))) {
     throw new Error(`Collection provider "${registration.key}" has invalid Client resources.`);
   }
 

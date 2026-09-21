@@ -69,6 +69,19 @@ export function PhiRuntimeModuleRenderClientManifestProvider({
   );
 }
 
+/**
+ * A Render Client by key, or none.
+ *
+ * `PhiRuntimeModuleRenderClientHost` throws when a key is missing, which is right for a Widget: the
+ * page asked for a type its Area does not carry, and there is nothing sensible to draw. A Client picked
+ * by configuration is a different case -- a Site may name a renderer whose Module has since been
+ * switched off -- and that reads better as a message in the block than as a broken page.
+ */
+export function usePhiRuntimeModuleRenderClient(type: string | null | undefined) {
+  const manifest = useContext(PhiRuntimeModuleRenderClientManifestContext);
+  return type ? manifest?.get(type) ?? null : null;
+}
+
 function usePhiRuntimeModuleRenderClientManifest() {
   const manifest = useContext(PhiRuntimeModuleRenderClientManifestContext);
   if (!manifest) {

@@ -8,7 +8,7 @@ import type {
 } from "../../../../../types/collection-provider";
 import type { PhiCmsWidgetPlugin } from "../../../../../types/cms-plugins";
 import { PHI_SIGNAL_VALUE_SCHEMAS, readPhiSignalRouteSet, type PhiSignalRouteSet } from "../../../../../types/signals";
-import { isPhiRuntimeDataProviderKey } from "../../../../../types/runtime-data-provider";
+import { isPhiNamespacedRuntimeKey, isPhiRuntimeDataProviderKey } from "../../../../../types/runtime-data-provider";
 import { readPhiLengthValue, type PhiCssLength } from "../../../../../types/length";
 import { readBoolean, readNumber, readString, type PhiCmsWidgetConfigBase } from "../../../../../components/widgets/config/parser-primitives";
 
@@ -97,6 +97,17 @@ export type PhiCmsCollectionViewWidgetConfig = PhiCmsWidgetConfigBase & {
   };
   initialQuery?: PhiCollectionProviderQuery;
   source: PhiCollectionProviderDataSource | null;
+  /**
+   * A renderer other than the one the bound provider ships.
+   *
+   * The provider's resource names the Render Client it comes with, and that is what draws the items
+   * unless a Site says otherwise here. A Module that does not own the resource registers another Client
+   * for the same items under its own key, and naming that key is how a Site chooses it -- which is the
+   * only way to show somebody else's objects your way without forking the provider.
+   *
+   * A key whose Module is not active in this Area is reported in the block rather than thrown.
+   */
+  itemRendererKey?: string | null;
   signalRoutes?: PhiSignalRouteSet | null;
 };
 
@@ -257,6 +268,7 @@ export function normalizePhiCmsCollectionViewWidgetConfig(config: unknown): PhiC
     },
     initialQuery: readInitialQuery(raw.initialQuery),
     source: readSource(raw.source),
+    itemRendererKey: isPhiNamespacedRuntimeKey(raw.itemRendererKey) ? raw.itemRendererKey : null,
     signalRoutes: readPhiSignalRouteSet(raw.signalRoutes),
   };
 }
@@ -290,6 +302,7 @@ export const PHI_COLLECTION_VIEW_WIDGET_DEFINITION = {
   },
   fields: [
     { key: "source", type: "data-provider", providerKind: "collection", label: "Collection Provider" },
+    { key: "itemRendererKey", type: "string", label: "Item Renderer" },
     { key: "presentation.title", type: "string", label: "Title" },
     { key: "presentation.description", type: "string", label: "Description" },
     {

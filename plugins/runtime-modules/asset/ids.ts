@@ -1,6 +1,9 @@
 import { PHI_SHARED_PACKAGE_NAME } from "../../../types/signals";
 import type { PhiRuntimeModuleId } from "../contracts";
-import { PHI_MEDIA_LIBRARY_DATA_PROVIDER_KEYS } from "../../../constants/media-library-provider-keys";
+import {
+  PHI_MEDIA_LIBRARY_DATA_PROVIDER_KEYS,
+  PHI_MEDIA_LIBRARY_ITEM_RENDERER_KEY,
+} from "../../../constants/media-library-provider-keys";
 
 export const PHI_ASSET_RUNTIME_MODULE_ID =
   `${PHI_SHARED_PACKAGE_NAME}/modules/asset` as const satisfies PhiRuntimeModuleId;
@@ -15,3 +18,6 @@ export const PHI_ASSET_RUNTIME_DATA_PROVIDER_KEYS = {
   mediaFolders: PHI_MEDIA_LIBRARY_DATA_PROVIDER_KEYS.folders,
   mediaCollection: PHI_MEDIA_LIBRARY_DATA_PROVIDER_KEYS.collection,
 } as const;
+
+/** The card this Module ships for its own items; a Site may name another. */
+export const PHI_ASSET_RUNTIME_ITEM_RENDERER_KEY = PHI_MEDIA_LIBRARY_ITEM_RENDERER_KEY;

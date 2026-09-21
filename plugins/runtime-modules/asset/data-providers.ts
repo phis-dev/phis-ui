@@ -1,6 +1,6 @@
 import type { PhiRuntimeModuleDataProviderDescriptor } from "../contracts";
 import { PHI_SIGNAL_VALUE_SCHEMAS } from "../../../types/signals";
-import { PHI_ASSET_RUNTIME_DATA_PROVIDER_KEYS } from "./ids";
+import { PHI_ASSET_RUNTIME_DATA_PROVIDER_KEYS, PHI_ASSET_RUNTIME_ITEM_RENDERER_KEY } from "./ids";
 import { PHI_ASSET_RUNTIME_MODULE_ID } from "./ids";
 
 export const PHI_ASSET_RUNTIME_DATA_PROVIDER_DESCRIPTORS = [
@@ -32,7 +32,7 @@ export const PHI_ASSET_RUNTIME_DATA_PROVIDER_DESCRIPTORS = [
         resourceKey: "assets",
         title: "Assets",
         itemIdentityPath: "id",
-        itemRendererKey: "@phis/ui/media-asset",
+        itemRendererKey: PHI_ASSET_RUNTIME_ITEM_RENDERER_KEY,
         selectionValueSchema: PHI_SIGNAL_VALUE_SCHEMAS.mediaAssetSelection,
         defaultForWidget: true,
         query: {

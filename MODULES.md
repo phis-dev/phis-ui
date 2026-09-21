@@ -465,6 +465,21 @@ Preset Forms are explicit `forms` entries in the Module's Server Area contributi
 select namespaced field, validation, options, read, and handler providers. The CMS tree places only the
 generic Form Widget with a `formId`; a Module must not add a domain Form Widget alias.
 
+A Collection resource names the Render Client that draws its items (`itemRendererKey`) instead of
+carrying the component, and that key is owned like any other first-party identifier
+(`"renderers/<key>"` in `constants/runtime-module-ownership.ts`). Because the renderer is an ordinary
+entry in the Area's Render Client manifest, a Module that does not own the resource may register another
+one for the same items under its own key, and a Site names it in the Widget's `itemRendererKey`. That is
+the whole mechanism for showing somebody else's objects your way: no fork of the Provider, no import of
+the owning Module, and no branch in Core. The key to cite is the Foundation's
+(`PHI_MEDIA_LIBRARY_ITEM_RENDERER_KEY`), never the Module's file. A named renderer whose Module is not
+active in the Area is reported inside the block.
+
+The same shape frees what a Collection *emits*. A generic Widget cannot know what a selection means, so
+`collection-view` declares `valueSchemaFrom: "data-source"` and the resource declares
+`selectionValueSchema` ([SIGNALS.md](./SIGNALS.md)). Data, drawing, and meaning are all the bound
+resource's to state; Core supplies the frame for all three and spells out none of them.
+
 Provider Clients own data access and mutations. Forms own record-oriented validation and submit
 lifecycles. Controllers coordinate runtime state. Signals connect those surfaces. None may silently take
 over another layer's responsibility.
