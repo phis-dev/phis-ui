@@ -432,6 +432,13 @@ built. Remove an entry when it is done.
   `@phis/server/groups:v1`, never branches on a Directory provider, and leaves provider setup and sync to
   the Add-on half.
 - **Module distribution.** Designed in [design/MODULE_DISTRIBUTION.md](./design/MODULE_DISTRIBUTION.md).
+- **Say what a Site loses before it switches a Module off.** Deactivating a Module leaves every reference
+  to it dangling, and each kind is only discovered when the page renders: a Collection View naming one of
+  its item renderers, a signal route pointing at a receiver it owned, a data-provider binding to one of
+  its resources. Each reports itself in the block, which is right at render time and far too late at
+  decision time. One check that answers "what stops working if this goes" for renderers, routes and
+  bindings together, run where the Module selection is edited and again on publish. Not a fallback: the
+  block still refuses to draw something other than what was chosen, the Site is simply told first.
 
 ## Verification
 
