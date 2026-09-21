@@ -155,6 +155,30 @@ Every `json` capability and route names a value schema; non-JSON signals carry n
   bound, so a collection from another package could be shown but could not mean anything of its own.
 - JSON routes match only when scope, channel, action, value type, and value schema are all compatible.
 
+### Naming a value, and translating one
+
+Two gaps look alike from a distance, and answering both in the same place makes one of them wrong.
+
+**A value that domain code produced is named at its source.** A Collection's items are drawn by a
+renderer the owning Module registers, so a selection's payload is that Module's to build: it knows a
+row is a conversation and writes `{ threadId }`. The generic Widget around it must not spell the name
+out, so the resource declares `selectionValueSchema` and the capability defers with
+`valueSchemaFrom: "data-source"`. Nothing is converted -- the Builder resolves the name when it writes
+the route, and matching and the runtime see an ordinary concrete schema.
+
+**A value that generic Core code produced is translated, not renamed.** A Table builds its own
+selection: `tableSelection` is `{ selectedRowIdentities }`, and that is already the truthful name for
+what a Table knows. What is missing is not a name but the meaning, and the meaning is a different
+value -- one row identity becomes one `threadId`, and a multi-selection has to collapse or be refused.
+That is a Module Controller's work: it listens for the generic signal and emits its own. Labelling
+`{ selectedRowIdentities }` as `threadSelection` would satisfy every check on the route and hand the
+receiver a payload it cannot read, which is worse than no route at all.
+
+The test is one question: **did domain code build this payload?** If it did, name it there. If Core
+built it, translate it in the Controller. The conversations Module does both -- its Collection renderer
+names its own selection, and its Controller turns a Table's selection and a Form's result into the same
+`threadSelection`.
+
 ## Capabilities and routes
 
 A plugin declares what it can do; a concrete instance stores how it is wired. The two never mix.

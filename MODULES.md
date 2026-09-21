@@ -488,6 +488,12 @@ The same shape frees what a Collection *emits*. A generic Widget cannot know wha
 `selectionValueSchema` ([SIGNALS.md](./SIGNALS.md)). Data, drawing, and meaning are all the bound
 resource's to state; Core supplies the frame for all three and spells out none of them.
 
+That works because the payload is the Module's own: its renderer drew the item and built the value. Where
+Core builds the value itself -- a Table's `tableSelection` is `{ selectedRowIdentities }` -- there is
+nothing to rename, and the Module's Controller translates instead. SIGNALS.md,
+[Naming a value, and translating one](./SIGNALS.md#naming-a-value-and-translating-one), is where the two
+are told apart.
+
 Provider Clients own data access and mutations. Forms own record-oriented validation and submit
 lifecycles. Controllers coordinate runtime state. Signals connect those surfaces. None may silently take
 over another layer's responsibility.
