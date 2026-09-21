@@ -53,6 +53,17 @@ export const PHI_THREADS_RUNTIME_DATA_PROVIDER_DESCRIPTORS = [
             { key: "unreadOnly", title: "Unread only", type: "enum" },
           ],
         },
+        /*
+         * Archiving is not deleting, and reopening is why it need not be.
+         *
+         * One row carries the status, so archiving closes the conversation for everyone in it rather
+         * than hiding it from one reader -- which is the reason it is offered as a plain action with no
+         * confirmation: nothing is lost, and the other action puts it back.
+         */
+        actions: [
+          { key: "archive", title: "Archive", scope: "item" },
+          { key: "reopen", title: "Reopen", scope: "item" },
+        ],
       },
     ],
   },

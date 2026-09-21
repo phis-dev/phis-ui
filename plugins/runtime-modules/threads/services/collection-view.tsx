@@ -7,6 +7,7 @@ import type { PhiCollectionViewBindingModel } from "../../../../types/collection
 import type { PhiCmsCollectionViewWidgetConfig } from "../../core/widgets/collection-view/config";
 import { PhisThreadStatus } from "../../../../constants/threads";
 import { PhiAlertControl } from "../../../../components/controls/phi-alert-control";
+import { PhiButtonControl } from "../../../../components/controls/phi-button-control";
 import { PhiFlexControl } from "../../../../components/controls/phi-flex-control";
 import { PhiTagControl } from "../../../../components/controls/phi-tag-control";
 import { PhiTypographyControl } from "../../../../components/controls/phi-typography-control";
@@ -28,6 +29,8 @@ export const PHI_THREAD_COLLECTION_DEFAULT_LABELS = {
   emptyText: "No conversations yet.",
   loadingText: "Loading conversations.",
   errorTitle: "That did not work",
+  archiveLabel: "Archive",
+  reopenLabel: "Reopen",
 };
 
 export type PhiThreadCollectionLabels = typeof PHI_THREAD_COLLECTION_DEFAULT_LABELS;
@@ -115,34 +118,55 @@ export function PhiThreadCollectionViewBinding({
 
   return (
     <PhiFlexControl vertical gap="small">
-      {rows.map((row) => (
-        <PhiFlexControl
-          key={row.id}
-          align="center"
-          gap="small"
-          wrap
-          role="button"
-          tabIndex={0}
-          onClick={() => selectionSignals.emitCapability("selection", { threadId: row.id })}
-          onKeyDown={(event) => {
-            if (event.key !== "Enter" && event.key !== " ") return;
-            event.preventDefault();
-            selectionSignals.emitCapability("selection", { threadId: row.id });
-          }}
-          style={{ cursor: "pointer" }}
-        >
-          <PhiTypographyControl strong={row.unread} style={{ margin: 0 }}>
-            {row.subject ?? labels.subjectFallback}
-          </PhiTypographyControl>
-          {row.unread ? <PhiTagControl>{labels.unreadLabel}</PhiTagControl> : null}
-          {row.status === PhisThreadStatus.Archived ? (
-            <PhiTagControl>{labels.archivedLabel}</PhiTagControl>
-          ) : null}
-          <PhiTypographyControl type="secondary">
-            {formatTime(row.latestMessageAt ?? row.updatedAt)}
-          </PhiTypographyControl>
-        </PhiFlexControl>
-      ))}
+      {rows.map((row) => {
+        const archived = row.status === PhisThreadStatus.Archived;
+        const select = () => selectionSignals.emitCapability("selection", { threadId: row.id });
+        return (
+          /*
+           * The action sits beside what opens the conversation, never inside it.
+           *
+           * A row that is one large target with a smaller one inside needs the inner click to stop the
+           * outer from also firing -- and `PhiButtonControl` hands its handler no event to stop it
+           * with. Two siblings need none of that: the conversation opens from the part that names it,
+           * and archiving is its own target.
+           */
+          <PhiFlexControl key={row.id} align="center" justify="space-between" gap="small">
+            <PhiFlexControl
+              align="center"
+              gap="small"
+              wrap
+              role="button"
+              tabIndex={0}
+              onClick={select}
+              onKeyDown={(event) => {
+                if (event.key !== "Enter" && event.key !== " ") return;
+                event.preventDefault();
+                select();
+              }}
+              style={{ cursor: "pointer", flex: 1, minWidth: 0 }}
+            >
+              <PhiTypographyControl strong={row.unread} style={{ margin: 0 }}>
+                {row.subject ?? labels.subjectFallback}
+              </PhiTypographyControl>
+              {row.unread ? <PhiTagControl>{labels.unreadLabel}</PhiTagControl> : null}
+              {archived ? <PhiTagControl>{labels.archivedLabel}</PhiTagControl> : null}
+              <PhiTypographyControl type="secondary">
+                {formatTime(row.latestMessageAt ?? row.updatedAt)}
+              </PhiTypographyControl>
+            </PhiFlexControl>
+            <PhiButtonControl
+              label={archived ? labels.reopenLabel : labels.archiveLabel}
+              type="link"
+              size="small"
+              onClick={() => void binding.activate({
+                actionKey: archived ? "reopen" : "archive",
+                itemKey: row.id,
+                query: binding.query,
+              })}
+            />
+          </PhiFlexControl>
+        );
+      })}
     </PhiFlexControl>
   );
 }
