@@ -6,6 +6,7 @@ import { PHI_THREADS_CONTROLLER_TYPE } from "./controller/address";
 import { PHI_THREADS_RUNTIME_CONTROLLER_DEFINITION } from "./controller/definition";
 import { PHI_THREADS_RUNTIME_DATA_PROVIDER_DESCRIPTORS } from "./data-providers";
 import { PHI_THREADS_FORM_HANDLER_PROVIDER_DESCRIPTORS } from "./forms";
+import { PHI_THREADS_USER_SPACE_MEDIA_KINDS } from "./media-spaces";
 
 /**
  * Conversations, as a person sees them.
@@ -46,11 +47,10 @@ export const PHI_THREADS_RUNTIME_MODULE_DEFINITION = {
    * a composer that offers a file on a Site with no User Spaces would be offering something the control
    * plane is going to refuse. Declaring it is what makes the offer honest.
    *
-   * The kinds are what a conversation carries: a screenshot, a recording, a log -- `text/plain` resolves
-   * to `document` -- and an archive of several. `binary` is absent for the reason the groups Module
-   * leaves it out: distributing executables is a Site decision taken in the Site Space.
+   * The kinds are their own module, because the composer reads the same list to decide what its file
+   * dialog accepts -- and it runs in a browser.
    */
   mediaSpaces: {
-    user: { kinds: ["image", "video", "audio", "pdf", "markdown", "document", "archive"] },
+    user: { kinds: PHI_THREADS_USER_SPACE_MEDIA_KINDS },
   },
 } satisfies PhiRuntimeModuleDefinition;

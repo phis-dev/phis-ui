@@ -22,7 +22,7 @@ import {
   findPhiThreadListenRoute,
   type PhiThreadWidgetConfig,
 } from "../thread-widget-config";
-import { PHI_THREADS_RUNTIME_MODULE_DEFINITION } from "../../definition";
+import { PHI_THREADS_USER_SPACE_MEDIA_KINDS } from "../../media-spaces";
 import type { PhiThreadComposerLabels } from "../../../../../components/widgets/label-sets/threads";
 import { PhiFlexControl } from "../../../../../components/controls/phi-flex-control";
 import { PhiTypographyControl } from "../../../../../components/controls/phi-typography-control";
@@ -102,7 +102,7 @@ export function PhiThreadComposerWidgetClient({
      * actually refuses.
      */
     acceptance: {
-      kinds: PHI_THREADS_RUNTIME_MODULE_DEFINITION.mediaSpaces.user.kinds,
+      kinds: PHI_THREADS_USER_SPACE_MEDIA_KINDS,
       multiple: true,
     },
     // Their own Space and nowhere else: custody follows the uploader, and it is the only place on the
