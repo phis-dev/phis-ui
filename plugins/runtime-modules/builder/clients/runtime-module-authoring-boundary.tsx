@@ -60,6 +60,10 @@ export function PhiBuilderRuntimeModuleAuthoringBoundary({
     () => activeEntries.flatMap((entry) => entry.dataProviderDescriptors),
     [activeEntries],
   );
+  const collectionItemRendererDescriptors = useMemo(
+    () => activeEntries.flatMap((entry) => entry.collectionItemRendererDescriptors),
+    [activeEntries],
+  );
   const calendarAdapterDescriptors = useMemo(
     () => activeEntries.flatMap((entry) => entry.calendarAdapterDescriptors),
     [activeEntries],
@@ -77,10 +81,18 @@ export function PhiBuilderRuntimeModuleAuthoringBoundary({
     setPhiBuilderModuleMetas(targetArea, {
       plugins,
       dataProviders: dataProviderDescriptors,
+      collectionItemRenderers: collectionItemRendererDescriptors,
       calendarAdapters: calendarAdapterDescriptors,
       forms: formOptions,
     });
-  }, [calendarAdapterDescriptors, dataProviderDescriptors, formOptions, plugins, targetArea]);
+  }, [
+    calendarAdapterDescriptors,
+    collectionItemRendererDescriptors,
+    dataProviderDescriptors,
+    formOptions,
+    plugins,
+    targetArea,
+  ]);
 
   return (
     <PhiRuntimeModuleProvider

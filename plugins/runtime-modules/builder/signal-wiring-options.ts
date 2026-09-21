@@ -10,9 +10,9 @@ import {
 import type {
   PhiSignalInputCapability,
   PhiSignalOutputCapability,
-  PhiSignalValueSchema,
 } from "../../../types/signals";
 import type { PhiRuntimeModuleDataProviderDescriptor } from "../contracts";
+import { readPhiBuilderBoundCollectionResource } from "./selected-collection-source";
 import {
   resolvePhiLayoutSignalEndpoints,
   resolvePhiRegionSignalEndpoints,
@@ -88,31 +88,6 @@ export function phiSignalCapabilitiesMatch(
 }
 
 /**
- * What the bound resource calls its selection, or nothing.
- *
- * The Widget's own config holds the binding, and the resource descriptors come from the Modules active
- * in this Area -- so the answer exists only for a placed instance, which is exactly when wiring happens.
- */
-function resolveBoundSelectionSchema(
-  config: Record<string, unknown> | null | undefined,
-  dataProviders: readonly PhiRuntimeModuleDataProviderDescriptor[],
-): PhiSignalValueSchema | null {
-  const source = config?.source;
-  if (!source || typeof source !== "object" || Array.isArray(source)) {
-    return null;
-  }
-  const { providerKey, resourceKey } = source as { providerKey?: unknown; resourceKey?: unknown };
-  if (typeof providerKey !== "string" || typeof resourceKey !== "string") {
-    return null;
-  }
-  const provider = dataProviders.find((candidate) => candidate.key === providerKey);
-  if (provider?.kind !== "collection") {
-    return null;
-  }
-  return provider.resources.find((resource) => resource.resourceKey === resourceKey)?.selectionValueSchema ?? null;
-}
-
-/**
  * Turns a deferred capability into a concrete one, here and not in the runtime.
  *
  * Wiring is where a schema first has to be a name: the route records it, the receiver is matched against
@@ -128,7 +103,7 @@ function resolveDeferredOutputSchemas(
   if (!endpoints.some((endpoint) => endpoint.emits.some((capability) => capability.valueSchemaFrom != null))) {
     return [...endpoints];
   }
-  const schema = resolveBoundSelectionSchema(config, dataProviders);
+  const schema = readPhiBuilderBoundCollectionResource(config, dataProviders)?.selectionValueSchema ?? null;
   return endpoints.map((endpoint) => ({
     ...endpoint,
     emits: endpoint.emits.flatMap((capability) => {

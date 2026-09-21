@@ -73,6 +73,16 @@ export const PHI_BUILDER_RUNTIME_DATA_PROVIDER_CLIENT_DEFINITIONS = [
         .PhiBuilderNavigationSetsOptionsProviderClient,
   },
   {
+    key: PHI_BUILDER_RUNTIME_DATA_PROVIDER_KEYS.collectionItemRenderers,
+    ownerModuleId: PHI_BUILDER_RUNTIME_MODULE_ID,
+    loadLive: async () =>
+      (await import("./options-providers"))
+        .PhiBuilderCollectionItemRenderersOptionsProviderClient,
+    loadAuthoring: async () =>
+      (await import("./options-providers"))
+        .PhiBuilderCollectionItemRenderersOptionsProviderClient,
+  },
+  {
     key: PHI_BUILDER_RUNTIME_DATA_PROVIDER_KEYS.forms,
     ownerModuleId: PHI_BUILDER_RUNTIME_MODULE_ID,
     loadLive: async () =>

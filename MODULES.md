@@ -475,6 +475,14 @@ the owning Module, and no branch in Core. The key to cite is the Foundation's
 (`PHI_MEDIA_LIBRARY_ITEM_RENDERER_KEY`), never the Module's file. A named renderer whose Module is not
 active in the Area is reported inside the block.
 
+So that a Site can find one, a Module declares what it offers in `collectionItemRenderers`:
+`{ key, rendersItemsOf, title }`, where `key` is the Render Client it registers and `rendersItemsOf` is
+the resource `itemRendererKey` it stands in for. The two are equal for the renderer a Provider ships
+with its own resource, which declares itself like any other rather than appearing as an unnamed default.
+The Builder offers exactly the renderers declared for the bound resource's contract. Nothing validates
+`rendersItemsOf` against the Module that owns those items -- it may not be installed -- so the check is
+that both keys are namespaced and that a Module does not offer the same renderer twice.
+
 The same shape frees what a Collection *emits*. A generic Widget cannot know what a selection means, so
 `collection-view` declares `valueSchemaFrom: "data-source"` and the resource declares
 `selectionValueSchema` ([SIGNALS.md](./SIGNALS.md)). Data, drawing, and meaning are all the bound

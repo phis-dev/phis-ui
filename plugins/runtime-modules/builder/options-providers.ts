@@ -32,6 +32,7 @@ import {
 } from "./developer-workspace-store";
 import type { PhiDeveloperBuilderWorkspaceState } from "./developer-workspace-types";
 import { getPhiBuilderModuleMetasSnapshot } from "./plugin-meta-store";
+import { resolvePhiBuilderSelectedCollectionItemContract } from "./selected-collection-source";
 
 function readBuilderSnapshot(context: PhiControlOptionsProviderContext) {
   return context.snapshot as PhiDeveloperBuilderWorkspaceState;
@@ -294,6 +295,43 @@ const builderProviderStore = {
   subscribe: (listener: () => void) => builderWorkspaceStore.subscribe("public", listener),
   getSnapshot: () => getPhiDeveloperBuilderStateSnapshot("public"),
 };
+
+/**
+ * The renderers on offer for whatever this Collection View is bound to.
+ *
+ * The bound resource names the item contract, and every active Module that declared a renderer for that
+ * contract appears -- including the one the provider ships, which declares itself like any other. So the
+ * list is empty until a source is chosen, which is correct: without items there is nothing to draw, and
+ * offering renderers for an unknown shape would only let an author pick one that cannot read the data.
+ *
+ * Nothing here knows what a media asset is. The Module that owns the items published a contract when it
+ * named its resource's renderer, and the Modules offering alternatives cite that name.
+ */
+function resolveCollectionItemRendererOptions(
+  context: PhiControlOptionsProviderContext,
+): PhiResolvedControlOptions {
+  const state = readBuilderSnapshot(context);
+  const metas = getPhiBuilderModuleMetasSnapshot(state.area);
+  const itemRendererKey = resolvePhiBuilderSelectedCollectionItemContract(state, metas.dataProviders ?? []);
+  if (!itemRendererKey) {
+    return { options: [] };
+  }
+  return {
+    options: (metas.collectionItemRenderers ?? [])
+      .filter((renderer) => renderer.rendersItemsOf === itemRendererKey)
+      .map((renderer) => ({
+        value: renderer.key,
+        label: renderer.title,
+        description: renderer.description,
+      })),
+  };
+}
+
+export const PhiBuilderCollectionItemRenderersOptionsProviderClient = createPhiControlOptionsProviderClient({
+  key: PHI_BUILDER_RUNTIME_DATA_PROVIDER_KEYS.collectionItemRenderers,
+  ...builderProviderStore,
+  resolve: resolveCollectionItemRendererOptions,
+});
 
 export const PhiBuilderPagesOptionsProviderClient = createPhiControlOptionsProviderClient({
   key: PHI_BUILDER_RUNTIME_DATA_PROVIDER_KEYS.builderPages,

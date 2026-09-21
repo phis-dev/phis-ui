@@ -1,6 +1,25 @@
 import type { PhiRuntimeDataProviderBinding } from "./runtime-data-provider";
 import type { PhiSignalValueSchema } from "./signals";
 
+/**
+ * A renderer a Module offers for Collection items, its own or somebody else's.
+ *
+ * `key` is the Render Client the Module registers; `rendersItemsOf` is the resource `itemRendererKey`
+ * it can stand in for. The two are the same for the renderer a provider ships with its own resource,
+ * and differ for every alternative -- which is the whole point: a Module states that it can draw items
+ * it does not own, and says so by naming the contract rather than the provider, so it never has to
+ * import the Module that owns them.
+ *
+ * Declaring is not registering. This is what the Builder reads to offer a choice; the component itself
+ * is an ordinary Render Client entry in the Area's manifest.
+ */
+export type PhiCollectionItemRendererDescriptor = {
+  key: `${string}/${string}`;
+  rendersItemsOf: `${string}/${string}`;
+  title: string;
+  description?: string;
+};
+
 export type PhiCollectionProviderFilterType = "string" | "enum" | "enum[]" | "path";
 
 export type PhiCollectionProviderFilterDescriptor = {

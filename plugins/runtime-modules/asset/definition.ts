@@ -2,7 +2,7 @@ import { PHI_ASSET_RUNTIME_CONTROLLER_DEFINITION } from "../../../components/med
 import { PHI_ASSET_CONTROLLER_TYPE } from "../../../components/media/asset-controller-address";
 import type { PhiRuntimeModuleDefinition } from "../contracts";
 import { buildPhiRuntimeModuleControllerDescriptor } from "../contracts";
-import { PHI_ASSET_RUNTIME_MODULE_ID } from "./ids";
+import { PHI_ASSET_RUNTIME_ITEM_RENDERER_KEY, PHI_ASSET_RUNTIME_MODULE_ID } from "./ids";
 import { PHI_ASSET_RUNTIME_DATA_PROVIDER_DESCRIPTORS } from "./data-providers";
 import { PHI_CMS_AREA_KEYS } from "../../../constants/cms-areas";
 import { PHI_CORE_SERVER_BINDING } from "../../../types/server-capabilities";
@@ -26,6 +26,14 @@ export const PHI_ASSET_RUNTIME_MODULE_DEFINITION = {
   iconFamily: "media",
   controllerMountPolicy: "area",
   dataProviders: PHI_ASSET_RUNTIME_DATA_PROVIDER_DESCRIPTORS,
+  // Its own card, declared like anybody else's would be: what a Site picks from is one list, and the
+  // renderer a provider ships is in it under its own name rather than as an unnamed default.
+  collectionItemRenderers: [{
+    key: PHI_ASSET_RUNTIME_ITEM_RENDERER_KEY,
+    rendersItemsOf: PHI_ASSET_RUNTIME_ITEM_RENDERER_KEY,
+    title: "Media asset card",
+    description: "Thumbnail, name and metadata, with the Module's own selection and actions.",
+  }],
   formProviders: {
     fieldTypes: [PHI_ASSET_FOCAL_RECT_FORM_PROVIDER_DESCRIPTOR],
     handlers: [

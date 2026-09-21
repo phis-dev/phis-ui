@@ -126,6 +126,15 @@ export const PHI_BUILDER_RUNTIME_DATA_PROVIDER_DESCRIPTORS = [
     description: "Navigation set choices for the active Builder area.",
   },
   {
+    key: PHI_BUILDER_RUNTIME_DATA_PROVIDER_KEYS.collectionItemRenderers,
+    ownerModuleId: PHI_BUILDER_RUNTIME_MODULE_ID,
+    kind: "options",
+    executionMode: "static",
+    authoringMode: "read",
+    title: "Collection item renderers",
+    description: "Renderers the active Modules offer for the items of the bound Collection resource.",
+  },
+  {
     key: PHI_BUILDER_RUNTIME_DATA_PROVIDER_KEYS.forms,
     ownerModuleId: PHI_BUILDER_RUNTIME_MODULE_ID,
     kind: "options",

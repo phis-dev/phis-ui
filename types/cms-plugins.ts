@@ -785,6 +785,15 @@ export type PhiRuntimeModuleDefinition = {
     readonly supportQueues?: readonly import("./seed").PhisDeclaredSupportQueue[];
     readonly supportTicketTypes?: readonly import("./seed").PhisDeclaredSupportTicketType[];
   };
+  /**
+   * Renderers this Module offers for Collection items.
+   *
+   * Separate from `dataProviders` because it is the one contribution that is deliberately about another
+   * Module's data: a Module may declare a renderer for items whose provider it does not own, and a Site
+   * chooses it in the Collection View's `itemRendererKey`. The Module owning the items is not consulted
+   * and does not have to be -- it published a contract when it named its resource's renderer.
+   */
+  collectionItemRenderers?: readonly import("./collection-provider").PhiCollectionItemRendererDescriptor[];
   calendarAdapters?: readonly PhiCalendarAdapterDescriptor[];
   formProviders?: PhiRuntimeModuleFormProviderDescriptors;
   authUiProvider?: {

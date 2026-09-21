@@ -9,6 +9,7 @@ import type {
 import type { PhiCmsWidgetPlugin } from "../../../../../types/cms-plugins";
 import { PHI_SIGNAL_VALUE_SCHEMAS, readPhiSignalRouteSet, type PhiSignalRouteSet } from "../../../../../types/signals";
 import { isPhiNamespacedRuntimeKey, isPhiRuntimeDataProviderKey } from "../../../../../types/runtime-data-provider";
+import { PHI_BUILDER_RUNTIME_DATA_PROVIDER_KEYS } from "../../../builder/ids";
 import { readPhiLengthValue, type PhiCssLength } from "../../../../../types/length";
 import { readBoolean, readNumber, readString, type PhiCmsWidgetConfigBase } from "../../../../../components/widgets/config/parser-primitives";
 
@@ -302,7 +303,22 @@ export const PHI_COLLECTION_VIEW_WIDGET_DEFINITION = {
   },
   fields: [
     { key: "source", type: "data-provider", providerKind: "collection", label: "Collection Provider" },
-    { key: "itemRendererKey", type: "string", label: "Item Renderer" },
+    {
+      key: "itemRendererKey",
+      type: "choice",
+      label: "Item Renderer",
+      presentation: "select",
+      optionsProvider: {
+        providerKey: PHI_BUILDER_RUNTIME_DATA_PROVIDER_KEYS.collectionItemRenderers,
+        loadMode: "client",
+        // The list is a function of the binding, so changing the binding has to re-ask; `required` is
+        // what keeps it empty, rather than wrong, until there is one.
+        dependencies: [{ param: "source", source: "config", valuePath: "source", required: true }],
+      },
+      emptyOption: { value: "", label: "Provider default" },
+      emptyValue: null,
+      placeholder: "Bind a Collection Provider first",
+    },
     { key: "presentation.title", type: "string", label: "Title" },
     { key: "presentation.description", type: "string", label: "Description" },
     {

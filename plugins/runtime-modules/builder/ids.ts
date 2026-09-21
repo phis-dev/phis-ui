@@ -12,6 +12,7 @@ export const PHI_BUILDER_RUNTIME_DATA_PROVIDER_KEYS = {
   areaRootRoute: createPhiSharedRuntimeDataProviderKey("options", "builder-area-root-route"),
   landingPage: createPhiSharedRuntimeDataProviderKey("options", "builder-landing-page"),
   builderNavigationSets: createPhiSharedRuntimeDataProviderKey("options", "builder-navigation-sets"),
+  collectionItemRenderers: createPhiSharedRuntimeDataProviderKey("options", "builder-collection-item-renderers"),
   runtimeModules: createPhiSharedRuntimeDataProviderKey("options", "runtime-modules"),
   runtimeModulesTable: createPhiSharedRuntimeDataProviderKey("tables", "runtime-modules"),
   /*

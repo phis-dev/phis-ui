@@ -71,6 +71,7 @@ export function buildPhiBuilderModuleAuthoringCatalog({
       })),
       layoutTypes: layouts.map(buildPhiRuntimeModuleLayoutType),
       dataProviderDescriptors: entry.definition.dataProviders ?? [],
+      collectionItemRendererDescriptors: entry.definition.collectionItemRenderers ?? [],
       calendarAdapterDescriptors: entry.definition.calendarAdapters ?? [],
       formOptions: (entry.forms ?? []).map((form) => ({
         value: form.formId,

@@ -415,6 +415,29 @@ function assertPhiDataProviderResources(
   assertPhiCollectionProviderResources(moduleId, provider);
 }
 
+/**
+ * A renderer offer is checked here and nowhere else.
+ *
+ * What it claims to render belongs to another Module, so there is nothing to cross-check it against:
+ * the Module owning those items may not even be installed. What can be checked is that both keys are
+ * namespaced and that the Module does not offer the same renderer twice.
+ */
+function assertPhiCollectionItemRenderers(definition: PhiRuntimeModuleDefinition) {
+  const keys = new Set<string>();
+  for (const renderer of definition.collectionItemRenderers ?? []) {
+    if (!isPhiNamespacedRuntimeKey(renderer.key) || !isPhiNamespacedRuntimeKey(renderer.rendersItemsOf)) {
+      throw new Error(`${definition.moduleId}: item renderer "${renderer.key}" has an invalid key.`);
+    }
+    if (!renderer.title.trim()) {
+      throw new Error(`${definition.moduleId}: item renderer "${renderer.key}" has no title.`);
+    }
+    if (keys.has(renderer.key)) {
+      throw new Error(`${definition.moduleId}: duplicate item renderer "${renderer.key}".`);
+    }
+    keys.add(renderer.key);
+  }
+}
+
 function assertPhiRuntimeModuleMetadata(definition: PhiRuntimeModuleDefinition) {
   for (const [key, value] of [
     ["title", definition.title],
@@ -434,6 +457,7 @@ function assertPhiRuntimeModuleMetadata(definition: PhiRuntimeModuleDefinition) 
   if (isPhiOwnedRuntimeModuleId(definition.moduleId) && sourceLocale !== "en") {
     throw new Error(`${definition.moduleId}: Phi-owned Modules must use English canonical copy.`);
   }
+  assertPhiCollectionItemRenderers(definition);
   if (definition.authUiProvider) {
     if (!isPhiNamespacedRuntimeKey(definition.authUiProvider.providerKey)) {
       throw new Error(`${definition.moduleId}: Auth UI provider key must be namespaced.`);
