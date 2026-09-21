@@ -68,6 +68,14 @@ export async function buildPhiDefaultAppThreadsPageTree({
         id: PHI_APP_THREADS_PAGE_WIDGET_IDS.widgetInbox,
         parentLayoutNodeId: PHI_BASE_PAGE_LAYOUT_NODE_ID,
         typeKey: "collection-view",
+        /*
+         * One slot index per child, not one slot with three children.
+         *
+         * The scaffold renders sequential slots: `buildSequentialSlots` assigns by `slotIndex`, so
+         * three nodes sharing an index are three assignments to the same place and only the last
+         * survives -- silently, because an overwritten node never reaches the tree that would have
+         * reported it missing.
+         */
         slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
         sortOrder: 0,
         label: labels.inboxTitle,
@@ -128,7 +136,7 @@ export async function buildPhiDefaultAppThreadsPageTree({
         id: PHI_APP_THREADS_PAGE_WIDGET_IDS.widgetConversation,
         parentLayoutNodeId: PHI_BASE_PAGE_LAYOUT_NODE_ID,
         typeKey: "thread-conversation",
-        slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
+        slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX + 1,
         sortOrder: 1,
         label: labels.title,
         config: {
@@ -159,7 +167,7 @@ export async function buildPhiDefaultAppThreadsPageTree({
         id: PHI_APP_THREADS_PAGE_WIDGET_IDS.widgetComposer,
         parentLayoutNodeId: PHI_BASE_PAGE_LAYOUT_NODE_ID,
         typeKey: "thread-composer",
-        slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
+        slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX + 2,
         sortOrder: 2,
         label: labels.composerLabel,
         config: {
