@@ -243,6 +243,68 @@ while (queue.length > 0) {
   }
 }
 
+// Rule 3: a Module definition stays on the Server. It is a declaration about the whole Module --
+// its Providers, its Forms, its Widgets -- and importing it as a value carries all of them into
+// whatever bundle the importer belongs to. The conversations composer did it for one list of media
+// kinds and pulled the Module's Forms into the browser with it; that only surfaced once a Form
+// reached a Server-only label set, which means the import had been wrong for as long as it existed
+// and nothing said so. Anything both halves of the seam read belongs in a module of its own.
+const moduleDefinitions = new Set();
+for (const file of allSourceFiles) {
+  if (file.endsWith(".test.ts") || file.endsWith(".test.tsx")) {
+    continue;
+  }
+  if (/\bsatisfies\s+PhiRuntimeModuleDefinition\b/.test(await readSource(file))) {
+    moduleDefinitions.add(file);
+  }
+}
+
+const clientRoots = [];
+for (const file of allSourceFiles) {
+  if (hasUseClientDirective(await readSource(file))) {
+    clientRoots.push(file);
+  }
+}
+
+// Which client module first reached each file, so a violation can print the way in rather than just
+// the two ends of it.
+const clientReachedFrom = new Map(clientRoots.map((file) => [file, null]));
+const clientQueue = [...clientRoots];
+while (clientQueue.length > 0) {
+  const current = clientQueue.shift();
+  const source = await readSource(current);
+  for (const { target, statement, typeOnly } of [
+    ...readStaticImports(source, current),
+    ...readDynamicImports(source, current),
+  ]) {
+    if (typeOnly) {
+      continue;
+    }
+    if (moduleDefinitions.has(target)) {
+      const chain = [];
+      for (let step = current; step != null; step = clientReachedFrom.get(step) ?? null) {
+        chain.unshift(path.relative(repositoryRoot, step));
+      }
+      failures.push(
+        [
+          `${path.relative(repositoryRoot, current)} reaches a Module definition from the Client graph:`,
+          `    ${statement}`,
+          `    -> ${path.relative(repositoryRoot, target)}`,
+          `    Reached through: ${chain.join(" -> ")}`,
+          "    A definition declares the whole Module, so the import carries its Providers, Forms and",
+          "    everything they import into the browser bundle. Put what both halves read in its own",
+          "    module and have the definition read it too.",
+        ].join("\n"),
+      );
+      continue;
+    }
+    if (!clientReachedFrom.has(target)) {
+      clientReachedFrom.set(target, current);
+      clientQueue.push(target);
+    }
+  }
+}
+
 if (failures.length > 0) {
   console.error("Render-Client boundary violations:");
   for (const failure of failures) {
@@ -254,5 +316,6 @@ if (failures.length > 0) {
 console.log(
   `Render-Client boundaries validated: ${layoutClients.size} Layout clients behind "use client", ` +
     `${registeredClients.size} registered Render Clients, ` +
-    `${visitedServerModules.size} server modules reachable from ${nextEntries.length} Next entries.`,
+    `${visitedServerModules.size} server modules reachable from ${nextEntries.length} Next entries, ` +
+    `${moduleDefinitions.size} Module definitions out of reach of ${clientRoots.length} Client roots.`,
 );

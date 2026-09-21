@@ -330,6 +330,12 @@ ownership, and invalid Area selections are hard errors before rendering starts.
 - optional Controller descriptor and mount policy;
 - serializable Provider and adapter descriptors.
 
+Server-safe also means it stays there. A Client Widget must not import its Module's definition, not even
+for one field: the definition declares the whole Module, so the import carries its Providers, its Forms
+and everything those import into the browser bundle. What both halves of the seam read -- the media
+kinds a file dialog accepts being the case that keeps coming up -- goes in a module of its own that the
+definition reads too. `validate-render-client-boundaries` walks the Client graph and refuses the import.
+
 ## Module source locale and authored copy
 
 Every Module has exactly one canonical `sourceLocale`. Omission means `en`. Phi-owned Modules author all

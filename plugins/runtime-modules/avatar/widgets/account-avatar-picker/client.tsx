@@ -7,7 +7,7 @@ import { PhiFileDropControl } from "../../../../../components/controls/phi-file-
 import { PhiProgressControl } from "../../../../../components/controls/phi-progress-control";
 import { PhiAlertControl } from "../../../../../components/controls/phi-alert-control";
 import { usePhiMediaUpload } from "../../../../../components/media/phi-media-upload";
-import { PHI_AVATAR_RUNTIME_MODULE_DEFINITION } from "../../../../../plugins/runtime-modules/avatar/definition";
+import { PHI_AVATAR_USER_SPACE_MEDIA_KINDS } from "../../../../../plugins/runtime-modules/avatar/media-spaces";
 import { setPhiViewerAvatar } from "../../../../../components/account/avatar-client";
 import { PHI_AVATAR_REVISION } from "../../../../../components/account/avatar-revision";
 import { PHI_AVATAR_OVERLAY_IDS } from "../../../../../components/runtime/avatar-overlay-ids";
@@ -81,7 +81,7 @@ export function PhiAccountAvatarPickerWidgetClient({
      * be accepted.
      */
     acceptance: {
-      kinds: PHI_AVATAR_RUNTIME_MODULE_DEFINITION.mediaSpaces.user.kinds,
+      kinds: PHI_AVATAR_USER_SPACE_MEDIA_KINDS,
       multiple: false,
     },
     initOptions: { spaceAddress: "user" },

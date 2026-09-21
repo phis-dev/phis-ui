@@ -1,6 +1,7 @@
 import type { PhiCmsAreaKey } from "../../../constants/cms-areas";
 import type { PhiRuntimeModuleDefinition } from "../contracts";
 import { PHI_AVATAR_RUNTIME_MODULE_ID } from "./ids";
+import { PHI_AVATAR_USER_SPACE_MEDIA_KINDS } from "./media-spaces";
 import { PHI_CORE_SERVER_BINDING } from "../../../types/server-capabilities";
 
 /**
@@ -25,5 +26,7 @@ export const PHI_AVATAR_RUNTIME_MODULE_DEFINITION = {
   category: "identity",
   iconFamily: "account",
   // A picture and nothing else: the Module has one purpose and states it rather than inheriting a list.
-  mediaSpaces: { user: { kinds: ["image"] } },
+  // The list is its own module, because the picker reads the same one to decide what its file dialog
+  // accepts -- and it runs in a browser.
+  mediaSpaces: { user: { kinds: PHI_AVATAR_USER_SPACE_MEDIA_KINDS } },
 } satisfies PhiRuntimeModuleDefinition;
