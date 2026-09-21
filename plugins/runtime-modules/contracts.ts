@@ -19,6 +19,7 @@ import { isPhiCmsAreaKey } from "../../constants/cms-areas";
 import { PHI_MODULE_MARKER, isPhiRuntimeModuleId } from "../../constants/module-identity";
 import { isPhiCmsPluginCategory } from "../../constants/cms-plugin-categories";
 import { assertPhiSignalPluginMetaContract, isPhiSignalValueSchema } from "../../types/signals";
+import { isPhiNamespacedRuntimeKey } from "../../types/runtime-data-provider";
 import {
   isPhiViewerAccessPolicyProviderOwned,
   type PhiRoleProviderId,
@@ -108,11 +109,6 @@ export function buildPhiRuntimeModuleControllerDescriptor(
   };
 }
 
-function isNamespacedRuntimeKey(value: string) {
-  const separatorIndex = value.lastIndexOf("/");
-  return separatorIndex > 0 && separatorIndex < value.length - 1;
-}
-
 function assertPhiTableProviderResources(
   moduleId: PhiRuntimeModuleId,
   provider: PhiRuntimeModuleDataProviderDescriptor,
@@ -174,7 +170,7 @@ function assertPhiTableProviderResources(
           throw new Error(`${moduleId}: Table field "${resource.resourceKey}/${field.key}" has invalid options.`);
         }
       }
-      if (field.editor?.fieldProviderKey && !isNamespacedRuntimeKey(field.editor.fieldProviderKey)) {
+      if (field.editor?.fieldProviderKey && !isPhiNamespacedRuntimeKey(field.editor.fieldProviderKey)) {
         throw new Error(`${moduleId}: Table field "${resource.resourceKey}/${field.key}" has an invalid editor key.`);
       }
     }
@@ -209,7 +205,7 @@ function assertPhiTableProviderResources(
       throw new Error(`${moduleId}: tree row ordering requires a declared hierarchy.`);
     }
     for (const capability of [...(resource.dragSources ?? []), ...(resource.dropTargets ?? [])]) {
-      if (!isNamespacedRuntimeKey(capability.payloadType) ||
+      if (!isPhiNamespacedRuntimeKey(capability.payloadType) ||
         capability.modes?.some((mode) => !["before", "after", "child", "replace", "append"].includes(mode))) {
         throw new Error(`${moduleId}: Table resource "${resource.resourceKey}" has an invalid DnD capability.`);
       }
@@ -324,12 +320,12 @@ function assertPhiTreeProviderResources(
       }
     }
     for (const capability of resource.dragSources ?? []) {
-      if (!isNamespacedRuntimeKey(capability.payloadType) || !fieldKeys.has(capability.sourceObjectIdentityPath)) {
+      if (!isPhiNamespacedRuntimeKey(capability.payloadType) || !fieldKeys.has(capability.sourceObjectIdentityPath)) {
         throw new Error(`${moduleId}: Tree resource "${resource.resourceKey}" has an invalid drag source.`);
       }
     }
     for (const capability of resource.dropTargets ?? []) {
-      if (!isNamespacedRuntimeKey(capability.payloadType) ||
+      if (!isPhiNamespacedRuntimeKey(capability.payloadType) ||
         capability.modes?.some((mode) => !["before", "after", "child", "replace", "append"].includes(mode))) {
         throw new Error(`${moduleId}: Tree resource "${resource.resourceKey}" has an invalid drop target.`);
       }
@@ -373,7 +369,7 @@ function assertPhiCollectionProviderResources(
       throw new Error(`${moduleId}: Collection provider "${provider.key}" has an invalid resource key.`);
     }
     resourceKeys.add(resource.resourceKey);
-    if (!resource.title.trim() || !resource.itemIdentityPath.trim() || !isNamespacedRuntimeKey(resource.itemRendererKey)) {
+    if (!resource.title.trim() || !resource.itemIdentityPath.trim() || !isPhiNamespacedRuntimeKey(resource.itemRendererKey)) {
       throw new Error(`${moduleId}: Collection resource "${resource.resourceKey}" has invalid identity or renderer metadata.`);
     }
     // A resource that announces a selection says under which name, because the Widget showing it will
@@ -439,7 +435,7 @@ function assertPhiRuntimeModuleMetadata(definition: PhiRuntimeModuleDefinition) 
     throw new Error(`${definition.moduleId}: Phi-owned Modules must use English canonical copy.`);
   }
   if (definition.authUiProvider) {
-    if (!isNamespacedRuntimeKey(definition.authUiProvider.providerKey)) {
+    if (!isPhiNamespacedRuntimeKey(definition.authUiProvider.providerKey)) {
       throw new Error(`${definition.moduleId}: Auth UI provider key must be namespaced.`);
     }
     if (
@@ -610,7 +606,7 @@ export function createPhiRuntimeModuleCatalog(
     );
     const hasController = hasPhiRuntimeModuleController(definition);
     if (hasController) {
-      if (!isNamespacedRuntimeKey(definition.controllerType)) {
+      if (!isPhiNamespacedRuntimeKey(definition.controllerType)) {
         throw new Error(`Invalid runtime module controller type "${definition.controllerType}".`);
       }
       const descriptorControllerType = `${definition.controller.pluginKey}/${definition.controller.key}`;
@@ -674,7 +670,7 @@ export function createPhiRuntimeModuleCatalog(
       }
     }
     for (const provider of definition.dataProviders ?? []) {
-      if (!isNamespacedRuntimeKey(provider.key)) {
+      if (!isPhiNamespacedRuntimeKey(provider.key)) {
         throw new Error(`${definition.moduleId}: invalid data provider key "${provider.key}".`);
       }
       if (provider.ownerModuleId !== definition.moduleId) {
@@ -720,7 +716,7 @@ export function createPhiRuntimeModuleCatalog(
     ] as const;
     for (const [kind, providers, owners] of formProviderFamilies) {
       for (const provider of providers) {
-        if (!isNamespacedRuntimeKey(provider.key)) {
+        if (!isPhiNamespacedRuntimeKey(provider.key)) {
           throw new Error(`${definition.moduleId}: invalid form ${kind} provider key "${provider.key}".`);
         }
         if (provider.ownerModuleId !== definition.moduleId) {
@@ -849,7 +845,7 @@ export function createPhiRuntimeModuleCatalog(
         throw new Error(`${entry.definition.moduleId}: widget "${type}" has duplicate required data providers.`);
       }
       for (const providerKey of requiredProviderKeys) {
-        if (!isNamespacedRuntimeKey(providerKey)) {
+        if (!isPhiNamespacedRuntimeKey(providerKey)) {
           throw new Error(`${entry.definition.moduleId}: widget "${type}" has invalid data provider "${providerKey}".`);
         }
         if (!ownerModuleIdByDataProviderKey.has(providerKey)) {
@@ -897,7 +893,7 @@ export function assertPhiRuntimeModuleArtifacts(
     if (widget.ownerModuleId !== moduleId) {
       throw new Error(`${moduleId}: widget "${type}" has a different owner module id.`);
     }
-    if (!isNamespacedRuntimeKey(type)) {
+    if (!isPhiNamespacedRuntimeKey(type)) {
       throw new Error(`${moduleId}: invalid owned widget type "${type}".`);
     }
     if (widgetTypes.has(type)) {
@@ -937,7 +933,7 @@ export function assertPhiRuntimeModuleArtifacts(
     if (layout.ownerModuleId !== moduleId) {
       throw new Error(`${moduleId}: layout "${type}" has a different owner module id.`);
     }
-    if (!isNamespacedRuntimeKey(type)) {
+    if (!isPhiNamespacedRuntimeKey(type)) {
       throw new Error(`${moduleId}: invalid owned layout type "${type}".`);
     }
     if (layoutTypes.has(type)) {
