@@ -562,6 +562,42 @@ working-surface routes and navigation entries remain ordinary contributions unde
 Mutable Site Page paths and typed internal Page/Asset targets follow [REFERENCES.md](./REFERENCES.md).
 Module route paths remain descriptor-owned and cannot be changed by a Site Page Meta Form.
 
+### When a Module's page actually appears
+
+A route and its navigation entry are computed per request from the compiled catalog. Neither is
+materialized anywhere, so neither has a publish of its own: add a route, change its `path`, change its
+`navigation`, and the next request has it.
+
+What *is* stored is which Modules an Area carries. `config.modules.runtimeModules` on the Area preset is
+the whole switch. The Builder writes it as a module-change draft and it takes effect when that draft is
+published. An Area that has never been asked carries no such config at all, and then the code-owned
+default applies (`createPhiDefaultAreaRuntimeModuleIds`) -- which is the shipped selection and says
+nothing about what a Site has chosen. `[]` is a different answer again: every optional Module off.
+
+So the sequence for a new Module page is: activate the Module for the Area, save, publish the module
+change. Nothing about the route or the entry is published separately and nothing is swept.
+
+Three things make the "the Module is on and the sidebar is unchanged" state hard to read, and all three
+are deliberate:
+
+- **A navigation entry whose route does not resolve is dropped without a word.** That is `isUnrouted`:
+  the item named a route and got nothing back. It is also exactly what an entry left behind by a Module
+  that was switched off looks like, and the two cannot be told apart at that point -- which is why the
+  surface says nothing rather than guessing which one it is.
+- **A stored navigation overlay never hides a new entry.** It starts from the computed items and only
+  adds (`customItems`), relabels (`itemOverrides`), reorders (`placement`) or removes ids it names
+  explicitly (`tombstones`). If an entry is missing, a published navigation tree is not the reason.
+- **A Module route's path is namespaced.** `path: "/conversations"` is served at
+  `/phis/ui/conversations`. Requesting the declared path proves nothing about whether the route exists,
+  and an Area that answers signed-out requests with 404 rather than a redirect will not tell the
+  difference either.
+
+One more behaves the same way without being deliberate: an `antd:` icon name that neither registry knows
+renders nothing at all, silently. The preset icon guard checks the prefix; it does not check that the
+name resolves. `components/shell/phi-icon.tsx` holds the eagerly bundled set and
+`phi-management-icon.tsx` the lazily loaded one, and a name in neither leaves a blank where a mark was
+meant to be.
+
 ### Descriptor identity and instantiation
 
 Area-shell, Area-Overlay, route, navigation, Theme, and Theme-block descriptors are separate families

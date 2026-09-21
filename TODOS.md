@@ -449,6 +449,11 @@ built. Remove an entry when it is done.
 
 ## Contracts
 
+- **Check that a preset icon name resolves, not only that it is namespaced.**
+  `validate-preset-icon-vocabulary` accepts any `antd:*` name; a name in neither
+  `components/shell/phi-icon.tsx` nor `phi-management-icon.tsx` renders nothing at all, with no error
+  anywhere. Read both registries in the guard and fail on a name that is in neither.
+
 - **Machine-readable JSON schemas.** Signal `valueSchema` ids are enforced by TypeScript readers and
   emitters only. Add a runtime schema registry once the controller and Widget schema inventory is stable.
 - **Keep `scopeKey` separate from signal routing.** Audit new `scopeKey` uses; never derive a signal scope
