@@ -296,11 +296,30 @@ export type PhiSignalFilter = {
   valueSchemas?: readonly PhiSignalValueSchema[];
 };
 
+/**
+ * Where a sender's `json` schema comes from, when the Widget itself cannot know it.
+ *
+ * A Widget bound to a data provider shows whatever the bound resource holds, so what a selection *is* is
+ * the resource's answer and not the Widget's. Naming a schema in the capability freezes one provider's
+ * vocabulary into a generic Widget -- which is how `collection-view` came to announce every selection as
+ * a media asset, whichever provider was bound, and why a package from another repository could bind its
+ * own collection but not its own meaning.
+ *
+ * `data-source` defers the answer to the bound resource's descriptor. The Builder resolves it before the
+ * capability is offered for wiring, so the route that gets written carries a concrete schema and the
+ * runtime emits it like any other. Core never has to spell the name out.
+ *
+ * Only a sender may defer. A receiver has to know what it listens for before anything arrives, and it has
+ * no source to ask.
+ */
+export type PhiSignalValueSchemaOrigin = "data-source";
+
 export type PhiSignalOutputCapability = {
   id: string;
   action: PhiSignalAction;
   valueType: PhiSignalValueType;
   valueSchema?: PhiSignalValueSchema | null;
+  valueSchemaFrom?: PhiSignalValueSchemaOrigin | null;
   enumValues?: string[] | null;
   required?: boolean;
   target?: PhiSignalCapabilityTarget | null;
@@ -376,8 +395,20 @@ export function assertPhiSignalPluginMetaContract(
     if (!isPhiSignalValueType(capability.valueType)) {
       throw new Error(`${context}: sender output "${capability.id}" declares an invalid valueType.`);
     }
-    if (capability.valueType === "json" && !isPhiSignalValueSchema(capability.valueSchema)) {
-      throw new Error(`${context}: sender output "${capability.id}" with valueType "json" must declare valueSchema.`);
+    if (capability.valueSchemaFrom != null && !isPhiSignalValueSchemaOrigin(capability.valueSchemaFrom)) {
+      throw new Error(`${context}: sender output "${capability.id}" declares an invalid valueSchemaFrom.`);
+    }
+    if (capability.valueSchemaFrom != null && capability.valueType !== "json") {
+      throw new Error(`${context}: sender output "${capability.id}" may only defer a valueSchema with valueType "json".`);
+    }
+    if (capability.valueSchemaFrom != null && capability.valueSchema != null) {
+      throw new Error(`${context}: sender output "${capability.id}" declares a valueSchema and where to read one.`);
+    }
+    if (capability.valueType === "json" && capability.valueSchemaFrom == null &&
+      !isPhiSignalValueSchema(capability.valueSchema)) {
+      throw new Error(
+        `${context}: sender output "${capability.id}" with valueType "json" must declare valueSchema or valueSchemaFrom.`,
+      );
     }
     if (capability.target != null && !isPhiSignalCapabilityTarget(capability.target)) {
       throw new Error(`${context}: sender output "${capability.id}" declares an invalid target.`);
@@ -394,6 +425,11 @@ export function assertPhiSignalPluginMetaContract(
     }
     if (!isPhiSignalValueType(capability.valueType)) {
       throw new Error(`${context}: receiver input "${capability.id}" declares an invalid valueType.`);
+    }
+    if (capability.valueSchemaFrom != null) {
+      throw new Error(
+        `${context}: receiver input "${capability.id}" must not defer its valueSchema -- a receiver has no data source to read one from.`,
+      );
     }
     if (capability.valueType === "json" && !isPhiSignalValueSchema(capability.valueSchema)) {
       throw new Error(`${context}: receiver input "${capability.id}" with valueType "json" must declare valueSchema.`);
@@ -415,6 +451,10 @@ export function assertPhiSignalPluginMetaContract(
     }
     receiverInputKeys.add(key);
   }
+}
+
+export function isPhiSignalValueSchemaOrigin(value: unknown): value is PhiSignalValueSchemaOrigin {
+  return value === "data-source";
 }
 
 export function isPhiSignalCapabilityTarget(value: unknown): value is PhiSignalCapabilityTarget {

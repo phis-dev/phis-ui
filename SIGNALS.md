@@ -144,6 +144,15 @@ Every `json` capability and route names a value schema; non-JSON signals carry n
   key from its own name and never passes through this table.
 - A third-party package builds its schemas with `createPhiSignalValueSchema(packageName, schemaKey)` or
   its own module-scoped key.
+- **A generic sender defers its schema to whatever is bound to it.** A Widget backed by a data provider
+  cannot know what its selection means, because the bound resource decides that. Such an output declares
+  `valueSchemaFrom: "data-source"` in place of `valueSchema`, and the resource descriptor declares
+  `selectionValueSchema`. The Builder resolves the two when it writes the route, so matching and the
+  runtime only ever see an ordinary concrete schema, and a capability whose source declares nothing is
+  not offered at all. Only a sender may defer -- a receiver has to know what it listens for before
+  anything arrives, and has no source to ask. This is what keeps Core from spelling out a Module's name:
+  `collection-view` used to announce every selection as `mediaAssetSelection` whichever provider was
+  bound, so a collection from another package could be shown but could not mean anything of its own.
 - JSON routes match only when scope, channel, action, value type, and value schema are all compatible.
 
 ## Capabilities and routes
@@ -153,8 +162,9 @@ A plugin declares what it can do; a concrete instance stores how it is wired. Th
 - `fields` declares Inspector-editable config. Renderable-block `capabilities` declares binary interaction
   participation (`selectable`, `draggable`, `hoverable`, `activatable`, `focusable`, `droppable`).
   `runtimeSignals` declares signal capabilities. None of these is inferred from another.
-- `runtimeSignals.emits` lists sender outputs: `{ id, action, valueType, valueSchema?, enumValues?,
-  required?, target? }`. Outputs declare no channel and no scope.
+- `runtimeSignals.emits` lists sender outputs: `{ id, action, valueType, valueSchema?, valueSchemaFrom?,
+  enumValues?, required?, target? }`. Outputs declare no channel and no scope, and name either a schema
+  or where to read one, never both.
 - `runtimeSignals.listens` lists receiver inputs: the same fields plus `channel`. Inputs are unique per
   receiver by `channel + action + valueType + valueSchema` (`assertPhiSignalPluginMetaContract`).
   Receiver channels are fixed capabilities; free-text listener channels are not accepted.

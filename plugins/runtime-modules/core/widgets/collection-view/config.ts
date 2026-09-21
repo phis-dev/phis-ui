@@ -278,7 +278,10 @@ export const PHI_COLLECTION_VIEW_WIDGET_DEFINITION = {
   slotSizePolicy: "fill-inline",
   runtimeSignals: {
     emits: [
-      { id: "selection", action: "change", valueType: "json", valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.mediaAssetSelection },
+      // Not a schema of its own: this Widget shows whichever provider is bound to it, so the name a
+      // selection travels under is the bound resource's to declare. Core naming one here is how every
+      // collection, of every provider, used to announce itself as a media asset.
+      { id: "selection", action: "change", valueType: "json", valueSchemaFrom: "data-source" },
       { id: "actionActivate", action: "activate", valueType: "json", valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.collectionAction },
     ],
     listens: [

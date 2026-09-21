@@ -18,7 +18,7 @@ import type { PhiCmsAreaDefinition } from "../../types/cms-module-descriptors";
 import { isPhiCmsAreaKey } from "../../constants/cms-areas";
 import { PHI_MODULE_MARKER, isPhiRuntimeModuleId } from "../../constants/module-identity";
 import { isPhiCmsPluginCategory } from "../../constants/cms-plugin-categories";
-import { assertPhiSignalPluginMetaContract } from "../../types/signals";
+import { assertPhiSignalPluginMetaContract, isPhiSignalValueSchema } from "../../types/signals";
 import {
   isPhiViewerAccessPolicyProviderOwned,
   type PhiRoleProviderId,
@@ -375,6 +375,11 @@ function assertPhiCollectionProviderResources(
     resourceKeys.add(resource.resourceKey);
     if (!resource.title.trim() || !resource.itemIdentityPath.trim() || !isNamespacedRuntimeKey(resource.itemRendererKey)) {
       throw new Error(`${moduleId}: Collection resource "${resource.resourceKey}" has invalid identity or renderer metadata.`);
+    }
+    // A resource that announces a selection says under which name, because the Widget showing it will
+    // not: `collection-view` defers that to whatever is bound to it.
+    if (resource.selectionValueSchema != null && !isPhiSignalValueSchema(resource.selectionValueSchema)) {
+      throw new Error(`${moduleId}: Collection resource "${resource.resourceKey}" declares an invalid selection schema.`);
     }
     if (resource.defaultForWidget) defaultCount += 1;
     const filterKeys = (resource.query.filterFields ?? []).map((field) => field.key);

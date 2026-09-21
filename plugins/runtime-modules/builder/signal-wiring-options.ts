@@ -10,7 +10,9 @@ import {
 import type {
   PhiSignalInputCapability,
   PhiSignalOutputCapability,
+  PhiSignalValueSchema,
 } from "../../../types/signals";
+import type { PhiRuntimeModuleDataProviderDescriptor } from "../contracts";
 import {
   resolvePhiLayoutSignalEndpoints,
   resolvePhiRegionSignalEndpoints,
@@ -78,12 +80,69 @@ export function phiSignalCapabilitiesMatch(
     output &&
     input &&
     output.valueType === input.valueType &&
+    // An output that still defers its schema has not been resolved against a bound source, so there is
+    // nothing yet to compare and nothing worth offering.
+    output.valueSchemaFrom == null &&
     (output.valueType !== "json" || output.valueSchema === input.valueSchema),
   );
 }
 
+/**
+ * What the bound resource calls its selection, or nothing.
+ *
+ * The Widget's own config holds the binding, and the resource descriptors come from the Modules active
+ * in this Area -- so the answer exists only for a placed instance, which is exactly when wiring happens.
+ */
+function resolveBoundSelectionSchema(
+  config: Record<string, unknown> | null | undefined,
+  dataProviders: readonly PhiRuntimeModuleDataProviderDescriptor[],
+): PhiSignalValueSchema | null {
+  const source = config?.source;
+  if (!source || typeof source !== "object" || Array.isArray(source)) {
+    return null;
+  }
+  const { providerKey, resourceKey } = source as { providerKey?: unknown; resourceKey?: unknown };
+  if (typeof providerKey !== "string" || typeof resourceKey !== "string") {
+    return null;
+  }
+  const provider = dataProviders.find((candidate) => candidate.key === providerKey);
+  if (provider?.kind !== "collection") {
+    return null;
+  }
+  return provider.resources.find((resource) => resource.resourceKey === resourceKey)?.selectionValueSchema ?? null;
+}
+
+/**
+ * Turns a deferred capability into a concrete one, here and not in the runtime.
+ *
+ * Wiring is where a schema first has to be a name: the route records it, the receiver is matched against
+ * it, and from then on the runtime reads the route rather than the capability. A capability whose source
+ * declares nothing is dropped instead of offered -- a route built from it could never carry a value the
+ * receiver reads, and nothing at runtime would say so.
+ */
+function resolveDeferredOutputSchemas(
+  endpoints: readonly PhiSignalEndpoint[],
+  config: Record<string, unknown> | null | undefined,
+  dataProviders: readonly PhiRuntimeModuleDataProviderDescriptor[],
+): PhiSignalEndpoint[] {
+  if (!endpoints.some((endpoint) => endpoint.emits.some((capability) => capability.valueSchemaFrom != null))) {
+    return [...endpoints];
+  }
+  const schema = resolveBoundSelectionSchema(config, dataProviders);
+  return endpoints.map((endpoint) => ({
+    ...endpoint,
+    emits: endpoint.emits.flatMap((capability) => {
+      if (capability.valueSchemaFrom == null) {
+        return [capability];
+      }
+      return schema ? [{ ...capability, valueSchema: schema, valueSchemaFrom: null }] : [];
+    }),
+  }));
+}
+
 export function resolvePhiBuilderSelectedSignalEndpoints(state: PhiDeveloperBuilderWorkspaceState): PhiSignalEndpoint[] {
-  const plugins = getPhiBuilderModuleMetasSnapshot(state.area).plugins ?? [];
+  const metas = getPhiBuilderModuleMetasSnapshot(state.area);
+  const plugins = metas.plugins ?? [];
   const routeScope = "area" as const;
   if (state.nodeKind === "region") {
     const regionKey = state.selectedRegionKey;
@@ -109,15 +168,19 @@ export function resolvePhiBuilderSelectedSignalEndpoints(state: PhiDeveloperBuil
         (candidate.typeKey === widget.widgetType || `${candidate.pluginKey}/${candidate.typeKey}` === widget.widgetType))
       : null;
     return widget && plugin && plugin.kind === "widget"
-      ? [...resolvePhiWidgetSignalEndpoints({
-          blockId: widget.id,
-          label: widget.label ?? widget.id,
-          typeKey: plugin.typeKey,
-          config: widget.config,
-          runtimeSignals: plugin.runtimeSignals,
-          signalSubcontrols: plugin.signalSubcontrols,
-          routeScope,
-        })]
+      ? resolveDeferredOutputSchemas(
+          resolvePhiWidgetSignalEndpoints({
+            blockId: widget.id,
+            label: widget.label ?? widget.id,
+            typeKey: plugin.typeKey,
+            config: widget.config,
+            runtimeSignals: plugin.runtimeSignals,
+            signalSubcontrols: plugin.signalSubcontrols,
+            routeScope,
+          }),
+          widget.config,
+          metas.dataProviders ?? [],
+        )
       : [];
   }
   if (state.nodeKind === "layout") {

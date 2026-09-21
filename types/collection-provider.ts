@@ -1,4 +1,5 @@
 import type { PhiRuntimeDataProviderBinding } from "./runtime-data-provider";
+import type { PhiSignalValueSchema } from "./signals";
 
 export type PhiCollectionProviderFilterType = "string" | "enum" | "enum[]" | "path";
 
@@ -26,6 +27,18 @@ export type PhiCollectionProviderResourceDescriptor = {
   description?: string;
   itemIdentityPath: string;
   itemRendererKey: `${string}/${string}`;
+  /**
+   * The schema a selection from this resource travels under.
+   *
+   * It belongs here and not on the Widget, because the Widget is generic: `collection-view` shows
+   * whatever provider is bound to it, so a selection means whatever the bound resource says it means. A
+   * Module names its own schema -- one from this package through the ownership registry, one from
+   * another repository through `createPhiSignalValueSchema` and its own package name -- and Core passes
+   * it through without ever having to know the word.
+   *
+   * Absent means this resource announces no selection, and the Builder offers no route for one.
+   */
+  selectionValueSchema?: PhiSignalValueSchema;
   defaultForWidget?: boolean;
   query: {
     search?: boolean;
