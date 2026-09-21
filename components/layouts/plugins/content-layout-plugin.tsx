@@ -7,6 +7,7 @@ import { parsePhiCmsContentLayoutConfig } from "../../../types/cms-config";
 import { PhiContentLayout } from "../phi-content-layout";
 import { definePhiLayoutRenderers } from "../layout-plugin-renderers";
 import { PHI_CONTENT_LAYOUT_DEFINITION } from "../layout-definitions";
+import { resolvePhiLayoutAnchor } from "../phi-layout-contract";
 
 export const PHI_CONTENT_LAYOUT_PLUGIN: PhiCmsLayoutPlugin<PhiCmsContentLayoutConfig> = {
   ...PHI_CONTENT_LAYOUT_DEFINITION,
@@ -34,7 +35,7 @@ export const PHI_CONTENT_LAYOUT_PLUGIN: PhiCmsLayoutPlugin<PhiCmsContentLayoutCo
       border={config.border}
       borderRadius={config.borderRadius}
       labelEnd={config.labelEnd}
-      editSlotAnchor={config.anchor ?? "center"}
+      editSlotAnchor={resolvePhiLayoutAnchor(config.anchor, PHI_CONTENT_LAYOUT_DEFINITION.defaultAnchor)}
     />
   )),
 };

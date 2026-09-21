@@ -2,7 +2,7 @@ import { PhiCmsLayoutType } from "../../../constants/cms-layout-types";
 import type { PhiCmsLayoutPlugin } from "../../../types";
 import type { PhiCmsThreeColumnLayoutConfig } from "../../../types/cms-config";
 import { parsePhiCmsThreeColumnLayoutConfig } from "../../../types/cms-config";
-import { resolvePhiAnchorPlacement } from "../phi-layout-contract";
+import { resolvePhiLayoutAnchor } from "../phi-layout-contract";
 import { PhiThreeColumnLayout } from "../phi-three-column-layout";
 import { definePhiLayoutRenderers } from "../layout-plugin-renderers";
 import { PHI_THREE_COLUMN_LAYOUT_DEFINITION } from "../layout-definitions";
@@ -27,7 +27,7 @@ export const PHI_THREE_COLUMN_LAYOUT_PLUGIN: PhiCmsLayoutPlugin<PhiCmsThreeColum
       leftWidth={config.leftWidth}
       middleWidth={config.middleWidth}
       rightWidth={config.rightWidth}
-      editSlotAnchor={config.anchor ? resolvePhiAnchorPlacement(config.anchor) : undefined}
+      editSlotAnchor={resolvePhiLayoutAnchor(config.anchor)}
       zIndex={config.zIndex}
       shadow={config.shadow}
       effect={config.effect}

@@ -3,7 +3,7 @@ import type { PhiCmsLayoutPlugin } from "../../../types";
 import type { PhiCmsGridLayoutConfig } from "../../../types/cms-config";
 import { parsePhiCmsGridLayoutConfig } from "../../../types/cms-config";
 import {
-  resolvePhiAnchorPlacement,
+  resolvePhiLayoutAnchor,
 } from "../phi-layout-contract";
 import { PhiGridLayout } from "../phi-grid-layout";
 import { definePhiLayoutRenderers } from "../layout-plugin-renderers";
@@ -24,7 +24,7 @@ export const PHI_GRID_LAYOUT_PLUGIN: PhiCmsLayoutPlugin<PhiCmsGridLayoutConfig> 
       renderMode={renderMode}
       gap={config.gap}
       anchor={config.anchor}
-      editSlotAnchor={config.anchor ? resolvePhiAnchorPlacement(config.anchor) : undefined}
+      editSlotAnchor={resolvePhiLayoutAnchor(config.anchor)}
       columnGap={config.columnGap}
       slotPlacements={config.slotPlacements}
       align={config.align}

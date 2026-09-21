@@ -6,7 +6,7 @@ import type { PhiCmsFlexVerticalLayoutConfig } from "../../../types/cms-config";
 import {
   parsePhiCmsFlexVerticalLayoutConfig,
 } from "../../../types/cms-config";
-import { resolvePhiAnchorPlacement } from "../phi-layout-contract";
+import { resolvePhiLayoutAnchor } from "../phi-layout-contract";
 import { PhiFlexVerticalLayout } from "../phi-flex-vertical-layout";
 import { definePhiLayoutRenderers } from "../layout-plugin-renderers";
 import { PHI_FLEX_VERTICAL_LAYOUT_DEFINITION } from "../layout-definitions";
@@ -25,7 +25,7 @@ export const PHI_FLEX_VERTICAL_LAYOUT_PLUGIN: PhiCmsLayoutPlugin<PhiCmsFlexVerti
       slots={renderSequentialSlotChildren(node)}
       renderMode={renderMode}
       gap={config.gap}
-      editSlotAnchor={config.anchor ? resolvePhiAnchorPlacement(config.anchor) : undefined}
+      editSlotAnchor={resolvePhiLayoutAnchor(config.anchor, PHI_FLEX_VERTICAL_LAYOUT_DEFINITION.defaultAnchor)}
       zIndex={config.zIndex}
       shadow={config.shadow}
       effect={config.effect}

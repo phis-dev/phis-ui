@@ -6,7 +6,7 @@ import type { PhiCmsLayoutPlugin } from "../../../types";
 import type { PhiCmsStackLayoutConfig } from "../../../types/cms-config";
 import { parsePhiCmsStackLayoutConfig } from "../../../types/cms-config";
 import {
-  resolvePhiAnchorPlacement,
+  resolvePhiLayoutAnchor,
 } from "../phi-layout-contract";
 import { PhiStackLayout } from "../phi-stack-layout";
 import { definePhiLayoutRenderers } from "../layout-plugin-renderers";
@@ -65,8 +65,8 @@ export const PHI_STACK_LAYOUT_PLUGIN: PhiCmsLayoutPlugin<PhiCmsStackLayoutConfig
       slotTransition={config.slotTransition}
       slotTransitionDurationMs={config.slotTransitionDurationMs}
       slotTransitionEasing={config.slotTransitionEasing}
-      slotAnchor={config.anchor ? resolvePhiAnchorPlacement(config.anchor) : undefined}
-      editSlotAnchor={config.anchor ? resolvePhiAnchorPlacement(config.anchor) : undefined}
+      slotAnchor={config.anchor ? resolvePhiLayoutAnchor(config.anchor) : undefined}
+      editSlotAnchor={resolvePhiLayoutAnchor(config.anchor)}
       zIndex={config.zIndex}
       shadow={config.shadow}
       effect={config.effect}

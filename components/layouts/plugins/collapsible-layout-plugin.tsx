@@ -8,7 +8,7 @@ import {
   parsePhiCmsCollapsibleLayoutConfig,
 } from "../../../types/cms-config";
 import {
-  resolvePhiAnchorPlacement,
+  resolvePhiLayoutAnchor,
 } from "../phi-layout-contract";
 import { PhiCollapsibleLayout } from "../phi-collapsible-layout";
 import { definePhiLayoutRenderers } from "../layout-plugin-renderers";
@@ -58,7 +58,7 @@ export const PHI_COLLAPSIBLE_LAYOUT_PLUGIN: PhiCmsLayoutPlugin<PhiCmsCollapsible
       slotMeta={resolvePhiCollapsibleSlotMeta(node, config)}
       renderMode={renderMode}
       anchor={config.anchor}
-      editSlotAnchor={config.anchor ? resolvePhiAnchorPlacement(config.anchor) : undefined}
+      editSlotAnchor={resolvePhiLayoutAnchor(config.anchor, PHI_COLLAPSIBLE_LAYOUT_DEFINITION.defaultAnchor)}
       panelMinHeight={config.panelMinHeight}
       accordion={config.accordion}
       slotTitles={node.resolvedSlotTitles ?? config.slotTitles}

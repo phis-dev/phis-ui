@@ -5,7 +5,7 @@ import {
 import type { PhiCmsLayoutPlugin } from "../../../types";
 import type { PhiCmsCarouselLayoutConfig } from "../../../types/cms-config";
 import { parsePhiCmsCarouselLayoutConfig } from "../../../types/cms-config";
-import { resolvePhiAnchorPlacement } from "../phi-layout-contract";
+import { resolvePhiLayoutAnchor } from "../phi-layout-contract";
 import { PhiCarouselLayout } from "../phi-carousel-layout";
 import { definePhiLayoutRenderers } from "../layout-plugin-renderers";
 import type { PhiCmsLayoutRenderNode } from "../../../types/cms";
@@ -75,8 +75,8 @@ export const PHI_CAROUSEL_LAYOUT_PLUGIN: PhiCmsLayoutPlugin<PhiCmsCarouselLayout
       loop={config.loop}
       autoplayMs={config.autoplayMs}
       lookahead={config.lookahead}
-      slotAnchor={config.anchor ? resolvePhiAnchorPlacement(config.anchor) : undefined}
-      editSlotAnchor={config.anchor ? resolvePhiAnchorPlacement(config.anchor) : undefined}
+      slotAnchor={config.anchor ? resolvePhiLayoutAnchor(config.anchor) : undefined}
+      editSlotAnchor={resolvePhiLayoutAnchor(config.anchor)}
       zIndex={config.zIndex}
       shadow={config.shadow}
       effect={config.effect}

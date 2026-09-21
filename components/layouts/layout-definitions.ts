@@ -43,6 +43,19 @@ const PHI_COLLAPSIBLE_SLOT_OPTIONS = PHI_CMS_COLLAPSIBLE_LAYOUT_SLOTS.map((slot)
   label: slot.label,
 }));
 
+/*
+ * What a kind's slots do when nobody has said otherwise.
+ *
+ * Stated per kind rather than once, because it is a property of the kind: a column centres and starts
+ * at the top, a row runs from the left at middle height, a content wrapper centres both ways. A kind
+ * that states none keeps "no anchor", which stretches -- not stating a default and defaulting to the
+ * middle are different things.
+ */
+const PHI_CONTENT_LAYOUT_DEFAULT_ANCHOR = {
+  horizontal: "center",
+  vertical: "middle",
+} as const;
+
 const PHI_FLEX_LAYOUT_DEFAULT_ANCHOR = {
   horizontal: "left",
   vertical: "middle",
@@ -69,6 +82,7 @@ export const PHI_CONTENT_LAYOUT_DEFINITION = {
   description: "Neutral full-width content wrapper with a single default slot.",
   category: "structure",
   iconName: "content",
+  defaultAnchor: PHI_CONTENT_LAYOUT_DEFAULT_ANCHOR,
   defaultConfig: resolvePhiLayoutDefaults("content"),
   fields: [...PHI_LAYOUT_PADDING_FIELDS],
   slots: [...PHI_CMS_DEFAULT_LAYOUT_SLOTS],

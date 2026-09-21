@@ -241,6 +241,27 @@ export function resolvePhiAnchorPlacement(
   return resolvePhiAnchorWidgetPlacement(anchor);
 }
 
+/**
+ * The anchor a Layout draws with: the one it was given, else the one its kind declares.
+ *
+ * A Layout kind states how its slots sit when nobody has said otherwise -- a Flex Vertical centres its
+ * column and starts at the top, a Flex runs from the left at middle height. That declaration reached
+ * the picker and the Inspector and stopped there: the drawing asked the config alone, found nothing,
+ * and fell to "no anchor", which stretches. So the default a kind announced was never the default it
+ * drew with.
+ *
+ * A kind that declares none keeps "no anchor", rather than being given the centre by a resolver that
+ * treats missing parts as centred. Not stating a default and defaulting to the middle are different
+ * things, and eight of the twelve kinds state none.
+ */
+export function resolvePhiLayoutAnchor(
+  anchor?: PhiRenderableBlockAnchor | null,
+  defaultAnchor?: PhiRenderableBlockAnchor | null,
+): PhiAnchorWidgetPlacement | null {
+  const effective = anchor ?? defaultAnchor;
+  return effective ? resolvePhiAnchorWidgetPlacement(effective) : null;
+}
+
 export function resolvePhiFlexAxisAlignment(
   anchor: PhiAnchorWidgetPlacement | null | undefined,
   vertical: boolean,

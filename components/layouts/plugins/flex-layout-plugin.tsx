@@ -4,7 +4,7 @@ import {
 import type { PhiCmsLayoutPlugin } from "../../../types";
 import type { PhiCmsFlexLayoutConfig } from "../../../types/cms-config";
 import { parsePhiCmsFlexLayoutConfig } from "../../../types/cms-config";
-import { resolvePhiAnchorPlacement } from "../phi-layout-contract";
+import { resolvePhiLayoutAnchor } from "../phi-layout-contract";
 import { PhiFlexLayout } from "../phi-flex-layout";
 import { definePhiLayoutRenderers } from "../layout-plugin-renderers";
 import { PHI_FLEX_LAYOUT_DEFINITION } from "../layout-definitions";
@@ -25,7 +25,7 @@ export const PHI_FLEX_LAYOUT_PLUGIN: PhiCmsLayoutPlugin<PhiCmsFlexLayoutConfig> 
       gap={config.gap}
       distribution={config.distribution}
       wrap={config.wrap}
-      editSlotAnchor={config.anchor ? resolvePhiAnchorPlacement(config.anchor) : undefined}
+      editSlotAnchor={resolvePhiLayoutAnchor(config.anchor, PHI_FLEX_LAYOUT_DEFINITION.defaultAnchor)}
       verticalSeparators={config.verticalSeparators}
       separatorBeforeFirst={config.separatorBeforeFirst}
       separatorSpan={config.separatorSpan}
