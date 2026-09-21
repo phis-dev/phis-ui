@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 
 import type { PhiCmsInstanceId } from "../../../../types/cms-instance-id";
 import type { PhiCollectionViewBindingModel } from "../../../../types/collection-provider";
@@ -13,6 +13,8 @@ import { PhiTagControl } from "../../../../components/controls/phi-tag-control";
 import { PhiTypographyControl } from "../../../../components/controls/phi-typography-control";
 import { createPhiSignalSubcontrolAddress } from "../../../../types/signals";
 import { usePhiControlSignalController } from "../../../../components/widgets/client/shared/phi-control-signals";
+import type { PhiThreadDraft } from "./collection";
+import { PhiNewConversationPanel } from "./new-conversation-panel";
 
 /**
  * What a conversation row says, when nothing else says it.
@@ -31,6 +33,24 @@ export const PHI_THREAD_COLLECTION_DEFAULT_LABELS = {
   errorTitle: "That did not work",
   archiveLabel: "Archive",
   reopenLabel: "Reopen",
+  newConversationLabel: "New conversation",
+  newConversation: {
+    peopleKindLabel: "With people",
+    groupKindLabel: "With a group",
+    peopleLabel: "People",
+    peoplePlaceholder: "Who is this with?",
+    groupLabel: "Group",
+    groupPlaceholder: "Which group?",
+    subjectLabel: "Subject",
+    subjectPlaceholder: "What is it about? (optional)",
+    messageLabel: "Message",
+    messagePlaceholder: "Write the first message",
+    openLabel: "Open conversation",
+    cancelLabel: "Cancel",
+    loadingText: "Loading who you can write to.",
+    noKindsText: "This site offers no conversations you can open.",
+    errorTitle: "That did not work",
+  },
 };
 
 export type PhiThreadCollectionLabels = typeof PHI_THREAD_COLLECTION_DEFAULT_LABELS;
@@ -88,6 +108,12 @@ export function PhiThreadCollectionViewBinding({
     typeKey: "collection-view",
   });
 
+  const [creating, setCreating] = useState(false);
+  const panelOpen = binding.openPanelKey === "newConversation";
+  const toolbarActions = config.features.tools.mode === "self-contained"
+    ? config.features.actions?.toolbar ?? []
+    : [];
+
   const rows = useMemo(
     () => (binding.data?.items ?? []).map(readRow).filter((row): row is PhiThreadCollectionRow => row != null),
     [binding.data],
@@ -100,25 +126,79 @@ export function PhiThreadCollectionViewBinding({
     };
   }, []);
 
-  if (binding.error) {
-    return (
-      <PhiAlertControl level="error" showIcon title={labels.errorTitle} description={binding.error} />
-    );
+  /*
+   * Opening one and selecting it are the same gesture, finished in two places.
+   *
+   * The Provider answers with the new conversation's id in `meta`, because a listing cannot say which
+   * of its rows is new -- and then this announces it on the same route a click on a row uses. A person
+   * who opens a conversation is already reading it.
+   */
+  async function createConversation(draft: PhiThreadDraft) {
+    setCreating(true);
+    try {
+      const data = await binding.activate({ actionKey: "newConversation", item: draft, query: binding.query });
+      if (data.error) return;
+      const createdThreadId = data.meta?.createdThreadId;
+      binding.setOpenPanelKey(null);
+      if (typeof createdThreadId === "number") {
+        selectionSignals.emitCapability("selection", { threadId: createdThreadId });
+      }
+    } finally {
+      setCreating(false);
+    }
   }
-  if (binding.loading && rows.length === 0) {
-    return <PhiTypographyControl type="secondary">{labels.loadingText}</PhiTypographyControl>;
-  }
-  if (rows.length === 0) {
-    return (
-      <PhiTypographyControl type="secondary">
-        {config.presentation.emptyDescription ?? labels.emptyText}
-      </PhiTypographyControl>
-    );
-  }
+
+  const toolbar = toolbarActions.length === 0 ? null : (
+    <PhiFlexControl gap="small" wrap>
+      {toolbarActions.map((action) => (
+        <PhiButtonControl
+          key={action.key}
+          label={action.label ?? (action.key === "newConversation" ? labels.newConversationLabel : action.key)}
+          tooltip={action.description}
+          type={action.mode === "primary" ? "primary" : "default"}
+          danger={action.mode === "danger"}
+          size={config.presentation.controlSize}
+          onClick={action.key === "newConversation"
+            ? () => binding.setOpenPanelKey(panelOpen ? null : "newConversation")
+            : undefined}
+        />
+      ))}
+    </PhiFlexControl>
+  );
+
+  const panel = panelOpen ? (
+    <PhiNewConversationPanel
+      labels={labels.newConversation}
+      busy={creating}
+      onCancel={() => binding.setOpenPanelKey(null)}
+      onSubmit={(draft) => void createConversation(draft)}
+    />
+  ) : null;
+
+  /*
+   * A failure, a wait and an empty listing all keep the toolbar and the panel.
+   *
+   * An empty inbox is the most likely moment for somebody to want a new conversation, and it was also
+   * the one state where the way to start one used to disappear.
+   */
+  const body = binding.error
+    ? <PhiAlertControl level="error" showIcon title={labels.errorTitle} description={binding.error} />
+    : binding.loading && rows.length === 0
+      ? <PhiTypographyControl type="secondary">{labels.loadingText}</PhiTypographyControl>
+      : rows.length === 0
+        ? (
+          <PhiTypographyControl type="secondary">
+            {config.presentation.emptyDescription ?? labels.emptyText}
+          </PhiTypographyControl>
+        )
+        : null;
 
   return (
     <PhiFlexControl vertical gap="small">
-      {rows.map((row) => {
+      {toolbar}
+      {panel}
+      {body}
+      {body != null ? null : rows.map((row) => {
         const archived = row.status === PhisThreadStatus.Archived;
         const select = () => selectionSignals.emitCapability("selection", { threadId: row.id });
         return (

@@ -79,6 +79,73 @@ async function queryThreadCollection(request: PhiCollectionProviderQueryRequest)
   }
 }
 
+/** Who a conversation may be opened with, and which kinds this Site materialized. */
+export type PhiThreadCandidates = {
+  users: { userId: number; displayName: string | null; companyName: string | null }[];
+  groups: { id: number; name: string; flags: number }[];
+  kindFlags: number;
+};
+
+/**
+ * The people and groups this viewer may open a conversation with.
+ *
+ * Asked of the Site rather than assembled from a directory: who is reachable is a question about shared
+ * group membership and about what the Site lets Staff see, and both answers are the control plane's. The
+ * route takes no parameters and pages nothing, so neither does this -- a person sees who they may write
+ * to, which is a short list by construction.
+ */
+export async function fetchPhiThreadCandidates(signal?: AbortSignal): Promise<PhiThreadCandidates> {
+  const response = await fetch("/api/site/threads/candidates", {
+    method: "GET",
+    headers: { Accept: "application/json" },
+    cache: "no-store",
+    credentials: "include",
+    signal,
+  });
+  const payload = await response.json().catch(() => null) as Partial<PhiThreadCandidates> & {
+    error?: string;
+    message?: string;
+  } | null;
+  if (!response.ok || !payload) {
+    throw new Error(
+      payload?.message ?? payload?.error ?? `Candidate request failed with status ${response.status}.`,
+    );
+  }
+  return {
+    users: payload.users ?? [],
+    groups: payload.groups ?? [],
+    kindFlags: typeof payload.kindFlags === "number" ? payload.kindFlags : 0,
+  };
+}
+
+/** What the panel hands over; the Core route decides which of it is required. */
+export type PhiThreadDraft = {
+  kind: number;
+  message: string;
+  subject?: string | null;
+  participantUserIds?: number[];
+  participantGroupIds?: number[];
+};
+
+function readThreadDraft(item: Record<string, unknown> | null | undefined): PhiThreadDraft {
+  const kind = typeof item?.kind === "number" ? item.kind : null;
+  const message = typeof item?.message === "string" ? item.message.trim() : "";
+  if (kind == null || !message) {
+    throw new Error("A conversation needs a kind and a first message.");
+  }
+  return {
+    kind,
+    message,
+    subject: typeof item?.subject === "string" && item.subject.trim() ? item.subject.trim() : null,
+    participantUserIds: Array.isArray(item?.participantUserIds)
+      ? item.participantUserIds.filter((value): value is number => typeof value === "number")
+      : [],
+    participantGroupIds: Array.isArray(item?.participantGroupIds)
+      ? item.participantGroupIds.filter((value): value is number => typeof value === "number")
+      : [],
+  };
+}
+
 function readThreadId(value: unknown) {
   const threadId = typeof value === "number" ? value : Number(value);
   if (!Number.isInteger(threadId) || threadId <= 0) {
@@ -102,6 +169,54 @@ async function runThreadCollectionAction(request: PhiCollectionProviderActionReq
   if (request.resourceKey !== "inbox") {
     throw new Error(`Unknown conversation collection "${request.resourceKey}".`);
   }
+  const query = request.query ?? {};
+
+  /*
+   * Opening one is the only action that makes a row rather than changing one, so it is also the only one
+   * that has something to say afterwards: which conversation was opened. That leaves in `meta`, where a
+   * Provider puts what the rows themselves do not carry, and the renderer turns it into a selection.
+   */
+  if (request.actionKey === "newConversation") {
+    const draft = readThreadDraft(request.item);
+    try {
+      const response = await fetch("/api/site/threads", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        cache: "no-store",
+        credentials: "include",
+        body: JSON.stringify(draft),
+        signal: request.signal,
+      });
+      const payload = await response.json().catch(() => null) as {
+        thread?: { thread?: { id?: unknown } };
+        error?: string;
+        message?: string;
+      } | null;
+      const createdThreadId = payload?.thread?.thread?.id;
+      if (!response.ok || typeof createdThreadId !== "number") {
+        throw new Error(
+          payload?.message ?? payload?.error ?? `Conversation request failed with status ${response.status}.`,
+        );
+      }
+      const data = await queryThreadCollection({
+        resourceKey: request.resourceKey,
+        query,
+        params: request.params,
+        signal: request.signal,
+      });
+      return { ...data, meta: { createdThreadId } };
+    } catch (error) {
+      if (request.signal.aborted) throw error;
+      return {
+        resourceKey: request.resourceKey,
+        items: [],
+        total: 0,
+        loading: false,
+        error: error instanceof Error ? error.message : "The conversation could not be opened.",
+      };
+    }
+  }
+
   const status = request.actionKey === "archive"
     ? PhisThreadStatus.Archived
     : request.actionKey === "reopen"
@@ -112,7 +227,6 @@ async function runThreadCollectionAction(request: PhiCollectionProviderActionReq
   }
 
   const threadId = readThreadId(request.itemKey);
-  const query = request.query ?? {};
   try {
     const response = await fetch(`/api/site/threads/${threadId}`, {
       method: "PATCH",

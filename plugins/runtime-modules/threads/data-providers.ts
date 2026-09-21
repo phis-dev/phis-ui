@@ -61,9 +61,16 @@ export const PHI_THREADS_RUNTIME_DATA_PROVIDER_DESCRIPTORS = [
          * confirmation: nothing is lost, and the other action puts it back.
          */
         actions: [
+          /*
+           * Opening a conversation is a resource action with a panel, the same shape as uploading into
+           * the media library. It is not a second Widget, and a picker Widget is what this would have
+           * had to be: something placed beside the listing, wired to it, and useless anywhere else.
+           */
+          { key: "newConversation", title: "New conversation", scope: "resource", panelKey: "newConversation" },
           { key: "archive", title: "Archive", scope: "item" },
           { key: "reopen", title: "Reopen", scope: "item" },
         ],
+        panels: [{ key: "newConversation", title: "New conversation" }],
       },
     ],
   },
