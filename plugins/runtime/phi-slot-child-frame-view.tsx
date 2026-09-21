@@ -23,6 +23,7 @@ import { combinePhiBoxShadows, resolvePhiShadow } from "../../helpers/layout-sty
 import {
   buildPhiSlotChildClassName,
   buildPhiSlotChildDataAttributes,
+  resolvePhiEffectiveSlotSizePolicy,
   resolvePhiSlotChildBaseStyle,
   resolvePhiSlotChildExplicitAxes,
   resolvePhiSlotSizePolicy,
@@ -128,10 +129,18 @@ export function PhiSlotChildFrameView({
       ? config?.collapsedSizeHint ?? config?.size
       : config?.size;
   const resolvedConfig = { ...config, size: resolvedSize };
-  const policy = resolvePhiSlotSizePolicy(slotSizePolicy, kind);
   const explicitAxes = resolvePhiSlotChildExplicitAxes(resolvedConfig);
   const resolvedExplicitInlineSize = explicitInlineSize ?? explicitAxes.explicitInlineSize;
   const resolvedExplicitBlockSize = explicitBlockSize ?? explicitAxes.explicitBlockSize;
+  /*
+   * The effective policy, not the declared one -- the frame is what states the policy to the CSS and to
+   * whatever reads its attributes, and a frame carrying a width of its own while announcing "fill"
+   * makes every reader below it wrong in the same way at once.
+   */
+  const policy = resolvePhiEffectiveSlotSizePolicy(resolvePhiSlotSizePolicy(slotSizePolicy, kind), {
+    explicitInlineSize: resolvedExplicitInlineSize,
+    explicitBlockSize: resolvedExplicitBlockSize,
+  });
   const effectsStyle = disableEffects
     ? resolveRenderableBlockStaticEffectsStyle(resolvedConfig)
     : resolveRenderableBlockEffectsStyle(resolvedConfig);

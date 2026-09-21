@@ -187,19 +187,19 @@
   min-height: 0;
 }
 
-:where(.phi-layout-scaffold-anchor__content[data-phi-slot-size-inline="fill"][data-phi-layout-explicit-width="true"]) {
+/*
+ * Filling is filling, whether or not a width was also stated.
+ *
+ * These were four rules -- with an explicit size and without, per axis -- carrying the same
+ * declaration, split for a distinction that was never drawn. The distinction is real and now lives
+ * where it belongs: a stated size makes the axis `fixed`, so "fill" here can no longer mean anything
+ * but fill.
+ */
+:where(.phi-layout-scaffold-anchor__content[data-phi-slot-size-inline="fill"]) {
   width: 100%;
 }
 
-:where(.phi-layout-scaffold-anchor__content[data-phi-slot-size-block="fill"][data-phi-layout-explicit-height="true"]) {
-  height: 100%;
-}
-
-:where(.phi-layout-scaffold-anchor__content[data-phi-slot-size-inline="fill"]:not([data-phi-layout-explicit-width="true"])) {
-  width: 100%;
-}
-
-:where(.phi-layout-scaffold-anchor__content[data-phi-slot-size-block="fill"]:not([data-phi-layout-explicit-height="true"])) {
+:where(.phi-layout-scaffold-anchor__content[data-phi-slot-size-block="fill"]) {
   height: 100%;
 }
 

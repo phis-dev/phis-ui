@@ -96,8 +96,8 @@ export function PhiFlexVerticalLayout({
     }
 
     const slotSizing = resolvePhiLayoutSlotChildSizing(child);
-    const shouldFillMainAxis = slotSizing.fillBlock && !slotSizing.hasExplicitHeight;
-    const shouldFillCrossAxis = slotSizing.fillInline;
+    const shouldFillMainAxis = slotSizing.stretchesBlock;
+    const shouldFillCrossAxis = slotSizing.stretchesInline;
 
     return (
       <div
@@ -136,8 +136,14 @@ export function PhiFlexVerticalLayout({
            * the anchor is about the content. A slot is as wide as what it holds wants to be, and a child
            * that caps its width -- a column of copy at a readable measure -- is narrower than that: it
            * then stands at the left edge of a centred slot, which reads as "not centred" and is.
+           *
+           * Always, and not only where the slot is not stretching. A filling child states its own width
+           * of 100% and fills whatever this says, so the alignment costs it nothing; a child that fills
+           * up to a maximum is exactly the case the paragraph above describes, and forcing stretch here
+           * was what kept it in the corner. With no anchor the alignment is "stretch" anyway, so a
+           * Layout that has not been anchored is unchanged.
            */
-          alignItems: shouldFillCrossAxis ? "stretch" : resolvedFlowAlignment.alignItems,
+          alignItems: resolvedFlowAlignment.alignItems,
         }}
       >
         {child}

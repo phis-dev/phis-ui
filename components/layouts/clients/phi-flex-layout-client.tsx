@@ -182,10 +182,8 @@ export function PhiFlexLayout({
     }
 
     const slotSizing = resolvePhiLayoutSlotChildSizing(child);
-    const shouldFillMainAxis =
-      (resolvedVertical ? slotSizing.fillBlock : slotSizing.fillInline) &&
-      !(resolvedVertical ? slotSizing.hasExplicitHeight : slotSizing.hasExplicitWidth);
-    const shouldFillCrossAxis = resolvedVertical ? slotSizing.fillInline : slotSizing.fillBlock;
+    const shouldFillMainAxis = resolvedVertical ? slotSizing.stretchesBlock : slotSizing.stretchesInline;
+    const shouldFillCrossAxis = resolvedVertical ? slotSizing.stretchesInline : slotSizing.stretchesBlock;
     const minMainSize = resolvedVertical ? slotSizing.minBlockSize : slotSizing.minInlineSize;
     const maxMainSize = resolvedVertical ? slotSizing.maxBlockSize : slotSizing.maxInlineSize;
     const minCrossSize = resolvedVertical ? slotSizing.minInlineSize : slotSizing.minBlockSize;

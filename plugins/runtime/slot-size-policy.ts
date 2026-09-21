@@ -85,6 +85,33 @@ export function resolvePhiSlotChildExplicitAxes(
   };
 }
 
+/**
+ * The policy a child actually runs on, which is not always the one it declared.
+ *
+ * An axis that states a size of its own is fixed on that axis, whatever the policy said. A Layout's
+ * declared policy is fill on both axes and a width used to be recorded beside it without changing it:
+ * the child then claimed the whole axis while measuring something else, so the slot stretched, and a
+ * Layout with an anchor had nothing left to place. Every caller had to remember to subtract the one
+ * from the other, and the callers that forgot were the bugs.
+ *
+ * A maximum is deliberately not a size. `maxWidth` means "fill, but no further than this" -- a column
+ * of copy at a readable measure still wants the width it is given, up to the cap. It stays filling and
+ * is merely capped; what it needs is not a different policy but a Layout that places it rather than
+ * stretching it, which is the anchor's job.
+ *
+ * Applied where the sizing is resolved rather than offered as something to call, because a size can
+ * also arrive at runtime -- a Signal that sets a width has to flip the policy the same way a stored
+ * config does, and a rule that has to be remembered at each site is a rule that is already broken.
+ */
+export function resolvePhiEffectiveSlotSizePolicy(
+  policy: PhiNormalizedSlotSizePolicy,
+  explicit: { explicitInlineSize?: boolean; explicitBlockSize?: boolean } | null | undefined,
+): PhiNormalizedSlotSizePolicy {
+  const inline = explicit?.explicitInlineSize === true ? "fixed" : policy.inline;
+  const block = explicit?.explicitBlockSize === true ? "fixed" : policy.block;
+  return inline === policy.inline && block === policy.block ? policy : { inline, block };
+}
+
 function resolvePhiSlotChildSizeConstraints(
   config: Pick<PhiRenderableBlockBase, "minSize" | "maxSize"> | null | undefined,
 ) {
@@ -114,9 +141,10 @@ export function resolvePhiSlotChildSizingForConfig(
   slotSizePolicy: PhiSlotSizePolicy | null | undefined,
   config: Pick<PhiRenderableBlockBase, "size" | "minSize" | "maxSize"> | null | undefined,
 ): PhiSlotChildSizing {
+  const explicit = resolvePhiSlotChildExplicitAxes(config);
   return {
-    policy: resolvePhiSlotSizePolicy(slotSizePolicy, kind),
-    ...resolvePhiSlotChildExplicitAxes(config),
+    policy: resolvePhiEffectiveSlotSizePolicy(resolvePhiSlotSizePolicy(slotSizePolicy, kind), explicit),
+    ...explicit,
     ...resolvePhiSlotChildSizeConstraints(config),
   };
 }
@@ -202,12 +230,19 @@ export function resolvePhiSlotChildSizing(
         ? props.kind
         : fallbackKind;
 
-    return {
-      policy: resolvePhiSlotSizePolicy(props.slotSizePolicy, resolvedKind),
+    const explicit = {
       explicitInlineSize:
         props.explicitInlineSize === true || props["data-phi-layout-explicit-width"] === "true",
       explicitBlockSize:
         props.explicitBlockSize === true || props["data-phi-layout-explicit-height"] === "true",
+    };
+
+    return {
+      policy: resolvePhiEffectiveSlotSizePolicy(
+        resolvePhiSlotSizePolicy(props.slotSizePolicy, resolvedKind),
+        explicit,
+      ),
+      ...explicit,
       ...configConstraints,
     };
   }
@@ -230,10 +265,15 @@ export function resolvePhiSlotChildSizing(
     fallbackKind,
   );
 
-  return {
-    policy,
+  const explicit = {
     explicitInlineSize: props["data-phi-layout-explicit-width"] === "true",
     explicitBlockSize: props["data-phi-layout-explicit-height"] === "true",
+  };
+
+  return {
+    // Idempotent: an element that already wrote the effective policy into its attributes says the same again.
+    policy: resolvePhiEffectiveSlotSizePolicy(policy, explicit),
+    ...explicit,
     minInlineSize:
       configConstraints.minInlineSize ??
       (typeof props["data-phi-slot-min-inline-size"] === "string"
@@ -263,6 +303,17 @@ export function resolvePhiSlotChildBaseStyle(policy: PhiNormalizedSlotSizePolicy
     minHeight: 0,
     maxWidth: "100%",
     maxHeight: "100%",
+    /*
+     * Whatever the Layout says, which is what an anchor is.
+     *
+     * A child is a flex item, and a stylesheet that stretches it takes the decision away from the
+     * Layout holding it: a stretched item is placed at the start of the cross axis, and a child that
+     * caps its own width -- a column at a readable measure -- then sits in the corner of a Layout
+     * anchored to the centre, looking as though the anchor did nothing. Stated here, and `auto` rather
+     * than a value, so it still stretches wherever the Layout asks for stretch, which is what a Layout
+     * with no anchor asks for.
+     */
+    alignSelf: "auto",
     ...(policy.inline === "fill" ? { width: "100%" } : policy.inline === "intrinsic" ? { width: "fit-content" } : {}),
     ...(policy.block === "fill" ? { height: "100%" } : policy.block === "intrinsic" ? { height: "fit-content" } : {}),
   };

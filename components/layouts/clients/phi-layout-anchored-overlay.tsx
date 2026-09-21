@@ -7,10 +7,20 @@ export type PhiLayoutAnchorRole = "left" | "middle" | "right";
 
 export type PhiLayoutSlotChildSizing = {
   fillSlot: boolean;
+  /** What the policy says, which is not the same as what the child ends up doing. */
   fillInline: boolean;
   fillBlock: boolean;
   hasExplicitWidth: boolean;
   hasExplicitHeight: boolean;
+  /**
+   * Whether the slot should stretch to the axis.
+   *
+   * The policy is already the effective one (`resolvePhiEffectiveSlotSizePolicy`), so a child that
+   * states a size of its own reads as `fixed` here and not as `fill`. These two are the question a
+   * Layout actually asks, named for what it wants to know rather than for what the policy is called.
+   */
+  stretchesInline: boolean;
+  stretchesBlock: boolean;
   minInlineSize: CSSProperties["minWidth"];
   minBlockSize: CSSProperties["minHeight"];
   maxInlineSize: CSSProperties["maxWidth"];
@@ -44,6 +54,8 @@ export function resolvePhiLayoutSlotChildSizing(
     fillBlock: slotSizing.policy.block === "fill",
     hasExplicitWidth: slotSizing.explicitInlineSize,
     hasExplicitHeight: slotSizing.explicitBlockSize,
+    stretchesInline: slotSizing.policy.inline === "fill",
+    stretchesBlock: slotSizing.policy.block === "fill",
     minInlineSize: slotSizing.minInlineSize,
     minBlockSize: slotSizing.minBlockSize,
     maxInlineSize: slotSizing.maxInlineSize,
@@ -140,9 +152,10 @@ export function PhiLayoutAnchoredOverlay({
     >
       <div
         className="phi-layout-scaffold-anchor__content"
+        /* Not the raw policy: a wrapper at full width leaves the anchor above nothing to move. */
         style={{
-          width: slotSizing.fillInline ? "100%" : undefined,
-          height: slotSizing.fillBlock ? "100%" : undefined,
+          width: slotSizing.stretchesInline ? "100%" : undefined,
+          height: slotSizing.stretchesBlock ? "100%" : undefined,
         }}
         {...buildPhiSlotChildDataAttributes(
           {

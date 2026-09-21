@@ -87,8 +87,9 @@ function resolveGridSlotPlacementStyle(slot: ReactNode): CSSProperties {
     minHeight: 0,
     maxWidth: "100%",
     maxHeight: "100%",
-    width: sizing.fillInline ? "100%" : "fit-content",
-    height: sizing.fillBlock ? "100%" : "fit-content",
+    /* `fit-content` where the child states its own size, so the cell's placement has room to place it. */
+    width: sizing.stretchesInline ? "100%" : "fit-content",
+    height: sizing.stretchesBlock ? "100%" : "fit-content",
   };
 }
 
