@@ -23,6 +23,15 @@ export type PhiRootMetadataInput = {
   site?: PhiMetadataScope | null;
   area?: PhiMetadataScope | null;
   page?: PhiMetadataScope | null;
+  /**
+   * The Signet's address, as the Theme Set that is followed states it -- a data URL for the Sets that
+   * draw their own mark.
+   *
+   * Only `icon`, not `apple`: an Apple touch icon has to be a raster of a stated size, and pointing the
+   * home screen at a drawing it cannot read would be worse than saying nothing. A Site that has no
+   * Signet says nothing at all here, which leaves the browser the `/favicon.ico` it asks for anyway.
+   */
+  signet?: string | null;
 };
 
 function resolveFirstText(...values: Array<string | null | undefined>) {
@@ -81,6 +90,7 @@ export function buildPhiRootMetadata(options: PhiRootMetadataInput = {}): Metada
     resolvedAreaTitle,
   );
   const resolvedMetadataBase = resolveMetadataBase(options.metadataBase);
+  const resolvedSignet = resolveFirstText(options.signet);
   const shouldNoIndex =
     options.page?.noindex === true ||
     options.area?.noindex === true ||
@@ -90,6 +100,7 @@ export function buildPhiRootMetadata(options: PhiRootMetadataInput = {}): Metada
     ...(resolvedMetadataBase ? { metadataBase: resolvedMetadataBase } : {}),
     ...(resolvedApplicationName ? { applicationName: resolvedApplicationName } : {}),
     ...(resolvedDescription ? { description: resolvedDescription } : {}),
+    ...(resolvedSignet ? { icons: { icon: resolvedSignet } } : {}),
     ...(shouldNoIndex
       ? {
           robots: {

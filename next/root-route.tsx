@@ -10,7 +10,7 @@ import type { PhiModuleFontContributions } from "../module";
 import type { PhiSiteModuleServerAreaContributions } from "../plugins/runtime-modules/site-modules";
 import { loadPhiThemeBlockCatalog } from "../plugins/runtime-modules/theme/block-catalog";
 import { collectPhiThemeDescriptorContributions } from "../plugins/runtime-modules/theme/theme-descriptors";
-import type { PhiThemeBlockCatalog } from "../theme/phi-theme-composition";
+import { resolvePhiThemeComposition, type PhiThemeBlockCatalog } from "../theme/phi-theme-composition";
 import { composePhiFontCatalogue } from "../theme/phi-font-catalogue";
 import { buildPhiRootMetadata } from "../helpers/phi-metadata";
 import { localizePath } from "../helpers/locale";
@@ -35,6 +35,19 @@ import type { PhiResolvedLocale } from "../helpers/site-locale-config";
 import { fetchResolvedSiteLocale } from "../server-helpers/site-locale";
 import type { PhiThemeMode } from "../theme/phi-theme-presets";
 
+/**
+ * The Theme blocks this Site can follow, loaded once per host and then kept.
+ *
+ * A Theme is site-wide, so the catalogue is the installed union and never changes between requests.
+ * Both the head and the document shell need it, and each keeps its own: they are separate entry points
+ * into the same Site, and a shared module-level cache would tie the static tree's answer to whether
+ * the dynamic one happened to be asked first.
+ */
+function createPhiThemeBlockLoader(siteModules: PhiSiteModuleServerAreaContributions) {
+  let themeBlocks: Promise<PhiThemeBlockCatalog> | null = null;
+  return () => (themeBlocks ??= loadPhiThemeBlockCatalog(collectPhiThemeDescriptorContributions(siteModules)));
+}
+
 async function loadPhiNextRootContract() {
   const runtimeConfig = readPhiSiteRuntimeConfigSync();
   const { site, resolvedLocale } = await loadPhiRootLayoutContext({
@@ -50,25 +63,42 @@ async function loadPhiNextRootContract() {
   };
 }
 
-export async function generatePhiNextRootMetadata(): Promise<Metadata> {
-  const { runtimeConfig, site } = await loadPhiNextRootContract();
-  return buildPhiNextRootMetadata(runtimeConfig, site);
+/**
+ * The document's head, given what this Site installed.
+ *
+ * A factory over the Modules rather than a plain function, for the same reason the layout below is
+ * one: the Signet is a Theme block, and which blocks exist depends on which Modules are installed. The
+ * catalogue is loaded once and kept, because nothing in it changes between requests -- the same
+ * arrangement the document shell makes for itself.
+ */
+export function createPhiNextRootMetadata(siteModules: PhiSiteModuleServerAreaContributions) {
+  const loadThemeBlocks = createPhiThemeBlockLoader(siteModules);
+
+  return async function generateMetadata(): Promise<Metadata> {
+    const { runtimeConfig, site } = await loadPhiNextRootContract();
+    return buildPhiNextRootMetadata(runtimeConfig, site, await loadThemeBlocks());
+  };
 }
 
 /** The static tree's counterpart: the published Site, never a Theme under review. */
-export async function generatePhiNextStaticRootMetadata(): Promise<Metadata> {
-  const runtimeConfig = readPhiSiteRuntimeConfigSync();
-  const site = await getResolvedSiteConfig({
-    apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
-    internalToken: readPhiServerApiCredentials().internalToken,
-    siteKey: runtimeConfig.site.key,
-  });
-  return buildPhiNextRootMetadata(runtimeConfig, site);
+export function createPhiNextStaticRootMetadata(siteModules: PhiSiteModuleServerAreaContributions) {
+  const loadThemeBlocks = createPhiThemeBlockLoader(siteModules);
+
+  return async function generateStaticMetadata(): Promise<Metadata> {
+    const runtimeConfig = readPhiSiteRuntimeConfigSync();
+    const site = await getResolvedSiteConfig({
+      apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
+      internalToken: readPhiServerApiCredentials().internalToken,
+      siteKey: runtimeConfig.site.key,
+    });
+    return buildPhiNextRootMetadata(runtimeConfig, site, await loadThemeBlocks());
+  };
 }
 
 function buildPhiNextRootMetadata(
   runtimeConfig: ReturnType<typeof readPhiSiteRuntimeConfigSync>,
   site: PhiSiteConfig,
+  themeBlocks: PhiThemeBlockCatalog,
 ): Metadata {
   return buildPhiRootMetadata({
     metadataBase: site.publicUrl ?? runtimeConfig.site.publicUrl ?? undefined,
@@ -84,6 +114,12 @@ function buildPhiNextRootMetadata(
         site.theme?.brand?.slogan?.label ??
         "Canonical starter structure for PHIS-powered sites.",
     },
+    /*
+     * The Set that is followed, resolved the same way the Brand Widget resolves the Logo, so the tab
+     * and the header cannot end up wearing two different marks. A Site that follows a Set without one
+     * hands over nothing and the head stays quiet.
+     */
+    signet: resolvePhiThemeComposition(site.theme, themeBlocks).markSet.signet,
   });
 }
 
@@ -196,11 +232,7 @@ function createPhiNextRootDocument(
   fonts: PhiModuleFontContributions,
 ) {
   const fontCatalogue = composePhiFontCatalogue(fonts.flatMap((contribution) => contribution.families));
-  let themeBlocks: Promise<PhiThemeBlockCatalog> | null = null;
-  const loadThemeBlocks = () => {
-    themeBlocks ??= loadPhiThemeBlockCatalog(collectPhiThemeDescriptorContributions(siteModules));
-    return themeBlocks;
-  };
+  const loadThemeBlocks = createPhiThemeBlockLoader(siteModules);
 
   return async function PhiNextRootDocument({
     runtimeConfig,

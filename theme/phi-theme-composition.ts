@@ -102,10 +102,10 @@ export type PhiThemeComposition = {
   fonts: PhiThemeFontsBlock;
   set: PhiThemeSetBlock | null;
   /**
-   * The Set whose Logo the Theme is offered: the one it names, or the core Set where it names none or
-   * one that is not available -- the same floor every part falls back to.
+   * The Set whose marks the Theme is offered -- the Logo and the Signet: the one it names, or the core
+   * Set where it names none or one that is not available, the same floor every part falls back to.
    */
-  logoSet: PhiThemeSetBlock;
+  markSet: PhiThemeSetBlock;
   /** The parts whose selection could not be resolved and are running on the core block instead. */
   unavailable: {
     palette: string | null;
@@ -130,7 +130,7 @@ export function resolvePhiThemeComposition(
 ): PhiThemeComposition {
   const selection = readPhiThemeBlockSelection(theme, catalog);
   const set = selection.set ? resolvePhiThemeSetSelection(catalog.sets, selection.set) : null;
-  const logoSet = set?.set ?? resolvePhiThemeSetSelection(catalog.sets, null).set;
+  const markSet = set?.set ?? resolvePhiThemeSetSelection(catalog.sets, null).set;
   const palette = resolvePhiThemeBlockSelection(
     catalog.palettes,
     selection.palette,
@@ -158,7 +158,7 @@ export function resolvePhiThemeComposition(
     ground: ground.block,
     fonts: fonts.block,
     set: set?.available ? set.set : null,
-    logoSet,
+    markSet,
     unavailable: {
       palette: palette.available ? null : palette.requested,
       style: style.available ? null : style.requested,

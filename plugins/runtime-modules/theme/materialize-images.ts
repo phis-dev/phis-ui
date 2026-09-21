@@ -188,10 +188,10 @@ export async function materializePhiThemeModuleBlocks<T extends { root?: PhiSite
  */
 export async function materializePhiThemeBrandLogo<T extends { brand?: PhiSiteThemeBrand | null }>(
   theme: T,
-  logoSet: PhiThemeSetBlock,
+  markSet: PhiThemeSetBlock,
 ): Promise<T> {
   // A core Set offers nothing to take, so only its Logo drops out here; what the author set is still theirs.
-  const offered = isPhiCoreThemeSet(logoSet) ? { ...logoSet, logo: null } : logoSet;
+  const offered = isPhiCoreThemeSet(markSet) ? { ...markSet, logo: null } : markSet;
   const logos = resolvePhiThemeEffectiveLogo(theme.brand?.logo, offered);
   if (!logos.light && !logos.dark) return theme;
 
@@ -211,7 +211,7 @@ export async function materializePhiThemeBrandLogo<T extends { brand?: PhiSiteTh
     const source = logo.sourceUrl;
     let assetId = uploadedBySource.get(source);
     if (assetId === undefined) {
-      const file = await readPhiThemeImageFile(source, `${logoSet.key}-logo${sharedPicture ? "" : `-${mode}`}`);
+      const file = await readPhiThemeImageFile(source, `${markSet.key}-logo${sharedPicture ? "" : `-${mode}`}`);
       const result = await runPhiMediaUploadSession(file, undefined, {
         meta: { source: PhiMediaAssetSource.ThemeBrandLogo },
       });

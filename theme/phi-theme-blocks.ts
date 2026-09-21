@@ -96,6 +96,25 @@ export type PhiThemeSetBlock = PhiThemeBlockIdentity & {
   ground: string;
   fonts: string;
   logo?: PhiSiteThemeBrandLogos | null;
+  /**
+   * The Signet: the square the Site is marked with where only a square will do -- the browser tab, the
+   * home screen, an avatar.
+   *
+   * One picture, not one per mode, and no authored counterpart beside it the way the Logo has: a Signet
+   * carries its own ground, so it does not need the mode, and a Signet that did not match the Logo it
+   * stands in for would be a mistake rather than a choice. Whoever wants another one changes the Set.
+   *
+   * A data URL, like the pictures the core blocks carry, so that a look cannot be missing its mark
+   * because a file did not ship. Its media type comes with it, so a Set is free to mark itself with
+   * something that is not a drawing.
+   *
+   * It is read per request and never copied into the Site's record the way the four parts are, nor
+   * taken into the Media library the way the Logo is on the first save. What those two protect is a
+   * decision the author made -- the Logo of a Set becomes the Site's own the moment it is kept. The
+   * Signet is nobody's decision but the Set's, so it lives and goes with it: switch the Module off and
+   * the tab goes blank, the same way `unavailable.set` already says the look is gone.
+   */
+  signet?: string | null;
 };
 
 /**
@@ -222,6 +241,11 @@ export const PHI_CORE_THEME_SETS: readonly PhiThemeSetBlock[] = [
       light: { sourceKind: "url", sourceUrl: PHI_THEME_PLACEHOLDER_LOGO_LIGHT },
       dark: { sourceKind: "url", sourceUrl: PHI_THEME_PLACEHOLDER_LOGO_DARK },
     },
+    /*
+     * No Signet, and no placeholder for one either. The blank Logo works because it sits in the header
+     * with room to say what it is; the same sign in a browser tab is four pixels of nothing that a Site
+     * would be wearing without having asked. A Set that carries a mark carries its square too.
+     */
   },
 ];
 

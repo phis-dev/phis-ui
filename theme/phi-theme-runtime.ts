@@ -84,7 +84,7 @@ export function resolvePhiThemeRuntimePayload<T extends PhiThemeRuntimeSource>(
       fonts: resolvePhiThemeEffectiveFonts(theme?.fonts, composition.fonts),
       brand: {
         ...(theme?.brand ?? {}),
-        logo: resolvePhiThemeEffectiveLogo(theme?.brand?.logo, composition.logoSet),
+        logo: resolvePhiThemeEffectiveLogo(theme?.brand?.logo, composition.markSet),
       },
       style: {
         ...(theme?.style ?? {}),

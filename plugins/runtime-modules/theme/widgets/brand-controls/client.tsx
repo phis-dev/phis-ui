@@ -1645,7 +1645,7 @@ export function PhiBuilderBrandThemeControllerWidgetClient({
        */
       nextTheme = await materializePhiThemeBrandLogo(
         materialized.theme,
-        resolvePhiThemeComposition(materialized.theme, themeBlocks).logoSet,
+        resolvePhiThemeComposition(materialized.theme, themeBlocks).markSet,
       );
       const response = await fetch("/api/site/cms/theme", {
         method: "POST",
@@ -2978,8 +2978,8 @@ export function PhiBuilderBrandIdentityControlsWidgetClient({
    * The Logo shows what the Site draws, which is the Set's wherever the record says nothing about the
    * mode. Picking one takes the mode over; the reset hands it back to the Set.
    */
-  const logoSet = resolvePhiThemeComposition(state.draft, themeBlocks).logoSet;
-  const logos = resolvePhiThemeEffectiveLogo(brand.logo, logoSet);
+  const markSet = resolvePhiThemeComposition(state.draft, themeBlocks).markSet;
+  const logos = resolvePhiThemeEffectiveLogo(brand.logo, markSet);
   const otherMode = mode === "dark" ? "light" : "dark";
   const logo = logos[mode] ?? null;
   const logoPreviewUrl = resolvePhiBrandLogoUrl({ logo: logos }, mode);
@@ -3070,7 +3070,7 @@ export function PhiBuilderBrandIdentityControlsWidgetClient({
                     <PhiFlexControl align="center" gap={clientToken.paddingXXS} style={{ flexShrink: 0 }}>
                       <PhiBrandBlockResetButton
                         disabled={brand.logo?.[mode] == null}
-                        blockTitle={logoSet.title}
+                        blockTitle={markSet.title}
                         onReset={() => publishDraft(mergeThemeBrandLogo(state.draft, mode, undefined))}
                       />
                       <PhiBrandCopyModeButton
