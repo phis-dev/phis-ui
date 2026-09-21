@@ -251,7 +251,7 @@ function PhiLocalizationControllerMount({ address }: { address: PhiSignalAddress
       correlationId: signal.correlationId,
       timestamp: Date.now(),
     });
-  }, [address, closeEditor, dispatchSignal, formAddress, overlayAddress, send, sourceLocaleAddress, tableAddress]), {
+  }, [address, closeEditor, dispatchSignal, formAddress, overlayAddress, saveActionAddress, send, sourceLocaleAddress, tableAddress]), {
     scopes: ["page", "area"],
     channels: ["locale", "context", "status", "query", "command", "localizationWorkspace", "action", "dialog", "submitting", "submit", "state"],
   },

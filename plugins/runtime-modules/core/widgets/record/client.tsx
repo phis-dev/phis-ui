@@ -48,7 +48,11 @@ export function PhiRecordWidgetClient({
    * the bus holds an addressed signal until its receiver appears.
    */
   const signalIdentity = usePhiSignalIdentity();
-  const listenRoutes = config.signalRoutes?.listens ?? [];
+  /*
+   * Memoised because the `?? []` hands out a fresh array whenever no routes are declared, and the
+   * subscription below is keyed on it: without this the Widget would resubscribe on every render.
+   */
+  const listenRoutes = useMemo(() => config.signalRoutes?.listens ?? [], [config.signalRoutes?.listens]);
   const { provider, resource, bindingError } = usePhiTableProvider(config.source);
   const [selectedRowIdentity, setSelectedRowIdentity] = useState<PhiTableRowIdentity | null>(null);
   const [record, setRecord] = useState<Record<string, unknown> | null>(null);
