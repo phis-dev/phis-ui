@@ -1,7 +1,8 @@
 import type { PhiCmsAreaKey } from "../../../constants/cms-areas";
 import type { PhiRuntimeModuleDefinition } from "../contracts";
 import { PHI_CORE_SERVER_BINDING } from "../../../types/server-capabilities";
-import { PHI_THREADS_RUNTIME_MODULE_ID } from "./ids";
+import { PHI_THREADS_RUNTIME_ITEM_RENDERER_KEY, PHI_THREADS_RUNTIME_MODULE_ID } from "./ids";
+import { PHI_THREADS_RUNTIME_DATA_PROVIDER_DESCRIPTORS } from "./data-providers";
 
 /**
  * Conversations, as a person sees them.
@@ -24,6 +25,14 @@ export const PHI_THREADS_RUNTIME_MODULE_DEFINITION = {
   description: "Threads a person is in, and the composer that writes into one.",
   category: "communication",
   iconFamily: "threads",
+  dataProviders: PHI_THREADS_RUNTIME_DATA_PROVIDER_DESCRIPTORS,
+  // Its own row, declared like anybody else's: a Site picking a renderer sees the default under a name.
+  collectionItemRenderers: [{
+    key: PHI_THREADS_RUNTIME_ITEM_RENDERER_KEY,
+    rendersItemsOf: PHI_THREADS_RUNTIME_ITEM_RENDERER_KEY,
+    title: "Conversation row",
+    description: "Subject, last activity and an unread mark, in a single column.",
+  }],
   threadKinds: ["direct"],
   /*
    * Where an attachment goes before it hangs on anything.
