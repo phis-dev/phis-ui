@@ -70,6 +70,15 @@ export type PhiSiteThemeWordmark = {
   /** Slanting, which is its own axis: a name is regularly both bold and italic. */
   fontStyle?: "normal" | "italic" | null;
   letterSpacing?: string | null;
+  /**
+   * Whether the name is drawn at all, said outright the way a Logo says it has none.
+   *
+   * Writing no parts cannot mean it: an empty Wordmark falls back to the Site's own name, which is
+   * what a Site that has not got around to setting one should show. A brand whose Logo already
+   * contains its name needs the opposite -- nothing beside the picture -- and that is a decision,
+   * not an omission. Absent means the name is drawn, so every Site that never stated it is unchanged.
+   */
+  shows?: "name" | "none" | null;
   parts?: PhiSiteThemeWordmarkPart[] | null;
 };
 

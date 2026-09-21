@@ -67,11 +67,25 @@ function hasWordmarkParts(
   return Array.isArray(parts) && parts.some((part) => typeof part?.text === "string" && part.text.trim());
 }
 
+/**
+ * A Brand that has said it draws no name.
+ *
+ * Asked before the parts and before the fallback, because it outranks both: the fallback exists for a
+ * Site that has not set a name yet, and this is a Site saying its name is not set in type at all.
+ */
+function wordmarkIsSwitchedOff(wordmark: PhiSiteThemeWordmark | null | undefined) {
+  return wordmark?.shows === "none";
+}
+
 function renderWordmark(
   wordmark: PhiSiteThemeWordmark | null | undefined,
   fallbackTitle?: ReactNode,
   fallbackStyle?: CSSProperties,
 ) {
+  if (wordmarkIsSwitchedOff(wordmark)) {
+    return null;
+  }
+
   const wordmarkStyle: CSSProperties = {
     ...(fallbackStyle ?? {}),
     ...(wordmark?.fontFamily ? { fontFamily: wordmark.fontFamily } : {}),
@@ -150,10 +164,11 @@ export function phiBrandControlIsEmpty({
   shows = "lockup",
   mode,
 }: PhiBrandControlProps): boolean {
+  const drawsName = shows !== "logo" && !wordmarkIsSwitchedOff(brand?.wordmark);
   const hasLogo = shows !== "wordmark" && Boolean(resolvePhiBrandLogoUrl(brand, mode));
-  const hasWordmark = shows !== "logo"
+  const hasWordmark = drawsName
     && (hasWordmarkParts(brand?.wordmark?.parts) || Boolean(fallbackTitle));
-  const hasEyebrow = shows !== "logo" && Boolean(brand?.eyebrow);
+  const hasEyebrow = drawsName && Boolean(brand?.eyebrow);
   return !hasLogo && !hasWordmark && !hasEyebrow;
 }
 
@@ -171,7 +186,14 @@ export function PhiBrandControl({
   shows = "lockup",
   mode,
 }: PhiBrandControlProps) {
-  const eyebrow = shows === "logo" ? null : brand?.eyebrow ?? null;
+  /*
+   * The Eyebrow travels with the Wordmark, so it goes where the Wordmark does -- switched off by the
+   * Brand as much as left out by the placement. It is the line above the name; above a bare Logo it
+   * would sit over nothing.
+   */
+  const eyebrow = shows === "logo" || wordmarkIsSwitchedOff(brand?.wordmark)
+    ? null
+    : brand?.eyebrow ?? null;
   const wordmarkNode = shows === "logo"
     ? null
     : renderWordmark(brand?.wordmark, fallbackTitle, {

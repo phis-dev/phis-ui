@@ -1049,10 +1049,37 @@ function mergeThemeWordmarkParts(
   parts: readonly PhiSiteThemeWordmarkPart[],
 ): ThemePayload {
   const hasText = parts.some((part) => part.text.trim());
+  const wordmark = theme.brand?.wordmark ?? {};
+  if (hasText) {
+    return mergeThemeBrand(theme, {
+      wordmark: { ...wordmark, parts: parts.map((part) => ({ ...part })) },
+    });
+  }
+  /*
+   * Clearing the text hands the Site's name back to the fallback -- unless the Brand has said it draws
+   * no name, which is a decision about the Wordmark and not about its parts. Dropping the whole record
+   * here would switch the name back on the moment somebody emptied the last part.
+   */
   return mergeThemeBrand(theme, {
-    wordmark: hasText
-      ? { ...(theme.brand?.wordmark ?? {}), parts: parts.map((part) => ({ ...part })) }
-      : null,
+    wordmark: wordmark.shows === "none" ? { shows: "none" } : null,
+  });
+}
+
+/** Whether the Brand draws a name at all. Off is stated; on is simply the Wordmark without the word. */
+function mergeThemeWordmarkShows(theme: ThemePayload, shows: boolean): ThemePayload {
+  const wordmark = theme.brand?.wordmark ?? {};
+  if (!shows) {
+    return mergeThemeBrand(theme, { wordmark: { ...wordmark, shows: "none" } });
+  }
+  /*
+   * Switching it back on takes the statement away rather than writing "name": what is left is a
+   * Wordmark that has not said anything, which is the state every Site starts in. A Wordmark with
+   * nothing else in it goes entirely, so the record does not keep an empty object.
+   */
+  const rest = { ...wordmark };
+  delete rest.shows;
+  return mergeThemeBrand(theme, {
+    wordmark: Object.keys(rest).length > 0 ? rest : null,
   });
 }
 
@@ -2769,6 +2796,10 @@ function clearThemeRootSurface(
  * "Reset" here takes the author's layer away rather than restoring a copy, which is why it names the
  * block: what comes back is whatever that block says today, not what it said when somebody last
  * looked. Offered only where there is something to take away.
+ *
+ * Drawn as a button, like the "Copy to" it stands beside. It was a text button, and a text button that
+ * reads "Follow phis.dev" looks like a caption saying which block is being followed -- which is exactly
+ * what it is not: it is the way back to that block, and nobody presses a caption.
  */
 function PhiBrandBlockResetButton({
   blockTitle,
@@ -2780,7 +2811,13 @@ function PhiBrandBlockResetButton({
   onReset: () => void;
 }) {
   return (
-    <PhiButtonControl size="small" type="text" disabled={disabled} onClick={onReset} label={`Follow ${blockTitle}`} />
+    <PhiButtonControl
+      size="small"
+      style={{ flexShrink: 0 }}
+      disabled={disabled}
+      onClick={onReset}
+      label={`Follow ${blockTitle}`}
+    />
   );
 }
 
@@ -2947,6 +2984,8 @@ export function PhiBuilderBrandIdentityControlsWidgetClient({
   const logo = logos[mode] ?? null;
   const logoPreviewUrl = resolvePhiBrandLogoUrl({ logo: logos }, mode);
   const wordmarkParts: readonly PhiSiteThemeWordmarkPart[] = brand.wordmark?.parts ?? [];
+  /* Absent means the name is drawn: a Site that never stated this wants what it has always had. */
+  const showsWordmark = brand.wordmark?.shows !== "none";
   /*
    * A Site with no Wordmark yet still gets a field to type it into.
    *
@@ -3144,9 +3183,22 @@ export function PhiBuilderBrandIdentityControlsWidgetClient({
                   } as CSSProperties}
                 >
                   <PhiTypographyControl type="secondary">
-                    The Site name as it is set. One part per colour: a two-tone name is one word written
-                    in two. With no part at all the frame shows {fallbackWordmark}.
+                    {showsWordmark
+                      ? <>The Site name as it is set. One part per colour: a two-tone name is one word
+                        written in two. With no part at all the frame shows {fallbackWordmark}.</>
+                      : <>The Brand is the Logo alone. The name is not drawn, and neither is the
+                        Eyebrow above it.</>}
                   </PhiTypographyControl>
+                  {/* In the control column like every other row: it is a setting, not a section header. */}
+                  <PhiSwitchControl
+                    label="Show name"
+                    checked={showsWordmark}
+                    checkedChildren="On"
+                    unCheckedChildren="Off"
+                    onChange={(checked) => publishDraft(mergeThemeWordmarkShows(state.draft, checked))}
+                  />
+                  {/* Everything below sets the name. With the name switched off there is nothing to set. */}
+                  {showsWordmark && (<>
                   {editableWordmarkParts.map((part, index) => (
                     <PhiLabeledControl key={index} label={`Part #${index + 1}`} fill>
                       <PhiFlexControl gap={clientToken.paddingXXS} align="center" style={{ width: "100%", minWidth: 0 }}>
@@ -3258,6 +3310,7 @@ export function PhiBuilderBrandIdentityControlsWidgetClient({
                       }))}
                     />
                   </PhiLabeledControl>
+                  </>)}
                 </PhiFlexControl>
               ),
             },
