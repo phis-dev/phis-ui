@@ -169,6 +169,7 @@ export const PHI_SIGNAL_VALUE_SCHEMAS = {
   tableSelection: createPhiSharedSignalValueSchema("table-selection"),
   tableState: createPhiSharedSignalValueSchema("table-state"),
   tableMutation: createPhiSharedSignalValueSchema("table-mutation"),
+  threadSelection: createPhiSharedSignalValueSchema("thread-selection"),
   treeAction: createPhiSharedSignalValueSchema("tree-action"),
   treeBindingParams: createPhiSharedSignalValueSchema("tree-binding-params"),
   treeState: createPhiSharedSignalValueSchema("tree-state"),

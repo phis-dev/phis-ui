@@ -10,11 +10,18 @@ import { PhiButtonControl } from "../../../../../components/controls/phi-button-
 import { PhiTagControl } from "../../../../../components/controls/phi-tag-control";
 import { PhiTextControl } from "../../../../../components/controls/phi-text-control";
 import { usePhiMediaUpload } from "../../../../../components/media/phi-media-upload";
+import { usePhiSignalListener } from "../../../../../components/runtime/runtime-signal-bus";
 import {
-  usePhiSignalDispatcher,
-  usePhiSignalListener,
-} from "../../../../../components/runtime/runtime-signal-bus";
-import type { PhiSignalFilter } from "../../../../../types/signals";
+  usePhiSignalEmitter,
+  usePhiSignalIdentity,
+} from "../../../../../components/runtime/runtime-signal-identity";
+import { findPhiSignalRoutesByCapabilityId } from "../../../../../types/signals";
+import { readPhiThreadSignalValue } from "../../../../../types/thread-widget";
+import {
+  buildPhiThreadListenFilter,
+  findPhiThreadListenRoute,
+  type PhiThreadWidgetConfig,
+} from "../thread-widget-config";
 import { PHI_THREADS_RUNTIME_MODULE_DEFINITION } from "../../definition";
 import type { PhiThreadComposerLabels } from "../../../../../components/widgets/label-sets/threads";
 import { PhiFlexControl } from "../../../../../components/controls/phi-flex-control";
@@ -22,18 +29,9 @@ import { PhiTypographyControl } from "../../../../../components/controls/phi-typ
 
 export type PhiThreadComposerWidgetClientProps = PhiClientBlockBaseProps<
   PhiThreadComposerLabels,
-  { padding?: number | string },
+  PhiThreadWidgetConfig,
   Pick<PhiBlockRuntime, "site" | "locale" | "viewer">
 >;
-
-/**
- * What a conversation surface says when the person picks one.
- *
- * `change` rather than a verb of its own: choosing a conversation changes which one is being written
- * in, and the signal vocabulary is deliberately small -- a Module inventing an action for its own case
- * is how two surfaces come to mean the same thing in two words.
- */
-const PHI_THREAD_SELECTION_FILTER: PhiSignalFilter = { channels: ["thread"], actions: ["change"] };
 
 /**
  * Writes a message into the selected conversation, with files from the viewer's own Space.
@@ -53,22 +51,34 @@ export function PhiThreadComposerWidgetClient({
   labels,
   config,
 }: PhiThreadComposerWidgetClientProps) {
-  const dispatchSignal = usePhiSignalDispatcher();
+  const identity = usePhiSignalIdentity();
+  const emitSignal = usePhiSignalEmitter();
   const [threadId, setThreadId] = useState<number | null>(null);
   const [message, setMessage] = useState("");
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const listenRoutes = config?.signalRoutes?.listens;
+
   usePhiSignalListener(
-    useCallback((signal: { value: unknown }) => {
-      const value = typeof signal.value === "number" ? signal.value : Number(signal.value);
-      setThreadId(Number.isInteger(value) && value > 0 ? value : null);
+    useCallback((signal) => {
+      if (signal.receiver !== identity.receiver && signal.receiver !== "broadcast") {
+        return;
+      }
+      const route = findPhiThreadListenRoute(listenRoutes, signal);
+      if (route?.capabilityId !== "select") {
+        return;
+      }
+      setThreadId(readPhiThreadSignalValue(signal.value)?.threadId ?? null);
       // A different conversation is a different message. Carrying the text across would put somebody's
       // half-written reply under a heading they did not choose.
       setMessage("");
       setError(null);
-    }, []),
-    PHI_THREAD_SELECTION_FILTER,
+    }, [identity.receiver, listenRoutes]),
+    useMemo(() => buildPhiThreadListenFilter(listenRoutes, identity.receiver), [identity.receiver, listenRoutes]),
+    // Named here and not only inside the filter: this is what tells the bus somebody answers for the
+    // address, and a signal sent to an address nobody answers for is held rather than refused.
+    identity.receiver,
   );
 
   const uploadLabels = useMemo(() => ({
@@ -100,6 +110,29 @@ export function PhiThreadComposerWidgetClient({
     initOptions: { spaceAddress: "user" },
     onRejected: (reason) => setError(reason),
   });
+
+  /**
+   * What this composer says after a message landed, to whoever the Site wired it to.
+   *
+   * Nothing is sent when nothing is wired, which is the honest behaviour for a Widget placed on its
+   * own: there is no conversation beside it that would need telling.
+   */
+  const emitWritten = useCallback((id: number) => {
+    for (const route of findPhiSignalRoutesByCapabilityId(config?.signalRoutes?.emits, "written")) {
+      if (route.receiver == null) {
+        continue;
+      }
+      emitSignal({
+        scope: route.scope,
+        channel: route.channel,
+        action: route.action,
+        value: route.valueType === "none" ? null : { threadId: id },
+        valueType: route.valueType,
+        valueSchema: route.valueSchema ?? null,
+        receiver: route.receiver,
+      });
+    }
+  }, [config?.signalRoutes?.emits, emitSignal]);
 
   const attached = items.filter((item) => item.status === "done" && item.assetId != null);
   const uploading = items.filter((item) => item.status === "uploading");
@@ -135,21 +168,13 @@ export function PhiThreadComposerWidgetClient({
        * `change` would put every listener through switching threads -- and this composer is one of
        * them, so it would clear the next message somebody had already started.
        */
-      dispatchSignal({
-        scope: "page",
-        sender: null,
-        receiver: "broadcast",
-        channel: "thread",
-        action: "reload",
-        value: threadId,
-        valueType: "number",
-      });
+      emitWritten(threadId);
     } catch {
       setError(labels.feedback.errorNetwork);
     } finally {
       setSending(false);
     }
-  }, [attached, dispatchSignal, labels, message, reset, threadId]);
+  }, [attached, emitWritten, labels, message, reset, threadId]);
 
   if (threadId == null) {
     return (

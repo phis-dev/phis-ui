@@ -1,7 +1,7 @@
 import { PhiCmsWidgetType, resolvePhiCmsWidgetPluginKey } from "../../../../../constants/cms-widget-types";
 import type { PhiCmsWidgetPlugin } from "../../../../../types";
-import type { PhiCmsPaddingOnlyWidgetConfig } from "../../../../../components/widgets/config/helpers";
-import { parsePhiPaddingOnlyWidgetConfig } from "../../../../../components/widgets/config/helpers";
+import { PHI_SIGNAL_VALUE_SCHEMAS } from "../../../../../types/signals";
+import { parsePhiThreadWidgetConfig, type PhiThreadWidgetConfig } from "../thread-widget-config";
 
 /**
  * One conversation, read.
@@ -23,11 +23,44 @@ export const PHI_THREAD_CONVERSATION_WIDGET_DEFINITION = {
   title: "Conversation",
   description: "Reads the selected conversation: its messages, who wrote them, and what hangs on them.",
   category: "content",
+  /*
+   * What it is told, and the one thing it says back.
+   *
+   * `select` and `reload` are two capabilities rather than one because they mean different things to
+   * whoever listens: a selection switches conversation, a reload says the open one has moved on. Folded
+   * into one action, every reload would put the composer beside it through a switch -- which clears the
+   * reply somebody is halfway through.
+   *
+   * `opened` is announced only for a conversation this Widget opened by itself, which is the `?thread=`
+   * case. It carries no channel, like every emit: where the announcement goes is the route's business.
+   */
+  runtimeSignals: {
+    listens: [
+      {
+        id: "select",
+        channel: "thread",
+        action: "change",
+        valueType: "json",
+        valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.threadSelection,
+      },
+      {
+        id: "reload",
+        channel: "thread",
+        action: "reload",
+        valueType: "json",
+        valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.threadSelection,
+      },
+    ],
+    emits: [
+      { id: "opened", action: "change", valueType: "json", valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.threadSelection },
+    ],
+  },
   fields: [],
-  parseConfig: parsePhiPaddingOnlyWidgetConfig,
+  parseConfig: parsePhiThreadWidgetConfig,
 } satisfies Pick<
-  PhiCmsWidgetPlugin<PhiCmsPaddingOnlyWidgetConfig>,
-  "kind" | "pluginKey" | "typeKey" | "title" | "description" | "category" | "fields" | "parseConfig"
+  PhiCmsWidgetPlugin<PhiThreadWidgetConfig>,
+  | "kind" | "pluginKey" | "typeKey" | "title" | "description" | "category"
+  | "runtimeSignals" | "fields" | "parseConfig"
 >;
 
 export const PHI_THREAD_CONVERSATION_WIDGET_PLUGIN_TYPE = PhiCmsWidgetType.ThreadConversation;

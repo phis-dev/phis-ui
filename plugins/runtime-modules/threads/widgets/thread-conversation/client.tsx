@@ -9,40 +9,31 @@ import { PhisThreadMessageFlag, PhisThreadStatus } from "../../../../../constant
 import { PhiAlertControl } from "../../../../../components/controls/phi-alert-control";
 import { PhiButtonControl } from "../../../../../components/controls/phi-button-control";
 import { PhiTagControl } from "../../../../../components/controls/phi-tag-control";
+import { usePhiSignalListener } from "../../../../../components/runtime/runtime-signal-bus";
 import {
-  usePhiSignalDispatcher,
-  usePhiSignalListener,
-} from "../../../../../components/runtime/runtime-signal-bus";
-import type { PhiSignalFilter } from "../../../../../types/signals";
+  usePhiSignalEmitter,
+  usePhiSignalIdentity,
+} from "../../../../../components/runtime/runtime-signal-identity";
+import { findPhiSignalRoutesByCapabilityId } from "../../../../../types/signals";
+import { readPhiThreadSignalValue } from "../../../../../types/thread-widget";
+import {
+  buildPhiThreadListenFilter,
+  findPhiThreadListenRoute,
+  readPhiThreadAddressId,
+  type PhiThreadWidgetConfig,
+} from "../thread-widget-config";
 import type { PhiThreadConversationLabels } from "../../../../../components/widgets/label-sets/threads";
 import { PhiFlexControl } from "../../../../../components/controls/phi-flex-control";
 import { PhiTypographyControl } from "../../../../../components/controls/phi-typography-control";
 
 export type PhiThreadConversationWidgetClientProps = PhiClientBlockBaseProps<
   PhiThreadConversationLabels,
-  { padding?: number | string },
+  PhiThreadWidgetConfig,
   Pick<PhiBlockRuntime, "site" | "locale" | "viewer">
 >;
 
-/** Somebody picked a conversation -- a listing, or this widget reading it off the address. */
-const PHI_THREAD_SELECTION_FILTER: PhiSignalFilter = { channels: ["thread"], actions: ["change"] };
-
-/**
- * Something was written into a conversation and what is on screen is now behind.
- *
- * `reload` rather than a second `change`: the conversation has not changed, only its contents, and a
- * `change` would put every listener through switching to a thread they are already in -- which for the
- * composer means clearing the message somebody is halfway through typing.
- */
-const PHI_THREAD_RELOAD_FILTER: PhiSignalFilter = { channels: ["thread"], actions: ["reload"] };
-
 /** How much of a conversation is fetched at once; older messages are asked for by the button. */
 const PHI_THREAD_MESSAGE_WINDOW = 50;
-
-function readThreadId(value: unknown) {
-  const parsed = typeof value === "number" ? value : Number(value);
-  return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
-}
 
 /** Why a window did not arrive, in the three shapes this surface can say anything about. */
 type PhiThreadFetchFailure = "notFound" | "generic" | "network";
@@ -100,9 +91,11 @@ export function PhiThreadConversationWidgetClient({
   config,
 }: PhiThreadConversationWidgetClientProps) {
   const searchParams = useSearchParams();
-  const dispatchSignal = usePhiSignalDispatcher();
+  const identity = usePhiSignalIdentity();
+  const emitSignal = usePhiSignalEmitter();
 
-  const addressedThreadId = readThreadId(searchParams.get("thread"));
+  const listenRoutes = config?.signalRoutes?.listens;
+  const addressedThreadId = readPhiThreadAddressId(searchParams.get("thread"));
   const [threadId, setThreadId] = useState<number | null>(addressedThreadId);
   /*
    * What loaded, and what failed, each tagged with the conversation it belongs to.
@@ -133,15 +126,6 @@ export function PhiThreadConversationWidgetClient({
    * conversation this widget opened by itself, which is the case the address carries.
    */
   const announcedThreadId = useRef<number | null>(null);
-
-  usePhiSignalListener(
-    useCallback((signal: { value: unknown }) => {
-      const next = readThreadId(signal.value);
-      announcedThreadId.current = next;
-      setThreadId(next);
-    }, []),
-    PHI_THREAD_SELECTION_FILTER,
-  );
 
   const receive = useCallback((id: number, result: PhiThreadFetchResult) => {
     if (result.ok) {
@@ -174,16 +158,39 @@ export function PhiThreadConversationWidgetClient({
     return () => controller.abort();
   }, [receive, threadId]);
 
+  /*
+   * One listener for both capabilities, because both arrive on the same wiring.
+   *
+   * Which one it is, is the route's `capabilityId` and not the channel: a Site may wire `select` to a
+   * listing beside this and `reload` to the composer beneath it, or point both at something else
+   * entirely, and this reads the same either way.
+   */
   usePhiSignalListener(
-    useCallback((signal: { value: unknown }) => {
-      const written = readThreadId(signal.value);
+    useCallback((signal) => {
+      if (signal.receiver !== identity.receiver && signal.receiver !== "broadcast") {
+        return;
+      }
+      const route = findPhiThreadListenRoute(listenRoutes, signal);
+      if (route?.capabilityId === "select") {
+        const next = readPhiThreadSignalValue(signal.value)?.threadId ?? null;
+        announcedThreadId.current = next;
+        setThreadId(next);
+        return;
+      }
+      if (route?.capabilityId !== "reload") {
+        return;
+      }
+      const written = readPhiThreadSignalValue(signal.value)?.threadId ?? null;
       // Only when it is this conversation: a reload for another one is somebody else's business.
       if (written == null || written !== threadId) {
         return;
       }
       void fetchPhiThreadDetail(written).then((result) => receive(written, result));
-    }, [receive, threadId]),
-    PHI_THREAD_RELOAD_FILTER,
+    }, [identity.receiver, listenRoutes, receive, threadId]),
+    useMemo(() => buildPhiThreadListenFilter(listenRoutes, identity.receiver), [identity.receiver, listenRoutes]),
+    // Named here and not only inside the filter: this is what tells the bus somebody answers for the
+    // address, and a signal sent to an address nobody answers for is held rather than refused.
+    identity.receiver,
   );
 
   const openedThreadId = detail?.thread.id ?? null;
@@ -199,16 +206,21 @@ export function PhiThreadConversationWidgetClient({
       return;
     }
     announcedThreadId.current = openedThreadId;
-    dispatchSignal({
-      scope: "page",
-      sender: null,
-      receiver: "broadcast",
-      channel: "thread",
-      action: "change",
-      value: openedThreadId,
-      valueType: "number",
-    });
-  }, [dispatchSignal, openedThreadId]);
+    for (const route of findPhiSignalRoutesByCapabilityId(config?.signalRoutes?.emits, "opened")) {
+      if (route.receiver == null) {
+        continue;
+      }
+      emitSignal({
+        scope: route.scope,
+        channel: route.channel,
+        action: route.action,
+        value: route.valueType === "none" ? null : { threadId: openedThreadId },
+        valueType: route.valueType,
+        valueSchema: route.valueSchema ?? null,
+        receiver: route.receiver,
+      });
+    }
+  }, [config?.signalRoutes?.emits, emitSignal, openedThreadId]);
 
   const newestMessageId = detail?.messages.at(-1)?.id ?? null;
 

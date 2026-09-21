@@ -200,6 +200,7 @@ const PHI_RUNTIME_MODULE_OWNERSHIP: Readonly<Record<string, readonly [module: st
   "signals/table-selection": ["core", "table-selection"],
   "signals/table-state": ["core", "table-state"],
   "signals/temporal-selection": ["core", "temporal-selection"],
+  "signals/thread-selection": ["threads", "selection"],
   "signals/tree-action": ["core", "tree-action"],
   "signals/tree-binding-params": ["core", "tree-binding-params"],
   "signals/tree-mutation": ["core", "tree-mutation"],

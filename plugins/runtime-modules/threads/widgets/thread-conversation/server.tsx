@@ -1,12 +1,13 @@
 import type { PhiBlockRuntime } from "../../../../../types";
 import { getPhiThreadConversationLabels } from "../../../../../components/widgets/label-sets/threads";
 import { PhiCmsWidgetType } from "../../../../../constants/cms-widget-types";
+import type { PhiThreadWidgetConfig } from "../thread-widget-config";
 import { PhiRuntimeModuleRenderClientHost } from "../../../../../components/runtime/runtime-module-render-client-manifest";
 import { readPhiServerApiCredentials } from "../../../../../helpers/phis-server-credentials";
 
 export type PhiThreadConversationWidgetProps = {
   runtime: Pick<PhiBlockRuntime, "site" | "locale" | "viewer" | "area">;
-  config?: { padding?: number | string };
+  config?: PhiThreadWidgetConfig | null;
 };
 
 export async function PhiThreadConversationWidget({ runtime, config }: PhiThreadConversationWidgetProps) {
