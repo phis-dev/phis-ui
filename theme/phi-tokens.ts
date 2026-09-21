@@ -64,13 +64,18 @@ export const PHI_LAYOUT = {
    * A number is a handful of characters and does not become more readable with room after it. In the
    * house label column a Control takes two thirds of the form, which is right for a sentence and
    * absurd for four digits: the figure sits at the left edge of a field stretching past the end of
-   * the label above it. This is the same 233 the sidebar is, and it holds an eight-digit figure with
-   * a unit in front of it and the stepper beside it.
+   * the label above it.
+   *
+   * One step down the sequence from the sidebar's 233, because 233 was still a field a number sat in
+   * the corner of. 144 holds five or six digits with a unit in front and the stepper beside them,
+   * which is what the numbers in this house actually are -- a tracking in em, a pixel offset, a
+   * count. A figure longer than that is rare enough to be the caller's business: `style` still wins,
+   * because the ceiling is written first.
    *
    * A maximum and not a width. A number field still fills a column narrower than this -- in an
    * Inspector, a toolbar or a table cell nothing changes at all.
    */
-  numberControlMax: 233,
+  numberControlMax: 144,
   /*
    * How wide a column of content is allowed to get, in three steps of the same sequence.
    *
