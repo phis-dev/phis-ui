@@ -84,7 +84,8 @@ Four rules carry it:
    `status-card`. A Module never needs to say its own name inside its own namespace.
 4. **Namespaces come from a closed set** -- `widgets`, `layouts`, `controller`, `forms`, `form-field`,
    `form-validation`, `form-handler`, `options`, `tables`, `trees`, `collections`, `calendars`,
-   `signals`, `background-patterns`. A third-party package invents Modules and leaves, not namespaces.
+   `cards`, `signals`, `background-patterns`. A third-party package invents Modules and leaves, not
+   namespaces.
 
 Name the Module for what it does. `core` means a package's unselectable base Module, which is what
 `@phis/ui` has; a package with one Module gives it a real name.

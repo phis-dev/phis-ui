@@ -12,6 +12,10 @@ export const PHI_USER_MANAGEMENT_RUNTIME_MODULE_SERVER_AREA_CONTRIBUTION =
       forms: PHI_USER_MANAGEMENT_RUNTIME_MODULE_FORMS,
       layouts: [],
       routes: PHI_USER_MANAGEMENT_RUNTIME_MODULE_ROUTES,
+      dashboardCards: {
+        load: () => import("./cards")
+          .then((module) => module.PHI_USER_MANAGEMENT_RUNTIME_MODULE_DASHBOARD_CARDS),
+      },
       load: () => import("./module").then((module) => module.PHI_USER_MANAGEMENT_RUNTIME_MODULE),
     },
   });

@@ -1,11 +1,21 @@
-# Dashboard: Planned Design
+# Dashboard: Design
 
-**Status: none of the contribution described here is built.** What it is assembled from exists: the
-Collection Widget with its card presentation and its item renderer key
-(`plugins/runtime-modules/core/widgets/collection-view/config.ts`, `types/collection-provider.ts`), the
-runtime data provider contracts, and the `dashboard` Module with its Controller and its three page
-trees. What is described here and is **not** built is the card contribution -- what a Module offers,
-how a card resolves what it shows, and who decides when it is asked again.
+**Status: the contribution, the fan-in and the two phases are built; the clock and the Site's decisions
+are not.** What exists is sections 1 to 3, 5, 6 and 8: a Module contributes card descriptors
+(`types/dashboard-cards.ts`, `dashboardCards` on the catalog entry), the Site answers the list and each
+payload at `/api/site/dashboard-cards` (`gateway/dashboard-cards-route.ts`), the `dashboard` Module fans
+them in through one Collection provider, and its card View resolves each payload on its own
+(`plugins/runtime-modules/dashboard/`). The Admin Dashboard is the first page drawn this way, with cards
+from `core`, `user-management` and `localization`.
+
+What is **not** built is section 4 -- the Controller as a clock, and with it `staleness`, the floor,
+staggering, pausing and backoff -- and section 7, the Site's own decisions about order, hiding and
+renaming. Until the clock exists, a card is asked once, when it mounts, and the descriptor carries no
+staleness to declare: a field nothing reads is worse than a field that is not there yet. Ordering is the
+card id, which is to say the owning Module, and section 9's first question is still open.
+
+Only the `stat` form is offered. `list` and a series card wait for the case that needs them, on the
+terms section 9 states.
 
 Decisions taken while writing this are stated where they apply, including the ones that rejected an
 earlier answer, because the rejected ones are the ones that come back.

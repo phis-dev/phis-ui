@@ -40,6 +40,10 @@ vi.mock("./navigation-target-route", () => ({
   buildPhiNavigationTargetRouteHandler: () =>
     async () => new Response("navigation-target", { status: 200 }),
 }));
+vi.mock("./dashboard-cards-route", () => ({
+  buildPhiDashboardCardsRouteHandler: () =>
+    async () => new Response("dashboard-cards", { status: 200 }),
+}));
 
 import { buildPhiSiteProxyHandlers } from "./site-proxy";
 import { clearPhiSiteReadCache, readPhiSiteReadCache } from "./site-read-cache";
@@ -86,6 +90,7 @@ describe("buildPhiSiteProxyHandlers", () => {
     ["forms", "GET"],
     ["module-diagnostics", "GET"],
     ["navigation-target", "GET"],
+    ["dashboard-cards", "GET"],
   ] as const)("answers /%s from the Site on %s", async (segment, method) => {
     const response = await handlers[method](request, at(segment));
     expect(await response.text()).toBe(segment);

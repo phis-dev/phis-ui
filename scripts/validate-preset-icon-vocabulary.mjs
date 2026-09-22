@@ -24,7 +24,12 @@ import process from "node:process";
 const repositoryRoot = process.cwd();
 
 const presetDirectories = ["components/regions/presets"];
-const presetFilePattern = /(^|\/)presets\.tsx?$|(^|\/)presets\//u;
+/*
+ * A card contribution is read here too, and it is the case this rule was written for: a Module's cards
+ * ship with it to every Site that activates it, and the mark beside a card's title is named by nobody
+ * along the way. The same objection, the same two prefixes.
+ */
+const presetFilePattern = /(^|\/)presets\.tsx?$|(^|\/)presets\/|(^|\/)cards\.tsx?$|(^|\/)cards\//u;
 const moduleRoot = "plugins/runtime-modules";
 
 /** The prefixes a preset may not name, and why each one is not a default anybody agreed to. */

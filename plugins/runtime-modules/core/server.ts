@@ -13,6 +13,9 @@ export function createPhiCoreRuntimeModuleServerAreaContribution() {
       widgets: PHI_CORE_WIDGETS,
       layouts: PHI_CORE_LAYOUTS,
       themes: PHI_CORE_RUNTIME_MODULE_THEMES,
+      dashboardCards: {
+        load: () => import("./cards").then((module) => module.PHI_CORE_RUNTIME_MODULE_DASHBOARD_CARDS),
+      },
       load: () => import("./module").then((module) => module.PHI_CORE_RUNTIME_MODULE),
     },
   });

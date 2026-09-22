@@ -22,14 +22,17 @@ export type BuildPhiSiteProxyHandlersOptions = {
  * The paths under `/api/site` that Core cannot answer, because the answer is in the Site.
  *
  * `forms` resolves the submit handler a Module registered before anything goes upstream;
- * `module-diagnostics` compares what this Site's Modules require against what its server offers; and
- * `navigation-target` resolves where a forwarding Area root would send this viewer. All three read the
- * Site's own Module catalogs, which phi-server deliberately knows nothing about.
+ * `module-diagnostics` compares what this Site's Modules require against what its server offers;
+ * `navigation-target` resolves where a forwarding Area root would send this viewer; and
+ * `dashboard-cards` fans the Area's active Modules in to one list of cards, then answers each card's
+ * payload. All four read the Site's own Module catalogs, which phi-server deliberately knows nothing
+ * about.
  *
  * They are one segment each and matched exactly, so nothing deeper is captured by accident: an Asset
- * under `/api/site/media/...` goes upstream as it always did.
+ * under `/api/site/media/...` goes upstream as it always did. It is also why `dashboard-cards` names
+ * the card it wants in a query parameter rather than in a second segment.
  */
-const LOCALLY_ANSWERED = ["forms", "module-diagnostics", "navigation-target"] as const;
+const LOCALLY_ANSWERED = ["forms", "module-diagnostics", "navigation-target", "dashboard-cards"] as const;
 
 type PhiLocallyAnsweredPath = (typeof LOCALLY_ANSWERED)[number];
 
@@ -63,6 +66,10 @@ async function buildLocallyAnsweredHandlers(
   if (answered === "module-diagnostics") {
     const { buildPhiSiteModuleDiagnosticsRouteHandler } = await import("./module-diagnostics-route");
     return { GET: buildPhiSiteModuleDiagnosticsRouteHandler({ loadAreaBridge }) };
+  }
+  if (answered === "dashboard-cards") {
+    const { buildPhiDashboardCardsRouteHandler } = await import("./dashboard-cards-route");
+    return { GET: buildPhiDashboardCardsRouteHandler({ loadAreaBridge }) };
   }
   const { buildPhiNavigationTargetRouteHandler } = await import("./navigation-target-route");
   return { GET: buildPhiNavigationTargetRouteHandler({ loadAreaBridge }) };

@@ -6,6 +6,7 @@ import { PHI_COMMON_RUNTIME_MODULE_RENDER_CLIENT_MANIFEST } from "./common";
 import { extendPhiRuntimeModuleDataProviderClientManifest } from "../../../components/runtime/runtime-module-data-provider-client-manifest";
 import { PHI_COMMON_RUNTIME_MODULE_DATA_PROVIDER_CLIENT_MANIFEST } from "./common-data-providers";
 import { PHI_AUTH_RUNTIME_DATA_PROVIDER_CLIENT_DEFINITIONS } from "../auth/client-data-providers";
+import { PHI_DASHBOARD_RUNTIME_DATA_PROVIDER_CLIENT_DEFINITIONS } from "../dashboard/client-data-providers";
 import { PHI_GROUPS_RUNTIME_DATA_PROVIDER_CLIENT_DEFINITIONS } from "../groups/client-data-providers";
 import { PHI_LOCALIZATION_RUNTIME_DATA_PROVIDER_CLIENT_DEFINITIONS } from "../localization/client-data-providers";
 import { PHI_OBSERVABILITY_RUNTIME_DATA_PROVIDER_CLIENT_DEFINITIONS } from "../observability/client-data-providers";
@@ -25,6 +26,7 @@ export const PHI_ADMIN_RUNTIME_MODULE_DATA_PROVIDER_CLIENT_MANIFEST =
     PHI_COMMON_RUNTIME_MODULE_DATA_PROVIDER_CLIENT_MANIFEST,
     [
       ...PHI_AUTH_RUNTIME_DATA_PROVIDER_CLIENT_DEFINITIONS,
+      ...PHI_DASHBOARD_RUNTIME_DATA_PROVIDER_CLIENT_DEFINITIONS,
       ...PHI_GROUPS_RUNTIME_DATA_PROVIDER_CLIENT_DEFINITIONS,
       ...PHI_LOCALIZATION_RUNTIME_DATA_PROVIDER_CLIENT_DEFINITIONS,
       ...PHI_OBSERVABILITY_RUNTIME_DATA_PROVIDER_CLIENT_DEFINITIONS,

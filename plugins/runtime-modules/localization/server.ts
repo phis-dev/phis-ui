@@ -12,6 +12,10 @@ export function createPhiLocalizationRuntimeModuleServerAreaContribution() {
       forms: PHI_LOCALIZATION_RUNTIME_MODULE_FORMS,
       layouts: [],
       routes: PHI_LOCALIZATION_RUNTIME_MODULE_ROUTES,
+      dashboardCards: {
+        load: () => import("./cards")
+          .then((module) => module.PHI_LOCALIZATION_RUNTIME_MODULE_DASHBOARD_CARDS),
+      },
       load: () => import("./module").then((module) => module.PHI_LOCALIZATION_RUNTIME_MODULE),
     },
   });

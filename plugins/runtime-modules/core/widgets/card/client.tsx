@@ -4,6 +4,7 @@ import { PhiButtonControl } from "../../../../../components/controls/phi-button-
 
 import type { PhiClientBlockBaseProps } from "../../../../../types";
 import { PhiCardControl } from "../../../../../components/controls/phi-card-control";
+import { PhiIcon } from "../../../../../components/shell/phi-icon";
 import { PhiLink } from "../../../../../components/navigation/phi-link";
 import { usePhiConfig } from "../../../../../components/root/phi-config-provider";
 import { PhiTypographyControl } from "../../../../../components/controls/phi-typography-control";
@@ -27,6 +28,15 @@ export type PhiCardWidgetClientConfig = {
    */
   iconUrl?: string;
   iconAlt?: string;
+  /**
+   * The same mark, named rather than delivered: `antd:dashboard`, or anything else an icon name reaches.
+   *
+   * A picture that arrives as bytes and an icon that arrives as a name occupy one place on a card, so
+   * they are one decision here. `iconUrl` wins when both are given, because a Site that uploaded a mark
+   * meant it. A contributed card is the case this exists for: a Module ships an icon with itself and
+   * has no file to point at.
+   */
+  iconName?: string;
   /**
    * How the delivered bytes meet the cover box. Both come from the shared image presentation
    * resolver, so a generated variant arrives already centered and an original keeps its focal
@@ -138,6 +148,22 @@ export function PhiCardWidgetClient({
                 background: token.colorFillQuaternary,
               }}
             />
+          ) : config?.iconName ? (
+            <span
+              aria-hidden="true"
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                justifyContent: "center",
+                width: 40,
+                height: 40,
+                borderRadius: token.borderRadius,
+                background: token.colorFillQuaternary,
+                color: cardHighlight ? token.colorPrimary : token.colorTextSecondary,
+              }}
+            >
+              <PhiIcon name={config.iconName} size={24} />
+            </span>
           ) : null}
           {labels.eyebrow ? (
             <PhiTypographyControl

@@ -916,6 +916,18 @@ export type PhiRuntimeModuleCatalogEntry = {
     namespace: string;
     load: () => Promise<PhiRuntimeModuleFeatureResolver>;
   };
+  /**
+   * The cards this Module offers a Dashboard, loaded only when one asks.
+   *
+   * Declared like `features` and for the same reason: the answer is assembled on the server, from label
+   * sets and endpoints that must not reach the browser, and a Site whose Dashboard nobody opens never
+   * pays for it. The Module offers; which cards a Site shows is the Site's decision.
+   *
+   * There is no namespace to declare. A card carries its own id, and that id says whose it is.
+   */
+  dashboardCards?: {
+    load: () => Promise<import("./dashboard-cards").PhiDashboardCardProvider>;
+  };
   load: PhiRuntimeModuleLoader;
 };
 

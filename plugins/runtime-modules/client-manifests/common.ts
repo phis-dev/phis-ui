@@ -9,6 +9,7 @@ import { PhiCmsLayoutType } from "../../../constants/cms-layout-types";
 import { PhiRuntimeRenderClientType } from "../../../constants/runtime-render-client-types";
 import { PHI_ASSET_RUNTIME_MODULE_ID } from "../asset/ids";
 import { PHI_MEDIA_LIBRARY_ITEM_RENDERER_KEY } from "../../../constants/media-library-provider-keys";
+import { PHI_DASHBOARD_CARD_ITEM_RENDERER_KEY } from "../../../constants/dashboard-card-provider-keys";
 import { createPhiRuntimeModuleCalendarAdapterClientManifest } from "../../../components/runtime/runtime-module-calendar-adapter-client-manifest";
 import { PHI_CORE_CALENDAR_ADAPTER_CLIENT_DEFINITIONS } from "../client-calendar-adapters/core";
 import { PhiLazyAssetRuntimeControllerClient } from "../asset/client";
@@ -229,6 +230,14 @@ export const PHI_COMMON_RUNTIME_MODULE_RENDER_CLIENT_MANIFEST =
       PhiCmsWidgetType.CollectionView,
       definePhiRuntimeModuleRenderClient(
         dynamic(() => import("../../../components/widgets/client/collection-view-widget").then((module) => module.PhiCollectionViewWidget)),
+      ),
+    ],
+    // The Dashboard's card, on the same terms: a renderer the Collection View hosts by key. It is the
+    // one that resolves each item's payload after the list, which is why the shared card View is not it.
+    [
+      PHI_DASHBOARD_CARD_ITEM_RENDERER_KEY,
+      definePhiRuntimeModuleRenderClient(
+        dynamic(() => import("../dashboard/clients/dashboard-card-view").then((module) => module.PhiDashboardCardCollectionViewBinding)),
       ),
     ],
     // An item renderer, not a Widget: the Collection View hosts it by the key its bound resource names,
