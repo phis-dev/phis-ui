@@ -115,6 +115,15 @@ export async function PhiCmsErrorPage({ code, cmsBridge, area, locale: staticLoc
       undefined,
       undefined,
       cmsBridge.runtimeModuleCatalog,
+      /*
+       * A refusal, not the address that was asked for.
+       *
+       * Next renders this tree beside the Page of every matched route whether it is shown or not, and
+       * `/error/404` names no Area preset -- so a resolution that claimed the request would hand the
+       * Shell the default Module selection and drop every Module the Site switched on. It claims only
+       * where nothing else did, which is the root refusal route with no Area layout above it.
+       */
+      "refusal",
     );
   } catch {
     return <PhiCmsHardFallbackErrorPage code={code} />;

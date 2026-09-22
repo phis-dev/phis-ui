@@ -50,6 +50,7 @@ import {
   resolvePhiCmsThemeReviewRequestContext,
 } from "./cms-review";
 import {
+  maybeGetPhiRequestRuntime,
   setPhiRequestNavigationContext,
   setPhiRequestRuntime,
 } from "./request-runtime";
@@ -101,8 +102,15 @@ export type ResolvePhiCmsRequestArgs = {
    * path would resolve to -- the same routing, access and root-route decisions -- without touching
    * request state and without asset work, and returns once the Page is decided. Anything rendered
    * from a lookup result would draw unprojected Backgrounds; a lookup is for reading the Page node.
+   *
+   * `"refusal"` resolves a `not-found`, `unauthorized` or `forbidden` tree, which Next renders beside
+   * the Page of every matched route whether it is shown or not. It draws like a render, but it binds
+   * the request-scoped state only when nothing else has: the refusal is not the address that was
+   * asked for, and its `/error/...` path resolves no Area preset, so claiming the request would hand
+   * the Shell the default Module selection instead of the Site's own. A refusal raised above every
+   * Area layout has no Page beside it, and there it does claim.
    */
-  purpose?: "render" | "lookup";
+  purpose?: "render" | "lookup" | "refusal";
 };
 
 async function instantiatePhiRoutePresetPage({
@@ -256,6 +264,16 @@ export async function resolvePhiCmsRequest({
   purpose = "render",
 }: ResolvePhiCmsRequestArgs): Promise<PhiResolvedCmsRequest | null> {
   const areaMask = resolvePhiCmsAreaMask(area);
+  /*
+   * Whether this resolution speaks for the request.
+   *
+   * A refusal boundary does so only where nothing has been resolved at all, which is the root refusal
+   * route with no Area layout above it. The test is the request's runtime rather than its Area: a
+   * refusal answers in Public whichever Area caught it, so asking whether *that* Area is spoken for
+   * would let a Public refusal claim an App request.
+   */
+  const ownsRequestState = purpose === "render"
+    || (purpose === "refusal" && !maybeGetPhiRequestRuntime());
   const baseRequestContext =
     requestContext ??
     (await loadPhiSiteRequestContext(
@@ -275,7 +293,7 @@ export async function resolvePhiCmsRequest({
     areaMask,
     request: searchParams ? { searchParams } : undefined,
   });
-  if (purpose === "render") {
+  if (ownsRequestState) {
     setPhiRequestRuntime(runtime);
   }
 
@@ -317,7 +335,7 @@ export async function resolvePhiCmsRequest({
       requestedAreaKey,
     ),
   };
-  if (purpose === "render") {
+  if (ownsRequestState) {
     setPhiRequestRuntime(runtimeWithAuthProvider);
     setPhiRequestNavigationContext(requestedAreaKey, catalog, activeModuleKeys);
   }
@@ -460,6 +478,7 @@ export const loadPhiResolvedCmsRequest = cache(async function loadPhiResolvedCms
   requestContext: PhiSiteRequestContext | undefined,
   searchParams: Record<string, string | undefined> | undefined,
   runtimeModuleCatalog: PhiRuntimeModuleCatalog,
+  purpose: ResolvePhiCmsRequestArgs["purpose"] = "render",
 ) {
   const revision = resolvePhiCmsRevisionFromSearchParams(searchParams);
   const review = resolvePhiCmsReviewParams(searchParams);
@@ -473,6 +492,7 @@ export const loadPhiResolvedCmsRequest = cache(async function loadPhiResolvedCms
     internalToken,
     requestContext,
     searchParams,
+    purpose,
     runtimeModuleCatalog,
     loadExactCmsArea: (requestPath, sourcePreset) =>
       getPhiExactSiteArea({
