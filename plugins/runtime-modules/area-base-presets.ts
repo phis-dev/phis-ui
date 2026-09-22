@@ -170,7 +170,7 @@ export const PHI_AREA_BASE_RUNTIME_MODULE_ROUTES = [
       import("../../components/regions/presets/phi-default-app-profile-page-tree")
         .then((module) => module.buildPhiDefaultAppProfilePageTree({ page, runtime })),
   },
-  ...([401, 403, 404, 500] as const).map((code) => ({
+  ...([401, 403, 404] as const).map((code) => ({
     ownerModuleId: PHI_PUBLIC_RUNTIME_MODULE_ID,
     presetKey: `public-error-${code}-page`,
     presetVersion: 1,

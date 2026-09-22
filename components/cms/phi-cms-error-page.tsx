@@ -51,10 +51,6 @@ const ERROR_COPY: Record<PhiCmsErrorCode, { title: string; text: string }> = {
     title: "Not found",
     text: "This page could not be found.",
   },
-  500: {
-    title: "Something went wrong",
-    text: "The page could not be rendered.",
-  },
 };
 
 function PhiCmsHardFallbackErrorPage({ code }: { code: PhiCmsErrorCode }) {

@@ -119,6 +119,12 @@
       "types": "./next/runtime-module-client-boundary.tsx",
       "default": "./next/runtime-module-client-boundary.tsx"
     },
+    "./next/global-error": {
+      "import": "./next/global-error.tsx",
+      "require": "./next/global-error.tsx",
+      "types": "./next/global-error.tsx",
+      "default": "./next/global-error.tsx"
+    },
     "./next/root-route": {
       "import": "./next/root-route.tsx",
       "require": "./next/root-route.tsx",

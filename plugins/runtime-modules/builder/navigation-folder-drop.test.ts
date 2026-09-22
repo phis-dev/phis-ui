@@ -50,13 +50,13 @@ function shape(item: PhiBuilderNavigationItem | null): Shape | null {
 
 describe("buildPhiBuilderNavigationContainerFromCatalogFolder", () => {
   it("brings a folder's Pages along as links inside a container named after it", async () => {
-    const error = folder("error", "Error", [page("error/404", "Not found"), page("error/500", "Server error")]);
+    const error = folder("error", "Error", [page("error/404", "Not found"), page("error/403", "Forbidden")]);
 
     expect(shape(await buildPhiBuilderNavigationContainerFromCatalogFolder(error, createFactory()))).toEqual({
       id: "id-1", kind: "container", label: "Error",
       children: [
         { id: "id-2", kind: "link", label: "Not found" },
-        { id: "id-3", kind: "link", label: "Server error" },
+        { id: "id-3", kind: "link", label: "Forbidden" },
       ],
     });
   });

@@ -404,7 +404,7 @@ assert(authEntry);
  */
 for (const path of [
   "/register", "/login", "/confirm", "/reset-password", "/logout",
-  "/error/401", "/error/403", "/error/404", "/error/500",
+  "/error/401", "/error/403", "/error/404",
 ]) {
   const binding = resolvePhiCmsRoutePreset(publicWithAuthRoutes, path);
   assert(binding, `The Public route ${path} must be declared.`);

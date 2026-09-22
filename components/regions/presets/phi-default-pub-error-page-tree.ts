@@ -5,13 +5,21 @@ import { PhiCmsPageType, PhiCmsRegionType, PhiCmsStatus } from "../../../constan
 import { createPhiCmsPresetNodes } from "../../../helpers/cms-preset-nodes";
 import type { PhiCmsPageNode, PhiResolvedCmsPageTree } from "../../../types/cms";
 
-export type PhiCmsErrorCode = 401 | 403 | 404 | 500;
+/**
+ * The refusals a Site owns a Page for.
+ *
+ * A 500 is deliberately not among them. The other three are decided before rendering starts and can
+ * therefore be answered with a CMS tree like any other Page; a 500 is what is left when rendering has
+ * already failed, so the machinery that would resolve its tree is the machinery that broke. It is a
+ * fixed page instead, in `next/global-error.tsx`, and no preset stands for it here -- a Page in the
+ * Builder that is never the one shown only invites an edit that cannot take effect.
+ */
+export type PhiCmsErrorCode = 401 | 403 | 404;
 
-const ERROR_STATUS: Record<PhiCmsErrorCode, "403" | "404" | "500"> = {
+const ERROR_STATUS: Record<PhiCmsErrorCode, "403" | "404"> = {
   401: "403",
   403: "403",
   404: "404",
-  500: "500",
 };
 
 /**
@@ -39,10 +47,6 @@ const ERROR_SOURCE_COPY: Record<PhiCmsErrorCode, { title: string; subTitle: stri
     title: "Not found",
     subTitle: "This page could not be found.",
   },
-  500: {
-    title: "Something went wrong",
-    subTitle: "Something went wrong.",
-  },
 };
 
 const SYNTHETIC_ERROR_REGION_IDS = {
@@ -55,7 +59,7 @@ export function resolvePhiCmsErrorPagePath(code: PhiCmsErrorCode) {
 
 export function parsePhiCmsErrorCode(value: string | number | null | undefined): PhiCmsErrorCode | null {
   const parsed = typeof value === "number" ? value : Number(String(value ?? "").trim());
-  return parsed === 401 || parsed === 403 || parsed === 404 || parsed === 500 ? parsed : null;
+  return parsed === 401 || parsed === 403 || parsed === 404 ? parsed : null;
 }
 
 export async function buildPhiDefaultPubErrorPageTree({
@@ -133,8 +137,7 @@ export async function buildPhiDefaultPubErrorPageTree({
            * Only the 404 offers the way out, and only because only the 404 has one.
            *
            * The link goes to the root of the Area the refusal happened in. For a missing page that is
-           * somewhere the visitor may go; for 401 and 403 it is the same door that just refused them,
-           * and for 500 it may be as broken as the page they came from.
+           * somewhere the visitor may go; for 401 and 403 it is the same door that just refused them.
            */
           homeLink: code === 404,
         },
