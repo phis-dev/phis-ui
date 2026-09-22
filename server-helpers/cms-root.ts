@@ -2,6 +2,9 @@ import "server-only";
 
 import { cache } from "react";
 import { cookies, headers } from "next/headers";
+import { notFound } from "next/navigation";
+
+import { isPhiReservedCmsRoot } from "../helpers/cms-routing";
 
 import type { PhiCmsSiteBridge } from "../types/cms-plugins";
 import type { PhiResolvedCmsRequest } from "../types/cms-plugins";
@@ -139,6 +142,15 @@ const loadPhiCmsRootScopeCached = cache(async function loadPhiCmsRootScopeCached
   const siteKey = bridgeRuntime?.siteKey?.trim() ?? "";
   if (!siteKey) {
     throw new Error("PhiCmsSiteBridge.runtime.siteKey is required for CMS root rendering.");
+  }
+
+  /*
+   * A root the Site does not own is refused before anything is resolved. Reading it as an unprefixed
+   * Public address would forward a missing `/_next/...` asset to the Site's home page, at the price of
+   * a full root resolution per request; see `isPhiReservedCmsRoot`.
+   */
+  if (isPhiReservedCmsRoot(root)) {
+    notFound();
   }
 
   const path = pathKey.length > 0 ? pathKey.split("\u0000") : undefined;

@@ -10,6 +10,27 @@ export function isKnownSpecialCmsRoot(root: string) {
   return SPECIAL_ROOT_SET.has(root.trim().toLowerCase());
 }
 
+/**
+ * Roots a Site never owns.
+ *
+ * Every first segment that is neither an Area nor a locale is read as an unprefixed Public address and
+ * forwarded to the default locale -- which is what sends `/imprint` to `/en/imprint`. The framework's
+ * own trees sit at first segments too, and a static asset that is merely missing falls out of the file
+ * handler and into that same rule: `/_next/static/chunks/<hash>.js` was answered with a forward to the
+ * Site's home page, so a browser that asked for a script was handed HTML, and every stale chunk after a
+ * deploy paid for a CMS root resolution to say it.
+ *
+ * A reserved root is refused instead. The extension test is the same one `next/site-proxy.ts` uses to
+ * decide what middleware hands straight to Next: a first segment that names a file is a file that is
+ * not there, not a Page that wants a locale.
+ */
+const RESERVED_ROOT_SET = new Set<string>(["_next", "api"]);
+
+export function isPhiReservedCmsRoot(root: string) {
+  const normalized = root.trim().toLowerCase();
+  return RESERVED_ROOT_SET.has(normalized) || /\.[\w-]+$/.test(normalized);
+}
+
 export function normalizePhiCmsRouteSegment(segment: string) {
   return segment.trim().replace(/%2b/gi, "+");
 }

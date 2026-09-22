@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { canonicalHrefUnlessCurrent } from "./cms-routing";
+import { canonicalHrefUnlessCurrent, isPhiReservedCmsRoot } from "./cms-routing";
 
 /*
  * The forward that costs nothing to get wrong and everything to leave wrong.
@@ -40,5 +40,46 @@ describe("canonicalHrefUnlessCurrent", () => {
    */
   it("forwards a request that differs only in spelling", () => {
     expect(canonicalHrefUnlessCurrent("/en/contact", "/EN/contact")).toBe("/en/contact");
+  });
+});
+
+/*
+ * Which first segments the Site is allowed to read as an address of its own.
+ *
+ * Anything that is neither an Area nor a locale is an unprefixed Public address and gets forwarded to
+ * the default locale. That rule is what sends `/imprint` to `/en/imprint`, and it used to swallow the
+ * framework's own trees with it: a static asset that was merely missing fell out of the file handler,
+ * matched the catch-all, and was answered with a forward to the Site's home page -- so a browser asking
+ * for a script was handed HTML, and every stale chunk after a deploy paid for a root resolution to say
+ * it.
+ *
+ * Both halves are worth holding. A reserved root that stopped being refused brings the forward back;
+ * a locale or an Area that started being refused takes the Site down.
+ */
+describe("isPhiReservedCmsRoot", () => {
+  it("refuses the framework's own roots", () => {
+    expect(isPhiReservedCmsRoot("_next")).toBe(true);
+    expect(isPhiReservedCmsRoot("api")).toBe(true);
+  });
+
+  it("refuses a first segment that names a file", () => {
+    expect(isPhiReservedCmsRoot("favicon.ico")).toBe(true);
+    expect(isPhiReservedCmsRoot("robots.txt")).toBe(true);
+    expect(isPhiReservedCmsRoot("sitemap.xml")).toBe(true);
+  });
+
+  // A root arrives from the URL, so it arrives in whatever case and padding the request carried.
+  it("reads a root the way the request spelled it", () => {
+    expect(isPhiReservedCmsRoot("_NEXT")).toBe(true);
+    expect(isPhiReservedCmsRoot(" _next ")).toBe(true);
+  });
+
+  it("leaves Areas, locales and Public addresses alone", () => {
+    for (const root of ["public", "app", "admin", "builder", "editor", "accounting"]) {
+      expect(isPhiReservedCmsRoot(root)).toBe(false);
+    }
+    expect(isPhiReservedCmsRoot("en")).toBe(false);
+    expect(isPhiReservedCmsRoot("de-ch")).toBe(false);
+    expect(isPhiReservedCmsRoot("imprint")).toBe(false);
   });
 });
