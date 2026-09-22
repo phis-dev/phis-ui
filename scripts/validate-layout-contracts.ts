@@ -169,6 +169,13 @@ assert.deepEqual(
  * Sending the config meant the same object sat in two places of one element's props, which React
  * serializes as a reference back into the element being built and fills in after the fact. Element props
  * are frozen by then in development, and the write that follows can throw.
+ *
+ * The policy comes back `fixed` on the inline axis although the slot asked for `fill-inline`, and that
+ * is the answer rather than a contradiction: a stated width is what the child measures, so the axis
+ * that states one no longer claims to fill. The alternative left every reader to subtract the size from
+ * the policy, and the readers that forgot were the bug. A maximum is deliberately not a size -- a
+ * column capped at a readable measure still fills up to the cap -- which is why `maxBlockSize` sits
+ * here beside a block axis that stays `intrinsic`.
  */
 assert.deepEqual(
   resolvePhiSlotChildSizingForConfig("widget", "fill-inline", {
@@ -177,7 +184,7 @@ assert.deepEqual(
     maxSize: { height: "50vh" },
   }),
   {
-    policy: { inline: "fill", block: "intrinsic" },
+    policy: { inline: "fixed", block: "intrinsic" },
     explicitInlineSize: true,
     explicitBlockSize: false,
     minInlineSize: 120,
