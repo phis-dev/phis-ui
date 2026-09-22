@@ -177,9 +177,19 @@ export function PhiAccountMenu({
     type: "group",
     key: "account-areas",
     label: labels.areas.title,
+    /*
+     * A plain anchor, where every other entry in this menu is a `Link`.
+     *
+     * Crossing into another Area is not a step within this application, it is leaving it for the next
+     * one: other Modules, other Chrome, other access. A client navigation keeps the whole provider tree
+     * of the Area being left mounted while the segments underneath are swapped, which asks the old
+     * arrangement to serve the new one; a document request builds the arriving Area from nothing, which
+     * is what it is entitled to. Nobody carries unsaved work from the Builder into the App, so there is
+     * no state here worth the trick.
+     */
     children: (areaEntries ?? []).map((entry) => ({
       key: `area-${entry.area}`,
-      label: entry.current ? entry.label : <Link href={entry.href}>{entry.label}</Link>,
+      label: entry.current ? entry.label : <a href={entry.href}>{entry.label}</a>,
       disabled: entry.current,
     })),
   }];
