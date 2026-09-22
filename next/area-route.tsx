@@ -9,7 +9,6 @@ import { readPhiSiteRuntimeConfigSync } from "../helpers/site-runtime";
 
 import { PhiCmsErrorPage } from "../components/cms/phi-cms-error-page";
 import type { PhiCmsErrorPageProps } from "../components/cms/phi-cms-error-page";
-import type { PhiCmsAreaKey } from "../constants/cms-areas";
 import {
   PhiCmsAreaBoundary,
   PhiCmsAreaShell,
@@ -160,28 +159,6 @@ export function createPhiNextStaticAreaSlotPage(
 }
 
 /**
- * An Area's own refusal page: `not-found.tsx`, `unauthorized.tsx`, `forbidden.tsx`.
- *
- * Next resolves these from the refusing segment upwards, so as long as the Area itself is reachable they
- * render in that Area's children slot: the shell stays, the error tree fills the content region, and the
- * Client boundary the layout mounted is already in place. Only a refusal by the layout itself walks past
- * them to the root, where there is no Area left to render into.
- */
-export function createPhiNextStaticAreaErrorPage(
-  code: PhiCmsErrorPageProps["code"],
-  cmsBridge: PhiCmsSiteBridge,
-  area: PhiCmsAreaKey,
-) {
-  return function PhiNextStaticAreaErrorPage() {
-    return <PhiCmsErrorPage code={code} cmsBridge={cmsBridge} area={area} />;
-  };
-}
-
-export function createPhiNextStaticAreaNotFound(cmsBridge: PhiCmsSiteBridge, area: PhiCmsAreaKey) {
-  return createPhiNextStaticAreaErrorPage(404, cmsBridge, area);
-}
-
-/**
  * What a root error route rebuilds before it renders.
  *
  * The Bridge is loaded rather than imported, and the Boundary mounted through `next/dynamic`, for the
@@ -202,10 +179,15 @@ export type PhiNextRootErrorArea = {
  * layout, so neither the Area's shell nor the Client boundary it mounts exist any more -- which is why
  * this rebuilds both rather than rendering the error tree bare.
  *
- * It answers as Public whichever Area was asked for, and every Area is welcome to answer for itself
- * first: an Area that carries its own `not-found.tsx`, `unauthorized.tsx` or `forbidden.tsx` catches
- * the refusal inside its own shell and never reaches here. What is left for this route are refusals
- * raised above an Area segment, and paths that name no Area at all.
+ * It answers as Public for every Area, and it is the only route that answers: an Area carries no
+ * refusal routes of its own, because one placed inside an Area could never catch anything. Existence
+ * is decided by `PhiCmsAreaShell` rather than by the Page, so that the status line can still say 404
+ * -- decided below the shell it arrives after the flush, and Next can then only swap the body, which
+ * answers 200. The shell is therefore the thrower, and a refusal is always caught above it. A
+ * boundary beside the shell's own Layout is skipped; this was measured, at 404 with no navigation.
+ *
+ * So the shell is not lost here, it was never reachable: an Area keeping its navigation on an error
+ * page and an Area answering 404 are the same choice made two ways, and the status line wins.
  *
  * Rebuilding the refused Area here instead was measured and dropped: one registry naming all six put
  * 22 further Client modules into every route, the Builder's workspace among them, and roughly half of
