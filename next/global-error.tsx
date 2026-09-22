@@ -2,6 +2,8 @@
 
 import { handleISRError } from "next/dist/client/components/handle-isr-error";
 
+import { PhiResultWidgetBody } from "../components/widgets/shared/result-body";
+
 /**
  * What is left when there is nothing left.
  *
@@ -22,9 +24,12 @@ import { handleISRError } from "next/dist/client/components/handle-isr-error";
  * boundary means it replaces the document, which is why it renders `<html>` and `<body>` itself and
  * why nothing here may reach for a provider: at this point in a failed render there are none.
  *
- * `color-scheme` does the theming instead. `Canvas` and `CanvasText` are the browser's own pair and
- * follow the viewer's light or dark preference without a stylesheet, which is the only kind of theme
- * this page can honestly claim to have.
+ * It is light for every viewer, and that is a decision rather than an oversight. The browser's own
+ * `Canvas`/`CanvasText` pair would follow a dark preference for free, and did -- but the Result below
+ * draws in antd's light seed, because the tokens that would say otherwise come from the provider this
+ * page replaced. A dark viewer got antd's near-black title on a near-black ground. The Result's
+ * illustration is drawn light whatever the Theme says, so a light page is what this content is
+ * anyway; `color-scheme: light` keeps the browser from darkening the button underneath it.
  */
 export function PhiNextGlobalErrorPage({
   error,
@@ -49,13 +54,13 @@ export function PhiNextGlobalErrorPage({
   handleISRError({ error });
 
   return (
-    <html lang="en" style={{ colorScheme: "light dark" }}>
+    <html lang="en" style={{ colorScheme: "light" }}>
       <body
         style={{
           alignItems: "center",
-          background: "Canvas",
+          background: "#fff",
           boxSizing: "border-box",
-          color: "CanvasText",
+          color: "rgba(0, 0, 0, 0.88)",
           display: "flex",
           flexDirection: "column",
           fontFamily: "system-ui, -apple-system, Segoe UI, Roboto, sans-serif",
@@ -67,12 +72,43 @@ export function PhiNextGlobalErrorPage({
         }}
       >
         <title>Something went wrong</title>
-        <h1 style={{ fontSize: "2rem", lineHeight: 1.2, margin: 0 }}>Something went wrong</h1>
-        <p style={{ fontSize: "1rem", lineHeight: 1.5, margin: "0.75rem 0 0" }}>
-          The page could not be rendered.
-        </p>
         {/*
-          * Rendering again is the only way out worth offering.
+          * The same Result the other three refusals draw, if it can be fetched, and text that needs
+          * nothing if it cannot.
+          *
+          * The body is a plain Client component taking plain props, so this page can have it without
+          * a runtime or a registry -- but it reaches antd through a lazy boundary, which is the whole
+          * reason antd is not in every route's first load. Here that boundary has to resolve at the
+          * one moment the Site is already failing, so the fallback is the page rather than nothing:
+          * the visitor is told what happened immediately, and the Result takes over if it arrives.
+          *
+          * It draws in antd's own seed rather than the Site's Theme. The variables a Theme sets come
+          * from the provider above the root Layout, and this page replaced that Layout.
+          */}
+        <PhiResultWidgetBody
+          config={{ status: "500" }}
+          code="500"
+          title="Something went wrong"
+          subTitle="The page could not be rendered."
+          fallback={(
+            <>
+              <h1 style={{ fontSize: "2rem", lineHeight: 1.2, margin: 0 }}>Something went wrong</h1>
+              <p style={{
+                color: "rgba(0, 0, 0, 0.45)",
+                fontSize: "1rem",
+                lineHeight: 1.5,
+                margin: "0.75rem 0 0",
+              }}>
+                The page could not be rendered.
+              </p>
+            </>
+          )}
+        />
+        {/*
+          * Rendering again is the only way out worth offering, and it stands outside the Result
+          * because the Result has nowhere for it: its own `extra` slot is the Home link the 404 uses,
+          * and a retry that appeared only once a chunk had loaded would be missing exactly when it
+          * is needed.
           *
           * The 404 sends its visitor to the root of the Area that refused them, because for a missing
           * Page that root is somewhere they may go. Here it is not: the address is not the problem,

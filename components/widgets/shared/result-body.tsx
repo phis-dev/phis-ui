@@ -1,6 +1,6 @@
 "use client";
 
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, type ReactNode } from "react";
 
 import type { PhiResultWidgetBodyProps } from "./result-body-client";
 
@@ -17,9 +17,21 @@ const PhiResultWidgetBodyImplementation = lazy(async () => ({
   default: (await import("./result-body-client")).PhiResultWidgetBody,
 }));
 
-export function PhiResultWidgetBody(props: PhiResultWidgetBodyProps) {
+/**
+ * What stands there while the implementation is still on its way.
+ *
+ * Nothing, for a Page: the Result is one block among others, the rest of the Page is already there,
+ * and a placeholder that swaps itself out moves the text around it. The 500 page is the other case --
+ * it is the whole page, it is reached at the moment something is already broken, and the chunk it
+ * waits for may be the next thing that fails to arrive. It passes markup of its own, which needs
+ * nothing loaded, and lets the Result replace it if it gets there.
+ */
+export function PhiResultWidgetBody({
+  fallback = null,
+  ...props
+}: PhiResultWidgetBodyProps & { fallback?: ReactNode }) {
   return (
-    <Suspense fallback={null}>
+    <Suspense fallback={fallback}>
       <PhiResultWidgetBodyImplementation {...props} />
     </Suspense>
   );
