@@ -135,6 +135,9 @@ import {
   PHI_SWITCH_WIDGET_DEFINITION,
 } from "./widgets/switch/config";
 import {
+  PHI_THEME_MODE_SWITCH_WIDGET_DEFINITION,
+} from "./widgets/theme-mode-switch/config";
+import {
   PHI_TABLE_WIDGET_DEFINITION,
 } from "./widgets/table/config";
 import {
@@ -470,6 +473,13 @@ export const PHI_RUNTIME_MODULE_WIDGETS: readonly PhiRuntimeModuleWidgetDefiniti
     renderPolicies: {"runtime":"custom","preview":"custom","authoring":"custom"},
     loadRuntime: () => import("./widgets/switch/plugin").then((module) => module.PHI_SWITCH_WIDGET_PLUGIN),
     loadPreview: () => import("./widgets/switch/plugin").then((module) => module.PHI_SWITCH_WIDGET_PLUGIN),
+  }),
+  defineFirstPartyWidget({
+    definition: PHI_THEME_MODE_SWITCH_WIDGET_DEFINITION,
+    ownerModuleId: PHI_CORE_RUNTIME_MODULE_ID,
+    renderPolicies: {"runtime":"custom","preview":"custom","authoring":"custom"},
+    loadRuntime: () => import("./widgets/theme-mode-switch/plugin").then((module) => module.PHI_THEME_MODE_SWITCH_WIDGET_PLUGIN),
+    loadPreview: () => import("./widgets/theme-mode-switch/plugin").then((module) => module.PHI_THEME_MODE_SWITCH_WIDGET_PLUGIN),
   }),
   defineFirstPartyWidget({
     definition: PHI_TAB_BAR_WIDGET_DEFINITION,

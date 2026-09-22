@@ -7,10 +7,8 @@ import {
 } from "../../../constants/cms-layout-types";
 import { PhiCmsPageType, PhiCmsRegionType, PhiCmsStatus } from "../../../constants/phi-cms";
 import { createPhiCmsPresetNodes } from "../../../helpers/cms-preset-nodes";
-import { createPhiSignalAddress } from "../../../types/signals";
 import { localizeAreaPath } from "../../../helpers/locale";
 import { resolvePhiShellHeaderHeight } from "../../../helpers/shell-region-style";
-import { createPhiCoreRuntimeControllerAddress } from "../../runtime/core-runtime-controller-address";
 import type { PhiCmsPageNode, PhiResolvedCmsPageTree } from "../../../types/cms";
 import type { PhiBlockRuntime } from "../../../types";
 
@@ -145,41 +143,15 @@ export async function buildPhiDefaultPubWelcomePageTree({
     ],
     contentWidgets: [
       nodes.widget({
-        typeKey: "switch",
+        typeKey: "theme-mode-switch",
         id: SYNTHETIC_WELCOME_WIDGET_IDS.widgetThemeModeSwitch,
         parentLayoutNodeId: SYNTHETIC_WELCOME_LAYOUT_IDS.layoutHeaderBottom,
         slotIndex: PHI_CMS_THREE_COLUMN_LAYOUT_SLOT_INDEX.Right,
         sortOrder: 0,
         label: "pub welcome theme mode switch",
         config: {
-          defaultChecked: runtime.viewer.themeMode === "dark",
           checkedChildren: "Dark",
           unCheckedChildren: "Light",
-          key: "themeMode",
-          signalRoutes: {
-            emits: [
-              {
-                routeKey: "pub-welcome-theme-mode-change",
-                capabilityId: "change",
-                scope: "site",
-                channel: "themeMode",
-                action: "change",
-                valueType: "boolean",
-                receiver: createPhiCoreRuntimeControllerAddress(),
-              },
-            ],
-            listens: [
-              {
-                routeKey: "pub-welcome-theme-mode-follow",
-                capabilityId: "themeMode",
-                scope: "page",
-                channel: "themeMode",
-                action: "change",
-                valueType: "boolean",
-                receiver: createPhiSignalAddress("cms", SYNTHETIC_WELCOME_WIDGET_IDS.widgetThemeModeSwitch),
-              },
-            ],
-          },
         },
       }),
       nodes.widget({

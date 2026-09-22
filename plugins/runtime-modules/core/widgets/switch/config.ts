@@ -43,17 +43,16 @@ export const PHI_SWITCH_WIDGET_DEFINITION = {
   category: "form",
   iconFamily: "form",
   slotSizePolicy: "intrinsic",
-  runtimeSignals: {
-    ...PHI_BOOLEAN_CONTROL_SIGNALS,
-    listens: [
-      ...PHI_BOOLEAN_CONTROL_SIGNALS.listens,
-      /*
-       * The mode the Site is shown in, as the Core Runtime Controller tells it: a switch that offers
-       * light and dark follows the mode on screen instead of keeping the one it was rendered with.
-       */
-      { id: "themeMode", channel: "themeMode", action: "change", valueType: "boolean" },
-    ],
-  },
+  /*
+   * A boolean switch, and nothing beyond that.
+   *
+   * It carried a `themeMode` input once, so that a switch wired to light and dark could follow the
+   * mode on screen. That put one Theme into the contract of every switch on every Site, and it needed
+   * somebody to keep telling it -- which is what the Theme Mode Relay did, by broadcasting to the
+   * whole Area each time anything registered in it. Both are gone: the Theme Mode Switch reads the
+   * mode from the same context that hands it its tokens, and asks nobody.
+   */
+  runtimeSignals: PHI_BOOLEAN_CONTROL_SIGNALS,
   fields: [
     { key: "label", type: "string", label: "Label" },
     { key: "defaultChecked", type: "boolean", label: "Default Checked" },

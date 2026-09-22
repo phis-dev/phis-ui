@@ -41,7 +41,6 @@ import {
 } from "../../../plugins/runtime-modules/builder/route-scope";
 import { createPhiThemeControllerAddress } from "../../../plugins/runtime-modules/theme/controller/address";
 import { PHI_THEME_SIGNAL_CHANNELS } from "../../../plugins/runtime-modules/theme/controller/signals";
-import { createPhiCoreRuntimeControllerAddress } from "../../runtime/core-runtime-controller-address";
 import { PHI_BUILDER_RUNTIME_MODULE_ID } from "../../../plugins/runtime-modules/builder/ids";
 import { PHI_ASSET_RUNTIME_DATA_PROVIDER_KEYS } from "../../../plugins/runtime-modules/asset/ids";
 import { PHI_BUILDER_RUNTIME_DATA_PROVIDER_KEYS } from "../../../plugins/runtime-modules/builder/ids";
@@ -665,41 +664,15 @@ export async function buildPhiDefaultBuilderAreaPresetTree({
         },
       }),
       nodes.widget({
-        typeKey: "switch",
+        typeKey: "theme-mode-switch",
         id: SYNTHETIC_DEV_WIDGET_IDS.widgetHeaderTopThemeModeSwitch,
         parentLayoutNodeId: SYNTHETIC_DEV_LAYOUT_IDS.layoutHeaderTop,
         slotIndex: PHI_CMS_THREE_COLUMN_LAYOUT_SLOT_INDEX.Left,
         sortOrder: 1,
         label: "Theme mode switch",
         config: {
-          defaultChecked: runtime.viewer.themeMode === "dark",
           checkedChildren: labels.themeSwitch.dark,
           unCheckedChildren: labels.themeSwitch.light,
-          key: "themeMode",
-          signalRoutes: {
-            emits: [
-              {
-                routeKey: "builder-header-theme-mode-change",
-                capabilityId: "change",
-                scope: "site",
-                channel: "themeMode",
-                action: "change",
-                valueType: "boolean",
-                receiver: createPhiCoreRuntimeControllerAddress(),
-              },
-            ],
-            listens: [
-              {
-                routeKey: "builder-header-theme-mode-follow",
-                capabilityId: "themeMode",
-                scope: "page",
-                channel: "themeMode",
-                action: "change",
-                valueType: "boolean",
-                receiver: createPhiSignalAddress("cms", SYNTHETIC_DEV_WIDGET_IDS.widgetHeaderTopThemeModeSwitch),
-              },
-            ],
-          },
         },
       }),
       nodes.widget({

@@ -178,6 +178,12 @@ export const PHI_COMMON_RUNTIME_MODULE_RENDER_CLIENT_MANIFEST =
       ),
     ],
     [
+      PhiCmsWidgetType.ThemeModeSwitch,
+      definePhiRuntimeModuleRenderClient(
+        dynamic(() => import("../core/widgets/theme-mode-switch/client").then((module) => module.PhiThemeModeSwitchWidget)),
+      ),
+    ],
+    [
       PhiCmsWidgetType.Record,
       definePhiRuntimeModuleRenderClient(
         dynamic(() => import("../core/widgets/record/client").then((module) => module.PhiRecordWidgetClient)),

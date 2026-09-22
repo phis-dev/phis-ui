@@ -112,6 +112,7 @@ const PHI_CMS_WIDGET_MODULE_BY_TYPE_KEY: Readonly<Record<string, keyof typeof PH
   "spacer": "core",
   "structure-region": "builder",
   "switch": "core",
+  "theme-mode-switch": "core",
   "tab-bar": "core",
   "table": "core",
   "test-block": "builder",
@@ -178,6 +179,10 @@ export const PhiCmsWidgetType = {
   SelectBox: defineWidgetType(resolvePhiCmsWidgetPluginKey("select-box"), "select-box"),
   Spacer: defineWidgetType(resolvePhiCmsWidgetPluginKey("spacer"), "spacer"),
   Switch: defineWidgetType(resolvePhiCmsWidgetPluginKey("switch"), "switch"),
+  ThemeModeSwitch: defineWidgetType(
+    resolvePhiCmsWidgetPluginKey("theme-mode-switch"),
+    "theme-mode-switch",
+  ),
   Html: defineWidgetType(resolvePhiCmsWidgetPluginKey("html"), "html"),
   SidebarNavigation: defineWidgetType(resolvePhiCmsWidgetPluginKey("sidebar-navigation"), "sidebar-navigation"),
   HelloWorld: defineWidgetType(resolvePhiCmsWidgetPluginKey("hello-world"), "hello-world"),

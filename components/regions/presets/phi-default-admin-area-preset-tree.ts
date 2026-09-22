@@ -7,14 +7,12 @@ import {
 } from "../../../constants/cms-layout-types";
 import { PhiCmsRegionType, PhiCmsStatus } from "../../../constants/phi-cms";
 import { createPhiCmsPresetNodes } from "../../../helpers/cms-preset-nodes";
-import { createPhiSignalAddress } from "../../../types/signals";
 import { resolvePhiShellHeaderHeight, resolvePhiShellMetric } from "../../../helpers/shell-region-style";
 import type { PhiResolvedCmsPageTree, PhiCmsPageNode } from "../../../types/cms";
 import type { PhiBlockRuntime } from "../../../types";
 import { PHI_LAYOUT } from "../../../theme/phi-tokens";
 import { PHI_SPACE } from "../../../theme/antd-css-var-contract";
 import { createPhiDefaultAreaRuntimeModuleIds } from "../../../plugins/runtime-modules/builder/runtime-module-defaults";
-import { createPhiCoreRuntimeControllerAddress } from "../../runtime/core-runtime-controller-address";
 
 const SYNTHETIC_ADMIN_REGION_IDS = {
   regionHeaderTop: -126,
@@ -196,41 +194,15 @@ export async function buildPhiDefaultAdminAreaPresetTree({
     ],
     contentWidgets: [
       nodes.widget({
-        typeKey: "switch",
+        typeKey: "theme-mode-switch",
         id: SYNTHETIC_ADMIN_WIDGET_IDS.widgetHeaderTopThemeModeSwitch,
         parentLayoutNodeId: SYNTHETIC_ADMIN_LAYOUT_IDS.layoutHeaderTop,
         slotIndex: PHI_CMS_THREE_COLUMN_LAYOUT_SLOT_INDEX.Left,
         sortOrder: 0,
         label: "Theme mode switch",
         config: {
-          defaultChecked: runtime.viewer.themeMode === "dark",
           checkedChildren: "Dark",
           unCheckedChildren: "Light",
-          key: "themeMode",
-          signalRoutes: {
-            emits: [
-              {
-                routeKey: "admin-header-theme-mode-change",
-                capabilityId: "change",
-                scope: "site",
-                channel: "themeMode",
-                action: "change",
-                valueType: "boolean",
-                receiver: createPhiCoreRuntimeControllerAddress(),
-              },
-            ],
-            listens: [
-              {
-                routeKey: "admin-header-theme-mode-follow",
-                capabilityId: "themeMode",
-                scope: "page",
-                channel: "themeMode",
-                action: "change",
-                valueType: "boolean",
-                receiver: createPhiSignalAddress("cms", SYNTHETIC_ADMIN_WIDGET_IDS.widgetHeaderTopThemeModeSwitch),
-              },
-            ],
-          },
         },
       }),
       nodes.widget({
