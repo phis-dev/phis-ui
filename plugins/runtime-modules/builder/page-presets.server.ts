@@ -10,6 +10,7 @@ import type { PhiRuntimeModuleCatalog, PhiRuntimeModuleId } from "../../../types
 import type { PhiCmsRoutePresetBinding } from "../../../types/cms-module-descriptors";
 import { getCurrentCmsPageDraft, getResolvedCmsPage, getSiteCmsPageCatalog } from "../../../gateway/site-page";
 import type { PhiDeveloperBuilderArea, PhiDeveloperBuilderRegionDraft } from "./developer-workspace-types";
+import { buildPhiBuilderModulePresetPagesByArea } from "./page-preset-catalog.server";
 import {
   resolvePhiBuilderActivePageCatalog,
   resolvePhiBuilderCmsStoragePathForCatalog,
@@ -164,7 +165,20 @@ function resolvePresetFetchPath(area: PhiDeveloperBuilderArea, storagePath: stri
   return storagePath === "/" ? `/${area}` : `/${area}${storagePath}`;
 }
 
-const resolvePhiBuilderSitePageStoragePath = cache(async function resolvePhiBuilderSitePageStoragePath({
+/**
+ * Where a Page in the Builder's tree is stored, for a key that named no route preset.
+ *
+ * Both callers prefer the preset binding and only fall here when there is none, which used to read as
+ * "then it is a Page the Site made" -- so the catalog was built from the persisted Pages alone. A
+ * Module's own nested route puts a node in the tree that is neither: `/error/401` and its siblings make
+ * an `error` folder, `{ key, title, children }` with no `sourcePreset`, and no binding answers for it.
+ * Opening it asked for a storage path the persisted catalog could not know, and the Builder refused
+ * the Page catalog it had drawn itself.
+ *
+ * The presets belong in the catalog for the same reason the folder is in the tree: they are what put
+ * it there. A preset Page cannot shadow anything by being here, because a binding is preferred above.
+ */
+const resolvePhiBuilderPageStoragePath = cache(async function resolvePhiBuilderPageStoragePath({
   apiBaseUrl,
   internalToken,
   siteKey,
@@ -172,6 +186,7 @@ const resolvePhiBuilderSitePageStoragePath = cache(async function resolvePhiBuil
   cookieHeader,
   area,
   pageKey,
+  runtimeModuleCatalog,
 }: {
   apiBaseUrl: string;
   internalToken: string;
@@ -180,6 +195,7 @@ const resolvePhiBuilderSitePageStoragePath = cache(async function resolvePhiBuil
   cookieHeader: string;
   area: PhiDeveloperBuilderArea;
   pageKey: string;
+  runtimeModuleCatalog: PhiRuntimeModuleCatalog;
 }) {
   const persistedPages = await getSiteCmsPageCatalog({
     apiBaseUrl,
@@ -191,7 +207,7 @@ const resolvePhiBuilderSitePageStoragePath = cache(async function resolvePhiBuil
   });
   const catalog = resolvePhiBuilderActivePageCatalog(
     area,
-    { [area]: [] },
+    buildPhiBuilderModulePresetPagesByArea(runtimeModuleCatalog),
     null,
     { [area]: persistedPages },
   );
@@ -219,7 +235,7 @@ const buildPageDraftsForScope = cache(async function buildPageDraftsForScope(
   const presetBinding = presetResolution?.binding ?? null;
   const cookieHeader = (await cookies()).toString();
   const storagePath = presetBinding?.descriptor.path ??
-    await resolvePhiBuilderSitePageStoragePath({
+    await resolvePhiBuilderPageStoragePath({
       apiBaseUrl,
       internalToken,
       siteKey,
@@ -227,6 +243,7 @@ const buildPageDraftsForScope = cache(async function buildPageDraftsForScope(
       cookieHeader,
       area,
       pageKey,
+      runtimeModuleCatalog,
     });
   const fetchPath = resolvePresetFetchPath(area, storagePath);
   const sourcePreset = presetBinding
@@ -417,7 +434,7 @@ async function buildPageMetaForScope(
   const presetBinding = presetResolution?.binding ?? null;
   const cookieHeader = (await cookies()).toString();
   const storagePath = presetBinding?.descriptor.path ??
-    await resolvePhiBuilderSitePageStoragePath({
+    await resolvePhiBuilderPageStoragePath({
       apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
       internalToken: readPhiServerApiCredentials().internalToken,
       siteKey: runtime.site.key,
@@ -425,6 +442,7 @@ async function buildPageMetaForScope(
       cookieHeader,
       area,
       pageKey,
+      runtimeModuleCatalog,
     });
   const fetchPath = resolvePresetFetchPath(area, storagePath);
   const sourcePreset = presetBinding
