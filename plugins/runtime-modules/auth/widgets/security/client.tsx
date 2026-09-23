@@ -11,6 +11,7 @@ import { PhiFlexControl } from "../../../../../components/controls/phi-flex-cont
 import { PhiTypographyControl } from "../../../../../components/controls/phi-typography-control";
 import { PhiSkeletonControl } from "../../../../../components/controls/phi-skeleton-control";
 import { fetchPhiCsrfToken } from "../../../../../helpers/csrf-token";
+import type { PhiAuthWorkflowBodyLabels } from "../../../../../components/widgets/label-types/auth-workflow";
 import {
   formatPhiAuthSecurityWidgetLabel,
   type PhiAuthSecurityWidgetLabels,
@@ -54,9 +55,12 @@ type SecurityPayload = {
 export function PhiAuthSecurityWidgetClient({
   apiPath = "/api/auth/account/security",
   labels,
+  workflowLabels,
 }: {
   apiPath?: string;
   labels: PhiAuthSecurityWidgetLabels;
+  /** The shared second-factor body's own words; adding a device is drawn by that component. */
+  workflowLabels: PhiAuthWorkflowBodyLabels;
 }) {
   const [payload, setPayload] = useState<SecurityPayload | null>(null);
   const [loading, setLoading] = useState(true);
@@ -129,6 +133,7 @@ export function PhiAuthSecurityWidgetClient({
         <PhiAuthWorkflowBody
           mode="enroll"
           next="/app/security"
+          labels={workflowLabels}
           onComplete={async () => {
             setEnrolling(false);
             await load();

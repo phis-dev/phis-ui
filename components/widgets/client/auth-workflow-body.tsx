@@ -9,6 +9,7 @@ import { PhiAlertControl } from "../../controls/phi-alert-control";
 import { PhiFlexControl } from "../../controls/phi-flex-control";
 import { PhiTypographyControl } from "../../controls/phi-typography-control";
 import { PhiQrCodeControl } from "../../controls/phi-qr-code-control";
+import type { PhiAuthWorkflowBodyLabels } from "../label-types/auth-workflow";
 import { fetchPhiCsrfToken } from "../../../helpers/csrf-token";
 
 type Enrollment = {
@@ -34,11 +35,13 @@ export type PhiAuthWorkflowBodyMode = "enroll" | "challenge";
 export function PhiAuthWorkflowBody({
   mode,
   next: fallbackNext,
+  labels,
   onComplete,
 }: {
   mode: PhiAuthWorkflowBodyMode;
   /** Where a finished step goes when the server's answer does not name somewhere itself. */
   next: string;
+  labels: PhiAuthWorkflowBodyLabels;
   onComplete: (payload: { area: string | null; next: string }) => Promise<void> | void;
 }) {
   const [enrollment, setEnrollment] = useState<Enrollment | null>(null);
@@ -65,11 +68,11 @@ export function PhiAuthWorkflowBody({
       });
       const payload = await response.json().catch(() => null) as (Enrollment & { error?: string }) | null;
       if (!response.ok || !payload?.factorId || !payload.otpauthUri) {
-        throw new Error(payload?.error ?? "Authenticator setup could not be started.");
+        throw new Error(payload?.error ?? labels.errors.setupFailed);
       }
       setEnrollment(payload);
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : "Authenticator setup could not be started.");
+      setError(caught instanceof Error ? caught.message : labels.errors.setupFailed);
     } finally {
       setBusy(false);
     }
@@ -105,7 +108,7 @@ export function PhiAuthWorkflowBody({
         error?: string;
       } | null;
       if (!response.ok || !payload?.ok) {
-        throw new Error(payload?.error ?? "Authentication code could not be verified.");
+        throw new Error(payload?.error ?? labels.errors.verifyFailed);
       }
       if (Array.isArray(payload.recoveryCodes) && payload.recoveryCodes.length > 0) {
         setRecovery({
@@ -117,7 +120,7 @@ export function PhiAuthWorkflowBody({
       }
       await onComplete({ area: payload.area?.trim() || null, next: payload.next ?? fallbackNext });
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : "Authentication code could not be verified.");
+      setError(caught instanceof Error ? caught.message : labels.errors.verifyFailed);
     } finally {
       setBusy(false);
     }
@@ -129,8 +132,8 @@ export function PhiAuthWorkflowBody({
         <PhiAlertControl
           level="success"
           showIcon
-          title="Authenticator configured"
-          description="Save these recovery codes now. They are shown only once."
+          title={labels.recovery.title}
+          description={labels.recovery.description}
         />
         <PhiFlexControl vertical gap="small">
           {recovery.codes.map((recoveryCode) => (
@@ -140,7 +143,7 @@ export function PhiAuthWorkflowBody({
         <PhiButtonControl
           type="primary"
           onClick={() => void onComplete({ area: recovery.area, next: recovery.next })}
-          label="I saved the recovery codes"
+          label={labels.recovery.acknowledge}
         />
       </PhiFlexControl>
     );
@@ -149,25 +152,19 @@ export function PhiAuthWorkflowBody({
   if (mode === "enroll") {
     return (
       <PhiFlexControl vertical gap="middle" align="center">
-        <PhiTypographyControl presentation="title" level={4}>Set up an authenticator app</PhiTypographyControl>
-        {/*
-          * Says what to do, not why it is being asked -- because both callers land here: a sign-in that
-          * cannot continue without it, and somebody in Settings adding a device because they want one.
-          * It told the second group their site could not be opened. The wording belongs in a Label Set
-          * like every other sentence a visitor reads; it is literal here because it always was.
-          */}
+        <PhiTypographyControl presentation="title" level={4}>{labels.enroll.title}</PhiTypographyControl>
         <PhiTypographyControl presentation="paragraph" type="secondary">
-          Scan the code below with your authenticator app, then enter the six-digit code it shows.
+          {labels.enroll.intro}
         </PhiTypographyControl>
         {error ? <PhiAlertControl level="error" showIcon title={error} /> : null}
         {!enrollment ? (
-          <PhiButtonControl type="primary" loading={busy} onClick={() => void startEnrollment()} label="Start setup" />
+          <PhiButtonControl type="primary" loading={busy} onClick={() => void startEnrollment()} label={labels.enroll.start} />
         ) : (
           <>
             <PhiQrCodeControl value={enrollment.otpauthUri} type="svg" />
             <PhiTypographyControl copyable code>{enrollment.manualKey}</PhiTypographyControl>
             <PhiOtpControl
-              ariaLabel="Authenticator code"
+              ariaLabel={labels.enroll.codeAriaLabel}
               length={6}
               value={code}
               onChange={setCode}
@@ -178,7 +175,7 @@ export function PhiAuthWorkflowBody({
               loading={busy}
               disabled={!/^\d{6}$/.test(code)}
               onClick={() => void submit()}
-              label="Verify and continue"
+              label={labels.verify}
             />
           </>
         )}
@@ -188,26 +185,26 @@ export function PhiAuthWorkflowBody({
 
   return (
     <PhiFlexControl vertical gap="middle">
-      <PhiTypographyControl presentation="title" level={4}>Two-factor authentication</PhiTypographyControl>
+      <PhiTypographyControl presentation="title" level={4}>{labels.challenge.title}</PhiTypographyControl>
       {error ? <PhiAlertControl level="error" showIcon title={error} /> : null}
       <PhiTextControl
         value={code}
         inputType={methodKey === "totp" ? "digits" : "text"}
         autoComplete="one-time-code"
         maxLength={methodKey === "totp" ? 6 : 11}
-        placeholder={methodKey === "totp" ? "6-digit code" : "Recovery code"}
+        placeholder={methodKey === "totp" ? labels.challenge.codePlaceholder : labels.challenge.recoveryPlaceholder}
         allowClear={false}
         onChange={(nextValue) => setCode(nextValue ?? "")}
         disabled={busy}
       />
-      <PhiButtonControl type="primary" loading={busy} onClick={() => void submit()} label="Verify and continue" />
+      <PhiButtonControl type="primary" loading={busy} onClick={() => void submit()} label={labels.verify} />
       <PhiButtonControl
         type="link"
         onClick={() => {
           setMethodKey((current) => current === "totp" ? "recovery-code" : "totp");
           setCode("");
         }}
-        label={methodKey === "totp" ? "Use a recovery code" : "Use authenticator code"}
+        label={methodKey === "totp" ? labels.challenge.useRecovery : labels.challenge.useAuthenticator}
       />
     </PhiFlexControl>
   );

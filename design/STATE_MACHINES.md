@@ -56,11 +56,17 @@ three meet:
   `mode` and `next`. The shared type also shared the copy: both callers showed "Two-factor
   authentication is required before this site can be opened", including to people who were adding an
   authenticator because they wanted one.
-- `stage` (`primary | second-factor | step-up | recovery`, `types/auth-manifest.ts`) and
-  `capabilitiesByArea` (`primary-login | factor-challenge | factor-enrollment | recovery`,
-  `plugins/runtime-modules/auth/definition.ts`) are declared, typed, script-validated and documented.
-  Only `primary` and `primary-login` are ever read. Six of eight values are vocabulary waiting for a
-  mechanism that does not exist.
+- `capabilitiesByArea` (`primary-login | factor-challenge | factor-enrollment | recovery`) **has its
+  mechanism.** Each machine state names the capability it needs to be shown, and
+  `canPresentPhiAuthState` asks the provider for that Area whether it offers it -- so three of the four
+  are read where one written-out `"primary-login"` used to be, and a state no provider here can present
+  now says so instead of leaving a visitor in front of an empty step. `recovery` is still unread: no
+  state names it, because Core answers no recovery state.
+
+  `stage` (`primary | second-factor | step-up | recovery`, `types/auth-manifest.ts`) is untouched. Only
+  `primary` is ever read, and unlike the capabilities it has nothing that would consume the rest: it
+  describes a sign-in method, and the machine describes where a Session stands. They are not the same
+  axis, which is probably why one of them found a mechanism and the other did not.
 - ~~`getCsrfToken` is written six times across Auth and Core clients~~ -- **ten, and now once.** Counting
   them found four more than this document claimed, in four spellings: two threw a hard-coded English
   sentence, two threw a sentence from a Label Set, one threw a `PhiTableProviderError`, and three gave up
@@ -554,10 +560,14 @@ Not design questions -- one approval and one dependency.
 - **The Page host is being rebuilt.** The lifetime answer above reads three files that the removal of
   parallel routes for `page.tsx` touches. Writing the rule down does not wait; building the binding on
   top of it should.
-- **Half the grammar still has no reader, by this document's own test.** With one machine built, these
-  are declared, typed and validated, and nothing consumes them: `capability` on a state, and all three
-  effect kinds (`signal`, `forward`, `read`). That is the same charge laid against `stage` and
-  `capabilitiesByArea` under [What exists today](#what-exists-today), and it now applies here.
+- **Three effect kinds still have no reader, by this document's own test.** `signal`, `forward` and
+  `read` are declared, typed and validated, and nothing consumes them -- the same charge this document
+  lays against unread vocabulary under [What exists today](#what-exists-today).
+
+  `capability` is no longer among them: each Auth state names one, and the Controller asks the Area's
+  provider whether it offers it. That is also what gave `capabilitiesByArea` the mechanism it had been
+  waiting for, which is the shape to look for here -- a declaration earns its place when something
+  already declared elsewhere turns out to be the other half of it.
 
   It is recorded rather than removed because the first consumer said something about which parts earn
   their place. States, statements, transitions and the determinism rules are all in use: Auth raises an

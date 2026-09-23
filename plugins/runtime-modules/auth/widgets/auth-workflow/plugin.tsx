@@ -1,26 +1,19 @@
 import type { PhiCmsServerWidgetPlugin } from "../../../../../types";
-import { PhiRuntimeModuleRenderClientHost } from "../../../../../components/runtime/runtime-module-render-client-manifest";
-import { PhiRuntimeRenderClientType } from "../../../../../constants/runtime-render-client-types";
+import { renderPhiWidgetPreviewPlaceholder } from "../../../../../plugins/factories/widget-renderers";
 import {
   PHI_AUTH_WORKFLOW_WIDGET_DEFINITION,
   type PhiCmsAuthWorkflowWidgetConfig,
 } from "./config";
-
-function renderAuthWorkflow({
-  widget,
-  config,
-}: Parameters<PhiCmsServerWidgetPlugin<PhiCmsAuthWorkflowWidgetConfig>["render"]>[0]) {
-  return (
-    <PhiRuntimeModuleRenderClientHost
-      key={`widget-${widget.id}`}
-      type={PhiRuntimeRenderClientType.AuthWorkflow}
-      componentProps={{ signalRoutes: config.signalRoutes }}
-    />
-  );
-}
+import { PhiAuthWorkflowWidget } from "./server";
 
 export const PHI_AUTH_WORKFLOW_WIDGET_PLUGIN: PhiCmsServerWidgetPlugin<PhiCmsAuthWorkflowWidgetConfig> = {
   ...PHI_AUTH_WORKFLOW_WIDGET_DEFINITION,
-  render: renderAuthWorkflow,
-  renderPreview: renderAuthWorkflow,
+  render: ({ runtime, config }) => (
+    <PhiAuthWorkflowWidget runtime={runtime} signalRoutes={config.signalRoutes} />
+  ),
+  /*
+   * A placeholder rather than the real body, as the account security Widget does: drawing it would start
+   * an enrolment against Core from inside the Builder.
+   */
+  renderPreview: ({ widget }) => renderPhiWidgetPreviewPlaceholder(widget),
 };

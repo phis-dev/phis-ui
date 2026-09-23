@@ -37,6 +37,22 @@ type PhiAuthControllerRenderArgs = Parameters<NonNullable<
   PhiRuntimeControllerPlugin<Record<string, never>>["renderController"]
 >>[0];
 
+/**
+ * Whether the provider on a surface can present the state the machine is in.
+ *
+ * Two declarations that had never met. Each state names the presentation capability it needs, and
+ * `authUiProvider.capabilities` names what an Area's provider offers -- of which exactly one value,
+ * `primary-login`, was ever read, the other three being vocabulary waiting for a mechanism. This is the
+ * mechanism: a state is presentable here or it is not, and the answer comes from the definition rather
+ * than from a string written out at the one place that happened to need it.
+ *
+ * A state naming no capability is presentable anywhere. `complete` is one: there is nothing left to show.
+ */
+function canPresentPhiAuthState(state: string, capabilities: readonly string[] | undefined) {
+  const capability = PHI_AUTH_MACHINE_DEFINITION.states[state]?.capability;
+  return !capability || capabilities?.includes(capability) === true;
+}
+
 function PhiAuthControllerView({
   address,
   runtime,
@@ -79,8 +95,25 @@ function PhiAuthControllerView({
   const project = machine.project;
   useEffect(() => {
     if (coreUnavailable && !workflow) return;
-    project(workflow?.state ?? "anonymous");
-  }, [coreUnavailable, project, workflow]);
+    const next = workflow?.state ?? "anonymous";
+
+    /*
+     * Core decided this state and it is shown either way -- but if no provider here can present it, the
+     * visitor is about to see nothing at all and no other line says why.
+     *
+     * Not deduplicated: a provider that cannot present a state its Site can reach is a configuration
+     * fault, so this is rare by definition rather than by suppression. Reported instead of acted on,
+     * because forwarding somebody out of a second factor is worse than showing them an empty step.
+     */
+    if (!canPresentPhiAuthState(next, runtime.authUiProvider?.capabilities)) {
+      console.warn(
+        `[phi-auth] Signing in reached "${next}", which needs the ` +
+        `"${PHI_AUTH_MACHINE_DEFINITION.states[next]?.capability}" capability, and the Auth provider in ` +
+        `the "${runtime.area}" Area does not offer it. Nothing will be drawn for this step.`,
+      );
+    }
+    project(next);
+  }, [coreUnavailable, project, runtime.area, runtime.authUiProvider, workflow]);
 
   /*
    * The answer Widgets condition on, and it carries statements rather than the state key. A Widget
@@ -108,7 +141,6 @@ function PhiAuthControllerView({
       : null,
     [overlayIds],
   );
-  const canRenderPrimaryLogin = runtime.authUiProvider?.capabilities.includes("primary-login") === true;
 
   const dispatch = useCallback((input: Pick<PhiSignal, "channel" | "action" | "value" | "valueType" | "valueSchema" | "receiver"> & {
     correlationId?: string;
@@ -302,10 +334,15 @@ function PhiAuthControllerView({
     const next = (
       typeof signal.value === "string" ? normalizeLoginRedirectTarget(signal.value) : null
     ) ?? normalizeLoginRedirectTarget(`${window.location.pathname}${window.location.search}`) ?? "/";
+    /*
+     * Asked of the state signing in starts from rather than of a written-out `"primary-login"`. Same
+     * answer today, and it stays the right question if a Site ever opens this modal from somewhere
+     * other than the beginning.
+     */
     if (
       !overlayAddress ||
       !formControllerAddress ||
-      !canRenderPrimaryLogin
+      !canPresentPhiAuthState(PHI_AUTH_MACHINE_DEFINITION.initial, runtime.authUiProvider?.capabilities)
     ) {
       redirectToPublicLogin(next);
       return;

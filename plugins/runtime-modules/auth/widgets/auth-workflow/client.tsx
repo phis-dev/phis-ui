@@ -14,10 +14,12 @@ import {
   type PhiSignalValue,
 } from "../../../../../types/signals";
 import type { PhiAuthWorkflow } from "../../../../../types/auth-manifest";
+import type { PhiAuthWorkflowBodyLabels } from "../../../../../components/widgets/label-types/auth-workflow";
 import { PHI_AUTH_MACHINE_STATEMENTS } from "../../machine";
 
 export type PhiAuthWorkflowWidgetClientProps = {
   signalRoutes?: PhiSignalRouteSet | null;
+  labels: PhiAuthWorkflowBodyLabels;
 };
 
 /**
@@ -36,7 +38,7 @@ function readWorkflow(value: unknown): PhiAuthWorkflow | null {
     : null;
 }
 
-export function PhiAuthWorkflowWidgetClient({ signalRoutes }: PhiAuthWorkflowWidgetClientProps) {
+export function PhiAuthWorkflowWidgetClient({ signalRoutes, labels }: PhiAuthWorkflowWidgetClientProps) {
   const identity = usePhiSignalIdentity();
   const emitSignal = usePhiSignalEmitter(identity.sender);
   const emitRoutes = useMemo(() => signalRoutes?.emits ?? [], [signalRoutes?.emits]);
@@ -111,6 +113,7 @@ export function PhiAuthWorkflowWidgetClient({ signalRoutes }: PhiAuthWorkflowWid
     <PhiAuthWorkflowBody
       mode={workflow.state === "factor-enrollment-required" ? "enroll" : "challenge"}
       next={workflow.next}
+      labels={labels}
       onComplete={({ area, next }) => {
         setWorkflow(null);
         emitCapability("submitSuccess", { ok: true, payload: { area, next } });
