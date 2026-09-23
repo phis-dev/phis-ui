@@ -11,4 +11,6 @@ into the matching contract document, and open work is tracked in [TODOS.md](../T
 - [MODULE_DISTRIBUTION.md](./MODULE_DISTRIBUTION.md) -- distributing compiled and commercial Modules and
   acquiring them from a configured source.
 - [OVERLAY_AUTHORING.md](./OVERLAY_AUTHORING.md) -- authoring Modal and Drawer Overlays in Builder.
+- [STATE_MACHINES.md](./STATE_MACHINES.md) -- a shared description of multi-step work: states,
+  transitions, server-owned projections, and where a flow's state lives.
 - [TOURS.md](./TOURS.md) -- guided UI Tours, visual-anchor resolution, and user progress.
