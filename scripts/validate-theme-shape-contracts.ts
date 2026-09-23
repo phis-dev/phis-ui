@@ -243,11 +243,26 @@ const layoutContractSource = await readFile(
   new URL("../components/layouts/phi-layout-contract.ts", import.meta.url),
   "utf8",
 );
-assert.match(
-  layoutContractSource,
-  new RegExp(String.raw`borderRadius:\s*resolvedBorderRadius \?\? "var\(${PHI_SURFACE_SHAPE_CSS_VAR}, 0\)"`, "u"),
+assert.ok(
+  layoutContractSource.includes(`= "var(${PHI_SURFACE_SHAPE_CSS_VAR}, 0)"`),
   "A Layout without a configured radius must take the surface step, falling back to none.",
 );
+/*
+ * And it must reach the box as four corners, never as the shorthand. A Widget states a single corner as
+ * a longhand, and React refuses a shorthand standing beside a longhand it may have to drop on the next
+ * render -- which is what writing `borderRadius` on every Layout produced.
+ */
+for (const corner of [
+  "borderTopLeftRadius",
+  "borderTopRightRadius",
+  "borderBottomRightRadius",
+  "borderBottomLeftRadius",
+]) {
+  assert.ok(
+    layoutContractSource.includes(`${corner}: PHI_LAYOUT_SURFACE_RADIUS`),
+    `A Layout's ${corner} must carry the step, so no shorthand stands beside a Widget's own corner.`,
+  );
+}
 
 /**
  * Cascader's own stylesheet contains nothing but the dropdown panel and its columns, so shaping its

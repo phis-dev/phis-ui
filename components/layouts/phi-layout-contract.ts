@@ -144,6 +144,9 @@ export function resolvePhiLayoutBoxStyle({
   return resolvedStyle;
 }
 
+/** The Site's answer for a Layout that states no corner of its own; see `resolvePhiLayoutStyle`. */
+const PHI_LAYOUT_SURFACE_RADIUS = "var(--phi-surface-radius, 0)";
+
 export function resolvePhiLayoutStyle({
   padding,
   paddingTop,
@@ -182,8 +185,21 @@ export function resolvePhiLayoutStyle({
      *
      * The fallback is `0` rather than a token, because that is what this returned before there was a
      * step to take, and a Layout rendered outside the Provider should not start rounding on its own.
+     *
+     * Four corners rather than the shorthand, and only in this branch. A Widget states a single corner
+     * as a longhand (`borderTopLeftRadius`), and React refuses to have a shorthand standing beside a
+     * longhand it may have to remove on the next render -- which is what a shorthand written on every
+     * Layout, configured or not, created. Where the author DID state a radius the shorthand stays: it
+     * is their one value, and it was already the only thing on the box.
      */
-    borderRadius: resolvedBorderRadius ?? "var(--phi-surface-radius, 0)",
+    ...(resolvedBorderRadius == null
+      ? {
+        borderTopLeftRadius: PHI_LAYOUT_SURFACE_RADIUS,
+        borderTopRightRadius: PHI_LAYOUT_SURFACE_RADIUS,
+        borderBottomRightRadius: PHI_LAYOUT_SURFACE_RADIUS,
+        borderBottomLeftRadius: PHI_LAYOUT_SURFACE_RADIUS,
+      }
+      : { borderRadius: resolvedBorderRadius }),
     ...resolvePhiPaddingStyle({ padding, paddingTop, paddingRight, paddingBottom, paddingLeft }),
   };
 }
