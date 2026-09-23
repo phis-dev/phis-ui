@@ -68,3 +68,46 @@
 .ant-segmented.ant-segmented-lg .ant-segmented-thumb.ant-segmented-thumb {
   border-radius: var(--phi-control-radius-inner-lg, var(--ant-border-radius));
 }
+
+/*
+ * Controls that grow with their content.
+ *
+ * `pill` resolves to a radius far above any Control height, which the browser clamps to exactly half
+ * the rendered height -- the capsule, as long as that height is one Control line. A Textarea, a
+ * multiple Select whose tags wrap onto a second row, and a Mentions box are not one line, and half of
+ * a box four rows tall is an arc that eats the sides instead of closing them. `--phi-control-radius-
+ * grown-*` carries the capsule of ONE line, which a grown Control then holds however tall it gets.
+ *
+ * These are the only rules here that set the default size. The reason the others leave it to the
+ * component tokens -- a rule strong enough would also outrank antd's own `-circle` and `-round` Button
+ * shapes -- does not apply: no Button grows, and no selector below can reach one.
+ *
+ * Each size excludes the other two through `:where()`, which contributes no specificity. Otherwise the
+ * default rule, one element heavier than the size rules above it, would win on a small Textarea it was
+ * never about.
+ *
+ * The Textarea inside an affix wrapper -- `showCount`, `allowClear`, a feedback icon -- is excluded as
+ * well: antd draws it borderless and transparent inside the wrapper that carries the border, so the
+ * shape belongs to the wrapper and a radius on the field within it would be rounding nothing.
+ */
+
+textarea.ant-input.ant-input:not(:where(.ant-input-sm, .ant-input-lg, .ant-input-underlined, .ant-input-affix-wrapper > textarea)),
+.ant-input-textarea-affix-wrapper.ant-input-textarea-affix-wrapper:not(:where(.ant-input-affix-wrapper-sm, .ant-input-affix-wrapper-lg, .ant-input-underlined)),
+.ant-select-multiple.ant-select-multiple:not(:where(.ant-select-sm, .ant-select-lg, .ant-select-underlined)),
+.ant-mentions.ant-mentions:not(:where(.ant-mentions-sm, .ant-mentions-lg, .ant-mentions-underlined)) {
+  border-radius: var(--phi-control-radius-grown-md, var(--ant-border-radius));
+}
+
+textarea.ant-input-sm.ant-input-sm:not(:where(.ant-input-underlined, .ant-input-affix-wrapper > textarea)),
+.ant-input-textarea-affix-wrapper.ant-input-affix-wrapper-sm.ant-input-affix-wrapper-sm:not(:where(.ant-input-underlined)),
+.ant-select-multiple.ant-select-sm.ant-select-sm:not(:where(.ant-select-underlined)),
+.ant-mentions-sm.ant-mentions-sm:not(:where(.ant-mentions-underlined)) {
+  border-radius: var(--phi-control-radius-grown-sm, var(--ant-border-radius-sm));
+}
+
+textarea.ant-input-lg.ant-input-lg:not(:where(.ant-input-underlined, .ant-input-affix-wrapper > textarea)),
+.ant-input-textarea-affix-wrapper.ant-input-affix-wrapper-lg.ant-input-affix-wrapper-lg:not(:where(.ant-input-underlined)),
+.ant-select-multiple.ant-select-lg.ant-select-lg:not(:where(.ant-select-underlined)),
+.ant-mentions-lg.ant-mentions-lg:not(:where(.ant-mentions-underlined)) {
+  border-radius: var(--phi-control-radius-grown-lg, var(--ant-border-radius-lg));
+}

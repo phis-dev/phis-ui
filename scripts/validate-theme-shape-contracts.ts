@@ -43,24 +43,57 @@ const AUTHORED_SCALE = { borderRadiusXS: 1, borderRadiusSM: 5, borderRadius: 8, 
 
 assert.deepEqual(
   resolvePhiControlShapeRadii("rounded", AUTHORED_SCALE),
-  { sm: 5, md: 8, lg: 13, innerSm: 1, innerMd: 5, innerLg: 8 },
+  { sm: 5, md: 8, lg: 13, innerSm: 1, innerMd: 5, innerLg: 8, grownSm: 5, grownMd: 8, grownLg: 13 },
   "`rounded` is the authored scale unchanged.",
 );
 assert.deepEqual(
   resolvePhiControlShapeRadii("subtle", AUTHORED_SCALE),
-  { sm: 5, md: 5, lg: 8, innerSm: 1, innerMd: 1, innerLg: 5 },
+  { sm: 5, md: 5, lg: 8, innerSm: 1, innerMd: 1, innerLg: 5, grownSm: 5, grownMd: 5, grownLg: 8 },
   "`subtle` is the authored scale shifted one step toward the small end.",
 );
 
 /**
  * `square` and `pill` are absolute statements about geometry, so no size may soften them. This is the
  * defect the entry recorded: a small pill Button that renders at the small radius is simply wrong.
+ *
+ * A grown pill Control is the one slot the full radius does not reach, and it is asserted on its own
+ * below: what it carries is the same capsule at a different number, not the same number softened.
  */
 for (const [shape, radius] of [["square", 0], ["pill", 9999]] as const) {
   const radii = resolvePhiControlShapeRadii(shape, AUTHORED_SCALE);
   for (const [slot, value] of Object.entries(radii)) {
+    if (shape === "pill" && slot.startsWith("grown")) {
+      continue;
+    }
     assert.equal(value, radius, `${shape} must reach ${slot}, not only the default size.`);
   }
+}
+
+/**
+ * A Control whose height is not one Control line -- a Textarea, a multiple Select whose tags wrap, a
+ * Mentions box -- keeps the capsule of ONE line instead of clamping to half of whatever it has grown
+ * to, which on a tall box is an arc across the side rather than a capsule.
+ *
+ * The heights are deliberately odd, because the rounding is part of the statement: the browser clamps
+ * anything at or above half the height to the capsule, so the spare half pixel is spent where it cannot
+ * show and the custom property stays a whole number.
+ */
+const AUTHORED_HEIGHTS = { controlHeightSM: 21, controlHeight: 34, controlHeightLG: 55 };
+const grownPill = resolvePhiControlShapeRadii("pill", { ...AUTHORED_SCALE, ...AUTHORED_HEIGHTS });
+assert.deepEqual(
+  [grownPill.grownSm, grownPill.grownMd, grownPill.grownLg],
+  [11, 17, 28],
+  "A grown pill Control carries half a Control line, rounded up -- never half of itself.",
+);
+
+// Every other shape is already a number rather than a limit, so growing cannot change what it means.
+for (const shape of ["square", "subtle", "rounded"] as const) {
+  const radii = resolvePhiControlShapeRadii(shape, { ...AUTHORED_SCALE, ...AUTHORED_HEIGHTS });
+  assert.deepEqual(
+    [radii.grownSm, radii.grownMd, radii.grownLg],
+    [radii.sm, radii.md, radii.lg],
+    `${shape} states a radius, so a grown Control renders the same one.`,
+  );
 }
 
 // Relative shapes must keep a size scale rather than flatten it, or the Small and Large numbers an
@@ -86,6 +119,15 @@ for (const value of Object.values(cssVars)) {
 assert.ok(
   !Object.values(PHI_CONTROL_SHAPE_CSS_VARS).includes("--phi-control-radius-md" as never),
   "The default size stays on the component tokens; a CSS rule for it would outrank antd's own Button shapes.",
+);
+/**
+ * Except for a grown Control, where the default size is exactly where the component token is wrong. The
+ * reason the rule above exists does not reach it: no Button grows, and the selectors that read this
+ * property name a Textarea, a multiple Select and a Mentions box.
+ */
+assert.ok(
+  Object.values(PHI_CONTROL_SHAPE_CSS_VARS).includes("--phi-control-radius-grown-md" as never),
+  "A grown Control needs the default size stated, because that is the size the component token misses.",
 );
 
 const components = applyPhiControlShapeComponentTokens(

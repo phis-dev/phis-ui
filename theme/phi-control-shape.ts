@@ -85,6 +85,10 @@ export function resolvePhiControlShape(value: unknown): PhiControlShape {
  * `inner*` is the radius of a box nested INSIDE a Control body -- the Segmented item and thumb. antd
  * keeps it one step below the body so the item never overruns its container; an absolute shape has to
  * reach it too, or a pill Segmented ends up with square items inside a capsule.
+ *
+ * `grown*` is the radius of a Control whose height is NOT one Control line: a Textarea, a Select holding
+ * enough tags to wrap, a Mentions box. Only `pill` differs there, and it has to -- see
+ * `resolvePhiGrownControlShapeRadii`.
  */
 export type PhiControlShapeRadii = {
   sm: number;
@@ -93,6 +97,9 @@ export type PhiControlShapeRadii = {
   innerSm: number;
   innerMd: number;
   innerLg: number;
+  grownSm: number;
+  grownMd: number;
+  grownLg: number;
 };
 
 export type PhiControlShapeRadiusTokens = {
@@ -100,6 +107,9 @@ export type PhiControlShapeRadiusTokens = {
   borderRadiusSM?: unknown;
   borderRadius?: unknown;
   borderRadiusLG?: unknown;
+  controlHeightSM?: unknown;
+  controlHeight?: unknown;
+  controlHeightLG?: unknown;
 };
 
 /**
@@ -110,19 +120,21 @@ export type PhiControlShapeRadiusTokens = {
  */
 const PHI_CONTROL_SHAPE_FULL_RADIUS = 9999;
 
-function readTokenRadius(tokens: PhiControlShapeRadiusTokens | undefined, key: keyof PhiControlShapeRadiusTokens, fallback: number) {
+function readTokenNumber(tokens: PhiControlShapeRadiusTokens | undefined, key: keyof PhiControlShapeRadiusTokens, fallback: number) {
   const value = tokens?.[key];
   return typeof value === "number" && Number.isFinite(value) ? value : fallback;
 }
 
-export function resolvePhiControlShapeRadii(
+type PhiControlShapeBodyRadii = Omit<PhiControlShapeRadii, "grownSm" | "grownMd" | "grownLg">;
+
+function resolvePhiControlShapeBodyRadii(
   shape: PhiControlShape,
   tokens?: PhiControlShapeRadiusTokens,
-): PhiControlShapeRadii {
-  const xs = readTokenRadius(tokens, "borderRadiusXS", 2);
-  const sm = readTokenRadius(tokens, "borderRadiusSM", 2);
-  const base = readTokenRadius(tokens, "borderRadius", 6);
-  const lg = readTokenRadius(tokens, "borderRadiusLG", base);
+): PhiControlShapeBodyRadii {
+  const xs = readTokenNumber(tokens, "borderRadiusXS", 2);
+  const sm = readTokenNumber(tokens, "borderRadiusSM", 2);
+  const base = readTokenNumber(tokens, "borderRadius", 6);
+  const lg = readTokenNumber(tokens, "borderRadiusLG", base);
 
   if (shape === "square") {
     return { sm: 0, md: 0, lg: 0, innerSm: 0, innerMd: 0, innerLg: 0 };
@@ -138,6 +150,47 @@ export function resolvePhiControlShapeRadii(
   }
 
   return { sm, md: base, lg, innerSm: xs, innerMd: sm, innerLg: base };
+}
+
+/**
+ * The radius of a Control that grows with what is in it.
+ *
+ * `PHI_CONTROL_SHAPE_FULL_RADIUS` is an abbreviation, and the comment above it says what for: a number
+ * far above any Control height clamps to exactly half that height. That is the capsule only while the
+ * height IS one Control line. A Textarea four rows tall, or a Select holding enough tags to wrap, keeps
+ * clamping to half of whatever it has become -- and half of a tall box is not a capsule but an arc that
+ * eats the sides it was meant to close.
+ *
+ * So a grown Control is given the capsule of ONE line and holds it: `createPhiControlShapeCorners`
+ * already states the rule -- "a pill corner on a small Control is still half that Control's height" --
+ * and this is that sentence taken literally, where the abbreviation stops being able to. Rounded up,
+ * because the browser clamps anything at or above half the height to the capsule, so the extra half
+ * pixel is spent where it cannot show and the property stays a whole number.
+ *
+ * Every other shape is already a number rather than a limit, so growing changes nothing about it.
+ */
+function resolvePhiGrownControlShapeRadii(
+  shape: PhiControlShape,
+  body: PhiControlShapeBodyRadii,
+  tokens?: PhiControlShapeRadiusTokens,
+): Pick<PhiControlShapeRadii, "grownSm" | "grownMd" | "grownLg"> {
+  if (shape !== "pill") {
+    return { grownSm: body.sm, grownMd: body.md, grownLg: body.lg };
+  }
+
+  return {
+    grownSm: Math.ceil(readTokenNumber(tokens, "controlHeightSM", 24) / 2),
+    grownMd: Math.ceil(readTokenNumber(tokens, "controlHeight", 32) / 2),
+    grownLg: Math.ceil(readTokenNumber(tokens, "controlHeightLG", 40) / 2),
+  };
+}
+
+export function resolvePhiControlShapeRadii(
+  shape: PhiControlShape,
+  tokens?: PhiControlShapeRadiusTokens,
+): PhiControlShapeRadii {
+  const body = resolvePhiControlShapeBodyRadii(shape, tokens);
+  return { ...body, ...resolvePhiGrownControlShapeRadii(shape, body, tokens) };
 }
 
 export function resolvePhiControlShapeRadius(
@@ -158,6 +211,11 @@ export function resolvePhiControlShapeRadius(
  * The default size is deliberately absent: it is already carried by the component tokens, and a CSS
  * rule strong enough to set it would also have to outrank antd's own `-circle` and `-round` Button
  * shapes, which stay authoritative.
+ *
+ * `grownMd` is the one exception, and for the reason that does not apply: the default size is exactly
+ * where the component token is wrong for a grown Control, so something has to say otherwise, and no
+ * Button ever grows -- the selectors that read it name a Textarea, a multiple Select and a Mentions box,
+ * and reach no Button shape at all.
  */
 export type PhiControlShapeCssVarSlot = Exclude<keyof PhiControlShapeRadii, "md">;
 
@@ -167,6 +225,9 @@ export const PHI_CONTROL_SHAPE_CSS_VARS = {
   innerSm: "--phi-control-radius-inner-sm",
   innerMd: "--phi-control-radius-inner-md",
   innerLg: "--phi-control-radius-inner-lg",
+  grownSm: "--phi-control-radius-grown-sm",
+  grownMd: "--phi-control-radius-grown-md",
+  grownLg: "--phi-control-radius-grown-lg",
 } as const satisfies Record<PhiControlShapeCssVarSlot, `--${string}`>;
 
 export function buildPhiControlShapeCssVars(

@@ -295,9 +295,16 @@ drawable yet: resolving it throws.
   icon-only Controls. Both apply at every Control size.
 - `rounded` is the numeric radius scale unchanged; `subtle` is that scale shifted one step smaller.
 - `pill` is derived centrally from the rendered Control height, never persisted as `border-radius: 50%`.
+- A Control that grows with its content -- a Textarea, a multiple Select whose tags wrap, a Mentions box --
+  keeps the capsule of ONE Control line at every height. Half of a box four rows tall is an arc across its
+  side, not a capsule, so `pill` there is half the Control height rounded up rather than the full radius.
+  The other three shapes state a number and are unaffected.
 
 The shape reaches the default Control size through Ant Design component tokens and the small and large sizes
 through `styles/control-shape.css`, which reads `--phi-control-radius-*` variables built from the live tokens.
+Grown Controls take all three sizes from that stylesheet, the default size included: that is the size where
+the component token is wrong for them, and no Button -- whose `-circle` and `-round` shapes the other rules
+stay clear of -- can grow.
 It governs Control bodies and triggers only. `borderRadiusSM`, `borderRadius`, and `borderRadiusLG` keep
 governing surfaces: Layouts, Cards, Tables, Trees, Modals, Drawers, and popups, including the popup of a
 Select, Picker, or Cascader. For Phi Controls the shape wins over conflicting component radius overrides.
