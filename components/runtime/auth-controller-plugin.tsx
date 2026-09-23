@@ -235,6 +235,23 @@ function PhiAuthControllerView({
       const result = signal.value as { ok?: boolean; payload?: Record<string, unknown> | null } | null;
       if (result?.ok !== true) return;
       const payload = result.payload ?? null;
+
+      /*
+       * Tell the machine an answer is on its way, before handing it one.
+       *
+       * Not ceremony. The state that follows arrives through `project`, and a projection that changes
+       * state with nothing outstanding is reported as divergence -- so without this every sign-in that
+       * asks for a second factor would print a console error saying the server contradicted itself.
+       * Sending is also what puts the transition table to use: an event from a state that does not
+       * answer to it is a fault, and now it is one that says so.
+       *
+       * Which event it is follows from where the machine stands, because that is what the table
+       * distinguishes: primary credentials are answered from `anonymous`, a factor from one of the two
+       * states that owe one. The same signal carries both, because the step Widget reports its result
+       * the way the Form Widget reports one.
+       */
+      machine.send(machine.snapshot.state === "anonymous" ? "authenticated" : "factorSettled");
+
       /*
        * Not finished: a second factor is owed. This used to return and leave the step Widget to work it
        * out from the same signal; now the workflow is taken here, which is what makes this Controller

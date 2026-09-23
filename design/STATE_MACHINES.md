@@ -542,6 +542,18 @@ Not design questions -- one approval and one dependency.
 - **The Page host is being rebuilt.** The lifetime answer above reads three files that the removal of
   parallel routes for `page.tsx` touches. Writing the rule down does not wait; building the binding on
   top of it should.
+- **Half the grammar still has no reader, by this document's own test.** With one machine built, these
+  are declared, typed and validated, and nothing consumes them: `capability` on a state, and all three
+  effect kinds (`signal`, `forward`, `read`). That is the same charge laid against `stage` and
+  `capabilitiesByArea` under [What exists today](#what-exists-today), and it now applies here.
+
+  It is recorded rather than removed because the first consumer said something about which parts earn
+  their place. States, statements, transitions and the determinism rules are all in use: Auth raises an
+  event, the table decides whether that event is answerable from where the machine stands, and the
+  statements are what the login preset reads. Effects are not, and the reason is specific -- Auth's
+  answer arrives on the same signal that raises the event, so a `read` would buy a second request for
+  something already in hand. A machine whose outcome arrives separately would need them. Until one
+  exists, a third party reading this should know these three are untried.
 
 ## Build order
 

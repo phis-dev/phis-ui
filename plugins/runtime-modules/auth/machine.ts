@@ -85,24 +85,21 @@ export const PHI_AUTH_MACHINE_DEFINITION: PhiStateMachineDefinition = {
       statements: [PHI_AUTH_MACHINE_STATEMENTS.complete],
     },
   },
+  /*
+   * No effects on any of these, which is worth saying because a projection usually wants a `read`.
+   *
+   * Here the answer arrives with the event. The handler's reply carries the workflow, and the Controller
+   * listens for that reply anyway, so a `read` effect would spend a second request on something already
+   * in hand. What the transitions do instead is state which events are answerable from where -- raised
+   * from a state that does not admit them, they are a fault the binding reports rather than a silent
+   * no-op -- and tell the machine that an answer is owed, so the projection that follows is progress
+   * and not a contradiction.
+   */
   transitions: {
-    /*
-     * Primary credentials went in. Core answers whether that was the whole of it or whether a factor
-     * is owed, so this asks and waits rather than deciding.
-     */
-    authenticated: { from: "anonymous", event: "authenticated", to: "complete", effects: [{ kind: "read" }] },
-    enrolled: {
-      from: "factor-enrollment-required",
-      event: "factorSettled",
-      to: "complete",
-      effects: [{ kind: "read" }],
-    },
-    challenged: {
-      from: "factor-challenge-required",
-      event: "factorSettled",
-      to: "complete",
-      effects: [{ kind: "read" }],
-    },
+    /** Primary credentials went in. Whether that was the whole of it is Core's to say. */
+    authenticated: { from: "anonymous", event: "authenticated", to: "complete" },
+    enrolled: { from: "factor-enrollment-required", event: "factorSettled", to: "complete" },
+    challenged: { from: "factor-challenge-required", event: "factorSettled", to: "complete" },
   },
   /*
    * Nothing from outside this Module. Reading where somebody stands in signing in is one thing; raising

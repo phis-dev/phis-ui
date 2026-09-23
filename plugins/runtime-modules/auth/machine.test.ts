@@ -5,7 +5,10 @@ import {
   PHI_AUTH_MACHINE_REFERENCE,
   PHI_AUTH_MACHINE_STATEMENTS,
 } from "./machine";
-import { readPhiStateMachineSnapshot } from "../../../helpers/state-machine-binding";
+import {
+  readPhiStateMachineSnapshot,
+  resolvePhiStateMachineTransition,
+} from "../../../helpers/state-machine-binding";
 import { collectPhiStateMachineDefinitionErrors } from "../../../types/state-machine";
 
 /**
@@ -85,6 +88,39 @@ describe("what the login preset needs to ask", () => {
         "complete",
         "stepRunning",
       ]);
+    }
+  });
+});
+
+describe("what the Controller raises", () => {
+  function resolve(from: string, event: string) {
+    return resolvePhiStateMachineTransition(PHI_AUTH_MACHINE_DEFINITION, from, event, {});
+  }
+
+  /*
+   * The Controller picks the event from where the machine stands, because one signal carries both
+   * answers: the login handler's and the step Widget's, which reports its result the same way a Form
+   * does. This is the table that reading is against.
+   */
+  it("answers primary credentials from anonymous, and a factor from the states that owe one", () => {
+    expect(resolve("anonymous", "authenticated")).toMatchObject({ taken: true });
+    expect(resolve("factor-challenge-required", "factorSettled")).toMatchObject({ taken: true });
+    expect(resolve("factor-enrollment-required", "factorSettled")).toMatchObject({ taken: true });
+  });
+
+  it("refuses each event from where the other one belongs", () => {
+    expect(resolve("anonymous", "factorSettled")).toEqual({ taken: false, refusal: "unknown-event" });
+    expect(resolve("factor-challenge-required", "authenticated"))
+      .toEqual({ taken: false, refusal: "unknown-event" });
+  });
+
+  /*
+   * A projection usually wants a `read` effect. This one does not: the workflow arrives on the same
+   * signal that raises the event, so a read would spend a second request on an answer already in hand.
+   */
+  it("carries no effects at all", () => {
+    for (const transition of Object.values(PHI_AUTH_MACHINE_DEFINITION.transitions)) {
+      expect(transition.effects).toBeUndefined();
     }
   });
 });
