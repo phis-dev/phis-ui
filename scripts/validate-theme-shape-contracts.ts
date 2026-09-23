@@ -236,4 +236,21 @@ assert.equal(
   "The theme preview declares the shape properties; it is the one place the Style tab's shapes are seen.",
 );
 
+/**
+ * A Widget that draws its own box around a `borderless` field must take the Control shape, not
+ * `--ant-border-radius`: on a Control element that variable carries the shape itself, because Ant Design
+ * ships a component token in CSS variable mode as a local redefinition of it. Read inline, where no rule
+ * in the stylesheet above can reach it, a `pill` Site rendered a Markdown editor several rows tall as a
+ * capsule.
+ */
+const markdownEditorSource = await readFile(
+  new URL("../components/widgets/client/markdown-editor.tsx", import.meta.url),
+  "utf8",
+);
+assert.match(
+  markdownEditorSource,
+  /borderRadius: "var\(--phi-control-radius-grown-md, var\(--ant-border-radius-lg\)\)"/u,
+  "The Markdown editor's own box takes the grown Control radius, never `--ant-border-radius`.",
+);
+
 console.log("Theme Control shape contracts validated.");

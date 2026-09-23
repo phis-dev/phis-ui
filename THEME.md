@@ -311,6 +311,14 @@ Select, Picker, or Cascader. For Phi Controls the shape wins over conflicting co
 Intrinsic geometry stays authoritative: Switch stays a capsule, Checkbox and Radio keep their shapes, joined
 groups round only their outer boundary.
 
+`--ant-border-radius` means one thing on a surface and another on a Control, so a Widget that draws its own
+box around a Control must not read it. Ant Design ships a component token in CSS variable mode as a local
+redefinition of the same variable on the Control element (`.ant-input-css-var`, `.ant-select-css-var`), which
+is how the shape reaches the default size at all: on a surface the variable carries the surface radius, on a
+Control it carries the Control shape -- under `pill` the full radius. A field rendered `borderless` whose
+wrapper supplies the border and the corner therefore takes `--phi-control-radius-grown-*`, and falls back to
+`--ant-border-radius-lg`, the one radius on that element no component token redefines.
+
 Persist the semantic value only. Pixel radii, percentages, Ant Design token names, and per-component overrides
 are not part of this field.
 

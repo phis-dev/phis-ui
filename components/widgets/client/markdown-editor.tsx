@@ -110,7 +110,22 @@ export function PhiMarkdownWidgetEditor({
         minWidth: 0,
         padding: "var(--ant-padding-sm)",
         border: "1px solid var(--ant-color-border-secondary)",
-        borderRadius: "var(--ant-border-radius)",
+        /*
+         * The Control shape, and not `--ant-border-radius`.
+         *
+         * The field is `borderless`, so this style is the box: it draws the border, the ground and the
+         * corner the Control would have drawn itself. The corner is the trap. On a Control element
+         * `--ant-border-radius` does not mean the surface radius -- Ant Design ships a component token in
+         * CSS variable mode as a LOCAL redefinition of the same variable on that element, so what is
+         * read here is the Control shape, and under `pill` that is the full radius. Inline, where no
+         * rule in `styles/control-shape.css` can reach it: a Markdown editor several rows tall came out
+         * as a capsule.
+         *
+         * `grown-md` is what that stylesheet would have given it -- the capsule of one Control line,
+         * held at every height (THEME.md, "Control shape"). The fallback is the LARGE surface radius,
+         * because it is the one radius on this element that a component token does not redefine.
+         */
+        borderRadius: "var(--phi-control-radius-grown-md, var(--ant-border-radius-lg))",
         background: "var(--ant-color-bg-container)",
         resize: "none",
         fontFamily:
