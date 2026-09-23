@@ -6,6 +6,7 @@ import {
   applyPhiSurfaceShapeComponentTokens,
   PHI_SURFACE_SHAPE_CSS_VAR,
   resolvePhiSurfaceShapeRadius,
+  resolvePhiTooltipShapeRadius,
   buildPhiControlShapeCssVars,
   PHI_CONTROL_SHAPE_CSS_VARS,
   createPhiControlShapeCorners,
@@ -214,17 +215,37 @@ for (const component of ["Card", "Modal", "Dropdown", "Select", "DatePicker", "C
   );
 }
 /*
- * A Tooltip is a label with a tail and a Drawer is flush to the viewport edge, so neither is a surface
- * this step has anything to say about. Asserting their absence keeps that a decision rather than an
- * oversight somebody closes on sight.
+ * A Drawer lies flush to the viewport edge, so a corner there would round against nothing. Asserting the
+ * absence keeps that a decision rather than an oversight somebody closes on sight.
  */
-for (const component of ["Tooltip", "Drawer"]) {
-  assert.equal(
-    shapedSurfaces[component],
-    undefined,
-    `${component} is not a surface the shape answers for.`,
-  );
-}
+assert.equal(shapedSurfaces.Drawer, undefined, "A Drawer is not a surface the shape answers for.");
+
+/*
+ * A Tooltip takes the step like any other surface -- and under `pill` the capsule STATED, not the
+ * abbreviation. Ant Design computes the Tooltip's minimum width from this number, so 9999 would ask for
+ * a tooltip twenty thousand pixels wide instead of a rounded one. Half the Control height is the same
+ * capsule, because a Tooltip's minimum height is the Control height.
+ */
+assert.equal(
+  shapedSurfaces.Tooltip?.borderRadius,
+  TABLE_SHAPE_STEPS.borderRadius,
+  "A Tooltip takes the surface step as its own borderRadius.",
+);
+assert.equal(
+  resolvePhiTooltipShapeRadius("pill", { ...TABLE_SHAPE_STEPS, controlHeight: 34 }),
+  17,
+  "A Tooltip under pill takes half a Control height, never the full-radius abbreviation.",
+);
+assert.notEqual(
+  resolvePhiTooltipShapeRadius("pill", { ...TABLE_SHAPE_STEPS, controlHeight: 34 }),
+  9999,
+  "The full-radius abbreviation is arithmetic here, not a radius: it would set the minimum width.",
+);
+assert.equal(
+  resolvePhiTooltipShapeRadius("square", TABLE_SHAPE_STEPS),
+  0,
+  "Every other shape answers exactly as a surface does.",
+);
 
 /**
  * The other end of the same Table. Ant Design draws no bottom radius at all, so the CSS Module clips it,

@@ -292,8 +292,8 @@ export function resolvePhiSurfaceShapeRadius(
  * Menu opens for a submenu in a collapsed Sider. An overlay and a dropdown are surfaces like any other; it
  * is the Control SHAPE that stays off them.
  *
- * A Tooltip and a Drawer are deliberately absent. A Tooltip is a label with a tail rather than a surface,
- * and a Drawer is flush to the edge of the viewport, where a corner would round against nothing.
+ * A Drawer is deliberately absent: it lies flush to the edge of the viewport, where a corner would round
+ * against nothing. A Tooltip takes the step too, but not from here -- see `resolvePhiTooltipShapeRadius`.
  */
 /**
  * The three that name the box themselves, each under its own token.
@@ -319,6 +319,28 @@ const PHI_SURFACE_SHAPE_LG_COMPONENTS = [
   "Popover",
   "Menu",
 ] as const;
+/**
+ * The Tooltip's corner, which is the surface step everywhere but `pill`.
+ *
+ * `pill` cannot use the abbreviation here. Ant Design computes the Tooltip's MINIMUM WIDTH from this
+ * number -- `tooltipBorderRadius * 2 + sizePopupArrow`, and again with the arrow offset for the edge
+ * placements -- so `PHI_CONTROL_SHAPE_FULL_RADIUS` would ask for a tooltip twenty thousand pixels wide,
+ * and `min-width` beats the `maxWidth: 250` that would otherwise have caught it. The abbreviation works
+ * where the number is only ever read as a radius and clamped by the browser; here it is arithmetic.
+ *
+ * So the capsule is stated rather than abbreviated, the same way a grown Control states it: half the
+ * Control height, which is exactly a Tooltip's own capsule because `minHeight` IS the Control height. A
+ * Tooltip that wraps to a second line then holds that corner instead of growing an arc across its side.
+ */
+export function resolvePhiTooltipShapeRadius(
+  shape: PhiControlShape,
+  tokens?: PhiControlShapeRadiusTokens,
+) {
+  return shape === "pill"
+    ? Math.ceil(readTokenNumber(tokens, "controlHeight", 32) / 2)
+    : resolvePhiSurfaceShapeRadius(shape, tokens);
+}
+
 export function applyPhiSurfaceShapeComponentTokens(
   components: Record<string, Record<string, unknown>>,
   shape: PhiControlShape,
@@ -332,6 +354,10 @@ export function applyPhiSurfaceShapeComponentTokens(
   for (const component of PHI_SURFACE_SHAPE_LG_COMPONENTS) {
     next[component] = { ...(next[component] ?? {}), borderRadiusLG: borderRadius };
   }
+  next.Tooltip = {
+    ...(next.Tooltip ?? {}),
+    borderRadius: resolvePhiTooltipShapeRadius(shape, tokens),
+  };
   return next;
 }
 

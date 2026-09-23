@@ -332,9 +332,14 @@ as `--phi-surface-radius` and, where a component has a token for it, as that tok
   that global: a **Card**'s container, header, cover and actions bar; a **Modal**'s content, which is what an
   Overlay renders as; and the panels a **Dropdown**, a **Select**, a **DatePicker**, a **Cascader**, a
   **Popover** and a collapsed Sider's **Menu** submenu open over the page. An overlay and a dropdown are
-  surfaces like any other -- what stays off them is the Control shape, not the scale. A **Tooltip** (a label
-  with a tail) and a **Drawer** (flush to the viewport edge) are not surfaces this answers for, and the icon
-  tile a Card draws beside its title is an element inside one, so it keeps the numeric scale.
+  surfaces like any other -- what stays off them is the Control shape, not the scale. A **Drawer** (flush to the viewport
+  edge) is not a surface this answers for, and the icon tile a Card draws beside its title is an element
+  inside one, so it keeps the numeric scale.
+- **Tooltip** -- the same step through its own `borderRadius`, except under `pill`, where it takes half the
+  Control height (`resolvePhiTooltipShapeRadius`). The full-radius abbreviation cannot be used here: Ant
+  Design computes the Tooltip's minimum width from this number, so 9999 would ask for a tooltip twenty
+  thousand pixels wide. Half the Control height is the same capsule, because a Tooltip's minimum height is
+  the Control height, and a Tooltip that wraps holds that corner instead of growing an arc.
 - **Layout** -- the box, wherever the author configured no radius. An explicit `borderRadius` on a Layout
   always wins: the step answers silence, it is not a ceiling. Outside the Provider the variable is absent and
   a Layout falls back to no radius, which is what it had before the step existed. For Phi Controls the shape wins over conflicting component radius overrides.
