@@ -207,7 +207,7 @@ const BRAND_THEME_BACKGROUND_SECTION_KEYS = ["root", "chrome", "shadow"] as cons
 const BRAND_THEME_IDENTITY_COLLAPSE_STORAGE_KEY = "phi.builder.brand.theme.identityCollapse.activeKey";
 const BRAND_THEME_IDENTITY_SECTION_KEYS = ["logo", "wordmark", "lines"] as const;
 const BRAND_THEME_STYLE_SECTION_KEYS = [
-  "controls",
+  "shapes",
   "buttonShadow",
   "radius",
   "controlHeight",
@@ -2499,8 +2499,8 @@ export function PhiBuilderBrandStyleControlsWidgetClient({
           onOpenSectionChange={changeActiveStyleSection}
           sections={[
             {
-              key: "controls",
-              label: <PhiTypographyControl strong>Controls</PhiTypographyControl>,
+              key: "shapes",
+              label: <PhiTypographyControl strong>Shapes</PhiTypographyControl>,
               children: (
                 <PhiFlexControl vertical gap={clientToken.paddingXS}>
                   {/*
@@ -2509,8 +2509,8 @@ export function PhiBuilderBrandStyleControlsWidgetClient({
                     step, because they are one scale and handing back half of it would leave a shape
                     nobody chose.
                   */}
+                  {/* No label: the section it stands alone in is called Shapes. */}
                   <PhiSegmentedControl<PhiBrandShapeChoice>
-                    label="Shape"
                     value={resolveThemeShapeChoice(state.draft)}
                     options={[
                       {
