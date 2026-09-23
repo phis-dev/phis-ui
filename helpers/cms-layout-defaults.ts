@@ -1,4 +1,4 @@
-import { PHI_COLOR, PHI_MARGIN, PHI_RADIUS, PHI_SHADOW, PHI_SPACE } from "../theme/antd-css-var-contract";
+import { PHI_COLOR, PHI_MARGIN, PHI_SHADOW, PHI_SPACE } from "../theme/antd-css-var-contract";
 import type { PhiLayoutKind } from "../components/layouts/phi-layout-contract";
 import { PHI_RENDERABLE_BLOCK_DEFAULT_ANCHOR } from "./renderable-block-defaults";
 
@@ -7,15 +7,10 @@ type JsonRecord = Record<string, unknown>;
 export type PhiLayoutDefaults = JsonRecord;
 export type PhiLayoutCreationPreset = "panel" | "overlay-actions" | "page-base";
 
-const PHI_LAYOUT_CHROME_PRESET_DEFAULTS = {
-  borderRadius: PHI_RADIUS.base,
-} as const;
-
 export const PHI_CONTENT_LAYOUT_DEFAULTS: PhiLayoutDefaults = {
     margin: 0,
 };
 const PHI_CONTENT_LAYOUT_PANEL_PRESET = {
-    ...PHI_LAYOUT_CHROME_PRESET_DEFAULTS,
     margin: 0,
     padding: PHI_SPACE.base,
 } as const;
@@ -31,7 +26,6 @@ export const PHI_FLEX_LAYOUT_DEFAULTS: PhiLayoutDefaults = {
     wrap: false,
 };
 const PHI_FLEX_LAYOUT_PANEL_PRESET = {
-    ...PHI_LAYOUT_CHROME_PRESET_DEFAULTS,
     distribution: "anchor",
     gap: PHI_MARGIN.base,
     verticalSeparators: false,
@@ -64,7 +58,6 @@ export const PHI_FLEX_VERTICAL_LAYOUT_DEFAULTS: PhiLayoutDefaults = {
     gap: PHI_SPACE.sm,
 };
 const PHI_FLEX_VERTICAL_LAYOUT_PANEL_PRESET = {
-    ...PHI_LAYOUT_CHROME_PRESET_DEFAULTS,
     gap: PHI_SPACE.base,
     padding: PHI_SPACE.base,
 } as const;
@@ -74,7 +67,6 @@ const PHI_FLEX_VERTICAL_LAYOUT_PANEL_PRESET = {
  * touching this config -- the preset tree contract rejects a deviating copy.
  */
 const PHI_FLEX_VERTICAL_LAYOUT_PAGE_BASE_PRESET = {
-    ...PHI_LAYOUT_CHROME_PRESET_DEFAULTS,
     gap: PHI_SPACE.base,
     padding: PHI_SPACE.base,
     width: "100%",
@@ -95,7 +87,6 @@ export const PHI_GRID_LAYOUT_DEFAULTS: PhiLayoutDefaults = {
     wrap: false,
 };
 const PHI_GRID_LAYOUT_PANEL_PRESET = {
-    ...PHI_LAYOUT_CHROME_PRESET_DEFAULTS,
     gap: PHI_MARGIN.base,
     columnGap: 0,
     align: undefined,
@@ -109,7 +100,6 @@ export const PHI_MASONRY_LAYOUT_DEFAULTS: PhiLayoutDefaults = {
     gap: PHI_MARGIN.md,
 };
 const PHI_MASONRY_LAYOUT_PANEL_PRESET = {
-    ...PHI_LAYOUT_CHROME_PRESET_DEFAULTS,
     columns: 3,
     gap: PHI_MARGIN.base,
     padding: PHI_SPACE.base,
@@ -119,7 +109,6 @@ export const PHI_STACK_LAYOUT_DEFAULTS: PhiLayoutDefaults = {
     slotTransition: "none",
 };
 const PHI_STACK_LAYOUT_PANEL_PRESET = {
-    ...PHI_LAYOUT_CHROME_PRESET_DEFAULTS,
     padding: PHI_SPACE.base,
 } as const;
 
@@ -142,7 +131,6 @@ export const PHI_CAROUSEL_LAYOUT_DEFAULTS: PhiLayoutDefaults = {
     loop: false,
 };
 const PHI_CAROUSEL_LAYOUT_PANEL_PRESET = {
-    ...PHI_LAYOUT_CHROME_PRESET_DEFAULTS,
     padding: PHI_SPACE.base,
 } as const;
 
@@ -162,7 +150,6 @@ export const PHI_COLLAPSIBLE_LAYOUT_DEFAULTS: PhiLayoutDefaults = {
     innerPadding: PHI_SPACE.base,
 };
 const PHI_COLLAPSIBLE_LAYOUT_PANEL_PRESET = {
-    ...PHI_LAYOUT_CHROME_PRESET_DEFAULTS,
     anchor: PHI_RENDERABLE_BLOCK_DEFAULT_ANCHOR,
     accordion: false,
     slotTitles: [],
@@ -186,7 +173,6 @@ export const PHI_SPLIT_CARD_LAYOUT_DEFAULTS: PhiLayoutDefaults = {
     gap: 0,
 };
 const PHI_SPLIT_CARD_LAYOUT_PANEL_PRESET = {
-    ...PHI_LAYOUT_CHROME_PRESET_DEFAULTS,
     anchor: PHI_SPLIT_CARD_LAYOUT_DEFAULT_ANCHOR,
     gap: PHI_SPACE.base,
     padding: "1.3125rem",
@@ -228,7 +214,6 @@ export const PHI_THREE_COLUMN_LAYOUT_DEFAULTS: PhiLayoutDefaults = {
     wrap: false,
 };
 const PHI_THREE_COLUMN_LAYOUT_PANEL_PRESET = {
-    ...PHI_LAYOUT_CHROME_PRESET_DEFAULTS,
     balancedSides: true,
     gap: PHI_MARGIN.base,
     wrap: false,
