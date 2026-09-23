@@ -14,6 +14,7 @@ export * from "./types/length";
 export * from "./types/responsive";
 export * from "./types/spacing";
 export * from "./types/runtime-condition";
+export * from "./types/state-machine";
 export * from "./types/access";
 export type * from "./types/cms-plugins";
 export type * from "./types/cms-presets";

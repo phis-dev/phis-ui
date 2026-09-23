@@ -298,6 +298,23 @@ Widgets, Layouts, and Controllers never mount a Controller themselves. A Control
 an optional server-only `serverPreload` whose serializable, request-scoped result is handed to its Client;
 it never handles browser signals.
 
+**How long an instance lives follows from which host mounts it, and there are two.**
+`PhiRuntimeControllerServerHost` appears in `components/cms/phi-cms-root-layout.tsx`, materialized from
+the Layout tree with `ownerMountScope: "area"`, and again in `components/cms/phi-cms-root-page.tsx` and
+`phi-cms-root-slot-page.tsx`, materialized from the Page tree with `ownerMountScope: "page"`. Which tree
+asks for a Controller is what decides its host, so:
+
+- A Controller reached through the Layout tree is mounted by the Area's Layout segment and **survives a
+  client navigation between Pages of that Area.** It is replaced when the Layout segment is, which for a
+  change of Area is a hard navigation anyway.
+- A Controller reached through the Page tree is mounted by the Page and **is replaced with every
+  navigation**, including one within its own Area.
+
+This is not a third policy and there is no field for it. A Controller that needs to outlast a navigation
+does not get there by being registered in the luckier tree -- that would make correctness depend on a
+position nobody chose deliberately -- it keeps what must survive somewhere that survives. Consequently
+nothing may be held in a Page-hosted Controller that a Page after it depends on.
+
 ## Render modes and diagnostics
 
 A rendered artifact runs in one of these modes: `runtime` (normal mounted rendering in any Area),

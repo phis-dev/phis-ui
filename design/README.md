@@ -15,4 +15,5 @@ into the matching contract document, and open work is tracked in [TODOS.md](../T
   transitions, server-owned projections, and where a flow's state lives.
 - [TOURS.md](./TOURS.md) -- guided UI Tours, visual-anchor resolution, and user progress.
 - [USER_STATE.md](./USER_STATE.md) -- an account-bound store for what a person decided: dismissed cards,
-  a read marker, a Tour's progress.
+  a read marker, a Tour's progress. **Built.** It stays here as the reasoning; what a Module needs in
+  order to use it is [THIRD_PARTY_MODULES.md](../THIRD_PARTY_MODULES.md) §11.

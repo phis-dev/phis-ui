@@ -80,16 +80,35 @@ export function phiPublicAuthManifestOffersRegistration(manifest: PhiPublicAuthM
 }
 
 /**
- * The authentication already in progress for this request, or null when there is none.
+ * Where this request's viewer stands in signing in, or null when the request carries no Session.
  *
  * Needs the viewer's cookies, because an unfinished authentication is held in their Session. A visitor
  * without one is the ordinary case and answers 401 -- which the widget used to provoke on every Login
  * page view, two red lines in the console for a question whose answer was "nobody is signed in".
+ *
+ * **`null` means one thing: no Session on this request.** It used to mean two, because a `complete`
+ * workflow was folded into it as well, which made a signed-in viewer and an anonymous one give the same
+ * answer -- and Core answers `complete` for everybody who is signed in, not for some edge case
+ * (`serializeAuthWorkflow` returns it for any session that is in neither intermediate state). For the
+ * one caller this function was written for that was survivable, because it only ever asked whether to
+ * interrupt somebody. For a reader that has to say which state the viewer is in it is not: "nobody told
+ * me" would pass as "finished", over a security decision, which is exactly what
+ * [design/STATE_MACHINES.md](../design/STATE_MACHINES.md) forbids of a projection.
+ *
+ * For the same reason nothing else folds into `null` either. A missing base URL or Site key is a
+ * misconfiguration and throws, as it does for the manifest above; a 200 that carries no readable
+ * workflow is a broken answer and throws too. Only the absent Session is silent.
  */
 export async function fetchPhiAuthWorkflow(
   options: FetchPhiPublicAuthOptions & { cookieHeader?: string },
 ): Promise<PhiAuthWorkflow | null> {
-  if (!options.apiBaseUrl.trim() || !options.siteKey.trim() || !options.cookieHeader?.trim()) {
+  if (!options.apiBaseUrl.trim()) {
+    throw new Error("Missing apiBaseUrl for fetchPhiAuthWorkflow.");
+  }
+  if (!options.siteKey.trim()) {
+    throw new Error("Missing siteKey for fetchPhiAuthWorkflow.");
+  }
+  if (!options.cookieHeader?.trim()) {
     return null;
   }
 
@@ -107,8 +126,8 @@ export async function fetchPhiAuthWorkflow(
   }
 
   const payload = await response.json().catch(() => null);
-  const workflow = isRecord(payload) && isRecord(payload.workflow)
-    ? (payload.workflow as PhiAuthWorkflow)
-    : null;
-  return workflow && workflow.state !== "complete" ? workflow : null;
+  if (!isRecord(payload) || !isRecord(payload.workflow)) {
+    throw new Error("Auth workflow answered without a workflow.");
+  }
+  return payload.workflow as PhiAuthWorkflow;
 }

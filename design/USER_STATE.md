@@ -1,15 +1,28 @@
 # User state design
 
-This is a design, not a contract: none of it is built. There is no declared key family for user state and
-no route behind it.
+**This one is built.** The document stays here because it is the reasoning rather than the reference --
+what a Module needs in order to use it is [THIRD_PARTY_MODULES.md](../THIRD_PARTY_MODULES.md) §11, and
+the vocabulary that binds both ends is `@phis/contracts/user-state`.
+
+What carries it:
+
+| Part | Where |
+| --- | --- |
+| Shapes, key grammar, limits, the write reader | `@phis/contracts/user-state` |
+| The store | `phis.user_site_memberships.module_state`, one `jsonb_set` per write |
+| The route | `GET/PATCH/DELETE /api/site/user-state`, session-authenticated |
+| What a Module may write | the key's prefix against the union of `runtimeModules` over published Areas |
+| Declaring keys | `userState` on a Module definition ([types/cms-plugins.ts](../types/cms-plugins.ts)) |
+| Writing, from the browser | `@phis/ui/runtime/user-state-client` |
+| Reading, while rendering | `getPhiUserState` from `@phis/ui/server-helpers` |
 
 A Module-owned table for one boolean per visitor, a cookie invented for the purpose, or a `localStorage`
-key standing in for an account-bound fact is not an allowed substitute for this design.
+key standing in for an account-bound fact is not an allowed substitute for it.
 
-## What exists today
+## What it replaced
 
-Nothing a Module may write, and that is worth stating plainly: this is a missing capability rather than a
-mess to clean up.
+Nothing a Module could write -- a missing capability rather than a mess to clean up. Everything below is
+still true, and is now the list of neighbours this store deliberately did not take over.
 
 - `phis.user_accounts` holds `preferred_locale` and `flags`, and its contract says it carries nothing
   else. `phis.user_profiles` is a fixed set of name and address columns. `phis.user_site_memberships`
@@ -172,8 +185,9 @@ deliberately and says so; it does not get a fake account-bound key that silently
 
 ## Relation to state machines
 
-[STATE_MACHINES.md](./STATE_MACHINES.md) declares a `persistence` target. `profile` becomes available once
-this exists, and a machine then keeps its position here as a `value`.
+[STATE_MACHINES.md](./STATE_MACHINES.md) declares a `persistence` target. `profile` is available now, and
+a machine keeps its position here as a `value` under the same `valueSchema` its snapshot travels under --
+with the conditions that come with this store, which that document lists rather than repeating them here.
 
 The direction matters: this is not part of the machine, the machine is one of its callers. A dismissed
 card and a read feed are not state machines -- a card has two states and no course of events, and a set of
@@ -209,10 +223,14 @@ The first two are what make this worth building; the rest is what it then also c
 
 ## Open questions
 
-1. **Server-side writes.** A Module that marks something read as the side effect of a server action has no
-   browser write to make. Letting Core write on a Module's behalf needs a narrower rule than "a Module
-   owns its keys".
-2. **Eviction for `set`.** Whether the limit is declared per key or fixed by the contract, and whether
-   eviction is oldest-first or the Module's choice.
-3. **Size.** The row travels with session resolution, so a large namespace is paid for on every request.
-   Whether the contract caps the serialized size per Module, and what happens at the cap.
+Two of the three were answered by building it.
+
+1. **Server-side writes.** Still open. A Module that marks something read as the side effect of a server
+   action has no browser write to make. Letting Core write on a Module's behalf needs a narrower rule
+   than "a Module owns its keys".
+2. ~~**Eviction for `set`.**~~ Declared per key, capped at `PHIS_USER_STATE_MAX_SET_LIMIT`, oldest-first.
+   A full set drops its oldest entry rather than refusing the write, because a set that refuses is a set
+   that silently stops recording.
+3. ~~**Size.**~~ `PHIS_USER_STATE_MAX_SERIALIZED_BYTES` per Module namespace, measured on the write and
+   refused with `413`. Per namespace rather than per key, because splitting a large value across ten keys
+   is the obvious way around a per-key limit.

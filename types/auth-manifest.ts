@@ -18,7 +18,13 @@ export type PhiPublicAuthManifest = {
   }>;
 };
 
-/** An authentication that has begun and is not finished: a second factor asked for, or enrolled. */
+/**
+ * Where a Session stands in signing in: a second factor asked for, one to enrol, or nothing left to do.
+ *
+ * `complete` is a state and not an absence, which is the distinction the reader of this used to lose.
+ * Core answers it for every signed-in viewer, so a reader that treats it as "no workflow" cannot tell
+ * somebody who finished from somebody who never started.
+ */
 export type PhiAuthWorkflow = {
   state: "factor-enrollment-required" | "factor-challenge-required" | "complete";
   methodKey: "totp" | null;

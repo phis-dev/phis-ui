@@ -1,7 +1,14 @@
 # State machine design
 
-This is a design, not a contract: none of it is built. There is no `PhiStateMachineBinding`, no state
-machine definition family, and no state channel.
+This is a design, not a contract, and the machine does not run yet: there is no `PhiStateMachineBinding`,
+no host, and no state channel. A flow written today still uses the mechanisms in [What exists
+today](#what-exists-today).
+
+Two things under it are built. The account-bound store behind the `profile` persistence target exists
+([USER_STATE.md](./USER_STATE.md)), and the definition grammar exists as
+[types/state-machine.ts](../types/state-machine.ts) -- the shapes, the vocabularies and
+`collectPhiStateMachineDefinitionErrors`, with nothing yet to run a definition that passes it. Neither
+settles a question; they remove dependencies. [Build order](#build-order) says what is left.
 
 A feature-local step counter, phase string, workflow reducer, or progress store is not an allowed
 substitute for this design. Where a flow exists today it uses the mechanisms in [What exists
@@ -80,12 +87,34 @@ Widgets, Forms, Overlays                  (present the state; never hold it)
 
 ## Where the grammar lives
 
-The definition grammar -- authority, persistence, state kinds, the descriptor shapes, the reader -- belongs
-in `@phis/contracts`, on the same grounds the signal vocabularies do: phi-server validates stored wiring
-against the same lists, and a definition that is ever stored, mirrored or validated server-side must be
-read from one source rather than two. `PhiStateMachineBinding` and every host stay in `@phis/ui`. It is
-the split signals already have -- grammar there, runtime here -- and it is what makes a third party's
-definition checkable on both sides of the relay.
+`@phis/ui`, in `types/state-machine.ts`, beside `types/runtime-condition.ts`.
+
+An earlier version of this section said `@phis/contracts`, on the grounds that phi-server validates stored
+wiring against the same lists. The grounds do not hold, and the test is the admission rule that package
+states for itself: *name the two parties and the sentence they promise each other*. phi-server validates
+signal wiring stored on CMS nodes (`src/lib/cms/signal-validation.ts`, called from write and publish
+validation) and it stores a Site's active Module ids. It holds nothing else of this: no condition
+expression, no controller setting, no Module descriptor. A machine definition belongs to a Module the way
+a Controller descriptor does, and phi-server never sees one.
+
+**The rule, sharper than the README has it: what phi-server reads goes in `@phis/contracts`, and nothing
+else does.** Not "what two parties share" -- `@phis/ui` and a third-party Module are two parties, and
+everything they agree on already lives in `@phis/ui` (`types/cms-plugins.ts` is exactly that agreement).
+The precedent is `PhiRuntimeConditionExpression`: stored on CMS nodes, read by nobody on the server side,
+and it lives in `@phis/ui`. A machine's guards are those same expressions, so putting the grammar in
+`@phis/contracts` would drag the whole condition vocabulary across with it, to a party that has no use
+for it.
+
+What does cross the wire is already covered: a transition's effects are ordinary signals, and
+`@phis/contracts/signals` holds that vocabulary. `PHI_SIGNAL_ACTION`s are not widened for this.
+
+A Module author linking against both is not a cost worth optimising -- linking against
+`@phis/contracts` is required of them regardless. Whether `@phis/ui` should re-export the contract halves
+so a Module has one import surface is a separate question, still open; the re-export pattern exists
+already (`types/user-state.ts`, `constants/user-state.ts`) but has never been applied as a rule.
+
+If phi-server ever does store or validate a definition, the grammar moves. Pre-v1 that is an ABI break
+and an ABI break is allowed ([AGENTS.md](../AGENTS.md)).
 
 ## Authority
 
@@ -107,7 +136,10 @@ This field is what keeps a third party from rebuilding a security state machine 
 
 ## Definition identity and content
 
-- Every machine has a stable namespaced id and a positive integer definition version.
+- Every machine is named `(ownerModuleId, machineKey)` and carries a positive integer definition version.
+  The pair rather than an id of its own, for the reason a Page route is named the same way: an id built
+  from a package name cannot separate two Modules shipped in one package, and a Site may run one of them.
+  It is also what makes a `profile` checkpoint's key derivable instead of declared.
 - States and transitions are keyed objects, not arrays of records. The key is the identity, so an object
   makes uniqueness structural where an array leaves it to a validator, lookup is direct, and a diff
   between two versions stays readable -- which is what a versioned identity is for.
@@ -165,7 +197,8 @@ repeated on every registration.
 - The snapshot travels under a declared `valueSchema`, not as `Record<string, unknown>`. Its shape is
   owned by the defining Module, named with the ordinary
   `<package>/signals/<key>` grammar ([SIGNALS.md](../SIGNALS.md)), and therefore checkable by a third
-  party and by phi-server.
+  party and by phi-server. It is also the schema a `profile` checkpoint is stored under, so a machine
+  names the shape of its position once and both the snapshot and the store are held to it.
 - The host answers `condition/reload` with the snapshot through the existing
   `usePhiRuntimeConditionStateResponder`, so a node's `visibleWhen` can read `controller` state as it does
   today. This is the compatibility requirement that makes the design adoptable at all: existing presets
@@ -209,8 +242,35 @@ what such a reading is, instead of reconstructing it later from whatever the fir
   still decides the outcome, but a foreign `enroll` is still an interference.
 
 Expressing the reference cleanly means a condition source of its own beside `controller`, which widens
-`PHI_RUNTIME_CONDITION_SOURCES` and needs approval like any other closed enum. The alternative -- letting
-a third party write the address -- is what this section exists to prevent.
+`PHI_RUNTIME_CONDITION_SOURCES` (today `row`, `form`, `controller`, `page`, `widget`, `feature`) and needs
+approval like any other closed enum. The alternative -- letting a third party write the address -- is what
+this section exists to prevent.
+
+**It is part of the first build rather than a later addition, and the reason is a reader that already
+exists.** The obvious objection is that Auth reads nobody else's machine, so a seventh value would have
+no caller -- which is what [What exists today](#what-exists-today) holds against `stage` and
+`capabilitiesByArea`, six of eight values declared and never read. The objection does not survive looking
+at the login preset:
+
+```ts
+function noStepRunning(stepAddress: PhiSignalAddress) {
+  return { source: "widget", widgetAddress: stepAddress,
+           valuePath: "active", operator: "falsy", whenUnavailable: "matched" } as const;
+}
+```
+
+`components/regions/presets/phi-login-form-nodes.ts`, used twice. Three things are wrong with it the day
+Auth becomes a projection, and all three are silent. It reads `widget`, the most transient source there
+is -- a Widget "reports only what it found out for itself"
+([types/runtime-condition.ts](../types/runtime-condition.ts)) -- while the state will be coming from the
+server. `whenUnavailable: "matched"` then means the Widget's silence reads as "no step is running", so
+the sign-in form appears *during* a recovery. And `stepAddress` is a written-out address, the exact thing
+[THIRD_PARTY_MODULES.md](../THIRD_PARTY_MODULES.md) forbids for routes.
+
+So the first build does not add a source for a hypothetical caller; it repairs two conditions that are
+about to become wrong. What that forces is worth more than the value itself: every definition has to
+separate the facts it publishes from the state keys it keeps from the very first one, and that separation
+is not something a later version can retrofit onto machines written without it.
 
 ## Signaling
 
@@ -240,6 +300,16 @@ Controller contract leaves open: `controllerMountPolicy` distinguishes `site`, `
 nothing states whether an Area Controller survives a navigation inside its Area.
 
 - A machine's lifetime is its host's lifetime. When the host unmounts, an unpersisted machine is gone.
+- **Which, inside an Area, has two values already** -- this was an open question and the answer was in
+  the tree the whole time. `PhiRuntimeControllerServerHost` is mounted twice:
+  `components/cms/phi-cms-root-layout.tsx` mounts `registeredControllerSettings`, and
+  `components/cms/phi-cms-root-page.tsx` (with the slot Page beside it) mounts `pageControllerSettings`.
+  A Controller from the Layout host survives a soft navigation within its Area; one from the Page host
+  goes with the Page. Nothing states this today, for Controllers either, and `MODULES.md` is where it
+  belongs.
+  A machine does not get a field for it. One that *must* survive a navigation says so through
+  `persistence`, never by being registered in the luckier host -- otherwise correctness hangs on a
+  position in the tree that whoever wrote the preset was not thinking about.
 - **A machine never crosses an Area boundary in memory.** Crossing one is a hard navigation
   ([SIGNALS.md](../SIGNALS.md): no signal travels from one Area to another), so a machine that spans Areas
   checkpoints to a declared persistence target before the forward and resumes through the destination
@@ -252,13 +322,37 @@ nothing states whether an Area Controller survives a navigation inside its Area.
   - `server` -- the authoritative store behind a `server` authority machine; the binding holds a copy and
     re-reads it, never writes it;
   - `profile` -- account-bound state for a position that should outlive the session, held in the store
-    designed in [USER_STATE.md](./USER_STATE.md). That store does not exist yet, so this target is not in
-    the first implementation: the set starts as `none | query | server` and `profile` is added when there
-    is something behind it, rather than declared over nothing.
+    described in [USER_STATE.md](./USER_STATE.md), which is built: the contract vocabulary is
+    `@phis/contracts/user-state`, the store is `user_site_memberships.module_state`, and the two ends are
+    `@phis/ui/runtime/user-state-client` and `getPhiUserState`.
+- `profile` is the target with the most conditions attached, and they come from the store rather than from
+  this design. A machine that wants it has to live with all five:
+  - **A checkpoint is a `value`, and its schema is the snapshot's.** The store's `value` shape asks for a
+    declared `valueSchema` in the ordinary `<package>/signals/<key>` grammar -- the same thing
+    [Reading the current state](#reading-the-current-state) already requires of a snapshot. One
+    declaration serves both, and a machine that could not name the shape of its own position could not
+    have published a snapshot either.
+  - **The key belongs to the owning Module, not to the host.** A user-state key is `<moduleId>/<key>` and
+    the prefix is the whole authorization, so a machine checkpoints under the id of the Module that
+    *defines* it. A Controller from another Module may host it, but it cannot be the one whose id is on
+    the key.
+  - **Only for a signed-in viewer, and never read on Public.** The store answers from the session, and a
+    Public page renders once for everybody with empty cookies. So the Area-crossing case this section
+    names first -- login in Public, destination in App -- is exactly the one `profile` cannot carry: it
+    stays `query` or `server`. `profile` is for a machine that is already behind a login on both ends.
+  - **Writing is a round trip; reading is a request of its own.** Neither is a local set. A machine
+    checkpoints at positions worth a request, not on every transition, and a resuming host pays one
+    `getPhiUserState` while it renders. A machine whose every step must survive a reload wants `query`,
+    which costs nothing and is in the address bar already.
+  - **The Module's whole namespace is capped** at `PHIS_USER_STATE_MAX_SERIALIZED_BYTES`, shared with
+    every other key that Module keeps. A position is a state key and a version; a machine that wants to
+    store its course of events there has misread what the store is for.
 - `localStorage`, `sessionStorage`, cookies invented for the purpose, and module globals are not
   persistence targets. The Form draft in `sessionStorage` stays what it is -- a draft of typed input, not
   the position in a flow.
-- Persisted state stores stable state keys and the definition version. A version mismatch discards.
+- Persisted state stores stable state keys and the definition version. A version mismatch discards -- and
+  under `profile` discarding means clearing the key, not writing a null into it, because the store treats
+  an absent key and a falsy one as different answers.
 
 ## The server-owned case
 
@@ -268,6 +362,18 @@ Auth is the first consumer and the reason the `server` authority exists. Under t
   `anonymous`, `primary-verified`, `factor-enrollment-required`, `factor-challenge-required` and
   `complete` -- the progression `phis-server` AUTHENTICATION.md §9 already publishes, read from the
   endpoint that already answers it instead of from a field on a login response.
+- **That reader has to be fixed before it can be one.** `gateway/auth-public-manifest.ts` returns `null`
+  for a `401` -- a visitor who is not mid-authentication -- and `null` again when the workflow says
+  `complete`. Two different answers, one return value, and a projection handed `null` cannot tell
+  `anonymous` from `complete`. [Reading another Module's machine](#reading-another-modules-machine)
+  already states the rule this breaks: for a machine over a security decision, "no state" must never
+  pass as `complete`. So the first piece of work on Auth is this function, not the binding.
+- **A re-read that contradicts the shown state wins, and says so.** Under `server` authority the browser
+  holds no opinion it could weigh against the server, so "report instead of adopt" is not an available
+  answer -- the projection adopts. The report is what comes with it rather than instead of it: a
+  contradicting re-read is nearly always a fault in the effect that ran before it, and silence there is
+  how a flow that resets itself once per hour stays unexplained. See
+  [Diagnostics](#diagnostics) for the level.
 - A reload during a second factor re-reads the state and resumes. Nothing in the browser constructs a
   workflow value; `security/client.tsx` starts enrollment by raising an event, and the state it then shows
   is Core's answer.
@@ -276,6 +382,43 @@ Auth is the first consumer and the reason the `server` authority exists. Under t
   resolution instead of at the visitor.
 - Nothing about enforcement changes. Core remains the only party that marks a factor, assurance level or
   session complete; a projection is presentation state and holds no credential, token or seed.
+
+## Composition
+
+Two machines coordinate through signals. **A machine is never a state of another machine.**
+
+Nesting would need a second addressing (how is the inner one spoken to), a second persistence rule (where
+does its position go), and a second version beside the outer one -- and the case that raises the question,
+checkout, is precisely the one with *two authorities*. An inner machine that keeps its own authority is
+not nested; it is a second machine with a hidden wire.
+
+Nothing is lost by refusing it. "Payment is running" is a state of the outer machine, and the inner
+machine's ending is an event. What it costs instead is that published statements stop being optional: the
+outer machine learns what the inner one is doing through the named fact the inner one publishes, which is
+[the section below](#reading-another-modules-machine) and not a separate mechanism.
+
+## Diagnostics
+
+A wrong transition is as invisible today as a dropped signal was before the bus reported one. The bus has
+since grown three levels, and a machine adds no fourth -- it sorts its own faults into the same three
+(`components/runtime/runtime-signal-bus.tsx`):
+
+| Bus fault | Level | Machine fault at the same level |
+| --- | --- | --- |
+| `undeliverable` -- an address nobody answers to | `warn`, deduplicated, **in production too** | an unknown state key; an event with no transition for `(from, event)`, deduplicated by `(machineId, from, event)` |
+| circulation -- a signal setting itself off | `error`, **development only**, guarded at the call site so the bundler removes it | a `server` re-read that contradicts the state being shown |
+| `pending` -- a receiver not mounted yet | nothing, held | a guard that refuses; a transition whose target is the current state |
+
+The reasoning carries over with the levels. An unknown state key is a fault in a definition, not in a
+run, and the bus says of its own production warning that "a wiring that names an address nobody answers
+to is not a state a Site is meant to be in" -- the same is true of a state key nothing declares. A
+refused guard is the ordinary case and stays silent, which [States, events, and
+transitions](#states-events-and-transitions) already requires. Divergence sits with circulation because
+detecting it costs a comparison on every read.
+
+All of it belongs to the binding and none of it to the host. Diagnostics written per host is how
+`getCsrfToken` ended up with six spellings and logout with three different error postures, two of which
+discarded the failure silently.
 
 ## Third-party surface
 
@@ -315,14 +458,61 @@ by the owner or refused.
 Five consumers, three of them already written or designed. The spread matters as much as the count: a
 design shaped around Auth alone would not survive the other four.
 
-## Open questions
+## Answered
 
-1. **Divergence under `server` authority.** What a projection does when a re-read contradicts the state it
-   was showing: discard and re-render, or report. Auth has an obvious answer; a slower domain may not.
-2. **Lifetime inside an Area.** Whether an Area-hosted machine survives a soft navigation between Pages of
-   that Area, which the Controller contract does not currently state for Controllers either.
-3. **Composition.** Whether one machine may host another as a state, or whether two machines only ever
-   coordinate through signals. The checkout case forces this question.
-4. **Diagnostics.** A wrong transition is as invisible today as a dropped signal was before the bus
-   reported one. Whether the binding reports a refused event, an unknown state key, or a guard that never
-   resolves, and at what level.
+The four questions this document opened with are decided, and two of them turned out to have had an
+answer in the repository rather than needing one invented.
+
+1. **Divergence under `server` authority** -- the projection adopts and reports.
+   [The server-owned case](#the-server-owned-case).
+2. **Lifetime inside an Area** -- already determined by which of the two hosts mounts the Controller, and
+   a machine gets no field for it. [Lifetime and persistence](#lifetime-and-persistence).
+3. **Composition** -- signals only; a machine is never a state of another machine.
+   [Composition](#composition).
+4. **Diagnostics** -- the bus's three levels, nothing new.
+   [Diagnostics](#diagnostics).
+
+A fifth was raised and decided against the first instinct: the condition source for
+`(ownerModuleId, machineId)` is in the first build, because two conditions in the login preset break
+silently without it. [Reading another Module's machine](#reading-another-modules-machine).
+
+## What is still open
+
+Not design questions -- one approval and one dependency.
+
+- **A seventh `PHI_RUNTIME_CONDITION_SOURCES` value** is a closed enum and needs operator approval.
+- **Server-side progression.** A machine whose state advances as the side effect of a server action has
+  no browser write with which to checkpoint to `profile`. This is [USER_STATE.md](./USER_STATE.md)'s one
+  remaining open question seen from this end, and it does not block a `server` authority machine, which
+  re-reads instead of checkpointing.
+- **The Page host is being rebuilt.** The lifetime answer above reads three files that the removal of
+  parallel routes for `page.tsx` touches. Writing the rule down does not wait; building the binding on
+  top of it should.
+
+## Build order
+
+It follows from the answers rather than from preference, and the first two steps were not about machines
+at all -- both were things that were already wrong.
+
+1. ~~`fetchPhiAuthWorkflow` stops folding `401` and `complete` into the same `null`.~~ **Done.** It folded
+   three things: a misconfiguration, an absent Session, and a finished one. Core answers `complete` for
+   every signed-in viewer (`serializeAuthWorkflow`), so a signed-in visitor and an anonymous one gave the
+   same answer. `null` now means one thing, and the two other cases throw.
+2. ~~The rule for which host a Controller is mounted in, into `MODULES.md`.~~ **Done.** One paragraph, no
+   code, true before it was written down.
+3. ~~The definition grammar.~~ **Done**, as [types/state-machine.ts](../types/state-machine.ts) -- not in
+   `@phis/contracts`, for the reason in [Where the grammar lives](#where-the-grammar-lives). Authority,
+   persistence, states, flat transitions, guards as ordinary condition expressions, effects that name
+   rather than carry, published statements, and `collectPhiStateMachineDefinitionErrors` holding the two
+   determinism rules the flat shape gave up structural enforcement of.
+4. `PhiStateMachineBinding`, headless, with the diagnostics above in it and not in a host.
+5. The condition source, and with it the two login-preset conditions rewritten from
+   `source: "widget"` onto a named statement.
+6. Auth as the first consumer: one projection, `security/client.tsx` raising an event instead of
+   constructing a workflow value.
+
+Two things the grammar settled that this document had left vaguer than it should have. A machine is named
+`(ownerModuleId, machineKey)` like a Page preset, not by an id of its own -- a package may carry two
+Modules and a Site run one of them, which is the same reason user-state keys take a Module id. And a
+`profile` checkpoint's key is derived from that pair rather than declared, which puts the owning Module's
+id in front by construction: the prefix the store authorizes on cannot be got wrong.

@@ -23,6 +23,7 @@ export {
   PHI_SIGNAL_VALUE_TYPES,
   isPhiSignalAction,
   isPhiSignalScope,
+  isPhiSignalValueSchemaShape,
   isPhiSignalValueType,
   type PhiSignalAction,
   type PhiSignalScope,
