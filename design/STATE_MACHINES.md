@@ -1,14 +1,17 @@
 # State machine design
 
-This is a design, not a contract, and the machine does not run yet: there is no `PhiStateMachineBinding`,
-no host, and no state channel. A flow written today still uses the mechanisms in [What exists
-today](#what-exists-today).
+This is a design, not a contract, and no flow uses it yet: nothing hosts a machine, no Module declares
+one, and there is no condition source to read one with. A flow written today still uses the mechanisms in
+[What exists today](#what-exists-today).
 
-Two things under it are built. The account-bound store behind the `profile` persistence target exists
-([USER_STATE.md](./USER_STATE.md)), and the definition grammar exists as
-[types/state-machine.ts](../types/state-machine.ts) -- the shapes, the vocabularies and
-`collectPhiStateMachineDefinitionErrors`, with nothing yet to run a definition that passes it. Neither
-settles a question; they remove dependencies. [Build order](#build-order) says what is left.
+What is built is everything below the host. The account-bound store behind the `profile` persistence
+target ([USER_STATE.md](./USER_STATE.md)); the definition grammar and its validator, in
+[types/state-machine.ts](../types/state-machine.ts); and the binding, split across
+[helpers/state-machine-binding.ts](../helpers/state-machine-binding.ts) (what is decided),
+[helpers/state-machine-diagnostics.ts](../helpers/state-machine-diagnostics.ts) (what is said out loud)
+and [components/runtime/phi-state-machine-binding.ts](../components/runtime/phi-state-machine-binding.ts)
+(where the machine currently is). None of it settles a question in this document; it removes
+dependencies. [Build order](#build-order) says what is left.
 
 A feature-local step counter, phase string, workflow reducer, or progress store is not an allowed
 substitute for this design. Where a flow exists today it uses the mechanisms in [What exists
@@ -420,6 +423,12 @@ All of it belongs to the binding and none of it to the host. Diagnostics written
 `getCsrfToken` ended up with six spellings and logout with three different error postures, two of which
 discarded the failure silently.
 
+Built as [helpers/state-machine-diagnostics.ts](../helpers/state-machine-diagnostics.ts). One line of
+this table needed sharpening on contact: divergence is reported only when a re-read disagrees with what
+was shown **and nothing had been sent**. A projection changing state after a request is what a projection
+does, so reporting every change would have buried the case worth reading -- a second tab, an expired
+Session, or an effect that reported a transition the server never made.
+
 ## Third-party surface
 
 A Module declares a machine the way it declares a Controller or a provider descriptor: serializable
@@ -505,7 +514,10 @@ at all -- both were things that were already wrong.
    persistence, states, flat transitions, guards as ordinary condition expressions, effects that name
    rather than carry, published statements, and `collectPhiStateMachineDefinitionErrors` holding the two
    determinism rules the flat shape gave up structural enforcement of.
-4. `PhiStateMachineBinding`, headless, with the diagnostics above in it and not in a host.
+4. ~~`PhiStateMachineBinding`, headless, with the diagnostics above in it and not in a host.~~ **Done**,
+   in three files rather than one: this package has no way to render a hook in a test, so what is
+   decided and what is reported live beside the hook instead of inside it, and the hook holds only where
+   the machine is. The diagnostics are still the binding's and not a host's, which was the point.
 5. The condition source, and with it the two login-preset conditions rewritten from
    `source: "widget"` onto a named statement.
 6. Auth as the first consumer: one projection, `security/client.tsx` raising an event instead of
