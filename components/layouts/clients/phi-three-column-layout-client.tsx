@@ -2,6 +2,9 @@ import type { CSSProperties, ReactNode } from "react";
 
 import {
   normalizePhiCssSize,
+  PHI_SLOT_CROSS_MARGIN_END_PROPERTY,
+  PHI_SLOT_CROSS_MARGIN_START_PROPERTY,
+  resolvePhiSlotCrossMargin,
   type PhiLayoutEditRenderInsertControl,
   type PhiLayoutKind,
   } from "../phi-layout-contract";
@@ -104,6 +107,19 @@ function renderColumn(
   const resolvedWidth = normalizePhiCssSize(width);
   const hasContent = child !== null && child !== undefined && child !== false;
   const { horizontal, vertical } = resolveThreeColumnAnchorAlignment(anchor, slotRole);
+  /*
+   * The same placement again, as the margins a child that fills is moved by.
+   *
+   * `justify-content` only reaches a child that leaves room in the column. A child that fills -- or
+   * caps itself and fills up to the cap -- is placed by the auto margins it reads off
+   * `--phi-slot-cross-margin-*` instead, and those inherit: a column stated none, so its children took
+   * whatever a Flex Vertical further up had handed down, and an auto margin beats the column's
+   * `justify-content`. A left slot inside a centred column therefore centred.
+   *
+   * Every column states both, `0` included, which is what stops the inheritance rather than merely
+   * correcting it here.
+   */
+  const crossMargin = resolvePhiSlotCrossMargin(horizontal);
 
   return (
     <div
@@ -124,7 +140,9 @@ function renderColumn(
         width: resolvedWidth,
         maxWidth: resolvedWidth,
         boxSizing: "border-box",
-      }}
+        [PHI_SLOT_CROSS_MARGIN_START_PROPERTY]: crossMargin.start,
+        [PHI_SLOT_CROSS_MARGIN_END_PROPERTY]: crossMargin.end,
+      } as CSSProperties}
     >
       {hasContent ? (
         <div
