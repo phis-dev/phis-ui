@@ -119,6 +119,18 @@ export type PhiDashboardCardContext = {
   apiBaseUrl: string;
   internalToken: string;
   siteKey: string;
+  /**
+   * The request's own cookies, for a card that counts something belonging to the person looking.
+   *
+   * The internal token says which installation is asking, never who. A Core route that answers "my
+   * inbox" resolves the session and refuses without one, so a card about a person needs the credential
+   * that names them -- `viewer` carries what somebody may reach, which is a different question from
+   * who they are.
+   *
+   * It is not a widening of what a provider holds. `internalToken` is already here, and it is the
+   * service credential: strictly more than one person's session.
+   */
+  cookieHeader: string;
   locale: string;
   area: PhiCmsAreaKey;
   viewer: PhiAccessViewer;

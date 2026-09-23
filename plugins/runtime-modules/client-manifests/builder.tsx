@@ -12,6 +12,7 @@ import { PhiRuntimeRenderClientType } from "../../../constants/runtime-render-cl
 import { PhiCmsWidgetType } from "../../../constants/cms-widget-types";
 import { extendPhiRuntimeModuleDataProviderClientManifest } from "../../../components/runtime/runtime-module-data-provider-client-manifest";
 import { PHI_COMMON_RUNTIME_MODULE_DATA_PROVIDER_CLIENT_MANIFEST } from "./common-data-providers";
+import { PHI_DASHBOARD_RUNTIME_DATA_PROVIDER_CLIENT_DEFINITIONS } from "../dashboard/client-data-providers";
 import { PHI_BUILDER_RUNTIME_DATA_PROVIDER_CLIENT_DEFINITIONS } from "../builder/client-data-providers";
 import { PHI_REVISIONS_RUNTIME_DATA_PROVIDER_CLIENT_DEFINITIONS } from "../revisions/client-data-providers";
 import { PHI_THEME_RUNTIME_DATA_PROVIDER_CLIENT_DEFINITIONS } from "../theme/client-data-providers";
@@ -61,6 +62,7 @@ export const PHI_BUILDER_RUNTIME_MODULE_DATA_PROVIDER_CLIENT_MANIFEST =
   extendPhiRuntimeModuleDataProviderClientManifest(
     PHI_COMMON_RUNTIME_MODULE_DATA_PROVIDER_CLIENT_MANIFEST,
     [
+      ...PHI_DASHBOARD_RUNTIME_DATA_PROVIDER_CLIENT_DEFINITIONS,
       ...PHI_BUILDER_RUNTIME_DATA_PROVIDER_CLIENT_DEFINITIONS,
       ...PHI_REVISIONS_RUNTIME_DATA_PROVIDER_CLIENT_DEFINITIONS,
       ...PHI_THEME_RUNTIME_DATA_PROVIDER_CLIENT_DEFINITIONS,

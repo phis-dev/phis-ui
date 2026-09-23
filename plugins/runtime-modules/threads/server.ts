@@ -14,6 +14,10 @@ export function createPhiThreadsRuntimeModuleServerAreaContribution() {
       layouts: [],
       areaOverlays: [],
       routes: PHI_THREADS_RUNTIME_MODULE_ROUTES,
+      dashboardCards: {
+        load: () => import("./cards")
+          .then((module) => module.PHI_THREADS_RUNTIME_MODULE_DASHBOARD_CARDS),
+      },
       navigation: [],
       load: () => import("./module").then((module) => module.PHI_THREADS_RUNTIME_MODULE),
     },

@@ -183,6 +183,7 @@ async function resolveDashboardCardScope({
     apiBaseUrl,
     internalToken,
     siteKey,
+    cookieHeader,
     locale,
     area,
     viewer: requestContext.viewer,

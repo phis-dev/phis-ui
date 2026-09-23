@@ -6,7 +6,14 @@ are not.** What exists is sections 1 to 3, 5, 6 and 8: a Module contributes card
 payload at `/api/site/dashboard-cards` (`gateway/dashboard-cards-route.ts`), the `dashboard` Module fans
 them in through one Collection provider, and its card View resolves each payload on its own
 (`plugins/runtime-modules/dashboard/`). The Admin Dashboard is the first page drawn this way, with cards
-from `core`, `user-management` and `localization`.
+from `core`, `user-management` and `localization`; the App, Accounting and Editor Dashboards draw the
+same Collection, and `threads` puts the first card on the App one.
+
+That card is the first about the person rather than about the installation, and it cost the contract one
+field. Core answers "my conversations" from the session and refuses without one, so
+`PhiDashboardCardContext` carries the request's cookies beside the internal token. It is not a wider
+capability than a provider already had -- the internal token is the service credential, which is more --
+but it is the difference between a card that counts what a Site has and one that counts what you have.
 
 What is **not** built is section 4 -- the Controller as a clock, and with it `staleness`, the floor,
 staggering, pausing and backoff -- and section 7, the Site's own decisions about order, hiding and
@@ -225,8 +232,11 @@ one.
 2. The card forms -- `stat` and `list` -- against the existing card presentation.
 3. The Controller as a clock: staleness, floor, stagger, visibility, backoff.
 4. The Site's decisions: candidates minus decisions, dismissing through the item action.
-5. The first two real contributions, from `@phis/ui/threads` and `@phis/support`.
+5. The first two real contributions, from `@phis/ui/threads` and `@phis/support`. **Threads is done**;
+   Support is not.
 
 Step 5 is last on purpose. Until two Modules that know nothing of each other have both put a card on
 the same Dashboard, every decision above is a guess about how it will be used -- and the two questions
-in section 9 that are worth deciding late are exactly the ones those two contributions will answer.
+in section 9 that are worth deciding late are exactly the ones those two contributions will answer. The
+first of the two has already answered one that was not on the list: a card may be about the viewer, and
+the context had nothing that named them.

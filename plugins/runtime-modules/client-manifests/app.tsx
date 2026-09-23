@@ -5,6 +5,7 @@ import { PHI_APP_RUNTIME_MODULE_CONTROLLER_CLIENT_AREA_CONTRIBUTIONS } from "../
 import { PHI_COMMON_RUNTIME_MODULE_RENDER_CLIENT_MANIFEST } from "./common";
 import { PHI_COMMON_RUNTIME_MODULE_DATA_PROVIDER_CLIENT_MANIFEST } from "./common-data-providers";
 import { extendPhiRuntimeModuleDataProviderClientManifest } from "../../../components/runtime/runtime-module-data-provider-client-manifest";
+import { PHI_DASHBOARD_RUNTIME_DATA_PROVIDER_CLIENT_DEFINITIONS } from "../dashboard/client-data-providers";
 import { PHI_GROUPS_RUNTIME_DATA_PROVIDER_CLIENT_DEFINITIONS } from "../groups/client-data-providers";
 import { PHI_THREADS_RUNTIME_DATA_PROVIDER_CLIENT_DEFINITIONS } from "../threads/client-data-providers";
 import { extendPhiRuntimeModuleRenderClientManifest } from "../../../components/runtime/runtime-module-render-client-manifest";
@@ -14,6 +15,7 @@ export const PHI_APP_RUNTIME_MODULE_DATA_PROVIDER_CLIENT_MANIFEST =
     PHI_COMMON_RUNTIME_MODULE_DATA_PROVIDER_CLIENT_MANIFEST,
     [
       // The App reads groups too: someone sees which groups they are in and who else is in them.
+      ...PHI_DASHBOARD_RUNTIME_DATA_PROVIDER_CLIENT_DEFINITIONS,
       ...PHI_GROUPS_RUNTIME_DATA_PROVIDER_CLIENT_DEFINITIONS,
       // And conversations, which the App is the only Area to carry. Here rather than in the common
       // manifest because this one is a static import: every Area that took the common list would ship

@@ -5,6 +5,7 @@ import type {
   PhiCmsRoutePresetDescriptor,
 } from "../../../types/cms-module-descriptors";
 import { PHI_APP_SETTINGS_NAV_ITEM_KEY } from "../area-definitions";
+import type { PhiAreaDashboardKey } from "../../../components/regions/presets/area-dashboard-label-set";
 import { PHI_DASHBOARD_RUNTIME_MODULE_ID } from "./ids";
 
 /**
@@ -19,35 +20,34 @@ import { PHI_DASHBOARD_RUNTIME_MODULE_ID } from "./ids";
  * to be -- and, sorted against the other Modules anchored the same way, first.
  */
 type PhiDashboardRouteTemplate = {
-  area: PhiCmsAreaKey;
+  area: PhiAreaDashboardKey;
   navKey: `${PhiCmsAreaKey}:${string}`;
   /** Absent only where an Area declares no intrinsic entry at all to sit before. */
   before?: string;
-  eyebrow: string;
-  description: string;
 };
 
+/*
+ * What each of these Dashboards says is no longer here.
+ *
+ * The eyebrow and the sentence travelled with the template while the page drew them on a card. The page
+ * places a Collection over the card contributions now, so the sentence is a page description and lives
+ * in the preset's label set with the rest of its words -- see `area-dashboard-label-set.ts`.
+ */
 const GENERIC_DASHBOARDS = [
   {
     area: "app",
     navKey: "app:sidebar",
     before: PHI_APP_SETTINGS_NAV_ITEM_KEY,
-    eyebrow: "App",
-    description: "Everything this site makes available to you once you are signed in.",
   },
   {
     area: "accounting",
     navKey: "accounting:sidebar",
     before: "@phis/ui/modules/accounting/nav/home",
-    eyebrow: "Accounting",
-    description: "Invoices and billing workflows for this site.",
   },
   {
     area: "editor",
     navKey: "editor:sidebar",
     before: "@phis/ui/modules/editor/nav/translations",
-    eyebrow: "Editor",
-    description: "Content and translation work for this site.",
   },
 ] as const satisfies readonly PhiDashboardRouteTemplate[];
 
@@ -108,15 +108,13 @@ export const PHI_DASHBOARD_RUNTIME_MODULE_ROUTES = [
       area: template.area,
       navKey: template.navKey,
       ...("before" in template ? { before: template.before } : {}),
-      loadTree: ({ page }: PhiCmsDescriptorBuildContext) =>
+      loadTree: ({ page, runtime }: PhiCmsDescriptorBuildContext) =>
         import("../../../components/regions/presets/phi-default-area-dashboard-page-tree")
           .then((module) => module.buildPhiDefaultAreaDashboardPageTree({
             page,
+            runtime,
             area: template.area,
             presetKey: `${template.area}-dashboard-page`,
-            title: "Dashboard",
-            eyebrow: template.eyebrow,
-            description: template.description,
           })),
     })
   ),
