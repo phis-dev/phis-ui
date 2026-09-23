@@ -307,12 +307,12 @@ the component token is wrong for them, and no Button -- whose `-circle` and `-ro
 stay clear of -- can grow.
 It governs Control bodies and triggers, plus the Menu item: a Sider entry stands one Control line high in a
 column of Controls, so its selected ground rounds with them, through `itemBorderRadius` and
-`subMenuItemBorderRadius` and never through Menu's own `borderRadius`, which draws the panel a submenu opens
-in a collapsed Sider. `borderRadiusSM`, `borderRadius`, and `borderRadiusLG` keep
+`subMenuItemBorderRadius` and never through Menu's own `borderRadius`, which draws a submenu title's arrow
+and nothing else. `borderRadiusSM`, `borderRadius`, and `borderRadiusLG` keep
 governing surfaces: Layouts, Cards, Trees, Modals, Drawers, and popups, including the popup of a
 Select, Picker, or Cascader.
 
-The choice also reaches four surfaces, on the surface scale rather than the Control one
+The choice also reaches the surfaces, on the surface scale rather than the Control one
 (`resolvePhiSurfaceShapeRadius`): `square` takes no radius, `subtle` `borderRadiusSM`, `rounded`
 `borderRadius`, and `pill` `borderRadiusLG`. A capsule around a grid or around a column of content is not a
 thing, so `pill` there is the widest step of the scale and not the full radius. The number rides on the root
@@ -325,10 +325,13 @@ as `--phi-surface-radius` and, where a component has a token for it, as that tok
 - **Tree** -- the node grounds through a component-level override of the global `borderRadius`, which is what
   Ant Design's Tree reads and what it declares no token of its own for; the frame of a bordered Tree from the
   variable.
-- **Card** -- the container, and with it the header, the cover and the actions bar, through a
-  component-level override of the global `borderRadiusLG`, which is what Ant Design's Card reads and what it
-  declares no token of its own for. The icon tile a Card draws beside its title is not a surface and keeps
-  the numeric scale.
+- **The eight boxes drawn from the global `borderRadiusLG`**, each through a component-level override of
+  that global: a **Card**'s container, header, cover and actions bar; a **Modal**'s content, which is what an
+  Overlay renders as; and the panels a **Dropdown**, a **Select**, a **DatePicker**, a **Cascader**, a
+  **Popover** and a collapsed Sider's **Menu** submenu open over the page. An overlay and a dropdown are
+  surfaces like any other -- what stays off them is the Control shape, not the scale. A **Tooltip** (a label
+  with a tail) and a **Drawer** (flush to the viewport edge) are not surfaces this answers for, and the icon
+  tile a Card draws beside its title is an element inside one, so it keeps the numeric scale.
 - **Layout** -- the box, wherever the author configured no radius. An explicit `borderRadius` on a Layout
   always wins: the step answers silence, it is not a ceiling. Outside the Provider the variable is absent and
   a Layout falls back to no radius, which is what it had before the step existed. For Phi Controls the shape wins over conflicting component radius overrides.

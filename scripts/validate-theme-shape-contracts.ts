@@ -154,7 +154,7 @@ assert.equal(components.Menu?.subMenuItemBorderRadius, 3, "A submenu title stand
 assert.equal(
   components.Menu?.borderRadius,
   undefined,
-  "Menu borderRadius draws the submenu popup and stays on the surface scale.",
+  "Menu borderRadius draws a submenu title's arrow, not a Control, and stays where it is.",
 );
 
 /**
@@ -196,11 +196,30 @@ assert.deepEqual(
   { borderRadius: TABLE_SHAPE_STEPS.borderRadius },
   "A Tree takes the step as its own borderRadius, which is what its node grounds read.",
 );
-assert.deepEqual(
-  shapedSurfaces.Card,
-  { borderRadiusLG: TABLE_SHAPE_STEPS.borderRadius },
-  "A Card takes the step as its own borderRadiusLG, which is what its container reads.",
-);
+/*
+ * The eight that draw their box from the global `borderRadiusLG`: a Card's container, a Modal's content,
+ * and the six panels that open over the page. An overlay and a dropdown are surfaces like any other, and
+ * only the Control shape stays off them.
+ */
+for (const component of ["Card", "Modal", "Dropdown", "Select", "DatePicker", "Cascader", "Popover", "Menu"]) {
+  assert.equal(
+    shapedSurfaces[component]?.borderRadiusLG,
+    TABLE_SHAPE_STEPS.borderRadius,
+    `${component} takes the step as borderRadiusLG, which is what the box it draws reads.`,
+  );
+}
+/*
+ * A Tooltip is a label with a tail and a Drawer is flush to the viewport edge, so neither is a surface
+ * this step has anything to say about. Asserting their absence keeps that a decision rather than an
+ * oversight somebody closes on sight.
+ */
+for (const component of ["Tooltip", "Drawer"]) {
+  assert.equal(
+    shapedSurfaces[component],
+    undefined,
+    `${component} is not a surface the shape answers for.`,
+  );
+}
 
 /**
  * The other end of the same Table. Ant Design draws no bottom radius at all, so the CSS Module clips it,

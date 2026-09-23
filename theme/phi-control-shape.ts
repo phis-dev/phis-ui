@@ -251,10 +251,11 @@ export function buildPhiControlShapeCssVars(
  * three take the three radius tokens in order, so the number a surface wears is always one somebody
  * could have written into the numeric scale by hand.
  *
- * Four readers: a Table (`headerBorderRadius`, and the clip in its CSS Module), a Tree (its node grounds
- * through the component token, its frame through the variable), a Card (its container, header and cover),
- * and a Layout, whose box takes it wherever the author configured no radius of their own. An explicit
- * radius always wins -- this is the answer to "nothing was said", not a ceiling.
+ * Its readers are every surface that draws a box: a Table (`headerBorderRadius`, and the clip in its CSS
+ * Module), a Tree (its node grounds through the component token, its frame through the variable), a
+ * Layout (its box, wherever the author configured no radius of their own), and the eight components whose
+ * box is the global `borderRadiusLG` -- a Card, a Modal, and the six panels that open over the page. An
+ * explicit radius always wins -- this is the answer to "nothing was said", not a ceiling.
  */
 export const PHI_SURFACE_SHAPE_CSS_VAR = "--phi-surface-radius";
 
@@ -280,24 +281,45 @@ export function resolvePhiSurfaceShapeRadius(
  * `phi-table-control.module.css` clips them and reads the variable, so both ends of one Table are the
  * same corner.
  *
- * A Tree and a Card declare no radius token at all: the Tree reads the global `borderRadius` for its node
- * grounds, the Card the global `borderRadiusLG` for its container, header, cover and actions. The step
- * arrives at both as a component-level override of the global they read -- which is what a component token
- * is in CSS variable mode: the same variable, redefined on the element. The name therefore differs per
- * component, and naming the wrong one would be silently inert rather than wrong.
+ * Only the Table declares a radius token of its own. Everything else reads a global, and the step reaches
+ * it as a component-level override of that global -- which is what a component token is in CSS variable
+ * mode: the same variable, redefined on the element. The name differs per component, and naming the wrong
+ * one is silently inert rather than visibly wrong, which is why each is asserted by name.
+ *
+ * A Tree reads `borderRadius` for its node grounds. The eight below read `borderRadiusLG` for the box they
+ * draw: a Card its container, a Modal its content, and the six others the panel they open -- a Dropdown's
+ * menu, a Select's list, a DatePicker's and a Cascader's panel, a Popover's inner box, and the popup a
+ * Menu opens for a submenu in a collapsed Sider. An overlay and a dropdown are surfaces like any other; it
+ * is the Control SHAPE that stays off them.
+ *
+ * A Tooltip and a Drawer are deliberately absent. A Tooltip is a label with a tail rather than a surface,
+ * and a Drawer is flush to the edge of the viewport, where a corner would round against nothing.
  */
+const PHI_SURFACE_SHAPE_LG_COMPONENTS = [
+  "Card",
+  "Modal",
+  "Dropdown",
+  "Select",
+  "DatePicker",
+  "Cascader",
+  "Popover",
+  "Menu",
+] as const;
 export function applyPhiSurfaceShapeComponentTokens(
   components: Record<string, Record<string, unknown>>,
   shape: PhiControlShape,
   tokens: PhiControlShapeRadiusTokens,
 ) {
   const borderRadius = resolvePhiSurfaceShapeRadius(shape, tokens);
-  return {
+  const next: Record<string, Record<string, unknown>> = {
     ...components,
     Table: { ...(components.Table ?? {}), headerBorderRadius: borderRadius },
     Tree: { ...(components.Tree ?? {}), borderRadius },
-    Card: { ...(components.Card ?? {}), borderRadiusLG: borderRadius },
   };
+  for (const component of PHI_SURFACE_SHAPE_LG_COMPONENTS) {
+    next[component] = { ...(next[component] ?? {}), borderRadiusLG: borderRadius };
+  }
+  return next;
 }
 
 /**
@@ -330,8 +352,9 @@ const PHI_SHAPED_ANTD_COMPONENTS = [
  * Button among capsules would be.
  *
  * Both item tokens take it, because a submenu title sits in that column too and is the same object.
- * `borderRadius` is deliberately not among them: on Menu that token draws the panel a submenu opens in
- * a collapsed Sider, and THEME.md, "Control shape", keeps popup surfaces on the surface scale.
+ * `borderRadius` is deliberately not among them: on Menu that token draws the little arrow of a submenu
+ * title and nothing else, so shaping it would round two three-pixel bars. The popup that title opens in a
+ * collapsed Sider is a surface and reads `borderRadiusLG`, which the surface step sets.
  */
 const PHI_SHAPED_ANTD_COMPONENT_TOKENS = {
   Menu: ["itemBorderRadius", "subMenuItemBorderRadius"],
