@@ -37,8 +37,11 @@ import type {
  * that has an effect. Keeping it in the Controller is what keeps that rule true.
  *
  * What it decides lives in `helpers/state-machine-binding.ts` and what it says out loud in
- * `helpers/state-machine-diagnostics.ts`, both testable without React, which this package cannot render.
- * What is left here is the part that genuinely needs a component: where the machine currently is.
+ * `helpers/state-machine-diagnostics.ts`. That is the split `helpers/table-binding.ts` already has
+ * beside `phi-table-binding.ts`: which transition an event takes and whether a fault is worth printing
+ * are decisions about a definition, not about a component, and they are the same decisions whether or
+ * not React is in the room. What is left here is the part that genuinely needs one -- where the machine
+ * currently is, and who gets re-rendered when it moves.
  */
 
 /**
@@ -112,8 +115,14 @@ export function usePhiStateMachineBinding({
    * surprising is a re-read that disagrees with what was on screen while nothing was asked: another tab
    * finished the flow, a Session expired underneath, or an effect reported a transition the server
    * never made. Sending sets this; projecting clears it.
+   *
+   * It starts owed for a projection, and that is not a convenience. A projection's first state always
+   * arrives unasked -- the host mounts, reads, and hands over whatever Core said -- so treating that as
+   * a contradiction would put a line in the console on every single sign-in, which is how the one line
+   * that means something stops being read. The machine has shown nothing yet; there is nothing for an
+   * answer to contradict.
    */
-  const awaitingAnswer = useRef(false);
+  const awaitingAnswer = useRef(definition.authority === "server");
 
   /*
    * Rendered from the state and never from the ref.

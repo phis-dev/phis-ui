@@ -424,10 +424,18 @@ All of it belongs to the binding and none of it to the host. Diagnostics written
 discarded the failure silently.
 
 Built as [helpers/state-machine-diagnostics.ts](../helpers/state-machine-diagnostics.ts). One line of
-this table needed sharpening on contact: divergence is reported only when a re-read disagrees with what
-was shown **and nothing had been sent**. A projection changing state after a request is what a projection
-does, so reporting every change would have buried the case worth reading -- a second tab, an expired
-Session, or an effect that reported a transition the server never made.
+this table needed sharpening twice, and both times in the same direction -- towards saying less.
+
+Divergence is reported only when a re-read disagrees with what was shown **and nothing had been sent**.
+A projection changing state after a request is what a projection does, so reporting every change would
+have buried the case worth reading: a second tab, an expired Session, or an effect that reported a
+transition the server never made.
+
+And **never for the first state a projection is handed**, which a test of the mounted binding caught
+before anything used it. A projection's first state always arrives unasked -- the host mounts, reads,
+and hands over whatever Core said -- so the original rule would have put a line in the console on every
+single sign-in. The machine has shown nothing at that point; there is nothing for an answer to
+contradict.
 
 ## Third-party surface
 
@@ -515,9 +523,10 @@ at all -- both were things that were already wrong.
    rather than carry, published statements, and `collectPhiStateMachineDefinitionErrors` holding the two
    determinism rules the flat shape gave up structural enforcement of.
 4. ~~`PhiStateMachineBinding`, headless, with the diagnostics above in it and not in a host.~~ **Done**,
-   in three files rather than one: this package has no way to render a hook in a test, so what is
-   decided and what is reported live beside the hook instead of inside it, and the hook holds only where
-   the machine is. The diagnostics are still the binding's and not a host's, which was the point.
+   in three files rather than one, on the split `helpers/table-binding.ts` already has beside
+   `phi-table-binding.ts`: which transition an event takes and whether a fault is worth printing are
+   decisions about a definition rather than about a component. The hook holds where the machine is and
+   who re-renders when it moves. The diagnostics are the binding's and not a host's, which was the point.
 5. The condition source, and with it the two login-preset conditions rewritten from
    `source: "widget"` onto a named statement.
 6. Auth as the first consumer: one projection, `security/client.tsx` raising an event instead of
