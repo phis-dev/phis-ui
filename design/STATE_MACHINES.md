@@ -68,8 +68,20 @@ three meet:
   `helpers/csrf-token.ts` holds the request now, and the endpoint path with it, which had been written out
   ten times as well. It throws rather than returning null, because a null is what invites the `if` that
   was forgotten three times; a caller that means to stay quiet writes a `catch` and is quiet on purpose.
-- Logout is still implemented three times -- Widget, sidebar menu, Core Runtime adapter -- with three
-  different endings. Only the token they all needed was shared; what they do with it was not touched.
+- ~~Logout is implemented three times -- Widget, sidebar menu, Core Runtime adapter -- with three
+  different endings.~~ **The request is shared; the three endings stay, and each now says why.** The
+  menu loads a fresh document because the page behind it was rendered for a session that is gone, the
+  sign-out Page replaces itself so Back does not return to a sign-out that already happened, and the
+  adapter asks the Area for the Page again because whether whoever is now nobody may still stand there
+  is the Area's answer. Three endings, three reasons, one request -- which is the same shape the CSRF
+  reader has, and not an accident: what differs between callers is the consequence, never the call.
+
+  Reading them side by side suggested a bug that was not one: the sidebar omitted `x-phis-site-key`
+  while the other two set it. The proxy strips every `x-phis-` header and sets the Site's own, so the
+  header never arrived and the sidebar was right by accident. Dropping it took a prop with it --
+  `PhiCoreRuntimeApplicationAdapter` no longer takes `siteKey`, because that header was its only
+  purpose. Confirmed in the browser rather than inferred: signing out without it answers `200` and the
+  session is gone afterwards.
 
 ## Core model
 

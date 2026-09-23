@@ -1,12 +1,11 @@
 "use client";
-import { fetchPhiCsrfToken } from "../../../../../helpers/csrf-token";
+import { requestPhiLogout } from "../../../../../helpers/logout";
 
 import { useEffect, useState } from "react";
 
 import { PhiButtonControl } from "../../../../../components/controls/phi-button-control";
 import { PhiAlertControl } from "../../../../../components/controls/phi-alert-control";
 import type { PhiBlockRuntime, PhiClientBlockBaseProps } from "../../../../../types";
-import { PHIS_SITE_KEY_HEADER } from "../../../../../constants/http-headers";
 import { PhiFlexControl } from "../../../../../components/controls/phi-flex-control";
 import { PhiTypographyControl } from "../../../../../components/controls/phi-typography-control";
 import { PhiSpinControl } from "../../../../../components/controls/phi-spin-control";
@@ -26,21 +25,8 @@ export function PhiAuthLogoutWidgetClient({
     const controller = new AbortController();
     async function logout() {
       try {
-        const token = await fetchPhiCsrfToken({
-          signal: controller.signal,
-          unavailableMessage: "Logout could not be initialized.",
-        });
-
-        const headers = new Headers({ "x-csrf-token": token });
-        if (siteKey) headers.set(PHIS_SITE_KEY_HEADER, siteKey);
-        const response = await fetch("/api/auth/logout", {
-          method: "POST",
-          credentials: "include",
-          cache: "no-store",
-          headers,
-          signal: controller.signal,
-        });
-        if (!response.ok) throw new Error("Logout failed.");
+        await requestPhiLogout({ signal: controller.signal, failedMessage: "Logout failed." });
+        /* Replaced, not assigned: Back must not return to a sign-out that already happened. */
         window.location.replace(`/${locale}`);
       } catch (caught) {
         if (!controller.signal.aborted) {

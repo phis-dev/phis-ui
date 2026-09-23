@@ -1,5 +1,5 @@
 "use client";
-import { fetchPhiCsrfToken } from "../../helpers/csrf-token";
+import { requestPhiLogout } from "../../helpers/logout";
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -14,7 +14,6 @@ import { usePhiSignalListener } from "./runtime-signal-bus";
 import { usePhiSignalRuntimePartition } from "./runtime-signal-partition";
 import { registerPhiSignalInstance } from "./runtime-signal-registry";
 import { createPhiCoreRuntimeControllerAddress } from "./core-runtime-controller-address";
-import { PHIS_SITE_KEY_HEADER } from "../../constants/http-headers";
 import type { PhiApplicationFeedbackRequest } from "./application-feedback-host";
 
 /*
@@ -33,7 +32,11 @@ const PHI_CORE_RUNTIME_APPLICATION_SIGNAL_FILTER = {
   receiver: createPhiCoreRuntimeControllerAddress(),
 } as const;
 
-export function PhiCoreRuntimeApplicationAdapter({ siteKey }: { siteKey?: string } = {}) {
+/*
+ * No `siteKey` any more. It was passed in so a logout could name the Site, and that header never left
+ * the browser: the proxy strips every `x-phis-` header and sets the Site's own.
+ */
+export function PhiCoreRuntimeApplicationAdapter() {
   const router = useRouter();
   /*
    * Armed once and never disarmed: the host owns the toast that is on screen, so unmounting it when
@@ -68,34 +71,19 @@ export function PhiCoreRuntimeApplicationAdapter({ siteKey }: { siteKey?: string
 
   const signOut = useCallback(async () => {
     /* A session that cannot be ended here is ended by its own expiry; there is no surface to report to. */
-    let csrfToken: string;
     try {
-      csrfToken = await fetchPhiCsrfToken();
+      await requestPhiLogout();
     } catch {
       return;
     }
 
-    const headers = new Headers({ "x-csrf-token": csrfToken });
-    const normalizedSiteKey = siteKey?.trim().toLowerCase();
-    if (normalizedSiteKey) {
-      headers.set(PHIS_SITE_KEY_HEADER, normalizedSiteKey);
-    }
-
-    const response = await fetch("/api/auth/logout", {
-      method: "POST",
-      headers,
-      credentials: "include",
-      cache: "no-store",
-    });
-    if (response.ok) {
-      /*
-       * The Page is asked for again rather than replaced with one chosen here. Whoever is now nobody
-       * may not be allowed where they stood, and the Area answers that -- with its own redirect, its
-       * own sign-in Page -- which is a decision that belongs to it and not to this adapter.
-       */
-      router.refresh();
-    }
-  }, [router, siteKey]);
+    /*
+     * The Page is asked for again rather than replaced with one chosen here. Whoever is now nobody
+     * may not be allowed where they stood, and the Area answers that -- with its own redirect, its
+     * own sign-in Page -- which is a decision that belongs to it and not to this adapter.
+     */
+    router.refresh();
+  }, [router]);
 
   usePhiSignalListener((signal) => {
     const navigateValue = readPhiCoreRuntimeNavigateSignalValue(signal);

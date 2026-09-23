@@ -227,7 +227,7 @@ export async function PhiRootLayout({
               * fetched only when something is announced, the ground is named for what it is.
               */}
             <div data-phi-app-ground="true">
-              <PhiCoreRuntimeApplicationAdapter siteKey={site.key} />
+              <PhiCoreRuntimeApplicationAdapter />
               <PhiDayjsLocale locale={resolvedLocale?.locale ?? resolvedLocale?.intlLocale}>
                 {children}
               </PhiDayjsLocale>

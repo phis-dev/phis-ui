@@ -1,5 +1,5 @@
 "use client";
-import { fetchPhiCsrfToken } from "../../../../../helpers/csrf-token";
+import { requestPhiLogout } from "../../../../../helpers/logout";
 
 import { usePathname } from "next/navigation";
 
@@ -74,31 +74,19 @@ export function PhiSidebarNavigationWidgetClient({
     }
 
     /* Nothing to tell somebody who clicked sign out: the menu closes either way. */
-    let csrfToken: string;
     try {
-      csrfToken = await fetchPhiCsrfToken();
+      await requestPhiLogout();
     } catch {
       return;
     }
 
-    const logoutResponse = await fetch("/api/auth/logout", {
-      method: "POST",
-      headers: {
-        "x-csrf-token": csrfToken,
-      },
-      credentials: "include",
-      cache: "no-store",
-    });
-
-    if (logoutResponse.ok) {
-      /*
-       * A full document load, not a client navigation: the session this page was rendered for is gone,
-       * and `router.push` would keep the RSC cache and the client stores built while it was still
-       * valid. Landing on a fresh document is the point.
-       */
-      // eslint-disable-next-line @next/next/no-location-assign-relative-destination
-      window.location.assign(`/${runtime?.locale.current ?? "en"}`);
-    }
+    /*
+     * A full document load, not a client navigation: the session this page was rendered for is gone,
+     * and `router.push` would keep the RSC cache and the client stores built while it was still valid.
+     * Landing on a fresh document is the point.
+     */
+    // eslint-disable-next-line @next/next/no-location-assign-relative-destination
+    window.location.assign(`/${runtime?.locale.current ?? "en"}`);
   }
 
   return (
