@@ -106,10 +106,31 @@ export const PHI_AUTH_CONTROLLER_DEFINITION = {
         valueType: "json",
         valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.runtimeConditionState,
       },
+      /*
+       * The workflow itself, for the one Widget that draws it.
+       *
+       * Separate from the statements above, and deliberately: those are what anybody may condition on,
+       * this is the Module's own data and goes to the Widget that presents it. Broadcast in Area scope
+       * rather than addressed, because the same Login preset is built twice -- once as the Public page
+       * and once as an Area Overlay -- with different instance ids, so there is no one address to name.
+       * Only one of them is ever on screen, and the other hears nothing it would act on.
+       */
+      {
+        id: "authWorkflowChange",
+        action: "change",
+        valueType: "json",
+        valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.authWorkflowState,
+      },
     ],
     listens: [
       { id: "loginOpen", channel: "command", action: "open", valueType: "path" },
       { id: "conditionStateRequest", channel: "condition", action: "reload", valueType: "none" },
+      /*
+       * Asked by a step Widget that mounted after the broadcast went out, which an Overlay body always
+       * does: it mounts on first open. The same push-and-pull pair the condition channel uses, for the
+       * same reason -- a broadcast is not held for a receiver that does not exist yet.
+       */
+      { id: "authWorkflowRequest", channel: "workflow", action: "reload", valueType: "none" },
       {
         id: "loginResult",
         channel: "submit",

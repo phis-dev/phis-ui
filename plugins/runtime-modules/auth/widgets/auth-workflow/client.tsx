@@ -14,19 +14,26 @@ import {
   type PhiSignalValue,
 } from "../../../../../types/signals";
 import type { PhiAuthWorkflow } from "../../../../../types/auth-manifest";
+import { PHI_AUTH_MACHINE_STATEMENTS } from "../../machine";
 
 export type PhiAuthWorkflowWidgetClientProps = {
   signalRoutes?: PhiSignalRouteSet | null;
 };
 
+/**
+ * What the Auth Controller says the workflow is.
+ *
+ * This Widget used to read the login handler's answer itself and keep the result, which meant a reload
+ * part-way through a second factor emptied it -- for a state Core would still have answered for. The
+ * Controller holds it now, from `serverPreload` on the way in and from the same form answer afterwards,
+ * and this draws whatever it is told.
+ */
 function readWorkflow(value: unknown): PhiAuthWorkflow | null {
   if (!value || typeof value !== "object" || Array.isArray(value)) return null;
-  const result = value as { ok?: boolean; payload?: Record<string, unknown> | null };
-  if (result.ok !== true) return null;
-  const payload = result.payload;
-  if (!payload || payload.complete !== false) return null;
-  const workflow = payload.workflow;
-  return workflow && typeof workflow === "object" ? workflow as PhiAuthWorkflow : null;
+  const workflow = (value as { workflow?: unknown }).workflow;
+  return workflow && typeof workflow === "object" && !Array.isArray(workflow)
+    ? workflow as PhiAuthWorkflow
+    : null;
 }
 
 export function PhiAuthWorkflowWidgetClient({ signalRoutes }: PhiAuthWorkflowWidgetClientProps) {
@@ -51,28 +58,49 @@ export function PhiAuthWorkflowWidgetClient({ signalRoutes }: PhiAuthWorkflowWid
     }
   }, [emitRoutes, emitSignal]);
 
+  /*
+   * Both ways the Controller's answer arrives: the broadcast it sends whenever the workflow changes,
+   * and the reply to the question below. A signal addressed to some other Widget is not this one's.
+   */
   usePhiSignalListener(
     (signal) => {
-      const next = readWorkflow(signal.value);
-      if (next) setWorkflow(next);
+      if (signal.receiver !== "broadcast" && signal.receiver !== identity.receiver) return;
+      setWorkflow(readWorkflow(signal.value));
     },
     useMemo(() => ({
-      channels: ["submit"],
-      actions: ["activate"] as const,
-      valueSchemas: [PHI_SIGNAL_VALUE_SCHEMAS.formResult],
-      ...(identity.receiver ? { receiver: identity.receiver } : {}),
-    }), [identity.receiver]),
+      scopes: ["area"] as const,
+      channels: ["workflow"],
+      actions: ["change"] as const,
+      valueSchemas: [PHI_SIGNAL_VALUE_SCHEMAS.authWorkflowState],
+    }), []),
+    /*
+     * Answering for this address is not optional: the reply to the request below is addressed here, and
+     * a reader that does not name what it reads for leaves the bus holding those signals forever.
+     */
     identity.receiver ?? null,
   );
 
   /*
-   * Whether this step is under way, for the Widgets that must stand back while it is.
+   * Asked once on mount, because a broadcast is not held for somebody who was not there.
    *
-   * The password form and the external methods beside it are answers to a question that has already
-   * been answered; leaving them on screen invites somebody to start over halfway through.
+   * An Overlay body mounts on first open, long after the Controller said what it had, so without this
+   * the second factor would be missing precisely where the Login is a modal.
    */
   useEffect(() => {
-    emitCapability("conditionStateChange", { state: { active } });
+    emitCapability("authWorkflowRequest", null);
+  }, [emitCapability]);
+
+  /*
+   * The machine's statement, passed on to the Widgets that arrange themselves around it.
+   *
+   * Not this Widget's opinion: `awaitingCredentials` is what the Auth machine publishes, and this only
+   * carries it the last hop. It goes through here because a Page node cannot ask an Area Controller --
+   * the question would materialize that Controller at page scope, which it does not allow.
+   */
+  useEffect(() => {
+    emitCapability("conditionStateChange", {
+      state: { [PHI_AUTH_MACHINE_STATEMENTS.awaitingCredentials]: !active },
+    });
   }, [active, emitCapability]);
 
   if (!active || !workflow) {

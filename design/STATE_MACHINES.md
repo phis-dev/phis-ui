@@ -236,6 +236,25 @@ what such a reading is, instead of reconstructing it later from whatever the fir
   through the current route table. A machine condition names `(ownerModuleId, machineId)` and resolves the
   same way. A hard-coded `controller:` address breaks quietly as soon as the instance is named differently
   or the owning Module is not active in that Area.
+- **But asking is also mounting, and that is a harder limit than it looks.** A `controller` condition
+  needs a `conditionStateRequest` route to ask along, and that same route is what materializes the
+  Controller -- at the scope of the tree the asking node sits in
+  (`components/runtime/runtime-controller-materialization.ts`, `mountScope: ownerMountScope`). A node in
+  a Page therefore demands a page-scope mount, and a Controller that allows `area` only refuses it
+  outright: *Runtime controller "default" cannot be mounted at "page" scope.* Broadcasting past the
+  problem does not work either, because a Widget filters incoming signals on its own address
+  (`components/forms/form-descriptor-runtime-client.tsx`).
+
+  So **a Page Widget cannot read an Area Controller's machine at all**, by either direction. This was
+  found by a browser check after the Auth rewrite: 567 unit tests, 30 contract scripts, typecheck and
+  lint were all green while the sign-in form was simply absent. It is also, in hindsight, why the login
+  preset asked its neighbouring Widget in the first place -- that was a workaround, not an oversight.
+
+  A machine source of its own would inherit this unchanged, so it is not a reason to prefer one. What
+  it changes is the claim above: a reference resolves to an address, and an address is still not always
+  askable. Until a Controller can be named without being mounted, a machine hosted at Area scope
+  publishes to Page nodes by relaying through a node they can reach -- which keeps the statement's
+  author the machine, and makes only the last hop a neighbour.
 - **Absence is an answer.** The owning Module may not be active, so the machine may not exist.
   `whenUnavailable` already carries this, and the cautious reading is the default: for a machine over a
   security decision, "no state" must never pass as `complete`.
@@ -527,10 +546,18 @@ at all -- both were things that were already wrong.
    `phi-table-binding.ts`: which transition an event takes and whether a fault is worth printing are
    decisions about a definition rather than about a component. The hook holds where the machine is and
    who re-renders when it moves. The diagnostics are the binding's and not a host's, which was the point.
-5. The condition source, and with it the two login-preset conditions rewritten from
-   `source: "widget"` onto a named statement.
-6. Auth as the first consumer: one projection, `security/client.tsx` raising an event instead of
-   constructing a workflow value.
+5. ~~The condition source~~ -- **not built, and the reason held up.** The two login-preset conditions
+   were the case for it, and they turned out to have the Auth Controller's address in hand already, so
+   a seventh `PHI_RUNTIME_CONDITION_SOURCES` value would again have had no reader on the day it
+   shipped. Then the browser check found that they could not have used it either: a Page node cannot
+   ask an Area Controller. Both conditions now read a named statement
+   (`PHI_AUTH_MACHINE_STATEMENTS.awaitingCredentials`) relayed through the step Widget, which decides
+   nothing and carries it one hop.
+6. Auth as the first consumer. **Mostly done**: the Controller hosts the projection, `serverPreload`
+   reads the workflow while the page renders, and the step Widget draws what it is told instead of
+   keeping its own copy. What is left is `security/client.tsx`, which still constructs a
+   `PhiAuthWorkflow` value to start enrollment -- the thing `phis-server` AUTHENTICATION.md §9 forbids,
+   and now repairable because there is somewhere for that state to live.
 
 Two things the grammar settled that this document had left vaguer than it should have. A machine is named
 `(ownerModuleId, machineKey)` like a Page preset, not by an id of its own -- a package may carry two

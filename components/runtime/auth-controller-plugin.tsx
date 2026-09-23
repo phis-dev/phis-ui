@@ -13,6 +13,7 @@ import {
   PHI_AUTH_MACHINE_REFERENCE,
 } from "../../plugins/runtime-modules/auth/machine";
 import type { PhiRuntimeControllerPlugin } from "../../types";
+import type { PhiAuthWorkflow } from "../../types/auth-manifest";
 import {
   createPhiSignalCorrelationId,
   usePhiSignalDispatcher,
@@ -58,17 +59,28 @@ function PhiAuthControllerView({
   });
 
   /*
+   * The workflow this Controller is currently sure of, from the render and then from the form.
+   *
+   * Both ends arrive here rather than at the Widget: `serverPreload` brings what Core said while the
+   * page rendered, and the login handler's answer arrives on a signal this Controller already listens
+   * for. One place that knows, so the Widget that draws the step has one source instead of the
+   * `useState` a reload used to empty.
+   */
+  const [workflow, setWorkflow] = useState<PhiAuthWorkflow | null>(
+    preloadData?.unavailable ? null : preloadData?.workflow ?? null,
+  );
+
+  /*
    * An unreachable Core leaves the machine alone. `anonymous` would be an assertion about somebody this
    * render could not ask about, and on a Login page that assertion shows the sign-in form to a visitor
    * who is half-way through a second factor.
    */
-  const projectedState = preloadData?.unavailable
-    ? null
-    : preloadData?.workflow?.state ?? "anonymous";
+  const coreUnavailable = preloadData?.unavailable === true;
   const project = machine.project;
   useEffect(() => {
-    if (projectedState) project(projectedState);
-  }, [project, projectedState]);
+    if (coreUnavailable && !workflow) return;
+    project(workflow?.state ?? "anonymous");
+  }, [coreUnavailable, project, workflow]);
 
   /*
    * The answer Widgets condition on, and it carries statements rather than the state key. A Widget
@@ -188,6 +200,32 @@ function PhiAuthControllerView({
     );
   }, [forward, locale]);
 
+  /*
+   * The workflow handed to whichever step Widget is on screen.
+   *
+   * Broadcast rather than addressed: the Login preset is built as a Public page and as an Area Overlay
+   * with different instance ids, and only one of them exists at a time. A Widget that is not there
+   * hears nothing, which is the same as today except that the answer now survives a reload.
+   */
+  const sendWorkflow = useCallback((
+    receiver: PhiSignal["receiver"],
+    correlationId?: string,
+  ) => {
+    dispatch({
+      channel: "workflow",
+      action: "change",
+      value: { workflow },
+      valueType: "json",
+      valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.authWorkflowState,
+      receiver,
+      correlationId,
+    });
+  }, [dispatch, workflow]);
+
+  useEffect(() => {
+    sendWorkflow("broadcast");
+  }, [sendWorkflow]);
+
   usePhiSignalListener((signal) => {
     if (
       signal.channel === "submit" &&
@@ -197,7 +235,19 @@ function PhiAuthControllerView({
       const result = signal.value as { ok?: boolean; payload?: Record<string, unknown> | null } | null;
       if (result?.ok !== true) return;
       const payload = result.payload ?? null;
-      if (payload?.complete === false) return;
+      /*
+       * Not finished: a second factor is owed. This used to return and leave the step Widget to work it
+       * out from the same signal; now the workflow is taken here, which is what makes this Controller
+       * the one place that knows -- and what lets `serverPreload` answer the same question on a reload.
+       */
+      if (payload?.complete === false) {
+        const next = payload.workflow;
+        if (next && typeof next === "object" && !Array.isArray(next)) {
+          setWorkflow(next as PhiAuthWorkflow);
+        }
+        return;
+      }
+      setWorkflow(null);
       closeOverlay(signal.correlationId);
       void completeLogin(payload);
       return;
@@ -223,6 +273,14 @@ function PhiAuthControllerView({
       closeOverlay(signal.correlationId);
       return;
     }
+    /*
+     * A step Widget that mounted late, asking for what it missed. The answer goes back to the asker
+     * with the correlation id it was asked with, as every reply on this bus does.
+     */
+    if (signal.channel === "workflow" && signal.action === "reload" && signal.sender != null) {
+      sendWorkflow(signal.sender, signal.correlationId);
+      return;
+    }
     if (signal.channel !== "command" || signal.action !== "open") return;
     const next = (
       typeof signal.value === "string" ? normalizeLoginRedirectTarget(signal.value) : null
@@ -239,8 +297,8 @@ function PhiAuthControllerView({
     setOpenSequence((current) => current + 1);
   }, {
     scopes: ["area"],
-    channels: ["command", "dialog", "submit"],
-    actions: ["open", "close", "activate"],
+    channels: ["command", "dialog", "submit", "workflow"],
+    actions: ["open", "close", "activate", "reload"],
     receiver: address,
   });
 

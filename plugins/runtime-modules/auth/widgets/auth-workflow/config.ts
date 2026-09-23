@@ -45,6 +45,17 @@ export const PHI_AUTH_WORKFLOW_WIDGET_DEFINITION = {
         valueType: "json",
         valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.formResult,
       },
+      /*
+       * Asked once on mount, for the case this Widget was not there when the Controller last said
+       * where signing in stands -- which is every time the Login is an Overlay, since an Overlay body
+       * mounts on first open.
+       */
+      { id: "authWorkflowRequest", action: "reload", valueType: "none" },
+      /*
+       * The machine's statement, carried the last hop to the Widgets beside this one. They cannot ask
+       * the Auth Controller themselves: a `controller` condition materializes its Controller at the
+       * scope of the tree that asks, and a Page may not mount an Area-only Controller.
+       */
       {
         id: "conditionStateChange",
         action: "change",
@@ -53,12 +64,19 @@ export const PHI_AUTH_WORKFLOW_WIDGET_DEFINITION = {
       },
     ],
     listens: [
+      /*
+       * The workflow, from the Auth Controller and no longer from the login form.
+       *
+       * Reading the form's answer directly is what tied this step to a single page view: a reload
+       * emptied it, and Core would still have answered the same question. The Controller reads it
+       * while the page renders and hands it over; this draws it.
+       */
       {
-        id: "loginResult",
-        channel: "submit",
-        action: "activate",
+        id: "authWorkflowChange",
+        channel: "workflow",
+        action: "change",
         valueType: "json",
-        valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.formResult,
+        valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.authWorkflowState,
       },
     ],
   },

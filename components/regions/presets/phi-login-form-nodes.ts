@@ -5,8 +5,10 @@ import { createPhiCmsPresetNodes } from "../../../helpers/cms-preset-nodes";
 import {
   createPhiSignalAddress,
   PHI_SIGNAL_VALUE_SCHEMAS,
+  type PhiControllerSignalAddress,
   type PhiSignalAddress,
 } from "../../../types/signals";
+import { PHI_AUTH_MACHINE_STATEMENTS } from "../../../plugins/runtime-modules/auth/machine";
 import type { PhiCmsInstanceId } from "../../../types/cms-instance-id";
 import type { PhiCmsContentWidgetNode, PhiCmsLayoutNode } from "../../../types/cms";
 
@@ -43,18 +45,23 @@ function feature(key: string) {
 }
 
 /**
- * That no second authentication step is under way.
+ * That this is a place where somebody may start signing in.
+ *
+ * Read from the step Widget, but no longer decided there: it is the Auth machine's published statement,
+ * passed on. The Widget used to report `active` about itself and this asked for the negation of it --
+ * right until the machine gained a state, then silently wrong, because a negation over an open set of
+ * states cannot account for what it has not been told about. `awaitingCredentials` is true only in the
+ * states where credentials really are the next thing, so a state added later has to opt in.
  *
  * `whenUnavailable: "matched"` because a page that has just opened is the ordinary case: nobody is
- * halfway through a second factor, and waiting for the step Widget to report that nothing is happening
- * would leave the sign-in form absent until after hydration.
+ * part-way through a second factor, and waiting would leave the sign-in form absent until hydration.
  */
-function noStepRunning(stepAddress: PhiSignalAddress) {
+function awaitingCredentials(stepAddress: PhiSignalAddress) {
   return {
     source: "widget",
     widgetAddress: stepAddress,
-    valuePath: "active",
-    operator: "falsy",
+    valuePath: PHI_AUTH_MACHINE_STATEMENTS.awaitingCredentials,
+    operator: "truthy",
     whenUnavailable: "matched",
   } as const;
 }
@@ -73,7 +80,7 @@ export type PhiLoginNodesOptions = {
   parentLayoutNodeId: PhiCmsInstanceId;
   locale: string;
   /** The Controller that decides where a finished sign-in goes, and performs nothing itself. */
-  authControllerAddress: PhiSignalAddress;
+  authControllerAddress: PhiControllerSignalAddress;
   /** The first free slot on the surface this is placed on. */
   slotIndex?: number;
 };
@@ -91,6 +98,25 @@ export function buildPhiLoginNodes({
   contentWidgets: PhiCmsContentWidgetNode[];
 } {
   const stepAddress = createPhiSignalAddress("cms", ids.widgetStep);
+  /*
+   * The step Widget passes on what the Controller told it, because the Controller cannot be asked.
+   *
+   * A `controller` condition needs a `conditionStateRequest` route to ask along, and that route is also
+   * what materializes the Controller -- at the scope of the tree the asking node sits in. These nodes
+   * sit in a Page, and the Auth Controller allows `area` only, so the question is refused outright:
+   * "Runtime controller \"default\" cannot be mounted at \"page\" scope". Relaying keeps the answer's
+   * origin where it now belongs -- the machine -- and only the last hop is a neighbour.
+   */
+  const relayStatementRoute = (routeKey: string, receiver: PhiSignalAddress) => ({
+    routeKey,
+    capabilityId: "conditionStateChange",
+    scope: "area" as const,
+    channel: "condition",
+    action: "change" as const,
+    valueType: "json" as const,
+    valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.runtimeConditionState,
+    receiver,
+  });
   const nodes = createPhiCmsPresetNodes({ siteId, visibilityMask });
   /*
    * Both the form and the step report the same way, so the Controller reads one answer rather than two.
@@ -124,38 +150,28 @@ export function buildPhiLoginNodes({
         label: "login second factor",
         config: {
           signalRoutes: {
-            ...reportResultRoute("login-step-result"),
             emits: [
               ...reportResultRoute("login-step-result").emits,
+              relayStatementRoute("login-step-state", createPhiSignalAddress("cms", ids.widgetLogin)),
+              relayStatementRoute("login-step-state-methods", createPhiSignalAddress("cms", ids.widgetMethods)),
               {
-                routeKey: "login-step-state",
-                capabilityId: "conditionStateChange",
+                routeKey: "login-step-workflow-request",
+                capabilityId: "authWorkflowRequest",
                 scope: "area" as const,
-                channel: "condition",
-                action: "change" as const,
-                valueType: "json" as const,
-                valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.runtimeConditionState,
-                receiver: createPhiSignalAddress("cms", ids.widgetLogin),
-              },
-              {
-                routeKey: "login-step-state-methods",
-                capabilityId: "conditionStateChange",
-                scope: "area" as const,
-                channel: "condition",
-                action: "change" as const,
-                valueType: "json" as const,
-                valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.runtimeConditionState,
-                receiver: createPhiSignalAddress("cms", ids.widgetMethods),
+                channel: "workflow",
+                action: "reload" as const,
+                valueType: "none" as const,
+                receiver: authControllerAddress,
               },
             ],
             listens: [{
-              routeKey: "login-step-from-form",
-              capabilityId: "loginResult",
+              routeKey: "login-step-workflow",
+              capabilityId: "authWorkflowChange",
               scope: "area" as const,
-              channel: "submit",
-              action: "activate" as const,
+              channel: "workflow",
+              action: "change" as const,
               valueType: "json" as const,
-              valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.formResult,
+              valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.authWorkflowState,
               receiver: createPhiSignalAddress("cms", ids.widgetStep),
             }],
           },
@@ -192,21 +208,11 @@ export function buildPhiLoginNodes({
           ],
           visibleWhen: {
             match: "all",
-            conditions: [feature("password"), noStepRunning(stepAddress)],
+            conditions: [feature("password"), awaitingCredentials(stepAddress)],
           },
           signalRoutes: {
             emits: [
               ...reportResultRoute("login-result").emits,
-              {
-                routeKey: "login-result-to-step",
-                capabilityId: "submitSuccess",
-                scope: "area" as const,
-                channel: "submit",
-                action: "activate" as const,
-                valueType: "json" as const,
-                valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.formResult,
-                receiver: stepAddress,
-              },
             ],
           },
         },
@@ -220,7 +226,7 @@ export function buildPhiLoginNodes({
         config: {
           visibleWhen: {
             match: "all",
-            conditions: [feature("external"), noStepRunning(stepAddress)],
+            conditions: [feature("external"), awaitingCredentials(stepAddress)],
           },
         },
       }),
