@@ -46,6 +46,8 @@ export const PHI_THREADS_RUNTIME_DATA_PROVIDER_DESCRIPTORS = [
         title: "Inbox",
         description: "Every conversation this viewer is in, whichever kind it is.",
         rowIdentityPath: "id",
+        // A row is a conversation, and opening it is the whole point of the page.
+        rowActivation: true,
         /*
          * `state` and `archived` are not on the Core row; the Provider computes both.
          *

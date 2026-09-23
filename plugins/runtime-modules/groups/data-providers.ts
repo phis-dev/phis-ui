@@ -51,6 +51,8 @@ export const PHI_GROUPS_RUNTIME_DATA_PROVIDER_DESCRIPTORS = [
         resourceKey: "groups",
         title: "Groups",
         rowIdentityPath: "id",
+        // A row is a group; the page beside it shows the one that was chosen.
+        rowActivation: true,
         fields: [
           { key: "id", title: "ID", type: "string", required: true },
           { key: "name", title: "Name", type: "string" },
@@ -143,6 +145,7 @@ export const PHI_GROUPS_RUNTIME_DATA_PROVIDER_DESCRIPTORS = [
         resourceKey: "myGroups",
         title: "My groups",
         rowIdentityPath: "id",
+        rowActivation: true,
         fields: [
           { key: "id", title: "ID", type: "string", required: true },
           { key: "name", title: "Group", type: "string" },

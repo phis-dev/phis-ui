@@ -531,6 +531,17 @@ export type PhiTableProviderResourceDescriptor = {
   bindingFields?: readonly PhiTableProviderBindingFieldDefinition[];
   query: PhiTableProviderQueryCapabilities;
   recordRead?: boolean;
+  /**
+   * Whether a row of this resource stands for something a person opens.
+   *
+   * Without it a row is inert and choosing one is the selection column's business, which is what a
+   * table of values is. A resource says this because only the resource knows: a conversation, a group
+   * and an invoice are things; an audit entry and a membership are records of things, and a click that
+   * appeared to open one would be a promise the page cannot keep.
+   *
+   * A boolean rather than a flag, to sit beside `recordRead` in the shape it already has.
+   */
+  rowActivation?: boolean;
   actions?: readonly PhiTableProviderActionCapability[];
   rowOrdering?: PhiTableProviderRowOrdering;
   dragSources?: readonly PhiTableProviderDragDropCapability[];

@@ -971,6 +971,43 @@ export function PhiTableWidgetClient({
           )),
           onChange: updateSelection,
         } : undefined}
+        /*
+         * A row means itself, where both ends agree that it means something.
+         *
+         * The resource says whether its rows stand for things at all (`rowActivation`), because only it
+         * knows; the placement says whether anything is chosen here. Either alone is not enough -- a
+         * resource of records would offer a click that opens nothing.
+         *
+         * What the click does follows the mode, because the mode is what a selection means. With one
+         * row at a time it replaces, which is the radio beside it doing what a person tried first. With
+         * several it toggles, which is the checkbox beside it: the row is a larger target for the same
+         * decision, not a second kind of decision.
+         *
+         * Compared as strings, for the reason the Control now writes its keys that way: an identity is
+         * a number or a string depending on the resource, and the same row must not be able to be in a
+         * selection twice.
+         *
+         * It goes through `updateSelection`, so it emits `selectionChange` like any other selection.
+         * A Controller listening for a chosen conversation does not learn that a mouse was involved.
+         */
+        onRowActivate={features.rowSelection?.mode && features.rowSelection.mode !== "none" && resource?.rowActivation ? (row) => {
+          const identity = readRowIdentity(row, resource.rowIdentityPath);
+          if (identity == null || findMatchingCondition(
+            row,
+            features.rowSelection?.disabledWhen,
+            conditionControllerStates,
+          )) {
+            return;
+          }
+          if (features.rowSelection?.mode !== "multiple") {
+            updateSelection([identity]);
+            return;
+          }
+          const isSelected = selectedRowIdentities.some((current) => String(current) === String(identity));
+          updateSelection(isSelected
+            ? selectedRowIdentities.filter((current) => String(current) !== String(identity))
+            : [...selectedRowIdentities, identity]);
+        } : undefined}
         pagination={features.pagination?.enabled === false ? false : {
           page: resolvedQuery.page ?? 1,
           pageSize: resolvedQuery.pageSize ?? 20,

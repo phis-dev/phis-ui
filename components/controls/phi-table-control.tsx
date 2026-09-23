@@ -40,6 +40,7 @@ import {
   type CSSProperties,
   type DragEvent,
   type HTMLAttributes,
+  type MouseEvent,
   type Key,
   type ReactNode,
 } from "react";
@@ -356,6 +357,12 @@ export type PhiTableControlProps<TRow extends Record<string, unknown>> = {
   emptyText?: ReactNode;
   layout: PhiTableLayoutConfig;
   rowStyle?: (row: TRow) => CSSProperties | undefined;
+  /**
+   * What a click on the row itself means, where the row stands for something openable.
+   *
+   * Absent leaves the row inert, which is what a table of values is. It has nothing to do with the
+   * selection column: that column is the keyboard path and stays whatever this does.
+   */
   onRowActivate?: (row: TRow) => void;
   onExternalRowDragOver?: (
     event: DragEvent<HTMLTableRowElement>,
@@ -380,6 +387,33 @@ export function readPhiTableControlValue(row: Record<string, unknown>, path: str
     (current, segment) => isRecord(current) ? current[segment] : undefined,
     row,
   );
+}
+
+/**
+ * What a row carries that is not the row.
+ *
+ * A row holds buttons, links, the selection control and, where a column is editable, a field. A click
+ * on any of them bubbles up, so a row that activated on every click would archive a conversation and
+ * open it in one gesture.
+ */
+const PHI_TABLE_ROW_INTERACTIVE_TARGET = [
+  "a", "button", "input", "select", "textarea", "label",
+  "[role=button]", "[role=link]", "[role=checkbox]", "[role=radio]", "[contenteditable=true]",
+].join(",");
+
+/**
+ * Whether this click means the row, rather than something in it or nothing at all.
+ *
+ * Dragging a selection across a cell ends in a click as well, and somebody reading a subject line is
+ * not choosing a conversation -- so an uncollapsed selection is not an activation either.
+ */
+function isPhiTableRowActivationClick(event: MouseEvent<HTMLTableRowElement>) {
+  const target = event.target;
+  if (target instanceof Element && target.closest(PHI_TABLE_ROW_INTERACTIVE_TARGET)) {
+    return false;
+  }
+  const selection = typeof window === "undefined" ? null : window.getSelection();
+  return selection == null || selection.isCollapsed;
 }
 
 function readIdentity(row: Record<string, unknown>, path: string): PhiTableRowIdentity | null {
@@ -1424,7 +1458,15 @@ export function PhiTableControl<TRow extends Record<string, unknown>>({
         type: rowSelection.mode === "single" ? "radio" : "checkbox",
         fixed: rowReordering?.enabled || orderedColumns.some((column) => column.fixed === "left"),
         preserveSelectedRowKeys: rowSelection.preserveSelectedRowIdentities ?? true,
-        selectedRowKeys: [...rowSelection.selectedRowIdentities],
+        /*
+         * The same shape `rowKey` writes, which is a string whatever the identity was.
+         *
+         * They were two shapes until a row click selected one: the primitive compares keys strictly,
+         * and a numeric identity never matched the string key beside it. It was invisible while the
+         * only way to select was the primitive's own column -- the keys it hands back are its own, so
+         * the round trip matched itself -- and it appeared the moment an identity came from the row.
+         */
+        selectedRowKeys: rowSelection.selectedRowIdentities.map((identity) => String(identity)),
         onChange: (keys) => rowSelection.onChange(normalizeSelectedKeys(keys)),
         getCheckboxProps: (row) => ({ disabled: rowSelection.isRowDisabled?.(row) ?? false }),
       } satisfies TableRowSelection<TRow>)
@@ -1497,8 +1539,16 @@ export function PhiTableControl<TRow extends Record<string, unknown>>({
           onExternalRowDrop?.(event, row, placement);
           setDropTarget(null);
         } : undefined,
-        onClick: onRowActivate ? () => onRowActivate(row) : undefined,
+        onClick: onRowActivate
+          ? (event: MouseEvent<HTMLTableRowElement>) => {
+            if (isPhiTableRowActivationClick(event)) {
+              onRowActivate(row);
+            }
+          }
+          : undefined,
         style: {
+          // A row that does something says so; without it the only sign is that it worked.
+          ...(onRowActivate ? { cursor: "pointer" } : {}),
           ...rowStyle?.(row),
           ...(dropTarget && String(dropTarget.identity) === String(readIdentity(row, rowIdentityPath)) ? {
           boxShadow: dropTarget.placement === "before"
