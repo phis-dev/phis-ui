@@ -251,9 +251,10 @@ nothing states whether an Area Controller survives a navigation inside its Area.
     use today and what makes an emailed link resumable;
   - `server` -- the authoritative store behind a `server` authority machine; the binding holds a copy and
     re-reads it, never writes it;
-  - `profile` -- User Space state, scoped by Site, user, machine id and definition version, for progress
-    that should outlive the session. Anonymous progress, retention and synchronization are out of scope
-    here as they are for Tours.
+  - `profile` -- account-bound state for a position that should outlive the session, held in the store
+    designed in [USER_STATE.md](./USER_STATE.md). That store does not exist yet, so this target is not in
+    the first implementation: the set starts as `none | query | server` and `profile` is added when there
+    is something behind it, rather than declared over nothing.
 - `localStorage`, `sessionStorage`, cookies invented for the purpose, and module globals are not
   persistence targets. The Form draft in `sessionStorage` stays what it is -- a draft of typed input, not
   the position in a flow.

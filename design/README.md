@@ -14,3 +14,5 @@ into the matching contract document, and open work is tracked in [TODOS.md](../T
 - [STATE_MACHINES.md](./STATE_MACHINES.md) -- a shared description of multi-step work: states,
   transitions, server-owned projections, and where a flow's state lives.
 - [TOURS.md](./TOURS.md) -- guided UI Tours, visual-anchor resolution, and user progress.
+- [USER_STATE.md](./USER_STATE.md) -- an account-bound store for what a person decided: dismissed cards,
+  a read marker, a Tour's progress.
