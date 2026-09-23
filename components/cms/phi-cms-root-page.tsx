@@ -146,7 +146,7 @@ export async function PhiCmsRootPage({
     tree: filteredPageTree,
     ownerMountScope: "page",
     widgetPluginsByType: runtimeModuleScope.widgetDefinitionsByType,
-    baseSettings: null,
+    baseSettings: resolvedRequest.page.controllerSettings ?? null,
     activeControllerTypes: [...runtimeModuleScope.moduleSet.controllerDescriptorsByType.keys()],
     regionTypes: [PhiCmsRegionType.Content],
     includeOverlays: true,

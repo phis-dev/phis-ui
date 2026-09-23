@@ -1,12 +1,11 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 
-import type { PhiRuntimeControllerPlugin, PhiSignal, PhiSignalAddress } from "../../../../types";
+import type { PhiRuntimeControllerPlugin } from "../../../../types";
 import {
-  PHI_SIGNAL_VALUE_SCHEMAS,
-  createPhiSignalAddress,
-  createPhiSignalSubcontrolAddress,
+  findPhiSignalRoutesByCapabilityId,
+  type PhiSignalValue,
 } from "../../../../types/signals";
 import { readPhiTableActionSignalValue, readPhiTableSelectionSignalValue } from "../../../../types/table-widget";
 import { readPhiOverlayCloseRequest } from "../../../../types/cms-overlay";
@@ -17,27 +16,10 @@ import {
   PHI_THREADS_RUNTIME_CONTROLLER_DEFINITION,
   type PhiThreadsControllerConfig,
 } from "./definition";
-import {
-  PHI_APP_THREADS_PAGE_OVERLAY_IDS,
-  PHI_APP_THREADS_PAGE_WIDGET_IDS,
-} from "../addresses";
 
 type ControllerRenderArgs = Parameters<NonNullable<
   PhiRuntimeControllerPlugin<PhiThreadsControllerConfig>["renderController"]
 >>[0];
-
-const INBOX_ADDRESS = createPhiSignalAddress("cms", PHI_APP_THREADS_PAGE_WIDGET_IDS.widgetInbox);
-const READER_ADDRESSES = [
-  createPhiSignalAddress("cms", PHI_APP_THREADS_PAGE_WIDGET_IDS.widgetConversation),
-  createPhiSignalAddress("cms", PHI_APP_THREADS_PAGE_WIDGET_IDS.widgetComposer),
-];
-const FORM_ADDRESS = createPhiSignalAddress("cms", PHI_APP_THREADS_PAGE_WIDGET_IDS.widgetNewForm);
-const OVERLAY_ADDRESS = createPhiSignalAddress("cms", PHI_APP_THREADS_PAGE_OVERLAY_IDS.overlayNew);
-const SAVE_BUTTON_ADDRESS = createPhiSignalSubcontrolAddress(
-  "cms",
-  PHI_APP_THREADS_PAGE_WIDGET_IDS.widgetNewCommands,
-  "save",
-);
 
 /**
  * A row key is a conversation id, and this is the only code allowed to know it.
@@ -67,71 +49,59 @@ function readCreatedThreadId(value: unknown) {
   return typeof threadId === "number" && Number.isInteger(threadId) && threadId > 0 ? threadId : null;
 }
 
-function PhiThreadsControllerView({ address }: Pick<ControllerRenderArgs, "address">) {
+function PhiThreadsControllerView({
+  address,
+  config,
+}: Pick<ControllerRenderArgs, "address" | "config">) {
   const dispatchSignal = usePhiSignalDispatcher();
   const [submitting, setSubmitting] = useState(false);
+  const emitRoutes = useMemo(() => config.signalRoutes?.emits ?? [], [config.signalRoutes?.emits]);
 
-  const send = useCallback((input: {
-    receiver: PhiSignalAddress;
-    channel: string;
-    action: PhiSignal["action"];
-    value: PhiSignal["value"];
-    valueType: PhiSignal["valueType"];
-    valueSchema?: PhiSignal["valueSchema"];
-    correlationId: string;
-  }) => dispatchSignal({
-    scope: "page",
-    sender: address,
-    receiver: input.receiver,
-    channel: input.channel,
-    action: input.action,
-    value: input.value,
-    valueType: input.valueType,
-    valueSchema: input.valueSchema ?? null,
-    correlationId: input.correlationId,
-    timestamp: Date.now(),
-  }), [address, dispatchSignal]);
-
-  const sendThread = useCallback((threadId: number | null, correlationId: string) => {
-    for (const receiver of READER_ADDRESSES) {
-      send({
-        receiver,
-        channel: "thread",
-        action: "change",
-        value: { threadId },
-        valueType: "json",
-        valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.threadSelection,
+  /*
+   * One declared output, delivered through every route that names it.
+   *
+   * The channel, the action and the value schema are the route's, not this code's -- which is what
+   * lets the same `threadChange` reach the conversation and the composer without this Controller
+   * holding a list of the two, and lets a Site point either of them somewhere else.
+   *
+   * A route with no receiver, or a JSON route with no schema, is skipped rather than sent: SIGNALS.md
+   * makes the schema part of matching, and a payload nobody can check is worse than none.
+   */
+  const emitCapability = useCallback((
+    capabilityId: string,
+    value: PhiSignalValue,
+    correlationId: string,
+  ) => {
+    for (const route of findPhiSignalRoutesByCapabilityId(emitRoutes, capabilityId)) {
+      if (route.receiver == null || (route.valueType === "json" && !route.valueSchema)) {
+        continue;
+      }
+      dispatchSignal({
+        scope: route.scope,
+        sender: address,
+        receiver: route.receiver,
+        channel: route.channel,
+        action: route.action,
+        value: route.valueType === "none" ? null : value,
+        valueType: route.valueType,
+        valueSchema: route.valueSchema ?? null,
         correlationId,
+        timestamp: Date.now(),
       });
     }
-  }, [send]);
+  }, [address, dispatchSignal, emitRoutes]);
 
-  const reloadInbox = useCallback((correlationId: string) => send({
-    receiver: INBOX_ADDRESS,
-    channel: "reload",
-    action: "activate",
-    value: null,
-    valueType: "none",
-    correlationId,
-  }), [send]);
+  const sendThread = useCallback((threadId: number | null, correlationId: string) =>
+    emitCapability("threadChange", { threadId }, correlationId), [emitCapability]);
 
-  const closeDialog = useCallback((correlationId: string) => send({
-    receiver: OVERLAY_ADDRESS,
-    channel: "dialog",
-    action: "close",
-    value: null,
-    valueType: "none",
-    correlationId,
-  }), [send]);
+  const reloadInbox = useCallback((correlationId: string) =>
+    emitCapability("reload", null, correlationId), [emitCapability]);
 
-  const resetForm = useCallback((correlationId: string) => send({
-    receiver: FORM_ADDRESS,
-    channel: "reset",
-    action: "activate",
-    value: null,
-    valueType: "none",
-    correlationId,
-  }), [send]);
+  const closeDialog = useCallback((correlationId: string) =>
+    emitCapability("dialogClose", null, correlationId), [emitCapability]);
+
+  const resetForm = useCallback((correlationId: string) =>
+    emitCapability("formReset", null, correlationId), [emitCapability]);
 
   /* This Controller gates nothing, so the answer never varies -- but a Widget still has to hear it. */
   usePhiRuntimeConditionStateResponder({ address, scope: "page", state: { ready: true } });
@@ -143,14 +113,7 @@ function PhiThreadsControllerView({ address }: Pick<ControllerRenderArgs, "addre
     if (signal.channel === "action" && signal.action === "activate") {
       if (readPhiTableActionSignalValue(signal.value)?.actionKey !== "newConversation") return;
       setSubmitting(false);
-      send({
-        receiver: OVERLAY_ADDRESS,
-        channel: "dialog",
-        action: "activate",
-        value: null,
-        valueType: "none",
-        correlationId: signal.correlationId,
-      });
+      emitCapability("dialogOpen", null, signal.correlationId);
       return;
     }
 
@@ -166,14 +129,7 @@ function PhiThreadsControllerView({ address }: Pick<ControllerRenderArgs, "addre
         return;
       }
       if (signal.value === "save" && !submitting) {
-        send({
-          receiver: FORM_ADDRESS,
-          channel: "submit",
-          action: "activate",
-          value: null,
-          valueType: "none",
-          correlationId: signal.correlationId,
-        });
+        emitCapability("formSubmit", null, signal.correlationId);
       }
       return;
     }
@@ -194,14 +150,7 @@ function PhiThreadsControllerView({ address }: Pick<ControllerRenderArgs, "addre
     // The button shows it is working; the Form is the only one who knows that it is.
     if (signal.channel === "submitting" && signal.action === "change" && typeof signal.value === "boolean") {
       setSubmitting(signal.value);
-      send({
-        receiver: SAVE_BUTTON_ADDRESS,
-        channel: "submitting",
-        action: "change",
-        value: signal.value,
-        valueType: "boolean",
-        correlationId: signal.correlationId,
-      });
+      emitCapability("submitting", signal.value, signal.correlationId);
       return;
     }
 
@@ -232,7 +181,7 @@ function PhiThreadsControllerView({ address }: Pick<ControllerRenderArgs, "addre
     if (signal.channel === "selection") {
       sendThread(readSelectedThreadId(signal.value), signal.correlationId);
     }
-  }, [address, closeDialog, reloadInbox, resetForm, send, sendThread, submitting]), {
+  }, [address, closeDialog, emitCapability, reloadInbox, resetForm, sendThread, submitting]), {
     scopes: ["page"],
     receiver: address,
   });
@@ -242,7 +191,8 @@ function PhiThreadsControllerView({ address }: Pick<ControllerRenderArgs, "addre
 
 export const PHI_THREADS_RUNTIME_CONTROLLER_PLUGIN = {
   ...PHI_THREADS_RUNTIME_CONTROLLER_DEFINITION,
-  renderController: ({ key, address }) => <PhiThreadsControllerView key={key} address={address} />,
+  renderController: ({ key, address, config }) =>
+    <PhiThreadsControllerView key={key} address={address} config={config} />,
 } satisfies PhiRuntimeControllerPlugin<PhiThreadsControllerConfig>;
 
 export const PhiThreadsRuntimeControllerClient = createPhiRuntimeControllerClient(

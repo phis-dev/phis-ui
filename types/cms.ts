@@ -1,4 +1,4 @@
-import type { PhiRuntimeModuleId } from "./cms-plugins";
+import type { PhiRuntimeControllerSetting, PhiRuntimeModuleId } from "./cms-plugins";
 import type { PhiCmsInstanceId } from "./cms-instance-id";
 import type { PhiCmsPresetSource } from "./cms-module-descriptors";
 import type { PhiViewerAccessPolicy } from "./access";
@@ -132,6 +132,19 @@ export type PhiResolvedCmsPageTree = {
   overlays: PhiCmsOverlayNode[];
   layoutNodes: PhiCmsLayoutNode[];
   contentWidgets: PhiCmsContentWidgetNode[];
+  /**
+   * The Controllers this Page configures, and what it tells them.
+   *
+   * An Area has had this for as long as it has had Controllers -- `areaControllerSettings` on the
+   * module set -- and a Page had nothing. So a Page-scope Controller could be brought into being by a
+   * Widget asking for it and then be told nothing, which is why the Controllers on the conversations
+   * and groups Pages addressed their Widgets out of a preset id map: there was no other way to learn
+   * who to send to, and it holds only while the same code owns both ends.
+   *
+   * A Page says it here, beside the routes it already writes for every Widget on it. Demand mounting
+   * is untouched: a setting says what a Controller is configured with, not that it is running.
+   */
+  controllerSettings?: readonly PhiRuntimeControllerSetting[] | null;
 };
 
 export type PhiResolvedCmsRenderableTree = Pick<

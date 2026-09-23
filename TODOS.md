@@ -421,11 +421,6 @@ built. Remove an entry when it is done.
 
 ## Tables and Markdown
 
-- **A Controller addresses its Page by hard-coded Widget id.** Both the groups and the conversations
-  Controller name the Page's Widgets from a preset id map. It works because the same code owns both ends,
-  and it is exactly the coupling routes exist to remove: a Site that rearranges the Page keeps the routes
-  and loses the Controller. A Controller should dispatch to the receivers its own mounted configuration
-  names, the way a Widget emits to the receivers in its route set.
 - **Provider-backed Markdown table embeds.** TABLES.md defines the closed embed descriptor; no embed parser
   exists yet.
 

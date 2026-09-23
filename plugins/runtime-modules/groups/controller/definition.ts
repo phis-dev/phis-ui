@@ -1,9 +1,23 @@
-import { PHI_SIGNAL_VALUE_SCHEMAS } from "../../../../types/signals";
+import {
+  PHI_SIGNAL_VALUE_SCHEMAS,
+  readPhiSignalRouteSet,
+  type PhiSignalRouteSet,
+} from "../../../../types/signals";
 import type { PhiRuntimeControllerDefinition } from "../../../../types/cms-plugins";
 import { PHI_GROUPS_CONTROLLER_KEY,
   PHI_GROUPS_CONTROLLER_PLUGIN_KEY } from "../controller/address";
 
-export type PhiGroupsControllerConfig = Record<string, never>;
+export type PhiGroupsControllerConfig = {
+  /**
+   * Who this Controller speaks to, written by the Page that placed it.
+   *
+   * It used to hold the Widget ids of both Groups Pages at once and send to all of them, on the
+   * grounds that a signal to an address nobody listens on is not delivered. That worked and hid the
+   * real problem: the Controller knew there were two Pages, and neither Page could be rearranged.
+   * Each Page names its own receivers now, and the Controller has stopped counting Pages.
+   */
+  signalRoutes: PhiSignalRouteSet | null;
+};
 
 /**
  * Turns "a group is selected" into "show that group's members".
@@ -35,7 +49,13 @@ export const PHI_GROUPS_RUNTIME_CONTROLLER_DEFINITION = {
         valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.runtimeConditionState,
       },
       { id: "reload", action: "activate", valueType: "none" },
-      { id: "formSubmit", action: "activate", valueType: "none" },
+      /*
+       * Two submits, because they are two Forms and the toolbar asks for one of them by name. It was
+       * one output aimed by a value -- `save` against `saveMembership` -- which put the choice of
+       * receiver in the payload, where a route could not see it.
+       */
+      { id: "createSubmit", action: "activate", valueType: "none" },
+      { id: "membershipSubmit", action: "activate", valueType: "none" },
     ],
     listens: [
       {
@@ -59,5 +79,7 @@ export const PHI_GROUPS_RUNTIME_CONTROLLER_DEFINITION = {
     ],
   },
   defaultConfig: {},
-  parseConfig: (): PhiGroupsControllerConfig => ({}),
+  parseConfig: (raw): PhiGroupsControllerConfig => ({
+    signalRoutes: readPhiSignalRouteSet(raw.signalRoutes),
+  }),
 } satisfies PhiRuntimeControllerDefinition<PhiGroupsControllerConfig>;

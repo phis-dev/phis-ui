@@ -13,6 +13,10 @@ const identity = {
  * Every one of them names at least one of the others in a route, so none may be positional: the
  * listing tells the Controller what was chosen, the Controller tells the conversation and the composer,
  * and the composer asks the conversation to read itself again.
+ *
+ * Only the preset reads these. The Controller used to as well, which made it a second owner of this
+ * Page's arrangement; it takes its receivers from its own settings now, and the Page writes both
+ * directions of the wiring in one place.
  */
 export const PHI_APP_THREADS_PAGE_WIDGET_IDS = createPhiPresetCmsInstanceIdMap(identity, [
   "widgetInbox",

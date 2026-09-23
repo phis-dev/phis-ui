@@ -147,7 +147,7 @@ export async function PhiCmsRootSlotPage({
     tree: filteredPageTree,
     ownerMountScope: "page",
     widgetPluginsByType: runtimeModuleScope.widgetDefinitionsByType,
-    baseSettings: null,
+    baseSettings: resolvedRequest.page.controllerSettings ?? null,
     activeControllerTypes: [...runtimeModuleScope.moduleSet.controllerDescriptorsByType.keys()],
     regionTypes: [regionType],
   });

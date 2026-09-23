@@ -10,7 +10,11 @@ import {
 } from "../../../types/signals";
 import { PHI_THREAD_LIBRARY_DATA_PROVIDER_KEYS } from "../../../constants/thread-library-provider-keys";
 import { PhisThreadKind, PhisThreadStatus } from "../../../constants/threads";
-import { createPhiThreadsControllerAddress } from "../../../plugins/runtime-modules/threads/controller/address";
+import {
+  createPhiThreadsControllerAddress,
+  PHI_THREADS_CONTROLLER_INSTANCE_KEY,
+  PHI_THREADS_CONTROLLER_TYPE,
+} from "../../../plugins/runtime-modules/threads/controller/address";
 import {
   PHI_APP_THREADS_PAGE_LAYOUT_IDS,
   PHI_APP_THREADS_PAGE_OVERLAY_IDS,
@@ -86,6 +90,104 @@ export async function buildPhiDefaultAppThreadsPageTree({
         value: labels.description,
       },
     },
+    /*
+     * Who the Controller speaks to, said by the Page that arranges them.
+     *
+     * It used to reach into a preset id map from inside the Module, which is the coupling routes exist
+     * to remove: a Site that rearranged this Page would have kept every Widget route and lost the
+     * Controller. Now both directions are written here, in the same vocabulary -- the Widgets' `emits`
+     * point at the Controller, and these point back.
+     *
+     * Declaring it does not mount it. The Controller is still `demand`, brought into being by a Widget
+     * asking for its condition state; a setting only says what it is configured with when it is. The
+     * materializer takes the Page's word over the demand's, so this is the one that carries.
+     */
+    controllerSettings: [{
+      type: PHI_THREADS_CONTROLLER_TYPE,
+      instanceKey: PHI_THREADS_CONTROLLER_INSTANCE_KEY,
+      mountScope: "page",
+      config: {
+        signalRoutes: {
+          emits: [
+            // One capability, two receivers: the conversation and the composer both follow the choice.
+            {
+              routeKey: "app-threads-controller-thread-conversation",
+              capabilityId: "threadChange",
+              scope: "page",
+              channel: "thread",
+              action: "change",
+              valueType: "json",
+              valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.threadSelection,
+              receiver: conversationAddress,
+            },
+            {
+              routeKey: "app-threads-controller-thread-composer",
+              capabilityId: "threadChange",
+              scope: "page",
+              channel: "thread",
+              action: "change",
+              valueType: "json",
+              valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.threadSelection,
+              receiver: composerAddress,
+            },
+            {
+              routeKey: "app-threads-controller-reload-inbox",
+              capabilityId: "reload",
+              scope: "page",
+              channel: "reload",
+              action: "activate",
+              valueType: "none",
+              receiver: inboxAddress,
+            },
+            {
+              routeKey: "app-threads-controller-dialog-open",
+              capabilityId: "dialogOpen",
+              scope: "page",
+              channel: "dialog",
+              action: "activate",
+              valueType: "none",
+              receiver: overlayAddress,
+            },
+            {
+              routeKey: "app-threads-controller-dialog-close",
+              capabilityId: "dialogClose",
+              scope: "page",
+              channel: "dialog",
+              action: "close",
+              valueType: "none",
+              receiver: overlayAddress,
+            },
+            {
+              routeKey: "app-threads-controller-form-submit",
+              capabilityId: "formSubmit",
+              scope: "page",
+              channel: "submit",
+              action: "activate",
+              valueType: "none",
+              receiver: formAddress,
+            },
+            {
+              routeKey: "app-threads-controller-form-reset",
+              capabilityId: "formReset",
+              scope: "page",
+              channel: "reset",
+              action: "activate",
+              valueType: "none",
+              receiver: formAddress,
+            },
+            {
+              routeKey: "app-threads-controller-submitting",
+              capabilityId: "submitting",
+              scope: "page",
+              channel: "submitting",
+              action: "change",
+              valueType: "boolean",
+              receiver: saveButtonAddress,
+            },
+          ],
+        },
+      },
+    }],
     /*
      * The dialog that holds the form, and nothing else about it.
      *

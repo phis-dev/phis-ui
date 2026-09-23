@@ -6,7 +6,11 @@ import { createPhiCmsPresetNodes } from "../../../helpers/cms-preset-nodes";
 import type { PhiCmsPageNode, PhiResolvedCmsPageTree } from "../../../types/cms";
 import type { PhiBlockRuntime } from "../../../types";
 import { createPhiSignalAddress, PHI_SIGNAL_VALUE_SCHEMAS } from "../../../types/signals";
-import { createPhiGroupsControllerAddress } from "../../../plugins/runtime-modules/groups/controller/address";
+import {
+  createPhiGroupsControllerAddress,
+  PHI_GROUPS_CONTROLLER_INSTANCE_KEY,
+  PHI_GROUPS_CONTROLLER_TYPE,
+} from "../../../plugins/runtime-modules/groups/controller/address";
 import { PHI_APP_GROUPS_PAGE_WIDGET_IDS } from "../../../plugins/runtime-modules/groups/addresses";
 import { buildPhiBasePageContentScaffold, PHI_BASE_PAGE_LAYOUT_NODE_ID } from "./phi-base-page-layout";
 import { getPhiGroupFormLabels } from "../../../plugins/runtime-modules/groups/labels";
@@ -67,6 +71,61 @@ export async function buildPhiDefaultAppGroupsPageTree({
       title: { msgId: 0, source: "Groups", value: labels.mine.title },
       description: { msgId: 0, source: "The groups you belong to.", value: labels.mine.description },
     },
+    /*
+     * Who the Controller speaks to on this Page.
+     *
+     * It used to carry the Widget ids of both Groups Pages and send to all of them, relying on a
+     * signal to an unlistened address going nowhere. Each Page names its own receivers now, so the
+     * Controller no longer knows that the other Page exists.
+     */
+    controllerSettings: [{
+      type: PHI_GROUPS_CONTROLLER_TYPE,
+      instanceKey: PHI_GROUPS_CONTROLLER_INSTANCE_KEY,
+      mountScope: "page",
+      config: {
+        signalRoutes: {
+          emits: [
+            {
+              routeKey: "app-groups-controller-filters",
+              capabilityId: "filtersChange",
+              scope: "page",
+              channel: "filters",
+              action: "change",
+              valueType: "json",
+              valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.tableFilters,
+              receiver: membersTableAddress,
+            },
+            {
+              routeKey: "app-groups-controller-reload-my-groups",
+              capabilityId: "reload",
+              scope: "page",
+              channel: "reload",
+              action: "activate",
+              valueType: "none",
+              receiver: myGroupsTableAddress,
+            },
+            {
+              routeKey: "app-groups-controller-reload-members",
+              capabilityId: "reload",
+              scope: "page",
+              channel: "reload",
+              action: "activate",
+              valueType: "none",
+              receiver: membersTableAddress,
+            },
+            {
+              routeKey: "app-groups-controller-membership-submit",
+              capabilityId: "membershipSubmit",
+              scope: "page",
+              channel: "submit",
+              action: "activate",
+              valueType: "none",
+              receiver: membershipFormAddress,
+            },
+          ],
+        },
+      },
+    }],
     overlays: [],
     regions: [scaffold.region],
     layoutNodes: [scaffold.layoutNode],

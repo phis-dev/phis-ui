@@ -1,9 +1,12 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 
 import type { PhiRuntimeControllerPlugin } from "../../../../types";
-import { PHI_SIGNAL_VALUE_SCHEMAS, createPhiSignalAddress } from "../../../../types/signals";
+import {
+  findPhiSignalRoutesByCapabilityId,
+  type PhiSignalValue,
+} from "../../../../types/signals";
 import { readPhiTableSelectionSignalValue } from "../../../../types/table-widget";
 import { createPhiRuntimeControllerClient } from "../../../../components/runtime/runtime-controller-client-factory";
 import { PHI_GROUPS_OPTIONS_REVISION } from "../services/options-revision";
@@ -13,30 +16,10 @@ import {
   PHI_GROUPS_RUNTIME_CONTROLLER_DEFINITION,
   type PhiGroupsControllerConfig,
 } from "../controller/definition";
-import {
-  PHI_APP_GROUPS_PAGE_WIDGET_IDS,
-  PHI_GROUPS_PAGE_WIDGET_IDS,
-} from "../addresses";
 
 type ControllerRenderArgs = Parameters<NonNullable<
   PhiRuntimeControllerPlugin<PhiGroupsControllerConfig>["renderController"]
 >>[0];
-
-/*
- * Both Pages mount this Controller and each has its own membership table, so the filter goes to both
- * addresses. Only one of them exists on any given Page; a signal to an address nobody listens on is
- * simply not delivered, which is cheaper than teaching the Controller which Page it is on.
- */
-const MEMBERS_TABLE_ADDRESSES = [
-  createPhiSignalAddress("cms", PHI_GROUPS_PAGE_WIDGET_IDS.widgetMembersTable),
-  createPhiSignalAddress("cms", PHI_APP_GROUPS_PAGE_WIDGET_IDS.widgetMembersTable),
-];
-const GROUPS_TABLE_ADDRESS = createPhiSignalAddress("cms", PHI_GROUPS_PAGE_WIDGET_IDS.widgetGroupsTable);
-const CREATE_FORM_ADDRESS = createPhiSignalAddress("cms", PHI_GROUPS_PAGE_WIDGET_IDS.widgetCreateForm);
-const MEMBERSHIP_FORM_ADDRESSES = [
-  createPhiSignalAddress("cms", PHI_GROUPS_PAGE_WIDGET_IDS.widgetMembershipForm),
-  createPhiSignalAddress("cms", PHI_APP_GROUPS_PAGE_WIDGET_IDS.widgetMembershipForm),
-];
 
 /* This Controller gates nothing, so the answer never varies -- but a Widget still has to hear it. */
 const GROUPS_CONDITION_STATE = { ready: true } as const;
@@ -49,27 +32,42 @@ function readSelectedGroupId(value: unknown) {
   return Number.isSafeInteger(groupId) && groupId > 0 ? groupId : null;
 }
 
-function PhiGroupsControllerView({ address }: Pick<ControllerRenderArgs, "address">) {
+function PhiGroupsControllerView({
+  address,
+  config,
+}: Pick<ControllerRenderArgs, "address" | "config">) {
   const dispatchSignal = usePhiSignalDispatcher();
+  const emitRoutes = useMemo(() => config.signalRoutes?.emits ?? [], [config.signalRoutes?.emits]);
 
-  const sendGroupFilter = useCallback((groupId: number | null, correlationId: string) => {
-    for (const receiver of MEMBERS_TABLE_ADDRESSES) {
+  /* One declared output, delivered through every route the Page wrote for it. */
+  const emitCapability = useCallback((
+    capabilityId: string,
+    value: PhiSignalValue,
+    correlationId: string,
+  ) => {
+    for (const route of findPhiSignalRoutesByCapabilityId(emitRoutes, capabilityId)) {
+      if (route.receiver == null || (route.valueType === "json" && !route.valueSchema)) {
+        continue;
+      }
       dispatchSignal({
-        scope: "page",
+        scope: route.scope,
         sender: address,
-        receiver,
-        channel: "filters",
-        action: "change",
-        // No selection means no group, and the membership table answers that with an empty list rather
-        // than with every membership on the Site.
-        value: { groupId },
-        valueType: "json",
-        valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.tableFilters,
+        receiver: route.receiver,
+        channel: route.channel,
+        action: route.action,
+        value: route.valueType === "none" ? null : value,
+        valueType: route.valueType,
+        valueSchema: route.valueSchema ?? null,
         correlationId,
         timestamp: Date.now(),
       });
     }
-  }, [address, dispatchSignal]);
+  }, [address, dispatchSignal, emitRoutes]);
+
+  // No selection means no group, and the membership table answers that with an empty list rather than
+  // with every membership on the Site.
+  const sendGroupFilter = useCallback((groupId: number | null, correlationId: string) =>
+    emitCapability("filtersChange", { groupId }, correlationId), [emitCapability]);
 
   // Nothing about this Controller gates a Widget; answering keeps the asking Widget from waiting.
   usePhiRuntimeConditionStateResponder({ address, scope: "page", state: GROUPS_CONDITION_STATE });
@@ -77,23 +75,10 @@ function PhiGroupsControllerView({ address }: Pick<ControllerRenderArgs, "addres
   usePhiSignalListener((signal) => {
     if (signal.channel === "command") {
       // The Forms are submitted from outside, so a toolbar asks and this carries it to the right one.
-      const forms = signal.value === "save"
-        ? [CREATE_FORM_ADDRESS]
-        : signal.value === "saveMembership"
-          ? MEMBERSHIP_FORM_ADDRESSES
-          : [];
-      for (const form of forms) {
-        dispatchSignal({
-          scope: "page",
-          sender: address,
-          receiver: form,
-          channel: "submit",
-          action: "activate",
-          value: null,
-          valueType: "none",
-          correlationId: signal.correlationId,
-          timestamp: Date.now(),
-        });
+      if (signal.value === "save") {
+        emitCapability("createSubmit", null, signal.correlationId);
+      } else if (signal.value === "saveMembership") {
+        emitCapability("membershipSubmit", null, signal.correlationId);
       }
       return;
     }
@@ -104,20 +89,8 @@ function PhiGroupsControllerView({ address }: Pick<ControllerRenderArgs, "addres
        * tables are -- a group just created is not in the list the group field loaded on arrival.
        */
       PHI_GROUPS_OPTIONS_REVISION.bump();
-      // Something was written: both lists are stale, and neither knows which of them it was.
-      for (const receiver of [GROUPS_TABLE_ADDRESS, ...MEMBERS_TABLE_ADDRESSES]) {
-        dispatchSignal({
-          scope: "page",
-          sender: address,
-          receiver,
-          channel: "reload",
-          action: "activate",
-          value: null,
-          valueType: "none",
-          correlationId: signal.correlationId,
-          timestamp: Date.now(),
-        });
-      }
+      // Something was written: every list this Page named is stale, and none knows which it was.
+      emitCapability("reload", null, signal.correlationId);
       return;
     }
     sendGroupFilter(readSelectedGroupId(signal.value), signal.correlationId);
@@ -133,7 +106,8 @@ function PhiGroupsControllerView({ address }: Pick<ControllerRenderArgs, "addres
 
 export const PHI_GROUPS_RUNTIME_CONTROLLER_PLUGIN = {
   ...PHI_GROUPS_RUNTIME_CONTROLLER_DEFINITION,
-  renderController: ({ key, address }) => <PhiGroupsControllerView key={key} address={address} />,
+  renderController: ({ key, address, config }) =>
+    <PhiGroupsControllerView key={key} address={address} config={config} />,
 } satisfies PhiRuntimeControllerPlugin<PhiGroupsControllerConfig>;
 
 export const PhiGroupsRuntimeControllerClient = createPhiRuntimeControllerClient(

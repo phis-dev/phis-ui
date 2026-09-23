@@ -1,11 +1,24 @@
-import { PHI_SIGNAL_VALUE_SCHEMAS } from "../../../../types/signals";
+import {
+  PHI_SIGNAL_VALUE_SCHEMAS,
+  readPhiSignalRouteSet,
+  type PhiSignalRouteSet,
+} from "../../../../types/signals";
 import type { PhiRuntimeControllerDefinition } from "../../../../types/cms-plugins";
 import {
   PHI_THREADS_CONTROLLER_KEY,
   PHI_THREADS_CONTROLLER_PLUGIN_KEY,
 } from "./address";
 
-export type PhiThreadsControllerConfig = Record<string, never>;
+export type PhiThreadsControllerConfig = {
+  /**
+   * Who this Controller speaks to, written by the Page that placed it.
+   *
+   * It used to speak to five Widget ids out of a preset id map, which worked because the same code
+   * owned both ends and would have stopped working for a Site that rearranged the Page. A route set is
+   * how every Widget already says the same thing, so the Controller now says it the same way.
+   */
+  signalRoutes: PhiSignalRouteSet | null;
+};
 
 /**
  * Turns "a row is selected" into "that conversation", and runs the dialog that opens a new one.
@@ -104,5 +117,7 @@ export const PHI_THREADS_RUNTIME_CONTROLLER_DEFINITION = {
     ],
   },
   defaultConfig: {},
-  parseConfig: (): PhiThreadsControllerConfig => ({}),
+  parseConfig: (raw): PhiThreadsControllerConfig => ({
+    signalRoutes: readPhiSignalRouteSet(raw.signalRoutes),
+  }),
 } satisfies PhiRuntimeControllerDefinition<PhiThreadsControllerConfig>;

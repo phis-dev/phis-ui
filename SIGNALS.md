@@ -227,6 +227,12 @@ type PhiSignalRoute = {
   translates channels.
 - Deleting or replacing a receiver removes the routes that target it or its subcontrols in the same
   Builder mutation.
+- A Controller carries the same `signalRoutes` in its own config, and its Page writes them:
+  `controllerSettings` on a resolved Page tree, beside the routes that Page already writes for every
+  Widget on it. An Area does the same through `areaControllerSettings`. Before that a Page-scope
+  Controller could be told nothing, so the two that needed receivers held Widget ids from a preset id
+  map -- which is the coupling routes exist to remove, and which held only while one piece of code
+  owned both ends.
 
 ```ts
 const runtimeSignals = {
