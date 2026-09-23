@@ -160,6 +160,7 @@ export const PHI_SIGNAL_VALUE_SCHEMAS = {
   runtimeConditionState: createPhiSharedSignalValueSchema("runtime-condition-state"),
   runtimeNavigation: createPhiSharedSignalValueSchema("runtime-navigation"),
   runtimeTheme: createPhiSharedSignalValueSchema("runtime-theme"),
+  authWorkflowState: createPhiSharedSignalValueSchema("auth-workflow-state"),
   stackMeta: createPhiSharedSignalValueSchema("stack-meta"),
   tableAction: createPhiSharedSignalValueSchema("table-action"),
   tableBindingParams: createPhiSharedSignalValueSchema("table-binding-params"),

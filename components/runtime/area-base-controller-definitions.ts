@@ -13,6 +13,26 @@ import {
 
 type PhiEmptyControllerConfig = Record<string, never>;
 
+/**
+ * What the Auth Controller is handed about the viewer before it renders.
+ *
+ * Declared here rather than beside the `serverPreload` that produces it, because the Client needs the
+ * type and that module is `server-only` -- importing it from there would drag it into the Client graph
+ * for a shape that is erased at compile time.
+ */
+export type PhiAuthControllerPreload = {
+  /** What Core said, or null when this request carries no Session. */
+  workflow: import("../../types/auth-manifest").PhiAuthWorkflow | null;
+  /**
+   * That Core could not be asked, which is not the same as nobody being signed in.
+   *
+   * Kept apart on purpose: folding an unreachable Core into "anonymous" is the fault
+   * `fetchPhiAuthWorkflow` was just repaired for. The Controller then projects nothing rather than
+   * asserting a state it does not know.
+   */
+  unavailable: boolean;
+};
+
 function createPhiEmptyControllerDefinition(
   pluginKey: string,
   key: string,
@@ -75,9 +95,21 @@ export const PHI_AUTH_CONTROLLER_DEFINITION = {
         valueType: "json",
         valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.runtimeNavigation,
       },
+      /*
+       * Where the viewer stands in signing in, for the Widgets that have to arrange themselves around
+       * it. What travels is the machine's published statements and never its state keys, so a state
+       * added later cannot change what a reader was told without its author saying so.
+       */
+      {
+        id: "conditionStateChange",
+        action: "change",
+        valueType: "json",
+        valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.runtimeConditionState,
+      },
     ],
     listens: [
       { id: "loginOpen", channel: "command", action: "open", valueType: "path" },
+      { id: "conditionStateRequest", channel: "condition", action: "reload", valueType: "none" },
       {
         id: "loginResult",
         channel: "submit",

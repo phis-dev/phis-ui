@@ -166,6 +166,7 @@ const PHI_RUNTIME_MODULE_OWNERSHIP: Readonly<Record<string, readonly [module: st
   "options/theme-presets": ["theme", "presets"],
   "options/translation-contexts": ["localization", "translation-contexts"],
   "tables/auth-installations": ["auth", "installations"],
+  "signals/auth-workflow-state": ["auth", "workflow-state"],
   "signals/background-config": ["core", "background-config"],
   "signals/border-config": ["core", "border-config"],
   "signals/brand-theme": ["theme", "brand"],

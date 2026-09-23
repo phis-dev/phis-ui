@@ -2,7 +2,16 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-import { PHI_AUTH_CONTROLLER_DEFINITION } from "./area-base-controller-definitions";
+import {
+  PHI_AUTH_CONTROLLER_DEFINITION,
+  type PhiAuthControllerPreload,
+} from "./area-base-controller-definitions";
+import { usePhiStateMachineBinding } from "./phi-state-machine-binding";
+import { usePhiRuntimeConditionStateResponder } from "./runtime-condition-state-responder";
+import {
+  PHI_AUTH_MACHINE_DEFINITION,
+  PHI_AUTH_MACHINE_REFERENCE,
+} from "../../plugins/runtime-modules/auth/machine";
 import type { PhiRuntimeControllerPlugin } from "../../types";
 import {
   createPhiSignalCorrelationId,
@@ -30,8 +39,47 @@ type PhiAuthControllerRenderArgs = Parameters<NonNullable<
 function PhiAuthControllerView({
   address,
   runtime,
-}: Pick<PhiAuthControllerRenderArgs, "address" | "runtime">) {
+  preloadData,
+}: Pick<PhiAuthControllerRenderArgs, "address" | "runtime"> & {
+  preloadData?: PhiAuthControllerPreload | null;
+}) {
   const dispatchSignal = usePhiSignalDispatcher();
+
+  /*
+   * Where signing in stands, held here rather than in the Widget that draws the second factor.
+   *
+   * It used to live in that Widget's `useState`, fed by a field on the login response, so a reload
+   * part-way through a factor lost a state Core would still have answered for. The machine is a
+   * projection: nothing here computes a next state, and what it shows is what `serverPreload` read.
+   */
+  const machine = usePhiStateMachineBinding({
+    definition: PHI_AUTH_MACHINE_DEFINITION,
+    reference: PHI_AUTH_MACHINE_REFERENCE,
+  });
+
+  /*
+   * An unreachable Core leaves the machine alone. `anonymous` would be an assertion about somebody this
+   * render could not ask about, and on a Login page that assertion shows the sign-in form to a visitor
+   * who is half-way through a second factor.
+   */
+  const projectedState = preloadData?.unavailable
+    ? null
+    : preloadData?.workflow?.state ?? "anonymous";
+  const project = machine.project;
+  useEffect(() => {
+    if (projectedState) project(projectedState);
+  }, [project, projectedState]);
+
+  /*
+   * The answer Widgets condition on, and it carries statements rather than the state key. A Widget
+   * asking "may somebody start signing in here" gets `false` from a state it has never heard of, which
+   * is what a negation over an open set of states could not do.
+   */
+  usePhiRuntimeConditionStateResponder({
+    address,
+    scope: "area",
+    state: machine.snapshot.statements,
+  });
   const pendingOpenRef = useRef<{ correlationId: string; nextPath: string } | null>(null);
   const [openSequence, setOpenSequence] = useState(0);
   const locale = runtime.locale.current;
@@ -225,13 +273,14 @@ function PhiAuthControllerView({
 
 const PHI_AUTH_CONTROLLER_CLIENT_PLUGIN = {
   ...PHI_AUTH_CONTROLLER_DEFINITION,
-  renderController: ({ address, runtime }) => (
+  renderController: ({ address, runtime, preloadData }) => (
     <PhiAuthControllerView
       address={address}
       runtime={runtime}
+      preloadData={preloadData}
     />
   ),
-} satisfies PhiRuntimeControllerPlugin<Record<string, never>>;
+} satisfies PhiRuntimeControllerPlugin<Record<string, never>, PhiAuthControllerPreload>;
 
 export const PhiAuthControllerClient = createPhiRuntimeControllerClient(
   PHI_AUTH_CONTROLLER_CLIENT_PLUGIN,

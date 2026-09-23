@@ -169,12 +169,16 @@ type PhiStateMachineDefinitionBase = {
    */
   readonly statements: readonly string[];
   /**
-   * The shape a snapshot travels under, and the shape a `profile` checkpoint is stored as.
+   * The shape of the `data` a snapshot carries -- not of the snapshot itself.
    *
-   * One declaration for both, because the user-state `value` shape asks for exactly this: a
-   * `<package>/signals/<key>` schema, owned by the defining Module, checkable by a third party. A
-   * machine that could not name the shape of its own position could not have published a snapshot
-   * either.
+   * The envelope is identical for every machine: reference, version, state key, statements. What
+   * differs is what a state hangs off it, and that is the part a reader has to know in advance and a
+   * third party or phi-server can check. The `<package>/signals/<key>` grammar because a snapshot
+   * travels as a signal value, and because the user-state `value` shape asks for a schema of exactly
+   * that form -- so a `profile` machine names this once and both hold it to it.
+   *
+   * Required even from a machine that carries no data yet. One that cannot name the shape of what it
+   * publishes has not finished deciding what it publishes.
    */
   readonly snapshotSchema: PhiSignalValueSchema;
   /**
