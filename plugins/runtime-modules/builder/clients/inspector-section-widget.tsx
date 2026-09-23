@@ -275,11 +275,26 @@ function usePhiBuilderInspectorSectionState(signalRoutes?: PhiSignalRouteSet) {
       ? findPhiBuilderWidgetNodeByIdInWidgets(selectedRootDraft.rootNodeChildWidgets ?? [], nodeId) ??
         findPhiBuilderWidgetNodeByIdInLayouts(selectedRootDraft.rootNodeChildLayouts ?? [], nodeId)
       : null;
+  /*
+   * Which plugin the selection is, asked in the order that can only answer about the selection itself.
+   *
+   * The root node's type belongs to the root node. Reaching for it whenever a nested layout was not
+   * found in the draft answers with a DIFFERENT block: the Inspector then read its fields off the root
+   * -- a Content wrapper declares nothing but padding -- and the Settings panel, which hides itself when
+   * a layout declares no settings, hid for every layout on the page. The header kept the right name the
+   * whole time, because `PhiInspectorTitle` resolves the plugin from `nodeKey` instead.
+   *
+   * So the root's type is used only where the selection IS the root, and everything else falls back to
+   * `nodeKey`, which is what the title already matches on. A missing draft now costs the fields of the
+   * block that is selected, never the fields of another one.
+   */
   const selectedStructureTypeKey =
     nodeKind === "widget"
       ? selectedWidgetNode?.widgetType ?? nodeKey
       : nodeKind === "layout"
-        ? selectedNestedLayoutNode?.widgetType ?? selectedRootDraft?.rootNodeTypeKey ?? nodeKey
+        ? selectedNestedLayoutNode?.widgetType
+          ?? (nodeId == null || nodeId === selectedRootNodeId ? selectedRootDraft?.rootNodeTypeKey : null)
+          ?? nodeKey
         : nodeKey;
   const selectedStructurePlugin = activeBuilderPlugins.find((plugin) =>
     plugin.kind === nodeKind &&
