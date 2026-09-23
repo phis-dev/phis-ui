@@ -38,7 +38,6 @@ const SYNTHETIC_ADMIN_WIDGET_IDS = createPhiPresetCmsInstanceIdMap({
 }, [
   "widgetSiderLeftNav",
   "widgetHeaderTopAccount",
-  "widgetHeaderTopThemeModeSwitch",
   "widgetHeaderMainPageTitle",
 ]);
 
@@ -193,18 +192,6 @@ export async function buildPhiDefaultAdminAreaPresetTree({
       }),
     ],
     contentWidgets: [
-      nodes.widget({
-        typeKey: "theme-mode-switch",
-        id: SYNTHETIC_ADMIN_WIDGET_IDS.widgetHeaderTopThemeModeSwitch,
-        parentLayoutNodeId: SYNTHETIC_ADMIN_LAYOUT_IDS.layoutHeaderTop,
-        slotIndex: PHI_CMS_THREE_COLUMN_LAYOUT_SLOT_INDEX.Left,
-        sortOrder: 0,
-        label: "Theme mode switch",
-        config: {
-          checkedChildren: "Dark",
-          unCheckedChildren: "Light",
-        },
-      }),
       nodes.widget({
         typeKey: "page-title",
         id: SYNTHETIC_ADMIN_WIDGET_IDS.widgetHeaderMainPageTitle,
