@@ -1,4 +1,5 @@
 "use client";
+import { fetchPhiCsrfToken } from "../../helpers/csrf-token";
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -66,14 +67,11 @@ export function PhiCoreRuntimeApplicationAdapter({ siteKey }: { siteKey?: string
   useEffect(() => registerPhiSignalInstance(partition, { address, scope: "site" }), [address, partition]);
 
   const signOut = useCallback(async () => {
-    const csrfResponse = await fetch("/api/auth/csrf", {
-      method: "GET",
-      credentials: "include",
-      cache: "no-store",
-    });
-    const csrfPayload = (await csrfResponse.json().catch(() => ({}))) as { token?: string };
-    const csrfToken = csrfPayload.token?.trim() ?? "";
-    if (!csrfResponse.ok || !csrfToken) {
+    /* A session that cannot be ended here is ended by its own expiry; there is no surface to report to. */
+    let csrfToken: string;
+    try {
+      csrfToken = await fetchPhiCsrfToken();
+    } catch {
       return;
     }
 

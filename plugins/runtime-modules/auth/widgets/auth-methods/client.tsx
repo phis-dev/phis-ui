@@ -12,6 +12,7 @@ import { PhiFlexControl } from "../../../../../components/controls/phi-flex-cont
 import { PHI_SPACE } from "../../../../../theme/antd-css-var-contract";
 import { PHI_LAYOUT } from "../../../../../theme/phi-tokens";
 import { PhiIcon } from "../../../../../components/shell/phi-icon";
+import { fetchPhiCsrfToken } from "../../../../../helpers/csrf-token";
 
 export type PhiAuthMethodsWidgetClientProps = {
   methods: PhiPublicAuthManifest["methods"];
@@ -23,14 +24,6 @@ export type PhiAuthMethodsWidgetClientProps = {
     unavailable: string;
   };
 };
-
-async function getCsrfToken(unavailable: string) {
-  const response = await fetch("/api/auth/csrf", { credentials: "include", cache: "no-store" });
-  const payload = await response.json().catch(() => null) as { token?: unknown } | null;
-  const token = typeof payload?.token === "string" ? payload.token : "";
-  if (!response.ok || !token) throw new Error(unavailable);
-  return token;
-}
 
 export function PhiAuthMethodsWidgetClient({
   methods,
@@ -45,7 +38,7 @@ export function PhiAuthMethodsWidgetClient({
     setStartingMethod(method.methodKey);
     setError(null);
     try {
-      const csrfToken = await getCsrfToken(labels.unavailable);
+      const csrfToken = await fetchPhiCsrfToken({ unavailableMessage: labels.unavailable });
       const next = normalizeLoginRedirectTarget(page.query.next) ?? page.path;
       const response = await fetch(method.startPath, {
         method: "POST",

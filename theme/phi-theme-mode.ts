@@ -1,4 +1,5 @@
 import type { PhiThemeMode } from "./phi-theme-presets";
+import { fetchPhiCsrfToken } from "../helpers/csrf-token";
 
 /**
  * How a viewer wants to see a Site. It is never part of a Theme: a Theme record and its drafts carry
@@ -176,17 +177,14 @@ export async function storePhiThemeModePreferenceOnAccount(
   preference: PhiThemeModePreference,
 ): Promise<void> {
   try {
-    const csrfResponse = await fetch("/api/auth/csrf", {
-      method: "GET",
-      credentials: "include",
-      cache: "no-store",
-    });
-    if (!csrfResponse.ok) {
-      return;
-    }
-    const csrfPayload = (await csrfResponse.json().catch(() => ({}))) as { token?: string };
-    const csrfToken = csrfPayload.token?.trim() ?? "";
-    if (!csrfToken) {
+    /*
+     * A preference that cannot be saved stays applied for this visit. The cookie already carries it, so
+     * there is nothing to tell somebody who only changed how the page looks.
+     */
+    let csrfToken: string;
+    try {
+      csrfToken = await fetchPhiCsrfToken();
+    } catch {
       return;
     }
     await fetch("/api/auth/profile/theme", {

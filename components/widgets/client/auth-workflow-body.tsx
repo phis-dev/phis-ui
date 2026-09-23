@@ -9,20 +9,13 @@ import { PhiAlertControl } from "../../controls/phi-alert-control";
 import { PhiFlexControl } from "../../controls/phi-flex-control";
 import { PhiTypographyControl } from "../../controls/phi-typography-control";
 import { PhiQrCodeControl } from "../../controls/phi-qr-code-control";
+import { fetchPhiCsrfToken } from "../../../helpers/csrf-token";
 
 type Enrollment = {
   factorId: string;
   manualKey: string;
   otpauthUri: string;
 };
-
-async function getCsrfToken() {
-  const response = await fetch("/api/auth/csrf", { credentials: "include", cache: "no-store" });
-  const payload = await response.json().catch(() => null) as { token?: unknown } | null;
-  const token = typeof payload?.token === "string" ? payload.token : "";
-  if (!response.ok || !token) throw new Error("Could not initialize authentication session.");
-  return token;
-}
 
 /**
  * Which of the two things this is, which is not the same question as what state a Session is in.
@@ -63,7 +56,7 @@ export function PhiAuthWorkflowBody({
     setBusy(true);
     setError(null);
     try {
-      const token = await getCsrfToken();
+      const token = await fetchPhiCsrfToken();
       const response = await fetch("/api/auth/workflow/totp/enroll", {
         method: "POST",
         credentials: "include",
@@ -86,7 +79,7 @@ export function PhiAuthWorkflowBody({
     setBusy(true);
     setError(null);
     try {
-      const token = await getCsrfToken();
+      const token = await fetchPhiCsrfToken();
       const enrolling = mode === "enroll";
       const response = await fetch(
         enrolling ? "/api/auth/workflow/totp/confirm" : "/api/auth/workflow/verify",

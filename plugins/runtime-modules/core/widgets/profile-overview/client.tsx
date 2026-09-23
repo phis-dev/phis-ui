@@ -1,4 +1,5 @@
 "use client";
+import { fetchPhiCsrfToken } from "../../../../../helpers/csrf-token";
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -64,16 +65,9 @@ export function PhiProfileOverviewWidgetClient({
     setError(null);
 
     try {
-      const csrfResponse = await fetch("/api/auth/csrf", {
-        method: "GET",
-        credentials: "include",
-        cache: "no-store",
+      const csrfToken = await fetchPhiCsrfToken({
+        unavailableMessage: labels.feedback.errorNetwork,
       });
-      const csrfPayload = (await csrfResponse.json().catch(() => ({}))) as { token?: string };
-      const csrfToken = csrfPayload.token?.trim() ?? "";
-      if (!csrfResponse.ok || !csrfToken) {
-        throw new Error(labels.feedback.errorNetwork);
-      }
 
       const response = await fetch("/api/auth/profile/newsletter", {
         method: "PATCH",

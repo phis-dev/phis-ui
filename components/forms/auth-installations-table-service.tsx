@@ -9,6 +9,7 @@ import {
   type PhiTableProviderRecordRequest,
 } from "../../types/table-widget";
 import { createPhiTableProviderClient } from "../widgets/client/shared/phi-table-provider";
+import { fetchPhiCsrfToken } from "../../helpers/csrf-token";
 import { PHI_AUTH_RUNTIME_DATA_PROVIDER_DESCRIPTORS } from "../../plugins/runtime-modules/auth/data-providers";
 
 const API_PATH = "/api/auth/admin/installations";
@@ -50,13 +51,13 @@ async function readApiResponse(response: Response) {
   return payload;
 }
 
+/* The shared reader throws a plain Error; a Table Provider has to fail in its own vocabulary. */
 async function getCsrfToken(signal?: AbortSignal) {
-  const response = await fetch("/api/auth/csrf", { credentials: "include", cache: "no-store", signal });
-  const payload = await response.json().catch(() => null) as { token?: unknown } | null;
-  if (!response.ok || typeof payload?.token !== "string" || !payload.token) {
+  try {
+    return await fetchPhiCsrfToken({ signal });
+  } catch {
     throw new PhiTableProviderError("request-failed", "Could not initialize the secure settings request.");
   }
-  return payload.token;
 }
 
 async function loadInstallations(signal?: AbortSignal) {

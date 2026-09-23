@@ -1,4 +1,5 @@
 "use client";
+import { fetchPhiCsrfToken } from "../../../../../helpers/csrf-token";
 
 import { usePathname } from "next/navigation";
 
@@ -72,15 +73,11 @@ export function PhiSidebarNavigationWidgetClient({
       return;
     }
 
-    const csrfResponse = await fetch("/api/auth/csrf", {
-      method: "GET",
-      credentials: "include",
-      cache: "no-store",
-    });
-    const csrfPayload = (await csrfResponse.json().catch(() => ({}))) as { token?: string };
-    const csrfToken = csrfPayload.token?.trim() ?? "";
-
-    if (!csrfResponse.ok || !csrfToken) {
+    /* Nothing to tell somebody who clicked sign out: the menu closes either way. */
+    let csrfToken: string;
+    try {
+      csrfToken = await fetchPhiCsrfToken();
+    } catch {
       return;
     }
 

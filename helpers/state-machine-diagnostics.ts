@@ -7,8 +7,8 @@ import type { PhiStateMachineReference } from "../types/state-machine";
  * Beside the binding rather than inside it, because whether a fault is worth printing is a decision
  * about a definition and not about a component: the same event from the same state is the same fault in
  * a test, in a render, and in a Controller that never renders at all. It is still the binding's and
- * never a host's -- written per host is how `getCsrfToken` ended up with six spellings and logout with
- * three error postures, two of which discarded the failure silently.
+ * never a host's -- written per host is how fetching a CSRF token ended up written ten times in four
+ * spellings, three of which discarded the failure silently.
  *
  * The levels are the signal bus's three, because a machine's faults are the same three faults and a
  * fourth vocabulary would only mean two things to learn:

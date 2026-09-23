@@ -10,6 +10,7 @@ import { PhiConfirmControl } from "../../../../../components/controls/phi-confir
 import { PhiFlexControl } from "../../../../../components/controls/phi-flex-control";
 import { PhiTypographyControl } from "../../../../../components/controls/phi-typography-control";
 import { PhiSkeletonControl } from "../../../../../components/controls/phi-skeleton-control";
+import { fetchPhiCsrfToken } from "../../../../../helpers/csrf-token";
 import {
   formatPhiAuthSecurityWidgetLabel,
   type PhiAuthSecurityWidgetLabels,
@@ -19,18 +20,6 @@ const PhiAuthWorkflowBody = lazy(
   () => import("../../../../../components/widgets/client/auth-workflow-body")
     .then((module) => ({ default: module.PhiAuthWorkflowBody })),
 );
-
-/**
- * The sentence is passed in rather than written here, because it is the one the visitor reads and every
- * other one on this surface comes from the label set.
- */
-async function getCsrfToken(unavailableMessage: string) {
-  const response = await fetch("/api/auth/csrf", { credentials: "include", cache: "no-store" });
-  const payload = await response.json().catch(() => null) as { token?: unknown } | null;
-  const token = typeof payload?.token === "string" ? payload.token : "";
-  if (!response.ok || !token) throw new Error(unavailableMessage);
-  return token;
-}
 
 type SecurityPayload = {
   ok: boolean;
@@ -102,7 +91,7 @@ export function PhiAuthSecurityWidgetClient({
 
   async function removeFactor(factorId: string) {
     try {
-      const token = await getCsrfToken(labels.errors.csrfFailed);
+      const token = await fetchPhiCsrfToken({ unavailableMessage: labels.errors.csrfFailed });
       const response = await fetch(`/api/auth/account/factors/${encodeURIComponent(factorId)}`, {
         method: "DELETE",
         credentials: "include",
@@ -119,7 +108,7 @@ export function PhiAuthSecurityWidgetClient({
 
   async function revokeSession(sessionId: string) {
     try {
-      const token = await getCsrfToken(labels.errors.csrfFailed);
+      const token = await fetchPhiCsrfToken({ unavailableMessage: labels.errors.csrfFailed });
       const response = await fetch(`/api/auth/account/sessions/${encodeURIComponent(sessionId)}`, {
         method: "DELETE",
         credentials: "include",

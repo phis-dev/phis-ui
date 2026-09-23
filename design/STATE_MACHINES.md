@@ -61,9 +61,15 @@ three meet:
   `plugins/runtime-modules/auth/definition.ts`) are declared, typed, script-validated and documented.
   Only `primary` and `primary-login` are ever read. Six of eight values are vocabulary waiting for a
   mechanism that does not exist.
-- `getCsrfToken` is written six times across Auth and Core clients, and logout is implemented three times
-  -- Widget, sidebar menu, Core Runtime adapter -- with three different endings and three different error
-  postures, two of which discard the failure silently.
+- ~~`getCsrfToken` is written six times across Auth and Core clients~~ -- **ten, and now once.** Counting
+  them found four more than this document claimed, in four spellings: two threw a hard-coded English
+  sentence, two threw a sentence from a Label Set, one threw a `PhiTableProviderError`, and three gave up
+  without a word -- a logout that quietly did nothing, a theme preference that quietly stayed unsaved.
+  `helpers/csrf-token.ts` holds the request now, and the endpoint path with it, which had been written out
+  ten times as well. It throws rather than returning null, because a null is what invites the `if` that
+  was forgotten three times; a caller that means to stay quiet writes a `catch` and is quiet on purpose.
+- Logout is still implemented three times -- Widget, sidebar menu, Core Runtime adapter -- with three
+  different endings. Only the token they all needed was shared; what they do with it was not touched.
 
 ## Core model
 
@@ -451,8 +457,8 @@ transitions](#states-events-and-transitions) already requires. Divergence sits w
 detecting it costs a comparison on every read.
 
 All of it belongs to the binding and none of it to the host. Diagnostics written per host is how
-`getCsrfToken` ended up with six spellings and logout with three different error postures, two of which
-discarded the failure silently.
+`getCsrfToken` ended up written ten times in four spellings, three of which discarded the failure
+silently. It is one function now; logout still is not.
 
 Built as [helpers/state-machine-diagnostics.ts](../helpers/state-machine-diagnostics.ts). One line of
 this table needed sharpening twice, and both times in the same direction -- towards saying less.

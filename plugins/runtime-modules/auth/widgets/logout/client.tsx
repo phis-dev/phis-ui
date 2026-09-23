@@ -1,4 +1,5 @@
 "use client";
+import { fetchPhiCsrfToken } from "../../../../../helpers/csrf-token";
 
 import { useEffect, useState } from "react";
 
@@ -25,14 +26,10 @@ export function PhiAuthLogoutWidgetClient({
     const controller = new AbortController();
     async function logout() {
       try {
-        const csrfResponse = await fetch("/api/auth/csrf", {
-          credentials: "include",
-          cache: "no-store",
+        const token = await fetchPhiCsrfToken({
           signal: controller.signal,
+          unavailableMessage: "Logout could not be initialized.",
         });
-        const csrfPayload = await csrfResponse.json().catch(() => null) as { token?: unknown } | null;
-        const token = typeof csrfPayload?.token === "string" ? csrfPayload.token : "";
-        if (!csrfResponse.ok || !token) throw new Error("Logout could not be initialized.");
 
         const headers = new Headers({ "x-csrf-token": token });
         if (siteKey) headers.set(PHIS_SITE_KEY_HEADER, siteKey);
