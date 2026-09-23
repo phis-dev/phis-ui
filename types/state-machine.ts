@@ -1,6 +1,6 @@
 import { isPhiSignalValueSchemaShape, type PhiSignalValueSchema } from "./signals";
 import type { PhiRuntimeConditionExpression } from "./runtime-condition";
-import type { PhiCmsPresetIdentity, PhiRuntimeModuleId } from "./cms-module-descriptors";
+import type { PhiRuntimeModuleId } from "./cms-module-descriptors";
 
 /**
  * A named description of the states one piece of work can be in, and how it moves between them.
@@ -10,13 +10,16 @@ import type { PhiCmsPresetIdentity, PhiRuntimeModuleId } from "./cms-module-desc
  * checks a write against. A machine definition belongs to a Module the way a Controller descriptor does,
  * and the guards below are `PhiRuntimeConditionExpression`, which is itself stored on CMS nodes and read
  * by nobody on the server side. Moving this across would drag that whole vocabulary to a party with no
- * use for it. ([design/STATE_MACHINES.md](../design/STATE_MACHINES.md) -- and note that document is a
- * design: this file is the grammar, `PhiStateMachineBinding` does not exist yet.)
+ * use for it. ([design/STATE_MACHINES.md](../design/STATE_MACHINES.md), which is still a design: this is
+ * the grammar and the binding runs it, but most of what that document describes is unbuilt.)
  *
  * Nothing here is executable and nothing here is a reference to something executable. A definition is
  * serializable on the same terms as a Form descriptor: no callbacks, no element references, no
- * selectors, no credentials, and no route targets. Where a machine has to reach something -- a signal to
- * raise, a reader to call, a Page to forward to -- it names it, and the host resolves the name.
+ * selectors, no credentials, and no route targets. The design also gives a transition *effects* -- a
+ * signal to raise, a reader to call, a Page to forward to, each named rather than carried. They are not
+ * here, because the one machine that exists does not need them: its answer arrives on the same signal
+ * that raises the event, so a `read` would buy a second request for something already in hand. A
+ * machine whose outcome arrives separately is what would bring them back.
  */
 
 /**
@@ -25,8 +28,7 @@ import type { PhiCmsPresetIdentity, PhiRuntimeModuleId } from "./cms-module-desc
  * This is the first field of a definition rather than an implementation detail, because it is the field
  * that makes a whole class of mistake unavailable. Under `server` there is no local transition function
  * to write, so a third party structurally cannot rebuild a security state machine in the browser -- which
- * is what `phis-server` AUTHENTICATION.md §9 forbids in prose today and what the Auth security Widget
- * does anyway, for want of anywhere to put the state.
+ * is what `phis-server` AUTHENTICATION.md §9 forbids in prose.
  *
  * A machine never mixes the two. Work that is partly server-owned -- a checkout whose payment step is
  * settled elsewhere -- is two machines that coordinate, not one machine that is half of each.
@@ -82,9 +84,10 @@ export type PhiStateMachineReference = {
  * One state, and the two things it may say about itself.
  *
  * A state is a name first. `statements` is what outside readers see (below); `capability` is what the
- * state needs in order to be shown at all -- the vocabulary `capabilitiesByArea` already declares and
- * nothing reads. Naming it here is what lets a Site policy fail closed at resolution, when a machine
- * can reach a state no active provider can present, instead of failing in front of the visitor.
+ * state needs in order to be shown at all, in the vocabulary `capabilitiesByArea` declares. Naming it
+ * here is what gave that vocabulary a reader: a host asks its Area's provider whether it offers what
+ * the state needs, and a state nobody here can present says so rather than leaving a visitor in front
+ * of an empty step.
  *
  * There is deliberately no `terminal` flag. A state with no transition out of it is terminal by being
  * one, and a second spelling of that fact is a second thing to keep true.
@@ -95,26 +98,6 @@ export type PhiStateMachineState = {
   /** The presentation capability this state needs a provider for. */
   readonly capability?: string;
 };
-
-/**
- * What a transition asks its host to do, once it has been taken.
- *
- * The binding performs none of these. It says what should happen and the host does it, which is the
- * same split `PhiTableBinding` has and the reason a machine can live in a Controller without the
- * Controller's powers leaking into it. A definition that wanted to touch `window`, the router or a
- * gateway could not express it here, which is the point.
- *
- * - `signal` names a `capabilityId` from the host's own `runtimeSignals`, so the address is whatever
- *   the Builder wired that capability to -- and an unwired one is a wiring fault the bus already
- *   reports, not a silent no-op invented here.
- * - `forward` names a Page by preset identity, resolved through the current route table.
- * - `read` re-reads the authoritative state. Only meaningful under `server` authority, where it is how
- *   a transition says "the outcome is whatever Core says next".
- */
-export type PhiStateMachineEffect =
-  | { readonly kind: "signal"; readonly capabilityId: string }
-  | ({ readonly kind: "forward" } & PhiCmsPresetIdentity)
-  | { readonly kind: "read" };
 
 /**
  * `(from, event) -> to`, optionally guarded.
@@ -132,7 +115,6 @@ export type PhiStateMachineTransition = {
   readonly event: string;
   readonly to: string;
   readonly when?: PhiRuntimeConditionExpression;
-  readonly effects?: readonly PhiStateMachineEffect[];
 };
 
 type PhiStateMachineDefinitionBase = {

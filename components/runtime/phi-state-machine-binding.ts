@@ -18,7 +18,6 @@ import type { PhiRuntimeConditionSourceValues } from "../../types/runtime-condit
 import type {
   PhiStateMachineCheckpoint,
   PhiStateMachineDefinition,
-  PhiStateMachineEffect,
   PhiStateMachineReference,
   PhiStateMachineSnapshot,
 } from "../../types/state-machine";
@@ -26,15 +25,14 @@ import type {
 /**
  * A machine, held by whoever hosts it, performing nothing.
  *
- * The binding decides what should happen; the host is what does it. It never dispatches a signal, asks
- * the Core Runtime Controller for a forward, calls a gateway, writes a checkpoint or touches `window` --
- * those come back as effects for the host, which is what lets a machine live inside a Controller without
- * the Controller's powers leaking into a definition a third party wrote. It is the split
- * `PhiTableBinding` already has.
+ * The binding decides where the machine stands; the host is what acts on it. It never dispatches a
+ * signal, navigates, calls a gateway, writes a checkpoint or touches `window` -- it answers, and the
+ * Controller does. That is what lets a machine live inside a Controller without the Controller's powers
+ * leaking into a definition a third party wrote, and it is the split `PhiTableBinding` already has.
  *
  * A Widget never holds one. [SIGNALS.md](../../SIGNALS.md) says listen routes update local state only
- * and never emit another signal implicitly; a machine in a Widget would break that on every transition
- * that has an effect. Keeping it in the Controller is what keeps that rule true.
+ * and never emit another signal implicitly; a machine in a Widget would break that the moment a
+ * transition made its host do something. Keeping it in the Controller is what keeps that rule true.
  *
  * What it decides lives in `helpers/state-machine-binding.ts` and what it says out loud in
  * `helpers/state-machine-diagnostics.ts`. That is the split `helpers/table-binding.ts` already has
@@ -60,7 +58,6 @@ type PhiStateMachinePosition = {
 export type PhiStateMachineSendResult = {
   /** Whether the machine moved. Under `server` authority this is always false: Core decides. */
   readonly taken: boolean;
-  readonly effects: readonly PhiStateMachineEffect[];
   /** The position for the host to keep, or null when this machine keeps none. */
   readonly checkpoint: PhiStateMachineCheckpoint | null;
   readonly snapshot: PhiStateMachineSnapshot;
@@ -113,8 +110,8 @@ export function usePhiStateMachineBinding({
    * A projection changing state is the ordinary case -- that is what a projection does -- so a report
    * on every change would be noise, and noise is how the one that matters gets missed. What is
    * surprising is a re-read that disagrees with what was on screen while nothing was asked: another tab
-   * finished the flow, a Session expired underneath, or an effect reported a transition the server
-   * never made. Sending sets this; projecting clears it.
+   * finished the flow, a Session expired underneath, or the host projected a state without raising the
+   * event that would have asked for it. Sending sets this; projecting clears it.
    *
    * It starts owed for a projection, and that is not a convenience. A projection's first state always
    * arrives unasked -- the host mounts, reads, and hands over whatever Core said -- so treating that as
@@ -143,9 +140,11 @@ export function usePhiStateMachineBinding({
     /*
      * Under server authority an event is a request and never a transition.
      *
-     * The effects still go out -- that is how the request reaches Core -- but nothing here moves, and
-     * the next state arrives through `project`. A binding that guessed the outcome and corrected itself
-     * afterwards would be showing a state no server ever said.
+     * Nothing here moves: the next state arrives through `project`. A binding that guessed the outcome
+     * and corrected itself afterwards would be showing a state no server ever said. What the send does
+     * is record that an answer is owed, so the projection that follows is progress and not a
+     * contradiction -- and put the transition table to use, since an event from a state that does not
+     * answer to it is a fault worth reporting.
      */
     if (definition.authority === "server") {
       const resolution = resolvePhiStateMachineTransition(definition, from, event, sources);
@@ -153,7 +152,6 @@ export function usePhiStateMachineBinding({
         reportPhiStateMachineRefusal(reference, resolution.refusal, from, event);
         return {
           taken: false,
-          effects: [],
           checkpoint: null,
           snapshot: readPhiStateMachineSnapshot(definition, reference, from, data),
         } as const;
@@ -161,7 +159,6 @@ export function usePhiStateMachineBinding({
       awaitingAnswer.current = true;
       return {
         taken: false,
-        effects: resolution.transition.effects ?? [],
         checkpoint: null,
         snapshot: readPhiStateMachineSnapshot(definition, reference, from, data),
       } as const;
@@ -172,27 +169,22 @@ export function usePhiStateMachineBinding({
       reportPhiStateMachineRefusal(reference, resolution.refusal, from, event);
       return {
         taken: false,
-        effects: [],
         checkpoint: null,
         snapshot: readPhiStateMachineSnapshot(definition, reference, from, data),
       } as const;
     }
 
     const to = resolution.transition.to;
-    const effects = resolution.transition.effects ?? [];
 
     /*
      * A transition onto the state the machine is already in reports nothing and keeps nothing.
      *
-     * Its effects still run, because a transition that asks for something is asking whether or not the
-     * name of the state changes. What is suppressed is the render and the checkpoint: a position that
-     * did not move is not worth a round trip, and a change signal for a state nobody left is the kind
-     * of no-op that ends up in a loop.
+     * What is suppressed is the render and the checkpoint: a position that did not move is not worth a
+     * round trip, and a change signal for a state nobody left is the kind of no-op that ends in a loop.
      */
     if (to === from) {
       return {
         taken: true,
-        effects,
         checkpoint: null,
         snapshot: readPhiStateMachineSnapshot(definition, reference, from, data),
       } as const;
@@ -208,7 +200,6 @@ export function usePhiStateMachineBinding({
     setRendered(next);
     return {
       taken: true,
-      effects,
       checkpoint: readPhiStateMachineCheckpoint(definition, to),
       snapshot: readPhiStateMachineSnapshot(definition, reference, to),
     } as const;

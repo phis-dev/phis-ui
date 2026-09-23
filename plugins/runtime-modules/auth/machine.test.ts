@@ -113,14 +113,4 @@ describe("what the Controller raises", () => {
     expect(resolve("factor-challenge-required", "authenticated"))
       .toEqual({ taken: false, refusal: "unknown-event" });
   });
-
-  /*
-   * A projection usually wants a `read` effect. This one does not: the workflow arrives on the same
-   * signal that raises the event, so a read would spend a second request on an answer already in hand.
-   */
-  it("carries no effects at all", () => {
-    for (const transition of Object.values(PHI_AUTH_MACHINE_DEFINITION.transitions)) {
-      expect(transition.effects).toBeUndefined();
-    }
-  });
 });

@@ -217,9 +217,10 @@ This field is what keeps a third party from rebuilding a security state machine 
 - **Waiting and failing are states, not flags beside them.** Today every Controller carries its own
   `submitting` and `error` next to whatever it considers the real state; that is where the divergence in
   loading and error presentation comes from. A definition that needs "submitted and waiting" names it.
-- A transition may declare effects. An effect is a request to the host: dispatch this declared signal, ask
-  the Core Runtime Controller for this forward, call this declared reader. The binding performs none of
-  them itself and never touches `window`, the router, or a gateway.
+- A transition may declare effects: dispatch this declared signal, ask the Core Runtime Controller for
+  this forward, call this declared reader. The binding would perform none of them itself and never touch
+  `window`, the router, or a gateway -- it asks, the host acts. **Designed, not built.** The one machine
+  that exists needs none, so the grammar carries none; see [What is still open](#what-is-still-open).
 - Guards, effects, and the state table are the whole of a machine's behaviour. A definition with branching
   that cannot be expressed in them is a sign that it is two machines.
 
@@ -550,9 +551,13 @@ silently without it. [Reading another Module's machine](#reading-another-modules
 
 ## What is still open
 
-Not design questions -- one approval and one dependency.
+Not design questions -- one dependency and one rebuild.
 
-- **A seventh `PHI_RUNTIME_CONDITION_SOURCES` value** is a closed enum and needs operator approval.
+- ~~**A seventh `PHI_RUNTIME_CONDITION_SOURCES` value** is a closed enum and needs operator approval.~~
+  **Approved, and not spent.** The enum still has its six values, because the statement a machine
+  publishes turned out to be readable through the `widget` source already there: the login preset asks
+  the step Widget beside it, which relays what its Controller holds. A seventh source would have been a
+  second way to ask the same question. The approval stands for the day something cannot be relayed.
 - **Server-side progression.** A machine whose state advances as the side effect of a server action has
   no browser write with which to checkpoint to `profile`. This is [USER_STATE.md](./USER_STATE.md)'s one
   remaining open question seen from this end, and it does not block a `server` authority machine, which
@@ -560,14 +565,22 @@ Not design questions -- one approval and one dependency.
 - **The Page host is being rebuilt.** The lifetime answer above reads three files that the removal of
   parallel routes for `page.tsx` touches. Writing the rule down does not wait; building the binding on
   top of it should.
-- **Three effect kinds still have no reader, by this document's own test.** `signal`, `forward` and
-  `read` are declared, typed and validated, and nothing consumes them -- the same charge this document
-  lays against unread vocabulary under [What exists today](#what-exists-today).
+- ~~Three effect kinds still have no reader.~~ **Removed from the code, kept in this design.** `signal`,
+  `forward` and `read` were declared, typed and validated with nothing consuming them, which is the
+  charge this document lays against unread vocabulary under [What exists today](#what-exists-today), and
+  it is not less true when the declaration is ours. A transition now carries nothing to perform.
 
-  `capability` is no longer among them: each Auth state names one, and the Controller asks the Area's
-  provider whether it offers it. That is also what gave `capabilitiesByArea` the mechanism it had been
-  waiting for, which is the shape to look for here -- a declaration earns its place when something
-  already declared elsewhere turns out to be the other half of it.
+  The design keeps them because the reasoning still holds for a machine that does not exist yet: a
+  transition that asks its host to do something is how a machine reaches the world without touching it.
+  Auth simply is not that machine -- its answer arrives on the same signal that raises the event, so a
+  `read` would buy a second request for something already in hand. A machine whose outcome arrives
+  separately brings them back, and `PhiStateMachineEffect` is what it will be called.
+
+  `capability` went the other way at the same time: each Auth state names one, and the Controller asks
+  the Area's provider whether it offers it. That is also what gave `capabilitiesByArea` the mechanism it
+  had been waiting for. Both moves are the same rule applied in both directions -- a declaration earns
+  its place when something already declared elsewhere turns out to be the other half of it, and loses
+  it when nothing does.
 
   It is recorded rather than removed because the first consumer said something about which parts earn
   their place. States, statements, transitions and the determinism rules are all in use: Auth raises an

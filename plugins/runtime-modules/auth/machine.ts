@@ -27,11 +27,11 @@ export const PHI_AUTH_MACHINE_REFERENCE: PhiStateMachineReference = {
 /**
  * What the Widgets around it are allowed to ask, and the whole of it.
  *
- * Each of these is positive on purpose. `noStepRunning()` in the login preset reads a negation today --
- * "nothing is happening" -- and a negation over an open set of states is right until the machine gains
- * one, then silently wrong: it would show the sign-in form during a recovery nobody told it about.
- * A state added later publishes none of these until its author says so, so a reader asking
- * `awaitingCredentials` gets `false` from a state it has never heard of, which is the safe answer.
+ * Each of these is positive on purpose. The login preset used to ask a Widget beside it whether a step
+ * was running and take silence for "no" -- a negation over a set of states that was open, so a state
+ * nobody had told it about would have shown the sign-in form in the middle of one. A state added later
+ * publishes none of these until its author says so, so a reader asking `awaitingCredentials` gets
+ * `false` from a state it has never heard of, which is the safe answer.
  */
 export const PHI_AUTH_MACHINE_STATEMENTS = {
   /** Nobody is part-way through anything: the sign-in form is the thing to show. */
@@ -52,8 +52,8 @@ export const PHI_AUTH_MACHINE_STATEMENTS = {
  * demonstrates.
  *
  * `to` on a transition under `server` authority is the expectation and not the outcome. The binding
- * takes the effects and leaves the position alone; Core's next answer decides where the machine
- * actually lands.
+ * leaves the position alone and Core's next answer decides where the machine actually lands, so `to`
+ * documents what is usually meant by an event rather than what happens.
  */
 export const PHI_AUTH_MACHINE_DEFINITION: PhiStateMachineDefinition = {
   machineKey: PHI_AUTH_MACHINE_KEY,
@@ -86,14 +86,12 @@ export const PHI_AUTH_MACHINE_DEFINITION: PhiStateMachineDefinition = {
     },
   },
   /*
-   * No effects on any of these, which is worth saying because a projection usually wants a `read`.
+   * What these do, given that a transition carries nothing to perform.
    *
-   * Here the answer arrives with the event. The handler's reply carries the workflow, and the Controller
-   * listens for that reply anyway, so a `read` effect would spend a second request on something already
-   * in hand. What the transitions do instead is state which events are answerable from where -- raised
-   * from a state that does not admit them, they are a fault the binding reports rather than a silent
-   * no-op -- and tell the machine that an answer is owed, so the projection that follows is progress
-   * and not a contradiction.
+   * They state which events are answerable from where: raised from a state that does not admit them,
+   * the binding reports a fault rather than doing nothing quietly. And raising one tells the machine an
+   * answer is owed, so the projection that follows counts as progress instead of a contradiction --
+   * which is the whole of what `send` is for here, since the answer arrives on the same signal.
    */
   transitions: {
     /** Primary credentials went in. Whether that was the whole of it is Core's to say. */

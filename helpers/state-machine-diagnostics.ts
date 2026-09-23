@@ -92,8 +92,9 @@ export function reportPhiStateMachineMisuse(
  *
  * A projection changing state is what a projection does, so this is not every change -- the binding
  * only calls it when no answer was owed. What is left is the surprising kind: another tab finished the
- * flow, a Session expired underneath, or an effect reported a transition the server never made. The
- * server's answer wins either way; this is so the third case does not stay unexplained.
+ * flow, a Session expired underneath, or the host projected a state without raising the event that
+ * would have asked for it. The server's answer wins either way; this is so the third case does not
+ * stay unexplained.
  */
 export function reportPhiStateMachineDivergence(
   reference: PhiStateMachineReference,
@@ -104,8 +105,8 @@ export function reportPhiStateMachineDivergence(
   return sayOnce(`${machine}|diverged|${shown}|${answered}`, () => {
     console.error(
       `[phi-state-machine] ${machine} was showing "${shown}" and a re-read answered "${answered}" ` +
-      "without anything having been sent. The server's answer wins. Look for an effect that reported a " +
-      "transition the server did not make, or for a second tab.",
+      "without anything having been sent. The server's answer wins. Look for a host that projected " +
+      "without raising the event first, or for a second tab.",
     );
   });
 }
