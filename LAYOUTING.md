@@ -43,8 +43,7 @@ The shared fields are:
 
 - `padding`, `paddingTop`, `paddingRight`, `paddingBottom`, `paddingLeft`
 - `background`
-- `border`
-- `borderRadius`
+- `borderSource`, `border`, `borderRadius`
 - `shadow`
 - `effect`
 - the shared renderable-block geometry, visibility, access, and transition fields
@@ -64,6 +63,30 @@ Presets store the chosen id, not CSS implementations. A custom shadow is the sol
 as `{ kind: "custom", value: "<box-shadow>" }`; arbitrary effect parameters and arbitrary strings in the
 shadow field are invalid. `borderRadius` given as one value is shown by the Border control as four equal
 corner radii; explicit per-corner values override it.
+
+### Where a Layout's outline comes from
+
+`borderSource` is `none`, `theme`, or `custom` (`types/cms-config.ts`), and it answers for every Layout
+family alike -- it is chrome, not a family field, so a Module's own Layout gets it without declaring
+anything.
+
+- `theme` draws the Site's own line: its border colour at its line width, so it follows the Theme rather
+  than copying it.
+- `custom` draws the configured `border`, and is the only source that reads a configured `borderRadius`
+  or per-corner radius. Under the other two the corner comes from the Control shape's surface step
+  ([THEME.md](./THEME.md#control-shape)), so switching to `theme` or `none` shows the shape at once.
+- `none` draws no line and states so, rather than saying nothing: the style is laid over one that may
+  already carry a line.
+
+A stored Layout that predates the field is read by `resolvePhiCmsBorderSource`: a configured LINE means
+`custom`, everything else means `none`. A radius alone is not a line. The rule is stated once and read by
+the drawing and the Inspector, which is what keeps them from disagreeing about a Site nobody rewrote.
+
+This is the only thing that decides a Layout's outer edge. A Layout family never draws a frame of its own
+-- the Collapsible's `ghost` governs the INSIDE, whether its panels are separate objects or a flat list,
+and says nothing about the edge around them. Its grounds state no corner at all: the Layout box has one
+and clips them to it, because a clip only takes away and a ground rounded more tightly than its box would
+never be reached.
 
 ### Background motion
 

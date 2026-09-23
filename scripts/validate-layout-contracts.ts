@@ -13,9 +13,12 @@ import {
   resolvePhiLayoutDefaults,
 } from "../helpers/cms-layout-defaults";
 import {
+  resolvePhiLayoutStyle,
   resolvePhiPaddingStyle,
   type PhiLayoutKind,
 } from "../components/layouts/phi-layout-contract";
+import { resolvePhiCmsBorderSource } from "../types/cms-config";
+import { resolvePhiSourcedBorderStyle } from "../helpers/border-widget-style";
 import { PhiCmsRegionStatic } from "../components/regions/phi-cms-region-static";
 import { resolvePhiBuilderPreviewRegionConfig } from "../plugins/runtime-modules/builder/render-root-node-preview.server";
 import { parsePhiCmsContentLayoutConfig, parsePhiCmsGridLayoutConfig } from "../types/cms-config";
@@ -306,5 +309,58 @@ for (const layoutKind of layoutKinds) {
   }
   assert.deepEqual(mismatches, [], mismatches.join("\n"));
 }
+
+/**
+ * LAYOUTING.md, "Where a Layout's outline comes from": a Layout that predates `borderSource` is read by
+ * one rule, and the rule turns on the LINE.
+ *
+ * A radius alone is not a line. Reading it as one would answer `custom` for every Layout whose corners
+ * were ever set -- and `custom` is the single state in which a corner stops following the Site's shape,
+ * so the mistake would be invisible in the code and visible on every page.
+ */
+assert.equal(resolvePhiCmsBorderSource(undefined, null), "none", "Nothing configured means no line.");
+assert.equal(
+  resolvePhiCmsBorderSource(undefined, { borderTopLeftRadius: 24 }),
+  "none",
+  "A corner radius is not a border: a Layout that only rounded itself never drew a line.",
+);
+assert.equal(
+  resolvePhiCmsBorderSource(undefined, { borderWidth: 1, borderStyle: "solid" }),
+  "custom",
+  "A configured line means the author drew one, which is what `custom` says.",
+);
+assert.equal(
+  resolvePhiCmsBorderSource(undefined, "none"),
+  "none",
+  "A border written as the string `none` is an absence, not a line.",
+);
+assert.equal(
+  resolvePhiCmsBorderSource("theme", { borderWidth: 4 }),
+  "theme",
+  "A stated source always wins: the reading rule only answers where nothing was stated.",
+);
+
+/*
+ * And the corner follows the source. `custom` is the one source that reads a configured radius, so
+ * switching away from it has to show the shape at once rather than keeping the radii of a line nobody
+ * draws any more.
+ */
+const customCornerStyle = resolvePhiLayoutStyle({ borderSource: "custom", border: "1px solid red", borderRadius: 30 });
+assert.equal(customCornerStyle.borderRadius, "30px", "A custom outline keeps the corner it configured.");
+assert.equal(
+  resolvePhiLayoutStyle({ borderSource: "theme", border: "1px solid red", borderRadius: 30 }).borderRadius,
+  undefined,
+  "Under `theme` the corner comes from the shape, so no configured radius may survive as a shorthand.",
+);
+assert.equal(
+  resolvePhiSourcedBorderStyle("none", { borderWidth: 2, borderTopLeftRadius: 30 }).border,
+  "none",
+  "`none` states the absence, because this style is laid over one that may already carry a line.",
+);
+assert.equal(
+  resolvePhiSourcedBorderStyle("theme", { borderTopLeftRadius: 30 }).borderTopLeftRadius,
+  undefined,
+  "Neither does a per-corner radius survive a source that is not `custom`.",
+);
 
 console.log(`Layout contracts valid: ${PHI_CMS_LAYOUT_REGISTRY.length} plugins, ${layoutKinds.length} families.`);
