@@ -20,6 +20,7 @@ export {
   type PhiLabelSetLabels,
   type PhiLabelSetTexts,
 } from "./gateway/label-set";
+export { getPhiUserState, type GetPhiUserStateOptions, type PhiUserState } from "./gateway/user-state";
 export { resolvePhiRequestLocale } from "./server-helpers/request-locale";
 export { loadPhiResolvedCmsRequest } from "./server-helpers/cms-request";
 export { loadPhiCmsRootRequest } from "./server-helpers/cms-root";

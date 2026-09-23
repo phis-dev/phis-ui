@@ -988,6 +988,68 @@ SERVER_ADDONS.md](../phis-server/SERVER_ADDONS.md)); Module activation never ins
 - Missing Widget/Layout renderers remain localized to the affected CMS node.
 - Do not catch contract failures and substitute a global registry or first-party implementation.
 
+## 11. Remember what somebody decided
+
+A dismissed card, how far a feed was read, where somebody got to in a guided sequence: your Module can
+keep these per Site, against the account of the person looking. Declare what you keep on the Module:
+
+```ts
+// definition.ts
+  userState: [
+    { key: `${STATUS_MODULE_ID}/dismissed-banner`, shape: "flag" },
+    { key: `${STATUS_MODULE_ID}/read-until`, shape: "marker" },
+  ],
+```
+
+A key is `<module id>/<key>`, and **the prefix is the whole authorization**: Core admits a write when
+an active Module of that Site owns the prefix and the session belongs to the person being written about.
+Keys of a Module that is switched off are refused, and the state it already holds is kept and hidden
+until it is switched on again.
+
+The declaration itself travels nowhere -- unlike a route or a Widget type, Core never sees it. It is your
+own account of what you store: it lets the browser refuse a malformed write before spending a round trip,
+and it puts what your Module keeps where the next person reading your code will find it. An undeclared
+key still works. Declare anyway.
+
+Four shapes, and the choice is not cosmetic:
+
+| Shape | Value | Use it for |
+| --- | --- | --- |
+| `flag` | one boolean | a dismissed card, a hint switched off |
+| `marker` | one number that only moves forward | "read up to here" |
+| `value` | one JSON object under a declared schema | a position in a sequence |
+| `set` | a bounded list, oldest evicted, `limit` required | independent entries a marker cannot express |
+
+**Reach for `marker` before `set`.** A reader who has seen everything up to Tuesday has read everything
+before it, so one number answers what a growing list of ids answers only by growing -- and that list
+travels with the row on every request that resolves a session. A marker also settles the case a set
+cannot: it never moves backwards, so a second tab answering late cannot unread what somebody read.
+
+Write from the browser:
+
+```ts
+import { writePhiUserState, clearPhiUserState } from "@phis/ui/runtime/user-state-client";
+
+await writePhiUserState({ descriptor: DISMISSED_BANNER, value: true });
+await clearPhiUserState(DISMISSED_BANNER.key);   // absent again, which is not the same as `false`
+```
+
+Read it while rendering, in an authenticated Area, with `getPhiUserState` from `@phis/ui/server-helpers` --
+guarded by `runtime.viewer.access === "authenticated"`, and never on a Public page: those are rendered
+once for every anonymous visitor, `cookies()` is empty there without saying so, and "nothing stored"
+would be the answer for everybody. A Public surface that wants an account-bound fact loads it in the
+browser after the page arrives ([STATIC_RENDERING.md](./STATIC_RENDERING.md)).
+
+Two limits worth knowing before you design around them: your namespace is capped at 4096 serialized
+bytes across all of your keys together, and a `set` at 256 entries. Both answer with a refusal rather
+than by dropping something quietly.
+
+**What does not belong here.** Anything your Module needs in order to work -- an order, a booking, a
+submitted form -- belongs in your own storage with its own lifecycle. The test: if losing it would be a
+support case rather than a small annoyance, it is not user state. And it is never a permission: a
+signed-in person can write whatever they like into their own namespace, so nothing you read from here
+may decide what somebody is allowed to do.
+
 ## Boundary checklist
 
 - Server catalog files contain metadata and lazy imports, not Client components.
@@ -1007,6 +1069,8 @@ SERVER_ADDONS.md](../phis-server/SERVER_ADDONS.md)); Module activation never ins
 - No Public Widget's server half reads cookies, headers or the viewer, or renders a per-visitor value
   (token, nonce, timestamp, random value); those are loaded in the browser (STATIC_RENDERING.md).
 - Module data a Public page must show without delay is loaded in the browser, not rendered on the server.
+- User state is declared on the Module, keyed under its own id, read on the server only in an
+  authenticated Area, and never read as a permission.
 - Every handler-mode Form has an owned phase-matching handler Provider, and the owner Module is selected in
   every intended effective Area preset.
 

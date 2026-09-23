@@ -763,6 +763,25 @@ export type PhiRuntimeModuleDefinition = {
    */
   threadKinds?: readonly import("./threads").PhisDeclarableThreadKind[];
   /**
+   * What this Module keeps about the person looking at it, per Site.
+   *
+   * Not a declaration in the sense of the two above, despite the placement. Those tell a Site what to
+   * make available and are materialized on publish; this one travels nowhere. phi-server admits a write
+   * on the key's prefix -- an active Module's id -- and checks the value against the shape the write
+   * itself names, so it needs no list from here and is not given one.
+   *
+   * It earns its place all the same. It lets this side refuse a malformed write before spending a round
+   * trip on it, and it puts what a Module stores where somebody reading that Module will find it, rather
+   * than leaving it to be discovered from rows in production. A key that is not declared still works,
+   * and that is the honest description of what this is: the Module's own account of itself.
+   *
+   * A dismissed card is a `flag`, a read position a `marker`, a place in a guided sequence a `value`.
+   * What is not here is anything the Module needs in order to work -- an order, a booking, a submission
+   * belongs in its own storage, because losing one of these should be an annoyance and not a support
+   * case.
+   */
+  userState?: readonly import("./user-state").PhisDeclarableUserStateKey[];
+  /**
    * The rows this Module needs a Site to have before any of it works.
    *
    * Not a third declaration of the two above, whatever the placement suggests. Those declare

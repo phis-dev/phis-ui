@@ -418,6 +418,12 @@
       "types": "./runtime-signal-client.ts",
       "default": "./runtime-signal-client.ts"
     },
+    "./runtime/user-state-client": {
+      "import": "./runtime-user-state-client.ts",
+      "require": "./runtime-user-state-client.ts",
+      "types": "./runtime-user-state-client.ts",
+      "default": "./runtime-user-state-client.ts"
+    },
     "./cms": {
       "import": "./cms.ts",
       "require": "./cms.ts",

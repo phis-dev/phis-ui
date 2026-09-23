@@ -42,6 +42,7 @@ export type * from "./types/threads";
 export type * from "./types/thread-widget";
 export { readPhiThreadSignalValue } from "./types/thread-widget";
 export type * from "./types/tree";
+export type * from "./types/user-state";
 export type * from "./types/widget-runtime";
 export * from "./types/runtime-module-locale";
 export type * from "./types/site-theme";
