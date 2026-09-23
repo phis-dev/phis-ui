@@ -26,7 +26,7 @@ export const PHI_AUTH_RUNTIME_MODULE_DEFINITION = {
   title: "Auth",
   description: "Site login, mandatory authentication workflows, Admin settings, and App account security.",
   category: "identity",
-  icon: "antd:user-outlined",
+  icon: "antd:safety-certificate",
   controllerMountPolicy: "area",
   authUiProvider: {
     providerKey: PHI_AUTH_CONTROLLER_TYPE,

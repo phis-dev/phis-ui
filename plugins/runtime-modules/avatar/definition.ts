@@ -24,7 +24,7 @@ export const PHI_AVATAR_RUNTIME_MODULE_DEFINITION = {
   title: "Avatar",
   description: "A personal picture, stored in the person's own Media Space.",
   category: "identity",
-  iconFamily: "account",
+  icon: "antd:user-outlined",
   // A picture and nothing else: the Module has one purpose and states it rather than inheriting a list.
   // The list is its own module, because the picker reads the same one to decide what its file dialog
   // accepts -- and it runs in a browser.
