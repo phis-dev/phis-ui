@@ -322,6 +322,9 @@ as `--phi-surface-radius` and, where a component has a token for it, as that tok
   top corners and a footer's bottom come from. The bottom corners are not drawn by Ant Design at all;
   `components/controls/phi-table-control.module.css` clips them from the variable when a footer or a summary
   row closes the Table.
+- **Collapse** -- its panels, through `collapsePanelBorderRadius`, the token Ant Design derives from
+  `borderRadiusLG` and draws a panel's container, first header and last body from. It is what the
+  Collapsible Layout renders with.
 - **Tree** -- the node grounds through a component-level override of the global `borderRadius`, which is what
   Ant Design's Tree reads and what it declares no token of its own for; the frame of a bordered Tree from the
   variable.

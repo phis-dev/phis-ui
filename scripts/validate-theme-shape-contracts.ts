@@ -186,6 +186,11 @@ assert.deepEqual(
   { headerBg: "#fff", headerBorderRadius: TABLE_SHAPE_STEPS.borderRadius },
   "The step arrives as headerBorderRadius, beside whatever else the Table was configured with.",
 );
+assert.deepEqual(
+  shapedSurfaces.Collapse,
+  { collapsePanelBorderRadius: TABLE_SHAPE_STEPS.borderRadius },
+  "A Collapse takes the step as collapsePanelBorderRadius, which draws its panels.",
+);
 /*
  * A Tree and a Card declare no radius token, so the step has to arrive as an override of the global each
  * of them reads -- and they do not read the same one. Asserting the NAME is the point: the wrong global

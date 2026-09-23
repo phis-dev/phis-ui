@@ -252,9 +252,9 @@ export function buildPhiControlShapeCssVars(
  * could have written into the numeric scale by hand.
  *
  * Its readers are every surface that draws a box: a Table (`headerBorderRadius`, and the clip in its CSS
- * Module), a Tree (its node grounds through the component token, its frame through the variable), a
- * Layout (its box, wherever the author configured no radius of their own), and the eight components whose
- * box is the global `borderRadiusLG` -- a Card, a Modal, and the six panels that open over the page. An
+ * Module), a Collapse (`collapsePanelBorderRadius`, its panels), a Tree (its node grounds through the
+ * component token, its frame through the variable), a Layout (its box, wherever the author configured no
+ * radius of their own), and the eight components whose box is the global `borderRadiusLG` -- a Card, a Modal, and the six panels that open over the page. An
  * explicit radius always wins -- this is the answer to "nothing was said", not a ceiling.
  */
 export const PHI_SURFACE_SHAPE_CSS_VAR = "--phi-surface-radius";
@@ -281,10 +281,10 @@ export function resolvePhiSurfaceShapeRadius(
  * `phi-table-control.module.css` clips them and reads the variable, so both ends of one Table are the
  * same corner.
  *
- * Only the Table declares a radius token of its own. Everything else reads a global, and the step reaches
- * it as a component-level override of that global -- which is what a component token is in CSS variable
- * mode: the same variable, redefined on the element. The name differs per component, and naming the wrong
- * one is silently inert rather than visibly wrong, which is why each is asserted by name.
+ * The name differs per component, and naming the wrong one is silently inert rather than visibly wrong,
+ * which is why each is asserted by name. A Table and a Collapse have a token of their own; everything
+ * else reads a global, and the step reaches it as a component-level override of that global -- which is
+ * what a component token is in CSS variable mode: the same variable, redefined on the element.
  *
  * A Tree reads `borderRadius` for its node grounds. The eight below read `borderRadiusLG` for the box they
  * draw: a Card its container, a Modal its content, and the six others the panel they open -- a Dropdown's
@@ -295,6 +295,20 @@ export function resolvePhiSurfaceShapeRadius(
  * A Tooltip and a Drawer are deliberately absent. A Tooltip is a label with a tail rather than a surface,
  * and a Drawer is flush to the edge of the viewport, where a corner would round against nothing.
  */
+/**
+ * The three that name the box themselves, each under its own token.
+ *
+ * A Table and a Collapse declare a radius token of their own -- the container's corners and the panel's.
+ * A Tree declares none and reads the global `borderRadius` for its node grounds, which is the same
+ * mechanism under a borrowed name: a component token in CSS variable mode IS that variable redefined on
+ * the element.
+ */
+const PHI_SURFACE_SHAPE_TOKEN_NAMES = {
+  Table: "headerBorderRadius",
+  Collapse: "collapsePanelBorderRadius",
+  Tree: "borderRadius",
+} as const satisfies Record<string, string>;
+
 const PHI_SURFACE_SHAPE_LG_COMPONENTS = [
   "Card",
   "Modal",
@@ -311,11 +325,10 @@ export function applyPhiSurfaceShapeComponentTokens(
   tokens: PhiControlShapeRadiusTokens,
 ) {
   const borderRadius = resolvePhiSurfaceShapeRadius(shape, tokens);
-  const next: Record<string, Record<string, unknown>> = {
-    ...components,
-    Table: { ...(components.Table ?? {}), headerBorderRadius: borderRadius },
-    Tree: { ...(components.Tree ?? {}), borderRadius },
-  };
+  const next: Record<string, Record<string, unknown>> = { ...components };
+  for (const [component, tokenName] of Object.entries(PHI_SURFACE_SHAPE_TOKEN_NAMES)) {
+    next[component] = { ...(next[component] ?? {}), [tokenName]: borderRadius };
+  }
   for (const component of PHI_SURFACE_SHAPE_LG_COMPONENTS) {
     next[component] = { ...(next[component] ?? {}), borderRadiusLG: borderRadius };
   }
