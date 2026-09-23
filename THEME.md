@@ -305,7 +305,10 @@ through `styles/control-shape.css`, which reads `--phi-control-radius-*` variabl
 Grown Controls take all three sizes from that stylesheet, the default size included: that is the size where
 the component token is wrong for them, and no Button -- whose `-circle` and `-round` shapes the other rules
 stay clear of -- can grow.
-It governs Control bodies and triggers only. `borderRadiusSM`, `borderRadius`, and `borderRadiusLG` keep
+It governs Control bodies and triggers, plus the Menu item: a Sider entry stands one Control line high in a
+column of Controls, so its selected ground rounds with them, through `itemBorderRadius` and
+`subMenuItemBorderRadius` and never through Menu's own `borderRadius`, which draws the panel a submenu opens
+in a collapsed Sider. `borderRadiusSM`, `borderRadius`, and `borderRadiusLG` keep
 governing surfaces: Layouts, Cards, Tables, Trees, Modals, Drawers, and popups, including the popup of a
 Select, Picker, or Cascader. For Phi Controls the shape wins over conflicting component radius overrides.
 Intrinsic geometry stays authoritative: Switch stays a capsule, Checkbox and Radio keep their shapes, joined

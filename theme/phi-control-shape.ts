@@ -264,6 +264,22 @@ const PHI_SHAPED_ANTD_COMPONENTS = [
 ] as const;
 
 /**
+ * Components the shape reaches through a token that is not called `borderRadius`.
+ *
+ * A Menu item is not a Control and is drawn as one: its height is the default Control height
+ * (`buildPhiComponentTokens`), and what rounds there is the item's own selected ground, standing in a
+ * column of Controls. Under `pill` a rounded rectangle among capsules is the same defect a rounded
+ * Button among capsules would be.
+ *
+ * Both item tokens take it, because a submenu title sits in that column too and is the same object.
+ * `borderRadius` is deliberately not among them: on Menu that token draws the panel a submenu opens in
+ * a collapsed Sider, and THEME.md, "Control shape", keeps popup surfaces on the surface scale.
+ */
+const PHI_SHAPED_ANTD_COMPONENT_TOKENS = {
+  Menu: ["itemBorderRadius", "subMenuItemBorderRadius"],
+} as const satisfies Record<string, readonly string[]>;
+
+/**
  * Applies the shape to the Control components, outranking a raw adapter-level radius override.
  *
  * THEME.md, "Control shape", requires this direction: for Phi Controls the shape wins over conflicting
@@ -286,6 +302,12 @@ export function applyPhiControlShapeComponentTokens(
   const next = { ...components };
   for (const component of PHI_SHAPED_ANTD_COMPONENTS) {
     next[component] = { ...(next[component] ?? {}), borderRadius };
+  }
+  for (const [component, tokenNames] of Object.entries(PHI_SHAPED_ANTD_COMPONENT_TOKENS)) {
+    next[component] = {
+      ...(next[component] ?? {}),
+      ...Object.fromEntries(tokenNames.map((tokenName) => [tokenName, borderRadius])),
+    };
   }
   return next;
 }

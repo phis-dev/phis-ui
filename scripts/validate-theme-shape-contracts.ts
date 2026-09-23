@@ -141,6 +141,20 @@ for (const key of ["Button", "Input", "InputNumber", "Select", "Segmented", "Dat
 assert.equal(components.Table?.borderRadius, 13, "Container surface radius remains independent.");
 
 /**
+ * A Menu item stands one Control line high in a column of Controls, so its selected ground takes the
+ * shape -- through the two item tokens, and never through `borderRadius`, which on Menu draws the panel
+ * a submenu opens in a collapsed Sider. THEME.md, "Control shape", leaves that panel on the surface
+ * scale.
+ */
+assert.equal(components.Menu?.itemBorderRadius, 3, "A Menu item must take the Control shape.");
+assert.equal(components.Menu?.subMenuItemBorderRadius, 3, "A submenu title stands in the same column.");
+assert.equal(
+  components.Menu?.borderRadius,
+  undefined,
+  "Menu borderRadius draws the submenu popup and stays on the surface scale.",
+);
+
+/**
  * Cascader's own stylesheet contains nothing but the dropdown panel and its columns, so shaping its
  * component token would round a POPUP -- which THEME.md, "Control shape", leaves on the surface scale. Its
  * trigger renders as `.ant-select` and is already covered by the Select entry. AutoComplete, TimePicker,
