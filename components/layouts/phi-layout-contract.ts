@@ -174,7 +174,16 @@ export function resolvePhiLayoutStyle({
       : {
           border,
         }),
-    ...(resolvedBorderRadius == null ? {} : { borderRadius: resolvedBorderRadius }),
+    /*
+     * A Layout is a surface, so an author who said nothing about its corner gets the Site's answer to
+     * that question -- the same step a Table and a Tree take, carried on the root as
+     * `--phi-surface-radius` (THEME.md, "Control shape"). An author who did say something keeps it: the
+     * step answers silence, it does not cap anybody.
+     *
+     * The fallback is `0` rather than a token, because that is what this returned before there was a
+     * step to take, and a Layout rendered outside the Provider should not start rounding on its own.
+     */
+    borderRadius: resolvedBorderRadius ?? "var(--phi-surface-radius, 0)",
     ...resolvePhiPaddingStyle({ padding, paddingTop, paddingRight, paddingBottom, paddingLeft }),
   };
 }

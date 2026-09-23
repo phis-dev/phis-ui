@@ -139,7 +139,10 @@ import { PhiTagControl } from "../../../../../components/controls/phi-tag-contro
 import {
   PHI_CONTROL_SHAPES,
   applyPhiControlShapeComponentTokens,
+  applyPhiSurfaceShapeComponentTokens,
   buildPhiControlShapeCssVars,
+  PHI_SURFACE_SHAPE_CSS_VAR,
+  resolvePhiSurfaceShapeRadius,
   createPhiControlShapeCorners,
   readPhiControlShapeCorners,
   resolvePhiControlShape,
@@ -3769,9 +3772,14 @@ export function PhiBuilderBrandThemePreviewWidgetClient({
    * identity as well is part of it: two shapes with otherwise equal tokens would hash to one key and
    * serve each other from cache.
    */
-  const previewShapedComponents = applyPhiControlShapeComponentTokens(
-    { ...(applyPhiButtonShadowComponentTokens(previewThemeResolved.components, previewThemeResolved.buttons, mode) ?? {}) },
-    resolvePhiControlShape(previewThemeResolved.shape?.controls),
+  const previewControlShape = resolvePhiControlShape(previewThemeResolved.shape?.controls);
+  const previewShapedComponents = applyPhiSurfaceShapeComponentTokens(
+    applyPhiControlShapeComponentTokens(
+      { ...(applyPhiButtonShadowComponentTokens(previewThemeResolved.components, previewThemeResolved.buttons, mode) ?? {}) },
+      previewControlShape,
+      previewEffectiveToken,
+    ),
+    previewControlShape,
     previewEffectiveToken,
   );
   const previewAntdTheme = {
@@ -3947,10 +3955,11 @@ export function PhiBuilderBrandThemePreviewWidgetClient({
            * Small and large Control radii are inherited custom properties, so the preview declares its
            * own here and overrides whatever the surrounding Builder shape put on the Root.
            */
-          ...buildPhiControlShapeCssVars(
-            resolvePhiControlShape(previewThemeResolved.shape?.controls),
-            previewEffectiveToken,
-          ),
+          ...buildPhiControlShapeCssVars(previewControlShape, previewEffectiveToken),
+          ...({
+            [PHI_SURFACE_SHAPE_CSS_VAR]:
+              `${resolvePhiSurfaceShapeRadius(previewControlShape, previewEffectiveToken)}px`,
+          } as Record<`--${string}`, string>),
         }}
       >
         <PhiBrandChromePreviewShell

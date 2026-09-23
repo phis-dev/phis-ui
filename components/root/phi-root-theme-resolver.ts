@@ -20,6 +20,7 @@ import {
 import { applyPhiButtonShadowComponentTokens } from "../../theme/phi-button-shadow";
 import {
   applyPhiControlShapeComponentTokens,
+  applyPhiSurfaceShapeComponentTokens,
   resolvePhiControlShape,
 } from "../../theme/phi-control-shape";
 
@@ -125,10 +126,15 @@ export function resolvePhiRootTheme({
         : {}),
     },
   });
-  const components = applyPhiControlShapeComponentTokens(mergeComponentThemes(
-    sharedComponentDefaults,
-    applyPhiButtonShadowComponentTokens(siteTheme?.components, siteTheme?.buttons, mode),
-  ), resolvePhiControlShape(siteTheme.shape?.controls), effectiveThemeTokens);
+  const resolvedControlShape = resolvePhiControlShape(siteTheme.shape?.controls);
+  const components = applyPhiSurfaceShapeComponentTokens(
+    applyPhiControlShapeComponentTokens(mergeComponentThemes(
+      sharedComponentDefaults,
+      applyPhiButtonShadowComponentTokens(siteTheme?.components, siteTheme?.buttons, mode),
+    ), resolvedControlShape, effectiveThemeTokens),
+    resolvedControlShape,
+    effectiveThemeTokens,
+  );
   const token = {
     ...effectiveThemeTokens,
   };

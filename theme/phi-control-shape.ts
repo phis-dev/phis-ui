@@ -243,6 +243,64 @@ export function buildPhiControlShapeCssVars(
 }
 
 /**
+ * A surface's own corner, chosen by the same setting and answered on the surface scale.
+ *
+ * A surface keeps a surface's radii -- `pill` on a Table or a Layout would be a capsule around a grid
+ * or around a column of content, which is not a thing. What the shape says about them is softer: how
+ * far this Site rounds, as one step on the scale it already has. `square` takes none, and the other
+ * three take the three radius tokens in order, so the number a surface wears is always one somebody
+ * could have written into the numeric scale by hand.
+ *
+ * Four readers: a Table (`headerBorderRadius`, and the clip in its CSS Module), a Tree (its node grounds
+ * through the component token, its frame through the variable), a Card (its container, header and cover),
+ * and a Layout, whose box takes it wherever the author configured no radius of their own. An explicit
+ * radius always wins -- this is the answer to "nothing was said", not a ceiling.
+ */
+export const PHI_SURFACE_SHAPE_CSS_VAR = "--phi-surface-radius";
+
+export function resolvePhiSurfaceShapeRadius(
+  shape: PhiControlShape,
+  tokens?: PhiControlShapeRadiusTokens,
+) {
+  if (shape === "square") {
+    return 0;
+  }
+  if (shape === "subtle") {
+    return readTokenNumber(tokens, "borderRadiusSM", 2);
+  }
+  const base = readTokenNumber(tokens, "borderRadius", 6);
+  return shape === "rounded" ? base : readTokenNumber(tokens, "borderRadiusLG", base);
+}
+
+/**
+ * The step as antd component tokens, so the two surfaces that have one follow it without a rule.
+ *
+ * `headerBorderRadius` is what antd derives its internal `tableRadius` from, and that one number draws
+ * a Table's container corners and the bottom of its footer. The bottom corners it does NOT draw:
+ * `phi-table-control.module.css` clips them and reads the variable, so both ends of one Table are the
+ * same corner.
+ *
+ * A Tree and a Card declare no radius token at all: the Tree reads the global `borderRadius` for its node
+ * grounds, the Card the global `borderRadiusLG` for its container, header, cover and actions. The step
+ * arrives at both as a component-level override of the global they read -- which is what a component token
+ * is in CSS variable mode: the same variable, redefined on the element. The name therefore differs per
+ * component, and naming the wrong one would be silently inert rather than wrong.
+ */
+export function applyPhiSurfaceShapeComponentTokens(
+  components: Record<string, Record<string, unknown>>,
+  shape: PhiControlShape,
+  tokens: PhiControlShapeRadiusTokens,
+) {
+  const borderRadius = resolvePhiSurfaceShapeRadius(shape, tokens);
+  return {
+    ...components,
+    Table: { ...(components.Table ?? {}), headerBorderRadius: borderRadius },
+    Tree: { ...(components.Tree ?? {}), borderRadius },
+    Card: { ...(components.Card ?? {}), borderRadiusLG: borderRadius },
+  };
+}
+
+/**
  * antd components whose component token styles the Control BODY.
  *
  * The four that used to sit here and were removed on 2026-08-20 -- `AutoComplete`, `Cascader`,

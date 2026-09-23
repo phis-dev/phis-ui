@@ -3,6 +3,9 @@ import { readFile } from "node:fs/promises";
 
 import {
   applyPhiControlShapeComponentTokens,
+  applyPhiSurfaceShapeComponentTokens,
+  PHI_SURFACE_SHAPE_CSS_VAR,
+  resolvePhiSurfaceShapeRadius,
   buildPhiControlShapeCssVars,
   PHI_CONTROL_SHAPE_CSS_VARS,
   createPhiControlShapeCorners,
@@ -152,6 +155,79 @@ assert.equal(
   components.Menu?.borderRadius,
   undefined,
   "Menu borderRadius draws the submenu popup and stays on the surface scale.",
+);
+
+/**
+ * THEME.md, "Control shape": the surfaces follow the same choice on the SURFACE scale -- one step per
+ * shape, `pill` included, because a capsule around a grid is not a thing. The numbers below are the three
+ * radius tokens in order, which is what keeps a surface wearing something somebody could have written into
+ * the numeric scale by hand.
+ */
+const TABLE_SHAPE_STEPS = { borderRadiusSM: 3, borderRadius: 9, borderRadiusLG: 13 };
+for (const [shape, expected] of [
+  ["square", 0],
+  ["subtle", TABLE_SHAPE_STEPS.borderRadiusSM],
+  ["rounded", TABLE_SHAPE_STEPS.borderRadius],
+  ["pill", TABLE_SHAPE_STEPS.borderRadiusLG],
+] as const) {
+  assert.equal(
+    resolvePhiSurfaceShapeRadius(shape, TABLE_SHAPE_STEPS),
+    expected,
+    `A Table under "${shape}" takes its step of the surface scale.`,
+  );
+}
+const shapedSurfaces = applyPhiSurfaceShapeComponentTokens(
+  { Table: { headerBg: "#fff" } },
+  "rounded",
+  TABLE_SHAPE_STEPS,
+);
+assert.deepEqual(
+  shapedSurfaces.Table,
+  { headerBg: "#fff", headerBorderRadius: TABLE_SHAPE_STEPS.borderRadius },
+  "The step arrives as headerBorderRadius, beside whatever else the Table was configured with.",
+);
+/*
+ * A Tree and a Card declare no radius token, so the step has to arrive as an override of the global each
+ * of them reads -- and they do not read the same one. Asserting the NAME is the point: the wrong global
+ * here is silently inert rather than visibly wrong.
+ */
+assert.deepEqual(
+  shapedSurfaces.Tree,
+  { borderRadius: TABLE_SHAPE_STEPS.borderRadius },
+  "A Tree takes the step as its own borderRadius, which is what its node grounds read.",
+);
+assert.deepEqual(
+  shapedSurfaces.Card,
+  { borderRadiusLG: TABLE_SHAPE_STEPS.borderRadius },
+  "A Card takes the step as its own borderRadiusLG, which is what its container reads.",
+);
+
+/**
+ * The other end of the same Table. Ant Design draws no bottom radius at all, so the CSS Module clips it,
+ * and it has to read the same number or a Table would round unevenly under any shape but the default.
+ */
+const tableStylesheet = await readFile(
+  new URL("../components/controls/phi-table-control.module.css", import.meta.url),
+  "utf8",
+);
+assert.ok(
+  tableStylesheet.includes(`var(${PHI_SURFACE_SHAPE_CSS_VAR},`),
+  "The Table's bottom corners must read the surface step, with the surface token as fallback.",
+);
+
+/**
+ * A Layout has no component token to carry the step, so it reads the variable where the author configured
+ * nothing -- and falls back to no radius, which is what a Layout had before the step existed and what one
+ * rendered outside the Provider should keep having.
+ */
+const layoutContractSource = await readFile(
+  new URL("../components/layouts/phi-layout-contract.ts", import.meta.url),
+  "utf8",
+);
+assert.match(
+  layoutContractSource,
+  new RegExp(String.raw`borderRadius:\s*resolvedBorderRadius \?\? "var\(${PHI_SURFACE_SHAPE_CSS_VAR}, 0\)"`, "u"),
+  "A Layout without a configured radius must take the surface step, falling back to none.",
 );
 
 /**

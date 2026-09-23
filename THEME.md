@@ -309,8 +309,29 @@ It governs Control bodies and triggers, plus the Menu item: a Sider entry stands
 column of Controls, so its selected ground rounds with them, through `itemBorderRadius` and
 `subMenuItemBorderRadius` and never through Menu's own `borderRadius`, which draws the panel a submenu opens
 in a collapsed Sider. `borderRadiusSM`, `borderRadius`, and `borderRadiusLG` keep
-governing surfaces: Layouts, Cards, Tables, Trees, Modals, Drawers, and popups, including the popup of a
-Select, Picker, or Cascader. For Phi Controls the shape wins over conflicting component radius overrides.
+governing surfaces: Layouts, Cards, Trees, Modals, Drawers, and popups, including the popup of a
+Select, Picker, or Cascader.
+
+The choice also reaches four surfaces, on the surface scale rather than the Control one
+(`resolvePhiSurfaceShapeRadius`): `square` takes no radius, `subtle` `borderRadiusSM`, `rounded`
+`borderRadius`, and `pill` `borderRadiusLG`. A capsule around a grid or around a column of content is not a
+thing, so `pill` there is the widest step of the scale and not the full radius. The number rides on the root
+as `--phi-surface-radius` and, where a component has a token for it, as that token:
+
+- **Table** -- `headerBorderRadius`, which Ant Design's internal `tableRadius` and therefore the container's
+  top corners and a footer's bottom come from. The bottom corners are not drawn by Ant Design at all;
+  `components/controls/phi-table-control.module.css` clips them from the variable when a footer or a summary
+  row closes the Table.
+- **Tree** -- the node grounds through a component-level override of the global `borderRadius`, which is what
+  Ant Design's Tree reads and what it declares no token of its own for; the frame of a bordered Tree from the
+  variable.
+- **Card** -- the container, and with it the header, the cover and the actions bar, through a
+  component-level override of the global `borderRadiusLG`, which is what Ant Design's Card reads and what it
+  declares no token of its own for. The icon tile a Card draws beside its title is not a surface and keeps
+  the numeric scale.
+- **Layout** -- the box, wherever the author configured no radius. An explicit `borderRadius` on a Layout
+  always wins: the step answers silence, it is not a ceiling. Outside the Provider the variable is absent and
+  a Layout falls back to no radius, which is what it had before the step existed. For Phi Controls the shape wins over conflicting component radius overrides.
 Intrinsic geometry stays authoritative: Switch stays a capsule, Checkbox and Radio keep their shapes, joined
 groups round only their outer boundary.
 

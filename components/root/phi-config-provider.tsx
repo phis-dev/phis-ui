@@ -24,6 +24,8 @@ import type {
 import type { PhiRootThemeFonts } from "./phi-root-theme-resolver";
 import {
   buildPhiControlShapeCssVars,
+  PHI_SURFACE_SHAPE_CSS_VAR,
+  resolvePhiSurfaceShapeRadius,
   type PhiControlShape,
 } from "../../theme/phi-control-shape";
 
@@ -86,7 +88,18 @@ function PhiConfigValueProvider({
    * them the same request the numeric scale moves.
    */
   const controlShapeVars = useMemo(
-    () => buildPhiControlShapeCssVars(controlShape, token as unknown as Record<string, unknown>),
+    () => ({
+      ...buildPhiControlShapeCssVars(controlShape, token as unknown as Record<string, unknown>),
+      /*
+       * The Table's corner rides along rather than living in the map above: that map is what
+       * `styles/control-shape.css` reads, and this one is read by a CSS Module beside the Control it
+       * belongs to. Same element, same source, different reader.
+       */
+      [PHI_SURFACE_SHAPE_CSS_VAR]: `${resolvePhiSurfaceShapeRadius(
+        controlShape,
+        token as unknown as Record<string, unknown>,
+      )}px`,
+    }),
     [controlShape, token],
   );
   /*

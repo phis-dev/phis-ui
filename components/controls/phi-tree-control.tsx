@@ -400,7 +400,9 @@ export function PhiTreeControl({
         padding: token.paddingSM,
         background: token.colorBgContainer,
         border: `1px solid ${token.colorBorderSecondary}`,
-        borderRadius: token.borderRadiusLG,
+        // The frame is the surface; its corner is the Site's step, with the old token as the fallback
+        // for a Tree rendered outside the Provider.
+        borderRadius: "var(--phi-surface-radius, var(--ant-border-radius-lg))",
       }}
     >
       {tree}
