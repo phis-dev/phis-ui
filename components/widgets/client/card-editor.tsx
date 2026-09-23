@@ -40,6 +40,7 @@ export function PhiCardWidgetEditor({ config, title }: PhiCardWidgetEditorProps)
         description: config.description,
         meta: config.meta,
         actionLabel: config.actionLabel,
+        value: config.value,
       }}
       config={{
         imageUrl: presentation.url ?? undefined,
@@ -52,6 +53,7 @@ export function PhiCardWidgetEditor({ config, title }: PhiCardWidgetEditorProps)
         actionHref: config.actionHref,
         actionNewTab: config.actionNewTab,
         variant: config.variant,
+        body: config.body,
         highlight: config.highlight,
       }}
     />

@@ -6,8 +6,12 @@ import { useEffect, useMemo, useState } from "react";
 import type { PhiCmsInstanceId } from "../../../../types/cms-instance-id";
 import type { PhiCollectionViewBindingModel } from "../../../../types/collection-provider";
 import type { PhiCmsCollectionViewWidgetConfig } from "../../core/widgets/collection-view/config";
-import type { PhiDashboardCardPayload, PhiDashboardCardRow } from "../../../../types/dashboard-cards";
-import { PhiCardWidgetClient } from "../../core/widgets/card/client";
+import type {
+  PhiDashboardCardForm,
+  PhiDashboardCardPayload,
+  PhiDashboardCardRow,
+} from "../../../../types/dashboard-cards";
+import { PhiCardWidgetClient, type PhiCardWidgetBody } from "../../core/widgets/card/client";
 import { PhiCollectionViewControl } from "../../../../components/controls/phi-collection-view-control";
 import { PhiAlertControl } from "../../../../components/controls/phi-alert-control";
 import { PhiEmptyControl } from "../../../../components/controls/phi-empty-control";
@@ -27,6 +31,20 @@ import { PhiEmptyControl } from "../../../../components/controls/phi-empty-contr
 
 /** A card at the width a card is still a card at, matching the shared card View's floor. */
 const CARD_MIN_COLUMN_WIDTH = 260;
+
+/**
+ * A Module's form, and the Core body that draws it.
+ *
+ * Two vocabularies with one entry each today, and deliberately not one type. `form` is what a Module
+ * declares about its contribution; `body` is what Core draws. They agree now and are allowed to stop:
+ * a `series` form would reasonably draw in whatever body Core has for a graphic, under another name.
+ *
+ * A total map rather than a condition, so the day `list` joins the form vocabulary this file stops
+ * compiling instead of quietly falling back to a heading.
+ */
+const CARD_BODY_BY_FORM: Record<PhiDashboardCardForm, PhiCardWidgetBody> = {
+  stat: "stat",
+};
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
@@ -107,18 +125,32 @@ function PhiDashboardCard({
     <PhiCardWidgetClient
       labels={{
         ...(row.eyebrow ? { eyebrow: row.eyebrow } : {}),
-        // The figure takes the place the descriptor's title held while it was loading.
-        title: payload?.value ?? row.title,
+        /*
+         * The title stays the title.
+         *
+         * It used to be replaced by the figure once one arrived, which left the eyebrow as the only
+         * word saying what had been counted. The body draws the pair, so "Site users" and "42" are on
+         * screen together and the card reads the same before and after it resolves.
+         */
+        title: row.title,
+        ...(payload?.value ? { value: payload.value } : {}),
         ...(payload?.description ?? row.description
           ? { description: payload?.description ?? row.description }
           : {}),
-        ...(error ? { meta: error } : payload?.meta ? { meta: payload.meta } : {}),
+        ...(payload?.meta ? { meta: payload.meta } : {}),
       }}
       config={{
         variant: "compact",
+        body: CARD_BODY_BY_FORM[row.form] ?? "text",
         ...(row.href ? { href: row.href } : {}),
         ...(row.mark ? { iconName: row.mark } : {}),
       }}
+      /*
+       * What the card is told about its own content, and the whole of it. The card decides none of
+       * this; that this file still does is what will move to a Controller when the Dashboard gets a
+       * clock (DASHBOARD.md section 4).
+       */
+      binding={{ loading: current === null, error }}
     />
   );
 }

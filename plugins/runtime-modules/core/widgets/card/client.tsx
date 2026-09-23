@@ -6,8 +6,23 @@ import type { PhiClientBlockBaseProps } from "../../../../../types";
 import { PhiCardControl } from "../../../../../components/controls/phi-card-control";
 import { PhiIcon } from "../../../../../components/shell/phi-icon";
 import { PhiLink } from "../../../../../components/navigation/phi-link";
+import { PhiStatisticControl } from "../../../../../components/controls/phi-statistic-control";
 import { usePhiConfig } from "../../../../../components/root/phi-config-provider";
 import { PhiTypographyControl } from "../../../../../components/controls/phi-typography-control";
+
+/**
+ * What fills a card between its eyebrow and its description.
+ *
+ * `text` is a heading, which is what a card has always been. `stat` is a labelled figure drawn by the
+ * same Control the Theme inspector uses, so the house keeps one statistic rather than two: before this,
+ * a Dashboard card wrote its figure into the title slot, and "Site users" was replaced by "42" with
+ * only the eyebrow left to say what had been counted.
+ *
+ * The body is chosen, never inferred from whether a value happens to have arrived. A card that decided
+ * by presence would draw as text and reflow into a statistic the moment its figure landed -- twelve
+ * times on a Dashboard, on every load.
+ */
+export type PhiCardWidgetBody = "text" | "stat";
 
 export type PhiCardWidgetClientLabels = {
   eyebrow?: string;
@@ -15,6 +30,25 @@ export type PhiCardWidgetClientLabels = {
   description?: string;
   meta?: string;
   actionLabel?: string;
+  /** The figure a `stat` body draws. Data rather than copy, and never translated. */
+  value?: string;
+};
+
+/**
+ * What is true about a card's content right now, as opposed to what the card says.
+ *
+ * Handed in, never decided here. `design/STATE_MACHINES.md` puts it plainly -- a Widget "presents a
+ * state it was given" -- and this is the whole of what a card is given about its own: whether the
+ * content is still coming, and whether it failed.
+ *
+ * Two plain facts rather than a named phase, deliberately. A phase vocabulary of the card's own would
+ * be the feature-local substitute that design forbids, and there would be two of them the day the real
+ * machine lands. For the same reason it never travels in `config`: a page tree stores what an author
+ * wrote, and "still loading" is not that.
+ */
+export type PhiCardWidgetClientBinding = {
+  loading?: boolean;
+  error?: string | null;
 };
 
 export type PhiCardWidgetClientConfig = {
@@ -51,17 +85,27 @@ export type PhiCardWidgetClientConfig = {
   actionHref?: string;
   actionNewTab?: boolean;
   variant?: "default" | "compact" | "featured";
+  /**
+   * Which body draws, independent of `variant`.
+   *
+   * `variant` is size and weight, this is the kind of thing inside. A compact statistic and a featured
+   * statistic are both sensible, which is why folding one into the other would have cost a case.
+   */
+  body?: PhiCardWidgetBody;
   highlight?: boolean;
 };
 
 export type PhiCardWidgetClientProps = PhiClientBlockBaseProps<
   PhiCardWidgetClientLabels,
   PhiCardWidgetClientConfig
->;
+> & {
+  binding?: PhiCardWidgetClientBinding;
+};
 
 export function PhiCardWidgetClient({
   labels,
   config,
+  binding,
 }: PhiCardWidgetClientProps) {
   const { token } = usePhiConfig();
   const variant = config?.variant ?? "default";
@@ -100,6 +144,45 @@ export function PhiCardWidgetClient({
       </PhiTypographyControl>
     )
   ) : null;
+
+  /*
+   * A failure stands where the figure would, not in a footnote.
+   *
+   * `design/STATE_MACHINES.md`: "Waiting and failing are states, not flags beside them." A card whose
+   * number could not be resolved has not got a number, and saying so in the place the number belongs is
+   * the difference between a card that failed and a card that is merely quiet. It is set at body size
+   * because a sentence in figure type is unreadable.
+   */
+  const statNode = (
+    <PhiStatisticControl
+      title={labels.title}
+      value={binding?.error ?? labels.value ?? ""}
+      loading={binding?.loading ?? false}
+      styles={{
+        content: binding?.error
+          ? { color: token.colorError, fontSize: token.fontSize }
+          : { color: cardHighlight ? token.colorPrimary : token.colorTextHeading },
+      }}
+    />
+  );
+
+  /*
+   * On a stat card the link takes the whole body.
+   *
+   * A text card's heading is the link and has been since it was written, so it keeps that. A stat card's
+   * label is small secondary type and a poor target on its own, so the figure goes inside the link with
+   * it. Whether the whole box should be the link is older and wider than this body -- `PhiCardControl`
+   * already lifts the box under the pointer as though it were -- and is not settled here.
+   */
+  const bodyNode = (config?.body ?? "text") === "stat"
+    ? hasPrimaryLink
+      ? (
+        <PhiLink href={config!.href!} newTab={config?.newTab} style={{ color: "inherit", display: "block" }}>
+          {statNode}
+        </PhiLink>
+      )
+      : statNode
+    : titleNode;
 
   return (
     <PhiCardControl
@@ -179,7 +262,7 @@ export function PhiCardWidgetClient({
               {labels.eyebrow}
             </PhiTypographyControl>
           ) : null}
-          {titleNode}
+          {bodyNode}
         </div>
 
         {labels.description ? (

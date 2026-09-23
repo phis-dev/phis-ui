@@ -51,8 +51,9 @@ export type PhiDashboardCardDescriptor = {
    * What the card says before its payload arrives, already translated.
    *
    * A descriptor is assembled on the server, where the label sets are, so a Module answers in the
-   * viewer's language rather than handing Core a key to look up. `title` is what stands where the
-   * figure will stand, which is why a card that has not resolved reads as itself and not as a grey box.
+   * viewer's language rather than handing Core a key to look up. `title` is what the figure will be
+   * labelled with and it keeps that place afterwards, which is why a card that has not resolved reads
+   * as itself and not as a grey box -- and why one that has resolved still says what it counted.
    */
   eyebrow?: string;
   title: string;

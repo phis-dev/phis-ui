@@ -1,6 +1,7 @@
 import { resolvePhiCmsWidgetPluginKey } from "../../../../../constants/cms-widget-types";
 import { PhiCmsWidgetType } from "../../../../../constants/cms-widget-types";
 import type { PhiCmsWidgetPlugin } from "../../../../../types";
+import type { PhiCardWidgetBody } from "./client";
 import type { PhiMediaImageSourceConfig } from "../../../../../types/media";
 import { readPhiMediaImageSourceConfig } from "../../../../../components/widgets/config/image-source-parser";
 import {
@@ -19,6 +20,10 @@ export type PhiCmsCardWidgetConfig = PhiCmsWidgetConfigBase &
     title?: string;
     description?: string;
     meta?: string;
+    /** Which body draws. Absent is `text`, which is what every card written before this one is. */
+    body?: PhiCardWidgetBody;
+    /** The figure a `stat` body draws. Never translated, whatever `translate` says. */
+    value?: string;
     href?: string;
     newTab?: boolean;
     actionLabel?: string;
@@ -42,6 +47,11 @@ export function parsePhiCmsCardWidgetConfig(config: Record<string, unknown>): Ph
     iconAlt: readString(config.iconAlt),
     description: readString(config.description),
     meta: readString(config.meta),
+    value: readString(config.value),
+    body: ((): PhiCmsCardWidgetConfig["body"] => {
+      const body = readString(config.body);
+      return body === "text" || body === "stat" ? body : undefined;
+    })(),
     href: readString(config.href),
     newTab: readBoolean(config.newTab),
     actionLabel: readString(config.actionLabel),
@@ -74,6 +84,16 @@ export const PHI_CARD_WIDGET_DEFINITION = {
     { key: "title", type: "string", label: "Title" },
     { key: "description", type: "string", label: "Description" },
     { key: "meta", type: "string", label: "Meta" },
+    {
+      key: "body",
+      type: "choice",
+      label: "Body",
+      options: [
+        { value: "text", label: "Text" },
+        { value: "stat", label: "Statistic" },
+      ],
+    },
+    { key: "value", type: "string", label: "Value", visibleWhen: { field: "body", equals: "stat" } },
     {
       key: "sourceKind",
       type: "choice",

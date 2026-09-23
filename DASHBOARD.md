@@ -14,8 +14,16 @@ renaming. Until the clock exists, a card is asked once, when it mounts, and the 
 staleness to declare: a field nothing reads is worse than a field that is not there yet. Ordering is the
 card id, which is to say the owning Module, and section 9's first question is still open.
 
-Only the `stat` form is offered. `list` and a series card wait for the case that needs them, on the
-terms section 9 states.
+The card Widget itself decides none of that. It is given a value, whether the value is still coming and
+whether it failed, and draws them; what asks, and when, is the Dashboard's card View for now. That is
+what makes the clock a move rather than a rewrite, and it is `design/STATE_MACHINES.md`'s rule that a
+Widget presents a state it was given rather than holding one.
+
+Only the `stat` form is offered, and it now draws: Core's card takes a `body`, and the `stat` body is
+`PhiStatisticControl` -- the same Control the Theme inspector uses, so the house keeps one statistic
+rather than two. Before that the figure was written into the card's title slot, which left the eyebrow
+as the only word saying what had been counted. `list` and a series card wait for the case that needs
+them, on the terms section 9 states.
 
 Decisions taken while writing this are stated where they apply, including the ones that rejected an
 earlier answer, because the rejected ones are the ones that come back.

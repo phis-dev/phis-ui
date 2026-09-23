@@ -13,6 +13,7 @@ export type PhiCardWidgetLabels = {
   description?: string;
   meta?: string;
   actionLabel?: string;
+  value?: string;
 };
 
 export type PhiCardWidgetConfig = PhiCardWidgetClientConfig & {
@@ -51,6 +52,14 @@ export async function PhiCardWidget({
   const description = translatedByKey.get("description");
   const meta = translatedByKey.get("meta");
   const actionLabel = translatedByKey.get("actionLabel");
+  /*
+   * The figure is left out of that list on purpose.
+   *
+   * A label set answers for words, and a Site's own number is not one. Sending it through the
+   * translator would make "1,204" a message id, and `translate` is a per-Widget switch, so a stat card
+   * that turned it off to protect the figure would lose its title's translation with it.
+   */
+  const value = labels.value ?? config?.value;
   const resolvedAsset =
     config?.sourceKind === "asset" && typeof config.assetId === "number"
       ? await resolvePhiPublicAssetReference({ runtime, assetId: config.assetId }).catch(() => null)
@@ -78,6 +87,7 @@ export async function PhiCardWidget({
           description,
           meta,
           actionLabel,
+          value,
         },
         config: {
           imageUrl: presentation.url ?? undefined,
@@ -90,6 +100,7 @@ export async function PhiCardWidget({
           actionHref: config?.actionHref,
           actionNewTab: config?.actionNewTab,
           variant: config?.variant,
+          body: config?.body,
           highlight: config?.highlight,
         },
       }}
