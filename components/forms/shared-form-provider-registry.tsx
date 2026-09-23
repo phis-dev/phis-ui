@@ -56,7 +56,16 @@ function lazyPhiFormFieldControl(
       aria-busy="true"
       style={{
         blockSize: `calc(var(--ant-control-height) * ${placeholderRows} + var(--ant-padding-sm) * ${placeholderRows - 1})`,
-        borderRadius: "var(--ant-border-radius)",
+        /*
+         * The Control shape, because this stands where a Control is about to stand. `grown-md` is half a
+         * Control line, which on the one-row placeholder is exactly the capsule and on a taller one is the
+         * capsule held -- the same answer the field itself will give when it arrives, so the shape does not
+         * change under the reader at the moment the chunk lands.
+         *
+         * Here the fallback is the plain surface radius and not the large one: this is an ordinary `div`,
+         * not an Ant Design Control, so nothing has redefined `--ant-border-radius` on it.
+         */
+        borderRadius: "var(--phi-control-radius-grown-md, var(--ant-border-radius))",
         background: "var(--ant-color-fill-quaternary)",
       }}
     />
