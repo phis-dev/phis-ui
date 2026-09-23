@@ -78,6 +78,15 @@ Widgets, Forms, Overlays                  (present the state; never hold it)
 - A Widget never hosts a machine and never holds its state. It presents a state it was given and reports
   what the visitor did.
 
+## Where the grammar lives
+
+The definition grammar -- authority, persistence, state kinds, the descriptor shapes, the reader -- belongs
+in `@phis/contracts`, on the same grounds the signal vocabularies do: phi-server validates stored wiring
+against the same lists, and a definition that is ever stored, mirrored or validated server-side must be
+read from one source rather than two. `PhiStateMachineBinding` and every host stay in `@phis/ui`. It is
+the split signals already have -- grammar there, runtime here -- and it is what makes a third party's
+definition checkable on both sides of the relay.
+
 ## Authority
 
 `authority` is the first field of a definition, not an implementation detail.
@@ -99,12 +108,22 @@ This field is what keeps a third party from rebuilding a security state machine 
 ## Definition identity and content
 
 - Every machine has a stable namespaced id and a positive integer definition version.
-- Every state has a stable state key. Array or table position is presentation order, never identity.
-- Every transition has a stable key within the definition.
-- Changing the version deliberately creates a new machine. Persisted state recorded under an older version
-  is discarded, not migrated: the package is pre-v1 and keeps no compatibility readers
-  ([AGENTS.md](../AGENTS.md)). A machine that must retain history across versions records it as domain
-  data, not as machine state.
+- States and transitions are keyed objects, not arrays of records. The key is the identity, so an object
+  makes uniqueness structural where an array leaves it to a validator, lookup is direct, and a diff
+  between two versions stays readable -- which is what a versioned identity is for.
+  `PHI_SIGNAL_VALUE_SCHEMAS` is already written this way. The descriptor lists that *are* arrays, such as
+  the form handler providers, are arrays because they are concatenated across Modules; a machine belongs
+  to exactly one Module and is never assembled. Where several owners contribute, an array; where one
+  owns, an object.
+- Position carries no meaning. A state has no order, and a transition's place in the object is not a
+  priority.
+- The version has exactly one job: it is the identity of persisted state. Changing it deliberately makes a
+  different machine, and state recorded under an older version is discarded rather than migrated. A
+  machine that must keep history across versions records it as domain data, not as machine state.
+- It is not a compatibility promise, and nothing here is. While the package is pre-v1 an ABI break is
+  allowed, including one a third-party package reads -- that package is rebuilt
+  ([AGENTS.md](../AGENTS.md): no shims, no parallel shapes, no compatibility readers). So there is no
+  version tolerance to negotiate between Modules and a reader declares no version it was written against.
 - Titles, descriptions, and any text a state contributes use the normal Label Set and translation paths
   ([TRANSLATIONS.md](../TRANSLATIONS.md)). A state key is not a user-visible string, and a definition
   carries no literal English copy -- the current second-factor body does, and that is one of the symptoms.
@@ -119,6 +138,12 @@ This field is what keeps a third party from rebuilding a security state machine 
 - A transition is `(from state, event key) -> to state`, optionally guarded. Guards reuse
   `PhiRuntimeConditionExpression` ([types/runtime-condition.ts](../types/runtime-condition.ts)) so that a
   guard and a `visibleWhen` are the same language, evaluated the same way, against the same sources.
+- Determinism is a validation rule rather than a shape. Transitions are keyed flat by transition key and
+  not nested under `from` and `event`, because nesting forbids the guarded alternative -- one event, two
+  targets, decided by a condition -- which Auth does not need and the first non-trivial client machine
+  probably will. What the nesting would have made impossible is checked instead: at most one unguarded
+  transition per `(from, event)`, and a guarded set with no unguarded fallback is a definition error
+  rather than a silent dead end.
 - **Waiting and failing are states, not flags beside them.** Today every Controller carries its own
   `submitting` and `error` next to whatever it considers the real state; that is where the divergence in
   loading and error presentation comes from. A definition that needs "submitted and waiting" names it.
@@ -148,6 +173,45 @@ repeated on every registration.
 - Signal readiness and state readiness stay distinct facts, as they do for Tour anchors
   ([TOURS.md](./TOURS.md)).
 
+## Reading another Module's machine
+
+One Module asking what another Module's machine is doing is an ordinary case -- a shop offering checkout
+only to a completed session, a Module holding its own Overlay back while a Tour runs -- and the channel
+for it already exists: a `controller` condition reads any address, and [SIGNALS.md](../SIGNALS.md) permits
+listening in on an address another listener owns. Nobody does it yet. Every `source: "controller"`
+condition in the package today reads a Controller of its own Module, which makes this the moment to say
+what such a reading is, instead of reconstructing it later from whatever the first caller wrote.
+
+- **A machine publishes named statements, not raw state keys.** Today a condition reads a path such as
+  `permissions.readOnly` out of a `Record<string, unknown>` -- an outside reader guessing at somebody
+  else's field names. A definition instead publishes a small set of named facts about itself and keeps
+  its state keys internal. The distinction already exists among the condition sources: `feature` is what
+  a Module publishes deliberately under a name it keeps, `controller` is whatever somebody happened to
+  report. A published surface is a machine's `feature`.
+- **The reason is correctness, not compatibility.** A reader that asks "while no step is running" --
+  which `noStepRunning()` in the login preset does today -- is right until the machine gains a state and
+  then silently wrong: it shows the login form during a recovery nobody told it about. Rebuilding that
+  package does not fix it, because it still compiles. A positive reading survives a new state, a negation
+  over an open set of states does not, and the owner is the only party who can keep a named statement
+  true across the states it adds.
+- **A reader names a reference, never an address.** [THIRD_PARTY_MODULES.md](../THIRD_PARTY_MODULES.md)
+  forbids the exact analogue for routes -- "Your own path must not appear anywhere in your Module. No
+  link, no forward, no condition on `/login`" -- and answers it with `(ownerModuleId, presetKey)` resolved
+  through the current route table. A machine condition names `(ownerModuleId, machineId)` and resolves the
+  same way. A hard-coded `controller:` address breaks quietly as soon as the instance is named differently
+  or the owning Module is not active in that Area.
+- **Absence is an answer.** The owning Module may not be active, so the machine may not exist.
+  `whenUnavailable` already carries this, and the cautious reading is the default: for a machine over a
+  security decision, "no state" must never pass as `complete`.
+- **Events from outside are declared, and there are none by default.** Reading is one thing; raising an
+  event in somebody else's machine is another. A machine states which events it accepts from outside its
+  owning Module, and states none unless it says so. Server authority softens that only halfway -- Core
+  still decides the outcome, but a foreign `enroll` is still an interference.
+
+Expressing the reference cleanly means a condition source of its own beside `controller`, which widens
+`PHI_RUNTIME_CONDITION_SOURCES` and needs approval like any other closed enum. The alternative -- letting
+a third party write the address -- is what this section exists to prevent.
+
 ## Signaling
 
 A machine uses the existing signal bus, scopes, addresses, actions, value types, and correlation ids. It
@@ -160,10 +224,10 @@ does not define a parallel event bus, a module-global store, or a second registr
   visible to Builder wiring and to descriptor validation like any other capability.
 - An event reaches a machine only through an explicitly routed signal from the originating instance. The
   host attaches no DOM listeners and infers no transition from a neighbouring Widget's internals.
-- Effects are dispatched by the host and never by a Widget that received a listen route. [SIGNALS.md](../SIGNALS.md)
-  states the rule the other way round -- "Listen routes update local state only; they never emit another
-  signal implicitly" -- and a machine that lived in a Widget would break it on every transition. Keeping
-  the machine in the Controller is what keeps that rule true.
+- Effects are dispatched by the host and never by a Widget that received a listen route.
+  [SIGNALS.md](../SIGNALS.md) states the rule the other way round -- "Listen routes update local state
+  only; they never emit another signal implicitly" -- and a machine that lived in a Widget would break it
+  on every transition. Keeping the machine in the Controller is what keeps that rule true.
 - A reply, a state change, and every effect carry the correlation id of the signal that caused them,
   across helpers and awaits.
 - Suppress no-op transitions. A guard that refuses, or a transition whose target equals the current state,
@@ -221,7 +285,9 @@ import-side-effect registration, no request-derived imports.
 
 What a third party gets: state, transitions, guards, effects, snapshot delivery, condition-state answering,
 persistence, and version handling. What it must not do: define a machine over a security decision another
-party owns, write a `server` authority machine without a reader, or reach another Area's host.
+party owns, write a `server` authority machine without a reader, or reach another Area's host. Reading a
+machine it does not own is [its own section](#reading-another-modules-machine); writing to one is declared
+by the owner or refused.
 
 ## Non-goals
 
@@ -254,11 +320,8 @@ design shaped around Auth alone would not survive the other four.
    was showing: discard and re-render, or report. Auth has an obvious answer; a slower domain may not.
 2. **Lifetime inside an Area.** Whether an Area-hosted machine survives a soft navigation between Pages of
    that Area, which the Controller contract does not currently state for Controllers either.
-3. **Where the grammar lives.** Signal vocabularies sit in `@phis/contracts/signals` because phi-server
-   validates stored wiring against the same lists. A machine definition that is ever stored, validated or
-   mirrored server-side belongs there too, not in `phis-ui/types`.
-4. **Composition.** Whether one machine may host another as a state, or whether two machines only ever
+3. **Composition.** Whether one machine may host another as a state, or whether two machines only ever
    coordinate through signals. The checkout case forces this question.
-5. **Diagnostics.** A wrong transition is as invisible today as a dropped signal was before the bus
+4. **Diagnostics.** A wrong transition is as invisible today as a dropped signal was before the bus
    reported one. Whether the binding reports a refused event, an unknown state key, or a guard that never
    resolves, and at what level.
