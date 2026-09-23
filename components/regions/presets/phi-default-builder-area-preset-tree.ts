@@ -3239,6 +3239,25 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                       { key: "label", fieldKey: "label", title: modulesLabels?.detail.field ?? "Field" },
                       { key: "value", fieldKey: "value", title: modulesLabels?.detail.value ?? "Value", sizing: { mode: "fill" } },
                     ],
+                    /*
+                     * Where the Module runs stands under the list rather than in it: the rows say what
+                     * the Module is, which is the same on every Site, and this says what this Site did
+                     * with it.
+                     *
+                     * A summary row rather than the free-text footer, so it keeps the columns the list
+                     * is read in -- caption left, answer right, under the same two headings. The footer
+                     * would have set the same sentence adrift across the full width.
+                     */
+                    summary: {
+                      placement: "body-end" as const,
+                      rows: [{
+                        key: "activeAreas",
+                        cells: [
+                          { key: "label", columnKey: "label", item: { key: "activeAreasLabel", value: { source: "provider" as const, fieldKey: "activeAreasLabel" } } },
+                          { key: "value", columnKey: "value", item: { key: "activeAreas", value: { source: "provider" as const, fieldKey: "activeAreas" } } },
+                        ],
+                      }],
+                    },
                     controlSize: "small",
                   },
                   features: {

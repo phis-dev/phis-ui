@@ -206,6 +206,19 @@ export const PHI_BUILDER_RUNTIME_DATA_PROVIDER_DESCRIPTORS = [
         { key: "label", title: "Field", type: "string", required: true },
         { key: "value", title: "Value", type: "string", required: true },
       ],
+      /*
+       * Where the Module runs is not a fact beside the others: the rows above say what the Module IS,
+       * and this one says what this Site did with it. It leaves the list and stands under it, which is
+       * why it travels as a summary rather than as a row.
+       *
+       * Two fields for one statement, because the summary row fills the same two columns the rows do
+       * and a summary cell renders a value. The caption travels as data for the same reason every row's
+       * caption does: this resource's first column IS a label, localized where the labels are.
+       */
+      summaryFields: [
+        { key: "activeAreasLabel", title: "Active areas caption", type: "string" },
+        { key: "activeAreas", title: "Active areas", type: "string" },
+      ],
       query: { sorting: "none", pagination: "none" },
     }, {
       /*

@@ -235,12 +235,41 @@ function readLabelMap(params: Record<string, unknown> | undefined, key: string) 
   return candidate as Record<string, string>;
 }
 
+/** Where a Module actually runs, as the Areas' own labels, for whoever is asking. */
+function readRuntimeModuleActiveAreas(
+  state: PhiDeveloperBuilderWorkspaceState,
+  moduleId: string,
+) {
+  const definition = state.runtimeModuleDefinitions.find((candidate) => candidate.moduleId === moduleId);
+  if (!definition) {
+    return [];
+  }
+  const baseAreaKey = resolveModuleBaseAreaKey(definition.moduleId);
+  return PHI_CMS_AREA_KEYS.filter((areaKey) =>
+    definition.eligibleAreas.includes(areaKey) &&
+    (areaKey === baseAreaKey || isModuleActiveInArea(state, definition.moduleId, areaKey)));
+}
+
+function buildRuntimeModuleActiveAreasLabel(
+  state: PhiDeveloperBuilderWorkspaceState,
+  moduleId: string,
+  areaLabels: Record<string, string> | null,
+) {
+  return readRuntimeModuleActiveAreas(state, moduleId)
+    .map((areaKey) => areaLabels?.[areaKey] ?? areaKey)
+    .join(", ");
+}
+
 /**
  * The detail rows for one Module, as field/value pairs.
  *
  * Only what the Module contract actually carries today: vendor, support link, manual and version are
  * declared nowhere yet, and a row promising them empty would read as a Module that failed to state them
  * rather than as a contract that has not grown them.
+ *
+ * Where the Module runs is not among them. Every row here answers "what is this Module", which is the
+ * same answer on every Site that installed it; where it runs is what THIS Site decided, so it stands
+ * under the list as its footer rather than inside it as its last line.
  */
 function buildRuntimeModuleDetailRows(
   state: PhiDeveloperBuilderWorkspaceState,
@@ -255,9 +284,6 @@ function buildRuntimeModuleDetailRows(
   }
 
   const baseAreaKey = resolveModuleBaseAreaKey(definition.moduleId);
-  const activeAreas = PHI_CMS_AREA_KEYS.filter((areaKey) =>
-    definition.eligibleAreas.includes(areaKey) &&
-    (areaKey === baseAreaKey || isModuleActiveInArea(state, definition.moduleId, areaKey)));
   const label = (key: string, fallback: string) => detailLabels?.[key] ?? fallback;
   const yesNo = (value: boolean) =>
     value ? label("yes", "Yes") : label("no", "No");
@@ -277,11 +303,6 @@ function buildRuntimeModuleDetailRows(
       value: definition.eligibleAreas.map((areaKey) => areaLabels?.[areaKey] ?? areaKey).join(", "),
     },
     { key: "baseModule", label: label("baseModule", "Area Base module"), value: yesNo(baseAreaKey != null) },
-    {
-      key: "activeAreas",
-      label: label("activeAreas", "Active areas"),
-      value: activeAreas.map((areaKey) => areaLabels?.[areaKey] ?? areaKey).join(", ") || "–",
-    },
   ];
 }
 
@@ -310,28 +331,32 @@ export function PhiBuilderRuntimeModulesTableProviderClient({ children }: { chil
     const query = async (request: PhiTableProviderQueryRequest) => {
       if (request.resourceKey === DETAIL_RESOURCE_KEY) {
         const moduleId = typeof request.params?.moduleId === "string" ? request.params.moduleId : "";
-        return queryPhiStaticTableResource(
-          {
-            descriptor: detailResourceDescriptor,
-            rows: buildRuntimeModuleDetailRows(
-              builderState,
-              moduleId,
-              readAreaLabels(request.params),
-              readLabelMap(request.params, "detailLabels"),
-              readLabelMap(request.params, "categoryLabels"),
-            ),
+        const areaLabels = readAreaLabels(request.params);
+        const detailLabels = readLabelMap(request.params, "detailLabels");
+        return {
+          ...queryPhiStaticTableResource(
+            {
+              descriptor: detailResourceDescriptor,
+              rows: buildRuntimeModuleDetailRows(
+                builderState,
+                moduleId,
+                areaLabels,
+                detailLabels,
+                readLabelMap(request.params, "categoryLabels"),
+              ),
+            },
+            request,
+          ),
+          /*
+           * The closing row, in the two columns the list above it uses. A Module active nowhere answers
+           * with a dash rather than with nothing: an empty cell would read as one that failed to load,
+           * and "nowhere" is a state worth seeing on the page that decides it.
+           */
+          summary: {
+            activeAreasLabel: detailLabels?.activeAreas ?? "Active areas",
+            activeAreas: buildRuntimeModuleActiveAreasLabel(builderState, moduleId, areaLabels) || "–",
           },
-          request,
-        );
-      }
-      if (request.resourceKey === MODULE_USAGE_RESOURCE_KEY) {
-        return queryPhiStaticTableResource(
-          {
-            descriptor: moduleUsageResourceDescriptor,
-            rows: (builderState.moduleDeactivationRequest?.usage ?? []).map((entry) => ({ ...entry })),
-          },
-          request,
-        );
+        };
       }
       if (request.resourceKey === MODULE_USAGE_RESOURCE_KEY) {
         return queryPhiStaticTableResource(
