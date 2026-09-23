@@ -1,7 +1,27 @@
-.root.withFooter [class~="ant-table"] {
+/*
+ * A Table closed by a block of its own clips that block to the Table's corner.
+ *
+ * Ant Design rounds the bottom of `.ant-table-footer` and nothing else. A summary row sits in `<tfoot>`
+ * with a ground of its own and paints straight into the corner, so the same square end appeared as soon
+ * as a Table closed with one instead of with a footer. Clipping the Table is what both cases want, which
+ * is why the rule names neither.
+ */
+.root.withClosingBlock [class~="ant-table"] {
   border-end-start-radius: var(--ant-border-radius-lg);
   border-end-end-radius: var(--ant-border-radius-lg);
   overflow: hidden;
+}
+
+/*
+ * A summary row stands on the ground a footer stands on.
+ *
+ * Ant Design gives `.ant-table-footer` the `footerBg` token and the summary `tableBg` -- the ground of
+ * an ordinary row. Both close a Table, and a closing block that looks like one more row does not read
+ * as one. The class is repeated once because Ant Design's own rule weighs the wrapper and the summary,
+ * and its stylesheet is injected after this one.
+ */
+.root.root [class~="ant-table-summary"] {
+  background: var(--ant-table-footer-bg, var(--ant-color-fill-alter));
 }
 
 .root [class~="ant-table-pagination"][class~="ant-pagination"] {

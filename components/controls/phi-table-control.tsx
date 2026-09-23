@@ -1472,9 +1472,16 @@ export function PhiTableControl<TRow extends Record<string, unknown>>({
       } satisfies TableRowSelection<TRow>)
     : undefined;
 
+  /*
+   * Whether something of the Table's own stands at its bottom edge. A sticky-top summary does not: it
+   * rides above the rows and leaves the last row to end the Table.
+   */
+  const hasClosingBlock = !loading &&
+    (Boolean(footer) || (summary != null && summary.placement !== "sticky-top"));
+
   const table = (
     <Table<TRow>
-      className={[styles.root, footer && !loading ? styles.withFooter : null].filter(Boolean).join(" ")}
+      className={[styles.root, hasClosingBlock ? styles.withClosingBlock : null].filter(Boolean).join(" ")}
       style={{ "--phi-table-striped-row-background": token.colorFillAlter } as CSSProperties}
       rowKey={(row) => loading
         ? `__phi_table_loading_${String((row as Record<PropertyKey, unknown>)[PHI_TABLE_LOADING_ROW])}`
