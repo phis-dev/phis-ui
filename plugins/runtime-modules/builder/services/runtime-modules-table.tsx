@@ -58,10 +58,12 @@ const MODULE_USAGE_RESOURCE_KEY = "moduleUsage";
  * cell renders as nothing at all.
  *
  * Both table filters narrow which rows are listed and never what a cell means: `area` keeps the Modules
- * eligible for one Area, `showFoundation` admits the Modules the site is built out of -- the ones that
- * carry the Areas themselves, and the ones every site keeps anyway because taking them away leaves it
- * unable to be administered at all. Those are the site's own scaffolding rather than a choice, which is
- * why the filter starts off.
+ * eligible for one Area, `showFoundation` switches between the two halves of the catalog -- the Modules
+ * the site is built out of, which carry the Areas themselves and which taking away leaves it unable to
+ * be administered at all, and everything else, which is what a site actually chooses. It switches
+ * rather than adds, because the two halves are read for different reasons: one list is the scaffolding
+ * somebody is looking up, the other is the set of decisions somebody came here to make, and a switch
+ * that only grew the first list left the decisions buried in it. It starts off, on the choices.
  */
 function readAreaLabels(params: Record<string, unknown> | undefined) {
   const candidate = params?.areaLabels;
@@ -120,7 +122,7 @@ function buildRuntimeModuleRows(
     .filter((definition) =>
       definition.kind !== "platform" &&
       (view.areaFilter == null || definition.eligibleAreas.includes(view.areaFilter)) &&
-      (view.showFoundation || readPhiRuntimeModuleCategory(definition.category) !== "foundation"))
+      (readPhiRuntimeModuleCategory(definition.category) === "foundation") === view.showFoundation)
     .map((definition) => {
       const baseAreaKey = resolveModuleBaseAreaKey(definition.moduleId);
       const activeAreas = PHI_CMS_AREA_KEYS.filter((areaKey) =>
@@ -144,7 +146,16 @@ function buildRuntimeModuleRows(
         ])),
       };
     })
-    .sort((left, right) => left.title.localeCompare(right.title, "en", { sensitivity: "base" }));
+    /*
+     * The Area Base Modules stand first, the rest alphabetically behind them.
+     *
+     * Not a rank -- nothing reads this order back (the selection is rebuilt from the catalog on every
+     * save). It is the reading order of the foundation half: the rows whose switch is locked are the
+     * ones nobody can act on, and a list that opens with them says where the choices begin.
+     */
+    .sort((left, right) =>
+      Number(right.isBaseModule) - Number(left.isBaseModule) ||
+      left.title.localeCompare(right.title, "en", { sensitivity: "base" }));
 }
 
 /**
@@ -154,12 +165,19 @@ function buildRuntimeModuleRows(
  * before coming here -- so the row exists to answer why. It is inert: no switch, no checkbox, nothing
  * to flip, because there is no definition to flip anything against. The next save of this workspace
  * writes the selection without it, and the row says so rather than letting that happen quietly.
+ *
+ * It belongs to the choices half and not to the foundation one: whatever the missing Module was, the
+ * site selected it, and a selection is a choice. There is also no definition left to read a category
+ * off, so putting it anywhere else would be putting it there by guess.
  */
 function buildUnresolvedRuntimeModuleRows(
   state: PhiDeveloperBuilderWorkspaceState,
   view: PhiRuntimeModulesTableView,
   labels: { missing: string; missingHint: string } | null,
 ) {
+  if (view.showFoundation) {
+    return [];
+  }
   const installed = new Set(state.runtimeModuleDefinitions.map((definition) => definition.moduleId));
   const areas = view.areaFilter ? [view.areaFilter] : PHI_CMS_AREA_KEYS;
   const byModuleId = new Map<string, PhiCmsAreaKey[]>();
