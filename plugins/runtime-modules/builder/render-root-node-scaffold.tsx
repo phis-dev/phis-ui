@@ -15,7 +15,12 @@ import {
   type PhiCmsBackgroundWidgetConfig,
 } from "../../../components/widgets/config/background";
 import type { PhiCmsGeometryWidgetConfig } from "../../../components/widgets/config/geometry";
-import { resolvePhiBorderWidgetStyle } from "../../../helpers/border-widget-style";
+import { resolvePhiSourcedBorderStyle } from "../../../helpers/border-widget-style";
+import {
+  readPhiCmsBorderSource,
+  resolvePhiCmsBorderSource,
+  type PhiCmsBorderSource,
+} from "../../../types/cms-config";
 import { resolvePhiAnchorPlacement } from "../../../components/layouts/phi-layout-contract";
 import { PhiSlotChildFrame } from "../../../plugins/runtime/phi-slot-child-frame";
 import {
@@ -1024,16 +1029,24 @@ function resolveLayoutNodeRootProps(node: PhiCmsLayoutRenderNode) {
 
 function resolveRootNodeChromeStyle({
   background,
+  borderSource,
   border,
   shadow,
   style,
 }: {
   background?: PhiCmsBackgroundWidgetConfig | null;
+  borderSource?: PhiCmsBorderSource;
   border?: PhiCmsBorderWidgetConfig | null;
   shadow?: PhiShadow | null;
   style?: CSSProperties;
 }): CSSProperties | undefined {
-  if (background == null && border == null && shadow == null) {
+  /*
+   * The Canvas draws the same chrome the page will, so it has to ask the same question: where does the
+   * outline come from. `theme` draws a line where nothing is stored, which is why the shortcut below
+   * can no longer take "nothing stored" for "nothing to draw".
+   */
+  const resolvedBorderSource = resolvePhiCmsBorderSource(borderSource, border);
+  if (background == null && border == null && shadow == null && resolvedBorderSource !== "theme") {
     return style;
   }
 
@@ -1042,7 +1055,7 @@ function resolveRootNodeChromeStyle({
   return {
     ...style,
     ...backgroundStyle,
-    ...(border == null ? {} : resolvePhiBorderWidgetStyle(border)),
+    ...resolvePhiSourcedBorderStyle(resolvedBorderSource, border),
     boxShadow: combinePhiBoxShadows(backgroundStyle.boxShadow, resolvePhiShadow(shadow)),
   };
 }
@@ -1809,6 +1822,7 @@ export function renderPhiRootNodeScaffold(
             paddingLeft: normalizedRootNode.rootNodePadding?.paddingLeft ?? undefined,
             style: resolveRootNodeChromeStyle({
               background: normalizedRootNode.rootNodeBackground,
+              borderSource: readPhiCmsBorderSource(normalizedRootNode.rootNodeConfig?.borderSource),
               border: normalizedRootNode.rootNodeBorder,
               shadow: normalizedRootNode.rootNodeShadow,
               style: (rendered.props as { style?: CSSProperties }).style,
@@ -1875,6 +1889,7 @@ export function renderPhiRootNodePreview(
                 paddingLeft: normalizedRootNode.rootNodePadding?.paddingLeft ?? undefined,
                 style: resolveRootNodeChromeStyle({
                   background: normalizedRootNode.rootNodeBackground,
+                  borderSource: readPhiCmsBorderSource(normalizedRootNode.rootNodeConfig?.borderSource),
                   border: normalizedRootNode.rootNodeBorder,
                   shadow: normalizedRootNode.rootNodeShadow,
                   style: (rendered.props as { style?: CSSProperties }).style,

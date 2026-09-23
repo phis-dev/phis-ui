@@ -31,6 +31,7 @@ export const PHI_MASONRY_LAYOUT_PLUGIN: PhiCmsLayoutPlugin<PhiCmsMasonryLayoutCo
       collapsedSizeHint={config.collapsedSizeHint}
       padding={config.padding}
       background={config.background}
+      borderSource={config.borderSource}
       border={config.border}
       borderRadius={config.borderRadius}
       labelEnd={config.labelEnd}

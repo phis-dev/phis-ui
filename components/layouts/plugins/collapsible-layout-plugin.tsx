@@ -65,7 +65,6 @@ export const PHI_COLLAPSIBLE_LAYOUT_PLUGIN: PhiCmsLayoutPlugin<PhiCmsCollapsible
       translateSlotTitles={config.translateSlotTitles}
       defaultOpenSlotKeys={config.defaultOpenSlotKeys}
       collapsible={config.collapsible}
-      bordered={config.bordered}
       ghost={config.ghost}
       expandIconPlacement={config.expandIconPlacement}
       collapseSize={config.collapseSize}
@@ -81,6 +80,7 @@ export const PHI_COLLAPSIBLE_LAYOUT_PLUGIN: PhiCmsLayoutPlugin<PhiCmsCollapsible
       paddingBottom={config.paddingBottom}
       paddingLeft={config.paddingLeft}
       background={config.background}
+      borderSource={config.borderSource}
       border={config.border}
       borderRadius={config.borderRadius}
       labelEnd={config.labelEnd}

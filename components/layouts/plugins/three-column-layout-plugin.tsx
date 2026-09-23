@@ -37,6 +37,7 @@ export const PHI_THREE_COLUMN_LAYOUT_PLUGIN: PhiCmsLayoutPlugin<PhiCmsThreeColum
       paddingBottom={config.paddingBottom}
       paddingLeft={config.paddingLeft}
       background={config.background}
+      borderSource={config.borderSource}
       border={config.border}
       borderRadius={config.borderRadius}
       labelEnd={config.labelEnd}

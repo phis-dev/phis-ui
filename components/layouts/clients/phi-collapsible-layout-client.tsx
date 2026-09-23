@@ -51,7 +51,6 @@ export type PhiCollapsibleLayoutProps = Omit<PhiBaseLayoutProps, "slots"> & {
   onOpenSlotKeysChange?: (next: string[]) => void;
   defaultOpenSlotKeys?: string[];
   collapsible?: "header" | "icon" | "disabled";
-  bordered?: boolean;
   ghost?: boolean;
   expandIconPlacement?: "start" | "end";
   collapseSize?: PhiControlSize;
@@ -133,10 +132,19 @@ function resolveCollapsibleStyles(
   headerPadding: CSSProperties["padding"] | undefined,
   innerPadding: CSSProperties["padding"] | undefined,
 ): CollapseProps["styles"] {
+  /*
+   * The grounds are square, because they are not an edge.
+   *
+   * A header and a panel are the filling of the Layout box, not a box of their own, and the box has
+   * already decided its corner -- from the shape or from what the author configured. Rounding them a
+   * second time means the same number in two places, which is the arrangement that drifts apart the
+   * moment one of the two gains a source the other does not have. Squared, the wrapper's clip is the
+   * only corner there is, and it is the box's.
+   */
   return {
-    header: headerPadding == null ? undefined : { padding: headerPadding },
+    header: { ...(headerPadding == null ? {} : { padding: headerPadding }), borderRadius: 0 },
     title: titleStrong ? { fontWeight: 600 } : undefined,
-    body: innerPadding == null ? undefined : { padding: innerPadding },
+    body: { ...(innerPadding == null ? {} : { padding: innerPadding }), borderRadius: 0 },
   };
 }
 
@@ -159,7 +167,6 @@ function PhiCollapsibleLayoutBody({
   onOpenSlotKeysChange,
   defaultOpenSlotKeys,
   collapsible = "header",
-  bordered = false,
   ghost = true,
   expandIconPlacement = "start",
   collapseSize = "medium",
@@ -188,6 +195,7 @@ function PhiCollapsibleLayoutBody({
     paddingLeft,
     background,
     backgroundLayer,
+    borderSource,
     border,
     borderRadius,
     effect,
@@ -405,6 +413,7 @@ function PhiCollapsibleLayoutBody({
     paddingBottom,
     paddingLeft,
     background,
+    borderSource,
     border,
     borderRadius,
     effect,
@@ -568,6 +577,23 @@ function PhiCollapsibleLayoutBody({
     >
       {backgroundLayer}
       <div
+        /*
+         * The grounds inside follow the corner outside.
+         *
+         * A Collapse paints its own header and panel grounds, and it rounds them from its own token --
+         * the Site's surface step, which is the box's corner only as long as nobody set another one.
+         * Under `custom` the box can be rounded 30px while the ground inside is still rounded 8, and the
+         * colour then squares off the corner it sits in.
+         *
+         * `border-radius: inherit` takes the box's corner literally, whatever it resolved to, and the
+         * clip makes every ground inside end there -- which works because the grounds are square
+         * (`resolveCollapsibleStyles`): a clip only ever takes away, so a ground that rounded itself
+         * more tightly than the box would keep its own corner and the clip would never reach it.
+         *
+         * The clip earns its place twice over: it shapes the corner, and it keeps the content of a
+         * panel inside the panel.
+         */
+        style={{ borderRadius: "inherit", overflow: "hidden" }}
         onMouseDown={
           isEditMode
             ? (event) => {
@@ -590,7 +616,13 @@ function PhiCollapsibleLayoutBody({
         <Collapse
           accordion={accordion}
           activeKey={toCollapseActiveKey(resolvedOpenSlotKeys, accordion)}
-          bordered={bordered}
+          /*
+           * Never its own outline: the Layout box draws it, out of `borderSource`, for every Layout the
+           * same way. What stays here is `ghost`, which decides the inside -- and Ant Design's borderless
+           * variant keeps the first header's top corners on `collapsePanelBorderRadius`, the same surface
+           * step the box takes, so inside and outside meet on one number.
+           */
+          bordered={false}
           ghost={ghost}
           collapsible={effectiveCollapsible}
           destroyOnHidden={false}

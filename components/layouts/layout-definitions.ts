@@ -154,7 +154,11 @@ export const PHI_COLLAPSIBLE_LAYOUT_DEFINITION = {
     { key: "panelMinHeight", type: "length", label: "Panel Min Height", min: 0 },
     { key: "translateSlotTitles", type: "boolean", label: "Translate Slot Titles" },
     { key: "accordion", type: "boolean", label: "Accordion" },
-    { key: "bordered", type: "boolean", label: "Bordered" },
+    /*
+     * The inside, and only the inside: whether the panels are separate objects -- their own ground, a
+     * rule between them -- or a flat list. The outline around the whole thing is the Layout box's, and
+     * `borderSource` is where that is decided, for every Layout at once.
+     */
     { key: "ghost", type: "boolean", label: "Ghost" },
     {
       key: "collapsible",

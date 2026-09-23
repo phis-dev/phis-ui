@@ -74,6 +74,19 @@ export type PhiCmsLayerBase = PhiCmsRenderableBlockConfigBase & {
   paddingBottom?: CSSProperties["paddingBottom"];
   paddingLeft?: CSSProperties["paddingLeft"];
   background?: CSSProperties["background"];
+  /**
+   * Where a Layout's outline comes from, which is a different question from what it looks like.
+   *
+   * `none` draws none, `theme` draws the Site's own line -- its border colour and line width, with the
+   * corner the shape already gives every surface -- and `custom` draws what `border` says. Absent means
+   * `custom` where a border was configured and `none` everywhere else, which is how a Site written
+   * before this field reads correctly without being rewritten.
+   *
+   * The point of stating it is that "no border" and "nobody has said yet" stop being the same absence,
+   * and that a Layout with its own frame -- a Collapsible outlining its panels -- no longer has to be a
+   * second way of asking the same thing.
+   */
+  borderSource?: PhiCmsBorderSource;
   border?: CSSProperties["border"];
   borderRadius?: CSSProperties["borderRadius"];
 };
@@ -207,6 +220,40 @@ export function mergePhiPaddingWidgetConfig(
   override: PhiCmsPaddingWidgetConfig | null | undefined,
 ): PhiCmsPaddingWidgetConfig | null {
   return mergePhiCmsConfigValues<PhiCmsPaddingWidgetConfig>(base, override);
+}
+
+export const PHI_CMS_BORDER_SOURCES = ["none", "theme", "custom"] as const;
+
+export type PhiCmsBorderSource = (typeof PHI_CMS_BORDER_SOURCES)[number];
+
+export function readPhiCmsBorderSource(value: unknown): PhiCmsBorderSource | undefined {
+  return typeof value === "string" && (PHI_CMS_BORDER_SOURCES as readonly string[]).includes(value)
+    ? value as PhiCmsBorderSource
+    : undefined;
+}
+
+/**
+ * The source a stored Layout answers with when it never stated one.
+ *
+ * A configured border means the author drew a line, so that is `custom`; anything else is `none`. The
+ * rule is stated once and read wherever a source is needed, so the Inspector and the drawing cannot
+ * come to different conclusions about a Layout that predates the field.
+ */
+export function resolvePhiCmsBorderSource(
+  source: PhiCmsBorderSource | undefined,
+  border: unknown,
+): PhiCmsBorderSource {
+  if (source) {
+    return source;
+  }
+  const hasBorder = typeof border === "string"
+    ? border.trim().length > 0 && border !== "none"
+    // A radius is not a line. A Layout that only ever had its corners set never drew an outline, and
+    // reading it as `custom` would put it in the one state where the corners stop following the shape.
+    : border != null && typeof border === "object"
+      && (["borderWidth", "borderStyle", "borderColor"] as const)
+        .some((key) => (border as Record<string, unknown>)[key] != null);
+  return hasBorder ? "custom" : "none";
 }
 
 export type PhiCmsBorderWidgetConfig = {
@@ -351,7 +398,6 @@ export type PhiCmsCollapsibleLayoutConfig = PhiCmsLayerBase & {
   translateSlotTitles?: boolean;
   defaultOpenSlotKeys?: string[];
   collapsible?: "header" | "icon" | "disabled";
-  bordered?: boolean;
   ghost?: boolean;
   expandIconPlacement?: "start" | "end";
   collapseSize?: PhiControlSize;
@@ -548,6 +594,7 @@ export function parsePhiCmsContentLayoutConfig(
       paddingTop: readCssSize(config.paddingTop),
       paddingBottom: readCssSize(config.paddingBottom),
       background: readString(config.background),
+      borderSource: readPhiCmsBorderSource(config.borderSource),
       border: readString(config.border),
       borderRadius: readCssSize(config.borderRadius),
       anchor: resolvePhiAnchorPlacement(readRenderableBlockAnchorOrPlacement(config.anchor)) ?? undefined,
@@ -571,6 +618,7 @@ export function parsePhiCmsFlexLayoutConfig(config: Record<string, unknown>): Ph
       paddingTop: readCssSize(config.paddingTop),
       paddingBottom: readCssSize(config.paddingBottom),
       background: readString(config.background),
+      borderSource: readPhiCmsBorderSource(config.borderSource),
       border: readString(config.border),
       borderRadius: readCssSize(config.borderRadius),
       gap: readCssSize(config.gap),
@@ -606,6 +654,7 @@ export function parsePhiCmsFlexVerticalLayoutConfig(
       paddingTop: readCssSize(config.paddingTop),
       paddingBottom: readCssSize(config.paddingBottom),
       background: readString(config.background),
+      borderSource: readPhiCmsBorderSource(config.borderSource),
       border: readString(config.border),
       borderRadius: readCssSize(config.borderRadius),
       gap: readCssSize(config.gap),
@@ -625,6 +674,7 @@ export function parsePhiCmsMasonryLayoutConfig(
       labelEnd: readPhiLayoutLabelEnd(config.labelEnd),
       padding: readCssSize(config.padding),
       background: readString(config.background),
+      borderSource: readPhiCmsBorderSource(config.borderSource),
       border: readString(config.border),
       borderRadius: readCssSize(config.borderRadius),
       columns: readNumber(config.columns),
@@ -649,6 +699,7 @@ export function parsePhiCmsStackLayoutConfig(
       labelEnd: readPhiLayoutLabelEnd(config.labelEnd),
       padding: readCssSize(config.padding),
       background: readString(config.background),
+      borderSource: readPhiCmsBorderSource(config.borderSource),
       border: readString(config.border),
       borderRadius: readCssSize(config.borderRadius),
       activeSlotKey: readString(config.activeSlotKey),
@@ -723,6 +774,7 @@ export function parsePhiCmsCarouselLayoutConfig(
       labelEnd: readPhiLayoutLabelEnd(config.labelEnd),
       padding: readCssSize(config.padding),
       background: readString(config.background),
+      borderSource: readPhiCmsBorderSource(config.borderSource),
       border: readString(config.border),
       borderRadius: readCssSize(config.borderRadius),
       activeSlotKey: readString(config.activeSlotKey),
@@ -791,6 +843,7 @@ export function parsePhiCmsCollapsibleLayoutConfig(
       paddingTop: readCssSize(config.paddingTop),
       paddingBottom: readCssSize(config.paddingBottom),
       background: readString(config.background),
+      borderSource: readPhiCmsBorderSource(config.borderSource),
       border: readString(config.border),
       borderRadius: readCssSize(config.borderRadius),
       anchor: readRenderableBlockAnchorOrPlacement(config.anchor),
@@ -800,7 +853,6 @@ export function parsePhiCmsCollapsibleLayoutConfig(
       translateSlotTitles: readBoolean(config.translateSlotTitles),
       defaultOpenSlotKeys: readStringArray(config.defaultOpenSlotKeys),
       collapsible: readCollapsibleTrigger(config.collapsible),
-      bordered: readBoolean(config.bordered),
       ghost: readBoolean(config.ghost),
       expandIconPlacement: readExpandIconPlacement(config.expandIconPlacement),
       collapseSize: readCollapsibleSize(config.collapseSize),
@@ -822,6 +874,7 @@ export function parsePhiCmsGridLayoutConfig(
       labelEnd: readPhiLayoutLabelEnd(config.labelEnd),
       padding: readCssSize(config.padding),
       background: readString(config.background),
+      borderSource: readPhiCmsBorderSource(config.borderSource),
       border: readString(config.border),
       borderRadius: readCssSize(config.borderRadius),
       gap: readCssSize(config.gap),
@@ -862,6 +915,7 @@ export function parsePhiCmsThreeColumnLayoutConfig(
       paddingTop: readCssSize(config.paddingTop),
       paddingBottom: readCssSize(config.paddingBottom),
       background: readString(config.background),
+      borderSource: readPhiCmsBorderSource(config.borderSource),
       border: readString(config.border),
       borderRadius: readCssSize(config.borderRadius),
       balancedSides: readBoolean(config.balancedSides) ?? true,
@@ -895,6 +949,7 @@ export function parsePhiCmsSplitCardLayoutConfig(
       paddingTop: readCssSize(config.paddingTop),
       paddingBottom: readCssSize(config.paddingBottom),
       background: readString(config.background),
+      borderSource: readPhiCmsBorderSource(config.borderSource),
       border: readString(config.border),
       borderRadius: readCssSize(config.borderRadius),
       effect: isPhiLayoutEffectId(config.effect) ? config.effect : undefined,

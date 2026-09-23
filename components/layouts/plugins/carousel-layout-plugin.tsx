@@ -86,6 +86,7 @@ export const PHI_CAROUSEL_LAYOUT_PLUGIN: PhiCmsLayoutPlugin<PhiCmsCarouselLayout
       paddingBottom={config.paddingBottom}
       paddingLeft={config.paddingLeft}
       background={config.background}
+      borderSource={config.borderSource}
       border={config.border}
       borderRadius={config.borderRadius}
       labelEnd={config.labelEnd}

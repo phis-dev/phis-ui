@@ -11,6 +11,8 @@ import type {
   PhiRenderableBlockSize,
 } from "../../types";
 import type { PhiShadow, PhiLayoutEffectId } from "../../types/layout-style";
+import { resolvePhiCmsBorderSource, type PhiCmsBorderSource } from "../../types/cms-config";
+import { PHI_THEME_BORDER_LINE } from "../../helpers/border-widget-style";
 
 export type PhiLayoutProps = {
   size?: PhiRenderableBlockSize;
@@ -35,6 +37,7 @@ export type PhiLayoutProps = {
   paddingLeft?: CSSProperties["paddingLeft"];
   background?: CSSProperties["background"];
   backgroundLayer?: ReactNode;
+  borderSource?: PhiCmsBorderSource;
   border?: CSSProperties["border"];
   borderRadius?: CSSProperties["borderRadius"];
 };
@@ -154,6 +157,7 @@ export function resolvePhiLayoutStyle({
   paddingBottom,
   paddingLeft,
   background,
+  borderSource,
   border,
   borderRadius,
 }: Pick<
@@ -164,22 +168,40 @@ export function resolvePhiLayoutStyle({
   | "paddingBottom"
   | "paddingLeft"
   | "background"
+  | "borderSource"
   | "border"
   | "borderRadius"
 >): CSSProperties {
 
-  const resolvedBorderRadius = normalizePhiCssSize(borderRadius);
+  /*
+   * Where the outline comes from, asked before anything about what it looks like.
+   *
+   * `theme` is the Site's own line -- the border colour and the line width it already states -- so a
+   * Layout can take the house style without anybody typing a colour into it, and it moves when the
+   * Theme moves. `custom` is the configured line, and the one source that reads a configured corner.
+   * `none` draws nothing, and is what a Layout that was never asked says now that "no line" and
+   * "nobody said" are two different answers.
+   */
+  const resolvedBorderSource = resolvePhiCmsBorderSource(borderSource, border);
+  const resolvedBorderRadius = resolvedBorderSource === "custom"
+    ? normalizePhiCssSize(borderRadius)
+    : null;
 
   return {
     ...(background == null ? {} : { background }),
-    ...(border == null
-      ? {}
-      : {
-          border,
-        }),
+    ...(resolvedBorderSource === "theme"
+      ? { border: PHI_THEME_BORDER_LINE }
+      : resolvedBorderSource === "custom" && border != null
+        ? { border }
+        : {}),
     /*
      * A Layout is a surface, so an author who said nothing about its corner gets the Site's answer to
-     * that question -- the same step a Table and a Tree take, carried on the root as
+     * that question -- and so does one who said something but is no longer asking for it: a corner is
+     * the author's only under `custom`, which is the one state where the fields that set it are even
+     * shown. Switching to `theme` or `none` therefore shows the shape at once, square or capsule,
+     * instead of keeping the radii of a border that is no longer being drawn.
+     *
+     * The rest of that question -- the same step a Table and a Tree take, carried on the root as
      * `--phi-surface-radius` (THEME.md, "Control shape"). An author who did say something keeps it: the
      * step answers silence, it does not cap anybody.
      *

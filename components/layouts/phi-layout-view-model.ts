@@ -76,6 +76,7 @@ export function resolvePhiBaseLayoutChrome({
   paddingBottom,
   paddingLeft,
   background,
+  borderSource,
   border,
   borderRadius,
   effect,
@@ -90,6 +91,7 @@ export function resolvePhiBaseLayoutChrome({
   | "paddingBottom"
   | "paddingLeft"
   | "background"
+  | "borderSource"
   | "border"
   | "borderRadius"
   | "effect"
@@ -102,6 +104,7 @@ export function resolvePhiBaseLayoutChrome({
     paddingBottom,
     paddingLeft,
     background,
+    borderSource,
     border,
     borderRadius,
   });

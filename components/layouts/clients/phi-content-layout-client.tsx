@@ -11,6 +11,7 @@ import { PhiLayoutAnchoredOverlay } from "./phi-layout-anchored-overlay";
 import type { PhiAnchorWidgetPlacement } from "../../controls/phi-anchor-control-contract";
 import type { PhiRenderableBlockRenderMode, PhiRenderableBlockSize } from "../../../types";
 import type { PhiShadow, PhiLayoutEffectId } from "../../../types/layout-style";
+import type { PhiCmsBorderSource } from "../../../types/cms-config";
 import {
   isPhiLayoutAuthoringRender,
   phiLayoutDebugLayerMarker,
@@ -39,6 +40,7 @@ export type PhiContentLayoutProps = {
   background?: CSSProperties["background"];
   backgroundLayer?: ReactNode;
   border?: CSSProperties["border"];
+  borderSource?: PhiCmsBorderSource;
   borderRadius?: CSSProperties["borderRadius"];
   editSlotAction?: (
     slotIndex: number,
@@ -67,6 +69,7 @@ export function PhiContentLayout({
   paddingLeft,
   background,
   backgroundLayer,
+  borderSource,
   border,
   borderRadius,
   effect,
@@ -92,6 +95,7 @@ export function PhiContentLayout({
     paddingBottom,
     paddingLeft,
     background,
+    borderSource,
     border,
     borderRadius,
     effect,

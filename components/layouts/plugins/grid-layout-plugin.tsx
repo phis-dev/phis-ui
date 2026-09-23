@@ -38,6 +38,7 @@ export const PHI_GRID_LAYOUT_PLUGIN: PhiCmsLayoutPlugin<PhiCmsGridLayoutConfig> 
       effect={config.effect}
       padding={config.padding}
       background={config.background}
+      borderSource={config.borderSource}
       border={config.border}
       borderRadius={config.borderRadius}
       labelEnd={config.labelEnd}

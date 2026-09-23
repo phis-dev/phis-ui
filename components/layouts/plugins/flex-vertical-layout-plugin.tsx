@@ -35,6 +35,7 @@ export const PHI_FLEX_VERTICAL_LAYOUT_PLUGIN: PhiCmsLayoutPlugin<PhiCmsFlexVerti
       paddingBottom={config.paddingBottom}
       paddingLeft={config.paddingLeft}
       background={config.background}
+      borderSource={config.borderSource}
       border={config.border}
       borderRadius={config.borderRadius}
       labelEnd={config.labelEnd}

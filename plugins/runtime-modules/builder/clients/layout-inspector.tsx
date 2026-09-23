@@ -5,6 +5,12 @@ import { useEffect, useState } from "react";
 import { usePhiBaseLayoutOwnSlotController } from "../../../../components/layouts/phi-layout-slot-state";
 import { PhiBackgroundControl, type PhiBackgroundControlProps } from "../../../../components/controls/phi-background-control";
 import { PhiBorderControl } from "../../../../components/controls/phi-border-control";
+import { PhiSegmentedControl } from "../../../../components/controls/phi-segmented-control";
+import {
+  PHI_CMS_BORDER_SOURCES,
+  resolvePhiCmsBorderSource,
+  type PhiCmsBorderSource,
+} from "../../../../types/cms-config";
 import { PhiShadowControl } from "../../../../components/controls/phi-shadow-control";
 import { PhiViewportVisibilityControl } from "../../../../components/controls/phi-viewport-visibility-control";
 import { PhiPlacementMatrixControl } from "../../../../components/controls/phi-placement-matrix-control";
@@ -61,6 +67,13 @@ import { PhiFlexControl } from "../../../../components/controls/phi-flex-control
 import { PhiTypographyControl } from "../../../../components/controls/phi-typography-control";
 
 const PHI_GAP_SM = "var(--ant-padding-sm)";
+
+/** Read only where the Border labels have not arrived; the words themselves live in their label set. */
+const PHI_BORDER_SOURCE_FALLBACK_LABELS: Record<PhiCmsBorderSource, string> = {
+  none: "None",
+  theme: "Theme",
+  custom: "Custom",
+};
 
 type PhiCmsChromeConfigField = Extract<PhiCmsConfigField, { type: "padding" | "background" | "border" | "shadow" | "slot-placement" }>;
 
@@ -158,6 +171,15 @@ export function PhiDeveloperBuilderLayoutInspectorWidgetClient({
     currentDraft?.rootNodeBorder,
   );
   const resolvedLayoutPaddingDefaults = normalizePhiPaddingWidgetConfig(layoutDefaultConfigRecord);
+  /*
+   * Where this Layout's outline comes from. Asked of the same resolver the drawing asks, so a Layout
+   * written before the field reads the same on both sides -- a configured line means `custom`, and the
+   * absence of one means `none` rather than "unanswered".
+   */
+  const layoutBorderSource = resolvePhiCmsBorderSource(
+    currentLayoutConfigRecord.borderSource as PhiCmsBorderSource | undefined,
+    currentDraft?.rootNodeBorder ?? currentLayoutConfigRecord.border,
+  );
   const declaredFields = selectedStructurePlugin?.fields ?? [];
   const settingsFields = declaredFields.filter(
     (field) => !isPhiCmsChromeConfigField(field) && isPhiInspectorConfigFieldVisible(field, currentLayoutConfigRecord),
@@ -531,15 +553,37 @@ export function PhiDeveloperBuilderLayoutInspectorWidgetClient({
                       title: borderLabels?.title ?? "Border",
                       children: (
                         <div style={{ display: "grid", gap: PHI_GAP_SM, width: "100%" }}>
-                          <PhiBorderControl
-                            mode="control"
+                          {/*
+                            * The question above the answer: where the line comes from. `theme` takes the
+                            * Site's border colour and line width, so a Layout wears the house style
+                            * without anybody typing a colour into it and moves when the Theme moves.
+                            *
+                            * The fields below appear only for `custom`, the way every other conditional
+                            * field in this Inspector appears -- and unlike the Settings panel that went
+                            * missing, what makes them go is standing right above them.
+                            */}
+                          <PhiSegmentedControl<PhiCmsBorderSource>
+                            value={layoutBorderSource}
+                            options={PHI_CMS_BORDER_SOURCES.map((source) => ({
+                              value: source,
+                              label: borderLabels?.sources?.[source]
+                                ?? PHI_BORDER_SOURCE_FALLBACK_LABELS[source],
+                            }))}
+                            block
                             disabled={isPreviewMode}
-                            value={resolvedLayoutBorder}
-                            onChange={(border) => onBorderChange?.(border)}
-                            labels={borderLabels}
-                            colorPickerLabels={colorPickerLabels}
-                            colorPickerPlacement="left"
+                            onChange={(source) => onConfigChange?.("borderSource", source)}
                           />
+                          {layoutBorderSource === "custom" ? (
+                            <PhiBorderControl
+                              mode="control"
+                              disabled={isPreviewMode}
+                              value={resolvedLayoutBorder}
+                              onChange={(border) => onBorderChange?.(border)}
+                              labels={borderLabels}
+                              colorPickerLabels={colorPickerLabels}
+                              colorPickerPlacement="left"
+                            />
+                          ) : null}
                         </div>
                       ),
                     },

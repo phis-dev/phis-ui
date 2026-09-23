@@ -1,6 +1,12 @@
 export type PhiBorderWidgetLabels = {
   title: string;
   description: string;
+  /** Where the outline comes from: none at all, the Site's own line, or one drawn here. */
+  sources: {
+    none: string;
+    theme: string;
+    custom: string;
+  };
   sections: {
     border: string;
     color: string;
@@ -43,6 +49,11 @@ export type PhiBorderWidgetLabels = {
 export const PHI_BORDER_WIDGET_DEFAULT_LABELS: PhiBorderWidgetLabels = {
   title: "Border",
   description: "Configure border width, style, color, and corner radius.",
+  sources: {
+    none: "None",
+    theme: "Theme",
+    custom: "Custom",
+  },
   sections: {
     border: "Border",
     color: "Color",

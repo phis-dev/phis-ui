@@ -13,6 +13,9 @@ const PHI_BORDER_WIDGET_LABEL_SET = definePhiLabelSet({
   labels: {
     title: PHI_BORDER_WIDGET_DEFAULT_LABELS.title,
     description: definePhiMessageLabel(PHI_BORDER_WIDGET_DEFAULT_LABELS.description),
+    source_none: PHI_BORDER_WIDGET_DEFAULT_LABELS.sources.none,
+    source_theme: PHI_BORDER_WIDGET_DEFAULT_LABELS.sources.theme,
+    source_custom: PHI_BORDER_WIDGET_DEFAULT_LABELS.sources.custom,
     section_border: PHI_BORDER_WIDGET_DEFAULT_LABELS.sections.border,
     section_color: PHI_BORDER_WIDGET_DEFAULT_LABELS.sections.color,
     section_radius: PHI_BORDER_WIDGET_DEFAULT_LABELS.sections.radius,
@@ -48,6 +51,11 @@ export async function getPhiBorderWidgetLabels(options: PhiGlobalTranslatorOptio
   return {
     title: labels.title,
     description: labels.description,
+    sources: {
+      none: labels.source_none,
+      theme: labels.source_theme,
+      custom: labels.source_custom,
+    },
     sections: {
       border: labels.section_border,
       color: labels.section_color,

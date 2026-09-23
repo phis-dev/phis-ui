@@ -40,7 +40,8 @@ import {
   type PhiCmsBackgroundWidgetConfig,
 } from "../widgets/config/background";
 import { PhiBackgroundMotionLayer } from "./clients/phi-background-motion-layer-lazy";
-import { resolvePhiBorderWidgetStyle } from "../../helpers/border-widget-style";
+import { resolvePhiSourcedBorderStyle } from "../../helpers/border-widget-style";
+import { readPhiCmsBorderSource, resolvePhiCmsBorderSource } from "../../types/cms-config";
 import {
   isPhiCmsPageOwnedRegion,
   resolvePhiCmsRegionKey,
@@ -794,10 +795,19 @@ function renderLayoutNode(
           ? (node.config.rootNodeBorder as PhiCmsBorderWidgetConfig)
           : null;
       const rootNodeShadow = readPhiShadow(node.config.rootNodeShadow) ?? null;
+      /*
+       * Where the root node's outline comes from. It has to be asked before the shortcut below, because
+       * `theme` draws a line out of nothing stored -- and because `none` has to be able to take one away.
+       */
+      const rootNodeBorderSource = resolvePhiCmsBorderSource(
+        readPhiCmsBorderSource(node.config.borderSource),
+        rootNodeBorder ?? node.config.border,
+      );
 
       if (
         !isValidElement(normalizedRendered) ||
-        (rootNodeBackground == null && rootNodeBorder == null && rootNodeShadow == null)
+        (rootNodeBackground == null && rootNodeBorder == null && rootNodeShadow == null
+          && rootNodeBorderSource !== "theme")
       ) {
         return wrapPhiRuntimeModuleUiProvider(
           normalizedRendered,
@@ -824,7 +834,7 @@ function renderLayoutNode(
           ...renderedProps.style,
           ...rootNodeBackgroundStyle,
           ...(rootNodeBackgroundMotion == null ? {} : { position: "relative", isolation: "isolate" }),
-          ...(rootNodeBorder == null ? {} : resolvePhiBorderWidgetStyle(rootNodeBorder)),
+          ...resolvePhiSourcedBorderStyle(rootNodeBorderSource, rootNodeBorder),
           boxShadow: combinePhiBoxShadows(rootNodeBackgroundStyle.boxShadow, resolvePhiShadow(rootNodeShadow)),
         },
       } as never);

@@ -14,6 +14,7 @@ import { PHI_CMS_THREE_COLUMN_LAYOUT_SLOTS } from "../../../constants/cms-layout
 import type { PhiAnchorWidgetPlacement } from "../../controls/phi-anchor-control-contract";
 import type { PhiRenderableBlockRenderMode, PhiRenderableBlockSize } from "../../../types";
 import type { PhiShadow, PhiLayoutEffectId } from "../../../types/layout-style";
+import type { PhiCmsBorderSource } from "../../../types/cms-config";
 import {
   isPhiLayoutAuthoringRender,
   phiLayoutDebugLayerMarker,
@@ -31,6 +32,7 @@ export type PhiThreeColumnLayoutProps = {
   wrap?: boolean | CSSProperties["flexWrap"];
   align?: CSSProperties["alignItems"];
   justify?: CSSProperties["justifyContent"];
+  borderSource?: PhiCmsBorderSource;
   leftWidth?: CSSProperties["width"];
   middleWidth?: CSSProperties["width"];
   rightWidth?: CSSProperties["width"];
@@ -217,6 +219,7 @@ export function PhiThreeColumnLayout({
     paddingLeft,
     background,
     backgroundLayer,
+    borderSource,
     border,
     borderRadius,
     effect,
@@ -242,6 +245,7 @@ export function PhiThreeColumnLayout({
     paddingBottom,
     paddingLeft,
     background,
+    borderSource,
     border,
     borderRadius,
     effect,

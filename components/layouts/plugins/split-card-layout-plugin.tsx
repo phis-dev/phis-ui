@@ -28,6 +28,7 @@ export const PHI_SPLIT_CARD_LAYOUT_PLUGIN: PhiCmsLayoutPlugin<PhiCmsSplitCardLay
       paddingTop={config.paddingTop}
       paddingBottom={config.paddingBottom}
       background={config.background}
+      borderSource={config.borderSource}
       border={config.border}
       borderRadius={config.borderRadius}
       labelEnd={config.labelEnd}

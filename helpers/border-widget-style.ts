@@ -1,6 +1,6 @@
 import type { CSSProperties } from "react";
 
-import type { PhiCmsBorderWidgetConfig } from "../types/cms-config";
+import type { PhiCmsBorderSource, PhiCmsBorderWidgetConfig } from "../types/cms-config";
 
 export type PhiResolvedBorderWidgetStyle = Pick<
   CSSProperties,
@@ -15,6 +15,32 @@ type PhiBorderWidgetStyleFallback = {
   border?: CSSProperties["border"] | null;
   borderRadius?: number | string | null;
 };
+
+/** The Site's own line: its border colour at its line width. One string, so nobody types a second. */
+export const PHI_THEME_BORDER_LINE = "var(--ant-line-width, 1px) solid var(--ant-color-border)";
+
+/**
+ * The border style of something that states WHERE its line comes from.
+ *
+ * Line and corner both follow the source, and only `custom` reads what was configured. Switching to
+ * `theme` is how somebody asks for the Site's own edge, so the Site has to answer with all of it -- a
+ * `square` shape has to square the corners then and there, and a `pill` round them, rather than leaving
+ * the radii of the custom border standing and looking as though the switch did nothing.
+ *
+ * `none` states `border: "none"` rather than saying nothing, because this style is laid over one that
+ * may already carry a line. Silence there would leave the old line standing, which is exactly how "no
+ * border" came to draw the border somebody had configured before switching it off. Its corners come
+ * from the shape as well: an unoutlined box still has them, and they are the Site's to answer.
+ */
+export function resolvePhiSourcedBorderStyle(
+  source: PhiCmsBorderSource,
+  border: PhiCmsBorderWidgetConfig | null | undefined,
+): PhiResolvedBorderWidgetStyle {
+  if (source === "custom") {
+    return resolvePhiBorderWidgetStyle(border);
+  }
+  return { border: source === "theme" ? PHI_THEME_BORDER_LINE : "none" };
+}
 
 export function resolvePhiBorderWidgetStyle(
   border: PhiCmsBorderWidgetConfig | null | undefined,

@@ -32,6 +32,7 @@ export const PHI_CONTENT_LAYOUT_PLUGIN: PhiCmsLayoutPlugin<PhiCmsContentLayoutCo
       paddingTop={config.paddingTop}
       paddingBottom={config.paddingBottom}
       background={config.background}
+      borderSource={config.borderSource}
       border={config.border}
       borderRadius={config.borderRadius}
       labelEnd={config.labelEnd}
