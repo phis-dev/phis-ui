@@ -98,6 +98,7 @@ graph.
 | Forms | [FORMS.md](./FORMS.md) |
 | Tables, Trees, Collections | [TABLES.md](./TABLES.md), [TREES.md](./TREES.md), [COLLECTIONS.md](./COLLECTIONS.md) |
 | Overlays | [OVERLAYS.md](./OVERLAYS.md) |
+| Conversation surfaces | [THREADS.md](./THREADS.md) |
 | Builder | [BUILDER.md](./BUILDER.md) |
 | Settings | [SETTINGS.md](./SETTINGS.md) |
 | Access and visibility | [ACCESS.md](./ACCESS.md) |

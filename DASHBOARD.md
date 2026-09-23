@@ -173,9 +173,9 @@ payload the card resolved, and it lives wherever that data lives. The card prese
 so: a path to something already servable.
 
 A third party that wants a real picture of its own has a Space for it. Custody follows the uploader
-(THREADS.md section 5): a person writes into their own User Space, an Add-on into its own Add-on
-Space. Not the Site Space, but not nothing either -- and once it is a delivery path, it is a picture
-in the content and needs no rule of its own.
+([phis-server design/THREADS.md](../phis-server/design/THREADS.md) section 5): a person writes into
+their own User Space, an Add-on into its own Add-on Space. Not the Site Space, but not nothing either
+-- and once it is a delivery path, it is a picture in the content and needs no rule of its own.
 
 ## 6. Who sees a card
 
