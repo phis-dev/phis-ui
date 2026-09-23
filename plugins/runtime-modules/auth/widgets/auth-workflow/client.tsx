@@ -109,7 +109,8 @@ export function PhiAuthWorkflowWidgetClient({ signalRoutes }: PhiAuthWorkflowWid
 
   return (
     <PhiAuthWorkflowBody
-      workflow={workflow}
+      mode={workflow.state === "factor-enrollment-required" ? "enroll" : "challenge"}
+      next={workflow.next}
       onComplete={({ area, next }) => {
         setWorkflow(null);
         emitCapability("submitSuccess", { ok: true, payload: { area, next } });

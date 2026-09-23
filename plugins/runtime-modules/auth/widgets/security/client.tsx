@@ -138,7 +138,8 @@ export function PhiAuthSecurityWidgetClient({
     return (
       <Suspense fallback={<PhiSkeletonControl lines={4} />}>
         <PhiAuthWorkflowBody
-          workflow={{ state: "factor-enrollment-required", methodKey: "totp", next: "/app/security" }}
+          mode="enroll"
+          next="/app/security"
           onComplete={async () => {
             setEnrolling(false);
             await load();

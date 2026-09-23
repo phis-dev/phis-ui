@@ -6,7 +6,6 @@ import { PhiTextControl } from "../../controls/phi-text-control";
 import { PhiOtpControl } from "../../controls/phi-otp-control";
 import { PhiButtonControl } from "../../controls/phi-button-control";
 import { PhiAlertControl } from "../../controls/phi-alert-control";
-import type { PhiAuthWorkflow } from "../../../types/auth-manifest";
 import { PhiFlexControl } from "../../controls/phi-flex-control";
 import { PhiTypographyControl } from "../../controls/phi-typography-control";
 import { PhiQrCodeControl } from "../../controls/phi-qr-code-control";
@@ -25,11 +24,28 @@ async function getCsrfToken() {
   return token;
 }
 
+/**
+ * Which of the two things this is, which is not the same question as what state a Session is in.
+ *
+ * It used to take a `PhiAuthWorkflow`, and the App settings surface had to invent one to add an
+ * authenticator -- a value describing an authentication in progress, written by a browser for somebody
+ * who had finished signing in an hour ago. That was never a state Core could have answered for: adding
+ * a device voluntarily is not a step in signing in, and `GET /api/v1/auth/workflow` answers `complete`
+ * for exactly those people.
+ *
+ * So this asks for what it actually uses. Of the workflow it only ever read `state` and `next`, and
+ * never `methodKey` at all.
+ */
+export type PhiAuthWorkflowBodyMode = "enroll" | "challenge";
+
 export function PhiAuthWorkflowBody({
-  workflow,
+  mode,
+  next: fallbackNext,
   onComplete,
 }: {
-  workflow: PhiAuthWorkflow;
+  mode: PhiAuthWorkflowBodyMode;
+  /** Where a finished step goes when the server's answer does not name somewhere itself. */
+  next: string;
   onComplete: (payload: { area: string | null; next: string }) => Promise<void> | void;
 }) {
   const [enrollment, setEnrollment] = useState<Enrollment | null>(null);
@@ -71,7 +87,7 @@ export function PhiAuthWorkflowBody({
     setError(null);
     try {
       const token = await getCsrfToken();
-      const enrolling = workflow.state === "factor-enrollment-required";
+      const enrolling = mode === "enroll";
       const response = await fetch(
         enrolling ? "/api/auth/workflow/totp/confirm" : "/api/auth/workflow/verify",
         {
@@ -102,11 +118,11 @@ export function PhiAuthWorkflowBody({
         setRecovery({
           codes: payload.recoveryCodes,
           area: payload.area?.trim() || null,
-          next: payload.next ?? workflow.next,
+          next: payload.next ?? fallbackNext,
         });
         return;
       }
-      await onComplete({ area: payload.area?.trim() || null, next: payload.next ?? workflow.next });
+      await onComplete({ area: payload.area?.trim() || null, next: payload.next ?? fallbackNext });
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Authentication code could not be verified.");
     } finally {
@@ -137,12 +153,18 @@ export function PhiAuthWorkflowBody({
     );
   }
 
-  if (workflow.state === "factor-enrollment-required") {
+  if (mode === "enroll") {
     return (
       <PhiFlexControl vertical gap="middle" align="center">
         <PhiTypographyControl presentation="title" level={4}>Set up an authenticator app</PhiTypographyControl>
+        {/*
+          * Says what to do, not why it is being asked -- because both callers land here: a sign-in that
+          * cannot continue without it, and somebody in Settings adding a device because they want one.
+          * It told the second group their site could not be opened. The wording belongs in a Label Set
+          * like every other sentence a visitor reads; it is literal here because it always was.
+          */}
         <PhiTypographyControl presentation="paragraph" type="secondary">
-          Two-factor authentication is required before this site can be opened.
+          Scan the code below with your authenticator app, then enter the six-digit code it shows.
         </PhiTypographyControl>
         {error ? <PhiAlertControl level="error" showIcon title={error} /> : null}
         {!enrollment ? (

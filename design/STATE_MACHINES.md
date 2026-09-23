@@ -1,25 +1,27 @@
 # State machine design
 
-This is a design, not a contract, and no flow uses it yet: nothing hosts a machine, no Module declares
-one, and there is no condition source to read one with. A flow written today still uses the mechanisms in
-[What exists today](#what-exists-today).
+**One machine runs.** Auth hosts a `server` authority projection, and the pieces under it are built:
 
-What is built is everything below the host. The account-bound store behind the `profile` persistence
-target ([USER_STATE.md](./USER_STATE.md)); the definition grammar and its validator, in
-[types/state-machine.ts](../types/state-machine.ts); and the binding, split across
-[helpers/state-machine-binding.ts](../helpers/state-machine-binding.ts) (what is decided),
-[helpers/state-machine-diagnostics.ts](../helpers/state-machine-diagnostics.ts) (what is said out loud)
-and [components/runtime/phi-state-machine-binding.ts](../components/runtime/phi-state-machine-binding.ts)
-(where the machine currently is). None of it settles a question in this document; it removes
-dependencies. [Build order](#build-order) says what is left.
+| | |
+| --- | --- |
+| Grammar and validator | [types/state-machine.ts](../types/state-machine.ts) |
+| Binding | [helpers/state-machine-binding.ts](../helpers/state-machine-binding.ts) (what is decided), [helpers/state-machine-diagnostics.ts](../helpers/state-machine-diagnostics.ts) (what is said), [components/runtime/phi-state-machine-binding.ts](../components/runtime/phi-state-machine-binding.ts) (where it stands) |
+| The first machine | [plugins/runtime-modules/auth/machine.ts](../plugins/runtime-modules/auth/machine.ts), hosted by the Auth Controller |
+| `profile` persistence | the account-bound store, [USER_STATE.md](./USER_STATE.md) |
 
-A feature-local step counter, phase string, workflow reducer, or progress store is not an allowed
-substitute for this design. Where a flow exists today it uses the mechanisms in [What exists
-today](#what-exists-today), and it keeps using them until this design is approved and built.
+It stays a design document because most of what it describes is still unbuilt: no second Module declares
+a machine, there is no condition source for reading somebody else's, no Builder surface, and the
+composition and diagnostics rules have one consumer between them. The sections below are marked where
+contact with a real consumer changed them -- which happened often enough to be the most useful thing
+here.
+
+A feature-local step counter, phase string, workflow reducer, or progress store is still not an allowed
+substitute. A flow that needs one declares a machine.
 
 ## What exists today
 
-Three unrelated mechanisms carry multi-step work, chosen per flow rather than by rule:
+Three unrelated mechanisms carry multi-step work, chosen per flow rather than by rule. All three are
+still in use; what changed is that Auth no longer relies on the third for the state Core owns.
 
 - **Handler phases.** `execution: { mode, phase }` on the Form Widget selects `submit` or `confirm`, and
   `gateway/form-handler-resolution.ts` resolves that phase to `submitHandlerKey`, `confirmHandlerKey`, or
@@ -37,14 +39,23 @@ Three unrelated mechanisms carry multi-step work, chosen per flow rather than by
 The cost of having no shared answer is measurable in the Auth Module, which is the only place where all
 three meet:
 
-- `gateway/auth-public-manifest.ts` contains `fetchPhiAuthWorkflow()`, the reader for Core's
-  `GET /api/v1/auth/workflow`. **It is never called.** The second-factor state instead arrives as a field
-  on the login response and lives in a Widget's `useState`, so a reload between primary authentication and
-  the second factor loses a state the server would still answer for.
-- `plugins/runtime-modules/auth/widgets/security/client.tsx` constructs a `PhiAuthWorkflow` value in the
-  browser to start enrollment from the App settings surface. `phis-server` AUTHENTICATION.md §9 forbids
-  exactly that ("it must not reconstruct the authentication state machine"). It happens because there is
-  nothing a server-owned state could be attached to.
+- ~~`fetchPhiAuthWorkflow()` is never called.~~ **Fixed.** The reader for `GET /api/v1/auth/workflow`
+  existed and nothing used it; the second-factor state arrived as a field on the login response and lived
+  in a Widget's `useState`, so a reload between primary authentication and the second factor lost a state
+  the server would still have answered for. The Auth Controller's `serverPreload` calls it now, which
+  makes a reload the re-read. The reader itself had to be repaired first: it folded a misconfiguration,
+  an absent Session and a finished one into the same `null`.
+- ~~`security/client.tsx` constructs a `PhiAuthWorkflow` value in the browser~~ -- **fixed, and the
+  diagnosis here was wrong.** It read as a breach of `phis-server` AUTHENTICATION.md §9 ("it must not
+  reconstruct the authentication state machine"), and the remedy looked like attaching it to a
+  server-owned state. Neither held. The App settings surface has no authentication workflow at all:
+  somebody adding a device signed in an hour ago, and `GET /api/v1/auth/workflow` answers `complete`
+  for exactly them, so there was never a server state to attach to. The real fault was a shared type --
+  `PhiAuthWorkflowBody` asked for a whole workflow while reading only `state` and `next` from it, never
+  `methodKey` -- which left the one caller that had no workflow obliged to invent one. It now takes
+  `mode` and `next`. The shared type also shared the copy: both callers showed "Two-factor
+  authentication is required before this site can be opened", including to people who were adding an
+  authenticator because they wanted one.
 - `stage` (`primary | second-factor | step-up | recovery`, `types/auth-manifest.ts`) and
   `capabilitiesByArea` (`primary-login | factor-challenge | factor-enrollment | recovery`,
   `plugins/runtime-modules/auth/definition.ts`) are declared, typed, script-validated and documented.
@@ -397,8 +408,9 @@ Auth is the first consumer and the reason the `server` authority exists. Under t
   how a flow that resets itself once per hour stays unexplained. See
   [Diagnostics](#diagnostics) for the level.
 - A reload during a second factor re-reads the state and resumes. Nothing in the browser constructs a
-  workflow value; `security/client.tsx` starts enrollment by raising an event, and the state it then shows
-  is Core's answer.
+  workflow value -- not because enrollment was moved onto the machine, but because the surface that was
+  inventing one never needed a workflow: it asks the body for the mode it wants. A machine answers where
+  a Session stands; it does not answer for somebody who is already through.
 - `stage` and `capabilitiesByArea` become meaningful: a state names the presentation capability it needs,
   and a Site policy whose machine reaches a state no active provider can present fails closed at
   resolution instead of at the visitor.
@@ -553,11 +565,10 @@ at all -- both were things that were already wrong.
    ask an Area Controller. Both conditions now read a named statement
    (`PHI_AUTH_MACHINE_STATEMENTS.awaitingCredentials`) relayed through the step Widget, which decides
    nothing and carries it one hop.
-6. Auth as the first consumer. **Mostly done**: the Controller hosts the projection, `serverPreload`
-   reads the workflow while the page renders, and the step Widget draws what it is told instead of
-   keeping its own copy. What is left is `security/client.tsx`, which still constructs a
-   `PhiAuthWorkflow` value to start enrollment -- the thing `phis-server` AUTHENTICATION.md §9 forbids,
-   and now repairable because there is somewhere for that state to live.
+6. ~~Auth as the first consumer.~~ **Done.** The Controller hosts the projection, `serverPreload` reads
+   the workflow while the page renders, the step Widget draws what it is told instead of keeping its own
+   copy, and `PhiAuthWorkflowBody` no longer asks for a workflow it only half-read -- which is what let
+   the App settings surface stop inventing one.
 
 Two things the grammar settled that this document had left vaguer than it should have. A machine is named
 `(ownerModuleId, machineKey)` like a Page preset, not by an id of its own -- a package may carry two
