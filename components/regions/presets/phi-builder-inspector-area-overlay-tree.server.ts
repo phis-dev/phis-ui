@@ -238,7 +238,10 @@ export async function buildPhiBuilderInspectorAreaOverlayTree({
         label: "Builder inspector sections",
         config: {
           ghost: true,
-          bordered: false,
+          // One section at a time: the Drawer is long enough that two open sections push the second
+          // one past the fold. Settings stays the section that opens with the Drawer, so it mounts
+          // and can hide its own slot when the layout declares nothing for it.
+          accordion: true,
           padding: PHI_SPACE.sm,
           innerPadding: PHI_SPACE.sm,
           slotTitles: sections.map(([, , sectionKey]) =>
