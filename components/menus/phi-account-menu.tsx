@@ -178,29 +178,28 @@ export function PhiAccountMenu({
     key: "account-areas",
     label: labels.areas.title,
     /*
-     * A plain anchor, where every other entry in this menu is a `Link`.
+     * A `Link`, like every other entry in this menu.
      *
-     * Crossing into another Area is not a step within this application, it is leaving it for the next
-     * one: other Modules, other Chrome, other access. A client navigation keeps the whole provider tree
-     * of the Area being left mounted while the segments underneath are swapped, which asks the old
-     * arrangement to serve the new one; a document request builds the arriving Area from nothing, which
-     * is what it is entitled to. Nobody carries unsaved work from the Builder into the App, so there is
-     * no state here worth the trick.
+     * It was a plain anchor for months, and the reason was sound while it lasted: a client navigation
+     * across an Area boundary ran away with itself, 42 to 110 navigations that never settled. Measuring
+     * it named the cause, and the cause was never this link. An Area root forwards to its landing Page,
+     * and a forward serialised into a navigation that also changes the Area is what Next's router cannot
+     * settle. Crossing an Area is quiet; a forward is quiet; only the two together were not.
      *
-     * It is also, still, the only thing standing between this click and a runaway -- and measuring it
-     * named the runaway. It is not the Area boundary and it is not this menu: what loops is **a server
-     * redirect answered into a client navigation that changes the Area**, and `href` being an Area root
-     * is what produces one, because a root forwards to its landing Page. An Area configured not to
-     * forward is quiet across the same boundary, three runs out of three, and so is a redirect inside one
-     * Area. Only the two together loop, and the server answers every one of those requests correctly and
-     * exactly once -- it is the client's router state that never advances (TODOS.md).
+     * That is answered where it happens now. The proxy forwards a known Area root with a real HTTP 307
+     * before any router state exists (`gateway/area-root-door.ts`), and where it does not know one yet
+     * the render hands the forward to the browser instead of the router
+     * (`components/cms/phi-hard-forward.tsx`). Measured after: one navigation warm, three cold, against
+     * two document requests for the anchor.
      *
-     * So this is not a link problem and there is no version of this link that fixes it. The anchor is
-     * what it always was: the arriving Area built from nothing, which is what it is entitled to.
+     * What the anchor also said -- that the arriving Area is entitled to be built from nothing -- is
+     * still true and still happens: cold, the browser does exactly that. Warm it is not needed, because
+     * the Area being left is not asked to serve the new one; the forward lands before the old tree is
+     * consulted at all.
      */
     children: (areaEntries ?? []).map((entry) => ({
       key: `area-${entry.area}`,
-      label: entry.current ? entry.label : <a href={entry.href}>{entry.label}</a>,
+      label: entry.current ? entry.label : <Link href={entry.href}>{entry.label}</Link>,
       disabled: entry.current,
     })),
   }];

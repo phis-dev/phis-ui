@@ -368,8 +368,10 @@ nothing states whether an Area Controller survives a navigation inside its Area.
   A machine does not get a field for it. One that *must* survive a navigation says so through
   `persistence`, never by being registered in the luckier host -- otherwise correctness hangs on a
   position in the tree that whoever wrote the preset was not thinking about.
-- **A machine never crosses an Area boundary in memory.** Crossing one is a hard navigation
-  ([SIGNALS.md](../SIGNALS.md): no signal travels from one Area to another), so a machine that spans Areas
+- **A machine never crosses an Area boundary in memory.** Crossing one replaces the Area's Layout segment
+  and with it every provider under it -- as a client navigation now, not a document reload, which changes
+  nothing about the rule ([SIGNALS.md](../SIGNALS.md): no signal travels from one Area to another). So a
+  machine that spans Areas
   checkpoints to a declared persistence target before the forward and resumes through the destination
   Area's own host -- the rule already written for Tours. Login in Public followed by a destination in App
   is exactly this case.

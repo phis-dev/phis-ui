@@ -218,8 +218,9 @@ is persisted: not the text, not a record that it was shown.
   is the only thing that exists.
 
 **The cache is memory, and the Area ends it.** A translation may be kept for as long as the surface is
-mounted, so pressing twice does not ask twice. An Area change is a hard navigation
-([SHELL.md](./SHELL.md)), so client memory ends with it on its own; `sessionStorage` would survive the
+mounted, so pressing twice does not ask twice. An Area change replaces the Area's Layout segment and
+unmounts everything under it, so client memory ends with it on its own -- that holds whether the crossing
+is a document request or, as it is now, an ordinary client navigation. `sessionStorage` would survive the
 boundary and would then need the clearing that memory gets for nothing.
 
 ### What the Core half needs

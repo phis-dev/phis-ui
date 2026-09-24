@@ -305,8 +305,12 @@ the Layout tree with `ownerMountScope: "area"`, and again in `components/cms/phi
 asks for a Controller is what decides its host, so:
 
 - A Controller reached through the Layout tree is mounted by the Area's Layout segment and **survives a
-  client navigation between Pages of that Area.** It is replaced when the Layout segment is, which for a
-  change of Area is a hard navigation anyway.
+  client navigation between Pages of that Area.** It is replaced when the Layout segment is, and a change
+  of Area is exactly that: the Area's own Layout is its segment, so crossing replaces it whether the
+  browser reloads or the router swaps it. (It used to say "a change of Area is a hard navigation anyway".
+  That stopped being true when the Area-root forward moved into the proxy -- crossing is now an ordinary
+  client navigation. The conclusion is unchanged, and now it rests on the segment rather than on the
+  transport.)
 - A Controller reached through the Page tree is mounted by the Page and **is replaced with every
   navigation**, including one within its own Area.
 
