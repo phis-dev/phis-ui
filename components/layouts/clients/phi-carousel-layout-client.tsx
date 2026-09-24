@@ -22,7 +22,7 @@ import { isRenderablePhiNode } from "../phi-layout-scaffold-utils";
 import { PhiLayoutAnchoredOverlay } from "./phi-layout-anchored-overlay";
 import { PhiSequenceSlotEditor } from "./phi-sequence-slot-editor";
 import type { PhiAnchorWidgetPlacement } from "../../controls/phi-anchor-control-contract";
-import { usePhiSlotSequence } from "../use-phi-slot-sequence";
+import { resolvePhiSequenceEditableSlotCount, usePhiSlotSequence } from "../use-phi-slot-sequence";
 
 /**
  * A Stack with a wider window.
@@ -132,6 +132,7 @@ export function PhiCarouselLayout({
     editSlotAnchor = "center",
   } = layoutProps;
   const isEditMode = renderMode === "editor";
+  const editableSlotCount = resolvePhiSequenceEditableSlotCount(slots, slotKeys);
   const { token } = theme.useToken();
   const {
     activeIndex,
@@ -141,6 +142,9 @@ export function PhiCarouselLayout({
     blockId,
     slots,
     slotKeys,
+    // While authoring, the sequence reaches one slot past the last filled one -- the empty slot the
+    // next child goes into. A page has no such slot and steps through what it holds.
+    ...(isEditMode ? { slotCount: editableSlotCount } : {}),
     ...(slotMeta ? { slotLabels: slotMeta } : {}),
     ...(activeSlotKey === undefined ? {} : { activeSlotKey }),
     ...(defaultActiveSlotKey === undefined ? {} : { defaultActiveSlotKey }),
@@ -224,6 +228,7 @@ export function PhiCarouselLayout({
         slots={slots}
         slotKeys={slotKeys}
         slotLabels={resolvedSlotMeta}
+        slotCount={editableSlotCount}
         activeIndex={activeIndex}
         onActiveIndexChange={setActiveIndex}
         slotNoun="carousel slot"

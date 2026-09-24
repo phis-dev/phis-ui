@@ -32,8 +32,14 @@ import { PhiTypographyControl } from "../../controls/phi-typography-control";
  *
  * A Stack shows one slot and a Carousel shows several, but neither is edited that way: a person
  * fills one slot, then steps to the next. So the Builder's view of both is the same view -- a step
- * counter, a slot, and somewhere to add the next one -- and the difference between the two layouts
- * exists only where somebody is reading the page.
+ * counter and a slot -- and the difference between the two layouts exists only where somebody is
+ * reading the page.
+ *
+ * **There is no button that adds a slot.** The sequence always offers one empty slot behind the last
+ * filled one, so adding is filling: step into the empty slot, put something in it, and the counter
+ * has grown because the slot behind it has come into reach. A second control beside the pager would
+ * be a second way to say the same thing, and it sat next to the arrows as if paging were the thing
+ * it did.
  *
  * The moving parts stay outside. This component neither owns the index nor announces it; it is
  * handed one and reports the step somebody asked for, so the same signals drive the canvas as drive
@@ -45,6 +51,12 @@ export type PhiSequenceSlotEditorProps = {
   slotKeys: string[];
   /** Labels as the sequence resolved them, so the canvas names a slot the way a pager does. */
   slotLabels: readonly { index: number; label: string }[];
+  /**
+   * How many slots the counter runs over: the filled ones and the empty one behind them, which is
+   * where the next slot is authored. Handed in rather than counted here, because the sequence that
+   * clamps the index has to agree with the counter that shows it.
+   */
+  slotCount: number;
   activeIndex: number;
   onActiveIndexChange: (index: number) => void;
   /** What a slot of this layout is called, for the labels a screen reader reads out. */
@@ -83,6 +95,7 @@ export function PhiSequenceSlotEditor({
   slots,
   slotKeys,
   slotLabels,
+  slotCount,
   activeIndex,
   onActiveIndexChange,
   slotNoun,
@@ -97,7 +110,7 @@ export function PhiSequenceSlotEditor({
   style,
 }: PhiSequenceSlotEditorProps) {
   const isAuthoringRender = isPhiLayoutAuthoringRender(authoring);
-  const editableSlotCount = Math.max(slots.length, 1);
+  const editableSlotCount = Math.max(slotCount, 1);
   const currentIndex = Math.min(activeIndex, editableSlotCount - 1);
   const currentSlot = slots[currentIndex] ?? null;
   const hasCurrentSlot = isRenderablePhiNode(currentSlot);
@@ -171,20 +184,6 @@ export function PhiSequenceSlotEditor({
             onClick={() => onActiveIndexChange(currentIndex + 1)}
           />
         </span>
-        {editSlotAction && editRenderInsertControl
-          ? editRenderInsertControl({
-            presentation: "inline",
-            slotIndex: currentIndex + 1,
-            label: currentSlotLabel,
-            ariaLabel: `Add ${slotNoun}`,
-            onInsert: (targetSlotIndex) =>
-              editSlotAction(targetSlotIndex, {
-                defaultPickSection: "widget",
-                allowWidgetSection: true,
-                slotIndex: targetSlotIndex,
-              }),
-          })
-          : null}
       </PhiFlexControl>
       <div
         className={phiLayoutSlotClassName(isAuthoringRender)}

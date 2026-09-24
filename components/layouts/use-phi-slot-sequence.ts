@@ -61,6 +61,24 @@ export function clampPhiSlotIndex(index: number, slotCount: number) {
   return Math.min(Math.max(index, 0), Math.max(slotCount - 1, 0));
 }
 
+/**
+ * How many slots a sequence offers while it is being authored: the ones it holds, and one more.
+ *
+ * A page shows what somebody filled. The Builder has to show one slot past that, because an empty
+ * slot is the only place a new one can be added -- step into it, fill it, and the sequence has grown
+ * by one and offers the next. That is why the counter moves as soon as a slot is filled: the slot
+ * behind the last one has just come into reach.
+ *
+ * `slots` is indexed by slot index and may hold gaps, so its length is the slot behind the last
+ * filled one rather than a count of children. The layout's own slot list is the ceiling.
+ */
+export function resolvePhiSequenceEditableSlotCount(
+  slots: readonly unknown[],
+  slotKeys: readonly string[],
+) {
+  return Math.min(Math.max(slots.length + 1, 1), Math.max(slotKeys.length, 1));
+}
+
 export function resolvePhiSlotIndexByKey(
   slotKeys: string[],
   activeSlotKey?: string,
@@ -78,6 +96,7 @@ export function usePhiSlotSequence({
   slots,
   slotKeys,
   slotLabels,
+  slotCount,
   activeSlotKey,
   defaultActiveSlotKey,
 }: {
@@ -87,6 +106,12 @@ export function usePhiSlotSequence({
   slots: ReactNode[];
   slotKeys: string[];
   slotLabels?: readonly PhiSlotSequenceLabel[];
+  /**
+   * How far the sequence can be stepped, when that is not simply the slots it was handed. The
+   * Builder offers one empty slot past the last filled one and has to be able to reach it; a page
+   * leaves this unset and moves through what it holds.
+   */
+  slotCount?: number;
   activeSlotKey?: string;
   defaultActiveSlotKey?: string;
 }): PhiSlotSequence {
@@ -95,6 +120,7 @@ export function usePhiSlotSequence({
   const signalScope = signalIdentity.scope ?? "page";
   const signalAddress = blockId == null ? null : createPhiSignalAddress("cms", blockId);
 
+  const reachableSlotCount = slotCount ?? slots.length;
   const configuredIndex = resolvePhiSlotIndexByKey(slotKeys, activeSlotKey, defaultActiveSlotKey);
   /*
    * Held against the address it was set for. A sequence that is moved and then re-mounted somewhere
@@ -137,7 +163,7 @@ export function usePhiSlotSequence({
       channel: PHI_STACK_META_SIGNAL_CHANNEL,
       action: "change",
       value: {
-        activeSlotIndex: clampPhiSlotIndex(currentIndex, slots.length),
+        activeSlotIndex: clampPhiSlotIndex(currentIndex, reachableSlotCount),
         slots: slotMeta,
       },
       valueType: "json",
@@ -146,7 +172,7 @@ export function usePhiSlotSequence({
       receiver: "broadcast",
       correlationId,
     });
-  }, [currentIndex, dispatchSignal, signalAddress, signalScope, slotMeta, slots.length]);
+  }, [currentIndex, dispatchSignal, reachableSlotCount, signalAddress, signalScope, slotMeta]);
 
   usePhiSignalListener(
     (signal) => {
@@ -160,7 +186,7 @@ export function usePhiSlotSequence({
         }
         setSteeredSlot({
           key: signalAddress,
-          index: clampPhiSlotIndex(signal.value, slots.length),
+          index: clampPhiSlotIndex(signal.value, reachableSlotCount),
         });
         return;
       }
@@ -208,12 +234,12 @@ export function usePhiSlotSequence({
   const setActiveIndex = useCallback((index: number) => {
     setSteeredSlot({
       ...(signalAddress ? { key: signalAddress } : {}),
-      index: clampPhiSlotIndex(index, slots.length),
+      index: clampPhiSlotIndex(index, reachableSlotCount),
     });
-  }, [signalAddress, slots.length]);
+  }, [reachableSlotCount, signalAddress]);
 
   return {
-    activeIndex: clampPhiSlotIndex(currentIndex, slots.length),
+    activeIndex: clampPhiSlotIndex(currentIndex, reachableSlotCount),
     slotMeta,
     setActiveIndex,
   };
