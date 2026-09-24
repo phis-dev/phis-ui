@@ -6,6 +6,7 @@ type PhiBuilderIconMotif =
   | "content"
   | "vertical"
   | "flex"
+  | "collapse"
   | "stack"
   | "carousel"
   | "grid"
@@ -63,12 +64,34 @@ function FlexMotif() {
   );
 }
 
+/**
+ * The Flex motif turned a quarter, because that is what the Layout is.
+ *
+ * Drawn as a rotation of the same shapes rather than as three bars of its own: a Flex Vertical is a
+ * Flex laid out down instead of across, and an icon that said anything else would be claiming a
+ * difference the Layout does not have. Redraw `FlexMotif` and this follows.
+ */
 function VerticalMotif() {
   return (
+    <g transform="rotate(90 8 8)">
+      <FlexMotif />
+    </g>
+  );
+}
+
+/**
+ * Two closed headers and one open panel under the middle of them.
+ *
+ * Not the Stack's pile: a Collapsible shows all of its slots at once and only one of them opened, so
+ * the motif has to say "headers, and a body belonging to one of them" rather than "one on top of
+ * another".
+ */
+function CollapseMotif() {
+  return (
     <>
-      <rect x="4" y="3" width="8" height="2" rx="0.8" fill="currentColor" fillOpacity="0.18" />
-      <rect x="4" y="6.5" width="8" height="2" rx="0.8" fill="currentColor" fillOpacity="0.3" />
-      <rect x="4" y="10" width="8" height="2" rx="0.8" fill="currentColor" fillOpacity="0.18" />
+      <rect x="3" y="3" width="10" height="2" rx="0.8" fill="currentColor" fillOpacity="0.3" />
+      <rect x="3" y="6" width="10" height="2" rx="0.8" fill="currentColor" fillOpacity="0.3" />
+      <rect x="3" y="9" width="10" height="4" rx="0.8" fill="currentColor" fillOpacity="0.14" />
     </>
   );
 }
@@ -151,6 +174,7 @@ export function PhiBuilderIcon({ motif, size = 16 }: PhiBuilderIconProps) {
       {motif === "content" ? <ContentMotif /> : null}
       {motif === "vertical" ? <VerticalMotif /> : null}
       {motif === "flex" ? <FlexMotif /> : null}
+      {motif === "collapse" ? <CollapseMotif /> : null}
       {motif === "stack" ? <StackMotif /> : null}
       {motif === "carousel" ? <CarouselMotif /> : null}
       {motif === "grid" ? <GridMotif /> : null}

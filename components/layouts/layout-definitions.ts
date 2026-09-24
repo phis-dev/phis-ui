@@ -124,7 +124,7 @@ export const PHI_FLEX_VERTICAL_LAYOUT_DEFINITION = {
   title: "Flex Vertical",
   description: "Sequential slot layout, laid out in a column.",
   category: "structure",
-  iconName: "flex",
+  iconName: "vertical",
   defaultAnchor: PHI_FLEX_VERTICAL_LAYOUT_DEFAULT_ANCHOR,
   defaultConfig: resolvePhiLayoutDefaults("verticalflex"),
   fields: [...PHI_LAYOUT_PADDING_FIELDS],

@@ -24,6 +24,7 @@ export function PhiBuilderMotifIcon({
     case "content":
     case "vertical":
     case "flex":
+    case "collapse":
     case "stack":
     case "carousel":
     case "grid":
