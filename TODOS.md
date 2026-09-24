@@ -390,6 +390,30 @@ built. Remove an entry when it is done.
   and that is a change to every renderable block, not to Overlays. Order matters: responsive block
   geometry, then the Overlay adoption, then `width` goes -- doing the last one first would drop
   distinctions the presets are currently making on purpose.
+
+  **The decision that has to come before any of it: what a profile is measured against.** "Responsive"
+  is not one mechanism here, it is three, and the tree is not of one mind about them:
+
+  - *CSS decides on its own, nothing is authored.* A Flex Layout's `wrap` is a boolean and the room
+    decides; a Masonry with `minColumnWidth` fills as many columns as fit, and with `columns` does not.
+  - *The block measures its own width.* A Form declares `container-type: inline-size` and switches at
+    360px and 768px (styles/layout.css); a Grid runs a `ResizeObserver` on its own container and reads
+    `compact | medium | wide` off it (components/layouts/clients/phi-grid-layout-client.tsx); the Shell
+    does the same for its visibility flags at 768 and 1200 (styles/shell.css).
+  - *Neither.* A Split Card has no wrap and no profiles at all -- its two cards do not stack. And
+    `size`, `minSize` and `maxSize` are a number that never becomes another one.
+
+  The Overlay is the one exception, and it matters for this decision: its responsive `width` is handed
+  to Ant Design as `{ xs, md, lg }`, which are **viewport** media queries. Every other responsive thing
+  in the tree answers to its own measured width. So block geometry cannot simply "become responsive" --
+  it has to say against what, and the two answers are not compatible: a `medium` that means "this block
+  is between 360 and 768 wide" and a `medium` that means "the window is" would be the same word for the
+  third time.
+
+  Recommendation: **the block's own measured width**, because that is what actually forces the content,
+  and because it keeps one meaning across Grid, Form and block geometry. A Modal genuinely is hung on
+  the viewport rather than standing in a Layout, but it can say so with `maxSize` in `vw` units instead
+  of with a second profile system.
 - **Overlay authoring in Builder.** Designed in [design/OVERLAY_AUTHORING.md](./design/OVERLAY_AUTHORING.md).
 
 ## Builder
