@@ -201,7 +201,7 @@ export const PHI_GALLERY_WIDGET_DEFINITION = {
     {
       key: "durationMs",
       type: "number",
-      label: "Transition Duration",
+      label: "Duration",
       min: PHI_SEQUENCE_TRANSITION_MIN_MS,
       max: PHI_SEQUENCE_TRANSITION_MAX_MS,
       step: PHI_SEQUENCE_TRANSITION_STEP_MS,
@@ -210,7 +210,7 @@ export const PHI_GALLERY_WIDGET_DEFINITION = {
     {
       key: "easing",
       type: "choice",
-      label: "Transition Easing",
+      label: "Easing",
       options: [...PHI_MOTION_EASING_FIELD_OPTIONS],
     },
     { key: "gap", type: "string", label: "Gap" },
@@ -218,7 +218,7 @@ export const PHI_GALLERY_WIDGET_DEFINITION = {
     {
       key: "mountPolicy",
       type: "choice",
-      label: "Picture Mounting",
+      label: "Mounting",
       options: [...PHI_CMS_MOUNT_POLICY_FIELD_OPTIONS],
     },
     { key: "aspectRatio", type: "string", label: "Aspect Ratio" },
@@ -247,7 +247,7 @@ export const PHI_GALLERY_WIDGET_DEFINITION = {
       // Zero is the one value below the floor that means something: it does not move on its own.
       key: "autoplayMs",
       type: "number",
-      label: "Autoplay Interval",
+      label: "Autoplay",
       min: 0,
       max: PHI_SEQUENCE_TRANSITION_MAX_MS,
       step: PHI_SEQUENCE_TRANSITION_STEP_MS,
