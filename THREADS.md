@@ -137,7 +137,9 @@ session and refuses without one ([DASHBOARD.md](./DASHBOARD.md)).
 
 ## 9. The language a message is written in
 
-**Not built.** This section is the contract it would be built against, and the Core half comes first.
+**The stored fact is built; the ad-hoc translation is not.** A message records what it was written in
+and the composer asks for it. What is missing is the reading half -- the route, and the control that
+calls it -- and the Core half comes first, as the last part of this section sets out.
 
 ### The stored fact
 
@@ -145,16 +147,40 @@ A message carries the language it was written in, on the message and not on the 
 writing in different languages is the case this exists for, so one language per conversation would be
 wrong in exactly the situation that makes it interesting.
 
-**The Site's own locale vocabulary, not a provider's catalogue.** A translation provider is swappable
-and its list of languages is not a promise: a provider is replaced, a language leaves its list, and the
-message from two years ago is still written in Portuguese. What a provider can do decides what is
-*offered* at translation time; it never decides what may be *stored*.
+**Not a provider's catalogue.** A translation provider is swappable and its list of languages is not a
+promise: a provider is replaced, a language leaves its list, and the message from two years ago is still
+written in Portuguese. What a provider can do decides what is *offered* at translation time; it never
+decides what may be *stored*.
+
+**Offered from the Site's locales, stored against the platform's.** The two are not the same question.
+What a Site publishes in is what the composer's picker shows; what a person wrote in is what the column
+holds, and Core validates against `PHI_LOCALE_CAPABILITIES` so that an integration importing a message
+in a language this Site does not publish still records the truth instead of losing it. A key the
+platform does not know is refused outright rather than quietly stored as nothing -- a picker sending one
+is broken, and its writer would never learn.
 
 **The writer says it, and the interface does not guess.** A person with a German interface answers an
 English customer in English, so taking the viewer's UI locale silently would be wrong precisely where
-the field matters. The composer offers a picker, preselected from the writer's own setting and falling
-back to the Site default. Both values are already in the runtime -- `viewer.preferredLocale` and
-`site.defaultLocale`.
+the field matters. The preselection is the writer's own setting where the Site still offers it, and the
+Site default otherwise -- `viewer.preferredLocale` and `site.defaultLocale`, both already in the
+runtime. A stored preference the Site has since dropped falls back rather than being preselected into a
+value nothing can show.
+
+**Both places a message is written ask the same question.** The composer carries its own picker, and
+the *New conversation* Form carries a field, because opening a conversation and answering in one are
+the same act. The Form's languages and its preselection arrive through the placement -- the Page preset
+writes them into the Form Widget's config and the Core `site-locales` options provider reads them back
+during the render -- for the reason the profile language field works that way: a registered Form is the
+same on every Site and the languages are not. The composer's choice survives a change of conversation,
+because it belongs to the person writing rather than to the thread.
+
+**Null is a real answer.** Not declared is what a system message carries, what an import carries where
+the integration does not know, and what everything written before this field existed carries. It is
+never to be read as the Site's default, and a translation asked about such a message is a translation
+whose source the provider detects.
+
+**Withheld with the text.** A redacted message, and a confidential one seen by an Add-on, reports null:
+what a withdrawn message was written in is still something about a message nobody may read.
 
 The field earns its place by deciding whether there is anything to translate at all. Without it, asking
 means sending the text to a third party to find out, which is what the rest of this section exists to
@@ -189,17 +215,22 @@ boundary and would then need the clearing that memory gets for nothing.
 
 In order:
 
-1. **A provider-neutral translation unit.** The dispatch already exists -- `translation.mode` is
-   `deepl | cdn | custom | none`, where `custom` forwards to an endpoint that brings its own unit, so
-   DeepL is the default and not a dependency. What is needed is that unit without the label machinery
-   around it: no translation context, no persisted cache key, no marker accounting. Those belong to UI
-   copy, and message bodies must never enter that pipeline
-   ([TRANSLATIONS.md](./TRANSLATIONS.md)).
-2. **A capability answer**, carried in `serverCapabilities`: whether this installation can translate.
+1. ~~**A provider-neutral translation unit.**~~ Done. `translation.mode` is
+   `deepl | cdn+deepl | add-on | none`, and the unit that answers it lives apart from the label
+   machinery -- no translation context, no persisted cache key, no marker accounting. Those belong to UI
+   copy, and message bodies must never enter that pipeline ([TRANSLATIONS.md](./TRANSLATIONS.md)).
+   `add-on` hands the work to a Provider implementing the `translation` service kind, which the operator
+   selects; DeepL is therefore the default and not a dependency.
+2. **The `add-on` call itself.** The service kind, its interface and the operator's selection are in
+   place; resolving the selected Provider and calling it is not, so `add-on` currently answers
+   `unconfigured`.
+3. **A capability answer**, carried in `serverCapabilities`: whether this installation can translate.
    Never the key. Without it a Site renders a control that cannot work.
-3. **The offered target list**, as the intersection above. DeepL answers by API; a `custom` endpoint
-   would have to be able to say what it supports, which today's contract does not ask of it.
-4. **The route**: `(messageId, target locale)` -- may this viewer read the message, is it
+4. **The offered target list**, as the intersection above. DeepL answers by API, and a Provider answers
+   through `probeCapabilities`, which is asked once when it is configured rather than per translation --
+   a list fetched at the moment of use is one that decides whether a control may be drawn after it has
+   been drawn.
+5. **The route**: `(messageId, target locale)` -- may this viewer read the message, is it
    `Confidential`, can this installation translate; then call, return, store nothing.
 
 The body sent is `body_markdown ?? body_text`. Markdown passes through as text and the control codes

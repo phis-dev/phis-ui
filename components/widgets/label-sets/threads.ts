@@ -11,6 +11,8 @@ const PHI_THREAD_COMPOSER_LABEL_SET = definePhiLabelSet({
     send_label: "Send",
     attach_label: "Attach a file",
     attach_hint: definePhiMessageLabel("Anyone who can read this conversation can open what you attach."),
+    language_label: "Language",
+    language_hint: definePhiMessageLabel("The language you are writing in, so it can be offered for translation."),
     remove_attachment_label: "Remove",
     no_thread_text: definePhiMessageLabel("Choose a conversation to write in."),
     error_title: "That did not work",
@@ -179,6 +181,11 @@ const PHI_THREAD_FORM_LABEL_SET = definePhiLabelSet({
     message_label: "Message",
     message_placeholder: definePhiMessageLabel("Write the first message"),
     message_required: definePhiMessageLabel("A conversation starts with a message."),
+    language_label: "Language",
+    language_hint: definePhiMessageLabel(
+      "The language you are writing in, so it can be offered for translation.",
+    ),
+    language_required: definePhiMessageLabel("Choose the language you are writing in."),
   },
 });
 
@@ -194,6 +201,9 @@ export async function getPhiThreadFormLabels(options: PhiGlobalTranslatorOptions
     messageLabel: labels.message_label,
     messagePlaceholder: labels.message_placeholder,
     messageRequired: labels.message_required,
+    languageLabel: labels.language_label,
+    languageHint: labels.language_hint,
+    languageRequired: labels.language_required,
   };
 }
 
@@ -232,6 +242,8 @@ export async function getPhiThreadComposerLabels(options: PhiGlobalTranslatorOpt
     sendLabel: labels.send_label,
     attachLabel: labels.attach_label,
     attachHint: labels.attach_hint,
+    languageLabel: labels.language_label,
+    languageHint: labels.language_hint,
     removeAttachmentLabel: labels.remove_attachment_label,
     noThreadText: labels.no_thread_text,
     feedback: {
