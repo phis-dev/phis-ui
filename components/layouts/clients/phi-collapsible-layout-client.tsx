@@ -3,14 +3,15 @@
 import { Collapse } from "antd";
 import type { CollapseProps } from "antd";
 import type { CSSProperties, MouseEvent, ReactNode } from "react";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { usePhiConfig } from "../../root/phi-config-provider";
 import { createPhiSignalAddress } from "../../../types/signals";
 import type { PhiRenderableBlockAnchor } from "../../../types/renderable-block";
 import type { PhiCmsInstanceId } from "../../../types/cms-instance-id";
 import type { PhiControlSize } from "../../../types/control";
-import { usePhiSignalListener } from "../../runtime/runtime-signal-bus";
+import { usePhiSignalDispatcher, usePhiSignalListener } from "../../runtime/runtime-signal-bus";
+import { usePhiSignalIdentity } from "../../runtime/runtime-signal-identity";
 import type { PhiAnchorWidgetPlacement } from "../../controls/phi-anchor-control-contract";
 import { PhiLayoutAnchoredOverlay } from "./phi-layout-anchored-overlay";
 import {
@@ -282,6 +283,59 @@ function PhiCollapsibleLayoutBody({
     slotIndex: number;
     value: string;
   } | null>(null);
+
+  /*
+   * The open state, said out loud.
+   *
+   * The Collapsible has always listened on `openSlotKeys` and `activeSlotKey` and answered on neither,
+   * so anything that steered it -- a Controller, a pager, a second Collapsible -- could never learn
+   * where it stands. It announces on mount and on every change, as itself and to `broadcast`; its own
+   * listener reads only what is addressed to it, so this cannot feed back.
+   *
+   * The active slot is the last key opened, which for an accordion is the only open one. With nothing
+   * open there is no active slot, and an empty string would be inventing one.
+   */
+  const dispatchSignal = usePhiSignalDispatcher();
+  const signalScope = usePhiSignalIdentity().scope ?? "page";
+  const openSlotKeysSignature = useMemo(
+    () => JSON.stringify(resolvedOpenSlotKeys),
+    [resolvedOpenSlotKeys],
+  );
+  const announcedOpenSlotKeys = useMemo(
+    () => JSON.parse(openSlotKeysSignature) as string[],
+    [openSlotKeysSignature],
+  );
+
+  useEffect(() => {
+    if (!receiverAddress) {
+      return;
+    }
+
+    dispatchSignal({
+      scope: signalScope,
+      channel: "openSlotKeys",
+      action: "change",
+      value: announcedOpenSlotKeys,
+      valueType: "string[]",
+      sender: receiverAddress,
+      receiver: "broadcast",
+    });
+
+    const activeSlotKey = announcedOpenSlotKeys[announcedOpenSlotKeys.length - 1];
+    if (activeSlotKey === undefined) {
+      return;
+    }
+
+    dispatchSignal({
+      scope: signalScope,
+      channel: "activeSlotKey",
+      action: "change",
+      value: activeSlotKey,
+      valueType: "string",
+      sender: receiverAddress,
+      receiver: "broadcast",
+    });
+  }, [announcedOpenSlotKeys, dispatchSignal, receiverAddress, signalScope]);
 
   const commitSlotTitle = useCallback(() => {
     if (!editingSlotTitle) {
