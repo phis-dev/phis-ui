@@ -5,7 +5,6 @@ import { resolvePhiCmsRoutePresetByIdentity } from "../../../plugins/runtime-mod
 import { resolvePhiNavHref } from "../../../helpers/locale";
 import { phiRuntime } from "../../../server-helpers/phi-runtime";
 import type { PhiBlockRuntime } from "../../../types";
-import { canPhiViewerAccess } from "../../../types/access";
 import { readPhiPageReference, type PhiPageReference } from "../../../types/references";
 
 /**
@@ -66,10 +65,9 @@ export async function resolvePhiWidgetInternalReferences(input: {
       reference.target.ownerModuleId as `${string}/${string}`,
       reference.target.presetKey,
     );
-    if (
-      route && route.area === input.runtime.area && activeModuleIds.has(route.ownerModuleId) &&
-      canPhiViewerAccess(input.runtime.viewer, route.accessPolicy)
-    ) {
+    // A reference resolves to the address the route has, or to nothing when no Module carries it. Who
+    // is reading does not enter: the same reference names the same Page for everybody in the Area.
+    if (route && route.area === input.runtime.area && activeModuleIds.has(route.ownerModuleId)) {
       pagePaths.set(reference.reference, href(route.path));
     }
   }

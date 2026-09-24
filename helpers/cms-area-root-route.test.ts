@@ -1,6 +1,5 @@
 import { describe, expect, it } from "vitest";
 
-import { PHI_CORE_ROLE_PROVIDER_ID } from "@phis/contracts/access";
 
 import {
   applyPhiAreaRootRouteDecision,
@@ -12,7 +11,6 @@ import { createPhiBuilderRuntimeModuleCatalog } from "../plugins/runtime-modules
 import { createPhiDefaultAreaRuntimeModuleIds } from "../plugins/runtime-modules/builder/runtime-module-defaults";
 import { PHI_DASHBOARD_RUNTIME_MODULE_ID } from "../plugins/runtime-modules/dashboard/ids";
 import { resolvePhiCmsDescriptorCatalog } from "../plugins/runtime-modules/descriptor-compiler";
-import type { PhiBlockRuntime } from "../types";
 import type { PhiResolvedCmsPageTree } from "../types/cms";
 import type { PhiRuntimeModuleId } from "../types/cms-module-descriptors";
 import { createPhiPageReference } from "../types/references";
@@ -31,11 +29,6 @@ const builderModuleIds = new Set<PhiRuntimeModuleId>([
   "@phis/ui/builder" as PhiRuntimeModuleId,
   ...createPhiDefaultAreaRuntimeModuleIds("builder"),
 ]);
-const developer = {
-  access: "authenticated",
-  roleClaims: [{ providerId: PHI_CORE_ROLE_PROVIDER_ID, flags: 0b111_1111 }],
-  groupClaims: [],
-} as unknown as PhiBlockRuntime["viewer"];
 
 const dashboardReference = createPhiPageReference({
   kind: "module",
@@ -46,14 +39,12 @@ const dashboardReference = createPhiPageReference({
 function resolveDashboard(overrides: {
   area?: Parameters<typeof resolvePhiAreaModulePageReferencePath>[0]["area"];
   activeModuleIds?: ReadonlySet<PhiRuntimeModuleId>;
-  viewer?: PhiBlockRuntime["viewer"];
 } = {}) {
   return resolvePhiAreaModulePageReferencePath({
     reference: dashboardReference,
     area: overrides.area ?? "builder",
     catalog,
     activeModuleIds: overrides.activeModuleIds ?? builderModuleIds,
-    viewer: overrides.viewer ?? developer,
   });
 }
 
@@ -105,26 +96,28 @@ describe("resolving a Module-carried target", () => {
     expect(resolveDashboard({ activeModuleIds: without })).toBeNull();
   });
 
-  it("resolves nothing for a viewer the route itself would refuse", () => {
+  /*
+   * The inverse of what this test used to assert.
+   *
+   * It checked that a route with a narrower policy than its Area resolved to nothing for a viewer that
+   * policy would refuse -- which made an Area's front door move with the reader. ACCESS.md now states
+   * the opposite: a route is in or out by Module selection, and a Module that may not show this person
+   * what the Page holds answers that inside the Page.
+   */
+  it("resolves the same path whatever the reader holds", () => {
     const settingsReference = createPhiPageReference({
       kind: "module",
       ownerModuleId: "@phis/ui/modules/admin",
       presetKey: "admin-settings-general-page",
     });
-    const resolve = (viewer: PhiBlockRuntime["viewer"]) => resolvePhiAreaModulePageReferencePath({
+    const resolved = resolvePhiAreaModulePageReferencePath({
       reference: settingsReference,
       area: "admin",
       catalog,
       activeModuleIds: new Set<PhiRuntimeModuleId>(["@phis/ui/modules/admin" as PhiRuntimeModuleId]),
-      viewer,
     });
 
-    expect(resolve(developer)).toMatch(/^\/phis\/ui\/settings\//u);
-    expect(resolve({
-      access: "authenticated",
-      roleClaims: [],
-      groupClaims: [],
-    } as unknown as PhiBlockRuntime["viewer"])).toBeNull();
+    expect(resolved).toMatch(/^\/phis\/ui\/settings\//u);
   });
 
   it("resolves nothing across Areas, where the same path means another page", () => {

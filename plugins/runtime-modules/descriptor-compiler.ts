@@ -874,14 +874,12 @@ export function compilePhiCmsActiveRouteTable({
   catalog,
   area,
   activeModuleIds,
-  viewer,
   publicRoutePaths,
   landingSelection,
 }: {
   catalog: PhiCmsCompiledDescriptorCatalog;
   area: PhiCmsAreaKey;
   activeModuleIds: ReadonlySet<PhiRuntimeModuleId>;
-  viewer?: PhiAccessViewer;
   /**
    * The addresses the Area's config gave Public routes whose declared path was taken.
    *
@@ -922,13 +920,15 @@ export function compilePhiCmsActiveRouteTable({
    * Which application for `/` is answered, decided once before anything is compiled.
    *
    * Who wins is `choosePhiAreaRootApplicant`, shared with the Builder so the Page an author edits is
-   * the Page a visitor is served. What belongs here is only who gets to apply: active in this Area,
-   * and visible to this viewer. The applications that are not answered are not in the table at all.
+   * the Page a visitor is served. What belongs here is only who gets to apply: active in this Area. The
+   * applications that are not answered are not in the table at all.
+   *
+   * Not who is reading. An Area's front door is the same door for everybody the Area lets in, so a
+   * viewer here would make two people disagree about which Module answers `/` -- see ACCESS.md.
    */
   const rootApplicants = (catalog.routesByArea.get(area) ?? []).filter((declared) =>
     declared.descriptor.path === "/" &&
-    activeModuleIds.has(declared.descriptor.ownerModuleId) &&
-    (!viewer || canPhiViewerAccess(viewer, declared.descriptor.accessPolicy)));
+    activeModuleIds.has(declared.descriptor.ownerModuleId));
   const chosenRoot = choosePhiAreaRootApplicant(
     rootApplicants,
     (declared) => declared.descriptor,
@@ -964,9 +964,6 @@ export function compilePhiCmsActiveRouteTable({
     : declaredRoutes;
   for (const declared of orderedRoutes) {
     if (!activeModuleIds.has(declared.descriptor.ownerModuleId)) {
-      continue;
-    }
-    if (viewer && !canPhiViewerAccess(viewer, declared.descriptor.accessPolicy)) {
       continue;
     }
     if (declared.descriptor.path === "/" && declared !== chosenRoot) {
@@ -1214,12 +1211,23 @@ export function resolvePhiCmsActiveNavigationSurfaces({
     throw new Error(`Area "${area}" base module "${definition.baseModuleId}" is not active.`);
   }
 
+  /*
+   * Which routes exist, and nothing about who is reading.
+   *
+   * A route is in or out by Module selection alone. An entry may still hide from one reader -- that is
+   * the next block, and it is the entry's own statement -- but the set of addresses this Area answers is
+   * one set (ACCESS.md).
+   */
   const activeRoutes = (catalog.routesByArea.get(area) ?? [])
     .map(({ descriptor }) => descriptor)
-    .filter(({ ownerModuleId }) => activeModuleIds.has(ownerModuleId))
-    .filter((route) => !viewer || canPhiViewerAccess(viewer, route.accessPolicy));
+    .filter(({ ownerModuleId }) => activeModuleIds.has(ownerModuleId));
   const activeRouteIdentityKeys = new Set(activeRoutes.map((route) =>
     buildPhiCmsPresetIdentityKey(route.ownerModuleId, route.presetKey)));
+  /*
+   * Whether this reader is shown the entry, which is a different question from whether the address
+   * answers. An entry says this for itself; it is never read off the route it points at, because the
+   * route is the same route for everybody and a hidden entry must not imply a missing address.
+   */
   const isNavigationNodeVisible = (node: ResolvedNavigationNode) => {
     if (node.isUnrouted) {
       return false;
@@ -1227,13 +1235,7 @@ export function resolvePhiCmsActiveNavigationSurfaces({
     if (!viewer) {
       return true;
     }
-    const routePolicy = node.item.target?.kind === "module"
-      ? catalog.routeByIdentity.get(buildPhiCmsPresetIdentityKey(
-          node.item.target.ownerModuleId,
-          node.item.target.presetKey,
-        ))?.accessPolicy
-      : undefined;
-    return canPhiViewerAccess(viewer, node.item.accessPolicy ?? routePolicy);
+    return canPhiViewerAccess(viewer, node.item.accessPolicy);
   };
 
   return (definition.navigationSurfaces ?? []).map((surface) => {

@@ -4,7 +4,6 @@ import type {
   PhiCmsCompiledDescriptorCatalog,
   PhiRuntimeModuleId,
 } from "../../../types/cms-module-descriptors";
-import type { PhiBlockRuntime } from "../../../types";
 import type { PhiCmsPageNode, PhiResolvedCmsPageTree } from "../../../types/cms";
 import {
   buildPhiCmsEmptyPageTree,
@@ -31,7 +30,6 @@ import {
  */
 export function buildPhiAreaRootRedirectTree({
   page,
-  runtime,
   catalog,
   activeModuleIds,
   area,
@@ -39,18 +37,23 @@ export function buildPhiAreaRootRedirectTree({
   title,
 }: {
   page: PhiCmsPageNode;
-  runtime: PhiBlockRuntime;
   catalog: PhiCmsCompiledDescriptorCatalog;
   activeModuleIds: ReadonlySet<PhiRuntimeModuleId>;
   area: PhiCmsAreaKey;
   navKey: string;
   title: string;
 }): PhiResolvedCmsPageTree {
+  /*
+   * The unfiltered surface, deliberately.
+   *
+   * An entry may hide from one reader; the Area's front door may not move with it. Reading the filtered
+   * surface here would give two people in the same Area two different roots -- and it is what made the
+   * root a viewer-dependent answer, which ACCESS.md now forbids and which the proxy cannot cache.
+   */
   const surface = resolvePhiCmsActiveNavigationSurfaces({
     catalog,
     area,
     activeModuleIds,
-    viewer: runtime.viewer,
   }).find((candidate) => candidate.navKey === navKey);
   const targetPath = surface
     ? findFirstPhiCmsNavigationLinkPath(surface.items, page.path)

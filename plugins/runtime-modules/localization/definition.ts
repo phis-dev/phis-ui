@@ -6,7 +6,6 @@ import { buildPhiRuntimeModuleControllerDescriptor } from "../contracts";
 import { PHI_LOCALIZATION_RUNTIME_MODULE_ID } from "./ids";
 import { PHI_LOCALIZATION_FORM_HANDLER_PROVIDER_DESCRIPTORS } from "../../../plugins/runtime-modules/localization/forms";
 import { PHI_CORE_SERVER_BINDING } from "../../../types/server-capabilities";
-import { PHI_VIEWER_ACCESS_CONTENT_EDITING } from "../../../types/access";
 import { PHI_LOCALIZATION_RUNTIME_DATA_PROVIDER_DESCRIPTORS } from "./data-providers";
 
 export const PHI_LOCALIZATION_RUNTIME_MODULE_DEFINITION = {
@@ -14,7 +13,6 @@ export const PHI_LOCALIZATION_RUNTIME_MODULE_DEFINITION = {
   kind: "module",
   eligibleAreas: ["admin", "editor"] as const satisfies readonly PhiCmsAreaKey[],
   serverBinding: PHI_CORE_SERVER_BINDING,
-  accessPolicy: PHI_VIEWER_ACCESS_CONTENT_EDITING,
   controllerType: PHI_LOCALIZATION_CONTROLLER_TYPE,
   controller: buildPhiRuntimeModuleControllerDescriptor(PHI_LOCALIZATION_RUNTIME_CONTROLLER_DEFINITION),
   title: "Localization",

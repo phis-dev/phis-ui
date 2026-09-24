@@ -18,7 +18,6 @@ import {
   resolvePhiCmsRoutePreset,
 } from "../plugins/runtime-modules/descriptor-compiler";
 import { resolveActivePresetModuleKeys } from "./cms-request";
-import type { PhiBlockRuntime } from "../types";
 import type { PhiCmsSiteBridge } from "../types/cms-plugins";
 import type { PhiCapabilitySnapshot } from "../types/server-capabilities";
 
@@ -37,7 +36,6 @@ const PHI_PUBLIC_LOGIN_PATH = "/login";
 export const resolvePhiPublicLoginHref = cache(async function resolvePhiPublicLoginHref(
   cmsBridge: PhiCmsSiteBridge,
   locale: string,
-  viewer?: PhiBlockRuntime["viewer"],
   serverCapabilities?: PhiCapabilitySnapshot | null,
 ): Promise<string | null> {
   const catalog = resolvePhiCmsDescriptorCatalog(cmsBridge.runtimeModuleCatalog);
@@ -72,13 +70,11 @@ export const resolvePhiPublicLoginHref = cache(async function resolvePhiPublicLo
     "public",
     areaPreset ? { preset: areaPreset.preset } : null,
     serverCapabilities ?? null,
-    viewer,
   );
   const routeTable = compilePhiCmsActiveRouteTable({
     catalog,
     area: "public",
     activeModuleIds,
-    viewer,
     publicRoutePaths: readPhiAreaPublicRoutePaths(areaPreset?.preset.preset.config),
     landingSelection: readPhiAreaLandingSelection(areaPreset?.preset.preset.config),
   });
@@ -116,7 +112,7 @@ export async function resolvePhiUnauthenticatedLoginHref(
     internalToken: cmsBridge.runtime?.internalToken ?? "",
     siteKey: cmsBridge.runtime?.siteKey ?? "",
   }).catch(() => null);
-  const login = await resolvePhiPublicLoginHref(cmsBridge, locale, undefined, serverCapabilities);
+  const login = await resolvePhiPublicLoginHref(cmsBridge, locale, serverCapabilities);
   if (!login) {
     return null;
   }

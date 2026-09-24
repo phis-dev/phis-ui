@@ -180,32 +180,50 @@ Developer roles, and provider-specific content using its own roles.
 
 ## 5. Policy placement and inheritance
 
-The same access policy applies to:
+**An Area decides who may enter; nothing below it decides who may arrive.** The routing boundary is the
+Area and only the Area. Inside one, every viewer the Area admitted sees the same set of addresses, the
+same Module selection and the same Area root -- a Page is never routed away from one reader and towards
+another.
 
-- Area definitions;
-- Route/Page descriptors and persisted Pages;
+So the same access policy applies to:
+
+- Area definitions -- and this is the one that gates a route;
 - Navigation injections, manual links, containers, and separators;
 - Module Widget/Layout minimum access;
 - persisted Widget/Layout instances;
 - Regions and other renderable contributions;
 - Toolbar actions and API operations.
 
-A Navigation item targeting a Route inherits the Route policy unless it explicitly restricts access
-further. Manual or external items declare their own policy or inherit their Navigation surface.
+**A Route descriptor carries no policy.** It used to, and a Navigation item targeting a Route used to
+inherit it -- which made the compiled route table, the resolution of a stored Page reference and the
+Area's own front door all differ per reader. A Module is likewise never deactivated for a viewer: it is
+on for an Area or it is not.
+
+A Navigation item states its own policy or is shown to everybody the Area admits. An item that hides is
+saying something about the menu, never about the address: the address still answers, and a container
+whose every child hides is not drawn because nothing is left under it.
+
+**What a Module does instead.** A Module that may not show a given person what its Page holds answers
+that *inside* the Page -- in its tree loader, so nothing it will not show is resolved, fetched or
+mounted. That answer is a body and not a status line: a refusal raised below the Area shell arrives
+after the flush, and Next can then only swap the body. It is therefore presentation, and presentation is
+never the boundary -- `phis-server/AUTHORIZATION.md` section 8 requires every protected read and every
+write to enforce the same policy server-side, which is what a script reaches and a hidden route never
+protected against.
 
 Artifact access is the intersection of every containing layer:
 
 ```text
 Area
-AND Page
 AND artifact-type minimum
 AND concrete instance
 ```
 
 A child or instance may restrict inherited access but may never widen it.
 
-Server resolution filters unauthorized routes, navigation, and renderable artifacts before they cross
-the Client boundary. Client evaluation uses the same policy only for presentation and interaction.
+Server resolution filters unauthorized navigation and renderable artifacts before they cross the Client
+boundary. It does not filter routes. Client evaluation uses the same policy only for presentation and
+interaction.
 Renderable filtering also precedes demand-controller materialization, so a denied Widget/Layout cannot
 mount a controller or pass sibling Draft data to a renderer. Command Toolbar button policies are
 filtered from the server-rendered config before the Client toolbar receives it.
@@ -246,10 +264,16 @@ keeps answering correctly if the matrix widens.
 A projection is presentation. The server stays authoritative and enforces the same split on its own
 routes; a disabled control is a courtesy, never the boundary.
 
-User management is the worked example. Its `/users` route (`/admin/phis/ui/users`) carries the Developer-tools policy, so a Developer
-enters and reads. The controller projects `permissions.readOnly`, and the page binds cell editing, the
-create toolbar action, and the edit and delete row actions to it. `@phis/server` mirrors the split per
-method: GET behind the Developer guard, every mutating method behind the Admin-only one.
+User management is the worked example, and it is what the whole of section 5 is for. Its `/users` route
+(`/admin/phis/ui/users`) states no policy at all: entry is the Admin Area's question and it answered it
+already. What differs between a Developer and an Admin is capability, not reachability -- the controller
+projects `permissions.readOnly`, and the page binds cell editing, the create toolbar action, and the
+edit and delete row actions to it. `@phis/server` mirrors the split per method: GET behind the Developer
+guard, every mutating method behind the Admin-only one.
+
+That split is the pattern for every case that used to reach for a route policy. Where a Module must go
+further than read-only and show nothing at all, it returns a different tree rather than a different
+route.
 
 ## 7. Viewport visibility matrix
 

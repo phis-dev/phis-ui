@@ -201,14 +201,10 @@ const definition = {
     providerId: MODULE_PROVIDER,
     requiredCapabilities: [],
   },
-  accessPolicy: {
-    access: "roles",
-    providerId: FOREIGN_PROVIDER,
-    allowedRoleFlags: 1,
-  },
   controllerType: "@test/pkg/modules/controller",
   controller: {
-    pluginKey: "@test",
+    // Matches `controllerType` above; the Module-policy assertion used to throw before this was read.
+    pluginKey: "@test/pkg/modules",
     key: "controller",
     title: "Controller",
     allowedMountScopes: ["area"],
@@ -221,14 +217,44 @@ const definition = {
   controllerMountPolicy: "demand",
 } satisfies PhiRuntimeModuleDefinition;
 
+/*
+ * A Module may name Core's roles or its own provider's, and nobody else's. The subject used to be the
+ * Module itself; a Module carries no access policy any more (ACCESS.md section 5 -- it is on for an
+ * Area or it is not), so the rule is checked where a policy still lives. A Widget minimum is the
+ * smallest such place.
+ */
 const entry = {
   definition,
+  routes: [{
+    ownerModuleId: MODULE_ID,
+    presetKey: "probe-page",
+    presetVersion: 1,
+    area: "public",
+    title: "Probe",
+    path: "/probe",
+    navigation: [{
+      navKey: "public:header",
+      parentItemKey: null,
+      item: {
+        itemKey: "@test/pkg/nav/probe",
+        label: { defaultMessage: "Probe" },
+        accessPolicy: {
+          access: "roles",
+          providerId: FOREIGN_PROVIDER,
+          allowedRoleFlags: 1,
+        },
+      },
+    }],
+    loadTree: () => {
+      throw new Error("not loaded");
+    },
+  }],
   widgets: [],
   layouts: [],
   load: async () => {
     throw new Error("not loaded");
   },
-} satisfies PhiRuntimeModuleCatalogEntry;
+} as unknown as PhiRuntimeModuleCatalogEntry;
 
 assert.throws(
   () => createPhiRuntimeModuleCatalog([entry], []),

@@ -230,14 +230,12 @@ export function buildPhiNavigationTargetRouteHandler({
         area,
         areaPreset ? { preset: areaPreset.preset } : null,
         requestContext.serverCapabilities,
-        requestContext.viewer,
       );
       const storagePath = resolveAreaStoragePath(resolvedRoute.cmsPath, area);
       const routeTable = compilePhiCmsActiveRouteTable({
         catalog,
         area,
         activeModuleIds,
-        viewer: requestContext.viewer,
         publicRoutePaths: readPhiAreaPublicRoutePaths(areaPreset?.preset.preset.config),
         landingSelection: readPhiAreaLandingSelection(areaPreset?.preset.preset.config),
       });
@@ -254,10 +252,8 @@ export function buildPhiNavigationTargetRouteHandler({
             locale: resolvedRoute.locale,
             cookieHeader,
           });
-      const available = routeBinding != null || (
-        customPage != null &&
-        canPhiViewerAccess(requestContext.viewer, customPage.page.page.accessPolicy)
-      );
+      // A Site-authored Page is available because it exists, not because of who is asking.
+      const available = routeBinding != null || customPage != null;
 
       // Only an Area root can forward; for every other path the question does not arise.
       const destinationHref = available && storagePath === "/"

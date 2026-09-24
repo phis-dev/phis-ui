@@ -173,12 +173,12 @@ export const PHI_AUTH_RUNTIME_MODULE_ROUTES = [
     title: "Authentication",
     path: "/settings/authentication",
     mount: { mountKey: "settings" },
-    accessPolicy: PHI_VIEWER_ACCESS_SITE_ADMIN,
     navigation: [{
       navKey: "admin:sidebar",
       parentItemKey: PHI_ADMIN_SETTINGS_NAV_ITEM_KEY,
       item: {
         itemKey: "@phis/ui/modules/auth/nav/admin/settings",
+        accessPolicy: PHI_VIEWER_ACCESS_SITE_ADMIN,
         label: { defaultMessage: "Authentication" },
         icon: "antd:safety-certificate",
         routePresetKey: "admin-auth-settings-page",

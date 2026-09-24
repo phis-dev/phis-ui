@@ -18,7 +18,6 @@ import {
 } from "./phi-cms-runtime-registry";
 import { PhiRuntimeModuleDataProviderHost } from "../runtime/runtime-module-data-provider-host";
 import { resolvePhiRuntimeControllerDefinitions } from "../../plugins/runtime-modules/resolver";
-import { canPhiViewerAccess } from "../../types/access";
 import {
   buildPhiRuntimeModuleAccessRegistry,
   filterPhiCmsRenderableTreeForViewer,
@@ -112,15 +111,14 @@ export async function PhiCmsRootSlotPage({
     return null;
   }
 
+  /*
+   * Which Modules this Area runs, and not which ones this person may see. A Module is area-bound and
+   * never switched off for a reader (ACCESS.md); what its Widgets show may still differ per person.
+   */
   const runtimeModuleIds = resolvePhiRuntimeModuleIdsForArea(
     resolvedRequest.runtime.area,
     readPhiAreaPresetRuntimeModuleIds(resolvedRequest.areaPreset, resolvedRequest.runtime.area),
     [...cmsBridge.runtimeModuleCatalog.values()].map((entry) => entry.definition),
-  ).filter((moduleId) =>
-    canPhiViewerAccess(
-      resolvedRequest.runtime.viewer,
-      cmsBridge.runtimeModuleCatalog.get(moduleId)?.definition.accessPolicy,
-    )
   );
   const runtimeModuleScope = await resolvePhiCmsRuntimeModuleScope({
     cmsBridge,

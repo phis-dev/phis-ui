@@ -1,8 +1,6 @@
 import type { PhiCmsAreaKey } from "../constants/cms-areas";
 import { PhiCmsPageType, PhiCmsStatus } from "../constants/phi-cms";
 import { resolvePhiCmsRoutePresetByIdentity } from "../plugins/runtime-modules/descriptor-compiler";
-import type { PhiBlockRuntime } from "../types";
-import { canPhiViewerAccess } from "../types/access";
 import type { PhiResolvedCmsPagePayload, PhiResolvedCmsPageTree } from "../types/cms";
 import type {
   PhiCmsCompiledDescriptorCatalog,
@@ -27,22 +25,23 @@ export type PhiAreaRootRouteDecision =
 /**
  * A reference to a Page a Module carries, as the Area-relative path it names.
  *
- * Checked against this Area, this Module selection and this viewer, so a reference to a route that is
- * no longer reachable resolves to nothing rather than to a path that answers 404. A Site-authored Page
- * cannot be resolved without asking the server and is handled by the caller.
+ * Checked against this Area and this Module selection, so a reference to a route no Module carries any
+ * more resolves to nothing rather than to a path that answers 404. A Site-authored Page cannot be
+ * resolved without asking the server and is handled by the caller.
+ *
+ * Not against the viewer. This is what an Area's root forwards to, and a front door that moved with the
+ * reader is the thing ACCESS.md forbids.
  */
 export function resolvePhiAreaModulePageReferencePath({
   reference,
   area,
   catalog,
   activeModuleIds,
-  viewer,
 }: {
   reference: PhiPageReference;
   area: PhiCmsAreaKey;
   catalog: PhiCmsCompiledDescriptorCatalog;
   activeModuleIds: ReadonlySet<PhiRuntimeModuleId>;
-  viewer: PhiBlockRuntime["viewer"];
 }): string | null {
   const parsed = readPhiPageReference(reference);
   if (parsed?.target.kind !== "module") {
@@ -53,10 +52,7 @@ export function resolvePhiAreaModulePageReferencePath({
     parsed.target.ownerModuleId as PhiRuntimeModuleId,
     parsed.target.presetKey,
   );
-  return route &&
-    route.area === area &&
-    activeModuleIds.has(route.ownerModuleId) &&
-    canPhiViewerAccess(viewer, route.accessPolicy)
+  return route && route.area === area && activeModuleIds.has(route.ownerModuleId)
     ? route.path
     : null;
 }

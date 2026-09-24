@@ -622,12 +622,6 @@ export function createPhiRuntimeModuleCatalog(
     assertPhiRuntimeModuleMetadata(definition);
     assertPhiRuntimeModuleServerBinding(definition);
     const ownerProviderId = definition.serverBinding.providerId as PhiRoleProviderId;
-    assertOwnedAccessPolicy(
-      definition.moduleId,
-      ownerProviderId,
-      definition.accessPolicy,
-      "module access policy",
-    );
     const hasController = hasPhiRuntimeModuleController(definition);
     if (hasController) {
       if (!isPhiNamespacedRuntimeKey(definition.controllerType)) {
@@ -679,12 +673,8 @@ export function createPhiRuntimeModuleCatalog(
       }
     }
     for (const route of entry.routes ?? []) {
-      assertOwnedAccessPolicy(
-        definition.moduleId,
-        ownerProviderId,
-        route.accessPolicy,
-        `route preset "${route.presetKey}"`,
-      );
+      // A route states no policy any more -- an address is the Area's, not a reader's (ACCESS.md). What
+      // a route still brings is navigation, and an entry's own policy is checked below.
       for (const injection of route.navigation ?? []) {
         assertNavigationItemAccessPolicies(
           definition.moduleId,

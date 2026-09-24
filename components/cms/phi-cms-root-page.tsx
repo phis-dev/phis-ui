@@ -105,7 +105,6 @@ export async function PhiCmsRootPage({
       const login = await resolvePhiPublicLoginHref(
         cmsBridge,
         resolvedRoute.locale,
-        resolvedRequest.runtime.viewer,
         resolvedRequest.serverCapabilities,
       );
       if (!login) {
@@ -117,15 +116,14 @@ export async function PhiCmsRootPage({
     redirect(localizeAreaPath(resolvedRoute.locale, resolvedRequest.runtime.viewer.resolvedArea, "/"));
   }
 
+  /*
+   * Which Modules this Area runs, and not which ones this person may see. A Module is area-bound and
+   * never switched off for a reader (ACCESS.md); what its Widgets show may still differ per person.
+   */
   const runtimeModuleIds = resolvePhiRuntimeModuleIdsForArea(
     resolvedRequest.runtime.area,
     readPhiAreaPresetRuntimeModuleIds(resolvedRequest.areaPreset, resolvedRequest.runtime.area),
     [...cmsBridge.runtimeModuleCatalog.values()].map((entry) => entry.definition),
-  ).filter((moduleId) =>
-    canPhiViewerAccess(
-      resolvedRequest.runtime.viewer,
-      cmsBridge.runtimeModuleCatalog.get(moduleId)?.definition.accessPolicy,
-    )
   );
   const runtimeModuleScope = await resolvePhiCmsRuntimeModuleScope({
     cmsBridge,

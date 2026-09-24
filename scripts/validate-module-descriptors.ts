@@ -321,29 +321,34 @@ assert.equal(
 assert.equal(resolvePhiCmsRoutePreset(adminFeatureRoutes, "/phis/ui/locales")?.descriptor.ownerModuleId, PHI_LOCALIZATION_RUNTIME_MODULE_ID);
 assert.equal(resolvePhiCmsRoutePreset(adminFeatureRoutes, "/phis/ui/logs")?.descriptor.ownerModuleId, PHI_OBSERVABILITY_RUNTIME_MODULE_ID);
 assert.equal(resolvePhiCmsRoutePreset(adminFeatureRoutes, "/phis/ui/users")?.descriptor.ownerModuleId, PHI_USER_MANAGEMENT_RUNTIME_MODULE_ID);
-// User management is readable by a Developer and writable only by an Admin, the same split
-// `phi-server` enforces per method. Entry is therefore the Developer's; the read-only projection
-// that removes the capability lives in the page's controller, not in this route policy. A Builder
-// holds no Admin area access at all and must not reach the route.
-const adminRoutesForRole = (roleFlags: number) => compilePhiCmsActiveRouteTable({
+/*
+ * The guard rail for the rule this used to break.
+ *
+ * `compilePhiCmsActiveRouteTable` takes no viewer, and this is what keeps it that way: the Area's route
+ * table is compiled once and asserted to be the same table however the reader is described. An Area
+ * answers one set of addresses to everybody it let in (ACCESS.md); what a Module is willing to show a
+ * given person is decided inside the Page, and its data refuses server-side regardless.
+ *
+ * It used to assert the opposite -- that `/phis/ui/users` vanished for a Builder -- which is how the
+ * front door came to move with the reader. A Builder holds no Admin Area access at all, so that was
+ * never the question this table answers.
+ */
+const adminRoutePathsForTable = (table: ReturnType<typeof compilePhiCmsActiveRouteTable>) =>
+  [...table.exactByPath.keys()].sort();
+const adminRouteTableAgain = compilePhiCmsActiveRouteTable({
   catalog,
   area: "admin",
   activeModuleIds: adminFeatureModuleIds,
-  viewer: {
-    access: "authenticated",
-    roleClaims: [{ providerId: "@phis/server/core", flags: roleFlags }],
-    groupClaims: [],
-  },
 });
-assert.equal(
-  resolvePhiCmsRoutePreset(adminRoutesForRole(PhiBaseRole.Developer), "/phis/ui/users")?.descriptor.ownerModuleId,
-  PHI_USER_MANAGEMENT_RUNTIME_MODULE_ID,
+assert.deepEqual(
+  adminRoutePathsForTable(adminRouteTableAgain),
+  adminRoutePathsForTable(adminFeatureRoutes),
+  "The Admin route table must not depend on anything but the Module selection.",
 );
 assert.equal(
-  resolvePhiCmsRoutePreset(adminRoutesForRole(PhiBaseRole.Admin), "/phis/ui/users")?.descriptor.ownerModuleId,
+  resolvePhiCmsRoutePreset(adminFeatureRoutes, "/phis/ui/users")?.descriptor.ownerModuleId,
   PHI_USER_MANAGEMENT_RUNTIME_MODULE_ID,
 );
-assert.equal(resolvePhiCmsRoutePreset(adminRoutesForRole(PhiBaseRole.Builder), "/phis/ui/users"), null);
 assert.equal(
   resolvePhiCmsRoutePreset(adminFeatureRoutes, "/phis/ui/settings/authentication")?.descriptor.ownerModuleId,
   PHI_AUTH_RUNTIME_MODULE_ID,
@@ -364,8 +369,14 @@ assert.deepEqual(
   adminNavigationItems?.map((item) => readPhiCmsNavigationTargetPath(item.target) ?? null),
   ["/phis/ui/dashboard", "/phis/ui/locales", "/phis/ui/logs", "/phis/ui/users", null],
 );
-// The Users entry inherits the route policy, so it follows entry rather than write capability: a
-// Developer sees it and reads the page, a Builder never reaches the Admin sidebar.
+/*
+ * An entry hides on its own statement, never on the policy of the route it points at.
+ *
+ * The Users entry declares none, so it is shown to everyone the Admin Area lets in -- a Developer reads
+ * the page and an Admin writes it, which is the read-only projection in the page's controller and not a
+ * routing question. Asserting the sidebar is the same list for every reader is what keeps the Area root
+ * a published fact: the front door is its first entry.
+ */
 const adminNavigationPathsForRole = (roleFlags: number) => resolvePhiCmsActiveNavigationSurfaces({
   catalog,
   area: "admin",
@@ -377,9 +388,34 @@ const adminNavigationPathsForRole = (roleFlags: number) => resolvePhiCmsActiveNa
   },
 }).find((surface) => surface.navKey === "admin:sidebar")?.items
   .map((item) => readPhiCmsNavigationTargetPath(item.target) ?? null);
-assert.equal(adminNavigationPathsForRole(PhiBaseRole.Developer)?.includes("/phis/ui/users"), true);
-assert.equal(adminNavigationPathsForRole(PhiBaseRole.Admin)?.includes("/phis/ui/users"), true);
-assert.equal(adminNavigationPathsForRole(PhiBaseRole.Builder)?.includes("/phis/ui/users"), false);
+const adminSidebarWithoutViewer = adminNavigationItems
+  ?.map((item) => readPhiCmsNavigationTargetPath(item.target) ?? null);
+assert.deepEqual(
+  adminSidebarWithoutViewer,
+  ["/phis/ui/dashboard", "/phis/ui/locales", "/phis/ui/logs", "/phis/ui/users", null],
+  "Without a reader the sidebar is the published list, Settings container included.",
+);
+/*
+ * Every entry that states no policy is shown to everybody the Area let in -- the four pages above are
+ * the Admin Area's own, and none of them narrows further. What does narrow is the Settings container's
+ * only child, `General`, which is Site Admin's; a Developer therefore sees no Settings group, because a
+ * container with nothing under it is not an entry.
+ *
+ * This is the whole of what may differ per reader. The route table beside it does not (above), which is
+ * what keeps the Area root a published fact.
+ */
+for (const role of [PhiBaseRole.Developer, PhiBaseRole.Builder]) {
+  assert.deepEqual(
+    adminNavigationPathsForRole(role),
+    ["/phis/ui/dashboard", "/phis/ui/locales", "/phis/ui/logs", "/phis/ui/users"],
+    "An entry without a policy is shown to every reader the Area admits.",
+  );
+}
+assert.deepEqual(
+  adminNavigationPathsForRole(PhiBaseRole.Admin),
+  adminSidebarWithoutViewer,
+  "A Site Admin sees the Settings container, because its only child is theirs.",
+);
 
 const adminSettingsContainer = adminNavigationItems?.at(-1);
 assert.equal(adminSettingsContainer?.kind, "container");

@@ -1,10 +1,6 @@
 import type { PhiCmsRoutePresetDescriptor } from "../../../types/cms-module-descriptors";
 import { PHI_BASE_PAGE_LAYOUT_VERSION } from "../../../components/regions/presets/phi-base-page-layout";
 import { PHI_GROUPS_RUNTIME_MODULE_ID } from "./ids";
-import {
-  PHI_VIEWER_ACCESS_AUTHENTICATED,
-  PHI_VIEWER_ACCESS_DEVELOPER_TOOLS,
-} from "../../../types/access";
 
 export const PHI_GROUPS_RUNTIME_MODULE_ROUTES = [{
   ownerModuleId: PHI_GROUPS_RUNTIME_MODULE_ID,
@@ -15,7 +11,6 @@ export const PHI_GROUPS_RUNTIME_MODULE_ROUTES = [{
   // Entry is Developer, which the Core Admin override widens to Admin -- a group is an authorization
   // unit Pages, Navigation, and Assets refer to, so making one is Site administration. A group's own
   // Manager administers their group where they work, not here.
-  accessPolicy: PHI_VIEWER_ACCESS_DEVELOPER_TOOLS,
   path: "/groups",
   navigation: [{
     navKey: "admin:sidebar",
@@ -39,7 +34,6 @@ export const PHI_GROUPS_RUNTIME_MODULE_ROUTES = [{
   title: "Groups",
   // Anyone signed in: the page answers "which groups am I in and what may I do there", and having no
   // group is an answer rather than a reason to hide the page.
-  accessPolicy: PHI_VIEWER_ACCESS_AUTHENTICATED,
   path: "/groups",
   navigation: [{
     navKey: "app:sidebar",

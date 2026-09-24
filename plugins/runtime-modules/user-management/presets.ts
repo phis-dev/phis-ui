@@ -1,7 +1,6 @@
 import type { PhiCmsRoutePresetDescriptor } from "../../../types/cms-module-descriptors";
 import { PHI_BASE_PAGE_LAYOUT_VERSION } from "../../../components/regions/presets/phi-base-page-layout";
 import { PHI_USER_MANAGEMENT_RUNTIME_MODULE_ID } from "./ids";
-import { PHI_VIEWER_ACCESS_DEVELOPER_TOOLS } from "../../../types/access";
 
 export const PHI_USER_MANAGEMENT_RUNTIME_MODULE_ROUTES = [{
   ownerModuleId: PHI_USER_MANAGEMENT_RUNTIME_MODULE_ID,
@@ -14,7 +13,6 @@ export const PHI_USER_MANAGEMENT_RUNTIME_MODULE_ROUTES = [{
   // one. The page carries that split through the controller's `permissions.readOnly` projection and
   // the `disabledWhen` conditions built on it, so entry is the route's decision and capability is
   // the surface's.
-  accessPolicy: PHI_VIEWER_ACCESS_DEVELOPER_TOOLS,
   path: "/users",
   navigation: [{
     navKey: "admin:sidebar",

@@ -213,7 +213,6 @@ const loadPhiCmsRootScopeCached = cache(async function loadPhiCmsRootScopeCached
     resolvedRoute.area,
     baseResolvedAreaPreset ? { preset: baseResolvedAreaPreset } : null,
     requestContext.serverCapabilities,
-    runtime.viewer,
   );
   const composedAreaPreset = baseResolvedAreaPreset
     ? await composePhiCmsActiveAreaOverlayPresets({

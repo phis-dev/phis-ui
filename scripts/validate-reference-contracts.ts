@@ -421,20 +421,22 @@ assert.equal(
   0,
 );
 
-// Access is evaluated against the route policy, not against the Area the viewer already reached.
-installReferenceProjection({ resolved: [] });
-assert.equal(
-  (await resolveReferences({ roleFlags: 0, pageReferences: [usersReference] })).pagePaths.size,
-  0,
-);
-installReferenceProjection({ resolved: [] });
-assert.deepEqual(
-  [...(await resolveReferences({
-    roleFlags: PhiBaseRole.Admin,
-    pageReferences: [usersReference],
-  })).pagePaths.values()],
-  ["/admin/phis/ui/users"],
-);
+/*
+ * A reference names the same Page for everybody, and this is the guard rail for it.
+ *
+ * It used to assert the opposite -- that a reference stopped resolving for a reader the route's own
+ * policy would refuse -- which made a stored reference mean different things to two people in one Area.
+ * ACCESS.md now settles it: a route is in or out by Module selection, and what a Module is willing to
+ * show is decided inside the Page. So the same reference resolves to the same path at every role.
+ */
+for (const roleFlags of [0, PhiBaseRole.Developer, PhiBaseRole.Admin, PhiBaseRole.Builder]) {
+  installReferenceProjection({ resolved: [] });
+  assert.deepEqual(
+    [...(await resolveReferences({ roleFlags, pageReferences: [usersReference] })).pagePaths.values()],
+    ["/admin/phis/ui/users"],
+    "A Page reference must resolve to one path whatever the reader holds.",
+  );
+}
 
 // An unknown preset key resolves to nothing rather than to the owning module's first route.
 installReferenceProjection({ resolved: [] });
@@ -609,13 +611,23 @@ const localizedHtml = await resolveHtml({
 });
 assert.ok(localizedHtml.includes(`<a href="/de/about#team">about us</a>`));
 
-// The same content resolved by a viewer who may not reach the Module target keeps its text only.
+/*
+ * The same content is the same link whoever reads it.
+ *
+ * This used to assert that a reader the route's policy refused got the text without its link. That was
+ * the same defect one layer up: authored content changing shape per reader, because a route was treated
+ * as viewer-dependent. A link that leads somewhere this person may not use is still a link -- the Page
+ * behind it answers for itself, and its data refuses server-side (ACCESS.md).
+ *
+ * Content stripped to text remains the answer where nothing carries the target at all: the Module is
+ * off, or the reference names no route. Those are the cases above, and they still hold.
+ */
 installReferenceProjection({ resolved: [] });
-const deniedHtml = await resolveHtml({
+const lowRoleHtml = await resolveHtml({
   roleFlags: 0,
   html: `<p><a href="${createPhiPageUri(usersReference)}">users</a></p>`,
 });
-assert.equal(deniedHtml, "<p>users</p>");
+assert.equal(lowRoleHtml, `<p><a href="/admin/phis/ui/users">users</a></p>`);
 
 // ---------------------------------------------------------------------------
 // External-document bypass encodings

@@ -1,7 +1,6 @@
 import type { PhiCmsRoutePresetDescriptor } from "../../../types/cms-module-descriptors";
 import { PHI_BASE_PAGE_LAYOUT_VERSION } from "../../../components/regions/presets/phi-base-page-layout";
 import { PHI_THREADS_RUNTIME_MODULE_ID } from "./ids";
-import { PHI_VIEWER_ACCESS_AUTHENTICATED } from "../../../types/access";
 
 export const PHI_THREADS_RUNTIME_MODULE_ROUTES = [{
   ownerModuleId: PHI_THREADS_RUNTIME_MODULE_ID,
@@ -11,7 +10,6 @@ export const PHI_THREADS_RUNTIME_MODULE_ROUTES = [{
   title: "Conversations",
   // Anyone signed in. Which conversations they see is the Core route's answer and not this Page's:
   // having none is an answer, and one a person can act on from here.
-  accessPolicy: PHI_VIEWER_ACCESS_AUTHENTICATED,
   path: "/conversations",
   navigation: [{
     navKey: "app:sidebar",

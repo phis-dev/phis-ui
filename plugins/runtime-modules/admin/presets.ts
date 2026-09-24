@@ -10,10 +10,6 @@ import {
   PHI_DEFAULT_PUB_AREA_COMPOSITION_NODE_KEYS,
 } from "../preset-contracts/pub-area";
 import { PHI_ADMIN_RUNTIME_MODULE_ID } from "./ids";
-import {
-  PHI_VIEWER_ACCESS_DEVELOPER_TOOLS,
-  PHI_VIEWER_ACCESS_SITE_ADMIN,
-} from "../../../types/access";
 
 export const PHI_ADMIN_RUNTIME_MODULE_AREA_SHELLS = [{
   ownerModuleId: PHI_ADMIN_RUNTIME_MODULE_ID,
@@ -57,7 +53,6 @@ const ADMIN_OWNED_ROUTES = [
     presetKey: "admin-settings-general-page",
     presetVersion: 1 + PHI_BASE_PAGE_LAYOUT_VERSION,
     title: "General",
-    accessPolicy: PHI_VIEWER_ACCESS_SITE_ADMIN,
     path: "/settings/general",
     mount: { mountKey: "settings" },
     loadTree: ({ page, runtime }: PhiCmsDescriptorBuildContext) =>
@@ -75,7 +70,6 @@ export const PHI_ADMIN_RUNTIME_MODULE_ROUTES = [
     ownerModuleId: PHI_ADMIN_RUNTIME_MODULE_ID,
     area: "admin",
     title: "Admin",
-    accessPolicy: PHI_VIEWER_ACCESS_DEVELOPER_TOOLS,
   }),
   ...ADMIN_OWNED_ROUTES,
 ] satisfies readonly PhiCmsRoutePresetDescriptor[];

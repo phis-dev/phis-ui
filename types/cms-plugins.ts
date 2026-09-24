@@ -729,7 +729,6 @@ export type PhiRuntimeModuleDefinition = {
   kind: "platform" | "module";
   eligibleAreas: readonly PhiCmsAreaKey[];
   serverBinding: import("./server-capabilities").PhiRuntimeModuleServerBinding;
-  accessPolicy?: import("./access").PhiViewerAccessPolicy;
   controllerType?: `${string}/${string}`;
   controller?: PhiRuntimeModuleControllerDescriptor;
   sourceLocale?: string;

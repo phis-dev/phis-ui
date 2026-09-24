@@ -25,7 +25,6 @@ import type {
 import type { PhiBlockRuntime } from "../../types";
 import type { PhiNavItem } from "../shell/shell-types";
 import { readPhiPageReference } from "../../types/references";
-import { canPhiViewerAccess } from "../../types/access";
 
 function collectNavigationLabels(
   items: readonly PhiCmsResolvedNavigationItem[],
@@ -108,8 +107,9 @@ export async function resolvePhiDescriptorNavigationItems(
         reference.target.ownerModuleId as PhiRuntimeModuleId,
         reference.target.presetKey,
       );
+      // Whether the address exists, which is Module selection and nothing about this reader.
       const available = route != null && route.area === runtime.area &&
-        activeModuleIds.has(route.ownerModuleId) && canPhiViewerAccess(runtime.viewer, route.accessPolicy);
+        activeModuleIds.has(route.ownerModuleId);
       return {
         ...item,
         target: {

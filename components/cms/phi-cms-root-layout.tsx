@@ -161,7 +161,6 @@ export async function PhiCmsAreaBoundary({
       const login = await resolvePhiPublicLoginHref(
         cmsBridge,
         resolvedRoute.locale,
-        runtime.viewer,
         rootScope.requestContext.serverCapabilities,
       );
       if (!login) {

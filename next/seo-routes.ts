@@ -193,7 +193,6 @@ async function buildPhiSitemapXml(
     catalog: resolvePhiCmsDescriptorCatalog(bridge.runtimeModuleCatalog),
     area: "public",
     activeModuleIds,
-    viewer: requestContext.viewer,
     publicRoutePaths: readPhiAreaPublicRoutePaths(areaPreset?.preset.preset.config),
     landingSelection: readPhiAreaLandingSelection(areaPreset?.preset.preset.config),
   });
@@ -257,7 +256,6 @@ export function buildPhiSitemapRouteHandler({ bridge }: { bridge: PhiCmsSiteBrid
       "public",
       context.areaPreset ? { preset: context.areaPreset.preset } : null,
       context.requestContext.serverCapabilities,
-      context.requestContext.viewer,
     );
     const xml = await cache.resolve(
       buildPhiSitemapFingerprint(context, activeModuleIds),

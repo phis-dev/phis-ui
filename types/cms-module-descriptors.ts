@@ -101,7 +101,6 @@ export type PhiCmsRoutePresetDescriptor = PhiCmsPresetIdentity & {
   landingPage?: true;
   mount?: PhiCmsRouteMountReference;
   title: string;
-  accessPolicy?: PhiViewerAccessPolicy;
   /**
    * The `PhiCmsFlags` a Page of this route starts out with.
    *

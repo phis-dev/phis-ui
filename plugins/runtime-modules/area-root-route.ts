@@ -1,5 +1,4 @@
 import type { PhiCmsAreaKey } from "../../constants/cms-areas";
-import type { PhiViewerAccessPolicy } from "../../types/access";
 import type {
   PhiCmsRoutePresetDescriptor,
   PhiRuntimeModuleId,
@@ -32,13 +31,11 @@ export function buildPhiAreaRootRoutePresetDescriptor({
   area,
   navKey = resolvePhiAreaRootRouteNavKey(area),
   title,
-  accessPolicy,
 }: {
   ownerModuleId: PhiRuntimeModuleId;
   area: PhiCmsAreaKey;
   navKey?: `${PhiCmsAreaKey}:${string}`;
   title: string;
-  accessPolicy?: PhiViewerAccessPolicy;
 }): PhiCmsRoutePresetDescriptor {
   return {
     ownerModuleId,
@@ -47,12 +44,10 @@ export function buildPhiAreaRootRoutePresetDescriptor({
     area,
     title,
     path: "/",
-    ...(accessPolicy ? { accessPolicy } : {}),
-    loadTree: ({ page, runtime, catalog, activeModuleIds }) =>
+    loadTree: ({ page, catalog, activeModuleIds }) =>
       import("../../components/regions/presets/phi-area-root-redirect-tree")
         .then((module) => module.buildPhiAreaRootRedirectTree({
           page,
-          runtime,
           catalog,
           activeModuleIds,
           area,

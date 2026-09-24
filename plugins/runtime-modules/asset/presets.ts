@@ -42,12 +42,12 @@ export const PHI_ASSET_RUNTIME_MODULE_ROUTES = [{
   title: "Media",
   path: "/settings/media",
   mount: { mountKey: "settings" },
-  accessPolicy: PHI_VIEWER_ACCESS_SITE_ADMIN,
   navigation: [{
     navKey: "admin:sidebar",
     parentItemKey: PHI_ADMIN_SETTINGS_NAV_ITEM_KEY,
     item: {
       itemKey: "@phis/ui/modules/asset/nav/admin/settings",
+      accessPolicy: PHI_VIEWER_ACCESS_SITE_ADMIN,
       label: { defaultMessage: "Media" },
       icon: "antd:picture",
       routePresetKey: "admin-media-settings-page",

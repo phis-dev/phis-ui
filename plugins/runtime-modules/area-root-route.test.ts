@@ -137,7 +137,6 @@ describe("an Area root", () => {
     const compiled = resolvePhiCmsDescriptorCatalog(createPhiAccountingRuntimeModuleCatalog());
     const resolved = buildPhiAreaRootRedirectTree({
       page,
-      runtime,
       catalog: compiled,
       activeModuleIds: new Set<PhiRuntimeModuleId>([
         compiled.areaDefinitions.get("accounting")!.baseModuleId,

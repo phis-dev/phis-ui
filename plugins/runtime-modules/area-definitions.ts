@@ -19,6 +19,7 @@ import {
   PHI_VIEWER_ACCESS_CONTENT_EDITING,
   PHI_VIEWER_ACCESS_DEVELOPER_TOOLS,
   PHI_VIEWER_ACCESS_STRUCTURE_AUTHORING,
+  PHI_VIEWER_ACCESS_SITE_ADMIN,
 } from "../../types/access";
 
 const label = (defaultMessage: string) => ({ defaultMessage });
@@ -284,6 +285,9 @@ export const PHI_ADMIN_RUNTIME_AREA_DEFINITIONS = [
               itemKey: "@phis/ui/modules/admin/nav/settings/general",
               label: label("General"),
               icon: "antd:global",
+              // The entry's own statement, where it used to be the route's. The address answers for
+              // everybody the Admin Area lets in; only the entry keeps to Site Admins (ACCESS.md).
+              accessPolicy: PHI_VIEWER_ACCESS_SITE_ADMIN,
               routePresetKey: "admin-settings-general-page",
             }],
           },

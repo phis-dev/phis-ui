@@ -11,7 +11,6 @@ import type { PhiResolvedRuntimeModuleSet } from "../types/cms-plugins";
 import type { PhiCmsInstanceId } from "../types/cms-instance-id";
 import type { PhiAccessViewer, PhiRoleProviderId } from "../types/access";
 import {
-  canPhiViewerAccess,
   canPhiViewerAccessOwnedPolicy,
   readPhiViewerAccessPolicy,
 } from "../types/access";
@@ -130,13 +129,6 @@ export function filterPhiCmsRenderableTreeForViewer<TTree extends PhiResolvedCms
   viewer: PhiAccessViewer;
   registry: AccessRegistry;
 }): TTree {
-  if (
-    tree.page &&
-    !canPhiViewerAccess(viewer, tree.page.accessPolicy)
-  ) {
-    return { ...tree, regions: [], overlays: [], layoutNodes: [], contentWidgets: [] };
-  }
-
   const layoutsById = new Map(tree.layoutNodes.map((node) => [node.id, node]));
   const childLayoutsByParent = new Map<PhiCmsInstanceId, PhiCmsLayoutNode[]>();
   const childWidgetsByParent = new Map<PhiCmsInstanceId, PhiCmsContentWidgetNode[]>();

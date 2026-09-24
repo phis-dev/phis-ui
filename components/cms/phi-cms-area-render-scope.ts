@@ -13,7 +13,6 @@ import {
 } from "../../plugins/runtime-modules/settings";
 import { materializePhiRuntimeControllerSettings } from "../runtime/runtime-controller-materialization";
 import { resolvePhiRuntimeControllerDefinitions } from "../../plugins/runtime-modules/resolver";
-import { canPhiViewerAccess } from "../../types/access";
 import {
   buildPhiRuntimeModuleAccessRegistry,
   filterPhiCmsRenderableTreeForViewer,
@@ -48,12 +47,14 @@ const loadPhiCmsAreaRenderScopeCached = cache(async function loadPhiCmsAreaRende
   const { resolvedAreaPreset, runtime } = rootScope;
   const layoutTree = resolvedAreaPreset ?? null;
 
+  /*
+   * Which Modules this Area runs, and not which ones this person may see. A Module is area-bound and
+   * never switched off for a reader (ACCESS.md); what its Widgets show may still differ per person.
+   */
   const runtimeModuleIds = resolvePhiRuntimeModuleIdsForArea(
     runtime.area,
     readPhiAreaPresetRuntimeModuleIds(layoutTree, runtime.area),
     [...cmsBridge.runtimeModuleCatalog.values()].map((entry) => entry.definition),
-  ).filter((moduleId) =>
-    canPhiViewerAccess(runtime.viewer, cmsBridge.runtimeModuleCatalog.get(moduleId)?.definition.accessPolicy)
   );
   const runtimeModuleScope = await resolvePhiCmsRuntimeModuleScope({
     cmsBridge,

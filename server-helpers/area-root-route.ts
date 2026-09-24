@@ -45,7 +45,6 @@ export async function resolvePhiAreaPageReferencePath({
       area,
       catalog,
       activeModuleIds,
-      viewer: runtime.viewer,
     });
   }
 

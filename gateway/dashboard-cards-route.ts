@@ -168,13 +168,11 @@ async function resolveDashboardCardScope({
     area,
     areaPreset ? { preset: areaPreset.preset } : null,
     requestContext.serverCapabilities,
-    requestContext.viewer,
   );
   const routeTable = compilePhiCmsActiveRouteTable({
     catalog,
     area,
     activeModuleIds,
-    viewer: requestContext.viewer,
     publicRoutePaths: readPhiAreaPublicRoutePaths(areaPreset?.preset.preset.config),
     landingSelection: readPhiAreaLandingSelection(areaPreset?.preset.preset.config),
   });

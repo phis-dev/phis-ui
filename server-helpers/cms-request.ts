@@ -168,7 +168,6 @@ export function resolveActivePresetModuleKeys(
   area: PhiCmsAreaKey,
   areaPreset: Pick<PhiResolvedCmsAreaPresetPayload, "preset"> | null,
   serverCapabilities: PhiCapabilitySnapshot | null,
-  viewer?: PhiBlockRuntime["viewer"],
 ) {
   const platformModuleId = runtimeModuleCatalog.platformModuleId;
   if (!platformModuleId) {
@@ -189,9 +188,8 @@ export function resolveActivePresetModuleKeys(
   )) {
     const definition = runtimeModuleCatalog.get(moduleKey)?.definition;
     if (definition) {
-      if (viewer && !canPhiViewerAccess(viewer, definition.accessPolicy)) {
-        continue;
-      }
+      // A Module is on for an Area or it is not. It is never switched off for one reader (ACCESS.md):
+      // what its Widgets show may differ per person, that it is loaded may not.
       const bindingResolution = resolvePhiRuntimeModuleServerBinding(
         definition.serverBinding,
         serverCapabilities,
@@ -325,7 +323,6 @@ export async function resolvePhiCmsRequest({
     requestedAreaKey,
     effectiveAreaPreset,
     resolvedRequestContext.serverCapabilities,
-    runtime.viewer,
   );
   const runtimeWithAuthProvider: PhiBlockRuntime = {
     ...runtime,
@@ -346,7 +343,6 @@ export async function resolvePhiCmsRequest({
     catalog,
     area: requestedAreaKey,
     activeModuleIds: activeModuleKeys,
-    viewer: runtime.viewer,
     publicRoutePaths: readPhiAreaPublicRoutePaths(effectiveAreaPreset?.preset.preset.config),
     landingSelection: readPhiAreaLandingSelection(effectiveAreaPreset?.preset.preset.config),
   });
@@ -421,13 +417,17 @@ export async function resolvePhiCmsRequest({
     ? applyPhiAreaRootRouteDecision(loadedPage, rootRouteDecision, requestedAreaKey)
     : loadedPage ?? folderRedirectPage;
 
-  const accessiblePage =
-    resolvedPage &&
-    canPhiViewerAccess(runtime.viewer, resolvedPage.page.page.accessPolicy)
-      ? resolvedPage
-      : null;
-  const effectivePage = accessiblePage
-    ? mapResolvedPageToRequestedContext(accessiblePage, areaMask, path)
+  /*
+   * The Page a request resolved to, whoever asked.
+   *
+   * There is no viewer here and there must not be: an address answers the same Page for everybody the
+   * Area let in (ACCESS.md). A Module that may not show this person what the Page holds answers that
+   * inside the Page -- in its own tree loader, with what it is willing to show -- and its data refuses
+   * server-side regardless of what was rendered. Deciding it here instead made the address itself
+   * disappear, which is a different and much larger claim.
+   */
+  const effectivePage = resolvedPage
+    ? mapResolvedPageToRequestedContext(resolvedPage, areaMask, path)
     : null;
 
   const resolvedContent = effectivePage;
