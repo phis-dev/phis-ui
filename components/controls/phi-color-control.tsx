@@ -141,7 +141,7 @@ export function PhiColorControl({
   allowClear,
   mode = "single",
   open,
-  showText = false,
+  showText,
   trigger,
   placement = "auto",
   size,
@@ -175,6 +175,15 @@ export function PhiColorControl({
   const selectedPaletteKey = selectedPalette?.key;
   const selectedPaletteLabel = selectedPalette?.label ?? selectedPaletteKey;
   const selectedCssValue = picker.value ?? defaultValue;
+  /*
+   * A single colour names itself, a gradient cannot.
+   *
+   * antd spells a gradient out stop by stop -- "rgb(22, 119, 255) 0%, rgb(255, 255, 255) 100%" -- which
+   * says less than the swatch already shows and takes a whole Inspector row to say it. So the value is
+   * written out only where it is one colour, and a caller that passes its own trigger keeps it bare.
+   */
+  const showsGradient = parseLinearGradientValue(selectedCssValue) != null;
+  const resolvedShowText = showText ?? (children == null && !showsGradient);
   const antdPresets: NonNullable<ColorPickerProps["presets"]> = presets.map((preset) => ({
     key: preset.key,
     label: preset.label,
@@ -192,7 +201,7 @@ export function PhiColorControl({
       trigger={trigger}
       placement={placement === "auto" ? undefined : placement}
       size={size}
-      showText={showText}
+      showText={resolvedShowText}
       presets={antdPresets}
       getPopupContainer={getPopupContainer}
       classNames={{ popup: { root: ["phi-color-widget-popup", popupClassName].filter(Boolean).join(" ") } }}
@@ -202,6 +211,12 @@ export function PhiColorControl({
           alignItems: "center",
           lineHeight: 1,
           maxWidth: "100%",
+          /*
+           * A grid or flex cell stretches an item whose width is `auto`, and the swatch was taking the
+           * whole Inspector column for it. It is a button, not a field: it is as wide as what it shows.
+           * A caller that brings its own trigger keeps the sizing that trigger was written for.
+           */
+          ...(children == null ? { width: "fit-content" } : {}),
         },
         popupOverlayInner: {
           padding: 12,

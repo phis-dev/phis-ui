@@ -134,7 +134,6 @@ export function PhiColorWidget({
         onDiscard={onDiscard}
         presets={pickerPresets}
         onChange={publish}
-        showText={!children}
       >
         {children}
       </PhiColorControl>
