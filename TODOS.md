@@ -33,6 +33,56 @@ built. Remove an entry when it is done.
 
 ## Layouts and Widgets
 
+- **One breakpoint scale, and it is ours.** Five sets of thresholds decide the same kind of question in
+  this tree, and only one of them is on the house scale:
+
+  | Where | Thresholds | Origin |
+  |---|---|---|
+  | Quick Links | 144 / 377 | `theme/phi-container-breakpoints.ts` -- Phi, and its only user |
+  | Grid | `token.screenSM` / `token.screenLG` = 576 / 992 | Ant Design |
+  | Form | 360 / 768 | hand-written in styles/layout.css |
+  | Shell visibility | 768 / 1200 | hand-written in styles/shell.css |
+  | Overlay `width` | `{ xs, md, lg }` | Ant Design's own breakpoint names |
+
+  Media and container queries take any length, so none of these numbers is imposed on us except the
+  Overlay's, which travel into Ant Design as names rather than values. The rest is simply nobody having
+  chosen once.
+
+  **The line to cut along is what a threshold means, not where it is written.** A *content* threshold
+  answers "at what width does this stop fitting" -- the Form's 360, where its labels go back above their
+  inputs, or the Grid's profiles. Those are ours, and the house scale is as good a ruler as any with the
+  advantage that it is already the ruler everywhere else. A *device band* answers "is this a phone", and
+  it has to fall in the gap between real device classes, which the sequence does not: **377 sits between
+  a 375px iPhone and a 390px one**, two phones of one class on opposite sides of a boundary. 610 sits
+  inside the tablet band.
+
+  The Shell's thresholds are the case where mechanism and meaning come apart: they are written as
+  container queries (`@container phi-render-viewport`) but that container is the window less the sider,
+  so they are a device band in a container query's clothing. They stay where they are, and that reason
+  belongs written beside them so nobody moves them onto the scale by accident. They also carry more than
+  looks: `viewportFlags` on every renderable block (`PhiViewport.Compact | Medium | Wide`, types/access.ts)
+  is resolved against exactly these numbers, so moving them changes which blocks exist on a page rather
+  than how they are drawn.
+
+  **What it costs, measured:**
+
+  | Today | Nearest Phi number | Shift |
+  |---|---|---|
+  | Grid 576 | 610 | +34 |
+  | Grid 992 | 987 | **-5** |
+  | Form 360 | 377 | +17 |
+  | Form 768 | 610 or 987 | -158 / +219 |
+
+  Three of the four are nearly free. The Form's upper threshold is the one real decision: it is where a
+  form goes from two columns to more, no Phi number sits near 768, and either direction visibly changes
+  desktop forms. It gets decided on its own rather than rounded.
+
+  **Do this first, before responsive block geometry.** The geometry rebuild needs one scale to profile
+  against; starting with geometry would cast Ant Design's device numbers into the new form and make them
+  much harder to leave. Concretely: grow `theme/phi-container-breakpoints.ts` from two constants to the
+  run (144, 233, 377, 610, 987), move the Grid off `token.screenSM`/`screenLG` and the Form off its
+  hand-written pair, and leave the Shell's band alone with its reason stated.
+
 - **Generic float-button Widget.** A Widget over antd `FloatButton` behind a Phi Control, with
   config-driven placement, icon, and badge, emitting activation like the button Widget.
 - **Control badge adoption from real use cases.** The badge contract exists for button and toolbar.
@@ -387,9 +437,10 @@ built. Remove an entry when it is done.
   `{ width, height }`. The `compact | medium | wide` axis lives only on Grid spans and offsets and on
   the Overlay `width` being removed here, so adopting block geometry as it stands would lose the 20--80px
   each preset gains on a wide screen. Block geometry therefore has to take the responsive form first,
-  and that is a change to every renderable block, not to Overlays. Order matters: responsive block
-  geometry, then the Overlay adoption, then `width` goes -- doing the last one first would drop
-  distinctions the presets are currently making on purpose.
+  and that is a change to every renderable block, not to Overlays. Order matters: the one breakpoint
+  scale first (see "One breakpoint scale, and it is ours" under Layouts and Widgets), then responsive
+  block geometry, then the Overlay adoption, then `width` goes -- taking them in any other order either
+  casts Ant Design's numbers into the new form or drops distinctions the presets are making on purpose.
 
   **The decision that has to come before any of it: what a profile is measured against.** "Responsive"
   is not one mechanism here, it is three, and the tree is not of one mind about them:
@@ -414,6 +465,18 @@ built. Remove an entry when it is done.
   and because it keeps one meaning across Grid, Form and block geometry. A Modal genuinely is hung on
   the viewport rather than standing in a Layout, but it can say so with `maxSize` in `vw` units instead
   of with a second profile system.
+- **What the Shell is on a phone.** Today the answer is subtraction: the Shell hides Regions by
+  `viewportFlags` below 768px (styles/shell.css), so a narrow screen gets the same Shell with parts
+  missing. Nothing is re-arranged, and the navigation that lived in the sider is simply gone.
+
+  An idea rather than a design: collect the navigation items that the sider, the header and the footer
+  each contribute into one menu, so a phone gets one way in instead of three that do not fit. What would
+  have to be decided before it is a design -- which Regions may contribute, what orders the result, and
+  who owns the collecting. The last one is the trap: a menu that gathers items from every Region is one
+  step from being the single place that knows all five Areas' presets, catalogs and module sets, which
+  NEXT_INTEGRATION.md forbids outright. The Area-switch entry under Verification ran into the same wall
+  from the other side.
+
 - **Overlay authoring in Builder.** Designed in [design/OVERLAY_AUTHORING.md](./design/OVERLAY_AUTHORING.md).
 
 ## Builder
