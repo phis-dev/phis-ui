@@ -29,9 +29,6 @@ export const PHI_SPACING_TOKEN_KEYS = [
 export type PhiSpacingScaleKey = (typeof PHI_SPACING_SCALE_KEYS)[number];
 export type PhiSpacingScaleFamily = "padding" | "margin";
 
-export const PHI_SPACING_SCALE_KEY_OPTIONS: readonly PhiControlOption[] =
-  PHI_SPACING_SCALE_KEYS.map((key) => ({ value: key, label: key }));
-
 export function resolvePhiSpacingScaleValue(
   key: PhiSpacingScaleKey,
   family: PhiSpacingScaleFamily,

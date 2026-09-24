@@ -2,6 +2,7 @@ import type { PhiBlockRuntime, PhiCmsRuntimeRenderRegistry } from "../../../type
 import type { PhiSignalRouteSet } from "../../../types/signals";
 import { getPhiBorderWidgetLabels } from "../../../components/widgets/label-sets/border";
 import { getPhiBackgroundWidgetLabels } from "../../../components/widgets/label-sets/background";
+import { getPhiPaddingWidgetLabels } from "../../../components/widgets/label-sets/padding";
 import { getPhiGeometryWidgetLabels } from "../../../components/widgets/label-sets/geometry";
 import { getPhiSignalsWidgetLabels } from "../../../components/widgets/label-sets/signals";
 import { getPhiColorPickerLabelsForRuntime } from "../../../components/widgets/label-sets/color-picker";
@@ -74,6 +75,7 @@ export async function PhiBuilderInspectorSectionWidget({
   const [
     backgroundLabels,
     borderLabels,
+    paddingLabels,
     geometryLabels,
     signalsLabels,
     colorPickerLabels,
@@ -85,6 +87,11 @@ export async function PhiBuilderInspectorSectionWidget({
       locale: runtime.locale.current,
     }),
     getPhiBorderWidgetLabels({
+      apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
+      internalToken: readPhiServerApiCredentials().internalToken,
+      locale: runtime.locale.current,
+    }),
+    getPhiPaddingWidgetLabels({
       apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
       internalToken: readPhiServerApiCredentials().internalToken,
       locale: runtime.locale.current,
@@ -120,6 +127,7 @@ export async function PhiBuilderInspectorSectionWidget({
             geometryLabels={geometryLabels}
             backgroundLabels={backgroundLabels}
             borderLabels={borderLabels}
+            paddingLabels={paddingLabels}
             colorPickerLabels={colorPickerLabels}
           />
         ) : view === "layout" ? (
@@ -129,6 +137,7 @@ export async function PhiBuilderInspectorSectionWidget({
             signalsLabels={signalsLabels}
             backgroundLabels={backgroundLabels}
             borderLabels={borderLabels}
+            paddingLabels={paddingLabels}
             colorPickerLabels={colorPickerLabels}
             iconPickerLabels={iconPickerLabels}
           />

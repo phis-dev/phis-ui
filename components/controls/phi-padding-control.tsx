@@ -10,9 +10,10 @@ import {
 } from "../widgets/label-types/padding";
 import { usePhiConfig } from "../root/phi-config-provider";
 import { PhiLabeledControl } from "./phi-labeled-control";
+import type { PhiControlOption } from "./phi-control-options";
 import type { PhiWidgetControlMode } from "../../types/widget-ui";
 import {
-  PHI_SPACING_SCALE_KEY_OPTIONS,
+  PHI_SPACING_SCALE_KEYS,
   resolvePhiSpacingScaleKey,
   resolvePhiSpacingScaleValue,
   type PhiSpacingScaleFamily,
@@ -91,6 +92,7 @@ function renderPaddingInput(
   value: number | string | null | undefined,
   family: PhiSpacingScaleFamily,
   disabled: boolean,
+  options: readonly PhiControlOption<PhiPaddingScaleKey>[],
   onChange: (nextValue: PhiPaddingScaleKey) => void,
 ) {
   return (
@@ -100,7 +102,7 @@ function renderPaddingInput(
         disabled={disabled}
         value={normalizePaddingScaleKey(value, family) ?? "none"}
         onChange={onChange}
-        options={[...PHI_SPACING_SCALE_KEY_OPTIONS]}
+        options={[...options]}
         style={{ width: "100%", minWidth: 0 }}
       />
     </PhiLabeledControl>
@@ -122,6 +124,10 @@ export function PhiPaddingControl({
     [value, config],
   );
   const isDisabled = disabled || !onChange;
+  const scaleOptions = useMemo<readonly PhiControlOption<PhiPaddingScaleKey>[]>(
+    () => PHI_SPACING_SCALE_KEYS.map((key) => ({ value: key, label: labels.scaleSizes[key] })),
+    [labels],
+  );
   const [displayState, setDisplayState] = useState(() => ({ source: currentValue, value: currentValue }));
 
   function emit(nextValue: PhiCmsPaddingWidgetConfig | null) {
@@ -148,6 +154,7 @@ export function PhiPaddingControl({
         resolvedDisplayValue?.paddingTop ?? resolvedDisplayValue?.padding,
         "padding",
         isDisabled,
+        scaleOptions,
         (next) => {
           const nextPadding = resolveNextPadding(resolvedDisplayValue, "paddingTop", next);
           setDisplayState({ source: currentValue, value: nextPadding });
@@ -161,6 +168,7 @@ export function PhiPaddingControl({
         resolvedDisplayValue?.paddingLeft ?? resolvedDisplayValue?.padding,
         "padding",
         isDisabled,
+        scaleOptions,
         (next) => {
           const nextPadding = resolveNextPadding(resolvedDisplayValue, "paddingLeft", next);
           setDisplayState({ source: currentValue, value: nextPadding });
@@ -173,6 +181,7 @@ export function PhiPaddingControl({
             resolvedGapValue,
             "margin",
             isDisabled,
+            scaleOptions,
             (next) => {
               const nextPadding = resolveNextPadding(resolvedDisplayValue, "gap", next);
               setDisplayState({ source: currentValue, value: nextPadding });
@@ -185,6 +194,7 @@ export function PhiPaddingControl({
         resolvedDisplayValue?.paddingRight ?? resolvedDisplayValue?.padding,
         "padding",
         isDisabled,
+        scaleOptions,
         (next) => {
           const nextPadding = resolveNextPadding(resolvedDisplayValue, "paddingRight", next);
           setDisplayState({ source: currentValue, value: nextPadding });
@@ -198,6 +208,7 @@ export function PhiPaddingControl({
         resolvedDisplayValue?.paddingBottom ?? resolvedDisplayValue?.padding,
         "padding",
         isDisabled,
+        scaleOptions,
         (next) => {
           const nextPadding = resolveNextPadding(resolvedDisplayValue, "paddingBottom", next);
           setDisplayState({ source: currentValue, value: nextPadding });

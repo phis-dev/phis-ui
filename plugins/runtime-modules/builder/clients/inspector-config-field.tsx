@@ -860,7 +860,7 @@ export function renderPhiInspectorConfigField({
       <PhiBoundRadiusControl
         key={field.key}
         labels={{
-          ...PHI_RADIUS_CONTROL_DEFAULT_LABELS,
+          ...(borderLabels ?? PHI_RADIUS_CONTROL_DEFAULT_LABELS),
           sections: { radius: field.required ? `${field.label} *` : field.label },
         }}
         labelWidth={PHI_INSPECTOR_FIELD_LABEL_WIDTH}
