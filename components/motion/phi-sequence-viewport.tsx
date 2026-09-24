@@ -201,6 +201,7 @@ export function PhiSequenceViewport({
           : {
             position: "absolute",
             insetBlockStart: 0,
+            insetBlockEnd: 0,
             insetInlineStart: outgoing && fadeState.outgoingStart !== null
               ? `calc(${index - fadeState.outgoingStart} * ${step})`
               : 0,
@@ -242,6 +243,16 @@ export function PhiSequenceViewport({
           alignItems: "stretch",
           gap: gapLength,
           width: "100%",
+          /*
+           * The track is as tall as the window, not as tall as the tallest item.
+           *
+           * `alignItems: stretch` gives every item the track's height, so whatever the track is
+           * worth is what an item has to place its content in. Left at content height there was
+           * nothing to place within: an item anchored to the bottom or the middle sat at the top,
+           * because top and bottom were the same line. A caller that gives the viewport no height
+           * of its own still gets content height -- a percentage against an auto parent is auto.
+           */
+          height: "100%",
           minWidth: 0,
           ...(onTrack
             ? {

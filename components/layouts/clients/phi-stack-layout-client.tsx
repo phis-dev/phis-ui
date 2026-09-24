@@ -260,7 +260,13 @@ export function PhiStackLayout({
       {backgroundLayer}
       <div
         data-phi-stack-stage="true"
-        style={{ position: "relative", width: "100%", minWidth: 0, minHeight: 0 }}
+        /*
+         * The stage is as tall as the Stack, not as tall as the slot standing in it. A slot that is
+         * only as tall as its content has no room to place that content, so an anchor of bottom or
+         * middle drew at the top. Where the Stack itself has no height, a percentage against an auto
+         * parent stays auto and the stage is content height as before.
+         */
+        style={{ position: "relative", width: "100%", height: "100%", minWidth: 0, minHeight: 0 }}
       >
         {slots.map((slot, index) => {
           const isActive = index === resolvedActiveIndex;
@@ -287,12 +293,13 @@ export function PhiStackLayout({
               data-phi-stack-slot-state={isActive ? "active" : isOutgoing ? "outgoing" : "inactive"}
               style={{
                 width: "100%",
+                height: "100%",
                 minWidth: 0,
                 minHeight: 0,
                 ...(isOutgoing
                   ? {
                       position: "absolute",
-                      insetBlockStart: 0,
+                      insetBlock: 0,
                       insetInline: 0,
                       zIndex: 1,
                       pointerEvents: "none",
