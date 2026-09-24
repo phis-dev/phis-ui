@@ -198,8 +198,15 @@ export function PhiDeveloperBuilderLayoutInspectorWidgetClient({
    * The Settings panel hides itself when the layout declares nothing for it. It is the Drawer's first
    * panel and open by default, so it is mounted and can act; the Drawer itself lists one Collapse item
    * per section and cannot know what a section will render.
+   *
+   * Nothing is decided before the layout's plugin has arrived. A plugin that is not resolved yet
+   * declares no fields, which reads exactly like a layout that declares none -- and at mount that is
+   * the ordinary state, so the panel hid itself over a question it could not yet answer. "Not known"
+   * is not "empty".
    */
-  const settingsHasContent = !isTargetKind || section !== "settings" || settingsFields.length > 0 || slotPlacementField != null
+  const settingsAnswerIsKnown = selectedStructurePlugin != null;
+  const settingsHasContent = !settingsAnswerIsKnown || !isTargetKind || section !== "settings"
+    || settingsFields.length > 0 || slotPlacementField != null
     || chromeFields.some((field) => field.type !== "padding");
   const ownSlot = usePhiBaseLayoutOwnSlotController();
   useEffect(() => {

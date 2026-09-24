@@ -238,6 +238,16 @@ function PhiCollapsibleLayoutBody({
 
     return Array.from({ length: appendSlotIndex + 1 }, (_, slotIndex) => slotIndex);
   }, [appendSlotIndex, isEditMode, occupiedSlotIndices]);
+  /*
+   * The keys of the slots that are off the screen. A hidden panel must not be the open one: with an
+   * accordion that would leave the Collapse showing nothing at all.
+   */
+  const hiddenSlotKeys = new Set(
+    renderedSlotIndices
+      .filter((slotIndex) => (resolvedSlotStates[slotIndex] ?? "expanded") === "hidden")
+      .map((slotIndex) => validSlotKeys[slotIndex])
+      .filter((key): key is string => Boolean(key)),
+  );
   const baseOpenSlotKeys = useMemo(
     () => resolveDefaultOpenSlotKeys(defaultOpenSlotKeys, validSlotKeys, accordion),
     [accordion, defaultOpenSlotKeys, validSlotKeys],
@@ -435,10 +445,16 @@ function PhiCollapsibleLayoutBody({
       if (!slotKey) {
         return null;
       }
-      const slotState = resolvedSlotStates[slotIndex] ?? "expanded";
-      if (slotState === "hidden") {
-        return null;
-      }
+      /*
+       * A hidden slot keeps its panel and leaves the screen, instead of being dropped.
+       *
+       * What hides a slot is usually the child inside it -- an Inspector section that finds it has
+       * nothing to show hides its own panel. Dropping the panel would unmount that child, and with it
+       * the only thing that could ever ask the question again: the slot then stayed hidden for every
+       * later selection, until the page was reloaded. Off-screen and rendered anyway, the child keeps
+       * deciding and can take the slot back.
+       */
+      const isHiddenSlot = (resolvedSlotStates[slotIndex] ?? "expanded") === "hidden";
 
       const child = slots[slotIndex] ?? null;
       const hasContent = isRenderableSlotChild(child);
@@ -525,7 +541,8 @@ function PhiCollapsibleLayoutBody({
         key: slotKey,
         label,
         collapsible: effectiveCollapsible,
-        forceRender: isEditMode,
+        forceRender: isEditMode || isHiddenSlot,
+        ...(isHiddenSlot ? { style: { display: "none" } } : {}),
         children: childContent
           ? childContent
           : editSlotAction && editRenderInsertControl
@@ -615,7 +632,10 @@ function PhiCollapsibleLayoutBody({
       >
         <Collapse
           accordion={accordion}
-          activeKey={toCollapseActiveKey(resolvedOpenSlotKeys, accordion)}
+          activeKey={toCollapseActiveKey(
+            resolvedOpenSlotKeys.filter((key) => !hiddenSlotKeys.has(key)),
+            accordion,
+          )}
           /*
            * Never its own outline: the Layout box draws it, out of `borderSource`, for every Layout the
            * same way. What stays here is `ghost`, which decides the inside -- and Ant Design's borderless
