@@ -1,6 +1,5 @@
 "use client";
 
-import { theme as antdTheme } from "antd";
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 
 import { normalizePhiCssSize, resolvePhiLayoutInset } from "../phi-layout-contract";
@@ -9,6 +8,10 @@ import { PhiBaseLayout } from "../phi-base-layout";
 import { resolvePhiLayoutDefaults } from "../../../helpers/cms-layout-defaults";
 import { resolvePhiLayoutSlotChildSizing } from "./phi-layout-anchored-overlay";
 import { resolvePhiGridSlotPlacement } from "../phi-grid-contract";
+import {
+  PHI_CONTAINER_BREAKPOINT_CONTENT,
+  PHI_CONTAINER_BREAKPOINT_REGION,
+} from "../../../theme/phi-container-breakpoints";
 import {
   isPhiLayoutAuthoringRender,
   phiLayoutSlotClassName,
@@ -135,7 +138,6 @@ export function PhiGridLayout({
     paddingLeft,
     layoutKind = "grid",
   } = layoutProps;
-  const { token } = antdTheme.useToken();
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [containerWidth, setContainerWidth] = useState<number | null>(null);
   useEffect(() => {
@@ -150,9 +152,17 @@ export function PhiGridLayout({
     observer.observe(node);
     return () => observer.disconnect();
   }, []);
-  const responsiveProfile = containerWidth != null && containerWidth >= token.screenLG
+  /*
+   * Measured on the Grid's own box, against the house scale.
+   *
+   * It read `token.screenSM` and `token.screenLG` before -- Ant Design's *device* numbers, 576 and 992,
+   * applied to a container width. The comparison was always about content, so the numbers are now
+   * content thresholds: `contentMax` is where a Grid has left the content column, `contentMaxWide`
+   * where it runs the width of the page. The shift is +34 and -5 pixels.
+   */
+  const responsiveProfile = containerWidth != null && containerWidth >= PHI_CONTAINER_BREAKPOINT_REGION
     ? "wide"
-    : containerWidth != null && containerWidth >= token.screenSM
+    : containerWidth != null && containerWidth >= PHI_CONTAINER_BREAKPOINT_CONTENT
       ? "medium"
       : "compact";
   const resolvedGap = normalizePhiCssSize(gap) ?? (PHI_GRID_LAYOUT_DEFAULTS.gap as number | string);

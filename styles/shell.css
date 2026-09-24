@@ -24,6 +24,16 @@
   container-type: inline-size;
 }
 
+/*
+ * A device band, not a content threshold, although it is written as a container query.
+ *
+ * `phi-render-viewport` is the window less the sider, so what these three measure is the screen. They
+ * are deliberately NOT on the container-breakpoint scale in `theme/phi-container-breakpoints.ts`: a
+ * Phi number has to fall where it fits content, and 377 sits between a 375px phone and a 390px one,
+ * which would put two phones of one class on opposite sides of a boundary. They also carry
+ * `viewportFlags`, so they decide whether a block exists on the page rather than how it is drawn --
+ * moving them adds and removes content.
+ */
 @container phi-render-viewport (width < 768px) {
   :where([data-phi-viewport-flags="2"], [data-phi-viewport-flags="4"], [data-phi-viewport-flags="6"]) {
     display: none !important;

@@ -20,6 +20,10 @@ import {
   type PhiResponsiveValue,
 } from "../../types/responsive";
 import {
+  PHI_CONTAINER_BREAKPOINT_COL3,
+  PHI_CONTAINER_BREAKPOINT_CONTENT,
+} from "../../theme/phi-container-breakpoints";
+import {
   collectPhiRuntimeValueConditions,
   readPhiRuntimeConditionExpression,
 } from "../../types/runtime-condition";
@@ -319,16 +323,23 @@ export function parsePhiFormDescriptor(value: unknown): PhiFormDescriptor {
  *
  * Its own width, not the window's: a form is measured where it stands, and a 480px dialog on a desk
  * monitor fell under `screenSM` and stacked its labels on a row with room for three of them. What a
- * label beside a short input actually needs is about a third of 360px; below that the input is left too
- * little to type in.
+ * label beside a short input actually needs is about a third of the width; below that the input is left
+ * too little to type in.
+ *
+ * Both numbers come off the container-breakpoint scale. `medium` was 360 and is 377, seventeen pixels
+ * that change nothing -- the narrowest form anybody authors is the 400px login dialog, and it stays on
+ * the near side. `wide` was 768 and is 610, which is `contentMax`: a form wider than that has left the
+ * content column, and 768 could be reached from nowhere in particular. No shipped descriptor tells its
+ * `medium` and `wide` ranges apart, so today the upper threshold decides nothing at all; it is put
+ * where it will mean something when one does.
  *
  * The comparison itself is made by the container queries in `styles/layout.css`, and these numbers are
  * the same numbers. They are declared here so the contract states them and the tests can read them --
  * if one side changes, the other has to be changed with it.
  */
 export const PHI_FORM_RESPONSIVE_MIN_WIDTH = {
-  medium: 360,
-  wide: 768,
+  medium: PHI_CONTAINER_BREAKPOINT_COL3,
+  wide: PHI_CONTAINER_BREAKPOINT_CONTENT,
 } as const;
 
 /**

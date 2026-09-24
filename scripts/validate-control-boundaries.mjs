@@ -326,7 +326,6 @@ const antdImportAllowance = new Map([
    * than a decision -- see TODOS.md -- and it is listed here so that it shrinks in the open.
    */
   ["components/layouts/clients/phi-carousel-layout-client.tsx", { values: ["theme"], reason: "Reads tokens." }],
-  ["components/layouts/clients/phi-grid-layout-client.tsx", { values: ["theme"], reason: "Reads tokens." }],
   ["components/layouts/phi-structure-region-layout.tsx", { values: ["theme"], reason: "Reads tokens." }],
   ["plugins/runtime-modules/builder/clients/inspector-config-field.tsx", { values: ["theme"], reason: "Reads tokens." }],
   ["plugins/runtime-modules/builder/clients/layout-scaffold-overlays.tsx", { values: ["theme"], reason: "Reads tokens." }],
