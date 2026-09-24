@@ -6,6 +6,8 @@ export type PhiBuilderInsertPickerControlLabels = {
   searchLayouts: string;
   searchWidgets: string;
   filterPackages: string;
+  /** The entry that stands for no package filter at all. */
+  allPackages: string;
   filterCategories: string;
   noCompatibleItems: string;
 };
@@ -18,6 +20,7 @@ export const PHI_BUILDER_INSERT_PICKER_CONTROL_DEFAULT_LABELS: PhiBuilderInsertP
   searchLayouts: "Search layouts",
   searchWidgets: "Search widgets",
   filterPackages: "Filter packages",
+  allPackages: "All packages",
   filterCategories: "Filter categories",
   noCompatibleItems: "No compatible items found.",
 };

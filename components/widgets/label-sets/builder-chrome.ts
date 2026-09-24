@@ -49,6 +49,7 @@ const PHI_BUILDER_CHROME_WIDGET_LABEL_SET = definePhiLabelSet({
     canvas_picker_search_layouts: PHI_BUILDER_CHROME_WIDGET_DEFAULT_LABELS.canvas.picker.searchLayouts,
     canvas_picker_search_widgets: PHI_BUILDER_CHROME_WIDGET_DEFAULT_LABELS.canvas.picker.searchWidgets,
     canvas_picker_filter_packages: PHI_BUILDER_CHROME_WIDGET_DEFAULT_LABELS.canvas.picker.filterPackages,
+    canvas_picker_all_packages: PHI_BUILDER_CHROME_WIDGET_DEFAULT_LABELS.canvas.picker.allPackages,
     canvas_picker_filter_categories: PHI_BUILDER_CHROME_WIDGET_DEFAULT_LABELS.canvas.picker.filterCategories,
     canvas_picker_no_compatible_items: definePhiMessageLabel(
       PHI_BUILDER_CHROME_WIDGET_DEFAULT_LABELS.canvas.picker.noCompatibleItems,
@@ -140,6 +141,7 @@ export async function getPhiBuilderChromeWidgetLabels(
         searchLayouts: labels.canvas_picker_search_layouts,
         searchWidgets: labels.canvas_picker_search_widgets,
         filterPackages: labels.canvas_picker_filter_packages,
+        allPackages: labels.canvas_picker_all_packages,
         filterCategories: labels.canvas_picker_filter_categories,
         noCompatibleItems: labels.canvas_picker_no_compatible_items,
       },
