@@ -240,6 +240,18 @@ function buildPhiSequenceStartSlotField(
   } as const;
 }
 
+/**
+ * Hidden once the Stack draws every slot at once.
+ *
+ * Each of these settings answers a question a pile does not ask -- which slot starts, what happens to
+ * the ones nobody is looking at, how the box gets from one to the next. Left on screen they would read
+ * as broken rather than as inapplicable.
+ */
+const PHI_STACK_SINGLE_SLOT_FIELD_VISIBILITY = {
+  field: "slotDisplay",
+  notEquals: "stacked",
+} as const;
+
 export const PHI_STACK_LAYOUT_DEFINITION = {
   kind: "layout",
   pluginKey: resolvePhiCmsLayoutPluginKey("stack"),
@@ -252,12 +264,33 @@ export const PHI_STACK_LAYOUT_DEFINITION = {
   defaultConfig: resolvePhiLayoutDefaults("stack"),
   fields: [
     ...PHI_LAYOUT_PADDING_FIELDS,
-    buildPhiSequenceStartSlotField(PHI_CMS_STACK_LAYOUT_SLOTS),
+    {
+      /*
+       * Whether the Stack is a sequence or a pile.
+       *
+       * `single` is what a Stack has always been: one slot stands in the box and the rest wait. `stacked`
+       * draws every slot in that same box, one over the next, which is a ground for anything that wants
+       * layers -- a caption over a picture, and later an animation Widget that moves them against each
+       * other. Everything below this field answers "which single slot", so a pile leaves them behind.
+       */
+      key: "slotDisplay",
+      type: "choice",
+      label: "Display",
+      options: [
+        { value: "single", label: "Single" },
+        { value: "stacked", label: "Stacked" },
+      ],
+    },
+    {
+      ...buildPhiSequenceStartSlotField(PHI_CMS_STACK_LAYOUT_SLOTS),
+      visibleWhen: PHI_STACK_SINGLE_SLOT_FIELD_VISIBILITY,
+    },
     {
       key: "mountPolicy",
       type: "choice",
       label: "Mounting",
       options: [...PHI_CMS_MOUNT_POLICY_FIELD_OPTIONS],
+      visibleWhen: PHI_STACK_SINGLE_SLOT_FIELD_VISIBILITY,
     },
     {
       key: "slotTransition",
@@ -267,6 +300,7 @@ export const PHI_STACK_LAYOUT_DEFINITION = {
         { value: "none", label: "None" },
         { value: "fade-over", label: "Fade over" },
       ],
+      visibleWhen: PHI_STACK_SINGLE_SLOT_FIELD_VISIBILITY,
     },
     {
       key: "slotTransitionDurationMs",
@@ -276,12 +310,14 @@ export const PHI_STACK_LAYOUT_DEFINITION = {
       max: PHI_SEQUENCE_TRANSITION_MAX_MS,
       step: PHI_SEQUENCE_TRANSITION_STEP_MS,
       prefix: "ms",
+      visibleWhen: PHI_STACK_SINGLE_SLOT_FIELD_VISIBILITY,
     },
     {
       key: "slotTransitionEasing",
       type: "choice",
       label: "Easing",
       options: [...PHI_MOTION_EASING_FIELD_OPTIONS],
+      visibleWhen: PHI_STACK_SINGLE_SLOT_FIELD_VISIBILITY,
     },
   ],
   runtimeSignals: {

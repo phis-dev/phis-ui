@@ -371,6 +371,14 @@ export type PhiCmsStackLayoutConfig = PhiCmsLayerBase & {
    * thing that happens to share a word.
    */
   defaultActiveSlotKey?: string;
+  /**
+   * Whether the box holds one slot at a time or all of them at once.
+   *
+   * `stacked` draws every slot in the same box, one over the next, in slot order. The settings that
+   * pick a single slot -- the starting one, the mount policy, the transition -- describe nothing then,
+   * and the layout stops reading them.
+   */
+  slotDisplay?: "single" | "stacked";
   mountPolicy?: PhiCmsMountPolicy;
   slotTransition?: "none" | "fade-over";
   slotTransitionDurationMs?: number;
@@ -710,6 +718,7 @@ export function parsePhiCmsStackLayoutConfig(
       border: readString(config.border),
       borderRadius: readCssSize(config.borderRadius),
       defaultActiveSlotKey: readString(config.defaultActiveSlotKey),
+      slotDisplay: config.slotDisplay === "stacked" ? "stacked" : "single",
       mountPolicy: readPhiCmsMountPolicy(config.mountPolicy, "remount"),
       slotTransition: config.slotTransition === "fade-over" ? "fade-over" : "none",
       // Absent means "whatever the theme does", which is why the fallback is read from the token

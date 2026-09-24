@@ -249,6 +249,20 @@ form layout's own control range at each width, including the label column a Form
 because the Grid arranged it. A form whose labels stand above their controls has no label column, and its
 submit starts where its inputs start. The Grid still sees one Widget.
 
+### Stack slot display
+
+`slotDisplay: "single" | "stacked"` decides whether the Stack is a sequence or a pile, and defaults to
+`single` -- one slot stands in the box and the rest wait, which is everything the section below
+describes. `stacked` draws every populated slot in that same box, in slot order, so the last one lies on
+top; the first one stays in normal flow and owns the Stack's natural size, the rest are taken out of flow
+over it. Every layer stays reachable, and the topmost takes the pointer where they overlap.
+
+A pile does not pick a slot, so `defaultActiveSlotKey`, `mountPolicy` and the three transition settings
+describe nothing and are neither read nor offered in the Inspector. Everything is mounted. Slot signals
+still emit, and the persisted child topology is the same one `single` reads -- switching between the two
+is a presentation change and never touches content. Builder edit rendering stays on the slot editor in
+both modes: a pile has no way to say which layer a dropped Widget belongs to.
+
 ### Stack slot mounting
 
 `PhiStackLayout` declares `mountPolicy` from the shared mount vocabulary in `types/cms-mount-policy.ts`

@@ -106,6 +106,9 @@ const PHI_MASONRY_LAYOUT_PANEL_PRESET = {
 } as const;
 
 export const PHI_STACK_LAYOUT_DEFAULTS: PhiLayoutDefaults = {
+    // One slot at a time is what a Stack is until somebody says otherwise; the pile is the deliberate
+    // choice, not the standing one.
+    slotDisplay: "single",
     slotTransition: "none",
     /*
      * Stated here although the parser resolves the same word on its own, because these defaults are

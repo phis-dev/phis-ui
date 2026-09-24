@@ -38,6 +38,7 @@ export type PhiStackLayoutProps = Omit<PhiBaseLayoutProps, "slots"> & {
   slotKeys: string[];
   slotMeta?: PhiStackLayoutSlotMeta[];
   defaultActiveSlotKey?: string;
+  slotDisplay?: "single" | "stacked";
   mountPolicy?: PhiCmsMountPolicy;
   slotTransition?: "none" | "fade-over";
   slotTransitionDurationMs?: number;
@@ -53,6 +54,7 @@ export function PhiStackLayout({
   slotKeys,
   slotMeta,
   defaultActiveSlotKey,
+  slotDisplay = "single",
   mountPolicy = "remount",
   slotTransition = "none",
   slotTransitionDurationMs,
@@ -90,6 +92,14 @@ export function PhiStackLayout({
     editSlotAnchor = "center",
   } = layoutProps;
   const isEditMode = renderMode === "editor";
+  /*
+   * A pile, not a sequence.
+   *
+   * Every slot is drawn in the one box, in slot order, so the last one lies on top -- which is what a
+   * later animation Widget will have to move against. Authoring stays one slot at a time: a pile has no
+   * way to say which layer a dropped Widget belongs to.
+   */
+  const isStacked = slotDisplay === "stacked" && !isEditMode;
   const editableSlotCount = resolvePhiSequenceEditableSlotCount(slots, slotKeys);
   const chrome = {
     padding,
@@ -146,13 +156,13 @@ export function PhiStackLayout({
     setTransitionState({
       activeSlotIndex: resolvedActiveIndex,
       outgoingSlotIndex:
-        slotTransition === "fade-over" && !isEditMode
+        slotTransition === "fade-over" && !isEditMode && !isStacked
           ? transitionState.activeSlotIndex
           : null,
       sequence: transitionState.sequence + 1,
     });
   }
-  const transitionEnabled = slotTransition === "fade-over" && !isEditMode;
+  const transitionEnabled = slotTransition === "fade-over" && !isEditMode && !isStacked;
   const outgoingSlotIndex =
     transitionEnabled && transitionState.outgoingSlotIndex !== resolvedActiveIndex
       ? transitionState.outgoingSlotIndex
@@ -239,9 +249,17 @@ export function PhiStackLayout({
   }
 
   const resolvedLayoutInset = resolvePhiLayoutInset(chrome);
+  /*
+   * The layer that keeps the box a box.
+   *
+   * The others are taken out of flow to lie over it, so without one in flow the stage would have no
+   * content height of its own and a Stack that was not given a height would collapse to nothing.
+   */
+  const baseStackedSlotIndex = slots.findIndex((slot) => isRenderablePhiNode(slot));
 
   return (
     <div
+      data-phi-stack-slot-display={isStacked ? "stacked" : "single"}
       data-phi-stack-slot-transition={slotTransition}
       style={{
         position: "relative",
@@ -273,27 +291,38 @@ export function PhiStackLayout({
            * the window lags by the length of the transition rather than cutting at the moment the
            * index changes.
            */
-          const shouldMount = shouldPhiCmsContentStayMounted({
+          const shouldMount = isStacked || shouldPhiCmsContentStayMounted({
             policy: mountPolicy,
             insideWindow: isActive || isOutgoing,
             hasEnteredWindow: visitedSlotIndices.has(index),
           });
           if (!shouldMount || !isRenderablePhiNode(slot)) return null;
 
+          /*
+           * Every layer stays reachable, and the one on top takes the pointer where they overlap. That
+           * is what lying over something means; a layer that should let the click through says so with
+           * its own content rather than by the Stack deciding for all of them.
+           */
+          const stackedLayerStyle: CSSProperties = index === baseStackedSlotIndex
+            ? { position: "relative", zIndex: index }
+            : { position: "absolute", insetBlock: 0, insetInline: 0, zIndex: index };
+
           return (
             <div
               key={slotKeys[index] ?? `slot-${index}`}
               ref={isOutgoing ? outgoingSlotRef : undefined}
-              hidden={!isActive && !isOutgoing}
-              inert={!isActive}
-              aria-hidden={!isActive || undefined}
-              data-phi-stack-slot-state={isActive ? "active" : isOutgoing ? "outgoing" : "inactive"}
+              hidden={!isStacked && !isActive && !isOutgoing}
+              inert={!isStacked && !isActive}
+              aria-hidden={(!isStacked && !isActive) || undefined}
+              data-phi-stack-slot-state={isStacked ? "stacked" : isActive ? "active" : isOutgoing ? "outgoing" : "inactive"}
               style={{
                 width: "100%",
                 height: "100%",
                 minWidth: 0,
                 minHeight: 0,
-                ...(isOutgoing
+                ...(isStacked
+                  ? stackedLayerStyle
+                  : isOutgoing
                   ? {
                       position: "absolute",
                       insetBlock: 0,
