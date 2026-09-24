@@ -354,9 +354,42 @@ built. Remove an entry when it is done.
   `hero.bottom`, `footer_top.top`. Closed shape catalog (wave, layered wave, zigzag, curve, slope) with
   validated ids and bounded parameters, never raw SVG or path data. Static inline SVG outside Region layout
   metrics; optional transform-only, reduced-motion-safe animation that a static Region never loads.
-- **Modal sizing.** OVERLAYS.md makes `controlSize` the Modal sizing path, but `PhiCmsOverlayConfig` still
-  accepts `width` (types/cms-overlay.ts) and the auth and avatar Overlay presets persist a responsive
-  `width` beside `controlSize`. Either drop `width` from Modal config or admit it in the contract.
+- **An Overlay is a block, and should be sized like one.** This began as "Modal sizing: either drop
+  `width` from Modal config or admit it in the contract", and the answer turned out to be neither. The
+  question is not which of the two sizing fields wins. It is why an Overlay has private sizing fields at
+  all.
+
+  Every renderable block carries `size`, `minSize`, `maxSize` and `collapsedSizeHint`, each a
+  `{ width?, height? }` (types/renderable-block.ts). `PhiCmsOverlayConfig` carries none of them: it
+  extends `PhiCmsContainerChromeConfig`, which is padding, background, border, shadow and effect and no
+  geometry at all (types/cms-container.ts). So the Overlay grew three fields of its own, each weaker
+  than the one it stands in for -- `width` is a width with no height, the Drawer's `size` is a single
+  length under the same name the block contract uses for a pair, and `maxSize` is a bare number under
+  the same name the block contract uses for a pair.
+
+  **What the missing vocabulary costs is visible in the presets.** The auth Overlay says in its own
+  comment that "the width has a floor rather than a preference" -- and then writes two widths, 400 and
+  420, both chosen to sit above the 360 at which the form inside puts its labels back over its inputs.
+  The floor is simulated by picking values above it, because there is no `minSize` to state it with. At
+  the other end, the viewport clamp every Modal gets is hard-wired in the Control
+  (`calc(100vw - 2 x base)`, components/controls/phi-modal-control.tsx) rather than written as a
+  `maxSize` where any other block would write it. And an authored height cannot be expressed at all:
+  height reaches a Modal only through the transient `size` signal and is gone at the next remount.
+
+  **The shape of it.** Adopt `size`, `minSize` and `maxSize` on the Overlay from the block contract and
+  drop `width`. `controlSize` stays, in the role it has everywhere else -- three steps for whoever does
+  not want to name a number, the same role a Button's size has -- and it is not a responsive vocabulary:
+  `small` is 520px on a phone and on a 4K screen alike. Its three widths also fit none of the eight
+  Overlay presets, which want 400, 420, 480, 520, 560, 600, 640 and 720; adding steps for them would
+  damage a vocabulary that belongs to Controls rather than to Overlays.
+
+  **And this is the part that reaches past Overlays.** `PhiRenderableBlockSize` is a plain
+  `{ width, height }`. The `compact | medium | wide` axis lives only on Grid spans and offsets and on
+  the Overlay `width` being removed here, so adopting block geometry as it stands would lose the 20--80px
+  each preset gains on a wide screen. Block geometry therefore has to take the responsive form first,
+  and that is a change to every renderable block, not to Overlays. Order matters: responsive block
+  geometry, then the Overlay adoption, then `width` goes -- doing the last one first would drop
+  distinctions the presets are currently making on purpose.
 - **Overlay authoring in Builder.** Designed in [design/OVERLAY_AUTHORING.md](./design/OVERLAY_AUTHORING.md).
 
 ## Builder
