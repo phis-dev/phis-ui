@@ -601,6 +601,22 @@ built. Remove an entry when it is done.
 
   Until one of them, `components/menus/phi-account-menu.tsx` keeps its plain anchor.
 
+- **The Builder got heavier and nobody said why.** Measured against production builds two weeks apart
+  (`browser-test/notes/MESSUNG-payloads.md`, which also says how to run the three measurements and which
+  of them answer which question): between 09.09. and 24.09. the Builder gained **18 scripts, 169 kB over
+  the wire and 479 kB decoded** on a cold load of `/builder/phis/ui/dashboard`. In the same fortnight
+  Public and the landing page each *lost* around 180 kB over the wire and 600 kB decoded.
+
+  The Builder is the surface with the smallest audience and the largest load, so a rise there is the one
+  that should be argued for rather than noticed later. Find what joined its graph and either justify it in
+  that note or move it out.
+
+- **The Public bundle drifts upward unremarked.** 21.09. to 24.09.: **+5,320 raw and +1,457 gzip**, same
+  script count, measured by `pnpm bundle:check:public` against a production server. Small, but it has only
+  ever gone one way, and the guard reports contents rather than size, so nothing fails when it grows.
+  `TODOS.md` already carries "freeze the module-graph audit"; a size budget belongs beside it, and the
+  numbers to set it from are in the note.
+
 - **Freeze the module-graph audit.** `pnpm audit:graph` exists but is not part of `pnpm verify`. Set its
   output budget and failure thresholds, then add it.
 - **Generated-output budget report** for the Skeleton's development build, separating Turbopack cache,
