@@ -56,6 +56,36 @@ export function readPhiSiteReadCache<T>(
   return entry.value as Promise<T>;
 }
 
+/**
+ * What is already there, without asking for it.
+ *
+ * `readPhiSiteReadCache` cannot answer "do you happen to know" -- it is given a loader and will run it.
+ * A caller that must not perform the load, because it has no way to perform it, needs the question asked
+ * plainly instead. `undefined` means nobody has put it here yet or it has expired, which is an answer
+ * and not a failure: the caller falls back to whatever it did before.
+ *
+ * The value is a promise because that is what the store holds; a peeked entry is already settled, so
+ * awaiting it costs nothing.
+ */
+export function peekPhiSiteReadCache<T>(key: string): Promise<T> | undefined {
+  const cached = readStore().get(key);
+  return cached && cached.expiresAt > Date.now() ? (cached.value as Promise<T>) : undefined;
+}
+
+/**
+ * What one render worked out, left where another request can find it.
+ *
+ * Unlike a read, nothing is fetched: the value is already in hand. It expires with the same TTL and is
+ * dropped by the same read-marker sweep as everything else here, so a publish takes it with it.
+ */
+export function writePhiSiteReadCache<T>(
+  key: string,
+  value: T,
+  ttlMs: number = PHI_SITE_READ_CACHE_TTL_MS,
+) {
+  readStore().set(key, { expiresAt: Date.now() + ttlMs, value: Promise.resolve(value) });
+}
+
 /** Empties the cache; `keep` spares one entry, such as the load that found out the rest is stale. */
 export function clearPhiSiteReadCache(options: { keep?: string } = {}) {
   const store = readStore();

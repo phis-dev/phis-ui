@@ -615,6 +615,25 @@ built. Remove an entry when it is done.
   Scripts: `browser-test/scripts/check-area-link-loop.mjs` (counts; `TO_HREF` picks the target),
   `trace-area-link-navigations.mjs` (history stacks), `check-area-arrival-settle.mjs` (hard-load control).
 
+- **Warm an Area's door before the first client navigation asks for it.** The proxy now answers an Area
+  root with a real HTTP 307 when a render has already worked out where that root leads
+  (`gateway/area-root-door.ts`), and that is what makes a cross-Area `Link` cost one navigation instead of
+  dozens -- measured warm at **1 navigation and 2 RSC requests, three runs out of three**, against 42 to 110
+  cold. What is left is the cold case: the first request for a given Area root in a process, and the first
+  after a publish sweeps the cache, still forwards from inside the render, and a client navigation that
+  meets that forward still runs away.
+
+  So the account menu keeps its plain anchor. Removing it is worth exactly one more step: resolve the
+  door once per Area without waiting for somebody to visit its root. The Area Layout is the place -- it
+  already holds the Area preset, the Module selection and the descriptor catalog on every request in that
+  Area. The pure case (nothing configured, so the door is the first entry of the Area's own Navigation) is
+  a computation over data already in hand and covers every Site that has not configured a root route. A
+  configured route whose target is a Site-authored Page needs one server reference resolution, so that
+  one can keep waiting for the first visit.
+
+  Once a door is warm before it is needed, the anchor in `components/menus/phi-account-menu.tsx` goes, and
+  the comment above it says what to measure.
+
 - **Freeze the module-graph audit.** `pnpm audit:graph` exists but is not part of `pnpm verify`. Set its
   output budget and failure thresholds, then add it.
 - **Generated-output budget report** for the Skeleton's development build, separating Turbopack cache,

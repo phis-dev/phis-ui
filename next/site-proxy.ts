@@ -8,6 +8,7 @@ import {
 import { readPhiSiteRuntimeConfigSync } from "../helpers/site-runtime";
 import { fetchResolvedSiteLocale, fetchSiteLocaleConfig } from "../server-helpers/site-locale";
 import { PHIS_REQUEST_PATH_HEADER, PHIS_REQUEST_SEARCH_HEADER } from "../constants/http-headers";
+import { peekPhiAreaRootDoor } from "../gateway/area-root-door";
 import { readPhiServerApiCredentials } from "../helpers/phis-server-credentials";
 import { getResolvedSiteConfig } from "../gateway/site-config";
 import {
@@ -191,6 +192,30 @@ export async function proxyPhiNextSiteRequest(request: NextRequest) {
   }
 
   if (KNOWN_SPECIAL_ROOTS.has(firstSegment)) {
+    /*
+     * An Area root forwards, and here is the cheapest place to do it.
+     *
+     * Only when a render already worked out where this Area's door leads (gateway/area-root-door.ts).
+     * Cold, or after a publish swept the cache, this knows nothing and the render below forwards as it
+     * always did -- so nothing depends on the cache being warm, and one request is all it costs to warm
+     * it.
+     *
+     * The point is the status line's position rather than its number. A forward decided inside the
+     * render reaches a client navigation as a serialised redirect, and applying one across a change of
+     * Area leaves Next's router asking for the same address at request speed. Issued here it is an
+     * ordinary HTTP 307, answered before there is a router state tree to disagree with: one navigation
+     * instead of dozens, and an unchanged document path.
+     *
+     * Access is not decided here and must not be -- this runs without a descriptor catalog and without
+     * an Area preset. The destination is inside the same Area as the address asked for, so whatever the
+     * Area would have refused, it still refuses one hop later.
+     */
+    if (pathname.replace(/\/+$/u, "").toLowerCase() === `/${firstSegment}`) {
+      const door = await peekPhiAreaRootDoor(firstSegment);
+      if (door && door !== pathname) {
+        return NextResponse.redirect(new URL(door + search, request.url), 307);
+      }
+    }
     /**
      * Protected roots are forwarded rather than gated here. This runs in middleware, with no descriptor
      * catalog and no Area preset, so it cannot know whether an Auth Module owns `/login` on this Site --

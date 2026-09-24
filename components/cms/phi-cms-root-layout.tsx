@@ -13,6 +13,7 @@ import { hasRenderableRegionRoot } from "./phi-cms-region-helpers";
 import { loadPhiCmsAreaRenderScope } from "./phi-cms-area-render-scope";
 import { hasPhiCmsRevisionPreview } from "../../server-helpers/cms-root";
 import { performPhiCmsPageRedirect, resolvePhiCmsPageRedirect } from "./phi-cms-page-redirect";
+import { rememberPhiAreaRootDoor } from "../../gateway/area-root-door";
 import { localizeAreaPath } from "../../helpers/locale";
 import {
   resolvePhiPublicLoginHref,
@@ -209,6 +210,15 @@ export async function PhiCmsAreaBoundary({
      * its segments, so what is skipped here is only ever a forward that was already satisfied.
      */
     if (pageRedirect) {
+      /*
+       * Left where the proxy can find it, before it is performed.
+       *
+       * The next request for this Area's root is then answered with a real 307 before Next's router
+       * exists, which is what a client navigation across an Area boundary needs (gateway/area-root-door.ts).
+       * Remembering it here rather than in the Page is deliberate: this Layout is what a client
+       * navigation re-runs, and the Page below it may never render once this forwards.
+       */
+      rememberPhiAreaRootDoor(resolvedRoute.area, request.pathname, pageRedirect.href);
       performPhiCmsPageRedirect(pageRedirect);
     }
   }
