@@ -2,8 +2,6 @@ import { PhiCmsRegionType } from "../../constants/phi-cms";
 import type { PhiResolvedCmsRenderableTree } from "../../types/cms";
 import type { PhiCmsSiteBridge } from "../../types/cms-plugins";
 import type { PhiBlockRuntime } from "../../types";
-import { forbidden, redirect, unauthorized } from "next/navigation";
-import { resolvePhiUnauthenticatedLoginHref } from "../../server-helpers/public-login-route";
 import { PhiCmsLayoutRenderer } from "./phi-cms-layout-renderer";
 import { hasRenderableRegionRoot } from "./phi-cms-region-helpers";
 import { loadPhiCmsRootRequest } from "../../server-helpers/cms-root";
@@ -71,16 +69,19 @@ export async function PhiCmsRootSlotPage({
       cmsBridge,
     });
   } catch (error) {
+    /*
+     * A slot refuses nothing, for the same reason it forwards nothing (below).
+     *
+     * The Layout beside it resolves the same request and answers `401` or `403` there, once, with a
+     * status line. Raising it here as well would raise it seven times over -- and a refusal raised from
+     * a parallel slot is worse than a repeat: `redirect`, `unauthorized` and `forbidden` all reach the
+     * client as a navigation, and a navigation asked for by a slot is asked for again the moment the
+     * arriving tree renders that slot again.
+     *
+     * So an Area the viewer may not see draws no Region here and is refused above.
+     */
     if (isPhiCmsGatewayAuthError(error)) {
-      if (error.status === 401) {
-        // Mirrors the Layout: offer the sign-in route when one exists, refuse outright when none does.
-        const login = await resolvePhiUnauthenticatedLoginHref(cmsBridge, root);
-        if (login) {
-          redirect(login);
-        }
-        unauthorized();
-      }
-      forbidden();
+      return null;
     }
     throw error;
   }

@@ -186,6 +186,17 @@ export function PhiAccountMenu({
      * arrangement to serve the new one; a document request builds the arriving Area from nothing, which
      * is what it is entitled to. Nobody carries unsaved work from the Builder into the App, so there is
      * no state here worth the trick.
+     *
+     * It is also, still, the only thing standing between this click and a runaway -- and measuring it
+     * again narrowed what the runaway is. It is not the Area boundary: the same click as a `Link`, aimed
+     * at a Page *inside* the arriving Area instead of at its root, costs one navigation and one RSC
+     * request, three runs out of three. What loops is `href` being an Area root, whose forward to the
+     * landing Page crosses the `(root)`/`(pages)` group boundary in the same navigation that crosses the
+     * Area. Either boundary on its own is quiet; together they are not (TODOS.md).
+     *
+     * So there is a version of this that could be a `Link` -- one naming where the Area root would have
+     * sent this viewer. It would have to resolve six Areas' landing Pages to draw one menu, which is a
+     * decision about cost rather than about links, and it is not taken here.
      */
     children: (areaEntries ?? []).map((entry) => ({
       key: `area-${entry.area}`,

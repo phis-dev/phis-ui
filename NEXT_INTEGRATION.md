@@ -81,10 +81,43 @@ src/app/(site)/<area>/layout.tsx              guards, providers, Area Overlays, 
 src/app/(site)/<area>/(root)/layout.tsx       chrome "none"   -- the Area root
 src/app/(site)/<area>/(root)/page.tsx
 src/app/(site)/<area>/(root)/@<slot>/page.tsx
+src/app/(site)/<area>/(root)/@<slot>/default.tsx
 src/app/(site)/<area>/(pages)/layout.tsx      chrome "shell"  -- everything below it
 src/app/(site)/<area>/(pages)/[...path]/page.tsx
 src/app/(site)/<area>/(pages)/@<slot>/[...path]/page.tsx
+src/app/(site)/<area>/(pages)/@<slot>/default.tsx
 ```
+
+**Every slot carries a `default.tsx`.** Next holds one active segment per slot beside the children
+segment, and a client navigation that leaves the branch -- the Area root to a Page below it, or one Area
+to the next -- moves children to something the slots have no counterpart for. The file is what Next puts
+there instead; without it, the leaving branch's slot segment stays and is asked to serve an address it
+was never resolved for.
+
+It is Next's own contract and nothing more. It was added while hunting the Area-switch navigation loop and
+**measured not to affect it** -- a full 2x2 against the slots' second defect below, every cell of which
+runs away (TODOS.md). So it earns its place as correctness, not as a fix.
+
+It draws nothing, which is the answer rather than a placeholder: a slot draws one Region of one Page, and
+an address that does not reach that Page has no Region for it.
+
+The static tree is the exception and must not be given one. Only the proxy reaches it, with a document
+request, so nothing ever navigates within it -- and there its slots sit *inside* the catch-all
+(`(pages)/[...path]/@<slot>/page.tsx`) rather than beside it. A `default.tsx` there resolves to a route
+with `[...path]` in the middle, which Next refuses outright: `Catch-all must be the last part of the URL`,
+thrown as an unhandled rejection that takes the whole route manifest with it. Adding the file for
+symmetry was tried, and every Public address answered 404 until the files were removed and the process
+restarted.
+
+**A slot never navigates.** It does not forward a forwarding Page and it does not refuse an Area the
+viewer may not see -- it returns nothing and lets the Layout beside it answer, once, with a status line.
+Six segments resolve the same request in parallel, so a `redirect`, `unauthorized` or `forbidden` raised
+in a slot is raised six times over; and each of the three reaches the client as a navigation, which the
+arriving tree asks for again as soon as it renders that slot. Existence, access and forwarding are
+decided above the split for exactly this reason.
+
+This too was measured against the Area-switch loop and does not move it either. It stands as what it is:
+a refusal answered once instead of six times.
 
 The Public Area is routed a second time, for anonymous visitors, in a tree that reads nothing of the
 request and whose renders Next keeps ([STATIC_RENDERING.md](./STATIC_RENDERING.md)). It has its own

@@ -442,6 +442,38 @@ built. Remove an entry when it is done.
 
 ## Verification
 
+- **The Area-switch loop is the Area root's forward, not the Area boundary.** Narrowed on 24.09. by
+  measurement, with the account menu's Area entry made a `Link`. Each row is dev, after a cleared
+  `.next/dev` and a restart, and the last row is three runs out of three:
+
+  | click | navigations | RSC | outcome |
+  |---|---|---|---|
+  | to another Area's **root** (`/app`) | 41 / 98 / 104 / 110 in 40s | ~2 per navigation | never settles |
+  | inside one Area, Page to Page | 1 | 1 | -- |
+  | inside one Area, Page to that Area's **root** (forwards back) | 2 | 3 | -- |
+  | **to another Area's Page** (`/app/phis/ui/dashboard`) | **1** | **1** | -- |
+
+  So crossing an Area with a `Link` is quiet, and crossing the `(root)`/`(pages)` group boundary is
+  quiet. Only both in one navigation loop -- which is what an Area root does, because it forwards to its
+  landing Page (`resolvedRoute.canonicalHref` in `phi-cms-root-page.tsx`). That sharpens the earlier
+  analysis, which had the group switch but not the fact that the Area boundary is innocent
+  (`browser-test/notes/ANALYSE-area-switch-loop.md`).
+
+  Two things this did **not** turn out to be, both changed anyway on their own merits and both measured
+  as making no difference to the loop (a full 2x2, and every cell but one runs away): the Page-owned
+  slots having no `default.tsx`, and the slots raising refusals of their own beside the Layout's
+  (`NEXT_INTEGRATION.md`). An earlier reading of "halved, and settles at 29" was a first-navigation
+  artifact after a cold start and did not survive two clean repeats.
+
+  **The lead that follows from this:** an Area entry that names the landing Page rather than the Area
+  root is one navigation. Making that the menu's `href` means resolving six Areas' landing Pages to draw
+  one menu -- a cost question, and the operator's call. Until then the entry stays a plain anchor.
+
+  Scripts: `browser-test/scripts/check-area-link-loop.mjs` (counts; `TO_HREF` picks the target),
+  `trace-area-link-navigations.mjs` (stacks), `check-area-arrival-settle.mjs` (hard-load control).
+  **Restart with a cleared `.next/dev` before each run** -- route files added or moved under a running
+  dev server, and the first navigation after a cold start, both produce numbers that mean nothing.
+
 - **Freeze the module-graph audit.** `pnpm audit:graph` exists but is not part of `pnpm verify`. Set its
   output budget and failure thresholds, then add it.
 - **Generated-output budget report** for the Skeleton's development build, separating Turbopack cache,

@@ -140,6 +140,28 @@ export function createPhiNextStaticAreaPage(root: string, cmsBridge: PhiCmsSiteB
   return { Page: PhiNextStaticAreaPage, generateMetadata };
 }
 
+/**
+ * What a Page-owned slot shows for an address its own branch does not answer.
+ *
+ * Next keeps each slot's active segment beside the children segment, and a client navigation that
+ * leaves the branch -- Area root to a Page below it, or one Area to the next -- moves children while
+ * the slots have nothing to move to. Without this file Next has no state to put there: it keeps the
+ * leaving branch's slot and asks it to serve an address it was never resolved for, and the arriving
+ * Layout answers with a tree that disagrees with the one the client holds. That disagreement is what
+ * the client tries to settle by navigating again.
+ *
+ * Nothing is the right answer and not a placeholder. A slot draws one Region of one Page; an address
+ * that does not reach that Page has no Region for it, and the Layout beside it already decided
+ * existence, access and forwarding with a status line. So this neither resolves the request nor
+ * refuses it -- both are answered once, above, and a slot that answered a second time would only
+ * multiply what the client has to unwind.
+ */
+export function createPhiNextAreaSlotDefault() {
+  return function PhiNextAreaSlotDefault() {
+    return null;
+  };
+}
+
 export function createPhiNextStaticAreaSlotPage(
   root: string,
   cmsBridge: PhiCmsSiteBridge,
