@@ -7,7 +7,11 @@ import {
 } from "../helpers/site-locale-config";
 import { readPhiSiteRuntimeConfigSync } from "../helpers/site-runtime";
 import { fetchResolvedSiteLocale, fetchSiteLocaleConfig } from "../server-helpers/site-locale";
-import { PHIS_REQUEST_PATH_HEADER, PHIS_REQUEST_SEARCH_HEADER } from "../constants/http-headers";
+import {
+  PHIS_CLIENT_NAVIGATION_HEADER,
+  PHIS_REQUEST_PATH_HEADER,
+  PHIS_REQUEST_SEARCH_HEADER,
+} from "../constants/http-headers";
 import { peekPhiAreaRootDoor } from "../gateway/area-root-door";
 import { readPhiServerApiCredentials } from "../helpers/phis-server-credentials";
 import { getResolvedSiteConfig } from "../gateway/site-config";
@@ -41,6 +45,24 @@ const KNOWN_SPECIAL_ROOTS = new Set<string>(PHI_CMS_SPECIAL_ROOTS);
  * preview -- into a choice nobody made, and from then on `/` sent a German browser to `/en/`. The
  * cookie is written where a viewer chooses: the locale switch.
  */
+
+/**
+ * Whether the browser is navigating within the app rather than asking for a document.
+ *
+ * Not `RSC` and not `_rsc`. Both were measured absent here: Next consumes its own routing markers before
+ * the proxy runs, and strips the query parameter from `request.url` as well -- so the header a Server
+ * Component cannot read is one the proxy cannot read either. What survives is the browser's own
+ * `Sec-Fetch-Dest`, which says `document` for a navigation the browser performs and `empty` for a fetch
+ * the app performs, and which nothing in between rewrites.
+ *
+ * Absent is read as a document, which is the safe answer: it keeps the status line for anything that is
+ * not a browser -- a crawler, `curl`, a health check -- and the status line is what a forwarding Area root
+ * needs so it is not filed as a page.
+ */
+function isPhiClientNavigation(request: NextRequest) {
+  const destination = request.headers.get("sec-fetch-dest");
+  return destination != null && destination !== "document";
+}
 
 function isAssetOrBackendPath(pathname: string) {
   return (
@@ -162,6 +184,14 @@ export async function proxyPhiNextSiteRequest(request: NextRequest) {
   const localeConfig = await readLocaleConfig(runtimeConfig);
   const requestHeaders = new Headers(request.headers);
   requestHeaders.delete("x-locale");
+  /*
+   * The one fact a Server Component cannot ask for: whether this is a client navigation.
+   *
+   * Next consumes `RSC` before `headers()` sees it -- measured -- so it is copied under a name of our own
+   * (constants/http-headers.ts). Set on every branch that forwards the request into the app, and set to
+   * `0` rather than left out, because absent and false are different answers everywhere else in this file.
+   */
+  requestHeaders.set(PHIS_CLIENT_NAVIGATION_HEADER, isPhiClientNavigation(request) ? "1" : "0");
   const prefixedLocale = extractLocalePrefix(pathname, localeConfig);
 
   if (prefixedLocale) {

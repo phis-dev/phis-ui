@@ -14,6 +14,7 @@ import { loadPhiCmsAreaRenderScope } from "./phi-cms-area-render-scope";
 import { hasPhiCmsRevisionPreview } from "../../server-helpers/cms-root";
 import { performPhiCmsPageRedirect, resolvePhiCmsPageRedirect } from "./phi-cms-page-redirect";
 import { rememberPhiAreaRootDoor } from "../../gateway/area-root-door";
+import { PhiHardForward } from "./phi-hard-forward";
 import { warmPhiAreaRootDoor } from "../../server-helpers/area-root-door-warmup";
 import { localizeAreaPath } from "../../helpers/locale";
 import {
@@ -221,6 +222,19 @@ export async function PhiCmsAreaBoundary({
        */
       if (request.pathname?.replace(/\/+$/u, "").toLowerCase() === `/${resolvedRoute.area}`) {
         rememberPhiAreaRootDoor(resolvedRoute.area, pageRedirect.href);
+      }
+      /*
+       * A client navigation is handed to the browser; a document request keeps its status line.
+       *
+       * This branch only runs when the proxy did not answer -- a warm door is a real 307 before any
+       * router state exists (gateway/area-root-door.ts). Cold, the two request kinds want opposite
+       * things. A `redirect()` serialised into a navigation that also changes the Area is what the
+       * router cannot settle, so that case is forwarded by the browser instead
+       * (components/cms/phi-hard-forward.tsx). A document request has no router to confuse and does
+       * want the 307, because that is how a forwarding root stays out of an index as a page.
+       */
+      if (request.clientNavigation) {
+        return <PhiHardForward href={pageRedirect.href} />;
       }
       performPhiCmsPageRedirect(pageRedirect);
     }

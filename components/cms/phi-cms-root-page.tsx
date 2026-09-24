@@ -6,6 +6,7 @@ import {
   loadPhiCmsRootRequest,
 } from "../../server-helpers/cms-root";
 import { PhiCmsPageRenderer } from "./phi-cms-page-renderer";
+import { PhiHardForward } from "./phi-hard-forward";
 import { localizeAreaPath } from "../../helpers/locale";
 import {
   resolvePhiPublicLoginHref,
@@ -87,6 +88,21 @@ export async function PhiCmsRootPage({
     request.pathname,
   );
   if (pageRedirect) {
+    /*
+     * The same split the Layout makes, for the case the Layout does not see.
+     *
+     * A change of Area re-runs the Layout, and that is where a crossing is answered -- measured. What
+     * reaches here is the navigation the Layout's own comment names: one inside an Area, where the Layout
+     * is not re-rendered and this Page is. A `redirect()` serialised into a client navigation is what the
+     * router struggles with, so a navigation is handed to the browser and a document request keeps its
+     * 307 (components/cms/phi-hard-forward.tsx).
+     *
+     * Only ever cold either way: a warm door is answered by the proxy as a real 307 before anything here
+     * renders.
+     */
+    if (request.clientNavigation) {
+      return <PhiHardForward href={pageRedirect.href} />;
+    }
     performPhiCmsPageRedirect(pageRedirect);
   }
 

@@ -34,7 +34,11 @@ import {
   applyPhiBackgroundAssetProjection,
   resolvePhiBackgroundAssetProjection,
 } from "../components/widgets/helpers/background-reference-resolver.server";
-import { PHIS_REQUEST_PATH_HEADER, PHIS_REQUEST_SEARCH_HEADER } from "../constants/http-headers";
+import {
+  PHIS_CLIENT_NAVIGATION_HEADER,
+  PHIS_REQUEST_PATH_HEADER,
+  PHIS_REQUEST_SEARCH_HEADER,
+} from "../constants/http-headers";
 import { isPhiStaticCmsSiteBridge } from "./static-render";
 
 export type LoadPhiCmsRootRequestArgs = {
@@ -48,6 +52,13 @@ type PhiCmsRequestSearchParams = Record<string, string | undefined>;
 type PhiCmsServerRequest = {
   pathname?: string;
   searchParams?: PhiCmsRequestSearchParams;
+  /**
+   * Whether the browser is navigating rather than asking for a document.
+   *
+   * Told by the proxy, because Next consumes `RSC` before a Server Component can read it
+   * (`constants/http-headers.ts`). A static render never sees one and says so.
+   */
+  clientNavigation?: boolean;
 };
 
 /**
@@ -115,6 +126,8 @@ async function loadPhiCmsServerRequest(
       request: {
         pathname: `/${[root, ...(path ?? [])].join("/")}`,
         searchParams: {},
+        // Only the proxy reaches this tree, and only with a document request.
+        clientNavigation: false,
       },
       cookieHeader: "",
     };
@@ -127,6 +140,7 @@ async function loadPhiCmsServerRequest(
     request: {
       pathname: normalizeRequestPathname(requestHeaders.get(PHIS_REQUEST_PATH_HEADER)),
       searchParams: parseSearchParamsHeader(requestHeaders.get(PHIS_REQUEST_SEARCH_HEADER)),
+      clientNavigation: requestHeaders.get(PHIS_CLIENT_NAVIGATION_HEADER) === "1",
     },
     cookieHeader: cookieStore.toString(),
   };
