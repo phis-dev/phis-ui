@@ -572,24 +572,34 @@ built. Remove an entry when it is done.
   Scripts: `browser-test/scripts/check-area-link-loop.mjs` (counts; `TO_HREF` picks the target),
   `trace-area-link-navigations.mjs` (history stacks), `check-area-arrival-settle.mjs` (hard-load control).
 
-- **Warm an Area's door before the first client navigation asks for it.** The proxy now answers an Area
-  root with a real HTTP 307 when a render has already worked out where that root leads
-  (`gateway/area-root-door.ts`), and that is what makes a cross-Area `Link` cost one navigation instead of
-  dozens -- measured warm at **1 navigation and 2 RSC requests, three runs out of three**, against 42 to 110
-  cold. What is left is the cold case: the first request for a given Area root in a process, and the first
-  after a publish sweeps the cache, still forwards from inside the render, and a client navigation that
-  meets that forward still runs away.
+- **Close the last cold door, and then the account menu's anchor goes.** The proxy answers an Area root
+  with a real HTTP 307 once a door is known, and any request in an Area now teaches it that Area's door
+  (`gateway/area-root-door.ts`, `server-helpers/area-root-door-warmup.ts`). Measured, dev:
 
-  So the account menu keeps its plain anchor. Removing it is worth exactly one more step: resolve the
-  door once per Area without waiting for somebody to visit its root. The Area Layout is the place -- it
-  already holds the Area preset, the Module selection and the descriptor catalog on every request in that
-  Area. The pure case (nothing configured, so the door is the first entry of the Area's own Navigation) is
-  a computation over data already in hand and covers every Site that has not configured a root route. A
-  configured route whose target is a Site-authored Page needs one server reference resolution, so that
-  one can keep waiting for the first visit.
+  | the click, as a `Link` from another Area | navigations | RSC |
+  |---|---|---|
+  | after any visit to any Page of the target Area | **1** | 2 |
+  | with nobody having been in that Area this process | 42 | 85 |
 
-  Once a door is warm before it is needed, the anchor in `components/menus/phi-account-menu.tsx` goes, and
-  the comment above it says what to measure.
+  What is left is exactly one case: the **first** request into an Area after a process starts or a publish
+  sweeps the cache. Warming cannot reach it from inside -- that request is the one that would warm the
+  door, and the warm-up runs in its own Layout after the proxy let it through. Warming it from outside
+  would mean one Area's render reaching another Area's descriptor catalog, which `NEXT_INTEGRATION.md`
+  forbids and which is the reason the proxy remembers instead of computing.
+
+  Two candidates, both needing operator approval:
+
+  - **Hold the door in Core.** A Site process that learns a door publishes it; the proxy asks Core on a
+    local miss, through the same cached read it already makes for the locale. Then only the very first
+    request across the whole installation is cold, and a restart costs nothing. It needs an endpoint and a
+    place to keep it.
+  - **Make the cold forward a hard one.** The render only ever forwards when the proxy did not, so the
+    render could forward with `location.replace` instead of `redirect`. Measured quiet at 3 navigations
+    and 2 documents, against 42 for the loop. The price is that one cold request's status line: 200 with a
+    client-side redirect rather than 307. Staff Areas are `noindex`, and Public is not in this branch, so
+    the crawler argument that put the 307 there may not apply -- but it is the operator's call.
+
+  Until one of them, `components/menus/phi-account-menu.tsx` keeps its plain anchor.
 
 - **Freeze the module-graph audit.** `pnpm audit:graph` exists but is not part of `pnpm verify`. Set its
   output budget and failure thresholds, then add it.

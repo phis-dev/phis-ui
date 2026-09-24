@@ -42,22 +42,22 @@ function doorKey(area: string) {
 }
 
 /**
- * Remember, but only for the address this is about.
+ * Remember a door, having checked that it is one.
  *
- * The Layout that forwards runs for every request in its Area, not only for the root -- it receives no
- * catch-all segments and derives which Page it resolved. It is the caller's `pathname` that says whether
- * this render really was the root, and a forward resolved for anything else says nothing about the door.
+ * What is checked here is the door: a Site-relative path that is not the Area root itself, because a door
+ * onto the address the request already names is the loop the forward's own guard exists to prevent.
+ *
+ * What is *not* checked here is the occasion. Two callers have one -- the render that forwarded, and the
+ * warm-up that worked the door out without being asked -- and each knows something about its own
+ * situation that this cannot: the forwarding Layout runs for every request in its Area and must establish
+ * that this one really was the root. That belongs at the call site, not in here.
  */
-export function rememberPhiAreaRootDoor(
-  area: string,
-  pathname: string | null | undefined,
-  href: string,
-) {
+export function rememberPhiAreaRootDoor(area: string, href: string) {
   const normalizedArea = area.trim().toLowerCase();
-  if (!pathname || pathname.replace(/\/+$/u, "").toLowerCase() !== `/${normalizedArea}`) {
+  if (!href.startsWith("/")) {
     return;
   }
-  if (!href.startsWith("/") || href === pathname) {
+  if (href.replace(/\/+$/u, "").toLowerCase() === `/${normalizedArea}`) {
     return;
   }
   writePhiSiteReadCache(doorKey(normalizedArea), href, PHI_AREA_ROOT_DOOR_TTL_MS);
