@@ -21,7 +21,6 @@ import {
   PHI_APP_THREADS_PAGE_WIDGET_IDS,
 } from "../../../plugins/runtime-modules/threads/addresses";
 import { PHI_THREADS_FORM_IDS } from "../../../plugins/runtime-modules/threads/forms";
-import { PHI_SITE_LOCALES_CONFIG_KEY } from "../../forms/site-locales-config";
 import { PHI_COLOR, PHI_SPACE } from "../../../theme/antd-css-var-contract";
 import { buildPhiBasePageContentScaffold, PHI_BASE_PAGE_LAYOUT_NODE_ID } from "./phi-base-page-layout";
 import { getPhiThreadPageLabels } from "../../widgets/label-sets/threads";
@@ -61,26 +60,6 @@ export async function buildPhiDefaultAppThreadsPageTree({
     internalToken: credentials.internalToken,
     locale: runtime.locale.current,
   });
-
-  /*
-   * What the language field offers and what it starts on, both of which only this Page knows.
-   *
-   * The registered Form is the same on every Site; its languages are not, so they travel through the
-   * placement and the Core options provider reads them back during the render. The preselection is the
-   * writer's own setting where the Site still offers it, and the Site default otherwise -- the same
-   * rule the composer applies to a reply, because opening a conversation and answering in one are the
-   * same act of writing.
-   *
-   * A stored preference the Site no longer offers falls back rather than being preselected into a
-   * value the select cannot show.
-   */
-  const availableLocales = runtime.site.availableLocales.map(
-    (option) => ({ code: option.code, label: option.label }),
-  );
-  const preferredLocale = runtime.viewer.preferredLocale?.trim() || "";
-  const messageSourceLang = availableLocales.some((option) => option.code === preferredLocale)
-    ? preferredLocale
-    : runtime.site.defaultLocale;
 
   const controllerAddress = createPhiThreadsControllerAddress();
   const inboxAddress = createPhiSignalAddress("cms", PHI_APP_THREADS_PAGE_WIDGET_IDS.widgetInbox);
@@ -526,10 +505,7 @@ export async function buildPhiDefaultAppThreadsPageTree({
         label: labels.newConversationLabel,
         config: {
           formId: PHI_THREADS_FORM_IDS.newConversation,
-          formConfig: {
-            [PHI_SITE_LOCALES_CONFIG_KEY]: availableLocales,
-            initialValues: { messageSourceLang },
-          },
+          formConfig: {},
           execution: { mode: "handler" },
           source: null,
           signalRoutes: {

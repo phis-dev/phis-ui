@@ -13,7 +13,6 @@ import {
 import { definePhiRuntimeModuleForm } from "../../../components/forms/form-registry";
 import { PhisThreadKind } from "../../../constants/threads";
 import { readPhiServerApiCredentials } from "../../../helpers/phis-server-credentials";
-import { PHI_CORE_RUNTIME_DATA_PROVIDER_KEYS } from "../core/ids";
 import { PHI_THREADS_RUNTIME_DATA_PROVIDER_KEYS, PHI_THREADS_RUNTIME_MODULE_ID } from "./ids";
 
 export const PHI_THREADS_FORM_IDS = {
@@ -83,33 +82,6 @@ const PHI_THREADS_NEW_CONVERSATION_FORM_DESCRIPTOR: PhiFormDescriptor = {
         message: label("messageRequired", "A conversation starts with a message."),
       }],
     },
-    /*
-     * What the opening message is written in, declared rather than guessed.
-     *
-     * The options are not in this descriptor, for the reason the profile language field's are not: a
-     * registered Form is the same on every Site and the languages are not, so the placement hands them
-     * over and the Core options provider reads them back during the render. The preselection travels
-     * the same way -- the writer's own setting, falling back to the Site default -- because only the
-     * Page knows either.
-     *
-     * Required, and it can be: the placement always preselects, so the rule can only fail where a
-     * person cleared the field on purpose. What it buys is that the field cannot be silently empty on
-     * a placement that forgot to hand the languages over.
-     */
-    {
-      key: "messageSourceLang",
-      fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.select,
-      label: label("language", "Language"),
-      description: label(
-        "languageHint",
-        "The language you are writing in, so it can be offered for translation.",
-      ),
-      optionsProvider: { providerKey: PHI_CORE_RUNTIME_DATA_PROVIDER_KEYS.siteLocales },
-      validation: [{
-        providerKey: PHI_FORM_VALIDATION_PROVIDER_KEYS.required,
-        message: label("languageRequired", "Choose the language you are writing in."),
-      }],
-    },
   ],
   layout: {
     gap: { compact: "sm", medium: "base" },
@@ -136,9 +108,6 @@ async function loadLabels(
     message: labels.messageLabel,
     messagePlaceholder: labels.messagePlaceholder,
     messageRequired: labels.messageRequired,
-    language: labels.languageLabel,
-    languageHint: labels.languageHint,
-    languageRequired: labels.languageRequired,
   });
 }
 

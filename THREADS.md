@@ -137,70 +137,81 @@ session and refuses without one ([DASHBOARD.md](./DASHBOARD.md)).
 
 ## 9. The language a message is written in
 
-**The stored fact is built; the ad-hoc translation is not.** A message records what it was written in
-and the composer asks for it. What is missing is the reading half -- the route, and the control that
-calls it -- and the Core half comes first, as the last part of this section sets out.
+**Nobody is asked.** Nothing on these surfaces offers a language picker, and no message carries a
+language a person chose -- because a translator determines the source language itself, and asking would
+have been a field somebody has to fill in for an answer that is already available for nothing.
 
-### The stored fact
+### Why nothing is asked
 
-A message carries the language it was written in, on the message and not on the thread. Two people
-writing in different languages is the case this exists for, so one language per conversation would be
-wrong in exactly the situation that makes it interesting.
+The obvious design -- the writer declares it -- was built and taken out again, and the reason is worth
+keeping: the field would have decided *whether there is anything to translate at all*, which only pays
+where translating happens by itself. It never does here. A translation is one press of one button by one
+person who does not understand one message, and that person is a better filter than any stored value:
+they do not press on the messages they can read.
 
-**Not a provider's catalogue.** A translation provider is swappable and its list of languages is not a
-promise: a provider is replaced, a language leaves its list, and the message from two years ago is still
-written in Portuguese. What a provider can do decides what is *offered* at translation time; it never
-decides what may be *stored*.
+What a declared language would have bought is therefore a control that hides itself -- against a field
+in every composer and every conversation form, filled in by everyone, for the sake of the few who ever
+translate.
 
-**Offered from the Site's locales, stored against the platform's.** The two are not the same question.
-What a Site publishes in is what the composer's picker shows; what a person wrote in is what the column
-holds, and Core validates against `PHI_LOCALE_CAPABILITIES` so that an integration importing a message
-in a language this Site does not publish still records the truth instead of losing it. A key the
-platform does not know is refused outright rather than quietly stored as nothing -- a picker sending one
-is broken, and its writer would never learn.
+**The source language is still known afterwards.** A provider reports what it detected, so a translation
+can say which language it came out of. It is a result rather than a precondition, which is all this
+surface needs.
 
-**The writer says it, and the interface does not guess.** A person with a German interface answers an
-English customer in English, so taking the viewer's UI locale silently would be wrong precisely where
-the field matters. The preselection is the writer's own setting where the Site still offers it, and the
-Site default otherwise -- `viewer.preferredLocale` and `site.defaultLocale`, both already in the
-runtime. A stored preference the Site has since dropped falls back rather than being preselected into a
-value nothing can show.
+### The one place a language is stored
 
-**Both places a message is written ask the same question.** The composer carries its own picker, and
-the *New conversation* Form carries a field, because opening a conversation and answering in one are
-the same act. The Form's languages and its preselection arrive through the placement -- the Page preset
-writes them into the Form Widget's config and the Core `site-locales` options provider reads them back
-during the render -- for the reason the profile language field works that way: a registered Form is the
-same on every Site and the languages are not. The composer's choice survives a change of conversation,
-because it belongs to the person writing rather than to the thread.
+`thread_messages.source_lang` exists and stays, and **only an integration writes it**
+([phis-server design/THREADS.md §14](../phis-server/design/THREADS.md)). An Add-on delivering messages
+usually knows the language for nothing -- a mail header, the locale of the page a form was submitted
+from, the browser language a chat widget saw -- and that is a fact which is lost if there is nowhere to
+put it. It is also the only kind of value a *filter* can use: routing Portuguese enquiries to the people
+who speak Portuguese needs a stored column, because nothing that comes into being while somebody reads
+can appear in a `WHERE` clause.
 
-**Null is a real answer.** Not declared is what a system message carries, what an import carries where
-the integration does not know, and what everything written before this field existed carries. It is
-never to be read as the Site's default, and a translation asked about such a message is a translation
-whose source the provider detects.
-
-**Withheld with the text.** A redacted message, and a confidential one seen by an Add-on, reports null:
-what a withdrawn message was written in is still something about a message nobody may read.
-
-The field earns its place by deciding whether there is anything to translate at all. Without it, asking
-means sending the text to a third party to find out, which is what the rest of this section exists to
-avoid.
+Since no surface writes it, the column reads cleanly: a value present means an integration said so, and
+null means nobody did. These surfaces only ever read it, and today not even that.
 
 ### The ad-hoc translation
 
 **The original always remains.** A translation is a *view* of a message, never a version of it. Nothing
 is persisted: not the text, not a record that it was shown.
 
-- **The thread shows originals.** Translating is never automatic and never a consequence of the
+- **The thread shows originals.** Translating is never automatic and never a consequence of two
   languages differing.
-- **Each message carries its own control**, with a target chosen from the Site's locales intersected
-  with what this installation's translation unit can do, preselected as above.
-- **One server round trip** returns the text. Core decides and calls, because the message body lives
-  there and `Confidential` means it may not leave Core -- a Site fetching the body and posting it
-  onwards would have moved it out already, and the rule would be circumvented rather than kept.
+- **One message, one control, one round trip.** Not a thread at a time. A mixed thread translated in one
+  batch asks the provider for German into German for every message that is already German, and a batch
+  could skip those only if it knew their languages -- which it does not, because nothing declares them.
+  A person does know, and skips them by not pressing.
+
+  Two measurements against the DeepL Free API sharpen this and correct one thing it would have been easy
+  to assume. Billing is by **source** text, and a German sentence asked for German is charged in full
+  like any other, so the waste is real. But the text comes back **byte-identical**, twice measured, with
+  and without an explicit source language -- so a batch would not have corrupted originals at DeepL, and
+  this section does not claim it would. What has no such assurance is a Provider behind the `add-on`
+  mode, which may be a model that rewrites; the risk is a Provider's, not a fact about translation.
+
+  The deciding reason is the second measurement: texts in one batch **share no context with each other**,
+  so the coherence a batch seemed to offer does not exist -- while `context` applies to the whole request
+  and is not billed. One message per request is therefore the only shape in which `context` can carry
+  *that* message's neighbours instead of one compromise for all of them. Batching would have cost money
+  and bought nothing.
+- **The inbox is not translated.** A thread list is many short subjects in mixed languages with nobody
+  pressing per row, so it is the one place where the batch problem above has no human to solve it --
+  and short text is what detection is least reliable on. If it ever happens, it happens for a listing
+  whose rows come from integrations, whose languages are therefore stored and can be skipped.
+- **Neighbouring messages travel as `context`, not as more texts to translate.** That is what the field
+  is for -- "the subject matter, the surrounding sentence, the register to keep" -- so the surrounding
+  conversation informs the translation without being translated with it, and without being charged for:
+  measured, `context` adds nothing to the bill, while the same words sent as a text to translate would
+  be billed in full. It is how one message at a time gets coherence a batch could not have given it.
+- **Core decides and calls**, because the message body lives there and `Confidential` means it may not
+  leave Core -- a Site fetching the body and posting it onwards would have moved it out already, and the
+  rule would be circumvented rather than kept.
+- **The target** is the Site's locales intersected with what this installation's translation unit can
+  do, preselected from `viewer.preferredLocale` and falling back to `site.defaultLocale`.
 - **It toggles back.** "Show the original" is the same control, not a second feature.
-- **It is marked as machine-made.** Unmarked, it reads as what the person wrote, and a machine
-  translation carries a tone nobody chose.
+- **It is marked as machine-made**, and says which language it came out of where the provider reported
+  one. Unmarked, it reads as what the person wrote, and a machine translation carries a tone nobody
+  chose.
 - **`Edited` is never set.** That flag means a person changed the message. A translation changes
   nothing.
 - **A reply quotes the original**, as do search, notification bodies and export -- because the original
@@ -231,7 +242,9 @@ In order:
    a list fetched at the moment of use is one that decides whether a control may be drawn after it has
    been drawn.
 5. **The route**: `(messageId, target locale)` -- may this viewer read the message, is it
-   `Confidential`, can this installation translate; then call, return, store nothing.
+   `Confidential`, can this installation translate; then call, return, store nothing. It passes the
+   message's `source_lang` where an integration recorded one and `null` otherwise, which is the
+   contract's own way of saying "you decide" and needs no branch on either side.
 
 The body sent is `body_markdown ?? body_text`. Markdown passes through as text and the control codes
 survive, so the richer body is the one to send, and the answer is rendered the way the original is.

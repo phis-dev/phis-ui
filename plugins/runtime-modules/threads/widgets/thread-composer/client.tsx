@@ -8,7 +8,6 @@ import { PhiProgressControl } from "../../../../../components/controls/phi-progr
 import { PhiAlertControl } from "../../../../../components/controls/phi-alert-control";
 import { PhiButtonControl } from "../../../../../components/controls/phi-button-control";
 import { PhiTagControl } from "../../../../../components/controls/phi-tag-control";
-import { PhiSelectControl } from "../../../../../components/controls/phi-select-control";
 import { PhiTextControl } from "../../../../../components/controls/phi-text-control";
 import { usePhiMediaUpload } from "../../../../../components/media/phi-media-upload";
 import { usePhiSignalListener } from "../../../../../components/runtime/runtime-signal-bus";
@@ -28,21 +27,11 @@ import type { PhiThreadComposerLabels } from "../../../../../components/widgets/
 import { PhiFlexControl } from "../../../../../components/controls/phi-flex-control";
 import { PhiTypographyControl } from "../../../../../components/controls/phi-typography-control";
 
-type PhiThreadComposerRuntime = Pick<PhiBlockRuntime, "site" | "locale" | "viewer">;
-
-/**
- * `runtime` is required here, unlike the shared client base.
- *
- * The composer is reached through its server half and nowhere else -- the Builder shows a placeholder
- * instead -- and that half refuses to render without an authenticated viewer. Leaving the slice
- * optional would only buy optional chaining and an invented default for the Site's own locales, which
- * is exactly the guess the language picker exists to avoid.
- */
 export type PhiThreadComposerWidgetClientProps = PhiClientBlockBaseProps<
   PhiThreadComposerLabels,
   PhiThreadWidgetConfig,
-  PhiThreadComposerRuntime
-> & { runtime: PhiThreadComposerRuntime };
+  Pick<PhiBlockRuntime, "site" | "locale" | "viewer">
+>;
 
 /**
  * Writes a message into the selected conversation, with files from the viewer's own Space.
@@ -59,7 +48,6 @@ export type PhiThreadComposerWidgetClientProps = PhiClientBlockBaseProps<
  * person's own Space rather than nowhere.
  */
 export function PhiThreadComposerWidgetClient({
-  runtime,
   labels,
   config,
 }: PhiThreadComposerWidgetClientProps) {
@@ -67,22 +55,6 @@ export function PhiThreadComposerWidgetClient({
   const emitSignal = usePhiSignalEmitter();
   const [threadId, setThreadId] = useState<number | null>(null);
   const [message, setMessage] = useState("");
-  /*
-   * What the writer says they are writing in, and never what the interface guessed.
-   *
-   * A person with a German interface answering an English customer in English is the case the field
-   * exists for, so taking `locale.current` silently would be wrong exactly where it matters. The
-   * preselection is their own stored preference where the Site has it, the Site default otherwise --
-   * a starting point they can change, not an answer given on their behalf.
-   *
-   * It survives a change of conversation on purpose: the language belongs to the person writing, while
-   * the text belongs to the thread and is cleared with it.
-   */
-  const [sourceLang, setSourceLang] = useState(() => {
-    const preferred = runtime.viewer.preferredLocale;
-    const offered = runtime.site.availableLocales.some((locale) => locale.code === preferred);
-    return offered && preferred ? preferred : runtime.site.defaultLocale;
-  });
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -162,18 +134,6 @@ export function PhiThreadComposerWidgetClient({
     }
   }, [config?.signalRoutes?.emits, emitSignal]);
 
-  /*
-   * The Site's own locales, and deliberately not what the translator can do.
-   *
-   * What a provider supports decides what is offered at translation time; it never decides what may be
-   * recorded. A provider is swapped and a language leaves its list, and the message stays written in
-   * what it was written in.
-   */
-  const languageOptions = useMemo(
-    () => runtime.site.availableLocales.map((locale) => ({ value: locale.code, label: locale.label })),
-    [runtime.site.availableLocales],
-  );
-
   const attached = items.filter((item) => item.status === "done" && item.assetId != null);
   const uploading = items.filter((item) => item.status === "uploading");
   const canSend = threadId != null && message.trim().length > 0 && uploading.length === 0 && !sending;
@@ -190,7 +150,6 @@ export function PhiThreadComposerWidgetClient({
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
           message: message.trim(),
-          messageSourceLang: sourceLang,
           assetIds: attached.map((item) => item.assetId),
         }),
       });
@@ -215,7 +174,7 @@ export function PhiThreadComposerWidgetClient({
     } finally {
       setSending(false);
     }
-  }, [attached, emitWritten, labels, message, reset, sourceLang, threadId]);
+  }, [attached, emitWritten, labels, message, reset, threadId]);
 
   if (threadId == null) {
     return (
@@ -262,14 +221,6 @@ export function PhiThreadComposerWidgetClient({
             */}
           <PhiButtonControl label={labels.attachLabel} disabled={sending} onClick={() => {}} />
         </PhiFileDropControl>
-        <PhiSelectControl
-          value={sourceLang}
-          options={languageOptions}
-          ariaLabel={labels.languageLabel}
-          size="small"
-          disabled={sending}
-          onChange={(next) => setSourceLang(next ?? runtime.site.defaultLocale)}
-        />
         <PhiButtonControl
           label={labels.sendLabel}
           type="primary"
@@ -279,7 +230,6 @@ export function PhiThreadComposerWidgetClient({
         />
       </PhiFlexControl>
       <PhiTypographyControl type="secondary">{labels.attachHint}</PhiTypographyControl>
-      <PhiTypographyControl type="secondary">{labels.languageHint}</PhiTypographyControl>
     </PhiFlexControl>
   );
 }
