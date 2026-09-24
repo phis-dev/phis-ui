@@ -1088,6 +1088,7 @@ export function renderPhiInspectorConfigField({
         max={field.max}
         step={field.step}
         precision={field.precision}
+        prefix={field.prefix}
         disabled={disabled || !onChange}
         style={{ width: "100%" }}
         onChange={(nextValue) =>

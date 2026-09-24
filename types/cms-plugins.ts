@@ -173,6 +173,13 @@ export type PhiCmsConfigField =
       max?: number;
       step?: number;
       precision?: number;
+      /**
+       * The unit, standing in front of the number rather than in the label.
+       *
+       * A label that ends in "(ms)" reads as part of the field's name and is gone the moment the
+       * field is narrow; the unit belongs to the value, so it stands where the value is.
+       */
+      prefix?: string;
     })
   | (PhiCmsConfigFieldBase & {
       type: "choice";

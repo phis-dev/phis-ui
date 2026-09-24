@@ -64,6 +64,15 @@ export const PHI_SEQUENCE_TRANSITION_MIN_MS = 100;
 export const PHI_SEQUENCE_TRANSITION_MAX_MS = 600_000;
 
 /**
+ * What one press of a duration field's spinner is worth.
+ *
+ * A millisecond at a time is a unit nobody authors in: the difference is invisible and the range runs
+ * to ten minutes. A hundred is the smallest step that shows, and it lands on the floor of the range
+ * exactly, so the grid the spinner walks holds every value it offers.
+ */
+export const PHI_SEQUENCE_TRANSITION_STEP_MS = 100;
+
+/**
  * The two ways of showing a sequence, and which end of a wider window an index means.
  *
  * They live here rather than beside the viewport that draws them because a stored configuration is

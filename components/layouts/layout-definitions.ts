@@ -18,6 +18,7 @@ import {
   PHI_MOTION_EASING_FIELD_OPTIONS,
   PHI_SEQUENCE_TRANSITION_MAX_MS,
   PHI_SEQUENCE_TRANSITION_MIN_MS,
+  PHI_SEQUENCE_TRANSITION_STEP_MS,
 } from "../../helpers/motion";
 import { resolvePhiLayoutDefaults } from "../../helpers/cms-layout-defaults";
 import { PHI_RENDERABLE_BLOCK_DEFAULT_ANCHOR } from "../../helpers/renderable-block-defaults";
@@ -270,9 +271,11 @@ export const PHI_STACK_LAYOUT_DEFINITION = {
     {
       key: "slotTransitionDurationMs",
       type: "number",
-      label: "Transition Duration (ms)",
+      label: "Transition Duration",
       min: PHI_SEQUENCE_TRANSITION_MIN_MS,
       max: PHI_SEQUENCE_TRANSITION_MAX_MS,
+      step: PHI_SEQUENCE_TRANSITION_STEP_MS,
+      prefix: "ms",
     },
     {
       key: "slotTransitionEasing",
@@ -336,9 +339,11 @@ export const PHI_CAROUSEL_LAYOUT_DEFINITION = {
     {
       key: "transitionDurationMs",
       type: "number",
-      label: "Transition Duration (ms)",
+      label: "Transition Duration",
       min: PHI_SEQUENCE_TRANSITION_MIN_MS,
       max: PHI_SEQUENCE_TRANSITION_MAX_MS,
+      step: PHI_SEQUENCE_TRANSITION_STEP_MS,
+      prefix: "ms",
     },
     {
       key: "transitionEasing",
@@ -363,9 +368,11 @@ export const PHI_CAROUSEL_LAYOUT_DEFINITION = {
       // Zero is the one value below the floor that means something: it does not move on its own.
       key: "autoplayMs",
       type: "number",
-      label: "Autoplay Interval (ms)",
+      label: "Autoplay Interval",
       min: 0,
       max: PHI_SEQUENCE_TRANSITION_MAX_MS,
+      step: PHI_SEQUENCE_TRANSITION_STEP_MS,
+      prefix: "ms",
     },
     { key: "lookahead", type: "number", label: "Mount Ahead", min: 0 },
     /*

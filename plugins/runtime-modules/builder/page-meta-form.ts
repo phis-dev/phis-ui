@@ -1,4 +1,4 @@
-import { PHI_MOTION_EASINGS } from "../../../helpers/motion";
+import { PHI_MOTION_EASINGS, PHI_SEQUENCE_TRANSITION_STEP_MS } from "../../../helpers/motion";
 import {
   PHI_FORM_STACKED_FULL,
   phiFormFlowHalfColumns,
@@ -191,16 +191,16 @@ const effectsDescriptors = {
       {
         key: "transitionDurationMs",
         fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.number,
-        label: literal("Duration (ms)"),
+        label: literal("Duration"),
         initialValue: 1000,
-        config: { min: 0, max: 10000, precision: 0 },
+        config: { min: 0, max: 10000, precision: 0, step: PHI_SEQUENCE_TRANSITION_STEP_MS, prefix: "ms" },
       },
       {
         key: "transitionDelayMs",
         fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.number,
-        label: literal("Delay (ms)"),
+        label: literal("Delay"),
         initialValue: 0,
-        config: { min: 0, max: 10000, precision: 0 },
+        config: { min: 0, max: 10000, precision: 0, step: PHI_SEQUENCE_TRANSITION_STEP_MS, prefix: "ms" },
       },
       {
         key: "transitionEasing",

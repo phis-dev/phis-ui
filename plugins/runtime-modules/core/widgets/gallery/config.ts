@@ -5,6 +5,7 @@ import {
   PHI_MOTION_EASING_FIELD_OPTIONS,
   PHI_SEQUENCE_TRANSITION_MAX_MS,
   PHI_SEQUENCE_TRANSITION_MIN_MS,
+  PHI_SEQUENCE_TRANSITION_STEP_MS,
   clampPhiSequenceTransitionMs,
   PHI_SEQUENCE_ANCHORS,
   PHI_SEQUENCE_TRANSITIONS,
@@ -200,9 +201,11 @@ export const PHI_GALLERY_WIDGET_DEFINITION = {
     {
       key: "durationMs",
       type: "number",
-      label: "Transition Duration (ms)",
+      label: "Transition Duration",
       min: PHI_SEQUENCE_TRANSITION_MIN_MS,
       max: PHI_SEQUENCE_TRANSITION_MAX_MS,
+      step: PHI_SEQUENCE_TRANSITION_STEP_MS,
+      prefix: "ms",
     },
     {
       key: "easing",
@@ -244,9 +247,11 @@ export const PHI_GALLERY_WIDGET_DEFINITION = {
       // Zero is the one value below the floor that means something: it does not move on its own.
       key: "autoplayMs",
       type: "number",
-      label: "Autoplay Interval (ms)",
+      label: "Autoplay Interval",
       min: 0,
       max: PHI_SEQUENCE_TRANSITION_MAX_MS,
+      step: PHI_SEQUENCE_TRANSITION_STEP_MS,
+      prefix: "ms",
     },
   ],
   parseConfig: parsePhiCmsGalleryWidgetConfig,

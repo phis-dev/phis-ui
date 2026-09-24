@@ -275,6 +275,7 @@ export const PHI_SHARED_FORM_PROVIDER_REGISTRY = createPhiFormProviderRegistry({
           max={typeof field.config?.max === "number" ? field.config.max : undefined}
           step={typeof field.config?.step === "number" ? field.config.step : undefined}
           precision={typeof field.config?.precision === "number" ? field.config.precision : undefined}
+          prefix={typeof field.config?.prefix === "string" ? field.config.prefix : undefined}
           style={{ width: "100%" }}
           onChange={(nextValue) => onChange?.(nextValue)}
         />
