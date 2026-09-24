@@ -107,6 +107,12 @@ const PHI_MASONRY_LAYOUT_PANEL_PRESET = {
 
 export const PHI_STACK_LAYOUT_DEFAULTS: PhiLayoutDefaults = {
     slotTransition: "none",
+    /*
+     * Stated here although the parser resolves the same word on its own, because these defaults are
+     * what the Inspector shows as the standing answer. Left absent, the select stood empty over a
+     * setting that was never in doubt.
+     */
+    mountPolicy: "remount",
 };
 const PHI_STACK_LAYOUT_PANEL_PRESET = {
     padding: PHI_SPACE.base,
