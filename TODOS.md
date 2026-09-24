@@ -442,37 +442,60 @@ built. Remove an entry when it is done.
 
 ## Verification
 
-- **The Area-switch loop is the Area root's forward, not the Area boundary.** Narrowed on 24.09. by
-  measurement, with the account menu's Area entry made a `Link`. Each row is dev, after a cleared
-  `.next/dev` and a restart, and the last row is three runs out of three:
+- **The Area-switch loop: a server redirect answered into a navigation that changes the Area.** Narrowed
+  on 24.09. from "somewhere in the parallel routes" to that sentence. Every row is dev, after a cleared
+  `.next/dev`, a restart and a `curl` warm-up of both routes, because without those the numbers mean
+  nothing:
 
-  | click | navigations | RSC | outcome |
+  | click, as a `Link` | navigations | RSC | outcome |
   |---|---|---|---|
-  | to another Area's **root** (`/app`) | 41 / 98 / 104 / 110 in 40s | ~2 per navigation | never settles |
-  | inside one Area, Page to Page | 1 | 1 | -- |
-  | inside one Area, Page to that Area's **root** (forwards back) | 2 | 3 | -- |
-  | **to another Area's Page** (`/app/phis/ui/dashboard`) | **1** | **1** | -- |
+  | into another Area's **root**, which forwards | 41 / 45 / 46 / 55 / 67 / 98 / 110 | 2 per navigation | never settles |
+  | into another Area's **Page** (no redirect) | 1 | 1 | quiet, 3 of 3 |
+  | into another Area whose root is configured **not** to forward (`rootRoute.mode: "landing"`) | 1 | 1 | quiet, 3 of 3 |
+  | inside one Area, Page to Page | 1 | 1 | quiet |
+  | inside one Area, Page to that Area's root, **which forwards back** | 2 | 3 | quiet |
 
-  So crossing an Area with a `Link` is quiet, and crossing the `(root)`/`(pages)` group boundary is
-  quiet. Only both in one navigation loop -- which is what an Area root does, because it forwards to its
-  landing Page (`resolvedRoute.canonicalHref` in `phi-cms-root-page.tsx`). That sharpens the earlier
-  analysis, which had the group switch but not the fact that the Area boundary is innocent
-  (`browser-test/notes/ANALYSE-area-switch-loop.md`).
+  Read down the column: crossing an Area is quiet. A redirect is quiet. Crossing the `(root)`/`(pages)`
+  group boundary is quiet -- the last row does all three of those and costs two navigations. Only a
+  redirect *and* a change of Area in one navigation loop. The landing row is the control that settles it:
+  same Area boundary, same group structure, same menu, no forward, quiet.
 
-  Two things this did **not** turn out to be, both changed anyway on their own merits and both measured
-  as making no difference to the loop (a full 2x2, and every cell but one runs away): the Page-owned
-  slots having no `default.tsx`, and the slots raising refusals of their own beside the Layout's
-  (`NEXT_INTEGRATION.md`). An earlier reading of "halved, and settles at 29" was a first-navigation
-  artifact after a cold start and did not survive two clean repeats.
+  **The server is not looping.** Logged inside `resolvePhiCmsPageRedirect` during a run: `/editor`
+  resolves exactly once -- seven lines, which is one render (the Layout, the Page and the five slots) --
+  with `currentPathname="/editor"`, so its guard correctly does not apply. Nothing after that. The access
+  log for the same window shows **52 requests to `/editor/phis/ui/dashboard`, every one answered 200 in
+  400--900ms**, and no further redirect resolution at all. Each answer is complete and correct.
 
-  **The lead that follows from this:** an Area entry that names the landing Page rather than the Area
-  root is one navigation. Making that the menu's `href` means resolving six Areas' landing Pages to draw
-  one menu -- a cost question, and the operator's call. Until then the entry stays a plain anchor.
+  **It is the client's router state that never advances.** The request sequence is: one RSC request for
+  `/editor` (answered with a serialised redirect inside a 200), then the follow-up for
+  `/editor/phis/ui/dashboard` **in pairs**, and from the second pair onwards always with the *same*
+  `_rsc` key. That key is derived from the router state tree, so an unchanging key means the tree is not
+  moving -- which is the `"refetch"` marker the earlier analysis found standing on all six parallel
+  segments after a complete response. Today's contribution is the trigger: the marker is set by applying
+  a redirect whose follow-up response belongs under a different Area segment than the tree the client
+  still holds.
+
+  Levers tried and dead: `308`/`permanentRedirect` instead of `307` (41 and 45 navigations, unchanged).
+  Things that turned out **not** to be it, each changed anyway on its own merits and each measured as a
+  full 2x2 in which every cell runs away: the Page-owned slots having no `default.tsx`, and the slots
+  raising refusals of their own beside the Layout's (`NEXT_INTEGRATION.md`).
+
+  **What is left to know, and it is one thing:** why the reducer keeps the marker after a complete
+  response. That needs Next's `router-reducer` instrumented, which is the step
+  `browser-test/notes/ANALYSE-area-switch-loop.md` has named since 22.09. Everything above it is now
+  measured rather than suspected.
+
+  **What follows for us.** Not a link change: giving the menu the landing Page would make the account menu
+  the one place that knows all five Areas' presets, catalogs and module sets, which
+  `NEXT_INTEGRATION.md` forbids outright, and the target is deliberately a Page reference whose fallback
+  is the Area navigation's first entry -- reorder it and the front door moves. So the entry stays a plain
+  anchor at two document requests. The two real options are an Area root that does not forward
+  (`rootRoute.mode: "landing"`, measured quiet, but that is a product decision per Area) and the planned
+  removal of the Page-owned parallel routes, whose *existence* is still implicated even though their
+  defects were not.
 
   Scripts: `browser-test/scripts/check-area-link-loop.mjs` (counts; `TO_HREF` picks the target),
-  `trace-area-link-navigations.mjs` (stacks), `check-area-arrival-settle.mjs` (hard-load control).
-  **Restart with a cleared `.next/dev` before each run** -- route files added or moved under a running
-  dev server, and the first navigation after a cold start, both produce numbers that mean nothing.
+  `trace-area-link-navigations.mjs` (history stacks), `check-area-arrival-settle.mjs` (hard-load control).
 
 - **Freeze the module-graph audit.** `pnpm audit:graph` exists but is not part of `pnpm verify`. Set its
   output budget and failure thresholds, then add it.

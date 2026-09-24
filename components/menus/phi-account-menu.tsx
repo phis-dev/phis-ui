@@ -188,15 +188,15 @@ export function PhiAccountMenu({
      * no state here worth the trick.
      *
      * It is also, still, the only thing standing between this click and a runaway -- and measuring it
-     * again narrowed what the runaway is. It is not the Area boundary: the same click as a `Link`, aimed
-     * at a Page *inside* the arriving Area instead of at its root, costs one navigation and one RSC
-     * request, three runs out of three. What loops is `href` being an Area root, whose forward to the
-     * landing Page crosses the `(root)`/`(pages)` group boundary in the same navigation that crosses the
-     * Area. Either boundary on its own is quiet; together they are not (TODOS.md).
+     * named the runaway. It is not the Area boundary and it is not this menu: what loops is **a server
+     * redirect answered into a client navigation that changes the Area**, and `href` being an Area root
+     * is what produces one, because a root forwards to its landing Page. An Area configured not to
+     * forward is quiet across the same boundary, three runs out of three, and so is a redirect inside one
+     * Area. Only the two together loop, and the server answers every one of those requests correctly and
+     * exactly once -- it is the client's router state that never advances (TODOS.md).
      *
-     * So there is a version of this that could be a `Link` -- one naming where the Area root would have
-     * sent this viewer. It would have to resolve six Areas' landing Pages to draw one menu, which is a
-     * decision about cost rather than about links, and it is not taken here.
+     * So this is not a link problem and there is no version of this link that fixes it. The anchor is
+     * what it always was: the arriving Area built from nothing, which is what it is entitled to.
      */
     children: (areaEntries ?? []).map((entry) => ({
       key: `area-${entry.area}`,
