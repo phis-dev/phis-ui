@@ -37,7 +37,6 @@ export type PhiStackLayoutProps = Omit<PhiBaseLayoutProps, "slots"> & {
   slots: ReactNode[];
   slotKeys: string[];
   slotMeta?: PhiStackLayoutSlotMeta[];
-  activeSlotKey?: string;
   defaultActiveSlotKey?: string;
   mountPolicy?: PhiCmsMountPolicy;
   slotTransition?: "none" | "fade-over";
@@ -53,7 +52,6 @@ export function PhiStackLayout({
   slots,
   slotKeys,
   slotMeta,
-  activeSlotKey,
   defaultActiveSlotKey,
   mountPolicy = "remount",
   slotTransition = "none",
@@ -120,7 +118,6 @@ export function PhiStackLayout({
     // next child goes into. A page has no such slot and steps through what it holds.
     ...(isEditMode ? { slotCount: editableSlotCount } : {}),
     ...(slotMeta ? { slotLabels: slotMeta } : {}),
-    ...(activeSlotKey === undefined ? {} : { activeSlotKey }),
     ...(defaultActiveSlotKey === undefined ? {} : { defaultActiveSlotKey }),
   });
 

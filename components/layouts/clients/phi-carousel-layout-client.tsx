@@ -57,7 +57,6 @@ export type PhiCarouselLayoutProps = Omit<PhiBaseLayoutProps, "slots"> & {
   slots: ReactNode[];
   slotKeys: string[];
   slotMeta?: PhiCarouselLayoutSlotMeta[];
-  activeSlotKey?: string;
   defaultActiveSlotKey?: string;
   visibleSlots?: number;
   windowAnchor?: PhiSequenceAnchor;
@@ -87,7 +86,6 @@ export function PhiCarouselLayout({
   slots,
   slotKeys,
   slotMeta,
-  activeSlotKey,
   defaultActiveSlotKey,
   visibleSlots = 1,
   windowAnchor = "start",
@@ -146,7 +144,6 @@ export function PhiCarouselLayout({
     // next child goes into. A page has no such slot and steps through what it holds.
     ...(isEditMode ? { slotCount: editableSlotCount } : {}),
     ...(slotMeta ? { slotLabels: slotMeta } : {}),
-    ...(activeSlotKey === undefined ? {} : { activeSlotKey }),
     ...(defaultActiveSlotKey === undefined ? {} : { defaultActiveSlotKey }),
   });
 

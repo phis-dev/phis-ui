@@ -59,7 +59,6 @@ export const PHI_STACK_LAYOUT_PLUGIN: PhiCmsLayoutPlugin<PhiCmsStackLayoutConfig
       slotKeys={resolvePhiStackSlotKeys()}
       slotMeta={resolvePhiStackSlotMeta(node)}
       renderMode={renderMode}
-      activeSlotKey={config.activeSlotKey}
       defaultActiveSlotKey={config.defaultActiveSlotKey}
       mountPolicy={config.mountPolicy}
       slotTransition={config.slotTransition}

@@ -63,7 +63,6 @@ export const PHI_CAROUSEL_LAYOUT_PLUGIN: PhiCmsLayoutPlugin<PhiCmsCarouselLayout
       slotKeys={resolvePhiCarouselSlotKeys()}
       slotMeta={resolvePhiCarouselSlotMeta(node)}
       renderMode={renderMode}
-      activeSlotKey={config.activeSlotKey}
       defaultActiveSlotKey={config.defaultActiveSlotKey}
       visibleSlots={config.visibleSlots}
       windowAnchor={config.windowAnchor}

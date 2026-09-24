@@ -79,14 +79,18 @@ export function resolvePhiSequenceEditableSlotCount(
   return Math.min(Math.max(slots.length + 1, 1), Math.max(slotKeys.length, 1));
 }
 
+/**
+ * Where a sequence stands before anything has moved it: the configured slot, or the first one.
+ *
+ * A key no slot carries resolves to the first slot rather than to nothing, because a sequence always
+ * stands somewhere. The Inspector offers the declared slots as a list, so the case is a stored value
+ * from a layout that has since been reshaped, not a typo.
+ */
 export function resolvePhiSlotIndexByKey(
   slotKeys: string[],
-  activeSlotKey?: string,
   defaultActiveSlotKey?: string,
 ) {
-  const fallbackKey = defaultActiveSlotKey ?? slotKeys[0];
-  const resolvedKey = activeSlotKey ?? fallbackKey;
-  const index = slotKeys.indexOf(resolvedKey ?? "");
+  const index = slotKeys.indexOf(defaultActiveSlotKey ?? slotKeys[0] ?? "");
 
   return index >= 0 ? index : 0;
 }
@@ -97,7 +101,6 @@ export function usePhiSlotSequence({
   slotKeys,
   slotLabels,
   slotCount,
-  activeSlotKey,
   defaultActiveSlotKey,
 }: {
   // Whatever the layout was given: the address is built from it, and a sequence without one is
@@ -112,7 +115,10 @@ export function usePhiSlotSequence({
    * leaves this unset and moves through what it holds.
    */
   slotCount?: number;
-  activeSlotKey?: string;
+  /**
+   * The slot the sequence starts on. Only the start: once something steers -- a signal, a pager, the
+   * Builder's arrows -- that position holds, and a later change here does not take it back.
+   */
   defaultActiveSlotKey?: string;
 }): PhiSlotSequence {
   const dispatchSignal = usePhiSignalDispatcher();
@@ -121,7 +127,7 @@ export function usePhiSlotSequence({
   const signalAddress = blockId == null ? null : createPhiSignalAddress("cms", blockId);
 
   const reachableSlotCount = slotCount ?? slots.length;
-  const configuredIndex = resolvePhiSlotIndexByKey(slotKeys, activeSlotKey, defaultActiveSlotKey);
+  const configuredIndex = resolvePhiSlotIndexByKey(slotKeys, defaultActiveSlotKey);
   /*
    * Held against the address it was set for. A sequence that is moved and then re-mounted somewhere
    * else must not inherit a position that was never about it.

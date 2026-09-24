@@ -220,6 +220,25 @@ export const PHI_COLLAPSIBLE_LAYOUT_DEFINITION = {
   slots: [...PHI_CMS_COLLAPSIBLE_LAYOUT_SLOTS],
 } satisfies PhiCmsLayoutPluginDefinition<PhiCmsCollapsibleLayoutConfig>;
 
+/**
+ * The slots a sequence can start on, as a list to pick from rather than a key to type.
+ *
+ * A sequence declares its slots up front, so the choice is known before anybody authors anything --
+ * and a mistyped key used to resolve silently to the first slot, which looked like the field being
+ * ignored. The list names every declared slot, filled or not, because the starting slot is a
+ * position and not a child.
+ */
+function buildPhiSequenceStartSlotField(
+  slots: readonly { key: string; label: string }[],
+) {
+  return {
+    key: "defaultActiveSlotKey",
+    type: "choice",
+    label: "Start Slot",
+    options: slots.map((slot) => ({ value: slot.key, label: slot.label })),
+  } as const;
+}
+
 export const PHI_STACK_LAYOUT_DEFINITION = {
   kind: "layout",
   pluginKey: resolvePhiCmsLayoutPluginKey("stack"),
@@ -232,8 +251,7 @@ export const PHI_STACK_LAYOUT_DEFINITION = {
   defaultConfig: resolvePhiLayoutDefaults("stack"),
   fields: [
     ...PHI_LAYOUT_PADDING_FIELDS,
-    { key: "activeSlotKey", type: "string", label: "Active Slot Key" },
-    { key: "defaultActiveSlotKey", type: "string", label: "Default Active Slot Key" },
+    buildPhiSequenceStartSlotField(PHI_CMS_STACK_LAYOUT_SLOTS),
     {
       key: "mountPolicy",
       type: "choice",
@@ -293,8 +311,7 @@ export const PHI_CAROUSEL_LAYOUT_DEFINITION = {
   defaultConfig: resolvePhiLayoutDefaults("carousel"),
   fields: [
     ...PHI_LAYOUT_PADDING_FIELDS,
-    { key: "activeSlotKey", type: "string", label: "Active Slot Key" },
-    { key: "defaultActiveSlotKey", type: "string", label: "Default Active Slot Key" },
+    buildPhiSequenceStartSlotField(PHI_CMS_CAROUSEL_LAYOUT_SLOTS),
     { key: "visibleSlots", type: "number", label: "Visible Slots", min: 1, max: PHI_CMS_CAROUSEL_LAYOUT_SLOTS.length },
     {
       key: "windowAnchor",

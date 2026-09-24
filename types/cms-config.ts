@@ -362,7 +362,14 @@ export type PhiCmsFlexVerticalLayoutConfig = PhiCmsLayerBase & {
 };
 
 export type PhiCmsStackLayoutConfig = PhiCmsLayerBase & {
-  activeSlotKey?: string;
+  /**
+   * The slot the sequence stands on when nothing has moved it yet.
+   *
+   * It is a starting position and not a steering wheel: a signal, a pager Widget or the Builder's
+   * arrows move the sequence from here, and what they set outlives a later change to this value.
+   * Steering happens on the `activeSlotKey` and `activeSlotIndex` channels, which is a different
+   * thing that happens to share a word.
+   */
   defaultActiveSlotKey?: string;
   mountPolicy?: PhiCmsMountPolicy;
   slotTransition?: "none" | "fade-over";
@@ -371,7 +378,7 @@ export type PhiCmsStackLayoutConfig = PhiCmsLayerBase & {
 };
 
 export type PhiCmsCarouselLayoutConfig = PhiCmsLayerBase & {
-  activeSlotKey?: string;
+  /** The slot the sequence starts on. See the Stack's, which it works exactly like. */
   defaultActiveSlotKey?: string;
   /** How many slots stand in the window at once. The Stack's window is always one; this one is not. */
   visibleSlots?: number;
@@ -702,7 +709,6 @@ export function parsePhiCmsStackLayoutConfig(
       borderSource: readPhiCmsBorderSource(config.borderSource),
       border: readString(config.border),
       borderRadius: readCssSize(config.borderRadius),
-      activeSlotKey: readString(config.activeSlotKey),
       defaultActiveSlotKey: readString(config.defaultActiveSlotKey),
       mountPolicy: readPhiCmsMountPolicy(config.mountPolicy, "remount"),
       slotTransition: config.slotTransition === "fade-over" ? "fade-over" : "none",
@@ -777,7 +783,6 @@ export function parsePhiCmsCarouselLayoutConfig(
       borderSource: readPhiCmsBorderSource(config.borderSource),
       border: readString(config.border),
       borderRadius: readCssSize(config.borderRadius),
-      activeSlotKey: readString(config.activeSlotKey),
       defaultActiveSlotKey: readString(config.defaultActiveSlotKey),
       ...(visibleSlots === undefined ? {} : { visibleSlots }),
       ...(windowAnchor === undefined ? {} : { windowAnchor }),
