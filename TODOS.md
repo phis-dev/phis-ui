@@ -33,12 +33,96 @@ built. Remove an entry when it is done.
 
 ## Layouts and Widgets
 
-- **Nothing checks that the Form's two thresholds agree.** `PHI_FORM_RESPONSIVE_MIN_WIDTH` states them
-  in TypeScript and `styles/layout.css` compares against them, and a container query cannot read a custom
-  property for its threshold, so the literal has to stand in the stylesheet as well. Today the only thing
-  holding the two together is a comment on each side. A guard that reads the stylesheet and asserts the
-  pair -- `scripts/validate-media-space-contracts.ts` already reads source this way -- would make a
-  divergence fail rather than render.
+- **One resolver for block geometry.** `size`, `minSize` and `maxSize` are read in five places, and each
+  one interprets them for itself. This is the prerequisite for making them responsive, and it is worth
+  doing on its own merits.
+
+  **The five readers, and what each answers when a value is absent:**
+
+  | | Where | What it writes | Absent inline size means |
+  |---|---|---|---|
+  | A | `plugins/runtime/slot-size-policy.ts` | the slot policy, as `phi-slot-child--*` classes | the declared policy, else the kind's default |
+  | B | `plugins/runtime/phi-slot-child-frame-view.tsx` | CSS on the frame around every child | nothing written |
+  | C | `components/layouts/phi-layout-contract.ts` | CSS on a Layout's own inner box | `100%` |
+  | D | `components/regions/clients/cms-region-container-client.tsx` | Shell Region geometry | the Theme's sider width |
+  | E | `plugins/runtime-modules/builder/render-root-node-preview.server.tsx` | custom properties for the root scaffold | `100%` |
+
+  Five answers to one blank. B and C are not alternatives: a Layout in a slot is wrapped by B and draws
+  its own box with C, so its geometry is applied twice, on two nested elements, **by two rules that
+  disagree** -- B caps an absolute inline maximum with `min(100%, Npx)`, C writes the same value plain.
+
+  **Findings worth not rediscovering.**
+
+  *A number is a unit, not a type.* `PhiCssLength` is `number | "<n><unit>"` and `serializePhiCssLength`
+  stores a pixel length as a bare number and everything else as a string (`types/length.ts`). So
+  `typeof value === "number"` in these readers means **"is an absolute pixel length"**, and B's capping
+  is the correct rule -- an absolute maximum can be wider than its slot, a `%` or `ch` maximum is already
+  relative to something. It only looks like a type check. Any reader that branches on `typeof` instead of
+  `readPhiCssLengthPart` has misread the vocabulary; the same encoding carries runtime values, because
+  `readPhiDimensionValue` serialises signal input with the same function.
+
+  *`size` is two statements in one field.* It is a measurement, and it is the claim "I decide this axis",
+  which flips the slot policy from `fill` to `fixed` (`resolvePhiEffectiveSlotSizePolicy`). That function's
+  own comment gives the reason this entry exists: *"a rule that has to be remembered at each site is a
+  rule that is already broken."* It is correct one level down and unstated one level up.
+
+  *The medium is not symmetric.* A page is definite in width and indefinite in height, so `height: 100%`
+  against an auto-height parent resolves to `auto` and a percentage `max-height` is treated as `none`.
+  That is why B caps the inline axis and not the block axis, and it is the same asymmetry that hides the
+  palette defect in the entry below.
+
+  **The target model.** One function, beside the vocabulary rather than beside any caller, that reads a
+  config once and returns everything the five need:
+
+      resolvePhiRenderableBlockGeometry(config) -> {
+        inline: { size, min, max },   // resolved CSS lengths, decoded by unit
+        block:  { size, min, max },
+        explicitInline: boolean,      // "this block decides its own inline axis"
+        explicitBlock:  boolean,
+      }
+
+  A: reads `explicitInline`/`explicitBlock` and the constraints. B: builds its style from it. C: the same,
+  plus its own `100%` fallback applied by the caller rather than decided a second time. D and E: the same
+  object instead of their own fallbacks. Nobody else touches the three fields, and a guard enforces that
+  the way `soleOwnerPrimitives` enforces primitive ownership -- checked in both directions, so a reader
+  that stops using it fails too.
+
+  Then responsive geometry is a change to the resolver alone; the five call sites never learn about
+  profiles. Without this they would each learn it separately, and by the record above, slightly
+  differently.
+
+  **Order.** The move first, with no pixel changed: five callers, the differences preserved verbatim as
+  caller-side fallbacks or named options, plus the guard. Then each rule settled on its own, because each
+  moves pixels: (a) whether `100%` is the answer for everyone or stays C's fallback, (b) whether an
+  absolute maximum is capped on the block axis too and what a `ch` or `rem` maximum should do, (c) whether
+  the Builder root scaffold's own fallbacks become the general ones or stay a stated exception. Only then
+  the responsive form -- and with it the question the palette raises: if a block states a width at `wide`
+  and not at `compact`, does its slot policy change with the viewport, or is "explicit" a property of the
+  block as a whole?
+
+- **The layout palette says nothing, and what it inherits is wrong.** A Layout's `slotSizePolicy` answers
+  "when this Layout stands in someone else's slot, how does it size itself". Eleven of twelve Layouts
+  answer nothing and inherit `fill` on both axes; only Three Column declares (`fill-inline`).
+
+  Flex and Three Column are the same shape -- a row of slots -- and run different policies today for no
+  reason anybody wrote down. And a vertical Flex is **not** the mirror of a horizontal one: mirroring
+  would give it `inline: intrinsic`, which shrink-wraps a page column to its widest child, and
+  `block: fill`, which resolves to `auto` and does nothing. Both axes of the symmetric answer are wrong,
+  for the reason above -- width is definite, height is not.
+
+  What the palette should say, on that reading: **`fill-inline` for Flex, Flex Vertical, Three Column,
+  Grid, Masonry, Split Card, Content, Collapsible, Stack and Carousel** -- take the inline size you are
+  given, be as tall as your content -- and **`fill` only for Page Region and Structure Region**, which
+  genuinely fill a definite height. The default is the rare case today and the exception is silent.
+
+  It has stayed invisible because `block: fill` is `height: 100%`, which does nothing wherever the parent
+  height is auto. It bites only where a parent does have a definite height, and there it looks like a bug
+  in the parent: two such were fixed on 24.09. (the Stack stage's height, and the anchor that ignored
+  `bottom`). Widgets do not have this problem -- their default is `intrinsic`, which suits the controls,
+  and 38 of 67 declare something else where it matters. The Layouts inherit an answer that nothing forces
+  them to notice.
+
+  This moves pixels wherever a definite height is in play, so it is its own change, after the resolver.
 
 - **Generic float-button Widget.** A Widget over antd `FloatButton` behind a Phi Control, with
   config-driven placement, icon, and badge, emitting activation like the button Widget.
@@ -396,8 +480,9 @@ built. Remove an entry when it is done.
   each preset gains on a wide screen. Block geometry therefore has to take the responsive form first,
   and that is a change to every renderable block, not to Overlays. Order matters, and the first step is
   done: the container-breakpoint scale in `theme/phi-container-breakpoints.ts` is what a profile is
-  measured against, so responsive block geometry has a ruler to take. Then the Overlay adoption, then
-  `width` goes -- the other order would drop distinctions the presets are making on purpose.
+  measured against. Next is "One resolver for block geometry" under Layouts and Widgets, which is where
+  the responsive form would be built; then the Overlay adoption, then `width` goes -- the other order
+  would drop distinctions the presets are making on purpose.
 
   **The decision that has to come before any of it: what a profile is measured against.** "Responsive"
   is not one mechanism here, it is three, and the tree is not of one mind about them:
