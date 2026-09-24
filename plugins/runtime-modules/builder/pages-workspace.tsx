@@ -17,6 +17,7 @@ import { buildPhiBuilderRuntimeModuleIdsForArea } from "./area-shell-presets.ser
 import { resolvePhiBuilderCanvasRuntimeModuleSandbox } from "./runtime-module-sandbox.server";
 import { PhiBuilderWorkspaceScopeBoundary } from "./clients/workspace-scope-boundary";
 import { buildPhiBuilderModuleAuthoringCatalog } from "./module-authoring-catalog.server";
+import { localizePhiBuilderModuleAuthoringCatalog } from "./plugin-meta-labels.server";
 import { resolvePhiBuilderAuthoringPickerDataProviderKeysFromCatalog } from "./authoring-provider-keys";
 import { PhiBuilderRuntimeModuleAuthoringBoundary } from "./clients/runtime-module-authoring-boundary";
 import {
@@ -91,12 +92,15 @@ export async function PhiDeveloperBuilderPagesWorkspaceWidget({
     viewer: runtime.viewer,
     serverCapabilities: registry.serverCapabilities,
   });
-  const authoringCatalog = buildPhiBuilderModuleAuthoringCatalog({
-    catalog: registry.runtimeModuleCatalog,
-    area: previewArea,
-    activeModuleIds: sandbox.moduleSet.activeModuleIds,
-    viewer: runtime.viewer,
-  });
+  const authoringCatalog = await localizePhiBuilderModuleAuthoringCatalog(
+    runtime,
+    buildPhiBuilderModuleAuthoringCatalog({
+      catalog: registry.runtimeModuleCatalog,
+      area: previewArea,
+      activeModuleIds: sandbox.moduleSet.activeModuleIds,
+      viewer: runtime.viewer,
+    }),
+  );
   const previewRuntime = {
     ...runtime,
     page: {
