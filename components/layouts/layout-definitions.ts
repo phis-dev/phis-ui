@@ -256,13 +256,13 @@ export const PHI_STACK_LAYOUT_DEFINITION = {
     {
       key: "mountPolicy",
       type: "choice",
-      label: "Slot Mounting",
+      label: "Mounting",
       options: [...PHI_CMS_MOUNT_POLICY_FIELD_OPTIONS],
     },
     {
       key: "slotTransition",
       type: "choice",
-      label: "Slot Transition",
+      label: "Transition",
       options: [
         { value: "none", label: "None" },
         { value: "fade-over", label: "Fade over" },
@@ -271,7 +271,7 @@ export const PHI_STACK_LAYOUT_DEFINITION = {
     {
       key: "slotTransitionDurationMs",
       type: "number",
-      label: "Transition Duration",
+      label: "Duration",
       min: PHI_SEQUENCE_TRANSITION_MIN_MS,
       max: PHI_SEQUENCE_TRANSITION_MAX_MS,
       step: PHI_SEQUENCE_TRANSITION_STEP_MS,
@@ -280,7 +280,7 @@ export const PHI_STACK_LAYOUT_DEFINITION = {
     {
       key: "slotTransitionEasing",
       type: "choice",
-      label: "Transition Easing",
+      label: "Easing",
       options: [...PHI_MOTION_EASING_FIELD_OPTIONS],
     },
   ],
@@ -339,7 +339,7 @@ export const PHI_CAROUSEL_LAYOUT_DEFINITION = {
     {
       key: "transitionDurationMs",
       type: "number",
-      label: "Transition Duration",
+      label: "Duration",
       min: PHI_SEQUENCE_TRANSITION_MIN_MS,
       max: PHI_SEQUENCE_TRANSITION_MAX_MS,
       step: PHI_SEQUENCE_TRANSITION_STEP_MS,
@@ -348,7 +348,7 @@ export const PHI_CAROUSEL_LAYOUT_DEFINITION = {
     {
       key: "transitionEasing",
       type: "choice",
-      label: "Transition Easing",
+      label: "Easing",
       options: [...PHI_MOTION_EASING_FIELD_OPTIONS],
     },
     { key: "slotGap", type: "string", label: "Slot Gap" },
@@ -368,7 +368,7 @@ export const PHI_CAROUSEL_LAYOUT_DEFINITION = {
       // Zero is the one value below the floor that means something: it does not move on its own.
       key: "autoplayMs",
       type: "number",
-      label: "Autoplay Interval",
+      label: "Autoplay",
       min: 0,
       max: PHI_SEQUENCE_TRANSITION_MAX_MS,
       step: PHI_SEQUENCE_TRANSITION_STEP_MS,
