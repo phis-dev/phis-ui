@@ -1,4 +1,3 @@
-import { PhiCmsLayoutType } from "../../../constants/cms-layout-types";
 import type { PhiCmsLayoutPlugin } from "../../../types";
 import { PhiPageRegionLayout } from "../phi-page-region-layout";
 import { definePhiLayoutRenderers } from "../layout-plugin-renderers";
@@ -29,5 +28,3 @@ export const PHI_PAGE_REGION_LAYOUT_PLUGIN: PhiCmsLayoutPlugin<PhiPageRegionLayo
     );
   }),
 };
-
-export const PHI_PAGE_REGION_LAYOUT_PLUGIN_TYPE = PhiCmsLayoutType.PageRegion;

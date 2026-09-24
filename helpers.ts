@@ -8,7 +8,6 @@ export * from "./helpers/locale";
 export * from "./helpers/phis-runtime";
 export * from "./helpers/site-api";
 export * from "./helpers/site-locale-config";
-export * from "./helpers/site-structure";
 export * from "./helpers/renderable-block-defaults";
 export * from "./helpers/cms-layout-defaults";
 export * from "./helpers/renderable-block-plugin-fields";

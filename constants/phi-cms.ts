@@ -14,7 +14,6 @@ export {
   DEFAULT_PHI_CMS_VISIBILITY_MASK,
   PhiCmsFlags,
   PhiCmsPageType,
-  PhiCmsRegionStatus,
   PhiCmsRegionType,
   PhiCmsRevisionFlags,
   PhiCmsStatus,

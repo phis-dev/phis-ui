@@ -1,7 +1,6 @@
 import type { PhiSignal } from "../../types";
 import { readPhiCmsInstanceId } from "../../types/cms-instance-id";
 
-export const PHI_STACK_SIGNAL_CHANNEL = "stack";
 export const PHI_STACK_META_SIGNAL_CHANNEL = "stackMeta";
 export const PHI_STACK_ACTIVE_SLOT_SIGNAL_CHANNEL = "activeSlotIndex";
 export const PHI_STACK_ACTIVE_SLOT_KEY_SIGNAL_CHANNEL = "activeSlotKey";

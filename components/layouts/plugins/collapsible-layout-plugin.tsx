@@ -1,6 +1,5 @@
 import {
   PHI_CMS_COLLAPSIBLE_LAYOUT_SLOTS,
-  PhiCmsLayoutType,
 } from "../../../constants/cms-layout-types";
 import type { PhiCmsLayoutPlugin } from "../../../types";
 import type { PhiCmsCollapsibleLayoutConfig } from "../../../types/cms-config";
@@ -92,5 +91,3 @@ export const PHI_COLLAPSIBLE_LAYOUT_PLUGIN: PhiCmsLayoutPlugin<PhiCmsCollapsible
     />
   )),
 };
-
-export const PHI_COLLAPSIBLE_LAYOUT_PLUGIN_TYPE = PhiCmsLayoutType.Collapsible;

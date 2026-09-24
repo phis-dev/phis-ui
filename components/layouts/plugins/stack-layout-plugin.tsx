@@ -1,6 +1,5 @@
 import {
   PHI_CMS_STACK_LAYOUT_SLOTS,
-  PhiCmsLayoutType,
 } from "../../../constants/cms-layout-types";
 import type { PhiCmsLayoutPlugin } from "../../../types";
 import type { PhiCmsStackLayoutConfig } from "../../../types/cms-config";
@@ -87,5 +86,3 @@ export const PHI_STACK_LAYOUT_PLUGIN: PhiCmsLayoutPlugin<PhiCmsStackLayoutConfig
     />
   )),
 };
-
-export const PHI_STACK_LAYOUT_PLUGIN_TYPE = PhiCmsLayoutType.Stack;

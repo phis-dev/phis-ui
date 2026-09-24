@@ -3,8 +3,6 @@ import type { PhiSignalDispatch } from "../../runtime/runtime-signal-bus";
 import { createPhiCoreRuntimeControllerAddress } from "../../runtime/core-runtime-controller-address";
 import { emitPhiCoreRuntimePageSnapshot } from "../../runtime/core-runtime-controller-snapshots";
 
-export const PHI_PAGE_TITLE_SIGNAL_KEY = "pageTitle";
-
 export type PhiPageTitleSignalValue = {
   area?: string | null;
   pageKey?: string | null;

@@ -3,11 +3,6 @@ import "server-only";
 import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 
-import {
-  type SiteLocaleConfig,
-} from "./site-locale-config";
-import { fetchSiteLocaleConfig } from "../server-helpers/site-locale";
-
 export type PhiSiteRuntimeConfig = {
   site: {
     key: string;
@@ -99,14 +94,4 @@ export function readPhiSiteRuntimeConfigSync(): PhiSiteRuntimeConfig {
 
 export function getPhiInternalApiTimeoutMs() {
   return readPhiSiteRuntimeConfigSync().network?.internalApiTimeoutMs ?? DEFAULT_TIMEOUT_MS;
-}
-
-export async function getPhiSiteLocaleConfig(): Promise<SiteLocaleConfig> {
-  const runtimeConfig = readPhiSiteRuntimeConfigSync();
-
-  return fetchSiteLocaleConfig({
-    apiBaseUrl: runtimeConfig.phis.apiBaseUrl,
-    internalToken: runtimeConfig.phis.internalToken,
-    siteKey: runtimeConfig.site.key,
-  });
 }

@@ -1,5 +1,4 @@
 import {
-  PhiCmsLayoutType,
 } from "../../../constants/cms-layout-types";
 import type { PhiCmsLayoutPlugin } from "../../../types";
 import type { PhiCmsFlexVerticalLayoutConfig } from "../../../types/cms-config";
@@ -47,5 +46,3 @@ export const PHI_FLEX_VERTICAL_LAYOUT_PLUGIN: PhiCmsLayoutPlugin<PhiCmsFlexVerti
     />
   )),
 };
-
-export const PHI_FLEX_VERTICAL_LAYOUT_PLUGIN_TYPE = PhiCmsLayoutType.FlexVertical;

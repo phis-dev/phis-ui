@@ -6,20 +6,26 @@ built. Remove an entry when it is done.
 
 ## Code hygiene
 
-- **Remove dead value exports.** Named exports with no consumer in phis-ui, the Skeleton, phis-server,
-  or the sibling Module packages -- each name below appears only at its definition:
-  `NAV_ITEMS`, `PRODUCT_PANELS` (helpers/site-structure.ts); `canAccessPage` (helpers/access.ts);
-  `isApiV1Path`, `isMedusaApiPath`, `buildLocalProxyPath` (helpers/site-api.ts); `PHI_MOTION`
-  (theme/antd-css-var-contract.ts); `matchesPhiCmsVisibility`; `getPhiSiteLocaleConfig`;
-  `PhiRuntimeModuleAuthoringHost`; `PHI_SIGNAL_CHANNELS`, `findPhiSignalRouteByKey` (types/signals.ts);
-  `PHI_STACK_SIGNAL_CHANNEL`; `PHI_PAGE_TITLE_SIGNAL_KEY`; `deletePhiImagePreviewStore`,
-  `removePhiImagePreviewAsset`, `setPhiImagePreviewDateRange` (components/media/phi-image-preview-store.ts);
-  `usePhiAssetCollectionRuntime`; `PhiCmsRegionStatus`; the `*_PLUGIN_TYPE` constants in
-  `components/layouts/plugins/`; `serializePhiCmsRenderableBlockConfig`,
-  `deserializePhiCmsRenderableBlockConfig`, `stripPhiCmsRenderableBlockConfigDefaults`,
-  `serializePhiCmsDirectionalLayoutConfig`, `deserializePhiCmsDirectionalLayoutConfig`, and
-  `serializePhiCmsWidgetConfig` (helpers/cms-config-serialization.ts). Keep deliberate public entry
-  points such as `phisUiLogger` (net/log.ts) and mark them as such; re-scan before deleting.
+- **One dead export left, and it is the interesting one.** `usePhiAssetCollectionRuntime`
+  (components/media/asset-collection-runtime.ts) has no caller anywhere, but
+  `scripts/validate-media-space-contracts.ts` reads its source and pins the guarantee that *a Collection
+  request without a bound provider surfaces as an error, never as an empty gallery*. Deleting the hook
+  takes the guarantee with it and the check fails, which is the check doing its job. So the question is
+  not whether the export is used -- it is where that guarantee belongs now that the Media Picker binding
+  and the Collection View binding each answer the same question for themselves. Decide that, then move
+  the assertion and drop the hook.
+
+  The rest of the sweep is done. Two findings worth keeping. **The public barrels are not an add-on
+  surface**: `@phis/ui` ships types and functions for Modules, not for Add-ons, so a name sitting behind
+  `export *` in helpers.ts, types.ts or constants.ts is not thereby public API -- nothing chose it, the
+  wildcard swept it up. **A sweep grows as it runs**: removing `isApiV1Path` and `isMedusaApiPath` left
+  `API_PATHS` and `MEDUSA_API_PREFIXES` with no reader, and removing `canAccessPage` left
+  `PageAccessInput`; each removal has to be re-scanned after the one before it, not planned in one list
+  up front.
+
+  `helpers/cms-config-serialization.ts` came out of it holding one function that forwards to
+  `mergeRenderableBlockDefaults` under another name. Worth folding into its single caller,
+  `components/widgets/config/parser-primitives.ts`, rather than keeping a file for a rename.
 - **Convert concrete preset builders to local-key templates.** Some first-party preset builders still
   return concrete trees with synthetic ids (for example
   `components/regions/presets/phi-default-site-area-preset-tree.ts`), so the central instantiator is not
@@ -27,19 +33,11 @@ built. Remove an entry when it is done.
 
 ## Layouts and Widgets
 
-- **Collapsible Layout open-state emit.** The Collapsible Layout listens to `openSlotKeys`,
-  `activeSlotKey`, `activeSlotIndex`, and `slot` signals but emits nothing
-  (`components/layouts/clients/phi-collapsible-layout-client.tsx`). Add a symmetric open-state change
-  emit. No consumer needs it today.
 - **Generic float-button Widget.** A Widget over antd `FloatButton` behind a Phi Control, with
   config-driven placement, icon, and badge, emitting activation like the button Widget.
 - **Control badge adoption from real use cases.** The badge contract exists for button and toolbar.
   Evaluate basket, support inbox, and similar domain buttons one by one; migrate only where the generic
   receiver contract fits without losing domain semantics.
-- **A Statistic Widget.** `PhiStatisticControl` exists and has one caller, the Theme inspector. The
-  second is a Widget of its own, so a Site can put a figure on a page -- a count, a total, a rate --
-  with `title` and `value` as config and the Control deciding presentation. Placing it is the point:
-  the Theme inspector's three are a fixed internal readout, where a Widget is the general case.
 - **Normalize Preset Content roots to vertical Flex.** Audit first-party Page presets and use a vertical
   Flex Layout as the Content Region root, keeping another root only where the Page has a semantic reason.
   The legacy Content Layout path is still registered.

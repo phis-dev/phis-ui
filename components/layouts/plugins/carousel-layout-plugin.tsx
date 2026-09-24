@@ -1,6 +1,5 @@
 import {
   PHI_CMS_CAROUSEL_LAYOUT_SLOTS,
-  PhiCmsLayoutType,
 } from "../../../constants/cms-layout-types";
 import type { PhiCmsLayoutPlugin } from "../../../types";
 import type { PhiCmsCarouselLayoutConfig } from "../../../types/cms-config";
@@ -96,5 +95,3 @@ export const PHI_CAROUSEL_LAYOUT_PLUGIN: PhiCmsLayoutPlugin<PhiCmsCarouselLayout
     />
   )),
 };
-
-export const PHI_CAROUSEL_LAYOUT_PLUGIN_TYPE = PhiCmsLayoutType.Carousel;

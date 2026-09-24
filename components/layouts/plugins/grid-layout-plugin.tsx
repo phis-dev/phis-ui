@@ -1,4 +1,3 @@
-import { PhiCmsLayoutType } from "../../../constants/cms-layout-types";
 import type { PhiCmsLayoutPlugin } from "../../../types";
 import type { PhiCmsGridLayoutConfig } from "../../../types/cms-config";
 import { parsePhiCmsGridLayoutConfig } from "../../../types/cms-config";
@@ -45,5 +44,3 @@ export const PHI_GRID_LAYOUT_PLUGIN: PhiCmsLayoutPlugin<PhiCmsGridLayoutConfig> 
     />
   )),
 };
-
-export const PHI_GRID_LAYOUT_PLUGIN_TYPE = PhiCmsLayoutType.Grid;

@@ -99,10 +99,6 @@ export function setPhiImagePreviewFlags(scopeKey: string, presentationFlags: num
   phiImagePreviewStore.patch(scopeKey, (current) => ({ ...current, presentationFlags, page: 1, error: null }));
 }
 
-export function setPhiImagePreviewDateRange(scopeKey: string, since: string | null, until: string | null) {
-  phiImagePreviewStore.patch(scopeKey, (current) => ({ ...current, since, until, page: 1, error: null }));
-}
-
 export function setPhiImagePreviewPage(scopeKey: string, page: number) {
   phiImagePreviewStore.patch(scopeKey, (current) => ({ ...current, page: Number.isInteger(page) && page > 0 ? page : 1 }));
 }
@@ -149,15 +145,6 @@ export function setPhiImagePreviewResults(
   }));
 }
 
-export function removePhiImagePreviewAsset(scopeKey: string, assetId: number) {
-  phiImagePreviewStore.patch(scopeKey, (current) => ({
-    ...current,
-    assets: current.assets.filter((asset) => asset.id !== assetId),
-    selectedAssetId: current.selectedAssetId === assetId ? null : current.selectedAssetId,
-    selectedAsset: current.selectedAsset?.id === assetId ? null : current.selectedAsset,
-  }));
-}
-
 export function updatePhiImagePreviewAsset(
   scopeKey: string,
   assetId: number,
@@ -201,10 +188,6 @@ export function bumpPhiImagePreviewRefreshToken(scopeKey: string) {
 
 export function resetPhiImagePreviewStore(scopeKey: string) {
   phiImagePreviewStore.reset(scopeKey);
-}
-
-export function deletePhiImagePreviewStore(scopeKey: string) {
-  phiImagePreviewStore.deleteScope(scopeKey);
 }
 
 /**

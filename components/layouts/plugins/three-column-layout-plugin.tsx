@@ -1,4 +1,3 @@
-import { PhiCmsLayoutType } from "../../../constants/cms-layout-types";
 import type { PhiCmsLayoutPlugin } from "../../../types";
 import type { PhiCmsThreeColumnLayoutConfig } from "../../../types/cms-config";
 import { parsePhiCmsThreeColumnLayoutConfig } from "../../../types/cms-config";
@@ -49,5 +48,3 @@ export const PHI_THREE_COLUMN_LAYOUT_PLUGIN: PhiCmsLayoutPlugin<PhiCmsThreeColum
     />
   )),
 };
-
-export const PHI_THREE_COLUMN_LAYOUT_PLUGIN_TYPE = PhiCmsLayoutType.ThreeColumn;

@@ -1,4 +1,3 @@
-import { PhiCmsLayoutType } from "../../../constants/cms-layout-types";
 import type { PhiCmsLayoutPlugin } from "../../../types";
 import { PHI_REGION_WIDGET_DEFAULT_LABELS } from "../../widgets/label-types/region";
 import { PhiStructureRegionLayout } from "../phi-structure-region-layout";
@@ -31,5 +30,3 @@ export const PHI_STRUCTURE_REGION_LAYOUT_PLUGIN: PhiCmsLayoutPlugin<PhiStructure
     );
   }),
 };
-
-export const PHI_STRUCTURE_REGION_LAYOUT_PLUGIN_TYPE = PhiCmsLayoutType.StructureRegion;

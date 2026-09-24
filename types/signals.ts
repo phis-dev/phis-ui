@@ -83,29 +83,6 @@ export type PhiSignalRuntimeContext = {
   slotKey?: string | null;
 };
 
-export const PHI_SIGNAL_CHANNELS = [
-  "text",
-  "path",
-  "select",
-  "toggle",
-  "number",
-  "color",
-  "command",
-  "visibility",
-  "enabled",
-  "background",
-  "border",
-  "selection",
-  "stack",
-  "layout",
-  "content",
-  "style",
-  "meta",
-  "drag",
-  "drop",
-  "flush",
-  "inspector",
-] as const;
 export type PhiSignalChannel = string;
 
 export function createPhiSignalValueSchema(
@@ -558,13 +535,6 @@ export function readPhiSignalRouteSet(value: unknown): PhiSignalRouteSet | null 
     return null;
   }
   return emits || listens ? { emits, listens } : null;
-}
-
-export function findPhiSignalRouteByKey(
-  routes: readonly PhiSignalRoute[] | null | undefined,
-  routeKey: string,
-): PhiSignalRoute | null {
-  return routes?.find((route) => route.routeKey === routeKey) ?? null;
 }
 
 export function findPhiSignalRoutesByCapabilityId(

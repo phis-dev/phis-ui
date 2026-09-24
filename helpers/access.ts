@@ -1,15 +1,4 @@
-import { PhiCmsVisibilityContext, DEFAULT_PHI_CMS_VISIBILITY_MASK } from "../constants/phi-cms";
-import {
-  canPhiViewerAccess,
-  type PhiAccessViewer,
-  type PhiViewerAccessPolicy,
-} from "../types/access";
-
-export type PageAccessInput = {
-  visibilityMask?: number | null;
-  accessPolicy?: PhiViewerAccessPolicy | null;
-  viewer: PhiAccessViewer;
-};
+import { PhiCmsVisibilityContext } from "../constants/phi-cms";
 
 export type ResolvedCmsPath = {
   areaMask: number;
@@ -69,16 +58,4 @@ export function resolveCmsPath(path: string | null | undefined): ResolvedCmsPath
 
   const remaining = segments.slice(1).join("/");
   return { areaMask, path: remaining ? `/${remaining}` : "/" };
-}
-
-export function canAccessPage(input: PageAccessInput, areaMask: number) {
-  const visibilityMask =
-    Number.isInteger(input.visibilityMask) && (input.visibilityMask ?? 0) !== 0
-      ? (input.visibilityMask as number)
-      : DEFAULT_PHI_CMS_VISIBILITY_MASK;
-  if ((visibilityMask & areaMask) === 0) {
-    return false;
-  }
-
-  return canPhiViewerAccess(input.viewer, input.accessPolicy);
 }

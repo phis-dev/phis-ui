@@ -1,4 +1,3 @@
-import { PhiCmsLayoutType } from "../../../constants/cms-layout-types";
 import type { PhiCmsLayoutPlugin } from "../../../types";
 import type { PhiCmsMasonryLayoutConfig } from "../../../types/cms-config";
 import { parsePhiCmsMasonryLayoutConfig } from "../../../types/cms-config";
@@ -38,5 +37,3 @@ export const PHI_MASONRY_LAYOUT_PLUGIN: PhiCmsLayoutPlugin<PhiCmsMasonryLayoutCo
     />
   )),
 };
-
-export const PHI_MASONRY_LAYOUT_PLUGIN_TYPE = PhiCmsLayoutType.Masonry;

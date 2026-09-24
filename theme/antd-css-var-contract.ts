@@ -75,10 +75,6 @@ export const PHI_SHADOW = {
   tertiary: "var(--ant-box-shadow-tertiary)",
 } as const;
 
-export const PHI_MOTION = {
-  durationMid: "var(--ant-motion-duration-mid)",
-} as const;
-
 export const PHI_FONT_SIZE = {
   base: "var(--ant-font-size)",
   sm: "var(--ant-font-size-sm)",

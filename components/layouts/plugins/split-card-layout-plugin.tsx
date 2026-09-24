@@ -1,4 +1,3 @@
-import { PhiCmsLayoutType } from "../../../constants/cms-layout-types";
 import type { PhiCmsLayoutPlugin } from "../../../types";
 import type { PhiCmsSplitCardLayoutConfig } from "../../../types/cms-config";
 import { parsePhiCmsSplitCardLayoutConfig } from "../../../types/cms-config";
@@ -50,5 +49,3 @@ export const PHI_SPLIT_CARD_LAYOUT_PLUGIN: PhiCmsLayoutPlugin<PhiCmsSplitCardLay
     />
   )),
 };
-
-export const PHI_SPLIT_CARD_LAYOUT_PLUGIN_TYPE = PhiCmsLayoutType.SplitCard;
