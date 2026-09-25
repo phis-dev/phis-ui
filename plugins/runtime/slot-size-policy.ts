@@ -1,10 +1,12 @@
 import { isValidElement, type CSSProperties, type ReactNode } from "react";
 
 import type { PhiSlotAxisSizePolicy, PhiSlotSizePolicy, PhiNormalizedSlotSizePolicy } from "../../types";
+import type { PhiCssLengthUnit } from "../../types/length";
 import {
   resolvePhiRenderableBlockGeometry,
   type PhiRenderableBlockGeometryInput,
   type PhiResolvedBlockGeometry,
+  type PhiResolvedBlockLength,
 } from "../../types/renderable-block-geometry";
 
 export type PhiSlotChildKind = "widget" | "layout";
@@ -356,5 +358,67 @@ export function resolvePhiSlotChildBaseStyle(policy: PhiNormalizedSlotSizePolicy
     marginInlineEnd: "var(--phi-slot-cross-margin-end, 0)",
     ...(policy.inline === "fill" ? { width: "100%" } : policy.inline === "intrinsic" ? { width: "fit-content" } : {}),
     ...(policy.block === "fill" ? { height: "100%" } : policy.block === "intrinsic" ? { height: "fit-content" } : {}),
+  };
+}
+
+/*
+ * A stated inline maximum, capped at the slot where the slot is a room.
+ *
+ * A maximum in a length that measures something other than the slot -- `px`, `em`, `rem`, `vw`, `vh` --
+ * can state more room than there is, and `min(100%, ...)` lets the room win. A `%` maximum is already
+ * measured against the slot, and an expression the vocabulary does not decode may carry its own
+ * percentage; both are written plain.
+ *
+ * The cap is left off an `intrinsic` child, because there the `100%` is the thing that breaks it. Such a
+ * child is `width: fit-content` and frequently stands in a box that shrinks to fit it -- the anchored
+ * Overlay, a centred slot -- so the percentage is measured against a width that is being computed from
+ * this element. A plain cyclic percentage merely behaves as `none`, but one inside a math function
+ * cannot, so the browser drops the declaration whole and the stated maximum with it. That was the
+ * Markdown Widget's finding: a stated maximum width that nothing honoured. Plain, the maximum holds, and
+ * nothing overflows for the missing cap -- `fit-content` does not exceed the room it is offered.
+ *
+ * What the frame still cannot see is its parent: a `fixed` child inside a shrink-to-fit box meets the
+ * same cyclic percentage, and the frame has no way to know it is in one. Its stated width wins there,
+ * as it did before.
+ */
+const PHI_SLOT_CHILD_CAPPED_MAX_UNITS: readonly PhiCssLengthUnit[] = ["px", "em", "rem", "vw", "vh"];
+
+export function resolvePhiSlotChildInlineMaximum(
+  max: PhiResolvedBlockLength | null,
+  inlinePolicy: PhiSlotAxisSizePolicy,
+): string | undefined {
+  if (max == null) {
+    return undefined;
+  }
+
+  const capped =
+    inlinePolicy !== "intrinsic" &&
+    max.part != null &&
+    PHI_SLOT_CHILD_CAPPED_MAX_UNITS.includes(max.part.unit);
+
+  return capped ? `min(100%, ${max.css})` : max.css;
+}
+
+/*
+ * The frame's own box, from the geometry read once.
+ *
+ * The block axis takes no cap, which is the inline rule read the other way round: a percentage height is
+ * measured against a containing block whose height is `auto` in the ordinary case, so `min(100%, ...)`
+ * there would meet the cyclic percentage as the rule rather than as the exception. A stated block
+ * maximum is written as it stands.
+ */
+export function resolvePhiSlotChildSizeStyle(
+  geometry: PhiResolvedBlockGeometry,
+  policy: PhiNormalizedSlotSizePolicy,
+): CSSProperties {
+  const maxWidth = resolvePhiSlotChildInlineMaximum(geometry.inline.max, policy.inline);
+
+  return {
+    ...(geometry.inline.size == null ? {} : { width: geometry.inline.size.css }),
+    ...(geometry.block.size == null ? {} : { height: geometry.block.size.css }),
+    ...(geometry.inline.min == null ? {} : { minWidth: geometry.inline.min.css }),
+    ...(geometry.block.min == null ? {} : { minHeight: geometry.block.min.css }),
+    ...(maxWidth == null ? {} : { maxWidth }),
+    ...(geometry.block.max == null ? {} : { maxHeight: geometry.block.max.css }),
   };
 }

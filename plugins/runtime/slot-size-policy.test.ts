@@ -3,9 +3,11 @@ import { describe, expect, it } from "vitest";
 
 import {
   resolvePhiEffectiveSlotSizePolicy,
+  resolvePhiSlotChildSizeStyle,
   resolvePhiSlotChildSizing,
   resolvePhiSlotChildSizingForConfig,
 } from "./slot-size-policy";
+import { resolvePhiRenderableBlockGeometry } from "../../types/renderable-block-geometry";
 
 /**
  * What a stated size does to a declared policy.
@@ -90,5 +92,45 @@ describe("the policy a slot child actually runs on", () => {
       expect(sizing.policy).toEqual({ inline: "fixed", block: "fill" });
       expect(sizing.explicitInlineSize).toBe(true);
     });
+  });
+});
+
+/**
+ * The cap on a stated maximum, and the one place it must not be written.
+ *
+ * `min(100%, ...)` keeps a maximum from claiming more room than the slot has. Inside a box that shrinks
+ * to fit its child the `100%` is a percentage of a width computed from that very child, and a math
+ * function cannot fall back to `none` the way a plain percentage does -- the browser drops it, and the
+ * maximum with it. An `intrinsic` child is the one that stands in such a box, so its maximum is written
+ * plain, where it holds.
+ */
+describe("the maximum a slot child frame writes", () => {
+  const styleFor = (
+    config: Parameters<typeof resolvePhiRenderableBlockGeometry>[0],
+    inline: "fill" | "fixed" | "intrinsic",
+  ) =>
+    resolvePhiSlotChildSizeStyle(resolvePhiRenderableBlockGeometry(config), {
+      inline,
+      block: "intrinsic",
+    });
+
+  it("caps an absolute maximum at the slot where the child fills it", () => {
+    expect(styleFor({ maxSize: { width: 610 } }, "fill").maxWidth).toBe("min(100%, 610px)");
+    expect(styleFor({ maxSize: { width: "40rem" } }, "fill").maxWidth).toBe("min(100%, 40rem)");
+    expect(styleFor({ maxSize: { width: 610 } }, "fixed").maxWidth).toBe("min(100%, 610px)");
+  });
+
+  it("writes an intrinsic child's maximum plain", () => {
+    expect(styleFor({ maxSize: { width: 610 } }, "intrinsic").maxWidth).toBe("610px");
+  });
+
+  /* Already measured against the slot, or an expression that may measure itself: no second measurement. */
+  it("leaves a relative maximum and an expression alone", () => {
+    expect(styleFor({ maxSize: { width: "50%" } }, "fill").maxWidth).toBe("50%");
+    expect(styleFor({ maxSize: { width: "calc(100% - 2rem)" } }, "fill").maxWidth).toBe("calc(100% - 2rem)");
+  });
+
+  it("never caps the block axis", () => {
+    expect(styleFor({ maxSize: { height: 400 } }, "fill").maxHeight).toBe("400px");
   });
 });

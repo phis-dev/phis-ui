@@ -58,13 +58,31 @@ built. Remove an entry when it is done.
     no frame above it -- reached only when the renderer is asked for several Regions at once, which in
     the repo no caller does; it was handing in `size` and `maxSize` that the Flex Vertical client reads
     with nothing, and it states its fill in its own style now.
-  - (b) The frame caps an absolute inline maximum at `min(100%, ...)` and writes a block maximum plain.
-    Whether the block axis takes the same cap, and what a `rem` or `ch` maximum should do. And one
-    finding from the Markdown Widget: for an `intrinsic` child the `100%` in the cap is cyclic inside a
-    shrink-to-fit slot (the anchored overlay's `fit-content` box, a Flex Vertical's centred slot), and
-    a math function with a cyclic percentage is dropped whole -- so an intrinsic block with a stated
-    `maxSize.width` is not capped at all. Markdown now fills instead; the cap for intrinsic children is
-    still wrong and wants a form that does not lean on a percentage of the slot.
+  - (b) is settled: a maximum is capped at the slot only where the slot is a room the child does not
+    decide. `resolvePhiSlotChildInlineMaximum` (plugins/runtime/slot-size-policy.ts, beside the base
+    style and tested with it) caps a maximum in `px`, `em`, `rem`, `vw` or `vh` at `min(100%, ...)` for
+    a child that fills or is fixed on the inline axis; an `intrinsic` child's maximum is written plain,
+    because there the `100%` is the cyclic percentage that takes the whole declaration with it -- the
+    Markdown Widget's finding. A `%` maximum and an undecoded expression stay plain, and the block axis
+    takes no cap: a percentage height meets an `auto` containing block as the rule rather than as the
+    exception, so the cap would be the cyclic case by default.
+
+    No pixel moved. Every maximum authored in the repo today hangs on a `fill-inline` or `fill` block --
+    480 on the welcome measure and the login form, 400 on the four brand control panels, 610 on the
+    settings panels -- so the cap still applies exactly where it applied; what changed is that an author
+    who caps an intrinsic Widget is now obeyed. Markdown stays `fill-inline`, and not as a leftover: a
+    text block takes the width it is given, which is what `textAlign: end` needs, and the HTML Widget
+    and the Markdown TOC read the same. What the frame still cannot see is its parent -- a `fixed` child
+    inside a shrink-to-fit box meets the same cyclic percentage and its stated width wins there, as
+    before.
+
+    The inventory turned up six further places that write a maximum into CSS, all of them plain:
+    `resolvePhiLayoutBoxStyle`, the Region shell on the server and in the client, the Flex Layout's own
+    slot wrapper, the Structure Region preview, and the Builder scaffold's custom properties. Those are
+    boxes that give the room rather than boxes standing in one, so plain is the right answer for them --
+    except the Layout's inner box, which restates its own frame's maximum one box further in. It is
+    harmless there (it stands inside the cap) and load-bearing where a Layout has no frame, so it stays,
+    recorded here rather than swept.
   - (c) The Builder root scaffold's own fallbacks (`100%`, `auto`, `0`, `none`, the Region's fallback
     band; `resolvePhiRootScaffoldProperties`): the general answers, or a stated exception.
   - Then the responsive form, in the resolver alone; the readers never learn about profiles. With it the

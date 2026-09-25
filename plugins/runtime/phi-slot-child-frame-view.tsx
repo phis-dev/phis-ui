@@ -27,13 +27,11 @@ import {
   resolvePhiSlotChildBaseStyle,
   resolvePhiSlotChildExplicitAxes,
   resolvePhiSlotChildSizeConstraints,
+  resolvePhiSlotChildSizeStyle,
   resolvePhiSlotSizePolicy,
   type PhiSlotChildKind,
 } from "./slot-size-policy";
-import {
-  resolvePhiRenderableBlockGeometry,
-  type PhiResolvedBlockGeometry,
-} from "../../types/renderable-block-geometry";
+import { resolvePhiRenderableBlockGeometry } from "../../types/renderable-block-geometry";
 import type { PhiRenderableBlockReceiver } from "../../components/runtime/renderable-block-runtime";
 
 export type PhiSlotChildFrameViewProps = {
@@ -56,32 +54,6 @@ export type PhiSlotChildFrameViewProps = {
   onPointerLeave?: PointerEventHandler<HTMLDivElement>;
   children: ReactNode;
 };
-
-/*
- * The frame's own box, from the geometry read once.
- *
- * An absolute inline maximum is capped at the slot: a block may state a maximum wider than the room it
- * stands in, and `min(100%, ...)` lets the room win. A relative maximum is already measured against
- * something and is written plain. Whether the same cap belongs on the block axis is an open question
- * (TODOS.md, block geometry), and until it is answered the block axis stays as it was: plain.
- */
-function resolvePhiSlotChildSizeStyle(geometry: PhiResolvedBlockGeometry): CSSProperties {
-  const maxWidth =
-    geometry.inline.max == null
-      ? undefined
-      : geometry.inline.max.part?.unit === "px"
-        ? `min(100%, ${geometry.inline.max.css})`
-        : geometry.inline.max.css;
-
-  return {
-    ...(geometry.inline.size == null ? {} : { width: geometry.inline.size.css }),
-    ...(geometry.block.size == null ? {} : { height: geometry.block.size.css }),
-    ...(geometry.inline.min == null ? {} : { minWidth: geometry.inline.min.css }),
-    ...(geometry.block.min == null ? {} : { minHeight: geometry.block.min.css }),
-    ...(maxWidth == null ? {} : { maxWidth }),
-    ...(geometry.block.max == null ? {} : { maxHeight: geometry.block.max.css }),
-  };
-}
 
 function resolvePhiSlotChildBorderStyle(border: PhiRenderableBlockBase["border"]): CSSProperties {
   if (border == null) {
@@ -183,7 +155,7 @@ export function PhiSlotChildFrameView({
       })}
       style={{
         ...resolvePhiSlotChildBaseStyle(policy),
-        ...resolvePhiSlotChildSizeStyle(geometry),
+        ...resolvePhiSlotChildSizeStyle(geometry, policy),
         ...resolvedBackgroundStyle,
         ...resolvePhiSlotChildBorderStyle(resolvedConfig.border),
         ...(resolvedConfig.zIndex == null ? {} : { zIndex: resolvedConfig.zIndex }),

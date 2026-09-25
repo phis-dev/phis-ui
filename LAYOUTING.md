@@ -249,6 +249,17 @@ which is what flips a slot policy from `fill` to `fixed`. A collapsed block meas
   string on the vocabulary is decoded and written back canonically; a keyword or an expression
   (`fit-content`, `calc()`) passes through as written, undecoded. A reader that has to know whether a
   maximum is absolute asks the decoded unit, never `typeof`.
+- A maximum is capped at the slot only where the slot is a room the child does not decide. The frame
+  writes `max-width: min(100%, ...)` for a maximum in a length that measures something other than the
+  slot (`px`, `em`, `rem`, `vw`, `vh`), and only for a child that fills or is fixed on the inline axis
+  (`resolvePhiSlotChildInlineMaximum`). An `intrinsic` child's maximum is written plain: it is
+  `width: fit-content` and often stands in a box that shrinks to fit it, so the `100%` is a percentage
+  of a width being computed from the child itself -- and a math function cannot behave as `none` the way
+  a plain percentage does, so the browser drops the declaration and the maximum with it. A `%` maximum
+  and an undecoded expression are plain everywhere, and the block axis takes no cap at all: a percentage
+  height is measured against a containing block that is `auto` in the ordinary case. Every other box
+  that writes a maximum -- a Layout's inner box, the Region shell, a Flex slot wrapper -- gives the room
+  rather than standing in it, and writes the maximum as it stands.
 - An absent value is not answered with a size. Neither the slot child frame nor a Layout's inner box
   writes one: the frame carries the child's policy, and `styles/layout.css` fills the box from it
   (`.phi-slot-child--inline-fill > *`, `.phi-slot-child--block-fill > .phi-layout`). Where a Layout is
