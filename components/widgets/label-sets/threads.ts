@@ -194,7 +194,16 @@ const PHI_THREAD_FORM_LABEL_SET = definePhiLabelSet({
     people_hint: definePhiMessageLabel("Everyone you name can read the whole conversation."),
     people_required: definePhiMessageLabel("Choose at least one person."),
     subject_label: "Subject",
-    subject_placeholder: definePhiMessageLabel("What is it about? (optional)"),
+    subject_placeholder: definePhiMessageLabel("What is it about?"),
+    /*
+     * Asked for, although the column may be null.
+     *
+     * The subject names the whole chain -- the inbox row, the heading, what a notification is called --
+     * and a conversation without one is named after whoever is in it instead. An integration relaying a
+     * mail with an empty subject header cannot be held to this, which is why the database still allows
+     * none; a person opening one here can be.
+     */
+    subject_required: definePhiMessageLabel("Give the conversation a subject."),
     message_label: "Message",
     message_placeholder: definePhiMessageLabel("Write the first message"),
     message_required: definePhiMessageLabel("A conversation starts with a message."),
@@ -210,6 +219,7 @@ export async function getPhiThreadFormLabels(options: PhiGlobalTranslatorOptions
     peopleRequired: labels.people_required,
     subjectLabel: labels.subject_label,
     subjectPlaceholder: labels.subject_placeholder,
+    subjectRequired: labels.subject_required,
     messageLabel: labels.message_label,
     messagePlaceholder: labels.message_placeholder,
     messageRequired: labels.message_required,

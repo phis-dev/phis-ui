@@ -116,6 +116,16 @@ composer wherever those Modules put one.
 | Media Space | the User Space kinds in section 5 |
 | Dashboard card | unread conversations, on the App Dashboard |
 
+**The new-conversation Form asks for a subject, and will not open one without it.** The subject is the
+name of the whole chain -- the row in the inbox Table, the heading over the messages, what a notification
+is called -- so a conversation opened without one is shown under the names of whoever is in it for the
+rest of its life. The person who could say what it is about in four words is the one opening it.
+
+The column behind it stays nullable, and that is not an inconsistency: an integration relaying a mail
+with an empty `Subject` header cannot be held to this, and losing the message to protect a heading would
+be the wrong trade. `POST /api/site/threads` refuses an empty subject as well, because a validated field
+that only the form holds to is a courtesy and this Module's Form is not the only thing that can call it.
+
 **Foundation names, and the Module's own alias.** The listing's Provider key is a Foundation contract,
 so anybody outside this Module cites that name; the Module keeps an alias so it need not spell its own
 namespace back to itself. The two are the same string and look different in source, which is worth

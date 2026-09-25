@@ -65,11 +65,27 @@ const PHI_THREADS_NEW_CONVERSATION_FORM_DESCRIPTOR: PhiFormDescriptor = {
         message: label("peopleRequired", "Choose at least one person."),
       }],
     },
+    /*
+     * Required here, although the column is nullable.
+     *
+     * The subject is the name of the whole chain: it is the row in an inbox, the heading above the
+     * messages, and what a notification is called. A conversation opened without one is named after
+     * whoever is in it for the rest of its life, which reads as a list of people rather than as a
+     * subject -- and the person who could have said what it is about in four words is the one opening it.
+     *
+     * The column stays nullable because an integration cannot be held to this. A mail arrives with an
+     * empty `Subject` header and is still a conversation; refusing it in the database would lose the
+     * message to protect a heading.
+     */
     {
       key: "subject",
       fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.text,
       label: label("subject", "Subject"),
-      placeholder: label("subjectPlaceholder", "What is it about? (optional)"),
+      placeholder: label("subjectPlaceholder", "What is it about?"),
+      validation: [{
+        providerKey: PHI_FORM_VALIDATION_PROVIDER_KEYS.required,
+        message: label("subjectRequired", "Give the conversation a subject."),
+      }],
     },
     {
       key: "message",
@@ -105,6 +121,7 @@ async function loadLabels(
     peopleRequired: labels.peopleRequired,
     subject: labels.subjectLabel,
     subjectPlaceholder: labels.subjectPlaceholder,
+    subjectRequired: labels.subjectRequired,
     message: labels.messageLabel,
     messagePlaceholder: labels.messagePlaceholder,
     messageRequired: labels.messageRequired,
