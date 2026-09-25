@@ -403,4 +403,27 @@ assert.match(
   "The Markdown editor's own box takes the grown Control radius, never `--ant-border-radius`.",
 );
 
+/**
+ * A media tile draws its own box and has no component token to carry the step, so it reads the variable
+ * -- and so does the skeleton standing in for it, or a grid changes shape the moment the assets arrive.
+ * `borderRadiusLG` here meant every Site wore the widest corner of its scale no matter what it chose.
+ *
+ * Bare, with no antd variable behind it: both components read the Config Provider, which throws when it
+ * is missing and is itself what declares the property, so a fallback could only ever name a dependency
+ * this Control does not need.
+ */
+const mediaAssetTileSource = await readFile(
+  new URL("../components/controls/phi-media-asset-tile-control.tsx", import.meta.url),
+  "utf8",
+);
+assert.equal(
+  mediaAssetTileSource.match(/borderRadius: "var\(--phi-surface-radius\)"/gu)?.length,
+  2,
+  "A media tile and its skeleton must both take the surface step.",
+);
+assert.ok(
+  !/--ant-border-radius/u.test(mediaAssetTileSource),
+  "A media tile states no antd radius variable; the surface step is the whole answer.",
+);
+
 console.log("Theme Control shape contracts validated.");

@@ -343,6 +343,12 @@ as `--phi-surface-radius` and, where a component has a token for it, as that tok
 - **Layout** -- the box, wherever the author configured no radius. An explicit `borderRadius` on a Layout
   always wins: the step answers silence, it is not a ceiling. Outside the Provider the variable is absent and
   a Layout falls back to no radius, which is what it had before the step existed. For Phi Controls the shape wins over conflicting component radius overrides.
+- **A Phi Control that draws its own surface** -- the frame of a bordered Tree, and a media tile together with
+  the skeleton standing in for it. There is no component token to carry the step to a box phis draws itself, so
+  it reads the variable. Only where a Control can render outside the Provider does a fallback belong beside it:
+  a Tree reads Ant Design's tokens directly and keeps `--ant-border-radius-lg`, while a media tile reads the
+  Config Provider, which throws when it is absent and is what declares the property, so it states the variable
+  bare.
 Intrinsic geometry stays authoritative: Switch stays a capsule, Checkbox and Radio keep their shapes, joined
 groups round only their outer boundary.
 

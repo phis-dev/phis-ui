@@ -89,7 +89,10 @@ export function PhiMediaAssetTileControl({
   const optimizable = imageUrl === asset.deliveryUrl ? isPhiMediaAssetOriginalOptimizable(asset) : isPublic;
   const cardStyle: CSSProperties = {
     border: `1px solid ${selected ? token.colorPrimary : token.colorBorderSecondary}`,
-    borderRadius: token.borderRadiusLG,
+    // A tile is a surface, so its corner is the Site's step rather than the widest one the scale has
+    // (THEME.md, "Control shape"). No antd fallback beside it: `usePhiConfig` above throws without the
+    // Provider, and the Provider is what writes this property, so there is no render that could need one.
+    borderRadius: "var(--phi-surface-radius)",
     overflow: "hidden",
     padding: 0,
     cursor: isSelectable ? "pointer" : "default",
@@ -281,7 +284,8 @@ export function PhiMediaAssetCollectionSkeletonControl({
       key={index}
       style={{
         border: `1px solid ${token.colorBorderSecondary}`,
-        borderRadius: token.borderRadiusLG,
+        // Same corner as the tile it stands in for, or the placeholder changes shape on arrival.
+        borderRadius: "var(--phi-surface-radius)",
         overflow: "hidden",
         background: token.colorBgContainer,
         width: "100%",
