@@ -236,12 +236,32 @@ Table and Tree contracts are [TABLES.md](./TABLES.md) and [TREES.md](./TREES.md)
   given; it never keeps a second value state and never renders a Widget or Layout.
 - Core field providers: `text`, `email`, `password`, `textarea`, `hidden`, `honeypot`, `checkbox`,
   `select`, `url`, `tel`, `number`, `slider`, `multi-select`, `checkbox-group`, `datetime`, `switch`,
-  `segmented`, `cascader`, `table`, `tree`, `storage-size`.
+  `segmented`, `cascader`, `table`, `tree`, `storage-size`, `upload`.
+- That list is closed, and it is the only place a new field kind is added -- here for a kind every Form
+  may want, or in the owning Module's `formProviders` for one only that Module wants. A bespoke input
+  inside a Widget, a panel written beside the Form, or a client component that collects values and posts
+  them itself is not an alternative to a field Provider; it is the same work without the descriptor, the
+  validation, the labels, or the reuse. If a kind is missing, say so and have it agreed
+  ([AGENTS.md](./AGENTS.md), "Design rules").
 - `storage-size` is a byte count shown in megabytes. The value the form carries is bytes at every
   moment -- the Control converts on the way in and on the way out (`components/forms/storage-size.ts`),
   so a handler, a validator and an API payload see the unit a limit is stored and enforced in, and a
   label never has to carry one. A megabyte is 1 048 576 bytes here, which is what every tool that
   enforces an upload limit means by it.
+- `upload` is what somebody attached. Its value is the list of Media Asset ids the finished uploads left
+  behind, and with nothing attached the field holds no value at all rather than an empty list, so
+  `required` means what it says. The transport is the shared one (`usePhiMediaUpload`), so the Site's
+  `max_object_bytes` and `allowed_content_types` are what bind; the field's `kinds`, `maxBytes` and
+  `maxFiles` narrow that for one Form and can never widen it. `space` names the Media Space the file
+  lands in -- `user` for the viewer's own Space, absent for the Site's -- and the Control's `placeholder`
+  is what its trigger says -- or the Label Set key `uploadTrigger`, where the descriptor names no
+  placeholder. A refusal is wording too, so the eight `uploadError*` keys and `uploadErrorTooMany`
+  (`PHI_FORM_UPLOAD_LABEL_KEYS`) are read from the Form's Label Set and fall back to the shared upload
+  defaults where a Form has not translated them. Removing an entry takes the id out of the value and
+  leaves the Asset where it is, because the file belongs to the person who uploaded it and not to the
+  Form. An id that arrived as an
+  initial value is shown as an id: resolving a stored Asset to its name needs a reader this field does
+  not have, and inventing one inside a field Provider is the thing this section forbids.
 - Core validation providers: `required`, `email`, `min-length`, `max-length`, `exact-length`,
   `min-letters`, `matches-field`, `url`, `tel`, `pattern`, `number`. They build Ant Design rules inside
   `PhiFormControl`. `pattern` takes `source` (at most 512 characters) and `flags` from `i`, `m`, `s`, `u`.

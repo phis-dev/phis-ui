@@ -7,6 +7,7 @@ import type {
   PhiRuntimeModuleFormProviderDescriptors,
 } from "../../types/form-descriptor";
 import { createPhiModuleScopedKey } from "../../constants/runtime-module-ownership";
+import { PhiMediaKind } from "../../constants/media";
 
 export function createPhiSharedFormProviderKey(
   kind: "field" | "validation" | "handler",
@@ -41,6 +42,7 @@ export const PHI_FORM_FIELD_PROVIDER_KEYS = {
   cascader: createPhiSharedFormProviderKey("field", "cascader"),
   table: createPhiSharedFormProviderKey("field", "table"),
   tree: createPhiSharedFormProviderKey("field", "tree"),
+  upload: createPhiSharedFormProviderKey("field", "upload"),
 } as const;
 
 export const PHI_AUTH_FORM_FIELD_PROVIDER_KEYS = {
@@ -193,6 +195,52 @@ export const PHI_SHARED_FORM_FIELD_TYPE_PROVIDER_DESCRIPTORS = [
     title: "Storage size",
     valueType: "number",
     presentation: "control",
+  },
+  /*
+   * A file somebody attaches, and the Media Asset ids it becomes.
+   *
+   * `json` because the value is a list: one file or several, a Form reads the same shape either way, and
+   * a handler that has to branch on "number or array of numbers" is a shape nobody chose. With nothing
+   * attached the field carries no value at all rather than an empty list, so `required` on it means what
+   * it says -- Ant Design's required rule passes an empty array.
+   *
+   * The settings narrow the Site's own answer and never widen it: `max_object_bytes` and
+   * `allowed_content_types` are enforced by the control plane whatever stands here. `space` is the Media
+   * Space the file lands in, named the way the control plane names one -- `user` for the viewer's own,
+   * absent for the Site's -- and it is a setting rather than an inheritance because a Form has no
+   * surrounding library view to inherit one from.
+   */
+  {
+    key: PHI_FORM_FIELD_PROVIDER_KEYS.upload,
+    ownerModuleId: PHI_CORE_RUNTIME_MODULE_ID,
+    title: "Upload",
+    valueType: "json",
+    presentation: "control",
+    settingsFields: [
+      {
+        key: "kinds",
+        type: "choice",
+        mode: "multiple",
+        valueType: "string[]",
+        label: "Accepted kinds",
+        description: "Everything the Site allows, when nothing is named.",
+        options: [
+          { value: PhiMediaKind.Image, label: "Image" },
+          { value: PhiMediaKind.Video, label: "Video" },
+          { value: PhiMediaKind.Audio, label: "Audio" },
+          { value: PhiMediaKind.Pdf, label: "PDF" },
+          { value: PhiMediaKind.Markdown, label: "Markdown" },
+          { value: PhiMediaKind.Document, label: "Document" },
+          { value: PhiMediaKind.Archive, label: "Archive" },
+          { value: PhiMediaKind.Font, label: "Font" },
+          { value: PhiMediaKind.Binary, label: "Binary" },
+          { value: PhiMediaKind.Other, label: "Other" },
+        ] as { value: string; label: string }[],
+      },
+      { key: "maxFiles", type: "number", label: "Most files", min: 1, precision: 0 },
+      { key: "maxBytes", type: "number", label: "Largest file", min: 1, precision: 0, prefix: "bytes" },
+      { key: "space", type: "string", label: "Space", description: "`user` for the viewer's own Space." },
+    ],
   },
 ] as const;
 

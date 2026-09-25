@@ -27,6 +27,13 @@ and loading are [MODULES.md](../../MODULES.md); signal capabilities, routes, and
   in the browser.
 - A `Phi*Widget` is a complete CMS Widget with identity, config, signals, and registered Runtime,
   Preview, and Authoring projections. Presentation-only editors are `Phi*Control` components.
+- **A Widget that collects input places the Form Widget** ([FORMS.md](../../FORMS.md)). Fields,
+  validation, the submit, the failure text, and the waiting state are the Form's declared job, and a
+  Widget that writes them again by hand has none of those contracts and none of their translations. What
+  a Widget legitimately owns is the rest: which record it looks at, the signals it sends and listens to,
+  and the surface around the Form. If the field kind it needs does not exist, a field Provider is added in
+  `components/forms/` -- or in the owning Module's Provider set -- after the operator has agreed to it,
+  and never as a bespoke input inside the Widget ([AGENTS.md](../../AGENTS.md), "Design rules").
 - A Widget must not contain another Widget. Composition of several Widgets belongs to Layouts and their
   slots ([LAYOUTING.md](../../LAYOUTING.md)). Inside one Widget, Ant Design primitives the validator does
   not yet name may still be imported directly, and interactive primitives come from the canonical Phi

@@ -17,6 +17,33 @@ The contract this guide applies is [FORMS.md](../../FORMS.md); where the two see
 is right. For package layout, Module, Controller, manifest, and consuming-Site composition around the
 Form, start with [THIRD_PARTY_MODULES.md](../../THIRD_PARTY_MODULES.md).
 
+## Nothing here is built by hand
+
+Everything this guide uses exists already, which is the reason to follow it rather than to assemble
+something that happens to work:
+
+- a field is one of the field Providers in
+  [FORMS.md](../../FORMS.md#field-and-validation-providers) -- text and choice, toggle and date, slider
+  and cascader, the compound Table and Tree, storage size, upload;
+- what renders it is a canonical `Phi*Control`, never Ant Design directly;
+- the Form is placed through the one generic Form Widget and never through a Form Widget of your own;
+- the submit is a declared handler Provider behind `/api/site/forms`, never a `fetch` written into a
+  client component;
+- the wording is a Label Set, never a string sitting in a component where no translator reaches it.
+
+If what you need is not on that list, the answer is not a hand-written panel beside the Form and not a
+Widget with its own state and its own `fetch`. Stop, tell the operator what is missing and where it would
+live, and once that is agreed build it in the layer that owns it: a Core field Provider in
+`components/forms/`, or your own Module's `formProviders` when only your Module needs it. Then write it
+down -- here and in the contract document -- so the next person meets the answer instead of inventing the
+same workaround.
+
+The upload field is the example of both halves of that. Attaching a file to a Form had no Provider for a
+long time, so every surface that needed one -- the Thread composer among them -- wired
+`usePhiMediaUpload` into a client component of its own and posted the Asset ids itself. None of that was
+difficult, which is exactly why it went unremarked: it ran, and it sat outside every Form contract while
+it did. The Provider exists now, and a Form that takes a file declares it like any other field.
+
 ## Terminology: there is no single Form Provider
 
 These similarly named objects have separate responsibilities:
@@ -593,6 +620,8 @@ package preset itself.
 
 ## Checklist
 
+- Build no field, no validation, no submit, and no wording that a Provider or Label Set already owns;
+  where one is missing, agree it with the operator and add it centrally instead of beside the Form.
 - Use `createPhiFormId(ownerModuleId, formKey)` and keep `descriptor.key` identical.
 - Export one pure `definePhiRuntimeModuleForm(...)` definition from a Server entry and name its `areas`.
 - Choose `handler` or `signal` execution explicitly; do not combine them.

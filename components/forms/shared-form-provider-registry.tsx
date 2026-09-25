@@ -90,6 +90,9 @@ const PhiLazyCompoundTableFormControl = lazyPhiFormFieldControl(() =>
   import("./compound-form-controls").then((module) => module.PhiCompoundTableFormControl), 3);
 const PhiLazyCompoundTreeFormControl = lazyPhiFormFieldControl(() =>
   import("./compound-form-controls").then((module) => module.PhiCompoundTreeFormControl), 3);
+// The trigger, and above it the row the attachments occupy once there is one.
+const PhiLazyUploadFormControl = lazyPhiFormFieldControl(() =>
+  import("./upload-form-control").then((module) => module.PhiUploadFormControl), 2);
 
 /**
  * What a field type is, named by its key, joined to how it renders.
@@ -343,6 +346,9 @@ export const PHI_SHARED_FORM_PROVIDER_REGISTRY = createPhiFormProviderRegistry({
     }),
     phiSharedFieldType(PHI_FORM_FIELD_PROVIDER_KEYS.datetime, {
       Control: PhiLazyDateTimeFormControl,
+    }),
+    phiSharedFieldType(PHI_FORM_FIELD_PROVIDER_KEYS.upload, {
+      Control: PhiLazyUploadFormControl,
     }),
     /*
      * The field holds bytes and shows megabytes, so both conversions sit on this one Control: the

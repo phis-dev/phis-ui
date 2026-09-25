@@ -60,6 +60,7 @@ const PHI_RUNTIME_MODULE_OWNERSHIP: Readonly<Record<string, readonly [module: st
   "form-field/text": ["core", "text"],
   "form-field/textarea": ["core", "textarea"],
   "form-field/tree": ["core", "tree"],
+  "form-field/upload": ["core", "upload"],
   "form-field/url": ["core", "url"],
   "form-handler/admin-settings-general": ["admin", "settings-general"],
   "form-handler/app-profile-name": ["app", "profile-name"],

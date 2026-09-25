@@ -89,9 +89,25 @@ change. If a contract is unclear, stop and ask instead of guessing.
 
 ## Design rules
 
-- Reuse before adding: look for an existing helper, contract, plugin, preset, Control, or wrapper, and
-  extend a shared contract instead of adding a site-specific case or a parallel family. If reuse is not
-  obvious, ask.
+- **Reuse before adding, and the layers are not optional.** A surface is assembled from what already
+  exists: an interactive primitive is a `Phi*Control`, a placeable thing is a Widget with declared
+  metadata, a composition of several is a Layout with slots, and anything that collects input and submits
+  it is a declared Form -- a `PhiFormDescriptor` with field Providers and a handler
+  ([FORMS.md](./FORMS.md), [components/forms/PRESET_FORMS_HOWTO.md](./components/forms/PRESET_FORMS_HOWTO.md))
+  -- and not a client component with its own `useState` and its own `fetch`. Look for the existing
+  helper, contract, plugin, preset, Control, or wrapper first, and extend a shared contract instead of
+  adding a site-specific case or a parallel family.
+- **A missing piece is asked for, never worked around.** Where the existing Controls, Widgets, Layouts,
+  Forms, field Providers, or presets cannot express a requirement, stop and put the gap to the operator:
+  what is missing, where it would live, what it costs. Approved, it is built centrally in the layer that
+  owns it and consumed like everything else; unapproved, the requirement waits. Write the gap into the
+  owning How-to or contract document while you are there, so the next reader meets the answer instead of
+  the workaround -- that is what the How-tos are for, presets included. "It runs" is not the standard: a
+  hand-built panel has no validation contract, no label set a translator can reach, no Inspector
+  metadata, and no reuse, and the cost lands on whoever rewrites it. The Thread composer is the standing
+  example. It kept its own state, its own `fetch`, and no field descriptors long after the Form gateway
+  existed, and the upload field Provider it would have needed was missing because nobody had asked for
+  it.
 - Modules are Site extensions, Add-ons are server extensions ([MODULES.md](./MODULES.md)). Phi-owned
   Modules are reference implementations and follow the owner-folder layout exactly. A Module preset uses
   generic Core Widgets, Provider bindings, Form ids, and signal routes; domain wrappers that only inject a
