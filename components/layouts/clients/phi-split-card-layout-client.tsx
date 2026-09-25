@@ -192,8 +192,6 @@ export function PhiSplitCardLayout({
     gridTemplateColumns: "minmax(0, 1fr) minmax(0, 1.61803398875fr)",
     gap: resolvedGap,
     alignItems: "stretch",
-    width: "100%",
-    height: "100%",
     minWidth: 0,
     minHeight: 0,
     ...style,

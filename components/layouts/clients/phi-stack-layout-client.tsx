@@ -261,10 +261,15 @@ export function PhiStackLayout({
     <div
       data-phi-stack-slot-display={isStacked ? "stacked" : "single"}
       data-phi-stack-slot-transition={slotTransition}
+      /*
+       * The Layout's own box, named as one: the fill rules address `.phi-layout`
+       * (`.phi-slot-child--block-fill > .phi-layout`, styles/layout.css), and this box carried a
+       * `height: 100%` of its own instead, so the class was never missed. Without it the box would
+       * take the width its frame gives and no height at all.
+       */
+      className="phi-layout"
       style={{
         position: "relative",
-        width: "100%",
-        height: "100%",
         minWidth: 0,
         minHeight: 0,
         boxSizing: "border-box",

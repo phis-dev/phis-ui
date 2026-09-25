@@ -979,9 +979,20 @@ export async function PhiCmsLayoutRenderer({
   return (
     <PhiFlexVerticalLayout
       gap={stackGap}
-      size={{ width: "100%" }}
-      maxSize={{ width: "100%" }}
-      style={{ marginInline: 0 }}
+      /*
+       * The one Layout in the tree with no slot child frame above it, so it states its own fill.
+       *
+       * It stacks one Region under the next, and it is reached only when this renderer is asked for
+       * more than one Region at once -- every caller in the repo names a single `regionTypes` entry,
+       * so it is the package export (cms.ts) calling without a filter that gets here. Two Regions of
+       * the same kind are not what this is: a Region is filled by one preset.
+       *
+       * Built here rather than authored, so there is no frame to carry a size policy for it. It used
+       * to hand in `size` and `maxSize`, which the Flex Vertical client reads with nothing -- that
+       * client builds its own box and never looks at block geometry. What actually filled it was the
+       * `width: 100%; height: 100%` the client wrote unconditionally, and that is gone now.
+       */
+      style={{ marginInline: 0, width: "100%", height: "100%" }}
       slots={renderedRegions}
     />
   );

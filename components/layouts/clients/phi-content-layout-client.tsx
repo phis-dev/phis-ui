@@ -120,8 +120,6 @@ export function PhiContentLayout({
       className="phi-layout"
       style={{
         position: hasSlot0 || (isEditor && editSlotAction) ? "relative" : undefined,
-        width: "100%",
-        height: shouldFillBlock ? "100%" : undefined,
         minWidth: 0,
         minHeight: 0,
         margin,

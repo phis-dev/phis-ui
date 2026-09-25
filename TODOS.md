@@ -50,13 +50,14 @@ built. Remove an entry when it is done.
     child is treated by its policy alone and `intrinsic` now means intrinsic for a Layout too (it used
     to fall through to the kind's default, which for a Layout is the opposite answer).
 
-    What is left of (a): eight Layout clients still write `width: 100%; height: 100%` into their own
-    container by hand (flex, flex-vertical, stack, carousel, content, threecol, split, collapsible) --
-    only Grid and Masonry go through `resolvePhiLayoutBoxStyle` at all. Three Column is the case that
-    shows why it matters: it declares `fill-inline`, so its frame is `height: fit-content`, and the
-    `height: 100%` it writes is a percentage against an auto height that the browser drops. It reads as
-    a rule and is a no-op. Removing the eight needs the frameless paths covered first -- the Region
-    stack in `phi-cms-layout-renderer.tsx` renders a Flex Vertical without a frame.
+    The eight Layout clients that wrote `width: 100%; height: 100%` into their own container by hand
+    are done too, and the sequence slot editor with them. Two things the sweep turned up: the Stack and
+    the Carousel box carried no `phi-layout` class at all, so the fill rule for the block axis could
+    never have reached them -- their own `height: 100%` was covering for a missing name, and they are
+    named now. And the Region stack in `phi-cms-layout-renderer.tsx` is the one Layout in the tree with
+    no frame above it -- reached only when the renderer is asked for several Regions at once, which in
+    the repo no caller does; it was handing in `size` and `maxSize` that the Flex Vertical client reads
+    with nothing, and it states its fill in its own style now.
   - (b) The frame caps an absolute inline maximum at `min(100%, ...)` and writes a block maximum plain.
     Whether the block axis takes the same cap, and what a `rem` or `ch` maximum should do. And one
     finding from the Markdown Widget: for an `intrinsic` child the `100%` in the cap is cyclic inside a
