@@ -1314,6 +1314,38 @@ function emitRootThemeState(
 }
 
 /**
+ * The Page, asked again for the Theme it now has.
+ *
+ * Publishing moves what the server renders from, and almost none of that is in this Widget's hands.
+ * The Root layout reads the Site's Theme once per server render and hands the whole of it down --
+ * fonts, the root background, the Brand's pictures -- and the Builder page around this Widget was
+ * measured with the shell heights of the Theme that stood before. The broadcast beside this one
+ * reaches the Theme Widgets on this page and nothing above them, and the preview signal only paints
+ * the draft; so without this, what was published is visible on the next navigation and not before.
+ *
+ * `reload` at the Core Runtime's address is the Site's one way of saying it: the always-mounted
+ * adapter answers with `router.refresh()`, which re-renders the route's Server components and leaves
+ * the operator on the panel they had open (components/runtime/core-runtime-application-adapter.tsx).
+ * A document reload would close it.
+ */
+function emitRootReload(
+  dispatchSignal: ReturnType<typeof usePhiSignalDispatcher>,
+  correlationId: string | undefined,
+) {
+  dispatchSignal({
+    scope: "site",
+    channel: "reload",
+    action: "activate",
+    value: null,
+    valueType: "none",
+    sender: createPhiThemeControllerAddress(),
+    receiver: createPhiCoreRuntimeControllerAddress(),
+    correlationId,
+    timestamp: Date.now(),
+  });
+}
+
+/**
  * The draft, for a Widget that edits it but does not own it.
  *
  * Three Widgets do that -- colours, style, the root background -- and each held its own copy of this:
@@ -1738,6 +1770,7 @@ export function PhiBuilderBrandThemeControllerWidgetClient({
     );
     emitSelectOptions(correlationId);
     showMessage({ level: "success", content: "Published theme." }, { correlationId: correlationId ?? null });
+    emitRootReload(dispatchSignal, correlationId);
   }
 
   /*
