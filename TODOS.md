@@ -529,10 +529,18 @@ built. Remove an entry when it is done.
   is between 360 and 768 wide" and a `medium` that means "the window is" would be the same word for the
   third time.
 
-  Recommendation: **the block's own measured width**, because that is what actually forces the content,
-  and because it keeps one meaning across Grid, Form and block geometry. A Modal genuinely is hung on
-  the viewport rather than standing in a Layout, but it can say so with `maxSize` in `vw` units instead
-  of with a second profile system.
+  **Decided (2026-09-25): a profile is measured against the block's own width.** What forces the
+  content is the room the block actually stands in, and that keeps one meaning of `compact | medium |
+  wide` across Grid, Form and block geometry -- a word that means three things is worse than a word
+  that covers one case less well. A Modal genuinely hangs on the viewport rather than standing in a
+  Layout; it says so with `maxSize` in `vw` units, not with a second profile system. The Overlay's
+  `{ xs, md, lg }` handed to Ant Design is therefore the thing that goes, not the thing the rest adopts.
+
+  What follows from it, and is not yet decided: the scale is the container-breakpoint one
+  (theme/phi-container-breakpoints.ts), but measuring means a `ResizeObserver` or
+  `container-type: inline-size` per block, and block geometry sits on every renderable block rather
+  than on the handful that measure today. Which of the two, and whether a block that states no
+  responsive value at all should pay for either, is the first question of the responsive form.
 - **What the Shell is on a phone.** Today the answer is subtraction: the Shell hides Regions by
   `viewportFlags` below 768px (styles/shell.css), so a narrow screen gets the same Shell with parts
   missing. Nothing is re-arranged, and the navigation that lived in the sider is simply gone.

@@ -227,7 +227,10 @@ The parent slot policy is authoritative; child defaults cannot override it.
 - Layout depth counts actual Layout nodes only; visual config never adds depth.
 - The Canvas, preview, and published runtime must derive sizing from the same declared policies.
 - Responsive behavior belongs to the Layout that knows the actual slot geometry, not to a global
-  viewport heuristic.
+  viewport heuristic. A `compact | medium | wide` profile is measured against the block's own width on
+  the container-breakpoint scale (theme/phi-container-breakpoints.ts), never against the viewport --
+  one meaning of the three words across Grid, Form and block geometry. A block that really hangs on the
+  window says so in `vw` units, not with a second set of profiles.
 - Every slot states `--phi-slot-cross-margin-start` and `--phi-slot-cross-margin-end` from its own
   placement, `0` included (`resolvePhiSlotCrossMargin`). A child stretched to its slot and capped by a
   maximum is placed by the auto margins it reads off them, and custom properties inherit: a slot that
