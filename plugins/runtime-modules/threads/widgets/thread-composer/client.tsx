@@ -7,6 +7,7 @@ import { PhiFileDropControl } from "../../../../../components/controls/phi-file-
 import { PhiProgressControl } from "../../../../../components/controls/phi-progress-control";
 import { PhiAlertControl } from "../../../../../components/controls/phi-alert-control";
 import { PhiButtonControl } from "../../../../../components/controls/phi-button-control";
+import { PhiCardControl } from "../../../../../components/controls/phi-card-control";
 import { PhiTagControl } from "../../../../../components/controls/phi-tag-control";
 import { PhiTextControl } from "../../../../../components/controls/phi-text-control";
 import { usePhiMediaUpload } from "../../../../../components/media/phi-media-upload";
@@ -176,60 +177,69 @@ export function PhiThreadComposerWidgetClient({
     }
   }, [attached, emitWritten, labels, message, reset, threadId]);
 
+  /*
+   * The same box the conversation above it wears, for the same reason.
+   *
+   * Two Widgets under each other, one framed and one loose, read as one panel and something that fell out
+   * of it. The frame, the ground, the corner and the inset are the Card's -- this Widget says nothing about
+   * any of them, and hands its configured padding to the Card rather than wrapping it in a padded box.
+   */
   if (threadId == null) {
     return (
-      <PhiTypographyControl type="secondary" style={{ padding: config?.padding }}>
-        {labels.noThreadText}
-      </PhiTypographyControl>
+      <PhiCardControl padding={config?.padding}>
+        <PhiTypographyControl type="secondary">{labels.noThreadText}</PhiTypographyControl>
+      </PhiCardControl>
     );
   }
 
   return (
-    <PhiFlexControl vertical gap="small" style={{ padding: config?.padding }}>
-      {error ? (
-        <PhiAlertControl level="error" title={labels.feedback.errorTitle} description={error} />
-      ) : null}
-      <PhiTextControl
-        presentation="textarea"
-        value={message}
-        onChange={(next) => setMessage(next ?? "")}
-        placeholder={labels.messagePlaceholder}
-        autoSize={{ minRows: 3, maxRows: 12 }}
-        disabled={sending}
-      />
-      {attached.length > 0 ? (
-        <PhiFlexControl wrap gap="small">
-          {attached.map((item) => (
-            <PhiTagControl key={item.localId}>{item.file.name}</PhiTagControl>
-          ))}
-        </PhiFlexControl>
-      ) : null}
-      {uploading.map((item) => (
-        <PhiProgressControl key={item.localId} percent={Math.round(item.progress)} size="small" />
-      ))}
-      <PhiFlexControl justify="space-between" align="center" gap="small">
-        <PhiFileDropControl
-          accept={accept}
-          multiple
+    <PhiCardControl padding={config?.padding}>
+      <PhiFlexControl vertical gap="small">
+        {error ? (
+          <PhiAlertControl level="error" title={labels.feedback.errorTitle} description={error} />
+        ) : null}
+        <PhiTextControl
+          presentation="textarea"
+          value={message}
+          onChange={(next) => setMessage(next ?? "")}
+          placeholder={labels.messagePlaceholder}
+          autoSize={{ minRows: 3, maxRows: 12 }}
           disabled={sending}
-          onFile={(file) => void upload(file)}
-        >
-          {/*
-            * The click belongs to the uploader wrapped around it, which opens the file dialog. The
-            * empty handler is what says this button is live: a Button with none is disabled on
-            * purpose, and this one is not.
-            */}
-          <PhiButtonControl label={labels.attachLabel} disabled={sending} onClick={() => {}} />
-        </PhiFileDropControl>
-        <PhiButtonControl
-          label={labels.sendLabel}
-          type="primary"
-          loading={sending}
-          disabled={!canSend}
-          onClick={() => void send()}
         />
+        {attached.length > 0 ? (
+          <PhiFlexControl wrap gap="small">
+            {attached.map((item) => (
+              <PhiTagControl key={item.localId}>{item.file.name}</PhiTagControl>
+            ))}
+          </PhiFlexControl>
+        ) : null}
+        {uploading.map((item) => (
+          <PhiProgressControl key={item.localId} percent={Math.round(item.progress)} size="small" />
+        ))}
+        <PhiFlexControl justify="space-between" align="center" gap="small">
+          <PhiFileDropControl
+            accept={accept}
+            multiple
+            disabled={sending}
+            onFile={(file) => void upload(file)}
+          >
+            {/*
+              * The click belongs to the uploader wrapped around it, which opens the file dialog. The
+              * empty handler is what says this button is live: a Button with none is disabled on
+              * purpose, and this one is not.
+              */}
+            <PhiButtonControl label={labels.attachLabel} disabled={sending} onClick={() => {}} />
+          </PhiFileDropControl>
+          <PhiButtonControl
+            label={labels.sendLabel}
+            type="primary"
+            loading={sending}
+            disabled={!canSend}
+            onClick={() => void send()}
+          />
+        </PhiFlexControl>
+        <PhiTypographyControl type="secondary">{labels.attachHint}</PhiTypographyControl>
       </PhiFlexControl>
-      <PhiTypographyControl type="secondary">{labels.attachHint}</PhiTypographyControl>
-    </PhiFlexControl>
+    </PhiCardControl>
   );
 }

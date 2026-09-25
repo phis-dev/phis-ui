@@ -24,6 +24,11 @@ import { usePhiConfig } from "../root/phi-config-provider";
  * **A card is a box, not a layout.** Anything that arranges what is inside it belongs to the caller's own
  * element, which is why there is no body style: a Widget that wants its parts on a grid puts the grid in
  * a `div` of its own rather than reaching into the Card's body through the primitive.
+ *
+ * `padding` is the exception, and it is not one of those: the inset of a box is the box's own business,
+ * which is why this control already decides it. A caller that needs a different one says so here. The
+ * alternative was a `div` wrapped around the Card to pad it from outside, which is a box around a box and
+ * pads the wrong side of the frame -- if a Card needs a wrapper to be spaced, the prop was missing.
  */
 export type PhiCardControlProps = {
   /** A heading in a bar of its own above the body, with a rule under it. */
@@ -36,6 +41,14 @@ export type PhiCardControlProps = {
   size?: "small" | "medium";
   /** The box lifts under the pointer, which is how a card says that the whole of it is a link. */
   hoverable?: boolean;
+  /**
+   * The body's own inset, where the Theme's answer is not the right one.
+   *
+   * Absent is the Theme's -- `padding` at the ordinary size and `paddingSM` for chrome -- and that stays
+   * the answer to "nothing was said" rather than becoming a ceiling. A Widget whose configuration carries
+   * a padding passes it straight through; nothing has to know which of the two it got.
+   */
+  padding?: number | string;
   style?: CSSProperties;
   children?: ReactNode;
 };
@@ -46,6 +59,7 @@ export function PhiCardControl({
   cover,
   size = "medium",
   hoverable,
+  padding,
   style,
   children,
 }: PhiCardControlProps) {
@@ -58,7 +72,7 @@ export function PhiCardControl({
       size={size}
       hoverable={hoverable}
       style={style}
-      styles={{ body: { padding: size === "small" ? token.paddingSM : token.padding } }}
+      styles={{ body: { padding: padding ?? (size === "small" ? token.paddingSM : token.padding) } }}
     >
       {children}
     </Card>

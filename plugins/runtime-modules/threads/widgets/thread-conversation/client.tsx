@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 
 import type { PhiBlockRuntime, PhiClientBlockBaseProps } from "../../../../../types";
@@ -8,8 +8,9 @@ import type { PhisThreadDetail, PhisThreadMessage } from "../../../../../types/t
 import { PhisThreadMessageFlag, PhisThreadStatus } from "../../../../../constants/threads";
 import { PhiAlertControl } from "../../../../../components/controls/phi-alert-control";
 import { PhiButtonControl } from "../../../../../components/controls/phi-button-control";
+import { PhiCardControl } from "../../../../../components/controls/phi-card-control";
+import { PhiDividerControl } from "../../../../../components/controls/phi-divider-control";
 import { PhiTagControl } from "../../../../../components/controls/phi-tag-control";
-import { usePhiConfig } from "../../../../../components/root/phi-config-provider";
 import { usePhiSignalListener } from "../../../../../components/runtime/runtime-signal-bus";
 import {
   usePhiSignalEmitter,
@@ -131,7 +132,6 @@ export function PhiThreadConversationWidgetClient({
   labels,
   config,
 }: PhiThreadConversationWidgetClientProps) {
-  const { token } = usePhiConfig();
   const searchParams = useSearchParams();
   const identity = usePhiSignalIdentity();
   const emitSignal = usePhiSignalEmitter();
@@ -445,91 +445,107 @@ export function PhiThreadConversationWidgetClient({
   }, [runtime]);
 
   /*
-   * The box this Widget is, drawn from the Theme and worn in every state.
+   * The box is a Card, and the Card is the box.
    *
-   * A conversation is a panel on a page: it has a frame and it sits on the panel background, and both
-   * come from the Theme rather than from colours typed in here -- `colorBgContainer` is what a panel
-   * stands on and `colorBorderSecondary` is the quiet frame, the same pair the Card Widget uses.
+   * A conversation is a panel on a page, and this Widget says nothing about what a panel looks like: the
+   * frame, the ground and the corner all belong to `PhiCardControl`, and so does the inset -- this Widget
+   * only hands its configured one over. That matters beyond
+   * tidiness -- `Card` is one of the components the Theme's surface shape reaches through a component
+   * token, so a Site set to `square` gets square corners here without this file knowing that shapes exist.
+   * The first version of this drew the box by hand and reached for an Ant Design CSS variable to do it,
+   * which is the leak the control boundary exists to prevent.
    *
    * All four states wear it, including "nothing chosen" and "still loading". A frame that appears only
    * once a conversation has arrived is a page that jumps when somebody clicks a row, and the empty state
    * is the one a person looks at longest.
    *
-   * The configured padding wins where a Site set one, and the Theme's own `padding` stands in where none
-   * is set: a frame drawn tight against the text would be the Theme's spacing scale ignored at the one
-   * place it became visible.
+   * A configured padding goes to the Card as its body inset, which is what a padding on this Widget always
+   * meant. It travelled as a `div` wrapped around the Card for one revision, which padded the outside of
+   * the frame instead -- a box around a box, and the sign that the Card was missing the prop.
    */
-  const panelStyle = {
-    padding: config?.padding ?? token.padding,
-    background: token.colorBgContainer,
-    border: `1px solid ${token.colorBorderSecondary}`,
-    borderRadius: token.borderRadiusLG,
-  };
-
   if (threadId == null) {
     return (
-      <div style={panelStyle}>
+      <PhiCardControl padding={config?.padding}>
         <PhiTypographyControl type="secondary">{labels.noThreadText}</PhiTypographyControl>
-      </div>
+      </PhiCardControl>
     );
   }
 
   if (error) {
     return (
-      <div style={panelStyle}>
+      <PhiCardControl padding={config?.padding}>
         <PhiAlertControl level="error" title={labels.feedback.errorTitle} description={error} />
-      </div>
+      </PhiCardControl>
     );
   }
 
   if (!detail) {
     return (
-      <div style={panelStyle}>
+      <PhiCardControl padding={config?.padding}>
         <PhiTypographyControl type="secondary">{labels.loadingText}</PhiTypographyControl>
-      </div>
+      </PhiCardControl>
     );
   }
 
   return (
-    <PhiFlexControl vertical gap="large" style={panelStyle}>
-      <PhiFlexControl align="center" gap="small" wrap>
-        <PhiTypographyControl presentation="title" level={4} style={{ margin: 0 }}>
-          {readThreadTitle(detail, labels)}
-        </PhiTypographyControl>
-        {detail.thread.status === PhisThreadStatus.Archived ? (
-          <PhiTagControl>{labels.archivedLabel}</PhiTagControl>
-        ) : null}
-      </PhiFlexControl>
-
-      {detail.hasMoreMessages ? (
-        <PhiButtonControl
-          label={labels.olderLabel}
-          type="link"
-          loading={loadingOlder}
-          onClick={() => void loadOlder()}
-        />
-      ) : null}
-
-      {detail.messages.length === 0 ? (
-        <PhiTypographyControl type="secondary">{labels.emptyText}</PhiTypographyControl>
-      ) : (
+    <>
+      {/*
+        * The subject is the Card's heading, which is also what closes the gap under it.
+        *
+        * It used to be a title inside the body with a large gap to the first message, and the gap was the
+        * only thing saying "this is a heading". A heading bar with a rule under it says it in one line, so
+        * the first message starts where the conversation starts.
+        */}
+      <PhiCardControl
+        padding={config?.padding}
+        title={
+          <PhiFlexControl align="center" gap="small" wrap>
+            {readThreadTitle(detail, labels)}
+            {detail.thread.status === PhisThreadStatus.Archived ? (
+              <PhiTagControl>{labels.archivedLabel}</PhiTagControl>
+            ) : null}
+          </PhiFlexControl>
+        }
+      >
         <PhiFlexControl vertical gap="middle">
-          {detail.messages.map((message) => (
-            <PhiThreadMessageRow
-              key={message.id}
-              message={message}
-              labels={labels}
-              formatTime={formatTime}
-              formatLanguage={formatLanguage}
-              translation={translations[message.id] ?? null}
-              canTranslate={translationTarget != null}
-              onTranslate={translate}
+          {detail.hasMoreMessages ? (
+            <PhiButtonControl
+              label={labels.olderLabel}
+              type="link"
+              loading={loadingOlder}
+              onClick={() => void loadOlder()}
             />
-          ))}
-        </PhiFlexControl>
-      )}
+          ) : null}
 
-    </PhiFlexControl>
+          {detail.messages.length === 0 ? (
+            <PhiTypographyControl type="secondary">{labels.emptyText}</PhiTypographyControl>
+          ) : (
+            detail.messages.map((message, index) => (
+              /*
+               * A rule between messages, and none above the first.
+               *
+               * Where one message ends and the next begins is the one thing a reader has to be able to see
+               * at a glance, and spacing alone was doing that work -- which is why it had to be so much of
+               * it. A line does it in less room, and the messages sit closer together for it. Zero margin
+               * because the Flex gap around it is already the Theme's spacing.
+               */
+              <Fragment key={message.id}>
+                {index > 0 ? <PhiDividerControl style={{ margin: 0 }} /> : null}
+                <PhiThreadMessageRow
+                  message={message}
+                  labels={labels}
+                  formatTime={formatTime}
+                  formatLanguage={formatLanguage}
+                  translation={translations[message.id] ?? null}
+                  canTranslate={translationTarget != null}
+                  onTranslate={translate}
+                />
+              </Fragment>
+            ))
+          )}
+        </PhiFlexControl>
+      </PhiCardControl>
+    </>
   );
 }
 
