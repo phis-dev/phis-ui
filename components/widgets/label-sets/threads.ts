@@ -43,6 +43,25 @@ const PHI_THREAD_CONVERSATION_LABEL_SET = definePhiLabelSet({
      * place a person actually looks while writing the next one.
      */
     internal_label: "Internal note",
+    /*
+     * One word for the control, because there is one control.
+     *
+     * The target language is not asked for: it is the language this person is reading in, and the button
+     * only appears where that language can actually be produced. A picker beside every message would have
+     * been a second control on every row for the sake of reading one message in a third language.
+     */
+    translate_label: "Translate",
+    original_label: "Show the original",
+    /*
+     * Said on the translation, because an unmarked one reads as what the person wrote.
+     *
+     * A machine translation carries a register nobody chose, and a support agent answering a sentence a
+     * machine put there has to know that is what they are looking at. The language it came out of stands
+     * beside it as its own name, where the provider reported one -- not woven into a sentence, which would
+     * fix a word order that only holds in English.
+     */
+    machine_translation_label: "Machine translation",
+    translation_error_text: definePhiMessageLabel("The translation could not be fetched."),
     redacted_text: definePhiMessageLabel("This message was withdrawn."),
     withheld_text: definePhiMessageLabel("This message is not shown to you."),
     system_author_label: "System",
@@ -209,6 +228,9 @@ export async function getPhiThreadConversationLabels(options: PhiGlobalTranslato
     olderLabel: labels.older_label,
     archivedLabel: labels.archived_label,
     internalLabel: labels.internal_label,
+    translateLabel: labels.translate_label,
+    originalLabel: labels.original_label,
+    machineTranslationLabel: labels.machine_translation_label,
     redactedText: labels.redacted_text,
     withheldText: labels.withheld_text,
     systemAuthorLabel: labels.system_author_label,
@@ -218,6 +240,7 @@ export async function getPhiThreadConversationLabels(options: PhiGlobalTranslato
       errorGeneric: labels.error_generic,
       errorNetwork: labels.error_network,
       errorNotFound: labels.error_not_found,
+      errorTranslation: labels.translation_error_text,
     },
   };
 }

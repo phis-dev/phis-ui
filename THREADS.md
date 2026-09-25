@@ -167,8 +167,15 @@ put it. It is also the only kind of value a *filter* can use: routing Portuguese
 who speak Portuguese needs a stored column, because nothing that comes into being while somebody reads
 can appear in a `WHERE` clause.
 
-Since no surface writes it, the column reads cleanly: a value present means an integration said so, and
-null means nobody did. These surfaces only ever read it, and today not even that.
+**The ad-hoc translation fills it as well.** A provider reports the language it recognised, and a message
+that declared none keeps that value with the flag `LangDetected` (32) beside it -- because the recognition
+is free with a translation somebody paid for, and without it the column would stay empty for every message
+a person ever wrote. The flag is what keeps the column readable: without it, a declared language and a
+guess about five characters would look the same to whatever routes on them. A declaration is never
+overwritten.
+
+These surfaces only ever read the column, and today not even that. The writing happens in Core, on the
+translate call -- not here, and not from a browser.
 
 ### The ad-hoc translation
 
@@ -190,24 +197,36 @@ is persisted: not the text, not a record that it was shown.
   mode, which may be a model that rewrites; the risk is a Provider's, not a fact about translation.
 
   The deciding reason is the second measurement: texts in one batch **share no context with each other**,
-  so the coherence a batch seemed to offer does not exist -- while `context` applies to the whole request
-  and is not billed. One message per request is therefore the only shape in which `context` can carry
-  *that* message's neighbours instead of one compromise for all of them. Batching would have cost money
-  and bought nothing.
+  so the coherence a batch seemed to offer does not exist. Batching would have cost money for the messages
+  nobody needed translated and bought nothing for the one somebody did.
 - **The inbox is not translated.** A thread list is many short subjects in mixed languages with nobody
   pressing per row, so it is the one place where the batch problem above has no human to solve it --
   and short text is what detection is least reliable on. If it ever happens, it happens for a listing
   whose rows come from integrations, whose languages are therefore stored and can be skipped.
-- **Neighbouring messages travel as `context`, not as more texts to translate.** That is what the field
-  is for -- "the subject matter, the surrounding sentence, the register to keep" -- so the surrounding
-  conversation informs the translation without being translated with it, and without being charged for:
-  measured, `context` adds nothing to the bill, while the same words sent as a text to translate would
-  be billed in full. It is how one message at a time gets coherence a batch could not have given it.
+- **Nothing around the message travels with it.** Sending the neighbouring messages as `context` was
+  built and taken out again, and the reason is worth keeping because the argument for it was convincing
+  and beside the point. `context` is request-wide and, measured, not billed -- so it looked free. What is
+  free is the *bill*. What nobody has measured is what a provider does with a context that is long and in
+  a third language, which is what the message before this one often is: a thread with a German question, a
+  Portuguese answer and an English note is the ordinary case here, not the exception. DeepL documents
+  context as text that influences a translation without being translated, and says nothing about a context
+  in another language; an Add-on Provider may be a model, where the question is wide open.
+
+  The field stays in the Provider contract. What would bring it back is a measurement, not an argument.
 - **Core decides and calls**, because the message body lives there and `Confidential` means it may not
   leave Core -- a Site fetching the body and posting it onwards would have moved it out already, and the
   rule would be circumvented rather than kept.
-- **The target** is the Site's locales intersected with what this installation's translation unit can
-  do, preselected from `viewer.preferredLocale` and falling back to `site.defaultLocale`.
+- **The target is the reader's own language, and there is no picker.** `viewer.preferredLocale` -- what
+  this account set as its language in its own settings -- and the locale the surface is rendered in only
+  where nobody has set one, because then there is no "own" language to take. The control appears when that
+  language is in the offered list and is absent otherwise, never disabled.
+
+  The reason there is no choice at the message is the bill. Every press is a translation charged by the
+  length of the text sent, whether anybody reads the answer or not, and a dropdown on every row invites
+  exactly the behaviour that costs the most: trying a second and a third language on the same paragraph to
+  see which one reads better. One language per person, set once, is the same control with nothing to try
+  out -- and somebody who wants another one changes their own setting, which is one deliberate act instead
+  of an idle one in every row.
 - **It toggles back.** "Show the original" is the same control, not a second feature.
 - **It is marked as machine-made**, and says which language it came out of where the provider reported
   one. Unmarked, it reads as what the person wrote, and a machine translation carries a tone nobody
@@ -233,19 +252,32 @@ In order:
    copy, and message bodies must never enter that pipeline ([TRANSLATIONS.md](./TRANSLATIONS.md)).
    `add-on` hands the work to a Provider implementing the `translation` service kind, which the operator
    selects; DeepL is therefore the default and not a dependency.
-2. **The `add-on` call itself.** The service kind, its interface and the operator's selection are in
-   place; resolving the selected Provider and calling it is not, so `add-on` currently answers
-   `unconfigured`.
-3. **A capability answer**, carried in `serverCapabilities`: whether this installation can translate.
-   Never the key. Without it a Site renders a control that cannot work.
-4. **The offered target list**, as the intersection above. DeepL answers by API, and a Provider answers
-   through `probeCapabilities`, which is asked once when it is configured rather than per translation --
-   a list fetched at the moment of use is one that decides whether a control may be drawn after it has
-   been drawn.
-5. **The route**: `(messageId, target locale)` -- may this viewer read the message, is it
-   `Confidential`, can this installation translate; then call, return, store nothing. It passes the
-   message's `source_lang` where an integration recorded one and `null` otherwise, which is the
-   contract's own way of saying "you decide" and needs no branch on either side.
+2. ~~**The `add-on` call itself.**~~ Done. The selected Provider is resolved through the service-provider
+   registry and instantiated once, keyed by the selection and the manifest digest, so an upgraded Add-on
+   and a changed selection are both a different adapter rather than a stale one. Nothing selectable is
+   `unconfigured`; a Provider that threw is `failed`. No Add-on implements the kind yet, so the path is
+   built and typechecked and has never run.
+3. ~~**A capability answer.**~~ Done, and **not** in `serverCapabilities`, which this item used to name.
+   That snapshot reports one verdict per capability *provider*, and Core's entry is unconditionally
+   available because Core is the server that answers it; translation is configuration rather than
+   interface -- the same build translates or does not, depending on what an operator saved. Folding it in
+   would have meant either a Core entry turning `misconfigured`, switching off every unrelated first-party
+   Module with it, or a capability id whose presence means nothing. It is `GET /api/site/translation`,
+   answering `{ available, targetLocales }` for this Site and saying nothing about the mode, the Provider
+   or a key.
+4. ~~**The offered target list.**~~ Done, as the intersection above. For the DeepL modes it comes from the
+   platform's own locale capability table, which already carries each locale's DeepL target code and is
+   therefore this platform's statement of what DeepL can produce -- no API call, and no outage in one that
+   could hide a control that works. A Provider answers through `probeCapabilities`, asked once for a
+   selection rather than per translation, because a list fetched at the moment of use decides whether a
+   control may be drawn after it has been drawn.
+5. ~~**The route.**~~ Done: `POST /api/site/threads/<threadId>/messages/<messageId>/translate` with the
+   target locale in the body. It asks in this order -- can this installation translate into that locale,
+   may this viewer read the message, is it `Confidential` -- then calls, answers, and stores nothing. It
+   passes the message's `source_lang` where an integration recorded one and `null` otherwise, and answers
+   with the language the provider detected where it reported one. `POST` for a call that stores nothing,
+   because it spends money and reaches a third party: a `GET` invites a prefetch, a retry and a cache to
+   translate on somebody's behalf.
 
 The body sent is `body_markdown ?? body_text`. Markdown passes through as text and the control codes
 survive, so the richer body is the one to send, and the answer is rendered the way the original is.

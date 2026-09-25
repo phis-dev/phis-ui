@@ -78,6 +78,46 @@ async function fetchPhiThreadDetail(
   }
 }
 
+/**
+ * What this installation is willing to translate into, for this Site.
+ *
+ * Asked once and never derived: the mode, the key and the selected Provider are installation state no
+ * Site is shown, so a surface that guessed would draw a control that answers 409. `available: false` is a
+ * control that must not exist, not an empty one.
+ */
+type PhiThreadTranslationOffer = {
+  available: boolean;
+  targetLocales: readonly string[];
+};
+
+async function fetchPhiTranslationOffer(signal?: AbortSignal) {
+  try {
+    const response = await fetch("/api/site/translation", { cache: "no-store", signal });
+    if (!response.ok) {
+      return null;
+    }
+    const payload = await response.json() as { translation: PhiThreadTranslationOffer };
+    return payload.translation ?? null;
+  } catch {
+    // Not knowing is the same as not offered: nothing is drawn, and nothing claims an outage on a
+    // conversation that loaded perfectly well.
+    return null;
+  }
+}
+
+/**
+ * What became of one message's translation.
+ *
+ * `visible` is on the ready entry rather than in a set of its own, because "show the original" is the
+ * same control and not a second feature -- pressing it back must not throw away what was already paid
+ * for. Keyed by message id, which is unique across threads, so switching conversations and returning
+ * does not ask again. The Area ending unmounts this and with it the whole cache.
+ */
+type PhiMessageTranslation =
+  | { status: "pending" }
+  | { status: "failed" }
+  | { status: "ready"; text: string; sourceLocale: string | null; visible: boolean };
+
 function readFailureText(failure: PhiThreadFetchFailure, labels: PhiThreadConversationLabels) {
   if (failure === "notFound") {
     return labels.feedback.errorNotFound;
@@ -114,6 +154,25 @@ export function PhiThreadConversationWidgetClient({
     useState<{ id: number; detail: PhisThreadDetail } | null>(null);
   const [failedThread, setFailedThread] = useState<{ id: number; message: string } | null>(null);
   const [loadingOlder, setLoadingOlder] = useState(false);
+  /*
+   * The one language the control offers, or null for no control.
+   *
+   * **The language this account set as its own** -- `viewer.preferredLocale` -- and the locale the surface
+   * is rendered in only where nobody has set one, because then there is no "own" language to use.
+   *
+   * There is no picker, and the reason is the bill. Every press is a translation that is paid for by the
+   * length of the text sent, whether or not anybody reads the answer: a dropdown beside every message
+   * invites trying a second and a third language on the same paragraph to see which reads better, and
+   * each of those is charged in full. One language per person, set once in their own settings, is the
+   * same control with nothing to try out. Somebody who wants to read in another language changes their
+   * own, which is a deliberate act in one place rather than an idle one in every row.
+   *
+   * Null until the offer has answered, and null afterwards where this installation cannot produce that
+   * language -- which is why the button is absent rather than disabled: a control that cannot work is not
+   * a control.
+   */
+  const [translationTarget, setTranslationTarget] = useState<string | null>(null);
+  const [translations, setTranslations] = useState<Record<number, PhiMessageTranslation>>({});
 
   const detail = loadedThread?.id === threadId ? loadedThread.detail : null;
   const error = failedThread?.id === threadId ? failedThread.message : null;
@@ -157,6 +216,25 @@ export function PhiThreadConversationWidgetClient({
     void open(threadId);
     return () => controller.abort();
   }, [receive, threadId]);
+
+  const readingLocale =
+    runtime?.viewer?.preferredLocale?.trim() || runtime?.locale?.current?.trim() || "";
+
+  useEffect(() => {
+    if (!readingLocale) {
+      return;
+    }
+    const controller = new AbortController();
+    void fetchPhiTranslationOffer(controller.signal).then((offer) => {
+      if (controller.signal.aborted) {
+        return;
+      }
+      setTranslationTarget(
+        offer?.available && offer.targetLocales.includes(readingLocale) ? readingLocale : null,
+      );
+    });
+    return () => controller.abort();
+  }, [readingLocale]);
 
   /*
    * One listener for both capabilities, because both arrive on the same wiring.
@@ -266,6 +344,93 @@ export function PhiThreadConversationWidgetClient({
     }
   }, [detail, labels, openedThreadId]);
 
+  /**
+   * One message, one round trip, and nothing kept anywhere but here.
+   *
+   * Core translates rather than this surface, because the body lives there and `Confidential` says it may
+   * not leave it -- fetching the body and posting it to a provider from a browser would have moved it out
+   * before any rule could apply. What comes back is held in memory for as long as this is mounted and is
+   * never stored: the original is the only version of a message that exists.
+   */
+  const translate = useCallback(async (messageId: number) => {
+    if (openedThreadId == null || translationTarget == null) {
+      return;
+    }
+    const existing = translations[messageId];
+    if (existing?.status === "pending") {
+      return;
+    }
+    if (existing?.status === "ready") {
+      // The same control, pressed back. Nothing is asked again for something already paid for.
+      setTranslations((current) => ({
+        ...current,
+        [messageId]: { ...existing, visible: !existing.visible },
+      }));
+      return;
+    }
+    setTranslations((current) => ({ ...current, [messageId]: { status: "pending" } }));
+    const fail = () => setTranslations((current) => ({ ...current, [messageId]: { status: "failed" } }));
+    try {
+      const response = await fetch(
+        `/api/site/threads/${openedThreadId}/messages/${messageId}/translate`,
+        {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ locale: translationTarget }),
+        },
+      );
+      if (!response.ok) {
+        fail();
+        return;
+      }
+      const payload = await response.json() as {
+        translation?: { text?: string; sourceLocale?: string | null };
+      };
+      const text = payload.translation?.text ?? "";
+      if (!text) {
+        fail();
+        return;
+      }
+      setTranslations((current) => ({
+        ...current,
+        [messageId]: {
+          status: "ready",
+          text,
+          sourceLocale: payload.translation?.sourceLocale ?? null,
+          visible: true,
+        },
+      }));
+    } catch {
+      fail();
+    }
+  }, [openedThreadId, translationTarget, translations]);
+
+  /**
+   * A language's own name, in the language of whoever is reading.
+   *
+   * The provider answers with a locale key, and a key is not something to show somebody. Null where the
+   * platform cannot name it or nothing was detected -- a translation marked as machine-made is honest
+   * without saying what it came out of.
+   */
+  const formatLanguage = useMemo(() => {
+    let names: Intl.DisplayNames | null = null;
+    try {
+      names = new Intl.DisplayNames([readingLocale || "en"], { type: "language" });
+    } catch {
+      names = null;
+    }
+    return (locale: string | null) => {
+      if (!locale) {
+        return null;
+      }
+      try {
+        return names?.of(locale) ?? null;
+      } catch {
+        return null;
+      }
+    };
+  }, [readingLocale]);
+
   const formatTime = useMemo(() => {
     const formatter = new Intl.DateTimeFormat(runtime?.locale?.current ?? undefined, {
       dateStyle: "medium",
@@ -331,6 +496,10 @@ export function PhiThreadConversationWidgetClient({
               message={message}
               labels={labels}
               formatTime={formatTime}
+              formatLanguage={formatLanguage}
+              translation={translations[message.id] ?? null}
+              canTranslate={translationTarget != null}
+              onTranslate={translate}
             />
           ))}
         </PhiFlexControl>
@@ -387,13 +556,31 @@ function PhiThreadMessageRow({
   message,
   labels,
   formatTime,
+  formatLanguage,
+  translation,
+  canTranslate,
+  onTranslate,
 }: {
   message: PhisThreadMessage;
   labels: PhiThreadConversationLabels;
   formatTime: (value: string) => string;
+  formatLanguage: (locale: string | null) => string | null;
+  translation: PhiMessageTranslation | null;
+  canTranslate: boolean;
+  onTranslate: (messageId: number) => void;
 }) {
   const internal = (message.flags & PhisThreadMessageFlag.Internal) !== 0;
   const redacted = (message.flags & PhisThreadMessageFlag.Redacted) !== 0;
+  /*
+   * `Confidential` gets no control, and the route would refuse it anyway.
+   *
+   * It is the one flag about where a body may go rather than who may read it, and a translation is the
+   * body leaving Core. Whoever may read this message still may not have it translated, so the button is
+   * absent rather than there to be refused.
+   */
+  const confidential = (message.flags & PhisThreadMessageFlag.Confidential) !== 0;
+  const shown = translation?.status === "ready" && translation.visible ? translation : null;
+  const offerTranslation = canTranslate && !confidential && message.bodyText != null;
 
   return (
     <PhiFlexControl vertical gap={4}>
@@ -414,9 +601,36 @@ function PhiThreadMessageRow({
       ) : (
         // `white-space: pre-wrap` so the line breaks somebody typed are the ones they see back.
         <PhiTypographyControl presentation="paragraph" style={{ margin: 0, whiteSpace: "pre-wrap" }}>
-          {message.bodyText}
+          {shown ? shown.text : message.bodyText}
         </PhiTypographyControl>
       )}
+
+      {shown ? (
+        <PhiFlexControl align="center" gap="small" wrap>
+          {/* Marked, because unmarked it reads as what the person wrote. */}
+          <PhiTagControl color="blue">{labels.machineTranslationLabel}</PhiTagControl>
+          {formatLanguage(shown.sourceLocale) ? (
+            <PhiTagControl>{formatLanguage(shown.sourceLocale)}</PhiTagControl>
+          ) : null}
+        </PhiFlexControl>
+      ) : null}
+
+      {translation?.status === "failed" ? (
+        <PhiTypographyControl type="secondary">
+          {labels.feedback.errorTranslation}
+        </PhiTypographyControl>
+      ) : null}
+
+      {offerTranslation ? (
+        <PhiFlexControl>
+          <PhiButtonControl
+            label={shown ? labels.originalLabel : labels.translateLabel}
+            type="link"
+            loading={translation?.status === "pending"}
+            onClick={() => onTranslate(message.id)}
+          />
+        </PhiFlexControl>
+      ) : null}
 
       {message.assets.length > 0 ? (
         <PhiFlexControl wrap gap="small">
