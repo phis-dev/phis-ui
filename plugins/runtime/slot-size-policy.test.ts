@@ -45,7 +45,7 @@ describe("the policy a slot child actually runs on", () => {
     });
     expect(sizing.policy.inline).toBe("fill");
     expect(sizing.explicitInlineSize).toBe(false);
-    expect(sizing.maxInlineSize).toBe(610);
+    expect(sizing.maxInlineSize).toBe("610px");
   });
 
   it("flips the Layout default of fill on both axes when a width is configured", () => {

@@ -1,4 +1,5 @@
 import type { PhiBlockBaseProps, PhiRenderableBlockBase, PhiBlockRuntime } from "../../../../../types";
+import { resolvePhiRenderableBlockGeometry } from "../../../../../types/renderable-block-geometry";
 
 export type PhiHelloWorldWidgetLabels = {
   title: string;
@@ -18,18 +19,6 @@ export type PhiHelloWorldWidgetProps = PhiBlockBaseProps<
   }>;
 };
 
-function toCssSize(value: number | string | null | undefined, fallback: string) {
-  if (typeof value === "number") {
-    return `${value}px`;
-  }
-
-  if (typeof value === "string" && value.trim()) {
-    return value;
-  }
-
-  return fallback;
-}
-
 export function PhiHelloWorldWidget({
   labels,
   config,
@@ -39,7 +28,7 @@ export function PhiHelloWorldWidget({
     <div
       style={{
         width: "100%",
-        minHeight: toCssSize(config?.size?.height, "240px"),
+        minHeight: resolvePhiRenderableBlockGeometry(config).block.size?.css ?? "240px",
         borderRadius: 21,
         border: "1px solid rgba(148, 163, 184, 0.32)",
         background:

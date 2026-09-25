@@ -2,6 +2,9 @@ import { isValidElement, type CSSProperties, type ReactNode } from "react";
 import {
   normalizePhiCssSize,
   resolvePhiFlexAxisAlignment,
+  PHI_SLOT_CROSS_MARGIN_END_PROPERTY,
+  PHI_SLOT_CROSS_MARGIN_START_PROPERTY,
+  resolvePhiSlotCrossMargin,
 } from "../phi-layout-contract";
 import { resolvePhiLayoutSlotChildSizing } from "./phi-layout-anchored-overlay";
 import { resolvePhiLayoutDefaults } from "../../../helpers/cms-layout-defaults";
@@ -199,6 +202,10 @@ export function PhiFlexLayout({
         : shouldFillMainAxis
           ? 0
           : "auto";
+    const placesInline = resolvedVertical ? shouldFillCrossAxis : shouldFillMainAxis;
+    const slotCrossMargin = placesInline
+      ? resolvePhiSlotCrossMargin(resolvedVertical ? resolvedFlowAlignment.alignItems : resolvedJustifyContent)
+      : { start: "0", end: "0" };
 
     return (
       <div
@@ -236,7 +243,16 @@ export function PhiFlexLayout({
           alignSelf: shouldFillCrossAxis ? "stretch" : undefined,
           display: "flex",
           flexDirection: "column",
-        }}
+          /*
+           * The inline placement again, as the margins a child that fills and caps itself is moved by.
+           * In a row the inline axis is the main one, so a slot that grows and holds a capped child
+           * places it by the Layout's `justify-content`; in a column it is the cross axis and the slot's
+           * own alignment. A slot that does not grow is as wide as its child and states `0`, which is
+           * what stops a Flex Vertical further up from placing this Layout's children.
+           */
+          [PHI_SLOT_CROSS_MARGIN_START_PROPERTY]: slotCrossMargin.start,
+          [PHI_SLOT_CROSS_MARGIN_END_PROPERTY]: slotCrossMargin.end,
+        } as CSSProperties}
       >
         {child}
       </div>

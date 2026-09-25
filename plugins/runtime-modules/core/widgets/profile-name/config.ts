@@ -8,6 +8,7 @@ export const PHI_PROFILE_NAME_WIDGET_DEFINITION = {
   kind: "widget",
   pluginKey: resolvePhiCmsWidgetPluginKey("profile-name"),
   typeKey: "profile-name",
+  slotSizePolicy: "intrinsic",
   title: "Profile name",
   description: "Authenticated profile name editor.",
   category: "account",
@@ -15,7 +16,7 @@ export const PHI_PROFILE_NAME_WIDGET_DEFINITION = {
   parseConfig: parsePhiPaddingOnlyWidgetConfig,
 } satisfies Pick<
   PhiCmsWidgetPlugin<PhiCmsPaddingOnlyWidgetConfig>,
-  "kind" | "pluginKey" | "typeKey" | "title" | "description" | "category" | "fields" | "parseConfig"
+  "kind" | "pluginKey" | "typeKey" | "slotSizePolicy" | "title" | "description" | "category" | "fields" | "parseConfig"
 >;
 
 export const PHI_PROFILE_NAME_WIDGET_PLUGIN_TYPE = PhiCmsWidgetType.ProfileName;

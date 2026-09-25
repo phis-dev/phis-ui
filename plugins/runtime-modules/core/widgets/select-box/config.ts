@@ -21,6 +21,7 @@ export const PHI_SELECT_BOX_WIDGET_DEFINITION = {
   kind: "widget",
   pluginKey: resolvePhiCmsWidgetPluginKey("select-box"),
   typeKey: "select-box",
+  slotSizePolicy: "intrinsic",
   title: "Select Box",
   description: "Reusable select control that emits runtime state signals.",
   category: "form",
@@ -59,6 +60,7 @@ export const PHI_SELECT_BOX_WIDGET_DEFINITION = {
   | "kind"
   | "pluginKey"
   | "typeKey"
+  | "slotSizePolicy"
   | "title"
   | "description"
   | "category"

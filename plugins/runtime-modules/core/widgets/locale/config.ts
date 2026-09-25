@@ -7,6 +7,7 @@ export const PHI_LOCALE_WIDGET_DEFINITION = {
   kind: "widget",
   pluginKey: resolvePhiCmsWidgetPluginKey("locale"),
   typeKey: "locale",
+  slotSizePolicy: "intrinsic",
   title: "Locale",
   description: "Locale switcher widget.",
   category: "navigation",
@@ -18,6 +19,7 @@ export const PHI_LOCALE_WIDGET_DEFINITION = {
   | "kind"
   | "pluginKey"
   | "typeKey"
+  | "slotSizePolicy"
   | "title"
   | "description"
   | "category"

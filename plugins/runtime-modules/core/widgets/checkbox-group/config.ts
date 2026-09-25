@@ -36,6 +36,7 @@ export const PHI_CHECKBOX_GROUP_WIDGET_DEFINITION = {
   kind: "widget",
   pluginKey: resolvePhiCmsWidgetPluginKey("checkbox-group"),
   typeKey: "checkbox-group",
+  slotSizePolicy: "intrinsic",
   title: "Checkbox Group",
   description: "Reusable multi-choice checkbox group with static or provider-backed options.",
   category: "form",
@@ -60,6 +61,7 @@ export const PHI_CHECKBOX_GROUP_WIDGET_DEFINITION = {
   | "kind"
   | "pluginKey"
   | "typeKey"
+  | "slotSizePolicy"
   | "title"
   | "description"
   | "category"

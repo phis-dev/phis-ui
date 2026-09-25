@@ -49,6 +49,7 @@ export const PHI_COLOR_WIDGET_DEFINITION = {
   kind: "widget",
   pluginKey: resolvePhiCmsWidgetPluginKey("color"),
   typeKey: "color",
+  slotSizePolicy: "intrinsic",
   title: "Color",
   description: "Reusable color control widget for CMS builder surfaces.",
   category: "configuration",
@@ -83,6 +84,7 @@ export const PHI_COLOR_WIDGET_DEFINITION = {
   | "kind"
   | "pluginKey"
   | "typeKey"
+  | "slotSizePolicy"
   | "title"
   | "description"
   | "category"

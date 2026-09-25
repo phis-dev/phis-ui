@@ -75,6 +75,7 @@ export const PHI_MEDIA_PICKER_WIDGET_DEFINITION = {
   kind: "widget",
   pluginKey: resolvePhiCmsWidgetPluginKey("media-picker"),
   typeKey: "media-picker",
+  slotSizePolicy: "intrinsic",
   title: "Mediathek",
   description: "Button-based media picker with search, read-only folder context, thumbnails, and pagination.",
   category: "media",
@@ -122,6 +123,7 @@ export const PHI_MEDIA_PICKER_WIDGET_DEFINITION = {
   | "kind"
   | "pluginKey"
   | "typeKey"
+  | "slotSizePolicy"
   | "title"
   | "description"
   | "category"

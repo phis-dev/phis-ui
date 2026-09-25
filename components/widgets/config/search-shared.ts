@@ -56,12 +56,12 @@ export const PHI_SEARCH_WIDGET_DEFAULT_CONFIG: Partial<PhiCmsSearchWidgetConfig>
 export function buildPhiSearchWidgetDefinition(
   options: Pick<
     PhiCmsWidgetPlugin<PhiCmsSearchWidgetConfig>,
-    "typeKey" | "title" | "description"
+    "typeKey" | "title" | "description" | "slotSizePolicy"
   > &
     Partial<
       Pick<
         PhiCmsWidgetPlugin<PhiCmsSearchWidgetConfig>,
-        "category" | "iconFamily" | "slotSizePolicy" | "defaultConfig"
+        "category" | "iconFamily" | "defaultConfig"
       >
     >,
 ) {
@@ -73,7 +73,7 @@ export function buildPhiSearchWidgetDefinition(
     description: options.description,
     category: options.category ?? "navigation",
     iconFamily: options.iconFamily ?? "navigation",
-    ...(options.slotSizePolicy ? { slotSizePolicy: options.slotSizePolicy } : {}),
+    slotSizePolicy: options.slotSizePolicy,
     runtimeSignals: {
       ...PHI_TEXT_CONTROL_SIGNALS,
     },

@@ -11,6 +11,7 @@ export const PHI_PAGE_TITLE_WIDGET_DEFINITION = {
   kind: "widget",
   pluginKey: resolvePhiCmsWidgetPluginKey("page-title"),
   typeKey: "page-title",
+  slotSizePolicy: "intrinsic",
   title: "Page title",
   category: "content",
   description: "Displays the current localized CMS page title from runtime metadata.",
@@ -19,5 +20,5 @@ export const PHI_PAGE_TITLE_WIDGET_DEFINITION = {
   parseConfig: parsePhiPageTitleWidgetConfig,
 } satisfies Pick<
   PhiCmsWidgetPlugin<PhiPageTitleWidgetConfig>,
-  "kind" | "pluginKey" | "typeKey" | "title" | "description" | "category" | "iconFamily" | "fields" | "parseConfig"
+  "kind" | "pluginKey" | "typeKey" | "slotSizePolicy" | "title" | "description" | "category" | "iconFamily" | "fields" | "parseConfig"
 >;

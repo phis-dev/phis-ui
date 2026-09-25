@@ -13,7 +13,7 @@ import {
 export type PhiMarkdownSpacingKey = "none" | "xxs" | "xs" | "sm" | "base" | "md" | "lg" | "xl" | "xxl";
 
 /** Logical, not left and right: a Site in an RTL locale reads "start" as the right-hand edge. */
-export type PhiMarkdownTextAlign = "start" | "center" | "end";
+export type PhiMarkdownTextAlign = "start" | "center" | "end" | "justify";
 
 export type PhiCmsMarkdownWidgetConfig = PhiCmsWidgetConfigBase & {
   sourceMode?: "inline" | "url";
@@ -37,6 +37,7 @@ const PHI_MARKDOWN_TEXT_ALIGN_OPTIONS: Array<{ value: PhiMarkdownTextAlign; labe
   { value: "start", label: "Start" },
   { value: "center", label: "Center" },
   { value: "end", label: "End" },
+  { value: "justify", label: "Justify" },
 ];
 
 const PHI_MARKDOWN_SPACING_OPTIONS: Array<{ value: PhiMarkdownSpacingKey; label: string }> = [
@@ -94,10 +95,18 @@ export const PHI_MARKDOWN_WIDGET_DEFINITION = {
   category: "content",
   description: "Render local or remote markdown with shared translation and typography.",
   iconFamily: "basic",
-  slotSizePolicy: "intrinsic",
+  /*
+   * A text block takes the width it is given, like the HTML Widget and the Markdown TOC. As `intrinsic`
+   * it was as wide as its own longest line: a short paragraph stood in a box narrower than the slot,
+   * `textAlign: end` pushed the text to the box's far edge, and a stated maximum width never capped it -- the
+   * cap's `100%` is cyclic inside a shrink-to-fit slot and the browser drops the whole cap. Filling, the
+   * block is capped by its maximum and placed by the Layout's anchor, in the Builder and live alike.
+   */
+  slotSizePolicy: "fill-inline",
   defaultConfig: {
     translate: true,
     revalidateSeconds: 14400,
+    textAlign: "start",
     textBlockSpacingBefore: "none",
     textBlockSpacingAfter: "sm",
     headingBlockSpacingBefore: "none",

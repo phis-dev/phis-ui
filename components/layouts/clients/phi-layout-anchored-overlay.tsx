@@ -2,6 +2,11 @@ import { Children, isValidElement, type CSSProperties, type ReactNode } from "re
 
 import { buildPhiSlotChildDataAttributes, resolvePhiSlotChildSizing } from "../../../plugins/runtime/slot-size-policy";
 import type { PhiAnchorWidgetPlacement } from "../../controls/phi-anchor-control-contract";
+import {
+  PHI_SLOT_CROSS_MARGIN_END_PROPERTY,
+  PHI_SLOT_CROSS_MARGIN_START_PROPERTY,
+  resolvePhiSlotCrossMargin,
+} from "../phi-layout-contract";
 
 export type PhiLayoutAnchorRole = "left" | "middle" | "right";
 
@@ -107,6 +112,12 @@ function resolveAnchorAlignment(
   return { horizontal, vertical };
 }
 
+/**
+ * The anchor's placement, as the margins a child that fills up to a cap is moved by. `justify-content`
+ * reaches a child that leaves room in the row; a child stretched to the row and capped is placed by the
+ * auto margins it reads off `--phi-slot-cross-margin-*`, and those inherit -- so an overlay that stated
+ * none handed its child whatever Layout stood above. Stated on every overlay, `0` included.
+ */
 export function PhiLayoutAnchoredOverlay({
   anchor,
   slotRole,
@@ -119,6 +130,7 @@ export function PhiLayoutAnchoredOverlay({
 }: PhiLayoutAnchoredOverlayProps) {
   const { horizontal, vertical } = resolveAnchorAlignment(anchor, slotRole);
   const slotSizing = resolvePhiLayoutSlotChildSizing(children);
+  const crossMargin = resolvePhiSlotCrossMargin(horizontal);
 
   return (
     <div
@@ -130,6 +142,8 @@ export function PhiLayoutAnchoredOverlay({
         justifyContent: horizontal,
         alignItems: vertical,
         backgroundColor: backgroundColor ?? "transparent",
+        [PHI_SLOT_CROSS_MARGIN_START_PROPERTY]: crossMargin.start,
+        [PHI_SLOT_CROSS_MARGIN_END_PROPERTY]: crossMargin.end,
         ...(positionMode === "absolute"
           ? {
               top: inset?.top ?? 0,
@@ -148,7 +162,7 @@ export function PhiLayoutAnchoredOverlay({
               alignSelf: slotSizing.fillInline || fillAvailableInline ? "stretch" : undefined,
             }
           : null),
-      }}
+      } as CSSProperties}
     >
       <div
         className="phi-layout-scaffold-anchor__content"

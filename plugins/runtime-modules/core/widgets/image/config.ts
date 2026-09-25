@@ -135,6 +135,7 @@ export const PHI_IMAGE_WIDGET_DEFINITION = {
   kind: "widget",
   pluginKey: resolvePhiCmsWidgetPluginKey("image"),
   typeKey: "image",
+  slotSizePolicy: "intrinsic",
   title: "Image",
   description: "Flexible image renderer for local media, trusted URLs, and on-demand renditions.",
   category: "content",
@@ -221,6 +222,7 @@ export const PHI_IMAGE_WIDGET_DEFINITION = {
   | "kind"
   | "pluginKey"
   | "typeKey"
+  | "slotSizePolicy"
   | "title"
   | "description"
   | "category"

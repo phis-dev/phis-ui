@@ -39,6 +39,7 @@ export const PHI_TEST_BLOCK_WIDGET_DEFINITION = {
   kind: "widget",
   pluginKey: resolvePhiCmsWidgetPluginKey("test-block"),
   typeKey: "test-block",
+  slotSizePolicy: "intrinsic",
   title: "Test Block",
   category: "developer",
   description: "Simple colored box for layout testing.",
@@ -56,6 +57,7 @@ export const PHI_TEST_BLOCK_WIDGET_DEFINITION = {
   | "kind"
   | "pluginKey"
   | "typeKey"
+  | "slotSizePolicy"
   | "title"
   | "description"
   | "category"

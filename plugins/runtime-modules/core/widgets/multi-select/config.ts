@@ -97,6 +97,7 @@ export const PHI_MULTI_SELECT_WIDGET_DEFINITION = {
   kind: "widget",
   pluginKey: resolvePhiCmsWidgetPluginKey("multi-select"),
   typeKey: "multi-select",
+  slotSizePolicy: "intrinsic",
   title: "Multi Select",
   description: "Reusable multi-select control that emits runtime selection signals.",
   category: "form",
@@ -146,6 +147,7 @@ export const PHI_MULTI_SELECT_WIDGET_DEFINITION = {
   | "kind"
   | "pluginKey"
   | "typeKey"
+  | "slotSizePolicy"
   | "title"
   | "description"
   | "category"

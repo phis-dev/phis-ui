@@ -45,7 +45,7 @@ export function createPhiCmsWidgetDefinition<TConfig>(options: {
   iconFamily?: PhiWidgetDefinitionBase<TConfig>["iconFamily"];
   runtimeSignals?: PhiWidgetDefinitionBase<TConfig>["runtimeSignals"];
   requiredDataProviders?: PhiWidgetDefinitionBase<TConfig>["requiredDataProviders"];
-  slotSizePolicy?: PhiWidgetDefinitionBase<TConfig>["slotSizePolicy"];
+  slotSizePolicy: PhiWidgetDefinitionBase<TConfig>["slotSizePolicy"];
   fields?: PhiWidgetDefinitionBase<TConfig>["fields"];
   defaultConfig?: TConfig;
   parseConfig: (raw: Record<string, unknown>) => TConfig;

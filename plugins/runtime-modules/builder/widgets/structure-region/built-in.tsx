@@ -26,7 +26,11 @@ import { readPhiCmsInstanceId, type PhiCmsInstanceId } from "../../../../../type
 import type { PhiCmsRegionConfig } from "../../../../../types";
 import { normalizePhiPaddingWidgetConfig } from "../../../../../types/cms-config";
 import { readPhiShadow } from "../../../../../types/layout-style";
-import { resolvePhiCssLength } from "../../../../../helpers/css-length";
+import {
+  readPhiRenderableBlockLength,
+  resolvePhiRenderableBlockGeometry,
+  type PhiResolvedBlockGeometry,
+} from "../../../../../types/renderable-block-geometry";
 import {
   extractPhiStructureNode as extractStructureNode,
   swapPhiStructureWidgetsAcrossTrees,
@@ -335,17 +339,15 @@ function resolvePickItemPackageName(item: PhiStructureRegionPickItem) {
 }
 
 function resolveSlotBodyMinHeight(
-  draft: PhiDeveloperBuilderRegionDraft | null,
+  geometry: PhiResolvedBlockGeometry,
   fallbackMinHeight: number,
   fillAvailableHeight = false,
 ) {
-  const baseMinHeight = draft?.minSize?.height ?? draft?.size?.height ?? (fillAvailableHeight ? fallbackMinHeight : null);
-
-  if (baseMinHeight == null) {
-    return undefined;
-  }
-
-  return `${baseMinHeight}px`;
+  return (
+    geometry.block.min?.css ??
+    geometry.block.size?.css ??
+    (fillAvailableHeight ? `${fallbackMinHeight}px` : undefined)
+  );
 }
 
 function buildInsertedLayoutNode(
@@ -751,9 +753,7 @@ export function PhiStructureRegionScaffold({
     regionDraft ??
     fallbackPageDraft ??
     getDefaultRegionDraft(config.regionKey);
-  const draftSize = effectiveDraft?.size ?? null;
-  const draftMinSize = effectiveDraft?.minSize ?? null;
-  const draftMaxSize = effectiveDraft?.maxSize ?? null;
+  const draftGeometry = resolvePhiRenderableBlockGeometry(effectiveDraft);
   const rootNodeDefinition = effectiveDraft?.rootNodeKind == null || !effectiveDraft.rootNodeTypeKey
     ? null
     : layoutMetasByType.get(effectiveDraft.rootNodeTypeKey) ?? null;
@@ -761,11 +761,11 @@ export function PhiStructureRegionScaffold({
   const shouldFillAvailableHeight =
     isFullHeightRegion &&
     effectiveDraft?.regionConfig?.fullHeight !== false &&
-    draftSize?.height == null &&
-    draftMinSize?.height == null &&
-    draftMaxSize?.height == null;
+    draftGeometry.block.size == null &&
+    draftGeometry.block.min == null &&
+    draftGeometry.block.max == null;
   const shouldStretchAvailableHeight = shouldFillAvailableHeight || shouldStretchContentRegion;
-  const hasExplicitSidebarWidth = isFullHeightRegion && draftSize?.width != null;
+  const hasExplicitSidebarWidth = isFullHeightRegion && draftGeometry.explicitInline;
   const slotBackgroundStyle = effectiveDraft?.background
     ? resolvePhiBackgroundWidgetStyle({
         ...effectiveDraft.background,
@@ -791,58 +791,43 @@ export function PhiStructureRegionScaffold({
     fontSize: regionConfig?.fontSize,
     lineHeight: regionConfig?.lineHeight,
   });
-  const outerWidth = hasExplicitSidebarWidth ? resolvePhiCssLength(draftSize?.width) : "100%";
-  const outerMinWidth = hasExplicitSidebarWidth
-    ? resolvePhiCssLength(draftMinSize?.width) ?? resolvePhiCssLength(draftSize?.width)
-    : 0;
-  const outerMaxWidth = hasExplicitSidebarWidth
-    ? resolvePhiCssLength(draftMaxSize?.width) ?? resolvePhiCssLength(draftSize?.width)
-    : undefined;
-  const slotWidth = hasExplicitSidebarWidth ? "100%" : resolvePhiCssLength(draftSize?.width) ?? "100%";
-  const slotMinWidth = hasExplicitSidebarWidth
-    ? "0px"
-    : resolvePhiCssLength(draftMinSize?.width) ?? resolvePhiCssLength(draftSize?.width);
-  const slotMaxWidth = hasExplicitSidebarWidth
-    ? "100%"
-    : resolvePhiCssLength(draftMaxSize?.width) ?? resolvePhiCssLength(draftSize?.width);
+  const draftWidth = draftGeometry.inline.size?.css;
+  const draftMinWidth = draftGeometry.inline.min?.css;
+  const draftMaxWidth = draftGeometry.inline.max?.css;
+  const draftHeight = draftGeometry.block.size?.css;
+  const resolvedOffsetTop = readPhiRenderableBlockLength(offsetTop)?.css;
+  const outerWidth = hasExplicitSidebarWidth ? draftWidth : "100%";
+  const outerMinWidth = hasExplicitSidebarWidth ? draftMinWidth ?? draftWidth : 0;
+  const outerMaxWidth = hasExplicitSidebarWidth ? draftMaxWidth ?? draftWidth : undefined;
+  const slotWidth = hasExplicitSidebarWidth ? "100%" : draftWidth ?? "100%";
+  const slotMinWidth = hasExplicitSidebarWidth ? "0px" : draftMinWidth ?? draftWidth;
+  const slotMaxWidth = hasExplicitSidebarWidth ? "100%" : draftMaxWidth ?? draftWidth;
   // A Region with a maximum width is a centred column, exactly as the live Region shell renders it.
   const slotCentreStyle: CSSProperties =
-    !hasExplicitSidebarWidth && draftMaxSize?.width != null ? { marginInline: "auto" } : {};
+    !hasExplicitSidebarWidth && draftGeometry.inline.max != null ? { marginInline: "auto" } : {};
   const slotHeight = shouldStretchAvailableHeight
     ? undefined
     : shouldFillAvailableHeight
-      ? `calc(100% - ${resolvePhiCssLength(offsetTop) ?? "0px"})`
-      : draftSize?.height != null
-        ? resolvePhiCssLength(draftSize.height)
-        : undefined;
+      ? `calc(100% - ${resolvedOffsetTop ?? "0px"})`
+      : draftHeight;
   const slotMinHeight =
       shouldStretchAvailableHeight
       ? 0
       : shouldFillAvailableHeight
-      ? `calc(100% - ${resolvePhiCssLength(offsetTop) ?? "0px"})`
-      : draftMinSize?.height != null
-        ? resolvePhiCssLength(draftMinSize.height)
-        : draftSize?.height != null
-          ? resolvePhiCssLength(draftSize.height)
-          : shouldStretchAvailableHeight
-            ? 0
-            : resolvedFallbackMinHeight;
+      ? `calc(100% - ${resolvedOffsetTop ?? "0px"})`
+      : draftGeometry.block.min?.css ?? draftHeight ?? resolvedFallbackMinHeight;
   const slotMaxHeight =
     shouldStretchAvailableHeight
       ? undefined
       : shouldFillAvailableHeight
-      ? `calc(100% - ${resolvePhiCssLength(offsetTop) ?? "0px"})`
-      : draftMaxSize?.height != null
-        ? resolvePhiCssLength(draftMaxSize.height)
-        : draftSize?.height != null
-          ? resolvePhiCssLength(draftSize.height)
-          : undefined;
+      ? `calc(100% - ${resolvedOffsetTop ?? "0px"})`
+      : draftGeometry.block.max?.css ?? draftHeight;
   const slotBodyMinHeight = resolveSlotBodyMinHeight(
-    effectiveDraft,
+    draftGeometry,
     shouldFillAvailableHeight ? 0 : resolvedFallbackMinHeight,
     slotKind === "structure",
   );
-  const slotBodyFallbackHeight = slotBodyMinHeight ?? resolvePhiCssLength(resolvedFallbackMinHeight);
+  const slotBodyFallbackHeight = slotBodyMinHeight ?? `${resolvedFallbackMinHeight}px`;
   const hasRootNode = effectiveDraft?.rootNodeTypeKey != null;
   const shouldUseFallbackBodyHeightForRoot =
     shouldFillAvailableHeight;
@@ -2331,7 +2316,7 @@ export function PhiStructureRegionScaffold({
           height: previewSlotHeight,
           minHeight: slotMinHeight,
           maxHeight: slotMaxHeight,
-          marginTop: resolvePhiCssLength(offsetTop),
+          marginTop: resolvedOffsetTop,
           ...slotCentreStyle,
           ...slotBackgroundStyle,
           ...slotBorderStyle,
@@ -2469,7 +2454,7 @@ export function PhiStructureRegionScaffold({
             height: slotHeight,
             minHeight: slotMinHeight,
             maxHeight: slotMaxHeight,
-            marginTop: resolvePhiCssLength(offsetTop),
+            marginTop: resolvedOffsetTop,
             ...slotCentreStyle,
             ...slotBackgroundStyle,
             ...slotBorderStyle,

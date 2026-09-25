@@ -1,6 +1,11 @@
 import { isValidElement, type CSSProperties, type ReactNode } from "react";
 
-import type { PhiRenderableBlockBase, PhiSlotAxisSizePolicy, PhiSlotSizePolicy, PhiNormalizedSlotSizePolicy } from "../../types";
+import type { PhiSlotAxisSizePolicy, PhiSlotSizePolicy, PhiNormalizedSlotSizePolicy } from "../../types";
+import {
+  resolvePhiRenderableBlockGeometry,
+  type PhiRenderableBlockGeometryInput,
+  type PhiResolvedBlockGeometry,
+} from "../../types/renderable-block-geometry";
 
 export type PhiSlotChildKind = "widget" | "layout";
 
@@ -14,6 +19,16 @@ export type PhiSlotChildSizing = {
   maxBlockSize?: CSSProperties["maxHeight"];
 };
 
+/*
+ * What a child sizes like when nothing says otherwise.
+ *
+ * Every Widget and Layout definition states its own policy (`slotSizePolicy` is required there), so this
+ * is no longer the answer any of them relies on. What is left for it: a policy that arrives from a config
+ * rather than from a definition and is absent, and an object form that names one axis and leaves the
+ * other open. The two entries stay apart because the open axis of a Layout and of a Widget do want
+ * different answers -- a Layout has no size of its own and takes the room it is given, a Widget is its
+ * content until it says otherwise.
+ */
 const PHI_SLOT_CHILD_DEFAULT_POLICY: Record<PhiSlotChildKind, PhiNormalizedSlotSizePolicy> = {
   widget: {
     inline: "intrinsic",
@@ -38,8 +53,23 @@ export function resolvePhiSlotSizePolicy(
 ): PhiNormalizedSlotSizePolicy {
   const fallback = PHI_SLOT_CHILD_DEFAULT_POLICY[kind];
 
-  if (policy == null || policy === "intrinsic") {
+  if (policy == null) {
     return fallback;
+  }
+
+  /*
+   * Stated `intrinsic` means intrinsic, on both axes, for a Layout as much as for a Widget.
+   *
+   * It used to fall through to the kind's default, which for a Widget happens to be the same answer and
+   * for a Layout is the opposite one: a Layout asking to be its content would have filled its slot. No
+   * Layout asked, so nothing moved -- but the word has to mean what it says now that every definition
+   * has to say it.
+   */
+  if (policy === "intrinsic") {
+    return {
+      inline: "intrinsic",
+      block: "intrinsic",
+    };
   }
 
   if (policy === "fill") {
@@ -76,12 +106,10 @@ export function resolvePhiSlotSizePolicy(
   };
 }
 
-export function resolvePhiSlotChildExplicitAxes(
-  config: Pick<PhiRenderableBlockBase, "size"> | null | undefined,
-) {
+export function resolvePhiSlotChildExplicitAxes(geometry: PhiResolvedBlockGeometry) {
   return {
-    explicitInlineSize: config?.size?.width != null,
-    explicitBlockSize: config?.size?.height != null,
+    explicitInlineSize: geometry.explicitInline,
+    explicitBlockSize: geometry.explicitBlock,
   };
 }
 
@@ -112,14 +140,12 @@ export function resolvePhiEffectiveSlotSizePolicy(
   return inline === policy.inline && block === policy.block ? policy : { inline, block };
 }
 
-function resolvePhiSlotChildSizeConstraints(
-  config: Pick<PhiRenderableBlockBase, "minSize" | "maxSize"> | null | undefined,
-) {
+export function resolvePhiSlotChildSizeConstraints(geometry: PhiResolvedBlockGeometry) {
   return {
-    minInlineSize: config?.minSize?.width ?? undefined,
-    minBlockSize: config?.minSize?.height ?? undefined,
-    maxInlineSize: config?.maxSize?.width ?? undefined,
-    maxBlockSize: config?.maxSize?.height ?? undefined,
+    minInlineSize: geometry.inline.min?.css,
+    minBlockSize: geometry.block.min?.css,
+    maxInlineSize: geometry.inline.max?.css,
+    maxBlockSize: geometry.block.max?.css,
   };
 }
 
@@ -139,13 +165,14 @@ function resolvePhiSlotChildSizeConstraints(
 export function resolvePhiSlotChildSizingForConfig(
   kind: PhiSlotChildKind,
   slotSizePolicy: PhiSlotSizePolicy | null | undefined,
-  config: Pick<PhiRenderableBlockBase, "size" | "minSize" | "maxSize"> | null | undefined,
+  config: PhiRenderableBlockGeometryInput | null | undefined,
 ): PhiSlotChildSizing {
-  const explicit = resolvePhiSlotChildExplicitAxes(config);
+  const geometry = resolvePhiRenderableBlockGeometry(config);
+  const explicit = resolvePhiSlotChildExplicitAxes(geometry);
   return {
     policy: resolvePhiEffectiveSlotSizePolicy(resolvePhiSlotSizePolicy(slotSizePolicy, kind), explicit),
     ...explicit,
-    ...resolvePhiSlotChildSizeConstraints(config),
+    ...resolvePhiSlotChildSizeConstraints(geometry),
   };
 }
 
@@ -205,7 +232,7 @@ export function resolvePhiSlotChildSizing(
     kind?: PhiSlotChildKind;
     explicitInlineSize?: unknown;
     explicitBlockSize?: unknown;
-    config?: Pick<PhiRenderableBlockBase, "minSize" | "maxSize"> | null;
+    config?: PhiRenderableBlockGeometryInput | null;
     "data-phi-slot-size-inline"?: unknown;
     "data-phi-slot-size-block"?: unknown;
     "data-phi-layout-explicit-width"?: unknown;
@@ -222,7 +249,7 @@ export function resolvePhiSlotChildSizing(
     return sizingProps;
   }
 
-  const configConstraints = resolvePhiSlotChildSizeConstraints(props.config);
+  const configConstraints = resolvePhiSlotChildSizeConstraints(resolvePhiRenderableBlockGeometry(props.config));
 
   if (props.slotSizePolicy != null || props.kind != null) {
     const resolvedKind =

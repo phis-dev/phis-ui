@@ -28,6 +28,7 @@ export const PHI_NUMBER_INPUT_WIDGET_DEFINITION = {
   kind: "widget",
   pluginKey: resolvePhiCmsWidgetPluginKey("number-input"),
   typeKey: "number-input",
+  slotSizePolicy: "intrinsic",
   title: "Number Input",
   description: "Reusable numeric input that emits typed number signals.",
   category: "form",
@@ -53,6 +54,7 @@ export const PHI_NUMBER_INPUT_WIDGET_DEFINITION = {
   | "kind"
   | "pluginKey"
   | "typeKey"
+  | "slotSizePolicy"
   | "title"
   | "description"
   | "category"

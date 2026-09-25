@@ -9,7 +9,6 @@ import { PhiTextControl } from "../../controls/phi-text-control";
 import { PhiExternalDocumentEditor } from "./external-document-editor";
 import { registerPhiMarkdownWidgetEditorBridge } from "./markdown-editor-bridge";
 
-const MARKDOWN_EDITOR_WIDTH = 520;
 const MARKDOWN_EDITOR_HEIGHT = 260;
 
 export type PhiMarkdownWidgetEditorProps = {
@@ -103,10 +102,20 @@ export function PhiMarkdownWidgetEditor({
           onChange?.(draftMarkdown);
         }
       }}
+      /*
+       * The source reads the way the rendered text will sit, so an alignment is visible while editing.
+       * On the field's own text, not on `style`: `style` places the control as a whole, and with a clear
+       * button the control is a wrapper around the textarea, which is where the text is.
+       */
+      inputStyle={config?.textAlign ? { textAlign: config.textAlign } : undefined}
       style={{
-        width: MARKDOWN_EDITOR_WIDTH,
+        /*
+         * As wide as the slot: the Widget fills its inline axis (`fill-inline`), so the frame decides the
+         * width and the editor takes it. A fixed 520px here dated from when the Widget was intrinsic and
+         * the frame shrank to the editor; kept, it stood in a filled slot at half the width.
+         */
+        width: "100%",
         height: MARKDOWN_EDITOR_HEIGHT,
-        maxWidth: "100%",
         minWidth: 0,
         padding: "var(--ant-padding-sm)",
         border: "1px solid var(--ant-color-border-secondary)",

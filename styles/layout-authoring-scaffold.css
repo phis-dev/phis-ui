@@ -254,6 +254,20 @@
   justify-content: var(--phi-edit-scaffold-body-justify);
 }
 
+/*
+ * The drawer stands in for the slot child frame, so it owes the Layout what a frame would give it.
+ *
+ * A Structure Region's root Layout is rendered here rather than in a slot: there is no
+ * `.phi-slot-child` above it and therefore none of the fill rules in `layout.css`. The Layout box
+ * states only what the block configured (`resolvePhiLayoutBoxStyle`), so without this rule a Grid or
+ * Masonry root would be laid out at its content size in the Builder and at full size everywhere else.
+ */
+:where(.phi-edit-scaffold-drawer__body > .phi-layout) {
+  flex: 1 1 auto;
+  width: 100%;
+  height: 100%;
+}
+
 /* Its width is set inline where the bar is built, out of reach of the fill rule in `layout.css`. */
 :where(.phi-layout-scaffold-delete) {
   position: absolute;

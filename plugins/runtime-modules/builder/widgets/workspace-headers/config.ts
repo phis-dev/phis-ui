@@ -20,6 +20,7 @@ export const PHI_DEVELOPER_BUILDER_PAGES_HEADER_WIDGET_DEFINITION = {
   kind: "widget",
   pluginKey: resolvePhiCmsWidgetPluginKey("developer-builder-pages-header"),
   typeKey: "developer-builder-pages-header",
+  slotSizePolicy: "intrinsic",
   title: "Builder Pages Header",
   description: "Pages header controls for the Builder pages workspace.",
   category: "workspace",
@@ -42,6 +43,7 @@ export const PHI_DEVELOPER_BUILDER_PAGES_HEADER_WIDGET_DEFINITION = {
   | "kind"
   | "pluginKey"
   | "typeKey"
+  | "slotSizePolicy"
   | "title"
   | "description"
   | "category"

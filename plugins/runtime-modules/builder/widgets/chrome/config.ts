@@ -30,7 +30,7 @@ function createBuilderChromeWidgetDefinition(options: {
   title: string;
   description: string;
   runtimeSignals?: PhiBuilderChromeWidgetDefinition["runtimeSignals"];
-  slotSizePolicy?: PhiBuilderChromeWidgetDefinition["slotSizePolicy"];
+  slotSizePolicy: PhiBuilderChromeWidgetDefinition["slotSizePolicy"];
 }): PhiBuilderChromeWidgetDefinition {
   return {
     kind: "widget",
@@ -49,12 +49,14 @@ function createBuilderChromeWidgetDefinition(options: {
 
 export const PHI_BUILDER_MODE_SWITCH_WIDGET_DEFINITION = createBuilderChromeWidgetDefinition({
   typeKey: "builder-mode-switch",
+  slotSizePolicy: "intrinsic",
   title: "Builder Mode Switch",
   description: "Editor and preview switch for Builder workspaces.",
 });
 
 export const PHI_BUILDER_INSPECTOR_HEADER_WIDGET_DEFINITION = createBuilderChromeWidgetDefinition({
   typeKey: "builder-inspector-header",
+  slotSizePolicy: "intrinsic",
   title: "Builder Inspector Header",
   description: "Dynamic node kind and type heading for Builder inspector overlays.",
 });
@@ -108,6 +110,7 @@ export const PHI_BUILDER_INSPECTOR_SECTION_WIDGET_DEFINITIONS =
 
 export const PHI_DEVELOPER_BUILDER_DRAFT_STATUS_WIDGET_DEFINITION = createBuilderChromeWidgetDefinition({
   typeKey: "builder-draft-status",
+  slotSizePolicy: "intrinsic",
   title: "Builder Draft Status",
   description: "Builder header status showing whether the current scope is draft or published.",
 });

@@ -366,7 +366,7 @@ export type PhiCmsWidgetPlugin<TConfig> = {
   requiredRuntimeControllers?: PhiCmsWidgetRuntimeControllerRequirementResolver<TConfig>;
   requiredDataProviders?: readonly PhiRuntimeDataProviderKey[];
   contentBinding?: PhiCmsWidgetContentBinding | null;
-  slotSizePolicy?: PhiSlotSizePolicy;
+  slotSizePolicy: PhiSlotSizePolicy;
   /**
    * The kind of Region this Widget needs, where standing in the other kind would break it.
    *
@@ -542,7 +542,7 @@ export type PhiCmsLayoutPlugin<TConfig> = {
   iconFamily?: string;
   commercial?: PhiCmsPluginCommercialMeta;
   runtimeSignals?: PhiSignalPluginMeta | null;
-  slotSizePolicy?: PhiSlotSizePolicy;
+  slotSizePolicy: PhiSlotSizePolicy;
   defaultConfig?: Partial<TConfig>;
   defaultAnchor?: PhiRenderableBlockAnchor | null;
   fields: PhiCmsConfigField[];
@@ -700,7 +700,7 @@ export type PhiRuntimeModuleClientWidgetDefinition = {
   ownerModuleId: PhiRuntimeModuleId;
   title: string;
   signalSubcontrols?: readonly PhiCmsWidgetSignalSubcontrolCollection[];
-  slotSizePolicy?: PhiSlotSizePolicy;
+  slotSizePolicy: PhiSlotSizePolicy;
   renderPolicies: PhiRuntimeModuleRenderPolicies;
 };
 

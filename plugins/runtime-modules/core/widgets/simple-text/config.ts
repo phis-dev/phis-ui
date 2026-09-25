@@ -88,6 +88,7 @@ export const PHI_SIMPLE_TEXT_WIDGET_DEFINITION = {
   kind: "widget",
   pluginKey: resolvePhiCmsWidgetPluginKey("simple-text"),
   typeKey: "simple-text",
+  slotSizePolicy: "intrinsic",
   title: "Simple Text",
   category: "content",
   description: "Plain text or a single link with optional icon and text styling.",
@@ -167,6 +168,7 @@ export const PHI_SIMPLE_TEXT_WIDGET_DEFINITION = {
   | "kind"
   | "pluginKey"
   | "typeKey"
+  | "slotSizePolicy"
   | "title"
   | "description"
   | "category"

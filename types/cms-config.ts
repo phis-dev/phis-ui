@@ -16,7 +16,6 @@ import type { PhiResponsiveValue } from "./responsive";
 import {
   isPhiAnchorWidgetPlacement,
   resolvePhiRenderableBlockAnchor,
-  type PhiAnchorWidgetPlacement,
 } from "../components/controls/phi-anchor-control-contract";
 import {
   readBoolean,
@@ -41,10 +40,7 @@ import {
   type PhiShadow,
   type PhiLayoutEffectId,
 } from "./layout-style";
-import {
-  resolvePhiAnchorPlacement,
-  type PhiBaseLayoutSlotStates,
-} from "../components/layouts/phi-layout-contract";
+import type { PhiBaseLayoutSlotStates } from "../components/layouts/phi-layout-contract";
 import { applyPhiLayoutDefaults } from "../helpers/cms-layout-defaults";
 import { resolvePhiLayoutDefaults } from "../helpers/cms-layout-defaults";
 import { normalizeRenderableBlockAnchor } from "../helpers/renderable-block-serialization";
@@ -332,7 +328,7 @@ export function expandPhiBorderRadiusConfig(value: unknown): PhiCmsBorderWidgetC
 export type PhiCmsContentLayoutConfig = PhiCmsLayerBase & {
   size?: PhiRenderableBlockSize;
   margin?: CSSProperties["margin"];
-  anchor?: PhiAnchorWidgetPlacement;
+  anchor?: PhiRenderableBlockAnchor;
   padding?: CSSProperties["padding"];
   paddingLeft?: CSSProperties["paddingLeft"];
   paddingRight?: CSSProperties["paddingRight"];
@@ -612,7 +608,13 @@ export function parsePhiCmsContentLayoutConfig(
       borderSource: readPhiCmsBorderSource(config.borderSource),
       border: readString(config.border),
       borderRadius: readCssSize(config.borderRadius),
-      anchor: resolvePhiAnchorPlacement(readRenderableBlockAnchorOrPlacement(config.anchor)) ?? undefined,
+      /*
+       * Handed on as the block anchor, like every other Layout's. This one used to be folded into a
+       * placement name here, and the renderer then asked the name for its `horizontal` -- a string has
+       * none, so a Content Layout anchored left drew centred wherever the parsed config reached it, in
+       * preview and live, while the Builder, which hands the object straight through, drew it left.
+       */
+      anchor: readRenderableBlockAnchorOrPlacement(config.anchor),
     },
     resolvePhiLayoutDefaults("content"),
   );

@@ -13,6 +13,7 @@ import {
   resolvePhiLayoutDefaults,
 } from "../helpers/cms-layout-defaults";
 import {
+  resolvePhiLayoutAnchor,
   resolvePhiLayoutStyle,
   resolvePhiPaddingStyle,
   type PhiLayoutKind,
@@ -86,6 +87,19 @@ assert.equal(
   undefined,
   "A Layout config must not take geometry from flat width/height; `size` is the only spelling read.",
 );
+/*
+ * The anchor survives parsing as the block anchor. Folded into a placement name it was lost on the
+ * way to the renderer, which asks the value for its `horizontal` and, finding none, centres.
+ */
+assert.deepEqual(
+  resolvePhiLayoutAnchor(
+    parsePhiCmsContentLayoutConfig({ anchor: { horizontal: "left", vertical: "middle" } }).anchor,
+    { horizontal: "center", vertical: "middle" },
+  ),
+  "left",
+  "A Content Layout anchored left must resolve to the left placement after parsing.",
+);
+
 assert.deepEqual(
   parsePhiCmsContentLayoutConfig({ size: { width: 400 } }).size,
   { width: 400, height: undefined },
@@ -178,7 +192,8 @@ assert.deepEqual(
  * that states one no longer claims to fill. The alternative left every reader to subtract the size from
  * the policy, and the readers that forgot were the bug. A maximum is deliberately not a size -- a
  * column capped at a readable measure still fills up to the cap -- which is why `maxBlockSize` sits
- * here beside a block axis that stays `intrinsic`.
+ * here beside a block axis that stays `intrinsic`. The constraints arrive as CSS lengths, decoded by the
+ * geometry resolver: the bare `120` the config stores is a pixel length, and it says so here.
  */
 assert.deepEqual(
   resolvePhiSlotChildSizingForConfig("widget", "fill-inline", {
@@ -190,8 +205,8 @@ assert.deepEqual(
     policy: { inline: "fixed", block: "intrinsic" },
     explicitInlineSize: true,
     explicitBlockSize: false,
-    minInlineSize: 120,
-    minBlockSize: 40,
+    minInlineSize: "120px",
+    minBlockSize: "40px",
     maxInlineSize: undefined,
     maxBlockSize: "50vh",
   },

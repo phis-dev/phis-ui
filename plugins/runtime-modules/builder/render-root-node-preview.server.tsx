@@ -21,23 +21,11 @@ import { getPhiBuilderRegionDraftKey } from "./region-keys";
 import {
   type PhiBuilderRootNodeDraft,
 } from "./root-node-normalization";
-import { resolvePhiRootNodeCssSize } from "./root-node-css-size";
+import { resolvePhiRenderableBlockGeometry } from "../../../types/renderable-block-geometry";
+import { resolvePhiRootScaffoldProperties } from "./builder-geometry";
 import { buildPhiBuilderRootNodeRenderableTree } from "./root-node-renderable-tree";
 import { normalizePhiPaddingWidgetConfig } from "../../../types/cms-config";
 import { resolvePhiPaddingStyle } from "../../../components/layouts/phi-layout-contract";
-
-function resolveCssLength(value: unknown) {
-  if (typeof value === "number" && Number.isFinite(value)) {
-    return `${value}px`;
-  }
-
-  if (typeof value === "string") {
-    const trimmed = value.trim();
-    return trimmed.length > 0 ? trimmed : null;
-  }
-
-  return null;
-}
 
 export type PhiBuilderRootNodePreviewInput = PhiBuilderRootNodeDraft;
 
@@ -86,7 +74,13 @@ function resolvePreviewFallbackBlockSize(
     return null;
   }
 
-  return resolveCssLength(draft?.minSize?.height) ?? resolveCssLength(draft?.size?.height) ?? "84px";
+  return resolvePreviewFallbackBand(draft);
+}
+
+/** The band a Region falls back to: its stated minimum, else its stated height, else the house 84px. */
+function resolvePreviewFallbackBand(draft: PhiBuilderPreviewRegionDraft | null | undefined) {
+  const geometry = resolvePhiRenderableBlockGeometry(draft);
+  return geometry.block.min?.css ?? geometry.block.size?.css ?? "84px";
 }
 
 function resolvePreviewFallbackMinBlockSize(
@@ -97,7 +91,7 @@ function resolvePreviewFallbackMinBlockSize(
     return null;
   }
 
-  return resolveCssLength(draft?.minSize?.height) ?? resolveCssLength(draft?.size?.height) ?? "84px";
+  return resolvePreviewFallbackBand(draft);
 }
 
 function buildPreviewTree(
@@ -329,6 +323,7 @@ export async function PhiBuilderRootNodeServerPreview({
   extraPreviewNodes,
 }: PhiBuilderRootNodeServerPreviewProps): Promise<ReactNode> {
   const rootSlotChildKind = rootNode.kind === "widget" ? "widget" : "layout";
+  const rootGeometry = resolvePhiRenderableBlockGeometry(rootNode.rootNodeGeometry);
   const tree = buildPreviewTree(rootNode, regionType, regionConfig, regionBackgroundConfig);
 
   if (!tree) {
@@ -360,22 +355,11 @@ export async function PhiBuilderRootNodeServerPreview({
           className="phi-builder-root-scaffold__slot"
           kind={rootSlotChildKind}
           blockId={rootNode.id ?? null}
-          explicitInlineSize={rootNode.rootNodeGeometry?.size?.width != null}
-          explicitBlockSize={rootNode.rootNodeGeometry?.size?.height != null}
+          explicitInlineSize={rootGeometry.explicitInline}
+          explicitBlockSize={rootGeometry.explicitBlock}
           style={
             {
-              "--phi-root-scaffold-width": resolvePhiRootNodeCssSize(rootNode.rootNodeGeometry?.size?.width, "100%"),
-              "--phi-root-scaffold-height":
-                resolvePhiRootNodeCssSize(rootNode.rootNodeGeometry?.size?.height, fallbackBlockSize ?? "auto"),
-              "--phi-root-scaffold-min-width": resolvePhiRootNodeCssSize(rootNode.rootNodeGeometry?.minSize?.width, "0"),
-              "--phi-root-scaffold-min-height":
-                resolvePhiRootNodeCssSize(rootNode.rootNodeGeometry?.minSize?.height, fallbackMinBlockSize ?? "0"),
-              "--phi-root-scaffold-max-width": resolvePhiRootNodeCssSize(rootNode.rootNodeGeometry?.maxSize?.width, "none"),
-              "--phi-root-scaffold-max-height": resolvePhiRootNodeCssSize(rootNode.rootNodeGeometry?.maxSize?.height, "none"),
-              "--phi-root-scaffold-flex":
-                rootNode.rootNodeGeometry?.size?.width != null || rootNode.rootNodeGeometry?.size?.height != null ? "0 0 auto" : "1 1 auto",
-              "--phi-root-scaffold-explicit-width": resolvePhiRootNodeCssSize(rootNode.rootNodeGeometry?.size?.width, "auto"),
-              "--phi-root-scaffold-explicit-height": resolvePhiRootNodeCssSize(rootNode.rootNodeGeometry?.size?.height, "auto"),
+              ...resolvePhiRootScaffoldProperties(rootGeometry, fallbackBlockSize, fallbackMinBlockSize),
               minWidth: 0,
               minHeight: 0,
               flex: "1 1 auto",

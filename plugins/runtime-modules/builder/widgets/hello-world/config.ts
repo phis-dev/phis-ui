@@ -32,6 +32,7 @@ export const PHI_HELLO_WORLD_WIDGET_DEFINITION = {
   kind: "widget",
   pluginKey: resolvePhiCmsWidgetPluginKey("hello-world"),
   typeKey: "hello-world",
+  slotSizePolicy: "intrinsic",
   title: "Hello World",
   category: "developer",
   description: "Debug widget showing current runtime and page information.",
@@ -40,7 +41,7 @@ export const PHI_HELLO_WORLD_WIDGET_DEFINITION = {
   parseConfig: parsePhiCmsHelloWorldWidgetConfig,
 } satisfies Pick<
   PhiCmsWidgetPlugin<PhiCmsHelloWorldWidgetConfig>,
-  "kind" | "pluginKey" | "typeKey" | "title" | "description" | "category" | "iconFamily" | "fields" | "parseConfig"
+  "kind" | "pluginKey" | "typeKey" | "slotSizePolicy" | "title" | "description" | "category" | "iconFamily" | "fields" | "parseConfig"
 >;
 
 export const PHI_HELLO_WORLD_WIDGET_PLUGIN_TYPE = PhiCmsWidgetType.HelloWorld;

@@ -20,6 +20,7 @@ import { PhiCmsFlags } from "../../constants/phi-cms";
 import type { PhiBlockRuntime, PhiCmsRegionConfig, PhiCmsRegionKey } from "../../types";
 import type { PhiCmsBorderWidgetConfig } from "../../types/cms-config";
 import { createPhiSignalAddress } from "../../types/signals";
+import { resolvePhiRenderableBlockGeometry } from "../../types/renderable-block-geometry";
 import { resolvePhiPaddingStyle } from "../layouts/phi-layout-contract";
 
 type PhiRuntimeShellTheme = NonNullable<NonNullable<PhiBlockRuntime["site"]["theme"]>["shell"]>;
@@ -68,12 +69,10 @@ export function PhiCmsRegionStatic({
   const isFooter =
     regionKey === "footer_top" || regionKey === "footer_main" || regionKey === "footer_bottom";
   const isSider = regionKey === "sider_left" || regionKey === "sider_right";
-  const resolvedSize =
-    resolvedVisibility === "collapsed"
-      ? config.collapsedSizeHint ?? config.size
-      : config.size;
-  const resolvedHeight = normalizeCssLength(resolvedSize?.height);
-  const resolvedWidth = normalizeCssLength(resolvedSize?.width) ?? resolvePhiShellSiderWidth(shellTheme);
+  const geometry = resolvePhiRenderableBlockGeometry({ ...config, visibility: resolvedVisibility });
+  const resolvedHeight = geometry.block.size?.css;
+  // A sider that states no width takes the Theme's; this Region's own answer, not the reader's.
+  const resolvedWidth = geometry.inline.size?.css ?? resolvePhiShellSiderWidth(shellTheme);
   const resolvedTop = normalizeCssLength(config.offsetTop) ?? 0;
   const resolvedBorderRadius = normalizeCssLength(config.borderRadius);
   const resolvedFullHeight = config.fullHeight === true;
@@ -128,7 +127,7 @@ export function PhiCmsRegionStatic({
   const effectsConfig = {
     visibility: resolvedVisibility,
     enabled: resolvedEnabled,
-    size: resolvedSize,
+    size: config.size,
     minSize: config.minSize,
     maxSize: config.maxSize,
     zIndex: resolvedZIndex,
@@ -222,10 +221,10 @@ export function PhiCmsRegionStatic({
     ...(resolvedTypography.fontSize ? { fontSize: resolvedTypography.fontSize } : {}),
     ...(resolvedTypography.lineHeight ? { lineHeight: resolvedTypography.lineHeight } : {}),
     ...resolvedBorderStyle,
-    ...(config.minSize?.width == null ? {} : { minWidth: config.minSize.width }),
-    ...(config.minSize?.height == null ? {} : { minHeight: config.minSize.height }),
-    ...(config.maxSize?.width == null ? {} : { maxWidth: config.maxSize.width }),
-    ...(config.maxSize?.height == null ? {} : { maxHeight: config.maxSize.height }),
+    ...(geometry.inline.min == null ? {} : { minWidth: geometry.inline.min.css }),
+    ...(geometry.block.min == null ? {} : { minHeight: geometry.block.min.css }),
+    ...(geometry.inline.max == null ? {} : { maxWidth: geometry.inline.max.css }),
+    ...(geometry.block.max == null ? {} : { maxHeight: geometry.block.max.css }),
     ...(config.opacity == null ? {} : { opacity: config.opacity }),
     ...(resolvedEnabled ? {} : { opacity: Math.min(config.opacity ?? 1, 0.5), pointerEvents: "none" }),
     ...(resolvedVisibility === "collapsed" ? { overflow: "hidden" } : {}),
@@ -248,7 +247,7 @@ export function PhiCmsRegionStatic({
       padding: 0,
       ...baseStyle,
       margin: 0,
-      ...(!isSider && config.maxSize?.width != null ? { marginInline: "auto" } : {}),
+      ...(!isSider && geometry.inline.max != null ? { marginInline: "auto" } : {}),
     },
   };
   const content = (

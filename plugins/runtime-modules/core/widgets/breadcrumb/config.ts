@@ -23,6 +23,7 @@ export const PHI_BREADCRUMB_WIDGET_DEFINITION = {
   kind: "widget",
   pluginKey: resolvePhiCmsWidgetPluginKey("breadcrumb"),
   typeKey: "breadcrumb",
+  slotSizePolicy: "intrinsic",
   title: "Breadcrumb",
   description: "Generic breadcrumb trail for page and header contexts.",
   category: "navigation",
@@ -40,6 +41,7 @@ export const PHI_BREADCRUMB_WIDGET_DEFINITION = {
   | "kind"
   | "pluginKey"
   | "typeKey"
+  | "slotSizePolicy"
   | "title"
   | "description"
   | "category"

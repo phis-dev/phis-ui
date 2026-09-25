@@ -4,8 +4,7 @@ import { theme as antdTheme } from "antd";
 import type { CSSProperties, ReactNode } from "react";
 
 import { PhiCmsRegionType } from "../../../../constants/phi-cms";
-import { PHI_LAYOUT } from "../../../../theme/phi-tokens";
-import { resolvePhiCssLength } from "../../../../helpers/css-length";
+import { resolvePhiBuilderSiderWidth } from "../builder-geometry";
 import { usePhiDeveloperBuilderStateValue } from "../developer-workspace-store";
 import type {
   PhiDeveloperBuilderArea,
@@ -322,13 +321,13 @@ export function PhiDeveloperBuilderStructureCanvas({
 
           if (firstChild?.kind === "region" && firstChild.regionKey === "sider_left") {
             const draft = resolveWorkspaceDraft("sider_left");
-            const width = resolvePhiCssLength(draft?.size?.width ?? draft?.minSize?.width ?? PHI_LAYOUT.sidebarWidth) ?? `${PHI_LAYOUT.sidebarWidth}px`;
+            const width = resolvePhiBuilderSiderWidth(draft);
             return `${width} minmax(0, 1fr)`;
           }
 
           if (secondChild?.kind === "region" && secondChild.regionKey === "sider_right") {
             const draft = resolveWorkspaceDraft("sider_right");
-            const width = resolvePhiCssLength(draft?.size?.width ?? draft?.minSize?.width ?? PHI_LAYOUT.sidebarWidth) ?? `${PHI_LAYOUT.sidebarWidth}px`;
+            const width = resolvePhiBuilderSiderWidth(draft);
             return `minmax(0, 1fr) ${width}`;
           }
 

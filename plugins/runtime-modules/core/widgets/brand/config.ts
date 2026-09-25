@@ -69,6 +69,7 @@ export const PHI_BRAND_WIDGET_DEFINITION = {
   kind: "widget",
   pluginKey: resolvePhiCmsWidgetPluginKey("brand"),
   typeKey: "brand",
+  slotSizePolicy: "intrinsic",
   title: "Brand",
   category: "content",
   description: "Site brand mark and wordmark.",
@@ -79,7 +80,7 @@ export const PHI_BRAND_WIDGET_DEFINITION = {
   parseConfig: parsePhiCmsBrandWidgetConfig,
 } satisfies Pick<
   PhiCmsWidgetPlugin<PhiCmsBrandWidgetConfig>,
-  "kind" | "pluginKey" | "typeKey" | "title" | "description" | "category" | "iconFamily" | "fields" | "parseConfig"
+  "kind" | "pluginKey" | "typeKey" | "slotSizePolicy" | "title" | "description" | "category" | "iconFamily" | "fields" | "parseConfig"
 >;
 
 export const PHI_BRAND_WIDGET_PLUGIN_TYPE = PhiCmsWidgetType.Brand;

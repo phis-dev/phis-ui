@@ -20,6 +20,7 @@ export const PHI_ICON_WIDGET_DEFINITION = {
   kind: "widget",
   pluginKey: resolvePhiCmsWidgetPluginKey("icon"),
   typeKey: "icon",
+  slotSizePolicy: "intrinsic",
   title: "Icon",
   category: "content",
   description: "Standalone icon block with shared icon and color tool actions.",
@@ -34,6 +35,7 @@ export const PHI_ICON_WIDGET_DEFINITION = {
   | "kind"
   | "pluginKey"
   | "typeKey"
+  | "slotSizePolicy"
   | "title"
   | "description"
   | "category"

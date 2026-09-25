@@ -171,6 +171,7 @@ export const PHI_GALLERY_WIDGET_DEFINITION = {
   kind: "widget",
   pluginKey: resolvePhiCmsWidgetPluginKey("gallery"),
   typeKey: "gallery",
+  slotSizePolicy: "intrinsic",
   title: "Gallery",
   description: "A run of pictures shown a few at a time, with arrows, dots and optional autoplay.",
   category: "media",
@@ -260,6 +261,7 @@ export const PHI_GALLERY_WIDGET_DEFINITION = {
   | "kind"
   | "pluginKey"
   | "typeKey"
+  | "slotSizePolicy"
   | "title"
   | "description"
   | "category"

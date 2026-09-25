@@ -19,6 +19,7 @@ import type {
   PhiCmsWidgetAuthoringCanvas,
 } from "../../../../../types";
 import { mapPhiBuilderNavigationItemsToNavItems } from "../../../../../components/widgets/builder/navigation-items";
+import { resolvePhiRenderableBlockGeometry } from "../../../../../types/renderable-block-geometry";
 
 function PhiHeaderNavigationWidgetEditor({
   runtime,
@@ -58,7 +59,7 @@ export const PHI_HEADER_NAVIGATION_WIDGET_BUILDER_PLUGIN: PhiCmsBuilderWidgetPlu
   renderEditor: ({ runtime, regionConfig, config, authoring }) => authoring ? (
     <PhiHeaderNavigationWidgetEditor
       runtime={runtime}
-      config={{ ...config, height: regionConfig?.size?.height ?? undefined }}
+      config={{ ...config, height: resolvePhiRenderableBlockGeometry(regionConfig).block.size?.css }}
       canvas={authoring.canvas}
     />
   ) : null,

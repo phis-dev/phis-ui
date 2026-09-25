@@ -34,6 +34,7 @@ export const PHI_DESCRIPTION_WIDGET_DEFINITION = {
   kind: "widget",
   pluginKey: resolvePhiCmsWidgetPluginKey("description"),
   typeKey: "description",
+  slotSizePolicy: "intrinsic",
   title: "Description",
   category: "content",
   description: "Introductory text block with eyebrow, title, body, bullet list, and footer.",
@@ -49,7 +50,7 @@ export const PHI_DESCRIPTION_WIDGET_DEFINITION = {
   parseConfig: parsePhiCmsDescriptionWidgetConfig,
 } satisfies Pick<
   PhiCmsWidgetPlugin<PhiCmsDescriptionWidgetConfig>,
-  "kind" | "pluginKey" | "typeKey" | "title" | "description" | "category" | "iconFamily" | "fields" | "parseConfig"
+  "kind" | "pluginKey" | "typeKey" | "slotSizePolicy" | "title" | "description" | "category" | "iconFamily" | "fields" | "parseConfig"
 >;
 
 export const PHI_DESCRIPTION_WIDGET_PLUGIN_TYPE = PhiCmsWidgetType.Description;

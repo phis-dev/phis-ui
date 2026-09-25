@@ -9,6 +9,7 @@ import { PhisThreadMessageFlag, PhisThreadStatus } from "../../../../../constant
 import { PhiAlertControl } from "../../../../../components/controls/phi-alert-control";
 import { PhiButtonControl } from "../../../../../components/controls/phi-button-control";
 import { PhiTagControl } from "../../../../../components/controls/phi-tag-control";
+import { usePhiConfig } from "../../../../../components/root/phi-config-provider";
 import { usePhiSignalListener } from "../../../../../components/runtime/runtime-signal-bus";
 import {
   usePhiSignalEmitter,
@@ -130,6 +131,7 @@ export function PhiThreadConversationWidgetClient({
   labels,
   config,
 }: PhiThreadConversationWidgetClientProps) {
+  const { token } = usePhiConfig();
   const searchParams = useSearchParams();
   const identity = usePhiSignalIdentity();
   const emitSignal = usePhiSignalEmitter();
@@ -442,17 +444,39 @@ export function PhiThreadConversationWidgetClient({
     };
   }, [runtime]);
 
+  /*
+   * The box this Widget is, drawn from the Theme and worn in every state.
+   *
+   * A conversation is a panel on a page: it has a frame and it sits on the panel background, and both
+   * come from the Theme rather than from colours typed in here -- `colorBgContainer` is what a panel
+   * stands on and `colorBorderSecondary` is the quiet frame, the same pair the Card Widget uses.
+   *
+   * All four states wear it, including "nothing chosen" and "still loading". A frame that appears only
+   * once a conversation has arrived is a page that jumps when somebody clicks a row, and the empty state
+   * is the one a person looks at longest.
+   *
+   * The configured padding wins where a Site set one, and the Theme's own `padding` stands in where none
+   * is set: a frame drawn tight against the text would be the Theme's spacing scale ignored at the one
+   * place it became visible.
+   */
+  const panelStyle = {
+    padding: config?.padding ?? token.padding,
+    background: token.colorBgContainer,
+    border: `1px solid ${token.colorBorderSecondary}`,
+    borderRadius: token.borderRadiusLG,
+  };
+
   if (threadId == null) {
     return (
-      <PhiTypographyControl type="secondary" style={{ padding: config?.padding }}>
-        {labels.noThreadText}
-      </PhiTypographyControl>
+      <div style={panelStyle}>
+        <PhiTypographyControl type="secondary">{labels.noThreadText}</PhiTypographyControl>
+      </div>
     );
   }
 
   if (error) {
     return (
-      <div style={{ padding: config?.padding }}>
+      <div style={panelStyle}>
         <PhiAlertControl level="error" title={labels.feedback.errorTitle} description={error} />
       </div>
     );
@@ -460,14 +484,14 @@ export function PhiThreadConversationWidgetClient({
 
   if (!detail) {
     return (
-      <PhiTypographyControl type="secondary" style={{ padding: config?.padding }}>
-        {labels.loadingText}
-      </PhiTypographyControl>
+      <div style={panelStyle}>
+        <PhiTypographyControl type="secondary">{labels.loadingText}</PhiTypographyControl>
+      </div>
     );
   }
 
   return (
-    <PhiFlexControl vertical gap="large" style={{ padding: config?.padding }}>
+    <PhiFlexControl vertical gap="large" style={panelStyle}>
       <PhiFlexControl align="center" gap="small" wrap>
         <PhiTypographyControl presentation="title" level={4} style={{ margin: 0 }}>
           {readThreadTitle(detail, labels)}
@@ -592,6 +616,23 @@ function PhiThreadMessageRow({
         {/* On the message, because which of the two a note is must never be in doubt while writing. */}
         {internal ? <PhiTagControl color="orange">{labels.internalLabel}</PhiTagControl> : null}
         <PhiTypographyControl type="secondary">{formatTime(message.createdAt)}</PhiTypographyControl>
+        {/*
+          * Beside the time, because that is where a message says what it is rather than what it says.
+          *
+          * The author, the markers and the timestamp are already one line about the message; reading it
+          * in another language is the same kind of fact and belongs in the same line. Under the body it
+          * sat between one message and the next, where a row of buttons reads as the conversation's
+          * furniture instead of as this message's.
+          */}
+        {offerTranslation ? (
+          <PhiButtonControl
+            label={shown ? labels.originalLabel : labels.translateLabel}
+            type="link"
+            size="small"
+            loading={translation?.status === "pending"}
+            onClick={() => onTranslate(message.id)}
+          />
+        ) : null}
       </PhiFlexControl>
 
       {message.bodyText == null ? (
@@ -621,16 +662,6 @@ function PhiThreadMessageRow({
         </PhiTypographyControl>
       ) : null}
 
-      {offerTranslation ? (
-        <PhiFlexControl>
-          <PhiButtonControl
-            label={shown ? labels.originalLabel : labels.translateLabel}
-            type="link"
-            loading={translation?.status === "pending"}
-            onClick={() => onTranslate(message.id)}
-          />
-        </PhiFlexControl>
-      ) : null}
 
       {message.assets.length > 0 ? (
         <PhiFlexControl wrap gap="small">

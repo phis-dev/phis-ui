@@ -78,7 +78,8 @@ import {
   buildPhiBuilderRootNodeRenderConfig,
   normalizePhiBuilderRootNodeDraft,
 } from "./root-node-normalization";
-import { resolvePhiRootNodeCssSize } from "./root-node-css-size";
+import { resolvePhiRenderableBlockGeometry } from "../../../types/renderable-block-geometry";
+import { resolvePhiRootScaffoldProperties } from "./builder-geometry";
 import { PhiWidgetPreviewFallback } from "../../../components/widgets/built-in/widget-preview";
 import { splitPhiCmsLayoutNamespacedTypeKey } from "../../../constants/cms-layout-types";
 import type {
@@ -1500,6 +1501,7 @@ export function renderPhiRootNodeScaffold(
 
   const regionKey = rootNode.regionKey;
   const normalizedRootNode = normalizePhiBuilderRootNodeDraft(rootNode);
+  const rootGeometry = resolvePhiRenderableBlockGeometry(normalizedRootNode.rootNodeGeometry);
   if (normalizedRootNode.id == null) {
     return null;
   }
@@ -1546,8 +1548,8 @@ export function renderPhiRootNodeScaffold(
       kind="layout"
       blockId={normalizedRootNode.id ?? null}
       config={rootNodeRenderableConfig}
-      explicitInlineSize={normalizedRootNode.rootNodeGeometry?.size?.width != null}
-      explicitBlockSize={normalizedRootNode.rootNodeGeometry?.size?.height != null}
+      explicitInlineSize={rootGeometry.explicitInline}
+      explicitBlockSize={rootGeometry.explicitBlock}
     >
       {child}
     </PhiLayoutEffectsPreviewFrame>
@@ -1640,23 +1642,11 @@ export function renderPhiRootNodeScaffold(
       packageName={rootPackageName}
       style={
         {
-          "--phi-root-scaffold-width": resolvePhiRootNodeCssSize(normalizedRootNode.rootNodeGeometry?.size?.width, "100%"),
-          "--phi-root-scaffold-height":
-            resolvePhiRootNodeCssSize(normalizedRootNode.rootNodeGeometry?.size?.height, options?.fallbackBlockSize ?? "auto"),
-          "--phi-root-scaffold-min-width":
-            resolvePhiRootNodeCssSize(normalizedRootNode.rootNodeGeometry?.minSize?.width, "0"),
-          "--phi-root-scaffold-min-height":
-            resolvePhiRootNodeCssSize(normalizedRootNode.rootNodeGeometry?.minSize?.height, options?.fallbackMinBlockSize ?? "0"),
-          "--phi-root-scaffold-max-width":
-            resolvePhiRootNodeCssSize(normalizedRootNode.rootNodeGeometry?.maxSize?.width, "none"),
-          "--phi-root-scaffold-max-height":
-            resolvePhiRootNodeCssSize(normalizedRootNode.rootNodeGeometry?.maxSize?.height, "none"),
-          "--phi-root-scaffold-flex":
-            normalizedRootNode.rootNodeGeometry?.size?.width != null || normalizedRootNode.rootNodeGeometry?.size?.height != null ? "0 0 auto" : "1 1 auto",
-          "--phi-root-scaffold-explicit-width":
-            resolvePhiRootNodeCssSize(normalizedRootNode.rootNodeGeometry?.size?.width, "auto"),
-          "--phi-root-scaffold-explicit-height":
-            resolvePhiRootNodeCssSize(normalizedRootNode.rootNodeGeometry?.size?.height, "auto"),
+          ...resolvePhiRootScaffoldProperties(
+            rootGeometry,
+            options?.fallbackBlockSize,
+            options?.fallbackMinBlockSize,
+          ),
         } as React.CSSProperties & Record<`--${string}`, string>
       }
       onClick={
@@ -1678,14 +1668,15 @@ export function renderPhiRootNodeScaffold(
   const renderChildLayoutNode = (node: PhiCmsLayoutRenderNode) => {
     const nodeKind = "layout" as const;
     const rootProps = resolveLayoutNodeRootProps(node);
+    const rootPropsGeometry = resolvePhiRenderableBlockGeometry(rootProps.rootNodeGeometry);
     return (
       <PhiAuthoringLayoutEffectsPreviewFrame
         type={node.widgetType}
         kind={nodeKind}
         blockId={node.id}
         config={node.config as Partial<PhiRenderableBlockBase>}
-        explicitInlineSize={rootProps.rootNodeGeometry?.size?.width != null}
-        explicitBlockSize={rootProps.rootNodeGeometry?.size?.height != null}
+        explicitInlineSize={rootPropsGeometry.explicitInline}
+        explicitBlockSize={rootPropsGeometry.explicitBlock}
       >
         {renderPhiRootNodeScaffold(
           { ...rootProps, regionKey },
@@ -1849,14 +1840,15 @@ export function renderPhiRootNodePreview(
   },
 ) {
   const normalizedRootNode = normalizePhiBuilderRootNodeDraft(rootNode);
+  const rootGeometry = resolvePhiRenderableBlockGeometry(normalizedRootNode.rootNodeGeometry);
 
   return (
     <PhiSlotChildFrame
       className="phi-builder-root-scaffold__slot"
       kind={resolveRootNodeSlotChildKind(normalizedRootNode.kind)}
       blockId={normalizedRootNode.id ?? null}
-      explicitInlineSize={normalizedRootNode.rootNodeGeometry?.size?.width != null}
-      explicitBlockSize={normalizedRootNode.rootNodeGeometry?.size?.height != null}
+      explicitInlineSize={rootGeometry.explicitInline}
+      explicitBlockSize={rootGeometry.explicitBlock}
       config={normalizedRootNode.rootNodeConfig as Partial<PhiRenderableBlockBase> | null | undefined}
     >
       <PhiAuthoringLayoutLoader

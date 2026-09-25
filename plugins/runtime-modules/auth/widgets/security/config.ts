@@ -7,6 +7,7 @@ export const PHI_AUTH_SECURITY_WIDGET_DEFINITION = {
   kind: "widget",
   pluginKey: resolvePhiCmsWidgetPluginKey("auth-security"),
   typeKey: "auth-security",
+  slotSizePolicy: "intrinsic",
   title: "Account Security",
   description: "Authenticated self-service for factors, identities, recovery, and sessions.",
   category: "account",
@@ -19,6 +20,7 @@ export const PHI_AUTH_SECURITY_WIDGET_DEFINITION = {
   | "kind"
   | "pluginKey"
   | "typeKey"
+  | "slotSizePolicy"
   | "title"
   | "description"
   | "category"

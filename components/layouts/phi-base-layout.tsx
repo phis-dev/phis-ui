@@ -59,20 +59,14 @@ export function PhiBaseLayout({
   initialSlotStates,
   style,
   editSlotAction,
-  editRenderInsertControl,
 }: PhiBaseLayoutProps) {
   const isAuthoringRender = isPhiLayoutAuthoringRender({ editSlotAction, editSlotLabels, capabilities });
   const slotList = slots ?? [];
   const resolvedSlotStates = resolvePhiBaseLayoutSlotStates(slotList.length, initialSlotStates);
   const resolvedRenderMode = renderMode ?? "live";
-  const isEditMode = resolvedRenderMode === "editor";
   const resolvedVisibility = visibility ?? "visible";
   const resolvedEnabled = enabled ?? true;
   const resolvedDebugMode = debugMode ?? false;
-  const resolvedSize =
-    resolvedVisibility === "collapsed"
-      ? collapsedSizeHint ?? size
-      : size;
   const resolvedMargin = resolvePhiRenderableBlockStyleValue(margin);
   const resolvedGap = resolvePhiRenderableBlockStyleValue(gap);
   const resolvedZIndex = resolvePhiRenderableBlockStyleValue(zIndex ?? 0);
@@ -114,43 +108,9 @@ export function PhiBaseLayout({
     return null;
   }
 
-  const resolvedLiveSlots = slotList
+  const resolvedSlots = slotList
     .map((slot, index) => resolveLayoutSlotNode(slot, index))
     .filter((slot): slot is ReactNode => slot !== null);
-  const resolvedEditSlots = isEditMode
-    ? (() => {
-        const rendered: ReactNode[] = [];
-        const inputSlots = slotList.length > 0 ? slotList : [null];
-
-        inputSlots.forEach((slot, index) => {
-          const resolvedSlot = resolveLayoutSlotNode(slot, index);
-          if (resolvedSlot !== null) {
-            rendered.push(resolvedSlot);
-          }
-
-          const nextSlotIndex = slotList.length > 0 ? index + 1 : 0;
-          const insertButton = editSlotAction && editRenderInsertControl
-            ? editRenderInsertControl({
-                key: `insert-${index}`,
-                presentation: "inline",
-                slotIndex: nextSlotIndex,
-                label: editSlotLabels?.[index],
-                onInsert: (targetSlotIndex) =>
-                  editSlotAction(targetSlotIndex, {
-                    defaultPickSection: "widget",
-                    allowWidgetSection: true,
-                    slotIndex: targetSlotIndex,
-                  }),
-              })
-            : null;
-          if (insertButton !== null) {
-            rendered.push(insertButton);
-          }
-        });
-
-        return rendered;
-      })()
-    : resolvedLiveSlots;
   const {
     style: resolvedLayoutStyle,
     hasExplicitLayoutBackground,
@@ -169,9 +129,11 @@ export function PhiBaseLayout({
   });
   const resolvedContainerStyle = {
     ...resolvePhiLayoutBoxStyle({
-      size: resolvedSize,
+      size,
       minSize,
       maxSize,
+      collapsedSizeHint,
+      visibility: resolvedVisibility,
     }),
     ...(resolvedZIndex == null ? {} : { zIndex: resolvedZIndex }),
     opacity: resolvedOpacity,
@@ -218,7 +180,7 @@ export function PhiBaseLayout({
       style={resolvedContainerStyle}
     >
       {backgroundLayer}
-      {resolvedEditSlots}
+      {resolvedSlots}
     </div>
   );
 }

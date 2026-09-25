@@ -11,6 +11,7 @@ export * from "./types/control";
 export * from "./types/calendar";
 export * from "./types/dimension";
 export * from "./types/length";
+export * from "./types/renderable-block-geometry";
 export * from "./types/responsive";
 export * from "./types/spacing";
 export * from "./types/runtime-condition";

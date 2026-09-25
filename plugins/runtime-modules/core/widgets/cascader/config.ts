@@ -54,6 +54,7 @@ export const PHI_CASCADER_WIDGET_DEFINITION = {
   kind: "widget",
   pluginKey: resolvePhiCmsWidgetPluginKey("cascader"),
   typeKey: "cascader",
+  slotSizePolicy: "intrinsic",
   title: "Cascader",
   description: "Reusable writable cascader that emits runtime state signals.",
   category: "form",
@@ -96,6 +97,7 @@ export const PHI_CASCADER_WIDGET_DEFINITION = {
   | "kind"
   | "pluginKey"
   | "typeKey"
+  | "slotSizePolicy"
   | "title"
   | "description"
   | "category"

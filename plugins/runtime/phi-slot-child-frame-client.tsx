@@ -65,10 +65,6 @@ export function PhiSlotChildFrameClient({
   });
   const resolvedVisibility = blockRuntime.state.visibility ?? "visible";
   const resolvedEnabled = blockRuntime.state.enabled ?? true;
-  const resolvedSize =
-    resolvedVisibility === "collapsed"
-      ? blockRuntime.state.collapsedSizeHint ?? blockRuntime.state.size
-      : blockRuntime.state.size;
   const resolvedConfig: Partial<PhiRenderableBlock> = {
     ...config,
     visibility: resolvedVisibility,
@@ -76,7 +72,7 @@ export function PhiSlotChildFrameClient({
     renderMode: blockRuntime.state.renderMode,
     debugMode: blockRuntime.state.debugMode,
     className: blockRuntime.state.className,
-    size: resolvedSize,
+    size: blockRuntime.state.size,
     minSize: blockRuntime.state.minSize,
     maxSize: blockRuntime.state.maxSize,
     collapsedSizeHint: blockRuntime.state.collapsedSizeHint,

@@ -20,6 +20,7 @@ export const PHI_THREAD_CONVERSATION_WIDGET_DEFINITION = {
   kind: "widget",
   pluginKey: resolvePhiCmsWidgetPluginKey("thread-conversation"),
   typeKey: "thread-conversation",
+  slotSizePolicy: "intrinsic",
   title: "Conversation",
   description: "Reads the selected conversation: its messages, who wrote them, and what hangs on them.",
   category: "content",
@@ -59,7 +60,7 @@ export const PHI_THREAD_CONVERSATION_WIDGET_DEFINITION = {
   parseConfig: parsePhiThreadWidgetConfig,
 } satisfies Pick<
   PhiCmsWidgetPlugin<PhiThreadWidgetConfig>,
-  | "kind" | "pluginKey" | "typeKey" | "title" | "description" | "category"
+  | "kind" | "pluginKey" | "typeKey" | "slotSizePolicy" | "title" | "description" | "category"
   | "runtimeSignals" | "fields" | "parseConfig"
 >;
 

@@ -31,6 +31,7 @@ export const PHI_LENGTH_WIDGET_DEFINITION = {
   kind: "widget",
   pluginKey: resolvePhiCmsWidgetPluginKey("length"),
   typeKey: "length",
+  slotSizePolicy: "intrinsic",
   title: "Length",
   description: "Reusable numeric CSS length input with an explicit unit.",
   category: "form",
@@ -56,6 +57,7 @@ export const PHI_LENGTH_WIDGET_DEFINITION = {
   | "kind"
   | "pluginKey"
   | "typeKey"
+  | "slotSizePolicy"
   | "title"
   | "description"
   | "category"

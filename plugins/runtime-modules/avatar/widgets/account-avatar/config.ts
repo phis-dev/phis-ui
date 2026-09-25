@@ -15,6 +15,7 @@ export const PHI_ACCOUNT_AVATAR_WIDGET_DEFINITION = {
   kind: "widget",
   pluginKey: resolvePhiCmsWidgetPluginKey("account-avatar"),
   typeKey: "account-avatar",
+  slotSizePolicy: "intrinsic",
   title: "Account avatar",
   description: "The signed-in person's own picture, with a control to change it.",
   category: "account",
@@ -22,7 +23,7 @@ export const PHI_ACCOUNT_AVATAR_WIDGET_DEFINITION = {
   parseConfig: parsePhiPaddingOnlyWidgetConfig,
 } satisfies Pick<
   PhiCmsWidgetPlugin<PhiCmsPaddingOnlyWidgetConfig>,
-  "kind" | "pluginKey" | "typeKey" | "title" | "description" | "category" | "fields" | "parseConfig"
+  "kind" | "pluginKey" | "typeKey" | "slotSizePolicy" | "title" | "description" | "category" | "fields" | "parseConfig"
 >;
 
 export const PHI_ACCOUNT_AVATAR_WIDGET_PLUGIN_TYPE = PhiCmsWidgetType.AccountAvatar;

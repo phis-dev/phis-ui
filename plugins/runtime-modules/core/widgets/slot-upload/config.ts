@@ -61,6 +61,7 @@ export const PHI_SLOT_UPLOAD_WIDGET_DEFINITION = {
   kind: "widget",
   pluginKey: PHI_SLOT_UPLOAD_WIDGET_PLUGIN_KEY,
   typeKey: PHI_SLOT_UPLOAD_WIDGET_TYPE_KEY,
+  slotSizePolicy: "intrinsic",
   title: "Slot upload",
   category: "media",
   description: "Puts a file into a declared slot on a row of an Add-on's table.",
@@ -90,6 +91,6 @@ export const PHI_SLOT_UPLOAD_WIDGET_DEFINITION = {
   },
 } satisfies Pick<
   PhiCmsWidgetPlugin<PhiSlotUploadWidgetConfig>,
-  | "kind" | "pluginKey" | "typeKey" | "title" | "description"
+  | "kind" | "pluginKey" | "typeKey" | "slotSizePolicy" | "title" | "description"
   | "category" | "iconFamily" | "fields" | "defaultConfig" | "parseConfig" | "runtimeSignals"
 >;

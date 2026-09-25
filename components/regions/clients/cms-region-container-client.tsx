@@ -52,6 +52,7 @@ import { PhiSlotChildEffectsVisibilityObserver } from "../../../plugins/runtime/
 import { PhiSlotChildViewportEffectsObserver } from "../../../plugins/runtime/phi-slot-child-viewport-effects-observer";
 import { resolvePhiPaddingStyle } from "../../layouts/phi-layout-contract";
 import { PhiFlexControl } from "../../controls/phi-flex-control";
+import { resolvePhiRenderableBlockGeometry } from "../../../types/renderable-block-geometry";
 
 function normalizeCssLength(value: unknown) {
   return typeof value === "string" || typeof value === "number" ? value : undefined;
@@ -163,8 +164,10 @@ export function PhiCmsRegionContainerClient({
     regionKey === "footer_top" || regionKey === "footer_main" || regionKey === "footer_bottom";
   const isSider = regionKey === "sider_left" || regionKey === "sider_right";
   const resolvedMode = liveThemeMode;
-  const resolvedHeight = normalizeCssLength(config?.size?.height);
-  const resolvedWidth = normalizeCssLength(config?.size?.width) ?? resolvePhiShellSiderWidth(shellTheme);
+  const geometry = resolvePhiRenderableBlockGeometry(config);
+  const resolvedHeight = geometry.block.size?.css;
+  // A sider that states no width takes the Theme's; this Region's own answer, not the reader's.
+  const resolvedWidth = geometry.inline.size?.css ?? resolvePhiShellSiderWidth(shellTheme);
   const resolvedCollapsedWidth =
     normalizeCssLength(config?.collapsedWidth) ?? resolvePhiShellSiderCollapsedWidth(shellTheme);
   const resolvedTop = normalizeCssLength(config?.offsetTop) ?? 0;
@@ -384,15 +387,15 @@ export function PhiCmsRegionContainerClient({
    * a `margin` value in the Region config is not a thing the renderer reads.
    */
   const centreInlineStyle: CSSProperties =
-    !isSider && blockRuntime.state.maxSize?.width != null ? { marginInline: "auto" } : {};
+    !isSider && geometry.inline.max != null ? { marginInline: "auto" } : {};
   const runtimeStyle = {
     borderRadius: resolvedBorderRadius,
-    ...(resolvedSize?.width == null ? {} : { width: resolvedSize.width }),
-    ...(resolvedSize?.height == null ? {} : { height: resolvedSize.height }),
-    ...(blockRuntime.state.minSize?.width == null ? {} : { minWidth: blockRuntime.state.minSize.width }),
-    ...(blockRuntime.state.minSize?.height == null ? {} : { minHeight: blockRuntime.state.minSize.height }),
-    ...(blockRuntime.state.maxSize?.width == null ? {} : { maxWidth: blockRuntime.state.maxSize.width }),
-    ...(blockRuntime.state.maxSize?.height == null ? {} : { maxHeight: blockRuntime.state.maxSize.height }),
+    ...(geometry.inline.size == null ? {} : { width: geometry.inline.size.css }),
+    ...(geometry.block.size == null ? {} : { height: geometry.block.size.css }),
+    ...(geometry.inline.min == null ? {} : { minWidth: geometry.inline.min.css }),
+    ...(geometry.block.min == null ? {} : { minHeight: geometry.block.min.css }),
+    ...(geometry.inline.max == null ? {} : { maxWidth: geometry.inline.max.css }),
+    ...(geometry.block.max == null ? {} : { maxHeight: geometry.block.max.css }),
     ...(blockRuntime.state.opacity == null ? {} : { opacity: blockRuntime.state.opacity }),
     ...(resolvedEnabled
       ? {}

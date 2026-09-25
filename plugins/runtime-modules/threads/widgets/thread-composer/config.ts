@@ -17,6 +17,7 @@ export const PHI_THREAD_COMPOSER_WIDGET_DEFINITION = {
   kind: "widget",
   pluginKey: resolvePhiCmsWidgetPluginKey("thread-composer"),
   typeKey: "thread-composer",
+  slotSizePolicy: "intrinsic",
   title: "Conversation composer",
   description: "Writes a message into the selected conversation, with files from the viewer's own Space.",
   category: "content",
@@ -50,7 +51,7 @@ export const PHI_THREAD_COMPOSER_WIDGET_DEFINITION = {
   parseConfig: parsePhiThreadWidgetConfig,
 } satisfies Pick<
   PhiCmsWidgetPlugin<PhiThreadWidgetConfig>,
-  | "kind" | "pluginKey" | "typeKey" | "title" | "description" | "category"
+  | "kind" | "pluginKey" | "typeKey" | "slotSizePolicy" | "title" | "description" | "category"
   | "runtimeSignals" | "fields" | "parseConfig"
 >;
 

@@ -2,15 +2,21 @@
 
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 
-import { normalizePhiCssSize, resolvePhiLayoutInset } from "../phi-layout-contract";
+import {
+  PHI_SLOT_CROSS_MARGIN_END_PROPERTY,
+  PHI_SLOT_CROSS_MARGIN_START_PROPERTY,
+  normalizePhiCssSize,
+  resolvePhiLayoutInset,
+  resolvePhiSlotCrossMargin,
+} from "../phi-layout-contract";
 import type { PhiGridLayoutProps } from "../phi-grid-contract";
 import { PhiBaseLayout } from "../phi-base-layout";
 import { resolvePhiLayoutDefaults } from "../../../helpers/cms-layout-defaults";
 import { resolvePhiLayoutSlotChildSizing } from "./phi-layout-anchored-overlay";
-import { resolvePhiGridSlotPlacement } from "../phi-grid-contract";
+import { resolvePhiGridSlotColumns, type PhiGridSlotColumns } from "../phi-grid-contract";
 import {
+  PHI_CONTAINER_BREAKPOINT_COL3,
   PHI_CONTAINER_BREAKPOINT_CONTENT,
-  PHI_CONTAINER_BREAKPOINT_REGION,
 } from "../../../theme/phi-container-breakpoints";
 import {
   isPhiLayoutAuthoringRender,
@@ -96,14 +102,8 @@ function resolveGridSlotPlacementStyle(slot: ReactNode): CSSProperties {
   };
 }
 
-function resolveGridSlotStyle(
-  slotPlacements: PhiGridLayoutProps["slotPlacements"],
-  slotIndex: number,
-  profile: "compact" | "medium" | "wide",
-  fallbackSpan: number,
-) {
-  const placement = resolvePhiGridSlotPlacement(slotPlacements, slotIndex, profile, fallbackSpan);
-  return { gridColumn: `${placement.offset + 1} / span ${placement.span}` } satisfies CSSProperties;
+function resolveGridSlotStyle(columns: PhiGridSlotColumns | undefined): CSSProperties {
+  return columns == null ? {} : { gridColumn: `${columns.start} / span ${columns.span}` };
 }
 
 export function PhiGridLayout({
@@ -153,16 +153,19 @@ export function PhiGridLayout({
     return () => observer.disconnect();
   }, []);
   /*
-   * Measured on the Grid's own box, against the house scale.
+   * Measured on the Grid's own box, against the house scale -- the same pair a Form switches at
+   * (LAYOUTING.md, "Grid slot placement"): three columns fit from 377, and from 610 the Grid is as wide
+   * as the content column ever gets.
    *
-   * It read `token.screenSM` and `token.screenLG` before -- Ant Design's *device* numbers, 576 and 992,
-   * applied to a container width. The comparison was always about content, so the numbers are now
-   * content thresholds: `contentMax` is where a Grid has left the content column, `contentMaxWide`
-   * where it runs the width of the page. The shift is +34 and -5 pixels.
+   * It read `token.screenSM` and `token.screenLG` before, Ant Design's device numbers 576 and 992, and
+   * for one afternoon `contentMax` and `contentMaxWide` (610 and 987). Both pairs put "medium" out of
+   * reach of the content column: a Grid standing in it measures the column minus its padding, so it
+   * never reached 610 and drew every slot at its `compact` span, stacked. The profiles are about the
+   * Grid's own room, and the content column is the room most Grids have.
    */
-  const responsiveProfile = containerWidth != null && containerWidth >= PHI_CONTAINER_BREAKPOINT_REGION
+  const responsiveProfile = containerWidth != null && containerWidth >= PHI_CONTAINER_BREAKPOINT_CONTENT
     ? "wide"
-    : containerWidth != null && containerWidth >= PHI_CONTAINER_BREAKPOINT_CONTENT
+    : containerWidth != null && containerWidth >= PHI_CONTAINER_BREAKPOINT_COL3
       ? "medium"
       : "compact";
   const resolvedGap = normalizePhiCssSize(gap) ?? (PHI_GRID_LAYOUT_DEFAULTS.gap as number | string);
@@ -171,6 +174,7 @@ export function PhiGridLayout({
   const resolvedPlacementAnchor = resolveGridPlacementAnchor(anchor, editSlotAnchor);
   const resolvedAlignItems = resolveGridAnchorAlign(resolvedPlacementAnchor) ?? align;
   const resolvedJustifyContent = resolveGridAnchorJustify(resolvedPlacementAnchor) ?? justify;
+  const slotCrossMargin = resolvePhiSlotCrossMargin(resolvedJustifyContent);
   const fallbackSpan = PHI_GRID_LAYOUT_DEFAULT_SPAN;
   const isEditMode = renderMode === "editor";
   const occupiedSlotIndices = slots.reduce<number[]>((next, slot, slotIndex) => {
@@ -181,6 +185,12 @@ export function PhiGridLayout({
     return next;
   }, []);
   const nextInsertSlotIndex = occupiedSlotIndices.length > 0 ? Math.max(...occupiedSlotIndices) + 1 : 0;
+  const slotColumns = resolvePhiGridSlotColumns(
+    slotPlacements,
+    isEditMode ? [...occupiedSlotIndices, nextInsertSlotIndex] : occupiedSlotIndices,
+    responsiveProfile,
+    fallbackSpan,
+  );
   const renderedSlots: ReactNode[] = slots.map((slot, slotIndex) => {
     if (slot === null || slot === undefined || slot === false) {
       return null;
@@ -192,7 +202,7 @@ export function PhiGridLayout({
         className={phiLayoutSlotClassName(isAuthoringRender, "phi-grid-layout__slot")}
         data-phi-layout-has-content={phiLayoutSlotContentMarker(isAuthoringRender, true)}
         style={{
-          ...resolveGridSlotStyle(slotPlacements, slotIndex, responsiveProfile, fallbackSpan),
+          ...resolveGridSlotStyle(slotColumns.get(slotIndex)),
           minWidth: 0,
           minHeight: 0,
           width: "100%",
@@ -200,8 +210,11 @@ export function PhiGridLayout({
           display: "flex",
           alignItems: resolvedAlignItems,
           justifyContent: resolvedJustifyContent,
+          // The same placement as margins, for a child stretched to the cell and capped; see the Layout contract.
+          [PHI_SLOT_CROSS_MARGIN_START_PROPERTY]: slotCrossMargin.start,
+          [PHI_SLOT_CROSS_MARGIN_END_PROPERTY]: slotCrossMargin.end,
           ...(slotStyle ?? {}),
-        }}
+        } as CSSProperties}
       >
         <div style={resolveGridSlotPlacementStyle(slot)}>
           {slot}
@@ -216,7 +229,7 @@ export function PhiGridLayout({
         className={phiLayoutSlotClassName(isAuthoringRender, "phi-grid-layout__slot")}
         data-phi-layout-has-content={phiLayoutSlotContentMarker(isAuthoringRender, false)}
         style={{
-          ...resolveGridSlotStyle(slotPlacements, nextInsertSlotIndex, responsiveProfile, fallbackSpan),
+          ...resolveGridSlotStyle(slotColumns.get(nextInsertSlotIndex)),
           minWidth: 0,
           width: "100%",
           height: "100%",
@@ -284,8 +297,6 @@ export function PhiGridLayout({
       ) : null}
       <PhiBaseLayout
         {...layoutProps}
-        editSlotAction={undefined}
-        editSlotLabels={undefined}
         layoutKind={layoutKind}
         slots={renderedSlots}
         gap={undefined}

@@ -181,6 +181,10 @@ composition, not alternate Layout kinds.
 - Layouts receive ordered `slots` as the primary child API; free-form `children` is not the public
   placement API.
 - Empty, occupied, preview, and edit rendering use the same slot topology.
+- A Layout in the editor draws exactly one insert affordance, at the next free `slotIndex`, and draws it
+  itself. There is no insert between the items: the base layout offered one after every slot, which made
+  the count grow with the children and turned an empty trailing entry of the slots array into a position
+  of its own. A fixed-slot Layout marks its empty slots instead, which is the same one-per-place rule.
 - Slot state belongs to the owning Layout receiver. `slot:` is not a public v1 receiver family.
 - A title-bearing Layout family stores slot titles as Layout presentation config keyed by its declared
   slot order. A child Widget/Layout label is not a fallback source for that title.
@@ -215,19 +219,53 @@ The parent slot policy is authoritative; child defaults cannot override it.
 
 ## Sizing and nesting
 
-- Layouts default to filling the available parent slot unless their plugin declares another policy.
+- Every Widget and Layout definition states its own `slotSizePolicy`; it is a required field, not a
+  default to fall back into. Layouts state `fill` where they fill, Widgets `intrinsic` where they are
+  their content, and a Layout that sizes like a Widget says so -- Three Column states `fill-inline` and
+  is placed in its slot rather than stretched by it. A child is treated by its policy alone: nothing
+  below the definition asks again whether it is a Widget or a Layout.
 - Layout depth counts actual Layout nodes only; visual config never adds depth.
 - The Canvas, preview, and published runtime must derive sizing from the same declared policies.
 - Responsive behavior belongs to the Layout that knows the actual slot geometry, not to a global
   viewport heuristic.
+- Every slot states `--phi-slot-cross-margin-start` and `--phi-slot-cross-margin-end` from its own
+  placement, `0` included (`resolvePhiSlotCrossMargin`). A child stretched to its slot and capped by a
+  maximum is placed by the auto margins it reads off them, and custom properties inherit: a slot that
+  states none hands its child the placement of whatever Layout stands above.
+
+### Block geometry is read once
+
+`size`, `minSize` and `maxSize` (CMS.md, renderable blocks) reach CSS through one reader,
+`resolvePhiRenderableBlockGeometry` (types/renderable-block-geometry.ts). It reads a block's config once
+and answers per axis -- `inline` and `block`, each with `size`, `min` and `max` -- as CSS lengths decoded
+by unit, and it states whether the block decides an axis for itself (`explicitInline`, `explicitBlock`),
+which is what flips a slot policy from `fill` to `fixed`. A collapsed block measures by its
+`collapsedSizeHint` where it has one; that substitution is the reader's too.
+
+- A bare number is a pixel length, because that is how the vocabulary stores one (`PhiCssLength`); a
+  string on the vocabulary is decoded and written back canonically; a keyword or an expression
+  (`fit-content`, `calc()`) passes through as written, undecoded. A reader that has to know whether a
+  maximum is absolute asks the decoded unit, never `typeof`.
+- An absent value is not answered with a size. Neither the slot child frame nor a Layout's inner box
+  writes one: the frame carries the child's policy, and `styles/layout.css` fills the box from it
+  (`.phi-slot-child--inline-fill > *`, `.phi-slot-child--block-fill > .phi-layout`). Where a Layout is
+  rendered outside a frame, the element standing in for the frame states the same fill in CSS -- the
+  Builder's edit scaffold drawer is the one such place. What remains a caller's own fallback is a value
+  no policy can supply: a sider takes the Theme's width, the Builder root scaffold its custom-property
+  defaults. The reader does not decide any of it a second time.
+- Nothing else reads the three fields by name. `scripts/validate-block-geometry-readers.mjs` names every
+  file that draws geometry and checks that it imports the resolver, names every file that touches the
+  fields without drawing them with the reason, and fails an entry nothing uses any more.
 
 ### Grid slot placement
 
 `PhiGridLayout` owns one 24-unit logical grid. Every populated slot may declare presentation-only
 placement with a responsive `span` and `offset`, using the shared `compact`, `medium`, and `wide`
 profiles. `span` is an integer from `1` through `24`; `offset` is an integer from `0` through `23`,
-defaults to `0`, and counts unused columns from the logical inline start. `offset + span` must not exceed
-`24` in any profile. Responsive values use the shared smaller-to-larger cascade.
+defaults to `0`, and counts unused columns before the slot in flow: slots stand in source order from the
+logical inline start, each after the one before it, and a slot that no longer fits starts the next row
+(`resolvePhiGridSlotColumns`). `offset + span` must not exceed `24` in any profile. Responsive values use
+the shared smaller-to-larger cascade.
 
 The effective profile is resolved from the Grid Layout's own available inline size and the same shared
 Phi thresholds used by responsive Forms, never from the browser viewport. Runtime, preview, and Builder

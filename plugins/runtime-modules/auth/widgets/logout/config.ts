@@ -7,6 +7,7 @@ export const PHI_AUTH_LOGOUT_WIDGET_DEFINITION = {
   kind: "widget",
   pluginKey: resolvePhiCmsWidgetPluginKey("auth-logout"),
   typeKey: "auth-logout",
+  slotSizePolicy: "intrinsic",
   title: "Logout",
   description: "Revokes the current session through the Core Auth endpoint.",
   category: "account",
@@ -19,6 +20,7 @@ export const PHI_AUTH_LOGOUT_WIDGET_DEFINITION = {
   | "kind"
   | "pluginKey"
   | "typeKey"
+  | "slotSizePolicy"
   | "title"
   | "description"
   | "category"

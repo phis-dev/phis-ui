@@ -26,9 +26,14 @@ import {
   resolvePhiEffectiveSlotSizePolicy,
   resolvePhiSlotChildBaseStyle,
   resolvePhiSlotChildExplicitAxes,
+  resolvePhiSlotChildSizeConstraints,
   resolvePhiSlotSizePolicy,
   type PhiSlotChildKind,
 } from "./slot-size-policy";
+import {
+  resolvePhiRenderableBlockGeometry,
+  type PhiResolvedBlockGeometry,
+} from "../../types/renderable-block-geometry";
 import type { PhiRenderableBlockReceiver } from "../../components/runtime/renderable-block-runtime";
 
 export type PhiSlotChildFrameViewProps = {
@@ -52,25 +57,29 @@ export type PhiSlotChildFrameViewProps = {
   children: ReactNode;
 };
 
-function resolvePhiSlotChildSizeStyle(
-  config: Pick<PhiRenderableBlockBase, "size" | "minSize" | "maxSize"> | null | undefined,
-): CSSProperties {
+/*
+ * The frame's own box, from the geometry read once.
+ *
+ * An absolute inline maximum is capped at the slot: a block may state a maximum wider than the room it
+ * stands in, and `min(100%, ...)` lets the room win. A relative maximum is already measured against
+ * something and is written plain. Whether the same cap belongs on the block axis is an open question
+ * (TODOS.md, block geometry), and until it is answered the block axis stays as it was: plain.
+ */
+function resolvePhiSlotChildSizeStyle(geometry: PhiResolvedBlockGeometry): CSSProperties {
   const maxWidth =
-    typeof config?.maxSize?.width === "number"
-      ? `min(100%, ${config.maxSize.width}px)`
-      : config?.maxSize?.width;
-  const maxHeight =
-    typeof config?.maxSize?.height === "number"
-      ? `${config.maxSize.height}px`
-      : config?.maxSize?.height;
+    geometry.inline.max == null
+      ? undefined
+      : geometry.inline.max.part?.unit === "px"
+        ? `min(100%, ${geometry.inline.max.css})`
+        : geometry.inline.max.css;
 
   return {
-    ...(config?.size?.width == null ? {} : { width: config.size.width }),
-    ...(config?.size?.height == null ? {} : { height: config.size.height }),
-    ...(config?.minSize?.width == null ? {} : { minWidth: config.minSize.width }),
-    ...(config?.minSize?.height == null ? {} : { minHeight: config.minSize.height }),
+    ...(geometry.inline.size == null ? {} : { width: geometry.inline.size.css }),
+    ...(geometry.block.size == null ? {} : { height: geometry.block.size.css }),
+    ...(geometry.inline.min == null ? {} : { minWidth: geometry.inline.min.css }),
+    ...(geometry.block.min == null ? {} : { minHeight: geometry.block.min.css }),
     ...(maxWidth == null ? {} : { maxWidth }),
-    ...(maxHeight == null ? {} : { maxHeight }),
+    ...(geometry.block.max == null ? {} : { maxHeight: geometry.block.max.css }),
   };
 }
 
@@ -124,12 +133,9 @@ export function PhiSlotChildFrameView({
 }: PhiSlotChildFrameViewProps) {
   const resolvedVisibility = config?.visibility ?? "visible";
   const resolvedEnabled = config?.enabled ?? true;
-  const resolvedSize =
-    resolvedVisibility === "collapsed"
-      ? config?.collapsedSizeHint ?? config?.size
-      : config?.size;
-  const resolvedConfig = { ...config, size: resolvedSize };
-  const explicitAxes = resolvePhiSlotChildExplicitAxes(resolvedConfig);
+  const resolvedConfig = { ...config, visibility: resolvedVisibility };
+  const geometry = resolvePhiRenderableBlockGeometry(resolvedConfig);
+  const explicitAxes = resolvePhiSlotChildExplicitAxes(geometry);
   const resolvedExplicitInlineSize = explicitInlineSize ?? explicitAxes.explicitInlineSize;
   const resolvedExplicitBlockSize = explicitBlockSize ?? explicitAxes.explicitBlockSize;
   /*
@@ -173,14 +179,11 @@ export function PhiSlotChildFrameView({
       {...buildPhiSlotChildDataAttributes(policy, {
         explicitInlineSize: resolvedExplicitInlineSize,
         explicitBlockSize: resolvedExplicitBlockSize,
-        minInlineSize: resolvedConfig.minSize?.width ?? undefined,
-        minBlockSize: resolvedConfig.minSize?.height ?? undefined,
-        maxInlineSize: resolvedConfig.maxSize?.width ?? undefined,
-        maxBlockSize: resolvedConfig.maxSize?.height ?? undefined,
+        ...resolvePhiSlotChildSizeConstraints(geometry),
       })}
       style={{
         ...resolvePhiSlotChildBaseStyle(policy),
-        ...resolvePhiSlotChildSizeStyle(resolvedConfig),
+        ...resolvePhiSlotChildSizeStyle(geometry),
         ...resolvedBackgroundStyle,
         ...resolvePhiSlotChildBorderStyle(resolvedConfig.border),
         ...(resolvedConfig.zIndex == null ? {} : { zIndex: resolvedConfig.zIndex }),

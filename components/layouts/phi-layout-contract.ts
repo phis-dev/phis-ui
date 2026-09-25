@@ -9,9 +9,11 @@ import type {
   PhiRenderableBlockRenderMode,
   PhiRenderableBlockAnchor,
   PhiRenderableBlockSize,
+  PhiRenderableBlockVisibility,
 } from "../../types";
 import type { PhiShadow, PhiLayoutEffectId } from "../../types/layout-style";
 import { resolvePhiCmsBorderSource, type PhiCmsBorderSource } from "../../types/cms-config";
+import { resolvePhiRenderableBlockGeometry } from "../../types/renderable-block-geometry";
 import { PHI_THEME_BORDER_LINE } from "../../helpers/border-widget-style";
 
 export type PhiLayoutProps = {
@@ -111,40 +113,37 @@ export function normalizePhiCssSize(value: number | string | undefined) {
   return value;
 }
 
+/**
+ * A Layout's own inner box: what the block states, and nothing else.
+ *
+ * An absent size is not this box's question. The box stands inside the slot child frame, the frame
+ * carries the child's size policy, and `styles/layout.css` fills this box from there -- width through
+ * `.phi-slot-child--inline-fill > *`, height through `.phi-slot-child--block-fill > .phi-layout`. A
+ * `100%` written here as well said the same thing a second time in the common case and the wrong thing
+ * in the others: under `fill-inline` the frame is `height: fit-content`, and a percentage height
+ * against it is dropped by the browser rather than obeyed. Whoever renders a Layout outside a frame
+ * states the fill in CSS where that frame's job is being done instead (the Builder's edit scaffold
+ * drawer, `styles/layout-authoring-scaffold.css`).
+ */
 export function resolvePhiLayoutBoxStyle({
   size,
   minSize,
   maxSize,
-}: Pick<PhiLayoutProps, "size" | "minSize" | "maxSize">): CSSProperties {
-  const resolvedStyle: CSSProperties = {};
+  collapsedSizeHint,
+  visibility,
+}: Pick<PhiLayoutProps, "size" | "minSize" | "maxSize" | "collapsedSizeHint"> & {
+  visibility?: PhiRenderableBlockVisibility | null;
+}): CSSProperties {
+  const geometry = resolvePhiRenderableBlockGeometry({ size, minSize, maxSize, collapsedSizeHint, visibility });
 
-  const resolvedWidth = normalizePhiCssSize(size?.width ?? "100%");
-  const resolvedHeight = normalizePhiCssSize(size?.height ?? "100%");
-  const resolvedMinWidth = normalizePhiCssSize(minSize?.width ?? undefined);
-  const resolvedMaxWidth = normalizePhiCssSize(maxSize?.width ?? undefined);
-  const resolvedMinHeight = normalizePhiCssSize(minSize?.height ?? undefined);
-  const resolvedMaxHeight = normalizePhiCssSize(maxSize?.height ?? undefined);
-
-  if (resolvedWidth !== undefined) {
-    resolvedStyle.width = resolvedWidth;
-  }
-  if (resolvedHeight !== undefined) {
-    resolvedStyle.height = resolvedHeight;
-  }
-  if (resolvedMinWidth !== undefined) {
-    resolvedStyle.minWidth = resolvedMinWidth;
-  }
-  if (resolvedMaxWidth !== undefined) {
-    resolvedStyle.maxWidth = resolvedMaxWidth;
-  }
-  if (resolvedMinHeight !== undefined) {
-    resolvedStyle.minHeight = resolvedMinHeight;
-  }
-  if (resolvedMaxHeight !== undefined) {
-    resolvedStyle.maxHeight = resolvedMaxHeight;
-  }
-
-  return resolvedStyle;
+  return {
+    ...(geometry.inline.size == null ? {} : { width: geometry.inline.size.css }),
+    ...(geometry.block.size == null ? {} : { height: geometry.block.size.css }),
+    ...(geometry.inline.min == null ? {} : { minWidth: geometry.inline.min.css }),
+    ...(geometry.inline.max == null ? {} : { maxWidth: geometry.inline.max.css }),
+    ...(geometry.block.min == null ? {} : { minHeight: geometry.block.min.css }),
+    ...(geometry.block.max == null ? {} : { maxHeight: geometry.block.max.css }),
+  };
 }
 
 /** The Site's answer for a Layout that states no corner of its own; see `resolvePhiLayoutStyle`. */
@@ -332,12 +331,21 @@ export const PHI_SLOT_CROSS_MARGIN_END_PROPERTY = "--phi-slot-cross-margin-end";
  * Handed down as custom properties rather than applied here, because the child is not always the slot's
  * own element -- a Visibility Gate sits between them as `display: contents`, and custom properties
  * inherit straight through that while a child selector would stop at it. Every slot states them, `0`
- * included, so a nested Layout never inherits the placement of the one above it.
+ * included, so a nested Layout never inherits the placement of the one above it -- and "every slot"
+ * means every one: a Content Layout that stated none put a left-anchored Markdown block in the middle,
+ * because the auto margins it read were a Flex Vertical's further up, and an auto margin beats the
+ * `justify-content` of the box the child actually stands in.
+ *
+ * Takes either spelling of a placement, the flex one (`flex-end`) and the grid one (`end`).
  */
-export function resolvePhiSlotCrossMargin(alignItems: CSSProperties["alignItems"]) {
+export function resolvePhiSlotCrossMargin(
+  placement: CSSProperties["alignItems"] | CSSProperties["justifyContent"],
+) {
+  const centred = placement === "center";
+  const atEnd = placement === "flex-end" || placement === "end";
   return {
-    start: alignItems === "center" || alignItems === "flex-end" ? "auto" : "0",
-    end: alignItems === "center" ? "auto" : "0",
+    start: centred || atEnd ? "auto" : "0",
+    end: centred ? "auto" : "0",
   };
 }
 

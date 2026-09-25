@@ -21,6 +21,7 @@ export const PHI_ACCOUNT_WIDGET_DEFINITION = {
   kind: "widget",
   pluginKey: resolvePhiCmsWidgetPluginKey("account"),
   typeKey: "account",
+  slotSizePolicy: "intrinsic",
   title: "Account",
   description: "Viewer account control with guest and authenticated states.",
   category: "navigation",
@@ -32,6 +33,7 @@ export const PHI_ACCOUNT_WIDGET_DEFINITION = {
   | "kind"
   | "pluginKey"
   | "typeKey"
+  | "slotSizePolicy"
   | "title"
   | "description"
   | "category"

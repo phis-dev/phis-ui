@@ -24,6 +24,7 @@ export const PHI_DIMENSION_WIDGET_DEFINITION = {
   kind: "widget",
   pluginKey: resolvePhiCmsWidgetPluginKey("dimension"),
   typeKey: "dimension",
+  slotSizePolicy: "intrinsic",
   title: "Dimension",
   description: "Reusable width and height input with explicit CSS units.",
   category: "form",
@@ -43,6 +44,7 @@ export const PHI_DIMENSION_WIDGET_DEFINITION = {
   | "kind"
   | "pluginKey"
   | "typeKey"
+  | "slotSizePolicy"
   | "title"
   | "description"
   | "category"

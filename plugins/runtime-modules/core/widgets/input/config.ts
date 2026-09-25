@@ -66,6 +66,7 @@ export const PHI_INPUT_WIDGET_DEFINITION = {
   kind: "widget",
   pluginKey: resolvePhiCmsWidgetPluginKey("input"),
   typeKey: "input",
+  slotSizePolicy: "intrinsic",
   title: "Input",
   description: "Simple text input control that dispatches text commands for its own block.",
   category: "form",
@@ -115,6 +116,7 @@ export const PHI_INPUT_WIDGET_DEFINITION = {
   | "kind"
   | "pluginKey"
   | "typeKey"
+  | "slotSizePolicy"
   | "title"
   | "description"
   | "category"
