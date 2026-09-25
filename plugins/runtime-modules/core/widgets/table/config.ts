@@ -25,7 +25,7 @@ import type {
   PhiCmsConfigField,
   PhiCmsWidgetPlugin,
 } from "../../../../../types/cms-plugins";
-import { readBoolean, readNumber, readString } from "../../../../../components/widgets/config/parser-primitives";
+import { readBoolean, readNumber, readNumberList, readString } from "../../../../../components/widgets/config/parser-primitives";
 import {
   PHI_CONTROL_SIZE_FIELD,
   parsePhiControlPresentationConfig,
@@ -591,9 +591,7 @@ export function parsePhiTableWidgetConfig(config: Record<string, unknown>): PhiT
       pagination: {
         enabled: readBoolean(pagination.enabled),
         pageSize: readNumber(pagination.pageSize),
-        pageSizeOptions: Array.isArray(pagination.pageSizeOptions)
-          ? pagination.pageSizeOptions.filter((value): value is number => typeof value === "number" && Number.isFinite(value))
-          : undefined,
+        pageSizeOptions: readNumberList(pagination.pageSizeOptions),
         showSizeChanger: readBoolean(pagination.showSizeChanger),
       },
       sorting: {

@@ -27,6 +27,7 @@ export type PhiCollectionViewControlProps = {
     total: number;
     simple?: boolean;
     showSizeChanger?: boolean;
+    pageSizeOptions?: readonly number[];
     size?: PhiControlSize;
     onChange: (page: number, pageSize: number) => void;
   } | null;
@@ -69,6 +70,7 @@ export function PhiCollectionViewControl({
             total={pagination.total}
             simple={pagination.simple}
             showSizeChanger={pagination.showSizeChanger}
+            pageSizeOptions={pagination.pageSizeOptions}
             size={pagination.size}
             onChange={(value) => pagination.onChange(value.page, value.pageSize)}
           />

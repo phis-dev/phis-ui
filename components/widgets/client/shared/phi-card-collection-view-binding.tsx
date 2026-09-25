@@ -162,6 +162,9 @@ export function PhiCardCollectionViewBinding({
         ...(features.pagination?.showSizeChanger === undefined
           ? {}
           : { showSizeChanger: features.pagination.showSizeChanger }),
+        ...(features.pagination?.pageSizeOptions === undefined
+          ? {}
+          : { pageSizeOptions: features.pagination.pageSizeOptions }),
         onChange: (page: number, pageSize: number) =>
           binding.setQuery((current) => ({ ...current, page, pageSize })),
       }}

@@ -11,7 +11,7 @@ import { PHI_SIGNAL_VALUE_SCHEMAS, readPhiSignalRouteSet, type PhiSignalRouteSet
 import { isPhiNamespacedRuntimeKey, isPhiRuntimeDataProviderKey } from "../../../../../types/runtime-data-provider";
 import { PHI_BUILDER_RUNTIME_DATA_PROVIDER_KEYS } from "../../../builder/ids";
 import { readPhiLengthValue, type PhiCssLength } from "../../../../../types/length";
-import { readBoolean, readNumber, readString, type PhiCmsWidgetConfigBase } from "../../../../../components/widgets/config/parser-primitives";
+import { readBoolean, readNumber, readNumberList, readString, type PhiCmsWidgetConfigBase } from "../../../../../components/widgets/config/parser-primitives";
 
 export type PhiCmsCollectionViewMode = "grid" | "masonry" | "stack";
 export type PhiCmsCollectionFilterControl = "select" | "multi-select" | "cascader";
@@ -93,6 +93,7 @@ export type PhiCmsCollectionViewWidgetConfig = PhiCmsWidgetConfigBase & {
       enabled: boolean;
       pageSize?: number;
       showSizeChanger?: boolean;
+      pageSizeOptions?: readonly number[];
       simple?: boolean;
     };
   };
@@ -264,6 +265,7 @@ export function normalizePhiCmsCollectionViewWidgetConfig(config: unknown): PhiC
         enabled: readBoolean(pagination.enabled) ?? true,
         pageSize: readNumber(pagination.pageSize),
         showSizeChanger: readBoolean(pagination.showSizeChanger) ?? false,
+        pageSizeOptions: readNumberList(pagination.pageSizeOptions),
         simple: readBoolean(pagination.simple) ?? true,
       } : undefined,
     },

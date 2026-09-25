@@ -20,6 +20,14 @@ export function readBoolean(value: unknown) {
   return typeof value === "boolean" ? value : undefined;
 }
 
+export function readNumberList(value: unknown) {
+  if (!Array.isArray(value)) {
+    return undefined;
+  }
+  const numbers = value.filter((entry): entry is number => typeof entry === "number" && Number.isFinite(entry));
+  return numbers.length > 0 ? numbers : undefined;
+}
+
 export function readCssSize(value: unknown) {
   return readNumber(value) ?? readString(value);
 }

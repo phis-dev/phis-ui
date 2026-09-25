@@ -14,6 +14,13 @@ export type PhiPaginationControlProps = PhiPaginationControlValue & {
   readOnly?: boolean;
   simple?: boolean;
   showSizeChanger?: boolean;
+  /**
+   * The page sizes the changer offers, instead of antd's own 10/20/50/100.
+   *
+   * The current `pageSize` is appended by antd when it is not among them, so a Site cannot configure a
+   * changer that cannot show where it stands.
+   */
+  pageSizeOptions?: readonly number[];
   size?: PhiControlSize;
   getPopupContainer?: (triggerNode: HTMLElement) => HTMLElement;
   popupRootClassName?: string;
@@ -29,6 +36,7 @@ export function PhiPaginationControl({
   readOnly = false,
   simple,
   showSizeChanger,
+  pageSizeOptions,
   size,
   getPopupContainer,
   popupRootClassName,
@@ -43,6 +51,7 @@ export function PhiPaginationControl({
       disabled={disabled || readOnly}
       simple={simple}
       size={size}
+      pageSizeOptions={pageSizeOptions ? [...pageSizeOptions] : undefined}
       showSizeChanger={showSizeChanger ? {
         getPopupContainer,
         classNames: popupRootClassName ? { popup: { root: popupRootClassName } } : undefined,
