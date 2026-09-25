@@ -270,6 +270,11 @@ logical inline start, each after the one before it, and a slot that no longer fi
 (`resolvePhiGridSlotColumns`). `offset + span` must not exceed `24` in any profile. Responsive values use
 the shared smaller-to-larger cascade.
 
+`gap` is the distance between slots on both axes; `columnGap` overrides it on the horizontal one and is
+what a Grid states that holds its rows apart and its columns flush. `gap` used to reach `row-gap` alone
+while only `columnGap` had a field, so the vertical distance was whatever a default or a preset had
+written and no operator could reach it.
+
 The effective profile is resolved from the Grid Layout's own available inline size and the same shared
 Phi thresholds used by responsive Forms, never from the browser viewport. Runtime, preview, and Builder
 must therefore resolve the same placement when the Grid is mounted in a Page, Modal, Drawer, Inspector,

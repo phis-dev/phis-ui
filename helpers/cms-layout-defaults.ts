@@ -81,13 +81,13 @@ const PHI_FLEX_VERTICAL_LAYOUT_PAGE_BASE_PRESET = {
 
 export const PHI_GRID_LAYOUT_DEFAULTS: PhiLayoutDefaults = {
     gap: 0,
-    columnGap: 0,
     align: undefined,
     justify: undefined,
     wrap: false,
 };
 const PHI_GRID_LAYOUT_PANEL_PRESET = {
     gap: PHI_MARGIN.base,
+    // Rows apart, columns flush: stated, because an absent column gap follows the gap now.
     columnGap: 0,
     align: undefined,
     justify: undefined,

@@ -454,6 +454,18 @@ export const PHI_GRID_LAYOUT_DEFINITION = {
   defaultConfig: resolvePhiLayoutDefaults("grid"),
   fields: [
     ...PHI_LAYOUT_PADDING_FIELDS,
+    /*
+     * `gap` is the distance on both axes, `columnGap` overrides it on the horizontal one.
+     *
+     * Only the second had a field, and it reaches `column-gap` alone, so the vertical distance was
+     * whatever a default or a preset had written and no operator could change it.
+     */
+    {
+      key: "gap",
+      type: "choice",
+      label: "Gap",
+      optionsProvider: { providerKey: PHI_CORE_RUNTIME_DATA_PROVIDER_KEYS.spacingScale, params: { family: "margin" } },
+    },
     {
       key: "columnGap",
       type: "choice",

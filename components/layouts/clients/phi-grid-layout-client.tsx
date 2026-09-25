@@ -119,7 +119,7 @@ export function PhiGridLayout({
   });
   const {
     gap = PHI_GRID_LAYOUT_DEFAULTS.gap as number | string,
-    columnGap = PHI_GRID_LAYOUT_DEFAULTS.columnGap as number | string,
+    columnGap,
     slotPlacements,
     anchor,
     editSlotAnchor,
@@ -169,8 +169,16 @@ export function PhiGridLayout({
       ? "medium"
       : "compact";
   const resolvedGap = normalizePhiCssSize(gap) ?? (PHI_GRID_LAYOUT_DEFAULTS.gap as number | string);
-  const resolvedColumnGap =
-    normalizePhiCssSize(columnGap) ?? (PHI_GRID_LAYOUT_DEFAULTS.columnGap as number | string);
+  /*
+   * One gap for both axes, and the column gap only where somebody said so.
+   *
+   * `gap` is the Grid's distance between its slots; it reached `row-gap` alone, and `columnGap` was the
+   * only one of the two with a field in the Inspector. So the vertical distance could not be set at all
+   * and the horizontal was the only thing that moved -- two halves of one idea, one of them unreachable.
+   * A stated column gap still wins, which is what a Grid wants that holds rows apart and columns flush;
+   * the panel preset is exactly that and says its `0` out loud.
+   */
+  const resolvedColumnGap = normalizePhiCssSize(columnGap) ?? resolvedGap;
   const resolvedPlacementAnchor = resolveGridPlacementAnchor(anchor, editSlotAnchor);
   const resolvedAlignItems = resolveGridAnchorAlign(resolvedPlacementAnchor) ?? align;
   const resolvedJustifyContent = resolveGridAnchorJustify(resolvedPlacementAnchor) ?? justify;
