@@ -343,6 +343,10 @@ as `--phi-surface-radius` and, where a component has a token for it, as that tok
 - **Layout** -- the box, wherever the author configured no radius. An explicit `borderRadius` on a Layout
   always wins: the step answers silence, it is not a ceiling. Outside the Provider the variable is absent and
   a Layout falls back to no radius, which is what it had before the step existed. For Phi Controls the shape wins over conflicting component radius overrides.
+  The **Split Card**'s two cards are surfaces of their own and take the same step from the same constant,
+  as longhands so the shorthand never stands beside the corners a configured card border writes. A slot
+  that draws no card -- no background, no border, no shadow -- states no corner, because there is no box
+  there to round.
 - **A Phi Control that draws its own surface** -- the frame of a bordered Tree, and a media tile together with
   the skeleton standing in for it. There is no component token to carry the step to a box phis draws itself, so
   it reads the variable. Only where a Control can render outside the Provider does a fallback belong beside it:

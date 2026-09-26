@@ -8,6 +8,7 @@ import {
 } from "../../widgets/config/background";
 import {
   normalizePhiCssSize,
+  PHI_LAYOUT_SURFACE_RADIUS,
   type PhiLayoutEditRenderInsertControl,
   } from "../phi-layout-contract";
 import { PhiLayoutAnchoredOverlay } from "./phi-layout-anchored-overlay";
@@ -72,13 +73,21 @@ function renderSplitCardSlot(
   const hasContent = child !== null && child !== undefined && child !== false;
   const showInsertButton = typeof editSlotAction === "function" && editRenderInsertControl != null;
   const resolvedSlotBackgroundStyle = resolvePhiBackgroundWidgetStyle(slotBackground ?? null);
-  const resolvedSlotBorderStyle = resolvePhiBorderWidgetStyle(slotBorder ?? null, {
-    borderRadius: slotBorderRadius,
-  });
   const hasExplicitCardChrome =
     (slotBackground != null && slotBackground.base.kind !== "none") ||
     slotBorder != null ||
     slotShadow != null;
+  /*
+   * The corner reaches the card as four longhands and never as the shorthand, because the slot radius is
+   * a variable wherever nobody configured one, and React refuses a shorthand standing beside the
+   * longhands a configured border writes on the same box.
+   *
+   * A slot that draws no card states no corner: there is no box there to round, and rounding the frame
+   * would clip content against nothing.
+   */
+  const resolvedSlotBorderStyle = resolvePhiBorderWidgetStyle(slotBorder ?? null, {
+    borderRadius: hasExplicitCardChrome ? slotBorderRadius : 0,
+  });
 
   return (
     <div
@@ -93,7 +102,6 @@ function renderSplitCardSlot(
         minHeight: 0,
         display: "flex",
         alignItems: "stretch",
-        borderRadius: hasExplicitCardChrome ? normalizePhiCssSize(slotBorderRadius) : 0,
         overflow: hasExplicitCardChrome ? "hidden" : undefined,
         padding: normalizePhiCssSize(slotPadding),
         boxSizing: "border-box",
@@ -166,8 +174,14 @@ export function PhiSplitCardLayout({
   const isAuthoringRender = isPhiLayoutAuthoringRender({ editSlotAction });
   const resolvedRenderMode = renderMode ?? "live";
   const resolvedGap = normalizePhiCssSize(gap) ?? (PHI_SPLIT_CARD_LAYOUT_DEFAULTS.gap as number | string);
-  const resolvedSlotRadius =
-    normalizePhiCssSize(borderRadius) ?? (PHI_SPLIT_CARD_LAYOUT_DEFAULTS.borderRadius as number | string);
+  /*
+   * A card in a Split Card is a surface, so the corner nobody stated is the Site's to answer -- the same
+   * step a Layout box, a Table and a Tree take, carried on the root as `--phi-surface-radius`
+   * (THEME.md, "Control shape"). The Split Card's Layout defaults name no radius at all, so what stood
+   * here before answered with nothing: under a `pill` Theme the two cards sat square between capsule
+   * Buttons. An author who did state a radius keeps it -- the step answers silence, it caps nobody.
+   */
+  const resolvedSlotRadius = normalizePhiCssSize(borderRadius) ?? PHI_LAYOUT_SURFACE_RADIUS;
   const {
     style: resolvedLayoutStyle,
     hasExplicitLayoutBackground,

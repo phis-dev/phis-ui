@@ -147,8 +147,13 @@ export function resolvePhiLayoutBoxStyle({
   };
 }
 
-/** The Site's answer for a Layout that states no corner of its own; see `resolvePhiLayoutStyle`. */
-const PHI_LAYOUT_SURFACE_RADIUS = "var(--phi-surface-radius, 0)";
+/**
+ * The Site's answer for a Layout that states no corner of its own; see `resolvePhiLayoutStyle`.
+ *
+ * Exported because a Layout's box is not the only surface a Layout draws: the Split Card draws two, one
+ * per slot, and they answer the same question with the same value.
+ */
+export const PHI_LAYOUT_SURFACE_RADIUS = "var(--phi-surface-radius, 0)";
 
 export function resolvePhiLayoutStyle({
   padding,
