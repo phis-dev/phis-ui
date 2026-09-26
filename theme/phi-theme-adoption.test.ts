@@ -60,8 +60,20 @@ const modulePalette: PhiThemePresetPlugin = {
       colorLink: "#B5651D",
     },
     modes: {
-      light: { seed: { colorTextBase: "#2B1D0E", colorBgBase: "#FFF8EE" } },
-      dark: { seed: { colorTextBase: "#F3E9DA", colorBgBase: "#1A120A" }, overrides: { colorBgLayout: "#120C06" } },
+      /*
+       * `colorFillQuaternary` is stated here for the same reason the rest is: the house palette states
+       * its own quietest filling rather than letting Ant Design derive an invisible two per cent, so a
+       * palette that left the key out would resolve to the house value once the Module is gone. In this
+       * palette's own colours, at the same step off its text base.
+       */
+      light: {
+        seed: { colorTextBase: "#2B1D0E", colorBgBase: "#FFF8EE" },
+        overrides: { colorFillQuaternary: "rgba(43, 29, 14, 0.03)" },
+      },
+      dark: {
+        seed: { colorTextBase: "#F3E9DA", colorBgBase: "#1A120A" },
+        overrides: { colorBgLayout: "#120C06", colorFillQuaternary: "rgba(243, 233, 218, 0.06)" },
+      },
     },
   },
 };
@@ -154,7 +166,8 @@ describe("adopting a Module palette and style on save", () => {
     const adopted = adoptPhiThemeModulePalette(theme, modulePalette);
     expect(adopted.palette?.seed?.colorPrimary).toBe("#000000");
     expect(adopted.palette?.seed?.colorLink).toBe("#B5651D");
-    expect(adopted.palette?.modes?.dark?.overrides).toEqual({ colorBgLayout: "#120C06" });
+    expect(adopted.palette?.modes?.dark?.overrides)
+      .toEqual({ colorBgLayout: "#120C06", colorFillQuaternary: "rgba(243, 233, 218, 0.06)" });
   });
 
   it("resolves the same colours once the Module palette is gone", () => {
