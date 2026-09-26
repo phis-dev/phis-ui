@@ -112,10 +112,10 @@ export type PhiFormWidgetFrameProps = {
    * It stands outside the grid rather than around the fields, because the submit and the ways out belong
    * in it too -- a button outside the box it submits reads as something else's button. Its inset is the
    * Card's, so the query container is measured inside the padding, which is the width the fields have --
-   * and `wash`, which draws no Card, takes the chrome inset so its ground does not run flush into the
-   * labels. Null draws nothing and insets nothing, which is what a Form in a slot that already paints
-   * a ground wants: there the query container is the block itself, so the width the fields read is the
-   * width the placement capped.
+   * and `wash`, which draws no Card, takes the same inset a Collapsible's body takes, so its ground does
+   * not run flush into the labels. Null draws nothing and insets nothing, which is what a Form in a slot
+   * that already paints a ground wants: there the query container is the block itself, so the width the
+   * fields read is the width the placement capped.
    */
   card?: PhiCmsFormWidgetCardConfig | null;
   /** The ways out it offers, drawn in the same column as the submit. */
@@ -239,14 +239,16 @@ export function PhiFormWidgetFrame({ submit, card, links, layout, children }: Ph
            * No Card, because a Card brings the Theme's container ground and its frame, and both are too
            * much for a Form that already stands on one -- what is wanted there is only that the fields
            * are set off, which `colorFillQuaternary` does. The corner is the surface step every surface
-           * takes where nobody stated one, and the inset is the chrome one: a ground running flush into
-           * the labels reads as a mistake, and this is the step where a box is deliberately absent.
+           * takes where nobody stated one, and the inset is the base one, the same step a Collapsible's
+           * body takes: a ground running flush into the labels reads as a mistake, and a filled area
+           * holding fields is a body rather than chrome -- the chrome inset belongs to `panel`, which
+           * has the frame that goes with it.
            */
           <div
             style={{
               background: PHI_COLOR.fillQuaternary,
               borderRadius: PHI_LAYOUT_SURFACE_RADIUS,
-              padding: card.padding ?? PHI_SPACE.sm,
+              padding: card.padding ?? PHI_SPACE.base,
             }}
           >
             {measured}

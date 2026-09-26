@@ -364,7 +364,8 @@ the only way a Form is placed. There are no domain Form Widgets. Its config:
   each step is stated once. `card` and `panel` share the Theme's container ground and its frame and differ
   only in the inset (`padding` against `paddingSM`), because the inset already says how deep the box sits
   and a second ground would say it again. `wash` is the step below both: `colorFillQuaternary`, the
-  quietest filling the Theme has, the surface step for a corner, no frame, and the chrome inset so the
+  quietest filling the Theme has, the surface step for a corner, no frame, and the base inset -- the one a
+  Collapsible's body takes, because a filled area holding fields is a body rather than chrome -- so the
   ground does not run flush into the labels. It is for a Form that already stands on a container.
 - Absent is the fourth step and the default: no ground, no frame, no inset. A Form in a Split Card slot --
   the Login and its siblings -- is there, and the slot already paints a ground, so a box would be a plate
