@@ -1,7 +1,9 @@
 # Consent design
 
-This is a design, not a contract: none of it is built. There is no consent state, no gate, and no banner
-Widget.
+This is a design, not a contract. One part of it is built: the Video Module's placeholder, which asks at
+the embed for one provider and stores nothing ("The placeholder is where the consent is asked", and
+[MODULES.md](../MODULES.md) for the Module). Everything else is still design -- there is no consent state,
+no visit-long unlock, no Site declaration of categories, and no banner Widget.
 
 A Widget that loads a third party and decides for itself whether it may, a cookie invented in a Module for
 the purpose, a feature-local "cookiesAccepted" flag, or a bought Consent Management Platform dropped into
@@ -239,20 +241,26 @@ privacy notice. A banner is a region-placed Widget that positions itself, not an
 
 ## Signed-in Areas
 
-App, Admin and Builder show no banner. The reason is not that signing in settles the question: an account
-is a contract, and § 25 is about the device -- it applies to a signed-in person exactly as it does to a
-visitor. Nobody consents to a video provider's cookie by creating an account, and the terms checkbox at
+No Area shows a banner, and the reason is never that signing in settled the question. An account is a
+contract; § 25 is about the device and applies to a signed-in person exactly as it does to a visitor.
+Nobody consents to a video provider's cookie by creating an account, and the terms checkbox at
 registration is about terms.
 
-The reason is that in those Areas there is nothing to ask. What they store is the session, the CSRF token,
-the Area, the locale and the mode, and every one of those is on the exempt list. A banner there would be
-the harmful kind from "No banner without something to ask", shown to somebody trying to work.
+What the staff Areas *store* is the session, the CSRF token, the Area, the locale and the mode, every one
+of them on the exempt list -- so there was never anything to ask about the Site's own cookies. A banner
+there would be the harmful kind from "No banner without something to ask", shown to somebody trying to
+work.
 
-That holds only while it stays true. If a staff Area ever embeds a video, a map or a captcha, the answer is
-still not a bar on every page: for a signed-in person the decision has a home -- a bit in `user_site_flags`,
-the same shape as newsletter consent -- and the surface is Settings, while the gate renders its placeholder
-where the embed would be. The gate is Area-independent because it lives in the Widget; only the banner is
-Area-scoped.
+Embedding is a different matter, and App does embed: the Video Module is eligible in `public` and `app`,
+because a video in a help page behind a login is as ordinary as one on a landing page. That needs no
+banner either, and the reason is the shape rather than the Area -- the placeholder asks where the video
+is, for that one provider, and keeps nothing. The gate lives in the Widget, so it is Area-independent by
+construction; only a banner would ever have to be placed per Area, which is one more argument for not
+having one.
+
+The Area only starts to matter if a Site wants the answer remembered. For a visitor that is a cookie and
+everything under "What is stored"; for a signed-in person it is a bit in `user_site_flags`, the same shape
+as newsletter consent, and the surface is Settings rather than a bar on every page.
 
 ## How the decision travels
 
@@ -293,7 +301,9 @@ honour. So the order of work is the reverse of the visible one.
 2. **The gate** -- one condition a Widget passes before it loads anything third-party. Without the
    category it renders a placeholder that explains what is missing and offers the decision. This is the
    step that makes the law enforceable in code, and it can be tested today against a Site with nothing to
-   gate.
+   gate. **Built for video**, in the shape below: the Widget asks per press and keeps no state, which is
+   the version that needs no contract above it. A second kind of embed reuses the placeholder; a Site that
+   wants to be asked once per visit is what step 1 is for.
 3. **The Site's declaration** -- which categories this Site has. Empty means no banner, which is state 1
    above. Categories are authorable with the existing `collection` field type (`itemFields` is recursive),
    so no new Inspector field type is needed.

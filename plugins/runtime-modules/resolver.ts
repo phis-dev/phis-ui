@@ -3,6 +3,7 @@ import type { PhiCmsAreaKey } from "../../constants/cms-areas";
 import type { PhiCmsRenderIssue, PhiRuntimeControllerSetting } from "../../types/cms-plugins";
 import type { PhiRuntimeDataProviderKey } from "../../types/runtime-data-provider";
 import type { PhiCalendarAdapterKey } from "../../types/calendar";
+import type { PhiVideoProviderDescriptor, PhiVideoProviderKey } from "../../types/video";
 import type { PhiFormProviderKey } from "../../types/form-descriptor";
 import type { PhiCapabilitySnapshot } from "../../types/server-capabilities";
 import { splitPhiCmsLayoutNamespacedTypeKey } from "../../constants/cms-layout-types";
@@ -123,6 +124,14 @@ function loadModule(
         `Runtime module "${moduleId}" Calendar adapter descriptors do not match its catalog definition.`,
       );
     }
+    if (
+      JSON.stringify(runtimeModule.videoProviders ?? []) !==
+      JSON.stringify(catalogEntry.definition.videoProviders ?? [])
+    ) {
+      throw new Error(
+        `Runtime module "${moduleId}" video provider descriptors do not match its catalog definition.`,
+      );
+    }
     return runtimeModule;
   });
 }
@@ -210,6 +219,7 @@ export async function resolvePhiRuntimeModuleSet({
       ? T
       : never
   >();
+  const videoProviderDescriptorsByKey = new Map<PhiVideoProviderKey, PhiVideoProviderDescriptor>();
   const formFieldTypeProviderDescriptorsByKey = new Map<
     PhiFormProviderKey,
     PhiResolvedRuntimeModuleSet["formFieldTypeProviderDescriptorsByKey"] extends ReadonlyMap<PhiFormProviderKey, infer T>
@@ -289,6 +299,12 @@ export async function resolvePhiRuntimeModuleSet({
       }
       calendarAdapterDescriptorsByKey.set(descriptor.key, descriptor);
     }
+    for (const descriptor of definition.videoProviders ?? []) {
+      if (videoProviderDescriptorsByKey.has(descriptor.key)) {
+        throw new Error(`Video provider "${descriptor.key}" is owned by more than one runtime module.`);
+      }
+      videoProviderDescriptorsByKey.set(descriptor.key, descriptor);
+    }
     for (const descriptor of definition.formProviders?.fieldTypes ?? []) {
       if (formFieldTypeProviderDescriptorsByKey.has(descriptor.key)) {
         throw new Error(`Form field type provider "${descriptor.key}" is owned by more than one runtime module.`);
@@ -359,6 +375,7 @@ export async function resolvePhiRuntimeModuleSet({
     layoutDefinitionsByType,
     dataProviderDescriptorsByKey,
     calendarAdapterDescriptorsByKey,
+    videoProviderDescriptorsByKey,
     formFieldTypeProviderDescriptorsByKey,
     formValidationProviderDescriptorsByKey,
     formHandlerProviderDescriptorsByKey,

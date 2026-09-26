@@ -285,6 +285,12 @@ export const PHI_COMMON_RUNTIME_MODULE_RENDER_CLIENT_MANIFEST =
       ),
     ],
     [
+      PhiCmsWidgetType.VideoEmbed,
+      definePhiRuntimeModuleRenderClient(
+        dynamic(() => import("../video/widgets/embed/client").then((module) => module.PhiVideoEmbedWidgetClient)),
+      ),
+    ],
+    [
       PhiCmsWidgetType.AccountAvatar,
       definePhiRuntimeModuleRenderClient(
         dynamic(() => import("../avatar/widgets/account-avatar/client").then((module) => module.PhiAccountAvatarWidgetClient)),

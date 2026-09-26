@@ -820,6 +820,15 @@ export type PhiRuntimeModuleDefinition = {
    */
   collectionItemRenderers?: readonly import("./collection-provider").PhiCollectionItemRendererDescriptor[];
   calendarAdapters?: readonly PhiCalendarAdapterDescriptor[];
+  /**
+   * Places a video may be fetched from, once somebody has asked for it.
+   *
+   * A contribution rather than a Core table, for the same reason Calendar adapters are: the Video Module
+   * ships the two everybody wants, and an add-on brings the one its customer uses without Core learning
+   * its name. A provider is plain data, so unlike an adapter it needs no Client loader -- the descriptors
+   * reach the browser as props and the placeholder reads them there.
+   */
+  videoProviders?: readonly import("./video").PhiVideoProviderDescriptor[];
   formProviders?: PhiRuntimeModuleFormProviderDescriptors;
   authUiProvider?: {
     providerKey: `${string}/${string}`;
@@ -980,6 +989,10 @@ export type PhiResolvedRuntimeModuleSet = {
   layoutDefinitionsByType: ReadonlyMap<string, PhiRuntimeModuleLayoutDefinition>;
   dataProviderDescriptorsByKey: ReadonlyMap<PhiRuntimeDataProviderKey, PhiRuntimeModuleDataProviderDescriptor>;
   calendarAdapterDescriptorsByKey: ReadonlyMap<PhiCalendarAdapterKey, PhiCalendarAdapterDescriptor>;
+  videoProviderDescriptorsByKey: ReadonlyMap<
+    import("./video").PhiVideoProviderKey,
+    import("./video").PhiVideoProviderDescriptor
+  >;
   formFieldTypeProviderDescriptorsByKey: ReadonlyMap<PhiFormProviderKey, PhiFormFieldTypeProviderDescriptor>;
   formValidationProviderDescriptorsByKey: ReadonlyMap<PhiFormProviderKey, PhiFormValidationProviderDescriptor>;
   formHandlerProviderDescriptorsByKey: ReadonlyMap<PhiFormProviderKey, PhiFormHandlerProviderDescriptor>;

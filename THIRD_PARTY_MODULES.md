@@ -84,8 +84,8 @@ Four rules carry it:
    `status-card`. A Module never needs to say its own name inside its own namespace.
 4. **Namespaces come from a closed set** -- `widgets`, `layouts`, `controller`, `forms`, `form-field`,
    `form-validation`, `form-handler`, `options`, `tables`, `trees`, `collections`, `calendars`,
-   `cards`, `signals`, `background-patterns`. A third-party package invents Modules and leaves, not
-   namespaces.
+   `cards`, `signals`, `background-patterns`, `video-providers`. A third-party package invents Modules
+   and leaves, not namespaces.
 
 Name the Module for what it does. `core` means a package's unselectable base Module, which is what
 `@phis/ui` has; a package with one Module gives it a real name.
@@ -1068,6 +1068,48 @@ submitted form -- belongs in your own storage with its own lifecycle. The test: 
 support case rather than a small annoyance, it is not user state. And it is never a permission: a
 signed-in person can write whatever they like into their own namespace, so nothing you read from here
 may decide what somebody is allowed to do.
+
+## 12. Add a place a video may come from
+
+The Video Module ships YouTube and Vimeo. If your customer's videos live somewhere else, contribute a
+provider instead of a second video Widget:
+
+```ts
+// definition.ts
+  videoProviders: [
+    {
+      key: `${STATUS_MODULE_ID}/video-providers/wistia`,
+      ownerModuleId: STATUS_MODULE_ID,
+      title: "Wistia",
+      recipient: "Wistia, Inc.",
+      privacyUrl: "https://wistia.com/privacy",
+      embedHostname: "fast.wistia.net",
+      embedUrlTemplate: "https://fast.wistia.net/embed/iframe/{id}?autoPlay=1",
+      addressPatterns: ["^https?://[a-z0-9-]+\\.wistia\\.com/medias/([A-Za-z0-9]{6,20})"],
+      aspectRatio: 16 / 9,
+    },
+  ],
+```
+
+A provider is data and nothing else: no Client loader, no component, no manifest entry. The descriptors
+reach the browser as props, and the Video Widget reads yours beside the first-party ones -- a Site pastes
+a Wistia address into the same Widget and it resolves to you.
+
+Four rules the catalog enforces when it is built, so a wrong provider stops a build rather than misleading
+a visitor:
+
+- `recipient` names a **company**, not a domain, and `privacyUrl` is where that company explains itself.
+  The placeholder shows both, and it is what the visitor decides on.
+- `embedUrlTemplate` is `https`, carries `{id}` exactly once, and its host must **be** `embedHostname`.
+  You cannot name one recipient and load from another.
+- Every pattern starts with `^` and has exactly one capture group, which is the video. Without the anchor
+  a pattern reads an id out of the middle of somebody else's address.
+- There is no "any address" provider, and there will not be one. A frame whose recipient cannot be named
+  is a frame whose placeholder cannot tell the truth ([design/CONSENT.md](./design/CONSENT.md)).
+
+Use the provider's privacy-friendlier host where it has one, the way the first-party providers use
+`youtube-nocookie.com` and Vimeo's `dnt=1`. It is data minimisation after the decision, never a reason to
+skip asking: the request still leaves for the provider and still discloses the page it comes from.
 
 ## Boundary checklist
 

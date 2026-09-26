@@ -12,6 +12,11 @@ import type {
 } from "../../types/cms-plugins";
 import type { PhiRuntimeDataProviderKey } from "../../types/runtime-data-provider";
 import { isPhiCalendarAdapterKey, type PhiCalendarAdapterKey } from "../../types/calendar";
+import {
+  collectPhiVideoProviderDescriptorErrors,
+  isPhiVideoProviderKey,
+  type PhiVideoProviderKey,
+} from "../../types/video";
 import type { PhiFormProviderKey } from "../../types/form-descriptor";
 import { isPhiFormId, readPhiFormPackageName } from "../../types/form-id";
 import type { PhiCmsAreaDefinition } from "../../types/cms-module-descriptors";
@@ -603,6 +608,7 @@ export function createPhiRuntimeModuleCatalog(
   const ownerModuleIdByLayoutType = new Map<string, PhiRuntimeModuleId>();
   const ownerModuleIdByDataProviderKey = new Map<PhiRuntimeDataProviderKey, PhiRuntimeModuleId>();
   const ownerModuleIdByCalendarAdapterKey = new Map<PhiCalendarAdapterKey, PhiRuntimeModuleId>();
+  const ownerModuleIdByVideoProviderKey = new Map<PhiVideoProviderKey, PhiRuntimeModuleId>();
   const ownerModuleIdByFormFieldTypeKey = new Map<PhiFormProviderKey, PhiRuntimeModuleId>();
   const ownerModuleIdByFormValidationKey = new Map<PhiFormProviderKey, PhiRuntimeModuleId>();
   const ownerModuleIdByFormHandlerKey = new Map<PhiFormProviderKey, PhiRuntimeModuleId>();
@@ -722,6 +728,30 @@ export function createPhiRuntimeModuleCatalog(
         );
       }
       ownerModuleIdByCalendarAdapterKey.set(adapter.key, definition.moduleId);
+    }
+    for (const provider of definition.videoProviders ?? []) {
+      if (!isPhiVideoProviderKey(provider.key)) {
+        throw new Error(`${definition.moduleId}: invalid video provider key "${provider.key}".`);
+      }
+      if (provider.ownerModuleId !== definition.moduleId) {
+        throw new Error(`${definition.moduleId}: video provider "${provider.key}" has a different owner module id.`);
+      }
+      /*
+       * The descriptor is checked here rather than where it is drawn, because a placeholder cannot
+       * repair a provider that does not say who receives the request. A Site would find out by showing
+       * somebody a promise it could not keep.
+       */
+      const descriptorErrors = collectPhiVideoProviderDescriptorErrors(provider);
+      if (descriptorErrors.length > 0) {
+        throw new Error(`${definition.moduleId}: ${descriptorErrors.join(" ")}`);
+      }
+      const currentProviderOwner = ownerModuleIdByVideoProviderKey.get(provider.key);
+      if (currentProviderOwner) {
+        throw new Error(
+          `Video provider "${provider.key}" is owned by both "${currentProviderOwner}" and "${definition.moduleId}".`,
+        );
+      }
+      ownerModuleIdByVideoProviderKey.set(provider.key, definition.moduleId);
     }
     const formProviderFamilies = [
       ["field type", definition.formProviders?.fieldTypes ?? [], ownerModuleIdByFormFieldTypeKey],
@@ -1046,6 +1076,13 @@ export function assertPhiRuntimeModule(module: PhiRuntimeModule) {
     if (descriptor.ownerModuleId !== module.moduleId) {
       throw new Error(
         `${module.moduleId}: Calendar adapter "${descriptor.key}" has a different owner module id.`,
+      );
+    }
+  }
+  for (const descriptor of module.videoProviders ?? []) {
+    if (descriptor.ownerModuleId !== module.moduleId) {
+      throw new Error(
+        `${module.moduleId}: video provider "${descriptor.key}" has a different owner module id.`,
       );
     }
   }

@@ -22,6 +22,7 @@ export const PHI_CMS_WIDGET_PLUGIN_KEYS = {
   "observability": `${PHI_CMS_WIDGET_PLUGIN_KEY_BASE}/observability/widgets`,
   "theme": `${PHI_CMS_WIDGET_PLUGIN_KEY_BASE}/theme/widgets`,
   "threads": `${PHI_CMS_WIDGET_PLUGIN_KEY_BASE}/threads/widgets`,
+  "video": `${PHI_CMS_WIDGET_PLUGIN_KEY_BASE}/video/widgets`,
 } as const;
 
 const PHI_CMS_WIDGET_MODULE_BY_TYPE_KEY: Readonly<Record<string, keyof typeof PHI_CMS_WIDGET_PLUGIN_KEYS>> = {
@@ -86,6 +87,7 @@ const PHI_CMS_WIDGET_MODULE_BY_TYPE_KEY: Readonly<Record<string, keyof typeof PH
   "icon": "core",
   "image": "core",
   "image-inspector": "asset",
+  "video-embed": "video",
   "input": "core",
   "length": "core",
   "locale": "core",
@@ -169,6 +171,7 @@ export const PhiCmsWidgetType = {
   AccountAvatar: defineWidgetType(resolvePhiCmsWidgetPluginKey("account-avatar"), "account-avatar"),
   AccountAvatarPicker: defineWidgetType(resolvePhiCmsWidgetPluginKey("account-avatar-picker"), "account-avatar-picker"),
   ThreadConversation: defineWidgetType(resolvePhiCmsWidgetPluginKey("thread-conversation"), "thread-conversation"),
+  VideoEmbed: defineWidgetType(resolvePhiCmsWidgetPluginKey("video-embed"), "video-embed"),
   ProfileOverview: defineWidgetType(resolvePhiCmsWidgetPluginKey("profile-overview"), "profile-overview"),
   ProfileName: defineWidgetType(resolvePhiCmsWidgetPluginKey("profile-name"), "profile-name"),
   Result: defineWidgetType(resolvePhiCmsWidgetPluginKey("result"), "result"),

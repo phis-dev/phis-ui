@@ -8,6 +8,7 @@ import type {
 } from "../../types/cms-plugins";
 import type { PhiRuntimeDataProviderKey } from "../../types/runtime-data-provider";
 import type { PhiCalendarAdapterDescriptor, PhiCalendarAdapterKey } from "../../types/calendar";
+import type { PhiVideoProviderDescriptor, PhiVideoProviderKey } from "../../types/video";
 
 export type PhiRuntimeModuleClientState = {
   moduleIds: ReadonlySet<string>;
@@ -16,6 +17,14 @@ export type PhiRuntimeModuleClientState = {
   widgetDefinitionsByType: ReadonlyMap<string, PhiRuntimeModuleClientWidgetDefinition>;
   dataProviderDescriptorsByKey: ReadonlyMap<PhiRuntimeDataProviderKey, PhiRuntimeModuleDataProviderDescriptor>;
   calendarAdapterDescriptorsByKey: ReadonlyMap<PhiCalendarAdapterKey, PhiCalendarAdapterDescriptor>;
+  /**
+   * Where a video may be fetched from, by provider key.
+   *
+   * Here rather than behind a loader because a provider is data: a Widget reads the patterns, the
+   * recipient and the embed template straight out of this map. A key nothing active owns resolves to
+   * nothing, which is how a placement outlives the Module that once served it.
+   */
+  videoProviderDescriptorsByKey: ReadonlyMap<PhiVideoProviderKey, PhiVideoProviderDescriptor>;
 };
 
 const EMPTY_RUNTIME_MODULE_STATE: PhiRuntimeModuleClientState = {
@@ -25,6 +34,7 @@ const EMPTY_RUNTIME_MODULE_STATE: PhiRuntimeModuleClientState = {
   widgetDefinitionsByType: new Map(),
   dataProviderDescriptorsByKey: new Map(),
   calendarAdapterDescriptorsByKey: new Map(),
+  videoProviderDescriptorsByKey: new Map(),
 };
 
 const PhiRuntimeModuleContext = createContext<PhiRuntimeModuleClientState>(
@@ -38,6 +48,7 @@ export function PhiRuntimeModuleProvider({
   widgetDefinitions = [],
   dataProviderDescriptors = [],
   calendarAdapterDescriptors = [],
+  videoProviderDescriptors = [],
   children,
 }: {
   moduleIds: readonly string[];
@@ -46,6 +57,7 @@ export function PhiRuntimeModuleProvider({
   widgetDefinitions?: readonly PhiRuntimeModuleClientWidgetDefinition[];
   dataProviderDescriptors?: readonly PhiRuntimeModuleDataProviderDescriptor[];
   calendarAdapterDescriptors?: readonly PhiCalendarAdapterDescriptor[];
+  videoProviderDescriptors?: readonly PhiVideoProviderDescriptor[];
   children: ReactNode;
 }) {
   const state = useMemo<PhiRuntimeModuleClientState>(() => ({
@@ -61,7 +73,18 @@ export function PhiRuntimeModuleProvider({
     calendarAdapterDescriptorsByKey: new Map(
       calendarAdapterDescriptors.map((descriptor) => [descriptor.key, descriptor]),
     ),
-  }), [calendarAdapterDescriptors, dataProviderDescriptors, layoutTypes, moduleIds, widgetDefinitions, widgetTypes]);
+    videoProviderDescriptorsByKey: new Map(
+      videoProviderDescriptors.map((descriptor) => [descriptor.key, descriptor]),
+    ),
+  }), [
+    calendarAdapterDescriptors,
+    dataProviderDescriptors,
+    layoutTypes,
+    moduleIds,
+    videoProviderDescriptors,
+    widgetDefinitions,
+    widgetTypes,
+  ]);
 
   return (
     <PhiRuntimeModuleContext.Provider value={state}>

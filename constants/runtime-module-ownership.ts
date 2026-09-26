@@ -230,6 +230,9 @@ const PHI_RUNTIME_MODULE_OWNERSHIP: Readonly<Record<string, readonly [module: st
   "tables/thread-inbox": ["threads", "inbox"],
   "tables/user-management": ["user-management", "user-management"],
   "trees/builder-page-source": ["builder", "page-source"],
+  // Video providers the Video Module ships. An add-on contributes its own under its own package.
+  "video-providers/vimeo": ["video", "vimeo"],
+  "video-providers/youtube": ["video", "youtube"],
 };
 
 /**

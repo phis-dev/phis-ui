@@ -8,6 +8,7 @@ import { PHI_AUTH_RUNTIME_MODULE_ID } from "../auth/ids";
 import { PHI_GROUPS_RUNTIME_MODULE_ID } from "../groups/ids";
 import { PHI_AVATAR_RUNTIME_MODULE_ID } from "../avatar/ids";
 import { PHI_THREADS_RUNTIME_MODULE_ID } from "../threads/ids";
+import { PHI_VIDEO_RUNTIME_MODULE_ID } from "../video/ids";
 import { PHI_COMMON_RUNTIME_MODULE_AUTHORING_CLIENT_CONTRIBUTIONS } from "./common";
 import { PHI_DASHBOARD_RUNTIME_MODULE_AUTHORING_CLIENT_CONTRIBUTION } from "../dashboard/authoring-client";
 
@@ -33,6 +34,11 @@ export const PHI_APP_RUNTIME_MODULE_AUTHORING_CLIENT_CONTRIBUTIONS = [
       moduleId: PHI_AVATAR_RUNTIME_MODULE_ID,
       loadAuthoring: () => import("../avatar/authoring")
         .then((module) => module.PhiAvatarRuntimeModuleAuthoringClient),
+    }),
+    definePhiRuntimeModuleAuthoringClientContribution({
+      moduleId: PHI_VIDEO_RUNTIME_MODULE_ID,
+      loadAuthoring: () => import("../video/authoring")
+        .then((module) => module.PhiVideoRuntimeModuleAuthoringClient),
     }),
     definePhiRuntimeModuleAuthoringClientContribution({
       moduleId: PHI_APP_RUNTIME_MODULE_ID,

@@ -55,6 +55,7 @@ Terminology across the Site/server boundary is strict:
 | `@phis/ui/modules/theme` | optional | `builder` | Theme and brand editing ([THEME.md](./THEME.md)) |
 | `@phis/ui/modules/threads` | optional | `app` | conversations a person is in, and the one composer every Module writing into one reuses |
 | `@phis/ui/modules/user-management` | optional | `admin` | users, roles, invites |
+| `@phis/ui/modules/video` | optional | `public`, `app` | the video providers a Site may embed from, and the Widget that asks before it fetches one ([design/CONSENT.md](./design/CONSENT.md)) |
 
 The source of this table is each Module's `ids.ts` and `definition.ts`; the Area base Modules come from
 `plugins/runtime-modules/area-definitions.ts`.

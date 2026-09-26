@@ -426,4 +426,28 @@ assert.ok(
   "A media tile states no antd radius variable; the surface step is the whole answer.",
 );
 
+/**
+ * A video frame is the same case as a media tile: a box the Site draws around somebody else's player, so
+ * it takes the surface step rather than the widest corner the scale has. The placeholder and the loaded
+ * player are one frame in the source, so one occurrence is the whole rule -- and the frame keeps
+ * `overflow: hidden`, or a square player would sit past a rounded corner.
+ */
+const videoEmbedSource = await readFile(
+  new URL("../components/controls/phi-video-embed-control.tsx", import.meta.url),
+  "utf8",
+);
+assert.equal(
+  videoEmbedSource.match(/borderRadius: "var\(--phi-surface-radius\)"/gu)?.length,
+  1,
+  "A video frame must take the surface step.",
+);
+assert.ok(
+  /overflow: "hidden"/u.test(videoEmbedSource),
+  "A video frame clips its player, or the corner it just took means nothing.",
+);
+assert.ok(
+  !/--ant-border-radius/u.test(videoEmbedSource),
+  "A video frame states no antd radius variable; it reads the Config Provider that declares the step.",
+);
+
 console.log("Theme Control shape contracts validated.");

@@ -5,6 +5,7 @@ import {
 } from "../authoring-contributions-client";
 import { PHI_PUBLIC_RUNTIME_MODULE_ID } from "../public/ids";
 import { PHI_AUTH_RUNTIME_MODULE_ID } from "../auth/ids";
+import { PHI_VIDEO_RUNTIME_MODULE_ID } from "../video/ids";
 import { PHI_COMMON_RUNTIME_MODULE_AUTHORING_CLIENT_CONTRIBUTIONS } from "./common";
 
 export const PHI_PUBLIC_RUNTIME_MODULE_AUTHORING_CLIENT_CONTRIBUTIONS = [
@@ -18,5 +19,10 @@ export const PHI_PUBLIC_RUNTIME_MODULE_AUTHORING_CLIENT_CONTRIBUTIONS = [
       moduleId: PHI_AUTH_RUNTIME_MODULE_ID,
       loadAuthoring: () => import("../auth/authoring")
         .then((module) => module.PhiAuthRuntimeModuleAuthoringClient),
+    }),
+    definePhiRuntimeModuleAuthoringClientContribution({
+      moduleId: PHI_VIDEO_RUNTIME_MODULE_ID,
+      loadAuthoring: () => import("../video/authoring")
+        .then((module) => module.PhiVideoRuntimeModuleAuthoringClient),
     }),
   ] as const;

@@ -66,6 +66,11 @@ export type {
   PhiMediaAssetCollectionSkeletonControlProps,
   PhiMediaAssetTileControlProps,
 } from "./components/controls/phi-media-asset-tile-control";
+export { PhiVideoEmbedControl } from "./components/controls/phi-video-embed-control";
+export type {
+  PhiVideoEmbedControlLabels,
+  PhiVideoEmbedControlProps,
+} from "./components/controls/phi-video-embed-control";
 export { PhiMaskPickerControl } from "./components/controls/phi-mask-picker-control";
 export type { PhiMaskPickerControlProps } from "./components/controls/phi-mask-picker-control";
 export { PhiColorControl } from "./components/controls/phi-color-control";

@@ -218,6 +218,15 @@ Generic control Widgets reuse the capability sets in `signals/control-signal-cap
 - The Card Widget has `variant` `default`, `compact`, or `featured`, `highlight`, `href`, and an explicit
   CTA (`actionLabel`, `actionHref`). Asset sources persist `assetId` and optional `variantKey`; only `url`
   sources persist `sourceUrl`.
+- The Video Widget (`video-embed`, owned by the Video Module) stores the address somebody pasted and
+  resolves it against the video providers the Area carries, so swapping YouTube for Vimeo is a different
+  link rather than a different Widget. Until a visitor presses the button, nothing leaves this origin --
+  not the player and not a thumbnail, which is why the poster is an Asset from this Site's Media library
+  and never the provider's still. The placeholder names the company that will receive the request and
+  links to their privacy notice; nothing is stored when it is pressed, so the answer lasts that view. An
+  address no active provider recognises stays in the configuration and renders nothing. The reasoning is
+  in [design/CONSENT.md](../../design/CONSENT.md), and contributing a provider is
+  [THIRD_PARTY_MODULES.md](../../THIRD_PARTY_MODULES.md) §12.
 - The Button Widget is a command, a way somewhere, or both. `href` renders a real anchor, which works
   before hydration and on middle click. A wired `navigate` capability sends `{ path }` to the Core Runtime
   Controller instead, for a Button that cannot be an anchor. A Button with `href` and no wiring is a plain
