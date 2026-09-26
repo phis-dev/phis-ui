@@ -572,16 +572,15 @@
   min-height: 0;
 }
 
+/*
+ * The slot itself is a slot child frame, so its width, height, minima and maxima are written inline by
+ * the frame from the root's geometry. Only what the frame does not write stands here -- and `align-self`
+ * is not on that list either: the frame states `auto` inline, deliberately, so the Layout's anchor
+ * rather than a stylesheet decides whether the root is stretched.
+ */
 :where(.phi-builder-root-scaffold__slot) {
   display: flex;
   flex-direction: column;
-  width: var(--phi-root-scaffold-width);
-  height: var(--phi-root-scaffold-height);
-  min-width: var(--phi-root-scaffold-min-width);
-  max-width: var(--phi-root-scaffold-max-width);
-  min-height: var(--phi-root-scaffold-min-height);
-  max-height: var(--phi-root-scaffold-max-height);
-  align-self: stretch;
   justify-content: flex-start;
 }
 

@@ -76,15 +76,45 @@ built. Remove an entry when it is done.
     inside a shrink-to-fit box meets the same cyclic percentage and its stated width wins there, as
     before.
 
-    The inventory turned up six further places that write a maximum into CSS, all of them plain:
+    The inventory turned up five further places that write a maximum into CSS, all of them plain:
     `resolvePhiLayoutBoxStyle`, the Region shell on the server and in the client, the Flex Layout's own
-    slot wrapper, the Structure Region preview, and the Builder scaffold's custom properties. Those are
-    boxes that give the room rather than boxes standing in one, so plain is the right answer for them --
+    slot wrapper, and the Structure Region preview. Those are boxes that give the room rather than boxes
+    standing in one, so plain is the right answer for them --
     except the Layout's inner box, which restates its own frame's maximum one box further in. It is
     harmless there (it stands inside the cap) and load-bearing where a Layout has no frame, so it stays,
     recorded here rather than swept.
-  - (c) The Builder root scaffold's own fallbacks (`100%`, `auto`, `0`, `none`, the Region's fallback
-    band; `resolvePhiRootScaffoldProperties`): the general answers, or a stated exception.
+  - (c) is settled: the scaffold had no fallbacks to decide, because none of them could be seen. Its
+    slot is a `PhiSlotChildFrame`, and the frame writes width, height, minimum and maximum inline from
+    the root's own geometry -- `100%` where the root fills, `fit-content` where it is its content, `0`
+    and `100%` for the constraints. The scaffold restated all six of those through custom properties
+    read in `styles/layout-authoring-scaffold.css`, and an inline style beats a stylesheet, so the six
+    declarations never applied once. The `100%`, `auto`, `0` and `none` behind them were unreachable,
+    and so was the band the Structure Region handed down -- which that Region was already writing on
+    the box one further out (`built-in.tsx`, the root body), where it does apply. So the general
+    answers are the frame's and the scaffold has no exception to state; a Region that wants a band
+    writes it on the box that gives the room.
+
+    What stays is what the frame cannot say: `--phi-root-scaffold-flex`, because the frame writes no
+    `flex` and a root that states a size must stop flexing, and the stated width and height, for the
+    one caller that builds its frame without the root's config -- the server preview. Those two are
+    written only when there is a size, so the declaration reading them never holds an empty variable;
+    the attribute that gates it (`data-phi-layout-explicit-width`) has the same source as the value.
+
+    One pixel does move, and on purpose. The server preview wrote `flex: 1 1 auto` inline beside the
+    properties, which shadowed `--phi-root-scaffold-flex` and grew a root that had just stated a
+    height. That inline value is gone and the property decides, the way it already did in the Canvas.
+    The same call site also restated the frame's `minWidth: 0` and `minHeight: 0`; those are the
+    frame's and are gone with it. And one more dead declaration went with the six: the slot's
+    `align-self: stretch`. The frame states `align-self: auto` inline on purpose -- that is how a
+    Layout's anchor keeps the placing of a child that caps its own width -- so a scaffold stretching
+    its root would have been the anchor bug again, had the declaration ever applied.
+
+    One value went out with the plumbing: the Structure Region's `resolvedRootBodyMinHeight`, the band
+    a content Region kept for a root that states no minimum. It was computed for the scaffold alone and
+    had no second reader, so it left with it. The box that gives the room still writes
+    `minHeight: slotBodyMinHeight` -- the draft's own minimum, or its height, and nothing where the
+    draft states neither. That is the rule speaking: a band nobody states is not a band the scaffold
+    invents.
   - Then the responsive form, in the resolver alone; the readers never learn about profiles. With it the
     question the palette raises: if a block states a width at `wide` and not at `compact`, does its slot
     policy change with the viewport, or is "explicit" a property of the block as a whole?

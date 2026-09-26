@@ -46,8 +46,6 @@ export type PhiBuilderRootNodeServerPreviewProps = {
   runtime: PhiBlockRuntime;
   regionType?: number;
   regionKey?: string;
-  fallbackBlockSize?: string | null;
-  fallbackMinBlockSize?: string | null;
   registry: PhiCmsRuntimeRenderRegistry;
   regionConfig?: Record<string, unknown> | null;
   regionBackgroundConfig?: PhiCmsBackgroundWidgetConfig | null;
@@ -56,43 +54,6 @@ export type PhiBuilderRootNodeServerPreviewProps = {
     contentWidgets: PhiCmsContentWidgetNode[];
   };
 };
-
-function resolvePreviewFallbackBlockSize(
-  regionKey: string | undefined,
-  draft: PhiBuilderPreviewRegionDraft | null | undefined,
-) {
-  if (!regionKey) {
-    return null;
-  }
-
-  const shouldUseFallbackHeight =
-    regionKey === "header_bottom" ||
-    regionKey === "hero" ||
-    regionKey === "sider_right";
-
-  if (!shouldUseFallbackHeight) {
-    return null;
-  }
-
-  return resolvePreviewFallbackBand(draft);
-}
-
-/** The band a Region falls back to: its stated minimum, else its stated height, else the house 84px. */
-function resolvePreviewFallbackBand(draft: PhiBuilderPreviewRegionDraft | null | undefined) {
-  const geometry = resolvePhiRenderableBlockGeometry(draft);
-  return geometry.block.min?.css ?? geometry.block.size?.css ?? "84px";
-}
-
-function resolvePreviewFallbackMinBlockSize(
-  regionKey: string | undefined,
-  draft: PhiBuilderPreviewRegionDraft | null | undefined,
-) {
-  if (regionKey !== "content") {
-    return null;
-  }
-
-  return resolvePreviewFallbackBand(draft);
-}
 
 function buildPreviewTree(
   rootNode: PhiBuilderRootNodePreviewInput,
@@ -260,8 +221,6 @@ export function PhiBuilderRegionServerPreview({
       rootNode={rootNode}
       runtime={runtime}
       regionKey={regionKey}
-      fallbackBlockSize={resolvePreviewFallbackBlockSize(regionKey, previewDraft)}
-      fallbackMinBlockSize={resolvePreviewFallbackMinBlockSize(regionKey, previewDraft)}
       regionType={resolvePhiCmsRegionType(regionKey)}
       registry={registry}
       regionConfig={previewRegionConfig}
@@ -315,8 +274,6 @@ export async function PhiBuilderRootNodeServerPreview({
   rootNode,
   runtime,
   regionType = PhiCmsRegionType.Content,
-  fallbackBlockSize = null,
-  fallbackMinBlockSize = null,
   registry,
   regionConfig = null,
   regionBackgroundConfig = null,
@@ -358,12 +315,7 @@ export async function PhiBuilderRootNodeServerPreview({
           explicitInlineSize={rootGeometry.explicitInline}
           explicitBlockSize={rootGeometry.explicitBlock}
           style={
-            {
-              ...resolvePhiRootScaffoldProperties(rootGeometry, fallbackBlockSize, fallbackMinBlockSize),
-              minWidth: 0,
-              minHeight: 0,
-              flex: "1 1 auto",
-            } as CSSProperties & Record<`--${string}`, string>
+            resolvePhiRootScaffoldProperties(rootGeometry) as CSSProperties & Record<`--${string}`, string>
           }
         >
         <PhiCmsLayoutRenderer

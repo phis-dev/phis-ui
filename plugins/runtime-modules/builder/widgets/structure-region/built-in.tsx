@@ -831,8 +831,6 @@ export function PhiStructureRegionScaffold({
   const hasRootNode = effectiveDraft?.rootNodeTypeKey != null;
   const shouldUseFallbackBodyHeightForRoot =
     shouldFillAvailableHeight;
-  const shouldUseFallbackBodyMinHeightForRoot =
-    !shouldUseFallbackBodyHeightForRoot && slotKind === "content";
   const resolvedRootBodyHeight =
     hasRootNode
       ? (
@@ -840,10 +838,6 @@ export function PhiStructureRegionScaffold({
           (shouldUseFallbackBodyHeightForRoot ? slotBodyFallbackHeight : undefined) ??
           (shouldStretchAvailableHeight ? "100%" : undefined)
         )
-      : undefined;
-  const resolvedRootBodyMinHeight =
-    hasRootNode && shouldUseFallbackBodyMinHeightForRoot
-      ? slotBodyFallbackHeight
       : undefined;
   const rootNodeId = effectiveDraft?.rootNodeId ?? null;
   const rootNodeKind = effectiveDraft?.rootNodeKind ?? null;
@@ -1829,8 +1823,6 @@ export function PhiStructureRegionScaffold({
       childLayouts: rootNodeChildLayouts,
       childWidgets: rootNodeChildWidgets,
     }, openSlot, openRootInspector, deleteRootNode, updateWidgetNodeConfig, updateLayoutNodeConfig, {
-      fallbackBlockSize: resolvedRootBodyHeight ?? null,
-      fallbackMinBlockSize: resolvedRootBodyMinHeight ?? null,
       effectsLabels,
       authoringToolsLabels,
       authoringCanvas,

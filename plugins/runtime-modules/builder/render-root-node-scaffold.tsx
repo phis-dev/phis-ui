@@ -1464,8 +1464,6 @@ export function renderPhiRootNodeScaffold(
   onUpdateWidgetNodeConfig?: (node: PhiCmsContentWidgetNode, configPatch: Record<string, unknown>) => void,
   onUpdateLayoutNodeConfig?: (node: PhiCmsLayoutRenderNode, configPatch: Record<string, unknown>) => void,
   options?: {
-    fallbackBlockSize?: string | null;
-    fallbackMinBlockSize?: string | null;
     effectsLabels?: PhiEffectsWidgetLabels;
     authoringToolsLabels?: PhiAuthoringToolsLabels;
     demandControllerContext?: PhiBuilderDemandControllerContextInput;
@@ -1642,11 +1640,7 @@ export function renderPhiRootNodeScaffold(
       packageName={rootPackageName}
       style={
         {
-          ...resolvePhiRootScaffoldProperties(
-            rootGeometry,
-            options?.fallbackBlockSize,
-            options?.fallbackMinBlockSize,
-          ),
+          ...resolvePhiRootScaffoldProperties(rootGeometry),
         } as React.CSSProperties & Record<`--${string}`, string>
       }
       onClick={

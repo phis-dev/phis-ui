@@ -265,8 +265,14 @@ which is what flips a slot policy from `fill` to `fixed`. A collapsed block meas
   (`.phi-slot-child--inline-fill > *`, `.phi-slot-child--block-fill > .phi-layout`). Where a Layout is
   rendered outside a frame, the element standing in for the frame states the same fill in CSS -- the
   Builder's edit scaffold drawer is the one such place. What remains a caller's own fallback is a value
-  no policy can supply: a sider takes the Theme's width, the Builder root scaffold its custom-property
-  defaults. The reader does not decide any of it a second time.
+  no policy can supply: a sider takes the Theme's width. The reader does not decide any of it a second
+  time.
+- A scaffold does not restate what its frame already writes. The Builder root scaffold's slot is a slot
+  child frame, so its width, height, minima and maxima are inline on the element, and the custom
+  properties the scaffold once wrote for the same six declarations could never win against them. What
+  it writes now is what the frame does not: `--phi-root-scaffold-flex`, because a root that states a
+  size must stop flexing, and the stated width and height for the server preview, which builds its
+  frame without the root's config.
 - Nothing else reads the three fields by name. `scripts/validate-block-geometry-readers.mjs` names every
   file that draws geometry and checks that it imports the resolver, names every file that touches the
   fields without drawing them with the reason, and fails an entry nothing uses any more.

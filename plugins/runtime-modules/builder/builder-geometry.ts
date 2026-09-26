@@ -6,28 +6,33 @@ import {
 } from "../../../types/renderable-block-geometry";
 
 /**
- * The custom properties the root scaffold stylesheet reads, from the root node's geometry read once.
+ * The two things the root scaffold adds to what the slot frame already writes.
  *
- * The fallbacks are the scaffold's own and stay stated here: `100%` for an absent width, `auto` or the
- * Region's fallback band for an absent height, `0` and `none` for absent constraints. Whether they
- * become the general answers or stay this scaffold's exception is an open question (TODOS.md, block
- * geometry). A root that states a size on either axis stops flexing, and says so in `--phi-root-scaffold-flex`.
+ * The scaffold's slot is a `PhiSlotChildFrame`, and that frame states the general answers inline: a
+ * minimum of `0`, a maximum of `100%`, and a width and a height from its policy -- `100%` where the
+ * root fills, `fit-content` where it is its content, the stated length where it states one. An inline
+ * style wins over every stylesheet, so a scaffold that restated those answers was writing into a
+ * declaration that never applied. It restated all six of them, with fallbacks of its own (`100%`,
+ * `auto`, `0`, `none`) and with a band handed down by the Region -- and none of it could be seen.
+ * That is the answer to the open question: the general answers are the frame's, and the scaffold does
+ * not have an exception to state. A Region that wants a band writes it on the box that gives the room,
+ * which is where the Structure Region already writes it.
+ *
+ * What is left is what the frame cannot say. The flex is one: the frame writes no `flex`, and a root
+ * that states a size on either axis must stop flexing or the slot stretches it past the size it just
+ * stated. The stated width and height are the other, and only for the server preview, which builds its
+ * frame without the root's config and would otherwise lose them; everywhere else the frame writes the
+ * same value inline and these are inherited and unused. They are written only when there is one, so the
+ * declaration that reads them is never left holding an empty variable -- the attribute that gates it is
+ * the same "the root stated a size" the value comes from.
  */
 export function resolvePhiRootScaffoldProperties(
   geometry: PhiResolvedBlockGeometry,
-  fallbackBlockSize: string | null | undefined,
-  fallbackMinBlockSize: string | null | undefined,
 ): Record<`--phi-root-scaffold-${string}`, string> {
   return {
-    "--phi-root-scaffold-width": geometry.inline.size?.css ?? "100%",
-    "--phi-root-scaffold-height": geometry.block.size?.css ?? fallbackBlockSize ?? "auto",
-    "--phi-root-scaffold-min-width": geometry.inline.min?.css ?? "0",
-    "--phi-root-scaffold-min-height": geometry.block.min?.css ?? fallbackMinBlockSize ?? "0",
-    "--phi-root-scaffold-max-width": geometry.inline.max?.css ?? "none",
-    "--phi-root-scaffold-max-height": geometry.block.max?.css ?? "none",
     "--phi-root-scaffold-flex": geometry.explicitInline || geometry.explicitBlock ? "0 0 auto" : "1 1 auto",
-    "--phi-root-scaffold-explicit-width": geometry.inline.size?.css ?? "auto",
-    "--phi-root-scaffold-explicit-height": geometry.block.size?.css ?? "auto",
+    ...(geometry.inline.size == null ? {} : { "--phi-root-scaffold-explicit-width": geometry.inline.size.css }),
+    ...(geometry.block.size == null ? {} : { "--phi-root-scaffold-explicit-height": geometry.block.size.css }),
   };
 }
 
