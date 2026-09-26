@@ -104,11 +104,36 @@ export const PHI_CORE_THEME_PRESET_PLUGINS = [
             colorTextBase: "#223A61",
             colorBgBase: "#ffffff",
           },
+          /*
+           * The quietest filling, stated rather than derived.
+           *
+           * Ant Design derives it as the base text colour at 2% (`themes/default/colors.js`), and at two
+           * per cent of a deep blue on white nothing is there: the ground of a Collapsible title, a
+           * striped Table row and a Tree's alternating row all read as plain background, and the surface
+           * that was supposed to separate itself from the page did not. Half again as much is enough to
+           * see and still quiet.
+           *
+           * Half again, and not more, because the four fillings are a LADDER -- 0.15, 0.06, 0.04, 0.02 in
+           * this mode -- and this is its lowest rung. Anything from 0.04 up would put the quietest
+           * filling level with or above the one above it, and a ground meant to recede would start
+           * shouting over the one that is meant to carry a hover.
+           */
+          overrides: {
+            colorFillQuaternary: "rgba(34, 58, 97, 0.03)",
+          },
         },
         dark: {
           seed: {
             colorTextBase: "#DCE7F8",
             colorBgBase: "#050914",
+          },
+          /*
+           * The same step in the dark, where the ladder is 0.18, 0.12, 0.08, 0.04 and the rung above is
+           * therefore twice as far away. A pale blue over near-black carries further than a deep blue
+           * over white, so the same proportion -- half again -- lands at 0.06 and stays clear of 0.08.
+           */
+          overrides: {
+            colorFillQuaternary: "rgba(220, 231, 248, 0.06)",
           },
         },
       },
