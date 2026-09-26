@@ -13,7 +13,74 @@ import { PHIS_AREA_HEADER, buildPhiMediaRequestHeaders } from "./phi-media-reque
  */
 export type PhiMediaUploadPlan =
   | { kind: "proxy-stream"; url: string; method: "PUT"; headers?: Record<string, string> }
-  | { kind: "presigned-put"; url: string; method: "PUT"; headers: Record<string, string>; expiresAt?: string };
+  | { kind: "presigned-put"; url: string; method: "PUT"; headers: Record<string, string>; expiresAt?: string }
+  | {
+      /**
+       * The body in pieces, each with its own signed address.
+       *
+       * Part *n* is the bytes from `(n - 1) * partSizeBytes`, and the last one carries what is left. That
+       * is the whole addressing scheme, which is why this needs no negotiation: the Server knew the size
+       * when it issued the plan, and slicing a `File` costs nothing.
+       */
+      kind: "multipart-put";
+      method: "PUT";
+      uploadId: string;
+      partSizeBytes: number;
+      parts: readonly { partNumber: number; url: string; headers?: Record<string, string> }[];
+      expiresAt?: string;
+    };
+
+/** How many parts travel at once. Enough to fill a high-latency link, few enough to stay polite. */
+const PHI_MEDIA_UPLOAD_PART_CONCURRENCY = 3;
+
+/** How often one part is tried again before the whole upload is given up on. */
+export const PHI_MEDIA_UPLOAD_PART_ATTEMPTS = 3;
+
+/**
+ * Which bytes one part covers.
+ *
+ * The plan states a part size and numbers the parts from one, so this is the whole of the addressing.
+ * The last part is short and every other one is exactly `partSizeBytes`; a number past the end yields an
+ * empty range rather than reading past the file, because a plan and a file disagreeing about the size is
+ * something to notice at finalize and not to paper over here.
+ */
+export function resolvePhiMediaUploadPartRange(
+  partNumber: number,
+  partSizeBytes: number,
+  fileSize: number,
+) {
+  const start = Math.min(Math.max(0, (partNumber - 1) * partSizeBytes), fileSize);
+  return { start, end: Math.min(start + partSizeBytes, fileSize) };
+}
+
+/**
+ * Whether a refused part is worth sending again.
+ *
+ * A transport failure has no status and may well be the network settling down. A `5xx` is the endpoint
+ * saying it could not, this time. A `4xx` is the endpoint saying it will not -- a signature it rejected
+ * will be rejected identically on the next attempt, so repeating it only delays the report.
+ */
+export function isPhiMediaUploadPartWorthRepeating(status: number) {
+  return status === 0 || status >= 500;
+}
+
+/**
+ * How far along the whole body is, from what each part has reported.
+ *
+ * A sum rather than a count of finished parts, so a single large part in flight still moves the figure.
+ * It is clamped because a part that reported progress and then started again would otherwise be counted
+ * twice -- the caller drops a part's contribution before retrying it, and the clamp is what keeps a bug
+ * there from showing somebody 140 per cent.
+ */
+export function resolvePhiMediaUploadPartProgress(
+  loadedByPart: ReadonlyMap<number, number>,
+  fileSize: number,
+) {
+  if (fileSize <= 0) return 0;
+  let loaded = 0;
+  for (const bytes of loadedByPart.values()) loaded += bytes;
+  return Math.max(0, Math.min(100, Math.round((loaded / fileSize) * 100)));
+}
 
 type PhiMediaUploadInitResponse = {
   token?: string;
@@ -186,10 +253,30 @@ function readPhiMediaUploadFailureReason(error: unknown): PhiMediaUploadFailureR
     : PHI_MEDIA_UPLOAD_FAILURE_REASONS.ClientError;
 }
 
+/**
+ * Whether a plan says enough to be carried out.
+ *
+ * Per kind, because a multipart plan has no single address: what makes it usable is an upload to name and
+ * at least one part to send. A plan missing that is a control-plane answer nobody can act on, and saying
+ * so at init is better than failing at the first part.
+ */
+function isUsablePhiMediaUploadPlan(plan: PhiMediaUploadPlan | undefined): plan is PhiMediaUploadPlan {
+  if (!plan) return false;
+  if (plan.kind === "multipart-put") {
+    return Boolean(plan.uploadId) && plan.partSizeBytes > 0 && plan.parts.length > 0;
+  }
+  return Boolean(plan.url);
+}
+
+/** The address a plan delivers to -- for a multipart plan, the one its parts share. */
+function readPlanAddress(plan: PhiMediaUploadPlan) {
+  return plan.kind === "multipart-put" ? plan.parts[0]?.url ?? "" : plan.url;
+}
+
 /** The origin the browser was told to deliver to, and never the signature that came with it. */
 function readPlanTarget(plan: PhiMediaUploadPlan) {
   try {
-    const target = new URL(plan.url, typeof location === "undefined" ? undefined : location.href);
+    const target = new URL(readPlanAddress(plan), typeof location === "undefined" ? undefined : location.href);
     const pageProtocol = typeof location === "undefined" ? null : location.protocol;
     const blockedAsMixedContent = pageProtocol === "https:" && target.protocol === "http:";
     return {
@@ -300,7 +387,7 @@ export async function initPhiMediaUploadSession(
   });
 
   const payload = await readJsonResponse<PhiMediaUploadInitResponse>(response);
-  if (!payload.token || !payload.plan?.url || !payload.finalizeUrl) {
+  if (!payload.token || !isUsablePhiMediaUploadPlan(payload.plan) || !payload.finalizeUrl) {
     throw new Error(payload.error ?? "Failed to create upload session.");
   }
 
@@ -315,11 +402,140 @@ export async function initPhiMediaUploadSession(
   };
 }
 
+/**
+ * One part of a body, to its own signed address.
+ *
+ * The entity tag is the point. `CompleteMultipartUpload` names every part by number and tag, so a part
+ * whose tag the browser cannot read is a part that cannot be assembled -- which is why the bucket's CORS
+ * rule exposes `ETag`, and why a missing one is an error here rather than an empty string passed along.
+ *
+ * Retried on a transport failure and on a `5xx`, and never on a `4xx`: a signature the endpoint rejected
+ * will be rejected again, and repeating it only delays saying so.
+ */
+async function uploadPhiMediaUploadPart(
+  part: { partNumber: number; url: string; headers?: Record<string, string> },
+  body: Blob,
+  onPartProgress: (loadedBytes: number) => void,
+): Promise<{ partNumber: number; eTag: string }> {
+  let lastError: unknown = null;
+
+  for (let attempt = 1; attempt <= PHI_MEDIA_UPLOAD_PART_ATTEMPTS; attempt += 1) {
+    try {
+      return await new Promise<{ partNumber: number; eTag: string }>((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.open("PUT", part.url);
+        for (const [header, value] of Object.entries(part.headers ?? {})) {
+          xhr.setRequestHeader(header, value);
+        }
+        xhr.upload.onprogress = (event) => {
+          if (event.lengthComputable) onPartProgress(event.loaded);
+        };
+        xhr.onerror = () => reject(new PhiMediaUploadError(
+          `Part ${part.partNumber} did not reach the storage endpoint.`,
+          PHI_MEDIA_UPLOAD_FAILURE_REASONS.StorageUnreachable,
+          0,
+        ));
+        xhr.onload = () => {
+          if (xhr.status < 200 || xhr.status >= 300) {
+            reject(new PhiMediaUploadError(
+              `Part ${part.partNumber} was refused (${xhr.status}).`,
+              PHI_MEDIA_UPLOAD_FAILURE_REASONS.StorageRejected,
+              xhr.status,
+            ));
+            return;
+          }
+          const eTag = (xhr.getResponseHeader("etag") ?? "").trim();
+          if (!eTag) {
+            reject(new PhiMediaUploadError(
+              `Part ${part.partNumber} arrived without an entity tag, so it cannot be assembled.`,
+              PHI_MEDIA_UPLOAD_FAILURE_REASONS.ClientError,
+              xhr.status,
+            ));
+            return;
+          }
+          onPartProgress(body.size);
+          resolve({ partNumber: part.partNumber, eTag });
+        };
+        xhr.send(body);
+      });
+    } catch (error) {
+      lastError = error;
+      const status = error instanceof PhiMediaUploadError ? error.status : 0;
+      if (!isPhiMediaUploadPartWorthRepeating(status) || attempt === PHI_MEDIA_UPLOAD_PART_ATTEMPTS) {
+        throw error;
+      }
+      // Whatever a part already reported is undone before it is sent again, or the total would grow.
+      onPartProgress(0);
+    }
+  }
+
+  throw lastError ?? new Error("Part upload failed.");
+}
+
+/**
+ * The body as parts, which is what makes a large upload survivable.
+ *
+ * The gain is not a higher ceiling but a smaller unit of failure: a single request that dies at ninety
+ * per cent has to start over, while a part that dies repeats alone. That is why the threshold for this is
+ * the part size rather than some number where a file counts as large.
+ *
+ * Progress is the sum of what every part reports, which is why a retry resets its own contribution
+ * first: a part that reported ten megabytes and then started again would otherwise count them twice and
+ * the total would run past the file.
+ */
+async function uploadPhiMediaUploadParts(
+  plan: Extract<PhiMediaUploadPlan, { kind: "multipart-put" }>,
+  file: File,
+  onProgress?: PhiMediaUploadProgressHandler,
+): Promise<PhiMediaUploadUploadResponse> {
+  const loadedByPart = new Map<number, number>();
+  const report = () => onProgress?.(resolvePhiMediaUploadPartProgress(loadedByPart, file.size));
+
+  const queue = [...plan.parts].sort((left, right) => left.partNumber - right.partNumber);
+  const done: { partNumber: number; eTag: string }[] = [];
+  let next = 0;
+
+  const worker = async () => {
+    for (;;) {
+      const index = next;
+      next += 1;
+      const part = queue[index];
+      if (!part) return;
+      const range = resolvePhiMediaUploadPartRange(part.partNumber, plan.partSizeBytes, file.size);
+      const body = file.slice(range.start, range.end);
+      done.push(await uploadPhiMediaUploadPart(part, body, (loadedBytes) => {
+        loadedByPart.set(part.partNumber, loadedBytes);
+        report();
+      }));
+    }
+  };
+
+  /*
+   * `Promise.all` and not `allSettled`: the first part to give up ends the upload, because an assembly
+   * missing one part cannot be completed and the parts already sent are aborted by the Server once the
+   * failure is reported. Waiting for the rest would only send bytes nobody will assemble.
+   */
+  await Promise.all(
+    Array.from({ length: Math.min(PHI_MEDIA_UPLOAD_PART_CONCURRENCY, queue.length) }, worker),
+  );
+
+  return {
+    status: "uploaded",
+    completion: {
+      uploadId: plan.uploadId,
+      parts: done.sort((left, right) => left.partNumber - right.partNumber),
+    },
+  };
+}
+
 export async function uploadPhiMediaUploadBody(
   plan: PhiMediaUploadPlan,
   file: File,
   onProgress?: PhiMediaUploadProgressHandler,
 ) {
+  if (plan.kind === "multipart-put") {
+    return await uploadPhiMediaUploadParts(plan, file, onProgress);
+  }
   if (plan.kind !== "proxy-stream" && plan.kind !== "presigned-put") {
     // A newer control plane issued a plan this Client cannot carry out. Saying so is the only safe
     // answer: there is no transport to fall back to that would not be a guess about where the body goes.
