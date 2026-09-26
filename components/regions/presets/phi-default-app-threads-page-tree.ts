@@ -723,6 +723,15 @@ export async function buildPhiDefaultAppThreadsPageTree({
           source: null,
           // The same box the conversation above it wears, so the two read as one panel.
           card: { presentation: "card" },
+          /*
+           * And the same width, which is why the house ceiling is lifted here.
+           *
+           * A Form is capped at the reading measure by default, because an input line nobody can read
+           * along is the ordinary mistake. This one stands under a conversation that runs the page, and a
+           * reply box two thirds as wide as the messages above it reads as something that fell out of
+           * the panel rather than as its last row.
+           */
+          maxSize: { width: "100%" },
           // Already translated, from this Page's own label set, so the Widget states it outright.
           submit: { label: labels.composerSendLabel, align: "end" },
           /*

@@ -1,5 +1,6 @@
 import { createPhiPresetCmsInstanceIdMap } from "../../../types/cms-instance-id";
 import { PHI_SPACE } from "../../../theme/antd-css-var-contract";
+import { PHI_LAYOUT } from "../../../theme/phi-tokens";
 import { PHI_AUTH_RUNTIME_MODULE_ID } from "../../../plugins/runtime-modules/auth/ids";
 import {
   PHI_CMS_DEFAULT_SLOT_INDEX,
@@ -121,10 +122,16 @@ export async function buildPhiDefaultPubLoginPageTree({
           footer: "Use the secure sign-in form to continue to your account area.",
         },
       }),
-      // Narrowed on the page alone: the auth overlay builds the same form into a column of its own width.
+      /*
+       * Narrowed on the page alone: the auth overlay builds the same form into a column of its own width.
+       *
+       * `contentMaxNarrow` is the Theme's measure for exactly this -- a single column of Controls with no
+       * label beside them. It stood at 480 for a long time, which is on no scale in this house and, until
+       * the Form Widget began passing its block geometry through at all, did nothing whatsoever.
+       */
       ...login.contentWidgets.map((widget) =>
         widget.id === SYNTHETIC_LOGIN_WIDGET_IDS.widgetLogin
-          ? { ...widget, config: { ...widget.config, maxSize: { width: 480 } } }
+          ? { ...widget, config: { ...widget.config, maxSize: { width: PHI_LAYOUT.contentMaxNarrow } } }
           : widget),
     ],
   };

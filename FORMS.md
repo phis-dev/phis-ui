@@ -335,7 +335,18 @@ the only way a Form is placed. There are no domain Form Widgets. Its config:
 | `source` | Optional Table Provider binding `{ providerKey, resourceKey, params }` whose resource declares `recordRead: true`. |
 | `openActionKey` | The Table action key that opens a record, default `edit`. |
 | `signalRoutes` | The Widget's routes. |
+| block geometry | `maxSize`, `minSize`, `size`, background, border, shadow -- read from the node like any other Widget. `maxSize.width` defaults to `PHI_LAYOUT.contentMax`; see below. |
 
+- **A Form is capped at the reading measure unless the placement says otherwise.** `maxSize.width`
+  defaults to `PHI_LAYOUT.contentMax` (610), the measure [THEME.md](./THEME.md) names for a labelled form,
+  and it is a ceiling rather than a width: the Form still fills a narrower slot edge to edge, and 610 is
+  exactly where its own layout switches to `wide`, so capping never demotes the layout. A placement that
+  means something else names a length and wins -- `contentMaxNarrow` for a column of Controls with no
+  label beside them, `contentMaxWide` for a Form read across, `100%` for a Form that takes its slot, such
+  as a reply under a conversation that runs the page. There is no width vocabulary of the Form's own:
+  `compact | medium | wide` are the measured profiles a length may vary over (`types/responsive.ts`, the
+  same cascade the Grid uses for `span`), not steps to pick from, and "no ceiling" is spelled `100%`,
+  because that is what every other block says.
 - The box around a Form is `card`, never a panel built beside it. It is `PhiCardControl`, so the ground,
   the frame, the inset and the corner are the Theme's -- `Card` is one of the surfaces the Theme's shape
   reaches through a component token ([THEME.md](./THEME.md)), which a hand-built box is not. It wraps the
