@@ -20,6 +20,7 @@ import {
   PHI_APP_THREADS_PAGE_OVERLAY_IDS,
   PHI_APP_THREADS_PAGE_WIDGET_IDS,
 } from "../../../plugins/runtime-modules/threads/addresses";
+import { createPhiRuntimeFormControllerAddress } from "../../forms/runtime-form-controller-address";
 import { PHI_THREADS_FORM_IDS } from "../../../plugins/runtime-modules/threads/forms";
 import { PHI_COLOR, PHI_SPACE } from "../../../theme/antd-css-var-contract";
 import { buildPhiBasePageContentScaffold, PHI_BASE_PAGE_LAYOUT_NODE_ID } from "./phi-base-page-layout";
@@ -65,6 +66,20 @@ export async function buildPhiDefaultAppThreadsPageTree({
   const inboxAddress = createPhiSignalAddress("cms", PHI_APP_THREADS_PAGE_WIDGET_IDS.widgetInbox);
   const conversationAddress = createPhiSignalAddress("cms", PHI_APP_THREADS_PAGE_WIDGET_IDS.widgetConversation);
   const composerAddress = createPhiSignalAddress("cms", PHI_APP_THREADS_PAGE_WIDGET_IDS.widgetComposer);
+  const composerEmptyAddress = createPhiSignalAddress(
+    "cms",
+    PHI_APP_THREADS_PAGE_WIDGET_IDS.widgetComposerEmpty,
+  );
+  /*
+   * The reply Form is told its conversation through its own Form controller, not at its Widget address.
+   *
+   * That is the declared way into a mounted Form's values: the controller takes `field/change` and hands
+   * it to the Form it belongs to, which writes the field the route names
+   * ([FORMS.md](../../../FORMS.md#form-controller)).
+   */
+  const composerFormControllerAddress = createPhiRuntimeFormControllerAddress(
+    `widget-${PHI_APP_THREADS_PAGE_WIDGET_IDS.widgetComposer}`,
+  );
   const formAddress = createPhiSignalAddress("cms", PHI_APP_THREADS_PAGE_WIDGET_IDS.widgetNewForm);
   const overlayAddress = createPhiSignalAddress("cms", PHI_APP_THREADS_PAGE_OVERLAY_IDS.overlayNew);
   const saveButtonAddress = createPhiSignalSubcontrolAddress(
@@ -109,7 +124,6 @@ export async function buildPhiDefaultAppThreadsPageTree({
       config: {
         signalRoutes: {
           emits: [
-            // One capability, two receivers: the conversation and the composer both follow the choice.
             {
               routeKey: "app-threads-controller-thread-conversation",
               capabilityId: "threadChange",
@@ -120,15 +134,75 @@ export async function buildPhiDefaultAppThreadsPageTree({
               valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.threadSelection,
               receiver: conversationAddress,
             },
+            /*
+             * The same choice, as a value in the reply Form's hidden field.
+             *
+             * `fieldKey` is here and not in the Controller's code, which is the whole point: the
+             * Controller says which conversation is open, and this Page says that the reply calls it
+             * `threadId`. A Site that renames the field, or points the Controller at a Form of its own,
+             * changes this line and nothing else.
+             */
             {
-              routeKey: "app-threads-controller-thread-composer",
-              capabilityId: "threadChange",
+              routeKey: "app-threads-controller-thread-field",
+              capabilityId: "threadField",
               scope: "page",
-              channel: "thread",
+              channel: "field",
               action: "change",
               valueType: "json",
+              valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.formField,
+              fieldKey: "threadId",
+              receiver: composerFormControllerAddress,
+            },
+            /*
+             * A reply landed in the conversation that is already open: it catches up rather than
+             * switching, which is what keeps a half-written next message where it was.
+             */
+            {
+              routeKey: "app-threads-controller-thread-reload",
+              capabilityId: "threadReload",
+              scope: "page",
+              channel: "thread",
+              action: "reload",
+              valueType: "json",
               valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.threadSelection,
+              receiver: conversationAddress,
+            },
+            // The reply is emptied once it has been sent. Cancelling the dialog must not do this.
+            {
+              routeKey: "app-threads-controller-reply-reset",
+              capabilityId: "replyReset",
+              scope: "page",
+              channel: "reset",
+              action: "activate",
+              valueType: "none",
               receiver: composerAddress,
+            },
+            /*
+             * Whether anything is open at all, to the two nodes that answer for it.
+             *
+             * The reply Form stands where a conversation is open, and the sentence stands where none is.
+             * A visibility gate never asks -- it listens at the node's own address -- so the state is
+             * pushed here, and each node reads the same fact with the opposite operator.
+             */
+            {
+              routeKey: "app-threads-controller-composer-condition",
+              capabilityId: "conditionStateChange",
+              scope: "page",
+              channel: "condition",
+              action: "change",
+              valueType: "json",
+              valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.runtimeConditionState,
+              receiver: composerAddress,
+            },
+            {
+              routeKey: "app-threads-controller-composer-empty-condition",
+              capabilityId: "conditionStateChange",
+              scope: "page",
+              channel: "condition",
+              action: "change",
+              valueType: "json",
+              valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.runtimeConditionState,
+              receiver: composerEmptyAddress,
             },
             {
               routeKey: "app-threads-controller-reload-inbox",
@@ -617,49 +691,111 @@ export async function buildPhiDefaultAppThreadsPageTree({
           },
         },
       }),
+      /*
+       * Writing into the open conversation: a declared Form, placed like any other.
+       *
+       * What stood here was a Widget of its own with its own text state, its own upload session and its
+       * own `fetch` to a REST path. Everything it did is declared now -- the message and the attachment
+       * are field descriptors, the send button is this placement's, the wording is a label set, and the
+       * submit is a handler Provider behind the Form gateway.
+       *
+       * The conversation it writes into arrives as a field value from the Controller, which is the one
+       * thing a descriptor cannot say: the route above names the field, and this node says nothing about
+       * where the value comes from.
+       *
+       * It reports its success to the Controller, which is what makes the surfaces around it live: the
+       * conversation catches up, the listing reorders, the reply empties, and the conversation it was
+       * written into is asserted again -- an emptied Form has only its initial values, and this one was
+       * never among them.
+       */
       nodes.widget({
         id: PHI_APP_THREADS_PAGE_WIDGET_IDS.widgetComposer,
         parentLayoutNodeId: PHI_BASE_PAGE_LAYOUT_NODE_ID,
-        typeKey: "thread-composer",
+        typeKey: "form",
         slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX + 2,
         sortOrder: 2,
         label: labels.composerLabel,
         config: {
+          translate: false,
+          formId: PHI_THREADS_FORM_IDS.message,
+          formConfig: {},
+          execution: { mode: "handler" },
+          source: null,
+          // The same box the conversation above it wears, so the two read as one panel.
+          card: { presentation: "card" },
+          // Already translated, from this Page's own label set, so the Widget states it outright.
+          submit: { label: labels.composerSendLabel, align: "end" },
+          /*
+           * Out of sight until there is something to write into.
+           *
+           * The hidden conversation field is `required`, so a Form shown without one would refuse its own
+           * submit with a message on a field nobody can see. The sentence below stands in its place.
+           */
+          visibleWhen: {
+            source: "controller",
+            controllerAddress,
+            valuePath: "threadOpen",
+            operator: "truthy",
+          },
           signalRoutes: {
-            listens: [{
-              routeKey: "app-threads-composer-select",
-              capabilityId: "select",
-              scope: "page",
-              channel: "thread",
-              action: "change",
-              valueType: "json",
-              valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.threadSelection,
-              receiver: composerAddress,
-            }],
-            /*
-             * A message was written, so what is on screen is out of date -- and the composer is the only
-             * one who knows. It asks rather than tells: the conversation compares the id to the one it
-             * is showing and ignores a request about any other.
-             */
             emits: [{
-              routeKey: "app-threads-written",
-              capabilityId: "written",
+              routeKey: "app-threads-reply-success",
+              capabilityId: "submitSuccess",
               scope: "page",
-              channel: "thread",
-              action: "reload",
+              channel: "submit",
+              action: "activate",
               valueType: "json",
-              valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.threadSelection,
-              receiver: conversationAddress,
+              valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.formResult,
+              receiver: controllerAddress,
             }, {
-              routeKey: "app-threads-written-inbox",
-              capabilityId: "written",
+              /*
+               * Emptied, and therefore no longer about any conversation. The Controller answers this by
+               * saying which one is open again -- after the emptying rather than beside it, because the
+               * two travel a different number of hops and the shorter one would be undone.
+               */
+              routeKey: "app-threads-reply-reset-complete",
+              capabilityId: "resetComplete",
               scope: "page",
-              channel: "thread",
-              action: "reload",
-              valueType: "json",
-              valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.threadSelection,
+              channel: "reset",
+              action: "activate",
+              valueType: "none",
               receiver: controllerAddress,
             }],
+            listens: [{
+              routeKey: "app-threads-reply-reset",
+              capabilityId: "reset",
+              scope: "page",
+              channel: "reset",
+              action: "activate",
+              valueType: "none",
+              receiver: composerAddress,
+            }],
+          },
+        },
+      }),
+      /*
+       * What stands where the reply would be, while nothing is chosen.
+       *
+       * `whenUnavailable: "matched"` because a Page that has just opened is the ordinary case: nobody has
+       * chosen a row yet, and waiting for the Controller to say so would leave the spot empty until then.
+       */
+      nodes.widget({
+        id: PHI_APP_THREADS_PAGE_WIDGET_IDS.widgetComposerEmpty,
+        parentLayoutNodeId: PHI_BASE_PAGE_LAYOUT_NODE_ID,
+        typeKey: "simple-text",
+        slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX + 3,
+        sortOrder: 3,
+        label: labels.composerLabel,
+        config: {
+          translate: false,
+          text: labels.composerNoThreadText,
+          color: PHI_COLOR.textSecondary,
+          visibleWhen: {
+            source: "controller",
+            controllerAddress,
+            valuePath: "threadOpen",
+            operator: "falsy",
+            whenUnavailable: "matched",
           },
         },
       }),

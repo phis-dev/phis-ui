@@ -22,6 +22,7 @@ export const PHI_APP_THREADS_PAGE_WIDGET_IDS = createPhiPresetCmsInstanceIdMap(i
   "widgetInbox",
   "widgetConversation",
   "widgetComposer",
+  "widgetComposerEmpty",
   "widgetNewForm",
   "widgetNewCommands",
 ]);

@@ -212,6 +212,7 @@ type PhiSignalRoute = {
   valueType: PhiSignalValueType;
   valueSchema?: PhiSignalValueSchema | null;
   receiver: PhiSignalAddress | "broadcast" | null;
+  fieldKey?: string | null;
 };
 ```
 
@@ -225,6 +226,15 @@ type PhiSignalRoute = {
 - The `channel` on an emit route is the receiver's channel chosen during wiring, so a generic `change`
   output can drive `enabled/change` on one receiver and `themeMode/change` on another. The runtime never
   translates channels.
+- `fieldKey` names the Form field a route writes, and only a route whose `valueSchema` is `form-field`
+  may carry one -- `readPhiSignalRoute` refuses both halves of the mistake: that schema without a field
+  name, and a field name on any other schema. The sender emits its own value and
+  `resolvePhiSignalRouteValue` wraps it into `{ fieldKey, value }` for the route, which is what the Core
+  Form controller's `field` input reads ([FORMS.md](./FORMS.md#form-controller)). The field name belongs
+  here because it is an addressing fact like every other one on this object: the sender holds a chosen
+  conversation or a dragged rectangle, and the Site decides which field it lands in. Written into the
+  sender instead, as the focal rectangle had it, the same Widget can never feed a second Form and a
+  renamed field means changing a package.
 - Deleting or replacing a receiver removes the routes that target it or its subcontrols in the same
   Builder mutation.
 - A Controller carries the same `signalRoutes` in its own config, and its Page writes them:

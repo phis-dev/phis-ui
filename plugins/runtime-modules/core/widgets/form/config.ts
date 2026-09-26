@@ -65,9 +65,33 @@ export type PhiCmsFormWidgetFeedbackConfig = {
   successText?: string;
 };
 
+/**
+ * The box the Widget draws around its Form, or none at all.
+ *
+ * A Form describes fields. Whether it stands in a box is the same kind of question as whether it carries
+ * its own submit -- the placement's, not the Form's -- which is why it is configured here and appears in
+ * no descriptor. It exists because the box was being built by hand: a client Widget with its own Card,
+ * its own inset and, in one revision, its own Ant Design colour variable, standing beside a Form that
+ * could not have a box at all. What draws it is `PhiCardControl`, so the Theme's surface shape reaches it
+ * through the same component token every other surface reads and the ground and the frame are the
+ * Theme's -- nothing here names a colour or a corner.
+ *
+ * `presentation` is the switch as well as the size: absent, or anything outside the two names, is no box,
+ * which is what every Form placed before this one has and keeps.
+ */
+export type PhiCmsFormWidgetCardConfig = {
+  /** `card` is a box on a Page of its own; `panel` is the smaller inset of chrome -- a Settings section. */
+  presentation: "card" | "panel";
+  /** A heading in a bar above the fields, already translated by whoever placed the Form. */
+  title: string | null;
+  /** The box's own inset, where the Theme's answer for this box is not the right one. */
+  padding: number | string | null;
+};
+
 export type PhiCmsFormWidgetConfig = {
   formId: PhiFormId | null;
   submit: PhiCmsFormWidgetSubmitConfig | null;
+  card: PhiCmsFormWidgetCardConfig | null;
   feedback: PhiCmsFormWidgetFeedbackConfig | null;
   links: readonly PhiCmsFormWidgetLinkConfig[];
   formConfig: Record<string, unknown>;
@@ -105,6 +129,13 @@ export function parsePhiFormWidgetConfig(rawConfig: Record<string, unknown>): Ph
 
   const submit = readRecord(rawConfig.submit);
   const submitAlign = submit.align;
+  const card = readRecord(rawConfig.card);
+  const cardPresentation = card.presentation === "card" || card.presentation === "panel"
+    ? card.presentation
+    : null;
+  const cardPadding = typeof card.padding === "number" || typeof card.padding === "string"
+    ? card.padding
+    : null;
   const feedback = readRecord(rawConfig.feedback);
   const feedbackSuccessText = typeof feedback.successText === "string" && feedback.successText.trim()
     ? feedback.successText.trim()
@@ -117,6 +148,15 @@ export function parsePhiFormWidgetConfig(rawConfig: Record<string, unknown>): Ph
       align: submitAlign === "center" || submitAlign === "end"
         ? submitAlign
         : "start",
+    },
+    /*
+     * No box unless one is named, and the name is read rather than the block's presence: an author who
+     * takes the box off again leaves an empty `card` behind, and an empty block is not a box.
+     */
+    card: cardPresentation == null ? null : {
+      presentation: cardPresentation,
+      title: typeof card.title === "string" && card.title.trim() ? card.title.trim() : null,
+      padding: cardPadding,
     },
     // Absent means silent, so a Form that says nothing about feedback keeps reporting where it stands.
     feedback: rawConfig.feedback == null ? null : {
@@ -245,6 +285,19 @@ export const PHI_FORM_WIDGET_DEFINITION = {
       { value: "center", label: "Center" },
       { value: "end", label: "End" },
     ] },
+    {
+      key: "card.presentation",
+      type: "choice",
+      label: "Box",
+      emptyOption: { value: "", label: "None" },
+      emptyValue: null,
+      options: [
+        { value: "card", label: "Card" },
+        { value: "panel", label: "Panel" },
+      ],
+    },
+    { key: "card.title", type: "string", label: "Box Heading" },
+    { key: "card.padding", type: "number", label: "Box Padding", min: 0, precision: 0, prefix: "px" },
     {
       key: "execution.mode",
       type: "choice",

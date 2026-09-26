@@ -389,11 +389,24 @@ for (const field of parsePhiFormDescriptor(PHI_BUILDER_SIGNAL_WIRING_FORM.descri
 }
 {
   const descriptor = parsePhiFormDescriptor(PHI_BUILDER_SIGNAL_WIRING_FORM.descriptor);
+  /*
+   * Four cascading selects and one typed name.
+   *
+   * `fieldKey` is the odd one and has to be: an input that takes a `form-field` value needs the field of
+   * the receiving Form, and a Form's field keys are its descriptor's -- nothing on this surface can offer
+   * them as options. So it is the one field here without a provider, and the wiring refuses to apply a
+   * `form-field` route without it ([BUILDER.md](../BUILDER.md) section 19).
+   */
+  const CASCADING_FIELD_KEYS = ["senderAddress", "senderCapabilityId", "receiverAddress", "receiverCapabilityId"];
   assert.deepEqual(
     descriptor.fields.map((field) => field.key),
-    ["senderAddress", "senderCapabilityId", "receiverAddress", "receiverCapabilityId"],
+    [...CASCADING_FIELD_KEYS, "fieldKey"],
   );
   for (const field of descriptor.fields) {
+    if (!CASCADING_FIELD_KEYS.includes(field.key)) {
+      assert.equal(field.optionsProvider, undefined, `${field.key} is typed, not chosen.`);
+      continue;
+    }
     // Every select cascades, so none of them may carry a static list: what can be chosen depends on the
     // endpoint chosen before it, and a receiver input has to match the sender output.
     assert.ok(field.optionsProvider, `${field.key} must resolve its options from a provider.`);

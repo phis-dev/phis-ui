@@ -2,7 +2,12 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 
 import { phiSignalCapabilitiesMatch } from "../plugins/runtime-modules/builder/signal-wiring-options";
-import { PHI_SIGNAL_VALUE_SCHEMAS, isPhiSignalValueSchema } from "../types/signals";
+import {
+  PHI_SIGNAL_VALUE_SCHEMAS,
+  isPhiSignalValueSchema,
+  readPhiSignalRouteSet,
+  resolvePhiSignalRouteValue,
+} from "../types/signals";
 
 /**
  * What a route carries is the VALUE.
@@ -134,6 +139,77 @@ for (const [name, schema] of Object.entries(PHI_SIGNAL_VALUE_SCHEMAS)) {
     `Declared value schema ${name} (${schema}) does not satisfy its own grammar.`,
   );
 }
+
+/**
+ * A route into a Form field names the field, and nothing else may.
+ *
+ * The field name is an addressing fact about the wire, so it belongs beside the receiver rather than in
+ * the sender's code -- which is where the focal rectangle kept it, and why that Widget could only ever
+ * feed one Form. Both halves are asserted: a `form-field` route without a name cannot be delivered, and a
+ * name on any other route would be read by nobody, which is the worse of the two silences.
+ */
+const fieldRoute = {
+  routeKey: "field-route",
+  capabilityId: "selectionChange",
+  scope: "page",
+  channel: "field",
+  action: "change",
+  valueType: "json",
+  valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.formField,
+  receiver: "controller:@phis/ui/modules/core/controller/form:widget-1",
+} as const;
+
+assert.equal(
+  readPhiSignalRouteSet({ emits: [fieldRoute] }),
+  null,
+  "A form-field route without a fieldKey must be refused.",
+);
+assert.equal(
+  readPhiSignalRouteSet({ emits: [{ ...fieldRoute, fieldKey: "   " }] }),
+  null,
+  "A blank fieldKey is no field name.",
+);
+assert.equal(
+  readPhiSignalRouteSet({ emits: [{ ...fieldRoute, fieldKey: " threadId " }] })?.emits?.[0]?.fieldKey,
+  "threadId",
+  "A named field survives normalization, trimmed.",
+);
+assert.equal(
+  readPhiSignalRouteSet({
+    emits: [{ ...fieldRoute, valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.threadSelection, fieldKey: "threadId" }],
+  }),
+  null,
+  "A fieldKey on a route that carries something else must be refused.",
+);
+
+/**
+ * What the sender hands over, and what the route makes of it.
+ *
+ * The sender holds a value. Wrapping it into `{ fieldKey, value }` happens once, here, so a Widget that
+ * emits the same value to a Form and to a Controller does not need to know which of the two it is talking
+ * to.
+ */
+const namedRoute = readPhiSignalRouteSet({ emits: [{ ...fieldRoute, fieldKey: "threadId" }] })?.emits?.[0];
+assert.ok(namedRoute, "The named route must parse.");
+assert.deepEqual(
+  resolvePhiSignalRouteValue(namedRoute, 7),
+  { fieldKey: "threadId", value: 7 },
+  "A route that names a field carries the form-field shape.",
+);
+assert.equal(
+  resolvePhiSignalRouteValue({ ...namedRoute, valueType: "none" }, 7),
+  null,
+  "A route that carries nothing carries nothing, field name or not.",
+);
+const plainRoute = readPhiSignalRouteSet({
+  emits: [{ ...fieldRoute, channel: "thread", valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.threadSelection }],
+})?.emits?.[0];
+assert.ok(plainRoute, "The plain route must parse.");
+assert.deepEqual(
+  resolvePhiSignalRouteValue(plainRoute, { threadId: 7 }),
+  { threadId: 7 },
+  "Without a field name the sender's value travels untouched.",
+);
 
 console.log(
   `Signal wiring compatibility contracts validated, including ${Object.keys(PHI_SIGNAL_VALUE_SCHEMAS).length} value schemas.`,

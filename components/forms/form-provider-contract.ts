@@ -97,6 +97,30 @@ export const PHI_FORM_HANDLER_PROVIDER_KEYS = {
   contact: createPhiSharedFormProviderKey("handler", "contact"),
 } as const;
 
+/**
+ * The keys an upload field reads out of its Form's Label Set, beyond the ones every field has.
+ *
+ * A field's label, description and placeholder arrive resolved, because the descriptor names them. What
+ * the descriptor cannot name is the wording of a refusal that has not happened yet, so these are read by
+ * key: a Form that translates uploads carries them, and a Form that does not gets the shared defaults,
+ * which say something a person can act on rather than leaking a control-plane code.
+ *
+ * They live with the descriptors rather than with the Control, because a Server label loader writes them
+ * and a Server module must not reach into a client component to learn their names.
+ */
+export const PHI_FORM_UPLOAD_LABEL_KEYS = {
+  trigger: "uploadTrigger",
+  tooMany: "uploadErrorTooMany",
+  errorGeneric: "uploadErrorGeneric",
+  errorNetwork: "uploadErrorNetwork",
+  errorTooLarge: "uploadErrorTooLarge",
+  errorDuplicate: "uploadErrorDuplicate",
+  errorTypeNotAllowed: "uploadErrorTypeNotAllowed",
+  errorQuotaExceeded: "uploadErrorQuotaExceeded",
+  errorSpaceUnavailable: "uploadErrorSpaceUnavailable",
+  errorStorageUnreachable: "uploadErrorStorageUnreachable",
+} as const;
+
 export const PHI_SHARED_FORM_FIELD_TYPE_PROVIDER_DESCRIPTORS = [
   { key: PHI_FORM_FIELD_PROVIDER_KEYS.text, ownerModuleId: PHI_CORE_RUNTIME_MODULE_ID, title: "Text", valueType: "string", presentation: "control", settingsFields: [{ key: "minLength", type: "number", label: "Minimum characters", min: 0 }, { key: "maxLength", type: "number", label: "Maximum characters", min: 0 }] },
   { key: PHI_FORM_FIELD_PROVIDER_KEYS.email, ownerModuleId: PHI_CORE_RUNTIME_MODULE_ID, title: "Email", valueType: "string", presentation: "control", settingsFields: [{ key: "minLength", type: "number", label: "Minimum characters", min: 0 }, { key: "maxLength", type: "number", label: "Maximum characters", min: 0 }] },

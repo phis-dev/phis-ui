@@ -15,28 +15,8 @@ import {
   usePhiMediaUpload,
   type PhiMediaUploadLabels,
 } from "../media/phi-media-upload";
+import { PHI_FORM_UPLOAD_LABEL_KEYS } from "./form-provider-contract";
 import type { PhiFormFieldProviderProps } from "./form-provider-registry";
-
-/**
- * The keys this field reads out of its Form's Label Set, beyond the ones every field has.
- *
- * A field's label, description and placeholder arrive resolved, because the descriptor names them. What
- * the descriptor cannot name is the wording of a refusal that has not happened yet, so these are read by
- * key: a Form that translates uploads carries them, and a Form that does not gets the shared defaults,
- * which say something a person can act on rather than leaking a control-plane code.
- */
-export const PHI_FORM_UPLOAD_LABEL_KEYS = {
-  trigger: "uploadTrigger",
-  tooMany: "uploadErrorTooMany",
-  errorGeneric: "uploadErrorGeneric",
-  errorNetwork: "uploadErrorNetwork",
-  errorTooLarge: "uploadErrorTooLarge",
-  errorDuplicate: "uploadErrorDuplicate",
-  errorTypeNotAllowed: "uploadErrorTypeNotAllowed",
-  errorQuotaExceeded: "uploadErrorQuotaExceeded",
-  errorSpaceUnavailable: "uploadErrorSpaceUnavailable",
-  errorStorageUnreachable: "uploadErrorStorageUnreachable",
-} as const;
 
 const DEFAULT_TRIGGER_LABEL = "Choose a file";
 const DEFAULT_TOO_MANY_LABEL = "No more files fit here.";

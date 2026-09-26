@@ -407,6 +407,7 @@ export const PHI_BUILDER_RUNTIME_DATA_PROVIDER_DESCRIPTORS = [
         { key: "channel", title: "Channel", type: "string", required: true },
         { key: "action", title: "Action", type: "string", required: true },
         { key: "valueType", title: "Value type", type: "string", required: true },
+        { key: "fieldKey", title: "Form field", type: "string" },
         { key: "receiver", title: "Receiver", type: "string" },
       ],
       query: {

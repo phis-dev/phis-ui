@@ -5,6 +5,8 @@ import { useCallback, useMemo, useState } from "react";
 import type { PhiRuntimeControllerPlugin } from "../../../../types";
 import {
   findPhiSignalRoutesByCapabilityId,
+  resolvePhiSignalRouteValue,
+  type PhiSignalAddress,
   type PhiSignalValue,
 } from "../../../../types/signals";
 import { readPhiTableActionSignalValue, readPhiTableSelectionSignalValue } from "../../../../types/table-widget";
@@ -55,6 +57,15 @@ function PhiThreadsControllerView({
 }: Pick<ControllerRenderArgs, "address" | "config">) {
   const dispatchSignal = usePhiSignalDispatcher();
   const [submitting, setSubmitting] = useState(false);
+  /*
+   * The conversation that is open, kept because two things need it after the fact.
+   *
+   * A reply Form is emptied when its message lands, and emptying returns its fields to their initial
+   * values -- where the conversation is not, because it never was one: it arrived as a signal. So it is
+   * asserted again afterwards. The same value is what the Page conditions on, which is the other reason
+   * it cannot merely pass through.
+   */
+  const [openThreadId, setOpenThreadId] = useState<number | null>(null);
   const emitRoutes = useMemo(() => config.signalRoutes?.emits ?? [], [config.signalRoutes?.emits]);
 
   /*
@@ -82,7 +93,7 @@ function PhiThreadsControllerView({
         receiver: route.receiver,
         channel: route.channel,
         action: route.action,
-        value: route.valueType === "none" ? null : value,
+        value: resolvePhiSignalRouteValue(route, value),
         valueType: route.valueType,
         valueSchema: route.valueSchema ?? null,
         correlationId,
@@ -91,8 +102,50 @@ function PhiThreadsControllerView({
     }
   }, [address, dispatchSignal, emitRoutes]);
 
-  const sendThread = useCallback((threadId: number | null, correlationId: string) =>
-    emitCapability("threadChange", { threadId }, correlationId), [emitCapability]);
+  /*
+   * Which Form is the dialog's, read off the wiring rather than from an id in this file.
+   *
+   * The Form this Controller presses and resets is the one the dialog holds -- that is what its own
+   * routes say. So a success from that address closes the dialog, and a success from anywhere else is a
+   * message written into the open conversation. Nothing here has to know a Widget id, and a Site that
+   * moves either Form is understood without being asked.
+   */
+  const dialogFormAddresses = useMemo(
+    () => new Set(
+      ["formSubmit", "formReset"]
+        .flatMap((capabilityId) => findPhiSignalRoutesByCapabilityId(emitRoutes, capabilityId))
+        .map((route) => route.receiver)
+        .filter((receiver): receiver is PhiSignalAddress => receiver != null && receiver !== "broadcast"),
+    ),
+    [emitRoutes],
+  );
+
+  const sendThread = useCallback((threadId: number | null, correlationId: string) => {
+    setOpenThreadId(threadId);
+    emitCapability("threadChange", { threadId }, correlationId);
+    // The same fact as a Form value. Which field it lands in is the route's to say.
+    emitCapability("threadField", threadId, correlationId);
+    /*
+     * And as condition state, pushed rather than answered.
+     *
+     * A node's visibility gate listens; it never asks. So the two nodes that stand or fall by this --
+     * the reply and the sentence in its place -- are told, on the correlation id of the choice that
+     * caused it. The responder below still answers a Widget that does ask.
+     */
+    emitCapability(
+      "conditionStateChange",
+      { state: { ready: true, threadOpen: threadId != null } },
+      correlationId,
+    );
+    /*
+     * And the reply starts empty, because a different conversation is a different message.
+     *
+     * Carrying half a sentence across would put it under a heading nobody chose. The emptying answers
+     * with `resetComplete`, which is where the conversation above is said once more -- so a Form that
+     * was mounted ends up holding the new id and nothing else.
+     */
+    emitCapability("replyReset", null, correlationId);
+  }, [emitCapability]);
 
   const reloadInbox = useCallback((correlationId: string) =>
     emitCapability("reload", null, correlationId), [emitCapability]);
@@ -103,8 +156,20 @@ function PhiThreadsControllerView({
   const resetForm = useCallback((correlationId: string) =>
     emitCapability("formReset", null, correlationId), [emitCapability]);
 
-  /* This Controller gates nothing, so the answer never varies -- but a Widget still has to hear it. */
-  usePhiRuntimeConditionStateResponder({ address, scope: "page", state: { ready: true } });
+  /*
+   * What the Page may condition on: that this Controller is up, and whether a conversation is open.
+   *
+   * The reply Form hangs on the second one. A Form whose hidden conversation is empty would refuse its
+   * own submit with a validation message on a field nobody can see, so it is not shown at all until
+   * there is something to write into -- and the sentence that stands there instead is its own node with
+   * the opposite condition. Absent means "no answer yet" to a visibility gate, which is why nothing
+   * flashes before the first selection arrives.
+   */
+  const conditionState = useMemo(
+    () => ({ ready: true, threadOpen: openThreadId != null }),
+    [openThreadId],
+  );
+  usePhiRuntimeConditionStateResponder({ address, scope: "page", state: conditionState });
 
   usePhiSignalListener(useCallback((signal) => {
     if (signal.receiver !== address) return;
@@ -159,6 +224,17 @@ function PhiThreadsControllerView({
      * which of its rows is new, so the answer to the submit says it instead.
      */
     if (signal.channel === "submit" && signal.action === "activate") {
+      if (signal.sender != null && !dialogFormAddresses.has(signal.sender)) {
+        /*
+         * A message landed in the open conversation. The reader is asked to catch up rather than to
+         * switch, the listing is stale because its order is by last activity, and the reply is emptied
+         * -- which loses the conversation it was written into, so it is said again.
+         */
+        reloadInbox(signal.correlationId);
+        emitCapability("threadReload", { threadId: openThreadId }, signal.correlationId);
+        emitCapability("replyReset", null, signal.correlationId);
+        return;
+      }
       setSubmitting(false);
       resetForm(signal.correlationId);
       closeDialog(signal.correlationId);
@@ -169,19 +245,30 @@ function PhiThreadsControllerView({
     }
 
     /*
-     * A message was written, so the listing is out of date: its order is by last activity and the row
-     * it belongs to is no longer where it was. Which conversation it was does not matter here -- the
-     * Table is asked again and answers with all of them.
+     * The reply is empty again, so it no longer knows which conversation it is about: emptying a Form
+     * returns its fields to the descriptor's initial values, and this one arrived as a signal. Said here
+     * rather than beside the reset that caused it, because a value written before the reset lands is a
+     * value the reset then throws away.
      */
-    if (signal.channel === "thread") {
-      reloadInbox(signal.correlationId);
+    if (signal.channel === "reset" && signal.action === "activate") {
+      emitCapability("threadField", openThreadId, signal.correlationId);
       return;
     }
 
     if (signal.channel === "selection") {
       sendThread(readSelectedThreadId(signal.value), signal.correlationId);
     }
-  }, [address, closeDialog, emitCapability, reloadInbox, resetForm, sendThread, submitting]), {
+  }, [
+    address,
+    closeDialog,
+    dialogFormAddresses,
+    emitCapability,
+    openThreadId,
+    reloadInbox,
+    resetForm,
+    sendThread,
+    submitting,
+  ]), {
     scopes: ["page"],
     receiver: address,
   });

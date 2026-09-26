@@ -16,6 +16,14 @@ import { usePhiConfig } from "../root/phi-config-provider";
  * preview -- the one box whose entire job is to show what a Theme looks like was the one drawn off the
  * Theme's own scale. Nobody decided any of that, and nobody should have to notice it again.
  *
+ * **The corner and the colours arrive by themselves, and no caller passes them.** The Theme's surface
+ * shape reaches `Card` as a component token (`applyPhiSurfaceShapeComponentTokens`, THEME.md "Control
+ * shape"), so a Site set to `square` draws square corners here without this file or its callers knowing
+ * that shapes exist; the ground and the frame are the Theme's `colorBgContainer` and its border token,
+ * which the primitive reads on its own. A box that names either by hand is a box that stops following the
+ * Theme the moment somebody changes it -- which is what every hand-built panel this control replaced did.
+ * The only decision left here is the inset, and that is the one below.
+ *
  * `toolbar` is Ant Design's `extra` under the name this house already uses for it in
  * `PhiCollectionHeaderControl`. It is passed straight through, which means a toolbar without a `title`
  * still draws the heading bar -- that is the primitive's behaviour, and inventing a rule against it here

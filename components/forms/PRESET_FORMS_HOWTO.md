@@ -29,7 +29,10 @@ something that happens to work:
 - the Form is placed through the one generic Form Widget and never through a Form Widget of your own;
 - the submit is a declared handler Provider behind `/api/site/forms`, never a `fetch` written into a
   client component;
-- the wording is a Label Set, never a string sitting in a component where no translator reaches it.
+- the wording is a Label Set, never a string sitting in a component where no translator reaches it;
+- the box the Form stands in is the Form Widget's own `card`, never a panel drawn around it -- the box is
+  `PhiCardControl`, and its ground, frame, inset and corner come from the Theme, which a hand-drawn one
+  stops following the moment the Theme changes.
 
 If what you need is not on that list, the answer is not a hand-written panel beside the Form and not a
 Widget with its own state and its own `fetch`. Stop, tell the operator what is missing and where it would
@@ -631,6 +634,7 @@ package preset itself.
 - Verify each intended Area twice: with the package-owned shell baseline before any database revision and
   with a persisted Area override whose `runtimeModules` selection is authoritative.
 - Place it through the generic Form Widget with `formId`; never create a domain Form Widget alias.
+- Where the Form is meant to stand in a box, configure the Widget's `card`; draw no box of your own.
 - Give the Form Widget a stable CMS instance id and place visible actions as sibling Button/Command
   Toolbar Widgets with explicit routes.
 - Do not mount the Core Form controller in the preset; verify that the Form Widget demand produces its

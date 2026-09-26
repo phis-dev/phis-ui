@@ -4,7 +4,10 @@ import { useCallback, useMemo, useState } from "react";
 
 import type { PhiSignal, PhiSignalAction, PhiSignalScope, PhiSignalChannel, PhiSignalValue, PhiSignalValueType } from "../../../../types";
 import type { PhiSignalAddress, PhiSignalRouteSet } from "../../../../types/signals";
-import { findPhiSignalRoutesByCapabilityId } from "../../../../types/signals";
+import {
+  findPhiSignalRoutesByCapabilityId,
+  resolvePhiSignalRouteValue,
+} from "../../../../types/signals";
 import { usePhiSignalListener } from "../../../runtime/runtime-signal-bus";
 import { usePhiSignalEmitter, usePhiSignalIdentity } from "../../../runtime/runtime-signal-identity";
 
@@ -123,7 +126,7 @@ export function usePhiControlSignalController<TValue = unknown>({
           scope: route.scope,
           channel: route.channel,
           action: route.action ?? action,
-          value: route.valueType === "none" ? null : value as PhiSignalValue,
+          value: resolvePhiSignalRouteValue(route, value as PhiSignalValue),
           valueType: nextValueType ?? route.valueType ?? (value == null ? "none" : signalValueType),
           valueSchema: route.valueSchema ?? null,
           receiver: route.receiver,

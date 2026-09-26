@@ -14,8 +14,12 @@ import {
 
 import { PHI_COLOR, PHI_SPACE } from "../../theme/antd-css-var-contract";
 import { PhiButtonControl } from "../controls/phi-button-control";
+import { PhiCardControl } from "../controls/phi-card-control";
 import { PhiLink } from "../navigation/phi-link";
-import type { PhiCmsFormWidgetSubmitConfig } from "../../plugins/runtime-modules/core/widgets/form/config";
+import type {
+  PhiCmsFormWidgetCardConfig,
+  PhiCmsFormWidgetSubmitConfig,
+} from "../../plugins/runtime-modules/core/widgets/form/config";
 import {
   PHI_FORM_ACTIONS_COLUMNS_PROPERTY,
   PHI_FORM_RESPONSIVE_MODES,
@@ -101,6 +105,14 @@ export type PhiFormWidgetLink = {
 export type PhiFormWidgetFrameProps = {
   /** The submit the Widget carries, or null where it carries none. */
   submit?: PhiCmsFormWidgetSubmitConfig | null;
+  /**
+   * The box around the whole of it, or null for no box.
+   *
+   * It stands outside the grid rather than around the fields, because the submit and the ways out belong
+   * in it too -- a button outside the box it submits reads as something else's button. Its inset is the
+   * Card's, so the query container is measured inside the padding, which is the width the fields have.
+   */
+  card?: PhiCmsFormWidgetCardConfig | null;
   /** The ways out it offers, drawn in the same column as the submit. */
   links?: readonly PhiFormWidgetLink[];
   /**
@@ -124,7 +136,7 @@ export type PhiFormWidgetFrameProps = {
  * here, from the form's layout, so it lines up under the inputs at each width and still moves with the
  * column a Form Layout decides -- that column is a custom property both of them read.
  */
-export function PhiFormWidgetFrame({ submit, links, layout, children }: PhiFormWidgetFrameProps) {
+export function PhiFormWidgetFrame({ submit, card, links, layout, children }: PhiFormWidgetFrameProps) {
   const [registration, setRegistration] = useState<PhiFormWidgetSubmitRegistration | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const slot = useMemo<PhiFormWidgetSubmitSlot>(
@@ -196,22 +208,34 @@ export function PhiFormWidgetFrame({ submit, links, layout, children }: PhiFormW
     </>
   ) : null;
 
+  const measured = (
+    <div
+      style={{
+        display: "grid",
+        gap: PHI_SPACE.sm,
+        width: "100%",
+        minWidth: 0,
+        containerType: "inline-size",
+        containerName: "phi-form",
+        ...actionsColumns,
+      } as CSSProperties}
+    >
+      {children}
+    </div>
+  );
+
   return (
     <PhiFormWidgetSubmitSlotContext.Provider value={slot}>
       <PhiFormWidgetSubmitNodeContext.Provider value={actionsNode}>
-        <div
-          style={{
-            display: "grid",
-            gap: PHI_SPACE.sm,
-            width: "100%",
-            minWidth: 0,
-            containerType: "inline-size",
-            containerName: "phi-form",
-            ...actionsColumns,
-          } as CSSProperties}
-        >
-          {children}
-        </div>
+        {card ? (
+          <PhiCardControl
+            size={card.presentation === "panel" ? "small" : "medium"}
+            {...(card.title ? { title: card.title } : {})}
+            {...(card.padding == null ? {} : { padding: card.padding })}
+          >
+            {measured}
+          </PhiCardControl>
+        ) : measured}
       </PhiFormWidgetSubmitNodeContext.Provider>
     </PhiFormWidgetSubmitSlotContext.Provider>
   );

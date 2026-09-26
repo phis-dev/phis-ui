@@ -922,13 +922,18 @@ this section describes only the Builder-owned configuration flow.
 
 - Plugins declare immutable capabilities through `runtimeSignals.emits` and `runtimeSignals.listens`.
 - Concrete CMS instances persist routes through `signalRoutes.emits` and `signalRoutes.listens` in
-  their config. There is no `signalWiring`, `topic`, `target`, `source`, payload key, or signal `kind`.
+  their config. There is no `signalWiring`, `topic`, `target`, `source`, or signal `kind`. The one payload
+  key a route names is `fieldKey`, on a route into a Form field and nowhere else (see below).
 - Every persisted route has one stable `routeKey` and one declared `capabilityId`. Route CRUD uses the
   former; runtime dispatch uses the latter.
 - Sender outputs declare `id`, `action`, `valueType`, and an optional JSON `valueSchema`. Receiver
   inputs additionally declare their stable `channel`.
 - A route copies the chosen receiver input's `scope`, `channel`, `action`, `valueType`, and
   `valueSchema`; scope is derived and read-only in Wiring.
+- An input that takes a `form-field` value needs one thing the cascade cannot offer: which field of the
+  receiving Form it writes. A Form's field keys are its descriptor's, and no options provider here can
+  read them, so Wiring's fifth input is typed rather than chosen, and applying a `form-field` route
+  without it is refused as incomplete. It stays empty for every other input.
 - Normal Wiring targets one concrete `cms:`, `region:`, or `controller:` receiver. It does not offer broadcast; multiple
   receivers require multiple explicit routes.
 - Widget subcontrols use the owning Widget address plus a subcontrol suffix. Layouts use

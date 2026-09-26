@@ -327,6 +327,7 @@ the only way a Form is placed. There are no domain Form Widgets. Its config:
 | --- | --- |
 | `formId` | The Form to render. |
 | `submit` | `{ label, align }` or absent. A submit button drawn by the Widget in the control column; `align` is `start` (default), `center`, or `end`. |
+| `card` | `{ presentation, title, padding }` or absent. The box the Widget draws around the Form, its submit and its links: `card` on a Page of its own, `panel` for the smaller inset of chrome. Absent is no box. |
 | `feedback` | `{ mode, successText? }` or absent. Absent answers in place. `mode` is `message` (a transient message) or `notification`; `successText` is what a success says where the descriptor's `success` says nothing. Set, it moves the answer out of the Form rather than adding one. |
 | `links` | `[{ key, href, requiresFeature? }]`, drawn below the submit. The text is `actions.<key>Label` of the Form's label set; a link whose `requiresFeature` is not published by an active Module is left out. |
 | `formConfig` | Placement config: `initialValues`, `initialValuesFromQuery`, values read by `config` text, and values an `optionsProvider` reads (see [Fields](#fields)). |
@@ -335,6 +336,13 @@ the only way a Form is placed. There are no domain Form Widgets. Its config:
 | `openActionKey` | The Table action key that opens a record, default `edit`. |
 | `signalRoutes` | The Widget's routes. |
 
+- The box around a Form is `card`, never a panel built beside it. It is `PhiCardControl`, so the ground,
+  the frame, the inset and the corner are the Theme's -- `Card` is one of the surfaces the Theme's shape
+  reaches through a component token ([THEME.md](./THEME.md)), which a hand-built box is not. It wraps the
+  submit and the links as well as the fields, because a button outside the box it submits reads as
+  something else's button. `title` is a heading in the box's own bar, already translated by whoever placed
+  the Form, and `padding` is only for where the Theme's inset for this box is wrong. Absent stays absent:
+  a Form placed before this existed is unchanged.
 - The Widget resolves the definition on the Server, loads labels and `loadInitialValues`, wraps the body
   in the owner Module's UI provider, and renders `PhiFormControl` in a client host.
 - `handler` mode submits through the Form controller and the [Relay](#relay). `signal` mode keeps the
@@ -431,6 +439,20 @@ Controller inputs: `values/change` (`form-values`), `field/change` (`form-field`
 (`change`, `form-result`), `error` (`change`, `form-error`), `reset` (`activate`), `clear` (`clear`). On
 `submit` or `confirm` it posts to the relay and answers the sender with `submitting`, then `result` or
 `error`, under the incoming correlation id.
+
+**A value a neighbour holds reaches a field through this Controller.** `values/change` and `field/change`
+are that path: the Controller hands what it hears to the Form it belongs to, which writes it with
+`setFieldsValue` or `setFieldValue` (`components/forms/runtime-form-binding.ts`). It is how a chosen
+conversation reaches a hidden field and a dragged focal rectangle reaches the Media metadata Form. Three
+things follow. The receiver is the Controller address, not the Widget's. The sender emits its own value and
+the route names the field it lands in -- `fieldKey`, which only a `form-field` route may carry
+([SIGNALS.md](./SIGNALS.md)) -- so a Widget is never written against one Form's field names. And a value
+written this way is not an initial value: a `reset` returns the field to the descriptor's, so whoever sent
+it asserts it again after a submit that resets.
+
+A record read is the other way a placed Form is filled, and the two do not mix: a read remounts the Form
+with new initial values, which discards anything written in. A Form acting on a neighbour's selection takes
+the value; a Form editing a record takes the record.
 
 A Module adds its own Controller only for a different lifecycle (checkout, payment, a server-side
 wizard), not to run an ordinary Form.

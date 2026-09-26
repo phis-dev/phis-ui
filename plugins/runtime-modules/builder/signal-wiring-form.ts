@@ -65,6 +65,21 @@ const descriptor: PhiFormDescriptor = {
       optionsProvider: { providerKey: PHI_BUILDER_RUNTIME_DATA_PROVIDER_KEYS.signalReceiverCapabilities },
       disabledWhen: { source: "form", valuePath: "receiverAddress", operator: "falsy" },
     },
+    /*
+     * The fifth select is a name, because the thing it names is not on the page yet.
+     *
+     * An input that takes a Form field needs to be told which one, and the field keys of a Form are its
+     * descriptor's, which no options provider here can read. So it is typed, and the wiring refuses to
+     * apply a `form-field` route without it -- the same refusal an unfinished cascade gets. It stays
+     * empty for every other input, where a field name would be read by nobody.
+     */
+    {
+      key: "fieldKey",
+      fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.text,
+      label: label("fields.fieldKey.label", "Form field"),
+      description: label("fields.fieldKey.description", "Only for an input that writes a Form field."),
+      disabledWhen: { source: "form", valuePath: "receiverCapabilityId", operator: "falsy" },
+    },
   ]),
 };
 

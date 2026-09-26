@@ -143,6 +143,8 @@ export type PhiDeveloperBuilderState = {
     senderCapabilityId: string | null;
     receiverAddress: string | null;
     receiverCapabilityId: string | null;
+    /** The Form field a `form-field` route writes; meaningless, and refused, on any other input. */
+    fieldKey: string | null;
   };
   effectsEditorRequest: PhiDeveloperBuilderEffectsRequest | null;
   /**

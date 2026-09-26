@@ -31,7 +31,7 @@ scaffold:
 ```text
 inbox          a generic Table over the thread library Provider
 conversation   thread-conversation, reading one thread
-composer       thread-composer, writing into it
+composer       the reply Form, placed through the generic Form Widget
 ```
 
 **The inbox is not a Widget of this Module.** It is Core's Table Widget bound to a Provider this Module
@@ -87,30 +87,46 @@ and what it does not change are Core's, in
 
 What this Module declares is the need -- `mediaSpaces.user.kinds` -- and the list is its own module
 because both halves of the offer read it from opposite sides of the Server/Client seam: the Module
-definition declares the Space on the Server, and the composer offers the file dialog in a browser. A
-Client Widget reaching into the definition to find out what it may accept would pull the Module's
-Providers, Forms and label sets into the browser bundle.
+definition declares the Space on the Server, and the reply Form's upload field is configured with the same
+list. The field is a shared Provider, so the list travels as field config rather than being read from the
+definition in a browser -- which would pull the Module's Providers, Forms and label sets into the bundle.
 
 `binary` is absent, for the reason the groups Module leaves it out: distributing executables is a Site
 decision, taken in the Site Space.
 
-## 6. The composer is shared
+## 6. The composer is a Form, and it is shared
 
 The composer is the one place a message is written and a file is hung on it. The group and Support
 Modules reuse it rather than each growing their own.
 
+It is a declared Form -- `threads/message`, placed through the one generic Form Widget -- and not a Widget
+of its own. Three field descriptors: a hidden conversation, a textarea, and the shared upload field. What
+it used to do for itself is somebody else's declared job now: validation is a Provider, the wording is a
+label set a translator reaches, the Send button belongs to the placement, and the submit is a handler
+Provider behind `/api/site/forms` rather than a `fetch` written into a client component.
+
+Which conversation it writes into is the one thing no descriptor can say, because it is chosen while the
+page is open. The Conversations Controller holds that answer and sends it in as a field value; the route
+names the field (`fieldKey`, [SIGNALS.md](./SIGNALS.md)), so the Controller says what is open and the Page
+says where it belongs. After a message lands the Form is emptied, which drops the conversation with it --
+an emptied Form has only its initial values -- so the Controller asserts it again in the same breath.
+
+The Form is out of sight until something is chosen, because a hidden required field cannot show a
+validation message; what stands in its place is a node of its own with the opposite condition.
+
 That is a promise to two other Modules, and it constrains this one: a change to the composer that
 assumes a direct conversation breaks Support, and a Site that has this Module switched off still has a
-composer wherever those Modules put one.
+composer wherever those Modules put one. What they reuse is now a Form id and a field vocabulary rather
+than a Widget type, which is the same promise in a smaller surface.
 
 ## 7. What the Module contributes
 
 | contribution | what it is |
 | --- | --- |
-| Widgets | `thread-conversation`, `thread-composer` |
+| Widgets | `thread-conversation` |
 | Data Provider | the thread library Table Provider, resource `inbox` |
 | Options Provider | conversation candidates -- who this viewer may write to |
-| Form | the new-conversation Form and its handler |
+| Forms | the new-conversation Form and the reply Form, with a handler Provider each |
 | Route preset | `app-threads-page` at `/conversations`, plus its sidebar entry |
 | Controller | the translation above, mounted on demand |
 | Media Space | the User Space kinds in section 5 |

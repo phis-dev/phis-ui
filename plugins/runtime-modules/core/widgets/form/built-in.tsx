@@ -101,6 +101,7 @@ export async function PhiFormWidget({
     const framed = (
       <PhiFormWidgetFrame
         submit={config?.submit ?? null}
+        card={config?.card ?? null}
         links={resolvedLinks}
         layout={resolvedForm.definition.descriptor.layout}
       >

@@ -319,6 +319,20 @@ export type PhiSignalRoute = {
   valueType: PhiSignalValueType;
   valueSchema?: PhiSignalValueSchema | null;
   receiver: PhiSignalReceiver;
+  /**
+   * Which Form field this route writes, for a route that carries a `form-field` value and only for one.
+   *
+   * A `form-field` payload is `{ fieldKey, value }`, and the field name is an addressing fact about this
+   * wire, not something the sender knows: the sender holds a value -- a chosen conversation, a dragged
+   * rectangle -- and a Site decides which Form field it lands in. Written into the sender's code, as the
+   * focal rectangle had it, the same Widget can never feed a second Form, and a Site that renames the
+   * field has to change a package to follow. So the route names it and the emitting side reads it from
+   * there, which is what every other fact on this object already is.
+   *
+   * Required wherever `valueSchema` is `form-field`, and refused everywhere else: a field name on a route
+   * that carries something else would be read by nobody, which is worse than absent.
+   */
+  fieldKey?: string | null;
 };
 
 export type PhiSignalRouteSet = {
@@ -492,6 +506,19 @@ function readPhiSignalRoute(value: unknown): PhiSignalRoute | null {
     return null;
   }
 
+  /*
+   * The field a `form-field` route writes, and nothing else may carry one.
+   *
+   * A route that promises a `form-field` value without naming a field cannot be delivered -- the Form
+   * would be told to write a field called `undefined` -- so it is refused here rather than dropped
+   * quietly, which is how every other incomplete route is treated in this parser.
+   */
+  const fieldKey = typeof value.fieldKey === "string" && value.fieldKey.trim() ? value.fieldKey.trim() : null;
+  const wantsFieldKey = valueSchema === PHI_SIGNAL_VALUE_SCHEMAS.formField;
+  if (wantsFieldKey ? !fieldKey : fieldKey != null) {
+    return null;
+  }
+
   return {
     routeKey,
     capabilityId,
@@ -501,6 +528,7 @@ function readPhiSignalRoute(value: unknown): PhiSignalRoute | null {
     valueType,
     valueSchema,
     receiver: value.receiver,
+    ...(fieldKey ? { fieldKey } : {}),
   };
 }
 
@@ -535,6 +563,24 @@ export function readPhiSignalRouteSet(value: unknown): PhiSignalRouteSet | null 
     return null;
   }
   return emits || listens ? { emits, listens } : null;
+}
+
+/**
+ * What this route actually carries, once the route has had its say about the payload.
+ *
+ * A sender holds a value and nothing more. Where the route names a Form field, the value is wrapped into
+ * the `form-field` shape the Core Form controller reads (`{ fieldKey, value }`), so the same Widget can
+ * feed a different field on the next page without a line of its code changing. Every emitter goes through
+ * here, because a second place that wraps would be a second answer to the same question.
+ */
+export function resolvePhiSignalRouteValue(
+  route: PhiSignalRoute,
+  value: PhiSignalValue,
+): PhiSignalValue {
+  if (route.valueType === "none") {
+    return null;
+  }
+  return route.fieldKey ? { fieldKey: route.fieldKey, value } : value;
 }
 
 export function findPhiSignalRoutesByCapabilityId(

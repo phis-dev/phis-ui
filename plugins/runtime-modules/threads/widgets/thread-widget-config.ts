@@ -8,13 +8,15 @@ import {
 } from "../../../../types/signals";
 
 /**
- * What every conversation Widget is configured with: a padding, and where its signals go.
+ * What a conversation Widget is configured with: a padding, and where its signals go.
  *
- * The three surfaces of a conversation -- a listing, the conversation itself, the composer beneath it
- * -- are separate Widgets that find each other over the `thread` channel, and none of them holds a
- * conversation of its own. That only works if the wiring is part of the configuration rather than a
- * channel name agreed on inside two clients: a Site places them and wires them, and a package from
- * another repository can dock onto the same routes ([THREADS.md] section 13).
+ * The three surfaces of a conversation -- a listing, the conversation itself, the reply beneath it -- are
+ * placed separately and find each other over the `thread` channel, and none of them holds a conversation
+ * of its own. Two of the three are not this Widget: the listing is Core's Table over a Provider, and the
+ * reply is a declared Form, which is told its conversation as a field value rather than by listening. That
+ * only works if the wiring is part of the configuration rather than a channel name agreed on inside two
+ * clients: a Site places them and wires them, and a package from another repository can dock onto the same
+ * routes ([THREADS.md] section 13).
  */
 export type PhiThreadWidgetConfig = {
   padding?: number | string;

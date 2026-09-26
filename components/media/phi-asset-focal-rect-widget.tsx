@@ -13,7 +13,10 @@ import {
 
 import type { PhiCmsAssetFocalRectWidgetConfig } from "../../plugins/runtime-modules/asset/widgets/asset-focal-rect/config";
 import type { PhiSignal, PhiSignalValue } from "../../types/signals";
-import { findPhiSignalRoutesByCapabilityId } from "../../types/signals";
+import {
+  findPhiSignalRoutesByCapabilityId,
+  resolvePhiSignalRouteValue,
+} from "../../types/signals";
 import { usePhiSignalListener } from "../runtime/runtime-signal-bus";
 import { usePhiSignalEmitter, usePhiSignalIdentity } from "../runtime/runtime-signal-identity";
 import { PhiTagControl } from "../controls/phi-tag-control";
@@ -137,7 +140,7 @@ export function PhiAssetFocalRectWidget({
         scope: route.scope,
         channel: route.channel,
         action: route.action,
-        value: route.valueType === "none" ? null : value,
+        value: resolvePhiSignalRouteValue(route, value),
         valueType: route.valueType,
         valueSchema: route.valueSchema ?? null,
         receiver: route.receiver,
@@ -174,7 +177,11 @@ export function PhiAssetFocalRectWidget({
       ...current,
       meta: { ...(current.meta ?? {}), focalRect: next },
     }));
-    emitCapability("focalRectChange", { fieldKey: "focalRect", value: next }, signal.correlationId);
+    /*
+     * The rectangle, and not a field: which field it lands in is written on the route
+     * (`fieldKey`), so this Widget can sit beside a different Form without being changed.
+     */
+    emitCapability("focalRectChange", next, signal.correlationId);
     emitCapability("close", null, signal.correlationId);
   }, [asset, draft, emitCapability, listenRoutes, receiver]);
 

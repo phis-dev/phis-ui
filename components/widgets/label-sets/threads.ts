@@ -3,28 +3,6 @@ import "server-only";
 import { PHI_TR_CTX_WEB_UI_LABEL, type PhiGlobalTranslatorOptions } from "../../../gateway/tr";
 import { definePhiLabelSet, definePhiMessageLabel, getPhiLabelSet } from "../../../gateway/label-set";
 
-const PHI_THREAD_COMPOSER_LABEL_SET = definePhiLabelSet({
-  key: "widget:thread-composer",
-  ctx: PHI_TR_CTX_WEB_UI_LABEL,
-  labels: {
-    message_placeholder: definePhiMessageLabel("Write a message"),
-    send_label: "Send",
-    attach_label: "Attach a file",
-    attach_hint: definePhiMessageLabel("Anyone who can read this conversation can open what you attach."),
-    remove_attachment_label: "Remove",
-    no_thread_text: definePhiMessageLabel("Choose a conversation to write in."),
-    error_title: "That did not work",
-    error_generic: definePhiMessageLabel("The message could not be sent."),
-    error_network: definePhiMessageLabel("The site could not be reached."),
-    error_too_large: definePhiMessageLabel("That file is too large."),
-    error_type_not_allowed: definePhiMessageLabel("That kind of file cannot be attached."),
-    error_duplicate: definePhiMessageLabel("That file is already attached."),
-    error_quota_exceeded: definePhiMessageLabel("There is no room left in your space."),
-    error_space_unavailable: definePhiMessageLabel("Files cannot be attached on this site."),
-    error_storage_unreachable: definePhiMessageLabel("The file storage could not be reached."),
-  },
-});
-
 const PHI_THREAD_CONVERSATION_LABEL_SET = definePhiLabelSet({
   key: "widget:thread-conversation",
   ctx: PHI_TR_CTX_WEB_UI_LABEL,
@@ -94,6 +72,15 @@ const PHI_THREAD_PAGE_LABEL_SET = definePhiLabelSet({
     cancel_label: "Cancel",
     composer_label: "Your answer",
     /*
+     * The reply's button and the sentence that stands where the reply would be.
+     *
+     * Both belong to the Page rather than to the Form's own set: whether a reply is offered at all, what
+     * its button says and what stands there while nothing is chosen are decisions of this arrangement,
+     * and a Site that places the same Form elsewhere makes them again.
+     */
+    composer_send_label: "Send",
+    composer_no_thread_text: definePhiMessageLabel("Choose a conversation to write in."),
+    /*
      * The listing is a Table, so what used to be a renderer's vocabulary is now column headings and
      * the names a badge draws. They are here rather than in the Provider for the reason every visible
      * word is: the Provider answers in numbers and runs in a browser, and a Site reads its own
@@ -141,6 +128,8 @@ export async function getPhiThreadPageLabels(options: PhiGlobalTranslatorOptions
     openConversationLabel: labels.open_conversation_label,
     cancelLabel: labels.cancel_label,
     composerLabel: labels.composer_label,
+    composerSendLabel: labels.composer_send_label,
+    composerNoThreadText: labels.composer_no_thread_text,
     columns: {
       subject: labels.column_subject,
       kind: labels.column_kind,
@@ -207,6 +196,29 @@ const PHI_THREAD_FORM_LABEL_SET = definePhiLabelSet({
     message_label: "Message",
     message_placeholder: definePhiMessageLabel("Write the first message"),
     message_required: definePhiMessageLabel("A conversation starts with a message."),
+    /*
+     * The reply, in the same set as the conversation it opens.
+     *
+     * Two Forms, one vocabulary: a Site that translates "message" once should not meet it twice under
+     * different keys. The refusals an upload can produce are here for the same reason the Form's own
+     * are -- a file that was too large says so in the reader's language, and the shared English default
+     * in `upload-form-control.tsx` is what a Form without a label set falls back to, not what this one
+     * should show.
+     */
+    reply_label: "Your message",
+    reply_placeholder: definePhiMessageLabel("Write a message"),
+    reply_required: definePhiMessageLabel("Write something before you send it."),
+    reply_thread_required: definePhiMessageLabel("Choose a conversation first."),
+    reply_attach_label: "Attach a file",
+    reply_attach_too_many: definePhiMessageLabel("No more files fit here."),
+    reply_error_generic: definePhiMessageLabel("The file could not be attached."),
+    reply_error_network: definePhiMessageLabel("The site could not be reached."),
+    reply_error_too_large: definePhiMessageLabel("That file is too large."),
+    reply_error_duplicate: definePhiMessageLabel("That file is already attached."),
+    reply_error_type_not_allowed: definePhiMessageLabel("That kind of file cannot be attached."),
+    reply_error_quota_exceeded: definePhiMessageLabel("There is no room left in your space."),
+    reply_error_space_unavailable: definePhiMessageLabel("Files cannot be attached on this site."),
+    reply_error_storage_unreachable: definePhiMessageLabel("The file storage could not be reached."),
   },
 });
 
@@ -223,6 +235,20 @@ export async function getPhiThreadFormLabels(options: PhiGlobalTranslatorOptions
     messageLabel: labels.message_label,
     messagePlaceholder: labels.message_placeholder,
     messageRequired: labels.message_required,
+    replyLabel: labels.reply_label,
+    replyPlaceholder: labels.reply_placeholder,
+    replyRequired: labels.reply_required,
+    replyThreadRequired: labels.reply_thread_required,
+    replyAttachLabel: labels.reply_attach_label,
+    replyAttachTooMany: labels.reply_attach_too_many,
+    replyErrorGeneric: labels.reply_error_generic,
+    replyErrorNetwork: labels.reply_error_network,
+    replyErrorTooLarge: labels.reply_error_too_large,
+    replyErrorDuplicate: labels.reply_error_duplicate,
+    replyErrorTypeNotAllowed: labels.reply_error_type_not_allowed,
+    replyErrorQuotaExceeded: labels.reply_error_quota_exceeded,
+    replyErrorSpaceUnavailable: labels.reply_error_space_unavailable,
+    replyErrorStorageUnreachable: labels.reply_error_storage_unreachable,
   };
 }
 
@@ -257,28 +283,3 @@ export async function getPhiThreadConversationLabels(options: PhiGlobalTranslato
 
 export type PhiThreadConversationLabels =
   Awaited<ReturnType<typeof getPhiThreadConversationLabels>>;
-
-export async function getPhiThreadComposerLabels(options: PhiGlobalTranslatorOptions) {
-  const labels = await getPhiLabelSet(options, PHI_THREAD_COMPOSER_LABEL_SET);
-  return {
-    messagePlaceholder: labels.message_placeholder,
-    sendLabel: labels.send_label,
-    attachLabel: labels.attach_label,
-    attachHint: labels.attach_hint,
-    removeAttachmentLabel: labels.remove_attachment_label,
-    noThreadText: labels.no_thread_text,
-    feedback: {
-      errorTitle: labels.error_title,
-      errorGeneric: labels.error_generic,
-      errorNetwork: labels.error_network,
-      errorTooLarge: labels.error_too_large,
-      errorTypeNotAllowed: labels.error_type_not_allowed,
-      errorDuplicate: labels.error_duplicate,
-      errorQuotaExceeded: labels.error_quota_exceeded,
-      errorSpaceUnavailable: labels.error_space_unavailable,
-      errorStorageUnreachable: labels.error_storage_unreachable,
-    },
-  };
-}
-
-export type PhiThreadComposerLabels = Awaited<ReturnType<typeof getPhiThreadComposerLabels>>;

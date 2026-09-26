@@ -3,6 +3,7 @@
 import {
   createPhiSignalRouteKey,
   readPhiSignalRouteSet,
+  PHI_SIGNAL_VALUE_SCHEMAS,
   type PhiSignalRoute,
   type PhiSignalRouteSet,
 } from "../../../types/signals";
@@ -31,6 +32,7 @@ const EMPTY_SESSION: PhiDeveloperBuilderWorkspaceState["signalWiring"] = {
   senderCapabilityId: null,
   receiverAddress: null,
   receiverCapabilityId: null,
+  fieldKey: null,
 };
 
 function readOptionalString(value: unknown) {
@@ -63,6 +65,10 @@ export function patchPhiBuilderSignalWiringSession(
         receiverCapabilityId: senderChanged || capabilityChanged || receiverChanged
           ? null
           : readOptionalString(values.receiverCapabilityId) ?? current.signalWiring.receiverCapabilityId,
+        // The field belongs to the receiver's input, so it falls with everything above it.
+        fieldKey: senderChanged || capabilityChanged || receiverChanged
+          ? null
+          : readOptionalString(values.fieldKey) ?? current.signalWiring.fieldKey,
       },
     };
   });
@@ -75,7 +81,9 @@ export function resetPhiBuilderSignalWiringSession(defaultArea: PhiDeveloperBuil
 function routesAreEquivalent(left: PhiSignalRoute, right: PhiSignalRoute) {
   return left.capabilityId === right.capabilityId && left.scope === right.scope &&
     left.channel === right.channel && left.action === right.action && left.valueType === right.valueType &&
-    (left.valueSchema ?? null) === (right.valueSchema ?? null) && left.receiver === right.receiver;
+    (left.valueSchema ?? null) === (right.valueSchema ?? null) && left.receiver === right.receiver &&
+    // Two routes into the same Form that fill different fields are two routes, not one twice.
+    (left.fieldKey ?? null) === (right.fieldKey ?? null);
 }
 
 export type PhiBuilderSignalWiringResult =
@@ -110,6 +118,15 @@ export function resolvePhiBuilderSignalWiringRoutes(
     return { kind: "mismatched" };
   }
 
+  /*
+   * An input that takes a Form field is not wired until the field is named: the value would arrive as
+   * `{ fieldKey: undefined }` and the Form would write nothing, with nobody to report it.
+   */
+  const wantsFieldKey = input.valueSchema === PHI_SIGNAL_VALUE_SCHEMAS.formField;
+  if (wantsFieldKey && !session.fieldKey) {
+    return { kind: "incomplete" };
+  }
+
   const route: PhiSignalRoute = {
     routeKey: createPhiSignalRouteKey(),
     capabilityId: output.id,
@@ -119,6 +136,7 @@ export function resolvePhiBuilderSignalWiringRoutes(
     valueType: input.valueType,
     valueSchema: input.valueSchema ?? null,
     receiver: receiver.address,
+    ...(wantsFieldKey && session.fieldKey ? { fieldKey: session.fieldKey } : {}),
   };
 
   const current = getPhiDeveloperSelectedSignalRoutes(defaultArea) ?? {};

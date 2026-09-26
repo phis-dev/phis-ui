@@ -60,7 +60,9 @@ function routesAreEquivalent(
 ) {
   return left.capabilityId === right.capabilityId && left.scope === right.scope &&
     left.channel === right.channel && left.action === right.action && left.valueType === right.valueType &&
-    (left.valueSchema ?? null) === (right.valueSchema ?? null) && left.receiver === right.receiver;
+    (left.valueSchema ?? null) === (right.valueSchema ?? null) && left.receiver === right.receiver &&
+    // Two routes into the same Form that fill different fields are two routes, not one twice.
+    (left.fieldKey ?? null) === (right.fieldKey ?? null);
 }
 
 export function PhiBuilderSignalRoutesTableProviderClient({ children }: { children: ReactNode }) {

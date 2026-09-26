@@ -2081,6 +2081,8 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                       action: "change",
                       valueType: "json",
                       valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.formField,
+                      // The field the rectangle lands in. The Widget hands over a rectangle.
+                      fieldKey: "focalRect",
                       receiver: createPhiRuntimeFormControllerAddress(
                         `widget-${PHI_ASSET_INSPECTOR_WIDGET_IDS.widgetMediaMetadataForm}`,
                       ),
