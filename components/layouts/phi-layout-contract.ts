@@ -9,11 +9,13 @@ import type {
   PhiRenderableBlockRenderMode,
   PhiRenderableBlockAnchor,
   PhiRenderableBlockSize,
-  PhiRenderableBlockVisibility,
 } from "../../types";
 import type { PhiShadow, PhiLayoutEffectId } from "../../types/layout-style";
 import { resolvePhiCmsBorderSource, type PhiCmsBorderSource } from "../../types/cms-config";
-import { resolvePhiRenderableBlockGeometry } from "../../types/renderable-block-geometry";
+import {
+  resolvePhiRenderableBlockGeometry,
+  type PhiRenderableBlockGeometryInput,
+} from "../../types/renderable-block-geometry";
 import { PHI_THEME_BORDER_LINE } from "../../helpers/border-widget-style";
 
 export type PhiLayoutProps = {
@@ -131,9 +133,7 @@ export function resolvePhiLayoutBoxStyle({
   maxSize,
   collapsedSizeHint,
   visibility,
-}: Pick<PhiLayoutProps, "size" | "minSize" | "maxSize" | "collapsedSizeHint"> & {
-  visibility?: PhiRenderableBlockVisibility | null;
-}): CSSProperties {
+}: PhiRenderableBlockGeometryInput): CSSProperties {
   const geometry = resolvePhiRenderableBlockGeometry({ size, minSize, maxSize, collapsedSizeHint, visibility });
 
   return {

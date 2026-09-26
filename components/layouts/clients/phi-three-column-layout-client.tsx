@@ -2,6 +2,7 @@ import type { CSSProperties, ReactNode } from "react";
 
 import {
   normalizePhiCssSize,
+  resolvePhiLayoutBoxStyle,
   phiFlexPlacementWord,
   resolvePhiPlacement,
   resolvePhiSlotPlacementMargins,
@@ -212,6 +213,10 @@ export function PhiThreeColumnLayout({
     effect,
     shadow,
     labelEnd,
+    size,
+    minSize,
+    maxSize,
+    collapsedSizeHint,
   } = layoutProps;
   const resolvedRenderMode = renderMode ?? "live";
   const resolvedLeftWidth = normalizePhiCssSize(leftWidth);
@@ -251,6 +256,16 @@ export function PhiThreeColumnLayout({
         position: "relative",
         minWidth: 0,
         minHeight: 0,
+        /*
+         * Its own geometry, the way every other Layout states it.
+         *
+         * The four fields were declared in this client's props and passed by its plugin, and then
+         * dropped -- not destructured, not read. A three-column Layout with an authored width was
+         * therefore whatever its slot gave it, and only the frame above it held a maximum. This is the
+         * same call `PhiBaseLayout` makes; this client draws its row itself instead of going through
+         * it, which is how it came to miss the one thing the base box does first.
+         */
+        ...resolvePhiLayoutBoxStyle({ size, minSize, maxSize, collapsedSizeHint }),
         ...resolvedLayoutStyle,
         display: "flex",
         flexDirection: "row",

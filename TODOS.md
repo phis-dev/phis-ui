@@ -148,8 +148,15 @@ built. Remove an entry when it is done.
   interpreter, used by the Structure Canvas and the Builder sider width; the Structure Region slot
   appended `px` to a minimum height without asking what it was, so a `%` height there produced `50%px`
   and no minimum at all (now decoded). The `collapsedSizeHint` substitution was copied into six files
-  and is the resolver's now. The three-column Layout declares `size`, `minSize`, `maxSize` and
-  `collapsedSizeHint` in its client props and never applies them -- dead fields, worth a decision.
+  and is the resolver's now. The three-column Layout declared `size`, `minSize`, `maxSize` and
+  `collapsedSizeHint` in its client props and never applied them -- not even destructured. Settled
+  (2026-09-26): it states them the way every other Layout does, through `resolvePhiLayoutBoxStyle`, the
+  same call `PhiBaseLayout` makes first. This client draws its row itself instead of going through the
+  base layout, which is how it came to miss the one thing the base box does. A three-column Layout with
+  an authored width was whatever its slot gave it before, and only the frame above it held a maximum.
+  `resolvePhiLayoutBoxStyle` now takes `PhiRenderableBlockGeometryInput` rather than a hand-picked slice
+  of the Layout props, because the resolver behind it already accepts a `null` field and the two
+  signatures disagreed about that.
   Two small changes of meaning that the guard makes deliberate: a blank string no longer claims an axis
   (`""` used to flip a slot policy to `fixed` while writing no width), and a `"240px"` string is now
   capped at the slot like the bare `240` that means the same thing.
