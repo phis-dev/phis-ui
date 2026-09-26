@@ -10,6 +10,9 @@ into the matching contract document, and open work is tracked in [TODOS.md](../T
   before it loads a third party, and why a Site that asks for nothing shows no banner.
 - [FONTS.md](./FONTS.md) -- copying a Module's font files into the Site's Media library on Theme save, and
   the licence survey behind font subsetting.
+- [MEDIA.md](./MEDIA.md) -- a seam for deriving one file from another, so that a transcoding pipeline is an
+  Add-on's business rather than Core's; the single storage-contract gap that blocks both video seeking and
+  an out-of-process worker; and what the Video Widget must not burn in while it grows a second source.
 - [MODULE_DISTRIBUTION.md](./MODULE_DISTRIBUTION.md) -- distributing compiled and commercial Modules and
   acquiring them from a configured source.
 - [OVERLAY_AUTHORING.md](./OVERLAY_AUTHORING.md) -- authoring Modal and Drawer Overlays in Builder.

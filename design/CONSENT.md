@@ -146,6 +146,7 @@ nothing, rather than under the pressure of the first embed.
 | Case | Status | Treatment |
 | --- | --- | --- |
 | Sign-in with Google, Microsoft, GitHub | in use, server-side redirect | consent-free; keep it a redirect, never a script |
+| A Site's own video file from the Media library | expected | no gate and no placeholder: the request is first-party, so there is nothing to disclose and nothing to ask. The condition is the delivery origin rather than the source kind -- see "The gate follows the origin" -- and [MEDIA.md](./MEDIA.md) for the rest |
 | A YouTube video in a page | expected | the central consent case: a placeholder that loads nothing, and fetches the player only after a click or a granted category. `youtube-nocookie` is not cookie-free -- it keeps a view out of personalisation -- and it discloses the IP to Google on load either way, so it does not remove the question |
 | Google Fonts at runtime | not used, and must stay so | `next/font` self-hosting is what keeps this out of the gate; a runtime request to Google would be a new consent case |
 | Maps, reCAPTCHA, Tag Manager, an analytics product | not used | all the same class as the video: nothing loads before the category is granted |
@@ -371,6 +372,35 @@ unlocks every video on the Site misstates the extent of the processing, which is
 controls, labelled apart, and never one that does more than it says.
 
 Either way the placeholder is content and never a barrier: no page is withheld until it is answered.
+
+### The gate follows the origin, not the source kind
+
+The Video Widget will grow a second source -- the Site's own file out of the Media library, beside YouTube
+and Vimeo ([MEDIA.md](./MEDIA.md)). That file needs no placeholder, and it is worth being exact about why,
+because the tempting shortcut is wrong in a way nobody would notice.
+
+§ 25 TDDDG is about storing or reading information in somebody's terminal equipment, and the Widget's gate
+exists because fetching a player from Google both accesses the device and discloses the visitor's address
+to a third party. A file delivered from the Site's own origin does neither: there is no third party to name,
+no recipient to disclose, and nothing to withdraw. So the asset branch loads, and the whole apparatus above
+-- placeholder, recipient, privacy link, visit-long answer -- is exactly what it does not need.
+
+The shortcut is to write that as `sourceKind === "asset"`. That is true only by accident. It holds today
+because delivery goes through `/api/site/media/...` on the Site's own origin, whatever storage Profile sits
+behind it -- the bytes are proxied, so the browser talks to the Site. It stops holding the moment a delivery
+URL points somewhere else, and signed delivery URLs straight from a bucket are already on the list of
+planned storage work. A Site whose media came from a Provider's own hostname would be making a third-party
+request on every page, with no placeholder, because the condition was written against the wrong thing.
+
+So the condition is **whether the delivery address leaves this origin**, answered from the storage Profile
+rather than from the Widget's source kind. Today that answer is always "no", which is why this costs one
+indirection and not a feature. There is nowhere to read it from yet, and that is an open question in
+[MEDIA.md](./MEDIA.md) rather than a reason to hard-code the accident.
+
+The same test settles the hosted-video case from the other direction. A Site that puts its videos on Mux or
+Cloudflare Stream is not self-hosting: the player comes from that company, so it is a `video-providers`
+entry, it names its recipient, and the placeholder applies unchanged. Nothing about that case is special,
+which is the point of asking about the origin instead of about the feature.
 
 ## Machine-readable signals
 
