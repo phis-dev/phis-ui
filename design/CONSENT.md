@@ -297,7 +297,58 @@ honour. So the order of work is the reverse of the visible one.
 3. **The Site's declaration** -- which categories this Site has. Empty means no banner, which is state 1
    above. Categories are authorable with the existing `collection` field type (`itemFields` is recursive),
    so no new Inspector field type is needed.
-4. **Then the banner Widget**, plus its second placement for withdrawal.
+4. **Then the banner Widget**, plus its second placement for withdrawal -- if a Site still needs one.
+
+### The placeholder is where the consent is asked
+
+The thing a gated Widget draws instead of the embed is not a fallback for something blocked. It is the
+request itself, and it is a better one than a banner can be: it names one recipient and one purpose, it
+appears where somebody has just shown they want that video or that map, and the page around it works
+without it. Informed, specific and voluntary are hard to claim for a dialog at the door that asks for
+everything before anybody has wanted anything; they are almost self-evident for a still image of a video
+with "load from YouTube" under it.
+
+What it has to say is therefore not "we use cookies": who receives the request (for a video, Google), what
+for, that it leaves for the United States under the adequacy decision, and that the decision can be taken
+back. That is a label on a placeholder, not a privacy notice, and it links to the notice for the rest.
+
+Nothing here is a banner that reappears, so the rule about storing a refusal does not bite. That rule is
+about being asked again and again -- a banner that "permanent bei jedem Besuch erneut die Einwilligung
+abfragt" -- and a placeholder asks nothing. It offers. Its resting state *is* the refusal, which is why
+there is nothing to remember in order not to nag.
+
+**The decision this raises is how long an answer lasts, and only the last step brings the apparatus of this
+document with it.**
+
+- **The click.** It loads this embed for this view, and phis stores nothing. § 25 then asks nothing of *us*
+  at all: no record, no duration, no withdrawal surface, no banner anywhere on the Site. Whatever the third
+  party stores afterwards, it stores on the basis of a click that is unmistakably the person's own. The cost
+  is a click per embed per visit.
+- **The visit.** "Load videos for this visit", offered beside "Load this video". The status belongs in
+  `sessionStorage`, **not in a cookie**: the lifetime is the same, but a cookie would travel on every
+  request to a server that cannot act on it -- the static render reads no cookies, and letting consent into
+  the static key would multiply the cache for a decision the client has to apply anyway. So a cookie would
+  cost a header on every request and buy nothing. It is per tab rather than per browser, which is the
+  honest reading of "this visit". Storing a yes/no status is the exempt case from § 25(2), and the Form
+  runtime already keeps an unsent draft the same way. What this step does owe is an off switch during the
+  visit, because withdrawal has to be possible at any time -- reachable where the consent was given, and
+  ending the unlock for the tab.
+- **Across visits.** The cookie under "What is stored", the twelve months, a withdrawal entry point on every
+  page, and the versioned record. A convenience, and the step that brings a banner back into view.
+
+The first two together are where this should start; the third is something a Site opts into once somebody
+complains about clicking, and then it pays for it with the rest of this document.
+
+**On granularity:** consent is per purpose, not per embed. Every YouTube frame on a Site has the same
+recipient and the same purpose, so one answer may cover all of them -- what must not be bundled is
+*different* purposes, a video with a map with an analytics product. So unlocking every video for a visit is
+lawful, and it is not a shortcut around granularity.
+
+What it does require is that the control says what it does. A button reading "Load video" that quietly
+unlocks every video on the Site misstates the extent of the processing, which is its own listed breach. Two
+controls, labelled apart, and never one that does more than it says.
+
+Either way the placeholder is content and never a barrier: no page is withheld until it is answered.
 
 ## Machine-readable signals
 
