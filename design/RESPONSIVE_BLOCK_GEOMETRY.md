@@ -27,10 +27,22 @@ everybody. The pair is **377 and 610** (`PHI_CONTAINER_BREAKPOINT_COL3` and
 `PHI_CONTAINER_BREAKPOINT_CONTENT`), the same two the Grid already switches at, so `compact | medium |
 wide` means one thing across the tree.
 
+That the number then stands twice -- once in TypeScript, once as a literal in the stylesheet -- is not
+new and is already held together by a guard:
+[scripts/validate-container-breakpoint-contracts.ts](../scripts/validate-container-breakpoint-contracts.ts)
+asserts that every named threshold is a member of the house scale and that the literals in
+`styles/layout.css` are the numbers `PHI_FORM_RESPONSIVE_MIN_WIDTH` declares, in that order, because
+"two comments used to be the whole of the agreement; a divergence rendered a form at the wrong width
+and reported nothing." Block geometry's pair joins that guard in the same way.
+
 **The container is the box that offers the room, never the block itself.** `container-type: inline-size`
 brings inline-size containment, and a box whose inline size may not depend on its contents cannot be
 `width: fit-content` -- which is exactly what the slot child frame writes for an `intrinsic` child. So
-the declaration goes one box out and the child queries it by name. That also settles the circle the
+the declaration goes one box out and the child queries it by name. The Form is the precedent for
+both halves: it declares its container inline on its own frame
+(`components/forms/phi-form-widget-frame.tsx`, `components/controls/phi-form-control.tsx`) and names it
+`phi-form`, and a named query resolves to the nearest ancestor carrying *that* name -- which is why a
+new `phi-slot` container can nest inside the Shell's `phi-render-viewport` without disturbing it. That also settles the circle the
 first decision left open: what is asked is the offered room, which stands before the block answers,
 rather than the block's own width, which is what the answer changes.
 
@@ -129,6 +141,8 @@ and a block that names no profile writes nothing and matches no rule -- it pays 
    profile (see "Only where it is needed").
 7. `components/controls/phi-geometry-control.tsx` -- a per-profile field, narrow first.
 8. Presets and `types/cms-presets.ts` -- the same widened fields, no preset changes required.
+9. `scripts/validate-container-breakpoint-contracts.ts` -- the new pair is asserted there against the
+   house scale and against the literals in the stylesheet, beside the Form's.
 
 ## Only where it is needed
 
@@ -184,6 +198,40 @@ before the declaration spreads.
 
 Style containment scopes counters and quotes to the box, which matters only for a numbering meant to run
 across blocks.
+
+## What the inventory found (2026-09-26)
+
+The tree was swept for everything layout containment touches -- `position: fixed` and `sticky`, every
+`z-index`, everything that already creates a stacking context, every existing container and every portal
+target -- in the stylesheets and in the inline styles separately. The design survives it, and the reason
+is worth stating: **every hazard this feature would introduce already exists in the tree today, put
+there on purpose, and mostly at the same boxes the container would go on.**
+
+- **Nothing that must escape is inside.** There is exactly one `position: fixed` in the whole repository
+  (`components/root/phi-root-background.tsx:108`, the page ground at `z-index: -1`) and none at all in
+  any stylesheet. There is no `createPortal` anywhere; every popup is Ant Design's, and every one of
+  them lands on `document.body` through the one shared helper.
+- **The Region shells are already stacking contexts.** `styles/shell.css` puts `isolation: isolate` on
+  hero and content deliberately, to cap the Builder's z-index values, and
+  `cms-region-container-client.tsx` adds it wherever a Region has background motion.
+- **Blocks with an effect are already both.** `styles/root.css:101-107` writes `transform` and
+  `will-change` straight onto `[data-phi-renderable-block]` for every configured viewport or transition
+  effect, and the glass, haze and blur layout effects write `backdrop-filter` on Layout boxes and Region
+  shells (`helpers/layout-style.ts`). A non-`none` filter or transform is already a stacking context and
+  already a containing block for fixed and absolute descendants.
+- **The Builder chrome anchors locally already.** `styles/layout-authoring-scaffold.css:382` gives every
+  widget scaffold `position: relative; isolation: isolate`, so the delete, drag and insert overlays
+  anchored at slot positions are contained per widget rather than escaping to the page.
+- **Sticky is untouched.** The Header and Sider Regions are `position: sticky`
+  (`cms-region-container-client.tsx:293,345`, `phi-cms-region-static.tsx:174-177`). Layout containment
+  on an ancestor does not change where a sticky element sticks; only becoming a scroll container would,
+  and nothing here changes `overflow`.
+
+One rule comes out of it, and it is the one that keeps the existing queries working: **every size
+container in this tree carries a name.** A named query resolves to the nearest ancestor holding *that*
+name, so a new `phi-slot` container nests inside the Shell's `phi-render-viewport`
+(`styles/shell.css:2-3, 23-24`; `styles/builder-scaffold.css:6-7`) and beside the Form's `phi-form`
+without either noticing. An unnamed container would be caught by unnamed queries and is not allowed.
 
 ## What this does not do
 
