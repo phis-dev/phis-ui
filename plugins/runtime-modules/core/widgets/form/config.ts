@@ -81,12 +81,24 @@ export type PhiCmsFormWidgetFeedbackConfig = {
  * through the same component token every other surface reads and the ground and the frame are the
  * Theme's -- nothing here names a colour or a corner.
  *
- * `presentation` is the switch as well as the size: absent, or anything outside the two names, is no box,
- * which is what every Form placed before this one has and keeps.
+ * `presentation` is the switch as well as the step: absent, or anything outside the three names, is no
+ * box at all -- no ground and no inset -- which is what every Form placed before this one has and keeps.
+ * That matters more than it sounds: the Login and its siblings stand in a Split Card slot that already
+ * paints a ground, so a box there would be a plate inside a plate, and an inset would move the query
+ * container the fields are measured in for nothing.
+ *
+ * The three names are one ladder -- how far the box separates itself from what is behind it -- and each
+ * step is stated once. `card` and `panel` deliberately share a ground: the inset already says how deep
+ * the box sits, and a second ground would say it again and drift the moment one of the two gains a
+ * source the other has not.
  */
 export type PhiCmsFormWidgetCardConfig = {
-  /** `card` is a box on a Page of its own; `panel` is the smaller inset of chrome -- a Settings section. */
-  presentation: "card" | "panel";
+  /**
+   * `card` is a box on a Page of its own; `panel` is the same box at the inset of chrome -- a Settings
+   * section; `wash` is the quietest filling the Theme has with no frame at all, for a Form that already
+   * stands on a container and only needs its fields set off from it.
+   */
+  presentation: "card" | "panel" | "wash";
   /** A heading in a bar above the fields, already translated by whoever placed the Form. */
   title: string | null;
   /** The box's own inset, where the Theme's answer for this box is not the right one. */
@@ -143,9 +155,10 @@ export function parsePhiFormWidgetConfig(rawConfig: Record<string, unknown>): Ph
   const submit = readRecord(rawConfig.submit);
   const submitAlign = submit.align;
   const card = readRecord(rawConfig.card);
-  const cardPresentation = card.presentation === "card" || card.presentation === "panel"
-    ? card.presentation
-    : null;
+  const cardPresentation =
+    card.presentation === "card" || card.presentation === "panel" || card.presentation === "wash"
+      ? card.presentation
+      : null;
   const cardPadding = typeof card.padding === "number" || typeof card.padding === "string"
     ? card.padding
     : null;
@@ -308,6 +321,7 @@ export const PHI_FORM_WIDGET_DEFINITION = {
       options: [
         { value: "card", label: "Card" },
         { value: "panel", label: "Panel" },
+        { value: "wash", label: "Wash" },
       ],
     },
     { key: "card.title", type: "string", label: "Box Heading" },

@@ -32,3 +32,32 @@ describe("the Form Widget's cap", () => {
     expect(parsed.minSize).toEqual({ width: 240 });
   });
 });
+
+/*
+ * The box the placement asks for, pinned as a closed list.
+ *
+ * Three names are one ladder -- how far the box sets itself off from what is behind it -- and the fourth
+ * step is saying nothing at all. That last one carries the weight: a Form in a Split Card slot stands on
+ * a ground already, and it is also the only state in which the Form's cap and the width its fields read
+ * are the same measure, because every inset sits between the two. So an unknown name and a `card` block
+ * an author emptied out both have to land on "no box" rather than on some box nobody chose.
+ */
+describe("the Form Widget's box", () => {
+  it("takes each of the three names", () => {
+    for (const presentation of ["card", "panel", "wash"] as const) {
+      expect(parsePhiFormWidgetConfig({ card: { presentation } }).card?.presentation)
+        .toBe(presentation);
+    }
+  });
+
+  it("is no box where the name is not one of them", () => {
+    expect(parsePhiFormWidgetConfig({ card: { presentation: "plate" } }).card).toBeNull();
+  });
+
+  it("is no box where the block was emptied out", () => {
+    // Deselecting the box in the Inspector leaves `card` behind with nothing in it, and an empty block
+    // is not a box -- which is why the name is read rather than the block's presence.
+    expect(parsePhiFormWidgetConfig({ card: {} }).card).toBeNull();
+    expect(parsePhiFormWidgetConfig({}).card).toBeNull();
+  });
+});

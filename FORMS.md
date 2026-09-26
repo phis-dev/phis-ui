@@ -327,7 +327,7 @@ the only way a Form is placed. There are no domain Form Widgets. Its config:
 | --- | --- |
 | `formId` | The Form to render. |
 | `submit` | `{ label, align }` or absent. A submit button drawn by the Widget in the control column; `align` is `start` (default), `center`, or `end`. |
-| `card` | `{ presentation, title, padding }` or absent. The box the Widget draws around the Form, its submit and its links: `card` on a Page of its own, `panel` for the smaller inset of chrome. Absent is no box. |
+| `card` | `{ presentation, title, padding }` or absent. The box the Widget draws around the Form, its submit and its links: `card` on a Page of its own, `panel` for the smaller inset of chrome, `wash` for a ground without a frame. Absent is no box, no ground and no inset. |
 | `feedback` | `{ mode, successText? }` or absent. Absent answers in place. `mode` is `message` (a transient message) or `notification`; `successText` is what a success says where the descriptor's `success` says nothing. Set, it moves the answer out of the Form rather than adding one. |
 | `links` | `[{ key, href, requiresFeature? }]`, drawn below the submit. The text is `actions.<key>Label` of the Form's label set; a link whose `requiresFeature` is not published by an active Module is left out. |
 | `formConfig` | Placement config: `initialValues`, `initialValuesFromQuery`, values read by `config` text, and values an `optionsProvider` reads (see [Fields](#fields)). |
@@ -360,6 +360,17 @@ the only way a Form is placed. There are no domain Form Widgets. Its config:
   something else's button. `title` is a heading in the box's own bar, already translated by whoever placed
   the Form, and `padding` is only for where the Theme's inset for this box is wrong. Absent stays absent:
   a Form placed before this existed is unchanged.
+- The three presentations are one ladder -- how far the box sets itself off from what is behind it -- and
+  each step is stated once. `card` and `panel` share the Theme's container ground and its frame and differ
+  only in the inset (`padding` against `paddingSM`), because the inset already says how deep the box sits
+  and a second ground would say it again. `wash` is the step below both: `colorFillQuaternary`, the
+  quietest filling the Theme has, the surface step for a corner, no frame, and the chrome inset so the
+  ground does not run flush into the labels. It is for a Form that already stands on a container.
+- Absent is the fourth step and the default: no ground, no frame, no inset. A Form in a Split Card slot --
+  the Login and its siblings -- is there, and the slot already paints a ground, so a box would be a plate
+  inside a plate. Absent is also the only state in which the Form's cap and the width its fields read are
+  the same measure: every inset sits between the two, so a Form capped at `contentMax` reads 610 flush and
+  568 inside a `card`, which puts it one layout mode below the cap it was given.
 - The Widget resolves the definition on the Server, loads labels and `loadInitialValues`, wraps the body
   in the owner Module's UI provider, and renders `PhiFormControl` in a client host.
 - `handler` mode submits through the Form controller and the [Relay](#relay). `signal` mode keeps the

@@ -117,6 +117,16 @@ export async function buildPhiDefaultAdminLocalesPageTree({
            * from the page's own label set.
            */
           submit: { label: widgetLabels.saveLocalesLabel },
+          /*
+           * The quietest of the three boxes, because of what stands beside it.
+           *
+           * This Form shares a grid with the locales Table, and a Table draws its own frame on the
+           * Theme's container ground. A `card` here would put a second framed panel next to it and read
+           * as two competing boxes; nothing at all left the fields sitting straight on the page, which
+           * is transparent under this Page's base Layout. `wash` sets them off and stays below the
+           * Table: the Theme's quietest filling, no frame, the chrome inset.
+           */
+          card: { presentation: "wash" },
           formConfig: {
             initialValues: {},
           },
