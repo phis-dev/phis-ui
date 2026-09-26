@@ -4,28 +4,45 @@ import { PHI_LAYOUT } from "../../../../../theme/phi-tokens";
 import { PHI_FORM_WIDGET_DEFINITION, parsePhiFormWidgetConfig } from "./config";
 
 /*
- * The Form's cap, pinned where it is declared.
+ * The Form's cap, pinned where it is declared and pinned as the fields' measure.
  *
- * It has been lost twice: once because the parser built a fresh object and dropped the block base an
- * author had set, and once because it was invented in the parser, which the slot frame never reads --
- * the Login Page capped its Form at 480 for a long time and the number did nothing, and every Form a
- * Preset placed rendered uncapped. `defaultConfig` is the one place all three readers reach: the
- * Builder writes it into a node it creates, the Inspector shows it under the node it edits, and the
- * render path merges it under a node that states nothing.
+ * It has been lost twice and then mismeasured once. Lost, because the parser built a fresh object and
+ * dropped the block base an author had set, and because it was invented in the parser, which the slot
+ * frame never reads -- the Login Page capped its Form at 480 for a long time and the number did nothing.
+ * Mismeasured, because a block cap is drawn on the outermost element and every box the Widget puts
+ * inside it eats the cap: a Form capped at 610 in a `card` gave its fields 568, which is also what
+ * their container query read, one step below the threshold the cap was picked to land on.
+ *
+ * So the cap is the Form's own field now, and `defaultConfig` is still the place: it is the one
+ * declaration all three readers reach -- the Builder writes it into a node it creates, the Inspector
+ * shows it under the node it edits, and the render path merges it under a node that states nothing.
+ * What must not come back is the block `maxSize`, which would cap the box again and take the inset off
+ * the fields a second time.
  */
 describe("the Form Widget's cap", () => {
   it("is declared as the reading measure", () => {
-    expect(PHI_FORM_WIDGET_DEFINITION.defaultConfig.maxSize)
-      .toEqual({ width: PHI_LAYOUT.contentMax });
+    expect(PHI_FORM_WIDGET_DEFINITION.defaultConfig.maxFormWidth).toBe(PHI_LAYOUT.contentMax);
   });
 
-  it("is not invented by the parser", () => {
-    // A parser that fills it in answers only the Widget's own render, where nothing reads it. If this
-    // starts passing a width again, the value is being written where the frame cannot see it.
-    expect(parsePhiFormWidgetConfig({}).maxSize?.width).toBeUndefined();
+  it("is not stated as the block's geometry", () => {
+    // The box around the fields is inside the block, so a block cap is a cap on box plus inset. If this
+    // starts failing, the fields are reading less than the number says and `wide` is out of reach again.
+    expect(PHI_FORM_WIDGET_DEFINITION.defaultConfig).not.toHaveProperty("maxSize");
   });
 
-  it("carries the placement's own geometry through", () => {
+  it("is answered by the parser as well, for the placement that states nothing", () => {
+    // Only a Widget's block base is merged under a node at render, so a Widget field that only
+    // `defaultConfig` states reaches the Builder and the Inspector and no Preset placement at all.
+    expect(parsePhiFormWidgetConfig({}).maxFormWidth).toBe(PHI_LAYOUT.contentMax);
+  });
+
+  it("carries the placement's own measure through", () => {
+    expect(parsePhiFormWidgetConfig({ maxFormWidth: 377 }).maxFormWidth).toBe(377);
+    expect(parsePhiFormWidgetConfig({ maxFormWidth: "100%" }).maxFormWidth).toBe("100%");
+  });
+
+  it("carries the placement's own geometry through as well", () => {
+    // Two boxes, both cappable: the block is the slot frame's, the form is this Widget's.
     const parsed = parsePhiFormWidgetConfig({ maxSize: { width: "100%" }, minSize: { width: 240 } });
 
     expect(parsed.maxSize).toEqual({ width: "100%" });

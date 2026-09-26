@@ -109,6 +109,21 @@ export type PhiCmsFormWidgetConfig = PhiCmsWidgetConfigBase & {
   formId: PhiFormId | null;
   submit: PhiCmsFormWidgetSubmitConfig | null;
   card: PhiCmsFormWidgetCardConfig | null;
+  /**
+   * How wide the form may get, measured where its fields stand rather than around the box.
+   *
+   * The Form's own measure and not block geometry, which is the whole point of it. A block's `maxSize`
+   * caps the element the slot frame draws, and every box the Widget puts inside that element takes its
+   * inset off the width that is left -- so a Form capped at the reading measure and standing in a `card`
+   * gave its fields 568 and its container query read 568 as well, one step below the very threshold the
+   * cap was chosen to land on. Stated here, the number means the fields: the Frame adds the box's inset
+   * back on so the box ends up wider than the cap, and what the fields read is what was written.
+   *
+   * A length or a number of pixels, and always answered: `100%` is how "no ceiling" is spelled, as
+   * everywhere else. A block `maxSize` an author states still caps the block -- two boxes, both of
+   * which may be capped.
+   */
+  maxFormWidth: number | string;
   feedback: PhiCmsFormWidgetFeedbackConfig | null;
   links: readonly PhiCmsFormWidgetLinkConfig[];
   formConfig: Record<string, unknown>;
@@ -162,6 +177,9 @@ export function parsePhiFormWidgetConfig(rawConfig: Record<string, unknown>): Ph
   const cardPadding = typeof card.padding === "number" || typeof card.padding === "string"
     ? card.padding
     : null;
+  const rawMaxFormWidth = typeof rawConfig.maxFormWidth === "string"
+    ? rawConfig.maxFormWidth.trim()
+    : rawConfig.maxFormWidth;
   const feedback = readRecord(rawConfig.feedback);
   const feedbackSuccessText = typeof feedback.successText === "string" && feedback.successText.trim()
     ? feedback.successText.trim()
@@ -176,6 +194,18 @@ export function parsePhiFormWidgetConfig(rawConfig: Record<string, unknown>): Ph
         ? submitAlign
         : "start",
     },
+    /*
+     * The house measure where the placement names none, and answered HERE as well as declared.
+     *
+     * `defaultConfig` reaches the Builder and the Inspector, but the render path merges only a Widget's
+     * block base under a node (`widgetBlockDefaultsByType`) -- so a Preset placement that says nothing
+     * arrives with no cap at all, which is exactly how every Preset-placed Form once rendered uncapped.
+     * A Widget field has to be answered by its parser. Both sides read the one constant.
+     */
+    maxFormWidth: typeof rawMaxFormWidth === "number"
+      || (typeof rawMaxFormWidth === "string" && rawMaxFormWidth)
+      ? rawMaxFormWidth
+      : PHI_LAYOUT.contentMax,
     /*
      * No box unless one is named, and the name is read rather than the block's presence: an author who
      * takes the box off again leaves an empty `card` behind, and an empty block is not a box.
@@ -326,6 +356,7 @@ export const PHI_FORM_WIDGET_DEFINITION = {
     },
     { key: "card.title", type: "string", label: "Box Heading" },
     { key: "card.padding", type: "number", label: "Box Padding", min: 0, precision: 0, prefix: "px" },
+    { key: "maxFormWidth", type: "number", label: "Max Form Width", min: 0, precision: 0, prefix: "px" },
     {
       key: "execution.mode",
       type: "choice",
@@ -359,17 +390,24 @@ export const PHI_FORM_WIDGET_DEFINITION = {
      * `PHI_LAYOUT.contentMax` is the measure the Theme names for exactly this -- "the one a labelled
      * form wants" -- and it is a ceiling, not a width: the Form still fills a narrower slot edge to
      * edge, and 610 is the width at which its own layout switches to `wide`, so the cap lands on the
-     * threshold rather than below it and nothing is demoted by being capped. A cap is also not a size:
-     * it leaves the slot policy `fill-inline` and the Layout in charge of placing the Form.
+     * threshold rather than below it and nothing is demoted by being capped.
      *
-     * Declared here and nowhere else. This is the one place a Widget's answer reaches all three readers
-     * -- the Builder writes it into a node it creates, the Inspector shows it under the node it edits,
-     * and the render path merges it under a node that states nothing, which is how a Preset placement
-     * gets it. A placement that means something else writes a length into its own config and wins:
-     * `contentMaxNarrow` for a column of Controls with no label beside them, `100%` for a Form that
-     * really takes its slot.
+     * Stated as the Form's own field and deliberately NOT as the block's `maxSize`, which is where it
+     * stood until the Widget grew a box. A block cap is drawn by the slot frame on the outermost
+     * element, and everything the Widget puts inside it -- a Card's inset, a Wash's ground -- comes off
+     * the width the fields are left with and off the width their container query measures. At the house
+     * cap that was 568 inside a `card`, one step under the threshold the number was picked to sit on, so
+     * `wide` could not be reached from inside a box at all. Measured at the fields, the Frame adds the
+     * box's chrome back on and the box is the one that ends up wider than 610.
+     *
+     * Declared here for the two readers that read a declaration -- the Builder writes it into a node it
+     * creates, the Inspector shows it under the node it edits -- while the render path is answered by
+     * the parser, because only a Widget's block base is merged under a node that states nothing. Both
+     * sides name `PHI_LAYOUT.contentMax`, so there is one number and two readers of it. A placement that
+     * means something else writes a length of its own and wins: `contentMaxNarrow` for a column of
+     * Controls with no label beside them, `100%` for a Form that really takes its slot.
      */
-    maxSize: { width: PHI_LAYOUT.contentMax },
+    maxFormWidth: PHI_LAYOUT.contentMax,
     formId: null,
     links: [],
     formConfig: {},

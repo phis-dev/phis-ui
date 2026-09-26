@@ -333,6 +333,11 @@ export function parsePhiFormDescriptor(value: unknown): PhiFormDescriptor {
  * `medium` and `wide` ranges apart, so today the upper threshold decides nothing at all; it is put
  * where it will mean something when one does.
  *
+ * The upper one is reachable, which took saying: the Form Widget's cap measures the same box this query
+ * measures, so a form capped at `contentMax` reads `contentMax` here. While the cap was the block's
+ * `maxSize`, every box the Widget drew took its inset off that measure first -- 568 inside a `card` --
+ * and a form in a box could not reach `wide` at all, whatever its descriptor said (see `FORMS.md`).
+ *
  * The comparison itself is made by the container queries in `styles/layout.css`, and these numbers are
  * the same numbers. They are declared here so the contract states them and the tests can read them --
  * if one side changes, the other has to be changed with it.

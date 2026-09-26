@@ -13,7 +13,8 @@ import {
 } from "react";
 
 import { PHI_COLOR, PHI_SPACE } from "../../theme/antd-css-var-contract";
-import { PHI_LAYOUT_SURFACE_RADIUS } from "../layouts/phi-layout-contract";
+import { PHI_THEME_BORDER_WIDTH } from "../../helpers/border-widget-style";
+import { normalizePhiCssSize, PHI_LAYOUT_SURFACE_RADIUS } from "../layouts/phi-layout-contract";
 import { PhiButtonControl } from "../controls/phi-button-control";
 import { PhiCardControl } from "../controls/phi-card-control";
 import { PhiLink } from "../navigation/phi-link";
@@ -118,6 +119,18 @@ export type PhiFormWidgetFrameProps = {
    * fields read is the width the placement capped.
    */
   card?: PhiCmsFormWidgetCardConfig | null;
+  /**
+   * How wide the form may get, measured at the fields rather than around the box.
+   *
+   * The cap belongs to the form, so the box grows outwards to carry it: a Form capped at 610 in a `card`
+   * is a 610 form in a 652 card, and its container query reads the 610 it was given. Capping the block
+   * instead -- which is where this number used to live -- put the inset inside the cap, so the fields
+   * read 568 and stood one layout step below the threshold the cap was chosen to land on.
+   *
+   * Null caps nothing. A block `maxSize` still caps the block; that is the other box, and it is drawn
+   * by the slot frame, above everything here.
+   */
+  maxFormWidth?: number | string | null;
   /** The ways out it offers, drawn in the same column as the submit. */
   links?: readonly PhiFormWidgetLink[];
   /**
@@ -128,6 +141,23 @@ export type PhiFormWidgetFrameProps = {
   layout?: PhiFormLayoutDescriptor;
   children: ReactNode;
 };
+
+/**
+ * What one side of a box costs, so the cap can be stated at the fields and the box grown to carry it.
+ *
+ * The inset is the box's own -- the Theme's `padding` for a Card and for a Wash, `paddingSM` for the
+ * chrome-sized Panel, or whatever the placement named instead -- and the two that have a frame pay for
+ * the Theme's line as well. Null where there is no box: then the fields are the outermost thing here and
+ * nothing stands between them and the cap.
+ */
+function resolvePhiFormBoxChrome(card: PhiCmsFormWidgetCardConfig | null | undefined) {
+  if (card == null) {
+    return null;
+  }
+  const inset = normalizePhiCssSize(card.padding ?? undefined)
+    ?? (card.presentation === "panel" ? PHI_SPACE.sm : PHI_SPACE.base);
+  return card.presentation === "wash" ? inset : `(${inset} + ${PHI_THEME_BORDER_WIDTH})`;
+}
 
 /**
  * The Form Widget's own surface: the query container its form is measured in, and the submit it carries.
@@ -141,7 +171,9 @@ export type PhiFormWidgetFrameProps = {
  * here, from the form's layout, so it lines up under the inputs at each width and still moves with the
  * column a Form Layout decides -- that column is a custom property both of them read.
  */
-export function PhiFormWidgetFrame({ submit, card, links, layout, children }: PhiFormWidgetFrameProps) {
+export function PhiFormWidgetFrame(
+  { submit, card, maxFormWidth, links, layout, children }: PhiFormWidgetFrameProps,
+) {
   const [registration, setRegistration] = useState<PhiFormWidgetSubmitRegistration | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const slot = useMemo<PhiFormWidgetSubmitSlot>(
@@ -213,6 +245,21 @@ export function PhiFormWidgetFrame({ submit, card, links, layout, children }: Ph
     </>
   ) : null;
 
+  /*
+   * The cap lands on the outermost box this Frame owns, and it lands there grown by that box's chrome.
+   *
+   * One box, one cap: the grid where there is no box, the box where there is, never both -- a cap inside
+   * an inset would take the inset off twice. `min(100%, ...)` because a cap is not a size and must never
+   * push out of the slot: a Form told to take `100%` and then grown by two insets would do exactly that.
+   */
+  const capLength = normalizePhiCssSize(maxFormWidth ?? undefined);
+  const boxChrome = resolvePhiFormBoxChrome(card);
+  const capStyle = capLength == null
+    ? undefined
+    : boxChrome == null
+      ? `min(100%, ${capLength})`
+      : `min(100%, calc(${capLength} + 2 * ${boxChrome}))`;
+
   const measured = (
     <div
       style={{
@@ -222,6 +269,7 @@ export function PhiFormWidgetFrame({ submit, card, links, layout, children }: Ph
         minWidth: 0,
         containerType: "inline-size",
         containerName: "phi-form",
+        ...(card ? {} : { maxWidth: capStyle }),
         ...actionsColumns,
       } as CSSProperties}
     >
@@ -249,6 +297,7 @@ export function PhiFormWidgetFrame({ submit, card, links, layout, children }: Ph
               background: PHI_COLOR.fillQuaternary,
               borderRadius: PHI_LAYOUT_SURFACE_RADIUS,
               padding: card.padding ?? PHI_SPACE.base,
+              maxWidth: capStyle,
             }}
           >
             {measured}
@@ -258,6 +307,7 @@ export function PhiFormWidgetFrame({ submit, card, links, layout, children }: Ph
             size={card.presentation === "panel" ? "small" : "medium"}
             {...(card.title ? { title: card.title } : {})}
             {...(card.padding == null ? {} : { padding: card.padding })}
+            {...(capStyle == null ? {} : { style: { maxWidth: capStyle } })}
           >
             {measured}
           </PhiCardControl>

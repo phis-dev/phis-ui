@@ -102,6 +102,7 @@ export async function PhiFormWidget({
       <PhiFormWidgetFrame
         submit={config?.submit ?? null}
         card={config?.card ?? null}
+        maxFormWidth={config?.maxFormWidth ?? null}
         links={resolvedLinks}
         layout={resolvedForm.definition.descriptor.layout}
       >

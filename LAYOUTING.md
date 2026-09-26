@@ -301,7 +301,9 @@ plain. Nothing writes the profile answers to CSS yet; that is
   node that states `maxSize` owns `maxSize` whole. A parser that fills the same field in instead reaches
   only the Widget's own render, and the slot frame -- which is what draws the block -- never sees it:
   that is how every Form a Preset placed rendered uncapped while the same Form dropped in the Builder
-  carried its cap. Only the block base is inherited; a Widget's own fields stay with its parser, because
+  carried its cap, back when the Form's cap was a block base at all. It is not any more: a Widget that
+  draws a box inside its block has to cap the fields rather than the block, because a block cap hands
+  the inset the width the content was promised ([FORMS.md](./FORMS.md)). Only the block base is inherited; a Widget's own fields stay with its parser, because
   a Segmented's field key or a Table's source would change what a Preset means rather than how wide it is.
 - Nothing else reads the three fields by name. `scripts/validate-block-geometry-readers.mjs` names every
   file that draws geometry and checks that it imports the resolver, names every file that touches the

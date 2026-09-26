@@ -335,24 +335,32 @@ the only way a Form is placed. There are no domain Form Widgets. Its config:
 | `source` | Optional Table Provider binding `{ providerKey, resourceKey, params }` whose resource declares `recordRead: true`. |
 | `openActionKey` | The Table action key that opens a record, default `edit`. |
 | `signalRoutes` | The Widget's routes. |
-| block geometry | `maxSize`, `minSize`, `size`, background, border, shadow -- read from the node like any other Widget. `maxSize.width` defaults to `PHI_LAYOUT.contentMax`; see below. |
+| `maxFormWidth` | How wide the form itself may get, measured at the fields rather than around the box. Defaults to `PHI_LAYOUT.contentMax`; see below. |
+| block geometry | `maxSize`, `minSize`, `size`, background, border, shadow -- read from the node like any other Widget. They measure the block the slot frame draws, which is the box *around* the Form's own. |
 
-- **A Form is capped at the reading measure unless the placement says otherwise.** `maxSize.width`
-  is declared as `PHI_LAYOUT.contentMax` (610) in the Widget's `defaultConfig`, the measure
+- **A Form is capped at the reading measure unless the placement says otherwise.** `maxFormWidth` is
+  declared as `PHI_LAYOUT.contentMax` (610) in the Widget's `defaultConfig`, the measure
   [THEME.md](./THEME.md) names for a labelled form, and it is a ceiling rather than a width: the Form
   still fills a narrower slot edge to edge, and 610 is exactly where its own layout switches to `wide`,
   so capping never demotes the layout. A cap is also not a size -- it leaves the slot policy
-  `fill-inline` and the Layout in charge of placing the Form. Declared and not invented: a Widget's
-  block base reaches a node three ways -- the Builder writes it into the node it creates, the Inspector
-  shows it under the node it edits, and the render path merges it under a node that states nothing
-  (`widgetBlockDefaultsByType`), which is how a Preset placement gets it. A parser that fills the same
-  value in instead answers only the Widget's own render, where nothing reads it. A placement that
-  means something else names a length and wins -- `contentMaxNarrow` for a column of Controls with no
-  label beside them, `contentMaxWide` for a Form read across, `100%` for a Form that takes its slot, such
-  as a reply under a conversation that runs the page. There is no width vocabulary of the Form's own:
-  `compact | medium | wide` are the measured profiles a length may vary over (`types/responsive.ts`, the
-  same cascade the Grid uses for `span`), not steps to pick from, and "no ceiling" is spelled `100%`,
-  because that is what every other block says.
+  `fill-inline` and the Layout in charge of placing the Form. It is declared in `defaultConfig` for the
+  Builder, which writes it into the node it creates, and for the Inspector, which shows it under the node
+  it edits -- and answered again by the parser for the render path, because only a Widget's *block base*
+  is merged under a node that states nothing (`widgetBlockDefaultsByType`). A Widget field of its own
+  reaches a Preset placement no other way; that is the same gap that once left every Preset-placed Form
+  uncapped. Both sides name the one constant. A placement that means something else names a length
+  and wins -- `contentMaxNarrow` for a column of Controls with no label beside them, `contentMaxWide` for
+  a Form read across, `100%` for a Form that takes its slot, such as a reply under a conversation that
+  runs the page. "No ceiling" is spelled `100%`, because that is what every other block says.
+- **The cap measures the fields, not the box around them.** It is the Form's own field and deliberately
+  not the block's `maxSize`, which is where it stood until the Widget grew a box. A block cap is drawn by
+  the slot frame on the outermost element, so every inset inside it -- a Card's, a Wash's -- comes off the
+  width the fields are left with *and* off the width their container query measures: a Form capped at 610
+  in a `card` handed its fields 568 and was laid out as a 568 form, one step below the threshold the cap
+  was chosen to land on, so `wide` could not be reached from inside a box at all. The Frame therefore adds
+  the box's chrome back on -- its inset, plus the Theme's line where the box has a frame -- and the box
+  ends up wider than the cap: a 610 form in a `card` is a 652 card. Both caps stay available and they
+  measure two different boxes; `min(100%, ...)` keeps either from pushing out of its slot.
 - The box around a Form is `card`, never a panel built beside it. It is `PhiCardControl`, so the ground,
   the frame, the inset and the corner are the Theme's -- `Card` is one of the surfaces the Theme's shape
   reaches through a component token ([THEME.md](./THEME.md)), which a hand-built box is not. It wraps the

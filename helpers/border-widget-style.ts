@@ -16,8 +16,14 @@ type PhiBorderWidgetStyleFallback = {
   borderRadius?: number | string | null;
 };
 
-/** The Site's line width. Never typed as a pixel: a Theme states it, and `lineWidth` is where. */
-const PHI_THEME_BORDER_WIDTH = "var(--ant-line-width, 1px)";
+/**
+ * The Site's line width. Never typed as a pixel: a Theme states it, and `lineWidth` is where.
+ *
+ * Exported because a line also takes room: a box that has to be as wide as its content plus its chrome
+ * has to add this to the sum, and a `1px` typed into that calculation is the same second answer as one
+ * typed into a border.
+ */
+export const PHI_THEME_BORDER_WIDTH = "var(--ant-line-width, 1px)";
 
 /** The Site's own line: its border colour at its line width. One string, so nobody types a second. */
 export const PHI_THEME_BORDER_LINE = `${PHI_THEME_BORDER_WIDTH} solid var(--ant-color-border)`;

@@ -128,10 +128,14 @@ export async function buildPhiDefaultPubLoginPageTree({
        * `contentMaxNarrow` is the Theme's measure for exactly this -- a single column of Controls with no
        * label beside them. It stood at 480 for a long time, which is on no scale in this house and, until
        * the Form Widget began passing its block geometry through at all, did nothing whatsoever.
+       *
+       * Said as the Form's own cap rather than as the block's: this form wears no box, so the two would
+       * measure the same thing today, and the moment it wore one the block cap would hand the inset the
+       * fields' width instead.
        */
       ...login.contentWidgets.map((widget) =>
         widget.id === SYNTHETIC_LOGIN_WIDGET_IDS.widgetLogin
-          ? { ...widget, config: { ...widget.config, maxSize: { width: PHI_LAYOUT.contentMaxNarrow } } }
+          ? { ...widget, config: { ...widget.config, maxFormWidth: PHI_LAYOUT.contentMaxNarrow } }
           : widget),
     ],
   };

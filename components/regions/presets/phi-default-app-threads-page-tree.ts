@@ -731,7 +731,7 @@ export async function buildPhiDefaultAppThreadsPageTree({
            * reply box two thirds as wide as the messages above it reads as something that fell out of
            * the panel rather than as its last row.
            */
-          maxSize: { width: "100%" },
+          maxFormWidth: "100%",
           // Already translated, from this Page's own label set, so the Widget states it outright.
           submit: { label: labels.composerSendLabel, align: "end" },
           /*
