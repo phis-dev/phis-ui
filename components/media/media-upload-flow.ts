@@ -127,6 +127,52 @@ export async function reportPhiMediaUploadFailure(
 }
 
 /**
+ * Says the body will not arrive, from a page that is going away.
+ *
+ * The one abandonment nothing else can report. `reportPhiMediaUploadFailure` needs the upload to have
+ * failed *and* the page to still be there to say so; a person who closes the tab mid-body produces
+ * neither, so the session sat at Pending until it expired and its staged bytes stayed paid for. Since
+ * expiry deliberately leaves storage alone, nothing was ever going to come back for them.
+ *
+ * `sendBeacon` and not `fetch`, because this is the moment a document stops being allowed to start
+ * ordinary requests: the browser takes the body and delivers it after the page is gone. `pagehide` and
+ * not `unload`, which is deprecated and unreliable, nor `beforeunload`, which is for asking a question
+ * nobody here wants to ask.
+ *
+ * The reason is `cancelled` because that is what it is -- leaving the page is a person stopping it, which
+ * is the reading the Server's own vocabulary gives that word, and until now the word had no producer.
+ *
+ * Returns the way to stand down. A caller that reaches finalize must use it: see `runPhiMediaUploadSession`
+ * for why the moment matters.
+ */
+function reportPhiMediaUploadAbandonmentOnLeaving(reportUrl: string) {
+  if (typeof window === "undefined" || typeof navigator === "undefined") {
+    return () => {};
+  }
+
+  const announce = () => {
+    try {
+      navigator.sendBeacon(
+        reportUrl,
+        new Blob(
+          [JSON.stringify({
+            reason: PHI_MEDIA_UPLOAD_FAILURE_REASONS.Cancelled,
+            detail: "The page was left while the body was in flight.",
+          })],
+          { type: "application/json" },
+        ),
+      );
+    } catch {
+      // Leaving is not the moment to handle a failure to say one is leaving. Expiry still releases the
+      // reservation; only the staged object is worse off, which is the state this existed to improve.
+    }
+  };
+
+  window.addEventListener("pagehide", announce);
+  return () => window.removeEventListener("pagehide", announce);
+}
+
+/**
  * What the Server is told this failure was.
  *
  * Only the four readings a browser can honestly distinguish are passed on; anything else is reported as
@@ -412,10 +458,12 @@ export async function runPhiMediaUploadSession(
   options?: PhiMediaUploadInitOptions,
 ): Promise<PhiMediaUploadSessionResult> {
   const init = await initPhiMediaUploadSession(file, options);
+  const standDown = reportPhiMediaUploadAbandonmentOnLeaving(init.reportUrl);
   let upload;
   try {
     upload = await uploadPhiMediaUploadBody(init.plan, file, onProgress);
   } catch (uploadError) {
+    standDown();
     // The Server cannot see this leg, so it is told rather than left to infer it from an expiry.
     await reportPhiMediaUploadFailure(
       init.reportUrl,
@@ -424,6 +472,17 @@ export async function runPhiMediaUploadSession(
     );
     throw uploadError;
   }
+  /*
+   * Stood down before finalize is sent, and deliberately not after it answers.
+   *
+   * Once the Server holds the finalize request it copies the staged object onto its final key and closes
+   * the session; a beacon arriving in the middle of that would be a second request racing the first for
+   * the same row and the same object. A beacon arriving *after* it is harmless -- the row is gone, so the
+   * report answers 404 and touches nothing -- but the window in between is not worth leaving open for a
+   * body that has already arrived. What this gives up is the sliver where somebody leaves after the body
+   * landed and before finalize was sent, and expiry already answers for that.
+   */
+  standDown();
   const finalize = await finalizePhiMediaUploadSession(init.finalizeUrl, upload.completion);
   return {
     asset: finalize.asset,
@@ -472,10 +531,12 @@ export async function runPhiAddonAssetUpload<TAsset>(input: {
   const reportUrl = input.reportUrl
     ?? `/api/site/media/uploads/${encodeURIComponent(reservation.token)}/report`;
 
+  const standDown = reportPhiMediaUploadAbandonmentOnLeaving(reportUrl);
   let upload;
   try {
     upload = await uploadPhiMediaUploadBody(reservation.plan, file, onProgress);
   } catch (uploadError) {
+    standDown();
     await reportPhiMediaUploadFailure(
       reportUrl,
       readPhiMediaUploadFailureReason(uploadError),
@@ -483,6 +544,8 @@ export async function runPhiAddonAssetUpload<TAsset>(input: {
     );
     throw uploadError;
   }
+  // The same moment as Core's own flow, for the same reason: there is one upload lifecycle.
+  standDown();
 
   return await finalize(upload.completion);
 }

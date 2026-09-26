@@ -99,22 +99,35 @@ So the compatibility question has a better answer than expected: a derivation th
 upload plan is *more* S3-compatible than a Core pipeline would be, because a Core pipeline would have to
 stream both directions through a Next.js route handler.
 
-## One gap, and it is the same gap twice
+## One direction, two additions
 
 There is no read counterpart. No download plan, no presigned GET, and `getObjectStream(storageKey)` takes
-no offset and no length; `readObjectHead(storageKey, byteLength)` reads only from the beginning.
+no offset and no length; `readObjectHead(storageKey, byteLength)` reads only from the beginning -- though its
+own comment says a remote Provider "reads a range rather than the body", so the shape is half there and
+lacks a starting point.
 
-That single gap blocks two unrelated things:
+Two things want reading, and they want different additions:
 
-- **Seeking in a video.** Without a ranged read there is no `206 Partial Content`. Measured on the live
-  delivery route: a request carrying `Range: bytes=0-99` is answered `200` with the whole body and no
-  `Accept-Ranges`. Chrome and Safari both need ranges to seek, and Safari frequently refuses to play at
-  all without them.
-- **A derivation worker outside the process.** Without a read plan it cannot reach the original except
-  through Core, which defeats the economics that `presigned-put` was designed for.
+- **Seeking in a video** wants a **ranged read on the adapter**. Without one there is no
+  `206 Partial Content`: measured on the live delivery route, a request carrying `Range: bytes=0-99` was
+  answered `200` with the whole body and no `Accept-Ranges`. Chrome and Safari both need ranges to seek,
+  and Safari frequently refuses to play at all without them.
+- **A derivation worker outside the process** wants a **read plan** -- a `presigned-get` beside the
+  existing `presigned-put` -- because reaching the original through Core defeats the economics that
+  `presigned-put` was designed for.
 
-One addition to the storage contract, two problems, and nothing about it is specific to video. It is the
-first thing to do in this area whatever happens to the rest.
+Only the first is needed for a video to be delivered at all, and it is the smaller of the two: Core keeps
+streaming, the route and the URL stay as they are, the origin does not move, and nothing about the consent
+question changes. The Local adapter is the default and its bytes go through Core either way, so a ranged
+read there is unavoidable and a read plan would not substitute for it.
+
+The read plan is for the pipeline, not for delivery -- and it moves the origin, because a presigned GET
+names the Provider's hostname. That is the case
+[CONSENT.md](./CONSENT.md#the-gate-follows-the-origin-not-the-source-kind) warns about, so it is a
+deliberate step and not an optimisation to take quietly.
+
+Neither is specific to video. A ranged read also buys resumable downloads for every large object a Site
+offers.
 
 ## What a generic derivation would need
 
