@@ -457,6 +457,24 @@ assert.ok(
 );
 
 /**
+ * The upload wall draws the same tile one step earlier -- a file that is still arriving, in a card beside
+ * the cards of the ones that arrived -- so it takes the same corner. The widest step of the numeric scale
+ * meant an upload stood square in a `pill` Site and then changed shape the moment it became an asset.
+ */
+const areaUploadSource = await readFile(
+  new URL("../components/media/phi-area-upload-widget.tsx", import.meta.url),
+  "utf8",
+);
+assert.ok(
+  areaUploadSource.includes('borderRadius: "var(--phi-surface-radius)"'),
+  "An upload wall card must take the surface step, the same one the finished tile beside it takes.",
+);
+assert.ok(
+  !/borderRadius: token\.borderRadius/u.test(areaUploadSource),
+  "An upload wall card reads no radius off the numeric scale; the step is what answers there.",
+);
+
+/**
  * A video frame is the same case as a media tile: a box the Site draws around somebody else's player, so
  * it takes the surface step rather than the widest corner the scale has. The placeholder and the loaded
  * player are one frame in the source, so one occurrence is the whole rule -- and the frame keeps

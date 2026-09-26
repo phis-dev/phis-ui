@@ -43,12 +43,33 @@ export type PhiSkeletonControlProps =
       presentation: "input" | "button";
       size?: "small" | "default" | "large";
       block?: boolean;
+      /**
+       * Stand in for the whole frame around it, on both axes, rather than for one field's worth of it.
+       *
+       * What a caller reaches for where the box is already measured -- a square media tile, a fixed
+       * row -- and cannot say with `style` alone; see `PHI_SKELETON_FILL_BOX`.
+       */
+      fill?: boolean;
       shape?: "circle" | "square" | "round" | "default";
     })
   | (PhiSkeletonSharedProps & {
       presentation: "node";
       children?: ReactNode;
     });
+
+/**
+ * The box a `fill` placeholder measures, stated on both of Ant Design's two elements.
+ *
+ * A caller's `style` reaches only the INNER element -- Ant Design keeps the outer box for `styles.root`
+ * -- and that outer box has no height of its own. A percentage height on the inner element therefore
+ * resolved against `auto` and computed to `auto` as well, so a placeholder asked to fill a square tile
+ * collapsed to nothing and the tile looked as though it had no image placeholder at all. Stating the box
+ * on the root gives the percentage something to resolve against.
+ *
+ * `minWidth: 0` because Ant Design's own field placeholder carries a minimum width of several Control
+ * heights, which is wider than a column in a dense grid and would push out of the frame it is filling.
+ */
+const PHI_SKELETON_FILL_BOX: CSSProperties = { width: "100%", minWidth: 0, height: "100%" };
 
 export function PhiSkeletonControl(props: PhiSkeletonControlProps) {
   const active = props.active ?? true;
@@ -67,7 +88,15 @@ export function PhiSkeletonControl(props: PhiSkeletonControlProps) {
    */
   switch (props.presentation) {
     case "input":
-      return <Skeleton.Input active={active} size={props.size} block={props.block} style={props.style} />;
+      return (
+        <Skeleton.Input
+          active={active}
+          size={props.size}
+          block={props.block}
+          {...(props.fill ? { styles: { root: PHI_SKELETON_FILL_BOX } } : {})}
+          style={props.fill ? { ...PHI_SKELETON_FILL_BOX, ...props.style } : props.style}
+        />
+      );
     case "button":
       return (
         <Skeleton.Button
@@ -75,7 +104,8 @@ export function PhiSkeletonControl(props: PhiSkeletonControlProps) {
           size={props.size}
           block={props.block}
           shape={props.shape}
-          style={props.style}
+          {...(props.fill ? { styles: { root: PHI_SKELETON_FILL_BOX } } : {})}
+          style={props.fill ? { ...PHI_SKELETON_FILL_BOX, ...props.style } : props.style}
         />
       );
     case "node":

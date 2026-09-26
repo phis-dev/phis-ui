@@ -37,6 +37,7 @@ import {
 } from "./asset-collection-runtime";
 import { PhiFileDropGuard } from "./phi-file-drop-guard";
 import { usePhiApplicationFeedback } from "../runtime/use-phi-application-feedback";
+import { resolvePhiThemeBorderLine } from "../../helpers/border-widget-style";
 import { usePhiConfig } from "../root/phi-config-provider";
 import { usePhiCollectionProviderAction } from "../widgets/client/shared/phi-collection-provider";
 import { PhiFileDropControl } from "../controls/phi-file-drop-control";
@@ -415,8 +416,15 @@ export function PhiAreaUploadBinding({ config, labels, onUploadComplete, collect
             <div
               key={item.localId}
               style={{
-                border: `1px solid ${token.colorBorderSecondary}`,
-                borderRadius: token.borderRadiusLG,
+                border: resolvePhiThemeBorderLine(token.colorBorderSecondary),
+                /*
+                 * The same corner the finished tile beside it takes: the Site's surface step, not the
+                 * widest corner the numeric scale happens to have (THEME.md, "Control shape").
+                 * `borderRadiusLG` here meant an upload stood square in a `pill` Site and then changed
+                 * shape the moment it turned into an asset tile. No antd fallback beside it -- the
+                 * Provider `usePhiConfig` reads is what writes this property.
+                 */
+                borderRadius: "var(--phi-surface-radius)",
                 overflow: "hidden",
                 background: item.status === "uploading" ? token.colorFillTertiary : token.colorBgContainer,
                 position: "relative",

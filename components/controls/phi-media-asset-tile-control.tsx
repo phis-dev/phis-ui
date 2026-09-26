@@ -6,6 +6,7 @@ import NextImage from "next/image";
 import type { CSSProperties } from "react";
 
 import { PhiMediaKind, isPhiMediaAssetOriginalOptimizable, isPhiMediaAssetPublic } from "../../constants/media";
+import { resolvePhiThemeBorderLine } from "../../helpers/border-widget-style";
 import type { PhiControlSize } from "../../types/control";
 import type { PhiMediaAssetTile } from "../../types/media";
 import { resolvePhiMediaAssetDisplayDimensions } from "../media/phi-image-preview-data";
@@ -52,6 +53,13 @@ export type PhiMediaAssetTileControlProps = {
   mode?: "grid" | "masonry" | "stack";
   size?: PhiControlSize;
   disabled?: boolean;
+  /**
+   * Whether this tile's own delete is in flight.
+   *
+   * Per tile rather than per grid: a listing may have two deletions running, and each one is answered
+   * where it was started. The button reports it and refuses a second press while it stands.
+   */
+  deleting?: boolean;
   onSelect?: (asset: PhiMediaAssetTile) => void;
   onDelete?: (asset: PhiMediaAssetTile) => void;
   deleteLabel?: string;
@@ -68,6 +76,7 @@ export function PhiMediaAssetTileControl({
   mode = "grid",
   size = "medium",
   disabled = false,
+  deleting = false,
   onSelect,
   onDelete,
   deleteLabel,
@@ -88,7 +97,7 @@ export function PhiMediaAssetTileControl({
   // The thumbnail and the preview are raster variants; only the original can be an SVG the optimiser refuses.
   const optimizable = imageUrl === asset.deliveryUrl ? isPhiMediaAssetOriginalOptimizable(asset) : isPublic;
   const cardStyle: CSSProperties = {
-    border: `1px solid ${selected ? token.colorPrimary : token.colorBorderSecondary}`,
+    border: resolvePhiThemeBorderLine(selected ? token.colorPrimary : token.colorBorderSecondary),
     // A tile is a surface, so its corner is the Site's step rather than the widest one the scale has
     // (THEME.md, "Control shape"). No antd fallback beside it: `usePhiConfig` above throws without the
     // Provider, and the Provider is what writes this property, so there is no render that could need one.
@@ -249,6 +258,7 @@ export function PhiMediaAssetTileControl({
                 type="text"
                 size="small"
                 danger
+                loading={deleting}
                 disabled={disabled}
                 onClick={() => onDelete(asset)}
               />
@@ -283,7 +293,7 @@ export function PhiMediaAssetCollectionSkeletonControl({
     <div
       key={index}
       style={{
-        border: `1px solid ${token.colorBorderSecondary}`,
+        border: resolvePhiThemeBorderLine(token.colorBorderSecondary),
         // Same corner as the tile it stands in for, or the placeholder changes shape on arrival.
         borderRadius: "var(--phi-surface-radius)",
         overflow: "hidden",
@@ -304,15 +314,8 @@ export function PhiMediaAssetCollectionSkeletonControl({
         <PhiSkeletonControl
           presentation="input"
           active={active}
-          block
-          style={{
-            display: "block",
-            width: "100%",
-            minWidth: 0,
-            maxWidth: "100%",
-            height: "100%",
-            borderRadius: 0,
-          }}
+          fill
+          style={{ display: "block", maxWidth: "100%", borderRadius: 0 }}
         />
       </div>
       <Flex

@@ -104,6 +104,14 @@ export function PhiAssetCollectionViewBinding({
     }
   }, [binding.data]);
   const [searchDraft, setSearchDraft] = useState(state.searchQuery);
+  /*
+   * Which tiles are being deleted right now, by asset.
+   *
+   * A list rather than one id: the grid offers a delete on every tile at once, and an id that could only
+   * hold the last press would move the indicator off the tile that is actually waiting. The entry is
+   * dropped in a `finally`, so a refusal clears it as surely as a success does.
+   */
+  const [deletingAssetIds, setDeletingAssetIds] = useState<readonly number[]>([]);
   const spaceSelectionAllowed = usePhiMediaSpaceSelectionAllowed();
   const activeSpaceAddress = typeof query.filters?.spaceId === "string" && query.filters.spaceId
     ? query.filters.spaceId
@@ -170,6 +178,7 @@ export function PhiAssetCollectionViewBinding({
   }
 
   async function deleteAsset(asset: PhiMediaAssetTile) {
+    setDeletingAssetIds((current) => current.includes(asset.id) ? current : [...current, asset.id]);
     try {
       const data = await binding.activate({ actionKey: "delete", itemKey: asset.id, query });
       if (data.error) throw new Error(data.error);
@@ -184,6 +193,8 @@ export function PhiAssetCollectionViewBinding({
         content: error instanceof Error ? error.message : labels.grid.deleteFailedText,
         durationSeconds: 2.8,
       });
+    } finally {
+      setDeletingAssetIds((current) => current.filter((id) => id !== asset.id));
     }
   }
 
@@ -407,6 +418,7 @@ export function PhiAssetCollectionViewBinding({
           minColumnWidth={minColumnWidth}
           selected={state.selectedAssetId === asset.id}
           mode={mode}
+          deleting={deletingAssetIds.includes(asset.id)}
           onSelect={selectAsset}
           onDelete={(nextAsset) => { void deleteAsset(nextAsset); }}
           deleteLabel={labels.grid.deleteLabel}

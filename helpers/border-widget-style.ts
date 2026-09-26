@@ -16,8 +16,24 @@ type PhiBorderWidgetStyleFallback = {
   borderRadius?: number | string | null;
 };
 
+/** The Site's line width. Never typed as a pixel: a Theme states it, and `lineWidth` is where. */
+const PHI_THEME_BORDER_WIDTH = "var(--ant-line-width, 1px)";
+
 /** The Site's own line: its border colour at its line width. One string, so nobody types a second. */
-export const PHI_THEME_BORDER_LINE = "var(--ant-line-width, 1px) solid var(--ant-color-border)";
+export const PHI_THEME_BORDER_LINE = `${PHI_THEME_BORDER_WIDTH} solid var(--ant-color-border)`;
+
+/**
+ * The same line at a colour the caller names.
+ *
+ * A surface may have reason to draw a quieter edge than the Site's own -- a media tile standing in a grid
+ * of them -- or a louder one to say it is selected. It has no reason to name a WIDTH: that one is the
+ * Theme's, and the `1px` these call sites used to type was a second answer to a question already
+ * answered, so a Site that set its line to two pixels kept a grid of hairlines. Only the colour is the
+ * caller's, and it comes off the token the Provider hands out.
+ */
+export function resolvePhiThemeBorderLine(color: string) {
+  return `${PHI_THEME_BORDER_WIDTH} solid ${color}`;
+}
 
 /**
  * The border style of something that states WHERE its line comes from.
