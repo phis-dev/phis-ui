@@ -57,8 +57,17 @@ function resolveNextPadding(
     [key]: nextValue ?? undefined,
   };
 
+  /*
+   * Nothing stated at all clears the config -- and a gap is something stated.
+   *
+   * It was left out of this test, so a Layout whose defaults carry no padding lost its gap on the way
+   * out: the value was written into `nextPadding` and the very next line threw the whole object away
+   * as empty. Most Layout defaults are exactly that shape (a Masonry is `columns` and `gap`), so the
+   * gap field looked dead everywhere except where somebody had also set a padding.
+   */
   if (
     nextPadding.padding == null &&
+    nextPadding.gap == null &&
     nextPadding.paddingTop == null &&
     nextPadding.paddingRight == null &&
     nextPadding.paddingBottom == null &&
