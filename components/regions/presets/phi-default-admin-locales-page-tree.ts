@@ -35,7 +35,6 @@ export const SYNTHETIC_ADMIN_LOCALES_WIDGET_IDS = createPhiPresetCmsInstanceIdMa
 }, [
   "widgetLocales",
   "widgetSiteLocalesForm",
-  "widgetSiteLocalesSubmit",
 ]);
 
 export async function buildPhiDefaultAdminLocalesPageTree({
@@ -91,8 +90,7 @@ export async function buildPhiDefaultAdminLocalesPageTree({
           columns: 24,
           slotPlacements: [
             { slotIndex: 0, span: { compact: 24, medium: 24, wide: 24 }, offset: { compact: 0, medium: 0, wide: 0 } },
-            { slotIndex: 1, span: { compact: 24, medium: 16, wide: 18 }, offset: { compact: 0, medium: 8, wide: 6 } },
-            { slotIndex: 2, span: { compact: 24, medium: 24, wide: 24 }, offset: { compact: 0, medium: 0, wide: 0 } },
+            { slotIndex: 1, span: { compact: 24, medium: 24, wide: 24 }, offset: { compact: 0, medium: 0, wide: 0 } },
           ],
           margin: 0,
           padding: 0,
@@ -110,6 +108,15 @@ export async function buildPhiDefaultAdminLocalesPageTree({
         label: "site locale settings form",
         config: {
           formId: PHI_LOCALIZATION_FORM_IDS.siteLocales,
+          /*
+           * The Form's own submit, not a Button Widget in the slot below.
+           *
+           * Only the Widget knows where its label column ends, so only a submit it draws stands under
+           * the inputs; a Button beside it stands in the Layout's box and lands next to that column at
+           * every width, which is what the offset in this grid used to guess at. Already translated,
+           * from the page's own label set.
+           */
+          submit: { label: widgetLabels.saveLocalesLabel },
           formConfig: {
             initialValues: {},
           },
@@ -129,47 +136,14 @@ export async function buildPhiDefaultAdminLocalesPageTree({
               valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.formResult,
               receiver: createPhiSignalAddress("cms", SYNTHETIC_ADMIN_LOCALES_WIDGET_IDS.widgetLocales),
             }],
-            listens: [{
-              routeKey: "admin-locales-settings-submit",
-              capabilityId: "submit",
-              scope: "page",
-              channel: "submit",
-              action: "activate",
-              valueType: "none",
-              receiver: createPhiSignalAddress("cms", SYNTHETIC_ADMIN_LOCALES_WIDGET_IDS.widgetSiteLocalesForm),
-            }],
           },
-        },
-      }),
-      nodes.widget({
-        id: SYNTHETIC_ADMIN_LOCALES_WIDGET_IDS.widgetSiteLocalesSubmit,
-        parentLayoutNodeId: SYNTHETIC_ADMIN_LOCALES_LAYOUT_IDS.layoutGrid,
-        typeKey: "button",
-        slotIndex: 1,
-        label: "save site locale settings",
-        config: {
-          key: "saveLocales",
-          actionKey: "save",
-          label: widgetLabels.saveLocalesLabel,
-          // Translated already, from the page's global label set.
-          translate: false,
-          buttonType: "primary",
-          signalRoutes: { emits: [{
-            routeKey: "admin-locales-settings-submit-button",
-            capabilityId: "activate",
-            scope: "page",
-            channel: "submit",
-            action: "activate",
-            valueType: "none",
-            receiver: createPhiSignalAddress("cms", SYNTHETIC_ADMIN_LOCALES_WIDGET_IDS.widgetSiteLocalesForm),
-          }] },
         },
       }),
       nodes.widget({
         id: SYNTHETIC_ADMIN_LOCALES_WIDGET_IDS.widgetLocales,
         parentLayoutNodeId: SYNTHETIC_ADMIN_LOCALES_LAYOUT_IDS.layoutGrid,
         typeKey: "table",
-        slotIndex: 2,
+        slotIndex: 1,
         label: labels.widgetLabel,
         config: {
           source: {
