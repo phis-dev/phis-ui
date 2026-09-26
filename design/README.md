@@ -6,6 +6,8 @@ into the matching contract document, and open work is tracked in [TODOS.md](../T
 
 - [BUILDER.md](./BUILDER.md) -- Builder surfaces that do not exist: page tree drawer, shell profiles and
   selector, a brand workspace, creation actions, breadcrumbs.
+- [CONSENT.md](./CONSENT.md) -- what a Site may store in a device without asking, the gate a Widget passes
+  before it loads a third party, and why a Site that asks for nothing shows no banner.
 - [FONTS.md](./FONTS.md) -- copying a Module's font files into the Site's Media library on Theme save, and
   the licence survey behind font subsetting.
 - [MODULE_DISTRIBUTION.md](./MODULE_DISTRIBUTION.md) -- distributing compiled and commercial Modules and
