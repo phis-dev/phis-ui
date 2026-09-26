@@ -378,6 +378,31 @@ for (const popupClass of ["dropdown", "ant-picker-panel", "ant-select-item", "an
   assert.ok(!shapeStylesheet.includes(popupClass), `${popupClass} is a popup surface and must not be shaped.`);
 }
 
+/*
+ * A ColorPicker's swatch is a box nested inside a Control body, the same relation a Segmented item has to
+ * its track, so it takes the inner radius -- and because antd sizes it square from the Control height,
+ * that is also what makes it a circle under `pill`. The rule stays inside the TRIGGER: the same class
+ * names the swatches in the panel the trigger opens, and a panel is a popup surface this file stays off.
+ */
+const swatchRules = shapeStylesheet
+  .split("\n")
+  .filter((line) => line.includes("ant-color-picker-color-block"));
+assert.ok(swatchRules.length > 0, "A ColorPicker swatch must be shaped; a square one in a capsule is the defect.");
+for (const rule of swatchRules) {
+  assert.ok(
+    rule.includes("ant-color-picker-trigger"),
+    "A swatch is shaped inside its trigger only; the panel's swatches stay on the surface scale.",
+  );
+  assert.ok(
+    rule.includes(".ant-color-picker-color-block.ant-color-picker-color-block"),
+    "antd writes the swatch radius at two classes, so a rule of ours has to weigh more than a tie.",
+  );
+}
+assert.ok(
+  shapeStylesheet.includes("margin-inline-start: 2px"),
+  "The swatch stands off the leading edge a capsule curves across, stated as a logical margin.",
+);
+
 const configProviderSource = await readFile(
   new URL("../components/root/phi-config-provider.tsx", import.meta.url),
   "utf8",

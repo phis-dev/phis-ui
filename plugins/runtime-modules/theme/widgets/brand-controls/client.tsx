@@ -3848,6 +3848,10 @@ export function PhiBuilderBrandThemePreviewWidgetClient({
   const previewTextSecondaryColor = readEffectiveTokenString(previewEffectiveToken, "colorTextSecondary", mode === "dark" ? "rgba(255,255,255,0.65)" : "rgba(0,0,0,0.65)");
   const previewTextTertiaryColor = readEffectiveTokenString(previewEffectiveToken, "colorTextTertiary", mode === "dark" ? "rgba(255,255,255,0.45)" : "rgba(0,0,0,0.45)");
   const previewLinkColor = readEffectiveTokenString(previewEffectiveToken, "colorLink", readEffectiveTokenString(previewEffectiveToken, "colorPrimary", "#1677ff"));
+  /*
+   * What the sample swatch shows: the brand colour, so the hex beside it moves the moment the seed does.
+   */
+  const previewSwatchColor = readEffectiveTokenString(previewEffectiveToken, "colorPrimary", "#1677ff");
   const previewLinkHoverColor = readEffectiveTokenString(previewEffectiveToken, "colorLinkHover", previewLinkColor);
   const previewLinkActiveColor = readEffectiveTokenString(previewEffectiveToken, "colorLinkActive", previewLinkColor);
   const statusPreviewItems = [
@@ -4069,6 +4073,19 @@ export function PhiBuilderBrandThemePreviewWidgetClient({
             value={previewInput}
             onChange={(next) => setPreviewInput(next ?? "")}
           />
+          {/*
+            * A colour swatch, shown rather than offered.
+            *
+            * It is the one sample whose corner the shape reaches through a box nested INSIDE a Control
+            * body rather than through the body itself (`styles/control-shape.css`), so it is the only
+            * place an author can see that switching to `pill` rounded the swatch as well instead of
+            * leaving a square one inside a capsule.
+            *
+            * `open={false}` is what makes it display only: a controlled `open` pins the panel shut and
+            * the trigger stays a live one. `disabled` would have dimmed it and reported the wrong Theme
+            * -- the same reason the sample buttons above carry `previewNoop` instead of no handler.
+            */}
+          <PhiColorControl value={previewSwatchColor} open={false} showText />
           <PhiDividerControl style={{ margin: 0 }} />
           <PhiFlexControl gap={clientToken.padding} wrap="wrap">
             <PhiFlexControl vertical gap={clientToken.paddingXS} style={{ flex: "1 1 260px", minWidth: 0 }}>

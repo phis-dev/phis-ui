@@ -70,6 +70,38 @@
 }
 
 /*
+ * A ColorPicker's swatch, inside a trigger the shape has just curved.
+ *
+ * The swatch is the same relation to its trigger that a Segmented item is to its track: a box nested
+ * inside a Control body, so it takes the inner radius. Ant Design sizes it square from the Control
+ * height, which is why the inner radius is enough to state a circle -- under `pill` the value is far
+ * above half the swatch's side and the browser clamps it to exactly that. A square swatch glued into a
+ * capsule was the same defect a square item in a capsule track is.
+ *
+ * Two pixels off the leading edge, because a capsule's curve cuts across the corner of whatever sits
+ * flush against it, and the swatch stands right there with the trigger's hex text beside it. Stated as a
+ * logical margin so it follows the writing direction rather than always moving right.
+ *
+ * Only inside the trigger. The same class names the swatches in the panel the trigger opens, and a panel
+ * is a popup surface this file stays off (see the header).
+ *
+ * Both classes are doubled: antd writes the swatch's radius at trigger + swatch, so a rule naming the
+ * same two would only tie and lose or win on source order.
+ */
+.ant-color-picker-trigger.ant-color-picker-trigger .ant-color-picker-color-block.ant-color-picker-color-block {
+  margin-inline-start: 2px;
+  border-radius: var(--phi-control-radius-inner-md, var(--ant-border-radius-sm));
+}
+
+.ant-color-picker-trigger.ant-color-picker-sm .ant-color-picker-color-block.ant-color-picker-color-block {
+  border-radius: var(--phi-control-radius-inner-sm, var(--ant-border-radius-xs));
+}
+
+.ant-color-picker-trigger.ant-color-picker-lg .ant-color-picker-color-block.ant-color-picker-color-block {
+  border-radius: var(--phi-control-radius-inner-lg, var(--ant-border-radius));
+}
+
+/*
  * Controls that grow with their content.
  *
  * `pill` resolves to a radius far above any Control height, which the browser clamps to exactly half
