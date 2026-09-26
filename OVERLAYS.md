@@ -318,6 +318,17 @@ never-opened Overlay is ordinary operation, and only a development build traces 
 Mount policy therefore remains a rendering decision -- what exists in the DOM and what survives a close --
 and is no longer a delivery decision.
 
+An Overlay opened by a Table's row action names that action itself, in `openActionKey`. A Table announces
+one thing -- a row action happened, and here is which one -- so each listener decides for itself whether
+it was meant: the Record or Form Widget in the Body by its own `openActionKey`, and the Overlay by this
+field. `matchesOpenAction` refuses an `open` route carrying the `tableAction` schema whenever the key is
+absent, because an Overlay that opens for every announcement opens when a row is deleted; the cost of
+that choice is that a forgotten key is silent -- no exception, nothing in the journal, a dialog that
+simply never comes up, which the Logs page carried for as long as it existed. Both halves are checked:
+the shell's overlay descriptor requires the field in its type, and
+`scripts/validate-overlay-open-action-keys.mjs` reads every hand-written Overlay node in a preset and
+fails one that listens Table-shaped without a key -- or states a key that no Table-shaped route reads.
+
 Runtime, preview, and authoring must resolve the same Overlay config and all declared zone trees.
 Provider demand, Widget/Controller materialization, access filtering, signal-route validation, and
 media/reference scans must include every reachable Overlay subtree exactly like reachable Region subtrees.
