@@ -1,10 +1,9 @@
 import { type CSSProperties, type ReactNode } from "react";
 import {
   normalizePhiCssSize,
-  PHI_SLOT_CROSS_MARGIN_END_PROPERTY,
-  PHI_SLOT_CROSS_MARGIN_START_PROPERTY,
   resolvePhiFlexAxisAlignment,
-  resolvePhiSlotCrossMargin,
+  phiPlacementFromWord,
+  resolvePhiSlotPlacementMargins,
 } from "../phi-layout-contract";
 import { resolvePhiLayoutSlotChildSizing } from "./phi-layout-anchored-overlay";
 import { resolvePhiLayoutDefaults } from "../../../helpers/cms-layout-defaults";
@@ -145,16 +144,14 @@ export function PhiFlexVerticalLayout({
            * Except where the child fills, which has to be stretched: `width: 100%` inside a shrink-to-fit
            * box is circular and resolves to zero, and a centred flex item is shrink-to-fit. That is not
            * a reason to give up the placement, though -- a filling child that also caps itself leaves
-           * room over, and `resolvePhiSlotCrossMargin` puts it in the middle of that room by margin
+           * room over, and the placement margins put it in the middle of that room
            * instead. Stretching and placing are two jobs, and `align-items` can only do one of them.
            */
           alignItems: shouldFillCrossAxis ? "stretch" : resolvedFlowAlignment.alignItems,
-          [PHI_SLOT_CROSS_MARGIN_START_PROPERTY]: shouldFillCrossAxis
-            ? resolvePhiSlotCrossMargin(resolvedFlowAlignment.alignItems).start
-            : "0",
-          [PHI_SLOT_CROSS_MARGIN_END_PROPERTY]: shouldFillCrossAxis
-            ? resolvePhiSlotCrossMargin(resolvedFlowAlignment.alignItems).end
-            : "0",
+          ...resolvePhiSlotPlacementMargins({
+            inline: shouldFillCrossAxis ? phiPlacementFromWord(resolvedFlowAlignment.alignItems) : null,
+            block: null,
+          }),
         } as CSSProperties}
       >
         {child}

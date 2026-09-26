@@ -64,8 +64,8 @@ export const PHI_STACK_LAYOUT_PLUGIN: PhiCmsLayoutPlugin<PhiCmsStackLayoutConfig
       slotTransition={config.slotTransition}
       slotTransitionDurationMs={config.slotTransitionDurationMs}
       slotTransitionEasing={config.slotTransitionEasing}
-      slotAnchor={config.anchor ? resolvePhiLayoutAnchor(config.anchor) : undefined}
-      editSlotAnchor={resolvePhiLayoutAnchor(config.anchor)}
+      slotAnchor={resolvePhiLayoutAnchor(config.anchor, PHI_STACK_LAYOUT_DEFINITION.defaultAnchor)}
+      editSlotAnchor={resolvePhiLayoutAnchor(config.anchor, PHI_STACK_LAYOUT_DEFINITION.defaultAnchor)}
       zIndex={config.zIndex}
       shadow={config.shadow}
       effect={config.effect}

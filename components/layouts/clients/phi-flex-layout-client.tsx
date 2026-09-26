@@ -2,9 +2,8 @@ import { isValidElement, type CSSProperties, type ReactNode } from "react";
 import {
   normalizePhiCssSize,
   resolvePhiFlexAxisAlignment,
-  PHI_SLOT_CROSS_MARGIN_END_PROPERTY,
-  PHI_SLOT_CROSS_MARGIN_START_PROPERTY,
-  resolvePhiSlotCrossMargin,
+  phiPlacementFromWord,
+  resolvePhiSlotPlacementMargins,
 } from "../phi-layout-contract";
 import { resolvePhiLayoutSlotChildSizing } from "./phi-layout-anchored-overlay";
 import { resolvePhiLayoutDefaults } from "../../../helpers/cms-layout-defaults";
@@ -203,9 +202,12 @@ export function PhiFlexLayout({
           ? 0
           : "auto";
     const placesInline = resolvedVertical ? shouldFillCrossAxis : shouldFillMainAxis;
-    const slotCrossMargin = placesInline
-      ? resolvePhiSlotCrossMargin(resolvedVertical ? resolvedFlowAlignment.alignItems : resolvedJustifyContent)
-      : { start: "0", end: "0" };
+    const slotPlacementMargins = resolvePhiSlotPlacementMargins({
+      inline: placesInline
+        ? phiPlacementFromWord(resolvedVertical ? resolvedFlowAlignment.alignItems : resolvedJustifyContent)
+        : null,
+      block: null,
+    });
 
     return (
       <div
@@ -250,8 +252,7 @@ export function PhiFlexLayout({
            * own alignment. A slot that does not grow is as wide as its child and states `0`, which is
            * what stops a Flex Vertical further up from placing this Layout's children.
            */
-          [PHI_SLOT_CROSS_MARGIN_START_PROPERTY]: slotCrossMargin.start,
-          [PHI_SLOT_CROSS_MARGIN_END_PROPERTY]: slotCrossMargin.end,
+          ...slotPlacementMargins,
         } as CSSProperties}
       >
         {child}

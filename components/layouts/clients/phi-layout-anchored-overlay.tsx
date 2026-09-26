@@ -3,9 +3,9 @@ import { Children, isValidElement, type CSSProperties, type ReactNode } from "re
 import { buildPhiSlotChildDataAttributes, resolvePhiSlotChildSizing } from "../../../plugins/runtime/slot-size-policy";
 import type { PhiAnchorWidgetPlacement } from "../../controls/phi-anchor-control-contract";
 import {
-  PHI_SLOT_CROSS_MARGIN_END_PROPERTY,
-  PHI_SLOT_CROSS_MARGIN_START_PROPERTY,
-  resolvePhiSlotCrossMargin,
+  phiFlexPlacementWord,
+  resolvePhiPlacement,
+  resolvePhiSlotPlacementMargins,
 } from "../phi-layout-contract";
 
 export type PhiLayoutAnchorRole = "left" | "middle" | "right";
@@ -84,38 +84,10 @@ export type PhiLayoutAnchoredOverlayProps = {
   children: ReactNode;
 };
 
-function resolveAnchorAlignment(
-  anchor: PhiAnchorWidgetPlacement | null | undefined,
-  slotRole: PhiLayoutAnchorRole | undefined,
-) {
-  const baseHorizontal =
-    anchor === "topLeft" || anchor === "left" || anchor === "bottomLeft"
-      ? "flex-start"
-      : anchor === "topRight" || anchor === "right" || anchor === "bottomRight"
-        ? "flex-end"
-        : "center";
-  const horizontal =
-    slotRole === "right"
-      ? baseHorizontal === "flex-start"
-        ? "flex-end"
-        : baseHorizontal === "flex-end"
-          ? "flex-start"
-          : "center"
-      : baseHorizontal;
-  const vertical =
-    anchor === "topLeft" || anchor === "top" || anchor === "topRight"
-      ? "flex-start"
-      : anchor === "bottomLeft" || anchor === "bottom" || anchor === "bottomRight"
-        ? "flex-end"
-        : "center";
-
-  return { horizontal, vertical };
-}
-
 /**
  * The anchor's placement, as the margins a child that fills up to a cap is moved by. `justify-content`
  * reaches a child that leaves room in the row; a child stretched to the row and capped is placed by the
- * auto margins it reads off `--phi-slot-cross-margin-*`, and those inherit -- so an overlay that stated
+ * auto margins it reads off `--phi-slot-inline-margin-*`, and those inherit -- so an overlay that stated
  * none handed its child whatever Layout stood above. Stated on every overlay, `0` included.
  */
 export function PhiLayoutAnchoredOverlay({
@@ -128,9 +100,21 @@ export function PhiLayoutAnchoredOverlay({
   backgroundColor,
   children,
 }: PhiLayoutAnchoredOverlayProps) {
-  const { horizontal, vertical } = resolveAnchorAlignment(anchor, slotRole);
+  /*
+   * An overlay in the right-hand role reads the anchor mirrored -- its "left" is the row's right --
+   * which is a role on one axis rather than a second reading of the nine placements.
+   *
+   * No middle is invented here any more. This component used to answer an absent anchor with `center`,
+   * which made it the place where four Layout kinds got their default without declaring one. They
+   * declare it now (`PHI_CENTRED_SLOT_DEFAULT_ANCHOR`), so an anchor that arrives absent here means the
+   * kind holding this overlay states none -- and a kind that states none stretches and starts, which is
+   * what leaving the two words unset says.
+   */
+  const placement = resolvePhiPlacement(anchor, slotRole === "right" ? "mirrorInline" : undefined);
+  const horizontal = phiFlexPlacementWord(placement.inline);
+  const vertical = phiFlexPlacementWord(placement.block);
   const slotSizing = resolvePhiLayoutSlotChildSizing(children);
-  const crossMargin = resolvePhiSlotCrossMargin(horizontal);
+  const placementMargins = resolvePhiSlotPlacementMargins({ inline: placement.inline, block: null });
 
   return (
     <div
@@ -142,8 +126,7 @@ export function PhiLayoutAnchoredOverlay({
         justifyContent: horizontal,
         alignItems: vertical,
         backgroundColor: backgroundColor ?? "transparent",
-        [PHI_SLOT_CROSS_MARGIN_START_PROPERTY]: crossMargin.start,
-        [PHI_SLOT_CROSS_MARGIN_END_PROPERTY]: crossMargin.end,
+        ...placementMargins,
         ...(positionMode === "absolute"
           ? {
               top: inset?.top ?? 0,

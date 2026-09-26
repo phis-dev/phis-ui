@@ -129,16 +129,20 @@ built. Remove an entry when it is done.
     and the thresholds are 377 and 610 for every block, because a container query cannot read a custom
     property in its condition. Building it changes `PhiRenderableBlockBase` and needs operator approval.
 
-    And one profile system that is already built and fed by nobody: the Grid reads
-    `compact | medium | wide` off its own measured container and then asks
-    `resolvePhiGridSlotColumns` for a span, but the fallback is the single constant
-    `PHI_GRID_LAYOUT_DEFAULT_SPAN = 6` for all three profiles
-    (components/layouts/clients/phi-grid-layout-client.tsx). A Grid whose slots carry no authored span
-    therefore never reflows -- four per row at 320px and at 1600px alike, only narrower, because the 24
-    tracks are `minmax(0, 1fr)` and shrink. The wrapping that does happen is the cursor running past
-    column 24, not an answer to the room. So the responsive form has to give the Grid a per-profile
-    default as well -- something like 24 / 12 / 6 -- or say why one constant is the right answer and the
-    author is meant to name every span.
+    The one profile system that was built and fed by nobody is settled (2026-09-26): the Grid's
+    fallback span is a profile value now, `PHI_GRID_LAYOUT_DEFAULT_SPAN` = 24 / 12 / 6, and it lives in
+    `components/layouts/phi-grid-contract.ts` beside the placement it feeds rather than in the client,
+    so it is tested with it. A Grid whose slots carry no authored span reflows: one per row below 377,
+    two below 610, four above. It did not before -- four abreast at every width, only narrower, because
+    the 24 tracks are `minmax(0, 1fr)` and shrink, and the wrapping that did happen was the cursor
+    running past column 24 rather than an answer to the room.
+
+    One rule moved with it. `readGridSlotPlacement` (types/cms-config.ts) invented a span of six to
+    check `offset + span <= 24`; with a `compact` default that fills the row, repeating the default
+    there would reject stored placements that state an offset and no span -- a rule the author never
+    broke. The check is stated of the profiles that name a span, and an offset with no room is clamped
+    by `resolvePhiGridSlotColumns`, as it always was. The Grid still measures itself with a
+    `ResizeObserver`; moving that onto a container query belongs to the responsive form.
 
   **What the move turned up.** There were more than five readers. `helpers/css-length.ts` was a sixth
   interpreter, used by the Structure Canvas and the Builder sider width; the Structure Region slot
@@ -150,23 +154,46 @@ built. Remove an entry when it is done.
   (`""` used to flip a slot policy to `fixed` while writing no width), and a `"240px"` string is now
   capped at the slot like the bare `240` that means the same thing.
 
-- **Placing a child that does not fill is written four times.** A slot that grows while its child is
-  capped or intrinsic has to place the child by the Layout's anchor, and every Layout answers that in
-  its own words: Flex and Flex Vertical set `--phi-slot-cross-margin-*` under a condition, Grid and
-  Three Column unconditionally, the Anchored Overlay for the five Layouts that delegate to it, and
-  Masonry not at all -- it forces `width: 100%` on every slot, so an intrinsic Widget there cannot
-  follow an anchor. The anchor itself is translated into `justify-content`/`align-items` by four
-  separate functions (`resolvePhiFlexAxisAlignment`, `resolveAnchorAlignment`, the Grid pair, and Three
-  Column's own), sharing nothing but `resolvePhiSlotCrossMargin`. And there is no block-axis margin at
-  all: `resolvePhiSlotChildBaseStyle` writes `marginInlineStart/End` only, which is why a Flex row
-  borrows the cross-axis mechanism for its main axis.
+- **Placing a child that does not fill.** Mostly settled (2026-09-26); what is left is written at the
+  end of this entry.
 
-  The shape it wants: one function from (the child's resolved sizing, the Layout's anchor, the flow
-  direction) to both the alignment and the margins, for both axes, with the four translators gone. The
-  child's sizing is already available to the slot before it renders -- the CMS renderer parks it on the
-  unrendered element and `resolvePhiLayoutSlotChildSizing` reads it back -- so the slot can react to the
-  child's policy instead of offering room and hoping. `kind` is not a parameter: an intrinsic Widget and
-  a `fill-inline` Layout want the same treatment.
+  It was written four times. Every Layout translated the anchor into `justify-content`/`align-items`
+  in its own words -- `resolvePhiFlexAxisAlignment`, `resolveAnchorAlignment`, the Grid pair and Three
+  Column's own -- sharing nothing but `resolvePhiSlotCrossMargin`, and the four answers differed in
+  three ways that are real and one that was not. The real ones: the spelling (`flex-start` against
+  `start`), which axis is the main one, and a slot role that overrides or mirrors an axis. The one that
+  was not: what an unstated axis means.
+
+  Now there is one reading. `resolvePhiPlacement` (components/layouts/phi-layout-contract.ts) answers
+  `{ inline, block }` in `start | center | end | null`, takes the anchor in both spellings it arrives
+  in, and takes the slot role as a modifier on one axis (`mirrorInline`, `pinInlineStart`,
+  `pinInlineEnd`). `phiFlexPlacementWord` and `phiGridPlacementWord` spell it; `phiPlacementFromWord`
+  reads a word back, for a Layout whose author set `align` or `justify` directly;
+  `resolvePhiSlotPlacementMargins` turns a placement into the four custom properties. All five call
+  sites go through it and the four translators are gone.
+
+  *The properties are named by the axis they write.* `--phi-slot-cross-margin-*` only ever wrote
+  `margin-inline`, which is the cross axis of a column and the main axis of a row -- the Grid handed its
+  `justify-content` to the same pair. Under that name nobody noticed that one axis had no properties at
+  all. They are `--phi-slot-inline-margin-*` now, `--phi-slot-block-margin-*` exists beside them, and
+  the frame reads all four.
+
+  *And nobody invents a middle any more.* The Anchored Overlay answered an absent anchor with `center`,
+  which quietly made it the place where four kinds got their default: Stack, Carousel, Split Card and
+  Three Column all drew a centre they never declared. They declare it now
+  (`PHI_CENTRED_SLOT_DEFAULT_ANCHOR` in layout-definitions.ts, passed by their plugins), so the same
+  centre is readable in the picker and the Inspector, and an anchor that arrives absent at the overlay
+  means what the house says it means: no anchor, which stretches and starts. No pixel moved.
+
+  **What is left.** Writing the block-axis margins is not enough to make them work: an auto margin
+  places a box only where its parent is a flex or grid container, and in block flow `margin-block: auto`
+  computes to `0`. The Grid's own inner placement box (`resolveGridSlotPlacementStyle`) is a plain block
+  box -- which is exactly why the *inline* margins work there, since `margin-inline: auto` does centre a
+  block box of a definite width. So the block axis needs that box to become a flex column first, per
+  Layout, and until then `resolvePhiSlotPlacementMargins` is called with `block: null` everywhere.
+  Masonry is the other half: it has no anchor at all, no prop and no client, and forces `width: 100%` on
+  every slot, so an intrinsic Widget there cannot follow one. Both are additive rather than
+  consolidating, and each moves pixels where it lands.
 
   **Findings worth not rediscovering.**
 

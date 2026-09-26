@@ -3,17 +3,22 @@
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 
 import {
-  PHI_SLOT_CROSS_MARGIN_END_PROPERTY,
-  PHI_SLOT_CROSS_MARGIN_START_PROPERTY,
   normalizePhiCssSize,
   resolvePhiLayoutInset,
-  resolvePhiSlotCrossMargin,
+  phiGridPlacementWord,
+  phiPlacementFromWord,
+  resolvePhiPlacement,
+  resolvePhiSlotPlacementMargins,
 } from "../phi-layout-contract";
 import type { PhiGridLayoutProps } from "../phi-grid-contract";
 import { PhiBaseLayout } from "../phi-base-layout";
 import { resolvePhiLayoutDefaults } from "../../../helpers/cms-layout-defaults";
 import { resolvePhiLayoutSlotChildSizing } from "./phi-layout-anchored-overlay";
-import { resolvePhiGridSlotColumns, type PhiGridSlotColumns } from "../phi-grid-contract";
+import {
+  PHI_GRID_LAYOUT_DEFAULT_SPAN,
+  resolvePhiGridSlotColumns,
+  type PhiGridSlotColumns,
+} from "../phi-grid-contract";
 import {
   PHI_CONTAINER_BREAKPOINT_COL3,
   PHI_CONTAINER_BREAKPOINT_CONTENT,
@@ -25,63 +30,8 @@ import {
 } from "../../../helpers/layout-authoring-markers";
 
 const PHI_GRID_LAYOUT_DEFAULTS = resolvePhiLayoutDefaults("grid");
-const PHI_GRID_LAYOUT_DEFAULT_SPAN = 6;
 
 export type { PhiGridLayoutProps } from "../phi-grid-contract";
-
-function resolveGridAnchorAlign(anchor: PhiGridLayoutProps["anchor"]): CSSProperties["alignItems"] | undefined {
-  if (anchor?.vertical === "top") {
-    return "start";
-  }
-
-  if (anchor?.vertical === "middle") {
-    return "center";
-  }
-
-  if (anchor?.vertical === "bottom") {
-    return "end";
-  }
-
-  return undefined;
-}
-
-function resolveGridAnchorJustify(anchor: PhiGridLayoutProps["anchor"]): CSSProperties["justifyContent"] | undefined {
-  if (anchor?.horizontal === "left") {
-    return "start";
-  }
-
-  if (anchor?.horizontal === "center") {
-    return "center";
-  }
-
-  if (anchor?.horizontal === "right") {
-    return "end";
-  }
-
-  return undefined;
-}
-
-function resolveGridPlacementAnchor(
-  anchor: PhiGridLayoutProps["anchor"],
-  editSlotAnchor: PhiGridLayoutProps["editSlotAnchor"],
-) {
-  if (editSlotAnchor != null) {
-    return {
-      horizontal: editSlotAnchor === "topLeft" || editSlotAnchor === "left" || editSlotAnchor === "bottomLeft"
-        ? "left"
-        : editSlotAnchor === "topRight" || editSlotAnchor === "right" || editSlotAnchor === "bottomRight"
-          ? "right"
-          : "center",
-      vertical: editSlotAnchor === "topLeft" || editSlotAnchor === "top" || editSlotAnchor === "topRight"
-        ? "top"
-        : editSlotAnchor === "bottomLeft" || editSlotAnchor === "bottom" || editSlotAnchor === "bottomRight"
-          ? "bottom"
-          : "middle",
-    } satisfies NonNullable<PhiGridLayoutProps["anchor"]>;
-  }
-
-  return anchor;
-}
 
 function resolveGridSlotPlacementStyle(slot: ReactNode): CSSProperties {
   /*
@@ -179,11 +129,19 @@ export function PhiGridLayout({
    * the panel preset is exactly that and says its `0` out loud.
    */
   const resolvedColumnGap = normalizePhiCssSize(columnGap) ?? resolvedGap;
-  const resolvedPlacementAnchor = resolveGridPlacementAnchor(anchor, editSlotAnchor);
-  const resolvedAlignItems = resolveGridAnchorAlign(resolvedPlacementAnchor) ?? align;
-  const resolvedJustifyContent = resolveGridAnchorJustify(resolvedPlacementAnchor) ?? justify;
-  const slotCrossMargin = resolvePhiSlotCrossMargin(resolvedJustifyContent);
-  const fallbackSpan = PHI_GRID_LAYOUT_DEFAULT_SPAN;
+  /*
+   * One reading of the anchor, in the grid spelling, and the author's own `align`/`justify` wherever it
+   * says nothing. The edit anchor arrives as one of the nine words, where every axis is stated; the
+   * config anchor arrives as the pair, where an axis may be missing and stays missing.
+   */
+  const placement = resolvePhiPlacement(editSlotAnchor ?? anchor);
+  const resolvedAlignItems = phiGridPlacementWord(placement.block) ?? align;
+  const resolvedJustifyContent = phiGridPlacementWord(placement.inline) ?? justify;
+  const slotPlacementMargins = resolvePhiSlotPlacementMargins({
+    inline: phiPlacementFromWord(resolvedJustifyContent),
+    block: null,
+  });
+  const fallbackSpan = PHI_GRID_LAYOUT_DEFAULT_SPAN[responsiveProfile];
   const isEditMode = renderMode === "editor";
   const occupiedSlotIndices = slots.reduce<number[]>((next, slot, slotIndex) => {
     if (slot !== null && slot !== undefined && slot !== false) {
@@ -219,8 +177,7 @@ export function PhiGridLayout({
           alignItems: resolvedAlignItems,
           justifyContent: resolvedJustifyContent,
           // The same placement as margins, for a child stretched to the cell and capped; see the Layout contract.
-          [PHI_SLOT_CROSS_MARGIN_START_PROPERTY]: slotCrossMargin.start,
-          [PHI_SLOT_CROSS_MARGIN_END_PROPERTY]: slotCrossMargin.end,
+          ...slotPlacementMargins,
           ...(slotStyle ?? {}),
         } as CSSProperties}
       >

@@ -2,9 +2,9 @@ import type { CSSProperties, ReactNode } from "react";
 
 import {
   normalizePhiCssSize,
-  PHI_SLOT_CROSS_MARGIN_END_PROPERTY,
-  PHI_SLOT_CROSS_MARGIN_START_PROPERTY,
-  resolvePhiSlotCrossMargin,
+  phiFlexPlacementWord,
+  resolvePhiPlacement,
+  resolvePhiSlotPlacementMargins,
   type PhiLayoutEditRenderInsertControl,
   type PhiLayoutKind,
   } from "../phi-layout-contract";
@@ -68,30 +68,6 @@ export type PhiThreeColumnLayoutProps = {
   style?: CSSProperties;
 };
 
-function resolveThreeColumnAnchorAlignment(
-  anchor: PhiAnchorWidgetPlacement | null | undefined,
-  slotRole: "left" | "middle" | "right",
-) {
-  const horizontal =
-    slotRole === "left"
-      ? "flex-start"
-      : slotRole === "right"
-        ? "flex-end"
-        : anchor === "topLeft" || anchor === "left" || anchor === "bottomLeft"
-          ? "flex-start"
-          : anchor === "topRight" || anchor === "right" || anchor === "bottomRight"
-            ? "flex-end"
-            : "center";
-  const vertical =
-    anchor === "topLeft" || anchor === "top" || anchor === "topRight"
-      ? "flex-start"
-      : anchor === "bottomLeft" || anchor === "bottom" || anchor === "bottomRight"
-        ? "flex-end"
-        : "center";
-
-  return { horizontal, vertical };
-}
-
 function renderColumn(
   key: string,
   child: ReactNode,
@@ -108,20 +84,32 @@ function renderColumn(
   const isAuthoringRender = isPhiLayoutAuthoringRender({ editSlotAction });
   const resolvedWidth = normalizePhiCssSize(width);
   const hasContent = child !== null && child !== undefined && child !== false;
-  const { horizontal, vertical } = resolveThreeColumnAnchorAlignment(anchor, slotRole);
+  /*
+   * The outer columns do not listen to the anchor at all; only the middle one does. That is a role on
+   * one axis rather than a second ladder of the nine placements.
+   *
+   * No middle is invented: the kind declares one (`PHI_CENTRED_SLOT_DEFAULT_ANCHOR`), which is what
+   * this client used to reach by falling through its own ladder.
+   */
+  const placement = resolvePhiPlacement(
+    anchor,
+    slotRole === "left" ? "pinInlineStart" : slotRole === "right" ? "pinInlineEnd" : undefined,
+  );
+  const horizontal = phiFlexPlacementWord(placement.inline);
+  const vertical = phiFlexPlacementWord(placement.block);
   /*
    * The same placement again, as the margins a child that fills is moved by.
    *
    * `justify-content` only reaches a child that leaves room in the column. A child that fills -- or
    * caps itself and fills up to the cap -- is placed by the auto margins it reads off
-   * `--phi-slot-cross-margin-*` instead, and those inherit: a column stated none, so its children took
+   * `--phi-slot-inline-margin-*` instead, and those inherit: a column stated none, so its children took
    * whatever a Flex Vertical further up had handed down, and an auto margin beats the column's
    * `justify-content`. A left slot inside a centred column therefore centred.
    *
    * Every column states both, `0` included, which is what stops the inheritance rather than merely
    * correcting it here.
    */
-  const crossMargin = resolvePhiSlotCrossMargin(horizontal);
+  const placementMargins = resolvePhiSlotPlacementMargins({ inline: placement.inline, block: null });
 
   return (
     <div
@@ -142,8 +130,7 @@ function renderColumn(
         width: resolvedWidth,
         maxWidth: resolvedWidth,
         boxSizing: "border-box",
-        [PHI_SLOT_CROSS_MARGIN_START_PROPERTY]: crossMargin.start,
-        [PHI_SLOT_CROSS_MARGIN_END_PROPERTY]: crossMargin.end,
+        ...placementMargins,
       } as CSSProperties}
     >
       {hasContent ? (

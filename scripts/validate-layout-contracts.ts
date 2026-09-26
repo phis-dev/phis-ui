@@ -302,9 +302,22 @@ for (const layoutKind of layoutKinds) {
     new URL("../components/layouts/layout-definitions.ts", import.meta.url),
     "utf8",
   );
+  /*
+   * Read per definition block, not as two adjacent lines.
+   *
+   * The pattern used to require `layoutKind` on the line after `typeKey`, so adding any field between
+   * them dropped that definition out of the map and this assertion failed with "the definitions must
+   * expose their kind pairing" -- which was never true: the pairing was there, one line further down.
+   * A declaration order is not what this file is checking.
+   */
   const layoutKindByTypeKey = new Map(
-    [...definitionsSource.matchAll(/typeKey:\s*"([a-z-]+)",\s*\n\s*layoutKind:\s*"([a-z]+)"/gu)]
-      .map((match) => [match[1]!, match[2]!] as const),
+    [...definitionsSource.matchAll(/export const PHI_[A-Z0-9_]+_DEFINITION = \{([\s\S]*?)\n\} (?:as const|satisfies)/gu)]
+      .flatMap((block) => {
+        const body = block[1] ?? "";
+        const typeKey = /\n\s{2}typeKey:\s*"([a-z-]+)"/u.exec(body)?.[1];
+        const layoutKind = /\n\s{2}layoutKind:\s*"([a-z]+)"/u.exec(body)?.[1];
+        return typeKey && layoutKind ? [[typeKey, layoutKind] as const] : [];
+      }),
   );
   assert.ok(layoutKindByTypeKey.size >= 10, "The Layout definitions must expose their kind pairing.");
   const mismatches: string[] = [];

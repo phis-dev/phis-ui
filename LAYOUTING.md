@@ -231,10 +231,21 @@ The parent slot policy is authoritative; child defaults cannot override it.
   the container-breakpoint scale (theme/phi-container-breakpoints.ts), never against the viewport --
   one meaning of the three words across Grid, Form and block geometry. A block that really hangs on the
   window says so in `vw` units, not with a second set of profiles.
-- Every slot states `--phi-slot-cross-margin-start` and `--phi-slot-cross-margin-end` from its own
-  placement, `0` included (`resolvePhiSlotCrossMargin`). A child stretched to its slot and capped by a
-  maximum is placed by the auto margins it reads off them, and custom properties inherit: a slot that
-  states none hands its child the placement of whatever Layout stands above.
+- The anchor is read once. `resolvePhiPlacement` (components/layouts/phi-layout-contract.ts) answers
+  `{ inline, block }` in `start | center | end | null`, takes the anchor as either the nine placements
+  or the `{ horizontal, vertical }` pair, and takes a slot role as a modifier on one axis -- the outer
+  columns of a three-column Layout do not listen to the anchor, an overlay in the right-hand role reads
+  it mirrored. `phiFlexPlacementWord` and `phiGridPlacementWord` spell the answer; `null` means the
+  anchor said nothing and the Layout's own value stands, which is not the same as the middle.
+- A Layout kind declares its default anchor where kinds are declared, never in the component that draws
+  it. A kind that declares none keeps "no anchor", which stretches and starts.
+- Every slot states all four placement margins from its own placement, `0` included
+  (`resolvePhiSlotPlacementMargins`): `--phi-slot-inline-margin-start`/`-end` and
+  `--phi-slot-block-margin-start`/`-end`. A child stretched to its slot and capped by a maximum is
+  placed by the auto margins it reads off them, and custom properties inherit: a slot that states none
+  hands its child the placement of whatever Layout stands above. An auto margin places a box only where
+  its parent is a flex or grid container -- in block flow `margin-block: auto` computes to `0`, while
+  `margin-inline: auto` still centres a box of a definite width.
 
 ### Block geometry is read once
 
@@ -284,8 +295,16 @@ placement with a responsive `span` and `offset`, using the shared `compact`, `me
 profiles. `span` is an integer from `1` through `24`; `offset` is an integer from `0` through `23`,
 defaults to `0`, and counts unused columns before the slot in flow: slots stand in source order from the
 logical inline start, each after the one before it, and a slot that no longer fits starts the next row
-(`resolvePhiGridSlotColumns`). `offset + span` must not exceed `24` in any profile. Responsive values use
-the shared smaller-to-larger cascade.
+(`resolvePhiGridSlotColumns`). `offset + span` must not exceed `24` in any profile that states a span.
+Responsive values use the shared smaller-to-larger cascade.
+
+A slot that states no span takes the profile default, `PHI_GRID_LAYOUT_DEFAULT_SPAN` -- 24 at `compact`,
+12 at `medium`, 6 at `wide`: the whole row where there is no room to share, two abreast in the middle,
+four where the Grid is at least as wide as the content column. It was one constant for all three
+profiles, so a Grid whose slots carried no authored span never reflowed -- four abreast at 320px and at
+1600px alike, only narrower, because the tracks are `minmax(0, 1fr)`. Because the `compact` default fills
+the row, an offset has nothing to push into there and is clamped away; that is also why the rule above
+is stated of the profiles that name a span, rather than of an invented one.
 
 `gap` is the distance between slots on both axes; `columnGap` overrides it on the horizontal one and is
 what a Grid states that holds its rows apart and its columns flush. `gap` used to reach `row-gap` alone

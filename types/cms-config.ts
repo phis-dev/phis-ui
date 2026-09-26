@@ -555,10 +555,21 @@ function readGridSlotPlacement(value: unknown, slotIndexFromArray?: number): Phi
   const span = readGridResponsivePlacement(slot.span, 1, 24);
   const offset = readGridResponsivePlacement(slot.offset, 0, 23);
   if (!span && !offset) return null;
-  const resolvedSpan = {
-    compact: span?.compact ?? 6,
-    medium: span?.medium ?? span?.compact ?? 6,
-    wide: span?.wide ?? span?.medium ?? span?.compact ?? 6,
+  /*
+   * The rule is about two numbers an author stated, so a profile where no span was stated has nothing
+   * to check.
+   *
+   * A span of six used to be invented here for the check, matching the one constant the Grid fell back
+   * to. The fallback is a profile value now (`PHI_GRID_LAYOUT_DEFAULT_SPAN`, 24/12/6), and repeating it
+   * here would reject stored placements rather than describe them: at `compact` the default fills the
+   * row, so any stated offset beside an absent span would fail a rule the author never broke. What
+   * happens instead is what always happened to an offset with no room -- `resolvePhiGridSlotColumns`
+   * clamps it to the tracks that are left.
+   */
+  const statedSpan = {
+    compact: span?.compact,
+    medium: span?.medium ?? span?.compact,
+    wide: span?.wide ?? span?.medium ?? span?.compact,
   };
   const resolvedOffset = {
     compact: offset?.compact ?? 0,
@@ -566,7 +577,8 @@ function readGridSlotPlacement(value: unknown, slotIndexFromArray?: number): Phi
     wide: offset?.wide ?? offset?.medium ?? offset?.compact ?? 0,
   };
   for (const profile of ["compact", "medium", "wide"] as const) {
-    if (resolvedOffset[profile] + resolvedSpan[profile] > 24) {
+    const profileSpan = statedSpan[profile];
+    if (profileSpan != null && resolvedOffset[profile] + profileSpan > 24) {
       throw new Error(`Grid slot ${slotIndex} ${profile} offset plus span exceeds 24.`);
     }
   }

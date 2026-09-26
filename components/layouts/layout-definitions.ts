@@ -74,6 +74,20 @@ const PHI_FLEX_VERTICAL_LAYOUT_DEFAULT_ANCHOR = {
   vertical: "top",
 } as const;
 
+/*
+ * The middle four kinds draw when nobody has said otherwise.
+ *
+ * They drew it already -- a Stack, a Carousel, a Split Card and a three-column Layout all centre a slot
+ * that states no anchor -- but the middle was reached inside the anchored overlay, by an expression that
+ * ran when the anchor was absent. A default nobody declares is a default nobody can read, in the picker
+ * or in the Inspector, so it is stated here with the others. No pixel moves; the same centre now has an
+ * author.
+ */
+const PHI_CENTRED_SLOT_DEFAULT_ANCHOR = {
+  horizontal: "center",
+  vertical: "middle",
+} as const;
+
 export const PHI_CONTENT_LAYOUT_DEFINITION = {
   kind: "layout",
   pluginKey: resolvePhiCmsLayoutPluginKey("content"),
@@ -261,6 +275,7 @@ export const PHI_STACK_LAYOUT_DEFINITION = {
   pluginKey: resolvePhiCmsLayoutPluginKey("stack"),
   typeKey: "stack",
   layoutKind: "stack",
+  defaultAnchor: PHI_CENTRED_SLOT_DEFAULT_ANCHOR,
   slotSizePolicy: "fill",
   title: "Stack",
   description: "Single-active-slot layout for tabbed or step-like sections.",
@@ -348,6 +363,7 @@ export const PHI_CAROUSEL_LAYOUT_DEFINITION = {
   pluginKey: resolvePhiCmsLayoutPluginKey("carousel"),
   typeKey: "carousel",
   layoutKind: "carousel",
+  defaultAnchor: PHI_CENTRED_SLOT_DEFAULT_ANCHOR,
   slotSizePolicy: "fill",
   title: "Carousel",
   description: "A run of slots shown a few at a time, moving on their own or on a signal.",
@@ -501,6 +517,7 @@ export const PHI_SPLIT_CARD_LAYOUT_DEFINITION = {
   pluginKey: resolvePhiCmsLayoutPluginKey("split-card"),
   typeKey: "split-card",
   layoutKind: "split",
+  defaultAnchor: PHI_CENTRED_SLOT_DEFAULT_ANCHOR,
   slotSizePolicy: "fill",
   title: "Split Card",
   description: "Two-panel card layout with left and right slots.",
@@ -524,6 +541,7 @@ export const PHI_THREE_COLUMN_LAYOUT_DEFINITION = {
   pluginKey: resolvePhiCmsLayoutPluginKey("three-column"),
   typeKey: "three-column",
   layoutKind: "threecol",
+  defaultAnchor: PHI_CENTRED_SLOT_DEFAULT_ANCHOR,
   slotSizePolicy: "fill-inline",
   title: "Three Column",
   description: "Fixed left, middle and right slots.",

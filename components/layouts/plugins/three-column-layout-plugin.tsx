@@ -26,7 +26,7 @@ export const PHI_THREE_COLUMN_LAYOUT_PLUGIN: PhiCmsLayoutPlugin<PhiCmsThreeColum
       leftWidth={config.leftWidth}
       middleWidth={config.middleWidth}
       rightWidth={config.rightWidth}
-      editSlotAnchor={resolvePhiLayoutAnchor(config.anchor)}
+      editSlotAnchor={resolvePhiLayoutAnchor(config.anchor, PHI_THREE_COLUMN_LAYOUT_DEFINITION.defaultAnchor)}
       zIndex={config.zIndex}
       shadow={config.shadow}
       effect={config.effect}

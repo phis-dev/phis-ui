@@ -3,7 +3,28 @@ import type { CSSProperties, ReactNode } from "react";
 import type { PhiBaseLayoutProps } from "./phi-layout-view-model";
 import type { PhiRenderableBlockAnchor } from "../../types";
 import type { PhiAnchorWidgetPlacement } from "../controls/phi-anchor-control-contract";
-import type { PhiResponsiveValue } from "../../types/responsive";
+import type { PhiResolvedResponsiveValue, PhiResponsiveValue } from "../../types/responsive";
+
+/**
+ * What a slot spans when its Grid was never told.
+ *
+ * One constant for all three profiles stood here before -- six tracks, four per row -- and a Grid whose
+ * slots carry no authored span therefore never reflowed: four abreast at 320px and at 1600px alike,
+ * only narrower, because the 24 tracks are `minmax(0, 1fr)` and shrink. The wrapping that did happen was
+ * the cursor running past column 24, not an answer to the room.
+ *
+ * So the default is a profile value like every other placement: the whole row where there is no room to
+ * share, two abreast in the middle, four where the Grid is at least as wide as the content column. An
+ * author who names a span still names it and nothing here applies.
+ *
+ * At `compact` the row is full, so an offset has nothing left to push into and is clamped away. That is
+ * the answer rather than an accident: a slot cannot be indented in a room that holds one slot.
+ */
+export const PHI_GRID_LAYOUT_DEFAULT_SPAN: PhiResolvedResponsiveValue<number> = {
+  compact: 24,
+  medium: 12,
+  wide: 6,
+};
 
 export type PhiGridLayoutSlotPlacement = {
   slotIndex: number;

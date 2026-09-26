@@ -345,17 +345,23 @@ export function resolvePhiSlotChildBaseStyle(policy: PhiNormalizedSlotSizePolicy
     alignSelf: "auto",
     /*
      * And where a Layout stretched this child in order to give it a width, this is how it is still
-     * placed: the slot hands down `--phi-slot-cross-margin`, which is `auto` on the side the anchor
+     * placed: the slot hands down `--phi-slot-inline-margin`, which is `auto` on the side the anchor
      * pulls towards and `0` everywhere else. A child that fills edge to edge has no room to be moved
      * in and the auto margins come to nothing; a child that caps itself has, and lands where it was
      * asked to. `0` by default, so a child whose slot says nothing keeps the margins it always had.
      *
-     * Two longhands rather than the `marginInline` shorthand: React writes a shorthand out as two
-     * longhands on the server and keeps it whole in the browser, and the two trees then disagree on an
-     * attribute React will not patch up.
+     * Both axes, because a row that caps a child's height and anchors it to the bottom has the same
+     * room left over as a column that caps its width. The properties were named `cross` while they
+     * only ever wrote `margin-inline`, and under that name the missing half went unnoticed.
+     *
+     * Two longhands per axis rather than the `marginInline` shorthand: React writes a shorthand out as
+     * two longhands on the server and keeps it whole in the browser, and the two trees then disagree on
+     * an attribute React will not patch up.
      */
-    marginInlineStart: "var(--phi-slot-cross-margin-start, 0)",
-    marginInlineEnd: "var(--phi-slot-cross-margin-end, 0)",
+    marginInlineStart: "var(--phi-slot-inline-margin-start, 0)",
+    marginInlineEnd: "var(--phi-slot-inline-margin-end, 0)",
+    marginBlockStart: "var(--phi-slot-block-margin-start, 0)",
+    marginBlockEnd: "var(--phi-slot-block-margin-end, 0)",
     ...(policy.inline === "fill" ? { width: "100%" } : policy.inline === "intrinsic" ? { width: "fit-content" } : {}),
     ...(policy.block === "fill" ? { height: "100%" } : policy.block === "intrinsic" ? { height: "fit-content" } : {}),
   };

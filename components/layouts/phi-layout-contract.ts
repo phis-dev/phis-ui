@@ -309,44 +309,175 @@ export function resolvePhiLayoutAnchor(
 }
 
 /**
- * The custom properties a slot hands its children, so a stretched one can still be placed.
+ * Where an anchor puts a child, on one axis, before anybody has spelled it.
  *
- * Two, not one shorthand. React expands a `marginInline` shorthand into two longhands when it renders
- * on the server and leaves it whole in the browser, so the two trees disagree on an attribute that is
- * never patched up -- a hydration mismatch for a margin that was only ever `auto` or `0`.
+ * Every Layout asked this question in its own words -- Flex in `flex-start`, Grid in `start`, the
+ * three-column client and the anchored overlay each with a hand-written ladder of the nine placements
+ * -- and the four answers differed in three ways that are real (the spelling, which axis is the main
+ * one, and a slot role that overrides or mirrors an axis) and in one that is not: what an unstated
+ * axis means. `null` is that case, kept apart from `center` so a caller can answer it for itself
+ * rather than be handed a middle it never asked for.
  */
-export const PHI_SLOT_CROSS_MARGIN_START_PROPERTY = "--phi-slot-cross-margin-start";
-export const PHI_SLOT_CROSS_MARGIN_END_PROPERTY = "--phi-slot-cross-margin-end";
+export type PhiAxisPlacement = "start" | "center" | "end";
+
+export type PhiPlacement = {
+  inline: PhiAxisPlacement | null;
+  block: PhiAxisPlacement | null;
+};
 
 /**
- * How a child that fills the cross axis is placed on it, given where the Layout wanted it.
+ * What a slot role does to the inline axis.
  *
- * Stretching and placing are two different jobs that `align-items` cannot do at once. A child that
- * fills has to be stretched, or its own `width: 100%` has nothing to measure against and collapses to
- * nothing. A child that fills *up to a cap* is stretched as well -- and then leaves room over, which is
- * where the Layout's anchor gets its say again: an auto margin pulls it into the middle or to the end
- * of the room the cap left, and a child that fills edge to edge has no room to be moved in, so the
- * auto margins come to nothing.
- *
- * Handed down as custom properties rather than applied here, because the child is not always the slot's
- * own element -- a Visibility Gate sits between them as `display: contents`, and custom properties
- * inherit straight through that while a child selector would stop at it. Every slot states them, `0`
- * included, so a nested Layout never inherits the placement of the one above it -- and "every slot"
- * means every one: a Content Layout that stated none put a left-anchored Markdown block in the middle,
- * because the auto margins it read were a Flex Vertical's further up, and an auto margin beats the
- * `justify-content` of the box the child actually stands in.
- *
- * Takes either spelling of a placement, the flex one (`flex-end`) and the grid one (`end`).
+ * The outer columns of a three-column Layout do not listen to the anchor at all, and an overlay in the
+ * right-hand role reads the anchor mirrored -- its "left" is the row's right. Both were written out as
+ * a second ladder beside the first; here they are what they are, a modifier on one axis.
  */
-export function resolvePhiSlotCrossMargin(
-  placement: CSSProperties["alignItems"] | CSSProperties["justifyContent"],
-) {
-  const centred = placement === "center";
-  const atEnd = placement === "flex-end" || placement === "end";
+export type PhiPlacementRole = "mirrorInline" | "pinInlineStart" | "pinInlineEnd";
+
+const PHI_PLACEMENT_BY_ANCHOR: Record<PhiAnchorWidgetPlacement, PhiPlacement> = {
+  topLeft: { inline: "start", block: "start" },
+  top: { inline: "center", block: "start" },
+  topRight: { inline: "end", block: "start" },
+  left: { inline: "start", block: "center" },
+  center: { inline: "center", block: "center" },
+  right: { inline: "end", block: "center" },
+  bottomLeft: { inline: "start", block: "end" },
+  bottom: { inline: "center", block: "end" },
+  bottomRight: { inline: "end", block: "end" },
+};
+
+function mirrorPhiAxisPlacement(placement: PhiAxisPlacement | null): PhiAxisPlacement | null {
+  return placement === "start" ? "end" : placement === "end" ? "start" : placement;
+}
+
+/**
+ * The anchor read once, in both spellings it arrives in.
+ *
+ * A `PhiRenderableBlockAnchor` still shows which axes were stated, and that is why it is taken as it
+ * is rather than through `resolvePhiAnchorWidgetPlacement`: that function answers the nine-word
+ * vocabulary, where every axis has a value, so it has to invent `center` for an axis nobody named.
+ * The nine words themselves are therefore always fully stated, and only the pair can carry a `null`.
+ */
+export function resolvePhiPlacement(
+  anchor: PhiAnchorWidgetPlacement | PhiRenderableBlockAnchor | null | undefined,
+  role?: PhiPlacementRole,
+): PhiPlacement {
+  const stated: PhiPlacement =
+    anchor == null
+      ? { inline: null, block: null }
+      : typeof anchor === "string"
+        ? PHI_PLACEMENT_BY_ANCHOR[anchor]
+        : {
+            inline:
+              anchor.horizontal === "left"
+                ? "start"
+                : anchor.horizontal === "right"
+                  ? "end"
+                  : anchor.horizontal === "center"
+                    ? "center"
+                    : null,
+            block:
+              anchor.vertical === "top"
+                ? "start"
+                : anchor.vertical === "bottom"
+                  ? "end"
+                  : anchor.vertical === "middle"
+                    ? "center"
+                    : null,
+          };
+
+  if (role === "pinInlineStart") {
+    return { inline: "start", block: stated.block };
+  }
+
+  if (role === "pinInlineEnd") {
+    return { inline: "end", block: stated.block };
+  }
+
+  if (role === "mirrorInline") {
+    return { inline: mirrorPhiAxisPlacement(stated.inline), block: stated.block };
+  }
+
+  return stated;
+}
+
+/** The flex spelling, and `undefined` where the anchor said nothing, so a caller's own value stands. */
+export function phiFlexPlacementWord(placement: PhiAxisPlacement | null) {
+  return placement === "start"
+    ? "flex-start"
+    : placement === "end"
+      ? "flex-end"
+      : placement === "center"
+        ? "center"
+        : undefined;
+}
+
+/** The grid spelling, and `undefined` where the anchor said nothing. */
+export function phiGridPlacementWord(placement: PhiAxisPlacement | null) {
+  return placement ?? undefined;
+}
+
+/**
+ * The custom properties a slot hands its children, so a stretched one can still be placed.
+ *
+ * Two per axis, not one shorthand. React expands a `marginInline` shorthand into two longhands when it
+ * renders on the server and leaves it whole in the browser, so the two trees disagree on an attribute
+ * that is never patched up -- a hydration mismatch for a margin that was only ever `auto` or `0`.
+ *
+ * They were named `cross` while they only ever wrote `margin-inline`, which is the cross axis of a
+ * column and the main axis of a row -- the Grid handed its `justify-content` to the same pair. Under
+ * that name nobody noticed that one of the two axes had no properties at all, so a row that caps a
+ * child's height and anchors it to the bottom could not place it. Named by the axis they write, both
+ * exist.
+ */
+export const PHI_SLOT_INLINE_MARGIN_START_PROPERTY = "--phi-slot-inline-margin-start";
+export const PHI_SLOT_INLINE_MARGIN_END_PROPERTY = "--phi-slot-inline-margin-end";
+export const PHI_SLOT_BLOCK_MARGIN_START_PROPERTY = "--phi-slot-block-margin-start";
+export const PHI_SLOT_BLOCK_MARGIN_END_PROPERTY = "--phi-slot-block-margin-end";
+
+function phiAxisMargins(placement: PhiAxisPlacement | null) {
   return {
-    start: centred || atEnd ? "auto" : "0",
-    end: centred ? "auto" : "0",
+    start: placement === "center" || placement === "end" ? "auto" : "0",
+    end: placement === "center" ? "auto" : "0",
   };
+}
+
+/**
+ * A placement as the four margins that carry it out, for a slot to hand down.
+ *
+ * An auto margin on the cross axis of a flex line overrides `align-self`, and that is harmless here: a
+ * child that fills takes its measurement from the `width` or `height` of `100%` its frame writes, not
+ * from being stretched, so there is nothing for the override to take away.
+ */
+export function resolvePhiSlotPlacementMargins(placement: PhiPlacement) {
+  const inline = phiAxisMargins(placement.inline);
+  const block = phiAxisMargins(placement.block);
+
+  return {
+    [PHI_SLOT_INLINE_MARGIN_START_PROPERTY]: inline.start,
+    [PHI_SLOT_INLINE_MARGIN_END_PROPERTY]: inline.end,
+    [PHI_SLOT_BLOCK_MARGIN_START_PROPERTY]: block.start,
+    [PHI_SLOT_BLOCK_MARGIN_END_PROPERTY]: block.end,
+  } as const;
+}
+
+/**
+ * An alignment word read back as a placement.
+ *
+ * A Layout whose author set `align` or `justify` directly has a placement too, it just arrived already
+ * spelled. Anything that distributes rather than places -- `space-between` and its kin -- names no side
+ * and reads as nothing stated.
+ */
+export function phiPlacementFromWord(
+  word: CSSProperties["justifyContent"] | CSSProperties["alignItems"],
+): PhiAxisPlacement | null {
+  return word === "center"
+    ? "center"
+    : word === "end" || word === "flex-end"
+      ? "end"
+      : word === "start" || word === "flex-start"
+        ? "start"
+        : null;
 }
 
 export function resolvePhiFlexAxisAlignment(

@@ -1,9 +1,7 @@
 import type { PhiCmsLayoutPlugin } from "../../../types";
 import type { PhiCmsSplitCardLayoutConfig } from "../../../types/cms-config";
 import { parsePhiCmsSplitCardLayoutConfig } from "../../../types/cms-config";
-import {
-  resolvePhiAnchorPlacement,
-} from "../phi-layout-contract";
+import { resolvePhiLayoutAnchor } from "../phi-layout-contract";
 import { PhiSplitCardLayout } from "../phi-split-card-layout";
 import { definePhiLayoutRenderers } from "../layout-plugin-renderers";
 import { PHI_SPLIT_CARD_LAYOUT_DEFINITION } from "../layout-definitions";
@@ -32,7 +30,7 @@ export const PHI_SPLIT_CARD_LAYOUT_PLUGIN: PhiCmsLayoutPlugin<PhiCmsSplitCardLay
       borderRadius={config.borderRadius}
       labelEnd={config.labelEnd}
       effect={config.effect}
-      editSlotAnchor={config.anchor ? resolvePhiAnchorPlacement(config.anchor) : undefined}
+      editSlotAnchor={resolvePhiLayoutAnchor(config.anchor, PHI_SPLIT_CARD_LAYOUT_DEFINITION.defaultAnchor)}
       leftPadding={config.leftPadding}
       rightPadding={config.rightPadding}
       leftBackground={config.leftBackground}
