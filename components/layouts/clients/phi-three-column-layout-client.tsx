@@ -13,7 +13,11 @@ import { resolvePhiBaseLayoutChrome } from "../phi-layout-view-model";
 import { resolvePhiLayoutDefaults } from "../../../helpers/cms-layout-defaults";
 import { PHI_CMS_THREE_COLUMN_LAYOUT_SLOTS } from "../../../constants/cms-layout-types";
 import type { PhiAnchorWidgetPlacement } from "../../controls/phi-anchor-control-contract";
-import type { PhiRenderableBlockRenderMode, PhiRenderableBlockSize } from "../../../types";
+import type {
+  PhiRenderableBlockRenderMode,
+  PhiRenderableBlockResponsiveSize,
+  PhiRenderableBlockSize,
+} from "../../../types";
 import type { PhiShadow, PhiLayoutEffectId } from "../../../types/layout-style";
 import type { PhiCmsBorderSource } from "../../../types/cms-config";
 import {
@@ -37,9 +41,9 @@ export type PhiThreeColumnLayoutProps = {
   leftWidth?: CSSProperties["width"];
   middleWidth?: CSSProperties["width"];
   rightWidth?: CSSProperties["width"];
-  size?: PhiRenderableBlockSize | null;
-  minSize?: PhiRenderableBlockSize | null;
-  maxSize?: PhiRenderableBlockSize | null;
+  size?: PhiRenderableBlockResponsiveSize | null;
+  minSize?: PhiRenderableBlockResponsiveSize | null;
+  maxSize?: PhiRenderableBlockResponsiveSize | null;
   collapsedSizeHint?: PhiRenderableBlockSize | null;
   renderMode?: PhiRenderableBlockRenderMode;
   zIndex?: number;

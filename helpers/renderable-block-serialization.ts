@@ -526,7 +526,10 @@ function normalizeRenderableBlockBase(value: unknown): PhiRenderableBlockBase {
   };
 }
 
-function stripRenderableBlockSize(value: PhiRenderableBlockSize | null | undefined) {
+/* Generic over the length: the same stripping serves a profile pair and a plain one. */
+function stripRenderableBlockSize<TLength>(
+  value: { width?: TLength | null; height?: TLength | null } | null | undefined,
+) {
   if (!value) {
     return undefined;
   }

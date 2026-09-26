@@ -104,3 +104,73 @@ describe("a block's geometry, read once", () => {
     expect(second).toEqual(first);
   });
 });
+
+/*
+ * A length may name a value per profile, and the base answer is the one that was always there.
+ *
+ * `inline` and `block` stay the `compact` reading, so every reader that existed before profiles keeps
+ * reading exactly what it read; the other two stand beside them and only where a field names more than
+ * one. Designed in design/RESPONSIVE_BLOCK_GEOMETRY.md.
+ */
+describe("a length stated per profile", () => {
+  it("leaves a plain config alone and states no profiles for it", () => {
+    const geometry = resolvePhiRenderableBlockGeometry({ size: { width: 610 }, maxSize: { width: "40rem" } });
+    expect(geometry.inline.size?.css).toBe("610px");
+    expect(geometry.inline.max?.css).toBe("40rem");
+    expect(geometry.profiles).toBeNull();
+  });
+
+  it("reads the base from compact and the other two beside it", () => {
+    const geometry = resolvePhiRenderableBlockGeometry({
+      size: { width: { compact: "100%", medium: "50%", wide: 610 } },
+    });
+    expect(geometry.inline.size?.css).toBe("100%");
+    expect(geometry.profiles?.medium.inline.size?.css).toBe("50%");
+    expect(geometry.profiles?.wide.inline.size?.css).toBe("610px");
+  });
+
+  it("cascades upward, so a profile nobody named takes the one below it", () => {
+    const geometry = resolvePhiRenderableBlockGeometry({
+      maxSize: { width: { compact: "100%", wide: 610 } },
+    });
+    expect(geometry.inline.max?.css).toBe("100%");
+    expect(geometry.profiles?.medium.inline.max?.css).toBe("100%");
+    expect(geometry.profiles?.wide.inline.max?.css).toBe("610px");
+  });
+
+  it("states nothing below the profile that first names a value", () => {
+    const geometry = resolvePhiRenderableBlockGeometry({ size: { width: { wide: 610 } } });
+    expect(geometry.inline.size).toBeNull();
+    expect(geometry.profiles?.medium.inline.size).toBeNull();
+    expect(geometry.profiles?.wide.inline.size?.css).toBe("610px");
+  });
+
+  /*
+   * A slot policy and the attribute that carries it are resolved once on the server, and CSS can vary a
+   * width but not an attribute. So "explicit" is a property of the block as a whole.
+   */
+  it("calls an axis explicit where any profile names a size", () => {
+    expect(resolvePhiRenderableBlockGeometry({ size: { width: { wide: 610 } } }).explicitInline).toBe(true);
+    expect(resolvePhiRenderableBlockGeometry({ size: { height: { medium: 240 } } }).explicitBlock).toBe(true);
+    expect(resolvePhiRenderableBlockGeometry({ maxSize: { width: { wide: 610 } } }).explicitInline).toBe(false);
+  });
+
+  it("keeps one axis plain while the other names profiles", () => {
+    const geometry = resolvePhiRenderableBlockGeometry({
+      size: { width: { compact: "100%", wide: 610 }, height: 240 },
+    });
+    expect(geometry.block.size?.css).toBe("240px");
+    expect(geometry.profiles?.wide.block.size?.css).toBe("240px");
+    expect(geometry.profiles?.wide.inline.size?.css).toBe("610px");
+  });
+
+  it("still measures a collapsed block by its plain hint", () => {
+    const geometry = resolvePhiRenderableBlockGeometry({
+      visibility: "collapsed",
+      size: { height: { compact: 400, wide: 800 } },
+      collapsedSizeHint: { height: 48 },
+    });
+    expect(geometry.block.size?.css).toBe("48px");
+    expect(geometry.profiles).toBeNull();
+  });
+});

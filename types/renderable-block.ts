@@ -3,14 +3,42 @@ import type { CSSProperties } from "react";
 import type { PhiCmsInstanceId } from "./cms-instance-id";
 import type { PhiViewerAccessPolicy, PhiViewportFlags } from "./access";
 import type { PhiShadow, PhiLayoutEffectId } from "./layout-style";
+import type { PhiResponsiveValue } from "./responsive";
 
 export type PhiRenderableBlockRenderMode = "live" | "preview" | "editor";
 
 export type PhiRenderableBlockVisibility = "hidden" | "collapsed" | "visible";
 
+/**
+ * A pair of lengths, plain: what a Signal sets and what the dimension Control edits.
+ *
+ * It stays plain on purpose. A Signal names a length, not a profile, and setting one replaces that axis
+ * wherever the block stated it.
+ */
 export type PhiRenderableBlockSize = {
   width?: number | string | null;
   height?: number | string | null;
+};
+
+/**
+ * One length, at one profile or at all of them.
+ *
+ * The profile sits on the leaf rather than on the field. The alternative --
+ * `PhiResponsiveValue<PhiRenderableBlockSize>` -- makes an author restate a height that never changes
+ * and turns the field into a union of two object shapes that have to be told apart by their keys. On
+ * the leaf, every stored config stays valid and means "the same at every profile", and the axis stays
+ * the unit an author thinks in: usually exactly one of the two varies.
+ *
+ * `PhiResponsiveValue` is the house form, the one the Grid already uses for `span` and `offset`, with
+ * the same smaller-to-larger cascade: `compact` is the base, `medium` falls back to it, `wide` to
+ * `medium`. Designed in design/RESPONSIVE_BLOCK_GEOMETRY.md.
+ */
+export type PhiResponsiveLength = number | string | PhiResponsiveValue<number | string> | null;
+
+/** The same pair as a block stores it, where each axis may name a value per profile. */
+export type PhiRenderableBlockResponsiveSize = {
+  width?: PhiResponsiveLength;
+  height?: PhiResponsiveLength;
 };
 
 export type PhiRenderableBlockAnchorHorizontal = "left" | "center" | "right";
@@ -171,9 +199,10 @@ export type PhiRenderableBlockBase = {
   effect?: PhiLayoutEffectId;
   shadow?: PhiShadow;
   className?: string;
-  size?: PhiRenderableBlockSize;
-  minSize?: PhiRenderableBlockSize;
-  maxSize?: PhiRenderableBlockSize;
+  size?: PhiRenderableBlockResponsiveSize;
+  minSize?: PhiRenderableBlockResponsiveSize;
+  maxSize?: PhiRenderableBlockResponsiveSize;
+  /** Plain: a collapsed block is not laid out, so one substitute measurement is enough. */
   collapsedSizeHint?: PhiRenderableBlockSize;
   effects?: PhiRenderableBlockEffects;
 };

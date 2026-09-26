@@ -2,7 +2,11 @@
 
 import { Divider, Flex, Typography } from "antd";
 
-import type { PhiRenderableBlockSize } from "../../types/renderable-block";
+import type {
+  PhiRenderableBlockResponsiveSize,
+  PhiRenderableBlockSize,
+  PhiResponsiveLength,
+} from "../../types/renderable-block";
 import {
   normalizePhiGeometryWidgetConfig,
   type PhiCmsGeometryWidgetConfig,
@@ -31,26 +35,44 @@ export type PhiGeometryControlProps = {
   onChange?: (value: PhiCmsGeometryWidgetConfig) => void;
 };
 
-function readSizeFromGeometryConfig(config: PhiCmsGeometryWidgetConfig): PhiRenderableBlockSize {
+/**
+ * The base length of a stored one, and the way back.
+ *
+ * A stored length may name a value per profile (`PhiResponsiveLength`). This Control edits one value,
+ * so it shows the base -- `compact`, the answer a narrow room gets -- and writes back into that entry
+ * alone, leaving `medium` and `wide` where the author put them. Editing a profile value is the
+ * Control's own step, designed in design/RESPONSIVE_BLOCK_GEOMETRY.md; until it exists, the rule here
+ * is that this Control never silently flattens what it cannot show.
+ */
+function readBaseLength(value: PhiResponsiveLength | undefined) {
+  return typeof value === "object" && value !== null ? value.compact ?? null : value ?? null;
+}
+
+function writeBaseLength(
+  stored: PhiResponsiveLength | undefined,
+  next: number | string | null | undefined,
+): PhiResponsiveLength {
+  if (typeof stored === "object" && stored !== null) {
+    return next == null ? { ...stored, compact: undefined } : { ...stored, compact: next };
+  }
+
+  return next ?? null;
+}
+
+function readBasePair(pair: PhiRenderableBlockResponsiveSize | undefined): PhiRenderableBlockSize {
   return {
-    width: config.size?.width ?? null,
-    height: config.size?.height ?? null,
+    width: readBaseLength(pair?.width),
+    height: readBaseLength(pair?.height),
   };
 }
 
-function readConstraintSizeFromGeometryConfig(
-  config: PhiCmsGeometryWidgetConfig,
-  kind: "min" | "max",
-): PhiRenderableBlockSize {
-  return kind === "min"
-    ? {
-        width: config.minSize?.width ?? null,
-        height: config.minSize?.height ?? null,
-      }
-    : {
-        width: config.maxSize?.width ?? null,
-        height: config.maxSize?.height ?? null,
-  };
+function writeBasePair(
+  stored: PhiRenderableBlockResponsiveSize | undefined,
+  next: PhiRenderableBlockSize | null | undefined,
+): PhiRenderableBlockResponsiveSize | undefined {
+  const width = writeBaseLength(stored?.width, next?.width);
+  const height = writeBaseLength(stored?.height, next?.height);
+  return width == null && height == null ? undefined : { width, height };
 }
 
 function formatSizeValue(size: PhiRenderableBlockSize | null | undefined) {
@@ -90,9 +112,9 @@ export function PhiGeometryControl({
 }: PhiGeometryControlProps) {
   const currentValue = normalizePhiGeometryWidgetConfig(value ?? config ?? null);
   const isDisabled = disabled || !onChange;
-  const currentSize = readSizeFromGeometryConfig(currentValue);
-  const currentMinSize = readConstraintSizeFromGeometryConfig(currentValue, "min");
-  const currentMaxSize = readConstraintSizeFromGeometryConfig(currentValue, "max");
+  const currentSize = readBasePair(currentValue.size);
+  const currentMinSize = readBasePair(currentValue.minSize);
+  const currentMaxSize = readBasePair(currentValue.maxSize);
 
   function emit(nextValue: PhiCmsGeometryWidgetConfig) {
     onChange?.(nextValue);
@@ -192,7 +214,7 @@ export function PhiGeometryControl({
           onChange={(nextSize) =>
             emit({
               ...currentValue,
-              size: nextSize ?? undefined,
+              size: writeBasePair(currentValue.size, nextSize),
             })
           }
         />,
@@ -206,7 +228,7 @@ export function PhiGeometryControl({
           onChange={(nextSize) =>
             emit({
               ...currentValue,
-              minSize: nextSize ?? undefined,
+              minSize: writeBasePair(currentValue.minSize, nextSize),
             })
           }
         />,
@@ -220,7 +242,7 @@ export function PhiGeometryControl({
           onChange={(nextSize) =>
             emit({
               ...currentValue,
-              maxSize: nextSize ?? undefined,
+              maxSize: writeBasePair(currentValue.maxSize, nextSize),
             })
           }
         />,

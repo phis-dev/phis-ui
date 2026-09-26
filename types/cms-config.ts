@@ -32,7 +32,7 @@ import {
 import type {
   PhiRenderableBlockBase,
   PhiRenderableBlockAnchor,
-  PhiRenderableBlockSize,
+  PhiRenderableBlockResponsiveSize,
 } from "./renderable-block";
 import {
   isPhiLayoutEffectId,
@@ -326,7 +326,7 @@ export function expandPhiBorderRadiusConfig(value: unknown): PhiCmsBorderWidgetC
 }
 
 export type PhiCmsContentLayoutConfig = PhiCmsLayerBase & {
-  size?: PhiRenderableBlockSize;
+  size?: PhiRenderableBlockResponsiveSize;
   margin?: CSSProperties["margin"];
   anchor?: PhiRenderableBlockAnchor;
   padding?: CSSProperties["padding"];

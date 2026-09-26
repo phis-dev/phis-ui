@@ -33,6 +33,7 @@ const geometryReaders = new Map([
   ["plugins/runtime-modules/builder/render-root-node-scaffold.tsx", "the Builder root scaffold"],
   ["plugins/runtime-modules/builder/widgets/structure-region/built-in.tsx", "a Region slot on the Structure Canvas"],
   ["plugins/runtime-modules/builder/widgets/hello-world/client.tsx", "the Hello World Widget's own minimum height"],
+  ["plugins/runtime-modules/core/widgets/icon/client.tsx", "the glyph's measurement, which is the block's size field doing double duty"],
   ["plugins/runtime-modules/core/widgets/header-navigation/plugin.tsx", "the Header Region's height, handed to the navigation"],
   ["plugins/runtime-modules/core/widgets/header-navigation/authoring.tsx", "the Header Region's height, handed to the navigation editor"],
 ]);
@@ -47,7 +48,6 @@ const structuralReaders = new Map([
   ["plugins/runtime-modules/core/widgets/html/config.ts", "Widget defaults filled in where the config states none"],
   ["plugins/runtime-modules/core/widgets/form/config.ts", "the reading measure a Form is capped at where the placement states no width"],
   ["plugins/runtime-modules/core/widgets/simple-text/config.ts", "Widget defaults filled in where the config states none"],
-  ["plugins/runtime-modules/core/widgets/icon/client.tsx", "the glyph size, a number the Icon Control takes, not a box"],
 ]);
 
 const fieldReadPattern = /\b(size|minSize|maxSize|collapsedSizeHint)\??\.(width|height)\b/;

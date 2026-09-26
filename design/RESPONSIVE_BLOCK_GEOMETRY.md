@@ -1,9 +1,15 @@
 # Responsive block geometry design
 
-Every renderable block states `size`, `minSize` and `maxSize` as one value per axis, and that value is
+Every renderable block states `size`, `minSize` and `maxSize` as one value per axis, and that value was
 the same in a 320px column and in a 1600px Region. This document is the design for letting a block name
-a value per profile. It is not built, and building it changes `PhiRenderableBlockBase`, so it requires
-operator approval.
+a value per profile.
+
+**Step one is built (2026-09-26): the stored form and the resolver.** A length may name a value per
+profile, the resolver hands back the `compact` answer where it always handed back the only answer, and
+the other two stand beside it in `profiles`. Nothing renders differently yet -- no container is
+declared, no stylesheet reads the properties, and the Inspector still edits one value -- so a config
+that names no profile is byte for byte the config it was, and its rendering is unchanged. The rest of
+this document is still design, and the remaining steps are listed under "Order".
 
 The decision it rests on is recorded in [TODOS.md](../TODOS.md) under "One resolver for block geometry":
 **a profile is measured against the room the block is offered, and CSS decides it -- nothing measures.**
@@ -244,8 +250,13 @@ without either noticing. An unnamed container would be caught by unnamed queries
 
 ## Order
 
-The resolver and the types first, with the frame still writing exactly what it writes today for a block
-that names no profile -- that step moves no pixel and can be verified as such. Then the container
-declarations and the stylesheet, then the Inspector control. The Grid's missing per-profile default
+**Done:** the types and the resolver, with the frame still writing exactly what it writes today for a
+block that names no profile. That step moved no pixel and is verified as such -- `PhiResponsiveLength`
+and `PhiRenderableBlockResponsiveSize` in types/renderable-block.ts, `profiles` on the resolved
+geometry, `readResponsiveCssSize` in the config parser so a stored profile value survives
+normalisation, and the geometry Control reading and writing the `compact` entry alone rather than
+flattening what it cannot show.
+
+**Next:** the container declarations and the stylesheet, then the Inspector control. The Grid's missing per-profile default
 (`PHI_GRID_LAYOUT_DEFAULT_SPAN`, one constant for all three profiles) is a separate item in TODOS.md and
 uses the same `PhiResponsiveValue` form; it is not a dependency in either direction.

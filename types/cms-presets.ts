@@ -5,6 +5,7 @@ import type { PhiCmsInstanceId } from "./cms-instance-id";
 import type { PhiCmsContainerChromeConfig } from "./cms-container";
 import type {
   PhiRenderableBlockEffects,
+  PhiRenderableBlockResponsiveSize,
   PhiRenderableBlockSize,
   PhiRenderableBlockVisibility,
 } from "./renderable-block";
@@ -53,9 +54,9 @@ export type PhiCmsRegionConfig = Record<string, unknown> & PhiCmsContainerChrome
   centered?: boolean;
   mobileOnly?: boolean;
   desktopOnly?: boolean;
-  size?: PhiRenderableBlockSize;
-  minSize?: PhiRenderableBlockSize;
-  maxSize?: PhiRenderableBlockSize;
+  size?: PhiRenderableBlockResponsiveSize;
+  minSize?: PhiRenderableBlockResponsiveSize;
+  maxSize?: PhiRenderableBlockResponsiveSize;
   collapsedSizeHint?: PhiRenderableBlockSize;
   opacity?: number;
   effects?: PhiRenderableBlockEffects;

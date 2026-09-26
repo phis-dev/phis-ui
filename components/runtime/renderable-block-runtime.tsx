@@ -182,7 +182,13 @@ function resolvePhiRenderableBlockSignalScope(
     : resolvePhiRenderableBlockReceiverScope(receiver, explicitScope);
 }
 
-function normalizePhiRenderableBlockSize(value: PhiRenderableBlockSize | null | undefined) {
+/*
+ * Generic over the length, because the same stripping serves both pairs: a block's `size` may name a
+ * value per profile, its `collapsedSizeHint` may not, and this only ever drops an empty pair.
+ */
+function normalizePhiRenderableBlockSize<TLength>(
+  value: { width?: TLength | null; height?: TLength | null } | null | undefined,
+) {
   if (!value || typeof value !== "object") {
     return undefined;
   }

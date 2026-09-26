@@ -8,6 +8,7 @@ import {
 import type {
   PhiRenderableBlockRenderMode,
   PhiRenderableBlockAnchor,
+  PhiRenderableBlockResponsiveSize,
   PhiRenderableBlockSize,
 } from "../../types";
 import type { PhiShadow, PhiLayoutEffectId } from "../../types/layout-style";
@@ -19,9 +20,9 @@ import {
 import { PHI_THEME_BORDER_LINE } from "../../helpers/border-widget-style";
 
 export type PhiLayoutProps = {
-  size?: PhiRenderableBlockSize;
-  minSize?: PhiRenderableBlockSize;
-  maxSize?: PhiRenderableBlockSize;
+  size?: PhiRenderableBlockResponsiveSize;
+  minSize?: PhiRenderableBlockResponsiveSize;
+  maxSize?: PhiRenderableBlockResponsiveSize;
   collapsedSizeHint?: PhiRenderableBlockSize;
   renderMode?: PhiRenderableBlockRenderMode;
   layoutKind?: PhiLayoutKind;

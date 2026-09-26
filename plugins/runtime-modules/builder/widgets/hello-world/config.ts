@@ -2,7 +2,7 @@ import { resolvePhiCmsWidgetPluginKey } from "../../../../../constants/cms-widge
 import { PhiCmsWidgetType } from "../../../../../constants/cms-widget-types";
 import { PHI_WIDGET_DIMENSION_PLUGIN_FIELDS } from "../../../../../helpers/widget-dimension-plugin-fields";
 import type { PhiCmsWidgetPlugin } from "../../../../../types";
-import type { PhiRenderableBlockSize } from "../../../../../types/renderable-block";
+import type { PhiRenderableBlockResponsiveSize } from "../../../../../types/renderable-block";
 import {
   readCssSize,
   readRenderableBlockConfig,
@@ -11,7 +11,7 @@ import {
 } from "../../../../../components/widgets/config/parser-primitives";
 
 export type PhiCmsHelloWorldWidgetConfig = PhiCmsWidgetConfigBase & {
-  size?: PhiRenderableBlockSize;
+  size?: PhiRenderableBlockResponsiveSize;
 };
 
 export function parsePhiCmsHelloWorldWidgetConfig(

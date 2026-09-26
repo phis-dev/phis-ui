@@ -1,5 +1,5 @@
 import { readPhiLengthValue, type PhiCssLength } from "../../../types";
-import type { PhiRenderableBlockSize } from "../../../types/renderable-block";
+import type { PhiRenderableBlockResponsiveSize } from "../../../types/renderable-block";
 import type { PhiViewportFlags } from "../../../types/access";
 import { normalizePhiViewportFlags } from "../../../types/access";
 import { readBoolean, readInteger, readRenderableBlockSize } from "./parser-primitives";
@@ -7,9 +7,9 @@ import { readBoolean, readInteger, readRenderableBlockSize } from "./parser-prim
 export type PhiCmsGeometryWidgetConfig = {
   sticky?: boolean;
   offsetTop?: PhiCssLength;
-  size?: PhiRenderableBlockSize;
-  minSize?: PhiRenderableBlockSize;
-  maxSize?: PhiRenderableBlockSize;
+  size?: PhiRenderableBlockResponsiveSize;
+  minSize?: PhiRenderableBlockResponsiveSize;
+  maxSize?: PhiRenderableBlockResponsiveSize;
   zIndex?: number;
   viewportFlags?: PhiViewportFlags;
 };

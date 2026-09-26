@@ -253,7 +253,16 @@ The parent slot policy is authoritative; child defaults cannot override it.
 `resolvePhiRenderableBlockGeometry` (types/renderable-block-geometry.ts). It reads a block's config once
 and answers per axis -- `inline` and `block`, each with `size`, `min` and `max` -- as CSS lengths decoded
 by unit, and it states whether the block decides an axis for itself (`explicitInline`, `explicitBlock`),
-which is what flips a slot policy from `fill` to `fixed`. A collapsed block measures by its
+which is what flips a slot policy from `fill` to `fixed`.
+
+Each of the six lengths may name a value per profile (`PhiResponsiveLength`, on the house
+`PhiResponsiveValue` with the smaller-to-larger cascade). The answer above is then the `compact` one --
+the base, what stands without a container query -- and the other two are in `profiles`, present only
+where a field names more than one. An axis counts as explicit where *any* profile names a size: a slot
+policy and the attribute that carries it are resolved once on the server, and CSS can vary a width but
+not an attribute, so the profiles vary the value rather than the policy. `collapsedSizeHint` stays
+plain. Nothing writes the profile answers to CSS yet; that is
+[design/RESPONSIVE_BLOCK_GEOMETRY.md](./design/RESPONSIVE_BLOCK_GEOMETRY.md). A collapsed block measures by its
 `collapsedSizeHint` where it has one; that substitution is the reader's too.
 
 - A bare number is a pixel length, because that is how the vocabulary stores one (`PhiCssLength`); a

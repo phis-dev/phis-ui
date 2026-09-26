@@ -1,5 +1,9 @@
 import type { PhiNavItem } from "../../shell/shell-types";
-import type { PhiRenderableBlockBase, PhiRenderableBlockSize } from "../../../types/renderable-block";
+import type {
+  PhiRenderableBlockBase,
+  PhiRenderableBlockResponsiveSize,
+  PhiResponsiveLength,
+} from "../../../types/renderable-block";
 import { mergePhiCmsRenderableBlockConfigDefaults } from "../../../helpers/cms-config-serialization";
 
 export type PhiCmsWidgetConfigBase = Record<string, unknown> & PhiRenderableBlockBase;
@@ -32,8 +36,40 @@ export function readCssSize(value: unknown) {
   return readNumber(value) ?? readString(value);
 }
 
-export function readRenderableBlockSize(value: unknown): PhiRenderableBlockSize | undefined {
+/**
+ * One stored length, plain or per profile.
+ *
+ * A profile value is `{ compact?, medium?, wide? }` and at least one of the three has to be a length,
+ * or it is not a profile value and states nothing. Read here rather than accepted as it stands, so a
+ * stored object cannot carry anything else into the config.
+ */
+export function readResponsiveCssSize(value: unknown): PhiResponsiveLength | undefined {
   const scalar = readCssSize(value);
+  if (scalar !== undefined) {
+    return scalar;
+  }
+
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return undefined;
+  }
+
+  const raw = value as Record<string, unknown>;
+  const compact = readCssSize(raw.compact);
+  const medium = readCssSize(raw.medium);
+  const wide = readCssSize(raw.wide);
+  if (compact === undefined && medium === undefined && wide === undefined) {
+    return undefined;
+  }
+
+  return {
+    ...(compact === undefined ? {} : { compact }),
+    ...(medium === undefined ? {} : { medium }),
+    ...(wide === undefined ? {} : { wide }),
+  };
+}
+
+export function readRenderableBlockSize(value: unknown): PhiRenderableBlockResponsiveSize | undefined {
+  const scalar = readResponsiveCssSize(value);
   if (scalar !== undefined) {
     return { width: scalar };
   }
@@ -42,8 +78,8 @@ export function readRenderableBlockSize(value: unknown): PhiRenderableBlockSize 
   }
 
   const raw = value as Record<string, unknown>;
-  const width = readCssSize(raw.width);
-  const height = readCssSize(raw.height);
+  const width = readResponsiveCssSize(raw.width);
+  const height = readResponsiveCssSize(raw.height);
   return width === undefined && height === undefined ? undefined : { width, height };
 }
 

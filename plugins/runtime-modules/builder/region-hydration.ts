@@ -18,7 +18,10 @@ import {
   type PhiDeveloperBuilderArea,
   type PhiDeveloperBuilderRegionDraft,
 } from "./developer-workspace-types";
-import type { PhiRenderableBlockSize } from "../../../types/renderable-block";
+import type {
+  PhiRenderableBlockResponsiveSize,
+  PhiRenderableBlockSize,
+} from "../../../types/renderable-block";
 import { readPhiLengthValue, type PhiCssLength } from "../../../types/length";
 import { getPhiBuilderDefaultRegionDraft } from "./region-defaults";
 import { resolvePhiBuilderRootNodeDefaults } from "./root-node-normalization";
@@ -44,9 +47,9 @@ type BuilderPersistedRegionConfig = {
   fullHeight?: boolean;
   sticky?: boolean;
   offsetTop?: PhiCssLength;
-  size?: PhiRenderableBlockSize;
-  minSize?: PhiRenderableBlockSize;
-  maxSize?: PhiRenderableBlockSize;
+  size?: PhiRenderableBlockResponsiveSize;
+  minSize?: PhiRenderableBlockResponsiveSize;
+  maxSize?: PhiRenderableBlockResponsiveSize;
   /*
    * Not an offer, an inventory. Geometry is stated in the three above; these are what older stored
    * configs still carry, and they are declared here so that the sweep further down -- which deletes

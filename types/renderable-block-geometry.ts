@@ -1,4 +1,9 @@
-import type { PhiRenderableBlockSize, PhiRenderableBlockVisibility } from "./renderable-block";
+import type {
+  PhiRenderableBlockResponsiveSize,
+  PhiRenderableBlockSize,
+  PhiRenderableBlockVisibility,
+  PhiResponsiveLength,
+} from "./renderable-block";
 import { readPhiCssLengthPart, type PhiCssLengthPart } from "./length";
 
 /**
@@ -37,22 +42,45 @@ export type PhiResolvedBlockAxisGeometry = {
   max: PhiResolvedBlockLength | null;
 };
 
+export type PhiResolvedBlockAxes = {
+  inline: PhiResolvedBlockAxisGeometry;
+  block: PhiResolvedBlockAxisGeometry;
+};
+
 export type PhiResolvedBlockGeometry = {
   inline: PhiResolvedBlockAxisGeometry;
   block: PhiResolvedBlockAxisGeometry;
-  /** The block decides its own inline axis: a width is stated, so the slot policy on that axis is `fixed`. */
+  /**
+   * The block decides its own inline axis: a width is stated, so the slot policy on that axis is
+   * `fixed`. Stated at *any* profile counts, because a slot policy and the data attribute that carries
+   * it are resolved once on the server and CSS can vary a width but not an attribute. "Explicit" is a
+   * property of the block as a whole; the profiles vary the value, not the policy.
+   */
   explicitInline: boolean;
   /** The block decides its own block axis. */
   explicitBlock: boolean;
+  /**
+   * The other two answers, and only where a field names more than one.
+   *
+   * `inline` and `block` above are the base -- `compact`, what stands without a container query -- so
+   * every reader that existed before profiles keeps reading exactly what it read. The one emitter that
+   * writes the custom properties reads this.
+   */
+  profiles: { medium: PhiResolvedBlockAxes; wide: PhiResolvedBlockAxes } | null;
 };
 
 export type PhiRenderableBlockGeometryInput = {
   visibility?: PhiRenderableBlockVisibility | null;
-  size?: PhiRenderableBlockSize | null;
-  minSize?: PhiRenderableBlockSize | null;
-  maxSize?: PhiRenderableBlockSize | null;
+  size?: PhiRenderableBlockResponsiveSize | null;
+  minSize?: PhiRenderableBlockResponsiveSize | null;
+  maxSize?: PhiRenderableBlockResponsiveSize | null;
   collapsedSizeHint?: PhiRenderableBlockSize | null;
 };
+
+/** The three rooms a block may answer differently, smaller to larger. */
+export const PHI_BLOCK_PROFILES = ["compact", "medium", "wide"] as const;
+
+export type PhiBlockProfile = (typeof PHI_BLOCK_PROFILES)[number];
 
 const EMPTY_AXIS: PhiResolvedBlockAxisGeometry = { size: null, min: null, max: null };
 
@@ -61,6 +89,7 @@ export const PHI_EMPTY_BLOCK_GEOMETRY: PhiResolvedBlockGeometry = {
   block: EMPTY_AXIS,
   explicitInline: false,
   explicitBlock: false,
+  profiles: null,
 };
 
 /**
@@ -103,6 +132,59 @@ function resolveAxis(
   };
 }
 
+function isResponsiveLength(value: PhiResponsiveLength | undefined): value is Exclude<PhiResponsiveLength, number | string | null> {
+  return typeof value === "object" && value !== null;
+}
+
+/**
+ * One stored length at one profile, smaller to larger.
+ *
+ * A plain length is the same answer at all three. A profile value cascades upward: `compact` is the
+ * base, `medium` falls back to it and `wide` to `medium` -- so a block that names only `wide` states
+ * nothing below 610 and is `auto` there, which is why the Inspector asks narrow first.
+ */
+function readProfileLength(value: PhiResponsiveLength | undefined, profile: PhiBlockProfile) {
+  if (!isResponsiveLength(value)) {
+    return value;
+  }
+
+  return profile === "compact"
+    ? value.compact
+    : profile === "medium"
+      ? value.medium ?? value.compact
+      : value.wide ?? value.medium ?? value.compact;
+}
+
+function resolveAxesForProfile(
+  size: PhiRenderableBlockResponsiveSize | null | undefined,
+  min: PhiRenderableBlockResponsiveSize | null | undefined,
+  max: PhiRenderableBlockResponsiveSize | null | undefined,
+  profile: PhiBlockProfile,
+): PhiResolvedBlockAxes {
+  return {
+    inline: resolveAxis(
+      readProfileLength(size?.width, profile),
+      readProfileLength(min?.width, profile),
+      readProfileLength(max?.width, profile),
+    ),
+    block: resolveAxis(
+      readProfileLength(size?.height, profile),
+      readProfileLength(min?.height, profile),
+      readProfileLength(max?.height, profile),
+    ),
+  };
+}
+
+/** Whether any of the six stored lengths names more than one profile. */
+function statesProfiles(
+  size: PhiRenderableBlockResponsiveSize | null | undefined,
+  min: PhiRenderableBlockResponsiveSize | null | undefined,
+  max: PhiRenderableBlockResponsiveSize | null | undefined,
+) {
+  return [size, min, max].some((pair) =>
+    isResponsiveLength(pair?.width) || isResponsiveLength(pair?.height));
+}
+
 export function resolvePhiRenderableBlockGeometry(
   config: PhiRenderableBlockGeometryInput | null | undefined,
 ): PhiResolvedBlockGeometry {
@@ -114,13 +196,25 @@ export function resolvePhiRenderableBlockGeometry(
     config.visibility === "collapsed"
       ? config.collapsedSizeHint ?? config.size
       : config.size;
-  const inline = resolveAxis(size?.width, config.minSize?.width, config.maxSize?.width);
-  const block = resolveAxis(size?.height, config.minSize?.height, config.maxSize?.height);
+  const base = resolveAxesForProfile(size, config.minSize, config.maxSize, "compact");
+  const profiles = statesProfiles(size, config.minSize, config.maxSize)
+    ? {
+        medium: resolveAxesForProfile(size, config.minSize, config.maxSize, "medium"),
+        wide: resolveAxesForProfile(size, config.minSize, config.maxSize, "wide"),
+      }
+    : null;
 
   return {
-    inline,
-    block,
-    explicitInline: inline.size != null,
-    explicitBlock: block.size != null,
+    inline: base.inline,
+    block: base.block,
+    explicitInline:
+      base.inline.size != null
+      || profiles?.medium.inline.size != null
+      || profiles?.wide.inline.size != null,
+    explicitBlock:
+      base.block.size != null
+      || profiles?.medium.block.size != null
+      || profiles?.wide.block.size != null,
+    profiles,
   };
 }

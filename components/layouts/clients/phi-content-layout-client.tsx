@@ -9,7 +9,7 @@ import {
 import { resolvePhiBaseLayoutChrome } from "../phi-layout-view-model";
 import { PhiLayoutAnchoredOverlay } from "./phi-layout-anchored-overlay";
 import type { PhiAnchorWidgetPlacement } from "../../controls/phi-anchor-control-contract";
-import type { PhiRenderableBlockRenderMode, PhiRenderableBlockSize } from "../../../types";
+import type { PhiRenderableBlockRenderMode, PhiRenderableBlockResponsiveSize } from "../../../types";
 import type { PhiShadow, PhiLayoutEffectId } from "../../../types/layout-style";
 import type { PhiCmsBorderSource } from "../../../types/cms-config";
 import {
@@ -23,9 +23,9 @@ export type PhiContentLayoutProps = {
   blockId?: string | number | null;
   slots?: ReactNode[];
   renderMode?: PhiRenderableBlockRenderMode;
-  size?: PhiRenderableBlockSize | null;
-  minSize?: PhiRenderableBlockSize | null;
-  maxSize?: PhiRenderableBlockSize | null;
+  size?: PhiRenderableBlockResponsiveSize | null;
+  minSize?: PhiRenderableBlockResponsiveSize | null;
+  maxSize?: PhiRenderableBlockResponsiveSize | null;
   margin?: CSSProperties["margin"];
   zIndex?: number;
   effect?: PhiLayoutEffectId;

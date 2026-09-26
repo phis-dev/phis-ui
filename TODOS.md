@@ -119,6 +119,13 @@ built. Remove an entry when it is done.
     question the palette raises: if a block states a width at `wide` and not at `compact`, does its slot
     policy change with the viewport, or is "explicit" a property of the block as a whole?
 
+    **Step one is built (2026-09-26): the stored form and the resolver.** A length may name a value per
+    profile, the resolver keeps handing back the `compact` answer where it handed back the only answer
+    before, and the other two stand beside it in `profiles`. Nothing renders differently: no container
+    is declared, no stylesheet reads the properties, and the Control edits the base entry alone instead
+    of flattening what it cannot show. What is left is the container declarations and the stylesheet,
+    then the Control.
+
     **Decided (2026-09-26): CSS decides, nothing measures**, and the form is settled. Designed in
     [design/RESPONSIVE_BLOCK_GEOMETRY.md](./design/RESPONSIVE_BLOCK_GEOMETRY.md): the profile sits on
     the stored length (`PhiResponsiveLength`, on the house `PhiResponsiveValue` the Grid already uses),

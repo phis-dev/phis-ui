@@ -3,7 +3,13 @@
 import { useState } from "react";
 
 import { PhiIcon } from "../../../../../components/shell/phi-icon";
-import type { PhiClientBlockBaseProps, PhiCmsInstanceId, PhiNoLabels, PhiRenderableBlockSize } from "../../../../../types";
+import type {
+  PhiClientBlockBaseProps,
+  PhiCmsInstanceId,
+  PhiNoLabels,
+  PhiRenderableBlockResponsiveSize,
+} from "../../../../../types";
+import { resolvePhiRenderableBlockGeometry } from "../../../../../types/renderable-block-geometry";
 import {
   createPhiRenderableBlockReceiver,
   usePhiRenderableBlockSignalListener,
@@ -18,7 +24,14 @@ export type PhiIconWidgetClientLabels = PhiNoLabels;
 export type PhiIconWidgetClientConfig = {
   icon?: string;
   color?: string;
-  size?: PhiRenderableBlockSize;
+  /**
+   * The glyph's measurement, and the block's `size` field doing double duty.
+   *
+   * It is the same field a block states its box with, so it takes the same profile pair -- an Icon that
+   * names a value per profile is not something the Control offers, but the type has to say what can
+   * arrive. What is read is the base answer, through the one geometry reader.
+   */
+  size?: PhiRenderableBlockResponsiveSize;
 };
 
 export type PhiIconWidgetClientProps = PhiClientBlockBaseProps<
@@ -29,7 +42,8 @@ export type PhiIconWidgetClientProps = PhiClientBlockBaseProps<
 };
 
 function resolveIconSize(config?: PhiIconWidgetClientConfig | null) {
-  return config?.size?.width ?? config?.size?.height ?? PHI_ICON_DEFAULT_SIZE;
+  const geometry = resolvePhiRenderableBlockGeometry({ size: config?.size });
+  return geometry.inline.size?.css ?? geometry.block.size?.css ?? PHI_ICON_DEFAULT_SIZE;
 }
 
 export function PhiIconWidgetClient({
