@@ -93,6 +93,15 @@ export async function buildPhiDefaultAdminLogsPageTree({
         title: widgetLabels.detail.title,
         width: 960,
         mountPolicy: "lazy-keep",
+        /*
+         * Which row action this modal is for, which it has to say itself.
+         *
+         * The Table announces one thing -- a row action happened, and here is which one -- and every
+         * listener decides whether it was meant: the Record Widget by its `openActionKey`, and this
+         * Overlay by the same field. Left unsaid, a Table-shaped `open` opens for nothing rather than
+         * for everything (`matchesOpenAction`), which is a modal that silently never comes up.
+         */
+        openActionKey: "view",
         signalRoutes: {
           emits: [{
             routeKey: "admin-logs-detail-modal-open-change",
