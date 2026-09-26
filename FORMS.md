@@ -338,9 +338,15 @@ the only way a Form is placed. There are no domain Form Widgets. Its config:
 | block geometry | `maxSize`, `minSize`, `size`, background, border, shadow -- read from the node like any other Widget. `maxSize.width` defaults to `PHI_LAYOUT.contentMax`; see below. |
 
 - **A Form is capped at the reading measure unless the placement says otherwise.** `maxSize.width`
-  defaults to `PHI_LAYOUT.contentMax` (610), the measure [THEME.md](./THEME.md) names for a labelled form,
-  and it is a ceiling rather than a width: the Form still fills a narrower slot edge to edge, and 610 is
-  exactly where its own layout switches to `wide`, so capping never demotes the layout. A placement that
+  is declared as `PHI_LAYOUT.contentMax` (610) in the Widget's `defaultConfig`, the measure
+  [THEME.md](./THEME.md) names for a labelled form, and it is a ceiling rather than a width: the Form
+  still fills a narrower slot edge to edge, and 610 is exactly where its own layout switches to `wide`,
+  so capping never demotes the layout. A cap is also not a size -- it leaves the slot policy
+  `fill-inline` and the Layout in charge of placing the Form. Declared and not invented: a Widget's
+  block base reaches a node three ways -- the Builder writes it into the node it creates, the Inspector
+  shows it under the node it edits, and the render path merges it under a node that states nothing
+  (`widgetBlockDefaultsByType`), which is how a Preset placement gets it. A parser that fills the same
+  value in instead answers only the Widget's own render, where nothing reads it. A placement that
   means something else names a length and wins -- `contentMaxNarrow` for a column of Controls with no
   label beside them, `contentMaxWide` for a Form read across, `100%` for a Form that takes its slot, such
   as a reply under a conversation that runs the page. There is no width vocabulary of the Form's own:

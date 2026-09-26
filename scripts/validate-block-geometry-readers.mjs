@@ -45,9 +45,6 @@ const structuralReaders = new Map([
   ["components/controls/phi-modal-control.tsx", "the Overlay's own `size`, a different vocabulary until the Overlay adopts block geometry (TODOS.md)"],
   ["plugins/runtime-modules/builder/region-controller.ts", "Builder commands that ask whether a draft states a height"],
   ["plugins/runtime-modules/builder/region-hydration.ts", "copies a draft's geometry into a Region config, field for field"],
-  ["plugins/runtime-modules/core/widgets/html/config.ts", "Widget defaults filled in where the config states none"],
-  ["plugins/runtime-modules/core/widgets/form/config.ts", "the reading measure a Form is capped at where the placement states no width"],
-  ["plugins/runtime-modules/core/widgets/simple-text/config.ts", "Widget defaults filled in where the config states none"],
 ]);
 
 const fieldReadPattern = /\b(size|minSize|maxSize|collapsedSizeHint)\??\.(width|height)\b/;

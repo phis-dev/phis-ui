@@ -293,9 +293,20 @@ plain. Nothing writes the profile answers to CSS yet; that is
   it writes now is what the frame does not: `--phi-root-scaffold-flex`, because a root that states a
   size must stop flexing, and the stated width and height for the server preview, which builds its
   frame without the root's config.
+- A Widget may state a block base of its own, and it states it in `defaultConfig` -- never in its
+  parser. The three readers of that declaration are the Builder, which writes it into a node it
+  creates, the Inspector, which shows it under the node it edits, and the render path, which merges it
+  under a node that states nothing (`widgetBlockDefaultsByType`, built with `stripRenderableBlockDefaults`
+  so only what a Widget says beyond the house answer is inherited). The merge is shallow, per key: a
+  node that states `maxSize` owns `maxSize` whole. A parser that fills the same field in instead reaches
+  only the Widget's own render, and the slot frame -- which is what draws the block -- never sees it:
+  that is how every Form a Preset placed rendered uncapped while the same Form dropped in the Builder
+  carried its cap. Only the block base is inherited; a Widget's own fields stay with its parser, because
+  a Segmented's field key or a Table's source would change what a Preset means rather than how wide it is.
 - Nothing else reads the three fields by name. `scripts/validate-block-geometry-readers.mjs` names every
   file that draws geometry and checks that it imports the resolver, names every file that touches the
-  fields without drawing them with the reason, and fails an entry nothing uses any more.
+  fields without drawing them with the reason, and fails an entry nothing uses any more. Since a Widget
+  states its block base rather than inventing it, no Widget parser is on either list.
 
 ### Grid slot placement
 

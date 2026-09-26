@@ -35,11 +35,6 @@ export function parsePhiCmsSimpleTextWidgetConfig(
 
   return {
     ...renderableBlockConfig,
-    size: renderableBlockConfig.size ?? { width: "fit-content", height: "auto" },
-    maxSize: {
-      ...(renderableBlockConfig.maxSize ?? {}),
-      ...(renderableBlockConfig.maxSize?.width == null ? { width: "100%" } : {}),
-    },
     text: readString(config.text),
     href: readString(config.href),
     icon: readString(config.icon),
@@ -154,10 +149,12 @@ export const PHI_SIMPLE_TEXT_WIDGET_DEFINITION = {
     { key: "code", type: "boolean", label: "Code", editorPlacement: "toolbar" },
   ],
   defaultConfig: {
-    size: {
-      width: "fit-content",
-      height: "auto",
-    },
+    /*
+     * No size: the `intrinsic` slot policy already draws a text as wide as its content
+     * (`slot-size-policy.ts`), and a *stated* size means something else -- it fixes the axis and takes
+     * the child out of its Layout's hands. The cap is the one thing worth saying, and it says only
+     * "never wider than the slot".
+     */
     maxSize: {
       width: "100%",
     },

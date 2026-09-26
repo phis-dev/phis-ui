@@ -52,15 +52,6 @@ export function parsePhiCmsHtmlWidgetConfig(config: Record<string, unknown>): Ph
 
   return {
     ...renderableBlockConfig,
-    size: renderableBlockConfig.size ?? { width: "100%", height: "auto" },
-    minSize: {
-      ...(renderableBlockConfig.minSize ?? {}),
-      ...(renderableBlockConfig.minSize?.width == null ? { width: 150 } : {}),
-    },
-    maxSize: {
-      ...(renderableBlockConfig.maxSize ?? {}),
-      ...(renderableBlockConfig.maxSize?.width == null ? { width: "100%" } : {}),
-    },
     html: readString(config.html),
     sourceMode: config.sourceMode === "url" ? "url" : "inline",
     sourceUrl: readString(config.sourceUrl),
@@ -116,10 +107,12 @@ export const PHI_HTML_WIDGET_DEFINITION = {
     translate: true,
     sourceMode: "inline",
     revalidateSeconds: 14400,
-    size: {
-      width: "100%",
-      height: "auto",
-    },
+    /*
+     * No size: the `fill-inline` slot policy already gives the block the slot's width, and a *stated*
+     * size means something else -- it fixes both axes and takes the child out of its Layout's hands.
+     * What is worth saying is the floor and the ceiling: foreign markup may be anything at all, so it
+     * gets a width it cannot collapse below and one it cannot break the slot with.
+     */
     minSize: {
       width: 150,
     },

@@ -37,6 +37,8 @@ import {
   PHI_VIEWER_ACCESS_ANYONE,
   type PhiRoleProviderId,
 } from "../../types/access";
+import { stripRenderableBlockDefaults } from "../../helpers/renderable-block-serialization";
+import type { PhiRenderableBlockBase } from "../../types/renderable-block";
 import { PhiCmsWidgetType } from "../../constants/cms-widget-types";
 import { parsePhiFormWidgetConfig } from "./core/widgets/form/config";
 
@@ -881,6 +883,28 @@ export async function resolvePhiRuntimeRenderRegistry({
     ownerModuleIdByWidgetType: new Map(widgetEntries.map(([type, entry]) => [type, entry.ownerModuleId])),
     widgetSlotSizePoliciesByType: new Map(
       widgetEntries.map(([type, entry]) => [type, entry.definition.slotSizePolicy]),
+    ),
+    /*
+     * What a Widget states about its own block, for the nodes that state nothing.
+     *
+     * A Widget's `defaultConfig` reaches a node two ways today: the Builder writes it into the node it
+     * creates, and the Inspector reads it under the node it edits. A Preset tree reaches it neither way
+     * -- its nodes are written by hand -- so a Form placed by a Preset rendered without the reading
+     * measure its Widget declares, while the same Form dropped in the Builder carried it. The third
+     * reader is the slot frame, and this is what it reads.
+     *
+     * Only the block base, taken with `stripRenderableBlockDefaults`, which is exactly "what this block
+     * says beyond the house answer": a size, a cap, a ground, a border. A Widget's own fields stay out
+     * -- a Segmented's field key, an Icon's glyph, a Table's source are answered by its parser where a
+     * node is silent, and inheriting those would change what a Preset means rather than how wide it is.
+     */
+    widgetBlockDefaultsByType: new Map(
+      widgetEntries.flatMap(([type, entry]) => {
+        const defaults = stripRenderableBlockDefaults(
+          entry.definition.defaultConfig as Partial<PhiRenderableBlockBase> | null | undefined,
+        );
+        return Object.keys(defaults).length > 0 ? [[type, defaults] as const] : [];
+      }),
     ),
     ownerModuleIdByLayoutType: new Map(layoutEntries.map(([type, entry]) => [type, entry.ownerModuleId])),
     uiProvidersByModuleId,

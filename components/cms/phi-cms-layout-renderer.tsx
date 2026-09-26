@@ -7,7 +7,7 @@ import type {
 } from "../../types/cms";
 import { comparePhiCmsInstanceIds, type PhiCmsInstanceId } from "../../types/cms-instance-id";
 import type { PhiBlockRuntime, PhiSignalScope } from "../../types";
-import type { PhiRenderableBlock, PhiRenderableBlockRuntime } from "../../types/renderable-block";
+import type { PhiRenderableBlock, PhiRenderableBlockBase, PhiRenderableBlockRuntime } from "../../types/renderable-block";
 import { readPhiShadow } from "../../types/layout-style";
 import { combinePhiBoxShadows, resolvePhiShadow } from "../../helpers/layout-style";
 import type {
@@ -210,11 +210,40 @@ function resolvePhiTreeSignalParticipants(tree: PhiResolvedCmsRenderableTree) {
   return participants;
 }
 
-function buildLayoutNodeResolver(tree: PhiResolvedCmsRenderableTree) {
+/**
+ * A Widget node, carrying what its Widget declares about the block where the node says nothing.
+ *
+ * Applied once, here, so there is one config and not two: the slot frame draws the block from the
+ * node's config, the Widget renders from the same config parsed, and until this existed the two could
+ * disagree -- a Form Widget declaring the reading measure as its cap rendered uncapped wherever a
+ * Preset placed it, because the Preset writes its nodes by hand and the frame never saw the Widget's
+ * answer. The Builder already merges the same defaults when it creates a node and when it edits one.
+ *
+ * Shallow, per key, and only the block base: see `widgetBlockDefaultsByType`.
+ */
+export function applyPhiWidgetBlockDefaults(
+  widget: PhiCmsContentWidgetNode,
+  blockDefaultsByType: ReadonlyMap<string, Partial<PhiRenderableBlockBase>>,
+): PhiCmsContentWidgetNode {
+  const defaults = blockDefaultsByType.get(widget.widgetType);
+  if (!defaults) {
+    return widget;
+  }
+  return {
+    ...widget,
+    config: { ...defaults, ...widget.config } as PhiCmsContentWidgetNode["config"],
+  };
+}
+
+function buildLayoutNodeResolver(
+  tree: PhiResolvedCmsRenderableTree,
+  blockDefaultsByType: ReadonlyMap<string, Partial<PhiRenderableBlockBase>>,
+) {
   const childWidgetsByParent = new Map<PhiCmsInstanceId, PhiCmsContentWidgetNode[]>();
   const childLayoutsByParent = new Map<PhiCmsInstanceId, typeof tree.layoutNodes>();
 
-  for (const widget of tree.contentWidgets) {
+  for (const rawWidget of tree.contentWidgets) {
+    const widget = applyPhiWidgetBlockDefaults(rawWidget, blockDefaultsByType);
     const current = childWidgetsByParent.get(widget.parentLayoutNodeId) ?? [];
     current.push(widget);
     childWidgetsByParent.set(widget.parentLayoutNodeId, current);
@@ -264,8 +293,11 @@ function buildLayoutNodeResolver(tree: PhiResolvedCmsRenderableTree) {
   return createNode;
 }
 
-function buildLayoutTree(tree: PhiResolvedCmsRenderableTree) {
-  const createNode = buildLayoutNodeResolver(tree);
+function buildLayoutTree(
+  tree: PhiResolvedCmsRenderableTree,
+  blockDefaultsByType: ReadonlyMap<string, Partial<PhiRenderableBlockBase>>,
+) {
+  const createNode = buildLayoutNodeResolver(tree, blockDefaultsByType);
   return tree.regions
     .slice()
     .sort((left, right) => left.sortOrder - right.sortOrder || left.id - right.id)
@@ -288,7 +320,7 @@ export async function PhiCmsOverlayRenderer({
   signalScope: Extract<PhiSignalScope, "area" | "page">;
 }) {
   const features = await resolvePhiCmsTreeFeatures(tree, registry, runtime);
-  const createNode = buildLayoutNodeResolver(tree);
+  const createNode = buildLayoutNodeResolver(tree, registry.widgetBlockDefaultsByType);
   const layoutPluginsByType = registry.layoutPluginsByType;
   const signalParticipants = resolvePhiTreeSignalParticipants(tree);
   const signalRuntime: PhiRenderableBlockRuntime = {
@@ -908,7 +940,7 @@ export async function PhiCmsLayoutRenderer({
   const signalParticipants = resolvePhiTreeSignalParticipants(filteredTree);
   const allowedRegionTypes = regionTypes ? new Set(regionTypes) : null;
   const layoutPluginsByType = registry.layoutPluginsByType;
-  const resolvedRegions = buildLayoutTree(filteredTree).filter(({ region }) =>
+  const resolvedRegions = buildLayoutTree(filteredTree, registry.widgetBlockDefaultsByType).filter(({ region }) =>
     allowedRegionTypes ? allowedRegionTypes.has(region.regionType) : true,
   );
   const renderableRegions = resolvedRegions.filter(({ root }) => root != null);

@@ -8,7 +8,7 @@ import type {
   PhiControlOptionsProviderConfig,
 } from "../components/controls/phi-control-options";
 
-import type { PhiRenderableBlockAnchor } from "./renderable-block";
+import type { PhiRenderableBlockAnchor, PhiRenderableBlockBase } from "./renderable-block";
 import type { PhiCmsRegionOwnership } from "../helpers/cms-region-keys";
 import type { PhiSlotSizePolicy } from "./slot-size-policy";
 import type { PhiLayoutKind } from "../components/layouts/phi-layout-contract";
@@ -503,6 +503,15 @@ export type PhiCmsRuntimeRenderRegistry = {
   renderIssuesByLayoutType: ReadonlyMap<string, PhiCmsRenderIssue>;
   ownerModuleIdByWidgetType: ReadonlyMap<string, PhiRuntimeModuleId>;
   widgetSlotSizePoliciesByType: ReadonlyMap<string, PhiSlotSizePolicy | undefined>;
+  /**
+   * The block base a Widget declares in its `defaultConfig`, for the nodes that declare none.
+   *
+   * Merged under a node's own config before anything renders, so the slot frame and the Widget read one
+   * config rather than two. Shallow, per key: a node that states `maxSize` owns `maxSize` whole, and a
+   * height without a width does not inherit the declared width. Only types that declare something are
+   * in here.
+   */
+  widgetBlockDefaultsByType: ReadonlyMap<string, Partial<PhiRenderableBlockBase>>;
   ownerModuleIdByLayoutType: ReadonlyMap<string, PhiRuntimeModuleId>;
   uiProvidersByModuleId: ReadonlyMap<PhiRuntimeModuleId, PhiRuntimeModuleUiProvider>;
   /**

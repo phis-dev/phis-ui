@@ -126,10 +126,9 @@ export function parsePhiFormWidgetConfig(rawConfig: Record<string, unknown>): Ph
   /*
    * The block's own geometry, which this Widget used to drop on the floor.
    *
-   * A placed node's `maxSize`, background, border and shadow reach the slot frame through the parsed
-   * config (`phi-cms-layout-renderer.tsx`), so a parser that returns only its own fields silently
-   * discards everything an author set in the Style tab. The Login Page had capped its Form at 480 for
-   * that long, and the number did nothing.
+   * A parser that returns only its own fields discards everything an author set in the Style tab, and
+   * the Form's parsed config is what the Widget renders from. Where the Form's *cap* comes from is a
+   * different question, answered in `defaultConfig` below rather than here.
    */
   const renderableBlockConfig = readRenderableBlockConfig(rawConfig);
   const normalizedFormId = typeof rawConfig.formId === "string"
@@ -157,24 +156,6 @@ export function parsePhiFormWidgetConfig(rawConfig: Record<string, unknown>): Ph
 
   return {
     ...renderableBlockConfig,
-    /*
-     * How wide a Form is allowed to get, answered by the house where nobody said otherwise.
-     *
-     * `PHI_LAYOUT.contentMax` is the measure the Theme names for exactly this -- "the one a labelled form
-     * wants" -- and it is a ceiling, not a width: the Form still fills a narrower slot edge to edge, and
-     * 610 is the width at which its own layout switches to `wide`, so the cap lands on the threshold
-     * rather than below it and nothing is demoted by being capped.
-     *
-     * A placement that means something else says a length, and it wins: `contentMaxNarrow` for a column
-     * of Controls with no label beside them, `contentMaxWide` for a Form read across, `100%` for a Form
-     * that really takes its slot. What it must no longer do is leave it unsaid and hope -- an uncapped
-     * Form on a wide page is an input line nobody can read along, and every placement that noticed wrote
-     * its own number, one of them off the house scale entirely.
-     */
-    maxSize: {
-      ...(renderableBlockConfig.maxSize ?? {}),
-      ...(renderableBlockConfig.maxSize?.width == null ? { width: PHI_LAYOUT.contentMax } : {}),
-    },
     formId: isPhiFormId(normalizedFormId) ? normalizedFormId : null,
     submit: rawConfig.submit == null ? null : {
       label: typeof submit.label === "string" && submit.label.trim() ? submit.label.trim() : null,
@@ -358,6 +339,23 @@ export const PHI_FORM_WIDGET_DEFINITION = {
     { key: "openActionKey", type: "string", label: "Open action key" },
   ],
   defaultConfig: {
+    /*
+     * How wide a Form is allowed to get, answered by the house where nobody said otherwise.
+     *
+     * `PHI_LAYOUT.contentMax` is the measure the Theme names for exactly this -- "the one a labelled
+     * form wants" -- and it is a ceiling, not a width: the Form still fills a narrower slot edge to
+     * edge, and 610 is the width at which its own layout switches to `wide`, so the cap lands on the
+     * threshold rather than below it and nothing is demoted by being capped. A cap is also not a size:
+     * it leaves the slot policy `fill-inline` and the Layout in charge of placing the Form.
+     *
+     * Declared here and nowhere else. This is the one place a Widget's answer reaches all three readers
+     * -- the Builder writes it into a node it creates, the Inspector shows it under the node it edits,
+     * and the render path merges it under a node that states nothing, which is how a Preset placement
+     * gets it. A placement that means something else writes a length into its own config and wins:
+     * `contentMaxNarrow` for a column of Controls with no label beside them, `100%` for a Form that
+     * really takes its slot.
+     */
+    maxSize: { width: PHI_LAYOUT.contentMax },
     formId: null,
     links: [],
     formConfig: {},

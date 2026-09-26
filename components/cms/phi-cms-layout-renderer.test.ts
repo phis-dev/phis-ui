@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { readPhiCmsInstanceId } from "../../types/cms-instance-id";
-import { buildPhiRenderFailureIssue } from "./phi-cms-layout-renderer";
+import { applyPhiWidgetBlockDefaults, buildPhiRenderFailureIssue } from "./phi-cms-layout-renderer";
 
 /*
  * The path that only runs when something has already gone wrong, which is exactly why it is tested.
@@ -52,5 +52,43 @@ describe("buildPhiRenderFailureIssue", () => {
 
     expect(rendered.code).toBe("render-failed");
     expect(rendered.detail).toBe("fetch failed");
+  });
+});
+
+/*
+ * What a Widget says about its own block, for the nodes that say nothing.
+ *
+ * A Preset writes its nodes by hand, so it reaches a Widget's `defaultConfig` neither the way the
+ * Builder does when it creates a node nor the way the Inspector does when it edits one. The Form Widget
+ * declared the reading measure as its cap and every Form a Preset placed rendered uncapped, because the
+ * slot frame reads the node and the node had never heard of it.
+ */
+describe("applyPhiWidgetBlockDefaults", () => {
+  const blockDefaults = new Map([
+    ["@phis/ui/modules/core/widgets/form", { maxSize: { width: 610 } }],
+  ]);
+  const widget = {
+    id: readPhiCmsInstanceId("EQFllPq86opL1uN1"),
+    widgetType: "@phis/ui/modules/core/widgets/form",
+    config: { formId: "registration" },
+  } as unknown as Parameters<typeof applyPhiWidgetBlockDefaults>[0];
+
+  it("hands a silent node what its Widget declares", () => {
+    expect(applyPhiWidgetBlockDefaults(widget, blockDefaults).config)
+      .toEqual({ maxSize: { width: 610 }, formId: "registration" });
+  });
+
+  it("lets the placement win, whole", () => {
+    // Shallow, per key: a node that states the cap owns it, and nothing of the default is mixed in.
+    const placed = { ...widget, config: { ...widget.config, maxSize: { width: "100%" } } };
+
+    expect(applyPhiWidgetBlockDefaults(placed, blockDefaults).config)
+      .toEqual({ maxSize: { width: "100%" }, formId: "registration" });
+  });
+
+  it("leaves a Widget that declares nothing exactly as it was", () => {
+    const text = { ...widget, widgetType: "@phis/ui/modules/core/widgets/simple-text" };
+
+    expect(applyPhiWidgetBlockDefaults(text, blockDefaults)).toBe(text);
   });
 });
