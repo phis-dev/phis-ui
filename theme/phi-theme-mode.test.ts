@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  PHI_COLOR_SCHEME_COOKIE,
   PHI_THEME_MODE_COOKIE,
   buildPhiThemeModeBootstrapScript,
   readPhiColorSchemeHintFromCookieHeader,
@@ -43,7 +44,24 @@ describe("theme mode resolution", () => {
     expect(script).toBeTypeOf("string");
     expect(script!.indexOf(PHI_THEME_MODE_COOKIE))
       .toBeLessThan(script!.indexOf("dataset.phiThemeMode"));
+    // And it writes nothing for that viewer either: the check comes before the cookie it guards.
+    expect(script!.indexOf(PHI_THEME_MODE_COOKIE))
+      .toBeLessThan(script!.indexOf(`${PHI_COLOR_SCHEME_COOKIE}=dark`));
     // A viewer who stated one is rendered in it, so there is nothing for a script to correct.
     expect(buildPhiThemeModeBootstrapScript("light")).toBeNull();
+  });
+
+  /**
+   * The hint is storage in somebody's device, so it exists only where it changes an answer: `dark`,
+   * for the visit it helps. Light is what its absence already means, which is why the other branch
+   * deletes -- including the year-long cookie earlier versions left behind.
+   */
+  it("stores the hint only for dark, and only for the visit", () => {
+    const script = buildPhiThemeModeBootstrapScript("system")!;
+
+    expect(script).toContain(`${PHI_COLOR_SCHEME_COOKIE}=dark;path=/;samesite=lax`);
+    expect(script).toContain(`${PHI_COLOR_SCHEME_COOKIE}=;path=/;max-age=0`);
+    expect(script).not.toContain("max-age=31536000");
+    expect(script).not.toContain(`${PHI_COLOR_SCHEME_COOKIE}=light`);
   });
 });

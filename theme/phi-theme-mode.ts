@@ -22,6 +22,17 @@ export const PHI_DEFAULT_THEME_MODE_PREFERENCE: PhiThemeModePreference = "system
  * Carries the browser's `prefers-color-scheme` answer from one request to the next, so a viewer on
  * `system` is rendered in the right projection server-side instead of correcting itself after
  * hydration. It holds what the browser reported, never what a person chose.
+ *
+ * It exists only where it changes an answer, and only for as long as it does: written when the browser
+ * says `dark`, deleted when it says anything else, and without an expiry, so it lasts the visit it
+ * helps and leaves nothing behind. `light` is never stored because absence already means it -- see
+ * `resolvePhiThemeMode` -- so the common viewer is asked for no storage at all.
+ *
+ * That is a § 25 TDDDG question and not a preference: keeping something in a device is exempt only
+ * where it is needed for the service somebody asked for, and a year-long copy of a value the browser
+ * repeats on request is hard to call needed. One visit is easy to call needed, because without it every
+ * page of that visit arrives in the wrong projection and corrects itself on screen
+ * ([design/CONSENT.md](../design/CONSENT.md)).
  */
 export const PHI_COLOR_SCHEME_COOKIE = "phis_color_scheme";
 
@@ -47,9 +58,12 @@ export function normalizePhiColorSchemeHint(value: unknown): PhiThemeMode | null
 /**
  * The one place that decides what a viewer is shown before anyone overrides it live. A stated light
  * or dark preference is kept; `system` follows the browser and falls back to light when the browser
- * states nothing or has not been asked yet. The Theme record's own mode takes no part: a live
- * `themeMode` or `theme` signal - the Builder's switch, a draft preview - is what overrides this, in
- * any Area, and only for as long as the page stays open.
+ * states nothing or has not been asked yet. That fallback is what lets the hint cookie exist only for
+ * `dark`: light needs no cookie because it is what no cookie already means.
+ *
+ * The Theme record's own mode takes no part: a live `themeMode` or `theme` signal - the Builder's
+ * switch, a draft preview - is what overrides this, in any Area, and only for as long as the page
+ * stays open.
  */
 export function resolvePhiThemeMode(
   preference: unknown,
@@ -74,8 +88,13 @@ export function resolvePhiThemeMode(
  * one document per locale and mode and reads nothing of the request (`createPhiNextStaticRootLayout`);
  * the proxy picks which of the two a viewer is served, preference first. Marking the root from the
  * browser's answer alone would undo exactly that pick -- a viewer who chose light on a dark machine
- * would watch the page turn dark again -- so a stated preference ends the script after the hint,
- * which stays what the browser said and stays worth recording.
+ * would watch the page turn dark again -- so a stated preference ends the script before anything else.
+ * It writes no hint either: a hint is read only where no preference was stated, so recording one for
+ * somebody who stated theirs would store a value nothing asks for. Going back to `system` writes it
+ * from the live provider, at the moment it starts to matter.
+ *
+ * The light branch deletes rather than stores, which also sweeps the year-long cookie earlier versions
+ * left in a returning browser.
  */
 export function buildPhiThemeModeBootstrapScript(preference: PhiThemeModePreference): string | null {
   if (preference !== "system") {
@@ -83,11 +102,13 @@ export function buildPhiThemeModeBootstrapScript(preference: PhiThemeModePrefere
   }
 
   return `(function(){try{` +
+    `if(/(?:^|;\\s*)${PHI_THEME_MODE_COOKIE}=(?:light|dark)(?:;|$)/.test(document.cookie)){return;}` +
     `var d=window.matchMedia('(prefers-color-scheme: dark)').matches;` +
     `var m=d?'dark':'light';` +
-    `if(document.cookie.indexOf('${PHI_COLOR_SCHEME_COOKIE}='+m)<0){` +
-    `document.cookie='${PHI_COLOR_SCHEME_COOKIE}='+m+';path=/;max-age=31536000;samesite=lax';}` +
-    `if(/(?:^|;\\s*)${PHI_THEME_MODE_COOKIE}=(?:light|dark)(?:;|$)/.test(document.cookie)){return;}` +
+    `if(d){if(document.cookie.indexOf('${PHI_COLOR_SCHEME_COOKIE}=dark')<0){` +
+    `document.cookie='${PHI_COLOR_SCHEME_COOKIE}=dark;path=/;samesite=lax';}}` +
+    `else if(document.cookie.indexOf('${PHI_COLOR_SCHEME_COOKIE}=')>=0){` +
+    `document.cookie='${PHI_COLOR_SCHEME_COOKIE}=;path=/;max-age=0;samesite=lax';}` +
     `var r=document.documentElement;` +
     `r.dataset.phiThemeMode=m;` +
     `r.style.colorScheme=m;` +
@@ -97,10 +118,14 @@ export function buildPhiThemeModeBootstrapScript(preference: PhiThemeModePrefere
 /**
  * Client-side counterpart of the bootstrap script, for a system preference that changes while the
  * page is open. Writing the hint here keeps the next server render in step with what is on screen.
+ *
+ * Light deletes instead of storing, for the reason on the cookie above: absence is already light, so a
+ * stored `light` would be a value in somebody's device that changes no answer.
  */
 export function writePhiColorSchemeHint(mode: PhiThemeMode): void {
-  document.cookie =
-    `${PHI_COLOR_SCHEME_COOKIE}=${mode};path=/;max-age=31536000;samesite=lax`;
+  document.cookie = mode === "dark"
+    ? `${PHI_COLOR_SCHEME_COOKIE}=dark;path=/;samesite=lax`
+    : `${PHI_COLOR_SCHEME_COOKIE}=;path=/;max-age=0;samesite=lax`;
 }
 
 /**
