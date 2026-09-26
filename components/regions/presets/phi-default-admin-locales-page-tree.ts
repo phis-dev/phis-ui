@@ -190,6 +190,12 @@ export async function buildPhiDefaultAdminLocalesPageTree({
               key: "locale",
               type: "select",
               label: widgetLabels.languageLabel,
+              /*
+               * No label over the select: a list of languages beside a search box on a page called
+               * Locales does not need to be told what it is. The word stays as the placeholder, where
+               * it reads as the question the empty filter asks and goes away once one is chosen.
+               */
+              labelPlacement: "none",
               optionsProvider: { providerKey: PHI_LOCALIZATION_RUNTIME_DATA_PROVIDER_KEYS.adminSiteLocales },
             }],
             pagination: { enabled: true, pageSize: 25, pageSizeOptions: [25, 50, 100], showSizeChanger: true },
