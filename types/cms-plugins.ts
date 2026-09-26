@@ -128,6 +128,16 @@ export type PhiCmsConfigField =
       type: "calendar-adapter";
     })
   | (PhiCmsConfigFieldBase & {
+      /**
+       * Which place a video comes from, chosen from the providers the edited Area actually activates.
+       *
+       * Its own type rather than a `choice` with an options provider, because the list is a Module
+       * contribution that is already resolved and already travels -- see `videoProviders` -- and because
+       * what gets stored is a provider key the render path looks up in the same registry.
+       */
+      type: "video-provider";
+    })
+  | (PhiCmsConfigFieldBase & {
       type: "dimension";
       widthKey?: string;
       heightKey?: string;

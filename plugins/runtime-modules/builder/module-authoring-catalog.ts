@@ -1,4 +1,5 @@
 import type { PhiCalendarAdapterDescriptor } from "../../../types/calendar";
+import type { PhiVideoProviderDescriptor } from "../../../types/video";
 import type {
   PhiRuntimeModuleClientWidgetDefinition,
   PhiRuntimeModuleDataProviderDescriptor,
@@ -18,6 +19,7 @@ export type PhiBuilderModuleAuthoringCatalogEntry = {
   dataProviderDescriptors: readonly PhiRuntimeModuleDataProviderDescriptor[];
   collectionItemRendererDescriptors: readonly PhiCollectionItemRendererDescriptor[];
   calendarAdapterDescriptors: readonly PhiCalendarAdapterDescriptor[];
+  videoProviderDescriptors: readonly PhiVideoProviderDescriptor[];
   formOptions: readonly PhiControlOption[];
   authoringDataProviderKeys: readonly PhiRuntimeDataProviderKey[];
 };

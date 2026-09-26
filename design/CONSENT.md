@@ -1,9 +1,10 @@
 # Consent design
 
-This is a design, not a contract. One part of it is built: the Video Module's placeholder, which asks at
-the embed for one provider and stores nothing ("The placeholder is where the consent is asked", and
-[MODULES.md](../MODULES.md) for the Module). Everything else is still design -- there is no consent state,
-no visit-long unlock, no Site declaration of categories, and no banner Widget.
+This is a design, not a contract. Two parts of it are built, both in the Video Module's placeholder: it
+asks at the embed for one provider, and it offers the visit-long answer beside the single press, with the
+withdrawal that answer owes ("The placeholder is where the consent is asked", and
+[MODULES.md](../MODULES.md) for the Module). The rest is still design -- there is no answer that outlives
+the tab, no Site declaration of categories, and no banner Widget.
 
 A Widget that loads a third party and decides for itself whether it may, a cookie invented in a Module for
 the purpose, a feature-local "cookiesAccepted" flag, or a bought Consent Management Platform dropped into
@@ -49,8 +50,10 @@ as a unique id. Everything under "Proof" follows from that second sentence.
 
 No analytics, no tag manager, no error reporter. Google Fonts are loaded through `next/font/google`, which
 fetches them at build time and serves them from this origin -- there is no runtime request to Google.
-`localStorage` is unused; `sessionStorage` holds an unsent Form draft and a Brand-editor preference, which
-[USER_STATE.md](./USER_STATE.md) already classes as per-device conveniences that may be lost.
+`localStorage` is unused; `sessionStorage` holds an unsent Form draft, a Brand-editor preference, and the
+visit-long video answer below -- all of which [USER_STATE.md](./USER_STATE.md) already classes as per-device
+conveniences that may be lost. The video answer is a plain yes under a provider key, never an identifier,
+which is what keeps it the exempt case rather than a record about somebody.
 
 **`phis_color_scheme` was the one entry worth an argument, and it has been narrowed.**
 `buildPhiThemeModeBootstrapScript` ([theme/phi-theme-mode.ts](../theme/phi-theme-mode.ts)) used to write it
@@ -143,7 +146,7 @@ nothing, rather than under the pressure of the first embed.
 | Case | Status | Treatment |
 | --- | --- | --- |
 | Sign-in with Google, Microsoft, GitHub | in use, server-side redirect | consent-free; keep it a redirect, never a script |
-| A YouTube video in a page | expected | the central consent case: a placeholder that loads nothing, and fetches the player only after a click or a granted category. `youtube-nocookie` reduces cookies but still discloses the IP to Google on load, so it does not remove the question |
+| A YouTube video in a page | expected | the central consent case: a placeholder that loads nothing, and fetches the player only after a click or a granted category. `youtube-nocookie` is not cookie-free -- it keeps a view out of personalisation -- and it discloses the IP to Google on load either way, so it does not remove the question |
 | Google Fonts at runtime | not used, and must stay so | `next/font` self-hosting is what keeps this out of the gate; a runtime request to Google would be a new consent case |
 | Maps, reCAPTCHA, Tag Manager, an analytics product | not used | all the same class as the video: nothing loads before the category is granted |
 | First-party reach measurement | not used | consent-bearing today; the Digital Omnibus draft would exempt self-hosted aggregate analysis, which is a reason not to hard-code the category list |
@@ -254,7 +257,10 @@ work.
 Embedding is a different matter, and App does embed: the Video Module is eligible in `public` and `app`,
 because a video in a help page behind a login is as ordinary as one on a landing page. That needs no
 banner either, and the reason is the shape rather than the Area -- the placeholder asks where the video
-is, for that one provider, and keeps nothing. The gate lives in the Widget, so it is Area-independent by
+is, for that one provider, and keeps nothing. What the *page* keeps is the provider and the video's id,
+not the address somebody pasted: a share link carries a timestamp, a `si=`, sometimes the id of a comment
+belonging to whoever copied it, and none of that is the video. Storing the id is the same restraint
+applied to the configuration that the placeholder applies to the visit. The gate lives in the Widget, so it is Area-independent by
 construction; only a banner would ever have to be placed per Area, which is one more argument for not
 having one.
 
@@ -330,11 +336,12 @@ there is nothing to remember in order not to nag.
 **The decision this raises is how long an answer lasts, and only the last step brings the apparatus of this
 document with it.**
 
-- **The click.** It loads this embed for this view, and phis stores nothing. § 25 then asks nothing of *us*
+- **The click.** *Built.* It loads this embed for this view, and phis stores nothing. § 25 then asks nothing of *us*
   at all: no record, no duration, no withdrawal surface, no banner anywhere on the Site. Whatever the third
   party stores afterwards, it stores on the basis of a click that is unmistakably the person's own. The cost
   is a click per embed per visit.
-- **The visit.** "Load videos for this visit", offered beside "Load this video". The status belongs in
+- **The visit.** *Built.* "Load videos for this visit", offered beside "Load this video", written by
+  [phi-video-consent-store.ts](../components/runtime/phi-video-consent-store.ts). The status belongs in
   `sessionStorage`, **not in a cookie**: the lifetime is the same, but a cookie would travel on every
   request to a server that cannot act on it -- the static render reads no cookies, and letting consent into
   the static key would multiply the cache for a decision the client has to apply anyway. So a cookie would
@@ -346,8 +353,13 @@ document with it.**
 - **Across visits.** The cookie under "What is stored", the twelve months, a withdrawal entry point on every
   page, and the versioned record. A convenience, and the step that brings a banner back into view.
 
-The first two together are where this should start; the third is something a Site opts into once somebody
+The first two are built and are where this starts; the third is something a Site opts into once somebody
 complains about clicking, and then it pays for it with the rest of this document.
+
+What the two cost in practice is one flash. The Server cannot see session storage, so it draws the
+placeholder and the answer is read from an effect -- a player that was unlocked earlier appears a moment
+after the placeholder it replaces. A cookie would remove the flash and buy it with a header on every
+request and a multiplied static cache, which is the trade this section already refused.
 
 **On granularity:** consent is per purpose, not per embed. Every YouTube frame on a Site has the same
 recipient and the same purpose, so one answer may cover all of them -- what must not be bundled is

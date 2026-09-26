@@ -4,6 +4,7 @@ import type { PhiBuilderPluginMeta } from "../../../types/builder";
 import type { PhiRuntimeModuleDataProviderDescriptor } from "../../../types/cms-plugins";
 import type { PhiCollectionItemRendererDescriptor } from "../../../types/collection-provider";
 import type { PhiCalendarAdapterDescriptor } from "../../../types/calendar";
+import type { PhiVideoProviderDescriptor } from "../../../types/video";
 import type { PhiControlOption } from "../../../components/controls/phi-control-options";
 import { createPhiPluginStateStore } from "../../../components/state/plugin-state-store";
 
@@ -12,12 +13,20 @@ type PhiBuilderModuleMetaState = {
   dataProviders: readonly PhiRuntimeModuleDataProviderDescriptor[];
   collectionItemRenderers: readonly PhiCollectionItemRendererDescriptor[];
   calendarAdapters: readonly PhiCalendarAdapterDescriptor[];
+  videoProviders: readonly PhiVideoProviderDescriptor[];
   forms: readonly PhiControlOption[];
 };
 
 const builderPluginMetaStore = createPhiPluginStateStore<PhiBuilderModuleMetaState>(
   "@phis/ui/builder-plugin-metas",
-  () => ({ plugins: [], dataProviders: [], collectionItemRenderers: [], calendarAdapters: [], forms: [] }),
+  () => ({
+    plugins: [],
+    dataProviders: [],
+    collectionItemRenderers: [],
+    calendarAdapters: [],
+    videoProviders: [],
+    forms: [],
+  }),
 );
 
 export function usePhiBuilderModuleMetas(area: string) {

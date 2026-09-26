@@ -39,6 +39,7 @@ import type {
   PhiRuntimeModuleDataProviderDescriptor,
 } from "../../../../types/cms-plugins";
 import type { PhiCalendarAdapterDescriptor } from "../../../../types/calendar";
+import type { PhiVideoProviderDescriptor } from "../../../../types/video";
 import { readPhiShadow, type PhiShadow } from "../../../../types/layout-style";
 import {
   expandPhiBorderRadiusConfig,
@@ -123,6 +124,7 @@ type PhiDeveloperBuilderLayoutInspectorWidgetClientProps = {
   iconPickerLabels?: PhiIconPickerControlLabels;
   dataProviderDescriptors?: readonly PhiRuntimeModuleDataProviderDescriptor[];
   calendarAdapterDescriptors?: readonly PhiCalendarAdapterDescriptor[];
+  videoProviderDescriptors?: readonly PhiVideoProviderDescriptor[];
   renderMediaPicker?: PhiBackgroundControlProps["renderMediaPicker"];
 };
 
@@ -150,6 +152,7 @@ export function PhiDeveloperBuilderLayoutInspectorWidgetClient({
   iconPickerLabels,
   dataProviderDescriptors = [],
   calendarAdapterDescriptors = [],
+  videoProviderDescriptors = [],
   renderMediaPicker,
 }: PhiDeveloperBuilderLayoutInspectorWidgetClientProps) {
   const isPreviewMode = builderMode === "preview";
@@ -423,6 +426,7 @@ export function PhiDeveloperBuilderLayoutInspectorWidgetClient({
                               iconPickerLabels,
                               dataProviderDescriptors,
                               calendarAdapterDescriptors,
+                              videoProviderDescriptors,
                               onChange: onConfigChange
                                 ? (next) => {
                                     for (const [key, value] of Object.entries(next)) {

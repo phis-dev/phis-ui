@@ -73,6 +73,7 @@ export function buildPhiBuilderModuleAuthoringCatalog({
       dataProviderDescriptors: entry.definition.dataProviders ?? [],
       collectionItemRendererDescriptors: entry.definition.collectionItemRenderers ?? [],
       calendarAdapterDescriptors: entry.definition.calendarAdapters ?? [],
+      videoProviderDescriptors: entry.definition.videoProviders ?? [],
       formOptions: (entry.forms ?? []).map((form) => ({
         value: form.formId,
         label: form.title,

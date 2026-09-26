@@ -68,6 +68,10 @@ export function PhiBuilderRuntimeModuleAuthoringBoundary({
     () => activeEntries.flatMap((entry) => entry.calendarAdapterDescriptors),
     [activeEntries],
   );
+  const videoProviderDescriptors = useMemo(
+    () => activeEntries.flatMap((entry) => entry.videoProviderDescriptors),
+    [activeEntries],
+  );
   const formOptions = useMemo(
     () => activeEntries.flatMap((entry) => entry.formOptions),
     [activeEntries],
@@ -83,6 +87,7 @@ export function PhiBuilderRuntimeModuleAuthoringBoundary({
       dataProviders: dataProviderDescriptors,
       collectionItemRenderers: collectionItemRendererDescriptors,
       calendarAdapters: calendarAdapterDescriptors,
+      videoProviders: videoProviderDescriptors,
       forms: formOptions,
     });
   }, [
@@ -92,6 +97,7 @@ export function PhiBuilderRuntimeModuleAuthoringBoundary({
     formOptions,
     plugins,
     targetArea,
+    videoProviderDescriptors,
   ]);
 
   return (
@@ -102,6 +108,7 @@ export function PhiBuilderRuntimeModuleAuthoringBoundary({
       widgetDefinitions={widgetDefinitions}
       dataProviderDescriptors={dataProviderDescriptors}
       calendarAdapterDescriptors={calendarAdapterDescriptors}
+      videoProviderDescriptors={videoProviderDescriptors}
     >
       <PhiRuntimeModuleAuthoringDataProviderHost providerKeys={authoringDataProviderKeys}>
         {/*

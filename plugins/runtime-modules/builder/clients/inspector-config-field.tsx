@@ -8,6 +8,7 @@ import type {
   PhiRuntimeModuleDataProviderDescriptor,
 } from "../../../../types/cms-plugins";
 import type { PhiCalendarAdapterDescriptor } from "../../../../types/calendar";
+import type { PhiVideoProviderDescriptor } from "../../../../types/video";
 import { readPhiLengthValue, type PhiRenderableBlockSize } from "../../../../types";
 import {
   normalizePhiPaddingWidgetConfig,
@@ -469,6 +470,7 @@ function PhiInspectorCollectionFieldControl({
   iconPickerLabels,
   dataProviderDescriptors,
   calendarAdapterDescriptors,
+  videoProviderDescriptors,
   onChange,
 }: {
   field: PhiInspectorCollectionField;
@@ -483,6 +485,7 @@ function PhiInspectorCollectionFieldControl({
   iconPickerLabels?: PhiIconPickerControlLabels;
   dataProviderDescriptors: readonly PhiRuntimeModuleDataProviderDescriptor[];
   calendarAdapterDescriptors: readonly PhiCalendarAdapterDescriptor[];
+  videoProviderDescriptors: readonly PhiVideoProviderDescriptor[];
   onChange?: (next: Record<string, unknown>) => void;
 }) {
   const { token } = theme.useToken();
@@ -587,6 +590,7 @@ function PhiInspectorCollectionFieldControl({
                   iconPickerLabels,
                   dataProviderDescriptors,
                   calendarAdapterDescriptors,
+                  videoProviderDescriptors,
                   onChange: (patch) => {
                     const nextItems = [...items];
                     nextItems[index] = {
@@ -667,6 +671,7 @@ export function renderPhiInspectorConfigField({
   iconPickerLabels,
   dataProviderDescriptors = [],
   calendarAdapterDescriptors = [],
+  videoProviderDescriptors = [],
 }: {
   field: PhiCmsConfigField;
   value: unknown;
@@ -682,6 +687,7 @@ export function renderPhiInspectorConfigField({
   iconPickerLabels?: PhiIconPickerControlLabels;
   dataProviderDescriptors?: readonly PhiRuntimeModuleDataProviderDescriptor[];
   calendarAdapterDescriptors?: readonly PhiCalendarAdapterDescriptor[];
+  videoProviderDescriptors?: readonly PhiVideoProviderDescriptor[];
   onChange?: (next: Record<string, unknown>) => void;
 }) {
   if (field.type === "readonly") {
@@ -788,6 +794,28 @@ export function renderPhiInspectorConfigField({
         disabled={disabled || !onChange}
         style={{ width: "100%" }}
         onChange={(calendarAdapterKey) => onChange?.({ [field.key]: calendarAdapterKey })}
+      />,
+    );
+  }
+
+  if (field.type === "video-provider") {
+    return renderPhiInspectorConfigFieldControl(
+      field,
+      <PhiSelectControl
+        /*
+         * The recipient is in the option, not only the provider's name, because choosing here is choosing
+         * who a visitor will be asked about -- and the placeholder will name that company either way.
+         */
+        options={videoProviderDescriptors.map((descriptor) => ({
+          value: descriptor.key,
+          label: descriptor.title,
+          description: descriptor.recipient,
+        }))}
+        placeholder="Select a video provider"
+        value={typeof value === "string" ? value : typeof defaultValue === "string" ? defaultValue : undefined}
+        disabled={disabled || !onChange}
+        style={{ width: "100%" }}
+        onChange={(videoProviderKey) => onChange?.({ [field.key]: videoProviderKey })}
       />,
     );
   }
@@ -952,6 +980,7 @@ export function renderPhiInspectorConfigField({
         iconPickerLabels={iconPickerLabels}
         dataProviderDescriptors={dataProviderDescriptors}
         calendarAdapterDescriptors={calendarAdapterDescriptors}
+        videoProviderDescriptors={videoProviderDescriptors}
         onChange={onChange}
       />
     );

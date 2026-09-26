@@ -1084,32 +1084,44 @@ provider instead of a second video Widget:
       recipient: "Wistia, Inc.",
       privacyUrl: "https://wistia.com/privacy",
       embedHostname: "fast.wistia.net",
-      embedUrlTemplate: "https://fast.wistia.net/embed/iframe/{id}?autoPlay=1",
-      addressPatterns: ["^https?://[a-z0-9-]+\\.wistia\\.com/medias/([A-Za-z0-9]{6,20})"],
+      embedUrlTemplate: "https://fast.wistia.net/embed/iframe/{id}",
+      embedParams: { autoPlay: "1", doNotTrack: "true" },
+      idPattern: "^[A-Za-z0-9]{10}$",
+      idExample: "26sk4fhlnn",
+      addressPatterns: ["^https?://[a-z0-9-]+\\.wistia\\.com/medias/([A-Za-z0-9]{10})(?![A-Za-z0-9])"],
       aspectRatio: 16 / 9,
     },
   ],
 ```
 
 A provider is data and nothing else: no Client loader, no component, no manifest entry. The descriptors
-reach the browser as props, and the Video Widget reads yours beside the first-party ones -- a Site pastes
-a Wistia address into the same Widget and it resolves to you.
+reach the browser as props, and the Video Widget offers yours beside the first-party ones -- a Site picks
+Wistia from the provider field and enters an id.
 
-Four rules the catalog enforces when it is built, so a wrong provider stops a build rather than misleading
+Six rules the catalog enforces when it is built, so a wrong provider stops a build rather than misleading
 a visitor:
 
 - `recipient` names a **company**, not a domain, and `privacyUrl` is where that company explains itself.
   The placeholder shows both, and it is what the visitor decides on.
 - `embedUrlTemplate` is `https`, carries `{id}` exactly once, and its host must **be** `embedHostname`.
   You cannot name one recipient and load from another.
-- Every pattern starts with `^` and has exactly one capture group, which is the video. Without the anchor
-  a pattern reads an id out of the middle of somebody else's address.
+- The template has no query of its own. What you always send goes in `embedParams`, as a list somebody can
+  read -- and those keys become reserved: a Site's own playback parameters are refused where they collide,
+  so `doNotTrack` cannot be switched off from an inspector field.
+- `idPattern` is anchored at both ends and `idExample` is an id it accepts. The Widget stores a bare id, so
+  something has to be able to say that a half-pasted share link is not one; the example is what the Builder
+  shows the person who has to type one.
+- Every address pattern starts with `^` and has exactly one capture group, which is the video. Addresses
+  are not stored -- they are how a pasted link becomes an id -- but without the anchor a pattern reads an id
+  out of the middle of somebody else's address.
 - There is no "any address" provider, and there will not be one. A frame whose recipient cannot be named
   is a frame whose placeholder cannot tell the truth ([design/CONSENT.md](./design/CONSENT.md)).
 
-Use the provider's privacy-friendlier host where it has one, the way the first-party providers use
-`youtube-nocookie.com` and Vimeo's `dnt=1`. It is data minimisation after the decision, never a reason to
-skip asking: the request still leaves for the provider and still discloses the page it comes from.
+Use the provider's privacy-friendlier host and parameters where it has them, the way the first-party
+providers use `youtube-nocookie.com` and Vimeo's `dnt=1`. Read what they actually promise before you rely
+on the name: `youtube-nocookie.com` is not cookie-free, it only keeps a view out of personalisation. Either
+way it is data minimisation after the decision, never a reason to skip asking -- the request still leaves
+for the provider and still discloses the page it comes from.
 
 ## Boundary checklist
 

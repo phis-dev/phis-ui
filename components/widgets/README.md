@@ -218,15 +218,25 @@ Generic control Widgets reuse the capability sets in `signals/control-signal-cap
 - The Card Widget has `variant` `default`, `compact`, or `featured`, `highlight`, `href`, and an explicit
   CTA (`actionLabel`, `actionHref`). Asset sources persist `assetId` and optional `variantKey`; only `url`
   sources persist `sourceUrl`.
-- The Video Widget (`video-embed`, owned by the Video Module) stores the address somebody pasted and
-  resolves it against the video providers the Area carries, so swapping YouTube for Vimeo is a different
-  link rather than a different Widget. Until a visitor presses the button, nothing leaves this origin --
-  not the player and not a thumbnail, which is why the poster is an Asset from this Site's Media library
-  and never the provider's still. The placeholder names the company that will receive the request and
-  links to their privacy notice; nothing is stored when it is pressed, so the answer lasts that view. An
-  address no active provider recognises stays in the configuration and renders nothing. The reasoning is
-  in [design/CONSENT.md](../../design/CONSENT.md), and contributing a provider is
-  [THIRD_PARTY_MODULES.md](../../THIRD_PARTY_MODULES.md) §12.
+- The Video Widget (`video-embed`, owned by the Video Module) stores `providerKey` and `videoId`, chosen
+  from the video providers the Area carries -- the way the Image Widget stores an `assetId` rather than a
+  URL. Never a pasted address: a share link carries a playlist, a timestamp, a `si=` and sometimes a
+  comment id belonging to whoever copied it, and all of it would be published with the page. A whole link
+  typed into the id field is still read; only the id is kept. `params` adds the provider's own playback
+  parameters (`start=90`, `h=<hash>`) and cannot touch the ones the provider always sends, so `dnt=1` is
+  not configurable away. Until a visitor presses the button, nothing leaves this origin -- not the player
+  and not a thumbnail, which is why the poster is an Asset from this Site's Media library and never the
+  provider's still. The placeholder names the company that will receive the request and links to their
+  privacy notice. Two controls stand there, labelled apart: **Load video** presses once and stores nothing, so
+  that answer lasts the view; **Load videos for this visit** stores a plain yes per provider in
+  `sessionStorage` ([phi-video-consent-store.ts](../runtime/phi-video-consent-store.ts)) and every
+  placeholder for that provider on the page opens with it. Nothing is preselected, neither does more than
+  its label says, and the visit-long answer carries its own way back beside the player it opened -- the
+  withdrawal it owes. Because the Server cannot read session storage, an already-unlocked player appears one
+  render after the placeholder rather than instead of it. A provider whose
+  Module is switched off stays in the configuration and renders nothing, and the Builder says which of
+  those cases it is. The reasoning is in [design/CONSENT.md](../../design/CONSENT.md), and contributing a
+  provider is [THIRD_PARTY_MODULES.md](../../THIRD_PARTY_MODULES.md) §12.
 - The Button Widget is a command, a way somewhere, or both. `href` renders a real anchor, which works
   before hydration and on middle click. A wired `navigate` capability sends `{ path }` to the Core Runtime
   Controller instead, for a Button that cannot be an anchor. A Button with `href` and no wiring is a plain
