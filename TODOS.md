@@ -119,6 +119,16 @@ built. Remove an entry when it is done.
     question the palette raises: if a block states a width at `wide` and not at `compact`, does its slot
     policy change with the viewport, or is "explicit" a property of the block as a whole?
 
+    **Decided (2026-09-26): CSS decides, nothing measures**, and the form is settled. Designed in
+    [design/RESPONSIVE_BLOCK_GEOMETRY.md](./design/RESPONSIVE_BLOCK_GEOMETRY.md): the profile sits on
+    the stored length (`PhiResponsiveLength`, on the house `PhiResponsiveValue` the Grid already uses),
+    the resolver keeps handing back today's answer as the `compact` base and adds the other two beside
+    it, and an axis with profiles is written in CSS rather than inline, because an inline style beats
+    every `@container` rule. "Explicit" becomes a property of the block as a whole -- the profiles vary
+    the value, not the policy. The container goes on the box that offers the room, never on the block,
+    and the thresholds are 377 and 610 for every block, because a container query cannot read a custom
+    property in its condition. Building it changes `PhiRenderableBlockBase` and needs operator approval.
+
     And one profile system that is already built and fed by nobody: the Grid reads
     `compact | medium | wide` off its own measured container and then asks
     `resolvePhiGridSlotColumns` for a span, but the fallback is the single constant
@@ -585,11 +595,11 @@ built. Remove an entry when it is done.
   Layout; it says so with `maxSize` in `vw` units, not with a second profile system. The Overlay's
   `{ xs, md, lg }` handed to Ant Design is therefore the thing that goes, not the thing the rest adopts.
 
-  What follows from it, and is not yet decided: the scale is the container-breakpoint one
-  (theme/phi-container-breakpoints.ts), but measuring means a `ResizeObserver` or
-  `container-type: inline-size` per block, and block geometry sits on every renderable block rather
-  than on the handful that measure today. Which of the two, and whether a block that states no
-  responsive value at all should pay for either, is the first question of the responsive form.
+  What follows from it was the first question of the responsive form, and it is answered under Layouts
+  and Widgets: **CSS decides, nothing measures** (2026-09-26). The scale stays the container-breakpoint
+  one (theme/phi-container-breakpoints.ts), the query goes on the box that offers the room rather than
+  on the block, and a block that states no responsive value pays nothing, because it writes no
+  properties and no rule matches it.
 - **What the Shell is on a phone.** Today the answer is subtraction: the Shell hides Regions by
   `viewportFlags` below 768px (styles/shell.css), so a narrow screen gets the same Shell with parts
   missing. Nothing is re-arranged, and the navigation that lived in the sider is simply gone.

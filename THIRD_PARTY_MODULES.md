@@ -604,6 +604,25 @@ Inside the Builder's own chrome the library is always readable, whatever the edi
 Module still renders its images. That availability is declared by the owning Module through
 `availableToAuthoringChrome` on its provider descriptor, not listed anywhere in the Builder.
 
+### A popup leaves the block
+
+A Widget that opens a Tooltip, a Dropdown, a Select menu or a Popover lets it render in a portal. That is
+Ant Design's default -- pass no `getPopupContainer` and the popup lands on `document.body` -- and where
+this Foundation names a container it names `document.body` too, through one helper shared by the Canvas
+scaffold. Do not point `getPopupContainer` at a node inside your own block.
+
+The reason is not tidiness. A renderable block's frame writes what the author configured, and several of
+those things make the block a stacking context of its own: an `opacity` below 1, and every effect that
+animates with a transform. A popup anchored inside such a block cannot paint above a later sibling block
+however high its `z-index`, and a transform additionally re-anchors a `position: fixed` descendant to the
+block instead of to the window. A popup in a portal has left the subtree and meets none of it.
+
+The rule gets wider once a block may state a size per profile: the box that offers a block its room then
+declares `container-type: inline-size`, which brings the same stacking context to every slot holding a
+responsive block. That work is designed in
+[design/RESPONSIVE_BLOCK_GEOMETRY.md](./design/RESPONSIVE_BLOCK_GEOMETRY.md) and is not built; a Widget
+written to this rule today needs no change when it is.
+
 ## 5. Add a Theme preset
 
 A Theme preset is module-owned data, not a global registration and not arbitrary `ConfigProvider`
@@ -1065,6 +1084,7 @@ may decide what somebody is allowed to do.
 - Controller fields and the `Controller` Client are either complete as one group or absent as one group.
 - Every controllerless Module contributes at least one meaningful owned artifact and no no-op Controller.
 - Widgets use Phi Controls, providers, signaling, and the shared Canvas scaffold contracts.
+- A Widget's popups render in a portal; `getPopupContainer` never names a node inside the block.
 - Server handlers revalidate Form input and enforce authorization independently of Client validation.
 - No Public Widget's server half reads cookies, headers or the viewer, or renders a per-visitor value
   (token, nonce, timestamp, random value); those are loaded in the browser (STATIC_RENDERING.md).
