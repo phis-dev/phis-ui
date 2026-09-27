@@ -6,7 +6,6 @@ import {
   type ConfigProviderProps,
   type ThemeConfig,
 } from "antd";
-import type { GlobalToken } from "antd/es/theme/interface";
 import {
   createContext,
   useContext,
@@ -21,6 +20,7 @@ import type {
   PhiThemeMode,
   PhiThemePresetPlugin,
 } from "../../theme/phi-theme-presets";
+import type { PhiThemeTokens } from "../../theme/phi-theme-tokens";
 import type { PhiRootThemeFonts } from "./phi-root-theme-resolver";
 import {
   buildPhiControlShapeCssVars,
@@ -47,7 +47,14 @@ export type PhiConfig = {
   mode: PhiThemeMode;
   controlShape: PhiControlShape;
   presets: readonly PhiThemePresetPlugin[];
-  token: GlobalToken;
+  /**
+   * The resolved Theme, in the names this house has stated (`theme/phi-theme-tokens.ts`).
+   *
+   * Ant Design computes the values and the whole of its `GlobalToken` is what arrives here, but what
+   * a Client Component may read is the stated list -- so a name nobody declared fails to compile at
+   * the reader rather than quietly working until the day the Theme is computed by something else.
+   */
+  token: PhiThemeTokens;
 };
 
 export type PhiFontCatalogueFamily = { family: string; cssVariable: string };

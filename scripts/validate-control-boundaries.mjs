@@ -261,7 +261,6 @@ const antdImportAllowance = new Map([
   ["components/root/phi-config-provider.tsx", {
     values: ["ConfigProvider", "theme"],
     types: ["ConfigProviderProps", "ThemeConfig"],
-    paths: ["antd/es/theme/interface"],
     reason: "The root adapter. Everything Ant Design is configured with enters here and nowhere else.",
   }],
   ["components/root/phi-root-live-theme-provider.tsx", {
@@ -278,6 +277,11 @@ const antdImportAllowance = new Map([
     values: ["ConfigProvider", "theme"],
     paths: ["antd/es/theme/interface"],
     reason: "The Theme preview renders a draft Theme, so it configures Ant Design a second time on purpose.",
+  }],
+  ["theme/phi-theme-tokens.ts", {
+    paths: ["antd/es/theme/interface"],
+    reason: "The stated token vocabulary. The one line that derives its value types is the bridge, "
+      + "and the drift check with it.",
   }],
   ["theme/phi-antd-token-resolver.ts", {
     paths: [
@@ -299,14 +303,6 @@ const antdImportAllowance = new Map([
   ["components/widgets/client/markdown-editor.tsx", {
     paths: ["antd/es/input/TextArea"],
     reason: "A ref to the textarea it has to place a cursor in. A leak, and the smallest one available.",
-  }],
-  ["components/widgets/helpers/font-family.ts", {
-    paths: ["antd/es/theme/interface"],
-    reason: "Token names, as part of the theme adapter.",
-  }],
-  ["components/widgets/helpers/font-size.ts", {
-    paths: ["antd/es/theme/interface"],
-    reason: "Token names, as part of the theme adapter.",
   }],
   ["helpers/antd-locale.ts", {
     paths: ["antd/es/locale"],

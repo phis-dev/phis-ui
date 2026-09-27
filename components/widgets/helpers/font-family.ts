@@ -1,12 +1,11 @@
-import type { GlobalToken } from "antd/es/theme/interface";
-
+import type { PhiThemeTokens } from "../../../theme/phi-theme-tokens";
 import type { PhiRootThemeFonts } from "../../root/phi-root-theme-resolver";
 import type { PhiWidgetFontFamilyKey } from "../../../types/site-theme";
 
 export function resolvePhiWidgetFontFamily(
   fontFamily: PhiWidgetFontFamilyKey | null | undefined,
   fonts: PhiRootThemeFonts,
-  token: GlobalToken,
+  token: PhiThemeTokens,
 ): string | undefined {
   switch (fontFamily) {
     case "system":

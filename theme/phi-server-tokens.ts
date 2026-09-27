@@ -2,6 +2,7 @@ import "server-only";
 
 import { buildPhiThemeStructuralTokens } from "./phi-theme";
 import { resolvePhiAntdAliasTokens } from "./phi-antd-token-resolver";
+import type { PhiThemeTokens } from "./phi-theme-tokens";
 import {
   PHI_CORE_THEME_PRESET_PLUGINS,
   resolvePhiThemePresetPlugin,
@@ -11,43 +12,51 @@ import {
   type PhiThemePresetPlugin,
 } from "./phi-theme-presets";
 
-export type PhiServerThemeTokens = {
-  colorBgContainer: string;
-  colorBgElevated: string;
-  colorBgSpotlight: string;
-  colorFillQuaternary: string;
-  colorBorderSecondary: string;
-  colorText: string;
-  colorTextSecondary: string;
-  colorTextTertiary: string;
-  colorTextHeading: string;
-  colorTextLightSolid: string;
-  colorPrimary: string;
-  lineWidth: number;
-  lineType: string;
-  boxShadowSecondary: string;
-  boxShadowTertiary: string;
-  fontSize: number;
-  fontSizeLG: number;
-  fontSizeHeading2: number;
-  lineHeight: number;
-  lineHeightLG: number;
-  lineHeightHeading2: number;
-  fontWeightStrong: number;
-  borderRadiusSM: number;
-  borderRadiusLG: number;
-  padding: number;
-  paddingSM: number;
-  paddingLG: number;
-  paddingXXS: number;
-  marginXS: number;
-  marginSM: number;
-  sizeXS: number;
-  sizeSM: number;
-  sizeMD: number;
-  sizeLG: number;
-  controlHeight: number;
-};
+/**
+ * The names a Server render reads, cut from the house's stated vocabulary.
+ *
+ * Narrower than the Client's, because a Server Component reads through the published `--phi-*`
+ * variables rather than through a hook and only this much of the Theme reaches CSS. Cut rather than
+ * written out a second time, so a name can never mean one thing here and another there.
+ */
+export type PhiServerThemeTokens = Pick<
+  PhiThemeTokens,
+  | "colorBgContainer"
+  | "colorBgElevated"
+  | "colorBgSpotlight"
+  | "colorFillQuaternary"
+  | "colorBorderSecondary"
+  | "colorText"
+  | "colorTextSecondary"
+  | "colorTextTertiary"
+  | "colorTextHeading"
+  | "colorTextLightSolid"
+  | "colorPrimary"
+  | "lineWidth"
+  | "lineType"
+  | "boxShadowSecondary"
+  | "boxShadowTertiary"
+  | "fontSize"
+  | "fontSizeLG"
+  | "fontSizeHeading2"
+  | "lineHeight"
+  | "lineHeightLG"
+  | "lineHeightHeading2"
+  | "fontWeightStrong"
+  | "borderRadiusSM"
+  | "borderRadiusLG"
+  | "padding"
+  | "paddingSM"
+  | "paddingLG"
+  | "paddingXXS"
+  | "marginXS"
+  | "marginSM"
+  | "sizeXS"
+  | "sizeSM"
+  | "sizeMD"
+  | "sizeLG"
+  | "controlHeight"
+>;
 
 type PhiServerThemeSource = {
   preset?: string | null;

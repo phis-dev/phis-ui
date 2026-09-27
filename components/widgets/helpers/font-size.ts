@@ -1,10 +1,9 @@
-import type { GlobalToken } from "antd/es/theme/interface";
-
+import type { PhiThemeTokens } from "../../../theme/phi-theme-tokens";
 import type { PhiWidgetFontSizeKey } from "../../../types/site-theme";
 
 export function resolvePhiWidgetFontSize(
   fontSize: PhiWidgetFontSizeKey | null | undefined,
-  token: GlobalToken,
+  token: PhiThemeTokens,
   defaultFontSize: PhiWidgetFontSizeKey = "inherit",
 ): number | undefined {
   switch (fontSize ?? defaultFontSize) {
