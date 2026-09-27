@@ -161,6 +161,14 @@ export type {
 } from "./components/controls/phi-button-control";
 export { PhiAlertControl } from "./components/controls/phi-alert-control";
 export type { PhiAlertControlProps } from "./components/controls/phi-alert-control";
+/*
+ * Absence, beside the failure it is not. Nine surfaces inside this package reach the Control by
+ * relative path; a Module package could not reach it at all and drew Ant Design's `Empty` itself,
+ * which is the large illustration and, with no `description`, the untranslated "No Data" -- the two
+ * outcomes the Control exists to make unreachable.
+ */
+export { PhiEmptyControl } from "./components/controls/phi-empty-control";
+export type { PhiEmptyControlProps } from "./components/controls/phi-empty-control";
 export {
   PHI_CONFIRM_PLACEMENTS,
   PhiConfirmControl,
