@@ -9,6 +9,7 @@ import { createPhiPageReference } from "../../../types/references";
 import { createPhiPresetCmsPageId } from "../../../types/cms-instance-id";
 import {
   resolvePhiBuilderOfferedPageCatalog,
+  resolvePhiBuilderOfferedPageKeyFromCatalogPath,
   type PhiBuilderOfferedCatalogState,
 } from "./offered-page-catalog";
 
@@ -209,5 +210,40 @@ describe("a Page the Public base holds and a package covers", () => {
       }),
       "/",
     )).toEqual([HOME.key]);
+  });
+});
+
+/**
+ * Reading the Select's answer back, which is the other half of filling it.
+ *
+ * The Select names a path, and a path is not a Page while two Modules declare it. Read against the
+ * installed catalog the covered one wins -- it is declared first, because the base Module is -- and
+ * the Builder is then sent to a Page it does not offer, moved off it again, and parked on the root.
+ */
+describe("the Page a path in the Select stands for", () => {
+  const landingNobody = { mode: "landing" } as const;
+
+  it("is the covering Page, not the base Page that shares the address", () => {
+    expect(resolvePhiBuilderOfferedPageKeyFromCatalogPath(
+      workspace({
+        stored: landingNobody,
+        pages: [HOME, TERMS, COVERING_TERMS],
+        moduleIds: [OFFEROR_ID],
+      }),
+      "public",
+      "/terms",
+    )).toBe(COVERING_TERMS.key);
+  });
+
+  it("is the base Page again once the covering package is switched off", () => {
+    expect(resolvePhiBuilderOfferedPageKeyFromCatalogPath(
+      workspace({
+        stored: landingNobody,
+        pages: [HOME, TERMS, COVERING_TERMS],
+        moduleIds: [],
+      }),
+      "public",
+      "/terms",
+    )).toBe(TERMS.key);
   });
 });

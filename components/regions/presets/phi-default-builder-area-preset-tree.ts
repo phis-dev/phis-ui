@@ -12,7 +12,6 @@ import { PHI_CMS_AREA_KEYS } from "../../../constants/cms-areas";
 import { PhiMediaKind } from "../../../constants/media";
 import { buildPhiCmsLayoutNode } from "../../../helpers/cms-node-factories";
 import { createPhiCmsPresetNodes } from "../../../helpers/cms-preset-nodes";
-import { PHI_AREA_META_PUBLIC_DEFAULTS } from "../../../helpers/cms-area-config";
 import { remapPhiSignalRoutesInConfig } from "../../../helpers/signal-route-lifecycle";
 import { resolvePhiShellHeaderHeight, resolvePhiShellMetric } from "../../../helpers/shell-region-style";
 import type { PhiCmsPageNode, PhiResolvedCmsPageTree } from "../../../types/cms";
@@ -74,7 +73,6 @@ import {
   PHI_BUILDER_PUBLIC_ROUTES_OVERLAY_IDS,
   PHI_BUILDER_PUBLIC_ROUTES_LAYOUT_IDS,
   PHI_BUILDER_PUBLIC_ROUTES_WIDGET_IDS,
-  PHI_BUILDER_SHELLS_WIDGET_IDS,
   PHI_BUILDER_MODULE_USAGE_OVERLAY_IDS,
   PHI_BUILDER_MODULE_USAGE_LAYOUT_IDS,
   PHI_BUILDER_MODULE_USAGE_WIDGET_IDS,
@@ -84,6 +82,7 @@ import {
 } from "../../../helpers/cms-page-addresses";
 import { PHI_REVISIONS_FORM_IDS } from "../../../plugins/runtime-modules/revisions/forms";
 import { PHI_BUILDER_PAGE_META_FORM_ID } from "../../../plugins/runtime-modules/builder/page-meta-form";
+import { PHI_BUILDER_AREA_SETTINGS_FORM_ID } from "../../../plugins/runtime-modules/builder/area-settings-form";
 import { getPhiBuilderNavigationPageLabels } from "./builder-navigation-label-set";
 import { getPhiMediaWidgetLabels } from "../../media/label-sets/media";
 import {
@@ -140,7 +139,6 @@ const PHI_BUILDER_WIDGET_NODE_KEYS = [
   "widgetNavigationSource",
   "widgetRevisionsAreaShellDelete",
   "widgetBuilderAreaSelector",
-  "widgetAreaRootRoute",
   "widgetBuilderModeSwitch",
   "widgetHeaderMainDebugSwitch",
   "widgetHeaderTopThemeModeSwitch",
@@ -2279,279 +2277,78 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
               },
             }),
             /*
-             * Where the Area's `/` goes.
+             * Everything the Area says about itself, as one Form.
              *
-             * A plain Select, in the Area settings dialog rather than in the header it used to share
-             * with the Sider switch: it is a statement about the Area being edited rather than about
-             * anything on the canvas, and the header is where the canvas is worked on. The choices are
-             * the Area's own registered Pages plus the two answers that are not a Page, and what a
-             * choice stores is a Page reference rather than a path.
+             * A Form rather than six Controls in a column, for the one thing a Form does that a stack
+             * cannot: it states the label column once -- `PHI_FORM_DEFAULT_LAYOUT` puts every caption
+             * in tracks 1-9 and every Control in 9-25 -- so the rows line up on an edge of their own
+             * instead of each being indented by the width of its own caption. None of the questions
+             * changed, and neither did what an answer is stored as.
+             *
+             * The captions travel in `formConfig` rather than through a Form label set of their own.
+             * This preset is server-rendered and already holds the whole translated chrome label set,
+             * so reading them from the placement keeps one translation source for the dialog instead
+             * of two that would have to be kept saying the same thing.
+             *
+             * The two headings that used to stand between the groups are gone with the stack. They
+             * were there because the rows had no common edge to read down; the label column is that
+             * edge, and a heading every second row would now be the thing interrupting it.
              */
             nodes.widget({
-              typeKey: "select-box",
-              id: SYNTHETIC_DEV_WIDGET_IDS.widgetAreaRootRoute,
+              typeKey: "form",
+              id: PHI_BUILDER_AREA_SETTINGS_WIDGET_IDS.areaSettingsForm,
               parentLayoutNodeId: PHI_BUILDER_AREA_SETTINGS_LAYOUT_IDS.areaSettingsFields,
               slotIndex: PHI_CMS_SEQUENTIAL_LAYOUT_SLOTS[0].slotIndex,
               sortOrder: 0,
-              label: "Area root route select",
+              label: "dev area settings form",
               config: {
-                key: "areaRootRoute",
-                size: { width: "100%" },
-                label: labels.rootRoute.title,
-                placeholder: labels.rootRoute.title,
-                options: [],
-                optionsProvider: {
-                  providerKey: PHI_BUILDER_RUNTIME_DATA_PROVIDER_KEYS.areaRootRoute,
-                  params: {
-                    automaticLabel: labels.rootRoute.automatic,
-                    landingLabel: labels.rootRoute.landing,
-                  },
+                formId: PHI_BUILDER_AREA_SETTINGS_FORM_ID,
+                /*
+                 * No submit button of its own: the dialog's footer carries the one button this Form
+                 * has, and the controller turns that command into the submit -- the arrangement the
+                 * Page metadata dialog already uses.
+                 */
+                execution: { mode: "signal" },
+                formConfig: {
+                  rootRouteTitle: labels.rootRoute.title,
+                  rootRouteAutomatic: labels.rootRoute.automatic,
+                  rootRouteLanding: labels.rootRoute.landing,
+                  landingPageLabel: labels.rootRoute.landingPage,
+                  landingPageEmpty: labels.rootRoute.landingPageEmpty,
+                  landingPageAdopted: labels.rootRoute.landingPageAdopted,
+                  titleTemplateLabel: labels.areaSettings.titleTemplate,
+                  titleTemplatePlaceholder: labels.areaSettings.titleTemplatePlaceholder,
+                  defaultTitleLabel: labels.areaSettings.defaultTitle,
+                  defaultTitlePlaceholder: labels.areaSettings.defaultTitlePlaceholder,
+                  seoIndexLabel: labels.areaSettings.seoIndex,
+                  seoSitemapLabel: labels.areaSettings.seoSitemap,
                 },
                 signalRoutes: {
-                  emits: [
-                    {
-                      routeKey: "builder-area-root-route-change",
-                      capabilityId: "change",
-                      scope: "area",
-                      channel: "rootRoute",
-                      action: "change",
-                      valueType: "string",
-                      receiver: createPhiBuilderControllerAddress(),
-                    },
-                  ],
+                  emits: [{
+                    routeKey: "builder-area-settings-values",
+                    capabilityId: "submitValues",
+                    scope: "area",
+                    channel: "areaSettingsForm",
+                    action: "change",
+                    valueType: "json",
+                    valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.formValues,
+                    receiver: createPhiBuilderControllerAddress(),
+                  }],
+                  listens: [{
+                    routeKey: "builder-area-settings-submit",
+                    capabilityId: "submit",
+                    scope: "page",
+                    channel: "submit",
+                    action: "activate",
+                    valueType: "none",
+                    receiver: createPhiSignalAddress(
+                      "cms",
+                      PHI_BUILDER_AREA_SETTINGS_WIDGET_IDS.areaSettingsForm,
+                    ),
+                  }],
                 },
               },
             }),
-            /*
-             * Which landing stands at `/`, when a Module offers one.
-             *
-             * The other half of the Select beside it: that one says what the root does, this one says
-             * which of the applications for the slot is answered. It is disabled until the first says
-             * "landing", and it lists offers rather than Pages -- a Module that declares `/` is
-             * applying, and only the ones that say they mean it are candidates. Empty is an answer
-             * too: nobody offers one here, and the root then draws the empty tree /pages authors.
-             */
-            nodes.widget({
-              typeKey: "select-box",
-              id: PHI_BUILDER_SHELLS_WIDGET_IDS.widgetAreaLandingPage,
-              parentLayoutNodeId: PHI_BUILDER_AREA_SETTINGS_LAYOUT_IDS.areaSettingsFields,
-              slotIndex: PHI_CMS_SEQUENTIAL_LAYOUT_SLOTS[1].slotIndex,
-              sortOrder: 1,
-              label: "Area landing page select",
-              config: {
-                key: "areaLandingPage",
-                size: { width: "100%" },
-                label: labels.rootRoute.landingPage,
-                placeholder: labels.rootRoute.landingPageEmpty,
-                allowClear: true,
-                options: [],
-                optionsProvider: {
-                  providerKey: PHI_BUILDER_RUNTIME_DATA_PROVIDER_KEYS.landingPage,
-                  params: {
-                    adoptedLabel: labels.rootRoute.landingPageAdopted,
-                    emptyLabel: labels.rootRoute.landingPageEmpty,
-                  },
-                },
-                signalRoutes: {
-                  emits: [
-                    {
-                      routeKey: "builder-area-landing-page-change",
-                      capabilityId: "change",
-                      scope: "area",
-                      channel: "landingPage",
-                      action: "change",
-                      valueType: "string",
-                      receiver: createPhiBuilderControllerAddress(),
-                    },
-                  ],
-                  listens: [
-                    {
-                      routeKey: "builder-area-landing-page-enabled",
-                      capabilityId: "enabled",
-                      scope: "page",
-                      channel: "enabled",
-                      action: "change",
-                      valueType: "boolean",
-                      receiver: createPhiSignalAddress("cms", PHI_BUILDER_SHELLS_WIDGET_IDS.widgetAreaLandingPage),
-                    },
-                  ],
-                },
-              },
-            }),
-            /*
-             * What the Area writes into the title of every Page it draws.
-             *
-             * Two fields under their own heading, above the search-engine switches and separate from
-             * them, because they are a different question answered by different Areas: the switches are
-             * about Public being found, these are about what stands in the browser tab, and the Admin
-             * wants its own answer to that. Both may be left alone -- an Area that says nothing here
-             * still gets titles -- which is why the placeholders state the resting value rather than
-             * repeating the label.
-             */
-            nodes.widget({
-              typeKey: "simple-text",
-              id: PHI_BUILDER_AREA_SETTINGS_WIDGET_IDS.areaSettingsTitlesTitle,
-              parentLayoutNodeId: PHI_BUILDER_AREA_SETTINGS_LAYOUT_IDS.areaSettingsFields,
-              slotIndex: PHI_CMS_SEQUENTIAL_LAYOUT_SLOTS[2].slotIndex,
-              sortOrder: 2,
-              label: "Area settings titles title",
-              config: {
-                text: labels.areaSettings.titlesTitle,
-                strong: true,
-              },
-            }),
-            ...([
-              [
-                PHI_BUILDER_SHELLS_WIDGET_IDS.widgetAreaTitleTemplate,
-                "areaTitleTemplate",
-                "titleTemplate",
-                labels.areaSettings.titleTemplate,
-                labels.areaSettings.titleTemplatePlaceholder,
-                3,
-              ],
-              [
-                PHI_BUILDER_SHELLS_WIDGET_IDS.widgetAreaDefaultTitle,
-                "areaDefaultTitle",
-                "defaultTitle",
-                labels.areaSettings.defaultTitle,
-                labels.areaSettings.defaultTitlePlaceholder,
-                4,
-              ],
-            ] as const).map(([id, key, channel, label, placeholder, sortOrder]) =>
-              nodes.widget({
-                typeKey: "input",
-                id,
-                parentLayoutNodeId: PHI_BUILDER_AREA_SETTINGS_LAYOUT_IDS.areaSettingsFields,
-                slotIndex: PHI_CMS_SEQUENTIAL_LAYOUT_SLOTS[sortOrder].slotIndex,
-                sortOrder,
-                label: `Area settings ${key}`,
-                config: {
-                  key,
-                  label,
-                  placeholder,
-                  size: { width: "100%" },
-                  text: "",
-                  inputType: "text",
-                  allowClear: true,
-                  trimEmittedValue: true,
-                  /*
-                   * Long enough that a word is one edit rather than five, short enough that the answer
-                   * is in the draft before anyone reaches for Save. Without it every keystroke would be
-                   * its own entry in the undo stack.
-                   */
-                  debounceMs: 400,
-                  signalRoutes: {
-                    emits: [{
-                      routeKey: `builder-${channel}-change`,
-                      capabilityId: "change",
-                      scope: "area",
-                      channel,
-                      action: "change",
-                      valueType: "string",
-                      receiver: createPhiBuilderControllerAddress(),
-                    }],
-                    listens: [{
-                      routeKey: `builder-${channel}-value`,
-                      capabilityId: "change",
-                      scope: "page",
-                      channel: "titleValue",
-                      action: "change",
-                      valueType: "string",
-                      receiver: createPhiSignalAddress("cms", id),
-                    }],
-                  },
-                },
-              })),
-            /*
-             * What the Area says about being found, and who may say it.
-             *
-             * Two switches under a heading, because they are a different subject from the root route
-             * and a form that runs them together would read as one. Both are shown in every Area and
-             * answerable in none but Public -- the controller says which by signal, as it does for the
-             * landing Select -- and outside Public they stand at what is actually the case.
-             */
-            nodes.widget({
-              typeKey: "simple-text",
-              id: PHI_BUILDER_AREA_SETTINGS_WIDGET_IDS.areaSettingsSeoTitle,
-              parentLayoutNodeId: PHI_BUILDER_AREA_SETTINGS_LAYOUT_IDS.areaSettingsFields,
-              slotIndex: PHI_CMS_SEQUENTIAL_LAYOUT_SLOTS[5].slotIndex,
-              sortOrder: 5,
-              label: "Area settings SEO title",
-              config: {
-                text: labels.areaSettings.seoTitle,
-                strong: true,
-              },
-            }),
-            ...([
-              [
-                PHI_BUILDER_SHELLS_WIDGET_IDS.widgetAreaSeoIndex,
-                "areaMetaIndex",
-                "seoIndex",
-                labels.areaSettings.seoIndex,
-                PHI_AREA_META_PUBLIC_DEFAULTS.index,
-                6,
-              ],
-              [
-                PHI_BUILDER_SHELLS_WIDGET_IDS.widgetAreaSeoSitemap,
-                "areaMetaSitemap",
-                "seoSitemap",
-                labels.areaSettings.seoSitemap,
-                PHI_AREA_META_PUBLIC_DEFAULTS.sitemap,
-                7,
-              ],
-            ] as const).map(([id, key, channel, label, defaultChecked, sortOrder]) =>
-              nodes.widget({
-                typeKey: "switch",
-                id,
-                parentLayoutNodeId: PHI_BUILDER_AREA_SETTINGS_LAYOUT_IDS.areaSettingsFields,
-                slotIndex: PHI_CMS_SEQUENTIAL_LAYOUT_SLOTS[sortOrder].slotIndex,
-                sortOrder,
-                label: `Area settings ${key}`,
-                config: {
-                  key,
-                  label,
-                  /*
-                   * A switch is intrinsically sized, and in a form that is exactly wrong: the row has
-                   * to be as wide as the others or its label column is a third of nothing. Said as
-                   * the block size it is, rather than by teaching the Control about forms.
-                   */
-                  size: { width: "100%" },
-                  /*
-                   * The resting state, and only that: what the Area actually says arrives by signal
-                   * before anyone sees the dialog. It matches the reader's default so the two never
-                   * disagree in the moment between the render and the controller's first word.
-                   */
-                  defaultChecked,
-                  signalRoutes: {
-                    emits: [{
-                      routeKey: `builder-${channel}-change`,
-                      capabilityId: "change",
-                      scope: "area",
-                      channel,
-                      action: "change",
-                      valueType: "boolean",
-                      receiver: createPhiBuilderControllerAddress(),
-                    }],
-                    listens: [{
-                      routeKey: `builder-${channel}-value`,
-                      capabilityId: "change",
-                      scope: "page",
-                      channel: "seoValue",
-                      action: "change",
-                      valueType: "boolean",
-                      receiver: createPhiSignalAddress("cms", id),
-                    }, {
-                      routeKey: `builder-${channel}-enabled`,
-                      capabilityId: "enabled",
-                      scope: "page",
-                      channel: "enabled",
-                      action: "change",
-                      valueType: "boolean",
-                      receiver: createPhiSignalAddress("cms", id),
-                    }],
-                  },
-                },
-              })),
             /*
              * Where the header's third column went.
              *
@@ -2600,19 +2397,35 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
               label: "Area settings commands",
               config: {
                 key: "area-settings-commands",
-                compact: false,
-                wrap: true,
+                /*
+                 * The two buttons as one group rather than as two things that happen to stand near
+                 * each other: they are the two ends of a single decision, and a gap between them
+                 * reads as two unrelated offers.
+                 */
+                compact: true,
+                /*
+                 * Not wrapping, because wrapping is what a compact group cannot do: two buttons that
+                 * may fall onto two lines cannot share one border, so `PhiToolbarControl` draws the
+                 * spaced row instead whenever both are asked for. Two short buttons in a dialog
+                 * footer have nowhere to wrap to anyway.
+                 */
+                wrap: false,
                 showLabels: true,
                 controlSize: "medium",
                 /*
-                 * One button, and it says "done" rather than "save".
+                 * Two buttons, because the Form holds the answers until one of them is pressed.
                  *
-                 * Every control in here writes into the draft the moment it is answered, exactly as it
-                 * did while it stood in the header, so there is nothing left to confirm -- and a Save
-                 * beside controls that already saved would be a second, wrong sentence about when a
-                 * change takes effect.
+                 * The controls used to write into the draft the moment they were answered, and then
+                 * there was nothing to confirm and nothing to take back. A Form answers as a record:
+                 * "done" asks it for what it holds and the controller writes that, so leaving has to
+                 * be sayable as well -- otherwise the only way out of a half-typed dialog is to make
+                 * the change.
                  */
                 buttons: [{
+                  key: "cancel",
+                  emits: [{ capabilityId: "command", value: "cancel" }],
+                  actionKey: "cancel",
+                }, {
                   key: "close",
                   emits: [{ capabilityId: "command", value: "close" }],
                   actionKey: "save",

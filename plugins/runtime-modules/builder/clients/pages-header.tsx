@@ -5,13 +5,15 @@ import { useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 import {
-  resolvePhiBuilderPageKeyFromCatalogPath,
   resolvePhiBuilderCatalogPathForCatalog,
-  resolvePhiBuilderActivePageCatalog,
   resolvePhiBuilderActivePageKey,
   type PhiBuilderPageCatalogArea,
   type PhiPresetPageNode,
 } from "../../../../helpers/cms-page-catalog";
+import {
+  resolvePhiBuilderOfferedPageCatalog,
+  resolvePhiBuilderOfferedPageKeyFromCatalogPath,
+} from "../offered-page-catalog";
 import {
   PHI_BUILDER_AREA_SEARCH_PARAM,
   PHI_BUILDER_PAGE_SEARCH_PARAM,
@@ -145,6 +147,23 @@ export function PhiDeveloperBuilderPagesHeaderSection({
     "public",
     (state) => state.persistedPageCatalogByArea,
   );
+  /*
+   * What the Select is allowed to name, which is narrower than what is installed: the Pages the Area
+   * answers with. The three fields below are what that narrowing is read from -- which Modules are
+   * switched on, and what the Area said about its root.
+   */
+  const navigationSurfacesByArea = usePhiDeveloperBuilderStateValue(
+    "public",
+    (state) => state.navigationSurfacesByArea,
+  );
+  const runtimeModuleIdsByArea = usePhiDeveloperBuilderStateValue(
+    "public",
+    (state) => state.runtimeModuleIdsByArea,
+  );
+  const areaRootRoutes = usePhiDeveloperBuilderStateValue(
+    "public",
+    (state) => state.areaRootRoutes,
+  );
   const pageCatalogHydratedByArea = usePhiDeveloperBuilderStateValue(
     "public",
     (state) => state.pageCatalogHydratedByArea,
@@ -163,12 +182,15 @@ export function PhiDeveloperBuilderPagesHeaderSection({
     (searchArea != null && searchArea !== currentArea
       ? (resolvePhiBuilderActivePageKey(null, modulePresetPagesByArea[searchArea]) ?? "")
       : currentPageKey);
-  const pageTree = resolvePhiBuilderActivePageCatalog(
-    area,
+  const offeredCatalogState = {
     modulePresetPagesByArea,
-    resolvedCustomPages,
+    customPages: resolvedCustomPages,
     persistedPageCatalogByArea,
-  );
+    navigationSurfacesByArea,
+    runtimeModuleIdsByArea,
+    areaRootRoutes,
+  };
+  const pageTree = resolvePhiBuilderOfferedPageCatalog(offeredCatalogState, area);
   const pageSelectionReady = catalogHydrated && pageCatalogHydratedByArea[area] === true && pageKey.length > 0;
   const selectedPath = pageSelectionReady
     ? findPageNodePath(pageTree, pageKey) ?? [{ key: pageKey, title: pageKey }]
@@ -227,7 +249,7 @@ export function PhiDeveloperBuilderPagesHeaderSection({
       const signalValue = signal.value;
       const nextPageKey =
         typeof signalValue === "string"
-          ? resolvePhiBuilderPageKeyFromCatalogPath(area, signalValue, pageTree)
+          ? resolvePhiBuilderOfferedPageKeyFromCatalogPath(offeredCatalogState, area, signalValue)
           : null;
       if (nextPageKey && nextPageKey !== pageKey) {
         navigateToPage(nextPageKey);

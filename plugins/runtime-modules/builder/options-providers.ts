@@ -6,6 +6,12 @@ import {
   resolvePhiRuntimeAreaDefinition,
 } from "../../../plugins/runtime-modules/area-definitions";
 import type { PhiControlOption } from "../../../components/controls/phi-control-options";
+import { isPhiCmsErrorPagePath } from "../../../constants/cms-error-pages";
+import {
+  PHI_BUILDER_AREA_LANDING_PAGE_EMPTY,
+  PHI_BUILDER_AREA_ROOT_ROUTE_AUTOMATIC,
+  PHI_BUILDER_AREA_ROOT_ROUTE_LANDING,
+} from "./area-settings-values";
 import {
   readPhiControlOptionsProviderParam,
   createPhiControlOptionsProviderClient,
@@ -15,6 +21,7 @@ import {
 import { PHI_BUILDER_RUNTIME_DATA_PROVIDER_KEYS } from "./ids";
 import {
   findPhiBuilderCatalogPathForCatalog,
+  normalizePhiBuilderCmsCatalogPath,
   resolvePhiBuilderCatalogPathForCatalog,
   resolvePhiBuilderCmsStoragePathForCatalog,
   resolvePhiBuilderActivePageCatalog,
@@ -23,12 +30,12 @@ import {
 } from "../../../helpers/cms-page-catalog";
 import {
   resolvePhiBuilderAreaRootApplicants,
+  resolvePhiBuilderOfferedPageCatalog,
   resolvePhiBuilderOfferedPageKey,
 } from "./offered-page-catalog";
 import {
   builderWorkspaceStore,
   getPhiDeveloperBuilderStateSnapshot,
-  readPhiBuilderEffectiveAreaRootRoute,
 } from "./developer-workspace-store";
 import type { PhiDeveloperBuilderWorkspaceState } from "./developer-workspace-types";
 import { getPhiBuilderModuleMetasSnapshot } from "./plugin-meta-store";
@@ -163,40 +170,75 @@ function resolveFormsOptions(context: PhiControlOptionsProviderContext): PhiReso
 }
 
 /**
- * Where the target Area's `/` goes, as one list.
+ * The fixed head of a list, taken from the field rather than invented here.
  *
- * The two answers that are not a Page come first and are followed by every registered Page of the
- * Area. What a choice stores is the Page's reference, never its path: a path is a fact about today's
- * routing table and would rot the first time a Page moved or a Module renamed its route. The two
- * labels arrive as provider params because the preset that places the select is server-rendered and
- * has the translated label set; a Client provider has neither.
+ * A Form field states the answers that are not a Page as its own options, and they arrive already
+ * resolved against the placement's translated captions. A Control placed without a form states
+ * nothing, and then the provider's own wording stands -- which is what the arguments are for.
  */
-export const PHI_BUILDER_AREA_ROOT_ROUTE_AUTOMATIC = "phi-root-route:automatic" as const;
-export const PHI_BUILDER_AREA_ROOT_ROUTE_LANDING = "phi-root-route:landing" as const;
-/**
- * "Nobody -- I will author it myself", as a value the Select can carry.
- *
- * The state has always existed in storage as a landing without a target; what it never had was a way
- * to be said. A cleared Select is indistinguishable from one nobody has touched, so a Builder who
- * meant "none" was read as "never asked" and the single applicant on offer was adopted behind them.
- */
-export const PHI_BUILDER_AREA_LANDING_PAGE_EMPTY = "phi-landing-page:empty" as const;
+function resolvePhiBuilderPlacementOptions(
+  context: PhiControlOptionsProviderContext,
+  ...fallbacks: readonly PhiControlOption[]
+): readonly PhiControlOption[] {
+  return context.options.length > 0 ? context.options : fallbacks;
+}
 
+/**
+ * One caption the placement holds, with the provider param as the older way of saying it.
+ */
+function readPhiBuilderPlacementText(
+  context: PhiControlOptionsProviderContext,
+  configKey: string,
+  paramKey: string,
+) {
+  const placed = context.sourceConfig?.[configKey];
+  return typeof placed === "string" && placed.length > 0
+    ? placed
+    : readPhiControlOptionsProviderParam(context.optionsProvider, paramKey);
+}
+
+/**
+ * The Pages a root may be sent to, which is every Page the Area answers with except two kinds.
+ *
+ * `/` is left out. A forward from the root to the root is a loop, and the Page standing there is
+ * already reachable through the two answers above this list -- so naming it as a destination offers
+ * an answer that cannot be carried out, spelled like one that can.
+ *
+ * The error Pages are left out for the other reason: they are what a refused request is answered
+ * with, not somewhere a Site sends the people who arrive at its front door. A root that forwards to
+ * `/error/404` is a Site that greets every visitor with "not found".
+ *
+ * Sorted by what the reader sees rather than by the order the Modules were installed in, which is
+ * what the catalog carries and what no one looking for a Page by name can follow. The path decides
+ * ties, because two Pages may share a title and never an address.
+ */
 function collectPageReferenceOptions(
   area: PhiBuilderPageCatalogArea,
   nodes: readonly PhiPresetPageNode[],
   allNodes: readonly PhiPresetPageNode[],
 ): PhiControlOption[] {
-  return nodes.flatMap((node) => [
-    ...(node.reference && node.tombstoned !== true
-      ? [{
-          value: node.reference,
-          label: node.title,
-          description: resolvePhiBuilderCmsStoragePathForCatalog(area, node.key, allNodes),
-        }]
-      : []),
-    ...collectPageReferenceOptions(area, node.children ?? [], allNodes),
-  ]);
+  const collect = (candidates: readonly PhiPresetPageNode[]): PhiControlOption[] =>
+    candidates.flatMap((node) => {
+      const storagePath = resolvePhiBuilderCmsStoragePathForCatalog(area, node.key, allNodes);
+      const normalizedPath = normalizePhiBuilderCmsCatalogPath(storagePath);
+      return [
+        ...(node.reference &&
+          node.tombstoned !== true &&
+          normalizedPath !== "/" &&
+          !isPhiCmsErrorPagePath(normalizedPath)
+          ? [{
+              value: node.reference,
+              label: node.title,
+              description: storagePath,
+            }]
+          : []),
+        ...collect(node.children ?? []),
+      ];
+    });
+
+  return collect(nodes).sort((left, right) =>
+    left.label.localeCompare(right.label) ||
+    (left.description ?? "").localeCompare(right.description ?? ""));
 }
 
 /**
@@ -218,7 +260,12 @@ function resolveLandingPageOptions(
   const moduleTitles = new Map(
     (snapshot.runtimeModuleDefinitions ?? []).map((definition) => [definition.moduleId, definition.title] as const),
   );
-  const adoptedLabel = readPhiControlOptionsProviderParam(context.optionsProvider, "adoptedLabel");
+  /*
+   * The caption the placement holds, read from the form's config rather than from a provider param:
+   * the Builder preset is server-rendered and has the translated chrome labels, and a Client provider
+   * has neither. Params stay readable for a Control placed without a form.
+   */
+  const adoptedLabel = readPhiBuilderPlacementText(context, "landingPageAdopted", "adoptedLabel");
   // The merged catalog rather than the raw preset pages: that is where a Module Page is given its
   // reference, and where a Page the Site has taken over carries the scope it was stored under.
   const catalog = resolvePhiBuilderActivePageCatalog(
@@ -228,10 +275,12 @@ function resolveLandingPageOptions(
     snapshot.persistedPageCatalogByArea,
   );
   const options: PhiControlOption[] = [
-    {
+    ...resolvePhiBuilderPlacementOptions(context, {
       value: PHI_BUILDER_AREA_LANDING_PAGE_EMPTY,
       label: readPhiControlOptionsProviderParam(context.optionsProvider, "emptyLabel") ?? "None",
-    },
+    }),
+    // "None" keeps its place at the head; the applicants behind it read in their own order, which is
+    // by name, because which package declared first is not something the reader can see.
     ...resolvePhiBuilderAreaRootApplicants(snapshot, area, catalog)
       .filter((node) => node.reference)
       .map((node) => {
@@ -242,16 +291,17 @@ function resolveLandingPageOptions(
           label: node.title,
           description: node.pageScopeId != null && adoptedLabel ? `${owner} -- ${adoptedLabel}` : owner,
         };
-      }),
+      })
+      .sort((left, right) =>
+        left.label.localeCompare(right.label) || left.description.localeCompare(right.description)),
   ];
 
-  const rootRoute = readPhiBuilderEffectiveAreaRootRoute(snapshot, area);
-  return {
-    options,
-    value: rootRoute?.mode === "landing" && rootRoute.target
-      ? rootRoute.target
-      : PHI_BUILDER_AREA_LANDING_PAGE_EMPTY,
-  };
+  /*
+   * Options only. What the field holds is the Form's, and the Builder controller states it as part of
+   * the record it sends when the dialog opens -- a second answer from here would be the same sentence
+   * from a source that does not know what has been typed since.
+   */
+  return { options };
 }
 
 function resolveAreaRootRouteOptions(
@@ -259,35 +309,32 @@ function resolveAreaRootRouteOptions(
 ): PhiResolvedControlOptions {
   const snapshot = readBuilderSnapshot(context);
   const area = resolveProviderArea(context);
-  const pageTree = resolvePhiBuilderActivePageCatalog(
-    area,
-    snapshot.modulePresetPagesByArea,
-    snapshot.customPages,
-    snapshot.persistedPageCatalogByArea,
-  );
-  // The effective answer, not only this session's: the Select has to open on what the Area actually
-  // says, and until somebody changes it that sentence came from the server.
-  const rootRoute = readPhiBuilderEffectiveAreaRootRoute(snapshot, area);
-
+  // What the Area answers with, not what is installed: a destination that is covered by another
+  // Module is one no visitor reaches, and listing it beside the Page that covers it puts the same
+  // address in the Select twice.
+  const pageTree = resolvePhiBuilderOfferedPageCatalog(snapshot, area);
+  /*
+   * Options only. Which of them the Area stands at is the Form's to hold: the Builder controller
+   * states the whole record when the dialog opens, and a second answer from here would be the same
+   * sentence from a source that does not know what has been typed since.
+   */
   return {
     options: [
-      {
-        value: PHI_BUILDER_AREA_ROOT_ROUTE_AUTOMATIC,
-        label: readPhiControlOptionsProviderParam(context.optionsProvider, "automaticLabel")
-          ?? "First navigation entry",
-      },
-      {
-        value: PHI_BUILDER_AREA_ROOT_ROUTE_LANDING,
-        label: readPhiControlOptionsProviderParam(context.optionsProvider, "landingLabel")
-          ?? "Landing page",
-      },
+      ...resolvePhiBuilderPlacementOptions(
+        context,
+        {
+          value: PHI_BUILDER_AREA_ROOT_ROUTE_AUTOMATIC,
+          label: readPhiControlOptionsProviderParam(context.optionsProvider, "automaticLabel")
+            ?? "First navigation entry",
+        },
+        {
+          value: PHI_BUILDER_AREA_ROOT_ROUTE_LANDING,
+          label: readPhiControlOptionsProviderParam(context.optionsProvider, "landingLabel")
+            ?? "Landing page",
+        },
+      ),
       ...collectPageReferenceOptions(area, pageTree, pageTree),
     ],
-    value: !rootRoute
-      ? PHI_BUILDER_AREA_ROOT_ROUTE_AUTOMATIC
-      : rootRoute.mode === "landing"
-        ? PHI_BUILDER_AREA_ROOT_ROUTE_LANDING
-        : rootRoute.target,
   };
 }
 

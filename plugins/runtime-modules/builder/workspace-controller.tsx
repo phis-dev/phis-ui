@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useEffectEvent, useMemo, useRef } from "react";
+import { useEffect, useEffectEvent, useMemo, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 import { createPhiSignalAddress, createPhiSignalSubcontrolAddress, PHI_SIGNAL_VALUE_SCHEMAS } from "../../../types/signals";
@@ -37,12 +37,12 @@ import {
   createEmptyPhiBuilderModulePresetPagesByArea,
   resolvePhiBuilderActivePageCatalog,
   resolvePhiBuilderActivePageKey,
-  resolvePhiBuilderPageKeyFromCatalogPath,
   type PhiPresetPageNode,
 } from "../../../helpers/cms-page-catalog";
 import { loadPhiBuilderPersistedPageCatalog } from "./page-catalog-client";
 import {
   resolvePhiBuilderOfferedPageKey,
+  resolvePhiBuilderOfferedPageKeyFromCatalogPath,
   type PhiBuilderOfferedCatalogState,
 } from "./offered-page-catalog";
 import type {
@@ -82,9 +82,6 @@ import {
   closePhiBuilderPublicRouteCollisionRequest,
 } from "./developer-workspace-store";
 import {
-  PHI_BUILDER_AREA_LANDING_PAGE_EMPTY,
-  PHI_BUILDER_AREA_ROOT_ROUTE_AUTOMATIC,
-  PHI_BUILDER_AREA_ROOT_ROUTE_LANDING,
 } from "./options-providers";
 import type { PhiPageReference } from "../../../types/references";
 import { PHI_AREA_META_PUBLIC_DEFAULTS } from "../../../helpers/cms-area-config";
@@ -112,6 +109,11 @@ import {
 import { readPhiTableActionSignalValue } from "../../../types/table-widget";
 import { usePhiBuilderPageController } from "./page-controller";
 import {
+  PHI_BUILDER_AREA_LANDING_PAGE_EMPTY,
+  PHI_BUILDER_AREA_ROOT_ROUTE_AUTOMATIC,
+  PHI_BUILDER_AREA_ROOT_ROUTE_LANDING,
+} from "./area-settings-values";
+import {
   PHI_BUILDER_EFFECTS_FORM_WIDGET_IDS,
   PHI_BUILDER_INSPECTOR_DRAWER_OVERLAY_IDS,
   PHI_BUILDER_INSPECTOR_OVERLAY_IDS,
@@ -123,8 +125,8 @@ import {
   PHI_BUILDER_MODULE_DETAIL_WIDGET_IDS,
   PHI_BUILDER_PUBLIC_ROUTES_OVERLAY_IDS,
   PHI_BUILDER_PUBLIC_ROUTES_WIDGET_IDS,
-  PHI_BUILDER_SHELLS_WIDGET_IDS,
   PHI_BUILDER_AREA_SETTINGS_OVERLAY_IDS,
+  PHI_BUILDER_AREA_SETTINGS_WIDGET_IDS,
   PHI_BUILDER_MODULE_USAGE_OVERLAY_IDS,
   PHI_BUILDER_MODULE_USAGE_WIDGET_IDS,
 } from "../../../helpers/cms-page-addresses";
@@ -366,7 +368,6 @@ function usePhiDeveloperBuilderWorkspaceController(
     effectiveArea,
   );
   const {
-    currentPageTree,
     emitPageTitleInputValue,
     navigateToBuilderPage,
     openPageMetaDialog,
@@ -586,76 +587,41 @@ function usePhiDeveloperBuilderWorkspaceController(
   ]);
 
   /*
-   * Whether the landing Select can be answered at all.
+   * What the Area settings dialog stands at, as the record its Form holds.
    *
-   * A Select emits its value as a string and nothing turns "the value is landing" into the boolean the
-   * enabled channel carries, so the controller says it: the capability is the one every renderable
-   * block inherits, and the Select only had to listen. Sent on mount as well as on every change,
-   * because a workspace that opens with the root forwarding must not start out answerable.
+   * One address and one message, where there used to be five addresses and three channels: the Form
+   * owns its fields, so the controller states the whole record rather than reaching each Control to
+   * tell it what it shows and whether it may be answered.
+   *
+   * It goes to the Form's own headless controller rather than to the Widget. That is the address
+   * `values` is heard on, and the Form Controller hands it to the mounted instance -- the way the
+   * Page metadata dialog is filled.
    */
-  const landingSelectAddress = useMemo(
-    () => createPhiSignalAddress("cms", PHI_BUILDER_SHELLS_WIDGET_IDS.widgetAreaLandingPage),
-    [],
-  );
   /*
-   * Answerable whenever the root is a landing, and not only when somebody offers one.
+   * How often the dialog has been asked for, which is what turns opening it into a change.
    *
-   * "None -- I will author it myself" is one of the answers, so there is always something to say. The
-   * older rule asked whether any Page carried the application flag, which after built-in Pages stopped
-   * applying left the Select switched off for good in an Area whose landing nobody had applied for.
+   * The Form's own controller is materialized on demand rather than standing with the Overlay, so a
+   * record sent in the same tick as the open command can arrive before there is anybody to hold it.
+   * Counting the opens puts the send in an effect, which runs once the render that opened the dialog
+   * is on the screen -- the arrangement the Page metadata dialog fills itself with.
    */
-  const landingSelectEnabled =
-    readPhiBuilderEffectiveAreaRootRoute(state, state.area)?.mode === "landing";
-  /*
-   * Said in the Select's own scope, and said once.
-   *
-   * The workspace header belongs to the Page, so the Select is registered as a Page-scoped receiver;
-   * an Area-scoped signal to it is not late, it is wrong, and the bus drops it rather than holding
-   * it. Held is what happens with the right scope: the controller mounts before the Control's chunk
-   * arrives, and the bus keeps the statement until somebody is there to hear it.
-   */
-  useEffect(() => {
-    dispatchSignal({
-      scope: "page",
-      channel: "enabled",
-      action: "change",
-      value: landingSelectEnabled,
-      valueType: "boolean",
-      sender: createPhiBuilderControllerAddress(),
-      receiver: landingSelectAddress,
-      timestamp: Date.now(),
-    });
-  }, [dispatchSignal, landingSelectAddress, landingSelectEnabled]);
-
-  /*
-   * What the Area currently says about being found, and whether it may be answered here.
-   *
-   * Only Public is ever asked: every other Area is authenticated and is not indexed whatever is
-   * stored, so its switches stand at the Public default and are shown as unanswerable rather than
-   * hidden -- the dialog is the same dialog in every Area, and a control that vanishes reads as a
-   * feature that is missing. Said in the switches' own Page scope, for the reason the landing Select
-   * is: the workspace header belongs to the Page.
-   */
-  const seoIndexAddress = useMemo(
-    () => createPhiSignalAddress("cms", PHI_BUILDER_SHELLS_WIDGET_IDS.widgetAreaSeoIndex),
-    [],
-  );
-  const seoSitemapAddress = useMemo(
-    () => createPhiSignalAddress("cms", PHI_BUILDER_SHELLS_WIDGET_IDS.widgetAreaSeoSitemap),
-    [],
-  );
-  const titleTemplateAddress = useMemo(
-    () => createPhiSignalAddress("cms", PHI_BUILDER_SHELLS_WIDGET_IDS.widgetAreaTitleTemplate),
-    [],
-  );
-  const defaultTitleAddress = useMemo(
-    () => createPhiSignalAddress("cms", PHI_BUILDER_SHELLS_WIDGET_IDS.widgetAreaDefaultTitle),
+  const [areaSettingsOpenCount, setAreaSettingsOpenCount] = useState(0);
+  const areaSettingsFormControllerAddress = useMemo(
+    () => createPhiRuntimeFormControllerAddress(
+      `widget-${PHI_BUILDER_AREA_SETTINGS_WIDGET_IDS.areaSettingsForm}`,
+    ),
     [],
   );
   const areaMeta = readPhiBuilderEffectiveAreaMeta(state, state.area);
+  const areaRootRoute = readPhiBuilderEffectiveAreaRootRoute(state, state.area);
   const seoAnswerable = state.area === "public";
-  // Outside Public the switches state the fact rather than the default: those Areas are not indexed
-  // and are in no sitemap, whatever a stored value from some earlier Area would suggest.
+  /*
+   * Only Public is ever asked: every other Area is authenticated and is not indexed whatever is
+   * stored, so its switches stand at what is actually the case and are shown as unanswerable rather
+   * than hidden -- the dialog is the same dialog in every Area, and a control that vanishes reads as
+   * a feature that is missing. `seoLocked` is how the Form is told which Area this is, because a
+   * field may only ask its own record.
+   */
   const seoIndex = seoAnswerable && (areaMeta?.index ?? PHI_AREA_META_PUBLIC_DEFAULTS.index);
   const seoSitemap = seoAnswerable && (areaMeta?.sitemap ?? PHI_AREA_META_PUBLIC_DEFAULTS.sitemap);
   /*
@@ -666,66 +632,67 @@ function usePhiDeveloperBuilderWorkspaceController(
    */
   const titleTemplate = areaMeta?.titleTemplate ?? "";
   const defaultTitle = areaMeta?.defaultTitle ?? "";
+  /*
+   * The two Selects answer one question between them, which is why both are filled from the same
+   * sentence: the first says what the root does, the second which application is answered, and a
+   * landing whose applicant was cleared is "the Builder authors it" rather than nothing said.
+   */
+  const areaRootRouteValue = !areaRootRoute
+    ? PHI_BUILDER_AREA_ROOT_ROUTE_AUTOMATIC
+    : areaRootRoute.mode === "landing"
+      ? PHI_BUILDER_AREA_ROOT_ROUTE_LANDING
+      : areaRootRoute.target;
+  const areaLandingPageValue = areaRootRoute?.mode === "landing" && areaRootRoute.target
+    ? areaRootRoute.target
+    : PHI_BUILDER_AREA_LANDING_PAGE_EMPTY;
 
   /**
    * Everything the Area settings dialog shows, said in one place.
    *
-   * Called from two moments, and it has to be both. The effect below covers a value that changes while
-   * the dialog stands open -- an undo, a switch between Areas. The dialog opening covers the far more
-   * common case: the controls live inside an Overlay and do not exist until it opens, so the state
-   * this controller stated at page load reached nobody. A signal is delivered once and is then spent;
-   * the mount that comes minutes later hears nothing, and the control would show its resting value as
-   * though it were the Area's answer.
+   * Called from two moments, and it has to be both. The effect below covers a value that changes
+   * while the dialog stands open -- an undo, a switch between Areas. The dialog opening covers the
+   * far more common case: the Form lives inside an Overlay and does not exist until it opens, so the
+   * record this controller stated at page load reached nobody. A signal is delivered once and is then
+   * spent; the mount that comes minutes later hears nothing, and the Form would show its resting
+   * values as though they were the Area's answer.
    */
   const publishAreaSettingsState = (correlationId?: string) => {
-    for (const [receiver, checked] of [
-      [seoIndexAddress, seoIndex],
-      [seoSitemapAddress, seoSitemap],
-    ] as const) {
-      dispatchSignal({
-        scope: "page",
-        channel: "seoValue",
-        action: "change",
-        value: checked,
-        valueType: "boolean",
-        sender: createPhiBuilderControllerAddress(),
-        receiver,
-        ...(correlationId ? { correlationId } : {}),
-        timestamp: Date.now(),
-      });
-      dispatchSignal({
-        scope: "page",
-        channel: "enabled",
-        action: "change",
-        value: seoAnswerable,
-        valueType: "boolean",
-        sender: createPhiBuilderControllerAddress(),
-        receiver,
-        ...(correlationId ? { correlationId } : {}),
-        timestamp: Date.now(),
-      });
-    }
-    for (const [receiver, text] of [
-      [titleTemplateAddress, titleTemplate],
-      [defaultTitleAddress, defaultTitle],
-    ] as const) {
-      dispatchSignal({
-        scope: "page",
-        channel: "titleValue",
-        action: "change",
-        value: text,
-        valueType: "string",
-        sender: createPhiBuilderControllerAddress(),
-        receiver,
-        ...(correlationId ? { correlationId } : {}),
-        timestamp: Date.now(),
-      });
-    }
+    dispatchSignal({
+      scope: "page",
+      channel: "values",
+      action: "change",
+      value: {
+        values: {
+          areaRootRoute: areaRootRouteValue,
+          areaLandingPage: areaLandingPageValue,
+          areaTitleTemplate: titleTemplate,
+          areaDefaultTitle: defaultTitle,
+          areaMetaIndex: seoIndex,
+          areaMetaSitemap: seoSitemap,
+          seoLocked: seoAnswerable ? "false" : "true",
+        },
+      },
+      valueType: "json",
+      valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.formValues,
+      sender: createPhiBuilderControllerAddress(),
+      receiver: areaSettingsFormControllerAddress,
+      ...(correlationId ? { correlationId } : {}),
+      timestamp: Date.now(),
+    });
   };
   const publishAreaSettingsStateEvent = useEffectEvent(publishAreaSettingsState);
   useEffect(() => {
     publishAreaSettingsStateEvent();
-  }, [defaultTitle, seoAnswerable, seoIndex, seoSitemap, titleTemplate]);
+  }, [
+    areaLandingPageValue,
+    areaRootRouteValue,
+    areaSettingsOpenCount,
+    defaultTitle,
+    seoAnswerable,
+    seoIndex,
+    seoSitemap,
+    titleTemplate,
+  ]);
 
   /*
    * The Area settings dialog, opened and closed by the two commands that ask for it.
@@ -1495,10 +1462,10 @@ function usePhiDeveloperBuilderWorkspaceController(
         if (builderWorkspaceKey !== "pages" || typeof signal.value !== "string" || signal.value.length === 0) {
           return;
         }
-        const nextPageKey = resolvePhiBuilderPageKeyFromCatalogPath(
+        const nextPageKey = resolvePhiBuilderOfferedPageKeyFromCatalogPath(
+          offeredCatalogState,
           effectiveArea,
           signal.value,
-          currentPageTree,
         );
         if (!nextPageKey) {
           return;
@@ -1521,15 +1488,10 @@ function usePhiDeveloperBuilderWorkspaceController(
           typeof next.pageKey === "string" && next.pageKey.length > 0
             ? next.pageKey
 	            : typeof next.value === "string" && next.value.length > 0
-              ? resolvePhiBuilderPageKeyFromCatalogPath(
+              ? resolvePhiBuilderOfferedPageKeyFromCatalogPath(
+                  offeredCatalogState,
                   state.area,
                   next.value,
-                  resolvePhiBuilderActivePageCatalog(
-                    state.area,
-                    state.modulePresetPagesByArea,
-                    state.customPages,
-                    state.persistedPageCatalogByArea,
-                  ),
                 )
               : null;
         if (!nextPageKey) {
@@ -1783,135 +1745,91 @@ function usePhiDeveloperBuilderWorkspaceController(
       }
 
       /*
-       * Where the target Area's root goes.
+       * Everything the Area settings dialog was asked, arriving at once.
        *
-       * The Select emits one string: a sentinel for the two answers that are not a Page, or a Page
-       * reference. It lands in the structure draft, which states `config.shell` whole on every save.
+       * One message instead of the four channels the separate Controls each had, because a Form
+       * answers as a record: what the root does, which application it answers, the two titles and
+       * the two search-engine switches are read out of it here and written into the structure draft.
+       *
+       * Recorded like every other edit in this workspace, and for the same reason. What the Shell
+       * says about itself is not in its Region tree, so it used to pass the history by -- the front
+       * door was the one thing in `/shells` that could be changed and not taken back. The scope is
+       * the structure workspace because that is the only surface this dialog opens on.
        */
       if (
         signal.scope === "area" &&
-        signal.channel === "rootRoute" &&
+        signal.channel === "areaSettingsForm" &&
         signal.action === "change" &&
+        signal.valueSchema === PHI_SIGNAL_VALUE_SCHEMAS.formValues &&
         signal.receiver === createPhiBuilderControllerAddress()
       ) {
-        if (typeof signal.value !== "string") {
+        const submitted = readPhiRuntimeFormValuesSignalValue(signal.value);
+        if (!submitted) {
           return;
         }
-        const currentRootRoute = readPhiBuilderEffectiveAreaRootRoute(state, state.area);
-        /*
-         * Recorded like every other edit in this workspace, and for the same reason.
-         *
-         * What the Shell says about itself is not in its Region tree, so it used to pass the history by
-         * -- the front door was the one thing in `/shells` that could be changed and not taken back.
-         * The scope is the structure workspace because that is the only surface these Selects appear on.
-         */
-        setPhiDeveloperBuilderAreaRootRoute(
-          state.area,
-          signal.value === PHI_BUILDER_AREA_ROOT_ROUTE_AUTOMATIC
-            ? null
-            : signal.value === PHI_BUILDER_AREA_ROOT_ROUTE_LANDING
-              // Switching back to a landing keeps the applicant that was chosen before, if there was
-              // one: the two Selects answer one question between them, and the second one's answer is
-              // not something the first one just unsaid.
-              ? { mode: "landing", ...(currentRootRoute?.mode === "landing" && currentRootRoute.target
-                  ? { target: currentRootRoute.target }
-                  : {}) }
-              : { mode: "redirect", target: signal.value as PhiPageReference },
-          {
-            historyContext: createPhiBuilderHistoryContext({ workspace: "structure", area: state.area }),
-            historyLabel: "Change root route",
-          },
-        );
-        return;
-      }
-
-      /*
-       * Which landing stands at the root, among those offered.
-       *
-       * Only reachable while the Area is set to a landing, because that is when the Select is enabled.
-       * Clearing it is an answer of its own -- a landing without an applicant, whose tree the Site
-       * authors itself -- so an empty value stores the mode without a target rather than nothing.
-       */
-      if (
-        signal.scope === "area" &&
-        signal.channel === "landingPage" &&
-        signal.action === "change" &&
-        signal.receiver === createPhiBuilderControllerAddress()
-      ) {
-        const target = typeof signal.value === "string" &&
-          signal.value.length > 0 &&
-          signal.value !== PHI_BUILDER_AREA_LANDING_PAGE_EMPTY
-          ? (signal.value as PhiPageReference)
+        const values = submitted.values;
+        const historyContext = createPhiBuilderHistoryContext({
+          workspace: "structure",
+          area: state.area,
+        });
+        const rootRouteAnswer = typeof values.areaRootRoute === "string"
+          ? values.areaRootRoute
           : null;
-        setPhiDeveloperBuilderAreaRootRoute(
+        /*
+         * The landing applicant is read only where it was asked. A root that forwards leaves that
+         * field out of the Form entirely, and reading it back would store an applicant against a
+         * root that has no slot to fill.
+         */
+        const landingAnswer = rootRouteAnswer === PHI_BUILDER_AREA_ROOT_ROUTE_LANDING &&
+          typeof values.areaLandingPage === "string" &&
+          values.areaLandingPage !== PHI_BUILDER_AREA_LANDING_PAGE_EMPTY
+          ? values.areaLandingPage as PhiPageReference
+          : null;
+        if (rootRouteAnswer != null) {
+          setPhiDeveloperBuilderAreaRootRoute(
+            state.area,
+            rootRouteAnswer === PHI_BUILDER_AREA_ROOT_ROUTE_AUTOMATIC
+              ? null
+              : rootRouteAnswer === PHI_BUILDER_AREA_ROOT_ROUTE_LANDING
+                ? { mode: "landing", ...(landingAnswer ? { target: landingAnswer } : {}) }
+                : { mode: "redirect", target: rootRouteAnswer as PhiPageReference },
+            { historyContext, historyLabel: "Change root route" },
+          );
+        }
+        /*
+         * The indexing answers are taken only where they were asked. Outside Public the switches are
+         * disabled and show the fact rather than the record, so reading them back would write that
+         * fact into an Area that never said it.
+         */
+        setPhiDeveloperBuilderAreaMeta(
           state.area,
-          target ? { mode: "landing", target } : { mode: "landing" },
           {
-            historyContext: createPhiBuilderHistoryContext({ workspace: "structure", area: state.area }),
-            historyLabel: "Change landing page",
+            titleTemplate: typeof values.areaTitleTemplate === "string"
+              ? values.areaTitleTemplate.trim()
+              : "",
+            defaultTitle: typeof values.areaDefaultTitle === "string"
+              ? values.areaDefaultTitle.trim()
+              : "",
+            ...(state.area === "public"
+              ? {
+                  index: values.areaMetaIndex !== false,
+                  sitemap: values.areaMetaSitemap !== false,
+                }
+              : {}),
           },
+          { historyContext, historyLabel: "Change area settings" },
         );
+        dispatchAreaSettingsDialog(false, signal.correlationId);
         return;
       }
 
       /*
-       * Whether the Area may be found, and whether its Pages are listed.
+       * The dialog the Form stands in, opened from the workspace header and closed from its footer.
        *
-       * Two switches, one sentence each, stored key by key: the answers are given one at a time and
-       * the one nobody touched has to keep saying what it said. Only Public can reach here at all,
-       * because only there are the switches enabled.
+       * Closing is not the controller's own move any more. The footer button asks the Form for what
+       * it holds, the Form answers on `areaSettingsForm`, and the handler above writes it and closes
+       * -- so the dialog cannot go while the answers are still only on the screen.
        */
-      if (
-        signal.scope === "area" &&
-        (signal.channel === "seoIndex" || signal.channel === "seoSitemap") &&
-        signal.action === "change" &&
-        signal.receiver === createPhiBuilderControllerAddress()
-      ) {
-        if (typeof signal.value !== "boolean") {
-          return;
-        }
-        setPhiDeveloperBuilderAreaMeta(
-          state.area,
-          signal.channel === "seoIndex" ? { index: signal.value } : { sitemap: signal.value },
-          {
-            historyContext: createPhiBuilderHistoryContext({ workspace: "structure", area: state.area }),
-            historyLabel: "Change area SEO",
-          },
-        );
-        return;
-      }
-
-      /*
-       * What the Area puts in the title of its Pages.
-       *
-       * Stored key by key like the switches above, and for the same reason. Empty is stored as empty
-       * rather than removed: the Area was asked and answered "the Site's name", which is what the
-       * reader resolves an absent template to anyway -- but an Area that has never been asked must
-       * stay distinguishable from one that was, or the next unrelated save would write a guess.
-       */
-      if (
-        signal.scope === "area" &&
-        (signal.channel === "titleTemplate" || signal.channel === "defaultTitle") &&
-        signal.action === "change" &&
-        signal.receiver === createPhiBuilderControllerAddress()
-      ) {
-        if (typeof signal.value !== "string") {
-          return;
-        }
-        setPhiDeveloperBuilderAreaMeta(
-          state.area,
-          signal.channel === "titleTemplate"
-            ? { titleTemplate: signal.value }
-            : { defaultTitle: signal.value },
-          {
-            historyContext: createPhiBuilderHistoryContext({ workspace: "structure", area: state.area }),
-            historyLabel: "Change area title",
-          },
-        );
-        return;
-      }
-
-      /* The dialog those switches stand in, opened from the workspace header and closed from its footer. */
       if (
         signal.scope === "area" &&
         signal.channel === "areaSettings" &&
@@ -1919,10 +1837,34 @@ function usePhiDeveloperBuilderWorkspaceController(
         signal.valueType === "string" &&
         signal.receiver === createPhiBuilderControllerAddress()
       ) {
-        const open = signal.value === "open";
-        dispatchAreaSettingsDialog(open, signal.correlationId);
-        if (open) {
-          publishAreaSettingsState(signal.correlationId);
+        if (signal.value === "open") {
+          dispatchAreaSettingsDialog(true, signal.correlationId);
+          setAreaSettingsOpenCount((count) => count + 1);
+          return;
+        }
+        /*
+         * Leaving without answering. The Form is told to drop what was typed rather than only being
+         * hidden: it is mounted with the Overlay and stays mounted, so an unsent answer left in it
+         * would be sitting there the next time the dialog opens -- beside the values the controller
+         * states on opening, half of one record and half of another.
+         */
+        const leaving = signal.value === "cancel";
+        dispatchSignal({
+          scope: "page",
+          channel: leaving ? "reset" : "submit",
+          action: "activate",
+          value: null,
+          valueType: "none",
+          sender: createPhiBuilderControllerAddress(),
+          receiver: createPhiSignalAddress(
+            "cms",
+            PHI_BUILDER_AREA_SETTINGS_WIDGET_IDS.areaSettingsForm,
+          ),
+          correlationId: signal.correlationId,
+          timestamp: Date.now(),
+        });
+        if (leaving) {
+          dispatchAreaSettingsDialog(false, signal.correlationId);
         }
         return;
       }

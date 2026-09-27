@@ -2,6 +2,7 @@ import {
   PHI_BUILDER_EFFECTS_FORMS,
   PHI_BUILDER_PAGE_META_FORM,
 } from "./page-meta-form";
+import { PHI_BUILDER_AREA_SETTINGS_FORM } from "./area-settings-form";
 import { PHI_BUILDER_SIGNAL_WIRING_FORM } from "./signal-wiring-form";
 import { definePhiRuntimeModuleServerAreaContribution } from "../area-contributions";
 import { PHI_BUILDER_RUNTIME_MODULE_DEFINITION } from "./definition";
@@ -22,7 +23,12 @@ export const PHI_BUILDER_RUNTIME_MODULE_SERVER_AREA_CONTRIBUTION =
       definition: PHI_BUILDER_RUNTIME_MODULE_DEFINITION,
       widgets: PHI_BUILDER_WIDGETS,
       layouts: PHI_BUILDER_RUNTIME_MODULE_LAYOUTS,
-      forms: [PHI_BUILDER_PAGE_META_FORM, ...PHI_BUILDER_EFFECTS_FORMS, PHI_BUILDER_SIGNAL_WIRING_FORM],
+      forms: [
+        PHI_BUILDER_PAGE_META_FORM,
+        PHI_BUILDER_AREA_SETTINGS_FORM,
+        ...PHI_BUILDER_EFFECTS_FORMS,
+        PHI_BUILDER_SIGNAL_WIRING_FORM,
+      ],
       areaShells: PHI_BUILDER_RUNTIME_MODULE_AREA_SHELLS,
       areaOverlays: PHI_BUILDER_RUNTIME_MODULE_AREA_OVERLAYS,
       routes: PHI_BUILDER_RUNTIME_MODULE_ROUTES,

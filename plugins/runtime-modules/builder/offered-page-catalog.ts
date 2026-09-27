@@ -10,6 +10,7 @@ import {
   normalizePhiBuilderCmsCatalogPath,
   resolvePhiBuilderActivePageCatalog,
   resolvePhiBuilderActivePageKey,
+  resolvePhiBuilderPageKeyFromCatalogPath,
   type PhiBuilderPageCatalogArea,
   type PhiPresetPageNode,
 } from "../../../helpers/cms-page-catalog";
@@ -238,6 +239,28 @@ export function resolvePhiBuilderOfferedPageCatalog(
 
   return answered.filter((node) =>
     node.storagePath !== "/" || (rootPageNode != null && node === rootPageNode));
+}
+
+/**
+ * The Page a catalog path names, read against the Pages the Area answers with.
+ *
+ * The Select the Builder is steered by lists one entry per address, and those entries come from the
+ * offered list -- so the path it emits has to be read back against that same list. Read against the
+ * installed catalog instead, an address two Modules declare is answered by whichever was declared
+ * first, and that is always the base Module: picking the covered address would send the Builder to a
+ * Page that is not on offer, the normalisation above would move it off again, and it would land on
+ * whatever the Area falls back to, which is the root.
+ */
+export function resolvePhiBuilderOfferedPageKeyFromCatalogPath(
+  state: PhiBuilderOfferedCatalogState,
+  area: PhiBuilderPageCatalogArea,
+  path: string,
+): string | null {
+  return resolvePhiBuilderPageKeyFromCatalogPath(
+    area,
+    path,
+    resolvePhiBuilderOfferedPageCatalog(state, area),
+  );
 }
 
 /** The key of the Page a reference names, anywhere in the tree. */

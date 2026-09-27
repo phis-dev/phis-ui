@@ -16,34 +16,12 @@ export const PHI_BUILDER_MODULES_TABLE_WIDGET_ID = createPhiPresetCmsInstanceId(
 });
 
 /**
- * Blocks of the Shells workspace the Builder controller has to reach by address.
- *
- * The landing Select is disabled by a signal rather than by a config the preset could carry, because
- * what enables it is a value only the controller holds -- so both sides need the same address, and it
- * is stated here rather than twice.
- */
-export const PHI_BUILDER_SHELLS_WIDGET_IDS = createPhiPresetCmsInstanceIdMap(
-  {
-    domain: "area" as const,
-    ownerModuleId: PHI_BUILDER_RUNTIME_MODULE_ID,
-    presetKey: "builder-area-preset",
-  },
-  [
-    "widgetAreaLandingPage",
-    "widgetAreaSeoIndex",
-    "widgetAreaSeoSitemap",
-    "widgetAreaTitleTemplate",
-    "widgetAreaDefaultTitle",
-  ],
-);
-
-/**
  * The Area settings dialog the Shells workspace opens, and what stands in it.
  *
  * Its own map because it is a conversation about the Area rather than about the canvas: the root
- * route, and -- for Public, the only Area anything indexes -- whether the Area may be found at all.
- * The controller reaches the overlay to open and close it, and the two switches to say what they
- * currently stand at and whether they may be answered here.
+ * route, the titles, and -- for Public, the only Area anything indexes -- whether the Area may be
+ * found at all. All of it is one Form, so the controller reaches three addresses: the overlay to
+ * open and close it, the Form to fill it and to ask it for what it holds, and the toolbar that asks.
  */
 const AREA_SETTINGS_ID_CONTEXT = {
   domain: "page" as const,
@@ -61,7 +39,7 @@ export const PHI_BUILDER_AREA_SETTINGS_LAYOUT_IDS = createPhiPresetCmsInstanceId
 );
 export const PHI_BUILDER_AREA_SETTINGS_WIDGET_IDS = createPhiPresetCmsInstanceIdMap(
   AREA_SETTINGS_ID_CONTEXT,
-  ["areaSettingsAction", "areaSettingsSeoTitle", "areaSettingsTitlesTitle", "areaSettingsCommands"],
+  ["areaSettingsAction", "areaSettingsForm", "areaSettingsCommands"],
 );
 
 const MODULES_DETAIL_ID_CONTEXT = {

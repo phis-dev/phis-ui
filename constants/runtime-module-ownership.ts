@@ -119,6 +119,7 @@ const PHI_RUNTIME_MODULE_OWNERSHIP: Readonly<Record<string, readonly [module: st
   "forms/auth/admin-password-method": ["auth", "admin-password-method"],
   "forms/auth/admin-policy": ["auth", "admin-policy"],
   "forms/auth/admin-totp-policy": ["auth", "admin-totp-policy"],
+  "forms/builder/area-settings": ["builder", "area-settings"],
   "forms/builder/effects/appearance": ["builder", "effects/appearance"],
   "forms/builder/effects/transitions": ["builder", "effects/transitions"],
   "forms/builder/effects/viewport": ["builder", "effects/viewport"],

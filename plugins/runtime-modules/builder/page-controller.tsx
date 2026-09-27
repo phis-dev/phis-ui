@@ -602,7 +602,6 @@ export function usePhiBuilderPageController({
   }, [effectivePageKey, emitPageTitleInputValue, pathname]);
 
   return {
-    currentPageTree,
     emitPageTitleInputValue,
     navigateToBuilderPage,
     openPageMetaDialog,
