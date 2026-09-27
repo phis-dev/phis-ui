@@ -172,6 +172,54 @@ const INSTALLATION_SHARED_FIELDS = [
     placeholder: label("installationTenantPlaceholder", "common"),
     autoComplete: "off",
   },
+  /*
+   * The provider's own settings, in one field each.
+   *
+   * Every one of these is read on every login -- the scope the authorize URL asks for, the restriction
+   * the callback checks, the prompt it passes on, the trust that decides whether a verified address may
+   * join an existing account. Until this form carried them there was no way to set them short of
+   * editing the Site's Auth JSON by hand, which meant the restriction in particular was a door that
+   * looked closed and was open.
+   *
+   * Lists as words in a text field, not as a tag editor: a scope and an organization login are typed
+   * from a provider's documentation, and the server reads spaces and commas alike. A field that does
+   * not apply to the chosen provider is refused by the server rather than quietly stored, so the hint
+   * names who it is for.
+   */
+  {
+    key: "scopes",
+    fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.text,
+    label: label("installationScopes", "Scopes"),
+    description: label("installationScopesHint", "Space separated. Empty asks the provider for the login defaults."),
+    autoComplete: "off",
+  },
+  {
+    key: "restrictions",
+    fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.text,
+    label: label("installationRestrictions", "Restrict sign-in to"),
+    description: label(
+      "installationRestrictionsHint",
+      "Space separated, and empty admits everyone the provider admits. GitHub organizations for GitHub, hosted domains for Google.",
+    ),
+    autoComplete: "off",
+  },
+  {
+    key: "prompt",
+    fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.text,
+    label: label("installationPrompt", "Prompt"),
+    description: label("installationPromptHint", "OpenID providers only: login, consent, or select_account."),
+    autoComplete: "off",
+  },
+  {
+    key: "trustedEmailLink",
+    fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.switch,
+    label: label("installationTrustedEmailLink", "Trust for email linking"),
+    description: label(
+      "installationTrustedEmailLinkHint",
+      "Lets a verified address from this provider join an existing account without a further proof, where the site policy allows it.",
+    ),
+    initialValue: false,
+  },
   {
     key: "callbackOrigin",
     fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.url,
@@ -299,6 +347,14 @@ async function loadLabels(
     installationTenant: labels.providers.tenant,
     installationTenantHint: labels.installations.tenantHint,
     installationTenantPlaceholder: labels.providers.tenantPlaceholder,
+    installationScopes: labels.providers.scopes,
+    installationScopesHint: labels.providers.scopesHint,
+    installationRestrictions: labels.providers.restrictions,
+    installationRestrictionsHint: labels.providers.restrictionsHint,
+    installationPrompt: labels.providers.prompt,
+    installationPromptHint: labels.providers.promptHint,
+    installationTrustedEmailLink: labels.providers.trustedEmailLink,
+    installationTrustedEmailLinkHint: labels.providers.trustedEmailLinkHint,
     installationCallbackOrigin: labels.installations.callbackOrigin,
     installationCallbackOriginHint: labels.installations.callbackOriginHint,
     installationEnabled: labels.providers.enabled,
