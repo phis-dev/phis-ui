@@ -361,6 +361,12 @@ the only way a Form is placed. There are no domain Form Widgets. Its config:
   the box's chrome back on -- its inset, plus the Theme's line where the box has a frame -- and the box
   ends up wider than the cap: a 610 form in a `card` is a 652 card. Both caps stay available and they
   measure two different boxes; `min(100%, ...)` keeps either from pushing out of its slot.
+- **The capped box is placed by the Layout above it.** Because the cap sits one box inside the frame, the
+  frame still fills the slot, and the placement margins the slot hands down (LAYOUTING.md, "Sizing and
+  nesting") find no room there. The capped box reads the same properties -- custom properties inherit --
+  so a Form under a Layout anchored to the centre is drawn centred and one under a Layout anchored to the
+  start keeps the start edge it always had. Without it the Login page drew its 377-wide form in the top
+  left corner of a card whose Layout asked for the middle.
 - The box around a Form is `card`, never a panel built beside it. It is `PhiCardControl`, so the ground,
   the frame, the inset and the corner are the Theme's -- `Card` is one of the surfaces the Theme's shape
   reaches through a component token ([THEME.md](./THEME.md)), which a hand-built box is not. It wraps the

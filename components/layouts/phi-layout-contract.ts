@@ -441,6 +441,32 @@ export const PHI_SLOT_INLINE_MARGIN_END_PROPERTY = "--phi-slot-inline-margin-end
 export const PHI_SLOT_BLOCK_MARGIN_START_PROPERTY = "--phi-slot-block-margin-start";
 export const PHI_SLOT_BLOCK_MARGIN_END_PROPERTY = "--phi-slot-block-margin-end";
 
+/**
+ * The same four, read back by whatever box has the room to be moved.
+ *
+ * The slot child frame reads them, and for a long time it was the only thing that did. But the frame is
+ * not always where the width is decided: a Widget that caps something inside itself -- the Form caps its
+ * fields, so that the cap is the measure the fields read rather than the measure of whatever box they
+ * are wearing -- leaves its own frame filling the slot edge to edge. An auto margin on a box with no room
+ * left over comes to nothing, so the frame is placed and the narrow box inside it still stands at the
+ * start edge of a slot that was anchored to the centre.
+ *
+ * Custom properties inherit, so the inner box reads the answer the slot gave without being handed it,
+ * and both boxes may consume it: at most one of them has room, and whichever it is lands where the
+ * Layout asked. Exported as the declarations rather than as the names, because a reader that spells them
+ * out spells the fallback out too, and a missing `, 0` is an invalid margin that takes the whole rule
+ * with it.
+ */
+export const PHI_SLOT_INLINE_PLACEMENT_MARGIN_STYLE = {
+  marginInlineStart: `var(${PHI_SLOT_INLINE_MARGIN_START_PROPERTY}, 0)`,
+  marginInlineEnd: `var(${PHI_SLOT_INLINE_MARGIN_END_PROPERTY}, 0)`,
+} as const satisfies CSSProperties;
+
+export const PHI_SLOT_BLOCK_PLACEMENT_MARGIN_STYLE = {
+  marginBlockStart: `var(${PHI_SLOT_BLOCK_MARGIN_START_PROPERTY}, 0)`,
+  marginBlockEnd: `var(${PHI_SLOT_BLOCK_MARGIN_END_PROPERTY}, 0)`,
+} as const satisfies CSSProperties;
+
 function phiAxisMargins(placement: PhiAxisPlacement | null) {
   return {
     start: placement === "center" || placement === "end" ? "auto" : "0",

@@ -14,7 +14,11 @@ import {
 
 import { PHI_COLOR, PHI_SPACE } from "../../theme/antd-css-var-contract";
 import { PHI_THEME_BORDER_WIDTH } from "../../helpers/border-widget-style";
-import { normalizePhiCssSize, PHI_LAYOUT_SURFACE_RADIUS } from "../layouts/phi-layout-contract";
+import {
+  normalizePhiCssSize,
+  PHI_LAYOUT_SURFACE_RADIUS,
+  PHI_SLOT_INLINE_PLACEMENT_MARGIN_STYLE,
+} from "../layouts/phi-layout-contract";
 import { PhiButtonControl } from "../controls/phi-button-control";
 import { PhiCardControl } from "../controls/phi-card-control";
 import { PhiLink } from "../navigation/phi-link";
@@ -260,6 +264,20 @@ export function PhiFormWidgetFrame(
       ? `min(100%, ${capLength})`
       : `min(100%, calc(${capLength} + 2 * ${boxChrome}))`;
 
+  /*
+   * And where the cap leaves room over, the Layout says which side of it the Form stands on.
+   *
+   * The slot's placement margins are handed down as custom properties and the slot child frame reads
+   * them, but the frame around a Form fills the slot: the cap is one box further in, so the frame has no
+   * room left over and its auto margins come to nothing. The box that does have the room is this one,
+   * and it reads the same answer -- centred under a Layout anchored to the centre, at the start edge
+   * under one anchored to the start, which is what it did unasked before.
+   */
+  const placedBoxStyle: CSSProperties = {
+    ...(capStyle == null ? {} : { maxWidth: capStyle }),
+    ...PHI_SLOT_INLINE_PLACEMENT_MARGIN_STYLE,
+  };
+
   const measured = (
     <div
       style={{
@@ -269,7 +287,7 @@ export function PhiFormWidgetFrame(
         minWidth: 0,
         containerType: "inline-size",
         containerName: "phi-form",
-        ...(card ? {} : { maxWidth: capStyle }),
+        ...(card ? {} : placedBoxStyle),
         ...actionsColumns,
       } as CSSProperties}
     >
@@ -297,7 +315,7 @@ export function PhiFormWidgetFrame(
               background: PHI_COLOR.fillQuaternary,
               borderRadius: PHI_LAYOUT_SURFACE_RADIUS,
               padding: card.padding ?? PHI_SPACE.base,
-              maxWidth: capStyle,
+              ...placedBoxStyle,
             }}
           >
             {measured}
@@ -307,7 +325,7 @@ export function PhiFormWidgetFrame(
             size={card.presentation === "panel" ? "small" : "medium"}
             {...(card.title ? { title: card.title } : {})}
             {...(card.padding == null ? {} : { padding: card.padding })}
-            {...(capStyle == null ? {} : { style: { maxWidth: capStyle } })}
+            style={placedBoxStyle}
           >
             {measured}
           </PhiCardControl>

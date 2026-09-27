@@ -3,6 +3,10 @@ import { isValidElement, type CSSProperties, type ReactNode } from "react";
 import type { PhiSlotAxisSizePolicy, PhiSlotSizePolicy, PhiNormalizedSlotSizePolicy } from "../../types";
 import type { PhiCssLengthUnit } from "../../types/length";
 import {
+  PHI_SLOT_BLOCK_PLACEMENT_MARGIN_STYLE,
+  PHI_SLOT_INLINE_PLACEMENT_MARGIN_STYLE,
+} from "../../components/layouts/phi-layout-contract";
+import {
   resolvePhiRenderableBlockGeometry,
   type PhiRenderableBlockGeometryInput,
   type PhiResolvedBlockGeometry,
@@ -358,10 +362,8 @@ export function resolvePhiSlotChildBaseStyle(policy: PhiNormalizedSlotSizePolicy
      * two longhands on the server and keeps it whole in the browser, and the two trees then disagree on
      * an attribute React will not patch up.
      */
-    marginInlineStart: "var(--phi-slot-inline-margin-start, 0)",
-    marginInlineEnd: "var(--phi-slot-inline-margin-end, 0)",
-    marginBlockStart: "var(--phi-slot-block-margin-start, 0)",
-    marginBlockEnd: "var(--phi-slot-block-margin-end, 0)",
+    ...PHI_SLOT_INLINE_PLACEMENT_MARGIN_STYLE,
+    ...PHI_SLOT_BLOCK_PLACEMENT_MARGIN_STYLE,
     ...(policy.inline === "fill" ? { width: "100%" } : policy.inline === "intrinsic" ? { width: "fit-content" } : {}),
     ...(policy.block === "fill" ? { height: "100%" } : policy.block === "intrinsic" ? { height: "fit-content" } : {}),
   };

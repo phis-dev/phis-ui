@@ -246,6 +246,13 @@ The parent slot policy is authoritative; child defaults cannot override it.
   hands its child the placement of whatever Layout stands above. An auto margin places a box only where
   its parent is a flex or grid container -- in block flow `margin-block: auto` computes to `0`, while
   `margin-inline: auto` still centres a box of a definite width.
+- A box that caps itself inside a Widget reads the same four properties, through
+  `PHI_SLOT_INLINE_PLACEMENT_MARGIN_STYLE` and `PHI_SLOT_BLOCK_PLACEMENT_MARGIN_STYLE`. The slot child
+  frame is not always where the width is decided -- the Form Widget caps its fields so that the cap is
+  the measure the fields read, which leaves the frame filling the slot -- and a frame with no room left
+  over places nothing. Both boxes may read the properties: at most one of them has room, and the other
+  one's auto margins come to nothing. Read them through the two constants rather than by name, so the
+  `, 0` fallback cannot be forgotten.
 
 ### Block geometry is read once
 

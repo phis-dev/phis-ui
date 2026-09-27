@@ -97,7 +97,21 @@ export async function buildPhiDefaultPubLoginPageTree({
         slotIndex: PHI_CMS_SPLIT_LAYOUT_SLOT_INDEX.Right,
         sortOrder: 0,
         label: "pub login form layout",
-        config: { ...PHI_LOGIN_FORM_LAYOUT_CONFIG, padding: 0 },
+        /*
+         * In the middle of its card, which is where the Split Card would have put it.
+         *
+         * The card anchors what stands in it to the centre on both axes, and this column fills the card
+         * -- so the card's anchor has nothing left to place and the column's own has everything. A
+         * Flex Vertical starts at the top where nobody says otherwise, which is right for a page's
+         * content region and wrong for a sign-in beside a panel of copy: the form then hangs off the top
+         * edge of a card as tall as the text next to it. Said here and not in the shared config, because
+         * the Overlay's card is exactly as tall as this same column and has no middle to move to.
+         */
+        config: {
+          ...PHI_LOGIN_FORM_LAYOUT_CONFIG,
+          padding: 0,
+          anchor: { horizontal: "center", vertical: "middle" },
+        },
       }),
       ...login.layoutNodes,
     ],

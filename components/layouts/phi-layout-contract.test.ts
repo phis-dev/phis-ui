@@ -5,6 +5,8 @@ import {
   PHI_SLOT_BLOCK_MARGIN_START_PROPERTY,
   PHI_SLOT_INLINE_MARGIN_END_PROPERTY,
   PHI_SLOT_INLINE_MARGIN_START_PROPERTY,
+  PHI_SLOT_BLOCK_PLACEMENT_MARGIN_STYLE,
+  PHI_SLOT_INLINE_PLACEMENT_MARGIN_STYLE,
   phiFlexPlacementWord,
   phiGridPlacementWord,
   resolvePhiPlacement,
@@ -85,5 +87,29 @@ describe("the margins a slot hands down", () => {
       [PHI_SLOT_BLOCK_MARGIN_START_PROPERTY]: "0",
       [PHI_SLOT_BLOCK_MARGIN_END_PROPERTY]: "0",
     });
+  });
+});
+
+/*
+ * And what a box reads back is the same four names, each with its fallback.
+ *
+ * The pairing is the whole mechanism, and both halves of it fail in the same silent direction. A slot
+ * that writes a property nobody reads places nothing; a box that reads a name nobody writes takes the
+ * fallback and stands where it always stood. Either way the anchor looks as though it did nothing, which
+ * is the finding that has come back twice -- once for the block axis, which had no properties at all,
+ * and once for the Form, whose cap sits one box inside the frame that was reading them.
+ */
+describe("the margins a box reads back", () => {
+  it("reads every property the slot writes, and falls back to no margin at all", () => {
+    const written = Object.keys(resolvePhiSlotPlacementMargins({ inline: "center", block: "center" }));
+    const read = Object.values({
+      ...PHI_SLOT_INLINE_PLACEMENT_MARGIN_STYLE,
+      ...PHI_SLOT_BLOCK_PLACEMENT_MARGIN_STYLE,
+    });
+
+    expect(read).toHaveLength(written.length);
+    for (const property of written) {
+      expect(read).toContain(`var(${property}, 0)`);
+    }
   });
 });
