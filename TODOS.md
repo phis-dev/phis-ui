@@ -717,6 +717,12 @@ built. Remove an entry when it is done.
 
 - **Provider-backed Markdown table embeds.** TABLES.md defines the closed embed descriptor; no embed parser
   exists yet.
+- **Code samples are coloured by a scanner, not by a grammar.** `core/widgets/markdown/code-tokens.ts`
+  reads six languages -- TypeScript, JSON, Bash, SQL, YAML and CSS -- and a fence naming anything else is
+  printed plain, which is the stated answer rather than a gap. What the scanner cannot see is a tag: HTML
+  and JSX come out as ordinary text, and so do interpolation inside a template literal, here-documents and
+  regular-expression literals. Decide whether a real grammar is worth a dependency in a package that
+  installs into every Site before adding one.
 
 ## Modules and packaging
 

@@ -7,6 +7,7 @@ import type { PhiClientBlockBaseProps, PhiNoLabels } from "../../../../../types"
 import { PHI_SIGNAL_VALUE_SCHEMAS } from "../../../../../types/signals";
 import { usePhiSignalEmitter } from "../../../../../components/runtime/runtime-signal-identity";
 import { usePhiConfig, type PhiConfig } from "../../../../../components/root/phi-config-provider";
+import type { PhiCodeToken, PhiCodeTokenKind } from "./code-tokens";
 import type { PhiMarkdownSpacingKey, PhiMarkdownTextAlign } from "./config";
 import type { PhiMarkdownTocHeading } from "../markdown-toc/config";
 import { PhiPlainTable } from "../../../../../components/tables/phi-plain-table";
@@ -30,7 +31,17 @@ export type PhiMarkdownBlock =
   | { kind: "paragraph"; inlines: PhiMarkdownInline[] }
   | { kind: "blockquote"; children: PhiMarkdownBlock[] }
   | { kind: "list"; ordered: boolean; start?: number; items: PhiMarkdownBlock[][] }
-  | { kind: "code"; text: string }
+  | {
+      kind: "code";
+      /**
+       * The language the fence named, as `resolvePhiCodeLanguage` knows it, or `null` for a block
+       * that named none or named one this house does not read. Either way the tokens below are the
+       * whole block; the name is here because a reader of the rendered page should be able to tell
+       * what was read, and it goes out as a `data-` attribute.
+       */
+      language: string | null;
+      tokens: PhiCodeToken[];
+    }
   | {
       kind: "table";
       header: PhiMarkdownInline[][];
@@ -81,6 +92,40 @@ function resolveMarkdownSpacing(
       return token.paddingXL;
     case "xxl":
       return token.paddingXL;
+  }
+}
+
+/**
+ * The colour a kind of code is drawn in, from the Theme and from nowhere else.
+ *
+ * Only the palette's own seeds are read -- primary, success, warning, error, info and the text
+ * shades -- so a Site that repaints its palette repaints its code samples, and both halves of the
+ * Theme come out right without a second table. That is also the whole budget: the palette states
+ * four hues, so kinds that never meet share one. `property` belongs to the languages that are keys
+ * and values and have no keywords of their own; `function` belongs to the ones that do.
+ *
+ * Plain text answers nothing and inherits the block's own colour, which is one `<span>` per run of
+ * ordinary code that the page does not have to carry.
+ */
+function resolveCodeTokenColor(kind: PhiCodeTokenKind, token: PhiConfig["token"]): string | undefined {
+  switch (kind) {
+    case "plain":
+      return undefined;
+    case "comment":
+      return token.colorTextTertiary;
+    case "punctuation":
+      return token.colorTextSecondary;
+    case "keyword":
+      return token.colorPrimary;
+    case "string":
+      return token.colorSuccess;
+    case "number":
+    case "literal":
+      return token.colorWarning;
+    case "function":
+      return token.colorError;
+    case "property":
+      return token.colorInfo;
   }
 }
 
@@ -184,15 +229,24 @@ function renderBlocks(
         return (
           <pre
             key={key}
+            data-phi-code-language={block.language ?? undefined}
             style={{
               margin: 0,
               padding: token.paddingLG,
               overflowX: "auto",
               borderRadius: token.borderRadiusSM,
               background: token.colorFillQuaternary,
+              fontFamily: token.fontFamilyCode,
             }}
           >
-            <code>{block.text}</code>
+            <code>
+              {block.tokens.map((codeToken, tokenIndex) => {
+                const color = resolveCodeTokenColor(codeToken.kind, token);
+                return color == null
+                  ? <Fragment key={tokenIndex}>{codeToken.text}</Fragment>
+                  : <span key={tokenIndex} style={{ color }}>{codeToken.text}</span>;
+              })}
+            </code>
           </pre>
         );
       case "divider":

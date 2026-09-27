@@ -10,6 +10,7 @@ import { PhiRuntimeModuleRenderClientHost } from "../../../../../components/runt
 import type { PhiCmsMarkdownWidgetConfig } from "./config";
 import type { PhiMarkdownTocHeading } from "../markdown-toc/config";
 import type { PhiMarkdownBlock, PhiMarkdownInline, PhiMarkdownTableAlign } from "./client";
+import { resolvePhiCodeLanguage, tokenizePhiCode } from "./code-tokens";
 import { readPhiInternalReference, type PhiPageReference } from "../../../../../types/references";
 import { resolvePhiWidgetInternalReferences } from "../../../../../components/widgets/helpers/internal-reference-resolver.server";
 import { resolvePhiWidgetSourceUrl } from "../../../../../components/widgets/helpers/widget-source-url";
@@ -23,6 +24,8 @@ type MarkdownNode = {
   url?: string;
   alt?: string;
   title?: string;
+  /** A fenced block's info string, up to its first space. Absent on an indented code block. */
+  lang?: string;
   children?: MarkdownNode[];
   /** GFM tables: one alignment per column, as the delimiter row states it. */
   align?: (string | null)[];
@@ -474,12 +477,20 @@ function mapBlockNodes(
           items: mapListItems(node.children, context, inlineMap),
         });
         break;
-      case "code":
+      case "code": {
+        /*
+         * Coloured here rather than in the browser, because a code sample never changes after it is
+         * rendered: the reader is sent the pieces and no highlighter. Fences are not translated
+         * either (see the inline collector above), so what is tokenized is what was written.
+         */
+        const language = resolvePhiCodeLanguage(node.lang);
         blocks.push({
           kind: "code",
-          text: node.value ?? "",
+          language,
+          tokens: tokenizePhiCode(node.value ?? "", language),
         });
         break;
+      }
       case "thematicBreak":
         blocks.push({
           kind: "divider",
