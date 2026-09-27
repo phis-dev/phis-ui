@@ -175,6 +175,14 @@ translation units. Server-owned Authoring catalogs group metadata by Module sour
 in bulk, and serialize localized copies to Client providers. The immutable Runtime Module definition
 retains its canonical source strings and locale; localization must not rewrite the active Module catalog.
 
+A Module whose source locale is not the canonical one is translated by every installation that runs it,
+on that installation's own provider, and never from the CDN. The canonical English its unit is keyed by
+is generated rather than declared, so two installations key the same string under two different hashes
+and no mirror can answer either of them. What would make those strings shareable is a package that
+declares its canonical text beside its own language; a local pre-translation is not the same thing, and
+looks like it is
+([phis-server TRANSLATIONS.md, "Translation modes"](../phis-server/TRANSLATIONS.md#translation-modes)).
+
 Module category, id, Provider keys, capabilities, and other machine identities remain stable keys. A
 separate global category Label Set may present a category key to users. Optional Site-owned presentation
 overrides are Site content and do not replace the global package translation.
