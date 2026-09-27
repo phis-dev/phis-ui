@@ -167,6 +167,8 @@ export type { PhiAlertControlProps } from "./components/controls/phi-alert-contr
  * which is the large illustration and, with no `description`, the untranslated "No Data" -- the two
  * outcomes the Control exists to make unreachable.
  */
+export { PhiCardControl } from "./components/controls/phi-card-control";
+export type { PhiCardControlProps } from "./components/controls/phi-card-control";
 export { PhiEmptyControl } from "./components/controls/phi-empty-control";
 export type { PhiEmptyControlProps } from "./components/controls/phi-empty-control";
 export {

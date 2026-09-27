@@ -383,8 +383,16 @@ export const STATUS_MODULE_DEFINITION = {
 `sourceLocale` is the single canonical language for every package-authored user-facing string owned by
 the Module. It defaults to `en`. Do not repeat or override it on individual Widgets, Forms, providers,
 presets, or navigation contributions. Define Module-owned Label Sets with
-`definePhiRuntimeModuleLabelSet(STATUS_MODULE_DEFINITION, ...)` from `@phis/ui/server-helpers`; this
+`definePhiRuntimeModuleLabelSet(STATUS_MODULE_DEFINITION, ...)` from `@phis/ui/module/labels`; this
 binds their global translation source language and stable Label-Set namespace to the owner Module.
+
+**From `@phis/ui/module/labels`, not from `@phis/ui/server-helpers`.** The same names are on the server
+barrel, and a package that takes them there imports `server-helpers/cms-root` and `next/headers` along
+with them. Nothing fails to compile. What happens instead is that every page of the Site answers `500`
+with an import trace naming the barrel -- because the Module definition is read on both sides of the
+seam: the generated Client projection imports it from the package root, so the browser graph gets
+whatever the definition's chain touches. `@phis/ui/module/labels` is one file wide and carries the
+credentials reader as well, for the same reason.
 
 `title`, `description`, and `category` are required non-empty Module metadata; `category` is one of the
 Module categories listed above and is the same value the package's `phis` block declares. Every Module must also
@@ -736,7 +744,12 @@ The Form contract is [FORMS.md](./FORMS.md); the step-by-step guide is
 
 - create the id with `createPhiFormId(STATUS_MODULE_ID, "incident-report")`, which yields
   `@acme/status/modules/status/forms/incident-report`; catalog construction requires the prefix to be
-  the owner Module id;
+  the owner Module id -- the Module id and not the package name, whatever the parameter is called, and a
+  package carrying two Modules gets two namespaces;
+- create it in a file the Module definition does **not** import. `@phis/ui/forms` carries
+  `gateway/form-submit`, which is `server-only`, so one `createPhiFormId` call in the definition's import
+  chain puts `server-only` in the browser graph and the Site answers `500` everywhere. The handler *key*
+  is a plain string and may sit anywhere; the id belongs beside the descriptor;
 - define the Form with `definePhiRuntimeModuleForm(...)` from `@phis/ui/forms`;
 - declare every referenced field, validation, and handler Provider in the Module definition's
   `formProviders`; a handler Provider declares its `credentialPolicy` and an `endpointKey` or
@@ -1126,7 +1139,10 @@ for the provider and still discloses the page it comes from.
 ## Boundary checklist
 
 - Server catalog files contain metadata and lazy imports, not Client components.
-- Definition/config files are safe for both Server and Client imports.
+- Definition/config files are safe for both Server and Client imports. Transitively: the definition is
+  read in the browser graph through the generated Client projection, so nothing its imports reach may be
+  `server-only` or touch `next/headers`. Prefer the narrow `@phis/ui/module/*` entries over the
+  `server-helpers` and `forms` barrels, which carry both.
 - `"use client"` appears only at executable Client, Controller, provider, and Authoring boundaries.
 - Live Area manifests do not import Authoring modules.
 - Public manifests cannot reach Builder/Admin/Editor implementations.

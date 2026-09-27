@@ -298,6 +298,12 @@
       "types": "./module-authoring-client.ts",
       "default": "./module-authoring-client.ts"
     },
+    "./module/labels": {
+      "import": "./module-labels.ts",
+      "require": "./module-labels.ts",
+      "types": "./module-labels.ts",
+      "default": "./module-labels.ts"
+    },
     "./module/projection": {
       "import": "./module-projection.ts",
       "require": "./module-projection.ts",
