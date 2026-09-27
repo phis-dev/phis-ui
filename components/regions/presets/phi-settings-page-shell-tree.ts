@@ -45,7 +45,7 @@ type PhiSettingsPageShellFormSectionBase = {
    * What a saved panel says, for a Form whose descriptor says nothing on success.
    *
    * Settings panels report through the application feedback instead of in place: a panel is one of
-   * several, and a switch that saves on change has no success panel to show. Where the Form's own
+   * several, and a panel that saves on change has no success panel to show. Where the Form's own
    * descriptor has success wording, that wins -- it is more specific than "Saved" ever is.
    */
   savedMessage?: string;
@@ -66,15 +66,15 @@ type PhiSettingsPageShellFormSectionBase = {
  * A panel saves in one of two ways, and which one is a question about its contents.
  *
  * Several fields are a thought somebody finishes before it is written down, so they are saved
- * together with a Button. One switch is the whole thought: flipping it is the decision, and a Save
- * beside it would only ask a second time.
+ * together with a Button. One control is the whole thought: flipping the switch, picking the
+ * language -- the choice is the decision, and a Save beside it would only ask a second time.
  *
  * The Button is the Form Widget's own (`submit: { label }`), not a Button Widget in the slot below:
  * only the Widget knows where the form's label column ends, so only a submit it draws lines up under
  * the inputs. A Form itself carries no submit -- that is the contract in FORMS.md, and the reason the
  * label is stated here rather than in the descriptor.
  *
- * The switch is still an ordinary Form -- same descriptor, same handler Provider, same gateway. What
+ * Such a panel is still an ordinary Form -- same descriptor, same handler Provider, same gateway. What
  * differs is one route, which the shell states because only it knows the Form's address: the Form's
  * own `stateChange` comes back to its `submit` channel, so a change submits. A Route decides the
  * channel, the action and the value type it sends under, which is why no Widget needed a new ability
@@ -367,7 +367,7 @@ export function buildPhiSettingsPageShellTree({
                   ],
                   listens: [
                     /*
-                     * Only the switch listens for a submit, because only the switch is sent one. A
+                     * Only a save-on-change panel listens for a submit, because only it is sent one. A
                      * Form Widget's own Button presses the form directly -- one call, no channel --
                      * so a Settings form that carries its own Save has nothing to hear.
                      */

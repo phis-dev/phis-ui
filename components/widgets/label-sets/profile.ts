@@ -9,10 +9,6 @@ const PHI_PROFILE_LOCALE_WIDGET_LABEL_SET = definePhiLabelSet({
   labels: {
     description: definePhiMessageLabel("Choose your preferred language for this site."),
     field_label: "Default language",
-    submit_label: "Save",
-    error_invalid_locale: definePhiMessageLabel("Please choose a language that is available on this site."),
-    success_title: "Language updated",
-    success_text: definePhiMessageLabel("Your preferred language has been saved."),
   },
 });
 
@@ -76,12 +72,6 @@ export async function getPhiProfileLocaleWidgetLabels(options: PhiGlobalTranslat
   return {
     description: labels.description,
     fieldLabel: labels.field_label,
-    submitLabel: labels.submit_label,
-    feedback: {
-      errorInvalidLocale: labels.error_invalid_locale,
-      successTitle: labels.success_title,
-      successText: labels.success_text,
-    },
   };
 }
 

@@ -93,7 +93,7 @@ export async function buildPhiDefaultAppProfilePageTree({
           nodeKey: "widgetLanguage",
           formId: PHI_APP_FORM_IDS.profileLocale,
           label: labels.language,
-          submitLabel: localeLabels.submitLabel,
+          submitOnChange: true,
           savedMessage: labels.saved,
           initialValues: { locale: preferredLocale },
           /*

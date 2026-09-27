@@ -7,7 +7,6 @@ import { PHI_SHARED_PACKAGE_NAME } from "../../../types/signals";
 import { flattenPhiFormLabels } from "../../../components/forms/form-labels";
 import {
   PHI_FORM_FIELD_PROVIDER_KEYS,
-  PHI_FORM_VALIDATION_PROVIDER_KEYS,
   createPhiSharedFormProviderKey,
 } from "../../../components/forms/form-provider-contract";
 import { PHI_CORE_RUNTIME_DATA_PROVIDER_KEYS } from "../core/ids";
@@ -127,10 +126,12 @@ const localeDescriptor: PhiFormDescriptor = {
       fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.select,
       label: label("fieldLabel", "Default language"),
       optionsProvider: { providerKey: PHI_CORE_RUNTIME_DATA_PROVIDER_KEYS.siteLocales },
-      validation: [{
-        providerKey: PHI_FORM_VALIDATION_PROVIDER_KEYS.required,
-        message: label("errorInvalidLocale", "Please choose a language that is available on this site."),
-      }],
+      /*
+       * No `required` rule, for the same reason the Appearance segmented carries none: the select
+       * opens on the account's language and offers no way to empty it, so the rule could only ever
+       * pass -- and it would print an asterisk beside a field nobody can leave blank. The endpoint
+       * refuses a code this Site does not have, which is where that answer belongs.
+       */
     },
   ],
   /*
@@ -220,9 +221,6 @@ async function loadLocaleLabels(
   });
   return flattenPhiFormLabels({
     fieldLabel: labels.fieldLabel,
-    errorInvalidLocale: labels.feedback.errorInvalidLocale,
-    save: labels.submitLabel,
-    saving: labels.submitLabel,
   });
 }
 
