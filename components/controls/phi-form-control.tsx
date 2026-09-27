@@ -308,10 +308,40 @@ export const PhiFormControl = forwardRef<PhiFormControlHandle, PhiFormControlPro
     }),
     [descriptor.fields, initialValues],
   );
+  /*
+   * The placement's values, written into the mounted form when they change -- and only then.
+   *
+   * Ant Design reads `initialValues` once, at the first render of a `Form`, so a form that is already
+   * mounted has to be told. This is that telling. It used to fire on the identity of the memo above,
+   * which is a new object on every render whose props are new objects -- and a Server render is
+   * exactly that: `router.refresh()` hands every Widget a fresh descriptor, so the effect ran and
+   * overwrote whatever somebody had typed since, with values nobody had changed.
+   *
+   * Compared by value, in the order the fields are declared, because the question is whether the
+   * Server now says something else, not whether React built another object.
+   *
+   * A field somebody has touched keeps what they put in it. The Server's answer is newer than the
+   * render, but it is not newer than the person: a Page that comes back while a form is half filled
+   * in is the ordinary case for a Settings panel that saves on change, and losing an entry to it is
+   * worse than showing an entry that is one save behind.
+   */
+  const initialValuesKey = JSON.stringify(
+    descriptor.fields.map((field) => [field.key, resolvedInitialValues[field.key] ?? null]),
+  );
+  const appliedInitialValuesRef = useRef<string | null>(null);
   useEffect(() => {
-    const fieldValues = Object.fromEntries(descriptor.fields.map((field) => [field.key, resolvedInitialValues[field.key]]));
+    if (appliedInitialValuesRef.current === initialValuesKey) {
+      return;
+    }
+    const first = appliedInitialValuesRef.current == null;
+    appliedInitialValuesRef.current = initialValuesKey;
+    const fieldValues = Object.fromEntries(
+      descriptor.fields
+        .filter((field) => first || !form.isFieldTouched(field.key))
+        .map((field) => [field.key, resolvedInitialValues[field.key]]),
+    );
     form.setFieldsValue(fieldValues);
-  }, [descriptor.fields, form, resolvedInitialValues]);
+  }, [descriptor.fields, form, initialValuesKey, resolvedInitialValues]);
 
   async function submit(values: Record<string, unknown>) {
     setSubmitting(true);

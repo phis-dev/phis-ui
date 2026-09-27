@@ -115,6 +115,26 @@ export function PhiRootLiveThemeProvider({
    * must not pull the page back out from under them.
    */
   const liveModeOverride = useRef(false);
+  /*
+   * And a mode the Server now states is taken, because the Server only states a new one when somebody
+   * asked for it.
+   *
+   * `useState(initialMode)` reads the prop once. Everything that switches the mode afterwards is a
+   * live signal or the operating system, so a viewer who changed the setting on their Profile page
+   * saw the page stay in the mode it had loaded in: the Page came back with the new one in the
+   * payload and this provider was already mounted and no longer listening.
+   *
+   * Compared against the last prop rather than against `mode`, so a live Theme draft in the Builder
+   * survives a re-render that carries the same answer as before.
+   */
+  const lastStatedMode = useRef(initialMode);
+  useEffect(() => {
+    if (lastStatedMode.current === initialMode) {
+      return;
+    }
+    lastStatedMode.current = initialMode;
+    setMode(initialMode);
+  }, [initialMode]);
   const [pageDescription, setPageDescription] = useState<string | null>(null);
   const [openGraphImage, setOpenGraphImage] = useState<string | null>(null);
   const [canonicalUrl, setCanonicalUrl] = useState<string | null>(null);

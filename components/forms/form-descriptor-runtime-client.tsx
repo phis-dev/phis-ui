@@ -100,7 +100,17 @@ export function PhiFormDescriptorRuntimeClient({
   }, [initialValuesInput, loadedInitialValues, queryInitialValues]);
   const [error, setError] = useState<string | null>(null);
   const [succeeded, setSucceeded] = useState(false);
-  const [record, setRecord] = useState<Record<string, unknown> | null>(configuredInitialValues);
+  /*
+   * What a source read brought back, and nothing until one has. The placement's own values are not
+   * state and must not be seeded into any.
+   *
+   * They were: this started as `useState(configuredInitialValues)`, and a `useState` initializer runs
+   * once. From then on the Form was handed the values the page had been rendered with at mount, for
+   * the rest of the tab's life -- while the Widget's props went on carrying whatever the Server last
+   * said. A Settings panel that saves and then asks for its Page again got the new value in the
+   * payload, wrote the mount-time one into the form, and looked as though the save had been undone.
+   */
+  const [record, setRecord] = useState<Record<string, unknown> | null>(null);
   const [loading, setLoading] = useState(source !== null);
   const [recordKey, setRecordKey] = useState("inline");
   const [conditionControllerStates, setConditionControllerStates] = useState<
@@ -425,7 +435,7 @@ export function PhiFormDescriptorRuntimeClient({
         descriptor={descriptor}
         labels={labels}
         formConfig={widgetConfig?.formConfig}
-        initialValues={record ?? undefined}
+        initialValues={record ?? configuredInitialValues}
         onFormReady={(activeForm) => {
           formRef.current = activeForm;
         }}
