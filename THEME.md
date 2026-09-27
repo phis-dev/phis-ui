@@ -284,6 +284,62 @@ The published Theme has one server projection and one client projection:
   Root passes only serializable data across it; Client theme modules never import server resolvers or
   `server-only` modules, and `pnpm audit:graph` must report no Client-to-server-only reachability.
 
+## The stated vocabulary
+
+The token names are Ant Design's spelling and they are this house's words too. `colorPrimary`,
+`paddingSM` and `controlHeight` mean here what they mean there, a Site has them stored under those
+names, and the Theme workspace writes them under those names. Nothing is renamed and nothing is
+translated. What is owned here is the **list**.
+
+`theme/phi-theme-tokens.ts` states it:
+
+- `PHI_THEME_TOKEN_KEYS` -- every name a render may read or write. `PhiThemeTokens` is cut from Ant
+  Design's `GlobalToken` by that list, and it is what `usePhiConfig().token` hands a Client Component;
+  `PhiServerThemeTokens` is cut from the same list, so the two projections cannot drift apart.
+- `PHI_THEME_OWN_TOKEN_KEYS` -- the names this house adds to Ant Design's set. `paddingXXL` is one:
+  `buildPhiThemeStructuralTokens` hands it over with the rest of the scale and the cssVar pass emits a
+  variable for every token it is given, so `--ant-padding-xxl` is on the page although `AliasToken` has
+  no such field. Ant Design's type does not know the name; its output does. Such a name is read as a
+  CSS variable, never through the hook, because it cannot be cut from a type that lacks it.
+- `PHI_THEME_PALETTE_SEED_KEYS` and `PHI_THEME_STYLE_SEED_KEYS` -- what a palette may seed and what a
+  style token may say beyond the vocabulary (`wireframe`, which is not a value on the page but the
+  switch the derivation runs under).
+
+A stored Theme is held to the list. `assertPhiThemeVocabulary` reads `palette.seed`,
+`palette.modes.*.seed`, `palette.modes.*.overrides` and `style.token` at the folds where they resolve,
+and the palette block and the Site record separately, while they can still be told apart -- after the
+merge a wrong key belongs to nobody. It throws and names every offending key with where it stood. This
+is the same strictness a stored Widget config is read with: a Theme derived past a name nobody has
+hides the mistake, because the page comes up and the one thing an author set is simply not there.
+
+**The bridge** is where Ant Design's own spelling and types appear, and nowhere else:
+`theme/phi-theme-tokens.ts` (the one line that derives the value types, which is also the drift check --
+a name Ant Design drops stops compiling in the list rather than in the files that read it),
+`theme/phi-antd-token-resolver.ts` (the alias derivation out of `antd/es/theme/themes/*`), and
+`components/root/phi-config-provider.tsx` (the root adapter). Above the bridge everything reads the
+stated names; below it one implementation turns a stored Theme into their values.
+
+So what swapping Ant Design would mean is stated and checkable: **the names are the contract, the
+algorithm behind them is not.** A different implementation has to answer the same list -- including the
+names Ant Design derives rather than seeds, which is the part that is genuinely Ant Design-shaped today
+-- and nothing above the bridge changes.
+
+Two things stay outside the boundary on purpose:
+
+- `theme.components` is Ant Design's component tree (`Layout.*`, `Menu.*`, some hundreds of names) and
+  stays an open record. Holding it to a list would take that whole tree in as a contract for the sake of
+  the handful of overrides a Site writes.
+- The Theme workspace (`plugins/runtime-modules/theme/widgets/brand-controls/client.tsx`) edits these
+  tokens rather than reading them -- it walks them by name and writes them back -- so it lives below the
+  bridge with Ant Design's own types. That is a decision, not a leak.
+
+`scripts/validate-control-boundaries.mjs` holds both halves. It decides which files may import Ant
+Design at all, and it checks which names cross: every `--ant-*` variable written anywhere in the tree is
+read back as a token name and must be one the list states. That is the way in that needs no import --
+BUILDER.md permits those variables on purpose -- and a typo in one resolves silently to nothing.
+Component tokens are the exception and each is named with its reason. A stated name nothing reads or
+writes fails the check, and so does a permission nobody uses.
+
 ## Control shape
 
 `theme.shape.controls` is `{ topLeft, topRight, bottomRight, bottomLeft }`, each

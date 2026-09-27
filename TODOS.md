@@ -698,22 +698,6 @@ built. Remove an entry when it is done.
   compiled, so its `./fonts` boundary contributes no typefaces and says nothing. Tracked with the shape of
   a fix in [phis-server TODOS.md](../phis-server/TODOS.md), "Site bootstrap and releases".
 - **Module font adoption into the Media library.** Designed in [design/FONTS.md](./design/FONTS.md).
-- **The bridge is drawn but not written down.** The vocabulary is stated
-  (`theme/phi-theme-tokens.ts`), `PhiConfig.token` is cut from it, a stored Theme is held to it, and
-  `scripts/validate-control-boundaries.mjs` checks which names cross as well as who may import Ant
-  Design. What is left is saying it in [THEME.md](./THEME.md), which today describes the token input
-  and the `--ant-*` output and names no vocabulary at all: which six files are the bridge, that above
-  them a render reads stated names and below them one implementation turns a stored Theme into their
-  values, and that swapping Ant Design means answering the same list rather than renaming anything.
-
-  Two things stay outside the boundary on purpose and want the same paragraph. `theme.components` is
-  Ant Design's component tree -- `Layout.*`, `Menu.*`, some hundreds of names -- and stays an open
-  record: holding it to a list would take that whole tree in as a contract for the sake of the handful
-  of overrides a Site actually writes. And the Theme workspace
-  (`plugins/runtime-modules/theme/widgets/brand-controls/client.tsx`) edits those tokens rather than
-  reading them, so it lives below the bridge with Ant Design's own types; unsaid, that reads like a
-  leak rather than a decision.
-
 - **A Tour for the Theme workspace.** The one thing `/builder/theme` does not say out loud is that a
   Module's Theme is offered and never taken: installing a package that ships a look changes nothing until
   somebody picks it here, and the "your logo" placeholder in the header is the sign that nobody has. That
