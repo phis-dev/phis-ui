@@ -88,6 +88,14 @@ export {
   PHI_RESET_PASSWORD_FORM_DESCRIPTOR,
 } from "./components/forms/shared-form-descriptors";
 export { PHI_SHARED_FORM_IDS } from "./components/forms/shared-form-ids";
+/*
+ * What `loadLabels` has to return, for whoever supplies one.
+ *
+ * A Form's labels are reached by a flat dotted key, and a Module that declares a Form declares
+ * `loadLabels` to produce them from its own label set. The flattener is the shape of that answer, so a
+ * package without it either restates the flattening or hands in a nested object the Form cannot read.
+ */
+export { flattenPhiFormLabels } from "./components/forms/form-labels";
 export {
   PHI_RUNTIME_FORM_CONTROLLER_DEFINITION,
   parsePhiRuntimeFormControllerConfig,

@@ -29,6 +29,16 @@ export {
  * sets take it from the gateway directly; this is the same type by the same name.
  */
 export type { PhiGlobalTranslatorOptions } from "./gateway/tr";
+/*
+ * The Site's own address for this server, for code that runs outside a request.
+ *
+ * A label set is loaded while a Page is assembled and while a Form is prepared, and neither has a
+ * request runtime to take the credentials from -- the first-party sets read them from here. It reads
+ * `config/site-runtime.json` and caches by path, so it belongs on this boundary and not on the
+ * Client-safe one.
+ */
+export { readPhiServerApiCredentials } from "./helpers/phis-server-credentials";
+export type { PhiServerApiCredentials } from "./helpers/phis-server-credentials";
 export { getPhiUserState, type GetPhiUserStateOptions, type PhiUserState } from "./gateway/user-state";
 export { resolvePhiRequestLocale } from "./server-helpers/request-locale";
 export { loadPhiResolvedCmsRequest } from "./server-helpers/cms-request";
