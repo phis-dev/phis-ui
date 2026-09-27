@@ -698,34 +698,21 @@ built. Remove an entry when it is done.
   compiled, so its `./fonts` boundary contributes no typefaces and says nothing. Tracked with the shape of
   a fix in [phis-server TODOS.md](../phis-server/TODOS.md), "Site bootstrap and releases".
 - **Module font adoption into the Media library.** Designed in [design/FONTS.md](./design/FONTS.md).
-- **The token vocabulary is the house's; what is missing is the boundary and the bridge.** The names
-  are Ant Design's spelling and they stay that way: `colorPrimary`, `paddingSM`, `controlHeight` are
-  this house's words too, and nothing stored anywhere has to move. What is missing is that the list is
-  never stated on the Client side and nothing computes it but Ant Design.
+- **The bridge is drawn but not written down.** The vocabulary is stated
+  (`theme/phi-theme-tokens.ts`), `PhiConfig.token` is cut from it, a stored Theme is held to it, and
+  `scripts/validate-control-boundaries.mjs` checks which names cross as well as who may import Ant
+  Design. What is left is saying it in [THEME.md](./THEME.md), which today describes the token input
+  and the `--ant-*` output and names no vocabulary at all: which six files are the bridge, that above
+  them a render reads stated names and below them one implementation turns a stored Theme into their
+  values, and that swapping Ant Design means answering the same list rather than renaming anything.
 
-  The Server already has the stated version. `PhiServerThemeTokens` (`theme/phi-server-tokens.ts`) is a
-  closed list of the names a Server render may read, owned here, spelled Ant Design's way, and the Shell
-  publishes it as `--phi-*`. The Client has no such list: `PhiConfig.token` is antd's `GlobalToken`
-  (`components/root/phi-config-provider.tsx`), so 57 files read from an open surface and the 51 names
-  they happen to use are an accident of what somebody typed rather than something the house promised.
-  Neither is a stored Theme held to the list -- `theme.palette.seed`, `theme.palette.modes.*.overrides`,
-  `theme.style.token` and `theme.components` are open `Record<string, ...>` on the Site record, so a key
-  this house does not have reaches the resolver unremarked.
-
-  The bridge exists and is not named as one. `theme/phi-antd-token-resolver.ts` derives the alias tokens
-  out of `antd/es/theme/themes/*` and `antd/es/theme/util/alias`, `components/root/phi-config-provider.tsx`
-  configures Ant Design with the result, and `components/widgets/helpers/font-family.ts` and
-  `font-size.ts` read the token names; those four are already the only files
-  `scripts/validate-control-boundaries.mjs` lets near Ant Design, each with its reason. Naming them the
-  bridge is most of the work: above it everything reads a Phi token record whose names are declared here,
-  below it one implementation turns a stored Theme into that record.
-
-  What swapping Ant Design would then mean, stated so it can be checked: the names are the contract, the
-  algorithm behind them is not. A different implementation has to answer the same list -- including what
-  antd derives rather than seeds, which is the part that is genuinely antd-shaped today -- and nothing
-  above the bridge changes. So the order is: state the Client list beside the Server one, type
-  `PhiConfig["token"]` with it, hold a stored Theme to it, and extend the boundary check from who may
-  import Ant Design to which names cross.
+  Two things stay outside the boundary on purpose and want the same paragraph. `theme.components` is
+  Ant Design's component tree -- `Layout.*`, `Menu.*`, some hundreds of names -- and stays an open
+  record: holding it to a list would take that whole tree in as a contract for the sake of the handful
+  of overrides a Site actually writes. And the Theme workspace
+  (`plugins/runtime-modules/theme/widgets/brand-controls/client.tsx`) edits those tokens rather than
+  reading them, so it lives below the bridge with Ant Design's own types; unsaid, that reads like a
+  leak rather than a decision.
 
 - **A Tour for the Theme workspace.** The one thing `/builder/theme` does not say out loud is that a
   Module's Theme is offered and never taken: installing a package that ships a look changes nothing until
