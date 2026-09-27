@@ -7,6 +7,7 @@ import {
 } from "../../../helpers/cms-area-config";
 import {
   findPhiBuilderPageKeyFromStoragePath,
+  normalizePhiBuilderCmsCatalogPath,
   resolvePhiBuilderActivePageCatalog,
   resolvePhiBuilderActivePageKey,
   type PhiBuilderPageCatalogArea,
@@ -116,6 +117,98 @@ function resolvePhiBuilderAreaRootPageNode(
 }
 
 /**
+ * The Pages this Area does not answer with, taken out of the list.
+ *
+ * The catalog carries a node per declared route, because it mirrors what is **installed**. What the
+ * list must show is what is **answered**, or an author edits a Page nobody is served -- the rule `/`
+ * is already held to, two paragraphs down. Two narrowings get from one to the other, and they are the
+ * same two the route table applies:
+ *
+ * A Module that is switched off answers nothing. Its routes are claims it would make if somebody
+ * flipped its switch, and `compilePhiCmsActiveRouteTable` skips them for exactly that reason.
+ *
+ * A base Module's Page that a package Module covers is no longer reachable either: the address
+ * answers with the covering one. Only what survived the first narrowing can cover, so the two are
+ * applied in that order and the second needs to ask nothing about activation.
+ *
+ * `/` is left to `choosePhiAreaRootApplicant` below. It is a slot rather than an address and is
+ * settled on rules this has not got -- the base landing has to stay in the running, because "landing,
+ * nobody" is answered by it standing.
+ *
+ * A node goes whether or not a stored Page hangs on it. What is stored is not lost by being off the
+ * list: neither switching a Module off nor covering renames or deletes anything, so the revision
+ * waits where it is and comes back with the address. Keeping its entry to guard it would cost the
+ * list the one thing it is for.
+ */
+function removePhiBuilderUnansweredPresetPages(
+  nodes: readonly PhiPresetPageNode[],
+  baseModuleId: PhiRuntimeModuleId | null,
+  isActive: (moduleId: PhiRuntimeModuleId) => boolean,
+): PhiPresetPageNode[] {
+  /*
+   * A folder is a segment of somebody's path rather than a Page of its own, so it goes when the last
+   * Page under it does: `insertPageTarget` only ever makes one to hold children.
+   */
+  const pruneEmptied = (node: PhiPresetPageNode, children: PhiPresetPageNode[]) =>
+    children.length > 0 || node.sourcePreset != null || node.storagePath != null;
+
+  const keepActive = (candidates: readonly PhiPresetPageNode[]): PhiPresetPageNode[] => candidates
+    .flatMap((node) => {
+      const ownerModuleId = node.sourcePreset?.ownerModuleId;
+      if (ownerModuleId != null && !isActive(ownerModuleId)) {
+        return [];
+      }
+      if (!node.children) {
+        return [node];
+      }
+      const children = keepActive(node.children);
+      return pruneEmptied(node, children) ? [{ ...node, children }] : [];
+    });
+
+  const active = keepActive(nodes);
+  if (baseModuleId == null) {
+    return active;
+  }
+
+  const coveredPaths = new Set<string>();
+  const collectCoveredPaths = (candidates: readonly PhiPresetPageNode[]) => {
+    for (const node of candidates) {
+      const ownerModuleId = node.sourcePreset?.ownerModuleId;
+      const path = node.storagePath == null
+        ? null
+        : normalizePhiBuilderCmsCatalogPath(node.storagePath);
+      if (path != null && path !== "/" && ownerModuleId != null && ownerModuleId !== baseModuleId) {
+        coveredPaths.add(path);
+      }
+      if (node.children) {
+        collectCoveredPaths(node.children);
+      }
+    }
+  };
+  collectCoveredPaths(active);
+  if (coveredPaths.size === 0) {
+    return active;
+  }
+
+  const uncover = (candidates: readonly PhiPresetPageNode[]): PhiPresetPageNode[] => candidates
+    .flatMap((node) => {
+      if (
+        node.sourcePreset?.ownerModuleId === baseModuleId &&
+        node.storagePath != null &&
+        coveredPaths.has(normalizePhiBuilderCmsCatalogPath(node.storagePath))
+      ) {
+        return [];
+      }
+      if (!node.children) {
+        return [node];
+      }
+      const children = uncover(node.children);
+      return pruneEmptied(node, children) ? [{ ...node, children }] : [];
+    });
+  return uncover(active);
+}
+
+/**
  * The Pages of an Area that may actually be opened, which is not the same as the Pages it has.
  *
  * While `/` forwards it is not a Page anybody authors: the forward is the whole content of the root
@@ -138,10 +231,12 @@ export function resolvePhiBuilderOfferedPageCatalog(
     state.customPages,
     state.persistedPageCatalogByArea,
   );
+  const { baseModuleId, isActive } = resolvePhiBuilderAreaModuleActivation(state, area);
+  const answered = removePhiBuilderUnansweredPresetPages(catalog, baseModuleId, isActive);
   const forwards = readPhiBuilderStoredAreaRootRoute(state, area)?.mode !== "landing";
-  const rootPageNode = forwards ? null : resolvePhiBuilderAreaRootPageNode(state, area, catalog);
+  const rootPageNode = forwards ? null : resolvePhiBuilderAreaRootPageNode(state, area, answered);
 
-  return catalog.filter((node) =>
+  return answered.filter((node) =>
     node.storagePath !== "/" || (rootPageNode != null && node === rootPageNode));
 }
 

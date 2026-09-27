@@ -231,6 +231,38 @@ export function choosePhiAreaRootApplicant<TApplicant>(
     ?? null;
 }
 
+export type PhiAreaPathClaim = {
+  ownerModuleId: PhiRuntimeModuleId;
+};
+
+/**
+ * Who answers a path several Modules declare, in the order the answer is taken.
+ *
+ * One rule and two readers, for the reason `choosePhiAreaRootApplicant` above is shared: the route
+ * table decides which Module answers an address, and the Builder's Page list decides which Page an
+ * author is offered for it. Two copies of this would agree until the day a package covers a base
+ * Page, which is the one day it matters -- and the author would be editing a Page nobody is served.
+ *
+ * The rule is the whole of the cover (MODULES.md, "Who owns an address"): an Area's base Module holds
+ * its Pages as a floor rather than as a choice, so it yields to any other Module declaring one of
+ * their paths, and keeps the path when none does. An address answers with its first claim, so
+ * yielding is nothing more than standing last. A `baseModuleId` of `null` is an Area where nothing
+ * yields -- outside Public no package can declare a base path -- and the order is left alone.
+ */
+export function orderPhiAreaPathClaimsByCover<TClaim>(
+  claims: readonly TClaim[],
+  readClaim: (claim: TClaim) => PhiAreaPathClaim,
+  { baseModuleId }: { baseModuleId: PhiRuntimeModuleId | null },
+): readonly TClaim[] {
+  if (baseModuleId == null) {
+    return claims;
+  }
+  return [
+    ...claims.filter((claim) => readClaim(claim).ownerModuleId !== baseModuleId),
+    ...claims.filter((claim) => readClaim(claim).ownerModuleId === baseModuleId),
+  ];
+}
+
 export const PHI_AREA_META_KEY = "meta" as const;
 
 /**
