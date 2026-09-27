@@ -4,17 +4,7 @@ import { PHI_CMS_DEFAULT_SLOT_INDEX } from "../../../constants/cms-layout-types"
 import { PhiCmsPageType, PhiCmsRegionType, PhiCmsStatus } from "../../../constants/phi-cms";
 import { createPhiCmsPresetNodes } from "../../../helpers/cms-preset-nodes";
 import type { PhiCmsPageNode, PhiResolvedCmsPageTree } from "../../../types/cms";
-
-/**
- * The refusals a Site owns a Page for.
- *
- * A 500 is deliberately not among them. The other three are decided before rendering starts and can
- * therefore be answered with a CMS tree like any other Page; a 500 is what is left when rendering has
- * already failed, so the machinery that would resolve its tree is the machinery that broke. It is a
- * fixed page instead, in `next/global-error.tsx`, and no preset stands for it here -- a Page in the
- * Builder that is never the one shown only invites an edit that cannot take effect.
- */
-export type PhiCmsErrorCode = 401 | 403 | 404;
+import type { PhiCmsErrorCode } from "../../../constants/cms-error-pages";
 
 const ERROR_STATUS: Record<PhiCmsErrorCode, "403" | "404"> = {
   401: "403",
@@ -52,15 +42,6 @@ const ERROR_SOURCE_COPY: Record<PhiCmsErrorCode, { title: string; subTitle: stri
 const SYNTHETIC_ERROR_REGION_IDS = {
   regionContent: -700,
 } as const;
-
-export function resolvePhiCmsErrorPagePath(code: PhiCmsErrorCode) {
-  return `/error/${code}`;
-}
-
-export function parsePhiCmsErrorCode(value: string | number | null | undefined): PhiCmsErrorCode | null {
-  const parsed = typeof value === "number" ? value : Number(String(value ?? "").trim());
-  return parsed === 401 || parsed === 403 || parsed === 404 ? parsed : null;
-}
 
 export async function buildPhiDefaultPubErrorPageTree({
   code,

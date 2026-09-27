@@ -9,6 +9,10 @@ import {
   PHI_DEFAULT_PUB_AREA_PRESET_KEY,
 } from "./preset-contracts/pub-area";
 import { PhiCmsFlags } from "../../constants/phi-cms";
+import {
+  PHI_CMS_ERROR_CODES,
+  resolvePhiCmsErrorPagePath,
+} from "../../constants/cms-error-pages";
 import { PHI_CORE_RUNTIME_MODULE_ID } from "./core/ids";
 import { PHI_ACCOUNTING_RUNTIME_MODULE_ID } from "./accounting/ids";
 import { PHI_APP_RUNTIME_MODULE_ID } from "./app/ids";
@@ -170,13 +174,13 @@ export const PHI_AREA_BASE_RUNTIME_MODULE_ROUTES = [
       import("../../components/regions/presets/phi-default-app-profile-page-tree")
         .then((module) => module.buildPhiDefaultAppProfilePageTree({ page, runtime })),
   },
-  ...([401, 403, 404] as const).map((code) => ({
+  ...PHI_CMS_ERROR_CODES.map((code) => ({
     ownerModuleId: PHI_PUBLIC_RUNTIME_MODULE_ID,
     presetKey: `public-error-${code}-page`,
     presetVersion: 1,
     area: "public" as const,
     title: String(code),
-    path: `/error/${code}`,
+    path: resolvePhiCmsErrorPagePath(code),
     /*
      * An error Page is what a failed request shows, not something to be found: listed in a search
      * result it would send a visitor straight to "not found". Unindexed by default, like the sign-in

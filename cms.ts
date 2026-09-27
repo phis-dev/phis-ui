@@ -16,8 +16,10 @@ export type {
 } from "./types/cms-plugins";
 export * from "./cms/plugins";
 export {
+  PHI_CMS_ERROR_CODES,
+  isPhiCmsErrorPagePath,
   parsePhiCmsErrorCode,
   resolvePhiCmsErrorPagePath,
   type PhiCmsErrorCode,
-} from "./components/regions/presets/phi-default-pub-error-page-tree";
+} from "./constants/cms-error-pages";
 export { PhiCmsRegionType } from "./constants/phi-cms";

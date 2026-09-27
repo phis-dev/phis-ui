@@ -11,7 +11,7 @@ import {
   parsePhiCmsErrorCode,
   resolvePhiCmsErrorPagePath,
   type PhiCmsErrorCode,
-} from "../regions/presets/phi-default-pub-error-page-tree";
+} from "../../constants/cms-error-pages";
 import {
   resolvePhiRuntimeModuleIdsForArea,
 } from "../../plugins/runtime-modules/settings";
