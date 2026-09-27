@@ -1,3 +1,5 @@
+import { assertPhiThemeVocabulary } from "./phi-theme-tokens";
+
 export type PhiThemeMode = "light" | "dark";
 export type PhiThemeCustomColorKey =
   | "custom1"
@@ -215,5 +217,20 @@ export function resolvePhiThemeColorTokens(
   sitePalette: PhiThemePalette | null | undefined,
   mode: PhiThemeMode,
 ) {
+  /*
+   * Held to the vocabulary here, and the two sides separately, because this is where they are still
+   * telling apart: once they are merged a bad key belongs to nobody. Every colour consumer comes
+   * through this function, so a Theme is read the same strict way whoever asks.
+   */
+  assertPhiThemeVocabulary({
+    palette: preset.palette,
+    modeSeedKeys: PHI_THEME_PALETTE_MODE_SEED_KEYS,
+    source: `The Theme palette block "${preset.key}"`,
+  });
+  assertPhiThemeVocabulary({
+    palette: sitePalette,
+    modeSeedKeys: PHI_THEME_PALETTE_MODE_SEED_KEYS,
+    source: "The Site's own Theme",
+  });
   return resolvePhiThemePaletteTokens(mergePhiThemePalettes(preset.palette, sitePalette), mode);
 }

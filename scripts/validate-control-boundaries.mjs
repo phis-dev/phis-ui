@@ -739,6 +739,126 @@ for (const [relativePath, entry] of antdImportAllowance) {
   }
 }
 
+/**
+ * Which names cross the boundary, not only who may reach for them.
+ *
+ * Above, the allowance decides which files may import Ant Design at all. It says nothing about the
+ * other way in, which needs no import: a style that writes `var(--ant-color-primary)` reaches the
+ * same token from any file in the tree, and a typo in it resolves to nothing at all -- silently, at
+ * runtime, in whatever the browser then draws. BUILDER.md permits those variables on purpose, so the
+ * rule here is not who writes one but that what it names is a word this house has stated
+ * (`theme/phi-theme-tokens.ts`).
+ *
+ * Component tokens are the exception, and each one is written down. `--ant-table-footer-bg` is
+ * Table's own, not a name on the alias scale, and the stated vocabulary deliberately stops at the
+ * alias level rather than taking Ant Design's whole component tree in as a contract.
+ */
+const antdComponentVariableAllowance = new Map([
+  ["--ant-table-footer-bg", {
+    reason: "Table's own token. The Table Control's stylesheet follows the component it is drawing.",
+  }],
+  ["--ant-cascader-dropdown-height", {
+    reason: "Cascader's own token. The root stylesheet sizes the popup by what the component sizes itself by.",
+  }],
+]);
+
+const SPACING_SEGMENTS = new Set(["xxs", "xs", "sm", "md", "lg", "xl", "xxl"]);
+
+/** `--ant-border-radius-lg` is `borderRadiusLG`: the size suffixes are shouted, the rest is camel. */
+function readAntdVariableTokenName(variable) {
+  return variable
+    .slice("--ant-".length)
+    .split("-")
+    .map((segment, index) => {
+      if (index === 0) return segment;
+      return SPACING_SEGMENTS.has(segment) ? segment.toUpperCase() : segment[0].toUpperCase() + segment.slice(1);
+    })
+    .join("");
+}
+
+async function listStyledSources(relativeDirectory = ".") {
+  const skipped = new Set(["node_modules", ".next", "dist", ".git", "scripts"]);
+  const entries = await readdir(path.join(repositoryRoot, relativeDirectory), { withFileTypes: true });
+  const files = [];
+  for (const entry of entries) {
+    if (skipped.has(entry.name)) continue;
+    const relativePath = relativeDirectory === "." ? entry.name : path.join(relativeDirectory, entry.name);
+    if (entry.isDirectory()) {
+      files.push(...await listStyledSources(relativePath));
+    } else if (/\.(?:[cm]?[jt]sx?|css)$/u.test(entry.name)) {
+      files.push(relativePath);
+    }
+  }
+  return files;
+}
+
+const themeVocabularySource = await readSource("theme/phi-theme-tokens.ts");
+
+/**
+ * The two lists that are the vocabulary, read by name.
+ *
+ * By name and not by "every quoted word in the file", because the file states other lists beside them
+ * -- which seeds a palette may set, which seed flags a style token may carry -- and those are a
+ * different permission. Scooping them up here would quietly let `--ant-wireframe` pass.
+ */
+function readStatedTokenList(source, constantName) {
+  const match = source.match(new RegExp(`export const ${constantName} = \\[([^\\]]*)\\] as const;`, "u"));
+  if (!match) {
+    failures.push(`theme/phi-theme-tokens.ts no longer states ${constantName}, which this check reads the vocabulary from.`);
+    return [];
+  }
+  return [...match[1].matchAll(/"([A-Za-z0-9]+)"/gu)].map((entry) => entry[1]);
+}
+
+const statedTokenNames = new Set([
+  ...readStatedTokenList(themeVocabularySource, "PHI_THEME_TOKEN_KEYS"),
+  ...readStatedTokenList(themeVocabularySource, "PHI_THEME_OWN_TOKEN_KEYS"),
+]);
+const styledSources = await listStyledSources();
+const componentVariablesSeen = new Set();
+const mentionedNames = new Set();
+
+for (const relativePath of styledSources) {
+  const source = await readSource(relativePath);
+  const ownVocabulary = relativePath === path.join("theme", "phi-theme-tokens.ts");
+
+  for (const match of source.matchAll(/--ant-[a-z0-9]+(?:-[a-z0-9]+)*/gu)) {
+    const variable = match[0];
+    if (antdComponentVariableAllowance.has(variable)) {
+      componentVariablesSeen.add(variable);
+      continue;
+    }
+    const name = readAntdVariableTokenName(variable);
+    mentionedNames.add(name);
+    if (statedTokenNames.has(name)) continue;
+    failures.push(
+      `${relativePath} writes ${variable}, which is ${name} -- a name theme/phi-theme-tokens.ts does not state. `
+        + "State it there, or, for a component's own token, name it in antdComponentVariableAllowance with its reason.",
+    );
+  }
+
+  if (ownVocabulary) continue;
+  for (const match of source.matchAll(/[A-Za-z][A-Za-z0-9]*/gu)) {
+    mentionedNames.add(match[0]);
+  }
+}
+
+for (const name of statedTokenNames) {
+  if (mentionedNames.has(name)) continue;
+  failures.push(
+    `theme/phi-theme-tokens.ts states ${name}, which nothing in the tree reads or writes. `
+      + "Remove it rather than keeping a word nobody says.",
+  );
+}
+
+for (const variable of antdComponentVariableAllowance.keys()) {
+  if (componentVariablesSeen.has(variable)) continue;
+  failures.push(
+    `antdComponentVariableAllowance permits ${variable}, which nothing writes any more. `
+      + "Remove the entry rather than leaving a permission nobody rereads.",
+  );
+}
+
 if (failures.length > 0) {
   console.error(`Control boundary validation failed:\n- ${failures.join("\n- ")}`);
   process.exit(1);
@@ -749,5 +869,6 @@ console.log(
     + `${controlledPrimitives.size} controlled primitives across the tree, `
     + `${soleOwnerPrimitives.size} owned by a single file, `
     + `${overlayShellConsumers.size} Overlay shells reachable from ${new Set([...overlayShellConsumers.values()].flatMap((consumers) => [...consumers])).size} files, `
-    + `${antdImportAllowance.size} files allowed an Ant Design import outside ${controlDirectory}).`,
+    + `${antdImportAllowance.size} files allowed an Ant Design import outside ${controlDirectory}, `
+    + `${statedTokenNames.size} stated Theme token names).`,
 );

@@ -2,9 +2,10 @@ import "server-only";
 
 import { buildPhiThemeStructuralTokens } from "./phi-theme";
 import { resolvePhiAntdAliasTokens } from "./phi-antd-token-resolver";
-import type { PhiThemeTokens } from "./phi-theme-tokens";
+import { assertPhiThemeVocabulary, type PhiThemeTokens } from "./phi-theme-tokens";
 import {
   PHI_CORE_THEME_PRESET_PLUGINS,
+  PHI_THEME_PALETTE_MODE_SEED_KEYS,
   resolvePhiThemePresetPlugin,
   resolvePhiThemeColorTokens,
   type PhiThemeMode,
@@ -101,6 +102,11 @@ export function resolvePhiServerThemeTokens({
     return cached;
   }
 
+  assertPhiThemeVocabulary({
+    styleToken: siteTheme?.style?.token,
+    modeSeedKeys: PHI_THEME_PALETTE_MODE_SEED_KEYS,
+    source: "The Site's own Theme",
+  });
   const themePreset = resolvePhiThemePresetPlugin(themePresets, siteTheme?.preset);
   const colorTokens = resolvePhiThemeColorTokens(themePreset, siteTheme?.palette, mode);
   const structuralTokens = buildPhiThemeStructuralTokens();

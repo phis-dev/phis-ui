@@ -12,11 +12,13 @@ import {
   buildPhiThemeStructuralTokens,
 } from "../../theme/phi-theme";
 import {
+  PHI_THEME_PALETTE_MODE_SEED_KEYS,
   resolvePhiThemePresetPlugin,
   resolvePhiThemeColorTokens,
   type PhiThemeMode,
   type PhiThemePresetPlugin,
 } from "../../theme/phi-theme-presets";
+import { assertPhiThemeVocabulary } from "../../theme/phi-theme-tokens";
 import { applyPhiButtonShadowComponentTokens } from "../../theme/phi-button-shadow";
 import {
   applyPhiControlShapeComponentTokens,
@@ -81,6 +83,11 @@ export function resolvePhiRootTheme({
    * Site's proportions. The palette merge happens before the tokens resolve, so a shared seed the Site
    * owns is never undercut by a mode override the block declares.
    */
+  assertPhiThemeVocabulary({
+    styleToken: siteTheme?.style?.token,
+    modeSeedKeys: PHI_THEME_PALETTE_MODE_SEED_KEYS,
+    source: "The Site's own Theme",
+  });
   const colorTokens = resolvePhiThemeColorTokens(themePreset, siteTheme?.palette, mode);
   const sharedTokenDefaults = buildPhiThemeStructuralTokens();
   const resolvedThemeTokens = {
