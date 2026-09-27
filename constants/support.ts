@@ -7,5 +7,15 @@ export {
   PHIS_SUPPORT_REQUESTER_WINDOW_DEFAULT_DAYS,
   PhisSupportClosePolicy,
   PhisSupportQueueFlag,
+  PhisSupportTicketChannel,
+  PhisSupportTicketPriority,
+  PhisSupportTicketSeverity,
+  PhisSupportTicketStatus,
   PhisSupportTicketTypeFlag,
+} from "@phis/contracts/support";
+export type {
+  PhisSupportTicketChannelValue,
+  PhisSupportTicketPriorityValue,
+  PhisSupportTicketSeverityValue,
+  PhisSupportTicketStatusValue,
 } from "@phis/contracts/support";
