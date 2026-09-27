@@ -75,6 +75,19 @@ export function definePhiModuleDefinitions(
 }
 
 /**
+ * The Controller descriptor a definition carries, for a package whose Module has a Controller.
+ *
+ * The builder itself is Client-safe -- the contracts file behind it holds types and pure functions --
+ * but its usual door, `@phis/ui/cms/plugins`, is the Server boundary and brings `server-only` with it.
+ * A definition is read on both sides of the seam: the generated Client projection imports
+ * `phiModuleDefinitions` from a package's root, so a package that reached for the builder through the
+ * Server door would pull `server-only` into a Client graph, and the Site would answer 500 rather than
+ * fail to compile. First-party Modules import it from the contracts file directly; a package outside
+ * this one cannot, and this is the same door for it.
+ */
+export { buildPhiRuntimeModuleControllerDescriptor } from "./plugins/runtime-modules/contracts";
+
+/**
  * The typefaces a package declares, exported from `./fonts` as `phiModuleFontContributions`.
  *
  * A boundary of its own, and the only one the Server boundary must not import. A declaration is a
