@@ -3,8 +3,10 @@ import { describe, expect, it } from "vitest";
 import {
   PHI_MEDIA_UPLOAD_PART_ATTEMPTS,
   isPhiMediaUploadPartWorthRepeating,
+  isUsablePhiMediaUploadPlan,
   resolvePhiMediaUploadPartProgress,
   resolvePhiMediaUploadPartRange,
+  resolvePhiMediaUploadStoredProgress,
 } from "./media-upload-flow";
 
 const MIB = 1024 * 1024;
@@ -82,5 +84,59 @@ describe("how far along the whole body is", () => {
   it("answers nothing for an empty body instead of dividing by it", () => {
     expect(resolvePhiMediaUploadPartProgress(new Map([[1, 0]]), 0)).toBe(0);
     expect(resolvePhiMediaUploadPartProgress(new Map(), 20 * MIB)).toBe(0);
+  });
+});
+
+/**
+ * Carrying on a body whose page went away.
+ *
+ * Two things can go wrong here and neither would look like a fault. A part already at the storage that is
+ * not counted makes the bar start at zero, so the one visible sign that the reload cost nothing is gone.
+ * And a plan with no part left to send -- a body that finished arriving and was never finalized -- read as
+ * unusable would send the whole thing again for no reason anybody could see.
+ */
+describe("what an earlier attempt already delivered", () => {
+  const PART = 16 * MIB;
+
+  it("counts a stored part as the bytes it covers, from the same addressing rule", () => {
+    const stored = resolvePhiMediaUploadStoredProgress([{ partNumber: 1, eTag: '"a"' }], PART, 20 * MIB);
+    expect(stored.get(1)).toBe(PART);
+    // Which is where the bar starts: four fifths of this body is already there.
+    expect(resolvePhiMediaUploadPartProgress(stored, 20 * MIB)).toBe(80);
+  });
+
+  it("gives a stored last part the remainder rather than a full part", () => {
+    const stored = resolvePhiMediaUploadStoredProgress(
+      [{ partNumber: 1, eTag: '"a"' }, { partNumber: 2, eTag: '"b"' }],
+      PART,
+      20 * MIB,
+    );
+    expect(stored.get(2)).toBe(4 * MIB);
+    expect(resolvePhiMediaUploadPartProgress(stored, 20 * MIB)).toBe(100);
+  });
+
+  it("counts nothing for an upload that is starting", () => {
+    expect(resolvePhiMediaUploadStoredProgress([], PART, 20 * MIB).size).toBe(0);
+  });
+
+  it("accepts a plan with nothing left to send, where the parts are already stored", () => {
+    const plan = {
+      kind: "multipart-put" as const,
+      method: "PUT" as const,
+      uploadId: "upload-1",
+      partSizeBytes: PART,
+      parts: [],
+    };
+    // Nothing to deliver and nothing delivered is an answer nobody can act on.
+    expect(isUsablePhiMediaUploadPlan(plan, 0)).toBe(false);
+    // Nothing to deliver because it is all there: what remains is to name the parts at finalize.
+    expect(isUsablePhiMediaUploadPlan(plan, 2)).toBe(true);
+  });
+
+  it("refuses a multipart plan the Provider did not name", () => {
+    expect(isUsablePhiMediaUploadPlan({
+      kind: "multipart-put", method: "PUT", uploadId: "", partSizeBytes: PART,
+      parts: [{ partNumber: 1, url: "https://s3.invalid/1" }],
+    }, 0)).toBe(false);
   });
 });

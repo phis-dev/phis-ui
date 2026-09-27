@@ -22,6 +22,10 @@ export type PhiMediaUploadPlan =
        * Part *n* is the bytes from `(n - 1) * partSizeBytes`, and the last one carries what is left. That
        * is the whole addressing scheme, which is why this needs no negotiation: the Server knew the size
        * when it issued the plan, and slicing a `File` costs nothing.
+       *
+       * `parts` is not always all of them. A session that was taken over from a page that went away is
+       * addressed for what is still missing, and the parts already at the storage arrive beside the plan --
+       * they are not addresses to deliver to, and nobody is to send them again.
        */
       kind: "multipart-put";
       method: "PUT";
@@ -52,6 +56,28 @@ export function resolvePhiMediaUploadPartRange(
 ) {
   const start = Math.min(Math.max(0, (partNumber - 1) * partSizeBytes), fileSize);
   return { start, end: Math.min(start + partSizeBytes, fileSize) };
+}
+
+/**
+ * How much of the body is already at the storage, part by part.
+ *
+ * A part that is there counts as delivered, because it is. The figure comes from the same addressing rule
+ * the upload uses rather than from anything reported back: part *n* covers a known range of this file, so
+ * there is no second account of how large a part is to disagree with the first. Without it the bar would
+ * start at zero for a body that is half there, and the person watching would have no way to tell that the
+ * reload had cost them nothing.
+ */
+export function resolvePhiMediaUploadStoredProgress(
+  stored: readonly PhiMediaUploadStoredPart[],
+  partSizeBytes: number,
+  fileSize: number,
+) {
+  const loadedByPart = new Map<number, number>();
+  for (const part of stored) {
+    const range = resolvePhiMediaUploadPartRange(part.partNumber, partSizeBytes, fileSize);
+    loadedByPart.set(part.partNumber, range.end - range.start);
+  }
+  return loadedByPart;
 }
 
 /**
@@ -89,6 +115,15 @@ type PhiMediaUploadInitResponse = {
   finalizeUrl?: string;
   reportUrl?: string;
   expiresAt?: string;
+  /**
+   * Parts of this very body that are already at the storage.
+   *
+   * The Server answers with them where it found an interrupted upload of the same file -- matched on the
+   * digest this request sent, so it is the same bytes and not merely the same name. The plan that comes
+   * with them addresses only what is still missing.
+   */
+  uploaded?: readonly PhiMediaUploadStoredPart[];
+  resumed?: boolean;
   error?: string;
 };
 
@@ -141,12 +176,28 @@ export type PhiMediaUploadSessionResult = {
   token: string;
 };
 
+/**
+ * A part the storage already holds, from an attempt whose page went away.
+ *
+ * The entity tag is why this has to travel: a completion names every part by number and tag, and the tags
+ * of these parts were read by a page that no longer exists. Only the Server can hand them back, having
+ * asked the storage what it is holding.
+ */
+export type PhiMediaUploadStoredPart = {
+  partNumber: number;
+  eTag: string;
+};
+
 type PhiMediaUploadInitSession = {
   token: string;
   plan: PhiMediaUploadPlan;
   finalizeUrl: string;
   reportUrl: string;
   expiresAt: string;
+  /** Parts an earlier attempt already delivered. Empty for an upload that is starting. */
+  uploaded: readonly PhiMediaUploadStoredPart[];
+  /** Whether this session was taken over rather than opened, which only the Server can say. */
+  resumed: boolean;
 };
 
 /**
@@ -162,6 +213,15 @@ export const PHI_MEDIA_UPLOAD_FAILURE_REASONS = {
   /** The storage endpoint answered, and refused. */
   StorageRejected: "storage_rejected",
   Cancelled: "cancelled",
+  /**
+   * The page went away while the body was still in flight.
+   *
+   * Kept apart from `cancelled`, which it used to be reported as, because the Server does opposite things
+   * with them. A person who stops an upload has decided against it and what arrived is waste. A reload, a
+   * crash or a closed tab decided nothing -- and a body travelling in parts leaves those parts at the
+   * storage, where the next attempt at the same file carries on from them instead of paying again.
+   */
+  Interrupted: "interrupted",
   ClientError: "client_error",
 } as const;
 
@@ -207,16 +267,23 @@ export async function reportPhiMediaUploadFailure(
  * not `unload`, which is deprecated and unreliable, nor `beforeunload`, which is for asking a question
  * nobody here wants to ask.
  *
- * The reason is `cancelled` because that is what it is -- leaving the page is a person stopping it, which
- * is the reading the Server's own vocabulary gives that word, and until now the word had no producer.
+ * Which word it uses depends on what can be salvaged, and that is the whole of the difference. A body sent
+ * in parts leaves them at the storage: saying `interrupted` is what keeps them, so the next attempt at the
+ * same file carries on instead of sending those bytes again. Any other plan leaves nothing a second page
+ * could build on, so leaving the page really is a person stopping it, and `cancelled` has the Server clear
+ * up after it.
  *
  * Returns the way to stand down. A caller that reaches finalize must use it: see `runPhiMediaUploadSession`
  * for why the moment matters.
  */
-function reportPhiMediaUploadAbandonmentOnLeaving(reportUrl: string) {
+function reportPhiMediaUploadAbandonmentOnLeaving(reportUrl: string, plan: PhiMediaUploadPlan) {
   if (typeof window === "undefined" || typeof navigator === "undefined") {
     return () => {};
   }
+
+  const reason = plan.kind === "multipart-put"
+    ? PHI_MEDIA_UPLOAD_FAILURE_REASONS.Interrupted
+    : PHI_MEDIA_UPLOAD_FAILURE_REASONS.Cancelled;
 
   const announce = () => {
     try {
@@ -224,7 +291,7 @@ function reportPhiMediaUploadAbandonmentOnLeaving(reportUrl: string) {
         reportUrl,
         new Blob(
           [JSON.stringify({
-            reason: PHI_MEDIA_UPLOAD_FAILURE_REASONS.Cancelled,
+            reason,
             detail: "The page was left while the body was in flight.",
           })],
           { type: "application/json" },
@@ -261,10 +328,21 @@ function readPhiMediaUploadFailureReason(error: unknown): PhiMediaUploadFailureR
  * at least one part to send. A plan missing that is a control-plane answer nobody can act on, and saying
  * so at init is better than failing at the first part.
  */
-function isUsablePhiMediaUploadPlan(plan: PhiMediaUploadPlan | undefined): plan is PhiMediaUploadPlan {
+/* Exported for the test that freezes the resumed case, not for a caller: init is the only reader. */
+export function isUsablePhiMediaUploadPlan(
+  plan: PhiMediaUploadPlan | undefined,
+  storedParts = 0,
+): plan is PhiMediaUploadPlan {
   if (!plan) return false;
   if (plan.kind === "multipart-put") {
-    return Boolean(plan.uploadId) && plan.partSizeBytes > 0 && plan.parts.length > 0;
+    /*
+     * A part to send, or one that is already there. The second case is a body that finished arriving and
+     * was never finalized -- the page went away in between -- and it has no part left to address. Refusing
+     * it as unusable would mean re-sending a whole body that is complete at the storage.
+     */
+    return Boolean(plan.uploadId)
+      && plan.partSizeBytes > 0
+      && plan.parts.length + storedParts > 0;
   }
   return Boolean(plan.url);
 }
@@ -395,7 +473,9 @@ export async function initPhiMediaUploadSession(
   });
 
   const payload = await readJsonResponse<PhiMediaUploadInitResponse>(response);
-  if (!payload.token || !isUsablePhiMediaUploadPlan(payload.plan) || !payload.finalizeUrl) {
+  const uploaded = (payload.uploaded ?? []).filter((part) =>
+    Number.isInteger(part?.partNumber) && part.partNumber > 0 && Boolean(part?.eTag));
+  if (!payload.token || !isUsablePhiMediaUploadPlan(payload.plan, uploaded.length) || !payload.finalizeUrl) {
     throw new Error(payload.error ?? "Failed to create upload session.");
   }
 
@@ -407,6 +487,8 @@ export async function initPhiMediaUploadSession(
     // not be what makes an upload fail.
     reportUrl: payload.reportUrl ?? `/api/site/media/uploads/${payload.token}/report`,
     expiresAt: payload.expiresAt ?? "",
+    uploaded,
+    resumed: payload.resumed === true,
   };
 }
 
@@ -487,6 +569,11 @@ async function uploadPhiMediaUploadPart(
  * per cent has to start over, while a part that dies repeats alone. That is why the threshold for this is
  * the part size rather than some number where a file counts as large.
  *
+ * The same reasoning reaches one step further than a failed request. A page that is reloaded or closed used
+ * to cost every part that had arrived; now those parts stay at the storage and the Server hands them back
+ * with the plan, so this sends what is missing and names the rest. Which parts they are is not this side's
+ * to work out -- the storage was asked.
+ *
  * Progress is the sum of what every part reports, which is why a retry resets its own contribution
  * first: a part that reported ten megabytes and then started again would otherwise count them twice and
  * the total would run past the file.
@@ -495,12 +582,24 @@ async function uploadPhiMediaUploadParts(
   plan: Extract<PhiMediaUploadPlan, { kind: "multipart-put" }>,
   file: File,
   onProgress?: PhiMediaUploadProgressHandler,
+  /** What an earlier attempt already delivered, which this one neither sends nor waits for. */
+  stored: readonly PhiMediaUploadStoredPart[] = [],
 ): Promise<PhiMediaUploadUploadResponse> {
   const loadedByPart = new Map<number, number>();
   const report = () => onProgress?.(resolvePhiMediaUploadPartProgress(loadedByPart, file.size));
 
+  for (const [partNumber, bytes] of resolvePhiMediaUploadStoredProgress(stored, plan.partSizeBytes, file.size)) {
+    loadedByPart.set(partNumber, bytes);
+  }
+  if (stored.length > 0) report();
+
   const queue = [...plan.parts].sort((left, right) => left.partNumber - right.partNumber);
-  const done: { partNumber: number; eTag: string }[] = [];
+  // Seeded with what is already there: a completion has to name every part, and these tags come from the
+  // Server because the page that read them is gone.
+  const done: { partNumber: number; eTag: string }[] = stored.map((part) => ({
+    partNumber: part.partNumber,
+    eTag: part.eTag,
+  }));
   let next = 0;
 
   const worker = async () => {
@@ -540,9 +639,11 @@ export async function uploadPhiMediaUploadBody(
   plan: PhiMediaUploadPlan,
   file: File,
   onProgress?: PhiMediaUploadProgressHandler,
+  /** Parts an earlier attempt delivered, where this session was taken over rather than opened. */
+  stored: readonly PhiMediaUploadStoredPart[] = [],
 ) {
   if (plan.kind === "multipart-put") {
-    return await uploadPhiMediaUploadParts(plan, file, onProgress);
+    return await uploadPhiMediaUploadParts(plan, file, onProgress, stored);
   }
   if (plan.kind !== "proxy-stream" && plan.kind !== "presigned-put") {
     // A newer control plane issued a plan this Client cannot carry out. Saying so is the only safe
@@ -682,10 +783,10 @@ export async function runPhiMediaUploadSession(
   options?: PhiMediaUploadInitOptions,
 ): Promise<PhiMediaUploadSessionResult> {
   const init = await initPhiMediaUploadSession(file, options);
-  const standDown = reportPhiMediaUploadAbandonmentOnLeaving(init.reportUrl);
+  const standDown = reportPhiMediaUploadAbandonmentOnLeaving(init.reportUrl, init.plan);
   let upload;
   try {
-    upload = await uploadPhiMediaUploadBody(init.plan, file, onProgress);
+    upload = await uploadPhiMediaUploadBody(init.plan, file, onProgress, init.uploaded);
   } catch (uploadError) {
     standDown();
     // The Server cannot see this leg, so it is told rather than left to infer it from an expiry.
@@ -755,7 +856,7 @@ export async function runPhiAddonAssetUpload<TAsset>(input: {
   const reportUrl = input.reportUrl
     ?? `/api/site/media/uploads/${encodeURIComponent(reservation.token)}/report`;
 
-  const standDown = reportPhiMediaUploadAbandonmentOnLeaving(reportUrl);
+  const standDown = reportPhiMediaUploadAbandonmentOnLeaving(reportUrl, reservation.plan);
   let upload;
   try {
     upload = await uploadPhiMediaUploadBody(reservation.plan, file, onProgress);
