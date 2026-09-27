@@ -240,10 +240,11 @@ instead -- is part of the feature rather than a nicety.
 - **The single-request size limit.** 128 MiB is about three and a half minutes of 1080p, settable in the
   Admin media settings, and `phis-server/TODOS.md` notes that the figure does not know which transport
   carries it. Above 2 GB `nginx` ends it either way, on the proxied path and on the presigned one.
-- **Which digest a multipart object carries.** Multipart upload is built and gated on a probe answer that
-  the S3 specification makes impossible -- `FULL_OBJECT` is for CRC only, never for SHA -- so the branch is
-  unreachable until that is decided. A `COMPOSITE` SHA-256 is strong enough to deduplicate but only within
-  one partitioning, which ours reproduces; the alternative is to accept that such an object has no
-  comparable digest, which `GROUPS_AND_STORAGE.md` already promises and `finalize` already handles. The
-  whole argument, the measurement it waits on, and what Garage answered are in
-  `phis-server/TODOS.md`, "Media and storage".
+- **Which digest a multipart object carries: settled.** It is `sha256-composite`, SHA-256 over the
+  concatenated part digests with the division named in the value, and a whole-object digest for such an
+  object turned out to be impossible rather than merely unmeasured -- `ChecksumType: FULL_OBJECT` is
+  accepted for the CRC algorithms alone. The Client hashes per part for a second reason that matters here:
+  Web Crypto has no incremental digest, so a video too large to hold in memory can only be described per
+  part. What this means for video specifically is that a two-gigabyte upload is resumable *and*
+  deduplicable, which is the combination the Widget's asset branch was going to need. The measurements and
+  what is left frozen are in `phis-server/TODOS.md`, "Media and storage".

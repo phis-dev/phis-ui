@@ -1,4 +1,5 @@
 import type { PhiImagePreviewApiRecord } from "./phi-image-preview-data";
+import { buildPhiMediaClientDigest } from "./media-upload-digest";
 import { PHIS_AREA_HEADER, buildPhiMediaRequestHeaders } from "./phi-media-request-headers";
 
 /**
@@ -366,6 +367,12 @@ export async function initPhiMediaUploadSession(
   // The Space is named the way every Media route names one -- as a query parameter -- while the Folder
   // and the flags travel in the body, because those describe the Asset rather than the Space it lands in.
   const spaceAddress = options?.spaceAddress?.trim() || null;
+  /*
+   * Hashed before the session is asked for, because the Server signs the digest into the upload request
+   * and cannot do that after it has issued one. Null where the browser cannot hash -- an upload without a
+   * digest still works; it simply arrives with nothing the storage was asked to verify.
+   */
+  const digest = await buildPhiMediaClientDigest(file);
   const initUrl = spaceAddress
     ? `/api/site/media/uploads/init?spaceId=${encodeURIComponent(spaceAddress)}`
     : "/api/site/media/uploads/init";
@@ -383,6 +390,7 @@ export async function initPhiMediaUploadSession(
       ...(folderId ? { folderId } : {}),
       ...(presentationFlags != null ? { presentationFlags } : {}),
       ...(meta ? { meta } : {}),
+      ...(digest ?? {}),
     }),
   });
 
