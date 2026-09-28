@@ -201,6 +201,8 @@ export type {
   PhiTreeControlDropRequest,
   PhiTreeControlExternalDropRequest,
 } from "./components/controls/phi-tree-control";
+export { PhiTreeSelectControl } from "./components/controls/phi-tree-select-control";
+export type { PhiTreeSelectControlProps } from "./components/controls/phi-tree-select-control";
 export {
   PhiCascaderControl,
   normalizePhiCascaderValue,
