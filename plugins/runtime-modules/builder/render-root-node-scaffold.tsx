@@ -879,7 +879,12 @@ function PhiWidgetEffectsPreviewFrame({
         chrome={(
           <>
             {tools}
-            {!isPreviewing ? (
+            {/*
+              * Not while the Widget is being written in: the preview sits in the middle of the frame,
+              * which on a text Widget is the middle of its editor, and there it stood between the
+              * caret and the surface it previews.
+              */}
+            {!isPreviewing && !isAuthoringActive ? (
               <PhiEffectsPreviewButton
                 config={config}
                 blockKind="widget"
@@ -1697,6 +1702,18 @@ export function renderPhiRootNodeScaffold(
           onUpdateLayoutNodeConfig,
           {
             effectsLabels: options?.effectsLabels,
+            /*
+             * The canvas and the tool captions travel down with the recursion.
+             *
+             * A nested Layout is drawn by this same function, and what it is not handed it cannot hand
+             * on. Without the canvas every Widget below it is rendered with `authoring: null`, so its
+             * editor comes up read-only, the scaffold's click finds no text target in it and authoring
+             * cannot be entered at all -- a Widget one Layout deeper was editable through the Inspector
+             * only. Without the captions the nested scaffold's own provider resets the Builder's tools
+             * to their default English.
+             */
+            authoringToolsLabels: options?.authoringToolsLabels,
+            authoringCanvas: options?.authoringCanvas,
             demandControllerContext,
             inheritedViewportFlags: resolvedViewportFlags,
             draggable: true,
