@@ -1,6 +1,6 @@
 import "server-only";
 
-import { PHI_CANONICAL_SOURCE_LOCALE, normalizeLocale } from "../helpers/locale";
+import { PHI_CANONICAL_SOURCE_LOCALE, canonicalizePhiLocaleTag } from "../helpers/locale";
 import { resolvePhiRuntimeConfig } from "../helpers/phis-runtime";
 import type {
   PhiResolvedLocale,
@@ -56,14 +56,14 @@ function normalizeLocaleOptions(input: unknown, defaultLocale: string) {
   const normalized: SiteLocaleOption[] = [];
   for (const value of input) {
     if (typeof value === "string") {
-      const code = normalizeLocale(value, { defaultLocale });
+      const code = canonicalizePhiLocaleTag(value);
       if (code) normalized.push({ code, label: buildLocaleLabel(code) });
       continue;
     }
     if (value && typeof value === "object") {
       const record = value as { code?: unknown; label?: unknown };
       const code = typeof record.code === "string"
-        ? normalizeLocale(record.code, { defaultLocale })
+        ? canonicalizePhiLocaleTag(record.code)
         : "";
       if (!code) continue;
       normalized.push({
@@ -92,7 +92,7 @@ function sanitizeSiteLocaleConfig(payload: unknown): SiteLocaleConfig {
     ? (site as { defaultLocale?: unknown; availableLocales?: unknown })
     : {};
   const fallbackDefaultLocale = typeof record.defaultLocale === "string"
-    ? normalizeLocale(record.defaultLocale, { defaultLocale: PHI_CANONICAL_SOURCE_LOCALE })
+    ? canonicalizePhiLocaleTag(record.defaultLocale) || PHI_CANONICAL_SOURCE_LOCALE
     : PHI_CANONICAL_SOURCE_LOCALE;
   const availableLocales = normalizeLocaleOptions(record.availableLocales, fallbackDefaultLocale);
   return {

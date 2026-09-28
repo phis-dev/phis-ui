@@ -37,7 +37,9 @@ export function extractLocalePrefix(pathname: string, config: SiteLocaleConfig):
   }
 
   const matched = normalizeSiteLocale(firstSegment, config);
-  if (firstSegment === matched || firstSegment.startsWith(`${matched}-`)) {
+  // The segment is lowercased and a Site's tag keeps its case (`pt-BR`), so the two are compared alike.
+  const lowered = matched.toLowerCase();
+  if (firstSegment === lowered || firstSegment.startsWith(`${lowered}-`)) {
     return matched;
   }
 

@@ -50,6 +50,24 @@ function matchLocaleCandidate(value: string, availableLocales: readonly string[]
   return prefix ?? null;
 }
 
+/**
+ * A locale tag in canonical spelling, with every subtag it came with.
+ *
+ * `normalizeLocale` without a list shortens a tag to its language, which is right for a visitor's
+ * `Accept-Language` and wrong for a Site's own locales: `pt-BR` became `pt`, `zh-Hant` became `zh`, and
+ * a Site offering `de` and `de-AT` lost `de-AT`. Whatever resolved a visitor to `pt-BR` then compared
+ * it with a list saying `pt` and answered 404. This keeps the tag and only fixes its spelling.
+ */
+export function canonicalizePhiLocaleTag(input: string | null | undefined) {
+  const value = normalizeLocaleCode(input);
+  if (!value) return "";
+  try {
+    return Intl.getCanonicalLocales(value)[0] ?? value;
+  } catch {
+    return "";
+  }
+}
+
 export function normalizeLocale(
   input: string | null | undefined,
   options: NormalizeLocaleOptions = {},
