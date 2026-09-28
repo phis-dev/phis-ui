@@ -186,6 +186,22 @@ export function readPhiThemeModePreferenceFromCookieHeader(
 }
 
 /**
+ * The preference a mounted page acts on: the one it was handed, unless that is `system` and the viewer's
+ * cookie says otherwise.
+ *
+ * The static tree is one document per locale and mode for everybody, so it hands every viewer `system`
+ * -- the proxy has already used the cookie to pick which document this viewer gets. Following the
+ * browser from there overrode the choice after hydration: a viewer who chose light on a dark system got
+ * the dark palette back and a `phis_color_scheme=dark` written for the next page.
+ */
+export function resolvePhiMountedThemeModePreference(
+  handed: PhiThemeModePreference,
+  cookieHeader?: string | null,
+): PhiThemeModePreference {
+  return handed !== "system" ? handed : readPhiThemeModePreferenceFromCookieHeader(cookieHeader);
+}
+
+/**
  * The account's copy of the choice, where there is an account to write it to.
  *
  * The switch in a Header is the same setting as the Settings panel, offered in one gesture instead of

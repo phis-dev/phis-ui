@@ -6,6 +6,7 @@ import {
   buildPhiThemeModeBootstrapScript,
   readPhiColorSchemeHintFromCookieHeader,
   readPhiThemeModePreferenceFromCookieHeader,
+  resolvePhiMountedThemeModePreference,
   resolvePhiThemeMode,
 } from "./phi-theme-mode";
 
@@ -63,5 +64,23 @@ describe("theme mode resolution", () => {
     expect(script).toContain(`${PHI_COLOR_SCHEME_COOKIE}=;path=/;max-age=0`);
     expect(script).not.toContain("max-age=31536000");
     expect(script).not.toContain(`${PHI_COLOR_SCHEME_COOKIE}=light`);
+  });
+});
+
+describe("the preference a mounted page acts on", () => {
+  it("keeps a choice the static document could not carry", () => {
+    const light = `${PHI_THEME_MODE_COOKIE}=light`;
+    const dark = `a=1; ${PHI_THEME_MODE_COOKIE}=dark`;
+    expect(resolvePhiMountedThemeModePreference("system", light)).toBe("light");
+    expect(resolvePhiMountedThemeModePreference("system", dark)).toBe("dark");
+  });
+
+  it("follows the browser only where nobody chose", () => {
+    expect(resolvePhiMountedThemeModePreference("system", "")).toBe("system");
+    expect(resolvePhiMountedThemeModePreference("system", null)).toBe("system");
+  });
+
+  it("takes what the dynamic document handed it, which already read the cookie", () => {
+    expect(resolvePhiMountedThemeModePreference("dark", `${PHI_THEME_MODE_COOKIE}=light`)).toBe("dark");
   });
 });

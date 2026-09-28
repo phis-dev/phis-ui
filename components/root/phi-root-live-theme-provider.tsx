@@ -17,6 +17,7 @@ import type {
 } from "../../theme/phi-theme-presets";
 import {
   applyPhiThemeModeToDocument,
+  resolvePhiMountedThemeModePreference,
   writePhiColorSchemeHint,
   storePhiThemeModePreferenceOnAccount,
   writePhiThemeModePreference,
@@ -182,7 +183,8 @@ export function PhiRootLiveThemeProvider({
    * stored so the next server render starts in the right mode instead of correcting itself.
    */
   useEffect(() => {
-    if (themeModePreference !== "system") {
+    // A choice in the cookie outranks the `system` a static document hands everybody.
+    if (resolvePhiMountedThemeModePreference(themeModePreference, document.cookie) !== "system") {
       return;
     }
 
