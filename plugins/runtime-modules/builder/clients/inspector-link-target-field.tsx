@@ -7,7 +7,6 @@ import { PhiSegmentedControl } from "../../../../components/controls/phi-segment
 import { PhiSwitchControl } from "../../../../components/controls/phi-switch-control";
 import { PhiTextControl } from "../../../../components/controls/phi-text-control";
 import { PhiTreeSelectControl } from "../../../../components/controls/phi-tree-select-control";
-import { resolvePhiBuilderActivePageCatalog } from "../../../../helpers/cms-page-catalog";
 import {
   isPhiStorableExternalHref,
   readPhiLinkTarget,
@@ -18,6 +17,7 @@ import {
   buildPhiBuilderPageReferenceTree,
   type PhiBuilderPageReferenceSelection,
 } from "../page-reference-tree";
+import { usePhiBuilderOfferedPageCatalog } from "../use-offered-page-catalog";
 import { usePhiDeveloperBuilderStateValue } from "../developer-workspace-store";
 
 export type PhiInspectorLinkTargetLabels = {
@@ -75,12 +75,7 @@ export function PhiInspectorLinkTargetFieldControl({
   const [draftHref, setDraftHref] = useState(target?.kind === "external" ? target.href : "");
 
   const state = usePhiDeveloperBuilderStateValue("public", (current) => current);
-  const pages = useMemo(() => resolvePhiBuilderActivePageCatalog(
-    state.area,
-    state.modulePresetPagesByArea,
-    state.customPages,
-    state.persistedPageCatalogByArea,
-  ), [state.area, state.customPages, state.modulePresetPagesByArea, state.persistedPageCatalogByArea]);
+  const pages = usePhiBuilderOfferedPageCatalog(state, state.area);
   const options = useMemo(
     () => buildPhiBuilderPageReferenceTree(state.area, pages, pages),
     [pages, state.area],

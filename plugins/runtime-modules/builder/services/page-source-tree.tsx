@@ -8,7 +8,8 @@ import { PHI_BUILDER_RUNTIME_DATA_PROVIDER_DESCRIPTORS } from "../../../../plugi
 import type { PhiTreeProviderRegistration } from "../../../../components/widgets/client/shared/phi-tree-provider";
 import { PhiTreeProviderClient } from "../../../../components/widgets/client/shared/phi-tree-provider";
 import { resolvePhiBuilderCmsFetchPath } from "../../../../helpers/cms-paths";
-import { resolvePhiBuilderActivePageCatalog, type PhiPresetPageNode } from "../../../../helpers/cms-page-catalog";
+import type { PhiPresetPageNode } from "../../../../helpers/cms-page-catalog";
+import { resolvePhiBuilderOfferedPageCatalog } from "../offered-page-catalog";
 import {
   buildPhiBuilderNavigationFolderDragSourceKey,
   buildPhiBuilderNavigationPageDragSourceKey,
@@ -70,12 +71,13 @@ export function PhiBuilderPageSourceTreeProviderClient({ children }: { children:
       })) : [],
       query: async (request) => {
         const area = isBuilderArea(request.params?.area) ? request.params.area : state.area;
-        const pages = resolvePhiBuilderActivePageCatalog(
-          area,
-          state.modulePresetPagesByArea,
-          state.customPages,
-          state.persistedPageCatalogByArea,
-        );
+        /*
+         * What the Area answers with, not what is installed in it. The active catalog mirrors the route
+         * declarations, so a base Module Page that a Site package covers is still in it -- and this tree
+         * offered both, two rows reading `/home`, one of them an address nobody is ever served. Dragging
+         * that one into a Navigation authors a link to a Page the Site does not answer with.
+         */
+        const pages = resolvePhiBuilderOfferedPageCatalog(state, area);
         const nodes = flattenPages(area, pages, pages);
         const search = request.query.search?.trim().toLocaleLowerCase();
         return {

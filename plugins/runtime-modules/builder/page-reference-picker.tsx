@@ -6,7 +6,7 @@ import { useMemo, useState } from "react";
 import { PhiButtonControl } from "../../../components/controls/phi-button-control";
 import { PhiPopoverControl } from "../../../components/controls/phi-popover-control";
 import { PhiTreeSelectControl } from "../../../components/controls/phi-tree-select-control";
-import { resolvePhiBuilderActivePageCatalog } from "../../../helpers/cms-page-catalog";
+import { usePhiBuilderOfferedPageCatalog } from "./use-offered-page-catalog";
 import {
   buildPhiBuilderPageReferenceTree,
   type PhiBuilderPageReferenceSelection,
@@ -24,12 +24,7 @@ export function PhiBuilderPageReferencePicker({
 }) {
   const state = usePhiDeveloperBuilderStateValue("public", (value) => value);
   const [open, setOpen] = useState(false);
-  const pages = useMemo(() => resolvePhiBuilderActivePageCatalog(
-    state.area,
-    state.modulePresetPagesByArea,
-    state.customPages,
-    state.persistedPageCatalogByArea,
-  ), [state.area, state.customPages, state.modulePresetPagesByArea, state.persistedPageCatalogByArea]);
+  const pages = usePhiBuilderOfferedPageCatalog(state, state.area);
   const options = useMemo(
     () => buildPhiBuilderPageReferenceTree(state.area, pages, pages),
     [pages, state.area],
