@@ -319,7 +319,21 @@ export type PhiCmsNavigationCustomItem = {
   label: string;
   icon?: string | null;
   target?:
-    | { kind: "page"; reference: string; resolvedPath?: string | null; deleted?: boolean }
+    | {
+        kind: "page";
+        reference: string;
+        /**
+         * Which Area to resolve the reference in, where it is not the one the Navigation belongs to.
+         *
+         * Same rule and same default as a Widget's link target: a reference names a Page, not where to
+         * look for it, and absent means the asking Area. Without it a link into another Area resolved
+         * to nothing -- which is how the source tree could offer a Page from one and the table then
+         * showed the result as unresolvable.
+         */
+        area?: PhiCmsAreaKey;
+        resolvedPath?: string | null;
+        deleted?: boolean;
+      }
     | { kind: "external"; href: string };
   newTab?: boolean;
   placement: PhiCmsNavigationItemPlacement;

@@ -5,6 +5,7 @@ import {
 } from "../../../../../constants/cms-areas";
 import {
   getPhiBuilderNavigationDefaultScopeKey,
+  createPhiBuilderNavigationPageLookup,
   resolvePhiBuilderNavigationPageTargets,
 } from "../../../../../helpers/cms-navigation-catalog";
 import { PhiHeaderNavigationWidgetClient } from "./client";
@@ -44,7 +45,11 @@ function PhiHeaderNavigationWidgetEditor({
     <PhiHeaderNavigationWidgetClient
       runtime={{ site: runtime.site, locale: runtime.locale, area: currentCmsArea }}
       items={mapPhiBuilderNavigationItemsToNavItems(
-        resolvePhiBuilderNavigationPageTargets(currentCmsArea, navigation.items, canvas.pageCatalog),
+        resolvePhiBuilderNavigationPageTargets(
+          currentCmsArea,
+          navigation.items,
+          createPhiBuilderNavigationPageLookup(canvas.pageCatalogForArea),
+        ),
       )}
       menuTheme={runtime.site.theme?.mode === "dark" ? "dark" : "light"}
       height={config.height}

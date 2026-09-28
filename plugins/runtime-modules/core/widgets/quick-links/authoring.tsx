@@ -7,6 +7,7 @@ import {
 import type { PhiBlockRuntime } from "../../../../../types/widget-runtime";
 import {
   getPhiBuilderNavigationDefaultScopeKey,
+  createPhiBuilderNavigationPageLookup,
   resolvePhiBuilderNavigationPageTargets,
 } from "../../../../../helpers/cms-navigation-catalog";
 import { PhiQuickLinksWidgetClient } from "./client";
@@ -32,7 +33,11 @@ function PhiQuickLinksWidgetBuilderEditor({
     return null;
   }
   const items = mapPhiBuilderNavigationItemsToQuickLinksItems(
-    resolvePhiBuilderNavigationPageTargets(currentCmsArea, navigation.items, canvas.pageCatalog),
+    resolvePhiBuilderNavigationPageTargets(
+          currentCmsArea,
+          navigation.items,
+          createPhiBuilderNavigationPageLookup(canvas.pageCatalogForArea),
+        ),
     runtime.locale.current,
     currentCmsArea,
   );

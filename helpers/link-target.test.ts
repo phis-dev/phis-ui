@@ -13,6 +13,11 @@ const OTHER = createPhiPageReference({ kind: "site", pageScopeId: 42 });
 const resolved = (entries: Array<readonly [PhiPageReference, string]>): PhiResolvedLinkTargets =>
   new Map(entries);
 
+const askedFor = (value: unknown) =>
+  [...collectPhiLinkTargetReferences(value).values()]
+    .map((entry) => `${entry.area ?? "-"}|${entry.reference}`)
+    .sort();
+
 /**
  * What a render has to ask about before it draws anything.
  *
@@ -22,29 +27,27 @@ const resolved = (entries: Array<readonly [PhiPageReference, string]>): PhiResol
  */
 describe("the Pages a tree's configs point at", () => {
   it("finds a target wherever in a config it sits", () => {
-    expect([...collectPhiLinkTargetReferences({
+    expect(askedFor({
       layoutNodes: [{ config: { linkTarget: { kind: "page", reference: PAGE } } }],
-    })]).toEqual([PAGE]);
+    })).toEqual([`-|${PAGE}`]);
   });
 
   it("finds a second link on the same Widget", () => {
-    expect([...collectPhiLinkTargetReferences({
+    expect(askedFor({
       linkTarget: { kind: "page", reference: PAGE },
       actionLinkTarget: { kind: "page", reference: OTHER },
-    })].sort()).toEqual([PAGE, OTHER].sort());
+    })).toEqual([`-|${PAGE}`, `-|${OTHER}`].sort());
   });
 
   it("asks about each Page once, however many Widgets point at it", () => {
-    expect([...collectPhiLinkTargetReferences([
+    expect(askedFor([
       { linkTarget: { kind: "page", reference: PAGE } },
       { linkTarget: { kind: "page", reference: PAGE } },
-    ])]).toEqual([PAGE]);
+    ])).toEqual([`-|${PAGE}`]);
   });
 
   it("has nothing to ask about an external address", () => {
-    expect([...collectPhiLinkTargetReferences({
-      linkTarget: { kind: "external", href: "https://example.com" },
-    })]).toEqual([]);
+    expect(askedFor({ linkTarget: { kind: "external", href: "https://example.com" } })).toEqual([]);
   });
 
   /*
@@ -52,13 +55,28 @@ describe("the Pages a tree's configs point at", () => {
    * up whatever was typed into its URL box and resolve a Page the Widget does not link to.
    */
   it("does not read a reserved scheme out of an external address", () => {
-    expect([...collectPhiLinkTargetReferences({
-      linkTarget: { kind: "external", href: `phis:page/${PAGE}` },
-    })]).toEqual([]);
+    expect(askedFor({ linkTarget: { kind: "external", href: `phis:page/${PAGE}` } })).toEqual([]);
+  });
+
+  /*
+   * The Area travels with the reference, because the question is answered per Area: a resolver told the
+   * wrong one finds nothing, and finding nothing reads exactly like the Page being gone. The same Page
+   * asked about in two Areas is two questions, and only one of them has an answer.
+   */
+  it("carries the Area a target named, and asks separately where two differ", () => {
+    expect(askedFor({
+      linkTarget: { kind: "page", reference: PAGE, area: "admin" },
+      actionLinkTarget: { kind: "page", reference: PAGE },
+    })).toEqual([`-|${PAGE}`, `admin|${PAGE}`].sort());
+  });
+
+  it("drops an Area that is not one, which leaves the asking Area", () => {
+    expect(askedFor({ linkTarget: { kind: "page", reference: PAGE, area: "nowhere" } }))
+      .toEqual([`-|${PAGE}`]);
   });
 
   it("has nothing to ask about a config that links nowhere", () => {
-    expect([...collectPhiLinkTargetReferences({ title: "Pricing", href: "/pricing" })]).toEqual([]);
+    expect(askedFor({ title: "Pricing", href: "/pricing" })).toEqual([]);
   });
 });
 

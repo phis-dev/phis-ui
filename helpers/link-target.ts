@@ -1,3 +1,4 @@
+import type { PhiCmsAreaKey } from "../constants/cms-areas";
 import {
   isPhiLinkTargetConfigKey,
   readPhiLinkTarget,
@@ -5,6 +6,18 @@ import {
   type PhiPageReference,
   type PhiResolvedLinkTargets,
 } from "../types/references";
+
+/**
+ * One Page a render has to ask about, and the Area to ask in.
+ *
+ * `null` means the Area doing the asking, which is what a link that names none intends. The pair is
+ * carried rather than the reference alone because the question is answered per Area: a resolver told
+ * the wrong one finds nothing, and finding nothing is indistinguishable from the Page being gone.
+ */
+export type PhiLinkTargetReference = {
+  reference: PhiPageReference;
+  area: PhiCmsAreaKey | null;
+};
 
 /**
  * Every Page a stored config points at, found by the name of the field it stands under.
@@ -19,8 +32,8 @@ import {
  */
 export function collectPhiLinkTargetReferences(
   value: unknown,
-  into: Set<PhiPageReference> = new Set(),
-): Set<PhiPageReference> {
+  into: Map<string, PhiLinkTargetReference> = new Map(),
+): Map<string, PhiLinkTargetReference> {
   if (Array.isArray(value)) {
     for (const entry of value) collectPhiLinkTargetReferences(entry, into);
     return into;
@@ -31,7 +44,10 @@ export function collectPhiLinkTargetReferences(
   for (const [key, entry] of Object.entries(value as Record<string, unknown>)) {
     if (isPhiLinkTargetConfigKey(key)) {
       const target = readPhiLinkTarget(entry);
-      if (target?.kind === "page") into.add(target.reference);
+      if (target?.kind === "page") {
+        const area = target.area ?? null;
+        into.set(`${area ?? ""}|${target.reference}`, { reference: target.reference, area });
+      }
       continue;
     }
     collectPhiLinkTargetReferences(entry, into);

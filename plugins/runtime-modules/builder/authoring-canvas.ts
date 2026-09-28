@@ -2,6 +2,8 @@
 
 import { useMemo } from "react";
 
+import type { PhiBuilderAreaKey } from "../../../constants/cms-areas";
+
 import type { PhiCmsWidgetAuthoringCanvas } from "../../../types/cms-plugins";
 import {
   findPhiBuilderNavigationSurface,
@@ -59,6 +61,16 @@ export function usePhiBuilderAuthoringCanvas(): PhiCmsWidgetAuthoringCanvas {
       },
       pageCatalog: resolvePhiBuilderActivePageCatalog(
         area,
+        modulePresetPagesByArea,
+        customPages,
+        persistedPageCatalogByArea,
+      ),
+      /*
+       * The same catalog for an Area that is not the one being edited, which a Navigation needs: a link
+       * may point into another Area, and only that Area's catalog holds its Page and can prefix its path.
+       */
+      pageCatalogForArea: (targetArea: PhiBuilderAreaKey) => resolvePhiBuilderActivePageCatalog(
+        targetArea,
         modulePresetPagesByArea,
         customPages,
         persistedPageCatalogByArea,

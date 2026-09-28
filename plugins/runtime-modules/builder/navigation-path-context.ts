@@ -1,4 +1,5 @@
 import type { PhiBuilderNavigationItem } from "../../../helpers/cms-navigation-catalog";
+import { resolvePhiCmsAreaAsBuilderArea, type PhiBuilderAreaKey } from "../../../constants/cms-areas";
 import {
   normalizePhiBuilderCmsCatalogPath,
   resolvePhiBuilderActivePageCatalog,
@@ -26,25 +27,46 @@ type NavigationPageTarget = {
 export function createPhiBuilderNavigationPathContext(
   state: Pick<PhiDeveloperBuilderWorkspaceState, "area" | "modulePresetPagesByArea" | "customPages" | "persistedPageCatalogByArea">,
 ) {
-  const pages = resolvePhiBuilderActivePageCatalog(
-    state.area,
-    state.modulePresetPagesByArea,
-    state.customPages,
-    state.persistedPageCatalogByArea,
-  );
-  const referenced = flattenPages(pages).filter((page) => page.reference);
-  const pagePaths = new Map<string, NavigationPageTarget>(referenced.map((page) => [page.reference!, {
-    path: resolvePhiBuilderNavigationTargetPath(state.area, page.key, pages),
-    address: normalizePhiBuilderCmsCatalogPath(resolvePhiBuilderCmsStoragePath(state.area, page.key, pages)),
-    deleted: page.tombstoned === true,
-  }]));
-  const pageOptions = referenced
-    .filter((page) => page.tombstoned !== true)
+  /*
+   * Keyed by Area, because a link may point into one that is not being edited and only that Area's
+   * catalog holds its Page. Reading everything out of the edited Area is what made such a link show no
+   * path at all: the reference was right, the catalog looked in was the wrong one, and a Page that is
+   * merely absent from a list reads exactly like a Page that has been deleted.
+   */
+  const catalogByArea = new Map<PhiBuilderAreaKey, {
+    pages: PhiPresetPageNode[];
+    pagePaths: Map<string, NavigationPageTarget>;
+  }>();
+  const readArea = (area: PhiBuilderAreaKey) => {
+    const cached = catalogByArea.get(area);
+    if (cached) return cached;
+    const areaPages = resolvePhiBuilderActivePageCatalog(
+      area,
+      state.modulePresetPagesByArea,
+      state.customPages,
+      state.persistedPageCatalogByArea,
+    );
+    const pagePaths = new Map<string, NavigationPageTarget>(
+      flattenPages(areaPages).filter((page) => page.reference).map((page) => [page.reference!, {
+        path: resolvePhiBuilderNavigationTargetPath(area, page.key, areaPages),
+        address: normalizePhiBuilderCmsCatalogPath(resolvePhiBuilderCmsStoragePath(area, page.key, areaPages)),
+        deleted: page.tombstoned === true,
+      }]),
+    );
+    const entry = { pages: areaPages, pagePaths };
+    catalogByArea.set(area, entry);
+    return entry;
+  };
+
+  const { pages, pagePaths } = readArea(state.area);
+  const pageOptions = flattenPages(pages)
+    .filter((page) => page.reference && page.tombstoned !== true)
     .map((page) => ({ value: page.reference!, label: pagePaths.get(page.reference!)!.path }));
   const resolveLinkPath = (item: PhiBuilderNavigationItem) => {
     if (item.kind !== "link" || item.external === true) return null;
     if (item.targetReference) {
-      const target = pagePaths.get(item.targetReference);
+      const area = item.targetArea ? resolvePhiCmsAreaAsBuilderArea(item.targetArea) : state.area;
+      const target = area ? readArea(area).pagePaths.get(item.targetReference) : undefined;
       return target && !target.deleted ? target.address : null;
     }
     // A Module link's target path is its route path: Area-relative, package namespace included.

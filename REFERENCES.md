@@ -61,6 +61,13 @@ more than one link, and each target carries its own new-tab decision rather than
 stored beside it. Whether a target opens through client navigation or a plain anchor is decided by its
 kind and never inferred from the shape of a string.
 
+A Page target may name the Area to resolve its reference in. A reference names a Page and not where to
+look for it, so the Area is resolution context; absent, it is the Area doing the asking, which is what
+nearly every link means. Naming another one is how a link leads out of its Area, and it changes nothing
+about the reference: the same Page, asked about somewhere else. Whether the reader may follow it remains
+the target Area's own answer, and a resolver that cannot establish what answers in that Area resolves
+nothing rather than guessing an address.
+
 Changing a Site Page path therefore does not rewrite structured internal links. Navigation, Markdown,
 HTML, and other typed reference consumers resolve the same identity to the new canonical path. The path
 command must still consult the reference index and return affected-reference counts for audit and

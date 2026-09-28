@@ -1,4 +1,9 @@
-import { isPhiCmsAreaKey, type PhiCmsAreaKey } from "../constants/cms-areas";
+import {
+  isPhiCmsAreaKey,
+  resolvePhiCmsAreaAsBuilderArea,
+  type PhiBuilderAreaKey,
+  type PhiCmsAreaKey,
+} from "../constants/cms-areas";
 import { readPhiCmsNavigationTargetPath } from "../helpers/navigation-target";
 import { resolvePhiCmsNavigationOverlay } from "../plugins/runtime-modules/descriptor-compiler";
 import type {
@@ -21,6 +26,8 @@ export type PhiBuilderNavigationItem = {
   label: string;
   href: string | null;
   targetReference?: string | null;
+  /** The Area the reference resolves in, where it is not this Navigation's own. */
+  targetArea?: PhiCmsAreaKey | null;
   targetDeleted?: boolean;
   icon?: string | null;
   external?: boolean;
@@ -130,6 +137,7 @@ function materializeNavigationItem(
       : readPhiCmsNavigationTargetPath(item.target),
     ...(customTarget?.kind === "page" ? {
       targetReference: customTarget.reference,
+      ...(customTarget.area ? { targetArea: customTarget.area } : {}),
       targetDeleted: customTarget.deleted === true,
     } : {}),
     icon: item.icon ?? null,
@@ -204,30 +212,70 @@ export function resolvePhiBuilderNavigationSurface(
   return surface;
 }
 
+/**
+ * Each link's address, worked out in the Area its target actually lives in.
+ *
+ * An item may name another Area, and then that Area's catalog is the only one holding its Page and the
+ * only one that can prefix its path. Resolving everything against the edited Area is what made a
+ * cross-Area link read as unresolvable the moment it was dropped: the reference was right, the catalog
+ * looked in was the wrong one, and a Page that is simply absent looks exactly like a Page that is gone.
+ *
+ * `pagesForArea` rather than one list, because the caller is the only one that can reach another Area's
+ * catalog -- and nearly every call asks for the same Area twice, so the cost is a cached lookup.
+ */
+/**
+ * A Page catalog lookup by CMS Area, for a caller that has one keyed by Builder Area.
+ *
+ * The two lists carry the same names and are still two questions -- the Areas a Site has, and the Areas
+ * the Builder can open -- so the translation is stated rather than assumed. An Area the Builder does not
+ * open has no catalog to show, and an empty list is the honest answer: a link into it resolves to
+ * nothing, which is what the reader sees.
+ */
+export function createPhiBuilderNavigationPageLookup(
+  pageCatalogForArea: (area: PhiBuilderAreaKey) => readonly PhiPresetPageNode[],
+) {
+  return (area: PhiCmsAreaKey): readonly PhiPresetPageNode[] => {
+    const builderArea = resolvePhiCmsAreaAsBuilderArea(area);
+    return builderArea ? pageCatalogForArea(builderArea) : [];
+  };
+}
+
 export function resolvePhiBuilderNavigationPageTargets(
   area: PhiCmsAreaKey,
   items: readonly PhiBuilderNavigationItem[],
-  pages: readonly PhiPresetPageNode[],
+  pagesForArea: ((area: PhiCmsAreaKey) => readonly PhiPresetPageNode[]) | readonly PhiPresetPageNode[],
 ): PhiBuilderNavigationItem[] {
-  const pageByReference = new Map<string, PhiPresetPageNode>();
-  const collect = (nodes: readonly PhiPresetPageNode[]) => {
-    for (const node of nodes) {
-      if (node.reference) pageByReference.set(node.reference, node);
-      if (node.children) collect(node.children);
-    }
+  const readPages = typeof pagesForArea === "function"
+    ? pagesForArea
+    : () => pagesForArea;
+  const byArea = new Map<PhiCmsAreaKey, Map<string, PhiPresetPageNode>>();
+  const pageIndex = (targetArea: PhiCmsAreaKey) => {
+    const cached = byArea.get(targetArea);
+    if (cached) return cached;
+    const index = new Map<string, PhiPresetPageNode>();
+    const collect = (nodes: readonly PhiPresetPageNode[]) => {
+      for (const node of nodes) {
+        if (node.reference) index.set(node.reference, node);
+        if (node.children) collect(node.children);
+      }
+    };
+    collect(readPages(targetArea));
+    byArea.set(targetArea, index);
+    return index;
   };
-  collect(pages);
+
   return items.map((item) => {
-    const page = item.targetReference ? pageByReference.get(item.targetReference) : null;
+    const targetArea = item.targetArea ?? area;
+    const page = item.targetReference ? pageIndex(targetArea).get(item.targetReference) : null;
     return {
       ...item,
       ...(item.targetReference ? {
         href: page && page.tombstoned !== true
-          ? resolvePhiBuilderNavigationTargetPath(area, page.key, pages)
+          ? resolvePhiBuilderNavigationTargetPath(targetArea, page.key, readPages(targetArea))
           : null,
         targetDeleted: page == null || page.tombstoned === true,
       } : {}),
-      children: resolvePhiBuilderNavigationPageTargets(area, item.children, pages),
+      children: resolvePhiBuilderNavigationPageTargets(area, item.children, pagesForArea),
     };
   });
 }

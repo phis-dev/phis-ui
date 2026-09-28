@@ -235,9 +235,17 @@ function createNavigationItem(
   };
 }
 
+/**
+ * A link to the Page that was dragged in, out of whichever Area it was dragged from.
+ *
+ * `targetArea` is written only when the two differ, because absent means "this Area" and that is nearly
+ * every link. Recording it is what makes a cross-Area link survive: the reference alone says which Page,
+ * never where to look for it, and every reader after this point would have looked here.
+ */
 function createPageNavigationItem(
   id: PhiBuilderNavigationItem["id"],
   area: Parameters<typeof resolvePhiBuilderNavigationTargetPath>[0],
+  navigationArea: Parameters<typeof resolvePhiBuilderNavigationTargetPath>[0],
   reference: string,
   pages: readonly PhiPresetPageNode[],
 ): PhiBuilderNavigationItem | null {
@@ -250,6 +258,7 @@ function createPageNavigationItem(
     id, source: "custom", ownerModuleId: null, kind: "link", label: page.title,
     href: resolvePhiBuilderNavigationTargetPath(area, page.key, pages),
     targetReference: pageReference!,
+    ...(area === navigationArea ? {} : { targetArea: area }),
     targetDeleted: page.tombstoned === true,
     icon: null,
     hidden: false, children: [],
@@ -532,7 +541,13 @@ export function PhiBuilderNavigationTableProviderClient({ children }: { children
               return allocated.id;
             },
             createPageItem: (id, page) => page.reference
-              ? createPageNavigationItem(id, folderSource.area, createPhiPageUri(page.reference), pages)
+              ? createPageNavigationItem(
+                id,
+                folderSource.area,
+                current.state.area,
+                createPhiPageUri(page.reference),
+                pages,
+              )
               : null,
             createContainerItem: (id, label, children) => ({ ...createNavigationItem(id, "container"), label, children }),
           });
@@ -555,7 +570,13 @@ export function PhiBuilderNavigationTableProviderClient({ children }: { children
           allocated.scope.state.customPages,
           allocated.scope.state.persistedPageCatalogByArea,
         );
-        const item = createPageNavigationItem(allocated.id, source.area, source.reference, pages);
+        const item = createPageNavigationItem(
+          allocated.id,
+          source.area,
+          allocated.scope.state.area,
+          source.reference,
+          pages,
+        );
         if (!item) return { status: "rejected", invalidation: "none", errorCode: "page-not-found" };
         writeNavigation(allocated.scope, insertNavigationItem(
           allocated.scope.navigation.items,

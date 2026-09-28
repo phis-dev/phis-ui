@@ -64,11 +64,23 @@ export function setPhiRequestNavigationContext(
 }
 
 export function getPhiRequestNavigationContext(area: PhiCmsAreaKey) {
-  const context = getPhiRequestRuntimeStore().navigationByArea.get(area);
+  const context = maybeGetPhiRequestNavigationContext(area);
   if (!context) {
     throw new Error(`Missing Phi request navigation context for Area "${area}".`);
   }
   return context;
+}
+
+/**
+ * The same, for an Area this request may not have set up.
+ *
+ * One Area is prepared per request -- the one being served -- so asking about another is a legitimate
+ * question with no answer here rather than a mistake. A link that points into another Area is the case:
+ * the compiled catalogue is the same object for every Area, but which Modules answer in one is that
+ * Area's own fact, and this request never read it.
+ */
+export function maybeGetPhiRequestNavigationContext(area: PhiCmsAreaKey) {
+  return getPhiRequestRuntimeStore().navigationByArea.get(area) ?? null;
 }
 
 export function maybeGetPhiRequestRuntime() {

@@ -1,6 +1,10 @@
 import "server-only";
 
-import { collectPhiLinkTargetReferences } from "../helpers/link-target";
+import type { PhiCmsAreaKey } from "../constants/cms-areas";
+import {
+  collectPhiLinkTargetReferences,
+  type PhiLinkTargetReference,
+} from "../helpers/link-target";
 import { resolvePhiWidgetInternalReferences } from "../components/widgets/helpers/internal-reference-resolver.server";
 import type { PhiBlockRuntime } from "../types";
 import type { PhiPageReference, PhiResolvedLinkTargets } from "../types/references";
@@ -21,7 +25,7 @@ export async function resolvePhiCmsTreeLinkTargets(
   tree: Pick<PhiResolvedCmsRenderableTree, "layoutNodes" | "contentWidgets" | "overlays">,
   runtime: Pick<PhiBlockRuntime, "site" | "locale" | "area" | "viewer">,
 ): Promise<PhiResolvedLinkTargets | null> {
-  const references = new Set<PhiPageReference>();
+  const references = new Map<string, PhiLinkTargetReference>();
   for (const node of [...tree.overlays, ...tree.layoutNodes, ...tree.contentWidgets]) {
     collectPhiLinkTargetReferences(node.config, references);
   }
@@ -29,13 +33,22 @@ export async function resolvePhiCmsTreeLinkTargets(
     return null;
   }
 
+  /*
+   * Grouped by the Area each target named, because the resolver answers per Area: it reads the Page
+   * Scopes of one Area and asks that Area's route table about Module Pages. Nearly every page groups
+   * into one bucket -- a link that names no Area is asking in this one -- so the ordinary render still
+   * costs a single round trip, and a page that reaches into another Area costs one more.
+   */
+  const byArea = new Map<PhiCmsAreaKey, PhiPageReference[]>();
+  for (const entry of references.values()) {
+    const area = entry.area ?? runtime.area;
+    byArea.set(area, [...(byArea.get(area) ?? []), entry.reference]);
+  }
+
   try {
-    const { pagePaths } = await resolvePhiWidgetInternalReferences({
-      runtime,
-      pageReferences: [...references],
-      assetIds: [],
-    });
-    return pagePaths;
+    const resolved = await Promise.all([...byArea].map(([area, pageReferences]) =>
+      resolvePhiWidgetInternalReferences({ runtime, area, pageReferences, assetIds: [] })));
+    return new Map(resolved.flatMap((entry) => [...entry.pagePaths]));
   } catch (error) {
     /*
      * A resolver that could not be reached leaves every target unresolved, which draws every link as

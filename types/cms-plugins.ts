@@ -333,6 +333,14 @@ export type PhiCmsWidgetAuthoringCanvas = {
   resolveNavigation: (navKey: string) => PhiBuilderNavigationTree | null;
   /** The page catalog of the edited Area, with local and persisted pages already merged in. */
   pageCatalog: PhiBuilderActivePageCatalog;
+  /**
+   * The same, for an Area that is not the one being edited.
+   *
+   * A Navigation link may point into another Area, and its Page lives only in that Area's catalog. A
+   * Widget that resolves link targets asks through this rather than assuming the edited Area, which is
+   * the assumption that made such a link read as unresolvable.
+   */
+  pageCatalogForArea: (area: PhiBuilderAreaKey) => PhiBuilderActivePageCatalog;
 };
 
 export type PhiCmsWidgetAuthoringContext<TConfig> = {

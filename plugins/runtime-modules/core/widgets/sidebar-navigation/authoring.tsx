@@ -10,6 +10,7 @@ import type {
 } from "../../../../../types";
 import {
   getPhiBuilderNavigationDefaultScopeKey,
+  createPhiBuilderNavigationPageLookup,
   resolvePhiBuilderNavigationPageTargets,
 } from "../../../../../helpers/cms-navigation-catalog";
 import { PhiSidebarNavigationWidgetPreviewClient } from "./client";
@@ -44,7 +45,11 @@ function PhiSidebarNavigationWidgetEditor({
       runtime={{ site: runtime.site, locale: runtime.locale, area: currentCmsArea }}
       config={config}
       items={mapPhiBuilderNavigationItemsToNavItems(
-        resolvePhiBuilderNavigationPageTargets(currentCmsArea, navigation.items, canvas.pageCatalog),
+        resolvePhiBuilderNavigationPageTargets(
+          currentCmsArea,
+          navigation.items,
+          createPhiBuilderNavigationPageLookup(canvas.pageCatalogForArea),
+        ),
       )}
       menuTheme="light"
     />

@@ -168,7 +168,17 @@ export function buildPhiBuilderNavigationOverlay(
         ...(current.item.kind === "link" && current.item.external === true && current.item.href
           ? { target: { kind: "external" as const, href: current.item.href } }
           : current.item.kind === "link" && current.item.targetReference
-            ? { target: { kind: "page" as const, reference: current.item.targetReference } }
+            ? {
+                target: {
+                  kind: "page" as const,
+                  reference: current.item.targetReference,
+                  /*
+                   * Only where the target is not in this Navigation's own Area. Absent is the ordinary
+                   * link and means "here", so nothing is written for the case that is nearly all of them.
+                   */
+                  ...(current.item.targetArea ? { area: current.item.targetArea } : {}),
+                },
+              }
             : {}),
         ...(current.item.newTab === true ? { newTab: true } : {}),
         placement: buildPlacement(current),

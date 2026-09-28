@@ -102,9 +102,19 @@ export async function resolvePhiDescriptorNavigationItems(
       const reference = readPhiPageReference(item.target.reference);
       if (!reference || reference.target.kind !== "module") return item;
       const route = resolvePhiCmsRouteDescriptorByPageId(catalog, reference.target.pageId);
-      // Whether the address exists, which is Module selection and nothing about this reader.
-      const available = route != null && route.area === runtime.area &&
-        activeModuleIds.has(route.ownerModuleId);
+      /*
+       * Whether the address exists, which is Module selection and nothing about this reader.
+       *
+       * Checked against the Area the target named rather than the one this Navigation sits in. For a
+       * target in another Area the answer stops here: `activeModuleIds` is this Area's, and which
+       * Modules answer in another is a fact the request never read. Reading the route's path anyway
+       * would point a link at an address that is only served where that Module is switched on --
+       * exactly the guess `REFERENCES.md` forbids. A Site Page in another Area is a different matter
+       * and resolves normally; only a Module Page needs the activation nobody here has.
+       */
+      const targetArea = item.target.area ?? runtime.area;
+      const available = route != null && route.area === targetArea &&
+        targetArea === runtime.area && activeModuleIds.has(route.ownerModuleId);
       return {
         ...item,
         target: {
