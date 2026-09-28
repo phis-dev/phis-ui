@@ -68,6 +68,29 @@ export function canonicalizePhiLocaleTag(input: string | null | undefined) {
   }
 }
 
+/**
+ * Whether text in `source` already is text in `locale`, so asking for a translation would be asking
+ * for the same words back.
+ *
+ * Language and script decide it, region does not: `en-US` reads an `en` source as it is, and `zh-Hant`
+ * does not read a `zh` (Simplified) one. Lookups used to compare tags shortened to their language,
+ * which made `zh-Hant` the source language and handed the Server `zh` -- the Simplified variant.
+ */
+export function isPhiLocaleReadableAsSource(locale: string, source: string) {
+  try {
+    const target = new Intl.Locale(canonicalizePhiLocaleTag(locale) || locale).maximize();
+    const origin = new Intl.Locale(canonicalizePhiLocaleTag(source) || source).maximize();
+    return target.language === origin.language && target.script === origin.script;
+  } catch {
+    return locale.trim().toLowerCase() === source.trim().toLowerCase();
+  }
+}
+
+/** The tag a translation lookup carries: whole, so the Server can tell `zh-Hant` from `zh-Hans`. */
+export function resolvePhiTranslationLocale(input: string | null | undefined) {
+  return canonicalizePhiLocaleTag(input?.split(",")[0]?.split(";")[0]) || PHI_CANONICAL_SOURCE_LOCALE;
+}
+
 export function normalizeLocale(
   input: string | null | undefined,
   options: NormalizeLocaleOptions = {},

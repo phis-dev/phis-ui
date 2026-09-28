@@ -1,6 +1,10 @@
 import "server-only";
 
-import { PHI_CANONICAL_SOURCE_LOCALE, normalizeLocale } from "../helpers/locale";
+import {
+  PHI_CANONICAL_SOURCE_LOCALE,
+  isPhiLocaleReadableAsSource,
+  resolvePhiTranslationLocale,
+} from "../helpers/locale";
 import { resolvePhiRuntimeConfig } from "../helpers/phis-runtime";
 import {
   formatPhiTranslation,
@@ -90,7 +94,7 @@ export async function trForLocale(
     return "";
   }
 
-  const locale = normalizeLocale(localeInput);
+  const locale = resolvePhiTranslationLocale(localeInput);
   const options = buildTranslatorOptions(locale);
   try {
     const translated = await requestInternalTranslation(
@@ -118,10 +122,10 @@ export async function trGlobalForLocale(
     return "";
   }
 
-  const locale = normalizeLocale(localeInput);
+  const locale = resolvePhiTranslationLocale(localeInput);
   const options = buildGlobalTranslatorOptions(locale);
 
-  if (locale === normalizeLocale(PHI_CANONICAL_SOURCE_LOCALE)) {
+  if (isPhiLocaleReadableAsSource(locale, PHI_CANONICAL_SOURCE_LOCALE)) {
     return formatPhiTranslation(normalizedMessage, params);
   }
 
@@ -161,7 +165,7 @@ export async function trBulkForLocale(
     return [] as string[];
   }
 
-  const locale = normalizeLocale(localeInput);
+  const locale = resolvePhiTranslationLocale(localeInput);
   const options = buildTranslatorOptions(locale, sourceLocale);
   try {
     return await requestInternalTranslationBulk(
@@ -195,10 +199,10 @@ export async function trGlobalBulkForLocale(
     return [] as string[];
   }
 
-  const locale = normalizeLocale(localeInput);
+  const locale = resolvePhiTranslationLocale(localeInput);
   const options = buildGlobalTranslatorOptions(locale);
 
-  if (locale === normalizeLocale(PHI_CANONICAL_SOURCE_LOCALE)) {
+  if (isPhiLocaleReadableAsSource(locale, PHI_CANONICAL_SOURCE_LOCALE)) {
     return normalizedMessages;
   }
 

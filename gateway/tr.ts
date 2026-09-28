@@ -1,6 +1,6 @@
 import "server-only";
 
-import { normalizeLocale } from "../helpers/locale";
+import { isPhiLocaleReadableAsSource } from "../helpers/locale";
 import { buildApiHeaders, buildApiUrl } from "../helpers/site-api";
 import { formatPhiTranslation } from "../helpers/translation-format";
 import {
@@ -129,7 +129,7 @@ function buildTranslationKey(
 }
 
 function isSourceLocale(options: PhiGlobalTranslatorOptions | PhiSiteTranslatorOptions) {
-  return options.sourceLocale != null && normalizeLocale(options.locale) === normalizeLocale(options.sourceLocale);
+  return options.sourceLocale != null && isPhiLocaleReadableAsSource(options.locale, options.sourceLocale);
 }
 
 async function requestTranslation(

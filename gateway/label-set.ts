@@ -5,7 +5,11 @@ import {
   PHI_TR_CTX_WEB_UI_MESSAGE,
   type PhiGlobalTranslatorOptions,
 } from "./tr";
-import { PHI_CANONICAL_SOURCE_LOCALE, normalizeLocale } from "../helpers/locale";
+import {
+  PHI_CANONICAL_SOURCE_LOCALE,
+  isPhiLocaleReadableAsSource,
+  resolvePhiTranslationLocale,
+} from "../helpers/locale";
 import type { PhiRuntimeModuleDefinition } from "../types/cms-plugins";
 import { resolvePhiRuntimeModuleSourceLocale } from "../types/runtime-module-locale";
 
@@ -74,11 +78,13 @@ export async function getPhiLabelSet<TLabels extends PhiLabelSetLabels>(
   options: PhiGlobalTranslatorOptions,
   definition: PhiLabelSetDefinition<TLabels>,
 ): Promise<PhiLabelSetTexts<TLabels>> {
-  const sourceLocale = normalizeLocale(definition.sourceLocale ?? options.sourceLocale ?? PHI_CANONICAL_SOURCE_LOCALE);
-  const targetLocale = normalizeLocale(options.locale);
+  const sourceLocale = resolvePhiTranslationLocale(
+    definition.sourceLocale ?? options.sourceLocale ?? PHI_CANONICAL_SOURCE_LOCALE,
+  );
+  const targetLocale = resolvePhiTranslationLocale(options.locale);
   const entries = Object.entries(definition.labels)
     .map(([key, value]) => [key, readLabelSetEntry(value, definition.ctx)] as const);
-  if (sourceLocale === targetLocale) {
+  if (isPhiLocaleReadableAsSource(targetLocale, sourceLocale)) {
     const labels = Object.fromEntries(
       entries.map(([key, entry]) => [key, entry.text]),
     ) as PhiLabelSetTexts<TLabels>;
