@@ -13,9 +13,14 @@ import type { PhiMenuControlItem } from "../controls/phi-menu-control";
  *
  * Written here and nowhere else: the cookie outranks the browser's Accept-Language, so it must only ever
  * hold a choice somebody made. Visiting a localized address is not one.
+ *
+ * `Secure` on https, matching what phis-server writes at sign-in: the same cookie with two attribute
+ * sets would be two different stories about one choice, and a browser keeps the secure one.
  */
 function rememberPhiLocaleChoice(locale: string) {
-  document.cookie = `phis_locale=${encodeURIComponent(locale)}; Path=/; Max-Age=31536000; SameSite=Lax`;
+  const secure = window.location.protocol === "https:" ? "; Secure" : "";
+  document.cookie =
+    `phis_locale=${encodeURIComponent(locale)}; Path=/; Max-Age=31536000; SameSite=Lax${secure}`;
 }
 
 export type PhiLocaleOption = {
