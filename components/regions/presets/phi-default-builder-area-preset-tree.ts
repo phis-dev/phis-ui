@@ -251,7 +251,6 @@ function buildBuilderCommandToolbarConfig(
       ],
     },
     compact: true,
-    wrap: false,
     showLabels: false,
     buttons: [
       { key: "save", emits: [{ capabilityId: "command", value: "save" }], actionKey: "save", buttonType: "default" },
@@ -2366,7 +2365,6 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
               config: {
                 key: "areaSettingsAction",
                 compact: true,
-                wrap: false,
                 showLabels: true,
                 buttons: [{
                   key: "areaSettings",
@@ -2403,13 +2401,6 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                  * reads as two unrelated offers.
                  */
                 compact: true,
-                /*
-                 * Not wrapping, because wrapping is what a compact group cannot do: two buttons that
-                 * may fall onto two lines cannot share one border, so `PhiToolbarControl` draws the
-                 * spaced row instead whenever both are asked for. Two short buttons in a dialog
-                 * footer have nowhere to wrap to anyway.
-                 */
-                wrap: false,
                 showLabels: true,
                 controlSize: "medium",
                 /*
@@ -2538,7 +2529,6 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                     ],
                   },
                   compact: true,
-                  wrap: false,
                   showLabels: true,
                   buttons: [
                     {
@@ -3283,7 +3273,6 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                 config: {
                   key: "revisions-area-shell-delete",
                   compact: true,
-                  wrap: false,
                   showLabels: true,
                   buttons: [
                     {
@@ -3371,7 +3360,6 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                 config: {
                   key: "delete-area-commands",
                   compact: true,
-                  wrap: false,
                   showLabels: true,
                   buttons: [
                     {

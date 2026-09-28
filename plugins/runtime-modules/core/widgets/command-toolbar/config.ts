@@ -205,7 +205,12 @@ export const PHI_COMMAND_TOOLBAR_WIDGET_DEFINITION = {
   fields: [
     { key: "buttons", type: "string", label: "Buttons", editorPlacement: "toolbar" },
     { key: "compact", type: "boolean", label: "Compact" },
-    { key: "wrap", type: "boolean", label: "Wrap" },
+    /*
+     * Only while the group is not compact. A compact group cannot wrap (`PhiToolbarControl`), so with
+     * compact on this is a switch whose position changes nothing -- and a control that does nothing is
+     * read as one that is broken.
+     */
+    { key: "wrap", type: "boolean", label: "Wrap", visibleWhen: { field: "compact", equals: false } },
     { key: "showLabels", type: "boolean", label: "Show Labels" },
     ...PHI_CONTROL_PRESENTATION_FIELDS,
     ...PHI_CONTROL_STATE_FIELDS,

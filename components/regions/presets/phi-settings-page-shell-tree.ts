@@ -458,7 +458,6 @@ export function buildPhiSettingsPageShellTree({
             translate: false,
             key: `${overlay.nodeKey}-commands`,
             compact: true,
-            wrap: false,
             showLabels: true,
             buttons: [
               { key: "cancel", emits: [{ capabilityId: "close", value: null }], label: overlay.cancelLabel },

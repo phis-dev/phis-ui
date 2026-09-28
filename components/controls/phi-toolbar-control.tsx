@@ -66,7 +66,15 @@ export function PhiToolbarControl({
       />
     ));
 
-  if (compact && !wrap) {
+  /*
+   * Compact decides, and `wrap` is the spaced row's question alone.
+   *
+   * A compact group cannot wrap: its members share one border, and a row that may break cannot draw
+   * one. Asking for both used to drop the group silently and hand back a wrapping row -- the wrong one
+   * of the two to lose, and a caller had no way to tell it had been overruled. Switching compact on
+   * now switches wrapping off, which is what the two together can only have meant.
+   */
+  if (compact) {
     return <PhiCompactGroupControl style={style}>{controls}{children}</PhiCompactGroupControl>;
   }
 
