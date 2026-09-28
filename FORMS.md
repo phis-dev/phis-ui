@@ -82,6 +82,7 @@ type PhiFormDescriptor = {
   fields: readonly PhiFormFieldDescriptor[];
   layout?: PhiFormLayoutDescriptor;
   success?: { title: PhiFormTextDescriptor; text?: PhiFormTextDescriptor; reset?: boolean };
+  errors?: Readonly<Record<string, PhiFormTextDescriptor>>;   // keyed by the handler's error `code`
   persistDraft?: boolean;
   guard?: boolean;
 };
@@ -92,6 +93,11 @@ type PhiFormDescriptor = {
 - `success` is what the Form shows when a submit is accepted; `reset: true` returns the fields to their
   initial values. Without `success` the Form shows nothing of its own, which is right when a Controller
   closes an Overlay or the page moves on.
+- `errors` is the counterpart of `success`: what the Form says when the handler refuses it, keyed by the
+  `code` in the refusal's body. The wording is a label, so a visitor reads it in the Site's language; a
+  code nothing maps falls back to the body's `error` line, which is English and written for a log. A
+  handler that wants its refusal read by a person answers `{ code, error }` -- `code` alone is the
+  contract, `error` alone reaches the visitor untranslated.
 - `persistDraft: true` keeps typed values in session storage for the tab, keyed by `descriptor.key`, and
   clears them when a submit is accepted.
 - `guard: true` makes the Form carry a guard token; see [Guard](#guard).

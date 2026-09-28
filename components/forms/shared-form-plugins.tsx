@@ -14,7 +14,7 @@ import {
   PHI_RESET_PASSWORD_FORM_DESCRIPTOR,
 } from "./shared-form-descriptors";
 import { PHI_SHARED_FORM_IDS } from "./shared-form-ids";
-import type { PhiFormLabelSetLoader } from "./form-resolution";
+import type { PhiFormInitialValuesLoader, PhiFormLabelSetLoader } from "./form-resolution";
 import { PHI_PUBLIC_RUNTIME_MODULE_ID } from "../../plugins/runtime-modules/public/ids";
 import { PHI_AUTH_RUNTIME_MODULE_ID } from "../../plugins/runtime-modules/auth/ids";
 
@@ -37,6 +37,23 @@ function createLabelLoader(
     }));
   };
 }
+
+/**
+ * The language the form was read in, handed to the handler as one of its values.
+ *
+ * A form that makes the server write an email is the case: the address, the name and the password say
+ * nothing about which language the person was reading, and the handler falls back to the Site's default
+ * -- so a Site that answers in English by default sent an English email to somebody who had just filled
+ * in a German form. The Site's locale is known where the form is rendered, on the server, and a hidden
+ * field is where a value nobody types belongs.
+ *
+ * Read on the render rather than resolved again in the handler, because the two would then be separate
+ * answers to one question: what a person was reading is what the page was drawn in, not what a request
+ * arriving later happens to negotiate.
+ */
+const loadFormLocale: PhiFormInitialValuesLoader = ({ runtime }) => ({
+  locale: runtime.locale.current,
+});
 
 export const PHI_SHARED_FORM_DEFINITIONS: readonly PhiRuntimeModuleFormDefinition[] = [
   definePhiRuntimeModuleForm({
@@ -80,6 +97,7 @@ export const PHI_SHARED_FORM_DEFINITIONS: readonly PhiRuntimeModuleFormDefinitio
     previewUpstreamPath: null,
     loadLabels: createLabelLoader(() => import("../widgets/label-sets/registration")
       .then((module) => module.getPhiRegistrationFormLabels)),
+    loadInitialValues: loadFormLocale,
   }),
   definePhiRuntimeModuleForm({
     ownerModuleId: PHI_PUBLIC_RUNTIME_MODULE_ID,
@@ -143,6 +161,7 @@ export const PHI_SHARED_FORM_DEFINITIONS: readonly PhiRuntimeModuleFormDefinitio
     previewUpstreamPath: null,
     loadLabels: createLabelLoader(() => import("../widgets/label-sets/reset-password")
       .then((module) => module.getPhiResetPasswordRequestFormLabels)),
+    loadInitialValues: loadFormLocale,
   }),
   definePhiRuntimeModuleForm({
     ownerModuleId: PHI_AUTH_RUNTIME_MODULE_ID,

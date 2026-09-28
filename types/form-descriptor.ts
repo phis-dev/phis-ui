@@ -164,6 +164,15 @@ export type PhiFormDescriptor = {
   layout?: PhiFormLayoutDescriptor;
   success?: PhiFormSuccessDescriptor;
   /**
+   * What the form says when the server refuses it, by the `code` that refusal carries.
+   *
+   * The counterpart of `success`, and there for the same reason: what a visitor reads has to be in
+   * their language, and a response body cannot be. A handler answers `{ code: "invalid_credentials" }`
+   * and the wording is looked up here, in the form's own label set. A code nothing maps falls back to
+   * the body's `error` line, which is English because its other reader is a log.
+   */
+  errors?: Readonly<Record<string, PhiFormTextDescriptor>>;
+  /**
    * Whether what has been typed survives leaving the page, for as long as the tab is open.
    *
    * For the long form somebody fills in once and would have to fill in again after following a link to

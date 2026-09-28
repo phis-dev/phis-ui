@@ -307,6 +307,16 @@ export function parsePhiFormDescriptor(value: unknown): PhiFormDescriptor {
           reset: value.success.reset == null ? undefined : value.success.reset === true,
         }
       : (() => { throw new Error("success must be an object."); })();
+  const errors: PhiFormDescriptor["errors"] | undefined = value.errors == null
+    ? undefined
+    : isRecord(value.errors)
+      ? Object.fromEntries(
+          Object.entries(value.errors).map(([code, text]) => [
+            code,
+            readTextDescriptor(text, `errors.${code}`),
+          ]),
+        )
+      : (() => { throw new Error("errors must be an object."); })();
   return {
     schemaVersion: PHI_FORM_DESCRIPTOR_SCHEMA_VERSION,
     key: readRequiredString(value.key, "key"),
@@ -314,6 +324,7 @@ export function parsePhiFormDescriptor(value: unknown): PhiFormDescriptor {
     fields,
     layout,
     success,
+    errors,
     persistDraft: value.persistDraft == null ? undefined : value.persistDraft === true,
     guard: value.guard == null ? undefined : value.guard === true,
   };

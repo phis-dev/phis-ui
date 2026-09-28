@@ -62,6 +62,17 @@ export const PHI_LOGIN_FORM_DESCRIPTOR = {
     },
     { key: "next", fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.hidden },
   ],
+  /*
+   * The two answers a password login can be refused with, said in the Site's language. The label set
+   * has carried this wording all along -- it was the response body's English that reached the visitor.
+   */
+  errors: {
+    invalid_credentials: label("errors.invalidCredentials", "Invalid credentials."),
+    account_disabled: label(
+      "errors.accountDisabled",
+      "Your account is disabled. Please contact support.",
+    ),
+  },
 } as const satisfies PhiFormDescriptor;
 
 export const PHI_PROVIDER_LINK_CONFIRMATION_FORM_DESCRIPTOR = {
@@ -289,6 +300,11 @@ export const PHI_RESET_PASSWORD_FORM_DESCRIPTOR = {
         },
       ],
     },
+    /*
+     * Hidden, and not a question either: the language this form was read in, so the reset link arrives
+     * written the same way. Nobody types it, the render fills it (`loadFormLocale`).
+     */
+    { key: "locale", fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.hidden },
   ],
   success: {
     title: label("feedback.successTitle", "Check your email"),

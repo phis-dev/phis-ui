@@ -491,9 +491,18 @@ export function PhiFormDescriptorRuntimeClient({
               correlationId: correlationId ?? undefined,
             });
             if (!result.ok) {
-              const message = typeof result.payload?.error === "string"
-                ? result.payload.error
-                : "Form submission failed.";
+              /*
+               * The code first: it is the only part of a refusal that can be said in the visitor's
+               * language, because the descriptor maps it to a label. `error` is what the handler wrote
+               * for a log, and it stands in only where the code is absent or nothing maps it.
+               */
+              const code = typeof result.payload?.code === "string" ? result.payload.code : null;
+              const declared = code ? descriptor.errors?.[code] : undefined;
+              const message = declared
+                ? resolvePhiFormText(declared, labels)
+                : typeof result.payload?.error === "string"
+                  ? result.payload.error
+                  : "Form submission failed.";
               throw new Error(message);
             }
             emitCapability(
