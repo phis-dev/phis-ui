@@ -45,6 +45,15 @@ export type PhiLinkTarget =
 export const PHI_LINK_TARGET_CONFIG_KEY = "linkTarget";
 const PHI_LINK_TARGET_CONFIG_KEY_SUFFIX = "LinkTarget";
 
+/**
+ * The addresses this render's Page targets answer on, resolved once before anything draws.
+ *
+ * A Map rather than a resolver a Widget may call, because the batching is the contract: references are
+ * resolved per render, and a Widget that could ask would ask one at a time -- twelve Cards in a grid,
+ * twelve round trips. A reference that is absent here did not resolve, and the Control draws no link.
+ */
+export type PhiResolvedLinkTargets = ReadonlyMap<PhiPageReference, string>;
+
 export function isPhiLinkTargetConfigKey(key: string) {
   return key === PHI_LINK_TARGET_CONFIG_KEY
     || (key.endsWith(PHI_LINK_TARGET_CONFIG_KEY_SUFFIX) && key.length > PHI_LINK_TARGET_CONFIG_KEY_SUFFIX.length);

@@ -1,0 +1,71 @@
+import {
+  isPhiLinkTargetConfigKey,
+  readPhiLinkTarget,
+  type PhiLinkTarget,
+  type PhiPageReference,
+  type PhiResolvedLinkTargets,
+} from "../types/references";
+
+/**
+ * Every Page a stored config points at, found by the name of the field it stands under.
+ *
+ * The same rule the server's reference collector goes by, for the other half of the job: it indexes what
+ * a Page is pointed at by, this gathers what a render has to resolve before it can draw. One rule,
+ * because two would drift and the drift would be invisible -- a target the index guards but the renderer
+ * never resolves draws nothing, and one the renderer resolves but the index misses outlives its Page.
+ *
+ * A target field is read whole and never descended into. An external target's `href` is a literal URL
+ * the Site does not own, and walking into it would collect whatever happened to be typed there.
+ */
+export function collectPhiLinkTargetReferences(
+  value: unknown,
+  into: Set<PhiPageReference> = new Set(),
+): Set<PhiPageReference> {
+  if (Array.isArray(value)) {
+    for (const entry of value) collectPhiLinkTargetReferences(entry, into);
+    return into;
+  }
+  if (!value || typeof value !== "object") {
+    return into;
+  }
+  for (const [key, entry] of Object.entries(value as Record<string, unknown>)) {
+    if (isPhiLinkTargetConfigKey(key)) {
+      const target = readPhiLinkTarget(entry);
+      if (target?.kind === "page") into.add(target.reference);
+      continue;
+    }
+    collectPhiLinkTargetReferences(entry, into);
+  }
+  return into;
+}
+
+/**
+ * Where a target leads, now, for the render that resolved it.
+ *
+ * `null` is the answer for a Page nobody could resolve -- deleted, unpublished, or brought by a Module
+ * that is switched off -- and it means no link at all rather than a link to nowhere. `REFERENCES.md`:
+ * an unresolved internal Page reference renders non-interactive text.
+ *
+ * A fragment rides along after resolution and is not part of what was resolved: the Page is identity,
+ * the place inside it is not, and a Page that moved keeps the anchor it was pointed at.
+ */
+export function resolvePhiLinkHref(
+  target: PhiLinkTarget | null | undefined,
+  resolved?: PhiResolvedLinkTargets | null,
+): { href: string; newTab: boolean } | null {
+  if (!target) {
+    return null;
+  }
+  if (target.kind === "external") {
+    return { href: target.href, newTab: target.newTab === true };
+  }
+  const path = resolved?.get(target.reference);
+  if (!path) {
+    return null;
+  }
+  const fragment = target.fragment?.replace(/^#/u, "").trim();
+  return {
+    href: fragment ? `${path}#${encodeURIComponent(fragment)}` : path,
+    newTab: target.newTab === true,
+  };
+}

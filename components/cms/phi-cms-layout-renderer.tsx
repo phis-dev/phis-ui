@@ -67,6 +67,7 @@ import type {
   PhiRuntimeFeatureState,
   PhiRuntimePageConditionState,
 } from "../../types/runtime-condition";
+import type { PhiResolvedLinkTargets } from "../../types/references";
 import { PhiCmsNodeVisibilityGate } from "./clients/phi-cms-node-visibility-gate";
 import { PhiRuntimeModuleRenderClientHost } from "../runtime/runtime-module-render-client-manifest";
 import { PhiRuntimeRenderClientType } from "../../constants/runtime-render-client-types";
@@ -85,6 +86,16 @@ async function resolvePhiCmsTreeFeatures(
   >
 ) {
   const { resolvePhiCmsTreeFeatures: resolve } = await import("../../server-helpers/cms-node-features");
+  return resolve(...args);
+}
+
+/** Lazily imported for the reason above: the pass is `server-only`, the helpers beside it are not. */
+async function resolvePhiCmsTreeLinkTargets(
+  ...args: Parameters<
+    typeof import("../../server-helpers/cms-link-targets")["resolvePhiCmsTreeLinkTargets"]
+  >
+) {
+  const { resolvePhiCmsTreeLinkTargets: resolve } = await import("../../server-helpers/cms-link-targets");
   return resolve(...args);
 }
 
@@ -180,6 +191,8 @@ type PhiCmsRenderContext = Pick<PhiCmsLayoutRendererProps, "runtime" | "tree"> &
   signalParticipants: ReadonlySet<string>;
   /** What the active Modules reported for the namespaces this tree asks about, or null if it asks none. */
   features: PhiRuntimeFeatureState | null;
+  /** Where this tree's Page targets lead, resolved in one pass, or null if it links to none. */
+  links: PhiResolvedLinkTargets | null;
 };
 
 type PhiRenderedChildEntry = {
@@ -319,7 +332,10 @@ export async function PhiCmsOverlayRenderer({
   registry: PhiResolvedRuntimeRenderRegistry;
   signalScope: Extract<PhiSignalScope, "area" | "page">;
 }) {
-  const features = await resolvePhiCmsTreeFeatures(tree, registry, runtime);
+  const [features, links] = await Promise.all([
+    resolvePhiCmsTreeFeatures(tree, registry, runtime),
+    resolvePhiCmsTreeLinkTargets(tree, runtime),
+  ]);
   const createNode = buildLayoutNodeResolver(tree, registry.widgetBlockDefaultsByType);
   const layoutPluginsByType = registry.layoutPluginsByType;
   const signalParticipants = resolvePhiTreeSignalParticipants(tree);
@@ -349,6 +365,7 @@ export async function PhiCmsOverlayRenderer({
           runtimeRegistry: registry,
           signalParticipants,
           features,
+          links,
         }), {
           kind: "layout",
           blockId: root.id,
@@ -430,6 +447,7 @@ function renderContentWidget(
         config: widgetPlugin.parseConfig(widget.config),
         registry: context.runtimeRegistry,
         features: context.features,
+        links: context.links,
       }), {
         kind: "widget",
         id: widget.id,
@@ -936,7 +954,10 @@ export async function PhiCmsLayoutRenderer({
     viewer: runtime.viewer,
     registry,
   });
-  const features = await resolvePhiCmsTreeFeatures(filteredTree, registry, runtime);
+  const [features, links] = await Promise.all([
+    resolvePhiCmsTreeFeatures(filteredTree, registry, runtime),
+    resolvePhiCmsTreeLinkTargets(filteredTree, runtime),
+  ]);
   const signalParticipants = resolvePhiTreeSignalParticipants(filteredTree);
   const allowedRegionTypes = regionTypes ? new Set(regionTypes) : null;
   const layoutPluginsByType = registry.layoutPluginsByType;
@@ -972,6 +993,7 @@ export async function PhiCmsLayoutRenderer({
           runtimeRegistry: registry,
           signalParticipants,
           features,
+          links,
         }), {
           kind: "layout",
           blockId: root.id,

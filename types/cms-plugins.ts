@@ -301,6 +301,14 @@ export type PhiCmsWidgetPluginRenderArgs<TConfig> = {
    * paying for the reads. A Widget that needs a fact unconditionally should read it itself.
    */
   features?: import("./runtime-condition").PhiRuntimeFeatureState | null;
+  /**
+   * Where this render's Page targets lead, resolved once before anything drew.
+   *
+   * Handed down rather than fetched, because the batching is the contract: a Widget that could resolve
+   * its own target would resolve one target per Widget. Absent means the page carries no internal link
+   * at all; a reference missing from it did not resolve, and `resolvePhiLinkHref` answers `null` for it.
+   */
+  links?: import("./references").PhiResolvedLinkTargets | null;
   license?: PhiCmsPluginLicenseState;
 };
 
