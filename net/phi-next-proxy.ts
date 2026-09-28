@@ -44,6 +44,32 @@ export type PhiNextProxyHandlers = {
   OPTIONS: PhiNextProxyHandler;
 };
 
+/**
+ * The catch-all's segments as a path again, each one encoded on its own.
+ *
+ * Next hands the segments over decoded, so joining them as they come turns an encoded `%2F` back into a
+ * separator and `..` into a step upwards: `/api/site/x%2F..%2F..%2Fv1%2Fx` reached `/api/v1/*` on the
+ * Server, carrying the internal token this door adds. A decoded `?` or `#` cut the path short. Encoding
+ * each segment keeps it one segment; a segment that is only dots is refused, because URL parsing
+ * resolves it -- percent-encoded or not -- however it is written.
+ */
+export function encodePhiProxyPathSegments(path: readonly string[] | undefined) {
+  if (!path?.length) return "";
+  for (const segment of path) {
+    if (segment === "." || segment === ".." || segment === "") {
+      throw new PhiProxyPathError(segment);
+    }
+  }
+  return `/${path.map((segment) => encodeURIComponent(segment)).join("/")}`;
+}
+
+export class PhiProxyPathError extends Error {
+  constructor(segment: string) {
+    super(`The proxy path holds a segment it cannot forward: "${segment}".`);
+    this.name = "PhiProxyPathError";
+  }
+}
+
 function buildTargetUrl(
   upstreamBaseUrl: string,
   upstreamPrefix: string,
@@ -52,7 +78,7 @@ function buildTargetUrl(
 ) {
   const normalizedBase = upstreamBaseUrl.replace(/\/$/, "");
   const normalizedPrefix = upstreamPrefix.startsWith("/") ? upstreamPrefix : `/${upstreamPrefix}`;
-  const pathSuffix = path?.length ? `/${path.join("/")}` : "";
+  const pathSuffix = encodePhiProxyPathSegments(path);
   const targetUrl = new URL(`${normalizedBase}${normalizedPrefix}${pathSuffix}`);
   targetUrl.search = request.nextUrl.search;
   return targetUrl;
@@ -146,7 +172,15 @@ async function proxyRequest(
     );
   }
 
-  const targetUrl = buildTargetUrl(config.upstreamBaseUrl, config.upstreamPrefix, request, path);
+  let targetUrl: URL;
+  try {
+    targetUrl = buildTargetUrl(config.upstreamBaseUrl, config.upstreamPrefix, request, path);
+  } catch (error) {
+    if (error instanceof PhiProxyPathError) {
+      return Response.json({ message: "Invalid path." }, { status: 400 });
+    }
+    throw error;
+  }
   const startedAt = Date.now();
 
   try {
