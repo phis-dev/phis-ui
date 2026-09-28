@@ -48,16 +48,20 @@ export function collectPhiLinkTargetReferences(
  *
  * A fragment rides along after resolution and is not part of what was resolved: the Page is identity,
  * the place inside it is not, and a Page that moved keeps the anchor it was pointed at.
+ *
+ * `external` comes out with the address because the target said so, not because the address looks a
+ * certain way. Every Control downstream would otherwise ask a regex the same question and get it wrong
+ * for the one case that matters -- an internal Page whose resolved path happens to be absolute.
  */
 export function resolvePhiLinkHref(
   target: PhiLinkTarget | null | undefined,
   resolved?: PhiResolvedLinkTargets | null,
-): { href: string; newTab: boolean } | null {
+): { href: string; newTab: boolean; external: boolean } | null {
   if (!target) {
     return null;
   }
   if (target.kind === "external") {
-    return { href: target.href, newTab: target.newTab === true };
+    return { href: target.href, newTab: target.newTab === true, external: true };
   }
   const path = resolved?.get(target.reference);
   if (!path) {
@@ -67,5 +71,6 @@ export function resolvePhiLinkHref(
   return {
     href: fragment ? `${path}#${encodeURIComponent(fragment)}` : path,
     newTab: target.newTab === true,
+    external: false,
   };
 }

@@ -93,10 +93,24 @@ export const PHI_AREA_BASE_RUNTIME_MODULE_AREA_SHELLS = [
   })),
 ] satisfies readonly PhiCmsAreaShellPresetDescriptor[];
 
+/**
+ * The Public base Pages a package may link to, named once.
+ *
+ * A Module that points at one of them has to say which, and a string typed at the call site is the same
+ * fragility as a path: nothing checks it, and a preset key that is renamed leaves a reference resolving
+ * to nothing. Stated here, beside the descriptors that declare them, so the two cannot drift.
+ */
+export const PHI_PUBLIC_BASE_PAGE_PRESET_KEYS = {
+  welcome: "public-welcome-page",
+  home: "public-home-page",
+  terms: "public-terms-page",
+  contact: "public-contact-page",
+} as const;
+
 export const PHI_AREA_BASE_RUNTIME_MODULE_ROUTES = [
   {
     ownerModuleId: PHI_PUBLIC_RUNTIME_MODULE_ID,
-    presetKey: "public-welcome-page",
+    presetKey: PHI_PUBLIC_BASE_PAGE_PRESET_KEYS.welcome,
     presetVersion: 1,
     area: "public",
     title: "Home",
@@ -115,7 +129,7 @@ export const PHI_AREA_BASE_RUNTIME_MODULE_ROUTES = [
   },
   {
     ownerModuleId: PHI_PUBLIC_RUNTIME_MODULE_ID,
-    presetKey: "public-home-page",
+    presetKey: PHI_PUBLIC_BASE_PAGE_PRESET_KEYS.home,
     presetVersion: 1,
     area: "public",
     title: "Home",
@@ -193,7 +207,7 @@ export const PHI_AREA_BASE_RUNTIME_MODULE_ROUTES = [
   })),
   {
     ownerModuleId: PHI_PUBLIC_RUNTIME_MODULE_ID,
-    presetKey: "public-terms-page",
+    presetKey: PHI_PUBLIC_BASE_PAGE_PRESET_KEYS.terms,
     presetVersion: 2,
     area: "public",
     title: "Terms and Conditions",
@@ -238,7 +252,7 @@ export const PHI_CORE_RUNTIME_MODULE_THEMES = PHI_CORE_THEME_PRESET_PLUGINS.map(
 export const PHI_PUBLIC_FORM_RUNTIME_MODULE_ROUTES = [
   {
     ownerModuleId: PHI_PUBLIC_RUNTIME_MODULE_ID,
-    presetKey: "public-contact-page",
+    presetKey: PHI_PUBLIC_BASE_PAGE_PRESET_KEYS.contact,
     presetVersion: 1,
     area: "public",
     title: "Contact",

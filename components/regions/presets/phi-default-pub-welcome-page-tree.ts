@@ -1,5 +1,6 @@
 import { createPhiPresetCmsInstanceIdMap } from "../../../types/cms-instance-id";
 import { PHI_PUBLIC_RUNTIME_MODULE_ID } from "../../../plugins/runtime-modules/public/ids";
+import { PHI_PUBLIC_BASE_PAGE_REFERENCES } from "../../../plugins/runtime-modules/public-base-page-references";
 import {
   PHI_CMS_DEFAULT_SLOT_INDEX,
   PHI_CMS_SEQUENTIAL_LAYOUT_SLOTS,
@@ -7,7 +8,6 @@ import {
 } from "../../../constants/cms-layout-types";
 import { PhiCmsPageType, PhiCmsRegionType, PhiCmsStatus } from "../../../constants/phi-cms";
 import { createPhiCmsPresetNodes } from "../../../helpers/cms-preset-nodes";
-import { localizeAreaPath } from "../../../helpers/locale";
 import { resolvePhiShellHeaderHeight } from "../../../helpers/shell-region-style";
 import type { PhiCmsPageNode, PhiResolvedCmsPageTree } from "../../../types/cms";
 import type { PhiBlockRuntime } from "../../../types";
@@ -205,8 +205,17 @@ export async function buildPhiDefaultPubWelcomePageTree({
           key: "read-more",
           label: "Read more...",
           buttonType: "primary",
-          /* A link, not a command: it renders a real anchor, which works before hydration. */
-          href: localizeAreaPath(runtime.locale.current, "public", "/home"),
+          /*
+           * A link, not a command: it renders a real anchor, which works before hydration.
+           *
+           * Named by reference, so the address it resolves to is whatever that Page answers on -- and
+           * whichever Module holds it. A path typed here pointed at the base Page even where a Site
+           * package had covered it, and went nowhere the day somebody moved it.
+           */
+          linkTarget: {
+            kind: "page" as const,
+            reference: PHI_PUBLIC_BASE_PAGE_REFERENCES.home,
+          },
           /* A beat behind the copy, so the page reads before it offers the way on. */
           effects: {
             transitionTrigger: "on_ready",

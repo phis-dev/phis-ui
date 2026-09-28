@@ -11,6 +11,16 @@ export type PhiLinkProps = {
   children: ReactNode;
   external?: boolean;
   newTab?: boolean;
+  /**
+   * Whether the client router may fetch the destination before anybody asks for it.
+   *
+   * Absent leaves Next to its own answer, which is right for a link a reader is likely to follow. A
+   * link that is a deliberate action rather than somewhere they are already heading says `false`: the
+   * speculation buys nothing, and where the destination is an Area root that forwards, it costs two
+   * requests nobody made. Only the client-navigated branch has an opinion; a plain anchor never
+   * prefetched.
+   */
+  prefetch?: boolean;
   className?: string;
   style?: CSSProperties;
   onClick?: MouseEventHandler<HTMLAnchorElement>;
@@ -21,6 +31,7 @@ export function PhiLink({
   children,
   external,
   newTab,
+  prefetch,
   className,
   style,
   onClick,
@@ -70,6 +81,7 @@ export function PhiLink({
   return (
     <Link
       href={href}
+      {...(prefetch === undefined ? {} : { prefetch })}
       className={className}
       style={linkStyle}
       onClick={onClick}

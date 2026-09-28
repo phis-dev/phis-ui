@@ -1,11 +1,11 @@
 "use client";
 
 import type { ReactNode, Ref } from "react";
-import Link from "next/link";
 import { Badge, Button, Tooltip } from "antd";
 import type { ButtonProps } from "antd";
 
 import type { PhiControlSize } from "../../types/control";
+import { PhiLink } from "../navigation/phi-link";
 import type { PhiButtonType } from "./phi-button-types";
 
 export type PhiControlBadgePresentation = {
@@ -36,6 +36,15 @@ export type PhiButtonControlProps = {
    * that mistake the easy one.
    */
   newTab?: boolean;
+  /**
+   * Whether the destination is outside this Site, stated rather than guessed.
+   *
+   * Absent leaves the answer to the same string test every other link falls back to. A caller that
+   * knows says so, and a caller that stores a structured target always knows: its target carries the
+   * kind, and reading it off a regex would put the decision back in a place that cannot see the
+   * difference between a Page and an address that merely starts the same way.
+   */
+  external?: boolean;
   tooltip?: ReactNode;
   icon?: ReactNode;
   type?: PhiButtonType;
@@ -77,6 +86,7 @@ export function PhiButtonControl({
   ariaLabel,
   href,
   newTab,
+  external,
   tooltip,
   icon,
   type = "default",
@@ -120,20 +130,28 @@ export function PhiButtonControl({
     </Button>
   );
   /*
+   * Through `PhiLink`, which is where this house decides between a client navigation and a plain
+   * anchor -- and where `target="_blank"` and `rel` are one decision rather than two props that can
+   * disagree. This control used to reach for `next/link` itself, so an external address went through
+   * the client router and never received the `rel` that a new tab needs.
+   *
    * Never prefetched. A button-shaped link is a deliberate action rather than somewhere the visitor is
    * already heading, so speculating on it buys nothing -- and on a refusal page, where this is what the
    * home link is made of, it buys a request for the Area root that the visitor never asked for. An Area
    * root that forwards turns that into two.
+   *
+   * The colour is the Button's. A link states one, and here the Button beneath it already has.
    */
   const linked = href && !disabled ? (
-    <Link
+    <PhiLink
       href={href}
+      {...(external === undefined ? {} : { external })}
+      newTab={newTab}
       prefetch={false}
-      target={newTab ? "_blank" : undefined}
-      rel={newTab ? "noreferrer" : undefined}
+      style={{ display: "inline-flex", color: "inherit" }}
     >
       {button}
-    </Link>
+    </PhiLink>
   ) : button;
   const badged = badge?.enabled ? (
     <Badge

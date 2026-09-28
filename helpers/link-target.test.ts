@@ -72,21 +72,21 @@ describe("the Pages a tree's configs point at", () => {
 describe("where a link target leads", () => {
   it("takes an external address as it stands", () => {
     expect(resolvePhiLinkHref({ kind: "external", href: "https://example.com", newTab: true }))
-      .toEqual({ href: "https://example.com", newTab: true });
+      .toEqual({ href: "https://example.com", newTab: true, external: true });
   });
 
   it("takes the address the Page answers on now", () => {
     expect(resolvePhiLinkHref(
       { kind: "page", reference: PAGE },
       resolved([[PAGE, "/en/pricing"]]),
-    )).toEqual({ href: "/en/pricing", newTab: false });
+    )).toEqual({ href: "/en/pricing", newTab: false, external: false });
   });
 
   it("keeps the place inside the Page, which the move did not change", () => {
     expect(resolvePhiLinkHref(
       { kind: "page", reference: PAGE, fragment: "plans" },
       resolved([[PAGE, "/en/pricing"]]),
-    )).toEqual({ href: "/en/pricing#plans", newTab: false });
+    )).toEqual({ href: "/en/pricing#plans", newTab: false, external: false });
   });
 
   it("draws no link for a Page that did not resolve", () => {

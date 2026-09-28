@@ -1,7 +1,12 @@
 import { resolvePhiCmsWidgetPluginKey } from "../../../../../constants/cms-widget-types";
 import { PHI_SIGNAL_VALUE_SCHEMAS } from "../../../../../types/signals";
 import type { PhiCmsWidgetPlugin } from "../../../../../types";
-import { readPhiCommonControlActionKey, type PhiCommonControlActionKey } from "../../../../../components/widgets/label-types/common-controls";
+import {
+  PHI_COMMON_CONTROL_DEFAULT_LABELS,
+  readPhiCommonControlActionKey,
+  type PhiCommonControlActionKey,
+} from "../../../../../components/widgets/label-types/common-controls";
+import { readPhiLinkTarget, type PhiLinkTarget } from "../../../../../types/references";
 import { PHI_BUTTON_CONTROL_SIGNALS } from "../../../../../components/widgets/signals/control-signal-capabilities";
 import { readBoolean, readString } from "../../../../../components/widgets/config/parser-primitives";
 import { readPhiButtonType, type PhiButtonType } from "../../../../../components/controls/phi-button-types";
@@ -28,8 +33,13 @@ export type PhiButtonWidgetConfig = PhiControlBadgeConfig & PhiControlConfig & {
    * The Control already renders a real anchor for this -- it works before hydration and on a page that
    * mounts no Controller. A Button with a target emits nothing and needs no route: "Create account"
    * beside a sign-in form is a link, and making it a signal would only add a wire that can break.
+   *
+   * A structured target rather than an href, so an internal Page is named by identity and survives its
+   * path moving. `REFERENCES.md` requires that of every Control that selects a Page; this Widget offered
+   * a text box instead, which meant it offered no way to select one at all, and the paths authors typed
+   * went stale the moment the Page moved.
    */
-  href?: string;
+  linkTarget?: PhiLinkTarget;
   danger?: boolean;
   /**
    * Whether the label and tooltip go through the Site translator when the Button renders.
@@ -57,11 +67,21 @@ export function parsePhiButtonWidgetConfig(config: Record<string, unknown>): Phi
     buttonType: readString(config.buttonType) == null
       ? undefined
       : readPhiButtonType(config.buttonType),
-    href: readString(config.href),
+    linkTarget: readPhiLinkTarget(config.linkTarget) ?? undefined,
     danger: readBoolean(config.danger),
     translate: readBoolean(config.translate),
   };
 }
+
+/*
+ * The action keys as a list to pick from, read off the label set that defines them rather than typed a
+ * second time here. It was a free-text field over a closed enum, so a typo silently became "no action":
+ * the Button kept its own label and lost the icon, the tooltip, the type and the danger colour the key
+ * would have brought, with nothing anywhere saying why.
+ */
+const PHI_BUTTON_ACTION_KEY_OPTIONS = (
+  Object.keys(PHI_COMMON_CONTROL_DEFAULT_LABELS.actions) as PhiCommonControlActionKey[]
+).map((value) => ({ value, label: PHI_COMMON_CONTROL_DEFAULT_LABELS.actions[value].label }));
 
 export const PHI_BUTTON_WIDGET_DEFINITION = {
   kind: "widget",
@@ -93,8 +113,15 @@ export const PHI_BUTTON_WIDGET_DEFINITION = {
     ],
   },
   fields: [
-    { key: "actionKey", type: "string", label: "Action Key" },
-    { key: "href", type: "url", label: "Link target" },
+    {
+      key: "actionKey",
+      type: "choice",
+      label: "Action Key",
+      emptyOption: { value: "", label: "None" },
+      emptyValue: undefined,
+      options: PHI_BUTTON_ACTION_KEY_OPTIONS,
+    },
+    { key: "linkTarget", type: "link-target", label: "Link target" },
     { key: "label", type: "string", label: "Label" },
     { key: "tooltip", type: "string", label: "Tooltip" },
     { key: "icon", type: "icon", label: "Icon", editorPlacement: "toolbar" },
@@ -112,6 +139,7 @@ export const PHI_BUTTON_WIDGET_DEFINITION = {
       ],
     },
     { key: "danger", type: "boolean", label: "Danger" },
+    { key: "translate", type: "boolean", label: "Translate Text" },
     ...PHI_CONTROL_PRESENTATION_FIELDS,
     ...PHI_CONTROL_STATE_FIELDS,
     ...PHI_CONTROL_BADGE_FIELDS,
