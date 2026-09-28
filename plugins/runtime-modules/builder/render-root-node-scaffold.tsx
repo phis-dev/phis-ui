@@ -556,6 +556,7 @@ function PhiWidgetEffectsPreviewFrame({
   regionKey,
   config,
   title,
+  scaffoldLabel,
   editorInteraction = "inert",
   onSelect,
   dropTarget,
@@ -569,6 +570,8 @@ function PhiWidgetEffectsPreviewFrame({
   regionKey: string | null;
   config: Partial<PhiRenderableBlockBase>;
   title?: string | null;
+  /** The band's text, where it says more than the name alone; the name is what `aria-label` speaks. */
+  scaffoldLabel?: string | null;
   editorInteraction?: PhiCmsBuilderWidgetEditorInteraction;
   onSelect?: () => void;
   dropTarget?: PhiStructureDropTargetData | null;
@@ -841,7 +844,7 @@ function PhiWidgetEffectsPreviewFrame({
           runtimeSignalEmissionsEnabled={false}
           className="phi-builder-widget-scaffold"
           style={widgetScaffoldStyle}
-          builderWidgetTitle={title}
+          builderWidgetTitle={scaffoldLabel?.trim() || title}
           builderWidgetSelected={selected}
           builderWidgetPopupOpen={isToolbarPopupOpen}
           onPointerLeave={isAuthoringActive && !isToolbarPopupOpen ? finishAuthoringOnPointerLeave : undefined}
@@ -872,7 +875,7 @@ function PhiWidgetEffectsPreviewFrame({
         runtimeSignalEmissionsEnabled={false}
         className="phi-builder-widget-scaffold"
         style={widgetScaffoldStyle}
-        builderWidgetTitle={title}
+        builderWidgetTitle={scaffoldLabel?.trim() || title}
         builderWidgetSelected={selected}
         builderWidgetPopupOpen={isToolbarPopupOpen}
         onPointerLeave={isAuthoringActive && !isToolbarPopupOpen ? finishAuthoringOnPointerLeave : undefined}
@@ -996,10 +999,36 @@ function readObjectConfig<T>(value: unknown): T | null {
   return typeof value === "object" && value != null ? (value as T) : null;
 }
 
+/**
+ * The band under a scaffold: what this node is called, and then what it is.
+ *
+ * Both belong there. The type is how somebody recognizes a Block they did not place, and the name a
+ * Preset gave it -- "dev home hero" -- is what tells two Markdown Widgets on one Page apart. On a
+ * Widget the name used to take the type's place, so on every Page built from a Preset the canvas
+ * stopped saying what anything was; a Layout said only its type and never its name.
+ *
+ * A node inserted through the picker is handed the type's own title as its name
+ * (`buildInsertedWidgetNode`), and "Markdown: Markdown" says nothing twice. So a name that is the type
+ * is not a name here. `typeName` is what that comparison is against, which for a Layout is the type
+ * without the trailing kind -- the picker writes "Vertical Flex", the band reads "Vertical Flex layout".
+ */
+function formatPhiScaffoldLabel(
+  name: string | null | undefined,
+  typeLabel: string,
+  typeName: string = typeLabel,
+) {
+  const resolvedName = name?.trim();
+
+  return !resolvedName || resolvedName === typeName.trim()
+    ? typeLabel
+    : `${resolvedName}: ${typeLabel}`;
+}
+
 function formatLayoutScaffoldLabel(
   typeKey: string,
   _kind: "layout" | "widget" | null | undefined,
   definitionTitle?: string | null,
+  name?: string | null,
 ) {
   const typeTitle = splitPhiCmsLayoutNamespacedTypeKey(typeKey)
     .typeKey
@@ -1008,8 +1037,9 @@ function formatLayoutScaffoldLabel(
     .map((part) => `${part.charAt(0).toUpperCase()}${part.slice(1)}`)
     .join(" ") ?? "Layout";
   const kindLabel = "layout";
+  const typeName = definitionTitle?.trim() || typeTitle;
 
-  return `${definitionTitle?.trim() || typeTitle} ${kindLabel}`;
+  return formatPhiScaffoldLabel(name, `${typeName} ${kindLabel}`, typeName);
 }
 
 function resolveLayoutNodeRootProps(node: PhiCmsLayoutRenderNode) {
@@ -1228,7 +1258,9 @@ function resolvePhiRootNodeRenderedBody(
       >
         {(plugin, definition) => {
           const resolvedConfig = plugin.parseConfig(widget.config ?? {}) as Record<string, unknown>;
-          const widgetTitle = widget.label ?? plugin.title ?? widget.widgetType;
+          const widgetTypeTitle = plugin.title ?? widget.widgetType;
+          const widgetTitle = widget.label ?? widgetTypeTitle;
+          const widgetScaffoldLabel = formatPhiScaffoldLabel(widget.label, widgetTypeTitle);
           const parsedWidgetConfig = (resolvedConfig ?? {}) as Record<string, unknown>;
       const editorConfig = {
         ...renderableBlockConfig,
@@ -1306,6 +1338,7 @@ function resolvePhiRootNodeRenderedBody(
             regionKey={regionKey}
             config={editorConfig as Partial<PhiRenderableBlockBase>}
             title={widgetTitle}
+            scaffoldLabel={widgetScaffoldLabel}
             editorInteraction={plugin.editorInteraction}
           >
             {renderedNode}
@@ -1322,6 +1355,7 @@ function resolvePhiRootNodeRenderedBody(
           regionKey={regionKey}
           config={editorConfig as Partial<PhiRenderableBlockBase>}
           title={widgetTitle}
+          scaffoldLabel={widgetScaffoldLabel}
           editorInteraction={plugin.editorInteraction}
           onSelect={
             onOpenInspectorWidgetNode
@@ -1641,6 +1675,7 @@ export function renderPhiRootNodeScaffold(
         normalizedRootNode.typeKey,
         normalizedRootNode.kind,
         definitionTitle,
+        normalizedRootNode.title,
       )}
       packageName={rootPackageName}
       style={
