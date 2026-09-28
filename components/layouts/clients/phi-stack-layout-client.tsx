@@ -191,7 +191,11 @@ export function PhiStackLayout({
       ? resolvePhiMotionDurationMs(token.motionDurationSlow)
       : clampPhiSequenceTransitionMs(slotTransitionDurationMs);
     if (reducedMotion || duration <= 0 || typeof outgoingSlot.animate !== "function") {
-      outgoingSlot.style.opacity = "0";
+      /*
+       * Taken away, not faded to nothing. An inline `opacity: 0` stayed on the element after it stopped
+       * being the outgoing slot, and a kept slot (`lazy-keep`, `eager`) came back as an empty tab. The
+       * microtask runs before the frame is painted, so nothing is seen of the outgoing slot either way.
+       */
       queueMicrotask(clearOutgoingSlot);
       return undefined;
     }
