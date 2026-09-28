@@ -276,16 +276,6 @@ export async function buildPhiBuilderInspectorAreaOverlayTree({
           padding: PHI_SPACE.base,
           background: PHI_COLOR.bgLayout,
           border: "none",
-          /*
-           * In the order of `PHI_BUILDER_EFFECTS_SECTIONS`, which is the order the Forms are placed in
-           * below. The tab bar above reads these through `stackMeta`; without them it fell back to each
-           * child node's own label, which is what somebody called the node and not a caption of ours.
-           */
-          slotTitles: [
-            effectsLabels.sections.transparency,
-            effectsLabels.sections.transitions,
-            effectsLabels.sections.viewportEffects,
-          ],
         },
       }),
       nodes.layout({
@@ -404,7 +394,17 @@ export async function buildPhiBuilderInspectorAreaOverlayTree({
           parentLayoutNodeId: PHI_BUILDER_INSPECTOR_LAYOUT_IDS.effectsBody,
           slotIndex,
           sortOrder: 0,
-          label: section === "appearance" ? "Appearance" : section === "transitions" ? "Transitions" : "Viewport",
+          /*
+           * The caption of the tab above, not just a name for the node.
+           *
+           * A Stack publishes the labels of its children through `stackMeta` (`resolvePhiStackSlotMeta`)
+           * and the tab bar reads them from there -- it has no `slotTitles` of its own, that vocabulary
+           * belongs to the Collapsible. So the three tabs are named here, from the Effects set, and were
+           * three English words written into this preset for as long as they were only node names.
+           */
+          label: effectsLabels.sections[
+            section === "appearance" ? "transparency" : section === "transitions" ? "transitions" : "viewportEffects"
+          ],
           config: {
             formId: PHI_BUILDER_EFFECTS_FORM_IDS[section],
             formConfig: {},
