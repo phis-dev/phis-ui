@@ -364,6 +364,7 @@ export function compilePhiCmsDescriptorCatalog({
   const areaShellByIdentity = new Map<string, PhiCmsAreaShellPresetBinding>();
   const areaOverlaysByArea = new Map<PhiCmsAreaKey, PhiCmsAreaOverlayPresetDescriptor[]>();
   const routeByIdentity = new Map<string, PhiCmsRoutePresetDescriptor>();
+  const routeByPageId = new Map<PhiCmsInstanceId, PhiCmsRoutePresetDescriptor>();
   /**
    * Navigation injections a Module contributes without owning a Page, keyed by Area.
    *
@@ -479,6 +480,10 @@ export function compilePhiCmsDescriptorCatalog({
       const resolvedDescriptor = resolvePhiCmsNamespacedRouteDescriptor(descriptor, areaDefinition);
       const compiled = compilePhiCmsRoutePattern(resolvedDescriptor);
       routeByIdentity.set(identity, resolvedDescriptor);
+      routeByPageId.set(
+        createPhiPresetCmsPageId({ ownerModuleId: moduleId, presetKey: descriptor.presetKey }),
+        resolvedDescriptor,
+      );
       const areaRoutes = routesByArea.get(descriptor.area) ?? [];
       areaRoutes.push(compiled);
       routesByArea.set(descriptor.area, areaRoutes);
@@ -768,6 +773,7 @@ export function compilePhiCmsDescriptorCatalog({
     areaOverlaysByArea,
     moduleNavigationByArea,
     routeByIdentity,
+    routeByPageId,
     routesByArea,
     themeByKey,
     themeBlockByKey,
@@ -1593,6 +1599,24 @@ export function resolvePhiCmsRoutePresetByIdentity(
   presetKey: string,
 ) {
   return catalog.routeByIdentity.get(buildPhiCmsPresetIdentityKey(ownerModuleId, presetKey)) ?? null;
+}
+
+/**
+ * The route a Module Page reference names, read off the whole catalogue.
+ *
+ * A reference carries the derived Page id and not the pair it was derived from, so this is the only way
+ * in from a stored link: the hash cannot be undone, and the catalogue is the other side of it.
+ *
+ * The Area's active route table answers the same question for what that Area actually serves, and where
+ * a caller has one it is the better question -- it has already dropped the Modules that are switched off
+ * and the root applicants that lost. This one is for a caller holding only the catalogue, and it leaves
+ * those checks to them.
+ */
+export function resolvePhiCmsRouteDescriptorByPageId(
+  catalog: PhiCmsCompiledDescriptorCatalog,
+  pageId: PhiCmsInstanceId,
+) {
+  return catalog.routeByPageId.get(pageId) ?? null;
 }
 
 export function resolvePhiCmsThemePresetBinding(

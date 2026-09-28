@@ -26,22 +26,14 @@ export {
   type PhiCmsPresetInstanceIdentity,
 } from "@phis/contracts/cms";
 
-/** The Page itself, not a node inside it -- the one place a Page id differs from a node id. */
-const PHI_CMS_PAGE_NODE_KEY = "page";
-
 /**
  * A Page's identity, as the Builder carries it.
  *
- * The pair a Module Page is stored under -- owner and preset key -- hashed to one opaque token. It is
- * recomputable rather than allocated, so no row has to exist before a Page can be addressed, and it
- * never mentions the path: reassigning where a Page answers leaves its drafts exactly where they were.
- * A Page authored in the Builder has no preset to hash and takes a draft-origin id instead.
+ * Re-exported rather than derived here: the same token is what a Module Page reference is made of, so it
+ * moved next to the reference codec in `@phis/contracts/references` where both sides reach it. A Page
+ * authored in the Builder has no preset to hash and takes a draft-origin id instead.
  */
-export function createPhiPresetCmsPageId(
-  identity: Omit<PhiCmsPresetInstanceIdentity, "domain" | "nodeKey">,
-): PhiCmsInstanceId {
-  return createPhiPresetCmsInstanceId({ ...identity, domain: "page", nodeKey: PHI_CMS_PAGE_NODE_KEY });
-}
+export { createPhiPresetCmsPageId } from "@phis/contracts/references";
 
 export function createPhiPresetCmsInstanceIdMap<const TNodeKey extends string>(
   identity: Omit<PhiCmsPresetInstanceIdentity, "nodeKey">,

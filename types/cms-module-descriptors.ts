@@ -400,6 +400,13 @@ export type PhiCmsCompiledDescriptorCatalog = {
     descriptor: PhiCmsNavigationInjectionDescriptor;
   }[]>;
   routeByIdentity: ReadonlyMap<string, PhiCmsRoutePresetDescriptor>;
+  /**
+   * The same routes, keyed by the Page id a reference names them with.
+   *
+   * Built here rather than derived per lookup, because the id is a hash: it goes one way, so a caller
+   * holding one cannot ask the identity map for it and would otherwise hash every route on every link.
+   */
+  routeByPageId: ReadonlyMap<PhiCmsInstanceId, PhiCmsRoutePresetDescriptor>;
   routesByArea: ReadonlyMap<PhiCmsAreaKey, readonly PhiCmsCompiledRoutePattern[]>;
   themeByKey: ReadonlyMap<string, PhiCmsThemePresetBinding>;
   /** Keyed by `<kind>:<blockKey>`, so a style and a ground may share a name. */

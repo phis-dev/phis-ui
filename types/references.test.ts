@@ -2,9 +2,11 @@ import { describe, expect, it } from "vitest";
 
 import {
   createPhiPageReference,
+  createPhiPresetCmsPageId,
   isPhiLinkTargetConfigKey,
   isPhiStorableExternalHref,
   readPhiLinkTarget,
+  readPhiPageReference,
 } from "./references";
 
 const PAGE = createPhiPageReference({ kind: "site", pageScopeId: 41 });
@@ -128,5 +130,77 @@ describe("the field a link target may stand under", () => {
     expect(isPhiLinkTargetConfigKey("linkTargetLabel")).toBe(false);
     expect(isPhiLinkTargetConfigKey("LinkTarget")).toBe(false);
     expect(isPhiLinkTargetConfigKey("href")).toBe(false);
+  });
+});
+
+/**
+ * What a Page reference is made of, and why it is as short as it is.
+ *
+ * It was base64-encoded JSON carrying the whole identity, which for a Module Page ran to 98 characters
+ * in every body that linked to one. The envelope bought nothing it was credited with: encoding is not
+ * signing, and Site and Area are revalidated on every resolution regardless. What it really bought was
+ * a payload the server could unpack -- and the server stopped needing to, because a Module Page target
+ * is not indexed and a Module Page already has a name both sides recompute.
+ */
+describe("a Page reference", () => {
+  const MODULE_IDENTITY = {
+    ownerModuleId: "@phis/ui/modules/public",
+    presetKey: "public-contact-page",
+  } as const;
+
+  it("names a Site Page by the Scope id itself, because a foreign key has to read it", () => {
+    const reference = createPhiPageReference({ kind: "site", pageScopeId: 41 });
+
+    expect(reference).toBe("v1s41");
+    expect(readPhiPageReference(reference)?.target).toEqual({ kind: "site", pageScopeId: 41 });
+  });
+
+  it("names a Module Page by the CMS Page id the whole house already derives", () => {
+    const reference = createPhiPageReference({ kind: "module", ...MODULE_IDENTITY });
+
+    expect(readPhiPageReference(reference)?.target)
+      .toEqual({ kind: "module", pageId: createPhiPresetCmsPageId(MODULE_IDENTITY) });
+  });
+
+  /* The number that made this worth doing, kept where a change to it would be noticed. */
+  it("is short enough to sit in a body without being the body", () => {
+    expect(createPhiPageReference({ kind: "site", pageScopeId: 41 })).toHaveLength(5);
+    expect(createPhiPageReference({ kind: "module", ...MODULE_IDENTITY })).toHaveLength(19);
+  });
+
+  /*
+   * The long form does not quietly still work. Nothing was written in it, and a reader that accepted
+   * both would be the fallback the house does not keep -- two formats, one of them unreachable from
+   * anything that writes, and no way to tell which a stored value came from.
+   */
+  it("does not read the form it replaced", () => {
+    expect(readPhiPageReference(
+      "v1.eyJ2IjoxLCJrIjoibSIsIm0iOiJAcGhpcy91aS9tb2R1bGVzL3B1YmxpYyIsInAiOiJwdWJsaWMtY29udGFjdC1wYWdlIn0",
+    )).toBeNull();
+  });
+
+  it("reads nothing out of a tag it does not know, or a body that does not fit it", () => {
+    for (const value of ["v1x41", "v1s0", "v1s", "v1s41x", "v1pnope", "v1p", "41", "", null]) {
+      expect(readPhiPageReference(value)).toBeNull();
+    }
+  });
+
+  /*
+   * Checked when the reference is made, because afterwards nobody can. A malformed owner id hashes
+   * perfectly well and yields a reference that resolves to nothing, for a reason the token no longer
+   * carries -- the one real cost of a one-way id, paid at the only place that still sees what went in.
+   */
+  it("refuses a malformed Module id while it can still say so", () => {
+    expect(() => createPhiPageReference({
+      kind: "module",
+      ownerModuleId: "phis/ui/modules/public",
+      presetKey: "public-contact-page",
+    })).toThrow(/Module id/);
+  });
+
+  it("refuses a Page Scope id that is not one", () => {
+    for (const pageScopeId of [0, -1, 1.5, Number.NaN]) {
+      expect(() => createPhiPageReference({ kind: "site", pageScopeId })).toThrow(/Page Scope/);
+    }
   });
 });

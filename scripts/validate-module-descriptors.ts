@@ -621,6 +621,7 @@ const buildTestCatalog = (
   areaShellByIdentity: new Map(),
   areaOverlaysByArea: new Map(),
   routeByIdentity: new Map(),
+  routeByPageId: new Map(),
   routesByArea: new Map([["public", routes.map(compilePhiCmsRoutePattern)]]),
   moduleNavigationByArea: new Map(),
   themeByKey: new Map(),

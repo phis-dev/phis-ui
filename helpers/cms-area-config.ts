@@ -3,8 +3,12 @@ import { createPhiDefaultAreaRuntimeModuleIds } from "../plugins/runtime-modules
 import { readPhiRuntimeModuleIds } from "../plugins/runtime-modules/settings";
 import type { PhiRuntimeModuleId } from "../types";
 import type { PhiResolvedCmsAreaPresetTree } from "../types/cms";
-import type { PhiCmsPresetIdentity } from "../types/cms-module-descriptors";
-import { readPhiPageReference, type PhiPageReference } from "../types/references";
+import type { PhiCmsInstanceId } from "../types/cms-instance-id";
+import {
+  createPhiPresetCmsPageId,
+  readPhiPageReference,
+  type PhiPageReference,
+} from "../types/references";
 
 /**
  * The two halves of an Area preset config, expressed as a path rather than as a list of field names.
@@ -140,7 +144,7 @@ export function readPhiAreaRootRoute(
  * reads as the blank it effectively is rather than as "never asked".
  */
 export type PhiAreaLandingSelection =
-  | { kind: "preset"; identity: PhiCmsPresetIdentity }
+  | { kind: "preset"; pageId: PhiCmsInstanceId }
   | { kind: "empty" };
 
 export function readPhiAreaLandingSelection(
@@ -163,13 +167,7 @@ export function resolvePhiAreaLandingSelection(
   }
   const parsed = rootRoute.target ? readPhiPageReference(rootRoute.target) : null;
   return parsed?.target.kind === "module"
-    ? {
-        kind: "preset",
-        identity: {
-          ownerModuleId: parsed.target.ownerModuleId as PhiRuntimeModuleId,
-          presetKey: parsed.target.presetKey,
-        },
-      }
+    ? { kind: "preset", pageId: parsed.target.pageId }
     : { kind: "empty" };
 }
 
@@ -207,11 +205,15 @@ export function choosePhiAreaRootApplicant<TApplicant>(
     landingSelection?: PhiAreaLandingSelection | null;
   },
 ): TApplicant | null {
+  /*
+   * Compared as Page ids rather than as the pair they are derived from. The Builder stores a reference,
+   * and a Module Page's reference names it by that id -- so the applicant is hashed to meet the answer
+   * rather than the answer unpacked to meet the applicant, which a one-way id does not allow.
+   */
   const named = landingSelection?.kind === "preset"
     ? applicants.find((applicant) => {
       const identity = readApplicant(applicant);
-      return identity.ownerModuleId === landingSelection.identity.ownerModuleId &&
-        identity.presetKey === landingSelection.identity.presetKey;
+      return createPhiPresetCmsPageId(identity) === landingSelection.pageId;
     })
     : undefined;
   /*

@@ -13,14 +13,13 @@ import {
 import {
   resolvePhiCmsNavigationOverlay,
   resolvePhiCmsActiveNavigationSurfaces,
-  resolvePhiCmsRoutePresetByIdentity,
+  resolvePhiCmsRouteDescriptorByPageId,
 } from "../../plugins/runtime-modules/descriptor-compiler";
 import { phiRuntime } from "../../server-helpers/phi-runtime";
 import { getPhiRequestNavigationContext } from "../../server-helpers/request-runtime";
 import type {
   PhiCmsNavigationOverlay,
   PhiCmsResolvedNavigationItem,
-  PhiRuntimeModuleId,
 } from "../../types/cms-module-descriptors";
 import type { PhiBlockRuntime } from "../../types";
 import type { PhiNavItem } from "../shell/shell-types";
@@ -102,11 +101,7 @@ export async function resolvePhiDescriptorNavigationItems(
       if (item.target?.kind !== "page" || item.target.resolvedPath || item.target.deleted === true) return item;
       const reference = readPhiPageReference(item.target.reference);
       if (!reference || reference.target.kind !== "module") return item;
-      const route = resolvePhiCmsRoutePresetByIdentity(
-        catalog,
-        reference.target.ownerModuleId as PhiRuntimeModuleId,
-        reference.target.presetKey,
-      );
+      const route = resolvePhiCmsRouteDescriptorByPageId(catalog, reference.target.pageId);
       // Whether the address exists, which is Module selection and nothing about this reader.
       const available = route != null && route.area === runtime.area &&
         activeModuleIds.has(route.ownerModuleId);

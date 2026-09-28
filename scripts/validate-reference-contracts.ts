@@ -17,10 +17,12 @@ import type { PhiBlockRuntime } from "../types";
 import { PHI_CORE_ROLE_PROVIDER_ID } from "../types/access";
 import type { PhiCmsAreaKey } from "../constants/cms-areas";
 import type { PhiRuntimeModuleId } from "../types/cms-module-descriptors";
+import { createPhiPresetCmsInstanceId } from "../types/cms-instance-id";
 import {
   createPhiAssetUri,
   createPhiPageReference,
   createPhiPageUri,
+  createPhiPresetCmsPageId,
   readPhiInternalReference,
   readPhiPageReference,
   type PhiPageReference,
@@ -44,8 +46,10 @@ const moduleReference = createPhiPageReference({
 });
 assert.deepEqual(readPhiPageReference(moduleReference)?.target, {
   kind: "module",
-  ownerModuleId: PHI_USER_MANAGEMENT_RUNTIME_MODULE_ID,
-  presetKey: "admin-users-page",
+  pageId: createPhiPresetCmsPageId({
+    ownerModuleId: PHI_USER_MANAGEMENT_RUNTIME_MODULE_ID,
+    presetKey: "admin-users-page",
+  }),
 });
 
 // The two ownership kinds never collide, and a Module reference names both halves of its identity.
@@ -70,14 +74,14 @@ assert.notEqual(
 for (const invalidScopeId of [0, -1, 1.5, Number.NaN, Number.MAX_SAFE_INTEGER + 1]) {
   assert.throws(
     () => createPhiPageReference({ kind: "site", pageScopeId: invalidScopeId }),
-    /Invalid Phi Page target/u,
+    /Page Scope/u,
     `Page scope id ${invalidScopeId} must not encode.`,
   );
 }
 for (const invalidModuleId of ["phis-ui", "@phis", "@phis/", "/phis-ui", ""]) {
   assert.throws(
     () => createPhiPageReference({ kind: "module", ownerModuleId: invalidModuleId, presetKey: "page" }),
-    /Invalid Phi Page target/u,
+    /Module id/u,
     `Module id "${invalidModuleId}" must not encode.`,
   );
 }
@@ -88,7 +92,7 @@ for (const invalidPresetKey of ["", "   "]) {
       ownerModuleId: PHI_USER_MANAGEMENT_RUNTIME_MODULE_ID,
       presetKey: invalidPresetKey,
     }),
-    /Invalid Phi Page target/u,
+    /Preset key/u,
   );
 }
 
@@ -98,35 +102,55 @@ for (const invalidPresetKey of ["", "   "]) {
  * Builder-history churn the stable reference exists to prevent. Assert the payload shape rather than
  * trusting the constructor signature.
  */
-const decodePayload = (reference: PhiPageReference) => JSON.parse(
-  Buffer.from(String(reference).slice("v1.".length).replaceAll("-", "+").replaceAll("_", "/"), "base64")
-    .toString("utf8"),
-) as Record<string, unknown>;
-assert.deepEqual(Object.keys(decodePayload(siteReference)).sort(), ["i", "k", "v"]);
-assert.deepEqual(Object.keys(decodePayload(moduleReference)).sort(), ["k", "m", "p", "v"]);
+assert.match(String(siteReference), /^v1s[1-9][0-9]*$/u);
+assert.match(String(moduleReference), /^v1p[A-Za-z0-9_-]{16}$/u);
 assert.equal(
   String(createPhiPageReference({ kind: "site", pageScopeId: 47 })),
   String(siteReference),
 );
+assert.equal(
+  String(createPhiPageReference({
+    kind: "module",
+    ownerModuleId: PHI_USER_MANAGEMENT_RUNTIME_MODULE_ID,
+    presetKey: "admin-users-page",
+  })),
+  String(moduleReference),
+);
 
-// Rejected encodings: wrong prefix, non-base64url, non-JSON, unknown version, unknown kind, wrong types.
-const encode = (value: unknown) =>
-  `v1.${Buffer.from(JSON.stringify(value), "utf8").toString("base64url")}`;
+/*
+ * The form this replaced does not quietly still decode. Two accepted forms would be a fallback the
+ * house does not keep: nothing writes the long one, and a stored value would no longer say which
+ * codec issued it.
+ */
+assert.equal(
+  readPhiPageReference(
+    "v1.eyJ2IjoxLCJrIjoibSIsIm0iOiJAcGhpcy91aS9tb2R1bGVzL3B1YmxpYyIsInAiOiJwdWJsaWMtY29udGFjdC1wYWdlIn0",
+  ),
+  null,
+);
+
+// Rejected: no version, unknown tag, an empty or malformed body, a Page id of the wrong origin or domain.
 for (const invalid of [
   "",
-  "v1.",
-  "v2.eyJ2IjoxLCJrIjoicyIsImkiOjQ3fQ",
-  "eyJ2IjoxLCJrIjoicyIsImkiOjQ3fQ",
-  "v1.not base64url!",
-  `v1.${Buffer.from("not json", "utf8").toString("base64url")}`,
-  encode({ v: 2, k: "s", i: 47 }),
-  encode({ v: 1, k: "x", i: 47 }),
-  encode({ v: 1, k: "s", i: "47" }),
-  encode({ v: 1, k: "s", i: 0 }),
-  encode({ v: 1, k: "m", m: "phis-ui", p: "page" }),
-  encode({ v: 1, k: "m", m: "@phis/ui", p: "" }),
-  encode([1, 2, 3]),
-  encode(null),
+  "v1",
+  "v1s",
+  "v1s0",
+  "v1s047",
+  "v1s47x",
+  "v1s 47",
+  "v2s47",
+  "s47",
+  "v1x47",
+  "v1p",
+  "v1pnope",
+  `v1p${"A".repeat(15)}`,
+  `v1p${"A".repeat(17)}`,
+  `v1p${createPhiPresetCmsInstanceId({
+    domain: "navigation",
+    ownerModuleId: PHI_USER_MANAGEMENT_RUNTIME_MODULE_ID,
+    presetKey: "admin-users-page",
+    nodeKey: "page",
+  })}`,
 ]) {
   assert.equal(readPhiPageReference(invalid), null, `"${invalid}" must not decode.`);
 }

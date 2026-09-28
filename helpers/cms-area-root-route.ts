@@ -1,6 +1,6 @@
 import type { PhiCmsAreaKey } from "../constants/cms-areas";
 import { PhiCmsPageType, PhiCmsStatus } from "../constants/phi-cms";
-import { resolvePhiCmsRoutePresetByIdentity } from "../plugins/runtime-modules/descriptor-compiler";
+import { resolvePhiCmsRouteDescriptorByPageId } from "../plugins/runtime-modules/descriptor-compiler";
 import type { PhiResolvedCmsPagePayload, PhiResolvedCmsPageTree } from "../types/cms";
 import type {
   PhiCmsCompiledDescriptorCatalog,
@@ -47,11 +47,7 @@ export function resolvePhiAreaModulePageReferencePath({
   if (parsed?.target.kind !== "module") {
     return null;
   }
-  const route = resolvePhiCmsRoutePresetByIdentity(
-    catalog,
-    parsed.target.ownerModuleId as PhiRuntimeModuleId,
-    parsed.target.presetKey,
-  );
+  const route = resolvePhiCmsRouteDescriptorByPageId(catalog, parsed.target.pageId);
   return route && route.area === area && activeModuleIds.has(route.ownerModuleId)
     ? route.path
     : null;

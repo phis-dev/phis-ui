@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 
+import { createPhiPresetCmsPageId } from "../../types/references";
+
 import { createPhiAppRuntimeModuleCatalog } from "./area-catalogs/app";
 import { createPhiPublicRuntimeModuleCatalog } from "./area-catalogs/public";
 import {
@@ -94,8 +96,9 @@ function compile({
   });
 }
 
+/* The Site stores a reference, and a Module Page's reference names it by its derived Page id. */
 function chose(identity: PhiCmsPresetIdentity): PhiAreaLandingSelection {
-  return { kind: "preset", identity };
+  return { kind: "preset", pageId: createPhiPresetCmsPageId(identity) };
 }
 
 describe("the Area root slot", () => {
@@ -227,7 +230,7 @@ describe("the applicant chosen for the root slot", () => {
   });
 
   it("is the named applicant once the Site answers", () => {
-    expect(choose([base, offeror, second], { kind: "preset", identity: second })).toBe(second);
+    expect(choose([base, offeror, second], chose(second))).toBe(second);
   });
 
   it("is the base Module's Page when the Site answered with nobody", () => {

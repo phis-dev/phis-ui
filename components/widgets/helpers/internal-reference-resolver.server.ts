@@ -1,7 +1,7 @@
 import "server-only";
 
 import { resolveSiteInternalReferences } from "../../../gateway/internal-references";
-import { resolvePhiCmsRoutePresetByIdentity } from "../../../plugins/runtime-modules/descriptor-compiler";
+import { resolvePhiCmsRouteDescriptorByPageId } from "../../../plugins/runtime-modules/descriptor-compiler";
 import { resolvePhiNavHref } from "../../../helpers/locale";
 import { phiRuntime } from "../../../server-helpers/phi-runtime";
 import type { PhiBlockRuntime } from "../../../types";
@@ -60,11 +60,7 @@ export async function resolvePhiWidgetInternalReferences(input: {
     if (pagePaths.has(rawReference)) continue;
     const reference = readPhiPageReference(rawReference);
     if (!reference || reference.target.kind !== "module") continue;
-    const route = resolvePhiCmsRoutePresetByIdentity(
-      catalog,
-      reference.target.ownerModuleId as `${string}/${string}`,
-      reference.target.presetKey,
-    );
+    const route = resolvePhiCmsRouteDescriptorByPageId(catalog, reference.target.pageId);
     // A reference resolves to the address the route has, or to nothing when no Module carries it. Who
     // is reading does not enter: the same reference names the same Page for everybody in the Area.
     if (route && route.area === input.runtime.area && activeModuleIds.has(route.ownerModuleId)) {
