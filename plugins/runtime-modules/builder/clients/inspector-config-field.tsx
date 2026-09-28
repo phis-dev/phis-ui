@@ -20,6 +20,10 @@ import { PhiBorderControl } from "../../../../components/controls/phi-border-con
 import { PhiColorWidget } from "../../../../components/widgets/client/phi-color-widget";
 import type { PhiColorPickerLabels } from "../../../../components/widgets/label-types/color-picker";
 import type { PhiIconPickerControlLabels } from "../../../../components/widgets/label-types/icon-picker";
+import {
+  PhiInspectorLinkTargetFieldControl,
+  type PhiInspectorLinkTargetLabels,
+} from "./inspector-link-target-field";
 import { PHI_RADIUS_CONTROL_DEFAULT_LABELS, PhiBoundRadiusControl } from "../../../../components/controls/phi-bound-radius-control";
 import { PhiDimensionControl } from "../../../../components/controls/phi-dimension-control";
 import { PhiLengthControl } from "../../../../components/controls/phi-length-control";
@@ -669,6 +673,7 @@ export function renderPhiInspectorConfigField({
   borderLabels,
   colorPickerLabels,
   iconPickerLabels,
+  linkTargetLabels,
   dataProviderDescriptors = [],
   calendarAdapterDescriptors = [],
   videoProviderDescriptors = [],
@@ -685,6 +690,7 @@ export function renderPhiInspectorConfigField({
   borderLabels?: PhiBorderWidgetLabels;
   colorPickerLabels?: PhiColorPickerLabels;
   iconPickerLabels?: PhiIconPickerControlLabels;
+  linkTargetLabels?: PhiInspectorLinkTargetLabels;
   dataProviderDescriptors?: readonly PhiRuntimeModuleDataProviderDescriptor[];
   calendarAdapterDescriptors?: readonly PhiCalendarAdapterDescriptor[];
   videoProviderDescriptors?: readonly PhiVideoProviderDescriptor[];
@@ -1104,6 +1110,22 @@ export function renderPhiInspectorConfigField({
         inputType={field.type === "url" ? "url" : "text"}
         style={{ width: "100%" }}
         onChange={(nextValue) => onChange?.({ [field.key]: nextValue || undefined })}
+      />,
+    );
+  }
+
+  /*
+   * A block rather than a row: the control is a choice plus whichever answer that choice asks for, and
+   * squeezing three stacked parts into the label column's other half leaves none of them usable.
+   */
+  if (field.type === "link-target") {
+    return renderPhiInspectorConfigFieldBlock(
+      field,
+      <PhiInspectorLinkTargetFieldControl
+        value={value ?? defaultValue}
+        disabled={disabled || !onChange}
+        {...(linkTargetLabels ? { labels: linkTargetLabels } : {})}
+        onChange={(next) => onChange?.({ [field.key]: next })}
       />,
     );
   }
