@@ -118,6 +118,22 @@ export type PhiCmsConfigField =
       type: "string" | "url" | "icon";
     })
   | (PhiCmsConfigFieldBase & {
+      /**
+       * One link, chosen rather than typed.
+       *
+       * Its own type rather than a `url`, because the two answers it accepts are not the same kind of
+       * thing: an internal Page is picked from the Area's Page tree and stored as identity, an external
+       * address is a literal URL. A text box can only take the second, which is why every Widget that
+       * offered a `url` field offered no way at all to reach a Page -- and the paths authors typed
+       * instead went stale the moment the Page moved.
+       *
+       * What is stored is a `PhiLinkTarget`, under a key the reference collector recognises. See
+       * `isPhiLinkTargetConfigKey` in `types/references.ts` for the naming rule and `REFERENCES.md` for
+       * why the name is what the server has to go on.
+       */
+      type: "link-target";
+    })
+  | (PhiCmsConfigFieldBase & {
       type: "readonly";
     })
   | (PhiCmsConfigFieldBase & {

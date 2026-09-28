@@ -53,6 +53,14 @@ editor. A free text field is available only for an explicitly external target. R
 locale-relative strings are not a second internal-target format. Module and Site targets share the same
 source/resolver contract.
 
+A Widget that offers a link persists a structured target rather than an href. A target is either an
+internal Page, carrying the stable Page reference and an optional fragment, or an explicitly external
+address, carrying a literal URL. There is no third form: root-relative and locale-relative strings are
+rejected on write, and a Widget that needs to reach a Page reaches it by reference. A Widget may offer
+more than one link, and each target carries its own new-tab decision rather than pairing with a flag
+stored beside it. Whether a target opens through client navigation or a plain anchor is decided by its
+kind and never inferred from the shape of a string.
+
 Changing a Site Page path therefore does not rewrite structured internal links. Navigation, Markdown,
 HTML, and other typed reference consumers resolve the same identity to the new canonical path. The path
 command must still consult the reference index and return affected-reference counts for audit and
@@ -141,6 +149,18 @@ an Asset under another shape, a copied delivery URL, or a Storage key authors a 
 guard cannot see, and the Asset it needs can be deleted while the Widget still renders it. A Module
 picture the Site takes over -- a ground somebody edited -- is uploaded into the Site Media Space on the
 way to the server and is referenced by id from then on, like any other Asset.
+
+A Control that persists a link target writes it into a field named `linkTarget`, or into one whose name
+ends in `LinkTarget`, and nothing else identifies a link target in persisted config. The rule is the
+Asset rule and exists for the same reason: the collector reads persisted config and cannot ask the
+Widget catalogue which of a plugin's fields carry targets. A target kept under another name, or kept as
+a bare path, authors a link the index cannot see -- the Page delete guard reports no affected references
+for it, and a Page path change leaves it pointing at an address nobody answers on.
+
+Only the internal kind reaches the index. An external target names nothing the Site owns, so there is no
+identity to guard and no path that can move under it; it contributes no index row, and the index gains no
+target variant for it. The field name is what the collector goes by either way, so a target that flips
+from a Page to an external address removes its row by being read again, not by a separate mutation.
 
 An unresolved internal Page reference renders non-interactive text; an unresolved Asset reference
 renders no media. Authoring receives a typed diagnostic containing the owner scope and source location.

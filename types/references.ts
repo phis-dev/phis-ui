@@ -11,6 +11,45 @@ export type PhiInternalReference =
   | { kind: "page"; reference: PhiPageReference; target: PhiPageTarget; fragment: string | null }
   | { kind: "asset"; assetId: number };
 
+/**
+ * Where a Control that offers one link leads.
+ *
+ * Two kinds and no third. A Page is named by its reference, which is identity and outlives the path
+ * moving under it; everything else is a literal URL somebody typed. What this refuses is the middle --
+ * the root-relative string that reads as external and means internal -- because that is the shape that
+ * rots in silence: the Page moves, the string does not, and nothing in the system ever knew the two were
+ * related. `REFERENCES.md`, "Stable internal targets", states the same refusal for navigation authoring;
+ * this is it as a type.
+ *
+ * `newTab` sits inside the target rather than beside it. A Widget that offers two links -- a Card with a
+ * heading and an action -- otherwise grows one flag per link and names them in parallel (`newTab`,
+ * `actionNewTab`, and a third the day a third link lands). That is one decision written twice, and it
+ * drifts the first time only one of the two is read.
+ */
+export type PhiLinkTarget =
+  | { kind: "page"; reference: PhiPageReference; fragment?: string | null; newTab?: boolean }
+  | { kind: "external"; href: string; newTab?: boolean };
+
+/**
+ * The field names a stored link target may stand under, and nothing else identifies one in persisted
+ * config.
+ *
+ * The Asset rule in `REFERENCES.md` is the precedent and the reason: the server's reference collector
+ * reads persisted JSON, not the Widget catalogue, so it cannot ask a plugin which of its fields hold
+ * targets. A Widget that keeps one under another name authors a reference the delete guard cannot see,
+ * and the Page it points at can be removed while the Widget still draws a link to it.
+ *
+ * One plain name for the single-link case and a suffix for the rest, so a Card's second link is
+ * `actionLinkTarget` and is found by the same rule that finds the first.
+ */
+export const PHI_LINK_TARGET_CONFIG_KEY = "linkTarget";
+const PHI_LINK_TARGET_CONFIG_KEY_SUFFIX = "LinkTarget";
+
+export function isPhiLinkTargetConfigKey(key: string) {
+  return key === PHI_LINK_TARGET_CONFIG_KEY
+    || (key.endsWith(PHI_LINK_TARGET_CONFIG_KEY_SUFFIX) && key.length > PHI_LINK_TARGET_CONFIG_KEY_SUFFIX.length);
+}
+
 type SerializedPageTarget =
   | { v: 1; k: "s"; i: number }
   | { v: 1; k: "m"; m: string; p: string };
@@ -108,6 +147,60 @@ export function createPhiAssetUri(assetId: number) {
     throw new Error("Phi Asset ids must be positive integers.");
   }
   return `${PHIS_INTERNAL_ASSET_SCHEME}${assetId}`;
+}
+
+/**
+ * Whether a string may be kept as an external target.
+ *
+ * Absolute, or an anchor on the document the reader already has. Everything else is refused, and the
+ * refusal is the whole point rather than strictness for its own sake: a stored `/pricing` is a Page link
+ * that has thrown its identity away, and one of them is enough to give the Site a second internal format
+ * -- one the resolver cannot resolve, the index cannot see, and the delete guard cannot warn about.
+ *
+ * This is deliberately not `isPhiExternalHref`. That one answers a rendering question about an href that
+ * already exists -- does this need a plain anchor rather than client navigation. This answers whether a
+ * value may be written down at all. Collapsing them would make every string that renders acceptably into
+ * a string the Site is allowed to keep, which is how the middle shape gets back in.
+ *
+ * The reserved scheme is rejected here in its plain form only. Normalising the encodings it can hide in
+ * belongs to the server's sanitizer, which sees the whole document; this is the near guard, so a target
+ * never carries an unresolved `phis:` URI in the field where a literal URL belongs.
+ */
+const PHI_STORABLE_EXTERNAL_HREF_PATTERN = /^(?:https?:\/\/|\/\/|mailto:|tel:|#)/iu;
+
+export function isPhiStorableExternalHref(value: string) {
+  const trimmed = value.trim();
+  return trimmed.length > 0
+    && !trimmed.toLowerCase().startsWith("phis:")
+    && PHI_STORABLE_EXTERNAL_HREF_PATTERN.test(trimmed);
+}
+
+/**
+ * A stored link target, read back under the contract rather than trusted.
+ *
+ * Anything that is not one of the two shapes answers `null`, and a Control that gets `null` draws no
+ * link at all. That is the same answer the contract gives for a Page reference that no longer resolves:
+ * non-interactive text beats a link that goes somewhere nobody chose.
+ */
+export function readPhiLinkTarget(value: unknown): PhiLinkTarget | null {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return null;
+  }
+  const record = value as Record<string, unknown>;
+  const newTab = record.newTab === true ? { newTab: true as const } : {};
+  if (record.kind === "page") {
+    const parsed = readPhiPageReference(record.reference);
+    if (!parsed) {
+      return null;
+    }
+    const fragment = typeof record.fragment === "string" ? record.fragment.replace(/^#/u, "").trim() : "";
+    return { kind: "page", reference: parsed.reference, ...(fragment ? { fragment } : {}), ...newTab };
+  }
+  if (record.kind === "external") {
+    const href = typeof record.href === "string" ? record.href.trim() : "";
+    return isPhiStorableExternalHref(href) ? { kind: "external", href, ...newTab } : null;
+  }
+  return null;
 }
 
 export function readPhiInternalReference(value: unknown): PhiInternalReference | null {
