@@ -19,6 +19,7 @@ import type { PhiCmsInstanceId } from "../../../../types/cms-instance-id";
 import { createPhiAssetUri, createPhiPageUri } from "../../../../types/references";
 import { PhiBuilderPageReferencePicker } from "../../../../plugins/runtime-modules/builder/page-reference-picker";
 import { usePhiAuthoringToolsLabels } from "./phi-authoring-tools-labels";
+import { resizePhiDescriptionItems } from "./description-items";
 import { PhiButtonControl } from "../../../controls/phi-button-control";
 import { PhiCheckboxControl } from "../../../controls/phi-checkbox-control";
 import { PhiNumberControl } from "../../../controls/phi-number-control";
@@ -632,6 +633,23 @@ export function PhiDescriptionWidgetItemsToolButton({
   const labels = usePhiAuthoringToolsLabels();
   const itemCount = Array.isArray(value) ? value.length : 0;
   const popup = usePhiWidgetScaffoldPopup();
+  /*
+   * What is being typed, apart from what is stored. The field reported every keystroke, and each one
+   * resized the list: typing "10" committed "1" first and dropped entries two onwards before the "0"
+   * arrived. The number is taken when the field is left or Enter is pressed.
+   */
+  const [draft, setDraft] = useState({ stored: itemCount, count: itemCount as number | null });
+  if (draft.stored !== itemCount) {
+    // A change from elsewhere -- an undo, another editor -- replaces what was being typed, adjusted
+    // during render so the field never shows the stale number for a frame.
+    setDraft({ stored: itemCount, count: itemCount });
+  }
+  const draftCount = draft.stored === itemCount ? draft.count : itemCount;
+  const setDraftCount = (count: number | null) => setDraft({ stored: itemCount, count });
+  const commit = () => {
+    if (draftCount === itemCount) return;
+    onChange(resizePhiDescriptionItems(value, draftCount));
+  };
 
   return (
     <PhiPopoverControl
@@ -654,13 +672,13 @@ export function PhiDescriptionWidgetItemsToolButton({
             min={0}
             max={12}
             precision={0}
-            value={itemCount}
-            onChange={(nextValue) => {
-              const nextCount = Math.max(0, Math.min(12, Math.trunc(nextValue ?? 0)));
-              const nextItems = Array.from({ length: nextCount }, (_, index) => value?.[index] ?? "");
-              onChange(nextItems);
+            value={draftCount}
+            onChange={setDraftCount}
+            onBlur={commit}
+            onKeyDown={(event) => {
+              stopOverlayEvent(event);
+              if (event.key === "Enter") commit();
             }}
-            onKeyDown={stopOverlayEvent}
           />
         </PhiFlexControl>
       }
