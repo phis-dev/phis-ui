@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { usePathname } from "next/navigation";
 
 import type { PhiCmsInstanceId } from "../../types/cms-instance-id";
 import { shouldPhiCmsContentStayMounted } from "../../types/cms-mount-policy";
@@ -115,6 +116,8 @@ export function PhiOverlayContainerClient({
     ? runtimeTitleOverride.value
     : config.title;
   const emittedOpenRef = useRef(false);
+  const openedAtPathname = useRef<string | null>(null);
+  const pathname = usePathname() ?? "/";
   const emitSignal = usePhiSignalEmitter(receiver);
   const listenRoutes = useMemo(() => config.signalRoutes?.listens ?? [], [config.signalRoutes?.listens]);
 
@@ -164,6 +167,37 @@ export function PhiOverlayContainerClient({
     emittedOpenRef.current = open;
     emitOpenChange(open);
   }, [emitOpenChange, open]);
+
+  /*
+   * An Overlay closes when the address underneath it changes.
+   *
+   * It was opened over a Page, and after a client navigation that Page is no longer there: the Login's
+   * own ways out -- "Create account", "Forgot password" -- left the modal standing over the very Page it
+   * had just sent the visitor to. An Area Overlay is mounted in the Shell and survives the navigation,
+   * so nothing else was going to take it down.
+   *
+   * Not a close request: by the time this runs the address has already changed, and there is nothing
+   * left for a Controller to decide about work that can no longer be finished here. The `openChange`
+   * route still carries the new state to whoever declared one.
+   *
+   * The address is remembered when the Overlay opens rather than compared against the previous render,
+   * because an Overlay opened *by* arriving somewhere -- a route that fires as the Page mounts -- would
+   * otherwise close itself in the same breath.
+   */
+  useEffect(() => {
+    if (!open) {
+      openedAtPathname.current = null;
+      return;
+    }
+    if (openedAtPathname.current == null) {
+      openedAtPathname.current = pathname;
+      return;
+    }
+    if (openedAtPathname.current !== pathname) {
+      openedAtPathname.current = null;
+      updateOpen(false);
+    }
+  }, [open, pathname, updateOpen]);
 
   usePhiSignalListener(useCallback((signal) => {
     if (signal.receiver !== receiver && signal.receiver !== "broadcast") return;
