@@ -171,6 +171,7 @@ first line (1-24) and `end` the line the element stops before (2-25).
 ```ts
 type PhiFormLayoutDescriptor = {
   gap?: { compact?: PhiSpacingToken; medium?: PhiSpacingToken; wide?: PhiSpacingToken };
+  columnGap?: { compact?: PhiSpacingToken; medium?: PhiSpacingToken; wide?: PhiSpacingToken };
   labelAlign?: "start" | "end";
   label?: PhiFormResponsiveGridRange;
   control?: PhiFormResponsiveGridRange;
@@ -197,8 +198,15 @@ type PhiFormFieldPlacementDescriptor = {
   stacked Form uses full-width ranges. `components/forms/form-descriptor-contract.ts` exports named
   ranges for the common cases (`PHI_FORM_ROW_START_HALF`, `PHI_FORM_STACKED_LAYOUT`, and others).
 - Fields are placed in declaration order; a field goes on the current row while its tracks are free.
-- `gap` uses the spacing tokens `none`, `xxs`, `xs`, `sm`, `base`, `md`, `lg`, `xl`, `xxl`. It is the only
-  spacing between fields.
+- `gap` uses the spacing tokens `none`, `xxs`, `xs`, `sm`, `base`, `md`, `lg`, `xl`, `xxl`. It is the
+  spacing between one row of fields and the next, and half of it is the gutter between a label and the
+  control beside it.
+- `columnGap` is the spacing across, between the two columns of a row that has two, from the same tokens.
+  Absent, it follows `gap` -- so two columns stand as far apart as two rows do, and twice as far apart as
+  a label from its own control. It is laid on the cell that opens a column (`phiFormCellOpensColumn`),
+  never on the first column, because the inset at the form's own edge belongs to the Layout it stands in.
+  The grid's `column-gap` stays 0 and has to: it would fall between a label and its control as readily as
+  between two fields.
 - Alignment is logical: in RTL the label stands on the right without a separate setting.
 - A descriptor has no padding, width, or maximum width. The Form fills its slot; padding and width limits
   belong to the containing Layout.

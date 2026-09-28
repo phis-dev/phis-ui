@@ -30,6 +30,7 @@ import {
   PHI_FORM_VALIDATION_PROVIDER_KEYS,
 } from "../forms/form-provider-contract";
 import {
+  phiFormCellOpensColumn,
   phiFormControlGridColumn,
   phiFormFieldFollowsLayoutColumns,
   phiFormLabelGridColumn,
@@ -300,6 +301,17 @@ export const PhiFormControl = forwardRef<PhiFormControlHandle, PhiFormControlPro
     medium: gapByToken[layout.gap.medium],
     wide: gapByToken[layout.gap.wide],
   } as const;
+  /*
+   * And the distance across, which is not the grid's `column-gap`: that one falls between every pair of
+   * adjacent elements, so it would push a label away from its own control by the amount that separates
+   * two fields. It is laid on the cell that opens a column instead (`phiFormCellOpensColumn`), so only
+   * the boundary between two columns pays it.
+   */
+  const columnGapByMode = {
+    compact: gapByToken[layout.columnGap.compact],
+    medium: gapByToken[layout.columnGap.medium],
+    wide: gapByToken[layout.columnGap.wide],
+  } as const;
   const resolvedInitialValues = useMemo(
     () => ({
       ...Object.fromEntries(descriptor.fields.flatMap((field) =>
@@ -455,6 +467,9 @@ export const PhiFormControl = forwardRef<PhiFormControlHandle, PhiFormControlPro
         "--phi-form-label-gutter-compact": `${Math.round(rowGapByMode.compact / 2)}px`,
         "--phi-form-label-gutter-medium": `${Math.round(rowGapByMode.medium / 2)}px`,
         "--phi-form-label-gutter-wide": `${Math.round(rowGapByMode.wide / 2)}px`,
+        "--phi-form-column-gutter-compact": `${columnGapByMode.compact}px`,
+        "--phi-form-column-gutter-medium": `${columnGapByMode.medium}px`,
+        "--phi-form-column-gutter-wide": `${columnGapByMode.wide}px`,
         "--phi-form-label-min-height": `${token.controlHeight}px`,
       } as CSSProperties}
       onValuesChange={(changedValues, allValues) => {
@@ -511,6 +526,10 @@ export const PhiFormControl = forwardRef<PhiFormControlHandle, PhiFormControlPro
               [`--phi-form-label-pad-${mode}`, placed.stacked
                 ? "0px"
                 : `var(--phi-form-label-gutter-${mode})`],
+              [`--phi-form-cell-lead-${mode}`,
+                phiFormCellOpensColumn(range, part === "label" ? placed.control : placed.label)
+                  ? `var(--phi-form-column-gutter-${mode})`
+                  : "0px"],
             ];
           }),
         ) as CSSProperties;

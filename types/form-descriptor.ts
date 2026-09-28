@@ -75,6 +75,21 @@ export type PhiFormLogicalAlignment = "start" | "center" | "end";
  */
 export type PhiFormLayoutDescriptor = {
   gap?: PhiResponsiveValue<PhiSpacingToken>;
+  /**
+   * What stands between two columns of a row, where a row has two.
+   *
+   * The grid's own `column-gap` cannot say this: it would fall between every pair of adjacent elements,
+   * so a label beside its control would be pushed away from it by the same amount that separates one
+   * field from the next -- and that distance is already said, per cell, as the label's own gutter. This
+   * is the other distance, and it is laid on the cell that opens a column: a field placed at 13-25 is
+   * moved off the field placed at 1-13, and one placed at 1-13 is not moved at all.
+   *
+   * Absent, it follows `gap`: the space between two fields side by side is the space between two fields
+   * one above the other, which is the reading that needs no second number. A row's two columns are then
+   * further apart than a label is from its own control, which is half of it -- the hierarchy a
+   * two-column form needs to read as two columns.
+   */
+  columnGap?: PhiResponsiveValue<PhiSpacingToken>;
   labelAlign?: Exclude<PhiFormLogicalAlignment, "center">;
   label?: PhiFormResponsiveGridRange;
   control?: PhiFormResponsiveGridRange;

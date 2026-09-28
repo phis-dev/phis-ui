@@ -279,10 +279,19 @@
   min-width: 0;
 }
 
+/*
+ * `padding-inline-start` rather than the grid's `column-gap`, and with a fallback of nothing.
+ *
+ * The gap between two columns of a row is not the gap between a label and its own control, and a
+ * `column-gap` cannot tell them apart -- it falls on every boundary between adjacent elements. So the
+ * Form Layout marks the one cell that opens a column and only that cell is moved. The fallback is for
+ * the cells that are not in a form's row at all, the actions row below it, which writes none of these.
+ */
 .phi-form-cell {
   grid-row: var(--phi-form-cell-row-compact);
   grid-column: var(--phi-form-cell-columns-compact);
   margin-block-end: var(--phi-form-cell-gap-compact);
+  padding-inline-start: var(--phi-form-cell-lead-compact, 0px);
   min-width: 0;
 }
 
@@ -320,6 +329,7 @@
     grid-row: var(--phi-form-cell-row-medium);
     grid-column: var(--phi-form-cell-columns-medium);
     margin-block-end: var(--phi-form-cell-gap-medium);
+    padding-inline-start: var(--phi-form-cell-lead-medium, 0px);
   }
 
   .phi-form-cell--label {
@@ -337,6 +347,7 @@
     grid-row: var(--phi-form-cell-row-wide);
     grid-column: var(--phi-form-cell-columns-wide);
     margin-block-end: var(--phi-form-cell-gap-wide);
+    padding-inline-start: var(--phi-form-cell-lead-wide, 0px);
   }
 
   .phi-form-cell--label {

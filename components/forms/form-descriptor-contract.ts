@@ -283,6 +283,7 @@ export function parsePhiFormDescriptor(value: unknown): PhiFormDescriptor {
     : isRecord(value.layout)
       ? {
           gap: readResponsiveGap(value.layout.gap, "layout.gap"),
+          columnGap: readResponsiveGap(value.layout.columnGap, "layout.columnGap"),
           labelAlign: value.layout.labelAlign == null
             ? undefined
             : value.layout.labelAlign === "start" || value.layout.labelAlign === "end"
@@ -493,6 +494,11 @@ export type PhiResolvedFormLayout = {
     medium: PhiSpacingToken;
     wide: PhiSpacingToken;
   };
+  columnGap: {
+    compact: PhiSpacingToken;
+    medium: PhiSpacingToken;
+    wide: PhiSpacingToken;
+  };
   labelAlign: "start" | "end";
   label: PhiResolvedFormResponsiveGridRange;
   control: PhiResolvedFormResponsiveGridRange;
@@ -577,8 +583,14 @@ export function resolvePhiFormResponsiveGridRange(
 export function resolvePhiFormLayout(
   layout?: PhiFormLayoutDescriptor,
 ): PhiResolvedFormLayout {
+  const gap = resolvePhiResponsiveValue(layout?.gap, PHI_FORM_DEFAULT_LAYOUT.gap);
   return {
-    gap: resolvePhiResponsiveValue(layout?.gap, PHI_FORM_DEFAULT_LAYOUT.gap),
+    gap,
+    /*
+     * The row gap answers for the column gap where nobody stated one, so the default is the number the
+     * form already carries rather than a second constant that could drift away from it.
+     */
+    columnGap: resolvePhiResponsiveValue(layout?.columnGap, gap),
     labelAlign: layout?.labelAlign ?? PHI_FORM_DEFAULT_LAYOUT.labelAlign,
     label: resolvePhiFormResponsiveGridRange(
       layout?.label,
@@ -733,6 +745,22 @@ export function phiFormFieldFollowsLayoutColumns(input: {
     input.placement?.control == null &&
     input.label.start === 1 &&
     input.control.end === PHI_FORM_GRID_LAST_LINE;
+}
+
+/**
+ * Whether this cell is the one that opens a column, and so the one the column gap is laid on.
+ *
+ * The question is asked per cell because the grid cannot answer it: `column-gap` would fall between a
+ * label and its own control as readily as between two fields, and those two distances are not the same
+ * one. A cell opens a column when it begins after the row's first line and no other part of its own
+ * field begins earlier -- so the label of a field placed at 13-25 opens one, its control at 17-25 does
+ * not, and a field stacked in that column opens one with both of its parts, because both begin at 13.
+ *
+ * A field that starts the row is never moved: there the inset belongs to whatever box the form stands
+ * in, and moving the first column would take the form off its own left edge.
+ */
+export function phiFormCellOpensColumn(range: PhiFormGridRange, sibling: PhiFormGridRange) {
+  return range.start > 1 && range.start <= sibling.start;
 }
 
 /**
