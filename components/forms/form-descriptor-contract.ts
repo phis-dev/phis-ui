@@ -696,6 +696,15 @@ export function resolvePhiFormGridPlacement(
 ) {
   const placements = new Map<string, {
     label: PhiFormGridRange;
+    /**
+     * The label tracks the layout reserves for this field, whether a label is drawn there or not.
+     *
+     * `label` is the control's range for a field without one, which is right for everything that asks
+     * where cells stand and wrong for the one question of where the field begins: a consent checkbox in
+     * the control column of a two-column form starts at the label's line like its neighbours, and
+     * measured against its own control it looked like a field opening a second column.
+     */
+    labelSlot: PhiFormGridRange;
     control: PhiFormGridRange;
     stacked: boolean;
     labelRow: number;
@@ -718,7 +727,9 @@ export function resolvePhiFormGridPlacement(
     const label = field.hasLabel ? ranges.label : control;
     const stacked = field.hasLabel && ranges.stacked;
     if (!field.inFlow) {
-      placements.set(field.key, { label, control, stacked, labelRow: rowStart, controlRow: rowStart });
+      placements.set(field.key, {
+        label, labelSlot: ranges.label, control, stacked, labelRow: rowStart, controlRow: rowStart,
+      });
       continue;
     }
 
@@ -731,7 +742,9 @@ export function resolvePhiFormGridPlacement(
 
     const controlRow = stacked ? rowStart + 1 : rowStart;
     lastRow = Math.max(lastRow, controlRow);
-    placements.set(field.key, { label, control, stacked, labelRow: rowStart, controlRow });
+    placements.set(field.key, {
+      label, labelSlot: ranges.label, control, stacked, labelRow: rowStart, controlRow,
+    });
   }
 
   return { placements, nextRow: lastRow + 1 };

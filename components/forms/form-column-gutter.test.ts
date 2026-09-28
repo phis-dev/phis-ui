@@ -6,6 +6,7 @@ import {
   PHI_FORM_STACKED_END_HALF,
   PHI_FORM_STACKED_FULL,
   phiFormCellOpensColumn,
+  resolvePhiFormGridPlacement,
   resolvePhiFormLayout,
 } from "./form-descriptor-contract";
 
@@ -73,5 +74,30 @@ describe("how wide that gap is", () => {
 
     expect(layout.columnGap).toEqual({ compact: "none", medium: "lg", wide: "xl" });
     expect(layout.gap).toEqual({ compact: "sm", medium: "base", wide: "base" });
+  });
+});
+
+describe("a field that draws no label", () => {
+  // Measured against the label slot the layout reserves: against its own control, which is what the
+  // drawn `label` of such a field is, every control past the first line looked like it opened a column.
+  function opensColumn(placement?: typeof PHI_FORM_SIDE_END_HALF | typeof PHI_FORM_STACKED_END_HALF) {
+    const layout = resolvePhiFormLayout(undefined);
+    const placed = resolvePhiFormGridPlacement(layout, [
+      { key: "email", inFlow: true, hasLabel: true },
+      { key: "consent", inFlow: true, hasLabel: false, placement },
+    ], "medium").placements.get("consent")!;
+    return phiFormCellOpensColumn(placed.control, placed.labelSlot);
+  }
+
+  it("stays in line with its labelled neighbours instead of taking the column gutter", () => {
+    expect(opensColumn()).toBe(false);
+  });
+
+  it("takes no gutter beside an empty label cell in the second column either", () => {
+    expect(opensColumn(PHI_FORM_SIDE_END_HALF)).toBe(false);
+  });
+
+  it("still opens the second column where its control begins it", () => {
+    expect(opensColumn(PHI_FORM_STACKED_END_HALF)).toBe(true);
   });
 });

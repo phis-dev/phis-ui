@@ -527,7 +527,7 @@ export const PhiFormControl = forwardRef<PhiFormControlHandle, PhiFormControlPro
                 ? "0px"
                 : `var(--phi-form-label-gutter-${mode})`],
               [`--phi-form-cell-lead-${mode}`,
-                phiFormCellOpensColumn(range, part === "label" ? placed.control : placed.label)
+                phiFormCellOpensColumn(range, part === "label" ? placed.control : placed.labelSlot)
                   ? `var(--phi-form-column-gutter-${mode})`
                   : "0px"],
             ];
