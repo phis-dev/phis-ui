@@ -389,6 +389,18 @@ export async function buildPhiBuilderInspectorAreaOverlayTree({
           config: {
             formId: PHI_BUILDER_EFFECTS_FORM_IDS[section],
             formConfig: {},
+            /*
+             * The Form takes the width of the Modal, because the Modal already chose one.
+             *
+             * Unstated, the parser answers with the house measure `PHI_LAYOUT.contentMax` -- 610, the
+             * width a labelled form wants where it stands on a page and the page is wider than any form
+             * should be. A `medium` Modal leaves 688 inside the body's `base` padding, so that cap left
+             * 78 over, and the Stack's centred anchor split it into 39 of empty ground on either side:
+             * the fields stood 55 from the sides and 16 from the top, which reads as a padding nobody
+             * wrote. Here the placement is the answer the cap is for -- a box whose width is already the
+             * decision -- so the Form really does take its slot.
+             */
+            maxFormWidth: "100%",
             execution: { mode: "signal" },
             source: null,
             signalRoutes: {
@@ -444,6 +456,10 @@ export async function buildPhiBuilderInspectorAreaOverlayTree({
         config: {
           formId: PHI_BUILDER_SIGNAL_WIRING_FORM_ID,
           formConfig: {},
+          // The same answer the Effects Forms give, for the same reason: this Modal is `medium` too, so
+          // the house cap of 610 would leave 78 of its 688 over and the fields would sit 55 from the
+          // sides against 16 from the top.
+          maxFormWidth: "100%",
           execution: { mode: "signal" },
           source: null,
           signalRoutes: {
