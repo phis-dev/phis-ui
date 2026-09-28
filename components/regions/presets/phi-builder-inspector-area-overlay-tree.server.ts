@@ -21,6 +21,7 @@ import {
 import { PHI_BUILDER_EFFECTS_SECTIONS } from "../../../plugins/runtime-modules/builder/effects-form-values";
 import { PHI_BUILDER_EFFECTS_FORM_IDS } from "../../../plugins/runtime-modules/builder/page-meta-form";
 import { PHI_BUILDER_SIGNAL_WIRING_FORM_ID } from "../../../plugins/runtime-modules/builder/signal-wiring-form";
+import { getPhiEffectsWidgetLabels } from "../../widgets/label-sets/effects";
 import { getPhiInspectorWidgetLabels } from "../../widgets/label-sets/inspector";
 import { getPhiSignalsWidgetLabels } from "../../widgets/label-sets/signals";
 import type { PhiInspectorWidgetLabels } from "../../widgets/label-types/inspector";
@@ -86,9 +87,10 @@ export async function buildPhiBuilderInspectorAreaOverlayTree({
     internalToken: readPhiServerApiCredentials().internalToken,
     locale: runtime.locale.current,
   };
-  const [inspectorLabels, signalsLabels] = await Promise.all([
+  const [inspectorLabels, signalsLabels, effectsLabels] = await Promise.all([
     getPhiInspectorWidgetLabels(labelOptions),
     getPhiSignalsWidgetLabels(labelOptions),
+    getPhiEffectsWidgetLabels(labelOptions),
   ]);
 
   const nodes = createPhiCmsPresetNodes(page);
@@ -145,7 +147,7 @@ export async function buildPhiBuilderInspectorAreaOverlayTree({
         sortOrder: 10,
         label: "Builder effects",
         config: {
-          title: "Effects",
+          title: effectsLabels.modalTitle,
           controlSize: "medium",
           mountPolicy: "eager",
           closeMode: "request",
@@ -267,7 +269,24 @@ export async function buildPhiBuilderInspectorAreaOverlayTree({
         slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
         sortOrder: 0,
         label: "Builder effects body",
-        config: { mountPolicy: "eager", slotTransition: "fade-over", defaultActiveSlotKey: "slot_0", padding: PHI_SPACE.base, background: PHI_COLOR.bgLayout, border: "none" },
+        config: {
+          mountPolicy: "eager",
+          slotTransition: "fade-over",
+          defaultActiveSlotKey: "slot_0",
+          padding: PHI_SPACE.base,
+          background: PHI_COLOR.bgLayout,
+          border: "none",
+          /*
+           * In the order of `PHI_BUILDER_EFFECTS_SECTIONS`, which is the order the Forms are placed in
+           * below. The tab bar above reads these through `stackMeta`; without them it fell back to each
+           * child node's own label, which is what somebody called the node and not a caption of ours.
+           */
+          slotTitles: [
+            effectsLabels.sections.transparency,
+            effectsLabels.sections.transitions,
+            effectsLabels.sections.viewportEffects,
+          ],
+        },
       }),
       nodes.layout({
         creationPreset: { layoutKind: "flex", preset: "overlay-actions" },
@@ -424,13 +443,17 @@ export async function buildPhiBuilderInspectorAreaOverlayTree({
         label: "Builder effects commands",
         config: {
           key: "builder-effects-commands",
-          compact: false,
-          wrap: true,
+          /*
+           * The two buttons as one group, the way the Area settings footer states it: they are the two
+           * ends of a single decision, and a gap between them reads as two unrelated offers. Wrapping
+           * follows from that and is not stated -- a compact group does not wrap.
+           */
+          compact: true,
           showLabels: true,
           controlSize: "medium",
           buttons: [
-            { key: "cancel", emits: [{ capabilityId: "command", value: "cancel" }], actionKey: "cancel", buttonType: "default" },
-            { key: "save", emits: [{ capabilityId: "command", value: "save" }], actionKey: "save", buttonType: "primary" },
+            { key: "cancel", emits: [{ capabilityId: "command", value: "cancel" }], actionKey: "cancel", label: effectsLabels.cancel, buttonType: "default" },
+            { key: "save", emits: [{ capabilityId: "command", value: "save" }], actionKey: "save", label: effectsLabels.save, buttonType: "primary" },
           ],
           signalRoutes: {
             emits: [{ routeKey: "builder-effects-command", capabilityId: "command", scope: "area", channel: "effects", action: "activate", valueType: "string", receiver: createPhiBuilderControllerAddress() }],
@@ -550,8 +573,12 @@ export async function buildPhiBuilderInspectorAreaOverlayTree({
         label: "Builder signal wiring commands",
         config: {
           key: "builder-signal-wiring-commands",
-          compact: false,
-          wrap: true,
+          /*
+           * The two buttons as one group, the way the Area settings footer states it: they are the two
+           * ends of a single decision, and a gap between them reads as two unrelated offers. Wrapping
+           * follows from that and is not stated -- a compact group does not wrap.
+           */
+          compact: true,
           showLabels: true,
           controlSize: "medium",
           buttons: [

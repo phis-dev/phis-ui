@@ -21,6 +21,8 @@ const PHI_EFFECTS_WIDGET_LABEL_SET = definePhiLabelSet({
     section_transparency: PHI_EFFECTS_WIDGET_DEFAULT_LABELS.sections.transparency,
     section_transitions: PHI_EFFECTS_WIDGET_DEFAULT_LABELS.sections.transitions,
     section_viewport_effects: PHI_EFFECTS_WIDGET_DEFAULT_LABELS.sections.viewportEffects,
+    description_transitions: definePhiMessageLabel(PHI_EFFECTS_WIDGET_DEFAULT_LABELS.descriptions.transitions),
+    description_viewport_effects: definePhiMessageLabel(PHI_EFFECTS_WIDGET_DEFAULT_LABELS.descriptions.viewportEffects),
     status_off: PHI_EFFECTS_WIDGET_DEFAULT_LABELS.status.off,
     status_configured: PHI_EFFECTS_WIDGET_DEFAULT_LABELS.status.configured,
     status_configured_plural: PHI_EFFECTS_WIDGET_DEFAULT_LABELS.status.configuredPlural,
@@ -114,6 +116,10 @@ export async function getPhiEffectsWidgetLabels(options: PhiGlobalTranslatorOpti
       transparency: labels.section_transparency,
       transitions: labels.section_transitions,
       viewportEffects: labels.section_viewport_effects,
+    },
+    descriptions: {
+      transitions: labels.description_transitions,
+      viewportEffects: labels.description_viewport_effects,
     },
     status: {
       off: labels.status_off,

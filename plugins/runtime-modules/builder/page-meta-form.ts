@@ -15,6 +15,7 @@ import { readPhiServerApiCredentials } from "../../../helpers/phis-server-creden
 
 export const PHI_BUILDER_PAGE_META_FORM_ID = createPhiFormId(PHI_SHARED_PACKAGE_NAME, "builder/page-meta");
 const PHI_BUILDER_PAGE_META_FORM_LABEL_SET_KEY = "@phis/ui/modules/builder/labels/page-meta" as const;
+const PHI_BUILDER_EFFECTS_FORM_LABEL_SET_KEY = "@phis/ui/modules/builder/labels/effects" as const;
 export const PHI_BUILDER_EFFECTS_FORM_IDS = {
   appearance: createPhiFormId(PHI_SHARED_PACKAGE_NAME, "builder/effects/appearance"),
   transitions: createPhiFormId(PHI_SHARED_PACKAGE_NAME, "builder/effects/transitions"),
@@ -23,25 +24,96 @@ export const PHI_BUILDER_EFFECTS_FORM_IDS = {
 const literal = (value: string) => ({ kind: "literal", value } as const);
 const label = (key: string, fallback: string) => ({ kind: "label", key, fallback } as const);
 const option = (value: string, label = value) => ({ value, label: literal(label) });
+/*
+ * An option whose caption comes from the Effects label set, named by the path it has there.
+ *
+ * `flattenPhiFormLabels` flattens that set to exactly these dotted paths, so the key here and the
+ * property there are one lookup. The fallback is the set's own English, written out the way every other
+ * descriptor in this house writes one.
+ */
+const labelledOption = <TValue extends string>(value: TValue, key: string, fallback: string) => (
+  { value, label: label(key, fallback) }
+);
+/*
+ * The plain string a compound editor needs for the same option.
+ *
+ * A table cell's enum editor takes its captions as strings in `config`, not as text descriptors, so it
+ * cannot be translated the way a field label is -- it gets the fallback. See `compoundEditor` below.
+ */
+const optionText = (entry: { label: ReturnType<typeof literal> | ReturnType<typeof label> }) =>
+  entry.label.kind === "literal" ? entry.label.value : entry.label.fallback;
 
-const transitionTypeOptions = ["fade", "slide", "flip", "rotate", "scale"].map((value) => option(value));
-const transitionModeOptions = ["in", "out"].map((value) => option(value));
-const transitionTriggerOptions = [
-  option("on_mount", "On mount"),
-  option("on_ready", "On ready"),
-  option("on_visible", "On visible"),
-  option("on_hover", "On hover"),
-  option("on_focus", "On focus"),
-  option("manual", "Manual"),
+const transitionTypeOptions = [
+  labelledOption("fade", "transitions.fade", "Fade"),
+  labelledOption("slide", "transitions.slide", "Slide"),
+  labelledOption("flip", "transitions.flip", "Flip"),
+  labelledOption("rotate", "transitions.rotate", "Rotate"),
+  labelledOption("scale", "transitions.scale", "Scale"),
 ];
-const transitionDirectionOptions = ["top", "top-right", "right", "bottom-right", "bottom", "bottom-left", "left", "top-left"].map((value) => option(value));
+const transitionModeOptions = [
+  labelledOption("in", "transitions.in", "In"),
+  labelledOption("out", "transitions.out", "Out"),
+];
+const transitionTriggerOptions = [
+  labelledOption("on_mount", "transitions.onMount", "On mount"),
+  labelledOption("on_ready", "transitions.onReady", "On ready"),
+  labelledOption("on_visible", "transitions.onVisible", "On visible"),
+  labelledOption("on_hover", "transitions.onHover", "On hover"),
+  labelledOption("on_focus", "transitions.onFocus", "On focus"),
+  labelledOption("manual", "transitions.manual", "Manual"),
+];
+const transitionDirectionOptions = [
+  labelledOption("top", "directions.top", "Top"),
+  labelledOption("top-right", "directions.topRight", "Top right"),
+  labelledOption("right", "directions.right", "Right"),
+  labelledOption("bottom-right", "directions.bottomRight", "Bottom right"),
+  labelledOption("bottom", "directions.bottom", "Bottom"),
+  labelledOption("bottom-left", "directions.bottomLeft", "Bottom left"),
+  labelledOption("left", "directions.left", "Left"),
+  labelledOption("top-left", "directions.topLeft", "Top left"),
+];
+/* An axis is named x, y and z in every language, so these three stay the letters they are. */
 const transitionAxisOptions = ["x", "y", "z"].map((value) => option(value));
-const transitionOriginOptions = ["top left", "top center", "top right", "center left", "center", "center right", "bottom left", "bottom center", "bottom right"].map((value) => option(value));
-const easingOptions = PHI_MOTION_EASINGS.map((value) => option(value));
-const viewportPropertyOptions = ["translate", "opacity", "rotate", "scale"].map((value) => option(value));
-const viewportAxisOptions = ["x", "y"].map((value) => option(value));
-const viewportUnitOptions = [option("px"), option("%"), option("deg"), option("unitless", "none")];
-const viewportRangeOptions = ["enter", "center", "exit"].map((value) => option(value));
+const transitionOriginOptions = [
+  labelledOption("top left", "origins.topLeft", "Top left"),
+  labelledOption("top center", "origins.topCenter", "Top center"),
+  labelledOption("top right", "origins.topRight", "Top right"),
+  labelledOption("center left", "origins.centerLeft", "Center left"),
+  labelledOption("center", "origins.center", "Center"),
+  labelledOption("center right", "origins.centerRight", "Center right"),
+  labelledOption("bottom left", "origins.bottomLeft", "Bottom left"),
+  labelledOption("bottom center", "origins.bottomCenter", "Bottom center"),
+  labelledOption("bottom right", "origins.bottomRight", "Bottom right"),
+];
+const easingOptions = [
+  labelledOption("linear", "easing.linear", "Linear"),
+  labelledOption("ease", "easing.ease", "Ease"),
+  labelledOption("ease-in", "easing.easeIn", "Ease in"),
+  labelledOption("ease-out", "easing.easeOut", "Ease out"),
+  labelledOption("ease-in-out", "easing.easeInOut", "Ease in out"),
+] satisfies readonly { value: (typeof PHI_MOTION_EASINGS)[number] }[];
+const viewportPropertyOptions = [
+  labelledOption("translate", "viewport.translate", "Translate"),
+  labelledOption("opacity", "viewport.opacity", "Opacity"),
+  labelledOption("rotate", "viewport.rotate", "Rotate"),
+  labelledOption("scale", "viewport.scale", "Scale"),
+];
+const viewportAxisOptions = [
+  labelledOption("x", "viewport.x", "X"),
+  labelledOption("y", "viewport.y", "Y"),
+];
+/* px, % and deg are the units themselves; only "no unit" is a word. */
+const viewportUnitOptions = [
+  option("px"),
+  option("%"),
+  option("deg"),
+  labelledOption("unitless", "viewport.unitNone", "none"),
+];
+const viewportRangeOptions = [
+  labelledOption("enter", "viewport.enter", "Enter"),
+  labelledOption("center", "viewport.center", "Center"),
+  labelledOption("exit", "viewport.exit", "Exit"),
+];
 const formEquals = (valuePath: string, value: string) => ({
   source: "form",
   valuePath,
@@ -61,12 +133,12 @@ const fullWidthPlacement = PHI_FORM_STACKED_FULL;
 
 const compoundEditor = (
   type: "number" | "boolean" | "enum",
-  options?: readonly { value: string; label: ReturnType<typeof literal> }[],
+  options?: readonly { value: string; label: ReturnType<typeof literal> | ReturnType<typeof label> }[],
   constraints?: Record<string, number>,
 ) => ({
   type,
   ...(type === "boolean" ? { control: "checkbox" } : {}),
-  ...(options ? { options: options.map((entry) => ({ value: entry.value, label: entry.label.value })) } : {}),
+  ...(options ? { options: options.map((entry) => ({ value: entry.value, label: optionText(entry) })) } : {}),
   ...(constraints ? { constraints } : {}),
 });
 
@@ -92,10 +164,11 @@ const effectsDescriptors = {
   appearance: {
     schemaVersion: 1,
     key: PHI_BUILDER_EFFECTS_FORM_IDS.appearance,
+    labelSetKey: PHI_BUILDER_EFFECTS_FORM_LABEL_SET_KEY,
     fields: phiFormFlowHalfColumns([{
       key: "transparency",
       fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.slider,
-      label: literal("Amount"),
+      label: label("fields.amount", "Amount"),
       initialValue: 0,
       config: { min: 0, max: 100, step: 1, precision: 0, tooltipSuffix: "%", showInput: true },
       placement: fullWidthPlacement,
@@ -105,38 +178,39 @@ const effectsDescriptors = {
   transitions: {
     schemaVersion: 1,
     key: PHI_BUILDER_EFFECTS_FORM_IDS.transitions,
+    labelSetKey: PHI_BUILDER_EFFECTS_FORM_LABEL_SET_KEY,
     fields: phiFormFlowHalfColumns([
       {
         key: "transitionTrigger",
         fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.select,
-        label: literal("Trigger"),
+        label: label("fields.trigger", "Trigger"),
         initialValue: "on_mount",
         options: transitionTriggerOptions,
       },
       {
         key: "transitionOnce",
         fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.switch,
-        label: literal("Once"),
+        label: label("fields.once", "Once"),
         initialValue: true,
       },
       {
         key: "transitionType",
         fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.select,
-        label: literal("Type"),
+        label: label("fields.type", "Type"),
         initialValue: "fade",
         options: transitionTypeOptions,
       },
       {
         key: "transitionMode",
         fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.select,
-        label: literal("Mode"),
+        label: label("fields.mode", "Mode"),
         initialValue: "in",
         options: transitionModeOptions,
       },
       {
         key: "transitionDirection",
         fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.select,
-        label: literal("Direction"),
+        label: label("fields.direction", "Direction"),
         initialValue: "bottom",
         options: transitionDirectionOptions,
         visibleWhen: formEquals("transitionType", "slide"),
@@ -144,7 +218,7 @@ const effectsDescriptors = {
       {
         key: "transitionDistance",
         fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.number,
-        label: literal("Distance"),
+        label: label("fields.distance", "Distance"),
         initialValue: 200,
         config: { min: 0 },
         visibleWhen: formEquals("transitionType", "slide"),
@@ -152,7 +226,7 @@ const effectsDescriptors = {
       {
         key: "transitionAxis",
         fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.select,
-        label: literal("Axis"),
+        label: label("fields.axis", "Axis"),
         initialValue: "z",
         options: transitionAxisOptions,
         visibleWhen: formAny("transitionType", ["flip", "rotate"]),
@@ -160,14 +234,14 @@ const effectsDescriptors = {
       {
         key: "transitionAngleDeg",
         fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.number,
-        label: literal("Angle"),
+        label: label("fields.angle", "Angle"),
         initialValue: 90,
         visibleWhen: formAny("transitionType", ["flip", "rotate"]),
       },
       {
         key: "transitionScale",
         fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.number,
-        label: literal("Scale"),
+        label: label("fields.scale", "Scale"),
         initialValue: 0.96,
         config: { min: 0, max: 10, step: 0.01, precision: 2 },
         visibleWhen: formEquals("transitionType", "scale"),
@@ -175,7 +249,7 @@ const effectsDescriptors = {
       {
         key: "transitionOrigin",
         fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.select,
-        label: literal("Origin"),
+        label: label("fields.origin", "Origin"),
         initialValue: "center",
         options: transitionOriginOptions,
         visibleWhen: formAny("transitionType", ["flip", "rotate", "scale"]),
@@ -183,7 +257,7 @@ const effectsDescriptors = {
       {
         key: "transitionPerspectivePx",
         fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.number,
-        label: literal("Perspective"),
+        label: label("fields.perspective", "Perspective"),
         initialValue: 800,
         config: { min: 0 },
         visibleWhen: formAny("transitionType", ["flip", "rotate"]),
@@ -191,29 +265,29 @@ const effectsDescriptors = {
       {
         key: "transitionDurationMs",
         fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.number,
-        label: literal("Duration"),
+        label: label("fields.duration", "Duration"),
         initialValue: 1000,
         config: { min: 0, max: 10000, precision: 0, step: PHI_SEQUENCE_TRANSITION_STEP_MS, prefix: "ms" },
       },
       {
         key: "transitionDelayMs",
         fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.number,
-        label: literal("Delay"),
+        label: label("fields.delay", "Delay"),
         initialValue: 0,
         config: { min: 0, max: 10000, precision: 0, step: PHI_SEQUENCE_TRANSITION_STEP_MS, prefix: "ms" },
       },
       {
         key: "transitionEasing",
         fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.select,
-        label: literal("Easing"),
+        label: label("fields.easing", "Easing"),
         initialValue: "ease-out",
         options: easingOptions,
       },
       {
         key: "transitions",
         fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.table,
-        label: literal("Transitions"),
-        description: literal("Ordered transition steps applied by the selected trigger."),
+        label: label("sections.transitions", "Transitions"),
+        description: label("descriptions.transitions", "Ordered transition steps applied by the selected trigger."),
         initialValue: [],
         placement: fullWidthPlacement,
         config: {
@@ -278,72 +352,73 @@ const effectsDescriptors = {
   viewport: {
     schemaVersion: 1,
     key: PHI_BUILDER_EFFECTS_FORM_IDS.viewport,
+    labelSetKey: PHI_BUILDER_EFFECTS_FORM_LABEL_SET_KEY,
     fields: phiFormFlowHalfColumns([
       {
         key: "viewportProperty",
         fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.select,
-        label: literal("Property"),
+        label: label("fields.property", "Property"),
         initialValue: "translate",
         options: viewportPropertyOptions,
       },
       {
         key: "viewportAxis",
         fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.select,
-        label: literal("Axis"),
+        label: label("fields.axis", "Axis"),
         initialValue: "y",
         options: viewportAxisOptions,
       },
       {
         key: "viewportFrom",
         fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.number,
-        label: literal("From"),
+        label: label("fields.from", "From"),
         initialValue: 0,
       },
       {
         key: "viewportTo",
         fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.number,
-        label: literal("To"),
+        label: label("fields.to", "To"),
         initialValue: 200,
       },
       {
         key: "viewportUnit",
         fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.select,
-        label: literal("Unit"),
+        label: label("fields.unit", "Unit"),
         initialValue: "px",
         options: viewportUnitOptions,
       },
       {
         key: "viewportRangeStart",
         fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.select,
-        label: literal("Range start"),
+        label: label("fields.rangeStart", "Range start"),
         initialValue: "enter",
         options: viewportRangeOptions,
       },
       {
         key: "viewportRangeEnd",
         fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.select,
-        label: literal("Range end"),
+        label: label("fields.rangeEnd", "Range end"),
         initialValue: "exit",
         options: viewportRangeOptions,
       },
       {
         key: "viewportEasing",
         fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.select,
-        label: literal("Easing"),
+        label: label("fields.easing", "Easing"),
         initialValue: "linear",
         options: easingOptions,
       },
       {
         key: "viewportClamp",
         fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.switch,
-        label: literal("Clamp"),
+        label: label("fields.clamp", "Clamp"),
         initialValue: true,
       },
       {
         key: "viewportEffects",
         fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.table,
-        label: literal("Viewport effects"),
-        description: literal("Effects driven by the element position within the viewport."),
+        label: label("sections.viewportEffects", "Viewport Effects"),
+        description: label("descriptions.viewportEffects", "Effects driven by the element position within the viewport."),
         initialValue: [],
         placement: fullWidthPlacement,
         config: {
@@ -495,6 +570,26 @@ export const PHI_BUILDER_PAGE_META_FORM = definePhiRuntimeModuleForm({
   previewUpstreamPath: null,
 });
 
+/*
+ * The Effects Widget's label set, flattened to the paths its descriptors name.
+ *
+ * The set existed all along -- it is what the Widget's own tool button and the Builder scaffold read --
+ * and only the three Forms in the Effects Modal had never been hooked to it, so every caption in them
+ * was the English written into the descriptor. Imported here rather than at the top of the file because
+ * the set is `server-only` and this file is reached from the client too.
+ */
+const loadPhiBuilderEffectsFormLabels: PhiFormLabelSetLoader = async ({ runtime }) => {
+  const [{ flattenPhiFormLabels }, { getPhiEffectsWidgetLabels }] = await Promise.all([
+    import("../../../components/forms/form-labels"),
+    import("../../../components/widgets/label-sets/effects"),
+  ]);
+  return flattenPhiFormLabels(await getPhiEffectsWidgetLabels({
+    apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
+    internalToken: readPhiServerApiCredentials().internalToken,
+    locale: runtime.locale.current,
+  }));
+};
+
 export const PHI_BUILDER_EFFECTS_FORMS = PHI_BUILDER_EFFECTS_SECTIONS.map(
   (section) => definePhiRuntimeModuleForm({
     ownerModuleId: PHI_BUILDER_RUNTIME_MODULE_ID,
@@ -507,6 +602,7 @@ export const PHI_BUILDER_EFFECTS_FORMS = PHI_BUILDER_EFFECTS_SECTIONS.map(
     category: "forms",
     tags: ["builder", "effects", section],
     descriptor: effectsDescriptors[section],
+    loadLabels: loadPhiBuilderEffectsFormLabels,
     submitHandlerKey: null,
     confirmHandlerKey: null,
     previewHandlerKey: null,

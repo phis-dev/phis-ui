@@ -11,6 +11,11 @@ export type PhiEffectsWidgetLabels = {
     transitions: string;
     viewportEffects: string;
   };
+  /** The sentence under a list, saying what the rows in it are. */
+  descriptions: {
+    transitions: string;
+    viewportEffects: string;
+  };
   status: {
     off: string;
     configured: string;
@@ -117,6 +122,10 @@ export const PHI_EFFECTS_WIDGET_DEFAULT_LABELS: PhiEffectsWidgetLabels = {
     transparency: "Transparency",
     transitions: "Transitions",
     viewportEffects: "Viewport Effects",
+  },
+  descriptions: {
+    transitions: "Ordered transition steps applied by the selected trigger.",
+    viewportEffects: "Effects driven by the element position within the viewport.",
   },
   status: {
     off: "Off",
