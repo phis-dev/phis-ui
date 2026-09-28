@@ -14,6 +14,8 @@ import {
 
 const subscribeHydration = () => () => undefined;
 const PHI_DRAWER_HEADER_MIN_BLOCK_SIZE = `calc(var(--ant-control-height) + ${PHI_SPACE.xs} + ${PHI_SPACE.xs})`;
+/** Where a title starts when the close button stands before it: past the button, not beneath it. */
+const PHI_DRAWER_TITLE_AFTER_CLOSE = `calc(${PHI_SPACE.sm} + var(--ant-control-height) + ${PHI_SPACE.xs})`;
 
 export type PhiDrawerControlProps = PhiOverlayControlCommonProps & {
   placement?: PhiCmsOverlayConfig["placement"];
@@ -47,16 +49,20 @@ export function PhiDrawerControl({
   const hydrated = useSyncExternalStore(subscribeHydration, () => true, () => false);
   const resolvedMask = resolvePhiOverlayMaskPresentation(mask);
   const closeAtInlineStart = placement === "right";
-  const renderedTitle = (
+  // A drawer with nothing to say in its header draws none: no title, no header content, no close button.
+  const hasHeaderContent = header != null || title != null;
+  const hasHeader = hasHeaderContent || closable;
+  const titleInset = closable && closeAtInlineStart ? PHI_DRAWER_TITLE_AFTER_CLOSE : PHI_SPACE.lg;
+  const renderedTitle = hasHeaderContent ? (
     <div style={{ display: "grid", minBlockSize: PHI_DRAWER_HEADER_MIN_BLOCK_SIZE, minWidth: 0, position: "relative", width: "100%" }}>
       {header}
       {title == null ? null : (
-        <div style={{ insetInlineStart: PHI_SPACE.lg, minWidth: 0, position: "absolute", top: "50%", transform: "translateY(-50%)", zIndex: 1 }}>
+        <div style={{ insetInlineStart: titleInset, minWidth: 0, position: "absolute", top: "50%", transform: "translateY(-50%)", zIndex: 1 }}>
           {title}
         </div>
       )}
     </div>
-  );
+  ) : null;
 
   return (
     <Drawer
@@ -78,6 +84,13 @@ export function PhiDrawerControl({
       styles={{
         mask: resolvedMask.maskStyle,
         wrapper: {
+          /*
+           * The surface a drawer stands on, unless its chrome names one. The section below is made
+           * transparent so the chrome shows through it, and without this nothing painted at all: a
+           * drawer without a configured background was see-through, and the presets only looked right
+           * because their glass effect brings a background of its own.
+           */
+          background: "var(--ant-color-bg-elevated)",
           ...containerStyle,
           padding: 0,
         },
@@ -93,7 +106,7 @@ export function PhiDrawerControl({
         },
         header: {
           flex: "0 0 auto",
-          minBlockSize: PHI_DRAWER_HEADER_MIN_BLOCK_SIZE,
+          minBlockSize: hasHeader ? PHI_DRAWER_HEADER_MIN_BLOCK_SIZE : 0,
           position: "relative",
           padding: 0,
           background: "transparent",
@@ -102,8 +115,8 @@ export function PhiDrawerControl({
         close: {
           position: "absolute",
           top: "50%",
-          left: closeAtInlineStart ? PHI_SPACE.sm : undefined,
-          right: closeAtInlineStart ? undefined : PHI_SPACE.sm,
+          insetInlineStart: closeAtInlineStart ? PHI_SPACE.sm : undefined,
+          insetInlineEnd: closeAtInlineStart ? undefined : PHI_SPACE.sm,
           marginInline: 0,
           transform: "translateY(-50%)",
           zIndex: 1,
