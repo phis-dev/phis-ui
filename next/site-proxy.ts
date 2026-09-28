@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { isPhiAssetOrBackendPath } from "./static-asset-path";
 
 import { PHI_CMS_SPECIAL_ROOTS } from "../helpers/cms-routing";
 import { localizePath } from "../helpers/locale";
@@ -64,16 +65,6 @@ function isPhiClientNavigation(request: NextRequest) {
   return destination != null && destination !== "document";
 }
 
-function isAssetOrBackendPath(pathname: string) {
-  return (
-    pathname.startsWith("/_next") ||
-    pathname.startsWith("/api") ||
-    pathname.startsWith("/favicon.ico") ||
-    pathname.startsWith("/robots.txt") ||
-    pathname.startsWith("/sitemap.xml") ||
-    /\.[\w-]+$/.test(pathname)
-  );
-}
 
 function readSiteRuntime() {
   return readPhiSiteRuntimeConfigSync();
@@ -176,7 +167,7 @@ export async function proxyPhiNextSiteRequest(request: NextRequest) {
       ? NextResponse.next()
       : new NextResponse(null, { status: 404 });
   }
-  if (isAssetOrBackendPath(pathname)) {
+  if (isPhiAssetOrBackendPath(pathname)) {
     return NextResponse.next();
   }
 
