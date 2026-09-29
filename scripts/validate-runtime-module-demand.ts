@@ -9,7 +9,10 @@ import type {
   PhiRuntimeModuleDefinition,
   PhiRuntimeModuleId,
 } from "../types/cms-plugins";
-import type { PhiRuntimeModuleFormDefinition } from "../components/forms/form-registry";
+import {
+  definePhiRuntimeModuleForm,
+  type PhiRuntimeModuleFormDefinition,
+} from "../components/forms/form-registry";
 import type { PhiCmsAreaDefinition } from "../types/cms-module-descriptors";
 import type { PhiFormId } from "../types/form-id";
 import { PhiCmsWidgetType } from "../constants/cms-widget-types";
@@ -234,7 +237,7 @@ const formOwnerModuleDefinition = {
     }],
   },
 } as const satisfies PhiRuntimeModuleDefinition;
-const testFormDefinition: PhiRuntimeModuleFormDefinition = {
+const testFormDefinition = definePhiRuntimeModuleForm({
   areas: ["app"],
   ownerModuleId: FORM_OWNER_MODULE_ID,
   formId: TEST_FORM_ID,
@@ -254,13 +257,8 @@ const testFormDefinition: PhiRuntimeModuleFormDefinition = {
     }],
   },
   submitHandlerKey: "",
-  confirmHandlerKey: null,
-  previewHandlerKey: null,
-  defaultConfig: {},
   variant: null,
-  config: {},
-  previewUpstreamPath: null,
-};
+});
 
 assert.throws(
   () => createPhiRuntimeModuleCatalog([

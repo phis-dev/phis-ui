@@ -173,12 +173,6 @@ export const PHI_MEDIA_SETTINGS_RUNTIME_MODULE_FORM = definePhiRuntimeModuleForm
   tags: ["settings", "media", "admin"],
   descriptor: PHI_MEDIA_SETTINGS_FORM_DESCRIPTOR,
   submitHandlerKey: PHI_MEDIA_SETTINGS_FORM_HANDLER_KEYS.general,
-  confirmHandlerKey: null,
-  previewHandlerKey: null,
-  defaultConfig: {},
-  variant: "default",
-  config: {},
-  previewUpstreamPath: null,
   loadLabels,
 });
 

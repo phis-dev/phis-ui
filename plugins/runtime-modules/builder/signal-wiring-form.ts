@@ -117,10 +117,4 @@ export const PHI_BUILDER_SIGNAL_WIRING_FORM = definePhiRuntimeModuleForm({
   descriptor,
   loadLabels: loadPhiBuilderSignalWiringFormLabels,
   submitHandlerKey: null,
-  confirmHandlerKey: null,
-  previewHandlerKey: null,
-  defaultConfig: {},
-  variant: "default",
-  config: {},
-  previewUpstreamPath: null,
 });

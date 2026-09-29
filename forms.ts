@@ -128,7 +128,10 @@ export {
   normalizePhiMutationResponseShape,
   normalizePhiMutationTransport,
 } from "./gateway/mutation";
-export type { PhiRuntimeModuleFormDefinition } from "./components/forms/form-registry";
+export type {
+  PhiRuntimeModuleFormDefinition,
+  PhiRuntimeModuleFormDefinitionInput,
+} from "./components/forms/form-registry";
 export type {
   PhiFormDefinitionLike,
   PhiFormDefinitionSource,

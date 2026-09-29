@@ -117,12 +117,6 @@ export const PHI_ADMIN_RUNTIME_MODULE_FORMS = [
     tags: ["settings", "site", "admin"],
     descriptor: PHI_ADMIN_SETTINGS_GENERAL_FORM_DESCRIPTOR,
     submitHandlerKey: PHI_ADMIN_SETTINGS_FORM_HANDLER_KEYS.general,
-    confirmHandlerKey: null,
-    previewHandlerKey: null,
-    defaultConfig: {},
-    variant: "default",
-    config: {},
-    previewUpstreamPath: null,
     loadLabels,
   }),
 ] as const;

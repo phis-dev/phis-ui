@@ -76,12 +76,6 @@ export const PHI_REVISIONS_RUNTIME_MODULE_FORMS = [
     tags: ["revisions", "area"],
     descriptor: PHI_REVISIONS_DELETE_AREA_FORM_DESCRIPTOR,
     submitHandlerKey: null,
-    confirmHandlerKey: null,
-    previewHandlerKey: null,
-    defaultConfig: {},
-    variant: "default",
-    config: {},
-    previewUpstreamPath: null,
     loadLabels,
   }),
 ] as const;

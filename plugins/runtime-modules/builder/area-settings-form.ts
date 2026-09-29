@@ -144,10 +144,4 @@ export const PHI_BUILDER_AREA_SETTINGS_FORM = definePhiRuntimeModuleForm({
   tags: ["builder", "area"],
   descriptor,
   submitHandlerKey: null,
-  confirmHandlerKey: null,
-  previewHandlerKey: null,
-  defaultConfig: {},
-  variant: "default",
-  config: {},
-  previewUpstreamPath: null,
 });

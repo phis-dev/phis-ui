@@ -562,12 +562,6 @@ export const PHI_BUILDER_PAGE_META_FORM = definePhiRuntimeModuleForm({
   descriptor,
   loadLabels: loadPhiBuilderPageMetaFormLabels,
   submitHandlerKey: null,
-  confirmHandlerKey: null,
-  previewHandlerKey: null,
-  defaultConfig: {},
-  variant: "default",
-  config: {},
-  previewUpstreamPath: null,
 });
 
 /*
@@ -604,11 +598,5 @@ export const PHI_BUILDER_EFFECTS_FORMS = PHI_BUILDER_EFFECTS_SECTIONS.map(
     descriptor: effectsDescriptors[section],
     loadLabels: loadPhiBuilderEffectsFormLabels,
     submitHandlerKey: null,
-    confirmHandlerKey: null,
-    previewHandlerKey: null,
-    defaultConfig: {},
-    variant: "default",
-    config: {},
-    previewUpstreamPath: null,
   }),
 );

@@ -160,12 +160,6 @@ export const PHI_ASSET_METADATA_RUNTIME_MODULE_FORM = definePhiRuntimeModuleForm
   tags: ["asset", "metadata"],
   descriptor: PHI_ASSET_METADATA_FORM_DESCRIPTOR,
   submitHandlerKey: PHI_ASSET_METADATA_FORM_HANDLER_KEY,
-  confirmHandlerKey: null,
-  previewHandlerKey: null,
-  defaultConfig: {},
-  variant: "default",
-  config: {},
-  previewUpstreamPath: null,
   loadLabels: loadAssetFormLabels,
 });
 
@@ -181,12 +175,6 @@ export const PHI_ASSET_FOLDER_RUNTIME_MODULE_FORM = definePhiRuntimeModuleForm({
   tags: ["asset", "folder"],
   descriptor: PHI_ASSET_FOLDER_FORM_DESCRIPTOR,
   submitHandlerKey: PHI_ASSET_FOLDER_FORM_HANDLER_KEY,
-  confirmHandlerKey: null,
-  previewHandlerKey: null,
-  defaultConfig: {},
-  variant: "default",
-  config: {},
-  previewUpstreamPath: null,
   loadLabels: loadAssetFormLabels,
 });
 

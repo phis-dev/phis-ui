@@ -24,7 +24,8 @@ const PHI_FORM_PURPOSE_VALUES = new Set<string>(Object.values(PHI_FORM_PURPOSES)
  * A Form as a Module ships it: the definition every Form has (`PhiFormDefinitionLike`), without the
  * database's row id and status, under a namespaced id and with the Areas it belongs to.
  */
-export type PhiRuntimeModuleFormDefinition = Omit<PhiFormDefinitionLike, "id" | "status" | "formId"> & {
+export type PhiRuntimeModuleFormDefinition =
+  Omit<PhiFormDefinitionLike, "id" | "status" | "formId"> & {
   /**
    * The Areas this Form belongs to.
    *
@@ -39,6 +40,23 @@ export type PhiRuntimeModuleFormDefinition = Omit<PhiFormDefinitionLike, "id" | 
   purpose?: PhiFormPurpose;
 };
 
+/** The fields a Module may leave out of a Form it defines, because nearly every Form leaves them empty. */
+type PhiRuntimeModuleFormDefaultedField =
+  | "confirmHandlerKey"
+  | "previewHandlerKey"
+  | "defaultConfig"
+  | "variant"
+  | "config"
+  | "previewUpstreamPath";
+
+/**
+ * What `definePhiRuntimeModuleForm` takes: a `PhiRuntimeModuleFormDefinition` whose defaulted fields
+ * may be left out. The factory fills them in, so every defined Form still carries all of them.
+ */
+export type PhiRuntimeModuleFormDefinitionInput =
+  Omit<PhiRuntimeModuleFormDefinition, PhiRuntimeModuleFormDefaultedField>
+  & Partial<Pick<PhiRuntimeModuleFormDefinition, PhiRuntimeModuleFormDefaultedField>>;
+
 /** The Form an active Module supplies for a purpose, or `null` where none does. */
 export function findPhiFormDefinitionByPurpose(
   definitions: Iterable<PhiRuntimeModuleFormDefinition>,
@@ -50,9 +68,32 @@ export function findPhiFormDefinitionByPurpose(
   return null;
 }
 
+/**
+ * Checks a Module's Form and fills in the fields it left out: no confirm or preview handler, no
+ * preview upstream, empty `defaultConfig` and `config`, variant `"default"`. An explicit value, `null`
+ * included, is kept.
+ */
 export function definePhiRuntimeModuleForm(
-  definition: PhiRuntimeModuleFormDefinition,
+  input: PhiRuntimeModuleFormDefinitionInput,
 ): PhiRuntimeModuleFormDefinition {
+  const {
+    confirmHandlerKey = null,
+    previewHandlerKey = null,
+    defaultConfig = {},
+    variant = "default",
+    config = {},
+    previewUpstreamPath = null,
+    ...rest
+  } = input;
+  const definition: PhiRuntimeModuleFormDefinition = {
+    ...rest,
+    confirmHandlerKey,
+    previewHandlerKey,
+    defaultConfig,
+    variant,
+    config,
+    previewUpstreamPath,
+  };
   const formId = normalizePhiFormId(definition.formId);
   if (!isPhiFormId(formId)) {
     throw new Error(`Invalid namespaced Form id "${definition.formId}".`);

@@ -42,7 +42,9 @@ this document lists only what Forms emit and accept.
 ## Definition
 
 A definition is created with `definePhiRuntimeModuleForm(...)` (`components/forms/form-registry.ts`) and
-kept in a Server entry. Fields:
+kept in a Server entry. Fields marked optional may be left out of the input
+(`PhiRuntimeModuleFormDefinitionInput`); the factory fills in their default, so a defined Form
+(`PhiRuntimeModuleFormDefinition`) always carries every field.
 
 | Field | Meaning |
 | --- | --- |
@@ -52,9 +54,10 @@ kept in a Server entry. Fields:
 | `version` | Positive integer. |
 | `flags`, `title`, `description`, `category`, `tags` | Catalog metadata. |
 | `descriptor` | The `PhiFormDescriptor`, parsed on definition. |
-| `submitHandlerKey`, `confirmHandlerKey`, `previewHandlerKey` | Logical handler names such as `auth.login`, or `null`. |
-| `defaultConfig`, `config`, `variant` | Carried on the definition and deep-merged with a Site override into `effectiveConfig`; nothing reads the result yet. Prepared for the Form Builder, where an author assembles a Form instead of placing a preset. A placed Form Widget is configured by its node, not from here. |
-| `previewUpstreamPath` | Carried on the definition; the relay does not read it (see [Relay](#relay)). |
+| `submitHandlerKey` | Logical handler name such as `auth.login`, or `null`. |
+| `confirmHandlerKey`, `previewHandlerKey` | Optional, default `null`. Logical handler names like `submitHandlerKey`. |
+| `defaultConfig`, `config`, `variant` | Optional, default `{}`, `{}`, `"default"`. Carried on the definition and deep-merged with a Site override into `effectiveConfig`; nothing reads the result yet. Prepared for the Form Builder, where an author assembles a Form instead of placing a preset. A placed Form Widget is configured by its node, not from here. |
+| `previewUpstreamPath` | Optional, default `null`. Carried on the definition; the relay does not read it (see [Relay](#relay)). |
 | `loadLabels` | Optional Server loader for the descriptor's `labelSetKey`. |
 | `loadInitialValues` | Optional Server loader for values the Form needs before it can be filled in. |
 | `purpose` | Optional platform role from `PHI_FORM_PURPOSES`; an unknown value is refused on definition. |

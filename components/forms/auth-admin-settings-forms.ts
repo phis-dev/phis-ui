@@ -382,12 +382,6 @@ function defineAuthAdminSettingsForm(input: {
     tags: ["settings", "auth", "admin"],
     descriptor: input.descriptor,
     submitHandlerKey: input.handlerKey,
-    confirmHandlerKey: null,
-    previewHandlerKey: null,
-    defaultConfig: {},
-    variant: "default",
-    config: {},
-    previewUpstreamPath: null,
     loadLabels,
   });
 }
