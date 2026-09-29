@@ -6,6 +6,7 @@ import type {
 } from "./runtime-data-provider";
 import type { PhiSignalRouteSet } from "./signals";
 import type { PhiRuntimeConditionExpression } from "./runtime-condition";
+import { isPhiRecord } from "../helpers/is-record";
 
 export type PhiTableRowIdentity = string | number;
 export type PhiTableSortDirection = "ascending" | "descending";
@@ -663,10 +664,6 @@ export class PhiTableProviderError extends Error {
   }
 }
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
-}
-
 function readPositiveInteger(value: unknown) {
   return typeof value === "number" && Number.isInteger(value) && value > 0 ? value : undefined;
 }
@@ -689,18 +686,18 @@ function isPhiTableQueryValue(value: unknown): value is PhiTableQueryValue {
 }
 
 export function readPhiTableQuery(value: unknown): PhiTableQuery | null {
-  if (!isRecord(value)) return null;
+  if (!isPhiRecord(value)) return null;
   const allowedKeys = new Set([
     "page", "pageSize", "cursor", "search", "sorts", "filters", "expandedRowIdentities",
   ]);
   if (Object.keys(value).some((key) => !allowedKeys.has(key))) return null;
   if (value.filters !== undefined &&
-    (!isRecord(value.filters) || Object.values(value.filters).some((filterValue) => !isPhiTableQueryValue(filterValue)))) {
+    (!isPhiRecord(value.filters) || Object.values(value.filters).some((filterValue) => !isPhiTableQueryValue(filterValue)))) {
     return null;
   }
   const filters = value.filters as Record<string, PhiTableQueryValue> | undefined;
   if (value.sorts !== undefined && (!Array.isArray(value.sorts) || value.sorts.some((entry) =>
-    !isRecord(entry) || Object.keys(entry).some((key) => key !== "key" && key !== "direction") ||
+    !isPhiRecord(entry) || Object.keys(entry).some((key) => key !== "key" && key !== "direction") ||
     typeof entry.key !== "string" || !entry.key.trim() ||
     (entry.direction !== "ascending" && entry.direction !== "descending")))) {
     return null;
@@ -724,12 +721,12 @@ export function readPhiTableQuery(value: unknown): PhiTableQuery | null {
 }
 
 export function readPhiTableFilters(value: unknown): PhiTableQuery["filters"] | null {
-  if (!isRecord(value)) return null;
+  if (!isPhiRecord(value)) return null;
   return readPhiTableQuery({ filters: value })?.filters ?? null;
 }
 
 export function readPhiTableBindingParamsSignalValue(value: unknown): PhiTableBindingParamsSignalValue | null {
-  if (!isRecord(value) || !isRecord(value.params) ||
+  if (!isPhiRecord(value) || !isPhiRecord(value.params) ||
     Object.values(value.params).some((paramValue) => !isPhiTableQueryValue(paramValue))) {
     return null;
   }
@@ -737,14 +734,14 @@ export function readPhiTableBindingParamsSignalValue(value: unknown): PhiTableBi
 }
 
 export function readPhiTableSelectionSignalValue(value: unknown): PhiTableSelectionSignalValue | null {
-  const selectedRowIdentities = isRecord(value)
+  const selectedRowIdentities = isPhiRecord(value)
     ? readRowIdentities(value.selectedRowIdentities)
     : undefined;
   return selectedRowIdentities ? { selectedRowIdentities } : null;
 }
 
 export function readPhiTableColumnOrderSignalValue(value: unknown): PhiTableColumnOrderSignalValue | null {
-  if (!isRecord(value) || !Array.isArray(value.columnOrder) ||
+  if (!isPhiRecord(value) || !Array.isArray(value.columnOrder) ||
     !value.columnOrder.every((entry) => typeof entry === "string" && entry.trim().length > 0)) {
     return null;
   }
@@ -753,14 +750,14 @@ export function readPhiTableColumnOrderSignalValue(value: unknown): PhiTableColu
 }
 
 export function readPhiTableExpansionSignalValue(value: unknown): PhiTableExpansionSignalValue | null {
-  const expandedRowIdentities = isRecord(value)
+  const expandedRowIdentities = isPhiRecord(value)
     ? readRowIdentities(value.expandedRowIdentities)
     : undefined;
   return expandedRowIdentities ? { expandedRowIdentities } : null;
 }
 
 export function readPhiTableActionSignalValue(value: unknown): PhiTableActionSignalValue | null {
-  if (!isRecord(value) || typeof value.actionKey !== "string" || !value.actionKey.trim()) {
+  if (!isPhiRecord(value) || typeof value.actionKey !== "string" || !value.actionKey.trim()) {
     return null;
   }
   const selectedRowIdentities = readRowIdentities(value.selectedRowIdentities);
@@ -783,7 +780,7 @@ export function readPhiTableActionSignalValue(value: unknown): PhiTableActionSig
 }
 
 export function readPhiTableProviderQueryResult(value: unknown): PhiTableProviderQueryResult | null {
-  if (!isRecord(value) || !Array.isArray(value.rows) || !value.rows.every(isRecord)) return null;
+  if (!isPhiRecord(value) || !Array.isArray(value.rows) || !value.rows.every(isPhiRecord)) return null;
   if ("loading" in value || "error" in value || "meta" in value || "resourceKey" in value || "tableKey" in value) {
     return null;
   }
@@ -800,7 +797,7 @@ export function readPhiTableProviderQueryResult(value: unknown): PhiTableProvide
     (page !== undefined && readPositiveInteger(page) === undefined) ||
     (pageSize !== undefined && readPositiveInteger(pageSize) === undefined) ||
     (value.nextCursor !== undefined && value.nextCursor !== null && typeof value.nextCursor !== "string") ||
-    (value.facets !== undefined && !isRecord(value.facets)) ||
+    (value.facets !== undefined && !isPhiRecord(value.facets)) ||
     summary === null ||
     (value.resolvedQuery !== undefined && resolvedQuery === null)) {
     return null;
@@ -818,7 +815,7 @@ export function readPhiTableProviderQueryResult(value: unknown): PhiTableProvide
 }
 
 function readPhiTableSummaryValues(value: unknown) {
-  return isRecord(value) && Object.values(value).every((entry) =>
+  return isPhiRecord(value) && Object.values(value).every((entry) =>
     entry === null || typeof entry === "string" || typeof entry === "boolean" ||
     typeof entry === "number" && Number.isFinite(entry))
     ? value as Record<string, PhiTableSummaryValue>
@@ -829,16 +826,16 @@ export function readPhiTableProviderMutationResult(value: unknown): PhiTableProv
   const allowedKeys = new Set([
     "status", "invalidation", "canonicalValue", "rowPatch", "summaryPatch", "value", "errorCode", "message",
   ]);
-  const summaryPatch = value && isRecord(value) && value.summaryPatch !== undefined
+  const summaryPatch = value && isPhiRecord(value) && value.summaryPatch !== undefined
     ? readPhiTableSummaryValues(value.summaryPatch)
     : undefined;
-  if (!isRecord(value) ||
+  if (!isPhiRecord(value) ||
     Object.keys(value).some((key) => !allowedKeys.has(key)) ||
     (value.status !== "accepted" && value.status !== "rejected") ||
     (value.invalidation !== "none" && value.invalidation !== "view" && value.invalidation !== "resource") ||
-    (value.rowPatch !== undefined && !isRecord(value.rowPatch)) ||
+    (value.rowPatch !== undefined && !isPhiRecord(value.rowPatch)) ||
     summaryPatch === null ||
-    (value.value !== undefined && value.value !== null && !isRecord(value.value)) ||
+    (value.value !== undefined && value.value !== null && !isPhiRecord(value.value)) ||
     (value.errorCode !== undefined && typeof value.errorCode !== "string") ||
     (value.message !== undefined && typeof value.message !== "string") ||
     (value.status === "rejected" && (

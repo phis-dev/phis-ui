@@ -2,16 +2,13 @@ import type {
   PhiTableProviderRowMoveMutationRequest,
   PhiTableRowIdentity,
 } from "../types/table-widget";
+import { isPhiRecord } from "./is-record";
 
 type TableRow = Record<string, unknown>;
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
-}
-
 export function readPhiTableRowValue(row: TableRow, path: string) {
   return path.split(".").filter(Boolean).reduce<unknown>(
-    (current, segment) => isRecord(current) ? current[segment] : undefined,
+    (current, segment) => isPhiRecord(current) ? current[segment] : undefined,
     row,
   );
 }
@@ -27,7 +24,7 @@ export function patchPhiTableRowValue(row: TableRow, path: string, value: unknow
   const segments = path.split(".").filter(Boolean);
   if (segments.length === 0) return row;
   const patchAt = (current: unknown, index: number): Record<string, unknown> => {
-    const source = isRecord(current) ? current : {};
+    const source = isPhiRecord(current) ? current : {};
     const key = segments[index];
     return {
       ...source,

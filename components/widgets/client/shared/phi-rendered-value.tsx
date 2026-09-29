@@ -13,6 +13,7 @@ import { PhiTagControl } from "../../../controls/phi-tag-control";
 import { PhiTypographyControl } from "../../../controls/phi-typography-control";
 import { PhiLink } from "../../../navigation/phi-link";
 import { PhiIcon } from "../../../shell/phi-icon";
+import { isPhiRecord } from "../../../../helpers/is-record";
 
 /**
  * How one value out of a Provider is drawn: a date as a date, an address as a link, a set of words as
@@ -56,15 +57,11 @@ export type PhiRenderedValuePresentation = "cell" | "block";
  * Control the author asked for.
  */
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
-}
-
 export function normalizePhiRenderedText(value: unknown): string {
   if (value == null) return "";
   if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") return String(value);
   if (Array.isArray(value)) return value.map(normalizePhiRenderedText).filter(Boolean).join(", ");
-  return isRecord(value) ? JSON.stringify(value) : "";
+  return isPhiRecord(value) ? JSON.stringify(value) : "";
 }
 
 function resolveTagColor(color: PhiTableTagColor | undefined) {

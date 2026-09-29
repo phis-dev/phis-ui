@@ -2,6 +2,7 @@ import type { PhiCoreRuntimePageSnapshot, PhiSignal } from "../../../types";
 import type { PhiSignalDispatch } from "../../runtime/runtime-signal-bus";
 import { createPhiCoreRuntimeControllerAddress } from "../../runtime/core-runtime-controller-address";
 import { emitPhiCoreRuntimePageSnapshot } from "../../runtime/core-runtime-controller-snapshots";
+import { isPhiRecord } from "../../../helpers/is-record";
 
 export type PhiPageTitleSignalValue = {
   area?: string | null;
@@ -11,10 +12,6 @@ export type PhiPageTitleSignalValue = {
   pagePath?: string | null;
   pageType?: number | null;
 };
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return !!value && typeof value === "object" && !Array.isArray(value);
-}
 
 export function resolvePhiPageTitleSignalValue(signal: PhiSignal): PhiPageTitleSignalValue | null {
   const rawValue = signal.value;
@@ -28,7 +25,7 @@ export function resolvePhiPageTitleSignalValue(signal: PhiSignal): PhiPageTitleS
     };
   }
 
-  if (!isRecord(rawValue)) {
+  if (!isPhiRecord(rawValue)) {
     return null;
   }
 

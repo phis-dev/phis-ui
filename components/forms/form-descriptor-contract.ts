@@ -29,6 +29,7 @@ import {
 } from "../../types/runtime-condition";
 import { isPhiSpacingToken, type PhiSpacingToken } from "../../types/spacing";
 import { parsePhiControlOptionsProviderConfig } from "../controls/phi-control-options";
+import { isPhiRecord } from "../../helpers/is-record";
 
 /** The last grid line, one past the last track, because `end` is exclusive. */
 export const PHI_FORM_GRID_LAST_LINE = PHI_FORM_GRID_TRACKS + 1;
@@ -47,10 +48,6 @@ export function shouldPhiFormSubmitOnKeyDown(input: {
     !input.multiline &&
     !input.contentEditable &&
     !input.managedKeyboardScope;
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
 }
 
 function readRequiredString(value: unknown, path: string) {
@@ -77,7 +74,7 @@ function readProviderKey(value: unknown, path: string) {
 }
 
 function readTextDescriptor(value: unknown, path: string): PhiFormTextDescriptor {
-  if (!isRecord(value)) {
+  if (!isPhiRecord(value)) {
     throw new Error(`${path} must be a Form text descriptor.`);
   }
   if (value.kind === "literal") {
@@ -97,7 +94,7 @@ function readGridRange(value: unknown, path: string): PhiFormGridRange | undefin
   if (value == null) {
     return undefined;
   }
-  if (!isRecord(value)) {
+  if (!isPhiRecord(value)) {
     throw new Error(`${path} must be a grid range object.`);
   }
   return assertGridRange(
@@ -116,7 +113,7 @@ function readResponsiveGridRange(
   if (value == null) {
     return undefined;
   }
-  if (!isRecord(value)) {
+  if (!isPhiRecord(value)) {
     throw new Error(`${path} must be a responsive grid range object.`);
   }
   return {
@@ -140,7 +137,7 @@ function readFormConditionExpression(value: unknown, path: string) {
 
 function readResponsiveGap(value: unknown, path: string): PhiResponsiveValue<PhiSpacingToken> | undefined {
   if (value == null) return undefined;
-  if (!isRecord(value)) throw new Error(`${path} must be a responsive spacing object.`);
+  if (!isPhiRecord(value)) throw new Error(`${path} must be a responsive spacing object.`);
   const readToken = (entry: unknown, entryPath: string) => {
     if (entry == null) return undefined;
     if (!isPhiSpacingToken(entry)) throw new Error(`${entryPath} must be a Phi spacing token.`);
@@ -154,7 +151,7 @@ function readResponsiveGap(value: unknown, path: string): PhiResponsiveValue<Phi
 }
 
 function readValidationRule(value: unknown, path: string): PhiFormValidationRuleDescriptor {
-  if (!isRecord(value)) {
+  if (!isPhiRecord(value)) {
     throw new Error(`${path} must be a validation rule object.`);
   }
   return {
@@ -162,14 +159,14 @@ function readValidationRule(value: unknown, path: string): PhiFormValidationRule
     message: value.message == null ? undefined : readTextDescriptor(value.message, `${path}.message`),
     config: value.config == null
       ? undefined
-      : isRecord(value.config)
+      : isPhiRecord(value.config)
         ? value.config
         : (() => { throw new Error(`${path}.config must be an object.`); })(),
   };
 }
 
 function readOption(value: unknown, path: string): PhiFormOptionDescriptor {
-  if (!isRecord(value)) {
+  if (!isPhiRecord(value)) {
     throw new Error(`${path} must be an option object.`);
   }
   return {
@@ -194,7 +191,7 @@ function assertUniqueKeys(items: readonly { key: string }[], path: string) {
 }
 
 function readField(value: unknown, path: string): PhiFormFieldDescriptor {
-  if (!isRecord(value)) {
+  if (!isPhiRecord(value)) {
     throw new Error(`${path} must be a field object.`);
   }
   const options = Array.isArray(value.options)
@@ -210,12 +207,12 @@ function readField(value: unknown, path: string): PhiFormFieldDescriptor {
   if (value.optionsProvider != null && !optionsProvider) {
     throw new Error(`${path}.optionsProvider is invalid.`);
   }
-  if (value.config != null && !isRecord(value.config)) {
+  if (value.config != null && !isPhiRecord(value.config)) {
     throw new Error(`${path}.config must be an object.`);
   }
   const placement = value.placement == null
     ? undefined
-    : isRecord(value.placement)
+    : isPhiRecord(value.placement)
       ? {
           label: readResponsiveGridRange(value.placement.label, `${path}.placement.label`),
           control: readResponsiveGridRange(value.placement.control, `${path}.placement.control`),
@@ -250,7 +247,7 @@ function readField(value: unknown, path: string): PhiFormFieldDescriptor {
 }
 
 export function parsePhiFormDescriptor(value: unknown): PhiFormDescriptor {
-  if (!isRecord(value)) {
+  if (!isPhiRecord(value)) {
     throw new Error("Form descriptor must be an object.");
   }
   if (value.schemaVersion !== PHI_FORM_DESCRIPTOR_SCHEMA_VERSION) {
@@ -280,7 +277,7 @@ export function parsePhiFormDescriptor(value: unknown): PhiFormDescriptor {
     : readProviderKey(value.labelSetKey, "labelSetKey") as PhiFormLabelSetKey;
   const layout: PhiFormLayoutDescriptor | undefined = value.layout == null
     ? undefined
-    : isRecord(value.layout)
+    : isPhiRecord(value.layout)
       ? {
           gap: readResponsiveGap(value.layout.gap, "layout.gap"),
           columnGap: readResponsiveGap(value.layout.columnGap, "layout.columnGap"),
@@ -298,7 +295,7 @@ export function parsePhiFormDescriptor(value: unknown): PhiFormDescriptor {
   }
   const success: PhiFormSuccessDescriptor | undefined = value.success == null
     ? undefined
-    : isRecord(value.success)
+    : isPhiRecord(value.success)
       ? {
           title: readTextDescriptor(value.success.title, "success.title"),
           text: value.success.text == null
@@ -309,7 +306,7 @@ export function parsePhiFormDescriptor(value: unknown): PhiFormDescriptor {
       : (() => { throw new Error("success must be an object."); })();
   const errors: PhiFormDescriptor["errors"] | undefined = value.errors == null
     ? undefined
-    : isRecord(value.errors)
+    : isPhiRecord(value.errors)
       ? Object.fromEntries(
           Object.entries(value.errors).map(([code, text]) => [
             code,

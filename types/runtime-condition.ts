@@ -8,6 +8,7 @@ import {
   type PhiSignalRouteSet,
 } from "./signals";
 import type { PhiRuntimeControllerRequirement } from "./cms-plugins";
+import { isPhiRecord } from "../helpers/is-record";
 
 /**
  * Where a condition reads the value it judges.
@@ -101,10 +102,6 @@ export type PhiRuntimeConditionStateSignalValue = {
   state: Record<string, unknown>;
 };
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
-}
-
 function readConditionValue(value: unknown): PhiRuntimeConditionValue | undefined {
   return typeof value === "string" ? value : undefined;
 }
@@ -116,7 +113,7 @@ function readConditionSource(value: unknown): PhiRuntimeConditionSource | null {
 }
 
 export function readPhiRuntimeValueCondition(value: unknown): PhiRuntimeValueCondition | null {
-  if (!isRecord(value)) return null;
+  if (!isPhiRecord(value)) return null;
   const source = readConditionSource(value.source);
   const operator = value.operator === "truthy" || value.operator === "falsy" ||
     value.operator === "equals" || value.operator === "contains"
@@ -158,7 +155,7 @@ export function readPhiRuntimeValueCondition(value: unknown): PhiRuntimeValueCon
 export function readPhiRuntimeConditionExpression(value: unknown): PhiRuntimeConditionExpression | null {
   const leaf = readPhiRuntimeValueCondition(value);
   if (leaf) return leaf;
-  if (!isRecord(value) || (value.match !== "all" && value.match !== "any") || !Array.isArray(value.conditions)) {
+  if (!isPhiRecord(value) || (value.match !== "all" && value.match !== "any") || !Array.isArray(value.conditions)) {
     return null;
   }
   const conditions = value.conditions.map(readPhiRuntimeConditionExpression);
@@ -192,7 +189,7 @@ export function combinePhiRuntimeConditionExpressions(
 export function readPhiRuntimeConditionStateSignalValue(
   value: unknown,
 ): PhiRuntimeConditionStateSignalValue | null {
-  return isRecord(value) && isRecord(value.state) ? { state: value.state } : null;
+  return isPhiRecord(value) && isPhiRecord(value.state) ? { state: value.state } : null;
 }
 
 export function resolvePhiRuntimeConditionControllerRequirements(
@@ -217,7 +214,7 @@ export function resolvePhiRuntimeConditionControllerRequirements(
 export function readPhiRuntimeConditionValue(input: unknown, valuePath: string): unknown {
   let current = input;
   for (const segment of valuePath.split(".").filter(Boolean)) {
-    if (!isRecord(current)) return undefined;
+    if (!isPhiRecord(current)) return undefined;
     current = current[segment];
   }
   return current;

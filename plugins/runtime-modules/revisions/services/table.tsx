@@ -41,6 +41,7 @@ import {
   resolvePhiBuilderRevisionScope,
 } from "../types";
 import { resolvePhiBuilderRevisionNavScopeKey } from "../../../../helpers/cms-navigation-scope-key";
+import { isPhiRecord } from "../../../../helpers/is-record";
 
 type ErrorPayload = {
   error?: string;
@@ -54,12 +55,8 @@ type RevisionsTableParams = {
   labels: PhiBuilderRevisionsWidgetLabels;
 };
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
-}
-
 function readPresetSource(value: unknown): PhiCmsPresetSource | null {
-  if (!isRecord(value)) {
+  if (!isPhiRecord(value)) {
     return null;
   }
   return typeof value.ownerModuleId === "string" &&
@@ -70,7 +67,7 @@ function readPresetSource(value: unknown): PhiCmsPresetSource | null {
 }
 
 function readRevisionScope(value: unknown): PhiBuilderRevisionScope | null {
-  if (!isRecord(value) ||
+  if (!isPhiRecord(value) ||
     (value.kind !== "area" && value.kind !== "page" && value.kind !== "navigation" && value.kind !== "theme") ||
     !isPhiCmsAreaKey(value.area)
   ) {
@@ -88,10 +85,10 @@ function readRevisionScope(value: unknown): PhiBuilderRevisionScope | null {
 }
 
 function readParams(value: unknown): RevisionsTableParams {
-  if (!isRecord(value) || !isRecord(value.labels)) {
+  if (!isPhiRecord(value) || !isPhiRecord(value.labels)) {
     throw new Error("Revisions table parameters are missing.");
   }
-  if (!isRecord(value.scope) && typeof window !== "undefined") {
+  if (!isPhiRecord(value.scope) && typeof window !== "undefined") {
     const state = getPhiWorkspaceCatalogSnapshot(PHI_WORKSPACE_CATALOG_SCOPE);
     const search = new URLSearchParams(window.location.search);
     const kind = normalizePhiBuilderRevisionsKindSearchParam(value.kind) ??
@@ -162,7 +159,7 @@ function readParams(value: unknown): RevisionsTableParams {
     typeof value.scopeKey !== "string" ||
     typeof value.reviewPagePath !== "string" ||
     typeof value.navScopeKey !== "string" ||
-    !isRecord(value.labels)
+    !isPhiRecord(value.labels)
   ) {
     throw new Error("Invalid Revisions table parameters.");
   }
@@ -185,7 +182,7 @@ async function readJson(response: Response) {
 }
 
 function readErrorMessage(body: unknown, fallback: string) {
-  return isRecord(body) && typeof body.error === "string" ? body.error : fallback;
+  return isPhiRecord(body) && typeof body.error === "string" ? body.error : fallback;
 }
 
 function buildRevisionQuery(scope: PhiBuilderRevisionScope) {
@@ -311,7 +308,7 @@ function formatTemplate(template: string, ...values: Array<number | string | nul
 }
 
 function readDiffTotal(value: unknown) {
-  return readNumber(isRecord(value) ? value.total : null) ?? 0;
+  return readNumber(isPhiRecord(value) ? value.total : null) ?? 0;
 }
 
 function readRevisionSourceId(row: PhiBuilderRevisionHistoryRow, meta: Record<string, unknown> | null) {
@@ -345,10 +342,10 @@ function formatRevisionMessage(
   labels: PhiBuilderRevisionsWidgetLabels,
   row: PhiBuilderRevisionHistoryRow,
 ) {
-  const meta = isRecord(row.meta) ? row.meta : null;
+  const meta = isPhiRecord(row.meta) ? row.meta : null;
   const messageKey = typeof meta?.messageKey === "string" ? meta.messageKey : null;
   const sourceRevisionId = readRevisionSourceId(row, meta);
-  const nodes = isRecord(meta?.nodes) ? meta.nodes : null;
+  const nodes = isPhiRecord(meta?.nodes) ? meta.nodes : null;
 
   if (messageKey === "page_deleted") {
     return formatTemplate(labels.messages.pageDeleted, sourceRevisionId);
@@ -356,7 +353,7 @@ function formatRevisionMessage(
   if (messageKey === "page_meta_changed") {
     return formatTemplate(
       labels.messages.pageMetaChanged,
-      formatPageMetaChangeLabel(labels, isRecord(meta?.pageMeta) ? meta.pageMeta : null),
+      formatPageMetaChangeLabel(labels, isPhiRecord(meta?.pageMeta) ? meta.pageMeta : null),
       sourceRevisionId,
     );
   }
@@ -381,7 +378,7 @@ function formatRevisionMessage(
     return formatTemplate(labels.messages.areaSaved, sourceRevisionId);
   }
   if (messageKey === "navigation_overlay_changed") {
-    const navigationMeta = isRecord(meta?.navigation) ? meta.navigation : null;
+    const navigationMeta = isPhiRecord(meta?.navigation) ? meta.navigation : null;
     return formatTemplate(
       labels.messages.navigationOverlayChanged,
       readNumber(navigationMeta?.overrideCount) ?? 0,
@@ -393,7 +390,7 @@ function formatRevisionMessage(
     return formatTemplate(labels.messages.navigationSaved, sourceRevisionId);
   }
   if (messageKey === "theme_changed") {
-    const themeMeta = isRecord(meta?.theme) ? meta.theme : null;
+    const themeMeta = isPhiRecord(meta?.theme) ? meta.theme : null;
     return formatTemplate(
       labels.messages.themeChanged,
       typeof themeMeta?.preset === "string" ? themeMeta.preset : "custom",

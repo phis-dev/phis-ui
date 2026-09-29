@@ -13,6 +13,7 @@ import type { PhiFormDescriptor } from "../types/form-descriptor";
 import type { PhiRuntimeModuleId } from "../types/cms-module-descriptors";
 import type { PhiFormId } from "../types/form-id";
 import { isPhiFormId, normalizePhiFormId } from "../types/form-id";
+import { isPhiRecord } from "../helpers/is-record";
 
 export const PHI_FORM_DEFINITION_STATUS = {
   workingDraft: 0,
@@ -61,10 +62,6 @@ type FormRegistryPayload = {
   forms?: unknown[];
 };
 
-function isPlainObject(value: unknown): value is Record<string, unknown> {
-  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
-}
-
 function toStringArray(value: unknown): string[] {
   if (!Array.isArray(value)) {
     return [];
@@ -73,11 +70,11 @@ function toStringArray(value: unknown): string[] {
 }
 
 function toRecord(value: unknown): Record<string, unknown> {
-  return isPlainObject(value) ? value : {};
+  return isPhiRecord(value) ? value : {};
 }
 
 function normalizeRegistryRecord(value: unknown): PhiFormRegistryRecord | null {
-  if (!isPlainObject(value)) {
+  if (!isPhiRecord(value)) {
     return null;
   }
 
@@ -129,7 +126,7 @@ function normalizeRegistryRecord(value: unknown): PhiFormRegistryRecord | null {
 }
 
 function normalizeRegistryResponse(payload: unknown): PhiFormRegistryRecord[] {
-  if (!isPlainObject(payload)) {
+  if (!isPhiRecord(payload)) {
     return [];
   }
   const forms: unknown[] = Array.isArray((payload as FormRegistryPayload).forms)

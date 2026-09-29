@@ -23,6 +23,7 @@ import type {
   PhiRuntimeFormResultSignalValue,
   PhiRuntimeFormSubmitSignalValue,
 } from "./runtime-form-controller-mount";
+import { isPhiRecord } from "../../helpers/is-record";
 
 export type PhiRuntimeFormSubmitResult = PhiRuntimeFormResultSignalValue;
 
@@ -70,24 +71,20 @@ export type PhiRuntimeFormClient = {
   clear(options?: { correlationId?: string }): void;
 };
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
-}
-
 function readRuntimeFormResult(value: unknown): PhiRuntimeFormResultSignalValue | null {
-  if (!isRecord(value) || typeof value.ok !== "boolean" || typeof value.status !== "number") {
+  if (!isPhiRecord(value) || typeof value.ok !== "boolean" || typeof value.status !== "number") {
     return null;
   }
 
   return {
     ok: value.ok,
     status: value.status,
-    payload: isRecord(value.payload) ? value.payload : null,
+    payload: isPhiRecord(value.payload) ? value.payload : null,
   };
 }
 
 function readRuntimeFormError(value: unknown): PhiRuntimeFormErrorSignalValue | null {
-  return isRecord(value) && typeof value.message === "string"
+  return isPhiRecord(value) && typeof value.message === "string"
     ? { message: value.message }
     : null;
 }

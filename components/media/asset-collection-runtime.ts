@@ -26,6 +26,7 @@ import {
   type PhiImagePreviewStoreState,
   usePhiImagePreviewStore,
 } from "./phi-image-preview-store";
+import { isPhiRecord } from "../../helpers/is-record";
 
 export const PHI_ASSET_COLLECTION_DATA_SOURCE = {
   providerKey: PHI_ASSET_RUNTIME_DATA_PROVIDER_KEYS.mediaCollection,
@@ -56,28 +57,24 @@ export function buildPhiAssetCollectionQuery(
   };
 }
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
-}
-
 export function applyPhiAssetCollectionData(
   data: PhiCollectionProviderData,
   resolvedCollectionRequestKey?: string,
 ) {
   const folders = Array.isArray(data.meta?.folders)
-    ? data.meta.folders.filter(isRecord) as unknown as PhiMediaAssetFolder[]
+    ? data.meta.folders.filter(isPhiRecord) as unknown as PhiMediaAssetFolder[]
     : [];
-  const pagination = isRecord(data.meta?.pagination)
+  const pagination = isPhiRecord(data.meta?.pagination)
     ? data.meta.pagination as unknown as PhiMediaPickerPagination
     : null;
   setPhiImagePreviewResults(PHI_ASSET_CONTROLLER_STORE_KEY, {
-    activeSpace: isRecord(data.meta?.activeSpace)
+    activeSpace: isPhiRecord(data.meta?.activeSpace)
       ? data.meta.activeSpace as unknown as PhiMediaSpaceOption
       : null,
     spaces: Array.isArray(data.meta?.spaces)
-      ? data.meta.spaces.filter(isRecord) as unknown as PhiMediaSpaceOption[]
+      ? data.meta.spaces.filter(isPhiRecord) as unknown as PhiMediaSpaceOption[]
       : [],
-    assets: data.items.filter(isRecord) as unknown as PhiMediaAssetTile[],
+    assets: data.items.filter(isPhiRecord) as unknown as PhiMediaAssetTile[],
     folders,
     pagination,
     resolvedCollectionRequestKey,

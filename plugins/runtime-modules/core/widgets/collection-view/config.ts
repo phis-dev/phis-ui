@@ -12,6 +12,7 @@ import { isPhiNamespacedRuntimeKey, isPhiRuntimeDataProviderKey } from "../../..
 import { PHI_BUILDER_RUNTIME_DATA_PROVIDER_KEYS } from "../../../builder/ids";
 import { readPhiLengthValue, type PhiCssLength } from "../../../../../types/length";
 import { readBoolean, readNumber, readNumberList, readString, type PhiCmsWidgetConfigBase } from "../../../../../components/widgets/config/parser-primitives";
+import { isPhiRecord } from "../../../../../helpers/is-record";
 
 export type PhiCmsCollectionViewMode = "grid" | "masonry" | "stack";
 export type PhiCmsCollectionFilterControl = "select" | "multi-select" | "cascader";
@@ -128,12 +129,8 @@ export function parsePhiCmsAssetPreviewGridWidgetConfig(
   return normalizePhiCmsAssetPreviewGridWidgetConfig(config);
 }
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
-}
-
 function readCardPresentation(value: unknown): PhiCmsCollectionCardPresentation | undefined {
-  if (!isRecord(value)) {
+  if (!isPhiRecord(value)) {
     return undefined;
   }
   const variant = readString(value.variant);
@@ -162,21 +159,21 @@ function readControlSize(value: unknown): PhiControlSize | undefined {
 }
 
 function readSource(value: unknown): PhiCollectionProviderDataSource | null {
-  if (!isRecord(value)) return null;
+  if (!isPhiRecord(value)) return null;
   const resourceKey = readString(value.resourceKey);
   if (!isPhiRuntimeDataProviderKey(value.providerKey) || !resourceKey) return null;
   return {
     providerKey: value.providerKey,
     resourceKey,
     scopeKey: readString(value.scopeKey),
-    params: isRecord(value.params) ? value.params : undefined,
+    params: isPhiRecord(value.params) ? value.params : undefined,
   };
 }
 
 function readFilters(value: unknown): PhiCmsCollectionFilterPresentation[] {
   if (!Array.isArray(value)) return [];
   return value.flatMap((entry) => {
-    if (!isRecord(entry)) return [];
+    if (!isPhiRecord(entry)) return [];
     const key = readString(entry.key);
     const control = entry.control === "multi-select" || entry.control === "cascader" ? entry.control : "select";
     return key ? [{
@@ -193,7 +190,7 @@ function readFilters(value: unknown): PhiCmsCollectionFilterPresentation[] {
 function readToolbarActions(value: unknown): PhiCmsCollectionToolbarActionPresentation[] {
   if (!Array.isArray(value)) return [];
   return value.flatMap((entry) => {
-    if (!isRecord(entry)) return [];
+    if (!isPhiRecord(entry)) return [];
     const key = readString(entry.key);
     if (!key) return [];
     return [{
@@ -208,7 +205,7 @@ function readToolbarActions(value: unknown): PhiCmsCollectionToolbarActionPresen
 }
 
 function readInitialQuery(value: unknown): PhiCollectionProviderQuery | undefined {
-  if (!isRecord(value)) return undefined;
+  if (!isPhiRecord(value)) return undefined;
   const page = readNumber(value.page);
   const pageSize = readNumber(value.pageSize);
   return {
@@ -217,7 +214,7 @@ function readInitialQuery(value: unknown): PhiCollectionProviderQuery | undefine
     search: readString(value.search),
     sortKey: readString(value.sortKey),
     sortOrder: value.sortOrder === "ascend" ? "ascend" : value.sortOrder === "descend" ? "descend" : undefined,
-    filters: isRecord(value.filters)
+    filters: isPhiRecord(value.filters)
       ? Object.fromEntries(Object.entries(value.filters).filter((entry): entry is [string, PhiCollectionProviderQueryValue] => {
           const filterValue = entry[1];
           return filterValue == null || typeof filterValue === "string" || typeof filterValue === "number" ||
@@ -229,13 +226,13 @@ function readInitialQuery(value: unknown): PhiCollectionProviderQuery | undefine
 }
 
 export function normalizePhiCmsCollectionViewWidgetConfig(config: unknown): PhiCmsCollectionViewWidgetConfig {
-  const raw = isRecord(config) ? config : {};
-  const presentation = isRecord(raw.presentation) ? raw.presentation : {};
-  const features = isRecord(raw.features) ? raw.features : {};
-  const tools = isRecord(features.tools) ? features.tools : {};
-  const search = isRecord(features.search) ? features.search : null;
-  const actions = isRecord(features.actions) ? features.actions : {};
-  const pagination = isRecord(features.pagination) ? features.pagination : null;
+  const raw = isPhiRecord(config) ? config : {};
+  const presentation = isPhiRecord(raw.presentation) ? raw.presentation : {};
+  const features = isPhiRecord(raw.features) ? raw.features : {};
+  const tools = isPhiRecord(features.tools) ? features.tools : {};
+  const search = isPhiRecord(features.search) ? features.search : null;
+  const actions = isPhiRecord(features.actions) ? features.actions : {};
+  const pagination = isPhiRecord(features.pagination) ? features.pagination : null;
   return {
     presentation: {
       title: readString(presentation.title),
@@ -246,7 +243,7 @@ export function normalizePhiCmsCollectionViewWidgetConfig(config: unknown): PhiC
       minColumnWidth: readPhiLengthValue(presentation.minColumnWidth) ?? undefined,
       emptyDescription: readString(presentation.emptyDescription),
       controlSize: readControlSize(presentation.controlSize) ?? "small",
-      labels: isRecord(presentation.labels) ? presentation.labels : undefined,
+      labels: isPhiRecord(presentation.labels) ? presentation.labels : undefined,
     },
     features: {
       tools: {

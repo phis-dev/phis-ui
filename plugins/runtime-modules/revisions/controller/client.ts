@@ -43,15 +43,12 @@ import {
   PHI_BUILDER_DELETE_AREA_OVERLAY_IDS,
   PHI_BUILDER_DELETE_AREA_WIDGET_IDS,
 } from "../../../../helpers/cms-page-addresses";
+import { isPhiRecord } from "../../../../helpers/is-record";
 
 const PHI_REVISIONS_TABLE_ADDRESS = createPhiSignalAddress(
   "cms",
   PHI_BUILDER_REVISIONS_TABLE_WIDGET_ID,
 );
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
-}
 
 function PhiRevisionsControllerMount({ address }: { address: PhiSignalAddress }) {
   const dispatchSignal = usePhiSignalDispatcher();
@@ -225,8 +222,8 @@ function PhiRevisionsControllerMount({ address }: { address: PhiSignalAddress })
     }
 
     if (signal.channel === "formValues" && signal.action === "change") {
-      const payload = isRecord(signal.value) ? signal.value as Record<string, unknown> : null;
-      const values = isRecord(payload?.values) ? payload.values : null;
+      const payload = isPhiRecord(signal.value) ? signal.value as Record<string, unknown> : null;
+      const values = isPhiRecord(payload?.values) ? payload.values : null;
       const typed = typeof values?.areaKey === "string" ? values.areaKey.trim() : "";
       const area = getPhiWorkspaceCatalogSnapshot(PHI_WORKSPACE_CATALOG_SCOPE).area;
       if (typed !== area) {
@@ -272,9 +269,9 @@ function PhiRevisionsControllerMount({ address }: { address: PhiSignalAddress })
       router.replace(`${pathname}?${search.toString()}`, { scroll: false });
       return;
     }
-    if (signal.channel === "mutation" && signal.action === "change" && isRecord(signal.value)) {
+    if (signal.channel === "mutation" && signal.action === "change" && isPhiRecord(signal.value)) {
       const payload = signal.value as Record<string, unknown>;
-      const action = isRecord(payload.value) ? payload.value : null;
+      const action = isPhiRecord(payload.value) ? payload.value : null;
       const key = typeof action?.key === "string" ? action.key : "";
       if (key === "restore") {
         showMessage(

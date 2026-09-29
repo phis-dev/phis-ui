@@ -79,6 +79,7 @@ import { resolvePhiButtonIcon } from "../../../../../components/widgets/client/s
 import { PhiFlexControl } from "../../../../../components/controls/phi-flex-control";
 import { PhiTypographyControl } from "../../../../../components/controls/phi-typography-control";
 import { PhiCompactGroupControl } from "../../../../../components/controls/phi-compact-group-control";
+import { isPhiRecord } from "../../../../../helpers/is-record";
 
 type TableRow = Record<string, unknown>;
 type DateRangeValue = { start?: string; end?: string };
@@ -102,10 +103,6 @@ export type PhiTableWidgetClientProps = {
     selectedRowIdentities?: readonly PhiTableRowIdentity[];
   }) => boolean | void;
 };
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
-}
 
 function formatTableActionTemplate(
   value: string | undefined,
@@ -181,7 +178,7 @@ function buildQueryFilters(
   for (const filter of filters ?? []) {
     const value = values[filter.key];
     if (filter.type === "dateRange") {
-      const range = isRecord(value) ? value : null;
+      const range = isPhiRecord(value) ? value : null;
       const start = typeof range?.start === "string" ? range.start : "";
       const end = typeof range?.end === "string" ? range.end : "";
       if (start) result[filter.startKey] = start;
@@ -224,7 +221,7 @@ function updateTableQueryFilters(
 ) {
   const next = { ...(current ?? {}) };
   if (filter.type === "dateRange") {
-    const range = isRecord(value) ? value : {};
+    const range = isPhiRecord(value) ? value : {};
     const start = typeof range.start === "string" ? range.start : "";
     const end = typeof range.end === "string" ? range.end : "";
     if (start) next[filter.startKey] = start;
@@ -319,7 +316,7 @@ export function PhiTableWidgetClient({
   const config = useMemo(() => JSON.parse(configKey) as PhiTableWidgetConfig, [configKey]);
   const { presentation, features, source } = config;
   const [bindingParams, setBindingParams] = useState<Record<string, unknown>>(
-    () => isRecord(source?.params) ? source.params : {},
+    () => isPhiRecord(source?.params) ? source.params : {},
   );
   const resolvedSource = useMemo(() => source ? { ...source, params: bindingParams } : null, [bindingParams, source]);
   const resolvedControlSize = presentation.controlSize ??
@@ -1376,7 +1373,7 @@ function TableFilter({ filter, field, sourceConfig, value, size, onChange, label
       style={{ minWidth: 140 }} />;
   }
   if (filter.type === "dateRange") {
-    const range = isRecord(value) ? value : {};
+    const range = isPhiRecord(value) ? value : {};
     return <PhiCompactGroupControl>
       <PhiTextControl value={typeof range.start === "string" ? range.start : ""} placeholder={filter.startPlaceholder}
         size={size} onChange={(next) => onChange({ ...range, start: next ?? "" })}

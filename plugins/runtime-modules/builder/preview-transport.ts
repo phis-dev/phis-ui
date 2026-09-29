@@ -9,6 +9,7 @@ import type { PhiAnchorWidgetPlacement } from "../../../components/controls/phi-
 import type { PhiCmsInstanceId } from "../../../types/cms-instance-id";
 import type { PhiRuntimeModuleId } from "../../../types/cms-plugins";
 import type { PhiShadow, PhiLayoutEffectId } from "../../../types/layout-style";
+import { isPhiRecord } from "../../../helpers/is-record";
 
 export const PHI_BUILDER_PREVIEW_SEARCH_PARAM = "phiBuilderPreview";
 export const PHI_BUILDER_PREVIEW_ROUTE = "/builder/api/preview";
@@ -48,10 +49,6 @@ export type PhiBuilderPreviewSnapshot = {
 
 export type PhiBuilderPreviewSnapshotId = string;
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
-}
-
 export function serializePhiBuilderPreviewSnapshot(snapshot: PhiBuilderPreviewSnapshot) {
   return JSON.stringify(snapshot);
 }
@@ -63,7 +60,7 @@ export function parsePhiBuilderPreviewSnapshot(value: string | null | undefined)
 
   try {
     const parsed = JSON.parse(value) as unknown;
-    if (!isRecord(parsed) || parsed.version !== 2) {
+    if (!isPhiRecord(parsed) || parsed.version !== 2) {
       return null;
     }
 
@@ -74,12 +71,12 @@ export function parsePhiBuilderPreviewSnapshot(value: string | null | undefined)
       !pageKey ||
       !Array.isArray(parsed.runtimeModuleIds) ||
       parsed.runtimeModuleIds.some((moduleId) => typeof moduleId !== "string" || moduleId.length === 0) ||
-      !isRecord(parsed.regionDrafts)
+      !isPhiRecord(parsed.regionDrafts)
     ) {
       return null;
     }
     const regionDraftEntries = Object.entries(parsed.regionDrafts);
-    if (regionDraftEntries.some(([, draft]) => !isRecord(draft))) {
+    if (regionDraftEntries.some(([, draft]) => !isPhiRecord(draft))) {
       return null;
     }
     const regionDrafts = Object.fromEntries(

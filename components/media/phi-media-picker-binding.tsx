@@ -25,6 +25,7 @@ import {
   buildPhiMediaSpaceOptions,
   usePhiMediaSpaceSelectionAllowed,
 } from "./media-space-selection";
+import { isPhiRecord } from "../../helpers/is-record";
 
 export type PhiMediaPickerBindingProps = {
   config?: PhiCmsMediaPickerWidgetConfig | null;
@@ -42,10 +43,6 @@ export type PhiMediaPickerBindingProps = {
   getPopupContainer?: (triggerNode: HTMLElement) => HTMLElement;
   popupRootClassName?: string;
 };
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
-}
 
 export function usePhiMediaPickerBinding({
   config,
@@ -134,18 +131,18 @@ export function usePhiMediaPickerBinding({
         });
         if (abortController.signal.aborted) return;
         const nextFolders = Array.isArray(data.meta?.folders)
-          ? data.meta.folders.filter(isRecord) as unknown as PhiMediaAssetFolder[]
+          ? data.meta.folders.filter(isPhiRecord) as unknown as PhiMediaAssetFolder[]
           : [];
-        const nextAssets = data.items.filter(isRecord) as unknown as PhiMediaAssetTile[];
+        const nextAssets = data.items.filter(isPhiRecord) as unknown as PhiMediaAssetTile[];
         setAssets(nextAssets);
         for (const asset of nextAssets) assetCacheRef.current.set(asset.id, asset);
         setFolders(nextFolders);
         setSpaces(Array.isArray(data.meta?.spaces)
-          ? data.meta.spaces.filter(isRecord) as unknown as PhiMediaSpaceOption[]
+          ? data.meta.spaces.filter(isPhiRecord) as unknown as PhiMediaSpaceOption[]
           : []);
         // The answer says which Space it actually served, so the selector follows the control plane
         // rather than the other way round -- including the first load, which asked for nothing.
-        const activeAddress = isRecord(data.meta?.activeSpace) && typeof data.meta.activeSpace.address === "string"
+        const activeAddress = isPhiRecord(data.meta?.activeSpace) && typeof data.meta.activeSpace.address === "string"
           ? data.meta.activeSpace.address
           : null;
         if (activeAddress) setSpaceAddress(activeAddress);

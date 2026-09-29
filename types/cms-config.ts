@@ -44,6 +44,7 @@ import type { PhiBaseLayoutSlotStates } from "../components/layouts/phi-layout-c
 import { applyPhiLayoutDefaults } from "../helpers/cms-layout-defaults";
 import { resolvePhiLayoutDefaults } from "../helpers/cms-layout-defaults";
 import { normalizeRenderableBlockAnchor } from "../helpers/renderable-block-serialization";
+import { isPhiRecord } from "../helpers/is-record";
 
 export type PhiCmsPluginConfigBase = Record<string, unknown>;
 
@@ -111,9 +112,6 @@ export type PhiCmsPaddingWidgetConfig = {
 
 type JsonRecord = Record<string, unknown>;
 
-function isPlainObject(value: unknown): value is JsonRecord {
-  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
-}
 function readInitialSlotStates(value: unknown): PhiBaseLayoutSlotStates | undefined {
   if (Array.isArray(value)) {
     const normalized = value.map((candidate) =>
@@ -193,10 +191,10 @@ export function mergePhiCmsConfigValues<T extends JsonRecord>(
   override: Partial<T> | null | undefined,
 ): T | null {
   const next: JsonRecord = {
-    ...(isPlainObject(defaults) ? defaults : {}),
+    ...(isPhiRecord(defaults) ? defaults : {}),
   };
 
-  if (isPlainObject(override)) {
+  if (isPhiRecord(override)) {
     for (const [key, value] of Object.entries(override)) {
       if (value !== undefined && value !== null) {
         next[key] = value;

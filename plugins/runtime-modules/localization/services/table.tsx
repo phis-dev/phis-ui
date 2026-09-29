@@ -18,6 +18,7 @@ import {
 } from "../../../../components/widgets/client/shared/phi-table-provider";
 import { createPhiLocalizationControllerAddress } from "../controller/address";
 import { PHI_LOCALIZATION_RUNTIME_DATA_PROVIDER_DESCRIPTORS } from "../../../../plugins/runtime-modules/localization/data-providers";
+import { isPhiRecord } from "../../../../helpers/is-record";
 
 const ADMIN_LOCALES_API_PATH = "/api/site/admin/locales";
 const EDITOR_TRANSLATIONS_API_PATH = "/api/site/editor/translations";
@@ -34,12 +35,8 @@ type ApiResponse = {
   updatedAt?: unknown;
 };
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
-}
-
 function readRows(value: unknown) {
-  return Array.isArray(value) ? value.filter(isRecord) : [];
+  return Array.isArray(value) ? value.filter(isPhiRecord) : [];
 }
 
 function readStringFilter(query: PhiTableQuery, key: string) {
@@ -83,7 +80,7 @@ async function loadSiteTranslations({
     headers: { accept: "application/json" },
     signal,
   }));
-  const translations = isRecord(result?.translations) ? result.translations : {};
+  const translations = isPhiRecord(result?.translations) ? result.translations : {};
   const selectedLocale = typeof result?.selectedLocale === "string" ? result.selectedLocale : "";
   const rows = readRows(translations.rows).map((row) => ({
     ...row,
@@ -104,7 +101,7 @@ async function loadSiteTranslations({
       ? { filters: { locale: selectedLocale } }
       : undefined,
     facets: {
-      site: isRecord(result?.site) ? result.site : {},
+      site: isPhiRecord(result?.site) ? result.site : {},
       platformLocales: readRows(result?.platformLocales),
       selectedLocale,
     },
@@ -128,13 +125,13 @@ async function loadEditorTranslations({
     headers: { accept: "application/json" },
     signal,
   }));
-  const translations = isRecord(result?.translations) ? result.translations : {};
+  const translations = isPhiRecord(result?.translations) ? result.translations : {};
   const selectedLocale = typeof result?.selectedLocale === "string" ? result.selectedLocale : "";
   const rows = readRows(translations.rows).map((row) => ({
     ...row,
     status: row.hasTranslation === true ? "translated" : "missing",
   }));
-  const site = isRecord(result?.site) ? result.site : {};
+  const site = isPhiRecord(result?.site) ? result.site : {};
   return {
     rows,
     total: typeof translations.total === "number" ? translations.total : rows.length,
@@ -157,7 +154,7 @@ async function loadSiteLocaleSettings(signal: AbortSignal) {
     headers: { accept: "application/json" },
     signal,
   }));
-  const site = isRecord(result?.site) ? result.site : {};
+  const site = isPhiRecord(result?.site) ? result.site : {};
   return {
     id: "site",
     sourceLocale: typeof site.sourceLocale === "string" ? site.sourceLocale : "",
@@ -300,7 +297,7 @@ export function PhiLocalizationTableProviderClient({ children }: { children: Rea
       url = `${apiPath}?${params.toString()}`;
       init.method = "DELETE";
     } else if (request.actionKey === "saveTranslation") {
-      if (!isRecord(request.actionValue)) {
+      if (!isPhiRecord(request.actionValue)) {
         throw new PhiTableProviderError("invalid-action-value", "Save translation requires values.");
       }
       init.method = "PATCH";
@@ -321,7 +318,7 @@ export function PhiLocalizationTableProviderClient({ children }: { children: Rea
       url = `${apiPath}?${new URLSearchParams({ msgId: String(msgId), locale }).toString()}`;
       init.method = "DELETE";
     } else if (request.resourceKey === "siteTranslations" && request.actionKey === "saveLocales") {
-      if (!isRecord(request.actionValue)) {
+      if (!isPhiRecord(request.actionValue)) {
         throw new PhiTableProviderError("invalid-action-value", "Save locales requires values.");
       }
       init.method = "PATCH";

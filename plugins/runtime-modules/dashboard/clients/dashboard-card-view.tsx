@@ -15,6 +15,7 @@ import { PhiCardWidgetClient, type PhiCardWidgetBody } from "../../core/widgets/
 import { PhiCollectionViewControl } from "../../../../components/controls/phi-collection-view-control";
 import { PhiAlertControl } from "../../../../components/controls/phi-alert-control";
 import { PhiEmptyControl } from "../../../../components/controls/phi-empty-control";
+import { isPhiRecord } from "../../../../helpers/is-record";
 
 /**
  * A Dashboard, drawn.
@@ -46,13 +47,9 @@ const CARD_BODY_BY_FORM: Record<PhiDashboardCardForm, PhiCardWidgetBody> = {
   stat: "stat",
 };
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
-}
-
 function readRows(binding: PhiCollectionViewBindingModel) {
   return (binding.data?.items ?? [])
-    .filter(isRecord)
+    .filter(isPhiRecord)
     .map((item) => item as unknown as PhiDashboardCardRow)
     .filter((row) => typeof row.cardId === "string" && typeof row.title === "string");
 }

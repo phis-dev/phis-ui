@@ -43,17 +43,14 @@ import {
   PHI_RENDERABLE_BLOCK_DEFAULT_Z_INDEX,
   createPhiRenderableBlockDefaults,
 } from "./renderable-block-defaults";
+import { isPhiRecord } from "./is-record";
 
 type JsonRecord = Record<string, unknown>;
-
-function isRecord(value: unknown): value is JsonRecord {
-  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
-}
 
 export function normalizeRenderableBlockAnchor(
   value: unknown,
 ): PhiRenderableBlockAnchor | undefined {
-  if (!isRecord(value)) {
+  if (!isPhiRecord(value)) {
     return undefined;
   }
 
@@ -86,7 +83,7 @@ function normalizeRenderableBlockSize(value: unknown): PhiRenderableBlockSize | 
     return { width: value };
   }
 
-  if (!isRecord(value)) {
+  if (!isPhiRecord(value)) {
     return undefined;
   }
 
@@ -233,7 +230,7 @@ function normalizeRenderableBlockTransitionOffset(value: unknown): number | stri
 }
 
 function normalizeRenderableBlockTransition(value: unknown): PhiRenderableBlockTransition | undefined {
-  if (!isRecord(value)) {
+  if (!isPhiRecord(value)) {
     return undefined;
   }
 
@@ -302,7 +299,7 @@ function normalizeRenderableBlockTransitions(value: unknown): PhiRenderableBlock
 }
 
 function normalizeRenderableBlockViewportEffect(value: unknown): PhiRenderableBlockViewportEffect | undefined {
-  if (!isRecord(value)) {
+  if (!isPhiRecord(value)) {
     return undefined;
   }
 
@@ -356,7 +353,7 @@ function normalizeRenderableBlockViewportEffects(value: unknown): PhiRenderableB
 }
 
 function normalizeRenderableBlockEffects(value: unknown): PhiRenderableBlockEffects | undefined {
-  if (!isRecord(value)) {
+  if (!isPhiRecord(value)) {
     return undefined;
   }
 
@@ -387,7 +384,7 @@ function normalizeRenderableBlockEffects(value: unknown): PhiRenderableBlockEffe
 function normalizeRenderableBlockCapabilities(
   value: unknown,
 ): PhiRenderableBlockCapabilities | undefined {
-  if (!isRecord(value)) {
+  if (!isPhiRecord(value)) {
     return undefined;
   }
 
@@ -408,7 +405,7 @@ function normalizeRenderableBlockCapabilities(
 function normalizeRenderableBlockRuntimeContext(
   value: unknown,
 ): PhiRenderableBlockRuntimeContext | undefined {
-  if (!isRecord(value)) {
+  if (!isPhiRecord(value)) {
     return undefined;
   }
 
@@ -451,7 +448,7 @@ function normalizeRenderableBlockRuntimeContext(
 function normalizeRenderableBlockInteractionState(
   value: unknown,
 ): PhiRenderableBlockInteractionState | undefined {
-  if (!isRecord(value)) {
+  if (!isPhiRecord(value)) {
     return undefined;
   }
 
@@ -483,7 +480,7 @@ function normalizeRenderableBlockRuntime(value: unknown): PhiRenderableBlockRunt
 }
 
 function normalizeRenderableBlockBase(value: unknown): PhiRenderableBlockBase {
-  if (!isRecord(value)) {
+  if (!isPhiRecord(value)) {
     return createPhiRenderableBlockDefaults();
   }
 
@@ -803,7 +800,7 @@ export function stripRenderableBlockDefaults(
 export function deserializeRenderableBlock(
   value: unknown,
 ): PhiRenderableBlock {
-  if (!isRecord(value)) {
+  if (!isPhiRecord(value)) {
     return {
       ...createPhiRenderableBlockDefaults(),
     };

@@ -56,6 +56,7 @@ import {
 } from "./inspector-choice-values";
 import { PhiFlexControl } from "../../../../components/controls/phi-flex-control";
 import { PhiTypographyControl } from "../../../../components/controls/phi-typography-control";
+import { isPhiRecord } from "../../../../helpers/is-record";
 
 export type PhiInspectorWidgetReferenceOption = {
   value: string;
@@ -66,10 +67,6 @@ export type PhiInspectorWidgetReferenceOption = {
 type PhiInspectorChoiceField = Extract<PhiCmsConfigField, { type: "choice" }>;
 type PhiInspectorCollectionField = Extract<PhiCmsConfigField, { type: "collection" }>;
 const PHI_STATIC_OPTIONS_PROVIDER_VALUE = "__phi_static_options__";
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
-}
 
 export function renderPhiInspectorSettingsRow(label: string, control: ReactNode, key?: string) {
   return (
@@ -713,9 +710,9 @@ export function renderPhiInspectorConfigField({
   if (field.type === "data-provider") {
     const providerConfig = parsePhiControlOptionsProviderConfig(value)
       ?? parsePhiControlOptionsProviderConfig(defaultValue);
-    const rawProviderConfig = isRecord(value)
+    const rawProviderConfig = isPhiRecord(value)
       ? value
-      : isRecord(defaultValue)
+      : isPhiRecord(defaultValue)
         ? defaultValue
         : {};
     const supportsStaticOptions = !field.providerKind || field.providerKind === "options";
@@ -757,7 +754,7 @@ export function renderPhiInspectorConfigField({
                         "defaultForWidget" in resource && resource.defaultForWidget === true)?.resourceKey ??
                         (resources.length === 1 ? resources[0]?.resourceKey : "") ?? "";
                     })(),
-                    params: isRecord(rawProviderConfig.params) ? rawProviderConfig.params : undefined,
+                    params: isPhiRecord(rawProviderConfig.params) ? rawProviderConfig.params : undefined,
                   }
                 : { ...providerConfig, providerKey },
           })}
@@ -777,7 +774,7 @@ export function renderPhiInspectorConfigField({
               [field.key]: {
                 providerKey: selectedProvider.key,
                 resourceKey,
-                params: isRecord(rawProviderConfig.params) ? rawProviderConfig.params : undefined,
+                params: isPhiRecord(rawProviderConfig.params) ? rawProviderConfig.params : undefined,
               },
             })}
           />

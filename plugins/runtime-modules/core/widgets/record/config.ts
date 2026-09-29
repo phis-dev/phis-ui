@@ -12,6 +12,7 @@ import {
   type PhiTableTagVariant,
   type PhiTableValueRenderer,
 } from "../../../../../types/table-widget";
+import { isPhiRecord } from "../../../../../helpers/is-record";
 
 const PHI_RECORD_VALUE_RENDERERS = [
   "text",
@@ -28,10 +29,6 @@ const PHI_RECORD_VALUE_RENDERERS = [
   "icon",
 ] as const satisfies readonly PhiTableValueRenderer[];
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
-}
-
 function readRecordValueRenderer(value: unknown): PhiTableValueRenderer | undefined {
   return typeof value === "string" && (PHI_RECORD_VALUE_RENDERERS as readonly string[]).includes(value)
     ? value as PhiTableValueRenderer
@@ -45,7 +42,7 @@ function readTagVariant(value: unknown): PhiTableTagVariant | undefined {
 }
 
 function readStringMap(value: unknown): Readonly<Record<string, string>> | undefined {
-  if (!isRecord(value)) return undefined;
+  if (!isPhiRecord(value)) return undefined;
   const entries = Object.entries(value).flatMap(([key, entry]) => {
     const text = readString(entry);
     return text ? [[key, text] as const] : [];
@@ -54,7 +51,7 @@ function readStringMap(value: unknown): Readonly<Record<string, string>> | undef
 }
 
 function readRecordField(value: unknown): PhiRecordFieldDefinition | null {
-  if (!isRecord(value)) return null;
+  if (!isPhiRecord(value)) return null;
   const key = readString(value.key);
   const fieldKey = readString(value.fieldKey);
   if (!key || !fieldKey) return null;
@@ -64,7 +61,7 @@ function readRecordField(value: unknown): PhiRecordFieldDefinition | null {
     label: readString(value.label) ?? fieldKey,
     renderer: readRecordValueRenderer(value.renderer),
     valueMap: readStringMap(value.valueMap),
-    tagColorMap: isRecord(value.tagColorMap)
+    tagColorMap: isPhiRecord(value.tagColorMap)
       ? value.tagColorMap as PhiRecordFieldDefinition["tagColorMap"]
       : undefined,
     tagVariant: readTagVariant(value.tagVariant),
@@ -75,10 +72,10 @@ function readRecordField(value: unknown): PhiRecordFieldDefinition | null {
 export function parsePhiRecordWidgetConfig(
   rawConfig: Record<string, unknown>,
 ): PhiRecordWidgetConfig {
-  const source = isRecord(rawConfig.source) ? rawConfig.source : {};
+  const source = isPhiRecord(rawConfig.source) ? rawConfig.source : {};
   const providerKey = typeof source.providerKey === "string" ? source.providerKey : "";
   const resourceKey = readString(source.resourceKey)?.trim() ?? "";
-  const presentation = isRecord(rawConfig.presentation) ? rawConfig.presentation : {};
+  const presentation = isPhiRecord(rawConfig.presentation) ? rawConfig.presentation : {};
   const columns = readInteger(presentation.columns);
 
   return {
@@ -86,7 +83,7 @@ export function parsePhiRecordWidgetConfig(
       ? {
           providerKey,
           resourceKey,
-          params: isRecord(source.params) ? { ...source.params } : {},
+          params: isPhiRecord(source.params) ? { ...source.params } : {},
         }
       : null,
     openActionKey: readString(rawConfig.openActionKey)?.trim() ?? "view",

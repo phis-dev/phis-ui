@@ -14,6 +14,7 @@ import {
   type PhiCollectionProviderRegistration,
 } from "../../../../components/widgets/client/shared/phi-collection-provider";
 import type { PhiDashboardCardRow } from "../../../../types/dashboard-cards";
+import { isPhiRecord } from "../../../../helpers/is-record";
 
 /**
  * The fan-in, from the browser's side: one request, and no idea what stands behind it.
@@ -33,13 +34,9 @@ type PhiDashboardCardsResponse = {
   cards?: unknown;
 };
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
-}
-
 function readCardRows(payload: PhiDashboardCardsResponse) {
   return Array.isArray(payload.cards)
-    ? payload.cards.filter(isRecord).map((card) => ({ ...card }) as unknown as PhiDashboardCardRow)
+    ? payload.cards.filter(isPhiRecord).map((card) => ({ ...card }) as unknown as PhiDashboardCardRow)
     : [];
 }
 

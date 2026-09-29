@@ -9,6 +9,7 @@ import type { PhiCmsAreaKey } from "../constants/cms-areas";
 import type { PhiRuntimeModuleCatalog } from "../plugins/runtime-modules/contracts";
 import { PHIS_SITE_KEY_HEADER } from "../constants/http-headers";
 import type { PhiSiteAreaBridgeLoader } from "./site-area-bridges";
+import { isPhiRecord } from "../helpers/is-record";
 
 /**
  * How the catalog of the Area a Form was submitted from is reached.
@@ -40,10 +41,6 @@ type SiteFormSubmitBody = {
 
 const PHI_SITE_SESSION_COOKIE_NAME = "phis_session";
 const PHI_AUTH_LINK_COOKIE_NAME = "phis_auth_link";
-
-function isPlainObject(value: unknown): value is Record<string, unknown> {
-  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
-}
 
 function toJsonResponse(payload: unknown, status: number) {
   return Response.json(payload ?? {}, { status });
@@ -151,7 +148,7 @@ function readBearerToken(headers: Headers) {
 async function readRequestBody(request: NextRequest): Promise<SiteFormSubmitBody | null> {
   try {
     const body = (await request.json()) as unknown;
-    return isPlainObject(body) ? (body as SiteFormSubmitBody) : null;
+    return isPhiRecord(body) ? (body as SiteFormSubmitBody) : null;
   } catch {
     return null;
   }

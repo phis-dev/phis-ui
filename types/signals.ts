@@ -74,6 +74,7 @@ import {
   type PhiSignalValueSchema,
   type PhiSignalValueType,
 } from "@phis/contracts/signals";
+import { isPhiRecord } from "../helpers/is-record";
 
 export type PhiSignalRuntimeContext = {
   siteKey?: string | null;
@@ -473,12 +474,8 @@ export function readPhiSignalValueSchema(value: unknown): PhiSignalValueSchema |
   return isPhiSignalValueSchema(value) ? (value.trim() as PhiSignalValueSchema) : null;
 }
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
-}
-
 function readPhiSignalRoute(value: unknown): PhiSignalRoute | null {
-  if (!isRecord(value)) {
+  if (!isPhiRecord(value)) {
     return null;
   }
   const routeKey = typeof value.routeKey === "string" && value.routeKey.trim() ? value.routeKey.trim() : null;
@@ -546,7 +543,7 @@ function readPhiSignalRouteList(value: unknown): PhiSignalRoute[] | null {
 }
 
 export function readPhiSignalRouteSet(value: unknown): PhiSignalRouteSet | null {
-  if (!isRecord(value)) {
+  if (!isPhiRecord(value)) {
     return null;
   }
 

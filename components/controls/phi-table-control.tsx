@@ -73,6 +73,7 @@ import { PhiExpandIndicator } from "./phi-expand-indicator";
 import styles from "./phi-table-control.module.css";
 import { usePhiConfig } from "../root/phi-config-provider";
 import { PhiSkeletonControl } from "./phi-skeleton-control";
+import { isPhiRecord } from "../../helpers/is-record";
 
 export type PhiTableControlCellEditor = {
   type: Exclude<PhiTableProviderFieldType, "json">;
@@ -378,13 +379,9 @@ export type PhiTableControlProps<TRow extends Record<string, unknown>> = {
   onExternalDrop?: (event: DragEvent<HTMLDivElement>) => void;
 };
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
-}
-
 export function readPhiTableControlValue(row: Record<string, unknown>, path: string) {
   return path.split(".").filter(Boolean).reduce<unknown>(
-    (current, segment) => isRecord(current) ? current[segment] : undefined,
+    (current, segment) => isPhiRecord(current) ? current[segment] : undefined,
     row,
   );
 }

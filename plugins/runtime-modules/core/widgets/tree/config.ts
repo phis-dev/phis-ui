@@ -12,19 +12,16 @@ import { readPhiLengthValue } from "../../../../../types/length";
 import { resolvePhiRuntimeConditionControllerRequirements } from "../../../../../types/runtime-condition";
 import { PHI_CONTROL_SIZE_FIELD, parsePhiControlPresentationConfig } from "../../../../../components/widgets/config/control-signal-config";
 import { readBoolean, readNumber, readString } from "../../../../../components/widgets/config/parser-primitives";
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
-}
+import { isPhiRecord } from "../../../../../helpers/is-record";
 
 function readActions(value: unknown): PhiTreeActionDefinition[] {
   if (!Array.isArray(value)) return [];
   return value.flatMap((entry) => {
-    if (!isRecord(entry)) return [];
+    if (!isPhiRecord(entry)) return [];
     const key = readString(entry.key);
     const label = readString(entry.label);
     if (!key || !label) return [];
-    const rawConfirm = isRecord(entry.confirm) ? entry.confirm : null;
+    const rawConfirm = isPhiRecord(entry.confirm) ? entry.confirm : null;
     const confirmTitle = readString(rawConfirm?.title);
     return [{
       key,
@@ -49,7 +46,7 @@ function readActions(value: unknown): PhiTreeActionDefinition[] {
 function readBindingTools(value: unknown): PhiTreeBindingToolDefinition[] {
   if (!Array.isArray(value)) return [];
   return value.flatMap((entry) => {
-    if (!isRecord(entry)) return [];
+    if (!isPhiRecord(entry)) return [];
     const key = readString(entry.key);
     if (!key) return [];
     return [{
@@ -63,30 +60,30 @@ function readBindingTools(value: unknown): PhiTreeBindingToolDefinition[] {
 }
 
 function readSource(value: unknown): PhiTreeWidgetConfig["source"] {
-  if (!isRecord(value) || !isPhiRuntimeDataProviderKey(value.providerKey) || !readString(value.resourceKey)) return null;
+  if (!isPhiRecord(value) || !isPhiRuntimeDataProviderKey(value.providerKey) || !readString(value.resourceKey)) return null;
   return {
     providerKey: value.providerKey,
     resourceKey: readString(value.resourceKey)!,
-    params: isRecord(value.params) ? value.params : undefined,
+    params: isPhiRecord(value.params) ? value.params : undefined,
   };
 }
 
 export function parsePhiTreeWidgetConfig(raw: Record<string, unknown>): PhiTreeWidgetConfig {
-  const presentation = isRecord(raw.presentation) ? raw.presentation : {};
-  const row = isRecord(presentation.row) ? presentation.row : {};
-  const node = isRecord(presentation.node) ? presentation.node : {};
-  const titleEditor = isRecord(node.titleEditor) ? node.titleEditor : {};
-  const iconEditor = isRecord(node.iconEditor) ? node.iconEditor : {};
-  const features = isRecord(raw.features) ? raw.features : {};
-  const search = isRecord(features.search) ? features.search : {};
-  const selection = isRecord(features.selection) ? features.selection : {};
-  const checking = isRecord(features.checking) ? features.checking : {};
-  const expansion = isRecord(features.expansion) ? features.expansion : {};
-  const editing = isRecord(features.editing) ? features.editing : {};
-  const tools = isRecord(features.tools) ? features.tools : {};
-  const actions = isRecord(features.actions) ? features.actions : {};
-  const dnd = isRecord(features.dnd) ? features.dnd : {};
-  const initialQuery = isRecord(raw.initialQuery) ? raw.initialQuery : {};
+  const presentation = isPhiRecord(raw.presentation) ? raw.presentation : {};
+  const row = isPhiRecord(presentation.row) ? presentation.row : {};
+  const node = isPhiRecord(presentation.node) ? presentation.node : {};
+  const titleEditor = isPhiRecord(node.titleEditor) ? node.titleEditor : {};
+  const iconEditor = isPhiRecord(node.iconEditor) ? node.iconEditor : {};
+  const features = isPhiRecord(raw.features) ? raw.features : {};
+  const search = isPhiRecord(features.search) ? features.search : {};
+  const selection = isPhiRecord(features.selection) ? features.selection : {};
+  const checking = isPhiRecord(features.checking) ? features.checking : {};
+  const expansion = isPhiRecord(features.expansion) ? features.expansion : {};
+  const editing = isPhiRecord(features.editing) ? features.editing : {};
+  const tools = isPhiRecord(features.tools) ? features.tools : {};
+  const actions = isPhiRecord(features.actions) ? features.actions : {};
+  const dnd = isPhiRecord(features.dnd) ? features.dnd : {};
+  const initialQuery = isPhiRecord(raw.initialQuery) ? raw.initialQuery : {};
   return {
     presentation: {
       ...parsePhiControlPresentationConfig(presentation),

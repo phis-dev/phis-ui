@@ -17,6 +17,7 @@ import type {
 } from "../../../types";
 import { PHI_RENDERABLE_BLOCK_RECEIVE_BINDINGS } from "./renderable-block-signal-capabilities";
 import type { PhiCmsInstanceId } from "../../../types/cms-instance-id";
+import { isPhiRecord } from "../../../helpers/is-record";
 
 export type PhiSignalEndpointTarget = "self" | "subcontrol";
 
@@ -28,10 +29,6 @@ export type PhiSignalEndpoint = {
   emits: PhiSignalOutputCapability[];
   listens: PhiSignalInputCapability[];
 };
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
-}
 
 function readString(value: unknown) {
   return typeof value === "string" && value.trim() ? value.trim() : null;
@@ -81,7 +78,7 @@ function readWidgetSignalSubcontrols(
     }
 
     for (const rawItem of items) {
-      if (!isRecord(rawItem)) {
+      if (!isPhiRecord(rawItem)) {
         continue;
       }
 

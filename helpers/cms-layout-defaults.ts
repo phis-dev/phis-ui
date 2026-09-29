@@ -1,6 +1,7 @@
 import { PHI_COLOR, PHI_MARGIN, PHI_SHADOW, PHI_SPACE } from "../theme/antd-css-var-contract";
 import type { PhiLayoutKind } from "../components/layouts/phi-layout-contract";
 import { PHI_RENDERABLE_BLOCK_DEFAULT_ANCHOR } from "./renderable-block-defaults";
+import { isPhiRecord } from "./is-record";
 
 type JsonRecord = Record<string, unknown>;
 
@@ -243,16 +244,12 @@ const PHI_LAYOUT_DEFAULTS_BY_KIND: Record<PhiLayoutKind, PhiLayoutDefaults> = {
   collapsible: PHI_COLLAPSIBLE_LAYOUT_DEFAULTS,
 };
 
-function isPlainObject(value: unknown): value is JsonRecord {
-  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
-}
-
 function isSameValue(left: unknown, right: unknown) {
   if (Object.is(left, right)) {
     return true;
   }
 
-  if (!isPlainObject(left) || !isPlainObject(right)) {
+  if (!isPhiRecord(left) || !isPhiRecord(right)) {
     return false;
   }
 
@@ -303,7 +300,7 @@ export function applyPhiLayoutDefaults<T extends JsonRecord>(
   value: Partial<T> | null | undefined,
   defaults: JsonRecord,
 ): T {
-  if (!isPlainObject(value)) {
+  if (!isPhiRecord(value)) {
     return { ...defaults } as T;
   }
 

@@ -37,6 +37,7 @@ import {
   readPhiRuntimeConditionExpression,
   resolvePhiRuntimeConditionControllerRequirements,
 } from "../../../../../types/runtime-condition";
+import { isPhiRecord } from "../../../../../helpers/is-record";
 
 function readConditionExpression(value: unknown) {
   return readPhiRuntimeConditionExpression(value) ?? undefined;
@@ -163,15 +164,11 @@ const PHI_TABLE_ACTION_CONFIG_FIELDS: PhiCmsConfigField[] = [
   { key: "confirm.cancelText", type: "string", label: "Confirm Cancel Text" },
 ];
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
-}
-
 function readTableTagColor(value: unknown): PhiTableTagColor | undefined {
   if (typeof value === "string" && (PHI_TABLE_TAG_COLORS as readonly string[]).includes(value)) {
     return value as PhiTableTagColor;
   }
-  if (!isRecord(value) || value.kind !== "custom") return undefined;
+  if (!isPhiRecord(value) || value.kind !== "custom") return undefined;
   const customValue = readString(value.value);
   return customValue ? { kind: "custom", value: customValue } : undefined;
 }
@@ -200,9 +197,9 @@ function isPhiTableCoreSummaryFieldKey(value: string): value is PhiTableCoreSumm
 }
 
 function readTableSummaryItem(value: unknown): PhiTableSummaryItemDefinition | null {
-  if (!isRecord(value)) return null;
+  if (!isPhiRecord(value)) return null;
   const key = readString(value.key);
-  const rawValue = isRecord(value.value) ? value.value : {};
+  const rawValue = isPhiRecord(value.value) ? value.value : {};
   const fieldKey = readString(rawValue.fieldKey);
   if (!key || !fieldKey) return null;
   const source: PhiTableSummaryValueSource | null = rawValue.source === "core" &&
@@ -221,7 +218,7 @@ function readTableSummaryItem(value: unknown): PhiTableSummaryItemDefinition | n
 }
 
 function readTableFooter(value: unknown): PhiTableFooterConfig | undefined {
-  if (!isRecord(value) || !Array.isArray(value.values)) return undefined;
+  if (!isPhiRecord(value) || !Array.isArray(value.values)) return undefined;
   const template = readString(value.template);
   const values = value.values.flatMap((item) => {
     const parsed = readTableSummaryItem(item);
@@ -238,13 +235,13 @@ function readTableFooter(value: unknown): PhiTableFooterConfig | undefined {
 }
 
 function readTableSummary(value: unknown): PhiTableSummaryConfig | undefined {
-  if (!isRecord(value) || !Array.isArray(value.rows)) return undefined;
+  if (!isPhiRecord(value) || !Array.isArray(value.rows)) return undefined;
   const rows = value.rows.flatMap<PhiTableSummaryConfig["rows"][number]>((rowValue) => {
-    if (!isRecord(rowValue) || !Array.isArray(rowValue.cells)) return [];
+    if (!isPhiRecord(rowValue) || !Array.isArray(rowValue.cells)) return [];
     const key = readString(rowValue.key);
     if (!key) return [];
     const cells = rowValue.cells.flatMap<PhiTableSummaryConfig["rows"][number]["cells"][number]>((cellValue) => {
-      if (!isRecord(cellValue)) return [];
+      if (!isPhiRecord(cellValue)) return [];
       const cellKey = readString(cellValue.key);
       const columnKey = readString(cellValue.columnKey);
       const item = readTableSummaryItem(cellValue.item);
@@ -273,7 +270,7 @@ function readColumns(value: unknown): PhiTableColumnDefinition[] {
     return [];
   }
   return value.flatMap((item) => {
-    if (!isRecord(item)) {
+    if (!isPhiRecord(item)) {
       return [];
     }
     const key = readString(item.key);
@@ -292,16 +289,16 @@ function readColumns(value: unknown): PhiTableColumnDefinition[] {
       ? item.renderer
       : "text";
     const align = item.align === "center" || item.align === "right" ? item.align : "left";
-    const rawSizing = isRecord(item.sizing) ? item.sizing : {};
+    const rawSizing = isPhiRecord(item.sizing) ? item.sizing : {};
     const sizing = readTableColumnSizing(rawSizing);
-    const valueMap = isRecord(item.valueMap)
+    const valueMap = isPhiRecord(item.valueMap)
       ? Object.fromEntries(
           Object.entries(item.valueMap).filter(
             (entry): entry is [string, string] => typeof entry[1] === "string",
           ),
         )
       : undefined;
-    const tagColorMap = isRecord(item.tagColorMap)
+    const tagColorMap = isPhiRecord(item.tagColorMap)
       ? Object.fromEntries(
           Object.entries(item.tagColorMap).flatMap(([key, value]) => {
             const color = readTableTagColor(value);
@@ -309,7 +306,7 @@ function readColumns(value: unknown): PhiTableColumnDefinition[] {
           }),
         )
       : undefined;
-    const rawEditor = isRecord(item.editor) ? item.editor : undefined;
+    const rawEditor = isPhiRecord(item.editor) ? item.editor : undefined;
     const editorControl = readTableColumnEditorControl(rawEditor?.control);
     return [{
       key,
@@ -360,7 +357,7 @@ function readFilterOptions(value: unknown) {
     return [];
   }
   return value.flatMap((item) => {
-    if (!isRecord(item)) {
+    if (!isPhiRecord(item)) {
       return [];
     }
     const label = readString(item.label);
@@ -375,7 +372,7 @@ function readFilters(value: unknown): PhiTableFilterDefinition[] {
   }
   const result: PhiTableFilterDefinition[] = [];
   for (const item of value) {
-    if (!isRecord(item)) {
+    if (!isPhiRecord(item)) {
       continue;
     }
     const key = readString(item.key);
@@ -419,7 +416,7 @@ function readFilters(value: unknown): PhiTableFilterDefinition[] {
       if (!startKey || !endKey) {
         continue;
       }
-      const defaultValue = isRecord(item.defaultValue)
+      const defaultValue = isPhiRecord(item.defaultValue)
         ? { start: readString(item.defaultValue.start), end: readString(item.defaultValue.end) }
         : undefined;
       result.push({
@@ -453,7 +450,7 @@ function readActions(value: unknown): PhiTableActionDefinition[] {
   }
   const result: PhiTableActionDefinition[] = [];
   for (const item of value) {
-    if (!isRecord(item)) {
+    if (!isPhiRecord(item)) {
       continue;
     }
     const key = readString(item.key);
@@ -478,14 +475,14 @@ function readActions(value: unknown): PhiTableActionDefinition[] {
       newTab: readBoolean(item.newTab),
       visibleWhen: readConditionExpression(item.visibleWhen),
       disabledWhen: readConditionExpression(item.disabledWhen),
-      confirm: isRecord(item.confirm) && readString(item.confirm.title)
+      confirm: isPhiRecord(item.confirm) && readString(item.confirm.title)
         ? (() => {
-            const alertLevel: PhiFeedbackLevel | undefined = isRecord(item.confirm.alert) &&
+            const alertLevel: PhiFeedbackLevel | undefined = isPhiRecord(item.confirm.alert) &&
               (item.confirm.alert.level === "success" || item.confirm.alert.level === "info" ||
                 item.confirm.alert.level === "warning" || item.confirm.alert.level === "error")
               ? item.confirm.alert.level
               : undefined;
-            const alert = isRecord(item.confirm.alert) && readString(item.confirm.alert.title) && alertLevel
+            const alert = isPhiRecord(item.confirm.alert) && readString(item.confirm.alert.title) && alertLevel
               ? {
                   level: alertLevel,
                   title: readString(item.confirm.alert.title) as string,
@@ -507,7 +504,7 @@ function readActions(value: unknown): PhiTableActionDefinition[] {
 }
 
 function readSource(value: unknown): PhiTableWidgetConfig["source"] {
-  if (!isRecord(value)) {
+  if (!isPhiRecord(value)) {
     return null;
   }
   const providerKey = readString(value.providerKey);
@@ -516,29 +513,29 @@ function readSource(value: unknown): PhiTableWidgetConfig["source"] {
     ? {
         providerKey,
         resourceKey,
-        params: isRecord(value.params) ? value.params : undefined,
+        params: isPhiRecord(value.params) ? value.params : undefined,
       }
     : null;
 }
 
 export function parsePhiTableWidgetConfig(config: Record<string, unknown>): PhiTableWidgetConfig {
-  const presentation = isRecord(config.presentation) ? config.presentation : {};
-  const features = isRecord(config.features) ? config.features : {};
-  const search = isRecord(features.search) ? features.search : {};
-  const pagination = isRecord(features.pagination) ? features.pagination : {};
-  const sorting = isRecord(features.sorting) ? features.sorting : {};
-  const rowSelection = isRecord(features.rowSelection) ? features.rowSelection : {};
-  const rowReordering = isRecord(features.rowReordering) ? features.rowReordering : {};
-  const columnReordering = isRecord(features.columnReordering) ? features.columnReordering : {};
-  const editing = isRecord(features.editing) ? features.editing : {};
-  const tools = isRecord(features.tools) ? features.tools : {};
-  const structure = isRecord(features.structure) ? features.structure : {};
-  const actions = isRecord(features.actions) ? features.actions : {};
-  const emptyState = isRecord(presentation.emptyState) ? presentation.emptyState : {};
-  const layout = isRecord(presentation.layout) ? presentation.layout : {};
-  const row = isRecord(presentation.row) ? presentation.row : {};
+  const presentation = isPhiRecord(config.presentation) ? config.presentation : {};
+  const features = isPhiRecord(config.features) ? config.features : {};
+  const search = isPhiRecord(features.search) ? features.search : {};
+  const pagination = isPhiRecord(features.pagination) ? features.pagination : {};
+  const sorting = isPhiRecord(features.sorting) ? features.sorting : {};
+  const rowSelection = isPhiRecord(features.rowSelection) ? features.rowSelection : {};
+  const rowReordering = isPhiRecord(features.rowReordering) ? features.rowReordering : {};
+  const columnReordering = isPhiRecord(features.columnReordering) ? features.columnReordering : {};
+  const editing = isPhiRecord(features.editing) ? features.editing : {};
+  const tools = isPhiRecord(features.tools) ? features.tools : {};
+  const structure = isPhiRecord(features.structure) ? features.structure : {};
+  const actions = isPhiRecord(features.actions) ? features.actions : {};
+  const emptyState = isPhiRecord(presentation.emptyState) ? presentation.emptyState : {};
+  const layout = isPhiRecord(presentation.layout) ? presentation.layout : {};
+  const row = isPhiRecord(presentation.row) ? presentation.row : {};
   const initialQuery = readPhiTableQuery(
-    isRecord(config.initialQuery) ? config.initialQuery : {},
+    isPhiRecord(config.initialQuery) ? config.initialQuery : {},
   ) ?? {};
   const defaultSorts = readPhiTableQuery({ sorts: sorting.defaultSorts })?.sorts ?? [];
   const presentationControls = parsePhiControlPresentationConfig(presentation);
@@ -617,10 +614,10 @@ export function parsePhiTableWidgetConfig(config: Record<string, unknown>): PhiT
         mode: toolsMode,
         bindingFields: Array.isArray(tools.bindingFields)
           ? tools.bindingFields.flatMap((entry) => {
-              if (!isRecord(entry) || !readString(entry.key)) return [];
-              const rawCreate = isRecord(entry.create) ? entry.create : null;
+              if (!isPhiRecord(entry) || !readString(entry.key)) return [];
+              const rawCreate = isPhiRecord(entry.create) ? entry.create : null;
               const createLabel = readString(rawCreate?.label);
-              const disabledWhen = isRecord(entry.disabledWhen) && readString(entry.disabledWhen.fieldKey) &&
+              const disabledWhen = isPhiRecord(entry.disabledWhen) && readString(entry.disabledWhen.fieldKey) &&
                 (typeof entry.disabledWhen.equals === "string" ||
                   typeof entry.disabledWhen.equals === "boolean" ||
                   typeof entry.disabledWhen.equals === "number" && Number.isFinite(entry.disabledWhen.equals))
@@ -631,7 +628,7 @@ export function parsePhiTableWidgetConfig(config: Record<string, unknown>): PhiT
                 : undefined;
               const optionLabels = Array.isArray(entry.optionLabels)
                 ? entry.optionLabels.flatMap((option) => {
-                    if (!isRecord(option)) return [];
+                    if (!isPhiRecord(option)) return [];
                     const value = typeof option.value === "number" && Number.isFinite(option.value)
                       ? option.value
                       : readString(option.value);
@@ -639,7 +636,7 @@ export function parsePhiTableWidgetConfig(config: Record<string, unknown>): PhiT
                     return value !== undefined && label ? [{ value, label }] : [];
                   })
                 : [];
-              const cascader = isRecord(entry.cascader) ? {
+              const cascader = isPhiRecord(entry.cascader) ? {
                 allowRoot: readBoolean(entry.cascader.allowRoot),
                 separator: readString(entry.cascader.separator),
                 rootValue: readString(entry.cascader.rootValue),

@@ -3,6 +3,7 @@ import { PHI_SIGNAL_VALUE_SCHEMAS } from "../../../types/signals";
 import type { PhiSignalDispatch } from "../../../components/runtime/runtime-signal-bus";
 import type { PhiBuilderPageCatalogArea } from "../../../helpers/cms-page-catalog";
 import { createPhiBuilderControllerAddress } from "./controller/address";
+import { isPhiRecord } from "../../../helpers/is-record";
 
 export type PhiBuilderNavigationDragEventValue = {
   area?: PhiBuilderPageCatalogArea;
@@ -20,17 +21,13 @@ export type PhiBuilderNavigationDragStateValue = {
   dragging: boolean;
 };
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return !!value && typeof value === "object" && !Array.isArray(value);
-}
-
 function resolveSignalValue(signal: PhiSignal) {
   return signal.value;
 }
 
 export function resolvePhiBuilderNavigationDragEvent(signal: PhiSignal): PhiBuilderNavigationDragEventValue | null {
   const rawValue = resolveSignalValue(signal);
-  if (!isRecord(rawValue)) {
+  if (!isPhiRecord(rawValue)) {
     return null;
   }
   const value = rawValue as Record<string, unknown>;
@@ -64,7 +61,7 @@ export function resolvePhiBuilderNavigationDragging(signal: PhiSignal): boolean 
   }
 
   const value = resolveSignalValue(signal);
-  if (!isRecord(value)) {
+  if (!isPhiRecord(value)) {
     return null;
   }
 

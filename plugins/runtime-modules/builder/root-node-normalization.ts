@@ -14,8 +14,7 @@ import type { PhiRenderableBlockRenderMode } from "../../../types";
 import type { PhiCmsInstanceId } from "../../../types/cms-instance-id";
 import type { PhiBuilderRootNodeKind } from "./preview-transport";
 import { readPhiShadow, type PhiShadow } from "../../../types/layout-style";
-
-type JsonRecord = Record<string, unknown>;
+import { isPhiRecord } from "../../../helpers/is-record";
 
 export type PhiBuilderRootNodeDraft = {
   id?: PhiCmsInstanceId | null;
@@ -40,10 +39,6 @@ export type PhiBuilderRootNodeDefaults = {
   rootNodeBorder: PhiCmsBorderWidgetConfig | null;
 };
 
-function isRecord(value: unknown): value is JsonRecord {
-  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
-}
-
 export function resolvePhiBuilderRootNodeDefaults(
   resolvedConfig?: Record<string, unknown> | null,
 ): PhiBuilderRootNodeDefaults {
@@ -54,15 +49,15 @@ export function resolvePhiBuilderRootNodeDefaultsFromConfig(
   resolvedConfig: Record<string, unknown>,
 ): PhiBuilderRootNodeDefaults {
   const backgroundConfig =
-    isRecord(resolvedConfig.background) && !Array.isArray(resolvedConfig.background)
+    isPhiRecord(resolvedConfig.background) && !Array.isArray(resolvedConfig.background)
       ? resolvedConfig.background
-      : isRecord(resolvedConfig.rootNodeBackground) && !Array.isArray(resolvedConfig.rootNodeBackground)
+      : isPhiRecord(resolvedConfig.rootNodeBackground) && !Array.isArray(resolvedConfig.rootNodeBackground)
         ? resolvedConfig.rootNodeBackground
         : null;
   const borderConfig =
-    isRecord(resolvedConfig.border) && !Array.isArray(resolvedConfig.border)
+    isPhiRecord(resolvedConfig.border) && !Array.isArray(resolvedConfig.border)
       ? resolvedConfig.border
-      : isRecord(resolvedConfig.rootNodeBorder) && !Array.isArray(resolvedConfig.rootNodeBorder)
+      : isPhiRecord(resolvedConfig.rootNodeBorder) && !Array.isArray(resolvedConfig.rootNodeBorder)
         ? resolvedConfig.rootNodeBorder
         : null;
 

@@ -1,4 +1,5 @@
 import { readPhiShadow, type PhiShadow } from "../../../types/layout-style";
+import { isPhiRecord } from "../../../helpers/is-record";
 
 export type PhiBuilderInspectorAction =
   | { kind: "patchSelectedRegionDraft"; patch: Record<string, unknown> }
@@ -11,18 +12,14 @@ export type PhiBuilderInspectorAction =
   | { kind: "patchSelectedLayoutShadow"; shadow: PhiShadow }
   | { kind: "patchSelectedLayoutConfig"; key: string; value?: unknown };
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
-}
-
 function readRecord(value: unknown): Record<string, unknown> | null {
-  return isRecord(value) ? value : null;
+  return isPhiRecord(value) ? value : null;
 }
 
 export function readPhiBuilderInspectorAction(
   value: unknown,
 ): PhiBuilderInspectorAction | null {
-  if (!isRecord(value) || typeof value.kind !== "string") {
+  if (!isPhiRecord(value) || typeof value.kind !== "string") {
     return null;
   }
 

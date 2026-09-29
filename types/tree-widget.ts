@@ -9,6 +9,7 @@ import type {
   PhiTableQueryValue,
 } from "./table-widget";
 import type { PhiRuntimeConditionExpression } from "./runtime-condition";
+import { isPhiRecord } from "../helpers/is-record";
 
 export type PhiTreeNodeIdentity = string | number;
 export type PhiTreeProviderFieldDefinition = PhiTableProviderFieldDefinition;
@@ -209,13 +210,9 @@ export class PhiTreeProviderError extends Error {
   }
 }
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
-}
-
 export function readPhiTreeProviderQueryResult(value: unknown): PhiTreeProviderQueryResult | null {
-  if (!isRecord(value) || Object.keys(value).some((key) => key !== "nodes") ||
-    !Array.isArray(value.nodes) || !value.nodes.every(isRecord)) {
+  if (!isPhiRecord(value) || Object.keys(value).some((key) => key !== "nodes") ||
+    !Array.isArray(value.nodes) || !value.nodes.every(isPhiRecord)) {
     return null;
   }
   return { nodes: value.nodes };
@@ -225,11 +222,11 @@ export function readPhiTreeProviderMutationResult(value: unknown): PhiTreeProvid
   const allowedKeys = new Set([
     "status", "invalidation", "canonicalValue", "nodePatch", "value", "errorCode", "message",
   ]);
-  if (!isRecord(value) || Object.keys(value).some((key) => !allowedKeys.has(key)) ||
+  if (!isPhiRecord(value) || Object.keys(value).some((key) => !allowedKeys.has(key)) ||
     value.status !== "accepted" && value.status !== "rejected" ||
     value.invalidation !== "none" && value.invalidation !== "view" && value.invalidation !== "resource" ||
-    value.nodePatch !== undefined && !isRecord(value.nodePatch) ||
-    value.value !== undefined && value.value !== null && !isRecord(value.value) ||
+    value.nodePatch !== undefined && !isPhiRecord(value.nodePatch) ||
+    value.value !== undefined && value.value !== null && !isPhiRecord(value.value) ||
     value.errorCode !== undefined && typeof value.errorCode !== "string" ||
     value.message !== undefined && typeof value.message !== "string" ||
     value.status === "rejected" && (typeof value.errorCode !== "string" || !value.errorCode.trim() ||

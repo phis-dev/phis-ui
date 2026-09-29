@@ -6,6 +6,7 @@ import {
   PHI_FEEDBACK_LEVELS,
   type PhiFeedbackLevel,
 } from "./control";
+import { isPhiRecord } from "../helpers/is-record";
 
 export const PHI_CORE_RUNTIME_FEEDBACK_LEVELS = PHI_FEEDBACK_LEVELS;
 
@@ -63,10 +64,6 @@ export type PhiCoreRuntimePageSnapshot = {
   pageType: number | null;
 };
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return !!value && typeof value === "object" && !Array.isArray(value);
-}
-
 function hasOnlyKeys(value: Record<string, unknown>, allowedKeys: readonly string[]) {
   return Object.keys(value).every((key) => allowedKeys.includes(key));
 }
@@ -99,7 +96,7 @@ function readNotificationPlacement(value: unknown): PhiCoreRuntimeNotificationPl
 export function readPhiCoreRuntimeNotificationValue(
   value: unknown,
 ): PhiCoreRuntimeNotificationValue | null {
-  if (!isRecord(value) || !hasOnlyKeys(value, [
+  if (!isPhiRecord(value) || !hasOnlyKeys(value, [
     "level",
     "title",
     "description",
@@ -142,7 +139,7 @@ export function readPhiCoreRuntimeNotificationValue(
 export function readPhiCoreRuntimeMessageValue(
   value: unknown,
 ): PhiCoreRuntimeMessageValue | null {
-  if (!isRecord(value) || !hasOnlyKeys(value, ["level", "content", "durationSeconds"])) {
+  if (!isPhiRecord(value) || !hasOnlyKeys(value, ["level", "content", "durationSeconds"])) {
     return null;
   }
   const level = readFeedbackLevel(value.level);

@@ -2,6 +2,7 @@ import "server-only";
 
 import { PHIS_SITE_KEY_HEADER } from "../constants/http-headers";
 import type { PhiAuthWorkflow, PhiPublicAuthManifest } from "../types/auth-manifest";
+import { isPhiRecord } from "../helpers/is-record";
 
 export type FetchPhiPublicAuthOptions = {
   apiBaseUrl: string;
@@ -22,12 +23,8 @@ function buildHeaders(options: FetchPhiPublicAuthOptions, userAgent: string, coo
   return headers;
 }
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
-}
-
 function readManifest(value: unknown): PhiPublicAuthManifest | null {
-  return isRecord(value) && value.version === 1 && Array.isArray(value.methods)
+  return isPhiRecord(value) && value.version === 1 && Array.isArray(value.methods)
     ? (value as PhiPublicAuthManifest)
     : null;
 }
@@ -126,7 +123,7 @@ export async function fetchPhiAuthWorkflow(
   }
 
   const payload = await response.json().catch(() => null);
-  if (!isRecord(payload) || !isRecord(payload.workflow)) {
+  if (!isPhiRecord(payload) || !isPhiRecord(payload.workflow)) {
     throw new Error("Auth workflow answered without a workflow.");
   }
   return payload.workflow as PhiAuthWorkflow;

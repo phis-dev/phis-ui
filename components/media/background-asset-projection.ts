@@ -1,4 +1,5 @@
 import type { PhiImageDeliveryProjection } from "./image-presentation";
+import { isPhiRecord } from "../../helpers/is-record";
 
 /**
  * Backgrounds bind an Asset by id, but drawing one needs facts the config cannot hold: the delivery
@@ -27,10 +28,6 @@ type PhiBackgroundProjectableTree = {
   overlays: readonly { config: Record<string, unknown> }[];
 };
 
-function isRecord(value: unknown): value is JsonRecord {
-  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
-}
-
 /** An Asset-bound image background: the only shape that needs a delivery projection. */
 function readBackgroundAssetId(value: JsonRecord): number | null {
   if (value.kind !== "image" || value.sourceKind !== "asset") {
@@ -46,7 +43,7 @@ function collectFrom(value: unknown, into: Set<number>) {
     for (const entry of value) collectFrom(entry, into);
     return;
   }
-  if (!isRecord(value)) return;
+  if (!isPhiRecord(value)) return;
 
   const assetId = readBackgroundAssetId(value);
   if (assetId != null) into.add(assetId);
@@ -84,7 +81,7 @@ function projectInto(
   if (Array.isArray(value)) {
     return value.map((entry) => projectInto(entry, assets));
   }
-  if (!isRecord(value)) return value;
+  if (!isPhiRecord(value)) return value;
 
   const projected: JsonRecord = {};
   for (const [key, entry] of Object.entries(value)) {

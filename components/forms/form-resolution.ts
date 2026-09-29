@@ -3,6 +3,7 @@ import "server-only";
 import type { PhiBlockRuntime, PhiSignalAddress } from "../../types";
 import type { PhiFormDescriptor } from "../../types/form-descriptor";
 import type { PhiRuntimeModuleId } from "../../types/cms-module-descriptors";
+import { isPhiRecord } from "../../helpers/is-record";
 
 export type PhiFormDefinitionSource = "shared" | "db";
 
@@ -90,16 +91,12 @@ export type PhiResolvedFormDefinition<TDefinition extends PhiFormDefinitionLike 
 
 type AnyRecord = Record<string, unknown>;
 
-function isPlainObject(value: unknown): value is AnyRecord {
-  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
-}
-
 function deepMergeRecords(base: AnyRecord, override: AnyRecord): AnyRecord {
   const result: AnyRecord = { ...base };
 
   for (const [key, overrideValue] of Object.entries(override)) {
     const baseValue = result[key];
-    if (isPlainObject(baseValue) && isPlainObject(overrideValue)) {
+    if (isPhiRecord(baseValue) && isPhiRecord(overrideValue)) {
       result[key] = deepMergeRecords(baseValue, overrideValue);
       continue;
     }

@@ -27,6 +27,7 @@ import {
   readPhiRuntimeFormValiditySignalValue,
   readPhiRuntimeFormValuesSignalValue,
 } from "./runtime-form-state";
+import { isPhiRecord } from "../../helpers/is-record";
 
 export type PhiRuntimeFormSubmitSignalValue = {
   formId: string;
@@ -74,12 +75,8 @@ function resolveFormOwnerReceiver(instanceKey: string | number | null | undefine
   return widgetId ? createPhiSignalAddress("cms", widgetId as PhiCmsInstanceId) : "broadcast";
 }
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
-}
-
 function isPhiRuntimeFormSubmitSignalValue(value: unknown): value is PhiRuntimeFormSubmitSignalValue {
-  if (!isRecord(value) || !isRecord(value.values)) {
+  if (!isPhiRecord(value) || !isPhiRecord(value.values)) {
     return false;
   }
 
