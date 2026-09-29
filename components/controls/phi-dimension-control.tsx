@@ -9,6 +9,7 @@ import {
   type PhiRenderableBlockSize,
 } from "../../types";
 import { PhiLengthControl } from "./phi-length-control";
+import { PHI_SPACE } from "../../theme/antd-css-var-contract";
 
 export type PhiDimensionControlProps = {
   value?: PhiRenderableBlockSize | null;
@@ -56,7 +57,12 @@ export function PhiDimensionControl({
       style={{
         display: "grid",
         gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
-        gap: 4,
+        /*
+         * The narrowest step in the vocabulary, because width and height are one measurement in two
+         * fields: they belong closer together than two fields of a form do, and the gap that says so is
+         * a named step rather than a number picked at the time.
+         */
+        gap: PHI_SPACE.xxs,
         width: "100%",
         minWidth: 0,
         ...style,
