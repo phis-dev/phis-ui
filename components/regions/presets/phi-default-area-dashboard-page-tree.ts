@@ -5,7 +5,7 @@ import {
   PHI_DASHBOARD_CARD_RESOURCE_KEY,
 } from "../../../constants/dashboard-card-provider-keys";
 import { PHI_CMS_SEQUENTIAL_LAYOUT_SLOTS } from "../../../constants/cms-layout-types";
-import { PhiCmsPageType, PhiCmsStatus } from "../../../constants/phi-cms";
+import { PhiCmsPageType } from "../../../constants/phi-cms";
 import { createPhiCmsPresetNodes } from "../../../helpers/cms-preset-nodes";
 import type { PhiCmsPageNode, PhiResolvedCmsPageTree } from "../../../types/cms";
 import type { PhiBlockRuntime } from "../../../types";
@@ -70,11 +70,7 @@ export async function buildPhiDefaultAreaDashboardPageTree({
 
   const nodes = createPhiCmsPresetNodes(page);
   return {
-    page: {
-      ...page,
-      pageType: PhiCmsPageType.Standard,
-      status: PhiCmsStatus.Published,
-    },
+    page: nodes.page({ pageType: PhiCmsPageType.Standard }),
     pageMeta: {
       title: { msgId: 0, source: "Dashboard", value: labels.pageTitle },
       description: { msgId: 0, source: "", value: labels.pageDescription },

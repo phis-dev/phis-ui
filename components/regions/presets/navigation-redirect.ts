@@ -1,5 +1,6 @@
-import { PhiCmsPageType, PhiCmsStatus } from "../../../constants/phi-cms";
+import { PhiCmsPageType } from "../../../constants/phi-cms";
 import type { PhiCmsAreaKey } from "../../../constants/cms-areas";
+import { createPhiCmsPresetNodes } from "../../../helpers/cms-preset-nodes";
 import { readPhiCmsNavigationTargetPath } from "../../../helpers/navigation-target";
 import type { PhiCmsResolvedNavigationItem } from "../../../types/cms-module-descriptors";
 import type { PhiCmsPageNode, PhiResolvedCmsPageTree } from "../../../types/cms";
@@ -55,17 +56,15 @@ export function buildPhiCmsRedirectPageTree({
   title: string;
 }): PhiResolvedCmsPageTree {
   return {
-    page: {
-      ...page,
+    page: createPhiCmsPresetNodes(page).page({
       pageType: PhiCmsPageType.Redirect,
-      status: PhiCmsStatus.Published,
       layoutConfig: {
         redirect: {
           target: { area, path },
           status: 307,
         },
       },
-    },
+    }),
     pageMeta: {
       title: { msgId: 0, source: title, value: title },
       description: null,
@@ -91,11 +90,7 @@ export function buildPhiCmsEmptyPageTree({
   title: string;
 }): PhiResolvedCmsPageTree {
   return {
-    page: {
-      ...page,
-      pageType: PhiCmsPageType.Standard,
-      status: PhiCmsStatus.Published,
-    },
+    page: createPhiCmsPresetNodes(page).page({ pageType: PhiCmsPageType.Standard }),
     pageMeta: {
       title: { msgId: 0, source: title, value: title },
       description: null,

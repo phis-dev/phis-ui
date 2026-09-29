@@ -1,5 +1,5 @@
 import { PHI_CMS_DEFAULT_SLOT_INDEX } from "../../../constants/cms-layout-types";
-import { PhiCmsPageType, PhiCmsStatus } from "../../../constants/phi-cms";
+import { PhiCmsPageType } from "../../../constants/phi-cms";
 import { PHI_GROUPS_RUNTIME_DATA_PROVIDER_KEYS } from "../../../plugins/runtime-modules/groups/ids";
 import { PhiGroupMembershipFlags } from "../../../constants/site-groups";
 import { createPhiCmsPresetNodes } from "../../../helpers/cms-preset-nodes";
@@ -61,11 +61,7 @@ export async function buildPhiDefaultAdminGroupsPageTree({
 
   const nodes = createPhiCmsPresetNodes(page);
   return {
-    page: {
-      ...page,
-      pageType: PhiCmsPageType.Standard,
-      status: PhiCmsStatus.Published,
-    },
+    page: nodes.page({ pageType: PhiCmsPageType.Standard }),
     pageMeta: {
       title: { msgId: 0, source: "Groups", value: labels.page.title },
       description: {

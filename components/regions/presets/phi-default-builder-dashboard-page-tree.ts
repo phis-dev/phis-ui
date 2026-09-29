@@ -1,7 +1,7 @@
 import { createPhiPresetCmsInstanceIdMap } from "../../../types/cms-instance-id";
 import { PHI_DASHBOARD_RUNTIME_MODULE_ID } from "../../../plugins/runtime-modules/dashboard/ids";
 import { PHI_CMS_DEFAULT_SLOT_INDEX } from "../../../constants/cms-layout-types";
-import { PhiCmsPageType, PhiCmsRegionType, PhiCmsStatus } from "../../../constants/phi-cms";
+import { PhiCmsPageType, PhiCmsRegionType } from "../../../constants/phi-cms";
 import { createPhiCmsPresetNodes } from "../../../helpers/cms-preset-nodes";
 import { resolvePhiShellHeaderHeight } from "../../../helpers/shell-region-style";
 
@@ -53,11 +53,7 @@ export async function buildPhiDefaultBuilderDashboardPageTree({
 
   const nodes = createPhiCmsPresetNodes(page);
   return {
-    page: {
-      ...page,
-      pageType: PhiCmsPageType.Standard,
-      status: PhiCmsStatus.Published,
-    },
+    page: nodes.page({ pageType: PhiCmsPageType.Standard }),
     pageMeta: {
       title: {
         msgId: 0,
@@ -68,15 +64,10 @@ export async function buildPhiDefaultBuilderDashboardPageTree({
     },
     overlays: [],
     regions: [
-      {
+      nodes.region({
         id: SYNTHETIC_BUILDER_DASHBOARD_REGION_IDS.regionHeaderBottom,
-        pageId: page.id,
-        areaPresetId: null,
         regionType: PhiCmsRegionType.HeaderBottom,
         rootLayoutNodeId: SYNTHETIC_BUILDER_DASHBOARD_LAYOUT_IDS.layoutHeaderBottom,
-        status: PhiCmsStatus.Published,
-        flags: 0,
-        visibilityMask: page.visibilityMask,
         sortOrder: 25,
         config: {
           sticky: true,
@@ -88,7 +79,7 @@ export async function buildPhiDefaultBuilderDashboardPageTree({
           size: { height: `${resolvePhiShellHeaderHeight(runtime.site.theme?.shell, "bottom")}px` },
           offsetTop: resolvePhiShellHeaderHeight(runtime.site.theme?.shell, "main"),
         },
-      },
+      }),
       scaffold.region,
     ],
     layoutNodes: [

@@ -2,7 +2,7 @@ import {
   PHI_CMS_DEFAULT_SLOT_INDEX,
   PHI_CMS_SEQUENTIAL_LAYOUT_SLOTS,
 } from "../../../constants/cms-layout-types";
-import { PhiCmsPageType, PhiCmsStatus } from "../../../constants/phi-cms";
+import { PhiCmsPageType } from "../../../constants/phi-cms";
 import { createPhiCmsPresetNodes } from "../../../helpers/cms-preset-nodes";
 import type { PhiCmsPageNode, PhiResolvedCmsPageTree } from "../../../types/cms";
 import type { PhiBlockRuntime } from "../../../types";
@@ -52,21 +52,13 @@ export async function buildPhiDefaultEditorTranslationsPageTree({
 
   const nodes = createPhiCmsPresetNodes(page);
   return {
-    page: {
-      ...page,
-      pageType: PhiCmsPageType.Standard,
-      status: PhiCmsStatus.Published,
-    },
-    overlays: [{
+    page: nodes.page({ pageType: PhiCmsPageType.Standard }),
+    overlays: [nodes.overlay({
       id: PHI_EDITOR_TRANSLATION_OVERLAY_ID,
       overlayType: "modal",
-      headerLayoutNodeId: null,
       bodyLayoutNodeId: PHI_EDITOR_TRANSLATION_OVERLAY_LAYOUT_ID,
       footerPresentation: "actions",
       footerLayoutNodeId: PHI_EDITOR_TRANSLATION_OVERLAY_FOOTER_LAYOUT_ID,
-      status: PhiCmsStatus.Published,
-      flags: 0,
-      visibilityMask: page.visibilityMask,
       sortOrder: 0,
       label: "editor translation edit modal",
       config: {
@@ -85,7 +77,7 @@ export async function buildPhiDefaultEditorTranslationsPageTree({
           ],
         },
       },
-    }],
+    })],
     regions: [scaffold.region],
     layoutNodes: [
       scaffold.layoutNode,

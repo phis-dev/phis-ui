@@ -1,5 +1,5 @@
 import { PHI_CMS_DEFAULT_SLOT_INDEX } from "../../../constants/cms-layout-types";
-import { PhiCmsRegionType, PhiCmsStatus } from "../../../constants/phi-cms";
+import { PhiCmsRegionType } from "../../../constants/phi-cms";
 import { createPhiCmsPresetNodes } from "../../../helpers/cms-preset-nodes";
 import { PHI_CORE_RUNTIME_MODULE_ID } from "../../../plugins/runtime-modules/core/ids";
 import type { PhiCmsLayoutNode, PhiCmsPageNode, PhiCmsRegionNode } from "../../../types/cms";
@@ -64,18 +64,13 @@ export function buildPhiBasePageContentScaffold({
   regionConfig?: Record<string, unknown>;
 }): { region: PhiCmsRegionNode; layoutNode: PhiCmsLayoutNode } {
   return {
-    region: {
+    region: createPhiCmsPresetNodes(page).region({
       id: regionId,
-      pageId: page.id,
-      areaPresetId: null,
       regionType: PhiCmsRegionType.Content,
       rootLayoutNodeId: PHI_BASE_PAGE_LAYOUT_NODE_ID,
-      status: PhiCmsStatus.Published,
-      flags: 0,
-      visibilityMask: page.visibilityMask,
       sortOrder: 30,
-      config: regionConfig ?? {},
-    },
+      config: regionConfig,
+    }),
     layoutNode: buildPhiBasePageLayoutNode(page),
   };
 }

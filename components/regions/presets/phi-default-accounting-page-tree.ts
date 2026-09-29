@@ -1,7 +1,7 @@
 import { createPhiPresetCmsInstanceIdMap } from "../../../types/cms-instance-id";
 import { PHI_ACCOUNTING_RUNTIME_MODULE_ID } from "../../../plugins/runtime-modules/accounting/ids";
 import { PHI_CMS_SEQUENTIAL_LAYOUT_SLOTS } from "../../../constants/cms-layout-types";
-import { PhiCmsPageType, PhiCmsStatus } from "../../../constants/phi-cms";
+import { PhiCmsPageType } from "../../../constants/phi-cms";
 import { createPhiCmsPresetNodes } from "../../../helpers/cms-preset-nodes";
 import type { PhiResolvedCmsPageTree, PhiCmsPageNode } from "../../../types/cms";
 import type { PhiBlockRuntime } from "../../../types";
@@ -32,11 +32,7 @@ export async function buildPhiDefaultAccountingPageTree({
 
   const nodes = createPhiCmsPresetNodes(page);
   return {
-    page: {
-      ...page,
-      pageType: PhiCmsPageType.Standard,
-      status: PhiCmsStatus.Published,
-    },
+    page: nodes.page({ pageType: PhiCmsPageType.Standard }),
     overlays: [],
     regions: [scaffold.region],
     layoutNodes: [scaffold.layoutNode],

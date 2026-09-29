@@ -1,5 +1,5 @@
 import { PHI_CMS_DEFAULT_SLOT_INDEX } from "../../../constants/cms-layout-types";
-import { PhiCmsPageType, PhiCmsStatus } from "../../../constants/phi-cms";
+import { PhiCmsPageType } from "../../../constants/phi-cms";
 import { createPhiCmsPresetNodes } from "../../../helpers/cms-preset-nodes";
 import type { PhiCmsPageNode, PhiResolvedCmsPageTree } from "../../../types/cms";
 import type { PhiBlockRuntime } from "../../../types";
@@ -96,7 +96,7 @@ export async function buildPhiDefaultAppThreadsPageTree({
 
   const nodes = createPhiCmsPresetNodes(page);
   return {
-    page: { ...page, pageType: PhiCmsPageType.Standard, status: PhiCmsStatus.Published },
+    page: nodes.page({ pageType: PhiCmsPageType.Standard }),
     pageMeta: {
       title: { msgId: 0, source: "Conversations", value: labels.title },
       description: {
@@ -269,16 +269,12 @@ export async function buildPhiDefaultAppThreadsPageTree({
      * keep, and `request` because closing one that is being submitted would leave a conversation half
      * opened with nobody watching -- the Controller decides, which is what "request" means.
      */
-    overlays: [{
+    overlays: [nodes.overlay({
       id: PHI_APP_THREADS_PAGE_OVERLAY_IDS.overlayNew,
       overlayType: "modal",
-      headerLayoutNodeId: null,
       bodyLayoutNodeId: PHI_APP_THREADS_PAGE_LAYOUT_IDS.layoutNew,
       footerPresentation: "actions",
       footerLayoutNodeId: PHI_APP_THREADS_PAGE_LAYOUT_IDS.layoutNewFooter,
-      status: PhiCmsStatus.Published,
-      flags: 0,
-      visibilityMask: page.visibilityMask,
       sortOrder: 0,
       label: "app-threads-new-modal",
       config: {
@@ -324,7 +320,7 @@ export async function buildPhiDefaultAppThreadsPageTree({
           }],
         },
       },
-    }],
+    })],
     regions: [scaffold.region],
     layoutNodes: [
       scaffold.layoutNode,

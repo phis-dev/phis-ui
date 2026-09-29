@@ -8,7 +8,6 @@ import {
 import {
   PhiCmsPageType,
   PhiCmsRegionType,
-  PhiCmsStatus,
 } from "../../../constants/phi-cms";
 import { createPhiCmsPresetNodes } from "../../../helpers/cms-preset-nodes";
 import type { PhiCmsPageNode, PhiResolvedCmsPageTree } from "../../../types/cms";
@@ -70,25 +69,15 @@ export async function buildPhiDefaultPubConfirmPageTree({
   } as const;
   const nodes = createPhiCmsPresetNodes(page);
   return {
-    page: {
-      ...page,
-      pageType: PhiCmsPageType.Standard,
-      status: PhiCmsStatus.Published,
-    },
+    page: nodes.page({ pageType: PhiCmsPageType.Standard }),
     overlays: [],
     regions: [
-      {
+      nodes.region({
         id: SYNTHETIC_CONFIRM_REGION_IDS.regionContent,
-        pageId: page.id,
-        areaPresetId: null,
         regionType: PhiCmsRegionType.Content,
         rootLayoutNodeId: SYNTHETIC_CONFIRM_LAYOUT_IDS.layoutContent,
-        status: PhiCmsStatus.Published,
-        flags: 0,
-        visibilityMask: page.visibilityMask,
         sortOrder: 30,
-        config: {},
-      },
+      }),
     ],
     layoutNodes: [
       nodes.layout({

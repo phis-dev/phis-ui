@@ -2,7 +2,7 @@ import {
   PHI_CMS_COLLAPSIBLE_LAYOUT_MAX_SLOTS,
   PHI_CMS_DEFAULT_SLOT_INDEX,
 } from "../../../constants/cms-layout-types";
-import { PhiCmsPageType, PhiCmsStatus } from "../../../constants/phi-cms";
+import { PhiCmsPageType } from "../../../constants/phi-cms";
 import { createPhiCmsPresetNodes } from "../../../helpers/cms-preset-nodes";
 import { PHI_SPACE } from "../../../theme/antd-css-var-contract";
 import { PHI_LAYOUT } from "../../../theme/phi-tokens";
@@ -492,21 +492,17 @@ export function buildPhiSettingsPageShellTree({
   ];
 
   return {
-    page: { ...page, pageType: PhiCmsPageType.Standard, status: PhiCmsStatus.Published },
+    page: nodes.page({ pageType: PhiCmsPageType.Standard }),
     pageMeta: {
       title: { msgId: 0, source: label, value: label },
       description: null,
     },
-    overlays: overlays.map((overlay, overlayIndex) => ({
+    overlays: overlays.map((overlay, overlayIndex) => nodes.overlay({
       id: overlayIds[overlay.nodeKey]!,
-      overlayType: "modal" as const,
-      headerLayoutNodeId: null,
+      overlayType: "modal",
       bodyLayoutNodeId: layouts[`${overlay.nodeKey}Body`]!,
-      footerPresentation: "actions" as const,
+      footerPresentation: "actions",
       footerLayoutNodeId: layouts[`${overlay.nodeKey}Footer`]!,
-      status: PhiCmsStatus.Published,
-      flags: 0,
-      visibilityMask: page.visibilityMask,
       sortOrder: overlayIndex,
       label: overlay.title,
       config: {

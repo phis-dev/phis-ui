@@ -1,7 +1,7 @@
 import {
   PHI_CMS_DEFAULT_SLOT_INDEX,
 } from "../../../constants/cms-layout-types";
-import { PhiCmsPageType, PhiCmsStatus } from "../../../constants/phi-cms";
+import { PhiCmsPageType } from "../../../constants/phi-cms";
 import { createPhiCmsPresetNodes } from "../../../helpers/cms-preset-nodes";
 import type { PhiResolvedCmsPageTree, PhiCmsPageNode } from "../../../types/cms";
 import type { PhiBlockRuntime } from "../../../types";
@@ -65,6 +65,7 @@ export async function buildPhiDefaultAdminUsersPageTree({
     operator: "falsy" as const,
     reason: "User Management is still loading.",
   };
+  const nodes = createPhiCmsPresetNodes(page);
   const overlay = (
     id: typeof PHI_USER_MANAGEMENT_PAGE_OVERLAY_IDS[keyof typeof PHI_USER_MANAGEMENT_PAGE_OVERLAY_IDS],
     rootLayoutNodeId: typeof PHI_USER_MANAGEMENT_PAGE_LAYOUT_IDS[keyof typeof PHI_USER_MANAGEMENT_PAGE_LAYOUT_IDS],
@@ -72,10 +73,9 @@ export async function buildPhiDefaultAdminUsersPageTree({
     width: Record<string, string | number>,
     key: string,
     formMode?: "create" | "edit",
-  ) => ({
+  ) => nodes.overlay({
     id,
-    overlayType: "modal" as const,
-    headerLayoutNodeId: null,
+    overlayType: "modal",
     bodyLayoutNodeId: rootLayoutNodeId,
     ...(formMode === "create"
       ? {
@@ -91,9 +91,6 @@ export async function buildPhiDefaultAdminUsersPageTree({
             footerPresentation: "none" as const,
             footerLayoutNodeId: null,
           }),
-    status: PhiCmsStatus.Published,
-    flags: 0,
-    visibilityMask: page.visibilityMask,
     sortOrder: 0,
     label: key,
     config: {
@@ -154,13 +151,8 @@ export async function buildPhiDefaultAdminUsersPageTree({
     regionConfig: { border: false },
   });
 
-  const nodes = createPhiCmsPresetNodes(page);
   return {
-    page: {
-      ...page,
-      pageType: PhiCmsPageType.Standard,
-      status: PhiCmsStatus.Published,
-    },
+    page: nodes.page({ pageType: PhiCmsPageType.Standard }),
     pageMeta: {
       title: { msgId: 0, source: "Users", value: labels.pageTitle },
       description: { msgId: 0, source: "Manage local site users, roles, access, and login history.", value: labels.pageDescription },

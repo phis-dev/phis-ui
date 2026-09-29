@@ -6,7 +6,7 @@ import {
   PHI_CMS_DEFAULT_SLOT_INDEX,
   PHI_CMS_SPLIT_LAYOUT_SLOT_INDEX,
 } from "../../../constants/cms-layout-types";
-import { PhiCmsPageType, PhiCmsRegionType, PhiCmsStatus } from "../../../constants/phi-cms";
+import { PhiCmsPageType, PhiCmsRegionType } from "../../../constants/phi-cms";
 import { createPhiCmsPresetNodes } from "../../../helpers/cms-preset-nodes";
 import type { PhiCmsPageNode, PhiResolvedCmsPageTree } from "../../../types/cms";
 import {
@@ -56,25 +56,15 @@ export async function buildPhiDefaultPubLoginPageTree({
   });
   const nodes = createPhiCmsPresetNodes(page);
   return {
-    page: {
-      ...page,
-      pageType: PhiCmsPageType.Standard,
-      status: PhiCmsStatus.Published,
-    },
+    page: nodes.page({ pageType: PhiCmsPageType.Standard }),
     overlays: [],
     regions: [
-      {
+      nodes.region({
         id: SYNTHETIC_LOGIN_REGION_IDS.regionContent,
-        pageId: page.id,
-        areaPresetId: null,
         regionType: PhiCmsRegionType.Content,
         rootLayoutNodeId: SYNTHETIC_LOGIN_LAYOUT_IDS.layoutContent,
-        status: PhiCmsStatus.Published,
-        flags: 0,
-        visibilityMask: page.visibilityMask,
         sortOrder: 30,
-        config: {},
-      },
+      }),
     ],
     layoutNodes: [
       nodes.layout({

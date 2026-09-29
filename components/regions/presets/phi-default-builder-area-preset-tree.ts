@@ -12,6 +12,7 @@ import { PHI_CMS_AREA_KEYS } from "../../../constants/cms-areas";
 import { PhiMediaKind } from "../../../constants/media";
 import { buildPhiCmsLayoutNode } from "../../../helpers/cms-node-factories";
 import { createPhiCmsPresetNodes } from "../../../helpers/cms-preset-nodes";
+import { buildPhiHeaderTopActionsLayoutNode } from "./phi-header-top-actions-layout";
 import { remapPhiSignalRoutesInConfig } from "../../../helpers/signal-route-lifecycle";
 import { resolvePhiShellHeaderHeight, resolvePhiShellMetric } from "../../../helpers/shell-region-style";
 import type { PhiCmsPageNode, PhiResolvedCmsPageTree } from "../../../types/cms";
@@ -370,10 +371,7 @@ export async function buildPhiDefaultBuilderAreaPresetTree({
   });
 
   return {
-    page: {
-      ...page,
-      status: PhiCmsStatus.Published,
-    },
+    page: nodes.page(),
     pageMeta: {
       title: {
         msgId: 0,
@@ -385,15 +383,10 @@ export async function buildPhiDefaultBuilderAreaPresetTree({
     runtimeModuleIds: createPhiDefaultAreaRuntimeModuleIds("builder"),
     overlays: [],
     regions: [
-      {
+      nodes.region({
         id: SYNTHETIC_DEV_REGION_IDS.regionHeaderTop,
-        pageId: page.id,
-        areaPresetId: null,
         regionType: PhiCmsRegionType.HeaderTop,
         rootLayoutNodeId: SYNTHETIC_DEV_LAYOUT_IDS.layoutHeaderTop,
-        status: PhiCmsStatus.Published,
-        flags: 0,
-        visibilityMask: page.visibilityMask,
         sortOrder: -10,
         config: {
           sticky: false,
@@ -408,16 +401,11 @@ export async function buildPhiDefaultBuilderAreaPresetTree({
           size: { height: `${headerTopHeight}px` },
           offsetTop: 0,
         },
-      },
-      {
+      }),
+      nodes.region({
         id: SYNTHETIC_DEV_REGION_IDS.regionHeaderMain,
-        pageId: page.id,
-        areaPresetId: null,
         regionType: PhiCmsRegionType.HeaderMain,
         rootLayoutNodeId: SYNTHETIC_DEV_LAYOUT_IDS.layoutHeaderMain,
-        status: PhiCmsStatus.Published,
-        flags: 0,
-        visibilityMask: page.visibilityMask,
         sortOrder: 0,
         config: {
           sticky: true,
@@ -425,16 +413,11 @@ export async function buildPhiDefaultBuilderAreaPresetTree({
           size: { height: `${headerMainHeight}px` },
           offsetTop: 0,
         },
-      },
-      {
+      }),
+      nodes.region({
         id: SYNTHETIC_DEV_REGION_IDS.regionSiderLeft,
-        pageId: page.id,
-        areaPresetId: null,
         regionType: PhiCmsRegionType.SiderLeft,
         rootLayoutNodeId: SYNTHETIC_DEV_LAYOUT_IDS.layoutSiderLeft,
-        status: PhiCmsStatus.Published,
-        flags: 0,
-        visibilityMask: page.visibilityMask,
         sortOrder: 10,
         config: {
           sticky: true,
@@ -458,20 +441,15 @@ export async function buildPhiDefaultBuilderAreaPresetTree({
             : { size: { width: `${PHI_LAYOUT.sidebarWidth}px` } }),
           offsetTop: 0,
         },
-      },
-      {
+      }),
+      nodes.region({
         id: SYNTHETIC_DEV_REGION_IDS.regionFooterMain,
-        pageId: page.id,
-        areaPresetId: null,
         regionType: PhiCmsRegionType.Footer,
         rootLayoutNodeId: SYNTHETIC_DEV_LAYOUT_IDS.layoutFooterMain,
-        status: PhiCmsStatus.Published,
-        flags: 0,
-        visibilityMask: page.visibilityMask,
         sortOrder: 30,
         // No chrome of its own, for the reason given on `header_top` above.
         config: {},
-      },
+      }),
     ],
     layoutNodes: [
       nodes.layout({
@@ -502,21 +480,10 @@ export async function buildPhiDefaultBuilderAreaPresetTree({
           style: { height: "100%" },
         },
       }),
-      nodes.layout({
-        typeKey: "flex",
+      buildPhiHeaderTopActionsLayoutNode(nodes, {
         id: SYNTHETIC_DEV_LAYOUT_IDS.layoutHeaderTopActions,
         parentLayoutNodeId: SYNTHETIC_DEV_LAYOUT_IDS.layoutHeaderTop,
-        slotIndex: PHI_CMS_THREE_COLUMN_LAYOUT_SLOT_INDEX.Right,
-        sortOrder: 0,
         label: "dev header top actions",
-        config: {
-          anchor: { horizontal: "right", vertical: "middle" },
-          gap: 12,
-          verticalSeparators: false,
-          separatorBeforeFirst: true,
-          separatorSpan: "50%",
-          wrap: false,
-        },
       }),
       nodes.layout({
         creationPreset: { layoutKind: "verticalflex", preset: "panel" },
@@ -793,10 +760,7 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
   const builderPageTitleSource = resolveBuilderPageTitleSource(builderPageKey);
   const builderPageTitle = resolveBuilderPageTitle(labels, builderPageKey, builderPageTitleSource);
   return {
-    page: {
-      ...page,
-      status: PhiCmsStatus.Published,
-    },
+    page: nodes.page(),
     pageMeta: {
       title: {
         msgId: 0,
@@ -813,16 +777,12 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
        * own: the controller opens and closes it on the two commands, and every control inside writes
        * into the structure draft as it is answered.
        */
-      ...(isStructurePage ? [{
+      ...(isStructurePage ? [nodes.overlay({
         id: PHI_BUILDER_AREA_SETTINGS_OVERLAY_IDS.overlayAreaSettings,
-        overlayType: "modal" as const,
-        headerLayoutNodeId: null,
+        overlayType: "modal",
         bodyLayoutNodeId: PHI_BUILDER_AREA_SETTINGS_LAYOUT_IDS.areaSettingsBody,
-        footerPresentation: "actions" as const,
+        footerPresentation: "actions",
         footerLayoutNodeId: PHI_BUILDER_AREA_SETTINGS_LAYOUT_IDS.areaSettingsFooter,
-        status: PhiCmsStatus.Published,
-        flags: 0,
-        visibilityMask: page.visibilityMask,
         sortOrder: 0,
         label: "Builder area settings",
         config: {
@@ -846,17 +806,13 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
             ],
           },
         },
-      }] : []),
-      ...(isPagesPage ? [{
+      })] : []),
+      ...(isPagesPage ? [nodes.overlay({
         id: PHI_BUILDER_PAGE_META_OVERLAY_IDS.editor,
-        overlayType: "modal" as const,
-        headerLayoutNodeId: null,
+        overlayType: "modal",
         bodyLayoutNodeId: PHI_BUILDER_PAGE_META_LAYOUT_IDS.body,
-        footerPresentation: "actions" as const,
+        footerPresentation: "actions",
         footerLayoutNodeId: PHI_BUILDER_PAGE_META_LAYOUT_IDS.footer,
-        status: PhiCmsStatus.Published,
-        flags: 0,
-        visibilityMask: page.visibilityMask,
         sortOrder: 0,
         label: "Builder page metadata",
         config: {
@@ -873,17 +829,11 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
             ],
           },
         },
-      }] : []),
-      ...(isModulesPage ? [{
+      })] : []),
+      ...(isModulesPage ? [nodes.overlay({
         id: PHI_BUILDER_MODULE_DETAIL_OVERLAY_IDS.overlayModuleDetail,
-        overlayType: "modal" as const,
-        headerLayoutNodeId: null,
+        overlayType: "modal",
         bodyLayoutNodeId: PHI_BUILDER_MODULE_DETAIL_LAYOUT_IDS.body,
-        footerPresentation: "none" as const,
-        footerLayoutNodeId: null,
-        status: PhiCmsStatus.Published,
-        flags: 0,
-        visibilityMask: page.visibilityMask,
         sortOrder: 0,
         label: "Builder module detail",
         config: {
@@ -898,17 +848,13 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
             ],
           },
         },
-      }] : []),
-      ...(isRevisionsPage ? [{
+      })] : []),
+      ...(isRevisionsPage ? [nodes.overlay({
         id: PHI_BUILDER_DELETE_AREA_OVERLAY_IDS.overlayDeleteArea,
-        overlayType: "modal" as const,
-        headerLayoutNodeId: null,
+        overlayType: "modal",
         bodyLayoutNodeId: PHI_BUILDER_DELETE_AREA_LAYOUT_IDS.deleteAreaBody,
-        footerPresentation: "actions" as const,
+        footerPresentation: "actions",
         footerLayoutNodeId: PHI_BUILDER_DELETE_AREA_LAYOUT_IDS.deleteAreaFooter,
-        status: PhiCmsStatus.Published,
-        flags: 0,
-        visibilityMask: page.visibilityMask,
         sortOrder: 0,
         label: "Builder delete area",
         config: {
@@ -928,17 +874,13 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
             ],
           },
         },
-      }] : []),
-      ...(isModulesPage ? [{
+      })] : []),
+      ...(isModulesPage ? [nodes.overlay({
         id: PHI_BUILDER_MODULE_USAGE_OVERLAY_IDS.overlayModuleUsage,
-        overlayType: "modal" as const,
-        headerLayoutNodeId: null,
+        overlayType: "modal",
         bodyLayoutNodeId: PHI_BUILDER_MODULE_USAGE_LAYOUT_IDS.moduleUsageBody,
-        footerPresentation: "actions" as const,
+        footerPresentation: "actions",
         footerLayoutNodeId: PHI_BUILDER_MODULE_USAGE_LAYOUT_IDS.moduleUsageFooter,
-        status: PhiCmsStatus.Published,
-        flags: 0,
-        visibilityMask: page.visibilityMask,
         sortOrder: 0,
         label: "Builder module usage",
         config: {
@@ -953,17 +895,13 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
             ],
           },
         },
-      }] : []),
-      ...(isModulesPage ? [{
+      })] : []),
+      ...(isModulesPage ? [nodes.overlay({
         id: PHI_BUILDER_PUBLIC_ROUTES_OVERLAY_IDS.overlayPublicRoutes,
-        overlayType: "modal" as const,
-        headerLayoutNodeId: null,
+        overlayType: "modal",
         bodyLayoutNodeId: PHI_BUILDER_PUBLIC_ROUTES_LAYOUT_IDS.publicRoutesBody,
-        footerPresentation: "actions" as const,
+        footerPresentation: "actions",
         footerLayoutNodeId: PHI_BUILDER_PUBLIC_ROUTES_LAYOUT_IDS.publicRoutesFooter,
-        status: PhiCmsStatus.Published,
-        flags: 0,
-        visibilityMask: page.visibilityMask,
         sortOrder: 0,
         label: "Builder public route collision",
         config: {
@@ -979,17 +917,14 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
             ],
           },
         },
-      }] : []),
-      ...(isMediaPage ? [{
+      })] : []),
+      ...(isMediaPage ? [nodes.overlay({
       id: PHI_ASSET_INSPECTOR_OVERLAY_IDS.overlayMediaInspector,
-      overlayType: "drawer" as const,
+      overlayType: "drawer",
       headerLayoutNodeId: PHI_ASSET_INSPECTOR_LAYOUT_IDS.layoutMediaInspectorHeader,
       bodyLayoutNodeId: PHI_ASSET_INSPECTOR_LAYOUT_IDS.layoutMediaInspector,
-      footerPresentation: "actions" as const,
+      footerPresentation: "actions",
       footerLayoutNodeId: PHI_ASSET_INSPECTOR_LAYOUT_IDS.layoutMediaInspectorFooter,
-      status: PhiCmsStatus.Published,
-      flags: 0,
-      visibilityMask: page.visibilityMask,
       sortOrder: 0,
       label: "Asset inspector",
       config: {
@@ -1027,16 +962,12 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
           ],
         },
       },
-    }, {
+    }), nodes.overlay({
         id: PHI_ASSET_INSPECTOR_OVERLAY_IDS.overlayMediaFocalRect,
-        overlayType: "modal" as const,
-        headerLayoutNodeId: null,
+        overlayType: "modal",
         bodyLayoutNodeId: PHI_ASSET_INSPECTOR_LAYOUT_IDS.layoutMediaFocalRectBody,
-        footerPresentation: "actions" as const,
+        footerPresentation: "actions",
         footerLayoutNodeId: PHI_ASSET_INSPECTOR_LAYOUT_IDS.layoutMediaFocalRectFooter,
-        status: PhiCmsStatus.Published,
-        flags: 0,
-        visibilityMask: page.visibilityMask,
         sortOrder: 1,
         label: "Asset focal rectangle",
         config: {
@@ -1073,17 +1004,13 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
             ],
           },
         },
-      }] : []),
-      ...(isMediaPage ? [{
+      })] : []),
+      ...(isMediaPage ? [nodes.overlay({
         id: PHI_ASSET_INSPECTOR_OVERLAY_IDS.overlayMediaFolderCreate,
-        overlayType: "modal" as const,
-        headerLayoutNodeId: null,
+        overlayType: "modal",
         bodyLayoutNodeId: PHI_ASSET_INSPECTOR_LAYOUT_IDS.layoutMediaFolderCreateBody,
-        footerPresentation: "actions" as const,
+        footerPresentation: "actions",
         footerLayoutNodeId: PHI_ASSET_INSPECTOR_LAYOUT_IDS.layoutMediaFolderCreateFooter,
-        status: PhiCmsStatus.Published,
-        flags: 0,
-        visibilityMask: page.visibilityMask,
         sortOrder: 2,
         label: "Create asset folder",
         config: {
@@ -1121,20 +1048,15 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
             ],
           },
         },
-      }] : []),
+      })] : []),
     ],
     regions: [
       ...(isStructurePage || isPagesPage || isNavigationPage || isRevisionsPage || isMediaPage || isThemePage || isModulesPage
         ? [
-            {
+            nodes.region({
               id: SYNTHETIC_DEV_REGION_IDS.regionHeaderBottom,
-              pageId: page.id,
-              areaPresetId: null,
               regionType: PhiCmsRegionType.HeaderBottom,
               rootLayoutNodeId: SYNTHETIC_DEV_LAYOUT_IDS.layoutHeaderBottom,
-              status: PhiCmsStatus.Published,
-              flags: 0,
-              visibilityMask: page.visibilityMask,
               sortOrder: 5,
               config: {
                 sticky: true,
@@ -1143,18 +1065,13 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                 size: { height: `${resolvePhiShellHeaderHeight(runtime.site.theme?.shell, "bottom")}px` },
                 offsetTop: resolvePhiShellHeaderHeight(runtime.site.theme?.shell, "main"),
               },
-            },
+            }),
           ]
         : []),
-      {
+      nodes.region({
         id: SYNTHETIC_DEV_REGION_IDS.regionContent,
-        pageId: page.id,
-        areaPresetId: null,
         regionType: PhiCmsRegionType.Content,
         rootLayoutNodeId: SYNTHETIC_DEV_LAYOUT_IDS.layoutContent,
-        status: PhiCmsStatus.Published,
-        flags: 0,
-        visibilityMask: page.visibilityMask,
         sortOrder: 20,
         config: {
           maxSize: { width: "100%" },
@@ -1162,7 +1079,7 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
           padding: 0,
           margin: 0,
         },
-      },
+      }),
     ],
     layoutNodes: [
       ...((isStructurePage || isPagesPage || isMediaPage || isNavigationPage || isRevisionsPage || isThemePage || isModulesPage)

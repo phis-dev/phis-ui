@@ -1,7 +1,7 @@
 import { createPhiPresetCmsInstanceId } from "../../../types/cms-instance-id";
 import { PHI_PUBLIC_RUNTIME_MODULE_ID } from "../../../plugins/runtime-modules/public/ids";
 import { PHI_CMS_DEFAULT_SLOT_INDEX } from "../../../constants/cms-layout-types";
-import { PhiCmsPageType, PhiCmsRegionType, PhiCmsStatus } from "../../../constants/phi-cms";
+import { PhiCmsPageType, PhiCmsRegionType } from "../../../constants/phi-cms";
 import { createPhiCmsPresetNodes } from "../../../helpers/cms-preset-nodes";
 import type { PhiCmsPageNode, PhiResolvedCmsPageTree } from "../../../types/cms";
 import type { PhiCmsErrorCode } from "../../../constants/cms-error-pages";
@@ -67,25 +67,15 @@ export async function buildPhiDefaultPubErrorPageTree({
 
   const nodes = createPhiCmsPresetNodes(page);
   return {
-    page: {
-      ...page,
-      pageType: PhiCmsPageType.Standard,
-      status: PhiCmsStatus.Published,
-    },
+    page: nodes.page({ pageType: PhiCmsPageType.Standard }),
     overlays: [],
     regions: [
-      {
+      nodes.region({
         id: SYNTHETIC_ERROR_REGION_IDS.regionContent - code,
-        pageId: page.id,
-        areaPresetId: null,
         regionType: PhiCmsRegionType.Content,
         rootLayoutNodeId: layoutContentId,
-        status: PhiCmsStatus.Published,
-        flags: 0,
-        visibilityMask: page.visibilityMask,
         sortOrder: 30,
-        config: {},
-      },
+      }),
     ],
     layoutNodes: [
       nodes.layout({

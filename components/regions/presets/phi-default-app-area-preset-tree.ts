@@ -1,7 +1,7 @@
 import { createPhiPresetCmsInstanceIdMap } from "../../../types/cms-instance-id";
 import { PHI_APP_RUNTIME_MODULE_ID } from "../../../plugins/runtime-modules/app/ids";
 import { PHI_CMS_DEFAULT_SLOT_INDEX } from "../../../constants/cms-layout-types";
-import { PhiCmsRegionType, PhiCmsStatus } from "../../../constants/phi-cms";
+import { PhiCmsRegionType } from "../../../constants/phi-cms";
 import { createPhiCmsPresetNodes } from "../../../helpers/cms-preset-nodes";
 import { resolvePhiShellMetric } from "../../../helpers/shell-region-style";
 import type { PhiResolvedCmsPageTree, PhiCmsPageNode } from "../../../types/cms";
@@ -61,15 +61,10 @@ export async function buildPhiDefaultAppAreaPresetTree({
     page,
     runtimeModuleIds: createPhiDefaultAreaRuntimeModuleIds("app"),
     overlays: [],
-    regions: [{
+    regions: [nodes.region({
       id: SYNTHETIC_APP_REGION_IDS.regionSiderLeft,
-      pageId: page.id,
-      areaPresetId: null,
       regionType: PhiCmsRegionType.SiderLeft,
       rootLayoutNodeId: SYNTHETIC_APP_LAYOUT_IDS.layoutSiderLeft,
-      status: PhiCmsStatus.Published,
-      flags: 0,
-      visibilityMask: page.visibilityMask,
       // Between the header and the content, which is where it is read.
       sortOrder: 25,
       // Structure only: the frame's look is the Theme's (SHELL.md, Shell Chrome Overlay).
@@ -80,7 +75,7 @@ export async function buildPhiDefaultAppAreaPresetTree({
         ...(typeof shellSiderLeftOffsetTop === "number" ? { offsetTop: shellSiderLeftOffsetTop } : { offsetTop: 0 }),
         collapsible: true,
       },
-    }],
+    })],
     layoutNodes: [
       nodes.layout({
         creationPreset: { layoutKind: "verticalflex", preset: "panel" },

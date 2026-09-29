@@ -6,7 +6,7 @@ import {
   PHI_CMS_SEQUENTIAL_LAYOUT_SLOTS,
   PHI_CMS_THREE_COLUMN_LAYOUT_SLOT_INDEX,
 } from "../../../constants/cms-layout-types";
-import { PhiCmsPageType, PhiCmsRegionType, PhiCmsStatus } from "../../../constants/phi-cms";
+import { PhiCmsPageType, PhiCmsRegionType } from "../../../constants/phi-cms";
 import { createPhiCmsPresetNodes } from "../../../helpers/cms-preset-nodes";
 import { resolvePhiShellHeaderHeight } from "../../../helpers/shell-region-style";
 import type { PhiCmsPageNode, PhiResolvedCmsPageTree } from "../../../types/cms";
@@ -72,39 +72,24 @@ export async function buildPhiDefaultPubWelcomePageTree({
 }): Promise<PhiResolvedCmsPageTree> {
   const nodes = createPhiCmsPresetNodes(page);
   return {
-    page: {
-      ...page,
-      pageType: PhiCmsPageType.Landing,
-      status: PhiCmsStatus.Published,
-    },
+    page: nodes.page({ pageType: PhiCmsPageType.Landing }),
     overlays: [],
     regions: [
-      {
+      nodes.region({
         id: SYNTHETIC_WELCOME_REGION_IDS.regionHeaderBottom,
-        pageId: page.id,
-        areaPresetId: null,
         regionType: PhiCmsRegionType.HeaderBottom,
         rootLayoutNodeId: SYNTHETIC_WELCOME_LAYOUT_IDS.layoutHeaderBottom,
-        status: PhiCmsStatus.Published,
-        flags: 0,
-        visibilityMask: page.visibilityMask,
         sortOrder: 25,
         config: {
           size: { height: `${resolvePhiShellHeaderHeight(runtime.site.theme?.shell, "bottom")}px` },
         },
-      },
-      {
+      }),
+      nodes.region({
         id: SYNTHETIC_WELCOME_REGION_IDS.regionContent,
-        pageId: page.id,
-        areaPresetId: null,
         regionType: PhiCmsRegionType.Content,
         rootLayoutNodeId: SYNTHETIC_WELCOME_LAYOUT_IDS.layoutContent,
-        status: PhiCmsStatus.Published,
-        flags: 0,
-        visibilityMask: page.visibilityMask,
         sortOrder: 30,
-        config: {},
-      },
+      }),
     ],
     layoutNodes: [
       nodes.layout({

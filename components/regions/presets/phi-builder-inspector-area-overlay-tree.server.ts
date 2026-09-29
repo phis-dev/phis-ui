@@ -1,5 +1,4 @@
 import { PHI_CMS_DEFAULT_SLOT_INDEX } from "../../../constants/cms-layout-types";
-import { PhiCmsStatus } from "../../../constants/phi-cms";
 import { createPhiCmsPresetNodes } from "../../../helpers/cms-preset-nodes";
 import { PHI_COLOR, PHI_SPACE } from "../../../theme/antd-css-var-contract";
 import type { PhiCmsPageNode, PhiResolvedCmsPageTree } from "../../../types/cms";
@@ -102,16 +101,11 @@ export async function buildPhiBuilderInspectorAreaOverlayTree({
       [PHI_BUILDER_INSPECTOR_OVERLAY_IDS.regionInspector, PHI_BUILDER_INSPECTOR_LAYOUT_IDS.regionInspectorHeader, PHI_BUILDER_INSPECTOR_LAYOUT_IDS.regionInspectorBody, "Region inspector", "region"],
       [PHI_BUILDER_INSPECTOR_OVERLAY_IDS.layoutInspector, PHI_BUILDER_INSPECTOR_LAYOUT_IDS.layoutInspectorHeader, PHI_BUILDER_INSPECTOR_LAYOUT_IDS.layoutInspectorBody, "Layout inspector", "layout"],
       [PHI_BUILDER_INSPECTOR_OVERLAY_IDS.widgetInspector, PHI_BUILDER_INSPECTOR_LAYOUT_IDS.widgetInspectorHeader, PHI_BUILDER_INSPECTOR_LAYOUT_IDS.widgetInspectorBody, "Widget inspector", "widget"],
-    ] as const).map(([id, headerLayoutNodeId, bodyLayoutNodeId, title, view], index) => ({
+    ] as const).map(([id, headerLayoutNodeId, bodyLayoutNodeId, title, view], index) => nodes.overlay({
       id,
-      overlayType: "drawer" as const,
+      overlayType: "drawer",
       headerLayoutNodeId,
       bodyLayoutNodeId,
-      footerPresentation: "none" as const,
-      footerLayoutNodeId: null,
-      status: PhiCmsStatus.Published,
-      flags: 0,
-      visibilityMask: page.visibilityMask,
       sortOrder: index,
       label: title,
       config: {
@@ -134,16 +128,13 @@ export async function buildPhiBuilderInspectorAreaOverlayTree({
         },
       },
       })),
-      {
+      nodes.overlay({
         id: PHI_BUILDER_INSPECTOR_OVERLAY_IDS.effectsEditor,
-        overlayType: "modal" as const,
+        overlayType: "modal",
         headerLayoutNodeId: PHI_BUILDER_INSPECTOR_LAYOUT_IDS.effectsHeader,
         bodyLayoutNodeId: PHI_BUILDER_INSPECTOR_LAYOUT_IDS.effectsBody,
-        footerPresentation: "actions" as const,
+        footerPresentation: "actions",
         footerLayoutNodeId: PHI_BUILDER_INSPECTOR_LAYOUT_IDS.effectsFooter,
-        status: PhiCmsStatus.Published,
-        flags: 0,
-        visibilityMask: page.visibilityMask,
         sortOrder: 10,
         label: "Builder effects",
         config: {
@@ -162,22 +153,18 @@ export async function buildPhiBuilderInspectorAreaOverlayTree({
             ],
           },
         },
-      },
-      {
+      }),
+      nodes.overlay({
         /*
          * Signal wiring. The Modal, its Form and its footer actions are declared here rather than built
          * as a React Modal of its own -- the wiring surface predates the overlay contract and was dropped
          * during the overlay consolidation because of it.
          */
         id: PHI_BUILDER_INSPECTOR_OVERLAY_IDS.signalWiring,
-        overlayType: "modal" as const,
-        headerLayoutNodeId: null,
+        overlayType: "modal",
         bodyLayoutNodeId: PHI_BUILDER_INSPECTOR_LAYOUT_IDS.signalWiringBody,
-        footerPresentation: "actions" as const,
+        footerPresentation: "actions",
         footerLayoutNodeId: PHI_BUILDER_INSPECTOR_LAYOUT_IDS.signalWiringFooter,
-        status: PhiCmsStatus.Published,
-        flags: 0,
-        visibilityMask: page.visibilityMask,
         sortOrder: 11,
         label: "Builder signal wiring",
         config: {
@@ -196,7 +183,7 @@ export async function buildPhiBuilderInspectorAreaOverlayTree({
             ],
           },
         },
-      },
+      }),
     ],
     layoutNodes: [
       ...([[

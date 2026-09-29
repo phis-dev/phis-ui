@@ -14,7 +14,9 @@ import type { PhiBlockRuntime } from "../../../types";
 import { trGlobal } from "../../../server-helpers/translate";
 import { PHI_TR_CTX_WEB_UI_LABEL } from "../../../gateway/tr";
 import { PHI_PADDING } from "../../../theme/phi-tokens";
+import { PHI_SPACE } from "../../../theme/antd-css-var-contract";
 import { buildPhiCmsWidgetTypeKey } from "../../../helpers/cms-node-factories";
+import { createPhiCmsPresetNodes } from "../../../helpers/cms-preset-nodes";
 import { resolvePhiBrandContact } from "../../../helpers/brand-contact";
 import { resolvePhiShellHeaderHeight, resolvePhiShellMetric } from "../../../helpers/shell-region-style";
 import { resolvePhiLayoutCreationPreset } from "../../../helpers/cms-layout-defaults";
@@ -131,6 +133,7 @@ export async function buildPhiDefaultSiteAreaPresetTree({
     family: "footer",
     region: "bottom",
   });
+  const nodes = createPhiCmsPresetNodes(page);
   return {
     page,
     runtimeModuleIds: createPhiDefaultAreaRuntimeModuleIds(runtimeModuleArea),
@@ -138,10 +141,8 @@ export async function buildPhiDefaultSiteAreaPresetTree({
     regions: [
       ...(headerTopRegion && includeHeaderTop
         ? [
-            {
+            nodes.region({
               id: SYNTHETIC_REGION_IDS.regionHeaderTop,
-              pageId: page.id,
-              areaPresetId: null,
               regionType: PhiCmsRegionType.HeaderTop,
               rootLayoutNodeId: PHI_DEFAULT_PUB_AREA_LAYOUT_IDS.layoutHeaderTop,
               status: headerTopRegion.status,
@@ -153,15 +154,13 @@ export async function buildPhiDefaultSiteAreaPresetTree({
                 size: { ...(headerTopRegion.config.size ?? {}), height: `${shellHeaderTopHeight}px` },
                 ...(typeof shellHeaderTopOffsetTop === "number" ? { offsetTop: shellHeaderTopOffsetTop } : {}),
               },
-            },
+            }),
           ]
         : []),
       ...(headerMainRegion
         ? [
-            {
+            nodes.region({
               id: SYNTHETIC_REGION_IDS.regionHeaderMain,
-              pageId: page.id,
-              areaPresetId: null,
               regionType: PhiCmsRegionType.HeaderMain,
               rootLayoutNodeId: PHI_DEFAULT_PUB_AREA_LAYOUT_IDS.layoutHeaderMain,
               status: headerMainRegion.status,
@@ -173,15 +172,13 @@ export async function buildPhiDefaultSiteAreaPresetTree({
                 size: { ...(headerMainRegion.config.size ?? {}), height: `${shellHeaderMainHeight}px` },
                 ...(typeof shellHeaderMainOffsetTop === "number" ? { offsetTop: shellHeaderMainOffsetTop } : {}),
               },
-            },
+            }),
           ]
         : []),
       ...(headerBottomRegion
         ? [
-            {
+            nodes.region({
               id: SYNTHETIC_REGION_IDS.regionHeaderBottom,
-              pageId: page.id,
-              areaPresetId: null,
               regionType: PhiCmsRegionType.HeaderBottom,
               rootLayoutNodeId: PHI_DEFAULT_PUB_AREA_LAYOUT_IDS.layoutHeaderBottom,
               status: headerBottomRegion.status,
@@ -193,15 +190,13 @@ export async function buildPhiDefaultSiteAreaPresetTree({
                 size: { ...(headerBottomRegion.config.size ?? {}), height: `${shellHeaderBottomHeight}px` },
                 ...(typeof shellHeaderBottomOffsetTop === "number" ? { offsetTop: shellHeaderBottomOffsetTop } : {}),
               },
-            },
+            }),
           ]
         : []),
       ...(siderRightRegion
         ? [
-            {
+            nodes.region({
               id: SYNTHETIC_REGION_IDS.regionSiderRight,
-              pageId: page.id,
-              areaPresetId: null,
               regionType: PhiCmsRegionType.SiderRight,
               rootLayoutNodeId: PHI_DEFAULT_PUB_AREA_LAYOUT_IDS.layoutSiderRight,
               status: siderRightRegion.status,
@@ -215,15 +210,13 @@ export async function buildPhiDefaultSiteAreaPresetTree({
                   : {}),
                 ...(typeof shellSiderRightOffsetTop === "number" ? { offsetTop: shellSiderRightOffsetTop } : {}),
               },
-            },
+            }),
           ]
         : []),
       ...(footerTopRegion
         ? [
-            {
+            nodes.region({
               id: SYNTHETIC_REGION_IDS.regionFooterTop,
-              pageId: page.id,
-              areaPresetId: null,
               regionType: PhiCmsRegionType.FooterTop,
               rootLayoutNodeId: PHI_DEFAULT_PUB_AREA_LAYOUT_IDS.layoutFooterTop,
               status: footerTopRegion.status,
@@ -236,15 +229,13 @@ export async function buildPhiDefaultSiteAreaPresetTree({
                   ? { size: { ...(footerTopRegion.config.size ?? {}), height: `${shellFooterTopHeight}px` } }
                   : {}),
               },
-            },
+            }),
           ]
         : []),
       ...(footerMainRegion
         ? [
-            {
+            nodes.region({
               id: SYNTHETIC_REGION_IDS.regionFooterMain,
-              pageId: page.id,
-              areaPresetId: null,
               regionType: PhiCmsRegionType.Footer,
               rootLayoutNodeId: PHI_DEFAULT_PUB_AREA_LAYOUT_IDS.layoutFooterMain,
               status: footerMainRegion.status,
@@ -257,15 +248,13 @@ export async function buildPhiDefaultSiteAreaPresetTree({
                   ? { size: { ...(footerMainRegion.config.size ?? {}), height: `${shellFooterMainHeight}px` } }
                   : {}),
               },
-            },
+            }),
           ]
         : []),
       ...(footerBottomRegion
         ? [
-            {
+            nodes.region({
               id: SYNTHETIC_REGION_IDS.regionFooterBottom,
-              pageId: page.id,
-              areaPresetId: null,
               regionType: PhiCmsRegionType.FooterBottom,
               rootLayoutNodeId: PHI_DEFAULT_PUB_AREA_LAYOUT_IDS.layoutFooterBottom,
               status: footerBottomRegion.status,
@@ -278,7 +267,7 @@ export async function buildPhiDefaultSiteAreaPresetTree({
                   ? { size: { ...(footerBottomRegion.config.size ?? {}), height: `${shellFooterBottomHeight}px` } }
                   : {}),
               },
-            },
+            }),
           ]
         : []),
     ],
@@ -413,9 +402,9 @@ export async function buildPhiDefaultSiteAreaPresetTree({
                   horizontal: "right",
                   vertical: "middle",
                 },
-                gap: PHI_PADDING.md,
-                paddingInline: PHI_PADDING.lg,
-                paddingBlock: PHI_PADDING.sm,
+                gap: PHI_SPACE.md,
+                paddingInline: PHI_SPACE.lg,
+                paddingBlock: PHI_SPACE.sm,
                 wrap: true,
                 style: { width: "100%" },
               },

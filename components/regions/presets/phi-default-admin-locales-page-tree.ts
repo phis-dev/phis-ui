@@ -3,7 +3,7 @@ import { PHI_LOCALIZATION_RUNTIME_MODULE_ID } from "../../../plugins/runtime-mod
 import {
   PHI_CMS_DEFAULT_SLOT_INDEX,
 } from "../../../constants/cms-layout-types";
-import { PhiCmsPageType, PhiCmsStatus } from "../../../constants/phi-cms";
+import { PhiCmsPageType } from "../../../constants/phi-cms";
 import { createPhiCmsPresetNodes } from "../../../helpers/cms-preset-nodes";
 import type { PhiCmsPageNode, PhiResolvedCmsPageTree } from "../../../types/cms";
 import type { PhiBlockRuntime } from "../../../types";
@@ -63,11 +63,7 @@ export async function buildPhiDefaultAdminLocalesPageTree({
 
   const nodes = createPhiCmsPresetNodes(page);
   return {
-    page: {
-      ...page,
-      pageType: PhiCmsPageType.Standard,
-      status: PhiCmsStatus.Published,
-    },
+    page: nodes.page({ pageType: PhiCmsPageType.Standard }),
     pageMeta: {
       title: { msgId: 0, source: "Locales", value: labels.pageTitle },
       description: { msgId: 0, source: "Manage site languages and site-specific translations.", value: labels.pageDescription },

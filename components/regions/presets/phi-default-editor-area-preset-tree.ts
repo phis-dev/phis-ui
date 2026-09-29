@@ -5,8 +5,9 @@ import {
   PHI_CMS_SEQUENTIAL_LAYOUT_SLOTS,
   PHI_CMS_THREE_COLUMN_LAYOUT_SLOT_INDEX,
 } from "../../../constants/cms-layout-types";
-import { PhiCmsRegionType, PhiCmsStatus } from "../../../constants/phi-cms";
+import { PhiCmsRegionType } from "../../../constants/phi-cms";
 import { createPhiCmsPresetNodes } from "../../../helpers/cms-preset-nodes";
+import { buildPhiHeaderTopActionsLayoutNode } from "./phi-header-top-actions-layout";
 import { resolvePhiShellHeaderHeight, resolvePhiShellMetric } from "../../../helpers/shell-region-style";
 import type { PhiResolvedCmsPageTree, PhiCmsPageNode } from "../../../types/cms";
 import type { PhiBlockRuntime } from "../../../types";
@@ -76,47 +77,32 @@ export async function buildPhiDefaultEditorAreaPresetTree({
     runtimeModuleIds: createPhiDefaultAreaRuntimeModuleIds("editor"),
     overlays: [],
     regions: [
-      {
+      nodes.region({
         id: SYNTHETIC_EDITOR_REGION_IDS.regionHeaderTop,
-        pageId: page.id,
-        areaPresetId: null,
         regionType: PhiCmsRegionType.HeaderTop,
         rootLayoutNodeId: SYNTHETIC_EDITOR_LAYOUT_IDS.layoutHeaderTop,
-        status: PhiCmsStatus.Published,
-        flags: 0,
-        visibilityMask: page.visibilityMask,
         sortOrder: 10,
         // Structure only: the frame's look is the Theme's (SHELL.md, Shell Chrome Overlay).
         config: {
           sticky: false,
           size: { height: `${resolvePhiShellHeaderHeight(runtime.site.theme?.shell, "top")}px` },
         },
-      },
-      {
+      }),
+      nodes.region({
         id: SYNTHETIC_EDITOR_REGION_IDS.regionHeaderMain,
-        pageId: page.id,
-        areaPresetId: null,
         regionType: PhiCmsRegionType.HeaderMain,
         rootLayoutNodeId: SYNTHETIC_EDITOR_LAYOUT_IDS.layoutHeaderMain,
-        status: PhiCmsStatus.Published,
-        flags: 0,
-        visibilityMask: page.visibilityMask,
         sortOrder: 20,
         config: {
           sticky: true,
           size: { height: `${resolvePhiShellHeaderHeight(runtime.site.theme?.shell, "main")}px` },
           offsetTop: typeof shellHeaderMainOffsetTop === "number" ? shellHeaderMainOffsetTop : 0,
         },
-      },
-      {
+      }),
+      nodes.region({
         id: SYNTHETIC_EDITOR_REGION_IDS.regionSiderLeft,
-        pageId: page.id,
-        areaPresetId: null,
         regionType: PhiCmsRegionType.SiderLeft,
         rootLayoutNodeId: SYNTHETIC_EDITOR_LAYOUT_IDS.layoutSiderLeft,
-        status: PhiCmsStatus.Published,
-        flags: 0,
-        visibilityMask: page.visibilityMask,
         sortOrder: 25,
         config: {
           sticky: true,
@@ -125,7 +111,7 @@ export async function buildPhiDefaultEditorAreaPresetTree({
           ...(typeof shellSiderLeftOffsetTop === "number" ? { offsetTop: shellSiderLeftOffsetTop } : { offsetTop: 0 }),
           collapsible: true,
         },
-      },
+      }),
     ],
     layoutNodes: [
       nodes.layout({
@@ -158,24 +144,10 @@ export async function buildPhiDefaultEditorAreaPresetTree({
           style: { height: "100%" },
         },
       }),
-      nodes.layout({
-        typeKey: "flex",
+      buildPhiHeaderTopActionsLayoutNode(nodes, {
         id: SYNTHETIC_EDITOR_LAYOUT_IDS.layoutHeaderTopActions,
         parentLayoutNodeId: SYNTHETIC_EDITOR_LAYOUT_IDS.layoutHeaderTop,
-        slotIndex: PHI_CMS_THREE_COLUMN_LAYOUT_SLOT_INDEX.Right,
-        sortOrder: 0,
         label: "editor header top actions",
-        config: {
-          anchor: {
-            horizontal: "right",
-            vertical: "middle",
-          },
-          gap: 12,
-          verticalSeparators: false,
-          separatorBeforeFirst: true,
-          separatorSpan: "50%",
-          wrap: false,
-        },
       }),
       nodes.layout({
         creationPreset: { layoutKind: "verticalflex", preset: "panel" },

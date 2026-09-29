@@ -1,5 +1,4 @@
 import { PHI_CMS_DEFAULT_SLOT_INDEX } from "../../../constants/cms-layout-types";
-import { PhiCmsStatus } from "../../../constants/phi-cms";
 import { createPhiCmsPresetNodes } from "../../../helpers/cms-preset-nodes";
 import { PHI_COLOR, PHI_SPACE } from "../../../theme/antd-css-var-contract";
 import type { PhiCmsPageNode, PhiResolvedCmsPageTree } from "../../../types/cms";
@@ -45,16 +44,10 @@ export async function buildPhiAuthAreaLoginOverlayTree({
   return {
     page,
     regions: [],
-    overlays: [{
+    overlays: [nodes.overlay({
       id: ids.overlayLogin,
       overlayType: "modal",
-      headerLayoutNodeId: null,
       bodyLayoutNodeId: ids.layoutBody,
-      footerPresentation: "none",
-      footerLayoutNodeId: null,
-      status: PhiCmsStatus.Published,
-      flags: 0,
-      visibilityMask: page.visibilityMask,
       sortOrder: 0,
       label: `${area} auth login`,
       config: {
@@ -102,7 +95,7 @@ export async function buildPhiAuthAreaLoginOverlayTree({
           ],
         },
       },
-    }],
+    })],
     layoutNodes: [nodes.layout({
       id: ids.layoutBody,
       parentLayoutNodeId: null,

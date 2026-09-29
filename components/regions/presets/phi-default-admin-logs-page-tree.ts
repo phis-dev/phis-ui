@@ -1,7 +1,7 @@
 import { createPhiPresetCmsInstanceIdMap } from "../../../types/cms-instance-id";
 import { PHI_OBSERVABILITY_RUNTIME_MODULE_ID } from "../../../plugins/runtime-modules/observability/ids";
 import { PHI_CMS_DEFAULT_SLOT_INDEX } from "../../../constants/cms-layout-types";
-import { PhiCmsPageType, PhiCmsStatus } from "../../../constants/phi-cms";
+import { PhiCmsPageType } from "../../../constants/phi-cms";
 import { createPhiCmsPresetNodes } from "../../../helpers/cms-preset-nodes";
 import type { PhiCmsPageNode, PhiResolvedCmsPageTree } from "../../../types/cms";
 import type { PhiBlockRuntime } from "../../../types";
@@ -68,25 +68,15 @@ export async function buildPhiDefaultAdminLogsPageTree({
 
   const nodes = createPhiCmsPresetNodes(page);
   return {
-    page: {
-      ...page,
-      pageType: PhiCmsPageType.Standard,
-      status: PhiCmsStatus.Published,
-    },
+    page: nodes.page({ pageType: PhiCmsPageType.Standard }),
     pageMeta: {
       title: { msgId: 0, source: "Logs", value: labels.pageTitle },
       description: { msgId: 0, source: "Inspect site-scoped runtime logs from the current site process.", value: labels.pageDescription },
     },
-    overlays: [{
+    overlays: [nodes.overlay({
       id: SYNTHETIC_ADMIN_LOGS_OVERLAY_IDS.overlayDetail,
       overlayType: "modal",
-      headerLayoutNodeId: null,
       bodyLayoutNodeId: SYNTHETIC_ADMIN_LOGS_LAYOUT_IDS.layoutDetail,
-      footerPresentation: "none",
-      footerLayoutNodeId: null,
-      status: PhiCmsStatus.Published,
-      flags: 0,
-      visibilityMask: page.visibilityMask,
       sortOrder: 0,
       label: "observability log detail modal",
       config: {
@@ -124,7 +114,7 @@ export async function buildPhiDefaultAdminLogsPageTree({
           }],
         },
       },
-    }],
+    })],
     regions: [scaffold.region],
     layoutNodes: [
       scaffold.layoutNode,
