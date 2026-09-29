@@ -51,6 +51,8 @@ export type PhiBuilderModulesPageLabels = {
     where: string;
     blocks: string;
     shell: string;
+    /** The row said when the Module switched off is Public's last Auth UI provider. */
+    signIn: string;
     confirm: string;
     cancel: string;
   };
@@ -130,6 +132,9 @@ export const PHI_BUILDER_MODULES_PAGE_DEFAULT_LABELS: PhiBuilderModulesPageLabel
     where: "Page",
     blocks: "Blocks",
     shell: "Area shell",
+    signIn:
+      "Sign-in: nobody can sign in any more, and signed-in people stay signed in. " +
+      "Run phis auth restore-preset --site <site key> on the server to bring it back.",
     confirm: "Switch off anyway",
     cancel: "Keep it on",
   },

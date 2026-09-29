@@ -99,7 +99,8 @@ export type PhiBuilderModuleUsageEntry = {
   key: string;
   area: string;
   where: string;
-  blocks: number;
+  /** `null` for what is not a block: the sign-in a Public Auth UI provider takes with it. */
+  blocks: number | null;
 };
 
 export type PhiBuilderModuleDeactivationRequest = {

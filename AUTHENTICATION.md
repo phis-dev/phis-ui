@@ -304,8 +304,10 @@ out-of-band CLI recovery remains available.
 ## 9. Disablement and preset recovery
 
 Disabling `@phis/ui/modules/auth` removes only its active Area contributions. Existing Site sessions,
-Core access evaluation, the generic viewer snapshot, and Core logout remain operational. Builder may warn
-that an Area has no Auth UI provider but must not silently reactivate one.
+Core access evaluation, the generic viewer snapshot, and Core logout remain operational. Builder must not
+silently reactivate a provider. It does not refuse the change either: switching off Public's last Auth
+UI provider opens the Module switch-off dialog with a sign-in row that says nobody can sign in afterwards
+and names `phis auth restore-preset` as the way back, and the operator confirms or keeps the Module on.
 
 The semantic recovery operation is:
 

@@ -220,6 +220,38 @@ function shellLabel(params: Record<string, unknown> | undefined) {
   return readLabelMap(params, "usageLabels")?.shell ?? "Area shell";
 }
 
+function signInLabel(params: Record<string, unknown> | undefined) {
+  return readLabelMap(params, "usageLabels")?.signIn ??
+    "Sign-in: nobody can sign in any more. " +
+    "Run phis auth restore-preset --site <site key> to bring it back.";
+}
+
+/**
+ * Whether switching this Module off in these Areas leaves Public with no Auth UI provider.
+ *
+ * Public is where signing in happens -- a staff Area sends an unauthenticated visitor to Public's
+ * sign-in -- so its last provider going is the one change that locks everybody not already signed in
+ * out. It stays allowed: AUTHENTICATION.md lets a Site run without Auth presentation, and
+ * `phis auth restore-preset` is the way back. What it must not be is silent.
+ */
+export function leavesPublicWithoutSignIn(
+  state: Pick<PhiDeveloperBuilderWorkspaceState, "runtimeModuleIdsByArea" | "runtimeModuleDefinitions">,
+  definition: { moduleId: PhiRuntimeModuleId; authUiProvider?: unknown },
+  cmsAreas: readonly PhiCmsAreaKey[],
+) {
+  if (definition.authUiProvider == null || !cmsAreas.includes("public")) {
+    return false;
+  }
+  const publicModuleIds = state.runtimeModuleIdsByArea.public ?? [];
+  if (!publicModuleIds.includes(definition.moduleId)) {
+    return false;
+  }
+  const definitionsById = new Map(state.runtimeModuleDefinitions.map((entry) => [entry.moduleId, entry]));
+  return !publicModuleIds.some((moduleId) =>
+    moduleId !== definition.moduleId && definitionsById.get(moduleId)?.authUiProvider != null
+  );
+}
+
 function readMissingLabels(params: Record<string, unknown> | undefined) {
   const labels = readLabelMap(params, "missingLabels");
   return labels?.missing && labels.missingHint
@@ -467,7 +499,15 @@ export function PhiBuilderRuntimeModulesTableProviderClient({ children }: { chil
           (areaKey): areaKey is PhiCmsAreaKey & PhiDeveloperBuilderArea =>
             isPhiBuilderAreaKey(areaKey) && isModuleActiveInArea(builderState, definition.moduleId, areaKey),
         );
-        const usage: PhiBuilderModuleUsageEntry[] = [];
+        const signInLost = leavesPublicWithoutSignIn(builderState, definition, areas);
+        const usage: PhiBuilderModuleUsageEntry[] = signInLost
+          ? [{
+              key: "public:sign-in",
+              area: areaLabelFor("public", request.params),
+              where: signInLabel(request.params),
+              blocks: null,
+            }]
+          : [];
         for (const areaKey of areas) {
           const entries = await loadPhiBuilderModuleBlockUsage(areaKey, definition.moduleId)
             .catch(() => []);

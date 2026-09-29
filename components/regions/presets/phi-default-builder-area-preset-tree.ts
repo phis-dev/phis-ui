@@ -2750,7 +2750,9 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                         ? { missing: modulesLabels.missing.category, missingHint: modulesLabels.missing.hint }
                         : null,
                       areaLabels: modulesLabels?.areas ?? null,
-                      usageLabels: modulesLabels ? { shell: modulesLabels.usage.shell } : null,
+                      usageLabels: modulesLabels
+                        ? { shell: modulesLabels.usage.shell, signIn: modulesLabels.usage.signIn }
+                        : null,
                     },
                   },
                   presentation: {
