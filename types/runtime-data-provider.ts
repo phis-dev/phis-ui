@@ -1,4 +1,13 @@
-export type PhiRuntimeDataProviderKey = `${string}/${string}`;
+/*
+ * The key shape is part of stored descriptors -- a Form field names its options provider by it -- so it
+ * is read from `@phis/contracts/controls` with the check that goes with it.
+ */
+export {
+  isPhiNamespacedRuntimeKey,
+  isPhiRuntimeDataProviderKey,
+  type PhiRuntimeDataProviderKey,
+} from "@phis/contracts/controls";
+import type { PhiRuntimeDataProviderKey } from "@phis/contracts/controls";
 
 export type PhiRuntimeDataProviderKind = "options" | "table" | "tree" | "collection";
 
@@ -11,22 +20,3 @@ export type PhiRuntimeDataProviderBinding = {
   scopeKey?: string;
   params?: Record<string, unknown>;
 };
-
-/**
- * `<namespace>/<name>`: an identifier that says whose it is.
- *
- * Provider keys, item renderer keys and everything else a Module may contribute to a shared registry
- * share this shape, so they share one check. A second spelling of it is the one that drifts.
- */
-export function isPhiNamespacedRuntimeKey(value: unknown): value is `${string}/${string}` {
-  if (typeof value !== "string") {
-    return false;
-  }
-
-  const separatorIndex = value.lastIndexOf("/");
-  return separatorIndex > 0 && separatorIndex < value.length - 1;
-}
-
-export function isPhiRuntimeDataProviderKey(value: unknown): value is PhiRuntimeDataProviderKey {
-  return isPhiNamespacedRuntimeKey(value);
-}

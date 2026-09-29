@@ -1,17 +1,9 @@
-export const PHI_SPACING_TOKENS = [
-  "none",
-  "xxs",
-  "xs",
-  "sm",
-  "base",
-  "md",
-  "lg",
-  "xl",
-  "xxl",
-] as const;
-
-export type PhiSpacingToken = (typeof PHI_SPACING_TOKENS)[number];
-
-export function isPhiSpacingToken(value: unknown): value is PhiSpacingToken {
-  return typeof value === "string" && (PHI_SPACING_TOKENS as readonly string[]).includes(value);
-}
+/*
+ * The spacing steps are named in stored descriptors, so the list lives in `@phis/contracts/layout` and
+ * a token the server accepts is one this side can draw.
+ */
+export {
+  PHI_SPACING_TOKENS,
+  isPhiSpacingToken,
+  type PhiSpacingToken,
+} from "@phis/contracts/layout";

@@ -1,213 +1,34 @@
 import type { PhiCmsConfigField } from "./cms-plugins";
 import type { PhiRuntimeModuleId } from "./cms-plugins";
-import type { PhiControlOption } from "../components/controls/phi-control-options";
-import type { PhiControlOptionsProviderConfig } from "../components/controls/phi-control-options";
-import type { PhiResponsiveValue } from "./responsive";
-import type { PhiRuntimeConditionExpression } from "./runtime-condition";
-import type { PhiSpacingToken } from "./spacing";
+import type { PhiFormProviderKey } from "@phis/contracts/forms";
 import type {
   PhiFormSubmitCategory,
   PhiFormSubmitMethod,
   PhiFormSubmitTransport,
 } from "../gateway/form-submit";
 
-export type PhiFormProviderKey = `${string}/${string}`;
-
-export type PhiFormLabelSetKey = `${string}/${string}`;
-
-export const PHI_FORM_DESCRIPTOR_SCHEMA_VERSION = 1 as const;
-
-/**
- * Where a piece of a form's wording comes from.
- *
- * `literal` is the word itself. `label` is a key into the form's label set, which is how anything a
- * visitor reads gets translated. `config` is a value the Widget was placed with -- the target of a
- * consent link, say, which is a property of where the form stands rather than of the form: the same
- * registration form points at one site's terms in one Area and another's elsewhere, and only the
- * placement knows which, and in which language's path.
+/*
+ * The descriptor itself is stored by phis-server and written by Module presets and the Form Builder, so
+ * it is `@phis/contracts/forms`. What stays here is the Module registry around it: which field types,
+ * validation rules and handlers the active Modules provide.
  */
-export type PhiFormTextDescriptor =
-  | {
-      kind: "literal";
-      value: string;
-    }
-  | {
-      kind: "label";
-      key: string;
-      fallback: string;
-    }
-  | {
-      kind: "config";
-      key: string;
-      fallback: string;
-    };
-
-/** The number of tracks every form grid is divided into. */
-export const PHI_FORM_GRID_TRACKS = 24 as const;
-
-/**
- * Where one element lies on the form grid, written the way CSS Grid writes it: `start` is the line the
- * element begins at and `end` is the line it stops before, both counted from 1, so the last line is 25.
- *
- * A range rather than a width, because a width can only say how much room something takes and never
- * where the room is. A label at 1-7 with an input at 7-19 leaves 19-25 empty, and a tool button can
- * then say 21-25 and stand in that gap on the same row -- neither of which a span can express. Ranges
- * also carry the responsive case without a second concept: a label at 1-25 above an input at 1-25 is
- * the stacked form, because two elements that both claim the whole width cannot share a row.
- */
-export type PhiFormGridRange = {
-  /** First line the element occupies, 1 to 24. */
-  start: number;
-  /** Line the element stops before, 2 to 25. Exclusive, as in CSS. */
-  end: number;
-};
-
-export type PhiFormResponsiveGridRange = PhiResponsiveValue<PhiFormGridRange>;
-
-export type PhiFormLogicalAlignment = "start" | "center" | "end";
-
-/**
- * What a form's rows look like where a field says nothing of its own.
- *
- * There is no `columns` and no `labelPlacement` here any more: a two-column form is fields whose
- * ranges lie in 1-13 and 13-25, and a stacked form is a label whose range is the full width. One
- * mechanism decides all of it, and the responsive sets decide it per measured width.
- */
-export type PhiFormLayoutDescriptor = {
-  gap?: PhiResponsiveValue<PhiSpacingToken>;
-  /**
-   * What stands between two columns of a row, where a row has two.
-   *
-   * The grid's own `column-gap` cannot say this: it would fall between every pair of adjacent elements,
-   * so a label beside its control would be pushed away from it by the same amount that separates one
-   * field from the next -- and that distance is already said, per cell, as the label's own gutter. This
-   * is the other distance, and it is laid on the cell that opens a column: a field placed at 13-25 is
-   * moved off the field placed at 1-13, and one placed at 1-13 is not moved at all.
-   *
-   * Absent, it follows `gap`: the space between two fields side by side is the space between two fields
-   * one above the other, which is the reading that needs no second number. A row's two columns are then
-   * further apart than a label is from its own control, which is half of it -- the hierarchy a
-   * two-column form needs to read as two columns.
-   */
-  columnGap?: PhiResponsiveValue<PhiSpacingToken>;
-  labelAlign?: Exclude<PhiFormLogicalAlignment, "center">;
-  label?: PhiFormResponsiveGridRange;
-  control?: PhiFormResponsiveGridRange;
-};
-
-/**
- * Where this one field's parts lie, overriding the layout's defaults.
- *
- * `label` and `control` are column ranges on the 24-track grid, not content, and each mode is decided
- * from what is stated for it:
- * - both: the label in its range, the control in its range;
- * - only `control`: the field has no label column. The control takes exactly that range, and a label,
- *   where the field has one, stands above it inside the same range;
- * - only `label`: the field has no control column. The label takes exactly that range, and whatever the
- *   field draws as its control stands under it inside the same range;
- * - neither, or no placement: the layout's ranges.
- *
- * The part left out is never taken from the layout: a control moved to 7-19 beside a layout label at 1-9
- * would overlap it and fall onto a second row without anyone having asked for it.
- *
- * Elements are placed in declaration order and CSS Grid does not go back to fill a gap it has passed,
- * so a field meant to stand beside the one before it is declared after it and the row fills from the
- * inline start. That is the whole ordering rule.
- */
-export type PhiFormFieldPlacementDescriptor = {
-  label?: PhiFormResponsiveGridRange;
-  control?: PhiFormResponsiveGridRange;
-};
-
-export type PhiFormValidationRuleDescriptor = {
-  providerKey: PhiFormProviderKey;
-  message?: PhiFormTextDescriptor;
-  config?: Record<string, unknown>;
-};
-
-export type PhiFormOptionDescriptor = Omit<
-  PhiControlOption,
-  "label" | "description"
-> & {
-  label: PhiFormTextDescriptor;
-  description?: PhiFormTextDescriptor;
-};
-
-export type PhiFormFieldDescriptor = {
-  key: string;
-  fieldProviderKey: PhiFormProviderKey;
-  label?: PhiFormTextDescriptor;
-  controlLabel?: PhiFormTextDescriptor;
-  description?: PhiFormTextDescriptor;
-  placeholder?: PhiFormTextDescriptor;
-  autoComplete?: string;
-  initialValue?: unknown;
-  options?: readonly PhiFormOptionDescriptor[];
-  optionsProvider?: PhiControlOptionsProviderConfig | null;
-  validation?: readonly PhiFormValidationRuleDescriptor[];
-  visibleWhen?: PhiRuntimeConditionExpression;
-  disabledWhen?: PhiRuntimeConditionExpression;
-  placement?: PhiFormFieldPlacementDescriptor;
-  config?: Record<string, unknown>;
-};
-
-/**
- * What a form shows when a submit is accepted.
- *
- * Declared rather than coded, because every form that submits to a handler has this moment and each of
- * them used to answer it in its own component: the Contact form with a toast, the Registration with an
- * alert, each with its own wording and its own idea of whether the fields stay filled in.
- *
- * Absent means the form says nothing of its own. That is the right answer wherever something else is
- * listening -- a Controller that closes an Overlay on `submitSuccess`, a page that navigates away.
- */
-export type PhiFormSuccessDescriptor = {
-  title: PhiFormTextDescriptor;
-  text?: PhiFormTextDescriptor;
-  /** Whether the fields go back to their initial values, ready for another entry. */
-  reset?: boolean;
-  /**
-   * Whether the form has done its one job once it succeeds: the success stays, the fields and the
-   * Widget's submit go. A confirmation link is spent by its first submit, and a button left standing
-   * would only offer to spend it again.
-   */
-  complete?: boolean;
-};
-
-export type PhiFormDescriptor = {
-  schemaVersion: typeof PHI_FORM_DESCRIPTOR_SCHEMA_VERSION;
-  key: string;
-  labelSetKey?: PhiFormLabelSetKey;
-  fields: readonly PhiFormFieldDescriptor[];
-  layout?: PhiFormLayoutDescriptor;
-  success?: PhiFormSuccessDescriptor;
-  /**
-   * What the form says when the server refuses it, by the `code` that refusal carries.
-   *
-   * The counterpart of `success`, and there for the same reason: what a visitor reads has to be in
-   * their language, and a response body cannot be. A handler answers `{ code: "invalid_credentials" }`
-   * and the wording is looked up here, in the form's own label set. A code nothing maps falls back to
-   * the body's `error` line, which is English because its other reader is a log.
-   */
-  errors?: Readonly<Record<string, PhiFormTextDescriptor>>;
-  /**
-   * Whether what has been typed survives leaving the page, for as long as the tab is open.
-   *
-   * For the long form somebody fills in once and would have to fill in again after following a link to
-   * read the terms. Session storage, never local: a half-finished registration on a shared machine is
-   * not something to leave behind, and it is cleared the moment the form is accepted.
-   */
-  persistDraft?: boolean;
-  /**
-   * That the server accepts this form only with a guard token: `issuedAt` and `formToken`, signed by
-   * phis-server when the form was shown and refused if it comes back too fast or too late.
-   *
-   * The browser asks for the token when the form mounts (`/api/site/forms?phase=guard`) and adds it to
-   * what it submits. It is not rendered into the page, so a page with a guarded form is the same for
-   * every visitor and can be cached.
-   */
-  guard?: boolean;
-};
+export {
+  PHI_FORM_DESCRIPTOR_SCHEMA_VERSION,
+  PHI_FORM_GRID_TRACKS,
+  type PhiFormDescriptor,
+  type PhiFormFieldDescriptor,
+  type PhiFormFieldPlacementDescriptor,
+  type PhiFormGridRange,
+  type PhiFormLabelSetKey,
+  type PhiFormLayoutDescriptor,
+  type PhiFormLogicalAlignment,
+  type PhiFormOptionDescriptor,
+  type PhiFormProviderKey,
+  type PhiFormResponsiveGridRange,
+  type PhiFormSuccessDescriptor,
+  type PhiFormTextDescriptor,
+  type PhiFormValidationRuleDescriptor,
+} from "@phis/contracts/forms";
 
 export type PhiFormHandlerPhase = "submit" | "confirm" | "preview";
 export type PhiFormHandlerCredentialPolicy = "none" | "site-session" | "auth-link";

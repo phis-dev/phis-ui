@@ -43,6 +43,7 @@ export {
   isPhiControllerSignalAddress,
   isPhiSignalAddress,
   isPhiSignalReceiver,
+  readPhiControllerSignalAddress,
   readPhiSignalAddress,
   type PhiControllerSignalAddress,
   type PhiSignalAddress,
@@ -53,9 +54,9 @@ export {
 
 import {
   isPhiControllerPluginKey,
-  isPhiControllerSignalAddress,
   isPhiSignalAddressSegment,
   isPhiSignalReceiver,
+  readPhiControllerSignalAddress,
   type PhiControllerSignalAddress,
   type PhiSignalAddress,
   type PhiSignalAddressFamily,
@@ -220,12 +221,6 @@ export function createPhiControllerSignalAddress(
     throw new Error(`Invalid Phi controller signal address parts: ${plugin}/${controller}:${instance}.`);
   }
   return `controller:${plugin}/${controller}:${instance}` as PhiControllerSignalAddress;
-}
-
-export function readPhiControllerSignalAddress(
-  value: unknown,
-): PhiControllerSignalAddress | undefined {
-  return isPhiControllerSignalAddress(value) ? value.trim() as PhiControllerSignalAddress : undefined;
 }
 
 export function readPhiControllerSignalAddressParts(value: unknown): {
