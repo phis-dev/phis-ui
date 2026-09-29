@@ -96,12 +96,6 @@ import {
   PHI_PAGINATION_WIDGET_DEFINITION,
 } from "./widgets/pagination/config";
 import {
-  PHI_PROFILE_NAME_WIDGET_DEFINITION,
-} from "./widgets/profile-name/config";
-import {
-  PHI_PROFILE_OVERVIEW_WIDGET_DEFINITION,
-} from "./widgets/profile-overview/config";
-import {
   PHI_QUICK_LINKS_WIDGET_DEFINITION,
 } from "./widgets/quick-links/config";
 import {
@@ -280,14 +274,6 @@ export default createPhiAuthoringWidgetModule([
   definePhiAuthoringWidgetModuleLoader(
     PHI_PAGINATION_WIDGET_DEFINITION,
     () => import("./widgets/pagination/authoring").then((module) => module.PHI_PAGINATION_WIDGET_BUILDER_PLUGIN),
-  ),
-  definePhiAuthoringWidgetModuleLoader(
-    PHI_PROFILE_NAME_WIDGET_DEFINITION,
-    () => import("./widgets/profile-name/authoring").then((module) => module.PHI_PROFILE_NAME_WIDGET_BUILDER_PLUGIN),
-  ),
-  definePhiAuthoringWidgetModuleLoader(
-    PHI_PROFILE_OVERVIEW_WIDGET_DEFINITION,
-    () => import("./widgets/profile-overview/authoring").then((module) => module.PHI_PROFILE_OVERVIEW_WIDGET_BUILDER_PLUGIN),
   ),
   definePhiAuthoringWidgetModuleLoader(
     PHI_QUICK_LINKS_WIDGET_DEFINITION,

@@ -309,18 +309,6 @@ export const PHI_COMMON_RUNTIME_MODULE_RENDER_CLIENT_MANIFEST =
       ),
     ],
     [
-      PhiCmsWidgetType.ProfileName,
-      definePhiRuntimeModuleRenderClient(
-        dynamic(() => import("../core/widgets/profile-name/client").then((module) => module.PhiProfileNameWidgetClient)),
-      ),
-    ],
-    [
-      PhiCmsWidgetType.ProfileOverview,
-      definePhiRuntimeModuleRenderClient(
-        dynamic(() => import("../core/widgets/profile-overview/client").then((module) => module.PhiProfileOverviewWidgetClient)),
-      ),
-    ],
-    [
       PhiRuntimeRenderClientType.SearchStandalone,
       definePhiRuntimeModuleRenderClient(
         dynamic(() => import("../../../components/widgets/client/search").then((module) => module.PhiSearchWidget)),
