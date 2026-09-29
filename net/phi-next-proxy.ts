@@ -88,9 +88,34 @@ function toHeadersObject(headers: Headers) {
   return Object.fromEntries(headers.entries());
 }
 
+/** Headers that describe one connection, not the response: the runtime writes its own on the way out. */
+const HOP_BY_HOP_RESPONSE_HEADERS = ["connection", "keep-alive", "transfer-encoding"];
+
+/**
+ * The upstream response's headers as the browser may see them.
+ *
+ * `fetch` hands over a body it has already decoded: undici asks for gzip, deflate and br on its own and
+ * undoes whatever the Server applied. Passing the Server's `content-encoding` on then tells the browser
+ * to decode plain bytes a second time (`ERR_CONTENT_DECODING_FAILED`), and its `content-length` counts
+ * the compressed bytes. Both go for a decoded body; the runtime frames the body it actually sends.
+ * Asking upstream for `identity` instead would rest on the Server honouring it -- this holds either way.
+ */
+export function buildPhiProxyResponseHeaders(upstream: Headers, options: { bodyDecoded: boolean }) {
+  const headers = new Headers(upstream);
+  for (const name of HOP_BY_HOP_RESPONSE_HEADERS) headers.delete(name);
+  if (options.bodyDecoded) {
+    headers.delete("content-encoding");
+    headers.delete("content-length");
+  }
+  return headers;
+}
+
 function buildResponseHeaders(headers: Record<string, string | string[] | undefined>) {
   const responseHeaders = new Headers();
   for (const [key, value] of Object.entries(headers)) {
+    if (HOP_BY_HOP_RESPONSE_HEADERS.includes(key.toLowerCase())) {
+      continue;
+    }
     if (typeof value === "string") {
       responseHeaders.set(key, value);
       continue;
@@ -231,9 +256,12 @@ async function proxyRequest(
       });
     }
 
+    // The Node path hands over the Server's bytes as they came, still encoded; `fetch` decoded them.
     return new Response(targetResponse.body, {
       status: targetResponse.status,
-      headers: targetResponse.headers,
+      headers: hasBody
+        ? targetResponse.headers
+        : buildPhiProxyResponseHeaders(targetResponse.headers, { bodyDecoded: true }),
     });
   } catch (error) {
     logRuntimeEvent("error", "proxy.request.failed", {

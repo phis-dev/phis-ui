@@ -33,6 +33,26 @@ viewer redirects, fallback behavior, or optional Module composition. The Skeleto
 for every Site and remains an updateable wrapper layer after Site creation. Installing, upgrading, or
 removing a Module must not patch the Skeleton source or generate Module-specific route/runtime files.
 
+## Forwarded headers
+
+A proxy door states to the Server who is asking; nothing the caller sent under those names survives it.
+`x-forwarded-*`, `x-real-ip` and `forwarded` are dropped with `x-phis-*` and `authorization`, and the
+Site sets its own:
+
+- `x-forwarded-for` is one entry: the address the outermost reverse proxy we run observed, counted from
+  the right of the incoming list by `TRUST_PROXY` -- the variable and convention the Server uses (unset
+  or `true` is one proxy, `false` or `0` none, a number that many). Where nothing vouches for an address,
+  none is sent. The Server, reading its own `TRUST_PROXY` of one, takes that entry.
+- `x-forwarded-proto` is what the nearest trusted proxy stated, else the request's own scheme.
+
+The Site runtime unit binds `127.0.0.1` behind the nginx profile, which appends `$remote_addr`; that is
+the one proxy the default assumes. A Site behind a further proxy (a CDN in front of nginx) sets
+`TRUST_PROXY` in its unit to the number of hops.
+
+`fetch` decodes the Server's compressed bodies, so a `GET`/`HEAD` answered through it loses
+`content-encoding` and `content-length` on the way back; the Node path for bodies passes the Server's
+bytes on as they came, encoding included.
+
 ## Static graph boundary
 
 Next.js discovers filesystem routes and parallel slots at build time, so the physical route files remain
