@@ -8,6 +8,10 @@ import {
   type PhiResolvedResponsiveValue,
   type PhiResponsiveValue,
 } from "../../types/responsive";
+import {
+  PHI_CONTAINER_BREAKPOINT_COL3,
+  PHI_CONTAINER_BREAKPOINT_CONTENT,
+} from "../../theme/phi-container-breakpoints";
 
 /**
  * What a slot spans when its Grid was never told.
@@ -112,4 +116,96 @@ export function resolvePhiGridSlotColumns(
   }
 
   return resolved;
+}
+
+export type PhiGridLayoutProfile = keyof PhiResolvedResponsiveValue<number>;
+
+export const PHI_GRID_LAYOUT_PROFILES: readonly PhiGridLayoutProfile[] = ["compact", "medium", "wide"];
+
+/**
+ * Where a Grid stops being `compact` and where it becomes `wide`, measured on its own box.
+ *
+ * The house pair a Form switches at (LAYOUTING.md, "Grid slot placement"): three columns fit from
+ * 377, and from 610 the Grid is as wide as the content column ever gets. It read Ant Design's device
+ * numbers before, 576 and 992, and for one afternoon 610 and 987 -- both put `medium` out of reach of
+ * the content column, whose Grid measures the column minus its padding.
+ *
+ * The comparison is made by the `@container phi-grid` queries in `styles/layout.css`, and these are the
+ * same numbers; `validate-container-breakpoint-contracts.ts` holds the two together.
+ */
+export const PHI_GRID_RESPONSIVE_MIN_WIDTH = {
+  medium: PHI_CONTAINER_BREAKPOINT_COL3,
+  wide: PHI_CONTAINER_BREAKPOINT_CONTENT,
+} as const;
+
+/**
+ * Where each slot stands at every width, answered at once.
+ *
+ * The profile was measured in JavaScript before, which the server cannot do: every Grid was delivered
+ * at `compact` -- each slot a whole row -- and rebuilt after hydration, a shift on every page that held
+ * one. All three answers are known without measuring anything, so all three go into the markup and a
+ * container query picks one (`styles/layout.css`), the way the Form grid does.
+ */
+export function resolvePhiGridSlotProfileColumns(
+  slotPlacements: PhiGridLayoutSlotPlacement[] | undefined,
+  slotIndices: readonly number[],
+): Map<number, PhiResolvedResponsiveValue<PhiGridSlotColumns>> {
+  const [compact, medium, wide] = PHI_GRID_LAYOUT_PROFILES.map((profile) => resolvePhiGridSlotColumns(
+    slotPlacements,
+    slotIndices,
+    profile,
+    PHI_GRID_LAYOUT_DEFAULT_SPAN[profile],
+  ));
+  const resolved = new Map<number, PhiResolvedResponsiveValue<PhiGridSlotColumns>>();
+  for (const slotIndex of slotIndices) {
+    const byProfile = {
+      compact: compact?.get(slotIndex),
+      medium: medium?.get(slotIndex),
+      wide: wide?.get(slotIndex),
+    };
+    if (byProfile.compact && byProfile.medium && byProfile.wide) {
+      resolved.set(slotIndex, byProfile as PhiResolvedResponsiveValue<PhiGridSlotColumns>);
+    }
+  }
+  return resolved;
+}
+
+/**
+ * How much of the column gap falls before and after a slot, in 24ths of it.
+ *
+ * The gap is not a `column-gap`. A `column-gap` falls between all 24 tracks, whether or not a slot
+ * boundary stands there, so a Grid with a 16px gap could not be narrower than 23 x 16 = 368px and ran
+ * over its box below that -- in a sider, a dialog, the Inspector. The tracks are flush instead, and each
+ * slot insets its content by its share of the gaps: a slot starting on line `s` and spanning `n` tracks
+ * gives up `s - 1` 24ths of a gap before it and `25 - s - n` after. That is exactly where a `column-gap`
+ * put the slot's edges -- `(s - 1)(W + g) / 24` to `(s - 1 + n)(W + g) / 24 - g` for a box `W` wide --
+ * so a Grid with room looks as it did, and one without room narrows its slots rather than overflowing.
+ * Between two slots in a row the two shares add up to one whole gap.
+ */
+export function resolvePhiGridSlotGapShares(columns: PhiGridSlotColumns, trackCount = 24) {
+  return {
+    lead: columns.start - 1,
+    trail: Math.max(0, trackCount + 1 - columns.start - columns.span),
+  };
+}
+
+/**
+ * The custom properties a slot carries: its columns and gap shares at every width.
+ *
+ * `styles/layout.css` (`.phi-grid-layout__slot`) reads the `compact` set by default and the other two
+ * under the Grid's container queries.
+ */
+export function resolvePhiGridSlotColumnProperties(
+  columns: PhiResolvedResponsiveValue<PhiGridSlotColumns> | undefined,
+): Record<`--phi-grid-slot-${string}`, string> {
+  if (columns == null) return {};
+  const properties: Record<`--phi-grid-slot-${string}`, string> = {};
+  for (const profile of PHI_GRID_LAYOUT_PROFILES) {
+    const placement = columns[profile];
+    const shares = resolvePhiGridSlotGapShares(placement);
+    properties[`--phi-grid-slot-columns-${profile}`] = `${placement.start} / span ${placement.span}`;
+    properties[`--phi-grid-slot-lead-${profile}`] = String(shares.lead);
+    properties[`--phi-grid-slot-trail-${profile}`] = String(shares.trail);
+  }
+  return properties;
 }

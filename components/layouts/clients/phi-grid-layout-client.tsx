@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 
 import {
   normalizePhiCssSize,
@@ -15,14 +15,9 @@ import { PhiBaseLayout } from "../phi-base-layout";
 import { resolvePhiLayoutDefaults } from "../../../helpers/cms-layout-defaults";
 import { resolvePhiLayoutSlotChildSizing } from "./phi-layout-anchored-overlay";
 import {
-  PHI_GRID_LAYOUT_DEFAULT_SPAN,
-  resolvePhiGridSlotColumns,
-  type PhiGridSlotColumns,
+  resolvePhiGridSlotColumnProperties,
+  resolvePhiGridSlotProfileColumns,
 } from "../phi-grid-contract";
-import {
-  PHI_CONTAINER_BREAKPOINT_COL3,
-  PHI_CONTAINER_BREAKPOINT_CONTENT,
-} from "../../../theme/phi-container-breakpoints";
 import {
   isPhiLayoutAuthoringRender,
   phiLayoutSlotClassName,
@@ -52,8 +47,21 @@ function resolveGridSlotPlacementStyle(slot: ReactNode): CSSProperties {
   };
 }
 
-function resolveGridSlotStyle(columns: PhiGridSlotColumns | undefined): CSSProperties {
-  return columns == null ? {} : { gridColumn: `${columns.start} / span ${columns.span}` };
+/*
+ * The 24 track guides of the edit overlay, each inset by its share of the column gap the same way a
+ * slot is (`resolvePhiGridSlotGapShares`): the tracks are flush, so a guide that filled its track would
+ * draw one continuous band where the operator is meant to see columns and the gaps between them.
+ */
+function resolveGridGuideStyle(index: number): CSSProperties {
+  return {
+    minWidth: 0,
+    minHeight: "100%",
+    marginInlineStart: `calc(var(--phi-grid-column-gap, 0px) * ${index} / 24)`,
+    marginInlineEnd: `calc(var(--phi-grid-column-gap, 0px) * ${23 - index} / 24)`,
+    border: "1px dashed var(--phi-debug-layer-slot-border)",
+    borderRadius: "var(--ant-border-radius)",
+    background: "var(--phi-debug-layer-slot-background-soft, transparent)",
+  };
 }
 
 export function PhiGridLayout({
@@ -88,36 +96,6 @@ export function PhiGridLayout({
     paddingLeft,
     layoutKind = "grid",
   } = layoutProps;
-  const containerRef = useRef<HTMLDivElement | null>(null);
-  const [containerWidth, setContainerWidth] = useState<number | null>(null);
-  useEffect(() => {
-    const node = containerRef.current;
-    if (!node || typeof ResizeObserver === "undefined") return;
-    const update = () => setContainerWidth((current) => {
-      const next = node.clientWidth;
-      return current === next ? current : next;
-    });
-    update();
-    const observer = new ResizeObserver(update);
-    observer.observe(node);
-    return () => observer.disconnect();
-  }, []);
-  /*
-   * Measured on the Grid's own box, against the house scale -- the same pair a Form switches at
-   * (LAYOUTING.md, "Grid slot placement"): three columns fit from 377, and from 610 the Grid is as wide
-   * as the content column ever gets.
-   *
-   * It read `token.screenSM` and `token.screenLG` before, Ant Design's device numbers 576 and 992, and
-   * for one afternoon `contentMax` and `contentMaxWide` (610 and 987). Both pairs put "medium" out of
-   * reach of the content column: a Grid standing in it measures the column minus its padding, so it
-   * never reached 610 and drew every slot at its `compact` span, stacked. The profiles are about the
-   * Grid's own room, and the content column is the room most Grids have.
-   */
-  const responsiveProfile = containerWidth != null && containerWidth >= PHI_CONTAINER_BREAKPOINT_CONTENT
-    ? "wide"
-    : containerWidth != null && containerWidth >= PHI_CONTAINER_BREAKPOINT_COL3
-      ? "medium"
-      : "compact";
   const resolvedGap = normalizePhiCssSize(gap) ?? (PHI_GRID_LAYOUT_DEFAULTS.gap as number | string);
   /*
    * One gap for both axes, and the column gap only where somebody said so.
@@ -141,7 +119,6 @@ export function PhiGridLayout({
     inline: phiPlacementFromWord(resolvedJustifyContent),
     block: null,
   });
-  const fallbackSpan = PHI_GRID_LAYOUT_DEFAULT_SPAN[responsiveProfile];
   const isEditMode = renderMode === "editor";
   const occupiedSlotIndices = slots.reduce<number[]>((next, slot, slotIndex) => {
     if (slot !== null && slot !== undefined && slot !== false) {
@@ -151,11 +128,18 @@ export function PhiGridLayout({
     return next;
   }, []);
   const nextInsertSlotIndex = occupiedSlotIndices.length > 0 ? Math.max(...occupiedSlotIndices) + 1 : 0;
-  const slotColumns = resolvePhiGridSlotColumns(
+  /*
+   * Every profile's columns, not the one this Grid happens to be at: which applies is asked of the
+   * Grid's own width by the container queries in `styles/layout.css` (`phi-grid`), so the server's
+   * markup already stands where it will stay. The width was measured with a `ResizeObserver` before,
+   * which the server cannot do -- every Grid was delivered at `compact`, one slot a row, and rebuilt
+   * after hydration -- and it measured `clientWidth` of a wrapper around the Layout, padding included,
+   * where the Form measures inside the padding. The container is now the Layout's own box, so a Grid
+   * and a Form of the same room answer the same profile (LAYOUTING.md, "Grid slot placement").
+   */
+  const slotColumns = resolvePhiGridSlotProfileColumns(
     slotPlacements,
     isEditMode ? [...occupiedSlotIndices, nextInsertSlotIndex] : occupiedSlotIndices,
-    responsiveProfile,
-    fallbackSpan,
   );
   const renderedSlots: ReactNode[] = slots.map((slot, slotIndex) => {
     if (slot === null || slot === undefined || slot === false) {
@@ -168,7 +152,8 @@ export function PhiGridLayout({
         className={phiLayoutSlotClassName(isAuthoringRender, "phi-grid-layout__slot")}
         data-phi-layout-has-content={phiLayoutSlotContentMarker(isAuthoringRender, true)}
         style={{
-          ...resolveGridSlotStyle(slotColumns.get(slotIndex)),
+          ...resolvePhiGridSlotColumnProperties(slotColumns.get(slotIndex)),
+          boxSizing: "border-box",
           minWidth: 0,
           minHeight: 0,
           width: "100%",
@@ -194,7 +179,8 @@ export function PhiGridLayout({
         className={phiLayoutSlotClassName(isAuthoringRender, "phi-grid-layout__slot")}
         data-phi-layout-has-content={phiLayoutSlotContentMarker(isAuthoringRender, false)}
         style={{
-          ...resolveGridSlotStyle(slotColumns.get(nextInsertSlotIndex)),
+          ...resolvePhiGridSlotColumnProperties(slotColumns.get(nextInsertSlotIndex)),
+          boxSizing: "border-box",
           minWidth: 0,
           width: "100%",
           height: "100%",
@@ -226,61 +212,81 @@ export function PhiGridLayout({
     paddingBottom,
     paddingLeft,
   });
-  const overlayStyle: CSSProperties = {
-    position: "absolute",
-    top: resolvedLayoutInset.top,
-    right: resolvedLayoutInset.right,
-    bottom: resolvedLayoutInset.bottom,
-    left: resolvedLayoutInset.left,
-    display: "grid",
-    gridTemplateColumns: "repeat(24, minmax(0, 1fr))",
-    gap: 0,
-    columnGap: resolvedColumnGap,
-    rowGap: resolvedGap,
-    alignContent: "start",
-    pointerEvents: "none",
-    zIndex: 0,
-  };
+  /*
+   * The edit guides sit inside the Layout's box rather than beside it. They stood in a wrapper with
+   * the Layout, and that wrapper was the Grid's outer element: not `.phi-layout`, so the fill rules
+   * (`.phi-slot-child--block-fill > .phi-layout`, styles/layout.css) never reached the Grid, and a Grid
+   * in a filling slot took the height of its content. Absolutely placed in the Layout's padding box at
+   * its inset, they cover the tracks as before; `zIndex: -1` in the Layout's own stacking context puts
+   * them over its background and under its slots, where the wrapper's `zIndex` pair used to.
+   */
+  const guideOverlay = isEditMode ? (
+    <div
+      aria-hidden="true"
+      style={{
+        position: "absolute",
+        top: resolvedLayoutInset.top,
+        right: resolvedLayoutInset.right,
+        bottom: resolvedLayoutInset.bottom,
+        left: resolvedLayoutInset.left,
+        display: "grid",
+        gridTemplateColumns: "repeat(24, minmax(0, 1fr))",
+        gap: 0,
+        rowGap: resolvedGap,
+        alignContent: "start",
+        pointerEvents: "none",
+        zIndex: -1,
+      }}
+    >
+      {Array.from({ length: 24 }, (_, index) => (
+        <div key={`grid-guide-${index}`} style={resolveGridGuideStyle(index)} />
+      ))}
+    </div>
+  ) : null;
 
   return (
-    <div ref={containerRef} style={{ position: "relative", width: "100%", minWidth: 0 }}>
-      {isEditMode ? (
-        <div style={overlayStyle} aria-hidden="true">
-          {Array.from({ length: 24 }, (_, index) => (
-            <div
-              key={`grid-guide-${index}`}
-              style={{
-                minWidth: 0,
-                minHeight: "100%",
-                border: "1px dashed var(--phi-debug-layer-slot-border)",
-                borderRadius: "var(--ant-border-radius)",
-                background: "var(--phi-debug-layer-slot-background-soft, transparent)",
-              }}
-            />
-          ))}
-        </div>
-      ) : null}
-      <PhiBaseLayout
-        {...layoutProps}
-        layoutKind={layoutKind}
-        slots={renderedSlots}
-        gap={undefined}
-        renderMode={renderMode}
-        style={{
-          position: "relative",
-          display: "grid",
-          gridTemplateColumns: "repeat(24, minmax(0, 1fr))",
-          gap: 0,
-          columnGap: resolvedColumnGap,
-          rowGap: resolvedGap,
-          alignContent: "start",
-          gridAutoFlow: "row",
-          minWidth: 0,
-          zIndex: 1,
-          ...style,
-        }}
-      >
-      </PhiBaseLayout>
-    </div>
+    <PhiBaseLayout
+      {...layoutProps}
+      layoutKind={layoutKind}
+      slots={renderedSlots}
+      gap={undefined}
+      renderMode={renderMode}
+      backgroundLayer={guideOverlay == null ? layoutProps.backgroundLayer : (
+        <>
+          {layoutProps.backgroundLayer}
+          {guideOverlay}
+        </>
+      )}
+      style={{
+        position: "relative",
+        /*
+         * Its own stacking context, for the guides' `zIndex: -1`. It was `zIndex: 1`, which only lifted
+         * the Layout over the guides beside it -- and over every sibling after it, and over the
+         * `zIndex` the block states, which `style` overrode.
+         */
+        isolation: "isolate",
+        /*
+         * The box the profiles are measured on: its content box, inside the padding -- the width the
+         * tracks have, and what a Form measures too.
+         */
+        containerType: "inline-size",
+        containerName: "phi-grid",
+        display: "grid",
+        gridTemplateColumns: "repeat(24, minmax(0, 1fr))",
+        gap: 0,
+        /*
+         * No `column-gap`: the tracks are flush and each slot takes its share of the gap as padding
+         * (`resolvePhiGridSlotGapShares`), so the gap costs only what falls between slots.
+         */
+        columnGap: 0,
+        rowGap: resolvedGap,
+        ["--phi-grid-column-gap" as string]: normalizePhiCssSize(resolvedColumnGap),
+        alignContent: "start",
+        gridAutoFlow: "row",
+        minWidth: 0,
+        ...style,
+      } as CSSProperties}
+    >
+    </PhiBaseLayout>
   );
 }

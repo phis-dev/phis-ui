@@ -9,6 +9,7 @@ import {
   PHI_CONTAINER_BREAKPOINT_REGION,
 } from "../theme/phi-container-breakpoints";
 import { PHI_FORM_RESPONSIVE_MIN_WIDTH } from "../components/forms/form-descriptor-contract";
+import { PHI_GRID_RESPONSIVE_MIN_WIDTH } from "../components/layouts/phi-grid-contract";
 
 /**
  * Every named threshold is a member of the scale.
@@ -56,6 +57,24 @@ for (const threshold of Object.values(PHI_FORM_RESPONSIVE_MIN_WIDTH)) {
 }
 
 /**
+ * The Grid states its thresholds twice as well, for the same reason: its slot placement is picked by
+ * `@container phi-grid` queries, and `PHI_GRID_RESPONSIVE_MIN_WIDTH` is what the contract says they are.
+ */
+const gridThresholds = [...layoutStylesheet.matchAll(/@container phi-grid \(min-width: (\d+)px\)/gu)]
+  .map((match) => Number(match[1]));
+assert.deepEqual(
+  gridThresholds,
+  [PHI_GRID_RESPONSIVE_MIN_WIDTH.medium, PHI_GRID_RESPONSIVE_MIN_WIDTH.wide],
+  "styles/layout.css must compare against the same numbers PHI_GRID_RESPONSIVE_MIN_WIDTH declares, in that order.",
+);
+for (const threshold of Object.values(PHI_GRID_RESPONSIVE_MIN_WIDTH)) {
+  assert.ok(
+    (PHI_CONTAINER_BREAKPOINTS as readonly number[]).includes(threshold),
+    `The Grid switches at ${threshold}, which is not on the container-breakpoint scale.`,
+  );
+}
+
+/**
  * And the Shell's thresholds are deliberately NOT on it.
  *
  * They are written as container queries because the Shell measures the render viewport, but what they
@@ -77,5 +96,6 @@ for (const threshold of shellThresholds) {
 
 console.log(
   `Container breakpoint contracts valid: scale of ${PHI_CONTAINER_BREAKPOINTS.length}, `
-  + `Form at ${formThresholds.join(" and ")}, Shell bands off the scale.`,
+  + `Form at ${formThresholds.join(" and ")}, Grid at ${gridThresholds.join(" and ")}, `
+  + "Shell bands off the scale.",
 );

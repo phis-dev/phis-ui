@@ -340,10 +340,29 @@ what a Grid states that holds its rows apart and its columns flush. `gap` used t
 while only `columnGap` had a field, so the vertical distance was whatever a default or a preset had
 written and no operator could reach it.
 
-The effective profile is resolved from the Grid Layout's own available inline size and the same shared
-Phi thresholds used by responsive Forms, never from the browser viewport. Runtime, preview, and Builder
-must therefore resolve the same placement when the Grid is mounted in a Page, Modal, Drawer, Inspector,
-or nested Layout slot. Slot source order remains the logical, focus, accessibility, and authoring order;
+The column gap falls between slots, not between tracks. The 24 tracks are flush (`column-gap: 0`) and
+each slot insets its content by its share of the gap (`resolvePhiGridSlotGapShares`): a slot on line `s`
+spanning `n` tracks takes `(s - 1) / 24` of a gap before it and `(25 - s - n) / 24` after, so two slots
+side by side hold exactly one gap between them and every edge stands where a `column-gap` put it. A
+`column-gap` fell on all 23 track boundaries whether a slot ended there or not, which made `23 x gap`
+(368px at 16px) the narrowest a Grid could be; below it the Grid ran over its box. Now a Grid without
+that room narrows its slots instead. The Builder's track guides take the same shares.
+
+The effective profile is resolved from the Grid Layout's own inline size -- its content box, inside its
+padding, the width the tracks have -- on the same shared Phi thresholds as responsive Forms
+(`PHI_GRID_RESPONSIVE_MIN_WIDTH`, 377 and 610), never from the browser viewport. It is resolved in CSS,
+not measured: every slot carries its columns and gap shares for all three profiles as custom properties
+(`resolvePhiGridSlotColumnProperties`), the Grid's Layout box is the `phi-grid` query container, and
+`@container phi-grid` rules in `styles/layout.css` pick one set -- the Form grid's arrangement. So the
+server's markup already stands where it stays; a `ResizeObserver` answered after hydration before, and
+every Grid was delivered at `compact` and rebuilt. Runtime, preview, and Builder therefore resolve the
+same placement when the Grid is mounted in a Page, Modal, Drawer, Inspector, or nested Layout slot; a
+nested Grid answers to its own box, the nearest `phi-grid` container.
+
+The Grid's outer element is its Layout box (`.phi-layout`); the Builder's track guides are drawn inside
+it rather than beside it in a wrapper, which kept the fill rules (`.phi-slot-child--block-fill >
+.phi-layout`) from ever reaching a Grid. Being a size container, the Grid's width cannot come from its
+content: it takes the width its slot gives, as its `fill` policy says. Slot source order remains the logical, focus, accessibility, and authoring order;
 offset changes presentation only and must not reorder or synthesize slots.
 
 Placement belongs to the owning Grid Layout config. A Grid must not inspect a child Widget type, Form

@@ -23,6 +23,11 @@ import { PhiLayoutAnchoredOverlay } from "./phi-layout-anchored-overlay";
 import { PhiSequenceSlotEditor } from "./phi-sequence-slot-editor";
 import type { PhiAnchorWidgetPlacement } from "../../controls/phi-anchor-control-contract";
 import { resolvePhiSequenceEditableSlotCount, usePhiSlotSequence } from "../use-phi-slot-sequence";
+import {
+  resolvePhiCarouselCurrentPage,
+  resolvePhiCarouselPageStarts,
+  resolvePhiCarouselStep,
+} from "../phi-carousel-pages";
 
 /**
  * A Stack with a wider window.
@@ -165,21 +170,23 @@ export function PhiCarouselLayout({
   const nextFilled = track.findIndex((entry) => entry.slotIndex >= activeIndex);
   const trackIndex = nextFilled >= 0 ? nextFilled : Math.max(track.length - 1, 0);
   const span = Math.min(Math.max(visibleSlots, 1), Math.max(track.length, 1));
-  // The last window rather than the last slot: past this the window would hang off the end, and
-  // stepping to it would move nothing.
-  const lastTrackStart = Math.max(0, track.length - span);
+  // Where the window stops: a window at a time, and the last window rather than the last slot -- past
+  // it the window would hang off the end. The arrows, the dots and the timer all read this one list.
+  const pageStarts = useMemo(
+    () => resolvePhiCarouselPageStarts(track.length, span),
+    [span, track.length],
+  );
+  const lastTrackStart = pageStarts[pageStarts.length - 1] ?? 0;
 
   const stepTo = useCallback((nextTrackIndex: number) => {
     const entry = track[nextTrackIndex];
     if (entry) setActiveIndex(entry.slotIndex);
   }, [setActiveIndex, track]);
 
-  const step = useCallback((direction: 1 | -1) => {
-    const next = trackIndex + direction * span;
-    if (next > lastTrackStart) return stepTo(loop ? 0 : lastTrackStart);
-    if (next < 0) return stepTo(loop ? lastTrackStart : 0);
-    return stepTo(next);
-  }, [lastTrackStart, loop, span, stepTo, trackIndex]);
+  const step = useCallback(
+    (direction: 1 | -1) => stepTo(resolvePhiCarouselStep(pageStarts, trackIndex, direction, loop)),
+    [loop, pageStarts, stepTo, trackIndex],
+  );
 
   const advance = useCallback(() => step(1), [step]);
 
@@ -246,10 +253,11 @@ export function PhiCarouselLayout({
   /*
    * One dot per window, not per slot: with a wide window the slots move a window at a time, so a dot
    * per slot would offer positions the Carousel never stops at. Each is named after the first slot it
-   * brings into view -- the label a person gave the block, which needs no translating.
+   * brings into view -- the label a person gave the block, which needs no translating. The last dot's
+   * window is the last window, so that first slot is not always a multiple of the window.
    */
-  const pageCount = Math.ceil(track.length / span);
-  const currentPage = Math.min(Math.floor(trackIndex / span), Math.max(pageCount - 1, 0));
+  const pageCount = pageStarts.length;
+  const currentPage = resolvePhiCarouselCurrentPage(pageStarts, trackIndex);
   const slotLabelAt = (position: number) => {
     const entry = track[position];
     const meta = entry && resolvedSlotMeta.find((candidate) => candidate.index === entry.slotIndex);
@@ -341,9 +349,9 @@ export function PhiCarouselLayout({
             <button
               key={page}
               type="button"
-              aria-label={slotLabelAt(page * span)}
+              aria-label={slotLabelAt(pageStarts[page] ?? 0)}
               aria-current={page === currentPage || undefined}
-              onClick={() => stepTo(Math.min(page * span, lastTrackStart))}
+              onClick={() => stepTo(pageStarts[page] ?? 0)}
               style={{
                 width: page === currentPage ? token.controlHeightXS : token.marginXS,
                 height: token.marginXS,
