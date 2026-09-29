@@ -190,8 +190,6 @@ async function loadNameLabels(
     companyName: labels.fields.companyName,
     successTitle: labels.feedback.successTitle,
     successText: labels.feedback.successText,
-    save: labels.submitLabel,
-    saving: labels.submitLabel,
     actions: { submitLabel: labels.submitLabel },
   });
 }

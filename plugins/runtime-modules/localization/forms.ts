@@ -72,8 +72,6 @@ async function loadAdminLabels(context: Parameters<NonNullable<ReturnType<typeof
   return flattenPhiFormLabels({
     defaultLocaleLabel: labels.defaultLocaleLabel,
     availableLocalesLabel: labels.availableLocalesLabel,
-    saveLabel: labels.saveLocalesLabel,
-    savingLabel: labels.saveLocalesLabel,
     actions: { submitLabel: labels.saveLocalesLabel },
     searchLabel: labels.searchPlaceholder,
     searchPlaceholder: labels.searchPlaceholder,
