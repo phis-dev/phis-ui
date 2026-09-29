@@ -4,14 +4,12 @@ import type {
   PhiCmsRoutePresetDescriptor,
 } from "../../../types/cms-module-descriptors";
 import { PhiCmsFlags } from "../../../constants/phi-cms";
-import { PHI_BASE_PAGE_LAYOUT_VERSION } from "../../../components/regions/presets/phi-base-page-layout";
 import { PHI_AUTH_LOGIN_OVERLAY_IDS } from "../../../components/runtime/auth-overlay-ids";
-import { PHI_VIEWER_ACCESS_SITE_ADMIN } from "../../../types/access";
 import {
-  PHI_ADMIN_SETTINGS_NAV_ITEM_KEY,
   PHI_APP_ACCOUNT_NAV_ITEM_KEY,
   PHI_APP_SETTINGS_NAV_ITEM_KEY,
 } from "../area-definitions";
+import { buildPhiAdminSidebarRoutePresetDescriptor } from "../admin-sidebar-route";
 import { PHI_AUTH_RUNTIME_MODULE_ID } from "./ids";
 
 /**
@@ -165,29 +163,18 @@ export const PHI_AUTH_RUNTIME_MODULE_ROUTES = [
       import("../../../components/regions/presets/phi-default-app-security-page-tree")
         .then((module) => module.buildPhiDefaultAppSecurityPageTree({ page, runtime })),
   },
-  {
+  buildPhiAdminSidebarRoutePresetDescriptor({
     ownerModuleId: PHI_AUTH_RUNTIME_MODULE_ID,
     presetKey: "admin-auth-settings-page",
-    presetVersion: 1 + PHI_BASE_PAGE_LAYOUT_VERSION,
-    area: "admin",
     title: "Authentication",
     path: "/settings/authentication",
-    mount: { mountKey: "settings" },
-    navigation: [{
-      navKey: "admin:sidebar",
-      parentItemKey: PHI_ADMIN_SETTINGS_NAV_ITEM_KEY,
-      item: {
-        itemKey: "@phis/ui/modules/auth/nav/admin/settings",
-        accessPolicy: PHI_VIEWER_ACCESS_SITE_ADMIN,
-        label: { defaultMessage: "Authentication" },
-        icon: "antd:safety-certificate",
-        routePresetKey: "admin-auth-settings-page",
-      },
-    }],
+    placement: "settings",
+    itemKey: "@phis/ui/modules/auth/nav/admin/settings",
+    icon: "antd:safety-certificate",
     loadTree: ({ page, runtime }) =>
       import("../../../components/regions/presets/phi-default-admin-auth-settings-page-tree")
         .then((module) => module.buildPhiDefaultAdminAuthSettingsPageTree({ page, runtime })),
-  },
+  }),
 ] satisfies readonly PhiCmsRoutePresetDescriptor[];
 
 /**

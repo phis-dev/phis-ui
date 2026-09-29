@@ -69,11 +69,16 @@ assert.deepEqual(
   ["@acme/shop/modules/orders", "@acme/shop/modules/storefront"],
 );
 
-// Every Area catalog reads the seam, and the Builder reads the union.
+// Every Area catalog reads the seam through the one factory, and the Builder reads the union.
+assert.match(
+  readFileSync("plugins/runtime-modules/area-catalogs/area-catalog.ts", "utf8"),
+  /readPhiSiteModuleServerAreaContributions\(siteModules, area\)/,
+  "the Area catalog factory must compose the Site's own Modules",
+);
 for (const area of ["accounting", "admin", "app", "editor", "public"] as const) {
   assert.match(
     readFileSync(`plugins/runtime-modules/area-catalogs/${area}.ts`, "utf8"),
-    new RegExp(`readPhiSiteModuleServerAreaContributions\\(siteModules, "${area}"\\)`),
+    new RegExp(`createPhiAreaRuntimeModuleCatalog\\(\\s*"${area}",[^)]*siteModules,\\s*\\)`),
     `the ${area} Area catalog must compose the Site's own Modules`,
   );
 }

@@ -1,26 +1,18 @@
 import type { PhiCmsRoutePresetDescriptor } from "../../../types/cms-module-descriptors";
-import { PHI_BASE_PAGE_LAYOUT_VERSION } from "../../../components/regions/presets/phi-base-page-layout";
+import { buildPhiAdminSidebarRoutePresetDescriptor } from "../admin-sidebar-route";
 import { PHI_OBSERVABILITY_RUNTIME_MODULE_ID } from "./ids";
 
-export const PHI_OBSERVABILITY_RUNTIME_MODULE_ROUTES = [{
-  ownerModuleId: PHI_OBSERVABILITY_RUNTIME_MODULE_ID,
-  presetKey: "admin-logs-page",
-  presetVersion: 1 + PHI_BASE_PAGE_LAYOUT_VERSION,
-  area: "admin",
-  title: "Logs",
-  path: "/logs",
-  navigation: [{
-    navKey: "admin:sidebar",
-    parentItemKey: null,
-    before: "@phis/ui/modules/admin/nav/settings",
-    item: {
-      itemKey: "@phis/ui/modules/observability/nav/admin/logs",
-      label: { defaultMessage: "Logs" },
-      icon: "antd:file-search",
-      routePresetKey: "admin-logs-page",
-    },
-  }],
-  loadTree: ({ page, runtime }) =>
-    import("../../../components/regions/presets/phi-default-admin-logs-page-tree")
-      .then((module) => module.buildPhiDefaultAdminLogsPageTree({ page, runtime })),
-}] satisfies readonly PhiCmsRoutePresetDescriptor[];
+export const PHI_OBSERVABILITY_RUNTIME_MODULE_ROUTES = [
+  buildPhiAdminSidebarRoutePresetDescriptor({
+    ownerModuleId: PHI_OBSERVABILITY_RUNTIME_MODULE_ID,
+    presetKey: "admin-logs-page",
+    title: "Logs",
+    path: "/logs",
+    placement: "sidebar",
+    itemKey: "@phis/ui/modules/observability/nav/admin/logs",
+    icon: "antd:file-search",
+    loadTree: ({ page, runtime }) =>
+      import("../../../components/regions/presets/phi-default-admin-logs-page-tree")
+        .then((module) => module.buildPhiDefaultAdminLogsPageTree({ page, runtime })),
+  }),
+] satisfies readonly PhiCmsRoutePresetDescriptor[];

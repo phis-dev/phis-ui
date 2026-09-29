@@ -1,6 +1,6 @@
 "use client";
 
-import type { PhiCmsBuilderWidgetPlugin } from "../../../../../types";
+import { createPhiCmsBuilderWidgetPlugin } from "../../../../../plugins/factories/widget-builder-plugin";
 import { PhiWidgetEditorPlaceholder } from "../../../../../components/widgets/builder/widget-editor-placeholder";
 import { usePhiRuntimeModuleState } from "../../../../../components/runtime/runtime-module-context";
 import { parsePhiVideoEmbedParams, resolvePhiVideoAddress, resolvePhiVideoId } from "../../../../../types/video";
@@ -88,18 +88,19 @@ function PhiVideoEmbedWidgetEditorSummary({ config }: { config: PhiVideoEmbedWid
   );
 }
 
-export const PHI_VIDEO_EMBED_WIDGET_BUILDER_PLUGIN: PhiCmsBuilderWidgetPlugin<PhiVideoEmbedWidgetConfig> = {
-  ...PHI_VIDEO_EMBED_WIDGET_DEFINITION,
-  /*
-   * A placeholder rather than the live Widget, because the Builder canvas is not where a request should
-   * leave for a provider. What the Widget looks like is what the preview is for; what the editor owes is
-   * an answer about the provider and the id.
-   */
-  renderEditor: ({ widget, config }) => (
-    <PhiWidgetEditorPlaceholder
-      widget={widget}
-      pluginTitle={PHI_VIDEO_EMBED_WIDGET_DEFINITION.title}
-      summary={<PhiVideoEmbedWidgetEditorSummary config={config ?? undefined} />}
-    />
-  ),
-};
+export const PHI_VIDEO_EMBED_WIDGET_BUILDER_PLUGIN =
+  createPhiCmsBuilderWidgetPlugin<PhiVideoEmbedWidgetConfig>(
+    PHI_VIDEO_EMBED_WIDGET_DEFINITION,
+    /*
+     * A placeholder rather than the live Widget, because the Builder canvas is not where a request
+     * should leave for a provider. What the Widget looks like is what the preview is for; what the
+     * editor owes is an answer about the provider and the id.
+     */
+    ({ widget, config }) => (
+      <PhiWidgetEditorPlaceholder
+        widget={widget}
+        pluginTitle={PHI_VIDEO_EMBED_WIDGET_DEFINITION.title}
+        summary={<PhiVideoEmbedWidgetEditorSummary config={config ?? undefined} />}
+      />
+    ),
+  );
