@@ -98,13 +98,16 @@ export type PhiFormLayoutDescriptor = {
 /**
  * Where this one field's parts lie, overriding the layout's defaults.
  *
+ * Both parts or neither: a field that places itself says where its label and its control go, so a
+ * control moved to 7-19 cannot leave its label on the layout's range and fall onto a second row.
+ *
  * Elements are placed in declaration order and CSS Grid does not go back to fill a gap it has passed,
  * so a field meant to stand beside the one before it is declared after it and the row fills from the
  * inline start. That is the whole ordering rule.
  */
 export type PhiFormFieldPlacementDescriptor = {
-  label?: PhiFormResponsiveGridRange;
-  control?: PhiFormResponsiveGridRange;
+  label: PhiFormResponsiveGridRange;
+  control: PhiFormResponsiveGridRange;
 };
 
 export type PhiFormValidationRuleDescriptor = {

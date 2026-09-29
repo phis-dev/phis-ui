@@ -195,13 +195,13 @@ type PhiFormLayoutDescriptor = {
   control?: PhiFormResponsiveGridRange;
 };
 type PhiFormFieldPlacementDescriptor = {
-  label?: PhiFormResponsiveGridRange;
-  control?: PhiFormResponsiveGridRange;
+  label: PhiFormResponsiveGridRange;
+  control: PhiFormResponsiveGridRange;
 };
 ```
 
 - The three responsive modes are `compact`, `medium`, and `wide`. They are chosen from the Form's own
-  width, never the viewport: `medium` from 360px, `wide` from 768px (`PHI_FORM_RESPONSIVE_MIN_WIDTH`,
+  width, never the viewport: `medium` from 377px, `wide` from 610px (`PHI_FORM_RESPONSIVE_MIN_WIDTH`,
   implemented as container queries in `styles/layout.css`). The same descriptor therefore fits a page, an
   Overlay, or a narrow slot.
 - A responsive value cascades from the nearest smaller mode that is set; an unset section uses the
@@ -210,7 +210,8 @@ type PhiFormFieldPlacementDescriptor = {
   `compact` and 1-9 otherwise; control 1-25 in `compact` and 9-25 otherwise -- a third of the width for
   the labels, the same column the Login states for itself.
 - A field with no `placement` uses the layout ranges. A field that sets a placement states it for both
-  parts.
+  parts; a placement with only `label` or only `control` is refused when the descriptor is parsed. Within
+  one part, unset modes cascade as above and fall back to the layout's range for that part.
 - When a field's label and control ranges overlap they stack on two rows; otherwise they share one. There
   is no `columns` or `labelPlacement` setting: a two-column Form is fields in 1-13 and 13-25, and a
   stacked Form uses full-width ranges. `components/forms/form-descriptor-contract.ts` exports named

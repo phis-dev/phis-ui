@@ -190,6 +190,32 @@ function assertUniqueKeys(items: readonly { key: string }[], path: string) {
   }
 }
 
+/**
+ * A field's own placement, which states both parts or is left out.
+ *
+ * A placement with one part would take the other from the layout, and the two rarely agree: a control
+ * moved to 7-19 beside a layout label at 1-9 overlaps it and the field stacks without anyone asking.
+ */
+function readFieldPlacement(
+  value: unknown,
+  path: string,
+): PhiFormFieldPlacementDescriptor | undefined {
+  if (value == null) {
+    return undefined;
+  }
+  if (!isPhiRecord(value)) {
+    throw new Error(`${path} must be an object.`);
+  }
+  const label = readResponsiveGridRange(value.label, `${path}.label`);
+  const control = readResponsiveGridRange(value.control, `${path}.control`);
+  if (!label || !control) {
+    throw new Error(
+      `${path} must state both label and control; leave placement out to use the layout ranges.`,
+    );
+  }
+  return { label, control };
+}
+
 function readField(value: unknown, path: string): PhiFormFieldDescriptor {
   if (!isPhiRecord(value)) {
     throw new Error(`${path} must be a field object.`);
@@ -210,14 +236,7 @@ function readField(value: unknown, path: string): PhiFormFieldDescriptor {
   if (value.config != null && !isPhiRecord(value.config)) {
     throw new Error(`${path}.config must be an object.`);
   }
-  const placement = value.placement == null
-    ? undefined
-    : isPhiRecord(value.placement)
-      ? {
-          label: readResponsiveGridRange(value.placement.label, `${path}.placement.label`),
-          control: readResponsiveGridRange(value.placement.control, `${path}.placement.control`),
-        }
-      : (() => { throw new Error(`${path}.placement must be an object.`); })();
+  const placement = readFieldPlacement(value.placement, `${path}.placement`);
 
   return {
     key: readRequiredString(value.key, `${path}.key`),
@@ -458,7 +477,7 @@ export function phiFormFlowHalfColumns(
   return fields.map((field) => {
     if (field.placement) {
       const claimsWholeRow =
-        field.placement.control?.medium?.start === 1 &&
+        field.placement.control.medium?.start === 1 &&
         field.placement.control.medium.end === PHI_FORM_GRID_LAST_LINE;
       atRowStart = claimsWholeRow ? true : !atRowStart;
       return field;
@@ -751,8 +770,7 @@ export function phiFormFieldFollowsLayoutColumns(input: {
   stacked: boolean;
 }) {
   return !input.stacked &&
-    input.placement?.label == null &&
-    input.placement?.control == null &&
+    input.placement == null &&
     input.label.start === 1 &&
     input.control.end === PHI_FORM_GRID_LAST_LINE;
 }
