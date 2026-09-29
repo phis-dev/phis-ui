@@ -89,7 +89,17 @@ export async function buildPhiDefaultEditorTranslationsPageTree({
         slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
         sortOrder: 0,
         label: "editor translation modal content",
-        config: { anchor: { horizontal: "left", vertical: "top" }, gap: PHI_SPACE.base, padding: 0, border: false },
+        /*
+         * The Body's root Layout is its one padding owner (OVERLAYS.md, "Padding ownership"): the
+         * Modal adds none, so the Form stands one `base` in from every edge, as in every other dialog.
+         */
+        config: {
+          anchor: { horizontal: "left", vertical: "top" },
+          gap: PHI_SPACE.base,
+          margin: 0,
+          padding: PHI_SPACE.base,
+          border: false,
+        },
       }),
       nodes.layout({
         id: PHI_EDITOR_TRANSLATION_OVERLAY_FOOTER_LAYOUT_ID,
