@@ -37,6 +37,8 @@ export type PhiTextControlProps = {
   minLength?: number;
   maxLength?: number;
   rows?: number;
+  /** How many characters wide a text area is where nothing else states a width. */
+  cols?: number;
   autoSize?: boolean | { minRows?: number; maxRows?: number };
   tabIndex?: number;
   size?: PhiControlSize;
@@ -103,6 +105,7 @@ export function PhiTextControl({
   minLength,
   maxLength,
   rows,
+  cols,
   autoSize,
   tabIndex,
   size,
@@ -161,6 +164,7 @@ export function PhiTextControl({
         allowClear={stableAllowClear}
         autoSize={autoSize}
         rows={rows}
+        cols={cols}
         onPressEnter={onPressEnter}
       />
     );

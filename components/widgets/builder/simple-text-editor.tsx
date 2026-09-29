@@ -180,7 +180,7 @@ export function PhiSimpleTextWidgetEditor({
       {config?.icon ? <PhiIcon name={config.icon} size="1.25em" /> : null}
       <PhiInlineTextEditor
         value={draftText}
-        variant="borderless"
+        variant="underlined"
         placeholder={labels.text.placeholder}
         readOnly={!onChangeText}
         onFocus={() => setEditedText(text)}
@@ -193,8 +193,6 @@ export function PhiSimpleTextWidgetEditor({
         }}
         onCancel={() => setEditedText(null)}
         inputStyle={{
-          borderBottom: "1px solid var(--ant-color-border, rgba(0, 0, 0, 0.15))",
-          borderRadius: 0,
           paddingInline: 0,
           paddingBlock: 4,
           fontSize: resolvedFontSize ?? "inherit",
@@ -204,7 +202,14 @@ export function PhiSimpleTextWidgetEditor({
           textDecoration: textDecoration || undefined,
           color: config?.color ?? undefined,
           fontFamily: resolvedFontFamily,
-          backgroundColor: config?.code ? "var(--ant-color-fill-secondary, rgba(0, 0, 0, 0.04))" : undefined,
+          /*
+           * The page shows through: an edit in place must not paint over what is behind the text.
+           *
+           * Ant Design's underlined field fills itself with the container colour, which is right for a
+           * form and wrong here -- the Widget stands on whatever its Region is painted with. Code text is
+           * the exception, because there the fill is part of how the text reads.
+           */
+          backgroundColor: config?.code ? "var(--ant-color-fill-secondary, rgba(0, 0, 0, 0.04))" : "transparent",
         }}
         fitContent
         style={{
