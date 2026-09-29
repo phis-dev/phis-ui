@@ -5,43 +5,18 @@ import { useState } from "react";
 
 import { PhiButtonControl } from "../../controls/phi-button-control";
 import { MenuFoldOutlined, MenuUnfoldOutlined } from "@ant-design/icons";
-import { resolvePhiBorderWidgetStyle } from "../../../helpers/border-widget-style";
-import {
-  phiBackgroundWidgetConfigPaintsGround,
-  resolvePhiBackgroundMotion,
-  resolvePhiBackgroundMotionHostStyle,
-  resolvePhiBackgroundWidgetStyle,
-  type PhiCmsBackgroundWidgetConfig,
-} from "../../widgets/config/background";
-import {
-  resolvePhiShellRegionChrome,
-  resolvePhiShellRegionGroundStyle,
-  resolvePhiShellRegionTypography,
-  resolvePhiShellRegionZIndex,
-  resolvePhiShellSiderCollapsedWidth,
-  resolvePhiShellSiderWidth,
-} from "../../../helpers/shell-region-style";
-import { combinePhiBoxShadows } from "../../../helpers/layout-style";
-import { phiRegionUsesShellChromeOverlay } from "../../root/phi-shell-chrome-overlay";
-import { hasPhiFlag } from "../../../helpers/flags";
-import { PhiCmsFlags } from "../../../constants/phi-cms";
+import { type PhiCmsBackgroundWidgetConfig } from "../../widgets/config/background";
+import { resolvePhiShellRegionZIndex } from "../../../helpers/shell-region-style";
 import type { PhiCmsRegionConfig, PhiCmsRegionKey } from "../../../types";
 
 import { PhiBackgroundMotionLayer } from "../../cms/clients/phi-background-motion-layer-lazy";
-import type { PhiBlockRuntime } from "../../../types/widget-runtime";
 import type {
-  PhiRenderableBlock,
   PhiRenderableBlockRuntimeContext,
   PhiSignalScope,
 } from "../../../types";
-import type { PhiCmsBorderWidgetConfig } from "../../../types/cms-config";
 import { PhiIcon } from "../../shell/phi-icon";
 import { PhiSiderContextProvider } from "../presets/clients/sider-context";
-import {
-  resolveRenderableBlockEffectsAttributes,
-  resolveRenderableBlockEffectsStyle,
-  resolveRenderableBlockViewportEffects,
-} from "../../../helpers/renderable-block-effects";
+import { resolveRenderableBlockViewportEffects } from "../../../helpers/renderable-block-effects";
 import {
   createPhiRenderableBlockReceiver,
   usePhiRenderableBlockRuntime,
@@ -50,26 +25,15 @@ import { usePhiConfig } from "../../root/phi-config-provider";
 import { PhiEffectsReadyTrigger } from "../../../plugins/runtime/phi-effects-ready-trigger";
 import { PhiSlotChildEffectsVisibilityObserver } from "../../../plugins/runtime/phi-slot-child-effects-visibility-observer";
 import { PhiSlotChildViewportEffectsObserver } from "../../../plugins/runtime/phi-slot-child-viewport-effects-observer";
-import { resolvePhiPaddingStyle } from "../../layouts/phi-layout-contract";
 import { PhiFlexControl } from "../../controls/phi-flex-control";
-import { resolvePhiRenderableBlockGeometry } from "../../../types/renderable-block-geometry";
-
-function normalizeCssLength(value: unknown) {
-  return typeof value === "string" || typeof value === "number" ? value : undefined;
-}
-
-function isBorderConfig(value: unknown): value is PhiCmsBorderWidgetConfig {
-  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
-}
-
-type PhiRuntimeShellTheme = NonNullable<NonNullable<PhiBlockRuntime["site"]["theme"]>["shell"]>;
+import { resolvePhiCmsRegionShell, type PhiCmsRegionShellTheme } from "../phi-cms-region-shell";
 
 type PhiCmsRegionContainerClientProps = {
   children: ReactNode;
   className?: string;
   regionKey: PhiCmsRegionKey;
   config?: PhiCmsRegionConfig;
-  shellTheme?: PhiRuntimeShellTheme;
+  shellTheme?: PhiCmsRegionShellTheme;
   style?: CSSProperties;
   regionType?: number;
   previewMode?: boolean;
@@ -80,6 +44,12 @@ type PhiCmsRegionContainerClientProps = {
   routeScope: Extract<PhiSignalScope, "area" | "page">;
 };
 
+/**
+ * A Region that stays alive after it has rendered: it takes signals, runs effects, collapses, or moves
+ * its Background. What it draws comes from the Region-shell resolver it shares with the static renderer,
+ * fed with the config merged with the live runtime state and painted in the live colour mode. What is
+ * left here is what only a live Region has.
+ */
 export function PhiCmsRegionContainerClient({
   children,
   className,
@@ -123,18 +93,16 @@ export function PhiCmsRegionContainerClient({
     },
   });
   const resolvedVisibility = blockRuntime.state.visibility ?? "visible";
-  const resolvedEnabled = blockRuntime.state.enabled ?? true;
-  const resolvedSize =
-    resolvedVisibility === "collapsed"
-      ? blockRuntime.state.collapsedSizeHint ?? blockRuntime.state.size
-      : blockRuntime.state.size;
   const runtimeBackground = blockRuntime.state.background;
   const config: PhiCmsRegionConfig = {
     ...(initialConfig ?? {}),
     visibility: resolvedVisibility,
     viewportFlags: blockRuntime.state.viewportFlags,
-    enabled: resolvedEnabled,
-    size: resolvedSize,
+    enabled: blockRuntime.state.enabled ?? true,
+    size:
+      resolvedVisibility === "collapsed"
+        ? blockRuntime.state.collapsedSizeHint ?? blockRuntime.state.size
+        : blockRuntime.state.size,
     minSize: blockRuntime.state.minSize,
     maxSize: blockRuntime.state.maxSize,
     collapsedSizeHint: blockRuntime.state.collapsedSizeHint,
@@ -155,487 +123,177 @@ export function PhiCmsRegionContainerClient({
   };
   const [collapsed, setCollapsed] = useState(false);
 
-  if (resolvedVisibility === "hidden") {
-    return null;
-  }
-  const isHeader =
-    regionKey === "header_top" || regionKey === "header_main" || regionKey === "header_bottom";
-  const isFooter =
-    regionKey === "footer_top" || regionKey === "footer_main" || regionKey === "footer_bottom";
-  const isSider = regionKey === "sider_left" || regionKey === "sider_right";
-  const resolvedMode = liveThemeMode;
-  const geometry = resolvePhiRenderableBlockGeometry(config);
-  const resolvedHeight = geometry.block.size?.css;
-  // A sider that states no width takes the Theme's; this Region's own answer, not the reader's.
-  const resolvedWidth = geometry.inline.size?.css ?? resolvePhiShellSiderWidth(shellTheme);
-  const resolvedCollapsedWidth =
-    normalizeCssLength(config?.collapsedWidth) ?? resolvePhiShellSiderCollapsedWidth(shellTheme);
-  const resolvedTop = normalizeCssLength(config?.offsetTop) ?? 0;
-  const resolvedBorderRadius = normalizeCssLength(config?.borderRadius);
-  const resolvedFullHeight = config?.fullHeight === true;
-  const resolvedFullHeightSize =
-    resolvedFullHeight && !resolvedHeight
-      ? `calc(100dvh - ${typeof resolvedTop === "number" ? `${resolvedTop}px` : resolvedTop})`
-      : resolvedHeight;
-  const shouldStickSider = config?.sticky === true || resolvedFullHeight;
-  const resolvedZIndex =
-    config?.zIndex ?? resolvePhiShellRegionZIndex(regionKey, resolvedFullHeight);
-  const resolvedCollapsible = config?.collapsible === true;
-  const resolvedCollapseIcon = typeof config?.collapseIcon === "string" ? config.collapseIcon : undefined;
-  const isCollapsed = hasPhiFlag(config?.flags, PhiCmsFlags.Collapsed);
-  /*
-   * A Background config that paints nothing is not an authored ground. The Builder writes one onto every
-   * Region draft it persists, so its presence would otherwise mean "authored" for every Region an author
-   * has ever opened.
-   */
-  const regionBackgroundConfig = phiBackgroundWidgetConfigPaintsGround(config?.backgroundConfig)
-    ? (config?.backgroundConfig as PhiCmsBackgroundWidgetConfig)
-    : null;
-  const regionBackgroundMotion = resolvePhiBackgroundMotion(regionBackgroundConfig);
-  const regionBackgroundStyle = regionBackgroundConfig
-    ? regionBackgroundMotion == null
-      ? resolvePhiBackgroundWidgetStyle({ ...regionBackgroundConfig, effect: null })
-      : resolvePhiBackgroundMotionHostStyle({ ...regionBackgroundConfig, effect: null })
-    : null;
-  const regionBackgroundBoxShadow =
-    typeof regionBackgroundStyle?.boxShadow === "string" ? regionBackgroundStyle.boxShadow : undefined;
-  const resolvedChrome = resolvePhiShellRegionChrome(regionKey, shellTheme, {
-    mode: resolvedMode,
-    background: typeof config?.background === "string" ? config.background : undefined,
-    shadow: config?.shadow,
-    effect: config?.effect,
-    tokens: {
-      colorBgElevated: token.colorBgElevated,
-      colorBgContainer: token.colorBgContainer,
-      colorBgSpotlight: token.colorBgSpotlight,
-      colorTextLightSolid: token.colorTextLightSolid,
-      colorText: token.colorText,
+  const shell = resolvePhiCmsRegionShell({
+    regionKey,
+    config,
+    shellTheme,
+    paint: {
+      kind: "live",
+      mode: liveThemeMode,
+      tokens: {
+        colorBgElevated: token.colorBgElevated,
+        colorBgContainer: token.colorBgContainer,
+        colorBgSpotlight: token.colorBgSpotlight,
+        colorTextLightSolid: token.colorTextLightSolid,
+        colorText: token.colorText,
+      },
     },
+    animatesBackground: true,
+    previewMode,
+    regionType,
+    className,
+    style,
   });
-  const resolvedBackground = resolvedChrome.background;
-  /*
-   * The ground as a longhand, because the same style also carries longhands from an authored Background
-   * and from the Shell Chrome Overlay. Mixing them with the `background` shorthand makes React warn as
-   * soon as a rerender drops one of the longhands.
-   */
-  const regionGroundStyle = regionBackgroundStyle == null
-    ? resolvePhiShellRegionGroundStyle(resolvedBackground)
-    : {};
-  /*
-   * The Shell Chrome Overlay (SHELL.md), read from the custom properties the Root Layout publishes,
-   * exactly as the server-rendered Region reads them, and decided by the same rule. Only the Header,
-   * Sider and Footer branches below spread it, so the Region-key test is belt and braces there.
-   */
-  const shellChromeOverlayStyle: CSSProperties =
-    phiRegionUsesShellChromeOverlay({
-      regionKey,
-      backgroundConfig: regionBackgroundConfig,
-      effect: config?.effect,
-      grounds: [resolvedBackground],
-    })
-      ? {
-        backgroundColor: "var(--phi-region-chrome-color, transparent)",
-        backgroundImage: "var(--phi-region-chrome-image, none)",
-        backgroundSize: "var(--phi-region-chrome-size, auto)",
-        backgroundPosition: "var(--phi-region-chrome-position, 0 0)",
-        backgroundRepeat: "var(--phi-region-chrome-repeat, repeat)",
-        backgroundAttachment: "var(--phi-region-chrome-attachment, fixed)",
-        backdropFilter: "var(--phi-region-chrome-filter, none)",
-        WebkitBackdropFilter: "var(--phi-region-chrome-filter, none)",
-      }
-      : {};
-  const resolvedTextColor = resolvedChrome.color;
-  const resolvedShadow = resolvedChrome.shadow;
-  const resolvedTypography = resolvePhiShellRegionTypography(regionKey, shellTheme, {
-    fontSize: config?.fontSize,
-    lineHeight: config?.lineHeight,
-  });
-  const fallbackBorder = `1px solid ${token.colorBorderSecondary}`;
-  const resolvedBorderStyle =
-    config?.border == null || config.border === false
-      ? {}
-      : isBorderConfig(config.border)
-        ? resolvePhiBorderWidgetStyle(config.border)
-        : isHeader
-          ? ({ borderBottom: typeof config.border === "string" ? config.border : fallbackBorder } satisfies CSSProperties)
-          : isFooter
-            ? ({ borderTop: typeof config.border === "string" ? config.border : fallbackBorder } satisfies CSSProperties)
-            : isSider
-              ? (regionKey === "sider_left"
-                  ? ({ borderInlineEnd: typeof config.border === "string" ? config.border : fallbackBorder } satisfies CSSProperties)
-                  : ({ borderInlineStart: typeof config.border === "string" ? config.border : fallbackBorder } satisfies CSSProperties))
-              : ({ border: typeof config.border === "string" ? config.border : fallbackBorder } satisfies CSSProperties);
-  const collapseToolbarBorder =
-    config?.border === true
-      ? fallbackBorder
-      : typeof config?.border === "string"
-        ? config.border
-        : isBorderConfig(config?.border)
-          ? resolvePhiBorderWidgetStyle(config.border).border
-          : undefined;
-  const isRightSider = regionKey === "sider_right";
-  if (isCollapsed && previewMode && regionKey !== "header_bottom") {
+  if (shell == null) {
     return null;
   }
 
-  const content = (() => {
-  const regionPaddingStyle = resolvePhiPaddingStyle({
-    padding: config.padding,
-    paddingTop: config.paddingTop,
-    paddingRight: config.paddingRight,
-    paddingBottom: config.paddingBottom,
-    paddingLeft: config.paddingLeft,
-  });
-  const baseStyle = (
-    isHeader
-      ? {
-            ...(regionBackgroundStyle ?? {}),
-            position: config?.sticky ? "sticky" : "relative",
-            top: config?.sticky ? resolvedTop : undefined,
-            insetBlockStart: config?.sticky ? resolvedTop : undefined,
-            zIndex: resolvedZIndex,
-            ...resolvedChrome.effectStyle,
-            ...regionGroundStyle,
-            ...shellChromeOverlayStyle,
-            boxShadow: combinePhiBoxShadows(regionBackgroundBoxShadow, resolvedChrome.effectStyle?.boxShadow, resolvedShadow),
-            ...(resolvedHeight ? { height: resolvedHeight } : {}),
-            color: resolvedTextColor,
-            ...resolvedBorderStyle,
-            ...(resolvedTypography.fontSize ? { fontSize: resolvedTypography.fontSize } : {}),
-            ...(resolvedTypography.lineHeight ? { lineHeight: resolvedTypography.lineHeight } : {}),
-            }
-          : isFooter
-          ? {
-              ...(regionBackgroundStyle ?? {}),
-              position: "relative",
-              ...resolvedChrome.effectStyle,
-              ...regionGroundStyle,
-              ...shellChromeOverlayStyle,
-              boxShadow: combinePhiBoxShadows(regionBackgroundBoxShadow, resolvedChrome.effectStyle?.boxShadow, resolvedShadow),
-              zIndex: resolvedZIndex,
-              ...(resolvedHeight ? { height: resolvedHeight } : {}),
-              color: resolvedTextColor,
-              ...resolvedBorderStyle,
-              ...(resolvedTypography.fontSize ? { fontSize: resolvedTypography.fontSize } : {}),
-              ...(resolvedTypography.lineHeight ? { lineHeight: resolvedTypography.lineHeight } : {}),
-            }
-          : isSider
-            ? {
-              ...(regionBackgroundStyle ?? {}),
-                ...resolvedChrome.effectStyle,
-                ...regionGroundStyle,
-                ...shellChromeOverlayStyle,
-                boxShadow: combinePhiBoxShadows(regionBackgroundBoxShadow, resolvedChrome.effectStyle?.boxShadow, resolvedShadow),
-                ...resolvedBorderStyle,
-                ...(resolvedWidth
-                  ? {
-                      width: resolvedWidth,
-                      minWidth: resolvedWidth,
-                      maxWidth: resolvedWidth,
-                    }
-                : {}),
-                overflowX: "visible",
-                overflowY: resolvedFullHeight ? "auto" : "visible",
-                alignSelf: resolvedFullHeight ? "stretch" : "start",
-                display: resolvedFullHeight ? "flex" : undefined,
-                flexDirection: resolvedFullHeight ? "column" : undefined,
-                flex: resolvedFullHeight ? "1 1 auto" : undefined,
-                minHeight: resolvedFullHeight ? 0 : undefined,
-                color: resolvedTextColor,
-                position: shouldStickSider ? "sticky" : "relative",
-                top: shouldStickSider ? resolvedTop : undefined,
-                zIndex: resolvedZIndex,
-                ...(resolvedFullHeightSize ? { height: resolvedFullHeightSize } : {}),
-              ...(resolvedFullHeight ? { minBlockSize: resolvedFullHeightSize ?? "100dvh" } : {}),
-              ...(resolvedTypography.fontSize ? { fontSize: resolvedTypography.fontSize } : {}),
-              ...(resolvedTypography.lineHeight ? { lineHeight: resolvedTypography.lineHeight } : {}),
-              }
-            : {
-                ...(regionBackgroundStyle ?? {}),
-                position: "relative",
-                zIndex: resolvedZIndex,
-                ...resolvedChrome.effectStyle,
-                ...regionGroundStyle,
-                width: "100%",
-                boxShadow: combinePhiBoxShadows(regionBackgroundBoxShadow, resolvedChrome.effectStyle?.boxShadow, resolvedShadow),
-                ...resolvedBorderStyle,
-                ...(resolvedTypography.fontSize ? { fontSize: resolvedTypography.fontSize } : {}),
-                ...(resolvedTypography.lineHeight ? { lineHeight: resolvedTypography.lineHeight } : {}),
-              }
-  ) as CSSProperties;
-  const renderableConfig: Partial<PhiRenderableBlock> = {
-    visibility: resolvedVisibility,
-    enabled: resolvedEnabled,
-    size: resolvedSize,
-    minSize: blockRuntime.state.minSize,
-    maxSize: blockRuntime.state.maxSize,
-    collapsedSizeHint: blockRuntime.state.collapsedSizeHint,
-    zIndex: blockRuntime.state.zIndex,
-    opacity: blockRuntime.state.opacity,
-    effect: blockRuntime.state.effect,
-    effects: blockRuntime.state.effects,
+  const effectsTrigger = shell.attributes["data-phi-effects-trigger"];
+  const viewportEffects = resolveRenderableBlockViewportEffects(shell.effectsConfig);
+  const attributes = {
+    ...shell.attributes,
+    "data-phi-effects-state":
+      blockRuntime.state.effectsState ?? shell.attributes["data-phi-effects-state"],
   };
-  const effectsStyle = resolveRenderableBlockEffectsStyle(renderableConfig);
-  const effectsAttributes = resolveRenderableBlockEffectsAttributes(renderableConfig);
-  const viewportEffects = resolveRenderableBlockViewportEffects(renderableConfig);
-  const effectsTrigger = effectsAttributes?.["data-phi-effects-trigger"];
-  const shouldObserveVisibility = effectsTrigger === "on_visible";
-  const shouldWaitForReady = effectsTrigger === "on_ready";
-  /*
-   * A Region with a maximum width is a column in a full-width host, and the column sits in the middle:
-   * the block-level inline margins carry the centring, because the shell forces `margin: 0` below and
-   * a `margin` value in the Region config is not a thing the renderer reads.
-   */
-  const centreInlineStyle: CSSProperties =
-    !isSider && geometry.inline.max != null ? { marginInline: "auto" } : {};
-  const runtimeStyle = {
-    borderRadius: resolvedBorderRadius,
-    ...(geometry.inline.size == null ? {} : { width: geometry.inline.size.css }),
-    ...(geometry.block.size == null ? {} : { height: geometry.block.size.css }),
-    ...(geometry.inline.min == null ? {} : { minWidth: geometry.inline.min.css }),
-    ...(geometry.block.min == null ? {} : { minHeight: geometry.block.min.css }),
-    ...(geometry.inline.max == null ? {} : { maxWidth: geometry.inline.max.css }),
-    ...(geometry.block.max == null ? {} : { maxHeight: geometry.block.max.css }),
-    ...(blockRuntime.state.opacity == null ? {} : { opacity: blockRuntime.state.opacity }),
-    ...(resolvedEnabled
-      ? {}
-      : {
-          opacity: Math.min(blockRuntime.state.opacity ?? 1, 0.5),
-          pointerEvents: "none" as const,
-        }),
-    ...(resolvedVisibility === "collapsed" ? { overflow: "hidden" as const } : {}),
-    ...effectsStyle,
-  } satisfies CSSProperties;
-  const mergedStyle = {
-    ...baseStyle,
-    ...(regionBackgroundMotion == null ? {} : { isolation: "isolate" as const }),
-    ...style,
-    ...runtimeStyle,
-  } satisfies CSSProperties;
-  const backgroundMotionLayer = regionBackgroundMotion != null && regionBackgroundConfig != null
-    ? <PhiBackgroundMotionLayer config={regionBackgroundConfig} />
+  const backgroundMotionLayer = shell.animatesBackground && shell.backgroundConfig != null
+    ? <PhiBackgroundMotionLayer config={shell.backgroundConfig} />
     : null;
   const effectObservers = (
     <>
-      {shouldObserveVisibility ? (
+      {effectsTrigger === "on_visible" ? (
         <PhiSlotChildEffectsVisibilityObserver
-          once={effectsAttributes?.["data-phi-effects-once"] !== "false"}
+          once={shell.attributes["data-phi-effects-once"] !== "false"}
         />
       ) : null}
-      {shouldWaitForReady ? <PhiEffectsReadyTrigger /> : null}
+      {effectsTrigger === "on_ready" ? <PhiEffectsReadyTrigger /> : null}
       {viewportEffects.length > 0 ? (
         <PhiSlotChildViewportEffectsObserver effects={viewportEffects} />
       ) : null}
     </>
   );
 
-  const resolvedRenderedSiderWidth =
-    isSider && resolvedCollapsible && collapsed ? resolvedCollapsedWidth : resolvedWidth;
-  const resolvedSiderContainerStyle = (
-    isSider
-      ? {
-          ...mergedStyle,
-          ...(resolvedRenderedSiderWidth
-            ? {
-                width: resolvedRenderedSiderWidth,
-                minWidth: resolvedRenderedSiderWidth,
-                maxWidth: resolvedRenderedSiderWidth,
-              }
-            : {}),
-        }
-      : mergedStyle
-  ) as CSSProperties;
-  const resolvedSiderContentTransform =
-    isSider && resolvedCollapsible
-      ? collapsed
-        ? `translate3d(${isRightSider ? "6px" : "-6px"}, 0, 0) scale(0.995)`
-        : "translate3d(0, 0, 0) scale(1)"
-      : "translate3d(0, 0, 0) scale(1)";
-
-  if (isHeader) {
+  if (shell.family !== "sider") {
+    const Element = shell.element as "header" | "footer" | "div";
     return (
-      <header
-        data-phi-region-key={regionKey}
-        data-phi-region-type={regionType}
-        data-phi-renderable-block="true"
-        data-phi-signal-receiver={receiver ?? undefined}
-        data-phi-block-visibility={resolvedVisibility}
-        data-phi-viewport-flags={blockRuntime.state.viewportFlags || undefined}
-        data-phi-block-enabled={resolvedEnabled ? "true" : "false"}
-        {...effectsAttributes}
-        data-phi-effects-state={blockRuntime.state.effectsState ?? effectsAttributes?.["data-phi-effects-state"]}
-        className={["phi-cms-region-shell", className].filter(Boolean).join(" ")}
-        style={{ padding: 0, ...mergedStyle, margin: 0, ...centreInlineStyle }}
-      >
+      <Element {...attributes} style={shell.style}>
         {backgroundMotionLayer}
-        <div className="phi-cms-region-shell__content" style={regionPaddingStyle}>
+        <div className="phi-cms-region-shell__content" style={shell.contentStyle}>
           {children}
         </div>
         {effectObservers}
-      </header>
-      );
-    }
-
-    if (isSider) {
-      const chromeMode = resolvedCollapsible;
-
-      return (
-        <aside
-          data-phi-region-key={regionKey}
-          data-phi-region-type={regionType}
-          data-phi-renderable-block="true"
-          data-phi-signal-receiver={receiver ?? undefined}
-          data-phi-block-visibility={resolvedVisibility}
-          data-phi-viewport-flags={blockRuntime.state.viewportFlags || undefined}
-          data-phi-block-enabled={resolvedEnabled ? "true" : "false"}
-          {...effectsAttributes}
-          data-phi-effects-state={blockRuntime.state.effectsState ?? effectsAttributes?.["data-phi-effects-state"]}
-          data-phi-sider-collapsed={resolvedCollapsible && collapsed ? "true" : undefined}
-          className={["phi-cms-region-shell", className].filter(Boolean).join(" ")}
-          style={{
-            padding: 0,
-            transition: "width 180ms ease, min-width 180ms ease, max-width 180ms ease, flex-basis 180ms ease",
-            ...resolvedSiderContainerStyle,
-            margin: 0,
-          } as CSSProperties}
-        >
-          {backgroundMotionLayer}
-          <PhiSiderContextProvider
-            value={{
-              collapsed: resolvedCollapsible ? collapsed : false,
-              collapsedWidth: resolvedCollapsedWidth,
-            }}
-          >
-            <div
-              style={{
-                position: "relative",
-                display: "flex",
-                flexDirection: "column",
-                flex: "1 1 auto",
-                width: "100%",
-                height: "100%",
-                minWidth: 0,
-                minHeight: 0,
-              }}
-            >
-              {resolvedCollapsible ? (
-                <PhiFlexControl
-                  align="center"
-                  justify={collapsed ? "center" : isRightSider ? "flex-end" : "flex-start"}
-                  style={{
-                    minHeight: resolvedCollapsedWidth,
-                    paddingTop: 0,
-                    paddingInline: collapsed ? 0 : token.paddingXS,
-                    paddingBottom: 0,
-                    borderBottom: collapseToolbarBorder,
-                    zIndex: 1,
-                  } as CSSProperties}
-                >
-                  <PhiButtonControl
-                    type="text"
-                    ariaLabel={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-                    icon={
-                      resolvedCollapseIcon ? (
-                        <PhiIcon name={resolvedCollapseIcon} />
-                      ) : (
-                        (() => {
-                          if (isRightSider) {
-                            return collapsed ? <MenuFoldOutlined /> : <MenuUnfoldOutlined />;
-                          }
-
-                          return collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />;
-                        })()
-                      )
-                    }
-                    style={{
-                      minWidth: resolvedCollapsedWidth,
-                      height: resolvedCollapsedWidth,
-                      paddingInline: 0,
-                      color: resolvedMode === "dark" ? token.colorTextLightSolid : token.colorTextSecondary,
-                    } as CSSProperties}
-                    onClick={() => setCollapsed((value) => !value)}
-                  />
-                </PhiFlexControl>
-              ) : null}
-              <div
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  width: "100%",
-                  minWidth: 0,
-                  flex: "1 1 auto",
-                  minHeight: 0,
-                }}
-              >
-                <div
-                  className="phi-cms-region-shell__content"
-                  style={{
-                    ...regionPaddingStyle,
-                    transition: chromeMode
-                      ? "opacity 180ms ease"
-                      : "transform 220ms cubic-bezier(0.2, 0, 0, 1), opacity 180ms ease",
-                    transform: chromeMode ? "none" : resolvedSiderContentTransform,
-                    transformOrigin: isRightSider ? "top right" : "top left",
-                    opacity: resolvedCollapsible && collapsed ? 0.985 : 1,
-                    willChange: chromeMode ? "opacity" : "transform, opacity",
-                  }}
-                >
-                  {children}
-                </div>
-              </div>
-            </div>
-          </PhiSiderContextProvider>
-          {effectObservers}
-        </aside>
-      );
-    }
-
-    if (isFooter) {
-      return (
-      <footer
-        data-phi-region-key={regionKey}
-        data-phi-region-type={regionType}
-        data-phi-renderable-block="true"
-        data-phi-signal-receiver={receiver ?? undefined}
-        data-phi-block-visibility={resolvedVisibility}
-        data-phi-viewport-flags={blockRuntime.state.viewportFlags || undefined}
-        data-phi-block-enabled={resolvedEnabled ? "true" : "false"}
-        {...effectsAttributes}
-        data-phi-effects-state={blockRuntime.state.effectsState ?? effectsAttributes?.["data-phi-effects-state"]}
-        className={["phi-cms-region-shell", className].filter(Boolean).join(" ")}
-        style={{ padding: 0, ...mergedStyle, margin: 0, ...centreInlineStyle } as CSSProperties}
-      >
-        {backgroundMotionLayer}
-        <div className="phi-cms-region-shell__content" style={regionPaddingStyle}>
-          {children}
-        </div>
-        {effectObservers}
-      </footer>
+      </Element>
     );
   }
 
-    return (
-    <div
-      data-phi-region-key={regionKey}
-      data-phi-region-type={regionType}
-      data-phi-renderable-block="true"
-      data-phi-signal-receiver={receiver ?? undefined}
-      data-phi-block-visibility={resolvedVisibility}
-      data-phi-viewport-flags={blockRuntime.state.viewportFlags || undefined}
-      data-phi-block-enabled={resolvedEnabled ? "true" : "false"}
-      {...effectsAttributes}
-      data-phi-effects-state={blockRuntime.state.effectsState ?? effectsAttributes?.["data-phi-effects-state"]}
-      className={["phi-cms-region-shell", className].filter(Boolean).join(" ")}
-      style={{ padding: 0, ...mergedStyle, margin: 0, ...centreInlineStyle } as CSSProperties}
+  const isRightSider = regionKey === "sider_right";
+  const collapsible = config.collapsible === true;
+  const isFullHeight = config.fullHeight === true;
+  const isCollapsed = collapsible && collapsed;
+  const collapsedWidth = shell.siderCollapsedWidth;
+  const collapseIcon = typeof config.collapseIcon === "string" ? config.collapseIcon : undefined;
+  const contentTransform = isCollapsed
+    ? `translate3d(${isRightSider ? "6px" : "-6px"}, 0, 0) scale(0.995)`
+    : "translate3d(0, 0, 0) scale(1)";
+
+  return (
+    <aside
+      {...attributes}
+      data-phi-sider-collapsed={isCollapsed ? "true" : undefined}
+      style={{
+        transition:
+          "width 180ms ease, min-width 180ms ease, max-width 180ms ease, flex-basis 180ms ease",
+        ...shell.style,
+        /*
+         * The inner column below is a flex column that fills the Sider, and only a full-height Sider has
+         * a height for it to fill; the static renderer has no such column and needs neither.
+         */
+        ...(isFullHeight ? { display: "flex", flexDirection: "column" } : {}),
+        // A collapsed Sider is its collapsed width, whatever bounds the expanded one states.
+        ...(isCollapsed
+          ? { width: collapsedWidth, minWidth: collapsedWidth, maxWidth: collapsedWidth }
+          : {}),
+      }}
     >
       {backgroundMotionLayer}
-      <div className="phi-cms-region-shell__content" style={regionPaddingStyle}>
-        {children}
-      </div>
+      <PhiSiderContextProvider value={{ collapsed: isCollapsed, collapsedWidth }}>
+        <div
+          style={{
+            position: "relative",
+            display: "flex",
+            flexDirection: "column",
+            flex: "1 1 auto",
+            width: "100%",
+            height: "100%",
+            minWidth: 0,
+            minHeight: 0,
+          }}
+        >
+          {collapsible ? (
+            <PhiFlexControl
+              align="center"
+              justify={collapsed ? "center" : isRightSider ? "flex-end" : "flex-start"}
+              style={{
+                minHeight: collapsedWidth,
+                paddingTop: 0,
+                paddingInline: collapsed ? 0 : token.paddingXS,
+                paddingBottom: 0,
+                borderBottom: shell.borderLine,
+                zIndex: 1,
+              }}
+            >
+              <PhiButtonControl
+                type="text"
+                ariaLabel={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+                icon={
+                  collapseIcon ? (
+                    <PhiIcon name={collapseIcon} />
+                  ) : isRightSider ? (
+                    collapsed ? <MenuFoldOutlined /> : <MenuUnfoldOutlined />
+                  ) : collapsed ? (
+                    <MenuUnfoldOutlined />
+                  ) : (
+                    <MenuFoldOutlined />
+                  )
+                }
+                style={{
+                  minWidth: collapsedWidth,
+                  height: collapsedWidth,
+                  paddingInline: 0,
+                  color: liveThemeMode === "dark" ? token.colorTextLightSolid : token.colorTextSecondary,
+                }}
+                onClick={() => setCollapsed((value) => !value)}
+              />
+            </PhiFlexControl>
+          ) : null}
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              width: "100%",
+              minWidth: 0,
+              flex: "1 1 auto",
+              minHeight: 0,
+            }}
+          >
+            <div
+              className="phi-cms-region-shell__content"
+              style={{
+                ...shell.contentStyle,
+                transition: collapsible
+                  ? "opacity 180ms ease"
+                  : "transform 220ms cubic-bezier(0.2, 0, 0, 1), opacity 180ms ease",
+                transform: collapsible ? "none" : contentTransform,
+                transformOrigin: isRightSider ? "top right" : "top left",
+                opacity: isCollapsed ? 0.985 : 1,
+                willChange: collapsible ? "opacity" : "transform, opacity",
+              }}
+            >
+              {children}
+            </div>
+          </div>
+        </div>
+      </PhiSiderContextProvider>
       {effectObservers}
-    </div>
+    </aside>
   );
-  })();
-
-  return content;
 }
