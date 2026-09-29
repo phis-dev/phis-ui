@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo } from "react";
 
 import type { PhiCmsInstanceId } from "../../../../types/cms-instance-id";
 import type { PhiCollectionViewBindingModel } from "../../../../types/collection-provider";
@@ -14,6 +14,7 @@ import { PhiEmptyControl } from "../../../controls/phi-empty-control";
 import { PhiTextControl } from "../../../controls/phi-text-control";
 import { PhiCardWidgetClient } from "../../../../plugins/runtime-modules/core/widgets/card/client";
 import { normalizePhiCssSize } from "../../../layouts/phi-layout-contract";
+import { usePhiSearchDraft } from "./phi-search-draft";
 
 /**
  * A Collection drawn as Cards.
@@ -100,18 +101,16 @@ export function PhiCardCollectionViewBinding({
     () => (binding.data?.items ?? []) as Record<string, unknown>[],
     [binding.data?.items],
   );
-  const [searchDraft, setSearchDraft] = useState(binding.query.search ?? "");
-
-  // Typing is not a query. The draft is what a person sees; the query follows once they stop.
-  useEffect(() => {
-    if (searchDraft === (binding.query.search ?? "")) {
-      return;
-    }
-    const timer = window.setTimeout(() => {
-      binding.setQuery((current) => ({ ...current, page: 1, search: searchDraft }));
-    }, 250);
-    return () => window.clearTimeout(timer);
-  }, [binding, searchDraft]);
+  const { setQuery } = binding;
+  const onSearchChange = useCallback(
+    (search: string) => setQuery((current) => ({ ...current, page: 1, search })),
+    [setQuery],
+  );
+  const { draft: searchDraft, setDraft: setSearchDraft } = usePhiSearchDraft({
+    query: binding.query.search ?? "",
+    onQueryChange: onSearchChange,
+    debounceMs: 250,
+  });
 
   const cards = items.map((item, index) => {
     const card = buildCard(item, presentation.card);

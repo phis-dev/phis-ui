@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import type {
   PhiCollectionProviderDataSource,
@@ -34,6 +34,13 @@ export function usePhiCollectionViewBinding({
   const [error, setError] = useState<string | null>(null);
   const [refreshToken, setRefreshToken] = useState(0);
   const [openPanelKey, setOpenPanelKey] = useState<string | null>(null);
+  /*
+   * Which request may still write `data`. Every query and every action takes the next number, and an
+   * answer lands only while its number is the latest -- so a delete that returns after the person has
+   * searched on cannot put the old list back over the new one. A query is also aborted when the next
+   * one starts; an action is not, because what it does on the Server has to finish either way.
+   */
+  const latestRequestRef = useRef(0);
   const initialQueryKey = JSON.stringify(buildInitialQuery(initialQuery, pageSize));
   const sourceKey = `${source?.providerKey ?? ""}:${source?.resourceKey ?? ""}`;
   const requestKey = useMemo(() => JSON.stringify([
@@ -58,6 +65,8 @@ export function usePhiCollectionViewBinding({
   useEffect(() => {
     if (!provider || !source || bindingError) return;
     const abortController = new AbortController();
+    const requestId = ++latestRequestRef.current;
+    const isCurrent = () => !abortController.signal.aborted && requestId === latestRequestRef.current;
     const loadingTimer = window.setTimeout(() => {
       if (abortController.signal.aborted) return;
       setLoading(true);
@@ -69,14 +78,15 @@ export function usePhiCollectionViewBinding({
       params: source.params,
       signal: abortController.signal,
     }).then((nextData) => {
-      if (abortController.signal.aborted) return;
+      if (!isCurrent()) return;
       setData(nextData);
       setError(nextData.error);
     }).catch((nextError: unknown) => {
-      if (!abortController.signal.aborted) {
+      if (isCurrent()) {
         setError(nextError instanceof Error ? nextError.message : "Collection request failed.");
       }
     }).finally(() => {
+      // Superseded by an action is still finished loading; only a newer query takes the flag over.
       if (!abortController.signal.aborted) setLoading(false);
     });
     return () => {
@@ -92,6 +102,7 @@ export function usePhiCollectionViewBinding({
     }
     if (!provider.action) throw new Error(`Collection provider "${source.providerKey}" is read-only.`);
     const abortController = new AbortController();
+    const requestId = ++latestRequestRef.current;
     const nextData = await provider.action({
       ...request,
       resourceKey: source.resourceKey,
@@ -99,25 +110,26 @@ export function usePhiCollectionViewBinding({
       query: request.query ?? query,
       signal: abortController.signal,
     });
-    setData(nextData);
-    setError(nextData.error);
+    if (requestId === latestRequestRef.current) {
+      setData(nextData);
+      setError(nextData.error);
+    }
     return nextData;
   }, [bindingError, provider, query, source]);
 
-  return {
-    provider,
-    resource,
-    bindingError,
-    binding: {
-      query,
-      data,
-      loading,
-      error,
-      openPanelKey,
-      setQuery,
-      setOpenPanelKey,
-      reload,
-      activate,
-    } satisfies PhiCollectionViewBindingModel,
-  };
+  // One object while nothing in it changes, so a View can depend on the binding without restarting
+  // whatever it runs on every render of the Widget around it.
+  const binding = useMemo<PhiCollectionViewBindingModel>(() => ({
+    query,
+    data,
+    loading,
+    error,
+    openPanelKey,
+    setQuery,
+    setOpenPanelKey,
+    reload,
+    activate,
+  }), [activate, data, error, loading, openPanelKey, query, reload]);
+
+  return { provider, resource, bindingError, binding };
 }

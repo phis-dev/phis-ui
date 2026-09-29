@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { PhiMediaAssetFlags, PhiMediaKind } from "../../constants/media";
 import type { PhiCmsInstanceId } from "../../types/cms-instance-id";
@@ -25,6 +25,7 @@ import { usePhiApplicationFeedback } from "../runtime/use-phi-application-feedba
 import type { PhiCmsCollectionViewWidgetConfig } from "../../plugins/runtime-modules/core/widgets/collection-view/config";
 import { resolvePhiButtonIcon } from "../widgets/client/shared/phi-button-icons";
 import { usePhiControlSignalController } from "../widgets/client/shared/phi-control-signals";
+import { usePhiSearchDraft } from "../widgets/client/shared/phi-search-draft";
 import {
   buildPhiMediaSpaceOptions,
   usePhiMediaSpaceSelectionAllowed,
@@ -103,7 +104,15 @@ export function PhiAssetCollectionViewBinding({
       applyPhiAssetCollectionData(binding.data);
     }
   }, [binding.data]);
-  const [searchDraft, setSearchDraft] = useState(state.searchQuery);
+  const onSearchChange = useCallback(
+    (search: string) => setQuery((current) => ({ ...current, page: 1, search })),
+    [setQuery],
+  );
+  const { draft: searchDraft, setDraft: setSearchDraft } = usePhiSearchDraft({
+    query: state.searchQuery,
+    onQueryChange: onSearchChange,
+    debounceMs: 150,
+  });
   /*
    * Which tiles are being deleted right now, by asset.
    *
@@ -153,17 +162,6 @@ export function PhiAssetCollectionViewBinding({
     valueType: "json",
     typeKey: "collection-action",
   });
-  useEffect(() => {
-    const timer = window.setTimeout(() => setSearchDraft(state.searchQuery), 0);
-    return () => window.clearTimeout(timer);
-  }, [state.searchQuery]);
-  useEffect(() => {
-    if (searchDraft === state.searchQuery) return;
-    const timer = window.setTimeout(() => {
-      setQuery((current) => ({ ...current, page: 1, search: searchDraft }));
-    }, 150);
-    return () => window.clearTimeout(timer);
-  }, [searchDraft, setQuery, state.searchQuery]);
 
   if (unsupportedFilter || unsupportedAction) {
     return (
