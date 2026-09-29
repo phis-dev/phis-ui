@@ -22,30 +22,41 @@ import {
 import { PhiButtonControl } from "../controls/phi-button-control";
 import { PhiCardControl } from "../controls/phi-card-control";
 import { PhiLink } from "../navigation/phi-link";
-import type {
-  PhiCmsFormWidgetCardConfig,
-  PhiCmsFormWidgetSubmitConfig,
-} from "../../plugins/runtime-modules/core/widgets/form/config";
+import type { PhiCmsFormWidgetCardConfig } from "../../plugins/runtime-modules/core/widgets/form/config";
 import {
   PHI_FORM_ACTIONS_COLUMNS_PROPERTY,
   PHI_FORM_RESPONSIVE_MODES,
   phiFormActionsGridColumn,
+  phiFormGridColumn,
   resolvePhiFormLayout,
+  resolvePhiFormResponsiveGridRange,
 } from "./form-descriptor-contract";
-import type { PhiFormLayoutDescriptor } from "../../types/form-descriptor";
+import type {
+  PhiFormLayoutDescriptor,
+  PhiFormLogicalAlignment,
+  PhiFormResponsiveGridRange,
+} from "../../types/form-descriptor";
 
 /**
  * What a form body offers the Widget above it, so the Widget can draw a submit for it.
  *
- * A form describes fields. Whether there is a button, what it says and which column it stands in are the
- * Widget's to decide -- which is why the body hands up a way to submit rather than a button, and why the
- * label is only what this form would call it if the Widget's config says nothing.
+ * The body hands up a way to submit rather than a button: whether a button is drawn is the Widget's
+ * placement, and what it says and where it stands is the descriptor's -- neither is the body's.
  */
 export type PhiFormWidgetSubmitRegistration = {
   /** Asks the mounted form to submit. The same request the `submit` capability makes. */
   submit: () => void;
-  /** What this form calls submitting, used where the Widget's config names nothing. */
-  label?: string;
+};
+
+/**
+ * The submit the Widget draws, already resolved: the placement said `inline`, and the descriptor's
+ * `submit` said what it reads and where it stands.
+ */
+export type PhiFormWidgetSubmit = {
+  label: string;
+  align: PhiFormLogicalAlignment;
+  /** The descriptor's own tracks for it, or absent for the layout's control range. */
+  control?: PhiFormResponsiveGridRange;
 };
 
 type PhiFormWidgetSubmitSlot = {
@@ -64,7 +75,7 @@ const PhiFormWidgetSubmitNodeContext = createContext<ReactNode>(null);
  * that a submit is under way. Null where no Widget is listening, which is what a form rendered outside
  * one gets: it simply has no submit of its own to draw instead.
  */
-export function usePhiFormWidgetSubmit(submit: () => void, label?: string) {
+export function usePhiFormWidgetSubmit(submit: () => void) {
   const slot = useContext(PhiFormWidgetSubmitSlotContext);
   // The call is read through a ref so a body may pass a fresh closure every render without
   // re-registering -- the registration is identity, not a value that changes with each keystroke.
@@ -79,9 +90,9 @@ export function usePhiFormWidgetSubmit(submit: () => void, label?: string) {
     if (!slot) {
       return;
     }
-    slot.register({ submit: () => submitRef.current(), label });
+    slot.register({ submit: () => submitRef.current() });
     return () => slot.register(null);
-  }, [label, slot]);
+  }, [slot]);
 
   return slot;
 }
@@ -97,7 +108,7 @@ export function PhiFormWidgetSubmitOutlet() {
   return <>{useContext(PhiFormWidgetSubmitNodeContext)}</>;
 }
 
-function resolveSubmitJustification(align: PhiCmsFormWidgetSubmitConfig["align"]) {
+function resolveSubmitJustification(align: PhiFormLogicalAlignment) {
   return align === "start" ? "flex-start" : align === "center" ? "center" : "flex-end";
 }
 
@@ -109,8 +120,8 @@ export type PhiFormWidgetLink = {
 };
 
 export type PhiFormWidgetFrameProps = {
-  /** The submit the Widget carries, or null where it carries none. */
-  submit?: PhiCmsFormWidgetSubmitConfig | null;
+  /** The submit the Widget draws, or null where the placement keeps it external. */
+  submit?: PhiFormWidgetSubmit | null;
   /**
    * The box around the whole of it, or null for no box.
    *
@@ -184,23 +195,38 @@ export function PhiFormWidgetFrame(
     () => ({ register: setRegistration, setSubmitting }),
     [],
   );
-  const actionsColumns = useMemo(() => {
-    const resolved = resolvePhiFormLayout(layout);
+  const resolvedLayout = useMemo(() => resolvePhiFormLayout(layout), [layout]);
+  const actionsColumns = useMemo(() => Object.fromEntries(PHI_FORM_RESPONSIVE_MODES.map((mode) => [
+    `${PHI_FORM_ACTIONS_COLUMNS_PROPERTY}-${mode}`,
+    phiFormActionsGridColumn(resolvedLayout, mode),
+  ])), [resolvedLayout]);
+  /*
+   * Tracks the descriptor names for its submit replace the actions row's columns for that row alone;
+   * the links keep the layout's control range, which is where they line up with the inputs.
+   */
+  const submitControl = submit?.control;
+  const submitColumns = useMemo(() => {
+    if (!submitControl) return undefined;
+    const ranges = resolvePhiFormResponsiveGridRange(
+      submitControl,
+      resolvedLayout.control,
+      "submit.control",
+    );
     return Object.fromEntries(PHI_FORM_RESPONSIVE_MODES.map((mode) => [
       `${PHI_FORM_ACTIONS_COLUMNS_PROPERTY}-${mode}`,
-      phiFormActionsGridColumn(resolved, mode),
+      phiFormGridColumn(ranges[mode]),
     ]));
-  }, [layout]);
+  }, [resolvedLayout, submitControl]);
 
   const submitButton = submit && registration ? (
-    <div className="phi-form-descriptor-actions">
+    <div className="phi-form-descriptor-actions" style={submitColumns as CSSProperties | undefined}>
       <div
         className="phi-form-cell phi-form-cell--control"
         style={{ display: "flex", justifyContent: resolveSubmitJustification(submit.align) }}
       >
         <PhiButtonControl
           type="primary"
-          label={submit.label ?? registration.label ?? "Submit"}
+          label={submit.label}
           loading={submitting}
           onClick={registration.submit}
         />

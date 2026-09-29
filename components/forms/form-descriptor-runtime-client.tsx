@@ -324,10 +324,7 @@ export function PhiFormDescriptorRuntimeClient({
    * about what submitting means -- the button shows the loading state of a submit somebody else
    * started, because there is only one submit to be in.
    */
-  const submitSlot = usePhiFormWidgetSubmit(
-    () => requestSubmit(),
-    labels?.["actions.submitLabel"],
-  );
+  const submitSlot = usePhiFormWidgetSubmit(() => requestSubmit());
 
   /*
    * What has been typed, kept for as long as the tab is open, where the form asks for it.
@@ -448,6 +445,7 @@ export function PhiFormDescriptorRuntimeClient({
         labels={labels}
         formConfig={widgetConfig?.formConfig}
         initialValues={record ?? configuredInitialValues}
+        submitOnEnter={widgetConfig?.submitOnEnter ?? false}
         onFormReady={(activeForm) => {
           formRef.current = activeForm;
         }}

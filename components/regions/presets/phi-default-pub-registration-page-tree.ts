@@ -106,7 +106,8 @@ export async function buildPhiDefaultPubRegistrationPageTree({
          */
         config: {
           formId: PHI_SHARED_FORM_IDS.registration,
-          submit: {},
+          submit: "inline",
+          submitOnEnter: true,
           formConfig: {
             // Localized here, where the locale is known: the consent link is a path on this Site.
             termsHref: localizeAreaPath(runtime.locale.current, "public", "/terms-and-conditions"),

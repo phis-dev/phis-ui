@@ -60,7 +60,6 @@ export async function buildPhiDefaultAppSecurityPageTree({
           nodeKey: "widgetPassword",
           formId: PHI_SHARED_FORM_IDS.profilePassword,
           label: labels.password,
-          submitLabel: passwordLabels.submitLabel,
         }],
       },
       {
@@ -78,7 +77,6 @@ export async function buildPhiDefaultAppSecurityPageTree({
           nodeKey: "widgetEmail",
           formId: PHI_SHARED_FORM_IDS.profileEmail,
           label: labels.email,
-          submitLabel: emailLabels.submitLabel,
         }],
       },
       {

@@ -13,6 +13,7 @@ import type {
  * validation rules and handlers the active Modules provide.
  */
 export {
+  PHI_FORM_DEFAULT_SUBMIT_LABEL,
   PHI_FORM_DESCRIPTOR_SCHEMA_VERSION,
   PHI_FORM_GRID_TRACKS,
   type PhiFormDescriptor,
@@ -25,6 +26,7 @@ export {
   type PhiFormOptionDescriptor,
   type PhiFormProviderKey,
   type PhiFormResponsiveGridRange,
+  type PhiFormSubmitDescriptor,
   type PhiFormSuccessDescriptor,
   type PhiFormTextDescriptor,
   type PhiFormValidationRuleDescriptor,

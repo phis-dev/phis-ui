@@ -142,6 +142,7 @@ async function loadLabels(
     locale: context.runtime.locale.current,
   });
   return flattenPhiFormLabels({
+    actions: { submitLabel: labels.submitLabel },
     defaultUserQuota: labels.fields.defaultUserQuota,
     defaultUserQuotaHint: labels.fields.defaultUserQuotaHint,
     defaultGroupQuota: labels.fields.defaultGroupQuota,

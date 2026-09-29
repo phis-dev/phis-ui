@@ -50,7 +50,6 @@ export async function buildPhiDefaultAdminSettingsPageTree({
           nodeKey: "widgetGeneralForm",
           formId: PHI_ADMIN_SETTINGS_FORM_IDS.general,
           label: labels.title,
-          submitLabel: labels.submitLabel,
           initialValues: {
             name: settings.name,
             hostname: settings.hostname,

@@ -53,6 +53,11 @@ export type PhiFormControlProps = {
   /** What the Widget was placed with, for text a field takes from its placement rather than its form. */
   formConfig?: Readonly<Record<string, unknown>>;
   initialValues?: Record<string, unknown>;
+  /**
+   * Whether Enter in a single-line field submits this form. The placement's answer, never assumed:
+   * a page with a search beside a form, or two forms, has more than one thing Enter could mean.
+   */
+  submitOnEnter: boolean;
   disabled?: boolean;
   readOnly?: boolean;
   conditionControllerStates?: Readonly<Record<string, Record<string, unknown>>>;
@@ -240,6 +245,7 @@ export const PhiFormControl = forwardRef<PhiFormControlHandle, PhiFormControlPro
   labels,
   formConfig,
   initialValues,
+  submitOnEnter,
   disabled = false,
   readOnly = false,
   conditionControllerStates = {},
@@ -481,7 +487,7 @@ export const PhiFormControl = forwardRef<PhiFormControlHandle, PhiFormControlPro
       onBlurCapture={onBlurCapture}
       onKeyDown={(event) => {
         const target = event.target as HTMLElement | null;
-        if (!target || !shouldPhiFormSubmitOnKeyDown({
+        if (!submitOnEnter || !target || !shouldPhiFormSubmitOnKeyDown({
           key: event.key,
           defaultPrevented: event.defaultPrevented,
           isComposing: event.nativeEvent.isComposing,

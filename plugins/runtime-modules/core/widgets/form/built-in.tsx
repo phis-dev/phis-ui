@@ -10,6 +10,8 @@ import { PhiRuntimeModuleRenderClientHost } from "../../../../../components/runt
 import { PhiRuntimeRenderClientType } from "../../../../../constants/runtime-render-client-types";
 import type { PhiFormId } from "../../../../../types/form-id";
 import type { PhiCmsFormWidgetConfig } from "./config";
+import { resolvePhiFormText } from "../../../../../components/forms/form-descriptor-contract";
+import { PHI_FORM_DEFAULT_SUBMIT_LABEL } from "../../../../../types/form-descriptor";
 import {
   readPhiRuntimeConditionValue,
   type PhiRuntimeFeatureState,
@@ -91,14 +93,26 @@ export async function PhiFormWidget({
   });
 
   /*
-   * Every form body is wrapped the same way. The submit and the ways out belong to the Widget, so no
-   * body may carry either: a body offers a way to submit, and this frame decides whether there is a
-   * button at all, what it says, and which column it and the links stand in.
+   * Every form body is wrapped the same way, and no body carries a submit or a way out: a body offers
+   * a way to submit. Whether a button is drawn is this placement's `submit`; what it says and which
+   * tracks it stands on are the descriptor's, resolved here where the form's labels already are.
    */
+  const submitDescriptor = resolvedForm.definition.descriptor.submit;
+  const submit = config?.submit === "inline"
+    ? {
+        label: resolvePhiFormText(
+          submitDescriptor?.label ?? PHI_FORM_DEFAULT_SUBMIT_LABEL,
+          labels,
+          config.formConfig,
+        ),
+        align: submitDescriptor?.align ?? "start",
+        ...(submitDescriptor?.control ? { control: submitDescriptor.control } : {}),
+      }
+    : null;
   const wrapFormUiProvider = (node: ReactNode) => {
     const framed = (
       <PhiFormWidgetFrame
-        submit={config?.submit ?? null}
+        submit={submit}
         card={config?.card ?? null}
         maxFormWidth={config?.maxFormWidth ?? null}
         links={resolvedLinks}

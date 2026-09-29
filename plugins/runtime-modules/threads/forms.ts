@@ -134,6 +134,7 @@ async function loadLabels(
     replyRequired: labels.replyRequired,
     replyThreadRequired: labels.replyThreadRequired,
     replyAttach: labels.replyAttachLabel,
+    replySend: labels.replySendLabel,
     /*
      * The upload field's own keys, which the descriptor cannot name.
      *
@@ -206,6 +207,8 @@ const PHI_THREADS_MESSAGE_FORM_DESCRIPTOR: PhiFormDescriptor = {
     },
   ],
   layout: { gap: { compact: "sm", medium: "base" } },
+  // At the end of the row, where a composer's send stands; drawn only where the placement says inline.
+  submit: { label: label("replySend", "Send"), align: "end" },
 };
 
 export const PHI_THREADS_RUNTIME_MODULE_FORMS = [

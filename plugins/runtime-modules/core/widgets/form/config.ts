@@ -14,26 +14,17 @@ import { PHI_LAYOUT } from "../../../../../theme/phi-tokens";
 import { PHI_BUILDER_RUNTIME_DATA_PROVIDER_KEYS } from "../../../builder/ids";
 
 /**
- * A submit the form carries itself, instead of a Button Widget beside it.
+ * Whether this placement draws the form's own submit.
  *
- * Optional, and never the only way in: a form is submitted by whoever holds its `submit` capability,
- * which is how an external Button, an Overlay footer or a toolbar drives one today. This adds a second
- * sender on the same channel, not a second path -- a form with its own submit still answers the signal,
- * and one that has none is unchanged.
+ * `inline` draws the button the descriptor describes (`submit`: what it says, where on the grid it
+ * stands). `external` draws none: the form is submitted by whoever holds its `submit` capability -- a
+ * Button Widget, an Overlay footer, a toolbar -- or by Enter where `submitOnEnter` allows it. Either way
+ * there is one path; the button is only one more sender on the same channel.
+ *
+ * The placement answers this and not the form, because the same form stands on a page of its own with
+ * a button under its fields and in a dialog whose footer carries the button.
  */
-export type PhiCmsFormWidgetSubmitConfig = {
-  /** What it says. The form's own label set decides where this is absent. */
-  label: string | null;
-  /**
-   * Where in the control column the button sits -- not where in the form.
-   *
-   * The submit stands on the same twenty-four tracks as the fields, in the span the inputs occupy, so
-   * `start` puts it under the first input rather than at the form's left edge and `center` centres it
-   * over the inputs rather than over label and input together. `start` is the default because that is
-   * where the eye already is when the last field has been filled in.
-   */
-  align: "start" | "center" | "end";
-};
+export type PhiCmsFormWidgetSubmitPlacement = "inline" | "external";
 
 /**
  * A way out of the form, standing where its submit stands.
@@ -107,7 +98,13 @@ export type PhiCmsFormWidgetCardConfig = {
 
 export type PhiCmsFormWidgetConfig = PhiCmsWidgetConfigBase & {
   formId: PhiFormId | null;
-  submit: PhiCmsFormWidgetSubmitConfig | null;
+  submit: PhiCmsFormWidgetSubmitPlacement;
+  /**
+   * Whether Enter in a single-line field submits. Off unless the placement says so: with a second form
+   * or a search on the same page, Enter has more than one thing it could mean, and only whoever put
+   * them there knows which one it should.
+   */
+  submitOnEnter: boolean;
   card: PhiCmsFormWidgetCardConfig | null;
   /**
    * How wide the form may get, measured where its fields stand rather than around the box.
@@ -167,8 +164,6 @@ export function parsePhiFormWidgetConfig(rawConfig: Record<string, unknown>): Ph
   const providerKey = typeof source.providerKey === "string" ? source.providerKey : "";
   const resourceKey = typeof source.resourceKey === "string" ? source.resourceKey.trim() : "";
 
-  const submit = readRecord(rawConfig.submit);
-  const submitAlign = submit.align;
   const card = readRecord(rawConfig.card);
   const cardPresentation =
     card.presentation === "card" || card.presentation === "panel" || card.presentation === "wash"
@@ -188,12 +183,8 @@ export function parsePhiFormWidgetConfig(rawConfig: Record<string, unknown>): Ph
   return {
     ...renderableBlockConfig,
     formId: isPhiFormId(normalizedFormId) ? normalizedFormId : null,
-    submit: rawConfig.submit == null ? null : {
-      label: typeof submit.label === "string" && submit.label.trim() ? submit.label.trim() : null,
-      align: submitAlign === "center" || submitAlign === "end"
-        ? submitAlign
-        : "start",
-    },
+    submit: rawConfig.submit === "inline" ? "inline" : "external",
+    submitOnEnter: rawConfig.submitOnEnter === true,
     /*
      * The house measure where the placement names none, and answered HERE as well as declared.
      *
@@ -351,12 +342,11 @@ export const PHI_FORM_WIDGET_DEFINITION = {
         providerKey: PHI_BUILDER_RUNTIME_DATA_PROVIDER_KEYS.forms,
       },
     },
-    { key: "submit.label", type: "string", label: "Submit Label" },
-    { key: "submit.align", type: "choice", label: "Submit Alignment", options: [
-      { value: "start", label: "Start" },
-      { value: "center", label: "Center" },
-      { value: "end", label: "End" },
+    { key: "submit", type: "choice", label: "Submit", options: [
+      { value: "inline", label: "Inline" },
+      { value: "external", label: "External" },
     ] },
+    { key: "submitOnEnter", type: "boolean", label: "Submit On Enter" },
     {
       key: "card.presentation",
       type: "choice",
@@ -424,6 +414,8 @@ export const PHI_FORM_WIDGET_DEFINITION = {
      */
     maxFormWidth: PHI_LAYOUT.contentMax,
     formId: null,
+    submit: "external",
+    submitOnEnter: false,
     links: [],
     formConfig: {},
     execution: { mode: "handler", phase: "submit" },

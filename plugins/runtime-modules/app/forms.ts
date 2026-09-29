@@ -192,6 +192,7 @@ async function loadNameLabels(
     successText: labels.feedback.successText,
     save: labels.submitLabel,
     saving: labels.submitLabel,
+    actions: { submitLabel: labels.submitLabel },
   });
 }
 

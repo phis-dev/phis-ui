@@ -95,11 +95,22 @@ type PhiFormDescriptor = {
   errors?: Readonly<Record<string, PhiFormTextDescriptor>>;   // keyed by the handler's error `code`
   persistDraft?: boolean;
   guard?: boolean;
+  submit?: {                    // what the Form's own submit looks like, where one is drawn
+    label?: PhiFormTextDescriptor;             // default `actions.submitLabel`, else "Submit"
+    align?: "start" | "center" | "end";        // default `start`
+    control?: PhiFormResponsiveGridRange;      // default the layout's control range
+  };
 };
 ```
 
-- A descriptor with `actions` or `presentation` is rejected. Submit, reset, cancel, and close are not
-  part of a descriptor.
+The descriptor and its parser live in `@phis/contracts/forms`; phis-server reads stored descriptors
+with the same parser.
+
+- A descriptor with `actions` or `presentation` is rejected. Reset, cancel, and close are not part of a
+  descriptor.
+- `submit` describes the Form's button: what it says and where on the Form's grid it stands. Whether it
+  is drawn is not the descriptor's to say -- the same Form stands on a Page with its button under the
+  fields and in a dialog whose footer carries the button. The Form Widget's `submit` decides that.
 - `success` is what the Form shows when a submit is accepted; `reset: true` returns the fields to their
   initial values, `complete: true` leaves only the success -- fields and the Widget's submit go, because
   the Form has done its one job (a confirmation link is spent by its first submit). Without `success`
@@ -363,7 +374,8 @@ the only way a Form is placed. There are no domain Form Widgets. Its config:
 | Field | Meaning |
 | --- | --- |
 | `formId` | The Form to render. |
-| `submit` | `{ label, align }` or absent. A submit button drawn by the Widget in the control column; `align` is `start` (default), `center`, or `end`. |
+| `submit` | `inline` or `external` (default). `inline` draws the button the descriptor's `submit` describes; `external` draws none, and the Form is submitted through its `submit` input or by Enter. |
+| `submitOnEnter` | Default `false`. Whether Enter in a single-line field submits. Off unless the placement says so, because a second Form or a search on the same page gives Enter more than one meaning. |
 | `card` | `{ presentation, title, padding }` or absent. The box the Widget draws around the Form, its submit and its links: `card` on a Page of its own, `panel` for the smaller inset of chrome, `wash` for a ground without a frame. Absent is no box, no ground and no inset. |
 | `feedback` | `{ mode, successText? }` or absent. Absent answers in place. `mode` is `message` (a transient message) or `notification`; `successText` is what a success says where the descriptor's `success` says nothing. Set, it moves the answer out of the Form rather than adding one. |
 | `links` | `[{ key, href, requiresFeature? }]`, drawn below the submit. The text is `actions.<key>Label` of the Form's label set; a link whose `requiresFeature` is not published by an active Module is left out. |
@@ -428,7 +440,7 @@ the only way a Form is placed. There are no domain Form Widgets. Its config:
 - `handler` mode submits through the Form controller and the [Relay](#relay). `signal` mode keeps the
   Form local: a valid submit emits `submitValues` with `{ values }` and `submitSuccess`, and calls no
   gateway. A signal-mode Form may have no `submitHandlerKey`.
-- The Widget-drawn submit is a second sender on the same submit path, not another path. Buttons outside
+- The Widget-drawn submit and Enter are senders on the same submit path, not other paths. Buttons outside
   the Form (a sibling Layout, an Overlay footer, a toolbar) reach the Widget through its `submit` and
   `reset` inputs. A Form-internal Button is only a field-local command and cannot submit, reset, or close.
   A Form does not detect whether it stands in an Overlay and adds nothing to Layout or Overlay chrome.

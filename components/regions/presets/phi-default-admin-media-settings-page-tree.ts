@@ -47,7 +47,6 @@ export async function buildPhiDefaultAdminMediaSettingsPageTree({
           nodeKey: "widgetMediaForm",
           formId: PHI_MEDIA_SETTINGS_FORM_IDS.general,
           label: labels.intro.title,
-          submitLabel: labels.submitLabel,
           initialValues: {
             defaultUserQuotaBytes: settings.defaultUserQuotaBytes,
             defaultGroupQuotaBytes: settings.defaultGroupQuotaBytes,

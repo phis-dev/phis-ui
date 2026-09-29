@@ -304,6 +304,7 @@ async function loadLabels(
     locale: context.runtime.locale.current,
   });
   return flattenPhiFormLabels({
+    actions: { submitLabel: labels.submitLabel },
     registrationMode: labels.policy.registrationMode,
     registrationModeDisabled: labels.policy.registrationModeDisabled,
     registrationModeInviteOnly: labels.policy.registrationModeInviteOnly,

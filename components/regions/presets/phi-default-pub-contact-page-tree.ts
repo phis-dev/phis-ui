@@ -106,7 +106,8 @@ export async function buildPhiDefaultPubContactPageTree({
          */
         config: {
           formId: PHI_SHARED_FORM_IDS.contact,
-          submit: {},
+          submit: "inline",
+          submitOnEnter: true,
         },
       }),
     ],

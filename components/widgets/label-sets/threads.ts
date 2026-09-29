@@ -78,7 +78,6 @@ const PHI_THREAD_PAGE_LABEL_SET = definePhiLabelSet({
      * its button says and what stands there while nothing is chosen are decisions of this arrangement,
      * and a Site that places the same Form elsewhere makes them again.
      */
-    composer_send_label: "Send",
     composer_no_thread_text: definePhiMessageLabel("Choose a conversation to write in."),
     /*
      * The listing is a Table, so what used to be a renderer's vocabulary is now column headings and
@@ -128,7 +127,6 @@ export async function getPhiThreadPageLabels(options: PhiGlobalTranslatorOptions
     openConversationLabel: labels.open_conversation_label,
     cancelLabel: labels.cancel_label,
     composerLabel: labels.composer_label,
-    composerSendLabel: labels.composer_send_label,
     composerNoThreadText: labels.composer_no_thread_text,
     columns: {
       subject: labels.column_subject,
@@ -208,6 +206,7 @@ const PHI_THREAD_FORM_LABEL_SET = definePhiLabelSet({
     reply_required: definePhiMessageLabel("Write something before you send it."),
     reply_thread_required: definePhiMessageLabel("Choose a conversation first."),
     reply_attach_label: "Attach a file",
+    reply_send_label: "Send",
     reply_attach_too_many: definePhiMessageLabel("No more files fit here."),
     reply_error_generic: definePhiMessageLabel("The file could not be attached."),
     reply_error_network: definePhiMessageLabel("The site could not be reached."),
@@ -238,6 +237,7 @@ export async function getPhiThreadFormLabels(options: PhiGlobalTranslatorOptions
     replyRequired: labels.reply_required,
     replyThreadRequired: labels.reply_thread_required,
     replyAttachLabel: labels.reply_attach_label,
+    replySendLabel: labels.reply_send_label,
     replyAttachTooMany: labels.reply_attach_too_many,
     replyErrorGeneric: labels.reply_error_generic,
     replyErrorNetwork: labels.reply_error_network,

@@ -186,7 +186,8 @@ export function buildPhiLoginNodes({
         config: {
           formId: PHI_SHARED_FORM_IDS.login,
           // Declared, unnamed: the Login's own label set says "Sign in", in the language it is read in.
-          submit: {},
+          submit: "inline",
+          submitOnEnter: true,
           /*
            * The page they were headed for travels with the submit, so the handler can answer with it.
            * A refused page sends them here as `/login?next=…`, and the hidden `next` field is where that
@@ -242,7 +243,8 @@ export function buildPhiLoginNodes({
         label: "login provider link confirmation",
         config: {
           formId: PHI_SHARED_FORM_IDS.providerLinkConfirmation,
-          submit: {},
+          submit: "inline",
+          submitOnEnter: true,
           execution: { mode: "handler", phase: "confirm" },
           visibleWhen: {
             source: "page",

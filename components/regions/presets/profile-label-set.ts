@@ -20,7 +20,6 @@ const PHI_PROFILE_PAGE_LABEL_SET = definePhiLabelSet({
     subscriptions: "Subscriptions",
     /** The switch's own subject, and the authoring name of the Form that holds it. */
     newsletter: "Newsletter",
-    save: "Save",
     /*
      * What a panel says when it saved and its Form has no wording of its own -- the language select
      * and the newsletter switch, which say nothing in place because there is nothing in place to say
@@ -39,7 +38,6 @@ export async function getPhiProfilePageLabels(options: PhiGlobalTranslatorOption
     appearance: labels.appearance,
     subscriptions: labels.subscriptions,
     newsletter: labels.newsletter,
-    save: labels.save,
     saved: labels.saved,
   };
 }

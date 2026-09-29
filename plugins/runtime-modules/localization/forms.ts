@@ -74,6 +74,7 @@ async function loadAdminLabels(context: Parameters<NonNullable<ReturnType<typeof
     availableLocalesLabel: labels.availableLocalesLabel,
     saveLabel: labels.saveLocalesLabel,
     savingLabel: labels.saveLocalesLabel,
+    actions: { submitLabel: labels.saveLocalesLabel },
     searchLabel: labels.searchPlaceholder,
     searchPlaceholder: labels.searchPlaceholder,
     languageLabel: labels.languageLabel,

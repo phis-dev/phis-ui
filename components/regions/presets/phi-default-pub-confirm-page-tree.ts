@@ -161,7 +161,8 @@ export async function buildPhiDefaultPubConfirmPageTree({
         label: "pub confirmation widget",
         config: {
           formId: PHI_SHARED_FORM_IDS.confirm,
-          submit: {},
+          submit: "inline",
+          submitOnEnter: true,
           formConfig: { initialValuesFromQuery: { token: "token" } },
           visibleWhen: previewIsPending,
         },

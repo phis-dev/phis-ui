@@ -101,6 +101,7 @@ async function loadLabels(
     supportEmail: labels.fields.supportEmail,
     supportEmailRequired: labels.fields.supportEmail,
     supportEmailInvalid: labels.feedback.errorInvalidSupportEmail,
+    actions: { submitLabel: labels.submitLabel },
   });
 }
 

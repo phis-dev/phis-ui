@@ -68,7 +68,6 @@ export async function buildPhiDefaultAdminAuthSettingsPageTree({
           nodeKey: "widgetPolicyForm",
           formId: PHI_AUTH_ADMIN_SETTINGS_FORM_IDS.policy,
           label: labels.sections.policy.title,
-          submitLabel: labels.submitLabel,
           initialValues: {
             registrationMode: settings.policy.registrationMode,
             existingAccountLinking: settings.policy.existingAccountLinking,
@@ -85,7 +84,6 @@ export async function buildPhiDefaultAdminAuthSettingsPageTree({
           nodeKey: "widgetPasswordForm",
           formId: PHI_AUTH_ADMIN_SETTINGS_FORM_IDS.passwordMethod,
           label: labels.sections.password.title,
-          submitLabel: labels.submitLabel,
           initialValues: {
             enabled: settings.passwordMethod.enabled,
             sortOrder: settings.passwordMethod.sortOrder,
@@ -101,7 +99,6 @@ export async function buildPhiDefaultAdminAuthSettingsPageTree({
           nodeKey: "widgetTotpForm",
           formId: PHI_AUTH_ADMIN_SETTINGS_FORM_IDS.totpPolicy,
           label: labels.sections.totp.title,
-          submitLabel: labels.submitLabel,
           initialValues: {
             required: settings.totpPolicy.required,
             enforcement: settings.totpPolicy.enforcement,

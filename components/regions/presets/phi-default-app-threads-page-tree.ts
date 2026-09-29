@@ -729,7 +729,7 @@ export async function buildPhiDefaultAppThreadsPageTree({
            */
           maxFormWidth: "100%",
           // Already translated, from this Page's own label set, so the Widget states it outright.
-          submit: { label: labels.composerSendLabel, align: "end" },
+          submit: "inline",
           /*
            * Out of sight until there is something to write into.
            *

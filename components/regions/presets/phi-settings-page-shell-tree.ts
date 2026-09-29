@@ -69,10 +69,10 @@ type PhiSettingsPageShellFormSectionBase = {
  * together with a Button. One control is the whole thought: flipping the switch, picking the
  * language -- the choice is the decision, and a Save beside it would only ask a second time.
  *
- * The Button is the Form Widget's own (`submit: { label }`), not a Button Widget in the slot below:
+ * The Button is the Form Widget's own (`submit: "inline"`), not a Button Widget in the slot below:
  * only the Widget knows where the form's label column ends, so only a submit it draws lines up under
- * the inputs. A Form itself carries no submit -- that is the contract in FORMS.md, and the reason the
- * label is stated here rather than in the descriptor.
+ * the inputs. What it says is the Form's -- its descriptor's `submit`, else its `actions.submitLabel`
+ * -- so the panel states only that it is drawn.
  *
  * Such a panel is still an ordinary Form -- same descriptor, same handler Provider, same gateway. What
  * differs is one route, which the shell states because only it knows the Form's address: the Form's
@@ -80,9 +80,9 @@ type PhiSettingsPageShellFormSectionBase = {
  * channel, the action and the value type it sends under, which is why no Widget needed a new ability
  * for this.
  */
-export type PhiSettingsPageShellFormSection =
-  | (PhiSettingsPageShellFormSectionBase & { submitLabel: string; submitOnChange?: never })
-  | (PhiSettingsPageShellFormSectionBase & { submitOnChange: true; submitLabel?: never });
+export type PhiSettingsPageShellFormSection = PhiSettingsPageShellFormSectionBase & {
+  submitOnChange?: true;
+};
 
 export type PhiSettingsPageShellSection =
   | PhiSettingsPageShellWidgetSection
@@ -339,8 +339,8 @@ export function buildPhiSettingsPageShellTree({
                   ...(section.initialValues ? { initialValues: section.initialValues } : {}),
                   ...section.formConfig,
                 },
-                // Already translated, from the page's own label set, so the Widget states it outright.
-                ...(section.submitOnChange ? {} : { submit: { label: section.submitLabel } }),
+                // What the button says is the Form's own `actions.submitLabel`; the panel draws it.
+                ...(section.submitOnChange ? {} : { submit: "inline", submitOnEnter: true }),
                 /*
                  * Every Settings panel reports what a save did, because nothing else here does: the
                  * panel may be collapsed, it may be one of six, and a switch has no success panel.

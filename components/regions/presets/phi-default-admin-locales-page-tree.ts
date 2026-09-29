@@ -112,7 +112,8 @@ export async function buildPhiDefaultAdminLocalesPageTree({
            * every width, which is what the offset in this grid used to guess at. Already translated,
            * from the page's own label set.
            */
-          submit: { label: widgetLabels.saveLocalesLabel },
+          submit: "inline",
+          submitOnEnter: true,
           /*
            * The quietest of the three boxes, because of what stands beside it.
            *

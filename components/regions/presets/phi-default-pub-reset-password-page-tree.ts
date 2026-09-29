@@ -134,7 +134,8 @@ export async function buildPhiDefaultPubResetPasswordPageTree({
         label: "pub reset password request widget",
         config: {
           formId: PHI_SHARED_FORM_IDS.resetPassword,
-          submit: {},
+          submit: "inline",
+          submitOnEnter: true,
           visibleWhen: withoutToken,
         },
       }),
@@ -150,7 +151,8 @@ export async function buildPhiDefaultPubResetPasswordPageTree({
         label: "pub reset password confirm widget",
         config: {
           formId: PHI_SHARED_FORM_IDS.resetPasswordConfirm,
-          submit: {},
+          submit: "inline",
+          submitOnEnter: true,
           execution: { mode: "handler", phase: "confirm" },
           formConfig: { initialValuesFromQuery: { token: "token" } },
           visibleWhen: withToken,
