@@ -277,6 +277,7 @@ export const PHI_CONFIRM_FORM_DESCRIPTOR = {
   success: {
     title: label("feedback.successTitle", "Confirmed"),
     text: label("feedback.successText", "Your registration has been confirmed."),
+    complete: true,
   },
 } as const satisfies PhiFormDescriptor;
 
@@ -361,6 +362,7 @@ export const PHI_RESET_PASSWORD_CONFIRM_FORM_DESCRIPTOR = {
   success: {
     title: label("feedback.successTitle", "Password updated"),
     text: label("feedback.successText", "You can now sign in with your new password."),
+    complete: true,
   },
 } as const satisfies PhiFormDescriptor;
 

@@ -421,6 +421,14 @@ export function PhiFormDescriptorRuntimeClient({
    * submit, it is a question about a field, and it belongs next to the field either way.
    */
   const answersInPlace = feedback == null;
+  /*
+   * A form that has done its one job shows only what happened. Its fields go, and so does the Widget's
+   * submit: the registration is withdrawn, which is what takes the button out of the frame.
+   */
+  const completed = succeeded && success?.complete === true;
+  useEffect(() => {
+    if (completed) submitSlot?.register(null);
+  }, [completed, submitSlot]);
   const content = loading ? <PhiSkeletonControl lines={4} withTitle /> : (
     <>
       {answersInPlace && error ? <PhiAlertControl level="error" showIcon title={error} /> : null}
@@ -432,6 +440,8 @@ export function PhiFormDescriptorRuntimeClient({
           description={success.text ? resolvePhiFormText(success.text, labels) : undefined}
         />
       ) : null}
+      {completed ? null : (
+        <>
       <PhiFormControl
         key={recordKey}
         descriptor={descriptor}
@@ -526,6 +536,8 @@ export function PhiFormDescriptorRuntimeClient({
         }}
       />
       <PhiFormWidgetSubmitOutlet />
+        </>
+      )}
     </>
   );
 

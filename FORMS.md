@@ -101,8 +101,10 @@ type PhiFormDescriptor = {
 - A descriptor with `actions` or `presentation` is rejected. Submit, reset, cancel, and close are not
   part of a descriptor.
 - `success` is what the Form shows when a submit is accepted; `reset: true` returns the fields to their
-  initial values. Without `success` the Form shows nothing of its own, which is right when a Controller
-  closes an Overlay or the page moves on.
+  initial values, `complete: true` leaves only the success -- fields and the Widget's submit go, because
+  the Form has done its one job (a confirmation link is spent by its first submit). Without `success`
+  the Form shows nothing of its own, which is right when a Controller closes an Overlay or the page
+  moves on.
 - `errors` is the counterpart of `success`: what the Form says when the handler refuses it, keyed by the
   `code` in the refusal's body. The wording is a label, so a visitor reads it in the Site's language; a
   code nothing maps falls back to the body's `error` line, which is English and written for a log. A

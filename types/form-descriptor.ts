@@ -154,6 +154,12 @@ export type PhiFormSuccessDescriptor = {
   text?: PhiFormTextDescriptor;
   /** Whether the fields go back to their initial values, ready for another entry. */
   reset?: boolean;
+  /**
+   * Whether the form has done its one job once it succeeds: the success stays, the fields and the
+   * Widget's submit go. A confirmation link is spent by its first submit, and a button left standing
+   * would only offer to spend it again.
+   */
+  complete?: boolean;
 };
 
 export type PhiFormDescriptor = {

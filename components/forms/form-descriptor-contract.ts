@@ -302,6 +302,7 @@ export function parsePhiFormDescriptor(value: unknown): PhiFormDescriptor {
             ? undefined
             : readTextDescriptor(value.success.text, "success.text"),
           reset: value.success.reset == null ? undefined : value.success.reset === true,
+          complete: value.success.complete == null ? undefined : value.success.complete === true,
         }
       : (() => { throw new Error("success must be an object."); })();
   const errors: PhiFormDescriptor["errors"] | undefined = value.errors == null
