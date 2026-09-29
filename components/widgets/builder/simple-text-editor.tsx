@@ -203,6 +203,16 @@ export function PhiSimpleTextWidgetEditor({
         onCancel={() => setEditedText(null)}
         inputStyle={{
           paddingInline: 0,
+          /*
+           * Stated here and not left to the size, because of when each of the two arrives.
+           *
+           * `size="small"` puts the room at zero through a class, and that class is in a stylesheet Ant
+           * Design injects while the page is already rendering. The text area measures itself for its
+           * height in between -- that is what `autoSize` does -- so it can measure a box with the
+           * ordinary room in it and then keep that height after the room is gone, which leaves the text
+           * at the top of a box too tall for it. An inline zero is there at the first paint.
+           */
+          paddingBlock: 0,
           fontSize: resolvedFontSize ?? "inherit",
           lineHeight: resolvedFontSize ? 1.6 : "inherit",
           fontWeight: config?.strong ? 600 : undefined,
