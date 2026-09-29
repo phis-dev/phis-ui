@@ -151,7 +151,6 @@ export function PhiSimpleTextWidgetEditor({
    * had already been taken back.
    */
   const [editedText, setEditedText] = useState<string | null>(null);
-  const [isFocused, setIsFocused] = useState(false);
   const draftText = editedText ?? text;
   const textDecoration = [
     config?.underline ? "underline" : null,
@@ -159,7 +158,6 @@ export function PhiSimpleTextWidgetEditor({
   ]
     .filter(Boolean)
     .join(" ");
-  const inputWidthCh = Math.max(draftText.length + 1, isFocused ? 12 : 2);
   const resolvedFontFamily = config?.code
     ? token.fontFamilyCode
     : resolvePhiWidgetFontFamily(config?.fontFamily, fonts, token);
@@ -185,11 +183,7 @@ export function PhiSimpleTextWidgetEditor({
         variant="borderless"
         placeholder={labels.text.placeholder}
         readOnly={!onChangeText}
-        onFocus={() => {
-          setIsFocused(true);
-          setEditedText(text);
-        }}
-        onBlur={() => setIsFocused(false)}
+        onFocus={() => setEditedText(text)}
         onChange={(nextText) => setEditedText(nextText)}
         onCommit={(committedText) => {
           setEditedText(null);
@@ -199,21 +193,21 @@ export function PhiSimpleTextWidgetEditor({
         }}
         onCancel={() => setEditedText(null)}
         inputStyle={{
-            borderBottom: "1px solid var(--ant-color-border, rgba(0, 0, 0, 0.15))",
-            borderRadius: 0,
-            paddingInline: 0,
-            paddingBlock: 4,
-            fontSize: resolvedFontSize ?? "inherit",
-            lineHeight: resolvedFontSize ? 1.6 : "inherit",
-            fontWeight: config?.strong ? 600 : undefined,
-            fontStyle: config?.italic ? "italic" : undefined,
-            textDecoration: textDecoration || undefined,
-            color: config?.color ?? undefined,
-            fontFamily: resolvedFontFamily,
+          borderBottom: "1px solid var(--ant-color-border, rgba(0, 0, 0, 0.15))",
+          borderRadius: 0,
+          paddingInline: 0,
+          paddingBlock: 4,
+          fontSize: resolvedFontSize ?? "inherit",
+          lineHeight: resolvedFontSize ? 1.6 : "inherit",
+          fontWeight: config?.strong ? 600 : undefined,
+          fontStyle: config?.italic ? "italic" : undefined,
+          textDecoration: textDecoration || undefined,
+          color: config?.color ?? undefined,
+          fontFamily: resolvedFontFamily,
           backgroundColor: config?.code ? "var(--ant-color-fill-secondary, rgba(0, 0, 0, 0.04))" : undefined,
         }}
+        fitContent
         style={{
-          width: `${inputWidthCh}ch`,
           minWidth: 0,
           flex: "0 0 auto",
           maxWidth: "100%",

@@ -23,6 +23,15 @@ export type PhiInlineTextEditorProps = {
   inputStyle?: CSSProperties;
   /** Marks the editor as a collapsible's title, which the collapsible checks before it toggles. */
   collapsibleTitleControl?: boolean;
+  /**
+   * The field is as wide as the text in it, and grows with it while it is typed.
+   *
+   * A character count cannot say how wide text is: `ch` is the advance of a zero, and a proportional
+   * font spends more on a capital and less on an `i`, so a counted width cuts the tail off the very text
+   * it was counted from -- and a field that scrolls shows that as a word ending mid-letter. The width
+   * comes from the text itself instead.
+   */
+  fitContent?: boolean;
 };
 
 function stopAtEditor(event: SyntheticEvent) {
@@ -53,17 +62,47 @@ export function PhiInlineTextEditor({
   style,
   inputStyle,
   collapsibleTitleControl,
+  fitContent,
 }: PhiInlineTextEditorProps) {
   const cancelPendingRef = useRef(false);
 
   return (
     <span
       data-phi-collapsible-title-control={collapsibleTitleControl ? "true" : undefined}
-      style={{ display: "inline-block", minWidth: 0, maxWidth: "100%", ...style }}
+      style={{
+        display: "inline-block",
+        minWidth: 0,
+        maxWidth: "100%",
+        ...style,
+        // The copy below carries the width and the field is laid over it, which needs a box to lie in.
+        ...(fitContent ? { position: "relative" } : null),
+      }}
       onMouseDown={stopAtEditor}
       onPointerDown={stopAtEditor}
       onClick={stopAtEditor}
     >
+      {fitContent ? (
+        /*
+         * The same text in the same styles, hidden: the width of the field, written out.
+         *
+         * `pre` so that spaces count here as they count in the field, and `overflow: hidden` because
+         * where the room runs out this copy is the one thing still as wide as the whole text -- its box
+         * is clamped, the text in it is not, and an ancestor would find something to scroll. One space
+         * when there is nothing to show, so an empty field keeps a line for the caret to stand on.
+         */
+        <span
+          aria-hidden="true"
+          style={{
+            ...inputStyle,
+            display: "block",
+            whiteSpace: "pre",
+            visibility: "hidden",
+            overflow: "hidden",
+          }}
+        >
+          {value || placeholder || " "}
+        </span>
+      ) : null}
       <PhiTextControl
         value={value}
         ariaLabel={ariaLabel}
@@ -72,7 +111,9 @@ export function PhiInlineTextEditor({
         readOnly={readOnly}
         variant={variant}
         allowClear={false}
-        style={{ width: "100%" }}
+        style={fitContent
+          ? { position: "absolute", top: 0, left: 0, width: "100%", height: "100%" }
+          : { width: "100%" }}
         inputStyle={inputStyle}
         onChange={(nextValue) => onChange(nextValue ?? "")}
         onFocus={onFocus}
