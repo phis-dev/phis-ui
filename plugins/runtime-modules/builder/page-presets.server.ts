@@ -20,8 +20,10 @@ import { PHI_BUILDER_PAGE_REGION_KEYS } from "./region-keys";
 import {
   PHI_BUILDER_AREA_SEARCH_PARAM,
   PHI_BUILDER_PAGE_SEARCH_PARAM,
+  PHI_BUILDER_RUNTIME_MODULES_SEARCH_PARAM,
   normalizePhiBuilderAreaSearchParam,
   normalizePhiBuilderPageSearchParam,
+  normalizePhiBuilderRuntimeModuleIdsSearchParam,
 } from "../../../helpers/cms-scope-search-params";
 import {
   compilePhiCmsActiveRouteTable,
@@ -88,7 +90,23 @@ const resolvePhiBuilderAreaRouteTable = cache(async function resolvePhiBuilderAr
     buildPhiBuilderRuntimeModulesConfigForArea(runtime, area, runtimeModuleCatalog),
     buildPhiBuilderAreaLandingSelection(runtime, area, runtimeModuleCatalog),
   ]);
-  const activeModuleKeys = new Set(modulesConfig.moduleIds);
+  /*
+   * The Modules the Builder is drafting for this Area, when it names them, rather than the saved ones.
+   *
+   * The canvas renders the drafted set (pages-workspace.tsx), and so does the Page tree the Client
+   * picks from. Compiled from the saved set instead, a Page only a freshly switched-on Module brings
+   * -- `/home` of a Site Module -- was a stale address here: the scope fell back to the Area root
+   * while the Client kept the Page it had asked for, and the canvas waited for a scope that never came.
+   */
+  const searchParams = runtime.request?.searchParams ?? {};
+  const draftedArea =
+    normalizePhiBuilderAreaSearchParam(searchParams[PHI_BUILDER_AREA_SEARCH_PARAM]) ?? "public";
+  const draftedModuleIds = draftedArea === area
+    ? normalizePhiBuilderRuntimeModuleIdsSearchParam(
+      searchParams[PHI_BUILDER_RUNTIME_MODULES_SEARCH_PARAM],
+    )
+    : null;
+  const activeModuleKeys = new Set(draftedModuleIds ?? modulesConfig.moduleIds);
   if (!runtimeModuleCatalog.platformModuleId) {
     throw new Error("Builder runtime catalog has no Platform contribution.");
   }
