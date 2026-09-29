@@ -25,9 +25,8 @@ export type PhiCmsOverlayMaskConfig = {
 };
 
 export type PhiCmsOverlaySize = string | number;
-export type PhiCmsOverlayResponsiveSize = PhiResponsiveValue<PhiCmsOverlaySize> & {
-  compact: PhiCmsOverlaySize;
-};
+/** A Modal width per responsive mode; unset modes cascade from the nearest smaller one that is set. */
+export type PhiCmsOverlayResponsiveSize = PhiResponsiveValue<PhiCmsOverlaySize>;
 
 export const PHI_OVERLAY_CLOSE_SOURCES = ["close-button", "mask", "escape"] as const;
 export type PhiOverlayCloseSource = (typeof PHI_OVERLAY_CLOSE_SOURCES)[number];
@@ -88,13 +87,14 @@ function readSize(value: unknown) {
 function readResponsiveSize(value: unknown): PhiCmsOverlayResponsiveSize | undefined {
   if (!value || typeof value !== "object" || Array.isArray(value)) return undefined;
   const record = value as Record<string, unknown>;
-  const compact = readSize(record.compact);
-  if (compact === undefined) return undefined;
-  return {
-    compact,
+  const size = {
+    compact: readSize(record.compact),
     medium: readSize(record.medium),
     wide: readSize(record.wide),
   };
+  return size.compact === undefined && size.medium === undefined && size.wide === undefined
+    ? undefined
+    : size;
 }
 
 function readMask(value: unknown): PhiCmsOverlayMaskConfig {

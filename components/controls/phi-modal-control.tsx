@@ -4,25 +4,52 @@ import { useEffect, useRef, useSyncExternalStore } from "react";
 import { Modal } from "antd";
 
 import { PHI_CONTROL, PHI_SPACE } from "../../theme/antd-css-var-contract";
-import type { PhiCmsOverlaySize } from "../../types/cms-overlay";
 import type { PhiControlSize } from "../../types/control";
 import type { PhiRenderableBlockSize } from "../../types/renderable-block";
 import { resolvePhiMotionDurationMs } from "../../helpers/motion";
 import { usePhiConfig } from "../root/phi-config-provider";
 import {
+  PHI_MODAL_RESPONSIVE_MIN_WIDTH,
   PHI_OVERLAY_DEFAULT_MASK,
+  resolvePhiModalResponsiveMode,
+  resolvePhiModalWidth,
   resolvePhiOverlayDismissSource,
   resolvePhiOverlayMaskPresentation,
+  type PhiModalResponsiveMode,
+  type PhiModalWidth,
   type PhiOverlayControlCommonProps,
 } from "./phi-overlay-control-contract";
 
 const subscribeHydration = () => () => undefined;
 
+const PHI_MODAL_MODE_QUERIES = [
+  `(min-width: ${PHI_MODAL_RESPONSIVE_MIN_WIDTH.medium}px)`,
+  `(min-width: ${PHI_MODAL_RESPONSIVE_MIN_WIDTH.wide}px)`,
+];
+
+/** The viewport crosses one of the Modal's two thresholds far less often than it resizes. */
+function subscribeModalMode(onChange: () => void) {
+  const queries = PHI_MODAL_MODE_QUERIES.map((query) => window.matchMedia(query));
+  for (const query of queries) query.addEventListener("change", onChange);
+  return () => {
+    for (const query of queries) query.removeEventListener("change", onChange);
+  };
+}
+
+function readModalMode(): PhiModalResponsiveMode {
+  return resolvePhiModalResponsiveMode(window.innerWidth);
+}
+
+function readServerModalMode(): PhiModalResponsiveMode {
+  return "compact";
+}
+
 export type PhiModalControlProps = PhiOverlayControlCommonProps & {
   centered?: boolean;
   controlSize?: PhiControlSize;
   size?: PhiRenderableBlockSize | null;
-  width?: PhiCmsOverlaySize | Partial<Record<"xs" | "md" | "lg", PhiCmsOverlaySize>>;
+  /** One width, or one per responsive mode on the container scale (`PHI_MODAL_RESPONSIVE_MIN_WIDTH`). */
+  width?: PhiModalWidth;
   rootClassName?: string;
 };
 
@@ -56,6 +83,7 @@ export function PhiModalControl({
 }: PhiModalControlProps) {
   const { token } = usePhiConfig();
   const hydrated = useSyncExternalStore(subscribeHydration, () => true, () => false);
+  const mode = useSyncExternalStore(subscribeModalMode, readModalMode, readServerModalMode);
   const bodyMeasureRef = useRef<HTMLDivElement | null>(null);
   const bodyContentRef = useRef<HTMLDivElement | null>(null);
   const resizeAnimationRef = useRef<Animation | null>(null);
@@ -129,9 +157,13 @@ export function PhiModalControl({
       )}
     </div>
   );
-  const resolvedWidth = size?.width ?? width ?? (controlSize == null
-    ? undefined
-    : PHI_MODAL_WIDTH_BY_CONTROL_SIZE[controlSize]);
+  const resolvedWidth = size?.width ?? resolvePhiModalWidth(
+    width,
+    controlSize == null ? undefined : PHI_MODAL_WIDTH_BY_CONTROL_SIZE[controlSize],
+    mode,
+  );
+  // The wrapper covers the viewport; letting the pointer through means opening it, not just the mask.
+  const passesOutsidePointer = !resolvedMask.capturesOutsidePointer;
 
   return (
     <Modal
@@ -143,7 +175,7 @@ export function PhiModalControl({
       destroyOnHidden={mountPolicy === "remount"}
       forceRender={hydrated && mountPolicy === "eager"}
       centered={centered}
-      width={resolvedWidth as PhiCmsOverlaySize | Partial<Record<"xs" | "md" | "lg", PhiCmsOverlaySize>> | undefined}
+      width={resolvedWidth}
       style={{
         maxWidth: `calc(100vw - ${PHI_SPACE.base} - ${PHI_SPACE.base})`,
         transition: `width ${token.motionDurationMid} ${token.motionEaseInOut}`,
@@ -153,7 +185,9 @@ export function PhiModalControl({
       focusable={{ trap: true, focusTriggerAfterClose: true }}
       styles={{
         mask: resolvedMask.maskStyle,
+        ...(passesOutsidePointer ? { wrapper: { pointerEvents: "none" as const } } : null),
         container: {
+          ...(passesOutsidePointer ? { pointerEvents: "auto" as const } : null),
           display: "flex",
           flexDirection: "column",
           gap: 0,

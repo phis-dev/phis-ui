@@ -192,6 +192,7 @@ assert.deepEqual(resolvePhiOverlayMaskPresentation({
   allowOutsideInteraction: false,
   closable: false,
 }), {
+  capturesOutsidePointer: true,
   adapterMask: { enabled: true, blur: false, closable: false },
   maskStyle: {
     background: "transparent",
@@ -213,6 +214,7 @@ assert.deepEqual(resolvePhiOverlayMaskPresentation({
   allowOutsideInteraction: true,
   closable: true,
 }), {
+  capturesOutsidePointer: true,
   adapterMask: { enabled: true, blur: true, closable: true },
   maskStyle: {},
 });

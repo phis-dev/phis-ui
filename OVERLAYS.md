@@ -222,6 +222,13 @@ viewport with one `base` spacing token on both inline sides, including below Ant
 breakpoint. Presets do not persist Ant Design breakpoint names or reproduce responsive Modal sizing
 through Body Layout widths.
 
+A Modal `width` is one length or a responsive value `{ compact?, medium?, wide? }`. The modes come off
+the container scale, not Ant Design's device breakpoints: `medium` from 377px and `wide` from 610px of
+available viewport width (`PHI_MODAL_RESPONSIVE_MIN_WIDTH`, the same pair the Form switches at). Any
+subset may be stated; an unset mode cascades from the nearest smaller one that is set, and a mode below
+every stated one takes the `controlSize` width (or the Modal default when there is none). A runtime
+`size.width` overrides it at every mode.
+
 Every Modal exposes the generic `controlSize` listen capability. A connected listen route uses `action: "change"`,
 `valueType: "string"`, and accepts only the existing `PhiControlSize` values `small`, `medium`, or
 `large`. A valid signal changes only the mounted Modal's transient presentation; it does not mutate the
@@ -277,7 +284,9 @@ config. Theme/Core owns those values and both Overlay Controls use one shared ad
 
 A closable outside action is always intercepted so the Overlay can close; the same pointer action must
 not also activate Canvas, navigation, or another control underneath it. The effective capture rule is
-`!allowOutsideInteraction || closable`. This derived runtime rule is not another persisted field.
+`!allowOutsideInteraction || closable`. This derived runtime rule is not another persisted field. Where
+the rule lets the pointer through, it passes every layer the Overlay puts over the page: a Modal's
+viewport-covering wrapper is opened along with its mask, and only the Modal surface itself takes input.
 
 Close behavior continues through `closeMode`: an immediate Overlay closes directly, while a request-mode
 Overlay emits its normal correlated `closeRequest`. Mask configuration never bypasses that transaction.

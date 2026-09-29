@@ -8,10 +8,8 @@ import { shouldPhiCmsContentStayMounted } from "../../types/cms-mount-policy";
 import {
   parsePhiCmsOverlayConfig,
   type PhiOverlayCloseSource,
-  type PhiCmsOverlayResponsiveSize,
   type PhiCmsOverlayType,
 } from "../../types/cms-overlay";
-import { resolvePhiResponsiveValue } from "../../types/responsive";
 import { readPhiControlSize, type PhiControlSize } from "../../types/control";
 import { readPhiDimensionValue } from "../../types/dimension";
 import type { PhiRenderableBlockSize } from "../../types/renderable-block";
@@ -63,17 +61,6 @@ function matchesRoute(signal: PhiSignal, route: PhiSignalRoute) {
     route.action === signal.action &&
     route.valueType === signal.valueType &&
     route.valueSchema === signal.valueSchema;
-}
-
-function resolveModalWidth(width: ReturnType<typeof parsePhiCmsOverlayConfig>["width"]) {
-  if (width == null || typeof width !== "object") return width;
-  const responsive = width as PhiCmsOverlayResponsiveSize;
-  const resolved = resolvePhiResponsiveValue(responsive, {
-    compact: responsive.compact,
-    medium: responsive.compact,
-    wide: responsive.compact,
-  });
-  return { xs: resolved.compact, md: resolved.medium, lg: resolved.wide };
 }
 
 export function PhiOverlayContainerClient({
@@ -293,7 +280,7 @@ export function PhiOverlayContainerClient({
       centered={config.centered}
       controlSize={runtimeControlSize ?? config.controlSize}
       size={runtimeSize}
-      width={resolveModalWidth(config.width)}
+      width={config.width}
       containerStyle={surfaceStyle}
       onDismiss={requestClose}
     />
