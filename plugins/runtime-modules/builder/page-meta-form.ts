@@ -125,10 +125,6 @@ const formAny = (valuePath: string, values: readonly string[]) => ({
   conditions: values.map((value) => formEquals(valuePath, value)),
 } as const);
 
-const formLayout = {
-  gap: { compact: "sm", medium: "sm", wide: "sm" },
-} as const;
-
 const fullWidthPlacement = PHI_FORM_STACKED_FULL;
 
 const compoundEditor = (
@@ -173,7 +169,6 @@ const effectsDescriptors = {
       config: { min: 0, max: 100, step: 1, precision: 0, tooltipSuffix: "%", showInput: true },
       placement: fullWidthPlacement,
     }]),
-    layout: formLayout,
   },
   transitions: {
     schemaVersion: 1,
@@ -347,7 +342,6 @@ const effectsDescriptors = {
         },
       },
     ]),
-    layout: formLayout,
   },
   viewport: {
     schemaVersion: 1,
@@ -469,7 +463,6 @@ const effectsDescriptors = {
         },
       },
     ]),
-    layout: formLayout,
   },
 } as const satisfies Record<(typeof PHI_BUILDER_EFFECTS_SECTIONS)[number], PhiFormDescriptor>;
 
