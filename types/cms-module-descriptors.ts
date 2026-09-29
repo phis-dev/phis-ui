@@ -166,9 +166,9 @@ export type PhiCmsNavigationLabel = {
  * for what a person works with and wrong for the one entry they visit to change something. "last" puts
  * it after everything contributed, wherever the Area happens to declare it.
  *
- * Only an Area's own entry may say it. A contribution orders itself with `before` and `after` against
- * an exported anchor, and an entry standing last is no anchor: everything is before it by definition,
- * so naming it would say nothing that its own standing does not already say.
+ * Only an Area's own entry may say it. A contribution is placed by one of the surface's anchors, or
+ * with `before` and `after` against an exported item; the `end` anchor is the one place behind an
+ * entry standing last.
  */
 export type PhiCmsNavigationItemStanding = "last";
 
@@ -200,11 +200,45 @@ export type PhiCmsNavigationBaseItemDescriptor = {
   children?: readonly PhiCmsNavigationBaseItemDescriptor[];
 };
 
+/**
+ * A role a Module places its entry by, instead of naming somebody else's item.
+ *
+ * - `start`: the top of the surface, ahead of the Area's own entries.
+ * - `main`: the body, after the Area's own leading entries and ahead of those that stand last.
+ * - `settings`: inside the Area's Settings container, after the Area's own Settings pages.
+ * - `end`: the very bottom, behind everything, the entries standing last included.
+ *
+ * The role is the Module's word and the place is the Area's: each surface states what its roles mean
+ * (`PhiCmsNavigationSurfaceDescriptor.anchors`), so a Dashboard says "start" in every Area and every
+ * Area decides where that is. A Module cannot say "after Groups" this way, and that is the point -- two
+ * Modules that do not know each other have no order to agree on, and one naming the other's item would
+ * be a promise nobody made.
+ */
+export type PhiCmsNavigationAnchor = "start" | "main" | "settings" | "end";
+
+/**
+ * What an Area means by one of its anchors: a container, and where among its entries.
+ *
+ * `leading` goes ahead of the container's own entries, `body` behind them and ahead of any that stand
+ * last, `trailing` behind every entry the container ends up with. Entries sharing a place are ordered as
+ * every unanchored contribution is, by `ownerModuleId`, `presetKey` and `itemKey`.
+ */
+export type PhiCmsNavigationAnchorPlacement = {
+  /** The Area's own container the entries go into, or null for the surface itself. */
+  parentItemKey: string | null;
+  position: "leading" | "body" | "trailing";
+};
+
 export type PhiCmsNavigationSurfaceDescriptor = {
   navKey: `${PhiCmsAreaKey}:${string}`;
   label: PhiCmsNavigationLabel;
   items: readonly PhiCmsNavigationBaseItemDescriptor[];
   exportedItemKeys?: readonly string[];
+  /**
+   * The anchors this surface offers. Every Area sidebar declares the ones it has a place for; a
+   * surface that declares none can still be reached by exported item keys.
+   */
+  anchors?: Partial<Record<PhiCmsNavigationAnchor, PhiCmsNavigationAnchorPlacement>>;
 };
 
 export type PhiCmsNavigationInjectionItemDescriptor = {
@@ -224,13 +258,40 @@ export type PhiCmsNavigationInjectionItemDescriptor = {
   children?: readonly PhiCmsNavigationInjectionItemDescriptor[];
 };
 
-export type PhiCmsNavigationInjectionDescriptor = {
+/**
+ * An entry a Module places by role: the surface's `anchors` say where the role is.
+ *
+ * This is how a first-party Module places anything in an Area sidebar. It names no item of anybody
+ * else's, so an Area can rearrange its own entries without breaking a Module that never knew them.
+ */
+export type PhiCmsNavigationAnchoredInjectionDescriptor = {
   navKey: `${PhiCmsAreaKey}:${string}`;
+  anchor: PhiCmsNavigationAnchor;
+  parentItemKey?: never;
+  before?: never;
+  after?: never;
+  item: PhiCmsNavigationInjectionItemDescriptor;
+};
+
+/**
+ * An entry a Module places by item key: under `parentItemKey`, `before` or `after` an item the surface
+ * exports or one the Module injects itself.
+ *
+ * Kept because Modules outside this package are written against it, and because a surface that
+ * declares no anchors -- the account menu, the Public header -- has nothing else to offer.
+ */
+export type PhiCmsNavigationKeyedInjectionDescriptor = {
+  navKey: `${PhiCmsAreaKey}:${string}`;
+  anchor?: never;
   parentItemKey: string | null;
   before?: string;
   after?: string;
   item: PhiCmsNavigationInjectionItemDescriptor;
 };
+
+export type PhiCmsNavigationInjectionDescriptor =
+  | PhiCmsNavigationAnchoredInjectionDescriptor
+  | PhiCmsNavigationKeyedInjectionDescriptor;
 
 export type PhiCmsResolvedNavigationTarget =
   | (PhiCmsPresetIdentity & {

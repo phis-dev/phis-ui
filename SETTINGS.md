@@ -66,16 +66,19 @@ regions and header slot pages) remounts on navigation, so any Settings navigatio
 re-renders visibly on every switch. Settings navigation must therefore stay in the persistent shell.
 
 - The Settings container is a container item, not a link, and has no route behind it.
-- It stands after every entry Modules contribute, by declaring `standing: "last"` on the surface item.
-  An Area's own entries otherwise precede all contributed ones, which would put the one entry a person
-  visits to change something above everything they came to work with -- and would send an Area root
-  that forwards to the first visible entry into the Settings. It stays an ordinary exported anchor:
-  a contribution placed `before` it stands ahead of everything held back to the end, and one placed
-  `after` it ends the surface.
+- It stands after every entry Modules contribute to the sidebar body, by declaring `standing: "last"`
+  on the surface item. An Area's own entries otherwise precede all contributed ones, which would put the
+  one entry a person visits to change something above everything they came to work with -- and would
+  send an Area root that forwards to the first visible entry into the Settings. Only an entry at the
+  sidebar's `end` anchor stands behind it. It stays an exported item for Modules that still place
+  themselves by key: one placed `before` it stands ahead of everything held back to the end, and one
+  placed `after` it stands behind the container and ahead of `end`.
 - The base Area Module's General page (section 5) is declared statically as the container's first
-  child by the Area definition. All other Modules contribute their entries through the mount's
-  navigation injection, ordered after the static items. Ordering is owned by the surface declaration
-  and the injection contract; independent Modules never coordinate order among themselves.
+  child by the Area definition. Every other Module reaches the container through the sidebar's
+  `settings` anchor together with the `settings` mount -- `buildPhiSidebarRoutePresetDescriptor` with
+  `anchor: "settings"` states both -- and is ordered after the static items. Ordering is owned by the
+  surface declaration and the injection contract; independent Modules never coordinate order among
+  themselves.
 - Entries are access-filtered per viewer with the route's access policy: a viewer who cannot reach a
   Settings route does not see its entry.
 - Navigation overlays may reorder, reparent, or tombstone presentation items without changing effective

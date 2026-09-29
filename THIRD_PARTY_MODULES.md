@@ -910,9 +910,16 @@ first-party Module and refuses an unknown one. A Module package composes its own
 `buildPhiCmsWidgetNamespacedTypeKey`; the namespaced type is what the Server manifest and the Render
 Client manifest carry. The authoring editor is built from Controls in `@phis/ui/controls`.
 
-**Navigation.** An injection that names no anchor lands at the end of its surface, ordered by
-`ownerModuleId`, `presetKey`, and `itemKey`. `before`, `after`, and `parentItemKey` must point at an item
-the surface exports through `exportedItemKeys` or at one the Module injects itself.
+**Navigation.** Place a sidebar entry by role, not by somebody's item key: `anchor: "start"` (top of the
+sidebar), `"main"` (the body, ahead of Settings), `"settings"` (inside the Area's Settings container;
+mount the route with `mount: { mountKey: "settings" }`), or `"end"` (the very bottom). Each Area decides
+where its anchors are, and one it does not declare -- `settings` in an Area without a Settings container
+-- is refused. The entry is `{ navKey: "<area>:sidebar", anchor, item }`, with no `parentItemKey`.
+Entries sharing an anchor, and an injection that names neither an anchor nor an item, are ordered by
+`ownerModuleId`, `presetKey`, and `itemKey`; the Site reorders from there.
+The older keyed form still compiles: `before`, `after`, and `parentItemKey` must point at an item the
+surface exports through `exportedItemKeys` or at one the Module injects itself, and are the only way
+into a surface without anchors, such as `<area>:account`.
 
 ## 8b. How the package is built
 

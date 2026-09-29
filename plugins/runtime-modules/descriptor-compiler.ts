@@ -26,6 +26,8 @@ import type {
   PhiCmsAreaShellPresetDescriptor,
   PhiCmsCompiledDescriptorCatalog,
   PhiCmsCompiledRoutePattern,
+  PhiCmsNavigationAnchor,
+  PhiCmsNavigationAnchorPlacement,
   PhiCmsNavigationBaseItemDescriptor,
   PhiCmsNavigationInjectionItemDescriptor,
   PhiCmsNavigationInjectionDescriptor,
@@ -77,6 +79,17 @@ import {
 const PHI_CMS_REGION_TYPE_VALUES = new Set<number>(Object.values(PhiCmsRegionType));
 const PHI_ROUTE_PARAMETER_PATTERN = /^:[A-Za-z][A-Za-z0-9_]*$/;
 const PHI_ROUTE_MOUNT_KEY_PATTERN = /^[a-z][a-z0-9-]*$/;
+const PHI_NAVIGATION_ANCHORS = new Set<string>([
+  "start",
+  "main",
+  "settings",
+  "end",
+] satisfies readonly PhiCmsNavigationAnchor[]);
+const PHI_NAVIGATION_ANCHOR_POSITIONS = new Set<string>([
+  "leading",
+  "body",
+  "trailing",
+] satisfies readonly PhiCmsNavigationAnchorPlacement["position"][]);
 
 function normalizeRequiredKey(value: string, label: string) {
   const normalized = value.trim();
@@ -311,6 +324,25 @@ function assertAreaDefinitions(
           throw new Error(`${surface.navKey}: duplicate exported item "${itemKey}".`);
         }
         exportedItemKeys.add(itemKey);
+      }
+      for (const [anchor, placement] of Object.entries(surface.anchors ?? {})) {
+        if (!PHI_NAVIGATION_ANCHORS.has(anchor)) {
+          throw new Error(`${surface.navKey}: unknown navigation anchor "${anchor}".`);
+        }
+        if (!placement || !PHI_NAVIGATION_ANCHOR_POSITIONS.has(placement.position)) {
+          throw new Error(`${surface.navKey}: navigation anchor "${anchor}" has no valid position.`);
+        }
+        if (placement.parentItemKey === null) {
+          continue;
+        }
+        // Only a container of the Area's own: an entry that goes somewhere has no inside to put one in.
+        const parent = findNavigationItemDescriptor(surface.items, placement.parentItemKey);
+        if (!parent || parent.routePresetKey || parent.overlayPresetKey || parent.signalRoutes) {
+          throw new Error(
+            `${surface.navKey}: navigation anchor "${anchor}" parent ` +
+            `"${placement.parentItemKey}" must be a navigation container of the surface.`,
+          );
+        }
       }
     }
     const routeMountKeys = new Set<string>();
@@ -700,6 +732,26 @@ export function compilePhiCmsDescriptorCatalog({
           `${contributionLabel}: navigation injection cannot set before and after.`,
         );
       }
+      if (injection.anchor !== undefined) {
+        // The type says so already; a package compiled against another copy of it may not have asked.
+        const { parentItemKey, before, after } = injection as {
+          parentItemKey?: unknown;
+          before?: unknown;
+          after?: unknown;
+        };
+        if (parentItemKey !== undefined || before !== undefined || after !== undefined) {
+          throw new Error(
+            `${contributionLabel}: navigation anchor "${injection.anchor}" cannot be combined with ` +
+            "parentItemKey, before or after.",
+          );
+        }
+        if (!surface.anchors?.[injection.anchor]) {
+          throw new Error(
+            `${contributionLabel}: navigation surface "${injection.navKey}" declares no ` +
+            `anchor "${injection.anchor}".`,
+          );
+        }
+      }
       // An injection without an anchor is allowed and lands at the end of its surface, ordered by
       // `${ownerModuleId}\u001f${presetKey}\u001f${itemKey}` -- deterministic, and not dependent on the
       // order Modules happened to be composed in. Requiring an anchor here would have meant a Module can
@@ -1012,6 +1064,8 @@ type ResolvedNavigationNode = {
     /** Absent for a Module-level contribution, which has no Page to come from. */
     route: PhiCmsRoutePresetDescriptor | null;
     sortKey: string;
+    /** Where the surface put the entry's anchor; null for an entry placed by item key. */
+    position: PhiCmsNavigationAnchorPlacement["position"] | null;
   } | null;
 };
 
@@ -1097,7 +1151,7 @@ function buildResolvedNavigationNode(
       children: [],
     },
     definitionItemKey: descriptor.itemKey,
-    // Only an Area's own entry carries it; a contribution orders itself with `before`/`after`.
+    // Only an Area's own entry carries it; a contribution is placed by its anchor or `before`/`after`.
     standsLast: "standing" in descriptor && descriptor.standing === "last",
     // An item that named a route and got nothing back. A container never is one: it named nothing.
     isUnrouted: Boolean(descriptor.routePresetKey) && !target,
@@ -1119,11 +1173,20 @@ function orderNavigationSiblings(
    * that stands last is exported like any other and Modules do anchor against it. What changes is
    * only where that lands, which the pass below says.
    */
-  const trailing = intrinsic.filter((node) => node.standsLast);
-  const ordered = intrinsic.filter((node) => !node.standsLast);
-  const pending = [...injected].sort((left, right) =>
+  const sorted = [...injected].sort((left, right) =>
     left.injection!.sortKey.localeCompare(right.injection!.sortKey),
   );
+  /*
+   * Anchored entries at the two ends are placed before anything is inserted, so an entry placed by
+   * item key may still name one of them when it is the Module's own. `body` is the place an entry
+   * naming no anchor has always gone, so it simply joins those below.
+   */
+  const inPosition = (position: PhiCmsNavigationAnchorPlacement["position"]) =>
+    sorted.filter((node) => node.injection!.position === position);
+  const trailing = [...intrinsic.filter((node) => node.standsLast), ...inPosition("trailing")];
+  const ordered = [...inPosition("leading"), ...intrinsic.filter((node) => !node.standsLast)];
+  const pending = sorted.filter(({ injection }) =>
+    injection!.position !== "leading" && injection!.position !== "trailing");
 
   while (pending.length > 0) {
     let inserted = false;
@@ -1134,7 +1197,7 @@ function orderNavigationSiblings(
     const unanchored: ResolvedNavigationNode[] = [];
     for (const node of pending) {
       const descriptor = node.injection!.descriptor;
-      const anchor = descriptor.before ?? descriptor.after ?? null;
+      const anchor = node.injection!.position ? null : descriptor.before ?? descriptor.after ?? null;
       if (!anchor) {
         unanchored.push(node);
         continue;
@@ -1150,10 +1213,10 @@ function orderNavigationSiblings(
         /*
          * An anchor on an entry that stands last still means what it says.
          *
-         * Such an entry is exported like any other -- Modules anchor their Admin pages before the
-         * Settings container today -- so refusing it here would break a published anchor over an
-         * ordering detail. "Before" is the end of everything standing ahead of it, "after" is behind
-         * it, which is the end of the surface.
+         * Such an entry is exported like any other -- a Module written before sidebar anchors placed
+         * its Admin pages before the Settings container -- so refusing it here would break a published
+         * anchor over an ordering detail. "Before" is the end of everything standing ahead of it,
+         * "after" is behind it and ahead of whatever the Area's `end` anchor holds.
          */
         const trailingIndex = trailing.findIndex((node) => node.definitionItemKey === anchor);
         if (trailingIndex < 0) {
@@ -1291,21 +1354,24 @@ export function resolvePhiCmsActiveNavigationSurfaces({
         if (descriptor.navKey !== surface.navKey) {
           continue;
         }
+        // Compiled against the surface already, so a named anchor is one the surface declares.
+        const placement = descriptor.anchor ? surface.anchors![descriptor.anchor]! : null;
+        const parentItemKey = placement ? placement.parentItemKey : descriptor.parentItemKey!;
         const node = buildResolvedNavigationNode(
           catalog,
           activeRouteIdentityKeys,
           surface.navKey,
           contributorId,
           descriptor.item,
-          { descriptor, route, sortKey },
+          { descriptor, route, sortKey, position: placement?.position ?? null },
         );
         registerNode(node);
-        if (descriptor.parentItemKey === null) {
+        if (parentItemKey === null) {
           injectedRoots.push(node);
         } else {
-          const siblings = injectedByParent.get(descriptor.parentItemKey) ?? [];
+          const siblings = injectedByParent.get(parentItemKey) ?? [];
           siblings.push(node);
-          injectedByParent.set(descriptor.parentItemKey, siblings);
+          injectedByParent.set(parentItemKey, siblings);
         }
       }
     }

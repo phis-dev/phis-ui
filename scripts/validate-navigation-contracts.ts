@@ -13,7 +13,7 @@ import { buildPhiRuntimeModulePackageRoutePrefix } from "../helpers/runtime-modu
 import { localizeAreaPath, stripLocaleAndAreaFromPathname } from "../helpers/locale";
 import type {
   PhiCmsAreaDefinition,
-  PhiCmsNavigationInjectionDescriptor,
+  PhiCmsNavigationKeyedInjectionDescriptor,
   PhiCmsRoutePresetDescriptor,
   PhiRuntimeModuleId,
 } from "../types/cms-module-descriptors";
@@ -143,7 +143,9 @@ function createRoute({
   presetKey: string;
   path: string;
   itemKey: string;
-  injection: Omit<PhiCmsNavigationInjectionDescriptor, "navKey" | "item"> & { navKey?: `public:${string}` };
+  injection: Omit<PhiCmsNavigationKeyedInjectionDescriptor, "navKey" | "item" | "anchor"> & {
+    navKey?: `public:${string}`;
+  };
   routePresetKey?: string;
   mountKey?: string;
 }): PhiCmsRoutePresetDescriptor {

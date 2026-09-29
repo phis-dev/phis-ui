@@ -1,5 +1,7 @@
 import type {
   PhiCmsAreaDefinition,
+  PhiCmsNavigationAnchor,
+  PhiCmsNavigationAnchorPlacement,
   PhiCmsNavigationBaseItemDescriptor,
   PhiCmsNavigationSurfaceDescriptor,
 } from "../../types/cms-module-descriptors";
@@ -107,6 +109,29 @@ export const PHI_PUBLIC_ACCOUNT_NAV_ITEM_KEY = "@phis/ui/modules/public/nav/acco
 export const PHI_ADMIN_SETTINGS_NAV_ITEM_KEY = "@phis/ui/modules/admin/nav/settings";
 export const PHI_BUILDER_SETTINGS_NAV_ITEM_KEY = "@phis/ui/builder/nav/settings";
 
+/**
+ * What the four sidebar anchors mean, which is the same in every Area that has a sidebar.
+ *
+ * `start` is the top, ahead of the Area's own entries -- where a Dashboard goes, and so where the Area
+ * root forwards to. `main` is the body, after the Area's own leading entries and ahead of the Settings
+ * container, which stands last. `settings` is inside that container, after the Area's own Settings
+ * pages; an Area without one offers no `settings` anchor, and a Module naming it there is refused
+ * rather than put somewhere else. `end` is the very bottom, after the Settings container.
+ *
+ * Stated per Area even though it reads alike: it is the Area's to say, and the day one sidebar grows a
+ * leading block of its own, this is the one place that changes -- no Module's entry does.
+ */
+function sidebarAnchors(
+  settingsItemKey?: string,
+): Partial<Record<PhiCmsNavigationAnchor, PhiCmsNavigationAnchorPlacement>> {
+  return {
+    start: { parentItemKey: null, position: "leading" },
+    main: { parentItemKey: null, position: "body" },
+    ...(settingsItemKey ? { settings: { parentItemKey: settingsItemKey, position: "body" } } : {}),
+    end: { parentItemKey: null, position: "trailing" },
+  };
+}
+
 /*
  * The Public surfaces carry one intrinsic entry, the terms, and export it as the one anchor.
  *
@@ -208,6 +233,7 @@ export const PHI_APP_RUNTIME_AREA_DEFINITIONS = [
           }],
         }],
         exportedItemKeys: [PHI_APP_SETTINGS_NAV_ITEM_KEY],
+        anchors: sidebarAnchors(PHI_APP_SETTINGS_NAV_ITEM_KEY),
       },
       {
         navKey: "app:footer",
@@ -256,6 +282,7 @@ export const PHI_ACCOUNTING_RUNTIME_AREA_DEFINITIONS = [
         routePresetKey: "accounting-overview-page",
       }],
       exportedItemKeys: ["@phis/ui/modules/accounting/nav/home"],
+      anchors: sidebarAnchors(),
     }, accountNavigationSurface(PHI_ACCOUNTING_ACCOUNT_NAV_ITEM_KEY, "accounting:account")],
   },
 ] satisfies readonly PhiCmsAreaDefinition[];
@@ -293,6 +320,7 @@ export const PHI_ADMIN_RUNTIME_AREA_DEFINITIONS = [
           },
         ],
         exportedItemKeys: [PHI_ADMIN_SETTINGS_NAV_ITEM_KEY],
+        anchors: sidebarAnchors(PHI_ADMIN_SETTINGS_NAV_ITEM_KEY),
       },
       accountNavigationSurface(PHI_ADMIN_ACCOUNT_NAV_ITEM_KEY, "admin:account"),
     ],
@@ -315,6 +343,7 @@ export const PHI_EDITOR_RUNTIME_AREA_DEFINITIONS = [
         routePresetKey: "editor-translations-page",
       }],
       exportedItemKeys: ["@phis/ui/modules/editor/nav/translations"],
+      anchors: sidebarAnchors(),
     }, accountNavigationSurface(PHI_EDITOR_ACCOUNT_NAV_ITEM_KEY, "editor:account")],
   },
 ] satisfies readonly PhiCmsAreaDefinition[];
@@ -357,6 +386,7 @@ export const PHI_BUILDER_RUNTIME_AREA_DEFINITIONS = [
         "@phis/ui/builder/nav/navigation",
         PHI_BUILDER_SETTINGS_NAV_ITEM_KEY,
       ],
+      anchors: sidebarAnchors(PHI_BUILDER_SETTINGS_NAV_ITEM_KEY),
     }, accountNavigationSurface(PHI_BUILDER_ACCOUNT_NAV_ITEM_KEY, "builder:account")],
   },
 ] satisfies readonly PhiCmsAreaDefinition[];

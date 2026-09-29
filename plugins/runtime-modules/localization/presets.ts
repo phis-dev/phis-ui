@@ -1,14 +1,15 @@
 import type { PhiCmsRoutePresetDescriptor } from "../../../types/cms-module-descriptors";
-import { buildPhiAdminSidebarRoutePresetDescriptor } from "../admin-sidebar-route";
+import { buildPhiSidebarRoutePresetDescriptor } from "../sidebar-route";
 import { PHI_LOCALIZATION_RUNTIME_MODULE_ID } from "./ids";
 
 export const PHI_LOCALIZATION_RUNTIME_MODULE_ROUTES = [
-  buildPhiAdminSidebarRoutePresetDescriptor({
+  buildPhiSidebarRoutePresetDescriptor({
+    area: "admin",
+    anchor: "main",
     ownerModuleId: PHI_LOCALIZATION_RUNTIME_MODULE_ID,
     presetKey: "admin-locales-page",
     title: "Locales",
     path: "/locales",
-    placement: "sidebar",
     itemKey: "@phis/ui/modules/localization/nav/admin/locales",
     icon: "antd:translation",
     loadTree: ({ page, runtime }) =>

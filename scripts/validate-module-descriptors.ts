@@ -561,13 +561,14 @@ assert.deepEqual(
     "/phis/ui/shells",
     "/phis/ui/pages",
     "/phis/ui/navigation",
-    "/phis/ui/theme",
-    "/phis/ui/revisions",
-    null,
     "/phis/ui/media",
+    "/phis/ui/revisions",
+    "/phis/ui/theme",
+    // The Settings container, last: the Modules place themselves by the `main` anchor, ahead of it.
+    null,
   ],
 );
-const builderSettingsContainer = builderNavigationItems?.at(-2);
+const builderSettingsContainer = builderNavigationItems?.at(-1);
 assert.equal(builderSettingsContainer?.kind, "container");
 assert.deepEqual(
   builderSettingsContainer?.children.map((item) => readPhiCmsNavigationTargetPath(item.target) ?? null),

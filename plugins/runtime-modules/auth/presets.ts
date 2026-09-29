@@ -5,11 +5,8 @@ import type {
 } from "../../../types/cms-module-descriptors";
 import { PhiCmsFlags } from "../../../constants/phi-cms";
 import { PHI_AUTH_LOGIN_OVERLAY_IDS } from "../../../components/runtime/auth-overlay-ids";
-import {
-  PHI_APP_ACCOUNT_NAV_ITEM_KEY,
-  PHI_APP_SETTINGS_NAV_ITEM_KEY,
-} from "../area-definitions";
-import { buildPhiAdminSidebarRoutePresetDescriptor } from "../admin-sidebar-route";
+import { PHI_APP_ACCOUNT_NAV_ITEM_KEY } from "../area-definitions";
+import { buildPhiSidebarRoutePresetDescriptor } from "../sidebar-route";
 import { PHI_AUTH_RUNTIME_MODULE_ID } from "./ids";
 
 /**
@@ -123,24 +120,18 @@ export const PHI_AUTH_RUNTIME_MODULE_ROUTES = [
    * person proves who they are, and that is this Module's whether the Site signs people in with
    * passwords, a directory, or something not written yet.
    */
-  {
+  buildPhiSidebarRoutePresetDescriptor({
+    area: "app",
+    anchor: "settings",
     ownerModuleId: PHI_AUTH_RUNTIME_MODULE_ID,
     presetKey: "app-auth-security-page",
+    // Its own count and not the App page tree's: the Page has been at 1 from the start.
     presetVersion: 1,
-    area: "app",
     title: "Security",
     path: "/settings/security",
-    mount: { mountKey: "settings" },
+    itemKey: "@phis/ui/modules/auth/nav/app/security",
+    icon: "antd:safety-certificate",
     navigation: [{
-      navKey: "app:sidebar",
-      parentItemKey: PHI_APP_SETTINGS_NAV_ITEM_KEY,
-      item: {
-        itemKey: "@phis/ui/modules/auth/nav/app/security",
-        label: { defaultMessage: "Security" },
-        icon: "antd:safety-certificate",
-        routePresetKey: "app-auth-security-page",
-      },
-    }, {
       /*
        * And in the account menu, beside the profile it belongs next to.
        *
@@ -162,13 +153,14 @@ export const PHI_AUTH_RUNTIME_MODULE_ROUTES = [
     loadTree: ({ page, runtime }) =>
       import("../../../components/regions/presets/phi-default-app-security-page-tree")
         .then((module) => module.buildPhiDefaultAppSecurityPageTree({ page, runtime })),
-  },
-  buildPhiAdminSidebarRoutePresetDescriptor({
+  }),
+  buildPhiSidebarRoutePresetDescriptor({
+    area: "admin",
+    anchor: "settings",
     ownerModuleId: PHI_AUTH_RUNTIME_MODULE_ID,
     presetKey: "admin-auth-settings-page",
     title: "Authentication",
     path: "/settings/authentication",
-    placement: "settings",
     itemKey: "@phis/ui/modules/auth/nav/admin/settings",
     icon: "antd:safety-certificate",
     loadTree: ({ page, runtime }) =>

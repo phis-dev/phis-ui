@@ -651,10 +651,23 @@ addressed by its path.
 - An Area may export a route mount such as `settings`: a `mountKey` bound to an href-less navigation
   container. A route that opts in with `mount: { mountKey }` places its navigation entry there. A mount
   composes navigation, never paths.
-- Navigation descriptors inject only into surfaces an Area declares. `before`, `after`, and
-  `parentItemKey` may reference only items the surface exports through `exportedItemKeys` or items the
-  Module injects itself. Reordering or reparenting an item never changes a route path; a tombstoned
-  container hides its remaining subtree at runtime and shows it disabled in Builder navigation authoring.
+- Navigation descriptors inject only into surfaces an Area declares. An entry in an Area sidebar is
+  placed by role: `anchor: "start" | "main" | "settings" | "end"`, and the surface's `anchors` say what
+  each means in that Area. Every sidebar declares `start` (the top, ahead of the Area's own entries),
+  `main` (after the Area's own entries, ahead of the Settings container), `end` (the very bottom, behind
+  the Settings container), and -- where the Area has a Settings container -- `settings` (inside it,
+  after the Area's own Settings pages). An anchor the surface does not declare is refused, not moved
+  elsewhere. Entries sharing an anchor are ordered by `ownerModuleId`, `presetKey` and `itemKey`; that
+  is a default, and an operator reorders it in the Builder's Navigation. A Module never names another
+  Module's item, and first-party Modules name no item of the Area's either:
+  `buildPhiSidebarRoutePresetDescriptor` (`plugins/runtime-modules/sidebar-route.ts`) builds the Page
+  and its entry from the Area and the anchor, including the Settings mount and the Area's policy for
+  who sees Settings entries. The keyed form -- `parentItemKey` with `before` or `after` -- stays for
+  surfaces without anchors (the account menu, the Public header) and for Modules written against it; it
+  may reference only items the surface exports through `exportedItemKeys` or items the Module injects
+  itself, and cannot be combined with `anchor`. Reordering or reparenting an item never changes a route
+  path; a tombstoned container hides its remaining subtree at runtime and shows it disabled in Builder
+  navigation authoring.
 - Every Area declares `<area>:account`, the surface behind the account trigger, with one exported anchor
   and no target of its own. A Module docks its account entry under that anchor; the menu shows the
   anchor's children, with their own children as submenus, and every other item of the surface as itself.

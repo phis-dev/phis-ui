@@ -1,9 +1,11 @@
 import type { PhiCmsRoutePresetDescriptor } from "../../../types/cms-module-descriptors";
-import { buildPhiAdminSidebarRoutePresetDescriptor } from "../admin-sidebar-route";
+import { buildPhiSidebarRoutePresetDescriptor } from "../sidebar-route";
 import { PHI_USER_MANAGEMENT_RUNTIME_MODULE_ID } from "./ids";
 
 export const PHI_USER_MANAGEMENT_RUNTIME_MODULE_ROUTES = [
-  buildPhiAdminSidebarRoutePresetDescriptor({
+  buildPhiSidebarRoutePresetDescriptor({
+    area: "admin",
+    anchor: "main",
     ownerModuleId: PHI_USER_MANAGEMENT_RUNTIME_MODULE_ID,
     presetKey: "admin-users-page",
     title: "Users",
@@ -13,7 +15,6 @@ export const PHI_USER_MANAGEMENT_RUNTIME_MODULE_ROUTES = [
     // the `disabledWhen` conditions built on it, so entry is the route's decision and capability is
     // the surface's.
     path: "/users",
-    placement: "sidebar",
     itemKey: "@phis/ui/modules/user-management/nav/admin/users",
     icon: "antd:team",
     loadTree: ({ page, runtime }) =>
