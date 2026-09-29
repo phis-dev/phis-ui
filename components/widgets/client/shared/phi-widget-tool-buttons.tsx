@@ -15,6 +15,8 @@ import {
 import { formatUrl } from "@lexical/link";
 
 import type { PhiWidgetFontFamilyKey, PhiWidgetFontSizeKey } from "../../../../types/site-theme";
+import { PHI_WIDGET_FONT_FAMILY_OPTIONS } from "../../helpers/font-family";
+import { PHI_WIDGET_FONT_SIZE_OPTIONS } from "../../helpers/font-size";
 import type { PhiCmsInstanceId } from "../../../../types/cms-instance-id";
 import { createPhiAssetUri, createPhiPageUri } from "../../../../types/references";
 import { PhiBuilderPageReferencePicker } from "../../../../plugins/runtime-modules/builder/page-reference-picker";
@@ -160,25 +162,6 @@ export function PhiWidgetColorToolButton({
   );
 }
 
-const PHI_FONT_FAMILY_OPTIONS: Array<{ value: PhiWidgetFontFamilyKey; label: string }> = [
-  { value: "inherit", label: "Inherit" },
-  { value: "system", label: "System" },
-  { value: "body", label: "Body" },
-  { value: "mono", label: "Mono" },
-  { value: "serif", label: "Serif" },
-  { value: "accent", label: "Accent" },
-  { value: "display", label: "Display" },
-];
-
-const PHI_FONT_SIZE_OPTIONS: Array<{ value: PhiWidgetFontSizeKey; label: string }> = [
-  { value: "inherit", label: "Inherit" },
-  { value: "xs", label: "XS" },
-  { value: "sm", label: "SM" },
-  { value: "base", label: "Base" },
-  { value: "lg", label: "LG" },
-  { value: "xl", label: "XL" },
-];
-
 export type PhiWidgetTypographyToolButtonProps = {
   fontFamily?: PhiWidgetFontFamilyKey | null;
   fontSize?: PhiWidgetFontSizeKey | null;
@@ -225,7 +208,7 @@ export function PhiWidgetTypographyToolButton({
             </PhiTypographyControl>
             <PhiSelectControl<PhiWidgetFontFamilyKey>
               value={currentFontFamily}
-              options={PHI_FONT_FAMILY_OPTIONS}
+              options={PHI_WIDGET_FONT_FAMILY_OPTIONS}
               getPopupContainer={popup.getPopupContainer}
               popupRootClassName={popup.rootClassName}
               popupZIndex={PHI_Z_INDEX.authoringPopupNested}
@@ -243,7 +226,7 @@ export function PhiWidgetTypographyToolButton({
             </PhiTypographyControl>
             <PhiSelectControl<PhiWidgetFontSizeKey>
               value={currentFontSize}
-              options={PHI_FONT_SIZE_OPTIONS}
+              options={PHI_WIDGET_FONT_SIZE_OPTIONS}
               getPopupContainer={popup.getPopupContainer}
               popupRootClassName={popup.rootClassName}
               popupZIndex={PHI_Z_INDEX.authoringPopupNested}

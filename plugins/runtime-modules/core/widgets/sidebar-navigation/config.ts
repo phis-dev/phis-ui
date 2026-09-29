@@ -8,6 +8,8 @@ import {
   readString,
   type PhiCmsWidgetConfigBase,
 } from "../../../../../components/widgets/config/parser-primitives";
+import { readPhiWidgetFontFamily } from "../../../../../components/widgets/helpers/font-family";
+import { readPhiWidgetFontSize } from "../../../../../components/widgets/helpers/font-size";
 
 export type PhiCmsSidebarNavigationWidgetConfig = PhiCmsWidgetConfigBase & {
   navKey?: string;
@@ -15,32 +17,14 @@ export type PhiCmsSidebarNavigationWidgetConfig = PhiCmsWidgetConfigBase & {
   fontSize?: PhiWidgetFontSizeKey;
 };
 
-function readWidgetFontFamilyKey(value: unknown): PhiWidgetFontFamilyKey | undefined {
-  return value === "inherit" ||
-    value === "system" ||
-    value === "body" ||
-    value === "mono" ||
-    value === "serif" ||
-    value === "accent" ||
-    value === "display"
-    ? value
-    : undefined;
-}
-
-function readWidgetFontSizeKey(value: unknown): PhiWidgetFontSizeKey | undefined {
-  return value === "inherit" || value === "xs" || value === "sm" || value === "base" || value === "lg" || value === "xl"
-    ? value
-    : undefined;
-}
-
 export function parsePhiCmsSidebarNavigationWidgetConfig(
   config: Record<string, unknown>,
 ): PhiCmsSidebarNavigationWidgetConfig {
   return {
     ...readRenderableBlockConfig(config),
     navKey: readString(config.navKey),
-    fontFamily: readWidgetFontFamilyKey(config.fontFamily),
-    fontSize: readWidgetFontSizeKey(config.fontSize),
+    fontFamily: readPhiWidgetFontFamily(config.fontFamily),
+    fontSize: readPhiWidgetFontSize(config.fontSize),
   };
 }
 

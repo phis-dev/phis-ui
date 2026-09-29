@@ -23,6 +23,8 @@ export const PHI_BRAND_WIDGET_PLUGIN: PhiCmsServerWidgetPlugin<PhiCmsBrandWidget
       key={`widget-${widget.id}`}
       fallbackTitle={resolvePhiBrandWordmarkText(runtime)}
       mode={config.mode}
+      fontFamily={config.fontFamily}
+      fontSize={config.fontSize}
     />
   ),
   renderPreview: ({ widget, config, runtime }) => (
@@ -30,6 +32,8 @@ export const PHI_BRAND_WIDGET_PLUGIN: PhiCmsServerWidgetPlugin<PhiCmsBrandWidget
       key={`widget-${widget.id}`}
       fallbackTitle={resolvePhiBrandWordmarkText(runtime)}
       mode={config.mode}
+      fontFamily={config.fontFamily}
+      fontSize={config.fontSize}
       interactive={false}
     />
   ),

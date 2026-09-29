@@ -9,6 +9,14 @@ import {
   readString,
   type PhiCmsWidgetConfigBase,
 } from "../../../../../components/widgets/config/parser-primitives";
+import {
+  PHI_WIDGET_FONT_FAMILY_OPTIONS,
+  readPhiWidgetFontFamily,
+} from "../../../../../components/widgets/helpers/font-family";
+import {
+  PHI_WIDGET_FONT_SIZE_OPTIONS,
+  readPhiWidgetFontSize,
+} from "../../../../../components/widgets/helpers/font-size";
 
 export type PhiCmsSimpleTextWidgetConfig = PhiCmsWidgetConfigBase & {
   text?: string;
@@ -39,24 +47,8 @@ export function parsePhiCmsSimpleTextWidgetConfig(
     href: readString(config.href),
     icon: readString(config.icon),
     color: readString(config.color),
-    fontFamily: ((): PhiCmsSimpleTextWidgetConfig["fontFamily"] => {
-      const value = readString(config.fontFamily);
-      return value === "inherit" ||
-        value === "system" ||
-        value === "body" ||
-        value === "mono" ||
-        value === "serif" ||
-        value === "accent" ||
-        value === "display"
-        ? value
-        : undefined;
-    })(),
-    fontSize: ((): PhiCmsSimpleTextWidgetConfig["fontSize"] => {
-      const value = readString(config.fontSize);
-      return value === "inherit" || value === "xs" || value === "sm" || value === "base" || value === "lg" || value === "xl"
-        ? value
-        : undefined;
-    })(),
+    fontFamily: readPhiWidgetFontFamily(config.fontFamily),
+    fontSize: readPhiWidgetFontSize(config.fontSize),
     external: readBoolean(config.external),
     newTab: readBoolean(config.newTab),
     type: ((): PhiCmsSimpleTextWidgetConfig["type"] => {
@@ -104,29 +96,14 @@ export const PHI_SIMPLE_TEXT_WIDGET_DEFINITION = {
       type: "choice",
       label: "Font Family",
       editorPlacement: "toolbar",
-      options: [
-        { value: "inherit", label: "Inherit" },
-        { value: "system", label: "System" },
-        { value: "body", label: "Body" },
-        { value: "mono", label: "Mono" },
-        { value: "serif", label: "Serif" },
-        { value: "accent", label: "Accent" },
-        { value: "display", label: "Display" },
-      ],
+      options: [...PHI_WIDGET_FONT_FAMILY_OPTIONS],
     },
     {
       key: "fontSize",
       type: "choice",
       label: "Font Size",
       editorPlacement: "toolbar",
-      options: [
-        { value: "inherit", label: "Inherit" },
-        { value: "xs", label: "XS" },
-        { value: "sm", label: "SM" },
-        { value: "base", label: "Base" },
-        { value: "lg", label: "LG" },
-        { value: "xl", label: "XL" },
-      ],
+      options: [...PHI_WIDGET_FONT_SIZE_OPTIONS],
     },
     {
       key: "type",

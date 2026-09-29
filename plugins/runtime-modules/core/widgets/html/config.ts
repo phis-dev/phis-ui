@@ -13,6 +13,8 @@ import {
   readString,
   type PhiCmsWidgetConfigBase,
 } from "../../../../../components/widgets/config/parser-primitives";
+import { readPhiWidgetFontFamily } from "../../../../../components/widgets/helpers/font-family";
+import { readPhiWidgetFontSize } from "../../../../../components/widgets/helpers/font-size";
 
 export type PhiCmsHtmlWidgetConfig = PhiCmsWidgetConfigBase & {
   html?: string;
@@ -29,24 +31,6 @@ export type PhiHtmlWidgetContentConfig = PhiHtmlWidgetClientConfig & {
   resolvedContent?: PhiCmsResolvedContent | null;
 };
 
-function readWidgetFontFamilyKey(value: unknown): PhiWidgetFontFamilyKey | undefined {
-  return value === "inherit" ||
-    value === "system" ||
-    value === "body" ||
-    value === "mono" ||
-    value === "serif" ||
-    value === "accent" ||
-    value === "display"
-    ? value
-    : undefined;
-}
-
-function readWidgetFontSizeKey(value: unknown): PhiWidgetFontSizeKey | undefined {
-  return value === "inherit" || value === "xs" || value === "sm" || value === "base" || value === "lg" || value === "xl"
-    ? value
-    : undefined;
-}
-
 export function parsePhiCmsHtmlWidgetConfig(config: Record<string, unknown>): PhiCmsHtmlWidgetConfig {
   const renderableBlockConfig = readRenderableBlockConfig(config);
 
@@ -57,8 +41,8 @@ export function parsePhiCmsHtmlWidgetConfig(config: Record<string, unknown>): Ph
     sourceUrl: readString(config.sourceUrl),
     sourceLocale: readString(config.sourceLocale),
     revalidateSeconds: readNumber(config.revalidateSeconds),
-    fontFamily: readWidgetFontFamilyKey(config.fontFamily),
-    fontSize: readWidgetFontSizeKey(config.fontSize),
+    fontFamily: readPhiWidgetFontFamily(config.fontFamily),
+    fontSize: readPhiWidgetFontSize(config.fontSize),
     translate: readBoolean(config.translate) ?? true,
   };
 }

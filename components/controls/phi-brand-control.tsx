@@ -125,6 +125,16 @@ export type PhiBrandLineControlProps = {
   line?: PhiSiteThemeBrandLine | null;
   /** Drawn when the line names no icon of its own. */
   fallbackIcon?: string;
+  /**
+   * How the line is set where the placement says so -- a resolved family and size, as the Wordmark above
+   * is given its own.
+   *
+   * What the line *says* is Brand and is read from the Theme; how large it is drawn is not. The same
+   * sentence stands in a header strip and in a footer column, and those are two sizes. Nothing given
+   * inherits, which is what the Theme workspace preview wants: it shows the Brand, not a placement of it.
+   */
+  fontFamily?: CSSProperties["fontFamily"];
+  fontSize?: CSSProperties["fontSize"];
 };
 
 /**
@@ -137,7 +147,12 @@ export type PhiBrandLineControlProps = {
  * Nothing set means nothing drawn. The frame keeps its shape without the line, and an empty line with
  * an icon in front of it would say that something is missing rather than that nothing was asked for.
  */
-export function PhiBrandLineControl({ line, fallbackIcon }: PhiBrandLineControlProps) {
+export function PhiBrandLineControl({
+  line,
+  fallbackIcon,
+  fontFamily,
+  fontSize,
+}: PhiBrandLineControlProps) {
   const label = line?.label?.trim();
   if (!label) {
     return null;
@@ -145,7 +160,19 @@ export function PhiBrandLineControl({ line, fallbackIcon }: PhiBrandLineControlP
 
   const icon = line?.icon?.trim() || fallbackIcon;
   return (
-    <Flex align="center" gap={8} wrap={false} style={{ color: "inherit", minWidth: 0 }}>
+    <Flex
+      align="center"
+      gap={8}
+      wrap={false}
+      style={{
+        color: "inherit",
+        minWidth: 0,
+        fontFamily,
+        fontSize,
+        // The leading comes with the size, and only with it: without one the line reads as its surroundings.
+        lineHeight: fontSize == null ? undefined : PHI_LINE_HEIGHT_LG,
+      }}
+    >
       {icon ? <PhiIcon name={icon} size="inherit" /> : null}
       <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{label}</span>
     </Flex>

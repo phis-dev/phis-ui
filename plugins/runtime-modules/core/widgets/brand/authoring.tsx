@@ -6,6 +6,10 @@ import {
   usePhiSiteBrand,
   usePhiSiteWordmarkText,
 } from "../../../../../components/root/phi-root-live-theme-provider";
+import { usePhiConfig } from "../../../../../components/root/phi-config-provider";
+import { resolvePhiWidgetFontFamily } from "../../../../../components/widgets/helpers/font-family";
+import { resolvePhiWidgetFontSize } from "../../../../../components/widgets/helpers/font-size";
+import { PhiWidgetTypographyToolButton } from "../../../../../components/widgets/client/shared/phi-widget-tool-buttons";
 import { PHI_BRAND_LINE_FALLBACK_ICONS, PhiBrandWidgetClient } from "./client";
 import {
   PHI_BRAND_WIDGET_DEFINITION,
@@ -38,15 +42,22 @@ const PHI_BRAND_LINE_UNSET_LABELS: Record<PhiBrandWidgetLineMode, string> = {
 function PhiBrandWidgetEditor({ config }: PhiCmsBuilderWidgetRenderArgs<PhiCmsBrandWidgetConfig>) {
   const brand = usePhiSiteBrand();
   const wordmarkText = usePhiSiteWordmarkText();
+  const { fonts, token } = usePhiConfig();
   const mode = config.mode;
 
   if (isPhiBrandWidgetLineMode(mode)) {
     const line = mode === "location" ? brand?.location : brand?.slogan;
     if (!line?.label?.trim()) {
+      /*
+       * The unset line is set like the line it stands in for, so what is missing takes the room the
+       * sentence will take -- which is the whole reason it is drawn here at all.
+       */
       return (
         <PhiBrandLineControl
           line={{ label: PHI_BRAND_LINE_UNSET_LABELS[mode] }}
           fallbackIcon={PHI_BRAND_LINE_FALLBACK_ICONS[mode]}
+          fontFamily={resolvePhiWidgetFontFamily(config.fontFamily, fonts, token)}
+          fontSize={resolvePhiWidgetFontSize(config.fontSize, token, "lg")}
         />
       );
     }
@@ -62,7 +73,7 @@ function PhiBrandWidgetEditor({ config }: PhiCmsBuilderWidgetRenderArgs<PhiCmsBr
    */
   return (
     <PhiBrandWidgetClient
-      config={{ mode }}
+      config={{ mode, fontFamily: config.fontFamily, fontSize: config.fontSize }}
       fallbackTitle={wordmarkText}
       interactive={false}
     />
@@ -72,4 +83,23 @@ function PhiBrandWidgetEditor({ config }: PhiCmsBuilderWidgetRenderArgs<PhiCmsBr
 export const PHI_BRAND_WIDGET_BUILDER_PLUGIN: PhiCmsBuilderWidgetPlugin<PhiCmsBrandWidgetConfig> = {
   ...PHI_BRAND_WIDGET_DEFINITION,
   renderEditor: (args) => <PhiBrandWidgetEditor {...args} />,
+  /*
+   * Only the two lines are asked, and they are asked what a Simple Text is asked.
+   *
+   * A mark takes its type from the Theme's Wordmark, so the button would offer a setting that draws
+   * nothing there. `lg` as the default is the Simple Text's default, so the popup opens on the size the
+   * line is actually drawn at rather than on "Inherit".
+   */
+  renderEditorTools: ({ config, authoring }) =>
+    authoring?.updateConfig && isPhiBrandWidgetLineMode(config.mode) ? (
+      <PhiWidgetTypographyToolButton
+        fontFamily={config.fontFamily}
+        fontSize={config.fontSize}
+        defaultFontSize="lg"
+        onChange={({ fontFamily, fontSize }) => authoring.updateConfig?.({
+          ...(fontFamily !== undefined ? { fontFamily: fontFamily ?? undefined } : {}),
+          ...(fontSize !== undefined ? { fontSize: fontSize ?? undefined } : {}),
+        })}
+      />
+    ) : null,
 };

@@ -9,8 +9,8 @@ import {
 import { PhiLink } from "../../../../../components/navigation/phi-link";
 import { usePhiConfig } from "../../../../../components/root/phi-config-provider";
 import { PhiIcon } from "../../../../../components/shell/phi-icon";
-import { resolvePhiWidgetFontFamily } from "../../../../../components/widgets/helpers/font-family";
-import { resolvePhiWidgetFontSize } from "../../../../../components/widgets/helpers/font-size";
+import { readPhiWidgetFontFamily, resolvePhiWidgetFontFamily } from "../../../../../components/widgets/helpers/font-family";
+import { readPhiWidgetFontSize, resolvePhiWidgetFontSize } from "../../../../../components/widgets/helpers/font-size";
 import type { PhiClientBlockBaseProps, PhiCmsInstanceId, PhiRenderableBlockRenderMode } from "../../../../../types";
 import type { PhiWidgetFontFamilyKey, PhiWidgetFontSizeKey } from "../../../../../types/site-theme";
 import { PhiFlexControl } from "../../../../../components/controls/phi-flex-control";
@@ -127,39 +127,19 @@ export function PhiSimpleTextWidgetClient({
       return;
     }
 
+    // A Signal that names no slot leaves the value unset, which is the same answer a stored one gets.
     if (signal.channel === "fontFamily" && signal.action === "change") {
-      const nextFontFamily = signal.value;
-      const resolvedFontFamilyKey =
-        nextFontFamily === "inherit" ||
-        nextFontFamily === "system" ||
-        nextFontFamily === "body" ||
-        nextFontFamily === "mono" ||
-        nextFontFamily === "serif" ||
-        nextFontFamily === "accent" ||
-        nextFontFamily === "display"
-          ? nextFontFamily
-          : undefined;
       setFontFamilyOverride({
         active: true,
-        value: resolvedFontFamilyKey,
+        value: readPhiWidgetFontFamily(signal.value),
       });
       return;
     }
 
     if (signal.channel === "fontSize" && signal.action === "change") {
-      const nextFontSize = signal.value;
-      const resolvedFontSizeKey =
-        nextFontSize === "inherit" ||
-        nextFontSize === "xs" ||
-        nextFontSize === "sm" ||
-        nextFontSize === "base" ||
-        nextFontSize === "lg" ||
-        nextFontSize === "xl"
-          ? nextFontSize
-          : undefined;
       setFontSizeOverride({
         active: true,
-        value: resolvedFontSizeKey,
+        value: readPhiWidgetFontSize(signal.value),
       });
       return;
     }

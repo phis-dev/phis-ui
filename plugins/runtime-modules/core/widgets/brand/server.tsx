@@ -1,14 +1,11 @@
 import { PhiCmsWidgetType } from "../../../../../constants/cms-widget-types";
 import { PhiRuntimeModuleRenderClientHost } from "../../../../../components/runtime/runtime-module-render-client-manifest";
 import type { PhiBrandWidgetClientProps, PhiBrandWidgetConfig } from "./client";
-import type { PhiBrandWidgetMode } from "./config";
 
 export type PhiBrandWidgetProps = Pick<
   PhiBrandWidgetClientProps,
   "fallbackTitle" | "interactive"
-> & {
-  mode?: PhiBrandWidgetMode;
-};
+> & PhiBrandWidgetConfig;
 
 /*
  * The Brand itself is not read here. It comes from the root on the Client (`usePhiSiteBrand`), which
@@ -18,8 +15,10 @@ export function PhiBrandWidget({
   fallbackTitle,
   interactive,
   mode,
+  fontFamily,
+  fontSize,
 }: PhiBrandWidgetProps) {
-  const config: PhiBrandWidgetConfig = { mode };
+  const config: PhiBrandWidgetConfig = { mode, fontFamily, fontSize };
 
   return (
     <PhiRuntimeModuleRenderClientHost

@@ -1,10 +1,13 @@
 import { resolvePhiCmsWidgetPluginKey } from "../../../../../constants/cms-widget-types";
 import { PhiCmsWidgetType } from "../../../../../constants/cms-widget-types";
 import type { PhiCmsWidgetPlugin } from "../../../../../types";
+import type { PhiWidgetFontFamilyKey, PhiWidgetFontSizeKey } from "../../../../../types/site-theme";
 import {
   readRenderableBlockConfig,
   type PhiCmsWidgetConfigBase,
 } from "../../../../../components/widgets/config/parser-primitives";
+import { readPhiWidgetFontFamily } from "../../../../../components/widgets/helpers/font-family";
+import { readPhiWidgetFontSize } from "../../../../../components/widgets/helpers/font-size";
 
 /**
  * Which part of the Brand this Widget stands for, and the only thing it is asked.
@@ -19,6 +22,11 @@ import {
  *
  * The lines are modes rather than a second field. They were `mode: "line"` plus `line: "slogan"`, which
  * is one question asked twice -- and a Widget that had answered only the first was guessed at.
+ *
+ * The one thing beside the mode is the type of the two lines, and it is not an override of the Brand: the
+ * Brand writes the sentence, the placement says how large it stands here, because the same slogan sits in
+ * a header strip and in a footer column. It is asked on the scaffold's toolbar, where a Simple Text is
+ * asked the same thing, and nowhere else -- the mark modes take their type from the Theme's Wordmark.
  */
 export type PhiBrandWidgetMode =
   | "lockup"
@@ -38,6 +46,8 @@ export function isPhiBrandWidgetLineMode(
 
 export type PhiCmsBrandWidgetConfig = PhiCmsWidgetConfigBase & {
   mode?: PhiBrandWidgetMode;
+  fontFamily?: PhiWidgetFontFamilyKey;
+  fontSize?: PhiWidgetFontSizeKey;
 };
 
 const PHI_BRAND_WIDGET_MODE_OPTIONS = [
@@ -62,6 +72,8 @@ export function parsePhiCmsBrandWidgetConfig(config: Record<string, unknown>): P
   return {
     ...readRenderableBlockConfig(config),
     mode: readBrandWidgetMode(config.mode),
+    fontFamily: readPhiWidgetFontFamily(config.fontFamily),
+    fontSize: readPhiWidgetFontSize(config.fontSize),
   };
 }
 

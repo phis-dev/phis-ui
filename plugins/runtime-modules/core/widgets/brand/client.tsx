@@ -16,9 +16,14 @@ import {
 } from "./config";
 import { usePhiConfig } from "../../../../../components/root/phi-config-provider";
 import { usePhiSiteBrand } from "../../../../../components/root/phi-root-live-theme-provider";
+import { resolvePhiWidgetFontFamily } from "../../../../../components/widgets/helpers/font-family";
+import { resolvePhiWidgetFontSize } from "../../../../../components/widgets/helpers/font-size";
+import type { PhiWidgetFontFamilyKey, PhiWidgetFontSizeKey } from "../../../../../types/site-theme";
 
 export type PhiBrandWidgetConfig = {
   mode?: PhiBrandWidgetMode;
+  fontFamily?: PhiWidgetFontFamilyKey;
+  fontSize?: PhiWidgetFontSizeKey;
 };
 
 /** What a line shows in front of itself where the Brand names no icon for it. */
@@ -49,7 +54,7 @@ export function PhiBrandWidgetClient({
 }: PhiBrandWidgetClientProps) {
   const brand = usePhiSiteBrand();
   // The Theme's mode, not the Widget's: one picks the Logo's picture, the other what is drawn at all.
-  const { mode: themeMode } = usePhiConfig();
+  const { fonts, token, mode: themeMode } = usePhiConfig();
 
   /*
    * A line leads nowhere, deliberately. The Wordmark is the way home and is drawn as a link; a Site's
@@ -61,6 +66,15 @@ export function PhiBrandWidgetClient({
       <PhiBrandLineControl
         line={config.mode === "location" ? brand?.location : brand?.slogan}
         fallbackIcon={PHI_BRAND_LINE_FALLBACK_ICONS[config.mode]}
+        fontFamily={resolvePhiWidgetFontFamily(config.fontFamily, fonts, token)}
+        /*
+         * `lg` where nothing is said, which is the Simple Text's answer too.
+         *
+         * A line used to be a Simple Text holding a copy of the sentence, and the two stood side by side
+         * in a header. Inheriting meant the line came out at whatever the strip was set in -- smaller
+         * than the Widget beside it saying the same kind of thing. The same default is the same size.
+         */
+        fontSize={resolvePhiWidgetFontSize(config.fontSize, token, "lg")}
       />
     );
   }
