@@ -49,6 +49,13 @@ type PhiResolvedWidgetRuntimeSite = PhiBlockRuntimeSite & {
   };
 };
 
+function requirePhiViewerArea(area: PhiWidgetAreaKey | null | undefined): PhiWidgetAreaKey {
+  if (!area) {
+    throw new Error("The auth viewer answered a signed-in session without its Area.");
+  }
+  return area;
+}
+
 export type PhiViewerState = PhiBlockRuntime["viewer"];
 
 export type GetPhiCmsRuntimeInfoOptions = {
@@ -399,7 +406,12 @@ export async function getPhiCmsRuntimeInfo({
     site: resolvedSite,
       viewer: {
         access: "authenticated",
-        resolvedArea: payload.area ?? "app",
+        /*
+         * phis-server answers a signed-in viewer's Area every time (`resolvePhiUserArea`). A missing
+         * one used to become `app`, which the access guard then forwarded to -- onto an Area this
+         * viewer may not enter, and round again.
+         */
+        resolvedArea: requirePhiViewerArea(payload.area),
         roleClaims: (payload.user?.roleClaims ?? [])
           .filter((claim): claim is { providerId: `@${string}/${string}`; flags: number } =>
             typeof claim.providerId === "string" &&

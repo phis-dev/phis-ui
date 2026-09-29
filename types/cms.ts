@@ -45,7 +45,7 @@ export type PhiCmsPageRedirectTarget = {
 
 export type PhiCmsPageRedirectConfig = {
   target: PhiCmsPageRedirectTarget;
-  status?: 301 | 302 | 307 | 308;
+  status: 301 | 302 | 307 | 308;
 };
 
 export type PhiCmsRegionNode = {

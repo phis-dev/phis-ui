@@ -34,11 +34,15 @@ function readRedirectConfig(layoutConfig: Record<string, unknown> | null | undef
     return null;
   }
 
+  /*
+   * Stated, never assumed. An absent status used to mean permanent, and a browser keeps a 308 long
+   * after the reason for it: a forward whose target depends on Modules or on the viewer would stick.
+   */
   const rawStatus = rawRedirect.status;
-  const status =
-    rawStatus === 301 || rawStatus === 302 || rawStatus === 307 || rawStatus === 308
-      ? rawStatus
-      : undefined;
+  if (rawStatus !== 301 && rawStatus !== 302 && rawStatus !== 307 && rawStatus !== 308) {
+    return null;
+  }
+  const status = rawStatus;
 
   return {
     target: {
@@ -73,7 +77,7 @@ export function resolvePhiCmsPageRedirect(
   const redirectConfig = readRedirectConfig(page.layoutConfig);
   if (!redirectConfig) {
     throw new Error(
-      `Redirect page "${page.path}" requires layoutConfig.redirect.target.area and layoutConfig.redirect.target.path.`,
+      `Redirect page "${page.path}" requires layoutConfig.redirect.target.area, .target.path and .status.`,
     );
   }
 
@@ -84,7 +88,7 @@ export function resolvePhiCmsPageRedirect(
 
   return {
     href,
-    permanent: redirectConfig.status == null || redirectConfig.status === 301 || redirectConfig.status === 308,
+    permanent: redirectConfig.status === 301 || redirectConfig.status === 308,
   };
 }
 

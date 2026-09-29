@@ -1,6 +1,6 @@
 import "server-only";
 
-import { redirect, unauthorized } from "next/navigation";
+import { forbidden, redirect, unauthorized } from "next/navigation";
 
 import type { PhiCmsSiteBridge } from "../../types/cms-plugins";
 import type { PhiCapabilitySnapshot } from "../../types/server-capabilities";
@@ -16,7 +16,8 @@ import { localizeAreaPath } from "../../helpers/locale";
  *
  * Asked by the Layout for a document request and by the Page for a client navigation that stayed inside
  * the same branch and never re-ran the Layout. A signed-out visitor is sent to the Public login; anyone
- * else back to the root of the Area they resolve to.
+ * else back to the root of the Area they resolve to -- where they may enter it. Where they may not, or
+ * it is this very Area, the answer is 403: a forward there would be refused and forwarded again.
  */
 export async function guardPhiCmsAreaAccess({
   cmsBridge,
@@ -33,8 +34,8 @@ export async function guardPhiCmsAreaAccess({
   serverCapabilities: PhiCapabilitySnapshot | null;
   isRevisionPreview: boolean;
 }): Promise<void> {
-  const areaDefinition = resolvePhiCmsDescriptorCatalog(cmsBridge.runtimeModuleCatalog)
-    .areaDefinitions.get(resolvedRoute.area);
+  const areaDefinitions = resolvePhiCmsDescriptorCatalog(cmsBridge.runtimeModuleCatalog).areaDefinitions;
+  const areaDefinition = areaDefinitions.get(resolvedRoute.area);
   if (
     !isRevisionPreview &&
     resolvedRoute.rootKind === "area" &&
@@ -57,6 +58,19 @@ export async function guardPhiCmsAreaAccess({
       }
       const next = pathname?.trim() || `/${resolvedRoute.area}`;
       redirect(`${login}?${new URLSearchParams({ next }).toString()}`);
+    }
+    /*
+     * Server and UI decide who may enter from the same claims, so the home Area admits its viewer --
+     * until they disagree: a claim this side cannot read, an Area switched off. Then the home Area is
+     * as closed as this one, and forwarding there is a loop rather than a way out.
+     */
+    const homeDefinition = areaDefinitions.get(viewer.resolvedArea);
+    if (
+      viewer.resolvedArea === resolvedRoute.area ||
+      !homeDefinition ||
+      !canPhiViewerAccess(viewer, homeDefinition.accessPolicy)
+    ) {
+      forbidden();
     }
     redirect(localizeAreaPath(resolvedRoute.locale, viewer.resolvedArea, "/"));
   }

@@ -9,6 +9,9 @@ const navigation = vi.hoisted(() => ({
   unauthorized: vi.fn(() => {
     throw new Error("unauthorized");
   }),
+  forbidden: vi.fn(() => {
+    throw new Error("forbidden");
+  }),
 }));
 vi.mock("next/navigation", () => navigation);
 
@@ -29,7 +32,7 @@ import { guardPhiCmsAreaAccess } from "./phi-cms-area-access-guard";
 
 const cmsBridge = { runtimeModuleCatalog: new Map() } as unknown as PhiCmsSiteBridge;
 
-function viewer(access: "public" | "authenticated", resolvedArea: "public" | "app" | null) {
+function viewer(access: "public" | "authenticated", resolvedArea: "public" | "app" | "admin" | null) {
   return {
     access,
     resolvedArea,
@@ -55,6 +58,7 @@ describe("guardPhiCmsAreaAccess", () => {
   beforeEach(() => {
     areaDefinitions.clear();
     areaDefinitions.set("admin", { accessPolicy: PHI_VIEWER_ACCESS_AUTHENTICATED });
+    areaDefinitions.set("app", { accessPolicy: PHI_VIEWER_ACCESS_AUTHENTICATED });
     publicLogin.href = "/en/login";
   });
 
@@ -78,6 +82,18 @@ describe("guardPhiCmsAreaAccess", () => {
   it("sends anyone else back to the root of the Area they resolve to", async () => {
     areaDefinitions.set("admin", { accessPolicy: PHI_VIEWER_ACCESS_SITE_ADMIN });
     await expect(guard({ viewer: viewer("authenticated", "app") })).rejects.toThrow("redirect:/app");
+  });
+
+  it("refuses instead of forwarding where the way back would be refused as well", async () => {
+    areaDefinitions.set("admin", { accessPolicy: PHI_VIEWER_ACCESS_SITE_ADMIN });
+    // Home is this very Area: a forward would land here again.
+    await expect(guard({ viewer: viewer("authenticated", "admin") })).rejects.toThrow("forbidden");
+    // Home refuses this viewer too.
+    areaDefinitions.set("app", { accessPolicy: PHI_VIEWER_ACCESS_SITE_ADMIN });
+    await expect(guard({ viewer: viewer("authenticated", "app") })).rejects.toThrow("forbidden");
+    // Home is not an Area this build declares.
+    areaDefinitions.delete("app");
+    await expect(guard({ viewer: viewer("authenticated", "app") })).rejects.toThrow("forbidden");
   });
 
   it("lets a viewer through who may enter", async () => {
