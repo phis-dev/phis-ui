@@ -181,6 +181,15 @@ export function PhiSimpleTextWidgetEditor({
       <PhiInlineTextEditor
         value={draftText}
         variant="underlined"
+        /*
+         * Compact, because the field stands in the page and not in a form.
+         *
+         * A field of the ordinary size keeps a control's worth of room around its text, and that room is
+         * what a Widget in a Region does not have: the same sentence would stand taller here than it
+         * stands once it is read, and the strip around it would move as soon as it is edited. Small
+         * leaves the hairline under the text and nothing else.
+         */
+        size="small"
         placeholder={labels.text.placeholder}
         readOnly={!onChangeText}
         onFocus={() => setEditedText(text)}
@@ -194,7 +203,6 @@ export function PhiSimpleTextWidgetEditor({
         onCancel={() => setEditedText(null)}
         inputStyle={{
           paddingInline: 0,
-          paddingBlock: 4,
           fontSize: resolvedFontSize ?? "inherit",
           lineHeight: resolvedFontSize ? 1.6 : "inherit",
           fontWeight: config?.strong ? 600 : undefined,

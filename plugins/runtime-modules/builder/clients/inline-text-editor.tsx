@@ -2,7 +2,7 @@
 
 import { useRef, type CSSProperties, type FocusEventHandler, type SyntheticEvent } from "react";
 
-import type { PhiControlVariant } from "../../../../types/control";
+import type { PhiControlSize, PhiControlVariant } from "../../../../types/control";
 import { PhiTextControl } from "../../../../components/controls/phi-text-control";
 
 export type PhiInlineTextEditorProps = {
@@ -17,6 +17,8 @@ export type PhiInlineTextEditorProps = {
   autoFocus?: boolean;
   readOnly?: boolean;
   variant?: PhiControlVariant;
+  /** How much room the field takes around its text, where the text is not the only thing that decides. */
+  size?: PhiControlSize;
   /** Where the editor sits among its neighbours. */
   style?: CSSProperties;
   /** How the text inside it looks, so an edit in place reads like the text it edits. */
@@ -60,6 +62,7 @@ export function PhiInlineTextEditor({
   autoFocus,
   readOnly,
   variant,
+  size,
   style,
   inputStyle,
   collapsibleTitleControl,
@@ -110,6 +113,7 @@ export function PhiInlineTextEditor({
         autoFocus={autoFocus}
         readOnly={readOnly}
         variant={variant}
+        size={size}
         allowClear={false}
         presentation={fitContent ? "textarea" : "input"}
         autoSize={fitContent ? true : undefined}
