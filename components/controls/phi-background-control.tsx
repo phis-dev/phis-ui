@@ -26,6 +26,7 @@ import {
   phiBackgroundBaseSupportsGlassEffect,
   resolvePhiBackgroundParallaxDefaultStrength,
   normalizePhiBackgroundWidgetConfig,
+  readPhiBackgroundGradientCss,
   readPhiBackgroundPatternInkFromCss,
   resolvePhiBackgroundWidgetStyle,
   serializePhiBackgroundBaseCss,
@@ -462,9 +463,13 @@ export function PhiBackgroundControl({
   }
 
   function updateBaseFromCss(css: string) {
-    const nextBase = normalizePhiBackgroundWidgetConfig({
-      background: resolveStoredSolidColor(css),
-    }).base;
+    const storedCss = resolveStoredSolidColor(css);
+    // A gradient the Base cannot hold is refused, and the Base keeps what it had; stored as a colour it
+    // would lose its stops the next time anybody opened it.
+    if (readPhiBackgroundGradientCss(storedCss)?.problem) {
+      return;
+    }
+    const nextBase = normalizePhiBackgroundWidgetConfig({ background: storedCss }).base;
     if (currentValue.base.kind === "gradient" && nextBase.kind === "color") {
       emit({
         ...currentValue,
