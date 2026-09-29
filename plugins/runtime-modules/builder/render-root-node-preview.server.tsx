@@ -19,6 +19,7 @@ import {
 } from "./preview-transport";
 import { getPhiBuilderRegionDraftKey } from "./region-keys";
 import {
+  readPhiBuilderRootNodeDraftFields,
   type PhiBuilderRootNodeDraft,
 } from "./root-node-normalization";
 import { resolvePhiRenderableBlockGeometry } from "../../../types/renderable-block-geometry";
@@ -120,16 +121,7 @@ function resolveRootNodeFromPreviewDraft(draft: PhiBuilderPreviewRegionDraft | n
     id: draft.rootNodeId ?? null,
     typeKey: draft.rootNodeTypeKey,
     kind: resolvePreviewRootNodeKind(draft.rootNodeKind ?? null),
-    title: draft.rootNodeTitle ?? null,
-    rootNodeConfig: draft.rootNodeConfig ?? null,
-    rootNodeGeometry: draft.rootNodeGeometry ?? null,
-    rootNodeAnchor: draft.rootNodeAnchor ?? null,
-    rootNodePadding: draft.rootNodePadding ?? null,
-    rootNodeBackground: draft.rootNodeBackground ?? null,
-    rootNodeBorder: draft.rootNodeBorder ?? null,
-    rootNodeShadow: draft.rootNodeShadow ?? null,
-    childLayouts: draft.rootNodeChildLayouts ?? [],
-    childWidgets: draft.rootNodeChildWidgets ?? [],
+    ...readPhiBuilderRootNodeDraftFields(draft),
   };
 }
 

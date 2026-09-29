@@ -7,9 +7,8 @@ import {
 } from "../../server-helpers/cms-root";
 import { PhiCmsPageRenderer } from "./phi-cms-page-renderer";
 import { PhiHardForward } from "./phi-hard-forward";
-import { localizeAreaPath } from "../../helpers/locale";
+import { guardPhiCmsAreaAccess } from "./phi-cms-area-access-guard";
 import {
-  resolvePhiPublicLoginHref,
   resolvePhiUnauthenticatedLoginHref,
 } from "../../server-helpers/public-login-route";
 import { resolvePhiCmsPageRedirect, performPhiCmsPageRedirect } from "./phi-cms-page-redirect";
@@ -19,21 +18,15 @@ import { PhiRuntimeControllerServerHost } from "../runtime/runtime-controller-se
 import { materializePhiRuntimeControllerSettings } from "../runtime/runtime-controller-materialization";
 import { PhiCmsRegionType } from "../../constants/phi-cms";
 import {
-  resolvePhiRuntimeModuleIdsForArea,
-} from "../../plugins/runtime-modules/settings";
-import {
-  resolvePhiCmsRuntimeModuleScope,
+  resolvePhiCmsAreaRuntimeModuleScope,
   resolvePhiCmsTreeRuntimeRegistry,
 } from "./phi-cms-runtime-registry";
 import { PhiRuntimeModuleDataProviderHost } from "../runtime/runtime-module-data-provider-host";
 import { resolvePhiRuntimeControllerDefinitions } from "../../plugins/runtime-modules/resolver";
-import { canPhiViewerAccess } from "../../types/access";
-import { resolvePhiCmsDescriptorCatalog } from "../../plugins/runtime-modules/descriptor-compiler";
 import {
   buildPhiRuntimeModuleAccessRegistry,
   filterPhiCmsRenderableTreeForViewer,
 } from "../../helpers/cms-access-policy";
-import { readPhiAreaPresetRuntimeModuleIds } from "../../helpers/cms-area-config";
 
 export type PhiCmsRootPageProps = {
   root: string;
@@ -106,45 +99,19 @@ export async function PhiCmsRootPage({
     performPhiCmsPageRedirect(pageRedirect);
   }
 
-  const areaDefinition = resolvePhiCmsDescriptorCatalog(cmsBridge.runtimeModuleCatalog)
-    .areaDefinitions.get(resolvedRoute.area);
-  if (
-    !isRevisionPreview &&
-    resolvedRoute.rootKind === "area" &&
-    areaDefinition &&
-    !canPhiViewerAccess(resolvedRequest.runtime.viewer, areaDefinition.accessPolicy) &&
-    resolvedRequest.runtime.viewer.resolvedArea
-  ) {
-    if (resolvedRequest.runtime.viewer.access === "public" && resolvedRoute.area !== "public") {
-      // Mirrors the Layout guard: fail closed rather than redirect to a route the Auth Module may not
-      // contribute. See AUTHENTICATION.md section 6.
-      const login = await resolvePhiPublicLoginHref(
-        cmsBridge,
-        resolvedRoute.locale,
-        resolvedRequest.serverCapabilities,
-      );
-      if (!login) {
-        unauthorized();
-      }
-      const next = request.pathname?.trim() || `/${resolvedRoute.area}`;
-      redirect(`${login}?${new URLSearchParams({ next }).toString()}`);
-    }
-    redirect(localizeAreaPath(resolvedRoute.locale, resolvedRequest.runtime.viewer.resolvedArea, "/"));
-  }
-
-  /*
-   * Which Modules this Area runs, and not which ones this person may see. A Module is area-bound and
-   * never switched off for a reader (ACCESS.md); what its Widgets show may still differ per person.
-   */
-  const runtimeModuleIds = resolvePhiRuntimeModuleIdsForArea(
-    resolvedRequest.runtime.area,
-    readPhiAreaPresetRuntimeModuleIds(resolvedRequest.areaPreset, resolvedRequest.runtime.area),
-    [...cmsBridge.runtimeModuleCatalog.values()].map((entry) => entry.definition),
-  );
-  const runtimeModuleScope = await resolvePhiCmsRuntimeModuleScope({
+  await guardPhiCmsAreaAccess({
     cmsBridge,
-    moduleIds: runtimeModuleIds,
+    resolvedRoute,
+    viewer: resolvedRequest.runtime.viewer,
+    pathname: request.pathname,
+    serverCapabilities: resolvedRequest.serverCapabilities,
+    isRevisionPreview,
+  });
+
+  const runtimeModuleScope = await resolvePhiCmsAreaRuntimeModuleScope({
+    cmsBridge,
     area: resolvedRequest.runtime.area,
+    areaPreset: resolvedRequest.areaPreset,
     serverCapabilities: resolvedRequest.serverCapabilities,
   });
   const filteredPageTree = filterPhiCmsRenderableTreeForViewer({

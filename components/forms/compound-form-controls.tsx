@@ -17,6 +17,7 @@ import { PhiButtonControl } from "../controls/phi-button-control";
 import { PhiCollectionHeaderControl } from "../controls/phi-collection-header-control";
 import { PhiToolbarControl } from "../controls/phi-toolbar-control";
 import type { PhiControlOption } from "../controls/phi-control-options";
+import { readPhiDotPath as readPath } from "../../helpers/dot-path";
 
 type RecordValue = Record<string, unknown>;
 
@@ -24,13 +25,6 @@ function readRecords(value: unknown): RecordValue[] {
   return Array.isArray(value)
     ? value.filter((entry): entry is RecordValue => Boolean(entry) && typeof entry === "object" && !Array.isArray(entry)).map((entry) => ({ ...entry }))
     : [];
-}
-
-function readPath(record: RecordValue, path: string) {
-  return path.split(".").filter(Boolean).reduce<unknown>((current, key) =>
-    current && typeof current === "object" && !Array.isArray(current)
-      ? (current as RecordValue)[key]
-      : undefined, record);
 }
 
 function setPath(record: RecordValue, path: string, value: unknown) {

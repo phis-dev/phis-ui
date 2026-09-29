@@ -1,3 +1,5 @@
+import { PHI_SPACING_SCALE_DEFAULT_LABELS, type PhiSpacingScaleLabels } from "./spacing-scale";
+
 export type PhiBorderWidgetLabels = {
   title: string;
   description: string;
@@ -25,16 +27,7 @@ export type PhiBorderWidgetLabels = {
     width: string;
     colorHex: string;
   };
-  radiusSizes: {
-    none: string;
-    xxs: string;
-    xs: string;
-    sm: string;
-    base: string;
-    md: string;
-    lg: string;
-    xl: string;
-    xxl: string;
+  radiusSizes: PhiSpacingScaleLabels & {
     round: string;
   };
   borderStyles: {
@@ -73,15 +66,7 @@ export const PHI_BORDER_WIDGET_DEFAULT_LABELS: PhiBorderWidgetLabels = {
     colorHex: "#f0f0f0",
   },
   radiusSizes: {
-    none: "None",
-    xxs: "XXS",
-    xs: "XS",
-    sm: "SM",
-    base: "Base",
-    md: "MD",
-    lg: "LG",
-    xl: "XL",
-    xxl: "XXL",
+    ...PHI_SPACING_SCALE_DEFAULT_LABELS,
     round: "Round",
   },
   borderStyles: {

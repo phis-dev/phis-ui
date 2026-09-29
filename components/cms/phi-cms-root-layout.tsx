@@ -15,10 +15,9 @@ import { hasPhiCmsRevisionPreview } from "../../server-helpers/cms-root";
 import { performPhiCmsPageRedirect, resolvePhiCmsPageRedirect } from "./phi-cms-page-redirect";
 import { rememberPhiAreaRootDoor } from "../../gateway/area-root-door";
 import { PhiHardForward } from "./phi-hard-forward";
+import { guardPhiCmsAreaAccess } from "./phi-cms-area-access-guard";
 import { warmPhiAreaRootDoor } from "../../server-helpers/area-root-door-warmup";
-import { localizeAreaPath } from "../../helpers/locale";
 import {
-  resolvePhiPublicLoginHref,
   resolvePhiUnauthenticatedLoginHref,
 } from "../../server-helpers/public-login-route";
 import { isPhiCmsGatewayAuthError } from "../../gateway/errors";
@@ -26,7 +25,6 @@ import { PhiRuntimeControllerServerHost } from "../runtime/runtime-controller-se
 import { PhiRuntimeModuleProvider } from "../runtime/runtime-module-context";
 import { PhiRuntimeModuleDataProviderHost } from "../runtime/runtime-module-data-provider-host";
 import { PhiSignalRuntimePartitionProvider } from "../runtime/runtime-signal-partition";
-import { canPhiViewerAccess } from "../../types/access";
 import { resolvePhiCmsDescriptorCatalog } from "../../plugins/runtime-modules/descriptor-compiler";
 
 /**
@@ -147,33 +145,14 @@ export async function PhiCmsAreaBoundary({
     redirect(resolvedRoute.canonicalHref);
   }
 
-  const areaDefinition = resolvePhiCmsDescriptorCatalog(cmsBridge.runtimeModuleCatalog)
-    .areaDefinitions.get(resolvedRoute.area);
-  if (
-    !isRevisionPreview &&
-    resolvedRoute.rootKind === "area" &&
-    areaDefinition &&
-    !canPhiViewerAccess(runtime.viewer, areaDefinition.accessPolicy) &&
-    runtime.viewer.resolvedArea
-  ) {
-    if (runtime.viewer.access === "public" && resolvedRoute.area !== "public") {
-      // Section 6 of AUTHENTICATION.md: where no active Public Auth Module owns the route, protected
-      // access fails closed. Assuming it would send the visitor to a 404 that reports a missing page
-      // instead of a refused one, and this Layout still runs before the shell flushes, so 401 can
-      // still be the status rather than only the body.
-      const login = await resolvePhiPublicLoginHref(
-        cmsBridge,
-        resolvedRoute.locale,
-        rootScope.requestContext.serverCapabilities,
-      );
-      if (!login) {
-        unauthorized();
-      }
-      const next = request.pathname?.trim() || `/${resolvedRoute.area}`;
-      redirect(`${login}?${new URLSearchParams({ next }).toString()}`);
-    }
-    redirect(localizeAreaPath(resolvedRoute.locale, runtime.viewer.resolvedArea, "/"));
-  }
+  await guardPhiCmsAreaAccess({
+    cmsBridge,
+    resolvedRoute,
+    viewer: runtime.viewer,
+    pathname: request.pathname,
+    serverCapabilities: rootScope.requestContext.serverCapabilities,
+    isRevisionPreview,
+  });
 
   /**
    * Existence is answered after access, and here rather than in the Page, so the status line can still

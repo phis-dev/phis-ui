@@ -1,7 +1,11 @@
 import type { PhiControlPresentationConfig } from "./control";
 import type { PhiCssLength } from "./length";
 import type { PhiRuntimeDataProviderKey } from "./runtime-data-provider";
-import type { PhiSignalRouteSet } from "./signals";
+import type {
+  PhiProviderDropMode,
+  PhiProviderDropTargetCapability,
+  PhiSignalRouteSet,
+} from "./signals";
 import type {
   PhiTableActionDefinition,
   PhiTableProviderBindingFieldDefinition,
@@ -42,10 +46,7 @@ export type PhiTreeProviderDragSourceCapability = {
   sourceObjectIdentityPath: string;
 };
 
-export type PhiTreeProviderDropTargetCapability = {
-  payloadType: `${string}/${string}`;
-  modes?: readonly ("before" | "after" | "child" | "replace" | "append")[];
-};
+export type PhiTreeProviderDropTargetCapability = PhiProviderDropTargetCapability;
 
 export type PhiTreeProviderResourceDescriptor = {
   resourceKey: string;
@@ -123,7 +124,7 @@ export type PhiTreeProviderDropMutationRequest = PhiTreeProviderMutationRequestB
   kind: "drop";
   payloadType: `${string}/${string}`;
   sourceObjectIdentity: string;
-  dropMode: "before" | "after" | "child" | "replace" | "append";
+  dropMode: PhiProviderDropMode;
   targetParentNodeIdentity: PhiTreeNodeIdentity | null;
   beforeNodeIdentity: PhiTreeNodeIdentity | null;
   afterNodeIdentity: PhiTreeNodeIdentity | null;
@@ -208,6 +209,17 @@ export class PhiTreeProviderError extends Error {
     this.name = "PhiTreeProviderError";
     this.code = code;
   }
+}
+
+/**
+ * A node's field by dotted path, as the Tree reads identities, parents and titles.
+ *
+ * Deliberately not `readPhiDotPath`: a Tree walks into arrays (`"path.0"`) and keeps empty segments,
+ * which the shared record reader does not. Both Tree copies read this way, and they read it here.
+ */
+export function readPhiTreeNodePath(node: Record<string, unknown>, path: string): unknown {
+  return path.split(".").reduce<unknown>((current, key) =>
+    current && typeof current === "object" ? (current as Record<string, unknown>)[key] : undefined, node);
 }
 
 export function readPhiTreeProviderQueryResult(value: unknown): PhiTreeProviderQueryResult | null {

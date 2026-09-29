@@ -1,5 +1,5 @@
-export const PHI_PICKER_PLACEMENTS = [
-  "auto",
+/** Where a popup opens beside the element it belongs to, in Ant Design's placement names. */
+export const PHI_POPUP_PLACEMENTS = [
   "top",
   "topLeft",
   "topRight",
@@ -13,6 +13,8 @@ export const PHI_PICKER_PLACEMENTS = [
   "rightTop",
   "rightBottom",
 ] as const;
+
+export const PHI_PICKER_PLACEMENTS = ["auto", ...PHI_POPUP_PLACEMENTS] as const;
 
 export type PhiPickerPlacement = (typeof PHI_PICKER_PLACEMENTS)[number];
 

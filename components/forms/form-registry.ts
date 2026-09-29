@@ -1,6 +1,4 @@
-import type { PhiFormInitialValuesLoader, PhiFormLabelSetLoader } from "./form-resolution";
-import type { PhiFormDescriptor } from "../../types/form-descriptor";
-import type { PhiRuntimeModuleId } from "../../types/cms-module-descriptors";
+import type { PhiFormDefinitionLike } from "./form-resolution";
 import { isPhiCmsAreaKey, type PhiCmsAreaKey } from "../../constants/cms-areas";
 import type { PhiFormId } from "../../types/form-id";
 import { isPhiFormId, normalizePhiFormId } from "../../types/form-id";
@@ -22,8 +20,11 @@ export type PhiFormPurpose = (typeof PHI_FORM_PURPOSES)[keyof typeof PHI_FORM_PU
 
 const PHI_FORM_PURPOSE_VALUES = new Set<string>(Object.values(PHI_FORM_PURPOSES));
 
-export type PhiRuntimeModuleFormDefinition = {
-  ownerModuleId: PhiRuntimeModuleId;
+/**
+ * A Form as a Module ships it: the definition every Form has (`PhiFormDefinitionLike`), without the
+ * database's row id and status, under a namespaced id and with the Areas it belongs to.
+ */
+export type PhiRuntimeModuleFormDefinition = Omit<PhiFormDefinitionLike, "id" | "status" | "formId"> & {
   /**
    * The Areas this Form belongs to.
    *
@@ -34,22 +35,6 @@ export type PhiRuntimeModuleFormDefinition = {
    */
   areas: readonly PhiCmsAreaKey[];
   formId: PhiFormId;
-  version: number;
-  flags: number;
-  title: string;
-  description: string | null;
-  category: string | null;
-  tags: string[];
-  descriptor: PhiFormDescriptor;
-  submitHandlerKey: string | null;
-  confirmHandlerKey: string | null;
-  previewHandlerKey: string | null;
-  defaultConfig: Record<string, unknown>;
-  variant: string | null;
-  config: Record<string, unknown>;
-  previewUpstreamPath: string | null;
-  loadLabels?: PhiFormLabelSetLoader;
-  loadInitialValues?: PhiFormInitialValuesLoader;
   /** The platform role this Form fills, if any; see `PHI_FORM_PURPOSES`. */
   purpose?: PhiFormPurpose;
 };

@@ -4,7 +4,11 @@ import type { PhiControlOption, PhiControlOptionsProviderConfig } from "../compo
 import type {
   PhiRuntimeDataProviderKey,
 } from "./runtime-data-provider";
-import type { PhiSignalRouteSet } from "./signals";
+import type {
+  PhiProviderDropMode,
+  PhiProviderDropTargetCapability,
+  PhiSignalRouteSet,
+} from "./signals";
 import type { PhiRuntimeConditionExpression } from "./runtime-condition";
 import { isPhiRecord } from "../helpers/is-record";
 
@@ -517,10 +521,7 @@ export type PhiTableProviderBindingFieldDefinition = {
 
 export type PhiTableProviderRowOrdering = "none" | "flat" | "tree";
 
-export type PhiTableProviderDragDropCapability = {
-  payloadType: `${string}/${string}`;
-  modes?: readonly ("before" | "after" | "child" | "replace" | "append")[];
-};
+export type PhiTableProviderDragDropCapability = PhiProviderDropTargetCapability;
 
 export type PhiTableProviderResourceDescriptor = {
   resourceKey: string;
@@ -641,7 +642,7 @@ export type PhiTableProviderDropMutationRequest = PhiTableProviderMutationReques
     resourceKey: string;
     objectIdentities: readonly PhiTableRowIdentity[];
   };
-  dropMode: "before" | "after" | "child" | "replace" | "append";
+  dropMode: PhiProviderDropMode;
   targetParentRowIdentity: PhiTableRowIdentity | null;
   beforeRowIdentity: PhiTableRowIdentity | null;
   afterRowIdentity: PhiTableRowIdentity | null;

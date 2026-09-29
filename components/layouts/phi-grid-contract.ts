@@ -3,7 +3,11 @@ import type { CSSProperties, ReactNode } from "react";
 import type { PhiBaseLayoutProps } from "./phi-layout-view-model";
 import type { PhiRenderableBlockAnchor } from "../../types";
 import type { PhiAnchorWidgetPlacement } from "../controls/phi-anchor-control-contract";
-import type { PhiResolvedResponsiveValue, PhiResponsiveValue } from "../../types/responsive";
+import {
+  resolvePhiResponsiveValue,
+  type PhiResolvedResponsiveValue,
+  type PhiResponsiveValue,
+} from "../../types/responsive";
 
 /**
  * What a slot spans when its Grid was never told.
@@ -52,16 +56,16 @@ export function resolvePhiGridSlotPlacement(
   fallbackSpan: number,
 ) {
   const placement = slotPlacements?.find((candidate) => candidate.slotIndex === slotIndex);
-  const span = placement?.span?.[profile] ?? (profile === "wide"
-    ? placement?.span?.medium ?? placement?.span?.compact
-    : profile === "medium"
-      ? placement?.span?.compact
-      : undefined) ?? fallbackSpan;
-  const offset = placement?.offset?.[profile] ?? (profile === "wide"
-    ? placement?.offset?.medium ?? placement?.offset?.compact
-    : profile === "medium"
-      ? placement?.offset?.compact
-      : undefined) ?? 0;
+  const span = resolvePhiResponsiveValue(placement?.span, {
+    compact: fallbackSpan,
+    medium: fallbackSpan,
+    wide: fallbackSpan,
+  })[profile];
+  const offset = resolvePhiResponsiveValue(placement?.offset, {
+    compact: 0,
+    medium: 0,
+    wide: 0,
+  })[profile];
   return { span, offset };
 }
 

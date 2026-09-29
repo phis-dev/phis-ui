@@ -40,7 +40,7 @@ export type PhiWidgetDefinitionBase<TConfig> = Pick<
 export function createPhiCmsWidgetDefinition<TConfig>(options: {
   typeKey: string;
   title: string;
-  description: string;
+  description: PhiWidgetDefinitionBase<TConfig>["description"];
   category?: PhiWidgetDefinitionBase<TConfig>["category"];
   iconFamily?: PhiWidgetDefinitionBase<TConfig>["iconFamily"];
   runtimeSignals?: PhiWidgetDefinitionBase<TConfig>["runtimeSignals"];

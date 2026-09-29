@@ -4,20 +4,16 @@ import { cache } from "react";
 
 import type { PhiCmsSiteBridge } from "../../types/cms-plugins";
 import {
-  resolvePhiCmsRuntimeModuleScope,
+  resolvePhiCmsAreaRuntimeModuleScope,
   resolvePhiCmsTreeRuntimeRegistry,
 } from "./phi-cms-runtime-registry";
 import { loadPhiCmsRootRequest } from "../../server-helpers/cms-root";
-import {
-  resolvePhiRuntimeModuleIdsForArea,
-} from "../../plugins/runtime-modules/settings";
 import { materializePhiRuntimeControllerSettings } from "../runtime/runtime-controller-materialization";
 import { resolvePhiRuntimeControllerDefinitions } from "../../plugins/runtime-modules/resolver";
 import {
   buildPhiRuntimeModuleAccessRegistry,
   filterPhiCmsRenderableTreeForViewer,
 } from "../../helpers/cms-access-policy";
-import { readPhiAreaPresetRuntimeModuleIds } from "../../helpers/cms-area-config";
 
 /**
  * Everything an Area's own render needs, resolved once per request.
@@ -47,19 +43,10 @@ const loadPhiCmsAreaRenderScopeCached = cache(async function loadPhiCmsAreaRende
   const { resolvedAreaPreset, runtime } = rootScope;
   const layoutTree = resolvedAreaPreset ?? null;
 
-  /*
-   * Which Modules this Area runs, and not which ones this person may see. A Module is area-bound and
-   * never switched off for a reader (ACCESS.md); what its Widgets show may still differ per person.
-   */
-  const runtimeModuleIds = resolvePhiRuntimeModuleIdsForArea(
-    runtime.area,
-    readPhiAreaPresetRuntimeModuleIds(layoutTree, runtime.area),
-    [...cmsBridge.runtimeModuleCatalog.values()].map((entry) => entry.definition),
-  );
-  const runtimeModuleScope = await resolvePhiCmsRuntimeModuleScope({
+  const runtimeModuleScope = await resolvePhiCmsAreaRuntimeModuleScope({
     cmsBridge,
-    moduleIds: runtimeModuleIds,
     area: runtime.area,
+    areaPreset: layoutTree,
     serverCapabilities: rootScope.requestContext.serverCapabilities,
   });
   const filteredLayoutTree = layoutTree

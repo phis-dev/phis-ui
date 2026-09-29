@@ -10,10 +10,7 @@ import { isPhiCmsGatewayAuthError } from "../../gateway/errors";
 import { PhiRuntimeControllerServerHost } from "../runtime/runtime-controller-server-host";
 import { materializePhiRuntimeControllerSettings } from "../runtime/runtime-controller-materialization";
 import {
-  resolvePhiRuntimeModuleIdsForArea,
-} from "../../plugins/runtime-modules/settings";
-import {
-  resolvePhiCmsRuntimeModuleScope,
+  resolvePhiCmsAreaRuntimeModuleScope,
   resolvePhiCmsTreeRuntimeRegistry,
 } from "./phi-cms-runtime-registry";
 import { PhiRuntimeModuleDataProviderHost } from "../runtime/runtime-module-data-provider-host";
@@ -22,7 +19,6 @@ import {
   buildPhiRuntimeModuleAccessRegistry,
   filterPhiCmsRenderableTreeForViewer,
 } from "../../helpers/cms-access-policy";
-import { readPhiAreaPresetRuntimeModuleIds } from "../../helpers/cms-area-config";
 
 export type PhiCmsRootSlotPageProps = {
   root: string;
@@ -111,19 +107,10 @@ export async function PhiCmsRootSlotPage({
     return null;
   }
 
-  /*
-   * Which Modules this Area runs, and not which ones this person may see. A Module is area-bound and
-   * never switched off for a reader (ACCESS.md); what its Widgets show may still differ per person.
-   */
-  const runtimeModuleIds = resolvePhiRuntimeModuleIdsForArea(
-    resolvedRequest.runtime.area,
-    readPhiAreaPresetRuntimeModuleIds(resolvedRequest.areaPreset, resolvedRequest.runtime.area),
-    [...cmsBridge.runtimeModuleCatalog.values()].map((entry) => entry.definition),
-  );
-  const runtimeModuleScope = await resolvePhiCmsRuntimeModuleScope({
+  const runtimeModuleScope = await resolvePhiCmsAreaRuntimeModuleScope({
     cmsBridge,
-    moduleIds: runtimeModuleIds,
     area: resolvedRequest.runtime.area,
+    areaPreset: resolvedRequest.areaPreset,
     serverCapabilities: resolvedRequest.serverCapabilities,
   });
   const filteredPageTree = filterPhiCmsRenderableTreeForViewer({

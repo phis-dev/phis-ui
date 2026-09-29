@@ -3,6 +3,14 @@ import { PHI_GROUPS_RUNTIME_DATA_PROVIDER_KEYS } from "./ids";
 import { PHI_GROUPS_RUNTIME_MODULE_ID } from "./ids";
 import { PhiGroupMembershipFlags } from "../../../constants/site-groups";
 
+/** The membership levels a person picks from, by their cumulative flag values. */
+const PHI_GROUP_MEMBERSHIP_LEVEL_OPTIONS = [
+  { value: String(PhiGroupMembershipFlags.Member), label: "Member" },
+  { value: String(PhiGroupMembershipFlags.Author), label: "Author" },
+  { value: String(PhiGroupMembershipFlags.Editor), label: "Editor" },
+  { value: String(PhiGroupMembershipFlags.Manager), label: "Manager" },
+];
+
 /**
  * Groups and their members, as administration reads them.
  *
@@ -149,12 +157,12 @@ export const PHI_GROUPS_RUNTIME_DATA_PROVIDER_DESCRIPTORS = [
         fields: [
           { key: "id", title: "ID", type: "string", required: true },
           { key: "name", title: "Group", type: "string" },
-          { key: "membershipFlags", title: "Level", type: "enum", options: [
-            { value: String(PhiGroupMembershipFlags.Member), label: "Member" },
-            { value: String(PhiGroupMembershipFlags.Author), label: "Author" },
-            { value: String(PhiGroupMembershipFlags.Editor), label: "Editor" },
-            { value: String(PhiGroupMembershipFlags.Manager), label: "Manager" },
-          ] },
+          {
+            key: "membershipFlags",
+            title: "Level",
+            type: "enum",
+            options: PHI_GROUP_MEMBERSHIP_LEVEL_OPTIONS,
+          },
           { key: "canContribute", title: "May contribute", type: "boolean" },
           { key: "manages", title: "Manages", type: "boolean" },
           {
@@ -227,12 +235,7 @@ export const PHI_GROUPS_RUNTIME_DATA_PROVIDER_DESCRIPTORS = [
             // Enum rather than number: the level is a name a person picks, and only the three
             // cumulative values exist. The control plane normalizes anything else away.
             type: "enum",
-            options: [
-              { value: String(PhiGroupMembershipFlags.Member), label: "Member" },
-              { value: String(PhiGroupMembershipFlags.Author), label: "Author" },
-              { value: String(PhiGroupMembershipFlags.Editor), label: "Editor" },
-              { value: String(PhiGroupMembershipFlags.Manager), label: "Manager" },
-            ],
+            options: PHI_GROUP_MEMBERSHIP_LEVEL_OPTIONS,
             mutable: true,
             /*
              * `manageable` is the control plane's answer, not a guess: it is true only where this actor

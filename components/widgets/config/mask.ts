@@ -4,15 +4,19 @@ import { readBoolean, readCssSize, readNumber, readString } from "./parser-primi
 
 export type PhiMaskSource = "preset" | "asset";
 
-export type PhiMaskPreset =
-  | "circle"
-  | "ellipse"
-  | "triangle"
-  | "diamond"
-  | "hexagon"
-  | "star"
-  | "cloud"
-  | "blob";
+/** The preset shapes and their names, in the order a picker lists them. */
+const PHI_MASK_PRESET_ENTRIES = [
+  ["circle", "Circle"],
+  ["ellipse", "Ellipse"],
+  ["triangle", "Triangle"],
+  ["diamond", "Diamond"],
+  ["hexagon", "Hexagon"],
+  ["star", "Star"],
+  ["cloud", "Cloud"],
+  ["blob", "Blob"],
+] as const;
+
+export type PhiMaskPreset = (typeof PHI_MASK_PRESET_ENTRIES)[number][0];
 
 export type PhiMaskRepeat = "no-repeat" | "repeat";
 
@@ -33,16 +37,7 @@ export type PhiMaskConfig = {
   mode?: PhiMaskMode;
 };
 
-const PHI_MASK_PRESETS = new Set<PhiMaskPreset>([
-  "circle",
-  "ellipse",
-  "triangle",
-  "diamond",
-  "hexagon",
-  "star",
-  "cloud",
-  "blob",
-]);
+const PHI_MASK_PRESETS = new Set<PhiMaskPreset>(PHI_MASK_PRESET_ENTRIES.map(([preset]) => preset));
 
 export const PHI_MASK_DEFAULT_CONFIG: PhiMaskConfig = {
   enabled: false,
@@ -57,16 +52,8 @@ export const PHI_MASK_DEFAULT_CONFIG: PhiMaskConfig = {
   mode: "alpha",
 };
 
-export const PHI_MASK_PRESET_OPTIONS: ReadonlyArray<{ value: PhiMaskPreset; label: string }> = [
-  { value: "circle", label: "Circle" },
-  { value: "ellipse", label: "Ellipse" },
-  { value: "triangle", label: "Triangle" },
-  { value: "diamond", label: "Diamond" },
-  { value: "hexagon", label: "Hexagon" },
-  { value: "star", label: "Star" },
-  { value: "cloud", label: "Cloud" },
-  { value: "blob", label: "Blob" },
-];
+export const PHI_MASK_PRESET_OPTIONS: ReadonlyArray<{ value: PhiMaskPreset; label: string }> =
+  PHI_MASK_PRESET_ENTRIES.map(([value, label]) => ({ value, label }));
 
 const PHI_MASK_PRESET_SVG_PATHS: Record<PhiMaskPreset, string> = {
   circle: '<circle cx="50" cy="50" r="48" fill="white"/>',

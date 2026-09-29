@@ -73,7 +73,8 @@ import { PhiExpandIndicator } from "./phi-expand-indicator";
 import styles from "./phi-table-control.module.css";
 import { usePhiConfig } from "../root/phi-config-provider";
 import { PhiSkeletonControl } from "./phi-skeleton-control";
-import { isPhiRecord } from "../../helpers/is-record";
+import { readPhiDotPath } from "../../helpers/dot-path";
+import { readPhiTableRowIdentity as readIdentity } from "../../helpers/table-binding";
 
 export type PhiTableControlCellEditor = {
   type: Exclude<PhiTableProviderFieldType, "json">;
@@ -380,10 +381,7 @@ export type PhiTableControlProps<TRow extends Record<string, unknown>> = {
 };
 
 export function readPhiTableControlValue(row: Record<string, unknown>, path: string) {
-  return path.split(".").filter(Boolean).reduce<unknown>(
-    (current, segment) => isPhiRecord(current) ? current[segment] : undefined,
-    row,
-  );
+  return readPhiDotPath(row, path);
 }
 
 /**
@@ -411,13 +409,6 @@ function isPhiTableRowActivationClick(event: MouseEvent<HTMLTableRowElement>) {
   }
   const selection = typeof window === "undefined" ? null : window.getSelection();
   return selection == null || selection.isCollapsed;
-}
-
-function readIdentity(row: Record<string, unknown>, path: string): PhiTableRowIdentity | null {
-  const value = readPhiTableControlValue(row, path);
-  return typeof value === "string" || (typeof value === "number" && Number.isFinite(value))
-    ? value
-    : null;
 }
 
 function buildTreeRows<TRow extends Record<string, unknown>>(

@@ -15,14 +15,11 @@ export const PHI_CMS_SPECIAL_AREA_KEYS = PHI_CMS_AREA_KEYS.filter(
   (area): area is Exclude<PhiCmsAreaKey, "public"> => area !== "public",
 );
 
-export const PHI_BUILDER_AREA_KEYS = [
-  "public",
-  "app",
-  "admin",
-  "builder",
-  "editor",
-  "accounting",
-] as const;
+/**
+ * The Areas the Builder can open. A different question from the Areas a Site has (see
+ * `resolvePhiCmsAreaAsBuilderArea`), answered today by the same list.
+ */
+export const PHI_BUILDER_AREA_KEYS: typeof PHI_CMS_AREA_KEYS = PHI_CMS_AREA_KEYS;
 
 export type PhiBuilderAreaKey = (typeof PHI_BUILDER_AREA_KEYS)[number];
 

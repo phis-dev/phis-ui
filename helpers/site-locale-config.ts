@@ -1,4 +1,4 @@
-import { normalizeLocale, type SiteLocale } from "./locale";
+import { matchPhiLocalePrefixSegment, normalizeLocale, type SiteLocale } from "./locale";
 
 export type SiteLocaleOption = {
   code: string;
@@ -36,12 +36,9 @@ export function extractLocalePrefix(pathname: string, config: SiteLocaleConfig):
     return null;
   }
 
-  const matched = normalizeSiteLocale(firstSegment, config);
   // The segment is lowercased and a Site's tag keeps its case (`pt-BR`), so the two are compared alike.
-  const lowered = matched.toLowerCase();
-  if (firstSegment === lowered || firstSegment.startsWith(`${lowered}-`)) {
-    return matched;
-  }
-
-  return null;
+  return matchPhiLocalePrefixSegment(firstSegment, {
+    defaultLocale: config.defaultLocale,
+    availableLocales: config.availableLocales.map((option) => option.code),
+  });
 }

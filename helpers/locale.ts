@@ -128,9 +128,10 @@ export function normalizeLocale(
   return defaultLocale;
 }
 
-export function localizePath(locale: SiteLocale | string, targetPath: string) {
+/** `targetPath` under a first segment; an absolute URL passes through untouched. */
+function prefixPath(prefix: string, targetPath: string) {
   if (!targetPath || targetPath === "/") {
-    return `/${locale}`;
+    return `/${prefix}`;
   }
 
   if (/^https?:\/\//i.test(targetPath)) {
@@ -138,10 +139,14 @@ export function localizePath(locale: SiteLocale | string, targetPath: string) {
   }
 
   if (targetPath.startsWith("/")) {
-    return `/${locale}${targetPath}`;
+    return `/${prefix}${targetPath}`;
   }
 
-  return `/${locale}/${targetPath}`;
+  return `/${prefix}/${targetPath}`;
+}
+
+export function localizePath(locale: SiteLocale | string, targetPath: string) {
+  return prefixPath(locale, targetPath);
 }
 
 /**
@@ -152,21 +157,7 @@ export function localizePath(locale: SiteLocale | string, targetPath: string) {
  * a locale it had to invent.
  */
 export function phiAreaPath(area: SiteArea | string, targetPath: string) {
-  const normalizedArea = normalizeAreaSegment(area);
-
-  if (!targetPath || targetPath === "/") {
-    return `/${normalizedArea}`;
-  }
-
-  if (/^https?:\/\//i.test(targetPath)) {
-    return targetPath;
-  }
-
-  if (targetPath.startsWith("/")) {
-    return `/${normalizedArea}${targetPath}`;
-  }
-
-  return `/${normalizedArea}/${targetPath}`;
+  return prefixPath(normalizeAreaSegment(area), targetPath);
 }
 
 export function localizeAreaPath(
@@ -209,25 +200,37 @@ export function resolvePhiNavHref(
   return localizeAreaPath(locale, currentArea, normalizedHref);
 }
 
+/**
+ * The locale a path segment names, or `null` where it names none.
+ *
+ * The segment is resolved against the Site's locales and must then spell that locale or a regional form
+ * of it (`de-at` for `de`), compared without case. Anything else -- an Area, a page -- resolves to the
+ * default locale and is refused here, because it does not spell it.
+ */
+export function matchPhiLocalePrefixSegment(
+  segment: string,
+  options: Pick<NormalizeLocaleOptions, "defaultLocale" | "availableLocales"> = {},
+): SiteLocale | null {
+  if (!segment) {
+    return null;
+  }
+  const candidate = normalizeLocale(segment, {
+    defaultLocale: options.defaultLocale,
+    availableLocales: normalizeAvailableLocales(options.availableLocales),
+  });
+  const loweredSegment = segment.toLowerCase();
+  const loweredCandidate = candidate.toLowerCase();
+  return loweredSegment === loweredCandidate || loweredSegment.startsWith(`${loweredCandidate}-`)
+    ? candidate
+    : null;
+}
+
 export function stripLocaleFromPathname(
   pathname: string,
   options: Pick<NormalizeLocaleOptions, "defaultLocale" | "availableLocales"> = {},
 ) {
-  const resolvedAvailableLocales = normalizeAvailableLocales(options.availableLocales);
   const segments = pathname.split("/").filter(Boolean);
-  const firstSegment = segments[0];
-  const localeCandidate = firstSegment
-    ? normalizeLocale(firstSegment, {
-        defaultLocale: options.defaultLocale,
-        availableLocales: resolvedAvailableLocales,
-      })
-    : null;
-  if (
-    firstSegment &&
-    localeCandidate &&
-    (firstSegment.toLowerCase() === localeCandidate.toLowerCase() ||
-      firstSegment.toLowerCase().startsWith(`${localeCandidate.toLowerCase()}-`))
-  ) {
+  if (segments[0] && matchPhiLocalePrefixSegment(segments[0], options)) {
     return `/${segments.slice(1).join("/")}`;
   }
 

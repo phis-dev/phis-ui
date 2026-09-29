@@ -1,4 +1,3 @@
-import { resolvePhiCmsWidgetPluginKey } from "../../../constants/cms-widget-types";
 import type { PhiCmsWidgetPlugin } from "../../../types";
 import { PHI_TEXT_CONTROL_SIGNALS } from "../signals/control-signal-capabilities";
 import type { PhiCmsWidgetConfigBase } from "./parser-primitives";
@@ -8,6 +7,7 @@ import {
   parsePhiControlConfig,
   type PhiControlConfig,
 } from "./control-signal-config";
+import { createPhiCmsWidgetDefinition } from "./helpers";
 
 export type PhiCmsSearchWidgetConfig = PhiCmsWidgetConfigBase & PhiControlConfig & {
   value?: string;
@@ -65,9 +65,7 @@ export function buildPhiSearchWidgetDefinition(
       >
     >,
 ) {
-  return {
-    kind: "widget",
-    pluginKey: resolvePhiCmsWidgetPluginKey(options.typeKey),
+  return createPhiCmsWidgetDefinition<PhiCmsSearchWidgetConfig>({
     typeKey: options.typeKey,
     title: options.title,
     description: options.description,
@@ -83,19 +81,5 @@ export function buildPhiSearchWidgetDefinition(
       ...(options.defaultConfig ?? {}),
     },
     parseConfig: parsePhiCmsSearchWidgetConfig,
-  } satisfies Pick<
-    PhiCmsWidgetPlugin<PhiCmsSearchWidgetConfig>,
-    | "kind"
-    | "pluginKey"
-    | "typeKey"
-    | "title"
-    | "description"
-    | "category"
-    | "iconFamily"
-    | "slotSizePolicy"
-    | "runtimeSignals"
-    | "fields"
-    | "defaultConfig"
-    | "parseConfig"
-  >;
+  });
 }

@@ -10,6 +10,7 @@ import type {
   PhiTreeNodeIdentity,
   PhiTreeWidgetPresentation,
 } from "../../types/tree-widget";
+import { readPhiTreeNodePath } from "../../types/tree-widget";
 import type { PhiControlSize } from "../../types/control";
 import { PhiIcon } from "../shell/phi-icon";
 import { PhiIconPickerControl } from "./phi-icon-picker-control";
@@ -42,8 +43,7 @@ export type PhiTreeControlExternalDropRequest = Omit<PhiTreeControlDropRequest, 
 
 function readPath(value: TreeRecord, path: string | undefined): unknown {
   if (!path) return undefined;
-  return path.split(".").reduce<unknown>((current, key) =>
-    current && typeof current === "object" ? (current as Record<string, unknown>)[key] : undefined, value);
+  return readPhiTreeNodePath(value, path);
 }
 
 function readIdentity(value: unknown): PhiTreeNodeIdentity | null {

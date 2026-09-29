@@ -345,6 +345,15 @@ export type PhiSignalDragDropPayloadType = string;
 
 export type PhiSignalDropMode = "before" | "after" | "child" | "replace" | "append" | "swap";
 
+/** Where a Table row or Tree node takes a drop: every signal drop mode but a swap. */
+export type PhiProviderDropMode = Exclude<PhiSignalDropMode, "swap">;
+
+/** What a Table or Tree provider resource declares it accepts as a drop. */
+export type PhiProviderDropTargetCapability = {
+  payloadType: `${string}/${string}`;
+  modes?: readonly PhiProviderDropMode[];
+};
+
 export type PhiSignalDragSourceMeta = {
   key: string;
   types: PhiSignalDragDropPayloadType[];

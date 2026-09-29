@@ -12,6 +12,7 @@ import type {
 } from "../../../types/tree-widget";
 import {
   PhiTreeProviderError,
+  readPhiTreeNodePath as readPath,
   readPhiTreeProviderError,
   readPhiTreeProviderMutationResult,
   readPhiTreeProviderQueryResult,
@@ -25,11 +26,6 @@ type MutationInput = PhiTreeProviderMutationRequest extends infer TRequest
     ? Omit<TRequest, "resourceKey" | "params" | "signal">
     : never
   : never;
-
-function readPath(value: Record<string, unknown>, path: string): unknown {
-  return path.split(".").reduce<unknown>((current, key) =>
-    current && typeof current === "object" ? (current as Record<string, unknown>)[key] : undefined, value);
-}
 
 function patchNode(
   nodes: readonly TreeNode[],

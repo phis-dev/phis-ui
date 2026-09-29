@@ -1,3 +1,5 @@
+import { PHI_SPACING_SCALE_DEFAULT_LABELS, type PhiSpacingScaleLabels } from "./spacing-scale";
+
 export type PhiPaddingWidgetLabels = {
   title: string;
   description: string;
@@ -12,17 +14,7 @@ export type PhiPaddingWidgetLabels = {
     value: string;
   };
   /** The steps of the spacing scale, as the select box in each cell of the grid names them. */
-  scaleSizes: {
-    none: string;
-    xxs: string;
-    xs: string;
-    sm: string;
-    base: string;
-    md: string;
-    lg: string;
-    xl: string;
-    xxl: string;
-  };
+  scaleSizes: PhiSpacingScaleLabels;
 };
 
 export const PHI_PADDING_WIDGET_DEFAULT_LABELS: PhiPaddingWidgetLabels = {
@@ -38,15 +30,5 @@ export const PHI_PADDING_WIDGET_DEFAULT_LABELS: PhiPaddingWidgetLabels = {
   placeholders: {
     value: "none",
   },
-  scaleSizes: {
-    none: "None",
-    xxs: "XXS",
-    xs: "XS",
-    sm: "SM",
-    base: "Base",
-    md: "MD",
-    lg: "LG",
-    xl: "XL",
-    xxl: "XXL",
-  },
+  scaleSizes: { ...PHI_SPACING_SCALE_DEFAULT_LABELS },
 };

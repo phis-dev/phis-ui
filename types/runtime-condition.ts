@@ -9,6 +9,7 @@ import {
 } from "./signals";
 import type { PhiRuntimeControllerRequirement } from "./cms-plugins";
 import { isPhiRecord } from "../helpers/is-record";
+import { readPhiDotPath } from "../helpers/dot-path";
 
 /**
  * Where a condition reads the value it judges.
@@ -212,12 +213,7 @@ export function resolvePhiRuntimeConditionControllerRequirements(
 }
 
 export function readPhiRuntimeConditionValue(input: unknown, valuePath: string): unknown {
-  let current = input;
-  for (const segment of valuePath.split(".").filter(Boolean)) {
-    if (!isPhiRecord(current)) return undefined;
-    current = current[segment];
-  }
-  return current;
+  return readPhiDotPath(input, valuePath);
 }
 
 function resolvePhiRuntimeConditionSource(

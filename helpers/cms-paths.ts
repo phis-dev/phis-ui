@@ -12,22 +12,18 @@ export function resolvePhiBuilderCmsStoragePath(
   return resolvePhiBuilderCmsStoragePathForCatalog(area, pageKey, pages);
 }
 
+/** A storage path under its Area's segment: `/` is the Area itself. */
+function prefixPhiBuilderAreaPath(area: PhiDeveloperBuilderArea, storagePath: string) {
+  return storagePath === "/" ? `/${area}` : `/${area}${storagePath}`;
+}
+
 export function resolvePhiBuilderCmsFetchPath(
   area: PhiDeveloperBuilderArea,
   pageKey: string,
   pages: readonly PhiPresetPageNode[],
 ) {
   const storagePath = resolvePhiBuilderCmsStoragePath(area, pageKey, pages);
-
-  if (area === "public") {
-    return storagePath;
-  }
-
-  if (storagePath === "/") {
-    return `/${area}`;
-  }
-
-  return `/${area}${storagePath}`;
+  return area === "public" ? storagePath : prefixPhiBuilderAreaPath(area, storagePath);
 }
 
 export function resolvePhiBuilderNavigationTargetPath(
@@ -35,15 +31,5 @@ export function resolvePhiBuilderNavigationTargetPath(
   pageKey: string,
   pages: readonly PhiPresetPageNode[],
 ) {
-  const storagePath = resolvePhiBuilderCmsStoragePath(area, pageKey, pages);
-
-  if (area === "public") {
-    return storagePath === "/" ? "/public" : `/public${storagePath}`;
-  }
-
-  if (storagePath === "/") {
-    return `/${area}`;
-  }
-
-  return `/${area}${storagePath}`;
+  return prefixPhiBuilderAreaPath(area, resolvePhiBuilderCmsStoragePath(area, pageKey, pages));
 }

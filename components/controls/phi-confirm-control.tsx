@@ -6,21 +6,9 @@ import { Popconfirm } from "antd";
 import type { PhiControlSize } from "../../types/control";
 import type { PhiButtonType } from "./phi-button-types";
 import { PhiButtonControl } from "./phi-button-control";
+import { PHI_POPUP_PLACEMENTS } from "./phi-picker-control-contract";
 
-export const PHI_CONFIRM_PLACEMENTS = [
-  "top",
-  "topLeft",
-  "topRight",
-  "bottom",
-  "bottomLeft",
-  "bottomRight",
-  "left",
-  "leftTop",
-  "leftBottom",
-  "right",
-  "rightTop",
-  "rightBottom",
-] as const;
+export const PHI_CONFIRM_PLACEMENTS = PHI_POPUP_PLACEMENTS;
 
 export type PhiConfirmPlacement = (typeof PHI_CONFIRM_PLACEMENTS)[number];
 

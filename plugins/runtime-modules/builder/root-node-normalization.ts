@@ -12,7 +12,7 @@ import {
 } from "../../../components/controls/phi-anchor-control-contract";
 import type { PhiRenderableBlockRenderMode } from "../../../types";
 import type { PhiCmsInstanceId } from "../../../types/cms-instance-id";
-import type { PhiBuilderRootNodeKind } from "./preview-transport";
+import type { PhiBuilderPreviewRegionDraft, PhiBuilderRootNodeKind } from "./preview-transport";
 import { readPhiShadow, type PhiShadow } from "../../../types/layout-style";
 import { isPhiRecord } from "../../../helpers/is-record";
 
@@ -32,6 +32,39 @@ export type PhiBuilderRootNodeDraft = {
   childLayouts?: PhiCmsLayoutRenderNode[];
   childWidgets?: PhiCmsContentWidgetNode[];
 };
+
+/**
+ * What a region draft says about its root node, as a root node draft reads it: every field but the ones
+ * that name the node (`id`, `typeKey`, `kind`, `packageName`), which each caller answers for itself.
+ */
+export function readPhiBuilderRootNodeDraftFields(
+  draft: Pick<
+    PhiBuilderPreviewRegionDraft,
+    | "rootNodeTitle"
+    | "rootNodeConfig"
+    | "rootNodeGeometry"
+    | "rootNodeAnchor"
+    | "rootNodePadding"
+    | "rootNodeBackground"
+    | "rootNodeBorder"
+    | "rootNodeShadow"
+    | "rootNodeChildLayouts"
+    | "rootNodeChildWidgets"
+  >,
+): Omit<PhiBuilderRootNodeDraft, "id" | "typeKey" | "kind" | "packageName"> {
+  return {
+    title: draft.rootNodeTitle ?? null,
+    rootNodeConfig: draft.rootNodeConfig ?? null,
+    rootNodeGeometry: draft.rootNodeGeometry ?? null,
+    rootNodeAnchor: draft.rootNodeAnchor ?? null,
+    rootNodePadding: draft.rootNodePadding ?? null,
+    rootNodeBackground: draft.rootNodeBackground ?? null,
+    rootNodeBorder: draft.rootNodeBorder ?? null,
+    rootNodeShadow: draft.rootNodeShadow ?? null,
+    childLayouts: draft.rootNodeChildLayouts ?? [],
+    childWidgets: draft.rootNodeChildWidgets ?? [],
+  };
+}
 
 export type PhiBuilderRootNodeDefaults = {
   rootNodePadding: PhiCmsPaddingWidgetConfig | null;

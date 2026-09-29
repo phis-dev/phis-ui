@@ -3,14 +3,12 @@ import type {
   PhiTableRowIdentity,
 } from "../types/table-widget";
 import { isPhiRecord } from "./is-record";
+import { readPhiDotPath } from "./dot-path";
 
 type TableRow = Record<string, unknown>;
 
 export function readPhiTableRowValue(row: TableRow, path: string) {
-  return path.split(".").filter(Boolean).reduce<unknown>(
-    (current, segment) => isPhiRecord(current) ? current[segment] : undefined,
-    row,
-  );
+  return readPhiDotPath(row, path);
 }
 
 export function readPhiTableRowIdentity(row: TableRow, path: string): PhiTableRowIdentity | null {

@@ -1,5 +1,3 @@
-import { resolvePhiCmsWidgetPluginKey } from "../../../constants/cms-widget-types";
-import type { PhiCmsWidgetPlugin } from "../../../types";
 import { readString, type PhiCmsWidgetConfigBase } from "./parser-primitives";
 import {
   PHI_CHOICE_CONTROL_OPTION_FIELDS,
@@ -8,6 +6,7 @@ import {
   parsePhiStackChoiceControlConfig,
   type PhiStackChoiceControlConfig,
 } from "./choice-shared";
+import { createPhiCmsWidgetDefinition } from "./helpers";
 import { PHI_SELECT_CONTROL_SIGNALS } from "../signals/control-signal-capabilities";
 
 export type PhiCmsTabBarWidgetConfig = PhiCmsWidgetConfigBase & PhiStackChoiceControlConfig & {
@@ -24,9 +23,7 @@ export function parsePhiCmsTabBarWidgetConfig(config: Record<string, unknown>): 
   };
 }
 
-export const PHI_TAB_BAR_WIDGET_DEFINITION = {
-  kind: "widget",
-  pluginKey: resolvePhiCmsWidgetPluginKey("tab-bar"),
+export const PHI_TAB_BAR_WIDGET_DEFINITION = createPhiCmsWidgetDefinition<PhiCmsTabBarWidgetConfig>({
   typeKey: "tab-bar",
   title: "Tab bar",
   description: "Reusable tab control that emits runtime state signals and can optionally control stack slots.",
@@ -61,18 +58,4 @@ export const PHI_TAB_BAR_WIDGET_DEFINITION = {
     ...PHI_CHOICE_CONTROL_CONFIG_FIELDS,
   ],
   parseConfig: parsePhiCmsTabBarWidgetConfig,
-} satisfies Pick<
-  PhiCmsWidgetPlugin<PhiCmsTabBarWidgetConfig>,
-  | "kind"
-  | "pluginKey"
-  | "typeKey"
-  | "title"
-  | "description"
-  | "category"
-  | "iconFamily"
-  | "slotSizePolicy"
-  | "runtimeSignals"
-  | "defaultConfig"
-  | "fields"
-  | "parseConfig"
->;
+});

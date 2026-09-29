@@ -49,6 +49,7 @@ import { PhiBuilderInsertPickerControl } from "../../../../../components/control
 import {
   buildPhiBuilderRootNodeRenderConfig,
   normalizePhiBuilderRootNodeDraft,
+  readPhiBuilderRootNodeDraftFields,
   resolvePhiBuilderRootNodeDefaults,
 } from "../../../../../plugins/runtime-modules/builder/root-node-normalization";
 import { compactPhiCmsSequentialChildren, isPhiCmsSequentialLayoutSlots } from "../../../../../plugins/runtime-modules/builder/sequential-slot-helpers";
@@ -136,17 +137,8 @@ function buildStructureRootLayoutNode(
     id: draft.rootNodeId,
     typeKey: draft.rootNodeTypeKey,
     kind: draft.rootNodeKind,
-    title: draft.rootNodeTitle ?? null,
     packageName: draft.rootNodePackageName ?? null,
-    rootNodeConfig: draft.rootNodeConfig ?? null,
-    rootNodeGeometry: draft.rootNodeGeometry ?? null,
-    rootNodeAnchor: draft.rootNodeAnchor ?? null,
-    rootNodePadding: draft.rootNodePadding ?? null,
-    rootNodeBackground: draft.rootNodeBackground ?? null,
-    rootNodeBorder: draft.rootNodeBorder ?? null,
-    rootNodeShadow: draft.rootNodeShadow ?? null,
-    childLayouts: draft.rootNodeChildLayouts ?? [],
-    childWidgets: draft.rootNodeChildWidgets ?? [],
+    ...readPhiBuilderRootNodeDraftFields(draft),
   });
   const config = buildPhiBuilderRootNodeRenderConfig(normalized, "editor");
   delete config.renderMode;

@@ -123,26 +123,36 @@ function collectWidgetReferenceOptionsFromDrafts(
   return options;
 }
 
-function resolveDraftFromLayoutNode(
-  node: PhiCmsLayoutRenderNode | null,
-  meta?: PhiBuilderContainerMeta | null,
-): PhiDeveloperBuilderRegionDraft | null {
-  if (!node) {
-    return null;
-  }
-
-  const parsedConfig = {
-    ...(meta?.defaultConfig ?? {}),
-    ...(node.config ?? {}),
-  };
+/**
+ * The Inspector's draft for a root node, from its parsed config and what the node already knows about
+ * itself. Whatever `known` carries wins over what the config says; absent, the config and the node
+ * kind's defaults answer.
+ */
+function resolveDraftFromRootConfig(
+  parsedConfig: Record<string, unknown>,
+  known: Pick<
+    PhiDeveloperBuilderRegionDraft,
+    | "rootNodeId"
+    | "rootNodeTypeKey"
+    | "rootNodeKind"
+    | "rootNodeTitle"
+    | "rootNodeAnchor"
+    | "rootNodeGeometry"
+    | "rootNodePadding"
+    | "rootNodeBackground"
+    | "rootNodeBorder"
+    | "rootNodeShadow"
+  >,
+): PhiDeveloperBuilderRegionDraft {
   const rootNodeDefaults = resolvePhiBuilderRootNodeDefaultsFromConfig(parsedConfig);
 
   return {
     ...(parsedConfig as Record<string, unknown>),
-    rootNodeId: node.id,
-    rootNodeTypeKey: node.widgetType,
-    rootNodeKind: "layout",
-    rootNodeTitle: node.label,
+    ...(known.rootNodeGeometry ?? {}),
+    rootNodeId: known.rootNodeId,
+    rootNodeTypeKey: known.rootNodeTypeKey,
+    rootNodeKind: known.rootNodeKind,
+    rootNodeTitle: known.rootNodeTitle,
     background: {
       base: {
         kind: "color",
@@ -151,24 +161,51 @@ function resolveDraftFromLayoutNode(
       overlay: null,
       effect: null,
     },
+    rootNodeAnchor: known.rootNodeAnchor,
     rootNodePadding: mergePhiCmsConfigValues<PhiCmsPaddingWidgetConfig>(
       rootNodeDefaults.rootNodePadding,
-      normalizePhiPaddingWidgetConfig(parsedConfig),
+      known.rootNodePadding ?? normalizePhiPaddingWidgetConfig(parsedConfig),
     ),
+    rootNodeBackground:
+      known.rootNodeBackground ??
+      (typeof parsedConfig.background === "object" && parsedConfig.background != null
+        ? (parsedConfig.background as PhiCmsBackgroundWidgetConfig)
+        : rootNodeDefaults.rootNodeBackground),
+    rootNodeBorder:
+      known.rootNodeBorder ??
+      (typeof parsedConfig.border === "object" && parsedConfig.border != null
+        ? (parsedConfig.border as PhiCmsBorderWidgetConfig)
+        : rootNodeDefaults.rootNodeBorder),
+    rootNodeShadow:
+      known.rootNodeShadow ??
+      readPhiShadow(parsedConfig.rootNodeShadow) ?? null,
+  };
+}
+
+function resolveDraftFromLayoutNode(
+  node: PhiCmsLayoutRenderNode | null,
+  meta?: PhiBuilderContainerMeta | null,
+): PhiDeveloperBuilderRegionDraft | null {
+  if (!node) {
+    return null;
+  }
+
+  const parsedConfig: Record<string, unknown> = {
+    ...(meta?.defaultConfig ?? {}),
+    ...(node.config ?? {}),
+  };
+
+  return resolveDraftFromRootConfig(parsedConfig, {
+    rootNodeId: node.id,
+    rootNodeTypeKey: node.widgetType,
+    rootNodeKind: "layout",
+    rootNodeTitle: node.label,
+    // A stored placement name is taken as it is; only an anchor object is resolved.
     rootNodeAnchor:
       (typeof parsedConfig.anchor === "string" && isPhiAnchorWidgetPlacement(parsedConfig.anchor)
         ? parsedConfig.anchor
         : resolvePhiAnchorPlacement(parsedConfig.anchor as PhiRenderableBlockAnchor | null | undefined)) ?? null,
-    rootNodeBackground:
-      typeof parsedConfig.background === "object" && parsedConfig.background != null
-        ? (parsedConfig.background as PhiCmsBackgroundWidgetConfig)
-        : rootNodeDefaults.rootNodeBackground,
-    rootNodeBorder:
-      typeof parsedConfig.border === "object" && parsedConfig.border != null
-        ? (parsedConfig.border as PhiCmsBorderWidgetConfig)
-        : rootNodeDefaults.rootNodeBorder,
-    rootNodeShadow: readPhiShadow(parsedConfig.rootNodeShadow) ?? null,
-  };
+  });
 }
 
 function resolveDraftFromRootNodeDraft(
@@ -179,49 +216,26 @@ function resolveDraftFromRootNodeDraft(
     return null;
   }
 
-  const parsedRootConfig = {
+  const parsedRootConfig: Record<string, unknown> = {
     ...(meta?.defaultConfig ?? {}),
     ...(draft.rootNodeConfig ?? (draft as Record<string, unknown>)),
   };
-  const rootNodeDefaults = resolvePhiBuilderRootNodeDefaultsFromConfig(parsedRootConfig);
 
-  return {
-    ...(parsedRootConfig as Record<string, unknown>),
-    ...(draft.rootNodeGeometry ?? {}),
+  return resolveDraftFromRootConfig(parsedRootConfig, {
+    rootNodeGeometry: draft.rootNodeGeometry,
     rootNodeId: draft.rootNodeId ?? null,
     rootNodeTypeKey: draft.rootNodeTypeKey ?? null,
     rootNodeKind: draft.rootNodeKind ?? null,
     rootNodeTitle: draft.rootNodeTitle ?? null,
-    background: {
-      base: {
-        kind: "color",
-        color: "#ffffff",
-      },
-      overlay: null,
-      effect: null,
-    },
     rootNodeAnchor:
       draft.rootNodeAnchor ??
       resolvePhiAnchorPlacement(parsedRootConfig.anchor as PhiRenderableBlockAnchor | null | undefined) ??
       null,
-    rootNodePadding: mergePhiCmsConfigValues<PhiCmsPaddingWidgetConfig>(
-      rootNodeDefaults.rootNodePadding,
-      draft.rootNodePadding ?? normalizePhiPaddingWidgetConfig(parsedRootConfig),
-    ),
-    rootNodeBackground:
-      draft.rootNodeBackground ??
-      (typeof parsedRootConfig.background === "object" && parsedRootConfig.background != null
-        ? (parsedRootConfig.background as PhiCmsBackgroundWidgetConfig)
-        : rootNodeDefaults.rootNodeBackground),
-    rootNodeBorder:
-      draft.rootNodeBorder ??
-      (typeof parsedRootConfig.border === "object" && parsedRootConfig.border != null
-        ? (parsedRootConfig.border as PhiCmsBorderWidgetConfig)
-        : rootNodeDefaults.rootNodeBorder),
-    rootNodeShadow:
-      draft.rootNodeShadow ??
-      readPhiShadow(parsedRootConfig.rootNodeShadow) ?? null,
-  };
+    rootNodePadding: draft.rootNodePadding,
+    rootNodeBackground: draft.rootNodeBackground,
+    rootNodeBorder: draft.rootNodeBorder,
+    rootNodeShadow: draft.rootNodeShadow,
+  });
 }
 
 type PhiBuilderInspectorSectionWidgetClientProps = {

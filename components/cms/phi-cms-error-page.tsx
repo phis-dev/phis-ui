@@ -13,14 +13,10 @@ import {
   type PhiCmsErrorCode,
 } from "../../constants/cms-error-pages";
 import {
-  resolvePhiRuntimeModuleIdsForArea,
-} from "../../plugins/runtime-modules/settings";
-import {
-  resolvePhiCmsRuntimeModuleScope,
+  resolvePhiCmsAreaRuntimeModuleScope,
   resolvePhiCmsTreeRuntimeRegistry,
 } from "./phi-cms-runtime-registry";
 import { PhiRuntimeModuleDataProviderHost } from "../runtime/runtime-module-data-provider-host";
-import { readPhiAreaPresetRuntimeModuleIds } from "../../helpers/cms-area-config";
 import { isPhiStaticCmsSiteBridge } from "../../server-helpers/static-render";
 
 export type PhiCmsErrorPageProps = {
@@ -129,15 +125,10 @@ export async function PhiCmsErrorPage({ code, cmsBridge, area, locale: staticLoc
     return <PhiCmsHardFallbackErrorPage code={code} />;
   }
 
-  const runtimeModuleIds = resolvePhiRuntimeModuleIdsForArea(
-    resolvedRequest.runtime.area,
-    readPhiAreaPresetRuntimeModuleIds(resolvedRequest.areaPreset, resolvedRequest.runtime.area),
-    [...cmsBridge.runtimeModuleCatalog.values()].map((entry) => entry.definition),
-  );
-  const runtimeModuleScope = await resolvePhiCmsRuntimeModuleScope({
+  const runtimeModuleScope = await resolvePhiCmsAreaRuntimeModuleScope({
     cmsBridge,
-    moduleIds: runtimeModuleIds,
     area: resolvedRequest.runtime.area,
+    areaPreset: resolvedRequest.areaPreset,
     serverCapabilities: resolvedRequest.serverCapabilities,
   });
   const runtimeRegistry = await resolvePhiCmsTreeRuntimeRegistry({

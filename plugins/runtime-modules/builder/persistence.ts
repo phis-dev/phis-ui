@@ -20,6 +20,7 @@ import { getPhiBuilderDefaultRegionDraft } from "./region-defaults";
 import {
   buildPhiBuilderRootNodeRenderConfig,
   normalizePhiBuilderRootNodeDraft,
+  readPhiBuilderRootNodeDraftFields,
   type PhiBuilderRootNodeDraft,
 } from "./root-node-normalization";
 import { serializePhiDeveloperBuilderRegionConfig } from "./region-hydration";
@@ -358,17 +359,8 @@ function serializeRootDraft(
     id: draft.rootNodeId ?? null,
     typeKey: draft.rootNodeTypeKey,
     kind: draft.rootNodeKind,
-    title: draft.rootNodeTitle ?? null,
     packageName: draft.rootNodePackageName ?? null,
-    rootNodeConfig: draft.rootNodeConfig ?? null,
-    rootNodeGeometry: draft.rootNodeGeometry ?? null,
-    rootNodeAnchor: draft.rootNodeAnchor ?? null,
-    rootNodePadding: draft.rootNodePadding ?? null,
-    rootNodeBackground: draft.rootNodeBackground ?? null,
-    rootNodeBorder: draft.rootNodeBorder ?? null,
-    rootNodeShadow: draft.rootNodeShadow ?? null,
-    childLayouts: draft.rootNodeChildLayouts ?? [],
-    childWidgets: draft.rootNodeChildWidgets ?? [],
+    ...readPhiBuilderRootNodeDraftFields(draft),
   } satisfies PhiBuilderRootNodeDraft);
   const rootLayoutNodeId = readPersistableNodeId(draft.rootNodeId);
   if (rootLayoutNodeId == null) {
