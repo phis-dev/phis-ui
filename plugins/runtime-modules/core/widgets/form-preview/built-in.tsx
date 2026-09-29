@@ -33,6 +33,7 @@ const PHI_FORM_PREVIEW_DATA_SOURCE: PhiApiDataSource = {
       phase: "phase",
       formId: "formId",
       token: "token",
+      area: "area",
     },
   },
   cache: {

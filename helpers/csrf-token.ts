@@ -39,3 +39,31 @@ export async function fetchPhiCsrfToken(options: FetchPhiCsrfTokenOptions = {}):
   }
   return token;
 }
+
+/** The cookie Core's CSRF endpoint sets, readable by the page so it can repeat it in `x-csrf-token`. */
+const PHI_CSRF_COOKIE_NAME = "phis_csrf";
+
+function readPhiCsrfCookie(): string {
+  if (typeof document === "undefined") return "";
+  for (const part of document.cookie.split(";")) {
+    const separator = part.indexOf("=");
+    if (separator < 0 || part.slice(0, separator).trim() !== PHI_CSRF_COOKIE_NAME) continue;
+    try {
+      return decodeURIComponent(part.slice(separator + 1).trim());
+    } catch {
+      return "";
+    }
+  }
+  return "";
+}
+
+/**
+ * The token this browser already holds, or a fresh one where it holds none.
+ *
+ * For a request that goes out for whoever sends it, such as a Form submit: reading the cookie keeps the
+ * pair Core may have rotated -- sign-in replaces it -- instead of minting another beside it, and a
+ * fetch only happens once per browser. What the server compares is the header against that same cookie.
+ */
+export async function readPhiCsrfToken(options: FetchPhiCsrfTokenOptions = {}): Promise<string> {
+  return readPhiCsrfCookie() || fetchPhiCsrfToken(options);
+}

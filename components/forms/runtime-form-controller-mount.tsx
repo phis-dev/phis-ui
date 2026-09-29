@@ -28,6 +28,8 @@ import {
   readPhiRuntimeFormValuesSignalValue,
 } from "./runtime-form-state";
 import { isPhiRecord } from "../../helpers/is-record";
+import { readPhiCsrfToken } from "../../helpers/csrf-token";
+import { resolvePhiFormRelayArea } from "./form-relay-area";
 
 export type PhiRuntimeFormSubmitSignalValue = {
   formId: string;
@@ -84,6 +86,32 @@ function isPhiRuntimeFormSubmitSignalValue(value: unknown): value is PhiRuntimeF
     typeof value.formId === "string" &&
     (value.phase === "submit" || value.phase === "confirm")
   );
+}
+
+/**
+ * One submit to the Site's form relay, carrying what the relay may not work out for itself.
+ *
+ * The Area the Form was drawn in, and the browser's CSRF token. The relay used to mint a CSRF pair of
+ * its own for each submit, which proved nothing about the page that sent it; now it forwards this one,
+ * and a handler that declares CSRF refuses a submit without it. Every submit carries the token, because
+ * which handler needs one is the server's catalog, not the page's. A token that cannot be had is left
+ * out, and a handler that needs none -- a contact form -- still goes through.
+ */
+async function submitPhiFormToRelay(value: PhiRuntimeFormSubmitSignalValue, area: string | null) {
+  const csrfToken = await readPhiCsrfToken().catch(() => "");
+  return fetch("/api/site/forms", {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      ...(csrfToken ? { "x-csrf-token": csrfToken } : {}),
+    },
+    body: JSON.stringify({
+      formId: value.formId,
+      phase: value.phase,
+      area,
+      values: value.values,
+    }),
+  });
 }
 
 function emitControllerFeedback(
@@ -185,17 +213,7 @@ export function PhiRuntimeFormControllerMount({
         valueType: "boolean",
       });
 
-      void fetch("/api/site/forms", {
-        method: "POST",
-        headers: {
-          "content-type": "application/json",
-        },
-        body: JSON.stringify({
-          formId: signal.value.formId,
-          phase: signal.value.phase,
-          values: signal.value.values,
-        }),
-      })
+      void submitPhiFormToRelay(signal.value, resolvePhiFormRelayArea(signalPartition))
         .then(async (response): Promise<PhiRuntimeFormResultSignalValue> => {
           const payload = (await response.json().catch(() => null)) as Record<string, unknown> | null;
           return {

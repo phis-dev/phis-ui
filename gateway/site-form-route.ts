@@ -36,11 +36,16 @@ export type BuildPhiSiteFormRouteHandlersOptions = {
 type SiteFormSubmitBody = {
   formId?: string;
   phase?: "submit" | "confirm";
+  /** The Area of the page the Form was drawn in. See `resolvePhiServerFormHandler`. */
+  area?: unknown;
   values?: unknown;
 };
 
 const PHI_SITE_SESSION_COOKIE_NAME = "phis_session";
 const PHI_AUTH_LINK_COOKIE_NAME = "phis_auth_link";
+/** Core's double-submit pair: the cookie `/api/auth/csrf` sets and the header that repeats it. */
+const PHI_CSRF_COOKIE_NAME = "phis_csrf";
+const PHI_CSRF_HEADER_NAME = "x-csrf-token";
 
 function toJsonResponse(payload: unknown, status: number) {
   return Response.json(payload ?? {}, { status });
@@ -56,10 +61,29 @@ function headersToPlainObject(headers: Headers) {
   return result;
 }
 
+/**
+ * What goes upstream before the Provider has said what it needs: no browser cookie and no CSRF header.
+ * Each is added back only where the Provider declares it.
+ */
 function buildRelayHeaders(request: NextRequest, buildHeaders: (request: NextRequest) => Headers) {
   const headers = buildHeaders(request);
   headers.delete("cookie");
+  headers.delete(PHI_CSRF_HEADER_NAME);
   return headers;
+}
+
+/**
+ * The browser's own CSRF proof: the header its script sent and the cookie its browser holds, agreeing.
+ *
+ * The relay used to ask Core for a fresh token on every submit and send it upstream as both halves, so
+ * Core compared the relay with itself and every submit passed -- whatever page had sent it. The
+ * Set-Cookie of that round trip was dropped as well, so the pair belonged to nobody. The proof has to
+ * come from the browser, because only a page of this Site can read the cookie to repeat it in a header.
+ */
+function readBrowserCsrfToken(request: NextRequest) {
+  const headerToken = request.headers.get(PHI_CSRF_HEADER_NAME)?.trim() ?? "";
+  const cookieToken = request.cookies.get(PHI_CSRF_COOKIE_NAME)?.value?.trim() ?? "";
+  return headerToken && headerToken === cookieToken ? headerToken : null;
 }
 
 function appendCookieHeader(headers: Headers, cookiePair: string) {
@@ -135,6 +159,10 @@ function buildResponseWithSetCookies(payload: unknown, status: number, setCookie
   return response;
 }
 
+function readArea(value: unknown) {
+  return typeof value === "string" ? value : null;
+}
+
 function readBearerToken(headers: Headers) {
   const value = headers.get("authorization")?.trim() ?? "";
   if (!value) {
@@ -194,10 +222,10 @@ export function buildPhiSiteFormRouteHandlers({
    * It used to be minted during the server render, which tied every page with a public Form to the
    * request: the token carries the moment it was issued, so no two visitors may share a render. Issued
    * here, the page is the same for everybody. Only a Form whose submit handler is active in the Area the
-   * referer names gets one -- the same gate a submit passes -- and no cookie goes along: a guard is not
+   * page names gets one -- the same gate a submit passes -- and no cookie goes along: a guard is not
    * anybody's.
    */
-  async function guard(request: NextRequest, formId: string) {
+  async function guard(request: NextRequest, formId: string, area: string | null) {
     const relayHeaders = buildHeaders(request);
     const resolved = await resolvePhiServerFormHandler({
       request,
@@ -206,6 +234,7 @@ export function buildPhiSiteFormRouteHandlers({
       siteKey: relayHeaders.get(PHIS_SITE_KEY_HEADER)?.trim() ?? "",
       formId,
       phase: "submit",
+      area,
       loadRuntimeModuleCatalog,
     });
     if (!resolved) {
@@ -235,13 +264,14 @@ export function buildPhiSiteFormRouteHandlers({
     const phase = searchParams.get("phase")?.trim().toLowerCase() ?? "";
     const formId = searchParams.get("formId")?.trim().toLowerCase() ?? "";
     const token = searchParams.get("token")?.trim() ?? "";
+    const area = searchParams.get("area");
 
     if (phase === "guard" && formId) {
       if (!upstreamBaseUrl) {
         return toJsonResponse({ ok: false, error: missingBaseUrlMessage }, 500);
       }
       try {
-        return await guard(request, formId);
+        return await guard(request, formId, area);
       } catch (error) {
         const message = error instanceof Error ? error.message : "Form guard request failed.";
         return toJsonResponse({ ok: false, error: message }, 502);
@@ -270,6 +300,7 @@ export function buildPhiSiteFormRouteHandlers({
       siteKey: relayHeaders.get(PHIS_SITE_KEY_HEADER)?.trim() ?? "",
       formId,
       phase: "preview",
+      area,
       loadRuntimeModuleCatalog,
     });
     if (!resolved?.provider.upstreamPath) {
@@ -321,6 +352,7 @@ export function buildPhiSiteFormRouteHandlers({
         siteKey: relayHeaders.get(PHIS_SITE_KEY_HEADER)?.trim() ?? "",
         formId: body.formId,
         phase: body.phase,
+        area: readArea(body.area),
         loadRuntimeModuleCatalog,
       });
       if (!resolved) {
@@ -328,60 +360,28 @@ export function buildPhiSiteFormRouteHandlers({
       }
       const descriptor = buildPhiFormSubmitDescriptorFromHandlerProvider(resolved.formId, resolved.provider);
       const target = resolvePhiFormSubmitTarget(descriptor);
-      const requestValues = body.values ?? {};
-      if (target.requiresCsrf && target.csrfPath) {
-        const csrfHeaders = buildRelayHeaders(request, buildHeaders);
-        appendCredentialCookieForPolicy(csrfHeaders, request, descriptor.credentialPolicy);
-        const csrfResponse = await fetch(`${upstreamBaseUrl}${target.csrfPath}`, {
-          method: "GET",
-          headers: headersToPlainObject(csrfHeaders),
-          cache: "no-store",
-          signal: AbortSignal.timeout(timeoutMs),
-        });
-        const csrfPayload = (await csrfResponse.json().catch(() => null)) as { token?: string } | null;
-        const csrfToken = csrfPayload?.token?.trim() ?? "";
-
-        if (!csrfResponse.ok || !csrfToken) {
-          return toJsonResponse(
-            { ok: false, error: "Could not initialize submit session." },
-            csrfResponse.status >= 400 ? csrfResponse.status : 502,
-          );
-        }
-
-        const proxyHeaders = buildRelayHeaders(request, buildHeaders);
-        proxyHeaders.set("content-type", "application/json");
-        proxyHeaders.set("x-csrf-token", csrfToken);
-        appendCredentialCookieForPolicy(proxyHeaders, request, descriptor.credentialPolicy);
-        appendCookieHeader(proxyHeaders, `phis_csrf=${csrfToken}`);
-
-        const upstreamResponse = await fetch(`${upstreamBaseUrl}${target.upstreamPath}`, {
-          method: descriptor.method,
-          headers: headersToPlainObject(proxyHeaders),
-          body: JSON.stringify(requestValues),
-          cache: "no-store",
-          signal: AbortSignal.timeout(timeoutMs),
-        });
-
-        const upstreamPayload = await upstreamResponse.json().catch(() => null);
-        return buildResponseWithSetCookies(
-          upstreamPayload,
-          upstreamResponse.status,
-          readSetCookieHeaders(upstreamResponse),
-        );
-      }
-
       const proxyHeaders = buildRelayHeaders(request, buildHeaders);
       proxyHeaders.set("content-type", "application/json");
       appendCredentialCookieForPolicy(proxyHeaders, request, descriptor.credentialPolicy);
+      if (target.requiresCsrf) {
+        // Checked here only so a refusal costs no round trip; Core compares the same pair again.
+        const csrfToken = readBrowserCsrfToken(request);
+        if (!csrfToken) {
+          return toJsonResponse({ ok: false, error: "Invalid CSRF token." }, 403);
+        }
+        proxyHeaders.set(PHI_CSRF_HEADER_NAME, csrfToken);
+        appendCookieHeader(proxyHeaders, `${PHI_CSRF_COOKIE_NAME}=${csrfToken}`);
+      }
 
       const upstreamResponse = await fetch(`${upstreamBaseUrl}${target.upstreamPath}`, {
         method: descriptor.method,
         headers: headersToPlainObject(proxyHeaders),
-        body: JSON.stringify(requestValues),
+        body: JSON.stringify(body.values ?? {}),
         cache: "no-store",
         signal: AbortSignal.timeout(timeoutMs),
       });
 
+      // Whatever Core sets -- a new session, the CSRF token it rotates at sign-in -- is the browser's.
       const upstreamPayload = await upstreamResponse.json().catch(() => null);
       return buildResponseWithSetCookies(
         upstreamPayload,

@@ -27,6 +27,7 @@ import { usePhiRuntimePageConditionState } from "../runtime/runtime-page-conditi
 import { usePhiApplicationFeedback } from "../runtime/use-phi-application-feedback";
 import type { PhiFormGuardProps } from "./contracts";
 import { requestPhiFormGuard } from "./form-guard-client";
+import { usePhiFormRelayArea } from "./form-relay-area";
 import { PhiSkeletonControl } from "../controls/phi-skeleton-control";
 
 const EMPTY_FORM_VALUES: Record<string, unknown> = {};
@@ -304,14 +305,15 @@ export function PhiFormDescriptorRuntimeClient({
    * A request that failed is forgotten, and the next submit asks again.
    */
   const guardRef = useRef<Promise<PhiFormGuardProps> | null>(null);
+  const relayArea = usePhiFormRelayArea();
   const readGuard = useCallback(() => {
-    const pending = guardRef.current ?? requestPhiFormGuard(formId);
+    const pending = guardRef.current ?? requestPhiFormGuard(formId, relayArea);
     guardRef.current = pending;
     pending.catch(() => {
       if (guardRef.current === pending) guardRef.current = null;
     });
     return pending;
-  }, [formId]);
+  }, [formId, relayArea]);
   useEffect(() => {
     if (descriptor.guard && formId) void readGuard().catch(() => undefined);
   }, [descriptor.guard, formId, readGuard]);

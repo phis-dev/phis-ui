@@ -10,6 +10,7 @@ import { usePhiRuntimePageConditionState } from "../../../../../components/runti
 import { PhiAlertControl } from "../../../../../components/controls/phi-alert-control";
 import { PhiDescriptionListControl } from "../../../../../components/controls/phi-description-list-control";
 import { PhiSkeletonControl } from "../../../../../components/controls/phi-skeleton-control";
+import { usePhiFormRelayArea } from "../../../../../components/forms/form-relay-area";
 
 
 export type PhiFormPreviewWidgetClientProps = {
@@ -54,6 +55,7 @@ export function PhiFormPreviewWidgetClient({
 }: PhiFormPreviewWidgetClientProps) {
   const page = usePhiRuntimePageConditionState();
   const token = page.query[tokenParam]?.trim() ?? "";
+  const relayArea = usePhiFormRelayArea();
   const identity = usePhiSignalIdentity();
   const emitSignal = usePhiSignalEmitter(identity.sender);
   const emitRoutes = useMemo(() => signalRoutes?.emits ?? [], [signalRoutes?.emits]);
@@ -87,7 +89,7 @@ export function PhiFormPreviewWidgetClient({
 
     async function readPreview() {
       const url = buildPhiDataSourceUrl(dataSource, {
-        query: { phase: "preview", formId, token },
+        query: { phase: "preview", formId, token, area: relayArea },
       });
 
       try {
@@ -116,7 +118,7 @@ export function PhiFormPreviewWidgetClient({
     return () => {
       active = false;
     };
-  }, [dataSource, formId, token]);
+  }, [dataSource, formId, relayArea, token]);
 
   /*
    * The finding goes out whenever it changes, and nothing is announced while it is still being read:

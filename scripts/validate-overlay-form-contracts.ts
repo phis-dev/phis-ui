@@ -296,10 +296,13 @@ const builderClientManifestSource = await readFile(new URL("../plugins/runtime-m
 const commonClientManifestSource = await readFile(new URL("../plugins/runtime-modules/client-manifests/common.ts", import.meta.url), "utf8");
 const formHandlerResolutionSource = await readFile(new URL("../gateway/form-handler-resolution.ts", import.meta.url), "utf8");
 const runtimeWidgetsSource = await readFile(new URL("../plugins/runtime-modules/core/widgets.ts", import.meta.url), "utf8");
-assert.match(formHandlerResolutionSource, /isKnownSpecialCmsRoot\(firstSegment\)/u);
+// The Area is the one the request names, checked against the Area keys and the viewer's admission; the
+// referer and a path segment decide neither the Area nor the locale (FORMS.md, Relay).
+assert.match(formHandlerResolutionSource, /isPhiCmsAreaKey\(area\)/u);
+assert.match(formHandlerResolutionSource, /canPhiViewerAccess\(/u);
+assert.doesNotMatch(formHandlerResolutionSource, /headers\.get\("referer"\)/u);
 assert.doesNotMatch(formHandlerResolutionSource, /segments\[1\]/u);
 assert.match(formHandlerResolutionSource, /buildPhiLocalCmsAreaPayload/u);
-assert.match(formHandlerResolutionSource, /x-forwarded-host/u);
 await assert.rejects(() => readFile(new URL("../components/builder/clients/inspector-host.tsx", import.meta.url), "utf8"));
 await assert.rejects(() => readFile(new URL("../components/builder/controller-host.tsx", import.meta.url), "utf8"));
 assert.doesNotMatch(inspectorSectionSource, /PhiInspectorCollapsibleSections|PhiCollapsibleLayout|usePhiSignalListener/u);

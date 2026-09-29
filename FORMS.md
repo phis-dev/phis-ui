@@ -325,7 +325,8 @@ type PhiFormHandlerProviderDescriptor = {
   Provider `key` is catalog identity only and is never stored in a Form.
 - Catalog construction requires a non-empty `handlerKey`; at least one of `endpointKey` and
   `upstreamPath`; an `upstreamPath` and `csrfPath` starting with `/`; and a `csrfPath` when
-  `requiresCsrf` is set.
+  `requiresCsrf` is set. `csrfPath` names the Core endpoint that issues the token; the relay does not
+  call it, because the token has to be the browser's (see [Relay](#relay)).
 - The target is `upstreamPath` on phis-server when it is set; otherwise the category prefix
   (`/api/auth`, `/api/account`, `/api/forms`, `/api/site/forms`) followed by `endpointKey`
   (`gateway/form-submit.ts`).
@@ -543,8 +544,9 @@ Other Form-shaped surfaces are separate Controllers:
   (`components/forms/form-guard-client.ts`) calls `GET /api/site/forms?phase=guard&formId=<id>`. If the
   token has not arrived by submit, the submit waits for it. The values are added to the submitted record,
   not kept in fields, so a reset cannot clear them.
-- The relay issues a token only for a Form whose submit handler is active in the Area of the requesting
-  page, and forwards no cookie to phis-server's `/api/v1/forms/guard`. A refusal is a wiring fault.
+- The relay issues a token only for a Form whose submit handler is active in the Area the page names
+  (`&area=<area>`, see [Relay](#relay)), and forwards no cookie to phis-server's `/api/v1/forms/guard`.
+  A refusal is a wiring fault.
 
 ## Relay
 
@@ -560,17 +562,27 @@ The relay's options are `upstreamBaseUrl`, `buildHeaders`, `timeoutMs`, optional
 
 Requests:
 
-- `POST /api/site/forms` with `{ formId, phase: "submit" | "confirm", values }`. Nothing else in the
-  body is read.
-- `GET /api/site/forms?phase=guard&formId=<id>` issues a guard token.
-- `GET /api/site/forms?phase=preview&formId=<id>&token=<token>` reads a preview through the Form's
-  `preview` handler Provider.
+- `POST /api/site/forms` with `{ formId, phase: "submit" | "confirm", area, values }`, and the
+  browser's CSRF token in `x-csrf-token`. Nothing else in the body is read.
+- `GET /api/site/forms?phase=guard&formId=<id>&area=<area>` issues a guard token.
+- `GET /api/site/forms?phase=preview&formId=<id>&token=<token>&area=<area>` reads a preview through the
+  Form's `preview` handler Provider.
+
+The browser side is `PhiRuntimeFormControllerMount` for a submit, `requestPhiFormGuard` for a guard and
+the Form Preview Widget for a preview. `area` is the Area partition the Form is mounted under
+(`usePhiFormRelayArea`, `components/forms/form-relay-area.ts`); on the Builder canvas it is absent, so a
+Form drawn there resolves nothing. A submit sends the `phis_csrf` cookie's value as `x-csrf-token`,
+fetching `/api/auth/csrf` first when the browser has none (`readPhiCsrfToken`, `helpers/csrf-token.ts`);
+a submit without one still goes out, and only a Provider that declares CSRF refuses it.
 
 Resolution for every request (`gateway/form-handler-resolution.ts`):
 
-1. The Area comes from the `Referer`, which must be on the request host (compared with the forwarded and
-   `host` headers). A special Area is the first path segment; anything else is Public. A client-supplied
-   Area, endpoint, or Module id is never read.
+1. The Area is the one the request names (`area`), and it must be an Area key the Site hosts (its
+   Bridge loader answers a catalog) whose `accessPolicy` admits the viewer -- the check the Area's Layout
+   makes before rendering. The `Referer` is not read: a browser may omit it, and a page's own script can
+   set it. The locale the Area is read in is what the Site resolves for the request (`phis_locale`, the
+   account, `Accept-Language`, the Site default), always one of the Site's locales, never a path
+   segment. An endpoint, Module id, or anything else in the request is never read.
 2. The Area's effective tree is the persisted Area revision, or the code-owned shell preset when none is
    persisted. Its `runtimeModules`, the Area's locked base Module, and the server capability snapshot give
    the active Module set.
@@ -582,9 +594,13 @@ Resolution for every request (`gateway/form-handler-resolution.ts`):
 Any failure answers `404` with "Form handler is not active for this Area.".
 
 Dispatch for `submit` and `confirm`: the relay builds the target from the Provider, removes the browser
-`Cookie` header, adds only the cookie `credentialPolicy` allows, and, when `requiresCsrf` is set, first
-reads a token from `csrfPath` and sends it as `x-csrf-token` plus `phis_csrf`. It sends `values` as JSON
-with the Provider's method and returns phis-server's status, body, and `Set-Cookie` headers.
+`Cookie` and `x-csrf-token` headers, and adds only the cookie `credentialPolicy` allows. When
+`requiresCsrf` is set it forwards the browser's own CSRF proof unchanged -- its `x-csrf-token` header and
+its `phis_csrf` cookie -- and answers `403` "Invalid CSRF token." without an upstream call when either is
+missing or they disagree; phis-server compares the same pair again (`verifyCsrfRequest`). The relay never
+asks `csrfPath` for a token of its own: a pair it minted would pass that comparison for any page that
+reached the relay. It sends `values` as JSON with the Provider's method and returns phis-server's status,
+body, and every `Set-Cookie` header, including a CSRF token phis-server rotates at sign-in.
 
 Where a handler lives: a Module with an Add-on counterpart implements it in its Add-on; a Core handler is
 in phis-server. Catalog metadata alone persists nothing: without the endpoint a Form renders and validates

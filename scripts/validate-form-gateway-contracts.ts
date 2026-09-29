@@ -161,8 +161,6 @@ type UpstreamCall = {
 
 let activeModuleIds: string[] = [];
 let providerCapabilities: Array<{ id: string; interfaceDigest: string }> = [AUTH_CAPABILITY];
-let csrfStatus = 200;
-let csrfPayload: unknown = { token: "csrf-token-1" };
 let upstreamStatus = 200;
 let upstreamPayload: unknown = { ok: true };
 let upstreamSetCookies: string[] = [];
@@ -212,6 +210,18 @@ globalThis.fetch = (async (input: unknown, init?: RequestInit) => {
   if (path === "/api/v1/forms/registry") {
     return Response.json({ forms: [] });
   }
+  if (path === "/api/v1/site/locale") {
+    return Response.json({
+      locale: {
+        requestedLocale: null,
+        locale: "en",
+        language: "en",
+        direction: "ltr",
+        intlLocale: "en",
+        labelFallbacks: [],
+      },
+    });
+  }
 
   calls.push({
     url,
@@ -221,7 +231,7 @@ globalThis.fetch = (async (input: unknown, init?: RequestInit) => {
   });
 
   if (CSRF_PATHS.has(path)) {
-    return Response.json(csrfPayload ?? {}, { status: csrfStatus });
+    return Response.json({ token: "relay-minted" });
   }
   if (upstreamThrows) {
     throw upstreamThrows;
@@ -323,30 +333,42 @@ function buildHandlers(options?: { upstreamBaseUrl?: string; withAddOn?: boolean
 
 type SubmitOptions = {
   body?: unknown;
+  /** The Area the page names in the body; `null` leaves it out. Public unless stated. */
+  area?: string | null;
   referer?: string | null;
   cookie?: string | null;
-  host?: string;
-  forwardedHost?: string | null;
+  /** The `x-csrf-token` the page repeats from its cookie; absent unless stated. */
+  csrfHeader?: string;
   upstreamBaseUrl?: string;
   withAddOn?: boolean;
 };
 
+const BROWSER_CSRF = "browser-csrf-token";
+const BROWSER_COOKIES =
+  `phis_session=session-1; phis_auth_link=link-1; phis_csrf=${BROWSER_CSRF}; other=keep`;
+
 async function submit(options: SubmitOptions) {
   calls.length = 0;
-  const headers = new Headers({ host: options.host ?? SITE_HOST });
-  if (options.referer !== null) {
-    headers.set("referer", options.referer ?? `http://${SITE_HOST}/en/contact`);
+  const headers = new Headers({ host: SITE_HOST });
+  if (options.referer) {
+    headers.set("referer", options.referer);
   }
   if (options.cookie !== null) {
-    headers.set("cookie", options.cookie ?? "phis_session=session-1; phis_auth_link=link-1; other=keep");
+    headers.set("cookie", options.cookie ?? BROWSER_COOKIES);
   }
-  if (options.forwardedHost) {
-    headers.set("x-forwarded-host", options.forwardedHost);
+  if (options.csrfHeader !== undefined) {
+    headers.set("x-csrf-token", options.csrfHeader);
   }
+  const area = options.area === undefined ? "public" : options.area;
+  const body = options.body ?? {};
   const request = new NextRequest(`http://${SITE_HOST}/api/site/forms`, {
     method: "POST",
     headers,
-    body: JSON.stringify(options.body ?? {}),
+    body: JSON.stringify(
+      area !== null && typeof body === "object" && body !== null && !("area" in body)
+        ? { ...body, area }
+        : body,
+    ),
   });
   const response = await buildHandlers({
     upstreamBaseUrl: options.upstreamBaseUrl,
@@ -384,26 +406,34 @@ assert.equal(calls.length, 0);
 // --- Area authority --------------------------------------------------------
 
 /**
- * The Area comes from the referer, and only after the host matches the request. A forged referer from
- * another origin must not select an Area, or a public page could dispatch a staff Form.
+ * The Area is the one the page names, checked for what it grants; the referer is not read at all. A
+ * browser that sends none -- a `no-referrer` policy, a privacy extension -- submits like any other, and
+ * a referer from anywhere selects nothing.
  */
 for (const referer of [null, "http://evil.test/admin/settings", "not a url"]) {
-  const { response, payload } = await submit({
+  const { response } = await submit({
     body: { formId: FORM_IDS.contact, phase: "submit" },
     referer,
   });
-  assert.equal(response.status, 404, `Referer ${String(referer)} must not resolve an Area.`);
+  assert.equal(response.status, 200, `Referer ${String(referer)} must not decide the Area.`);
+  assert.equal(dispatchCall()?.url, `${UPSTREAM}/api/v1/forms/contact`);
+}
+// No Area, or one that is not an Area key, resolves nothing and reaches no upstream.
+for (const area of [null, "", "en", "contact", "../admin", "PUBLIC/../admin"]) {
+  const { response, payload } = await submit({
+    body: { formId: FORM_IDS.contact, phase: "submit" },
+    area,
+  });
+  assert.equal(response.status, 404, `Area ${JSON.stringify(area)} must not resolve.`);
   assert.equal(payload.error, "Form handler is not active for this Area.");
   assert.equal(calls.length, 0);
 }
-// A proxied host is honoured through the forwarded header.
-const forwarded = await submit({
-  body: { formId: FORM_IDS.contact, phase: "submit" },
-  host: "internal.local",
-  forwardedHost: SITE_HOST,
-  referer: `http://${SITE_HOST}/en/contact`,
+// Only a string is an Area: an object in its place is not read as one.
+const objectArea = await submit({
+  body: { formId: FORM_IDS.contact, phase: "submit", area: { area: "public" } },
 });
-assert.equal(forwarded.response.status, 200);
+assert.equal(objectArea.response.status, 404);
+assert.equal(calls.length, 0);
 
 // --- Descriptor authority --------------------------------------------------
 
@@ -469,7 +499,10 @@ assert.equal(
 assert.equal(calls.length, 0);
 
 providerCapabilities = [AUTH_CAPABILITY];
-const authActive = await submit({ body: { formId: FORM_IDS.login, phase: "submit", values: { email: "a@b.test" } } });
+const authActive = await submit({
+  body: { formId: FORM_IDS.login, phase: "submit", values: { email: "a@b.test" } },
+  csrfHeader: BROWSER_CSRF,
+});
 assert.equal(authActive.response.status, 200);
 
 // A phase the Form does not declare has no handler, so it does not dispatch.
@@ -489,61 +522,88 @@ const publicSubmission = await submit({ body: { formId: FORM_IDS.contact, phase:
 assert.equal(publicSubmission.response.status, 200);
 assert.equal(dispatchCall()?.headers.cookie, undefined, "A `none` policy forwards no cookie at all.");
 
-// `auth.login` is public but CSRF-protected: the token round trip must not smuggle a session either.
-const loginDispatch = await submit({ body: { formId: FORM_IDS.login, phase: "submit", values: {} } });
+/**
+ * CSRF is the browser's. The relay forwards the token the page sent and the cookie its browser holds,
+ * unchanged, and asks Core for none of its own: a pair it minted itself would pass Core's comparison
+ * for any page that reached it. `auth.login` is public but CSRF-protected, so its dispatch carries the
+ * browser's pair and nothing else -- no session smuggled along.
+ */
+const loginDispatch = await submit({
+  body: { formId: FORM_IDS.login, phase: "submit", values: {} },
+  csrfHeader: BROWSER_CSRF,
+});
 assert.equal(loginDispatch.response.status, 200);
-assert.equal(calls.length, 2);
-assert.equal(calls[0]?.url, `${UPSTREAM}/api/v1/auth/csrf`);
-assert.equal(calls[0]?.method, "GET");
-assert.equal(calls[0]?.headers.cookie, undefined);
-assert.equal(calls[1]?.url, `${UPSTREAM}/api/v1/auth/password/login`);
-assert.equal(calls[1]?.headers["x-csrf-token"], "csrf-token-1");
-assert.deepEqual(cookiesOf(calls[1]), ["phis_csrf=csrf-token-1"]);
+assert.equal(calls.length, 1, "The relay mints no CSRF pair of its own.");
+assert.ok(!calls.some((call) => call.url.includes("/csrf")));
+assert.equal(calls[0]?.url, `${UPSTREAM}/api/v1/auth/password/login`);
+assert.equal(calls[0]?.headers["x-csrf-token"], BROWSER_CSRF);
+assert.deepEqual(cookiesOf(calls[0]), [`phis_csrf=${BROWSER_CSRF}`]);
 
-// A Site-session Provider forwards the session cookie and nothing else.
-const siteSessionDispatch = await submit({ body: { formId: FORM_IDS.adminPolicy, phase: "submit", values: {} } });
+// A Site-session Provider forwards the session cookie beside the browser's CSRF cookie, nothing else.
+const siteSessionDispatch = await submit({
+  body: { formId: FORM_IDS.adminPolicy, phase: "submit", values: {} },
+  csrfHeader: BROWSER_CSRF,
+});
 assert.equal(siteSessionDispatch.response.status, 200);
-assert.equal(calls[1]?.method, "PATCH");
-assert.equal(calls[1]?.url, `${UPSTREAM}/api/v1/auth/admin/policy`);
-assert.deepEqual(cookiesOf(calls[0]), ["phis_session=session-1"]);
-assert.deepEqual(
-  cookiesOf(calls[1]).sort(),
-  ["phis_csrf=csrf-token-1", "phis_session=session-1"],
-);
+assert.equal(calls.length, 1);
+assert.equal(calls[0]?.method, "PATCH");
+assert.equal(calls[0]?.url, `${UPSTREAM}/api/v1/auth/admin/policy`);
+assert.equal(calls[0]?.headers["x-csrf-token"], BROWSER_CSRF);
+assert.deepEqual(cookiesOf(calls[0]).sort(), [`phis_csrf=${BROWSER_CSRF}`, "phis_session=session-1"]);
 
 // An Auth-link Provider forwards the link cookie and never the Site session.
-const authLinkDispatch = await submit({ body: { formId: FORM_IDS.providerLink, phase: "confirm", values: {} } });
+const authLinkDispatch = await submit({
+  body: { formId: FORM_IDS.providerLink, phase: "confirm", values: {} },
+  csrfHeader: BROWSER_CSRF,
+});
 assert.equal(authLinkDispatch.response.status, 200);
-assert.equal(calls[0]?.url, `${UPSTREAM}/api/v1/auth/csrf`);
-assert.deepEqual(cookiesOf(calls[0]), ["phis_auth_link=link-1"]);
-assert.deepEqual(
-  cookiesOf(calls[1]).sort(),
-  ["phis_auth_link=link-1", "phis_csrf=csrf-token-1"],
-);
-assert.equal(calls[1]?.url, `${UPSTREAM}/api/v1/auth/providers/link/confirm`);
+assert.equal(calls.length, 1);
+assert.equal(calls[0]?.url, `${UPSTREAM}/api/v1/auth/providers/link/confirm`);
+assert.deepEqual(cookiesOf(calls[0]).sort(), ["phis_auth_link=link-1", `phis_csrf=${BROWSER_CSRF}`]);
 
-// Without the named cookie nothing is invented.
-const noCookies = await submit({
+// Without the named credential cookie nothing is invented.
+const noSession = await submit({
   body: { formId: FORM_IDS.adminPolicy, phase: "submit", values: {} },
+  cookie: `phis_csrf=${BROWSER_CSRF}`,
+  csrfHeader: BROWSER_CSRF,
+});
+assert.equal(noSession.response.status, 200);
+assert.deepEqual(cookiesOf(calls[0]), [`phis_csrf=${BROWSER_CSRF}`]);
+
+// A missing or disagreeing half refuses the submit before anything goes upstream.
+for (const [label, options] of [
+  ["no header", {}],
+  ["no cookie", { cookie: "phis_session=session-1", csrfHeader: BROWSER_CSRF }],
+  ["no cookie header at all", { cookie: null, csrfHeader: BROWSER_CSRF }],
+  ["a header of its own", { csrfHeader: "forged-token" }],
+  ["an empty header", { csrfHeader: "  " }],
+] as const) {
+  const refused = await submit({ body: { formId: FORM_IDS.login, phase: "submit", values: {} }, ...options });
+  assert.equal(refused.response.status, 403, `A submit with ${label} must be refused.`);
+  assert.equal(refused.payload.error, "Invalid CSRF token.");
+  assert.equal(calls.length, 0, `A submit with ${label} must not reach an upstream.`);
+}
+
+// A handler that declares no CSRF needs no token: a contact form submits without one.
+const contactWithoutToken = await submit({
+  body: { formId: FORM_IDS.contact, phase: "submit", values: {} },
   cookie: null,
 });
-assert.equal(noCookies.response.status, 200);
-assert.deepEqual(cookiesOf(calls[1]), ["phis_csrf=csrf-token-1"]);
+assert.equal(contactWithoutToken.response.status, 200);
+assert.equal(dispatchCall()?.headers["x-csrf-token"], undefined);
+assert.equal(dispatchCall()?.headers.cookie, undefined);
 
-// A failed CSRF handshake stops the dispatch instead of submitting without a token.
-csrfStatus = 403;
-csrfPayload = { error: "forbidden" };
-const csrfDenied = await submit({ body: { formId: FORM_IDS.login, phase: "submit", values: {} } });
-assert.equal(csrfDenied.response.status, 403);
-assert.equal(csrfDenied.payload.error, "Could not initialize submit session.");
-assert.equal(calls.length, 1, "A denied handshake must not reach the destination.");
-
-csrfStatus = 200;
-csrfPayload = { token: "   " };
-const csrfEmpty = await submit({ body: { formId: FORM_IDS.login, phase: "submit", values: {} } });
-assert.equal(csrfEmpty.response.status, 502);
-assert.equal(calls.length, 1);
-csrfPayload = { token: "csrf-token-1" };
+// Core rotates the CSRF token at sign-in, and the browser has to be told.
+upstreamSetCookies = ["phis_session=fresh; Path=/; HttpOnly", "phis_csrf=rotated; Path=/"];
+const rotated = await submit({
+  body: { formId: FORM_IDS.login, phase: "submit", values: {} },
+  csrfHeader: BROWSER_CSRF,
+});
+assert.deepEqual(
+  rotated.response.headers.getSetCookie(),
+  ["phis_session=fresh; Path=/; HttpOnly", "phis_csrf=rotated; Path=/"],
+);
+upstreamSetCookies = [];
 
 // --- Upstream authority ----------------------------------------------------
 
@@ -641,11 +701,15 @@ activeModuleIds = [PHI_AUTH_RUNTIME_MODULE_ID];
 providerCapabilities = [AUTH_CAPABILITY];
 {
   calls.length = 0;
-  const search = new URLSearchParams({ phase: "preview", formId: FORM_IDS.confirm, token: "confirm-token" });
+  const search = new URLSearchParams({
+    phase: "preview",
+    formId: FORM_IDS.confirm,
+    token: "confirm-token",
+    area: "public",
+  });
   const response = await buildHandlers().GET(new NextRequest(`http://${SITE_HOST}/api/site/forms?${search.toString()}`, {
     headers: {
       host: SITE_HOST,
-      referer: `http://${SITE_HOST}/en/confirm`,
       cookie: "phis_session=session-1; phis_auth_link=link-1; other=keep",
     },
   }));
@@ -659,17 +723,16 @@ providerCapabilities = [AUTH_CAPABILITY];
 
 /**
  * A guarded Form asks for its token from the browser. The relay issues one only for a Form whose submit
- * handler is active in the Area the referer names -- the gate a submit passes -- and never forwards a
+ * handler is active in the Area the page names -- the gate a submit passes -- and never forwards a
  * cookie: the same page is served to everybody, and a guard belongs to nobody.
  */
-async function requestGuard(formId: string, referer: string | null = `http://${SITE_HOST}/en/contact`) {
+async function requestGuard(formId: string, area: string | null = "public") {
   calls.length = 0;
   const headers = new Headers({
     host: SITE_HOST,
     cookie: "phis_session=session-1; phis_auth_link=link-1",
   });
-  if (referer !== null) headers.set("referer", referer);
-  const search = new URLSearchParams({ phase: "guard", formId });
+  const search = new URLSearchParams({ phase: "guard", formId, ...(area === null ? {} : { area }) });
   const response = await buildHandlers().GET(
     new NextRequest(`http://${SITE_HOST}/api/site/forms?${search.toString()}`, { headers }),
   );
@@ -686,9 +749,9 @@ assert.equal(dispatchCall()?.url, `${UPSTREAM}/api/v1/forms/guard?form=${encodeU
 assert.equal(dispatchCall()?.method, "GET");
 assert.equal(dispatchCall()?.headers.cookie, undefined, "A guard request forwards no cookie.");
 
-for (const referer of [null, "http://evil.test/en/contact"]) {
-  const { response } = await requestGuard(FORM_IDS.contact, referer);
-  assert.equal(response.status, 404, `Referer ${String(referer)} must not be issued a guard.`);
+for (const area of [null, "nowhere"]) {
+  const { response } = await requestGuard(FORM_IDS.contact, area);
+  assert.equal(response.status, 404, `Area ${String(area)} must not be issued a guard.`);
   assert.equal(calls.length, 0);
 }
 const inactiveGuard = await requestGuard(FORM_IDS.login);

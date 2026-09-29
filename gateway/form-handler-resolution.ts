@@ -2,8 +2,8 @@ import "server-only";
 
 import type { NextRequest } from "next/server";
 
-import { resolvePhiCmsAreaMask, type PhiCmsAreaKey } from "../constants/cms-areas";
-import { isKnownSpecialCmsRoot } from "../helpers/cms-routing";
+import { isPhiCmsAreaKey, resolvePhiCmsAreaMask, type PhiCmsAreaKey } from "../constants/cms-areas";
+import { canPhiViewerAccess, type PhiAccessViewer } from "../types/access";
 import { getResolvedFormDefinition } from "./form-registry";
 import { getExactSiteArea } from "./site-area";
 import { getPhiCapabilitySnapshot } from "./server-capabilities";
@@ -25,46 +25,30 @@ export type PhiResolvedServerFormHandler = {
 };
 
 /**
- * The Area the Form was submitted from, and the locale it was drawn in.
- *
- * Public carries its locale in the path. Every other Area does not, and there the locale is what the
- * Site resolves for this request -- the viewer's choice, then the browser, then the Site default -- the
- * same answer the page itself was drawn with.
+ * Who the relay knows it is talking to before asking anybody: nobody in particular. An Area this viewer
+ * admits is entered without reading the session; any other Area asks for it first.
  */
-async function resolveRequestArea(
+const PHI_ANONYMOUS_FORM_VIEWER: PhiAccessViewer = { access: "public" };
+
+/**
+ * The locale the Form's Area is read in: what the Site resolves for this request -- the viewer's choice,
+ * then the browser, then the Site default -- and never a string off the path. Core answers only with one
+ * of the Site's own locales.
+ *
+ * It used to be the first segment of the referer for Public, taken as it stood. Any path that was not a
+ * special Area became a locale, `favicon.ico` included, and was handed on to the Area read as one.
+ */
+async function resolveRequestLocale(
   request: NextRequest,
   site: { upstreamBaseUrl: string; internalToken: string; siteKey: string },
-): Promise<{ area: PhiCmsAreaKey; locale: string } | null> {
-  const referer = request.headers.get("referer")?.trim();
-  if (!referer) return null;
-  let pathname = "";
-  try {
-    const url = new URL(referer);
-    const requestHosts = [
-      request.nextUrl.host,
-      request.headers.get("x-forwarded-host")?.split(",", 1)[0]?.trim(),
-      request.headers.get("host")?.trim(),
-    ].filter((host): host is string => Boolean(host));
-    if (!requestHosts.some((host) => host.toLowerCase() === url.host.toLowerCase())) return null;
-    pathname = url.pathname;
-  } catch {
-    return null;
-  }
-  const firstSegment = pathname.split("/").filter(Boolean)[0]?.trim().toLowerCase() ?? "";
-  const resolveLocale = async () => (await fetchResolvedSiteLocale({
+) {
+  return (await fetchResolvedSiteLocale({
     apiBaseUrl: site.upstreamBaseUrl,
     internalToken: site.internalToken,
     siteKey: site.siteKey,
     acceptLanguage: request.headers.get("accept-language"),
     cookieHeader: request.headers.get("cookie"),
   })).locale;
-  if (isKnownSpecialCmsRoot(firstSegment)) {
-    return { area: firstSegment as PhiCmsAreaKey, locale: await resolveLocale() };
-  }
-  if (firstSegment === "public" || !firstSegment) {
-    return { area: "public", locale: await resolveLocale() };
-  }
-  return { area: "public", locale: firstSegment };
 }
 
 function resolveAreaPath(area: PhiCmsAreaKey) {
@@ -79,6 +63,17 @@ export async function resolvePhiServerFormHandler(options: {
   formId: string;
   phase: PhiFormHandlerPhase;
   /**
+   * The Area the Form was drawn in, as the page that drew it names it.
+   *
+   * It used to be read off the `Referer`, which a browser may leave out (a `no-referrer` policy, a
+   * privacy extension) -- every submit then answered "not active" -- and which a page's own script may
+   * set to any address on the host. So it was the client's choice either way, only an unreliable one.
+   * Named outright, it is checked for what it grants: an Area this Site hosts, which this viewer may
+   * enter, whose active Modules own the Form and its handler. A viewer can reach nothing here that
+   * opening a page of that Area would not have shown them.
+   */
+  area: string | null | undefined;
+  /**
    * The catalog of the Area the request came from, loaded once that Area is known.
    *
    * A loader rather than a catalog, and required rather than defaulted. It used to fall back to the
@@ -88,45 +83,59 @@ export async function resolvePhiServerFormHandler(options: {
    * plugins into any graph that reached this file.
    *
    * A Form drawn on the Builder canvas needs no exception. The canvas is authoring: its runtime is a
-   * stand-in and a Form there must not submit, so resolving against the Builder's own Area is the
+   * stand-in and a Form there must not submit, so the canvas names no Area and nothing resolves -- the
    * correct refusal rather than a case to work around.
    */
   loadRuntimeModuleCatalog: (area: PhiCmsAreaKey) => Promise<PhiRuntimeModuleCatalog | null>;
 }): Promise<PhiResolvedServerFormHandler | null> {
-  const requestContext = await resolveRequestArea(options.request, options);
-  if (!requestContext) return null;
-  const catalog = await options.loadRuntimeModuleCatalog(requestContext.area);
+  const area = options.area?.trim().toLowerCase() ?? "";
+  if (!isPhiCmsAreaKey(area)) return null;
+  const catalog = await options.loadRuntimeModuleCatalog(area);
   if (!catalog) return null;
   const descriptorCatalog = resolvePhiCmsDescriptorCatalog(catalog);
-  const areaDefinition = descriptorCatalog.areaDefinitions.get(requestContext.area);
+  const areaDefinition = descriptorCatalog.areaDefinitions.get(area);
   if (!areaDefinition) return null;
+
+  const locale = await resolveRequestLocale(options.request, options);
+  const cookieHeader = options.request.headers.get("cookie") ?? "";
+  // Read at most once, and only when something needs the viewer: an admitting Area or a preset fallback.
+  const siteRequest: { context: Awaited<ReturnType<typeof loadPhiSiteRequestContext>> | null } = {
+    context: null,
+  };
+  const loadSiteRequestContext = async () => siteRequest.context ??= await loadPhiSiteRequestContext(
+    options.siteKey,
+    locale,
+    cookieHeader,
+    options.upstreamBaseUrl,
+    options.internalToken,
+  );
+  // What the Area's Layout asks before it renders (components/cms/phi-cms-area-access-guard.ts).
+  if (
+    !canPhiViewerAccess(PHI_ANONYMOUS_FORM_VIEWER, areaDefinition.accessPolicy) &&
+    !canPhiViewerAccess((await loadSiteRequestContext()).viewer, areaDefinition.accessPolicy)
+  ) {
+    return null;
+  }
 
   const areaPayload = await getExactSiteArea({
     apiBaseUrl: options.upstreamBaseUrl,
     internalToken: options.internalToken,
     siteKey: options.siteKey,
-    area: requestContext.area,
-    path: resolveAreaPath(requestContext.area),
-    locale: requestContext.locale,
-    cookieHeader: options.request.headers.get("cookie"),
+    area,
+    path: resolveAreaPath(area),
+    locale,
+    cookieHeader,
     sourcePreset: {
       ownerModuleId: areaDefinition.baseModuleId,
       presetKey: areaDefinition.shellPresetKey,
     },
   });
   let tree = areaPayload?.preset ?? null;
-  let fallbackRequestContext: Awaited<ReturnType<typeof loadPhiSiteRequestContext>> | null = null;
   if (!tree) {
-    fallbackRequestContext = await loadPhiSiteRequestContext(
-      options.siteKey,
-      requestContext.locale,
-      options.request.headers.get("cookie") ?? "",
-      options.upstreamBaseUrl,
-      options.internalToken,
-    );
-    const areaMask = resolvePhiCmsAreaMask(requestContext.area);
+    const requestContext = await loadSiteRequestContext();
+    const areaMask = resolvePhiCmsAreaMask(area);
     const runtime = buildPhiBlockRuntime({
-      requestContext: fallbackRequestContext,
+      requestContext,
       areaMask,
     });
     // The code-owned preset trees resolve their labels through the request runtime store. The page
@@ -135,19 +144,19 @@ export async function resolvePhiServerFormHandler(options: {
     // lookup after a cold start fails the whole dispatch once the label cache no longer masks it.
     tree = (await runWithPhiRequestRuntime(runtime, () => buildPhiLocalCmsAreaPayload({
       areaMask,
-      siteId: fallbackRequestContext!.site.id,
-      path: resolveAreaPath(requestContext.area),
+      siteId: requestContext.site.id,
+      path: resolveAreaPath(area),
       runtime,
       runtimeModuleCatalog: catalog,
     })))?.preset ?? null;
   }
   if (!tree) return null;
   const optionalModuleIds = resolvePhiRuntimeModuleIdsForArea(
-    requestContext.area,
-    readPhiAreaPresetRuntimeModuleIds(tree, requestContext.area),
+    area,
+    readPhiAreaPresetRuntimeModuleIds(tree, area),
     [...catalog.values()].map((entry) => entry.definition),
   );
-  const serverCapabilities = fallbackRequestContext?.serverCapabilities ??
+  const serverCapabilities = siteRequest.context?.serverCapabilities ??
     await getPhiCapabilitySnapshot({
       apiBaseUrl: options.upstreamBaseUrl,
       internalToken: options.internalToken,
@@ -156,7 +165,7 @@ export async function resolvePhiServerFormHandler(options: {
   const moduleSet = await resolvePhiRuntimeModuleSet({
     catalog,
     moduleIds: optionalModuleIds,
-    area: requestContext.area,
+    area,
     serverCapabilities,
   });
   const resolvedForm = await getResolvedFormDefinition({
@@ -166,7 +175,9 @@ export async function resolvePhiServerFormHandler(options: {
     formId: options.formId,
     presetDefinitions: [...moduleSet.formDefinitionsById.values()],
   });
-  if (!resolvedForm || !moduleSet.activeModuleIds.has(resolvedForm.definition.ownerModuleId)) return null;
+  if (!resolvedForm || !moduleSet.activeModuleIds.has(resolvedForm.definition.ownerModuleId)) {
+    return null;
+  }
   const handlerKey = options.phase === "submit"
     ? resolvedForm.definition.submitHandlerKey
     : options.phase === "confirm"
@@ -177,5 +188,5 @@ export async function resolvePhiServerFormHandler(options: {
     (candidate) => candidate.phase === options.phase && candidate.handlerKey === handlerKey,
   ) ?? null;
   if (!provider || !moduleSet.activeModuleIds.has(provider.ownerModuleId)) return null;
-  return { formId: resolvedForm.definition.formId, area: requestContext.area, provider };
+  return { formId: resolvedForm.definition.formId, area, provider };
 }
