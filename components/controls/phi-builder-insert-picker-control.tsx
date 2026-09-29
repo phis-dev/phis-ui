@@ -303,6 +303,31 @@ export function PhiBuilderInsertPickerControl<TItem extends PhiBuilderInsertPick
               style={{ flex: "1 1 0", minWidth: 0 }}
             />
           ) : null}
+          {/*
+            * The category filter stands beside it, for the same reason and in the same dress: it answers
+            * which part of the catalogue is in front of me, and it had a full row of its own under the
+            * header for it -- a row that was empty of everything else and pushed the list down by its
+            * height on every widget section.
+            *
+            * Two categories before it appears, as with the packages: filtering a single category down to
+            * itself is the choice between everything and everything.
+            */}
+          {section === "widget" && categoryOptions.length > 1 ? (
+            <Select
+              mode="multiple"
+              size="small"
+              variant="borderless"
+              allowClear
+              showSearch={false}
+              value={[...widgetCategoryFilters]}
+              onChange={onWidgetCategoryFiltersChange}
+              options={categoryOptions.map((category) => ({ value: category, label: category }))}
+              placeholder={labels.filterCategories}
+              aria-label={labels.filterCategories}
+              maxTagCount="responsive"
+              style={{ flex: "1 1 0", minWidth: 0 }}
+            />
+          ) : null}
           <Segmented<PhiBuilderInsertPickerSection>
             value={section}
             onChange={(nextSection) => {
@@ -319,20 +344,6 @@ export function PhiBuilderInsertPickerControl<TItem extends PhiBuilderInsertPick
             ]}
           />
         </Flex>
-
-        {section === "widget" ? (
-          <Select
-            mode="multiple"
-            allowClear
-            showSearch={false}
-            value={[...widgetCategoryFilters]}
-            onChange={onWidgetCategoryFiltersChange}
-            options={categoryOptions.map((category) => ({ value: category, label: category }))}
-            placeholder={labels.filterCategories}
-            maxTagCount="responsive"
-            style={{ width: "100%" }}
-          />
-        ) : null}
 
         <Input
           autoFocus
