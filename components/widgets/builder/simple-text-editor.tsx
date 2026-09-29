@@ -18,9 +18,7 @@ import {
 import { usePhiWidgetScaffoldPopup } from "../../widgets/client/shared/phi-widget-scaffold-popup";
 import { usePhiAuthoringToolsLabels } from "../../widgets/client/shared/phi-authoring-tools-labels";
 import { resolvePhiSimpleTextWidgetText, type PhiSimpleTextWidgetRenderableConfig } from "../../../plugins/runtime-modules/core/widgets/simple-text/config";
-import { PhiSimpleTextWidgetClient } from "../../../plugins/runtime-modules/core/widgets/simple-text/client";
 import { resolvePhiWidgetFontFamily } from "../helpers/font-family";
-import type { PhiCmsInstanceId } from "../../../types/cms-instance-id";
 import { resolvePhiWidgetFontSize } from "../helpers/font-size";
 import { PHI_Z_INDEX } from "../../../theme/phi-tokens";
 import { PhiFlexControl } from "../../controls/phi-flex-control";
@@ -109,21 +107,6 @@ export function PhiSimpleTextWidgetColorButton({
   const labels = usePhiAuthoringToolsLabels();
   return (
     <PhiWidgetColorToolButton value={config?.color ?? null} ariaLabel={labels.text.color} onChange={onChange} />
-  );
-}
-
-export type PhiSimpleTextWidgetIconButtonProps = {
-  config?: PhiSimpleTextWidgetRenderableConfig | null;
-  onChange: (icon: string | null) => void;
-};
-
-export function PhiSimpleTextWidgetIconButton({
-  config,
-  onChange,
-}: PhiSimpleTextWidgetIconButtonProps) {
-  const labels = usePhiAuthoringToolsLabels();
-  return (
-    <PhiWidgetIconToolButton value={config?.icon ?? null} ariaLabel={labels.text.icon} onChange={onChange} />
   );
 }
 
@@ -254,15 +237,6 @@ export function renderPhiSimpleTextWidgetEditor(
       onChangeText={onChangeText}
     />
   );
-}
-
-export function renderPhiSimpleTextWidgetBody(
-  blockId: PhiCmsInstanceId,
-  config: PhiSimpleTextWidgetRenderableConfig | undefined,
-  fallbackText = "Text",
-) {
-  const text = resolvePhiSimpleTextWidgetText(config, { preferConfigText: true }, fallbackText);
-  return <PhiSimpleTextWidgetClient blockId={blockId} labels={{ text }} config={config} />;
 }
 
 export function PhiSimpleTextWidgetEditorPluginBody({

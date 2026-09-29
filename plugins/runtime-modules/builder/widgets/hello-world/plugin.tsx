@@ -5,7 +5,6 @@ import { phiRuntime } from "../../../../../server-helpers/phi-runtime";
 import {
   type PhiCmsHelloWorldWidgetConfig,
 } from "./config";
-import { PHI_HELLO_WORLD_WIDGET_PLUGIN_TYPE } from "./config";
 import { PHI_HELLO_WORLD_WIDGET_DEFINITION } from "./config";
 import { PhiHelloWorldWidget } from "./client";
 
@@ -60,5 +59,3 @@ export const PHI_HELLO_WORLD_WIDGET_PLUGIN: PhiCmsServerWidgetPlugin<PhiCmsHello
   ...PHI_HELLO_WORLD_WIDGET_DEFINITION,
   ...definePhiPassiveWidgetRenderers((args) => <PhiHelloWorldWidgetPluginServer {...args} />),
 };
-
-export { PHI_HELLO_WORLD_WIDGET_PLUGIN_TYPE };

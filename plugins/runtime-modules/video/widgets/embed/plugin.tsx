@@ -8,5 +8,3 @@ export const PHI_VIDEO_EMBED_WIDGET_PLUGIN: PhiCmsServerWidgetPlugin<PhiVideoEmb
   render: ({ runtime, config }) => <PhiVideoEmbedWidgetServer runtime={runtime} config={config} />,
   renderPreview: ({ widget }) => renderPhiWidgetPreviewPlaceholder(widget),
 };
-
-export { PHI_VIDEO_EMBED_WIDGET_PLUGIN_TYPE } from "./config";

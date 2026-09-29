@@ -101,8 +101,6 @@ const loadPhiCmsAreaRenderScopeCached = cache(async function loadPhiCmsAreaRende
   };
 });
 
-export type PhiCmsAreaRenderScope = Awaited<ReturnType<typeof loadPhiCmsAreaRenderScopeCached>>;
-
 export async function loadPhiCmsAreaRenderScope({
   root,
   path,

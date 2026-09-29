@@ -3,7 +3,6 @@ import type { PhiServerBlockBaseProps } from "../../../../../types";
 import type { PhiCmsCardWidgetConfig } from "./config";
 import { resolvePhiImagePresentation } from "../../../../../components/media/image-presentation";
 import { resolvePhiPublicAssetReference } from "../../../../../components/widgets/helpers/internal-reference-resolver.server";
-import type { PhiCardWidgetClientConfig } from "./client";
 import { PhiCmsWidgetType } from "../../../../../constants/cms-widget-types";
 import { PhiRuntimeModuleRenderClientHost } from "../../../../../components/runtime/runtime-module-render-client-manifest";
 
@@ -14,10 +13,6 @@ export type PhiCardWidgetLabels = {
   meta?: string;
   actionLabel?: string;
   value?: string;
-};
-
-export type PhiCardWidgetConfig = PhiCardWidgetClientConfig & {
-  translate?: boolean;
 };
 
 export type PhiCardWidgetProps = PhiServerBlockBaseProps<

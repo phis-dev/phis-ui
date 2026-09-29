@@ -3,7 +3,7 @@ import { definePhiPassiveWidgetRenderers } from "../../../../../plugins/factorie
 import { phiRuntime } from "../../../../../server-helpers/phi-runtime";
 import { getPhiRecordWidgetLabels } from "../../../../../components/widgets/label-sets/record";
 import type { PhiRecordWidgetConfig } from "../../../../../types/record-widget";
-import { PHI_RECORD_WIDGET_DEFINITION, PHI_RECORD_WIDGET_PLUGIN_TYPE } from "./config";
+import { PHI_RECORD_WIDGET_DEFINITION } from "./config";
 import { PhiRecordWidget } from "./server";
 
 async function PhiRecordWidgetPluginServer({
@@ -26,5 +26,3 @@ export const PHI_RECORD_WIDGET_PLUGIN: PhiCmsServerWidgetPlugin<PhiRecordWidgetC
   ...PHI_RECORD_WIDGET_DEFINITION,
   ...definePhiPassiveWidgetRenderers((args) => <PhiRecordWidgetPluginServer {...args} />),
 };
-
-export { PHI_RECORD_WIDGET_PLUGIN_TYPE };

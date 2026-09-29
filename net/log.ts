@@ -124,8 +124,6 @@ export function createLogger(context: Partial<PhiLoggerContext>): PhiLogger {
   return createLoggerFromContext(normalizeContext(context));
 }
 
-export const phisUiLogger = createLogger({ service: "ui" });
-
 export function logRuntimeEvent(
   level: PhiLogLevel,
   event: string,

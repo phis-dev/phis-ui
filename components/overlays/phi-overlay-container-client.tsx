@@ -299,13 +299,3 @@ export function PhiOverlayContainerClient({
     />
   );
 }
-
-export type PhiNamedOverlayProps = Omit<PhiOverlayContainerClientProps, "overlayType">;
-
-export function PhiModal(props: PhiNamedOverlayProps) {
-  return <PhiOverlayContainerClient {...props} overlayType="modal" />;
-}
-
-export function PhiDrawer(props: PhiNamedOverlayProps) {
-  return <PhiOverlayContainerClient {...props} overlayType="drawer" />;
-}

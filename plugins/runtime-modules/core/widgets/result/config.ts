@@ -1,5 +1,4 @@
 import { resolvePhiCmsWidgetPluginKey } from "../../../../../constants/cms-widget-types";
-import { PhiCmsWidgetType } from "../../../../../constants/cms-widget-types";
 import { PHI_RENDERABLE_BLOCK_GEOMETRY_FIELDS } from "../../../../../helpers/renderable-block-plugin-fields";
 import type { PhiCmsWidgetPlugin } from "../../../../../types";
 import {
@@ -118,5 +117,3 @@ export const PHI_RESULT_WIDGET_DEFINITION = {
   | "defaultConfig"
   | "parseConfig"
 >;
-
-export const PHI_RESULT_WIDGET_PLUGIN_TYPE = PhiCmsWidgetType.Result;

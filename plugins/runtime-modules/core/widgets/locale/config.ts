@@ -1,5 +1,4 @@
 import { resolvePhiCmsWidgetPluginKey } from "../../../../../constants/cms-widget-types";
-import { PhiCmsWidgetType } from "../../../../../constants/cms-widget-types";
 import type { PhiCmsWidgetPlugin } from "../../../../../types";
 import { parsePhiEmptyWidgetConfig } from "../../../../../components/widgets/config/helpers";
 
@@ -28,5 +27,3 @@ export const PHI_LOCALE_WIDGET_DEFINITION = {
   | "fields"
   | "parseConfig"
 >;
-
-export const PHI_LOCALE_WIDGET_PLUGIN_TYPE = PhiCmsWidgetType.Locale;

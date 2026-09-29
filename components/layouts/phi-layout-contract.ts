@@ -1,6 +1,5 @@
 import type { CSSProperties, ReactNode } from "react";
 
-import { PhiCmsFlags } from "../../constants/phi-cms";
 import {
   resolvePhiAnchorWidgetPlacement,
   type PhiAnchorWidgetPlacement,
@@ -92,21 +91,12 @@ export type PhiLayoutKind =
   | "content"
   | "verticalflex"
   | "collapsible";
-export type PhiLayoutSlotPolicy = "fill" | "hug" | "fill-inline" | "fill-block" | "fixed" | "intrinsic";
-
-export const PhiLayoutFlags = PhiCmsFlags;
-
-export type PhiLayoutFlag = (typeof PhiLayoutFlags)[keyof typeof PhiLayoutFlags];
 
 export type PhiBaseLayoutSlotState = "expanded" | "collapsed" | "hidden";
 
 export type PhiBaseLayoutSlotStates =
   | Array<PhiBaseLayoutSlotState | null | undefined>
   | Record<number, PhiBaseLayoutSlotState | null | undefined>;
-
-export function hasPhiLayoutFlag(flags: number | null | undefined, flag: PhiLayoutFlag) {
-  return ((flags ?? 0) & flag) === flag;
-}
 
 export function normalizePhiCssSize(value: number | string | undefined) {
   if (typeof value === "number") {

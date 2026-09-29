@@ -3,7 +3,6 @@
 import {
   createContext,
   createElement,
-  useCallback,
   useContext,
   useMemo,
   type ComponentType,
@@ -17,7 +16,6 @@ import {
 import type {
   PhiTableProviderMutationRequest,
   PhiTableProviderMutationResult,
-  PhiTableProviderActionMutationRequest,
   PhiTableProviderRecordRequest,
   PhiTableProviderQueryRequest,
   PhiTableProviderQueryResult,
@@ -131,35 +129,4 @@ export function usePhiTableProvider(source: PhiTableSourceBinding | null) {
           ? `Table resource "${source.resourceKey}" is not declared by provider "${source.providerKey}".`
         : null,
   };
-}
-
-export function usePhiTableProviderMutation(source: PhiTableSourceBinding | null) {
-  const { provider, resource, bindingError } = usePhiTableProvider(source);
-
-  return useCallback(async (
-    value: Omit<PhiTableProviderActionMutationRequest, "kind" | "resourceKey" | "params" | "signal" | "query"> & {
-      query?: PhiTableProviderActionMutationRequest["query"];
-    },
-  ) => {
-    if (bindingError || !provider || !source) {
-      throw new Error(bindingError ?? "Table provider is unavailable.");
-    }
-    if (!provider.mutate) {
-      throw new Error(`Table provider "${source.providerKey}" is read-only.`);
-    }
-    if (!resource?.actions?.some((action) => action.key === value.actionKey)) {
-      throw new Error(
-        `Table action "${value.actionKey}" is not declared by resource "${source.resourceKey}".`,
-      );
-    }
-    const abortController = new AbortController();
-    return provider.mutate({
-      ...value,
-      kind: "action",
-      resourceKey: source.resourceKey,
-      params: source.params,
-      query: value.query ?? {},
-      signal: abortController.signal,
-    });
-  }, [bindingError, provider, resource, source]);
 }

@@ -15,8 +15,6 @@ import {
   type PhiRuntimeFeatureState,
 } from "../../../../../types/runtime-condition";
 
-export type PhiFormWidgetConfig = Record<string, unknown>;
-
 export type PhiFormWidgetProps = {
   runtime: Pick<PhiBlockRuntime, "site" | "locale"> &
     Partial<Pick<PhiBlockRuntime, "area">>;

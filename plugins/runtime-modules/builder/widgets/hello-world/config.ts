@@ -1,5 +1,4 @@
 import { resolvePhiCmsWidgetPluginKey } from "../../../../../constants/cms-widget-types";
-import { PhiCmsWidgetType } from "../../../../../constants/cms-widget-types";
 import { PHI_WIDGET_DIMENSION_PLUGIN_FIELDS } from "../../../../../helpers/widget-dimension-plugin-fields";
 import type { PhiCmsWidgetPlugin } from "../../../../../types";
 import type { PhiRenderableBlockResponsiveSize } from "../../../../../types/renderable-block";
@@ -43,5 +42,3 @@ export const PHI_HELLO_WORLD_WIDGET_DEFINITION = {
   PhiCmsWidgetPlugin<PhiCmsHelloWorldWidgetConfig>,
   "kind" | "pluginKey" | "typeKey" | "slotSizePolicy" | "title" | "description" | "category" | "iconFamily" | "fields" | "parseConfig"
 >;
-
-export const PHI_HELLO_WORLD_WIDGET_PLUGIN_TYPE = PhiCmsWidgetType.HelloWorld;

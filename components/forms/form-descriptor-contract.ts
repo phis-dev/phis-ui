@@ -397,12 +397,6 @@ export const PHI_FORM_ROW_FULL = {
   wide: { start: 1, end: PHI_FORM_GRID_LAST_LINE },
 } as const satisfies PhiFormResponsiveGridRange;
 
-export const PHI_FORM_ROW_START_HALF = {
-  compact: { start: 1, end: PHI_FORM_GRID_LAST_LINE },
-  medium: { start: 1, end: 13 },
-  wide: { start: 1, end: 13 },
-} as const satisfies PhiFormResponsiveGridRange;
-
 export const PHI_FORM_ROW_END_HALF = {
   compact: { start: 1, end: PHI_FORM_GRID_LAST_LINE },
   medium: { start: 13, end: PHI_FORM_GRID_LAST_LINE },
@@ -414,12 +408,6 @@ export const PHI_FORM_STACKED_LAYOUT = {
   label: PHI_FORM_ROW_FULL,
   control: PHI_FORM_ROW_FULL,
 } as const satisfies PhiFormLayoutDescriptor;
-
-/** One field of a two-column form whose labels stand above their controls. */
-export const PHI_FORM_STACKED_START_HALF = {
-  label: PHI_FORM_ROW_START_HALF,
-  control: PHI_FORM_ROW_START_HALF,
-} as const satisfies PhiFormFieldPlacementDescriptor;
 
 export const PHI_FORM_STACKED_END_HALF = {
   label: PHI_FORM_ROW_END_HALF,

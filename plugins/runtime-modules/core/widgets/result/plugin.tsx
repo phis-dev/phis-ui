@@ -1,7 +1,6 @@
 import type { PhiCmsServerWidgetPlugin } from "../../../../../types";
 import {
   PHI_RESULT_WIDGET_DEFINITION,
-  PHI_RESULT_WIDGET_PLUGIN_TYPE,
   type PhiCmsResultWidgetConfig,
 } from "./config";
 import { PhiResultWidget } from "./server";
@@ -26,5 +25,3 @@ export const PHI_RESULT_WIDGET_PLUGIN: PhiCmsServerWidgetPlugin<PhiCmsResultWidg
     />
   ),
 };
-
-export { PHI_RESULT_WIDGET_PLUGIN_TYPE };

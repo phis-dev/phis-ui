@@ -53,16 +53,6 @@ function resolvePhiBaseLayoutAncestorContext(
   return current;
 }
 
-export function usePhiBaseLayoutSlotState(slotIndex: number, ancestorLevel = 0) {
-  const context = useContext(PhiBaseLayoutSlotStateContext);
-  const targetContext = resolvePhiBaseLayoutAncestorContext(context, ancestorLevel);
-  if (!targetContext) {
-    return null;
-  }
-
-  return targetContext.slotStates[slotIndex] ?? "expanded";
-}
-
 export function usePhiBaseLayoutSlotStates(ancestorLevel = 0) {
   const context = useContext(PhiBaseLayoutSlotStateContext);
   const targetContext = resolvePhiBaseLayoutAncestorContext(context, ancestorLevel);

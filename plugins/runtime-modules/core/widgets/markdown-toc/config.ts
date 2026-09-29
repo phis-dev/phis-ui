@@ -1,6 +1,5 @@
 import { resolvePhiCmsWidgetPluginKey } from "../../../../../constants/cms-widget-types";
 import type { PhiCmsWidgetPlugin } from "../../../../../types";
-import { PhiCmsWidgetType } from "../../../../../constants/cms-widget-types";
 import { readBoolean, readNumber, readString, type PhiCmsWidgetConfigBase } from "../../../../../components/widgets/config/parser-primitives";
 import { PHI_MARKDOWN_WIDGET_DEFINITION } from "../markdown/config";
 
@@ -106,5 +105,3 @@ export const PHI_MARKDOWN_TOC_WIDGET_DEFINITION = {
   | "fields"
   | "parseConfig"
 >;
-
-export const PHI_MARKDOWN_TOC_WIDGET_PLUGIN_TYPE = PhiCmsWidgetType.MarkdownToc;

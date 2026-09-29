@@ -1,5 +1,4 @@
 import { resolvePhiCmsWidgetPluginKey } from "../../../../../constants/cms-widget-types";
-import { PhiCmsWidgetType } from "../../../../../constants/cms-widget-types";
 import type { PhiCmsWidgetPlugin } from "../../../../../types";
 import type { PhiCmsPaddingOnlyWidgetConfig } from "../../../../../components/widgets/config/helpers";
 import { parsePhiPaddingOnlyWidgetConfig } from "../../../../../components/widgets/config/helpers";
@@ -25,5 +24,3 @@ export const PHI_ACCOUNT_AVATAR_WIDGET_DEFINITION = {
   PhiCmsWidgetPlugin<PhiCmsPaddingOnlyWidgetConfig>,
   "kind" | "pluginKey" | "typeKey" | "slotSizePolicy" | "title" | "description" | "category" | "fields" | "parseConfig"
 >;
-
-export const PHI_ACCOUNT_AVATAR_WIDGET_PLUGIN_TYPE = PhiCmsWidgetType.AccountAvatar;

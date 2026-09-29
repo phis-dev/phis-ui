@@ -4,7 +4,6 @@ import type { PhiCmsAssetInspectorWidgetConfig } from "./config";
 import { PhiAssetConfigWidgetServer } from "../../../../../components/media/phi-image-inspector-server";
 import {
   PHI_IMAGE_INSPECTOR_WIDGET_DEFINITION,
-  PHI_IMAGE_INSPECTOR_WIDGET_PLUGIN_TYPE,
 } from "./config";
 
 export const PHI_IMAGE_INSPECTOR_WIDGET_PLUGIN: PhiCmsServerWidgetPlugin<PhiCmsAssetInspectorWidgetConfig> = {
@@ -14,5 +13,3 @@ export const PHI_IMAGE_INSPECTOR_WIDGET_PLUGIN: PhiCmsServerWidgetPlugin<PhiCmsA
   ),
   renderPreview: ({ widget }) => renderPhiWidgetPreviewPlaceholder(widget),
 };
-
-export { PHI_IMAGE_INSPECTOR_WIDGET_PLUGIN_TYPE };

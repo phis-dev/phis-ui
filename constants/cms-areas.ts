@@ -26,7 +26,6 @@ export const PHI_BUILDER_AREA_KEYS = [
 
 export type PhiBuilderAreaKey = (typeof PHI_BUILDER_AREA_KEYS)[number];
 
-const CMS_SPECIAL_AREA_SET = new Set<string>(PHI_CMS_SPECIAL_AREA_KEYS);
 const BUILDER_AREA_SET = new Set<string>(PHI_BUILDER_AREA_KEYS);
 
 const CMS_AREA_MASK_BY_KEY: Record<PhiCmsAreaKey, number> = {
@@ -65,10 +64,6 @@ export const PHI_BUILDER_AREA_OPTIONS = PHI_BUILDER_AREA_KEYS.map((area) => ({
   label: BUILDER_AREA_LABEL_BY_KEY[area],
 })) as ReadonlyArray<{ value: PhiBuilderAreaKey; label: string }>;
 
-export function isPhiCmsSpecialAreaKey(value: unknown): value is Exclude<PhiCmsAreaKey, "public"> {
-  return typeof value === "string" && CMS_SPECIAL_AREA_SET.has(value);
-}
-
 export function isPhiBuilderAreaKey(value: unknown): value is PhiBuilderAreaKey {
   return typeof value === "string" && BUILDER_AREA_SET.has(value);
 }
@@ -103,8 +98,4 @@ const CMS_AREA_TO_BUILDER_AREA_KEY = new Map<PhiCmsAreaKey, PhiBuilderAreaKey>(
  */
 export function resolvePhiCmsAreaAsBuilderArea(area: PhiCmsAreaKey): PhiBuilderAreaKey | null {
   return CMS_AREA_TO_BUILDER_AREA_KEY.get(area) ?? null;
-}
-
-export function resolvePhiBuilderAreaLabel(area: PhiBuilderAreaKey) {
-  return BUILDER_AREA_LABEL_BY_KEY[area];
 }

@@ -46,16 +46,7 @@ export type PhiNavItem = {
   children?: PhiNavItem[];
 };
 
-export type PhiShellSide = "left" | "right";
 export type PhiMenuTheme = "light" | "dark";
-export type PhiShellLayoutType = "landing" | "public" | "docs" | "shop" | "account" | "admin";
-export type PhiShellRegionKey =
-  | "header"
-  | "leftSidebar"
-  | "content"
-  | "rightSidebar"
-  | "footer"
-  | "drawer";
 
 export type PhiShellRegionVariant = {
   background?: string | null;
@@ -100,85 +91,4 @@ export type PhiShellTheme = {
     main?: PhiShellRegionTheme | null;
     bottom?: PhiShellRegionTheme | null;
   } & PhiShellRegionMetrics | null;
-};
-
-export type PhiShellLayoutDefinition = {
-  type: PhiShellLayoutType;
-  regions: {
-    header: boolean;
-    leftSidebar: boolean;
-    content: boolean;
-    rightSidebar: boolean;
-    footer: boolean;
-    drawer: boolean;
-  };
-};
-
-export const PHI_SHELL_LAYOUTS: Record<PhiShellLayoutType, PhiShellLayoutDefinition> = {
-  landing: {
-    type: "landing",
-    regions: {
-      header: true,
-      leftSidebar: false,
-      content: true,
-      rightSidebar: false,
-      footer: true,
-      drawer: false,
-    },
-  },
-  public: {
-    type: "public",
-    regions: {
-      header: true,
-      leftSidebar: true,
-      content: true,
-      rightSidebar: false,
-      footer: true,
-      drawer: false,
-    },
-  },
-  docs: {
-    type: "docs",
-    regions: {
-      header: true,
-      leftSidebar: true,
-      content: true,
-      rightSidebar: true,
-      footer: true,
-      drawer: false,
-    },
-  },
-  shop: {
-    type: "shop",
-    regions: {
-      header: true,
-      leftSidebar: true,
-      content: true,
-      rightSidebar: true,
-      footer: true,
-      drawer: true,
-    },
-  },
-  account: {
-    type: "account",
-    regions: {
-      header: true,
-      leftSidebar: true,
-      content: true,
-      rightSidebar: true,
-      footer: false,
-      drawer: false,
-    },
-  },
-  admin: {
-    type: "admin",
-    regions: {
-      header: true,
-      leftSidebar: true,
-      content: true,
-      rightSidebar: true,
-      footer: false,
-      drawer: true,
-    },
-  },
 };

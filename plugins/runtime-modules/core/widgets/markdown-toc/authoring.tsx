@@ -3,7 +3,6 @@
 import type { PhiCmsBuilderWidgetPlugin } from "../../../../../types";
 import {
   PHI_MARKDOWN_TOC_WIDGET_DEFINITION,
-  PHI_MARKDOWN_TOC_WIDGET_PLUGIN_TYPE,
   type PhiCmsMarkdownTocWidgetConfig,
 } from "./config";
 import { PhiMarkdownTocWidgetClient } from "./client";
@@ -15,5 +14,3 @@ export const PHI_MARKDOWN_TOC_WIDGET_BUILDER_PLUGIN: PhiCmsBuilderWidgetPlugin<P
     <PhiMarkdownTocWidgetClient config={{ ...config, title: config.title ?? PHI_MARKDOWN_TOC_WIDGET_DEFAULT_LABELS.title, headings: [] }} />
   ),
 };
-
-export { PHI_MARKDOWN_TOC_WIDGET_PLUGIN_TYPE };

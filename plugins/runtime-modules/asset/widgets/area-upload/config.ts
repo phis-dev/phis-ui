@@ -1,5 +1,4 @@
 import { resolvePhiCmsWidgetPluginKey } from "../../../../../constants/cms-widget-types";
-import { PhiCmsWidgetType } from "../../../../../constants/cms-widget-types";
 import type { PhiCmsWidgetPlugin } from "../../../../../types";
 import { PHI_ASSET_RUNTIME_DATA_PROVIDER_KEYS } from "../../ids";
 import {
@@ -86,5 +85,3 @@ export const PHI_AREA_UPLOAD_WIDGET_DEFINITION = {
   | "defaultConfig"
   | "parseConfig"
 >;
-
-export const PHI_AREA_UPLOAD_WIDGET_PLUGIN_TYPE = PhiCmsWidgetType.AreaUpload;

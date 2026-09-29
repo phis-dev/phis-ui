@@ -3,7 +3,6 @@ import { PhiCmsWidgetType } from "../../../../../constants/cms-widget-types";
 import { PhiRuntimeModuleRenderClientHost } from "../../../../../components/runtime/runtime-module-render-client-manifest";
 import {
   PHI_CHECKBOX_WIDGET_DEFINITION,
-  PHI_CHECKBOX_WIDGET_PLUGIN_TYPE,
   type PhiCheckboxWidgetConfig,
 } from "./config";
 
@@ -22,5 +21,3 @@ export const PHI_CHECKBOX_WIDGET_PLUGIN: PhiCmsServerWidgetPlugin<PhiCheckboxWid
     />
   ),
 };
-
-export { PHI_CHECKBOX_WIDGET_PLUGIN_TYPE };

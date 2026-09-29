@@ -1,7 +1,5 @@
 "use client";
 
-import { useMemo } from "react";
-
 import type { PhiRuntimeControllerSetting } from "../../../types";
 import { createPhiPluginStateStore } from "../../../components/state/plugin-state-store";
 
@@ -83,9 +81,4 @@ function resolveDemandControllerSettings(
  */
 export function getPhiBuilderDemandControllerSettingsSnapshot(area: string, pageKey: string) {
   return resolveDemandControllerSettings(demandControllerStore.getSnapshot(area) as never, pageKey);
-}
-
-export function usePhiBuilderDemandControllerSettings(area: string, pageKey: string) {
-  const state = demandControllerStore.useStore(area);
-  return useMemo(() => resolveDemandControllerSettings(state as never, pageKey), [pageKey, state]);
 }

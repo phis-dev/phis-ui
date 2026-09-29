@@ -4,7 +4,6 @@ import type { PhiCmsAssetFocalRectWidgetConfig } from "./config";
 import { PhiAssetFocalRectWidgetServer } from "../../../../../components/media/phi-asset-focal-rect-server";
 import {
   PHI_ASSET_FOCAL_RECT_WIDGET_DEFINITION,
-  PHI_ASSET_FOCAL_RECT_WIDGET_PLUGIN_TYPE,
 } from "./config";
 
 export const PHI_ASSET_FOCAL_RECT_WIDGET_PLUGIN: PhiCmsServerWidgetPlugin<PhiCmsAssetFocalRectWidgetConfig> = {
@@ -14,5 +13,3 @@ export const PHI_ASSET_FOCAL_RECT_WIDGET_PLUGIN: PhiCmsServerWidgetPlugin<PhiCms
   ),
   renderPreview: ({ widget }) => renderPhiWidgetPreviewPlaceholder(widget),
 };
-
-export { PHI_ASSET_FOCAL_RECT_WIDGET_PLUGIN_TYPE };

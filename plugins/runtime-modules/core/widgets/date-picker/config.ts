@@ -1,5 +1,4 @@
 import { resolvePhiCmsWidgetPluginKey } from "../../../../../constants/cms-widget-types";
-import { PhiCmsWidgetType } from "../../../../../constants/cms-widget-types";
 import type {
   PhiCalendarAdapterKey,
   PhiCalendarDate,
@@ -170,5 +169,3 @@ export const PHI_DATE_PICKER_WIDGET_DEFINITION = {
   },
   parseConfig: parsePhiDatePickerWidgetConfig,
 } satisfies Omit<PhiCmsWidgetPlugin<PhiDatePickerWidgetConfig>, "render" | "renderPreview">;
-
-export const PHI_DATE_PICKER_WIDGET_PLUGIN_TYPE = PhiCmsWidgetType.DatePicker;

@@ -101,10 +101,6 @@ export function requirePhiBuilderNavigationScopeKey(value: string | null | undef
   return formatPhiBuilderNavigationScopeKey(parsed.area, parsed.key);
 }
 
-export function countPhiBuilderNavigationItems(items: PhiBuilderNavigationItem[]): number {
-  return items.reduce((total, item) => total + 1 + countPhiBuilderNavigationItems(item.children), 0);
-}
-
 export function getPhiBuilderNavigationDefaultScopeKey(
   area: PhiCmsAreaKey,
   family?: PhiBuilderNavigationPresetFamily | null,

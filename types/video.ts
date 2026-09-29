@@ -78,8 +78,6 @@ export type PhiVideoProviderDescriptor = {
   aspectRatio: number;
 };
 
-export const PHI_VIDEO_PROVIDER_NAMESPACE = "video-providers";
-
 /** The only substitution an embed template may carry. */
 export const PHI_VIDEO_EMBED_ID_TOKEN = "{id}";
 

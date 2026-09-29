@@ -1,5 +1,4 @@
 import { resolvePhiCmsWidgetPluginKey } from "../../../../../constants/cms-widget-types";
-import { PhiCmsWidgetType } from "../../../../../constants/cms-widget-types";
 import type { PhiCmsWidgetPlugin } from "../../../../../types";
 import { PHI_ASSET_RUNTIME_DATA_PROVIDER_KEYS } from "../../ids";
 import { readPhiSignalRouteSet, type PhiSignalRouteSet } from "../../../../../types/signals";
@@ -66,5 +65,3 @@ export const PHI_IMAGE_INSPECTOR_WIDGET_DEFINITION = {
   | "defaultConfig"
   | "parseConfig"
 >;
-
-export const PHI_IMAGE_INSPECTOR_WIDGET_PLUGIN_TYPE = PhiCmsWidgetType.ImageInspector;

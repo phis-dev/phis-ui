@@ -4,7 +4,6 @@ import type { PhiCmsBuilderWidgetPlugin } from "../../../../../types";
 import { PhiCheckboxWidget } from "./client";
 import {
   PHI_CHECKBOX_WIDGET_DEFINITION,
-  PHI_CHECKBOX_WIDGET_PLUGIN_TYPE,
   type PhiCheckboxWidgetConfig,
 } from "./config";
 
@@ -14,5 +13,3 @@ export const PHI_CHECKBOX_WIDGET_BUILDER_PLUGIN: PhiCmsBuilderWidgetPlugin<PhiCh
     <PhiCheckboxWidget blockId={widget.id} config={config} />
   ),
 };
-
-export { PHI_CHECKBOX_WIDGET_PLUGIN_TYPE };

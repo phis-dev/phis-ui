@@ -2,7 +2,6 @@ import type { PhiCmsServerWidgetPlugin } from "../../../../../types";
 import { PhiFormPreviewWidget } from "./built-in";
 import {
   PHI_FORM_PREVIEW_WIDGET_DEFINITION,
-  PHI_FORM_PREVIEW_WIDGET_PLUGIN_TYPE,
   type PhiCmsFormPreviewWidgetConfig,
 } from "./config";
 
@@ -35,5 +34,3 @@ export const PHI_FORM_PREVIEW_WIDGET_PLUGIN: PhiCmsServerWidgetPlugin<PhiCmsForm
   render: renderFormPreview,
   renderPreview: renderFormPreview,
 };
-
-export { PHI_FORM_PREVIEW_WIDGET_PLUGIN_TYPE };

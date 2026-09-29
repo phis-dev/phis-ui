@@ -1,6 +1,6 @@
 "use client";
 
-import { startTransition, useEffect, useRef, useState } from "react";
+import { startTransition, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 import { getPhiBuilderDefaultRegionDraft } from "./region-defaults";
@@ -12,7 +12,6 @@ import {
 import {
   PHI_BUILDER_PREVIEW_SEARCH_PARAM,
   savePhiBuilderPreviewSnapshotRequest,
-  serializePhiBuilderPreviewSnapshot,
 } from "./preview-transport";
 import { getPhiDeveloperRegionDraftsSnapshot } from "./developer-workspace-store";
 import type {
@@ -45,93 +44,6 @@ function materializePhiBuilderPreviewRegionDrafts(
   }
 
   return nextDrafts;
-}
-
-export function usePhiDeveloperBuilderPreviewUrlSync(
-  state: Pick<PhiDeveloperBuilderWorkspaceState, "area" | "pageKey" | "builderMode" | "runtimeModuleIdsByArea">,
-  regionDrafts: Record<string, PhiDeveloperBuilderRegionDraft>,
-) {
-  const pathname = usePathname();
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const lastPreviewRef = useRef<{ payload: string; id: string } | null>(null);
-  const pendingPreviewRef = useRef(false);
-
-  useEffect(() => {
-    if (typeof pathname !== "string") {
-      return;
-    }
-
-    const nextSearchParams = new URLSearchParams(searchParams.toString());
-
-    if (state.builderMode !== "preview") {
-      pendingPreviewRef.current = false;
-      if (!nextSearchParams.has(PHI_BUILDER_PREVIEW_SEARCH_PARAM)) {
-        return;
-      }
-
-      nextSearchParams.delete(PHI_BUILDER_PREVIEW_SEARCH_PARAM);
-      lastPreviewRef.current = null;
-      const nextHref = nextSearchParams.toString() ? `${pathname}?${nextSearchParams.toString()}` : pathname;
-      startTransition(() => {
-        router.replace(nextHref, { scroll: false });
-      });
-      return;
-    }
-
-    const snapshot = {
-      version: 2,
-      area: state.area,
-      pageKey: state.pageKey,
-      runtimeModuleIds: state.runtimeModuleIdsByArea[state.area] ?? [],
-      regionDrafts,
-    } as const;
-    const serializedPreview = serializePhiBuilderPreviewSnapshot(snapshot);
-    const lastPreview = lastPreviewRef.current;
-
-    if (
-      lastPreview?.payload === serializedPreview &&
-      nextSearchParams.get(PHI_BUILDER_PREVIEW_SEARCH_PARAM) === lastPreview.id
-    ) {
-      return;
-    }
-
-    let cancelled = false;
-    pendingPreviewRef.current = true;
-
-    savePhiBuilderPreviewSnapshotRequest(snapshot)
-      .then((previewId) => {
-        if (cancelled) {
-          return;
-        }
-
-        pendingPreviewRef.current = false;
-        lastPreviewRef.current = {
-          payload: serializedPreview,
-          id: previewId,
-        };
-
-        const updatedSearchParams = new URLSearchParams(searchParams.toString());
-        updatedSearchParams.set(PHI_BUILDER_PREVIEW_SEARCH_PARAM, previewId);
-        const nextHref = `${pathname}?${updatedSearchParams.toString()}`;
-
-        startTransition(() => {
-          router.replace(nextHref, { scroll: false });
-        });
-      })
-      .catch(() => {
-        if (cancelled) {
-          return;
-        }
-
-        pendingPreviewRef.current = false;
-        lastPreviewRef.current = null;
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [pathname, regionDrafts, router, searchParams, state.area, state.builderMode, state.pageKey, state.runtimeModuleIdsByArea]);
 }
 
 export function usePhiDeveloperBuilderPreviewModeController(

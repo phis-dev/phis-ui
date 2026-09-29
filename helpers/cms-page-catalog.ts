@@ -3,7 +3,6 @@ import {
   resolvePhiBuilderAreaAsCmsArea,
   type PhiBuilderAreaKey,
 } from "../constants/cms-areas";
-import type { PhiTreeOption } from "../types/tree";
 import type { PhiCmsPresetSource } from "../types/cms-module-descriptors";
 import {
   createPhiPageReference,
@@ -53,14 +52,6 @@ export function createEmptyPhiBuilderModulePresetPagesByArea(): PhiBuilderModule
     (current, area) => ({ ...current, [area]: [] }),
     {} as PhiBuilderModulePresetPagesByArea,
   );
-}
-
-export function mapPhiPresetPageNodesToTreeOptions(nodes: readonly PhiPresetPageNode[]): PhiTreeOption[] {
-  return nodes.map((node) => ({
-    value: node.key,
-    label: node.title,
-    children: node.children ? mapPhiPresetPageNodesToTreeOptions(node.children) : undefined,
-  }));
 }
 
 export type PhiBuilderPageCatalogArea = PhiBuilderAreaKey;
@@ -144,13 +135,6 @@ export function resolvePagePath(
 ) {
   const pathSegments = findPagePathSegments([...pages], pageKey) ?? [pageKey];
   return `/${area}/${pathSegments.join("/")}`;
-}
-
-export function resolvePageNodePath(
-  pageKey: string,
-  pages: readonly PhiPresetPageNode[],
-) {
-  return findPageNodePath([...pages], pageKey);
 }
 
 /** The first node in the tree that is a Page rather than a folder holding Pages. */

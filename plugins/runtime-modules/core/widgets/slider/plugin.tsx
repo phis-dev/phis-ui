@@ -3,7 +3,6 @@ import { PhiCmsWidgetType } from "../../../../../constants/cms-widget-types";
 import { PhiRuntimeModuleRenderClientHost } from "../../../../../components/runtime/runtime-module-render-client-manifest";
 import {
   PHI_SLIDER_WIDGET_DEFINITION,
-  PHI_SLIDER_WIDGET_PLUGIN_TYPE,
   type PhiSliderWidgetConfig,
 } from "./config";
 
@@ -22,5 +21,3 @@ export const PHI_SLIDER_WIDGET_PLUGIN: PhiCmsServerWidgetPlugin<PhiSliderWidgetC
     />
   ),
 };
-
-export { PHI_SLIDER_WIDGET_PLUGIN_TYPE };

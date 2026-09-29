@@ -166,7 +166,6 @@ export const PHI_THEME_OWN_TOKEN_KEYS = [
 ] as const;
 
 export type PhiThemeTokenKey = (typeof PHI_THEME_TOKEN_KEYS)[number];
-export type PhiThemeOwnTokenKey = (typeof PHI_THEME_OWN_TOKEN_KEYS)[number];
 
 /**
  * The resolved Theme, in the names above and their Ant Design value types.

@@ -1,5 +1,4 @@
 import { resolvePhiCmsWidgetPluginKey } from "../../../../../constants/cms-widget-types";
-import { PhiCmsWidgetType } from "../../../../../constants/cms-widget-types";
 import type { PhiCmsWidgetPlugin } from "../../../../../types";
 import {
   PHI_SLIDER_TOOLTIP_MODES,
@@ -110,5 +109,3 @@ export const PHI_SLIDER_WIDGET_DEFINITION = {
   | "defaultConfig"
   | "parseConfig"
 >;
-
-export const PHI_SLIDER_WIDGET_PLUGIN_TYPE = PhiCmsWidgetType.Slider;

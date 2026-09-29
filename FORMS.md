@@ -202,7 +202,7 @@ type PhiFormFieldPlacementDescriptor = {
 - When a field's label and control ranges overlap they stack on two rows; otherwise they share one. There
   is no `columns` or `labelPlacement` setting: a two-column Form is fields in 1-13 and 13-25, and a
   stacked Form uses full-width ranges. `components/forms/form-descriptor-contract.ts` exports named
-  ranges for the common cases (`PHI_FORM_ROW_START_HALF`, `PHI_FORM_STACKED_LAYOUT`, and others).
+  ranges for the common cases (`PHI_FORM_STACKED_LAYOUT`, `PHI_FORM_SIDE_START_HALF`, and others).
 - Fields are placed in declaration order; a field goes on the current row while its tracks are free.
 - `gap` uses the spacing tokens `none`, `xxs`, `xs`, `sm`, `base`, `md`, `lg`, `xl`, `xxl`. It is the
   spacing between one row of fields and the next, and half of it is the gutter between a label and the

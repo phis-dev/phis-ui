@@ -1,5 +1,4 @@
 import { resolvePhiCmsWidgetPluginKey } from "../../../../../constants/cms-widget-types";
-import { PhiCmsWidgetType } from "../../../../../constants/cms-widget-types";
 import type { PhiCmsWidgetPlugin } from "../../../../../types";
 import {
   PHI_SIGNAL_VALUE_SCHEMAS,
@@ -66,5 +65,3 @@ export const PHI_ASSET_FOCAL_RECT_WIDGET_DEFINITION = {
   | "defaultConfig"
   | "parseConfig"
 >;
-
-export const PHI_ASSET_FOCAL_RECT_WIDGET_PLUGIN_TYPE = PhiCmsWidgetType.AssetFocalRect;

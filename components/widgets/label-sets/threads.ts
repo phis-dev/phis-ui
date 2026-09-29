@@ -164,8 +164,6 @@ export async function getPhiThreadPageLabels(options: PhiGlobalTranslatorOptions
   };
 }
 
-export type PhiThreadPageLabels = Awaited<ReturnType<typeof getPhiThreadPageLabels>>;
-
 /**
  * What the form that opens a conversation says.
  *
@@ -251,8 +249,6 @@ export async function getPhiThreadFormLabels(options: PhiGlobalTranslatorOptions
     replyErrorStorageUnreachable: labels.reply_error_storage_unreachable,
   };
 }
-
-export type PhiThreadFormLabels = Awaited<ReturnType<typeof getPhiThreadFormLabels>>;
 
 export async function getPhiThreadConversationLabels(options: PhiGlobalTranslatorOptions) {
   const labels = await getPhiLabelSet(options, PHI_THREAD_CONVERSATION_LABEL_SET);

@@ -1,4 +1,4 @@
-import { PhiCmsWidgetType, resolvePhiCmsWidgetPluginKey } from "../../../../../constants/cms-widget-types";
+import { resolvePhiCmsWidgetPluginKey } from "../../../../../constants/cms-widget-types";
 import type { PhiCmsWidgetPlugin } from "../../../../../types";
 import { isPhiFormId, normalizePhiFormId, type PhiFormId } from "../../../../../types/form-id";
 import { PHI_SIGNAL_VALUE_SCHEMAS, readPhiSignalRouteSet } from "../../../../../types/signals";
@@ -90,5 +90,3 @@ export const PHI_FORM_PREVIEW_WIDGET_DEFINITION = {
   | "defaultConfig"
   | "parseConfig"
 >;
-
-export const PHI_FORM_PREVIEW_WIDGET_PLUGIN_TYPE = PhiCmsWidgetType.FormPreview;

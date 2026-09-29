@@ -343,29 +343,6 @@ export const buildPhiBuilderStructureShellDraftsForArea = cache(async function b
   );
 });
 
-export async function buildPhiBuilderStructureShellDraftsByArea(
-  runtime: PhiBlockRuntime,
-  runtimeModuleCatalog: PhiRuntimeModuleCatalog,
-): Promise<Record<PhiDeveloperBuilderArea, Record<string, PhiDeveloperBuilderRegionDraft>>> {
-  const areas: readonly PhiDeveloperBuilderArea[] = PHI_BUILDER_AREA_KEYS;
-  const entries = await Promise.all(
-    areas.map(async (area) => [
-      area,
-      await buildShellDraftsForArea(
-        runtime,
-        runtime.site.key,
-        runtime.locale.current,
-        readPhiServerApiCredentials().apiBaseUrl,
-        readPhiServerApiCredentials().internalToken,
-        area,
-        runtimeModuleCatalog,
-      ),
-    ] as const),
-  );
-
-  return Object.fromEntries(entries) as Record<PhiDeveloperBuilderArea, Record<string, PhiDeveloperBuilderRegionDraft>>;
-}
-
 /**
  * What an Area's Modules namespace says, as the Builder sees it: the draft first, then what is
  * published, then the preset the code ships. Both answers come from one load because they are one

@@ -4,7 +4,6 @@ import type { PhiBlockRuntime, PhiCmsBuilderWidgetPlugin } from "../../../../../
 import { PhiOtpWidget } from "./client";
 import {
   PHI_OTP_WIDGET_DEFINITION,
-  PHI_OTP_WIDGET_PLUGIN_TYPE,
   type PhiCmsOtpWidgetConfig,
 } from "./config";
 
@@ -18,5 +17,3 @@ export const PHI_OTP_WIDGET_BUILDER_PLUGIN: PhiCmsBuilderWidgetPlugin<PhiCmsOtpW
     />
   ),
 };
-
-export { PHI_OTP_WIDGET_PLUGIN_TYPE };

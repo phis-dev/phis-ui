@@ -1,5 +1,4 @@
 import { resolvePhiCmsWidgetPluginKey } from "../../../../../constants/cms-widget-types";
-import { PhiCmsWidgetType } from "../../../../../constants/cms-widget-types";
 import { isPhiRuntimeDataProviderKey } from "../../../../../types/runtime-data-provider";
 import type { PhiCmsConfigField, PhiCmsWidgetPlugin } from "../../../../../types/cms-plugins";
 import type {
@@ -257,5 +256,3 @@ export const PHI_TREE_WIDGET_DEFINITION = {
 } satisfies Pick<PhiCmsWidgetPlugin<PhiTreeWidgetConfig>,
   "kind" | "pluginKey" | "typeKey" | "title" | "description" | "category" | "tags" | "icon" | "iconFamily" |
   "slotSizePolicy" | "requiredRuntimeControllers" | "runtimeSignals" | "fields" | "defaultConfig" | "parseConfig">;
-
-export const PHI_TREE_WIDGET_PLUGIN_TYPE = PhiCmsWidgetType.Tree;

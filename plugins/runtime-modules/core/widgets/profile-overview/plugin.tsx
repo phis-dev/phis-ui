@@ -3,7 +3,6 @@ import { renderPhiWidgetPreviewPlaceholder } from "../../../../../plugins/factor
 import { PhiProfileOverviewWidget } from "./server";
 import {
   PHI_PROFILE_OVERVIEW_WIDGET_DEFINITION,
-  PHI_PROFILE_OVERVIEW_WIDGET_PLUGIN_TYPE,
 } from "./config";
 
 export const PHI_PROFILE_OVERVIEW_WIDGET_PLUGIN: PhiCmsServerWidgetPlugin<Record<string, never>> = {
@@ -16,5 +15,3 @@ export const PHI_PROFILE_OVERVIEW_WIDGET_PLUGIN: PhiCmsServerWidgetPlugin<Record
   ),
   renderPreview: ({ widget }) => renderPhiWidgetPreviewPlaceholder(widget),
 };
-
-export { PHI_PROFILE_OVERVIEW_WIDGET_PLUGIN_TYPE };

@@ -36,12 +36,6 @@ const PHI_CONTROL_CLEAR_SIGNAL = {
   valueType: "none",
 } as const;
 
-const PHI_CONTROL_ACTIVATE_SIGNAL = {
-  id: "activate",
-  action: "activate",
-  valueType: "none",
-} as const;
-
 const PHI_CONTROL_FOCUS_SIGNALS = {
   emits: [
     { id: "focus", action: "change", valueType: "boolean" },
@@ -50,11 +44,6 @@ const PHI_CONTROL_FOCUS_SIGNALS = {
   listens: [
     { id: "focused", channel: "focused", action: "change", valueType: "boolean" },
   ],
-} satisfies PhiSignalPluginMeta;
-
-export const PHI_ACTIVATION_CONTROL_SIGNALS = {
-  emits: [PHI_CONTROL_ACTIVATE_SIGNAL],
-  listens: [],
 } satisfies PhiSignalPluginMeta;
 
 export const PHI_COMMAND_CONTROL_SIGNALS = {
@@ -231,17 +220,6 @@ export const PHI_MULTI_SELECT_CONTROL_SIGNALS = {
   ],
 } satisfies PhiSignalPluginMeta;
 
-export const PHI_NUMBER_MULTI_SELECT_CONTROL_SIGNALS = {
-  emits: [
-    { id: "change", action: "change", valueType: "number[]" },
-    ...PHI_CONTROL_FOCUS_SIGNALS.emits,
-  ],
-  listens: [
-    { ...PHI_CONTROL_SET_VALUE_SIGNAL, channel: "selection", valueType: "number[]" },
-    { ...PHI_CONTROL_CLEAR_SIGNAL, channel: "selection" },
-  ],
-} satisfies PhiSignalPluginMeta;
-
 export const PHI_DRAG_SOURCE_CONTROL_SIGNALS = {
   emits: [
     {
@@ -258,58 +236,6 @@ export const PHI_DRAG_SOURCE_CONTROL_SIGNALS = {
     },
     {
       id: "dragEnd",
-      action: "stop",
-      valueType: "json",
-      valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.dragDrop,
-    },
-  ],
-} satisfies PhiSignalPluginMeta;
-
-export const PHI_DROP_TARGET_CONTROL_SIGNALS = {
-  emits: [
-    {
-      id: "dragStart",
-      action: "start",
-      valueType: "json",
-      valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.dragDrop,
-    },
-    {
-      id: "dragOver",
-      action: "change",
-      valueType: "json",
-      valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.dragDrop,
-    },
-    {
-      id: "dragEnd",
-      action: "stop",
-      valueType: "json",
-      valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.dragDrop,
-    },
-    {
-      id: "drop",
-      action: "drop",
-      valueType: "json",
-      valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.dragDrop,
-    },
-  ],
-  listens: [
-    {
-      id: "dragStart",
-      channel: "drag",
-      action: "start",
-      valueType: "json",
-      valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.dragDrop,
-    },
-    {
-      id: "dragChange",
-      channel: "drag",
-      action: "change",
-      valueType: "json",
-      valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.dragDrop,
-    },
-    {
-      id: "dragEnd",
-      channel: "drag",
       action: "stop",
       valueType: "json",
       valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.dragDrop,

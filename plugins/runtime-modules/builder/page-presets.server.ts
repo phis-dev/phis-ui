@@ -533,14 +533,6 @@ function readPageIndexFlag(flags: number | null | undefined) {
   return !hasPhiFlag(flags, PhiCmsFlags.NoIndex);
 }
 
-export const buildPhiBuilderCurrentPageMeta = cache(async function buildPhiBuilderCurrentPageMeta(
-  runtime: PhiBlockRuntime,
-  runtimeModuleCatalog: PhiRuntimeModuleCatalog,
-): Promise<PhiBuilderPageMeta> {
-  const { area, pageKey } = await resolvePhiBuilderCurrentPageScope(runtime, runtimeModuleCatalog);
-  return buildPageMetaForScope(runtime, area, pageKey, runtimeModuleCatalog);
-});
-
 export const buildPhiBuilderPageMetaForScope = cache(async function buildPhiBuilderPageMetaForScope(
   runtime: PhiBlockRuntime,
   area: PhiDeveloperBuilderArea,

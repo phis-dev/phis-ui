@@ -1,4 +1,4 @@
-import { PhiCmsWidgetType, resolvePhiCmsWidgetPluginKey } from "../../../../../constants/cms-widget-types";
+import { resolvePhiCmsWidgetPluginKey } from "../../../../../constants/cms-widget-types";
 import type { PhiCmsWidgetPlugin } from "../../../../../types";
 import { PHI_SIGNAL_VALUE_SCHEMAS } from "../../../../../types/signals";
 import { parsePhiThreadWidgetConfig, type PhiThreadWidgetConfig } from "../thread-widget-config";
@@ -63,5 +63,3 @@ export const PHI_THREAD_CONVERSATION_WIDGET_DEFINITION = {
   | "kind" | "pluginKey" | "typeKey" | "slotSizePolicy" | "title" | "description" | "category"
   | "runtimeSignals" | "fields" | "parseConfig"
 >;
-
-export const PHI_THREAD_CONVERSATION_WIDGET_PLUGIN_TYPE = PhiCmsWidgetType.ThreadConversation;

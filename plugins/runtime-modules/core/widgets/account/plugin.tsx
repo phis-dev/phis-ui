@@ -1,7 +1,7 @@
 import { localizeAreaPath } from "../../../../../helpers/locale";
 import type { PhiCmsServerWidgetPlugin } from "../../../../../types";
 import type { PhiAccountWidgetConfig } from "./client";
-import { PHI_ACCOUNT_WIDGET_DEFINITION, PHI_ACCOUNT_WIDGET_PLUGIN_TYPE } from "./config";
+import { PHI_ACCOUNT_WIDGET_DEFINITION } from "./config";
 import { PhiAccountWidget } from "./server";
 import { PhiRuntimeRenderClientType } from "../../../../../constants/runtime-render-client-types";
 import { PhiRuntimeModuleRenderClientHost } from "../../../../../components/runtime/runtime-module-render-client-manifest";
@@ -61,4 +61,3 @@ export const PHI_ACCOUNT_WIDGET_PLUGIN: PhiCmsServerWidgetPlugin<PhiAccountWidge
     />
   ),
 };
-export { PHI_ACCOUNT_WIDGET_PLUGIN_TYPE };

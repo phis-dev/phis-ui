@@ -45,10 +45,3 @@ export function usePhiWorkspaceCatalogValue<TSelected>(
 export function getPhiWorkspaceCatalogSnapshot(scopeKey: string): PhiWorkspaceCatalogState {
   return phiWorkspaceCatalogStore.getSnapshot(scopeKey);
 }
-
-export function patchPhiWorkspaceCatalog(
-  scopeKey: string,
-  next: Partial<PhiWorkspaceCatalogState>,
-) {
-  phiWorkspaceCatalogStore.patch(scopeKey, (current) => ({ ...current, ...next }));
-}

@@ -1,5 +1,4 @@
 import { resolvePhiCmsWidgetPluginKey } from "../../../../../constants/cms-widget-types";
-import { PhiCmsWidgetType } from "../../../../../constants/cms-widget-types";
 import { isPhiRuntimeDataProviderKey } from "../../../../../types/runtime-data-provider";
 import {
   PHI_TABLE_TAG_COLORS,
@@ -1217,5 +1216,3 @@ export const PHI_TABLE_WIDGET_DEFINITION = {
   | "defaultConfig"
   | "parseConfig"
 >;
-
-export const PHI_TABLE_WIDGET_PLUGIN_TYPE = PhiCmsWidgetType.Table;

@@ -1,5 +1,4 @@
 import { resolvePhiCmsWidgetPluginKey } from "../../../../../constants/cms-widget-types";
-import { PhiCmsWidgetType } from "../../../../../constants/cms-widget-types";
 import type { PhiCmsWidgetPlugin } from "../../../../../types";
 import { PHI_BOOLEAN_CONTROL_SIGNALS } from "../../../../../components/widgets/signals/control-signal-capabilities";
 import { PHI_CONTROL_STATE_FIELDS, parsePhiControlStateConfig } from "../../../../../components/widgets/config/control-signal-config";
@@ -53,5 +52,3 @@ export const PHI_CHECKBOX_WIDGET_DEFINITION = {
   | "defaultConfig"
   | "parseConfig"
 >;
-
-export const PHI_CHECKBOX_WIDGET_PLUGIN_TYPE = PhiCmsWidgetType.Checkbox;

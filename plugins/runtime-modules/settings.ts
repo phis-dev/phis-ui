@@ -150,15 +150,6 @@ export function readPhiRuntimeModuleIdsForArea(
   return reading;
 }
 
-export function describePhiUnresolvedRuntimeModules(
-  area: string,
-  unresolved: readonly { moduleId: PhiRuntimeModuleId; reason: PhiUnresolvedRuntimeModuleReason }[],
-) {
-  return unresolved
-    .map(({ moduleId, reason }) => `${moduleId} (${reason})`)
-    .join(", ") + ` -- Area "${area}"`;
-}
-
 export function resolvePhiRuntimeModuleIdsForArea(
   area: string,
   moduleIds: readonly PhiRuntimeModuleId[] | null | undefined,

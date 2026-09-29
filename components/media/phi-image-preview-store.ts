@@ -189,19 +189,3 @@ export function bumpPhiImagePreviewRefreshToken(scopeKey: string) {
 export function resetPhiImagePreviewStore(scopeKey: string) {
   phiImagePreviewStore.reset(scopeKey);
 }
-
-/**
- * Asks for a different Space.
- *
- * Folders belong to the Space they were listed from, so the Folder filter and the page reset with it.
- */
-export function setPhiImagePreviewSpace(scopeKey: string, spaceAddress: string | null) {
-  phiImagePreviewStore.patch(scopeKey, (current) => ({
-    ...current,
-    spaceAddress: spaceAddress?.trim() || null,
-    folderId: null,
-    folderPath: null,
-    page: 1,
-    error: null,
-  }));
-}

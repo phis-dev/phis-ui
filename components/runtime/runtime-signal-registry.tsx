@@ -1,7 +1,5 @@
 "use client";
 
-import { useCallback, useSyncExternalStore } from "react";
-
 import type {
   PhiSignal,
   PhiSignalAddress,
@@ -12,7 +10,6 @@ import type {
 import { readPhiSignalReceiverScopeProblem } from "@phis/contracts/signals";
 import {
   resolvePhiSiteSignalRuntimePartition,
-  usePhiSignalRuntimePartition,
   type PhiSignalRuntimePartition,
 } from "./runtime-signal-partition";
 
@@ -136,13 +133,6 @@ export function resolvePhiSignalDeliverability(
     : "pending";
 }
 
-export function canDeliverPhiSignalToReceiver(
-  partition: PhiSignalRuntimePartition,
-  signal: PhiSignal,
-) {
-  return resolvePhiSignalDeliverability(partition, signal) === "deliverable";
-}
-
 export function resolvePhiSignalDeliveryPartition(
   partition: PhiSignalRuntimePartition,
   signal: PhiSignal,
@@ -174,26 +164,3 @@ export function registerPhiSignalInstance(
     }
   };
 }
-
-export function resolvePhiSignalInstance(
-  partition: PhiSignalRuntimePartition,
-  address: PhiSignalAddress,
-) {
-  return partition.instances.get(address) ?? null;
-}
-
-export function usePhiSignalInstance(address: PhiSignalAddress | null | undefined) {
-  const partition = usePhiSignalRuntimePartition();
-  return useSyncExternalStore(
-    useCallback((subscriber) => {
-      partition.instanceSubscribers.add(subscriber);
-      return () => partition.instanceSubscribers.delete(subscriber);
-    }, [partition]),
-    useCallback(
-      () => address ? resolvePhiSignalInstance(partition, address) : null,
-      [address, partition],
-    ),
-    () => null,
-  );
-}
-

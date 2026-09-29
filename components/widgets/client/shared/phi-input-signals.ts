@@ -2,13 +2,8 @@
 
 import type { PhiSignalAddress, PhiSignalRouteSet, PhiSignalScope } from "../../../../types";
 import {
-  type PhiControlSignalCommandValue,
-  type PhiControlSignalEventValue,
   usePhiControlSignalController,
 } from "./phi-control-signals";
-
-export type PhiInputSignalEventValue = PhiControlSignalEventValue;
-export type PhiInputSignalCommandValue = PhiControlSignalCommandValue;
 
 export type PhiInputSignalControllerOptions = {
   key?: string | null;

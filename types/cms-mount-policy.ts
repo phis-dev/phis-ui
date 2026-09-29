@@ -19,23 +19,6 @@
 export const PHI_CMS_MOUNT_POLICIES = ["remount", "lazy-keep", "eager"] as const;
 export type PhiCmsMountPolicy = (typeof PHI_CMS_MOUNT_POLICIES)[number];
 
-/**
- * Two axes, three useful answers.
- *
- * When it mounts (late or at load) and what happens when it leaves (dropped or kept). `remount` is
- * late and dropped, `lazy-keep` is late and kept, `eager` is at load and therefore kept whether it
- * wants to be or not. The fourth combination -- build everything, then throw it away -- is not a
- * policy, it is a bug.
- *
- * `remount` is implicitly late as well: to be remounted you have to have left. The names each say the
- * half that distinguishes them rather than spelling out both.
- */
-export const PHI_CMS_MOUNT_POLICY_MEANINGS: Readonly<Record<PhiCmsMountPolicy, string>> = {
-  remount: "Mounted when it enters the window, taken down when it leaves.",
-  "lazy-keep": "Mounted when it first enters the window, then kept.",
-  eager: "Mounted from the start, whether it is ever shown or not.",
-};
-
 export function isPhiCmsMountPolicy(value: unknown): value is PhiCmsMountPolicy {
   return typeof value === "string" && (PHI_CMS_MOUNT_POLICIES as readonly string[]).includes(value);
 }

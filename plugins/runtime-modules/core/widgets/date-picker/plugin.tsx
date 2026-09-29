@@ -3,7 +3,6 @@ import { PhiCmsWidgetType } from "../../../../../constants/cms-widget-types";
 import { PhiRuntimeModuleRenderClientHost } from "../../../../../components/runtime/runtime-module-render-client-manifest";
 import {
   PHI_DATE_PICKER_WIDGET_DEFINITION,
-  PHI_DATE_PICKER_WIDGET_PLUGIN_TYPE,
   type PhiDatePickerWidgetConfig,
 } from "./config";
 
@@ -22,5 +21,3 @@ export const PHI_DATE_PICKER_WIDGET_PLUGIN: PhiCmsServerWidgetPlugin<PhiDatePick
     />
   ),
 };
-
-export { PHI_DATE_PICKER_WIDGET_PLUGIN_TYPE };

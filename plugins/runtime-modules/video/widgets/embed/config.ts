@@ -1,4 +1,4 @@
-import { PhiCmsWidgetType, resolvePhiCmsWidgetPluginKey } from "../../../../../constants/cms-widget-types";
+import { resolvePhiCmsWidgetPluginKey } from "../../../../../constants/cms-widget-types";
 import type { PhiCmsWidgetPlugin } from "../../../../../types";
 import { isPhiVideoProviderKey, type PhiVideoProviderKey } from "../../../../../types/video";
 import {
@@ -179,5 +179,3 @@ export const PHI_VIDEO_EMBED_WIDGET_DEFINITION = {
   | "defaultConfig"
   | "parseConfig"
 >;
-
-export const PHI_VIDEO_EMBED_WIDGET_PLUGIN_TYPE = PhiCmsWidgetType.VideoEmbed;

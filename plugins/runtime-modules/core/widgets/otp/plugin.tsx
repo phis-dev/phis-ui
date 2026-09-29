@@ -3,7 +3,6 @@ import { PhiCmsWidgetType } from "../../../../../constants/cms-widget-types";
 import { PhiRuntimeModuleRenderClientHost } from "../../../../../components/runtime/runtime-module-render-client-manifest";
 import {
   PHI_OTP_WIDGET_DEFINITION,
-  PHI_OTP_WIDGET_PLUGIN_TYPE,
   type PhiCmsOtpWidgetConfig,
 } from "./config";
 
@@ -31,5 +30,3 @@ export const PHI_OTP_WIDGET_PLUGIN: PhiCmsServerWidgetPlugin<PhiCmsOtpWidgetConf
     />
   ),
 };
-
-export { PHI_OTP_WIDGET_PLUGIN_TYPE };

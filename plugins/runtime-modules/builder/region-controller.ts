@@ -1,8 +1,4 @@
 import { PhiCmsRegionType } from "../../../constants/phi-cms";
-import {
-  PHI_REGION_WIDGET_DEFAULT_LABELS,
-  getPhiRegionWidgetLabelEntry,
-} from "../../../components/widgets/label-types/region";
 import { getDefaultRegionDraft, resolveRegionDraftKey } from "./developer-region-drafts";
 import { getPhiBuilderRegionDraftKey } from "./region-keys";
 import {
@@ -37,12 +33,6 @@ export function getBuilderRegionKey(regionType: number) {
     default:
       return `region_${regionType}`;
   }
-}
-
-export function getBuilderRegionTitle(regionType: number) {
-  const regionKey = getBuilderRegionKey(regionType);
-  const labelEntry = getPhiRegionWidgetLabelEntry(regionKey, PHI_REGION_WIDGET_DEFAULT_LABELS);
-  return labelEntry?.title ?? `Region ${regionType}`;
 }
 
 export function applyPhiDeveloperBuilderSiderLeftMode(

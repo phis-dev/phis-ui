@@ -4,7 +4,6 @@ import type { PhiCmsBuilderWidgetPlugin } from "../../../../../types";
 import { PhiCheckboxGroupWidget } from "./client";
 import {
   PHI_CHECKBOX_GROUP_WIDGET_DEFINITION,
-  PHI_CHECKBOX_GROUP_WIDGET_PLUGIN_TYPE,
   type PhiCheckboxGroupWidgetConfig,
 } from "./config";
 import { PhiStaticOptionsToolButton } from "../../../../../components/widgets/builder/phi-static-options-picker";
@@ -27,5 +26,3 @@ export const PHI_CHECKBOX_GROUP_WIDGET_BUILDER_PLUGIN: PhiCmsBuilderWidgetPlugin
     />
   ) : null,
 };
-
-export { PHI_CHECKBOX_GROUP_WIDGET_PLUGIN_TYPE };

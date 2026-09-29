@@ -1,6 +1,6 @@
 import type { PhiCmsServerWidgetPlugin } from "../../../../../types";
 import { PhiLocaleWidget } from "./server";
-import { PHI_LOCALE_WIDGET_DEFINITION, PHI_LOCALE_WIDGET_PLUGIN_TYPE } from "./config";
+import { PHI_LOCALE_WIDGET_DEFINITION } from "./config";
 
 export const PHI_LOCALE_WIDGET_PLUGIN: PhiCmsServerWidgetPlugin<Record<string, never>> = {
   ...PHI_LOCALE_WIDGET_DEFINITION,
@@ -19,5 +19,3 @@ export const PHI_LOCALE_WIDGET_PLUGIN: PhiCmsServerWidgetPlugin<Record<string, n
     />
   ),
 };
-
-export { PHI_LOCALE_WIDGET_PLUGIN_TYPE };

@@ -1,4 +1,4 @@
-import { PhiCmsWidgetType, resolvePhiCmsWidgetPluginKey } from "../../../../../constants/cms-widget-types";
+import { resolvePhiCmsWidgetPluginKey } from "../../../../../constants/cms-widget-types";
 import { readBoolean, readInteger, readString } from "../../../../../components/widgets/config/parser-primitives";
 import type { PhiCmsWidgetPlugin } from "../../../../../types/cms-plugins";
 import type {
@@ -243,5 +243,3 @@ export const PHI_RECORD_WIDGET_DEFINITION = {
   | "defaultConfig"
   | "parseConfig"
 >;
-
-export const PHI_RECORD_WIDGET_PLUGIN_TYPE = PhiCmsWidgetType.Record;

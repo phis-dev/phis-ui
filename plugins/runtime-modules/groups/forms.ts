@@ -124,21 +124,6 @@ const PHI_GROUPS_MEMBERSHIP_FORM_DESCRIPTOR: PhiFormDescriptor = {
   },
 };
 
-/**
- * The same three values, written from inside the App.
- *
- * The group field offers only what this actor manages, and the people come from the group-manager
- * route rather than the Site's user list -- a Manager finds a colleague without being an administrator.
- */
-const PHI_GROUPS_MY_MEMBERSHIP_FORM_DESCRIPTOR: PhiFormDescriptor = {
-  ...PHI_GROUPS_MEMBERSHIP_FORM_DESCRIPTOR,
-  key: PHI_GROUPS_FORM_IDS.myMembership,
-  fields: PHI_GROUPS_MEMBERSHIP_FORM_DESCRIPTOR.fields.map((field) =>
-    field.key === "groupId"
-      ? { ...field, optionsProvider: { providerKey: PHI_GROUPS_RUNTIME_DATA_PROVIDER_KEYS.myGroupOptions } }
-      : field),
-};
-
 async function loadLabels(
   context: Parameters<NonNullable<ReturnType<typeof definePhiRuntimeModuleForm>["loadLabels"]>>[0],
 ) {
@@ -201,29 +186,6 @@ export const PHI_GROUPS_RUNTIME_MODULE_FORMS = [
     tags: ["groups", "members"],
     descriptor: PHI_GROUPS_MEMBERSHIP_FORM_DESCRIPTOR,
     submitHandlerKey: PHI_GROUPS_FORM_HANDLER_KEYS.membership,
-    confirmHandlerKey: null,
-    previewHandlerKey: null,
-    defaultConfig: {},
-    variant: "default",
-    config: {},
-    previewUpstreamPath: null,
-    loadLabels,
-  }),
-] as const;
-
-export const PHI_GROUPS_APP_RUNTIME_MODULE_FORMS = [
-  definePhiRuntimeModuleForm({
-    ownerModuleId: PHI_GROUPS_RUNTIME_MODULE_ID,
-    areas: ["app"],
-    formId: PHI_GROUPS_FORM_IDS.myMembership,
-    version: 1,
-    flags: 0,
-    title: "Add a member",
-    description: "Write one membership inside a group this actor manages.",
-    category: "forms",
-    tags: ["groups", "members"],
-    descriptor: PHI_GROUPS_MY_MEMBERSHIP_FORM_DESCRIPTOR,
-    submitHandlerKey: PHI_GROUPS_FORM_HANDLER_KEYS.myMembership,
     confirmHandlerKey: null,
     previewHandlerKey: null,
     defaultConfig: {},

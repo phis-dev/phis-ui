@@ -1,74 +1,27 @@
 "use client";
 
 import {
-  cloneElement,
-  isValidElement,
   useCallback,
   useContext,
   useMemo,
   useState,
-  type CSSProperties,
-  type ReactElement,
   type ReactNode,
 } from "react";
 import {
-  resolvePhiLayoutBoxStyle,
   type PhiBaseLayoutSlotStates,
   type PhiBaseLayoutSlotState,
 } from "../phi-layout-contract";
 import {
   resolvePhiBaseLayoutSlotStates,
-  resolvePhiBaseLayoutChrome,
-  type PhiBaseLayoutProps,
 } from "../phi-layout-view-model";
-import {
-  isPhiLayoutAuthoringRender,
-  phiLayoutDebugLayerMarker,
-} from "../../../helpers/layout-authoring-markers";
 
 export type { PhiBaseLayoutProps } from "../phi-layout-view-model";
 import { PhiBaseLayoutSlotStateContext, type PhiBaseLayoutSlotStateContextValue } from "../phi-layout-slot-state";
-
-function resolvePhiRenderableBlockStyleValue(value: number | string | null | undefined) {
-  return value == null || value === 0 || value === "0" || value === "0px" ? undefined : value;
-}
-
-export function resolvePhiLayoutEmptySlotFrameStyle(options: {
-  hasContent: boolean;
-  slotState: PhiBaseLayoutSlotState;
-  frameRadius: CSSProperties["borderRadius"];
-  editFrameBackground?: CSSProperties["background"];
-  minHeight: CSSProperties["minHeight"];
-}): CSSProperties {
-  const { hasContent, slotState, frameRadius, editFrameBackground, minHeight } = options;
-  const frameBorderColor = hasContent
-    ? "rgba(0, 0, 0, 0.14)"
-    : slotState === "collapsed"
-      ? "var(--phi-debug-layer-slot-border-strong)"
-      : "var(--phi-debug-layer-slot-border)";
-
-  return {
-    display: "flex",
-    flexDirection: "column",
-    gap: 0,
-    minWidth: 0,
-    flex: "1 1 auto",
-    alignSelf: "stretch",
-    border: `1px dashed ${frameBorderColor}`,
-    borderRadius: frameRadius,
-    background: editFrameBackground ?? (hasContent ? "transparent" : "var(--phi-debug-layer-slot-background)"),
-    padding: 0,
-    minHeight,
-    overflow: "hidden",
-    boxShadow: "inset 0 0 0 1px var(--phi-debug-layer-slot-border-strong)",
-  };
-}
 
 export {
   PhiBaseLayoutSlotScope,
   usePhiBaseLayoutOwnSlotController,
   usePhiBaseLayoutSlotController,
-  usePhiBaseLayoutSlotState,
   usePhiBaseLayoutSlotStates,
 } from "../phi-layout-slot-state";
 
@@ -137,186 +90,6 @@ export function PhiBaseLayoutSlotStateProvider({
   return (
     <PhiBaseLayoutSlotStateContext.Provider value={resolvedContext}>
       {children}
-    </PhiBaseLayoutSlotStateContext.Provider>
-  );
-}
-
-export function PhiBaseLayout({
-  slots,
-  editSlotLabels,
-  layoutKind,
-  labelEnd,
-  padding,
-  paddingTop,
-  paddingRight,
-  paddingBottom,
-  paddingLeft,
-  background,
-  backgroundLayer,
-  borderSource,
-  border,
-  borderRadius,
-  effect,
-  blockId,
-  renderMode,
-  visibility,
-  enabled,
-  capabilities,
-  runtime,
-  debugMode,
-  className,
-  size,
-  minSize,
-  maxSize,
-  collapsedSizeHint,
-  zIndex,
-  opacity,
-  shadow,
-  margin = 0,
-  gap = 0,
-  initialSlotStates,
-  style,
-  editSlotAction,
-}: PhiBaseLayoutProps) {
-  const isAuthoringRender = isPhiLayoutAuthoringRender({ editSlotAction, editSlotLabels, capabilities });
-  const slotCount = slots?.length ?? 0;
-  const slotList = slots ?? [];
-  const resolvedContext = usePhiBaseLayoutSlotStateContext(slotCount, initialSlotStates);
-  const resolvedSlotStates = resolvedContext.slotStates;
-
-  const resolvedRenderMode = renderMode ?? "live";
-  const resolvedVisibility = visibility ?? "visible";
-  const resolvedEnabled = enabled ?? true;
-  const resolvedDebugMode = debugMode ?? false;
-  const resolvedMargin = resolvePhiRenderableBlockStyleValue(margin);
-  const resolvedGap = resolvePhiRenderableBlockStyleValue(gap);
-  const resolvedZIndex = resolvePhiRenderableBlockStyleValue(zIndex ?? 0);
-  const resolvedOpacity = opacity ?? 1;
-  const resolveLayoutSlotNode = (slot: ReactNode, index: number) => {
-    const slotState = resolvedSlotStates[index] ?? "expanded";
-
-    if (slotState === "hidden") {
-      return null;
-    }
-
-    if (slotState === "collapsed") {
-      if (!isValidElement(slot)) {
-        return null;
-      }
-
-      const elementSlot = slot as ReactElement<{ style?: CSSProperties }>;
-      const slotStyle = elementSlot.props.style;
-      return cloneElement(elementSlot, {
-        style: {
-          ...(slotStyle ?? {}),
-          width: 0,
-          height: 0,
-          minWidth: 0,
-          minHeight: 0,
-          flexBasis: 0,
-          flexGrow: 0,
-          flexShrink: 0,
-          overflow: "hidden",
-          opacity: 0,
-          pointerEvents: "none",
-        },
-      });
-    }
-
-    return slot;
-  };
-
-  if (resolvedVisibility === "hidden") {
-    return null;
-  }
-
-  const resolvedSlots = slotList
-    .map((slot, index) => resolveLayoutSlotNode(slot, index))
-    .filter((slot): slot is ReactNode => slot !== null);
-
-  const {
-    style: resolvedLayoutStyle,
-    hasExplicitLayoutBackground,
-  } = resolvePhiBaseLayoutChrome({
-    labelEnd,
-    padding,
-    paddingTop,
-    paddingRight,
-    paddingBottom,
-    paddingLeft,
-    background,
-    borderSource,
-    border,
-    borderRadius,
-    effect,
-    shadow,
-  });
-  const resolvedContainerStyle = {
-    ...resolvePhiLayoutBoxStyle({
-      size,
-      minSize,
-      maxSize,
-      collapsedSizeHint,
-      visibility: resolvedVisibility,
-    }),
-    ...(resolvedZIndex == null ? {} : { zIndex: resolvedZIndex }),
-    opacity: resolvedOpacity,
-    ...(resolvedMargin == null
-      ? {}
-      : {
-          marginTop: resolvedMargin,
-          marginRight: resolvedMargin,
-          marginBottom: resolvedMargin,
-          marginLeft: resolvedMargin,
-        }),
-    ...(resolvedGap == null
-      ? {}
-      : {
-          rowGap: resolvedGap,
-          columnGap: resolvedGap,
-        }),
-    ...resolvedLayoutStyle,
-    ...(resolvedEnabled
-      ? {}
-      : {
-          opacity: 0.5,
-          pointerEvents: "none",
-        }),
-    flex: "1 1 auto",
-    minWidth: 0,
-    minHeight: 0,
-    overflow: resolvedVisibility === "collapsed" ? "hidden" : undefined,
-    ...style,
-  } as CSSProperties;
-
-  return (
-    <PhiBaseLayoutSlotStateContext.Provider value={resolvedContext}>
-      <div
-        data-phi-block-id={blockId ?? undefined}
-        data-layout-kind={layoutKind}
-        data-phi-block-render-mode={resolvedRenderMode}
-        data-phi-block-visibility={resolvedVisibility}
-        data-phi-block-enabled={resolvedEnabled ? "true" : "false"}
-        data-phi-block-selectable={capabilities?.selectable ? "true" : undefined}
-        data-phi-block-draggable={capabilities?.draggable ? "true" : undefined}
-        data-phi-block-hoverable={capabilities?.hoverable ? "true" : undefined}
-        data-phi-block-activatable={capabilities?.activatable ? "true" : undefined}
-        data-phi-block-focusable={capabilities?.focusable ? "true" : undefined}
-        data-phi-block-droppable={capabilities?.droppable ? "true" : undefined}
-        data-phi-block-selected={runtime?.selected ? "true" : undefined}
-        data-phi-block-hovered={runtime?.hovered ? "true" : undefined}
-        data-phi-block-dragging={runtime?.dragging ? "true" : undefined}
-        data-phi-block-focused={runtime?.focused ? "true" : undefined}
-        data-phi-block-active={runtime?.active ? "true" : undefined}
-        data-phi-layout-debug-layer={phiLayoutDebugLayerMarker(isAuthoringRender)}
-        data-phi-debug-scaffold={resolvedDebugMode ? "on" : undefined}
-        data-phi-layout-has-explicit-layout-background={hasExplicitLayoutBackground ? "true" : "false"}
-        className={["phi-layout", className].filter(Boolean).join(" ")}
-        style={resolvedContainerStyle}
-      >
-        {backgroundLayer}
-        {resolvedSlots}
-      </div>
     </PhiBaseLayoutSlotStateContext.Provider>
   );
 }

@@ -1,5 +1,4 @@
 import { resolvePhiCmsWidgetPluginKey } from "../../../constants/cms-widget-types";
-import { PhiCmsWidgetType } from "../../../constants/cms-widget-types";
 import type { PhiCmsWidgetPlugin } from "../../../types";
 import { readString, type PhiCmsWidgetConfigBase } from "./parser-primitives";
 import {
@@ -77,5 +76,3 @@ export const PHI_TAB_BAR_WIDGET_DEFINITION = {
   | "fields"
   | "parseConfig"
 >;
-
-export const PHI_TAB_BAR_WIDGET_PLUGIN_TYPE = PhiCmsWidgetType.TabBar;

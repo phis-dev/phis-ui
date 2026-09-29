@@ -1,7 +1,7 @@
 import type { PhiCmsServerWidgetPlugin, PhiTableWidgetConfig } from "../../../../../types";
 import { definePhiPassiveWidgetRenderers } from "../../../../../plugins/factories/widget-renderers";
 import { phiRuntime } from "../../../../../server-helpers/phi-runtime";
-import { PHI_TABLE_WIDGET_DEFINITION, PHI_TABLE_WIDGET_PLUGIN_TYPE } from "./config";
+import { PHI_TABLE_WIDGET_DEFINITION } from "./config";
 import { PhiTableWidget } from "./server";
 import { getPhiTableWidgetLabels } from "../../../../../components/widgets/label-sets/table";
 
@@ -25,5 +25,3 @@ export const PHI_TABLE_WIDGET_PLUGIN: PhiCmsServerWidgetPlugin<PhiTableWidgetCon
   ...PHI_TABLE_WIDGET_DEFINITION,
   ...definePhiPassiveWidgetRenderers((args) => <PhiTableWidgetPluginServer {...args} />),
 };
-
-export { PHI_TABLE_WIDGET_PLUGIN_TYPE };

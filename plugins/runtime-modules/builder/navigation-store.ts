@@ -9,16 +9,8 @@ const navigationDraftStore = createPhiPluginStateStore<Record<string, PhiBuilder
   () => ({}),
 );
 
-export function usePhiBuilderNavigationDrafts() {
-  return navigationDraftStore.useStore("default");
-}
-
 export function usePhiBuilderNavigationDraft(navKey: string) {
   return navigationDraftStore.useStoreSelector("default", (drafts) => drafts[navKey] ?? null);
-}
-
-export function getPhiBuilderNavigationDraftsSnapshot() {
-  return navigationDraftStore.getSnapshot("default");
 }
 
 export function getPhiBuilderNavigationDraftSnapshot(navKey: string) {

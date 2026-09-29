@@ -1,5 +1,4 @@
 import { resolvePhiCmsWidgetPluginKey } from "../../../../../constants/cms-widget-types";
-import { PhiCmsWidgetType } from "../../../../../constants/cms-widget-types";
 import { normalizePhiMediaKind, PhiMediaKind } from "../../../../../constants/media";
 import type { PhiCmsWidgetPlugin } from "../../../../../types";
 import {
@@ -134,5 +133,3 @@ export const PHI_MEDIA_PICKER_WIDGET_DEFINITION = {
   | "defaultConfig"
   | "parseConfig"
 >;
-
-export const PHI_MEDIA_PICKER_WIDGET_PLUGIN_TYPE = PhiCmsWidgetType.MediaPicker;

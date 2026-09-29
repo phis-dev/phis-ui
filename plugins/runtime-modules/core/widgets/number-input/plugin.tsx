@@ -3,7 +3,6 @@ import { PhiCmsWidgetType } from "../../../../../constants/cms-widget-types";
 import { PhiRuntimeModuleRenderClientHost } from "../../../../../components/runtime/runtime-module-render-client-manifest";
 import {
   PHI_NUMBER_INPUT_WIDGET_DEFINITION,
-  PHI_NUMBER_INPUT_WIDGET_PLUGIN_TYPE,
   type PhiNumberInputWidgetConfig,
 } from "./config";
 
@@ -22,5 +21,3 @@ export const PHI_NUMBER_INPUT_WIDGET_PLUGIN: PhiCmsServerWidgetPlugin<PhiNumberI
     />
   ),
 };
-
-export { PHI_NUMBER_INPUT_WIDGET_PLUGIN_TYPE };

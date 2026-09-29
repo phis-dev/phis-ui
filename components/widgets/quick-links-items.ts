@@ -5,12 +5,6 @@ import {
 import type { PhiNavItem } from "../shell/shell-types";
 import type { PhiQuickLinksWidgetItem } from "../../plugins/runtime-modules/core/widgets/quick-links/client";
 
-export const PHI_QUICK_LINKS_PREVIEW_ITEMS: PhiQuickLinksWidgetItem[] = [
-  { label: "Overview", href: "/overview" },
-  { label: "Pricing", href: "/pricing" },
-  { label: "Contact", href: "/contact" },
-];
-
 export function mapPhiNavItemsToQuickLinksItems(
   items: PhiNavItem[],
   locale: string,

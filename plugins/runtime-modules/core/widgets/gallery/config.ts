@@ -1,5 +1,4 @@
 import { resolvePhiCmsWidgetPluginKey } from "../../../../../constants/cms-widget-types";
-import { PhiCmsWidgetType } from "../../../../../constants/cms-widget-types";
 import type { PhiCmsWidgetPlugin } from "../../../../../types";
 import {
   PHI_MOTION_EASING_FIELD_OPTIONS,
@@ -270,5 +269,3 @@ export const PHI_GALLERY_WIDGET_DEFINITION = {
   | "fields"
   | "parseConfig"
 >;
-
-export const PHI_GALLERY_WIDGET_PLUGIN_TYPE = PhiCmsWidgetType.Gallery;

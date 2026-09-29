@@ -8,9 +8,3 @@ import dynamic from "next/dynamic";
  */
 export const PhiLazyBuilderRuntimeControllerClient = dynamic(() =>
   import("./controller/client").then((module) => module.PhiBuilderRuntimeControllerClient));
-
-export function loadPhiBuilderRuntimeAuthoringClient() {
-  return import("./authoring")
-    .then((module) => module.PhiBuilderRuntimeModuleAuthoringClient);
-}
-

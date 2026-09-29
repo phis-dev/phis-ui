@@ -1,5 +1,4 @@
 import { resolvePhiCmsWidgetPluginKey } from "../../../../../constants/cms-widget-types";
-import { PhiCmsWidgetType } from "../../../../../constants/cms-widget-types";
 import type { PhiCmsWidgetPlugin } from "../../../../../types";
 import {
   normalizePhiRateCount,
@@ -85,5 +84,3 @@ export const PHI_RATE_WIDGET_DEFINITION = {
   | "defaultConfig"
   | "parseConfig"
 >;
-
-export const PHI_RATE_WIDGET_PLUGIN_TYPE = PhiCmsWidgetType.Rate;

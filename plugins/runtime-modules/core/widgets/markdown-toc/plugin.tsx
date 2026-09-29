@@ -2,7 +2,6 @@ import type { PhiCmsServerWidgetPlugin } from "../../../../../types";
 import { PhiWidgetInertPreview } from "../../../../../components/widgets/built-in/widget-preview";
 import {
   PHI_MARKDOWN_TOC_WIDGET_DEFINITION,
-  PHI_MARKDOWN_TOC_WIDGET_PLUGIN_TYPE,
   type PhiCmsMarkdownTocWidgetConfig,
 } from "./config";
 import { PhiMarkdownTocWidget } from "./server";
@@ -28,5 +27,3 @@ export const PHI_MARKDOWN_TOC_WIDGET_PLUGIN: PhiCmsServerWidgetPlugin<PhiCmsMark
     </PhiWidgetInertPreview>
   ),
 };
-
-export { PHI_MARKDOWN_TOC_WIDGET_PLUGIN_TYPE };

@@ -55,5 +55,3 @@ export async function getPhiAvatarWidgetLabels(options: PhiGlobalTranslatorOptio
     },
   };
 }
-
-export type PhiAvatarWidgetLabels = Awaited<ReturnType<typeof getPhiAvatarWidgetLabels>>;

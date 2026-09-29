@@ -13,22 +13,6 @@ import type { PhiCmsPageNode, PhiResolvedCmsPageTree } from "../../../types/cms"
  * answer, so the tree factories live here rather than in either of them.
  */
 
-export function findPhiCmsNavigationItemById(
-  items: readonly PhiCmsResolvedNavigationItem[],
-  id: PhiCmsResolvedNavigationItem["id"],
-): PhiCmsResolvedNavigationItem | null {
-  for (const item of items) {
-    if (item.id === id) {
-      return item;
-    }
-    const child = findPhiCmsNavigationItemById(item.children, id);
-    if (child) {
-      return child;
-    }
-  }
-  return null;
-}
-
 /**
  * The first place a navigation subtree actually goes.
  *

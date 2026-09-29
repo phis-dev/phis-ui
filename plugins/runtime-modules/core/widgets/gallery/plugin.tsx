@@ -4,7 +4,6 @@ import type { PhiCmsServerWidgetPlugin } from "../../../../../types";
 import { PhiRuntimeModuleRenderClientHost } from "../../../../../components/runtime/runtime-module-render-client-manifest";
 import {
   PHI_GALLERY_WIDGET_DEFINITION,
-  PHI_GALLERY_WIDGET_PLUGIN_TYPE,
   type PhiCmsGalleryWidgetConfig,
 } from "./config";
 
@@ -17,5 +16,3 @@ export const PHI_GALLERY_WIDGET_PLUGIN: PhiCmsServerWidgetPlugin<PhiCmsGalleryWi
     />
   )),
 };
-
-export { PHI_GALLERY_WIDGET_PLUGIN_TYPE };

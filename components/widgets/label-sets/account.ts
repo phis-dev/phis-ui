@@ -132,5 +132,3 @@ export async function getPhiAuthMethodsLabels(options: PhiGlobalTranslatorOption
     unavailable: labels.error_method_unavailable,
   };
 }
-
-export const getPhiAccountLoginModalLabels = getPhiLoginFormLabels;

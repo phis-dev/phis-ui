@@ -85,16 +85,6 @@ function encodeSvgDataUrl(svg: string) {
     .replace(/"/g, "%22")}")`;
 }
 
-export function resolvePhiMaskPresetImage(preset: PhiMaskPreset | null | undefined) {
-  const resolvedPreset = preset && PHI_MASK_PRESETS.has(preset) ? preset : PHI_MASK_DEFAULT_CONFIG.preset;
-  const body = resolvedPreset ? PHI_MASK_PRESET_SVG_PATHS[resolvedPreset] : null;
-  if (!body) {
-    return null;
-  }
-
-  return encodeSvgDataUrl(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">${body}</svg>`);
-}
-
 function resolvePhiMaskPresetImageWithRotation(
   preset: PhiMaskPreset | null | undefined,
   rotationDeg: number,

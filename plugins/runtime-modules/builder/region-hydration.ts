@@ -6,7 +6,6 @@ import { normalizePhiGeometryWidgetConfig } from "../../../components/widgets/co
 import { stripPhiResolvedAssetProjections } from "../../../components/media/image-presentation";
 import type { PhiCmsBorderWidgetConfig } from "../../../types/cms-config";
 import type {
-  PhiResolvedCmsAreaPresetTree,
   PhiCmsContentWidgetNode,
   PhiCmsLayoutNode,
   PhiCmsLayoutRenderNode,
@@ -286,61 +285,6 @@ export function buildPhiDeveloperBuilderRegionDraftsFromTree(
       toJsonRecord(region?.config) as BuilderPersistedRegionConfig,
       rootNode,
     );
-  }
-
-  return drafts;
-}
-
-export function buildPhiDeveloperBuilderDraftHydrationSet({
-  area,
-  pageKey,
-  areaPreset,
-  page,
-  shellRegionKeys = PHI_BUILDER_SHELL_REGION_KEYS,
-  pageRegionKeys = PHI_BUILDER_PAGE_REGION_KEYS,
-}: {
-  area: PhiDeveloperBuilderArea;
-  pageKey: string;
-  areaPreset: PhiResolvedCmsAreaPresetTree | null;
-  page: PhiResolvedCmsPageTree | null;
-  shellRegionKeys?: readonly PhiBuilderRegionKey[];
-  pageRegionKeys?: readonly PhiBuilderRegionKey[];
-}) {
-  const drafts: Record<string, PhiDeveloperBuilderRegionDraft> = {};
-
-  if (shellRegionKeys.length > 0 && areaPreset) {
-    Object.assign(
-      drafts,
-      buildPhiDeveloperBuilderRegionDraftsFromTree(
-        areaPreset,
-        area,
-        pageKey,
-        shellRegionKeys,
-      ),
-    );
-  } else {
-    for (const regionKey of shellRegionKeys) {
-      drafts[getPhiBuilderRegionDraftKey(area, regionKey, pageKey)] = buildRegionDraft(
-        regionKey,
-        {},
-        null,
-      );
-    }
-  }
-
-  if (pageRegionKeys.length > 0 && page) {
-    Object.assign(
-      drafts,
-      buildPhiDeveloperBuilderRegionDraftsFromTree(page, area, pageKey, pageRegionKeys),
-    );
-  } else {
-    for (const regionKey of pageRegionKeys) {
-      drafts[getPhiBuilderRegionDraftKey(area, regionKey, pageKey)] = buildRegionDraft(
-        regionKey,
-        {},
-        null,
-      );
-    }
   }
 
   return drafts;

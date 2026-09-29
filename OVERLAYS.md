@@ -344,9 +344,9 @@ routes.
 `PhiDialogControl` is the only other Control that may render either of them. Nothing else imports
 `PhiModalControl` or `PhiDrawerControl` directly -- see [Dialogs that are Controls](#dialogs-that-are-controls).
 
-`PhiModal` and `PhiDrawer` are the Core CMS renderers for resolved Overlay nodes. They adapt serializable
-Phi config to the Controls, resolve the optional Header and Footer Layouts plus required Body Layout, and
-map Control interaction reasons into the Overlay signal contract. Modal and Drawer share this logical
+`PhiOverlayContainerClient` is the Core CMS renderer for resolved Overlay nodes, as Modal or Drawer. It
+adapts serializable Phi config to the Controls, resolves the optional Header and Footer Layouts plus the
+required Body Layout, and maps Control interaction reasons into the Overlay signal contract. Modal and Drawer share this logical
 composition; Ant Design `title`, Drawer `extra`, and their differing semantic DOM nodes are private adapter
 details. Domain components render ordinary Widget or Control content only and must not wrap themselves in
 Ant Design Modal or Drawer components.

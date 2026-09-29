@@ -1,5 +1,4 @@
 import { resolvePhiCmsWidgetPluginKey } from "../../../../../constants/cms-widget-types";
-import { PhiCmsWidgetType } from "../../../../../constants/cms-widget-types";
 import type { PhiCmsWidgetPlugin } from "../../../../../types";
 import type { PhiAccountWidgetConfig } from "./client";
 
@@ -41,5 +40,3 @@ export const PHI_ACCOUNT_WIDGET_DEFINITION = {
   | "fields"
   | "parseConfig"
 >;
-
-export const PHI_ACCOUNT_WIDGET_PLUGIN_TYPE = PhiCmsWidgetType.Account;

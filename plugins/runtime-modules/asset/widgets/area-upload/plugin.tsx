@@ -2,7 +2,7 @@ import type { PhiCmsServerWidgetPlugin } from "../../../../../types";
 import { renderPhiWidgetPreviewPlaceholder } from "../../../../../plugins/factories/widget-renderers";
 import type { PhiCmsAreaUploadWidgetConfig } from "./config";
 import { PhiAreaUploadWidgetServer } from "../../../../../components/media/phi-area-upload-server";
-import { PHI_AREA_UPLOAD_WIDGET_DEFINITION, PHI_AREA_UPLOAD_WIDGET_PLUGIN_TYPE } from "./config";
+import { PHI_AREA_UPLOAD_WIDGET_DEFINITION } from "./config";
 
 export const PHI_AREA_UPLOAD_WIDGET_PLUGIN: PhiCmsServerWidgetPlugin<PhiCmsAreaUploadWidgetConfig> = {
   ...PHI_AREA_UPLOAD_WIDGET_DEFINITION,
@@ -11,5 +11,3 @@ export const PHI_AREA_UPLOAD_WIDGET_PLUGIN: PhiCmsServerWidgetPlugin<PhiCmsAreaU
   ),
   renderPreview: ({ widget }) => renderPhiWidgetPreviewPlaceholder(widget),
 };
-
-export { PHI_AREA_UPLOAD_WIDGET_PLUGIN_TYPE };

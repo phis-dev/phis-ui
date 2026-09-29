@@ -193,5 +193,3 @@ export async function getPhiAuthAdminSettingsLabels(options: PhiGlobalTranslator
     submitLabel: labels.submit_label,
   };
 }
-
-export type PhiAuthAdminSettingsLabels = Awaited<ReturnType<typeof getPhiAuthAdminSettingsLabels>>;

@@ -110,10 +110,6 @@ function PhiDeveloperBuilderPagesHeaderTitleField({
   );
 }
 
-export function PhiDeveloperBuilderPagesHeaderWidgetClient() {
-  return <PhiDeveloperBuilderPagesHeaderSection mode="full" />;
-}
-
 export type PhiDeveloperBuilderPagesHeaderSectionMode = "full" | "title" | "selector";
 
 export function PhiDeveloperBuilderPagesHeaderSection({
