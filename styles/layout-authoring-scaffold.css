@@ -518,6 +518,23 @@
   background: transparent;
 }
 
+/*
+ * And nothing at all while the Widget is being written in.
+ *
+ * Last of the state rules on purpose: they are all specificity zero, so document order decides, and this
+ * one has to outrank the hover a typing hand is inevitably producing. The band and the chrome are not
+ * drawn in that mode either (`render-root-node-scaffold.tsx`) -- what is left here is the outline, which
+ * hovering paints from the stylesheet and no prop can take back.
+ */
+:where(
+  .phi-builder-widget-scaffold:has(> .phi-builder-widget-scaffold__content--authoring)
+    > .phi-builder-widget-scaffold__state
+) {
+  outline-color: transparent;
+  background: transparent;
+  box-shadow: inset 0 0 0 1px transparent;
+}
+
 .phi-builder-widget-scaffold[data-phi-slot-child-kind="widget"]::before {
   content: attr(data-phi-builder-widget-title);
   position: absolute;
@@ -566,6 +583,18 @@
 ) {
   opacity: 1;
   pointer-events: auto;
+}
+
+/*
+ * And no band at all while the Widget is being written in, for the same reason the outline goes.
+ *
+ * `content: none` rather than an empty string: the band is `attr(data-phi-builder-widget-title)`, and a
+ * scaffold that withholds that attribute still draws the chip the band is made of -- padding, border and
+ * background around nothing. Stated after the rules that show the band, since it weighs the same as the
+ * one that fills it.
+ */
+.phi-builder-widget-scaffold:has(> .phi-builder-widget-scaffold__content--authoring)::before {
+  content: none;
 }
 
 :where(.phi-builder-root-scaffold) {

@@ -832,6 +832,22 @@ function PhiWidgetEffectsPreviewFrame({
     "--phi-builder-widget-scaffold-label-color": token.colorWarningText,
   } satisfies CSSProperties & Record<`--${string}`, string>;
 
+  /*
+   * While the Widget is being written in, the scaffold steps back.
+   *
+   * The band, the toolbar, the drag handle, the delete and inspector buttons and the effects preview are
+   * all chrome for a Widget one is looking at, and they sit on top of the surface one is typing into --
+   * the preview button stood dead centre of the text editor, the toolbar over its first line. None of it
+   * has anything to add while a text is being written, and what it does instead is cover the text and
+   * offer a drag handle for a node the pointer is inside of.
+   *
+   * The tools are not rendered; the band and the outline are the stylesheet's, drawn from hovering and
+   * from the attributes below, so they are switched off there -- and the band deliberately by `content`
+   * rather than by withholding its text, because an absent attribute still leaves `attr()` an empty
+   * string to draw a bordered chip from.
+   */
+  const scaffoldChrome = isAuthoringActive ? null : tools;
+
   if (!hasRenderableBlockPreviewEffects(config)) {
     return (
       <PhiWidgetScaffoldPopupProvider onOpenChange={setIsToolbarPopupOpen}>
@@ -848,7 +864,7 @@ function PhiWidgetEffectsPreviewFrame({
           builderWidgetSelected={selected}
           builderWidgetPopupOpen={isToolbarPopupOpen}
           onPointerLeave={isAuthoringActive && !isToolbarPopupOpen ? finishAuthoringOnPointerLeave : undefined}
-          chrome={tools}
+          chrome={scaffoldChrome}
         >
           {renderEditorLayers()}
         </PhiSlotChildFrame>
@@ -879,15 +895,10 @@ function PhiWidgetEffectsPreviewFrame({
         builderWidgetSelected={selected}
         builderWidgetPopupOpen={isToolbarPopupOpen}
         onPointerLeave={isAuthoringActive && !isToolbarPopupOpen ? finishAuthoringOnPointerLeave : undefined}
-        chrome={(
+        chrome={scaffoldChrome === null ? null : (
           <>
-            {tools}
-            {/*
-              * Not while the Widget is being written in: the preview sits in the middle of the frame,
-              * which on a text Widget is the middle of its editor, and there it stood between the
-              * caret and the surface it previews.
-              */}
-            {!isPreviewing && !isAuthoringActive ? (
+            {scaffoldChrome}
+            {!isPreviewing ? (
               <PhiEffectsPreviewButton
                 config={config}
                 blockKind="widget"
