@@ -373,6 +373,7 @@ export async function getPhiCmsRuntimeInfo({
       newsletterOptIn?: boolean | null;
       preferredLocale?: string | null;
       themeMode?: string | null;
+      mustChangePassword?: boolean;
       profile?: {
         firstName?: string | null;
         lastName?: string | null;
@@ -451,6 +452,7 @@ export async function getPhiCmsRuntimeInfo({
          * they decided something they never did.
          */
         preferredThemeMode: normalizePhiThemeModePreference(payload.user?.themeMode),
+        mustChangePassword: payload.user?.mustChangePassword === true,
         profile: payload.user?.profile ?? null,
       },
     };

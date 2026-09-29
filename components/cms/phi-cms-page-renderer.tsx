@@ -7,6 +7,7 @@ import {
   PhiCmsOverlayRenderer,
   type PhiCmsLayoutRendererProps,
 } from "./phi-cms-layout-renderer";
+import { PhiPasswordChangeRequired } from "../runtime/phi-password-change-required";
 
 export type PhiCmsPageRendererProps = {
   tree: PhiResolvedCmsRenderableTree;
@@ -49,6 +50,9 @@ export async function PhiCmsPageRenderer({
         registry={registry}
         signalScope="page"
       />
+      {runtime.viewer.mustChangePassword ? (
+        <PhiPasswordChangeRequired runtime={runtime} registry={registry} />
+      ) : null}
     </div>
   );
 }

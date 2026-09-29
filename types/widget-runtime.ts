@@ -113,6 +113,11 @@ export type PhiBlockRuntimeViewer = {
    * account, who has no stored choice to read.
    */
   preferredThemeMode?: PhiThemeModePreference | null;
+  /**
+   * An administrator asked this account for a new password. The server refuses every other request of
+   * the session until it is set, and each Page shows the change in front of itself.
+   */
+  mustChangePassword?: boolean;
   newsletterOptIn?: boolean | null;
   profile?: {
     firstName?: string | null;

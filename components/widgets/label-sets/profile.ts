@@ -225,6 +225,31 @@ export async function getPhiProfilePasswordWidgetLabels(options: PhiGlobalTransl
   };
 }
 
+const PHI_PASSWORD_CHANGE_REQUIRED_LABEL_SET = definePhiLabelSet({
+  key: "widget:password-change-required",
+  ctx: PHI_TR_CTX_WEB_UI_LABEL,
+  labels: {
+    title: "Set a new password",
+    text: definePhiMessageLabel(
+      "An administrator asked you to choose a new password before you continue. " +
+      "Enter the one you signed in with, then your new one. If you do not know it, use the link in " +
+      "the email we sent you.",
+    ),
+    elsewhere_text: definePhiMessageLabel("Your new password is set in your account."),
+    elsewhere_link: "Open my account",
+  },
+});
+
+export async function getPhiPasswordChangeRequiredLabels(options: PhiGlobalTranslatorOptions) {
+  const labels = await getPhiLabelSet(options, PHI_PASSWORD_CHANGE_REQUIRED_LABEL_SET);
+  return {
+    title: labels.title,
+    text: labels.text,
+    elsewhereText: labels.elsewhere_text,
+    elsewhereLink: labels.elsewhere_link,
+  };
+}
+
 /** The password labels under the paths its Form descriptor names them by. See the email one above. */
 export async function getPhiProfilePasswordFormLabels(options: PhiGlobalTranslatorOptions) {
   const labels = await getPhiProfilePasswordWidgetLabels(options);
