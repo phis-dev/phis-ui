@@ -10,14 +10,9 @@ import {
 } from "../../../../types/signals";
 import { usePhiSignalListener } from "../../../runtime/runtime-signal-bus";
 import { usePhiSignalEmitter, usePhiSignalIdentity } from "../../../runtime/runtime-signal-identity";
+import { findPhiControlListenRoute, readPhiControlSignalCommand } from "./phi-control-signal-routing";
 
 export type PhiControlSignalEventValue = "submit" | "focus" | "blur" | "clear";
-export type PhiControlSignalCommandValue =
-  | "clear"
-  | "enable"
-  | "disable"
-  | "toggle";
-
 export type PhiControlSignalControllerOptions<TValue> = {
   key?: string | null;
   valueType?: PhiSignalValueType | null;
@@ -53,19 +48,6 @@ export type PhiControlSignalController<TValue> = {
   emitClear: () => void;
   emitCapability: (capabilityId: string, value: PhiSignalValue | PhiControlSignalEventValue) => void;
 };
-
-function isPhiControlCommandValue(value: unknown): value is PhiControlSignalCommandValue {
-  if (
-    value === "clear" ||
-    value === "enable" ||
-    value === "disable" ||
-    value === "toggle"
-  ) {
-    return true;
-  }
-
-  return false;
-}
 
 function defaultCoerceValue<TValue>(value: unknown) {
   return value as TValue;
@@ -159,22 +141,12 @@ export function usePhiControlSignalController<TValue = unknown>({
         return;
       }
 
-      const route = listenRoutes.find((candidate) =>
-        candidate.channel === signal.channel &&
-        candidate.action === signal.action &&
-        candidate.valueType === signal.valueType &&
-        (
-          candidate.valueType !== "json" ||
-          (candidate.valueSchema != null && candidate.valueSchema === signal.valueSchema)
-        ) &&
-        candidate.receiver !== null,
-      );
+      const route = findPhiControlListenRoute(listenRoutes, signal);
       if (!route) {
         return;
       }
-      const action = signal.action;
-      const value = signal.value;
-      const targetsCurrentControl = signal.receiver === "broadcast" || (signalSender != null && signal.receiver === signalSender);
+      const targetsCurrentControl = signal.receiver === "broadcast" ||
+        (signalSender != null && signal.receiver === signalSender);
       if (!targetsCurrentControl) {
         return;
       }
@@ -182,55 +154,35 @@ export function usePhiControlSignalController<TValue = unknown>({
         return;
       }
 
-      if (action === "clear" || value === "clear") {
-        onClear?.();
-        if (clearValue !== undefined) {
-          onSetValue?.(clearValue);
-        }
-        return;
-      }
-      if (signal.channel === "focused" && action === "change") {
-        if (value === false) {
-          onBlurRequest?.();
-        } else {
+      const command = readPhiControlSignalCommand(signal);
+      switch (command?.kind) {
+        case "clear":
+          onClear?.();
+          if (clearValue !== undefined) {
+            onSetValue?.(clearValue);
+          }
+          return;
+        case "focus":
           onFocusRequest?.();
-        }
-        return;
-      }
-      if (signal.channel === "focused" && value === true) {
-        onFocusRequest?.();
-        return;
-      }
-      if (signal.channel === "focused" && value === false) {
-        onBlurRequest?.();
-        return;
-      }
-      if (action === "change" && signal.channel === "enabled") {
-        setCommandDisabled(typeof value === "boolean" ? !value : false);
-        return;
-      }
-      if (action === "toggle" || value === "toggle") {
-        onToggleRequest?.();
-        return;
-      }
-
-      const command = value;
-      if (action === "change") {
-        const nextValue = coerceValue(value);
-        if (nextValue != null) {
-          onSetValue?.(nextValue);
-        }
-        return;
-      }
-      if (isPhiControlCommandValue(command)) {
-        if (command === "enable") {
-          setCommandDisabled(false);
+          return;
+        case "blur":
+          onBlurRequest?.();
+          return;
+        case "enabled":
+          setCommandDisabled(!command.enabled);
+          return;
+        case "toggle":
+          onToggleRequest?.();
+          return;
+        case "set": {
+          const nextValue = coerceValue(command.value);
+          if (nextValue != null) {
+            onSetValue?.(nextValue);
+          }
           return;
         }
-        if (command === "disable") {
-          setCommandDisabled(true);
+        default:
           return;
-        }
       }
     },
     [

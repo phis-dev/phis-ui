@@ -112,6 +112,11 @@ The actions are exactly `activate`, `change`, `toggle`, `start`, `stop`, `clear`
 - Lifecycle actions keep their domain in the channel: data reload is `<domain>/reload`, focus is
   `focused/change` (boolean), effects are `effects/start|stop|clear`, drag is `drag/start|change|stop`,
   and a committed drop is `drop/drop`.
+- A value is data, never a command. A receiver decides what to do from `channel` and `action`: a Control
+  told `value/change` with the string `"clear"` shows "clear"; emptying it is `<channel>/clear`, and
+  enabling it is `enabled/change` with a boolean. A value picks among commands only on a channel that
+  declares exactly that -- a `string` command channel with `action: "activate"`, whose receiver lists
+  the words it answers.
 
 ## Value types and schemas
 
@@ -153,7 +158,8 @@ Every `json` capability and route names a value schema; non-JSON signals carry n
   anything arrives, and has no source to ask. This is what keeps Core from spelling out a Module's name:
   `collection-view` used to announce every selection as `mediaAssetSelection` whichever provider was
   bound, so a collection from another package could be shown but could not mean anything of its own.
-- JSON routes match only when scope, channel, action, value type, and value schema are all compatible.
+- A listen route matches only when scope, channel, action, and value type all agree, and for JSON the
+  value schema too. Scope counts because the bus puts the receiver's registered scope on the signal.
 
 ### Naming a value, and translating one
 
