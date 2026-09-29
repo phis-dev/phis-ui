@@ -191,10 +191,26 @@ function assertUniqueKeys(items: readonly { key: string }[], path: string) {
 }
 
 /**
- * A field's own placement, which states both parts or is left out.
+ * One part of a field's placement, which, once written, names a range for at least one mode.
  *
- * A placement with one part would take the other from the layout, and the two rarely agree: a control
- * moved to 7-19 beside a layout label at 1-9 overlaps it and the field stacks without anyone asking.
+ * An empty part would read as "stated" and still say nothing, and a stated part decides that the field
+ * has no column for the other one -- that is too much to hang on an object with nothing in it.
+ */
+function readPlacementPart(value: unknown, path: string) {
+  const range = readResponsiveGridRange(value, path);
+  if (range && !range.compact && !range.medium && !range.wide) {
+    throw new Error(`${path} must state a range for at least one of compact, medium, or wide.`);
+  }
+  return range;
+}
+
+/**
+ * A field's own placement: both parts, one part, or none.
+ *
+ * One part is a statement of its own and not half of two: a field that names only its control has no
+ * label column and draws its label above the control inside that range, and one that names only its
+ * label has no control column. Nothing is taken from the layout for the part left out -- a control moved
+ * to 7-19 beside a layout label at 1-9 would overlap it and stack without anyone having asked for it.
  */
 function readFieldPlacement(
   value: unknown,
@@ -206,14 +222,12 @@ function readFieldPlacement(
   if (!isPhiRecord(value)) {
     throw new Error(`${path} must be an object.`);
   }
-  const label = readResponsiveGridRange(value.label, `${path}.label`);
-  const control = readResponsiveGridRange(value.control, `${path}.control`);
-  if (!label || !control) {
-    throw new Error(
-      `${path} must state both label and control; leave placement out to use the layout ranges.`,
-    );
+  const label = readPlacementPart(value.label, `${path}.label`);
+  const control = readPlacementPart(value.control, `${path}.control`);
+  if (!label && !control) {
+    return undefined;
   }
-  return { label, control };
+  return { ...(label ? { label } : {}), ...(control ? { control } : {}) };
 }
 
 function readField(value: unknown, path: string): PhiFormFieldDescriptor {
@@ -475,10 +489,14 @@ export function phiFormFlowHalfColumns(
 ): PhiFormFieldDescriptor[] {
   let atRowStart = true;
   return fields.map((field) => {
-    if (field.placement) {
+    const stated = [
+      statedPhiFormGridRange(field.placement?.label, "medium"),
+      statedPhiFormGridRange(field.placement?.control, "medium"),
+    ].filter((range) => range != null);
+    if (stated.length > 0) {
       const claimsWholeRow =
-        field.placement.control.medium?.start === 1 &&
-        field.placement.control.medium.end === PHI_FORM_GRID_LAST_LINE;
+        Math.min(...stated.map((range) => range.start)) === 1 &&
+        Math.max(...stated.map((range) => range.end)) === PHI_FORM_GRID_LAST_LINE;
       atRowStart = claimsWholeRow ? true : !atRowStart;
       return field;
     }
@@ -622,14 +640,37 @@ export function resolvePhiFormLayout(
 }
 
 /**
+ * The range one part of a placement states for one mode, cascading only from the smaller modes of that
+ * same part -- never from the layout, which is the other part's business to decide.
+ */
+function statedPhiFormGridRange(
+  value: PhiFormResponsiveGridRange | undefined,
+  mode: PhiFormResponsiveMode,
+): PhiFormGridRange | undefined {
+  if (!value) return undefined;
+  if (mode === "compact") return value.compact;
+  if (mode === "medium") return value.medium ?? value.compact;
+  return value.wide ?? value.medium ?? value.compact;
+}
+
+/**
  * Where one field's label and control lie, at one measured width.
  *
- * A field that says nothing takes the layout's ranges; a field that says something says all of it, so a
- * control moved to 7-19 does not leave its label behind at a width that no longer suits it.
+ * Decided per mode from what the placement states for that mode:
+ * - both parts: each in its own range;
+ * - only the control: there is no label column. The field is that one range, and its label, if it has
+ *   one, stands above the control inside it;
+ * - only the label: there is no control column. The field is the label's range, and whatever control it
+ *   draws stands under the label inside it;
+ * - neither: the layout's ranges for both.
+ *
+ * The part left out is never taken from the layout. The two rarely agree: a control moved to 7-19 beside
+ * a layout label at 1-9 overlaps it, and the field stacked on two rows without anyone having asked.
  *
  * `stacked` falls out of the ranges rather than being declared: label and control that want the same
  * tracks cannot share a row, so they take two. That is what makes the narrow form and the wide form one
- * contract instead of a layout mode with two branches.
+ * contract instead of a layout mode with two branches -- and a one-part placement is always stacked,
+ * because both parts stand in the one range it names.
  */
 export function resolvePhiFormFieldRanges(
   layout: PhiResolvedFormLayout,
@@ -637,16 +678,16 @@ export function resolvePhiFormFieldRanges(
   mode: PhiFormResponsiveMode,
   path: string,
 ): { label: PhiFormGridRange; control: PhiFormGridRange; stacked: boolean } {
-  const label = resolvePhiFormResponsiveGridRange(
-    placement?.label,
-    layout.label,
-    `${path}.label`,
-  )[mode];
-  const control = resolvePhiFormResponsiveGridRange(
-    placement?.control,
-    layout.control,
-    `${path}.control`,
-  )[mode];
+  const statedLabel = statedPhiFormGridRange(placement?.label, mode);
+  const statedControl = statedPhiFormGridRange(placement?.control, mode);
+  const label = assertGridRange(
+    statedLabel ?? statedControl ?? layout.label[mode],
+    `${path}.label.${mode}`,
+  );
+  const control = assertGridRange(
+    statedControl ?? statedLabel ?? layout.control[mode],
+    `${path}.control.${mode}`,
+  );
 
   return { label, control, stacked: phiFormGridRangesOverlap(label, control) };
 }
@@ -770,7 +811,8 @@ export function phiFormFieldFollowsLayoutColumns(input: {
   stacked: boolean;
 }) {
   return !input.stacked &&
-    input.placement == null &&
+    input.placement?.label == null &&
+    input.placement?.control == null &&
     input.label.start === 1 &&
     input.control.end === PHI_FORM_GRID_LAST_LINE;
 }

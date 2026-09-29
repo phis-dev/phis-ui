@@ -195,8 +195,8 @@ type PhiFormLayoutDescriptor = {
   control?: PhiFormResponsiveGridRange;
 };
 type PhiFormFieldPlacementDescriptor = {
-  label: PhiFormResponsiveGridRange;
-  control: PhiFormResponsiveGridRange;
+  label?: PhiFormResponsiveGridRange;
+  control?: PhiFormResponsiveGridRange;
 };
 ```
 
@@ -209,9 +209,18 @@ type PhiFormFieldPlacementDescriptor = {
 - Defaults (`PHI_FORM_DEFAULT_LAYOUT`): gap `sm` / `base` / `base`; `labelAlign: "start"`; label 1-25 in
   `compact` and 1-9 otherwise; control 1-25 in `compact` and 9-25 otherwise -- a third of the width for
   the labels, the same column the Login states for itself.
-- A field with no `placement` uses the layout ranges. A field that sets a placement states it for both
-  parts; a placement with only `label` or only `control` is refused when the descriptor is parsed. Within
-  one part, unset modes cascade as above and fall back to the layout's range for that part.
+- A field's `label` and `control` are column ranges, not content. What a placement states is read per
+  mode; within one part an unset mode cascades from the nearest smaller mode of that same part:
+  - both parts stated: the label cell stands in its range, the control cell in its range;
+  - only `control`: the field has no label column. The control takes exactly that range, and the label
+    text, if the field has one, is drawn inside the same range, stacked above the control;
+  - only `label`: the field has no control column. The label takes exactly that range, and whatever the
+    field draws as its control stands under the label inside the same range;
+  - neither stated for that mode, or no `placement` at all: the layout's ranges for both parts.
+- The part a placement leaves out is never taken from the layout. A lone part may therefore span the
+  whole width label and control share in the layout, up to 1-25 (`{ control: PHI_FORM_ROW_FULL }`).
+- The parser accepts a placement with one part and checks its ranges; a part given as an object that
+  names no mode is refused, and a placement stating neither part is read as no placement.
 - When a field's label and control ranges overlap they stack on two rows; otherwise they share one. There
   is no `columns` or `labelPlacement` setting: a two-column Form is fields in 1-13 and 13-25, and a
   stacked Form uses full-width ranges. `components/forms/form-descriptor-contract.ts` exports named
