@@ -1,5 +1,4 @@
 "use client";
-import { requestPhiLogout } from "../../../../../helpers/logout";
 
 import { usePathname } from "next/navigation";
 
@@ -13,6 +12,10 @@ import { usePhiConfig } from "../../../../../components/root/phi-config-provider
 import type { PhiCmsSidebarNavigationWidgetConfig } from "./config";
 import { resolvePhiWidgetFontFamily } from "../../../../../components/widgets/helpers/font-family";
 import { resolvePhiWidgetFontSize } from "../../../../../components/widgets/helpers/font-size";
+import {
+  createPhiCoreRuntimeControllerAddress,
+} from "../../../../../components/runtime/core-runtime-controller-address";
+import { usePhiSignalEmitter } from "../../../../../components/runtime/runtime-signal-identity";
 
 export type PhiSidebarNavigationWidgetClientProps = PhiClientBlockBaseProps<
   PhiNoLabels,
@@ -67,26 +70,26 @@ export function PhiSidebarNavigationWidgetClient({
   // Without a runtime the Site's locales are unknown, and no path segment can be read as one.
   const availableLocales = runtime?.site.availableLocales.map((option) => option.code) ?? [];
   const presentation = usePhiSidebarMenuPresentation(config);
+  const emitSignal = usePhiSignalEmitter();
 
-  async function handleAction(action: "logout") {
+  /*
+   * Signing out is asked of the Core Runtime Controller, as the account menu and the password-change
+   * dialog ask it: it ends the session, says so when that fails, and loads the Page again as a fresh
+   * document, so no RSC cache or client store built for the old session survives it.
+   */
+  function handleAction(action: "logout") {
     if (action !== "logout") {
       return;
     }
-
-    /* Nothing to tell somebody who clicked sign out: the menu closes either way. */
-    try {
-      await requestPhiLogout();
-    } catch {
-      return;
-    }
-
-    /*
-     * A full document load, not a client navigation: the session this page was rendered for is gone,
-     * and `router.push` would keep the RSC cache and the client stores built while it was still valid.
-     * Landing on a fresh document is the point.
-     */
-    // eslint-disable-next-line @next/next/no-location-assign-relative-destination
-    window.location.assign(`/${runtime?.locale.current ?? "en"}`);
+    emitSignal({
+      scope: "site",
+      channel: "session",
+      action: "clear",
+      value: null,
+      valueType: "none",
+      valueSchema: null,
+      receiver: createPhiCoreRuntimeControllerAddress(),
+    });
   }
 
   return (

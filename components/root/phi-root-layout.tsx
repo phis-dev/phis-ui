@@ -15,6 +15,7 @@ import { PhiRootRemProvider } from "./phi-root-rem-provider";
 import { PhiRootLiveThemeProvider } from "./phi-root-live-theme-provider";
 import { PhiSignalRuntimePartitionProvider } from "../runtime/runtime-signal-partition";
 import { PhiCoreRuntimeApplicationAdapter } from "../runtime/core-runtime-application-adapter";
+import { getPhiSessionLabels } from "../widgets/label-sets/session";
 import {
   PHI_CORE_THEME_PRESET_PLUGINS,
   type PhiThemeMode,
@@ -125,6 +126,12 @@ export async function PhiRootLayout({
   const siteTheme = await projectPhiSiteThemeRootBackground(siteThemeRecord, { apiBaseUrl, internalToken, siteKey });
   const antdLocale = await loadPhiAntdLocale(resolvedLocale?.locale ?? resolvedLocale?.intlLocale);
   const resolvedThemeMode = resolvePhiThemeMode(themeModePreference, browserColorScheme);
+  // What the Core Runtime Controller says when a sign-out it was asked for fails.
+  const sessionLabels = await getPhiSessionLabels({
+    apiBaseUrl,
+    internalToken,
+    locale: resolvedLocale?.locale ?? site.defaultLocale,
+  });
 
   // Keep the basiset explicit and self-hosted; accent/display stay as open slots for later.
   /*
@@ -227,7 +234,7 @@ export async function PhiRootLayout({
               * fetched only when something is announced, the ground is named for what it is.
               */}
             <div data-phi-app-ground="true">
-              <PhiCoreRuntimeApplicationAdapter />
+              <PhiCoreRuntimeApplicationAdapter labels={sessionLabels} />
               <PhiDayjsLocale locale={resolvedLocale?.locale ?? resolvedLocale?.intlLocale}>
                 {children}
               </PhiDayjsLocale>

@@ -1,19 +1,19 @@
 import { fetchPhiCsrfToken } from "./csrf-token";
 
 /**
- * Ending a session, as the three places that offer it all do it.
+ * Ending a session, as the two places that perform it both do it.
  *
- * The request is the same in all three -- the account menu in the sidebar, the sign-out Page, and the
- * Core Runtime adapter answering a `session/clear` signal. What follows it is not, and deliberately so:
- * the menu loads a fresh document because the page behind it was rendered for a session that is gone,
- * the Page replaces itself so Back does not return to a sign-out that already happened, and the adapter
- * asks the Area for the Page again because whether whoever is now nobody may still stand there is the
- * Area's answer and not the adapter's. Three endings, three reasons, one request.
+ * The request is the same in both -- the sign-out Page, and the Core Runtime adapter answering a
+ * `session/clear` signal, which is what the account menu, the sidebar's sign-out entry and the
+ * password-change dialog send. What follows it is not, and deliberately so: the Page replaces itself
+ * so Back does not return to a sign-out that already happened, and the adapter loads the Page it stands
+ * on again as a fresh document, because whether whoever is now nobody may still stand there is the
+ * Area's answer, and nothing rendered or stored for the old session may outlive it. Two endings, two
+ * reasons, one request.
  *
- * Two of them also set `x-phis-site-key`, which never arrives: `next/proxy-runtime.ts` strips every
- * `x-phis-` header on the way through and sets the Site's own, so that a request from the open internet
- * cannot claim to come from inside. Read side by side, the third looked like it had forgotten
- * something. It had not, and now there is nothing to forget.
+ * Some callers used to set `x-phis-site-key`, which never arrives: `next/proxy-runtime.ts` strips
+ * every `x-phis-` header on the way through and sets the Site's own, so that a request from the open
+ * internet cannot claim to come from inside. None sets it now, so none can look as if it forgot to.
  */
 export const PHI_LOGOUT_PATH = "/api/auth/logout";
 

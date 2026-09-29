@@ -32,11 +32,21 @@ const PHI_CORE_RUNTIME_APPLICATION_SIGNAL_FILTER = {
   receiver: createPhiCoreRuntimeControllerAddress(),
 } as const;
 
+/** The Controller's own words, translated on the server for the Site's locale. */
+export type PhiCoreRuntimeApplicationLabels = {
+  /** Said when a `session/clear` could not end the session. */
+  signOutFailed: string;
+};
+
 /*
  * No `siteKey` any more. It was passed in so a logout could name the Site, and that header never left
  * the browser: the proxy strips every `x-phis-` header and sets the Site's own.
  */
-export function PhiCoreRuntimeApplicationAdapter() {
+export function PhiCoreRuntimeApplicationAdapter({
+  labels,
+}: {
+  labels: PhiCoreRuntimeApplicationLabels;
+}) {
   const router = useRouter();
   /*
    * Armed once and never disarmed: the host owns the toast that is on screen, so unmounting it when
@@ -69,21 +79,37 @@ export function PhiCoreRuntimeApplicationAdapter() {
    */
   useEffect(() => registerPhiSignalInstance(partition, { address, scope: "site" }), [address, partition]);
 
+  /* A second click while the first request is still out asks for nothing new. */
+  const signingOut = useRef(false);
+
   const signOut = useCallback(async () => {
-    /* A session that cannot be ended here is ended by its own expiry; there is no surface to report to. */
+    if (signingOut.current) {
+      return;
+    }
+    signingOut.current = true;
+    /*
+     * A failure is said, on the same surface every other announcement uses: the person asked to be
+     * signed out and still is signed in, and a menu that simply closed would let them believe
+     * otherwise.
+     */
     try {
-      await requestPhiLogout();
+      await requestPhiLogout({ failedMessage: labels.signOutFailed });
     } catch {
+      signingOut.current = false;
+      enqueue({ kind: "notification", value: { level: "error", title: labels.signOutFailed } });
       return;
     }
 
     /*
-     * The Page is asked for again rather than replaced with one chosen here. Whoever is now nobody
-     * may not be allowed where they stood, and the Area answers that -- with its own redirect, its
-     * own sign-in Page -- which is a decision that belongs to it and not to this adapter.
+     * The same Page, as a fresh document. It is asked for again rather than replaced with one chosen
+     * here: whoever is now nobody may not be allowed where they stood, and the Area answers that --
+     * with its own redirect, its own sign-in Page -- which is a decision that belongs to it and not
+     * to this adapter. And a document rather than `router.refresh()`, because the RSC cache and the
+     * client stores on this page were built for a session that is gone; keeping them is the one
+     * thing a sign-out must not do.
      */
-    router.refresh();
-  }, [router]);
+    window.location.reload();
+  }, [enqueue, labels.signOutFailed]);
 
   usePhiSignalListener((signal) => {
     const navigateValue = readPhiCoreRuntimeNavigateSignalValue(signal);
@@ -101,8 +127,8 @@ export function PhiCoreRuntimeApplicationAdapter() {
      *
      * The door is the Site's own `/api/auth/logout`, mounted by every Site regardless of which Modules
      * it installs, so this works in an Area no Auth Module ever enters. A failed call leaves the
-     * session alone and the page where it is: signing out half way and forwarding anyway would tell
-     * somebody they are out while they are not.
+     * session alone and the page where it is, and says so: signing out half way and forwarding
+     * anyway would tell somebody they are out while they are not.
      */
     if (signal.channel === "session" && signal.action === "clear") {
       void signOut();
