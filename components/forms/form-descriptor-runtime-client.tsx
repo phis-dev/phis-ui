@@ -456,6 +456,11 @@ export function PhiFormDescriptorRuntimeClient({
           // A value moved, so whatever validation refused before is no longer what is being asked.
           rejectedRef.current = false;
           runtimeBinding.onValuesChange(changed, all);
+          /*
+           * Announced only where somebody wired it: `emitCapability` walks the routes this Form was
+           * given, so a Form nobody listens to that way pays a lookup and nothing else.
+           */
+          emitCapability("valuesChange", { values: all });
           if (draftStorageKey) {
             try {
               window.sessionStorage.setItem(draftStorageKey, JSON.stringify(all));

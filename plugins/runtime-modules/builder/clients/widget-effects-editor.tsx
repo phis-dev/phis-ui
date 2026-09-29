@@ -8,14 +8,18 @@ import type { PhiEffectsWidgetLabels } from "../../../../components/widgets/labe
 import { PHI_EFFECTS_WIDGET_DEFAULT_LABELS } from "../../../../components/widgets/label-types/effects";
 import { PhiButtonControl } from "../../../../components/controls/phi-button-control";
 import { openPhiDeveloperBuilderEffectsEditor } from "../developer-workspace-store";
+import type { PhiDeveloperBuilderEffectsRequest } from "../developer-workspace-types";
 
 export function PhiWidgetEffectsToolButton({
   effects,
+  target,
   disabled = false,
   labels: labelsProp,
   onChange,
 }: {
   effects?: PhiRenderableBlockEffects | null;
+  /** Which node these effects belong to, so the canvas can draw them while the editor is open. */
+  target: PhiDeveloperBuilderEffectsRequest["target"];
   disabled?: boolean;
   labels?: PhiEffectsWidgetLabels | null;
   onChange?: (nextEffects: PhiRenderableBlockEffects) => void;
@@ -24,7 +28,7 @@ export function PhiWidgetEffectsToolButton({
 
   const open = () => {
     if (disabled || !onChange) return;
-    openPhiDeveloperBuilderEffectsEditor("public", effects ?? {}, onChange);
+    openPhiDeveloperBuilderEffectsEditor("public", effects ?? {}, target, onChange);
   };
 
   return (

@@ -89,7 +89,10 @@ import type {
 import { PhiBuilderDemandControllerRegistration } from "./demand-controller-registration";
 import type { PhiRuntimeControllerMaterializationOwner } from "../../../components/runtime/runtime-controller-materialization";
 import { buildPhiBuilderRootNodeRenderableTree } from "./root-node-renderable-tree";
-import { usePhiDeveloperBuilderStateValue } from "./developer-workspace-store";
+import {
+  readPhiDeveloperBuilderEffectsPreview,
+  usePhiDeveloperBuilderStateValue,
+} from "./developer-workspace-store";
 
 type PhiBuilderDemandControllerContext = {
   area: string;
@@ -554,7 +557,7 @@ function PhiWidgetEffectsPreviewFrame({
   slotSizePolicy,
   blockId,
   regionKey,
-  config,
+  config: committedConfig,
   title,
   scaffoldLabel,
   editorInteraction = "inert",
@@ -589,6 +592,21 @@ function PhiWidgetEffectsPreviewFrame({
       state.nodeKind === "widget" &&
       state.nodeId === blockId,
   );
+  /*
+   * What the node is drawn with: the draft, or -- while its Effects editor stands open on this node --
+   * what that editor shows at this moment.
+   *
+   * A transparency is chosen by looking at it, so the number has to be on the page while the handle is
+   * still under the finger; the draft learns it when Save is pressed. Overlaying the whole `effects`
+   * rather than one property keeps this the editor's picture and not a second opinion about it.
+   */
+  const effectsPreview = usePhiDeveloperBuilderStateValue(
+    "public",
+    (state) => readPhiDeveloperBuilderEffectsPreview(state, "widget", blockId ?? null),
+  );
+  const config = effectsPreview
+    ? { ...committedConfig, effects: effectsPreview }
+    : committedConfig;
   const [previewRunId, setPreviewRunId] = useState(0);
   const [isPreviewing, setIsPreviewing] = useState(false);
   const [isAuthoringActive, setIsAuthoringActive] = useState(false);
@@ -924,7 +942,7 @@ function PhiLayoutEffectsPreviewFrame({
   kind,
   slotSizePolicy,
   blockId,
-  config,
+  config: committedConfig,
   explicitInlineSize,
   explicitBlockSize,
   children,
@@ -937,6 +955,14 @@ function PhiLayoutEffectsPreviewFrame({
   explicitBlockSize?: boolean;
   children: ReactNode;
 }) {
+  // The same live picture the Widget frame draws, for the Layout whose own toolbar opened the editor.
+  const effectsPreview = usePhiDeveloperBuilderStateValue(
+    "public",
+    (state) => readPhiDeveloperBuilderEffectsPreview(state, "layout", blockId ?? null),
+  );
+  const config = effectsPreview
+    ? { ...committedConfig, effects: effectsPreview }
+    : committedConfig;
   const [previewRunId, setPreviewRunId] = useState(0);
   const [isPreviewing, setIsPreviewing] = useState(false);
   const previewDurationMs = resolveEffectsPreviewDurationMs(config);
@@ -1314,6 +1340,7 @@ function resolvePhiRootNodeRenderedBody(
           ) : null}
           <PhiWidgetEffectsToolButton
             effects={renderableBlockConfig.effects}
+            target={{ kind: "widget", blockId: widget.id }}
             labels={effectsLabels}
             onChange={(effects: PhiRenderableBlockEffects) =>
               onUpdateWidgetNodeConfig?.(widget, { effects })
@@ -1641,6 +1668,7 @@ export function renderPhiRootNodeScaffold(
                 ) : null}
                 <PhiWidgetEffectsToolButton
                   effects={rootNodeEffects}
+                  target={{ kind: "layout", blockId: normalizedRootNode.id ?? null }}
                   labels={options?.effectsLabels}
                   onChange={(effects: PhiRenderableBlockEffects) =>
                     onUpdateLayoutNodeConfig(syntheticRootNodeForUpdates, { effects })

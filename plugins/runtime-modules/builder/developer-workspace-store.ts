@@ -107,6 +107,7 @@ const builderEffectsCommitters = new Map<
 export function openPhiDeveloperBuilderEffectsEditor(
   scopeKey: PhiDeveloperBuilderArea,
   effects: PhiRenderableBlockEffects,
+  target: PhiDeveloperBuilderEffectsRequest["target"],
   onCommit: (effects: PhiRenderableBlockEffects) => void,
 ) {
   const correlationId = createPhiSignalCorrelationId();
@@ -117,8 +118,44 @@ export function openPhiDeveloperBuilderEffectsEditor(
   builderEffectsCommitters.set(correlationId, onCommit);
   builderWorkspaceStore.patch(scopeKey, (current) => ({
     ...current,
-    effectsEditorRequest: { correlationId, effects },
+    effectsEditorRequest: { correlationId, effects, target, preview: null },
   }));
+}
+
+/**
+ * What the open editor shows now, for the canvas to draw while it is being chosen.
+ *
+ * Nothing is committed and no history entry is written: dragging a slider is one gesture and would
+ * otherwise leave a hundred steps to undo, each of them a value nobody stopped at. The correlation is
+ * checked because the editor that sent this may already be closed -- a late message from a gesture that
+ * ended must not put a picture back on a node whose editor is gone.
+ */
+export function previewPhiDeveloperBuilderEffects(
+  scopeKey: PhiDeveloperBuilderArea,
+  correlationId: string,
+  preview: PhiRenderableBlockEffects,
+) {
+  builderWorkspaceStore.patch(scopeKey, (current) => (
+    current.effectsEditorRequest?.correlationId === correlationId
+      ? { ...current, effectsEditorRequest: { ...current.effectsEditorRequest, preview } }
+      : current
+  ));
+}
+
+/**
+ * The effects a node is drawn with while its editor stands open, or nothing where none is.
+ *
+ * The node names itself rather than asking whether it is selected, because the editor belongs to the
+ * node whose toolbar opened it and the selection may have moved on.
+ */
+export function readPhiDeveloperBuilderEffectsPreview(
+  state: PhiDeveloperBuilderState,
+  kind: PhiDeveloperBuilderNodeKind,
+  blockId: PhiCmsInstanceId | null,
+): PhiRenderableBlockEffects | null {
+  const request = state.effectsEditorRequest;
+  if (!request?.preview) return null;
+  return request.target.kind === kind && request.target.blockId === blockId ? request.preview : null;
 }
 
 export function completePhiDeveloperBuilderEffectsEditor(

@@ -69,6 +69,7 @@ import {
   completePhiDeveloperBuilderEffectsEditor,
   createDefaultBuilderChromeControls,
   normalizePhiDeveloperBuilderArea as normalizeBuilderArea,
+  previewPhiDeveloperBuilderEffects,
   selectPhiDeveloperBuilderNode,
   usePhiDeveloperRegionDraft,
   getPhiDeveloperBuilderStateSnapshot,
@@ -134,6 +135,7 @@ import { readPhiRuntimeFormValuesSignalValue } from "../../../components/forms/r
 import {
   PHI_BUILDER_EFFECTS_SECTIONS,
   mergePhiBuilderEffectsFormValues,
+  readPhiBuilderEffectsOpacity,
   splitPhiBuilderEffectsFormValues,
   type PhiBuilderEffectsSection,
 } from "./effects-form-values";
@@ -1255,6 +1257,29 @@ function usePhiDeveloperBuilderWorkspaceController(
       ) {
         completePhiDeveloperBuilderEffectsEditor(defaultArea, effectsRequest);
         initializedEffectsCorrelationRef.current = null;
+        return;
+      }
+      /*
+       * The Transparency as it is being dragged, drawn on the node and written nowhere.
+       *
+       * No correlation to check: this rides no workflow, it is the open editor talking, and the store
+       * only keeps the picture while the request it names is the one that stands. The base is what the
+       * editor opened with, so the one value being chosen is the only one that moves -- and cancelling
+       * needs nothing put back, because the request going away takes the picture with it.
+       */
+      if (
+        effectsRequest &&
+        signal.receiver === createPhiBuilderControllerAddress() &&
+        signal.channel === "effectsPreview:appearance" &&
+        signal.action === "change" &&
+        signal.valueSchema === PHI_SIGNAL_VALUE_SCHEMAS.formValues
+      ) {
+        const live = readPhiRuntimeFormValuesSignalValue(signal.value);
+        if (!live) return;
+        previewPhiDeveloperBuilderEffects(defaultArea, effectsRequest.correlationId, {
+          ...effectsRequest.effects,
+          opacity: readPhiBuilderEffectsOpacity(live.values),
+        });
         return;
       }
 

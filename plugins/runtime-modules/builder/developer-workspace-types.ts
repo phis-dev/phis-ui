@@ -72,6 +72,24 @@ export type PhiDeveloperBuilderDraftAllocation = {
 export type PhiDeveloperBuilderEffectsRequest = {
   correlationId: string;
   effects: PhiRenderableBlockEffects;
+  /**
+   * Whose effects these are, so the canvas can paint what is being chosen before it is chosen.
+   *
+   * The node is named rather than looked up from the selection: opening the editor is a press on one
+   * node's toolbar, and the selection is free to be something else by the time a value moves. A layout
+   * root carries no block id, which is why the kind is named beside it -- `null` means the region's root
+   * where the kind is `layout`, and nothing at all anywhere else.
+   */
+  target: { kind: PhiDeveloperBuilderNodeKind; blockId: PhiCmsInstanceId | null };
+  /**
+   * What the editor shows at this moment, painted in the canvas and committed to nothing.
+   *
+   * A transparency is a value one arrives at by looking, so the number has to be on the page while the
+   * handle is still under the finger. It stands beside `effects` instead of replacing it because that
+   * one is what the editor opened with: cancelling is the request going away, and the node goes back to
+   * what it was drawn with without anything having to be written back.
+   */
+  preview: PhiRenderableBlockEffects | null;
 };
 
 /** One contested address, with the answer being typed for it. */

@@ -54,6 +54,20 @@ function withoutRowKeys<TValue extends Record<string, unknown>>(value: unknown) 
   });
 }
 
+/**
+ * The Transparency the Appearance section shows, as the opacity a block is drawn with.
+ *
+ * One reading for both the commit and the live picture in the canvas: the form asks how much of the
+ * block is taken away, the style says how much is left, and a second place doing that arithmetic is a
+ * second place for the two to disagree. Three decimals, because a percent step is a thousandth and
+ * anything beyond it is the binary fraction showing through.
+ */
+export function readPhiBuilderEffectsOpacity(appearance: unknown): number {
+  const transparency = readRecord(appearance).transparency;
+  const clamped = typeof transparency === "number" ? Math.min(100, Math.max(0, transparency)) : 0;
+  return Number((1 - clamped / 100).toFixed(3));
+}
+
 export function mergePhiBuilderEffectsFormValues(input: {
   appearance: unknown;
   transitions: unknown;
@@ -62,14 +76,11 @@ export function mergePhiBuilderEffectsFormValues(input: {
   const appearance = readRecord(input.appearance);
   const transitions = readRecord(input.transitions);
   const viewport = readRecord(input.viewport);
-  const transparency = typeof appearance.transparency === "number"
-    ? Math.min(100, Math.max(0, appearance.transparency))
-    : 0;
   const viewportEffects = withoutRowKeys<Record<string, unknown>>(viewport.viewportEffects)
     .map((effect) => effect.unit === "unitless" ? { ...effect, unit: "" } : effect) as
       NonNullable<PhiRenderableBlockEffects["viewportEffects"]>;
   return {
-    opacity: Number((1 - transparency / 100).toFixed(3)),
+    opacity: readPhiBuilderEffectsOpacity(appearance),
     transitionTrigger: typeof transitions.transitionTrigger === "string"
       ? transitions.transitionTrigger as NonNullable<PhiRenderableBlockEffects["transitionTrigger"]>
       : "on_mount",

@@ -413,6 +413,17 @@ export async function buildPhiBuilderInspectorAreaOverlayTree({
               emits: [
                 { routeKey: `builder-effects-${section}-values`, capabilityId: "submitValues", scope: "area", channel: `effectsForm:${section}`, action: "change", valueType: "json", valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.formValues, receiver: createPhiBuilderControllerAddress() },
                 { routeKey: `builder-effects-${section}-validation`, capabilityId: "validationFailed", scope: "area", channel: `effectsFormValidation:${section}`, action: "change", valueType: "json", valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.formValidity, receiver: createPhiBuilderControllerAddress() },
+                /*
+                 * Appearance alone says its values on the way, because it alone can be shown on the way.
+                 *
+                 * A transparency is a style the node simply has, so the canvas can draw the value under
+                 * the finger. A transition and a viewport effect are motions: showing one means replaying
+                 * it, which is what the preview button on the node is for, and a message per keystroke
+                 * would only restart an animation nobody has finished describing.
+                 */
+                ...(section === "appearance"
+                  ? [{ routeKey: `builder-effects-${section}-live`, capabilityId: "valuesChange", scope: "area", channel: `effectsPreview:${section}`, action: "change", valueType: "json", valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.formValues, receiver: createPhiBuilderControllerAddress() }]
+                  : []),
               ],
               listens: [
                 { routeKey: `builder-effects-${section}-submit-form`, capabilityId: "submit", scope: "area", channel: "submit", action: "activate", valueType: "none", receiver: createPhiSignalAddress("cms", id) },

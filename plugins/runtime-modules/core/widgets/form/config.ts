@@ -301,6 +301,21 @@ export const PHI_FORM_WIDGET_DEFINITION = {
         valueType: "json",
         valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.formValues,
       },
+      /*
+       * The same values, while they are still being chosen rather than once they are meant.
+       *
+       * `submitValues` is the Form's answer and arrives once; this is the Form thinking aloud, and a
+       * receiver takes it to show what a value would look like before anybody commits to it -- the
+       * Effects editor draws its transparency on the node in the canvas from here. Nothing is saved on
+       * it, which is the point: a value passed through on the way to somewhere else must not be written
+       * anywhere that has to be undone.
+       */
+      {
+        id: "valuesChange",
+        action: "change",
+        valueType: "json",
+        valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.formValues,
+      },
       {
         id: "resetValues",
         action: "activate",
