@@ -57,6 +57,7 @@ kept in a Server entry. Fields:
 | `previewUpstreamPath` | Carried on the definition; the relay does not read it (see [Relay](#relay)). |
 | `loadLabels` | Optional Server loader for the descriptor's `labelSetKey`. |
 | `loadInitialValues` | Optional Server loader for values the Form needs before it can be filled in. |
+| `purpose` | Optional platform role from `PHI_FORM_PURPOSES`; an unknown value is refused on definition. |
 
 - A handler key names behavior, not a Provider key and not a Controller address. Catalog construction
   rejects a Form whose submit, confirm, or preview key has no handler Provider of the same phase owned by
@@ -67,6 +68,12 @@ kept in a Server entry. Fields:
   Form does around it (submit, links, success) comes from the Form Widget.
 - The active Module set rejects a Form whose field or validation Provider keys are not declared by an
   active Module (`plugins/runtime-modules/resolver.ts`).
+- Core asks for a Form by `purpose` where it needs one it cannot name, because the Module that supplies
+  it may be replaced (`findPhiFormDefinitionByPurpose`). `account-password-change` sets the signed-in
+  account's password and is what every Page shows in front of itself while an administrator's password
+  change is outstanding; the Auth Module's `profile-password` Form declares it. A replacement Auth Module
+  declares it on its own Form. Where no active Module does, the Page offers the reset link from the mail
+  and signing out instead.
 
 ## Descriptor
 

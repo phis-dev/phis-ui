@@ -235,8 +235,11 @@ const PHI_PASSWORD_CHANGE_REQUIRED_LABEL_SET = definePhiLabelSet({
       "Enter the one you signed in with, then your new one. If you do not know it, use the link in " +
       "the email we sent you.",
     ),
-    elsewhere_text: definePhiMessageLabel("Your new password is set in your account."),
-    elsewhere_link: "Open my account",
+    email_only_text: definePhiMessageLabel(
+      "An administrator asked you to choose a new password before you continue. " +
+      "Use the link in the email we sent you to set it, then sign in again.",
+    ),
+    sign_out: "Sign out",
   },
 });
 
@@ -245,8 +248,8 @@ export async function getPhiPasswordChangeRequiredLabels(options: PhiGlobalTrans
   return {
     title: labels.title,
     text: labels.text,
-    elsewhereText: labels.elsewhere_text,
-    elsewhereLink: labels.elsewhere_link,
+    emailOnlyText: labels.email_only_text,
+    signOut: labels.sign_out,
   };
 }
 

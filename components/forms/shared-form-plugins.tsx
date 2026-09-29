@@ -1,5 +1,6 @@
 import {
   definePhiRuntimeModuleForm,
+  PHI_FORM_PURPOSES,
   type PhiRuntimeModuleFormDefinition,
 } from "./form-registry";
 import {
@@ -220,6 +221,7 @@ export const PHI_SHARED_FORM_DEFINITIONS: readonly PhiRuntimeModuleFormDefinitio
     category: "preset",
     tags: ["account", "security"],
     descriptor: PHI_PROFILE_PASSWORD_FORM_DESCRIPTOR,
+    purpose: PHI_FORM_PURPOSES.accountPasswordChange,
     submitHandlerKey: "auth.profile.password",
     confirmHandlerKey: null,
     previewHandlerKey: null,

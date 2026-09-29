@@ -1,5 +1,4 @@
-import { PHI_SHARED_FORM_IDS } from "../forms/shared-form-ids";
-import { PhiButtonControl } from "../controls/phi-button-control";
+import { findPhiFormDefinitionByPurpose, PHI_FORM_PURPOSES } from "../forms/form-registry";
 import { getPhiPasswordChangeRequiredLabels } from "../widgets/label-sets/profile";
 import { readPhiServerApiCredentials } from "../../helpers/phis-server-credentials";
 import { PhiFormWidget } from "../../plugins/runtime-modules/core/widgets/form/built-in";
@@ -10,29 +9,28 @@ import { createPhiCoreRuntimeControllerAddress } from "./core-runtime-controller
 import { PhiPasswordChangeRequiredModal } from "./phi-password-change-required-modal";
 
 /*
- * The Profile's own password Form, and its success asking for the Page again: the account no longer
- * carries the flag then, and the Page renders without this in front of it.
+ * The Form's success asks for the Page again: the account no longer carries the flag then, and the Page
+ * renders without this in front of it.
  */
-const PASSWORD_FORM_CONFIG = parsePhiFormWidgetConfig({
-  formId: PHI_SHARED_FORM_IDS.profilePassword,
-  signalRoutes: {
-    emits: [{
-      routeKey: "password-change-required-reload",
-      capabilityId: "submitSuccess",
-      scope: "site",
-      channel: "reload",
-      action: "activate",
-      valueType: "none",
-      receiver: createPhiCoreRuntimeControllerAddress(),
-    }],
-  },
-});
+const RELOAD_ON_SUCCESS = {
+  emits: [{
+    routeKey: "password-change-required-reload",
+    capabilityId: "submitSuccess",
+    scope: "site",
+    channel: "reload",
+    action: "activate",
+    valueType: "none",
+    receiver: createPhiCoreRuntimeControllerAddress(),
+  }],
+};
 
 /**
  * What a Page shows in front of itself while an administrator's password change is outstanding.
  *
- * The Form is the Auth Module's, which serves the App and Admin Areas. Where an Area does not carry it,
- * the change is one link away in the App instead of reproduced here.
+ * The Form is whichever an active Module registers for `account-password-change` -- the Auth Module's
+ * own, or the one a replacement brings -- and not a Form id Core would have to know. Where no Module
+ * supplies one, the reset link that went out with the administrator's request is the way on, and
+ * signing out is offered rather than a link to somewhere that has no Form either.
  */
 export async function PhiPasswordChangeRequired({
   runtime,
@@ -47,24 +45,26 @@ export async function PhiPasswordChangeRequired({
     internalToken: credentials.internalToken,
     locale: runtime.locale.current,
   });
-  const formAvailable = registry.formDefinitionsById.has(PHI_SHARED_FORM_IDS.profilePassword);
+  const form = findPhiFormDefinitionByPurpose(
+    registry.formDefinitionsById.values(),
+    PHI_FORM_PURPOSES.accountPasswordChange,
+  );
 
   return (
     <PhiPasswordChangeRequiredModal
       title={labels.title}
-      text={formAvailable ? labels.text : labels.elsewhereText}
+      text={form ? labels.text : labels.emailOnlyText}
+      signOutLabel={form ? null : labels.signOut}
     >
-      {formAvailable ? (
+      {form ? (
         <PhiFormWidget
           runtime={runtime}
           registry={registry}
-          formId={PHI_SHARED_FORM_IDS.profilePassword}
+          formId={form.formId}
           formInstanceKey="password-change-required"
-          config={PASSWORD_FORM_CONFIG}
+          config={parsePhiFormWidgetConfig({ formId: form.formId, signalRoutes: RELOAD_ON_SUCCESS })}
         />
-      ) : (
-        <PhiButtonControl type="primary" href="/app" label={labels.elsewhereLink} />
-      )}
+      ) : null}
     </PhiPasswordChangeRequiredModal>
   );
 }
