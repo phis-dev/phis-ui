@@ -1,5 +1,5 @@
 import type { PhiThemeMode } from "./phi-theme-presets";
-import { fetchPhiCsrfToken } from "../helpers/csrf-token";
+import { requestPhiJson } from "../helpers/client-json-request";
 
 /**
  * How a viewer wants to see a Site. It is never part of a Theme: a Theme record and its drafts carry
@@ -220,23 +220,13 @@ export async function storePhiThemeModePreferenceOnAccount(
   try {
     /*
      * A preference that cannot be saved stays applied for this visit. The cookie already carries it, so
-     * there is nothing to tell somebody who only changed how the page looks.
+     * there is nothing to tell somebody who only changed how the page looks -- whether the token, the
+     * network or the session was missing, and whatever the answer says.
      */
-    let csrfToken: string;
-    try {
-      csrfToken = await fetchPhiCsrfToken();
-    } catch {
-      return;
-    }
-    await fetch("/api/auth/profile/theme", {
+    await requestPhiJson("/api/auth/profile/theme", {
       method: "PATCH",
-      credentials: "include",
-      cache: "no-store",
-      headers: {
-        "content-type": "application/json",
-        "x-csrf-token": csrfToken,
-      },
-      body: JSON.stringify({ themeMode: preference }),
+      body: { themeMode: preference },
+      csrf: true,
     });
   } catch {
     // Offline, or no session. The cookie stands; see above for why this stays quiet.

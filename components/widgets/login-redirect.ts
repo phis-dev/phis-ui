@@ -1,3 +1,4 @@
+import { requestPhiJson } from "../../helpers/client-json-request";
 import { localizeAreaPath, localizePath, stripLocaleAndAreaFromPathname } from "../../helpers/locale";
 
 export function normalizeLoginRedirectTarget(value: string | null | undefined) {
@@ -27,14 +28,10 @@ export function resolvePostLoginTarget(pathname: string, locale: string, area: s
 async function pathExists(path: string, area: string) {
   try {
     const search = new URLSearchParams({ path, area });
-    const response = await fetch(`/api/site/navigation-target?${search.toString()}`, {
-      method: "GET",
-      credentials: "include",
-      cache: "no-store",
-    });
-    const payload = await response.json().catch(() => null) as { available?: unknown } | null;
-
-    return response.ok && payload?.available === true;
+    const { ok, payload } = await requestPhiJson<{ available?: unknown }>(
+      `/api/site/navigation-target?${search.toString()}`,
+    );
+    return ok && payload?.available === true;
   } catch {
     return false;
   }

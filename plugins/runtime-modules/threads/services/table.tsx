@@ -11,6 +11,9 @@ import { createPhiTableProviderClient } from "../../../../components/widgets/cli
 import { PHI_THREAD_LIBRARY_DATA_PROVIDER_KEYS } from "../../../../constants/thread-library-provider-keys";
 import { PHI_THREADS_RUNTIME_DATA_PROVIDER_DESCRIPTORS } from "../data-providers";
 import { PHI_THREADS_RUNTIME_DATA_PROVIDER_KEYS } from "../ids";
+import {
+  readPhiTableProviderResponse,
+} from "../../../../components/widgets/client/shared/phi-table-provider-response";
 
 const API_PATH = "/api/site/threads";
 
@@ -30,20 +33,11 @@ type ApiResponse = {
   message?: unknown;
 };
 
-async function readApiResponse(response: Response) {
-  const payload = await response.json().catch(() => null) as ApiResponse | null;
-  if (!response.ok) {
-    throw new PhiTableProviderError(
-      "request-failed",
-      typeof payload?.message === "string"
-        ? payload.message
-        : typeof payload?.error === "string"
-          ? payload.error
-          : `Conversation request failed with status ${response.status}.`,
-    );
-  }
-  return payload;
-}
+const readApiResponse = (response: Response) =>
+  readPhiTableProviderResponse<ApiResponse>(response, {
+    subject: "Conversation",
+    errorKeys: ["message", "error"],
+  });
 
 function readIntegerFilter(query: PhiTableProviderQueryRequest["query"], key: string) {
   const value = query.filters?.[key];

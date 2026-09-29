@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 
+import { requestPhiJson } from "../../helpers/client-json-request";
 import type { PhiMediaAsset } from "../../types/media";
 import { PHI_ASSET_CONTROLLER_STORE_KEY } from "./asset-controller-signals";
 import { usePhiImagePreviewStore } from "./phi-image-preview-store";
@@ -25,15 +26,12 @@ export function usePhiAuthoringAssetDetails(assetId: number | null | undefined) 
 
     async function run() {
       try {
-        const response = await fetch(`/api/site/media/${assetId}`, {
-          method: "GET",
-          headers: { Accept: "application/json" },
-          cache: "no-store",
-          signal: controller.signal,
-        });
-        const payload = (await response.json()) as { asset?: PhiMediaAsset | null };
+        const { ok, payload } = await requestPhiJson<{ asset?: PhiMediaAsset | null }>(
+          `/api/site/media/${assetId}`,
+          { signal: controller.signal },
+        );
         if (!controller.signal.aborted) {
-          setAssetDetails(response.ok ? payload.asset ?? null : null);
+          setAssetDetails(ok ? payload?.asset ?? null : null);
         }
       } catch (error) {
         if (!controller.signal.aborted) {

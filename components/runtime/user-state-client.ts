@@ -1,6 +1,7 @@
 "use client";
 
 import { readPhisUserStateWrite } from "../../constants/user-state";
+import { readPhiJsonError, requestPhiJson } from "../../helpers/client-json-request";
 import type {
   PhisDeclarableUserStateKey,
   PhisUserStateStoredValue,
@@ -40,15 +41,10 @@ export class PhiUserStateError extends Error {
  * convention.
  */
 export async function fetchPhiUserState(signal?: AbortSignal) {
-  const response = await fetch(USER_STATE_URL, {
-    credentials: "include",
-    cache: "no-store",
-    signal,
-  });
-  if (!response.ok) {
-    throw new PhiUserStateError("failed", `user_state_read_failed:${response.status}`);
+  const { ok, status, payload } = await requestPhiJson<{ state?: unknown }>(USER_STATE_URL, { signal });
+  if (!ok) {
+    throw new PhiUserStateError("failed", `user_state_read_failed:${status}`);
   }
-  const payload = await response.json().catch(() => null) as { state?: unknown } | null;
   const state = payload?.state;
   return state && typeof state === "object" && !Array.isArray(state)
     ? state as Readonly<Record<string, PhisUserStateStoredValue>>
@@ -76,28 +72,23 @@ export async function writePhiUserState(input: {
     );
   }
 
-  const response = await fetch(USER_STATE_URL, {
+  const { ok, status, payload } = await requestPhiJson<{ value?: unknown }>(USER_STATE_URL, {
     method: "PATCH",
-    credentials: "include",
-    cache: "no-store",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify({
+    body: {
       key: input.descriptor.key,
       shape: input.descriptor.shape,
       value: write.value,
       ...(input.descriptor.shape === "set" ? { limit: input.descriptor.limit } : {}),
-    }),
+    },
   });
 
-  if (!response.ok) {
-    const body = await response.json().catch(() => null) as { error?: string } | null;
+  if (!ok) {
     throw new PhiUserStateError(
-      response.status === 403 ? "unavailable" : response.status === 413 ? "too-large" : "failed",
-      body?.error ?? `user_state_write_failed:${response.status}`,
+      status === 403 ? "unavailable" : status === 413 ? "too-large" : "failed",
+      readPhiJsonError(payload, `user_state_write_failed:${status}`),
     );
   }
 
-  const payload = await response.json().catch(() => null) as { value?: unknown } | null;
   return (payload?.value ?? null) as PhisUserStateStoredValue | null;
 }
 
@@ -108,16 +99,14 @@ export async function writePhiUserState(input: {
  * than set to `false`, because absent is what the reading Module treats as "never decided".
  */
 export async function clearPhiUserState(key: PhisDeclarableUserStateKey["key"]) {
-  const response = await fetch(`${USER_STATE_URL}?key=${encodeURIComponent(key)}`, {
-    method: "DELETE",
-    credentials: "include",
-    cache: "no-store",
-  });
-  if (!response.ok) {
-    const body = await response.json().catch(() => null) as { error?: string } | null;
+  const { ok, status, payload } = await requestPhiJson(
+    `${USER_STATE_URL}?key=${encodeURIComponent(key)}`,
+    { method: "DELETE" },
+  );
+  if (!ok) {
     throw new PhiUserStateError(
-      response.status === 403 ? "unavailable" : "failed",
-      body?.error ?? `user_state_clear_failed:${response.status}`,
+      status === 403 ? "unavailable" : "failed",
+      readPhiJsonError(payload, `user_state_clear_failed:${status}`),
     );
   }
 }

@@ -10,7 +10,7 @@ import { PhiFlexControl } from "../../controls/phi-flex-control";
 import { PhiTypographyControl } from "../../controls/phi-typography-control";
 import { PhiQrCodeControl } from "../../controls/phi-qr-code-control";
 import type { PhiAuthWorkflowBodyLabels } from "../label-types/auth-workflow";
-import { fetchPhiCsrfToken } from "../../../helpers/csrf-token";
+import { readPhiJsonError, requestPhiJson } from "../../../helpers/client-json-request";
 
 type Enrollment = {
   factorId: string;
@@ -59,16 +59,12 @@ export function PhiAuthWorkflowBody({
     setBusy(true);
     setError(null);
     try {
-      const token = await fetchPhiCsrfToken();
-      const response = await fetch("/api/auth/workflow/totp/enroll", {
+      const { ok, payload } = await requestPhiJson<Enrollment>("/api/auth/workflow/totp/enroll", {
         method: "POST",
-        credentials: "include",
-        cache: "no-store",
-        headers: { accept: "application/json", "x-csrf-token": token },
+        csrf: true,
       });
-      const payload = await response.json().catch(() => null) as (Enrollment & { error?: string }) | null;
-      if (!response.ok || !payload?.factorId || !payload.otpauthUri) {
-        throw new Error(payload?.error ?? labels.errors.setupFailed);
+      if (!ok || !payload?.factorId || !payload.otpauthUri) {
+        throw new Error(readPhiJsonError(payload, labels.errors.setupFailed));
       }
       setEnrollment(payload);
     } catch (caught) {
@@ -82,33 +78,19 @@ export function PhiAuthWorkflowBody({
     setBusy(true);
     setError(null);
     try {
-      const token = await fetchPhiCsrfToken();
       const enrolling = mode === "enroll";
-      const response = await fetch(
-        enrolling ? "/api/auth/workflow/totp/confirm" : "/api/auth/workflow/verify",
-        {
-          method: "POST",
-          credentials: "include",
-          cache: "no-store",
-          headers: {
-            accept: "application/json",
-            "content-type": "application/json",
-            "x-csrf-token": token,
-          },
-          body: JSON.stringify(enrolling
-            ? { factorId: enrollment?.factorId, code }
-            : { methodKey, code }),
-        },
-      );
-      const payload = await response.json().catch(() => null) as {
+      const { ok, payload } = await requestPhiJson<{
         ok?: boolean;
         area?: string;
         next?: string;
         recoveryCodes?: string[];
-        error?: string;
-      } | null;
-      if (!response.ok || !payload?.ok) {
-        throw new Error(payload?.error ?? labels.errors.verifyFailed);
+      }>(enrolling ? "/api/auth/workflow/totp/confirm" : "/api/auth/workflow/verify", {
+        method: "POST",
+        body: enrolling ? { factorId: enrollment?.factorId, code } : { methodKey, code },
+        csrf: true,
+      });
+      if (!ok || !payload?.ok) {
+        throw new Error(readPhiJsonError(payload, labels.errors.verifyFailed));
       }
       if (Array.isArray(payload.recoveryCodes) && payload.recoveryCodes.length > 0) {
         setRecovery({

@@ -10,7 +10,7 @@ import { PhiConfirmControl } from "../../../../../components/controls/phi-confir
 import { PhiFlexControl } from "../../../../../components/controls/phi-flex-control";
 import { PhiTypographyControl } from "../../../../../components/controls/phi-typography-control";
 import { PhiSkeletonControl } from "../../../../../components/controls/phi-skeleton-control";
-import { fetchPhiCsrfToken } from "../../../../../helpers/csrf-token";
+import { readPhiJsonError, requestPhiJson } from "../../../../../helpers/client-json-request";
 import type { PhiAuthWorkflowBodyLabels } from "../../../../../components/widgets/label-types/auth-workflow";
 import {
   formatPhiAuthSecurityWidgetLabel,
@@ -70,14 +70,8 @@ export function PhiAuthSecurityWidgetClient({
   const load = useCallback(async (signal?: AbortSignal) => {
     setLoading(true);
     try {
-      const response = await fetch(apiPath, {
-        credentials: "include",
-        cache: "no-store",
-        headers: { accept: "application/json" },
-        signal,
-      });
-      const next = await response.json().catch(() => null) as SecurityPayload | null;
-      if (!response.ok || !next?.ok) throw new Error(labels.errors.loadFailed);
+      const { ok, payload: next } = await requestPhiJson<SecurityPayload>(apiPath, { signal });
+      if (!ok || !next?.ok) throw new Error(labels.errors.loadFailed);
       setPayload(next);
       setError(null);
     } catch (caught) {
@@ -93,38 +87,36 @@ export function PhiAuthSecurityWidgetClient({
     return () => controller.abort();
   }, [load]);
 
-  async function removeFactor(factorId: string) {
+  /*
+   * Both removals are one delete behind a confirm, which no Form expresses: there is nothing to fill
+   * in. The answer is the list read again, because the server decides what remains.
+   */
+  async function removeAndReload(path: string, failedMessage: string) {
     try {
-      const token = await fetchPhiCsrfToken({ unavailableMessage: labels.errors.csrfFailed });
-      const response = await fetch(`/api/auth/account/factors/${encodeURIComponent(factorId)}`, {
+      const reply = await requestPhiJson(path, {
         method: "DELETE",
-        credentials: "include",
-        cache: "no-store",
-        headers: { accept: "application/json", "x-csrf-token": token },
+        csrf: true,
+        csrfUnavailableMessage: labels.errors.csrfFailed,
       });
-      const body = await response.json().catch(() => null) as { error?: string } | null;
-      if (!response.ok) throw new Error(body?.error ?? labels.errors.factorRemoveFailed);
+      if (!reply.ok) throw new Error(readPhiJsonError(reply.payload, failedMessage));
       await load();
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : labels.errors.factorRemoveFailed);
+      setError(caught instanceof Error ? caught.message : failedMessage);
     }
   }
 
-  async function revokeSession(sessionId: string) {
-    try {
-      const token = await fetchPhiCsrfToken({ unavailableMessage: labels.errors.csrfFailed });
-      const response = await fetch(`/api/auth/account/sessions/${encodeURIComponent(sessionId)}`, {
-        method: "DELETE",
-        credentials: "include",
-        cache: "no-store",
-        headers: { accept: "application/json", "x-csrf-token": token },
-      });
-      const body = await response.json().catch(() => null) as { error?: string } | null;
-      if (!response.ok) throw new Error(body?.error ?? labels.errors.sessionRevokeFailed);
-      await load();
-    } catch (caught) {
-      setError(caught instanceof Error ? caught.message : labels.errors.sessionRevokeFailed);
-    }
+  function removeFactor(factorId: string) {
+    return removeAndReload(
+      `/api/auth/account/factors/${encodeURIComponent(factorId)}`,
+      labels.errors.factorRemoveFailed,
+    );
+  }
+
+  function revokeSession(sessionId: string) {
+    return removeAndReload(
+      `/api/auth/account/sessions/${encodeURIComponent(sessionId)}`,
+      labels.errors.sessionRevokeFailed,
+    );
   }
 
   if (enrolling) {

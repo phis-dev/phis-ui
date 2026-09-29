@@ -11,6 +11,9 @@ import {
 } from "../../../../types/table-widget";
 import { createPhiTableProviderClient } from "../../../../components/widgets/client/shared/phi-table-provider";
 import { PHI_USER_MANAGEMENT_RUNTIME_DATA_PROVIDER_DESCRIPTORS } from "../../../../plugins/runtime-modules/user-management/data-providers";
+import {
+  readPhiTableProviderResponse,
+} from "../../../../components/widgets/client/shared/phi-table-provider-response";
 
 const API_PATH = "/api/site/admin/users";
 
@@ -46,18 +49,8 @@ function readRows(value: unknown) {
     : [];
 }
 
-async function readApiResponse(response: Response) {
-  const payload = await response.json().catch(() => null) as ApiResponse | null;
-  if (!response.ok) {
-    throw new PhiTableProviderError(
-      "request-failed",
-      typeof payload?.error === "string"
-        ? payload.error
-        : `User Management request failed with status ${response.status}.`,
-    );
-  }
-  return payload;
-}
+const readApiResponse = (response: Response) =>
+  readPhiTableProviderResponse<ApiResponse>(response, { subject: "User Management" });
 
 async function loadUsers({
   query,

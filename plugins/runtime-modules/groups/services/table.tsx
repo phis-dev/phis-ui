@@ -11,6 +11,9 @@ import {
 import { createPhiTableProviderClient } from "../../../../components/widgets/client/shared/phi-table-provider";
 import { PHI_GROUPS_OPTIONS_REVISION } from "../services/options-revision";
 import { PHI_GROUPS_RUNTIME_DATA_PROVIDER_DESCRIPTORS } from "../../../../plugins/runtime-modules/groups/data-providers";
+import {
+  readPhiTableProviderResponse,
+} from "../../../../components/widgets/client/shared/phi-table-provider-response";
 
 /*
  * The Site-session administration surface. `groups:v1` is the capability a Module speaks to; this is
@@ -48,20 +51,11 @@ function readPositiveInteger(value: unknown) {
   return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
 }
 
-async function readApiResponse(response: Response) {
-  const payload = await response.json().catch(() => null) as ApiResponse | null;
-  if (!response.ok) {
-    throw new PhiTableProviderError(
-      "request-failed",
-      typeof payload?.message === "string"
-        ? payload.message
-        : typeof payload?.error === "string"
-          ? payload.error
-          : `Groups request failed with status ${response.status}.`,
-    );
-  }
-  return payload;
-}
+const readApiResponse = (response: Response) =>
+  readPhiTableProviderResponse<ApiResponse>(response, {
+    subject: "Groups",
+    errorKeys: ["message", "error"],
+  });
 
 const requestInit = (signal: AbortSignal | undefined): RequestInit => ({
   cache: "no-store",

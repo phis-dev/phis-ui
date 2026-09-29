@@ -1,5 +1,7 @@
 "use client";
 
+import { readPhiJsonError, requestPhiJson } from "../../helpers/client-json-request";
+
 /**
  * Reading and writing the viewer's own avatar.
  *
@@ -27,30 +29,24 @@ function readAvatar(payload: unknown): PhiAvatarAsset | null {
 }
 
 export async function fetchPhiViewerAvatar(signal?: AbortSignal) {
-  const response = await fetch(AVATAR_URL, { credentials: "include", signal });
-  if (!response.ok) {
-    throw new Error(`avatar_read_failed:${response.status}`);
+  const { ok, status, payload } = await requestPhiJson(AVATAR_URL, { signal });
+  if (!ok) {
+    throw new Error(`avatar_read_failed:${status}`);
   }
-  return readAvatar(await response.json().catch(() => null));
+  return readAvatar(payload);
 }
 
 export async function setPhiViewerAvatar(assetId: number) {
-  const response = await fetch(AVATAR_URL, {
-    method: "PUT",
-    credentials: "include",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify({ assetId }),
-  });
-  if (!response.ok) {
-    const body = await response.json().catch(() => null) as { error?: string } | null;
-    throw new Error(body?.error ?? `avatar_write_failed:${response.status}`);
+  const { ok, status, payload } = await requestPhiJson(AVATAR_URL, { method: "PUT", body: { assetId } });
+  if (!ok) {
+    throw new Error(readPhiJsonError(payload, `avatar_write_failed:${status}`));
   }
-  return readAvatar(await response.json().catch(() => null));
+  return readAvatar(payload);
 }
 
 export async function clearPhiViewerAvatar() {
-  const response = await fetch(AVATAR_URL, { method: "DELETE", credentials: "include" });
-  if (!response.ok) {
-    throw new Error(`avatar_clear_failed:${response.status}`);
+  const { ok, status } = await requestPhiJson(AVATAR_URL, { method: "DELETE" });
+  if (!ok) {
+    throw new Error(`avatar_clear_failed:${status}`);
   }
 }

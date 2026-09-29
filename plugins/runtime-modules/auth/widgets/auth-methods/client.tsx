@@ -12,7 +12,7 @@ import { PhiFlexControl } from "../../../../../components/controls/phi-flex-cont
 import { PHI_SPACE } from "../../../../../theme/antd-css-var-contract";
 import { PHI_LAYOUT } from "../../../../../theme/phi-tokens";
 import { PhiIcon } from "../../../../../components/shell/phi-icon";
-import { fetchPhiCsrfToken } from "../../../../../helpers/csrf-token";
+import { readPhiJsonError, requestPhiJson } from "../../../../../helpers/client-json-request";
 
 export type PhiAuthMethodsWidgetClientProps = {
   methods: PhiPublicAuthManifest["methods"];
@@ -38,25 +38,19 @@ export function PhiAuthMethodsWidgetClient({
     setStartingMethod(method.methodKey);
     setError(null);
     try {
-      const csrfToken = await fetchPhiCsrfToken({ unavailableMessage: labels.unavailable });
       const next = normalizeLoginRedirectTarget(page.query.next) ?? page.path;
-      const response = await fetch(method.startPath, {
+      /*
+       * A button, not a Form: there is nothing to fill in, and the answer is an address off this Site
+       * that only this click may follow (see below).
+       */
+      const { ok, payload } = await requestPhiJson<{ redirectUrl?: unknown }>(method.startPath, {
         method: "POST",
-        credentials: "include",
-        cache: "no-store",
-        headers: {
-          accept: "application/json",
-          "content-type": "application/json",
-          "x-csrf-token": csrfToken,
-        },
-        body: JSON.stringify({ next }),
+        body: { next },
+        csrf: true,
+        csrfUnavailableMessage: labels.unavailable,
       });
-      const payload = await response.json().catch(() => null) as {
-        redirectUrl?: unknown;
-        error?: unknown;
-      } | null;
-      if (!response.ok || typeof payload?.redirectUrl !== "string") {
-        throw new Error(typeof payload?.error === "string" ? payload.error : labels.failed);
+      if (!ok || typeof payload?.redirectUrl !== "string") {
+        throw new Error(readPhiJsonError(payload, labels.failed));
       }
       /*
        * The one forward that does not go through the Runtime Controller, and the reason is the point of

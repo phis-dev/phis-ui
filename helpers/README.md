@@ -32,3 +32,8 @@ Most helpers are pure. The exceptions are explicit:
 
 A new helper with module state or a server-only import names that in its file header; anything that
 fetches belongs in `gateway/*` or `server-helpers/*`.
+
+The browser's requests to the Site's own routes are the one exception to that: `client-json-request.ts`
+(`requestPhiJson`, the session cookie, `no-store`, JSON and an optional CSRF token),
+`csrf-token.ts` and `logout.ts`. A Client file that talks to `/api/...` goes through
+`requestPhiJson` rather than spelling the request out; a Form goes through its handler Provider.

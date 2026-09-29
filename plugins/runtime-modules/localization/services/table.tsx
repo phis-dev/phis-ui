@@ -19,6 +19,9 @@ import {
 import { createPhiLocalizationControllerAddress } from "../controller/address";
 import { PHI_LOCALIZATION_RUNTIME_DATA_PROVIDER_DESCRIPTORS } from "../../../../plugins/runtime-modules/localization/data-providers";
 import { isPhiRecord } from "../../../../helpers/is-record";
+import {
+  readPhiTableProviderResponse,
+} from "../../../../components/widgets/client/shared/phi-table-provider-response";
 
 const ADMIN_LOCALES_API_PATH = "/api/site/admin/locales";
 const EDITOR_TRANSLATIONS_API_PATH = "/api/site/editor/translations";
@@ -44,18 +47,8 @@ function readStringFilter(query: PhiTableQuery, key: string) {
   return typeof value === "string" ? value.trim() : "";
 }
 
-async function readApiResponse(response: Response) {
-  const payload = await response.json().catch(() => null) as ApiResponse | null;
-  if (!response.ok) {
-    throw new PhiTableProviderError(
-      "request-failed",
-      typeof payload?.error === "string"
-        ? payload.error
-        : `Localization request failed with status ${response.status}.`,
-    );
-  }
-  return payload;
-}
+const readApiResponse = (response: Response) =>
+  readPhiTableProviderResponse<ApiResponse>(response, { subject: "Localization" });
 
 function buildQueryParams(query: PhiTableQuery) {
   const params = new URLSearchParams({

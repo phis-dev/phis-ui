@@ -11,6 +11,7 @@ import {
 import { createPhiTableProviderClient } from "../widgets/client/shared/phi-table-provider";
 import { fetchPhiCsrfToken } from "../../helpers/csrf-token";
 import { PHI_AUTH_RUNTIME_DATA_PROVIDER_DESCRIPTORS } from "../../plugins/runtime-modules/auth/data-providers";
+import { readPhiTableProviderResponse } from "../widgets/client/shared/phi-table-provider-response";
 
 const API_PATH = "/api/auth/admin/installations";
 
@@ -38,18 +39,8 @@ function flattenValidation(row: InstallationRow) {
   };
 }
 
-async function readApiResponse(response: Response) {
-  const payload = await response.json().catch(() => null) as ApiResponse | null;
-  if (!response.ok) {
-    throw new PhiTableProviderError(
-      "request-failed",
-      typeof payload?.error === "string"
-        ? payload.error
-        : `Auth installation request failed with status ${response.status}.`,
-    );
-  }
-  return payload;
-}
+const readApiResponse = (response: Response) =>
+  readPhiTableProviderResponse<ApiResponse>(response, { subject: "Auth installation" });
 
 /* The shared reader throws a plain Error; a Table Provider has to fail in its own vocabulary. */
 async function getCsrfToken(signal?: AbortSignal) {
