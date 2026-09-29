@@ -217,6 +217,8 @@ export class PhiHtmlImageNode extends DecoratorNode<ReactNode> {
 /** How long a typed size waits for the next digit before it moves the image. */
 const PHI_HTML_IMAGE_SIZE_SETTLE_MS = 500;
 
+type PhiHtmlImageSize = { width: PhiCssLength | null; height: PhiCssLength | null };
+
 function stopEditorEvent(event: { stopPropagation: () => void }) {
   event.stopPropagation();
 }
@@ -246,28 +248,49 @@ function PhiHtmlImageDecorator({
    * where the image collapses and takes this Popover with it, because the image is what the Popover is
    * anchored to. The typed size is held briefly and applied once the author stops.
    */
-  const [draftSize, setDraftSize] = useState<{ width: PhiCssLength | null; height: PhiCssLength | null } | null>(null);
+  const [draftSize, setDraftSize] = useState<PhiHtmlImageSize | null>(null);
   /*
    * While the Popover is open the image's own box is held at what it was when it opened. Otherwise a
    * typed size resizes the image, the line and everything after it move, and the Popover moves with
    * them -- no anchor within that flow can stay still. The image itself still shows the new size.
+   *
+   * The hold is read through `popoverOpen`, not cleared by each way of closing: a click beside the
+   * Popover, Escape, the image clicked again, Remove, the editor turning read-only -- every one of them
+   * ends the hold by ending `popoverOpen`, and no path can leave the box standing at its old size.
    */
   const hostRef = useRef<HTMLSpanElement | null>(null);
   const [heldBox, setHeldBox] = useState<{ width: number; height: number } | null>(null);
+  const box = popoverOpen ? heldBox : null;
   const flushRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pendingSizeRef = useRef<PhiHtmlImageSize | null>(null);
   const size = draftSize ?? { width, height };
 
+  /*
+   * A size still waiting for its next digit is written the moment the Popover closes, however it
+   * closes, so the image the author returns to already has the size they typed. What is left
+   * pending at unmount goes out on its timer: the node is looked up then, and a removed one is not
+   * found.
+   */
   useEffect(() => {
     if (popoverOpen) {
-      return undefined;
+      return;
     }
-    return () => {
-      if (flushRef.current) {
-        clearTimeout(flushRef.current);
-        flushRef.current = null;
+    if (flushRef.current) {
+      clearTimeout(flushRef.current);
+      flushRef.current = null;
+    }
+    const pending = pendingSizeRef.current;
+    pendingSizeRef.current = null;
+    if (!pending) {
+      return;
+    }
+    editor.update(() => {
+      const node = $getNodeByKey(nodeKey);
+      if ($isPhiHtmlImageNode(node)) {
+        node.setAttributes(pending);
       }
-    };
-  }, [popoverOpen]);
+    }, { tag: SKIP_DOM_SELECTION_TAG });
+  }, [editor, nodeKey, popoverOpen]);
 
   /*
    * Without the tag the reconciler answers an update whose pending selection is null by clearing the
@@ -283,6 +306,11 @@ function PhiHtmlImageDecorator({
     }, { tag: SKIP_DOM_SELECTION_TAG });
   };
 
+  const closePopover = () => {
+    setOpen(false);
+    setDraftSize(null);
+  };
+
   const image = (
     <img
       src={resolvePhiHtmlImageAuthoringSrc(src)}
@@ -290,9 +318,14 @@ function PhiHtmlImageDecorator({
       title={title ?? undefined}
       draggable={false}
       onClick={editable ? () => {
+        if (open) {
+          closePopover();
+          return;
+        }
         const rect = hostRef.current?.getBoundingClientRect();
-        setHeldBox(open || !rect ? null : { width: rect.width, height: rect.height });
-        setOpen((current) => !current);
+        setHeldBox(rect ? { width: rect.width, height: rect.height } : null);
+        setDraftSize(null);
+        setOpen(true);
       } : undefined}
       style={{
         maxWidth: "100%",
@@ -321,8 +354,8 @@ function PhiHtmlImageDecorator({
         position: "relative",
         display: "inline-flex",
         maxWidth: "100%",
-        width: heldBox?.width,
-        height: heldBox?.height,
+        width: box?.width,
+        height: box?.height,
       }}
       onMouseDown={stopEditorEvent}
       onPointerDown={stopEditorEvent}
@@ -336,9 +369,10 @@ function PhiHtmlImageDecorator({
         getPopupContainer={popup.getPopupContainer}
         rootClassName={popup.rootClassName}
         onOpenChange={(nextOpen) => {
-          setOpen(nextOpen);
-          if (!nextOpen) {
-            setDraftSize(null);
+          if (nextOpen) {
+            setOpen(true);
+          } else {
+            closePopover();
           }
         }}
         content={
@@ -387,11 +421,13 @@ function PhiHtmlImageDecorator({
                     height: readImageLength(nextSize?.height),
                   };
                   setDraftSize(next);
+                  pendingSizeRef.current = next;
                   if (flushRef.current) {
                     clearTimeout(flushRef.current);
                   }
                   flushRef.current = setTimeout(() => {
                     flushRef.current = null;
+                    pendingSizeRef.current = null;
                     patch(next);
                   }, PHI_HTML_IMAGE_SIZE_SETTLE_MS);
                 }}
@@ -403,7 +439,7 @@ function PhiHtmlImageDecorator({
                 danger
                 label="Remove"
                 onClick={() => {
-                  setOpen(false);
+                  closePopover();
                   editor.update(() => {
                     const node = $getNodeByKey(nodeKey);
                     if ($isPhiHtmlImageNode(node)) {
