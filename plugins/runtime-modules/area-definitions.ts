@@ -116,7 +116,7 @@ export const PHI_BUILDER_SETTINGS_NAV_ITEM_KEY = "@phis/ui/builder/nav/settings"
  */
 const publicTermsItem = {
   itemKey: "@phis/ui/modules/public/nav/terms",
-  label: label("Terms and Conditions"),
+  label: label("Terms & Conditions"),
   icon: "antd:file-text",
   routePresetKey: "public-terms-page",
 } as const;
