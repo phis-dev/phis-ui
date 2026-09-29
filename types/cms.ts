@@ -110,9 +110,9 @@ export type PhiCmsResolvedContent = {
   id: number;
   type: number;
   slug: string;
+  /** The version the revision pins; `assetId`, `meta` and `textFields` are that version's. */
+  versionId: number;
   assetId: number | null;
-  currentVersionId: number | null;
-  publishedVersionId: number | null;
   status: number;
   meta: Record<string, unknown>;
   textFields: Record<string, PhiCmsResolvedContentTextField>;
@@ -121,6 +121,11 @@ export type PhiCmsResolvedContent = {
 export type PhiCmsContentWidgetNode = PhiCmsNodeBase & {
   parentLayoutNodeId: PhiCmsInstanceId;
   contentId: number | null;
+  /**
+   * The content version this revision shows. The server sets it on every save that writes the content;
+   * a Widget that has written none yet has none.
+   */
+  contentVersionId?: number | null;
   resolvedContent?: PhiCmsResolvedContent | null;
 };
 
