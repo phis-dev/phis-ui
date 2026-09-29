@@ -7,6 +7,7 @@ import { PhiTagControl } from "../../controls/phi-tag-control";
 import type { PhiCmsDescriptionWidgetConfig } from "../../../plugins/runtime-modules/core/widgets/description/config";
 import { PhiTextControl } from "../../controls/phi-text-control";
 import { PhiFlexControl } from "../../controls/phi-flex-control";
+import { resolvePhiDescriptionEditorSections } from "./description-editor-sections";
 
 type PhiDescriptionEditorConfig = {
   eyebrow: string;
@@ -51,17 +52,12 @@ export function PhiDescriptionWidgetEditor({
   const [draftState, setDraftState] = useState(() => ({ source: config, value: resolvedConfig }));
   const draft = draftState.source === config ? draftState.value : resolvedConfig;
 
-  const previewLabels = useMemo(
-    () => ({
-      eyebrow: draft.eyebrow,
-      title: draft.title,
-      description: draft.description,
-      asideTitle: draft.asideTitle,
-      asideItems: draft.asideItems,
-      footer: draft.footer,
-    }),
-    [draft],
-  );
+  /*
+   * The parts that stand follow the stored config, never the draft: a field that mounted or unmounted
+   * as it was typed into would lose the caret on its first character, and one cleared to nothing
+   * would be gone before its blur could write the empty value.
+   */
+  const sections = resolvePhiDescriptionEditorSections(resolvedConfig, Boolean(onChange));
 
   /*
    * Typing changes the draft and nothing else.
@@ -121,7 +117,7 @@ export function PhiDescriptionWidgetEditor({
       style={{ width: "100%", minWidth: 0 }}
     >
       <PhiFlexControl vertical gap={10} style={{ width: "100%", minWidth: 0 }}>
-        {previewLabels.eyebrow ? (
+        {sections.eyebrowTag ? (
           <PhiTagControl
             color="default"
             style={{
@@ -161,7 +157,7 @@ export function PhiDescriptionWidgetEditor({
             style={EDITOR_TEXTAREA_STYLE}
           />
         )}
-        {previewLabels.title || previewLabels.description ? (
+        {sections.heading ? (
           <div>
             <PhiTextControl
               presentation="textarea"
@@ -198,7 +194,7 @@ export function PhiDescriptionWidgetEditor({
             />
           </div>
         ) : null}
-        {previewLabels.asideTitle || previewLabels.asideItems?.length ? (
+        {sections.aside ? (
           <PhiFlexControl vertical gap={12} style={{ width: "100%" }}>
             <PhiTextControl
               presentation="textarea"
