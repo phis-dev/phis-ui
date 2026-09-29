@@ -61,11 +61,8 @@ export const getExactSiteArea = cache(async function getExactSiteArea({
       includeToken: true,
       includeSiteKey: true,
       includeLocale: true,
-      extra: {
-        Accept: "application/json",
-        "User-Agent": "phis-ui/1.0",
-        ...(cookieHeader?.trim() ? { Cookie: cookieHeader } : {}),
-      },
+      gateway: true,
+      cookie: cookieHeader,
     }),
     cache: "no-store",
   });
@@ -154,7 +151,8 @@ export async function getPublicSiteAreaWithPublishedPages({
       includeToken: true,
       includeSiteKey: true,
       includeLocale: true,
-      extra: { Accept: "application/json", "User-Agent": "phis-ui-sitemap/1.0" },
+      gateway: true,
+      userAgent: "phis-ui-sitemap/1.0",
     }),
     cache: "no-store",
   });
@@ -206,11 +204,8 @@ export const getCurrentSiteAreaDraft = cache(async function getCurrentSiteAreaDr
       includeToken: true,
       includeSiteKey: true,
       includeLocale: true,
-      extra: {
-        Accept: "application/json",
-        "User-Agent": "phis-ui/1.0",
-        ...(cookieHeader?.trim() ? { Cookie: cookieHeader } : {}),
-      },
+      gateway: true,
+      cookie: cookieHeader,
     }),
     cache: "no-store",
   });

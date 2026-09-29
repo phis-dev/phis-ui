@@ -49,10 +49,7 @@ export async function fetchSiteNavigationFolderTarget({
       siteKey,
       includeToken: true,
       includeSiteKey: true,
-      extra: {
-        Accept: "application/json",
-        "User-Agent": "phis-ui/1.0",
-      },
+      gateway: true,
     }),
     cache: "no-store",
   });
@@ -79,10 +76,7 @@ export async function fetchSiteNavigationScopes({
         siteKey,
         includeToken: true,
         includeSiteKey: true,
-        extra: {
-          Accept: "application/json",
-          "User-Agent": "phis-ui/1.0",
-        },
+        gateway: true,
       }),
       cache: "no-store",
     },
@@ -171,11 +165,8 @@ async function fetchNavigationOverlay(
       siteKey,
       includeToken: true,
       includeSiteKey: true,
-      extra: {
-        Accept: "application/json",
-        "User-Agent": "phis-ui/1.0",
-        ...(cookieHeader?.trim() ? { Cookie: cookieHeader } : {}),
-      },
+      gateway: true,
+      cookie: cookieHeader,
     }),
     cache: "no-store",
   });

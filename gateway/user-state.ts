@@ -54,11 +54,8 @@ export const getPhiUserState = cache(async function getPhiUserState({
       siteKey,
       includeToken: true,
       includeSiteKey: true,
-      extra: {
-        Accept: "application/json",
-        Cookie: cookieHeader,
-        "User-Agent": "phis-ui/1.0",
-      },
+      gateway: true,
+      cookie: cookieHeader,
     }),
     cache: "no-store",
   });

@@ -320,11 +320,8 @@ export async function getPhiCmsRuntimeInfo({
       includeToken: true,
       siteKey: resolvedRuntime.siteKey as string,
       includeSiteKey: true,
-      extra: {
-        Accept: "application/json",
-        "User-Agent": "phis-ui/1.0",
-        ...(cookieHeader?.trim() ? { Cookie: cookieHeader.trim() } : {}),
-      },
+      gateway: true,
+      cookie: cookieHeader,
     }),
     cache: "no-store",
   });

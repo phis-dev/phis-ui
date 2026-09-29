@@ -34,10 +34,7 @@ export const getResolvedSiteStats = cache(async function getResolvedSiteStats({
       siteKey,
       includeToken: true,
       includeSiteKey: true,
-      extra: {
-        Accept: "application/json",
-        "User-Agent": "phis-ui/1.0",
-      },
+      gateway: true,
     }),
     cache: "no-store",
   });

@@ -41,10 +41,7 @@ export const getResolvedSiteAdminSettings = cache(async function getResolvedSite
       siteKey,
       includeToken: true,
       includeSiteKey: true,
-      extra: {
-        Accept: "application/json",
-        "User-Agent": "phis-ui/1.0",
-      },
+      gateway: true,
     }),
     cache: "no-store",
   });

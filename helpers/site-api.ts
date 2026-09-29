@@ -5,6 +5,9 @@ const DEFAULT_API_BASE_URL = "";
 export const PHI_SERVER_API_CACHE_TAG = "phi-server-api-v1" as const;
 export const DEFAULT_GET_REVALIDATE_SECONDS = 86400 as const;
 
+/** The `User-Agent` this package's gateway requests identify themselves with. */
+export const PHIS_UI_USER_AGENT = "phis-ui/1.0" as const;
+
 export type ApiHeaderOptions = {
   token?: string;
   publishableApiKey?: string;
@@ -14,6 +17,14 @@ export type ApiHeaderOptions = {
   includePublishable?: boolean;
   includeSiteKey?: boolean;
   includeLocale?: boolean;
+  /** Adds the gateway block: `Accept: application/json` and the `User-Agent`. */
+  gateway?: boolean;
+  /** Overrides {@link PHIS_UI_USER_AGENT} for a gateway request. */
+  userAgent?: string;
+  /** Adds `Content-Type: application/json` for a request with a JSON body. */
+  jsonBody?: boolean;
+  /** The viewer's `Cookie` header, forwarded only when it is not blank. */
+  cookie?: string | null;
   extra?: HeadersInit;
 };
 
@@ -44,9 +55,26 @@ export function buildApiHeaders({
   includePublishable = false,
   includeSiteKey = false,
   includeLocale = false,
+  gateway = false,
+  userAgent = PHIS_UI_USER_AGENT,
+  jsonBody = false,
+  cookie,
   extra = {},
 }: ApiHeaderOptions = {}) {
   const headers = new Headers(extra);
+
+  if (gateway) {
+    headers.set("Accept", "application/json");
+    headers.set("User-Agent", userAgent);
+  }
+
+  if (jsonBody) {
+    headers.set("Content-Type", "application/json");
+  }
+
+  if (cookie?.trim()) {
+    headers.set("Cookie", cookie.trim());
+  }
 
   if (includeToken && token) {
     headers.set(PHIS_TOKEN_HEADER, token);

@@ -191,10 +191,7 @@ export const fetchFormRegistry = cache(async function fetchFormRegistry({
       siteKey,
       includeToken: true,
       includeSiteKey: true,
-      extra: {
-        Accept: "application/json",
-        "User-Agent": "phis-ui/1.0",
-      },
+      gateway: true,
     }),
     cache: "no-store",
   });

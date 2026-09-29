@@ -100,11 +100,8 @@ function buildTranslatorHeaders(
     includeToken: true,
     includeSiteKey: "siteKey" in options && Boolean(options.siteKey.trim()),
     siteKey: "siteKey" in options ? options.siteKey : "",
-    extra: {
-      Accept: "application/json",
-      "Content-Type": "application/json",
-      "User-Agent": "phis-ui/1.0",
-    },
+    gateway: true,
+    jsonBody: true,
   });
 }
 

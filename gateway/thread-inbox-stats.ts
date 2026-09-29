@@ -53,11 +53,8 @@ export const getPhiThreadInboxStats = cache(async function getPhiThreadInboxStat
         siteKey,
         includeToken: true,
         includeSiteKey: true,
-        extra: {
-          Accept: "application/json",
-          Cookie: cookieHeader,
-          "User-Agent": "phis-ui/1.0",
-        },
+        gateway: true,
+        cookie: cookieHeader,
       }),
       cache: "no-store",
     },
