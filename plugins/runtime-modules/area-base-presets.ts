@@ -105,6 +105,7 @@ export const PHI_PUBLIC_BASE_PAGE_PRESET_KEYS = {
   home: "public-home-page",
   terms: "public-terms-page",
   contact: "public-contact-page",
+  unsubscribe: "public-unsubscribe-page",
 } as const;
 
 export const PHI_AREA_BASE_RUNTIME_MODULE_ROUTES = [
@@ -283,5 +284,28 @@ export const PHI_PUBLIC_FORM_RUNTIME_MODULE_ROUTES = [
     loadTree: ({ page }) =>
       import("../../components/regions/presets/phi-default-pub-contact-page-tree")
         .then((module) => module.buildPhiDefaultPubContactPageTree({ page })),
+  },
+  /*
+   * Where a circular's footer leads. Core's like the contact page, because the obligation is Core's: a Site
+   * that sends updates owes a way out of them, and a way out that depended on a Module being installed
+   * would be one an operator could switch off.
+   *
+   * No navigation entry, on either surface. Nobody navigates to leaving; the only way here is the link in a
+   * message, and a menu item for it would advertise the exit to everybody who never subscribed.
+   */
+  {
+    ownerModuleId: PHI_PUBLIC_RUNTIME_MODULE_ID,
+    presetKey: PHI_PUBLIC_BASE_PAGE_PRESET_KEYS.unsubscribe,
+    presetVersion: 1,
+    area: "public",
+    title: "Unsubscribe",
+    path: "/unsubscribe",
+    navigation: [],
+    loadTree: ({ page }) =>
+      import("../../components/regions/presets/phi-default-pub-unsubscribe-page-tree")
+        .then((module) => module.buildPhiDefaultPubUnsubscribePageTree({
+          page,
+          presetKey: PHI_PUBLIC_BASE_PAGE_PRESET_KEYS.unsubscribe,
+        })),
   },
 ] satisfies readonly PhiCmsRoutePresetDescriptor[];

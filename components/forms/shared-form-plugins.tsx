@@ -6,6 +6,7 @@ import {
 import {
   PHI_CONFIRM_FORM_DESCRIPTOR,
   PHI_CONTACT_FORM_DESCRIPTOR,
+  PHI_UNSUBSCRIBE_FORM_DESCRIPTOR,
   PHI_LOGIN_FORM_DESCRIPTOR,
   PHI_PROFILE_EMAIL_FORM_DESCRIPTOR,
   PHI_PROFILE_PASSWORD_FORM_DESCRIPTOR,
@@ -103,6 +104,21 @@ export const PHI_SHARED_FORM_DEFINITIONS: readonly PhiRuntimeModuleFormDefinitio
     submitHandlerKey: "forms.contact",
     loadLabels: createLabelLoader(() => import("../widgets/label-sets/contact")
       .then((module) => module.getPhiContactFormLabels)),
+  }),
+  definePhiRuntimeModuleForm({
+    ownerModuleId: PHI_PUBLIC_RUNTIME_MODULE_ID,
+    areas: ["public"],
+    formId: PHI_SHARED_FORM_IDS.unsubscribe,
+    version: 1,
+    flags: 0,
+    title: "Unsubscribe",
+    description: "Leaving a Site's circulars, from the link in one.",
+    category: "preset",
+    tags: ["preset", "shared"],
+    descriptor: PHI_UNSUBSCRIBE_FORM_DESCRIPTOR,
+    submitHandlerKey: "forms.unsubscribe",
+    loadLabels: createLabelLoader(() => import("../widgets/label-sets/unsubscribe")
+      .then((module) => module.getPhiUnsubscribeFormLabels)),
   }),
   definePhiRuntimeModuleForm({
     ownerModuleId: PHI_AUTH_RUNTIME_MODULE_ID,

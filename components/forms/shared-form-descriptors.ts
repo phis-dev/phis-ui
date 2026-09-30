@@ -29,6 +29,7 @@ export const PHI_FORM_LABEL_SET_KEYS = {
   login: "@phis/ui/modules/auth/labels/login",
   registration: "@phis/ui/modules/auth/labels/registration",
   contact: "@phis/ui/modules/public/labels/contact",
+  unsubscribe: "@phis/ui/modules/public/labels/unsubscribe",
   confirm: "@phis/ui/modules/auth/labels/confirm",
   resetPassword: "@phis/ui/modules/auth/labels/reset-password",
   profilePassword: "@phis/ui/modules/auth/labels/profile-password",
@@ -377,6 +378,43 @@ export const PHI_RESET_PASSWORD_CONFIRM_FORM_DESCRIPTOR = {
  * The ten-character minimum is stated here as well as on the server. Not instead of: the server's is
  * the rule, this one only spares somebody a round trip to be told what could have been said at once.
  */
+/**
+ * Leaving a Site's circulars: one hidden field and one button.
+ *
+ * The token is not a question, so it is not shown as one -- it arrived in the link and the placement puts
+ * it here, the same way the password reset's second stage spends its own. Nothing else is asked, because
+ * nothing else is needed: the signature in the token says who this is, and the only answer being given is
+ * "stop".
+ *
+ * There is no second stage and no confirmation step. A person who pressed this by accident is in the same
+ * place as one who never subscribed, and the profile page can turn it back on -- whereas a confirmation
+ * dialog in front of it is one more thing between somebody and leaving, which is the opposite of what a
+ * way out is for.
+ */
+export const PHI_UNSUBSCRIBE_FORM_DESCRIPTOR = {
+  schemaVersion: PHI_FORM_DESCRIPTOR_SCHEMA_VERSION,
+  key: PHI_SHARED_FORM_IDS.unsubscribe,
+  labelSetKey: PHI_FORM_LABEL_SET_KEYS.unsubscribe,
+  layout: PHI_FORM_STACKED_LAYOUT,
+  fields: [
+    {
+      key: "token",
+      fieldProviderKey: PHI_FORM_FIELD_PROVIDER_KEYS.hidden,
+      validation: [
+        required("fields.token.required", "This unsubscribe link is incomplete."),
+      ],
+    },
+  ],
+  success: {
+    title: label("feedback.successTitle", "Unsubscribed"),
+    text: label(
+      "feedback.successText",
+      "You will not receive further updates from this site. A message already on its way may still arrive.",
+    ),
+    complete: true,
+  },
+} as const satisfies PhiFormDescriptor;
+
 export const PHI_PROFILE_PASSWORD_FORM_DESCRIPTOR = {
   schemaVersion: PHI_FORM_DESCRIPTOR_SCHEMA_VERSION,
   key: PHI_SHARED_FORM_IDS.profilePassword,

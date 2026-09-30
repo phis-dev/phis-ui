@@ -7,6 +7,15 @@ export const PHI_SHARED_FORM_IDS = {
   registration: createPhiFormId(PHI_SHARED_PACKAGE_NAME, "registration"),
   contact: createPhiFormId(PHI_SHARED_PACKAGE_NAME, "contact"),
   confirm: createPhiFormId(PHI_SHARED_PACKAGE_NAME, "confirm"),
+  /**
+   * Leaving a Site's circulars, which is one press and asks nothing.
+   *
+   * Its own Form rather than a switch on the profile page, because the person pressing it is not signed in:
+   * they arrived from a link in a mail, and the token in that link is the whole of what identifies them. A
+   * Form is also what makes the press a `POST` -- the address must never act on being fetched, since mail
+   * clients fetch the links in a message before anybody has seen them.
+   */
+  unsubscribe: createPhiFormId(PHI_SHARED_PACKAGE_NAME, "unsubscribe"),
   resetPassword: createPhiFormId(PHI_SHARED_PACKAGE_NAME, "reset-password"),
   /**
    * The second stage of a password reset, which is its own form because it asks its own questions.

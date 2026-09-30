@@ -86,6 +86,7 @@ export {
   PHI_REGISTRATION_FORM_DESCRIPTOR,
   PHI_RESET_PASSWORD_CONFIRM_FORM_DESCRIPTOR,
   PHI_RESET_PASSWORD_FORM_DESCRIPTOR,
+  PHI_UNSUBSCRIBE_FORM_DESCRIPTOR,
 } from "./components/forms/shared-form-descriptors";
 export { PHI_SHARED_FORM_IDS } from "./components/forms/shared-form-ids";
 /*
