@@ -7,9 +7,7 @@ import {
 import { buildPhiRuntimeModuleControllerDescriptor } from "../contracts";
 import { definePhiAreaBaseRuntimeModuleDefinition } from "../area-base-definition";
 import { PHI_PUBLIC_RUNTIME_MODULE_ID } from "./ids";
-import {
-  PHI_PUBLIC_FORM_HANDLER_PROVIDER_DESCRIPTORS,
-} from "../../../components/forms/form-provider-contract";
+import { PHI_PUBLIC_FORM_HANDLER_PROVIDER_DESCRIPTORS } from "./form-providers";
 import {
   PHI_CORE_SERVER_BINDING,
 } from "../../../types/server-capabilities";

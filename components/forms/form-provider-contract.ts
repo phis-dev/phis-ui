@@ -1,10 +1,7 @@
-import { PHI_CORE_RUNTIME_MODULE_ID } from "../../plugins/runtime-modules/core/ids";
-import { PHI_PUBLIC_RUNTIME_MODULE_ID } from "../../plugins/runtime-modules/public/ids";
-import { PHI_AUTH_RUNTIME_MODULE_ID } from "../../plugins/runtime-modules/auth/ids";
 import type {
   PhiFormFieldTypeProviderDescriptor,
   PhiFormProviderKey,
-  PhiRuntimeModuleFormProviderDescriptors,
+  PhiFormValidationProviderDescriptor,
 } from "../../types/form-descriptor";
 import { createPhiModuleScopedKey } from "../../constants/runtime-module-ownership";
 import { PhiMediaKind } from "../../constants/media";
@@ -48,21 +45,6 @@ export const PHI_FORM_FIELD_PROVIDER_KEYS = {
 export const PHI_AUTH_FORM_FIELD_PROVIDER_KEYS = {
   termsConsent: createPhiSharedFormProviderKey("field", "auth-terms-consent"),
 } as const;
-
-export const PHI_AUTH_FORM_FIELD_TYPE_PROVIDER_DESCRIPTORS = [
-  {
-    key: PHI_AUTH_FORM_FIELD_PROVIDER_KEYS.termsConsent,
-    ownerModuleId: PHI_AUTH_RUNTIME_MODULE_ID,
-    title: "Terms consent",
-    valueType: "boolean",
-    presentation: "control",
-    settingsFields: [
-      { key: "text", type: "string", label: "Consent sentence, with %1 where the link goes" },
-      { key: "linkLabel", type: "string", label: "Link label" },
-      { key: "href", type: "url", label: "Link URL", required: true },
-    ],
-  },
-] as const satisfies readonly PhiFormFieldTypeProviderDescriptor[];
 
 export const PHI_FORM_VALIDATION_PROVIDER_KEYS = {
   required: createPhiSharedFormProviderKey("validation", "required"),
@@ -122,20 +104,30 @@ export const PHI_FORM_UPLOAD_LABEL_KEYS = {
   errorStorageUnreachable: "uploadErrorStorageUnreachable",
 } as const;
 
+/*
+ * The field types and validation rules every Form can use, described without an owner.
+ *
+ * Owning a provider is registering it, and that is a Module's act: the Core Module registers these in
+ * its definition and names itself there. The Foundation describes them -- the registry beside this file
+ * implements them, and a descriptor's settings are what the Inspector edits -- but it knows no Module,
+ * so the owner is not part of what is written here.
+ */
+export type PhiSharedFormFieldTypeDescriptor = Omit<PhiFormFieldTypeProviderDescriptor, "ownerModuleId">;
+export type PhiSharedFormValidationDescriptor = Omit<PhiFormValidationProviderDescriptor, "ownerModuleId">;
+
 export const PHI_SHARED_FORM_FIELD_TYPE_PROVIDER_DESCRIPTORS = [
-  { key: PHI_FORM_FIELD_PROVIDER_KEYS.text, ownerModuleId: PHI_CORE_RUNTIME_MODULE_ID, title: "Text", valueType: "string", presentation: "control", settingsFields: [{ key: "minLength", type: "number", label: "Minimum characters", min: 0 }, { key: "maxLength", type: "number", label: "Maximum characters", min: 0 }] },
-  { key: PHI_FORM_FIELD_PROVIDER_KEYS.email, ownerModuleId: PHI_CORE_RUNTIME_MODULE_ID, title: "Email", valueType: "string", presentation: "control", settingsFields: [{ key: "minLength", type: "number", label: "Minimum characters", min: 0 }, { key: "maxLength", type: "number", label: "Maximum characters", min: 0 }] },
-  { key: PHI_FORM_FIELD_PROVIDER_KEYS.password, ownerModuleId: PHI_CORE_RUNTIME_MODULE_ID, title: "Password", valueType: "string", presentation: "control", settingsFields: [{ key: "minLength", type: "number", label: "Minimum characters", min: 0 }, { key: "maxLength", type: "number", label: "Maximum characters", min: 0 }] },
-  { key: PHI_FORM_FIELD_PROVIDER_KEYS.textarea, ownerModuleId: PHI_CORE_RUNTIME_MODULE_ID, title: "Text Area", valueType: "string", presentation: "control", settingsFields: [{ key: "rows", type: "number", label: "Rows", min: 1 }, { key: "minLength", type: "number", label: "Minimum characters", min: 0 }, { key: "maxLength", type: "number", label: "Maximum characters", min: 0 }] },
-  { key: PHI_FORM_FIELD_PROVIDER_KEYS.hidden, ownerModuleId: PHI_CORE_RUNTIME_MODULE_ID, title: "Hidden", valueType: "string", presentation: "hidden" },
-  { key: PHI_FORM_FIELD_PROVIDER_KEYS.checkbox, ownerModuleId: PHI_CORE_RUNTIME_MODULE_ID, title: "Checkbox", valueType: "boolean", presentation: "control" },
-  { key: PHI_FORM_FIELD_PROVIDER_KEYS.select, ownerModuleId: PHI_CORE_RUNTIME_MODULE_ID, title: "Select", valueType: "string", presentation: "control" },
-  { key: PHI_FORM_FIELD_PROVIDER_KEYS.honeypot, ownerModuleId: PHI_CORE_RUNTIME_MODULE_ID, title: "Honeypot", valueType: "string", presentation: "honeypot" },
-  { key: PHI_FORM_FIELD_PROVIDER_KEYS.url, ownerModuleId: PHI_CORE_RUNTIME_MODULE_ID, title: "URL", valueType: "string", presentation: "control" },
-  { key: PHI_FORM_FIELD_PROVIDER_KEYS.tel, ownerModuleId: PHI_CORE_RUNTIME_MODULE_ID, title: "Telephone", valueType: "string", presentation: "control" },
+  { key: PHI_FORM_FIELD_PROVIDER_KEYS.text, title: "Text", valueType: "string", presentation: "control", settingsFields: [{ key: "minLength", type: "number", label: "Minimum characters", min: 0 }, { key: "maxLength", type: "number", label: "Maximum characters", min: 0 }] },
+  { key: PHI_FORM_FIELD_PROVIDER_KEYS.email, title: "Email", valueType: "string", presentation: "control", settingsFields: [{ key: "minLength", type: "number", label: "Minimum characters", min: 0 }, { key: "maxLength", type: "number", label: "Maximum characters", min: 0 }] },
+  { key: PHI_FORM_FIELD_PROVIDER_KEYS.password, title: "Password", valueType: "string", presentation: "control", settingsFields: [{ key: "minLength", type: "number", label: "Minimum characters", min: 0 }, { key: "maxLength", type: "number", label: "Maximum characters", min: 0 }] },
+  { key: PHI_FORM_FIELD_PROVIDER_KEYS.textarea, title: "Text Area", valueType: "string", presentation: "control", settingsFields: [{ key: "rows", type: "number", label: "Rows", min: 1 }, { key: "minLength", type: "number", label: "Minimum characters", min: 0 }, { key: "maxLength", type: "number", label: "Maximum characters", min: 0 }] },
+  { key: PHI_FORM_FIELD_PROVIDER_KEYS.hidden, title: "Hidden", valueType: "string", presentation: "hidden" },
+  { key: PHI_FORM_FIELD_PROVIDER_KEYS.checkbox, title: "Checkbox", valueType: "boolean", presentation: "control" },
+  { key: PHI_FORM_FIELD_PROVIDER_KEYS.select, title: "Select", valueType: "string", presentation: "control" },
+  { key: PHI_FORM_FIELD_PROVIDER_KEYS.honeypot, title: "Honeypot", valueType: "string", presentation: "honeypot" },
+  { key: PHI_FORM_FIELD_PROVIDER_KEYS.url, title: "URL", valueType: "string", presentation: "control" },
+  { key: PHI_FORM_FIELD_PROVIDER_KEYS.tel, title: "Telephone", valueType: "string", presentation: "control" },
   {
     key: PHI_FORM_FIELD_PROVIDER_KEYS.number,
-    ownerModuleId: PHI_CORE_RUNTIME_MODULE_ID,
     title: "Number",
     valueType: "number",
     presentation: "control",
@@ -148,7 +140,6 @@ export const PHI_SHARED_FORM_FIELD_TYPE_PROVIDER_DESCRIPTORS = [
   },
   {
     key: PHI_FORM_FIELD_PROVIDER_KEYS.slider,
-    ownerModuleId: PHI_CORE_RUNTIME_MODULE_ID,
     title: "Slider",
     valueType: "number",
     presentation: "control",
@@ -174,13 +165,12 @@ export const PHI_SHARED_FORM_FIELD_TYPE_PROVIDER_DESCRIPTORS = [
       { key: "precision", type: "number", label: "Input precision", min: 0 },
     ],
   },
-  { key: PHI_FORM_FIELD_PROVIDER_KEYS.multiSelect, ownerModuleId: PHI_CORE_RUNTIME_MODULE_ID, title: "Multi Select", valueType: "string[]", presentation: "control" },
-  { key: PHI_FORM_FIELD_PROVIDER_KEYS.checkboxGroup, ownerModuleId: PHI_CORE_RUNTIME_MODULE_ID, title: "Checkbox Group", valueType: "string[]", presentation: "control" },
-  { key: PHI_FORM_FIELD_PROVIDER_KEYS.switch, ownerModuleId: PHI_CORE_RUNTIME_MODULE_ID, title: "Switch", valueType: "boolean", presentation: "control" },
-  { key: PHI_FORM_FIELD_PROVIDER_KEYS.segmented, ownerModuleId: PHI_CORE_RUNTIME_MODULE_ID, title: "Segmented", valueType: "string", presentation: "control" },
+  { key: PHI_FORM_FIELD_PROVIDER_KEYS.multiSelect, title: "Multi Select", valueType: "string[]", presentation: "control" },
+  { key: PHI_FORM_FIELD_PROVIDER_KEYS.checkboxGroup, title: "Checkbox Group", valueType: "string[]", presentation: "control" },
+  { key: PHI_FORM_FIELD_PROVIDER_KEYS.switch, title: "Switch", valueType: "boolean", presentation: "control" },
+  { key: PHI_FORM_FIELD_PROVIDER_KEYS.segmented, title: "Segmented", valueType: "string", presentation: "control" },
   {
     key: PHI_FORM_FIELD_PROVIDER_KEYS.cascader,
-    ownerModuleId: PHI_CORE_RUNTIME_MODULE_ID,
     title: "Cascader",
     valueType: "string",
     presentation: "control",
@@ -199,11 +189,10 @@ export const PHI_SHARED_FORM_FIELD_TYPE_PROVIDER_DESCRIPTORS = [
       },
     ],
   },
-  { key: PHI_FORM_FIELD_PROVIDER_KEYS.table, ownerModuleId: PHI_CORE_RUNTIME_MODULE_ID, title: "Table value", valueType: "json", presentation: "control" },
-  { key: PHI_FORM_FIELD_PROVIDER_KEYS.tree, ownerModuleId: PHI_CORE_RUNTIME_MODULE_ID, title: "Tree value", valueType: "json", presentation: "control" },
+  { key: PHI_FORM_FIELD_PROVIDER_KEYS.table, title: "Table value", valueType: "json", presentation: "control" },
+  { key: PHI_FORM_FIELD_PROVIDER_KEYS.tree, title: "Tree value", valueType: "json", presentation: "control" },
   {
     key: PHI_FORM_FIELD_PROVIDER_KEYS.datetime,
-    ownerModuleId: PHI_CORE_RUNTIME_MODULE_ID,
     title: "Date and time",
     valueType: "string",
     presentation: "control",
@@ -216,7 +205,6 @@ export const PHI_SHARED_FORM_FIELD_TYPE_PROVIDER_DESCRIPTORS = [
    */
   {
     key: PHI_FORM_FIELD_PROVIDER_KEYS.storageSize,
-    ownerModuleId: PHI_CORE_RUNTIME_MODULE_ID,
     title: "Storage size",
     valueType: "number",
     presentation: "control",
@@ -237,7 +225,6 @@ export const PHI_SHARED_FORM_FIELD_TYPE_PROVIDER_DESCRIPTORS = [
    */
   {
     key: PHI_FORM_FIELD_PROVIDER_KEYS.upload,
-    ownerModuleId: PHI_CORE_RUNTIME_MODULE_ID,
     title: "Upload",
     valueType: "json",
     presentation: "control",
@@ -267,46 +254,40 @@ export const PHI_SHARED_FORM_FIELD_TYPE_PROVIDER_DESCRIPTORS = [
       { key: "space", type: "string", label: "Space", description: "`user` for the viewer's own Space." },
     ],
   },
-] as const;
+] as const satisfies readonly PhiSharedFormFieldTypeDescriptor[];
 
 export const PHI_SHARED_FORM_VALIDATION_PROVIDER_DESCRIPTORS = [
-  { key: PHI_FORM_VALIDATION_PROVIDER_KEYS.required, ownerModuleId: PHI_CORE_RUNTIME_MODULE_ID, title: "Required" },
-  { key: PHI_FORM_VALIDATION_PROVIDER_KEYS.email, ownerModuleId: PHI_CORE_RUNTIME_MODULE_ID, title: "Email" },
+  { key: PHI_FORM_VALIDATION_PROVIDER_KEYS.required, title: "Required" },
+  { key: PHI_FORM_VALIDATION_PROVIDER_KEYS.email, title: "Email" },
   {
     key: PHI_FORM_VALIDATION_PROVIDER_KEYS.minLength,
-    ownerModuleId: PHI_CORE_RUNTIME_MODULE_ID,
     title: "Minimum Length",
     settingsFields: [{ key: "min", type: "number", label: "Minimum", required: true }],
   },
   {
     key: PHI_FORM_VALIDATION_PROVIDER_KEYS.minLetters,
-    ownerModuleId: PHI_CORE_RUNTIME_MODULE_ID,
     title: "Minimum Letters",
     settingsFields: [{ key: "min", type: "number", label: "Minimum", required: true, min: 1 }],
   },
   {
     key: PHI_FORM_VALIDATION_PROVIDER_KEYS.maxLength,
-    ownerModuleId: PHI_CORE_RUNTIME_MODULE_ID,
     title: "Maximum Length",
     settingsFields: [{ key: "max", type: "number", label: "Maximum", required: true, min: 0 }],
   },
   {
     key: PHI_FORM_VALIDATION_PROVIDER_KEYS.exactLength,
-    ownerModuleId: PHI_CORE_RUNTIME_MODULE_ID,
     title: "Exact Length",
     settingsFields: [{ key: "length", type: "number", label: "Length", required: true, min: 0 }],
   },
   {
     key: PHI_FORM_VALIDATION_PROVIDER_KEYS.matchesField,
-    ownerModuleId: PHI_CORE_RUNTIME_MODULE_ID,
     title: "Matches Field",
     settingsFields: [{ key: "field", type: "string", label: "Field", required: true }],
   },
-  { key: PHI_FORM_VALIDATION_PROVIDER_KEYS.url, ownerModuleId: PHI_CORE_RUNTIME_MODULE_ID, title: "URL" },
-  { key: PHI_FORM_VALIDATION_PROVIDER_KEYS.tel, ownerModuleId: PHI_CORE_RUNTIME_MODULE_ID, title: "Telephone" },
+  { key: PHI_FORM_VALIDATION_PROVIDER_KEYS.url, title: "URL" },
+  { key: PHI_FORM_VALIDATION_PROVIDER_KEYS.tel, title: "Telephone" },
   {
     key: PHI_FORM_VALIDATION_PROVIDER_KEYS.pattern,
-    ownerModuleId: PHI_CORE_RUNTIME_MODULE_ID,
     title: "Pattern",
     settingsFields: [
       { key: "source", type: "string", label: "Pattern", required: true },
@@ -315,7 +296,6 @@ export const PHI_SHARED_FORM_VALIDATION_PROVIDER_DESCRIPTORS = [
   },
   {
     key: PHI_FORM_VALIDATION_PROVIDER_KEYS.number,
-    ownerModuleId: PHI_CORE_RUNTIME_MODULE_ID,
     title: "Number",
     settingsFields: [
       { key: "min", type: "number", label: "Minimum" },
@@ -325,46 +305,4 @@ export const PHI_SHARED_FORM_VALIDATION_PROVIDER_DESCRIPTORS = [
       { key: "integer", type: "boolean", label: "Integer only" },
     ],
   },
-] as const;
-
-export const PHI_AUTH_FORM_HANDLER_PROVIDER_DESCRIPTORS = [
-  { key: PHI_FORM_HANDLER_PROVIDER_KEYS.authAdminInstallationCreate, ownerModuleId: PHI_AUTH_RUNTIME_MODULE_ID, title: "Auth Admin installation create", phase: "submit", handlerKey: "auth.admin.installation-create", category: "auth", transport: "relay", method: "POST", endpointKey: null, upstreamPath: "/api/v1/auth/admin/installations", csrfPath: "/api/v1/auth/csrf", requiresCsrf: true, credentialPolicy: "site-session" },
-  { key: PHI_FORM_HANDLER_PROVIDER_KEYS.authAdminInstallationUpdate, ownerModuleId: PHI_AUTH_RUNTIME_MODULE_ID, title: "Auth Admin installation update", phase: "submit", handlerKey: "auth.admin.installation-update", category: "auth", transport: "relay", method: "PATCH", endpointKey: null, upstreamPath: "/api/v1/auth/admin/installations", csrfPath: "/api/v1/auth/csrf", requiresCsrf: true, credentialPolicy: "site-session" },
-  { key: PHI_FORM_HANDLER_PROVIDER_KEYS.authAdminPolicy, ownerModuleId: PHI_AUTH_RUNTIME_MODULE_ID, title: "Auth Admin policy", phase: "submit", handlerKey: "auth.admin.policy", category: "auth", transport: "relay", method: "PATCH", endpointKey: null, upstreamPath: "/api/v1/auth/admin/policy", csrfPath: "/api/v1/auth/csrf", requiresCsrf: true, credentialPolicy: "site-session" },
-  { key: PHI_FORM_HANDLER_PROVIDER_KEYS.authAdminPasswordMethod, ownerModuleId: PHI_AUTH_RUNTIME_MODULE_ID, title: "Auth Admin password method", phase: "submit", handlerKey: "auth.admin.password-method", category: "auth", transport: "relay", method: "PATCH", endpointKey: null, upstreamPath: "/api/v1/auth/admin/password-method", csrfPath: "/api/v1/auth/csrf", requiresCsrf: true, credentialPolicy: "site-session" },
-  { key: PHI_FORM_HANDLER_PROVIDER_KEYS.authAdminTotpPolicy, ownerModuleId: PHI_AUTH_RUNTIME_MODULE_ID, title: "Auth Admin two-factor policy", phase: "submit", handlerKey: "auth.admin.totp-policy", category: "auth", transport: "relay", method: "PATCH", endpointKey: null, upstreamPath: "/api/v1/auth/admin/totp-policy", csrfPath: "/api/v1/auth/csrf", requiresCsrf: true, credentialPolicy: "site-session" },
-  { key: PHI_FORM_HANDLER_PROVIDER_KEYS.authLogin, ownerModuleId: PHI_AUTH_RUNTIME_MODULE_ID, title: "Login", phase: "submit", handlerKey: "auth.login", category: "auth", transport: "relay", method: "POST", endpointKey: null, upstreamPath: "/api/v1/auth/password/login", csrfPath: "/api/v1/auth/csrf", requiresCsrf: true, credentialPolicy: "none" },
-  { key: PHI_FORM_HANDLER_PROVIDER_KEYS.authRegistration, ownerModuleId: PHI_AUTH_RUNTIME_MODULE_ID, title: "Registration", phase: "submit", handlerKey: "auth.registration", category: "auth", transport: "relay", method: "POST", endpointKey: null, upstreamPath: "/api/v1/forms/register", csrfPath: null, requiresCsrf: false, credentialPolicy: "none" },
-  { key: PHI_FORM_HANDLER_PROVIDER_KEYS.authRegistrationConfirm, ownerModuleId: PHI_AUTH_RUNTIME_MODULE_ID, title: "Registration Confirm", phase: "confirm", handlerKey: "auth.registration.confirm", category: "auth", transport: "relay", method: "POST", endpointKey: null, upstreamPath: "/api/v1/forms/register/confirm", csrfPath: null, requiresCsrf: false, credentialPolicy: "none" },
-  { key: PHI_FORM_HANDLER_PROVIDER_KEYS.authConfirm, ownerModuleId: PHI_AUTH_RUNTIME_MODULE_ID, title: "Confirm", phase: "submit", handlerKey: "auth.confirm", category: "auth", transport: "relay", method: "POST", endpointKey: null, upstreamPath: "/api/v1/forms/register/confirm", csrfPath: null, requiresCsrf: false, credentialPolicy: "none" },
-  { key: PHI_FORM_HANDLER_PROVIDER_KEYS.authConfirmPreview, ownerModuleId: PHI_AUTH_RUNTIME_MODULE_ID, title: "Confirm Preview", phase: "preview", handlerKey: "auth.confirm.preview", category: "auth", transport: "relay", method: "GET", endpointKey: null, upstreamPath: "/api/v1/forms/register/confirm-preview", csrfPath: null, requiresCsrf: false, credentialPolicy: "none" },
-  // Both reset steps verify the CSRF token now, like every other write under `/api/v1/auth`.
-  { key: PHI_FORM_HANDLER_PROVIDER_KEYS.authResetPassword, ownerModuleId: PHI_AUTH_RUNTIME_MODULE_ID, title: "Reset Password", phase: "submit", handlerKey: "auth.reset-password", category: "auth", transport: "relay", method: "POST", endpointKey: null, upstreamPath: "/api/v1/auth/password/reset/request", csrfPath: "/api/v1/auth/csrf", requiresCsrf: true, credentialPolicy: "none" },
-  { key: PHI_FORM_HANDLER_PROVIDER_KEYS.authResetPasswordConfirm, ownerModuleId: PHI_AUTH_RUNTIME_MODULE_ID, title: "Reset Password Confirm", phase: "confirm", handlerKey: "auth.reset-password.confirm", category: "auth", transport: "relay", method: "POST", endpointKey: null, upstreamPath: "/api/v1/auth/password/reset/confirm", csrfPath: "/api/v1/auth/csrf", requiresCsrf: true, credentialPolicy: "none" },
-  { key: PHI_FORM_HANDLER_PROVIDER_KEYS.authProviderLinkConfirm, ownerModuleId: PHI_AUTH_RUNTIME_MODULE_ID, title: "Provider Link Confirm", phase: "confirm", handlerKey: "auth.provider-link.confirm", category: "auth", transport: "relay", method: "POST", endpointKey: null, upstreamPath: "/api/v1/auth/providers/link/confirm", csrfPath: "/api/v1/auth/csrf", requiresCsrf: true, credentialPolicy: "auth-link" },
-  /*
-   * The two account credentials, reached with the session and nothing else.
-   *
-   * `site-session` is what makes them the asking person's own: the relay forwards the Site session
-   * cookie, so the server answers about whoever is asking and no account id is ever sent. The email
-   * one posts to `/request` because that is all a submit does -- the address moves when the link in
-   * the mail is followed, through the registration confirm handler that already exists.
-   */
-  { key: PHI_FORM_HANDLER_PROVIDER_KEYS.authProfilePassword, ownerModuleId: PHI_AUTH_RUNTIME_MODULE_ID, title: "Account password", phase: "submit", handlerKey: "auth.profile.password", category: "auth", transport: "relay", method: "PATCH", endpointKey: null, upstreamPath: "/api/v1/auth/profile/password", csrfPath: "/api/v1/auth/csrf", requiresCsrf: true, credentialPolicy: "site-session" },
-  { key: PHI_FORM_HANDLER_PROVIDER_KEYS.authProfileEmail, ownerModuleId: PHI_AUTH_RUNTIME_MODULE_ID, title: "Account email", phase: "submit", handlerKey: "auth.profile.email", category: "auth", transport: "relay", method: "POST", endpointKey: null, upstreamPath: "/api/v1/auth/profile/email/request", csrfPath: "/api/v1/auth/csrf", requiresCsrf: true, credentialPolicy: "site-session" },
-] as const;
-
-export const PHI_PUBLIC_FORM_HANDLER_PROVIDER_DESCRIPTORS = [
-  { key: PHI_FORM_HANDLER_PROVIDER_KEYS.contact, ownerModuleId: PHI_PUBLIC_RUNTIME_MODULE_ID, title: "Contact", phase: "submit", handlerKey: "forms.contact", category: "forms", transport: "relay", method: "POST", endpointKey: null, upstreamPath: "/api/v1/forms/contact", csrfPath: null, requiresCsrf: false, credentialPolicy: "none" },
-  /*
-   * No credential and no CSRF, like the contact form beside it -- and for a stronger reason. Whoever holds
-   * the link is who it was issued to, the signature in it says so, and the person pressing it is by
-   * definition not signed in. A CSRF token would have to come from a session that does not exist.
-   */
-  { key: PHI_FORM_HANDLER_PROVIDER_KEYS.unsubscribe, ownerModuleId: PHI_PUBLIC_RUNTIME_MODULE_ID, title: "Unsubscribe", phase: "submit", handlerKey: "forms.unsubscribe", category: "forms", transport: "relay", method: "POST", endpointKey: null, upstreamPath: "/api/v1/notifications/unsubscribe", csrfPath: null, requiresCsrf: false, credentialPolicy: "none" },
-] as const;
-
-export const PHI_CORE_FORM_PROVIDER_DESCRIPTORS = {
-  fieldTypes: PHI_SHARED_FORM_FIELD_TYPE_PROVIDER_DESCRIPTORS,
-  validationRules: PHI_SHARED_FORM_VALIDATION_PROVIDER_DESCRIPTORS,
-} as const satisfies PhiRuntimeModuleFormProviderDescriptors;
+] as const satisfies readonly PhiSharedFormValidationDescriptor[];

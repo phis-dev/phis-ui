@@ -1,7 +1,7 @@
 import { PHI_CMS_DEFAULT_SLOT_INDEX } from "../../../constants/cms-layout-types";
 import { PhiCmsRegionType } from "../../../constants/phi-cms";
 import { createPhiCmsPresetNodes } from "../../../helpers/cms-preset-nodes";
-import { PHI_CORE_RUNTIME_MODULE_ID } from "../../../plugins/runtime-modules/core/ids";
+import { PHI_SHARED_PACKAGE_NAME } from "../../../constants/package";
 import type { PhiCmsLayoutNode, PhiCmsPageNode, PhiCmsRegionNode } from "../../../types/cms";
 import { createPhiPresetCmsInstanceId } from "../../../types/cms-instance-id";
 
@@ -27,9 +27,13 @@ import { createPhiPresetCmsInstanceId } from "../../../types/cms-instance-id";
 
 export const PHI_BASE_PAGE_LAYOUT_VERSION = 3;
 
+/*
+ * Owned by the Foundation, not by a Module: the scaffold is shared by the page presets of every Module
+ * that uses it, so the identity names the package the Foundation ships in.
+ */
 export const PHI_BASE_PAGE_LAYOUT_NODE_ID = createPhiPresetCmsInstanceId({
   domain: "page",
-  ownerModuleId: PHI_CORE_RUNTIME_MODULE_ID,
+  ownerModuleId: PHI_SHARED_PACKAGE_NAME,
   presetKey: "page-base-layout",
   nodeKey: "layoutContent",
 });

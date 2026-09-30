@@ -2,8 +2,8 @@
 
 import type { ReactNode } from "react";
 
-import { PHI_AUTH_FORM_PROVIDER_REGISTRY } from "./auth-form-provider-registry";
-import { PhiFormProviderRegistryProvider } from "./form-provider-registry";
+import { PHI_AUTH_FORM_PROVIDER_REGISTRY } from "./form-provider-registry";
+import { PhiFormProviderRegistryProvider } from "../../../components/forms/form-provider-registry";
 
 export function PhiAuthFormUiProvider({ children }: { children: ReactNode }) {
   return (

@@ -48,7 +48,7 @@ export type PhiFormFieldProviderProps = {
   formConfig?: Readonly<Record<string, unknown>>;
 };
 
-export type PhiFormFieldTypeProvider = PhiFormFieldTypeProviderDescriptor & {
+export type PhiFormFieldTypeProvider = Omit<PhiFormFieldTypeProviderDescriptor, "ownerModuleId"> & {
   Control: ComponentType<PhiFormFieldProviderProps>;
   valuePropName?: string;
 };
@@ -59,7 +59,7 @@ export type PhiFormValidationContext = {
   message?: string;
 };
 
-export type PhiFormValidationProvider = PhiFormValidationProviderDescriptor & {
+export type PhiFormValidationProvider = Omit<PhiFormValidationProviderDescriptor, "ownerModuleId"> & {
   createRule: (context: PhiFormValidationContext) => Rule;
 };
 

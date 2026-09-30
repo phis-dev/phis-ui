@@ -5,7 +5,7 @@ import { buildPhiRuntimeModuleControllerDescriptor } from "../contracts";
 import { PHI_CORE_RUNTIME_MODULE_ID } from "./ids";
 import { PHI_CORE_RUNTIME_DATA_PROVIDER_DESCRIPTORS } from "./data-providers";
 import { PHI_CMS_AREA_KEYS } from "../../../constants/cms-areas";
-import { PHI_CORE_FORM_PROVIDER_DESCRIPTORS } from "../../../components/forms/form-provider-contract";
+import { PHI_CORE_FORM_PROVIDER_DESCRIPTORS } from "./form-providers";
 import { PHI_CORE_SERVER_BINDING } from "../../../types/server-capabilities";
 import { PHI_CORE_CALENDAR_ADAPTER_DESCRIPTORS } from "../runtime-calendar-adapters";
 

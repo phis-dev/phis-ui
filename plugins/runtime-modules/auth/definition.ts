@@ -11,7 +11,7 @@ import { PHI_AUTH_RUNTIME_MODULE_ID } from "./ids";
 import {
   PHI_AUTH_FORM_FIELD_TYPE_PROVIDER_DESCRIPTORS,
   PHI_AUTH_FORM_HANDLER_PROVIDER_DESCRIPTORS,
-} from "../../../components/forms/form-provider-contract";
+} from "./form-providers";
 import {
   PHI_CORE_AUTH_SERVER_BINDING,
 } from "../../../types/server-capabilities";

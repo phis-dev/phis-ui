@@ -1,13 +1,11 @@
 "use client";
 
-import { PhiCheckboxControl } from "../controls/phi-checkbox-control";
-import { PhiLink } from "../navigation/phi-link";
-import {
-  PHI_AUTH_FORM_FIELD_TYPE_PROVIDER_DESCRIPTORS,
-} from "./form-provider-contract";
-import { resolvePhiFormText } from "./form-descriptor-contract";
-import { createPhiFormProviderRegistry } from "./form-provider-registry";
-import type { PhiFormTextDescriptor } from "../../types/form-descriptor";
+import { PhiCheckboxControl } from "../../../components/controls/phi-checkbox-control";
+import { PhiLink } from "../../../components/navigation/phi-link";
+import { PHI_AUTH_FORM_FIELD_TYPE_PROVIDER_DESCRIPTORS } from "./form-providers";
+import { resolvePhiFormText } from "../../../components/forms/form-descriptor-contract";
+import { createPhiFormProviderRegistry } from "../../../components/forms/form-provider-registry";
+import type { PhiFormTextDescriptor } from "../../../types/form-descriptor";
 
 function readText(value: unknown): PhiFormTextDescriptor | null {
   return value && typeof value === "object" && "kind" in value
