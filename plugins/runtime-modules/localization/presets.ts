@@ -13,7 +13,7 @@ export const PHI_LOCALIZATION_RUNTIME_MODULE_ROUTES = [
     itemKey: "@phis/ui/modules/localization/nav/admin/locales",
     icon: "antd:translation",
     loadTree: ({ page, runtime }) =>
-      import("../../../components/regions/presets/phi-default-admin-locales-page-tree")
+      import("./trees/phi-default-admin-locales-page-tree")
         .then((module) => module.buildPhiDefaultAdminLocalesPageTree({ page, runtime })),
   }),
 ] satisfies readonly PhiCmsRoutePresetDescriptor[];

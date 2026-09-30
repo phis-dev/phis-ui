@@ -27,7 +27,7 @@ const FORM_ROUTE_TEMPLATES = [
     title: "Register",
     path: "/register",
     loadTree: (presetKey: string, { page, runtime }: PhiCmsDescriptorBuildContext) =>
-      import("../../../components/regions/presets/phi-default-pub-registration-page-tree")
+      import("./trees/phi-default-pub-registration-page-tree")
         .then((module) => module.buildPhiDefaultPubRegistrationPageTree({ page, runtime, presetKey })),
   },
   {
@@ -35,7 +35,7 @@ const FORM_ROUTE_TEMPLATES = [
     title: "Login",
     path: "/login",
     loadTree: (presetKey: string, { page, runtime }: PhiCmsDescriptorBuildContext) =>
-      import("../../../components/regions/presets/phi-default-pub-login-page-tree")
+      import("./trees/phi-default-pub-login-page-tree")
         .then((module) => module.buildPhiDefaultPubLoginPageTree({ page, runtime, presetKey })),
   },
   {
@@ -43,7 +43,7 @@ const FORM_ROUTE_TEMPLATES = [
     title: "Confirm",
     path: "/confirm",
     loadTree: (presetKey: string, { page }: PhiCmsDescriptorBuildContext) =>
-      import("../../../components/regions/presets/phi-default-pub-confirm-page-tree")
+      import("./trees/phi-default-pub-confirm-page-tree")
         .then((module) => module.buildPhiDefaultPubConfirmPageTree({ page, presetKey })),
   },
   {
@@ -51,7 +51,7 @@ const FORM_ROUTE_TEMPLATES = [
     title: "Reset Password",
     path: "/reset-password",
     loadTree: (presetKey: string, { page }: PhiCmsDescriptorBuildContext) =>
-      import("../../../components/regions/presets/phi-default-pub-reset-password-page-tree")
+      import("./trees/phi-default-pub-reset-password-page-tree")
         .then((module) => module.buildPhiDefaultPubResetPasswordPageTree({ page, presetKey })),
   },
 ] as const;
@@ -98,7 +98,7 @@ export const PHI_AUTH_RUNTIME_MODULE_ROUTES = [
     title: "Logout",
     path: "/logout",
     defaultPageFlags: PhiCmsFlags.NoIndex,
-    loadTree: ({ page }) => import("../../../components/regions/presets/phi-auth-runtime-page-tree")
+    loadTree: ({ page }) => import("./trees/phi-auth-runtime-page-tree")
       .then((module) => module.buildPhiAuthRuntimePageTree({
         page,
         presetKey: "public-logout-page",
@@ -151,7 +151,7 @@ export const PHI_AUTH_RUNTIME_MODULE_ROUTES = [
       },
     }],
     loadTree: ({ page, runtime }) =>
-      import("../../../components/regions/presets/phi-default-app-security-page-tree")
+      import("./trees/phi-default-app-security-page-tree")
         .then((module) => module.buildPhiDefaultAppSecurityPageTree({ page, runtime })),
   }),
   buildPhiSidebarRoutePresetDescriptor({
@@ -164,7 +164,7 @@ export const PHI_AUTH_RUNTIME_MODULE_ROUTES = [
     itemKey: "@phis/ui/modules/auth/nav/admin/settings",
     icon: "antd:safety-certificate",
     loadTree: ({ page, runtime }) =>
-      import("../../../components/regions/presets/phi-default-admin-auth-settings-page-tree")
+      import("./trees/phi-default-admin-auth-settings-page-tree")
         .then((module) => module.buildPhiDefaultAdminAuthSettingsPageTree({ page, runtime })),
   }),
 ] satisfies readonly PhiCmsRoutePresetDescriptor[];
@@ -183,7 +183,7 @@ export const PHI_AUTH_RUNTIME_MODULE_AREA_OVERLAYS = (["public", "app"] as const
   area,
   loadTree: async ({ page, runtime }) => {
     const { buildPhiAuthAreaLoginOverlayTree } =
-      await import("../../../components/regions/presets/phi-auth-area-overlay-tree.server");
+      await import("./trees/phi-auth-area-overlay-tree.server");
     return buildPhiAuthAreaLoginOverlayTree({ page, runtime, area });
   },
 })) satisfies readonly PhiCmsAreaOverlayPresetDescriptor[];

@@ -1,0 +1,107 @@
+import { PHI_ASSET_RUNTIME_MODULE_ID } from "../ids";
+import { PHI_MEDIA_SETTINGS_FORM_IDS } from "../../../../components/media/media-settings-forms";
+import { getPhiMediaSettingsPageLabels } from "../../../../components/media/media-settings-labels";
+import { getResolvedSiteMediaSettings } from "../../../../gateway/site-media-settings";
+import type { PhiCmsPageNode, PhiResolvedCmsPageTree } from "../../../../types/cms";
+import type { PhiBlockRuntime } from "../../../../types";
+import { buildPhiSettingsPageShellTree } from "../../../../components/regions/presets/phi-settings-page-shell-tree";
+import { readPhiServerApiCredentials } from "../../../../helpers/phis-server-credentials";
+
+const SYNTHETIC_MEDIA_SETTINGS_REGION_IDS = {
+  regionContent: -473,
+} as const;
+
+export async function buildPhiDefaultAdminMediaSettingsPageTree({
+  page,
+  runtime,
+}: {
+  page: PhiCmsPageNode;
+  runtime: PhiBlockRuntime;
+}): Promise<PhiResolvedCmsPageTree> {
+  const [labels, settings] = await Promise.all([
+    getPhiMediaSettingsPageLabels({
+      apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
+      internalToken: readPhiServerApiCredentials().internalToken,
+      locale: runtime.locale.current,
+    }),
+    getResolvedSiteMediaSettings({
+      apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
+      internalToken: readPhiServerApiCredentials().internalToken,
+      siteKey: runtime.site.key,
+    }),
+  ]);
+
+  const tree = buildPhiSettingsPageShellTree({
+    page,
+    ownerModuleId: PHI_ASSET_RUNTIME_MODULE_ID,
+    presetKey: "admin-media-settings-page",
+    regionId: SYNTHETIC_MEDIA_SETTINGS_REGION_IDS.regionContent,
+    label: labels.pageTitle,
+    panels: [
+      {
+        nodeKey: "panelMedia",
+        title: labels.intro.title,
+        description: labels.intro.description,
+        sections: [{
+          kind: "form",
+          nodeKey: "widgetMediaForm",
+          formId: PHI_MEDIA_SETTINGS_FORM_IDS.general,
+          label: labels.intro.title,
+          initialValues: {
+            defaultUserQuotaBytes: settings.defaultUserQuotaBytes,
+            defaultGroupQuotaBytes: settings.defaultGroupQuotaBytes,
+            defaultAddonQuotaBytes: settings.defaultAddonQuotaBytes,
+            maxUserQuotaBytes: settings.maxUserQuotaBytes,
+            maxGroupQuotaBytes: settings.maxGroupQuotaBytes,
+            maxAddonQuotaBytes: settings.maxAddonQuotaBytes,
+            maxObjectBytes: settings.maxObjectBytes,
+          },
+        }],
+      },
+      {
+        nodeKey: "panelTechnical",
+        title: labels.technical.title,
+        description: labels.technical.description,
+        sections: [{
+          nodeKey: "widgetTechnical",
+          typeKey: "description",
+          label: labels.technical.title,
+          config: {
+            asideItems: [
+              // Reported, not offered: availability follows from the Modules this Site activates.
+              `${labels.fields.userSpacesEnabled}: ${settings.userSpacesEnabled ? labels.availability.available : labels.availability.unavailable}`,
+              `${labels.fields.groupSpacesEnabled}: ${settings.groupSpacesEnabled ? labels.availability.available : labels.availability.unavailable}`,
+              /*
+               * The Add-on stores, named so they can be sized.
+               *
+               * An Add-on Space appears in no Space listing and belongs to nobody, so this is the only
+               * place an administrator learns one exists and what it costs. The id is here because it is
+               * the address the per-Space route takes: the Site default is set above, and departing from
+               * it for one Add-on needs a Space to point at.
+               */
+              `${labels.addonSpaces.title}: ${
+                settings.addonSpaces.length === 0
+                  ? labels.addonSpaces.empty
+                  : settings.addonSpaces
+                      .map((space) => `${space.addonId} (#${space.spaceId}) ${space.usedBytes} / ${space.quotaBytes ?? "-"}`)
+                      .join(", ")
+              }`,
+            ],
+          },
+        }],
+      },
+    ],
+  });
+
+  return {
+    ...tree,
+    pageMeta: {
+      title: { msgId: 0, source: "Media", value: labels.pageTitle },
+      description: {
+        msgId: 0,
+        source: "Configure Media Space availability and default quotas for this site.",
+        value: labels.pageDescription,
+      },
+    },
+  };
+}

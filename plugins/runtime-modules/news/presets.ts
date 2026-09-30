@@ -41,7 +41,7 @@ export const PHI_NEWS_RUNTIME_MODULE_ROUTES = [
       },
     }],
     loadTree: ({ page }: PhiCmsDescriptorBuildContext) =>
-      import("../../../components/regions/presets/phi-default-pub-news-page-tree")
+      import("./trees/phi-default-pub-news-page-tree")
         .then((module) => module.buildPhiDefaultPubNewsPageTree({ page })),
   },
 ] as const satisfies readonly PhiCmsRoutePresetDescriptor[];

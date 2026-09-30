@@ -3,7 +3,7 @@ import type {
   PhiCmsDescriptorBuildContext,
   PhiCmsRoutePresetDescriptor,
 } from "../../../types/cms-module-descriptors";
-import type { PhiAreaDashboardKey } from "../../../components/regions/presets/area-dashboard-label-set";
+import type { PhiAreaDashboardKey } from "./trees/area-dashboard-label-set";
 import { buildPhiSidebarRoutePresetDescriptor, type PhiSidebarAreaKey } from "../sidebar-route";
 import { PHI_DASHBOARD_RUNTIME_MODULE_ID } from "./ids";
 
@@ -52,20 +52,20 @@ export const PHI_DASHBOARD_RUNTIME_MODULE_ROUTES = [
   buildDashboardRoute({
     area: "admin",
     loadTree: ({ page, runtime }) =>
-      import("../../../components/regions/presets/phi-default-admin-dashboard-page-tree")
+      import("./trees/phi-default-admin-dashboard-page-tree")
         .then((module) => module.buildPhiDefaultAdminDashboardPageTree({ page, runtime })),
   }),
   buildDashboardRoute({
     area: "builder",
     loadTree: ({ page, runtime }) =>
-      import("../../../components/regions/presets/phi-default-builder-dashboard-page-tree")
+      import("./trees/phi-default-builder-dashboard-page-tree")
         .then((module) => module.buildPhiDefaultBuilderDashboardPageTree({ page, runtime })),
   }),
   ...GENERIC_DASHBOARD_AREAS.map((area) =>
     buildDashboardRoute({
       area,
       loadTree: ({ page, runtime }: PhiCmsDescriptorBuildContext) =>
-        import("../../../components/regions/presets/phi-default-area-dashboard-page-tree")
+        import("./trees/phi-default-area-dashboard-page-tree")
           .then((module) => module.buildPhiDefaultAreaDashboardPageTree({
             page,
             runtime,

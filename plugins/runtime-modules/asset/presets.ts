@@ -13,7 +13,7 @@ export const PHI_ASSET_RUNTIME_MODULE_ROUTES = [
     itemKey: "@phis/ui/modules/asset/nav/builder/media",
     icon: "antd:picture",
     loadTree: ({ page, runtime, catalog }) =>
-      import("../../../components/regions/presets/phi-default-builder-area-preset-tree")
+      import("../builder/trees/phi-default-builder-area-preset-tree")
         .then((module) => module.buildPhiDefaultBuilderPagePresetTree({
           page,
           runtime,
@@ -32,7 +32,7 @@ export const PHI_ASSET_RUNTIME_MODULE_ROUTES = [
     itemKey: "@phis/ui/modules/asset/nav/admin/settings",
     icon: "antd:picture",
     loadTree: ({ page, runtime }) =>
-      import("../../../components/regions/presets/phi-default-admin-media-settings-page-tree")
+      import("./trees/phi-default-admin-media-settings-page-tree")
         .then((module) => module.buildPhiDefaultAdminMediaSettingsPageTree({ page, runtime })),
   }),
 ] satisfies readonly PhiCmsRoutePresetDescriptor[];

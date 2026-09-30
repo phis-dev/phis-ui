@@ -29,7 +29,7 @@ export const PHI_AREA_BASE_RUNTIME_MODULE_AREA_SHELLS = [
     area: "public",
     exportedNodeKeys: PHI_DEFAULT_PUB_AREA_COMPOSITION_NODE_KEYS,
     loadTree: ({ page, runtime }: PhiCmsDescriptorBuildContext) =>
-      import("../../components/regions/presets/phi-default-site-area-preset-tree")
+      import("./phi-default-site-area-preset-tree")
         .then((module) => module.buildPhiDefaultSiteAreaPresetTree({
           page,
           runtime,
@@ -57,8 +57,8 @@ export const PHI_AREA_BASE_RUNTIME_MODULE_AREA_SHELLS = [
         { buildPhiDefaultAppAreaPresetTree },
         { mergePhiCmsShellTrees },
       ] = await Promise.all([
-        import("../../components/regions/presets/phi-default-site-area-preset-tree"),
-        import("../../components/regions/presets/phi-default-app-area-preset-tree"),
+        import("./phi-default-site-area-preset-tree"),
+        import("./app/trees/phi-default-app-area-preset-tree"),
         import("./shell-tree-composition"),
       ]);
       const [base, overlay] = await Promise.all([
@@ -82,7 +82,7 @@ export const PHI_AREA_BASE_RUNTIME_MODULE_AREA_SHELLS = [
     shellPresetVersion: 1,
     area,
     loadTree: ({ page, runtime }: PhiCmsDescriptorBuildContext) =>
-      import("../../components/regions/presets/phi-default-site-area-preset-tree")
+      import("./phi-default-site-area-preset-tree")
         .then((module) => module.buildPhiDefaultSiteAreaPresetTree({
           page,
           runtime,
@@ -125,7 +125,7 @@ export const PHI_AREA_BASE_RUNTIME_MODULE_ROUTES = [
      * would no longer cover this one on activation.
      */
     loadTree: ({ page, runtime }: PhiCmsDescriptorBuildContext) =>
-      import("../../components/regions/presets/phi-default-pub-welcome-page-tree")
+      import("./public/trees/phi-default-pub-welcome-page-tree")
         .then((module) => module.buildPhiDefaultPubWelcomePageTree({ page, runtime })),
   },
   {
@@ -157,7 +157,7 @@ export const PHI_AREA_BASE_RUNTIME_MODULE_ROUTES = [
       },
     ],
     loadTree: ({ page }: PhiCmsDescriptorBuildContext) =>
-      import("../../components/regions/presets/phi-default-pub-home-page-tree")
+      import("./public/trees/phi-default-pub-home-page-tree")
         .then((module) => module.buildPhiDefaultPubHomePageTree({ page })),
   },
   buildPhiAreaRootRoutePresetDescriptor({
@@ -186,7 +186,7 @@ export const PHI_AREA_BASE_RUNTIME_MODULE_ROUTES = [
     path: "/settings/profile",
     mount: { mountKey: "settings" },
     loadTree: ({ page, runtime }: PhiCmsDescriptorBuildContext) =>
-      import("../../components/regions/presets/phi-default-app-profile-page-tree")
+      import("./app/trees/phi-default-app-profile-page-tree")
         .then((module) => module.buildPhiDefaultAppProfilePageTree({ page, runtime })),
   },
   ...PHI_CMS_ERROR_CODES.map((code) => ({
@@ -203,7 +203,7 @@ export const PHI_AREA_BASE_RUNTIME_MODULE_ROUTES = [
      */
     defaultPageFlags: PhiCmsFlags.NoIndex,
     loadTree: ({ page }: PhiCmsDescriptorBuildContext) =>
-      import("../../components/regions/presets/phi-default-pub-error-page-tree")
+      import("./public/trees/phi-default-pub-error-page-tree")
         .then((module) => module.buildPhiDefaultPubErrorPageTree({ code, page })),
   })),
   {
@@ -214,7 +214,7 @@ export const PHI_AREA_BASE_RUNTIME_MODULE_ROUTES = [
     title: "Terms and Conditions",
     path: "/terms-and-conditions",
     loadTree: ({ page }) =>
-      import("../../components/regions/presets/phi-default-pub-terms-page-tree")
+      import("./public/trees/phi-default-pub-terms-page-tree")
         .then((module) => module.buildPhiDefaultPubTermsPageTree({ page })),
   },
   buildPhiAreaRootRoutePresetDescriptor({
@@ -230,7 +230,7 @@ export const PHI_AREA_BASE_RUNTIME_MODULE_ROUTES = [
     title: "Overview",
     path: "/overview",
     loadTree: ({ page, runtime }: PhiCmsDescriptorBuildContext) =>
-      import("../../components/regions/presets/phi-default-accounting-page-tree")
+      import("./accounting/trees/phi-default-accounting-page-tree")
         .then((module) => module.buildPhiDefaultAccountingPageTree({ page, runtime })),
   },
 ] satisfies readonly PhiCmsRoutePresetDescriptor[];
@@ -282,7 +282,7 @@ export const PHI_PUBLIC_FORM_RUNTIME_MODULE_ROUTES = [
       },
     ],
     loadTree: ({ page }) =>
-      import("../../components/regions/presets/phi-default-pub-contact-page-tree")
+      import("./public/trees/phi-default-pub-contact-page-tree")
         .then((module) => module.buildPhiDefaultPubContactPageTree({ page })),
   },
   /*
@@ -302,7 +302,7 @@ export const PHI_PUBLIC_FORM_RUNTIME_MODULE_ROUTES = [
     path: "/unsubscribe",
     navigation: [],
     loadTree: ({ page }) =>
-      import("../../components/regions/presets/phi-default-pub-unsubscribe-page-tree")
+      import("./public/trees/phi-default-pub-unsubscribe-page-tree")
         .then((module) => module.buildPhiDefaultPubUnsubscribePageTree({
           page,
           presetKey: PHI_PUBLIC_BASE_PAGE_PRESET_KEYS.unsubscribe,

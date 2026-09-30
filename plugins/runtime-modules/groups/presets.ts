@@ -16,7 +16,7 @@ export const PHI_GROUPS_RUNTIME_MODULE_ROUTES = [
     itemKey: "@phis/ui/modules/groups/nav/admin/groups",
     icon: "antd:cluster",
     loadTree: ({ page, runtime }) =>
-      import("../../../components/regions/presets/phi-default-admin-groups-page-tree")
+      import("./trees/phi-default-admin-groups-page-tree")
         .then((module) => module.buildPhiDefaultAdminGroupsPageTree({ page, runtime })),
   }),
   buildPhiSidebarRoutePresetDescriptor({
@@ -31,7 +31,7 @@ export const PHI_GROUPS_RUNTIME_MODULE_ROUTES = [
     itemKey: "@phis/ui/modules/groups/nav/app/groups",
     icon: "antd:cluster",
     loadTree: ({ page, runtime }) =>
-      import("../../../components/regions/presets/phi-default-app-groups-page-tree")
+      import("./trees/phi-default-app-groups-page-tree")
         .then((module) => module.buildPhiDefaultAppGroupsPageTree({ page, runtime })),
   }),
 ] satisfies readonly PhiCmsRoutePresetDescriptor[];

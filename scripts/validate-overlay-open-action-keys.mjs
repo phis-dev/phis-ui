@@ -28,7 +28,7 @@ import process from "node:process";
 const repositoryRoot = process.cwd();
 
 const presetDirectories = ["components/regions/presets"];
-const presetFilePattern = /(^|\/)presets\.tsx?$|(^|\/)presets\//u;
+const presetFilePattern = /(^|\/)presets\.tsx?$|(^|\/)presets\/|(^|\/)trees\/|^\/[a-z-]+-preset(-tree)?\.tsx?$/u;
 const moduleRoot = "plugins/runtime-modules";
 
 /** What marks an object as an Overlay node, and what the two halves of the pairing look like in source. */

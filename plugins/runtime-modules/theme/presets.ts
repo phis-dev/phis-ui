@@ -13,7 +13,7 @@ export const PHI_THEME_RUNTIME_MODULE_ROUTES = [
     itemKey: "@phis/ui/theme/nav/builder/theme",
     icon: "antd:skin",
     loadTree: ({ page, runtime, catalog }) =>
-      import("../../../components/regions/presets/phi-default-builder-area-preset-tree")
+      import("../builder/trees/phi-default-builder-area-preset-tree")
         .then((module) => module.buildPhiDefaultBuilderPagePresetTree({
           page,
           runtime,

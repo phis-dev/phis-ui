@@ -9,7 +9,7 @@ import { PHI_BUILDER_RUNTIME_MODULE_DEFINITION } from "./definition";
 import { PHI_BUILDER_RUNTIME_MODULE_LAYOUTS } from "./layouts";
 // The Inspector Overlays are a Module contribution, not shell content: a saved Area shell replaces
 // the code preset wholesale, and the Builder's own tools must survive that.
-import { PHI_BUILDER_RUNTIME_MODULE_AREA_OVERLAYS } from "../../../components/regions/presets/phi-builder-inspector-area-overlay-tree";
+import { PHI_BUILDER_RUNTIME_MODULE_AREA_OVERLAYS } from "./trees/phi-builder-inspector-area-overlay-tree";
 import {
   PHI_BUILDER_RUNTIME_MODULE_AREA_SHELLS,
   PHI_BUILDER_RUNTIME_MODULE_ROUTES,

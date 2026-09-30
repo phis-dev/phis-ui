@@ -496,7 +496,7 @@ presets must not duplicate them, and they are not normal `drawer_right` Regions 
 mounted by an Inspector host Widget.
 
 They are contributed through the `areaOverlays` descriptor family
-(`components/regions/presets/phi-builder-inspector-area-overlay-tree.ts`), not declared in the Builder
+(`plugins/runtime-modules/builder/trees/phi-builder-inspector-area-overlay-tree.ts`), not declared in the Builder
 Area shell preset. A shell preset is a starting point an operator may save over, after which the saved
 snapshot is the only source of truth for that Area; an Overlay declared there would disappear with that
 save. The Inspectors are the tool doing the authoring rather than content being authored, so they are

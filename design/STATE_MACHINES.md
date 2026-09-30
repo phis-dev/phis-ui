@@ -317,7 +317,7 @@ function noStepRunning(stepAddress: PhiSignalAddress) {
 }
 ```
 
-`components/regions/presets/phi-login-form-nodes.ts`, used twice. Three things are wrong with it the day
+`plugins/runtime-modules/auth/trees/phi-login-form-nodes.ts`, used twice. Three things are wrong with it the day
 Auth becomes a projection, and all three are silent. It reads `widget`, the most transient source there
 is -- a Widget "reports only what it found out for itself"
 ([types/runtime-condition.ts](../types/runtime-condition.ts)) -- while the state will be coming from the

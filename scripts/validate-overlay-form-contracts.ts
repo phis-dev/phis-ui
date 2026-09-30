@@ -291,8 +291,8 @@ const effectsToolSource = await readFile(new URL("../plugins/runtime-modules/bui
  * save. Reading them as one text keeps every rule here about the Builder's declaration rather than
  * about which file happens to carry it.
  */
-const builderShellPresetSource = await readFile(new URL("../components/regions/presets/phi-default-builder-area-preset-tree.ts", import.meta.url), "utf8");
-const builderOverlayPresetSource = await readFile(new URL("../components/regions/presets/phi-builder-inspector-area-overlay-tree.server.ts", import.meta.url), "utf8");
+const builderShellPresetSource = await readFile(new URL("../plugins/runtime-modules/builder/trees/phi-default-builder-area-preset-tree.ts", import.meta.url), "utf8");
+const builderOverlayPresetSource = await readFile(new URL("../plugins/runtime-modules/builder/trees/phi-builder-inspector-area-overlay-tree.server.ts", import.meta.url), "utf8");
 const builderPresetSource = `${builderShellPresetSource}\n${builderOverlayPresetSource}`;
 const builderClientManifestSource = await readFile(new URL("../plugins/runtime-modules/client-manifests/builder.tsx", import.meta.url), "utf8");
 const commonClientManifestSource = await readFile(new URL("../plugins/runtime-modules/client-manifests/common.ts", import.meta.url), "utf8");

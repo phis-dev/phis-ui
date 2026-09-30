@@ -22,8 +22,8 @@ export const PHI_ADMIN_RUNTIME_MODULE_AREA_SHELLS = [{
       { buildPhiDefaultAdminAreaPresetTree },
       { mergePhiCmsShellTrees, omitPhiCmsShellCompositionNodes },
     ] = await Promise.all([
-      import("../../../components/regions/presets/phi-default-site-area-preset-tree"),
-      import("../../../components/regions/presets/phi-default-admin-area-preset-tree"),
+      import("../phi-default-site-area-preset-tree"),
+      import("./trees/phi-default-admin-area-preset-tree"),
       import("../shell-tree-composition"),
     ]);
     const [base, overlay] = await Promise.all([
@@ -56,7 +56,7 @@ const ADMIN_OWNED_ROUTES = [
     path: "/settings/general",
     mount: { mountKey: "settings" },
     loadTree: ({ page, runtime }: PhiCmsDescriptorBuildContext) =>
-      import("../../../components/regions/presets/phi-default-admin-settings-page-tree")
+      import("./trees/phi-default-admin-settings-page-tree")
         .then((module) => module.buildPhiDefaultAdminSettingsPageTree({ page, runtime })),
   },
 ].map((route) => ({

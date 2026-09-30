@@ -136,6 +136,7 @@ plugins/runtime-modules/<module>/
 ├── definition.ts             the module definition; server-safe, no React
 ├── module.ts                 definition plus Controller definition
 ├── presets.ts                routes, Area shells, Area overlays, navigation
+├── trees/                    the preset trees those descriptors load: Pages, shells, overlays
 │
 ├── server.ts                 Server Area contribution        ─┐ the bundle boundary:
 ├── client.ts                 Controller Client contribution  ─┤ "use client" separates

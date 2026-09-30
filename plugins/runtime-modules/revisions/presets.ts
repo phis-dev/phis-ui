@@ -13,7 +13,7 @@ export const PHI_REVISIONS_RUNTIME_MODULE_ROUTES = [
     itemKey: "@phis/ui/modules/revisions/nav/builder/revisions",
     icon: "antd:history",
     loadTree: ({ page, runtime, catalog }) =>
-      import("../../../components/regions/presets/phi-default-builder-area-preset-tree")
+      import("../builder/trees/phi-default-builder-area-preset-tree")
         .then((module) => module.buildPhiDefaultBuilderPagePresetTree({
           page,
           runtime,

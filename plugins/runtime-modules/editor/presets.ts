@@ -12,7 +12,7 @@ export const PHI_EDITOR_RUNTIME_MODULE_AREA_SHELLS = [{
   shellPresetVersion: 1,
   area: "editor",
   loadTree: ({ page, runtime }) =>
-    import("../../../components/regions/presets/phi-default-editor-area-preset-tree")
+    import("./trees/phi-default-editor-area-preset-tree")
       .then((module) => module.buildPhiDefaultEditorAreaPresetTree({ page, runtime })),
 }] satisfies readonly PhiCmsAreaShellPresetDescriptor[];
 
@@ -28,6 +28,6 @@ export const PHI_EDITOR_RUNTIME_MODULE_ROUTES = [buildPhiAreaRootRoutePresetDesc
   title: "Translations",
   path: "/translations",
   loadTree: ({ page, runtime }) =>
-    import("../../../components/regions/presets/phi-default-editor-translations-page-tree")
+    import("./trees/phi-default-editor-translations-page-tree")
       .then((module) => module.buildPhiDefaultEditorTranslationsPageTree({ page, runtime })),
 }] satisfies readonly PhiCmsRoutePresetDescriptor[];

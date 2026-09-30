@@ -14,7 +14,7 @@ import {
   PHI_EDITOR_TRANSLATION_OVERLAY_ID,
   PHI_EDITOR_TRANSLATIONS_SOURCE_LOCALE_WIDGET_ID,
   PHI_EDITOR_TRANSLATIONS_WIDGET_ID,
-} from "../../../../components/regions/presets/editor-shell";
+} from "../../editor/trees/editor-shell";
 import {
   PHI_LOCALIZATION_RUNTIME_CONTROLLER_DEFINITION,
   type PhiLocalizationControllerConfig,

@@ -1,4 +1,6 @@
 import assert from "node:assert/strict";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 
@@ -25,6 +27,7 @@ import { resolvePhiBuilderPreviewRegionConfig } from "../plugins/runtime-modules
 import { parsePhiCmsContentLayoutConfig, parsePhiCmsGridLayoutConfig } from "../types/cms-config";
 import { resolvePhiGridSlotPlacement } from "../components/layouts/phi-grid-contract";
 import { PHI_CORE_LAYOUT_KIND_BY_TYPE_KEY } from "../components/layouts/layout-definitions";
+import { listPhiPresetTreeFiles } from "./preset-tree-files";
 import {
   resolvePhiSlotChildSizing,
   resolvePhiSlotChildSizingForConfig,
@@ -296,14 +299,13 @@ for (const layoutKind of layoutKinds) {
  * padding on all four sides and rendered with padding on two.
  */
 {
-  const { readdir, readFile } = await import("node:fs/promises");
-  const presetsDirectory = new URL("../components/regions/presets/", import.meta.url);
+  const { readFile } = await import("node:fs/promises");
   // A family belongs to Core's own Layouts, not to the Layout contract, so the pairing is Core's table.
   const layoutKindByTypeKey = new Map(Object.entries(PHI_CORE_LAYOUT_KIND_BY_TYPE_KEY));
   const mismatches: string[] = [];
-  for (const entry of await readdir(presetsDirectory)) {
-    if (!entry.endsWith(".ts")) continue;
-    const source = await readFile(new URL(entry, presetsDirectory), "utf8");
+  for (const file of listPhiPresetTreeFiles(fileURLToPath(new URL("..", import.meta.url)))) {
+    const entry = path.relative(fileURLToPath(new URL("..", import.meta.url)), file);
+    const source = await readFile(file, "utf8");
     for (const block of source.matchAll(/buildPhiCmsLayoutNode\(\{([\s\S]*?)\n\s*\}\)/gu)) {
       const body = block[1] ?? "";
       const declaredKind = body.match(/creationPreset:\s*\{\s*layoutKind:\s*"([a-z]+)"/u)?.[1];

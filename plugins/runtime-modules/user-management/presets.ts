@@ -18,7 +18,7 @@ export const PHI_USER_MANAGEMENT_RUNTIME_MODULE_ROUTES = [
     itemKey: "@phis/ui/modules/user-management/nav/admin/users",
     icon: "antd:team",
     loadTree: ({ page, runtime }) =>
-      import("../../../components/regions/presets/phi-default-admin-users-page-tree")
+      import("./trees/phi-default-admin-users-page-tree")
         .then((module) => module.buildPhiDefaultAdminUsersPageTree({ page, runtime })),
   }),
 ] satisfies readonly PhiCmsRoutePresetDescriptor[];

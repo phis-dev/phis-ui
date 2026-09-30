@@ -28,7 +28,7 @@ built. Remove an entry when it is done.
   `components/widgets/config/parser-primitives.ts`, rather than keeping a file for a rename.
 - **Convert concrete preset builders to local-key templates.** Some first-party preset builders still
   return concrete trees with synthetic ids (for example
-  `components/regions/presets/phi-default-site-area-preset-tree.ts`), so the central instantiator is not
+  `plugins/runtime-modules/phi-default-site-area-preset-tree.ts`), so the central instantiator is not
   yet the only node-construction authority.
 
 ## Layouts and Widgets

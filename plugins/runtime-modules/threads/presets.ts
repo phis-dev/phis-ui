@@ -15,7 +15,7 @@ export const PHI_THREADS_RUNTIME_MODULE_ROUTES = [
     itemKey: "@phis/ui/modules/threads/nav/app/conversations",
     icon: "antd:message",
     loadTree: ({ page, runtime }) =>
-      import("../../../components/regions/presets/phi-default-app-threads-page-tree")
+      import("./trees/phi-default-app-threads-page-tree")
         .then((module) => module.buildPhiDefaultAppThreadsPageTree({ page, runtime })),
   }),
 ] satisfies readonly PhiCmsRoutePresetDescriptor[];

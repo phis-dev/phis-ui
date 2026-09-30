@@ -1,0 +1,57 @@
+import { createPhiPresetCmsInstanceIdMap } from "../../../../types/cms-instance-id";
+import { PHI_ACCOUNTING_RUNTIME_MODULE_ID } from "../ids";
+import { PHI_CMS_SEQUENTIAL_LAYOUT_SLOTS } from "../../../../constants/cms-layout-types";
+import { PhiCmsPageType } from "../../../../constants/phi-cms";
+import { createPhiCmsPresetNodes } from "../../../../helpers/cms-preset-nodes";
+import type { PhiResolvedCmsPageTree, PhiCmsPageNode } from "../../../../types/cms";
+import type { PhiBlockRuntime } from "../../../../types";
+import { buildPhiBasePageContentScaffold, PHI_BASE_PAGE_LAYOUT_NODE_ID } from "../../../../components/regions/presets/phi-base-page-layout";
+
+const SYNTHETIC_ACCOUNTING_REGION_IDS = {
+  regionContent: -451,
+} as const;
+
+const SYNTHETIC_ACCOUNTING_WIDGET_IDS = createPhiPresetCmsInstanceIdMap({
+  domain: "page",
+  ownerModuleId: PHI_ACCOUNTING_RUNTIME_MODULE_ID,
+  presetKey: "accounting-overview-page",
+}, [
+  "widgetOverview",
+]);
+
+export async function buildPhiDefaultAccountingPageTree({
+  page,
+}: {
+  page: PhiCmsPageNode;
+  runtime: PhiBlockRuntime;
+}): Promise<PhiResolvedCmsPageTree> {
+  const scaffold = buildPhiBasePageContentScaffold({
+    page,
+    regionId: SYNTHETIC_ACCOUNTING_REGION_IDS.regionContent,
+  });
+
+  const nodes = createPhiCmsPresetNodes(page);
+  return {
+    page: nodes.page({ pageType: PhiCmsPageType.Standard }),
+    overlays: [],
+    regions: [scaffold.region],
+    layoutNodes: [scaffold.layoutNode],
+    contentWidgets: [
+      nodes.widget({
+        id: SYNTHETIC_ACCOUNTING_WIDGET_IDS.widgetOverview,
+        parentLayoutNodeId: PHI_BASE_PAGE_LAYOUT_NODE_ID,
+        typeKey: "card",
+        slotIndex: PHI_CMS_SEQUENTIAL_LAYOUT_SLOTS[0].slotIndex,
+        sortOrder: 0,
+        label: "Accounting",
+        config: {
+          eyebrow: "Accounting",
+          title: "Accounting",
+          description: "Invoices and billing workflows for this site.",
+          variant: "compact",
+          translate: true,
+        },
+      }),
+    ],
+  };
+}

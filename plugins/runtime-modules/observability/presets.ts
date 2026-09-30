@@ -13,7 +13,7 @@ export const PHI_OBSERVABILITY_RUNTIME_MODULE_ROUTES = [
     itemKey: "@phis/ui/modules/observability/nav/admin/logs",
     icon: "antd:file-search",
     loadTree: ({ page, runtime }) =>
-      import("../../../components/regions/presets/phi-default-admin-logs-page-tree")
+      import("./trees/phi-default-admin-logs-page-tree")
         .then((module) => module.buildPhiDefaultAdminLogsPageTree({ page, runtime })),
   }),
 ] satisfies readonly PhiCmsRoutePresetDescriptor[];

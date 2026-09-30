@@ -13,7 +13,7 @@ export const PHI_BUILDER_RUNTIME_MODULE_AREA_SHELLS = [{
   shellPresetVersion: 1,
   area: "builder",
   loadTree: ({ page, runtime }) =>
-    import("../../../components/regions/presets/phi-default-builder-area-preset-tree")
+    import("./trees/phi-default-builder-area-preset-tree")
       .then((module) => module.buildPhiDefaultBuilderAreaPresetTree({ page, runtime })),
 }] satisfies readonly PhiCmsAreaShellPresetDescriptor[];
 
@@ -32,7 +32,7 @@ const BUILDER_WORKSPACE_ROUTES = BUILDER_ROUTE_PRESETS.map((route) => ({
   title: route.title,
   path: route.path,
   loadTree: ({ page, runtime, catalog }) =>
-    import("../../../components/regions/presets/phi-default-builder-area-preset-tree")
+    import("./trees/phi-default-builder-area-preset-tree")
       .then((module) => module.buildPhiDefaultBuilderPagePresetTree({
         page,
         runtime,
@@ -57,7 +57,7 @@ const BUILDER_SETTINGS_ROUTES = [
     path: "/settings/general",
     mount: { mountKey: "settings" },
     loadTree: ({ page, runtime }) =>
-      import("../../../components/regions/presets/phi-default-builder-settings-page-tree")
+      import("./trees/phi-default-builder-settings-page-tree")
         .then((module) => module.buildPhiDefaultBuilderSettingsPageTree({ page, runtime })),
   },
 ] satisfies readonly PhiCmsRoutePresetDescriptor[];

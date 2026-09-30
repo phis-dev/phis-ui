@@ -236,7 +236,7 @@ root, and CSS keeps the banner out of the layout when a decision is on record. O
 round-trip, nothing visible on a second visit.
 
 **Placement** is the Footer region of the Public Area shell preset
-([components/regions/presets/phi-default-site-area-preset-tree.ts](../components/regions/presets/phi-default-site-area-preset-tree.ts)),
+([plugins/runtime-modules/phi-default-site-area-preset-tree.ts](../plugins/runtime-modules/phi-default-site-area-preset-tree.ts)),
 which `mergePhiCmsShellTrees` joins to every page tree in that Area -- the existing way to be on every
 page. Two consequences: it is Area-scoped, so covering App as well means an entry in that shell too, and
 there is no banner Overlay type. `PHI_CMS_OVERLAY_TYPES` is `modal` and `drawer`, both with a backdrop and

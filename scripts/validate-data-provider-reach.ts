@@ -5,6 +5,7 @@ import process from "node:process";
 
 import { PHI_CMS_AREA_KEYS, type PhiCmsAreaKey } from "../constants/cms-areas";
 import { PHI_FIRST_PARTY_RUNTIME_MODULE_CATALOG } from "../plugins/runtime-modules/catalog";
+import { listPhiPresetTreeFiles } from "./preset-tree-files";
 
 /*
  * A preset may only name a Data Provider its Area can load.
@@ -32,7 +33,6 @@ import { PHI_FIRST_PARTY_RUNTIME_MODULE_CATALOG } from "../plugins/runtime-modul
  */
 
 const repositoryRoot = process.cwd();
-const presetDirectory = path.join(repositoryRoot, "components/regions/presets");
 const manifestDirectory = path.join(repositoryRoot, "plugins/runtime-modules/client-manifests");
 const runtimeModulesDirectory = path.join(repositoryRoot, "plugins/runtime-modules");
 
@@ -70,17 +70,14 @@ function readLoadedPresetName(loadTree: unknown) {
  * and silently mis-attribute an Area, so it is refused rather than resolved.
  */
 const presetFilesByName = new Map<string, string>();
-for (const entry of readdirSync(presetDirectory)) {
-  if (!entry.endsWith(".ts") && !entry.endsWith(".tsx")) {
-    continue;
-  }
-  const name = entry.replace(/\.(ts|tsx)$/, "");
+for (const file of listPhiPresetTreeFiles(repositoryRoot)) {
+  const name = path.basename(file).replace(/\.(ts|tsx)$/, "");
   assert.equal(
     presetFilesByName.has(name),
     false,
     `Two preset files are named "${name}"; an import() could not be attributed to one of them.`,
   );
-  presetFilesByName.set(name, path.join(presetDirectory, entry));
+  presetFilesByName.set(name, file);
 }
 
 /** Which Areas each preset file is drawn in, from the descriptors that load it. */
