@@ -13,8 +13,9 @@ import { PHI_NEWS_RUNTIME_MODULE_ID } from "./ids";
  * News entries live in Core's `site_content` and every question about them -- who may write one, what a
  * version is, when one disappears -- is Core's
  * ([phis-server design/NEWS.md](../../../../phis-server/design/NEWS.md)). What this Module contributes is
- * an address, an entry in the Public header, and a Widget that reads. It owns no data, which is why it has
- * no Controller, no Forms and no Data Providers: there is nothing here to coordinate and nothing to write.
+ * the two addresses, the Provider behind them, the Forms that write an entry and publish it, and the
+ * Controller that tells a pressed row from the dialog it belongs to. It owns no data: what it writes, it
+ * writes through Core's endpoints.
  *
  * Public and editor. The Public Area is where a Site's news is read; the editor Area is where it is
  * written, and what it brings there is not a second copy of the list but the Provider behind a Table --

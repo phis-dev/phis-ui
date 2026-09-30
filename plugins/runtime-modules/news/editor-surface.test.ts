@@ -59,6 +59,8 @@ import { PHI_VIEWER_ACCESS_ANYONE } from "../../../types/access";
 import type { PhiCmsPageNode } from "../../../types/cms";
 import { PHI_NEWS_RUNTIME_MODULE_ROUTES } from "./presets";
 import { PHI_NEWS_FORM_HANDLER_PROVIDER_DESCRIPTORS, PHI_NEWS_FORM_IDS, PHI_NEWS_RUNTIME_MODULE_FORMS } from "./forms";
+import { PHI_NEWS_CONTROLLER_INSTANCE_KEY, PHI_NEWS_CONTROLLER_TYPE } from "./controller/address";
+import { PHI_NEWS_RUNTIME_CONTROLLER_DEFINITION } from "./controller/definition";
 
 /**
  * The editor surface, as far as it can be pinned without a Site.
@@ -232,5 +234,45 @@ describe("what News writes with", () => {
     // Two dialogs, each with a body and a footer beside the page's own layout.
     expect(tree.overlays).toHaveLength(2);
     expect(tree.layoutNodes).toHaveLength(5);
+  });
+
+  /*
+   * The Page mounts the Controller every one of those routes sends to.
+   *
+   * A `demand` Controller exists where somebody asks for it, and nothing else on this Page does: the Table
+   * asks for no condition state, and the Module's policy does not mount it for the Area. Without the setting
+   * the whole chain was wired to an address with no listener -- the bus held every signal, nothing threw,
+   * and no dialog opened. `validate-controller-mount-contracts` guards the same rule for every preset.
+   */
+  it("mounts its Controller for this Page", async () => {
+    const [, editorRoute] = PHI_NEWS_RUNTIME_MODULE_ROUTES;
+    const tree = await editorRoute!.loadTree({
+      page: NEWS_PAGE,
+      runtime: { locale: { current: "en" } },
+    } as never);
+
+    expect(tree.controllerSettings).toEqual([{
+      type: PHI_NEWS_CONTROLLER_TYPE,
+      instanceKey: PHI_NEWS_CONTROLLER_INSTANCE_KEY,
+      mountScope: "page",
+    }]);
+    // And the Controller allows the scope the Page mounts it at; a mismatch throws at render time.
+    expect(PHI_NEWS_RUNTIME_CONTROLLER_DEFINITION.allowedMountScopes).toContain("page");
+  });
+
+  /* A plus, as on every other Table: the label stays, as the tooltip and the accessible name. */
+  it("offers a new entry as an icon action", async () => {
+    const [, editorRoute] = PHI_NEWS_RUNTIME_MODULE_ROUTES;
+    const tree = await editorRoute!.loadTree({
+      page: NEWS_PAGE,
+      runtime: { locale: { current: "en" } },
+    } as never);
+
+    const table = tree.contentWidgets.find((widget) => widget.widgetType.endsWith("/table"));
+    const [toolbarAction] = (table!.config as {
+      features: { actions: { toolbar: { key: string; icon: string; display: string; label: string }[] } };
+    }).features.actions.toolbar;
+
+    expect(toolbarAction).toMatchObject({ key: "new", icon: "antd:plus", display: "icon" });
   });
 });

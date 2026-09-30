@@ -19,7 +19,13 @@ export const PHI_NEWS_RUNTIME_CONTROLLER_DEFINITION = {
   title: "News Controller",
   description: "Module owner for writing and publishing news entries.",
   icon: "antd:notification",
-  allowedMountScopes: ["area"],
+  /*
+   * The Page, not the Area: this Controller belongs to the News Page of the editor Area and is mounted by
+   * that Page's tree. `["area"]` was a contradiction with the `demand` mount policy -- the resolver only
+   * mounts a Controller for an Area when its Module says `area`, so nothing could ever mount this one and
+   * every signal the Page sent went nowhere.
+   */
+  allowedMountScopes: ["page"],
   runtimeSignals: {
     emits: [
       { id: "dialogOpen", action: "activate", valueType: "none" },
