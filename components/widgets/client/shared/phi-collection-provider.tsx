@@ -17,9 +17,9 @@ import {
 import type {
   PhiCollectionProviderActionRequest,
   PhiCollectionProviderData,
-  PhiCollectionProviderDataSource,
   PhiCollectionProviderQueryRequest,
 } from "../../../../types/collection-provider";
+import type { PhiProviderResourceSource } from "../../../../types/runtime-data-provider";
 
 export type PhiCollectionProviderRegistration = {
   key: PhiRuntimeDataProviderKey;
@@ -104,7 +104,7 @@ export function PhiCollectionProviderIsolationBoundary({ children }: { children:
   );
 }
 
-export function usePhiCollectionProvider(source: PhiCollectionProviderDataSource | null) {
+export function usePhiCollectionProvider(source: PhiProviderResourceSource | null) {
   const registry = useContext(PhiCollectionProviderRegistryContext);
   const provider = source ? registry.get(source.providerKey) ?? null : null;
   const resource = source && provider
@@ -124,7 +124,7 @@ export function usePhiCollectionProvider(source: PhiCollectionProviderDataSource
   };
 }
 
-export function usePhiCollectionProviderAction(source: PhiCollectionProviderDataSource | null) {
+export function usePhiCollectionProviderAction(source: PhiProviderResourceSource | null) {
   const { provider, bindingError } = usePhiCollectionProvider(source);
 
   return useCallback(async (

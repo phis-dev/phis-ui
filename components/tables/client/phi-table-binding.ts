@@ -20,9 +20,9 @@ import type {
   PhiTableProviderRowPatchMutationRequest,
   PhiTableQuery,
   PhiTableRowIdentity,
-  PhiTableSourceBinding,
   PhiTableSummaryValue,
 } from "../../../types/table-widget";
+import type { PhiProviderResourceSource } from "../../../types/runtime-data-provider";
 import {
   PhiTableProviderError,
   readPhiTableProviderError,
@@ -123,7 +123,7 @@ type MutationInput<TRequest extends PhiTableProviderMutationRequest> = TRequest 
   : never;
 
 export type PhiTableBindingInput = {
-  source: PhiTableSourceBinding | null;
+  source: PhiProviderResourceSource | null;
   initialQuery?: PhiTableQuery;
   externalQuery?: PhiTableQuery;
   externalSearch?: string;

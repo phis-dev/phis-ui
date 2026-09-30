@@ -1,9 +1,8 @@
 import { resolvePhiCmsWidgetPluginKey } from "../../../../../constants/cms-widget-types";
 import { PhiCmsWidgetType } from "../../../../../constants/cms-widget-types";
 import type { PhiCmsWidgetPlugin } from "../../../../../types";
-import type { PhiTableSourceBinding } from "../../../../../types/table-widget";
+import { readPhiProviderResourceSource, type PhiProviderResourceSource } from "../../../../../types/runtime-data-provider";
 import { isPhiFormId, normalizePhiFormId, type PhiFormId } from "../../../../../types/form-id";
-import { isPhiRuntimeDataProviderKey } from "../../../../../types/runtime-data-provider";
 import { PHI_SIGNAL_VALUE_SCHEMAS, readPhiSignalRouteSet } from "../../../../../types/signals";
 import { requirePhiRuntimeFormControllerForWidget } from "../../../../../components/forms/runtime-form-controller-requirement";
 import {
@@ -135,7 +134,7 @@ export type PhiCmsFormWidgetConfig = PhiCmsWidgetConfigBase & {
      */
     phase: "submit" | "confirm";
   };
-  source: PhiTableSourceBinding | null;
+  source: PhiProviderResourceSource | null;
   /**
    * The Table action that opens a row in this form, for a form fed by a Table.
    *
@@ -199,9 +198,6 @@ export function parsePhiFormWidgetConfig(rawConfig: Record<string, unknown>): Ph
     : "";
 
   const execution = readRecord(rawConfig.execution);
-  const source = readRecord(rawConfig.source);
-  const providerKey = typeof source.providerKey === "string" ? source.providerKey : "";
-  const resourceKey = typeof source.resourceKey === "string" ? source.resourceKey.trim() : "";
 
   const card = readRecord(rawConfig.card);
   const cardPresentation =
@@ -265,13 +261,7 @@ export function parsePhiFormWidgetConfig(rawConfig: Record<string, unknown>): Ph
       mode: execution.mode === "signal" ? "signal" : "handler",
       phase: execution.phase === "confirm" ? "confirm" : "submit",
     },
-    source: isPhiRuntimeDataProviderKey(providerKey) && resourceKey
-      ? {
-          providerKey,
-          resourceKey,
-          params: readRecord(source.params),
-        }
-      : null,
+    source: readPhiProviderResourceSource(rawConfig.source),
     openActionKey: typeof rawConfig.openActionKey === "string" && rawConfig.openActionKey.trim()
       ? rawConfig.openActionKey.trim()
       : undefined,

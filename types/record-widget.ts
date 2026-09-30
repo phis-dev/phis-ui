@@ -1,10 +1,10 @@
 import type { PhiSignalRouteSet } from "./signals";
 import type {
-  PhiTableSourceBinding,
   PhiTableTagColor,
   PhiTableTagVariant,
   PhiTableValueRenderer,
 } from "./table-widget";
+import type { PhiProviderResourceSource } from "./runtime-data-provider";
 
 /**
  * One named value out of a record.
@@ -48,7 +48,7 @@ export type PhiRecordWidgetPresentation = {
  * own driven by a selection elsewhere, or twice with two different sources.
  */
 export type PhiRecordWidgetConfig = {
-  source: PhiTableSourceBinding | null;
+  source: PhiProviderResourceSource | null;
   /** The row action whose signal opens a record -- `view` in every first-party table so far. */
   openActionKey: string;
   presentation: PhiRecordWidgetPresentation;

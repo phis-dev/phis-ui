@@ -1,4 +1,3 @@
-import type { PhiRuntimeDataProviderBinding } from "./runtime-data-provider";
 import type { PhiSignalValueSchema } from "./signals";
 
 /**
@@ -84,10 +83,6 @@ export type PhiCollectionProviderQuery = {
   sortKey?: string;
   sortOrder?: "ascending" | "descending";
   filters?: Record<string, PhiCollectionProviderQueryValue>;
-};
-
-export type PhiCollectionProviderDataSource = PhiRuntimeDataProviderBinding & {
-  resourceKey: string;
 };
 
 export type PhiCollectionProviderData = {

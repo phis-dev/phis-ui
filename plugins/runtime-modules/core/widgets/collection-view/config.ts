@@ -2,13 +2,13 @@ import { resolvePhiCmsWidgetPluginKey } from "../../../../../constants/cms-widge
 import { PhiCmsWidgetType } from "../../../../../constants/cms-widget-types";
 import type { PhiControlSize } from "../../../../../types/control";
 import type {
-  PhiCollectionProviderDataSource,
   PhiCollectionProviderQuery,
   PhiCollectionProviderQueryValue,
 } from "../../../../../types/collection-provider";
+import { readPhiProviderResourceSource, type PhiProviderResourceSource } from "../../../../../types/runtime-data-provider";
 import type { PhiCmsWidgetPlugin } from "../../../../../types/cms-plugins";
 import { PHI_SIGNAL_VALUE_SCHEMAS, readPhiSignalRouteSet, type PhiSignalRouteSet } from "../../../../../types/signals";
-import { isPhiNamespacedRuntimeKey, isPhiRuntimeDataProviderKey } from "../../../../../types/runtime-data-provider";
+import { isPhiNamespacedRuntimeKey } from "../../../../../types/runtime-data-provider";
 import { PHI_BUILDER_RUNTIME_DATA_PROVIDER_KEYS } from "../../../builder/ids";
 import { readPhiLengthValue, type PhiCssLength } from "../../../../../types/length";
 import { readBoolean, readNumber, readNumberList, readString, type PhiCmsWidgetConfigBase } from "../../../../../components/widgets/config/parser-primitives";
@@ -100,7 +100,7 @@ export type PhiCmsCollectionViewWidgetConfig = PhiCmsWidgetConfigBase & {
     };
   };
   initialQuery?: PhiCollectionProviderQuery;
-  source: PhiCollectionProviderDataSource | null;
+  source: PhiProviderResourceSource | null;
   /**
    * A renderer other than the one the bound provider ships.
    *
@@ -157,18 +157,6 @@ function readMode(value: unknown): PhiCmsCollectionViewMode {
 
 function readControlSize(value: unknown): PhiControlSize | undefined {
   return value === "small" || value === "medium" || value === "large" ? value : undefined;
-}
-
-function readSource(value: unknown): PhiCollectionProviderDataSource | null {
-  if (!isPhiRecord(value)) return null;
-  const resourceKey = readString(value.resourceKey);
-  if (!isPhiRuntimeDataProviderKey(value.providerKey) || !resourceKey) return null;
-  return {
-    providerKey: value.providerKey,
-    resourceKey,
-    scopeKey: readString(value.scopeKey),
-    params: isPhiRecord(value.params) ? value.params : undefined,
-  };
 }
 
 function readFilters(value: unknown): PhiCmsCollectionFilterPresentation[] {
@@ -267,7 +255,7 @@ export function normalizePhiCmsCollectionViewWidgetConfig(config: unknown): PhiC
       } : undefined,
     },
     initialQuery: readInitialQuery(raw.initialQuery),
-    source: readSource(raw.source),
+    source: readPhiProviderResourceSource(raw.source),
     itemRendererKey: isPhiNamespacedRuntimeKey(raw.itemRendererKey) ? raw.itemRendererKey : null,
     signalRoutes: readPhiSignalRouteSet(raw.signalRoutes),
   };

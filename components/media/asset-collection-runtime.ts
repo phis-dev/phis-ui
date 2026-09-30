@@ -5,9 +5,9 @@ import { useEffect, useMemo } from "react";
 import { PHI_ASSET_RUNTIME_DATA_PROVIDER_KEYS } from "../../plugins/runtime-modules/asset/ids";
 import type {
   PhiCollectionProviderData,
-  PhiCollectionProviderDataSource,
   PhiCollectionProviderQuery,
 } from "../../types/collection-provider";
+import type { PhiProviderResourceSource } from "../../types/runtime-data-provider";
 import type {
   PhiMediaAssetFolder,
   PhiMediaAssetTile,
@@ -31,7 +31,7 @@ import { isPhiRecord } from "../../helpers/is-record";
 export const PHI_ASSET_COLLECTION_DATA_SOURCE = {
   providerKey: PHI_ASSET_RUNTIME_DATA_PROVIDER_KEYS.mediaCollection,
   resourceKey: "assets",
-} as const satisfies PhiCollectionProviderDataSource;
+} as const satisfies PhiProviderResourceSource;
 
 export function buildPhiAssetCollectionQuery(
   state: Pick<
@@ -82,7 +82,7 @@ export function applyPhiAssetCollectionData(
 }
 
 export function usePhiAssetCollectionRuntime(
-  source: PhiCollectionProviderDataSource | null,
+  source: PhiProviderResourceSource | null,
   enabled = true,
 ) {
   const state = usePhiImagePreviewStore(PHI_ASSET_CONTROLLER_STORE_KEY);

@@ -1,5 +1,5 @@
 import { resolvePhiCmsWidgetPluginKey } from "../../../../../constants/cms-widget-types";
-import { isPhiRuntimeDataProviderKey } from "../../../../../types/runtime-data-provider";
+import { readPhiProviderResourceSource } from "../../../../../types/runtime-data-provider";
 import {
   PHI_TABLE_TAG_COLORS,
   PHI_TABLE_TAG_VARIANTS,
@@ -502,21 +502,6 @@ function readActions(value: unknown): PhiTableActionDefinition[] {
   return result;
 }
 
-function readSource(value: unknown): PhiTableWidgetConfig["source"] {
-  if (!isPhiRecord(value)) {
-    return null;
-  }
-  const providerKey = readString(value.providerKey);
-  const resourceKey = readString(value.resourceKey);
-  return isPhiRuntimeDataProviderKey(providerKey) && resourceKey
-    ? {
-        providerKey,
-        resourceKey,
-        params: isPhiRecord(value.params) ? value.params : undefined,
-      }
-    : null;
-}
-
 export function parsePhiTableWidgetConfig(config: Record<string, unknown>): PhiTableWidgetConfig {
   const presentation = isPhiRecord(config.presentation) ? config.presentation : {};
   const features = isPhiRecord(config.features) ? config.features : {};
@@ -678,7 +663,7 @@ export function parsePhiTableWidgetConfig(config: Record<string, unknown>): PhiT
       ...initialQuery,
       sorts: initialQuery.sorts as readonly PhiTableSort[] | undefined,
     },
-    source: readSource(config.source),
+    source: readPhiProviderResourceSource(config.source),
     signalRoutes: readPhiSignalRouteSet(config.signalRoutes),
   };
 }

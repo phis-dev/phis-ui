@@ -1,3 +1,4 @@
+import type { PhiProviderResourceSource } from "./runtime-data-provider";
 import type { PhiControlPresentationConfig, PhiFeedbackLevel } from "./control";
 import type { PhiCssLength } from "./length";
 import type { PhiControlOption, PhiControlOptionsProviderConfig } from "../components/controls/phi-control-options";
@@ -306,12 +307,6 @@ export type PhiTableStructureConfig =
       expandColumnKey: string;
     };
 
-export type PhiTableSourceBinding = {
-  providerKey: PhiRuntimeDataProviderKey;
-  resourceKey: string;
-  params?: Record<string, unknown>;
-};
-
 export type PhiTableSummaryValue = string | number | boolean | null;
 
 export type PhiTableSummaryValueSource =
@@ -397,7 +392,7 @@ export type PhiTableWidgetConfig = {
   presentation: PhiTableWidgetPresentation;
   features: PhiTableWidgetFeatures;
   initialQuery?: PhiTableQuery;
-  source: PhiTableSourceBinding | null;
+  source: PhiProviderResourceSource | null;
   signalRoutes?: PhiSignalRouteSet | null;
 };
 

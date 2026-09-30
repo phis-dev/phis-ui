@@ -8,7 +8,7 @@ import {
 } from "../../../../../types/signals";
 import type { PhiMediaKindValue } from "../../../../../types/media";
 import { PHI_ASSET_RUNTIME_DATA_PROVIDER_KEYS } from "../../ids";
-import type { PhiCollectionProviderDataSource } from "../../../../../types/collection-provider";
+import type { PhiProviderResourceSource } from "../../../../../types/runtime-data-provider";
 import { readBoolean, readNumber, readString, type PhiCmsWidgetConfigBase } from "../../../../../components/widgets/config/parser-primitives";
 import {
   PHI_MEDIA_PICKER_DEFAULT_COLUMN_WIDTH,
@@ -26,13 +26,13 @@ export type PhiCmsMediaPickerWidgetConfig = PhiCmsWidgetConfigBase & {
   showFolderFilter?: boolean;
   showPagination?: boolean;
   signalRoutes?: PhiSignalRouteSet | null;
-  dataSource?: PhiCollectionProviderDataSource | null;
+  dataSource?: PhiProviderResourceSource | null;
 };
 
 const PHI_MEDIA_PICKER_DATA_SOURCE = {
   providerKey: PHI_ASSET_RUNTIME_DATA_PROVIDER_KEYS.mediaCollection,
   resourceKey: "assets",
-} as const satisfies PhiCollectionProviderDataSource;
+} as const satisfies PhiProviderResourceSource;
 
 export function normalizePhiCmsMediaPickerWidgetConfig(config: unknown): PhiCmsMediaPickerWidgetConfig {
   if (!config || typeof config !== "object" || Array.isArray(config)) {

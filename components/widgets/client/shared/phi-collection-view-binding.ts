@@ -3,10 +3,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import type {
-  PhiCollectionProviderDataSource,
   PhiCollectionProviderQuery,
   PhiCollectionViewBindingModel,
 } from "../../../../types/collection-provider";
+import type { PhiProviderResourceSource } from "../../../../types/runtime-data-provider";
 import { usePhiCollectionProvider } from "./phi-collection-provider";
 
 function buildInitialQuery(initialQuery: PhiCollectionProviderQuery | undefined, pageSize: number | undefined) {
@@ -23,7 +23,7 @@ export function usePhiCollectionViewBinding({
   initialQuery,
   pageSize,
 }: {
-  source: PhiCollectionProviderDataSource | null;
+  source: PhiProviderResourceSource | null;
   initialQuery?: PhiCollectionProviderQuery;
   pageSize?: number;
 }) {

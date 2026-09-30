@@ -20,8 +20,8 @@ import type {
   PhiTableProviderQueryRequest,
   PhiTableProviderQueryResult,
   PhiTableProviderResourceDescriptor,
-  PhiTableSourceBinding,
 } from "../../../../types/table-widget";
+import type { PhiProviderResourceSource } from "../../../../types/runtime-data-provider";
 
 export type PhiTableProviderRegistration = {
   key: PhiRuntimeDataProviderKey;
@@ -112,7 +112,7 @@ function assertPhiTableProviderRegistration(registration: PhiTableProviderRegist
   }
 }
 
-export function usePhiTableProvider(source: PhiTableSourceBinding | null) {
+export function usePhiTableProvider(source: PhiProviderResourceSource | null) {
   const registry = useContext(PhiTableProviderRegistryContext);
   const provider = source ? registry.get(source.providerKey) ?? null : null;
   const resource = provider?.resources.find((candidate) =>
