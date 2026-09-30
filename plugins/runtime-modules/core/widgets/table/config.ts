@@ -29,7 +29,7 @@ import {
   PHI_CONTROL_SIZE_FIELD,
   parsePhiControlPresentationConfig,
 } from "../../../../../components/widgets/config/control-signal-config";
-import { PHI_CORE_RUNTIME_DATA_PROVIDER_KEYS } from "../../../../../plugins/runtime-modules/core/ids";
+import { PHI_CORE_RUNTIME_DATA_PROVIDER_KEYS } from "../../../../../constants/core-data-provider-keys";
 import { readPhiLengthValue } from "../../../../../types/length";
 import { parsePhiControlOptionsProviderConfig } from "../../../../../components/controls/phi-control-options";
 import {

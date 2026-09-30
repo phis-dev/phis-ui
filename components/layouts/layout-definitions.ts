@@ -26,7 +26,7 @@ import { PHI_LAYOUT_PADDING_FIELDS } from "../../helpers/layout-padding-field";
 import type { PhiCmsLayoutPluginDefinition } from "../../types/cms-plugins";
 import type { PhiLayoutKind } from "./phi-layout-contract";
 import { PHI_SIGNAL_VALUE_SCHEMAS } from "../../types/signals";
-import { PHI_CORE_RUNTIME_DATA_PROVIDER_KEYS } from "../../plugins/runtime-modules/core/ids";
+import { PHI_CORE_RUNTIME_DATA_PROVIDER_KEYS } from "../../constants/core-data-provider-keys";
 import type {
   PhiCmsCarouselLayoutConfig,
   PhiCmsCollapsibleLayoutConfig,

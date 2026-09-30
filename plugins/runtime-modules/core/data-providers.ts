@@ -1,5 +1,5 @@
 import type { PhiRuntimeModuleDataProviderDescriptor } from "../contracts";
-import { PHI_CORE_RUNTIME_DATA_PROVIDER_KEYS } from "./ids";
+import { PHI_CORE_RUNTIME_DATA_PROVIDER_KEYS } from "../../../constants/core-data-provider-keys";
 import { PHI_CORE_RUNTIME_MODULE_ID } from "./ids";
 
 export const PHI_CORE_RUNTIME_DATA_PROVIDER_DESCRIPTORS = [

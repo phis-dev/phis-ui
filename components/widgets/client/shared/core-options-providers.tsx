@@ -1,6 +1,6 @@
 "use client";
 
-import { PHI_CORE_RUNTIME_DATA_PROVIDER_KEYS } from "../../../../plugins/runtime-modules/core/ids";
+import { PHI_CORE_RUNTIME_DATA_PROVIDER_KEYS } from "../../../../constants/core-data-provider-keys";
 import {
   buildPhiSpacingScaleOptions,
   type PhiSpacingScaleFamily,

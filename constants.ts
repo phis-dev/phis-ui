@@ -63,4 +63,4 @@ export * from "./constants/threads";
 export * from "./constants/user-state";
 export * from "./constants/media-library-provider-keys";
 export * from "./constants/module-identity";
-export * from "./plugins/runtime-modules/core/ids";
+export { PHI_CORE_RUNTIME_DATA_PROVIDER_KEYS } from "./constants/core-data-provider-keys";

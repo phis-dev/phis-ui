@@ -9,7 +9,7 @@ import {
   PHI_FORM_FIELD_PROVIDER_KEYS,
   createPhiSharedFormProviderKey,
 } from "../../../components/forms/form-provider-contract";
-import { PHI_CORE_RUNTIME_DATA_PROVIDER_KEYS } from "../core/ids";
+import { PHI_CORE_RUNTIME_DATA_PROVIDER_KEYS } from "../../../constants/core-data-provider-keys";
 import { definePhiRuntimeModuleForm } from "../../../components/forms/form-registry";
 import { readPhiServerApiCredentials } from "../../../helpers/phis-server-credentials";
 import { PHI_APP_RUNTIME_MODULE_ID } from "./ids";

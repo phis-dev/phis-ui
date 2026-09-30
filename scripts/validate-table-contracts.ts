@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
 
-import { PHI_CORE_RUNTIME_DATA_PROVIDER_KEYS } from "../plugins/runtime-modules/core/ids";
+import { PHI_CORE_RUNTIME_DATA_PROVIDER_KEYS } from "../constants/core-data-provider-keys";
 import { createPhiRuntimeModuleCatalog, type PhiRuntimeModuleCatalogEntry } from "../plugins/runtime-modules/contracts";
 import { PHI_BUILDER_RUNTIME_DATA_PROVIDER_KEYS } from "../plugins/runtime-modules/builder/ids";
 import { PHI_BUILDER_RUNTIME_DATA_PROVIDER_DESCRIPTORS } from "../plugins/runtime-modules/builder/data-providers";
