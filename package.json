@@ -78,12 +78,6 @@
       "types": "./forms.ts",
       "default": "./forms.ts"
     },
-    "./builder": {
-      "import": "./builder.ts",
-      "require": "./builder.ts",
-      "types": "./builder.ts",
-      "default": "./builder.ts"
-    },
     "./builder-api-route": {
       "import": "./builder-api-route.ts",
       "require": "./builder-api-route.ts",

@@ -4,11 +4,7 @@ import type {
   PhiBuilderPluginMeta,
   PhiBuilderWidgetMeta,
 } from "../../../types/builder";
-import type {
-  PhiCmsLayoutPluginDefinition,
-  PhiResolvedRuntimeModuleSet,
-} from "../../../types/cms-plugins";
-import { canPhiViewerAccessOwnedPolicy } from "../../../types/access";
+import type { PhiCmsLayoutPluginDefinition } from "../../../types/cms-plugins";
 
 function normalizeWidgetIconFamily(category: PhiBuilderPluginMeta["category"]) {
   return category === "other" ? "content" : category;
@@ -114,36 +110,4 @@ export function resolvePhiBuilderWidgetDraftConfig<TConfig extends Record<string
     ...(resolvePhiBuilderPluginDefaultConfig(meta) ?? {}),
     ...(draftConfig ?? {}),
   } as Partial<TConfig>;
-}
-
-export function buildPhiBuilderPluginMetas(
-  moduleSet: PhiResolvedRuntimeModuleSet,
-  viewer?: import("../../../types/access").PhiAccessViewer,
-): PhiBuilderPluginMeta[] {
-  const layoutDefinitions = viewer
-    ? [...moduleSet.layoutDefinitionsByType.values()].filter((entry) =>
-        canPhiViewerAccessOwnedPolicy(
-          viewer,
-          entry.accessPolicy,
-          moduleSet.moduleDefinitionsById.get(entry.ownerModuleId)?.serverBinding.providerId,
-        )
-      )
-    : [...moduleSet.layoutDefinitionsByType.values()];
-  const widgetDefinitions = viewer
-    ? [...moduleSet.widgetDefinitionsByType.values()].filter((entry) =>
-        canPhiViewerAccessOwnedPolicy(
-          viewer,
-          entry.accessPolicy,
-          moduleSet.moduleDefinitionsById.get(entry.ownerModuleId)?.serverBinding.providerId,
-        )
-      )
-    : [...moduleSet.widgetDefinitionsByType.values()];
-  return [
-    ...layoutDefinitions.flatMap((entry) =>
-      buildPhiBuilderLayoutPluginMetas(entry.definition)
-    ),
-    ...widgetDefinitions.map((entry) =>
-      buildPhiBuilderPluginMeta(entry.definition)
-    ),
-  ];
 }
