@@ -7,7 +7,7 @@ import {
 import { resolvePhiServerFormHandler } from "./form-handler-resolution";
 import type { PhiCmsAreaKey } from "../constants/cms-areas";
 import type { PhiRuntimeModuleCatalog } from "../plugins/runtime-modules/contracts";
-import { PHIS_SITE_KEY_HEADER } from "../constants/http-headers";
+import { PHIS_FORM_RELAY_HEADER, PHIS_SITE_KEY_HEADER } from "../constants/http-headers";
 import type { PhiSiteAreaBridgeLoader } from "./site-area-bridges";
 import { isPhiRecord } from "../helpers/is-record";
 
@@ -370,6 +370,8 @@ export function buildPhiSiteFormRouteHandlers({
       const target = resolvePhiFormSubmitTarget(descriptor);
       const proxyHeaders = buildRelayHeaders(request, buildHeaders);
       proxyHeaders.set("content-type", "application/json");
+      // One visitor behind this request: phis counts relayed submissions per visitor, not per Site.
+      proxyHeaders.set(PHIS_FORM_RELAY_HEADER, "1");
       appendCredentialCookieForPolicy(proxyHeaders, request, descriptor.credentialPolicy);
       if (target.requiresCsrf) {
         // Checked here only so a refusal costs no round trip; Core compares the same pair again.
