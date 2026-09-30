@@ -43,7 +43,7 @@ import {
   assertPhiRuntimeModuleIdsAllowedForArea,
   readPhiRuntimeModuleIdsForArea,
 } from "../plugins/runtime-modules/settings";
-import { resolvePhiAuthUiRuntimeProjection } from "../plugins/runtime-modules/auth/ui-provider";
+import { resolvePhiAuthUiRuntimeProjection } from "../server-helpers/auth-ui-provider";
 import { createPhiRuntimeModuleCatalog } from "../plugins/runtime-modules/contracts";
 import { normalizePhiCmsRouteSegment } from "../helpers/cms-routing";
 import {

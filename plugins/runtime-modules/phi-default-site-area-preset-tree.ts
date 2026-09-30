@@ -20,7 +20,7 @@ import { resolvePhiBrandContact } from "../../helpers/brand-contact";
 import { resolvePhiShellHeaderHeight, resolvePhiShellMetric } from "../../helpers/shell-region-style";
 import { resolvePhiLayoutCreationPreset } from "../../helpers/cms-layout-defaults";
 import { PHI_DEFAULT_PUB_AREA_PRESET } from "./pub-area-preset";
-import { createPhiDefaultAreaRuntimeModuleIds } from "./builder/runtime-module-defaults";
+import { createPhiDefaultAreaRuntimeModuleIds } from "./area-module-defaults";
 import {
   PHI_DEFAULT_PUB_AREA_LAYOUT_NODE_KEYS,
   PHI_DEFAULT_PUB_AREA_WIDGET_NODE_KEYS,

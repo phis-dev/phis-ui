@@ -14,7 +14,7 @@ import type { PhiBlockRuntime } from "../../../../types";
 import { PHI_LAYOUT } from "../../../../theme/phi-tokens";
 import { PHI_SPACE } from "../../../../theme/antd-css-var-contract";
 import { getPhiEditorAreaLabels } from "./editor-label-set";
-import { createPhiDefaultAreaRuntimeModuleIds } from "../../builder/runtime-module-defaults";
+import { createPhiDefaultAreaRuntimeModuleIds } from "../../area-module-defaults";
 import { readPhiServerApiCredentials } from "../../../../helpers/phis-server-credentials";
 
 const SYNTHETIC_EDITOR_REGION_IDS = {

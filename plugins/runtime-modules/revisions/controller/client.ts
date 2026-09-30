@@ -32,7 +32,7 @@ import {
   resolvePhiBuilderActivePageKey,
   resolvePhiBuilderPageKeyFromCatalogPath,
 } from "../../../../helpers/cms-page-catalog";
-import { PHI_BUILDER_REVISIONS_TABLE_WIDGET_ID } from "../../../../helpers/cms-page-addresses";
+import { PHI_BUILDER_REVISIONS_TABLE_WIDGET_ID } from "../../builder/addresses";
 import {
   PHI_REVISIONS_RUNTIME_CONTROLLER_DEFINITION,
   type PhiRevisionsControllerConfig,
@@ -42,7 +42,7 @@ import { deleteCmsDraft } from "../../builder/persistence";
 import {
   PHI_BUILDER_DELETE_AREA_OVERLAY_IDS,
   PHI_BUILDER_DELETE_AREA_WIDGET_IDS,
-} from "../../../../helpers/cms-page-addresses";
+} from "../../builder/addresses";
 import { isPhiRecord } from "../../../../helpers/is-record";
 
 const PHI_REVISIONS_TABLE_ADDRESS = createPhiSignalAddress(

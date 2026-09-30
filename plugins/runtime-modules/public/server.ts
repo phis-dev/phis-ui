@@ -5,7 +5,7 @@ import {
 } from "../area-base-presets";
 import { definePhiRuntimeModuleServerAreaContribution } from "../area-contributions";
 import { PHI_PUBLIC_RUNTIME_MODULE_DEFINITION } from "../public/definition";
-import { PHI_PUBLIC_RUNTIME_MODULE_FORMS } from "../../../components/forms/shared-form-plugins";
+import { PHI_PUBLIC_RUNTIME_MODULE_FORMS } from "./forms";
 
 /**
  * The unselectable base module of its Area. Shells and routes come from the shared Area-base preset

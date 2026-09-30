@@ -229,7 +229,7 @@ export const PHI_COMMON_RUNTIME_MODULE_RENDER_CLIENT_MANIFEST =
     [
       PhiCmsWidgetType.CollectionView,
       definePhiRuntimeModuleRenderClient(
-        dynamic(() => import("../../../components/widgets/client/collection-view-widget").then((module) => module.PhiCollectionViewWidget)),
+        dynamic(() => import("../core/widgets/collection-view/client").then((module) => module.PhiCollectionViewWidget)),
       ),
     ],
     // The Dashboard's card, on the same terms: a renderer the Collection View hosts by key. It is the
@@ -245,7 +245,7 @@ export const PHI_COMMON_RUNTIME_MODULE_RENDER_CLIENT_MANIFEST =
     [
       PHI_MEDIA_LIBRARY_ITEM_RENDERER_KEY,
       definePhiRuntimeModuleRenderClient(
-        dynamic(() => import("../../../components/media/phi-asset-collection-view-binding").then((module) => module.PhiAssetCollectionViewBinding)),
+        dynamic(() => import("../core/widgets/collection-view/asset-binding").then((module) => module.PhiAssetCollectionViewBinding)),
       ),
     ],
     [

@@ -1,5 +1,5 @@
-import { PHI_BUILDER_RUNTIME_MODULE_ID } from "../plugins/runtime-modules/builder/ids";
-import { createPhiPresetCmsInstanceId, createPhiPresetCmsInstanceIdMap } from "../types/cms-instance-id";
+import { PHI_BUILDER_RUNTIME_MODULE_ID } from "./ids";
+import { createPhiPresetCmsInstanceId, createPhiPresetCmsInstanceIdMap } from "../../../types/cms-instance-id";
 
 export const PHI_BUILDER_REVISIONS_TABLE_WIDGET_ID = createPhiPresetCmsInstanceId({
   domain: "page",

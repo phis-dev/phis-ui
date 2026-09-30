@@ -889,7 +889,7 @@ await assert.rejects(
   assert.match(service, /search\.set\("spaceId", spaceId\)/u);
 
   // The Collection view is the other surface that reads Media, and it obeys the same rule.
-  const collection = await readSource("components/media/phi-asset-collection-view-binding.tsx");
+  const collection = await readSource("plugins/runtime-modules/core/widgets/collection-view/asset-binding.tsx");
   assert.match(
     collection,
     /spaceSelectionAllowed && spaceOptions\.length > 1/u,

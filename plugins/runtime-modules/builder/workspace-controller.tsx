@@ -130,7 +130,7 @@ import {
   PHI_BUILDER_AREA_SETTINGS_WIDGET_IDS,
   PHI_BUILDER_MODULE_USAGE_OVERLAY_IDS,
   PHI_BUILDER_MODULE_USAGE_WIDGET_IDS,
-} from "../../../helpers/cms-page-addresses";
+} from "./addresses";
 import { readPhiRuntimeFormValuesSignalValue } from "../../../components/forms/runtime-form-state";
 import {
   PHI_BUILDER_EFFECTS_SECTIONS,

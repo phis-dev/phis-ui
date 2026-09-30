@@ -19,7 +19,7 @@ export type {
   PhiAuthoringWidgetModuleProps,
 } from "./plugins/runtime-modules/client-authoring-widget-module";
 export { PhiStaticOptionsToolButton } from "./components/widgets/builder/phi-static-options-picker";
-export { PhiStaticTableResourceEditor } from "./components/tables/client/phi-static-table-resource-editor";
+export { PhiStaticTableResourceEditor } from "./plugins/runtime-modules/core/widgets/table/static-resource-editor";
 export {
   createPhiVersionedStaticTableProviderRegistration,
 } from "./components/widgets/client/shared/phi-static-table-provider";

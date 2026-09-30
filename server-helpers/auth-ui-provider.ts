@@ -3,8 +3,8 @@ import type {
   PhiCmsAreaKey,
   PhiRuntimeModuleCatalog,
   PhiRuntimeModuleId,
-} from "../../../types";
-import { createPhiControllerSignalAddress } from "../../../types/signals";
+} from "../types";
+import { createPhiControllerSignalAddress } from "../types/signals";
 
 export function resolvePhiAuthUiRuntimeProjection(
   catalog: PhiRuntimeModuleCatalog,

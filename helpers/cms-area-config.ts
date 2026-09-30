@@ -1,5 +1,5 @@
 import type { PhiBuilderAreaKey } from "../constants/cms-areas";
-import { createPhiDefaultAreaRuntimeModuleIds } from "../plugins/runtime-modules/builder/runtime-module-defaults";
+import { createPhiDefaultAreaRuntimeModuleIds } from "../plugins/runtime-modules/area-module-defaults";
 import { readPhiRuntimeModuleIds } from "../plugins/runtime-modules/settings";
 import type { PhiRuntimeModuleId } from "../types";
 import type { PhiResolvedCmsAreaPresetTree } from "../types/cms";

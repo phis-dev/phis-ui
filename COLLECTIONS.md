@@ -18,7 +18,7 @@ resource View (registered by the Provider Client for its resource)
 PhiCollectionViewControl and other Phi Controls
 ```
 
-- `PhiCollectionViewWidget` (`components/widgets/client/collection-view-widget.tsx`) is the one placeable
+- `PhiCollectionViewWidget` (`plugins/runtime-modules/core/widgets/collection-view/client.tsx`) is the one placeable
   CMS Collection View. It persists presentation, enabled features, source binding, and signal routes; it
   does not fetch domain endpoints or inspect Provider keys. Preview renders
   `PhiCollectionViewSkeletonControl` without a Binding.
@@ -77,7 +77,7 @@ variant                             default | compact | featured
 
 Only the card View reads `presentation.card`; another View ignores it. A resource whose items are not
 cards registers its own View instead. The Media library (`PhiAssetCollectionViewBinding`,
-`components/media/phi-asset-collection-view-binding.tsx`) is such a View.
+`plugins/runtime-modules/core/widgets/collection-view/asset-binding.tsx`) is such a View.
 
 Provider query results (`PhiCollectionProviderData`) contain `resourceKey`, `items`, authoritative
 `total`, `loading`, `error`, and optional Provider-owned `meta`. Presentation config is never sent to the Provider. Filtering and pagination

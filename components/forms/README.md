@@ -17,8 +17,12 @@ What lives here:
   controller and its client.
 - `form-guard-client.ts` -- the browser's guard token request.
 - `form-builder-controller-*.ts` -- the headless Form Builder Controller.
-- `shared-form-descriptors.ts`, `shared-form-ids.ts`, `shared-form-plugins.tsx` -- the first-party
+- `shared-form-descriptors.ts`, `shared-form-ids.ts` -- the descriptors and ids of the first-party
   Login, Registration, Confirmation, Password Reset, Provider Link Confirmation, and Contact Forms.
-- `auth-*` -- Auth Module Form providers, labels, and Admin settings Forms.
+  The Modules that own them register them: `plugins/runtime-modules/auth/forms.ts` and
+  `plugins/runtime-modules/public/forms.ts`. `shared-form-loaders.ts` holds the label and locale
+  loaders both use.
+- `auth-*` -- labels of the Auth Module's Forms. Its providers and Admin settings Forms live in
+  `plugins/runtime-modules/auth/`.
 
 The gateway half (registry reads, handler resolution, the `/api/site/forms` relay) is under `gateway/`.

@@ -2,16 +2,16 @@
 
 import { createElement } from "react";
 
-import type { PhiCmsInstanceId } from "../../../types/cms-instance-id";
-import { PhiAlertControl } from "../../controls/phi-alert-control";
-import { PhiCollectionViewSkeletonControl } from "../../controls/phi-collection-view-control";
-import { normalizePhiCssSize } from "../../layouts/phi-layout-contract";
-import { usePhiConfig } from "../../root/phi-config-provider";
-import { usePhiRuntimeModuleRenderClient } from "../../runtime/runtime-module-render-client-manifest";
-import type { PhiCmsCollectionViewWidgetConfig } from "../../../plugins/runtime-modules/core/widgets/collection-view/config";
-import { createPhiSignalAddress } from "../../../types/signals";
-import { usePhiControlSignalController } from "./shared/phi-control-signals";
-import { usePhiCollectionViewBinding } from "./shared/phi-collection-view-binding";
+import type { PhiCmsInstanceId } from "../../../../../types/cms-instance-id";
+import { PhiAlertControl } from "../../../../../components/controls/phi-alert-control";
+import { PhiCollectionViewSkeletonControl } from "../../../../../components/controls/phi-collection-view-control";
+import { normalizePhiCssSize } from "../../../../../components/layouts/phi-layout-contract";
+import { usePhiConfig } from "../../../../../components/root/phi-config-provider";
+import { usePhiRuntimeModuleRenderClient } from "../../../../../components/runtime/runtime-module-render-client-manifest";
+import type { PhiCmsCollectionViewWidgetConfig } from "./config";
+import { createPhiSignalAddress } from "../../../../../types/signals";
+import { usePhiControlSignalController } from "../../../../../components/widgets/client/shared/phi-control-signals";
+import { usePhiCollectionViewBinding } from "../../../../../components/widgets/client/shared/phi-collection-view-binding";
 
 export type PhiCollectionViewWidgetProps = {
   config?: PhiCmsCollectionViewWidgetConfig | null;

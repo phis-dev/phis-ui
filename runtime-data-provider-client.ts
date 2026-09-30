@@ -58,7 +58,7 @@ export type {
  */
 export {
   PhiCardCollectionViewBinding,
-} from "./components/widgets/client/shared/phi-card-collection-view-binding";
+} from "./plugins/runtime-modules/core/widgets/card/collection-view-binding";
 export {
   createPhiRuntimeModuleDataProviderClientManifest,
   extendPhiRuntimeModuleDataProviderClientManifest,

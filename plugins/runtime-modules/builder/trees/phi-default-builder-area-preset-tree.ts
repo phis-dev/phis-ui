@@ -49,7 +49,7 @@ import {
   PHI_BUILDER_MODULES_TABLE_FILTER_KEYS,
 } from "../data-providers";
 import { PHI_BUILDER_NAVIGATION_DND_TYPE_PAGE } from "../../../../constants/builder-navigation-dnd";
-import { createPhiDefaultAreaRuntimeModuleIds } from "../runtime-module-defaults";
+import { createPhiDefaultAreaRuntimeModuleIds } from "../../area-module-defaults";
 import { getPhiBuilderChromeWidgetLabels } from "../../../../components/widgets/label-sets/builder-chrome";
 import { PHI_BUILDER_CHROME_WIDGET_DEFAULT_LABELS } from "../../../../components/widgets/label-types/builder-chrome";
 import type { PhiBuilderChromeWidgetLabels } from "../../../../components/widgets/label-types/builder-chrome";
@@ -80,7 +80,7 @@ import {
   PHI_BUILDER_DELETE_AREA_OVERLAY_IDS,
   PHI_BUILDER_DELETE_AREA_LAYOUT_IDS,
   PHI_BUILDER_DELETE_AREA_WIDGET_IDS,
-} from "../../../../helpers/cms-page-addresses";
+} from "../addresses";
 import { PHI_REVISIONS_FORM_IDS } from "../../revisions/forms";
 import { PHI_BUILDER_PAGE_META_FORM_ID } from "../page-meta-form";
 import { PHI_BUILDER_AREA_SETTINGS_FORM_ID } from "../area-settings-form";

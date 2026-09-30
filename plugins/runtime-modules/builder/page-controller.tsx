@@ -55,7 +55,7 @@ import { createPhiBuilderControllerAddress } from "./controller/address";
 import {
   PHI_BUILDER_PAGE_META_OVERLAY_IDS,
   PHI_BUILDER_PAGE_META_WIDGET_IDS,
-} from "../../../helpers/cms-page-addresses";
+} from "./addresses";
 import { createPhiRuntimeFormControllerAddress } from "../../../components/forms/runtime-form-controller-address";
 import { createPhiSignalAddress, createPhiSignalSubcontrolAddress, PHI_SIGNAL_VALUE_SCHEMAS } from "../../../types/signals";
 import { readPhiRuntimeFormValuesSignalValue } from "../../../components/forms/runtime-form-state";

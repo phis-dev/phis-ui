@@ -32,7 +32,7 @@ import { resolvePhiCmsRoutePage } from "../plugins/runtime-modules/route-page-re
 import { PhiCmsFlags } from "../constants/phi-cms";
 import { hasPhiFlag } from "../helpers/flags";
 import { resolvePhiRuntimeModuleServerBinding } from "../plugins/runtime-modules/server-capabilities";
-import { resolvePhiAuthUiRuntimeProjection } from "../plugins/runtime-modules/auth/ui-provider";
+import { resolvePhiAuthUiRuntimeProjection } from "./auth-ui-provider";
 import {
   applyPhiBackgroundAssetProjection,
   resolvePhiBackgroundAssetProjection,

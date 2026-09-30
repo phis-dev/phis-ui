@@ -8,7 +8,7 @@ import type { PhiResolvedCmsPageTree, PhiCmsPageNode } from "../../../../types/c
 import type { PhiBlockRuntime } from "../../../../types";
 import { PHI_LAYOUT } from "../../../../theme/phi-tokens";
 import { PHI_SPACE } from "../../../../theme/antd-css-var-contract";
-import { createPhiDefaultAreaRuntimeModuleIds } from "../../builder/runtime-module-defaults";
+import { createPhiDefaultAreaRuntimeModuleIds } from "../../area-module-defaults";
 
 const SYNTHETIC_APP_REGION_IDS = {
   regionSiderLeft: -160,

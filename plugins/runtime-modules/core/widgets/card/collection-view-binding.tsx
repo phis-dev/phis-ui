@@ -2,19 +2,19 @@
 
 import { useCallback, useMemo } from "react";
 
-import type { PhiCmsInstanceId } from "../../../../types/cms-instance-id";
-import type { PhiCollectionViewBindingModel } from "../../../../types/collection-provider";
+import type { PhiCmsInstanceId } from "../../../../../types/cms-instance-id";
+import type { PhiCollectionViewBindingModel } from "../../../../../types/collection-provider";
 import type {
   PhiCmsCollectionCardPresentation,
   PhiCmsCollectionViewWidgetConfig,
-} from "../../../../plugins/runtime-modules/core/widgets/collection-view/config";
-import { PhiAlertControl } from "../../../controls/phi-alert-control";
-import { PhiCollectionViewControl } from "../../../controls/phi-collection-view-control";
-import { PhiEmptyControl } from "../../../controls/phi-empty-control";
-import { PhiTextControl } from "../../../controls/phi-text-control";
-import { PhiCardWidgetClient } from "../../../../plugins/runtime-modules/core/widgets/card/client";
-import { normalizePhiCssSize } from "../../../layouts/phi-layout-contract";
-import { usePhiSearchDraft } from "./phi-search-draft";
+} from "../collection-view/config";
+import { PhiAlertControl } from "../../../../../components/controls/phi-alert-control";
+import { PhiCollectionViewControl } from "../../../../../components/controls/phi-collection-view-control";
+import { PhiEmptyControl } from "../../../../../components/controls/phi-empty-control";
+import { PhiTextControl } from "../../../../../components/controls/phi-text-control";
+import { PhiCardWidgetClient } from "./client";
+import { normalizePhiCssSize } from "../../../../../components/layouts/phi-layout-contract";
+import { usePhiSearchDraft } from "../../../../../components/widgets/client/shared/phi-search-draft";
 
 /**
  * A Collection drawn as Cards.

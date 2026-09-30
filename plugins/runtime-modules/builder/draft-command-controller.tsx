@@ -8,7 +8,7 @@ import { PHI_SIGNAL_VALUE_SCHEMAS } from "../../../types/signals";
 import { usePhiSignalDispatcher } from "../../../components/runtime/runtime-signal-bus";
 import { usePhiApplicationFeedback } from "../../../components/runtime/use-phi-application-feedback";
 import { createPhiBuilderControllerAddress } from "./controller/address";
-import { createPhiDefaultAreaRuntimeModuleIds } from "./runtime-module-defaults";
+import { createPhiDefaultAreaRuntimeModuleIds } from "../area-module-defaults";
 import { getPhiBuilderDefaultRegionDraft } from "./region-defaults";
 import {
   getPhiBuilderRegionDraftKey,

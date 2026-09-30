@@ -28,7 +28,7 @@ import {
   resolvePhiCmsAreaShellPresetBinding,
   resolvePhiCmsDescriptorCatalog,
 } from "../plugins/runtime-modules/descriptor-compiler";
-import { resolvePhiAuthUiRuntimeProjection } from "../plugins/runtime-modules/auth/ui-provider";
+import { resolvePhiAuthUiRuntimeProjection } from "./auth-ui-provider";
 import { resolveActivePresetModuleKeys } from "./cms-request";
 import {
   applyPhiBackgroundAssetProjection,

@@ -1,7 +1,7 @@
 export { PhiAreaUploadWidget } from "./components/media/phi-area-upload-widget";
 export type { PhiAreaUploadWidgetProps } from "./components/media/phi-area-upload-widget";
-export { PhiAssetPreviewGridWidget } from "./components/media/phi-image-preview-grid-widget";
-export type { PhiAssetPreviewGridWidgetProps } from "./components/media/phi-image-preview-grid-widget";
+export { PhiAssetPreviewGridWidget } from "./plugins/runtime-modules/core/widgets/collection-view/image-preview-grid";
+export type { PhiAssetPreviewGridWidgetProps } from "./plugins/runtime-modules/core/widgets/collection-view/image-preview-grid";
 export { PhiAssetConfigWidget } from "./components/media/phi-image-inspector-widget";
 export type { PhiAssetConfigWidgetProps } from "./components/media/phi-image-inspector-widget";
 export { PhiAssetFolderControl } from "./components/media/phi-asset-folder-control";

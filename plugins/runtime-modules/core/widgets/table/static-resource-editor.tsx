@@ -1,11 +1,11 @@
 "use client";
 
-import type { PhiTableWidgetConfig } from "../../../types/table-widget";
-import { PhiTableWidgetClient } from "../../../plugins/runtime-modules/core/widgets/table/client";
+import type { PhiTableWidgetConfig } from "../../../../../types/table-widget";
+import { PhiTableWidgetClient } from "./client";
 import {
   PHI_TABLE_WIDGET_DEFAULT_LABELS,
   type PhiTableWidgetLabels,
-} from "../../widgets/label-types/table";
+} from "../../../../../components/widgets/label-types/table";
 
 export function PhiStaticTableResourceEditor({
   config,

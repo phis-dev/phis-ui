@@ -1,6 +1,6 @@
 import { PHI_PADDING } from "../../theme/phi-tokens";
 import type { PhiCmsAreaPreset, PhiCmsResolvedRegion } from "../../types";
-import { createPhiDefaultAreaRuntimeModuleIds } from "./builder/runtime-module-defaults";
+import { createPhiDefaultAreaRuntimeModuleIds } from "./area-module-defaults";
 
 const PUB_HEADER_TOP_REGION: PhiCmsResolvedRegion = {
   key: "header_top",

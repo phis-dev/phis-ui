@@ -2,46 +2,46 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 
-import { PhiMediaAssetFlags, PhiMediaKind } from "../../constants/media";
-import type { PhiCmsInstanceId } from "../../types/cms-instance-id";
-import type { PhiCollectionViewBindingModel } from "../../types/collection-provider";
-import type { PhiMediaAssetTile, PhiMediaKindValue } from "../../types/media";
-import { createPhiSignalSubcontrolAddress } from "../../types/signals";
-import { normalizePhiCssSize } from "../layouts/phi-layout-contract";
-import { PhiAlertControl } from "../controls/phi-alert-control";
-import { PhiButtonControl } from "../controls/phi-button-control";
-import { PhiCollectionViewControl } from "../controls/phi-collection-view-control";
-import { PhiEmptyControl } from "../controls/phi-empty-control";
-import { PhiMultiSelectControl } from "../controls/phi-multi-select-control";
-import { PhiSelectControl } from "../controls/phi-select-control";
-import { PhiTextControl } from "../controls/phi-text-control";
-import { PhiToolbarControl } from "../controls/phi-toolbar-control";
+import { PhiMediaAssetFlags, PhiMediaKind } from "../../../../../constants/media";
+import type { PhiCmsInstanceId } from "../../../../../types/cms-instance-id";
+import type { PhiCollectionViewBindingModel } from "../../../../../types/collection-provider";
+import type { PhiMediaAssetTile, PhiMediaKindValue } from "../../../../../types/media";
+import { createPhiSignalSubcontrolAddress } from "../../../../../types/signals";
+import { normalizePhiCssSize } from "../../../../../components/layouts/phi-layout-contract";
+import { PhiAlertControl } from "../../../../../components/controls/phi-alert-control";
+import { PhiButtonControl } from "../../../../../components/controls/phi-button-control";
+import { PhiCollectionViewControl } from "../../../../../components/controls/phi-collection-view-control";
+import { PhiEmptyControl } from "../../../../../components/controls/phi-empty-control";
+import { PhiMultiSelectControl } from "../../../../../components/controls/phi-multi-select-control";
+import { PhiSelectControl } from "../../../../../components/controls/phi-select-control";
+import { PhiTextControl } from "../../../../../components/controls/phi-text-control";
+import { PhiToolbarControl } from "../../../../../components/controls/phi-toolbar-control";
 import {
   PhiMediaAssetCollectionSkeletonControl,
   PhiMediaAssetTileControl,
-} from "../controls/phi-media-asset-tile-control";
-import { usePhiConfig } from "../root/phi-config-provider";
-import { usePhiApplicationFeedback } from "../runtime/use-phi-application-feedback";
-import type { PhiCmsCollectionViewWidgetConfig } from "../../plugins/runtime-modules/core/widgets/collection-view/config";
-import { resolvePhiButtonIcon } from "../widgets/client/shared/phi-button-icons";
-import { usePhiControlSignalController } from "../widgets/client/shared/phi-control-signals";
-import { usePhiSearchDraft } from "../widgets/client/shared/phi-search-draft";
+} from "../../../../../components/controls/phi-media-asset-tile-control";
+import { usePhiConfig } from "../../../../../components/root/phi-config-provider";
+import { usePhiApplicationFeedback } from "../../../../../components/runtime/use-phi-application-feedback";
+import type { PhiCmsCollectionViewWidgetConfig } from "./config";
+import { resolvePhiButtonIcon } from "../../../../../components/widgets/client/shared/phi-button-icons";
+import { usePhiControlSignalController } from "../../../../../components/widgets/client/shared/phi-control-signals";
+import { usePhiSearchDraft } from "../../../../../components/widgets/client/shared/phi-search-draft";
 import {
   buildPhiMediaSpaceOptions,
   usePhiMediaSpaceSelectionAllowed,
-} from "./media-space-selection";
+} from "../../../../../components/media/media-space-selection";
 import {
   buildPhiMediaFolderCascaderOptions,
   buildPhiMediaFolderValueById,
   combinePhiMediaFlagValues,
   PHI_ASSET_CONTROLLER_STORE_KEY,
   resolvePhiMediaFolderIdFromValue,
-} from "./phi-media-scope-controller";
-import { applyPhiAssetCollectionData } from "./asset-collection-runtime";
-import { PhiAssetFolderControl } from "./phi-asset-folder-control";
-import { PhiAreaUploadBinding } from "./phi-area-upload-widget";
-import { PHI_MEDIA_WIDGET_DEFAULT_LABELS, type PhiAssetWidgetLabels } from "./media-widget-labels";
-import { setPhiImagePreviewSelection, usePhiImagePreviewStore } from "./phi-image-preview-store";
+} from "../../../../../components/media/phi-media-scope-controller";
+import { applyPhiAssetCollectionData } from "../../../../../components/media/asset-collection-runtime";
+import { PhiAssetFolderControl } from "../../../../../components/media/phi-asset-folder-control";
+import { PhiAreaUploadBinding } from "../../../../../components/media/phi-area-upload-widget";
+import { PHI_MEDIA_WIDGET_DEFAULT_LABELS, type PhiAssetWidgetLabels } from "../../../../../components/media/media-widget-labels";
+import { setPhiImagePreviewSelection, usePhiImagePreviewStore } from "../../../../../components/media/phi-image-preview-store";
 
 const ASSET_FLAG_VALUES = [
   PhiMediaAssetFlags.Featured,

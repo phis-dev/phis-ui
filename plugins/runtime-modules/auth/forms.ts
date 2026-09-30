@@ -2,11 +2,9 @@ import {
   definePhiRuntimeModuleForm,
   PHI_FORM_PURPOSES,
   type PhiRuntimeModuleFormDefinition,
-} from "./form-registry";
+} from "../../../components/forms/form-registry";
 import {
   PHI_CONFIRM_FORM_DESCRIPTOR,
-  PHI_CONTACT_FORM_DESCRIPTOR,
-  PHI_UNSUBSCRIBE_FORM_DESCRIPTOR,
   PHI_LOGIN_FORM_DESCRIPTOR,
   PHI_PROFILE_EMAIL_FORM_DESCRIPTOR,
   PHI_PROFILE_PASSWORD_FORM_DESCRIPTOR,
@@ -14,50 +12,13 @@ import {
   PHI_REGISTRATION_FORM_DESCRIPTOR,
   PHI_RESET_PASSWORD_CONFIRM_FORM_DESCRIPTOR,
   PHI_RESET_PASSWORD_FORM_DESCRIPTOR,
-} from "./shared-form-descriptors";
-import { PHI_SHARED_FORM_IDS } from "./shared-form-ids";
-import type { PhiFormInitialValuesLoader, PhiFormLabelSetLoader } from "./form-resolution";
-import { PHI_PUBLIC_RUNTIME_MODULE_ID } from "../../plugins/runtime-modules/public/ids";
-import { PHI_AUTH_RUNTIME_MODULE_ID } from "../../plugins/runtime-modules/auth/ids";
+} from "../../../components/forms/shared-form-descriptors";
+import { PHI_SHARED_FORM_IDS } from "../../../components/forms/shared-form-ids";
+import { createPhiFormLabelSetLoader, loadPhiFormLocale } from "../../../components/forms/shared-form-loaders";
+import { PHI_AUTH_RUNTIME_MODULE_ID } from "./ids";
 
-function createLabelLoader(
-  load: () => Promise<
-    (options: { apiBaseUrl: string; internalToken: string; locale: string }) => Promise<unknown>
-  >,
-): PhiFormLabelSetLoader {
-  return async ({ runtime }) => {
-    const [{ flattenPhiFormLabels }, { phiRuntime }, loadLabels] = await Promise.all([
-      import("./form-labels"),
-      import("../../server-helpers/phi-runtime"),
-      load(),
-    ]);
-    const rt = phiRuntime(runtime);
-    return flattenPhiFormLabels(await loadLabels({
-      apiBaseUrl: rt.apiBaseUrl,
-      internalToken: rt.internalToken,
-      locale: runtime.locale.current,
-    }));
-  };
-}
-
-/**
- * The language the form was read in, handed to the handler as one of its values.
- *
- * A form that makes the server write an email is the case: the address, the name and the password say
- * nothing about which language the person was reading, and the handler falls back to the Site's default
- * -- so a Site that answers in English by default sent an English email to somebody who had just filled
- * in a German form. The Site's locale is known where the form is rendered, on the server, and a hidden
- * field is where a value nobody types belongs.
- *
- * Read on the render rather than resolved again in the handler, because the two would then be separate
- * answers to one question: what a person was reading is what the page was drawn in, not what a request
- * arriving later happens to negotiate.
- */
-const loadFormLocale: PhiFormInitialValuesLoader = ({ runtime }) => ({
-  locale: runtime.locale.current,
-});
-
-export const PHI_SHARED_FORM_DEFINITIONS: readonly PhiRuntimeModuleFormDefinition[] = [
+/** The Forms the Auth Module registers: signing in, registering, confirming, the account credentials. */
+export const PHI_AUTH_RUNTIME_MODULE_FORMS: readonly PhiRuntimeModuleFormDefinition[] = [
   definePhiRuntimeModuleForm({
     ownerModuleId: PHI_AUTH_RUNTIME_MODULE_ID,
     areas: ["public", "app"],
@@ -70,7 +31,7 @@ export const PHI_SHARED_FORM_DEFINITIONS: readonly PhiRuntimeModuleFormDefinitio
     tags: ["preset", "shared"],
     descriptor: PHI_LOGIN_FORM_DESCRIPTOR,
     submitHandlerKey: "auth.login",
-    loadLabels: createLabelLoader(() => import("../widgets/label-sets/account")
+    loadLabels: createPhiFormLabelSetLoader(() => import("../../../components/widgets/label-sets/account")
       .then((module) => module.getPhiLoginFormLabels)),
   }),
   definePhiRuntimeModuleForm({
@@ -86,39 +47,9 @@ export const PHI_SHARED_FORM_DEFINITIONS: readonly PhiRuntimeModuleFormDefinitio
     descriptor: PHI_REGISTRATION_FORM_DESCRIPTOR,
     submitHandlerKey: "auth.registration",
     confirmHandlerKey: "auth.registration.confirm",
-    loadLabels: createLabelLoader(() => import("../widgets/label-sets/registration")
+    loadLabels: createPhiFormLabelSetLoader(() => import("../../../components/widgets/label-sets/registration")
       .then((module) => module.getPhiRegistrationFormLabels)),
-    loadInitialValues: loadFormLocale,
-  }),
-  definePhiRuntimeModuleForm({
-    ownerModuleId: PHI_PUBLIC_RUNTIME_MODULE_ID,
-    areas: ["public"],
-    formId: PHI_SHARED_FORM_IDS.contact,
-    version: 1,
-    flags: 0,
-    title: "Contact",
-    description: "Shared contact form preset.",
-    category: "preset",
-    tags: ["preset", "shared"],
-    descriptor: PHI_CONTACT_FORM_DESCRIPTOR,
-    submitHandlerKey: "forms.contact",
-    loadLabels: createLabelLoader(() => import("../widgets/label-sets/contact")
-      .then((module) => module.getPhiContactFormLabels)),
-  }),
-  definePhiRuntimeModuleForm({
-    ownerModuleId: PHI_PUBLIC_RUNTIME_MODULE_ID,
-    areas: ["public"],
-    formId: PHI_SHARED_FORM_IDS.unsubscribe,
-    version: 1,
-    flags: 0,
-    title: "Unsubscribe",
-    description: "Leaving a Site's circulars, from the link in one.",
-    category: "preset",
-    tags: ["preset", "shared"],
-    descriptor: PHI_UNSUBSCRIBE_FORM_DESCRIPTOR,
-    submitHandlerKey: "forms.unsubscribe",
-    loadLabels: createLabelLoader(() => import("../widgets/label-sets/unsubscribe")
-      .then((module) => module.getPhiUnsubscribeFormLabels)),
+    loadInitialValues: loadPhiFormLocale,
   }),
   definePhiRuntimeModuleForm({
     ownerModuleId: PHI_AUTH_RUNTIME_MODULE_ID,
@@ -134,7 +65,7 @@ export const PHI_SHARED_FORM_DEFINITIONS: readonly PhiRuntimeModuleFormDefinitio
     submitHandlerKey: "auth.confirm",
     previewHandlerKey: "auth.confirm.preview",
     previewUpstreamPath: "/api/v1/forms/register/confirm-preview",
-    loadLabels: createLabelLoader(() => import("../widgets/label-sets/confirm")
+    loadLabels: createPhiFormLabelSetLoader(() => import("../../../components/widgets/label-sets/confirm")
       .then((module) => module.getPhiConfirmFormLabels)),
   }),
   definePhiRuntimeModuleForm({
@@ -149,9 +80,9 @@ export const PHI_SHARED_FORM_DEFINITIONS: readonly PhiRuntimeModuleFormDefinitio
     tags: ["preset", "shared"],
     descriptor: PHI_RESET_PASSWORD_FORM_DESCRIPTOR,
     submitHandlerKey: "auth.reset-password",
-    loadLabels: createLabelLoader(() => import("../widgets/label-sets/reset-password")
+    loadLabels: createPhiFormLabelSetLoader(() => import("../../../components/widgets/label-sets/reset-password")
       .then((module) => module.getPhiResetPasswordRequestFormLabels)),
-    loadInitialValues: loadFormLocale,
+    loadInitialValues: loadPhiFormLocale,
   }),
   definePhiRuntimeModuleForm({
     ownerModuleId: PHI_AUTH_RUNTIME_MODULE_ID,
@@ -166,7 +97,7 @@ export const PHI_SHARED_FORM_DEFINITIONS: readonly PhiRuntimeModuleFormDefinitio
     descriptor: PHI_RESET_PASSWORD_CONFIRM_FORM_DESCRIPTOR,
     submitHandlerKey: null,
     confirmHandlerKey: "auth.reset-password.confirm",
-    loadLabels: createLabelLoader(() => import("../widgets/label-sets/reset-password")
+    loadLabels: createPhiFormLabelSetLoader(() => import("../../../components/widgets/label-sets/reset-password")
       .then((module) => module.getPhiResetPasswordConfirmFormLabels)),
   }),
   definePhiRuntimeModuleForm({
@@ -182,7 +113,7 @@ export const PHI_SHARED_FORM_DEFINITIONS: readonly PhiRuntimeModuleFormDefinitio
     descriptor: PHI_PROVIDER_LINK_CONFIRMATION_FORM_DESCRIPTOR,
     submitHandlerKey: null,
     confirmHandlerKey: "auth.provider-link.confirm",
-    loadLabels: createLabelLoader(() => import("../widgets/label-sets/account")
+    loadLabels: createPhiFormLabelSetLoader(() => import("../../../components/widgets/label-sets/account")
       .then((module) => module.getPhiProviderLinkConfirmationFormLabels)),
   }),
   /*
@@ -202,7 +133,7 @@ export const PHI_SHARED_FORM_DEFINITIONS: readonly PhiRuntimeModuleFormDefinitio
     descriptor: PHI_PROFILE_PASSWORD_FORM_DESCRIPTOR,
     purpose: PHI_FORM_PURPOSES.accountPasswordChange,
     submitHandlerKey: "auth.profile.password",
-    loadLabels: createLabelLoader(() => import("../widgets/label-sets/profile")
+    loadLabels: createPhiFormLabelSetLoader(() => import("../../../components/widgets/label-sets/profile")
       .then((module) => module.getPhiProfilePasswordFormLabels)),
   }),
   definePhiRuntimeModuleForm({
@@ -217,15 +148,7 @@ export const PHI_SHARED_FORM_DEFINITIONS: readonly PhiRuntimeModuleFormDefinitio
     tags: ["account", "security"],
     descriptor: PHI_PROFILE_EMAIL_FORM_DESCRIPTOR,
     submitHandlerKey: "auth.profile.email",
-    loadLabels: createLabelLoader(() => import("../widgets/label-sets/profile")
+    loadLabels: createPhiFormLabelSetLoader(() => import("../../../components/widgets/label-sets/profile")
       .then((module) => module.getPhiProfileEmailFormLabels)),
   }),
 ];
-
-export const PHI_PUBLIC_RUNTIME_MODULE_FORMS = PHI_SHARED_FORM_DEFINITIONS.filter(
-  (definition) => definition.ownerModuleId === PHI_PUBLIC_RUNTIME_MODULE_ID,
-);
-
-export const PHI_AUTH_RUNTIME_MODULE_FORMS = PHI_SHARED_FORM_DEFINITIONS.filter(
-  (definition) => definition.ownerModuleId === PHI_AUTH_RUNTIME_MODULE_ID,
-);

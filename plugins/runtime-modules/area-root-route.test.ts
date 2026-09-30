@@ -7,7 +7,7 @@ import { createPhiAdminRuntimeModuleCatalog } from "./area-catalogs/admin";
 import { createPhiAppRuntimeModuleCatalog } from "./area-catalogs/app";
 import { createPhiEditorRuntimeModuleCatalog } from "./area-catalogs/editor";
 import { createPhiBuilderRuntimeModuleCatalog } from "./catalog";
-import { createPhiDefaultAreaRuntimeModuleIds } from "./builder/runtime-module-defaults";
+import { createPhiDefaultAreaRuntimeModuleIds } from "./area-module-defaults";
 import { PHI_DASHBOARD_RUNTIME_MODULE_ID } from "./dashboard/ids";
 import {
   resolvePhiCmsDescriptorCatalog,
