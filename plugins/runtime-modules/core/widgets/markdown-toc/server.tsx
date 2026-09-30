@@ -1,3 +1,5 @@
+import { PhiCmsFlags } from "../../../../../constants/phi-cms";
+import { hasPhiFlag } from "../../../../../helpers/flags";
 import type { PhiNoLabels, PhiServerBlockBaseProps } from "../../../../../types";
 import { tr } from "../../../../../server-helpers/translate";
 import type { PhiCmsContentWidgetNode, PhiResolvedCmsRenderableTree } from "../../../../../types/cms";
@@ -68,6 +70,7 @@ export async function PhiMarkdownTocWidget({
     widgetId: targetWidget.id,
     resolvedContent: targetWidget.resolvedContent ?? null,
   });
+  markdownConfig.translate = !hasPhiFlag(targetWidget.flags, PhiCmsFlags.NoTranslate);
   const renderData = await resolveMarkdownRenderData(markdownConfig, runtime);
   const headings = "error" in renderData ? [] : filterHeadings(renderData.headings, config);
 

@@ -86,6 +86,7 @@ export const PHI_SIMPLE_TEXT_WIDGET_DEFINITION = {
   kind: "widget",
   pluginKey: resolvePhiCmsWidgetPluginKey("simple-text"),
   typeKey: "simple-text",
+  translatesOwnText: true,
   slotSizePolicy: "intrinsic",
   title: "Simple Text",
   category: "content",
@@ -141,6 +142,7 @@ export const PHI_SIMPLE_TEXT_WIDGET_DEFINITION = {
   parseConfig: parsePhiCmsSimpleTextWidgetConfig,
 } satisfies Pick<
   PhiCmsWidgetPlugin<PhiCmsSimpleTextWidgetConfig>,
+  | "translatesOwnText"
   | "kind"
   | "pluginKey"
   | "typeKey"

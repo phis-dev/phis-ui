@@ -22,7 +22,7 @@ const ERROR_STATUS: Record<PhiCmsErrorCode, "403" | "404"> = {
  * translation in the builder inspector where every other widget shows the original.
  *
  * The admin presets are the deliberate other case: their labels are system copy shared across Sites, so
- * they are translated globally in the preset and carry `translate: false` into the widget.
+ * they are translated globally in the preset and set the node's `NoTranslate` flag.
  */
 const ERROR_SOURCE_COPY: Record<PhiCmsErrorCode, { title: string; subTitle: string }> = {
   401: {

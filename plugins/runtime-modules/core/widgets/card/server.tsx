@@ -24,8 +24,8 @@ export async function PhiCardWidget({
   labels,
   config,
   runtime,
-}: PhiCardWidgetProps) {
-  const translate = config?.translate ?? true;
+  translate,
+}: PhiCardWidgetProps & { translate: boolean }) {
   const textEntries = [
     ["eyebrow", labels.eyebrow ?? config?.eyebrow],
     ["title", labels.title ?? config?.title],

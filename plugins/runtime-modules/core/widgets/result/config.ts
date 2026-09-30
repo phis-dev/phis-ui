@@ -15,7 +15,6 @@ export type PhiCmsResultWidgetConfig = PhiCmsWidgetConfigBase & {
   code?: string;
   title?: string;
   subTitle?: string;
-  translate?: boolean;
   homeLink?: boolean;
   homeLinkLabel?: string;
 };
@@ -56,7 +55,6 @@ export function parsePhiCmsResultWidgetConfig(config: Record<string, unknown>): 
     code: readString(config.code),
     title: readString(config.title),
     subTitle: readString(config.subTitle),
-    translate: readBoolean(config.translate) ?? true,
     homeLink: readBoolean(config.homeLink) ?? true,
     homeLinkLabel: readString(config.homeLinkLabel),
   };
@@ -78,6 +76,7 @@ export const PHI_RESULT_WIDGET_DEFINITION = {
    * moves nothing. A Result that ends a page still fills one -- by being put in a slot that is that
    * wide, which is the layout's business rather than the widget's.
    */
+  translatesOwnText: true,
   slotSizePolicy: "intrinsic",
   fields: [
     ...PHI_RENDERABLE_BLOCK_GEOMETRY_FIELDS,
@@ -90,7 +89,6 @@ export const PHI_RESULT_WIDGET_DEFINITION = {
     { key: "code", type: "string", label: "Code" },
     { key: "title", type: "string", label: "Title" },
     { key: "subTitle", type: "string", label: "Subtitle" },
-    { key: "translate", type: "boolean", label: "Translate Text" },
     { key: "homeLink", type: "boolean", label: "Show Home Link" },
     { key: "homeLinkLabel", type: "string", label: "Home Link Label" },
   ],
@@ -98,12 +96,12 @@ export const PHI_RESULT_WIDGET_DEFINITION = {
     status: "info",
     title: "Information",
     subTitle: "",
-    translate: true,
     homeLink: true,
   },
   parseConfig: parsePhiCmsResultWidgetConfig,
 } satisfies Pick<
   PhiCmsWidgetPlugin<PhiCmsResultWidgetConfig>,
+  | "translatesOwnText"
   | "kind"
   | "pluginKey"
   | "typeKey"

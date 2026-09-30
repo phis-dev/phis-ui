@@ -406,6 +406,14 @@ export type PhiCmsWidgetPlugin<TConfig> = {
   requiredRuntimeControllers?: PhiCmsWidgetRuntimeControllerRequirementResolver<TConfig>;
   requiredDataProviders?: readonly PhiRuntimeDataProviderKey[];
   contentBinding?: PhiCmsWidgetContentBinding | null;
+  /**
+   * The Widget translates the text written into its own config.
+   *
+   * Turning that off is the node's `NoTranslate` flag, not a config field: the answer is the same for
+   * every Widget that writes text, so it lives where every node keeps its yes-or-no answers. A Widget
+   * that says so here gets the Inspector's switch for it.
+   */
+  translatesOwnText?: true;
   slotSizePolicy: PhiSlotSizePolicy;
   /**
    * The kind of Region this Widget needs, where standing in the other kind would break it.
@@ -445,6 +453,7 @@ export type PhiCmsWidgetPluginDefinition<TConfig> = Pick<
   | "requiredRuntimeControllers"
   | "requiredDataProviders"
   | "contentBinding"
+  | "translatesOwnText"
   | "slotSizePolicy"
   | "requiredRegionOwnership"
   | "defaultConfig"

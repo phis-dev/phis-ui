@@ -22,7 +22,7 @@ export type PhiCmsCardWidgetConfig = PhiCmsWidgetConfigBase &
     meta?: string;
     /** Which body draws. Absent is `text`, which is what every card written before this one is. */
     body?: PhiCardWidgetBody;
-    /** The figure a `stat` body draws. Never translated, whatever `translate` says. */
+    /** The figure a `stat` body draws. Never translated, whatever the node's `NoTranslate` flag says. */
     value?: string;
     href?: string;
     newTab?: boolean;
@@ -31,7 +31,6 @@ export type PhiCmsCardWidgetConfig = PhiCmsWidgetConfigBase &
     actionNewTab?: boolean;
     variant?: "default" | "compact" | "featured";
     highlight?: boolean;
-    translate?: boolean;
   };
 
 export function parsePhiCmsCardWidgetConfig(config: Record<string, unknown>): PhiCmsCardWidgetConfig {
@@ -62,7 +61,6 @@ export function parsePhiCmsCardWidgetConfig(config: Record<string, unknown>): Ph
       return variant === "compact" || variant === "featured" || variant === "default" ? variant : undefined;
     })(),
     highlight: readBoolean(config.highlight),
-    translate: readBoolean(config.translate) ?? true,
   };
   return source.sourceKind === "asset"
     ? { ...normalized, ...source }
@@ -77,6 +75,7 @@ export const PHI_CARD_WIDGET_DEFINITION = {
   category: "content",
   description: "Flexible content card with optional cover, CTA, and highlight state.",
   iconFamily: "basic",
+  translatesOwnText: true,
   slotSizePolicy: "fill-inline",
   fields: [
     { key: "eyebrow", type: "string", label: "Eyebrow" },
@@ -125,11 +124,11 @@ export const PHI_CARD_WIDGET_DEFINITION = {
       ],
     },
     { key: "highlight", type: "boolean", label: "Highlight" },
-    { key: "translate", type: "boolean", label: "Translate Text" },
   ],
   parseConfig: parsePhiCmsCardWidgetConfig,
 } satisfies Pick<
   PhiCmsWidgetPlugin<PhiCmsCardWidgetConfig>,
+  | "translatesOwnText"
   | "kind"
   | "pluginKey"
   | "typeKey"

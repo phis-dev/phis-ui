@@ -51,6 +51,7 @@ export type PhiBuilderWidgetMeta = PhiBuilderPluginMetaBase & {
   /** What the Widget declared about where it can stand; the insert picker is what reads it. */
   requiredRegionOwnership?: PhiCmsRegionOwnership | null;
   contentBinding?: PhiCmsWidgetContentBinding | null;
+  translatesOwnText?: true;
   signalSubcontrols?: readonly PhiCmsWidgetSignalSubcontrolCollection[];
   fields: readonly PhiCmsConfigField[];
 };

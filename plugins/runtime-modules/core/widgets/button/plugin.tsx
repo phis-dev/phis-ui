@@ -1,3 +1,5 @@
+import { PhiCmsFlags } from "../../../../../constants/phi-cms";
+import { hasPhiFlag } from "../../../../../helpers/flags";
 import type { PhiCmsWidgetPlugin } from "../../../../../types";
 import { PhiCmsWidgetType } from "../../../../../constants/cms-widget-types";
 import { PhiRuntimeModuleRenderClientHost } from "../../../../../components/runtime/runtime-module-render-client-manifest";
@@ -16,8 +18,9 @@ import type { PhiBlockRuntime } from "../../../../../types";
 async function translatePhiButtonConfig(
   config: PhiButtonWidgetConfig,
   runtime: PhiBlockRuntime,
+  translate: boolean,
 ): Promise<PhiButtonWidgetConfig> {
-  if (config.translate === false) return config;
+  if (!translate) return config;
   const entries = ([["label", config.label], ["tooltip", config.tooltip]] as const)
     .filter((entry): entry is readonly ["label" | "tooltip", string] => Boolean(entry[1]?.trim()));
   if (entries.length === 0) return config;
@@ -40,7 +43,7 @@ export const PHI_BUTTON_WIDGET_PLUGIN: PhiCmsWidgetPlugin<PhiButtonWidgetConfig>
       type={PhiCmsWidgetType.Button}
       componentProps={{
         blockId: widget.id,
-        config: await translatePhiButtonConfig(config, runtime),
+        config: await translatePhiButtonConfig(config, runtime, !hasPhiFlag(widget.flags, PhiCmsFlags.NoTranslate)),
         labels: await getPhiCommonControlLabelsForRuntime(runtime),
         link: resolvePhiLinkHref(config.linkTarget, links),
       }}
@@ -51,7 +54,7 @@ export const PHI_BUTTON_WIDGET_PLUGIN: PhiCmsWidgetPlugin<PhiButtonWidgetConfig>
       type={PhiCmsWidgetType.Button}
       componentProps={{
         blockId: widget.id,
-        config: await translatePhiButtonConfig(config, runtime),
+        config: await translatePhiButtonConfig(config, runtime, !hasPhiFlag(widget.flags, PhiCmsFlags.NoTranslate)),
         labels: await getPhiCommonControlLabelsForRuntime(runtime),
         link: resolvePhiLinkHref(config.linkTarget, links),
         disabled: true,

@@ -1,3 +1,5 @@
+import { PhiCmsFlags } from "../../../../../constants/phi-cms";
+import { hasPhiFlag } from "../../../../../helpers/flags";
 import type { PhiCmsServerWidgetPlugin } from "../../../../../types";
 import { definePhiPassiveWidgetRenderers } from "../../../../../plugins/factories/widget-renderers";
 import type { PhiCmsCardWidgetConfig } from "./config";
@@ -18,6 +20,7 @@ export const PHI_CARD_WIDGET_PLUGIN: PhiCmsServerWidgetPlugin<PhiCmsCardWidgetCo
       }}
       config={config}
       runtime={runtime}
+      translate={!hasPhiFlag(widget.flags, PhiCmsFlags.NoTranslate)}
     />
   )),
 };

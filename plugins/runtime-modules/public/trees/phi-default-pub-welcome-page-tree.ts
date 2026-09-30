@@ -159,7 +159,6 @@ export async function buildPhiDefaultPubWelcomePageTree({
         config: {
           sourceMode: "inline",
           markdown: PHI_DEFAULT_PUB_WELCOME_MARKDOWN,
-          translate: true,
           textAlign: "center",
           /*
            * A measure, not a column: the copy stops at 480 so a line stays readable on a wide screen,

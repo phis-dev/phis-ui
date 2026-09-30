@@ -40,15 +40,18 @@ async function translateLabel(
   locale: string | undefined,
   value: string | undefined,
   runtime: PhiBlockRuntime | undefined,
+  translate: boolean,
 ) {
   if (!value) {
     return undefined;
   }
 
   const masked = maskPhiTextPlaceholders(value);
-  const translated = locale
-    ? await trGlobalForLocale(locale, masked.text)
-    : await trGlobal(masked.text);
+  const translated = !translate
+    ? masked.text
+    : locale
+      ? await trGlobalForLocale(locale, masked.text)
+      : await trGlobal(masked.text);
   return resolvePhiTextPlaceholders(translated, masked.names, runtime);
 }
 
@@ -69,16 +72,17 @@ export async function PhiDescriptionWidget({
   labels,
   config,
   runtime,
-}: PhiDescriptionWidgetProps) {
+  translate,
+}: PhiDescriptionWidgetProps & { translate: boolean }) {
   const locale = runtime?.locale.current;
-  const eyebrow = await translateLabel(locale, labels.eyebrow ?? config?.eyebrow, runtime);
-  const title = await translateLabel(locale, labels.title ?? config?.title, runtime);
-  const description = await translateLabel(locale, labels.description ?? config?.description, runtime);
-  const asideTitle = await translateLabel(locale, labels.asideTitle ?? config?.asideTitle, runtime);
+  const eyebrow = await translateLabel(locale, labels.eyebrow ?? config?.eyebrow, runtime, translate);
+  const title = await translateLabel(locale, labels.title ?? config?.title, runtime, translate);
+  const description = await translateLabel(locale, labels.description ?? config?.description, runtime, translate);
+  const asideTitle = await translateLabel(locale, labels.asideTitle ?? config?.asideTitle, runtime, translate);
   const asideItems = await Promise.all(
-    (labels.asideItems ?? config?.asideItems ?? []).map((item) => translateLabel(locale, item, runtime)),
+    (labels.asideItems ?? config?.asideItems ?? []).map((item) => translateLabel(locale, item, runtime, translate)),
   );
-  const footer = await translateLabel(locale, labels.footer ?? config?.footer, runtime);
+  const footer = await translateLabel(locale, labels.footer ?? config?.footer, runtime, translate);
   const resolvedAsideItems = asideItems.filter((item): item is string => Boolean(item));
   const stackStyle: CSSProperties = {
     display: "grid",

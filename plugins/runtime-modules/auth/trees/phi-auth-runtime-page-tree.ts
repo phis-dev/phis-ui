@@ -1,7 +1,7 @@
 import { createPhiPresetCmsInstanceIdMap } from "../../../../types/cms-instance-id";
 import { PHI_AUTH_RUNTIME_MODULE_ID } from "../ids";
 import { PHI_CMS_DEFAULT_SLOT_INDEX } from "../../../../constants/cms-layout-types";
-import { PhiCmsPageType, PhiCmsRegionType } from "../../../../constants/phi-cms";
+import { PhiCmsFlags, PhiCmsPageType, PhiCmsRegionType } from "../../../../constants/phi-cms";
 import { createPhiCmsPresetNodes } from "../../../../helpers/cms-preset-nodes";
 import type { PhiCmsPageNode, PhiResolvedCmsPageTree } from "../../../../types/cms";
 
@@ -59,7 +59,8 @@ export function buildPhiAuthRuntimePageTree({
       slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
       sortOrder: 0,
       label,
-      config: { translate: false },
+      flags: PhiCmsFlags.NoTranslate,
+      config: {},
     })],
   };
 }

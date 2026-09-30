@@ -41,14 +41,6 @@ export type PhiButtonWidgetConfig = PhiControlBadgeConfig & PhiControlConfig & {
    */
   linkTarget?: PhiLinkTarget;
   danger?: boolean;
-  /**
-   * Whether the label and tooltip go through the Site translator when the Button renders.
-   *
-   * On by default, because text written into a placement is Site copy in the source language. A Preset
-   * that hands in text already translated from a global label set says `false`, or the Site would
-   * register that translation as a source of its own.
-   */
-  translate?: boolean;
 };
 
 export function parsePhiButtonWidgetConfig(config: Record<string, unknown>): PhiButtonWidgetConfig {
@@ -69,7 +61,6 @@ export function parsePhiButtonWidgetConfig(config: Record<string, unknown>): Phi
       : readPhiButtonType(config.buttonType),
     linkTarget: readPhiLinkTarget(config.linkTarget) ?? undefined,
     danger: readBoolean(config.danger),
-    translate: readBoolean(config.translate),
   };
 }
 
@@ -91,6 +82,7 @@ export const PHI_BUTTON_WIDGET_DEFINITION = {
   description: "Reusable command button that emits a configured runtime signal.",
   category: "form",
   iconFamily: "form",
+  translatesOwnText: true,
   slotSizePolicy: "intrinsic",
   runtimeSignals: {
     ...PHI_BUTTON_CONTROL_SIGNALS,
@@ -139,7 +131,6 @@ export const PHI_BUTTON_WIDGET_DEFINITION = {
       ],
     },
     { key: "danger", type: "boolean", label: "Danger" },
-    { key: "translate", type: "boolean", label: "Translate Text" },
     ...PHI_CONTROL_PRESENTATION_FIELDS,
     ...PHI_CONTROL_STATE_FIELDS,
     ...PHI_CONTROL_BADGE_FIELDS,
@@ -152,6 +143,7 @@ export const PHI_BUTTON_WIDGET_DEFINITION = {
   parseConfig: parsePhiButtonWidgetConfig,
 } satisfies Pick<
   PhiCmsWidgetPlugin<PhiButtonWidgetConfig>,
+  | "translatesOwnText"
   | "kind"
   | "pluginKey"
   | "typeKey"

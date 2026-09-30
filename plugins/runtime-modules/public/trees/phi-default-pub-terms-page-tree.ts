@@ -85,7 +85,6 @@ export async function buildPhiDefaultPubTermsPageTree({
         config: {
           sourceMode: "inline",
           markdown: PHI_DEFAULT_PUB_TERMS_MARKDOWN,
-          translate: true,
         },
       }),
     ],

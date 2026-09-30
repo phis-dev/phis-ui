@@ -42,6 +42,7 @@ export const PHI_DESCRIPTION_WIDGET_DEFINITION = {
   kind: "widget",
   pluginKey: resolvePhiCmsWidgetPluginKey("description"),
   typeKey: "description",
+  translatesOwnText: true,
   slotSizePolicy: "intrinsic",
   title: "Description",
   category: "content",
@@ -59,7 +60,7 @@ export const PHI_DESCRIPTION_WIDGET_DEFINITION = {
   parseConfig: parsePhiCmsDescriptionWidgetConfig,
 } satisfies Pick<
   PhiCmsWidgetPlugin<PhiCmsDescriptionWidgetConfig>,
-  "kind" | "pluginKey" | "typeKey" | "slotSizePolicy" | "title" | "description" | "category" | "iconFamily" | "fields" | "parseConfig"
+  "translatesOwnText" | "kind" | "pluginKey" | "typeKey" | "slotSizePolicy" | "title" | "description" | "category" | "iconFamily" | "fields" | "parseConfig"
 >;
 
 export const PHI_DESCRIPTION_WIDGET_PLUGIN_TYPE = PhiCmsWidgetType.Description;

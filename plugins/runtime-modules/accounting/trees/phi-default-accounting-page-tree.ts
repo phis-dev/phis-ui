@@ -49,7 +49,6 @@ export async function buildPhiDefaultAccountingPageTree({
           title: "Accounting",
           description: "Invoices and billing workflows for this site.",
           variant: "compact",
-          translate: true,
         },
       }),
     ],

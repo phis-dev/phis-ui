@@ -82,7 +82,6 @@ export async function buildPhiDefaultPubHomePageTree({
         config: {
           sourceMode: "inline",
           markdown: PHI_DEFAULT_PUB_HOME_MARKDOWN,
-          translate: true,
         },
       }),
     ],

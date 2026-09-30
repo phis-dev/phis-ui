@@ -1,3 +1,5 @@
+import { PhiCmsFlags } from "../../../../../constants/phi-cms";
+import { hasPhiFlag } from "../../../../../helpers/flags";
 import type { PhiCmsServerWidgetPlugin } from "../../../../../types";
 import { PhiDescriptionWidget } from "./server";
 import { PhiCmsWidgetType } from "../../../../../constants/cms-widget-types";
@@ -22,6 +24,7 @@ export const PHI_DESCRIPTION_WIDGET_PLUGIN: PhiCmsServerWidgetPlugin<PhiCmsDescr
         footer: config.footer,
       }}
       config={config}
+      translate={!hasPhiFlag(widget.flags, PhiCmsFlags.NoTranslate)}
       runtime={runtime}
     />
   ),

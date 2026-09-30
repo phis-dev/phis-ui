@@ -7,7 +7,6 @@ import type { PhiWidgetFontFamilyKey, PhiWidgetFontSizeKey } from "../../../../.
 import type { PhiHtmlWidgetClientConfig } from "./client";
 import { sanitizePhiHtmlWidgetMarkup } from "../../../../../components/widgets/helpers/html-content";
 import {
-  readBoolean,
   readNumber,
   readRenderableBlockConfig,
   readString,
@@ -24,7 +23,6 @@ export type PhiCmsHtmlWidgetConfig = PhiCmsWidgetConfigBase & {
   revalidateSeconds?: number;
   fontFamily?: PhiWidgetFontFamilyKey;
   fontSize?: PhiWidgetFontSizeKey;
-  translate?: boolean;
 };
 
 export type PhiHtmlWidgetContentConfig = PhiHtmlWidgetClientConfig & {
@@ -43,12 +41,10 @@ export function parsePhiCmsHtmlWidgetConfig(config: Record<string, unknown>): Ph
     revalidateSeconds: readNumber(config.revalidateSeconds),
     fontFamily: readPhiWidgetFontFamily(config.fontFamily),
     fontSize: readPhiWidgetFontSize(config.fontSize),
-    translate: readBoolean(config.translate) ?? true,
   };
 }
 
 export type PhiHtmlWidgetRenderableConfig = PhiHtmlWidgetContentConfig & {
-  translate?: boolean;
   sourceMode?: "inline" | "url";
   sourceUrl?: string;
   sourceLocale?: string;
@@ -63,6 +59,7 @@ export const PHI_HTML_WIDGET_DEFINITION = {
   category: "content",
   description: "HTML-backed editorial text block with a Lexical authoring scaffold in edit mode.",
   iconFamily: "content",
+  translatesOwnText: true,
   slotSizePolicy: "fill-inline",
   contentBinding: {
     storage: "html",
@@ -85,10 +82,8 @@ export const PHI_HTML_WIDGET_DEFINITION = {
     { key: "sourceUrl", type: "url", label: "Source URL", visibleWhen: { field: "sourceMode", equals: "url" } },
     { key: "sourceLocale", type: "string", label: "Source Locale", visibleWhen: { field: "sourceMode", equals: "url" } },
     { key: "revalidateSeconds", type: "number", label: "Revalidate Seconds", visibleWhen: { field: "sourceMode", equals: "url" } },
-    { key: "translate", type: "boolean", label: "Translate" },
   ],
   defaultConfig: {
-    translate: true,
     sourceMode: "inline",
     revalidateSeconds: 14400,
     /*
@@ -107,6 +102,7 @@ export const PHI_HTML_WIDGET_DEFINITION = {
   parseConfig: parsePhiCmsHtmlWidgetConfig,
 } satisfies Pick<
   PhiCmsWidgetPlugin<PhiCmsHtmlWidgetConfig>,
+  | "translatesOwnText"
   | "kind"
   | "pluginKey"
   | "typeKey"

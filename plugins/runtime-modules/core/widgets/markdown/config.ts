@@ -3,7 +3,6 @@ import type { PhiCmsWidgetPlugin } from "../../../../../types";
 import { PhiCmsWidgetType } from "../../../../../constants/cms-widget-types";
 import type { PhiCmsResolvedContent } from "../../../../../types/cms";
 import {
-  readBoolean,
   readNumber,
   readRenderableBlockConfig,
   readString,
@@ -22,6 +21,7 @@ export type PhiCmsMarkdownWidgetConfig = PhiCmsWidgetConfigBase & {
   sourceUrl?: string;
   sourceLocale?: string;
   revalidateSeconds?: number;
+  /** Set at render from the node's `NoTranslate` flag, or by a caller that knows; never authored. */
   translate?: boolean;
   textAlign?: PhiMarkdownTextAlign;
   textBlockSpacingBefore?: PhiMarkdownSpacingKey;
@@ -77,7 +77,6 @@ export function parsePhiCmsMarkdownWidgetConfig(config: Record<string, unknown>)
     sourceUrl,
     sourceLocale: readString(config.sourceLocale),
     revalidateSeconds: readNumber(config.revalidateSeconds),
-    translate: readBoolean(config.translate) ?? true,
     textAlign: readMarkdownTextAlign(config.textAlign),
     textBlockSpacingBefore: readMarkdownSpacingKey(config.textBlockSpacingBefore),
     textBlockSpacingAfter: readMarkdownSpacingKey(config.textBlockSpacingAfter),
@@ -102,9 +101,9 @@ export const PHI_MARKDOWN_WIDGET_DEFINITION = {
    * cap's `100%` is cyclic inside a shrink-to-fit slot and the browser drops the whole cap. Filling, the
    * block is capped by its maximum and placed by the Layout's anchor, in the Builder and live alike.
    */
+  translatesOwnText: true,
   slotSizePolicy: "fill-inline",
   defaultConfig: {
-    translate: true,
     revalidateSeconds: 14400,
     textAlign: "start",
     textBlockSpacingBefore: "none",
@@ -145,7 +144,6 @@ export const PHI_MARKDOWN_WIDGET_DEFINITION = {
       label: "Revalidate Seconds",
       visibleWhen: { field: "sourceMode", equals: "url" },
     },
-    { key: "translate", type: "boolean", label: "Translate" },
     {
       key: "textAlign",
       type: "choice",
@@ -181,6 +179,7 @@ export const PHI_MARKDOWN_WIDGET_DEFINITION = {
   parseConfig: parsePhiCmsMarkdownWidgetConfig,
 } satisfies Pick<
   PhiCmsWidgetPlugin<PhiCmsMarkdownWidgetConfig>,
+  | "translatesOwnText"
   | "kind"
   | "pluginKey"
   | "typeKey"

@@ -83,7 +83,7 @@ export async function PhiHtmlWidget({
   }
 
   const translatedHtml =
-    (sourceMode !== "url" && config?.resolvedContent != null) || config?.translate === false
+    (sourceMode !== "url" && config?.resolvedContent != null) || config?.preferSource === true
       ? sourceHtml
       : await translateSemanticHtml(
           sourceHtml,

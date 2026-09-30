@@ -1,3 +1,4 @@
+import { PhiCmsFlags } from "../../../constants/phi-cms";
 import type { PhiCmsContentWidgetNode, PhiCmsLayoutRenderNode } from "../../../types/cms";
 import type { PhiCmsInstanceId } from "../../../types/cms-instance-id";
 import type { PhiCmsPaddingWidgetConfig } from "../../../types/cms-config";
@@ -56,29 +57,20 @@ function patchLayoutNodeById(
 function patchWidgetNodeById(
   widgets: PhiCmsContentWidgetNode[],
   nodeId: PhiCmsInstanceId,
-  patchConfig: (config: Record<string, unknown>) => Record<string, unknown>,
+  patchNode: (node: PhiCmsContentWidgetNode) => PhiCmsContentWidgetNode,
 ): PhiCmsContentWidgetNode[] {
-  return widgets.map((node) => {
-    if (node.id === nodeId) {
-      return {
-        ...node,
-        config: patchConfig(node.config ?? {}),
-      };
-    }
-
-    return node;
-  });
+  return widgets.map((node) => (node.id === nodeId ? patchNode(node) : node));
 }
 
 function patchWidgetNodeByIdInLayouts(
   nodes: PhiCmsLayoutRenderNode[],
   nodeId: PhiCmsInstanceId,
-  patchConfig: (config: Record<string, unknown>) => Record<string, unknown>,
+  patchNode: (node: PhiCmsContentWidgetNode) => PhiCmsContentWidgetNode,
 ): PhiCmsLayoutRenderNode[] {
   return nodes.map((node) => ({
     ...node,
-    childLayouts: patchWidgetNodeByIdInLayouts(node.childLayouts ?? [], nodeId, patchConfig),
-    childWidgets: patchWidgetNodeById(node.childWidgets ?? [], nodeId, patchConfig),
+    childLayouts: patchWidgetNodeByIdInLayouts(node.childLayouts ?? [], nodeId, patchNode),
+    childWidgets: patchWidgetNodeById(node.childWidgets ?? [], nodeId, patchNode),
   }));
 }
 
@@ -174,10 +166,10 @@ function resolveInspectorCoalesceKey(
   return `${draftKey}:${state.nodeId ?? "root"}:${field}`;
 }
 
-function patchSelectedWidgetDraftConfig(
+function patchSelectedWidgetDraftNode(
   state: PhiDeveloperBuilderWorkspaceState,
   field: string,
-  patchConfig: (config: Record<string, unknown>) => Record<string, unknown>,
+  patchNode: (node: PhiCmsContentWidgetNode) => PhiCmsContentWidgetNode,
 ) {
   if (!state.selectedRootRegionKey || state.nodeId == null) {
     return false;
@@ -201,25 +193,15 @@ function patchSelectedWidgetDraftConfig(
     return false;
   }
 
-  const guardedPatch = guardPhiBuilderConfigPatch(
-    state.area,
-    selectedWidgetNode.widgetType,
-    patchConfig,
-  );
-
   setPhiDeveloperRegionDraft(
     draftKey,
     {
       ...selectedRootDraft,
-      rootNodeChildWidgets: patchWidgetNodeById(
-        selectedRootDraft.rootNodeChildWidgets ?? [],
-        state.nodeId,
-        guardedPatch,
-      ),
+      rootNodeChildWidgets: patchWidgetNodeById(selectedRootDraft.rootNodeChildWidgets ?? [], state.nodeId, patchNode),
       rootNodeChildLayouts: patchWidgetNodeByIdInLayouts(
         selectedRootDraft.rootNodeChildLayouts ?? [],
         state.nodeId,
-        guardedPatch,
+        patchNode,
       ),
     },
     {
@@ -230,6 +212,17 @@ function patchSelectedWidgetDraftConfig(
   );
 
   return true;
+}
+
+function patchSelectedWidgetDraftConfig(
+  state: PhiDeveloperBuilderWorkspaceState,
+  field: string,
+  patchConfig: (config: Record<string, unknown>) => Record<string, unknown>,
+) {
+  return patchSelectedWidgetDraftNode(state, field, (node) => ({
+    ...node,
+    config: guardPhiBuilderConfigPatch(state.area, node.widgetType, patchConfig)(node.config ?? {}),
+  }));
 }
 
 function patchSelectedStructureDraftConfig(
@@ -383,6 +376,16 @@ export function runPhiDeveloperBuilderInspectorAction(
         ...resolveWidgetSizeFromGeometry(geometry as PhiCmsGeometryWidgetConfig),
       }));
     }
+    return;
+  }
+
+  if (action.kind === "setSelectedWidgetTranslate") {
+    patchSelectedWidgetDraftNode(state, "translate", (node) => ({
+      ...node,
+      flags: action.translate
+        ? (node.flags ?? 0) & ~PhiCmsFlags.NoTranslate
+        : (node.flags ?? 0) | PhiCmsFlags.NoTranslate,
+    }));
     return;
   }
 

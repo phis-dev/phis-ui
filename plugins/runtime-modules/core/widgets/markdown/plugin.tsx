@@ -19,6 +19,7 @@ export const PHI_MARKDOWN_WIDGET_PLUGIN: PhiCmsServerWidgetPlugin<PhiCmsMarkdown
         widgetId: widget.id,
         resolvedContent: widget.resolvedContent ?? null,
         preferSource: hasPhiFlag(widget.flags, PhiCmsFlags.NoTranslate),
+        translate: !hasPhiFlag(widget.flags, PhiCmsFlags.NoTranslate),
       }}
       runtime={runtime}
     />

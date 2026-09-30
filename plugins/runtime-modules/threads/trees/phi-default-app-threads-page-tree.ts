@@ -1,5 +1,5 @@
 import { PHI_CMS_DEFAULT_SLOT_INDEX } from "../../../../constants/cms-layout-types";
-import { PhiCmsPageType } from "../../../../constants/phi-cms";
+import { PhiCmsFlags, PhiCmsPageType } from "../../../../constants/phi-cms";
 import { createPhiCmsPresetNodes } from "../../../../helpers/cms-preset-nodes";
 import type { PhiCmsPageNode, PhiResolvedCmsPageTree } from "../../../../types/cms";
 import type { PhiBlockRuntime } from "../../../../types";
@@ -711,8 +711,8 @@ export async function buildPhiDefaultAppThreadsPageTree({
         slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX + 2,
         sortOrder: 2,
         label: labels.composerLabel,
+        flags: PhiCmsFlags.NoTranslate,
         config: {
-          translate: false,
           formId: PHI_THREADS_FORM_IDS.message,
           formConfig: {},
           execution: { mode: "handler" },
@@ -791,8 +791,8 @@ export async function buildPhiDefaultAppThreadsPageTree({
         slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX + 3,
         sortOrder: 3,
         label: labels.composerLabel,
+        flags: PhiCmsFlags.NoTranslate,
         config: {
-          translate: false,
           text: labels.composerNoThreadText,
           color: PHI_COLOR.textSecondary,
           visibleWhen: {

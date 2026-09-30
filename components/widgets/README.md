@@ -202,6 +202,13 @@ Generic control Widgets reuse the capability sets in `signals/control-signal-cap
 
 ## Content Widgets
 
+A Widget that translates the text written into its own config says `translatesOwnText: true` in its
+definition: `simple-text`, `description`, `markdown`, `html`, `button`, `card`, `result`. Turning that off is
+the node's `PhiCmsFlags.NoTranslate` flag and nothing else -- there is no `translate` config field. The
+Builder's Inspector offers the switch for exactly these Widgets, and a Preset whose text arrives translated
+from a label set sets the flag on the node. For a Widget bound to a Content record the flag also shows the
+record's source text instead of its localized version.
+
 - `simple-text` keeps `text` as its live property. A CMS instance persists source text in
   `site_content(type=text)` through `content_id`; code-owned presets may use inline `config.text`.
   `flags & PhiCmsFlags.NoTranslate` renders source text without translation.

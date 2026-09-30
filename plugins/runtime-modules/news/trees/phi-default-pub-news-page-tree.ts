@@ -84,7 +84,6 @@ export async function buildPhiDefaultPubNewsPageTree({
         config: {
           sourceMode: "inline",
           markdown: PHI_DEFAULT_PUB_NEWS_MARKDOWN,
-          translate: true,
         },
       },
       {

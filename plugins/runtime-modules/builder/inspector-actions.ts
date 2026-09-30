@@ -5,6 +5,7 @@ export type PhiBuilderInspectorAction =
   | { kind: "patchSelectedRegionDraft"; patch: Record<string, unknown> }
   | { kind: "patchSelectedWidgetConfig"; patch: Record<string, unknown> }
   | { kind: "patchSelectedWidgetGeometry"; geometry: Record<string, unknown> }
+  | { kind: "setSelectedWidgetTranslate"; translate: boolean }
   | { kind: "patchSelectedLayoutAnchor"; selectedLayoutAnchor: string }
   | { kind: "patchSelectedLayoutPadding"; padding: Record<string, unknown> | null }
   | { kind: "patchSelectedLayoutBackground"; background: unknown }
@@ -36,6 +37,10 @@ export function readPhiBuilderInspectorAction(
   if (value.kind === "patchSelectedWidgetGeometry") {
     const geometry = readRecord(value.geometry);
     return geometry ? { kind: value.kind, geometry } : null;
+  }
+
+  if (value.kind === "setSelectedWidgetTranslate") {
+    return typeof value.translate === "boolean" ? { kind: value.kind, translate: value.translate } : null;
   }
 
   if (value.kind === "patchSelectedLayoutAnchor") {

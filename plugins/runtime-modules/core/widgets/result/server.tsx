@@ -8,21 +8,17 @@ import { readPhiServerApiCredentials } from "../../../../../helpers/phis-server-
 export type PhiResultWidgetProps = {
   config?: PhiCmsResultWidgetConfig;
   runtime: PhiBlockRuntime;
+  /** Whether the Widget's own text is translated, which the node's `NoTranslate` flag turns off. */
+  translate: boolean;
 };
 
-async function resolveResultText({
-  config,
-  runtime,
-}: {
-  config?: PhiCmsResultWidgetConfig;
-  runtime: PhiBlockRuntime;
-}) {
+async function resolveResultText({ config, runtime, translate }: PhiResultWidgetProps) {
   const code = config?.code?.trim();
   const title = config?.title?.trim();
   const subTitle = config?.subTitle?.trim();
   const homeLinkLabel = config?.homeLinkLabel?.trim() || PHI_RESULT_HOME_LINK_SOURCE_LABEL;
   const shouldTranslate =
-    config?.translate !== false &&
+    translate &&
     config?.renderMode !== "preview" &&
     config?.renderMode !== "editor" &&
     Boolean(readPhiServerApiCredentials().apiBaseUrl.trim()) &&
@@ -51,8 +47,8 @@ async function resolveResultText({
   };
 }
 
-export async function PhiResultWidget({ config, runtime }: PhiResultWidgetProps) {
-  const { code, title, subTitle, homeLinkLabel } = await resolveResultText({ config, runtime });
+export async function PhiResultWidget({ config, runtime, translate }: PhiResultWidgetProps) {
+  const { code, title, subTitle, homeLinkLabel } = await resolveResultText({ config, runtime, translate });
   /*
    * Resolved here rather than configured: the root of the Area this result was rendered in, in the
    * locale it was rendered for. `localizeAreaPath` is the same answer the navigation gives.

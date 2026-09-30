@@ -40,6 +40,9 @@ import {
   type PhiInspectorWidgetReferenceOption,
 } from "./inspector-config-field";
 import { PhiTypographyControl } from "../../../../components/controls/phi-typography-control";
+import { PhiSwitchControl } from "../../../../components/controls/phi-switch-control";
+import { PhiCmsFlags } from "../../../../constants/phi-cms";
+import { hasPhiFlag } from "../../../../helpers/flags";
 
 const PHI_GAP_SM = "var(--ant-padding-sm)";
 
@@ -55,6 +58,8 @@ type PhiDeveloperBuilderWidgetInspectorWidgetClientProps = {
   signalRouteScope?: PhiSignalRoute["scope"];
   onConfigChange?: (next: Record<string, unknown>) => void;
   onGeometryChange?: (next: PhiCmsGeometryWidgetConfig) => void;
+  /** Sets the node's `NoTranslate` flag; offered for a Widget that translates its own text. */
+  onTranslateChange?: (translate: boolean) => void;
   geometryLabels?: PhiGeometryWidgetLabels;
   signalsLabels?: PhiSignalsWidgetLabels;
   colorPickerLabels?: PhiColorPickerLabels;
@@ -76,6 +81,7 @@ export function PhiDeveloperBuilderWidgetInspectorWidgetClient({
   signalRouteScope = "widget",
   onConfigChange,
   onGeometryChange,
+  onTranslateChange,
   geometryLabels,
   signalsLabels,
   colorPickerLabels,
@@ -167,6 +173,14 @@ export function PhiDeveloperBuilderWidgetInspectorWidgetClient({
                         },
                       }),
                     )}
+                    {selectedStructureWidgetMeta.translatesOwnText ? (
+                      <PhiSwitchControl
+                        label="Translate text"
+                        checked={!hasPhiFlag(currentDraft?.flags ?? 0, PhiCmsFlags.NoTranslate)}
+                        disabled={isPreviewMode}
+                        onChange={onTranslateChange}
+                      />
+                    ) : null}
                   </div>
                 ),
               },
