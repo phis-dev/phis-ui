@@ -88,7 +88,7 @@ describe("the first-party sidebars", () => {
       "  General",
     ]);
     expect(sidebarOf("accounting")).toEqual(["Dashboard", "Overview"]);
-    expect(sidebarOf("editor")).toEqual(["Dashboard", "Translations"]);
+    expect(sidebarOf("editor")).toEqual(["Dashboard", "News", "Translations"]);
   });
 
   it("are reached by anchor alone", () => {

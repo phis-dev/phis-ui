@@ -337,6 +337,11 @@ export const PHI_EDITOR_RUNTIME_AREA_DEFINITIONS = [
       navKey: "editor:sidebar",
       label: label("Editor sidebar navigation"),
       items: [{
+        itemKey: "@phis/ui/modules/editor/nav/news",
+        label: label("News"),
+        icon: "antd:notification",
+        routePresetKey: "editor-news-page",
+      }, {
         itemKey: "@phis/ui/modules/editor/nav/translations",
         label: label("Translations"),
         icon: "antd:translation",

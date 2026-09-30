@@ -567,7 +567,6 @@ const exclusiveAreaEntries = [
 ];
 const expectedExclusiveAreaEntries = [
   "PHI_PUBLIC_RUNTIME_MODULE_ID:public",
-  "PHI_NEWS_RUNTIME_MODULE_ID:public",
   "PHI_APP_RUNTIME_MODULE_ID:app",
   "PHI_AVATAR_RUNTIME_MODULE_ID:app",
   "PHI_THREADS_RUNTIME_MODULE_ID:app",

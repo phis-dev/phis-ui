@@ -159,6 +159,7 @@ const PHI_RUNTIME_MODULE_OWNERSHIP: Readonly<Record<string, readonly [module: st
   "options/builder-signal-senders": ["builder", "signal-senders"],
   "options/forms": ["builder", "forms"],
   "options/group-member-candidates": ["groups", "group-member-candidates"],
+  "options/news-tags": ["news", "tags"],
   "options/thread-candidates": ["threads", "candidates"],
   "options/groups": ["groups", "groups"],
   "options/localization-locales": ["localization", "locales"],
@@ -227,6 +228,7 @@ const PHI_RUNTIME_MODULE_OWNERSHIP: Readonly<Record<string, readonly [module: st
   // The authoring-time options picker, owned by the Builder like the other authoring tables.
   "tables/static-options-editor": ["builder", "static-options-editor"],
   "tables/groups": ["groups", "groups"],
+  "tables/news": ["news", "news"],
   "tables/localization": ["localization", "localization"],
   "tables/observability": ["observability", "observability"],
   "tables/revisions": ["revisions", "revisions"],
