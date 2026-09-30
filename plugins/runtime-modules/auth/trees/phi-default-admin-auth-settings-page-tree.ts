@@ -1,6 +1,6 @@
 import { PHI_AUTH_RUNTIME_MODULE_ID } from "../ids";
 import { PHI_AUTH_RUNTIME_DATA_PROVIDER_KEYS } from "../ids";
-import { PHI_AUTH_ADMIN_SETTINGS_FORM_IDS } from "../../../../components/forms/auth-admin-settings-forms";
+import { PHI_AUTH_ADMIN_SETTINGS_FORM_IDS } from "../admin-settings-forms";
 import { getPhiAuthAdminSettingsLabels } from "../../../../components/forms/auth-admin-settings-labels";
 import { getResolvedSiteAuthAdminSettings } from "../../../../gateway/site-auth-settings";
 import type { PhiCmsPageNode, PhiResolvedCmsPageTree } from "../../../../types/cms";

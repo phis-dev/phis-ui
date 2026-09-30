@@ -3,14 +3,14 @@
 import {
   createPhiControlOptionsProviderClient,
   type PhiControlOptionsProviderContext,
-} from "../controls/phi-options-provider";
-import { PHI_ASSET_RUNTIME_DATA_PROVIDER_KEYS } from "../../plugins/runtime-modules/asset/ids";
-import { PHI_ASSET_CONTROLLER_STORE_KEY } from "./asset-controller-signals";
-import { phiImagePreviewStore, type PhiImagePreviewStoreState } from "./phi-image-preview-store";
+} from "../../../../components/controls/phi-options-provider";
+import { PHI_ASSET_RUNTIME_DATA_PROVIDER_KEYS } from "../ids";
+import { PHI_ASSET_CONTROLLER_STORE_KEY } from "../../../../components/media/asset-controller-signals";
+import { phiImagePreviewStore, type PhiImagePreviewStoreState } from "../../../../components/media/phi-image-preview-store";
 import {
   buildPhiMediaFolderCascaderOptions,
   buildPhiMediaFolderValueById,
-} from "./phi-media-scope-controller";
+} from "../../../../components/media/phi-media-scope-controller";
 
 export const PhiMediaFoldersOptionsProviderClient = createPhiControlOptionsProviderClient({
   key: PHI_ASSET_RUNTIME_DATA_PROVIDER_KEYS.mediaFolders,

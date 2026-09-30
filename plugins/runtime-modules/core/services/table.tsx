@@ -1,9 +1,9 @@
 "use client";
 
 import { PHI_CORE_RUNTIME_DATA_PROVIDER_KEYS } from "../../../../constants/core-data-provider-keys";
-import { PHI_CORE_RUNTIME_DATA_PROVIDER_DESCRIPTORS } from "../../../../plugins/runtime-modules/core/data-providers";
-import { createPhiTableProviderClient } from "./phi-table-provider";
-import { createPhiStaticTableProviderRegistration } from "./phi-static-table-provider";
+import { PHI_CORE_RUNTIME_DATA_PROVIDER_DESCRIPTORS } from "../data-providers";
+import { createPhiTableProviderClient } from "../../../../components/widgets/client/shared/phi-table-provider";
+import { createPhiStaticTableProviderRegistration } from "../../../../components/widgets/client/shared/phi-static-table-provider";
 
 const descriptor = PHI_CORE_RUNTIME_DATA_PROVIDER_DESCRIPTORS.find((candidate) =>
   candidate.key === PHI_CORE_RUNTIME_DATA_PROVIDER_KEYS.contentTable);

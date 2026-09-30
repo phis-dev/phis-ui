@@ -13,7 +13,7 @@ import { createPhiAuthControllerAddress } from "../../../../components/runtime/a
 import {
   PHI_AUTH_LOGIN_OVERLAY_IDS,
   type PhiAuthLoginOverlayArea,
-} from "../../../../components/runtime/auth-overlay-ids";
+} from "../overlay-ids";
 import { readPhiServerApiCredentials } from "../../../../helpers/phis-server-credentials";
 
 export async function buildPhiAuthAreaLoginOverlayTree({

@@ -300,7 +300,7 @@ const antdImportAllowance = new Map([
     paths: ["antd/es/form"],
     reason: "Rule types for the Form primitive PhiFormControl wraps.",
   }],
-  ["components/widgets/client/markdown-editor.tsx", {
+  ["plugins/runtime-modules/core/widgets/markdown/editor.tsx", {
     paths: ["antd/es/input/TextArea"],
     reason: "A ref to the textarea it has to place a cursor in. A leak, and the smallest one available.",
   }],

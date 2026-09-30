@@ -6,7 +6,7 @@ import type {
   PhiQuickLinksWidgetClientLabels,
 } from "./client";
 import { resolvePhiNavigationItems } from "../../../../../components/widgets/server/navigation-request";
-import { mapPhiNavItemsToQuickLinksItems } from "../../../../../components/widgets/quick-links-items";
+import { mapPhiNavItemsToQuickLinksItems } from "./items";
 
 export type PhiQuickLinksWidgetProps = {
   runtime: Pick<PhiBlockRuntime, "site" | "locale" | "area" | "viewer" | "request">;

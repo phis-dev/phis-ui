@@ -1,7 +1,7 @@
 import type { PhiCmsServerWidgetPlugin } from "../../../../../types";
 import { renderPhiWidgetPreviewPlaceholder } from "../../../../../plugins/factories/widget-renderers";
 import type { PhiCmsAssetFocalRectWidgetConfig } from "./config";
-import { PhiAssetFocalRectWidgetServer } from "../../../../../components/media/phi-asset-focal-rect-server";
+import { PhiAssetFocalRectWidgetServer } from "./server";
 import {
   PHI_ASSET_FOCAL_RECT_WIDGET_DEFINITION,
 } from "./config";

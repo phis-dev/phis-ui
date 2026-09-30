@@ -2,7 +2,7 @@
 
 import type { PhiCmsBuilderWidgetPlugin } from "../../../../../types";
 import type { PhiCmsCardWidgetConfig } from "./config";
-import { PhiCardWidgetEditor } from "../../../../../components/widgets/client/card-editor";
+import { PhiCardWidgetEditor } from "./editor";
 import { PhiWidgetImageToolButton } from "../../../../../components/widgets/client/shared/phi-widget-image-tool-button";
 import { PHI_CARD_WIDGET_DEFINITION } from "./config";
 

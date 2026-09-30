@@ -12,7 +12,7 @@ import {
 } from "../../../../../helpers/cms-navigation-catalog";
 import { PhiQuickLinksWidgetClient } from "./client";
 import { PHI_QUICK_LINKS_WIDGET_DEFINITION, type PhiCmsQuickLinksWidgetConfig } from "./config";
-import { mapPhiBuilderNavigationItemsToQuickLinksItems } from "../../../../../components/widgets/quick-links-items";
+import { mapPhiBuilderNavigationItemsToQuickLinksItems } from "./items";
 
 function PhiQuickLinksWidgetBuilderEditor({
   runtime,

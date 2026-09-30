@@ -27,10 +27,10 @@ export const PHI_CORE_RUNTIME_DATA_PROVIDER_CLIENT_DEFINITIONS = [
     key: PHI_CORE_RUNTIME_DATA_PROVIDER_KEYS.contentTable,
     ownerModuleId: PHI_CORE_RUNTIME_MODULE_ID,
     loadLive: async () =>
-      (await import("../../../components/widgets/client/shared/core-table-providers"))
+      (await import("./services/table"))
         .PhiContentTableProviderClient,
     loadAuthoring: async () =>
-      (await import("../../../components/widgets/client/shared/core-table-providers"))
+      (await import("./services/table"))
         .PhiContentTableProviderClient,
   },
 ] satisfies readonly PhiRuntimeModuleDataProviderClientDefinition[];

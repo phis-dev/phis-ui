@@ -92,7 +92,7 @@ import {
   PHI_ASSET_INSPECTOR_WIDGET_IDS,
   PHI_ASSET_MEDIA_PAGE_WIDGET_IDS,
 } from "../../../../components/media/asset-inspector-addresses";
-import { PHI_ASSET_FOLDER_FORM_ID, PHI_ASSET_METADATA_FORM_ID } from "../../../../components/media/asset-metadata-form";
+import { PHI_ASSET_FOLDER_FORM_ID, PHI_ASSET_METADATA_FORM_ID } from "../../asset/metadata-form";
 import { createPhiAssetControllerAddress } from "../../../../components/media/asset-controller-address";
 import { createPhiRuntimeFormControllerAddress } from "../../../../components/forms/runtime-form-controller-address";
 import { readPhiServerApiCredentials } from "../../../../helpers/phis-server-credentials";

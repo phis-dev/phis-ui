@@ -1,9 +1,9 @@
-import { resolvePhiNavHref } from "../../helpers/locale";
+import { resolvePhiNavHref } from "../../../../../helpers/locale";
 import {
   type PhiBuilderNavigationItem,
-} from "../../helpers/cms-navigation-catalog";
-import type { PhiNavItem } from "../shell/shell-types";
-import type { PhiQuickLinksWidgetItem } from "../../plugins/runtime-modules/core/widgets/quick-links/client";
+} from "../../../../../helpers/cms-navigation-catalog";
+import type { PhiNavItem } from "../../../../../components/shell/shell-types";
+import type { PhiQuickLinksWidgetItem } from "./client";
 
 export function mapPhiNavItemsToQuickLinksItems(
   items: PhiNavItem[],

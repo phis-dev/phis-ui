@@ -6,11 +6,11 @@ import type { PhiCmsBuilderWidgetPlugin } from "../../../../../types";
 import { PHI_ICON_WIDGET_DEFINITION, type PhiCmsIconWidgetConfig } from "./config";
 
 const PhiIconWidgetEditor = lazy(async () => ({
-  default: (await import("../../../../../components/widgets/builder/icon-editor")).PhiIconWidgetEditor,
+  default: (await import("./editor")).PhiIconWidgetEditor,
 }));
 
 const PhiIconWidgetEditorTools = lazy(async () => ({
-  default: (await import("../../../../../components/widgets/builder/icon-editor")).PhiIconWidgetEditorTools,
+  default: (await import("./editor")).PhiIconWidgetEditorTools,
 }));
 
 export const PHI_ICON_WIDGET_BUILDER_PLUGIN: PhiCmsBuilderWidgetPlugin<PhiCmsIconWidgetConfig> = {

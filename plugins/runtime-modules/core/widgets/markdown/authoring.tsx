@@ -7,7 +7,7 @@ import { PhiMarkdownWidgetToolbarTools } from "../../../../../components/widgets
 import { PHI_MARKDOWN_WIDGET_DEFINITION, type PhiCmsMarkdownWidgetConfig } from "./config";
 
 const PhiMarkdownWidgetEditor = lazy(async () => ({
-  default: (await import("../../../../../components/widgets/client/markdown-editor")).PhiMarkdownWidgetEditor,
+  default: (await import("./editor")).PhiMarkdownWidgetEditor,
 }));
 
 export const PHI_MARKDOWN_WIDGET_BUILDER_PLUGIN: PhiCmsBuilderWidgetPlugin<PhiCmsMarkdownWidgetConfig> = {

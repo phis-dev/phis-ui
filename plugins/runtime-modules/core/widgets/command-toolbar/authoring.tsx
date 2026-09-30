@@ -8,7 +8,7 @@ import {
   type PhiCommandToolbarWidgetConfig,
 } from "./config";
 import { PHI_COMMON_CONTROL_DEFAULT_LABELS } from "../../../../../components/widgets/label-types/common-controls";
-import { PhiCommandToolbarAuthoringTools } from "../../../../../components/widgets/builder/command-toolbar-authoring-tools";
+import { PhiCommandToolbarAuthoringTools } from "./authoring-tools";
 
 export const PHI_COMMAND_TOOLBAR_WIDGET_BUILDER_PLUGIN: PhiCmsBuilderWidgetPlugin<PhiCommandToolbarWidgetConfig> = {
   ...PHI_COMMAND_TOOLBAR_WIDGET_DEFINITION,

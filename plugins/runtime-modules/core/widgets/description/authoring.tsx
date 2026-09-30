@@ -1,7 +1,7 @@
 "use client";
 
 import type { PhiCmsBuilderWidgetPlugin } from "../../../../../types";
-import { PhiDescriptionWidgetEditor } from "../../../../../components/widgets/client/description-editor";
+import { PhiDescriptionWidgetEditor } from "./editor";
 import { PhiDescriptionWidgetItemsToolButton } from "../../../../../components/widgets/client/shared/phi-widget-tool-buttons";
 import { PHI_DESCRIPTION_WIDGET_DEFINITION, type PhiCmsDescriptionWidgetConfig } from "./config";
 

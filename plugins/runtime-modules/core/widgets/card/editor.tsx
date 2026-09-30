@@ -1,10 +1,10 @@
 "use client";
 
-import { buildPhiMediaAssetContentDeliveryUrl } from "../../../constants/media";
-import { resolvePhiImagePresentation } from "../../media/image-presentation";
-import { usePhiAuthoringAssetDetails } from "../../media/use-authoring-asset-details";
-import type { PhiCmsCardWidgetConfig } from "../../../plugins/runtime-modules/core/widgets/card/config";
-import { PhiCardWidgetClient } from "../../../plugins/runtime-modules/core/widgets/card/client";
+import { buildPhiMediaAssetContentDeliveryUrl } from "../../../../../constants/media";
+import { resolvePhiImagePresentation } from "../../../../../components/media/image-presentation";
+import { usePhiAuthoringAssetDetails } from "../../../../../components/media/use-authoring-asset-details";
+import type { PhiCmsCardWidgetConfig } from "./config";
+import { PhiCardWidgetClient } from "./client";
 
 export type PhiCardWidgetEditorProps = {
   config: PhiCmsCardWidgetConfig;

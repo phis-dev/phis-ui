@@ -1,6 +1,6 @@
-import type { PhiCmsAreaKey } from "../../constants/cms-areas";
-import { PHI_AUTH_RUNTIME_MODULE_ID } from "../../plugins/runtime-modules/auth/ids";
-import { createPhiPresetCmsInstanceIdMap } from "../../types/cms-instance-id";
+import type { PhiCmsAreaKey } from "../../../constants/cms-areas";
+import { PHI_AUTH_RUNTIME_MODULE_ID } from "./ids";
+import { createPhiPresetCmsInstanceIdMap } from "../../../types/cms-instance-id";
 
 export type PhiAuthLoginOverlayArea = Extract<PhiCmsAreaKey, "public" | "app">;
 

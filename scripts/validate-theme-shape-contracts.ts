@@ -449,7 +449,7 @@ assert.equal(
  * capsule.
  */
 const markdownEditorSource = await readFile(
-  new URL("../components/widgets/client/markdown-editor.tsx", import.meta.url),
+  new URL("../plugins/runtime-modules/core/widgets/markdown/editor.tsx", import.meta.url),
   "utf8",
 );
 assert.match(

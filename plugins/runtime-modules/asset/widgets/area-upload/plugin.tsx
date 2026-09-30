@@ -1,7 +1,7 @@
 import type { PhiCmsServerWidgetPlugin } from "../../../../../types";
 import { renderPhiWidgetPreviewPlaceholder } from "../../../../../plugins/factories/widget-renderers";
 import type { PhiCmsAreaUploadWidgetConfig } from "./config";
-import { PhiAreaUploadWidgetServer } from "../../../../../components/media/phi-area-upload-server";
+import { PhiAreaUploadWidgetServer } from "./server";
 import { PHI_AREA_UPLOAD_WIDGET_DEFINITION } from "./config";
 
 export const PHI_AREA_UPLOAD_WIDGET_PLUGIN: PhiCmsServerWidgetPlugin<PhiCmsAreaUploadWidgetConfig> = {

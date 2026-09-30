@@ -5,33 +5,33 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   PHI_AUTH_CONTROLLER_DEFINITION,
   type PhiAuthControllerPreload,
-} from "./area-base-controller-definitions";
-import { usePhiStateMachineBinding } from "./phi-state-machine-binding";
-import { usePhiRuntimeConditionStateResponder } from "./runtime-condition-state-responder";
+} from "../../../components/runtime/area-base-controller-definitions";
+import { usePhiStateMachineBinding } from "../../../components/runtime/phi-state-machine-binding";
+import { usePhiRuntimeConditionStateResponder } from "../../../components/runtime/runtime-condition-state-responder";
 import {
   PHI_AUTH_MACHINE_DEFINITION,
   PHI_AUTH_MACHINE_REFERENCE,
-} from "../../plugins/runtime-modules/auth/machine";
-import type { PhiRuntimeControllerPlugin } from "../../types";
-import type { PhiAuthWorkflow } from "../../types/auth-manifest";
+} from "./machine";
+import type { PhiRuntimeControllerPlugin } from "../../../types";
+import type { PhiAuthWorkflow } from "../../../types/auth-manifest";
 import {
   createPhiSignalCorrelationId,
   usePhiSignalDispatcher,
   usePhiSignalListener,
-} from "./runtime-signal-bus";
+} from "../../../components/runtime/runtime-signal-bus";
 import {
   normalizeLoginRedirectTarget,
   resolveSafePostLoginTarget,
-} from "../widgets/login-redirect";
-import { createPhiRuntimeControllerClient } from "./runtime-controller-client-factory";
-import { localizeAreaPath } from "../../helpers/locale";
-import { createPhiSignalAddress, PHI_SIGNAL_VALUE_SCHEMAS, type PhiSignal } from "../../types/signals";
-import { createPhiRuntimeFormControllerAddress } from "../forms/runtime-form-controller-address";
-import { createPhiCoreRuntimeControllerAddress } from "./core-runtime-controller-address";
+} from "../../../components/widgets/login-redirect";
+import { createPhiRuntimeControllerClient } from "../../../components/runtime/runtime-controller-client-factory";
+import { localizeAreaPath } from "../../../helpers/locale";
+import { createPhiSignalAddress, PHI_SIGNAL_VALUE_SCHEMAS, type PhiSignal } from "../../../types/signals";
+import { createPhiRuntimeFormControllerAddress } from "../../../components/forms/runtime-form-controller-address";
+import { createPhiCoreRuntimeControllerAddress } from "../../../components/runtime/core-runtime-controller-address";
 import {
   isPhiAuthLoginOverlayArea,
   PHI_AUTH_LOGIN_OVERLAY_IDS,
-} from "./auth-overlay-ids";
+} from "./overlay-ids";
 
 type PhiAuthControllerRenderArgs = Parameters<NonNullable<
   PhiRuntimeControllerPlugin<Record<string, never>>["renderController"]

@@ -1,5 +1,5 @@
 import { PHI_ASSET_RUNTIME_MODULE_ID } from "../ids";
-import { PHI_MEDIA_SETTINGS_FORM_IDS } from "../../../../components/media/media-settings-forms";
+import { PHI_MEDIA_SETTINGS_FORM_IDS } from "../settings-forms";
 import { getPhiMediaSettingsPageLabels } from "../../../../components/media/media-settings-labels";
 import { getResolvedSiteMediaSettings } from "../../../../gateway/site-media-settings";
 import type { PhiCmsPageNode, PhiResolvedCmsPageTree } from "../../../../types/cms";

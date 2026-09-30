@@ -1,20 +1,20 @@
 "use client";
 
-import { PHI_AUTH_RUNTIME_DATA_PROVIDER_KEYS } from "../../plugins/runtime-modules/auth/ids";
+import { PHI_AUTH_RUNTIME_DATA_PROVIDER_KEYS } from "../ids";
 import {
   PhiTableProviderError,
   type PhiTableProviderMutationRequest,
   type PhiTableProviderQueryRequest,
   type PhiTableProviderQueryResult,
   type PhiTableProviderRecordRequest,
-} from "../../types/table-widget";
-import { createPhiTableProviderClient } from "../widgets/client/shared/phi-table-provider";
-import { fetchPhiCsrfToken } from "../../helpers/csrf-token";
-import { PHI_AUTH_RUNTIME_DATA_PROVIDER_DESCRIPTORS } from "../../plugins/runtime-modules/auth/data-providers";
+} from "../../../../types/table-widget";
+import { createPhiTableProviderClient } from "../../../../components/widgets/client/shared/phi-table-provider";
+import { fetchPhiCsrfToken } from "../../../../helpers/csrf-token";
+import { PHI_AUTH_RUNTIME_DATA_PROVIDER_DESCRIPTORS } from "../data-providers";
 import {
   readPhiTableProviderResponse,
   type ReadPhiTableProviderResponseOptions,
-} from "../widgets/client/shared/phi-table-provider-response";
+} from "../../../../components/widgets/client/shared/phi-table-provider-response";
 
 const API_PATH = "/api/auth/admin/installations";
 

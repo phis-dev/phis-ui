@@ -8,15 +8,15 @@ import {
   PlusOutlined,
 } from "@ant-design/icons";
 
-import { PhiButtonControl } from "../../controls/phi-button-control";
-import { PhiPopoverControl } from "../../controls/phi-popover-control";
-import { usePhiConfig } from "../../root/phi-config-provider";
-import type { PhiCommandToolbarButtonConfig } from "../../../plugins/runtime-modules/core/widgets/command-toolbar/config";
-import { usePhiWidgetScaffoldPopup } from "../client/shared/phi-widget-scaffold-popup";
-import { usePhiAuthoringToolsLabels } from "../client/shared/phi-authoring-tools-labels";
-import { PhiFlexControl } from "../../controls/phi-flex-control";
-import { PhiTypographyControl } from "../../controls/phi-typography-control";
-import { PhiCompactGroupControl } from "../../controls/phi-compact-group-control";
+import { PhiButtonControl } from "../../../../../components/controls/phi-button-control";
+import { PhiPopoverControl } from "../../../../../components/controls/phi-popover-control";
+import { usePhiConfig } from "../../../../../components/root/phi-config-provider";
+import type { PhiCommandToolbarButtonConfig } from "./config";
+import { usePhiWidgetScaffoldPopup } from "../../../../../components/widgets/client/shared/phi-widget-scaffold-popup";
+import { usePhiAuthoringToolsLabels } from "../../../../../components/widgets/client/shared/phi-authoring-tools-labels";
+import { PhiFlexControl } from "../../../../../components/controls/phi-flex-control";
+import { PhiTypographyControl } from "../../../../../components/controls/phi-typography-control";
+import { PhiCompactGroupControl } from "../../../../../components/controls/phi-compact-group-control";
 
 function stopToolEvent(event: { stopPropagation: () => void }) {
   event.stopPropagation();

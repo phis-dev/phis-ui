@@ -9,9 +9,9 @@ import { PHI_CORE_SERVER_BINDING } from "../../../types/server-capabilities";
 import {
   PHI_ASSET_FOLDER_FORM_HANDLER_PROVIDER_DESCRIPTOR,
   PHI_ASSET_METADATA_FORM_HANDLER_PROVIDER_DESCRIPTOR,
-} from "../../../components/media/asset-metadata-form";
+} from "./metadata-form";
 import { PHI_ASSET_FOCAL_RECT_FORM_PROVIDER_DESCRIPTOR } from "../../../components/media/asset-form-field-providers";
-import { PHI_MEDIA_SETTINGS_FORM_HANDLER_PROVIDER_DESCRIPTOR } from "../../../components/media/media-settings-forms";
+import { PHI_MEDIA_SETTINGS_FORM_HANDLER_PROVIDER_DESCRIPTOR } from "./settings-forms";
 
 export const PHI_ASSET_RUNTIME_MODULE_DEFINITION = {
   moduleId: PHI_ASSET_RUNTIME_MODULE_ID,

@@ -6,11 +6,11 @@ import type { PhiCmsBuilderWidgetPlugin } from "../../../../../types";
 import { PHI_SIMPLE_TEXT_WIDGET_DEFINITION, type PhiCmsSimpleTextWidgetConfig } from "./config";
 
 const PhiSimpleTextWidgetEditorPluginBody = lazy(async () => ({
-  default: (await import("../../../../../components/widgets/builder/simple-text-editor")).PhiSimpleTextWidgetEditorPluginBody,
+  default: (await import("./editor")).PhiSimpleTextWidgetEditorPluginBody,
 }));
 
 const PhiSimpleTextWidgetEditorPluginTools = lazy(async () => ({
-  default: (await import("../../../../../components/widgets/builder/simple-text-editor")).PhiSimpleTextWidgetEditorPluginTools,
+  default: (await import("./editor")).PhiSimpleTextWidgetEditorPluginTools,
 }));
 
 export const PHI_SIMPLE_TEXT_WIDGET_BUILDER_PLUGIN: PhiCmsBuilderWidgetPlugin<PhiCmsSimpleTextWidgetConfig> = {

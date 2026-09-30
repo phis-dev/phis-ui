@@ -4,7 +4,7 @@ import type {
   PhiCmsRoutePresetDescriptor,
 } from "../../../types/cms-module-descriptors";
 import { PhiCmsFlags } from "../../../constants/phi-cms";
-import { PHI_AUTH_LOGIN_OVERLAY_IDS } from "../../../components/runtime/auth-overlay-ids";
+import { PHI_AUTH_LOGIN_OVERLAY_IDS } from "./overlay-ids";
 import { PHI_APP_ACCOUNT_NAV_ITEM_KEY } from "../area-definitions";
 import { buildPhiSidebarRoutePresetDescriptor } from "../sidebar-route";
 import { PHI_AUTH_RUNTIME_MODULE_ID } from "./ids";

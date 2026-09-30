@@ -4,24 +4,24 @@ import { useState } from "react";
 
 import { FormatPainterOutlined } from "@ant-design/icons";
 
-import { PhiInlineTextEditor } from "../../../plugins/runtime-modules/builder/clients/inline-text-editor";
-import { PhiButtonControl } from "../../controls/phi-button-control";
-import { PhiCheckboxControl } from "../../controls/phi-checkbox-control";
-import { PhiPopoverControl } from "../../controls/phi-popover-control";
-import { usePhiConfig } from "../../root/phi-config-provider";
-import { PhiIcon } from "../../shell/phi-icon";
+import { PhiInlineTextEditor } from "../../../builder/clients/inline-text-editor";
+import { PhiButtonControl } from "../../../../../components/controls/phi-button-control";
+import { PhiCheckboxControl } from "../../../../../components/controls/phi-checkbox-control";
+import { PhiPopoverControl } from "../../../../../components/controls/phi-popover-control";
+import { usePhiConfig } from "../../../../../components/root/phi-config-provider";
+import { PhiIcon } from "../../../../../components/shell/phi-icon";
 import {
   PhiWidgetColorToolButton,
   PhiWidgetIconToolButton,
   PhiWidgetTypographyToolButton,
-} from "../../widgets/client/shared/phi-widget-tool-buttons";
-import { usePhiWidgetScaffoldPopup } from "../../widgets/client/shared/phi-widget-scaffold-popup";
-import { usePhiAuthoringToolsLabels } from "../../widgets/client/shared/phi-authoring-tools-labels";
-import { resolvePhiSimpleTextWidgetText, type PhiSimpleTextWidgetRenderableConfig } from "../../../plugins/runtime-modules/core/widgets/simple-text/config";
-import { resolvePhiWidgetFontFamily } from "../helpers/font-family";
-import { resolvePhiWidgetFontSize } from "../helpers/font-size";
-import { PHI_Z_INDEX } from "../../../theme/phi-tokens";
-import { PhiFlexControl } from "../../controls/phi-flex-control";
+} from "../../../../../components/widgets/client/shared/phi-widget-tool-buttons";
+import { usePhiWidgetScaffoldPopup } from "../../../../../components/widgets/client/shared/phi-widget-scaffold-popup";
+import { usePhiAuthoringToolsLabels } from "../../../../../components/widgets/client/shared/phi-authoring-tools-labels";
+import { resolvePhiSimpleTextWidgetText, type PhiSimpleTextWidgetRenderableConfig } from "./config";
+import { resolvePhiWidgetFontFamily } from "../../../../../components/widgets/helpers/font-family";
+import { resolvePhiWidgetFontSize } from "../../../../../components/widgets/helpers/font-size";
+import { PHI_Z_INDEX } from "../../../../../theme/phi-tokens";
+import { PhiFlexControl } from "../../../../../components/controls/phi-flex-control";
 
 export type PhiSimpleTextWidgetEditorProps = {
   text: string;

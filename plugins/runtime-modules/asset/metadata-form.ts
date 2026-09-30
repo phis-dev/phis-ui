@@ -1,18 +1,18 @@
-import { PhiMediaAssetFlags } from "../../constants/media";
-import { PHI_ASSET_RUNTIME_DATA_PROVIDER_KEYS } from "../../plugins/runtime-modules/asset/ids";
-import { PHI_ASSET_RUNTIME_MODULE_ID } from "../../plugins/runtime-modules/asset/ids";
-import type { PhiFormDescriptor, PhiFormHandlerProviderDescriptor } from "../../types/form-descriptor";
-import { createPhiFormId } from "../../types/form-id";
-import { PHI_SHARED_PACKAGE_NAME } from "../../types/signals";
+import { PhiMediaAssetFlags } from "../../../constants/media";
+import { PHI_ASSET_RUNTIME_DATA_PROVIDER_KEYS } from "./ids";
+import { PHI_ASSET_RUNTIME_MODULE_ID } from "./ids";
+import type { PhiFormDescriptor, PhiFormHandlerProviderDescriptor } from "../../../types/form-descriptor";
+import { createPhiFormId } from "../../../types/form-id";
+import { PHI_SHARED_PACKAGE_NAME } from "../../../types/signals";
 import {
   PHI_FORM_FIELD_PROVIDER_KEYS,
   PHI_FORM_VALIDATION_PROVIDER_KEYS,
   createPhiSharedFormProviderKey,
-} from "../forms/form-provider-contract";
-import { definePhiRuntimeModuleForm } from "../forms/form-registry";
-import { flattenPhiFormLabels } from "../forms/form-labels";
-import { PHI_ASSET_FOCAL_RECT_FORM_PROVIDER_KEY } from "./asset-form-field-providers";
-import { readPhiServerApiCredentials } from "../../helpers/phis-server-credentials";
+} from "../../../components/forms/form-provider-contract";
+import { definePhiRuntimeModuleForm } from "../../../components/forms/form-registry";
+import { flattenPhiFormLabels } from "../../../components/forms/form-labels";
+import { PHI_ASSET_FOCAL_RECT_FORM_PROVIDER_KEY } from "../../../components/media/asset-form-field-providers";
+import { readPhiServerApiCredentials } from "../../../helpers/phis-server-credentials";
 
 export const PHI_ASSET_METADATA_FORM_ID = createPhiFormId(PHI_SHARED_PACKAGE_NAME, "asset/metadata");
 export const PHI_ASSET_FOLDER_FORM_ID = createPhiFormId(PHI_SHARED_PACKAGE_NAME, "asset/folder-create");
@@ -123,7 +123,7 @@ export const PHI_ASSET_FOLDER_FORM_DESCRIPTOR = {
 } as const satisfies PhiFormDescriptor;
 
 async function loadAssetFormLabels(context: Parameters<NonNullable<ReturnType<typeof definePhiRuntimeModuleForm>["loadLabels"]>>[0]) {
-  const { getPhiMediaWidgetLabels } = await import("./label-sets/media");
+  const { getPhiMediaWidgetLabels } = await import("../../../components/media/label-sets/media");
   const labels = await getPhiMediaWidgetLabels({
     apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
     internalToken: readPhiServerApiCredentials().internalToken,

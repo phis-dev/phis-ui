@@ -1,15 +1,15 @@
 "use client";
 
-import { PHI_ASSET_RUNTIME_DATA_PROVIDER_KEYS } from "../../plugins/runtime-modules/asset/ids";
-import { PHI_MEDIA_LIBRARY_ITEM_RENDERER_KEY } from "../../constants/media-library-provider-keys";
+import { PHI_ASSET_RUNTIME_DATA_PROVIDER_KEYS } from "../ids";
+import { PHI_MEDIA_LIBRARY_ITEM_RENDERER_KEY } from "../../../../constants/media-library-provider-keys";
 import type {
   PhiCollectionProviderActionRequest,
   PhiCollectionProviderQuery,
   PhiCollectionProviderQueryRequest,
-} from "../../types/collection-provider";
-import { createPhiCollectionProviderClient } from "../widgets/client/shared/phi-collection-provider";
-import { buildPhiMediaRequestHeaders } from "./phi-media-request-headers";
-import { readPhiImagePreviewResponse } from "./phi-image-preview-data";
+} from "../../../../types/collection-provider";
+import { createPhiCollectionProviderClient } from "../../../../components/widgets/client/shared/phi-collection-provider";
+import { buildPhiMediaRequestHeaders } from "../../../../components/media/phi-media-request-headers";
+import { readPhiImagePreviewResponse } from "../../../../components/media/phi-image-preview-data";
 
 function readFilter(query: PhiCollectionProviderQuery, key: string) {
   return query.filters?.[key];

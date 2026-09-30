@@ -1,7 +1,7 @@
 import type { PhiCmsServerWidgetPlugin } from "../../../../../types";
 import { renderPhiWidgetPreviewPlaceholder } from "../../../../../plugins/factories/widget-renderers";
 import type { PhiCmsAssetInspectorWidgetConfig } from "./config";
-import { PhiAssetConfigWidgetServer } from "../../../../../components/media/phi-image-inspector-server";
+import { PhiAssetConfigWidgetServer } from "./server";
 import {
   PHI_IMAGE_INSPECTOR_WIDGET_DEFINITION,
 } from "./config";

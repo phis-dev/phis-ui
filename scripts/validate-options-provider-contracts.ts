@@ -52,7 +52,7 @@ assert.match(
 for (const path of [
   "plugins/runtime-modules/builder/options-providers.ts",
   "plugins/runtime-modules/revisions/services/options.ts",
-  "components/media/asset-options-providers.ts",
+  "plugins/runtime-modules/asset/services/options.ts",
 ]) {
   const resolverSource = await readFile(new URL(`../${path}`, import.meta.url), "utf8");
   assert.match(

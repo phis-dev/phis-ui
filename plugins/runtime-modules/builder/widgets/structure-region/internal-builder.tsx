@@ -1,11 +1,11 @@
 "use client";
 
-import type { PhiCmsBuilderWidgetPlugin } from "../../../types";
+import type { PhiCmsBuilderWidgetPlugin } from "../../../../../types";
 import {
   PHI_STRUCTURE_REGION_WIDGET_DEFINITION,
   type PhiStructureRegionWidgetConfig,
-} from "../../../plugins/runtime-modules/builder/widgets/structure-region/config";
-import { PhiWidgetEditorPlaceholder } from "./widget-editor-placeholder";
+} from "./config";
+import { PhiWidgetEditorPlaceholder } from "../../../../../components/widgets/builder/widget-editor-placeholder";
 
 export const PHI_STRUCTURE_REGION_WIDGET_BUILDER_PLUGIN =
   {

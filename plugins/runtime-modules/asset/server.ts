@@ -1,8 +1,8 @@
 import {
   PHI_ASSET_FOLDER_RUNTIME_MODULE_FORM,
   PHI_ASSET_METADATA_RUNTIME_MODULE_FORM,
-} from "../../../components/media/asset-metadata-form";
-import { PHI_MEDIA_SETTINGS_RUNTIME_MODULE_FORM } from "../../../components/media/media-settings-forms";
+} from "./metadata-form";
+import { PHI_MEDIA_SETTINGS_RUNTIME_MODULE_FORM } from "./settings-forms";
 import { definePhiRuntimeModuleServerAreaContribution } from "../area-contributions";
 import { PHI_ASSET_RUNTIME_MODULE_DEFINITION } from "./definition";
 import { PHI_ASSET_RUNTIME_MODULE_ROUTES } from "./presets";

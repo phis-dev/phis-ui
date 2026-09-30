@@ -7,11 +7,11 @@ import type { PhiCmsImageWidgetConfig } from "./config";
 import { PHI_IMAGE_WIDGET_DEFINITION } from "./config";
 
 const PhiImageWidgetEditor = lazy(async () => ({
-  default: (await import("../../../../../components/widgets/client/image-editor")).PhiImageWidgetEditor,
+  default: (await import("./editor")).PhiImageWidgetEditor,
 }));
 
 const PhiImageWidgetEditorTools = lazy(async () => ({
-  default: (await import("../../../../../components/widgets/client/image-editor")).PhiImageWidgetEditorTools,
+  default: (await import("./editor")).PhiImageWidgetEditorTools,
 }));
 
 export const PHI_IMAGE_WIDGET_BUILDER_PLUGIN: PhiCmsBuilderWidgetPlugin<PhiCmsImageWidgetConfig> = {

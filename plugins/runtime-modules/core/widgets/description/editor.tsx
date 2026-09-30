@@ -2,12 +2,12 @@
 
 import { useMemo, useState } from "react";
 
-import { PhiTagControl } from "../../controls/phi-tag-control";
+import { PhiTagControl } from "../../../../../components/controls/phi-tag-control";
 
-import type { PhiCmsDescriptionWidgetConfig } from "../../../plugins/runtime-modules/core/widgets/description/config";
-import { PhiTextControl } from "../../controls/phi-text-control";
-import { PhiFlexControl } from "../../controls/phi-flex-control";
-import { resolvePhiDescriptionEditorSections } from "./description-editor-sections";
+import type { PhiCmsDescriptionWidgetConfig } from "./config";
+import { PhiTextControl } from "../../../../../components/controls/phi-text-control";
+import { PhiFlexControl } from "../../../../../components/controls/phi-flex-control";
+import { resolvePhiDescriptionEditorSections } from "../../../../../components/widgets/client/description-editor-sections";
 
 type PhiDescriptionEditorConfig = {
   eyebrow: string;

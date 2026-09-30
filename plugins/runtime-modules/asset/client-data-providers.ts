@@ -9,14 +9,14 @@ export const PHI_ASSET_RUNTIME_DATA_PROVIDER_CLIENT_DEFINITIONS = [
     key: PHI_ASSET_RUNTIME_DATA_PROVIDER_KEYS.mediaFolders,
     ownerModuleId: PHI_ASSET_RUNTIME_MODULE_ID,
     loadLive: async () =>
-      (await import("../../../components/media/asset-options-providers"))
+      (await import("./services/options"))
         .PhiMediaFoldersOptionsProviderClient,
   },
   {
     key: PHI_ASSET_RUNTIME_DATA_PROVIDER_KEYS.mediaCollection,
     ownerModuleId: PHI_ASSET_RUNTIME_MODULE_ID,
     loadLive: async () =>
-      (await import("../../../components/media/asset-collection-service"))
+      (await import("./services/collection"))
         .PhiAssetCollectionProviderClient,
   },
 ] satisfies readonly PhiRuntimeModuleDataProviderClientDefinition[];

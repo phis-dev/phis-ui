@@ -1,5 +1,5 @@
 import { PHI_AUTH_RUNTIME_MODULE_FORMS } from "../../../components/forms/shared-form-plugins";
-import { PHI_AUTH_ADMIN_SETTINGS_RUNTIME_MODULE_FORMS } from "../../../components/forms/auth-admin-settings-forms";
+import { PHI_AUTH_ADMIN_SETTINGS_RUNTIME_MODULE_FORMS } from "./admin-settings-forms";
 import { definePhiRuntimeModuleServerAreaContribution } from "../area-contributions";
 import { PHI_AUTH_RUNTIME_MODULE_DEFINITION } from "../auth/definition";
 import {

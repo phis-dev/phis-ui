@@ -3,11 +3,11 @@
 import { useEffect, useRef, useState } from "react";
 import type { TextAreaRef } from "antd/es/input/TextArea";
 
-import type { PhiCmsInstanceId } from "../../../types/cms-instance-id";
-import type { PhiCmsMarkdownWidgetConfig } from "../../../plugins/runtime-modules/core/widgets/markdown/config";
-import { PhiTextControl } from "../../controls/phi-text-control";
-import { PhiExternalDocumentEditor } from "./external-document-editor";
-import { registerPhiMarkdownWidgetEditorBridge } from "./markdown-editor-bridge";
+import type { PhiCmsInstanceId } from "../../../../../types/cms-instance-id";
+import type { PhiCmsMarkdownWidgetConfig } from "./config";
+import { PhiTextControl } from "../../../../../components/controls/phi-text-control";
+import { PhiExternalDocumentEditor } from "../../../../../components/widgets/client/external-document-editor";
+import { registerPhiMarkdownWidgetEditorBridge } from "../../../../../components/widgets/client/markdown-editor-bridge";
 
 const MARKDOWN_EDITOR_HEIGHT = 260;
 

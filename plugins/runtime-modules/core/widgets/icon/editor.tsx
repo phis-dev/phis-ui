@@ -1,13 +1,13 @@
 "use client";
 
-import type { PhiCmsIconWidgetConfig } from "../../../plugins/runtime-modules/core/widgets/icon/config";
-import type { PhiCmsInstanceId } from "../../../types/cms-instance-id";
-import { PhiIconWidgetClient } from "../../../plugins/runtime-modules/core/widgets/icon/client";
+import type { PhiCmsIconWidgetConfig } from "./config";
+import type { PhiCmsInstanceId } from "../../../../../types/cms-instance-id";
+import { PhiIconWidgetClient } from "./client";
 import {
   PhiWidgetColorToolButton,
   PhiWidgetIconToolButton,
-} from "../client/shared/phi-widget-tool-buttons";
-import { usePhiAuthoringToolsLabels } from "../client/shared/phi-authoring-tools-labels";
+} from "../../../../../components/widgets/client/shared/phi-widget-tool-buttons";
+import { usePhiAuthoringToolsLabels } from "../../../../../components/widgets/client/shared/phi-authoring-tools-labels";
 
 export function PhiIconWidgetEditor({
   blockId,

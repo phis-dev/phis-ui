@@ -885,7 +885,7 @@ await assert.rejects(
     /if \(activeAddress\) setSpaceAddress\(activeAddress\)/u,
     "The active Space comes back from the control plane.",
   );
-  const service = await readSource("components/media/asset-collection-service.tsx");
+  const service = await readSource("plugins/runtime-modules/asset/services/collection.tsx");
   assert.match(service, /search\.set\("spaceId", spaceId\)/u);
 
   // The Collection view is the other surface that reads Media, and it obeys the same rule.

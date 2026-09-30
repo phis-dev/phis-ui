@@ -7,5 +7,5 @@ import dynamic from "next/dynamic";
  * route's loadable manifest, and the HTML asks for them before hydration instead of after it.
  */
 export const PhiLazyAuthRuntimeControllerClient = dynamic(() =>
-  import("../../../components/runtime/auth-controller-plugin").then((module) => module.PhiAuthControllerClient));
+  import("./controller-plugin").then((module) => module.PhiAuthControllerClient));
 

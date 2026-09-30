@@ -36,7 +36,7 @@ import {
   PHI_ASSET_FOLDER_FORM_DESCRIPTOR,
   PHI_ASSET_FOLDER_FORM_ID,
   PHI_ASSET_METADATA_FORM_DESCRIPTOR,
-} from "../components/media/asset-metadata-form";
+} from "../plugins/runtime-modules/asset/metadata-form";
 import { PHI_ASSET_FOCAL_RECT_FORM_PROVIDER_DESCRIPTOR } from "../components/media/asset-form-field-providers";
 import { createPhiRuntimeModuleCatalog } from "../plugins/runtime-modules/contracts";
 

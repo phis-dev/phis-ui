@@ -1,15 +1,15 @@
-import { PHI_AUTH_RUNTIME_MODULE_ID } from "../../plugins/runtime-modules/auth/ids";
-import { PHI_BASE_ROLE_OPTIONS } from "../../constants/phi-base-role-metadata";
-import type { PhiFormDescriptor } from "../../types";
-import { createPhiFormId, type PhiFormId } from "../../types/form-id";
-import { PHI_SHARED_PACKAGE_NAME } from "../../types/signals";
-import { flattenPhiFormLabels } from "./form-labels";
+import { PHI_AUTH_RUNTIME_MODULE_ID } from "./ids";
+import { PHI_BASE_ROLE_OPTIONS } from "../../../constants/phi-base-role-metadata";
+import type { PhiFormDescriptor } from "../../../types";
+import { createPhiFormId, type PhiFormId } from "../../../types/form-id";
+import { PHI_SHARED_PACKAGE_NAME } from "../../../types/signals";
+import { flattenPhiFormLabels } from "../../../components/forms/form-labels";
 import {
   PHI_FORM_FIELD_PROVIDER_KEYS,
   PHI_FORM_VALIDATION_PROVIDER_KEYS,
-} from "./form-provider-contract";
-import { definePhiRuntimeModuleForm } from "./form-registry";
-import { readPhiServerApiCredentials } from "../../helpers/phis-server-credentials";
+} from "../../../components/forms/form-provider-contract";
+import { definePhiRuntimeModuleForm } from "../../../components/forms/form-registry";
+import { readPhiServerApiCredentials } from "../../../helpers/phis-server-credentials";
 
 export const PHI_AUTH_ADMIN_SETTINGS_FORM_IDS = {
   policy: createPhiFormId(PHI_SHARED_PACKAGE_NAME, "auth/admin-policy"),
@@ -297,7 +297,7 @@ const INSTALLATION_EDIT_FORM_DESCRIPTOR: PhiFormDescriptor = {
 async function loadLabels(
   context: Parameters<NonNullable<ReturnType<typeof definePhiRuntimeModuleForm>["loadLabels"]>>[0],
 ) {
-  const { getPhiAuthAdminSettingsLabels } = await import("./auth-admin-settings-labels");
+  const { getPhiAuthAdminSettingsLabels } = await import("../../../components/forms/auth-admin-settings-labels");
   const labels = await getPhiAuthAdminSettingsLabels({
     apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
     internalToken: readPhiServerApiCredentials().internalToken,

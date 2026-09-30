@@ -5,16 +5,16 @@ import { useEffect, useRef } from "react";
 import {
   normalizePhiImageAssetVariantKey,
   resolvePhiImageAssetVariantSpec,
-} from "../../../constants/media";
-import type { PhiMediaAsset } from "../../../types/media";
-import type { PhiCmsInstanceId } from "../../../types/cms-instance-id";
-import type { PhiCmsImageWidgetConfig } from "../../../plugins/runtime-modules/core/widgets/image/config";
-import { PHI_IMAGE_WIDGET_DEFAULT_LABELS } from "../label-types/image";
-import { PhiMaskPickerButton } from "./shared/phi-mask-picker";
-import { PhiWidgetImageToolButton } from "./shared/phi-widget-image-tool-button";
-import { PhiImageWidget } from "../../../plugins/runtime-modules/core/widgets/image/client";
-import { usePhiAuthoringAssetDetails } from "../../media/use-authoring-asset-details";
-import { PhiTypographyControl } from "../../controls/phi-typography-control";
+} from "../../../../../constants/media";
+import type { PhiMediaAsset } from "../../../../../types/media";
+import type { PhiCmsInstanceId } from "../../../../../types/cms-instance-id";
+import type { PhiCmsImageWidgetConfig } from "./config";
+import { PHI_IMAGE_WIDGET_DEFAULT_LABELS } from "../../../../../components/widgets/label-types/image";
+import { PhiMaskPickerButton } from "../../../../../components/widgets/client/shared/phi-mask-picker";
+import { PhiWidgetImageToolButton } from "../../../../../components/widgets/client/shared/phi-widget-image-tool-button";
+import { PhiImageWidget } from "./client";
+import { usePhiAuthoringAssetDetails } from "../../../../../components/media/use-authoring-asset-details";
+import { PhiTypographyControl } from "../../../../../components/controls/phi-typography-control";
 
 export type PhiImageWidgetEditorProps = {
   config?: PhiCmsImageWidgetConfig | null;

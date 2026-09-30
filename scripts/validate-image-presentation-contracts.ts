@@ -499,7 +499,7 @@ assert.equal(
 for (const path of [
   "plugins/runtime-modules/core/widgets/image/client.tsx",
   "plugins/runtime-modules/core/widgets/card/server.tsx",
-  "components/widgets/client/card-editor.tsx",
+  "plugins/runtime-modules/core/widgets/card/editor.tsx",
   "components/widgets/config/background.ts",
 ]) {
   const source = await readSource(path);
@@ -611,8 +611,8 @@ for (const path of [
 {
   // Both Editors read the Asset so the variant version a focal change bumps reaches the Editor too.
   for (const path of [
-    "components/widgets/client/image-editor.tsx",
-    "components/widgets/client/card-editor.tsx",
+    "plugins/runtime-modules/core/widgets/image/editor.tsx",
+    "plugins/runtime-modules/core/widgets/card/editor.tsx",
   ]) {
     assert.match(await readSource(path), /usePhiAuthoringAssetDetails/u, path);
   }
