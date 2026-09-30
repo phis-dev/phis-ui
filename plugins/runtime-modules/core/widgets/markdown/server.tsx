@@ -592,7 +592,17 @@ export async function resolveMarkdownRenderData(
     markdown,
     config?.translate !== false,
     headingIdPrefix,
-    sourceMode === "url" ? config?.sourceLocale?.trim() : undefined,
+    /*
+     * The declared language counts for inline text too, not only for a fetched document.
+     *
+     * It used to be read only in `url` mode, when the only foreign text was somebody else's page. Inline
+     * Markdown now arrives from News entries, where an author writes in their own language and Core keeps
+     * that language beside the words. Stating it is what sends each paragraph the external route --
+     * translated into the Site's language once, the original kept as the answer for its own -- instead of
+     * being handed to a provider as though it were already canonical. An empty value means canonical and
+     * is what every existing Widget has.
+     */
+    config?.sourceLocale?.trim() || undefined,
     sourceMode,
     sourceMode === "url" && config?.sourceUrl
       ? normalizeMarkdownSourceUrl(config.sourceUrl, runtime?.site.publicUrl)

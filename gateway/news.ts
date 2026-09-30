@@ -42,6 +42,9 @@ function readNewsEntry(value: unknown): PhiSiteNewsEntry | null {
     tags: Array.isArray(value.tags)
       ? value.tags.filter((tag): tag is string => typeof tag === "string" && tag.trim() !== "")
       : [],
+    sourceLocale: readString(value.sourceLocale).trim() || null,
+    // Absent means yes, which is the default everywhere this switch appears.
+    translate: value.translate !== false,
   };
 }
 

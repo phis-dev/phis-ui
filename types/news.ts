@@ -20,4 +20,14 @@ export type PhiSiteNewsEntry = {
   /** Where the entry points, as the Site wrote it: its own path or an absolute address. */
   link: string | null;
   tags: readonly string[];
+  /**
+   * The language the body is written in, or `null` for the Site's own.
+   *
+   * Core answers `title` and `subtitle` already translated for the asked-for language, but not the body:
+   * Markdown is translated paragraph by paragraph where it is rendered, so its structure never reaches a
+   * provider. This is what the renderer needs to translate it the right way round.
+   */
+  sourceLocale: string | null;
+  /** Whether a reader in another language may be served a translation of this entry at all. */
+  translate: boolean;
 };

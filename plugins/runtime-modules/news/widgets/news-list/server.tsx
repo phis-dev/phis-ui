@@ -43,18 +43,50 @@ export async function PhiNewsListWidget({ config, runtime }: PhiNewsListWidgetPr
     return <PhiAlertControl level="warning" showIcon title={labels.unavailable} />;
   }
 
-  const views: PhiNewsListEntryView[] = entries.slice(0, settings.limit).map((entry, index) => ({
-    // Core answers the slug where an entry has one; the index is the fallback for an entry that has none,
-    // so two entries can never share a React key.
-    id: entry.id || entry.slug || `news-${index}`,
-    title: entry.title,
-    subtitle: entry.subtitle,
-    content: entry.content,
-    date: formatPhiDate(entry.created, locale),
-    machineDate: entry.created,
-    link: settings.showLinks ? entry.link : null,
-    tags: settings.showTags ? entry.tags : [],
-  }));
+  /*
+   * The body is Markdown, and it is parsed and translated here rather than answered translated by Core.
+   *
+   * Only the inline content of headings, paragraphs and table cells is handed to a provider, as HTML --
+   * the structure, code fences and raw HTML never are (`collectMarkdownTranslationUnits`). That is what
+   * makes Markdown the right standard for an entry: the control characters are not spared, they are never
+   * sent. It also means each paragraph is its own cache entry, so correcting one costs one.
+   *
+   * The entry's own language and switch decide, not the Widget's: they belong to the words.
+   */
+  /*
+   * Imported here rather than at the top: the Widget catalogue loads every Module's server file at
+   * start-up, and reaching into the core Module's graph from there closes a cycle through its data
+   * provider keys -- eleven unrelated suites failed on an undefined constant before this moved inside.
+   */
+  const { resolveMarkdownRenderData } = await import("../../../core/widgets/markdown/server");
+
+  const views: PhiNewsListEntryView[] = await Promise.all(
+    entries.slice(0, settings.limit).map(async (entry, index) => {
+      // Core answers the slug where an entry has one; the index is the fallback for an entry that has
+      // none, so two entries can never share a React key -- or a heading anchor.
+      const id = entry.id || entry.slug || `news-${index}`;
+      const body = entry.content.trim()
+        ? await resolveMarkdownRenderData({
+          sourceMode: "inline",
+          markdown: entry.content,
+          translate: entry.translate,
+          sourceLocale: entry.sourceLocale ?? undefined,
+          widgetId: `news-${id}`,
+        }, runtime)
+        : { blocks: [] };
+
+      return {
+        id,
+        title: entry.title,
+        subtitle: entry.subtitle,
+        blocks: "error" in body ? [] : body.blocks,
+        date: formatPhiDate(entry.created, locale),
+        machineDate: entry.created,
+        link: settings.showLinks ? entry.link : null,
+        tags: settings.showTags ? entry.tags : [],
+      };
+    }),
+  );
 
   return (
     <PhiRuntimeModuleRenderClientHost

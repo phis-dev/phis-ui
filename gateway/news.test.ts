@@ -17,6 +17,8 @@ function entry(overrides: Record<string, unknown> = {}) {
     slug: "an-entry",
     created: "2026-09-01T08:00:00.000Z",
     outdated: null,
+    sourceLocale: null,
+    translate: true,
     title: "An entry",
     subtitle: "Its subtitle",
     content: "Its text.",
@@ -66,6 +68,23 @@ describe("fetchPhiSiteNews", () => {
     const entries = await fetchPhiSiteNews(OPTIONS);
 
     expect(entries.map((item) => item.slug)).toEqual(["intact"]);
+  });
+
+  it("carries the language the entry was written in, and its switch", async () => {
+    vi.stubGlobal("fetch", vi.fn(async () => newsResponse([
+      entry({ slug: "german", sourceLocale: "de" }),
+      entry({ slug: "no-translation", translate: false }),
+      entry({ slug: "plain" }),
+    ])));
+
+    const entries = await fetchPhiSiteNews(OPTIONS);
+
+    expect(entries.map((item) => [item.slug, item.sourceLocale, item.translate])).toEqual([
+      ["german", "de", true],
+      ["no-translation", null, false],
+      // Nothing stated means the Site's own language, and yes.
+      ["plain", null, true],
+    ]);
   });
 
   it("keeps only the tags that are strings, and reads an absent link as none", async () => {

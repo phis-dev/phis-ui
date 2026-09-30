@@ -6,6 +6,10 @@ import { PhiFlexControl } from "../../../../../components/controls/phi-flex-cont
 import { PhiTagControl } from "../../../../../components/controls/phi-tag-control";
 import { PhiTypographyControl } from "../../../../../components/controls/phi-typography-control";
 import { PhiLink } from "../../../../../components/navigation/phi-link";
+import {
+  PhiMarkdownWidgetClient,
+  type PhiMarkdownBlock,
+} from "../../../core/widgets/markdown/client";
 import { PHI_SPACE } from "../../../../../theme/antd-css-var-contract";
 import type { PhiNewsListLabels } from "../../../../../components/widgets/label-sets/news";
 
@@ -22,7 +26,8 @@ export type PhiNewsListEntryView = {
   id: string;
   title: string;
   subtitle: string;
-  content: string;
+  /** The body, parsed on the server: Markdown never crosses this boundary as text. */
+  blocks: PhiMarkdownBlock[];
   date: string;
   machineDate: string;
   link: string | null;
@@ -49,11 +54,13 @@ function PhiNewsListEntry({ entry, labels }: { entry: PhiNewsListEntryView; labe
             {entry.subtitle}
           </PhiTypographyControl>
         ) : null}
-        {entry.content ? (
-          <PhiTypographyControl presentation="paragraph" style={{ margin: 0 }}>
-            {entry.content}
-          </PhiTypographyControl>
-        ) : null}
+        {/*
+          * The body through the Markdown Widget's own Client, not a second renderer: it already knows how
+          * to draw these blocks, including code, tables and internal links. No `tocKey` and no headings
+          * are passed, so it contributes nothing to the page's table of contents -- a list of entries is
+          * not an article's outline.
+          */}
+        {entry.blocks.length > 0 ? <PhiMarkdownWidgetClient config={{ blocks: entry.blocks }} /> : null}
         {entry.tags.length > 0 ? (
           <PhiFlexControl wrap gap={PHI_SPACE.xxs}>
             {entry.tags.map((tag) => (
