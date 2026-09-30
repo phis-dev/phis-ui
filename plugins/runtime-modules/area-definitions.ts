@@ -333,16 +333,16 @@ export const PHI_EDITOR_RUNTIME_AREA_DEFINITIONS = [
     baseModuleId: PHI_EDITOR_RUNTIME_MODULE_ID,
     shellPresetKey: "editor-area-preset",
     accessPolicy: PHI_VIEWER_ACCESS_CONTENT_EDITING,
+    /*
+     * The surface, and nothing in it: every Page in this Area is contributed by the Module that owns its
+     * data, and each brings its own entry by anchor. An item stated here would outlive the Module it leads
+     * to -- which is what happened while Translations was named here and localization could be switched off.
+     */
     navigationSurfaces: [{
       navKey: "editor:sidebar",
       label: label("Editor sidebar navigation"),
-      items: [{
-        itemKey: "@phis/ui/modules/editor/nav/translations",
-        label: label("Translations"),
-        icon: "antd:translation",
-        routePresetKey: "editor-translations-page",
-      }],
-      exportedItemKeys: ["@phis/ui/modules/editor/nav/translations"],
+      items: [],
+      exportedItemKeys: [],
       anchors: sidebarAnchors(),
     }, accountNavigationSurface(PHI_EDITOR_ACCOUNT_NAV_ITEM_KEY, "editor:account")],
   },

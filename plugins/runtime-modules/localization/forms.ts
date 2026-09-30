@@ -86,7 +86,7 @@ async function loadAdminLabels(context: Parameters<NonNullable<ReturnType<typeof
 }
 
 async function loadEditorLabels(context: Parameters<NonNullable<ReturnType<typeof definePhiRuntimeModuleForm>["loadLabels"]>>[0]) {
-  const { getPhiEditorTranslationsWidgetLabels } = await import("../../../components/widgets/label-sets/editor-translations");
+  const { getPhiEditorTranslationsWidgetLabels } = await import("./trees/editor-translations-widget-label-set");
   const labels = await getPhiEditorTranslationsWidgetLabels({
     apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
     internalToken: readPhiServerApiCredentials().internalToken,

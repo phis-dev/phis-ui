@@ -1,51 +1,58 @@
-import { PHI_EDITOR_RUNTIME_MODULE_ID } from "../ids";
+/*
+ * The nodes of the Translations Page, which is this Module's Page and not the Editor Area's.
+ *
+ * They carry this Module as their owner because a synthetic instance id is derived from owner, preset key
+ * and node key -- so the ids say who ships the Page, and the Controller below reads them from here rather
+ * than reaching into another Module's folder.
+ */
+import { PHI_LOCALIZATION_RUNTIME_MODULE_ID } from "../ids";
 import { createPhiPresetCmsInstanceId } from "../../../../types/cms-instance-id";
 
 export const PHI_EDITOR_TRANSLATION_FORM_WIDGET_ID = createPhiPresetCmsInstanceId({
   domain: "page",
-  ownerModuleId: PHI_EDITOR_RUNTIME_MODULE_ID,
+  ownerModuleId: PHI_LOCALIZATION_RUNTIME_MODULE_ID,
   presetKey: "editor-translations-page",
   nodeKey: "widgetTranslationForm",
 });
 
 export const PHI_EDITOR_TRANSLATIONS_WIDGET_ID = createPhiPresetCmsInstanceId({
   domain: "page",
-  ownerModuleId: PHI_EDITOR_RUNTIME_MODULE_ID,
+  ownerModuleId: PHI_LOCALIZATION_RUNTIME_MODULE_ID,
   presetKey: "editor-translations-page",
   nodeKey: "widgetTranslations",
 });
 
 export const PHI_EDITOR_TRANSLATIONS_SOURCE_LOCALE_WIDGET_ID = createPhiPresetCmsInstanceId({
   domain: "page",
-  ownerModuleId: PHI_EDITOR_RUNTIME_MODULE_ID,
+  ownerModuleId: PHI_LOCALIZATION_RUNTIME_MODULE_ID,
   presetKey: "editor-translations-page",
   nodeKey: "widgetSourceLocale",
 });
 
 export const PHI_EDITOR_TRANSLATION_OVERLAY_ID = createPhiPresetCmsInstanceId({
   domain: "page",
-  ownerModuleId: PHI_EDITOR_RUNTIME_MODULE_ID,
+  ownerModuleId: PHI_LOCALIZATION_RUNTIME_MODULE_ID,
   presetKey: "editor-translations-page",
   nodeKey: "overlayTranslationEdit",
 });
 
 export const PHI_EDITOR_TRANSLATION_OVERLAY_LAYOUT_ID = createPhiPresetCmsInstanceId({
   domain: "page",
-  ownerModuleId: PHI_EDITOR_RUNTIME_MODULE_ID,
+  ownerModuleId: PHI_LOCALIZATION_RUNTIME_MODULE_ID,
   presetKey: "editor-translations-page",
   nodeKey: "layoutTranslationEdit",
 });
 
 export const PHI_EDITOR_TRANSLATION_OVERLAY_FOOTER_LAYOUT_ID = createPhiPresetCmsInstanceId({
   domain: "page",
-  ownerModuleId: PHI_EDITOR_RUNTIME_MODULE_ID,
+  ownerModuleId: PHI_LOCALIZATION_RUNTIME_MODULE_ID,
   presetKey: "editor-translations-page",
   nodeKey: "layoutTranslationEditFooter",
 });
 
 export const PHI_EDITOR_TRANSLATION_COMMANDS_WIDGET_ID = createPhiPresetCmsInstanceId({
   domain: "page",
-  ownerModuleId: PHI_EDITOR_RUNTIME_MODULE_ID,
+  ownerModuleId: PHI_LOCALIZATION_RUNTIME_MODULE_ID,
   presetKey: "editor-translations-page",
   nodeKey: "widgetTranslationCommands",
 });

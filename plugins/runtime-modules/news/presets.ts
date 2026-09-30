@@ -1,4 +1,4 @@
-import { PHI_BASE_PAGE_LAYOUT_VERSION } from "../../../components/regions/presets/phi-base-page-layout";
+import { buildPhiSidebarRoutePresetDescriptor } from "../sidebar-route";
 import type {
   PhiCmsDescriptorBuildContext,
   PhiCmsRoutePresetDescriptor,
@@ -56,25 +56,17 @@ export const PHI_NEWS_RUNTIME_MODULE_ROUTES = [
    * `anchor: "main"` rather than a parent item key: the sidebar exports roles, not items, and naming
    * another Module's entry would make this one depend on it being there.
    */
-  {
+  buildPhiSidebarRoutePresetDescriptor({
+    area: "editor",
+    anchor: "main",
     ownerModuleId: PHI_NEWS_RUNTIME_MODULE_ID,
     presetKey: PHI_EDITOR_NEWS_PAGE_PRESET_KEY,
-    presetVersion: 1 + PHI_BASE_PAGE_LAYOUT_VERSION,
-    area: "editor" as const,
     title: "News",
     path: "/news",
-    navigation: [{
-      navKey: "editor:sidebar" as const,
-      anchor: "main" as const,
-      item: {
-        itemKey: "@phis/ui/modules/news/nav/editor/news",
-        label: { defaultMessage: "News" },
-        icon: "antd:notification",
-        routePresetKey: PHI_EDITOR_NEWS_PAGE_PRESET_KEY,
-      },
-    }],
-    loadTree: ({ page, runtime }: PhiCmsDescriptorBuildContext) =>
+    itemKey: "@phis/ui/modules/news/nav/editor/news",
+    icon: "antd:notification",
+    loadTree: ({ page, runtime }) =>
       import("./trees/phi-default-editor-news-page-tree")
         .then((module) => module.buildPhiDefaultEditorNewsPageTree({ page, runtime })),
-  },
-] as const satisfies readonly PhiCmsRoutePresetDescriptor[];
+  }),
+] satisfies readonly PhiCmsRoutePresetDescriptor[];

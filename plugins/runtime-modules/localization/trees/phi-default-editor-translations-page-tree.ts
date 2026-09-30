@@ -16,14 +16,14 @@ import {
   PHI_EDITOR_TRANSLATION_OVERLAY_LAYOUT_ID,
   PHI_EDITOR_TRANSLATIONS_SOURCE_LOCALE_WIDGET_ID,
   PHI_EDITOR_TRANSLATIONS_WIDGET_ID,
-} from "./editor-shell";
+} from "./editor-translations-shell";
 import { buildPhiBasePageContentScaffold, PHI_BASE_PAGE_LAYOUT_NODE_ID } from "../../../../components/regions/presets/phi-base-page-layout";
 import { getPhiEditorTranslationsPageLabels } from "./editor-translations-label-set";
-import { getPhiEditorTranslationsWidgetLabels } from "../../../../components/widgets/label-sets/editor-translations";
-import { PHI_LOCALIZATION_RUNTIME_DATA_PROVIDER_KEYS } from "../../localization/ids";
-import { PHI_LOCALIZATION_FORM_IDS } from "../../localization/forms";
+import { getPhiEditorTranslationsWidgetLabels } from "./editor-translations-widget-label-set";
+import { PHI_LOCALIZATION_RUNTIME_DATA_PROVIDER_KEYS } from "../ids";
+import { PHI_LOCALIZATION_FORM_IDS } from "../forms";
 import { PHI_SIGNAL_VALUE_SCHEMAS } from "../../../../types/signals";
-import { createPhiLocalizationControllerAddress } from "../../localization/controller/address";
+import { createPhiLocalizationControllerAddress } from "../controller/address";
 import { readPhiServerApiCredentials } from "../../../../helpers/phis-server-credentials";
 
 const SYNTHETIC_EDITOR_TRANSLATIONS_REGION_IDS = { regionContent: -561 } as const;
@@ -199,7 +199,7 @@ export async function buildPhiDefaultEditorTranslationsPageTree({
                 defaultValue: "all",
               },
             ],
-            pagination: { enabled: true, pageSize: 25, pageSizeOptions: [25, 50, 100], showSizeChanger: true },
+            pagination: { enabled: true, pageSize: 25, pageSizes: [25, 50, 100] },
             sorting: { mode: "none" },
             tools: { mode: "self-contained", reset: true, reload: true },
             actions: {

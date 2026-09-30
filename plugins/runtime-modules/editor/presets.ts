@@ -1,4 +1,3 @@
-import { PHI_BASE_PAGE_LAYOUT_VERSION } from "../../../components/regions/presets/phi-base-page-layout";
 import type {
   PhiCmsAreaShellPresetDescriptor,
   PhiCmsRoutePresetDescriptor,
@@ -20,14 +19,4 @@ export const PHI_EDITOR_RUNTIME_MODULE_ROUTES = [buildPhiAreaRootRoutePresetDesc
   ownerModuleId: PHI_EDITOR_RUNTIME_MODULE_ID,
   area: "editor",
   title: "Editor",
-}), {
-  ownerModuleId: PHI_EDITOR_RUNTIME_MODULE_ID,
-  presetKey: "editor-translations-page",
-  presetVersion: 1 + PHI_BASE_PAGE_LAYOUT_VERSION,
-  area: "editor",
-  title: "Translations",
-  path: "/translations",
-  loadTree: ({ page, runtime }) =>
-    import("./trees/phi-default-editor-translations-page-tree")
-      .then((module) => module.buildPhiDefaultEditorTranslationsPageTree({ page, runtime })),
-}] satisfies readonly PhiCmsRoutePresetDescriptor[];
+})] satisfies readonly PhiCmsRoutePresetDescriptor[];

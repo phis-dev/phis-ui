@@ -89,8 +89,9 @@ describe("the first-party sidebars", () => {
     ]);
     expect(sidebarOf("accounting")).toEqual(["Dashboard", "Overview"]);
     /*
-     * News after Translations: the Area's own item comes before what a Module injects into the same
-     * anchor, and News is a Module's entry. A Site that wants it first says so in the overlay.
+     * Three Modules' entries and nothing of the Area's own: Dashboard anchors itself to `start`, the other
+     * two to `main`, and entries sharing an anchor are ordered by the Module that injected them. A Site
+     * that wants a different order says so in the navigation overlay.
      */
     expect(sidebarOf("editor")).toEqual(["Dashboard", "Translations", "News"]);
   });
