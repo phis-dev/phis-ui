@@ -11,7 +11,6 @@ import type {
   PhiMediaAssetTile,
 } from "../../../../types/media";
 import type { PhiCmsInstanceId } from "../../../../types/cms-instance-id";
-import type { PhiCssLength } from "../../../../types/length";
 import { PhiMediaPickerBinding } from "../../../media/phi-media-picker-binding";
 import { PHI_MEDIA_WIDGET_DEFAULT_LABELS } from "../../../media/media-widget-labels";
 import { PHI_SEARCH_WIDGET_DEFAULT_LABELS } from "../../label-types/search";
@@ -22,9 +21,8 @@ import { createPhiMediaPickerAssetControllerRoutes } from "../../../media/asset-
 
 type PhiWidgetImageToolButtonCommonPatch = {
   trusted?: boolean;
-  overrideSize?: boolean;
-  width?: PhiCssLength;
-  height?: PhiCssLength;
+  /** Cleared when the image changes: a fixed size chosen for one image is no answer for the next. */
+  imageSize?: undefined;
   blurDataUrl?: string;
 };
 
@@ -105,9 +103,7 @@ export function PhiWidgetImageToolButton({
       variantKey: PhiImageAssetVariantKey.Card,
       variantVersion: asset.variantVersion ?? null,
       trusted: false,
-      overrideSize: false,
-      width: undefined,
-      height: undefined,
+      imageSize: undefined,
       blurDataUrl: asset.blurDataUrl ?? undefined,
     });
   };
@@ -120,9 +116,7 @@ export function PhiWidgetImageToolButton({
         onChange({
           sourceKind: "url",
           sourceUrl: undefined,
-          overrideSize: false,
-          width: undefined,
-          height: undefined,
+          imageSize: undefined,
           blurDataUrl: undefined,
         });
       }}

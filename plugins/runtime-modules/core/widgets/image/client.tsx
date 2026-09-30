@@ -83,9 +83,9 @@ export function PhiImageWidget({
     simulateVariantCrop: authoringAssetVariantPreview,
   });
   const renderUrl = presentation.url;
-  const overrideSize = config?.overrideSize === true;
-  const width = resolveImageDimension(overrideSize, config?.width, presentation.width);
-  const height = resolveImageDimension(overrideSize, config?.height, presentation.height);
+  const overrideSize = config?.imageSize != null;
+  const width = resolveImageDimension(overrideSize, config?.imageSize?.width, presentation.width);
+  const height = resolveImageDimension(overrideSize, config?.imageSize?.height, presentation.height);
   const blurDataUrl = config?.blurDataUrl ?? resolvedAsset?.blurDataUrl ?? null;
   const alt = (sourceKind === "asset"
     ? (resolvedAsset?.altText ?? "")

@@ -24,17 +24,17 @@ export type PhiImageWidgetEditorProps = {
 function formatImageEditorOverlaySize(
   config: PhiCmsImageWidgetConfig | null | undefined,
   asset: PhiMediaAsset | null,
-  width: PhiCmsImageWidgetConfig["width"] | null | undefined,
-  height: PhiCmsImageWidgetConfig["height"] | null | undefined,
+  width: number | string | null | undefined,
+  height: number | string | null | undefined,
 ) {
   const variantKey = normalizePhiImageAssetVariantKey(config?.variantKey);
   const variantSpec = config?.sourceKind === "asset"
     ? resolvePhiImageAssetVariantSpec(variantKey)
     : null;
-  const resolvedWidth = config?.overrideSize === true
+  const resolvedWidth = config?.imageSize != null
     ? width
     : variantSpec?.width ?? asset?.width ?? width;
-  const resolvedHeight = config?.overrideSize === true
+  const resolvedHeight = config?.imageSize != null
     ? height
     : variantSpec?.height ?? asset?.height ?? height;
 
@@ -108,8 +108,8 @@ export function PhiImageWidgetEditor({ config, onChange }: PhiImageWidgetEditorP
   const overlaySize = formatImageEditorOverlaySize(
     config,
     resolvedAssetDetails,
-    config?.width ?? resolvedAssetDetails?.width,
-    config?.height ?? resolvedAssetDetails?.height,
+    config?.imageSize?.width ?? resolvedAssetDetails?.width,
+    config?.imageSize?.height ?? resolvedAssetDetails?.height,
   );
 
   return (

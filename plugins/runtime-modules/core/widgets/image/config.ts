@@ -27,15 +27,34 @@ export type PhiCmsImageWidgetConfig = PhiCmsWidgetConfigBase &
     sizes?: string;
     alt?: string;
     title?: string;
-    overrideSize?: boolean;
-    width?: number | string | null;
-    height?: number | string | null;
+    /**
+     * A fixed display size for the image, instead of the size of the variant it shows.
+     *
+     * Not the block's box -- that is `size`, and an image may stand smaller than the box it sits in.
+     * Absent, the image takes the variant's own size.
+     */
+    imageSize?: PhiImageWidgetSize;
     borderTopLeftRadius?: number | string;
     borderTopRightRadius?: number | string;
     borderBottomLeftRadius?: number | string;
     borderBottomRightRadius?: number | string;
     mask?: PhiMaskConfig;
   };
+
+export type PhiImageWidgetSize = {
+  width?: number | string;
+  height?: number | string;
+};
+
+function readImageSize(value: unknown): PhiImageWidgetSize | undefined {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return undefined;
+  }
+  const record = value as Record<string, unknown>;
+  const width = readCssSize(record.width) ?? undefined;
+  const height = readCssSize(record.height) ?? undefined;
+  return width == null && height == null ? undefined : { width, height };
+}
 
 function readImagePreviewMode(value: unknown): PhiImageWidgetPreviewMode {
   const mode = readString(value);
@@ -63,9 +82,7 @@ export function normalizePhiImageWidgetConfig(config: unknown): PhiCmsImageWidge
       sizes: undefined,
       preload: false,
       previewMode: "none",
-      overrideSize: false,
-      width: undefined,
-      height: undefined,
+      imageSize: undefined,
       blurDataUrl: undefined,
       borderTopLeftRadius: undefined,
       borderTopRightRadius: undefined,
@@ -87,9 +104,7 @@ export function normalizePhiImageWidgetConfig(config: unknown): PhiCmsImageWidge
     sizes: readString(raw.sizes),
     preload: readBoolean(raw.preload) ?? false,
     previewMode: readImagePreviewMode(raw.previewMode),
-    overrideSize: readBoolean(raw.overrideSize) ?? false,
-    width: readCssSize(raw.width),
-    height: readCssSize(raw.height),
+    imageSize: readImageSize(raw.imageSize),
     blurDataUrl: readString(raw.blurDataUrl),
     borderTopLeftRadius: readCssSize(raw.borderTopLeftRadius),
     borderTopRightRadius: readCssSize(raw.borderTopRightRadius),
@@ -185,19 +200,11 @@ export const PHI_IMAGE_WIDGET_DEFINITION = {
     },
     { key: "preload", type: "boolean", label: "Preload" },
     {
-      key: "overrideSize",
-      type: "boolean",
-      label: "Override size",
-    },
-    {
       key: "imageSize",
       type: "dimension",
-      label: "Size",
-      widthKey: "width",
-      heightKey: "height",
+      label: "Image size",
       widthPlaceholder: "Width",
       heightPlaceholder: "Height",
-      visibleWhen: { field: "overrideSize", equals: true },
     },
     {
       key: "radius",
