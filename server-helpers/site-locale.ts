@@ -97,7 +97,7 @@ function sanitizeSiteLocaleConfig(payload: unknown): SiteLocaleConfig {
  * The Site's languages, read from the Site config rather than cached beside it.
  *
  * They arrive in the same `/api/v1/site` answer, and a cache of their own kept them for an hour while
- * the config around them refreshed every two seconds: a language added in Admin was a page path for the
+ * the config around them refreshed every few seconds: a language added in Admin was a page path for the
  * router until then, and `/fr/...` was forwarded to `/de/fr/...`. The config's cache is also the one a
  * write through the Site proxy and a moved read marker clear.
  */

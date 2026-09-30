@@ -108,7 +108,7 @@ export type GetResolvedSiteConfigOptions = {
  * change markers, so this is also how long a process can go on showing what another process's publish
  * already replaced: it asks at most this often however many renders it serves, and not while it serves none.
  */
-export const PHI_SITE_CONFIG_REFRESH_MS = 2_000;
+export const PHI_SITE_CONFIG_REFRESH_MS = 3_000;
 
 const READ_MARKERS_KEY = Symbol.for("phis-ui.site-read-markers");
 
