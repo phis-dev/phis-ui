@@ -184,7 +184,8 @@ Generic control Widgets reuse the capability sets in `signals/control-signal-cap
 - The Command Toolbar (`command-toolbar`) groups command buttons. Each button has a stable `key` that
   becomes its subcontrol address (`cms:<instanceId>:<key>`) and an `emits` list referencing route
   `capabilityId`s; scope, channel, action, and receiver live only in the routes. Buttons may set `label`,
-  `tooltip`, `icon`, `display` (`icon | label | icon-label`), `danger`, `disabled`, and `buttonType`. The
+  `tooltip`, `icon`, `display` (`icon | label | icon-label`), `danger`, `disabled`, and `variant`
+  (`normal | primary | dashed | subtle | link`). The
   toolbar knows no workspace, page, or publish semantics; Controllers attach context.
 
 ### Options Providers

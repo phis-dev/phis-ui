@@ -1,6 +1,7 @@
 "use client";
 
 import type { PhiButtonWidgetConfig } from "./config";
+import { resolvePhiButtonVariantType } from "../../../../../components/widgets/config/button-variant";
 import type { PhiCommonControlLabels } from "../../../../../components/widgets/label-types/common-controls";
 import { usePhiControlSignalController } from "../../../../../components/widgets/client/shared/phi-control-signals";
 import { usePhiControlBadgeController } from "../../../../../components/widgets/client/shared/phi-control-badge";
@@ -95,7 +96,7 @@ export function PhiButtonWidget({
         ? { href: link.href, newTab: link.newTab, external: link.external }
         : {})}
       tooltip={tooltip}
-      type={config?.buttonType ?? action?.buttonType}
+      type={resolvePhiButtonVariantType(config?.variant ?? action?.variant)}
       danger={config?.danger === true || action?.danger === true}
       disabled={resolvedDisabled}
       size={config?.controlSize}

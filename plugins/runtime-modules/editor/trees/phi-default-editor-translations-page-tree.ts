@@ -318,7 +318,7 @@ export async function buildPhiDefaultEditorTranslationsPageTree({
           controlSize: "medium",
           buttons: [
             { key: "cancel", emits: [{ capabilityId: "command", value: "cancel" }], actionKey: "cancel", label: widgetLabels.actions.cancel },
-            { key: "save", emits: [{ capabilityId: "command", value: "save" }], actionKey: "save", label: widgetLabels.actions.save, buttonType: "primary" },
+            { key: "save", emits: [{ capabilityId: "command", value: "save" }], actionKey: "save", label: widgetLabels.actions.save, variant: "primary" },
           ],
           signalRoutes: {
             emits: [{

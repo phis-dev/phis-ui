@@ -1,4 +1,9 @@
 import { resolvePhiCmsWidgetPluginKey } from "../../../../../constants/cms-widget-types";
+import {
+  PHI_BUTTON_VARIANT_FIELD_OPTIONS,
+  readPhiButtonVariant,
+  type PhiButtonVariant,
+} from "../../../../../components/widgets/config/button-variant";
 import { PHI_SIGNAL_VALUE_SCHEMAS } from "../../../../../types/signals";
 import type { PhiCmsWidgetPlugin } from "../../../../../types";
 import {
@@ -9,7 +14,6 @@ import {
 import { readPhiLinkTarget, type PhiLinkTarget } from "../../../../../types/references";
 import { PHI_BUTTON_CONTROL_SIGNALS } from "../../../../../components/widgets/signals/control-signal-capabilities";
 import { readBoolean, readString } from "../../../../../components/widgets/config/parser-primitives";
-import { readPhiButtonType, type PhiButtonType } from "../../../../../components/controls/phi-button-types";
 import {
   PHI_CONTROL_BADGE_FIELDS,
   PHI_CONTROL_PRESENTATION_FIELDS,
@@ -26,7 +30,7 @@ export type PhiButtonWidgetConfig = PhiControlBadgeConfig & PhiControlConfig & {
   tooltip?: string;
   icon?: string;
   value?: string;
-  buttonType?: PhiButtonType;
+  variant?: PhiButtonVariant;
   /**
    * Where it leads, for a Button that is a way somewhere rather than a command.
    *
@@ -51,14 +55,12 @@ export function parsePhiButtonWidgetConfig(config: Record<string, unknown>): Phi
   return {
     ...controlState,
     ...parsePhiControlBadgeConfig(config),
-    actionKey: readPhiCommonControlActionKey(readString(config.actionKey) ?? readString(config.action)) ?? undefined,
+    actionKey: readPhiCommonControlActionKey(readString(config.actionKey)) ?? undefined,
     label: readString(config.label),
     tooltip: readString(config.tooltip),
     icon: readString(config.icon),
     value: readString(config.value),
-    buttonType: readString(config.buttonType) == null
-      ? undefined
-      : readPhiButtonType(config.buttonType),
+    variant: readPhiButtonVariant(config.variant),
     linkTarget: readPhiLinkTarget(config.linkTarget) ?? undefined,
     danger: readBoolean(config.danger),
   };
@@ -119,16 +121,10 @@ export const PHI_BUTTON_WIDGET_DEFINITION = {
     { key: "icon", type: "icon", label: "Icon", editorPlacement: "toolbar" },
     { key: "value", type: "string", label: "Signal Value" },
     {
-      key: "buttonType",
+      key: "variant",
       type: "choice",
-      label: "Button Type",
-      options: [
-        { value: "default", label: "Default" },
-        { value: "primary", label: "Primary" },
-        { value: "dashed", label: "Dashed" },
-        { value: "text", label: "Text" },
-        { value: "link", label: "Link" },
-      ],
+      label: "Variant",
+      options: [...PHI_BUTTON_VARIANT_FIELD_OPTIONS],
     },
     { key: "danger", type: "boolean", label: "Danger" },
     ...PHI_CONTROL_PRESENTATION_FIELDS,
@@ -137,7 +133,7 @@ export const PHI_BUTTON_WIDGET_DEFINITION = {
   ],
   defaultConfig: {
     key: "button",
-    buttonType: "default",
+    variant: "normal",
     badgeEnabled: false,
   },
   parseConfig: parsePhiButtonWidgetConfig,

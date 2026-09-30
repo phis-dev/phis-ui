@@ -1,10 +1,13 @@
 import { resolvePhiCmsWidgetPluginKey } from "../../../../../constants/cms-widget-types";
+import {
+  readPhiButtonVariant,
+  type PhiButtonVariant,
+} from "../../../../../components/widgets/config/button-variant";
 import type { PhiCmsWidgetPlugin } from "../../../../../types";
 import type { PhiSignalValue } from "../../../../../types/signals";
 import { readPhiCommonControlActionKey, type PhiCommonControlActionKey } from "../../../../../components/widgets/label-types/common-controls";
 import { PHI_COMMAND_CONTROL_SIGNALS } from "../../../../../components/widgets/signals/control-signal-capabilities";
 import { readBoolean, readNumber, readString } from "../../../../../components/widgets/config/parser-primitives";
-import { readPhiButtonType, type PhiButtonType } from "../../../../../components/controls/phi-button-types";
 import {
   PHI_CONTROL_PRESENTATION_FIELDS,
   PHI_CONTROL_STATE_FIELDS,
@@ -35,7 +38,7 @@ export type PhiCommandToolbarButtonConfig = {
   display?: "icon" | "label" | "icon-label";
   danger?: boolean;
   disabled?: boolean;
-  buttonType?: PhiButtonType;
+  variant?: PhiButtonVariant;
 };
 
 export type PhiCommandToolbarWidgetConfig = PhiControlConfig & {
@@ -128,7 +131,7 @@ function readCommandButtonConfig(value: unknown): PhiCommandToolbarButtonConfig 
     key,
     emits,
     ...(accessPolicy ? { accessPolicy } : {}),
-    actionKey: readPhiCommonControlActionKey(readString(record.actionKey) ?? readString(record.action) ?? key) ?? undefined,
+    actionKey: readPhiCommonControlActionKey(readString(record.actionKey) ?? key) ?? undefined,
     label: readString(record.label),
     tooltip: readString(record.tooltip),
     icon: readString(record.icon),
@@ -137,9 +140,7 @@ function readCommandButtonConfig(value: unknown): PhiCommandToolbarButtonConfig 
       : undefined,
     danger: readBoolean(record.danger),
     disabled: readBoolean(record.disabled),
-    buttonType: readString(record.buttonType) == null
-      ? undefined
-      : readPhiButtonType(record.buttonType),
+    variant: readPhiButtonVariant(record.variant),
   };
 }
 

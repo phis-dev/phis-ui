@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { resolvePhiButtonVariantType } from "../../../../../components/widgets/config/button-variant";
 
 import type { PhiCommandToolbarWidgetConfig } from "./config";
 import type { PhiCommonControlLabels } from "../../../../../components/widgets/label-types/common-controls";
@@ -290,7 +291,7 @@ export function PhiCommandToolbarWidget({
       label,
       tooltip: button.tooltip ?? action?.tooltip,
       showLabel: button.display == null ? undefined : button.display !== "icon",
-      type: button.buttonType ?? action?.buttonType ?? "default",
+      type: resolvePhiButtonVariantType(button.variant ?? action?.variant) ?? "default",
       danger: button.danger === true || action?.danger === true,
       disabled: button.disabled === true || buttonState.enabled === false,
       loading: buttonState.loading,

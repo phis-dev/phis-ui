@@ -197,7 +197,7 @@ Widget address, not the internal Core Form controller:
 config: {
   key: "submit",
   label: "Send request",
-  buttonType: "primary",
+  variant: "primary",
   signalRoutes: {
     emits: [{
       routeKey: "support-request-submit-button",

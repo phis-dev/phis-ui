@@ -531,7 +531,7 @@ export async function buildPhiDefaultAdminUsersPageTree({
           controlSize: "medium",
           buttons: [
             { key: "cancel", emits: [{ capabilityId: "command", value: "cancel" }], actionKey: "cancel", label: widgetLabels.confirm.cancel },
-            { key: "save", emits: [{ capabilityId: "command", value: "save" }], actionKey: "save", label: saveLabel, buttonType: "primary" },
+            { key: "save", emits: [{ capabilityId: "command", value: "save" }], actionKey: "save", label: saveLabel, variant: "primary" },
           ],
           signalRoutes: {
             emits: [{

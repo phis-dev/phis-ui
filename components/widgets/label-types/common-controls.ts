@@ -1,3 +1,4 @@
+import type { PhiButtonVariant } from "../config/button-variant";
 export type PhiCommonControlActionKey =
   | "add"
   | "apply"
@@ -25,7 +26,7 @@ export type PhiCommonControlActionLabels = {
   label: string;
   tooltip: string;
   icon: string;
-  buttonType?: "default" | "primary" | "dashed" | "text" | "link";
+  variant?: PhiButtonVariant;
   danger?: boolean;
 };
 
@@ -36,7 +37,7 @@ export type PhiCommonControlLabels = {
 export const PHI_COMMON_CONTROL_DEFAULT_LABELS: PhiCommonControlLabels = {
   actions: {
     add: { label: "Add", tooltip: "Add", icon: "add" },
-    apply: { label: "Apply", tooltip: "Apply", icon: "apply", buttonType: "primary" },
+    apply: { label: "Apply", tooltip: "Apply", icon: "apply", variant: "primary" },
     cancel: { label: "Cancel", tooltip: "Cancel", icon: "cancel" },
     clear: { label: "Clear", tooltip: "Clear", icon: "clear" },
     delete: { label: "Delete", tooltip: "Delete", icon: "delete", danger: true },
@@ -46,16 +47,16 @@ export const PHI_COMMON_CONTROL_DEFAULT_LABELS: PhiCommonControlLabels = {
     meta: { label: "Meta", tooltip: "Meta", icon: "meta" },
     new: { label: "New", tooltip: "New", icon: "new" },
     pageMeta: { label: "Meta", tooltip: "Page meta", icon: "meta" },
-    publish: { label: "Publish", tooltip: "Publish", icon: "publish", buttonType: "primary" },
+    publish: { label: "Publish", tooltip: "Publish", icon: "publish", variant: "primary" },
     reload: { label: "Reload", tooltip: "Reload", icon: "reload" },
     reset: { label: "Reset", tooltip: "Reset", icon: "reset", danger: true },
     restore: { label: "Restore", tooltip: "Restore", icon: "restore" },
     review: { label: "Review", tooltip: "Review", icon: "preview" },
-    save: { label: "Save", tooltip: "Save", icon: "save", buttonType: "primary" },
+    save: { label: "Save", tooltip: "Save", icon: "save", variant: "primary" },
     search: { label: "Search", tooltip: "Search", icon: "search" },
     undo: { label: "Undo", tooltip: "Undo", icon: "undo" },
     redo: { label: "Redo", tooltip: "Redo", icon: "redo" },
-    upload: { label: "Upload", tooltip: "Upload", icon: "upload", buttonType: "primary" },
+    upload: { label: "Upload", tooltip: "Upload", icon: "upload", variant: "primary" },
   },
 };
 

@@ -188,7 +188,7 @@ export async function buildPhiDefaultPubWelcomePageTree({
         config: {
           key: "read-more",
           label: "Read more...",
-          buttonType: "primary",
+          variant: "primary",
           /*
            * A link, not a command: it renders a real anchor, which works before hydration.
            *

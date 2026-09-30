@@ -420,7 +420,7 @@ export async function buildPhiDefaultAdminGroupsPageTree({
           showLabels: true,
           controlSize: "medium",
           buttons: [
-            { key: "save", emits: [{ capabilityId: "command", value: "save" }], actionKey: "save", label: labels.actions.create, buttonType: "primary" },
+            { key: "save", emits: [{ capabilityId: "command", value: "save" }], actionKey: "save", label: labels.actions.create, variant: "primary" },
           ],
           signalRoutes: {
             emits: [{
@@ -483,7 +483,7 @@ export async function buildPhiDefaultAdminGroupsPageTree({
           showLabels: true,
           controlSize: "medium",
           buttons: [
-            { key: "save", emits: [{ capabilityId: "command", value: "saveMembership" }], actionKey: "save", label: labels.membership.submit, buttonType: "primary" },
+            { key: "save", emits: [{ capabilityId: "command", value: "saveMembership" }], actionKey: "save", label: labels.membership.submit, variant: "primary" },
           ],
           signalRoutes: {
             emits: [{

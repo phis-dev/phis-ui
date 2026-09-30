@@ -450,8 +450,8 @@ export async function buildPhiBuilderInspectorAreaOverlayTree({
           showLabels: true,
           controlSize: "medium",
           buttons: [
-            { key: "cancel", emits: [{ capabilityId: "command", value: "cancel" }], actionKey: "cancel", label: effectsLabels.cancel, buttonType: "default" },
-            { key: "save", emits: [{ capabilityId: "command", value: "save" }], actionKey: "save", label: effectsLabels.save, buttonType: "primary" },
+            { key: "cancel", emits: [{ capabilityId: "command", value: "cancel" }], actionKey: "cancel", label: effectsLabels.cancel, variant: "normal" },
+            { key: "save", emits: [{ capabilityId: "command", value: "save" }], actionKey: "save", label: effectsLabels.save, variant: "primary" },
           ],
           signalRoutes: {
             emits: [{ routeKey: "builder-effects-command", capabilityId: "command", scope: "area", channel: "effects", action: "activate", valueType: "string", receiver: createPhiBuilderControllerAddress() }],
@@ -580,13 +580,13 @@ export async function buildPhiBuilderInspectorAreaOverlayTree({
           showLabels: true,
           controlSize: "medium",
           buttons: [
-            { key: "cancel", emits: [{ capabilityId: "command", value: "cancel" }], actionKey: "cancel", label: signalsLabels.routes.cancel, buttonType: "default" },
+            { key: "cancel", emits: [{ capabilityId: "command", value: "cancel" }], actionKey: "cancel", label: signalsLabels.routes.cancel, variant: "normal" },
             /*
              * The primary action reads "Apply", not "Save": it commits one route into the draft, and the
              * Page is saved separately. `actionKey` still names `save` so the button keeps that icon and
              * its loading affordance.
              */
-            { key: "apply", emits: [{ capabilityId: "command", value: "apply" }], actionKey: "save", label: signalsLabels.routes.apply, buttonType: "primary" },
+            { key: "apply", emits: [{ capabilityId: "command", value: "apply" }], actionKey: "save", label: signalsLabels.routes.apply, variant: "primary" },
           ],
           signalRoutes: {
             emits: [{ routeKey: "builder-signal-wiring-command", capabilityId: "command", scope: "area", channel: "signalWiring", action: "activate", valueType: "string", receiver: createPhiBuilderControllerAddress() }],

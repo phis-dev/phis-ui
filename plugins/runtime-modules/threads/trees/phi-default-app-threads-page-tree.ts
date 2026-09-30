@@ -632,7 +632,7 @@ export async function buildPhiDefaultAppThreadsPageTree({
           controlSize: "medium",
           buttons: [
             { key: "cancel", emits: [{ capabilityId: "command", value: "cancel" }], actionKey: "cancel", label: labels.cancelLabel },
-            { key: "save", emits: [{ capabilityId: "command", value: "save" }], actionKey: "save", label: labels.openConversationLabel, buttonType: "primary" },
+            { key: "save", emits: [{ capabilityId: "command", value: "save" }], actionKey: "save", label: labels.openConversationLabel, variant: "primary" },
           ],
           signalRoutes: {
             emits: [{
