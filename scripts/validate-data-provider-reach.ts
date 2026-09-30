@@ -5,6 +5,8 @@ import process from "node:process";
 
 import { PHI_CMS_AREA_KEYS, type PhiCmsAreaKey } from "../constants/cms-areas";
 import { PHI_FIRST_PARTY_RUNTIME_MODULE_CATALOG } from "../plugins/runtime-modules/catalog";
+import { createPhiDefaultAreaRuntimeModuleIds } from "../plugins/runtime-modules/area-module-defaults";
+import { isPhiRuntimeAreaBaseModuleId } from "../plugins/runtime-modules/area-definitions";
 import { listPhiPresetTreeFiles } from "./preset-tree-files";
 
 /*
@@ -82,6 +84,8 @@ for (const file of listPhiPresetTreeFiles(repositoryRoot)) {
 
 /** Which Areas each preset file is drawn in, from the descriptors that load it. */
 const areasByPresetName = new Map<string, Set<PhiCmsAreaKey>>();
+/** And which Modules ship it, which decides whether it can outlive the data it names. */
+const ownersByPresetName = new Map<string, Set<string>>();
 const unreadableLoaders: string[] = [];
 for (const [moduleId, entry] of PHI_FIRST_PARTY_RUNTIME_MODULE_CATALOG) {
   const descriptors = [
@@ -98,6 +102,9 @@ for (const [moduleId, entry] of PHI_FIRST_PARTY_RUNTIME_MODULE_CATALOG) {
     const areas = areasByPresetName.get(name) ?? new Set<PhiCmsAreaKey>();
     areas.add(descriptor.area);
     areasByPresetName.set(name, areas);
+    const owners = ownersByPresetName.get(name) ?? new Set<string>();
+    owners.add(moduleId);
+    ownersByPresetName.set(name, owners);
   }
 }
 
@@ -195,6 +202,40 @@ const registeredByArea = new Map<PhiCmsAreaKey, Set<string>>(
   PHI_CMS_AREA_KEYS.map((area) => [area, readRegisteredKeys(area)] as const),
 );
 
+/**
+ * Which Module answers each provider key, and which Modules an Area has on before anybody chooses.
+ *
+ * The check above asks whether an Area *can* load a provider. This one asks whether a Page can outlive it.
+ *
+ * A Page that its own Module ships needs nothing here: switch the Module off and the Page goes with it,
+ * because both are computed from the compiled catalog. That is the case for the groups and threads Pages,
+ * and it is what a Module is.
+ *
+ * A Page naming *another* Module's provider is the case that breaks. It exists whether or not that Module
+ * is on, so on a Site that has never configured the Area -- where `createPhiDefaultAreaRuntimeModuleIds`
+ * decides -- it renders and reports "provider not available from the active runtime modules". That is how a
+ * News Table shipped with a sidebar entry and no rows, and it is why the Editor's defaults name
+ * localization: the Translations Page is the Editor's, the data is not.
+ *
+ * Locked Modules count as on: a platform Module and an Area's own base Module are not somebody's choice.
+ */
+const ownerByProviderKey = new Map<string, string>();
+const lockedModuleIds = new Set<string>();
+for (const [moduleId, entry] of PHI_FIRST_PARTY_RUNTIME_MODULE_CATALOG) {
+  for (const provider of entry.definition.dataProviders ?? []) {
+    ownerByProviderKey.set(provider.key, moduleId);
+  }
+  if (entry.definition.kind === "platform" || isPhiRuntimeAreaBaseModuleId(moduleId)) {
+    lockedModuleIds.add(moduleId);
+  }
+}
+const activeByDefaultByArea = new Map<PhiCmsAreaKey, Set<string>>(
+  PHI_CMS_AREA_KEYS.map((area) => [
+    area,
+    new Set<string>([...createPhiDefaultAreaRuntimeModuleIds(area), ...lockedModuleIds]),
+  ] as const),
+);
+
 const problems: string[] = [];
 for (const [name, file] of presetFilesByName) {
   const expressions = collect(read(file), PROVIDER_KEY_PATTERN);
@@ -223,6 +264,16 @@ for (const [name, file] of presetFilesByName) {
         problems.push(
           `${relative} names "${key}" and is drawn in "${area}", ` +
           `but ${area}.tsx registers no Data Provider Client for it.`,
+        );
+      }
+      const owner = ownerByProviderKey.get(key);
+      const shipsItsOwnData = owner != null && (ownersByPresetName.get(name)?.has(owner) ?? false);
+      if (owner && !shipsItsOwnData && !activeByDefaultByArea.get(area)?.has(owner)) {
+        problems.push(
+          `${relative} names "${key}", which belongs to "${owner}", and is drawn in "${area}" by ` +
+          `${[...(ownersByPresetName.get(name) ?? [])].join(", ")}. "${area}" does not activate ` +
+          "that Module by default, so the Page would report the provider missing on a Site that has " +
+          "not configured the Area. Either the Page belongs to that Module, or the Area's defaults name it.",
         );
       }
     }
