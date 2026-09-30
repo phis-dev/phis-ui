@@ -57,7 +57,7 @@ import {
   buildPhiMediaFolderValueById,
   combinePhiMediaFlagValues,
   resolvePhiMediaFolderIdFromValue,
-} from "../components/media/phi-media-scope-controller";
+} from "../components/media/media-folder-options";
 import {
   initPhiMediaUploadSession,
   resolvePhiMediaUploadInitOptions,
@@ -68,7 +68,7 @@ import {
   PHI_ASSET_INSPECTOR_OVERLAY_IDS,
   PHI_ASSET_INSPECTOR_WIDGET_IDS,
   PHI_ASSET_MEDIA_PAGE_WIDGET_IDS,
-} from "../components/media/asset-inspector-addresses";
+} from "../plugins/runtime-modules/asset/media-page-ids";
 import { createPhiAssetControllerAddress } from "../components/media/asset-controller-address";
 import { createPhiMediaPickerAssetControllerRoutes } from "../components/media/asset-controller-routes";
 
@@ -700,7 +700,7 @@ const mediaSourcePaths = [
   "components/media/media-upload-flow.ts",
   "components/media/phi-image-preview-data.ts",
   "components/media/phi-image-preview-store.ts",
-  "components/media/phi-media-scope-controller.ts",
+  "plugins/runtime-modules/asset/controller/runtime.ts",
   "components/media/phi-media-picker-binding.tsx",
   "components/media/phi-area-upload-widget.tsx",
   "plugins/runtime-modules/asset/data-providers.ts",

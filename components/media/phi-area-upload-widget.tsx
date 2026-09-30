@@ -29,7 +29,7 @@ import {
   readPhiMediaUploadErrorMessage,
 } from "./phi-media-upload";
 import { usePhiImagePreviewStore, type PhiImagePreviewStoreState } from "./phi-image-preview-store";
-import { PHI_ASSET_CONTROLLER_STORE_KEY } from "./phi-media-scope-controller";
+import { PHI_ASSET_CONTROLLER_STORE_KEY } from "./asset-controller-signals";
 import {
   applyPhiAssetCollectionData,
   buildPhiAssetCollectionQuery,

@@ -12,15 +12,9 @@ export const PHI_ASSET_RUNTIME_MODULE_ROUTES = [
     path: "/media",
     itemKey: "@phis/ui/modules/asset/nav/builder/media",
     icon: "antd:picture",
-    loadTree: ({ page, runtime, catalog }) =>
-      import("../builder/trees/phi-default-builder-area-preset-tree")
-        .then((module) => module.buildPhiDefaultBuilderPagePresetTree({
-          page,
-          runtime,
-          registry: catalog,
-          ownerModuleId: PHI_ASSET_RUNTIME_MODULE_ID,
-          presetKey: "builder-media-page",
-        })),
+    loadTree: ({ page, runtime }) =>
+      import("./trees/phi-default-builder-media-page-tree")
+        .then((module) => module.buildPhiDefaultBuilderMediaPageTree({ page, runtime })),
   }),
   buildPhiSidebarRoutePresetDescriptor({
     area: "admin",

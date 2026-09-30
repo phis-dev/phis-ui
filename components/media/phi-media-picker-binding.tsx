@@ -16,10 +16,12 @@ import { PHI_ASSET_COLLECTION_DATA_SOURCE } from "./asset-collection-runtime";
 import {
   buildPhiMediaFolderCascaderOptions,
   buildPhiMediaFolderValueById,
+  resolvePhiMediaFolderIdFromValue,
+} from "./media-folder-options";
+import {
   PHI_ASSET_CONTROLLER_STORE_KEY,
   PHI_ASSET_SIGNAL_CHANNELS,
-  resolvePhiMediaFolderIdFromValue,
-} from "./phi-media-scope-controller";
+} from "./asset-controller-signals";
 import { setPhiImagePreviewSelection } from "./phi-image-preview-store";
 import {
   buildPhiMediaSpaceOptions,

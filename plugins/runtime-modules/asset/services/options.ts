@@ -10,7 +10,7 @@ import { phiImagePreviewStore, type PhiImagePreviewStoreState } from "../../../.
 import {
   buildPhiMediaFolderCascaderOptions,
   buildPhiMediaFolderValueById,
-} from "../../../../components/media/phi-media-scope-controller";
+} from "../../../../components/media/media-folder-options";
 
 export const PhiMediaFoldersOptionsProviderClient = createPhiControlOptionsProviderClient({
   key: PHI_ASSET_RUNTIME_DATA_PROVIDER_KEYS.mediaFolders,

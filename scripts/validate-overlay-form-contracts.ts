@@ -294,6 +294,8 @@ const effectsToolSource = await readFile(new URL("../plugins/runtime-modules/bui
 const builderShellPresetSource = await readFile(new URL("../plugins/runtime-modules/builder/trees/phi-default-builder-area-preset-tree.ts", import.meta.url), "utf8");
 const builderOverlayPresetSource = await readFile(new URL("../plugins/runtime-modules/builder/trees/phi-builder-inspector-area-overlay-tree.server.ts", import.meta.url), "utf8");
 const builderPresetSource = `${builderShellPresetSource}\n${builderOverlayPresetSource}`;
+// The Media library's Page is the Asset Module's, and so is its tree.
+const assetMediaPagePresetSource = await readFile(new URL("../plugins/runtime-modules/asset/trees/phi-default-builder-media-page-tree.ts", import.meta.url), "utf8");
 const builderClientManifestSource = await readFile(new URL("../plugins/runtime-modules/client-manifests/builder.tsx", import.meta.url), "utf8");
 const commonClientManifestSource = await readFile(new URL("../plugins/runtime-modules/client-manifests/common.ts", import.meta.url), "utf8");
 const formHandlerResolutionSource = await readFile(new URL("../gateway/form-handler-resolution.ts", import.meta.url), "utf8");
@@ -317,39 +319,39 @@ assert.doesNotMatch(builderPresetSource, /builder-inspector-host/u);
 assert.doesNotMatch(builderPresetSource, /builder-workspace-host/u);
 assert.doesNotMatch(builderPresetSource, /layoutDrawerRight|regionDrawerRight/u);
 assert.match(
-  builderPresetSource,
+  assetMediaPagePresetSource,
   /headerLayoutNodeId: PHI_ASSET_INSPECTOR_LAYOUT_IDS\.layoutMediaInspectorHeader,[\s\S]*?bodyLayoutNodeId: PHI_ASSET_INSPECTOR_LAYOUT_IDS\.layoutMediaInspector,[\s\S]*?footerLayoutNodeId: PHI_ASSET_INSPECTOR_LAYOUT_IDS\.layoutMediaInspectorFooter/u,
 );
 assert.match(
-  builderPresetSource,
+  assetMediaPagePresetSource,
   /typeKey: "collapsible",[\s\S]*?id: PHI_ASSET_INSPECTOR_LAYOUT_IDS\.layoutMediaInspector,[\s\S]*?previewTitle[\s\S]*?metadataTitle/u,
 );
 assert.match(
-  builderPresetSource,
+  assetMediaPagePresetSource,
   /typeKey: "image-inspector",[\s\S]*?parentLayoutNodeId: PHI_ASSET_INSPECTOR_LAYOUT_IDS\.layoutMediaInspector,[\s\S]*?slotIndex: PHI_CMS_SEQUENTIAL_LAYOUT_SLOTS\[0\]\.slotIndex/u,
 );
 assert.match(
-  builderPresetSource,
+  assetMediaPagePresetSource,
   /typeKey: "form",[\s\S]*?id: PHI_ASSET_INSPECTOR_WIDGET_IDS\.widgetMediaMetadataForm,[\s\S]*?parentLayoutNodeId: PHI_ASSET_INSPECTOR_LAYOUT_IDS\.layoutMediaInspector,[\s\S]*?slotIndex: PHI_CMS_SEQUENTIAL_LAYOUT_SLOTS\[1\]\.slotIndex/u,
 );
 assert.match(
-  builderPresetSource,
+  assetMediaPagePresetSource,
   /id: PHI_ASSET_INSPECTOR_OVERLAY_IDS\.overlayMediaFocalRect,[\s\S]*?bodyLayoutNodeId: PHI_ASSET_INSPECTOR_LAYOUT_IDS\.layoutMediaFocalRectBody,[\s\S]*?footerLayoutNodeId: PHI_ASSET_INSPECTOR_LAYOUT_IDS\.layoutMediaFocalRectFooter/u,
 );
 assert.match(
-  builderPresetSource,
+  assetMediaPagePresetSource,
   /typeKey: "content",[\s\S]*?id: PHI_ASSET_INSPECTOR_LAYOUT_IDS\.layoutMediaFocalRectBody,[\s\S]*?padding: 0,[\s\S]*?background: PHI_COLOR\.bgLayout/u,
 );
 assert.match(
-  builderPresetSource,
+  assetMediaPagePresetSource,
   /typeKey: "image-inspector",[\s\S]*?id: PHI_ASSET_MEDIA_PAGE_WIDGET_IDS\.widgetMediaInspector,[\s\S]*?capabilityId: "focalRectOpen"[\s\S]*?receiver: createPhiSignalAddress\("cms", PHI_ASSET_INSPECTOR_OVERLAY_IDS\.overlayMediaFocalRect\)/u,
 );
 assert.match(
-  builderPresetSource,
+  assetMediaPagePresetSource,
   /typeKey: "asset-focal-rect",[\s\S]*?id: PHI_ASSET_INSPECTOR_WIDGET_IDS\.widgetMediaFocalRect,[\s\S]*?parentLayoutNodeId: PHI_ASSET_INSPECTOR_LAYOUT_IDS\.layoutMediaFocalRectBody/u,
 );
 assert.match(
-  builderPresetSource,
+  assetMediaPagePresetSource,
   /typeKey: "command-toolbar",[\s\S]*?id: PHI_ASSET_INSPECTOR_WIDGET_IDS\.widgetMediaFocalRectCommands,[\s\S]*?parentLayoutNodeId: PHI_ASSET_INSPECTOR_LAYOUT_IDS\.layoutMediaFocalRectFooter/u,
 );
 assert.match(builderClientManifestSource, /PhiCmsWidgetType\.AssetFocalRect/u);

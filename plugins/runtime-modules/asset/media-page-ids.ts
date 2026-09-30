@@ -1,5 +1,5 @@
-import { PHI_ASSET_RUNTIME_MODULE_ID } from "../../plugins/runtime-modules/asset/ids";
-import { createPhiPresetCmsInstanceIdMap } from "../../types/cms-instance-id";
+import { PHI_ASSET_RUNTIME_MODULE_ID } from "./ids";
+import { createPhiPresetCmsInstanceIdMap } from "../../../types/cms-instance-id";
 
 const PHI_BUILDER_MEDIA_PAGE_ID_CONTEXT = {
   domain: "page" as const,
@@ -42,3 +42,10 @@ export const PHI_ASSET_MEDIA_PAGE_WIDGET_IDS = createPhiPresetCmsInstanceIdMap({
   ownerModuleId: PHI_ASSET_RUNTIME_MODULE_ID,
   presetKey: "builder-media-page",
 }, ["widgetMediaPreview", "widgetMediaInspector"]);
+
+/** The Page's own frame: the header bottom it keeps empty and the root its gallery stands in. */
+export const PHI_ASSET_MEDIA_PAGE_LAYOUT_IDS = createPhiPresetCmsInstanceIdMap({
+  domain: "area",
+  ownerModuleId: PHI_ASSET_RUNTIME_MODULE_ID,
+  presetKey: "builder-media-page",
+}, ["layoutHeaderBottom", "layoutContent"]);

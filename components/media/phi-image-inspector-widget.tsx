@@ -5,7 +5,7 @@ import { normalizePhiImagePreviewSelectionAsset } from "./phi-image-preview-data
 import { PhiAssetInspectorSection } from "./phi-asset-inspector-section";
 import { setPhiImagePreviewSelection, usePhiImagePreviewStore } from "./phi-image-preview-store";
 import type { PhiAssetInspectorWidgetLabels, PhiAssetWidgetLabels } from "./media-widget-labels";
-import { PHI_ASSET_CONTROLLER_STORE_KEY } from "./phi-media-scope-controller";
+import { PHI_ASSET_CONTROLLER_STORE_KEY } from "./asset-controller-signals";
 import { normalizeMediaFocalRect } from "./focal-rect";
 import { usePhiControlSignalController } from "../widgets/client/shared/phi-control-signals";
 

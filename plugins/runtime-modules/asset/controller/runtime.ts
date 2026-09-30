@@ -12,30 +12,30 @@ import {
   setPhiImagePreviewPageSize,
   setPhiImagePreviewSearchQuery,
   usePhiImagePreviewStore,
-} from "./phi-image-preview-store";
-import { PhiMediaAssetFlags, PhiMediaKind } from "../../constants/media";
-import { PHI_SIGNAL_VALUE_SCHEMAS, createPhiSignalAddress, createPhiSignalSubcontrolAddress } from "../../types/signals";
-import type { PhiMediaKindValue } from "../../types/media";
-import type { PhiSignal, PhiSignalAddress } from "../../types/signals";
-import type { PhiMediaAssetFolder } from "../../types/media";
-import { usePhiSignalListener } from "../runtime/runtime-signal-bus";
-import { usePhiSignalEmitter } from "../runtime/runtime-signal-identity";
-import { createPhiRuntimeFormControllerAddress } from "../forms/runtime-form-controller-address";
-import { createPhiAssetControllerAddress } from "./asset-controller-address";
+} from "../../../../components/media/phi-image-preview-store";
+import { PhiMediaAssetFlags, PhiMediaKind } from "../../../../constants/media";
+import { PHI_SIGNAL_VALUE_SCHEMAS, createPhiSignalAddress, createPhiSignalSubcontrolAddress } from "../../../../types/signals";
+import type { PhiMediaKindValue } from "../../../../types/media";
+import type { PhiSignal, PhiSignalAddress } from "../../../../types/signals";
+import type { PhiMediaAssetFolder } from "../../../../types/media";
+import { usePhiSignalListener } from "../../../../components/runtime/runtime-signal-bus";
+import { usePhiSignalEmitter } from "../../../../components/runtime/runtime-signal-identity";
+import { createPhiRuntimeFormControllerAddress } from "../../../../components/forms/runtime-form-controller-address";
+import { createPhiAssetControllerAddress } from "../../../../components/media/asset-controller-address";
 import {
   PHI_ASSET_CONTROLLER_STORE_KEY,
   PHI_ASSET_SIGNAL_CHANNELS,
-} from "./asset-controller-signals";
+} from "../../../../components/media/asset-controller-signals";
 import {
   PHI_ASSET_INSPECTOR_OVERLAY_IDS,
   PHI_ASSET_INSPECTOR_WIDGET_IDS,
   PHI_ASSET_MEDIA_PAGE_WIDGET_IDS,
-} from "./asset-inspector-addresses";
-import { normalizeMediaFocalRect } from "./focal-rect";
-export {
-  PHI_ASSET_CONTROLLER_STORE_KEY,
-  PHI_ASSET_SIGNAL_CHANNELS,
-} from "./asset-controller-signals";
+} from "../media-page-ids";
+import { normalizeMediaFocalRect } from "../../../../components/media/focal-rect";
+import {
+  resolvePhiMediaFolderIdFromValue,
+  combinePhiMediaFlagValues,
+} from "../../../../components/media/media-folder-options";
 
 const ASSET_METADATA_FORM_WIDGET_ADDRESS = createPhiSignalAddress(
   "cms",
@@ -85,93 +85,6 @@ type PhiAssetFolderRequest = {
   parentPath: string;
 };
 
-export function buildPhiMediaFolderOptions(folders: PhiMediaAssetFolder[]) {
-  const byParentId = new Map<number | null, PhiMediaAssetFolder[]>();
-  for (const folder of folders) {
-    const bucket = byParentId.get(folder.parentId) ?? [];
-    bucket.push(folder);
-    byParentId.set(folder.parentId, bucket);
-  }
-
-  for (const bucket of byParentId.values()) {
-    bucket.sort((left, right) => left.sortOrder - right.sortOrder || left.id - right.id);
-  }
-
-  function visit(folder: PhiMediaAssetFolder): {
-    value: number;
-    label: string;
-    children?: ReturnType<typeof visit>[];
-  } {
-    const children = (byParentId.get(folder.id) ?? []).map((child) => visit(child));
-    return children.length > 0
-      ? { value: folder.id, label: folder.name, children }
-      : { value: folder.id, label: folder.name };
-  }
-
-  return (byParentId.get(null) ?? []).map((folder) => visit(folder));
-}
-
-export function buildPhiMediaFolderPathById(folders: PhiMediaAssetFolder[], folderId: number | null) {
-  if (folderId == null) {
-    return [];
-  }
-
-  const byId = new Map(folders.map((folder) => [folder.id, folder] as const));
-  const path: number[] = [];
-  const visited = new Set<number>();
-  let currentId: number | null = folderId;
-
-  while (currentId != null) {
-    if (visited.has(currentId)) {
-      break;
-    }
-    visited.add(currentId);
-
-    const folder = byId.get(currentId);
-    if (!folder) {
-      break;
-    }
-
-    path.unshift(folder.id);
-    currentId = folder.parentId;
-  }
-
-  return path;
-}
-
-export function buildPhiMediaFolderValueById(folders: PhiMediaAssetFolder[], folderId: number | null) {
-  const path = buildPhiMediaFolderPathById(folders, folderId);
-  return path.length > 0 ? `/${path.join("/")}` : "/";
-}
-
-export function buildPhiMediaFolderCascaderOptions(folders: PhiMediaAssetFolder[]) {
-  return [...folders]
-    .sort((left, right) => {
-      const leftPath = buildPhiMediaFolderPathById(folders, left.id);
-      const rightPath = buildPhiMediaFolderPathById(folders, right.id);
-      return leftPath.length - rightPath.length || left.sortOrder - right.sortOrder || left.id - right.id;
-    })
-    .map((folder) => ({
-      value: buildPhiMediaFolderValueById(folders, folder.id),
-      label: folder.name,
-    }));
-}
-
-export function resolvePhiMediaFolderIdFromValue(folders: PhiMediaAssetFolder[], value: string | null | undefined) {
-  const trimmed = value?.trim() ?? "";
-  if (!trimmed || trimmed === "/") {
-    return null;
-  }
-
-  const lastSegment = trimmed.split("/").filter(Boolean).at(-1);
-  if (!lastSegment) {
-    return null;
-  }
-
-  const folderId = Number(lastSegment);
-  return Number.isInteger(folderId) && folders.some((folder) => folder.id === folderId) ? folderId : null;
-}
-
 function splitPhiMediaFolderNamePath(value: string | null | undefined) {
   return (value ?? "")
     .split("/")
@@ -193,10 +106,6 @@ function buildPhiMediaFolderNamePath(folders: PhiMediaAssetFolder[], folderId: n
     currentId = folder.parentId;
   }
   return path.length > 0 ? `/${path.join("/")}` : "";
-}
-
-export function combinePhiMediaFlagValues(presentationFlags: number[]) {
-  return presentationFlags.reduce((accumulator, flag) => accumulator | flag, 0);
 }
 
 function matchesAssetControllerSignal(signal: PhiSignal) {

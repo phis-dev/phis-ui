@@ -1,12 +1,12 @@
 import {
   PHI_SIGNAL_VALUE_SCHEMAS,
-} from "../../types/signals";
-import type { PhiRuntimeControllerDefinition } from "../../types/cms-plugins";
+} from "../../../../types/signals";
+import type { PhiRuntimeControllerDefinition } from "../../../../types/cms-plugins";
 import {
   PHI_ASSET_CONTROLLER_KEY,
   PHI_ASSET_CONTROLLER_PLUGIN_KEY,
-} from "./asset-controller-address";
-import { PHI_ASSET_SIGNAL_CHANNELS } from "./asset-controller-signals";
+} from "../../../../components/media/asset-controller-address";
+import { PHI_ASSET_SIGNAL_CHANNELS } from "../../../../components/media/asset-controller-signals";
 
 export type PhiAssetRuntimeControllerConfig = Record<string, never>;
 

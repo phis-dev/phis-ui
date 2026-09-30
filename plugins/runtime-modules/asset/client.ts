@@ -7,5 +7,5 @@ import dynamic from "next/dynamic";
  * route's loadable manifest, and the HTML asks for them before hydration instead of after it.
  */
 export const PhiLazyAssetRuntimeControllerClient = dynamic(() =>
-  import("../../../components/media/asset-controller-plugin").then((module) => module.PhiAssetRuntimeControllerClient));
+  import("./controller/client").then((module) => module.PhiAssetRuntimeControllerClient));
 

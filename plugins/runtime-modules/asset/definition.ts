@@ -1,4 +1,4 @@
-import { PHI_ASSET_RUNTIME_CONTROLLER_DEFINITION } from "../../../components/media/asset-controller-definition";
+import { PHI_ASSET_RUNTIME_CONTROLLER_DEFINITION } from "./controller/definition";
 import { PHI_ASSET_CONTROLLER_TYPE } from "../../../components/media/asset-controller-address";
 import type { PhiRuntimeModuleDefinition } from "../contracts";
 import { buildPhiRuntimeModuleControllerDescriptor } from "../contracts";

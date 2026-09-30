@@ -34,9 +34,9 @@ import {
   buildPhiMediaFolderCascaderOptions,
   buildPhiMediaFolderValueById,
   combinePhiMediaFlagValues,
-  PHI_ASSET_CONTROLLER_STORE_KEY,
   resolvePhiMediaFolderIdFromValue,
-} from "../../../../../components/media/phi-media-scope-controller";
+} from "../../../../../components/media/media-folder-options";
+import { PHI_ASSET_CONTROLLER_STORE_KEY } from "../../../../../components/media/asset-controller-signals";
 import { applyPhiAssetCollectionData } from "../../../../../components/media/asset-collection-runtime";
 import { PhiAssetFolderControl } from "../../../../../components/media/phi-asset-folder-control";
 import { PhiAreaUploadBinding } from "../../../../../components/media/phi-area-upload-widget";

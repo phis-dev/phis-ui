@@ -1,7 +1,7 @@
 "use client";
 
-import { usePhiAssetRuntimeController } from "./phi-media-scope-controller";
-import type { PhiRuntimeControllerMountScope } from "../../types";
+import { usePhiAssetRuntimeController } from "./runtime";
+import type { PhiRuntimeControllerMountScope } from "../../../../types";
 
 export function PhiAssetRuntimeControllerMount({
   mountScope,
