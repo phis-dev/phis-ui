@@ -136,6 +136,14 @@ export type PhiCmsFormWidgetConfig = PhiCmsWidgetConfigBase & {
     phase: "submit" | "confirm";
   };
   source: PhiTableSourceBinding | null;
+  /**
+   * The Table action that opens a row in this form, for a form fed by a Table.
+   *
+   * Absent is an answer of its own, not a missing default: a form with a `source` and no open action is
+   * a single-record form and reads its record when it mounts, the way a settings page does. Setting it
+   * makes the form wait for that action to name a row. `defaultConfig` says `"edit"`, so a form placed
+   * in the Builder starts as the Table-driven kind.
+   */
   openActionKey?: string;
   signalRoutes: ReturnType<typeof readPhiSignalRouteSet>;
 };
