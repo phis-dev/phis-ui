@@ -359,6 +359,14 @@ export function buildPhiSiteFormRouteHandlers({
         return toJsonResponse({ ok: false, error: "Form handler is not active for this Area." }, 404);
       }
       const descriptor = buildPhiFormSubmitDescriptorFromHandlerProvider(resolved.formId, resolved.provider);
+      if (descriptor.transport !== "relay") {
+        // The relay is the only transport that is carried out; relaying a handler that declared another
+        // would send its values somewhere it never asked them to go.
+        throw new Error(
+          `Form handler ${descriptor.submitHandlerKey} declares transport "${descriptor.transport}", ` +
+            "which this relay does not carry out.",
+        );
+      }
       const target = resolvePhiFormSubmitTarget(descriptor);
       const proxyHeaders = buildRelayHeaders(request, buildHeaders);
       proxyHeaders.set("content-type", "application/json");

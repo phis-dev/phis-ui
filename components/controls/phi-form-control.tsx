@@ -1,6 +1,16 @@
 "use client";
 
-import { Fragment, forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState, type CSSProperties } from "react";
+import {
+  Fragment,
+  forwardRef,
+  useEffect,
+  useId,
+  useImperativeHandle,
+  useMemo,
+  useRef,
+  useState,
+  type CSSProperties,
+} from "react";
 import {
   Form,
   theme as antdTheme,
@@ -74,6 +84,11 @@ export type PhiFormControlProps = {
   onBlurCapture?: () => void;
 };
 
+/** The id Ant Design gives a Form Item's control: the form's name and the field's key, joined by `_`. */
+function resolvePhiFormFieldDomId(formDomName: string, fieldKey: string) {
+  return `${formDomName}_${fieldKey}`;
+}
+
 export type PhiFormControlFormInstance = FormInstance<Record<string, unknown>>;
 
 export type PhiFormControlHandle = {
@@ -124,6 +139,7 @@ function resolveHoneypotStyle(
 }
 
 function PhiResolvedFormFieldControl({
+  id,
   provider,
   field,
   label,
@@ -139,6 +155,8 @@ function PhiResolvedFormFieldControl({
   formContext,
   formValues,
 }: {
+  /** Set by the Form Item this sits in, from the form's name and the field's key. */
+  id?: string;
   provider: PhiFormFieldTypeProvider;
   field: PhiFormFieldDescriptor;
   /** The live values of this form, for a field whose options depend on a sibling. */
@@ -201,10 +219,16 @@ function PhiResolvedFormFieldControl({
       { form: formValues },
     ).values,
   );
-  const lastRequiredDependencyKey = useRef(requiredDependencyKey);
+  /*
+   * Only a parent that changed on its own clears the child. Where the value changed in the same update
+   * -- the server answering with both, a draft restored, `setValues` from a sibling -- the value was
+   * chosen for the new parent, and clearing it threw away the one answer that fits.
+   */
+  const lastRequiredDependency = useRef({ key: requiredDependencyKey, value });
   useEffect(() => {
-    if (lastRequiredDependencyKey.current === requiredDependencyKey) return;
-    lastRequiredDependencyKey.current = requiredDependencyKey;
+    const last = lastRequiredDependency.current;
+    lastRequiredDependency.current = { key: requiredDependencyKey, value };
+    if (last.key === requiredDependencyKey || !Object.is(last.value, value)) return;
     if (value != null && value !== "") onChange?.(undefined);
   }, [onChange, requiredDependencyKey, value]);
   const Control = provider.Control;
@@ -215,6 +239,7 @@ function PhiResolvedFormFieldControl({
   return (
     <>
       <Control
+        id={id}
         field={field}
         label={label}
         description={description}
@@ -269,6 +294,12 @@ export const PhiFormControl = forwardRef<PhiFormControlHandle, PhiFormControlPro
   );
   const [internalForm] = Form.useForm<Record<string, unknown>>();
   const form = providedForm ?? internalForm;
+  /*
+   * A name of its own for every mounted form. Ant Design builds each field's DOM id from it, and without
+   * one the id was the field key alone: two forms with an `email` field on one page repeated the ids of
+   * the field and its messages, and a label could only have pointed at whichever came first.
+   */
+  const formDomName = `phi-form-${useId().replace(/[^A-Za-z0-9_-]/g, "")}`;
   useImperativeHandle(ref, () => ({
     submit: () => form.submit(),
     reset: () => form.resetFields(),
@@ -440,6 +471,7 @@ export const PhiFormControl = forwardRef<PhiFormControlHandle, PhiFormControlPro
     <div style={{ width: "100%", minWidth: 0 }}>
       <Form
       className="phi-form-descriptor"
+      name={formDomName}
       form={form}
       layout="vertical"
       colon={false}
@@ -634,7 +666,7 @@ export const PhiFormControl = forwardRef<PhiFormControlHandle, PhiFormControlPro
           <Fragment key={field.key}>
             {showLabel ? (
               <label
-                htmlFor={field.key}
+                htmlFor={resolvePhiFormFieldDomId(formDomName, field.key)}
                 className="phi-form-cell phi-form-cell--label"
                 style={{
                   ...cellProperties("label"),

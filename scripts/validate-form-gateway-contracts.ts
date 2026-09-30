@@ -71,10 +71,14 @@ assert.equal(
   buildPhiFormSubmitDescriptor({ formId: "f", submitHandlerKey: "auth.login", category: "forms" }).category,
   "forms",
 );
-assert.equal(
-  buildPhiFormSubmitDescriptor({ formId: "f", submitHandlerKey: "auth.login", category: "nonsense" }).category,
-  "auth",
-  "An unknown category falls back to the namespace rather than to an arbitrary prefix.",
+assert.throws(
+  () => buildPhiFormSubmitDescriptor({
+    formId: "f",
+    submitHandlerKey: "auth.login",
+    category: "nonsense",
+  }),
+  /Unknown form submit category/,
+  "An unknown category is refused, not replaced by the namespace's.",
 );
 
 // Without an explicit path the endpoint key resolves under its category prefix.
@@ -108,24 +112,33 @@ assert.equal(normalized.submitHandlerKey, "forms.contact");
 assert.equal(normalized.upstreamPath, "/api/v1/forms/contact");
 assert.equal(normalized.csrfPath, "/api/auth/csrf");
 assert.equal(normalized.requiresCsrf, true);
+// Transport and method are read as declared; only an absent one takes the default.
 for (const [transport, expected] of [
-  ["api", "serverAction"],
+  ["api", "api"],
   ["serverAction", "serverAction"],
-  ["server-action", "serverAction"],
   ["relay", "relay"],
-  ["nonsense", "relay"],
   [null, "relay"],
 ] as const) {
   assert.equal(buildPhiFormSubmitDescriptor({ formId: "f", submitHandlerKey: "x", transport }).transport, expected);
 }
+for (const transport of ["server-action", "nonsense"]) {
+  assert.throws(
+    () => buildPhiFormSubmitDescriptor({ formId: "f", submitHandlerKey: "x", transport }),
+    /Unknown form submit transport/,
+  );
+}
 for (const [method, expected] of [
-  ["get", "GET"],
   ["PATCH", "PATCH"],
-  ["delete", "DELETE"],
-  ["nonsense", "POST"],
+  ["DELETE", "DELETE"],
   [null, "POST"],
 ] as const) {
   assert.equal(buildPhiFormSubmitDescriptor({ formId: "f", submitHandlerKey: "x", method }).method, expected);
+}
+for (const method of ["get", "nonsense"]) {
+  assert.throws(
+    () => buildPhiFormSubmitDescriptor({ formId: "f", submitHandlerKey: "x", method }),
+    /Unknown form submit method/,
+  );
 }
 assert.equal(
   resolvePhiFormSubmitTarget(buildPhiFormSubmitDescriptor({

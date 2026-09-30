@@ -19,6 +19,11 @@ import type {
 import type { PhiControlOption } from "../controls/phi-control-options";
 
 export type PhiFormFieldProviderProps = {
+  /**
+   * The DOM id the form gives this field, unique on the page: the field's label points at it. A
+   * Control that has an input to focus puts it there; one without leaves it unused.
+   */
+  id?: string;
   field: PhiFormFieldDescriptor;
   label?: string;
   description?: string;

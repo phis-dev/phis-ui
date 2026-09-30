@@ -72,34 +72,40 @@ function normalizeSubmitHandlerKey(value: string) {
 }
 
 function normalizeCategory(value: string | null | undefined): PhiFormSubmitCategory | null {
-  const normalized = typeof value === "string" ? value.trim().toLowerCase() : "";
-  if (normalized === "auth" || normalized === "account" || normalized === "forms" || normalized === "site") {
-    return normalized;
+  if (value == null) {
+    return null;
   }
-
-  return null;
+  if (value === "auth" || value === "account" || value === "forms" || value === "site") {
+    return value;
+  }
+  throw new Error(`Unknown form submit category "${value}".`);
 }
 
+/*
+ * Each of these is read as stated or refused. A value outside the vocabulary used to be rewritten --
+ * `api` into `serverAction`, anything unknown into `relay` or `POST` -- so a handler ran differently
+ * from how it was declared, and nothing said so. Only an absent value takes the default.
+ */
 function normalizeTransport(value: string | null | undefined): PhiFormSubmitTransport {
-  const normalized = typeof value === "string" ? value.trim().toLowerCase() : "";
-  if (normalized === "api" || normalized === "serveraction" || normalized === "server-action") {
-    return "serverAction";
-  }
-
-  if (normalized === "relay") {
+  if (value == null) {
     return "relay";
   }
-
-  return "relay";
+  if (value === "relay" || value === "api" || value === "serverAction") {
+    return value;
+  }
+  throw new Error(`Unknown form submit transport "${value}".`);
 }
 
 function normalizeMethod(value: string | null | undefined): PhiFormSubmitMethod {
-  const normalized = typeof value === "string" ? value.trim().toUpperCase() : "";
-  if (normalized === "GET" || normalized === "PUT" || normalized === "PATCH" || normalized === "DELETE") {
-    return normalized;
+  if (value == null) {
+    return "POST";
   }
-
-  return "POST";
+  if (
+    value === "GET" || value === "POST" || value === "PUT" || value === "PATCH" || value === "DELETE"
+  ) {
+    return value;
+  }
+  throw new Error(`Unknown form submit method "${value}".`);
 }
 
 function resolveSubmitCategory(submitHandlerKey: string, explicitCategory?: string | null) {

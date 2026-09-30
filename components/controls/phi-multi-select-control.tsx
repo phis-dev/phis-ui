@@ -10,6 +10,8 @@ import { PhiControlOptionContent } from "./phi-control-option-content";
 import { PhiLabeledControl } from "./phi-labeled-control";
 
 export type PhiMultiSelectControlProps<TValue extends string | number = string> = {
+  /** The DOM id of the input, so a `<label for>` outside the control can name it. */
+  id?: string;
   value?: readonly TValue[];
   label?: string;
   description?: ReactNode;
@@ -30,6 +32,7 @@ export type PhiMultiSelectControlProps<TValue extends string | number = string> 
 };
 
 export function PhiMultiSelectControl<TValue extends string | number = string>({
+  id,
   value,
   label,
   description,
@@ -61,6 +64,7 @@ export function PhiMultiSelectControl<TValue extends string | number = string>({
   );
   const control = (
     <Select
+      id={id}
       mode={allowCustom ? "tags" : "multiple"}
       allowClear={allowClear}
       value={[...(value ?? [])]}

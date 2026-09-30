@@ -7,6 +7,8 @@ import { PHI_LAYOUT } from "../../theme/phi-tokens";
 import { PhiLabeledControl } from "./phi-labeled-control";
 
 export type PhiNumberControlProps = {
+  /** The DOM id of the input, so a `<label for>` outside the control can name it. */
+  id?: string;
   value?: number | null;
   label?: string;
   /**
@@ -33,6 +35,7 @@ export type PhiNumberControlProps = {
 };
 
 export function PhiNumberControl({
+  id,
   value,
   label,
   prefix,
@@ -52,6 +55,7 @@ export function PhiNumberControl({
 }: PhiNumberControlProps) {
   const control = (
     <InputNumber
+      id={id}
       value={value}
       prefix={prefix}
       placeholder={placeholder}

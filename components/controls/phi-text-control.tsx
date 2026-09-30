@@ -20,6 +20,8 @@ import { PhiLabeledControl } from "./phi-labeled-control";
 export type PhiTextControlPresentation = "input" | "password" | "textarea" | "hidden";
 
 export type PhiTextControlProps = {
+  /** The DOM id of the input, so a `<label for>` outside the control can name it. */
+  id?: string;
   value?: string | null;
   label?: ReactNode;
   description?: ReactNode;
@@ -88,6 +90,7 @@ function resolveTextInputKind(inputType: PhiTextInputType | null | undefined): R
 }
 
 export function PhiTextControl({
+  id,
   value,
   label,
   description,
@@ -130,6 +133,7 @@ export function PhiTextControl({
   };
   const commonProps = {
     ref: inputRef,
+    id,
     "aria-label": ariaLabel,
     autoFocus,
     autoComplete,

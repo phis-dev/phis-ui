@@ -11,6 +11,8 @@ import { PhiControlOptionContent } from "./phi-control-option-content";
 import { PhiLabeledControl } from "./phi-labeled-control";
 
 export type PhiSelectControlProps<TValue extends string | number = string> = {
+  /** The DOM id of the input, so a `<label for>` outside the control can name it. */
+  id?: string;
   value?: TValue;
   label?: string;
   description?: ReactNode;
@@ -82,6 +84,7 @@ function groupPhiSelectOptions<TValue extends string | number>(
 }
 
 export function PhiSelectControl<TValue extends string | number = string>({
+  id,
   value,
   label,
   description,
@@ -166,6 +169,7 @@ export function PhiSelectControl<TValue extends string | number = string>({
 
   const control = (
     <Select
+      id={id}
       aria-label={ariaLabel}
       value={value ?? undefined}
       placeholder={placeholder}
