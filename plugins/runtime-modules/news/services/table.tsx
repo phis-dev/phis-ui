@@ -39,6 +39,19 @@ function readNumber(value: unknown, fallback: number) {
   return typeof value === "number" && Number.isFinite(value) ? value : fallback;
 }
 
+/**
+ * The store's status as the Table speaks it.
+ *
+ * `0` and `1` are `DB.md`'s vocabulary and stay in the store; a Table draws a badge, which needs a word,
+ * and the status filter already sends one. Anything the release does not know keeps its number rather than
+ * being read as a draft -- a status nobody recognises must not look like the least published one.
+ */
+function readStatusWord(status: unknown) {
+  if (status === 0) return "draft";
+  if (status === 1) return "published";
+  return String(status ?? "");
+}
+
 function readStringFilter(query: PhiTableQuery, key: string) {
   const value = query.filters?.[key];
   return typeof value === "string" ? value.trim() : "";
@@ -71,7 +84,8 @@ async function loadEntries({
     RESPONSE_OPTIONS,
   );
 
-  const rows = Array.isArray(result?.entries) ? result.entries.filter(isPhiRecord) : [];
+  const rows = (Array.isArray(result?.entries) ? result.entries.filter(isPhiRecord) : [])
+    .map((row) => ({ ...row, status: readStatusWord(row.status) }));
   return {
     rows,
     total: readNumber(result?.total, rows.length),

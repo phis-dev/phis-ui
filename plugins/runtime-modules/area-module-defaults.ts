@@ -7,6 +7,7 @@ import { PHI_LOCALIZATION_RUNTIME_MODULE_ID } from "./localization/ids";
 import { PHI_OBSERVABILITY_RUNTIME_MODULE_ID } from "./observability/ids";
 import { PHI_USER_MANAGEMENT_RUNTIME_MODULE_ID } from "./user-management/ids";
 import { PHI_DASHBOARD_RUNTIME_MODULE_ID } from "./dashboard/ids";
+import { PHI_NEWS_RUNTIME_MODULE_ID } from "./news/ids";
 import { PHI_REVISIONS_RUNTIME_MODULE_ID } from "./revisions/ids";
 
 export function createPhiDefaultAreaRuntimeModuleIds(
@@ -41,7 +42,16 @@ export function createPhiDefaultAreaRuntimeModuleIds(
   }
 
   if (area === "editor") {
-    return [PHI_LOCALIZATION_RUNTIME_MODULE_ID, PHI_DASHBOARD_RUNTIME_MODULE_ID];
+    /*
+     * News belongs here for the same reason localization does: the Area ships a Page for it, and its
+     * sidebar offers the entry. A default that left the Module out would give every Site that has not
+     * configured its Editor a menu item leading to a Table that reports its Provider missing.
+     */
+    return [
+      PHI_LOCALIZATION_RUNTIME_MODULE_ID,
+      PHI_NEWS_RUNTIME_MODULE_ID,
+      PHI_DASHBOARD_RUNTIME_MODULE_ID,
+    ];
   }
 
   if (area === "accounting") {

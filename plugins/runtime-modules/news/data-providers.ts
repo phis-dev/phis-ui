@@ -36,7 +36,25 @@ export const PHI_NEWS_RUNTIME_DATA_PROVIDER_DESCRIPTORS = [
           { key: "title", title: "Title", type: "string" },
           { key: "subtitle", title: "Subtitle", type: "string" },
           { key: "content", title: "Body", type: "string" },
-          { key: "status", title: "Status", type: "number" },
+          /*
+           * A word, not the store's number. `badge` can only render a `string` or an `enum`, and a column
+           * that draws a status is the reason the field exists -- so the service says `draft` where the
+           * row says `0`, which is also what the status filter sends.
+           */
+          {
+            key: "status",
+            title: "Status",
+            type: "enum",
+            /*
+             * The vocabulary, not the words a reader sees: those come from the column's `valueMap`, in the
+             * page's language. Stated here because an `enum` field must name its option source, and because
+             * a Site binding another Widget to this resource should be able to read what the values are.
+             */
+            options: [
+              { value: "draft", label: "Draft" },
+              { value: "published", label: "Published" },
+            ],
+          },
           { key: "sourceLocale", title: "Written in", type: "string" },
           { key: "translate", title: "May be translated", type: "boolean" },
           /*

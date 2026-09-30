@@ -90,8 +90,8 @@ export async function buildPhiDefaultEditorNewsPageTree({
                 fieldKey: "status",
                 title: widgetLabels.columns.status,
                 renderer: "badge",
-                // The store's numbers, said in words: 0 is a draft, 1 is published (`DB.md`).
-                valueMap: { 0: widgetLabels.rowStatus.draft, 1: widgetLabels.rowStatus.published },
+                // The Provider answers a word; these are the words a reader sees.
+                valueMap: { draft: widgetLabels.rowStatus.draft, published: widgetLabels.rowStatus.published },
                 sizing: { mode: "content", minWidth: 112 },
               },
               {
