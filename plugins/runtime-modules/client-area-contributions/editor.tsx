@@ -3,11 +3,9 @@
 import { definePhiRuntimeModuleControllerClientAreaContribution } from "../area-contributions-controller-client";
 import { PHI_LOCALIZATION_RUNTIME_MODULE_ID } from "../localization/ids";
 import { PHI_EDITOR_RUNTIME_MODULE_ID } from "../editor/ids";
-import { PHI_NEWS_RUNTIME_MODULE_ID } from "../news/ids";
 import { PHI_COMMON_RUNTIME_MODULE_CONTROLLER_CLIENT_AREA_CONTRIBUTIONS } from "./common";
 import { PHI_DASHBOARD_RUNTIME_MODULE_CONTROLLER_CLIENT_AREA_CONTRIBUTION } from "../dashboard/client";
 import { PhiLazyLocalizationRuntimeControllerClient } from "../localization/client";
-import { PhiLazyNewsRuntimeControllerClient } from "../news/client";
 import { PhiLazyEditorRuntimeControllerClient } from "../editor/client";
 
 export const PHI_EDITOR_RUNTIME_MODULE_CONTROLLER_CLIENT_AREA_CONTRIBUTIONS = [
@@ -16,10 +14,6 @@ export const PHI_EDITOR_RUNTIME_MODULE_CONTROLLER_CLIENT_AREA_CONTRIBUTIONS = [
   definePhiRuntimeModuleControllerClientAreaContribution({
     moduleId: PHI_LOCALIZATION_RUNTIME_MODULE_ID,
     Controller: PhiLazyLocalizationRuntimeControllerClient,
-  }),
-  definePhiRuntimeModuleControllerClientAreaContribution({
-    moduleId: PHI_NEWS_RUNTIME_MODULE_ID,
-    Controller: PhiLazyNewsRuntimeControllerClient,
   }),
   definePhiRuntimeModuleControllerClientAreaContribution({
     moduleId: PHI_EDITOR_RUNTIME_MODULE_ID,

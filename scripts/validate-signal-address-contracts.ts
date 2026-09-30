@@ -199,6 +199,22 @@ const READS_FOR_ANOTHERS_ADDRESS = new Map<string, string>([
   ],
 ]);
 
+/*
+ * A Controller mount must restrict what it answers to its own address.
+ *
+ * Delivery hands every listener in the partition every signal of it, and the filter is the listener's
+ * own doing (`matchesPhiSignalFilter`). A Controller that filters by scope and channel alone therefore
+ * hears what it sends, and a Controller that answers on a channel it also emits on is then a circle:
+ * News sent the pressed row to its Form on the `action` channel, read it back as a fresh Table action,
+ * and set itself off again -- two hundred deliveries a second, a dialog frozen mid-open, and a record
+ * that looked delivered because it had been. `receiver` in the filter or `signal.receiver` compared in
+ * the body both settle it; which one is a matter of taste.
+ *
+ * Only Controllers. A Widget listens for what a Preset wired to it and states that in its routes, while
+ * a Controller is the one participant that talks to the same Widgets it hears from.
+ */
+const CONTROLLER_MOUNT_PATTERN = /^plugins\/runtime-modules\/[^/]+\/controller\/client\.tsx?$/u;
+
 const violations: string[] = [];
 
 for (const relativePath of sourcePaths) {
@@ -219,6 +235,28 @@ for (const relativePath of sourcePaths) {
       return;
     }
     const declared = readDeclaredAddresses(node, readAddress);
+    if (CONTROLLER_MOUNT_PATTERN.test(relativePath)) {
+      const filter = node.arguments[1];
+      let restricts = false;
+      if (filter) {
+        forEachDescendant(filter, (candidate) => {
+          if (
+            ts.isPropertyAssignment(candidate)
+            && ts.isIdentifier(candidate.name)
+            && candidate.name.text === "receiver"
+          ) {
+            restricts = true;
+          }
+        });
+      }
+      if (!restricts && readComparedAddresses(listener, readAddress).size === 0) {
+        const filterLine = sourceFile.getLineAndCharacterOfPosition(node.getStart()).line + 1;
+        violations.push(
+          `${relativePath}:${filterLine} answers for a Controller without restricting to its own address: ` +
+          "name `receiver` in the filter or compare `signal.receiver`, or it hears what it sends.",
+        );
+      }
+    }
     const missing = [...readComparedAddresses(listener, readAddress)]
       .filter((address) => !declared.has(address))
       .filter((address) => !READS_FOR_ANOTHERS_ADDRESS.has(`${relativePath}:${address}`));

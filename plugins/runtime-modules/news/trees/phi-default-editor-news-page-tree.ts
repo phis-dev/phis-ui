@@ -17,16 +17,15 @@ import { PHI_SPACE } from "../../../../theme/antd-css-var-contract";
 import {
   PHI_SIGNAL_VALUE_SCHEMAS,
   createPhiSignalAddress,
-  createPhiSignalSubcontrolAddress,
 } from "../../../../types/signals";
-import {
-  PHI_NEWS_CONTROLLER_INSTANCE_KEY,
-  PHI_NEWS_CONTROLLER_TYPE,
-  createPhiNewsControllerAddress,
-} from "../controller/address";
 import type { PhiFormId } from "../../../../types/form-id";
 import { PHI_NEWS_FORM_IDS } from "../forms";
 import {
+  PHI_EDITOR_NEWS_CREATE_COMMANDS_WIDGET_ID,
+  PHI_EDITOR_NEWS_CREATE_FORM_WIDGET_ID,
+  PHI_EDITOR_NEWS_CREATE_OVERLAY_FOOTER_LAYOUT_ID,
+  PHI_EDITOR_NEWS_CREATE_OVERLAY_ID,
+  PHI_EDITOR_NEWS_CREATE_OVERLAY_LAYOUT_ID,
   PHI_EDITOR_NEWS_ENTRY_COMMANDS_WIDGET_ID,
   PHI_EDITOR_NEWS_ENTRY_FORM_WIDGET_ID,
   PHI_EDITOR_NEWS_ENTRY_OVERLAY_FOOTER_LAYOUT_ID,
@@ -47,10 +46,26 @@ const SYNTHETIC_EDITOR_NEWS_REGION_IDS = { regionContent: -562 } as const;
 
 /** One dialog's five nodes, and the words on its two buttons. */
 type NewsDialogInput = {
-  key: "entry" | "publication";
+  key: "create" | "entry" | "publication";
   title: string;
   formId: PhiFormId;
+  /*
+   * The row action this dialog is for.
+   *
+   * A Table announces one thing -- an action happened on a row, and here is which one -- so each receiver
+   * decides for itself whether it was meant: the Overlay by this key on its own config, and a
+   * record-bound Form by the same key on its own. Without it an Overlay opens for every announcement,
+   * deleting included.
+   */
   openActionKey: string;
+  /*
+   * Whether the Form reads the row it was opened with.
+   *
+   * A record-bound Form waits: it shows its skeleton from the moment it mounts and leaves it when the row
+   * arrives. That is right for correcting an entry and impossible for writing a new one, which has no
+   * row -- so the create dialog carries the same Form with no source, and it opens ready to type.
+   */
+  bindsRecord: boolean;
   saveLabel: string;
   cancelLabel: string;
   ids: {
@@ -67,19 +82,25 @@ const NEWS_DIALOG_SOURCE = {
   resourceKey: PHI_NEWS_TABLE_RESOURCE_KEY,
 } as const;
 
+const TABLE_ADDRESS = createPhiSignalAddress("cms", PHI_EDITOR_NEWS_WIDGET_ID);
+
 /**
- * A dialog, stated once and built twice.
+ * A dialog, stated once and built three times.
  *
- * The two differ in three things -- which Form they carry, which row action opens them, and what their
- * title says -- and in nothing else. Writing them out twice would be two chances for the wiring to drift,
- * and the wiring is the part that cannot be seen from the outside: every route below names the Controller
- * as its receiver, and the Controller tells the two apart by the address a signal came from.
+ * Nothing here coordinates anything: the Overlay opens itself on the action it names, the Form reads the
+ * row from the same announcement, the footer presses that Form, and a Form that went through closes its
+ * Overlay and tells the Table to read again. Every route names a Widget, and the whole exchange is in the
+ * Page rather than in code -- which is what lets a Site rearrange it.
+ *
+ * It had a Module Controller in between, for two things only: the Save button's spinner, and refusing to
+ * close while a save was in flight. Those two cost a Controller to mount, an address to match per dialog,
+ * and a listener that had to be told not to hear itself -- three silent failures in one afternoon, each of
+ * which left every visible part of the page looking right.
  */
 function buildPhiNewsDialogNodes(
   nodes: ReturnType<typeof createPhiCmsPresetNodes>,
   input: NewsDialogInput,
 ) {
-  const controller = createPhiNewsControllerAddress();
   const overlayAddress = createPhiSignalAddress("cms", input.ids.overlay);
   const formAddress = createPhiSignalAddress("cms", input.ids.form);
   const prefix = `editor-news-${input.key}`;
@@ -91,20 +112,22 @@ function buildPhiNewsDialogNodes(
       bodyLayoutNodeId: input.ids.body,
       footerPresentation: "actions",
       footerLayoutNodeId: input.ids.footer,
-      sortOrder: input.key === "entry" ? 0 : 10,
+      sortOrder: input.key === "create" ? 0 : input.key === "entry" ? 10 : 20,
       label: `editor news ${input.key} modal`,
       config: {
         title: input.title,
         width: { compact: "calc(100vw - 32px)", medium: 720, wide: 880 },
         mountPolicy: "remount",
-        closeMode: "request",
+        /*
+         * `immediate`: there is nobody to ask. `request` exists so a Controller can refuse while a save
+         * is in flight, and the price of not having one is that the X closes a dialog mid-save -- the
+         * save still lands, because the Form's submit is already on its way to Core.
+         */
+        closeMode: "immediate",
+        openActionKey: input.openActionKey,
         signalRoutes: {
-          emits: [
-            { routeKey: `${prefix}-overlay-state`, capabilityId: "openChange", scope: "page", channel: "state", action: "change", valueType: "boolean", receiver: controller },
-            { routeKey: `${prefix}-overlay-close-request`, capabilityId: "closeRequest", scope: "page", channel: "dialog", action: "close", valueType: "json", valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.overlayCloseRequest, receiver: controller },
-          ],
           listens: [
-            { routeKey: `${prefix}-overlay-open`, capabilityId: "open", scope: "page", channel: "dialog", action: "activate", valueType: "none", receiver: overlayAddress },
+            { routeKey: `${prefix}-overlay-open`, capabilityId: "open", scope: "page", channel: "action", action: "activate", valueType: "json", valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.tableAction, receiver: overlayAddress },
             { routeKey: `${prefix}-overlay-close`, capabilityId: "close", scope: "page", channel: "dialog", action: "close", valueType: "none", receiver: overlayAddress },
           ],
         },
@@ -125,7 +148,7 @@ function buildPhiNewsDialogNodes(
           gap: PHI_SPACE.base,
           margin: 0,
           padding: PHI_SPACE.base,
-          border: false,
+          borders: false,
         },
       }),
       nodes.layout({
@@ -151,20 +174,29 @@ function buildPhiNewsDialogNodes(
           formId: input.formId,
           /*
            * The Table's own resource, so the Form reads the row that was pressed rather than asking Core a
-           * second time -- and `openActionKey` is what keeps it empty until a row arrives, which is how a
-           * new entry gets a blank Form without a second one existing.
+           * second time, and `openActionKey` decides which action it reads for. A Form with no source has
+           * nothing to wait for and opens blank; its hidden `contentId` stays empty, which is what tells
+           * Core that this is a new entry rather than a correction.
            */
-          source: NEWS_DIALOG_SOURCE,
-          openActionKey: input.openActionKey,
+          source: input.bindsRecord ? NEWS_DIALOG_SOURCE : null,
+          ...(input.bindsRecord ? { openActionKey: input.openActionKey } : {}),
+          // What Core said, said to the reader: the dialog is gone by then and would say nothing itself.
+          feedback: { mode: "message" },
           signalRoutes: {
             emits: [
-              { routeKey: `${prefix}-form-submit-success`, capabilityId: "submitSuccess", scope: "page", channel: "submit", action: "activate", valueType: "json", valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.formResult, receiver: controller },
-              { routeKey: `${prefix}-form-submitting`, capabilityId: "submitting", scope: "page", channel: "submitting", action: "change", valueType: "boolean", receiver: controller },
+              /*
+               * One success, two consequences: this dialog is finished, and the list it came from is
+               * stale. Both take no value -- a `formResult` would match neither listener, which is how a
+               * Table once never reloaded although the save had gone through.
+               */
+              { routeKey: `${prefix}-form-success-close`, capabilityId: "submitSuccess", scope: "page", channel: "dialog", action: "close", valueType: "none", receiver: overlayAddress },
+              { routeKey: `${prefix}-form-success-reload`, capabilityId: "submitSuccess", scope: "page", channel: "reload", action: "activate", valueType: "none", receiver: TABLE_ADDRESS },
             ],
             listens: [
-              { routeKey: `${prefix}-form-open`, capabilityId: "recordOpen", scope: "page", channel: "action", action: "activate", valueType: "json", valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.tableAction, receiver: formAddress },
+              ...(input.bindsRecord
+                ? [{ routeKey: `${prefix}-form-open`, capabilityId: "recordOpen", scope: "page" as const, channel: "action", action: "activate" as const, valueType: "json" as const, valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.tableAction, receiver: formAddress }]
+                : []),
               { routeKey: `${prefix}-form-submit`, capabilityId: "submit", scope: "page", channel: "submit", action: "activate", valueType: "none", receiver: formAddress },
-              { routeKey: `${prefix}-form-reset`, capabilityId: "reset", scope: "page", channel: "reset", action: "activate", valueType: "none", receiver: formAddress },
             ],
           },
         },
@@ -178,33 +210,23 @@ function buildPhiNewsDialogNodes(
         label: `editor news ${input.key} commands`,
         config: {
           key: `${prefix}-commands`,
-          compact: false,
-          wrap: true,
+          /*
+           * The two buttons as one group, the way every other overlay footer states it: they are the two
+           * ends of a single decision, and a gap between them reads as two unrelated offers. Wrapping
+           * follows from that and is not stated -- a compact group does not wrap.
+           */
+          compact: true,
           showLabels: true,
           controlSize: "medium",
           buttons: [
-            { key: "cancel", emits: [{ capabilityId: "command", value: "cancel" }], actionKey: "cancel", label: input.cancelLabel },
-            { key: "save", emits: [{ capabilityId: "command", value: "save" }], actionKey: "save", label: input.saveLabel, variant: "primary" },
+            { key: "cancel", emits: [{ capabilityId: "close", value: null }], actionKey: "cancel", label: input.cancelLabel },
+            { key: "save", emits: [{ capabilityId: "submit", value: null }], actionKey: "save", label: input.saveLabel, variant: "primary" },
           ],
           signalRoutes: {
-            emits: [{
-              routeKey: `${prefix}-command`,
-              capabilityId: "command",
-              scope: "page",
-              channel: "command",
-              action: "activate",
-              valueType: "string",
-              receiver: controller,
-            }],
-            listens: [{
-              routeKey: `${prefix}-save-loading`,
-              capabilityId: "loading",
-              scope: "page",
-              channel: "submitting",
-              action: "change",
-              valueType: "boolean",
-              receiver: createPhiSignalSubcontrolAddress("cms", input.ids.commands, "save"),
-            }],
+            emits: [
+              { routeKey: `${prefix}-cancel`, capabilityId: "close", scope: "page", channel: "dialog", action: "close", valueType: "none", receiver: overlayAddress },
+              { routeKey: `${prefix}-save`, capabilityId: "submit", scope: "page", channel: "submit", action: "activate", valueType: "none", receiver: formAddress },
+            ],
           },
         },
       }),
@@ -245,11 +267,35 @@ export async function buildPhiDefaultEditorNewsPageTree({
   });
 
   const nodes = createPhiCmsPresetNodes(page);
+  /*
+   * The same Form twice: once with nothing to read, once bound to the row that was pressed.
+   *
+   * Two dialogs rather than one, because a record-bound Form cannot be asked to start blank -- it waits
+   * for a row, and a new entry has none. One dialog for both was the first attempt: it opened on the plus
+   * and stayed a skeleton, because nothing was ever going to arrive.
+   */
+  const createDialog = buildPhiNewsDialogNodes(nodes, {
+    key: "create",
+    title: widgetLabels.overlays.create,
+    formId: PHI_NEWS_FORM_IDS.entry,
+    openActionKey: "new",
+    bindsRecord: false,
+    saveLabel: widgetLabels.form.save,
+    cancelLabel: widgetLabels.form.cancel,
+    ids: {
+      overlay: PHI_EDITOR_NEWS_CREATE_OVERLAY_ID,
+      body: PHI_EDITOR_NEWS_CREATE_OVERLAY_LAYOUT_ID,
+      footer: PHI_EDITOR_NEWS_CREATE_OVERLAY_FOOTER_LAYOUT_ID,
+      form: PHI_EDITOR_NEWS_CREATE_FORM_WIDGET_ID,
+      commands: PHI_EDITOR_NEWS_CREATE_COMMANDS_WIDGET_ID,
+    },
+  });
   const entryDialog = buildPhiNewsDialogNodes(nodes, {
     key: "entry",
     title: widgetLabels.overlays.entry,
     formId: PHI_NEWS_FORM_IDS.entry,
     openActionKey: "edit",
+    bindsRecord: true,
     saveLabel: widgetLabels.form.save,
     cancelLabel: widgetLabels.form.cancel,
     ids: {
@@ -265,6 +311,7 @@ export async function buildPhiDefaultEditorNewsPageTree({
     title: widgetLabels.overlays.publication,
     formId: PHI_NEWS_FORM_IDS.publication,
     openActionKey: "publish",
+    bindsRecord: true,
     saveLabel: widgetLabels.form.save,
     cancelLabel: widgetLabels.form.cancel,
     ids: {
@@ -278,22 +325,14 @@ export async function buildPhiDefaultEditorNewsPageTree({
 
   return {
     page: nodes.page({ pageType: PhiCmsPageType.Standard }),
-    /*
-     * The Controller this Page sends to, mounted by this Page.
-     *
-     * Every route below names it as receiver, and a `demand` Controller comes into being only where a Page
-     * or a Widget asks for it -- so without this line the dialogs were wired to an address nobody answered:
-     * the Table emitted, the signal went nowhere, and nothing opened. It is the Page's own, not the Area's,
-     * which is what lets the Module be switched off without leaving a Controller behind.
-     */
-    controllerSettings: [{
-      type: PHI_NEWS_CONTROLLER_TYPE,
-      instanceKey: PHI_NEWS_CONTROLLER_INSTANCE_KEY,
-      mountScope: "page",
-    }],
-    overlays: [entryDialog.overlay, publicationDialog.overlay],
+    overlays: [createDialog.overlay, entryDialog.overlay, publicationDialog.overlay],
     regions: [scaffold.region],
-    layoutNodes: [scaffold.layoutNode, ...entryDialog.layouts, ...publicationDialog.layouts],
+    layoutNodes: [
+      scaffold.layoutNode,
+      ...createDialog.layouts,
+      ...entryDialog.layouts,
+      ...publicationDialog.layouts,
+    ],
     contentWidgets: [
       nodes.widget({
         id: PHI_EDITOR_NEWS_WIDGET_ID,
@@ -390,8 +429,8 @@ export async function buildPhiDefaultEditorNewsPageTree({
             tools: { mode: "self-contained", reset: true, reload: true },
             actions: {
               /*
-               * A new entry is a toolbar action: there is no row to press, and the Controller answers it by
-               * resetting the entry Form and opening its dialog on nothing.
+               * A new entry is a toolbar action: there is no row to press. It is announced like any other
+               * action, and the create dialog opens itself because its `openActionKey` says `new`.
                */
               toolbar: [
                 {
@@ -458,16 +497,32 @@ export async function buildPhiDefaultEditorNewsPageTree({
           },
           initialQuery: { filters: { status: "all" } },
           signalRoutes: {
-            emits: [{
-              routeKey: "editor-news-table-action",
-              capabilityId: "actionActivate",
-              scope: "page",
-              channel: "action",
-              action: "activate",
-              valueType: "json",
-              valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.tableAction,
-              receiver: createPhiNewsControllerAddress(),
-            }],
+            /*
+             * One announcement, five listeners.
+             *
+             * The Table says which action happened on which row and nothing more; each receiver decides
+             * whether it was meant, by the `openActionKey` on its own config. That is why there is no
+             * coordinator here: a dialog that does not recognise the action ignores it, and a Site that
+             * adds a sixth receiver adds a route rather than a case in somebody's code.
+             */
+            emits: [
+              ...[
+                PHI_EDITOR_NEWS_CREATE_OVERLAY_ID,
+                PHI_EDITOR_NEWS_ENTRY_OVERLAY_ID,
+                PHI_EDITOR_NEWS_ENTRY_FORM_WIDGET_ID,
+                PHI_EDITOR_NEWS_PUBLICATION_OVERLAY_ID,
+                PHI_EDITOR_NEWS_PUBLICATION_FORM_WIDGET_ID,
+              ].map((receiverId, index) => ({
+                routeKey: `editor-news-table-action-${index}`,
+                capabilityId: "actionActivate",
+                scope: "page" as const,
+                channel: "action",
+                action: "activate" as const,
+                valueType: "json" as const,
+                valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.tableAction,
+                receiver: createPhiSignalAddress("cms", receiverId),
+              })),
+            ],
             listens: [{
               // What a saved Form leads to: the list read again, decided by the Table and not by the Form.
               routeKey: "editor-news-table-reload",
@@ -476,11 +531,12 @@ export async function buildPhiDefaultEditorNewsPageTree({
               channel: "reload",
               action: "activate",
               valueType: "none",
-              receiver: createPhiSignalAddress("cms", PHI_EDITOR_NEWS_WIDGET_ID),
+              receiver: TABLE_ADDRESS,
             }],
           },
         },
       }),
+      ...createDialog.widgets,
       ...entryDialog.widgets,
       ...publicationDialog.widgets,
     ],

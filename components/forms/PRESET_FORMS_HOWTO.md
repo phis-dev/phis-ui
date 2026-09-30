@@ -498,6 +498,16 @@ Ant Design value store with that record. A record-bound Form never calls its Pro
 while mounting. Handler mode may reload only the last successfully opened identity after submit or an
 explicit reload signal.
 
+**Creating and editing are two placed Forms.** A Form with a `source` waits: it shows its skeleton from
+the moment it mounts, and with an `openActionKey` it leaves that skeleton only when a row identity for
+that action arrives. A new record has none, so the same Widget asked to start blank shows a skeleton for
+ever -- the dialog opens, the footer works, no field ever appears, and nothing in the console says why.
+Place the same `formId` twice: once with `source: null` for the new record, once record-bound for the
+correction. The hidden identity field is what tells the handler which of the two it is -- empty for a new
+record, carried by the read for a correction. The auth Installations Page and the News Page both state it
+this way; one dialog for both was tried on News and cost an afternoon, because every visible part of the
+chain was right.
+
 ## Controller and signaling boundary
 
 Standard runtime Forms use the demand-materialized Core Form controller
@@ -511,6 +521,30 @@ Keep these three addresses distinct:
 | `cms:<form-widget-id>` | Public signal surface of the placed Form Widget; external buttons target its `submit` or `reset` input. | The CMS preset. |
 | `controller:@phis/ui/modules/core/controller/form:widget-<form-widget-id>` | Internal runtime state and handler execution for exactly that mounted Form. | Automatically demanded from the Form Widget; never added as a preset node. |
 | `controller:<module id>/controller/<controller key>:<instance>`, for example `controller:@acme/support/modules/requests/controller/default:default` | Optional domain workflow, for example a wizard, coordinated modal, or several Forms committed together. | The owning Runtime Module, only when needed. |
+
+A domain Controller of the third kind is mounted by the Page that needs it. Its Module declares
+`controllerMountPolicy: "demand"`, and `demand` means nobody mounts it unless somebody asks: a Page
+through `controllerSettings` on its resolved tree with `mountScope: "page"`, or a Widget through a
+`conditionStateRequest` route. The Controller's `allowedMountScopes` must include the scope the Page
+mounts it at; `demand` together with `["area"]` alone can never be mounted at all, because no Area mounts
+a `demand` Controller either.
+
+Two things about such a Controller are easy to get wrong and impossible to see. It must restrict what it
+answers to its own address -- `receiver` in the listener's filter, or `signal.receiver` compared in the
+body -- because every listener is handed every signal of the partition, so a Controller that names neither
+hears what it sends and, talking to the same Widgets it hears from, goes round: the News Controller sent a
+pressed row to its Form on the `action` channel, read it back as a fresh Table action, and delivered two
+hundred signals a second until the main thread stopped. And it must match the address a Command Toolbar
+sends under, which is the pressed **button** (`cms:<toolbar>:save`), not the Toolbar -- matching the
+Toolbar alone drops every Save and every Cancel while the Table's actions still work, which makes the
+Controller look healthy. `scripts/validate-signal-address-contracts.ts` catches the first.
+
+Forgetting to mount it is silent too. The bus holds a signal addressed to a listener that is not there, so
+a Table announcing a pressed row, a footer pressing Save, and a Form reporting success all go into the hold
+and stay there. Nothing throws, nothing is logged, the Table draws its rows, and no dialog ever opens.
+`scripts/validate-controller-mount-contracts.ts` reads every preset tree and refuses one that imports a
+`demand` Controller's address without mounting it -- which is the cheapest place to catch it, because from
+the browser the page looks finished.
 
 The Form Widget derives its Core controller instance key from its CMS widget id. A basic handler Form
 therefore needs no controller node, controller address, or controller import in its preset. Persisted
@@ -616,6 +650,10 @@ package preset itself.
 | Missing field or validation provider | The descriptor references a key absent from the active module metadata, or a custom executable registry was not loaded around the owner subtree. |
 | Missing submit/confirm/preview handler | The active module set does not declare matching handler metadata for that exact phase and `handlerKey`. |
 | Form renders but the visible button does nothing | The external Button and Form Widget do not share a compatible persisted signal route targeting `cms:<form-widget-id>`. |
+| Dialog opens and the Form stays a skeleton | The Form is record-bound (`source` plus `openActionKey`) and no row identity for that action arrives. For a new record, place the same `formId` a second time with `source: null` instead of opening the editor on nothing. |
+| A Table action, a footer command, or a Save leads to nothing at all | The domain Controller they address is not mounted: its Module mounts on `demand`, and neither the Page's `controllerSettings` nor a Widget demand asks for it. Check `allowedMountScopes` in the same breath, and run `scripts/validate-controller-mount-contracts.ts`. |
+| The Table's actions work, Save and Cancel do nothing | The receiver matches the Command Toolbar's own address. A Toolbar emits as the pressed button, `cms:<toolbar>:save`, so match the subcontrol addresses too. |
+| The dialog freezes on open or on Cancel, `[phi-signals] ... was delivered 200 times within a second` | A circle. Most often a Controller that restricts to no address, hearing what it sends: name `receiver` in its listener's filter or compare `signal.receiver`. |
 | Form validates but handler mode fails | Check active Form/handler Provider resolution, immutable Provider target and credential policy, server add-on/route, authorization, and response. |
 | Overlay closes before persistence succeeds | The workflow closes on the Save command instead of the correlated `submitSuccess` result. |
 | Signal mode sends no values | The Form lacks an emitted `submitValues` route or the receiver/controller capability does not accept the `formValues` schema. |
@@ -639,6 +677,12 @@ package preset itself.
   Toolbar Widgets with explicit routes.
 - Do not mount the Core Form controller in the preset; verify that the Form Widget demand produces its
   `widget-<widget-id>` instance.
+- Place a new record and a correction as two Form Widgets: `source: null` for the one, record-bound for
+  the other. Never ask a record-bound Form to start blank.
+- Where a domain Controller mounts on `demand`, mount it from the Page's `controllerSettings` and let its
+  `allowedMountScopes` include that scope; a Controller nobody mounts swallows every signal in silence.
+- Restrict a Controller's listener to its own address, and match the subcontrol address a Command Toolbar
+  sends under rather than the Toolbar's own.
 - For handler mode, declare the server-owned handler Provider, implement its Site or Add-on endpoint
   behind `/api/site/forms`, and revalidate/authorize all values there.
 - For signal mode, route `submitValues`, validation, and result feedback to the owning domain Controller.

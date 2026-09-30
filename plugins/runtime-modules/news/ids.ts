@@ -33,12 +33,49 @@ export const PHI_EDITOR_NEWS_WIDGET_ID = createPhiPresetCmsInstanceId({
 });
 
 /**
- * The nodes of that Page: the Table, and the two dialogs one writes in.
+ * The nodes of that Page: the Table, and the three dialogs one writes in.
  *
- * Two dialogs because there are two acts -- the words and the publication -- and each has its own Form,
- * its own footer and its own Save. The Controller tells them apart by which of these addresses a signal
- * came from, not by a word in the signal's value: an address cannot drift out of step with itself.
+ * Three, because writing a new entry and correcting an existing one are two dialogs and not one. A Form
+ * bound to a record waits for the row it was opened with and shows its skeleton until it arrives; a new
+ * entry has no row, so the same Form would wait for ever. The publication is the third act, with its own
+ * Form and its own authority. The Controller tells them apart by which of these addresses a signal came
+ * from, not by a word in the signal's value: an address cannot drift out of step with itself.
  */
+export const PHI_EDITOR_NEWS_CREATE_OVERLAY_ID = createPhiPresetCmsInstanceId({
+  domain: "page",
+  ownerModuleId: PHI_NEWS_RUNTIME_MODULE_ID,
+  presetKey: PHI_EDITOR_NEWS_PAGE_PRESET_KEY,
+  nodeKey: "overlayCreate",
+});
+
+export const PHI_EDITOR_NEWS_CREATE_OVERLAY_LAYOUT_ID = createPhiPresetCmsInstanceId({
+  domain: "page",
+  ownerModuleId: PHI_NEWS_RUNTIME_MODULE_ID,
+  presetKey: PHI_EDITOR_NEWS_PAGE_PRESET_KEY,
+  nodeKey: "layoutCreate",
+});
+
+export const PHI_EDITOR_NEWS_CREATE_OVERLAY_FOOTER_LAYOUT_ID = createPhiPresetCmsInstanceId({
+  domain: "page",
+  ownerModuleId: PHI_NEWS_RUNTIME_MODULE_ID,
+  presetKey: PHI_EDITOR_NEWS_PAGE_PRESET_KEY,
+  nodeKey: "layoutCreateFooter",
+});
+
+export const PHI_EDITOR_NEWS_CREATE_FORM_WIDGET_ID = createPhiPresetCmsInstanceId({
+  domain: "page",
+  ownerModuleId: PHI_NEWS_RUNTIME_MODULE_ID,
+  presetKey: PHI_EDITOR_NEWS_PAGE_PRESET_KEY,
+  nodeKey: "widgetCreateForm",
+});
+
+export const PHI_EDITOR_NEWS_CREATE_COMMANDS_WIDGET_ID = createPhiPresetCmsInstanceId({
+  domain: "page",
+  ownerModuleId: PHI_NEWS_RUNTIME_MODULE_ID,
+  presetKey: PHI_EDITOR_NEWS_PAGE_PRESET_KEY,
+  nodeKey: "widgetCreateCommands",
+});
+
 export const PHI_EDITOR_NEWS_ENTRY_OVERLAY_ID = createPhiPresetCmsInstanceId({
   domain: "page",
   ownerModuleId: PHI_NEWS_RUNTIME_MODULE_ID,

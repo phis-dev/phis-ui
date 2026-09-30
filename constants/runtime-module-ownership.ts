@@ -31,7 +31,6 @@ const PHI_RUNTIME_MODULE_OWNERSHIP: Readonly<Record<string, readonly [module: st
   "controller/form": ["core", "form"],
   "controller/form-builder": ["form-builder", "default"],
   "controller/groups": ["groups", "default"],
-  "controller/news": ["news", "default"],
   "controller/localization": ["localization", "default"],
   "controller/observability": ["observability", "default"],
   "controller/public-base": ["public", "base"],

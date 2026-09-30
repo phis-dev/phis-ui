@@ -79,6 +79,11 @@ A receiver is registered in exactly one scope, and that registration decides:
 - A subcontrol key is a local, stable key of a control inside the instance, for example a toolbar button
   (`cms:<instanceId>:save`). It never replaces the instance id; `cms:save` is invalid. The address says
   which control is targeted; `channel` and `action` say what happens there.
+- A subcontrol is also what **sends**: a Command Toolbar emits as the button that was pressed
+  (`cms:<toolbar>:save`), not as the Toolbar. That is the same fact read the other way -- a button has its
+  own address because it has its own state -- and it decides what a receiver has to match. A Controller
+  that told its three dialogs apart by the Toolbar's own address recognised none of them and dropped every
+  Save and every Cancel, while the Table's actions went through and made it look mounted and well.
 - A Controller's `<pluginKey>` is either a bare npm package name or
   `<npm-package>/modules/<module>/<namespace>` (`isPhiControllerPluginKey`). First-party Controllers use
   `@phis/ui/modules/<module>/controller`:
@@ -91,6 +96,15 @@ A receiver is registered in exactly one scope, and that registration decides:
   `readPhiControllerSignalAddressParts`. Code does not concatenate address strings.
 - `widget:`, `layout:`, `object:`, `runtime:`, `site:`, `area:`, `page:`, `slot:`, and `block:` are not
   address families.
+
+A listener is handed every signal of its partition and filters for itself (`matchesPhiSignalFilter`):
+`receiver` in the filter, or `signal.receiver` compared in the body. Naming neither means hearing what
+you send, which is harmless for a Widget answering routes a Preset wired to it and a circle for a
+Controller, since a Controller talks to the same Widgets it hears from. The News Controller sent a pressed
+row to its Form on the `action` channel, read it back as a fresh Table action and set itself off again:
+two hundred deliveries a second, a dialog frozen mid-open, and a record that looked delivered because it
+had been. `scripts/validate-signal-address-contracts.ts` refuses a Module Controller mount that restricts
+to neither.
 
 `sender` is a concrete address or `null` and is never `broadcast`; it is derived from the mounted
 instance. `receiver` is:
@@ -249,6 +263,20 @@ type PhiSignalRoute = {
   Controller could be told nothing, so the two that needed receivers held Widget ids from a preset id
   map -- which is the coupling routes exist to remove, and which held only while one piece of code
   owned both ends.
+- `controllerSettings` is also what brings a `demand` Controller into being. Three mount policies, three
+  answers to who mounts: `site` and `area` are mounted for the scope they name whether anything asks or
+  not, and `demand` is mounted by whoever needs it -- a Page through this field, or a Widget through a
+  `conditionStateRequest` route. Nobody asking means no Controller, and a Module whose policy is `demand`
+  must allow the scope its Page mounts it at (`allowedMountScopes`); `demand` with `["area"]` alone can
+  never be mounted, because no Area mounts it either.
+
+  Wiring to a Controller that nobody mounts fails in silence, which is the same silence as a forgotten
+  `openActionKey` and worse to find. The bus holds a signal addressed to an absent listener (see
+  [Delivery and correlation](#delivery-and-correlation)); with no Controller there is no listener, so
+  every signal is simply held. Nothing throws, nothing logs, and the half that sent still looks right --
+  the News Table drew its rows and announced every press, and not one dialog opened.
+  `scripts/validate-controller-mount-contracts.ts` reads every preset tree: one that imports a `demand`
+  Controller's address must also mount it.
 
 ```ts
 const runtimeSignals = {

@@ -46,6 +46,7 @@ const PHI_EDITOR_NEWS_WIDGET_LABEL_SET = definePhiLabelSet({
     form_save: "Save",
     form_cancel: "Cancel",
     form_title: "News entry",
+    create_title: "New news entry",
     publication_title: "Publication",
     form_slug_placeholder: "news-entry-address",
     form_slug_error: definePhiMessageLabel("An address is required: lower case, digits and hyphens."),
@@ -77,7 +78,7 @@ export type PhiEditorNewsWidgetLabels = {
     changed: string;
   };
   actions: { withdraw: string; delete: string; new: string; edit: string; publish: string };
-  overlays: { entry: string; publication: string };
+  overlays: { create: string; entry: string; publication: string };
   form: {
     save: string;
     cancel: string;
@@ -124,7 +125,11 @@ export async function getPhiEditorNewsWidgetLabels(
       edit: labels.action_edit,
       publish: labels.action_publish,
     },
-    overlays: { entry: labels.form_title, publication: labels.publication_title },
+    overlays: {
+      create: labels.create_title,
+      entry: labels.form_title,
+      publication: labels.publication_title,
+    },
     form: {
       save: labels.form_save,
       cancel: labels.form_cancel,

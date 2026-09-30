@@ -30,7 +30,7 @@ vi.mock("./trees/editor-news-widget-label-set", () => ({
     withdraw: { title: "", description: "" },
     delete: { title: "", description: "" },
     empty: { title: "", text: "" },
-    overlays: { entry: "", publication: "" },
+    overlays: { create: "", entry: "", publication: "" },
     form: {
       save: "", cancel: "", slugPlaceholder: "", slugError: "", titleError: "", subtitleLabel: "",
       contentLabel: "", contentPlaceholder: "", contentError: "", linkLabel: "", linkPlaceholder: "",
@@ -59,8 +59,6 @@ import { PHI_VIEWER_ACCESS_ANYONE } from "../../../types/access";
 import type { PhiCmsPageNode } from "../../../types/cms";
 import { PHI_NEWS_RUNTIME_MODULE_ROUTES } from "./presets";
 import { PHI_NEWS_FORM_HANDLER_PROVIDER_DESCRIPTORS, PHI_NEWS_FORM_IDS, PHI_NEWS_RUNTIME_MODULE_FORMS } from "./forms";
-import { PHI_NEWS_CONTROLLER_INSTANCE_KEY, PHI_NEWS_CONTROLLER_TYPE } from "./controller/address";
-import { PHI_NEWS_RUNTIME_CONTROLLER_DEFINITION } from "./controller/definition";
 
 /**
  * The editor surface, as far as it can be pinned without a Site.
@@ -218,12 +216,20 @@ describe("what News writes with", () => {
     } as never);
 
     const forms = tree.contentWidgets.filter((widget) => widget.widgetType.endsWith("/form"));
+    /*
+     * Three Forms, and the first of them reads nothing.
+     *
+     * A Form with a `source` and an `openActionKey` is a record editor: it shows its skeleton until the row
+     * it was opened with arrives. Writing a new entry has no row, so the create dialog carries the same
+     * Form unbound -- with one dialog for both, the plus opened on a skeleton that never resolved.
+     */
     expect(forms.map((form) => {
-      const config = form.config as { formId?: string; openActionKey?: string };
-      return [config.formId, config.openActionKey];
+      const config = form.config as { formId?: string; openActionKey?: string; source?: unknown };
+      return [config.formId, config.openActionKey ?? null, config.source == null ? "unbound" : "record"];
     })).toEqual([
-      [PHI_NEWS_FORM_IDS.entry, "edit"],
-      [PHI_NEWS_FORM_IDS.publication, "publish"],
+      [PHI_NEWS_FORM_IDS.entry, null, "unbound"],
+      [PHI_NEWS_FORM_IDS.entry, "edit", "record"],
+      [PHI_NEWS_FORM_IDS.publication, "publish", "record"],
     ]);
 
     const table = tree.contentWidgets.find((widget) => widget.widgetType.endsWith("/table"));
@@ -231,33 +237,42 @@ describe("what News writes with", () => {
     expect(features.actions.row.map((action) => action.key)).toEqual(["edit", "publish", "withdraw", "delete"]);
     expect(features.actions.toolbar.map((action) => action.key)).toEqual(["new"]);
 
-    // Two dialogs, each with a body and a footer beside the page's own layout.
-    expect(tree.overlays).toHaveLength(2);
-    expect(tree.layoutNodes).toHaveLength(5);
+    // Three dialogs, each with a body and a footer beside the page's own layout.
+    expect(tree.overlays).toHaveLength(3);
+    expect(tree.layoutNodes).toHaveLength(7);
+
+    /* Both footers as one compact group, the way every other overlay footer states it. */
+    const commands = tree.contentWidgets.filter((widget) => widget.widgetType.endsWith("/command-toolbar"));
+    expect(commands).toHaveLength(3);
+    for (const toolbar of commands) {
+      expect(toolbar.config).toMatchObject({ compact: true });
+    }
   });
 
   /*
-   * The Page mounts the Controller every one of those routes sends to.
+   * Nothing coordinates this Page, and that is the point.
    *
-   * A `demand` Controller exists where somebody asks for it, and nothing else on this Page does: the Table
-   * asks for no condition state, and the Module's policy does not mount it for the Area. Without the setting
-   * the whole chain was wired to an address with no listener -- the bus held every signal, nothing threw,
-   * and no dialog opened. `validate-controller-mount-contracts` guards the same rule for every preset.
+   * Every route names a Widget: the Table announces, each Overlay and each record-bound Form decides by
+   * its own `openActionKey` whether it was meant, the footer presses its Form, and a Form that went
+   * through closes its dialog and tells the Table to read again. A Controller in between was three
+   * silent failures -- one nobody mounted, one whose senders it could not recognise, and one that heard
+   * what it sent -- for a spinner and a refusal to close mid-save.
    */
-  it("mounts its Controller for this Page", async () => {
+  it("wires the Page to Widgets alone, with no Controller in between", async () => {
     const [, editorRoute] = PHI_NEWS_RUNTIME_MODULE_ROUTES;
     const tree = await editorRoute!.loadTree({
       page: NEWS_PAGE,
       runtime: { locale: { current: "en" } },
     } as never);
 
-    expect(tree.controllerSettings).toEqual([{
-      type: PHI_NEWS_CONTROLLER_TYPE,
-      instanceKey: PHI_NEWS_CONTROLLER_INSTANCE_KEY,
-      mountScope: "page",
-    }]);
-    // And the Controller allows the scope the Page mounts it at; a mismatch throws at render time.
-    expect(PHI_NEWS_RUNTIME_CONTROLLER_DEFINITION.allowedMountScopes).toContain("page");
+    expect(tree.controllerSettings).toBeUndefined();
+
+    const receivers = [...tree.contentWidgets, ...tree.overlays].flatMap((node) => {
+      const routes = (node.config as { signalRoutes?: { emits?: { receiver?: string }[]; listens?: { receiver?: string }[] } }).signalRoutes;
+      return [...routes?.emits ?? [], ...routes?.listens ?? []].map((route) => route.receiver ?? "");
+    });
+    expect(receivers.length).toBeGreaterThan(0);
+    expect(receivers.filter((receiver) => receiver.startsWith("controller:"))).toEqual([]);
   });
 
   /* A plus, as on every other Table: the label stays, as the tooltip and the accessible name. */

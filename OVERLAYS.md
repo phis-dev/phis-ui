@@ -96,9 +96,13 @@ The canonical `actions` Footer is an ordinary explicit Flex Layout with end alig
 responsive wrapping, `xs` gap, `xs` block padding, `base` inline padding, full width, transparent
 background, and no border. These values come from one Core creation preset so later Theme resolution can
 replace the standard presentation without changing Overlay topology. The Theme never creates business
-buttons, routes, commands, or Controller behavior. A preset normally places one labeled, non-compact,
-medium `PhiCommandToolbarWidget` in the first slot, but may use further normal slots for Buttons or
-additional Toolbars. A non-compact `PhiToolbarControl` uses `xs` gap between its controls.
+buttons, routes, commands, or Controller behavior. A preset normally places one labeled, medium
+`PhiCommandToolbarWidget` in the first slot, but may use further normal slots for Buttons or additional
+Toolbars. A non-compact `PhiToolbarControl` uses `xs` gap between its controls.
+
+A footer's own commands are a compact group. Cancel and Save are the two ends of a single decision, and a
+gap between them reads as two unrelated offers; wrapping follows from that and is not stated, because a
+compact group does not wrap. A Toolbar that carries unrelated actions is the case for a non-compact one.
 
 There is no generic Overlay actions list. Actions are normal Phi
 Widgets in the Footer Layout and use their declared signal routes. A Form rendered anywhere in an Overlay
@@ -326,6 +330,33 @@ never-opened Overlay is ordinary operation, and only a development build traces 
 
 Mount policy therefore remains a rendering decision -- what exists in the DOM and what survives a close --
 and is no longer a delivery decision.
+
+What is not a delivery decision either, and looks exactly like one when it goes wrong: whether the
+Controller a dialog is wired to exists at all. A Module Controller whose mount policy is `demand` is
+mounted by the Page that needs it, through `controllerSettings` on its tree
+([SIGNALS.md](./SIGNALS.md#capabilities-and-routes)). Unmounted, it is an address with no listener, so the
+bus holds every signal the Overlay and its Table send it -- no exception, nothing traced, and a dialog
+that never opens. This is the same silence as a forgotten `openActionKey`, reached from the other end,
+and `scripts/validate-controller-mount-contracts.ts` refuses a preset that wires to a Controller it does
+not mount.
+
+A dialog needs no Controller unless it keeps state. The Table announces which action happened on which
+row, each Overlay and each record-bound Form decides by its own `openActionKey` whether it was meant, the
+footer presses its Form through the Form's `submit` input, and a Form that went through closes its Overlay
+and tells the Table to read again -- five routes, no coordinator, and every one of them in the Page where
+a Site can rearrange them. What a Controller buys on top of that is worth naming, because it is little: a
+loading state on the Save button, and refusing to close while a save is in flight (`closeMode: "request"`).
+News paid for those two with three silent failures in one afternoon -- a Controller nobody mounted, one
+whose senders it did not recognise, and one that heard what it sent -- and now has none. The Settings Page
+shell and the Auth Installations Page are the shape to copy.
+
+Creating a record and correcting one are two dialogs, not one dialog opened twice. A Form Widget with a
+`source` and an `openActionKey` is a record editor: it shows its skeleton from the moment it mounts and
+leaves it when the row it was opened with arrives. A new record has no row, so the same dialog opened on
+nothing shows a skeleton for ever -- the fields never appear, and nothing says why. The create dialog
+carries the same Form with no source, which opens ready to type; what distinguishes a new record from a
+correction is then the identity field the editor fills and the create dialog leaves empty. The auth
+Installations Page states both, side by side.
 
 An Overlay opened by a Table's row action names that action itself, in `openActionKey`. A Table announces
 one thing -- a row action happened, and here is which one -- so each listener decides for itself whether
