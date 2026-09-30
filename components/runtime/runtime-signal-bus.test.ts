@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { emitPhiSignal, subscribePhiSignals } from "./runtime-signal-bus";
+import { emitPhiSignal, inferPhiSignalValueType, subscribePhiSignals } from "./runtime-signal-bus";
 import { registerPhiSignalInstance } from "./runtime-signal-registry";
 import type { PhiSignalRuntimePartition } from "./runtime-signal-partition";
 import type { PhiSignal, PhiSignalAddress } from "../../types/signals";
@@ -285,5 +285,13 @@ describe("a listener that does not name its address", () => {
     unsubscribe();
     for (const dispose of unregister) dispose();
     expect(partition.receiverListenerCounts.size).toBe(0);
+  });
+});
+
+describe("the value type a signal is given when its sender states none", () => {
+  it("reads an empty list as an identity list, not as numbers", () => {
+    expect(inferPhiSignalValueType([])).toBe("string[]");
+    expect(inferPhiSignalValueType([1, 2])).toBe("number[]");
+    expect(inferPhiSignalValueType(["a"])).toBe("string[]");
   });
 });

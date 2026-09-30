@@ -166,6 +166,7 @@ export function PhiTextControl({
         styles={inputStyle ? { textarea: inputStyle } : undefined}
         ref={textareaRef}
         allowClear={stableAllowClear}
+        onClear={onClear}
         autoSize={autoSize}
         rows={rows}
         cols={cols}
@@ -178,6 +179,7 @@ export function PhiTextControl({
         {...commonProps}
         styles={inputStyle ? { input: inputStyle } : undefined}
         allowClear={stableAllowClear}
+        onClear={onClear}
         prefix={prefix}
         onPressEnter={onPressEnter}
       />

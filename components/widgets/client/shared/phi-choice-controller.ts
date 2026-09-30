@@ -229,7 +229,8 @@ export function usePhiStackChoiceController<TConfig extends PhiStackChoiceContro
       return;
     }
 
-    const activeSlotIndex = Number(nextValue);
+    // `Number("")` is 0, so a cleared choice would otherwise activate the first slot.
+    const activeSlotIndex = nextValue.trim() === "" ? Number.NaN : Number(nextValue);
     if (
       !Number.isInteger(activeSlotIndex) ||
       !signalsEnabled

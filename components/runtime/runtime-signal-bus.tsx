@@ -409,7 +409,13 @@ export function inferPhiSignalValueType(value: PhiSignalValue): PhiSignalValueTy
     return "number";
   }
   if (Array.isArray(value)) {
-    return value.every((item) => typeof item === "number") ? "number[]" : "string[]";
+    /*
+     * An empty array holds no number to infer `number[]` from, and `every` over nothing is true. The
+     * lists sent without a stated type are identity lists -- a selection, a set of keys -- so an empty
+     * one is read as the empty case of those; a sender of numbers states `number[]` itself, as the
+     * Multi Select does.
+     */
+    return value.length > 0 && value.every((item) => typeof item === "number") ? "number[]" : "string[]";
   }
   if (typeof value === "object") {
     return "json";

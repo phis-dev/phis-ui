@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   createPhiDraftCmsInstanceId,
   createPhiPresetCmsInstanceId,
+  createPhiPresetCmsInstanceIdMap,
   createPhiPresetCmsPageId,
   readPhiCmsInstanceIdDescriptor,
 } from "./cms-instance-id";
@@ -68,5 +69,23 @@ describe("the draft instance id arithmetic", () => {
       draftRevisionId: 7,
       sequence: 3,
     });
+  });
+});
+
+describe("a Preset's instance id map", () => {
+  const identity = {
+    domain: "area",
+    ownerModuleId: "@phis/ui/modules/builder",
+    presetKey: "p",
+  } as const;
+
+  it("gives every node key its own id", () => {
+    const ids = createPhiPresetCmsInstanceIdMap(identity, ["a", "b"]);
+    expect(ids.a).toBe(createPhiPresetCmsInstanceId({ ...identity, nodeKey: "a" }));
+    expect(ids.a).not.toBe(ids.b);
+  });
+
+  it("refuses a node key listed twice", () => {
+    expect(() => createPhiPresetCmsInstanceIdMap(identity, ["a", "b", "a"])).toThrow(/"a"/);
   });
 });

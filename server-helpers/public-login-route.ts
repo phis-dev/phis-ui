@@ -1,7 +1,7 @@
 import "server-only";
 
 import { cache } from "react";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 
 import { PHI_CANONICAL_SOURCE_LOCALE, localizeAreaPath } from "../helpers/locale";
 import { getPhiExactSiteArea } from "./cms";
@@ -19,6 +19,7 @@ import {
 } from "../plugins/runtime-modules/descriptor-compiler";
 import { resolveActivePresetModuleKeys } from "./cms-request";
 import type { PhiCmsSiteBridge } from "../types/cms-plugins";
+import { PHIS_REQUEST_PATH_HEADER, PHIS_REQUEST_SEARCH_HEADER } from "../constants/http-headers";
 import type { PhiCapabilitySnapshot } from "../types/server-capabilities";
 
 const PHI_PUBLIC_LOGIN_PATH = "/login";
@@ -117,6 +118,18 @@ export async function resolvePhiUnauthenticatedLoginHref(
     return null;
   }
 
-  const next = root.startsWith("/") ? root : `/${root}`;
+  /*
+   * Back to what was asked for, query included, as the Area guard sends a visitor back to the path they
+   * requested: signing in only to land on the Area's root drops the page that was being opened. The
+   * proxy states the request path on every request it passes; a static render has none to state and
+   * no query, so it names the Area root, as the guard does where no path is known.
+   */
+  const requestHeaders = await headers();
+  const requestPath = requestHeaders.get(PHIS_REQUEST_PATH_HEADER)?.trim();
+  const requestSearch = requestHeaders.get(PHIS_REQUEST_SEARCH_HEADER)?.trim().replace(/^\?/, "");
+  const requestedPath = requestPath && (requestPath.startsWith("/") ? requestPath : `/${requestPath}`);
+  const next = requestedPath
+    ? `${requestedPath}${requestSearch ? `?${requestSearch}` : ""}`
+    : root.startsWith("/") ? root : `/${root}`;
   return `${login}?${new URLSearchParams({ login: "1", next }).toString()}`;
 }

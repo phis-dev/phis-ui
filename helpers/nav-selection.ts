@@ -9,21 +9,24 @@ import type { PhiNavItem } from "../components/shell/shell-types";
  */
 function normalizePhiCmsNavPath(pathname: string, availableLocales: readonly string[]) {
   const segments = pathname.split("/").filter(Boolean);
-  const firstSegment = segments[0]?.toLowerCase();
+  let offset = 0;
 
-  if (firstSegment && availableLocales.includes(firstSegment)) {
-    return `/${segments.slice(1).join("/")}`;
+  /*
+   * A CMS path can carry both prefixes, locale first and Area second (`/de/admin/users`), so each is
+   * stripped in that order rather than whichever comes first alone. `public` is an Area like the
+   * others here: its prefix says nothing about which page is meant.
+   */
+  if (availableLocales.includes(segments[offset]?.toLowerCase() ?? "")) {
+    offset += 1;
   }
 
-  if (firstSegment && firstSegment !== "public" && SUPPORTED_CMS_AREAS.includes(firstSegment as (typeof SUPPORTED_CMS_AREAS)[number])) {
-    return `/${segments.slice(1).join("/")}`;
+  const areaSegment = segments[offset]?.toLowerCase();
+
+  if (SUPPORTED_CMS_AREAS.includes(areaSegment as (typeof SUPPORTED_CMS_AREAS)[number])) {
+    offset += 1;
   }
 
-  if (firstSegment === "public") {
-    return `/${segments.slice(1).join("/")}`;
-  }
-
-  return pathname;
+  return offset === 0 ? pathname : `/${segments.slice(offset).join("/")}`;
 }
 
 export function isPhiNavPathActive(

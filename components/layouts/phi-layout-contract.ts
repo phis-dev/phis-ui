@@ -221,6 +221,70 @@ export function resolvePhiLayoutStyle({
   };
 }
 
+/**
+ * The four sides a `padding` shorthand names, in the order CSS reads them.
+ *
+ * The side fields are written as longhands so that a single side can be overridden beside the
+ * shorthand -- React refuses to have both standing on one element. Copying the whole shorthand into
+ * every longhand only works for one value: `8px 16px` as a `paddingTop` is not a length, and the
+ * browser drops it. So the shorthand is read the way CSS reads it, one to four values, top right
+ * bottom left, with the missing ones mirrored. Whitespace inside `calc()` or `var()` does not split a
+ * value. More than four values is not padding at all, and is refused rather than cut down.
+ */
+export function expandPhiPaddingShorthand(
+  padding: PhiLayoutProps["padding"],
+): { top: string; right: string; bottom: string; left: string } | null {
+  const resolved = normalizePhiCssSize(padding);
+
+  if (resolved == null) {
+    return null;
+  }
+
+  const values = splitPhiCssValueList(String(resolved));
+
+  if (values.length === 0) {
+    return null;
+  }
+
+  if (values.length > 4) {
+    throw new Error(`A padding shorthand names at most four sides, got "${resolved}".`);
+  }
+
+  const [top, right = top, bottom = top, left = right] = values;
+
+  return { top, right, bottom, left };
+}
+
+function splitPhiCssValueList(value: string) {
+  const values: string[] = [];
+  let depth = 0;
+  let current = "";
+
+  for (const character of value) {
+    if (character === "(") {
+      depth += 1;
+    } else if (character === ")") {
+      depth -= 1;
+    }
+
+    if (depth === 0 && /\s/.test(character)) {
+      if (current) {
+        values.push(current);
+      }
+      current = "";
+      continue;
+    }
+
+    current += character;
+  }
+
+  if (current) {
+    values.push(current);
+  }
+
+  return values;
+}
+
 export function resolvePhiPaddingStyle({
   padding,
   paddingTop,
@@ -235,16 +299,16 @@ export function resolvePhiPaddingStyle({
   | "paddingBottom"
   | "paddingLeft"
 >): CSSProperties {
-  const resolvedPadding = normalizePhiCssSize(padding);
+  const sides = expandPhiPaddingShorthand(padding);
 
   return {
-    ...(resolvedPadding == null
+    ...(sides == null
       ? {}
       : {
-          paddingTop: resolvedPadding,
-          paddingRight: resolvedPadding,
-          paddingBottom: resolvedPadding,
-          paddingLeft: resolvedPadding,
+          paddingTop: sides.top,
+          paddingRight: sides.right,
+          paddingBottom: sides.bottom,
+          paddingLeft: sides.left,
         }),
     ...(paddingTop == null ? {} : { paddingTop: normalizePhiCssSize(paddingTop) }),
     ...(paddingRight == null ? {} : { paddingRight: normalizePhiCssSize(paddingRight) }),
@@ -267,13 +331,13 @@ export function resolvePhiLayoutInset({
   | "paddingBottom"
   | "paddingLeft"
 >): Pick<CSSProperties, "top" | "right" | "bottom" | "left"> {
-  const resolvedPadding = normalizePhiCssSize(padding);
+  const sides = expandPhiPaddingShorthand(padding);
 
   return {
-    top: paddingTop == null ? resolvedPadding ?? 0 : normalizePhiCssSize(paddingTop) ?? 0,
-    right: paddingRight == null ? resolvedPadding ?? 0 : normalizePhiCssSize(paddingRight) ?? 0,
-    bottom: paddingBottom == null ? resolvedPadding ?? 0 : normalizePhiCssSize(paddingBottom) ?? 0,
-    left: paddingLeft == null ? resolvedPadding ?? 0 : normalizePhiCssSize(paddingLeft) ?? 0,
+    top: paddingTop == null ? sides?.top ?? 0 : normalizePhiCssSize(paddingTop) ?? 0,
+    right: paddingRight == null ? sides?.right ?? 0 : normalizePhiCssSize(paddingRight) ?? 0,
+    bottom: paddingBottom == null ? sides?.bottom ?? 0 : normalizePhiCssSize(paddingBottom) ?? 0,
+    left: paddingLeft == null ? sides?.left ?? 0 : normalizePhiCssSize(paddingLeft) ?? 0,
   };
 }
 

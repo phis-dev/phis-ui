@@ -59,10 +59,13 @@ const KNOWN_SPECIAL_ROOTS = new Set<string>(PHI_CMS_SPECIAL_ROOTS);
  * Absent is read as a document, which is the safe answer: it keeps the status line for anything that is
  * not a browser -- a crawler, `curl`, a health check -- and the status line is what a forwarding Area root
  * needs so it is not filed as a page.
+ *
+ * Only `empty` is the app's fetch. Every other value is the browser loading something as itself -- an
+ * `iframe` or `embed` is a document in a frame, a Builder preview among them -- and wants the same
+ * status line a top-level document gets.
  */
 function isPhiClientNavigation(request: NextRequest) {
-  const destination = request.headers.get("sec-fetch-dest");
-  return destination != null && destination !== "document";
+  return request.headers.get("sec-fetch-dest") === "empty";
 }
 
 

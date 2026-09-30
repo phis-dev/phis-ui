@@ -16,10 +16,13 @@ export function PhiAuthLogoutWidgetClient({
   Record<string, never>,
   { padding?: number | string },
   Pick<PhiBlockRuntime, "site" | "locale">
->) {
+> & {
+  // Always handed over with the request's locale, so the page after sign-out is never a guessed one.
+  runtime: Pick<PhiBlockRuntime, "site" | "locale">;
+}) {
   const [error, setError] = useState<string | null>(null);
-  const locale = runtime?.locale.current ?? "en";
-  const siteKey = runtime?.site.key ?? "";
+  const locale = runtime.locale.current;
+  const siteKey = runtime.site.key;
 
   useEffect(() => {
     const controller = new AbortController();

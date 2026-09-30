@@ -39,6 +39,22 @@ describe("the Form Widget's cap", () => {
   it("carries the placement's own measure through", () => {
     expect(parsePhiFormWidgetConfig({ maxFormWidth: 377 }).maxFormWidth).toBe(377);
     expect(parsePhiFormWidgetConfig({ maxFormWidth: "100%" }).maxFormWidth).toBe("100%");
+    expect(parsePhiFormWidgetConfig({ maxFormWidth: " 40rem " }).maxFormWidth).toBe("40rem");
+  });
+
+  it("refuses a cap that cannot be one", () => {
+    // `0` capped the fields at nothing and a bare `"610"` became `min(100%, 610)`, which the browser
+    // drops: both rendered something other than what was written, without an error.
+    expect(() => parsePhiFormWidgetConfig({ maxFormWidth: 0 })).toThrow(/positive number/);
+    expect(() => parsePhiFormWidgetConfig({ maxFormWidth: -10 })).toThrow(/positive number/);
+    expect(() => parsePhiFormWidgetConfig({ maxFormWidth: "610" })).toThrow(/needs a unit/);
+    expect(() => parsePhiFormWidgetConfig({ maxFormWidth: "0px" })).toThrow(/positive length/);
+    expect(() => parsePhiFormWidgetConfig({ maxFormWidth: true })).toThrow(/number or a length/);
+  });
+
+  it("leaves an emptied cap to the house measure", () => {
+    expect(parsePhiFormWidgetConfig({ maxFormWidth: "" }).maxFormWidth).toBe(PHI_LAYOUT.contentMax);
+    expect(parsePhiFormWidgetConfig({ maxFormWidth: null }).maxFormWidth).toBe(PHI_LAYOUT.contentMax);
   });
 
   it("carries the placement's own geometry through as well", () => {

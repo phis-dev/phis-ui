@@ -13,7 +13,8 @@ const PHI_STATIC_FILE_EXTENSIONS = new Set([
 export function isPhiAssetOrBackendPath(pathname: string) {
   if (
     pathname.startsWith("/_next") ||
-    pathname.startsWith("/api") ||
+    pathname === "/api" ||
+    pathname.startsWith("/api/") ||
     pathname.startsWith("/favicon.ico") ||
     pathname.startsWith("/robots.txt") ||
     pathname.startsWith("/sitemap.xml")

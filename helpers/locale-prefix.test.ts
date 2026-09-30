@@ -13,6 +13,14 @@ describe("matchPhiLocalePrefixSegment", () => {
 
   it("accepts a regional form of a listed locale", () => {
     expect(matchPhiLocalePrefixSegment("en-gb", options)).toBe("en");
+    expect(matchPhiLocalePrefixSegment("de-latn-ch", options)).toBe("de");
+    expect(matchPhiLocalePrefixSegment("en-419", options)).toBe("en");
+  });
+
+  it("refuses a page that only starts with a locale and a hyphen", () => {
+    expect(matchPhiLocalePrefixSegment("de-facto", options)).toBeNull();
+    expect(matchPhiLocalePrefixSegment("de-", options)).toBeNull();
+    expect(matchPhiLocalePrefixSegment("en-gb-x", options)).toBeNull();
   });
 
   it("refuses a segment that only resolves to the default locale", () => {

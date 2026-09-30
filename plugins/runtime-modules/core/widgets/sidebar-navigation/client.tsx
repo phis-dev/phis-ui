@@ -22,6 +22,8 @@ export type PhiSidebarNavigationWidgetClientProps = PhiClientBlockBaseProps<
   Pick<PhiCmsSidebarNavigationWidgetConfig, "fontFamily" | "fontSize">,
   Pick<PhiBlockRuntime, "site" | "locale" | "area">
 > & {
+  // Always handed over with the request's locale, so no reader has a language to invent.
+  runtime: Pick<PhiBlockRuntime, "site" | "locale" | "area">;
   items: PhiNavItem[];
   menuTheme?: "light" | "dark";
 };
@@ -67,8 +69,7 @@ export function PhiSidebarNavigationWidgetClient({
   menuTheme,
 }: PhiSidebarNavigationWidgetClientProps) {
   const pathname = usePathname() ?? "/";
-  // Without a runtime the Site's locales are unknown, and no path segment can be read as one.
-  const availableLocales = runtime?.site.availableLocales.map((option) => option.code) ?? [];
+  const availableLocales = runtime.site.availableLocales.map((option) => option.code);
   const presentation = usePhiSidebarMenuPresentation(config);
   const emitSignal = usePhiSignalEmitter();
 
@@ -99,8 +100,8 @@ export function PhiSidebarNavigationWidgetClient({
       menuTheme={menuTheme}
       selectedKeys={collectPhiSelectedNavKeys(pathname, items, availableLocales)}
       items={mapPhiNavItems(
-        runtime?.locale.current ?? "en",
-        runtime?.area ?? "public",
+        runtime.locale.current,
+        runtime.area,
         pathname,
         items,
         availableLocales,

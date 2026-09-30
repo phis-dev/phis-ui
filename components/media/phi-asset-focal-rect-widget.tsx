@@ -12,6 +12,7 @@ import {
 } from "react";
 
 import type { PhiCmsAssetFocalRectWidgetConfig } from "../../plugins/runtime-modules/asset/widgets/asset-focal-rect/config";
+import type { PhiMediaAsset } from "../../types/media";
 import type { PhiSignal, PhiSignalValue } from "../../types/signals";
 import {
   findPhiSignalRoutesByCapabilityId,
@@ -94,6 +95,21 @@ export function PhiAssetFocalRectWidget({
     () => selectedTile ? normalizePhiImagePreviewSelectionAsset(selectedTile) : null,
     [selectedTile],
   );
+
+  /*
+   * The draft and the rectangle `reset` returns to are seeded from the asset they were opened on. A
+   * different asset is a different edit, so it gets a fresh editor instead of the last asset's draft.
+   */
+  return <PhiAssetFocalRectEditor key={asset?.id ?? ""} asset={asset} config={config} />;
+}
+
+function PhiAssetFocalRectEditor({
+  asset,
+  config,
+}: {
+  asset: PhiMediaAsset | null;
+  config?: PhiCmsAssetFocalRectWidgetConfig | null;
+}) {
   const currentRect = useMemo(
     () => normalizeMediaFocalRect(asset?.meta?.focalRect),
     [asset?.meta?.focalRect],

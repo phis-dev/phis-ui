@@ -4,6 +4,8 @@ import type { ReactNode } from "react";
 import { useEffect } from "react";
 import dayjs from "dayjs";
 
+import { PhiIntlLocaleProvider } from "./phi-intl-locale";
+
 type DayjsLocaleModule = {
   default?: unknown;
 };
@@ -179,7 +181,21 @@ export function resolvePhiDayjsLocale(locale: string | null | undefined): PhiDay
   return PHI_DAYJS_LOCALE_RESOLUTIONS.get(base) ?? { key: "en", localeName: "en" };
 }
 
-export function PhiDayjsLocale({ locale, children }: { locale?: string | null; children: ReactNode }) {
+/**
+ * The page's locale for Client code: dayjs switched to it, and the Intl locale provided below it.
+ *
+ * Both sit in this one Client reference because the root layout is under every route, and each Client
+ * reference it reaches is paid for by every page (`validate-area-client-reach.mjs`).
+ */
+export function PhiDayjsLocale({
+  locale,
+  intlLocale,
+  children,
+}: {
+  locale?: string | null;
+  intlLocale: string;
+  children: ReactNode;
+}) {
   useEffect(() => {
     let active = true;
 
@@ -199,5 +215,5 @@ export function PhiDayjsLocale({ locale, children }: { locale?: string | null; c
     };
   }, [locale]);
 
-  return children;
+  return <PhiIntlLocaleProvider locale={intlLocale}>{children}</PhiIntlLocaleProvider>;
 }

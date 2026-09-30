@@ -6,6 +6,7 @@ import {
   type PhiTableProviderMutationResult,
   type PhiTableProviderQueryRequest,
   type PhiTableProviderResourceDescriptor,
+  type PhiTableSortDirection,
 } from "../../../../types/table-widget";
 import type { PhiTableProviderRegistration } from "./phi-table-provider";
 
@@ -21,9 +22,20 @@ function readValue(row: Record<string, unknown>, path: string) {
       : undefined, row);
 }
 
-function compareValues(left: unknown, right: unknown) {
-  if (typeof left === "number" && typeof right === "number") return left - right;
-  return String(left ?? "").localeCompare(String(right ?? ""));
+/*
+ * One ordering for a column whatever its cells hold: two numbers compare as numbers, anything else as
+ * text with digit runs read as numbers, so `9` sits before `10` whether it arrived as a number or a
+ * string. An empty cell is not the empty string -- it has no place in the order, so it goes after
+ * every value in both directions rather than first in one of them.
+ */
+function compareSortValues(left: unknown, right: unknown, direction: PhiTableSortDirection) {
+  const leftEmpty = left == null || left === "";
+  const rightEmpty = right == null || right === "";
+  if (leftEmpty || rightEmpty) return leftEmpty === rightEmpty ? 0 : leftEmpty ? 1 : -1;
+  const comparison = typeof left === "number" && typeof right === "number"
+    ? left - right
+    : String(left).localeCompare(String(right), undefined, { numeric: true });
+  return direction === "descending" ? -comparison : comparison;
 }
 
 function matchesFilter(value: unknown, filter: unknown) {
@@ -159,8 +171,12 @@ export function queryPhiStaticTableResource(
   if (request.query.sorts?.length) {
     rows.sort((left, right) => {
       for (const sort of request.query.sorts ?? []) {
-        const comparison = compareValues(readValue(left, sort.key), readValue(right, sort.key));
-        if (comparison !== 0) return sort.direction === "descending" ? -comparison : comparison;
+        const comparison = compareSortValues(
+          readValue(left, sort.key),
+          readValue(right, sort.key),
+          sort.direction,
+        );
+        if (comparison !== 0) return comparison;
       }
       return 0;
     });
@@ -170,7 +186,10 @@ export function queryPhiStaticTableResource(
   const pageSize = request.query.pageSize && request.query.pageSize > 0
     ? request.query.pageSize
     : total || 1;
-  const page = request.query.page && request.query.page > 0 ? request.query.page : 1;
+  const requestedPage = request.query.page && request.query.page > 0 ? request.query.page : 1;
+  // A page past the end -- the rows shrank under a filter, or one was deleted -- answers with the last
+  // page, and says so, rather than an empty page the pager cannot explain.
+  const page = Math.min(requestedPage, Math.max(1, Math.ceil(total / pageSize)));
   return {
     rows: rows.slice((page - 1) * pageSize, page * pageSize),
     total,

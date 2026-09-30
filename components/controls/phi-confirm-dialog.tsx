@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState, type ReactNode } from "react";
+import { useCallback, useRef, useState, type ReactNode } from "react";
 
 import { PhiDialogControl } from "./phi-dialog-control";
 
@@ -35,13 +35,17 @@ export type PhiConfirmDialogRequest = {
 export function usePhiConfirmDialog() {
   const [request, setRequest] = useState<PhiConfirmDialogRequest | null>(null);
   const [confirming, setConfirming] = useState(false);
+  // The question on screen right now, read by an answer that finishes after another was asked.
+  const currentRequestRef = useRef<PhiConfirmDialogRequest | null>(null);
 
   const close = useCallback(() => {
+    currentRequestRef.current = null;
     setRequest(null);
     setConfirming(false);
   }, []);
 
   const confirm = useCallback((next: PhiConfirmDialogRequest) => {
+    currentRequestRef.current = next;
     setConfirming(false);
     setRequest(next);
   }, []);
@@ -55,11 +59,16 @@ export function usePhiConfirmDialog() {
     if (!request || confirming) return;
     setConfirming(true);
     void (async () => {
+      /*
+       * The answer may take a while, and a new question can be asked in the meantime. Settling then
+       * belongs to the question that was answered: closing or re-enabling would dismiss or unlock the
+       * one that replaced it.
+       */
       try {
         await request.onConfirm();
-        close();
+        if (currentRequestRef.current === request) close();
       } catch {
-        setConfirming(false);
+        if (currentRequestRef.current === request) setConfirming(false);
       }
     })();
   }, [close, confirming, request]);

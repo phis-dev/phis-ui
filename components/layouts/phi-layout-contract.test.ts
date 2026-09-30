@@ -7,8 +7,11 @@ import {
   PHI_SLOT_INLINE_MARGIN_START_PROPERTY,
   PHI_SLOT_BLOCK_PLACEMENT_MARGIN_STYLE,
   PHI_SLOT_INLINE_PLACEMENT_MARGIN_STYLE,
+  expandPhiPaddingShorthand,
   phiFlexPlacementWord,
   phiGridPlacementWord,
+  resolvePhiLayoutInset,
+  resolvePhiPaddingStyle,
   resolvePhiPlacement,
   resolvePhiSlotPlacementMargins,
 } from "./phi-layout-contract";
@@ -111,5 +114,66 @@ describe("the margins a box reads back", () => {
     for (const property of written) {
       expect(read).toContain(`var(${property}, 0)`);
     }
+  });
+});
+
+/*
+ * A padding shorthand is read the way CSS reads it. Copying `8px 16px` into every longhand gave four
+ * values the browser drops.
+ */
+describe("how a padding shorthand reaches the four sides", () => {
+  it("mirrors one to four values in CSS order", () => {
+    expect(expandPhiPaddingShorthand(8)).toEqual({
+      top: "8px",
+      right: "8px",
+      bottom: "8px",
+      left: "8px",
+    });
+    expect(expandPhiPaddingShorthand("8px 16px")).toEqual({
+      top: "8px",
+      right: "16px",
+      bottom: "8px",
+      left: "16px",
+    });
+    expect(expandPhiPaddingShorthand("1px 2px 3px")).toEqual({
+      top: "1px",
+      right: "2px",
+      bottom: "3px",
+      left: "2px",
+    });
+    expect(expandPhiPaddingShorthand("1px 2px 3px 4px")).toEqual({
+      top: "1px",
+      right: "2px",
+      bottom: "3px",
+      left: "4px",
+    });
+  });
+
+  it("keeps whitespace inside functions as one value", () => {
+    expect(expandPhiPaddingShorthand("calc(1px + 2px) var(--gap, 4px)")).toEqual({
+      top: "calc(1px + 2px)",
+      right: "var(--gap, 4px)",
+      bottom: "calc(1px + 2px)",
+      left: "var(--gap, 4px)",
+    });
+  });
+
+  it("refuses more than four values", () => {
+    expect(() => expandPhiPaddingShorthand("1px 2px 3px 4px 5px")).toThrow(/at most four/);
+  });
+
+  it("lets a side field override its side of the shorthand", () => {
+    expect(resolvePhiPaddingStyle({ padding: "8px 16px", paddingTop: 2 })).toEqual({
+      paddingTop: "2px",
+      paddingRight: "16px",
+      paddingBottom: "8px",
+      paddingLeft: "16px",
+    });
+    expect(resolvePhiLayoutInset({ padding: "8px 16px" })).toEqual({
+      top: "8px",
+      right: "16px",
+      bottom: "8px",
+      left: "16px",
+    });
   });
 });

@@ -7,7 +7,7 @@ import {
   PHI_CMS_SEQUENTIAL_LAYOUT_SLOTS,
   PHI_CMS_THREE_COLUMN_LAYOUT_SLOT_INDEX,
 } from "../../../constants/cms-layout-types";
-import { PhiCmsFlags, PhiCmsRegionType, PhiCmsStatus } from "../../../constants/phi-cms";
+import { PhiCmsRegionType, PhiCmsStatus } from "../../../constants/phi-cms";
 import { PHI_CMS_AREA_KEYS } from "../../../constants/cms-areas";
 import { PhiMediaKind } from "../../../constants/media";
 import { buildPhiCmsLayoutNode } from "../../../helpers/cms-node-factories";
@@ -1059,7 +1059,6 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
               config: {
                 sticky: true,
                 // No chrome of its own, for the reason given on `header_top` above.
-                flags: isStructurePage ? PhiCmsFlags.Collapsed : 0,
                 size: { height: `${resolvePhiShellHeaderHeight(runtime.site.theme?.shell, "bottom")}px` },
                 offsetTop: resolvePhiShellHeaderHeight(runtime.site.theme?.shell, "main"),
               },

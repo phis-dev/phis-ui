@@ -146,6 +146,37 @@ function readRecord(value: unknown): Record<string, unknown> {
     : {};
 }
 
+/**
+ * The placement's own cap, or null where it states none.
+ *
+ * Absent -- the key missing, `null`, or a field emptied in the Inspector -- leaves the cap to the house
+ * measure. A cap that is stated but cannot be one is refused rather than replaced: `0` or a negative
+ * number caps the fields at nothing, and a bare `"610"` is not a CSS length, so `min(100%, 610)` is
+ * dropped by the browser and the Form renders uncapped with no error anywhere.
+ */
+function readPhiFormWidgetMaxFormWidth(value: unknown): number | string | null {
+  if (value == null) return null;
+  if (typeof value === "number") {
+    if (Number.isFinite(value) && value > 0) return value;
+    throw new Error(`Invalid Form maxFormWidth ${JSON.stringify(value)}. Expected a positive number.`);
+  }
+  if (typeof value !== "string") {
+    throw new Error(
+      `Invalid Form maxFormWidth ${JSON.stringify(value)}. Expected a number or a length.`,
+    );
+  }
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+  const leadingNumber = /^[+-]?(\d+\.?\d*|\.\d+)/.exec(trimmed);
+  if (leadingNumber && leadingNumber[0] === trimmed) {
+    throw new Error(`Invalid Form maxFormWidth ${JSON.stringify(value)}. A length needs a unit.`);
+  }
+  if (leadingNumber && Number(leadingNumber[0]) <= 0) {
+    throw new Error(`Invalid Form maxFormWidth ${JSON.stringify(value)}. Expected a positive length.`);
+  }
+  return trimmed;
+}
+
 export function parsePhiFormWidgetConfig(rawConfig: Record<string, unknown>): PhiCmsFormWidgetConfig {
   /*
    * The block's own geometry, which this Widget used to drop on the floor.
@@ -172,9 +203,7 @@ export function parsePhiFormWidgetConfig(rawConfig: Record<string, unknown>): Ph
   const cardPadding = typeof card.padding === "number" || typeof card.padding === "string"
     ? card.padding
     : null;
-  const rawMaxFormWidth = typeof rawConfig.maxFormWidth === "string"
-    ? rawConfig.maxFormWidth.trim()
-    : rawConfig.maxFormWidth;
+  const maxFormWidth = readPhiFormWidgetMaxFormWidth(rawConfig.maxFormWidth);
   const feedback = readRecord(rawConfig.feedback);
   const feedbackSuccessText = typeof feedback.successText === "string" && feedback.successText.trim()
     ? feedback.successText.trim()
@@ -193,10 +222,7 @@ export function parsePhiFormWidgetConfig(rawConfig: Record<string, unknown>): Ph
      * arrives with no cap at all, which is exactly how every Preset-placed Form once rendered uncapped.
      * A Widget field has to be answered by its parser. Both sides read the one constant.
      */
-    maxFormWidth: typeof rawMaxFormWidth === "number"
-      || (typeof rawMaxFormWidth === "string" && rawMaxFormWidth)
-      ? rawMaxFormWidth
-      : PHI_LAYOUT.contentMax,
+    maxFormWidth: maxFormWidth ?? PHI_LAYOUT.contentMax,
     /*
      * No box unless one is named, and the name is read rather than the block's presence: an author who
      * takes the box off again leaves an empty `card` behind, and an empty block is not a box.

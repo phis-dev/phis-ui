@@ -39,6 +39,19 @@ export function createPhiPresetCmsInstanceIdMap<const TNodeKey extends string>(
   identity: Omit<PhiCmsPresetInstanceIdentity, "nodeKey">,
   nodeKeys: readonly TNodeKey[],
 ): Readonly<Record<TNodeKey, PhiCmsInstanceId>> {
+  /*
+   * Two nodes under one key would share one id, and the map could only hand out the second: the
+   * first node would silently lose its identity. A repeated key is a mistake in the preset, so it is
+   * refused where the preset states it.
+   */
+  const seen = new Set<string>();
+  for (const nodeKey of nodeKeys) {
+    if (seen.has(nodeKey)) {
+      throw new Error(`Preset node key "${nodeKey}" is listed more than once.`);
+    }
+    seen.add(nodeKey);
+  }
+
   const entries = nodeKeys.map((nodeKey) => [
     nodeKey,
     createPhiPresetCmsInstanceId({ ...identity, nodeKey }),

@@ -15,6 +15,8 @@ export type PhiHeaderNavigationWidgetClientProps = PhiClientBlockBaseProps<
   Record<string, never>,
   Pick<PhiBlockRuntime, "site" | "locale" | "area">
 > & {
+  // Always handed over with the request's locale, so no reader has a language to invent.
+  runtime: Pick<PhiBlockRuntime, "site" | "locale" | "area">;
   items: PhiNavItem[];
   menuTheme?: PhiMenuTheme;
   height?: CSSProperties["height"];
@@ -32,12 +34,16 @@ export function PhiHeaderNavigationWidgetClient({
 }: PhiHeaderNavigationWidgetClientProps) {
   const { token } = usePhiConfig();
   const pathname = usePathname() ?? "/";
-  // Without a runtime the Site's locales are unknown, and no path segment can be read as one.
-  const availableLocales = runtime?.site.availableLocales.map((option) => option.code) ?? [];
+  const availableLocales = runtime.site.availableLocales.map((option) => option.code);
   const selectedKeys = collectPhiSelectedNavKeys(pathname, items, availableLocales);
-  const menuItems = mapPhiNavItems(runtime?.locale.current ?? "en", runtime?.area ?? "public", pathname, items, availableLocales, {
-    interactive,
-  });
+  const menuItems = mapPhiNavItems(
+    runtime.locale.current,
+    runtime.area,
+    pathname,
+    items,
+    availableLocales,
+    { interactive },
+  );
   const resolvedHeight =
     typeof height === "number" ? `${height}px` : (height ?? "100%");
 

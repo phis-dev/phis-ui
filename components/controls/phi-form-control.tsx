@@ -264,6 +264,11 @@ function PhiResolvedFormFieldControl({
   );
 }
 
+// One empty object for every form without controllers, so the fields drawn are not recomputed on
+// every render for a new `{}`.
+const PHI_FORM_NO_CONTROLLER_STATES: Readonly<Record<string, Record<string, unknown>>> =
+  Object.freeze({});
+
 export const PhiFormControl = forwardRef<PhiFormControlHandle, PhiFormControlProps>(function PhiFormControl({
   descriptor,
   registry,
@@ -273,7 +278,7 @@ export const PhiFormControl = forwardRef<PhiFormControlHandle, PhiFormControlPro
   submitOnEnter,
   disabled = false,
   readOnly = false,
-  conditionControllerStates = {},
+  conditionControllerStates = PHI_FORM_NO_CONTROLLER_STATES,
   form: providedForm,
   onValuesChange,
   onSubmit,
@@ -436,6 +441,21 @@ export const PhiFormControl = forwardRef<PhiFormControlHandle, PhiFormControlPro
   }), [form, onStateChange, onValuesChange]);
 
   /*
+   * The fields that are drawn: every field whose `visibleWhen` holds, and every field whose provider is
+   * missing, because that one draws the alert saying so. The grid placement and the trailing gap are
+   * worked out over these alone -- a field hidden by its condition takes no row, and the last field
+   * drawn is the one that must not keep a gap for a field that is not there.
+   */
+  const renderedFields = useMemo(() => descriptor.fields.filter((field) =>
+    !activeRegistry.fieldTypesByKey.has(field.fieldProviderKey) ||
+    !field.visibleWhen ||
+    evaluatePhiRuntimeConditionExpression(field.visibleWhen, {
+      form: formValues,
+      controllers: conditionControllerStates,
+    }) === "matched"),
+  [activeRegistry, conditionControllerStates, descriptor.fields, formValues]);
+
+  /*
    * Where every part of every field lies, at each of the three widths, worked out before anything is
    * drawn. Labels and controls are direct children of the form's grid and name their own row and
    * columns; CSS then picks the set that matches the form's measured width.
@@ -448,13 +468,13 @@ export const PhiFormControl = forwardRef<PhiFormControlHandle, PhiFormControlPro
    * away as everything inside it.
    */
   const lastInFlowFieldKey = useMemo(() => {
-    const inFlow = descriptor.fields.filter((field) =>
+    const inFlow = renderedFields.filter((field) =>
       activeRegistry.fieldTypesByKey.get(field.fieldProviderKey)?.presentation === "control");
     return inFlow.length === 0 ? null : inFlow[inFlow.length - 1].key;
-  }, [activeRegistry, descriptor.fields]);
+  }, [activeRegistry, renderedFields]);
 
   const placementByMode = useMemo(() => {
-    const entries = descriptor.fields.map((field) => ({
+    const entries = renderedFields.map((field) => ({
       key: field.key,
       placement: field.placement,
       inFlow: activeRegistry.fieldTypesByKey.get(field.fieldProviderKey)?.presentation === "control",
@@ -465,7 +485,7 @@ export const PhiFormControl = forwardRef<PhiFormControlHandle, PhiFormControlPro
       medium: resolvePhiFormGridPlacement(layout, entries, "medium"),
       wide: resolvePhiFormGridPlacement(layout, entries, "wide"),
     };
-  }, [activeRegistry, descriptor.fields, layout]);
+  }, [activeRegistry, layout, renderedFields]);
 
   return (
     <div style={{ width: "100%", minWidth: 0 }}>
@@ -535,7 +555,7 @@ export const PhiFormControl = forwardRef<PhiFormControlHandle, PhiFormControlPro
       onFinish={submit}
       onFinishFailed={validationFailed}
     >
-      {descriptor.fields.map((field) => {
+      {renderedFields.map((field) => {
         const provider = activeRegistry.fieldTypesByKey.get(
           field.fieldProviderKey,
         );
@@ -612,13 +632,6 @@ export const PhiFormControl = forwardRef<PhiFormControlHandle, PhiFormControlPro
         });
         const hidden = provider.presentation === "hidden";
         const honeypot = provider.presentation === "honeypot";
-        const visibility = field.visibleWhen
-          ? evaluatePhiRuntimeConditionExpression(field.visibleWhen, {
-              form: formValues,
-              controllers: conditionControllerStates,
-            })
-          : "matched";
-        if (visibility !== "matched") return null;
         const fieldDisabled = field.disabledWhen
           ? evaluatePhiRuntimeConditionExpression(field.disabledWhen, {
               form: formValues,

@@ -200,6 +200,8 @@ export function resolvePhiNavHref(
   return localizeAreaPath(locale, currentArea, normalizedHref);
 }
 
+const PHI_LOCALE_REGIONAL_SUFFIX = /^(?:-[a-z]{4})?(?:-(?:[a-z]{2}|\d{3}))?$/;
+
 /**
  * The locale a path segment names, or `null` where it names none.
  *
@@ -220,7 +222,16 @@ export function matchPhiLocalePrefixSegment(
   });
   const loweredSegment = segment.toLowerCase();
   const loweredCandidate = candidate.toLowerCase();
-  return loweredSegment === loweredCandidate || loweredSegment.startsWith(`${loweredCandidate}-`)
+  if (loweredSegment === loweredCandidate) {
+    return candidate;
+  }
+  /*
+   * A regional form is the locale followed by BCP 47 subtags -- a script of four letters, then a region
+   * of two letters or three digits -- and nothing else. A page that merely starts with the locale and a
+   * hyphen (`de-facto`) is a page, not German.
+   */
+  return loweredSegment.startsWith(`${loweredCandidate}-`) &&
+    PHI_LOCALE_REGIONAL_SUFFIX.test(loweredSegment.slice(loweredCandidate.length))
     ? candidate
     : null;
 }

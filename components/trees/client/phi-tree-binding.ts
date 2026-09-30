@@ -90,10 +90,17 @@ function validateTree(nodes: readonly TreeNode[], identityPath: string, parentPa
   return null;
 }
 
+/*
+ * The defaults stand at module level because the reset effect below depends on them: a fresh `{}` or
+ * `[]` on every render would be a new dependency each time and reset the tree on every render.
+ */
+const PHI_TREE_DEFAULT_INITIAL_QUERY: PhiTreeQuery = Object.freeze({});
+const PHI_TREE_DEFAULT_EXPANDED_NODE_IDENTITIES: readonly PhiTreeNodeIdentity[] = Object.freeze([]);
+
 export function usePhiTreeBinding({
   source,
-  initialQuery = {},
-  defaultExpandedNodeIdentities = [],
+  initialQuery = PHI_TREE_DEFAULT_INITIAL_QUERY,
+  defaultExpandedNodeIdentities = PHI_TREE_DEFAULT_EXPANDED_NODE_IDENTITIES,
   defaultExpandAll = false,
 }: {
   source: PhiTreeSourceBinding | null;

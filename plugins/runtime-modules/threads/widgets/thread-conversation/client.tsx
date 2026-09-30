@@ -32,7 +32,10 @@ export type PhiThreadConversationWidgetClientProps = PhiClientBlockBaseProps<
   PhiThreadConversationLabels,
   PhiThreadWidgetConfig,
   Pick<PhiBlockRuntime, "site" | "locale" | "viewer">
->;
+> & {
+  // Always handed over with the request's locale, which every date in the conversation is written in.
+  runtime: Pick<PhiBlockRuntime, "site" | "locale" | "viewer">;
+};
 
 /** How much of a conversation is fetched at once; older messages are asked for by the button. */
 const PHI_THREAD_MESSAGE_WINDOW = 50;
@@ -220,7 +223,7 @@ export function PhiThreadConversationWidgetClient({
   }, [receive, threadId]);
 
   const readingLocale =
-    runtime?.viewer?.preferredLocale?.trim() || runtime?.locale?.current?.trim() || "";
+    runtime.viewer.preferredLocale?.trim() || runtime.locale.current.trim();
 
   useEffect(() => {
     if (!readingLocale) {
@@ -433,8 +436,9 @@ export function PhiThreadConversationWidgetClient({
     };
   }, [readingLocale]);
 
+  const currentLocale = runtime.locale.current;
   const formatTime = useMemo(() => {
-    const formatter = new Intl.DateTimeFormat(runtime?.locale?.current ?? undefined, {
+    const formatter = new Intl.DateTimeFormat(currentLocale, {
       dateStyle: "medium",
       timeStyle: "short",
     });
@@ -442,7 +446,7 @@ export function PhiThreadConversationWidgetClient({
       const parsed = new Date(value);
       return Number.isNaN(parsed.getTime()) ? value : formatter.format(parsed);
     };
-  }, [runtime]);
+  }, [currentLocale]);
 
   /*
    * The box is a Card, and the Card is the box.

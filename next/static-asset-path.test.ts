@@ -18,5 +18,7 @@ describe("which paths the site proxy lets past as files", () => {
 
   it("does not take an ordinary page for a file", () => {
     expect(isPhiAssetOrBackendPath("/en/about")).toBe(false);
+    expect(isPhiAssetOrBackendPath("/apis")).toBe(false);
+    expect(isPhiAssetOrBackendPath("/api-docs/intro")).toBe(false);
   });
 });

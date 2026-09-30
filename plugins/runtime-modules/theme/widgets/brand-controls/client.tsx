@@ -3034,6 +3034,29 @@ export function PhiBuilderBrandIdentityControlsWidgetClient({
     ? wordmarkParts
     : [{ text: "" }];
   /*
+   * A key per row that stays with its part, which the stored parts have no field for.
+   *
+   * Keyed by position, removing a part from the middle handed the next row the removed row's
+   * component -- and with it whatever the text and colour controls held on their own, an open picker
+   * or a half-typed value. The keys are this editor's alone: removing a row takes its key out, adding
+   * one appends a fresh key, and a draft that changes length from elsewhere (hydrate, reset) is met by
+   * trimming or extending the list during render, which React allows for state derived from props.
+   */
+  const [wordmarkPartKeys, setWordmarkPartKeys] = useState(() => ({
+    keys: editableWordmarkParts.map((_, index) => index),
+    next: editableWordmarkParts.length,
+  }));
+  if (wordmarkPartKeys.keys.length !== editableWordmarkParts.length) {
+    const missing = Math.max(0, editableWordmarkParts.length - wordmarkPartKeys.keys.length);
+    setWordmarkPartKeys({
+      keys: [
+        ...wordmarkPartKeys.keys.slice(0, editableWordmarkParts.length),
+        ...Array.from({ length: missing }, (_, offset) => wordmarkPartKeys.next + offset),
+      ],
+      next: wordmarkPartKeys.next + missing,
+    });
+  }
+  /*
    * What the Site falls back to, shown rather than written. An author who has set no Wordmark should
    * see what the frame is showing instead of an empty field that looks like a missing name.
    */
@@ -3236,7 +3259,11 @@ export function PhiBuilderBrandIdentityControlsWidgetClient({
                   {/* Everything below sets the name. With the name switched off there is nothing to set. */}
                   {showsWordmark && (<>
                   {editableWordmarkParts.map((part, index) => (
-                    <PhiLabeledControl key={index} label={`Part #${index + 1}`} fill>
+                    <PhiLabeledControl
+                      key={wordmarkPartKeys.keys[index] ?? `pending-${index}`}
+                      label={`Part #${index + 1}`}
+                      fill
+                    >
                       <PhiFlexControl gap={clientToken.paddingXXS} align="center" style={{ width: "100%", minWidth: 0 }}>
                         <PhiTextControl
                           value={part.text}
@@ -3259,10 +3286,16 @@ export function PhiBuilderBrandIdentityControlsWidgetClient({
                           disabled={wordmarkParts.length === 0}
                           icon={<DeleteOutlined />}
                           ariaLabel="Remove this part of the Wordmark"
-                          onClick={() => publishDraft(mergeThemeWordmarkParts(
-                            state.draft,
-                            editableWordmarkParts.filter((_, at) => at !== index),
-                          ))}
+                          onClick={() => {
+                            setWordmarkPartKeys((current) => ({
+                              ...current,
+                              keys: current.keys.filter((_, at) => at !== index),
+                            }));
+                            publishDraft(mergeThemeWordmarkParts(
+                              state.draft,
+                              editableWordmarkParts.filter((_, at) => at !== index),
+                            ));
+                          }}
                         />
                       </PhiFlexControl>
                     </PhiLabeledControl>

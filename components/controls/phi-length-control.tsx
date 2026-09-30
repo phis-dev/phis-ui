@@ -57,13 +57,19 @@ export function PhiLengthControl({
    */
   const [pendingUnit, setPendingUnit] = useState<PhiCssLengthUnit | null>(null);
   const unit = part?.unit ?? pendingUnit ?? "px";
-  const controlDisabled = disabled || readOnly || !onChange;
+  /*
+   * Read-only is not disabled: the value stays legible and focusable, as it does in the Number
+   * Control. The number field takes `readOnly` natively; a Select has no such state, so the unit list
+   * is kept shut and its change ignored instead.
+   */
+  const controlDisabled = disabled || (!onChange && !readOnly);
   const control = (
     <PhiCompactGroupControl block size={size} style={{ width: "100%", minWidth: 0, ...style }}>
       <InputNumber
         aria-label={placeholder ?? label ?? "Length"}
         controls={false}
         disabled={controlDisabled}
+        readOnly={readOnly}
         min={min}
         max={max}
         step={step}
@@ -78,6 +84,7 @@ export function PhiLengthControl({
       <Select<PhiCssLengthUnit>
         aria-label={`${placeholder ?? label ?? "Length"} unit`}
         disabled={controlDisabled}
+        open={readOnly ? false : undefined}
         options={PHI_CSS_LENGTH_UNITS.map((option) => ({ value: option, label: option }))}
         popupMatchSelectWidth={false}
         getPopupContainer={getPopupContainer}
@@ -91,6 +98,7 @@ export function PhiLengthControl({
           content: { justifyContent: "center", textAlign: "center" },
         }}
         onChange={(nextUnit) => {
+          if (readOnly) return;
           setPendingUnit(nextUnit);
           if (part) {
             onChange?.(serializePhiCssLength(part.value, nextUnit));
