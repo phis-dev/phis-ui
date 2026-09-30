@@ -27,6 +27,11 @@ export type PhiJsonRequestOptions = {
   csrf?: boolean;
   /** What the thrown error says when the token cannot be had, from the caller's Label Set. */
   csrfUnavailableMessage?: string;
+  /**
+   * Headers a route needs beyond the JSON ones, such as the Area header every Media request carries.
+   * They sit underneath: accept, content-type and the CSRF token are this request's own and win.
+   */
+  headers?: HeadersInit;
   signal?: AbortSignal;
 };
 
@@ -66,7 +71,10 @@ export async function requestPhiJson<T = Record<string, unknown>>(
   path: string,
   options: PhiJsonRequestOptions = {},
 ): Promise<PhiJsonReply<T>> {
-  const headers: Record<string, string> = { accept: "application/json" };
+  const headers: Record<string, string> = {
+    ...Object.fromEntries(new Headers(options.headers)),
+    accept: "application/json",
+  };
   if (options.body !== undefined) {
     headers["content-type"] = "application/json";
   }

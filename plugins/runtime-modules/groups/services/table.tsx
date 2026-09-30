@@ -13,6 +13,7 @@ import { PHI_GROUPS_OPTIONS_REVISION } from "../services/options-revision";
 import { PHI_GROUPS_RUNTIME_DATA_PROVIDER_DESCRIPTORS } from "../../../../plugins/runtime-modules/groups/data-providers";
 import {
   readPhiTableProviderResponse,
+  type ReadPhiTableProviderResponseOptions,
 } from "../../../../components/widgets/client/shared/phi-table-provider-response";
 
 /*
@@ -51,11 +52,10 @@ function readPositiveInteger(value: unknown) {
   return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
 }
 
-const readApiResponse = (response: Response) =>
-  readPhiTableProviderResponse<ApiResponse>(response, {
-    subject: "Groups",
-    errorKeys: ["message", "error"],
-  });
+const RESPONSE_OPTIONS: ReadPhiTableProviderResponseOptions = {
+  subject: "Groups",
+  errorKeys: ["message", "error"],
+};
 
 const requestInit = (signal: AbortSignal | undefined): RequestInit => ({
   cache: "no-store",
@@ -69,7 +69,10 @@ async function loadRowsFrom(
   signal: AbortSignal | undefined,
   mapRow: (row: Record<string, unknown>) => Record<string, unknown> = (row) => row,
 ) {
-  const result = await readApiResponse(await fetch(path, requestInit(signal)));
+  const result = await readPhiTableProviderResponse<ApiResponse>(
+    await fetch(path, requestInit(signal)),
+    RESPONSE_OPTIONS,
+  );
   const rows = readRows(result?.rows).map(mapRow);
   return { rows, total: typeof result?.total === "number" ? result.total : rows.length };
 }
@@ -91,8 +94,9 @@ async function loadGroupMembers({
   const groupId = readPositiveInteger(query.filters?.groupId);
   // No group selected is an empty list, not an error: the table simply has nothing to show yet.
   if (!groupId) return { rows: [], total: 0 };
-  const result = await readApiResponse(
+  const result = await readPhiTableProviderResponse<ApiResponse>(
     await fetch(`${API_PATH}?groupId=${groupId}`, requestInit(signal)),
+    RESPONSE_OPTIONS,
   );
   // What this actor may do in this group, as the control plane sees it -- the interface never works it
   // out from a level of its own.
@@ -139,12 +143,15 @@ async function mutateGroups(request: PhiTableProviderMutationRequest) {
       if (!request.actionValue || typeof request.actionValue !== "object" || Array.isArray(request.actionValue)) {
         throw new PhiTableProviderError("invalid-action-value", "Create action requires a key and a name.");
       }
-      await readApiResponse(await fetch(API_PATH, {
-        ...init,
-        method: "POST",
-        headers: { ...init.headers, "content-type": "application/json" },
-        body: JSON.stringify(request.actionValue),
-      }));
+      await readPhiTableProviderResponse<ApiResponse>(
+        await fetch(API_PATH, {
+          ...init,
+          method: "POST",
+          headers: { ...init.headers, "content-type": "application/json" },
+          body: JSON.stringify(request.actionValue),
+        }),
+        RESPONSE_OPTIONS,
+      );
       PHI_GROUPS_OPTIONS_REVISION.bump();
       return { status: "accepted" as const, invalidation: "view" as const };
     }
@@ -168,12 +175,15 @@ async function mutateGroups(request: PhiTableProviderMutationRequest) {
       if (!groupId) {
         throw new PhiTableProviderError("invalid-query", "Retiring a group needs the group.");
       }
-      await readApiResponse(await fetch(`${API_PATH}?groupId=${groupId}`, {
-        ...init,
-        method: "PATCH",
-        headers: { ...init.headers, "content-type": "application/json" },
-        body: JSON.stringify({ retired: request.actionKey === "retire" }),
-      }));
+      await readPhiTableProviderResponse<ApiResponse>(
+        await fetch(`${API_PATH}?groupId=${groupId}`, {
+          ...init,
+          method: "PATCH",
+          headers: { ...init.headers, "content-type": "application/json" },
+          body: JSON.stringify({ retired: request.actionKey === "retire" }),
+        }),
+        RESPONSE_OPTIONS,
+      );
       PHI_GROUPS_OPTIONS_REVISION.bump();
       return { status: "accepted" as const, invalidation: "view" as const };
     }
@@ -199,12 +209,15 @@ async function mutateGroups(request: PhiTableProviderMutationRequest) {
         "Only the group flags are editable here; retirement is an action.",
       );
     }
-    await readApiResponse(await fetch(`${API_PATH}?groupId=${readPositiveInteger(request.rowIdentity)}`, {
-      ...init,
-      method: "PATCH",
-      headers: { ...init.headers, "content-type": "application/json" },
-      body: JSON.stringify({ [fieldKey]: request.proposedValue === true }),
-    }));
+    await readPhiTableProviderResponse<ApiResponse>(
+      await fetch(`${API_PATH}?groupId=${readPositiveInteger(request.rowIdentity)}`, {
+        ...init,
+        method: "PATCH",
+        headers: { ...init.headers, "content-type": "application/json" },
+        body: JSON.stringify({ [fieldKey]: request.proposedValue === true }),
+      }),
+      RESPONSE_OPTIONS,
+    );
     if (fieldKey === "showMemberCompany") {
       return {
         status: "accepted" as const,
@@ -239,19 +252,25 @@ async function mutateGroups(request: PhiTableProviderMutationRequest) {
     if (level == null) {
       throw new PhiTableProviderError("invalid-field-value", "Unknown membership level.");
     }
-    await readApiResponse(await fetch(url, {
-      ...init,
-      method: "PUT",
-      headers: { ...init.headers, "content-type": "application/json" },
-      body: JSON.stringify({ membershipFlags: level }),
-    }));
+    await readPhiTableProviderResponse<ApiResponse>(
+      await fetch(url, {
+        ...init,
+        method: "PUT",
+        headers: { ...init.headers, "content-type": "application/json" },
+        body: JSON.stringify({ membershipFlags: level }),
+      }),
+      RESPONSE_OPTIONS,
+    );
     // The level decides which groups this actor manages, and that is what one of the lists offers.
     PHI_GROUPS_OPTIONS_REVISION.bump();
     return { status: "accepted" as const, invalidation: "none" as const, canonicalValue: String(level) };
   }
 
   if (request.kind === "action" && request.actionKey === "delete") {
-    await readApiResponse(await fetch(url, { ...init, method: "DELETE" }));
+    await readPhiTableProviderResponse<ApiResponse>(
+      await fetch(url, { ...init, method: "DELETE" }),
+      RESPONSE_OPTIONS,
+    );
     PHI_GROUPS_OPTIONS_REVISION.bump();
     return { status: "accepted" as const, invalidation: "view" as const };
   }

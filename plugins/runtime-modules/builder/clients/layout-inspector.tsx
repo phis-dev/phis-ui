@@ -49,7 +49,7 @@ import {
 import {
   type PhiDeveloperBuilderMode,
   type PhiDeveloperBuilderNodeKind,
-  type PhiDeveloperBuilderRegionDraft,
+  type PhiDeveloperBuilderStructureNodeDraft,
 } from "../developer-workspace-types";
 import {
   isPhiInspectorConfigFieldVisible,
@@ -106,7 +106,7 @@ type PhiDeveloperBuilderLayoutInspectorWidgetClientProps = {
   selectedStructureNodeTitle?: string | null;
   selectedStructureDefaultConfig?: Record<string, unknown> | null;
   selectedStructurePlugin?: PhiBuilderContainerMeta | null;
-  currentDraft?: PhiDeveloperBuilderRegionDraft | null;
+  currentDraft?: PhiDeveloperBuilderStructureNodeDraft | null;
   currentShadow?: PhiShadow | null;
   signalRouteScope?: PhiSignalRoute["scope"];
   selectedLayoutAnchor?: PhiAnchorWidgetPlacement | null;

@@ -21,6 +21,7 @@ import { PHI_LOCALIZATION_RUNTIME_DATA_PROVIDER_DESCRIPTORS } from "../../../../
 import { isPhiRecord } from "../../../../helpers/is-record";
 import {
   readPhiTableProviderResponse,
+  type ReadPhiTableProviderResponseOptions,
 } from "../../../../components/widgets/client/shared/phi-table-provider-response";
 
 const ADMIN_LOCALES_API_PATH = "/api/site/admin/locales";
@@ -47,8 +48,7 @@ function readStringFilter(query: PhiTableQuery, key: string) {
   return typeof value === "string" ? value.trim() : "";
 }
 
-const readApiResponse = (response: Response) =>
-  readPhiTableProviderResponse<ApiResponse>(response, { subject: "Localization" });
+const RESPONSE_OPTIONS: ReadPhiTableProviderResponseOptions = { subject: "Localization" };
 
 function buildQueryParams(query: PhiTableQuery) {
   const params = new URLSearchParams({
@@ -67,12 +67,15 @@ async function loadSiteTranslations({
   const params = buildQueryParams(query);
   const locale = readStringFilter(query, "locale");
   if (locale) params.set("locale", locale);
-  const result = await readApiResponse(await fetch(`${ADMIN_LOCALES_API_PATH}?${params.toString()}`, {
-    cache: "no-store",
-    credentials: "include",
-    headers: { accept: "application/json" },
-    signal,
-  }));
+  const result = await readPhiTableProviderResponse<ApiResponse>(
+    await fetch(`${ADMIN_LOCALES_API_PATH}?${params.toString()}`, {
+      cache: "no-store",
+      credentials: "include",
+      headers: { accept: "application/json" },
+      signal,
+    }),
+    RESPONSE_OPTIONS,
+  );
   const translations = isPhiRecord(result?.translations) ? result.translations : {};
   const selectedLocale = typeof result?.selectedLocale === "string" ? result.selectedLocale : "";
   const rows = readRows(translations.rows).map((row) => ({
@@ -112,12 +115,15 @@ async function loadEditorTranslations({
   if (locale) params.set("locale", locale);
   if (context && context !== "all") params.set("ctx", context);
   if (status) params.set("status", status);
-  const result = await readApiResponse(await fetch(`${EDITOR_TRANSLATIONS_API_PATH}?${params.toString()}`, {
-    cache: "no-store",
-    credentials: "include",
-    headers: { accept: "application/json" },
-    signal,
-  }));
+  const result = await readPhiTableProviderResponse<ApiResponse>(
+    await fetch(`${EDITOR_TRANSLATIONS_API_PATH}?${params.toString()}`, {
+      cache: "no-store",
+      credentials: "include",
+      headers: { accept: "application/json" },
+      signal,
+    }),
+    RESPONSE_OPTIONS,
+  );
   const translations = isPhiRecord(result?.translations) ? result.translations : {};
   const selectedLocale = typeof result?.selectedLocale === "string" ? result.selectedLocale : "";
   const rows = readRows(translations.rows).map((row) => ({
@@ -141,12 +147,15 @@ async function loadEditorTranslations({
 }
 
 async function loadSiteLocaleSettings(signal: AbortSignal) {
-  const result = await readApiResponse(await fetch(`${ADMIN_LOCALES_API_PATH}?page=1&pageSize=1`, {
-    cache: "no-store",
-    credentials: "include",
-    headers: { accept: "application/json" },
-    signal,
-  }));
+  const result = await readPhiTableProviderResponse<ApiResponse>(
+    await fetch(`${ADMIN_LOCALES_API_PATH}?page=1&pageSize=1`, {
+      cache: "no-store",
+      credentials: "include",
+      headers: { accept: "application/json" },
+      signal,
+    }),
+    RESPONSE_OPTIONS,
+  );
   const site = isPhiRecord(result?.site) ? result.site : {};
   return {
     id: "site",
@@ -242,14 +251,17 @@ export function PhiLocalizationTableProviderClient({ children }: { children: Rea
           message: "A valid translation is required.",
         };
       }
-      const payload = await readApiResponse(await fetch(ADMIN_LOCALES_API_PATH, {
-        cache: "no-store",
-        credentials: "include",
-        headers: { accept: "application/json", "content-type": "application/json" },
-        method: "PATCH",
-        body: JSON.stringify({ action: "translation", msgId: Number(msgId), locale, translation }),
-        signal: request.signal,
-      }));
+      const payload = await readPhiTableProviderResponse<ApiResponse>(
+        await fetch(ADMIN_LOCALES_API_PATH, {
+          cache: "no-store",
+          credentials: "include",
+          headers: { accept: "application/json", "content-type": "application/json" },
+          method: "PATCH",
+          body: JSON.stringify({ action: "translation", msgId: Number(msgId), locale, translation }),
+          signal: request.signal,
+        }),
+        RESPONSE_OPTIONS,
+      );
       return {
         status: "accepted" as const,
         invalidation: "none" as const,
@@ -321,7 +333,9 @@ export function PhiLocalizationTableProviderClient({ children }: { children: Rea
       throw new PhiTableProviderError("action-not-supported", `Unsupported Localization action "${request.actionKey}".`);
     }
 
-    if (request.actionKey !== "refresh") await readApiResponse(await fetch(url, init));
+    if (request.actionKey !== "refresh") {
+      await readPhiTableProviderResponse<ApiResponse>(await fetch(url, init), RESPONSE_OPTIONS);
+    }
     return { status: "accepted" as const, invalidation: "view" as const };
   }, []);
 

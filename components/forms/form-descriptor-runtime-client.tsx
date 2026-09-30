@@ -11,8 +11,11 @@ import {
 import type { PhiCmsFormWidgetConfig } from "../../plugins/runtime-modules/core/widgets/form/config";
 import { usePhiSignalListener } from "../runtime/runtime-signal-bus";
 import { createPhiSignalCorrelationId } from "../runtime/runtime-signal-bus";
-import { usePhiSignalEmitter, usePhiSignalIdentity } from "../runtime/runtime-signal-identity";
-import { findPhiSignalRoutesByCapabilityId } from "../../types/signals";
+import {
+  emitPhiSignalCapability,
+  usePhiSignalEmitter,
+  usePhiSignalIdentity,
+} from "../runtime/runtime-signal-identity";
 import { isPhiControllerSignalAddress } from "../../types/signals";
 import { readPhiRuntimeConditionStateSignalValue } from "../../types/runtime-condition";
 import { collectPhiRuntimeValueConditions } from "../../types/runtime-condition";
@@ -136,19 +139,13 @@ export function PhiFormDescriptorRuntimeClient({
     value: PhiSignalValue = null,
     correlationId?: string | null,
   ) => {
-    for (const route of findPhiSignalRoutesByCapabilityId(widgetConfig?.signalRoutes?.emits, capabilityId)) {
-      if (route.receiver == null || (route.valueType === "json" && !route.valueSchema)) continue;
-      emitSignal({
-        scope: route.scope,
-        channel: route.channel,
-        action: route.action,
-        value: route.valueType === "none" ? null : value,
-        valueType: route.valueType,
-        valueSchema: route.valueSchema ?? null,
-        receiver: route.receiver,
-        ...(correlationId ? { correlationId } : {}),
-      });
-    }
+    emitPhiSignalCapability(
+      emitSignal,
+      widgetConfig?.signalRoutes?.emits,
+      capabilityId,
+      value,
+      correlationId,
+    );
   }, [emitSignal, widgetConfig]);
 
   /*

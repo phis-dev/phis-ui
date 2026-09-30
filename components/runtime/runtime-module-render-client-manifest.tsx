@@ -1,15 +1,17 @@
 "use client";
 
 import {
-  createContext,
   createElement,
   Suspense,
-  useContext,
   type ComponentType,
   type ReactNode,
 } from "react";
 
 import type { PhiSlotChildSizing } from "../../plugins/runtime/slot-size-policy";
+import {
+  createPhiRuntimeModuleClientManifestContext,
+  extendPhiRuntimeModuleClientManifest,
+} from "./runtime-module-client-manifest-context";
 
 export type PhiRuntimeModuleRenderClientProps = Readonly<Record<string, unknown>>;
 /**
@@ -23,8 +25,9 @@ export type PhiRuntimeModuleRenderClientProps = Readonly<Record<string, unknown>
 export type PhiRuntimeModuleRenderClient = ComponentType<PhiRuntimeModuleRenderClientProps>;
 export type PhiRuntimeModuleRenderClientManifest = ReadonlyMap<string, PhiRuntimeModuleRenderClient>;
 
-const PhiRuntimeModuleRenderClientManifestContext =
-  createContext<PhiRuntimeModuleRenderClientManifest | null>(null);
+const renderClientManifest = createPhiRuntimeModuleClientManifestContext<
+  PhiRuntimeModuleRenderClientManifest
+>("Runtime Render Client manifest is not mounted.");
 
 /** Types a Client whose props are narrower than the manifest's; the host passes what the server sent. */
 export function definePhiRuntimeModuleRenderClient<TProps extends object>(
@@ -43,31 +46,14 @@ export function extendPhiRuntimeModuleRenderClientManifest(
   base: PhiRuntimeModuleRenderClientManifest,
   entries: ReadonlyArray<readonly [string, PhiRuntimeModuleRenderClient]>,
 ): PhiRuntimeModuleRenderClientManifest {
-  const manifest = new Map(base);
-
-  for (const [type, Client] of entries) {
-    if (manifest.has(type)) {
-      throw new Error(`Duplicate Runtime Render Client for "${type}".`);
-    }
-    manifest.set(type, Client);
-  }
-
-  return manifest;
-}
-
-export function PhiRuntimeModuleRenderClientManifestProvider({
-  manifest,
-  children,
-}: {
-  manifest: PhiRuntimeModuleRenderClientManifest;
-  children: ReactNode;
-}) {
-  return (
-    <PhiRuntimeModuleRenderClientManifestContext.Provider value={manifest}>
-      {children}
-    </PhiRuntimeModuleRenderClientManifestContext.Provider>
+  return extendPhiRuntimeModuleClientManifest(
+    base,
+    entries,
+    (type) => `Duplicate Runtime Render Client for "${type}".`,
   );
 }
+
+export const PhiRuntimeModuleRenderClientManifestProvider = renderClientManifest.Provider;
 
 /**
  * A Render Client by key, or none.
@@ -78,16 +64,8 @@ export function PhiRuntimeModuleRenderClientManifestProvider({
  * switched off -- and that reads better as a message in the block than as a broken page.
  */
 export function usePhiRuntimeModuleRenderClient(type: string | null | undefined) {
-  const manifest = useContext(PhiRuntimeModuleRenderClientManifestContext);
+  const manifest = renderClientManifest.useOptionalManifest();
   return type ? manifest?.get(type) ?? null : null;
-}
-
-function usePhiRuntimeModuleRenderClientManifest() {
-  const manifest = useContext(PhiRuntimeModuleRenderClientManifestContext);
-  if (!manifest) {
-    throw new Error("Runtime Render Client manifest is not mounted.");
-  }
-  return manifest;
 }
 
 export function PhiRuntimeModuleRenderClientHost(props: {
@@ -97,7 +75,7 @@ export function PhiRuntimeModuleRenderClientHost(props: {
   slotChildSizing?: PhiSlotChildSizing | null;
 }) {
   const { type, componentProps, fallback = null } = props;
-  const manifest = usePhiRuntimeModuleRenderClientManifest();
+  const manifest = renderClientManifest.useManifest();
   const Client = manifest.get(type);
 
   if (!Client) {

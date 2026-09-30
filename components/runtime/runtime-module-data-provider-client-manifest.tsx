@@ -1,10 +1,8 @@
 "use client";
 
 import {
-  createContext,
   lazy,
   Suspense,
-  useContext,
   type ComponentType,
   type ReactNode,
 } from "react";
@@ -14,6 +12,10 @@ import type {
   PhiRuntimeModuleDataProviderClientDefinition,
 } from "../../types/cms-plugins";
 import type { PhiRuntimeDataProviderKey } from "../../types/runtime-data-provider";
+import {
+  createPhiRuntimeModuleClientManifestContext,
+  extendPhiRuntimeModuleClientManifest,
+} from "./runtime-module-client-manifest-context";
 
 type PhiRuntimeModuleDataProviderClients = {
   Live: ComponentType<PhiRuntimeModuleDataProviderClientProps>;
@@ -25,8 +27,9 @@ export type PhiRuntimeModuleDataProviderClientManifest = ReadonlyMap<
   PhiRuntimeModuleDataProviderClients
 >;
 
-const PhiRuntimeModuleDataProviderClientManifestContext =
-  createContext<PhiRuntimeModuleDataProviderClientManifest | null>(null);
+const dataProviderClientManifest = createPhiRuntimeModuleClientManifestContext<
+  PhiRuntimeModuleDataProviderClientManifest
+>("Runtime Data Provider Client manifest is not mounted.");
 
 export function createPhiRuntimeModuleDataProviderClientManifest(
   definitions: readonly PhiRuntimeModuleDataProviderClientDefinition[],
@@ -38,44 +41,19 @@ export function extendPhiRuntimeModuleDataProviderClientManifest(
   base: PhiRuntimeModuleDataProviderClientManifest,
   definitions: readonly PhiRuntimeModuleDataProviderClientDefinition[],
 ): PhiRuntimeModuleDataProviderClientManifest {
-  const manifest = new Map(base);
-
-  for (const definition of definitions) {
-    if (manifest.has(definition.key)) {
-      throw new Error(`Duplicate Runtime Data Provider Client loader for "${definition.key}".`);
-    }
-    manifest.set(definition.key, {
+  return extendPhiRuntimeModuleClientManifest(
+    base,
+    definitions.map((definition) => [definition.key, {
       Live: lazy(async () => ({ default: await definition.loadLive() })),
       ...(definition.loadAuthoring
         ? { Authoring: lazy(async () => ({ default: await definition.loadAuthoring!() })) }
         : {}),
-    });
-  }
-
-  return manifest;
-}
-
-export function PhiRuntimeModuleDataProviderClientManifestProvider({
-  manifest,
-  children,
-}: {
-  manifest: PhiRuntimeModuleDataProviderClientManifest;
-  children: ReactNode;
-}) {
-  return (
-    <PhiRuntimeModuleDataProviderClientManifestContext.Provider value={manifest}>
-      {children}
-    </PhiRuntimeModuleDataProviderClientManifestContext.Provider>
+    }] as const),
+    (key) => `Duplicate Runtime Data Provider Client loader for "${key}".`,
   );
 }
 
-function usePhiRuntimeModuleDataProviderClientManifest() {
-  const manifest = useContext(PhiRuntimeModuleDataProviderClientManifestContext);
-  if (!manifest) {
-    throw new Error("Runtime Data Provider Client manifest is not mounted.");
-  }
-  return manifest;
-}
+export const PhiRuntimeModuleDataProviderClientManifestProvider = dataProviderClientManifest.Provider;
 
 export function PhiRuntimeModuleDataProviderClientHost({
   providerKeys,
@@ -86,7 +64,7 @@ export function PhiRuntimeModuleDataProviderClientHost({
   mode: "live" | "authoring";
   children: ReactNode;
 }) {
-  const manifest = usePhiRuntimeModuleDataProviderClientManifest();
+  const manifest = dataProviderClientManifest.useManifest();
   const clients = providerKeys.map((providerKey) => {
     const entry = manifest.get(providerKey);
     const Client = mode === "live" ? entry?.Live : entry?.Authoring;

@@ -11,7 +11,10 @@ import {
 import { createPhiTableProviderClient } from "../widgets/client/shared/phi-table-provider";
 import { fetchPhiCsrfToken } from "../../helpers/csrf-token";
 import { PHI_AUTH_RUNTIME_DATA_PROVIDER_DESCRIPTORS } from "../../plugins/runtime-modules/auth/data-providers";
-import { readPhiTableProviderResponse } from "../widgets/client/shared/phi-table-provider-response";
+import {
+  readPhiTableProviderResponse,
+  type ReadPhiTableProviderResponseOptions,
+} from "../widgets/client/shared/phi-table-provider-response";
 
 const API_PATH = "/api/auth/admin/installations";
 
@@ -39,8 +42,7 @@ function flattenValidation(row: InstallationRow) {
   };
 }
 
-const readApiResponse = (response: Response) =>
-  readPhiTableProviderResponse<ApiResponse>(response, { subject: "Auth installation" });
+const RESPONSE_OPTIONS: ReadPhiTableProviderResponseOptions = { subject: "Auth installation" };
 
 /* The shared reader throws a plain Error; a Table Provider has to fail in its own vocabulary. */
 async function getCsrfToken(signal?: AbortSignal) {
@@ -52,12 +54,15 @@ async function getCsrfToken(signal?: AbortSignal) {
 }
 
 async function loadInstallations(signal?: AbortSignal) {
-  const result = await readApiResponse(await fetch(API_PATH, {
-    cache: "no-store",
-    credentials: "include",
-    headers: { accept: "application/json" },
-    signal,
-  }));
+  const result = await readPhiTableProviderResponse<ApiResponse>(
+    await fetch(API_PATH, {
+      cache: "no-store",
+      credentials: "include",
+      headers: { accept: "application/json" },
+      signal,
+    }),
+    RESPONSE_OPTIONS,
+  );
   return (Array.isArray(result?.installations) ? result.installations : [])
     .filter((row): row is InstallationRow =>
       Boolean(row) && typeof row === "object" && !Array.isArray(row))
@@ -115,12 +120,15 @@ async function mutateInstallation(request: PhiTableProviderMutationRequest) {
     ) {
       throw new PhiTableProviderError("invalid-field-value", "Only the enabled switches accept boolean edits.");
     }
-    const result = await readApiResponse(await fetch(`${API_PATH}/${encodeURIComponent(installationKey)}`, {
-      ...init,
-      method: "PATCH",
-      headers: baseHeaders,
-      body: JSON.stringify({ [request.fieldKey]: request.proposedValue }),
-    }));
+    const result = await readPhiTableProviderResponse<ApiResponse>(
+      await fetch(`${API_PATH}/${encodeURIComponent(installationKey)}`, {
+        ...init,
+        method: "PATCH",
+        headers: baseHeaders,
+        body: JSON.stringify({ [request.fieldKey]: request.proposedValue }),
+      }),
+      RESPONSE_OPTIONS,
+    );
     const row = result?.installation && typeof result.installation === "object" && !Array.isArray(result.installation)
       ? flattenValidation(result.installation as InstallationRow) as Record<string, unknown>
       : null;
@@ -146,11 +154,14 @@ async function mutateInstallation(request: PhiTableProviderMutationRequest) {
     throw new PhiTableProviderError("invalid-action-value", "This action requires an installation row.");
   }
   if (request.actionKey === "test") {
-    const result = await readApiResponse(await fetch(`${API_PATH}/${encodeURIComponent(installationKey)}/test`, {
-      ...init,
-      method: "POST",
-      headers: baseHeaders,
-    }));
+    const result = await readPhiTableProviderResponse<ApiResponse>(
+      await fetch(`${API_PATH}/${encodeURIComponent(installationKey)}/test`, {
+        ...init,
+        method: "POST",
+        headers: baseHeaders,
+      }),
+      RESPONSE_OPTIONS,
+    );
     /*
      * The test's answer is the answer, so it goes back into the row it is about.
      *
@@ -177,12 +188,15 @@ async function mutateInstallation(request: PhiTableProviderMutationRequest) {
     };
   }
   if (request.actionKey === "delete") {
-    await readApiResponse(await fetch(`${API_PATH}/${encodeURIComponent(installationKey)}`, {
-      ...init,
-      method: "DELETE",
-      headers: baseHeaders,
-      body: JSON.stringify({ confirm: true }),
-    }));
+    await readPhiTableProviderResponse<ApiResponse>(
+      await fetch(`${API_PATH}/${encodeURIComponent(installationKey)}`, {
+        ...init,
+        method: "DELETE",
+        headers: baseHeaders,
+        body: JSON.stringify({ confirm: true }),
+      }),
+      RESPONSE_OPTIONS,
+    );
     return { status: "accepted" as const, invalidation: "view" as const };
   }
   throw new PhiTableProviderError("action-not-supported", `Unsupported Auth installation action "${request.actionKey}".`);

@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, use, useContext, type ReactNode } from "react";
+import { use, type ReactNode } from "react";
 
 import type {
   PhiCalendarAdapterClient,
@@ -8,6 +8,10 @@ import type {
   PhiCalendarAdapterKey,
 } from "../../types/calendar";
 import { usePhiRuntimeModuleState } from "./runtime-module-context";
+import {
+  createPhiRuntimeModuleClientManifestContext,
+  extendPhiRuntimeModuleClientManifest,
+} from "./runtime-module-client-manifest-context";
 
 export type PhiRuntimeModuleCalendarAdapterClientManifest = ReadonlyMap<
   PhiCalendarAdapterKey,
@@ -20,8 +24,13 @@ const adapterPromiseByLoader = new WeakMap<
   Promise<PhiCalendarAdapterClient>
 >();
 
-const PhiRuntimeModuleCalendarAdapterClientManifestContext =
-  createContext<PhiRuntimeModuleCalendarAdapterClientManifest>(EMPTY_CALENDAR_ADAPTER_MANIFEST);
+/*
+ * Not mounted means no Calendar adapters, rather than an error: most Areas carry no calendar, and a
+ * Widget asking for an adapter still fails below, naming the adapter it could not find.
+ */
+const calendarAdapterClientManifest = createPhiRuntimeModuleClientManifestContext<
+  PhiRuntimeModuleCalendarAdapterClientManifest
+>("Calendar adapter Client manifest is not mounted.");
 
 export function createPhiRuntimeModuleCalendarAdapterClientManifest(
   definitions: readonly PhiCalendarAdapterClientDefinition[],
@@ -33,14 +42,11 @@ export function extendPhiRuntimeModuleCalendarAdapterClientManifest(
   base: PhiRuntimeModuleCalendarAdapterClientManifest,
   definitions: readonly PhiCalendarAdapterClientDefinition[],
 ): PhiRuntimeModuleCalendarAdapterClientManifest {
-  const manifest = new Map(base);
-  for (const definition of definitions) {
-    if (manifest.has(definition.key)) {
-      throw new Error(`Duplicate Calendar adapter Client loader for "${definition.key}".`);
-    }
-    manifest.set(definition.key, definition);
-  }
-  return manifest;
+  return extendPhiRuntimeModuleClientManifest(
+    base,
+    definitions.map((definition) => [definition.key, definition] as const),
+    (key) => `Duplicate Calendar adapter Client loader for "${key}".`,
+  );
 }
 
 export function PhiRuntimeModuleCalendarAdapterClientManifestProvider({
@@ -51,16 +57,15 @@ export function PhiRuntimeModuleCalendarAdapterClientManifestProvider({
   children: ReactNode;
 }) {
   return (
-    <PhiRuntimeModuleCalendarAdapterClientManifestContext.Provider
-      value={manifest ?? EMPTY_CALENDAR_ADAPTER_MANIFEST}
-    >
+    <calendarAdapterClientManifest.Provider manifest={manifest ?? EMPTY_CALENDAR_ADAPTER_MANIFEST}>
       {children}
-    </PhiRuntimeModuleCalendarAdapterClientManifestContext.Provider>
+    </calendarAdapterClientManifest.Provider>
   );
 }
 
 export function usePhiCalendarAdapterClient(key: PhiCalendarAdapterKey) {
-  const manifest = useContext(PhiRuntimeModuleCalendarAdapterClientManifestContext);
+  const manifest =
+    calendarAdapterClientManifest.useOptionalManifest() ?? EMPTY_CALENDAR_ADAPTER_MANIFEST;
   const runtimeModuleState = usePhiRuntimeModuleState();
   const descriptor = runtimeModuleState.calendarAdapterDescriptorsByKey.get(key);
   if (!descriptor) {

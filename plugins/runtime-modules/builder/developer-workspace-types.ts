@@ -48,6 +48,14 @@ export type PhiDeveloperBuilderRegionDraft = PhiCmsGeometryWidgetConfig & {
   rootNodeChildWidgets?: PhiCmsContentWidgetNode[];
 };
 
+/**
+ * The Inspector's draft for one node inside a Region, a Layout or the root.
+ *
+ * Its background is `rootNodeBackground`; the Region's own `background` belongs to the Region draft
+ * and means nothing here, which is why it is left out rather than filled with a stand-in.
+ */
+export type PhiDeveloperBuilderStructureNodeDraft = Omit<PhiDeveloperBuilderRegionDraft, "background">;
+
 export type PhiDeveloperBuilderPageMetaDraft = {
   title?: string | null;
   description?: string | null;

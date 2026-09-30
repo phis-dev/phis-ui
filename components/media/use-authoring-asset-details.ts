@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 
-import { readPhiJsonPayload } from "../../helpers/client-json-request";
+import { requestPhiJson } from "../../helpers/client-json-request";
 import type { PhiMediaAsset } from "../../types/media";
 import { PHI_ASSET_CONTROLLER_STORE_KEY } from "./asset-controller-signals";
 import { usePhiImagePreviewStore } from "./phi-image-preview-store";
@@ -28,16 +28,12 @@ export function usePhiAuthoringAssetDetails(assetId: number | null | undefined) 
     async function run() {
       try {
         // With the Area header, as every other Media request: see `buildPhiMediaRequestHeaders`.
-        const response = await fetch(`/api/site/media/${assetId}`, {
-          method: "GET",
-          credentials: "include",
-          cache: "no-store",
-          headers: buildPhiMediaRequestHeaders({ Accept: "application/json" }),
-          signal: controller.signal,
-        });
-        const payload = await readPhiJsonPayload<{ asset?: PhiMediaAsset | null }>(response);
+        const reply = await requestPhiJson<{ asset?: PhiMediaAsset | null }>(
+          `/api/site/media/${assetId}`,
+          { headers: buildPhiMediaRequestHeaders(), signal: controller.signal },
+        );
         if (!controller.signal.aborted) {
-          setAssetDetails(response.ok ? payload?.asset ?? null : null);
+          setAssetDetails(reply.ok ? reply.payload?.asset ?? null : null);
         }
       } catch (error) {
         if (!controller.signal.aborted) {

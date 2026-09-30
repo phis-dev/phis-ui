@@ -51,7 +51,8 @@ function readRows(value: unknown) {
     : [];
 }
 
-function readIdentity(row: Record<string, unknown>, key: string) {
+/** A row's id field as an Option value: a positive integer or a non-blank string, else none. */
+function readOptionValue(row: Record<string, unknown>, key: string) {
   const value = row[key];
   if (typeof value === "number" && Number.isInteger(value) && value > 0) return String(value);
   return typeof value === "string" && value.trim() ? value.trim() : null;
@@ -85,7 +86,7 @@ export const PhiGroupMemberCandidatesOptionsProviderClient = createPhiControlOpt
     `group-member-candidates:${readPhiOptionsRevision(context)}:${context.search}`,
   resolve: (context: PhiControlOptionsProviderContext) => ({
     options: readRows(context.asyncData).flatMap((row) => {
-      const value = readIdentity(row, "userId");
+      const value = readOptionValue(row, "userId");
       if (!value) return [];
       const name = typeof row.displayName === "string" && row.displayName.trim()
         ? row.displayName.trim()
@@ -116,7 +117,7 @@ export const PhiMyGroupOptionsProviderClient = createPhiControlOptionsProviderCl
   resolveLoadKey: (context) => `my-groups:${readPhiOptionsRevision(context)}`,
   resolve: (context: PhiControlOptionsProviderContext) => ({
     options: readRows(context.asyncData).flatMap((row) => {
-      const value = readIdentity(row, "id");
+      const value = readOptionValue(row, "id");
       // Only the groups this actor manages: naming another one would only earn a refusal.
       if (!value || row.manages !== true) return [];
       const name = typeof row.name === "string" && row.name.trim() ? row.name.trim() : `#${value}`;
@@ -132,7 +133,7 @@ export const PhiGroupOptionsProviderClient = createPhiControlOptionsProviderClie
   resolveLoadKey: (context) => `site-groups:${readPhiOptionsRevision(context)}`,
   resolve: (context: PhiControlOptionsProviderContext) => ({
     options: readRows(context.asyncData).flatMap((row) => {
-      const value = readIdentity(row, "id");
+      const value = readOptionValue(row, "id");
       if (!value) return [];
       const name = typeof row.name === "string" && row.name.trim() ? row.name.trim() : null;
       return [{ value, label: name ?? `#${value}` }];

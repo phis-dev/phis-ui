@@ -270,6 +270,14 @@ export function PhiAreaUploadBinding({ config, labels, onUploadComplete, collect
     return nextLocalId;
   }
 
+  /*
+   * One file, transported by us.
+   *
+   * This was `customRequest`, whose `onProgress`, `onSuccess` and `onError` fed an Ant Design file
+   * list that `showUploadList={false}` never rendered -- every visible part of the progress already
+   * came from `uploadWall` below. Dropping the primitive dropped that second, invisible copy with it.
+   * A retry from the wall comes through here as well, into the tile it already has (`localId`).
+   */
   async function uploadFileToWallItem(file: File, localId?: string) {
     const nextLocalId = startUploadWallItem(file, localId);
 
@@ -307,48 +315,6 @@ export function PhiAreaUploadBinding({ config, labels, onUploadComplete, collect
     }
   }
 
-  /*
-   * One file, transported by us.
-   *
-   * This was `customRequest`, whose `onProgress`, `onSuccess` and `onError` fed an Ant Design file
-   * list that `showUploadList={false}` never rendered -- every visible part of the progress already
-   * came from `uploadWall` below. Dropping the primitive dropped that second, invisible copy with it.
-   */
-  const receiveFile = async (uploadFile: File) => {
-    let localId = "";
-    try {
-      localId = await Promise.resolve(startUploadWallItem(uploadFile));
-      const payload = await runPhiMediaUploadSession(uploadFile, (progress) => {
-        setUploadWall((current) =>
-          current.map((item) =>
-            item.localId === localId ? { ...item, progress, status: "uploading" } : item,
-          ),
-        );
-      }, uploadInitOptions);
-      const uploadedTile = normalizePhiImagePreviewTile(payload.asset, []);
-      setUploadWall((current) =>
-        current.map((item) =>
-          item.localId === localId ? buildUploadWallItem(uploadedTile, localId) : item,
-        ),
-      );
-      onUploadComplete?.();
-    } catch (error) {
-      showUploadMessage("error", resolveUploadErrorMessage(error, labels));
-      setUploadWall((current) =>
-        current.map((item) =>
-          item.localId === localId
-            ? {
-                ...item,
-                progress: 100,
-                status: "error",
-                error: resolveUploadErrorMessage(error, labels),
-              }
-            : item,
-        ),
-      );
-    }
-  };
-
   return (
     <PhiFlexControl vertical gap={12} style={{ width: "100%" }}>
       <PhiFileDropGuard />
@@ -379,7 +345,7 @@ export function PhiAreaUploadBinding({ config, labels, onUploadComplete, collect
           dropZone
           multiple={multiple}
           accept={accept}
-          onFile={(file) => void receiveFile(file)}
+          onFile={(file) => void uploadFileToWallItem(file)}
           style={{
             padding: 0,
             width: "100%",

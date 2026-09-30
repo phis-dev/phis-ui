@@ -53,6 +53,19 @@ describe("requestPhiJson", () => {
     expect(headers["x-csrf-token"]).toBeUndefined();
   });
 
+  it("sends the caller's headers underneath its own", async () => {
+    const fetchMock = stubFetch(jsonResponse({ asset: null }));
+    await requestPhiJson("/api/site/media/7", {
+      body: {},
+      headers: { "X-Phis-Area": "admin", Accept: "text/html", "Content-Type": "text/plain" },
+    });
+    expect(requestAt(fetchMock, 0).headers).toEqual({
+      "x-phis-area": "admin",
+      accept: "application/json",
+      "content-type": "application/json",
+    });
+  });
+
   it("fetches a CSRF token first where asked and sends it", async () => {
     const fetchMock = stubFetch(jsonResponse({ token: " t0k " }), jsonResponse({ ok: true }));
     const reply = await requestPhiJson("/api/auth/account/sessions/s1", { method: "DELETE", csrf: true });

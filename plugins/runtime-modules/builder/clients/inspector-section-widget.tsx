@@ -37,6 +37,7 @@ import {
 } from "../developer-workspace-store";
 import type {
   PhiDeveloperBuilderRegionDraft,
+  PhiDeveloperBuilderStructureNodeDraft,
 } from "../developer-workspace-types";
 import { isPhiBuilderPageScopedRegion } from "../region-keys";
 import { PhiDeveloperBuilderRegionInspectorWidgetClient } from "./region-inspector";
@@ -143,7 +144,7 @@ function resolveDraftFromRootConfig(
     | "rootNodeBorder"
     | "rootNodeShadow"
   >,
-): PhiDeveloperBuilderRegionDraft {
+): PhiDeveloperBuilderStructureNodeDraft {
   const rootNodeDefaults = resolvePhiBuilderRootNodeDefaultsFromConfig(parsedConfig);
 
   return {
@@ -153,14 +154,6 @@ function resolveDraftFromRootConfig(
     rootNodeTypeKey: known.rootNodeTypeKey,
     rootNodeKind: known.rootNodeKind,
     rootNodeTitle: known.rootNodeTitle,
-    background: {
-      base: {
-        kind: "color",
-        color: "#ffffff",
-      },
-      overlay: null,
-      effect: null,
-    },
     rootNodeAnchor: known.rootNodeAnchor,
     rootNodePadding: mergePhiCmsConfigValues<PhiCmsPaddingWidgetConfig>(
       rootNodeDefaults.rootNodePadding,
@@ -185,7 +178,7 @@ function resolveDraftFromRootConfig(
 function resolveDraftFromLayoutNode(
   node: PhiCmsLayoutRenderNode | null,
   meta?: PhiBuilderContainerMeta | null,
-): PhiDeveloperBuilderRegionDraft | null {
+): PhiDeveloperBuilderStructureNodeDraft | null {
   if (!node) {
     return null;
   }
@@ -211,7 +204,7 @@ function resolveDraftFromLayoutNode(
 function resolveDraftFromRootNodeDraft(
   draft: PhiDeveloperBuilderRegionDraft | null,
   meta?: PhiBuilderContainerMeta | null,
-): PhiDeveloperBuilderRegionDraft | null {
+): PhiDeveloperBuilderStructureNodeDraft | null {
   if (!draft) {
     return null;
   }

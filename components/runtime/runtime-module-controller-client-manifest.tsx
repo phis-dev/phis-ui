@@ -1,11 +1,12 @@
 "use client";
 
-import { createContext, useContext, type ComponentType, type ReactNode } from "react";
+import type { ComponentType } from "react";
 
 import type {
   PhiRuntimeModuleControllerClientProps,
   PhiRuntimeModuleId,
 } from "../../types/cms-plugins";
+import { createPhiRuntimeModuleClientManifestContext } from "./runtime-module-client-manifest-context";
 
 /**
  * A Module's Controller Client, as the manifest holds it.
@@ -22,27 +23,9 @@ export type PhiRuntimeModuleControllerClientManifest = ReadonlyMap<
   PhiRuntimeModuleControllerClient
 >;
 
-const PhiRuntimeModuleControllerClientManifestContext =
-  createContext<PhiRuntimeModuleControllerClientManifest | null>(null);
+const controllerClientManifest = createPhiRuntimeModuleClientManifestContext<
+  PhiRuntimeModuleControllerClientManifest
+>("Runtime module Controller Client manifest is not mounted.");
 
-export function PhiRuntimeModuleControllerClientManifestProvider({
-  manifest,
-  children,
-}: {
-  manifest: PhiRuntimeModuleControllerClientManifest;
-  children: ReactNode;
-}) {
-  return (
-    <PhiRuntimeModuleControllerClientManifestContext.Provider value={manifest}>
-      {children}
-    </PhiRuntimeModuleControllerClientManifestContext.Provider>
-  );
-}
-
-export function usePhiRuntimeModuleControllerClientManifest() {
-  const manifest = useContext(PhiRuntimeModuleControllerClientManifestContext);
-  if (!manifest) {
-    throw new Error("Runtime module Controller Client manifest is not mounted.");
-  }
-  return manifest;
-}
+export const PhiRuntimeModuleControllerClientManifestProvider = controllerClientManifest.Provider;
+export const usePhiRuntimeModuleControllerClientManifest = controllerClientManifest.useManifest;

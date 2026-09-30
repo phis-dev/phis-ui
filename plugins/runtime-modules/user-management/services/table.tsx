@@ -13,6 +13,7 @@ import { createPhiTableProviderClient } from "../../../../components/widgets/cli
 import { PHI_USER_MANAGEMENT_RUNTIME_DATA_PROVIDER_DESCRIPTORS } from "../../../../plugins/runtime-modules/user-management/data-providers";
 import {
   readPhiTableProviderResponse,
+  type ReadPhiTableProviderResponseOptions,
 } from "../../../../components/widgets/client/shared/phi-table-provider-response";
 
 const API_PATH = "/api/site/admin/users";
@@ -49,8 +50,7 @@ function readRows(value: unknown) {
     : [];
 }
 
-const readApiResponse = (response: Response) =>
-  readPhiTableProviderResponse<ApiResponse>(response, { subject: "User Management" });
+const RESPONSE_OPTIONS: ReadPhiTableProviderResponseOptions = { subject: "User Management" };
 
 async function loadUsers({
   query,
@@ -72,12 +72,15 @@ async function loadUsers({
     params.set("sortOrder", primarySort.direction === "descending" ? "descend" : "ascend");
   }
 
-  const result = await readApiResponse(await fetch(`${API_PATH}?${params.toString()}`, {
-    cache: "no-store",
-    credentials: "include",
-    headers: { accept: "application/json" },
-    signal,
-  }));
+  const result = await readPhiTableProviderResponse<ApiResponse>(
+    await fetch(`${API_PATH}?${params.toString()}`, {
+      cache: "no-store",
+      credentials: "include",
+      headers: { accept: "application/json" },
+      signal,
+    }),
+    RESPONSE_OPTIONS,
+  );
   const rows = readRows(result?.rows);
   if (typeof result?.siteTotal !== "number" || !Number.isFinite(result.siteTotal) || result.siteTotal < 0) {
     throw new PhiTableProviderError("invalid-response", "User Management site total is invalid.");
@@ -105,12 +108,15 @@ async function loadUserSessions({
     historyUserId: String(userId),
     limit: String(query.pageSize && query.pageSize > 0 ? query.pageSize : 25),
   });
-  const result = await readApiResponse(await fetch(`${API_PATH}?${params.toString()}`, {
-    cache: "no-store",
-    credentials: "include",
-    headers: { accept: "application/json" },
-    signal,
-  }));
+  const result = await readPhiTableProviderResponse<ApiResponse>(
+    await fetch(`${API_PATH}?${params.toString()}`, {
+      cache: "no-store",
+      credentials: "include",
+      headers: { accept: "application/json" },
+      signal,
+    }),
+    RESPONSE_OPTIONS,
+  );
   const now = Date.now();
   const rows = readRows(result?.sessions).map((row) => {
     const revokedAt = typeof row.revokedAt === "string" ? row.revokedAt : null;
@@ -133,12 +139,15 @@ async function readUserRecord({ rowIdentity, signal }: PhiTableProviderRecordReq
     throw new PhiTableProviderError("invalid-query", "User record reading requires a positive user id.");
   }
   const params = new URLSearchParams({ userId: String(userId) });
-  const result = await readApiResponse(await fetch(`${API_PATH}?${params.toString()}`, {
-    cache: "no-store",
-    credentials: "include",
-    headers: { accept: "application/json" },
-    signal,
-  }));
+  const result = await readPhiTableProviderResponse<ApiResponse>(
+    await fetch(`${API_PATH}?${params.toString()}`, {
+      cache: "no-store",
+      credentials: "include",
+      headers: { accept: "application/json" },
+      signal,
+    }),
+    RESPONSE_OPTIONS,
+  );
   if (!result?.user || typeof result.user !== "object" || Array.isArray(result.user)) {
     throw new PhiTableProviderError("invalid-response", "User record response is invalid.");
   }
@@ -207,7 +216,7 @@ async function mutateUser(request: PhiTableProviderMutationRequest) {
 
   let result: ApiResponse | null = null;
   if (request.kind !== "action" || request.actionKey !== "refresh") {
-    result = await readApiResponse(await fetch(url, init));
+    result = await readPhiTableProviderResponse<ApiResponse>(await fetch(url, init), RESPONSE_OPTIONS);
   }
   if (request.kind === "field") {
     if (

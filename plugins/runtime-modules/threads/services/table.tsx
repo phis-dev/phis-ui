@@ -13,6 +13,7 @@ import { PHI_THREADS_RUNTIME_DATA_PROVIDER_DESCRIPTORS } from "../data-providers
 import { PHI_THREADS_RUNTIME_DATA_PROVIDER_KEYS } from "../ids";
 import {
   readPhiTableProviderResponse,
+  type ReadPhiTableProviderResponseOptions,
 } from "../../../../components/widgets/client/shared/phi-table-provider-response";
 
 const API_PATH = "/api/site/threads";
@@ -33,11 +34,10 @@ type ApiResponse = {
   message?: unknown;
 };
 
-const readApiResponse = (response: Response) =>
-  readPhiTableProviderResponse<ApiResponse>(response, {
-    subject: "Conversation",
-    errorKeys: ["message", "error"],
-  });
+const RESPONSE_OPTIONS: ReadPhiTableProviderResponseOptions = {
+  subject: "Conversation",
+  errorKeys: ["message", "error"],
+};
 
 function readIntegerFilter(query: PhiTableProviderQueryRequest["query"], key: string) {
   const value = query.filters?.[key];
@@ -99,8 +99,9 @@ async function queryThreadTable({
   if (resourceKey !== "inbox") {
     throw new PhiTableProviderError("resource-not-found", `Unknown conversation resource "${resourceKey}".`);
   }
-  const payload = await readApiResponse(
+  const payload = await readPhiTableProviderResponse<ApiResponse>(
     await fetch(`${API_PATH}?${buildThreadQuery(query).toString()}`, requestInit(signal)),
+    RESPONSE_OPTIONS,
   );
   const rows = readRows(payload?.rows).map(readThreadRow);
   return {
@@ -148,12 +149,15 @@ async function mutateThreadTable(request: PhiTableProviderMutationRequest) {
     );
   }
   const init = requestInit(request.signal);
-  await readApiResponse(await fetch(`${API_PATH}/${readThreadId(request.rowIdentity)}`, {
-    ...init,
-    method: "PATCH",
-    headers: { ...init.headers, "content-type": "application/json" },
-    body: JSON.stringify({ status }),
-  }));
+  await readPhiTableProviderResponse<ApiResponse>(
+    await fetch(`${API_PATH}/${readThreadId(request.rowIdentity)}`, {
+      ...init,
+      method: "PATCH",
+      headers: { ...init.headers, "content-type": "application/json" },
+      body: JSON.stringify({ status }),
+    }),
+    RESPONSE_OPTIONS,
+  );
   return { status: "accepted" as const, invalidation: "view" as const };
 }
 

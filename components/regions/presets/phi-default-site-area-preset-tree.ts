@@ -13,7 +13,6 @@ import type { PhiCmsPageNode, PhiResolvedCmsPageTree } from "../../../types/cms"
 import type { PhiBlockRuntime } from "../../../types";
 import { trGlobal } from "../../../server-helpers/translate";
 import { PHI_TR_CTX_WEB_UI_LABEL } from "../../../gateway/tr";
-import { PHI_PADDING } from "../../../theme/phi-tokens";
 import { PHI_SPACE } from "../../../theme/antd-css-var-contract";
 import { buildPhiCmsWidgetTypeKey } from "../../../helpers/cms-node-factories";
 import { createPhiCmsPresetNodes } from "../../../helpers/cms-preset-nodes";
@@ -429,8 +428,8 @@ export async function buildPhiDefaultSiteAreaPresetTree({
                 balancedSides: true,
                 align: "stretch",
                 justify: "space-between",
-                paddingTop: PHI_PADDING.base,
-                paddingBottom: PHI_PADDING.base,
+                paddingTop: PHI_SPACE.base,
+                paddingBottom: PHI_SPACE.base,
                 style: { minHeight: "96px" },
               },
             },
@@ -454,8 +453,8 @@ export async function buildPhiDefaultSiteAreaPresetTree({
                   horizontal: "center",
                   vertical: "middle",
                 },
-                gap: PHI_PADDING.md,
-                padding: `${PHI_PADDING.md}px ${PHI_PADDING.lg}px`,
+                gap: PHI_SPACE.md,
+                padding: `${PHI_SPACE.md} ${PHI_SPACE.lg}`,
                 wrap: true,
                 style: { minHeight: "48px", width: "100%" },
               },

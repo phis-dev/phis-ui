@@ -10,9 +10,12 @@ import {
 
 import type {
   PhiSignalAddress,
+  PhiSignalRoute,
   PhiSignalSender,
   PhiSignalScope,
+  PhiSignalValue,
 } from "../../types";
+import { findPhiSignalRoutesByCapabilityId } from "../../types/signals";
 import { usePhiSignalDispatcher, type PhiSignalInput } from "./runtime-signal-bus";
 
 export type PhiSignalIdentity = {
@@ -90,4 +93,36 @@ export function usePhiSignalEmitter(explicitSender?: PhiSignalSender) {
     },
     [dispatchSignal, runtimeSignalEmissionsEnabled, sender],
   );
+}
+
+export type PhiSignalEmitter = ReturnType<typeof usePhiSignalEmitter>;
+
+/**
+ * Sends one capability of a surface's own down every emit route declared for it.
+ *
+ * The Form and the Overlay each carried this loop; a Control goes through
+ * `usePhiControlSignalController` instead, which also listens and has no correlation to pass on. A
+ * route without a receiver is not wired yet, and a JSON route without a schema could not be read by
+ * anyone, so neither is sent. A route whose value type is `none` carries no value whatever was given.
+ */
+export function emitPhiSignalCapability(
+  emitSignal: PhiSignalEmitter,
+  routes: readonly PhiSignalRoute[] | null | undefined,
+  capabilityId: string,
+  value: PhiSignalValue,
+  correlationId?: string | null,
+) {
+  for (const route of findPhiSignalRoutesByCapabilityId(routes, capabilityId)) {
+    if (route.receiver == null || (route.valueType === "json" && !route.valueSchema)) continue;
+    emitSignal({
+      scope: route.scope,
+      channel: route.channel,
+      action: route.action,
+      value: route.valueType === "none" ? null : value,
+      valueType: route.valueType,
+      valueSchema: route.valueSchema ?? null,
+      receiver: route.receiver,
+      ...(correlationId ? { correlationId } : {}),
+    });
+  }
 }

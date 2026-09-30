@@ -21,7 +21,11 @@ import {
   findPhiSignalRoutesByCapabilityId,
 } from "../../types/signals";
 import { readPhiTableActionSignalValue } from "../../types/table-widget";
-import { usePhiSignalEmitter, PhiSignalIdentityProvider } from "../runtime/runtime-signal-identity";
+import {
+  emitPhiSignalCapability,
+  usePhiSignalEmitter,
+  PhiSignalIdentityProvider,
+} from "../runtime/runtime-signal-identity";
 import { usePhiSignalListener } from "../runtime/runtime-signal-bus";
 import { registerPhiSignalInstance } from "../runtime/runtime-signal-registry";
 import { usePhiSignalRuntimePartition } from "../runtime/runtime-signal-partition";
@@ -129,19 +133,7 @@ export function PhiOverlayContainerClient({
   }, [config.signalRoutes?.emits, emitSignal]);
 
   const emitCapability = useCallback((capabilityId: string, value: PhiSignal["value"], correlationId?: string) => {
-    for (const route of findPhiSignalRoutesByCapabilityId(config.signalRoutes?.emits, capabilityId)) {
-      if (route.receiver == null) continue;
-      emitSignal({
-        scope: route.scope,
-        channel: route.channel,
-        action: route.action,
-        value: route.valueType === "none" ? null : value,
-        valueType: route.valueType,
-        valueSchema: route.valueSchema ?? null,
-        receiver: route.receiver,
-        ...(correlationId ? { correlationId } : {}),
-      });
-    }
+    emitPhiSignalCapability(emitSignal, config.signalRoutes?.emits, capabilityId, value, correlationId);
   }, [config.signalRoutes?.emits, emitSignal]);
 
   const updateOpen = useCallback((nextOpen: boolean) => {
