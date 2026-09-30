@@ -56,8 +56,8 @@ export function PhiThemeModeSwitchWidget({
       readOnly={readOnly || !signalsEnabled}
       size={config?.controlSize}
       label={config?.label}
-      checkedChildren={config?.checkedChildren}
-      unCheckedChildren={config?.unCheckedChildren}
+      checkedLabel={config?.darkLabel}
+      uncheckedLabel={config?.lightLabel}
       onChange={requestMode}
     />
   );

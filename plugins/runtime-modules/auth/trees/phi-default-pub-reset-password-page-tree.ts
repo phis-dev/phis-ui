@@ -122,7 +122,7 @@ export async function buildPhiDefaultPubResetPasswordPageTree({
         label: "pub reset password intro",
         config: {
           text: "If the account exists, a reset email is on its way. Open the link in that email to choose a new password.",
-          type: "secondary",
+          tone: "secondary",
           visibleWhen: withoutToken,
         },
       }),

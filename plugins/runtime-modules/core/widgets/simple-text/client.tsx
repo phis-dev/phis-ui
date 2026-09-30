@@ -12,6 +12,8 @@ import { PhiIcon } from "../../../../../components/shell/phi-icon";
 import { readPhiWidgetFontFamily, resolvePhiWidgetFontFamily } from "../../../../../components/widgets/helpers/font-family";
 import { readPhiWidgetFontSize, resolvePhiWidgetFontSize } from "../../../../../components/widgets/helpers/font-size";
 import type { PhiClientBlockBaseProps, PhiCmsInstanceId, PhiRenderableBlockRenderMode } from "../../../../../types";
+import type { PhiTextTone } from "../../../../../components/widgets/config/text-tone";
+import { hasPhiSimpleTextMark, type PhiSimpleTextMark } from "./config";
 import type { PhiWidgetFontFamilyKey, PhiWidgetFontSizeKey } from "../../../../../types/site-theme";
 import { PhiFlexControl } from "../../../../../components/controls/phi-flex-control";
 import { PhiTypographyControl } from "../../../../../components/controls/phi-typography-control";
@@ -31,13 +33,9 @@ export type PhiSimpleTextWidgetClientConfig = {
   fontSize?: PhiWidgetFontSizeKey;
   external?: boolean;
   newTab?: boolean;
-  type?: "secondary" | "success" | "warning" | "danger";
-  strong?: boolean;
-  italic?: boolean;
-  underline?: boolean;
-  delete?: boolean;
+  tone?: PhiTextTone;
+  marks?: PhiSimpleTextMark[];
   disabled?: boolean;
-  code?: boolean;
 };
 
 export type PhiSimpleTextWidgetClientProps = PhiClientBlockBaseProps<
@@ -85,12 +83,12 @@ export function PhiSimpleTextWidgetClient({
   const fontFamilyValue = fontFamilyOverride.active ? fontFamilyOverride.value : config?.fontFamily;
   const fontSizeValue = fontSizeOverride.active ? fontSizeOverride.value : config?.fontSize;
   const styleValue = {
-    strong: styleOverride.strong ?? config?.strong,
-    italic: styleOverride.italic ?? config?.italic,
-    underline: styleOverride.underline ?? config?.underline,
-    delete: styleOverride.delete ?? config?.delete,
+    strong: styleOverride.strong ?? hasPhiSimpleTextMark(config, "bold"),
+    italic: styleOverride.italic ?? hasPhiSimpleTextMark(config, "italic"),
+    underline: styleOverride.underline ?? hasPhiSimpleTextMark(config, "underline"),
+    delete: styleOverride.delete ?? hasPhiSimpleTextMark(config, "strike"),
     disabled: config?.disabled,
-    code: styleOverride.code ?? config?.code,
+    code: styleOverride.code ?? hasPhiSimpleTextMark(config, "code"),
   };
   const resolvedFontFamily = styleValue.code
     ? token.fontFamilyCode
@@ -176,7 +174,7 @@ export function PhiSimpleTextWidgetClient({
     >
       {iconValue ? <PhiIcon name={iconValue} size="1.25em" /> : null}
       <PhiTypographyControl
-        type={config?.type}
+        type={config?.tone}
         strong={styleValue.strong}
         italic={styleValue.italic}
         underline={styleValue.underline}

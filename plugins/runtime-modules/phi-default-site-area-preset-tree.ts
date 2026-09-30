@@ -664,7 +664,7 @@ export async function buildPhiDefaultSiteAreaPresetTree({
               label: "pub footer bottom text",
               config: {
                 text: footerBottomText,
-                type: "secondary",
+                tone: "secondary",
               },
               contentId: null,
             },

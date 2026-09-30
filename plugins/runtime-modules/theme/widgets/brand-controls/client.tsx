@@ -2712,8 +2712,8 @@ export function PhiBuilderBrandStyleControlsWidgetClient({
                   <PhiSwitchControl
                     checked={wireframe}
                     disabled={saving}
-                    checkedChildren="On"
-                    unCheckedChildren="Off"
+                    checkedLabel="On"
+                    uncheckedLabel="Off"
                     onChange={(checked) => updateToken({ wireframe: checked })}
                   />
                 </PhiFlexControl>
@@ -3252,8 +3252,8 @@ export function PhiBuilderBrandIdentityControlsWidgetClient({
                   <PhiSwitchControl
                     label="Show name"
                     checked={showsWordmark}
-                    checkedChildren="On"
-                    unCheckedChildren="Off"
+                    checkedLabel="On"
+                    uncheckedLabel="Off"
                     onChange={(checked) => publishDraft(mergeThemeWordmarkShows(state.draft, checked))}
                   />
                   {/* Everything below sets the name. With the name switched off there is nothing to set. */}

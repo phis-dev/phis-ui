@@ -65,8 +65,8 @@ export function PhiSwitchWidget({
       readOnly={controlSignals.readOnly}
       size={config?.controlSize}
       label={config?.label}
-      checkedChildren={config?.checkedChildren}
-      unCheckedChildren={config?.unCheckedChildren}
+      checkedLabel={config?.checkedLabel}
+      uncheckedLabel={config?.uncheckedLabel}
       onChange={publish}
     />
   );

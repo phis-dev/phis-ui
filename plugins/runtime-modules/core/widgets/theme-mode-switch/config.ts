@@ -1,7 +1,10 @@
 import { resolvePhiCmsWidgetPluginKey } from "../../../../../constants/cms-widget-types";
 import type { PhiCmsWidgetPlugin } from "../../../../../types";
-import { readString } from "../../../../../components/widgets/config/parser-primitives";
-import type { PhiCmsWidgetConfigBase } from "../../../../../components/widgets/config/parser-primitives";
+import {
+  readRenderableBlockConfig,
+  readString,
+  type PhiCmsWidgetConfigBase,
+} from "../../../../../components/widgets/config/parser-primitives";
 import { PHI_COMPACT_CONTROL_PRESENTATION_FIELDS } from "../../../../../components/widgets/config/control-signal-config";
 
 type PhiThemeModeSwitchSize = "small" | "medium";
@@ -18,8 +21,8 @@ type PhiThemeModeSwitchSize = "small" | "medium";
  */
 export type PhiThemeModeSwitchWidgetConfig = PhiCmsWidgetConfigBase & {
   label?: string;
-  checkedChildren?: string;
-  unCheckedChildren?: string;
+  darkLabel?: string;
+  lightLabel?: string;
   controlSize?: PhiThemeModeSwitchSize;
 };
 
@@ -31,9 +34,10 @@ export function parsePhiThemeModeSwitchWidgetConfig(
   config: Record<string, unknown>,
 ): PhiThemeModeSwitchWidgetConfig {
   return {
+    ...readRenderableBlockConfig(config),
     label: readString(config.label),
-    checkedChildren: readString(config.checkedChildren),
-    unCheckedChildren: readString(config.unCheckedChildren),
+    darkLabel: readString(config.darkLabel),
+    lightLabel: readString(config.lightLabel),
     controlSize: readSize(config.controlSize),
   };
 }
@@ -59,13 +63,13 @@ export const PHI_THEME_MODE_SWITCH_WIDGET_DEFINITION = {
    */
   fields: [
     { key: "label", type: "string", label: "Label" },
-    { key: "checkedChildren", type: "string", label: "Dark Text" },
-    { key: "unCheckedChildren", type: "string", label: "Light Text" },
+    { key: "darkLabel", type: "string", label: "Dark Text" },
+    { key: "lightLabel", type: "string", label: "Light Text" },
     ...PHI_COMPACT_CONTROL_PRESENTATION_FIELDS,
   ],
   defaultConfig: {
-    checkedChildren: "Dark",
-    unCheckedChildren: "Light",
+    darkLabel: "Dark",
+    lightLabel: "Light",
   },
   parseConfig: parsePhiThemeModeSwitchWidgetConfig,
 } satisfies Pick<

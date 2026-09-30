@@ -14,8 +14,10 @@ export type PhiSwitchControlProps = {
   disabled?: boolean;
   readOnly?: boolean;
   loading?: boolean;
-  checkedChildren?: ReactNode;
-  unCheckedChildren?: ReactNode;
+  /** What the switch reads while on. */
+  checkedLabel?: ReactNode;
+  /** What the switch reads while off. */
+  uncheckedLabel?: ReactNode;
   size?: Exclude<PhiControlSize, "large">;
   onChange?: (checked: boolean) => void;
 };
@@ -27,8 +29,8 @@ export function PhiSwitchControl({
   disabled,
   readOnly,
   loading,
-  checkedChildren,
-  unCheckedChildren,
+  checkedLabel,
+  uncheckedLabel,
   size,
   onChange,
 }: PhiSwitchControlProps) {
@@ -39,8 +41,8 @@ export function PhiSwitchControl({
         checked={checked}
         disabled={disabled || readOnly || !onChange}
         loading={loading}
-        checkedChildren={checkedChildren}
-        unCheckedChildren={unCheckedChildren}
+        checkedChildren={checkedLabel}
+        unCheckedChildren={uncheckedLabel}
         size={size}
         onChange={onChange}
       />

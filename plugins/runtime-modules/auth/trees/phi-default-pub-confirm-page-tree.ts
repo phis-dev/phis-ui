@@ -175,7 +175,7 @@ export async function buildPhiDefaultPubConfirmPageTree({
         label: "pub confirmation missing token",
         config: {
           text: "No confirmation token was provided. Open the confirmation link from your email.",
-          type: "secondary",
+          tone: "secondary",
           visibleWhen: withoutToken,
         },
       }),

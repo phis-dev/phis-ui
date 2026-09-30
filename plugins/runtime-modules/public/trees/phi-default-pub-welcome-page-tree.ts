@@ -135,8 +135,8 @@ export async function buildPhiDefaultPubWelcomePageTree({
         sortOrder: 0,
         label: "pub welcome theme mode switch",
         config: {
-          checkedChildren: "Dark",
-          unCheckedChildren: "Light",
+          darkLabel: "Dark",
+          lightLabel: "Light",
         },
       }),
       nodes.widget({

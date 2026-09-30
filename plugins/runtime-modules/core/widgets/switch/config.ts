@@ -14,8 +14,8 @@ type PhiSwitchControlSize = "small" | "medium";
 export type PhiSwitchWidgetConfig = PhiControlConfig<PhiSwitchControlSize> & {
   label?: string;
   defaultChecked?: boolean;
-  checkedChildren?: string;
-  unCheckedChildren?: string;
+  checkedLabel?: string;
+  uncheckedLabel?: string;
 };
 
 export function parsePhiSwitchWidgetConfig(config: Record<string, unknown>): PhiSwitchWidgetConfig {
@@ -29,8 +29,8 @@ export function parsePhiSwitchWidgetConfig(config: Record<string, unknown>): Phi
     ...controlState,
     label: readString(config.label),
     defaultChecked: readBoolean(config.defaultChecked) ?? false,
-    checkedChildren: readString(config.checkedChildren),
-    unCheckedChildren: readString(config.unCheckedChildren),
+    checkedLabel: readString(config.checkedLabel),
+    uncheckedLabel: readString(config.uncheckedLabel),
   };
 }
 
@@ -56,8 +56,8 @@ export const PHI_SWITCH_WIDGET_DEFINITION = {
   fields: [
     { key: "label", type: "string", label: "Label" },
     { key: "defaultChecked", type: "boolean", label: "Default Checked" },
-    { key: "checkedChildren", type: "string", label: "Checked Text" },
-    { key: "unCheckedChildren", type: "string", label: "Unchecked Text" },
+    { key: "checkedLabel", type: "string", label: "Checked Text" },
+    { key: "uncheckedLabel", type: "string", label: "Unchecked Text" },
     ...PHI_COMPACT_CONTROL_PRESENTATION_FIELDS,
     ...PHI_CONTROL_STATE_FIELDS,
   ],

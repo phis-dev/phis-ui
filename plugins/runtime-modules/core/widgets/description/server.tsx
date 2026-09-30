@@ -6,6 +6,7 @@ import {
 import type { PhiBlockRuntime, PhiServerBlockBaseProps } from "../../../../../types";
 import { maskPhiTextPlaceholders, resolvePhiTextPlaceholders } from "../../../../../helpers/text-placeholders";
 import type { PhiCmsDescriptionWidgetConfig } from "./config";
+import type { PhiTextTone } from "../../../../../components/widgets/config/text-tone";
 import {
   PHI_COLOR,
   PHI_FONT_SIZE,
@@ -49,6 +50,19 @@ async function translateLabel(
     ? await trGlobalForLocale(locale, masked.text)
     : await trGlobal(masked.text);
   return resolvePhiTextPlaceholders(translated, masked.names, runtime);
+}
+
+function resolveDescriptionToneColor(tone: PhiTextTone | undefined) {
+  switch (tone) {
+    case "success":
+      return PHI_COLOR.success;
+    case "warning":
+      return PHI_COLOR.warning;
+    case "danger":
+      return PHI_COLOR.error;
+    default:
+      return PHI_COLOR.textSecondary;
+  }
 }
 
 export async function PhiDescriptionWidget({
@@ -126,7 +140,7 @@ export async function PhiDescriptionWidget({
               style={{
                 margin: 0,
                 marginBottom: 0,
-                color: PHI_COLOR.textSecondary,
+                color: resolveDescriptionToneColor(config?.tone),
                 fontSize: PHI_FONT_SIZE.lg,
                 lineHeight: PHI_LINE_HEIGHT.lg,
               }}

@@ -6,6 +6,7 @@ import { PhiTagControl } from "../../../../../components/controls/phi-tag-contro
 import type { PhiClientBlockBaseProps } from "../../../../../types";
 import { usePhiConfig } from "../../../../../components/root/phi-config-provider";
 import { PhiTypographyControl } from "../../../../../components/controls/phi-typography-control";
+import type { PhiTextTone } from "../../../../../components/widgets/config/text-tone";
 const PHI_LINE_HEIGHT_BASE = 1.5;
 const PHI_LINE_HEIGHT_LG = 1.6;
 const PHI_FONT_WEIGHT_STRONG = 600;
@@ -21,11 +22,12 @@ export type PhiDescriptionWidgetClientLabels = {
 
 export type PhiDescriptionWidgetClientProps = PhiClientBlockBaseProps<
   PhiDescriptionWidgetClientLabels,
-  Record<string, never>
+  { tone?: PhiTextTone }
 >;
 
 export function PhiDescriptionWidgetClient({
   labels,
+  config,
 }: PhiDescriptionWidgetClientProps) {
   const { token } = usePhiConfig();
   const asideItems = (labels.asideItems ?? []).filter(Boolean);
@@ -59,9 +61,10 @@ export function PhiDescriptionWidgetClient({
           ) : null}
           {labels.description ? (
             <PhiTypographyControl presentation="paragraph"
+              type={config?.tone}
               style={{
                 marginBottom: 0,
-                color: token.colorTextSecondary,
+                color: config?.tone ? undefined : token.colorTextSecondary,
                 fontSize: token.fontSizeLG,
                 lineHeight: PHI_LINE_HEIGHT_LG,
               }}

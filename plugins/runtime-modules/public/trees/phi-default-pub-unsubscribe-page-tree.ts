@@ -97,7 +97,7 @@ export async function buildPhiDefaultPubUnsubscribePageTree({
         config: {
           title: "This link is incomplete",
           description: "Open the unsubscribe link from the message itself, or use the most recent one you received.",
-          type: "secondary",
+          tone: "secondary",
           visibleWhen: withoutToken,
         },
       }),

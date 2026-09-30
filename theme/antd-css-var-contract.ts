@@ -28,6 +28,8 @@ export const PHI_COLOR = {
   linkActive: "var(--ant-color-link-active)",
   split: "var(--ant-color-split)",
   error: "var(--ant-color-error)",
+  success: "var(--ant-color-success)",
+  warning: "var(--ant-color-warning)",
 } as const;
 
 export const PHI_SPACE = {

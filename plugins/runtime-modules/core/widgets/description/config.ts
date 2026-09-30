@@ -2,6 +2,11 @@ import { resolvePhiCmsWidgetPluginKey } from "../../../../../constants/cms-widge
 import { PhiCmsWidgetType } from "../../../../../constants/cms-widget-types";
 import type { PhiCmsWidgetPlugin } from "../../../../../types";
 import { readRenderableBlockConfig, readString, type PhiCmsWidgetConfigBase } from "../../../../../components/widgets/config/parser-primitives";
+import {
+  PHI_TEXT_TONE_FIELD_OPTIONS,
+  readPhiTextTone,
+  type PhiTextTone,
+} from "../../../../../components/widgets/config/text-tone";
 
 export type PhiCmsDescriptionWidgetConfig = PhiCmsWidgetConfigBase & {
   eyebrow?: string;
@@ -10,6 +15,8 @@ export type PhiCmsDescriptionWidgetConfig = PhiCmsWidgetConfigBase & {
   asideTitle?: string;
   asideItems?: string[];
   footer?: string;
+  /** The tone of the description text; absent is the default secondary text. */
+  tone?: PhiTextTone;
 };
 
 export function parsePhiCmsDescriptionWidgetConfig(
@@ -27,6 +34,7 @@ export function parsePhiCmsDescriptionWidgetConfig(
       .map((item) => (typeof item === "string" ? item : undefined))
       .filter((item): item is string => item != null),
     footer: readString(config.footer),
+    tone: readPhiTextTone(config.tone),
   };
 }
 
@@ -46,6 +54,7 @@ export const PHI_DESCRIPTION_WIDGET_DEFINITION = {
     { key: "asideTitle", type: "string", label: "Aside Title" },
     { key: "asideItems", type: "string", label: "Aside Items", editorPlacement: "toolbar" },
     { key: "footer", type: "string", label: "Footer" },
+    { key: "tone", type: "choice", label: "Tone", options: [...PHI_TEXT_TONE_FIELD_OPTIONS] },
   ],
   parseConfig: parsePhiCmsDescriptionWidgetConfig,
 } satisfies Pick<

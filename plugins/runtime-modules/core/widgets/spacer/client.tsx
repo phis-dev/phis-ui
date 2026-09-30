@@ -2,9 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 
-import type { PhiBlockBaseProps, PhiNoLabels, PhiRenderableBlockBase } from "../../../../../types";
-
-export type PhiSpacerWidgetConfig = PhiRenderableBlockBase;
+import type { PhiBlockBaseProps, PhiNoLabels } from "../../../../../types";
+import type { PhiSpacerWidgetConfig } from "./config";
 
 export type PhiSpacerWidgetProps = PhiBlockBaseProps<
   PhiNoLabels,

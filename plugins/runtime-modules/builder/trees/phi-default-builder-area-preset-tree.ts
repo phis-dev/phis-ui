@@ -633,8 +633,8 @@ export async function buildPhiDefaultBuilderAreaPresetTree({
         sortOrder: 1,
         label: "Theme mode switch",
         config: {
-          checkedChildren: labels.themeSwitch.dark,
-          unCheckedChildren: labels.themeSwitch.light,
+          darkLabel: labels.themeSwitch.dark,
+          lightLabel: labels.themeSwitch.light,
         },
       }),
       nodes.widget({
@@ -2565,8 +2565,8 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                 label: "Brand preview mode switch",
                 config: {
                   defaultChecked: runtime.site.theme?.mode === "dark",
-                  checkedChildren: labels.themeSwitch.dark,
-                  unCheckedChildren: labels.themeSwitch.light,
+                  checkedLabel: labels.themeSwitch.dark,
+                  uncheckedLabel: labels.themeSwitch.light,
                   key: "brandPreviewThemeMode",
                   signalRoutes: {
                     emits: [
@@ -2783,7 +2783,7 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                 label: "Builder module usage intro",
                 config: {
                   text: modulesLabels?.usage.intro ?? "",
-                  type: "secondary",
+                  tone: "secondary",
                 },
               }),
               nodes.widget({
@@ -2860,7 +2860,7 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                 label: "Builder public route collision intro",
                 config: {
                   text: modulesLabels?.publicRoutes.intro ?? "",
-                  type: "secondary",
+                  tone: "secondary",
                 },
               }),
               nodes.widget({
@@ -3230,7 +3230,7 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                 slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
                 sortOrder: 0,
                 label: "Builder delete area warning",
-                config: { text: "", type: "danger" },
+                config: { text: "", tone: "danger" },
               }),
               nodes.widget({
                 typeKey: "simple-text",
@@ -3241,7 +3241,7 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                 label: "Builder delete area survives",
                 config: {
                   text: revisionsLabels?.deleteArea.survives ?? "",
-                  type: "secondary",
+                  tone: "secondary",
                 },
               }),
               nodes.widget({

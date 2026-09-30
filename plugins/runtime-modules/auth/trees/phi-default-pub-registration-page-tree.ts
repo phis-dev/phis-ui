@@ -126,7 +126,7 @@ export async function buildPhiDefaultPubRegistrationPageTree({
         label: "pub registration notice",
         config: {
           text: "We only use your details to create and support your account.",
-          type: "secondary",
+          tone: "secondary",
         },
       }),
     ],

@@ -17,6 +17,30 @@ import {
   PHI_WIDGET_FONT_SIZE_OPTIONS,
   readPhiWidgetFontSize,
 } from "../../../../../components/widgets/helpers/font-size";
+import {
+  PHI_TEXT_TONE_FIELD_OPTIONS,
+  readPhiTextTone,
+  type PhiTextTone,
+} from "../../../../../components/widgets/config/text-tone";
+
+/** The marks a Simple Text can carry, each on or off. */
+export const PHI_SIMPLE_TEXT_MARKS = ["bold", "italic", "underline", "strike", "code"] as const;
+
+export type PhiSimpleTextMark = (typeof PHI_SIMPLE_TEXT_MARKS)[number];
+
+function readSimpleTextMarks(value: unknown): PhiSimpleTextMark[] | undefined {
+  if (!Array.isArray(value)) {
+    return undefined;
+  }
+  return PHI_SIMPLE_TEXT_MARKS.filter((mark) => value.includes(mark));
+}
+
+export function hasPhiSimpleTextMark(
+  config: { marks?: readonly PhiSimpleTextMark[] } | null | undefined,
+  mark: PhiSimpleTextMark,
+) {
+  return config?.marks?.includes(mark) === true;
+}
 
 export type PhiCmsSimpleTextWidgetConfig = PhiCmsWidgetConfigBase & {
   text?: string;
@@ -27,13 +51,9 @@ export type PhiCmsSimpleTextWidgetConfig = PhiCmsWidgetConfigBase & {
   fontSize?: PhiWidgetFontSizeKey;
   external?: boolean;
   newTab?: boolean;
-  type?: "secondary" | "success" | "warning" | "danger";
-  strong?: boolean;
-  italic?: boolean;
-  underline?: boolean;
-  delete?: boolean;
+  tone?: PhiTextTone;
+  marks?: PhiSimpleTextMark[];
   disabled?: boolean;
-  code?: boolean;
 };
 
 export function parsePhiCmsSimpleTextWidgetConfig(
@@ -51,18 +71,9 @@ export function parsePhiCmsSimpleTextWidgetConfig(
     fontSize: readPhiWidgetFontSize(config.fontSize),
     external: readBoolean(config.external),
     newTab: readBoolean(config.newTab),
-    type: ((): PhiCmsSimpleTextWidgetConfig["type"] => {
-      const value = readString(config.type);
-      return value === "secondary" || value === "success" || value === "warning" || value === "danger"
-        ? value
-        : undefined;
-    })(),
-    strong: readBoolean(config.strong),
-    italic: readBoolean(config.italic),
-    underline: readBoolean(config.underline),
-    delete: readBoolean(config.delete),
+    tone: readPhiTextTone(config.tone),
+    marks: readSimpleTextMarks(config.marks),
     disabled: readBoolean(config.disabled),
-    code: readBoolean(config.code),
   };
 }
 
@@ -106,24 +117,15 @@ export const PHI_SIMPLE_TEXT_WIDGET_DEFINITION = {
       options: [...PHI_WIDGET_FONT_SIZE_OPTIONS],
     },
     {
-      key: "type",
+      key: "tone",
       type: "choice",
-      label: "Type",
-      options: [
-        { value: "secondary", label: "Secondary" },
-        { value: "success", label: "Success" },
-        { value: "warning", label: "Warning" },
-        { value: "danger", label: "Danger" },
-      ],
+      label: "Tone",
+      options: [...PHI_TEXT_TONE_FIELD_OPTIONS],
     },
     { key: "external", type: "boolean", label: "External" },
     { key: "newTab", type: "boolean", label: "Open In New Tab" },
-    { key: "strong", type: "boolean", label: "Strong", editorPlacement: "toolbar" },
-    { key: "italic", type: "boolean", label: "Italic", editorPlacement: "toolbar" },
-    { key: "underline", type: "boolean", label: "Underline", editorPlacement: "toolbar" },
-    { key: "delete", type: "boolean", label: "Delete", editorPlacement: "toolbar" },
+    { key: "marks", type: "string", label: "Marks", editorPlacement: "toolbar" },
     { key: "disabled", type: "boolean", label: "Disabled" },
-    { key: "code", type: "boolean", label: "Code", editorPlacement: "toolbar" },
   ],
   defaultConfig: {
     /*

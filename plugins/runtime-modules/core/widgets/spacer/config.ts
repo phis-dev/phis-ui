@@ -1,6 +1,12 @@
 import { resolvePhiCmsWidgetPluginKey } from "../../../../../constants/cms-widget-types";
 import type { PhiCmsWidgetPlugin } from "../../../../../types";
-import { parsePhiEmptyWidgetConfig } from "../../../../../components/widgets/config/helpers";
+import {
+  readRenderableBlockConfig,
+  type PhiCmsWidgetConfigBase,
+} from "../../../../../components/widgets/config/parser-primitives";
+
+/** A Spacer has no settings of its own; what it takes is the block's: size, anchor, effects. */
+export type PhiSpacerWidgetConfig = PhiCmsWidgetConfigBase;
 
 export const PHI_SPACER_WIDGET_DEFINITION = {
   kind: "widget",
@@ -13,9 +19,9 @@ export const PHI_SPACER_WIDGET_DEFINITION = {
   iconFamily: "layout",
   slotSizePolicy: "fill",
   fields: [],
-  parseConfig: parsePhiEmptyWidgetConfig,
+  parseConfig: (config: Record<string, unknown>): PhiSpacerWidgetConfig => readRenderableBlockConfig(config),
 } satisfies Pick<
-  PhiCmsWidgetPlugin<Record<string, never>>,
+  PhiCmsWidgetPlugin<PhiSpacerWidgetConfig>,
   | "kind"
   | "pluginKey"
   | "typeKey"

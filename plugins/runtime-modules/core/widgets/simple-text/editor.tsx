@@ -17,7 +17,13 @@ import {
 } from "../../../../../components/widgets/client/shared/phi-widget-tool-buttons";
 import { usePhiWidgetScaffoldPopup } from "../../../../../components/widgets/client/shared/phi-widget-scaffold-popup";
 import { usePhiAuthoringToolsLabels } from "../../../../../components/widgets/client/shared/phi-authoring-tools-labels";
-import { resolvePhiSimpleTextWidgetText, type PhiSimpleTextWidgetRenderableConfig } from "./config";
+import {
+  hasPhiSimpleTextMark,
+  PHI_SIMPLE_TEXT_MARKS,
+  resolvePhiSimpleTextWidgetText,
+  type PhiSimpleTextMark,
+  type PhiSimpleTextWidgetRenderableConfig,
+} from "./config";
 import { resolvePhiWidgetFontFamily } from "../../../../../components/widgets/helpers/font-family";
 import { resolvePhiWidgetFontSize } from "../../../../../components/widgets/helpers/font-size";
 import { PHI_Z_INDEX } from "../../../../../theme/phi-tokens";
@@ -29,13 +35,11 @@ export type PhiSimpleTextWidgetEditorProps = {
   onChangeText?: (text: string) => void;
 };
 
-type PhiStyleToggleKey = "strong" | "italic" | "underline" | "delete" | "code";
-
-const STYLE_TOGGLES: ReadonlyArray<{ key: PhiStyleToggleKey; label: string }> = [
-  { key: "strong", label: "Strong" },
+const STYLE_TOGGLES: ReadonlyArray<{ key: PhiSimpleTextMark; label: string }> = [
+  { key: "bold", label: "Strong" },
   { key: "italic", label: "Italic" },
   { key: "underline", label: "Underline" },
-  { key: "delete", label: "Delete" },
+  { key: "strike", label: "Delete" },
   { key: "code", label: "Code" },
 ];
 
@@ -74,9 +78,13 @@ export function PhiSimpleTextWidgetStyleButton({
           {STYLE_TOGGLES.map((toggle) => (
             <PhiCheckboxControl
               key={toggle.key}
-              checked={config?.[toggle.key] === true}
+              checked={hasPhiSimpleTextMark(config, toggle.key)}
               label={toggle.label}
-              onChange={(checked) => onChange({ [toggle.key]: checked })}
+              onChange={(checked) => {
+                const marks = PHI_SIMPLE_TEXT_MARKS.filter((mark) =>
+                  mark === toggle.key ? checked : hasPhiSimpleTextMark(config, mark));
+                onChange({ marks });
+              }}
             />
           ))}
         </PhiFlexControl>
@@ -153,12 +161,12 @@ export function PhiSimpleTextWidgetEditor({
   const [editedText, setEditedText] = useState<string | null>(null);
   const draftText = editedText ?? text;
   const textDecoration = [
-    config?.underline ? "underline" : null,
-    config?.delete ? "line-through" : null,
+    hasPhiSimpleTextMark(config, "underline") ? "underline" : null,
+    hasPhiSimpleTextMark(config, "strike") ? "line-through" : null,
   ]
     .filter(Boolean)
     .join(" ");
-  const resolvedFontFamily = config?.code
+  const resolvedFontFamily = hasPhiSimpleTextMark(config, "code")
     ? token.fontFamilyCode
     : resolvePhiWidgetFontFamily(config?.fontFamily, fonts, token);
   const resolvedFontSize = resolvePhiWidgetFontSize(config?.fontSize, token, "lg");
@@ -217,8 +225,8 @@ export function PhiSimpleTextWidgetEditor({
           minHeight: 0,
           fontSize: resolvedFontSize ?? "inherit",
           lineHeight: resolvedFontSize ? 1.6 : "inherit",
-          fontWeight: config?.strong ? 600 : undefined,
-          fontStyle: config?.italic ? "italic" : undefined,
+          fontWeight: hasPhiSimpleTextMark(config, "bold") ? 600 : undefined,
+          fontStyle: hasPhiSimpleTextMark(config, "italic") ? "italic" : undefined,
           textDecoration: textDecoration || undefined,
           color: config?.color ?? undefined,
           fontFamily: resolvedFontFamily,
@@ -229,7 +237,7 @@ export function PhiSimpleTextWidgetEditor({
            * form and wrong here -- the Widget stands on whatever its Region is painted with. Code text is
            * the exception, because there the fill is part of how the text reads.
            */
-          backgroundColor: config?.code ? "var(--ant-color-fill-secondary, rgba(0, 0, 0, 0.04))" : "transparent",
+          backgroundColor: hasPhiSimpleTextMark(config, "code") ? "var(--ant-color-fill-secondary, rgba(0, 0, 0, 0.04))" : "transparent",
         }}
         fitContent
         style={{
