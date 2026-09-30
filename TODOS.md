@@ -732,6 +732,13 @@ built. Remove an entry when it is done.
   `@phis/server/groups:v1`, never branches on a Directory provider, and leaves provider setup and sync to
   the Add-on half.
 - **Module distribution.** Designed in [design/MODULE_DISTRIBUTION.md](./design/MODULE_DISTRIBUTION.md).
+- **News Module: a Public address and one page.** News is a Core content type whose read path is built
+  and whose write path is not. The Module half belongs here as a first-party Runtime Module that
+  contributes `/news`, a `public:header` navigation entry and the widgets, and owns no data -- every
+  question about who may write, what a version is and when an entry disappears stays Core's. Designed,
+  together with the Core half it waits on, in
+  [../phis-server/design/NEWS.md](../phis-server/design/NEWS.md); the circular that may follow it is
+  [../phis-server/design/NOTIFICATIONS.md](../phis-server/design/NOTIFICATIONS.md).
 - **Say what a Site loses before it switches a Module off.** Deactivating a Module leaves every reference
   to it dangling, and each kind is only discovered when the page renders: a Collection View naming one of
   its item renderers, a signal route pointing at a receiver it owned, a data-provider binding to one of
