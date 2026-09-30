@@ -289,7 +289,7 @@ async function resolvePhiCmsRootPathKey(
   cmsBridge: PhiCmsSiteBridge,
 ) {
   if (path?.length) {
-    return path.join("\u0000");
+    return path.map(decodePhiCmsPathSegment).join("\u0000");
   }
   // A static route always names its segments, so no segments is the root and nothing is derived.
   if (isPhiStaticCmsSiteBridge(cmsBridge)) {
@@ -301,12 +301,34 @@ async function resolvePhiCmsRootPathKey(
   return derived?.length ? derived.join("\u0000") : "";
 }
 
+/**
+ * One segment in the form the Site stores paths in: decoded.
+ *
+ * The same request reaches this file in both spellings -- Next hands the Page `%C3%BCber-uns` and other
+ * readers `über-uns`, and the proxy's path header is always encoded -- so a key built from either as it
+ * came gave the Layout and the Page two cache entries, and the Layout resolved the encoded one to a 404.
+ * An encoded segment decodes to the stored one; a decoded one has nothing left to decode, unless it
+ * holds a `%` that is no escape, which is then kept as written.
+ */
+function decodePhiCmsPathSegment(segment: string) {
+  try {
+    return decodeURIComponent(segment);
+  } catch {
+    return segment;
+  }
+}
+
 export async function loadPhiCmsRootScope({
   root,
   path,
   cmsBridge,
 }: LoadPhiCmsRootRequestArgs) {
-  return loadPhiCmsRootScopeCached(root, await resolvePhiCmsRootPathKey(root, path, cmsBridge), cmsBridge);
+  const decodedRoot = decodePhiCmsPathSegment(root);
+  return loadPhiCmsRootScopeCached(
+    decodedRoot,
+    await resolvePhiCmsRootPathKey(decodedRoot, path, cmsBridge),
+    cmsBridge,
+  );
 }
 
 const loadPhiCmsRootRequestCached = cache(async function loadPhiCmsRootRequestCached(
@@ -366,8 +388,14 @@ export async function loadPhiCmsRootRequest({
   path,
   cmsBridge,
 }: LoadPhiCmsRootRequestArgs) {
-  return loadPhiCmsRootRequestCached(root, await resolvePhiCmsRootPathKey(root, path, cmsBridge), cmsBridge);
+  const decodedRoot = decodePhiCmsPathSegment(root);
+  return loadPhiCmsRootRequestCached(
+    decodedRoot,
+    await resolvePhiCmsRootPathKey(decodedRoot, path, cmsBridge),
+    cmsBridge,
+  );
 }
+
 function normalizeRequestPathname(rawValue: string | null | undefined) {
   if (!rawValue?.trim()) {
     return undefined;
@@ -385,7 +413,7 @@ function derivePathSegmentsFromRequestPath(
     return undefined;
   }
 
-  const segments = pathname.split("/").filter(Boolean);
+  const segments = pathname.split("/").filter(Boolean).map(decodePhiCmsPathSegment);
   if (segments.length === 0) {
     return undefined;
   }

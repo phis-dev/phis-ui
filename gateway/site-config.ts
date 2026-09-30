@@ -16,6 +16,7 @@ import type { PhiThemeBlockSelection } from "../theme/phi-theme-composition";
 import type { PhiControlShapeCorners } from "../theme/phi-control-shape";
 import type { PhiThemeButtons } from "../theme/phi-button-shadow";
 import type { PhiThemeTypography } from "../theme/phi-theme-typography";
+import { throwPhiCmsGatewayError } from "./errors";
 
 export type PhiSiteTheme = {
   mode?: "light" | "dark" | null;
@@ -161,7 +162,7 @@ async function fetchSiteConfig(
   });
 
   if (!response.ok) {
-    throw new Error(`Failed to fetch site config (${response.status}).`);
+    throwPhiCmsGatewayError(`Failed to fetch site config (${response.status}).`, response.status);
   }
 
   const payload = (await response.json()) as { site?: PhiSiteConfig };

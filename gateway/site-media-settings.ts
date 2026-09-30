@@ -2,6 +2,7 @@ import { cache } from "react";
 import "server-only";
 
 import { buildApiHeaders, buildApiUrl } from "../helpers/site-api";
+import { throwPhiCmsGatewayError } from "./errors";
 
 export type PhiSiteMediaSettings = {
   userSpacesEnabled: boolean;
@@ -62,7 +63,10 @@ export const getResolvedSiteMediaSettings = cache(async function getResolvedSite
   });
 
   if (!response.ok) {
-    throw new Error(`Failed to fetch site media settings (${response.status}).`);
+    throwPhiCmsGatewayError(
+      `Failed to fetch site media settings (${response.status}).`,
+      response.status,
+    );
   }
 
   const payload = (await response.json()) as {

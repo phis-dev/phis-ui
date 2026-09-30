@@ -3,6 +3,7 @@ import "server-only";
 import { PHIS_SITE_KEY_HEADER } from "../constants/http-headers";
 import type { PhiAuthWorkflow, PhiPublicAuthManifest } from "../types/auth-manifest";
 import { isPhiRecord } from "../helpers/is-record";
+import { throwPhiCmsGatewayError } from "./errors";
 
 export type FetchPhiPublicAuthOptions = {
   apiBaseUrl: string;
@@ -54,7 +55,7 @@ export async function fetchPhiPublicAuthManifest(
     cache: "no-store",
   });
   if (!response.ok) {
-    throw new Error(`Auth manifest fetch failed (${response.status}).`);
+    throwPhiCmsGatewayError(`Auth manifest fetch failed (${response.status}).`, response.status);
   }
 
   const manifest = readManifest(await response.json().catch(() => null));
@@ -119,7 +120,7 @@ export async function fetchPhiAuthWorkflow(
     return null;
   }
   if (!response.ok) {
-    throw new Error(`Auth workflow fetch failed (${response.status}).`);
+    throwPhiCmsGatewayError(`Auth workflow fetch failed (${response.status}).`, response.status);
   }
 
   const payload = await response.json().catch(() => null);

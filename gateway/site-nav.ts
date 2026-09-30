@@ -57,7 +57,7 @@ export async function fetchSiteNavigationFolderTarget({
     return null;
   }
   if (!response.ok) {
-    throw new Error(`Failed to resolve folder address (${response.status}).`);
+    throwPhiCmsGatewayError(`Failed to resolve folder address (${response.status}).`, response.status);
   }
   const payload = (await response.json()) as { reference?: unknown };
   return typeof payload.reference === "string" ? payload.reference : null;
@@ -82,7 +82,10 @@ export async function fetchSiteNavigationScopes({
     },
   );
   if (!response.ok) {
-    throw new Error(`Failed to fetch site navigation scopes (${response.status}).`);
+    throwPhiCmsGatewayError(
+      `Failed to fetch site navigation scopes (${response.status}).`,
+      response.status,
+    );
   }
   const payload = (await response.json()) as { scopes?: unknown };
   if (!Array.isArray(payload.scopes)) {

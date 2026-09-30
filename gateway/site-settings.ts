@@ -2,6 +2,7 @@ import { cache } from "react";
 import "server-only";
 
 import { buildApiHeaders, buildApiUrl } from "../helpers/site-api";
+import { throwPhiCmsGatewayError } from "./errors";
 
 export type PhiSiteAdminSettings = {
   key: string;
@@ -47,7 +48,10 @@ export const getResolvedSiteAdminSettings = cache(async function getResolvedSite
   });
 
   if (!response.ok) {
-    throw new Error(`Failed to fetch site admin settings (${response.status}).`);
+    throwPhiCmsGatewayError(
+      `Failed to fetch site admin settings (${response.status}).`,
+      response.status,
+    );
   }
 
   const payload = (await response.json()) as { settings?: PhiSiteAdminSettings };

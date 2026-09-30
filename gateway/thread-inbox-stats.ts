@@ -2,6 +2,7 @@ import { cache } from "react";
 import "server-only";
 
 import { buildApiHeaders, buildApiUrl } from "../helpers/site-api";
+import { throwPhiCmsGatewayError } from "./errors";
 
 /**
  * How much of a person's inbox is waiting for them.
@@ -61,7 +62,10 @@ export const getPhiThreadInboxStats = cache(async function getPhiThreadInboxStat
   );
 
   if (!response.ok) {
-    throw new Error(`Failed to read the conversation inbox (${response.status}).`);
+    throwPhiCmsGatewayError(
+      `Failed to read the conversation inbox (${response.status}).`,
+      response.status,
+    );
   }
 
   const payload = (await response.json()) as { total?: unknown };

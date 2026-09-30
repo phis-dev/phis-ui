@@ -8,6 +8,7 @@ import type {
   SiteLocaleOption,
 } from "../helpers/site-locale-config";
 import { PHIS_SITE_KEY_HEADER } from "../constants/http-headers";
+import { getResolvedSiteConfig } from "../gateway/site-config";
 
 export type FetchSiteLocaleConfigOptions = {
   apiBaseUrl?: string;
@@ -20,17 +21,6 @@ export type FetchResolvedSiteLocaleOptions = FetchSiteLocaleConfigOptions & {
   acceptLanguage?: string | null;
   cookieHeader?: string | null;
 };
-
-const CACHE_TTL_MS = 3_600_000;
-const configCache = new Map<string, { config: SiteLocaleConfig; cachedAt: number }>();
-
-function buildCacheKey(options: FetchSiteLocaleConfigOptions) {
-  const runtime = resolvePhiRuntimeConfig(options, {
-    context: "fetchSiteLocaleConfig cache",
-    requireSiteKey: true,
-  });
-  return [runtime.apiBaseUrl, runtime.internalToken, runtime.siteKey ?? ""].join("::");
-}
 
 function capitalizeLocaleLabel(value: string) {
   if (!value) return value;
@@ -103,33 +93,27 @@ function sanitizeSiteLocaleConfig(payload: unknown): SiteLocaleConfig {
   };
 }
 
+/**
+ * The Site's languages, read from the Site config rather than cached beside it.
+ *
+ * They arrive in the same `/api/v1/site` answer, and a cache of their own kept them for an hour while
+ * the config around them refreshed every two seconds: a language added in Admin was a page path for the
+ * router until then, and `/fr/...` was forwarded to `/de/fr/...`. The config's cache is also the one a
+ * write through the Site proxy and a moved read marker clear.
+ */
 export async function fetchSiteLocaleConfig(
   options: FetchSiteLocaleConfigOptions = {},
 ): Promise<SiteLocaleConfig> {
-  const now = Date.now();
-  const cacheKey = buildCacheKey(options);
-  const cached = configCache.get(cacheKey);
-  if (cached && now - cached.cachedAt < CACHE_TTL_MS) return cached.config;
-
   const resolvedRuntime = resolvePhiRuntimeConfig(options, {
     context: "fetchSiteLocaleConfig",
     requireSiteKey: true,
   });
-  const response = await fetch(`${resolvedRuntime.apiBaseUrl}/api/v1/site`, {
-    method: "GET",
-    headers: {
-      Accept: "application/json",
-      Authorization: `Bearer ${resolvedRuntime.internalToken}`,
-      [PHIS_SITE_KEY_HEADER]: resolvedRuntime.siteKey as string,
-      "user-agent": "phis-ui-locale-config/1.0",
-    },
-    cache: "no-store",
+  const site = await getResolvedSiteConfig({
+    apiBaseUrl: resolvedRuntime.apiBaseUrl,
+    internalToken: resolvedRuntime.internalToken,
+    siteKey: resolvedRuntime.siteKey as string,
   });
-  if (!response.ok) throw new Error(`Site locale config fetch failed (${response.status}).`);
-
-  const config = sanitizeSiteLocaleConfig(await response.json());
-  configCache.set(cacheKey, { config, cachedAt: now });
-  return config;
+  return sanitizeSiteLocaleConfig({ site });
 }
 
 export async function fetchResolvedSiteLocale(

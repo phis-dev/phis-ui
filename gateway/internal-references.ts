@@ -3,6 +3,7 @@ import "server-only";
 import { buildApiHeaders, buildApiUrl } from "../helpers/site-api";
 import type { PhiPublicMediaAssetReference } from "../types/media";
 import { readPhiPageReference, type PhiPageReference } from "../types/references";
+import { throwPhiCmsGatewayError } from "./errors";
 
 export type PhiResolvedPageReference = {
   reference: PhiPageReference;
@@ -83,7 +84,12 @@ export async function resolveSiteInternalReferences(input: {
     cache: "no-store",
     body: JSON.stringify({ ...(input.area ? { area: input.area } : {}), references, assets: assetIds }),
   });
-  if (!response.ok) throw new Error(`Failed to resolve internal references (${response.status}).`);
+  if (!response.ok) {
+    throwPhiCmsGatewayError(
+      `Failed to resolve internal references (${response.status}).`,
+      response.status,
+    );
+  }
 
   const payload = (await response.json().catch(() => null)) as { resolved?: unknown; assets?: unknown } | null;
   if (!Array.isArray(payload?.resolved) || !Array.isArray(payload?.assets)) {

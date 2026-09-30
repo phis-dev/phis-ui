@@ -9,6 +9,7 @@ import {
   readPhiTranslationCacheGeneration,
   writePhiTranslationCache,
 } from "../helpers/translation-cache";
+import { throwPhiCmsGatewayError } from "./errors";
 
 export const PHI_TR_CTX_WEB_UI_LABEL = "Web UI label" as const;
 
@@ -131,7 +132,7 @@ async function requestTranslation(
   });
 
   if (!response.ok) {
-    throw new Error(`Failed to translate message (${response.status}).`);
+    throwPhiCmsGatewayError(`Failed to translate message (${response.status}).`, response.status);
   }
 
   return response;

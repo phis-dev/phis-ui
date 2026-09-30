@@ -4,6 +4,7 @@ import "server-only";
 import { buildApiHeaders, buildApiUrl } from "../helpers/site-api";
 import { isPhisUserStateKey } from "../constants/user-state";
 import type { PhisUserStateStoredValue } from "../types/user-state";
+import { throwPhiCmsGatewayError } from "./errors";
 
 /**
  * What this Site's Modules kept about the person looking, read while the page is rendered.
@@ -61,7 +62,7 @@ export const getPhiUserState = cache(async function getPhiUserState({
   });
 
   if (!response.ok) {
-    throw new Error(`Failed to read user state (${response.status}).`);
+    throwPhiCmsGatewayError(`Failed to read user state (${response.status}).`, response.status);
   }
 
   const payload = (await response.json()) as { state?: unknown };

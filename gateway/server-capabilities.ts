@@ -7,6 +7,7 @@ import type {
   PhiCapabilitySnapshot,
   PhiCapabilityState,
 } from "../types/server-capabilities";
+import { throwPhiCmsGatewayError } from "./errors";
 
 const PROVIDER_ID_PATTERN = /^@[^/]+\/[^/]+(?:\/[^/]+)*$/;
 const CAPABILITY_ID_PATTERN = /^@[^/]+\/[^:]+:v[1-9]\d*$/;
@@ -102,7 +103,10 @@ export async function getPhiCapabilitySnapshot({
     cache: "no-store",
   });
   if (!response.ok) {
-    throw new Error(`Failed to resolve server capabilities (${response.status}).`);
+    throwPhiCmsGatewayError(
+      `Failed to resolve server capabilities (${response.status}).`,
+      response.status,
+    );
   }
   const snapshot = parseSnapshot(await response.json());
   if (snapshot.siteKey !== siteKey) {

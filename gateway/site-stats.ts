@@ -2,6 +2,7 @@ import { cache } from "react";
 import "server-only";
 
 import { buildApiHeaders, buildApiUrl } from "../helpers/site-api";
+import { throwPhiCmsGatewayError } from "./errors";
 
 export type PhiSiteStats = {
   userCount: number;
@@ -40,7 +41,7 @@ export const getResolvedSiteStats = cache(async function getResolvedSiteStats({
   });
 
   if (!response.ok) {
-    throw new Error(`Failed to fetch site stats (${response.status}).`);
+    throwPhiCmsGatewayError(`Failed to fetch site stats (${response.status}).`, response.status);
   }
 
   const payload = (await response.json()) as { stats?: PhiSiteStats };

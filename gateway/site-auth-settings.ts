@@ -2,6 +2,7 @@ import { cache } from "react";
 import "server-only";
 
 import { buildApiHeaders, buildApiUrl } from "../helpers/site-api";
+import { throwPhiCmsGatewayError } from "./errors";
 
 export type PhiSiteAuthAdminSettings = {
   policy: {
@@ -54,7 +55,7 @@ export const getResolvedSiteAuthAdminSettings = cache(async function getResolved
   });
 
   if (!response.ok) {
-    throw new Error(`Failed to fetch site auth settings (${response.status}).`);
+    throwPhiCmsGatewayError(`Failed to fetch site auth settings (${response.status}).`, response.status);
   }
 
   const payload = (await response.json()) as { auth?: PhiSiteAuthAdminSettings };

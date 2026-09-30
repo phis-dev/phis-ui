@@ -14,6 +14,7 @@ import type { PhiRuntimeModuleId } from "../types/cms-module-descriptors";
 import type { PhiFormId } from "../types/form-id";
 import { isPhiFormId, normalizePhiFormId } from "../types/form-id";
 import { isPhiRecord } from "../helpers/is-record";
+import { throwPhiCmsGatewayError } from "./errors";
 
 export const PHI_FORM_DEFINITION_STATUS = {
   workingDraft: 0,
@@ -196,7 +197,7 @@ export const fetchFormRegistry = cache(async function fetchFormRegistry({
     cache: "no-store",
   });
   if (!response.ok) {
-    throw new Error(`Failed to fetch form registry (${response.status}).`);
+    throwPhiCmsGatewayError(`Failed to fetch form registry (${response.status}).`, response.status);
   }
   return normalizeRegistryResponse(await response.json().catch(() => null));
 });
