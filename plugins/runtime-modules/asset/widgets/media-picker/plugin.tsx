@@ -1,6 +1,6 @@
 import type { PhiCmsServerWidgetPlugin } from "../../../../../types";
 import { renderPhiWidgetPreviewPlaceholder } from "../../../../../plugins/factories/widget-renderers";
-import type { PhiCmsMediaPickerWidgetConfig } from "./config";
+import type { PhiCmsMediaPickerWidgetConfig } from "../../../../../types/media";
 import { PhiMediaPickerWidgetServer } from "../../../../../components/media/phi-media-picker-server";
 import { PHI_MEDIA_PICKER_WIDGET_DEFINITION } from "./config";
 

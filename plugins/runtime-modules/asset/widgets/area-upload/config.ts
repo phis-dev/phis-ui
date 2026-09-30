@@ -1,4 +1,5 @@
 import { resolvePhiCmsWidgetPluginKey } from "../../../../../constants/cms-widget-types";
+import type { PhiCmsAreaUploadWidgetConfig } from "../../../../../types/media";
 import type { PhiCmsWidgetPlugin } from "../../../../../types";
 import { PHI_ASSET_RUNTIME_DATA_PROVIDER_KEYS } from "../../ids";
 import {
@@ -6,16 +7,7 @@ import {
   readInteger,
   readRenderableBlockConfig,
   readString,
-  type PhiCmsWidgetConfigBase,
 } from "../../../../../components/widgets/config/parser-primitives";
-
-export type PhiCmsAreaUploadWidgetConfig = PhiCmsWidgetConfigBase & {
-  allowDelete?: boolean;
-  multiple?: boolean;
-  accept?: string;
-  folderPath?: string;
-  presentationFlags?: number;
-};
 
 export function normalizePhiCmsAreaUploadWidgetConfig(config: unknown): PhiCmsAreaUploadWidgetConfig {
   if (!config || typeof config !== "object" || Array.isArray(config)) {

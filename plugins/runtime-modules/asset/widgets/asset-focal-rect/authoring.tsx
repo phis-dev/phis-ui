@@ -1,7 +1,7 @@
 "use client";
 
 import { createPhiCmsBuilderWidgetPlugin } from "../../../../../plugins/factories/widget-builder-plugin";
-import type { PhiCmsAssetFocalRectWidgetConfig } from "../../../../../plugins/runtime-modules/asset/widgets/asset-focal-rect/config";
+import type { PhiCmsAssetFocalRectWidgetConfig } from "../../../../../types/media";
 import { PHI_ASSET_FOCAL_RECT_WIDGET_DEFINITION } from "../../../../../plugins/runtime-modules/asset/widgets/asset-focal-rect/config";
 import { PhiWidgetEditorPlaceholder } from "../../../../../components/widgets/builder/widget-editor-placeholder";
 

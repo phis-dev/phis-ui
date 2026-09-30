@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 
 import { PhiMediaKind } from "../../constants/media";
 import type { PhiMediaAssetTile } from "../../types/media";
-import type { PhiCmsMediaPickerWidgetConfig } from "../../plugins/runtime-modules/asset/widgets/media-picker/config";
+import type { PhiCmsMediaPickerWidgetConfig } from "../../types/media";
 import type { PhiSearchWidgetLabels } from "../widgets/label-types/search";
 import { usePhiWidgetScaffoldPopup } from "../widgets/client/shared/phi-widget-scaffold-popup";
 import type { PhiAssetWidgetLabels } from "./media-widget-labels";

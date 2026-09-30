@@ -1,15 +1,10 @@
 import { resolvePhiCmsWidgetPluginKey } from "../../../../../constants/cms-widget-types";
+import type { PhiCmsAssetFocalRectWidgetConfig } from "../../../../../types/media";
 import type { PhiCmsWidgetPlugin } from "../../../../../types";
 import {
   PHI_SIGNAL_VALUE_SCHEMAS,
   readPhiSignalRouteSet,
-  type PhiSignalRouteSet,
 } from "../../../../../types/signals";
-import type { PhiCmsWidgetConfigBase } from "../../../../../components/widgets/config/parser-primitives";
-
-export type PhiCmsAssetFocalRectWidgetConfig = PhiCmsWidgetConfigBase & {
-  signalRoutes?: PhiSignalRouteSet | null;
-};
 
 export function parsePhiCmsAssetFocalRectWidgetConfig(
   config: Record<string, unknown>,

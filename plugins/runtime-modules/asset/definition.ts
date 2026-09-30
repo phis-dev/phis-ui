@@ -10,7 +10,7 @@ import {
   PHI_ASSET_FOLDER_FORM_HANDLER_PROVIDER_DESCRIPTOR,
   PHI_ASSET_METADATA_FORM_HANDLER_PROVIDER_DESCRIPTOR,
 } from "./metadata-form";
-import { PHI_ASSET_FOCAL_RECT_FORM_PROVIDER_DESCRIPTOR } from "../../../components/media/asset-form-field-providers";
+import { PHI_ASSET_FOCAL_RECT_FORM_PROVIDER_DESCRIPTOR } from "./form-providers";
 import { PHI_MEDIA_SETTINGS_FORM_HANDLER_PROVIDER_DESCRIPTOR } from "./settings-forms";
 
 export const PHI_ASSET_RUNTIME_MODULE_DEFINITION = {

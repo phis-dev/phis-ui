@@ -5,7 +5,7 @@ import { useEffect, useMemo, useRef, useState, type ComponentProps, type ReactNo
 import { PhiImageAssetVariantKey, PhiMediaKind } from "../../constants/media";
 import type { PhiCollectionProviderQuery } from "../../types/collection-provider";
 import type { PhiMediaAssetFolder, PhiMediaAssetTile, PhiMediaSpaceOption } from "../../types/media";
-import type { PhiCmsMediaPickerWidgetConfig } from "../../plugins/runtime-modules/asset/widgets/media-picker/config";
+import type { PhiCmsMediaPickerWidgetConfig } from "../../types/media";
 import type { PhiSearchWidgetLabels } from "../widgets/label-types/search";
 import { usePhiControlSignalController } from "../widgets/client/shared/phi-control-signals";
 import { usePhiCollectionProvider } from "../widgets/client/shared/phi-collection-provider";

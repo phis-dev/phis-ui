@@ -37,7 +37,7 @@ import {
   PHI_ASSET_FOLDER_FORM_ID,
   PHI_ASSET_METADATA_FORM_DESCRIPTOR,
 } from "../plugins/runtime-modules/asset/metadata-form";
-import { PHI_ASSET_FOCAL_RECT_FORM_PROVIDER_DESCRIPTOR } from "../components/media/asset-form-field-providers";
+import { PHI_ASSET_FOCAL_RECT_FORM_PROVIDER_DESCRIPTOR } from "../plugins/runtime-modules/asset/form-providers";
 import { createPhiRuntimeModuleCatalog } from "../plugins/runtime-modules/contracts";
 
 const controllerAddress = createPhiControllerSignalAddress("@test/pkg/modules/user-management/controller", "users", "default");

@@ -1,5 +1,5 @@
 import type { PhiBlockRuntime } from "../../../../../types";
-import type { PhiCmsAreaUploadWidgetConfig } from "./config";
+import type { PhiCmsAreaUploadWidgetConfig } from "../../../../../types/media";
 import { getPhiMediaWidgetLabels } from "../../../../../components/media/label-sets/media";
 import { PhiCmsWidgetType } from "../../../../../constants/cms-widget-types";
 import { PhiRuntimeModuleRenderClientHost } from "../../../../../components/runtime/runtime-module-render-client-manifest";

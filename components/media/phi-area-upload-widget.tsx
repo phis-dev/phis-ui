@@ -6,7 +6,7 @@ import { PhiButtonControl } from "../controls/phi-button-control";
 import NextImage from "next/image";
 import { useMemo, useRef, useState } from "react";
 
-import type { PhiCmsAreaUploadWidgetConfig } from "../../plugins/runtime-modules/asset/widgets/area-upload/config";
+import type { PhiCmsAreaUploadWidgetConfig } from "../../types/media";
 import { PhiCollectionLayoutControl } from "../controls/phi-collection-layout-control";
 import {
   resolvePhiMediaKindFromContentType,

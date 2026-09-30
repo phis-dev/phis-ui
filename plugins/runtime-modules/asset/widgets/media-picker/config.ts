@@ -1,33 +1,20 @@
 import { resolvePhiCmsWidgetPluginKey } from "../../../../../constants/cms-widget-types";
+import type { PhiCmsMediaPickerWidgetConfig } from "../../../../../types/media";
 import { normalizePhiMediaKind, PhiMediaKind } from "../../../../../constants/media";
 import type { PhiCmsWidgetPlugin } from "../../../../../types";
 import {
   PHI_SIGNAL_VALUE_SCHEMAS,
-  type PhiSignalRouteSet,
   readPhiSignalRouteSet,
 } from "../../../../../types/signals";
-import type { PhiMediaKindValue } from "../../../../../types/media";
 import { PHI_ASSET_RUNTIME_DATA_PROVIDER_KEYS } from "../../ids";
 import type { PhiProviderResourceSource } from "../../../../../types/runtime-data-provider";
-import { readBoolean, readNumber, readString, type PhiCmsWidgetConfigBase } from "../../../../../components/widgets/config/parser-primitives";
+import { readBoolean, readNumber, readString } from "../../../../../components/widgets/config/parser-primitives";
 import {
   PHI_MEDIA_PICKER_DEFAULT_COLUMN_WIDTH,
   PHI_MEDIA_PICKER_MAX_COLUMN_WIDTH,
   PHI_MEDIA_PICKER_MIN_COLUMN_WIDTH,
   normalizePhiMediaPickerMinColumnWidth,
 } from "../../../../../components/controls/phi-media-picker-control-contract";
-
-export type PhiCmsMediaPickerWidgetConfig = PhiCmsWidgetConfigBase & {
-  mediaType?: PhiMediaKindValue | null;
-  presentationFlags?: number | null;
-  pageSize?: number;
-  minColumnWidth?: number;
-  showSearchBar?: boolean;
-  showFolderFilter?: boolean;
-  showPagination?: boolean;
-  signalRoutes?: PhiSignalRouteSet | null;
-  dataSource?: PhiProviderResourceSource | null;
-};
 
 const PHI_MEDIA_PICKER_DATA_SOURCE = {
   providerKey: PHI_ASSET_RUNTIME_DATA_PROVIDER_KEYS.mediaCollection,

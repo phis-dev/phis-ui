@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo } from "react";
 
-import { PHI_ASSET_RUNTIME_DATA_PROVIDER_KEYS } from "../../plugins/runtime-modules/asset/ids";
+import { PHI_MEDIA_LIBRARY_DATA_PROVIDER_KEYS } from "../../constants/media-library-provider-keys";
 import type {
   PhiCollectionProviderData,
   PhiCollectionProviderQuery,
@@ -29,7 +29,7 @@ import {
 import { isPhiRecord } from "../../helpers/is-record";
 
 export const PHI_ASSET_COLLECTION_DATA_SOURCE = {
-  providerKey: PHI_ASSET_RUNTIME_DATA_PROVIDER_KEYS.mediaCollection,
+  providerKey: PHI_MEDIA_LIBRARY_DATA_PROVIDER_KEYS.collection,
   resourceKey: "assets",
 } as const satisfies PhiProviderResourceSource;
 

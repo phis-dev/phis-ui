@@ -11,7 +11,7 @@ import {
 } from "../../../components/forms/form-provider-contract";
 import { definePhiRuntimeModuleForm } from "../../../components/forms/form-registry";
 import { flattenPhiFormLabels } from "../../../components/forms/form-labels";
-import { PHI_ASSET_FOCAL_RECT_FORM_PROVIDER_KEY } from "../../../components/media/asset-form-field-providers";
+import { PHI_ASSET_FOCAL_RECT_FORM_PROVIDER_KEY } from "./form-providers";
 import { readPhiServerApiCredentials } from "../../../helpers/phis-server-credentials";
 
 export const PHI_ASSET_METADATA_FORM_ID = createPhiFormId(PHI_SHARED_PACKAGE_NAME, "asset/metadata");

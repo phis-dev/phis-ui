@@ -1,7 +1,7 @@
 "use client";
 
 import { createPhiCmsBuilderWidgetPlugin } from "../../../../../plugins/factories/widget-builder-plugin";
-import type { PhiCmsAssetInspectorWidgetConfig } from "../../../../../plugins/runtime-modules/asset/widgets/image-inspector/config";
+import type { PhiCmsAssetInspectorWidgetConfig } from "../../../../../types/media";
 import { PHI_IMAGE_INSPECTOR_WIDGET_DEFINITION } from "../../../../../plugins/runtime-modules/asset/widgets/image-inspector/config";
 import { PhiWidgetEditorPlaceholder } from "../../../../../components/widgets/builder/widget-editor-placeholder";
 

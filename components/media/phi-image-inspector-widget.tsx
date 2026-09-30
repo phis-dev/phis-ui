@@ -1,6 +1,6 @@
 "use client";
 
-import type { PhiCmsAssetInspectorWidgetConfig } from "../../plugins/runtime-modules/asset/widgets/image-inspector/config";
+import type { PhiCmsAssetInspectorWidgetConfig } from "../../types/media";
 import { normalizePhiImagePreviewSelectionAsset } from "./phi-image-preview-data";
 import { PhiAssetInspectorSection } from "./phi-asset-inspector-section";
 import { setPhiImagePreviewSelection, usePhiImagePreviewStore } from "./phi-image-preview-store";

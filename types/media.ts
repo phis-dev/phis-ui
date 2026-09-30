@@ -5,6 +5,10 @@ import {
   PhiMediaKind,
 } from "../constants/media";
 
+import type { PhiCmsWidgetConfigBase } from "../components/widgets/config/parser-primitives";
+import type { PhiProviderResourceSource } from "./runtime-data-provider";
+import type { PhiSignalRouteSet } from "./signals";
+
 export type PhiMediaKindValue = (typeof PhiMediaKind)[keyof typeof PhiMediaKind];
 export type PhiImageAssetVariantKeyValue =
   (typeof PhiImageAssetVariantKey)[keyof typeof PhiImageAssetVariantKey];
@@ -245,4 +249,39 @@ export type PhiPublicMediaAssetReference = {
   focalRect: { x: number; y: number; width: number; height: number } | null;
   /** Present for a font, and the reason a Theme can build a fallback face without opening the file. */
   font: PhiFontMetrics | null;
+};
+
+/*
+ * The configs of the Media Widgets, here rather than beside them: the picker, the upload and the
+ * inspector are Foundation bindings that several Modules build on -- Theme, the Builder, an image tool
+ * button, an avatar -- and a binding cannot take its settings in a type only one Module owns.
+ */
+
+export type PhiCmsAreaUploadWidgetConfig = PhiCmsWidgetConfigBase & {
+  allowDelete?: boolean;
+  multiple?: boolean;
+  accept?: string;
+  folderPath?: string;
+  presentationFlags?: number;
+};
+
+export type PhiCmsAssetFocalRectWidgetConfig = PhiCmsWidgetConfigBase & {
+  signalRoutes?: PhiSignalRouteSet | null;
+};
+
+export type PhiCmsAssetInspectorWidgetConfig = PhiCmsWidgetConfigBase & {
+  section: "preview" | "technical";
+  signalRoutes?: PhiSignalRouteSet | null;
+};
+
+export type PhiCmsMediaPickerWidgetConfig = PhiCmsWidgetConfigBase & {
+  mediaType?: PhiMediaKindValue | null;
+  presentationFlags?: number | null;
+  pageSize?: number;
+  minColumnWidth?: number;
+  showSearchBar?: boolean;
+  showFolderFilter?: boolean;
+  showPagination?: boolean;
+  signalRoutes?: PhiSignalRouteSet | null;
+  dataSource?: PhiProviderResourceSource | null;
 };

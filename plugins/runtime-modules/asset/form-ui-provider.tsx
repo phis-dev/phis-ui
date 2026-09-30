@@ -2,8 +2,8 @@
 
 import type { ReactNode } from "react";
 
-import { createPhiFormProviderRegistry, PhiFormProviderRegistryProvider } from "../forms/form-provider-registry";
-import { PHI_ASSET_FOCAL_RECT_FORM_PROVIDER_DESCRIPTOR } from "./asset-form-field-providers";
+import { createPhiFormProviderRegistry, PhiFormProviderRegistryProvider } from "../../../components/forms/form-provider-registry";
+import { PHI_ASSET_FOCAL_RECT_FORM_PROVIDER_DESCRIPTOR } from "./form-providers";
 
 const PHI_ASSET_FORM_PROVIDER_REGISTRY = createPhiFormProviderRegistry({
   fieldTypes: [{

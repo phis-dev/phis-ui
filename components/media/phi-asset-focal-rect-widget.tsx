@@ -11,7 +11,7 @@ import {
   type PointerEvent,
 } from "react";
 
-import type { PhiCmsAssetFocalRectWidgetConfig } from "../../plugins/runtime-modules/asset/widgets/asset-focal-rect/config";
+import type { PhiCmsAssetFocalRectWidgetConfig } from "../../types/media";
 import type { PhiMediaAsset } from "../../types/media";
 import type { PhiSignal, PhiSignalValue } from "../../types/signals";
 import {

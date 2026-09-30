@@ -1,6 +1,6 @@
-import { PHI_ASSET_RUNTIME_MODULE_ID } from "../../plugins/runtime-modules/asset/ids";
-import type { PhiFormFieldTypeProviderDescriptor } from "../../types/form-descriptor";
-import { createPhiSharedFormProviderKey } from "../forms/form-provider-contract";
+import { PHI_ASSET_RUNTIME_MODULE_ID } from "./ids";
+import type { PhiFormFieldTypeProviderDescriptor } from "../../../types/form-descriptor";
+import { createPhiSharedFormProviderKey } from "../../../components/forms/form-provider-contract";
 
 export const PHI_ASSET_FOCAL_RECT_FORM_PROVIDER_KEY = createPhiSharedFormProviderKey(
   "field",
