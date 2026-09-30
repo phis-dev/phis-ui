@@ -657,6 +657,21 @@ built. Remove an entry when it is done.
 
 ## Builder
 
+- **Seven Builder Pages in one tree, three of them another Module's.** Media, Revisions and Theme are owned
+  end to end by the asset, revisions and theme Modules -- route, sidebar entry and data -- but their page
+  trees are branches of `builder/trees/phi-default-builder-area-preset-tree.ts`, a 3611-line function that
+  builds all seven workspace Pages and tells them apart by `presetKey`. The three are not three blocks: the
+  Media branches alone sit at lines 686, 728, 919, 1006, 1052, 1082, 1092, 1169, 1288, 1756 and 3468, and
+  the whole function shares one set of synthetic node ids (`SYNTHETIC_DEV_*`, 83 uses) across every Page.
+  So a Module cannot be handed its own tree without either importing the Builder's ids -- which carry the
+  Builder as their owner -- or giving its Page new node identities.
+  Nothing misbehaves: the data each Page binds is its own Module's, and a switched-off Module takes its
+  route and entry with it ([the reach validator](../scripts/validate-data-provider-reach.ts) checks the
+  case that does break). What is wrong is only where the code lives. The way out is one piece of work, not
+  three: export the Builder's shell as a scaffold the way `phi-base-page-layout.ts` does for ordinary
+  Pages, then give each of the seven Pages its own tree in its own Module -- doing it for three would leave
+  two shapes in one Area, which reads worse than today.
+
 - **Author a table where the table is.** A collection field in an Overlay is better than a collection
   field down a narrow column, but for a table it is still describing a thing from beside it. The thing is
   on screen: a `+` in the header row adds a column and opens a picker with that column's settings, a `+`
