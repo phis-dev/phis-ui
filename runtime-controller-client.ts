@@ -16,6 +16,17 @@ export type {
 } from "./components/runtime/runtime-module-controller-client-manifest";
 export type { PhiRuntimeModuleControllerClientProps } from "./types/cms-plugins";
 /*
+ * A state machine, held by the Controller that hosts it. The grammar and its validator come from
+ * `@phis/ui/types`; this is the part that runs one, and a Controller is the only place it may run
+ * (MODULES.md, "State in a Controller").
+ */
+export { usePhiStateMachineBinding } from "./components/runtime/phi-state-machine-binding";
+export type {
+  PhiStateMachineBinding,
+  PhiStateMachineSendResult,
+  UsePhiStateMachineBindingOptions,
+} from "./components/runtime/phi-state-machine-binding";
+/*
  * What a Table said, read by the Controller that listens to it.
  *
  * A Controller's whole job is translating one surface's vocabulary into another's, and a Table's half of

@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
-import type { PhiBlockRuntime, PhiCmsRuntimeRenderRegistry } from "../../../../../types";
+import type { PhiBlockRuntime } from "../../../../../types";
+import type { PhiCmsRuntimeRenderRegistry } from "../../../../../types/cms-plugins";
 import { phiRuntime } from "../../../../../server-helpers/phi-runtime";
 import { getResolvedFormDefinition } from "../../../../../gateway/form-registry";
 import type { PhiFormRenderOptions } from "../../../../../components/forms/form-resolution";

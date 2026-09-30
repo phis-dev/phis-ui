@@ -1,4 +1,5 @@
-import type { PhiBlockRuntime, PhiCmsRuntimeRenderRegistry } from "../../../types";
+import type { PhiBlockRuntime } from "../../../types";
+import type { PhiCmsRuntimeRenderRegistry } from "../../../types/cms-plugins";
 import type { PhiSignalRouteSet } from "../../../types/signals";
 import { getPhiBorderWidgetLabels } from "../../../components/widgets/label-sets/border";
 import { getPhiBackgroundWidgetLabels } from "../../../components/widgets/label-sets/background";

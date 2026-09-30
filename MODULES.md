@@ -358,6 +358,67 @@ and everything those import into the browser bundle. What both halves of the sea
 kinds a file dialog accepts being the case that keeps coming up -- goes in a module of its own that the
 definition reads too. `validate-render-client-boundaries` walks the Client graph and refuses the import.
 
+## State in a Controller
+
+A Module keeps state that outlives one render in its Controller, and it has two public tools for it.
+Both are Module API, not phis-ui internals.
+
+**A position in a flow is a state machine.** A step counter, a phase string, or a reducer in a Widget is
+not an allowed substitute ([design/STATE_MACHINES.md](design/STATE_MACHINES.md)):
+
+- The definition is data, typed against `PhiStateMachineDefinition` from `@phis/ui/types`. It lives in
+  the Module's own folder, beside its `ids.ts`, the way Auth's
+  [machine.ts](plugins/runtime-modules/auth/machine.ts) does. It is serializable on the same terms as a
+  Form descriptor: no callbacks, no element references, no route targets. Guards are
+  `PhiRuntimeConditionExpression`, the same language as `visibleWhen`.
+- `ownerModuleId` in its `PhiStateMachineReference` is the Module's own id. `machineKey` is
+  lower-case with hyphens.
+- `authority` is the first decision. Under `server` the definition must name a `reader`, and the
+  binding offers no local transition. That is how a third party is kept from rebuilding a security flow
+  in the browser. Under `client` the binding moves the machine itself.
+- `persistence` says how long a position survives:
+  - `none` for most machines;
+  - `query` for a link that must resume;
+  - `server` for a `server` projection;
+  - `profile` for the account-bound store, under `<ownerModuleId>/<machineKey>`, which the Module
+    declares as user state (THIRD_PARTY_MODULES.md §11).
+
+  Raising `version` discards every stored position; it is never migrated.
+- What others may read is `statements`, never the state keys. A state names the statements true in it,
+  so a state added later publishes none of them until its author says so. Foreign Modules may raise
+  only the events listed in `acceptsExternalEvents`.
+- Check a definition with `collectPhiStateMachineDefinitionErrors`. It returns every fault at once,
+  including the determinism rules: at most one unguarded transition per `(from, event)`, and an
+  unguarded fallback beside every guarded one. A Module's test should assert the list is empty.
+
+The Controller runs it with `usePhiStateMachineBinding` from `@phis/ui/runtime/controller-client`:
+
+- `send(event, sources)` answers whether the machine moved and what checkpoint to keep. It passes the
+  guard sources on every call, never from the last render.
+- `project(state, data)` is the only way a `server` projection changes.
+- `snapshot` is what to publish. It carries the reference, version, state, every statement as a
+  boolean, and optional `data`.
+
+The binding performs nothing: it never dispatches a signal, navigates, calls a gateway, or writes a
+checkpoint. The Controller does all of that. The Controller publishes the statements through
+`usePhiRuntimeConditionStateResponder`, so Widgets condition on them with `visibleWhen`, as the Auth
+Controller does. A Widget never holds a machine, because a transition that made its host act would break
+the listen-only rule in [SIGNALS.md](SIGNALS.md).
+
+**Anything else is a scoped store.** `createPhiPluginStateStore(pluginKey, createDefaultState)` from
+`@phis/ui/state` holds client state keyed by a scope, such as an instance id or an Area. It gives:
+
+- `useStore` and `useStoreSelector` for rendering;
+- `getSnapshot`, `patch`, `replace`, and `reset` from callbacks;
+- `deleteScope` when the scope is gone.
+
+It suits a cache, a selection, or a panel's open state. It does not suit a position in a flow: that is
+a machine.
+
+The store is private to the Module that created it. A store is not a channel between Modules, the same
+way a Module-private signal bus or context is not. Another Module learns what a store holds only through
+signals or published statements.
+
 ## Module source locale and authored copy
 
 Every Module has exactly one canonical `sourceLocale`. Omission means `en`. Phi-owned Modules author all

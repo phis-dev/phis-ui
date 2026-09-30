@@ -1,4 +1,5 @@
-import type { PhiBlockRuntime, PhiCmsRuntimeRenderRegistry } from "../../../types";
+import type { PhiBlockRuntime } from "../../../types";
+import type { PhiCmsRuntimeRenderRegistry } from "../../../types/cms-plugins";
 import {
   buildPhiBuilderRuntimeModuleIdsForArea,
   buildPhiBuilderStructureShellDraftsForArea,

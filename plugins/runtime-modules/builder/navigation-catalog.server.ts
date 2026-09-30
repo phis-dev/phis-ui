@@ -11,10 +11,10 @@ import {
 } from "../../../plugins/runtime-modules/descriptor-compiler";
 import type {
   PhiBlockRuntime,
-  PhiCmsResolvedNavigationSurface,
   PhiRuntimeModuleCatalog,
   PhiRuntimeModuleId,
 } from "../../../types";
+import type { PhiCmsResolvedNavigationSurface } from "../../../types/cms-module-descriptors";
 import { fetchSiteNavigationScopes } from "../../../gateway/site-nav";
 import { createPhiBuilderCustomNavigationSurface } from "../../../helpers/cms-navigation-catalog";
 import { readPhiServerApiCredentials } from "../../../helpers/phis-server-credentials";

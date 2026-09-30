@@ -1,4 +1,5 @@
-import type { PhiBlockRuntime, PhiCmsRuntimeRenderRegistry } from "../../../types";
+import type { PhiBlockRuntime } from "../../../types";
+import type { PhiCmsRuntimeRenderRegistry } from "../../../types/cms-plugins";
 import { PHI_BUILDER_PREVIEW_SEARCH_PARAM, type PhiBuilderPreviewRegionDraft } from "./preview-transport";
 import { loadPhiBuilderPreviewSnapshot } from "./preview-store";
 import {
