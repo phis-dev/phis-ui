@@ -29,7 +29,7 @@ export async function PhiVideoEmbedWidgetServer({ runtime, config }: PhiVideoEmb
   });
 
   const posterAsset = typeof config?.posterAssetId === "number"
-    ? await resolvePhiPublicAssetReference({ runtime, assetId: config.posterAssetId }).catch(() => null)
+    ? await resolvePhiPublicAssetReference({ runtime, assetId: config.posterAssetId })
     : null;
   const presentation = posterAsset
     ? resolvePhiImagePresentation({

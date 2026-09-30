@@ -96,18 +96,14 @@ export async function trForLocale(
 
   const locale = resolvePhiTranslationLocale(localeInput);
   const options = buildTranslatorOptions(locale);
-  try {
-    const translated = await requestInternalTranslation(
-      options,
-      normalizedMessage,
-      undefined,
-      ctx ? String(ctx) : undefined,
-      format,
-    );
-    return formatPhiTranslation(translated, params);
-  } catch {
-    return formatPhiTranslation(normalizedMessage, params);
-  }
+  const translated = await requestInternalTranslation(
+    options,
+    normalizedMessage,
+    undefined,
+    ctx ? String(ctx) : undefined,
+    format,
+  );
+  return formatPhiTranslation(translated, params);
 }
 
 export async function trGlobalForLocale(
@@ -129,18 +125,14 @@ export async function trGlobalForLocale(
     return formatPhiTranslation(normalizedMessage, params);
   }
 
-  try {
-    const translated = await requestInternalTranslation(
-      options,
-      normalizedMessage,
-      undefined,
-      ctx ? String(ctx) : undefined,
-      format,
-    );
-    return formatPhiTranslation(translated, params);
-  } catch {
-    return formatPhiTranslation(normalizedMessage, params);
-  }
+  const translated = await requestInternalTranslation(
+    options,
+    normalizedMessage,
+    undefined,
+    ctx ? String(ctx) : undefined,
+    format,
+  );
+  return formatPhiTranslation(translated, params);
 }
 
 export async function trBulk(
@@ -167,16 +159,12 @@ export async function trBulkForLocale(
 
   const locale = resolvePhiTranslationLocale(localeInput);
   const options = buildTranslatorOptions(locale, sourceLocale);
-  try {
-    return await requestInternalTranslationBulk(
-      options,
-      normalizedMessages,
-      ctx ? String(ctx) : undefined,
-      format,
-    );
-  } catch {
-    return normalizedMessages;
-  }
+  return requestInternalTranslationBulk(
+    options,
+    normalizedMessages,
+    ctx ? String(ctx) : undefined,
+    format,
+  );
 }
 
 export async function trGlobalBulk(
@@ -206,14 +194,10 @@ export async function trGlobalBulkForLocale(
     return normalizedMessages;
   }
 
-  try {
-    return await requestInternalTranslationBulk(
-      options,
-      normalizedMessages,
-      ctx ? String(ctx) : undefined,
-      format,
-    );
-  } catch {
-    return normalizedMessages;
-  }
+  return requestInternalTranslationBulk(
+    options,
+    normalizedMessages,
+    ctx ? String(ctx) : undefined,
+    format,
+  );
 }

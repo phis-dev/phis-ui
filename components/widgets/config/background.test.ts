@@ -49,12 +49,6 @@ describe("background glass effect", () => {
   it("withholds both glass strengths from a base with nothing to thin", () => {
     for (const effect of ["glass", "haze"] as const) {
       expect(resolvePhiBackgroundEffect({ base: image, effect })).toBeNull();
-      expect(
-        resolvePhiBackgroundEffect({
-          base: { kind: "gradient", direction: "to top", stops: [] },
-          effect,
-        }),
-      ).toBeNull();
     }
   });
 
@@ -171,12 +165,12 @@ describe("background pattern ink", () => {
     expect(normalized.overlay).toMatchObject({ kind: "pattern", ink: { kind: "color", color: "#ff8800" } });
   });
 
-  it("reads a bare colour written before a gradient was possible", () => {
+  it("reads the ink only from its own field", () => {
     const normalized = normalizePhiBackgroundWidgetConfig({
       base: { kind: "none" },
       overlay: { kind: "pattern", patternKey: "@phis/background-patterns/grid", values: {}, color: "#ff8800" },
     });
-    expect(normalized.overlay).toMatchObject({ ink: { kind: "color", color: "#ff8800" } });
+    expect(normalized.overlay).not.toHaveProperty("ink");
   });
 
   it("has no ink to keep on a noise overlay", () => {
@@ -244,7 +238,7 @@ describe("background colour overlay", () => {
     expect(style.backgroundRepeat).toBe("no-repeat, no-repeat");
   });
 
-  it("keeps the ink through a normalize round trip, and reads a bare colour", () => {
+  it("keeps the ink through a normalize round trip, and reads it only from its own field", () => {
     expect(
       normalizePhiBackgroundWidgetConfig({
         base: { kind: "none" },
@@ -257,7 +251,7 @@ describe("background colour overlay", () => {
         base: { kind: "none" },
         overlay: { kind: "color", color: "#ff8800" },
       }).overlay,
-    ).toMatchObject({ kind: "color", ink: { kind: "color", color: "#ff8800" } });
+    ).not.toHaveProperty("ink");
   });
 
   it("paints a ground on its own, the way every other Overlay does", () => {

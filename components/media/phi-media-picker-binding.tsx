@@ -79,6 +79,7 @@ export function usePhiMediaPickerBinding({
   const spaceSelectionAllowed = usePhiMediaSpaceSelectionAllowed();
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [loadFailed, setLoadFailed] = useState(false);
   const assetCacheRef = useRef(new Map<number, PhiMediaAssetTile>());
   const isOpen = controlledOpen ?? localOpen;
   const selectedAssetId = controlledValue ?? localValue;
@@ -122,6 +123,7 @@ export function usePhiMediaPickerBinding({
     const abortController = new AbortController();
     const load = async () => {
       setLoading(true);
+      setLoadFailed(false);
       try {
         const data = await provider.query({
           resourceKey: source.resourceKey,
@@ -147,10 +149,13 @@ export function usePhiMediaPickerBinding({
           : null;
         if (activeAddress) setSpaceAddress(activeAddress);
         setTotal(typeof data.total === "number" ? data.total : data.items.length);
-      } catch {
+      } catch (error) {
         if (!abortController.signal.aborted) {
+          // A refused or failed read is not an empty library; saying "No assets found" would hide it.
+          console.error("Media picker failed to load assets.", error);
           setAssets([]);
           setTotal(0);
+          setLoadFailed(true);
         }
       } finally {
         if (!abortController.signal.aborted) setLoading(false);
@@ -213,7 +218,7 @@ export function usePhiMediaPickerBinding({
     showFolderFilter: config?.showFolderFilter ?? true,
     showPagination: config?.showPagination ?? true,
     trigger,
-    labels: { trigger: labels.picker.triggerLabel, title: labels.picker.popoverTitle, search: labels.tool.searchPlaceholder ?? searchLabels.placeholder, folder: labels.tool.folderLabel, space: labels.space.label, empty: bindingError ?? labels.picker.emptyDescription, clear: labels.picker.clearLabel, reload: labels.tool.reloadLabel, tileSize: labels.picker.tileSizeLabel },
+    labels: { trigger: labels.picker.triggerLabel, title: labels.picker.popoverTitle, search: labels.tool.searchPlaceholder ?? searchLabels.placeholder, folder: labels.tool.folderLabel, space: labels.space.label, empty: bindingError ?? (loadFailed ? labels.picker.loadFailedDescription : labels.picker.emptyDescription), clear: labels.picker.clearLabel, reload: labels.tool.reloadLabel, tileSize: labels.picker.tileSizeLabel },
     getPopupContainer,
     popupRootClassName,
     onOpenChange: updateOpen,

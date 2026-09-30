@@ -99,6 +99,9 @@ const PHI_MEDIA_WIDGET_LABEL_SET = definePhiLabelSet({
     picker_popover_title: PHI_MEDIA_WIDGET_DEFAULT_LABELS.picker.popoverTitle,
     picker_selected_label: PHI_MEDIA_WIDGET_DEFAULT_LABELS.picker.selectedLabel,
     picker_empty_description: definePhiMessageLabel(PHI_MEDIA_WIDGET_DEFAULT_LABELS.picker.emptyDescription),
+    picker_load_failed_description: definePhiMessageLabel(
+      PHI_MEDIA_WIDGET_DEFAULT_LABELS.picker.loadFailedDescription,
+    ),
     picker_clear_label: PHI_MEDIA_WIDGET_DEFAULT_LABELS.picker.clearLabel,
     picker_tile_size_label: PHI_MEDIA_WIDGET_DEFAULT_LABELS.picker.tileSizeLabel,
     space_label: PHI_MEDIA_WIDGET_DEFAULT_LABELS.space.label,
@@ -212,6 +215,7 @@ export async function getPhiMediaWidgetLabels(
       popoverTitle: labels.picker_popover_title,
       selectedLabel: labels.picker_selected_label,
       emptyDescription: labels.picker_empty_description,
+      loadFailedDescription: labels.picker_load_failed_description,
       clearLabel: labels.picker_clear_label,
       tileSizeLabel: labels.picker_tile_size_label,
     },

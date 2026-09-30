@@ -1,5 +1,4 @@
 import type { CSSProperties } from "react";
-import type { PhiCssLength } from "../types/length";
 import { PHI_COLOR } from "../theme/antd-css-var-contract";
 import { PHI_LAYOUT } from "../theme/phi-tokens";
 import type { PhiShadow, PhiLayoutEffectId } from "../types/layout-style";
@@ -111,14 +110,14 @@ function resolveRegionConfig(
 }
 
 type PhiShellMetricRegion = PhiShellRegionConfig & {
-  height?: CSSProperties["height"];
-  width?: CSSProperties["width"];
-  collapsedWidth?: CSSProperties["width"];
+  height?: number | null;
+  width?: number | null;
+  collapsedWidth?: number | null;
   fontSize?: CSSProperties["fontSize"];
   lineHeight?: CSSProperties["lineHeight"];
-  sticky?: boolean;
-  offsetTop?: PhiCssLength;
-  zIndex?: number;
+  sticky?: boolean | null;
+  offsetTop?: number | null;
+  zIndex?: number | null;
 };
 
 export type PhiShellRegionTypography = {
@@ -176,30 +175,61 @@ function resolvePhiShellRegionFamilyAndName(regionKey: PhiShellRegionKey): {
   return { family, region };
 }
 
+/*
+ * The Shell record states its metrics as pixel numbers (`PhiShellRegionMetrics`). Anything else there is
+ * a broken record, refused rather than read as unset -- that would put the preset default in its place
+ * and the record would look as if it had never been written.
+ */
 function readMetricValue(
   regionConfig: PhiShellMetricRegion | null | undefined,
   key: PhiShellMetricOrTypographyKey,
 ) {
-  const value = regionConfig?.[key];
-
-  if (key === "sticky") {
-    return typeof value === "boolean" ? value : undefined;
+  const value: unknown = regionConfig?.[key];
+  if (value === undefined || value === null) {
+    return undefined;
   }
-
-  if (typeof value === "number" || typeof value === "string") {
+  if (key === "sticky") {
+    if (typeof value !== "boolean") {
+      throw new Error(`Shell metric "sticky" must be a boolean, got ${JSON.stringify(value)}.`);
+    }
     return value;
   }
-
-  return undefined;
+  if (key === "fontSize" || key === "lineHeight") {
+    if (typeof value !== "number" && typeof value !== "string") {
+      throw new Error(`Shell metric "${key}" must be a CSS value, got ${JSON.stringify(value)}.`);
+    }
+    return value;
+  }
+  if (typeof value !== "number" || !Number.isFinite(value)) {
+    throw new Error(`Shell metric "${key}" must be a number of pixels, got ${JSON.stringify(value)}.`);
+  }
+  return value;
 }
+
+type PhiShellMetricOptions = {
+  family?: PhiShellRegionFamily;
+  region?: PhiShellRegionName;
+};
 
 export function resolvePhiShellMetric(
   shellTheme: PhiShellRegionTheme | undefined,
+  key: "fontSize" | "lineHeight",
+  options: PhiShellMetricOptions,
+): number | string | undefined;
+export function resolvePhiShellMetric(
+  shellTheme: PhiShellRegionTheme | undefined,
+  key: "sticky",
+  options: PhiShellMetricOptions,
+): boolean | undefined;
+export function resolvePhiShellMetric(
+  shellTheme: PhiShellRegionTheme | undefined,
+  key: Exclude<PhiShellMetricKey, "sticky">,
+  options: PhiShellMetricOptions,
+): number | undefined;
+export function resolvePhiShellMetric(
+  shellTheme: PhiShellRegionTheme | undefined,
   key: PhiShellMetricOrTypographyKey,
-  options: {
-    family?: PhiShellRegionFamily;
-    region?: PhiShellRegionName;
-  },
+  options: PhiShellMetricOptions,
 ) {
   const regionConfig = resolveRegionConfig(shellTheme, options.family, options.region);
   const familyConfig = resolveRegionFamily(shellTheme, options.family) as PhiShellMetricRegion | null | undefined;
@@ -225,7 +255,13 @@ export function resolvePhiShellHeaderHeight(
   region: "top" | "main" | "bottom",
 ): number {
   const height = resolvePhiShellMetric(shellTheme, "height", { family: "header", region });
-  return typeof height === "number" && Number.isFinite(height) && height > 0 ? height : PHI_LAYOUT.headerHeight;
+  if (height === undefined) {
+    return PHI_LAYOUT.headerHeight;
+  }
+  if (height <= 0) {
+    throw new Error(`Shell header "${region}" height must be positive, got ${height}.`);
+  }
+  return height;
 }
 
 export function resolvePhiShellRegionTypography(

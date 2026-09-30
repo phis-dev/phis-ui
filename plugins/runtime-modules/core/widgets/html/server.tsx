@@ -50,26 +50,26 @@ export async function PhiHtmlWidget({
 }: PhiHtmlWidgetProps) {
   const sourceMode = config?.sourceMode ?? (config?.sourceUrl?.trim() ? "url" : "inline");
   const sourceUrl = config?.sourceUrl?.trim() ?? "";
+  /*
+   * A source that cannot be resolved or read is an error, not an empty block: rendering nothing would
+   * look like a page without that section, and nobody would learn the address broke.
+   */
   const resolvedSourceUrl = sourceMode === "url" && sourceUrl
-    ? (() => {
-        try {
-          return resolvePhiWidgetSourceUrl(sourceUrl, runtime.site.publicUrl);
-        } catch {
-          return null;
-        }
-      })()
+    ? resolvePhiWidgetSourceUrl(sourceUrl, runtime.site.publicUrl)
     : null;
-  const resolvedHtml = sourceMode === "url" && sourceUrl
-    ? resolvedSourceUrl
-      ? await loadRemoteHtml(resolvedSourceUrl, config?.revalidateSeconds ?? HTML_DEFAULT_REVALIDATE_SECONDS)
-        .then((html) => resolvePhiHtmlWidgetMarkup({ html }, { preferConfigHtml: true }))
-        .catch(() => "")
-      : ""
-    : resolvePhiHtmlWidgetMarkup(config, {
-        preferSource: config?.preferSource === true,
-        preferConfigHtml: config?.renderMode === "preview" || config?.renderMode === "editor",
-        allowInternalReferences: true,
-      });
+  const revalidateSeconds = config?.revalidateSeconds ?? HTML_DEFAULT_REVALIDATE_SECONDS;
+  const resolvedHtml = resolvedSourceUrl
+    ? resolvePhiHtmlWidgetMarkup(
+        { html: await loadRemoteHtml(resolvedSourceUrl, revalidateSeconds) },
+        { preferConfigHtml: true },
+      )
+    : sourceMode === "url"
+      ? ""
+      : resolvePhiHtmlWidgetMarkup(config, {
+          preferSource: config?.preferSource === true,
+          preferConfigHtml: config?.renderMode === "preview" || config?.renderMode === "editor",
+          allowInternalReferences: true,
+        });
   const sourceHtml = resolvedHtml
     ? sanitizePhiHtmlWidgetMarkup(await resolvePhiHtmlReferences({
         html: resolvedHtml,

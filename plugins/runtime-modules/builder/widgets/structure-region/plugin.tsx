@@ -5,7 +5,7 @@ import { getPhiAuthoringToolsLabelsForRuntime } from "../../../../../components/
 import {
   PHI_BUILDER_PREVIEW_SEARCH_PARAM,
 } from "../../../../../plugins/runtime-modules/builder/preview-transport";
-import { resolvePhiBuilderPreviewSnapshotFromSearchParam } from "../../../../../plugins/runtime-modules/builder/preview-store";
+import { loadPhiBuilderPreviewSnapshot } from "../../../../../plugins/runtime-modules/builder/preview-store";
 import { buildPhiBuilderCurrentPageDrafts } from "../../page-presets.server";
 import { buildPhiBuilderCurrentStructureShellDrafts } from "../../area-shell-presets.server";
 import {
@@ -27,7 +27,7 @@ export const PHI_STRUCTURE_REGION_WIDGET_PLUGIN: PhiCmsWidgetPlugin<PhiStructure
       throw new Error("Structure Region requires the resolved runtime registry.");
     }
     const regionKey = config.regionKey ?? "";
-    const snapshot = resolvePhiBuilderPreviewSnapshotFromSearchParam(
+    const snapshot = loadPhiBuilderPreviewSnapshot(
       runtime.request?.searchParams?.[PHI_BUILDER_PREVIEW_SEARCH_PARAM],
     );
     const previewDraft = snapshot

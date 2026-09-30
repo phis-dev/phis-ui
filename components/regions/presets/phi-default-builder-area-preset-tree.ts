@@ -436,9 +436,7 @@ export async function buildPhiDefaultBuilderAreaPresetTree({
            * one edge of the Builder that is tall enough to show it -- so the Sider stood as an opaque
            * column beside Headers the Background ran through, which is not a chrome at all.
            */
-          ...(typeof shellSiderLeftWidth === "number"
-            ? { size: { width: `${shellSiderLeftWidth}px` } }
-            : { size: { width: `${PHI_LAYOUT.sidebarWidth}px` } }),
+          size: { width: `${shellSiderLeftWidth ?? PHI_LAYOUT.sidebarWidth}px` },
           offsetTop: 0,
         },
       }),

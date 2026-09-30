@@ -1,6 +1,5 @@
 import {
   PHI_BUILDER_PREVIEW_TTL_MS,
-  parsePhiBuilderPreviewSnapshot,
   type PhiBuilderPreviewSnapshot,
   type PhiBuilderPreviewSnapshotId,
 } from "./preview-transport";
@@ -67,10 +66,4 @@ export function loadPhiBuilderPreviewSnapshot(
 
   entry.expiresAt = now + PHI_BUILDER_PREVIEW_TTL_MS;
   return entry.snapshot;
-}
-
-export function resolvePhiBuilderPreviewSnapshotFromSearchParam(
-  value: string | null | undefined,
-): PhiBuilderPreviewSnapshot | null {
-  return loadPhiBuilderPreviewSnapshot(value) ?? parsePhiBuilderPreviewSnapshot(value);
 }

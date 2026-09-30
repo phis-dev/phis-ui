@@ -54,7 +54,7 @@ export async function buildPhiDefaultAppAreaPresetTree({
     region: "left",
   });
   const resolvedShellLeftWidth =
-    typeof shellSiderLeftWidth === "number" ? shellSiderLeftWidth : PHI_LAYOUT.sidebarWidth;
+    shellSiderLeftWidth ?? PHI_LAYOUT.sidebarWidth;
   const nodes = createPhiCmsPresetNodes(page);
 
   return {

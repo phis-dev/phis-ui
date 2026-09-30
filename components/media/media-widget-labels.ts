@@ -124,6 +124,7 @@ export type PhiMediaPickerWidgetLabels = {
   popoverTitle: string;
   selectedLabel: string;
   emptyDescription: string;
+  loadFailedDescription: string;
   clearLabel: string;
   tileSizeLabel: string;
 };
@@ -228,6 +229,7 @@ export const PHI_MEDIA_WIDGET_DEFAULT_LABELS: PhiAssetWidgetLabels = {
     popoverTitle: "Mediathek",
     selectedLabel: "Selected asset",
     emptyDescription: "No assets found.",
+    loadFailedDescription: "The media library could not be loaded.",
     clearLabel: "Clear selection",
     tileSizeLabel: "Tile size",
   },

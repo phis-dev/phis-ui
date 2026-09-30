@@ -201,19 +201,20 @@ function readBackgroundStops(value: unknown): PhiBackgroundGradientStop[] | unde
     return undefined;
   }
 
-  const stops = value
-    .map((stop): PhiBackgroundGradientStop | null => {
-      if (!stop || typeof stop !== "object" || Array.isArray(stop)) {
-        return null;
-      }
-      const raw = stop as Record<string, unknown>;
-      const color = readString(raw.color);
-      const percent = readNumber(raw.percent);
-      return color && percent !== undefined ? { color, percent } : null;
-    })
-    .filter((stop): stop is PhiBackgroundGradientStop => stop !== null);
+  const stops = value.map((stop): PhiBackgroundGradientStop | null => {
+    if (!stop || typeof stop !== "object" || Array.isArray(stop)) {
+      return null;
+    }
+    const raw = stop as Record<string, unknown>;
+    const color = readString(raw.color);
+    const percent = readNumber(raw.percent);
+    return color && percent !== undefined ? { color, percent } : null;
+  });
 
-  return stops.length > 0 ? stops : undefined;
+  // One unreadable stop makes it a different gradient than the one written; dropping it would paint that.
+  return stops.length >= 2 && stops.every((stop) => stop !== null)
+    ? (stops as PhiBackgroundGradientStop[])
+    : undefined;
 }
 
 function splitPhiBackgroundGradientStops(input: string) {
@@ -388,14 +389,10 @@ function normalizePhiBackgroundBase(value: unknown): PhiCmsBackgroundWidgetConfi
   const raw = value as Record<string, unknown>;
   const kind = readString(raw.kind);
   if (kind === "gradient") {
-    return {
-      kind,
-      direction: readBackgroundDirection(raw.direction ?? raw.backgroundDirection),
-      stops: readBackgroundStops(raw.stops) ?? readBackgroundStops(raw.colors) ?? [
-        { color: readString(raw.from) ?? "#ffffff", percent: 0 },
-        { color: readString(raw.to) ?? "#000000", percent: 100 },
-      ],
-    };
+    // Stops or nothing: a gradient without them has nothing to paint, and inventing white to black
+    // would put a Background on screen that nobody authored.
+    const stops = readBackgroundStops(raw.stops);
+    return stops ? { kind, direction: readBackgroundDirection(raw.direction), stops } : null;
   }
   if (kind === "image") {
     const source = readPhiMediaImageSourceConfig(raw);
@@ -416,7 +413,10 @@ function normalizePhiBackgroundBase(value: unknown): PhiCmsBackgroundWidgetConfi
       : { ...normalized, ...source };
   }
   if (kind === "none") return { kind };
-  if (kind === "color") return { kind, color: readString(raw.color) ?? "#ffffff" };
+  if (kind === "color") {
+    const color = readString(raw.color);
+    return color ? { kind, color } : null;
+  }
 
   const background = readString(raw.background);
   if (background) {
@@ -427,12 +427,7 @@ function normalizePhiBackgroundBase(value: unknown): PhiCmsBackgroundWidgetConfi
   return color ? { kind: "color", color } : null;
 }
 
-/**
- * The ink, from the Overlay's own field or from a bare colour.
- *
- * The bare colour is what the field looked like before a gradient was possible; reading it here keeps a
- * record written then rendering what it rendered, without a migration.
- */
+/** The ink, as a colour string or as the structure a Base colour or gradient has. */
 function readBackgroundPatternInk(value: unknown): PhiBackgroundPatternInk | null {
   if (typeof value === "string") {
     const color = value.trim();
@@ -454,7 +449,7 @@ function readBackgroundOverlay(value: unknown): PhiBackgroundOverlay | null {
   const raw = value as Record<string, unknown>;
   const kind = readString(raw.kind);
   if (kind === "color") {
-    const inkValue = readBackgroundPatternInk(raw.ink) ?? readBackgroundPatternInk(raw.color);
+    const inkValue = readBackgroundPatternInk(raw.ink);
     return {
       kind,
       opacity: readNumber(raw.opacity),
@@ -485,7 +480,7 @@ function readBackgroundOverlay(value: unknown): PhiBackgroundOverlay | null {
       );
     }),
   );
-  const ink = readBackgroundPatternInk(raw.ink) ?? readBackgroundPatternInk(raw.color);
+  const ink = readBackgroundPatternInk(raw.ink);
   return {
     kind,
     patternKey,

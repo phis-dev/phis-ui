@@ -63,12 +63,8 @@ function resolveSpecifier(specifier, importingFile) {
 
 async function collectSourceFiles(root) {
   const files = [];
-  let entries;
-  try {
-    entries = await readdir(root, { withFileTypes: true });
-  } catch {
-    return files;
-  }
+  // A root that cannot be read is a validator that checks less than it says; it fails instead.
+  const entries = await readdir(root, { withFileTypes: true });
   for (const entry of entries) {
     const entryPath = path.join(root, entry.name);
     if (entry.isDirectory()) {
@@ -83,7 +79,7 @@ async function collectSourceFiles(root) {
 const sourceCache = new Map();
 async function readSource(file) {
   if (!sourceCache.has(file)) {
-    sourceCache.set(file, await readFile(file, "utf8").catch(() => ""));
+    sourceCache.set(file, await readFile(file, "utf8"));
   }
   return sourceCache.get(file);
 }

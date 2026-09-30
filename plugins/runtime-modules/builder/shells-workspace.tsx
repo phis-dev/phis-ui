@@ -8,7 +8,7 @@ import {
   buildPhiBuilderPreviewRenderableTrees,
   buildPhiBuilderServerPreviewRegions,
 } from "./render-root-node-preview.server";
-import { resolvePhiBuilderPreviewSnapshotFromSearchParam } from "./preview-store";
+import { loadPhiBuilderPreviewSnapshot } from "./preview-store";
 import { PHI_BUILDER_PREVIEW_SEARCH_PARAM } from "./preview-transport";
 import { PhiDeveloperBuilderShellsWorkspaceWidgetClient } from "./clients/shells-workspace";
 import { resolvePhiBuilderCanvasRuntimeModuleSandbox } from "./runtime-module-sandbox.server";
@@ -38,7 +38,7 @@ export async function PhiDeveloperBuilderShellsWorkspaceWidget({
   registry: PhiCmsRuntimeRenderRegistry;
   disabled?: boolean;
 }) {
-  const snapshot = resolvePhiBuilderPreviewSnapshotFromSearchParam(
+  const snapshot = loadPhiBuilderPreviewSnapshot(
     runtime.request?.searchParams?.[PHI_BUILDER_PREVIEW_SEARCH_PARAM],
   );
   const snapshotArea = snapshot?.area ?? null;

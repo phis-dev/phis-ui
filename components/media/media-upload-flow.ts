@@ -473,9 +473,18 @@ export async function initPhiMediaUploadSession(
   });
 
   const payload = await readJsonResponse<PhiMediaUploadInitResponse>(response);
-  const uploaded = (payload.uploaded ?? []).filter((part) =>
+  const uploaded = payload.uploaded ?? [];
+  // A stored part this side cannot name is one finalize would leave out; that is not the Server's upload.
+  const partsReadable = uploaded.every((part) =>
     Number.isInteger(part?.partNumber) && part.partNumber > 0 && Boolean(part?.eTag));
-  if (!payload.token || !isUsablePhiMediaUploadPlan(payload.plan, uploaded.length) || !payload.finalizeUrl) {
+  if (
+    !payload.token ||
+    !partsReadable ||
+    !isUsablePhiMediaUploadPlan(payload.plan, uploaded.length) ||
+    !payload.finalizeUrl ||
+    !payload.reportUrl ||
+    !payload.expiresAt
+  ) {
     throw new Error(payload.error ?? "Failed to create upload session.");
   }
 
@@ -483,10 +492,8 @@ export async function initPhiMediaUploadSession(
     token: payload.token,
     plan: payload.plan,
     finalizeUrl: payload.finalizeUrl,
-    // Derived when an older control plane did not send it: reporting is a courtesy, and losing it must
-    // not be what makes an upload fail.
-    reportUrl: payload.reportUrl ?? `/api/site/media/uploads/${payload.token}/report`,
-    expiresAt: payload.expiresAt ?? "",
+    reportUrl: payload.reportUrl,
+    expiresAt: payload.expiresAt,
     uploaded,
     resumed: payload.resumed === true,
   };

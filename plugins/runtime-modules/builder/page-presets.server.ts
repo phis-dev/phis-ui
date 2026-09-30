@@ -478,7 +478,11 @@ async function buildPageMetaForScope(
     locale: runtime.locale.current,
     cookieHeader,
     sourcePreset,
-  }).catch(() => null);
+  }).catch((error) => {
+    throw new Error(`Failed to resolve builder page draft meta for "${area}" at "${storagePath}".`, {
+      cause: error,
+    });
+  });
 
   if (draftPage?.page?.pageMeta) {
     return {
@@ -506,7 +510,11 @@ async function buildPageMetaForScope(
     locale: runtime.locale.current,
     cookieHeader,
     sourcePreset,
-  }).catch(() => null);
+  }).catch((error) => {
+    throw new Error(`Failed to resolve builder page meta for "${area}" at "${fetchPath}".`, {
+      cause: error,
+    });
+  });
 
   if (resolvedPage?.page?.pageMeta) {
     return {

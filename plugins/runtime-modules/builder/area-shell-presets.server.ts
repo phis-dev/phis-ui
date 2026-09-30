@@ -253,11 +253,21 @@ const buildPhiBuilderAreaPresetConfig = cache(async function buildPhiBuilderArea
     cookieHeader,
     sourcePreset,
   };
-  const draftPreset = await getCurrentSiteAreaDraft({ ...request, area }).catch(() => null);
+  // A failed read is not "never asked": answering with the preset default would let the Builder show and
+  // save it over what the Area actually stores.
+  const draftPreset = await getCurrentSiteAreaDraft({ ...request, area }).catch((error) => {
+    throw new Error(`Failed to resolve builder structure draft config for area "${area}" at "${path}".`, {
+      cause: error,
+    });
+  });
   if (draftPreset?.preset) {
     return draftPreset.preset.preset.config ?? null;
   }
-  const resolvedPreset = await getExactSiteArea(request).catch(() => null);
+  const resolvedPreset = await getExactSiteArea(request).catch((error) => {
+    throw new Error(`Failed to resolve builder structure config for area "${area}" at "${path}".`, {
+      cause: error,
+    });
+  });
   return resolvedPreset?.preset ? resolvedPreset.preset.preset.config ?? null : null;
 });
 

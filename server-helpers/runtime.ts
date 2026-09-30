@@ -71,7 +71,7 @@ export type PhiCmsRuntimeInfo = {
 };
 
 export type PhiSiteRequestContext = {
-  serverCapabilities: PhiCapabilitySnapshot | null;
+  serverCapabilities: PhiCapabilitySnapshot;
   site: {
     id: number;
     key: string;
@@ -480,16 +480,13 @@ export const loadPhiSiteRequestContext = cache(async function loadPhiSiteRequest
     siteKey,
     cookieHeader,
   });
-  let serverCapabilities: PhiCapabilitySnapshot | null = null;
-  try {
-    serverCapabilities = await getPhiCapabilitySnapshot({
-      apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
-      internalToken: readPhiServerApiCredentials().internalToken,
-      siteKey: runtimeInfo.site.key,
-    });
-  } catch (error) {
-    console.error("Failed to load phi-server capability snapshot.", error);
-  }
+  // Without it no Module can tell what the server provides; rendering on would show Modules as active
+  // that the server refuses, so a failed read fails the request.
+  const serverCapabilities = await getPhiCapabilitySnapshot({
+    apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
+    internalToken: readPhiServerApiCredentials().internalToken,
+    siteKey: runtimeInfo.site.key,
+  });
 
   return {
     serverCapabilities,

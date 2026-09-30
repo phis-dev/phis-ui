@@ -1,6 +1,6 @@
 import type { PhiBlockRuntime, PhiCmsRuntimeRenderRegistry } from "../../../types";
 import { PHI_BUILDER_PREVIEW_SEARCH_PARAM, type PhiBuilderPreviewRegionDraft } from "./preview-transport";
-import { resolvePhiBuilderPreviewSnapshotFromSearchParam } from "./preview-store";
+import { loadPhiBuilderPreviewSnapshot } from "./preview-store";
 import {
   buildPhiBuilderPagesDraftsByScope,
   buildPhiBuilderPagePresetDrafts,
@@ -36,7 +36,7 @@ export async function PhiDeveloperBuilderPagesWorkspaceWidget({
   registry: PhiCmsRuntimeRenderRegistry;
   disabled?: boolean;
 }) {
-  const snapshot = resolvePhiBuilderPreviewSnapshotFromSearchParam(
+  const snapshot = loadPhiBuilderPreviewSnapshot(
     runtime.request?.searchParams?.[PHI_BUILDER_PREVIEW_SEARCH_PARAM],
   );
   const pageDraftsByScopePromise = buildPhiBuilderPagesDraftsByScope(

@@ -57,18 +57,6 @@ type TranslationBatchResponse = {
   provisional?: boolean;
 };
 
-function logTranslationFallback(error: unknown, meta: Record<string, unknown>) {
-  const message = error instanceof Error ? error.message : String(error);
-  console.warn(JSON.stringify({
-    level: "warn",
-    service: "ui",
-    event: "translation.fallback",
-    message: "Translation request failed. Falling back to source text.",
-    error: message,
-    meta,
-  }));
-}
-
 function assertGlobalTranslatorOptions({
   apiBaseUrl,
   internalToken,
@@ -188,33 +176,25 @@ export async function tr(
     return formatPhiTranslation(cached, params);
   }
 
-  try {
-    const generation = readPhiTranslationCacheGeneration();
-    const response = await requestTranslation(options, {
-      locale,
-      ...(sourceLocale ? { sourceLocale } : {}),
-      msg: normalizedMessage,
-      ...(context ? { ctx: context } : {}),
-      ...(format !== "text" ? { format } : {}),
-    });
+  // phis-server already answers a provider failure with the source text, marked provisional; what reaches
+  // this side as an error is the server failing, and that is not a translation to stand in for.
+  const generation = readPhiTranslationCacheGeneration();
+  const response = await requestTranslation(options, {
+    locale,
+    ...(sourceLocale ? { sourceLocale } : {}),
+    msg: normalizedMessage,
+    ...(context ? { ctx: context } : {}),
+    ...(format !== "text" ? { format } : {}),
+  });
 
-    const payload = (await response.json()) as TranslationResponse;
-    const translation = payload.translation ?? normalizedMessage;
-    if (payload.provisional !== true) {
-      writePhiTranslationCache(cacheKey, translation, generation);
-    }
-    return formatPhiTranslation(translation, params);
-  } catch (error) {
-    logTranslationFallback(error, {
-      locale,
-      sourceLocale: sourceLocale ?? null,
-      ctx: context ?? null,
-      format,
-      siteKey: "siteKey" in options ? options.siteKey : null,
-      msg: normalizedMessage.slice(0, 120),
-    });
-    return formatPhiTranslation(normalizedMessage, params);
+  const payload = (await response.json()) as TranslationResponse;
+  if (typeof payload.translation !== "string") {
+    throw new Error("Translation response carries no translation.");
   }
+  if (payload.provisional !== true) {
+    writePhiTranslationCache(cacheKey, payload.translation, generation);
+  }
+  return formatPhiTranslation(payload.translation, params);
 }
 
 export async function trBulk(
@@ -267,50 +247,38 @@ export async function trBulk(
     return normalizedMessages.map((msg, index) => resolved[index] ?? msg);
   }
 
-  try {
-    const generation = readPhiTranslationCacheGeneration();
-    const response = await requestTranslation(options, {
-      locale,
-      ...(sourceLocale ? { sourceLocale } : {}),
-      msgs: pending,
-      ...(context ? { ctx: context } : {}),
-      ...(format !== "text" ? { format } : {}),
-    });
+  const generation = readPhiTranslationCacheGeneration();
+  const response = await requestTranslation(options, {
+    locale,
+    ...(sourceLocale ? { sourceLocale } : {}),
+    msgs: pending,
+    ...(context ? { ctx: context } : {}),
+    ...(format !== "text" ? { format } : {}),
+  });
 
-    const payload = (await response.json()) as TranslationBatchResponse;
-    const translations = Array.isArray(payload.translations) ? payload.translations : [];
-    if (translations.length !== pending.length) {
-      throw new Error("Translation batch length mismatch.");
-    }
-
-    if (payload.provisional !== true) {
-      for (const [key, pendingIndex] of pendingIndexByKey) {
-        writePhiTranslationCache(key, translations[pendingIndex] || pending[pendingIndex] || "", generation);
-      }
-    }
-
-    return normalizedMessages.map((msg, index) => {
-      const hit = resolved[index];
-      if (hit != null) {
-        return hit;
-      }
-      const key = cacheKeys[index];
-      const pendingIndex = key == null ? undefined : pendingIndexByKey.get(key);
-      return (pendingIndex == null ? undefined : translations[pendingIndex]) || msg || "";
-    });
-  } catch (error) {
-    logTranslationFallback(error, {
-      locale,
-      sourceLocale: sourceLocale ?? null,
-      ctx: context ?? null,
-      format,
-      siteKey: "siteKey" in options ? options.siteKey : null,
-      msgCount: normalizedMessages.length,
-      requestedCount: pending.length,
-    });
-    // What the cache already answered stays answered; only what this request asked for falls back.
-    return normalizedMessages.map((msg, index) => resolved[index] ?? msg);
+  const payload = (await response.json()) as TranslationBatchResponse;
+  const translations = payload.translations;
+  if (
+    !Array.isArray(translations) ||
+    translations.length !== pending.length ||
+    translations.some((translation) => typeof translation !== "string")
+  ) {
+    throw new Error("Translation batch does not answer every message it was asked.");
   }
+
+  if (payload.provisional !== true) {
+    for (const [key, pendingIndex] of pendingIndexByKey) {
+      writePhiTranslationCache(key, translations[pendingIndex]!, generation);
+    }
+  }
+
+  return normalizedMessages.map((_msg, index) => {
+    const hit = resolved[index];
+    if (hit != null) {
+      return hit;
+    }
+    return translations[pendingIndexByKey.get(cacheKeys[index]!)!]!;
+  });
 }
 
 export function createGlobalTranslator(options: PhiGlobalTranslatorOptions) {
