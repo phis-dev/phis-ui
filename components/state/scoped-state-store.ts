@@ -144,32 +144,42 @@ export function createScopedStateStore<TState>(
     selector: (state: TState) => TSelected,
   ) {
     const normalizedScopeKey = normalizeScopedStateKey(scopeKey);
+    /*
+     * Cached on the source and on the selector. Keyed on the source alone, a selector that changed
+     * while the store did not -- a different id, a different scope -- kept answering with what the
+     * previous one selected. An inline selector is new each render, so it runs once per render; within
+     * one render every read agrees, which is what `useSyncExternalStore` needs.
+     */
     const selectedSnapshotRef = useRef<{
       source: TState;
+      selector: (state: TState) => TSelected;
       selected: TSelected;
     } | null>(null);
     const selectedHydrationSnapshotRef = useRef<{
+      source: TState;
+      selector: (state: TState) => TSelected;
       selected: TSelected;
     } | null>(null);
     const getSelectedSnapshot = () => {
       const source = getSnapshot(normalizedScopeKey);
       const cached = selectedSnapshotRef.current;
-      if (cached && Object.is(cached.source, source)) {
+      if (cached && Object.is(cached.source, source) && cached.selector === selector) {
         return cached.selected;
       }
 
       const selected = selector(source);
-      selectedSnapshotRef.current = { source, selected };
+      selectedSnapshotRef.current = { source, selector, selected };
       return selected;
     };
     const getSelectedHydrationSnapshot = () => {
+      const source = getHydrationSnapshot(normalizedScopeKey);
       const cached = selectedHydrationSnapshotRef.current;
-      if (cached) {
+      if (cached && Object.is(cached.source, source) && cached.selector === selector) {
         return cached.selected;
       }
 
-      const selected = selector(getHydrationSnapshot(normalizedScopeKey));
-      selectedHydrationSnapshotRef.current = { selected };
+      const selected = selector(source);
+      selectedHydrationSnapshotRef.current = { source, selector, selected };
       return selected;
     };
 

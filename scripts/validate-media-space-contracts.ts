@@ -381,7 +381,8 @@ globalThis.fetch = (async (input: unknown, init?: { body?: unknown }) => {
       token: "t",
       plan: { kind: "proxy-stream", url: "/api/site/media/uploads/t", method: "PUT" },
       finalizeUrl: "/finalize",
-      expiresAt: "",
+      reportUrl: "/report",
+      expiresAt: "2026-01-01T00:00:00.000Z",
     }),
     { status: 200, headers: { "Content-Type": "application/json" } },
   );

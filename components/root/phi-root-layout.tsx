@@ -11,6 +11,7 @@ import type { PhiSiteConfig } from "../../gateway/site-config";
 import { loadPhiAntdLocale } from "../../helpers/antd-locale";
 import type { PhiResolvedLocale } from "../../helpers/site-locale-config";
 import { PhiDayjsLocale } from "./phi-dayjs-locale";
+import { PhiIntlLocaleProvider } from "./phi-intl-locale";
 import { PhiRootRemProvider } from "./phi-root-rem-provider";
 import { PhiRootLiveThemeProvider } from "./phi-root-live-theme-provider";
 import { PhiSignalRuntimePartitionProvider } from "../runtime/runtime-signal-partition";
@@ -236,7 +237,9 @@ export async function PhiRootLayout({
             <div data-phi-app-ground="true">
               <PhiCoreRuntimeApplicationAdapter labels={sessionLabels} />
               <PhiDayjsLocale locale={resolvedLocale?.locale ?? resolvedLocale?.intlLocale}>
-                {children}
+                <PhiIntlLocaleProvider locale={resolvedLocale?.intlLocale ?? site.defaultLocale}>
+                  {children}
+                </PhiIntlLocaleProvider>
               </PhiDayjsLocale>
             </div>
           </PhiRootLiveThemeProvider>

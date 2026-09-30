@@ -53,9 +53,11 @@ async function queryMediaCollection(request: PhiCollectionProviderQueryRequest) 
     throw new Error(`Unknown Asset collection "${request.resourceKey}".`);
   }
   try {
+    // The Area goes with the read as with every write: the server answers for the Area it is told, and a
+    // read without it could list a different library than the one a delete on the same page acts on.
     const response = await fetch(`/api/site/media?${buildMediaQuery(request.query).toString()}`, {
       method: "GET",
-      headers: { Accept: "application/json" },
+      headers: buildPhiMediaRequestHeaders({ Accept: "application/json" }),
       cache: "no-store",
       credentials: "include",
       signal: request.signal,

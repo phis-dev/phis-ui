@@ -2,10 +2,11 @@
 
 import { useEffect, useMemo, useState } from "react";
 
-import { requestPhiJson } from "../../helpers/client-json-request";
+import { readPhiJsonPayload } from "../../helpers/client-json-request";
 import type { PhiMediaAsset } from "../../types/media";
 import { PHI_ASSET_CONTROLLER_STORE_KEY } from "./asset-controller-signals";
 import { usePhiImagePreviewStore } from "./phi-image-preview-store";
+import { buildPhiMediaRequestHeaders } from "./phi-media-request-headers";
 
 /**
  * Authoring surfaces need the same Asset facts the server render has: the delivery revision that a
@@ -26,12 +27,17 @@ export function usePhiAuthoringAssetDetails(assetId: number | null | undefined) 
 
     async function run() {
       try {
-        const { ok, payload } = await requestPhiJson<{ asset?: PhiMediaAsset | null }>(
-          `/api/site/media/${assetId}`,
-          { signal: controller.signal },
-        );
+        // With the Area header, as every other Media request: see `buildPhiMediaRequestHeaders`.
+        const response = await fetch(`/api/site/media/${assetId}`, {
+          method: "GET",
+          credentials: "include",
+          cache: "no-store",
+          headers: buildPhiMediaRequestHeaders({ Accept: "application/json" }),
+          signal: controller.signal,
+        });
+        const payload = await readPhiJsonPayload<{ asset?: PhiMediaAsset | null }>(response);
         if (!controller.signal.aborted) {
-          setAssetDetails(ok ? payload?.asset ?? null : null);
+          setAssetDetails(response.ok ? payload?.asset ?? null : null);
         }
       } catch (error) {
         if (!controller.signal.aborted) {

@@ -3,6 +3,7 @@
 import type { ReactNode } from "react";
 
 import { formatPhiDate, formatPhiDateTime } from "../../../../helpers/format-date-time";
+import { usePhiIntlLocale } from "../../../root/phi-intl-locale";
 import type {
   PhiTableTagColor,
   PhiTableTagVariant,
@@ -68,6 +69,12 @@ function resolveTagColor(color: PhiTableTagColor | undefined) {
   return typeof color === "object" ? color.value : color;
 }
 
+/** A component rather than a call, because the page's locale is read from context. */
+function PhiRenderedDate({ value, withTime }: { value: string; withTime: boolean }) {
+  const locale = usePhiIntlLocale();
+  return withTime ? formatPhiDateTime(value, locale) : formatPhiDate(value, locale);
+}
+
 export function renderPhiValueContent(
   value: unknown,
   definition: PhiRenderedValueDefinition,
@@ -100,7 +107,7 @@ export function renderPhiValueContent(
     );
   }
   if (definition.renderer === "date" || definition.renderer === "datetime") {
-    return definition.renderer === "date" ? formatPhiDate(normalizedValue) : formatPhiDateTime(normalizedValue);
+    return <PhiRenderedDate value={normalizedValue} withTime={definition.renderer === "datetime"} />;
   }
   if (definition.renderer === "json" && presentation === "block") {
     return (
