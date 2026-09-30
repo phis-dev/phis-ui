@@ -24,6 +24,7 @@ import { PhiCmsRegionStatic } from "../components/regions/phi-cms-region-static"
 import { resolvePhiBuilderPreviewRegionConfig } from "../plugins/runtime-modules/builder/render-root-node-preview.server";
 import { parsePhiCmsContentLayoutConfig, parsePhiCmsGridLayoutConfig } from "../types/cms-config";
 import { resolvePhiGridSlotPlacement } from "../components/layouts/phi-grid-contract";
+import { PHI_CORE_LAYOUT_KIND_BY_TYPE_KEY } from "../components/layouts/layout-definitions";
 import {
   resolvePhiSlotChildSizing,
   resolvePhiSlotChildSizingForConfig,
@@ -297,29 +298,8 @@ for (const layoutKind of layoutKinds) {
 {
   const { readdir, readFile } = await import("node:fs/promises");
   const presetsDirectory = new URL("../components/regions/presets/", import.meta.url);
-  // The registry carries no layout kind, so the pairing is read from the definitions that declare both.
-  const definitionsSource = await readFile(
-    new URL("../components/layouts/layout-definitions.ts", import.meta.url),
-    "utf8",
-  );
-  /*
-   * Read per definition block, not as two adjacent lines.
-   *
-   * The pattern used to require `layoutKind` on the line after `typeKey`, so adding any field between
-   * them dropped that definition out of the map and this assertion failed with "the definitions must
-   * expose their kind pairing" -- which was never true: the pairing was there, one line further down.
-   * A declaration order is not what this file is checking.
-   */
-  const layoutKindByTypeKey = new Map(
-    [...definitionsSource.matchAll(/export const PHI_[A-Z0-9_]+_DEFINITION = \{([\s\S]*?)\n\} (?:as const|satisfies)/gu)]
-      .flatMap((block) => {
-        const body = block[1] ?? "";
-        const typeKey = /\n\s{2}typeKey:\s*"([a-z-]+)"/u.exec(body)?.[1];
-        const layoutKind = /\n\s{2}layoutKind:\s*"([a-z]+)"/u.exec(body)?.[1];
-        return typeKey && layoutKind ? [[typeKey, layoutKind] as const] : [];
-      }),
-  );
-  assert.ok(layoutKindByTypeKey.size >= 10, "The Layout definitions must expose their kind pairing.");
+  // A family belongs to Core's own Layouts, not to the Layout contract, so the pairing is Core's table.
+  const layoutKindByTypeKey = new Map(Object.entries(PHI_CORE_LAYOUT_KIND_BY_TYPE_KEY));
   const mismatches: string[] = [];
   for (const entry of await readdir(presetsDirectory)) {
     if (!entry.endsWith(".ts")) continue;

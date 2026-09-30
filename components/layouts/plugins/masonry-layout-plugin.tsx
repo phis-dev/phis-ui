@@ -9,13 +9,13 @@ export const PHI_MASONRY_LAYOUT_PLUGIN: PhiCmsLayoutPlugin<PhiCmsMasonryLayoutCo
   ...PHI_MASONRY_LAYOUT_DEFINITION,
   parseConfig: parsePhiCmsMasonryLayoutConfig,
   ...definePhiLayoutRenderers<PhiCmsMasonryLayoutConfig>((
-    { node, config, layoutKind, renderSequentialSlotChildren },
+    { node, config, renderSequentialSlotChildren },
     renderMode,
   ) => (
     <PhiMasonryLayout
       key={`layout-${node.id}`}
       blockId={node.id}
-      layoutKind={layoutKind}
+      layoutKind="masonry"
       slots={renderSequentialSlotChildren(node)}
       renderMode={renderMode}
       columns={config.columns}

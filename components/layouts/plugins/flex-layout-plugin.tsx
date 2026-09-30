@@ -12,13 +12,13 @@ export const PHI_FLEX_LAYOUT_PLUGIN: PhiCmsLayoutPlugin<PhiCmsFlexLayoutConfig> 
   ...PHI_FLEX_LAYOUT_DEFINITION,
   parseConfig: parsePhiCmsFlexLayoutConfig,
   ...definePhiLayoutRenderers<PhiCmsFlexLayoutConfig>((
-    { node, config, layoutKind, renderSequentialSlotChildren },
+    { node, config, renderSequentialSlotChildren },
     renderMode,
   ) => (
     <PhiFlexLayout
       key={`layout-${node.id}`}
       blockId={node.id}
-      layoutKind={layoutKind}
+      layoutKind="flex"
       slots={renderSequentialSlotChildren(node)}
       renderMode={renderMode}
       gap={config.gap}

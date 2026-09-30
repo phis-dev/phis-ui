@@ -45,13 +45,13 @@ export const PHI_COLLAPSIBLE_LAYOUT_PLUGIN: PhiCmsLayoutPlugin<PhiCmsCollapsible
   ...PHI_COLLAPSIBLE_LAYOUT_DEFINITION,
   parseConfig: parsePhiCmsCollapsibleLayoutConfig,
   ...definePhiLayoutRenderers<PhiCmsCollapsibleLayoutConfig>((
-    { node, config, layoutKind, renderSequentialSlotChildren },
+    { node, config, renderSequentialSlotChildren },
     renderMode,
   ) => (
     <PhiCollapsibleLayout
       key={`layout-${node.id}`}
       blockId={node.id}
-      layoutKind={layoutKind}
+      layoutKind="collapsible"
       slots={renderSequentialSlotChildren(node)}
       slotKeys={resolvePhiCollapsibleSlotKeys()}
       slotMeta={resolvePhiCollapsibleSlotMeta(node, config)}

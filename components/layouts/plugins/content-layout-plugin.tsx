@@ -11,11 +11,11 @@ import { resolvePhiLayoutAnchor } from "../phi-layout-contract";
 export const PHI_CONTENT_LAYOUT_PLUGIN: PhiCmsLayoutPlugin<PhiCmsContentLayoutConfig> = {
   ...PHI_CONTENT_LAYOUT_DEFINITION,
   parseConfig: parsePhiCmsContentLayoutConfig,
-  ...definePhiLayoutRenderers<PhiCmsContentLayoutConfig>(({ node, config, layoutKind, renderChildren }, renderMode) => (
+  ...definePhiLayoutRenderers<PhiCmsContentLayoutConfig>(({ node, config, renderChildren }, renderMode) => (
     <PhiContentLayout
       key={`layout-${node.id}`}
       blockId={node.id}
-      layoutKind={layoutKind}
+      layoutKind="content"
       slots={renderChildren(node)}
       renderMode={renderMode}
       size={config.size}

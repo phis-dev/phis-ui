@@ -10,13 +10,13 @@ export const PHI_THREE_COLUMN_LAYOUT_PLUGIN: PhiCmsLayoutPlugin<PhiCmsThreeColum
   ...PHI_THREE_COLUMN_LAYOUT_DEFINITION,
   parseConfig: parsePhiCmsThreeColumnLayoutConfig,
   ...definePhiLayoutRenderers<PhiCmsThreeColumnLayoutConfig>((
-    { node, config, layoutKind, renderSequentialSlotChildren },
+    { node, config, renderSequentialSlotChildren },
     renderMode,
   ) => (
     <PhiThreeColumnLayout
       key={`layout-${node.id}`}
       blockId={node.id}
-      layoutKind={layoutKind}
+      layoutKind="threecol"
       slots={renderSequentialSlotChildren(node)}
       balancedSides={config.balancedSides}
       gap={config.gap}

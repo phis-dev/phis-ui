@@ -631,6 +631,43 @@ responsive block. That work is designed in
 [design/RESPONSIVE_BLOCK_GEOMETRY.md](./design/RESPONSIVE_BLOCK_GEOMETRY.md) and is not built; a Widget
 written to this rule today needs no change when it is.
 
+## 4a. Add a Layout
+
+A Layout is contributed the way a Widget is, with slots instead of content.
+
+**Declare it in the catalog entry.** Each entry in `layouts` is a `PhiRuntimeModuleLayoutDefinition`:
+`ownerModuleId`, the serializable `definition`, `renderPolicies`, and `loadRuntime`, which resolves to
+the executable `PhiCmsLayoutPlugin`.
+
+**Name it from your own package**, as a Widget does:
+- the `pluginKey` is `@acme/status/modules/status/layouts`;
+- the namespaced type comes from `buildPhiCmsLayoutNamespacedTypeKey`.
+
+Core's layout register (the list of Core's own Layouts) is not an extension point, and your Layout does
+not appear in it.
+
+**Declare the slots.** Each slot has:
+- `key`, `label`, and `slotIndex`;
+- `sequential: true`, when the children are an ordered run rather than named places.
+
+For a Layout whose slots are all sequential, `slotPositions` says what an emptied position does:
+- `"compact"`, the default: the Builder renumbers the rest after a move or a removal, as in a row.
+- `"fixed"`: every position keeps its number, because each one means something on its own, as with
+  one panel per slot.
+
+**Render it.** `render` and `renderEditor` receive:
+- the node and its parsed `config`;
+- the runtime and the tree;
+- `renderChildren` or `renderSequentialSlotChildren` for the slot contents.
+
+Style your own markup. `data-layout-kind` and its base CSS belong to Core's own Layout families and are
+no contract for yours.
+
+**Place it in a preset** with `buildPhiCmsLayoutNode`:
+- Pass your `pluginKey` explicitly. Without it the factory resolves the type key against Core's
+  Layouts.
+- Leave out `creationPreset`: it selects starting values for Core's families. Give `config` instead.
+
 ## 5. Add a Theme preset
 
 A Theme preset is module-owned data, not a global registration and not arbitrary `ConfigProvider`

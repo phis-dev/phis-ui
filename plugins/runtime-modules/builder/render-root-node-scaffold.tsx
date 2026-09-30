@@ -1493,7 +1493,6 @@ function resolvePhiRootNodeRenderedBody(
   try {
     return renderRootNode({
       node: syntheticRootNode,
-      layoutKind: plugin.layoutKind,
       runtime: {} as PhiBlockRuntime,
       tree: previewTree,
       config:

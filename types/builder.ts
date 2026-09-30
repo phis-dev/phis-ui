@@ -1,4 +1,3 @@
-import type { PhiLayoutKind } from "../components/layouts/phi-layout-contract";
 import type {
   PhiCmsBuilderWidgetPlugin,
   PhiCmsConfigField,
@@ -38,8 +37,8 @@ export type PhiBuilderPluginMetaBase = {
 
 export type PhiBuilderContainerMeta = PhiBuilderPluginMetaBase & {
   kind: "layout";
-  layoutKind: PhiLayoutKind;
   slots: readonly PhiCmsLayoutSlotDefinition[];
+  slotPositions: "compact" | "fixed";
   slotMode?: "named" | "sequential" | "single";
   allowReorder?: true;
   defaultAnchor?: PhiRenderableBlockAnchor | null;

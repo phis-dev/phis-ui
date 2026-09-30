@@ -58,7 +58,6 @@ export function buildPhiBuilderPluginMeta(plugin: PhiAnyCmsBuilderPlugin): PhiBu
   const slots = plugin.slots;
   return {
     kind: "layout",
-    layoutKind: plugin.layoutKind,
     pluginKey: plugin.pluginKey,
     typeKey: plugin.typeKey,
     title: plugin.title,
@@ -74,6 +73,7 @@ export function buildPhiBuilderPluginMeta(plugin: PhiAnyCmsBuilderPlugin): PhiBu
     defaultConfig,
     resolvedDefaultConfig,
     slots,
+    slotPositions: plugin.slotPositions ?? "compact",
     fields: plugin.fields,
     allowReorder: true,
     defaultAnchor: plugin.defaultAnchor ?? slots.find((slot) => slot.defaultAnchor != null)?.defaultAnchor ?? null,

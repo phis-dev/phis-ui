@@ -14,13 +14,13 @@ export const PHI_FLEX_VERTICAL_LAYOUT_PLUGIN: PhiCmsLayoutPlugin<PhiCmsFlexVerti
   ...PHI_FLEX_VERTICAL_LAYOUT_DEFINITION,
   parseConfig: parsePhiCmsFlexVerticalLayoutConfig,
   ...definePhiLayoutRenderers<PhiCmsFlexVerticalLayoutConfig>((
-    { node, config, layoutKind, renderSequentialSlotChildren },
+    { node, config, renderSequentialSlotChildren },
     renderMode,
   ) => (
     <PhiFlexVerticalLayout
       key={`layout-${node.id}`}
       blockId={node.id}
-      layoutKind={layoutKind}
+      layoutKind="verticalflex"
       slots={renderSequentialSlotChildren(node)}
       renderMode={renderMode}
       gap={config.gap}

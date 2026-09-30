@@ -11,6 +11,16 @@ export function isPhiCmsSequentialLayoutSlots(
   return Array.isArray(slots) && slots.length > 0 && slots.every((slot) => slot.sequential === true);
 }
 
+/** Whether moving or removing a child renumbers the rest, which is what `slotPositions` decides. */
+export function compactsPhiCmsSequentialSlots(
+  meta: {
+    slots?: readonly { sequential?: boolean }[] | null;
+    slotPositions?: "compact" | "fixed";
+  } | null | undefined,
+) {
+  return isPhiCmsSequentialLayoutSlots(meta?.slots) && meta?.slotPositions !== "fixed";
+}
+
 export function compactPhiCmsSequentialChildren({
   childLayouts,
   childWidgets,

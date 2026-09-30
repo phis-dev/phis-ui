@@ -51,13 +51,13 @@ export const PHI_CAROUSEL_LAYOUT_PLUGIN: PhiCmsLayoutPlugin<PhiCmsCarouselLayout
   ...PHI_CAROUSEL_LAYOUT_DEFINITION,
   parseConfig: parsePhiCmsCarouselLayoutConfig,
   ...definePhiLayoutRenderers<PhiCmsCarouselLayoutConfig>((
-    { node, config, layoutKind, renderSequentialSlotChildren },
+    { node, config, renderSequentialSlotChildren },
     renderMode,
   ) => (
     <PhiCarouselLayout
       key={`layout-${node.id}`}
       blockId={node.id}
-      layoutKind={layoutKind}
+      layoutKind="carousel"
       slots={renderSequentialSlotChildren(node)}
       slotKeys={resolvePhiCarouselSlotKeys()}
       slotMeta={resolvePhiCarouselSlotMeta(node)}

@@ -24,6 +24,7 @@ import { resolvePhiLayoutDefaults } from "../../helpers/cms-layout-defaults";
 import { PHI_RENDERABLE_BLOCK_DEFAULT_ANCHOR } from "../../helpers/renderable-block-defaults";
 import { PHI_LAYOUT_PADDING_FIELDS } from "../../helpers/layout-padding-field";
 import type { PhiCmsLayoutPluginDefinition } from "../../types/cms-plugins";
+import type { PhiLayoutKind } from "./phi-layout-contract";
 import { PHI_SIGNAL_VALUE_SCHEMAS } from "../../types/signals";
 import { PHI_CORE_RUNTIME_DATA_PROVIDER_KEYS } from "../../plugins/runtime-modules/core/ids";
 import type {
@@ -92,7 +93,6 @@ export const PHI_CONTENT_LAYOUT_DEFINITION = {
   kind: "layout",
   pluginKey: resolvePhiCmsLayoutPluginKey("content"),
   typeKey: "content",
-  layoutKind: "content",
   slotSizePolicy: "fill",
   title: "Content",
   description: "Neutral full-width content wrapper with a single default slot.",
@@ -108,7 +108,6 @@ export const PHI_FLEX_LAYOUT_DEFINITION = {
   kind: "layout",
   pluginKey: resolvePhiCmsLayoutPluginKey("flex"),
   typeKey: "flex",
-  layoutKind: "flex",
   slotSizePolicy: "fill",
   title: "Flex",
   description: "Sequential slot layout, laid out in a row.",
@@ -136,7 +135,6 @@ export const PHI_FLEX_VERTICAL_LAYOUT_DEFINITION = {
   kind: "layout",
   pluginKey: resolvePhiCmsLayoutPluginKey("flex-vertical"),
   typeKey: "flex-vertical",
-  layoutKind: "verticalflex",
   slotSizePolicy: "fill",
   title: "Flex Vertical",
   description: "Sequential slot layout, laid out in a column.",
@@ -152,8 +150,8 @@ export const PHI_COLLAPSIBLE_LAYOUT_DEFINITION = {
   kind: "layout",
   pluginKey: resolvePhiCmsLayoutPluginKey("collapsible"),
   typeKey: "collapsible",
-  layoutKind: "collapsible",
   slotSizePolicy: "fill",
+  slotPositions: "fixed",
   title: "Collapsible",
   description: "Sequential multi-section layout with one collapsible header per slot.",
   category: "structure",
@@ -274,7 +272,6 @@ export const PHI_STACK_LAYOUT_DEFINITION = {
   kind: "layout",
   pluginKey: resolvePhiCmsLayoutPluginKey("stack"),
   typeKey: "stack",
-  layoutKind: "stack",
   defaultAnchor: PHI_CENTRED_SLOT_DEFAULT_ANCHOR,
   slotSizePolicy: "fill",
   title: "Stack",
@@ -362,7 +359,6 @@ export const PHI_CAROUSEL_LAYOUT_DEFINITION = {
   kind: "layout",
   pluginKey: resolvePhiCmsLayoutPluginKey("carousel"),
   typeKey: "carousel",
-  layoutKind: "carousel",
   defaultAnchor: PHI_CENTRED_SLOT_DEFAULT_ANCHOR,
   slotSizePolicy: "fill",
   title: "Carousel",
@@ -461,7 +457,6 @@ export const PHI_GRID_LAYOUT_DEFINITION = {
   kind: "layout",
   pluginKey: resolvePhiCmsLayoutPluginKey("grid"),
   typeKey: "grid",
-  layoutKind: "grid",
   slotSizePolicy: "fill",
   title: "Grid",
   description: "Container-responsive 24-column slot grid using Phi responsive profiles.",
@@ -497,7 +492,6 @@ export const PHI_MASONRY_LAYOUT_DEFINITION = {
   kind: "layout",
   pluginKey: resolvePhiCmsLayoutPluginKey("masonry"),
   typeKey: "masonry",
-  layoutKind: "masonry",
   slotSizePolicy: "fill",
   title: "Masonry",
   description: "Sequential slot masonry layout with column-based flow.",
@@ -516,7 +510,6 @@ export const PHI_SPLIT_CARD_LAYOUT_DEFINITION = {
   kind: "layout",
   pluginKey: resolvePhiCmsLayoutPluginKey("split-card"),
   typeKey: "split-card",
-  layoutKind: "split",
   defaultAnchor: PHI_CENTRED_SLOT_DEFAULT_ANCHOR,
   slotSizePolicy: "fill",
   title: "Split Card",
@@ -540,7 +533,6 @@ export const PHI_THREE_COLUMN_LAYOUT_DEFINITION = {
   kind: "layout",
   pluginKey: resolvePhiCmsLayoutPluginKey("three-column"),
   typeKey: "three-column",
-  layoutKind: "threecol",
   defaultAnchor: PHI_CENTRED_SLOT_DEFAULT_ANCHOR,
   slotSizePolicy: "fill-inline",
   title: "Three Column",
@@ -564,7 +556,6 @@ export const PHI_STRUCTURE_REGION_LAYOUT_DEFINITION = {
   kind: "layout",
   pluginKey: resolvePhiCmsLayoutPluginKey("structure-region"),
   typeKey: "structure-region",
-  layoutKind: "grid",
   slotSizePolicy: "fill",
   title: "Structure Region",
   description: "Preview shell layout for dev structure editing.",
@@ -578,7 +569,6 @@ export const PHI_PAGE_REGION_LAYOUT_DEFINITION = {
   kind: "layout",
   pluginKey: resolvePhiCmsLayoutPluginKey("page-region"),
   typeKey: "page-region",
-  layoutKind: "grid",
   slotSizePolicy: "fill",
   title: "Page Region",
   description: "Preview page layout for dev page editing.",
@@ -602,3 +592,23 @@ export const PHI_CORE_LAYOUT_DEFINITIONS = [
   PHI_STRUCTURE_REGION_LAYOUT_DEFINITION,
   PHI_PAGE_REGION_LAYOUT_DEFINITION,
 ] as const;
+
+/*
+ * Which Core family each Core Layout belongs to.
+ *
+ * A family is how Core's own Layouts share defaults, creation presets and base CSS
+ * (`data-layout-kind`); it is not part of the Layout contract, so a Module's Layout has none. Presets
+ * name the family in `creationPreset`, and `validate-layout-contracts` holds them to this pairing.
+ */
+export const PHI_CORE_LAYOUT_KIND_BY_TYPE_KEY: Readonly<Record<string, PhiLayoutKind>> = {
+  [PHI_CAROUSEL_LAYOUT_DEFINITION.typeKey]: "carousel",
+  [PHI_COLLAPSIBLE_LAYOUT_DEFINITION.typeKey]: "collapsible",
+  [PHI_CONTENT_LAYOUT_DEFINITION.typeKey]: "content",
+  [PHI_FLEX_LAYOUT_DEFINITION.typeKey]: "flex",
+  [PHI_FLEX_VERTICAL_LAYOUT_DEFINITION.typeKey]: "verticalflex",
+  [PHI_GRID_LAYOUT_DEFINITION.typeKey]: "grid",
+  [PHI_MASONRY_LAYOUT_DEFINITION.typeKey]: "masonry",
+  [PHI_SPLIT_CARD_LAYOUT_DEFINITION.typeKey]: "split",
+  [PHI_STACK_LAYOUT_DEFINITION.typeKey]: "stack",
+  [PHI_THREE_COLUMN_LAYOUT_DEFINITION.typeKey]: "threecol",
+};

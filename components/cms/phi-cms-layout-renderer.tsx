@@ -820,7 +820,6 @@ function renderLayoutNode(
       }
       const rendered = renderLayout({
         node,
-        layoutKind: layoutPlugin.layoutKind,
         runtime: context.runtime,
         tree: context.tree,
         regionConfig: context.regionConfig,

@@ -10,13 +10,13 @@ export const PHI_SPLIT_CARD_LAYOUT_PLUGIN: PhiCmsLayoutPlugin<PhiCmsSplitCardLay
   ...PHI_SPLIT_CARD_LAYOUT_DEFINITION,
   parseConfig: parsePhiCmsSplitCardLayoutConfig,
   ...definePhiLayoutRenderers<PhiCmsSplitCardLayoutConfig>((
-    { node, config, layoutKind, renderSequentialSlotChildren },
+    { node, config, renderSequentialSlotChildren },
     renderMode,
   ) => (
     <PhiSplitCardLayout
       key={`layout-${node.id}`}
       blockId={node.id}
-      layoutKind={layoutKind}
+      layoutKind="split"
       slots={renderSequentialSlotChildren(node)}
       gap={config.gap}
       zIndex={config.zIndex}

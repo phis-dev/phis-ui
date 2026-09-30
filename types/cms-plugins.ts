@@ -11,7 +11,6 @@ import type {
 import type { PhiRenderableBlockAnchor, PhiRenderableBlockBase } from "./renderable-block";
 import type { PhiCmsRegionOwnership } from "../helpers/cms-region-keys";
 import type { PhiSlotSizePolicy } from "./slot-size-policy";
-import type { PhiLayoutKind } from "../components/layouts/phi-layout-contract";
 import type {
   PhiCmsContentWidgetNode,
   PhiCmsLayoutRenderNode,
@@ -380,7 +379,6 @@ export type PhiCmsWidgetRuntimeControllerRequirementResolver<TConfig> =
 
 export type PhiCmsLayoutPluginRenderArgs<TConfig> = {
   node: PhiCmsLayoutRenderNode;
-  layoutKind: PhiLayoutKind;
   runtime: PhiBlockRuntime;
   tree: PhiResolvedCmsRenderableTree;
   regionConfig?: PhiCmsRegionConfig;
@@ -583,7 +581,6 @@ export type PhiCmsLayoutPlugin<TConfig> = {
   kind: "layout";
   pluginKey: string;
   typeKey: string;
-  layoutKind: PhiLayoutKind;
   title: string;
   description?: string;
   category: PhiCmsPluginCategory;
@@ -598,6 +595,15 @@ export type PhiCmsLayoutPlugin<TConfig> = {
   defaultAnchor?: PhiRenderableBlockAnchor | null;
   fields: PhiCmsConfigField[];
   slots: PhiCmsLayoutSlotDefinition[];
+  /**
+   * What an emptied position does, for a Layout whose slots are all sequential.
+   *
+   * `compact`, the default, closes the gap: the Builder renumbers the children after a move or a
+   * removal, the way a row or a carousel reads. `fixed` keeps every position where it is, because each
+   * one means something on its own -- the Collapsible's panel three is panel three whether or not panel
+   * two holds anything.
+   */
+  slotPositions?: "compact" | "fixed";
   parseConfig: (raw: Record<string, unknown>) => TConfig;
   render: PhiBivariantCallback<[PhiCmsLayoutPluginRenderArgs<TConfig>], ReactNode>;
   renderEditor: PhiBivariantCallback<[PhiCmsLayoutPluginRenderArgs<TConfig>], ReactNode>;
@@ -608,7 +614,6 @@ export type PhiCmsLayoutPluginDefinition<TConfig> = Pick<
   | "kind"
   | "pluginKey"
   | "typeKey"
-  | "layoutKind"
   | "title"
   | "description"
   | "category"
@@ -623,6 +628,7 @@ export type PhiCmsLayoutPluginDefinition<TConfig> = Pick<
   | "defaultAnchor"
   | "fields"
   | "slots"
+  | "slotPositions"
 >;
 
 export type PhiCmsResolvedRequestLoaderArgs = {

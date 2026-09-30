@@ -12,13 +12,13 @@ export const PHI_GRID_LAYOUT_PLUGIN: PhiCmsLayoutPlugin<PhiCmsGridLayoutConfig> 
   ...PHI_GRID_LAYOUT_DEFINITION,
   parseConfig: parsePhiCmsGridLayoutConfig,
   ...definePhiLayoutRenderers<PhiCmsGridLayoutConfig>((
-    { node, config, layoutKind, renderSequentialSlotChildren },
+    { node, config, renderSequentialSlotChildren },
     renderMode,
   ) => (
     <PhiGridLayout
       key={`layout-${node.id}`}
       blockId={node.id}
-      layoutKind={layoutKind}
+      layoutKind="grid"
       slots={renderSequentialSlotChildren(node)}
       renderMode={renderMode}
       gap={config.gap}

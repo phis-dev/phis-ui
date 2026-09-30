@@ -52,7 +52,7 @@ import {
   readPhiBuilderRootNodeDraftFields,
   resolvePhiBuilderRootNodeDefaults,
 } from "../../../../../plugins/runtime-modules/builder/root-node-normalization";
-import { compactPhiCmsSequentialChildren, isPhiCmsSequentialLayoutSlots } from "../../../../../plugins/runtime-modules/builder/sequential-slot-helpers";
+import { compactPhiCmsSequentialChildren, compactsPhiCmsSequentialSlots } from "../../../../../plugins/runtime-modules/builder/sequential-slot-helpers";
 import { findPhiBuilderLayoutNodeById } from "../../../../../plugins/runtime-modules/builder/node-finders";
 import {
   getDefaultRegionDraft,
@@ -294,10 +294,7 @@ function compactStructureSequentialLayouts(
       layoutMetasByType,
     );
     const definition = layoutMetasByType.get(node.widgetType);
-    if (
-      !isPhiCmsSequentialLayoutSlots(definition?.slots) ||
-      definition?.layoutKind === "collapsible"
-    ) {
+    if (!compactsPhiCmsSequentialSlots(definition)) {
       return {
         ...node,
         childLayouts: nestedLayouts,
@@ -917,7 +914,7 @@ export function PhiStructureRegionScaffold({
         ? removeContentWidgetById(rootNodeChildWidgets, targetNodeId)
         : rootNodeChildWidgets;
     const compactedChildren =
-      isPhiCmsSequentialLayoutSlots(rootNodeDefinition?.slots) && rootNodeDefinition?.layoutKind !== "collapsible"
+      compactsPhiCmsSequentialSlots(rootNodeDefinition)
       ? compactPhiCmsSequentialChildren({
           childLayouts: nextChildLayouts,
           childWidgets: nextChildWidgets,
@@ -1111,9 +1108,7 @@ export function PhiStructureRegionScaffold({
     const targetDefinition = targetsRoot
       ? rootNodeDefinition
       : layoutMetasByType.get(targetLayout!.widgetType) ?? null;
-    const compactTarget =
-      isPhiCmsSequentialLayoutSlots(targetDefinition?.slots) &&
-      targetDefinition?.layoutKind !== "collapsible";
+    const compactTarget = compactsPhiCmsSequentialSlots(targetDefinition);
     if (compactTarget) {
       return true;
     }
@@ -1376,9 +1371,7 @@ export function PhiStructureRegionScaffold({
         target.parentLayoutNodeId === rootNodeId
           ? rootNodeDefinition
           : layoutMetasByType.get(targetLayout!.widgetType) ?? null;
-      const compactTarget =
-        isPhiCmsSequentialLayoutSlots(targetDefinition?.slots) &&
-        targetDefinition?.layoutKind !== "collapsible";
+      const compactTarget = compactsPhiCmsSequentialSlots(targetDefinition);
       const targetLayouts =
         target.parentLayoutNodeId === rootNodeId
           ? rootNodeChildLayouts
@@ -1462,10 +1455,7 @@ export function PhiStructureRegionScaffold({
         layoutMetasByType,
       );
       let nextSourceWidgets = extractedSource.childWidgets;
-      if (
-        isPhiCmsSequentialLayoutSlots(sourceRootDefinition?.slots) &&
-        sourceRootDefinition?.layoutKind !== "collapsible"
-      ) {
+      if (compactsPhiCmsSequentialSlots(sourceRootDefinition)) {
         const compactedSource = compactPhiCmsSequentialChildren({
           childLayouts: nextSourceLayouts,
           childWidgets: nextSourceWidgets,
@@ -1532,9 +1522,7 @@ export function PhiStructureRegionScaffold({
     const targetDefinition = targetsRoot
       ? rootNodeDefinition
       : layoutMetasByType.get(targetLayout!.widgetType) ?? null;
-    const compactSequential =
-      isPhiCmsSequentialLayoutSlots(targetDefinition?.slots) &&
-      targetDefinition?.layoutKind !== "collapsible";
+    const compactSequential = compactsPhiCmsSequentialSlots(targetDefinition);
     const targetLayouts = targetsRoot
       ? extracted.childLayouts
       : targetLayout?.childLayouts ?? [];
@@ -1723,10 +1711,7 @@ export function PhiStructureRegionScaffold({
         layoutMetasByType,
       );
       let nextSourceWidgets = extractedSource!.childWidgets;
-      if (
-        isPhiCmsSequentialLayoutSlots(sourceRootDefinition?.slots) &&
-        sourceRootDefinition?.layoutKind !== "collapsible"
-      ) {
+      if (compactsPhiCmsSequentialSlots(sourceRootDefinition)) {
         const compactedSource = compactPhiCmsSequentialChildren({
           childLayouts: nextSourceLayouts,
           childWidgets: nextSourceWidgets,
@@ -1856,9 +1841,7 @@ export function PhiStructureRegionScaffold({
     const parentLayoutDefinition = parentLayoutNode == null
       ? rootNodeDefinition
       : layoutMetasByType.get(parentLayoutNode.widgetType) ?? null;
-    const compactSequential =
-      isPhiCmsSequentialLayoutSlots(parentLayoutDefinition?.slots) &&
-      parentLayoutDefinition?.layoutKind !== "collapsible";
+    const compactSequential = compactsPhiCmsSequentialSlots(parentLayoutDefinition);
     const isSlotInsertion =
       hasRootNode &&
       insertionSlotIndex != null &&
@@ -1936,7 +1919,7 @@ export function PhiStructureRegionScaffold({
               parentLayoutNodeId,
               insertionSlotIndex,
               compactSequential,
-              parentLayoutKind: parentLayoutDefinition?.layoutKind ?? null,
+              parentSlotPositions: parentLayoutDefinition?.slotPositions ?? null,
               knownRootChildIds: rootNodeChildLayouts.map((node) => node.id),
             },
           );
@@ -2003,7 +1986,7 @@ export function PhiStructureRegionScaffold({
           insertionSlotIndex,
           targetLayoutNodeId,
           targetsRootLayout,
-          parentLayoutKind: parentLayoutDefinition?.layoutKind ?? null,
+          parentSlotPositions: parentLayoutDefinition?.slotPositions ?? null,
           slotPickerContext: currentSlotPickerContext
             ? {
               allowWidgetSection: currentSlotPickerContext.allowWidgetSection,

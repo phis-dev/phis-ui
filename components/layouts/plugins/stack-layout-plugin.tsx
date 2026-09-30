@@ -47,13 +47,13 @@ export const PHI_STACK_LAYOUT_PLUGIN: PhiCmsLayoutPlugin<PhiCmsStackLayoutConfig
   ...PHI_STACK_LAYOUT_DEFINITION,
   parseConfig: parsePhiCmsStackLayoutConfig,
   ...definePhiLayoutRenderers<PhiCmsStackLayoutConfig>((
-    { node, config, layoutKind, renderSequentialSlotChildren },
+    { node, config, renderSequentialSlotChildren },
     renderMode,
   ) => (
     <PhiStackLayout
       key={`layout-${node.id}`}
       blockId={node.id}
-      layoutKind={layoutKind}
+      layoutKind="stack"
       slots={renderSequentialSlotChildren(node)}
       slotKeys={resolvePhiStackSlotKeys()}
       slotMeta={resolvePhiStackSlotMeta(node)}
