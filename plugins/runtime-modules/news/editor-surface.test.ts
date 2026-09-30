@@ -40,8 +40,19 @@ describe("what News brings to the editor Area", () => {
      */
     const route = resolvePhiCmsRoutePreset(table, "/phis/ui/news");
     expect(route?.descriptor.presetKey).toBe("editor-news-page");
-    // The Page belongs to the editor Module, the data to this one -- as it is for `/translations`.
-    expect(route?.descriptor.ownerModuleId).toBe("@phis/ui/modules/editor");
+    /*
+     * This Module's own Page, not the Area's. That is what makes it switchable: the Page and its sidebar
+     * entry are computed from the catalog, so switching the Module off takes both away -- and it is the
+     * only shape a Module outside this package could use, since it can add nothing to the Area's own
+     * definition.
+     */
+    expect(route?.descriptor.ownerModuleId).toBe(PHI_NEWS_RUNTIME_MODULE_ID);
+
+    const [navigation] = route?.descriptor.navigation ?? [];
+    expect(navigation?.navKey).toBe("editor:sidebar");
+    // By role, not by another Module's item key: naming one would make this entry depend on it being there.
+    expect(navigation).toMatchObject({ anchor: "main" });
+    expect(navigation?.item.routePresetKey).toBe("editor-news-page");
 
   });
 

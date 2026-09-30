@@ -22,16 +22,6 @@ export const PHI_EDITOR_RUNTIME_MODULE_ROUTES = [buildPhiAreaRootRoutePresetDesc
   title: "Editor",
 }), {
   ownerModuleId: PHI_EDITOR_RUNTIME_MODULE_ID,
-  presetKey: "editor-news-page",
-  presetVersion: 1 + PHI_BASE_PAGE_LAYOUT_VERSION,
-  area: "editor",
-  title: "News",
-  path: "/news",
-  loadTree: ({ page, runtime }) =>
-    import("./trees/phi-default-editor-news-page-tree")
-      .then((module) => module.buildPhiDefaultEditorNewsPageTree({ page, runtime })),
-}, {
-  ownerModuleId: PHI_EDITOR_RUNTIME_MODULE_ID,
   presetKey: "editor-translations-page",
   presetVersion: 1 + PHI_BASE_PAGE_LAYOUT_VERSION,
   area: "editor",

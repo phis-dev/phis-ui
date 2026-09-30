@@ -49,10 +49,3 @@ export const PHI_EDITOR_TRANSLATION_COMMANDS_WIDGET_ID = createPhiPresetCmsInsta
   presetKey: "editor-translations-page",
   nodeKey: "widgetTranslationCommands",
 });
-
-export const PHI_EDITOR_NEWS_WIDGET_ID = createPhiPresetCmsInstanceId({
-  domain: "page",
-  ownerModuleId: PHI_EDITOR_RUNTIME_MODULE_ID,
-  presetKey: "editor-news-page",
-  nodeKey: "widgetNews",
-});

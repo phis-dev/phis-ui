@@ -1,8 +1,9 @@
+import { PHI_BASE_PAGE_LAYOUT_VERSION } from "../../../components/regions/presets/phi-base-page-layout";
 import type {
   PhiCmsDescriptorBuildContext,
   PhiCmsRoutePresetDescriptor,
 } from "../../../types/cms-module-descriptors";
-import { PHI_NEWS_RUNTIME_MODULE_ID } from "./ids";
+import { PHI_EDITOR_NEWS_PAGE_PRESET_KEY, PHI_NEWS_RUNTIME_MODULE_ID } from "./ids";
 
 const PHI_NEWS_PAGE_PRESET_KEY = "public-news-page";
 
@@ -43,5 +44,37 @@ export const PHI_NEWS_RUNTIME_MODULE_ROUTES = [
     loadTree: ({ page }: PhiCmsDescriptorBuildContext) =>
       import("./trees/phi-default-pub-news-page-tree")
         .then((module) => module.buildPhiDefaultPubNewsPageTree({ page })),
+  },
+  /*
+   * Where the entries are written, contributed by this Module rather than by the Area.
+   *
+   * The Page, its address, its name in the sidebar and the Table's own logic are all this Module's, which
+   * is what a Module is: switch it off and the Page and its entry go with it, because both are computed
+   * per request from the compiled catalog. Nothing of it sits in the Editor Area's own definition, so a
+   * Module outside this package contributes an editing surface exactly the same way.
+   *
+   * `anchor: "main"` rather than a parent item key: the sidebar exports roles, not items, and naming
+   * another Module's entry would make this one depend on it being there.
+   */
+  {
+    ownerModuleId: PHI_NEWS_RUNTIME_MODULE_ID,
+    presetKey: PHI_EDITOR_NEWS_PAGE_PRESET_KEY,
+    presetVersion: 1 + PHI_BASE_PAGE_LAYOUT_VERSION,
+    area: "editor" as const,
+    title: "News",
+    path: "/news",
+    navigation: [{
+      navKey: "editor:sidebar" as const,
+      anchor: "main" as const,
+      item: {
+        itemKey: "@phis/ui/modules/news/nav/editor/news",
+        label: { defaultMessage: "News" },
+        icon: "antd:notification",
+        routePresetKey: PHI_EDITOR_NEWS_PAGE_PRESET_KEY,
+      },
+    }],
+    loadTree: ({ page, runtime }: PhiCmsDescriptorBuildContext) =>
+      import("./trees/phi-default-editor-news-page-tree")
+        .then((module) => module.buildPhiDefaultEditorNewsPageTree({ page, runtime })),
   },
 ] as const satisfies readonly PhiCmsRoutePresetDescriptor[];

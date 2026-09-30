@@ -4,7 +4,7 @@ import { createPhiCmsPresetNodes } from "../../../../helpers/cms-preset-nodes";
 import { readPhiServerApiCredentials } from "../../../../helpers/phis-server-credentials";
 import type { PhiCmsPageNode, PhiResolvedCmsPageTree } from "../../../../types/cms";
 import type { PhiBlockRuntime } from "../../../../types";
-import { getPhiEditorNewsWidgetLabels } from "../../../../components/widgets/label-sets/editor-news";
+import { getPhiEditorNewsWidgetLabels } from "./editor-news-widget-label-set";
 import {
   buildPhiBasePageContentScaffold,
   PHI_BASE_PAGE_LAYOUT_NODE_ID,
@@ -12,9 +12,9 @@ import {
 import {
   PHI_NEWS_RUNTIME_DATA_PROVIDER_KEYS,
   PHI_NEWS_TABLE_RESOURCE_KEY,
-} from "../../news/ids";
+} from "../ids";
 import { getPhiEditorNewsPageLabels } from "./editor-news-label-set";
-import { PHI_EDITOR_NEWS_WIDGET_ID } from "./editor-shell";
+import { PHI_EDITOR_NEWS_WIDGET_ID } from "../ids";
 
 const SYNTHETIC_EDITOR_NEWS_REGION_IDS = { regionContent: -562 } as const;
 

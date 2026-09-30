@@ -1,7 +1,7 @@
 import "server-only";
 
-import { PHI_TR_CTX_WEB_UI_LABEL, type PhiGlobalTranslatorOptions } from "../../../gateway/tr";
-import { definePhiLabelSet, definePhiMessageLabel, getPhiLabelSet } from "../../../gateway/label-set";
+import { PHI_TR_CTX_WEB_UI_LABEL, type PhiGlobalTranslatorOptions } from "../../../../gateway/tr";
+import { definePhiLabelSet, definePhiMessageLabel, getPhiLabelSet } from "../../../../gateway/label-set";
 
 /**
  * What the News table says, wherever a Site places it.

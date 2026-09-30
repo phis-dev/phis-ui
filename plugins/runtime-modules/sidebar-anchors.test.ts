@@ -88,7 +88,11 @@ describe("the first-party sidebars", () => {
       "  General",
     ]);
     expect(sidebarOf("accounting")).toEqual(["Dashboard", "Overview"]);
-    expect(sidebarOf("editor")).toEqual(["Dashboard", "News", "Translations"]);
+    /*
+     * News after Translations: the Area's own item comes before what a Module injects into the same
+     * anchor, and News is a Module's entry. A Site that wants it first says so in the overlay.
+     */
+    expect(sidebarOf("editor")).toEqual(["Dashboard", "Translations", "News"]);
   });
 
   it("are reached by anchor alone", () => {
