@@ -1,5 +1,5 @@
 import type { PhiBlockRuntime } from "../../../../../types";
-import { getPhiAvatarWidgetLabels } from "../../../../../components/widgets/label-sets/avatar";
+import { getPhiAvatarWidgetLabels } from "../../labels";
 import { PhiCmsWidgetType } from "../../../../../constants/cms-widget-types";
 import { PhiRuntimeModuleRenderClientHost } from "../../../../../components/runtime/runtime-module-render-client-manifest";
 import { readPhiServerApiCredentials } from "../../../../../helpers/phis-server-credentials";
