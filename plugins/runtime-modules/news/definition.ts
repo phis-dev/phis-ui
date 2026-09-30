@@ -1,6 +1,9 @@
 import type { PhiCmsAreaKey } from "../../../constants/cms-areas";
-import type { PhiRuntimeModuleDefinition } from "../contracts";
+import { buildPhiRuntimeModuleControllerDescriptor, type PhiRuntimeModuleDefinition } from "../contracts";
 import { PHI_CORE_SERVER_BINDING } from "../../../types/server-capabilities";
+import { PHI_NEWS_CONTROLLER_TYPE } from "./controller/address";
+import { PHI_NEWS_RUNTIME_CONTROLLER_DEFINITION } from "./controller/definition";
+import { PHI_NEWS_FORM_HANDLER_PROVIDER_DESCRIPTORS } from "./forms";
 import { PHI_NEWS_RUNTIME_DATA_PROVIDER_DESCRIPTORS } from "./data-providers";
 import { PHI_NEWS_RUNTIME_MODULE_ID } from "./ids";
 
@@ -28,4 +31,13 @@ export const PHI_NEWS_RUNTIME_MODULE_DEFINITION = {
   category: "content",
   icon: "antd:notification",
   dataProviders: PHI_NEWS_RUNTIME_DATA_PROVIDER_DESCRIPTORS,
+  formProviders: { handlers: PHI_NEWS_FORM_HANDLER_PROVIDER_DESCRIPTORS },
+  /*
+   * The one thing a generic Table cannot do: say that the row somebody pressed is a news entry, and which
+   * of the two dialogs that press belongs to. Mounted on demand, because it exists for one Page -- the
+   * Public list needs none of it.
+   */
+  controllerType: PHI_NEWS_CONTROLLER_TYPE,
+  controller: buildPhiRuntimeModuleControllerDescriptor(PHI_NEWS_RUNTIME_CONTROLLER_DEFINITION),
+  controllerMountPolicy: "demand",
 } satisfies PhiRuntimeModuleDefinition;

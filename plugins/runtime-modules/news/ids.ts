@@ -31,3 +31,80 @@ export const PHI_EDITOR_NEWS_WIDGET_ID = createPhiPresetCmsInstanceId({
   presetKey: PHI_EDITOR_NEWS_PAGE_PRESET_KEY,
   nodeKey: "widgetNews",
 });
+
+/**
+ * The nodes of that Page: the Table, and the two dialogs one writes in.
+ *
+ * Two dialogs because there are two acts -- the words and the publication -- and each has its own Form,
+ * its own footer and its own Save. The Controller tells them apart by which of these addresses a signal
+ * came from, not by a word in the signal's value: an address cannot drift out of step with itself.
+ */
+export const PHI_EDITOR_NEWS_ENTRY_OVERLAY_ID = createPhiPresetCmsInstanceId({
+  domain: "page",
+  ownerModuleId: PHI_NEWS_RUNTIME_MODULE_ID,
+  presetKey: PHI_EDITOR_NEWS_PAGE_PRESET_KEY,
+  nodeKey: "overlayEntry",
+});
+
+export const PHI_EDITOR_NEWS_ENTRY_OVERLAY_LAYOUT_ID = createPhiPresetCmsInstanceId({
+  domain: "page",
+  ownerModuleId: PHI_NEWS_RUNTIME_MODULE_ID,
+  presetKey: PHI_EDITOR_NEWS_PAGE_PRESET_KEY,
+  nodeKey: "layoutEntry",
+});
+
+export const PHI_EDITOR_NEWS_ENTRY_OVERLAY_FOOTER_LAYOUT_ID = createPhiPresetCmsInstanceId({
+  domain: "page",
+  ownerModuleId: PHI_NEWS_RUNTIME_MODULE_ID,
+  presetKey: PHI_EDITOR_NEWS_PAGE_PRESET_KEY,
+  nodeKey: "layoutEntryFooter",
+});
+
+export const PHI_EDITOR_NEWS_ENTRY_FORM_WIDGET_ID = createPhiPresetCmsInstanceId({
+  domain: "page",
+  ownerModuleId: PHI_NEWS_RUNTIME_MODULE_ID,
+  presetKey: PHI_EDITOR_NEWS_PAGE_PRESET_KEY,
+  nodeKey: "widgetEntryForm",
+});
+
+export const PHI_EDITOR_NEWS_ENTRY_COMMANDS_WIDGET_ID = createPhiPresetCmsInstanceId({
+  domain: "page",
+  ownerModuleId: PHI_NEWS_RUNTIME_MODULE_ID,
+  presetKey: PHI_EDITOR_NEWS_PAGE_PRESET_KEY,
+  nodeKey: "widgetEntryCommands",
+});
+
+export const PHI_EDITOR_NEWS_PUBLICATION_OVERLAY_ID = createPhiPresetCmsInstanceId({
+  domain: "page",
+  ownerModuleId: PHI_NEWS_RUNTIME_MODULE_ID,
+  presetKey: PHI_EDITOR_NEWS_PAGE_PRESET_KEY,
+  nodeKey: "overlayPublication",
+});
+
+export const PHI_EDITOR_NEWS_PUBLICATION_OVERLAY_LAYOUT_ID = createPhiPresetCmsInstanceId({
+  domain: "page",
+  ownerModuleId: PHI_NEWS_RUNTIME_MODULE_ID,
+  presetKey: PHI_EDITOR_NEWS_PAGE_PRESET_KEY,
+  nodeKey: "layoutPublication",
+});
+
+export const PHI_EDITOR_NEWS_PUBLICATION_OVERLAY_FOOTER_LAYOUT_ID = createPhiPresetCmsInstanceId({
+  domain: "page",
+  ownerModuleId: PHI_NEWS_RUNTIME_MODULE_ID,
+  presetKey: PHI_EDITOR_NEWS_PAGE_PRESET_KEY,
+  nodeKey: "layoutPublicationFooter",
+});
+
+export const PHI_EDITOR_NEWS_PUBLICATION_FORM_WIDGET_ID = createPhiPresetCmsInstanceId({
+  domain: "page",
+  ownerModuleId: PHI_NEWS_RUNTIME_MODULE_ID,
+  presetKey: PHI_EDITOR_NEWS_PAGE_PRESET_KEY,
+  nodeKey: "widgetPublicationForm",
+});
+
+export const PHI_EDITOR_NEWS_PUBLICATION_COMMANDS_WIDGET_ID = createPhiPresetCmsInstanceId({
+  domain: "page",
+  ownerModuleId: PHI_NEWS_RUNTIME_MODULE_ID,
+  presetKey: PHI_EDITOR_NEWS_PAGE_PRESET_KEY,
+  nodeKey: "widgetPublicationCommands",
+});

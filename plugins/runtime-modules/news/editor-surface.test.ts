@@ -2,6 +2,43 @@ import { describe, expect, it, vi } from "vitest";
 
 vi.mock("server-only", () => ({}));
 
+/*
+ * The Page's words, stubbed: a label set asks Core for the translation of every string, which wants an
+ * installation. What this test reads is the wiring, and the wiring is the same whatever the words are.
+ */
+vi.mock("../../../helpers/phis-server-credentials", () => ({
+  readPhiServerApiCredentials: () => ({ apiBaseUrl: "https://core.test", internalToken: "token" }),
+}));
+vi.mock("./trees/editor-news-label-set", () => ({
+  getPhiEditorNewsPageLabels: async () => ({
+    pageTitle: "News",
+    pageDescription: "",
+    contentLabel: "news",
+    widgetLabel: "news entries",
+  }),
+}));
+vi.mock("./trees/editor-news-widget-label-set", () => ({
+  getPhiEditorNewsWidgetLabels: async () => ({
+    searchPlaceholder: "",
+    statusLabel: "",
+    statuses: { all: "", draft: "", published: "" },
+    rowStatus: { draft: "", published: "" },
+    columns: {
+      title: "", slug: "", status: "", language: "", tags: "", published: "", expires: "", changed: "",
+    },
+    actions: { withdraw: "", delete: "", new: "", edit: "", publish: "" },
+    withdraw: { title: "", description: "" },
+    delete: { title: "", description: "" },
+    empty: { title: "", text: "" },
+    overlays: { entry: "", publication: "" },
+    form: {
+      save: "", cancel: "", slugPlaceholder: "", slugError: "", titleError: "", subtitleLabel: "",
+      contentLabel: "", contentPlaceholder: "", contentError: "", linkLabel: "", linkPlaceholder: "",
+      sourceLocalePlaceholder: "", translateLabel: "",
+    },
+  }),
+}));
+
 import { createPhiEditorRuntimeModuleCatalog } from "../area-catalogs/editor";
 import {
   compilePhiCmsActiveRouteTable,
@@ -17,6 +54,11 @@ import {
   PHI_NEWS_TABLE_RESOURCE_KEY,
 } from "./ids";
 import type { PhiRuntimeModuleId } from "../../../types/cms-module-descriptors";
+import { PhiCmsPageType, PhiCmsStatus } from "../../../constants/phi-cms";
+import { PHI_VIEWER_ACCESS_ANYONE } from "../../../types/access";
+import type { PhiCmsPageNode } from "../../../types/cms";
+import { PHI_NEWS_RUNTIME_MODULE_ROUTES } from "./presets";
+import { PHI_NEWS_FORM_HANDLER_PROVIDER_DESCRIPTORS, PHI_NEWS_FORM_IDS, PHI_NEWS_RUNTIME_MODULE_FORMS } from "./forms";
 
 /**
  * The editor surface, as far as it can be pinned without a Site.
@@ -99,5 +141,96 @@ describe("what News brings to the editor Area", () => {
   it("registers a Client for every Provider it declares", () => {
     expect(PHI_NEWS_RUNTIME_DATA_PROVIDER_CLIENT_DEFINITIONS.map((entry) => entry.key).sort())
       .toEqual(Object.values(PHI_NEWS_RUNTIME_DATA_PROVIDER_KEYS).sort());
+  });
+});
+
+/**
+ * The two Forms behind that Page, and the wiring between them and the Table.
+ *
+ * None of it can be seen from a rendered page: a dialog whose `openActionKey` no action sends opens empty
+ * for ever, and a handler pointing at the wrong endpoint is the publishing role writing words.
+ */
+describe("what News writes with", () => {
+  const NEWS_PAGE = {
+    id: 21,
+    siteId: 3,
+    areaMask: 16,
+    path: "/news",
+    pageType: PhiCmsPageType.Standard,
+    status: PhiCmsStatus.Published,
+    flags: 0,
+    visibilityMask: 6,
+    accessPolicy: PHI_VIEWER_ACCESS_ANYONE,
+    titleMsgId: null,
+    descriptionMsgId: null,
+    heroRootLayoutNodeId: null,
+    headerBottomRootLayoutNodeId: null,
+    siderRightRootLayoutNodeId: null,
+    footerTopRootLayoutNodeId: null,
+    drawerRightRootLayoutNodeId: null,
+    contentRootLayoutNodeId: null,
+    layoutConfig: {},
+  } satisfies PhiCmsPageNode;
+
+  /*
+   * Two Forms, two authorities, two endpoints. A handler that pointed the publication at the entry's path
+   * would be the publishing role writing words, and nothing in a rendered page would say so.
+   */
+  it("sends each Form to the endpoint its authority guards", () => {
+    const byHandler = new Map(
+      PHI_NEWS_FORM_HANDLER_PROVIDER_DESCRIPTORS.map((entry) => [entry.handlerKey, entry]),
+    );
+
+    expect(byHandler.get("news.entry")).toMatchObject({
+      method: "PUT",
+      upstreamPath: "/api/site/editor/news",
+      transport: "relay",
+      credentialPolicy: "site-session",
+      requiresCsrf: false,
+    });
+    expect(byHandler.get("news.publication")).toMatchObject({
+      method: "POST",
+      upstreamPath: "/api/site/editor/news/publish",
+      transport: "relay",
+      credentialPolicy: "site-session",
+    });
+  });
+
+  it("declares both Forms for the editor Area and nowhere else", () => {
+    expect(PHI_NEWS_RUNTIME_MODULE_FORMS.map((form) => [form.formId, form.areas, form.submitHandlerKey]))
+      .toEqual([
+        [PHI_NEWS_FORM_IDS.entry, ["editor"], "news.entry"],
+        [PHI_NEWS_FORM_IDS.publication, ["editor"], "news.publication"],
+      ]);
+  });
+
+  /*
+   * The wiring nobody can see from outside: which dialog opens on which row action, and that every route
+   * ends at this Module's Controller. A Form whose `openActionKey` no action sends opens empty for ever.
+   */
+  it("wires each dialog to the row action that opens it", async () => {
+    const [, editorRoute] = PHI_NEWS_RUNTIME_MODULE_ROUTES;
+    const tree = await editorRoute!.loadTree({
+      page: NEWS_PAGE,
+      runtime: { locale: { current: "en" } },
+    } as never);
+
+    const forms = tree.contentWidgets.filter((widget) => widget.widgetType.endsWith("/form"));
+    expect(forms.map((form) => {
+      const config = form.config as { formId?: string; openActionKey?: string };
+      return [config.formId, config.openActionKey];
+    })).toEqual([
+      [PHI_NEWS_FORM_IDS.entry, "edit"],
+      [PHI_NEWS_FORM_IDS.publication, "publish"],
+    ]);
+
+    const table = tree.contentWidgets.find((widget) => widget.widgetType.endsWith("/table"));
+    const features = (table!.config as { features: { actions: { row: { key: string }[]; toolbar: { key: string }[] } } }).features;
+    expect(features.actions.row.map((action) => action.key)).toEqual(["edit", "publish", "withdraw", "delete"]);
+    expect(features.actions.toolbar.map((action) => action.key)).toEqual(["new"]);
+
+    // Two dialogs, each with a body and a footer beside the page's own layout.
+    expect(tree.overlays).toHaveLength(2);
+    expect(tree.layoutNodes).toHaveLength(5);
   });
 });

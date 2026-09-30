@@ -40,6 +40,24 @@ const PHI_EDITOR_NEWS_WIDGET_LABEL_SET = definePhiLabelSet({
     ),
     empty_title: definePhiMessageLabel("No news entries yet."),
     empty_text: definePhiMessageLabel("Nothing has been written here, or nothing matches the filter."),
+    action_new: "New entry",
+    action_edit: "Edit",
+    action_publish: "Publish",
+    form_save: "Save",
+    form_cancel: "Cancel",
+    form_title: "News entry",
+    publication_title: "Publication",
+    form_slug_placeholder: "news-entry-address",
+    form_slug_error: definePhiMessageLabel("An address is required: lower case, digits and hyphens."),
+    form_title_error: "A title is required.",
+    form_subtitle_label: "Subtitle",
+    form_content_label: "Body",
+    form_content_placeholder: definePhiMessageLabel("Markdown. Headings, lists and links are kept."),
+    form_content_error: "A body is required.",
+    form_link_label: "Link",
+    form_link_placeholder: "/somewhere or https://example.test",
+    form_source_locale_placeholder: definePhiMessageLabel("Empty: written in the Site's own language."),
+    form_translate_label: "May be translated",
   },
 });
 
@@ -58,7 +76,23 @@ export type PhiEditorNewsWidgetLabels = {
     expires: string;
     changed: string;
   };
-  actions: { withdraw: string; delete: string };
+  actions: { withdraw: string; delete: string; new: string; edit: string; publish: string };
+  overlays: { entry: string; publication: string };
+  form: {
+    save: string;
+    cancel: string;
+    slugPlaceholder: string;
+    slugError: string;
+    titleError: string;
+    subtitleLabel: string;
+    contentLabel: string;
+    contentPlaceholder: string;
+    contentError: string;
+    linkLabel: string;
+    linkPlaceholder: string;
+    sourceLocalePlaceholder: string;
+    translateLabel: string;
+  };
   withdraw: { title: string; description: string };
   delete: { title: string; description: string };
   empty: { title: string; text: string };
@@ -83,7 +117,29 @@ export async function getPhiEditorNewsWidgetLabels(
       expires: labels.column_expires,
       changed: labels.column_changed,
     },
-    actions: { withdraw: labels.action_withdraw, delete: labels.action_delete },
+    actions: {
+      withdraw: labels.action_withdraw,
+      delete: labels.action_delete,
+      new: labels.action_new,
+      edit: labels.action_edit,
+      publish: labels.action_publish,
+    },
+    overlays: { entry: labels.form_title, publication: labels.publication_title },
+    form: {
+      save: labels.form_save,
+      cancel: labels.form_cancel,
+      slugPlaceholder: labels.form_slug_placeholder,
+      slugError: labels.form_slug_error,
+      titleError: labels.form_title_error,
+      subtitleLabel: labels.form_subtitle_label,
+      contentLabel: labels.form_content_label,
+      contentPlaceholder: labels.form_content_placeholder,
+      contentError: labels.form_content_error,
+      linkLabel: labels.form_link_label,
+      linkPlaceholder: labels.form_link_placeholder,
+      sourceLocalePlaceholder: labels.form_source_locale_placeholder,
+      translateLabel: labels.form_translate_label,
+    },
     withdraw: { title: labels.withdraw_title, description: labels.withdraw_description },
     delete: { title: labels.delete_title, description: labels.delete_description },
     empty: { title: labels.empty_title, text: labels.empty_text },
