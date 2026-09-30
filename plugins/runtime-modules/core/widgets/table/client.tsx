@@ -1009,8 +1009,8 @@ export function PhiTableWidgetClient({
           page: resolvedQuery.page ?? 1,
           pageSize: resolvedQuery.pageSize ?? 20,
           total,
-          pageSizeOptions: features.pagination?.pageSizeOptions,
-          showSizeChanger: features.pagination?.showSizeChanger ?? true,
+          pageSizeOptions: features.pagination?.pageSizes,
+          showSizeChanger: (features.pagination?.pageSizes?.length ?? 0) > 0,
           onChange: (page, pageSize) => setQuery((current) => ({ ...current, page, pageSize, cursor: null })),
         }}
         tree={structure ? {
@@ -1107,9 +1107,9 @@ export function PhiTableWidgetClient({
             }
           : undefined}
         loading={effectiveLoading}
-        bordered={presentation.bordered}
+        bordered={presentation.borders}
         striped={presentation.row?.striped}
-        showHeader={presentation.showHeader}
+        showHeader={presentation.header}
         size={resolvedControlSize}
         emptyText={(
           <PhiFlexControl vertical gap="small">

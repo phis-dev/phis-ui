@@ -100,7 +100,7 @@ export function usePhiMediaPickerBinding({
     pageSize,
     search: searchQuery,
     sortKey: "created_at",
-    sortOrder: "descend",
+    sortOrder: "descending",
     filters: {
       folderId,
       kind: mediaType,

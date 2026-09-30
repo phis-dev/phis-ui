@@ -147,7 +147,7 @@ export async function buildPhiDefaultEditorNewsPageTree({
                 defaultValue: "all",
               },
             ],
-            pagination: { enabled: true, pageSize: 25, pageSizeOptions: [25, 50, 100], showSizeChanger: true },
+            pagination: { enabled: true, pageSize: 25, pageSizes: [25, 50, 100] },
             sorting: { mode: "none" },
             tools: { mode: "self-contained", reset: true, reload: true },
             actions: {

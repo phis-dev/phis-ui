@@ -431,7 +431,7 @@ export async function buildPhiDefaultAppThreadsPageTree({
           features: {
             // Choosing one is the whole point of the listing, and a conversation is read one at a time.
             rowSelection: { mode: "single", preserveSelectedRowIdentities: true },
-            pagination: { enabled: true, pageSize: 25 },
+            pagination: { enabled: true, pageSize: 25, pageSizes: [10, 20, 50, 100] },
             // The route answers by last activity and takes no text, and the resource says so; these
             // repeat it where a person would otherwise be offered the control.
             sorting: { mode: "none" },

@@ -155,15 +155,13 @@ export function PhiCardCollectionViewBinding({
         page: binding.query.page ?? 1,
         pageSize: binding.query.pageSize ?? features.pagination?.pageSize ?? 20,
         total: binding.data?.total ?? items.length,
-        ...(features.pagination?.simple === undefined
+        ...(features.pagination?.compact === undefined
           ? {}
-          : { simple: features.pagination.simple }),
-        ...(features.pagination?.showSizeChanger === undefined
+          : { simple: features.pagination.compact }),
+        showSizeChanger: (features.pagination?.pageSizes?.length ?? 0) > 0,
+        ...(features.pagination?.pageSizes === undefined
           ? {}
-          : { showSizeChanger: features.pagination.showSizeChanger }),
-        ...(features.pagination?.pageSizeOptions === undefined
-          ? {}
-          : { pageSizeOptions: features.pagination.pageSizeOptions }),
+          : { pageSizeOptions: features.pagination.pageSizes }),
         onChange: (page: number, pageSize: number) =>
           binding.setQuery((current) => ({ ...current, page, pageSize })),
       }}

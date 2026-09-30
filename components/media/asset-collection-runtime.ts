@@ -44,7 +44,7 @@ export function buildPhiAssetCollectionQuery(
     pageSize: state.pageSize,
     search: state.searchQuery,
     sortKey: "created_at",
-    sortOrder: "descend",
+    sortOrder: "descending",
     filters: {
       folderId: state.folderId,
       kind: state.kind,

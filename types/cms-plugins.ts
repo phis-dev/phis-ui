@@ -193,6 +193,11 @@ export type PhiCmsConfigField =
       type: "boolean";
     })
   | (PhiCmsConfigFieldBase & {
+      /** A list of whole numbers, such as the page sizes a table offers; each at least `min`. */
+      type: "number-list";
+      min?: number;
+    })
+  | (PhiCmsConfigFieldBase & {
       type: "number";
       min?: number;
       max?: number;

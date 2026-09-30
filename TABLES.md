@@ -222,7 +222,7 @@ The two modes change placement only. They do not change Provider calls, action c
 normalization, validation, or authorization.
 
 In `external` tools mode, the Widget does not render the integrated query/toolbar zones. An optional title
-and its description tooltip remain Widget presentation metadata. `presentation.bordered` applies only to the rendered Table Control; it never
+and its description tooltip remain Widget presentation metadata. `presentation.borders` applies only to the rendered Table Control; it never
 wraps the Widget header, tools, diagnostics, or an external host. `presentation.row.striped` alternates
 the currently rendered row order on the active page using the global Ant Design fill token. Sorting,
 filtering, pagination, expansion, and Provider refreshes may therefore change which displayed rows carry
@@ -435,6 +435,10 @@ Column order, row sorting, visitor column reordering, and resource row ordering 
 Row sorting supports `none`, `single`, and `multiple`. The normalized query carries an ordered sort list
 of stable column or Provider field keys plus `ascending` or `descending`; raw Ant Design sorter objects
 and the Ant Design strings `ascend` and `descend` are implementation details, not public ABI.
+
+Pagination is on unless `features.pagination.enabled` is `false`. `features.pagination.pageSizes` lists the
+page sizes a reader may switch between; without it the Table offers no choice and keeps `pageSize`. The
+header row shows unless `presentation.header` is `false`.
 
 ### Row selection
 

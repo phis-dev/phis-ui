@@ -433,9 +433,9 @@ export function PhiAssetCollectionViewBinding({
         page: state.page,
         pageSize: state.pageSize,
         total: state.pagination?.total ?? state.assets.length,
-        simple: features.pagination?.simple,
-        showSizeChanger: features.pagination?.showSizeChanger,
-        pageSizeOptions: features.pagination?.pageSizeOptions,
+        simple: features.pagination?.compact,
+        showSizeChanger: (features.pagination?.pageSizes?.length ?? 0) > 0,
+        pageSizeOptions: features.pagination?.pageSizes,
         size: controlSize,
         onChange: (page, pageSize) => {
           binding.setQuery((current) => ({ ...current, page, pageSize }));

@@ -51,6 +51,17 @@ export function readPhiCmsConfigFieldViolation(
       return null;
     }
 
+    case "number-list": {
+      if (!Array.isArray(value)) {
+        return `${field.key} must be a list of numbers, not ${describe(value)}.`;
+      }
+      const stray = value.find((item) =>
+        typeof item !== "number" || !Number.isInteger(item) || (field.min !== undefined && item < field.min));
+      return stray === undefined
+        ? null
+        : `${field.key} must list whole numbers${field.min !== undefined ? ` of at least ${field.min}` : ""}, not ${describe(stray)}.`;
+    }
+
     case "choice": {
       /*
        * Only a closed list can be checked. A field whose options are fetched, or which accepts what

@@ -1806,16 +1806,15 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                   pagination: {
                     enabled: true,
                     pageSize: 20,
-                    simple: true,
-                    showSizeChanger: true,
-                    pageSizeOptions: [10, 20, 50, 100, 200],
+                    compact: true,
+                    pageSizes: [10, 20, 50, 100, 200],
                   },
                 },
                 initialQuery: {
                   page: 1,
                   pageSize: 20,
                   sortKey: "created_at",
-                  sortOrder: "descend",
+                  sortOrder: "descending",
                   filters: { kind: [PhiMediaKind.Image] },
                 },
                 source: {
@@ -2670,7 +2669,7 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                     },
                   },
                   presentation: {
-                    bordered: true,
+                    borders: true,
                     layout: { mode: "auto", overflowX: "auto" },
                     columns: [
                       {
@@ -2755,7 +2754,7 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                       },
                     ],
                     search: { enabled: true },
-                    pagination: { enabled: false, pageSize: 200, showSizeChanger: false },
+                    pagination: { enabled: false, pageSize: 200 },
                     sorting: { mode: "single" },
                     editing: { mode: "cell" },
                     tools: { mode: "self-contained", reset: false, reload: false },
@@ -2800,7 +2799,7 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                     params: {},
                   },
                   presentation: {
-                    bordered: true,
+                    borders: true,
                     layout: { mode: "auto", overflowX: "auto" },
                     columns: [
                       { key: "area", fieldKey: "area", title: modulesLabels?.usage.area ?? "Area", sizing: { mode: "content" } },
@@ -2810,7 +2809,7 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                     controlSize: "small",
                   },
                   features: {
-                    pagination: { enabled: false, pageSize: 50, showSizeChanger: false },
+                    pagination: { enabled: false, pageSize: 50 },
                     sorting: { mode: "none" },
                     tools: { mode: "self-contained", reset: false, reload: false },
                   },
@@ -2877,7 +2876,7 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                     params: {},
                   },
                   presentation: {
-                    bordered: true,
+                    borders: true,
                     layout: { mode: "auto", overflowX: "auto" },
                     columns: [
                       { key: "title", fieldKey: "title", title: modulesLabels?.publicRoutes.page ?? "Page" },
@@ -2894,7 +2893,7 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                     controlSize: "small",
                   },
                   features: {
-                    pagination: { enabled: false, pageSize: 20, showSizeChanger: false },
+                    pagination: { enabled: false, pageSize: 20 },
                     sorting: { mode: "none" },
                     editing: { mode: "cell" },
                     tools: { mode: "self-contained", reset: false, reload: false },
@@ -2955,7 +2954,7 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                     },
                   },
                   presentation: {
-                    bordered: true,
+                    borders: true,
                     layout: { mode: "auto", overflowX: "auto" },
                     columns: [
                       { key: "label", fieldKey: "label", title: modulesLabels?.detail.field ?? "Field" },
@@ -2983,7 +2982,7 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                     controlSize: "small",
                   },
                   features: {
-                    pagination: { enabled: false, pageSize: 50, showSizeChanger: false },
+                    pagination: { enabled: false, pageSize: 50 },
                     sorting: { mode: "none" },
                     tools: { mode: "self-contained", reset: false, reload: false },
                   },
@@ -3071,7 +3070,7 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                     }],
                   },
                   presentation: {
-                    bordered: true,
+                    borders: true,
                     layout: { mode: "fixed", overflowX: "auto" },
                     footer: {
                       template: navigationLabels!.footerTemplate,
@@ -3311,7 +3310,7 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                     params: { labels: revisionsLabels },
                   },
                   presentation: {
-                    bordered: true,
+                    borders: true,
                     layout: { mode: "auto", overflowX: "auto" },
                     columns: [
                       { key: "revisionTags", fieldKey: "revisionTags", title: revisionsLabels?.columns.revision ?? "Revision", renderer: "tags", sticky: "left" },
@@ -3328,7 +3327,7 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                   },
                   features: {
                     rowSelection: { mode: "multiple", preserveSelectedRowIdentities: false, disabledWhen: { source: "row", valuePath: "deleteDisabled", operator: "truthy" } },
-                    pagination: { enabled: false, pageSize: 100, showSizeChanger: false },
+                    pagination: { enabled: false, pageSize: 100 },
                     sorting: { mode: "none" },
                     tools: {
                       mode: "self-contained",

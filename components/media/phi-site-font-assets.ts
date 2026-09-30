@@ -67,7 +67,7 @@ export function usePhiSiteFontAssets(enabled = true) {
         page: 1,
         pageSize: PHI_SITE_FONT_ASSET_LIMIT,
         sortKey: "created_at",
-        sortOrder: "descend",
+        sortOrder: "descending",
         filters: { kind: PhiMediaKind.Font },
       },
       signal: abortController.signal,

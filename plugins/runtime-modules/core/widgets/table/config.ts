@@ -568,8 +568,8 @@ export function parsePhiTableWidgetConfig(config: Record<string, unknown>): PhiT
         title: readString(emptyState.title),
         description: readString(emptyState.description),
       },
-      bordered: readBoolean(presentation.bordered),
-      showHeader: readBoolean(presentation.showHeader),
+      borders: readBoolean(presentation.borders),
+      header: readBoolean(presentation.header),
       footer: readTableFooter(presentation.footer),
       summary: readTableSummary(presentation.summary),
       row: {
@@ -587,8 +587,7 @@ export function parsePhiTableWidgetConfig(config: Record<string, unknown>): PhiT
       pagination: {
         enabled: readBoolean(pagination.enabled),
         pageSize: readNumber(pagination.pageSize),
-        pageSizeOptions: readNumberList(pagination.pageSizeOptions),
-        showSizeChanger: readBoolean(pagination.showSizeChanger),
+        pageSizes: readNumberList(pagination.pageSizes),
       },
       sorting: {
         mode: sorting.mode === "single" || sorting.mode === "multiple" ? sorting.mode : "none",
@@ -940,7 +939,7 @@ export const PHI_TABLE_WIDGET_DEFINITION = {
     { key: "features.search.debounceMs", type: "number", label: "Search Debounce", min: 0, precision: 0, visibleWhen: { field: "features.search.enabled", equals: true } },
     { key: "features.pagination.enabled", type: "boolean", label: "Pagination" },
     { key: "features.pagination.pageSize", type: "number", label: "Page Size", min: 1, precision: 0, visibleWhen: { field: "features.pagination.enabled", equals: true } },
-    { key: "features.pagination.showSizeChanger", type: "boolean", label: "Page Size Changer", visibleWhen: { field: "features.pagination.enabled", equals: true } },
+    { key: "features.pagination.pageSizes", type: "number-list", label: "Page Sizes", min: 1, visibleWhen: { field: "features.pagination.enabled", equals: true } },
     {
       key: "features.sorting.mode",
       type: "choice",
@@ -1170,8 +1169,8 @@ export const PHI_TABLE_WIDGET_DEFINITION = {
     { key: "presentation.emptyState.title", type: "string", label: "Empty Title" },
     { key: "presentation.emptyState.description", type: "string", label: "Empty Description" },
     { ...PHI_CONTROL_SIZE_FIELD, key: "presentation.controlSize" },
-    { key: "presentation.bordered", type: "boolean", label: "Bordered" },
-    { key: "presentation.showHeader", type: "boolean", label: "Show Header" },
+    { key: "presentation.borders", type: "boolean", label: "Borders" },
+    { key: "presentation.header", type: "boolean", label: "Header" },
     { key: "presentation.row.striped", type: "boolean", label: "Striped Rows" },
     ...buildPhiTableConditionExpressionConfigFields("presentation.row.mutedWhen", "Muted Row Conditions", "any", "No muted rows"),
   ],
@@ -1179,11 +1178,12 @@ export const PHI_TABLE_WIDGET_DEFINITION = {
     presentation: {
       columns: [],
       layout: { mode: "auto", overflowX: "auto" },
-      bordered: false,
-      showHeader: true,
+      borders: false,
+      header: true,
       row: { striped: false },
     },
     features: {
+      pagination: { pageSizes: [10, 20, 50, 100] },
       sorting: { mode: "none", defaultSorts: [] },
       rowSelection: { mode: "none" },
       rowReordering: { enabled: false },

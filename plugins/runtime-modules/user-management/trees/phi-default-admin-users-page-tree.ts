@@ -235,7 +235,7 @@ export async function buildPhiDefaultAdminUsersPageTree({
           },
           presentation: {
             controlSize: "small",
-            bordered: true,
+            borders: true,
             layout: { mode: "auto", overflowX: "auto" },
             columns: [
               { key: "enabled", fieldKey: "enabled", title: widgetLabels.columns.enabled, renderer: "switch", editor: { control: "switch" }, sizing: { mode: "content" }, sticky: "left" },
@@ -310,7 +310,7 @@ export async function buildPhiDefaultAdminUsersPageTree({
                 ],
               },
             ],
-            pagination: { enabled: true, pageSize: 20, pageSizeOptions: [10, 20, 50, 100], showSizeChanger: true },
+            pagination: { enabled: true, pageSize: 20, pageSizes: [10, 20, 50, 100] },
             sorting: { mode: "single", defaultSorts: [{ key: "createdAt", direction: "descending" }] },
             editing: { mode: "cell", disabledWhen: { match: "any", conditions: [readOnlyCondition, selfEnabledCondition] } },
             tools: { mode: "self-contained", reset: false, reload: true },
@@ -580,7 +580,7 @@ export async function buildPhiDefaultAdminUsersPageTree({
             emptyState: { title: widgetLabels.history.empty, description: "" },
           },
           features: {
-            pagination: { enabled: false, pageSize: 25, showSizeChanger: false },
+            pagination: { enabled: false, pageSize: 25 },
             sorting: { mode: "none" },
           },
           signalRoutes: {

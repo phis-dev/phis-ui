@@ -231,8 +231,8 @@ export type PhiTableSearchConfig = {
 export type PhiTablePaginationConfig = {
   enabled?: boolean;
   pageSize?: number;
-  pageSizeOptions?: readonly number[];
-  showSizeChanger?: boolean;
+  /** The page sizes a reader may switch between. Absent, the table offers no choice. */
+  pageSizes?: readonly number[];
 };
 
 export type PhiTableSortingConfig = {
@@ -362,8 +362,10 @@ export type PhiTableWidgetPresentation = PhiControlPresentationConfig & {
     title?: string;
     description?: string;
   };
-  bordered?: boolean;
-  showHeader?: boolean;
+  /** Lines around and between the cells. */
+  borders?: boolean;
+  /** The header row; shown unless this says `false`. */
+  header?: boolean;
   footer?: PhiTableFooterConfig;
   summary?: PhiTableSummaryConfig;
   row?: {

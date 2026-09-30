@@ -160,7 +160,7 @@ export async function buildPhiDefaultAdminLocalesPageTree({
           presentation: {
             title: widgetLabels.translationsTitle,
             description: widgetLabels.translationsDescription,
-            bordered: true,
+            borders: true,
             layout: { mode: "auto", overflowX: "auto" },
             columns: [
               {
@@ -205,7 +205,7 @@ export async function buildPhiDefaultAdminLocalesPageTree({
               labelPlacement: "none",
               optionsProvider: { providerKey: PHI_LOCALIZATION_RUNTIME_DATA_PROVIDER_KEYS.adminSiteLocales },
             }],
-            pagination: { enabled: true, pageSize: 25, pageSizeOptions: [25, 50, 100], showSizeChanger: true },
+            pagination: { enabled: true, pageSize: 25, pageSizes: [25, 50, 100] },
             sorting: { mode: "none" },
             rowSelection: {
               mode: "multiple",

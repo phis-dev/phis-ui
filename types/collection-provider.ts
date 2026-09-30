@@ -82,7 +82,7 @@ export type PhiCollectionProviderQuery = {
   pageSize?: number;
   search?: string;
   sortKey?: string;
-  sortOrder?: "ascend" | "descend";
+  sortOrder?: "ascending" | "descending";
   filters?: Record<string, PhiCollectionProviderQueryValue>;
 };
 

@@ -499,7 +499,7 @@ assert.equal(legacy.source, null);
 assert.deepEqual(legacy.presentation.columns, []);
 const parsedSizing = parsePhiTableWidgetConfig({
   presentation: {
-    bordered: true,
+    borders: true,
     row: { striped: true },
     layout: { mode: "fixed", overflowX: "visible" },
     columns: [
@@ -519,7 +519,7 @@ const parsedSizing = parsePhiTableWidgetConfig({
   },
 });
 assert.deepEqual(parsedSizing.presentation.layout, { mode: "fixed", overflowX: "visible" });
-assert.equal(parsedSizing.presentation.bordered, true);
+assert.equal(parsedSizing.presentation.borders, true);
 assert.equal(parsedSizing.presentation.row?.striped, true);
 assert.deepEqual(parsedSizing.presentation.columns.map((column) => column.sizing), [
   { mode: "content", minWidth: undefined, maxWidth: undefined },

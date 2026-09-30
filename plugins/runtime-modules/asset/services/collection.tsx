@@ -20,7 +20,7 @@ function buildMediaQuery(query: PhiCollectionProviderQuery) {
     page: String(query.page && query.page > 0 ? query.page : 1),
     pageSize: String(query.pageSize && query.pageSize > 0 ? query.pageSize : 20),
     sort: query.sortKey
-      ? `${query.sortKey}_${query.sortOrder === "ascend" ? "asc" : "desc"}`
+      ? `${query.sortKey}_${query.sortOrder === "ascending" ? "asc" : "desc"}`
       : "created_at_desc",
   });
   const folderId = readFilter(query, "folderId");

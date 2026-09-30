@@ -227,8 +227,7 @@ export async function buildPhiDefaultAdminLogsPageTree({
             pagination: {
               enabled: true,
               pageSize: 25,
-              pageSizeOptions: [25, 50, 100],
-              showSizeChanger: true,
+              pageSizes: [25, 50, 100],
             },
             sorting: { mode: "none" },
             tools: { mode: "self-contained", reload: true },

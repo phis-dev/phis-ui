@@ -656,6 +656,46 @@ function PhiInspectorCollectionFieldControl({
   );
 }
 
+/**
+ * A list of whole numbers typed as "10, 20, 50".
+ *
+ * The text is a draft until the field is left or Enter is pressed: reading it on every keystroke would
+ * turn "10, " back into "10" and take the comma away from under the cursor.
+ */
+function PhiInspectorNumberListField({
+  value,
+  min,
+  disabled,
+  onChange,
+}: {
+  value: readonly unknown[];
+  min?: number;
+  disabled: boolean;
+  onChange: (next: number[]) => void;
+}) {
+  const committed = value.filter((item): item is number => typeof item === "number").join(", ");
+  const [draft, setDraft] = useState<string | null>(null);
+  const commit = () => {
+    if (draft == null) return;
+    const next = draft
+      .split(/[\s,;]+/u)
+      .map((part) => Number(part))
+      .filter((item) => Number.isInteger(item) && (min === undefined || item >= min));
+    setDraft(null);
+    onChange(next);
+  };
+  return (
+    <PhiTextControl
+      value={draft ?? committed}
+      disabled={disabled}
+      style={{ width: "100%" }}
+      onChange={setDraft}
+      onBlur={commit}
+      onPressEnter={commit}
+    />
+  );
+}
+
 export function renderPhiInspectorConfigField({
   field,
   value,
@@ -1122,6 +1162,18 @@ export function renderPhiInspectorConfigField({
         disabled={disabled || !onChange}
         {...(linkTargetLabels ? { labels: linkTargetLabels } : {})}
         onChange={(next) => onChange?.({ [field.key]: next })}
+      />,
+    );
+  }
+
+  if (field.type === "number-list") {
+    return renderPhiInspectorConfigFieldControl(
+      field,
+      <PhiInspectorNumberListField
+        value={Array.isArray(value) ? value : Array.isArray(defaultValue) ? defaultValue : []}
+        min={field.min}
+        disabled={disabled || !onChange}
+        onChange={(next) => onChange?.({ [field.key]: next.length > 0 ? next : undefined })}
       />,
     );
   }

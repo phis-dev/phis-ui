@@ -122,7 +122,7 @@ export async function buildPhiDefaultAdminAuthSettingsPageTree({
             },
             presentation: {
               controlSize: "small",
-              bordered: true,
+              borders: true,
               layout: { mode: "auto", overflowX: "auto" },
               columns: [
                 { key: "installationKey", fieldKey: "installationKey", title: labels.installations.installationKey, sizing: { mode: "content" }, sticky: "left" },

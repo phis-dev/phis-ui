@@ -93,9 +93,10 @@ export type PhiCmsCollectionViewWidgetConfig = PhiCmsWidgetConfigBase & {
     pagination?: {
       enabled: boolean;
       pageSize?: number;
-      showSizeChanger?: boolean;
-      pageSizeOptions?: readonly number[];
-      simple?: boolean;
+      /** The page sizes a reader may switch between. Absent, the collection offers no choice. */
+      pageSizes?: readonly number[];
+      /** The short pager: previous, the page, next. */
+      compact?: boolean;
     };
   };
   initialQuery?: PhiCollectionProviderQuery;
@@ -213,7 +214,7 @@ function readInitialQuery(value: unknown): PhiCollectionProviderQuery | undefine
     pageSize: pageSize && pageSize > 0 ? pageSize : undefined,
     search: readString(value.search),
     sortKey: readString(value.sortKey),
-    sortOrder: value.sortOrder === "ascend" ? "ascend" : value.sortOrder === "descend" ? "descend" : undefined,
+    sortOrder: value.sortOrder === "ascending" || value.sortOrder === "descending" ? value.sortOrder : undefined,
     filters: isPhiRecord(value.filters)
       ? Object.fromEntries(Object.entries(value.filters).filter((entry): entry is [string, PhiCollectionProviderQueryValue] => {
           const filterValue = entry[1];
@@ -261,9 +262,8 @@ export function normalizePhiCmsCollectionViewWidgetConfig(config: unknown): PhiC
       pagination: pagination ? {
         enabled: readBoolean(pagination.enabled) ?? true,
         pageSize: readNumber(pagination.pageSize),
-        showSizeChanger: readBoolean(pagination.showSizeChanger) ?? false,
-        pageSizeOptions: readNumberList(pagination.pageSizeOptions),
-        simple: readBoolean(pagination.simple) ?? true,
+        pageSizes: readNumberList(pagination.pageSizes),
+        compact: readBoolean(pagination.compact) ?? true,
       } : undefined,
     },
     initialQuery: readInitialQuery(raw.initialQuery),
@@ -459,8 +459,8 @@ export const PHI_COLLECTION_VIEW_WIDGET_DEFINITION = {
     },
     { key: "features.pagination.enabled", type: "boolean", label: "Pagination" },
     { key: "features.pagination.pageSize", type: "number", label: "Page Size", min: 1, precision: 0 },
-    { key: "features.pagination.simple", type: "boolean", label: "Simple Pagination" },
-    { key: "features.pagination.showSizeChanger", type: "boolean", label: "Page Size Selector" },
+    { key: "features.pagination.compact", type: "boolean", label: "Compact Pagination" },
+    { key: "features.pagination.pageSizes", type: "number-list", label: "Page Sizes", min: 1 },
   ],
   defaultConfig: {
     presentation: { mode: "grid", controlSize: "small" },
