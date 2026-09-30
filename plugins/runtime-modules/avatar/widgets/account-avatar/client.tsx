@@ -13,7 +13,7 @@ import {
   type PhiAvatarAsset,
 } from "../../../../../components/account/avatar-client";
 import { PHI_AVATAR_REVISION } from "../../../../../components/account/avatar-revision";
-import { PHI_AVATAR_OVERLAY_IDS } from "../../../../../components/runtime/avatar-overlay-ids";
+import { PHI_AVATAR_OVERLAY_IDS } from "../../addresses";
 import { createPhiSignalAddress } from "../../../../../types/signals";
 import {
   createPhiSignalCorrelationId,

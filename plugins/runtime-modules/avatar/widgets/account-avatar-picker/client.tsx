@@ -10,7 +10,7 @@ import { usePhiMediaUpload } from "../../../../../components/media/phi-media-upl
 import { PHI_AVATAR_USER_SPACE_MEDIA_KINDS } from "../../../../../plugins/runtime-modules/avatar/media-spaces";
 import { setPhiViewerAvatar } from "../../../../../components/account/avatar-client";
 import { PHI_AVATAR_REVISION } from "../../../../../components/account/avatar-revision";
-import { PHI_AVATAR_OVERLAY_IDS } from "../../../../../components/runtime/avatar-overlay-ids";
+import { PHI_AVATAR_OVERLAY_IDS } from "../../addresses";
 import { createPhiSignalAddress } from "../../../../../types/signals";
 import {
   createPhiSignalCorrelationId,

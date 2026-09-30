@@ -1,5 +1,5 @@
-import { PHI_AVATAR_RUNTIME_MODULE_ID } from "../../plugins/runtime-modules/avatar/ids";
-import { createPhiPresetCmsInstanceIdMap } from "../../types/cms-instance-id";
+import { PHI_AVATAR_RUNTIME_MODULE_ID } from "./ids";
+import { createPhiPresetCmsInstanceIdMap } from "../../../types/cms-instance-id";
 
 /**
  * The Avatar Module's Area-owned Overlay.

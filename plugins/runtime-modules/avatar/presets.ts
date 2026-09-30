@@ -1,5 +1,5 @@
 import type { PhiCmsNavigationInjectionDescriptor } from "../../../types/cms-module-descriptors";
-import { PHI_AVATAR_OVERLAY_IDS } from "../../../components/runtime/avatar-overlay-ids";
+import { PHI_AVATAR_OVERLAY_IDS } from "./addresses";
 import { PHI_APP_ACCOUNT_NAV_ITEM_KEY } from "../area-definitions";
 
 /**

@@ -4,8 +4,8 @@ import { PHI_COLOR, PHI_SPACE } from "../../../theme/antd-css-var-contract";
 import type { PhiCmsPageNode, PhiResolvedCmsPageTree } from "../../../types/cms";
 import { createPhiSignalAddress } from "../../../types/signals";
 import type { PhiBlockRuntime } from "../../../types/widget-runtime";
-import { getPhiAvatarWidgetLabels } from "../../widgets/label-sets/avatar";
-import { PHI_AVATAR_OVERLAY_IDS } from "../../runtime/avatar-overlay-ids";
+import { getPhiAvatarWidgetLabels } from "../../../components/widgets/label-sets/avatar";
+import { PHI_AVATAR_OVERLAY_IDS } from "./addresses";
 import { readPhiServerApiCredentials } from "../../../helpers/phis-server-credentials";
 
 /**

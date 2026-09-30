@@ -1,7 +1,7 @@
 import { definePhiRuntimeModuleServerAreaContribution } from "../area-contributions";
 import { PHI_AVATAR_RUNTIME_MODULE_DEFINITION } from "./definition";
 // Der Overlay-Baum liegt noch unter components/regions/presets; Stufe 2 holt ihn hierher.
-import { PHI_AVATAR_RUNTIME_MODULE_AREA_OVERLAYS } from "../../../components/regions/presets/phi-avatar-area-overlay-tree";
+import { PHI_AVATAR_RUNTIME_MODULE_AREA_OVERLAYS } from "./overlay-tree";
 import { PHI_AVATAR_RUNTIME_MODULE_NAVIGATION } from "./presets";
 import { PHI_AVATAR_RUNTIME_MODULE_WIDGETS } from "./widgets";
 
