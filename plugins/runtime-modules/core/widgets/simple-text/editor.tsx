@@ -17,11 +17,10 @@ import {
 } from "../../../../../components/widgets/client/shared/phi-widget-tool-buttons";
 import { usePhiWidgetScaffoldPopup } from "../../../../../components/widgets/client/shared/phi-widget-scaffold-popup";
 import { usePhiAuthoringToolsLabels } from "../../../../../components/widgets/client/shared/phi-authoring-tools-labels";
+import { PHI_SIMPLE_TEXT_MARKS, type PhiSimpleTextMark } from "../../../../../types/core-widget-placements";
 import {
   hasPhiSimpleTextMark,
-  PHI_SIMPLE_TEXT_MARKS,
   resolvePhiSimpleTextWidgetText,
-  type PhiSimpleTextMark,
   type PhiSimpleTextWidgetRenderableConfig,
 } from "./config";
 import { resolvePhiWidgetFontFamily } from "../../../../../components/widgets/helpers/font-family";

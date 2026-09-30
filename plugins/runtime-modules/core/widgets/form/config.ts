@@ -1,4 +1,10 @@
 import { resolvePhiCmsWidgetPluginKey } from "../../../../../constants/cms-widget-types";
+import type {
+  PhiCmsFormWidgetCardConfig,
+  PhiCmsFormWidgetFeedbackConfig,
+  PhiCmsFormWidgetLinkConfig,
+  PhiCmsFormWidgetSubmitPlacement,
+} from "../../../../../types/core-widget-placements";
 import { PhiCmsWidgetType } from "../../../../../constants/cms-widget-types";
 import type { PhiCmsWidgetPlugin } from "../../../../../types";
 import { readPhiProviderResourceSource, type PhiProviderResourceSource } from "../../../../../types/runtime-data-provider";
@@ -11,89 +17,6 @@ import {
 } from "../../../../../components/widgets/config/parser-primitives";
 import { PHI_LAYOUT } from "../../../../../theme/phi-tokens";
 import { PHI_BUILDER_RUNTIME_DATA_PROVIDER_KEYS } from "../../../builder/ids";
-
-/**
- * Whether this placement draws the form's own submit.
- *
- * `inline` draws the button the descriptor describes (`submit`: what it says, where on the grid it
- * stands). `external` draws none: the form is submitted by whoever holds its `submit` capability -- a
- * Button Widget, an Overlay footer, a toolbar -- or by Enter where `submitOnEnter` allows it. Either way
- * there is one path; the button is only one more sender on the same channel.
- *
- * The placement answers this and not the form, because the same form stands on a page of its own with
- * a button under its fields and in a dialog whose footer carries the button.
- */
-export type PhiCmsFormWidgetSubmitPlacement = "inline" | "external";
-
-/**
- * A way out of the form, standing where its submit stands.
- *
- * "Forgot password" and "Create account" are not fields and not commands -- they are the two other
- * things a person at a sign-in might want. They belong to the Widget for the same reason the submit
- * does: whether they are offered, and in which column they sit, is the placement's decision. Being in
- * the Widget is also the only way they can line up under the inputs, because the label column is a
- * property of the form's own grid and nothing outside it can read where that column ends.
- */
-export type PhiCmsFormWidgetLinkConfig = {
-  /** Names the link's label in the form's label set, as `actions.<key>Label`. */
-  key: string;
-  href: string;
-  /** A published Module fact this link depends on, such as `auth.registration`. */
-  requiresFeature?: string;
-};
-
-/**
- * Whether a submit is worth saying out loud, and how.
- *
- * A Form already shows what happened where it stands: an error above the fields, and a success panel
- * where its descriptor has one. That is enough on a Page somebody came to in order to submit it. It is
- * not enough in Settings, where a panel is one of several and a switch that saves on change has nothing
- * to show at all -- the Widget that used to own the profile name reported through the application
- * feedback, and the registered Form that replaced it said nothing.
- *
- * So the placement decides, the way it decides whether there is a submit button: a Form on a Page of
- * its own stays quiet, a Form in a Settings panel reports. `successText` is what a success says where
- * the descriptor says nothing, already translated by whoever placed it.
- */
-export type PhiCmsFormWidgetFeedbackConfig = {
-  mode: "message" | "notification";
-  successText?: string;
-};
-
-/**
- * The box the Widget draws around its Form, or none at all.
- *
- * A Form describes fields. Whether it stands in a box is the same kind of question as whether it carries
- * its own submit -- the placement's, not the Form's -- which is why it is configured here and appears in
- * no descriptor. It exists because the box was being built by hand: a client Widget with its own Card,
- * its own inset and, in one revision, its own Ant Design colour variable, standing beside a Form that
- * could not have a box at all. What draws it is `PhiCardControl`, so the Theme's surface shape reaches it
- * through the same component token every other surface reads and the ground and the frame are the
- * Theme's -- nothing here names a colour or a corner.
- *
- * `presentation` is the switch as well as the step: absent, or anything outside the three names, is no
- * box at all -- no ground and no inset -- which is what every Form placed before this one has and keeps.
- * That matters more than it sounds: the Login and its siblings stand in a Split Card slot that already
- * paints a ground, so a box there would be a plate inside a plate, and an inset would move the query
- * container the fields are measured in for nothing.
- *
- * The three names are one ladder -- how far the box separates itself from what is behind it -- and each
- * step is stated once. `card` and `panel` deliberately share a ground: the inset already says how deep
- * the box sits, and a second ground would say it again and drift the moment one of the two gains a
- * source the other has not.
- */
-export type PhiCmsFormWidgetCardConfig = {
-  /**
-   * `card` is a box on a Page of its own; `panel` is the same box at the inset of chrome -- a Settings
-   * section; `wash` is the quietest filling the Theme has with no frame at all, for a Form that already
-   * stands on a container and only needs its fields set off from it.
-   */
-  presentation: "card" | "panel" | "wash";
-  /** A heading in a bar above the fields, already translated by whoever placed the Form. */
-  title: string | null;
-  /** The box's own inset, where the Theme's answer for this box is not the right one. */
-  padding: number | string | null;
-};
 
 export type PhiCmsFormWidgetConfig = PhiCmsWidgetConfigBase & {
   formId: PhiFormId | null;

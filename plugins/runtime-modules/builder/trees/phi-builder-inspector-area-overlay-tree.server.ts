@@ -6,6 +6,7 @@ import {
   PHI_SIGNAL_VALUE_SCHEMAS,
   createPhiSignalAddress,
   createPhiSignalSubcontrolAddress,
+  type PhiSignalRoute,
 } from "../../../../types/signals";
 import type { PhiBlockRuntime } from "../../../../types/widget-runtime";
 import { createPhiBuilderControllerAddress } from "../controller/address";
@@ -422,7 +423,7 @@ export async function buildPhiBuilderInspectorAreaOverlayTree({
                  * would only restart an animation nobody has finished describing.
                  */
                 ...(section === "appearance"
-                  ? [{ routeKey: `builder-effects-${section}-live`, capabilityId: "valuesChange", scope: "area", channel: `effectsPreview:${section}`, action: "change", valueType: "json", valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.formValues, receiver: createPhiBuilderControllerAddress() }]
+                  ? [{ routeKey: `builder-effects-${section}-live`, capabilityId: "valuesChange", scope: "area", channel: `effectsPreview:${section}`, action: "change", valueType: "json", valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.formValues, receiver: createPhiBuilderControllerAddress() } satisfies PhiSignalRoute]
                   : []),
               ],
               listens: [

@@ -1,4 +1,9 @@
 import { resolvePhiCmsWidgetPluginKey } from "../../../../../constants/cms-widget-types";
+import type {
+  PhiImageWidgetFit,
+  PhiImageWidgetPreviewMode,
+  PhiImageWidgetSize,
+} from "../../../../../types/core-widget-placements";
 import { PhiCmsWidgetType } from "../../../../../constants/cms-widget-types";
 import { PhiImageAssetVariantKey } from "../../../../../constants/media";
 import type { PhiCmsWidgetPlugin } from "../../../../../types";
@@ -15,10 +20,6 @@ import {
   normalizePhiMaskConfig,
   type PhiMaskConfig,
 } from "../../../../../components/widgets/config/mask";
-
-export type PhiImageWidgetSourceKind = "url" | "asset";
-export type PhiImageWidgetPreviewMode = "none" | "native" | "lightbox";
-export type PhiImageWidgetFit = "cover" | "contain" | "fill";
 
 export type PhiCmsImageWidgetConfig = PhiCmsWidgetConfigBase &
   PhiMediaImageSourceConfig & {
@@ -40,11 +41,6 @@ export type PhiCmsImageWidgetConfig = PhiCmsWidgetConfigBase &
     borderBottomRightRadius?: number | string;
     mask?: PhiMaskConfig;
   };
-
-export type PhiImageWidgetSize = {
-  width?: number | string;
-  height?: number | string;
-};
 
 function readImageSize(value: unknown): PhiImageWidgetSize | undefined {
   if (!value || typeof value !== "object" || Array.isArray(value)) {

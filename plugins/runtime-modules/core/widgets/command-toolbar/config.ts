@@ -1,13 +1,20 @@
 import { resolvePhiCmsWidgetPluginKey } from "../../../../../constants/cms-widget-types";
-import {
-  readPhiButtonVariant,
-  type PhiButtonVariant,
-} from "../../../../../components/widgets/config/button-variant";
+import type {
+  PhiCommandToolbarButtonConfig,
+  PhiCommandToolbarButtonEmitConfig,
+} from "../../../../../types/core-widget-placements";
+import { readPhiButtonVariant } from "../../../../../components/widgets/config/button-variant";
 import type { PhiCmsWidgetPlugin } from "../../../../../types";
 import type { PhiSignalValue } from "../../../../../types/signals";
-import { readPhiCommonControlActionKey, type PhiCommonControlActionKey } from "../../../../../components/widgets/label-types/common-controls";
+import { readPhiCommonControlActionKey } from "../../../../../components/widgets/label-types/common-controls";
 import { PHI_COMMAND_CONTROL_SIGNALS } from "../../../../../components/widgets/signals/control-signal-capabilities";
-import { readBoolean, readNumber, readString } from "../../../../../components/widgets/config/parser-primitives";
+import {
+  readBoolean,
+  readNumber,
+  readRenderableBlockConfig,
+  readString,
+  type PhiCmsWidgetConfigBase,
+} from "../../../../../components/widgets/config/parser-primitives";
 import {
   PHI_CONTROL_PRESENTATION_FIELDS,
   PHI_CONTROL_STATE_FIELDS,
@@ -19,29 +26,9 @@ import {
   readPhiViewerAccessPolicy,
   type PhiAccessViewer,
   type PhiRoleProviderId,
-  type PhiViewerAccessPolicy,
 } from "../../../../../types/access";
 
-export type PhiCommandToolbarButtonEmitConfig = {
-  capabilityId: string;
-  value?: PhiSignalValue;
-};
-
-export type PhiCommandToolbarButtonConfig = {
-  key: string;
-  emits: PhiCommandToolbarButtonEmitConfig[];
-  accessPolicy?: PhiViewerAccessPolicy;
-  actionKey?: PhiCommonControlActionKey;
-  label?: string;
-  tooltip?: string;
-  icon?: string;
-  display?: "icon" | "label" | "icon-label";
-  danger?: boolean;
-  disabled?: boolean;
-  variant?: PhiButtonVariant;
-};
-
-export type PhiCommandToolbarWidgetConfig = PhiControlConfig & {
+export type PhiCommandToolbarWidgetConfig = PhiCmsWidgetConfigBase & PhiControlConfig & {
   compact?: boolean;
   wrap?: boolean;
   showLabels?: boolean;
@@ -176,6 +163,7 @@ export function parsePhiCommandToolbarWidgetConfig(
   });
 
   return {
+    ...readRenderableBlockConfig(config),
     ...controlState,
     compact: readBoolean(config.compact) ?? true,
     wrap: readBoolean(config.wrap) ?? false,

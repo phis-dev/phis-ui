@@ -13,7 +13,8 @@ import { readPhiWidgetFontFamily, resolvePhiWidgetFontFamily } from "../../../..
 import { readPhiWidgetFontSize, resolvePhiWidgetFontSize } from "../../../../../components/widgets/helpers/font-size";
 import type { PhiClientBlockBaseProps, PhiCmsInstanceId, PhiRenderableBlockRenderMode } from "../../../../../types";
 import type { PhiTextTone } from "../../../../../components/widgets/config/text-tone";
-import { hasPhiSimpleTextMark, type PhiSimpleTextMark } from "./config";
+import type { PhiSimpleTextMark } from "../../../../../types/core-widget-placements";
+import { hasPhiSimpleTextMark } from "./config";
 import type { PhiWidgetFontFamilyKey, PhiWidgetFontSizeKey } from "../../../../../types/site-theme";
 import { PhiFlexControl } from "../../../../../components/controls/phi-flex-control";
 import { PhiTypographyControl } from "../../../../../components/controls/phi-typography-control";

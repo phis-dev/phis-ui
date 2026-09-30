@@ -11,7 +11,7 @@ import {
 import { PhiButtonControl } from "../../../../../components/controls/phi-button-control";
 import { PhiPopoverControl } from "../../../../../components/controls/phi-popover-control";
 import { usePhiConfig } from "../../../../../components/root/phi-config-provider";
-import type { PhiCommandToolbarButtonConfig } from "./config";
+import type { PhiCommandToolbarButtonConfig } from "../../../../../types/core-widget-placements";
 import { usePhiWidgetScaffoldPopup } from "../../../../../components/widgets/client/shared/phi-widget-scaffold-popup";
 import { usePhiAuthoringToolsLabels } from "../../../../../components/widgets/client/shared/phi-authoring-tools-labels";
 import { PhiFlexControl } from "../../../../../components/controls/phi-flex-control";

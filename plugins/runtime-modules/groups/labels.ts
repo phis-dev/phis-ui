@@ -19,7 +19,6 @@ const PHI_GROUPS_FORM_LABEL_SET = definePhiLabelSet({
     page_title: "Groups",
     page_description: definePhiMessageLabel("Site groups, their members, and the Space each group shares."),
     groups_title: "Groups",
-    groups_description: definePhiMessageLabel("A group is an authorization unit. Pages, Navigation, and Assets refer to it."),
     members_title: "Members",
     members_description: definePhiMessageLabel("Select a group to see who belongs to it."),
     members_empty: definePhiMessageLabel("No group selected."),
@@ -103,7 +102,6 @@ export async function getPhiGroupFormLabels(options: PhiGlobalTranslatorOptions)
     },
     groups: {
       title: labels.groups_title,
-      description: labels.groups_description,
     },
     members: {
       title: labels.members_title,

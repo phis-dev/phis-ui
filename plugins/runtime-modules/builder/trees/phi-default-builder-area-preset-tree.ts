@@ -16,6 +16,7 @@ import { buildPhiHeaderTopActionsLayoutNode } from "../../../../components/regio
 import { remapPhiSignalRoutesInConfig } from "../../../../helpers/signal-route-lifecycle";
 import { resolvePhiShellHeaderHeight, resolvePhiShellMetric } from "../../../../helpers/shell-region-style";
 import type { PhiCmsPageNode, PhiResolvedCmsPageTree } from "../../../../types/cms";
+import type { PhiCommandToolbarWidgetPlacement } from "../../../../types/core-widget-placements";
 import type {
   PhiCmsCompiledDescriptorCatalog,
   PhiRuntimeModuleId,
@@ -207,7 +208,7 @@ function resolveBuilderPageTitleSource(pageKey: string) {
 function buildBuilderCommandToolbarConfig(
   receiver = createPhiBuilderControllerAddress(),
   options?: { disableReset?: boolean },
-) {
+): PhiCommandToolbarWidgetPlacement {
   return {
     key: "builder-command-toolbar",
     signalRoutes: {
@@ -1765,7 +1766,6 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                 presentation: {
                   mode: "grid",
                   minColumnWidth: 102,
-                  gap: PHI_SPACE.sm,
                   emptyDescription: mediaLabels?.grid.emptyDescription ?? "No assets found.",
                   controlSize: "small",
                   labels: mediaLabels ?? undefined,
@@ -2887,7 +2887,7 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                         fieldKey: "path",
                         title: modulesLabels?.publicRoutes.address ?? "Address",
                         sizing: { mode: "fill", minWidth: 200 },
-                        editor: { mode: "inline", control: "text" },
+                        editor: {},
                       },
                     ],
                     controlSize: "small",

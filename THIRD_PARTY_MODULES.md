@@ -668,6 +668,47 @@ no contract for yours.
   Layouts.
 - Leave out `creationPreset`: it selects starting values for Core's families. Give `config` instead.
 
+## 4b. Place Core Widgets
+
+Your Pages are built from Widgets, and most of them will be Core's: Markdown, Simple Text, Button, Table,
+Form and the rest. You place them by type key, as data. You never import Core for this; the Foundation
+publishes what each one reads.
+
+**Use the node factories.** `buildPhiCmsWidgetNode`, or `widget` and `stack` on
+`createPhiCmsPresetNodes`, check `config` against the placement type for the type key:
+
+```ts
+nodes.widget({
+  typeKey: "button",
+  id: STATUS_WIDGET_IDS.refresh,
+  parentLayoutNodeId: STATUS_LAYOUT_IDS.toolbar,
+  slotIndex: 0,
+  label: "status refresh",
+  config: { label: "Refresh", variant: "primary", size: { width: "auto" } },
+});
+```
+
+A misspelt key, or a value outside a vocabulary, fails to compile. At runtime the parser would only
+drop it without a word.
+
+**The contract lives in `@phis/ui/core-widgets`.**
+- `PhiCoreWidgetPlacements` maps each listed type key to its placement type.
+- `PhiWidgetPlacementBase` is the envelope every placement shares: the block geometry, `visibleWhen`
+  and `signalRoutes`. The slot frame applies the block to every Widget alike.
+- Translation is off through the node flag `PhiCmsFlags.NoTranslate` (`flags`), not through config.
+
+**What stays untyped:**
+- a Core Widget not in the map yet, such as Card, whose config is still changing;
+- a type key known only at runtime;
+- a Widget named with a `pluginKey`, your own included, since its config is yours to define.
+
+Give such a `config` a type of your own with `satisfies`.
+
+`stack` takes no `pluginKey`, so place your own Widgets with `widget`.
+
+`validate-core-widget-placements` checks each placement type against the Widget's Inspector fields in
+both directions. The contract cannot drift from what the Inspector writes.
+
 ## 5. Add a Theme preset
 
 A Theme preset is module-owned data, not a global registration and not arbitrary `ConfigProvider`

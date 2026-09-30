@@ -8,7 +8,7 @@ import { PHI_SIGNAL_VALUE_SCHEMAS } from "../../../../../types/signals";
 import { usePhiSignalEmitter } from "../../../../../components/runtime/runtime-signal-identity";
 import { usePhiConfig, type PhiConfig } from "../../../../../components/root/phi-config-provider";
 import type { PhiCodeToken, PhiCodeTokenKind } from "./code-tokens";
-import type { PhiMarkdownSpacingKey, PhiMarkdownTextAlign } from "./config";
+import type { PhiMarkdownSpacingKey, PhiMarkdownTextAlign } from "../../../../../types/core-widget-placements";
 import type { PhiMarkdownTocHeading } from "../markdown-toc/config";
 import { PhiPlainTable } from "../../../../../components/tables/phi-plain-table";
 import { PhiTypographyControl } from "../../../../../components/controls/phi-typography-control";

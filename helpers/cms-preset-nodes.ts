@@ -1,4 +1,9 @@
-import { buildPhiCmsLayoutNode, buildPhiCmsWidgetNode } from "./cms-node-factories";
+import {
+  buildPhiCmsLayoutNode,
+  buildPhiCmsWidgetNode,
+  type PhiCmsWidgetNodeFactoryCommon,
+  type PhiCmsWidgetPlacementFields,
+} from "./cms-node-factories";
 import { PhiCmsStatus } from "../constants/phi-cms";
 import type {
   PhiCmsContentWidgetNode,
@@ -18,7 +23,6 @@ type PhiCmsPresetNodeDefaults = {
 };
 
 type PhiCmsPresetLayoutInput = Parameters<typeof buildPhiCmsLayoutNode>[0];
-type PhiCmsPresetWidgetInput = Parameters<typeof buildPhiCmsWidgetNode>[0];
 
 type PhiCmsPresetNodeInput<TInput> = Omit<
   TInput,
@@ -27,6 +31,23 @@ type PhiCmsPresetNodeInput<TInput> = Omit<
   status?: number;
   flags?: number;
 };
+
+/** A Widget placement in a Preset: typed by its type key, like `buildPhiCmsWidgetNode`. */
+type PhiCmsPresetWidgetInput<
+  TTypeKey extends string,
+  TPluginKey extends string | undefined = undefined,
+> = PhiCmsPresetNodeInput<PhiCmsWidgetNodeFactoryCommon> &
+  PhiCmsWidgetPlacementFields<TTypeKey, TPluginKey>;
+
+/**
+ * An entry of a stack. It names no `pluginKey`: the type keys of a stack are read as one tuple, and a
+ * second tuple beside it stops the compiler from reading either -- every config would pass unchecked.
+ * A Widget of another Module is placed with `widget`.
+ */
+type PhiCmsPresetStackEntry<TTypeKey extends string> = Omit<
+  PhiCmsPresetNodeInput<PhiCmsWidgetNodeFactoryCommon>,
+  "parentLayoutNodeId" | "slotIndex"
+> & PhiCmsWidgetPlacementFields<TTypeKey>;
 
 /**
  * What a Region placement decides: which Region, rooted where, in which order, configured how.
@@ -118,13 +139,15 @@ function createPhiCmsPresetNodeSet(defaults: PhiCmsPresetNodeDefaults) {
         ...input,
       } as PhiCmsPresetLayoutInput);
     },
-    widget(input: PhiCmsPresetNodeInput<PhiCmsPresetWidgetInput>): PhiCmsContentWidgetNode {
-      return buildPhiCmsWidgetNode({
+    widget<TTypeKey extends string, TPluginKey extends string | undefined = undefined>(
+      input: PhiCmsPresetWidgetInput<TTypeKey, TPluginKey>,
+    ): PhiCmsContentWidgetNode {
+      return buildPhiCmsWidgetNode<TTypeKey, TPluginKey>({
         ...common,
         sortOrder: input.slotIndex,
         contentId: null,
         ...input,
-      } as PhiCmsPresetWidgetInput);
+      });
     },
     /**
      * Widgets stacked in one Layout, in the order they are written.
@@ -132,22 +155,20 @@ function createPhiCmsPresetNodeSet(defaults: PhiCmsPresetNodeDefaults) {
      * Slots are counted for them, because a stack is a sequence and renumbering one by hand after
      * inserting something in the middle is exactly the kind of edit that goes wrong quietly.
      */
-    stack(
+    stack<const TTypeKeys extends readonly string[]>(
       parentLayoutNodeId: PhiCmsInstanceId,
-      entries: readonly Omit<
-        PhiCmsPresetNodeInput<PhiCmsPresetWidgetInput>,
-        "parentLayoutNodeId" | "slotIndex"
-      >[],
+      entries: { [TIndex in keyof TTypeKeys]: PhiCmsPresetStackEntry<TTypeKeys[TIndex]> },
       startAt = 0,
     ): PhiCmsContentWidgetNode[] {
-      return entries.map((entry, index) => buildPhiCmsWidgetNode({
+      const stacked = entries as readonly PhiCmsPresetStackEntry<string>[];
+      return stacked.map((entry, index) => buildPhiCmsWidgetNode({
         ...common,
         contentId: null,
         parentLayoutNodeId,
         slotIndex: startAt + index,
         sortOrder: startAt + index,
         ...entry,
-      } as PhiCmsPresetWidgetInput));
+      }));
     },
     overlay(input: PhiCmsPresetOverlayInput): PhiCmsOverlayNode {
       const node = {

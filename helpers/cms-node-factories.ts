@@ -2,6 +2,7 @@ import { buildPhiCmsLayoutNamespacedTypeKey, resolvePhiCmsLayoutPluginKey } from
 import { buildPhiCmsWidgetNamespacedTypeKey, resolvePhiCmsWidgetPluginKey } from "../constants/cms-widget-types";
 import type { PhiCmsLayoutNode, PhiCmsContentWidgetNode } from "../types/cms";
 import type { PhiCmsInstanceId } from "../types/cms-instance-id";
+import type { PhiCoreWidgetPlacements, PhiCoreWidgetTypeKey } from "../types/core-widget-placements";
 import {
   resolvePhiLayoutCreationPreset,
   type PhiLayoutCreationPreset,
@@ -20,8 +21,38 @@ type PhiCmsLayoutNodeFactoryCommon = {
   label: string | null;
 };
 
-type PhiCmsWidgetNodeFactoryCommon = Omit<PhiCmsLayoutNodeFactoryCommon, "parentLayoutNodeId"> & {
+export type PhiCmsWidgetNodeFactoryCommon = Omit<PhiCmsLayoutNodeFactoryCommon, "parentLayoutNodeId"> & {
   parentLayoutNodeId: PhiCmsInstanceId;
+  contentId?: number | null;
+};
+
+/**
+ * The config a Widget placement takes, read off its type key.
+ *
+ * A Core Widget listed in `PhiCoreWidgetPlacements` takes the placement Core promises to read, so a
+ * misspelt field or a value outside its vocabulary fails where the placement is written rather than
+ * being dropped by the parser at render. Everything else -- a Widget of another Module, named with its
+ * `pluginKey`, or a type key only known at runtime -- takes a plain record, because nothing here knows
+ * what it reads.
+ */
+export type PhiCmsWidgetPlacementConfig<
+  TTypeKey extends string,
+  TPluginKey extends string | undefined,
+> = [TPluginKey] extends [undefined]
+  ? TTypeKey extends PhiCoreWidgetTypeKey
+    ? PhiCoreWidgetPlacements[TTypeKey]
+    : Record<string, unknown>
+  : Record<string, unknown>;
+
+/** What a Widget placement names: which Widget, and configured how. */
+export type PhiCmsWidgetPlacementFields<
+  TTypeKey extends string,
+  TPluginKey extends string | undefined = undefined,
+> = {
+  /** Optional override; by default the owning module is resolved from the type key. */
+  pluginKey?: TPluginKey;
+  typeKey: TTypeKey;
+  config?: PhiCmsWidgetPlacementConfig<TTypeKey, TPluginKey>;
 };
 
 export function buildPhiCmsWidgetTypeKey(pluginKey: string, typeKey: string): string {
@@ -64,19 +95,22 @@ export function buildPhiCmsLayoutNode({
   };
 }
 
-export function buildPhiCmsWidgetNode({
+/*
+ * Generic over the type key rather than overloaded per Widget: an overload set picks the first
+ * signature a literal fits, and a config with a wrong field fits the untyped one, so the check would
+ * pass exactly when it should fail.
+ */
+export function buildPhiCmsWidgetNode<
+  TTypeKey extends string,
+  TPluginKey extends string | undefined = undefined,
+>({
   pluginKey,
   typeKey,
   config,
   contentId = null,
   ...common
-}: PhiCmsWidgetNodeFactoryCommon & {
-  /** Optional override; by default the owning module is resolved from the type key. */
-  pluginKey?: string;
-  typeKey: string;
-  config?: Record<string, unknown>;
-  contentId?: number | null;
-}): PhiCmsContentWidgetNode {
+}: PhiCmsWidgetNodeFactoryCommon &
+  PhiCmsWidgetPlacementFields<TTypeKey, TPluginKey>): PhiCmsContentWidgetNode {
   return {
     id: common.id,
     siteId: common.siteId,
@@ -88,7 +122,7 @@ export function buildPhiCmsWidgetNode({
     flags: common.flags ?? 0,
     visibilityMask: common.visibilityMask,
     label: common.label,
-    config: config ?? {},
+    config: (config ?? {}) as Record<string, unknown>,
     contentId,
   };
 }

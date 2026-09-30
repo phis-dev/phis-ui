@@ -123,6 +123,12 @@ export type PhiTableColumnDefinition = {
    */
   titleIcon?: string;
   titleDisplay?: "icon-label" | "icon";
+  /**
+   * A hint on the heading, for a column whose title cannot say everything -- a switch whose effect
+   * needs a sentence. Shown as the description glyph beside the heading, with the text on hover and
+   * as its accessible name; the heading itself stays as short as the column is narrow.
+   */
+  description?: string;
   renderer?: PhiTableValueRenderer;
   editor?: {
     control?: PhiTableColumnEditorControl;

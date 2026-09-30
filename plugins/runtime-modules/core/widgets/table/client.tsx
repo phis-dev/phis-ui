@@ -5,6 +5,7 @@ import type { PhiTableWidgetLabels } from "../../../../../components/widgets/lab
 import { PHI_TABLE_WIDGET_DEFAULT_LABELS } from "../../../../../components/widgets/label-types/table";
 import { formatPhiTableWidgetLabel } from "../../../../../components/widgets/label-types/table";
 import { PhiNameControl } from "../../../../../components/controls/phi-name-control";
+import { PhiDescriptionHint } from "../../../../../components/controls/phi-description-tooltip-icon";
 import { Fragment, useCallback, useEffect, useEffectEvent, useMemo, useState, type ReactNode } from "react";
 
 import { PhiMultiSelectControl } from "../../../../../components/controls/phi-multi-select-control";
@@ -140,13 +141,27 @@ function renderTableSummaryItem(item: PhiTableSummaryItemDefinition, value: PhiT
     : <>{item.label} {renderedValue}</>;
 }
 
+/** The column heading, followed by its hint where the column has one. */
+function buildTableColumnTitle(column: PhiTableColumnDefinition) {
+  const heading = buildTableColumnHeading(column);
+  if (!column.description) {
+    return heading;
+  }
+  return (
+    <PhiFlexControl align="center" gap={4} wrap={false}>
+      {heading}
+      <PhiDescriptionHint description={column.description} />
+    </PhiFlexControl>
+  );
+}
+
 /**
  * The column heading: its text, its icon, or the icon alone with the text as its name.
  *
  * An icon-only heading keeps the title in the tooltip and in `aria-label`, so a screen reader and a
  * hesitating pointer both still get the word the column was named after.
  */
-function buildTableColumnTitle(column: PhiTableColumnDefinition) {
+function buildTableColumnHeading(column: PhiTableColumnDefinition) {
   if (!column.titleIcon) {
     return column.title;
   }

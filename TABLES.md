@@ -275,6 +275,7 @@ A column may declare presentation metadata such as:
 
 - the selected Provider `fieldKey`
 - `title`
+- `description`, a hint shown as the `(i)` tooltip beside the heading, never as a second line
 - a compatible read renderer
 - an optional permitted inline-edit mode
 - semantic `sizing`

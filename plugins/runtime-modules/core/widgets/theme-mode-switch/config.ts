@@ -1,4 +1,5 @@
 import { resolvePhiCmsWidgetPluginKey } from "../../../../../constants/cms-widget-types";
+import type { PhiThemeModeSwitchSize } from "../../../../../types/core-widget-placements";
 import type { PhiCmsWidgetPlugin } from "../../../../../types";
 import {
   readRenderableBlockConfig,
@@ -6,8 +7,6 @@ import {
   type PhiCmsWidgetConfigBase,
 } from "../../../../../components/widgets/config/parser-primitives";
 import { PHI_COMPACT_CONTROL_PRESENTATION_FIELDS } from "../../../../../components/widgets/config/control-signal-config";
-
-type PhiThemeModeSwitchSize = "small" | "medium";
 
 /**
  * The switch that turns the Site light or dark.

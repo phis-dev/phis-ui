@@ -19,7 +19,12 @@ import {
   createPhiSignalAddress,
   createPhiSignalSubcontrolAddress,
 } from "../../../../types/signals";
-import { createPhiNewsControllerAddress } from "../controller/address";
+import {
+  PHI_NEWS_CONTROLLER_INSTANCE_KEY,
+  PHI_NEWS_CONTROLLER_TYPE,
+  createPhiNewsControllerAddress,
+} from "../controller/address";
+import type { PhiFormId } from "../../../../types/form-id";
 import { PHI_NEWS_FORM_IDS } from "../forms";
 import {
   PHI_EDITOR_NEWS_ENTRY_COMMANDS_WIDGET_ID,
@@ -44,7 +49,7 @@ const SYNTHETIC_EDITOR_NEWS_REGION_IDS = { regionContent: -562 } as const;
 type NewsDialogInput = {
   key: "entry" | "publication";
   title: string;
-  formId: string;
+  formId: PhiFormId;
   openActionKey: string;
   saveLabel: string;
   cancelLabel: string;
@@ -273,6 +278,19 @@ export async function buildPhiDefaultEditorNewsPageTree({
 
   return {
     page: nodes.page({ pageType: PhiCmsPageType.Standard }),
+    /*
+     * The Controller this Page sends to, mounted by this Page.
+     *
+     * Every route below names it as receiver, and a `demand` Controller comes into being only where a Page
+     * or a Widget asks for it -- so without this line the dialogs were wired to an address nobody answered:
+     * the Table emitted, the signal went nowhere, and nothing opened. It is the Page's own, not the Area's,
+     * which is what lets the Module be switched off without leaving a Controller behind.
+     */
+    controllerSettings: [{
+      type: PHI_NEWS_CONTROLLER_TYPE,
+      instanceKey: PHI_NEWS_CONTROLLER_INSTANCE_KEY,
+      mountScope: "page",
+    }],
     overlays: [entryDialog.overlay, publicationDialog.overlay],
     regions: [scaffold.region],
     layoutNodes: [scaffold.layoutNode, ...entryDialog.layouts, ...publicationDialog.layouts],
@@ -380,8 +398,8 @@ export async function buildPhiDefaultEditorNewsPageTree({
                   key: "new",
                   label: widgetLabels.actions.new,
                   icon: "antd:plus",
-                  display: "label",
-                  mode: "primary",
+                  // A plus, like every other Table's add: the label stays as its tooltip and its aria name.
+                  display: "icon",
                   execution: "signal",
                 },
               ],

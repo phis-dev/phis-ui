@@ -22,7 +22,7 @@ import {
 import { PhiButtonControl } from "../controls/phi-button-control";
 import { PhiCardControl } from "../controls/phi-card-control";
 import { PhiLink } from "../navigation/phi-link";
-import type { PhiCmsFormWidgetCardConfig } from "../../plugins/runtime-modules/core/widgets/form/config";
+import type { PhiCmsFormWidgetCardConfig } from "../../types/core-widget-placements";
 import {
   PHI_FORM_ACTIONS_COLUMNS_PROPERTY,
   PHI_FORM_RESPONSIVE_MODES,

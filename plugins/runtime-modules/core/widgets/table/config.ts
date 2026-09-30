@@ -315,6 +315,7 @@ function readColumns(value: unknown): PhiTableColumnDefinition[] {
       iconFieldKey: readString(item.iconFieldKey),
       titleIcon: readString(item.titleIcon),
       titleDisplay: item.titleDisplay === "icon" ? "icon" : undefined,
+      description: readString(item.description),
       renderer,
       editor: rawEditor && readBoolean(rawEditor.enabled) !== false
         ? { control: editorControl, disabledWhen: readConditionExpression(rawEditor.disabledWhen) }
@@ -760,6 +761,7 @@ export const PHI_TABLE_WIDGET_DEFINITION = {
         { key: "key", type: "string", label: "Key", required: true },
         { key: "fieldKey", type: "string", label: "Provider Field", required: true },
         { key: "title", type: "string", label: "Title", required: true },
+        { key: "description", type: "string", label: "Hint" },
         { key: "sortField", type: "string", label: "Provider Sort Field" },
         {
           key: "renderer",

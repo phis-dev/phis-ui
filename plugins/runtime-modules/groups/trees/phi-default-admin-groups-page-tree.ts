@@ -146,8 +146,6 @@ export async function buildPhiDefaultAdminGroupsPageTree({
         sortOrder: 0,
         label: labels.groups.title,
         config: {
-          title: labels.groups.title,
-          description: labels.groups.description,
           source: {
             providerKey: PHI_GROUPS_RUNTIME_DATA_PROVIDER_KEYS.table,
             resourceKey: "groups",
@@ -291,13 +289,13 @@ export async function buildPhiDefaultAdminGroupsPageTree({
         sortOrder: 1,
         label: labels.members.title,
         config: {
-          title: labels.members.title,
-          description: labels.members.description,
           source: {
             providerKey: PHI_GROUPS_RUNTIME_DATA_PROVIDER_KEYS.table,
             resourceKey: "groupMembers",
           },
           presentation: {
+            title: labels.members.title,
+            description: labels.members.description,
             layout: { mode: "auto", overflowX: "auto" },
             controlSize: "small",
             columns: [

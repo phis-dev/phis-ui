@@ -4,10 +4,8 @@ import { useCallback, useMemo } from "react";
 
 import type { PhiCmsInstanceId } from "../../../../../types/cms-instance-id";
 import type { PhiCollectionViewBindingModel } from "../../../../../types/collection-provider";
-import type {
-  PhiCmsCollectionCardPresentation,
-  PhiCmsCollectionViewWidgetConfig,
-} from "../collection-view/config";
+import type { PhiCmsCollectionCardPresentation } from "../../../../../types/core-widget-placements";
+import type { PhiCmsCollectionViewWidgetConfig } from "../collection-view/config";
 import { PhiAlertControl } from "../../../../../components/controls/phi-alert-control";
 import { PhiCollectionViewControl } from "../../../../../components/controls/phi-collection-view-control";
 import { PhiEmptyControl } from "../../../../../components/controls/phi-empty-control";

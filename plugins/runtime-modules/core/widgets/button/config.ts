@@ -13,7 +13,12 @@ import {
 } from "../../../../../components/widgets/label-types/common-controls";
 import { readPhiLinkTarget, type PhiLinkTarget } from "../../../../../types/references";
 import { PHI_BUTTON_CONTROL_SIGNALS } from "../../../../../components/widgets/signals/control-signal-capabilities";
-import { readBoolean, readString } from "../../../../../components/widgets/config/parser-primitives";
+import {
+  readBoolean,
+  readRenderableBlockConfig,
+  readString,
+  type PhiCmsWidgetConfigBase,
+} from "../../../../../components/widgets/config/parser-primitives";
 import {
   PHI_CONTROL_BADGE_FIELDS,
   PHI_CONTROL_PRESENTATION_FIELDS,
@@ -24,7 +29,7 @@ import {
   type PhiControlConfig,
 } from "../../../../../components/widgets/config/control-signal-config";
 
-export type PhiButtonWidgetConfig = PhiControlBadgeConfig & PhiControlConfig & {
+export type PhiButtonWidgetConfig = PhiCmsWidgetConfigBase & PhiControlBadgeConfig & PhiControlConfig & {
   actionKey?: PhiCommonControlActionKey;
   label?: string;
   tooltip?: string;
@@ -53,6 +58,7 @@ export function parsePhiButtonWidgetConfig(config: Record<string, unknown>): Phi
   });
 
   return {
+    ...readRenderableBlockConfig(config),
     ...controlState,
     ...parsePhiControlBadgeConfig(config),
     actionKey: readPhiCommonControlActionKey(readString(config.actionKey)) ?? undefined,

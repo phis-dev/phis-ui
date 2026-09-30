@@ -2,13 +2,18 @@ import {
   PHI_CMS_COLLAPSIBLE_LAYOUT_MAX_SLOTS,
   PHI_CMS_DEFAULT_SLOT_INDEX,
 } from "../../../constants/cms-layout-types";
-import { PhiCmsPageType } from "../../../constants/phi-cms";
+import { PhiCmsFlags, PhiCmsPageType } from "../../../constants/phi-cms";
 import { createPhiCmsPresetNodes } from "../../../helpers/cms-preset-nodes";
 import { PHI_SPACE } from "../../../theme/antd-css-var-contract";
 import { PHI_LAYOUT } from "../../../theme/phi-tokens";
 import type { PhiCmsPageNode, PhiCmsContentWidgetNode, PhiCmsLayoutNode, PhiResolvedCmsPageTree } from "../../../types/cms";
 import type { PhiRuntimeModuleId } from "../../../types/cms-module-descriptors";
 import { createPhiPresetCmsInstanceIdMap } from "../../../types/cms-instance-id";
+import type {
+  PhiFormWidgetPlacement,
+  PhiWidgetPlacementSignalRoutes,
+} from "../../../types/core-widget-placements";
+import type { PhiFormId } from "../../../types/form-id";
 import { PHI_SIGNAL_VALUE_SCHEMAS, createPhiSignalAddress } from "../../../types/signals";
 import { buildPhiBasePageContentScaffold, PHI_BASE_PAGE_LAYOUT_NODE_ID } from "./phi-base-page-layout";
 
@@ -30,7 +35,7 @@ type PhiSettingsPageShellFormSectionBase = {
   kind: "form";
   /** Preset-locally unique node key for the section's Form Widget instance id. */
   nodeKey: string;
-  formId: string;
+  formId: PhiFormId;
   label: string;
   initialValues?: Record<string, unknown>;
   /**
@@ -54,11 +59,8 @@ type PhiSettingsPageShellFormSectionBase = {
    * record-editing Settings form). `signalRoutes` entries are appended to whatever the shell
    * wires itself instead of replacing it.
    */
-  configOverrides?: Record<string, unknown> & {
-    signalRoutes?: {
-      emits?: readonly Record<string, unknown>[];
-      listens?: readonly Record<string, unknown>[];
-    };
+  configOverrides?: Omit<PhiFormWidgetPlacement, "signalRoutes"> & {
+    signalRoutes?: PhiWidgetPlacementSignalRoutes;
   };
 };
 
@@ -122,7 +124,7 @@ export type PhiSettingsPageShellOverlay = {
    * derives from `nodeKey`, which the caller derives the same way -- the preset identity is shared.
    */
   openActionKey: string;
-  formId: string;
+  formId: PhiFormId;
   label: string;
   formConfig?: Record<string, unknown>;
   /** What the Form Widget's config says beyond the shell's defaults, its routes included. */
@@ -304,7 +306,8 @@ export function buildPhiSettingsPageShellTree({
           slotIndex: panelSlot,
           sortOrder: panelSlot++,
           label: input.label,
-          config: { translate: false, ...input.config },
+          flags: PhiCmsFlags.NoTranslate,
+          config: input.config,
         });
 
       return [
@@ -401,8 +404,8 @@ export function buildPhiSettingsPageShellTree({
           slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
           sortOrder: 0,
           label: overlay.label,
+          flags: PhiCmsFlags.NoTranslate,
           config: {
-            translate: false,
             formId: overlay.formId,
             formConfig: { ...overlay.formConfig },
             /*
@@ -454,8 +457,8 @@ export function buildPhiSettingsPageShellTree({
           slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
           sortOrder: 0,
           label: overlay.title,
+          flags: PhiCmsFlags.NoTranslate,
           config: {
-            translate: false,
             key: `${overlay.nodeKey}-commands`,
             compact: true,
             showLabels: true,

@@ -1,4 +1,10 @@
 import { resolvePhiCmsWidgetPluginKey } from "../../../../../constants/cms-widget-types";
+import type {
+  PhiCmsCollectionCardPresentation,
+  PhiCmsCollectionFilterPresentation,
+  PhiCmsCollectionToolbarActionPresentation,
+  PhiCmsCollectionViewMode,
+} from "../../../../../types/core-widget-placements";
 import { PhiCmsWidgetType } from "../../../../../constants/cms-widget-types";
 import type { PhiControlSize } from "../../../../../types/control";
 import type {
@@ -13,54 +19,6 @@ import { PHI_BUILDER_RUNTIME_DATA_PROVIDER_KEYS } from "../../../builder/ids";
 import { readPhiLengthValue, type PhiCssLength } from "../../../../../types/length";
 import { readBoolean, readNumber, readNumberList, readString, type PhiCmsWidgetConfigBase } from "../../../../../components/widgets/config/parser-primitives";
 import { isPhiRecord } from "../../../../../helpers/is-record";
-
-export type PhiCmsCollectionViewMode = "grid" | "masonry" | "stack";
-export type PhiCmsCollectionFilterControl = "select" | "multi-select" | "cascader";
-
-export type PhiCmsCollectionFilterPresentation = {
-  key: string;
-  control: PhiCmsCollectionFilterControl;
-  placeholder?: string;
-  width?: PhiCssLength;
-  minWidth?: PhiCssLength;
-  actions?: PhiCmsCollectionToolbarActionPresentation[];
-};
-
-export type PhiCmsCollectionToolbarActionPresentation = {
-  key: string;
-  label?: string;
-  description?: string;
-  icon?: string;
-  display?: "icon" | "label" | "icon-label";
-  mode?: "normal" | "primary" | "danger";
-};
-
-/**
- * Where a card takes each of its parts from, as paths into one item.
- *
- * The Card Widget already knows what a card is -- eyebrow, title, description, meta, a cover, a link --
- * and a Collection already knows how to lay items out. What was missing between them is only this: which
- * field of a row is the title. Stating it here rather than in the provider keeps it where the rest of
- * the presentation lives, so a Site can point the title at another field without anybody writing code,
- * exactly as a Table's columns are chosen from the fields a provider offers.
- *
- * A resource that outgrows this ships its own View instead; that is one field in its registration, and
- * the Media library is the example of a domain that needed one.
- */
-export type PhiCmsCollectionCardPresentation = {
-  eyebrow?: string;
-  title?: string;
-  description?: string;
-  meta?: string;
-  /** A path to something already servable: a Media delivery path or a URL. */
-  imageUrl?: string;
-  /** The same, for the small mark beside the title. A cover and a mark are different pictures. */
-  iconUrl?: string;
-  href?: string;
-  actionLabel?: string;
-  actionHref?: string;
-  variant?: "default" | "compact" | "featured";
-};
 
 export type PhiCmsCollectionViewWidgetConfig = PhiCmsWidgetConfigBase & {
   presentation: {

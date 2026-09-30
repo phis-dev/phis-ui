@@ -1,4 +1,5 @@
 import { resolvePhiCmsWidgetPluginKey } from "../../../../../constants/cms-widget-types";
+import { PHI_SIMPLE_TEXT_MARKS, type PhiSimpleTextMark } from "../../../../../types/core-widget-placements";
 import { PhiCmsWidgetType } from "../../../../../constants/cms-widget-types";
 import { PHI_RENDERABLE_BLOCK_GEOMETRY_FIELDS } from "../../../../../helpers/renderable-block-plugin-fields";
 import type { PhiCmsResolvedContent, PhiCmsWidgetPlugin } from "../../../../../types";
@@ -22,11 +23,6 @@ import {
   readPhiTextTone,
   type PhiTextTone,
 } from "../../../../../components/widgets/config/text-tone";
-
-/** The marks a Simple Text can carry, each on or off. */
-export const PHI_SIMPLE_TEXT_MARKS = ["bold", "italic", "underline", "strike", "code"] as const;
-
-export type PhiSimpleTextMark = (typeof PHI_SIMPLE_TEXT_MARKS)[number];
 
 function readSimpleTextMarks(value: unknown): PhiSimpleTextMark[] | undefined {
   if (!Array.isArray(value)) {

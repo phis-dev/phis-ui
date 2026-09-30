@@ -138,8 +138,6 @@ export async function buildPhiDefaultAppGroupsPageTree({
         sortOrder: 0,
         label: labels.mine.title,
         config: {
-          title: labels.mine.title,
-          description: labels.mine.description,
           source: {
             providerKey: PHI_GROUPS_RUNTIME_DATA_PROVIDER_KEYS.table,
             resourceKey: "myGroups",
@@ -266,13 +264,13 @@ export async function buildPhiDefaultAppGroupsPageTree({
         sortOrder: 1,
         label: labels.members.title,
         config: {
-          title: labels.members.title,
-          description: labels.members.description,
           source: {
             providerKey: PHI_GROUPS_RUNTIME_DATA_PROVIDER_KEYS.table,
             resourceKey: "groupMembers",
           },
           presentation: {
+            title: labels.members.title,
+            description: labels.members.description,
             layout: { mode: "auto", overflowX: "auto" },
             controlSize: "small",
             // No address and no source column: a colleague is recognized by name, and where a

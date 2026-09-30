@@ -1,4 +1,5 @@
 import { resolvePhiCmsWidgetPluginKey } from "../../../../../constants/cms-widget-types";
+import type { PhiMarkdownSpacingKey, PhiMarkdownTextAlign } from "../../../../../types/core-widget-placements";
 import type { PhiCmsWidgetPlugin } from "../../../../../types";
 import { PhiCmsWidgetType } from "../../../../../constants/cms-widget-types";
 import type { PhiCmsResolvedContent } from "../../../../../types/cms";
@@ -8,11 +9,6 @@ import {
   readString,
   type PhiCmsWidgetConfigBase,
 } from "../../../../../components/widgets/config/parser-primitives";
-
-export type PhiMarkdownSpacingKey = "none" | "xxs" | "xs" | "sm" | "base" | "md" | "lg" | "xl" | "xxl";
-
-/** Logical, not left and right: a Site in an RTL locale reads "start" as the right-hand edge. */
-export type PhiMarkdownTextAlign = "start" | "center" | "end" | "justify";
 
 export type PhiCmsMarkdownWidgetConfig = PhiCmsWidgetConfigBase & {
   sourceMode?: "inline" | "url";
