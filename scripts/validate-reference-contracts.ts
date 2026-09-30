@@ -755,7 +755,7 @@ const htmlEditorSource = await readSource("components/widgets/client/html-editor
 const htmlToolsSource = await readSource("components/widgets/client/shared/phi-widget-tool-buttons.tsx");
 const markdownBuilderSource = await readSource("plugins/runtime-modules/core/widgets/markdown/authoring.tsx");
 assert.match(htmlEditorSource, /allowInternalReferences:\s*true/u);
-assert.match(htmlToolsSource, /PhiBuilderPageReferencePicker/u);
+assert.match(htmlToolsSource, /PhiPageReferencePicker/u);
 assert.match(htmlToolsSource, /PhiInternalAssetReferencePickerButton/u);
 assert.match(markdownBuilderSource, /PhiMarkdownWidgetToolbarTools/u);
 

@@ -78,7 +78,7 @@ import {
   PHI_COLOR_PICKER_PRESETS,
 } from "../../../../../components/widgets/config/color-picker-presets";
 import { PHI_SPACING_TOKEN_KEYS } from "../../../../../components/widgets/config/spacing-options";
-import { PhiColorWidget } from "../../../../../components/widgets/client/phi-color-widget";
+import { PhiColorFieldControl } from "../../../../../components/controls/phi-color-field-control";
 import { PhiBrandControl, resolvePhiBrandLogoUrl } from "../../../../../components/controls/phi-brand-control";
 import { PhiBackgroundControl, type PhiBackgroundControlProps } from "../../../../../components/controls/phi-background-control";
 import {
@@ -2279,7 +2279,7 @@ export function PhiBuilderBrandThemeControlsWidgetClient({
                         maxWidth: "100%",
                       }}
                     >
-                      <PhiColorWidget
+                      <PhiColorFieldControl
                         {...pickerTransaction}
                         tokenKey="custom6"
                         value={customPalette.custom6}
@@ -2308,7 +2308,7 @@ export function PhiBuilderBrandThemeControlsWidgetClient({
                             maxWidth: "100%",
                           }}
                         >
-                          <PhiColorWidget
+                          <PhiColorFieldControl
                             {...pickerTransaction}
                             label={item.label}
                             tokenKey={item.key}
@@ -2355,7 +2355,7 @@ export function PhiBuilderBrandThemeControlsWidgetClient({
                         maxWidth: "100%",
                       }}
                     >
-                      <PhiColorWidget
+                      <PhiColorFieldControl
                         {...pickerTransaction}
                         tokenKey={section.key}
                         value={seedValue}
@@ -2386,7 +2386,7 @@ export function PhiBuilderBrandThemeControlsWidgetClient({
                           }}
                         >
                           <PhiFlexControl vertical gap={clientToken.paddingXXS}>
-                            <PhiColorWidget
+                            <PhiColorFieldControl
                               {...pickerTransaction}
                               label={item.label}
                               tokenKey={item.key}

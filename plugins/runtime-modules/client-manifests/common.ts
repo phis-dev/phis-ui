@@ -67,7 +67,7 @@ export const PHI_COMMON_RUNTIME_MODULE_RENDER_CLIENT_MANIFEST =
     [
       PhiCmsWidgetType.Color,
       definePhiRuntimeModuleRenderClient(
-        dynamic(() => import("../../../components/widgets/client/phi-color-widget").then((module) => module.PhiColorWidget)),
+        dynamic(() => import("../core/widgets/color/client").then((module) => module.PhiColorWidget)),
       ),
     ],
     [

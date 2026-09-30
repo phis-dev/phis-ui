@@ -17,7 +17,7 @@ import {
 } from "../../../../types/cms-config";
 import { PhiBackgroundControl } from "../../../../components/controls/phi-background-control";
 import { PhiBorderControl } from "../../../../components/controls/phi-border-control";
-import { PhiColorWidget } from "../../../../components/widgets/client/phi-color-widget";
+import { PhiColorFieldControl } from "../../../../components/controls/phi-color-field-control";
 import type { PhiColorPickerLabels } from "../../../../components/widgets/label-types/color-picker";
 import type { PhiIconPickerControlLabels } from "../../../../components/widgets/label-types/icon-picker";
 import {
@@ -992,11 +992,10 @@ export function renderPhiInspectorConfigField({
   if (field.type === "color") {
     return renderPhiInspectorConfigFieldControl(
       field,
-      <PhiColorWidget
+      <PhiColorFieldControl
         value={value as string | null | undefined}
         defaultValue={defaultValue as string | undefined}
         disabled={disabled || !onChange}
-        signalsEnabled={false}
         mode={resolveInspectorColorMode(field.mode)}
         placement="left"
         labels={colorPickerLabels}

@@ -50,6 +50,7 @@ import { isPhiAnchorWidgetPlacement, type PhiAnchorWidgetPlacement } from "../..
 import type { PhiEffectsWidgetLabels } from "../../../components/widgets/label-types/effects";
 import type { PhiAuthoringToolsLabels } from "../../../components/widgets/label-types/authoring-tools";
 import { PhiAuthoringToolsLabelsProvider } from "../../../components/widgets/client/shared/phi-authoring-tools-labels";
+import { PhiBuilderPageReferencesProvider } from "./page-references-provider";
 import type {
   PhiCmsBuilderWidgetEditorInteraction,
   PhiCmsBuilderWidgetPlugin,
@@ -1913,7 +1914,7 @@ export function renderPhiRootNodeScaffold(
 
   return (
     <PhiAuthoringToolsLabelsProvider labels={options?.authoringToolsLabels}>
-      {scaffold}
+      <PhiBuilderPageReferencesProvider>{scaffold}</PhiBuilderPageReferencesProvider>
     </PhiAuthoringToolsLabelsProvider>
   );
 }

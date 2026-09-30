@@ -19,7 +19,7 @@ import { PHI_WIDGET_FONT_FAMILY_OPTIONS } from "../../helpers/font-family";
 import { PHI_WIDGET_FONT_SIZE_OPTIONS } from "../../helpers/font-size";
 import type { PhiCmsInstanceId } from "../../../../types/cms-instance-id";
 import { createPhiAssetUri, createPhiPageUri } from "../../../../types/references";
-import { PhiBuilderPageReferencePicker } from "../../../../plugins/runtime-modules/builder/page-reference-picker";
+import { PhiPageReferencePicker } from "./phi-page-reference-picker";
 import { usePhiAuthoringToolsLabels } from "./phi-authoring-tools-labels";
 import { resizePhiDescriptionItems } from "./description-items";
 import { PhiButtonControl } from "../../../controls/phi-button-control";
@@ -38,7 +38,7 @@ import {
   type PhiHtmlWidgetEditorBridgeState,
   type PhiHtmlWidgetTextFormat,
 } from "../html-editor-bridge";
-import { PhiColorWidget } from "../phi-color-widget";
+import { PhiColorFieldControl } from "../../../controls/phi-color-field-control";
 import {
   resolvePhiMarkdownWidgetEditorBridge,
   subscribePhiMarkdownWidgetEditorBridge,
@@ -119,10 +119,9 @@ export function PhiWidgetColorToolButton({
   const popup = usePhiWidgetScaffoldPopup();
 
   return (
-    <PhiColorWidget
+    <PhiColorFieldControl
       value={currentColor}
       defaultValue={currentColor ?? "#1677ff"}
-      signalsEnabled={false}
       allowClear
       getPopupContainer={popup.getPopupContainer}
       popupClassName={popup.rootClassName}
@@ -158,7 +157,7 @@ export function PhiWidgetColorToolButton({
           onClick={() => undefined}
         />
       </span>
-    </PhiColorWidget>
+    </PhiColorFieldControl>
   );
 }
 
@@ -504,7 +503,7 @@ export function PhiHtmlWidgetToolbarTools({
             onMouseDown={stopOverlayMouseEvent}
             onPointerDown={stopOverlayEvent}
           >
-            <PhiBuilderPageReferencePicker
+            <PhiPageReferencePicker
               onSelect={(selection) => {
                 bridge?.setLink(createPhiPageUri(selection.reference));
                 bridge?.focus();
@@ -585,7 +584,7 @@ export function PhiMarkdownWidgetToolbarTools({
   const bridge = resolvePhiMarkdownWidgetEditorBridge(blockId);
   return (
     <>
-      <PhiBuilderPageReferencePicker
+      <PhiPageReferencePicker
         onSelect={(selection) => {
           const label = selection.title.replaceAll("]", "\\]");
           bridge?.insert(`[${label}](${createPhiPageUri(selection.reference)})`);

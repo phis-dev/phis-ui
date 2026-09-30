@@ -1,13 +1,7 @@
-import type { PhiPageReference } from "../../../types/references";
 import type { PhiTreeOption } from "../../../types/tree";
 import { resolvePhiBuilderCmsFetchPath } from "../../../helpers/cms-paths";
 import type { PhiPresetPageNode } from "../../../helpers/cms-page-catalog";
-
-export type PhiBuilderPageReferenceSelection = {
-  reference: PhiPageReference;
-  title: string;
-  path: string;
-};
+import type { PhiPageReferenceSelection } from "../../../components/widgets/client/shared/phi-page-reference-picker";
 
 /**
  * The Area's Pages as the tree they are, with each node carrying what it stands for.
@@ -26,7 +20,7 @@ export function buildPhiBuilderPageReferenceTree(
   area: Parameters<typeof resolvePhiBuilderCmsFetchPath>[0],
   nodes: readonly PhiPresetPageNode[],
   allNodes: readonly PhiPresetPageNode[],
-): PhiTreeOption<PhiBuilderPageReferenceSelection>[] {
+): PhiTreeOption<PhiPageReferenceSelection>[] {
   return nodes.map((node) => {
     const path = resolvePhiBuilderCmsFetchPath(area, node.key, allNodes);
     const reference = node.tombstoned === true ? undefined : node.reference;

@@ -13,10 +13,8 @@ import {
   type PhiLinkTarget,
   type PhiPageReference,
 } from "../../../../types/references";
-import {
-  buildPhiBuilderPageReferenceTree,
-  type PhiBuilderPageReferenceSelection,
-} from "../page-reference-tree";
+import { buildPhiBuilderPageReferenceTree } from "../page-reference-tree";
+import type { PhiPageReferenceSelection } from "../../../../components/widgets/client/shared/phi-page-reference-picker";
 import { usePhiBuilderOfferedPageCatalog } from "../use-offered-page-catalog";
 import { usePhiDeveloperBuilderStateValue } from "../developer-workspace-store";
 
@@ -106,7 +104,7 @@ export function PhiInspectorLinkTargetFieldControl({
       />
 
       {mode === "page" ? (
-        <PhiTreeSelectControl<PhiBuilderPageReferenceSelection>
+        <PhiTreeSelectControl<PhiPageReferenceSelection>
           value={target?.kind === "page" ? target.reference : null}
           options={options}
           placeholder={labels.pagePlaceholder}

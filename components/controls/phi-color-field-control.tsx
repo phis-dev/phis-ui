@@ -2,35 +2,28 @@
 
 import { type ReactNode } from "react";
 
-import { usePhiConfig } from "../../root/phi-config-provider";
-import type { PhiColorWidgetConfig } from "../../../plugins/runtime-modules/core/widgets/color/config";
-import { createPhiColorPickerPresets } from "../config/color-picker-presets";
+import { usePhiConfig } from "../root/phi-config-provider";
+import { createPhiColorPickerPresets } from "../widgets/config/color-picker-presets";
 import {
   PHI_COLOR_PICKER_DEFAULT_LABELS,
   type PhiColorPickerLabels,
-} from "../label-types/color-picker";
-import {
-  PhiColorControl,
-  type PhiColorPickerMode,
-} from "../../controls/phi-color-control";
-import type { PhiPickerPlacement } from "../../controls/phi-picker-control-contract";
+} from "../widgets/label-types/color-picker";
+import { PhiColorControl, type PhiColorPickerMode } from "./phi-color-control";
+import type { PhiPickerPlacement } from "./phi-picker-control-contract";
 import {
   type PhiColorControlCustomColor,
   usePhiColorControlPresets,
-} from "../../controls/use-phi-color-control-presets";
-import { usePhiControlSignalController } from "./shared/phi-control-signals";
-import { PhiFlexControl } from "../../controls/phi-flex-control";
-import { PhiTypographyControl } from "../../controls/phi-typography-control";
+} from "./use-phi-color-control-presets";
+import { PhiFlexControl } from "./phi-flex-control";
+import { PhiTypographyControl } from "./phi-typography-control";
 
-export type PhiColorWidgetProps = {
-  config?: PhiColorWidgetConfig | null;
-  blockId?: string | number | null;
+export type PhiColorFieldControlProps = {
   label?: string;
   value?: string | null;
   defaultValue?: string;
+  /** Handed back with every change, so one handler can serve several fields. */
   tokenKey?: string;
   disabled?: boolean;
-  signalsEnabled?: boolean;
   mode?: PhiColorPickerMode;
   placement?: PhiPickerPlacement;
   allowClear?: boolean;
@@ -48,15 +41,21 @@ export type PhiColorWidgetProps = {
   onChange?: (value: string, tokenKey?: string) => void;
   onValueChange?: (value: string | null, tokenKey?: string) => void;
 };
-export function PhiColorWidget({
-  config,
-  label = config?.label,
-  value = config?.value,
-  defaultValue = config?.defaultValue ?? "#1677ff",
-  tokenKey = config?.key,
-  disabled = config?.disabled ?? false,
-  signalsEnabled = true,
-  mode,
+
+/**
+ * A labelled colour field: the colour primitive with the Site's presets and custom colours.
+ *
+ * A Control, so every Module may use it -- the Theme's brand controls, the Builder's Inspector, the
+ * authoring tool buttons. The Color Widget is the Core Module's placement of it, which adds its config
+ * and its signals.
+ */
+export function PhiColorFieldControl({
+  label,
+  value,
+  defaultValue = "#1677ff",
+  tokenKey,
+  disabled = false,
+  mode = "single",
   placement,
   allowClear,
   children,
@@ -72,39 +71,19 @@ export function PhiColorWidget({
   labels = PHI_COLOR_PICKER_DEFAULT_LABELS,
   onChange,
   onValueChange,
-}: PhiColorWidgetProps) {
+}: PhiColorFieldControlProps) {
   const { token } = usePhiConfig();
   const resolvedValue = value?.trim() || defaultValue;
   const pickerPresets = usePhiColorControlPresets({ labels, customColors, presets });
-  const controlSignals = usePhiControlSignalController<string>({
-    key: config?.key ?? tokenKey ?? "color",
-    signalRoutes: config?.signalRoutes,
-    typeKey: "color",
-    signalsEnabled,
-    initialDisabled: disabled,
-    initialReadOnly: config?.readOnly === true,
-    clearValue: defaultValue,
-    onSetValue: (nextValue) => {
-      const normalized = typeof nextValue === "string" ? nextValue : defaultValue;
-      onChange?.(normalized, tokenKey);
-      onValueChange?.(normalized, tokenKey);
-    },
-    coerceValue: (nextValue) => (typeof nextValue === "string" ? nextValue : null),
-  });
 
   function publish(nextValue: string | null) {
-    if (controlSignals.readOnly) {
-      return;
-    }
     if (nextValue == null) {
       onValueChange?.(null, tokenKey);
       onClear?.();
-      controlSignals.emitClear();
       return;
     }
     onChange?.(nextValue, tokenKey);
     onValueChange?.(nextValue, tokenKey);
-    controlSignals.emitChange(nextValue);
   }
 
   return (
@@ -120,9 +99,9 @@ export function PhiColorWidget({
         </PhiTypographyControl>
       ) : null}
       <PhiColorControl
-        mode={mode ?? config?.mode ?? "single"}
+        mode={mode}
         placement={placement}
-        disabled={controlSignals.disabled || controlSignals.readOnly}
+        disabled={disabled}
         allowClear={allowClear}
         value={resolvedValue}
         defaultValue={defaultValue}
