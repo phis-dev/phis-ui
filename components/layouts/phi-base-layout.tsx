@@ -60,7 +60,12 @@ export function PhiBaseLayout({
   style,
   editSlotAction,
 }: PhiBaseLayoutProps) {
-  const isAuthoringRender = isPhiLayoutAuthoringRender({ editSlotAction, editSlotLabels, capabilities });
+  const isAuthoringRender = isPhiLayoutAuthoringRender({
+    editSlotAction,
+    editSlotLabels,
+    capabilities,
+    renderMode,
+  });
   const slotList = slots ?? [];
   const resolvedSlotStates = resolvePhiBaseLayoutSlotStates(slotList.length, initialSlotStates);
   const resolvedRenderMode = renderMode ?? "live";

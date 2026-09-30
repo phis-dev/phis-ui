@@ -109,7 +109,7 @@ export function PhiSequenceSlotEditor({
   editSlotAnchor = "center",
   style,
 }: PhiSequenceSlotEditorProps) {
-  const isAuthoringRender = isPhiLayoutAuthoringRender(authoring);
+  const isAuthoringRender = isPhiLayoutAuthoringRender({ ...authoring, renderMode });
   const editableSlotCount = Math.max(slotCount, 1);
   const currentIndex = Math.min(activeIndex, editableSlotCount - 1);
   const currentSlot = slots[currentIndex] ?? null;

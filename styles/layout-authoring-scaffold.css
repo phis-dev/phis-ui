@@ -51,6 +51,7 @@
 
   --phi-debug-layer-slot-background: transparent;
   --phi-debug-layer-slot-background-strong: transparent;
+  --phi-debug-layer-slot-background-soft: transparent;
   --phi-debug-layer-slot-border: transparent;
   --phi-debug-layer-slot-border-strong: transparent;
 
@@ -74,6 +75,8 @@
 
   --phi-debug-layer-slot-background: var(--ant-color-warning-bg);
   --phi-debug-layer-slot-background-strong: var(--ant-color-warning-bg-hover);
+  /* The Grid's track guides: a tint light enough that a slot's own band stays the stronger mark. */
+  --phi-debug-layer-slot-background-soft: color-mix(in srgb, var(--ant-color-warning-bg) 50%, transparent);
   --phi-debug-layer-slot-border: var(--ant-color-warning);
   --phi-debug-layer-slot-border-strong: var(--ant-color-warning-text);
 
@@ -97,6 +100,7 @@
 
   --phi-debug-layer-slot-background: transparent;
   --phi-debug-layer-slot-background-strong: transparent;
+  --phi-debug-layer-slot-background-soft: transparent;
   --phi-debug-layer-slot-border: transparent;
   --phi-debug-layer-slot-border-strong: transparent;
 
@@ -163,6 +167,7 @@
   --phi-debug-layer-layout-border: var(--ant-color-success-border-hover);
   --phi-debug-layer-slot-background: transparent;
   --phi-debug-layer-slot-background-strong: transparent;
+  --phi-debug-layer-slot-background-soft: transparent;
   --phi-debug-layer-slot-border: var(--ant-color-warning-border-hover);
   outline-width: 1px;
   outline-offset: -1px;

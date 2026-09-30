@@ -254,3 +254,78 @@ export function isPhiTemporalValue(value: unknown): value is PhiTemporalValue {
   }
   return false;
 }
+
+/*
+ * Which calendar days an event covers, as ISO dates in the calendar's time zone.
+ *
+ * A calendar cell is a date, not an instant, and comparing an event's instant against a cell's local
+ * midnight mixed two zones: the calendar's, and the browser's the cell was created in. An event at 23:30
+ * in Zurich landed on the next day for a visitor in New York. Dates compared as dates, both read in the
+ * calendar's zone, cannot drift. A timed event covers every day from the one it starts on to the one it
+ * ends on -- one that ends exactly at midnight does not reach into the next day.
+ */
+const phiCalendarZoneDateFormatters = new Map<string, Intl.DateTimeFormat>();
+
+function readPhiCalendarZoneDate(instant: string, timeZone: string) {
+  let formatter = phiCalendarZoneDateFormatters.get(timeZone);
+  if (!formatter) {
+    formatter = new Intl.DateTimeFormat("en-CA", {
+      timeZone,
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hourCycle: "h23",
+    });
+    phiCalendarZoneDateFormatters.set(timeZone, formatter);
+  }
+  const parts = Object.fromEntries(
+    formatter.formatToParts(new Date(instant)).map((part) => [part.type, part.value]),
+  );
+  return {
+    isoDate: `${parts.year}-${parts.month}-${parts.day}`,
+    atMidnight: parts.hour === "00" && parts.minute === "00" && parts.second === "00",
+  };
+}
+
+function addPhiIsoDays(isoDate: string, days: number) {
+  const date = new Date(`${isoDate}T00:00:00Z`);
+  date.setUTCDate(date.getUTCDate() + days);
+  return date.toISOString().slice(0, 10);
+}
+
+export function resolvePhiCalendarEventDays(
+  event: PhiCalendarEvent,
+  timeZone: string,
+): { isoStart: string; isoEndExclusive: string } {
+  if (event.allDay) {
+    return { isoStart: event.startDate.isoDate, isoEndExclusive: event.endDateExclusive.isoDate };
+  }
+  const start = readPhiCalendarZoneDate(event.start.instant, timeZone);
+  const end = readPhiCalendarZoneDate(event.end.instant, timeZone);
+  const lastDay = end.atMidnight && end.isoDate > start.isoDate ? addPhiIsoDays(end.isoDate, -1) : end.isoDate;
+  return {
+    isoStart: start.isoDate,
+    isoEndExclusive: addPhiIsoDays(lastDay > start.isoDate ? lastDay : start.isoDate, 1),
+  };
+}
+
+/** Whether an event is shown on the calendar day `isoDate`, both read in `timeZone`. */
+export function phiCalendarEventFallsOnDate(event: PhiCalendarEvent, isoDate: string, timeZone: string) {
+  const days = resolvePhiCalendarEventDays(event, timeZone);
+  return isoDate >= days.isoStart && isoDate < days.isoEndExclusive;
+}
+
+/**
+ * The days a month panel shows: whole weeks from the one the month starts in, six of them, because the
+ * panel always draws six rows. Asking for the month alone left the leading and trailing days of the
+ * neighbouring months empty although they are on screen. `weekStart` is the panel's first weekday
+ * (0 = Sunday), `isoMonthStart` the first of the month.
+ */
+export function resolvePhiCalendarMonthPanelDays(isoMonthStart: string, weekStart: number) {
+  const weekday = new Date(`${isoMonthStart}T00:00:00Z`).getUTCDay();
+  const isoStart = addPhiIsoDays(isoMonthStart, -((weekday - weekStart + 7) % 7));
+  return { isoStart, isoEndExclusive: addPhiIsoDays(isoStart, 42) };
+}

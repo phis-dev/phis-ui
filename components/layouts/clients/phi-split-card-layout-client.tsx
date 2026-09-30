@@ -55,6 +55,7 @@ export type PhiSplitCardLayoutProps = Omit<PhiBaseLayoutProps, "slots"> & {
 };
 
 function renderSplitCardSlot(
+  isAuthoringRender: boolean,
   key: string,
   child: ReactNode,
   slotRole: "left" | "right",
@@ -69,7 +70,6 @@ function renderSplitCardSlot(
   slotShadow?: PhiShadow,
   slotBorderRadius?: CSSProperties["borderRadius"],
 ) {
-  const isAuthoringRender = isPhiLayoutAuthoringRender({ editSlotAction });
   const hasContent = child !== null && child !== undefined && child !== false;
   const showInsertButton = typeof editSlotAction === "function" && editRenderInsertControl != null;
   const resolvedSlotBackgroundStyle = resolvePhiBackgroundWidgetStyle(slotBackground ?? null);
@@ -171,7 +171,7 @@ export function PhiSplitCardLayout({
   shadow,
   style,
 }: PhiSplitCardLayoutProps) {
-  const isAuthoringRender = isPhiLayoutAuthoringRender({ editSlotAction });
+  const isAuthoringRender = isPhiLayoutAuthoringRender({ editSlotAction, renderMode });
   const resolvedRenderMode = renderMode ?? "live";
   const resolvedGap = normalizePhiCssSize(gap) ?? (PHI_SPLIT_CARD_LAYOUT_DEFAULTS.gap as number | string);
   /*
@@ -222,6 +222,7 @@ export function PhiSplitCardLayout({
     >
       {backgroundLayer}
       {renderSplitCardSlot(
+        isAuthoringRender,
         "slot-1",
         slots[0] ?? null,
         "left",
@@ -237,6 +238,7 @@ export function PhiSplitCardLayout({
         resolvedSlotRadius,
       )}
       {renderSplitCardSlot(
+        isAuthoringRender,
         "slot-2",
         slots[1] ?? null,
         "right",

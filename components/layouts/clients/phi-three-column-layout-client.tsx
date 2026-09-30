@@ -74,6 +74,7 @@ export type PhiThreeColumnLayoutProps = {
 };
 
 function renderColumn(
+  isAuthoringRender: boolean,
   key: string,
   child: ReactNode,
   width: CSSProperties["width"] | undefined,
@@ -86,7 +87,6 @@ function renderColumn(
   label?: ReactNode,
   showInsertButton?: boolean,
 ) {
-  const isAuthoringRender = isPhiLayoutAuthoringRender({ editSlotAction });
   const resolvedWidth = normalizePhiCssSize(width);
   const hasContent = child !== null && child !== undefined && child !== false;
   /*
@@ -200,7 +200,7 @@ export function PhiThreeColumnLayout({
   renderMode = "live",
   ...layoutProps
 }: PhiThreeColumnLayoutProps) {
-  const isAuthoringRender = isPhiLayoutAuthoringRender({ editSlotAction });
+  const isAuthoringRender = isPhiLayoutAuthoringRender({ editSlotAction, renderMode });
   const {
     style,
     layoutKind = "threecol",
@@ -282,6 +282,7 @@ export function PhiThreeColumnLayout({
     >
       {backgroundLayer}
       {renderColumn(
+        isAuthoringRender,
         "slot-1",
         slots[0] ?? null,
         leftWidth,
@@ -295,6 +296,7 @@ export function PhiThreeColumnLayout({
         showInsertButton,
       )}
       {renderColumn(
+        isAuthoringRender,
         "slot-2",
         slots[1] ?? null,
         middleWidth,
@@ -308,6 +310,7 @@ export function PhiThreeColumnLayout({
         showInsertButton,
       )}
       {renderColumn(
+        isAuthoringRender,
         "slot-3",
         slots[2] ?? null,
         rightWidth,

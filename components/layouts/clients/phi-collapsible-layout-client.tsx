@@ -182,6 +182,7 @@ function PhiCollapsibleLayoutBody({
     editSlotAction: layoutProps.editSlotAction,
     editSlotLabels: layoutProps.editSlotLabels,
     capabilities: layoutProps.capabilities,
+    renderMode: layoutProps.renderMode,
   });
   const { token } = usePhiConfig();
   const resolvedHeaderPadding = headerPadding ?? token.paddingSM;

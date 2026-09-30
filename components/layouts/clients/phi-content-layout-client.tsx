@@ -79,7 +79,7 @@ export function PhiContentLayout({
   editSlotAnchor = "center",
   style,
 }: PhiContentLayoutProps) {
-  const isAuthoringRender = isPhiLayoutAuthoringRender({ editSlotAction });
+  const isAuthoringRender = isPhiLayoutAuthoringRender({ editSlotAction, renderMode });
   const slot0 = Array.isArray(slots) ? slots[0] : undefined;
   const hasSlot0 = isRenderablePhiNode(slot0);
   const shouldFillBlock = true;

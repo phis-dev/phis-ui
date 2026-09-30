@@ -60,7 +60,7 @@ function resolveGridGuideStyle(index: number): CSSProperties {
     marginInlineEnd: `calc(var(--phi-grid-column-gap, 0px) * ${23 - index} / 24)`,
     border: "1px dashed var(--phi-debug-layer-slot-border)",
     borderRadius: "var(--ant-border-radius)",
-    background: "var(--phi-debug-layer-slot-background-soft, transparent)",
+    background: "var(--phi-debug-layer-slot-background-soft)",
   };
 }
 
@@ -74,6 +74,7 @@ export function PhiGridLayout({
     editSlotAction: layoutProps.editSlotAction,
     editSlotLabels: layoutProps.editSlotLabels,
     capabilities: layoutProps.capabilities,
+    renderMode: layoutProps.renderMode,
   });
   const {
     gap = PHI_GRID_LAYOUT_DEFAULTS.gap as number | string,

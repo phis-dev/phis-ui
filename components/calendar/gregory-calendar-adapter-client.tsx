@@ -12,9 +12,10 @@ import {
   type PhiCalendarAdapterClient,
   type PhiCalendarAdapterDatePickerProps,
   type PhiCalendarDate,
-  type PhiCalendarEvent,
   type PhiCalendarPrecision,
   type PhiTemporalValue,
+  phiCalendarEventFallsOnDate,
+  resolvePhiCalendarMonthPanelDays,
 } from "../../types/calendar";
 import { PhiFlexControl } from "../controls/phi-flex-control";
 import { PhiTypographyControl } from "../controls/phi-typography-control";
@@ -169,19 +170,13 @@ function renderDatePicker(props: PhiCalendarAdapterDatePickerProps) {
   );
 }
 
-function eventFallsOnDate(event: PhiCalendarEvent, value: Dayjs, timeZone: string) {
-  if (event.allDay) {
-    return !value.isBefore(event.startDate.isoDate, "day") &&
-      value.isBefore(event.endDateExclusive.isoDate, "day");
-  }
-  return dayjs(event.start.instant).tz(timeZone).isSame(value, "day");
-}
-
 function renderCalendar(props: Parameters<PhiCalendarAdapterClient["renderCalendar"]>[0]) {
   const calendarValue = props.value ? dayjs(props.value.isoDate) : undefined;
   const cellRender: CalendarProps<Dayjs>["cellRender"] = (value, info) => {
     if (info.type !== "date") return info.originNode;
-    const events = props.events.filter((event) => eventFallsOnDate(event, value, props.timeZone));
+    // The cell's own calendar date, compared as a date in the calendar's zone (`types/calendar.ts`).
+    const isoDate = value.format("YYYY-MM-DD");
+    const events = props.events.filter((event) => phiCalendarEventFallsOnDate(event, isoDate, props.timeZone));
     return (
       <PhiFlexControl vertical gap={2}>
         {events.map((event) => (
@@ -211,8 +206,12 @@ function renderCalendar(props: Parameters<PhiCalendarAdapterClient["renderCalend
         props.onViewportChange?.({
           view: mode,
           calendar: "gregory",
-          isoStart: start.format("YYYY-MM-DD"),
-          isoEndExclusive: start.add(1, mode).format("YYYY-MM-DD"),
+          ...(mode === "month"
+            ? resolvePhiCalendarMonthPanelDays(start.format("YYYY-MM-DD"), start.startOf("week").day())
+            : {
+                isoStart: start.format("YYYY-MM-DD"),
+                isoEndExclusive: start.add(1, mode).format("YYYY-MM-DD"),
+              }),
         });
       }}
     />

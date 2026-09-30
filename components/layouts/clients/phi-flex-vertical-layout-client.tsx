@@ -39,6 +39,7 @@ export function PhiFlexVerticalLayout({
     editSlotAction: layoutProps.editSlotAction,
     editSlotLabels: layoutProps.editSlotLabels,
     capabilities: layoutProps.capabilities,
+    renderMode: layoutProps.renderMode,
   });
   const {
     layoutKind = "verticalflex",

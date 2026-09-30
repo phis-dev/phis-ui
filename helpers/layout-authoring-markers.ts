@@ -8,7 +8,9 @@
  *
  * Whether a render is an authoring one is not a new flag. A layout already receives `editSlotAction`,
  * `editSlotLabels` and `capabilities`, all three of them things only the Builder passes and all three
- * absent on a published page. Reading them is what keeps this from becoming another value someone has
+ * absent on a published page -- and its `renderMode`, which is `preview` or `editor` only in the Builder.
+ * The Preview passes none of the three edit props, so without the mode its debug scaffold had no bands to
+ * draw. Reading them is what keeps this from becoming another value someone has
  * to remember to thread. `validate-authoring-marker-contracts.ts` pins the coupling, because an
  * implicit signal that nothing checks is an implicit signal that quietly stops being true.
  */
@@ -17,10 +19,12 @@ export type PhiLayoutAuthoringSignal = {
   editSlotAction?: unknown;
   editSlotLabels?: unknown;
   capabilities?: unknown;
+  renderMode?: unknown;
 };
 
 export function isPhiLayoutAuthoringRender(signal: PhiLayoutAuthoringSignal) {
-  return signal.editSlotAction != null || signal.editSlotLabels != null || signal.capabilities != null;
+  return signal.editSlotAction != null || signal.editSlotLabels != null || signal.capabilities != null ||
+    signal.renderMode === "preview" || signal.renderMode === "editor";
 }
 
 /** The layout band's marker, and nothing at all outside authoring. */
