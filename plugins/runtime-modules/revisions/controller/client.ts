@@ -37,7 +37,7 @@ import {
   type PhiRevisionsControllerConfig,
 } from "../controller/definition";
 import { resolvePhiBuilderRevisionNavScopeKey } from "../../../../helpers/cms-navigation-scope-key";
-import { deleteCmsDraft } from "../../builder/persistence";
+import { deleteCmsDraft } from "../../../../helpers/cms-draft-delete";
 import {
   PHI_REVISIONS_DELETE_AREA_OVERLAY_IDS,
   PHI_REVISIONS_DELETE_AREA_WIDGET_IDS,

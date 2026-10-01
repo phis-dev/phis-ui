@@ -20,10 +20,10 @@ import {
   resolvePhiBuilderActivePageKey,
   resolvePhiBuilderPagePresetSource,
 } from "../../../helpers/cms-page-catalog";
+import { deleteCmsDraft } from "../../../helpers/cms-draft-delete";
 import { buildPhiBuilderLiveHref,
   clearPhiDeveloperBuilderDraftAllocation,
   createPhiDeveloperBuilderInitialPageDrafts,
-  deleteCmsDraft,
   discardPhiDeveloperBuilderModulesDraft,
   getPhiDeveloperBuilderModulesDraftAllocation,
   savePhiDeveloperBuilderModulesDraft,
