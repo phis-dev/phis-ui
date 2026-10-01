@@ -1007,6 +1007,16 @@ source file and leaves the directive and the bare imports of `react` and `@phis/
 tend to drop the directive and inline peer dependencies. `@phis/example`'s `build` script is
 `tsc -p tsconfig.build.json` plus copying its font and picture files.
 
+**Node types are the package's own, and only for server code.** `@phis/ui` points its doors at sources,
+so a package compiles what a door reaches. The data doors -- `types`, `constants`, `helpers`, `theme`,
+`controls`, `forms`, `layouts`, `navigation`, `module`, `cms/plugins` and the like -- reach no Node API and
+no stylesheet, and `validate-module-dependency-direction` keeps it so; a package that only uses them needs
+neither Node types nor CSS declarations. The server doors -- `module/labels`, `server-helpers`, `net` --
+are server code and reach Node: the credentials reader takes `node:fs`. A package that imports one of them
+runs on Node and says so: `@types/node` in its `devDependencies` and `"types": ["node"]` in its
+`tsconfig.json`, as `@phis/support` does. `@phis/ui` does not hand Node's globals to a package whose
+client code has no use for them.
+
 `phis module check` inspects the installed package without loading it
 (`phis-server/src/cli/module-package.mts`):
 
