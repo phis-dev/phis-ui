@@ -4,7 +4,6 @@ import { RightOutlined } from "@ant-design/icons";
 import type { CSSProperties } from "react";
 
 import { usePhiConfig } from "../root/phi-config-provider";
-import styles from "./phi-expand-indicator.module.css";
 
 export function PhiExpandIndicator({
   expanded,
@@ -20,7 +19,7 @@ export function PhiExpandIndicator({
 
   return (
     <RightOutlined
-      className={animated ? styles.animated : undefined}
+      className={animated ? "phi-expand-indicator--animated" : undefined}
       style={{
         "--phi-expand-indicator-from": animationFromExpanded ? "90deg" : "0deg",
         "--phi-expand-indicator-to": expanded ? "90deg" : "0deg",

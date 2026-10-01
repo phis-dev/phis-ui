@@ -1,5 +1,4 @@
 export type { PhiCmsSiteBridge } from "../types/cms-plugins";
-export { PHI_FIRST_PARTY_RUNTIME_MODULE_CATALOG } from "../plugins/runtime-modules/catalog";
 export {
   assertPhiCmsPresetTreeContract,
   buildPhiCmsPresetIdentityKey,

@@ -278,8 +278,8 @@ export function resolvePhiSurfaceShapeRadius(
  *
  * `headerBorderRadius` is what antd derives its internal `tableRadius` from, and that one number draws
  * a Table's container corners and the bottom of its footer. The bottom corners it does NOT draw:
- * `phi-table-control.module.css` clips them and reads the variable, so both ends of one Table are the
- * same corner.
+ * `styles/controls.css` clips them and reads the variable, so both ends of one Table are the same
+ * corner.
  *
  * The name differs per component, and naming the wrong one is silently inert rather than visibly wrong,
  * which is why each is asserted by name. A Table and a Collapse have a token of their own; everything

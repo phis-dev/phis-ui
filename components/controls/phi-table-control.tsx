@@ -70,7 +70,6 @@ import { PhiSegmentedControl } from "./phi-segmented-control";
 import { PhiSwitchControl } from "./phi-switch-control";
 import { PhiTextControl } from "./phi-text-control";
 import { PhiExpandIndicator } from "./phi-expand-indicator";
-import styles from "./phi-table-control.module.css";
 import { usePhiConfig } from "../root/phi-config-provider";
 import { PhiSkeletonControl } from "./phi-skeleton-control";
 import { readPhiDotPath } from "../../helpers/dot-path";
@@ -1469,7 +1468,9 @@ export function PhiTableControl<TRow extends Record<string, unknown>>({
 
   const table = (
     <Table<TRow>
-      className={[styles.root, hasClosingBlock ? styles.withClosingBlock : null].filter(Boolean).join(" ")}
+      className={["phi-table-control", hasClosingBlock ? "phi-table-control--closing-block" : null]
+        .filter(Boolean)
+        .join(" ")}
       style={{ "--phi-table-striped-row-background": token.colorFillAlter } as CSSProperties}
       rowKey={(row) => loading
         ? `__phi_table_loading_${String((row as Record<PropertyKey, unknown>)[PHI_TABLE_LOADING_ROW])}`
@@ -1480,7 +1481,7 @@ export function PhiTableControl<TRow extends Record<string, unknown>>({
       showHeader={showHeader}
       tableLayout={layout.mode}
       size={size}
-      rowClassName={(_row, index) => striped && index % 2 === 1 ? styles.stripedRow : ""}
+      rowClassName={(_row, index) => striped && index % 2 === 1 ? "phi-table-control__row--striped" : ""}
       rowSelection={loading ? undefined : antdRowSelection}
       components={rowReordering?.enabled && !loading ? { body: { row: PhiTableSortableRow } } : undefined}
       scroll={layout.overflowX === "auto" ? { x: true } : undefined}

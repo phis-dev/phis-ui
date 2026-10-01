@@ -20,6 +20,7 @@ import { PHI_PUBLIC_RUNTIME_MODULE_ID } from "./public/ids";
 import { PHI_CORE_THEME_PRESET_PLUGINS } from "../../theme/phi-theme-presets";
 import { buildPhiAreaRootRoutePresetDescriptor } from "./area-root-route";
 import { PHI_BASE_PAGE_LAYOUT_VERSION } from "../../components/regions/presets/phi-base-page-layout";
+import { PHI_PUBLIC_BASE_PAGE_PRESET_KEYS } from "./public-base-page-references";
 
 export const PHI_AREA_BASE_RUNTIME_MODULE_AREA_SHELLS = [
   {
@@ -92,21 +93,6 @@ export const PHI_AREA_BASE_RUNTIME_MODULE_AREA_SHELLS = [
         })),
   })),
 ] satisfies readonly PhiCmsAreaShellPresetDescriptor[];
-
-/**
- * The Public base Pages a package may link to, named once.
- *
- * A Module that points at one of them has to say which, and a string typed at the call site is the same
- * fragility as a path: nothing checks it, and a preset key that is renamed leaves a reference resolving
- * to nothing. Stated here, beside the descriptors that declare them, so the two cannot drift.
- */
-export const PHI_PUBLIC_BASE_PAGE_PRESET_KEYS = {
-  welcome: "public-welcome-page",
-  home: "public-home-page",
-  terms: "public-terms-page",
-  contact: "public-contact-page",
-  unsubscribe: "public-unsubscribe-page",
-} as const;
 
 export const PHI_AREA_BASE_RUNTIME_MODULE_ROUTES = [
   {

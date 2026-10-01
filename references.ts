@@ -19,5 +19,7 @@ export {
   type PhiResolvedLinkTargets,
 } from "./types/references";
 export { resolvePhiLinkHref } from "./helpers/link-target";
-export { PHI_PUBLIC_BASE_PAGE_REFERENCES } from "./plugins/runtime-modules/public-base-page-references";
-export { PHI_PUBLIC_BASE_PAGE_PRESET_KEYS } from "./plugins/runtime-modules/area-base-presets";
+export {
+  PHI_PUBLIC_BASE_PAGE_PRESET_KEYS,
+  PHI_PUBLIC_BASE_PAGE_REFERENCES,
+} from "./plugins/runtime-modules/public-base-page-references";

@@ -13,7 +13,6 @@ import {
 } from "react";
 import { Dropdown } from "antd";
 
-import styles from "./phi-dropdown-control.module.css";
 import { toPhiAntdMenuItems, type PhiMenuControlItem } from "./phi-menu-control";
 
 /**
@@ -152,7 +151,7 @@ export function PhiPillDropdownControl({
   style,
 }: PhiPillDropdownControlProps) {
   const canOpen = items.length > 0;
-  const chevron = showChevron && canOpen ? <span className={styles.chevron} aria-hidden /> : null;
+  const chevron = showChevron && canOpen ? <span className="phi-dropdown-control__chevron" aria-hidden /> : null;
   const hasLabel = label != null && label !== false && label !== "";
 
   return (
@@ -165,7 +164,7 @@ export function PhiPillDropdownControl({
       <button
         ref={triggerRef}
         type="button"
-        className={[styles.trigger, className].filter(Boolean).join(" ")}
+        className={["phi-dropdown-control", className].filter(Boolean).join(" ")}
         style={{
           display: "inline-flex",
           alignItems: "center",
@@ -185,7 +184,7 @@ export function PhiPillDropdownControl({
       >
         {leading}
         {hasLabel && pill ? (
-          <span className={styles.pillTrigger}>
+          <span className="phi-dropdown-control__pill">
             <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
               <span>{label}</span>
               {chevron}

@@ -18,7 +18,6 @@ import { PhiTextControl } from "./phi-text-control";
 import { PhiConfirmControl } from "./phi-confirm-control";
 import { PhiExpandIndicator } from "./phi-expand-indicator";
 import { PhiLink } from "../navigation/phi-link";
-import styles from "./phi-tree-control.module.css";
 import { PhiSkeletonControl } from "./phi-skeleton-control";
 
 type TreeRecord = Record<string, unknown>;
@@ -98,7 +97,7 @@ function decorateVisibleTreeRows(
       : undefined;
     return {
       ...node,
-      className: stripe ? styles.stripedRow : undefined,
+      className: stripe ? "phi-tree-control__node--striped" : undefined,
       ...(children ? { children } : {}),
     };
   });
@@ -329,7 +328,7 @@ export function PhiTreeControl({
   const readEventNode = (value: EventDataNode<DataNode>) => value as unknown as PhiTreeControlNode;
   const tree = (
     <Tree<PhiTreeControlNode>
-      className={styles.root}
+      className="phi-tree-control"
       style={{
         width: "100%",
         background: presentation.bordered ? "transparent" : token.colorBgContainer,

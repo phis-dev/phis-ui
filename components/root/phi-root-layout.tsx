@@ -5,6 +5,7 @@ import "antd/dist/reset.css";
 import "../../styles/root.css";
 import "../../styles/layout.css";
 import "../../styles/control-shape.css";
+import "../../styles/controls.css";
 
 import { getResolvedSiteConfig } from "../../gateway/site-config";
 import type { PhiSiteConfig } from "../../gateway/site-config";

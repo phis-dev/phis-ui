@@ -104,6 +104,15 @@ Foundation builds on, and they stay that only while nothing in them leads to a M
 (`createPhiRuntimeModuleId`) rather than importing their `ids.ts`. The validator measures which is
 which: a module-system file that leads to a Module is a catalog, and the Foundation may not import it.
 
+The package's doors (`package.json#exports`) are held the same way, because they point at sources and a
+Module package compiles whatever a door reaches -- `import type` included. A door reaches a Module or a
+catalog only if it exists to assemble them (the Next app's routes and Areas, the Area catalogs and
+client manifests, and the few listed in the validator); every other door is module-free. A door reaches
+a stylesheet only if a Next app opens it. Controls name their classes and the rules live in `styles/`,
+loaded by the root layout, so nothing a Module imports carries a CSS import. A Module styles its own
+elements inline from the Theme tokens (`usePhiConfig().token`); a stylesheet of its own would be its own
+package's concern, declarations included.
+
 The rule has a practical edge that is easy to miss. A Foundation file that names a Module's Controller
 address has the dependency backwards even though nothing was imported *from* a Module folder — the
 address is Module knowledge wherever the file sits. `components/widgets/signals/page-title-signals.ts`

@@ -1,6 +1,5 @@
 import type { ReactNode } from "react";
 
-import styles from "./phi-plain-table.module.css";
 
 export type PhiPlainTableAlign = "left" | "center" | "right" | null;
 
@@ -36,8 +35,8 @@ export function PhiPlainTable({
   rows: readonly PhiPlainTableRow[];
 }) {
   return (
-    <div className={styles.scroll}>
-      <table className={styles.table}>
+    <div className="phi-plain-table__scroll">
+      <table className="phi-plain-table">
         <thead>
           <tr>
             {columns.map((column) => (

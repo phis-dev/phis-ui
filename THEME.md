@@ -376,8 +376,7 @@ as `--phi-surface-radius` and, where a component has a token for it, as that tok
 
 - **Table** -- `headerBorderRadius`, which Ant Design's internal `tableRadius` and therefore the container's
   top corners and a footer's bottom come from. The bottom corners are not drawn by Ant Design at all;
-  `components/controls/phi-table-control.module.css` clips them from the variable when a footer or a summary
-  row closes the Table.
+  `styles/controls.css` clips them from the variable when a footer or a summary row closes the Table.
 - **Collapse** -- its panels, through `collapsePanelBorderRadius`, the token Ant Design derives from
   `borderRadiusLG` and draws a panel's container, first header and last body from. It is what the
   Collapsible Layout renders with.

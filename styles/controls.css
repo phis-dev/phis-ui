@@ -1,0 +1,200 @@
+/*
+ * The shared Controls' own rules, by class name.
+ *
+ * They used to be CSS Modules beside each Control. A CSS Module is an import, and an import travels:
+ * every Module package that used `@phis/ui/controls` compiled these Controls from source and had to
+ * declare `*.module.css` for files it never wrote, because its program reached them and it had no
+ * Next types to explain them. A Control that names its classes asks nothing of whoever compiles it; the
+ * rules are loaded once, by the root layout, like every other stylesheet in `styles/`.
+ *
+ * Names follow the house pattern -- `phi-<control>`, `__part`, `--state` -- which is what keeps them
+ * apart now that no hash does.
+ */
+
+/* --- Dropdown ------------------------------------------------------------------------------------ */
+
+/*
+ * The shared pill trigger: a bordered, fully rounded label that reacts to hover. Hover is a CSS
+ * state, not React state, so a trigger never re-renders to change its own border colour.
+ */
+.phi-dropdown-control__pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 3.5rem;
+  padding: 4px 10px;
+  border: 1px solid var(--ant-color-border);
+  border-radius: 999px;
+  color: inherit;
+  font-size: inherit;
+  line-height: 1;
+  text-decoration: none;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition:
+    color var(--ant-motion-duration-mid),
+    border-color var(--ant-motion-duration-mid);
+}
+
+/* Hovering anywhere on the trigger lights the pill -- the account avatar beside it included. */
+.phi-dropdown-control:hover .phi-dropdown-control__pill {
+  border-color: var(--ant-color-primary-hover);
+  color: var(--ant-color-primary-hover);
+}
+
+/*
+ * The sider menu's submenu arrow, pointing down: antd draws it from two rounded bars sized off the
+ * font size (menu/style: size = fontSize / 7 * 5, bars 0.6 x 0.15 of it, shifted by a quarter), and
+ * an icon glyph never matches it. Centred in its box, so it lines up with the label beside it.
+ */
+.phi-dropdown-control__chevron {
+  --phi-chevron-size: calc(var(--ant-font-size) / 7 * 5);
+  position: relative;
+  display: inline-block;
+  flex-shrink: 0;
+  width: var(--phi-chevron-size);
+  height: var(--phi-chevron-size);
+  color: currentcolor;
+}
+
+.phi-dropdown-control__chevron::before,
+.phi-dropdown-control__chevron::after {
+  position: absolute;
+  top: calc(50% - var(--phi-chevron-size) * 0.075 + var(--phi-chevron-size) * 0.1768);
+  left: calc(50% - var(--phi-chevron-size) * 0.3);
+  width: calc(var(--phi-chevron-size) * 0.6);
+  height: calc(var(--phi-chevron-size) * 0.15);
+  border-radius: var(--ant-border-radius);
+  background-color: currentcolor;
+  content: "";
+}
+
+.phi-dropdown-control__chevron::before {
+  transform: rotate(-45deg) translateX(calc(var(--phi-chevron-size) * 0.25));
+}
+
+.phi-dropdown-control__chevron::after {
+  transform: rotate(45deg) translateX(calc(var(--phi-chevron-size) * -0.25));
+}
+
+/* --- Expand indicator ---------------------------------------------------------------------------- */
+
+@keyframes phi-expand-indicator-rotate {
+  from {
+    transform: rotate(var(--phi-expand-indicator-from));
+  }
+
+  to {
+    transform: rotate(var(--phi-expand-indicator-to));
+  }
+}
+
+.phi-expand-indicator--animated {
+  animation-duration: var(--phi-expand-indicator-duration);
+  animation-fill-mode: both;
+  animation-name: phi-expand-indicator-rotate;
+  animation-timing-function: var(--phi-expand-indicator-easing);
+}
+
+/* --- Table --------------------------------------------------------------------------------------- */
+
+/*
+ * A Table closed by a block of its own clips that block to the Table's corner.
+ *
+ * Ant Design rounds the bottom of `.ant-table-footer` and nothing else. A summary row sits in `<tfoot>`
+ * with a ground of its own and paints straight into the corner, so the same square end appeared as soon
+ * as a Table closed with one instead of with a footer. Clipping the Table is what both cases want, which
+ * is why the rule names neither.
+ */
+.phi-table-control.phi-table-control--closing-block [class~="ant-table"] {
+  border-end-start-radius: var(--phi-surface-radius, var(--ant-border-radius-lg));
+  border-end-end-radius: var(--phi-surface-radius, var(--ant-border-radius-lg));
+  overflow: hidden;
+}
+
+/*
+ * A summary row stands on the ground a footer stands on.
+ *
+ * Ant Design gives `.ant-table-footer` the `footerBg` token and the summary `tableBg` -- the ground of
+ * an ordinary row. Both close a Table, and a closing block that looks like one more row does not read
+ * as one. The class is repeated once because Ant Design's own rule weighs the wrapper and the summary,
+ * and its stylesheet is injected after this one.
+ */
+.phi-table-control.phi-table-control [class~="ant-table-summary"] {
+  background: var(--ant-table-footer-bg, var(--ant-color-fill-alter));
+}
+
+.phi-table-control [class~="ant-table-pagination"][class~="ant-pagination"] {
+  margin-block: var(--ant-padding-sm) 0 !important;
+}
+
+.phi-table-control
+  [class~="ant-table-tbody"]
+  > tr.phi-table-control__row--striped:not([class~="ant-table-row-selected"]):not(:hover)
+  > td {
+  background-color: var(--phi-table-striped-row-background);
+}
+
+/* --- Tree ---------------------------------------------------------------------------------------- */
+
+.phi-tree-control [class~="ant-tree-treenode"].phi-tree-control__node--striped {
+  background-color: var(--phi-tree-striped-row-background);
+}
+
+/*
+ * The drag handle matches the Table's row handle: the text colour of a text Button rather than antd's
+ * quaternary text, and centred on the row, so a node whose title carries a second line does not leave
+ * its handle at the top. antd weighs its handle rule at three classes, hence the repeated root class.
+ */
+.phi-tree-control.phi-tree-control
+  [class~="ant-tree-treenode-draggable"]
+  [class~="ant-tree-draggable-icon"] {
+  align-self: center;
+  color: var(--phi-tree-drag-handle-color);
+}
+
+/*
+ * The expand switcher sits on the row's centre as the handle does. antd stretches it over the whole row
+ * and sets its arrow in the first text line; the stretch is only needed for the connector lines of
+ * `showLine`, which must run unbroken from row to row, so a tree drawing lines keeps it.
+ */
+.phi-tree-control.phi-tree-control:not([class~="ant-tree-show-line"]) [class~="ant-tree-switcher"] {
+  align-self: center;
+}
+
+/* --- Plain table --------------------------------------------------------------------------------- */
+
+/* Wide tables scroll inside their own box instead of widening the Page. */
+.phi-plain-table__scroll {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.phi-plain-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--ant-font-size);
+  line-height: var(--ant-line-height);
+  color: var(--ant-color-text);
+}
+
+.phi-plain-table th,
+.phi-plain-table td {
+  padding: var(--ant-padding-xs) var(--ant-padding-sm);
+  text-align: start;
+  vertical-align: top;
+}
+
+.phi-plain-table th {
+  font-weight: var(--ant-font-weight-strong);
+  color: var(--ant-color-text-heading);
+  border-block-end: 1px solid var(--ant-color-border-secondary);
+}
+
+.phi-plain-table td {
+  border-block-end: 1px solid var(--ant-color-split);
+}
+
+.phi-plain-table tbody tr:last-child td {
+  border-block-end: none;
+}

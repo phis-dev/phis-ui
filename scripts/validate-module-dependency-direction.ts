@@ -187,6 +187,89 @@ for (const [sourcePath, targets] of importsByFile) {
   }
 }
 
+/*
+ * What each of the package's doors makes a Module package compile.
+ *
+ * The doors point at sources, so whoever imports one compiles everything it reaches -- `import type`
+ * included, which loads and checks the file as surely as a value import does. `@phis/ui/cms/plugins`
+ * re-exported the first-party catalog beside its contract types, and so every Module that only wanted
+ * `PhiRuntimeModule` compiled all of phis-ui's Modules, their React and five CSS Modules, and failed on
+ * `*.module.css` it never wrote. Two rules hold the doors since:
+ *
+ * - A door reaches a Module or a catalog only if it exists to assemble them, and is named below.
+ * - A door reaches a stylesheet only if a Next app is what opens it. Controls name their classes and
+ *   `styles/` is loaded by the root layout, so nothing a Module imports carries a CSS import.
+ */
+const PHI_ASSEMBLY_DOORS: Readonly<Record<string, string>> = {
+  "./widgets": "the server Widgets Core ships, for a Site to render directly",
+  "./media": "the image preview grid of the Core Collection View",
+  "./builder-api-route": "the Builder's preview route",
+  "./runtime/authoring-client": "the Core Table's static resource editor for authoring",
+  "./runtime/data-provider-client": "the Core Card's Collection binding",
+};
+const PHI_ASSEMBLY_DOOR_PATTERNS = [
+  /^\.\/next\//u, // the Next app's routes and Areas
+  /^\.\/runtime\/client-manifests\//u, // an Area's Render Client manifest
+  /^\.\/cms\/plugins\/[a-z]+$/u, // an Area's plugin catalog
+];
+const PHI_SITE_DOORS = new Set(["./shells", "./root", "./cms", "./cms/root-layout"]);
+const PHI_SITE_DOOR_PATTERN = /^\.\/next\//u;
+
+function collectDoorEntries(value: unknown): string | null {
+  if (typeof value === "string") return value;
+  if (value && typeof value === "object") {
+    const record = value as Record<string, unknown>;
+    for (const key of ["types", "import", "default"]) {
+      if (key in record) return collectDoorEntries(record[key]);
+    }
+    for (const entry of Object.values(record)) {
+      const found = collectDoorEntries(entry);
+      if (found) return found;
+    }
+  }
+  return null;
+}
+
+for (const [door, value] of Object.entries(packageManifest.exports as Record<string, unknown>)) {
+  const entry = collectDoorEntries(value);
+  if (!entry || !/\.(ts|tsx)$/u.test(entry)) continue;
+  const start = path.normalize(entry.replace(/^\.\//u, ""));
+  const seen = new Set([start]);
+  const queue = [start];
+  let reachedModule: string | null = null;
+  let reachedStylesheet: string | null = null;
+  while (queue.length > 0) {
+    const file = queue.shift()!;
+    for (const target of importsByFile.get(file) ?? []) {
+      if (target.endsWith(".css")) {
+        reachedStylesheet ??= `${file} -> ${target}`;
+        continue;
+      }
+      if (!reachedModule && (classify(target).kind === "module" || reachingModules.has(target))) {
+        reachedModule = `${file} -> ${target}`;
+      }
+      if (!seen.has(target)) {
+        seen.add(target);
+        queue.push(target);
+      }
+    }
+  }
+  const assembles = door in PHI_ASSEMBLY_DOORS || PHI_ASSEMBLY_DOOR_PATTERNS.some((pattern) => pattern.test(door));
+  if (reachedModule && !assembles) {
+    problems.push(
+      `${door} reaches a Module or a catalog (${reachedModule}); a Module importing it would compile ` +
+        "them. Re-export from somewhere module-free, or name the door as one that assembles Modules.",
+    );
+  }
+  const forSites = PHI_SITE_DOORS.has(door) || PHI_SITE_DOOR_PATTERN.test(door);
+  if (reachedStylesheet && !forSites) {
+    problems.push(
+      `${door} reaches a stylesheet (${reachedStylesheet}); a Module importing it would need CSS ` +
+        "declarations. Name classes and put the rules in styles/, loaded by the root layout.",
+    );
+  }
+}
+
 if (problems.length > 0) {
   console.error("Dependencies run against the module rule (MODULES.md, \"The dependency rule\"):");
   for (const problem of problems) {

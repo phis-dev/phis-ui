@@ -248,11 +248,12 @@ assert.equal(
 );
 
 /**
- * The other end of the same Table. Ant Design draws no bottom radius at all, so the CSS Module clips it,
- * and it has to read the same number or a Table would round unevenly under any shape but the default.
+ * The other end of the same Table. Ant Design draws no bottom radius at all, so `styles/controls.css`
+ * clips it, and it has to read the same number or a Table would round unevenly under any shape but the
+ * default.
  */
 const tableStylesheet = await readFile(
-  new URL("../components/controls/phi-table-control.module.css", import.meta.url),
+  new URL("../styles/controls.css", import.meta.url),
   "utf8",
 );
 assert.ok(
