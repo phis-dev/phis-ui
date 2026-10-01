@@ -2,7 +2,6 @@
 
 import type { ReactNode } from "react";
 import { useEffect } from "react";
-import dayjs from "dayjs";
 
 import { PhiIntlLocaleProvider } from "./phi-intl-locale";
 
@@ -106,6 +105,13 @@ const PHI_DAYJS_LOCALE_LOADERS: Record<PhiDayjsLocaleKey, () => Promise<DayjsLoc
   "zh-tw": () => import("dayjs/locale/zh-tw"),
 };
 
+/*
+ * The locale dayjs holds now. It starts as its own default, English, and English pages leave it there:
+ * dayjs is loaded only to switch it, so a page in English does not download it at all -- the date controls
+ * that use it bring it with them and find it already set to the page's locale.
+ */
+let appliedDayjsLocaleName = "en";
+
 function normalizeLocaleKey(input: string | null | undefined) {
   return input?.trim().replace(/_/g, "-").toLowerCase() ?? "";
 }
@@ -201,10 +207,12 @@ export function PhiDayjsLocale({
 
     async function applyLocale() {
       const resolved = resolvePhiDayjsLocale(locale);
+      if (resolved.localeName === appliedDayjsLocaleName) return;
       const loader = PHI_DAYJS_LOCALE_LOADERS[resolved.key] ?? PHI_DAYJS_LOCALE_LOADERS.en;
-      await loader();
+      const [{ default: dayjs }] = await Promise.all([import("dayjs"), loader()]);
       if (active) {
         dayjs.locale(resolved.localeName);
+        appliedDayjsLocaleName = resolved.localeName;
       }
     }
 

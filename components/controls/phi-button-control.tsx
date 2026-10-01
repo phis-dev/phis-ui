@@ -1,13 +1,20 @@
 "use client";
 
-import type { ReactNode, Ref } from "react";
-import { Badge, Button } from "antd";
+import { lazy, Suspense, type ReactNode, type Ref } from "react";
+import { Button } from "antd";
 import type { ButtonProps } from "antd";
 
 import type { PhiControlSize } from "../../types/control";
 import { PhiLink } from "../navigation/phi-link";
 import type { PhiButtonType } from "./phi-button-types";
 import { PhiHoverText } from "./phi-hover-text";
+
+/*
+ * Ant Design's Badge, loaded where a Button actually carries a count. Most Buttons carry none, and the
+ * Landing's carry none at all, so a static import put the Badge and its scroll-number motion on every page
+ * that draws a Button.
+ */
+const PhiLazyBadge = lazy(() => import("antd/es/badge"));
 
 export type PhiControlBadgePresentation = {
   enabled?: boolean;
@@ -154,16 +161,22 @@ export function PhiButtonControl({
       {button}
     </PhiLink>
   ) : button;
+  /*
+   * Rendered on the Server it is complete, and hydration waits for the chunk. Mounted in the browser before
+   * the chunk is there, the Button stands without its count until it arrives.
+   */
   const badged = badge?.enabled ? (
-    <Badge
-      color={badge.color}
-      count={badge.value ?? 0}
-      overflowCount={badge.overflowCount}
-      showZero={badge.showZero}
-      size="small"
-    >
-      {linked}
-    </Badge>
+    <Suspense fallback={linked}>
+      <PhiLazyBadge
+        color={badge.color}
+        count={badge.value ?? 0}
+        overflowCount={badge.overflowCount}
+        showZero={badge.showZero}
+        size="small"
+      >
+        {linked}
+      </PhiLazyBadge>
+    </Suspense>
   ) : linked;
 
   if (!visibleTooltip) return badged;
