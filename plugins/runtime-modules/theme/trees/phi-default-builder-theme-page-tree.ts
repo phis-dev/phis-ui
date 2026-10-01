@@ -437,11 +437,11 @@ export async function buildPhiDefaultBuilderThemePageTree({
               {
                 routeKey: "brand-preview-mode-change",
                 capabilityId: "change",
-                scope: "area",
+                scope: "page",
                 channel: PHI_THEME_SIGNAL_CHANNELS.previewThemeMode,
                 action: "change",
                 valueType: "boolean",
-                receiver: createPhiThemeControllerAddress(),
+                receiver: "broadcast",
               },
             ],
           },
