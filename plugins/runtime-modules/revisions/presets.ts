@@ -12,14 +12,8 @@ export const PHI_REVISIONS_RUNTIME_MODULE_ROUTES = [
     path: "/revisions",
     itemKey: "@phis/ui/modules/revisions/nav/builder/revisions",
     icon: "antd:history",
-    loadTree: ({ page, runtime, catalog }) =>
-      import("../builder/trees/phi-default-builder-area-preset-tree")
-        .then((module) => module.buildPhiDefaultBuilderPagePresetTree({
-          page,
-          runtime,
-          registry: catalog,
-          ownerModuleId: PHI_REVISIONS_RUNTIME_MODULE_ID,
-          presetKey: "builder-revisions-page",
-        })),
+    loadTree: ({ page, runtime }) =>
+      import("./trees/phi-default-builder-revisions-page-tree")
+        .then((module) => module.buildPhiDefaultBuilderRevisionsPageTree({ page, runtime })),
   }),
 ] satisfies readonly PhiCmsRoutePresetDescriptor[];

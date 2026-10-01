@@ -32,7 +32,6 @@ import {
   resolvePhiBuilderActivePageKey,
   resolvePhiBuilderPageKeyFromCatalogPath,
 } from "../../../../helpers/cms-page-catalog";
-import { PHI_BUILDER_REVISIONS_TABLE_WIDGET_ID } from "../../builder/addresses";
 import {
   PHI_REVISIONS_RUNTIME_CONTROLLER_DEFINITION,
   type PhiRevisionsControllerConfig,
@@ -40,14 +39,15 @@ import {
 import { resolvePhiBuilderRevisionNavScopeKey } from "../../../../helpers/cms-navigation-scope-key";
 import { deleteCmsDraft } from "../../builder/persistence";
 import {
-  PHI_BUILDER_DELETE_AREA_OVERLAY_IDS,
-  PHI_BUILDER_DELETE_AREA_WIDGET_IDS,
-} from "../../builder/addresses";
+  PHI_REVISIONS_DELETE_AREA_OVERLAY_IDS,
+  PHI_REVISIONS_DELETE_AREA_WIDGET_IDS,
+  PHI_REVISIONS_TABLE_WIDGET_ID,
+} from "../page-ids";
 import { isPhiRecord } from "../../../../helpers/is-record";
 
 const PHI_REVISIONS_TABLE_ADDRESS = createPhiSignalAddress(
   "cms",
-  PHI_BUILDER_REVISIONS_TABLE_WIDGET_ID,
+  PHI_REVISIONS_TABLE_WIDGET_ID,
 );
 
 function PhiRevisionsControllerMount({ address }: { address: PhiSignalAddress }) {
@@ -142,7 +142,7 @@ function PhiRevisionsControllerMount({ address }: { address: PhiSignalAddress })
         value: null,
         valueType: "none",
         sender: address,
-        receiver: createPhiSignalAddress("cms", PHI_BUILDER_DELETE_AREA_OVERLAY_IDS.overlayDeleteArea),
+        receiver: createPhiSignalAddress("cms", PHI_REVISIONS_DELETE_AREA_OVERLAY_IDS.overlayDeleteArea),
         ...(correlationId ? { correlationId } : {}),
         timestamp: Date.now(),
       });
@@ -203,7 +203,7 @@ function PhiRevisionsControllerMount({ address }: { address: PhiSignalAddress })
         value: `Everything this Site stored for ${area} is deleted, drafts and published alike. What is live changes at once, the Module preset takes the Area back, and no revision is left to restore it from. It cannot be undone.`,
         valueType: "string",
         sender: address,
-        receiver: createPhiSignalAddress("cms", PHI_BUILDER_DELETE_AREA_WIDGET_IDS.deleteAreaWarning),
+        receiver: createPhiSignalAddress("cms", PHI_REVISIONS_DELETE_AREA_WIDGET_IDS.deleteAreaWarning),
         correlationId: signal.correlationId,
         timestamp: Date.now(),
       });
@@ -214,7 +214,7 @@ function PhiRevisionsControllerMount({ address }: { address: PhiSignalAddress })
         value: null,
         valueType: "none",
         sender: address,
-        receiver: createPhiSignalAddress("cms", PHI_BUILDER_DELETE_AREA_OVERLAY_IDS.overlayDeleteArea),
+        receiver: createPhiSignalAddress("cms", PHI_REVISIONS_DELETE_AREA_OVERLAY_IDS.overlayDeleteArea),
         correlationId: signal.correlationId,
         timestamp: Date.now(),
       });

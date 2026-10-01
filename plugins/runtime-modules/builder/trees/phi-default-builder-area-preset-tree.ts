@@ -52,12 +52,9 @@ import { createPhiDefaultAreaRuntimeModuleIds } from "../../area-module-defaults
 import { getPhiBuilderChromeWidgetLabels } from "../../../../components/widgets/label-sets/builder-chrome";
 import { PHI_BUILDER_CHROME_WIDGET_DEFAULT_LABELS } from "../../../../components/widgets/label-types/builder-chrome";
 import type { PhiBuilderChromeWidgetLabels } from "../../../../components/widgets/label-types/builder-chrome";
-import { getPhiBuilderRevisionsWidgetLabels } from "../../../../components/widgets/label-sets/revisions";
 import { getPhiRegionWidgetLabels } from "../../../../components/widgets/label-sets/region";
 import { PHI_REGION_WIDGET_DEFAULT_LABELS } from "../../../../components/widgets/label-types/region";
 import { getPhiBuilderModulesPageLabels } from "../../../../components/widgets/label-sets/builder-modules";
-import { PHI_REVISIONS_RUNTIME_DATA_PROVIDER_KEYS } from "../../revisions/ids";
-import { createPhiRevisionsControllerAddress } from "../../revisions/controller/address";
 import {
   PHI_BUILDER_AREA_SETTINGS_LAYOUT_IDS,
   PHI_BUILDER_AREA_SETTINGS_OVERLAY_IDS,
@@ -65,7 +62,6 @@ import {
   PHI_BUILDER_PAGE_META_LAYOUT_IDS,
   PHI_BUILDER_PAGE_META_OVERLAY_IDS,
   PHI_BUILDER_PAGE_META_WIDGET_IDS,
-  PHI_BUILDER_REVISIONS_TABLE_WIDGET_ID,
   PHI_BUILDER_MODULES_TABLE_WIDGET_ID,
   PHI_BUILDER_MODULE_DETAIL_OVERLAY_IDS,
   PHI_BUILDER_MODULE_DETAIL_LAYOUT_IDS,
@@ -76,11 +72,7 @@ import {
   PHI_BUILDER_MODULE_USAGE_OVERLAY_IDS,
   PHI_BUILDER_MODULE_USAGE_LAYOUT_IDS,
   PHI_BUILDER_MODULE_USAGE_WIDGET_IDS,
-  PHI_BUILDER_DELETE_AREA_OVERLAY_IDS,
-  PHI_BUILDER_DELETE_AREA_LAYOUT_IDS,
-  PHI_BUILDER_DELETE_AREA_WIDGET_IDS,
 } from "../addresses";
-import { PHI_REVISIONS_FORM_IDS } from "../../revisions/forms";
 import { PHI_BUILDER_PAGE_META_FORM_ID } from "../page-meta-form";
 import { PHI_BUILDER_AREA_SETTINGS_FORM_ID } from "../area-settings-form";
 import { getPhiBuilderNavigationPageLabels } from "./builder-navigation-label-set";
@@ -127,7 +119,6 @@ const PHI_BUILDER_WIDGET_NODE_KEYS = [
   "widgetCanvas",
   "widgetNavigationItems",
   "widgetNavigationSource",
-  "widgetRevisionsAreaShellDelete",
   "widgetBuilderAreaSelector",
   "widgetBuilderModeSwitch",
   "widgetHeaderMainDebugSwitch",
@@ -137,7 +128,6 @@ const PHI_BUILDER_WIDGET_NODE_KEYS = [
   "widgetPagesHeaderTitle",
   "widgetPagesMetaToolbar",
   "widgetPagesHeaderSelector",
-  "widgetRevisionsTable",
   "widgetBrandContextSelect",
   "widgetBrandPreviewModeSwitch",
   "widgetBrandThemeControls",
@@ -668,7 +658,6 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
   const isStructurePage = presetKey === "builder-shells-page";
   const isPagesPage = presetKey === "builder-pages-page";
   const isNavigationPage = presetKey === "builder-navigation-page";
-  const isRevisionsPage = presetKey === "builder-revisions-page";
   const isModulesPage = presetKey === "builder-modules-page";
   const isThemePage = presetKey === "builder-theme-page";
   /*
@@ -685,11 +674,6 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
   }) : null;
   const siderFullHeightLabel = structureLabels?.structure.surface.siderFullHeight
     ?? PHI_REGION_WIDGET_DEFAULT_LABELS.structure.surface.siderFullHeight;
-  const revisionsLabels = isRevisionsPage ? await getPhiBuilderRevisionsWidgetLabels({
-    apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
-    internalToken: readPhiServerApiCredentials().internalToken,
-    locale: runtime.locale.current,
-  }) : null;
   const modulesLabels = isModulesPage ? await getPhiBuilderModulesPageLabels({
     apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
     internalToken: readPhiServerApiCredentials().internalToken,
@@ -828,32 +812,6 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
           },
         },
       })] : []),
-      ...(isRevisionsPage ? [nodes.overlay({
-        id: PHI_BUILDER_DELETE_AREA_OVERLAY_IDS.overlayDeleteArea,
-        overlayType: "modal",
-        bodyLayoutNodeId: PHI_BUILDER_DELETE_AREA_LAYOUT_IDS.deleteAreaBody,
-        footerPresentation: "actions",
-        footerLayoutNodeId: PHI_BUILDER_DELETE_AREA_LAYOUT_IDS.deleteAreaFooter,
-        sortOrder: 0,
-        label: "Builder delete area",
-        config: {
-          title: revisionsLabels?.deleteArea.title ?? "Delete this Area's shell?",
-          width: { compact: "calc(100vw - 32px)", medium: 520, wide: 560 },
-          /*
-           * `remount` rather than `lazy-keep`: the field is the confirmation, and a dialog that kept a
-           * half-typed Area key from the last time it was opened would carry an answer across to a
-           * question nobody asked again.
-           */
-          mountPolicy: "remount",
-          closeMode: "immediate",
-          signalRoutes: {
-            listens: [
-              { routeKey: "builder-delete-area-open", capabilityId: "open", scope: "area", channel: "dialog", action: "activate", valueType: "none", receiver: createPhiSignalAddress("cms", PHI_BUILDER_DELETE_AREA_OVERLAY_IDS.overlayDeleteArea) },
-              { routeKey: "builder-delete-area-close", capabilityId: "close", scope: "area", channel: "dialog", action: "close", valueType: "none", receiver: createPhiSignalAddress("cms", PHI_BUILDER_DELETE_AREA_OVERLAY_IDS.overlayDeleteArea) },
-            ],
-          },
-        },
-      })] : []),
       ...(isModulesPage ? [nodes.overlay({
         id: PHI_BUILDER_MODULE_USAGE_OVERLAY_IDS.overlayModuleUsage,
         overlayType: "modal",
@@ -899,7 +857,7 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
       })] : []),
     ],
     regions: [
-      ...(isStructurePage || isPagesPage || isNavigationPage || isRevisionsPage || isThemePage || isModulesPage
+      ...(isStructurePage || isPagesPage || isNavigationPage || isThemePage || isModulesPage
         ? [
             nodes.region({
               id: SYNTHETIC_DEV_REGION_IDS.regionHeaderBottom,
@@ -929,7 +887,7 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
       }),
     ],
     layoutNodes: [
-      ...((isStructurePage || isPagesPage || isNavigationPage || isRevisionsPage || isThemePage || isModulesPage)
+      ...((isStructurePage || isPagesPage || isNavigationPage || isThemePage || isModulesPage)
         ? [
             nodes.layout({
               creationPreset: { layoutKind: "threecol", preset: "panel" },
@@ -1034,7 +992,7 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                   borderRadius: 0,
                 },
               }
-          : isRevisionsPage || isModulesPage
+          : isModulesPage
             ? {
                 creationPreset: { layoutKind: "verticalflex", preset: "panel" },
                 typeKey: "flex-vertical",
@@ -1046,7 +1004,7 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                 status: PhiCmsStatus.Published,
                 flags: 0,
                 visibilityMask: page.visibilityMask,
-                label: isModulesPage ? "dev modules content vertical" : "dev revisions content vertical",
+                label: "dev modules content vertical",
                 config: {
                   anchor: {
                     horizontal: "center",
@@ -1102,33 +1060,6 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
             }),
           ]
         : []),
-      ...(isRevisionsPage ? [
-        nodes.layout({
-          creationPreset: { layoutKind: "verticalflex", preset: "panel" },
-          typeKey: "flex-vertical",
-          id: PHI_BUILDER_DELETE_AREA_LAYOUT_IDS.deleteAreaBody,
-          parentLayoutNodeId: null,
-          slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
-          sortOrder: 0,
-          label: "Builder delete area body",
-          config: {
-            gap: PHI_SPACE.base,
-            padding: PHI_SPACE.base,
-            background: PHI_COLOR.bgLayout,
-            border: "none",
-          },
-        }),
-        nodes.layout({
-          creationPreset: { layoutKind: "flex", preset: "overlay-actions" },
-          typeKey: "flex",
-          id: PHI_BUILDER_DELETE_AREA_LAYOUT_IDS.deleteAreaFooter,
-          parentLayoutNodeId: null,
-          slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
-          sortOrder: 0,
-          label: "Builder delete area footer",
-          config: {},
-        }),
-      ] : []),
       ...(isModulesPage ? [
         nodes.layout({
           creationPreset: { layoutKind: "verticalflex", preset: "panel" },
@@ -2485,251 +2416,6 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                         },
                       ],
                     },
-                  },
-                },
-              }),
-            ]
-        : isRevisionsPage
-          ? [
-              /*
-               * The one irreversible act in the Builder, put where stored history is looked at.
-               *
-               * It used to sit in the Shells toolbar beside undo and redo, which is the wrong company: a
-               * command that deletes every revision of an Area, live included, should not be one button
-               * away from the ones that take a step back. Its own slot, on its own, in red.
-               */
-              nodes.widget({
-                typeKey: "command-toolbar",
-                id: SYNTHETIC_DEV_WIDGET_IDS.widgetRevisionsAreaShellDelete,
-                parentLayoutNodeId: SYNTHETIC_DEV_LAYOUT_IDS.layoutHeaderBottom,
-                slotIndex: PHI_CMS_THREE_COLUMN_LAYOUT_SLOT_INDEX.Right,
-                sortOrder: 0,
-                label: "dev revisions area shell delete",
-                config: {
-                  key: "revisions-area-shell-delete",
-                  compact: true,
-                  showLabels: true,
-                  buttons: [
-                    {
-                      key: "deleteArea",
-                      emits: [{ capabilityId: "command", value: "deleteArea" }],
-                      label: revisionsLabels?.actions.deleteArea ?? "Delete Area",
-                      tooltip: revisionsLabels?.actions.deleteArea ?? "Delete Area",
-                      icon: "antd:delete",
-                      display: "icon-label",
-                      danger: true,
-                    },
-                  ],
-                  signalRoutes: {
-                    emits: [
-                      {
-                        routeKey: "builder-revisions-area-shell-delete",
-                        capabilityId: "command",
-                        scope: "area",
-                        channel: "command",
-                        action: "activate",
-                        valueType: "string",
-                        receiver: createPhiRevisionsControllerAddress(),
-                      },
-                    ],
-                  },
-                },
-              }),
-              /*
-               * The Overlay's Body and Footer, as ordinary Widgets in ordinary slots (OVERLAYS.md).
-               *
-               * The warning names the Area, which no config can hold: the Revisions Controller writes it
-               * in through `text/change` when the command arrives, and sends the Overlay its `open`
-               * separately. Nothing here knows which Area it is about until it is asked about one.
-               */
-              nodes.widget({
-                typeKey: "simple-text",
-                id: PHI_BUILDER_DELETE_AREA_WIDGET_IDS.deleteAreaWarning,
-                parentLayoutNodeId: PHI_BUILDER_DELETE_AREA_LAYOUT_IDS.deleteAreaBody,
-                slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
-                sortOrder: 0,
-                label: "Builder delete area warning",
-                config: { text: "", tone: "danger" },
-              }),
-              nodes.widget({
-                typeKey: "simple-text",
-                id: PHI_BUILDER_DELETE_AREA_WIDGET_IDS.deleteAreaSurvives,
-                parentLayoutNodeId: PHI_BUILDER_DELETE_AREA_LAYOUT_IDS.deleteAreaBody,
-                slotIndex: PHI_CMS_SEQUENTIAL_LAYOUT_SLOTS[1].slotIndex,
-                sortOrder: 1,
-                label: "Builder delete area survives",
-                config: {
-                  text: revisionsLabels?.deleteArea.survives ?? "",
-                  tone: "secondary",
-                },
-              }),
-              nodes.widget({
-                typeKey: "form",
-                id: PHI_BUILDER_DELETE_AREA_WIDGET_IDS.deleteAreaForm,
-                parentLayoutNodeId: PHI_BUILDER_DELETE_AREA_LAYOUT_IDS.deleteAreaBody,
-                slotIndex: PHI_CMS_SEQUENTIAL_LAYOUT_SLOTS[2].slotIndex,
-                sortOrder: 2,
-                label: "Builder delete area form",
-                config: {
-                  formId: PHI_REVISIONS_FORM_IDS.deleteArea,
-                  /*
-                   * Signal mode, not handler mode: there is no gateway call behind this Form. What it
-                   * produces is one validated value, handed to the Revisions Controller, which is the
-                   * only place that knows which Area the value has to match.
-                   */
-                  execution: { mode: "signal", phase: "submit" },
-                  signalRoutes: {
-                    emits: [
-                      { routeKey: "builder-delete-area-values", capabilityId: "submitValues", scope: "area", channel: "formValues", action: "change", valueType: "json", valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.formValues, receiver: createPhiRevisionsControllerAddress() },
-                    ],
-                  },
-                },
-              }),
-              nodes.widget({
-                typeKey: "command-toolbar",
-                id: PHI_BUILDER_DELETE_AREA_WIDGET_IDS.deleteAreaCommands,
-                parentLayoutNodeId: PHI_BUILDER_DELETE_AREA_LAYOUT_IDS.deleteAreaFooter,
-                slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
-                sortOrder: 0,
-                label: "Builder delete area commands",
-                config: {
-                  key: "delete-area-commands",
-                  compact: true,
-                  showLabels: true,
-                  buttons: [
-                    {
-                      key: "cancel",
-                      emits: [{ capabilityId: "close", value: null }],
-                      label: revisionsLabels?.deleteArea.cancel ?? "Cancel",
-                    },
-                    {
-                      key: "confirm",
-                      emits: [{ capabilityId: "submit", value: null }],
-                      label: revisionsLabels?.deleteArea.confirm ?? "Delete Area",
-                      danger: true,
-                    },
-                  ],
-                  signalRoutes: {
-                    emits: [
-                      { routeKey: "builder-delete-area-cancel", capabilityId: "close", scope: "area", channel: "dialog", action: "close", valueType: "none", receiver: createPhiSignalAddress("cms", PHI_BUILDER_DELETE_AREA_OVERLAY_IDS.overlayDeleteArea) },
-                      { routeKey: "builder-delete-area-submit", capabilityId: "submit", scope: "area", channel: "submit", action: "activate", valueType: "none", receiver: createPhiSignalAddress("cms", PHI_BUILDER_DELETE_AREA_WIDGET_IDS.deleteAreaForm) },
-                    ],
-                  },
-                },
-              }),
-              nodes.widget({
-                typeKey: "table",
-                id: PHI_BUILDER_REVISIONS_TABLE_WIDGET_ID,
-                parentLayoutNodeId: SYNTHETIC_DEV_LAYOUT_IDS.layoutContent,
-                slotIndex: 0,
-                label: "dev revisions table",
-                config: {
-                  source: {
-                    providerKey: PHI_REVISIONS_RUNTIME_DATA_PROVIDER_KEYS.table,
-                    resourceKey: "history",
-                    params: { labels: revisionsLabels },
-                  },
-                  presentation: {
-                    borders: true,
-                    layout: { mode: "auto", overflowX: "auto" },
-                    columns: [
-                      { key: "revisionTags", fieldKey: "revisionTags", title: revisionsLabels?.columns.revision ?? "Revision", renderer: "tags", sticky: "left" },
-                      { key: "createdAt", fieldKey: "createdAt", title: revisionsLabels?.columns.created ?? "Created", renderer: "datetime" },
-                      { key: "createdByDisplay", fieldKey: "createdByDisplay", title: revisionsLabels?.columns.by ?? "By" },
-                      { key: "formattedMessage", fieldKey: "formattedMessage", title: revisionsLabels?.columns.message ?? "Message", sizing: { mode: "fill" } },
-                    ],
-                    controlSize: "small",
-                    footer: {
-                      template: `%1 ${revisionsLabels?.revisionsLabel ?? "revisions"}`,
-                      values: [{ key: "revisions", value: { source: "core", fieldKey: "totalRows" } }],
-                      align: "start",
-                    },
-                  },
-                  features: {
-                    rowSelection: { mode: "multiple", preserveSelectedRowIdentities: false, disabledWhen: { source: "row", valuePath: "deleteDisabled", operator: "truthy" } },
-                    pagination: { enabled: false, pageSize: 100 },
-                    sorting: { mode: "none" },
-                    tools: {
-                      mode: "self-contained",
-                      bindingFields: [
-                        {
-                          key: "kind",
-                          label: revisionsLabels?.kindLabel ?? "Type",
-                          control: "select",
-                          optionLabels: [
-                            { value: "area", label: revisionsLabels?.kindOptions.area ?? "Area" },
-                            { value: "page", label: revisionsLabels?.kindOptions.page ?? "Page" },
-                            { value: "navigation", label: revisionsLabels?.kindOptions.navigation ?? "Navigation" },
-                            { value: "theme", label: revisionsLabels?.kindOptions.theme ?? "Theme" },
-                          ],
-                        },
-                        {
-                          key: "scopeKey",
-                          label: revisionsLabels?.scopeLabel ?? "Scope",
-                          control: "cascader",
-                          disabledWhen: { fieldKey: "kind", equals: "area" },
-                          cascader: {
-                            allowRoot: false,
-                            separator: "/",
-                            rootValue: "/",
-                            normalize: "raw",
-                          },
-                        },
-                      ],
-                      reset: false,
-                      reload: true,
-                    },
-                    actions: { row: [
-                      { key: "review", label: revisionsLabels?.actions.review ?? "Review", icon: "eye", display: "icon", execution: "link", hrefPath: "reviewHref", newTab: true },
-                      {
-                        key: "restore",
-                        label: revisionsLabels?.actions.restore ?? "Restore",
-                        icon: "antd:reload",
-                        display: "icon",
-                        execution: "provider",
-                        confirm: {
-                          title: revisionsLabels?.confirm.restoreTitle ?? "Restore revision?",
-                          description: revisionsLabels?.confirm.restoreDescription,
-                          okText: revisionsLabels?.actions.restore ?? "Restore",
-                        },
-                      },
-                      {
-                        key: "delete",
-                        label: revisionsLabels?.actions.delete ?? "Delete",
-                        icon: "antd:delete",
-                        display: "icon",
-                        mode: "danger",
-                        execution: "provider",
-                        confirm: {
-                          title: revisionsLabels?.confirm.deleteTitle ?? "Delete revision?",
-                          description: revisionsLabels?.confirm.deleteDescription,
-                          okText: revisionsLabels?.actions.delete ?? "Delete",
-                        },
-                      },
-                    ], bulk: [
-                      {
-                        key: "deleteSelected",
-                        label: revisionsLabels?.actions.deleteSelected ?? "Delete selected",
-                        icon: "antd:delete",
-                        display: "icon-label",
-                        mode: "danger",
-                        execution: "provider",
-                        confirm: {
-                          title: revisionsLabels?.confirm.deleteSelectedTitle ?? "Delete selected revisions?",
-                          description: revisionsLabels?.confirm.deleteSelectedDescription,
-                          okText: revisionsLabels?.actions.deleteSelected ?? "Delete selected",
-                        },
-                      },
-                    ] },
-                  },
-                  signalRoutes: {
-                    emits: [
-                      { routeKey: "builder-revisions-table-binding", capabilityId: "bindingParamsChange", scope: "area", channel: "bindingParams", action: "change", valueType: "json", valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.tableBindingParams, receiver: createPhiRevisionsControllerAddress() },
-                      { routeKey: "builder-revisions-table-mutation", capabilityId: "mutationChange", scope: "area", channel: "mutation", action: "change", valueType: "json", valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.tableMutation, receiver: createPhiRevisionsControllerAddress() },
-                    ],
-                    listens: [
-                      { routeKey: "builder-revisions-table-binding-input", capabilityId: "bindingParamsChange", scope: "area", channel: "bindingParams", action: "change", valueType: "json", valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.tableBindingParams, receiver: createPhiSignalAddress("cms", PHI_BUILDER_REVISIONS_TABLE_WIDGET_ID) },
-                    ],
                   },
                 },
               }),
