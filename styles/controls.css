@@ -11,6 +11,97 @@
  * apart now that no hash does.
  */
 
+/* --- Card ---------------------------------------------------------------------------------------- */
+
+/*
+ * The box Ant Design's Card drew, measured off the same tokens, without the Tabs it imports. The corner
+ * is the Theme's surface step; everything else is the token variable the primitive read.
+ */
+.phi-card-control {
+  --phi-card-control-radius: var(--phi-surface-radius, var(--ant-border-radius-lg));
+  --phi-card-control-line: var(--ant-line-width) var(--ant-line-type) var(--ant-color-border-secondary);
+  position: relative;
+  box-sizing: border-box;
+  min-width: 0;
+  border: var(--phi-card-control-line);
+  border-radius: var(--phi-card-control-radius);
+  background: var(--ant-color-bg-container);
+  color: var(--ant-color-text);
+  font-size: var(--ant-font-size);
+  line-height: var(--ant-line-height);
+}
+
+.phi-card-control__head {
+  display: flex;
+  align-items: center;
+  gap: var(--ant-padding-xs);
+  min-height: calc(var(--ant-font-size-lg) * var(--ant-line-height-lg) + var(--ant-padding) * 2);
+  padding: 0 var(--ant-padding-lg);
+  border-bottom: var(--phi-card-control-line);
+  border-radius: var(--phi-card-control-radius) var(--phi-card-control-radius) 0 0;
+  color: var(--ant-color-text-heading);
+  font-size: var(--ant-font-size-lg);
+  font-weight: var(--ant-font-weight-strong);
+}
+
+.phi-card-control__title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.phi-card-control__toolbar {
+  margin-inline-start: auto;
+  color: var(--ant-color-text);
+  font-size: var(--ant-font-size);
+  font-weight: normal;
+}
+
+.phi-card-control--small > .phi-card-control__head {
+  min-height: calc(var(--ant-font-size) * var(--ant-line-height) + var(--ant-padding-xs) * 2);
+  padding: 0 var(--ant-padding-sm);
+  font-size: var(--ant-font-size);
+}
+
+/* The cover runs to the frame's outer edge and takes its upper corners when nothing sits above it. */
+.phi-card-control__cover {
+  margin: calc(var(--ant-line-width) * -1) calc(var(--ant-line-width) * -1) 0;
+}
+
+.phi-card-control__cover > * {
+  display: block;
+  width: 100%;
+}
+
+.phi-card-control__cover:first-child,
+.phi-card-control__cover:first-child > * {
+  border-radius: var(--phi-card-control-radius) var(--phi-card-control-radius) 0 0;
+}
+
+.phi-card-control__body {
+  border-radius: 0 0 var(--phi-card-control-radius) var(--phi-card-control-radius);
+}
+
+/*
+ * Hover is a CSS state: the whole box is a link, and it lifts without anything re-rendering. The lift is
+ * the Theme's `boxShadow`, the one a raised surface wears; Ant Design's own card shadow is a derived
+ * value the Theme does not state, and a hover that ignored the Theme would be the one shadow it cannot
+ * change.
+ */
+.phi-card-control--hoverable {
+  cursor: pointer;
+  transition:
+    box-shadow var(--ant-motion-duration-mid),
+    border-color var(--ant-motion-duration-mid);
+}
+
+.phi-card-control--hoverable:hover {
+  border-color: transparent;
+  box-shadow: var(--ant-box-shadow);
+}
+
 /* --- Dropdown ------------------------------------------------------------------------------------ */
 
 /*

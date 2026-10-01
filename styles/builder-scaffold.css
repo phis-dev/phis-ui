@@ -8,7 +8,7 @@
   height: 100%;
 }
 
-:where(.phi-builder-structure-canvas .ant-card-body) {
+:where(.phi-builder-structure-canvas .phi-card-control__body) {
   height: 100%;
   padding: var(--phi-builder-structure-canvas-body-padding);
 }

@@ -1,7 +1,6 @@
 "use client";
 
 import type { CSSProperties, ReactNode } from "react";
-import { Card } from "antd";
 
 import { usePhiConfig } from "../root/phi-config-provider";
 
@@ -16,18 +15,22 @@ import { usePhiConfig } from "../root/phi-config-provider";
  * preview -- the one box whose entire job is to show what a Theme looks like was the one drawn off the
  * Theme's own scale. Nobody decided any of that, and nobody should have to notice it again.
  *
- * **The corner and the colours arrive by themselves, and no caller passes them.** The Theme's surface
- * shape reaches `Card` as a component token (`applyPhiSurfaceShapeComponentTokens`, THEME.md "Control
- * shape"), so a Site set to `square` draws square corners here without this file or its callers knowing
- * that shapes exist; the ground and the frame are the Theme's `colorBgContainer` and its border token,
- * which the primitive reads on its own. A box that names either by hand is a box that stops following the
- * Theme the moment somebody changes it -- which is what every hand-built panel this control replaced did.
- * The only decision left here is the inset, and that is the one below.
+ * **The corner and the colours arrive by themselves, and no caller passes them.** The corner is the Theme's
+ * surface step, `--phi-surface-radius` (THEME.md "Control shape"), so a Site set to `square` draws square
+ * corners here without this file or its callers knowing that shapes exist; the ground, the frame, the
+ * heading and the lift under the pointer are the Theme's tokens, read as the variables Ant Design
+ * publishes for them (`styles/controls.css`, "Card"). A box that names any of them by hand is a box that
+ * stops following the Theme the moment somebody changes it -- which is what every hand-built panel this
+ * control replaced did. The only decision left here is the inset, and that is the one below.
  *
- * `toolbar` is Ant Design's `extra` under the name this house already uses for it in
- * `PhiCollectionHeaderControl`. It is passed straight through, which means a toolbar without a `title`
- * still draws the heading bar -- that is the primitive's behaviour, and inventing a rule against it here
- * would only hide it.
+ * **Not Ant Design's `Card`.** It imports the Tabs, for a tab list this house never offers, and every page
+ * with a card -- a sign-in form on a Landing among them -- shipped the Tabs code with it. The box is a frame,
+ * a heading bar and a body; drawing those is cheaper than carrying a component that brings what nobody
+ * asked for.
+ *
+ * `toolbar` sits where Ant Design put its `extra`, under the name this house already uses for it in
+ * `PhiCollectionHeaderControl`. A toolbar without a `title` still draws the heading bar, as the primitive
+ * this replaced did.
  *
  * **A card is a box, not a layout.** Anything that arranges what is inside it belongs to the caller's own
  * element, which is why there is no body style: a Widget that wants its parts on a grid puts the grid in
@@ -72,17 +75,26 @@ export function PhiCardControl({
   children,
 }: PhiCardControlProps) {
   const { token } = usePhiConfig();
+  const className = [
+    "phi-card-control",
+    size === "small" ? "phi-card-control--small" : null,
+    hoverable ? "phi-card-control--hoverable" : null,
+  ].filter(Boolean).join(" ");
   return (
-    <Card
-      title={title}
-      extra={toolbar}
-      cover={cover}
-      size={size}
-      hoverable={hoverable}
-      style={style}
-      styles={{ body: { padding: padding ?? (size === "small" ? token.paddingSM : token.padding) } }}
-    >
-      {children}
-    </Card>
+    <div className={className} style={style}>
+      {title != null || toolbar != null ? (
+        <div className="phi-card-control__head">
+          {title != null ? <div className="phi-card-control__title">{title}</div> : null}
+          {toolbar != null ? <div className="phi-card-control__toolbar">{toolbar}</div> : null}
+        </div>
+      ) : null}
+      {cover != null ? <div className="phi-card-control__cover">{cover}</div> : null}
+      <div
+        className="phi-card-control__body"
+        style={{ padding: padding ?? (size === "small" ? token.paddingSM : token.padding) }}
+      >
+        {children}
+      </div>
+    </div>
   );
 }
