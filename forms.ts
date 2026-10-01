@@ -1,3 +1,11 @@
+/*
+ * The Form contract a Server may read: descriptors, ids, labels, provider keys, Controller addresses and
+ * definitions, and the gateway. The Client implementations -- the Form Control, the provider registry
+ * and its context, the Form Controller mount and client hook -- are in `@phis/ui/forms/client`. While
+ * they were here, a Module's Server file importing a Form helper from this door made every one of them a
+ * client reference of every route reaching the Module: the Support Module's Form definitions put the
+ * Form stack on the Public landing, an Area the Module does not even serve.
+ */
 export type {
   PhiFormAvailabilityProps,
   PhiFormGuardProps,
@@ -68,13 +76,6 @@ export {
   parsePhiFormDescriptor,
 } from "./components/forms/form-descriptor-contract";
 export {
-  createPhiFormProviderRegistry,
-  extendPhiFormProviderRegistry,
-  PhiFormProviderRegistryProvider,
-  usePhiFormProviderRegistry,
-} from "./components/forms/form-provider-registry";
-export { PhiFormControl } from "./components/controls/phi-form-control";
-export {
   PHI_CONFIRM_FORM_DESCRIPTOR,
   PHI_CONTACT_FORM_DESCRIPTOR,
   PHI_FORM_LABEL_SET_KEYS,
@@ -97,12 +98,6 @@ export {
   PHI_RUNTIME_FORM_CONTROLLER_DEFINITION,
   parsePhiRuntimeFormControllerConfig,
 } from "./components/forms/runtime-form-controller-definition";
-export {
-  PhiRuntimeFormControllerMount,
-} from "./components/forms/runtime-form-controller-mount";
-export {
-  usePhiRuntimeFormClient,
-} from "./components/forms/runtime-form-client";
 export {
   fetchFormRegistry,
   getResolvedFormDefinition,
