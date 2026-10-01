@@ -1,26 +1,7 @@
 "use client";
 
-import {
-  CheckOutlined,
-  CloudUploadOutlined,
-  CloseOutlined,
-  DeleteOutlined,
-  EditOutlined,
-  EyeInvisibleOutlined,
-  EyeOutlined,
-  FolderAddOutlined,
-  HistoryOutlined,
-  LinkOutlined,
-  MinusOutlined,
-  PlusOutlined,
-  RedoOutlined,
-  ReloadOutlined,
-  SaveOutlined,
-  SearchOutlined,
-  StopOutlined,
-  UndoOutlined,
-} from "@ant-design/icons";
 import type { ReactNode } from "react";
+import { PhiAntdIcon } from "../../../shell/phi-antd-icon";
 import { PhiIcon } from "../../../shell/phi-icon";
 
 export function resolvePhiButtonIcon(icon: string | null | undefined): ReactNode {
@@ -31,60 +12,60 @@ export function resolvePhiButtonIcon(icon: string | null | undefined): ReactNode
   switch (alias) {
     case "apply":
     case "check":
-      return <CheckOutlined />;
+      return <PhiAntdIcon icon="CheckOutlined" />;
     case "cancel":
     case "clear":
     case "close":
-      return <CloseOutlined />;
+      return <PhiAntdIcon icon="CloseOutlined" />;
     case "upload":
     case "cloud-upload":
     case "publish":
-      return <CloudUploadOutlined />;
+      return <PhiAntdIcon icon="CloudUploadOutlined" />;
     case "delete":
     case "trash":
-      return <DeleteOutlined />;
+      return <PhiAntdIcon icon="DeleteOutlined" />;
     case "edit":
     case "meta":
     case "settings":
-      return <EditOutlined />;
+      return <PhiAntdIcon icon="EditOutlined" />;
     case "eye":
     case "preview":
     case "view":
-      return <EyeOutlined />;
+      return <PhiAntdIcon icon="EyeOutlined" />;
     case "eye-invisible":
     case "eye-invisible-outlined":
-      return <EyeInvisibleOutlined />;
+      return <PhiAntdIcon icon="EyeInvisibleOutlined" />;
     case "folder-add":
     case "folder-add-outlined":
-      return <FolderAddOutlined />;
+      return <PhiAntdIcon icon="FolderAddOutlined" />;
     case "history":
-      return <HistoryOutlined />;
+      return <PhiAntdIcon icon="HistoryOutlined" />;
     case "link":
     case "link-outlined":
-      return <LinkOutlined />;
+      return <PhiAntdIcon icon="LinkOutlined" />;
     case "minus":
     case "minus-outlined":
-      return <MinusOutlined />;
+      return <PhiAntdIcon icon="MinusOutlined" />;
     case "add":
     case "new":
     case "plus":
-      return <PlusOutlined />;
+      return <PhiAntdIcon icon="PlusOutlined" />;
     case "redo":
-      return <RedoOutlined />;
+      return <PhiAntdIcon icon="RedoOutlined" />;
     case "reload":
     case "refresh":
     case "reset":
     case "restore":
-      return <ReloadOutlined />;
+      return <PhiAntdIcon icon="ReloadOutlined" />;
     case "save":
-      return <SaveOutlined />;
+      return <PhiAntdIcon icon="SaveOutlined" />;
     case "search":
-      return <SearchOutlined />;
+      return <PhiAntdIcon icon="SearchOutlined" />;
     case "stop":
     case "retire":
-      return <StopOutlined />;
+      return <PhiAntdIcon icon="StopOutlined" />;
     case "undo":
-      return <UndoOutlined />;
+      return <PhiAntdIcon icon="UndoOutlined" />;
     default:
       return normalizedIcon?.includes(":")
         ? <PhiIcon name={normalizedIcon} size="1em" />

@@ -715,10 +715,10 @@ are deliberate:
   and an Area that answers signed-out requests with 404 rather than a redirect will not tell the
   difference either.
 
-One more behaves the same way without being deliberate: an `antd:` icon name that neither registry knows
+One more behaves the same way without being deliberate: an `antd:` icon name the registry does not know
 renders nothing at all, silently. The preset icon guard checks the prefix; it does not check that the
-name resolves. `components/shell/phi-icon.tsx` holds the eagerly bundled set and
-`phi-management-icon.tsx` the lazily loaded one, and a name in neither leaves a blank where a mark was
+name resolves. `PHI_ANTD_ICON_NAMES` in `components/shell/phi-antd-icon.tsx` is the one registry, each
+icon loaded as its own chunk where it is drawn, and a name missing there leaves a blank where a mark was
 meant to be.
 
 ### Descriptor identity and instantiation

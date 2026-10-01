@@ -8,23 +8,7 @@ import {
   type ComponentType,
 } from "react";
 
-import {
-  AppleOutlined,
-  GithubOutlined,
-  GoogleOutlined,
-  HomeOutlined,
-  InfoCircleOutlined,
-  LogoutOutlined,
-  MailOutlined,
-  EnvironmentOutlined,
-  GlobalOutlined,
-  QuestionCircleOutlined,
-  ShoppingOutlined,
-  StarOutlined,
-  UserOutlined,
-  WindowsOutlined,
-} from "@ant-design/icons";
-import Image from "next/image";
+import { PHI_ANTD_ICON_NAMES, PhiAntdIcon } from "./phi-antd-icon";
 
 type PhiIconifyProps = {
   icon: string;
@@ -48,56 +32,19 @@ function loadIconifyComponent() {
   return iconifyComponentLoader;
 }
 
-const ANTD_ICON_REGISTRY = {
-  home: HomeOutlined,
-  "home-outlined": HomeOutlined,
-  mail: MailOutlined,
-  "mail-outlined": MailOutlined,
-  location: EnvironmentOutlined,
-  environment: EnvironmentOutlined,
-  "environment-outlined": EnvironmentOutlined,
-  global: GlobalOutlined,
-  "global-outlined": GlobalOutlined,
-  shopping: ShoppingOutlined,
-  "shopping-outlined": ShoppingOutlined,
-  star: StarOutlined,
-  "star-outlined": StarOutlined,
-  question: QuestionCircleOutlined,
-  "question-circle": QuestionCircleOutlined,
-  "question-circle-outlined": QuestionCircleOutlined,
-  info: InfoCircleOutlined,
-  "info-circle": InfoCircleOutlined,
-  "info-circle-outlined": InfoCircleOutlined,
-  logout: LogoutOutlined,
-  "logout-outlined": LogoutOutlined,
-  user: UserOutlined,
-  "user-outlined": UserOutlined,
-  /*
-   * The sign-in providers' marks.
-   *
-   * Bundled rather than `iconify:`, although that prefix is supported and would have shorter names.
-   * These are Core defaults on a public Login page, so every Site would ship them without anyone
-   * choosing them -- and an Iconify icon is fetched from Iconify's API by the visitor's browser. A
-   * Builder picking one for their own Widget opts into that; a default may not opt in on their behalf.
-   */
-  google: GoogleOutlined,
-  "google-outlined": GoogleOutlined,
-  apple: AppleOutlined,
-  "apple-outlined": AppleOutlined,
-  github: GithubOutlined,
-  "github-outlined": GithubOutlined,
-  windows: WindowsOutlined,
-  "windows-outlined": WindowsOutlined,
-} as const;
 
-const LazyPhiManagementIcon = lazy(
-  () => import("./phi-management-icon").then((module) => ({
-    default: module.PhiManagementIcon,
-  })),
-);
 const LazyPhiBuilderMotifIcon = lazy(
   () => import("./phi-builder-motif-icon").then((module) => ({
     default: module.PhiBuilderMotifIcon,
+  })),
+);
+/*
+ * `next/image` for the one namespace that needs it, which a page of Ant Design and Iconify icons never
+ * names -- it was on every first load that drew any icon at all.
+ */
+const LazyPhiAssetIcon = lazy(
+  () => import("./phi-asset-icon").then((module) => ({
+    default: module.PhiAssetIcon,
   })),
 );
 
@@ -115,14 +62,8 @@ function renderIconFallback(size: number | string) {
 }
 
 function renderAntdIcon(key: string, size: number | string) {
-  const Icon = ANTD_ICON_REGISTRY[key as keyof typeof ANTD_ICON_REGISTRY];
-  return Icon ? (
-    <Icon style={{ fontSize: size }} />
-  ) : (
-    <Suspense fallback={renderIconFallback(size)}>
-      <LazyPhiManagementIcon name={key} size={size} />
-    </Suspense>
-  );
+  const icon = PHI_ANTD_ICON_NAMES[key];
+  return icon ? <PhiAntdIcon icon={icon} size={size} /> : null;
 }
 
 function renderBuilderIcon(
@@ -213,35 +154,10 @@ export function PhiIcon({ name, size = 16 }: PhiIconProps) {
     case "iconify":
       return value ? <PhiIconifyIcon icon={value} size={resolvedSize} /> : null;
     case "asset":
-      return typeof resolvedSize === "number" ? (
-        <Image
-          src={value.startsWith("/") ? value : `/${value}`}
-          alt=""
-          width={resolvedSize}
-          height={resolvedSize}
-          aria-hidden="true"
-        />
-      ) : (
-        <span
-          aria-hidden="true"
-          style={{
-            display: "inline-flex",
-            width: resolvedSize,
-            height: resolvedSize,
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <img
-            src={value.startsWith("/") ? value : `/${value}`}
-            alt=""
-            style={{
-              width: "100%",
-              height: "100%",
-              objectFit: "contain",
-            }}
-          />
-        </span>
+      return (
+        <Suspense fallback={renderIconFallback(resolvedSize)}>
+          <LazyPhiAssetIcon path={value} size={resolvedSize} />
+        </Suspense>
       );
     default:
       return null;

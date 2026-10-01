@@ -872,9 +872,9 @@ built. Remove an entry when it is done.
 ## Contracts
 
 - **Check that a preset icon name resolves, not only that it is namespaced.**
-  `validate-preset-icon-vocabulary` accepts any `antd:*` name; a name in neither
-  `components/shell/phi-icon.tsx` nor `phi-management-icon.tsx` renders nothing at all, with no error
-  anywhere. Read both registries in the guard and fail on a name that is in neither.
+  `validate-preset-icon-vocabulary` accepts any `antd:*` name; a name missing from
+  `PHI_ANTD_ICON_NAMES` (`components/shell/phi-antd-icon.tsx`) renders nothing at all, with no error
+  anywhere. Read the registry in the guard and fail on a name that is not in it.
 
 - **Machine-readable JSON schemas.** Signal `valueSchema` ids are enforced by TypeScript readers and
   emitters only. Add a runtime schema registry once the controller and Widget schema inventory is stable.
