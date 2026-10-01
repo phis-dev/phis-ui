@@ -301,7 +301,9 @@ Installation is build-time; activation is per Site and Area.
   only. Controller types, instance keys, addresses, and config do not belong in it. A duplicate id or a
   selected locked Module is an error (`plugins/runtime-modules/settings.ts`, `resolver.ts`).
 - `eligibleAreas` on the definition is the only statement of where a Module may be selected. A Module never
-  enables itself, and installing a package never selects it.
+  enables itself, and installing a package never selects it. An installed package states it in its
+  `package.json#phis` instead, and the generated projection completes the definition with it
+  ([THIRD_PARTY_MODULES.md](./THIRD_PARTY_MODULES.md#9-install-without-patching-the-skeleton)).
 - A selected Module activates only when its server binding is available (see
   [Add-on boundary](#add-on-boundary)). An unavailable Module is left out of route, Controller, Widget,
   Layout, and Provider resolution while its selection stays persisted, and produces a scoped diagnostic.

@@ -10,7 +10,7 @@ import {
   type PhiSiteModuleServerAreaContributions,
 } from "../plugins/runtime-modules/site-modules";
 import type { PhiRuntimeModuleServerAreaContribution } from "../plugins/runtime-modules/area-contributions";
-import type { PhiRuntimeModuleCatalogEntry, PhiRuntimeModuleDefinition } from "../types/cms-plugins";
+import type { PhiRuntimeModuleCatalogEntry } from "../types/cms-plugins";
 import { collectPhiSiteModuleServerAreaContributions } from "../module-projection";
 import { collectPhiSiteModuleClientContributions } from "../module-projection-client";
 import { collectPhiSiteModuleAuthoringContributions } from "../module-projection-authoring-client";
@@ -181,33 +181,59 @@ for (const area of ["accounting", "admin", "app", "editor", "public"] as const) 
 
 // --- the projection a generated file calls -----------------------------------------------------
 
-// `phis-cli` writes imports and one call; the placement happens here, from each Module's own
-// eligibleAreas. Nothing loads a Module to work this out.
-function definition(moduleId: string, eligibleAreas: readonly string[]) {
-  return { moduleId, eligibleAreas } as unknown as PhiRuntimeModuleDefinition;
-}
-
+// `phis-cli` writes imports, the placements it read from each package.json#phis, and one call. The
+// placement completes the definitions here; nothing loads a Module to work this out.
 const storefront = "@acme/shop/modules/storefront";
 const orders = "@acme/shop/modules/orders";
-const definitions = [definition(storefront, ["public", "admin"]), definition(orders, ["admin"])];
+const placements = [
+  { moduleId: storefront, eligibleAreas: ["public", "admin"] },
+  { moduleId: orders, eligibleAreas: ["admin"] },
+] as const;
+const serverEntry = (moduleId: string) =>
+  ({ moduleId, catalogEntry: { definition: { moduleId }, widgets: [], layouts: [] } });
+const serverContributions = [
+  serverEntry(storefront),
+  serverEntry(orders),
+] as unknown as Parameters<typeof collectPhiSiteModuleServerAreaContributions>[0]["contributions"];
 
-const projected = collectPhiSiteModuleServerAreaContributions([
-  { moduleId: storefront, catalogEntry: { definition: definitions[0] } },
-  { moduleId: orders, catalogEntry: { definition: definitions[1] } },
-] as unknown as PhiRuntimeModuleServerAreaContribution[]);
+const projected = collectPhiSiteModuleServerAreaContributions({
+  placements,
+  contributions: serverContributions,
+});
 
 assert.deepEqual(Object.keys(projected).sort(), ["admin", "public"]);
 assert.deepEqual(projected.public?.map((entry) => entry.moduleId), [storefront]);
 assert.deepEqual(projected.admin?.map((entry) => entry.moduleId), [storefront, orders]);
 assert.equal(projected.editor, undefined, "an Area no Module named must stay absent");
+assert.deepEqual(
+  projected.admin?.map((entry) => entry.catalogEntry.definition.eligibleAreas),
+  [["public", "admin"], ["admin"]],
+  "the placement completes each definition, which names no Area itself",
+);
+// A Module the generator never placed, or a placement no package contributes for, is a projection that
+// disagrees with its packages; neither builds on a guess.
+assert.throws(
+  () => collectPhiSiteModuleServerAreaContributions({
+    placements: [placements[0]],
+    contributions: serverContributions,
+  }),
+  /"@acme\/shop\/modules\/orders" is installed but not placed/,
+);
+assert.throws(
+  () => collectPhiSiteModuleServerAreaContributions({
+    placements,
+    contributions: [serverContributions[0]],
+  }),
+  /"@acme\/shop\/modules\/orders" is placed but its package contributes nothing/,
+);
 
 const projectedClient = collectPhiSiteModuleClientContributions({
-  definitions,
+  placements,
   clients: [{
     modules: [
       { moduleId: storefront, renderClients: [["@acme/shop/cart", () => null]] },
       { moduleId: orders, dataProviders: [{ key: "@acme/shop/orders" }] },
-      // A Module the package never defined: dropped rather than registered nowhere.
+      // A Module the generator did not place: dropped rather than registered nowhere.
       { moduleId: "@acme/shop/modules/ghost", dataProviders: [{ key: "@acme/shop/ghost" }] },
     ],
     calendarAdapters: [{ key: "@acme/shop/calendars/deliveries" }],
@@ -215,7 +241,7 @@ const projectedClient = collectPhiSiteModuleClientContributions({
 } as unknown as Parameters<typeof collectPhiSiteModuleClientContributions>[0]);
 
 const projectedAuthoring = collectPhiSiteModuleAuthoringContributions({
-  definitions,
+  placements,
   authoring: [
     { moduleId: storefront, loadAuthoring: async () => null },
     { moduleId: orders, loadAuthoring: async () => null },
@@ -264,10 +290,13 @@ for (const area of ["accounting", "admin", "app", "builder", "editor", "public"]
 // for each active Module. Refused where the package is composed rather than at render time.
 assert.throws(
   () => collectPhiSiteModuleAuthoringContributions({
-    definitions,
+    placements,
     authoring: [{ moduleId: storefront, loadAuthoring: async () => null }],
   } as unknown as Parameters<typeof collectPhiSiteModuleAuthoringContributions>[0]),
   /"@acme\/shop\/modules\/orders" has no Authoring contribution/,
 );
 
-console.log("Site Module seam valid: both halves ship empty, the projection places by eligibleAreas, and every Area host reads them.");
+console.log(
+  "Site Module seam valid: both halves ship empty, the projection places by the packages' declared " +
+  "Areas, and every Area host reads them.",
+);

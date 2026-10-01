@@ -328,11 +328,15 @@ export const PHI_ADMIN_CMS_SITE_BRIDGE = createPhiAdminCmsSiteBridge(PHI_SITE_MO
 "use client";
 
 import { createPhiAdminRuntimeModuleClientBoundary } from "@phis/ui/next/areas/admin-client";
-import { PHI_SITE_MODULES_CLIENT } from "@/generated/site-modules-client";
+import { PHI_SITE_MODULES_CLIENT } from "@/generated/site-modules-client-admin";
 
 export const PhiAdminRuntimeModuleClientBoundary =
   createPhiAdminRuntimeModuleClientBoundary(PHI_SITE_MODULES_CLIENT);
 ```
+
+Each Area's Client boundary takes its own generated file. `phis module` writes one per Area, importing
+only the Client doors of packages with a Module for that Area, so one Area's bundle never carries
+another's Module code.
 
 An Area's own layout is then limited to static registration, importing the bridge and boundary from
 `@/runtime-modules/<area>`:

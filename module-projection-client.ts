@@ -3,22 +3,27 @@
 import type { PhiCmsAreaKey } from "./constants/cms-areas";
 import type { PhiRuntimeModuleRenderClient } from "./components/runtime/runtime-module-render-client-manifest";
 import type { PhiModuleClientContributions } from "./module-client";
-import type { PhiModuleDefinitions } from "./module";
 import type { PhiRuntimeModuleControllerClientAreaContribution } from "./plugins/runtime-modules/area-contributions-controller-client";
 import type { PhiRuntimeModuleId } from "./types/cms-module-descriptors";
 import type { PhiRuntimeModuleDataProviderClientDefinition } from "./types/cms-plugins";
 import type { PhiSiteModuleClientContributions } from "./plugins/runtime-modules/site-modules-client";
+import {
+  readPhiSiteModulePlacements,
+  type PhiSiteModulePlacement,
+} from "./plugins/runtime-modules/site-module-placements";
 
 /**
  * The Client counterpart of `collectPhiSiteModuleServerAreaContributions`.
  *
- * The Areas come from the definitions rather than from the Client contributions, because a Module states
- * them once and the Server boundary must not be imported here to read them. A Client contribution naming
- * a Module that is not among the definitions is dropped: it can only come from a package assembled
- * inconsistently, and carrying it would leave a loader registered for a Module no Area offers.
+ * Called once per Area, by that Area's own generated file. `phis module` read every package's
+ * `package.json#phis` and imported only the Client doors of packages with a Module for that Area, so an
+ * Area's bundle never holds another Area's Module code -- nor, as it did while one file served every
+ * Area, each package's whole definition just so the Areas could be read out of it. The placements are
+ * the generator's reading, passed as data. A Client contribution for a Module they do not place here is
+ * dropped: a package with Modules for different Areas brings all of them through its one door.
  *
- * Calendar adapters are not placed at all. They resolve by type wherever a Widget renders, and every Area
- * holds the same set.
+ * Calendar adapters are not placed by Module. They resolve by type wherever a Widget renders, so an Area
+ * holds the adapters of every package whose Client door its file imports.
  *
  * Authoring contributions are not here at all. They have their own projection and their own generated
  * file, because a value this object can reach is a value every Area host that imports it must ship --
@@ -32,12 +37,11 @@ type CollectedArea = {
 };
 
 export function collectPhiSiteModuleClientContributions(input: {
-  definitions: PhiModuleDefinitions;
+  placements: readonly PhiSiteModulePlacement[];
   clients: readonly PhiModuleClientContributions[];
 }): PhiSiteModuleClientContributions {
-  const areasByModuleId = new Map<PhiRuntimeModuleId, readonly PhiCmsAreaKey[]>(
-    input.definitions.map((definition) => [definition.moduleId, definition.eligibleAreas]),
-  );
+  const areasByModuleId: ReadonlyMap<PhiRuntimeModuleId, readonly PhiCmsAreaKey[]> =
+    readPhiSiteModulePlacements(input.placements);
   const collected = new Map<PhiCmsAreaKey, CollectedArea>();
 
   const areaFor = (area: PhiCmsAreaKey): CollectedArea => {

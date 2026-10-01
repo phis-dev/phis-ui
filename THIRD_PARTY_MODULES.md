@@ -150,7 +150,11 @@ The Module half never imports the Add-on half, and the Add-on half never imports
   "sideEffects": false,
   "phis": {
     "sourceLocale": "en",
-    "modules": [{ "moduleId": "@acme/status/modules/status", "category": "operations" }]
+    "modules": [{
+      "moduleId": "@acme/status/modules/status",
+      "category": "operations",
+      "eligibleAreas": ["public", "app", "admin", "builder", "editor", "accounting"]
+    }]
   },
   "exports": {
     ".": { "types": "./dist/index.d.ts", "import": "./dist/index.js" },
@@ -179,8 +183,14 @@ The Module half never imports the Add-on half, and the Add-on half never imports
 - The `phis` block declares every Module the package carries with its category
   (`PHI_RUNTIME_MODULE_CATEGORIES` in `@phis/contracts/catalog`: `foundation`, `workspace`, `content`,
   `media`, `commerce`, `identity`, `communication`, `events`, `analytics`, `integration`, `operations`,
-  `other`) and the language of the Modules' titles. A catalogue reads it without running the package;
-  `phis module check` reports a missing or malformed declaration.
+  `other`), the Areas it may serve (`eligibleAreas`), and the language of the Modules' titles. A
+  catalogue reads it without running the package; `phis module check` reports a missing or malformed
+  declaration.
+- `eligibleAreas` is stated here and nowhere else -- not in the Module's definition. `phis module` writes
+  one Client projection per Area and imports a package's Client door only into the Areas its Modules
+  serve; it has to know them without loading the package, and this file is the one it may read. The
+  generated projection completes the definition with them, so the catalog and the Builder read
+  `eligibleAreas` as usual.
 - CSS shipped by the package needs `"sideEffects": ["**/*.css"]` instead of `false`.
 
 Modules use Phi Controls for supported presentation and do not import Ant Design directly where a Phi
@@ -356,8 +366,8 @@ Empty Modules and artificial no-op Controllers are invalid.
 // definition.ts
 import {
   buildPhiRuntimeModuleControllerDescriptor,
-  type PhiRuntimeModuleDefinition,
-} from "@phis/ui/cms/plugins";
+  type PhiModuleDefinition,
+} from "@phis/ui/module";
 import { createPhiCoreServerBinding } from "@phis/ui/types";
 import { STATUS_CONTROLLER_TYPE, STATUS_MODULE_ID } from "./ids";
 import { STATUS_CONTROLLER_DEFINITION } from "./controller/definition";
@@ -365,7 +375,6 @@ import { STATUS_CONTROLLER_DEFINITION } from "./controller/definition";
 export const STATUS_MODULE_DEFINITION = {
   moduleId: STATUS_MODULE_ID,
   kind: "module",
-  eligibleAreas: ["public", "app", "admin", "builder", "editor", "accounting"],
   serverBinding: createPhiCoreServerBinding(),
   controllerType: STATUS_CONTROLLER_TYPE,
   controller: buildPhiRuntimeModuleControllerDescriptor(
@@ -377,7 +386,7 @@ export const STATUS_MODULE_DEFINITION = {
   category: "operations",
   icon: "antd:dashboard",
   controllerMountPolicy: "area",
-} satisfies PhiRuntimeModuleDefinition;
+} satisfies PhiModuleDefinition;
 ```
 
 `sourceLocale` is the single canonical language for every package-authored user-facing string owned by
@@ -389,8 +398,8 @@ binds their global translation source language and stable Label-Set namespace to
 **From `@phis/ui/module/labels`, not from `@phis/ui/server-helpers`.** The same names are on the server
 barrel, and a package that takes them there imports `server-helpers/cms-root` and `next/headers` along
 with them. Nothing fails to compile. What happens instead is that every page of the Site answers `500`
-with an import trace naming the barrel -- because the Module definition is read on both sides of the
-seam: the generated Client projection imports it from the package root, so the browser graph gets
+with an import trace naming the barrel -- because the Module definition is reachable from both sides of
+the seam: the Label Sets that bind to it are rendered by Client Widgets, so the browser graph gets
 whatever the definition's chain touches. `@phis/ui/module/labels` is one file wide and carries the
 credentials reader as well, for the same reason.
 
@@ -405,8 +414,8 @@ Sites. The server translates Authoring metadata before it reaches Client option 
 content, external documents, and Provider/user content keep their separate content-locale contracts;
 they must not inherit the Module source locale merely because a Module renders them.
 
-`eligibleAreas` is the module-level installation boundary. A third-party Module may list every
-canonical Area as above and can then be activated independently per Site and Area. Its Widgets appear
+`eligibleAreas` in the package's `phis` block is the module-level installation boundary. A third-party
+Module may list every canonical Area as above and can then be activated independently per Site and Area. Its Widgets appear
 in the Picker only for Areas where that Module is actually active. Do not repeat Area lists or
 authoring visibility on individual Widget definitions. `category` only groups and describes active
 Widgets in the Picker; it is never an authorization or visibility mechanism.
@@ -877,13 +886,17 @@ export const phiModuleServerContributions = definePhiModuleServerContributions([
 }]);
 ```
 
-- `definePhiModuleDefinitions` rejects a duplicate Module id and a definition without `eligibleAreas`.
-- `definePhiModuleServerContributions` validates each contribution where the package is built: the
-  `moduleId` must match the definition, and every Area-addressed descriptor (route, shell, overlay,
-  navigation injection) must address an Area the definition lists.
-- A contribution never names an Area. `phis module` generates a projection that places each Module into
-  the Areas of its `eligibleAreas` (`collectPhiSiteModuleServerAreaContributions` in
-  `@phis/ui/module/projection`), and each Area catalog keeps the descriptors addressed to it.
+- `definePhiModuleDefinitions` rejects a duplicate Module id. A definition names no Area
+  (`PhiModuleDefinition`); `package.json#phis` does.
+- `definePhiModuleServerContributions` checks where the package is built that each `moduleId` matches
+  its definition. Whether every Area-addressed descriptor (route, shell, overlay, navigation injection)
+  addresses an Area the Module serves is checked where the Areas are known: when the generated projection
+  completes the definition, at the Site's build.
+- A contribution never names an Area. `phis module` reads the package's `phis` block and generates a
+  projection that hands each Module's Areas to `collectPhiSiteModuleServerAreaContributions`
+  (`@phis/ui/module/projection`), which completes the definition and places the Module into them; each
+  Area catalog keeps the descriptors addressed to it. A package installed but not declared is refused
+  there by name.
 - `createPhiNextCmsSiteBridge` validates the combined catalog with `assertPhiRuntimeModuleCatalog`, so
   invalid ownership, missing loaders, unsupported render policies, or malformed signal metadata fail at
   Site assembly.
@@ -928,7 +941,11 @@ export const phiModuleClientContributions = definePhiModuleClientContributions({
 - `dataProviders` lists `{ key, ownerModuleId, loadLive, loadAuthoring? }` for the Provider descriptors in
   the definition. `loadAuthoring` exists only for providers whose `authoringMode` is `read` or `edit`.
 - `calendarAdapters` (beside `modules`) lists Calendar adapter Clients. Their Server descriptors are
-  `calendarAdapters` in the definition, keyed `<owner>/calendars/<key>`.
+  `calendarAdapters` in the definition, keyed `<owner>/calendars/<key>`. An Area holds the adapters of
+  the packages its generated Client file imports, which are the packages with a Module for that Area.
+- The door is imported only into the generated Client files of the Areas the package's Modules serve.
+  Keep it a list of `next/dynamic` loaders and small constants: whatever it reaches statically is paid
+  on every page of those Areas.
 - `definePhiModuleClientContributions` rejects a duplicate Module id.
 
 `./authoring-client` exports the Authoring contributions. Every Module brings one, including a Module
@@ -949,8 +966,8 @@ export const phiModuleAuthoringContributions = definePhiModuleAuthoringContribut
 ```
 
 `PhiStatusAuthoringClient` is the Client built in [section 4](#authoring-adapter); a Module without
-Widgets passes `createPhiAuthoringWidgetModule([])`. `collectPhiSiteModuleClientContributions` refuses a
-definition without an Authoring contribution, so the mistake surfaces where the package is composed.
+Widgets passes `createPhiAuthoringWidgetModule([])`. `collectPhiSiteModuleAuthoringContributions` refuses a
+declared Module without an Authoring contribution, so the mistake surfaces where the Site is composed.
 
 Public calendar values are serializable adapter-neutral records from `@phis/ui/types`. Do not persist or
 signal `Date`, Dayjs, Luxon, Temporal, or adapter-private objects. Scalar `date` and `time` signals carry
@@ -969,7 +986,9 @@ Widget; `@phis/calendar` is an optional Module package with event calendars and 
 ```
 
 A generator cannot guess an export it was never told about, so these names are fixed (`module.ts`). Each
-is keyed by Module id, because one package may carry several Modules.
+is keyed by Module id, because one package may carry several Modules. No generated file imports the
+root: the projections read the Areas from `package.json#phis` and everything else from the other doors.
+`phiModuleDefinitions` stays the package's own list of its Modules, for its tools and tests.
 
 **`./fonts` exists only for a package that declares typefaces, and nothing else in the package imports
 it.** A declaration is a `next/font/local` call at module scope: the Site's build evaluates it, hosts the
@@ -1066,8 +1085,8 @@ as described in [phis-server AUTHORIZATION.md, "Add-on roles"](../phis-server/AU
 Installing a Module never adds or rewrites Skeleton source. `phis module` records the installation and
 generates a projection, which the Skeleton hands to the generic hosts from the files under
 `src/runtime-modules/` -- each Area host, each Area's Client boundary, and the root. Those files do not
-change when a Module is installed or removed; placement by `eligibleAreas`, collision checks, and the
-Builder's union across Areas stay in `@phis/ui`.
+change when a Module is installed or removed; placement by the declared `eligibleAreas`, collision
+checks, and the Builder's union across Areas stay in `@phis/ui`.
 
 ```text
 phis module list  [--site <site key>]
@@ -1093,13 +1112,16 @@ A recorded entry is exactly `{ packageName, origin, spec? }` (`phis-server/src/c
 `origin` is `resolved` when `add` was given a `--spec` and `local` otherwise; the type also admits
 `source`.
 
-The projection is four generated files, written together: `src/generated/site-modules.ts`,
-`site-modules-client.ts`, `site-modules-authoring-client.ts`, and `site-modules-fonts.ts`. The fourth
-lists only the packages that export `./fonts`, read from each package's `exports` in the Site's
-`node_modules` -- the boundary itself calls `next/font/local` and throws outside a Next build, so the
-manifest is what decides it. A package the install has not brought in yet reads as one without
-typefaces, so run `phis module sync` after installing what `add --spec` recorded. All four files are
-preserved when the Skeleton is reconciled, so regenerating a Site does not uninstall its Modules.
+The projection is generated files, written together: `src/generated/site-modules.ts` (Server), one
+`site-modules-client-<area>.ts` per Area, `site-modules-authoring-client.ts`, and
+`site-modules-fonts.ts`. All of them are read from each package's manifest in the Site's `node_modules`,
+because nothing may run the package to ask: the Areas from its `phis` block decide which Area files
+import its Client door and are handed to the projection as placements, and its `exports` decide whether
+the fonts file imports `./fonts` -- that boundary calls `next/font/local` and throws outside a Next build.
+A package the install has not brought in yet has neither answer: it stays in the Server file, the Site's
+build refuses it by name, and `add` says to run `phis module sync` after installing what `--spec`
+recorded. All files are preserved when the Skeleton is reconciled, so regenerating a Site does not
+uninstall its Modules.
 
 After installation, rebuild the Site. Installing never enables a Module: the Site selects it per Area
 in the Builder, and only ids present in the build can be selected. If the package also carries an

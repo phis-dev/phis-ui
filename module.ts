@@ -1,8 +1,11 @@
-import {
-  definePhiRuntimeModuleServerAreaContribution,
-  type PhiRuntimeModuleServerAreaContribution,
+import type {
+  PhiRuntimeModuleServerAreaContribution,
 } from "./plugins/runtime-modules/area-contributions";
-import type { PhiRuntimeModuleDefinition } from "./types/cms-plugins";
+import type {
+  PhiRuntimeModule,
+  PhiRuntimeModuleCatalogEntry,
+  PhiRuntimeModuleDefinition,
+} from "./types/cms-plugins";
 import {
   PHI_CORE_FONT_FAMILIES,
   PHI_MODULE_FONT_CSS_VARIABLE_PATTERN,
@@ -25,25 +28,50 @@ import {
  *   ./authoring-client  phiModuleAuthoringContributions
  *   ./fonts             phiModuleFontContributions      (only a Module that declares typefaces)
  *
- * Each export is a list keyed by Module, because one package may carry several Modules. A Module never
- * names an Area: where its contributions belong follows from `eligibleAreas` on its own definition, which
- * is also what decides whether a Site may select it for an Area -- one statement, read in both places,
- * rather than a second list that can disagree with the first.
+ * Each export is a list keyed by Module, because one package may carry several Modules. A Module's code
+ * never names an Area: the package states its Modules' Areas once, in `package.json#phis`, where
+ * `phis module` can read them without running anything. The generated projection hands them to the
+ * definition, so the catalog and the Builder read `eligibleAreas` as they do for a first-party Module --
+ * one statement, rather than a second list in the code that can disagree with the first.
  *
  * These are what a Module author writes. What `phis-cli` generates from them is the per-Area projection
  * in `plugins/runtime-modules/site-modules.ts`, which is a different shape for a different reader.
  */
 
-export type PhiModuleServerContributions = readonly PhiRuntimeModuleServerAreaContribution[];
+/* Omit per union member: a definition is a union over its icon metadata, which a plain Omit flattens. */
+type PhiOmitAreas<T> = T extends unknown ? Omit<T, "eligibleAreas"> : never;
+
+/** A Module's definition as its package writes it: all but the Areas, which `package.json` states. */
+export type PhiModuleDefinition = PhiOmitAreas<PhiRuntimeModuleDefinition>;
+
+/** What a package's runtime loader returns, without the Areas for the same reason. */
+export type PhiModuleRuntime = PhiOmitAreas<PhiRuntimeModule>;
+
+/** One Module's Server catalog contribution, as its package writes it. */
+export type PhiModuleServerContribution = {
+  moduleId: PhiRuntimeModuleServerAreaContribution["moduleId"];
+  catalogEntry: Omit<PhiRuntimeModuleCatalogEntry, "definition" | "load"> & {
+    definition: PhiModuleDefinition;
+    load: () => Promise<PhiModuleRuntime>;
+  };
+};
+
+export type PhiModuleServerContributions = readonly PhiModuleServerContribution[];
 
 export function definePhiModuleServerContributions(
   contributions: PhiModuleServerContributions,
 ): PhiModuleServerContributions {
-  // Validating here rather than at Site assembly means a Module author sees the mismatch while building
-  // their own package, not the operator who installed it.
-  return contributions.map((contribution) =>
-    definePhiRuntimeModuleServerAreaContribution(contribution),
-  );
+  /*
+   * Only what can be said without the Areas. Whether a descriptor addresses an Area the Module serves is
+   * asked where the placement is known, when the projection completes the definition
+   * (`collectPhiSiteModuleServerAreaContributions`) -- at the Site's build, not the package's.
+   */
+  for (const contribution of contributions) {
+    if (contribution.catalogEntry.definition.moduleId !== contribution.moduleId) {
+      throw new Error(`Area contribution module id mismatch for "${contribution.moduleId}".`);
+    }
+  }
+  return contributions;
 }
 
 export type { PhiRuntimeModuleServerAreaContribution };
@@ -51,12 +79,12 @@ export type { PhiRuntimeModuleServerAreaContribution };
 /**
  * The Module definitions of a package, exported from its root entrypoint as `phiModuleDefinitions`.
  *
- * A definition is shared serializable contract, which MODULES.md allows every boundary to import, and it
- * is the only place a Module states its Areas. The generated Client projection needs those Areas and
- * must not reach into the Server boundary to get them, so it reads them here instead -- still one
- * statement, read from a place both sides may look at.
+ * A definition is shared serializable contract, which MODULES.md allows every boundary to import. It
+ * names no Area -- see `PhiModuleDefinition` -- and no generated file reads it: the projections take
+ * what they need from `package.json#phis` and from the Server, Client and Authoring doors. It stays the
+ * package's one list of its Modules, for the package's own tools and tests.
  */
-export type PhiModuleDefinitions = readonly PhiRuntimeModuleDefinition[];
+export type PhiModuleDefinitions = readonly PhiModuleDefinition[];
 
 export function definePhiModuleDefinitions(
   definitions: PhiModuleDefinitions,
@@ -65,9 +93,6 @@ export function definePhiModuleDefinitions(
   for (const definition of definitions) {
     if (seen.has(definition.moduleId)) {
       throw new Error(`Duplicate Module definition for "${definition.moduleId}".`);
-    }
-    if (definition.eligibleAreas.length === 0) {
-      throw new Error(`Module "${definition.moduleId}" declares no eligible Area and could never be used.`);
     }
     seen.add(definition.moduleId);
   }
@@ -79,11 +104,10 @@ export function definePhiModuleDefinitions(
  *
  * The builder itself is Client-safe -- the contracts file behind it holds types and pure functions --
  * but its usual door, `@phis/ui/cms/plugins`, is the Server boundary and brings `server-only` with it.
- * A definition is read on both sides of the seam: the generated Client projection imports
- * `phiModuleDefinitions` from a package's root, so a package that reached for the builder through the
- * Server door would pull `server-only` into a Client graph, and the Site would answer 500 rather than
- * fail to compile. First-party Modules import it from the contracts file directly; a package outside
- * this one cannot, and this is the same door for it.
+ * A definition is shared contract that a package's root door exports, and that door is not Server-only,
+ * so a package that reached for the builder through the Server door would pull `server-only` into every
+ * graph that opens its root. First-party Modules import it from the contracts file directly; a package
+ * outside this one cannot, and this is the same door for it.
  */
 export { buildPhiRuntimeModuleControllerDescriptor } from "./plugins/runtime-modules/contracts";
 
