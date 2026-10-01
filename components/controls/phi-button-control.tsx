@@ -1,23 +1,13 @@
 "use client";
 
-import { lazy, Suspense, type ReactNode, type Ref } from "react";
+import type { ReactNode, Ref } from "react";
 import { Badge, Button } from "antd";
 import type { ButtonProps } from "antd";
 
 import type { PhiControlSize } from "../../types/control";
 import { PhiLink } from "../navigation/phi-link";
 import type { PhiButtonType } from "./phi-button-types";
-
-/*
- * Ant Design's Tooltip, loaded for the buttons that carry one.
- *
- * Its module brings the Form library along: the tooltip isolates Form context through
- * `antd/es/form/context`, which imports `@rc-component/form`, a package that declares no side-effect
- * freedom -- so the whole Form library and its validator came with every page that drew a button, the
- * Landing among them, for a hover text most buttons do not have. Until it has loaded, the button stands
- * without its tooltip.
- */
-const PhiButtonTooltip = lazy(() => import("antd/es/tooltip"));
+import { PhiHoverText } from "./phi-hover-text";
 
 export type PhiControlBadgePresentation = {
   enabled?: boolean;
@@ -186,9 +176,5 @@ export function PhiButtonControl({
   const target = inert
     ? <span style={{ display: "inline-flex", cursor: "not-allowed" }}>{badged}</span>
     : badged;
-  return (
-    <Suspense fallback={target}>
-      <PhiButtonTooltip title={visibleTooltip}>{target}</PhiButtonTooltip>
-    </Suspense>
-  );
+  return <PhiHoverText title={visibleTooltip}>{target}</PhiHoverText>;
 }

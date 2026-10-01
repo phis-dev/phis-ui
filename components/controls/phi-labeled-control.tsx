@@ -1,10 +1,10 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { Tooltip, Typography } from "antd";
 
 import { usePhiConfig } from "../root/phi-config-provider";
 import { PhiDescriptionHint } from "./phi-description-tooltip-icon";
+import { PhiHoverText } from "./phi-hover-text";
 
 /**
  * A Control with the words around it: a label beside it, a description behind an information glyph.
@@ -37,11 +37,11 @@ export function PhiLabeledControl({
 
   if (!hasLabel) {
     return (
-      <Tooltip title={description}>
+      <PhiHoverText title={description}>
         <span style={{ display: "inline-flex", minWidth: 0, width: fill ? "100%" : undefined }}>
           {children}
         </span>
-      </Tooltip>
+      </PhiHoverText>
     );
   }
 
@@ -64,9 +64,7 @@ export function PhiLabeledControl({
       }}
     >
       <span style={{ display: "inline-flex", alignItems: "center", gap: token.paddingXXS, minWidth: 0 }}>
-        <Typography.Text ellipsis style={{ minWidth: 0, whiteSpace: "nowrap" }}>
-          {label}
-        </Typography.Text>
+        <span className="phi-typography phi-labeled-control__label">{label}</span>
         {hasDescription ? <PhiDescriptionHint description={description} /> : null}
       </span>
       <div

@@ -1,7 +1,8 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { Tooltip } from "antd";
+
+import { PhiHoverText } from "./phi-hover-text";
 
 /**
  * A graphic that says what it is.
@@ -37,7 +38,7 @@ export type PhiNameControlProps = {
 
 export function PhiNameControl({ name, children }: PhiNameControlProps) {
   return (
-    <Tooltip title={name}>
+    <PhiHoverText title={name}>
       <span
         role="img"
         aria-label={typeof name === "string" ? name : undefined}
@@ -46,6 +47,6 @@ export function PhiNameControl({ name, children }: PhiNameControlProps) {
       >
         {children}
       </span>
-    </Tooltip>
+    </PhiHoverText>
   );
 }

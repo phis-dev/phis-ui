@@ -242,6 +242,19 @@ h5.phi-typography, .phi-typography h5 {
   color: var(--ant-color-error-text);
 }
 
+/* --- Labeled control ---------------------------------------------------------------------------- */
+
+/*
+ * The label beside a Control: one line, cut with an ellipsis when the column is narrower than the words,
+ * which is what Ant Design's `Typography.Text ellipsis` did before the label stopped loading it.
+ */
+.phi-labeled-control__label {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
 /* --- Card ---------------------------------------------------------------------------------------- */
 
 /*
