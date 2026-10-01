@@ -71,6 +71,16 @@ export const PHI_COMMON_RUNTIME_MODULE_RENDER_CLIENT_MANIFEST =
       ),
     ],
     [
+      // Behind the manifest like the descriptor it frames: imported by the Form Widget's Server
+      // renderer, it was a client reference of every route -- the password-change prompt hangs under
+      // every page -- and pulled the Form stack into the first load of pages without a Form.
+      PhiRuntimeRenderClientType.FormWidgetFrame,
+      definePhiRuntimeModuleRenderClient(
+        dynamic(() => import("../../../components/forms/phi-form-widget-frame")
+          .then((module) => module.PhiFormWidgetFrame)),
+      ),
+    ],
+    [
       PhiRuntimeRenderClientType.FormDescriptor,
       definePhiRuntimeModuleRenderClient(
         dynamic(() => import("../../../components/forms/form-descriptor-runtime-client").then((module) => module.PhiFormDescriptorRuntimeClient)),

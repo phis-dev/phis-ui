@@ -16,4 +16,5 @@ export const PhiRuntimeRenderClientType = {
   OverlayContainer: "@phis/ui/runtime#overlay-container",
   SlotChildFrameEnhancer: "@phis/ui/runtime#slot-child-frame",
   FormDescriptor: "@phis/ui/form#descriptor",
+  FormWidgetFrame: "@phis/ui/form#widget-frame",
 } as const;

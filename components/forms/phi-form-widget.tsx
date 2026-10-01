@@ -6,7 +6,7 @@ import { getResolvedFormDefinition } from "../../gateway/form-registry";
 import type { PhiFormRenderOptions } from "./form-resolution";
 import { resolvePhiFormLabels } from "./form-resolution";
 import { createPhiRuntimeFormControllerAddress } from "./runtime-form-controller-address";
-import { PhiFormWidgetFrame } from "./phi-form-widget-frame";
+import type { PhiFormWidgetFrameProps } from "./phi-form-widget-frame";
 import { PhiRuntimeModuleRenderClientHost } from "../runtime/runtime-module-render-client-manifest";
 import { PhiRuntimeRenderClientType } from "../../constants/runtime-render-client-types";
 import type { PhiFormId } from "../../types/form-id";
@@ -113,16 +113,19 @@ export async function PhiFormWidget({
       }
     : null;
   const wrapFormUiProvider = (node: ReactNode) => {
+    const frameProps: PhiFormWidgetFrameProps = {
+      submit,
+      card: config?.card ?? null,
+      maxFormWidth: config?.maxFormWidth ?? null,
+      links: resolvedLinks,
+      layout: resolvedForm.definition.descriptor.layout,
+      children: node,
+    };
     const framed = (
-      <PhiFormWidgetFrame
-        submit={submit}
-        card={config?.card ?? null}
-        maxFormWidth={config?.maxFormWidth ?? null}
-        links={resolvedLinks}
-        layout={resolvedForm.definition.descriptor.layout}
-      >
-        {node}
-      </PhiFormWidgetFrame>
+      <PhiRuntimeModuleRenderClientHost
+        type={PhiRuntimeRenderClientType.FormWidgetFrame}
+        componentProps={frameProps}
+      />
     );
     return hasUiProvider
       ? (
