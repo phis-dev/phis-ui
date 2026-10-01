@@ -11,12 +11,8 @@ import { resolvePhiWidgetFontFamily } from "../../../../../components/widgets/he
 import { resolvePhiWidgetFontSize } from "../../../../../components/widgets/helpers/font-size";
 import { PhiWidgetTypographyToolButton } from "../../../../../components/widgets/client/shared/phi-widget-tool-buttons";
 import { PHI_BRAND_LINE_FALLBACK_ICONS, PhiBrandWidgetClient } from "./client";
-import {
-  PHI_BRAND_WIDGET_DEFINITION,
-  isPhiBrandWidgetLineMode,
-  type PhiBrandWidgetLineMode,
-  type PhiCmsBrandWidgetConfig,
-} from "./config";
+import { PHI_BRAND_WIDGET_DEFINITION, type PhiCmsBrandWidgetConfig } from "./config";
+import { isPhiBrandWidgetLineMode, type PhiBrandWidgetLineMode } from "./mode";
 
 /** What an unset line says instead of its sentence, which is also where to go and write one. */
 const PHI_BRAND_LINE_UNSET_LABELS: Record<PhiBrandWidgetLineMode, string> = {

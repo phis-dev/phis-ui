@@ -4,7 +4,7 @@ import { useState } from "react";
 
 import { PhiSliderControl } from "../../../../../components/controls/phi-slider-control";
 import type { PhiSliderWidgetConfig } from "./config";
-import { clampPhiSliderValue } from "./config";
+import { clampPhiSliderValue } from "./value";
 import { usePhiControlSignalController } from "../../../../../components/widgets/client/shared/phi-control-signals";
 
 export type PhiSliderWidgetProps = {

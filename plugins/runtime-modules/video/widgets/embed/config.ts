@@ -7,6 +7,7 @@ import {
   readString,
   type PhiCmsWidgetConfigBase,
 } from "../../../../../components/widgets/config/parser-primitives";
+import { PHI_VIDEO_EMBED_ASPECT_RATIOS, type PhiVideoEmbedAspectRatio } from "./aspect-ratio";
 
 /**
  * What shape the placeholder reserves.
@@ -15,18 +16,6 @@ import {
  * when a Site swaps a YouTube video for a Vimeo one. The rest are for a Site that knows better than the
  * provider does, which happens with a vertical cut.
  */
-export const PHI_VIDEO_EMBED_ASPECT_RATIOS = ["provider", "16:9", "4:3", "1:1", "21:9", "9:16"] as const;
-
-export type PhiVideoEmbedAspectRatio = (typeof PHI_VIDEO_EMBED_ASPECT_RATIOS)[number];
-
-const PHI_VIDEO_EMBED_ASPECT_RATIO_VALUES: Readonly<Record<string, number>> = {
-  "16:9": 16 / 9,
-  "4:3": 4 / 3,
-  "1:1": 1,
-  "21:9": 21 / 9,
-  "9:16": 9 / 16,
-};
-
 export function readPhiVideoEmbedAspectRatio(value: unknown): PhiVideoEmbedAspectRatio {
   const ratio = readString(value);
   return PHI_VIDEO_EMBED_ASPECT_RATIOS.includes(ratio as PhiVideoEmbedAspectRatio)
@@ -35,13 +24,6 @@ export function readPhiVideoEmbedAspectRatio(value: unknown): PhiVideoEmbedAspec
 }
 
 /** The number the placeholder and the player both use, with the provider's own as the fallback. */
-export function resolvePhiVideoEmbedAspectRatio(
-  configured: PhiVideoEmbedAspectRatio | undefined,
-  providerAspectRatio: number,
-) {
-  return (configured && PHI_VIDEO_EMBED_ASPECT_RATIO_VALUES[configured]) || providerAspectRatio;
-}
-
 function readPhiVideoProviderKey(value: unknown): PhiVideoProviderKey | undefined {
   const key = readString(value);
   // Shape only. Whether the provider is *active* is a question for the Area, and a key whose Module is

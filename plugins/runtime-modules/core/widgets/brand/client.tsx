@@ -13,7 +13,7 @@ import {
   isPhiBrandWidgetLineMode,
   type PhiBrandWidgetLineMode,
   type PhiBrandWidgetMode,
-} from "./config";
+} from "./mode";
 import { usePhiConfig } from "../../../../../components/root/phi-config-provider";
 import { usePhiSiteBrand } from "../../../../../components/root/phi-root-live-theme-provider";
 import { resolvePhiWidgetFontFamily } from "../../../../../components/widgets/helpers/font-family";

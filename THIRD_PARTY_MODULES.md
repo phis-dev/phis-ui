@@ -1256,10 +1256,13 @@ for the provider and still discloses the page it comes from.
 ## Boundary checklist
 
 - Server catalog files contain metadata and lazy imports, not Client components.
-- Definition/config files are safe for both Server and Client imports. Transitively: the definition is
-  read in the browser graph through the generated Client projection, so nothing its imports reach may be
-  `server-only` or touch `next/headers`. Prefer the narrow `@phis/ui/module/*` entries over the
-  `server-helpers` and `forms` barrels, which carry both.
+- Definition/config files are safe for both Server and Client imports. Transitively: a definition is
+  reachable from Client code -- Label Sets bind to it, and the package's root door exports it -- so
+  nothing its imports reach may be `server-only` or touch `next/headers`. Prefer the narrow
+  `@phis/ui/module/*` entries over the `server-helpers` and `forms` barrels, which carry both.
+- A live Widget client takes only types from its `config.ts`. The config module is the parser, with the
+  block defaults merge behind it; a helper the client needs at runtime lives in a file of its own beside
+  it (`scripts/validate-render-client-boundaries.mjs` checks first-party Widgets).
 - `"use client"` appears only at executable Client, Controller, provider, and Authoring boundaries.
 - Live Area manifests do not import Authoring modules.
 - Public manifests cannot reach Builder/Admin/Editor implementations.

@@ -11,6 +11,7 @@ import {
   type PhiControlStateConfig,
 } from "../../../../../components/widgets/config/control-signal-config";
 import { readBoolean, readNumber, readString } from "../../../../../components/widgets/config/parser-primitives";
+import { clampPhiSliderValue } from "./value";
 
 export type PhiSliderWidgetConfig = PhiControlStateConfig & {
   label?: string;
@@ -24,10 +25,6 @@ export type PhiSliderWidgetConfig = PhiControlStateConfig & {
   tooltipMode?: PhiSliderTooltipMode;
   tooltipSuffix?: string;
 };
-
-export function clampPhiSliderValue(value: number, min: number, max: number) {
-  return Math.min(max, Math.max(min, value));
-}
 
 function readPhiSliderTooltipMode(value: unknown): PhiSliderTooltipMode | undefined {
   return typeof value === "string" && PHI_SLIDER_TOOLTIP_MODES.includes(value as PhiSliderTooltipMode)

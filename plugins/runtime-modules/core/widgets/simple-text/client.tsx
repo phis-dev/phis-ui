@@ -14,7 +14,7 @@ import { readPhiWidgetFontSize, resolvePhiWidgetFontSize } from "../../../../../
 import type { PhiClientBlockBaseProps, PhiCmsInstanceId, PhiRenderableBlockRenderMode } from "../../../../../types";
 import type { PhiTextTone } from "../../../../../components/widgets/config/text-tone";
 import type { PhiSimpleTextMark } from "../../../../../types/core-widget-placements";
-import { hasPhiSimpleTextMark } from "./config";
+import { hasPhiSimpleTextMark } from "./marks";
 import type { PhiWidgetFontFamilyKey, PhiWidgetFontSizeKey } from "../../../../../types/site-theme";
 import { PhiFlexControl } from "../../../../../components/controls/phi-flex-control";
 import { PhiTypographyControl } from "../../../../../components/controls/phi-typography-control";

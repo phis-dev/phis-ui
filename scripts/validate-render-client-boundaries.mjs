@@ -301,6 +301,45 @@ while (clientQueue.length > 0) {
   }
 }
 
+/*
+ * A live Widget client takes nothing but types from its own `config.ts`.
+ *
+ * The config module is the Widget's parser: it reads every field through `parser-primitives`, and
+ * `readRenderableBlockConfig` there merges the block defaults with every normalizer behind it. A client
+ * that took one small helper from it as a value -- whether a Simple Text has a mark, which mode a Brand
+ * is in -- put the whole parser chain on every page that draws the Widget, the Landing among them. Such
+ * a helper lives in a file of its own beside the config, which the config reads too.
+ */
+let liveClientsChecked = 0;
+async function checkLiveClientConfigImports(directory) {
+  for (const entry of await readdir(directory, { withFileTypes: true })) {
+    const entryPath = path.join(directory, entry.name);
+    if (entry.isDirectory()) {
+      await checkLiveClientConfigImports(entryPath);
+      continue;
+    }
+    if (entry.name !== "client.tsx" || !entryPath.includes(`${path.sep}widgets${path.sep}`)) {
+      continue;
+    }
+    liveClientsChecked += 1;
+    const source = await readSource(entryPath);
+    for (const match of source.matchAll(/import\s+(type\s+)?\{([^}]*)\}\s+from\s+"\.\/config";/gu)) {
+      if (match[1]) {
+        continue;
+      }
+      const values = match[2].split(",").map((name) => name.trim())
+        .filter((name) => name && !name.startsWith("type "));
+      if (values.length > 0) {
+        failures.push(
+          `${path.relative(repositoryRoot, entryPath)} takes ${values.join(", ")} from ./config as a value. ` +
+          "A live client imports only types from its config; move the helper into a file of its own.",
+        );
+      }
+    }
+  }
+}
+await checkLiveClientConfigImports(path.join(repositoryRoot, "plugins/runtime-modules"));
+
 if (failures.length > 0) {
   console.error("Render-Client boundary violations:");
   for (const failure of failures) {
@@ -313,5 +352,6 @@ console.log(
   `Render-Client boundaries validated: ${layoutClients.size} Layout clients behind "use client", ` +
     `${registeredClients.size} registered Render Clients, ` +
     `${visitedServerModules.size} server modules reachable from ${nextEntries.length} Next entries, ` +
-    `${moduleDefinitions.size} Module definitions out of reach of ${clientRoots.length} Client roots.`,
+    `${moduleDefinitions.size} Module definitions out of reach of ${clientRoots.length} Client roots, ` +
+    `${liveClientsChecked} live Widget clients taking only types from their config.`,
 );

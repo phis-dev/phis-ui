@@ -9,10 +9,8 @@ import {
   parsePhiVideoEmbedParams,
   resolvePhiVideoId,
 } from "../../../../../types/video";
-import {
-  resolvePhiVideoEmbedAspectRatio,
-  type PhiVideoEmbedWidgetConfig,
-} from "./config";
+import { resolvePhiVideoEmbedAspectRatio } from "./aspect-ratio";
+import type { PhiVideoEmbedWidgetConfig } from "./config";
 
 export type PhiVideoEmbedWidgetClientProps = PhiClientBlockBaseProps<
   PhiVideoWidgetLabels,

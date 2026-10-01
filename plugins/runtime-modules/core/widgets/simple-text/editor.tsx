@@ -19,10 +19,10 @@ import { usePhiWidgetScaffoldPopup } from "../../../../../components/widgets/cli
 import { usePhiAuthoringToolsLabels } from "../../../../../components/widgets/client/shared/phi-authoring-tools-labels";
 import { PHI_SIMPLE_TEXT_MARKS, type PhiSimpleTextMark } from "../../../../../types/core-widget-placements";
 import {
-  hasPhiSimpleTextMark,
   resolvePhiSimpleTextWidgetText,
   type PhiSimpleTextWidgetRenderableConfig,
 } from "./config";
+import { hasPhiSimpleTextMark } from "./marks";
 import { resolvePhiWidgetFontFamily } from "../../../../../components/widgets/helpers/font-family";
 import { resolvePhiWidgetFontSize } from "../../../../../components/widgets/helpers/font-size";
 import { PHI_Z_INDEX } from "../../../../../theme/phi-tokens";

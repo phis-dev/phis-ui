@@ -31,13 +31,6 @@ function readSimpleTextMarks(value: unknown): PhiSimpleTextMark[] | undefined {
   return PHI_SIMPLE_TEXT_MARKS.filter((mark) => value.includes(mark));
 }
 
-export function hasPhiSimpleTextMark(
-  config: { marks?: readonly PhiSimpleTextMark[] } | null | undefined,
-  mark: PhiSimpleTextMark,
-) {
-  return config?.marks?.includes(mark) === true;
-}
-
 export type PhiCmsSimpleTextWidgetConfig = PhiCmsWidgetConfigBase & {
   text?: string;
   href?: string;
