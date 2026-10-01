@@ -28,7 +28,8 @@ import {
 import { getPhiCmsPage, getPhiExactSiteArea } from "../server-helpers/cms";
 import { resolveActivePresetModuleKeys, resolvePhiCmsRequest } from "../server-helpers/cms-request";
 import { runWithPhiRequestRuntime } from "../server-helpers/request-runtime";
-import { buildPhiBlockRuntime, loadPhiSiteRequestContext, type PhiSiteRequestContext } from "../server-helpers/runtime";
+import { buildPhiBlockRuntime, loadPhiSiteRequestContext } from "../server-helpers/runtime";
+import type { PhiSiteRequestContext } from "../types/site-request-context";
 import { fetchSiteLocaleConfig } from "../server-helpers/site-locale";
 import type { PhiCmsSiteBridge } from "../types/cms-plugins";
 import type { PhiRuntimeModuleId } from "../types/cms-module-descriptors";

@@ -1,7 +1,7 @@
 import "server-only";
 
 import { getSiteThemeRevision } from "../gateway/site-theme";
-import type { PhiSiteRequestContext } from "./runtime";
+import type { PhiSiteRequestContext } from "../types/site-request-context";
 import { readPhiServerApiCredentials } from "../helpers/phis-server-credentials";
 
 export type PhiCmsReviewKind = "area" | "page" | "navigation" | "theme";

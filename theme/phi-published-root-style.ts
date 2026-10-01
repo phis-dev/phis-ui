@@ -2,7 +2,7 @@ import "server-only";
 
 import type { CSSProperties } from "react";
 
-import type { PhiSiteTheme } from "../gateway/site-config";
+import type { PhiSiteTheme } from "../types/site-config";
 import { buildPhiCssVars, buildPhiShellCssVars } from "./phi-css-vars";
 import { resolvePhiServerThemeTokens } from "./phi-server-tokens";
 import {

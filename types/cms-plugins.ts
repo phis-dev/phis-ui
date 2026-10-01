@@ -1,5 +1,5 @@
 import type { ComponentType, ReactNode } from "react";
-import type { PhiSiteRequestContext } from "../server-helpers/runtime";
+import type { PhiSiteRequestContext } from "./site-request-context";
 import type { PhiCmsAreaKey } from "../constants/cms-areas";
 import type { PhiCmsPluginCategory } from "../constants/cms-plugin-categories";
 import type { PhiRuntimeModuleCategory } from "../constants/runtime-module-categories";

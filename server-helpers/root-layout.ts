@@ -2,7 +2,8 @@ import "server-only";
 
 import { headers } from "next/headers";
 
-import { getResolvedSiteConfig, type PhiSiteConfig, type PhiSiteTheme } from "../gateway/site-config";
+import { getResolvedSiteConfig } from "../gateway/site-config";
+import type { PhiSiteConfig, PhiSiteTheme } from "../types/site-config";
 import { getSiteThemeRevision } from "../gateway/site-theme";
 import type { PhiResolvedLocale } from "../helpers/site-locale-config";
 import { getPhiCmsReviewRevision, resolvePhiCmsReviewParams } from "./cms-review";

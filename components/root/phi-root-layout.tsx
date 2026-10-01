@@ -8,7 +8,7 @@ import "../../styles/control-shape.css";
 import "../../styles/controls.css";
 
 import { getResolvedSiteConfig } from "../../gateway/site-config";
-import type { PhiSiteConfig } from "../../gateway/site-config";
+import type { PhiSiteConfig } from "../../types/site-config";
 import { loadPhiAntdLocale } from "../../helpers/antd-locale";
 import type { PhiResolvedLocale } from "../../helpers/site-locale-config";
 import { PhiDayjsLocale } from "./phi-dayjs-locale";

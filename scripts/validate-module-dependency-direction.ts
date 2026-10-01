@@ -199,6 +199,9 @@ for (const [sourcePath, targets] of importsByFile) {
  * - A door reaches a Module or a catalog only if it exists to assemble them, and is named below.
  * - A door reaches a stylesheet only if a Next app is what opens it. Controls name their classes and
  *   `styles/` is loaded by the root layout, so nothing a Module imports carries a CSS import.
+ * - A door reaches Node -- a `node:` import, or `process` a file does not declare itself -- only
+ *   if it serves the server or the Next app. The data doors a Module builds on stay free of it: a
+ *   type-only import of `PhiSiteTheme` from its gateway had put `node:fs` behind `@phis/ui/controls`.
  */
 const PHI_ASSEMBLY_DOORS: Readonly<Record<string, string>> = {
   "./widgets": "the server Widgets Core ships, for a Site to render directly",
@@ -213,6 +216,44 @@ const PHI_ASSEMBLY_DOOR_PATTERNS = [
   /^\.\/cms\/plugins\/[a-z]+$/u, // an Area's plugin catalog
 ];
 const PHI_SITE_DOORS = new Set(["./shells", "./root", "./cms", "./cms/root-layout"]);
+// Doors for server code and the Next app, which run on Node and may say so.
+const PHI_SERVER_DOORS = new Set([
+  "./shells",
+  "./root",
+  "./server-helpers",
+  "./net",
+  "./widgets",
+  "./module/labels",
+  "./helpers/site-runtime",
+  "./cms",
+  "./cms/request",
+  "./cms/root-layout",
+  "./cms/root-page",
+  "./cms/root-slot-page",
+  "./cms/error-page",
+]);
+const PHI_SERVER_DOOR_PATTERNS = [
+  /^\.\/next\//u,
+  /^\.\/runtime\/client-manifests\//u,
+  /^\.\/cms\/plugins\/[a-z]+$/u,
+];
+
+const nodeUseByFile = new Map<string, boolean>();
+/*
+ * Whether a file needs Node types: a `node:` import, or `process` it does not declare itself. Reading
+ * the build mode is fine where the file declares `process` as far as it reads it, as the signal bus
+ * does; Next inlines the value, and no Node type is needed for it.
+ */
+function usesNode(relativePath: string) {
+  let answer = nodeUseByFile.get(relativePath);
+  if (answer === undefined) {
+    const code = stripComments(readFileSync(path.join(packageRoot, relativePath), "utf8"));
+    answer = /\bfrom\s*["']node:|\bimport\(\s*["']node:/u.test(code) ||
+      (/\bprocess\./u.test(code) && !/\bdeclare const process\b/u.test(code));
+    nodeUseByFile.set(relativePath, answer);
+  }
+  return answer;
+}
 const PHI_SITE_DOOR_PATTERN = /^\.\/next\//u;
 
 function collectDoorEntries(value: unknown): string | null {
@@ -238,8 +279,12 @@ for (const [door, value] of Object.entries(packageManifest.exports as Record<str
   const queue = [start];
   let reachedModule: string | null = null;
   let reachedStylesheet: string | null = null;
+  let reachedNode: string | null = null;
   while (queue.length > 0) {
     const file = queue.shift()!;
+    if (!reachedNode && !file.endsWith(".css") && usesNode(file)) {
+      reachedNode = file;
+    }
     for (const target of importsByFile.get(file) ?? []) {
       if (target.endsWith(".css")) {
         reachedStylesheet ??= `${file} -> ${target}`;
@@ -259,6 +304,14 @@ for (const [door, value] of Object.entries(packageManifest.exports as Record<str
     problems.push(
       `${door} reaches a Module or a catalog (${reachedModule}); a Module importing it would compile ` +
         "them. Re-export from somewhere module-free, or name the door as one that assembles Modules.",
+    );
+  }
+  const forServer = PHI_SERVER_DOORS.has(door) ||
+    PHI_SERVER_DOOR_PATTERNS.some((pattern) => pattern.test(door));
+  if (reachedNode && !forServer) {
+    problems.push(
+      `${door} reaches Node code (${reachedNode}); a Module importing it would need Node types. ` +
+        "Move the shape it needs into types/, or name the door as one that serves the server.",
     );
   }
   const forSites = PHI_SITE_DOORS.has(door) || PHI_SITE_DOOR_PATTERN.test(door);

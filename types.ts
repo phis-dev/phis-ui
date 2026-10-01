@@ -28,6 +28,7 @@ export {
   type PhiCmsAreaShellCompositionSource,
   type PhiCmsAreaShellPresetBinding,
   type PhiCmsAreaShellPresetDescriptor,
+  type PhiCmsDescriptorBuildContext,
   type PhiCmsNavigationAnchor,
   type PhiCmsNavigationAnchoredInjectionDescriptor,
   type PhiCmsNavigationAnchorPlacement,

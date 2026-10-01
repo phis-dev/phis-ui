@@ -111,7 +111,10 @@ client manifests, and the few listed in the validator); every other door is modu
 a stylesheet only if a Next app opens it. Controls name their classes and the rules live in `styles/`,
 loaded by the root layout, so nothing a Module imports carries a CSS import. A Module styles its own
 elements inline from the Theme tokens (`usePhiConfig().token`); a stylesheet of its own would be its own
-package's concern, declarations included.
+package's concern, declarations included. A data door does not reach Node either: a shape a Control or a contract needs lives in
+`types/`, not beside the server code that fills it, because a type-only import still compiles the file
+it names. Client code that reads the build mode declares `process` as far as it reads it, so Next can
+inline the value and drop the diagnostics behind it from production.
 
 The rule has a practical edge that is easy to miss. A Foundation file that names a Module's Controller
 address has the dependency backwards even though nothing was imported *from* a Module folder — the

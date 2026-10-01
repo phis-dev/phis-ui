@@ -65,6 +65,7 @@ export type {
   PhiCmsAreaShellPresetBinding,
   PhiCmsAreaShellPresetDescriptor,
   PhiCmsCompiledDescriptorCatalog,
+  PhiCmsDescriptorBuildContext,
   PhiCmsRoutePresetBinding,
   PhiCmsRoutePresetDescriptor,
   PhiCmsRouteMountKey,

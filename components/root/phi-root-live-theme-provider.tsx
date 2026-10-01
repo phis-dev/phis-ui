@@ -3,7 +3,7 @@
 import type { ConfigProviderProps } from "antd";
 import { createContext, useContext, useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
 
-import type { PhiSiteTheme } from "../../gateway/site-config";
+import type { PhiSiteTheme } from "../../types/site-config";
 import type { PhiSiteThemeBrand } from "../../types/site-theme";
 import { resolvePhiBrandWordmarkTextFrom } from "../../helpers/brand-wordmark";
 import { usePhiSignalListener } from "../runtime/runtime-signal-bus";

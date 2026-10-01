@@ -28,12 +28,12 @@ import { resolveCmsRootRoute } from "../server-helpers/cms-route";
 import {
   buildPhiBlockRuntime,
   loadPhiSiteRequestContext,
-  type PhiSiteRequestContext,
 } from "../server-helpers/runtime";
 import { runWithPhiRequestRuntime } from "../server-helpers/request-runtime";
 import { resolvePhiCmsPageRedirect } from "../components/cms/phi-cms-page-redirect";
 import type { PhiCmsSiteBridge } from "../types/cms-plugins";
 import type { PhiSiteAreaBridgeLoader } from "./site-area-bridges";
+import type { PhiSiteRequestContext } from "../types/site-request-context";
 
 function readInternalPath(value: string | null, requestUrl: string) {
   const normalized = value?.trim() ?? "";

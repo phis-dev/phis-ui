@@ -22,6 +22,13 @@ import type {
   PhiStateMachineSnapshot,
 } from "../../types/state-machine";
 
+/*
+ * The build mode, as the Site's bundler states it: Next replaces `process.env.NODE_ENV` with a constant,
+ * so the diagnostics behind it fall out of a production build. Declared here, as far as it is read, so a
+ * Module package compiling this file needs no Node types for a value that never reaches Node.
+ */
+declare const process: { env: { NODE_ENV?: string } };
+
 /**
  * A machine, held by whoever hosts it, performing nothing.
  *

@@ -57,7 +57,6 @@ import {
 import {
   buildPhiBlockRuntime,
   loadPhiSiteRequestContext,
-  type PhiSiteRequestContext,
 } from "./runtime";
 import { trForLocale } from "./translate";
 import {
@@ -66,6 +65,7 @@ import {
   readPhiAreaPublicRoutePaths,
 } from "../helpers/cms-area-config";
 import { readPhiServerApiCredentials } from "../helpers/phis-server-credentials";
+import type { PhiSiteRequestContext } from "../types/site-request-context";
 
 type LoadPhiResolvedCmsPage = (
   path: string,

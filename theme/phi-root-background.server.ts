@@ -5,7 +5,7 @@ import {
   collectPhiBackgroundAssetIdsFromValues,
   projectPhiBackgroundAssetsIntoValue,
 } from "../components/media/background-asset-projection";
-import type { PhiSiteTheme } from "../gateway/site-config";
+import type { PhiSiteTheme } from "../types/site-config";
 
 /**
  * Attaches delivery projections to the Theme Root Background before it reaches the client.

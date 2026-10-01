@@ -1,4 +1,4 @@
-import type { PhiSiteTheme } from "../../gateway/site-config";
+import type { PhiSiteTheme } from "../../types/site-config";
 import {
   resolvePhiShellRegionBackground,
   resolvePhiShellRegionColor,

@@ -30,7 +30,8 @@ import {
   type PhiThemeModePreference,
 } from "../theme/phi-theme-mode";
 import { readPhiServerApiCredentials } from "../helpers/phis-server-credentials";
-import { getResolvedSiteConfig, type PhiSiteConfig } from "../gateway/site-config";
+import { getResolvedSiteConfig } from "../gateway/site-config";
+import type { PhiSiteConfig } from "../types/site-config";
 import type { PhiResolvedLocale } from "../helpers/site-locale-config";
 import { fetchResolvedSiteLocale } from "../server-helpers/site-locale";
 import type { PhiThemeMode } from "../theme/phi-theme-presets";
