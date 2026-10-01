@@ -8,7 +8,6 @@ import timezone from "dayjs/plugin/timezone";
 import utc from "dayjs/plugin/utc";
 
 import {
-  PHI_GREGORY_CALENDAR_ADAPTER_KEY,
   type PhiCalendarAdapterClient,
   type PhiCalendarAdapterDatePickerProps,
   type PhiCalendarDate,
@@ -17,6 +16,7 @@ import {
   phiCalendarEventFallsOnDate,
   resolvePhiCalendarMonthPanelDays,
 } from "../../types/calendar";
+import { PHI_GREGORY_CALENDAR_ADAPTER_KEY } from "../../types/calendar-keys";
 import { PhiFlexControl } from "../controls/phi-flex-control";
 import { PhiTypographyControl } from "../controls/phi-typography-control";
 

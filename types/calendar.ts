@@ -1,4 +1,3 @@
-import { createPhiModuleScopedKey } from "../constants/runtime-module-ownership";
 import type { ReactNode } from "react";
 
 import type { PhiControlSize, PhiControlVariant } from "./control";
@@ -6,7 +5,6 @@ import type { PhiRuntimeModuleId } from "./cms-module-descriptors";
 
 export type PhiCalendarSystemId = string;
 export type PhiCalendarAdapterKey = `${string}/calendars/${string}`;
-export const PHI_GREGORY_CALENDAR_ADAPTER_KEY = createPhiModuleScopedKey("calendars", "gregory") satisfies PhiCalendarAdapterKey;
 export type PhiCalendarPrecision = "date" | "datetime" | "week" | "month" | "quarter" | "year";
 export type PhiCalendarSelectionMode = "single" | "range" | "multiple";
 export type PhiCalendarView = "month" | "week" | "day" | "agenda" | "year";

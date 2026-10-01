@@ -46,7 +46,8 @@ import {
 } from "react";
 
 import type { PhiControlSize, PhiControlVariant } from "../../types/control";
-import { PHI_GREGORY_CALENDAR_ADAPTER_KEY, type PhiCalendarAdapterKey, type PhiTemporalSelection } from "../../types/calendar";
+import type { PhiCalendarAdapterKey, PhiTemporalSelection } from "../../types/calendar";
+import { PHI_GREGORY_CALENDAR_ADAPTER_KEY } from "../../types/calendar-keys";
 import type {
   PhiTableColumnEditorControl,
   PhiTableProviderFieldType,

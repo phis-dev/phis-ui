@@ -9,12 +9,12 @@ import type {
   PhiTemporalSelection,
 } from "../../../../../types";
 import {
-  PHI_GREGORY_CALENDAR_ADAPTER_KEY,
   isPhiCalendarAdapterKey,
   isPhiCalendarDate,
   isPhiCalendarDisabledDateRule,
   isPhiTemporalSelection,
 } from "../../../../../types/calendar";
+import { PHI_GREGORY_CALENDAR_ADAPTER_KEY } from "../../../../../types/calendar-keys";
 import { PHI_SIGNAL_VALUE_SCHEMAS } from "../../../../../types/signals";
 import {
   PHI_CONTROL_PRESENTATION_FIELDS,

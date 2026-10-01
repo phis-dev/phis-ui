@@ -2,11 +2,8 @@
 
 import type { PhiFormFieldProviderProps } from "./form-provider-registry";
 import { PhiDatePickerControl } from "../controls/phi-date-picker-control";
-import {
-  PHI_GREGORY_CALENDAR_ADAPTER_KEY,
-  isPhiTemporalSelection,
-  type PhiTemporalSelection,
-} from "../../types/calendar";
+import { isPhiTemporalSelection, type PhiTemporalSelection } from "../../types/calendar";
+import { PHI_GREGORY_CALENDAR_ADAPTER_KEY } from "../../types/calendar-keys";
 
 const EMPTY_DATE_TIME_SELECTION: PhiTemporalSelection = { mode: "single", value: null };
 
