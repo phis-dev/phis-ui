@@ -26,7 +26,7 @@ for (const relativePath of sourceFiles) {
     true,
     relativePath.endsWith(".tsx")
       ? ts.ScriptKind.TSX
-      : relativePath.endsWith(".js")
+      : /\.m?js$/u.test(relativePath)
         ? ts.ScriptKind.JS
         : ts.ScriptKind.TS,
   );
@@ -158,6 +158,8 @@ async function collectSourceFiles(directory, prefix = "") {
       entry.isFile() &&
       (
         /\.(?:ts|tsx)$/u.test(entry.name) ||
+        // Plain JavaScript a package entry points at, such as the cache handler Next loads by path.
+        /\.mjs$/u.test(entry.name) ||
         (prefix === "" && entry.name === "index.js")
       ) &&
       !entry.name.endsWith(".d.ts")
