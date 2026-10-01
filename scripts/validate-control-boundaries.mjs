@@ -50,7 +50,7 @@ const feedbackPrimitiveOwners = new Map([
 ]);
 
 const overlayPrimitiveOwners = new Map([
-  ["Modal", "components/controls/phi-modal-control.tsx"],
+  ["Modal", "components/controls/phi-modal-control-adapter.tsx"],
   ["Drawer", "components/controls/phi-drawer-control.tsx"],
 ]);
 

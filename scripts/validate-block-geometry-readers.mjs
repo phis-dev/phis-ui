@@ -41,7 +41,7 @@ const geometryReaders = new Map([
 const structuralReaders = new Map([
   ["components/cms/phi-cms-root-layout.tsx", "reads a Header band's height for the Chrome pane's sticky travel; it measures, it does not draw"],
   ["components/controls/phi-geometry-control.tsx", "the Inspector control that edits the three fields"],
-  ["components/controls/phi-modal-control.tsx", "the Overlay's own `size`, a different vocabulary until the Overlay adopts block geometry (TODOS.md)"],
+  ["components/controls/phi-modal-control-adapter.tsx", "the Overlay's own `size`, a different vocabulary until the Overlay adopts block geometry (TODOS.md)"],
   ["plugins/runtime-modules/builder/region-controller.ts", "Builder commands that ask whether a draft states a height"],
   ["plugins/runtime-modules/builder/region-hydration.ts", "copies a draft's geometry into a Region config, field for field"],
 ]);
