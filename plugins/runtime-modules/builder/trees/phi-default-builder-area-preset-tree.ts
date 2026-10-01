@@ -580,10 +580,7 @@ export async function buildPhiDefaultBuilderAreaPresetTree({
         slotIndex: PHI_CMS_THREE_COLUMN_LAYOUT_SLOT_INDEX.Left,
         sortOrder: 1,
         label: "Theme mode switch",
-        config: {
-          darkLabel: labels.themeSwitch.dark,
-          lightLabel: labels.themeSwitch.light,
-        },
+        config: {},
       }),
       nodes.widget({
         typeKey: "sidebar-navigation",

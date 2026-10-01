@@ -16,12 +16,11 @@ import { PHI_COMPACT_CONTROL_PRESENTATION_FIELDS } from "../../../../../componen
  * every Widget its tokens -- so there is no `defaultChecked` to fall out of step with what is on
  * screen, and nothing to wire up for the switch to follow a change made elsewhere.
  *
- * What is left to configure is what it looks like: its label and the two words it wears.
+ * What is left to configure is its label and its size. The two positions wear a sun and a moon, not
+ * words: they read in every locale, and a translated word the width of the track would only crowd it.
  */
 export type PhiThemeModeSwitchWidgetConfig = PhiCmsWidgetConfigBase & {
   label?: string;
-  darkLabel?: string;
-  lightLabel?: string;
   controlSize?: PhiThemeModeSwitchSize;
 };
 
@@ -35,8 +34,6 @@ export function parsePhiThemeModeSwitchWidgetConfig(
   return {
     ...readRenderableBlockConfig(config),
     label: readString(config.label),
-    darkLabel: readString(config.darkLabel),
-    lightLabel: readString(config.lightLabel),
     controlSize: readSize(config.controlSize),
   };
 }
@@ -62,14 +59,9 @@ export const PHI_THEME_MODE_SWITCH_WIDGET_DEFINITION = {
    */
   fields: [
     { key: "label", type: "string", label: "Label" },
-    { key: "darkLabel", type: "string", label: "Dark Text" },
-    { key: "lightLabel", type: "string", label: "Light Text" },
     ...PHI_COMPACT_CONTROL_PRESENTATION_FIELDS,
   ],
-  defaultConfig: {
-    darkLabel: "Dark",
-    lightLabel: "Light",
-  },
+  defaultConfig: {},
   parseConfig: parsePhiThemeModeSwitchWidgetConfig,
 } satisfies Pick<
   PhiCmsWidgetPlugin<PhiThemeModeSwitchWidgetConfig>,

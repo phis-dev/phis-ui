@@ -134,10 +134,7 @@ export async function buildPhiDefaultPubWelcomePageTree({
         slotIndex: PHI_CMS_THREE_COLUMN_LAYOUT_SLOT_INDEX.Right,
         sortOrder: 0,
         label: "pub welcome theme mode switch",
-        config: {
-          darkLabel: "Dark",
-          lightLabel: "Light",
-        },
+        config: {},
       }),
       nodes.widget({
         typeKey: "simple-text",

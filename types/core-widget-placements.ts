@@ -414,8 +414,6 @@ export type PhiThemeModeSwitchSize = "small" | "medium";
 
 export type PhiThemeModeSwitchWidgetPlacement = PhiWidgetPlacementBase & {
   label?: string;
-  darkLabel?: string;
-  lightLabel?: string;
   controlSize?: PhiThemeModeSwitchSize;
 };
 

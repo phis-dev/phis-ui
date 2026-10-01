@@ -1,5 +1,7 @@
 "use client";
 
+import { MoonOutlined, SunOutlined } from "@ant-design/icons";
+
 import type { PhiBlockRuntime } from "../../../../../types";
 import type { PhiThemeModeSwitchWidgetConfig } from "./config";
 import { usePhiConfig } from "../../../../../components/root/phi-config-provider";
@@ -56,8 +58,8 @@ export function PhiThemeModeSwitchWidget({
       readOnly={readOnly || !signalsEnabled}
       size={config?.controlSize}
       label={config?.label}
-      checkedLabel={config?.darkLabel}
-      uncheckedLabel={config?.lightLabel}
+      checkedLabel={<MoonOutlined />}
+      uncheckedLabel={<SunOutlined />}
       onChange={requestMode}
     />
   );
