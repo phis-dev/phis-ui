@@ -18,18 +18,17 @@ async function loadLabels(runtime: PhiDraftStatusRenderRuntime) {
 
 export const PHI_DRAFT_STATUS_WIDGET_PLUGIN: PhiCmsServerWidgetPlugin<PhiDraftStatusWidgetConfig> = {
   ...PHI_DRAFT_STATUS_WIDGET_DEFINITION,
-  render: async ({ widget, config, runtime }) => (
+  render: async ({ config, runtime }) => (
     <PhiRuntimeModuleRenderClientHost
       type={PhiCmsWidgetType.DraftStatus}
-      componentProps={{ blockId: widget.id, config, labels: await loadLabels(runtime) }}
+      componentProps={{ config, labels: await loadLabels(runtime) }}
     />
   ),
   // A preview asks no Controller: it would answer for the draft being edited, not the one shown.
-  renderPreview: async ({ widget, config, runtime }) => (
+  renderPreview: async ({ config, runtime }) => (
     <PhiRuntimeModuleRenderClientHost
       type={PhiCmsWidgetType.DraftStatus}
       componentProps={{
-        blockId: widget.id,
         config,
         labels: await loadLabels(runtime),
         signalsEnabled: false,

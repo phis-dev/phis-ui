@@ -2,11 +2,11 @@
 
 import { useEffect, useMemo, useState } from "react";
 
-import type { PhiCmsInstanceId } from "../../../../../types";
-import { createPhiSignalAddress, findPhiSignalRoutesByCapabilityId } from "../../../../../types/signals";
+import { findPhiSignalRoutesByCapabilityId } from "../../../../../types/signals";
 import { readPhiDraftStatusSignalValue, type PhiDraftStatusSignalValue } from "../../../../../types/draft-status";
 import { usePhiConfig } from "../../../../../components/root/phi-config-provider";
 import { usePhiSignalDispatcher, usePhiSignalListener } from "../../../../../components/runtime/runtime-signal-bus";
+import { usePhiSignalIdentity } from "../../../../../components/runtime/runtime-signal-identity";
 import { PhiTagControl } from "../../../../../components/controls/phi-tag-control";
 import { PhiFlexControl } from "../../../../../components/controls/phi-flex-control";
 import { PhiTypographyControl } from "../../../../../components/controls/phi-typography-control";
@@ -42,14 +42,18 @@ function buildStatusLabel(state: PhiDraftStatusSignalValue | null, labels: PhiDr
  * when this mounts, and answers to this address; every change after reaches it as a broadcast from
  * the same Controller. Signals on the channel from anyone else are not this Widget's draft and are
  * passed over -- the Revisions page announces restores on it too.
+ *
+ * The address is the one the slot frame registered for this Widget, and the listener answers for it:
+ * an addressed signal is held until a listener names its receiver, so a listener that named none
+ * left the answer to the mount request waiting for good, and the tag stayed on "Checking..." whenever
+ * the Widget came up after the Controller's last broadcast. The answer arrives in the scope the frame
+ * registered, not the route's, so only a broadcast is matched on the route's scope.
  */
 export function PhiDraftStatusWidget({
-  blockId,
   config,
   labels = PHI_DRAFT_STATUS_WIDGET_DEFAULT_LABELS,
   signalsEnabled = true,
 }: {
-  blockId: PhiCmsInstanceId;
   config?: PhiDraftStatusWidgetConfig | null;
   labels?: PhiDraftStatusWidgetLabels;
   signalsEnabled?: boolean;
@@ -57,11 +61,10 @@ export function PhiDraftStatusWidget({
   const { token } = usePhiConfig();
   const dispatchSignal = usePhiSignalDispatcher();
   const [state, setState] = useState<PhiDraftStatusSignalValue | null>(null);
-  const selfAddress = createPhiSignalAddress("cms", blockId);
+  const selfAddress = usePhiSignalIdentity().receiver ?? null;
   const requestRoute = findPhiSignalRoutesByCapabilityId(config?.signalRoutes?.emits, "request")[0] ?? null;
   const statusRoute = findPhiSignalRoutesByCapabilityId(config?.signalRoutes?.listens, "status")[0] ?? null;
   const controller = requestRoute?.receiver ?? null;
-  const statusScope = statusRoute?.scope ?? null;
   const statusChannel = statusRoute?.channel ?? null;
 
   /*
@@ -75,6 +78,7 @@ export function PhiDraftStatusWidget({
   useEffect(() => {
     if (
       !signalsEnabled ||
+      selfAddress === null ||
       controller === null ||
       requestScope === null ||
       requestChannel === null ||
@@ -108,12 +112,13 @@ export function PhiDraftStatusWidget({
       if (!signalsEnabled || !statusRoute || controller === null) {
         return;
       }
+      const addressed = selfAddress !== null && signal.receiver === selfAddress;
+      const broadcast = signal.receiver === "broadcast" && signal.scope === statusRoute.scope;
       if (
-        signal.scope !== statusRoute.scope ||
         signal.channel !== statusRoute.channel ||
         signal.action !== statusRoute.action ||
         signal.sender !== controller ||
-        (signal.receiver !== selfAddress && signal.receiver !== "broadcast")
+        (!addressed && !broadcast)
       ) {
         return;
       }
@@ -123,12 +128,10 @@ export function PhiDraftStatusWidget({
       }
     },
     useMemo(
-      () => ({
-        scopes: statusScope === null ? [] : [statusScope],
-        channels: statusChannel === null ? [] : [statusChannel],
-      }),
-      [statusChannel, statusScope],
+      () => ({ channels: statusChannel === null ? [] : [statusChannel] }),
+      [statusChannel],
     ),
+    selfAddress,
   );
 
   const color =
