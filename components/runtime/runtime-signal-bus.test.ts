@@ -184,6 +184,30 @@ describe("deferred signal delivery", () => {
     expect(received).toHaveLength(1);
   });
 
+  it("releases a held signal to every listener the same commit subscribed, not just the first", async () => {
+    /*
+     * The Edit user form: its address was registered by the Form frame before the descriptor's chunk
+     * arrived, and the descriptor then subscribed its Form binding ahead of its `recordOpen` listener.
+     * Flushing inside the first subscription handed the row action to the binding alone.
+     */
+    const partition = createPartition();
+    const first: PhiSignal[] = [];
+    const second: PhiSignal[] = [];
+
+    registerPhiSignalInstance(partition, { address: RECEIVER, scope: "page" });
+    emit(partition);
+    await settle();
+    expect(partition.pendingSignals.size).toBe(1);
+
+    subscribePhiSignals(partition, (signal) => first.push(signal), undefined, RECEIVER);
+    subscribePhiSignals(partition, (signal) => second.push(signal), { receiver: RECEIVER });
+    await settle();
+
+    expect(first).toHaveLength(1);
+    expect(second).toHaveLength(1);
+    expect(partition.pendingSignals.size).toBe(0);
+  });
+
   it("keeps two routes to the same receiver apart", async () => {
     const partition = createPartition();
     const received: PhiSignal[] = [];

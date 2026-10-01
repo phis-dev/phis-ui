@@ -310,7 +310,11 @@ Subscriptions and registrations are destroyed with their provider. Browser tabs 
   to the Core Runtime Controller and its outputs into the active Area and Page. A Canvas partition never
   reaches the live Site endpoint.
 - A signal to an address that is not registered yet, or registered without a listener, is `pending`: it
-  is held and delivered when the receiver and a listener for it are both present. A signal that cannot be
+  is held and delivered when the receiver and a listener for it are both present. The release waits for
+  the end of the current task (a microtask), so every listener one commit mounts is subscribed before the
+  held signal goes out; released inside the first subscription, it reached only the listeners subscribed
+  so far, and a component's later listener -- the Edit user form's `recordOpen`, behind its Form
+  binding -- missed it on every first open. A signal that cannot be
   delivered at all -- a scope violation, an inactive receiver, a receiver outside the current context --
   is `undeliverable`: it is dropped and reported once on the console as `[phi-signals] Dropped ...`
   (`resolvePhiSignalDeliverability`).

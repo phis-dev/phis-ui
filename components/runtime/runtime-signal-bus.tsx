@@ -111,15 +111,35 @@ function deliverPhiSignalNow(deliveryPartition: PhiSignalRuntimePartition, signa
  * The flush hangs off `instanceSubscribers`, which both a registering instance and a subscribing
  * listener already notify -- the two halves of becoming usable, in whichever order a widget's
  * effects happen to run. Subscribing lazily keeps a partition that never defers anything free of it.
+ *
+ * The flush runs once the current task's effects are through, never in the middle of them. A widget
+ * subscribes several listeners in one commit, and the first one used to release the held signal to
+ * whoever had subscribed so far: the Edit user form registered its address in the Form frame, loaded
+ * its descriptor a chunk later, and the descriptor's Form binding -- listening for its Controller --
+ * took the row action that its `recordOpen` listener, one effect further down, never saw. The form
+ * stayed in its skeleton on every first open. Deferred by a microtask, the flush sees every listener
+ * that the same commit mounted, as delivery already does for `emitPhiSignal`.
  */
 const watchedPhiSignalPartitions = new WeakSet<PhiSignalRuntimePartition>();
+const scheduledPhiSignalFlushes = new WeakSet<PhiSignalRuntimePartition>();
 
 function watchPhiSignalPartition(partition: PhiSignalRuntimePartition) {
   if (watchedPhiSignalPartitions.has(partition)) {
     return;
   }
   watchedPhiSignalPartitions.add(partition);
-  partition.instanceSubscribers.add(() => flushPendingPhiSignals(partition));
+  partition.instanceSubscribers.add(() => schedulePendingPhiSignalFlush(partition));
+}
+
+function schedulePendingPhiSignalFlush(partition: PhiSignalRuntimePartition) {
+  if (scheduledPhiSignalFlushes.has(partition)) {
+    return;
+  }
+  scheduledPhiSignalFlushes.add(partition);
+  queueMicrotask(() => {
+    scheduledPhiSignalFlushes.delete(partition);
+    flushPendingPhiSignals(partition);
+  });
 }
 
 function holdPhiSignal(
