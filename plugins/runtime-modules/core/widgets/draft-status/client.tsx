@@ -149,12 +149,12 @@ export function PhiDraftStatusWidget({
   return (
     <PhiFlexControl align="center" justify="space-between" gap={12} wrap="wrap" style={{ width: "100%" }}>
       <PhiFlexControl align="center" gap={8} wrap>
-        <PhiTagControl color={color}>{buildStatusLabel(state, labels)}</PhiTagControl>
         {state?.subject ? (
           <PhiTypographyControl code style={{ fontSize: 12 }}>
             {state.subject}
           </PhiTypographyControl>
         ) : null}
+        <PhiTagControl color={color}>{buildStatusLabel(state, labels)}</PhiTagControl>
       </PhiFlexControl>
       {error ? (
         <PhiTypographyControl type="danger" style={{ fontSize: 12 }}>
