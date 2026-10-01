@@ -91,6 +91,12 @@ Builder     →  other Module      only its `ids`, never its internals
 The Builder is the single exception, and a narrow one: it edits the other Modules, so it must know
 their identity. It must not reach into their stores, their Controller addresses, or their presets.
 
+`scripts/validate-module-dependency-direction.ts` (part of `runtime-modules:check`) holds the rule for
+imports: every reference counts, type-only and `import()` included, tests too. The module system beside
+the Module folders (contracts, descriptor compiler, Area catalogs, client manifests) and the package's
+own doors in `package.json#exports` assemble the Modules and may name them; a Module named by its id as
+data is not a reference.
+
 The rule has a practical edge that is easy to miss. A Foundation file that names a Module's Controller
 address has the dependency backwards even though nothing was imported *from* a Module folder — the
 address is Module knowledge wherever the file sits. `components/widgets/signals/page-title-signals.ts`
