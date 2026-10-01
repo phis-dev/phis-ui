@@ -715,11 +715,11 @@ are deliberate:
   and an Area that answers signed-out requests with 404 rather than a redirect will not tell the
   difference either.
 
-One more behaves the same way without being deliberate: an `antd:` icon name the registry does not know
-renders nothing at all, silently. The preset icon guard checks the prefix; it does not check that the
-name resolves. `PHI_ANTD_ICON_NAMES` in `components/shell/phi-antd-icon.tsx` is the one registry, each
-icon loaded as its own chunk where it is drawn, and a name missing there leaves a blank where a mark was
-meant to be.
+One more behaved the same way without being deliberate: an `antd:` icon name the registry does not know
+renders nothing at all, silently. `PHI_ANTD_ICON_NAMES` in `components/shell/phi-antd-icon.tsx` is the one
+registry, each icon loaded as its own chunk where it is drawn, and `validate-preset-icon-vocabulary` fails
+on a preset's `antd:` name that neither it nor the Button resolver's aliases know. It found `antd:send`
+on the News editor and `antd:cluster` on the Groups cards, both blank until then.
 
 ### Descriptor identity and instantiation
 

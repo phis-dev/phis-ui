@@ -51,6 +51,30 @@ function lineOf(source, index) {
   return source.slice(0, index).split("\n").length;
 }
 
+/*
+ * And the `antd:` names a preset may use: the ones that resolve.
+ *
+ * A name the registry does not know renders nothing -- no error, no placeholder, a blank where a mark
+ * was meant to be. `PHI_ANTD_ICON_NAMES` is what `PhiIcon` resolves; a Button or Command Toolbar icon
+ * goes through `resolvePhiButtonIcon` first, whose own aliases (`save`, `publish`, `trash`) resolve as
+ * well. Read from the sources rather than imported, so the guard runs without compiling TypeScript.
+ */
+async function readResolvableAntdIconNames() {
+  const registrySource = await readFile(path.join(repositoryRoot, "components/shell/phi-antd-icon.tsx"), "utf8");
+  const registry = registrySource.match(/PHI_ANTD_ICON_NAMES[^=]*=\s*\{([\s\S]*?)\n\};/u);
+  if (!registry) throw new Error("PHI_ANTD_ICON_NAMES not found in components/shell/phi-antd-icon.tsx.");
+  const names = new Set([...registry[1].matchAll(/^\s*"?([a-z0-9-]+)"?\s*:/gmu)].map((match) => match[1]));
+  const buttonSource = await readFile(
+    path.join(repositoryRoot, "components/widgets/client/shared/phi-button-icons.tsx"),
+    "utf8",
+  );
+  for (const match of buttonSource.matchAll(/case "([a-z0-9-]+)":/gu)) names.add(match[1]);
+  return names;
+}
+
+const resolvableAntdIconNames = await readResolvableAntdIconNames();
+let antdIconNames = 0;
+
 const failures = [];
 const presetFiles = [
   ...(await Promise.all(presetDirectories.map(listSourceFiles))).flat(),
@@ -74,6 +98,20 @@ for (const file of presetFiles) {
       match = pattern.exec(source);
     }
   }
+  const antdPattern = /["'`]antd:([^"'`]*)["'`]/gu;
+  let antdMatch = antdPattern.exec(source);
+  while (antdMatch) {
+    antdIconNames += 1;
+    // The Button resolver lowercases; `PhiIcon` does not, so a name with capitals resolves in one place.
+    if (!resolvableAntdIconNames.has(antdMatch[1])) {
+      failures.push(
+        `${file}:${lineOf(source, antdMatch.index)} names \`antd:${antdMatch[1]}\`, which no icon registry `
+          + "resolves -- it would render as a blank. Use a name from PHI_ANTD_ICON_NAMES "
+          + "(components/shell/phi-antd-icon.tsx), or add the icon there.",
+      );
+    }
+    antdMatch = antdPattern.exec(source);
+  }
 }
 
 if (failures.length > 0) {
@@ -82,5 +120,6 @@ if (failures.length > 0) {
 }
 
 console.log(
-  `Preset icon vocabulary valid (${presetFiles.length} preset sources name bundled icons only).`,
+  `Preset icon vocabulary valid (${presetFiles.length} preset sources name bundled icons only; `
+    + `${antdIconNames} antd: names, all resolvable).`,
 );

@@ -21,6 +21,7 @@ const PHI_ANTD_ICON_LOADERS = {
   AppstoreOutlined: () => import("@ant-design/icons/es/icons/AppstoreOutlined"),
   BranchesOutlined: () => import("@ant-design/icons/es/icons/BranchesOutlined"),
   CheckOutlined: () => import("@ant-design/icons/es/icons/CheckOutlined"),
+  ClusterOutlined: () => import("@ant-design/icons/es/icons/ClusterOutlined"),
   CloseOutlined: () => import("@ant-design/icons/es/icons/CloseOutlined"),
   CloudUploadOutlined: () => import("@ant-design/icons/es/icons/CloudUploadOutlined"),
   CodeOutlined: () => import("@ant-design/icons/es/icons/CodeOutlined"),
@@ -58,6 +59,7 @@ const PHI_ANTD_ICON_LOADERS = {
   ReloadOutlined: () => import("@ant-design/icons/es/icons/ReloadOutlined"),
   SafetyCertificateOutlined: () => import("@ant-design/icons/es/icons/SafetyCertificateOutlined"),
   SaveOutlined: () => import("@ant-design/icons/es/icons/SaveOutlined"),
+  SendOutlined: () => import("@ant-design/icons/es/icons/SendOutlined"),
   SearchOutlined: () => import("@ant-design/icons/es/icons/SearchOutlined"),
   SettingOutlined: () => import("@ant-design/icons/es/icons/SettingOutlined"),
   ShoppingOutlined: () => import("@ant-design/icons/es/icons/ShoppingOutlined"),
@@ -95,6 +97,10 @@ function readLazyIcon(icon: PhiAntdIconKey) {
  * separately loaded registry; with every icon its own chunk there is nothing left to keep apart.
  */
 export const PHI_ANTD_ICON_NAMES: Readonly<Record<string, PhiAntdIconKey>> = {
+  cluster: "ClusterOutlined",
+  "cluster-outlined": "ClusterOutlined",
+  send: "SendOutlined",
+  "send-outlined": "SendOutlined",
   home: "HomeOutlined",
   "home-outlined": "HomeOutlined",
   mail: "MailOutlined",
