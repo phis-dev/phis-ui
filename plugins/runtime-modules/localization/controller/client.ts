@@ -6,7 +6,8 @@ import { createPhiRuntimeControllerClient } from "../../../../components/runtime
 import { usePhiSignalDispatcher, usePhiSignalListener } from "../../../../components/runtime/runtime-signal-bus";
 import { PHI_SIGNAL_VALUE_SCHEMAS } from "../../../../types/signals";
 import { createPhiSignalAddress, createPhiSignalSubcontrolAddress } from "../../../../types/signals";
-import { readPhiTableActionSignalValue, readPhiTableQuery } from "../../../../types/table-widget";
+import { readPhiTableQuery } from "../../../../types/table-widget";
+import { readPhiTableActionSignalValue } from "../../../../types/table-signal-values";
 import { readPhiOverlayCloseRequest } from "../../../../types/cms-overlay";
 import {
   PHI_EDITOR_TRANSLATION_FORM_WIDGET_ID,

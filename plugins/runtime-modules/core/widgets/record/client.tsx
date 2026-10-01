@@ -16,10 +16,8 @@ import {
   type PhiRecordWidgetLabels,
 } from "../../../../../components/widgets/label-types/record";
 import type { PhiRecordWidgetConfig } from "../../../../../types/record-widget";
-import {
-  readPhiTableActionSignalValue,
-  type PhiTableRowIdentity,
-} from "../../../../../types/table-widget";
+import type { PhiTableRowIdentity } from "../../../../../types/table-widget";
+import { readPhiTableActionSignalValue } from "../../../../../types/table-signal-values";
 
 export type PhiRecordWidgetClientProps = {
   config: PhiRecordWidgetConfig;

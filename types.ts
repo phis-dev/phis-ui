@@ -68,8 +68,8 @@ export type {
   PhiCmsPaddingWidgetConfig,
   PhiCmsPluginConfigBase,
   PhiCmsRenderableBlockConfigBase,
-  readPhiCmsBorderWidgetConfig,
 } from "./types/cms-config";
+export type { readPhiCmsBorderWidgetConfig } from "./types/cms-border-config";
 export type {
   PHI_CMS_BORDER_SOURCES,
   PhiCmsBorderSource,

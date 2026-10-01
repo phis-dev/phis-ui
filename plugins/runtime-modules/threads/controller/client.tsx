@@ -9,7 +9,10 @@ import {
   type PhiSignalAddress,
   type PhiSignalValue,
 } from "../../../../types/signals";
-import { readPhiTableActionSignalValue, readPhiTableSelectionSignalValue } from "../../../../types/table-widget";
+import {
+  readPhiTableActionSignalValue,
+  readPhiTableSelectionSignalValue,
+} from "../../../../types/table-signal-values";
 import { readPhiOverlayCloseRequest } from "../../../../types/cms-overlay";
 import { createPhiRuntimeControllerClient } from "../../../../components/runtime/runtime-controller-client-factory";
 import { usePhiRuntimeConditionStateResponder } from "../../../../components/runtime/runtime-condition-state-responder";

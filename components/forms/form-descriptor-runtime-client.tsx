@@ -4,10 +4,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import type { PhiSignalAddress, PhiSignalValue } from "../../types/signals";
 import type { PhiFormDescriptor } from "../../types/form-descriptor";
-import {
-  readPhiTableActionSignalValue,
-  type PhiTableRowIdentity,
-} from "../../types/table-widget";
+import type { PhiTableRowIdentity } from "../../types/table-widget";
+import { readPhiTableActionSignalValue } from "../../types/table-signal-values";
 import type { PhiCmsFormWidgetConfig } from "./form-widget-config";
 import { usePhiSignalListener } from "../runtime/runtime-signal-bus";
 import { createPhiSignalCorrelationId } from "../runtime/runtime-signal-bus";

@@ -18,8 +18,6 @@ import {
 } from "../helpers/table-binding";
 import { parsePhiTableWidgetConfig } from "../plugins/runtime-modules/core/widgets/table/config";
 import {
-  readPhiTableColumnOrderSignalValue,
-  readPhiTableBindingParamsSignalValue,
   readPhiTableProviderMutationResult,
   readPhiTableProviderQueryResult,
   readPhiTableQuery,
@@ -31,6 +29,10 @@ import {
   type PhiTableProviderResourceDescriptor,
   type PhiTableWidgetConfig,
 } from "../types/table-widget";
+import {
+  readPhiTableColumnOrderSignalValue,
+  readPhiTableBindingParamsSignalValue,
+} from "../types/table-signal-values";
 
 const repositoryRoot = path.resolve(import.meta.dirname, "..");
 const sourceRoots = ["components", "plugins"];

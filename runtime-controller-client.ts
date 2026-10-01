@@ -37,4 +37,4 @@ export type {
 export {
   readPhiTableActionSignalValue,
   readPhiTableSelectionSignalValue,
-} from "./types/table-widget";
+} from "./types/table-signal-values";

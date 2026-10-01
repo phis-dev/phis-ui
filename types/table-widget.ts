@@ -12,6 +12,7 @@ import type {
 } from "./signals";
 import type { PhiRuntimeConditionExpression } from "./runtime-condition";
 import { isPhiRecord } from "../helpers/is-record";
+import { isPhiTableQueryValue, readRowIdentities } from "./table-signal-values";
 
 export type PhiTableRowIdentity = string | number;
 export type PhiTableSortDirection = "ascending" | "descending";
@@ -672,23 +673,6 @@ function readPositiveInteger(value: unknown) {
   return typeof value === "number" && Number.isInteger(value) && value > 0 ? value : undefined;
 }
 
-function readRowIdentities(value: unknown): PhiTableRowIdentity[] | undefined {
-  if (!Array.isArray(value)) return undefined;
-  return value.every((entry) =>
-    typeof entry === "string" || (typeof entry === "number" && Number.isFinite(entry)))
-    ? value as PhiTableRowIdentity[]
-    : undefined;
-}
-
-function isPhiTableQueryValue(value: unknown): value is PhiTableQueryValue {
-  return value == null ||
-    typeof value === "string" ||
-    typeof value === "number" && Number.isFinite(value) ||
-    typeof value === "boolean" ||
-    Array.isArray(value) && value.every((entry) =>
-      typeof entry === "string" || typeof entry === "number" && Number.isFinite(entry));
-}
-
 export function readPhiTableQuery(value: unknown): PhiTableQuery | null {
   if (!isPhiRecord(value)) return null;
   const allowedKeys = new Set([
@@ -727,60 +711,6 @@ export function readPhiTableQuery(value: unknown): PhiTableQuery | null {
 export function readPhiTableFilters(value: unknown): PhiTableQuery["filters"] | null {
   if (!isPhiRecord(value)) return null;
   return readPhiTableQuery({ filters: value })?.filters ?? null;
-}
-
-export function readPhiTableBindingParamsSignalValue(value: unknown): PhiTableBindingParamsSignalValue | null {
-  if (!isPhiRecord(value) || !isPhiRecord(value.params) ||
-    Object.values(value.params).some((paramValue) => !isPhiTableQueryValue(paramValue))) {
-    return null;
-  }
-  return { params: value.params as Record<string, PhiTableQueryValue> };
-}
-
-export function readPhiTableSelectionSignalValue(value: unknown): PhiTableSelectionSignalValue | null {
-  const selectedRowIdentities = isPhiRecord(value)
-    ? readRowIdentities(value.selectedRowIdentities)
-    : undefined;
-  return selectedRowIdentities ? { selectedRowIdentities } : null;
-}
-
-export function readPhiTableColumnOrderSignalValue(value: unknown): PhiTableColumnOrderSignalValue | null {
-  if (!isPhiRecord(value) || !Array.isArray(value.columnOrder) ||
-    !value.columnOrder.every((entry) => typeof entry === "string" && entry.trim().length > 0)) {
-    return null;
-  }
-  const columnOrder = value.columnOrder as string[];
-  return new Set(columnOrder).size === columnOrder.length ? { columnOrder } : null;
-}
-
-export function readPhiTableExpansionSignalValue(value: unknown): PhiTableExpansionSignalValue | null {
-  const expandedRowIdentities = isPhiRecord(value)
-    ? readRowIdentities(value.expandedRowIdentities)
-    : undefined;
-  return expandedRowIdentities ? { expandedRowIdentities } : null;
-}
-
-export function readPhiTableActionSignalValue(value: unknown): PhiTableActionSignalValue | null {
-  if (!isPhiRecord(value) || typeof value.actionKey !== "string" || !value.actionKey.trim()) {
-    return null;
-  }
-  const selectedRowIdentities = readRowIdentities(value.selectedRowIdentities);
-  if (!selectedRowIdentities) return null;
-  const rowIdentity = value.rowIdentity;
-  if (rowIdentity !== undefined && rowIdentity !== null &&
-    typeof rowIdentity !== "string" &&
-    (typeof rowIdentity !== "number" || !Number.isFinite(rowIdentity))) {
-    return null;
-  }
-  if (value.actionValue !== undefined && !isPhiTableQueryValue(value.actionValue)) {
-    return null;
-  }
-  return {
-    actionKey: value.actionKey.trim(),
-    rowIdentity: rowIdentity as PhiTableRowIdentity | null | undefined,
-    selectedRowIdentities,
-    actionValue: value.actionValue as PhiTableQueryValue,
-  };
 }
 
 export function readPhiTableProviderQueryResult(value: unknown): PhiTableProviderQueryResult | null {

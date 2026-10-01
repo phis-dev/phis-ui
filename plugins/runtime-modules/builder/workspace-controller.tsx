@@ -4,7 +4,7 @@ import { useEffect, useEffectEvent, useMemo, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 import { createPhiSignalAddress, createPhiSignalSubcontrolAddress, PHI_SIGNAL_VALUE_SCHEMAS } from "../../../types/signals";
-import { readPhiTableBindingParamsSignalValue } from "../../../types/table-widget";
+import { readPhiTableBindingParamsSignalValue } from "../../../types/table-signal-values";
 import type {
   PhiRuntimeModuleDefinition,
   PhiRuntimeModuleId,
@@ -107,7 +107,7 @@ import {
   resolvePhiBuilderSignalWiringRoutes,
   resolvePhiBuilderSignalWiringRoutesWithout,
 } from "./signal-wiring-controller";
-import { readPhiTableActionSignalValue } from "../../../types/table-widget";
+import { readPhiTableActionSignalValue } from "../../../types/table-signal-values";
 import { usePhiBuilderPageController } from "./page-controller";
 import {
   PHI_BUILDER_AREA_LANDING_PAGE_EMPTY,

@@ -20,7 +20,7 @@ import {
   createPhiSignalAddress,
   findPhiSignalRoutesByCapabilityId,
 } from "../../types/signals";
-import { readPhiTableActionSignalValue } from "../../types/table-widget";
+import { readPhiTableActionSignalValue } from "../../types/table-signal-values";
 import {
   emitPhiSignalCapability,
   usePhiSignalEmitter,

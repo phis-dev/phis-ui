@@ -6,7 +6,7 @@ import { PHI_USER_MANAGEMENT_RUNTIME_DATA_PROVIDER_KEYS } from "../ids";
 import { PHI_VIEWER_ACCESS_SITE_ADMIN, canPhiViewerAccess } from "../../../../types/access";
 import type { PhiRuntimeControllerPlugin, PhiSignal, PhiSignalAddress } from "../../../../types";
 import { PHI_SIGNAL_VALUE_SCHEMAS, createPhiSignalAddress, createPhiSignalSubcontrolAddress } from "../../../../types/signals";
-import { readPhiTableActionSignalValue } from "../../../../types/table-widget";
+import { readPhiTableActionSignalValue } from "../../../../types/table-signal-values";
 import { readPhiOverlayCloseRequest } from "../../../../types/cms-overlay";
 import { createPhiRuntimeControllerClient } from "../../../../components/runtime/runtime-controller-client-factory";
 import { usePhiRuntimeConditionStateResponder } from "../../../../components/runtime/runtime-condition-state-responder";

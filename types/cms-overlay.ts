@@ -1,5 +1,5 @@
 import { normalizePhiBackgroundWidgetConfig } from "../components/widgets/config/background";
-import { readPhiCmsBorderWidgetConfig } from "./cms-config";
+import { readPhiCmsBorderWidgetConfig } from "./cms-border-config";
 import type { PhiCmsContainerChromeConfig } from "./cms-container";
 import { isPhiLayoutEffectId, readPhiShadow } from "./layout-style";
 import { readPhiSignalRouteSet, type PhiSignalRouteSet } from "./signals";

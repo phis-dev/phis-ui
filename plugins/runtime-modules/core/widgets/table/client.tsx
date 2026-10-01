@@ -38,12 +38,8 @@ import { clearPhiDataDragPayload, readPhiDataDragPayload } from "../../../../../
 import { renderPhiValueContent } from "../../../../../components/widgets/client/shared/phi-rendered-value";
 import { formatPhiTranslation } from "../../../../../helpers/translation-format";
 import {
-  readPhiTableColumnOrderSignalValue,
-  readPhiTableBindingParamsSignalValue,
-  readPhiTableExpansionSignalValue,
   readPhiTableFilters,
   readPhiTableQuery,
-  readPhiTableActionSignalValue,
   readPhiTableRowOptions,
   validatePhiTableWidgetBinding,
   type PhiTableActionDefinition,
@@ -62,6 +58,12 @@ import {
   type PhiTableWidgetConfig,
   type PhiTableWidgetState,
 } from "../../../../../types/table-widget";
+import {
+  readPhiTableColumnOrderSignalValue,
+  readPhiTableBindingParamsSignalValue,
+  readPhiTableExpansionSignalValue,
+  readPhiTableActionSignalValue,
+} from "../../../../../types/table-signal-values";
 import {
   collectPhiRuntimeValueConditions,
   combinePhiRuntimeConditionExpressions,

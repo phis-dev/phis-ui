@@ -14,7 +14,7 @@ import {
 import { PHI_MEDIA_UPLOAD_DEFAULT_LABELS } from "../../../../../components/media/phi-media-upload";
 import { usePhiSignalListener } from "../../../../../components/runtime/runtime-signal-bus";
 import { usePhiSignalIdentity } from "../../../../../components/runtime/runtime-signal-identity";
-import { readPhiTableBindingParamsSignalValue } from "../../../../../types/table-widget";
+import { readPhiTableBindingParamsSignalValue } from "../../../../../types/table-signal-values";
 import type { PhiSignal, PhiSignalRoute } from "../../../../../types/signals";
 import type { PhiSlotUploadWidgetConfig } from "./config";
 import { PhiFlexControl } from "../../../../../components/controls/phi-flex-control";

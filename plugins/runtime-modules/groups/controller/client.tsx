@@ -7,7 +7,7 @@ import {
   findPhiSignalRoutesByCapabilityId,
   type PhiSignalValue,
 } from "../../../../types/signals";
-import { readPhiTableSelectionSignalValue } from "../../../../types/table-widget";
+import { readPhiTableSelectionSignalValue } from "../../../../types/table-signal-values";
 import { createPhiRuntimeControllerClient } from "../../../../components/runtime/runtime-controller-client-factory";
 import { PHI_GROUPS_OPTIONS_REVISION } from "../services/options-revision";
 import { usePhiSignalDispatcher, usePhiSignalListener } from "../../../../components/runtime/runtime-signal-bus";

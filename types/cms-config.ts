@@ -12,6 +12,7 @@ import {
 } from "../helpers/motion";
 import { readPhiLengthValue, type PhiCssLength } from "./length";
 import type { PhiResponsiveValue } from "./responsive";
+import { readPhiCmsBorderWidgetConfig } from "./cms-border-config";
 
 import {
   isPhiAnchorWidgetPlacement,
@@ -439,52 +440,6 @@ function readRenderableBlockAnchorOrPlacement(value: unknown): PhiRenderableBloc
   return typeof value === "string" && isPhiAnchorWidgetPlacement(value)
     ? resolvePhiRenderableBlockAnchor(value)
     : undefined;
-}
-
-export function readPhiCmsBorderWidgetConfig(value: unknown): PhiCmsBorderWidgetConfig | undefined {
-  if (!value || typeof value !== "object" || Array.isArray(value)) {
-    const border = readString(value);
-    if (border == null) {
-      return undefined;
-    }
-
-    if (border === "none") {
-      return {
-        borderStyle: "none",
-      };
-    }
-
-    const match = border.match(/^([0-9.]+)px\s+([a-z-]+)\s+(.+)$/i);
-    if (!match) {
-      return undefined;
-    }
-
-    const borderWidth = Number.parseFloat(match[1]);
-    const borderStyle = match[2] as PhiCmsBorderWidgetConfig["borderStyle"];
-    const borderColor = match[3]?.trim();
-
-    return {
-      ...(Number.isFinite(borderWidth) ? { borderWidth } : {}),
-      ...(borderStyle == null ? {} : { borderStyle }),
-      ...(borderColor ? { borderColor } : {}),
-    };
-  }
-
-  const raw = value as Record<string, unknown>;
-  const next: PhiCmsBorderWidgetConfig = {
-    borderWidth: readNumber(raw.borderWidth),
-    borderStyle:
-      typeof raw.borderStyle === "string" && raw.borderStyle.trim().length > 0
-        ? (raw.borderStyle as PhiCmsBorderWidgetConfig["borderStyle"])
-        : undefined,
-    borderColor: readString(raw.borderColor),
-    borderTopLeftRadius: readCssSize(raw.borderTopLeftRadius),
-    borderTopRightRadius: readCssSize(raw.borderTopRightRadius),
-    borderBottomLeftRadius: readCssSize(raw.borderBottomLeftRadius),
-    borderBottomRightRadius: readCssSize(raw.borderBottomRightRadius),
-  };
-
-  return Object.values(next).some((entry) => entry != null) ? next : undefined;
 }
 
 function readGridResponsivePlacement(

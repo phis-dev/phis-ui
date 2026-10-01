@@ -4,7 +4,7 @@ import { createElement, useCallback, useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import type { PhiRuntimeControllerPlugin, PhiSignalAddress } from "../../../../types";
 import { createPhiSignalAddress, PHI_SIGNAL_VALUE_SCHEMAS } from "../../../../types/signals";
-import { readPhiTableBindingParamsSignalValue } from "../../../../types/table-widget";
+import { readPhiTableBindingParamsSignalValue } from "../../../../types/table-signal-values";
 import { isPhiBuilderAreaKey, type PhiBuilderAreaKey } from "../../../../constants/cms-areas";
 import { createPhiRuntimeControllerClient } from "../../../../components/runtime/runtime-controller-client-factory";
 import { usePhiSignalDispatcher, usePhiSignalListener } from "../../../../components/runtime/runtime-signal-bus";
