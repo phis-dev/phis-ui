@@ -2,7 +2,7 @@
 import { cleanup, render } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
 
-import { PhiDrawerControl } from "./phi-drawer-control";
+import { PhiDrawerControlAdapter as PhiDrawerControl } from "./phi-drawer-control-adapter";
 
 /**
  * What a drawer paints and where its header parts stand, measured on the mounted adapter: the styles
