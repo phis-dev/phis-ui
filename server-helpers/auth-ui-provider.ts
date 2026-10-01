@@ -4,7 +4,7 @@ import type {
   PhiRuntimeModuleCatalog,
   PhiRuntimeModuleId,
 } from "../types";
-import { createPhiControllerSignalAddress } from "../types/signals";
+import { createPhiControllerSignalAddress, createPhiSignalAddress } from "../types/signals";
 
 export function resolvePhiAuthUiRuntimeProjection(
   catalog: PhiRuntimeModuleCatalog,
@@ -33,7 +33,9 @@ export function resolvePhiAuthUiRuntimeProjection(
     return null;
   }
 
+  const loginOverlayId = resolved.provider.loginOverlayByArea?.[area];
   return {
+    loginOverlayAddress: loginOverlayId == null ? null : createPhiSignalAddress("cms", loginOverlayId),
     moduleId: resolved.moduleId,
     providerKey: resolved.provider.providerKey,
     capabilities: resolved.capabilities,

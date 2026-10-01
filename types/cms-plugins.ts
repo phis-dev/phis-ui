@@ -912,6 +912,14 @@ export type PhiRuntimeModuleDefinition = {
       | "recovery"
       | "site-settings"
     )[]>>;
+    /**
+     * The Area Overlay this provider signs a visitor in through, per Area.
+     *
+     * The Account Widget opens it directly; the provider's Controller arrives with the Overlay's zones
+     * and hears the open it was sent while it was not there yet. An Area without one is signed into on
+     * the Public `/login` page. Only an Area whose capabilities include `primary-login` may name one.
+     */
+    loginOverlayByArea?: Partial<Record<PhiCmsAreaKey, PhiCmsInstanceId>>;
   };
 } & PhiRuntimeModuleIconMetadata;
 

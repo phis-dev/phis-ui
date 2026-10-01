@@ -1,6 +1,7 @@
 import type {
   PhiCmsContentWidgetNode,
   PhiCmsLayoutNode,
+  PhiCmsOverlayNode,
   PhiResolvedCmsRenderableTree,
 } from "../../types/cms";
 import type { PhiCmsInstanceId } from "../../types/cms-instance-id";
@@ -31,6 +32,15 @@ export type PhiRuntimeControllerMaterializationOptions = {
   activeControllerTypes: ReadonlySet<string> | readonly string[];
   regionTypes?: readonly number[] | null;
   includeOverlays?: boolean;
+  /**
+   * Overlays whose Controllers arrive with their zones rather than with the Area.
+   *
+   * A closed, deferred Overlay is not in the page, and neither should the Controllers its Widgets ask
+   * for be: the sign-in Form put the Form Controller and the Auth Controller on every Public page for
+   * the few visitors who ever open it. `next/overlay-zones.tsx` mounts them when the zones are asked for
+   * (`materializePhiOverlayRuntimeControllerSettings`).
+   */
+  excludedOverlayIds?: ReadonlySet<PhiCmsInstanceId>;
 };
 
 function buildSettingKey(setting: Pick<PhiRuntimeControllerSetting, "type" | "instanceKey" | "mountScope">) {
@@ -108,13 +118,37 @@ function collectIncludedLayoutIds(
   return included;
 }
 
+function readOverlayRootLayoutNodeIds(overlays: readonly PhiCmsOverlayNode[]) {
+  return overlays.flatMap((overlay) => [
+    overlay.headerLayoutNodeId,
+    overlay.bodyLayoutNodeId,
+    overlay.footerLayoutNodeId,
+  ].filter((id): id is PhiCmsInstanceId => id != null));
+}
+
+function withoutOverlayWidgets(
+  tree: PhiResolvedCmsRenderableTree,
+  widgets: readonly PhiCmsContentWidgetNode[],
+  excludedOverlayIds: ReadonlySet<PhiCmsInstanceId> | undefined,
+): readonly PhiCmsContentWidgetNode[] {
+  if (!excludedOverlayIds || excludedOverlayIds.size === 0) {
+    return widgets;
+  }
+  const excludedLayoutIds = collectIncludedLayoutIds(
+    tree.layoutNodes,
+    readOverlayRootLayoutNodeIds(tree.overlays.filter((overlay) => excludedOverlayIds.has(overlay.id))),
+  );
+  return widgets.filter((widget) => !excludedLayoutIds.has(widget.parentLayoutNodeId));
+}
+
 function filterMaterializedWidgets(
   tree: PhiResolvedCmsRenderableTree,
   regionTypes?: readonly number[] | null,
   includeOverlays = false,
+  excludedOverlayIds?: ReadonlySet<PhiCmsInstanceId>,
 ): readonly PhiCmsContentWidgetNode[] {
   if (!regionTypes || regionTypes.length === 0) {
-    return tree.contentWidgets;
+    return withoutOverlayWidgets(tree, tree.contentWidgets, excludedOverlayIds);
   }
 
   const selectedRegionTypes = new Set(regionTypes);
@@ -122,11 +156,7 @@ function filterMaterializedWidgets(
     ...tree.regions
     .filter((region) => selectedRegionTypes.has(region.regionType))
     .map((region) => region.rootLayoutNodeId),
-    ...(includeOverlays ? tree.overlays.flatMap((overlay) => [
-      overlay.headerLayoutNodeId,
-      overlay.bodyLayoutNodeId,
-      overlay.footerLayoutNodeId,
-    ].filter((id): id is PhiCmsInstanceId => id != null)) : []),
+    ...(includeOverlays ? readOverlayRootLayoutNodeIds(tree.overlays) : []),
   ];
 
   if (rootLayoutNodeIds.length === 0) {
@@ -134,7 +164,11 @@ function filterMaterializedWidgets(
   }
 
   const includedLayoutIds = collectIncludedLayoutIds(tree.layoutNodes, rootLayoutNodeIds);
-  return tree.contentWidgets.filter((widget) => includedLayoutIds.has(widget.parentLayoutNodeId));
+  return withoutOverlayWidgets(
+    tree,
+    tree.contentWidgets.filter((widget) => includedLayoutIds.has(widget.parentLayoutNodeId)),
+    excludedOverlayIds,
+  );
 }
 
 export function materializePhiRuntimeControllerSettings({
@@ -145,6 +179,7 @@ export function materializePhiRuntimeControllerSettings({
   activeControllerTypes,
   regionTypes,
   includeOverlays,
+  excludedOverlayIds,
 }: PhiRuntimeControllerMaterializationOptions): PhiRuntimeControllerSetting[] {
   const settingsByKey = new Map<string, PhiRuntimeControllerSetting>();
   const allowedControllerTypes = new Set<string>(activeControllerTypes);
@@ -157,7 +192,58 @@ export function materializePhiRuntimeControllerSettings({
     settingsByKey.set(buildSettingKey(setting), { ...setting });
   }
 
-  for (const widget of filterMaterializedWidgets(tree, regionTypes, includeOverlays)) {
+  return materializeWidgetSettings({
+    tree,
+    widgets: filterMaterializedWidgets(tree, regionTypes, includeOverlays, excludedOverlayIds),
+    ownerMountScope,
+    widgetPluginsByType,
+    allowedControllerTypes,
+    settingsByKey,
+  });
+}
+
+/**
+ * The Controllers one Overlay's Widgets ask for, mounted with its zones when it first opens.
+ *
+ * The counterpart of `excludedOverlayIds`: what the Area left out because the Overlay was closed, the
+ * zones bring. In the Area's scope, because the Overlay is the Area's -- the addresses are the ones the
+ * page would have mounted, so nothing that sends to them has to know when they arrived.
+ */
+export function materializePhiOverlayRuntimeControllerSettings({
+  tree,
+  overlay,
+  widgetPluginsByType,
+  activeControllerTypes,
+}: Pick<PhiRuntimeControllerMaterializationOptions, "tree" | "widgetPluginsByType" | "activeControllerTypes"> & {
+  overlay: PhiCmsOverlayNode;
+}): PhiRuntimeControllerSetting[] {
+  const includedLayoutIds = collectIncludedLayoutIds(tree.layoutNodes, readOverlayRootLayoutNodeIds([overlay]));
+  return materializeWidgetSettings({
+    tree,
+    widgets: tree.contentWidgets.filter((widget) => includedLayoutIds.has(widget.parentLayoutNodeId)),
+    ownerMountScope: "area",
+    widgetPluginsByType,
+    allowedControllerTypes: new Set<string>(activeControllerTypes),
+    settingsByKey: new Map(),
+  });
+}
+
+function materializeWidgetSettings({
+  tree,
+  widgets,
+  ownerMountScope,
+  widgetPluginsByType,
+  allowedControllerTypes,
+  settingsByKey,
+}: {
+  tree: PhiResolvedCmsRenderableTree;
+  widgets: readonly PhiCmsContentWidgetNode[];
+  ownerMountScope: PhiRuntimeControllerMaterializationOwner;
+  widgetPluginsByType: WidgetPluginRegistryLike;
+  allowedControllerTypes: ReadonlySet<string>;
+  settingsByKey: Map<string, PhiRuntimeControllerSetting>;
+}): PhiRuntimeControllerSetting[] {
+  for (const widget of widgets) {
     const plugin = widgetPluginsByType.get(widget.widgetType);
     if (!plugin) {
       continue;

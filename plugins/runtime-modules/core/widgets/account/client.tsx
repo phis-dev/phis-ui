@@ -10,7 +10,9 @@ import {
   createPhiSignalCorrelationId,
   usePhiSignalDispatcher,
 } from "../../../../../components/runtime/runtime-signal-bus";
-import { createPhiSignalAddress } from "../../../../../types/signals";
+import { createPhiSignalAddress, PHI_SIGNAL_VALUE_SCHEMAS } from "../../../../../types/signals";
+import { createPhiCoreRuntimeControllerAddress } from "../../../../../components/runtime/core-runtime-controller-address";
+import { localizeAreaPath } from "../../../../../helpers/locale";
 import type { PhiCmsInstanceId } from "../../../../../types/cms-instance-id";
 import type { PhiAccountAreaEntry, PhiNavItem } from "../../../../../components/shell/shell-types";
 import { fetchPhiViewerAvatar } from "../../../../../components/account/avatar-client";
@@ -58,10 +60,40 @@ export function PhiAccountWidgetClient({
   const nextTarget = normalizeLoginRedirectTarget(searchParams.get("next"));
   const authUiProvider = runtime?.authUiProvider ?? null;
 
+  /*
+   * Signing in, opened from here rather than asked of a Controller that would have to be on every page.
+   *
+   * The provider's Controller comes with its Overlay's zones, so on the first open it is not there yet:
+   * the `open` sent to it waits on the bus and reaches it the moment it mounts, carrying where the
+   * visitor is headed, while the Overlay opens at once and shows its shell. The provider names the
+   * Overlay (`authUiProvider.loginOverlayAddress`); an Area without one signs in on the Public `/login`.
+   */
   function openLoginFromMenu() {
     setMenuOpen(false);
     const provider = authUiProvider;
-    if (!provider) {
+    if (!provider || !runtime) {
+      return;
+    }
+    const correlationId = createPhiSignalCorrelationId();
+    if (!provider.loginOverlayAddress) {
+      const target = nextTarget ?? normalizeLoginRedirectTarget(
+        `${window.location.pathname}${window.location.search}`,
+      ) ?? "/";
+      dispatchSignal({
+        scope: "site",
+        channel: "path",
+        action: "activate",
+        value: {
+          path: `${localizeAreaPath(runtime.locale.current, "public", "/login")}?${
+            new URLSearchParams({ next: target }).toString()}`,
+        },
+        valueType: "json",
+        valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.runtimeNavigation,
+        sender: null,
+        receiver: createPhiCoreRuntimeControllerAddress(),
+        correlationId,
+        timestamp: Date.now(),
+      });
       return;
     }
     dispatchSignal({
@@ -72,6 +104,17 @@ export function PhiAccountWidgetClient({
       valueType: "path",
       sender: null,
       receiver: provider.controllerAddress,
+      correlationId,
+    });
+    dispatchSignal({
+      scope: "area",
+      channel: "dialog",
+      action: "activate",
+      value: null,
+      valueType: "none",
+      sender: null,
+      receiver: provider.loginOverlayAddress,
+      correlationId,
     });
   }
 

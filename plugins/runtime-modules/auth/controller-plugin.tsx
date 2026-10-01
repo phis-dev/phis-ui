@@ -5,7 +5,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   PHI_AUTH_CONTROLLER_DEFINITION,
   type PhiAuthControllerPreload,
-} from "../../../components/runtime/area-base-controller-definitions";
+} from "./controller/definition";
 import { usePhiStateMachineBinding } from "../../../components/runtime/phi-state-machine-binding";
 import { usePhiRuntimeConditionStateResponder } from "../../../components/runtime/runtime-condition-state-responder";
 import {
@@ -55,9 +55,10 @@ function canPresentPhiAuthState(state: string, capabilities: readonly string[] |
 
 function PhiAuthControllerView({
   address,
+  mountScope,
   runtime,
   preloadData,
-}: Pick<PhiAuthControllerRenderArgs, "address" | "runtime"> & {
+}: Pick<PhiAuthControllerRenderArgs, "address" | "mountScope" | "runtime"> & {
   preloadData?: PhiAuthControllerPreload | null;
 }) {
   const dispatchSignal = usePhiSignalDispatcher();
@@ -122,7 +123,7 @@ function PhiAuthControllerView({
    */
   usePhiRuntimeConditionStateResponder({
     address,
-    scope: "area",
+    scope: mountScope,
     state: machine.snapshot.statements,
   });
   const pendingOpenRef = useRef<{ correlationId: string; nextPath: string } | null>(null);
@@ -350,7 +351,8 @@ function PhiAuthControllerView({
     pendingOpenRef.current = { correlationId: signal.correlationId, nextPath: next };
     setOpenSequence((current) => current + 1);
   }, {
-    scopes: ["area"],
+    // What is sent to this address arrives in the scope it was mounted in (SIGNALS.md, receiver scope).
+    scopes: [mountScope],
     channels: ["command", "dialog", "submit", "workflow"],
     actions: ["open", "close", "activate", "reload"],
     receiver: address,
@@ -385,9 +387,10 @@ function PhiAuthControllerView({
 
 const PHI_AUTH_CONTROLLER_CLIENT_PLUGIN = {
   ...PHI_AUTH_CONTROLLER_DEFINITION,
-  renderController: ({ address, runtime, preloadData }) => (
+  renderController: ({ address, mountScope, runtime, preloadData }) => (
     <PhiAuthControllerView
       address={address}
+      mountScope={mountScope}
       runtime={runtime}
       preloadData={preloadData}
     />

@@ -1,13 +1,14 @@
 import {
   PHI_AUTH_CONTROLLER_DEFINITION,
-} from "../../../components/runtime/area-base-controller-definitions";
+} from "./controller/definition";
 import {
   PHI_AUTH_CONTROLLER_TYPE,
-} from "../../../components/runtime/area-base-controller-addresses";
+} from "./controller/address";
 import type { PhiRuntimeModuleDefinition } from "../contracts";
 import { PHI_AUTH_RUNTIME_DATA_PROVIDER_DESCRIPTORS } from "../auth/data-providers";
 import { buildPhiRuntimeModuleControllerDescriptor } from "../contracts";
 import { PHI_AUTH_RUNTIME_MODULE_ID } from "./ids";
+import { PHI_AUTH_LOGIN_OVERLAY_IDS } from "./overlay-ids";
 import {
   PHI_AUTH_FORM_FIELD_TYPE_PROVIDER_DESCRIPTORS,
   PHI_AUTH_FORM_HANDLER_PROVIDER_DESCRIPTORS,
@@ -27,7 +28,12 @@ export const PHI_AUTH_RUNTIME_MODULE_DEFINITION = {
   description: "Site login, mandatory authentication workflows, Admin settings, and App account security.",
   category: "identity",
   icon: "antd:safety-certificate",
-  controllerMountPolicy: "area",
+  /*
+   * Mounted where signing in happens, not on every page of the Area: with the login Overlay's zones
+   * when it opens, and on the sign-in Pages that place the Login (the step Widget asks for it). The
+   * Account Widget opens the Overlay itself, so nothing on an ordinary page needs this Controller.
+   */
+  controllerMountPolicy: "demand",
   authUiProvider: {
     providerKey: PHI_AUTH_CONTROLLER_TYPE,
     controllerType: PHI_AUTH_CONTROLLER_TYPE,
@@ -35,6 +41,10 @@ export const PHI_AUTH_RUNTIME_MODULE_DEFINITION = {
       public: ["primary-login", "factor-challenge", "factor-enrollment", "recovery"],
       admin: ["site-settings"],
       app: ["primary-login"],
+    },
+    loginOverlayByArea: {
+      public: PHI_AUTH_LOGIN_OVERLAY_IDS.public.overlayLogin,
+      app: PHI_AUTH_LOGIN_OVERLAY_IDS.app.overlayLogin,
     },
   },
   formProviders: {

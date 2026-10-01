@@ -265,10 +265,12 @@ type PhiSignalRoute = {
   owned both ends.
 - `controllerSettings` is also what brings a `demand` Controller into being. Three mount policies, three
   answers to who mounts: `site` and `area` are mounted for the scope they name whether anything asks or
-  not, and `demand` is mounted by whoever needs it -- a Page through this field, or a Widget through a
-  `conditionStateRequest` route. Nobody asking means no Controller, and a Module whose policy is `demand`
-  must allow the scope its Page mounts it at (`allowedMountScopes`); `demand` with `["area"]` alone can
-  never be mounted, because no Area mounts it either.
+  not, and `demand` is mounted by whoever needs it -- a Page through this field, or a Widget through its
+  `requiredRuntimeControllers` (a `conditionStateRequest` route, the Auth step's `authWorkflowRequest`).
+  A Widget in a deferred Area Overlay demands at `area` scope, and its Controller arrives with the
+  Overlay's zones when it first opens (OVERLAYS.md); a Widget on a Page demands at `page` scope. Nobody
+  asking means no Controller, and a Module whose policy is `demand` must allow every scope it is asked
+  at (`allowedMountScopes`).
 
   Wiring to a Controller that nobody mounts fails in silence, which is the same silence as a forgotten
   `openActionKey` and worse to find. The bus holds a signal addressed to an absent listener (see

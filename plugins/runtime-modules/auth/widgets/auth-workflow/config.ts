@@ -1,6 +1,14 @@
 import { resolvePhiCmsWidgetPluginKey } from "../../../../../constants/cms-widget-types";
-import type { PhiCmsWidgetPlugin } from "../../../../../types";
-import { PHI_SIGNAL_VALUE_SCHEMAS, readPhiSignalRouteSet } from "../../../../../types/signals";
+import type {
+  PhiCmsWidgetPlugin,
+  PhiCmsWidgetRuntimeControllerRequirementResolver,
+} from "../../../../../types";
+import {
+  findPhiSignalRoutesByCapabilityId,
+  PHI_SIGNAL_VALUE_SCHEMAS,
+  readPhiControllerSignalAddressParts,
+  readPhiSignalRouteSet,
+} from "../../../../../types/signals";
 
 /**
  * The step that follows a password, when the account asks for one.
@@ -20,6 +28,22 @@ export function parsePhiAuthWorkflowWidgetConfig(
   return { signalRoutes: readPhiSignalRouteSet(rawConfig.signalRoutes) };
 }
 
+/**
+ * The Controller this step asks where signing in stands, mounted wherever the step is placed.
+ *
+ * Read from the placement's own `authWorkflowRequest` route, not written in here: the step names the
+ * Auth UI provider's Controller it was wired to, so a different provider's Controller is mounted by the
+ * same rule. The Auth Controller is mounted on demand -- with the login Overlay's zones, or on a
+ * sign-in Page -- and this is the demand.
+ */
+const requireAuthWorkflowController: PhiCmsWidgetRuntimeControllerRequirementResolver<
+  PhiCmsAuthWorkflowWidgetConfig
+> = ({ config }) => findPhiSignalRoutesByCapabilityId(config.signalRoutes?.emits, "authWorkflowRequest")
+  .flatMap((route) => {
+    const parts = readPhiControllerSignalAddressParts(route.receiver);
+    return parts ? [{ type: parts.type, instanceKey: parts.instanceKey, enabled: true }] : [];
+  });
+
 export const PHI_AUTH_WORKFLOW_WIDGET_DEFINITION = {
   kind: "widget",
   pluginKey: resolvePhiCmsWidgetPluginKey("auth-workflow"),
@@ -30,6 +54,7 @@ export const PHI_AUTH_WORKFLOW_WIDGET_DEFINITION = {
   tags: ["auth", "login", "totp"],
   icon: "antd:safety-certificate",
   slotSizePolicy: "fill-inline",
+  requiredRuntimeControllers: requireAuthWorkflowController,
   runtimeSignals: {
     emits: [
       /*
@@ -52,9 +77,8 @@ export const PHI_AUTH_WORKFLOW_WIDGET_DEFINITION = {
        */
       { id: "authWorkflowRequest", action: "reload", valueType: "none" },
       /*
-       * The machine's statement, carried the last hop to the Widgets beside this one. They cannot ask
-       * the Auth Controller themselves: a `controller` condition materializes its Controller at the
-       * scope of the tree that asks, and a Page may not mount an Area-only Controller.
+       * The machine's statement, carried the last hop to the Widgets beside this one, so that this step
+       * stays the one Widget that demands the Auth Controller and the others depend on the step alone.
        */
       {
         id: "conditionStateChange",
@@ -94,6 +118,7 @@ export const PHI_AUTH_WORKFLOW_WIDGET_DEFINITION = {
   | "tags"
   | "icon"
   | "slotSizePolicy"
+  | "requiredRuntimeControllers"
   | "runtimeSignals"
   | "fields"
   | "defaultConfig"

@@ -223,6 +223,15 @@ for an Overlay that viewer's tree contains. The shell opens at once and shows a 
 zones arrive; zones are kept for the address they were rendered at, so a client navigation asks again on
 the next open. A failed request closes the Overlay and logs the error, and the next open asks again.
 
+The Controllers go with the zones. The Area leaves out what the Widgets of a deferred Overlay ask for
+(`excludedOverlayIds` in `materializePhiRuntimeControllerSettings`, decided by the same
+`isPhiCmsOverlayDeferredWhenClosed` the renderer uses), and the action mounts them with the zones
+(`materializePhiOverlayRuntimeControllerSettings`), at `area` scope and at the addresses the page would
+have used. The container renders them beside the shell, not inside it, and keeps them once they have
+arrived, so a `remount` policy does not take a Controller's state with the body. What was sent to one of
+them before it arrived waits on the bus and reaches it when it mounts: the Account Widget's `command open`
+reaches the Auth Controller that way, and the Auth Controller's `values` the login Form's Controller.
+
 The reason is the first load. Rendered with the page, a closed Overlay's zones put every Client
 implementation inside them -- a sign-in Form, its Controls, the validation library -- into every page of
 the Area for the few visitors who open it. An `eager` Overlay keeps rendering with the page, because its

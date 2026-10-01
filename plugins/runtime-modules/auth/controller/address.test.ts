@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest";
 
-import { PHI_AUTH_CONTROLLER_DEFINITION } from "./area-base-controller-definitions";
+import { PHI_AUTH_CONTROLLER_DEFINITION } from "./definition";
 import {
   createPhiAuthControllerAddress,
   PHI_AUTH_CONTROLLER_KEY,
-} from "./area-base-controller-addresses";
-import { resolvePhiRuntimeControllerMount } from "../../plugins/registries/runtime-controller-core";
+} from "./address";
+import { resolvePhiRuntimeControllerMount } from "../../../../plugins/registries/runtime-controller-core";
 
 /**
  * The address senders use has to be the address the mount registers.

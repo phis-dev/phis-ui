@@ -26,7 +26,18 @@ export type PhiCmsOverlayZones = {
   footer: ReactNode;
 };
 
+/** What the Site's Server Action answers with: the zones, and what has to be mounted beside them. */
+export type PhiCmsLoadedOverlayZones = PhiCmsOverlayZones & {
+  /**
+   * The Controllers the zones' Widgets ask for, which the Area left out while the Overlay was closed.
+   *
+   * Mounted beside the shell, not inside it, and kept once they have arrived: a mount policy that drops
+   * the body on close must not take the Controllers' state with it.
+   */
+  controllers: ReactNode;
+};
+
 /** The Server Action a Site provides, named by the root layout and handed to every Overlay. */
 export type PhiCmsOverlayZonesLoader = (
   request: PhiCmsOverlayZonesRequest,
-) => Promise<PhiCmsOverlayZones | null>;
+) => Promise<PhiCmsLoadedOverlayZones | null>;

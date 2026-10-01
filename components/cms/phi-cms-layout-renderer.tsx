@@ -74,7 +74,7 @@ import { PhiRuntimeModuleRenderClientHost } from "../runtime/runtime-module-rend
 import { PhiRuntimeModuleUiProviderHost } from "../runtime/runtime-module-ui-provider-client-manifest";
 import type { PhiRuntimeModuleId } from "../../types/cms-module-descriptors";
 import { PhiRuntimeRenderClientType } from "../../constants/runtime-render-client-types";
-import { parsePhiCmsOverlayConfig } from "../../types/cms-overlay";
+import { isPhiCmsOverlayDeferredWhenClosed } from "../../types/cms-overlay";
 import type { PhiCmsOverlayZones, PhiCmsOverlayZonesRequest } from "../../types/cms-overlay-zones";
 
 /*
@@ -447,7 +447,7 @@ export async function PhiCmsOverlayRenderer({
     .slice()
     .sort((left, right) => left.sortOrder - right.sortOrder || comparePhiCmsInstanceIds(left.id, right.id));
   const defers = (overlay: PhiCmsOverlayNode) => deferredOrigin != null &&
-    parsePhiCmsOverlayConfig(overlay.config, overlay.overlayType).mountPolicy !== "eager";
+    isPhiCmsOverlayDeferredWhenClosed(overlay);
   const context = overlays.some((overlay) => !defers(overlay))
     ? await preparePhiCmsOverlayRenderContext({ tree, runtime, registry, signalScope })
     : null;

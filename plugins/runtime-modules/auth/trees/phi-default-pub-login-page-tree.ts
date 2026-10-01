@@ -13,7 +13,7 @@ import {
   buildPhiLoginNodes,
   PHI_LOGIN_FORM_LAYOUT_CONFIG,
 } from "./phi-login-form-nodes";
-import { createPhiAuthControllerAddress } from "../../../../components/runtime/area-base-controller-addresses";
+import { createPhiAuthControllerAddress } from "../controller/address";
 
 const SYNTHETIC_LOGIN_REGION_IDS = {
   regionContent: -230,

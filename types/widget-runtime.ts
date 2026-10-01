@@ -14,7 +14,7 @@ import type { PhiControlShapeCorners } from "../theme/phi-control-shape";
 import type { PhiThemeButtons } from "../theme/phi-button-shadow";
 import type { PhiThemeTypography } from "../theme/phi-theme-typography";
 import type { PhiViewerAddonRoleClaim, PhiViewerGroupClaim, PhiViewerRoleClaim } from "./access";
-import type { PhiControllerSignalAddress } from "./signals";
+import type { PhiControllerSignalAddress, PhiSignalAddress } from "./signals";
 
 export type PhiWidgetAreaKey =
   | "public"
@@ -157,6 +157,8 @@ export type PhiBlockRuntime = {
     providerKey: `${string}/${string}`;
     controllerAddress: PhiControllerSignalAddress;
     capabilities: readonly string[];
+    /** The Overlay to open for signing in here, or null when this Area signs in on `/login`. */
+    loginOverlayAddress: PhiSignalAddress | null;
   } | null;
   page?: PhiBlockRuntimePage;
   request?: {

@@ -183,3 +183,18 @@ export function parsePhiCmsOverlayConfig(
     signalRoutes: readPhiSignalRouteSet(rawConfig.signalRoutes),
   };
 }
+
+/**
+ * Whether an Area Overlay ships closed, without its zones, and asks for them on first open.
+ *
+ * Every policy but `eager` does: `eager` means the content is mounted before anybody opens it. The
+ * Overlay renderer decides by this which zones to leave out of the page, and the Controller
+ * materialization decides by the same answer which Controllers to leave out of the Area -- the ones the
+ * zones bring along when they arrive (`next/overlay-zones.tsx`).
+ */
+export function isPhiCmsOverlayDeferredWhenClosed(overlay: {
+  config: Record<string, unknown>;
+  overlayType: PhiCmsOverlayType;
+}): boolean {
+  return parsePhiCmsOverlayConfig(overlay.config, overlay.overlayType).mountPolicy !== "eager";
+}

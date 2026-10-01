@@ -524,10 +524,11 @@ Keep these three addresses distinct:
 
 A domain Controller of the third kind is mounted by the Page that needs it. Its Module declares
 `controllerMountPolicy: "demand"`, and `demand` means nobody mounts it unless somebody asks: a Page
-through `controllerSettings` on its resolved tree with `mountScope: "page"`, or a Widget through a
-`conditionStateRequest` route. The Controller's `allowedMountScopes` must include the scope the Page
-mounts it at; `demand` together with `["area"]` alone can never be mounted at all, because no Area mounts
-a `demand` Controller either.
+through `controllerSettings` on its resolved tree with `mountScope: "page"`, or a Widget through its
+`requiredRuntimeControllers` -- a `conditionStateRequest` route is one. A Widget in a deferred Area
+Overlay asks at `area` scope and the Controller comes with the Overlay's zones on first open; that is how
+the login Form's Controller and the Auth Controller reach the sign-in modal. The Controller's
+`allowedMountScopes` must include every scope it is asked at.
 
 Two things about such a Controller are easy to get wrong and impossible to see. It must restrict what it
 answers to its own address -- `receiver` in the listener's filter, or `signal.receiver` compared in the

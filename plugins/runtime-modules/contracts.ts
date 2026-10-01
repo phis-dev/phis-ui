@@ -479,12 +479,19 @@ function assertPhiRuntimeModuleMetadata(definition: PhiRuntimeModuleDefinition) 
     }
     if (
       !hasPhiRuntimeModuleController(definition) ||
-      definition.controllerMountPolicy !== "area" ||
       definition.authUiProvider.controllerType !== definition.controllerType
     ) {
-      throw new Error(
-        `${definition.moduleId}: Auth UI provider must reference its Area-mounted module controller.`,
-      );
+      throw new Error(`${definition.moduleId}: Auth UI provider must reference its module controller.`);
+    }
+    for (const area of Object.keys(definition.authUiProvider.loginOverlayByArea ?? {})) {
+      if (
+        !isPhiCmsAreaKey(area) ||
+        !definition.authUiProvider.capabilitiesByArea[area]?.includes("primary-login")
+      ) {
+        throw new Error(
+          `${definition.moduleId}: Auth UI provider names a login Overlay for "${area}", which offers no primary-login.`,
+        );
+      }
     }
     const capabilityEntries = Object.entries(definition.authUiProvider.capabilitiesByArea);
     if (capabilityEntries.length === 0) {

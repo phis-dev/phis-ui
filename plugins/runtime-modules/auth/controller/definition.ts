@@ -1,15 +1,9 @@
-import { PHI_SIGNAL_VALUE_SCHEMAS } from "../../types/signals";
-import type { PhiRuntimeControllerDefinition } from "../../types/cms-plugins";
+import { PHI_SIGNAL_VALUE_SCHEMAS } from "../../../../types/signals";
+import type { PhiRuntimeControllerDefinition } from "../../../../types/cms-plugins";
 import {
-  PHI_ACCOUNTING_BASE_CONTROLLER_KEY,
-  PHI_ACCOUNTING_BASE_CONTROLLER_PLUGIN_KEY,
-  PHI_APP_BASE_CONTROLLER_KEY,
-  PHI_APP_BASE_CONTROLLER_PLUGIN_KEY,
   PHI_AUTH_CONTROLLER_KEY,
   PHI_AUTH_CONTROLLER_PLUGIN_KEY,
-  PHI_PUBLIC_BASE_CONTROLLER_KEY,
-  PHI_PUBLIC_BASE_CONTROLLER_PLUGIN_KEY,
-} from "./area-base-controller-addresses";
+} from "./address";
 
 type PhiEmptyControllerConfig = Record<string, never>;
 
@@ -22,7 +16,7 @@ type PhiEmptyControllerConfig = Record<string, never>;
  */
 export type PhiAuthControllerPreload = {
   /** What Core said, or null when this request carries no Session. */
-  workflow: import("../../types/auth-manifest").PhiAuthWorkflow | null;
+  workflow: import("../../../../types/auth-manifest").PhiAuthWorkflow | null;
   /**
    * That Core could not be asked, which is not the same as nobody being signed in.
    *
@@ -33,37 +27,6 @@ export type PhiAuthControllerPreload = {
   unavailable: boolean;
 };
 
-function createPhiEmptyControllerDefinition(
-  pluginKey: string,
-  key: string,
-  title: string,
-  iconFamily: string,
-  areaBase = true,
-) {
-  return {
-    kind: "controller",
-    pluginKey,
-    key,
-    title,
-    description: areaBase
-      ? `Locked Area controller for ${title}.`
-      : `Runtime module controller for ${title}.`,
-    iconFamily,
-    allowedMountScopes: ["area"],
-    runtimeSignals: { emits: [], listens: [] },
-    defaultConfig: {},
-    parseConfig: (): PhiEmptyControllerConfig => ({}),
-  } satisfies PhiRuntimeControllerDefinition<PhiEmptyControllerConfig>;
-}
-
-export const PHI_PUBLIC_BASE_CONTROLLER_DEFINITION = createPhiEmptyControllerDefinition(
-  PHI_PUBLIC_BASE_CONTROLLER_PLUGIN_KEY,
-  PHI_PUBLIC_BASE_CONTROLLER_KEY, "Public Base Controller", "public",
-);
-export const PHI_APP_BASE_CONTROLLER_DEFINITION = createPhiEmptyControllerDefinition(
-  PHI_APP_BASE_CONTROLLER_PLUGIN_KEY,
-  PHI_APP_BASE_CONTROLLER_KEY, "App Base Controller", "app",
-);
 export const PHI_AUTH_CONTROLLER_DEFINITION = {
   kind: "controller",
   pluginKey: PHI_AUTH_CONTROLLER_PLUGIN_KEY,
@@ -71,7 +34,11 @@ export const PHI_AUTH_CONTROLLER_DEFINITION = {
   title: "Auth Controller",
   description: "Coordinates the active Auth UI provider modal and workflow presentation state.",
   iconFamily: "auth",
-  allowedMountScopes: ["area"],
+  /*
+   * `area` when the login Overlay's zones bring it, `page` on a sign-in Page that places the Login. It
+   * answers in whichever it was mounted in; the step Widget is what asks for it in both.
+   */
+  allowedMountScopes: ["area", "page"],
   runtimeSignals: {
     emits: [
       { id: "loginOverlayOpen", action: "activate", valueType: "none" },
@@ -151,7 +118,3 @@ export const PHI_AUTH_CONTROLLER_DEFINITION = {
   defaultConfig: {},
   parseConfig: (): PhiEmptyControllerConfig => ({}),
 } satisfies PhiRuntimeControllerDefinition<PhiEmptyControllerConfig>;
-export const PHI_ACCOUNTING_BASE_CONTROLLER_DEFINITION = createPhiEmptyControllerDefinition(
-  PHI_ACCOUNTING_BASE_CONTROLLER_PLUGIN_KEY,
-  PHI_ACCOUNTING_BASE_CONTROLLER_KEY, "Accounting Base Controller", "accounting",
-);

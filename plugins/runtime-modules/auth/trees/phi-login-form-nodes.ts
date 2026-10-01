@@ -99,13 +99,12 @@ export function buildPhiLoginNodes({
 } {
   const stepAddress = createPhiSignalAddress("cms", ids.widgetStep);
   /*
-   * The step Widget passes on what the Controller told it, because the Controller cannot be asked.
+   * The step Widget passes on what the Controller told it, so the Widgets beside it do not ask it.
    *
-   * A `controller` condition needs a `conditionStateRequest` route to ask along, and that route is also
-   * what materializes the Controller -- at the scope of the tree the asking node sits in. These nodes
-   * sit in a Page, and the Auth Controller allows `area` only, so the question is refused outright:
-   * "Runtime controller \"default\" cannot be mounted at \"page\" scope". Relaying keeps the answer's
-   * origin where it now belongs -- the machine -- and only the last hop is a neighbour.
+   * The step is what mounts the Auth Controller (its `authWorkflowRequest` route is the demand), so the
+   * Controller exists exactly where the step does -- with the login Overlay's zones, or on the sign-in
+   * Page. Relaying keeps the answer's origin where it belongs -- the machine -- and only the last hop is
+   * a neighbour, with one Widget responsible for the Controller being there.
    */
   const relayStatementRoute = (routeKey: string, receiver: PhiSignalAddress) => ({
     routeKey,

@@ -32,7 +32,11 @@ import { usePhiSignalRuntimePartition } from "../runtime/runtime-signal-partitio
 import { PhiModalControl } from "../controls/phi-modal-control";
 import { PhiDrawerControl } from "../controls/phi-drawer-control";
 import { usePhiOverlayZonesLoaderIfAny } from "./phi-overlay-zones-loader";
-import type { PhiCmsOverlayZones, PhiCmsOverlayZonesRequest } from "../../types/cms-overlay-zones";
+import type {
+  PhiCmsLoadedOverlayZones,
+  PhiCmsOverlayZones,
+  PhiCmsOverlayZonesRequest,
+} from "../../types/cms-overlay-zones";
 
 export type PhiOverlayContainerClientProps = {
   overlayId: PhiCmsInstanceId;
@@ -52,7 +56,7 @@ export type PhiOverlayContainerClientProps = {
 type PhiLoadedOverlayZones = {
   /** Which request and which address the zones were rendered for. */
   key: string;
-  zones: PhiCmsOverlayZones;
+  zones: PhiCmsLoadedOverlayZones;
 };
 
 /** Stands where the body will be while the zones are on their way, so the shell opens at once. */
@@ -291,11 +295,20 @@ export function PhiOverlayContainerClient({
     : loadedZones && loadedZones.key === deferredZonesKey
       ? loadedZones.zones
       : open ? { header: null, body: PHI_OVERLAY_ZONES_PENDING, footer: null } : null;
+  /*
+   * The Controllers that came with the zones, mounted for as long as this Overlay is, open or not.
+   *
+   * Taken from the last load even after a navigation made its zones stale: the next open asks again and
+   * the new answer takes their place, while a Controller in the middle of something keeps its state.
+   */
+  const zoneControllers = loadedZones?.zones.controllers ?? null;
   const containerChromeStyle = resolvePhiCmsContainerChromeStyle(config);
   const surfaceStyle = { ...containerChromeStyle, padding: 0 };
 
   if (overlayType === "drawer") {
     return (
+      <>
+      {zoneControllers}
       <PhiDrawerControl
         open={open}
         title={runtimeTitle}
@@ -314,10 +327,13 @@ export function PhiOverlayContainerClient({
         containerStyle={surfaceStyle}
         onDismiss={requestClose}
       />
+      </>
     );
   }
 
   return (
+    <>
+    {zoneControllers}
     <PhiModalControl
       open={open}
       title={runtimeTitle}
@@ -335,5 +351,6 @@ export function PhiOverlayContainerClient({
       containerStyle={surfaceStyle}
       onDismiss={requestClose}
     />
+    </>
   );
 }

@@ -9,13 +9,16 @@ import {
 } from "../components/cms/phi-cms-layout-renderer";
 import { isPhiCmsGatewayAuthError } from "../gateway/errors";
 import { hasPhiCmsRevisionPreview } from "../server-helpers/cms-root";
+import { materializePhiOverlayRuntimeControllerSettings } from "../components/runtime/runtime-controller-materialization";
+import { PhiRuntimeControllerServerHost } from "../components/runtime/runtime-controller-server-host";
+import { resolvePhiRuntimeControllerDefinitions } from "../plugins/runtime-modules/resolver";
 import {
   capturePhiRequestRuntimeStore,
   restorePhiRequestRuntimeStore,
   runInPhiRequestScope,
   type PhiCapturedRequestRuntime,
 } from "../server-helpers/request-runtime";
-import type { PhiCmsOverlayZones, PhiCmsOverlayZonesRequest } from "../types/cms-overlay-zones";
+import type { PhiCmsLoadedOverlayZones, PhiCmsOverlayZonesRequest } from "../types/cms-overlay-zones";
 import type { PhiSiteAreaBridgeLoader } from "../gateway/site-area-bridges";
 
 function isOverlayZonesRequest(value: unknown): value is PhiCmsOverlayZonesRequest {
@@ -53,14 +56,14 @@ function PhiRestoredRequestRuntime({
 export async function loadPhiCmsOverlayZones(
   loadBridge: PhiSiteAreaBridgeLoader,
   request: unknown,
-): Promise<PhiCmsOverlayZones | null> {
+): Promise<PhiCmsLoadedOverlayZones | null> {
   return runInPhiRequestScope(() => renderOverlayZones(loadBridge, request));
 }
 
 async function renderOverlayZones(
   loadBridge: PhiSiteAreaBridgeLoader,
   request: unknown,
-): Promise<PhiCmsOverlayZones | null> {
+): Promise<PhiCmsLoadedOverlayZones | null> {
   if (!isOverlayZonesRequest(request)) return null;
   const cmsBridge = await loadBridge(request.area);
   if (!cmsBridge) return null;
@@ -98,10 +101,35 @@ async function renderOverlayZones(
   });
   const zones = renderPhiCmsOverlayZones(context, overlay);
   if (!zones) return null;
+  const { runtimeModuleScope } = scope;
+  const controllerSettings = materializePhiOverlayRuntimeControllerSettings({
+    tree: filteredLayoutTree,
+    overlay,
+    widgetPluginsByType: runtimeModuleScope.widgetDefinitionsByType,
+    activeControllerTypes: [...runtimeModuleScope.moduleSet.controllerDescriptorsByType.keys()],
+  });
+  const controllers = controllerSettings.length === 0 ? null : (
+    <PhiRuntimeControllerServerHost
+      controllers={controllerSettings}
+      runtime={runtime}
+      registry={await resolvePhiRuntimeControllerDefinitions({
+        catalog: cmsBridge.runtimeModuleCatalog,
+        moduleSet: runtimeModuleScope.moduleSet,
+        settings: controllerSettings,
+      })}
+      controllerModuleIdsByType={runtimeModuleScope.moduleSet.ownerModuleIdByControllerType}
+      runtimeModuleCatalog={scope.runtimeRegistry.runtimeModuleCatalog}
+    />
+  );
   // Next renders the returned nodes after this function has returned, outside the request scope above.
   const captured = capturePhiRequestRuntimeStore();
   const restore = (node: React.ReactNode) => node == null ? null : (
     <PhiRestoredRequestRuntime captured={captured}>{node}</PhiRestoredRequestRuntime>
   );
-  return { header: restore(zones.header), body: restore(zones.body), footer: restore(zones.footer) };
+  return {
+    header: restore(zones.header),
+    body: restore(zones.body),
+    footer: restore(zones.footer),
+    controllers: restore(controllers),
+  };
 }

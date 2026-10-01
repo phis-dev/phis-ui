@@ -5,10 +5,10 @@ import { cookies } from "next/headers";
 import {
   PHI_AUTH_CONTROLLER_DEFINITION,
   type PhiAuthControllerPreload,
-} from "./area-base-controller-definitions";
-import { fetchPhiAuthWorkflow } from "../../gateway/auth-public-manifest";
-import { readPhiServerApiCredentials } from "../../helpers/phis-server-credentials";
-import type { PhiRuntimeControllerDefinition } from "../../types/cms-plugins";
+} from "./definition";
+import { fetchPhiAuthWorkflow } from "../../../../gateway/auth-public-manifest";
+import { readPhiServerApiCredentials } from "../../../../helpers/phis-server-credentials";
+import type { PhiRuntimeControllerDefinition } from "../../../../types/cms-plugins";
 
 /**
  * Where the viewer stands in signing in, read while the page renders.

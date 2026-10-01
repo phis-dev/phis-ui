@@ -9,7 +9,7 @@ import {
   PHI_LOGIN_FORM_LAYOUT_CONFIG,
 } from "./phi-login-form-nodes";
 import { getPhiLoginFormLabels } from "../../../../components/widgets/label-sets/account";
-import { createPhiAuthControllerAddress } from "../../../../components/runtime/area-base-controller-addresses";
+import { createPhiAuthControllerAddress } from "../controller/address";
 import {
   PHI_AUTH_LOGIN_OVERLAY_IDS,
   type PhiAuthLoginOverlayArea,

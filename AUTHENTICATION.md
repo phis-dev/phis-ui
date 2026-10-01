@@ -47,7 +47,7 @@ The first-party Auth Module contributes:
   providers, the `auth-workflow` Widget for a second factor, and the provider-link confirmation Form --
   plus the Auth-owned enrollment and recovery presentation artifacts;
 - one Auth UI provider descriptor plus separate lazy Client implementation;
-- one meaningful Auth Controller type mounted once in each active eligible Area;
+- one meaningful Auth Controller type, mounted on demand where signing in happens (section 4);
 - Auth-owned Form field/handler providers required by its flows;
 - one Admin Site Auth settings route and navigation contribution;
 - one App `/security` route (served at `/app/phis/ui/security`) with its `auth-security` Widget, and one
@@ -132,7 +132,15 @@ No part of it navigates. The Form reports its result, the second factor reports 
 the Auth Controller is the single place that decides where a completed sign-in goes -- then asks the
 Runtime Controller to perform the forward, which refuses any target that is not a path on this Site.
 
-The Auth Module owns one Area-mounted Auth Controller type. It is not a no-op controller:
+The Auth Module owns one Auth Controller type, mounted on demand (`controllerMountPolicy: "demand"`). The
+`auth-workflow` step Widget is the demand: its `authWorkflowRequest` route names the Controller, and its
+`requiredRuntimeControllers` mounts it wherever the step is placed. That is twice, by construction: on the
+`/login` Page at `page` scope, and with the login Overlay's zones at `area` scope, which arrive the first
+time the Overlay opens (OVERLAYS.md, deferred zones). An ordinary page carries no Auth Controller. The
+Account Widget opens the Overlay itself -- the provider names it in `authUiProvider.loginOverlayByArea`,
+projected as `runtime.authUiProvider.loginOverlayAddress` -- and sends `command open` to the Controller,
+which the bus holds until the Controller mounts with the zones. An Area whose provider names no Overlay
+signs in on the Public `/login` Page. It is not a no-op controller:
 
 - in Public it coordinates modal visibility, provider redirect/return presentation, opaque challenge
   state, mandatory enrollment, and safe success navigation;
@@ -147,8 +155,9 @@ for closed render kinds and allowed display metadata.
 
 In-place reauthentication applies only after a protected Area document was rendered under a complete
 session and a later same-origin request receives Core's canonical expired/invalid-session result. The
-Area Auth Controller may open the active provider's login presentation only when that Area projection
-declares `primary-login`. While open, the protected surface is masked and inert; Core continues to reject
+active provider's login Overlay may be opened only when that Area projection declares `primary-login`
+(`loginOverlayByArea` is refused for any other Area); whoever observes the expiry opens it the way the
+Account Widget does, and the Auth Controller arrives with it. While open, the protected surface is masked and inert; Core continues to reject
 every protected request. Successful completion closes the modal and revalidates or reloads the preserved
 current path. A state-changing request is never replayed implicitly. Closing or escaping the workflow
 navigates to the canonical Public `/login` Page with the current relative path as validated `next`.

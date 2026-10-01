@@ -9,6 +9,7 @@ import {
 } from "./phi-cms-runtime-registry";
 import { loadPhiCmsRootRequest } from "../../server-helpers/cms-root";
 import { materializePhiRuntimeControllerSettings } from "../runtime/runtime-controller-materialization";
+import { isPhiCmsOverlayDeferredWhenClosed } from "../../types/cms-overlay";
 import { resolvePhiRuntimeControllerDefinitions } from "../../plugins/runtime-modules/resolver";
 import {
   buildPhiRuntimeModuleAccessRegistry,
@@ -67,6 +68,10 @@ const loadPhiCmsAreaRenderScopeCached = cache(async function loadPhiCmsAreaRende
         widgetPluginsByType: runtimeModuleScope.widgetDefinitionsByType,
         baseSettings: runtimeModuleScope.moduleSet.areaControllerSettings,
         activeControllerTypes: [...runtimeModuleScope.moduleSet.controllerDescriptorsByType.keys()],
+        // The Area's Overlays render deferred (`PhiCmsOverlayRenderer`), so their Controllers do too.
+        excludedOverlayIds: new Set(filteredLayoutTree.overlays
+          .filter(isPhiCmsOverlayDeferredWhenClosed)
+          .map((overlay) => overlay.id)),
       })
     : null;
   const controllerDefinitionsByType = registeredControllerSettings
