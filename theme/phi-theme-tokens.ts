@@ -85,6 +85,10 @@ export const PHI_THEME_TOKEN_KEYS = [
   "colorWarningText",
   "colorError",
   "colorErrorBg",
+  // The three a danger text and link read, now that PhiTypographyControl draws them itself.
+  "colorErrorText",
+  "colorErrorTextHover",
+  "colorErrorTextActive",
   "colorLink",
   "colorLinkHover",
   "colorLinkActive",
@@ -134,13 +138,20 @@ export const PHI_THEME_TOKEN_KEYS = [
   "fontSizeSM",
   "fontSizeLG",
   "fontSizeXL",
+  // All five heading steps: PhiTypographyControl draws titles itself and reads each.
+  "fontSizeHeading1",
   "fontSizeHeading2",
   "fontSizeHeading3",
   "fontSizeHeading4",
+  "fontSizeHeading5",
   "fontWeightStrong",
   "lineHeight",
   "lineHeightLG",
+  "lineHeightHeading1",
   "lineHeightHeading2",
+  "lineHeightHeading3",
+  "lineHeightHeading4",
+  "lineHeightHeading5",
 
   // Motion.
   "motionDurationMid",

@@ -1,6 +1,6 @@
 "use client";
 
-import { Typography } from "antd";
+import { createElement, lazy, Suspense, type ReactNode } from "react";
 import type { LinkProps } from "antd/es/typography/Link";
 import type { ParagraphProps } from "antd/es/typography/Paragraph";
 import type { TextProps } from "antd/es/typography/Text";
@@ -18,10 +18,12 @@ import type { TitleProps } from "antd/es/typography/Title";
  * The near-miss is worth the sentence, since "text control" is what somebody reaching for this would
  * guess and they would land on a form field.
  *
- * A pass-through, like `PhiFlexControl`. Across the tree the props in use are `type`, `level`, `style`,
- * `title`, `strong` and `copyable` -- nothing that wants a platform vocabulary of its own. What it buys
- * is that Ant Design is replaceable in principle, and this is the file that would change instead of the
- * sixty-odd that imported `Typography` directly.
+ * It draws the element itself -- the same elements and class shape Ant Design's Typography produces,
+ * styled from the same tokens in `styles/controls.css` ("Typography") -- and loads the primitive only
+ * for what it alone does: `copyable`, `ellipsis` and `editable` (`phi-typography-control-adapter.tsx`).
+ * The primitive imports its inline editor and its ellipsis tooltip unconditionally, and with them Ant
+ * Design's Input and the whole Form library: every page with a line of text, the Landing among them,
+ * shipped a Form engine it never ran. Until the primitive has loaded, such a text is drawn plainly.
  */
 export type PhiTypographyControlProps =
   | ({ presentation?: "text" } & TextProps)
@@ -29,35 +31,100 @@ export type PhiTypographyControlProps =
   | ({ presentation: "paragraph" } & ParagraphProps)
   | ({ presentation: "link" } & LinkProps);
 
-/**
- * `presentation` is ours and not Ant Design's, so it must not reach the element.
- *
- * Typography spreads what it does not recognize onto the DOM node, which would put an unknown attribute
- * on every line of text on the Site and a React warning beside it. Copying and deleting rather than
- * destructuring, because a discriminated union has to be narrowed before it is destructured -- doing it
- * per branch means four bindings that exist only to be discarded.
- */
-function withoutPresentation<TProps extends { presentation?: unknown }>(props: TProps) {
-  const rest = { ...props };
-  delete rest.presentation;
-  return rest;
+const PhiTypographyControlAdapter = lazy(() =>
+  import("./phi-typography-control-adapter")
+    .then((module) => ({ default: module.PhiTypographyControlAdapter })));
+
+type PhiTypographyDecorations = {
+  strong?: boolean;
+  underline?: boolean;
+  delete?: boolean;
+  code?: boolean;
+  mark?: boolean;
+  keyboard?: boolean;
+  italic?: boolean;
+};
+
+/** The decorations as nested elements, in the order the primitive nests them. */
+function decorate(content: ReactNode, decorations: PhiTypographyDecorations): ReactNode {
+  let current = content;
+  const wrap = (tag: string, needed: boolean | undefined) => {
+    if (needed) current = createElement(tag, null, current);
+  };
+  wrap("strong", decorations.strong);
+  wrap("u", decorations.underline);
+  wrap("del", decorations.delete);
+  wrap("code", decorations.code);
+  wrap("mark", decorations.mark);
+  wrap("kbd", decorations.keyboard);
+  wrap("i", decorations.italic);
+  return current;
+}
+
+function PhiTypographyElement(props: PhiTypographyControlProps) {
+  const {
+    presentation = "text",
+    children,
+    className,
+    type,
+    disabled,
+    strong,
+    underline,
+    delete: deleted,
+    code,
+    mark,
+    keyboard,
+    italic,
+    copyable: _copyable,
+    ellipsis: _ellipsis,
+    editable: _editable,
+    level,
+    ...rest
+  } = props as PhiTypographyControlProps & PhiTypographyDecorations & {
+    type?: string;
+    disabled?: boolean;
+    copyable?: unknown;
+    ellipsis?: unknown;
+    editable?: unknown;
+    level?: number;
+    className?: string;
+    children?: ReactNode;
+  };
+  const tag = presentation === "title"
+    ? `h${level && level >= 1 && level <= 5 ? level : 1}`
+    : presentation === "paragraph"
+      ? "div"
+      : presentation === "link"
+        ? "a"
+        : "span";
+  const classes = [
+    "phi-typography",
+    presentation === "link" ? "phi-typography--link" : null,
+    type ? `phi-typography--${type}` : null,
+    disabled ? "phi-typography--disabled" : null,
+    className ?? null,
+  ].filter(Boolean).join(" ");
+  const linkRest = rest as { target?: string; rel?: string };
+  const elementProps = {
+    ...rest,
+    className: classes,
+    ...(presentation === "link" && linkRest.rel === undefined && linkRest.target === "_blank"
+      ? { rel: "noopener noreferrer" }
+      : {}),
+    ...(disabled && presentation === "link" ? { "aria-disabled": true } : {}),
+  };
+  const decorations = { strong, underline, delete: deleted, code, mark, keyboard, italic };
+  return createElement(tag, elementProps, decorate(children, decorations));
 }
 
 export function PhiTypographyControl(props: PhiTypographyControlProps) {
-  /*
-   * Text is the default because it is what most of a page is: 410 of the 476 sites this replaced were
-   * `Typography.Text`. A default that matches the common case is also what keeps the other three
-   * legible -- a `presentation` that appears only on a heading says something, where one on every line
-   * would say nothing.
-   */
-  if (props.presentation === "title") {
-    return <Typography.Title {...withoutPresentation(props)} />;
+  const special = props as { copyable?: unknown; ellipsis?: unknown; editable?: unknown };
+  if (!special.copyable && !special.ellipsis && !special.editable) {
+    return <PhiTypographyElement {...props} />;
   }
-  if (props.presentation === "paragraph") {
-    return <Typography.Paragraph {...withoutPresentation(props)} />;
-  }
-  if (props.presentation === "link") {
-    return <Typography.Link {...withoutPresentation(props)} />;
-  }
-  return <Typography.Text {...withoutPresentation(props)} />;
+  return (
+    <Suspense fallback={<PhiTypographyElement {...props} />}>
+      <PhiTypographyControlAdapter {...props} />
+    </Suspense>
+  );
 }
