@@ -10,7 +10,7 @@ import {
   PHI_CMS_BORDER_SOURCES,
   resolvePhiCmsBorderSource,
   type PhiCmsBorderSource,
-} from "../../../../types/cms-config";
+} from "../../../../types/cms-border-source";
 import { PhiShadowControl } from "../../../../components/controls/phi-shadow-control";
 import { PhiViewportVisibilityControl } from "../../../../components/controls/phi-viewport-visibility-control";
 import { PhiPlacementMatrixControl } from "../../../../components/controls/phi-placement-matrix-control";

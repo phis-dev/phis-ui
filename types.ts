@@ -64,20 +64,23 @@ export type {
   mergePhiCmsConfigValues,
   mergePhiPaddingWidgetConfig,
   normalizePhiPaddingWidgetConfig,
-  PHI_CMS_BORDER_SOURCES,
-  PhiCmsBorderSource,
   PhiCmsBorderWidgetConfig,
   PhiCmsPaddingWidgetConfig,
   PhiCmsPluginConfigBase,
   PhiCmsRenderableBlockConfigBase,
-  readPhiCmsBorderSource,
   readPhiCmsBorderWidgetConfig,
-  resolvePhiCmsBorderSource,
 } from "./types/cms-config";
+export type {
+  PHI_CMS_BORDER_SOURCES,
+  PhiCmsBorderSource,
+  readPhiCmsBorderSource,
+  resolvePhiCmsBorderSource,
+} from "./types/cms-border-source";
 export type * from "./types/renderable-block";
 export * from "./types/layout-style";
 export * from "./types/control";
 export * from "./types/calendar";
+export * from "./types/calendar-keys";
 export * from "./types/dimension";
 export * from "./types/length";
 export * from "./types/responsive";

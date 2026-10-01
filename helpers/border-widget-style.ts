@@ -1,6 +1,7 @@
 import type { CSSProperties } from "react";
 
-import type { PhiCmsBorderSource, PhiCmsBorderWidgetConfig } from "../types/cms-config";
+import type { PhiCmsBorderSource } from "../types/cms-border-source";
+import type { PhiCmsBorderWidgetConfig } from "../types/cms-config";
 
 export type PhiResolvedBorderWidgetStyle = Pick<
   CSSProperties,

@@ -6,10 +6,10 @@ import { renderToStaticMarkup } from "react-dom/server";
 
 import {
   buildPhiCmsLayoutNamespacedTypeKey,
-  resolvePhiCmsLayoutPluginKey,
   PHI_CMS_LAYOUT_REGISTRY,
   splitPhiCmsLayoutNamespacedTypeKey,
 } from "../constants/cms-layout-types";
+import { resolvePhiCmsLayoutPluginKey } from "../constants/cms-layout-type-keys";
 import {
   resolvePhiLayoutCreationPreset,
   resolvePhiLayoutDefaults,
@@ -20,7 +20,7 @@ import {
   resolvePhiPaddingStyle,
   type PhiLayoutKind,
 } from "../components/layouts/phi-layout-contract";
-import { resolvePhiCmsBorderSource } from "../types/cms-config";
+import { resolvePhiCmsBorderSource } from "../types/cms-border-source";
 import { resolvePhiSourcedBorderStyle } from "../helpers/border-widget-style";
 import { PhiCmsRegionStatic } from "../components/regions/phi-cms-region-static";
 import { resolvePhiBuilderPreviewRegionConfig } from "../plugins/runtime-modules/builder/render-root-node-preview.server";

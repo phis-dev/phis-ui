@@ -41,7 +41,7 @@ import {
 } from "../widgets/config/background";
 import { PhiBackgroundMotionLayer } from "./clients/phi-background-motion-layer-lazy";
 import { resolvePhiSourcedBorderStyle } from "../../helpers/border-widget-style";
-import { readPhiCmsBorderSource, resolvePhiCmsBorderSource } from "../../types/cms-config";
+import { readPhiCmsBorderSource, resolvePhiCmsBorderSource } from "../../types/cms-border-source";
 import {
   isPhiCmsPageOwnedRegion,
   resolvePhiCmsRegionKey,

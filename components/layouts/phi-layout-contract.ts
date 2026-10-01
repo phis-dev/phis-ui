@@ -11,7 +11,7 @@ import type {
   PhiRenderableBlockSize,
 } from "../../types";
 import type { PhiShadow, PhiLayoutEffectId } from "../../types/layout-style";
-import { resolvePhiCmsBorderSource, type PhiCmsBorderSource } from "../../types/cms-config";
+import { resolvePhiCmsBorderSource, type PhiCmsBorderSource } from "../../types/cms-border-source";
 import {
   resolvePhiRenderableBlockGeometry,
   type PhiRenderableBlockGeometryInput,

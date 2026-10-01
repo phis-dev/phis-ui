@@ -11,7 +11,7 @@ import { PhiLayoutAnchoredOverlay } from "./phi-layout-anchored-overlay";
 import type { PhiAnchorWidgetPlacement } from "../../controls/phi-anchor-control-contract";
 import type { PhiRenderableBlockRenderMode, PhiRenderableBlockResponsiveSize } from "../../../types";
 import type { PhiShadow, PhiLayoutEffectId } from "../../../types/layout-style";
-import type { PhiCmsBorderSource } from "../../../types/cms-config";
+import type { PhiCmsBorderSource } from "../../../types/cms-border-source";
 import {
   isPhiLayoutAuthoringRender,
   phiLayoutDebugLayerMarker,

@@ -20,7 +20,7 @@ import {
   readPhiCmsBorderSource,
   resolvePhiCmsBorderSource,
   type PhiCmsBorderSource,
-} from "../../../types/cms-config";
+} from "../../../types/cms-border-source";
 import { resolvePhiAnchorPlacement } from "../../../components/layouts/phi-layout-contract";
 import { PhiSlotChildFrame } from "../../../plugins/runtime/phi-slot-child-frame";
 import {
