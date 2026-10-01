@@ -5,7 +5,7 @@ import type { InputRef } from "antd/es/input";
 
 import type { PhiBlockRuntime, PhiCmsInstanceId } from "../../../../../types";
 import type { PhiCmsInputWidgetConfig } from "./config";
-import { usePhiRenderableWidgetRuntime } from "../../../../../components/runtime/renderable-block-runtime";
+import { usePhiRenderableWidgetRuntime } from "../../../../../components/runtime/renderable-widget-runtime";
 import { PhiTextControl } from "../../../../../components/controls/phi-text-control";
 import { usePhiInputSignalController } from "../../../../../components/widgets/client/shared/phi-input-signals";
 

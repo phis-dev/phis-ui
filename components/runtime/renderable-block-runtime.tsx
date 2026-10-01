@@ -16,7 +16,6 @@ import {
 } from "../../types/signals";
 import type {
   PhiRenderableBlock,
-  PhiRenderableBlockBase,
   PhiRenderableBlockCapabilities,
   PhiRenderableBlockInteractionState,
   PhiRenderableBlockRuntime,
@@ -24,13 +23,9 @@ import type {
   PhiRenderableBlockSize,
   PhiRenderableBlockVisibility,
 } from "../../types/renderable-block";
-import type { PhiBlockRuntime } from "../../types/widget-runtime";
 import type { PhiCmsInstanceId } from "../../types/cms-instance-id";
 import { readPhiShadow } from "../../types/layout-style";
-import {
-  mergeRenderableBlockDefaults,
-  normalizeRenderableBlockAnchor,
-} from "../../helpers/renderable-block-serialization";
+import { normalizeRenderableBlockAnchor } from "../../helpers/renderable-block-anchor";
 import {
   inferPhiSignalValueType,
   usePhiSignalDispatcher,
@@ -539,13 +534,6 @@ export type PhiRenderableBlockRuntimeController = {
   toggle: () => void;
 };
 
-export type PhiRenderableWidgetRuntimeInput<TConfig extends Record<string, unknown> = Record<string, unknown>> = {
-  blockId: PhiCmsInstanceId | null | undefined;
-  receiver?: PhiRenderableBlockReceiver | null | undefined;
-  runtime: Pick<PhiBlockRuntime, "site" | "locale" | "area">;
-  config?: TConfig | null;
-};
-
 function resolvePhiRenderableBlockRuntimeState(
   input: Partial<PhiRenderableBlockRuntimeState>,
 ): PhiRenderableBlockRuntimeState {
@@ -835,28 +823,4 @@ export function usePhiRenderableBlockRuntime(
     }),
     [emit, emitCommand, state],
   );
-}
-
-function resolvePhiRenderableWidgetRuntimeInput<TConfig extends Record<string, unknown> = Record<string, unknown>>(
-  input: PhiRenderableWidgetRuntimeInput<TConfig>,
-): Partial<PhiRenderableBlockRuntimeState> {
-  const normalizedConfig = mergeRenderableBlockDefaults(input.config as Partial<PhiRenderableBlockBase> | null | undefined);
-
-  return {
-    blockId: input.blockId ?? null,
-    receiver: input.receiver ?? null,
-    runtime: {
-      siteKey: input.runtime.site.key,
-      publicUrl: input.runtime.site.publicUrl ?? null,
-      defaultLang: input.runtime.locale.current,
-      area: input.runtime.area,
-    },
-    ...normalizedConfig,
-  };
-}
-
-export function usePhiRenderableWidgetRuntime<TConfig extends Record<string, unknown> = Record<string, unknown>>(
-  input: PhiRenderableWidgetRuntimeInput<TConfig>,
-): PhiRenderableBlockRuntimeController {
-  return usePhiRenderableBlockRuntime(resolvePhiRenderableWidgetRuntimeInput(input));
 }

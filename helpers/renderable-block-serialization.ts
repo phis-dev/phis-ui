@@ -44,39 +44,9 @@ import {
   createPhiRenderableBlockDefaults,
 } from "./renderable-block-defaults";
 import { isPhiRecord } from "./is-record";
+import { normalizeRenderableBlockAnchor } from "./renderable-block-anchor";
 
 type JsonRecord = Record<string, unknown>;
-
-export function normalizeRenderableBlockAnchor(
-  value: unknown,
-): PhiRenderableBlockAnchor | undefined {
-  if (!isPhiRecord(value)) {
-    return undefined;
-  }
-
-  const horizontal = value.horizontal;
-  const vertical = value.vertical;
-
-  if (
-    horizontal !== "left" &&
-    horizontal !== "center" &&
-    horizontal !== "right" &&
-    vertical !== "top" &&
-    vertical !== "middle" &&
-    vertical !== "bottom"
-  ) {
-    return undefined;
-  }
-
-  return {
-    ...(horizontal === "left" || horizontal === "center" || horizontal === "right"
-      ? { horizontal }
-      : {}),
-    ...(vertical === "top" || vertical === "middle" || vertical === "bottom"
-      ? { vertical }
-      : {}),
-  };
-}
 
 function normalizeRenderableBlockSize(value: unknown): PhiRenderableBlockSize | undefined {
   if (typeof value === "number" || typeof value === "string") {

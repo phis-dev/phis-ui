@@ -4,7 +4,7 @@ import { useRef, useState } from "react";
 
 import type { PhiBlockRuntime, PhiCmsInstanceId } from "../../../../../types";
 import type { PhiCmsOtpWidgetConfig } from "./config";
-import { usePhiRenderableWidgetRuntime } from "../../../../../components/runtime/renderable-block-runtime";
+import { usePhiRenderableWidgetRuntime } from "../../../../../components/runtime/renderable-widget-runtime";
 import {
   PhiOtpControl,
   type PhiOtpControlHandle,
