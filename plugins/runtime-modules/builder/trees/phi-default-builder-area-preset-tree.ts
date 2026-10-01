@@ -16,10 +16,7 @@ import { remapPhiSignalRoutesInConfig } from "../../../../helpers/signal-route-l
 import { resolvePhiShellHeaderHeight, resolvePhiShellMetric } from "../../../../helpers/shell-region-style";
 import type { PhiCmsPageNode, PhiResolvedCmsPageTree } from "../../../../types/cms";
 import type { PhiCommandToolbarWidgetPlacement } from "../../../../types/core-widget-placements";
-import type {
-  PhiCmsCompiledDescriptorCatalog,
-  PhiRuntimeModuleId,
-} from "../../../../types/cms-module-descriptors";
+import type { PhiRuntimeModuleId } from "../../../../types/cms-module-descriptors";
 import {
   PHI_SIGNAL_VALUE_SCHEMAS,
   createPhiSignalAddress,
@@ -28,19 +25,12 @@ import {
 } from "../../../../types";
 import { PHI_LAYOUT } from "../../../../theme/phi-tokens";
 import { PHI_COLOR, PHI_SPACE } from "../../../../theme/antd-css-var-contract";
-import {
-  buildPhiSiteThemeSelectOptions,
-  resolvePhiThemeSelectionValue,
-} from "../../../../theme/phi-theme-selection";
-import { buildPhiThemeSetSelectOptions } from "../../theme/set-options";
 import { createPhiBuilderControllerAddress } from "../controller/address";
 import {
   isPhiAreaScopedBuilderPage,
   isPhiDebugScaffoldBuilderPage,
   readPhiDeveloperBuilderWorkspaceKey,
 } from "../route-scope";
-import { createPhiThemeControllerAddress } from "../../theme/controller/address";
-import { PHI_THEME_SIGNAL_CHANNELS } from "../../theme/controller/signals";
 import { PHI_BUILDER_RUNTIME_MODULE_ID } from "../ids";
 import { PHI_BUILDER_RUNTIME_DATA_PROVIDER_KEYS } from "../ids";
 import {
@@ -96,12 +86,6 @@ const PHI_BUILDER_LAYOUT_NODE_KEYS = [
   "layoutSiderLeft",
   "layoutContent",
   "layoutFooterMain",
-  "layoutBrandControlsHeader",
-  "layoutBrandStack",
-  "layoutBrandCardsRow",
-  "layoutBrandStylePanel",
-  "layoutBrandBackgroundPanel",
-  "layoutBrandIdentityPanel",
   "layoutWorkspaceHeader",
 ] as const;
 
@@ -128,17 +112,6 @@ const PHI_BUILDER_WIDGET_NODE_KEYS = [
   "widgetPagesHeaderTitle",
   "widgetPagesMetaToolbar",
   "widgetPagesHeaderSelector",
-  "widgetBrandContextSelect",
-  "widgetBrandPreviewModeSwitch",
-  "widgetBrandThemeControls",
-  "widgetBrandThemePreview",
-  "widgetThemeStackSegmented",
-  "widgetBrandStyleControls",
-  "widgetBrandStylePreview",
-  "widgetBrandBackgroundControls",
-  "widgetBrandBackgroundPreview",
-  "widgetBrandIdentityControls",
-  "widgetBrandIdentityPreview",
 ] as const;
 
 const SYNTHETIC_DEV_WIDGET_IDS = createPhiPresetCmsInstanceIdMap({
@@ -147,7 +120,6 @@ const SYNTHETIC_DEV_WIDGET_IDS = createPhiPresetCmsInstanceIdMap({
   presetKey: "builder-area-preset",
 }, PHI_BUILDER_WIDGET_NODE_KEYS);
 
-const PHI_BUILDER_THEME_STACK_SIGNAL_KEY = "builder-theme-stack";
 
 function resolveBuilderPageTitle(
   labels: PhiBuilderChromeWidgetLabels,
@@ -182,7 +154,6 @@ function resolveBuilderPageTitleSource(pageKey: string) {
  * history is what is being looked at.
  */
 function buildBuilderCommandToolbarConfig(
-  receiver = createPhiBuilderControllerAddress(),
   options?: { disableReset?: boolean },
 ): PhiCommandToolbarWidgetPlacement {
   return {
@@ -196,7 +167,7 @@ function buildBuilderCommandToolbarConfig(
           channel: "command",
           action: "activate",
           valueType: "string",
-          receiver,
+          receiver: createPhiBuilderControllerAddress(),
         },
       ],
       listens: [
@@ -634,12 +605,10 @@ export async function buildPhiDefaultBuilderAreaPresetTree({
 async function buildPhiDefaultBuilderPagePresetTemplateTree({
   page,
   runtime,
-  registry,
   presetKey,
 }: {
   page: PhiCmsPageNode;
   runtime: PhiBlockRuntime;
-  registry: PhiCmsCompiledDescriptorCatalog;
   presetKey: string;
 }): Promise<PhiResolvedCmsPageTree> {
   const nodes = createPhiCmsPresetNodes(page);
@@ -659,7 +628,6 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
   const isPagesPage = presetKey === "builder-pages-page";
   const isNavigationPage = presetKey === "builder-navigation-page";
   const isModulesPage = presetKey === "builder-modules-page";
-  const isThemePage = presetKey === "builder-theme-page";
   /*
    * The Sider switch says what the canvas beside it says, so it reads it from the same place.
    *
@@ -696,9 +664,6 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
     locale: runtime.locale.current,
   }) : null;
   const builderCommandToolbarConfig = buildBuilderCommandToolbarConfig(
-    isThemePage
-      ? createPhiThemeControllerAddress()
-      : createPhiBuilderControllerAddress(),
     {
       /*
        * Held shut on the Modules page while what it means there is decided.
@@ -857,7 +822,7 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
       })] : []),
     ],
     regions: [
-      ...(isStructurePage || isPagesPage || isNavigationPage || isThemePage || isModulesPage
+      ...(isStructurePage || isPagesPage || isNavigationPage || isModulesPage
         ? [
             nodes.region({
               id: SYNTHETIC_DEV_REGION_IDS.regionHeaderBottom,
@@ -887,7 +852,7 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
       }),
     ],
     layoutNodes: [
-      ...((isStructurePage || isPagesPage || isNavigationPage || isThemePage || isModulesPage)
+      ...((isStructurePage || isPagesPage || isNavigationPage || isModulesPage)
         ? [
             nodes.layout({
               creationPreset: { layoutKind: "threecol", preset: "panel" },
@@ -961,32 +926,6 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                   padding: PHI_SPACE.base,
                   paddingTop: PHI_SPACE.base,
                   paddingBottom: PHI_SPACE.base,
-                  background: "transparent",
-                  border: "none",
-                  borderRadius: 0,
-                },
-              }
-          : isThemePage
-            ? {
-                creationPreset: { layoutKind: "verticalflex", preset: "panel" },
-                typeKey: "flex-vertical",
-                id: SYNTHETIC_DEV_LAYOUT_IDS.layoutContent,
-                siteId: page.siteId,
-                parentLayoutNodeId: null,
-                slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
-                sortOrder: 0,
-                status: PhiCmsStatus.Published,
-                flags: 0,
-                visibilityMask: page.visibilityMask,
-                label: "dev brand content vertical",
-                config: {
-                  anchor: {
-                    horizontal: "left",
-                    vertical: "top",
-                  },
-                  gap: PHI_SPACE.base,
-                  margin: 0,
-                  padding: PHI_SPACE.base,
                   background: "transparent",
                   border: "none",
                   borderRadius: 0,
@@ -1200,139 +1139,6 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
           config: {},
         }),
       ] : []),
-      ...(isThemePage
-        ? [
-            nodes.layout({
-              creationPreset: { layoutKind: "threecol", preset: "panel" },
-              typeKey: "three-column",
-              id: SYNTHETIC_DEV_LAYOUT_IDS.layoutBrandControlsHeader,
-              parentLayoutNodeId: SYNTHETIC_DEV_LAYOUT_IDS.layoutContent,
-              slotIndex: 0,
-              label: "dev brand controls header",
-              config: {
-                balancedSides: true,
-                contentAlign: "center",
-                gap: PHI_SPACE.base,
-                padding: 0,
-                paddingLeft: 0,
-                paddingRight: 0,
-              },
-            }),
-            nodes.layout({
-              typeKey: "stack",
-              id: SYNTHETIC_DEV_LAYOUT_IDS.layoutBrandStack,
-              parentLayoutNodeId: SYNTHETIC_DEV_LAYOUT_IDS.layoutContent,
-              slotIndex: PHI_CMS_SEQUENTIAL_LAYOUT_SLOTS[1].slotIndex,
-              sortOrder: 1,
-              label: "dev brand stack",
-              config: {
-                defaultActiveSlotKey: PHI_CMS_SEQUENTIAL_LAYOUT_SLOTS[0].key,
-                key: PHI_BUILDER_THEME_STACK_SIGNAL_KEY,
-                anchor: {
-                  horizontal: "left",
-                  vertical: "top",
-                },
-                padding: 0,
-              },
-            }),
-            nodes.layout({
-              creationPreset: { layoutKind: "flex", preset: "panel" },
-              typeKey: "flex",
-              id: SYNTHETIC_DEV_LAYOUT_IDS.layoutBrandCardsRow,
-              parentLayoutNodeId: SYNTHETIC_DEV_LAYOUT_IDS.layoutBrandStack,
-              slotIndex: PHI_CMS_SEQUENTIAL_LAYOUT_SLOTS[0].slotIndex,
-              sortOrder: 0,
-              label: "Color",
-              config: {
-                gap: PHI_SPACE.base,
-                anchor: {
-                  horizontal: "left",
-                  vertical: "top",
-                },
-                wrap: true,
-                padding: 0,
-                paddingLeft: 0,
-                paddingRight: 0,
-                background: "transparent",
-                border: "none",
-                borderRadius: 0,
-              },
-            }),
-            nodes.layout({
-              creationPreset: { layoutKind: "flex", preset: "panel" },
-              typeKey: "flex",
-              id: SYNTHETIC_DEV_LAYOUT_IDS.layoutBrandStylePanel,
-              parentLayoutNodeId: SYNTHETIC_DEV_LAYOUT_IDS.layoutBrandStack,
-              slotIndex: PHI_CMS_SEQUENTIAL_LAYOUT_SLOTS[1].slotIndex,
-              sortOrder: 1,
-              label: "Style",
-              config: {
-                gap: PHI_SPACE.base,
-                anchor: {
-                  horizontal: "left",
-                  vertical: "top",
-                },
-                wrap: true,
-                padding: 0,
-                paddingLeft: 0,
-                paddingRight: 0,
-                background: "transparent",
-                border: "none",
-                borderRadius: 0,
-              },
-            }),
-            /*
-             * The label is the Segmented's third entry: it reads the Stack's slots and takes the label
-             * of the first child in each, so naming this one is all the Segmented needs.
-             */
-            nodes.layout({
-              creationPreset: { layoutKind: "flex", preset: "panel" },
-              typeKey: "flex",
-              id: SYNTHETIC_DEV_LAYOUT_IDS.layoutBrandBackgroundPanel,
-              parentLayoutNodeId: SYNTHETIC_DEV_LAYOUT_IDS.layoutBrandStack,
-              slotIndex: PHI_CMS_SEQUENTIAL_LAYOUT_SLOTS[2].slotIndex,
-              sortOrder: 2,
-              label: "Background",
-              config: {
-                gap: PHI_SPACE.base,
-                anchor: {
-                  horizontal: "left",
-                  vertical: "top",
-                },
-                wrap: true,
-                padding: 0,
-                paddingLeft: 0,
-                paddingRight: 0,
-                background: "transparent",
-                border: "none",
-                borderRadius: 0,
-              },
-            }),
-            nodes.layout({
-              creationPreset: { layoutKind: "flex", preset: "panel" },
-              typeKey: "flex",
-              id: SYNTHETIC_DEV_LAYOUT_IDS.layoutBrandIdentityPanel,
-              parentLayoutNodeId: SYNTHETIC_DEV_LAYOUT_IDS.layoutBrandStack,
-              slotIndex: PHI_CMS_SEQUENTIAL_LAYOUT_SLOTS[3].slotIndex,
-              sortOrder: 3,
-              label: "Brand",
-              config: {
-                gap: PHI_SPACE.base,
-                anchor: {
-                  horizontal: "left",
-                  vertical: "top",
-                },
-                wrap: true,
-                padding: 0,
-                paddingLeft: 0,
-                paddingRight: 0,
-                background: "transparent",
-                border: "none",
-                borderRadius: 0,
-              },
-            }),
-          ]
-        : []),
     ],
     contentWidgets: [
       ...(isPagesPage ? [
@@ -1727,164 +1533,6 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                 sortOrder: 0,
                 label: "dev pages toolbar",
                 config: builderCommandToolbarConfig,
-              }),
-            ]
-        : isThemePage
-          ? [
-              nodes.widget({
-                typeKey: "command-toolbar",
-                id: SYNTHETIC_DEV_WIDGET_IDS.widgetToolbar,
-                parentLayoutNodeId: SYNTHETIC_DEV_LAYOUT_IDS.layoutHeaderBottom,
-                slotIndex: PHI_CMS_THREE_COLUMN_LAYOUT_SLOT_INDEX.Middle,
-                sortOrder: 0,
-                label: "dev brand toolbar",
-                config: builderCommandToolbarConfig,
-              }),
-              nodes.widget({
-                typeKey: "select-box",
-                id: SYNTHETIC_DEV_WIDGET_IDS.widgetBrandContextSelect,
-                parentLayoutNodeId: SYNTHETIC_DEV_LAYOUT_IDS.layoutHeaderBottom,
-                slotIndex: PHI_CMS_THREE_COLUMN_LAYOUT_SLOT_INDEX.Left,
-                sortOrder: 0,
-                label: "Brand set select",
-                config: {
-                  value: resolvePhiThemeSelectionValue(runtime.site.key, {
-                    published: runtime.site.themeRevision?.publishedRevisionId != null,
-                    draft: runtime.site.themeRevision?.workingDraftRevisionId != null,
-                  }),
-                  key: "brand-theme-preset",
-                  signalRoutes: {
-                    emits: [
-                      {
-                        routeKey: "brand-theme-select-change",
-                        capabilityId: "change",
-                        scope: "area",
-                        channel: PHI_THEME_SIGNAL_CHANNELS.presetSelect,
-                        action: "change",
-                        valueType: "string",
-                        receiver: createPhiThemeControllerAddress(),
-                      },
-                    ],
-                    listens: [
-                      {
-                        routeKey: "brand-theme-select-feedback",
-                        capabilityId: "selection",
-                        scope: "area",
-                        channel: PHI_THEME_SIGNAL_CHANNELS.presetSelect,
-                        action: "change",
-                        valueType: "string",
-                        receiver: "broadcast",
-                      },
-                      /*
-                       * The Published and Draft entries name the Set each was derived from and whether
-                       * a draft exists at all; the Controller states the list again whenever either
-                       * changes. What the tree states is only what the Site record knows before that.
-                       */
-                      {
-                        routeKey: "brand-theme-select-options",
-                        capabilityId: "options",
-                        scope: "area",
-                        channel: PHI_THEME_SIGNAL_CHANNELS.presetOptions,
-                        action: "change",
-                        valueType: "json",
-                        valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.controlOptions,
-                        receiver: "broadcast",
-                      },
-                    ],
-                  },
-                  options: [
-                    ...buildPhiSiteThemeSelectOptions({
-                      siteKey: runtime.site.key,
-                      published: runtime.site.themeRevision?.publishedRevisionId != null
-                        ? { theme: runtime.site.theme, revisionId: runtime.site.themeRevision.publishedRevisionId }
-                        : null,
-                      draft: runtime.site.themeRevision?.workingDraftRevisionId != null
-                        ? { theme: runtime.site.theme, revisionId: runtime.site.themeRevision.workingDraftRevisionId }
-                        : null,
-                    }),
-                    ...buildPhiThemeSetSelectOptions(registry),
-                  ],
-                },
-              }),
-              nodes.widget({
-                typeKey: "switch",
-                id: SYNTHETIC_DEV_WIDGET_IDS.widgetBrandPreviewModeSwitch,
-                parentLayoutNodeId: SYNTHETIC_DEV_LAYOUT_IDS.layoutBrandControlsHeader,
-                slotIndex: PHI_CMS_THREE_COLUMN_LAYOUT_SLOT_INDEX.Left,
-                sortOrder: 0,
-                label: "Brand preview mode switch",
-                config: {
-                  defaultChecked: runtime.site.theme?.mode === "dark",
-                  checkedLabel: labels.themeSwitch.dark,
-                  uncheckedLabel: labels.themeSwitch.light,
-                  key: "brandPreviewThemeMode",
-                  signalRoutes: {
-                    emits: [
-                      {
-                    routeKey: "brand-preview-mode-change",
-                    capabilityId: "change",
-                        scope: "page",
-                        channel: PHI_THEME_SIGNAL_CHANNELS.previewThemeMode,
-                        action: "change",
-                        valueType: "boolean",
-                        receiver: "broadcast",
-                      },
-                    ],
-                  },
-                },
-              }),
-              nodes.widget({
-                typeKey: "segmented",
-                id: SYNTHETIC_DEV_WIDGET_IDS.widgetThemeStackSegmented,
-                parentLayoutNodeId: SYNTHETIC_DEV_LAYOUT_IDS.layoutBrandControlsHeader,
-                slotIndex: PHI_CMS_THREE_COLUMN_LAYOUT_SLOT_INDEX.Middle,
-                sortOrder: 0,
-                label: "Theme stack segmented",
-                config: {
-                  value: "0",
-                  valueMode: "stack-slot-index",
-                  key: PHI_BUILDER_THEME_STACK_SIGNAL_KEY,
-                  signalRoutes: {
-                    emits: [
-                      {
-                        routeKey: "brand-stack-meta-request",
-                        capabilityId: "stackMeta",
-                        scope: "page",
-                        channel: "stackMeta",
-                        action: "activate",
-                        valueType: "none",
-                        receiver: createPhiSignalAddress("cms", SYNTHETIC_DEV_LAYOUT_IDS.layoutBrandStack),
-                      },
-                      {
-                        routeKey: "brand-stack-slot-change",
-                        capabilityId: "activeSlotIndex",
-                        scope: "page",
-                        channel: "activeSlotIndex",
-                        action: "change",
-                        valueType: "number",
-                        receiver: createPhiSignalAddress("cms", SYNTHETIC_DEV_LAYOUT_IDS.layoutBrandStack),
-                      },
-                    ],
-                    listens: [
-                      {
-                        routeKey: "brand-stack-meta-response",
-                        capabilityId: "stackMeta",
-                        scope: "page",
-                        channel: "stackMeta",
-                        action: "change",
-                        valueType: "json",
-                        valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.stackMeta,
-                        receiver: "broadcast",
-                      },
-                    ],
-                  },
-                  options: [
-                    { value: "0",
- label: "Color" },
-                    { value: "1",
- label: "Style" },
-                  ],
-                },
               }),
             ]
         : isModulesPage
@@ -2434,7 +2082,7 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
             }),
           ]
         : []),
-      ...((isStructurePage || isPagesPage || isNavigationPage || isThemePage || isModulesPage)
+      ...((isStructurePage || isPagesPage || isNavigationPage || isModulesPage)
         ? [
             nodes.widget({
               typeKey: "builder-draft-status",
@@ -2442,7 +2090,7 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
               parentLayoutNodeId: SYNTHETIC_DEV_LAYOUT_IDS.layoutHeaderBottom,
               slotIndex: PHI_CMS_THREE_COLUMN_LAYOUT_SLOT_INDEX.Right,
               sortOrder: 0,
-              label: isThemePage ? "builder brand draft status" : "builder draft status",
+              label: "builder draft status",
               config: {},
             }),
           ]
@@ -2471,118 +2119,6 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                 config: {},
               }),
             ]
-        : isThemePage
-            ? [
-                nodes.widget({
-                  typeKey: "builder-brand-theme-controls",
-                  id: SYNTHETIC_DEV_WIDGET_IDS.widgetBrandThemeControls,
-                  parentLayoutNodeId: SYNTHETIC_DEV_LAYOUT_IDS.layoutBrandCardsRow,
-                  slotIndex: PHI_CMS_SEQUENTIAL_LAYOUT_SLOTS[0].slotIndex,
-                  sortOrder: 0,
-                  label: "dev brand theme controls",
-                  config: {
-                    themeKey: "default",
-                    minSize: { width: 300 },
-                    maxSize: { width: 400 },
-                  },
-                }),
-                nodes.widget({
-                  typeKey: "builder-brand-theme-preview",
-                  id: SYNTHETIC_DEV_WIDGET_IDS.widgetBrandThemePreview,
-                  parentLayoutNodeId: SYNTHETIC_DEV_LAYOUT_IDS.layoutBrandCardsRow,
-                  slotIndex: PHI_CMS_SEQUENTIAL_LAYOUT_SLOTS[1].slotIndex,
-                  sortOrder: 1,
-                  label: "dev brand theme preview",
-                  config: {
-                    themeKey: "default",
-                    minSize: { width: 360 },
-                  },
-                }),
-                nodes.widget({
-                  typeKey: "builder-brand-style-controls",
-                  id: SYNTHETIC_DEV_WIDGET_IDS.widgetBrandStyleControls,
-                  parentLayoutNodeId: SYNTHETIC_DEV_LAYOUT_IDS.layoutBrandStylePanel,
-                  slotIndex: PHI_CMS_SEQUENTIAL_LAYOUT_SLOTS[0].slotIndex,
-                  sortOrder: 0,
-                  label: "dev brand style controls",
-                  config: {
-                    themeKey: "default",
-                    minSize: { width: 300 },
-                    maxSize: { width: 400 },
-                  },
-                }),
-                nodes.widget({
-                  typeKey: "builder-brand-background-controls",
-                  id: SYNTHETIC_DEV_WIDGET_IDS.widgetBrandBackgroundControls,
-                  parentLayoutNodeId: SYNTHETIC_DEV_LAYOUT_IDS.layoutBrandBackgroundPanel,
-                  slotIndex: PHI_CMS_SEQUENTIAL_LAYOUT_SLOTS[0].slotIndex,
-                  sortOrder: 0,
-                  label: "dev brand background controls",
-                  config: {
-                    themeKey: "default",
-                    // The three Theme panels share one slot, so they share one width. A wider Background
-                    // panel widened the slot itself and the column jumped whenever it was selected.
-                    minSize: { width: 300 },
-                    maxSize: { width: 400 },
-                  },
-                }),
-                nodes.widget({
-                  typeKey: "builder-brand-theme-preview",
-                  id: SYNTHETIC_DEV_WIDGET_IDS.widgetBrandBackgroundPreview,
-                  parentLayoutNodeId: SYNTHETIC_DEV_LAYOUT_IDS.layoutBrandBackgroundPanel,
-                  slotIndex: PHI_CMS_SEQUENTIAL_LAYOUT_SLOTS[1].slotIndex,
-                  sortOrder: 1,
-                  label: "dev brand background preview",
-                  config: {
-                    themeKey: "default",
-                    minSize: { width: 360 },
-                  },
-                }),
-                nodes.widget({
-                  typeKey: "builder-brand-theme-preview",
-                  id: SYNTHETIC_DEV_WIDGET_IDS.widgetBrandStylePreview,
-                  parentLayoutNodeId: SYNTHETIC_DEV_LAYOUT_IDS.layoutBrandStylePanel,
-                  slotIndex: PHI_CMS_SEQUENTIAL_LAYOUT_SLOTS[1].slotIndex,
-                  sortOrder: 1,
-                  label: "dev brand style preview",
-                  config: {
-                    themeKey: "default",
-                    minSize: { width: 360 },
-                  },
-                }),
-                nodes.widget({
-                  typeKey: "builder-brand-identity-controls",
-                  id: SYNTHETIC_DEV_WIDGET_IDS.widgetBrandIdentityControls,
-                  parentLayoutNodeId: SYNTHETIC_DEV_LAYOUT_IDS.layoutBrandIdentityPanel,
-                  slotIndex: PHI_CMS_SEQUENTIAL_LAYOUT_SLOTS[0].slotIndex,
-                  sortOrder: 0,
-                  label: "dev brand identity controls",
-                  config: {
-                    themeKey: "default",
-                    minSize: { width: 300 },
-                    maxSize: { width: 400 },
-                  },
-                }),
-                /*
-                 * The fourth instance of the one Preview Widget, not a fourth Preview.
-                 *
-                 * The Stack mounts only its active slot, so exactly one of them is alive at a time; a
-                 * freshly mounted one asks the Controller for the draft rather than waiting for the next
-                 * broadcast. Standing beside its own panel is the whole reason there is more than one.
-                 */
-                nodes.widget({
-                  typeKey: "builder-brand-theme-preview",
-                  id: SYNTHETIC_DEV_WIDGET_IDS.widgetBrandIdentityPreview,
-                  parentLayoutNodeId: SYNTHETIC_DEV_LAYOUT_IDS.layoutBrandIdentityPanel,
-                  slotIndex: PHI_CMS_SEQUENTIAL_LAYOUT_SLOTS[1].slotIndex,
-                  sortOrder: 1,
-                  label: "dev brand identity preview",
-                  config: {
-                    themeKey: "default",
-                    minSize: { width: 360 },
-                  },
-                }),
-              ]
           : []),
     ],
   };
@@ -2591,13 +2127,11 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
 export async function buildPhiDefaultBuilderPagePresetTree({
   page,
   runtime,
-  registry,
   ownerModuleId,
   presetKey,
 }: {
   page: PhiCmsPageNode;
   runtime: PhiBlockRuntime;
-  registry: PhiCmsCompiledDescriptorCatalog;
   ownerModuleId: PhiRuntimeModuleId;
   presetKey: string;
 }) {
@@ -2605,7 +2139,6 @@ export async function buildPhiDefaultBuilderPagePresetTree({
     await buildPhiDefaultBuilderPagePresetTemplateTree({
       page,
       runtime,
-      registry,
       presetKey,
     }),
     ownerModuleId,

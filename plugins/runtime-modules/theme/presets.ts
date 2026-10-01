@@ -13,13 +13,7 @@ export const PHI_THEME_RUNTIME_MODULE_ROUTES = [
     itemKey: "@phis/ui/theme/nav/builder/theme",
     icon: "antd:skin",
     loadTree: ({ page, runtime, catalog }) =>
-      import("../builder/trees/phi-default-builder-area-preset-tree")
-        .then((module) => module.buildPhiDefaultBuilderPagePresetTree({
-          page,
-          runtime,
-          registry: catalog,
-          ownerModuleId: PHI_THEME_RUNTIME_MODULE_ID,
-          presetKey: "builder-theme-page",
-        })),
+      import("./trees/phi-default-builder-theme-page-tree")
+        .then((module) => module.buildPhiDefaultBuilderThemePageTree({ page, runtime, registry: catalog })),
   }),
 ] satisfies readonly PhiCmsRoutePresetDescriptor[];
