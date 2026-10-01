@@ -137,6 +137,12 @@
       "require": "./next/cache-handler.mjs",
       "default": "./next/cache-handler.mjs"
     },
+    "./next/overlay-zones-client": {
+      "import": "./components/overlays/phi-overlay-zones-loader.tsx",
+      "require": "./components/overlays/phi-overlay-zones-loader.tsx",
+      "types": "./components/overlays/phi-overlay-zones-loader.tsx",
+      "default": "./components/overlays/phi-overlay-zones-loader.tsx"
+    },
     "./next/overlay-zones": {
       "import": "./next/overlay-zones.tsx",
       "require": "./next/overlay-zones.tsx",

@@ -47,9 +47,6 @@ const sourceExtensions = [".ts", ".tsx"];
  * and after.
  */
 const ROOT_CLIENT_REFERENCES = [
-  // A context and nothing else: the Server Action a closed Overlay asks for its zones with. It is what
-  // keeps every Overlay's contents -- the sign-in Form among them -- off the first load of every page.
-  "components/overlays/phi-overlay-zones-loader.tsx",
   "components/root/phi-dayjs-locale.tsx",
   "components/root/phi-root-live-theme-provider.tsx",
   "components/root/phi-root-rem-provider.tsx",

@@ -7,20 +7,18 @@ import type { PhiCmsOverlayZonesLoader } from "../../types/cms-overlay-zones";
 const PhiOverlayZonesLoaderContext = createContext<PhiCmsOverlayZonesLoader | null>(null);
 
 /**
- * The Site's Server Action for an Overlay's zones, handed down once from the root layout.
+ * The provider for the Site's Server Action for an Overlay's zones, built by the Site in a Client file.
  *
- * A Server Action is the one value a Server Component can give a Client one that calls back into the
- * server, and the root layout is the one place every Area's Overlays sit under -- so it is named there,
- * once, rather than in six Area boundaries.
+ * The Action has to be imported from a Client module. Imported by a Server Component -- the root layout --
+ * it joins that layout's server graph with everything it reaches, and the Action reaches every Area's
+ * bridge: their catalogs name every Area's Widget clients, which then became client references of every
+ * route, the Builder's on the Public landing. Imported from a Client file, the page holds a reference and
+ * nothing else. The root layout mounts the provider this returns, once, above every Area.
  */
-export function PhiOverlayZonesLoaderProvider({
-  loader,
-  children,
-}: {
-  loader: PhiCmsOverlayZonesLoader;
-  children: ReactNode;
-}) {
-  return <PhiOverlayZonesLoaderContext.Provider value={loader}>{children}</PhiOverlayZonesLoaderContext.Provider>;
+export function createPhiOverlayZonesLoaderProvider(loader: PhiCmsOverlayZonesLoader) {
+  return function PhiOverlayZonesLoaderProvider({ children }: { children: ReactNode }) {
+    return <PhiOverlayZonesLoaderContext.Provider value={loader}>{children}</PhiOverlayZonesLoaderContext.Provider>;
+  };
 }
 
 /**

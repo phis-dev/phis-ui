@@ -278,10 +278,14 @@ Two things follow from the section above and are not negotiable by the design:
 
 The generated list is `src/generated/site-modules-fonts.ts`: one import per installed package that
 exports `./fonts`, gathered into the second argument of `createPhiNextRootLayout`. The third argument
-is the Site's Server Action for Overlay zones, `src/runtime-modules/overlay-zones.ts`, a `"use server"`
-file the scaffold writes around `loadPhiCmsOverlayZones` (`@phis/ui/next/overlay-zones`) and the Site's
-`loadPhiSiteAreaBridge`; `createPhiNextStaticRootLayout` takes it before the Public boundary. It has to be
-the Site's because only the Site holds its Area bridges (OVERLAYS.md, "mountPolicy"). `phis module` writes
+is the provider of the Site's Server Action for Overlay zones; `createPhiNextStaticRootLayout` takes it
+before the Public boundary. The scaffold writes two files for it. `src/runtime-modules/overlay-zones.ts` is
+the `"use server"` Action around `loadPhiCmsOverlayZones` (`@phis/ui/next/overlay-zones`) and the Site's
+`loadPhiSiteAreaBridge` -- the Site's, because only the Site holds its Area bridges (OVERLAYS.md,
+"mountPolicy"). `src/runtime-modules/overlay-zones-client.tsx` is the only file that imports it, a Client
+file building the provider with `createPhiOverlayZonesLoaderProvider` (`@phis/ui/next/overlay-zones-client`).
+That second file is not ceremony: imported by a root layout, the Action brings every Area's bridge into
+that layout's server graph, and with it every Area's Widget clients onto every page. `phis module` writes
 it with the rest of the projection, from the `exports` of the packages installed in the Site. A package installed from a tarball rather than a workspace link has to be listed in
 `transpilePackages`, because the font loader runs only over modules Next compiles.
 

@@ -35,8 +35,6 @@ import type { PhiSiteConfig } from "../types/site-config";
 import type { PhiResolvedLocale } from "../helpers/site-locale-config";
 import { fetchResolvedSiteLocale } from "../server-helpers/site-locale";
 import type { PhiThemeMode } from "../theme/phi-theme-presets";
-import { PhiOverlayZonesLoaderProvider } from "../components/overlays/phi-overlay-zones-loader";
-import type { PhiCmsOverlayZonesLoader } from "../types/cms-overlay-zones";
 
 /**
  * The Theme blocks this Site can follow, loaded once per host and then kept.
@@ -130,8 +128,11 @@ function buildPhiNextRootMetadata(
 export function createPhiNextRootLayout(
   siteModules: PhiSiteModuleServerAreaContributions,
   fonts: PhiModuleFontContributions,
-  /** The Site's Server Action for a closed Overlay's zones (`types/cms-overlay-zones.ts`). */
-  loadOverlayZones: PhiCmsOverlayZonesLoader,
+  /**
+   * The provider of the Site's Server Action for a closed Overlay's zones, built in a Client file with
+   * `createPhiOverlayZonesLoaderProvider` (`types/cms-overlay-zones.ts`).
+   */
+  OverlayZonesProvider: React.ComponentType<{ children: React.ReactNode }>,
 ) {
   const document = createPhiNextRootDocument(siteModules, fonts);
 
@@ -157,7 +158,7 @@ export function createPhiNextRootLayout(
       resolvedLocale,
       browserColorScheme,
       themeModePreference,
-      children: <PhiOverlayZonesLoaderProvider loader={loadOverlayZones}>{children}</PhiOverlayZonesLoaderProvider>,
+      children: <OverlayZonesProvider>{children}</OverlayZonesProvider>,
     });
   };
 }
@@ -173,8 +174,8 @@ export function createPhiNextRootLayout(
 export function createPhiNextStaticRootLayout(
   siteModules: PhiSiteModuleServerAreaContributions,
   fonts: PhiModuleFontContributions,
-  /** The Site's Server Action for a closed Overlay's zones (`types/cms-overlay-zones.ts`). */
-  loadOverlayZones: PhiCmsOverlayZonesLoader,
+  /** The provider of the Site's Server Action for Overlay zones; see `createPhiNextRootLayout`. */
+  OverlayZonesProvider: React.ComponentType<{ children: React.ReactNode }>,
   /** The Client boundary of the Public Area, which the dynamic tree mounts in its `[root]` Layout. */
   Boundary: React.ComponentType<{ children: React.ReactNode }>,
 ) {
@@ -212,9 +213,9 @@ export function createPhiNextStaticRootLayout(
       resolvedLocale,
       browserColorScheme: normalizePhiColorSchemeHint(mode),
       children: (
-        <PhiOverlayZonesLoaderProvider loader={loadOverlayZones}>
+        <OverlayZonesProvider>
           <Boundary>{children}</Boundary>
-        </PhiOverlayZonesLoaderProvider>
+        </OverlayZonesProvider>
       ),
     });
   };
