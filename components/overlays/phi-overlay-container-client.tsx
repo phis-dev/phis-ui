@@ -31,16 +31,34 @@ import { registerPhiSignalInstance } from "../runtime/runtime-signal-registry";
 import { usePhiSignalRuntimePartition } from "../runtime/runtime-signal-partition";
 import { PhiModalControl } from "../controls/phi-modal-control";
 import { PhiDrawerControl } from "../controls/phi-drawer-control";
+import { usePhiOverlayZonesLoaderIfAny } from "./phi-overlay-zones-loader";
+import type { PhiCmsOverlayZones, PhiCmsOverlayZonesRequest } from "../../types/cms-overlay-zones";
 
 export type PhiOverlayContainerClientProps = {
   overlayId: PhiCmsInstanceId;
   overlayType: PhiCmsOverlayType;
   config: Record<string, unknown>;
   signalScope: Extract<PhiSignalScope, "area" | "page">;
-  header: ReactNode;
-  body: ReactNode;
-  footer: ReactNode;
+  header?: ReactNode;
+  body?: ReactNode;
+  footer?: ReactNode;
+  /**
+   * Set instead of the zones while the Overlay has not been opened: what to ask the Site's Server Action
+   * for the first time it opens (`types/cms-overlay-zones.ts`).
+   */
+  deferredZones?: PhiCmsOverlayZonesRequest;
 };
+
+type PhiLoadedOverlayZones = {
+  /** Which request and which address the zones were rendered for. */
+  key: string;
+  zones: PhiCmsOverlayZones;
+};
+
+/** Stands where the body will be while the zones are on their way, so the shell opens at once. */
+const PHI_OVERLAY_ZONES_PENDING = (
+  <div aria-busy="true" style={{ minBlockSize: "calc(var(--ant-control-height) * 3)" }} />
+);
 
 /**
  * Whether an `open` carried on a Table's action channel is meant for this Overlay.
@@ -75,6 +93,7 @@ export function PhiOverlayContainerClient({
   header,
   body,
   footer,
+  deferredZones,
 }: PhiOverlayContainerClientProps) {
   const configKey = JSON.stringify(rawConfig);
   const config = useMemo(
@@ -110,6 +129,8 @@ export function PhiOverlayContainerClient({
   const openedAtPathname = useRef<string | null>(null);
   const pathname = usePathname() ?? "/";
   const emitSignal = usePhiSignalEmitter(receiver);
+  const loadZones = usePhiOverlayZonesLoaderIfAny();
+  const [loadedZones, setLoadedZones] = useState<PhiLoadedOverlayZones | null>(null);
   const listenRoutes = useMemo(() => config.signalRoutes?.listens ?? [], [config.signalRoutes?.listens]);
 
   useEffect(() => registerPhiSignalInstance(signalPartition, {
@@ -140,6 +161,39 @@ export function PhiOverlayContainerClient({
     if (nextOpen) setHasOpened(true);
     setOpen(nextOpen);
   }, []);
+
+  /*
+   * The zones of a deferred Overlay, asked for when it opens and kept afterwards.
+   *
+   * Kept per request and address: an Area Overlay outlives client navigations, and its zones were
+   * rendered for the page under it -- a link target resolves against it -- so another address asks again
+   * the next time it opens. Asking fails into a closed Overlay and a logged error; the next open asks
+   * again rather than showing an empty shell.
+   */
+  const deferredZonesKey = deferredZones ? `${JSON.stringify(deferredZones)}@${pathname}` : null;
+  useEffect(() => {
+    if (!open || !deferredZones || !deferredZonesKey || loadedZones?.key === deferredZonesKey) return;
+    if (!loadZones) {
+      throw new Error("PhiOverlayZonesLoaderProvider is missing from the application Root Layout.");
+    }
+    let cancelled = false;
+    loadZones(deferredZones).then((zones) => {
+      if (cancelled) return;
+      if (!zones) {
+        console.error(`Overlay ${overlayId} could not be rendered for this viewer.`);
+        updateOpen(false);
+        return;
+      }
+      setLoadedZones({ key: deferredZonesKey, zones });
+    }, (error: unknown) => {
+      if (cancelled) return;
+      console.error(`Overlay ${overlayId} could not be loaded.`, error);
+      updateOpen(false);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [deferredZones, deferredZonesKey, loadZones, loadedZones?.key, open, overlayId, updateOpen]);
 
   useEffect(() => {
     if (emittedOpenRef.current === open) return;
@@ -232,6 +286,11 @@ export function PhiOverlayContainerClient({
       {zone}
     </PhiSignalIdentityProvider>
   ) : null;
+  const zones: PhiCmsOverlayZones | null = !deferredZones
+    ? { header, body, footer }
+    : loadedZones && loadedZones.key === deferredZonesKey
+      ? loadedZones.zones
+      : open ? { header: null, body: PHI_OVERLAY_ZONES_PENDING, footer: null } : null;
   const containerChromeStyle = resolvePhiCmsContainerChromeStyle(config);
   const surfaceStyle = { ...containerChromeStyle, padding: 0 };
 
@@ -240,9 +299,9 @@ export function PhiOverlayContainerClient({
       <PhiDrawerControl
         open={open}
         title={runtimeTitle}
-        header={renderZone(header)}
-        body={renderZone(body)}
-        footer={renderZone(footer)}
+        header={renderZone(zones?.header)}
+        body={renderZone(zones?.body)}
+        footer={renderZone(zones?.footer)}
         closable={config.closable}
         keyboard={config.keyboard}
         mask={config.mask}
@@ -262,9 +321,9 @@ export function PhiOverlayContainerClient({
     <PhiModalControl
       open={open}
       title={runtimeTitle}
-      header={renderZone(header)}
-      body={renderZone(body)}
-      footer={renderZone(footer)}
+      header={renderZone(zones?.header)}
+      body={renderZone(zones?.body)}
+      footer={renderZone(zones?.footer)}
       closable={config.closable}
       keyboard={config.keyboard}
       mask={config.mask}

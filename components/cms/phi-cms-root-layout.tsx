@@ -271,6 +271,7 @@ export async function PhiCmsAreaBoundary({
               runtime={runtime}
               registry={scope.runtimeRegistry}
               signalScope="area"
+              deferredOrigin={{ area: runtime.area, root, path: path ?? pagePath ?? null }}
             />
           ) : null}
         </PhiRuntimeModuleDataProviderHost>

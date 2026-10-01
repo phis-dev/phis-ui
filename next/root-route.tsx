@@ -35,6 +35,8 @@ import type { PhiSiteConfig } from "../types/site-config";
 import type { PhiResolvedLocale } from "../helpers/site-locale-config";
 import { fetchResolvedSiteLocale } from "../server-helpers/site-locale";
 import type { PhiThemeMode } from "../theme/phi-theme-presets";
+import { PhiOverlayZonesLoaderProvider } from "../components/overlays/phi-overlay-zones-loader";
+import type { PhiCmsOverlayZonesLoader } from "../types/cms-overlay-zones";
 
 /**
  * The Theme blocks this Site can follow, loaded once per host and then kept.
@@ -126,8 +128,10 @@ function buildPhiNextRootMetadata(
 
 /** The document shell of every dynamic route: the request decides the locale and the colour scheme. */
 export function createPhiNextRootLayout(
-  siteModules: PhiSiteModuleServerAreaContributions = {},
-  fonts: PhiModuleFontContributions = [],
+  siteModules: PhiSiteModuleServerAreaContributions,
+  fonts: PhiModuleFontContributions,
+  /** The Site's Server Action for a closed Overlay's zones (`types/cms-overlay-zones.ts`). */
+  loadOverlayZones: PhiCmsOverlayZonesLoader,
 ) {
   const document = createPhiNextRootDocument(siteModules, fonts);
 
@@ -153,7 +157,7 @@ export function createPhiNextRootLayout(
       resolvedLocale,
       browserColorScheme,
       themeModePreference,
-      children,
+      children: <PhiOverlayZonesLoaderProvider loader={loadOverlayZones}>{children}</PhiOverlayZonesLoaderProvider>,
     });
   };
 }
@@ -167,10 +171,12 @@ export function createPhiNextRootLayout(
  * published one; a Theme under review is a query, and a request with a query never reaches this tree.
  */
 export function createPhiNextStaticRootLayout(
-  siteModules: PhiSiteModuleServerAreaContributions = {},
-  fonts: PhiModuleFontContributions = [],
+  siteModules: PhiSiteModuleServerAreaContributions,
+  fonts: PhiModuleFontContributions,
+  /** The Site's Server Action for a closed Overlay's zones (`types/cms-overlay-zones.ts`). */
+  loadOverlayZones: PhiCmsOverlayZonesLoader,
   /** The Client boundary of the Public Area, which the dynamic tree mounts in its `[root]` Layout. */
-  Boundary?: React.ComponentType<{ children: React.ReactNode }>,
+  Boundary: React.ComponentType<{ children: React.ReactNode }>,
 ) {
   const document = createPhiNextRootDocument(siteModules, fonts);
 
@@ -205,7 +211,11 @@ export function createPhiNextStaticRootLayout(
       site,
       resolvedLocale,
       browserColorScheme: normalizePhiColorSchemeHint(mode),
-      children: Boundary ? <Boundary>{children}</Boundary> : children,
+      children: (
+        <PhiOverlayZonesLoaderProvider loader={loadOverlayZones}>
+          <Boundary>{children}</Boundary>
+        </PhiOverlayZonesLoaderProvider>
+      ),
     });
   };
 }

@@ -277,7 +277,11 @@ Two things follow from the section above and are not negotiable by the design:
   A Site pays for a Module's lettering in deploy size, never in fetches.
 
 The generated list is `src/generated/site-modules-fonts.ts`: one import per installed package that
-exports `./fonts`, gathered into the second argument of `createPhiNextRootLayout`. `phis module` writes
+exports `./fonts`, gathered into the second argument of `createPhiNextRootLayout`. The third argument
+is the Site's Server Action for Overlay zones, `src/runtime-modules/overlay-zones.ts`, a `"use server"`
+file the scaffold writes around `loadPhiCmsOverlayZones` (`@phis/ui/next/overlay-zones`) and the Site's
+`loadPhiSiteAreaBridge`; `createPhiNextStaticRootLayout` takes it before the Public boundary. It has to be
+the Site's because only the Site holds its Area bridges (OVERLAYS.md, "mountPolicy"). `phis module` writes
 it with the rest of the projection, from the `exports` of the packages installed in the Site. A package installed from a tarball rather than a workspace link has to be listed in
 `transpilePackages`, because the font loader runs only over modules Next compiles.
 

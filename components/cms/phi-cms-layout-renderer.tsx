@@ -3,6 +3,7 @@ import { cloneElement, createElement, isValidElement, type CSSProperties, type R
 import type {
   PhiCmsContentWidgetNode,
   PhiCmsLayoutRenderNode,
+  PhiCmsOverlayNode,
   PhiResolvedCmsRenderableTree,
 } from "../../types/cms";
 import { comparePhiCmsInstanceIds, type PhiCmsInstanceId } from "../../types/cms-instance-id";
@@ -71,6 +72,8 @@ import type { PhiResolvedLinkTargets } from "../../types/references";
 import { PhiCmsNodeVisibilityGate } from "./clients/phi-cms-node-visibility-gate";
 import { PhiRuntimeModuleRenderClientHost } from "../runtime/runtime-module-render-client-manifest";
 import { PhiRuntimeRenderClientType } from "../../constants/runtime-render-client-types";
+import { parsePhiCmsOverlayConfig } from "../../types/cms-overlay";
+import type { PhiCmsOverlayZones, PhiCmsOverlayZonesRequest } from "../../types/cms-overlay-zones";
 
 /*
  * Loaded when a render happens, not when this module is imported.
@@ -321,7 +324,20 @@ function buildLayoutTree(
     .filter((entry) => entry.root !== null);
 }
 
-export async function PhiCmsOverlayRenderer({
+/** Everything one Overlay's zones are rendered from, computed once per tree. */
+export type PhiCmsOverlayRenderContext = {
+  tree: PhiResolvedCmsRenderableTree;
+  runtime: PhiBlockRuntime;
+  registry: PhiResolvedRuntimeRenderRegistry;
+  signalScope: Extract<PhiSignalScope, "area" | "page">;
+  createNode: ReturnType<typeof buildLayoutNodeResolver>;
+  signalParticipants: Set<string>;
+  signalRuntime: PhiRenderableBlockRuntime;
+  features: Awaited<ReturnType<typeof resolvePhiCmsTreeFeatures>>;
+  links: Awaited<ReturnType<typeof resolvePhiCmsTreeLinkTargets>>;
+};
+
+export async function preparePhiCmsOverlayRenderContext({
   tree,
   runtime,
   registry,
@@ -331,77 +347,140 @@ export async function PhiCmsOverlayRenderer({
   runtime: PhiBlockRuntime;
   registry: PhiResolvedRuntimeRenderRegistry;
   signalScope: Extract<PhiSignalScope, "area" | "page">;
-}) {
+}): Promise<PhiCmsOverlayRenderContext> {
   const [features, links] = await Promise.all([
     resolvePhiCmsTreeFeatures(tree, registry, runtime),
     resolvePhiCmsTreeLinkTargets(tree, runtime),
   ]);
-  const createNode = buildLayoutNodeResolver(tree, registry.widgetBlockDefaultsByType);
-  const layoutPluginsByType = registry.layoutPluginsByType;
-  const signalParticipants = resolvePhiTreeSignalParticipants(tree);
-  const signalRuntime: PhiRenderableBlockRuntime = {
-    siteKey: runtime.site.key,
-    publicUrl: runtime.site.publicUrl ?? null,
-    defaultLang: runtime.locale.current,
-    area: runtime.area,
-    pageKey: runtime.page?.path ?? null,
+  return {
+    tree,
+    runtime,
+    registry,
+    signalScope,
+    createNode: buildLayoutNodeResolver(tree, registry.widgetBlockDefaultsByType),
+    // From the whole tree, not the Overlay alone: a block is a participant when anything in the tree
+    // addresses it, and that is the same answer whether the zones render with the page or on demand.
+    signalParticipants: resolvePhiTreeSignalParticipants(tree),
+    signalRuntime: {
+      siteKey: runtime.site.key,
+      publicUrl: runtime.site.publicUrl ?? null,
+      defaultLang: runtime.locale.current,
+      area: runtime.area,
+      pageKey: runtime.page?.path ?? null,
+    },
+    features,
+    links,
   };
+}
 
-  return tree.overlays
+/** One Overlay's header, body and footer, or null where its body cannot be drawn. */
+export function renderPhiCmsOverlayZones(
+  context: PhiCmsOverlayRenderContext,
+  overlay: PhiCmsOverlayNode,
+): PhiCmsOverlayZones | null {
+  const { tree, runtime, registry, signalScope, createNode, signalParticipants, signalRuntime } = context;
+  const layoutPluginsByType = registry.layoutPluginsByType;
+  const renderRoot = (layoutId: PhiCmsInstanceId | null, zone: "header" | "body" | "footer") => {
+    if (layoutId == null) return null;
+    const root = createNode(layoutId);
+    if (!root) return null;
+    return wrapPhiRenderedSlotChild(renderLayoutNode(root, {
+      runtime,
+      tree,
+      regionConfig: undefined,
+      signalScope,
+      signalRuntime,
+      layoutPluginsByType,
+      runtimeRegistry: registry,
+      signalParticipants,
+      features: context.features,
+      links: context.links,
+    }), {
+      kind: "layout",
+      blockId: root.id,
+      config: root.config as Partial<PhiRenderableBlock> | null | undefined,
+      key: `overlay-${zone}-layout-${root.id}`,
+      typeKey: root.widgetType,
+      moduleId: registry.ownerModuleIdByLayoutType.get(resolveLayoutRegistryType(root.widgetType)) ?? null,
+      signalScope,
+      signalRuntime,
+      signalParticipant:
+        signalParticipants.has(createPhiSignalAddress("cms", root.id)) ||
+        layoutPluginsByType.get(resolveLayoutRegistryType(root.widgetType))?.runtimeSignals != null,
+    });
+  };
+  const header = renderRoot(overlay.headerLayoutNodeId, "header");
+  const body = renderRoot(overlay.bodyLayoutNodeId, "body");
+  const footer = renderRoot(overlay.footerLayoutNodeId, "footer");
+  if (!body ||
+    (overlay.headerLayoutNodeId != null && !header) ||
+    (overlay.footerLayoutNodeId != null && !footer)) return null;
+  return { header, body, footer };
+}
+
+/**
+ * The tree's Overlays, each with its zones -- or, closed, with what it needs to ask for them.
+ *
+ * Given `deferredOrigin`, an Overlay that is not `eager` ships no zones: its Client container asks the
+ * Site's Server Action for them the first time it opens (`types/cms-overlay-zones.ts`). An `eager` one
+ * still renders here, because its policy is that the content is mounted before anyone opens it. Without
+ * `deferredOrigin` -- a page-level Overlay, for now -- the zones render with the page as before.
+ *
+ * A deferred Overlay is kept when its zones' root nodes exist; whether the body then draws anything is
+ * answered when it is asked for, which is the one difference from rendering it here.
+ */
+export async function PhiCmsOverlayRenderer({
+  tree,
+  runtime,
+  registry,
+  signalScope,
+  deferredOrigin,
+}: {
+  tree: PhiResolvedCmsRenderableTree;
+  runtime: PhiBlockRuntime;
+  registry: PhiResolvedRuntimeRenderRegistry;
+  signalScope: Extract<PhiSignalScope, "area" | "page">;
+  deferredOrigin?: Omit<PhiCmsOverlayZonesRequest, "overlayId">;
+}) {
+  const overlays = tree.overlays
     .slice()
-    .sort((left, right) => left.sortOrder - right.sortOrder || comparePhiCmsInstanceIds(left.id, right.id))
-    .map((overlay) => {
-      const renderRoot = (layoutId: PhiCmsInstanceId | null, zone: "header" | "body" | "footer") => {
-        if (layoutId == null) return null;
-        const root = createNode(layoutId);
-        if (!root) return null;
-        return wrapPhiRenderedSlotChild(renderLayoutNode(root, {
-          runtime,
-          tree,
-          regionConfig: undefined,
-          signalScope,
-          signalRuntime,
-          layoutPluginsByType,
-          runtimeRegistry: registry,
-          signalParticipants,
-          features,
-          links,
-        }), {
-          kind: "layout",
-          blockId: root.id,
-          config: root.config as Partial<PhiRenderableBlock> | null | undefined,
-          key: `overlay-${zone}-layout-${root.id}`,
-          typeKey: root.widgetType,
-          moduleId: registry.ownerModuleIdByLayoutType.get(resolveLayoutRegistryType(root.widgetType)) ?? null,
-          signalScope,
-          signalRuntime,
-          signalParticipant:
-            signalParticipants.has(createPhiSignalAddress("cms", root.id)) ||
-            layoutPluginsByType.get(resolveLayoutRegistryType(root.widgetType))?.runtimeSignals != null,
-        });
-      };
-      const renderedHeader = renderRoot(overlay.headerLayoutNodeId, "header");
-      const renderedBody = renderRoot(overlay.bodyLayoutNodeId, "body");
-      const renderedFooter = renderRoot(overlay.footerLayoutNodeId, "footer");
-      if (!renderedBody ||
-        (overlay.headerLayoutNodeId != null && !renderedHeader) ||
-        (overlay.footerLayoutNodeId != null && !renderedFooter)) return null;
+    .sort((left, right) => left.sortOrder - right.sortOrder || comparePhiCmsInstanceIds(left.id, right.id));
+  const defers = (overlay: PhiCmsOverlayNode) => deferredOrigin != null &&
+    parsePhiCmsOverlayConfig(overlay.config, overlay.overlayType).mountPolicy !== "eager";
+  const context = overlays.some((overlay) => !defers(overlay))
+    ? await preparePhiCmsOverlayRenderContext({ tree, runtime, registry, signalScope })
+    : null;
+  const createNode = context?.createNode ?? buildLayoutNodeResolver(tree, registry.widgetBlockDefaultsByType);
+
+  return overlays.map((overlay) => {
+    const common = {
+      overlayId: overlay.id,
+      overlayType: overlay.overlayType,
+      config: overlay.config,
+      signalScope,
+    };
+    if (deferredOrigin != null && defers(overlay)) {
+      const exists = (layoutId: PhiCmsInstanceId | null) => layoutId == null || createNode(layoutId) != null;
+      if (overlay.bodyLayoutNodeId == null || !exists(overlay.bodyLayoutNodeId) ||
+        !exists(overlay.headerLayoutNodeId) || !exists(overlay.footerLayoutNodeId)) return null;
       return (
         <PhiRuntimeModuleRenderClientHost
           key={`overlay-${overlay.id}`}
           type={PhiRuntimeRenderClientType.OverlayContainer}
-          componentProps={{
-            overlayId: overlay.id,
-            overlayType: overlay.overlayType,
-            config: overlay.config,
-            signalScope,
-            header: renderedHeader,
-            body: renderedBody,
-            footer: renderedFooter,
-          }}
+          componentProps={{ ...common, deferredZones: { ...deferredOrigin, overlayId: overlay.id } }}
         />
       );
-    });
+    }
+    const zones = context ? renderPhiCmsOverlayZones(context, overlay) : null;
+    if (!zones) return null;
+    return (
+      <PhiRuntimeModuleRenderClientHost
+        key={`overlay-${overlay.id}`}
+        type={PhiRuntimeRenderClientType.OverlayContainer}
+        componentProps={{ ...common, ...zones }}
+      />
+    );
+  });
 }
 
 function renderContentWidget(

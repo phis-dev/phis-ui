@@ -215,6 +215,20 @@ Layouts and the Gallery Widget use as well. For an Overlay the window is "open":
 
 A stored value outside these three is a read error, not a fallback.
 
+The policy also decides what the page carries. An Area Overlay that is not `eager` ships without its
+zones: the page holds only its configuration, and the container asks the Site's Server Action for the
+zones the first time it opens (`types/cms-overlay-zones.ts`, `next/overlay-zones.tsx`). The action renders
+the same Area again for the viewer the request carries, runs the Area's access guard, and answers only
+for an Overlay that viewer's tree contains. The shell opens at once and shows a placeholder until the
+zones arrive; zones are kept for the address they were rendered at, so a client navigation asks again on
+the next open. A failed request closes the Overlay and logs the error, and the next open asks again.
+
+The reason is the first load. Rendered with the page, a closed Overlay's zones put every Client
+implementation inside them -- a sign-in Form, its Controls, the validation library -- into every page of
+the Area for the few visitors who open it. An `eager` Overlay keeps rendering with the page, because its
+policy is that the content exists before the first open. Overlays a Page tree declares still render with
+the page for now; only the Area Boundary hands the renderer the origin a request needs.
+
 Transient `open`, `hasOpened`, loading, pending, focus, and resize-interaction state is never persisted. Callback
 functions, portals, raw Ant Design render callbacks, raw semantic-DOM styles/class names, `forceRender`,
 and arbitrary z-index values are renderer concerns and are not CMS config. Standard visual values resolve

@@ -137,6 +137,12 @@
       "require": "./next/cache-handler.mjs",
       "default": "./next/cache-handler.mjs"
     },
+    "./next/overlay-zones": {
+      "import": "./next/overlay-zones.tsx",
+      "require": "./next/overlay-zones.tsx",
+      "types": "./next/overlay-zones.tsx",
+      "default": "./next/overlay-zones.tsx"
+    },
     "./next/route-handlers": {
       "import": "./next/route-handlers.ts",
       "require": "./next/route-handlers.ts",
@@ -611,6 +617,7 @@
       "./next/areas/builder",
       "./next/areas/editor",
       "./next/areas/public",
+      "./next/overlay-zones",
       "./next/proxy-runtime",
       "./next/root-route",
       "./next/route-handlers",

@@ -46,6 +46,33 @@ export function runWithPhiRequestRuntime<T>(runtime: PhiBlockRuntime, work: () =
   return phiRequestRuntimeScope.run(store, work);
 }
 
+/**
+ * A request scope for a Server Action, which renders nothing until it has returned.
+ *
+ * An Action's body runs outside the React render, so the RSC-scoped store gives it a fresh object on
+ * every read; this scope holds one store for the body instead. What the body then returns is rendered by
+ * Next afterwards, outside the scope -- `capturePhiRequestRuntimeStore` and `restorePhiRequestRuntimeStore`
+ * carry what the body learned into that render.
+ */
+export function runInPhiRequestScope<T>(work: () => T): T {
+  return phiRequestRuntimeScope.run(createPhiRequestRuntimeStore(), work);
+}
+
+export type PhiCapturedRequestRuntime = Readonly<PhiRequestRuntimeStore>;
+
+export function capturePhiRequestRuntimeStore(): PhiCapturedRequestRuntime {
+  const store = getPhiRequestRuntimeStore();
+  return { runtime: store.runtime, navigationByArea: new Map(store.navigationByArea) };
+}
+
+export function restorePhiRequestRuntimeStore(captured: PhiCapturedRequestRuntime) {
+  const store = getPhiRequestRuntimeStore();
+  store.runtime = captured.runtime;
+  for (const [area, context] of captured.navigationByArea) {
+    store.navigationByArea.set(area, context);
+  }
+}
+
 export function setPhiRequestRuntime(runtime: PhiBlockRuntime) {
   const store = getPhiRequestRuntimeStore();
   store.runtime = runtime;
