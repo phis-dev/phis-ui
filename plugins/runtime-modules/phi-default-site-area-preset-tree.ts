@@ -8,7 +8,8 @@ import {
 } from "../../constants/cms-layout-types";
 import { PhiCmsFlags, PhiCmsRegionType } from "../../constants/phi-cms";
 import { resolvePhiCmsWidgetPluginKey } from "../../constants/cms-widget-types";
-import { buildPhiCmsLayoutNamespacedTypeKey, resolvePhiCmsLayoutPluginKey } from "../../constants/cms-layout-types";
+import { buildPhiCmsLayoutNamespacedTypeKey } from "../../constants/cms-layout-types";
+import { resolvePhiCmsLayoutPluginKey } from "../../constants/cms-layout-type-keys";
 import type { PhiCmsPageNode, PhiResolvedCmsPageTree } from "../../types/cms";
 import type { PhiBlockRuntime } from "../../types";
 import { trGlobal } from "../../server-helpers/translate";

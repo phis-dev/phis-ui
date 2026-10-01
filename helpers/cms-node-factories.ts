@@ -1,4 +1,5 @@
-import { buildPhiCmsLayoutNamespacedTypeKey, resolvePhiCmsLayoutPluginKey } from "../constants/cms-layout-types";
+import { buildPhiCmsLayoutNamespacedTypeKey } from "../constants/cms-layout-types";
+import { resolvePhiCmsLayoutPluginKey } from "../constants/cms-layout-type-keys";
 import { buildPhiCmsWidgetNamespacedTypeKey, resolvePhiCmsWidgetPluginKey } from "../constants/cms-widget-types";
 import type { PhiCmsLayoutNode, PhiCmsContentWidgetNode } from "../types/cms";
 import type { PhiCmsInstanceId } from "../types/cms-instance-id";

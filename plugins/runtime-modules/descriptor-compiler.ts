@@ -4,7 +4,7 @@ import {
   type PhiCmsAreaKey,
 } from "../../constants/cms-areas";
 import { PhiCmsPageType, PhiCmsRegionType, PhiCmsStatus } from "../../constants/phi-cms";
-import { PhiCmsLayoutType } from "../../constants/cms-layout-types";
+import { PhiCmsLayoutType } from "../../constants/cms-layout-type-keys";
 import {
   createPhiPresetCmsInstanceId,
   createPhiPresetCmsPageId,

@@ -1,4 +1,4 @@
-import { resolvePhiCmsLayoutPluginKey } from "../../constants/cms-layout-types";
+import { resolvePhiCmsLayoutPluginKey } from "../../constants/cms-layout-type-keys";
 import {
   PHI_CMS_CAROUSEL_LAYOUT_SLOTS,
   PHI_CMS_COLLAPSIBLE_LAYOUT_SLOTS,

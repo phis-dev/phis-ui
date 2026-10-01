@@ -5,7 +5,7 @@ import {
   definePhiRuntimeModuleRenderClient,
 } from "../../../components/runtime/runtime-module-render-client-manifest";
 import { PhiCmsWidgetType } from "../../../constants/cms-widget-types";
-import { PhiCmsLayoutType } from "../../../constants/cms-layout-types";
+import { PhiCmsLayoutType } from "../../../constants/cms-layout-type-keys";
 import { PhiRuntimeRenderClientType } from "../../../constants/runtime-render-client-types";
 import { PHI_ASSET_RUNTIME_MODULE_ID } from "../asset/ids";
 import { PHI_MEDIA_LIBRARY_ITEM_RENDERER_KEY } from "../../../constants/media-library-provider-keys";

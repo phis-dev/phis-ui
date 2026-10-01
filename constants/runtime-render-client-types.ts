@@ -1,4 +1,4 @@
-import { PHI_CMS_LAYOUT_PLUGIN_KEYS } from "./cms-layout-types";
+import { PHI_CMS_LAYOUT_PLUGIN_KEYS } from "./cms-layout-type-keys";
 import { PhiCmsWidgetType } from "./cms-widget-types";
 
 export const PhiRuntimeRenderClientType = {

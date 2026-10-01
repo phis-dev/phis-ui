@@ -1,6 +1,6 @@
 import type { PhiCollapsibleLayoutProps } from "./clients/phi-collapsible-layout-client";
 import { PhiRuntimeModuleRenderClientHost } from "../runtime/runtime-module-render-client-manifest";
-import { PhiCmsLayoutType } from "../../constants/cms-layout-types";
+import { PhiCmsLayoutType } from "../../constants/cms-layout-type-keys";
 
 export type { PhiCollapsibleLayoutProps } from "./clients/phi-collapsible-layout-client";
 
