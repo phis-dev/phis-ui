@@ -93,9 +93,16 @@ their identity. It must not reach into their stores, their Controller addresses,
 
 `scripts/validate-module-dependency-direction.ts` (part of `runtime-modules:check`) holds the rule for
 imports: every reference counts, type-only and `import()` included, tests too. The module system beside
-the Module folders (contracts, descriptor compiler, Area catalogs, client manifests) and the package's
-own doors in `package.json#exports` assemble the Modules and may name them; a Module named by its id as
-data is not a reference.
+the Module folders and the package's own doors in `package.json#exports` assemble the Modules and may
+name them; a Module named by its id as data is not a reference.
+
+The module system is two things, and the Foundation may use only one. Its catalogs and manifests
+(`catalog.ts`, `area-catalogs/`, `area-contributions/`, `client-manifests/` and the like) gather the
+Modules. Its contracts, descriptor compiler, settings and Area definitions are infrastructure the
+Foundation builds on, and they stay that only while nothing in them leads to a Module -- which is why
+`area-definitions.ts`, `area-module-defaults.ts` and `contracts.ts` name the Modules they mention by id
+(`createPhiRuntimeModuleId`) rather than importing their `ids.ts`. The validator measures which is
+which: a module-system file that leads to a Module is a catalog, and the Foundation may not import it.
 
 The rule has a practical edge that is easy to miss. A Foundation file that names a Module's Controller
 address has the dependency backwards even though nothing was imported *from* a Module folder — the

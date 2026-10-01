@@ -1,3 +1,5 @@
+import { PHI_SHARED_PACKAGE_NAME } from "../../constants/package";
+import { createPhiRuntimeModuleId } from "../../constants/module-identity";
 import type {
   PhiRuntimeModule,
   PhiRuntimeModuleDefinition,
@@ -30,12 +32,20 @@ import {
   type PhiRoleProviderId,
   type PhiViewerAccessPolicy,
 } from "../../types/access";
-import { PHI_AUTH_RUNTIME_MODULE_ID } from "./auth/ids";
 import {
   isPhiOwnedRuntimeModuleId,
   isPhiRuntimeModuleSourceLocale,
   resolvePhiRuntimeModuleSourceLocale,
 } from "../../types/runtime-module-locale";
+
+/*
+ * The Modules named here are named by id, as data. Importing their `ids.ts` bound every file that
+ * reads this one -- the Foundation among them -- to the Module folders at compile time (MODULES.md,
+ * "The dependency rule").
+ */
+const firstPartyModuleId = (moduleKey: string) =>
+  createPhiRuntimeModuleId(PHI_SHARED_PACKAGE_NAME, moduleKey);
+const PHI_AUTH_RUNTIME_MODULE_ID = firstPartyModuleId("auth");
 
 export type {
   PhiCmsPreviewWidgetPlugin,

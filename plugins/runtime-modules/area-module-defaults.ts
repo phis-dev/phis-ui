@@ -1,14 +1,24 @@
+import { PHI_SHARED_PACKAGE_NAME } from "../../constants/package";
+import { createPhiRuntimeModuleId } from "../../constants/module-identity";
 import type { PhiBuilderAreaKey } from "../../constants/cms-areas";
 import type { PhiRuntimeModuleId } from "../../types";
-import { PHI_ASSET_RUNTIME_MODULE_ID } from "./asset/ids";
-import { PHI_AUTH_RUNTIME_MODULE_ID } from "./auth/ids";
-import { PHI_THEME_RUNTIME_MODULE_ID } from "./theme/ids";
-import { PHI_LOCALIZATION_RUNTIME_MODULE_ID } from "./localization/ids";
-import { PHI_OBSERVABILITY_RUNTIME_MODULE_ID } from "./observability/ids";
-import { PHI_USER_MANAGEMENT_RUNTIME_MODULE_ID } from "./user-management/ids";
-import { PHI_DASHBOARD_RUNTIME_MODULE_ID } from "./dashboard/ids";
-import { PHI_NEWS_RUNTIME_MODULE_ID } from "./news/ids";
-import { PHI_REVISIONS_RUNTIME_MODULE_ID } from "./revisions/ids";
+
+/*
+ * The Modules named here are named by id, as data. Importing their `ids.ts` bound every file that
+ * reads this one -- the Foundation among them -- to the Module folders at compile time (MODULES.md,
+ * "The dependency rule").
+ */
+const firstPartyModuleId = (moduleKey: string) =>
+  createPhiRuntimeModuleId(PHI_SHARED_PACKAGE_NAME, moduleKey);
+const PHI_ASSET_RUNTIME_MODULE_ID = firstPartyModuleId("asset");
+const PHI_AUTH_RUNTIME_MODULE_ID = firstPartyModuleId("auth");
+const PHI_THEME_RUNTIME_MODULE_ID = firstPartyModuleId("theme");
+const PHI_LOCALIZATION_RUNTIME_MODULE_ID = firstPartyModuleId("localization");
+const PHI_OBSERVABILITY_RUNTIME_MODULE_ID = firstPartyModuleId("observability");
+const PHI_USER_MANAGEMENT_RUNTIME_MODULE_ID = firstPartyModuleId("user-management");
+const PHI_DASHBOARD_RUNTIME_MODULE_ID = firstPartyModuleId("dashboard");
+const PHI_NEWS_RUNTIME_MODULE_ID = firstPartyModuleId("news");
+const PHI_REVISIONS_RUNTIME_MODULE_ID = firstPartyModuleId("revisions");
 
 export function createPhiDefaultAreaRuntimeModuleIds(
   area: PhiBuilderAreaKey,

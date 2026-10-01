@@ -1,3 +1,5 @@
+import { PHI_SHARED_PACKAGE_NAME } from "../../constants/package";
+import { createPhiRuntimeModuleId } from "../../constants/module-identity";
 import type {
   PhiCmsAreaDefinition,
   PhiCmsNavigationAnchor,
@@ -7,12 +9,6 @@ import type {
 } from "../../types/cms-module-descriptors";
 import type { PhiCmsAreaKey } from "../../constants/cms-areas";
 import { createPhiCoreRuntimeControllerAddress } from "../../components/runtime/core-runtime-controller-address";
-import { PHI_ADMIN_RUNTIME_MODULE_ID } from "./admin/ids";
-import { PHI_ACCOUNTING_RUNTIME_MODULE_ID } from "./accounting/ids";
-import { PHI_APP_RUNTIME_MODULE_ID } from "./app/ids";
-import { PHI_BUILDER_RUNTIME_MODULE_ID } from "./builder/ids";
-import { PHI_PUBLIC_RUNTIME_MODULE_ID } from "./public/ids";
-import { PHI_EDITOR_RUNTIME_MODULE_ID } from "./editor/ids";
 import { PHI_DEFAULT_PUB_AREA_PRESET_KEY } from "./preset-contracts/pub-area";
 import {
   PHI_VIEWER_ACCESS_ACCOUNTING,
@@ -23,6 +19,20 @@ import {
   PHI_VIEWER_ACCESS_STRUCTURE_AUTHORING,
   PHI_VIEWER_ACCESS_SITE_ADMIN,
 } from "../../types/access";
+
+/*
+ * The Modules named here are named by id, as data. Importing their `ids.ts` bound every file that
+ * reads this one -- the Foundation among them -- to the Module folders at compile time (MODULES.md,
+ * "The dependency rule").
+ */
+const firstPartyModuleId = (moduleKey: string) =>
+  createPhiRuntimeModuleId(PHI_SHARED_PACKAGE_NAME, moduleKey);
+const PHI_ADMIN_RUNTIME_MODULE_ID = firstPartyModuleId("admin");
+const PHI_ACCOUNTING_RUNTIME_MODULE_ID = firstPartyModuleId("accounting");
+const PHI_APP_RUNTIME_MODULE_ID = firstPartyModuleId("app");
+const PHI_BUILDER_RUNTIME_MODULE_ID = firstPartyModuleId("builder");
+const PHI_PUBLIC_RUNTIME_MODULE_ID = firstPartyModuleId("public");
+const PHI_EDITOR_RUNTIME_MODULE_ID = firstPartyModuleId("editor");
 
 const label = (defaultMessage: string) => ({ defaultMessage });
 

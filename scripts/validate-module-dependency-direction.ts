@@ -22,6 +22,11 @@ import { fileURLToPath } from "node:url";
  * module system that assembles them and may name every Module; so may the package's own doors in
  * `package.json#exports`, which put the package together. Everything else in the package is Foundation.
  *
+ * The module system is two things, and the Foundation may use only one of them. Its catalogs and
+ * manifests gather the Modules; its contracts, compiler and Area definitions are infrastructure the
+ * Foundation builds on. Which is which is not listed but measured: a module-system file is a catalog
+ * when it leads to a Module, and the Foundation may not import one.
+ *
  * Every reference counts, the type-only and the lazy ones included: `import type` binds the Foundation
  * to a Module's shape as surely as a value does, and `import()` is still an edge. Tests count too.
  * Naming a Module by its id as data -- a string -- is not a reference and stays allowed.
@@ -118,23 +123,52 @@ const sourceFiles: string[] = [];
 collectSourceFiles(packageRoot, sourceFiles);
 const problems: string[] = [];
 
+const importsByFile = new Map<string, string[]>();
 for (const file of sourceFiles) {
-  const from = classify(path.relative(packageRoot, file));
+  const targets: string[] = [];
+  for (const match of stripComments(readFileSync(file, "utf8")).matchAll(importPattern)) {
+    const target = resolveImport(file, match[2] ?? match[4] ?? match[6]!);
+    if (target !== null) targets.push(path.relative(packageRoot, target));
+  }
+  importsByFile.set(path.relative(packageRoot, file), targets);
+}
+
+/*
+ * The module system's files that reach a Module, through other module-system files or directly: the
+ * catalogs and manifests. The rest of the module system -- contracts, the descriptor compiler, the
+ * Area definitions -- is what the Foundation builds on, and it may only stay that while nothing in it
+ * leads to a Module. A Foundation file importing a catalog reaches every Module in it, which is the
+ * dependency the rule forbids, taken one step round.
+ */
+const reachingModules = new Set<string>();
+for (let grew = true; grew;) {
+  grew = false;
+  for (const [file, targets] of importsByFile) {
+    if (classify(file).kind !== "module-system" || reachingModules.has(file)) continue;
+    if (targets.some((target) => classify(target).kind === "module" || reachingModules.has(target))) {
+      reachingModules.add(file);
+      grew = true;
+    }
+  }
+}
+
+for (const [sourcePath, targets] of importsByFile) {
+  const from = classify(sourcePath);
   if (from.kind === "module-system" || from.kind === "door") {
     continue;
   }
-  for (const match of stripComments(readFileSync(file, "utf8")).matchAll(importPattern)) {
-    const specifier = match[2] ?? match[4] ?? match[6]!;
-    const target = resolveImport(file, specifier);
-    if (target === null) {
+  for (const targetPath of targets) {
+    const to = classify(targetPath);
+    if (from.kind === "foundation" && to.kind === "module-system" && reachingModules.has(targetPath)) {
+      problems.push(
+        `${sourcePath} -> ${targetPath}: the Foundation may not import a module-system file that ` +
+          "reaches a Module.",
+      );
       continue;
     }
-    const targetPath = path.relative(packageRoot, target);
-    const to = classify(targetPath);
     if (to.kind !== "module") {
       continue;
     }
-    const sourcePath = path.relative(packageRoot, file);
     if (from.kind === "foundation") {
       problems.push(`${sourcePath} -> ${targetPath}: the Foundation may not reference a Module.`);
       continue;
@@ -166,5 +200,6 @@ if (problems.length > 0) {
 }
 
 console.log(
-  `Module dependency direction validated: ${moduleNames.size} Modules, ${sourceFiles.length} files.`,
+  `Module dependency direction validated: ${moduleNames.size} Modules, ${sourceFiles.length} files, ` +
+    `${reachingModules.size} module-system files that gather Modules.`,
 );
