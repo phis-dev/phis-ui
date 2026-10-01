@@ -1,5 +1,9 @@
 import type { PhiSiteTheme } from "../../types/site-config";
 import {
+  resolvePhiShellChromeOverlayVariables,
+  type PhiShellChromeOverlayVariables,
+} from "./phi-shell-chrome-overlay";
+import {
   resolvePhiShellRegionBackground,
   resolvePhiShellRegionColor,
 } from "../../helpers/shell-region-style";
@@ -155,5 +159,35 @@ export function resolvePhiRootTheme({
       token,
       components,
     },
+  };
+}
+
+export type PhiRootThemeByMode = Record<PhiThemeMode, PhiResolvedRootTheme["theme"]>;
+
+/**
+ * What the root needs of a Theme in the browser, resolved before it gets there.
+ *
+ * Both modes, because the mode switch changes the page without a round trip, and the Shell Chrome
+ * Overlay's custom properties, which carry both modes themselves. Everything here is plain data, so the
+ * Server resolves it for the page and the live provider only picks a mode. The resolution itself --
+ * this file, the Shell region styles, the Overlay, the component token builders -- is fetched by the
+ * browser only when a Theme draft arrives live from the Builder.
+ */
+export type PhiRootThemeState = {
+  themes: PhiRootThemeByMode;
+  chromeOverlayVariables: PhiShellChromeOverlayVariables;
+};
+
+export function resolvePhiRootThemeState(input: {
+  siteTheme: PhiSiteTheme;
+  fonts: PhiRootThemeFonts;
+  presets: readonly PhiThemePresetPlugin[];
+}): PhiRootThemeState {
+  return {
+    themes: {
+      light: resolvePhiRootTheme({ ...input, mode: "light" }).theme,
+      dark: resolvePhiRootTheme({ ...input, mode: "dark" }).theme,
+    },
+    chromeOverlayVariables: resolvePhiShellChromeOverlayVariables(input.siteTheme.root),
   };
 }

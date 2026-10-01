@@ -54,6 +54,22 @@ const ROOT_CLIENT_REFERENCES = [
   "components/runtime/runtime-signal-partition.tsx",
 ];
 
+/**
+ * The Theme resolution, which the Server does for the root and the browser fetches only for a draft.
+ *
+ * The live Theme provider used to resolve both the antd theme and the Shell Chrome Overlay itself, so
+ * every first load carried the resolver, the Shell region styles and the Overlay for a page whose
+ * Theme had been known on the Server all along. It now takes both modes resolved, and `import()`s the
+ * resolver when the Builder's Theme editor sends a draft. Statically reached again, they are back.
+ */
+const ROOT_SERVER_RESOLVED_THEME_FILES = [
+  "components/root/phi-root-theme-resolver.ts",
+  "components/root/phi-shell-chrome-overlay.ts",
+  "helpers/shell-region-style.ts",
+  "theme/phi-antd-token-resolver.ts",
+  "theme/phi-button-shadow.ts",
+];
+
 const LIVE_AREAS = ["public", "app", "admin", "editor", "accounting"];
 
 /**
@@ -307,6 +323,22 @@ for (const allowed of ROOT_CLIENT_REFERENCES) {
   }
 }
 
+for (const resolved of ROOT_SERVER_RESOLVED_THEME_FILES) {
+  const file = path.join(repositoryRoot, resolved);
+  if (!existsSync(file)) {
+    failures.push(`ROOT_SERVER_RESOLVED_THEME_FILES lists ${resolved}, which does not exist -- remove it.`);
+  } else if (root.eager.has(file)) {
+    failures.push(
+      [
+        "the root layout ships Theme resolution the Server already did:",
+        `    ${resolved}`,
+        "    reached through:",
+        formatChain(root.chain(file)),
+      ].join("\n"),
+    );
+  }
+}
+
 // --- 2. the live Area hosts --------------------------------------------------------------------
 
 const commonDirectories = readContributedModuleDirectories(COMMON_AREA_CONTRIBUTIONS);
@@ -474,7 +506,7 @@ if (failures.length > 0) {
 
 console.log(
   `Area Client reach validated: the root layout reaches ${root.clientReferences.size} allowed Client ` +
-    `references (${root.eager.size} files); ${LIVE_AREAS.length} live Areas ship ${liveAreaEagerFiles} ` +
+    `references (${root.eager.size} files), none of them Theme resolution; ${LIVE_AREAS.length} live Areas ship ${liveAreaEagerFiles} ` +
     `Client files, none of a Module they do not carry; ${DISPLAY_WIDGET_CLIENTS.length} display Widgets ` +
     `load no editing Control; Forms ship the common field kinds only; ${manifestLoaders} manifest ` +
       `loaders load implementations; ${registeredControllers} Controller Clients and ${renderClients} manifest ` +

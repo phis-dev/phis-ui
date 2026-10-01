@@ -283,6 +283,13 @@ The published Theme has one server projection and one client projection:
   `usePhiConfig()` value carries `token`, `customColors`, `fonts`, `layout`, `mode`, and `presets`. The Server
   Root passes only serializable data across it; Client theme modules never import server resolvers or
   `server-only` modules, and `pnpm audit:graph` must report no Client-to-server-only reachability.
+- The root resolves on the Server, for both modes: `resolvePhiRootThemeState(...)` in `PhiRootLayout` hands
+  `PhiRootLiveThemeProvider` the antd theme per mode plus the Shell Chrome Overlay's custom properties, and
+  the provider only picks the mode on screen, so the mode switch needs no round trip. The provider fetches
+  the resolver with `import()` only when a Theme draft arrives live from the Builder's Theme editor (the
+  `theme` signal); until it has resolved, the frame keeps the Theme it has. The resolver, the Shell region
+  styles and the Overlay are not on any first load, and `scripts/validate-area-client-reach.mjs` holds the
+  root to that (`ROOT_SERVER_RESOLVED_THEME_FILES`).
 
 ## The stated vocabulary
 

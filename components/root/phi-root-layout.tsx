@@ -14,6 +14,7 @@ import type { PhiResolvedLocale } from "../../helpers/site-locale-config";
 import { PhiDayjsLocale } from "./phi-dayjs-locale";
 import { PhiRootRemProvider } from "./phi-root-rem-provider";
 import { PhiRootLiveThemeProvider } from "./phi-root-live-theme-provider";
+import { resolvePhiRootThemeState } from "./phi-root-theme-resolver";
 import { PhiSignalRuntimePartitionProvider } from "../runtime/runtime-signal-partition";
 import { PhiCoreRuntimeApplicationAdapter } from "../runtime/core-runtime-application-adapter";
 import { getPhiSessionLabels } from "../widgets/label-sets/session";
@@ -178,6 +179,7 @@ export async function PhiRootLayout({
     serif: serifFont,
     display: displayFont,
   });
+  const themeState = resolvePhiRootThemeState({ siteTheme, fonts: themeFonts, presets: themePresets });
   const publishedRootTheme = resolvePhiPublishedRootTheme({
     siteTheme: siteThemeRecord,
     mode: resolvedThemeMode,
@@ -218,6 +220,7 @@ export async function PhiRootLayout({
             initialLocale={resolvedLocale?.locale ?? site.defaultLocale}
             availableLocales={site.availableLocales.map((option) => option.code)}
             fonts={themeFonts}
+            themeState={themeState}
             fontFamilies={fontCatalogue.entries.map(({ family, cssVariable }) => ({ family, cssVariable }))}
             presets={themePresets}
             rootClassName={fontCatalogue.className}

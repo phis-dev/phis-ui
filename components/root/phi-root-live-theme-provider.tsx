@@ -7,9 +7,9 @@ import type { PhiSiteTheme } from "../../types/site-config";
 import type { PhiSiteThemeBrand } from "../../types/site-theme";
 import { resolvePhiBrandWordmarkTextFrom } from "../../helpers/brand-wordmark";
 import { usePhiSignalListener } from "../runtime/runtime-signal-bus";
-import {
-  resolvePhiRootTheme,
-  type PhiRootThemeFonts,
+import type {
+  PhiRootThemeFonts,
+  PhiRootThemeState,
 } from "./phi-root-theme-resolver";
 import type {
   PhiThemeMode,
@@ -26,7 +26,6 @@ import {
 import { resolvePhiPublishedThemeCustomColors } from "../../theme/phi-theme-palette";
 import { PhiConfigProvider, type PhiFontCatalogueFamily } from "./phi-config-provider";
 import { PhiRootBackgroundLayer } from "./phi-root-background";
-import { resolvePhiShellChromeOverlayVariables } from "./phi-shell-chrome-overlay";
 import { resolvePhiControlShape } from "../../theme/phi-control-shape";
 import {
   PHI_SIGNAL_VALUE_SCHEMAS,
@@ -80,6 +79,7 @@ export function PhiRootLiveThemeProvider({
   initialLocale,
   availableLocales,
   fonts,
+  themeState,
   fontFamilies,
   presets,
   rootClassName,
@@ -98,6 +98,8 @@ export function PhiRootLiveThemeProvider({
   initialLocale: string;
   availableLocales: readonly string[];
   fonts: PhiRootThemeFonts;
+  /** The Theme resolved on the Server for both modes, with the Shell Chrome Overlay's properties. */
+  themeState: PhiRootThemeState;
   /** The families an author may choose from: this package's plus the installed Modules'. */
   fontFamilies: readonly PhiFontCatalogueFamily[];
   presets: readonly PhiThemePresetPlugin[];
@@ -139,10 +141,17 @@ export function PhiRootLiveThemeProvider({
   const [pageDescription, setPageDescription] = useState<string | null>(null);
   const [openGraphImage, setOpenGraphImage] = useState<string | null>(null);
   const [canonicalUrl, setCanonicalUrl] = useState<string | null>(null);
-  const resolvedTheme = useMemo(
-    () => resolvePhiRootTheme({ siteTheme: liveSiteTheme, mode, fonts, presets }),
-    [fonts, liveSiteTheme, mode, presets],
-  );
+  /*
+   * A live Theme draft, resolved in the browser -- the only case that needs the resolver here.
+   *
+   * The page arrives with both modes resolved on the Server, so switching modes only picks one. A draft
+   * from the Builder's Theme editor is a Theme the Server has never seen; the resolver is fetched for it
+   * then, and not shipped to every visitor of every page for that one moment. Until it is resolved, the
+   * frame keeps the Theme it has; a later draft outranks an earlier one still resolving.
+   */
+  const [liveThemeState, setLiveThemeState] = useState<PhiRootThemeState | null>(null);
+  const liveThemeRequest = useRef(0);
+  const activeThemeState = liveThemeState ?? themeState;
   const customColors = useMemo(
     () => resolvePhiPublishedThemeCustomColors(liveSiteTheme, mode, presets),
     [liveSiteTheme, mode, presets],
@@ -153,8 +162,8 @@ export function PhiRootLiveThemeProvider({
    * through `data-phi-theme-mode` rather than through a re-render.
    */
   const chromeOverlayStyle = useMemo(
-    () => ({ ...rootStyle, ...resolvePhiShellChromeOverlayVariables(liveSiteTheme.root) }),
-    [liveSiteTheme.root, rootStyle],
+    () => ({ ...rootStyle, ...activeThemeState.chromeOverlayVariables }),
+    [activeThemeState.chromeOverlayVariables, rootStyle],
   );
 
   useEffect(() => registerPhiSignalInstance(signalPartition, {
@@ -250,6 +259,11 @@ export function PhiRootLiveThemeProvider({
        */
       const nextTheme = signal.value as PhiSiteTheme;
       setLiveSiteTheme(nextTheme);
+      const request = ++liveThemeRequest.current;
+      void import("./phi-root-theme-resolver").then(({ resolvePhiRootThemeState }) => {
+        if (request !== liveThemeRequest.current) return;
+        setLiveThemeState(resolvePhiRootThemeState({ siteTheme: nextTheme, fonts, presets }));
+      });
       liveModeOverride.current = true;
       setMode(nextTheme.mode === "dark" ? "dark" : "light");
       return;
@@ -322,7 +336,7 @@ export function PhiRootLiveThemeProvider({
         locale={locale}
         mode={mode}
         controlShape={resolvePhiControlShape(liveSiteTheme.shape?.controls)}
-        theme={resolvedTheme.theme}
+        theme={activeThemeState.themes[mode]}
         presets={presets}
         rootClassName={rootClassName}
         rootStyle={chromeOverlayStyle}
