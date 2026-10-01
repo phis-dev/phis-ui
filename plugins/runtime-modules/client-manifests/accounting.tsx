@@ -7,6 +7,7 @@ import { PHI_COMMON_RUNTIME_MODULE_DATA_PROVIDER_CLIENT_MANIFEST } from "./commo
 import { extendPhiRuntimeModuleDataProviderClientManifest } from "../../../components/runtime/runtime-module-data-provider-client-manifest";
 import { PHI_DASHBOARD_RUNTIME_DATA_PROVIDER_CLIENT_DEFINITIONS } from "../dashboard/client-data-providers";
 export { PHI_COMMON_RUNTIME_MODULE_CALENDAR_ADAPTER_CLIENT_MANIFEST as PHI_ACCOUNTING_RUNTIME_MODULE_CALENDAR_ADAPTER_CLIENT_MANIFEST } from "./common";
+export { PHI_COMMON_RUNTIME_MODULE_UI_PROVIDER_CLIENT_MANIFEST as PHI_ACCOUNTING_RUNTIME_MODULE_UI_PROVIDER_CLIENT_MANIFEST } from "./common";
 
 export const PHI_ACCOUNTING_RUNTIME_MODULE_CONTROLLER_CLIENT_MANIFEST =
   createPhiRuntimeModuleControllerClientManifestFromAreaContributions(

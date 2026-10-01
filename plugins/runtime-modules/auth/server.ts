@@ -33,8 +33,7 @@ export function createPhiAuthRuntimeModuleServerAreaContribution() {
       forms: [...PHI_AUTH_RUNTIME_MODULE_FORMS, ...PHI_AUTH_ADMIN_SETTINGS_RUNTIME_MODULE_FORMS],
       areaOverlays: PHI_AUTH_RUNTIME_MODULE_AREA_OVERLAYS,
       routes: PHI_AUTH_RUNTIME_MODULE_ROUTES,
-      loadUiProvider: () => import("./form-ui-provider")
-        .then((module) => module.PhiAuthFormUiProvider),
+      uiProvider: true,
       features: {
         namespace: PHI_AUTH_RUNTIME_MODULE_FEATURE_NAMESPACE,
         load: () => import("./features")

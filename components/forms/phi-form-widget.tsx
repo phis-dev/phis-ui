@@ -17,11 +17,12 @@ import {
   readPhiRuntimeConditionValue,
   type PhiRuntimeFeatureState,
 } from "../../types/runtime-condition";
+import { PhiRuntimeModuleUiProviderHost } from "../runtime/runtime-module-ui-provider-client-manifest";
 
 export type PhiFormWidgetProps = {
   runtime: Pick<PhiBlockRuntime, "site" | "locale"> &
     Partial<Pick<PhiBlockRuntime, "area">>;
-  registry: Pick<PhiCmsRuntimeRenderRegistry, "formDefinitionsById" | "uiProvidersByModuleId">;
+  registry: Pick<PhiCmsRuntimeRenderRegistry, "formDefinitionsById" | "uiProviderModuleIds">;
   formId: PhiFormId;
   formInstanceKey?: string | number | null;
   config?: PhiCmsFormWidgetConfig;
@@ -67,7 +68,8 @@ export async function PhiFormWidget({
     formInstanceKey: String(formInstanceKey ?? `form-${normalizedFormId}`),
   };
 
-  const Provider = registry.uiProvidersByModuleId.get(resolvedForm.definition.ownerModuleId);
+  const ownerModuleId = resolvedForm.definition.ownerModuleId;
+  const hasUiProvider = registry.uiProviderModuleIds.has(ownerModuleId);
 
   /*
    * Both reads happen here, on the server, and both are the form's own: what it is called, and what it
@@ -122,7 +124,11 @@ export async function PhiFormWidget({
         {node}
       </PhiFormWidgetFrame>
     );
-    return Provider ? <Provider>{framed}</Provider> : framed;
+    return hasUiProvider
+      ? (
+        <PhiRuntimeModuleUiProviderHost moduleId={ownerModuleId}>{framed}</PhiRuntimeModuleUiProviderHost>
+      )
+      : framed;
   };
 
   return wrapFormUiProvider(

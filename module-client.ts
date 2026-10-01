@@ -6,6 +6,7 @@ import type { PhiRuntimeModuleId } from "./types/cms-module-descriptors";
 import type {
   PhiRuntimeModuleCalendarAdapterClientDefinition,
   PhiRuntimeModuleDataProviderClientDefinition,
+  PhiRuntimeModuleUiProvider,
 } from "./types/cms-plugins";
 
 /**
@@ -28,6 +29,11 @@ export type PhiModuleClientContribution = {
   /** Made with `next/dynamic(() => import(...))`, so the server render preloads its chunks. */
   Controller?: PhiRuntimeModuleControllerClient;
   renderClients?: ReadonlyArray<readonly [string, PhiRuntimeModuleRenderClient]>;
+  /**
+   * The Module's UI provider, made with `next/dynamic`, when its Server catalog entry says
+   * `uiProvider: true`. Loaded around the Module's own nodes where they render, never site-wide.
+   */
+  uiProvider?: PhiRuntimeModuleUiProvider;
   dataProviders?: readonly PhiRuntimeModuleDataProviderClientDefinition[];
 };
 

@@ -202,18 +202,57 @@ for (const file of await collectSourceFiles(nextEntryDirectory)) {
   }
 }
 
+/**
+ * Server modules that still load Client code themselves, each with why it has not moved yet.
+ *
+ * A list of known debt, not of exceptions to the rule: each entry ships its client on every route that
+ * reaches the module, and leaves this list when its loader moves into a Client manifest.
+ */
+const serverClientLoaderDebt = new Map([
+  [
+    "plugins/runtime-modules/builder/widgets/structure-region/plugin.tsx",
+    "Builder-only; the Structure Region's editable scaffold (built-in.tsx) still loads from its Server " +
+      "plugin and so ships on every Builder route. Moving it behind the Builder Render-Client manifest is open.",
+  ],
+]);
+
 const visitedServerModules = new Set(nextEntries);
 const importedBy = new Map();
 const queue = [...nextEntries];
 while (queue.length > 0) {
   const current = queue.shift();
   const source = await readSource(current);
-  const edges = [...readStaticImports(source, current), ...readDynamicImports(source, current)];
-  for (const { target, statement, typeOnly } of edges) {
+  const dynamicEdges = new Set(readDynamicImports(source, current));
+  const edges = [...readStaticImports(source, current), ...dynamicEdges];
+  for (const edge of edges) {
+    const { target, statement, typeOnly } = edge;
     if (typeOnly) {
       continue;
     }
     const targetSource = await readSource(target);
+    if (
+      hasUseClientDirective(targetSource) &&
+      dynamicEdges.has(edge) &&
+      !registeredClients.has(target) &&
+      !serverClientLoaderDebt.has(path.relative(repositoryRoot, current))
+    ) {
+      /*
+       * A loader on the Server for Client code. The bundler follows `import()` in the server graph like any
+       * import, so the client becomes a reference of every route reaching this module and ships with it --
+       * the Auth Module's Form UI provider, loaded this way from its catalog, put the Form stack on every
+       * page. Client code a Server decides to mount belongs in an Area's Client manifest.
+       */
+      failures.push(
+        [
+          `${path.relative(repositoryRoot, current)} loads Client code from the Server:`,
+          `    ${statement}`,
+          `    -> ${path.relative(repositoryRoot, target)}`,
+          "    A dynamic import in the server graph still makes it a client reference of every route that",
+          "    reaches this module. Put the loader in an Area's Client manifest and mount it from there.",
+        ].join("\n"),
+      );
+      continue;
+    }
     if (hasUseClientDirective(targetSource)) {
       // A client reference of whatever route reaches `current`.
       if (registeredClients.has(target)) {

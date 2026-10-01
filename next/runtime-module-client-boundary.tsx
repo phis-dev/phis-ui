@@ -10,6 +10,10 @@ import type { PhiRuntimeModuleAuthoringClientManifest } from "../components/runt
 import { PhiRuntimeModuleAuthoringClientManifestProvider } from "../components/runtime/runtime-module-authoring-client-manifest";
 import type { PhiRuntimeModuleCalendarAdapterClientManifest } from "../components/runtime/runtime-module-calendar-adapter-client-manifest";
 import { PhiRuntimeModuleCalendarAdapterClientManifestProvider } from "../components/runtime/runtime-module-calendar-adapter-client-manifest";
+import {
+  PhiRuntimeModuleUiProviderClientManifestProvider,
+  type PhiRuntimeModuleUiProviderClientManifest,
+} from "../components/runtime/runtime-module-ui-provider-client-manifest";
 
 export function PhiNextRuntimeModuleClientBoundary({
   children,
@@ -18,6 +22,7 @@ export function PhiNextRuntimeModuleClientBoundary({
   dataProviderManifest,
   authoringManifest,
   calendarAdapterManifest,
+  uiProviderManifest,
 }: {
   children: React.ReactNode;
   controllerManifest: PhiRuntimeModuleControllerClientManifest;
@@ -25,6 +30,7 @@ export function PhiNextRuntimeModuleClientBoundary({
   dataProviderManifest: PhiRuntimeModuleDataProviderClientManifest;
   authoringManifest?: PhiRuntimeModuleAuthoringClientManifest;
   calendarAdapterManifest?: PhiRuntimeModuleCalendarAdapterClientManifest;
+  uiProviderManifest: PhiRuntimeModuleUiProviderClientManifest;
 }) {
   const content = authoringManifest ? (
     <PhiRuntimeModuleAuthoringClientManifestProvider manifest={authoringManifest}>
@@ -37,7 +43,9 @@ export function PhiNextRuntimeModuleClientBoundary({
       <PhiRuntimeModuleRenderClientManifestProvider manifest={renderManifest}>
         <PhiRuntimeModuleCalendarAdapterClientManifestProvider manifest={calendarAdapterManifest}>
           <PhiRuntimeModuleDataProviderClientManifestProvider manifest={dataProviderManifest}>
-            {content}
+            <PhiRuntimeModuleUiProviderClientManifestProvider manifest={uiProviderManifest}>
+              {content}
+            </PhiRuntimeModuleUiProviderClientManifestProvider>
           </PhiRuntimeModuleDataProviderClientManifestProvider>
         </PhiRuntimeModuleCalendarAdapterClientManifestProvider>
       </PhiRuntimeModuleRenderClientManifestProvider>

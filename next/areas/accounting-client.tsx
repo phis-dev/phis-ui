@@ -3,6 +3,7 @@
 import {
   PHI_ACCOUNTING_RUNTIME_MODULE_CONTROLLER_CLIENT_MANIFEST,
   PHI_ACCOUNTING_RUNTIME_MODULE_CALENDAR_ADAPTER_CLIENT_MANIFEST,
+  PHI_ACCOUNTING_RUNTIME_MODULE_UI_PROVIDER_CLIENT_MANIFEST,
   PHI_ACCOUNTING_RUNTIME_MODULE_DATA_PROVIDER_CLIENT_MANIFEST,
   PHI_ACCOUNTING_RUNTIME_MODULE_RENDER_CLIENT_MANIFEST,
 } from "../../plugins/runtime-modules/client-manifests/accounting";
@@ -29,6 +30,7 @@ export function createPhiAccountingRuntimeModuleClientBoundary(
     render: PHI_ACCOUNTING_RUNTIME_MODULE_RENDER_CLIENT_MANIFEST,
     dataProvider: PHI_ACCOUNTING_RUNTIME_MODULE_DATA_PROVIDER_CLIENT_MANIFEST,
     calendarAdapter: PHI_ACCOUNTING_RUNTIME_MODULE_CALENDAR_ADAPTER_CLIENT_MANIFEST,
+    uiProvider: PHI_ACCOUNTING_RUNTIME_MODULE_UI_PROVIDER_CLIENT_MANIFEST,
   });
 
   return function PhiAccountingRuntimeModuleClientBoundary({
@@ -42,6 +44,7 @@ export function createPhiAccountingRuntimeModuleClientBoundary(
         controllerManifest={manifests.controller}
         dataProviderManifest={manifests.dataProvider}
         renderManifest={manifests.render}
+        uiProviderManifest={manifests.uiProvider}
       >
         {children}
       </PhiNextRuntimeModuleClientBoundary>

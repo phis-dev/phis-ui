@@ -7,6 +7,9 @@ import type {
   PhiRuntimeModuleDataProviderClientDefinition,
 } from "../../types/cms-plugins";
 import type { PhiRuntimeModuleControllerClientAreaContribution } from "./area-contributions-controller-client";
+import type {
+  PhiRuntimeModuleUiProviderClientDefinition,
+} from "../../components/runtime/runtime-module-ui-provider-client-manifest";
 
 /**
  * The Client counterpart to `site-modules.ts`, and the shape of the Client file `phis-cli` generates.
@@ -34,6 +37,7 @@ export type PhiSiteModuleClientAreaContributions = {
   controllers?: readonly PhiRuntimeModuleControllerClientAreaContribution[];
   renderClients?: ReadonlyArray<readonly [string, PhiRuntimeModuleRenderClient]>;
   dataProviders?: readonly PhiRuntimeModuleDataProviderClientDefinition[];
+  uiProviders?: readonly PhiRuntimeModuleUiProviderClientDefinition[];
 };
 
 export type PhiSiteModuleClientContributions = {

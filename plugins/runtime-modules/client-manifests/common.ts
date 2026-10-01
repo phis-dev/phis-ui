@@ -13,11 +13,35 @@ import { PHI_DASHBOARD_CARD_ITEM_RENDERER_KEY } from "../../../constants/dashboa
 import { createPhiRuntimeModuleCalendarAdapterClientManifest } from "../../../components/runtime/runtime-module-calendar-adapter-client-manifest";
 import { PHI_CORE_CALENDAR_ADAPTER_CLIENT_DEFINITIONS } from "../client-calendar-adapters/core";
 import { PhiLazyAssetRuntimeControllerClient } from "../asset/client";
+import {
+  createPhiRuntimeModuleUiProviderClientManifest,
+} from "../../../components/runtime/runtime-module-ui-provider-client-manifest";
+import { PHI_AUTH_RUNTIME_MODULE_ID } from "../auth/ids";
 
 export const PHI_COMMON_RUNTIME_MODULE_CALENDAR_ADAPTER_CLIENT_MANIFEST =
   createPhiRuntimeModuleCalendarAdapterClientManifest(
     PHI_CORE_CALENDAR_ADAPTER_CLIENT_DEFINITIONS,
   );
+
+/**
+ * The first-party Module UI providers, loaded where a node of their Module renders.
+ *
+ * The Auth and Asset providers carry their Modules' Form provider registries, and with them the Form
+ * stack. Their Server catalogs only say that they have one (`uiProvider: true`).
+ */
+export const PHI_COMMON_RUNTIME_MODULE_UI_PROVIDER_CLIENT_MANIFEST =
+  createPhiRuntimeModuleUiProviderClientManifest([
+    {
+      moduleId: PHI_AUTH_RUNTIME_MODULE_ID,
+      Provider: dynamic(() =>
+        import("../auth/form-ui-provider").then((module) => module.PhiAuthFormUiProvider)),
+    },
+    {
+      moduleId: PHI_ASSET_RUNTIME_MODULE_ID,
+      Provider: dynamic(() =>
+        import("../asset/form-ui-provider").then((module) => module.PhiAssetFormUiProvider)),
+    },
+  ]);
 
 export const PHI_COMMON_RUNTIME_MODULE_CONTROLLER_CLIENT_LOADERS = [
   [

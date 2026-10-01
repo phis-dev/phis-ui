@@ -899,7 +899,7 @@ graph leakage are hard validation errors.
   it after Site composition, so installed packages get the same validation as first-party Modules.
 - A catalog entry (`PhiRuntimeModuleCatalogEntry`) declares the definition, complete lightweight Widget
   and Layout definitions with their lazy Server loaders, Forms, `areaShells`, `areaOverlays`, `routes`,
-  `navigation`, `themes`, `themeBlocks`, an optional `loadUiProvider`, optional `features`, and `load`.
+  `navigation`, `themes`, `themeBlocks`, an optional `uiProvider: true`, optional `features`, and `load`.
   Ownership is derived from these entries; there is no parallel ownership list.
 - A Widget descriptor has separate mandatory `loadRuntime` and `loadPreview` edges; the render mode
   selects one per occurrence. Descriptors never statically import implementations. A package name read
@@ -923,8 +923,18 @@ graph leakage are hard validation errors.
 
 A Module may use Ant Design, another component library, or its own controls internally; the library is
 not cross-module ABI. When a library needs React context, a theme, a CSS cache, locale setup, or a portal
-root, the catalog entry declares one lazy `loadUiProvider`. The host mounts it only around the Module's
-own render subtree, and the Builder mounts it inside the Canvas sandbox. The provider:
+root, the Module brings one UI provider. The host mounts it only around the Module's own render subtree,
+and the Builder mounts it inside the Canvas sandbox.
+
+The provider is Client code, so it is split the way a Render Client is. The catalog entry only states
+`uiProvider: true`; the loader is a `next/dynamic` component in the Module's Client contribution
+(`uiProvider` in `definePhiModuleClientContributions`, or
+`PHI_COMMON_RUNTIME_MODULE_UI_PROVIDER_CLIENT_MANIFEST` for first-party Modules), and the Server wraps
+the Module's nodes in `PhiRuntimeModuleUiProviderHost`, which loads it from the Area's Client manifest
+where a node renders. A Server catalog that loaded the provider itself made it a client reference of
+every route that reached the catalog -- the Auth Module's Form provider brought the whole Form stack to
+every page, Landings without a Form included. A Module whose entry says `uiProvider: true` and whose
+Client half brings none is refused at render, by name. The provider:
 
 - never wraps the application root or another Module's subtree;
 - installs no signal bus, Controller registry, or renderer;
@@ -932,7 +942,7 @@ own render subtree, and the Builder mounts it inside the Canvas sandbox. The pro
 - is disposed with its subtree.
 
 Modules interoperate through signals and shared value contracts, never through each other's React
-context. The Auth Module's `loadUiProvider` is the first-party example.
+context. The Auth and Asset Modules' Form UI providers are the first-party examples.
 
 ### Builder Canvas sandbox
 

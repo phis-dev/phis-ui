@@ -3,6 +3,7 @@
 import {
   PHI_EDITOR_RUNTIME_MODULE_CONTROLLER_CLIENT_MANIFEST,
   PHI_EDITOR_RUNTIME_MODULE_CALENDAR_ADAPTER_CLIENT_MANIFEST,
+  PHI_EDITOR_RUNTIME_MODULE_UI_PROVIDER_CLIENT_MANIFEST,
   PHI_EDITOR_RUNTIME_MODULE_DATA_PROVIDER_CLIENT_MANIFEST,
   PHI_EDITOR_RUNTIME_MODULE_RENDER_CLIENT_MANIFEST,
 } from "../../plugins/runtime-modules/client-manifests/editor";
@@ -29,6 +30,7 @@ export function createPhiEditorRuntimeModuleClientBoundary(
     render: PHI_EDITOR_RUNTIME_MODULE_RENDER_CLIENT_MANIFEST,
     dataProvider: PHI_EDITOR_RUNTIME_MODULE_DATA_PROVIDER_CLIENT_MANIFEST,
     calendarAdapter: PHI_EDITOR_RUNTIME_MODULE_CALENDAR_ADAPTER_CLIENT_MANIFEST,
+    uiProvider: PHI_EDITOR_RUNTIME_MODULE_UI_PROVIDER_CLIENT_MANIFEST,
   });
 
   return function PhiEditorRuntimeModuleClientBoundary({
@@ -42,6 +44,7 @@ export function createPhiEditorRuntimeModuleClientBoundary(
         controllerManifest={manifests.controller}
         dataProviderManifest={manifests.dataProvider}
         renderManifest={manifests.render}
+        uiProviderManifest={manifests.uiProvider}
       >
         {children}
       </PhiNextRuntimeModuleClientBoundary>

@@ -7,6 +7,9 @@ import type { PhiRuntimeModuleControllerClientAreaContribution } from "./plugins
 import type { PhiRuntimeModuleId } from "./types/cms-module-descriptors";
 import type { PhiRuntimeModuleDataProviderClientDefinition } from "./types/cms-plugins";
 import type { PhiSiteModuleClientContributions } from "./plugins/runtime-modules/site-modules-client";
+import type {
+  PhiRuntimeModuleUiProviderClientDefinition,
+} from "./components/runtime/runtime-module-ui-provider-client-manifest";
 import {
   readPhiSiteModulePlacements,
   type PhiSiteModulePlacement,
@@ -34,6 +37,7 @@ type CollectedArea = {
   controllers: PhiRuntimeModuleControllerClientAreaContribution[];
   renderClients: Array<readonly [string, PhiRuntimeModuleRenderClient]>;
   dataProviders: PhiRuntimeModuleDataProviderClientDefinition[];
+  uiProviders: PhiRuntimeModuleUiProviderClientDefinition[];
 };
 
 export function collectPhiSiteModuleClientContributions(input: {
@@ -53,6 +57,7 @@ export function collectPhiSiteModuleClientContributions(input: {
       controllers: [],
       renderClients: [],
       dataProviders: [],
+      uiProviders: [],
     };
     collected.set(area, created);
     return created;
@@ -60,7 +65,7 @@ export function collectPhiSiteModuleClientContributions(input: {
 
   for (const client of input.clients) {
     for (const contribution of client.modules) {
-      const { Controller, renderClients, dataProviders, moduleId } = contribution;
+      const { Controller, renderClients, dataProviders, uiProvider, moduleId } = contribution;
       for (const area of areasByModuleId.get(moduleId) ?? []) {
         const target = areaFor(area);
         if (Controller) {
@@ -68,6 +73,9 @@ export function collectPhiSiteModuleClientContributions(input: {
         }
         target.renderClients.push(...(renderClients ?? []));
         target.dataProviders.push(...(dataProviders ?? []));
+        if (uiProvider) {
+          target.uiProviders.push({ moduleId, Provider: uiProvider });
+        }
       }
     }
   }

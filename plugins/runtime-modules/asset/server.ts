@@ -25,8 +25,7 @@ export function createPhiAssetRuntimeModuleServerAreaContribution() {
         PHI_MEDIA_SETTINGS_RUNTIME_MODULE_FORM,
       ],
       routes: PHI_ASSET_RUNTIME_MODULE_ROUTES,
-      loadUiProvider: () => import("./form-ui-provider")
-        .then((module) => module.PhiAssetFormUiProvider),
+      uiProvider: true,
       load: () => import("./module").then((module) => module.PHI_ASSET_RUNTIME_MODULE),
     },
   });

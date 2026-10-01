@@ -1,4 +1,4 @@
-import { cloneElement, createElement, isValidElement, type CSSProperties, type ReactElement, type ReactNode } from "react";
+import { cloneElement, isValidElement, type CSSProperties, type ReactElement, type ReactNode } from "react";
 
 import type {
   PhiCmsContentWidgetNode,
@@ -71,6 +71,8 @@ import type {
 import type { PhiResolvedLinkTargets } from "../../types/references";
 import { PhiCmsNodeVisibilityGate } from "./clients/phi-cms-node-visibility-gate";
 import { PhiRuntimeModuleRenderClientHost } from "../runtime/runtime-module-render-client-manifest";
+import { PhiRuntimeModuleUiProviderHost } from "../runtime/runtime-module-ui-provider-client-manifest";
+import type { PhiRuntimeModuleId } from "../../types/cms-module-descriptors";
 import { PhiRuntimeRenderClientType } from "../../constants/runtime-render-client-types";
 import { parsePhiCmsOverlayConfig } from "../../types/cms-overlay";
 import type { PhiCmsOverlayZones, PhiCmsOverlayZonesRequest } from "../../types/cms-overlay-zones";
@@ -169,11 +171,10 @@ function wrapPhiRuntimeModuleUiProvider(
   ownerModuleIdsByType: ReadonlyMap<string, string>,
   registry: PhiResolvedRuntimeRenderRegistry,
 ) {
-  const ownerModuleId = ownerModuleIdsByType.get(type);
-  const Provider = ownerModuleId
-    ? registry.uiProvidersByModuleId.get(ownerModuleId as `${string}/${string}`)
-    : null;
-  return Provider ? createElement(Provider, null, node) : node;
+  const ownerModuleId = ownerModuleIdsByType.get(type) as PhiRuntimeModuleId | undefined;
+  return ownerModuleId && registry.uiProviderModuleIds.has(ownerModuleId)
+    ? <PhiRuntimeModuleUiProviderHost moduleId={ownerModuleId}>{node}</PhiRuntimeModuleUiProviderHost>
+    : node;
 }
 
 export type PhiCmsLayoutRendererProps = {

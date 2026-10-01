@@ -557,7 +557,8 @@ export type PhiCmsRuntimeRenderRegistry = {
    */
   widgetBlockDefaultsByType: ReadonlyMap<string, Partial<PhiRenderableBlockBase>>;
   ownerModuleIdByLayoutType: ReadonlyMap<string, PhiRuntimeModuleId>;
-  uiProvidersByModuleId: ReadonlyMap<PhiRuntimeModuleId, PhiRuntimeModuleUiProvider>;
+  /** The used Modules whose catalog entry says they bring a UI provider through their Client half. */
+  uiProviderModuleIds: ReadonlySet<PhiRuntimeModuleId>;
   /**
    * How to ask each active Module for the facts it publishes, by the namespace it publishes them under.
    *
@@ -1008,7 +1009,14 @@ export type PhiRuntimeModuleCatalogEntry = {
   navigation?: readonly PhiCmsNavigationInjectionDescriptor[];
   themes?: readonly PhiCmsThemePresetDescriptor[];
   themeBlocks?: readonly PhiCmsThemeBlockDescriptor[];
-  loadUiProvider?: () => Promise<PhiRuntimeModuleUiProvider>;
+  /**
+   * That the Module brings a UI provider, which its Client contributions hold.
+   *
+   * Only the statement: the provider is Client code, and loaded from here it was a client reference of
+   * every route that reached the catalog. The Area's Client boundary holds the loader
+   * (`components/runtime/runtime-module-ui-provider-client-manifest.tsx`).
+   */
+  uiProvider?: true;
   /**
    * Named facts about this Module's own configuration, for conditions to be written against.
    *

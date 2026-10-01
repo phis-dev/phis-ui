@@ -1,7 +1,6 @@
 import assert from "node:assert/strict";
 
 import type { PhiResolvedCmsRenderableTree } from "../types/cms";
-import type { ReactNode } from "react";
 import type {
   PhiRuntimeControllerDefinition,
   PhiRuntimeModule,
@@ -43,12 +42,6 @@ const TEST_FORM_FIELD_PROVIDER_KEY = "@test/forms/text" as const;
 
 const loads = new Map<PhiRuntimeModuleId, number>();
 const widgetLoads = new Map<string, number>();
-let formUiProviderLoads = 0;
-
-function TestFormUiProvider({ children }: { children: ReactNode }) {
-  return children;
-}
-
 function createControllerDefinition(key: string): PhiRuntimeControllerDefinition<Record<string, never>> {
   return {
     kind: "controller",
@@ -116,14 +109,14 @@ function createEntry({
   widgetType,
   widgetTypes,
   forms,
-  loadUiProvider,
+  uiProvider,
 }: {
   definition: PhiRuntimeModuleDefinition;
   controllerDefinition?: PhiRuntimeControllerDefinition<Record<string, never>>;
   widgetType?: string;
   widgetTypes?: readonly string[];
   forms?: readonly PhiRuntimeModuleFormDefinition[];
-  loadUiProvider?: PhiRuntimeModuleCatalogEntry["loadUiProvider"];
+  uiProvider?: PhiRuntimeModuleCatalogEntry["uiProvider"];
 }): PhiRuntimeModuleCatalogEntry {
   const runtimeModule: PhiRuntimeModule = controllerDefinition
     ? { ...definition, controllerDefinition }
@@ -152,7 +145,7 @@ function createEntry({
     }),
     layouts: [],
     forms,
-    loadUiProvider,
+    uiProvider,
     load: async () => {
       loads.set(definition.moduleId, (loads.get(definition.moduleId) ?? 0) + 1);
       return runtimeModule;
@@ -324,10 +317,7 @@ const catalog = createPhiRuntimeModuleCatalog([
   createEntry({
     definition: formOwnerModuleDefinition,
     forms: [testFormDefinition],
-    loadUiProvider: async () => {
-      formUiProviderLoads += 1;
-      return TestFormUiProvider;
-    },
+    uiProvider: true,
   }),
 ], areaDefinitions);
 
@@ -368,14 +358,18 @@ assert.deepEqual(
 );
 
 const emptyTree = { contentWidgets: [], layoutNodes: [] } as unknown as PhiResolvedCmsRenderableTree;
-await resolvePhiRuntimeRenderRegistry({
+const emptyRegistry = await resolvePhiRuntimeRenderRegistry({
   catalog,
   moduleSet,
   trees: [emptyTree],
   serverCapabilities: null,
 });
 assert.deepEqual([...loads], [], "an empty tree must not load executable modules");
-assert.equal(formUiProviderLoads, 0, "an unused Form must not load its owner UI provider");
+assert.equal(
+  emptyRegistry.uiProviderModuleIds.size,
+  0,
+  "an unused Form must not mark its owner UI provider",
+);
 
 const formTree = {
   contentWidgets: [{
@@ -390,8 +384,9 @@ const formRegistry = await resolvePhiRuntimeRenderRegistry({
   trees: [formTree],
   serverCapabilities: null,
 });
-assert.equal(formUiProviderLoads, 1, "a referenced Form must load its owner UI provider");
-assert.equal(formRegistry.uiProvidersByModuleId.get(FORM_OWNER_MODULE_ID), TestFormUiProvider);
+// The Server only records that the owner brings a UI provider; the Client manifest holds the loader.
+assert.deepEqual([...formRegistry.uiProviderModuleIds], [FORM_OWNER_MODULE_ID],
+  "a referenced Form must mark its owner's UI provider for the Client host");
 assert.deepEqual(
   [...formRegistry.dataProviderDescriptorsByKey.keys()],
   [PROVIDER_KEY],

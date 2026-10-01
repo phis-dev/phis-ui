@@ -14,6 +14,10 @@ import {
   type PhiRuntimeModuleRenderClientManifest,
 } from "../../components/runtime/runtime-module-render-client-manifest";
 import type { PhiRuntimeModuleControllerClientManifest } from "../../components/runtime/runtime-module-controller-client-manifest";
+import {
+  extendPhiRuntimeModuleUiProviderClientManifest,
+  type PhiRuntimeModuleUiProviderClientManifest,
+} from "../../components/runtime/runtime-module-ui-provider-client-manifest";
 import { extendPhiRuntimeModuleControllerClientManifest } from "./area-contributions-controller-client";
 import type { PhiRuntimeModuleAuthoringClientContribution } from "./authoring-contributions-client";
 import type { PhiSiteModuleAuthoringContributions } from "./site-modules-authoring-client";
@@ -41,6 +45,7 @@ export type PhiSiteModuleClientManifests = {
   render: PhiRuntimeModuleRenderClientManifest;
   dataProvider: PhiRuntimeModuleDataProviderClientManifest;
   calendarAdapter: PhiRuntimeModuleCalendarAdapterClientManifest;
+  uiProvider: PhiRuntimeModuleUiProviderClientManifest;
 };
 
 export function readPhiSiteModuleClientAreaContributions(
@@ -72,6 +77,10 @@ export function extendWithPhiSiteModuleClientManifests(
     calendarAdapter: extendPhiRuntimeModuleCalendarAdapterClientManifest(
       base.calendarAdapter,
       contributions.calendarAdapters,
+    ),
+    uiProvider: extendPhiRuntimeModuleUiProviderClientManifest(
+      base.uiProvider,
+      areaContributions.uiProviders ?? [],
     ),
   };
 }

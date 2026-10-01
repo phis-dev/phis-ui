@@ -19,7 +19,6 @@ import {
   type PhiResolvedRuntimeRenderRegistry,
   type PhiRuntimeModule,
   type PhiRuntimeModuleCatalog,
-  type PhiRuntimeModuleCatalogEntry,
   type PhiRuntimeModuleDefinition,
   type PhiRuntimeModuleId,
   type PhiRuntimeModuleLayoutDefinition,
@@ -52,14 +51,6 @@ function loadPreviewWidgetPlugin(entry: PhiRuntimeModuleWidgetDefinition) {
 
 function loadLayoutPlugin(entry: PhiRuntimeModuleLayoutDefinition) {
   return entry.loadRuntime();
-}
-
-function loadUiProvider(catalogEntry: PhiRuntimeModuleCatalogEntry) {
-  const loader = catalogEntry.loadUiProvider;
-  if (!loader) {
-    return null;
-  }
-  return loader();
 }
 
 function loadModule(
@@ -756,7 +747,7 @@ export async function resolvePhiRuntimeRenderRegistry({
     }
   }));
 
-  const [runtimeWidgetPluginResults, previewWidgetPluginResults, layoutPluginResults, uiProviderResults] = await Promise.all([
+  const [runtimeWidgetPluginResults, previewWidgetPluginResults, layoutPluginResults] = await Promise.all([
     loadRuntimeWidgetEntries(runtimeWidgetEntries, runtimeWidgetRenderIssuesByType),
     loadPreviewWidgetEntries(previewWidgetEntries, previewWidgetRenderIssuesByType),
     Promise.all(layoutEntries.map(async ([type, entry]) => {
@@ -778,17 +769,6 @@ export async function resolvePhiRuntimeRenderRegistry({
         return null;
       }
     })),
-    Promise.all([...usedModuleIds].flatMap((moduleId) => {
-      const catalogEntry = catalog.get(moduleId);
-      return catalogEntry?.loadUiProvider ? [[moduleId, catalogEntry] as const] : [];
-    }).map(async ([moduleId, catalogEntry]) => {
-      try {
-        const provider = await loadUiProvider(catalogEntry);
-        return { moduleId, provider, error: null };
-      } catch (error) {
-        return { moduleId, provider: null, error };
-      }
-    })),
   ]);
 
   const runtimeWidgetPluginsByType = new Map<string, PhiCmsRuntimeWidgetPlugin<unknown>>(
@@ -800,45 +780,9 @@ export async function resolvePhiRuntimeRenderRegistry({
   const layoutPluginsByType = new Map(
     layoutPluginResults.filter((entry): entry is NonNullable<typeof entry> => entry != null),
   );
-  const uiProvidersByModuleId = new Map<PhiRuntimeModuleId, NonNullable<(typeof uiProviderResults)[number]["provider"]>>();
-
-  for (const result of uiProviderResults) {
-    if (result.error) {
-      for (const [type, entry] of widgetEntries) {
-        if (entry.ownerModuleId !== result.moduleId) {
-          continue;
-        }
-        runtimeWidgetPluginsByType.delete(type);
-        previewWidgetPluginsByType.delete(type);
-        const issue = reportRenderIssue({
-          code: "renderer-load-failed",
-          kind: "widget",
-          type,
-          moduleId: result.moduleId,
-          detail: `Module UI provider failed: ${readRenderIssueDetail(result.error)}`,
-        }, result.error);
-        runtimeWidgetRenderIssuesByType.set(type, issue);
-        previewWidgetRenderIssuesByType.set(type, issue);
-      }
-      for (const [type, entry] of layoutEntries) {
-        if (entry.ownerModuleId !== result.moduleId) {
-          continue;
-        }
-        layoutPluginsByType.delete(type);
-        renderIssuesByLayoutType.set(type, reportRenderIssue({
-          code: "renderer-load-failed",
-          kind: "layout",
-          type,
-          moduleId: result.moduleId,
-          detail: `Module UI provider failed: ${readRenderIssueDetail(result.error)}`,
-        }, result.error));
-      }
-      continue;
-    }
-    if (result.provider) {
-      uiProvidersByModuleId.set(result.moduleId, result.provider);
-    }
-  }
+  const uiProviderModuleIds = new Set(
+    [...usedModuleIds].filter((moduleId) => catalog.get(moduleId)?.uiProvider === true),
+  );
 
   return {
     runtimeModuleCatalog: catalog,
@@ -907,7 +851,7 @@ export async function resolvePhiRuntimeRenderRegistry({
       }),
     ),
     ownerModuleIdByLayoutType: new Map(layoutEntries.map(([type, entry]) => [type, entry.ownerModuleId])),
-    uiProvidersByModuleId,
+    uiProviderModuleIds,
     /*
      * Every active Module's published facts, whether or not its Widgets happen to be on this page.
      *
