@@ -1,7 +1,7 @@
 import { resolvePhiCmsWidgetPluginKey } from "../../../../../constants/cms-widget-types";
 import { PhiCmsWidgetType } from "../../../../../constants/cms-widget-types";
 import type { PhiCmsWidgetPlugin } from "../../../../../types";
-import type { PhiCardWidgetBody } from "./client";
+import type { PhiCardWidgetBody } from "../../../../../components/widgets/shared/card-body-client";
 import type { PhiMediaImageSourceConfig } from "../../../../../types/media";
 import { readPhiMediaImageSourceConfig } from "../../../../../components/widgets/config/image-source-parser";
 import {

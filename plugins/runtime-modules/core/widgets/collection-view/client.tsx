@@ -8,7 +8,7 @@ import { PhiCollectionViewSkeletonControl } from "../../../../../components/cont
 import { normalizePhiCssSize } from "../../../../../components/layouts/phi-layout-contract";
 import { usePhiConfig } from "../../../../../components/root/phi-config-provider";
 import { usePhiRuntimeModuleRenderClient } from "../../../../../components/runtime/runtime-module-render-client-manifest";
-import type { PhiCmsCollectionViewWidgetConfig } from "./config";
+import type { PhiCmsCollectionViewWidgetConfig } from "../../../../../types/collection-view-widget";
 import { createPhiSignalAddress } from "../../../../../types/signals";
 import { usePhiControlSignalController } from "../../../../../components/widgets/client/shared/phi-control-signals";
 import { usePhiCollectionViewBinding } from "../../../../../components/widgets/client/shared/phi-collection-view-binding";

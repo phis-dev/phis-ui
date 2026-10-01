@@ -2,7 +2,7 @@ import { resolvePhiCmsWidgetPluginKey } from "../../../../../constants/cms-widge
 import type { PhiCmsWidgetPlugin } from "../../../../../types";
 import { isPhiFormId, normalizePhiFormId, type PhiFormId } from "../../../../../types/form-id";
 import { PHI_SIGNAL_VALUE_SCHEMAS, readPhiSignalRouteSet } from "../../../../../types/signals";
-import { PHI_BUILDER_RUNTIME_DATA_PROVIDER_KEYS } from "../../../builder/ids";
+import { PHI_AUTHORING_OPTION_PROVIDER_KEYS } from "../../../../../constants/authoring-option-provider-keys";
 
 /**
  * What a form is about to do, shown before it is done.
@@ -64,7 +64,7 @@ export const PHI_FORM_PREVIEW_WIDGET_DEFINITION = {
       label: "Form",
       required: true,
       optionsProvider: {
-        providerKey: PHI_BUILDER_RUNTIME_DATA_PROVIDER_KEYS.forms,
+        providerKey: PHI_AUTHORING_OPTION_PROVIDER_KEYS.forms,
       },
     },
     { key: "tokenParam", type: "string", label: "Token parameter" },

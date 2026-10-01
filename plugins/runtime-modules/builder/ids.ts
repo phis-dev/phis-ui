@@ -1,18 +1,19 @@
 import { PHI_SHARED_PACKAGE_NAME } from "../../../types/signals";
 import type { PhiRuntimeModuleId } from "../contracts";
 import { createPhiSharedRuntimeDataProviderKey } from "../../../constants/runtime-data-provider-key";
+import { PHI_AUTHORING_OPTION_PROVIDER_KEYS } from "../../../constants/authoring-option-provider-keys";
 
 export const PHI_BUILDER_RUNTIME_MODULE_ID =
   `${PHI_SHARED_PACKAGE_NAME}/modules/builder` as const satisfies PhiRuntimeModuleId;
 
 
 export const PHI_BUILDER_RUNTIME_DATA_PROVIDER_KEYS = {
-  forms: createPhiSharedRuntimeDataProviderKey("options", "forms"),
-  builderPages: createPhiSharedRuntimeDataProviderKey("options", "builder-pages"),
+  forms: PHI_AUTHORING_OPTION_PROVIDER_KEYS.forms,
+  builderPages: PHI_AUTHORING_OPTION_PROVIDER_KEYS.pages,
   areaRootRoute: createPhiSharedRuntimeDataProviderKey("options", "builder-area-root-route"),
   landingPage: createPhiSharedRuntimeDataProviderKey("options", "builder-landing-page"),
-  builderNavigationSets: createPhiSharedRuntimeDataProviderKey("options", "builder-navigation-sets"),
-  collectionItemRenderers: createPhiSharedRuntimeDataProviderKey("options", "builder-collection-item-renderers"),
+  builderNavigationSets: PHI_AUTHORING_OPTION_PROVIDER_KEYS.navigationSets,
+  collectionItemRenderers: PHI_AUTHORING_OPTION_PROVIDER_KEYS.collectionItemRenderers,
   runtimeModules: createPhiSharedRuntimeDataProviderKey("options", "runtime-modules"),
   runtimeModulesTable: createPhiSharedRuntimeDataProviderKey("tables", "runtime-modules"),
   /*

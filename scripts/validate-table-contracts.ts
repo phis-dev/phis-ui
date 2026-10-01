@@ -52,7 +52,7 @@ const directTableControlAllowlist = new Set([
   "components/tables/client/phi-table-binding-control.tsx",
   "components/widgets/builder/phi-static-options-picker.tsx",
   "plugins/runtime-modules/theme/widgets/brand-controls/client.tsx",
-  "plugins/runtime-modules/core/widgets/markdown/client.tsx",
+  "components/widgets/shared/markdown-body-client.tsx",
   "plugins/runtime-modules/core/widgets/table/client.tsx",
   "components/widgets/signals/signal-endpoint-list.tsx",
 ]);

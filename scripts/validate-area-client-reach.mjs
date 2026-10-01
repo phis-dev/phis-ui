@@ -66,13 +66,11 @@ const DISPLAY_WIDGET_CLIENTS = [
   "account",
   "brand",
   "breadcrumb",
-  "card",
   "description",
   "gallery",
   "header-navigation",
   "icon",
   "image",
-  "markdown",
   "markdown-toc",
   "page-title",
   "quick-links",
@@ -80,7 +78,11 @@ const DISPLAY_WIDGET_CLIENTS = [
   "sidebar-navigation",
   "simple-text",
   "spacer",
-].map((widget) => `plugins/runtime-modules/core/widgets/${widget}/client.tsx`);
+].map((widget) => `plugins/runtime-modules/core/widgets/${widget}/client.tsx`).concat([
+  // The bodies those two Widgets draw with, which live in the Foundation so other Modules can too.
+  "components/widgets/shared/card-body-client.tsx",
+  "components/widgets/shared/markdown-body-client.tsx",
+]);
 
 /** Controls that exist to take input; a Widget that only shows content has no use for any of them. */
 const EDITING_CONTROL_PATTERN =

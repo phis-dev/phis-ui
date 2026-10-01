@@ -9,7 +9,7 @@ import { PhiThemeModeBootstrapScript } from "../components/root/phi-root-live-th
 import type { PhiModuleFontContributions } from "../module";
 import type { PhiSiteModuleServerAreaContributions } from "../plugins/runtime-modules/site-modules";
 import { loadPhiThemeBlockCatalog } from "../plugins/runtime-modules/theme/block-catalog";
-import { collectPhiThemeDescriptorContributions } from "../plugins/runtime-modules/theme/theme-descriptors";
+import { collectPhiThemeDescriptorContributions } from "../plugins/runtime-modules/theme-descriptors";
 import { resolvePhiThemeComposition, type PhiThemeBlockCatalog } from "../theme/phi-theme-composition";
 import { composePhiFontCatalogue } from "../theme/phi-font-catalogue";
 import { buildPhiRootMetadata } from "../helpers/phi-metadata";

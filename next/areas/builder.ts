@@ -2,7 +2,7 @@ import "server-only";
 
 import { createPhiBuilderRuntimeModuleCatalog } from "../../plugins/runtime-modules/catalog";
 import { loadPhiThemeBlockCatalog } from "../../plugins/runtime-modules/theme/block-catalog";
-import { collectPhiThemeDescriptorContributions } from "../../plugins/runtime-modules/theme/theme-descriptors";
+import { collectPhiThemeDescriptorContributions } from "../../plugins/runtime-modules/theme-descriptors";
 import type { PhiThemeBlockCatalog } from "../../theme/phi-theme-composition";
 import { createPhiNextCmsSiteBridge } from "../site-bridge";
 import type { PhiSiteModuleServerAreaContributions } from "../../plugins/runtime-modules/site-modules";

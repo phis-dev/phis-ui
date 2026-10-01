@@ -2,12 +2,7 @@ import { resolvePhiCmsWidgetPluginKey } from "../../../../../constants/cms-widge
 import type { PhiCmsWidgetPlugin } from "../../../../../types";
 import { readBoolean, readNumber, readString, type PhiCmsWidgetConfigBase } from "../../../../../components/widgets/config/parser-primitives";
 import { PHI_MARKDOWN_WIDGET_DEFINITION } from "../markdown/config";
-
-export type PhiMarkdownTocHeading = {
-  id: string;
-  level: 1 | 2 | 3 | 4 | 5;
-  text: string;
-};
+import type { PhiMarkdownTocHeading } from "../../../../../types/markdown";
 
 export type PhiCmsMarkdownTocWidgetConfig = PhiCmsWidgetConfigBase & {
   bindingMode?: "auto" | "target";

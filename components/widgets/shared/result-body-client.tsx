@@ -2,11 +2,11 @@
 
 import { Result } from "antd";
 
-import type { PhiCmsResultWidgetConfig } from "../../../plugins/runtime-modules/core/widgets/result/config";
+import type { PhiResultWidgetVisualStatus } from "../../../types/result-widget";
 import { PhiButtonControl } from "../../controls/phi-button-control";
 
 export type PhiResultWidgetBodyProps = {
-  config?: Pick<PhiCmsResultWidgetConfig, "status" | "homeLink">;
+  config?: { status?: PhiResultWidgetVisualStatus; homeLink?: boolean };
   code?: string;
   title?: string;
   subTitle?: string;

@@ -4,7 +4,7 @@ import { buildPhiMediaAssetContentDeliveryUrl } from "../../../../../constants/m
 import { resolvePhiImagePresentation } from "../../../../../components/media/image-presentation";
 import { usePhiAuthoringAssetDetails } from "../../../../../components/media/use-authoring-asset-details";
 import type { PhiCmsCardWidgetConfig } from "./config";
-import { PhiCardWidgetClient } from "./client";
+import { PhiCardWidgetClient } from "../../../../../components/widgets/shared/card-body-client";
 
 export type PhiCardWidgetEditorProps = {
   config: PhiCmsCardWidgetConfig;

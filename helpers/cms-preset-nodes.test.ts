@@ -4,7 +4,6 @@ import { createPhiCmsPresetNodes } from "./cms-preset-nodes";
 import { PhiCmsPageType, PhiCmsRegionType, PhiCmsStatus } from "../constants/phi-cms";
 import { PHI_VIEWER_ACCESS_ANYONE } from "../types/access";
 import { createPhiPresetCmsInstanceIdMap } from "../types/cms-instance-id";
-import { PHI_CORE_RUNTIME_MODULE_ID } from "../plugins/runtime-modules/core/ids";
 import type { PhiCmsPageNode } from "../types/cms";
 
 /**
@@ -38,7 +37,8 @@ const page: PhiCmsPageNode = {
 
 const ids = createPhiPresetCmsInstanceIdMap({
   domain: "page",
-  ownerModuleId: PHI_CORE_RUNTIME_MODULE_ID,
+  // Any owner will do: the factories never ask which Module a node belongs to.
+  ownerModuleId: "@phis/ui/modules/preset-nodes-test",
   presetKey: "preset-nodes-test",
 }, ["layoutContent", "overlayBody", "overlayHeader", "overlayFooter", "overlay"]);
 

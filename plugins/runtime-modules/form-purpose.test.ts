@@ -1,14 +1,14 @@
 import { describe, expect, it } from "vitest";
 
-import { PHI_SHARED_FORM_IDS } from "./shared-form-ids";
-import { PHI_AUTH_RUNTIME_MODULE_FORMS } from "../../plugins/runtime-modules/auth/forms";
-import { PHI_PUBLIC_RUNTIME_MODULE_FORMS } from "../../plugins/runtime-modules/public/forms";
+import { PHI_SHARED_FORM_IDS } from "../../components/forms/shared-form-ids";
+import { PHI_AUTH_RUNTIME_MODULE_FORMS } from "./auth/forms";
+import { PHI_PUBLIC_RUNTIME_MODULE_FORMS } from "./public/forms";
 import {
   definePhiRuntimeModuleForm,
   findPhiFormDefinitionByPurpose,
   PHI_FORM_PURPOSES,
   type PhiRuntimeModuleFormDefinition,
-} from "./form-registry";
+} from "../../components/forms/form-registry";
 
 /**
  * Core asks for the Form that sets a password by what it does, not by its id, so a Module replacing the

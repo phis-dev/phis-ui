@@ -1,5 +1,5 @@
 import type { PhiBlockRuntime } from "../../../../../types";
-import type { PhiCmsCollectionViewWidgetConfig } from "./config";
+import type { PhiCmsCollectionViewWidgetConfig } from "../../../../../types/collection-view-widget";
 import type { PhiCmsInstanceId } from "../../../../../types/cms-instance-id";
 import { PhiCmsWidgetType } from "../../../../../constants/cms-widget-types";
 import { PhiRuntimeModuleRenderClientHost } from "../../../../../components/runtime/runtime-module-render-client-manifest";

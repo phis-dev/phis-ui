@@ -523,7 +523,7 @@ for (const path of [
 {
   // The Card cover previously hard-coded `objectFit: "cover"` and no position at all, which framed a
   // `contain` variant wrongly and discarded the original's focal rectangle.
-  const cardBody = await readSource("plugins/runtime-modules/core/widgets/card/client.tsx");
+  const cardBody = await readSource("components/widgets/shared/card-body-client.tsx");
   assert.match(cardBody, /objectFit: config\.imageFit \?\? "cover"/u);
   assert.match(cardBody, /objectPosition: config\.imagePosition \?\? "center"/u);
 }

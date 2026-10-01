@@ -8,7 +8,7 @@ import {
   readPhiTableActionSignalValue,
   type PhiTableRowIdentity,
 } from "../../types/table-widget";
-import type { PhiCmsFormWidgetConfig } from "../../plugins/runtime-modules/core/widgets/form/config";
+import type { PhiCmsFormWidgetConfig } from "./form-widget-config";
 import { usePhiSignalListener } from "../runtime/runtime-signal-bus";
 import { createPhiSignalCorrelationId } from "../runtime/runtime-signal-bus";
 import {

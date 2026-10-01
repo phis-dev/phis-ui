@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 
 import { PHI_LAYOUT } from "../../../../../theme/phi-tokens";
-import { PHI_FORM_WIDGET_DEFINITION, parsePhiFormWidgetConfig } from "./config";
+import { parsePhiFormWidgetConfig } from "../../../../../components/forms/form-widget-config";
+import { PHI_FORM_WIDGET_DEFINITION } from "./config";
 
 /*
  * The Form's cap, pinned where it is declared and pinned as the fields' measure.

@@ -9,7 +9,7 @@ import { hasPhiFlag } from "../helpers/flags";
 import { PHI_FIRST_PARTY_RUNTIME_MODULE_CATALOG } from "../plugins/runtime-modules/catalog";
 import { PHI_PUBLIC_RUNTIME_MODULE_CATALOG } from "../plugins/runtime-modules/area-catalogs/public";
 import { PHI_APP_RUNTIME_MODULE_CATALOG } from "../plugins/runtime-modules/area-catalogs/app";
-import { collectPhiThemeDescriptorContributions } from "../plugins/runtime-modules/theme/theme-descriptors";
+import { collectPhiThemeDescriptorContributions } from "../plugins/runtime-modules/theme-descriptors";
 import {
   compilePhiCmsActiveRouteTable,
   compilePhiCmsRoutePattern,

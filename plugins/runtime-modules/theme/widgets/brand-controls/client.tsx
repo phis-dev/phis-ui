@@ -111,7 +111,7 @@ import { PhiLabeledControl } from "../../../../../components/controls/phi-labele
 import { PhiNumberControl } from "../../../../../components/controls/phi-number-control";
 import { PhiColorControl } from "../../../../../components/controls/phi-color-control";
 import { usePhiControlOptionsProvider } from "../../../../../components/controls/phi-options-provider";
-import { PHI_BUILDER_RUNTIME_DATA_PROVIDER_KEYS } from "../../../builder/ids";
+import { PHI_AUTHORING_OPTION_PROVIDER_KEYS } from "../../../../../constants/authoring-option-provider-keys";
 import { PhiShadowControl } from "../../../../../components/controls/phi-shadow-control";
 import type { PhiShadow } from "../../../../../types/layout-style";
 import type {
@@ -3136,7 +3136,7 @@ export function PhiBuilderBrandIdentityControlsWidgetClient({
    * would look like a Site with one Page.
    */
   const { options: homePathOptions } = usePhiControlOptionsProvider({
-    optionsProvider: { providerKey: PHI_BUILDER_RUNTIME_DATA_PROVIDER_KEYS.builderPages },
+    optionsProvider: { providerKey: PHI_AUTHORING_OPTION_PROVIDER_KEYS.pages },
   });
 
   function updateWordmarkPart(index: number, patch: Partial<PhiSiteThemeWordmarkPart>) {

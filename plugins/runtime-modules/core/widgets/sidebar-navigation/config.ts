@@ -2,7 +2,7 @@ import { resolvePhiCmsWidgetPluginKey } from "../../../../../constants/cms-widge
 import { PhiCmsWidgetType } from "../../../../../constants/cms-widget-types";
 import type { PhiCmsWidgetPlugin } from "../../../../../types";
 import type { PhiWidgetFontFamilyKey, PhiWidgetFontSizeKey } from "../../../../../types/site-theme";
-import { PHI_BUILDER_RUNTIME_DATA_PROVIDER_KEYS } from "../../../../../plugins/runtime-modules/builder/ids";
+import { PHI_AUTHORING_OPTION_PROVIDER_KEYS } from "../../../../../constants/authoring-option-provider-keys";
 import {
   readRenderableBlockConfig,
   readString,
@@ -52,7 +52,7 @@ export const PHI_SIDEBAR_NAVIGATION_WIDGET_DEFINITION = {
     label: "Navigation",
     presentation: "select",
     optionsProvider: {
-      providerKey: PHI_BUILDER_RUNTIME_DATA_PROVIDER_KEYS.builderNavigationSets,
+      providerKey: PHI_AUTHORING_OPTION_PROVIDER_KEYS.navigationSets,
       loadMode: "hybrid",
       search: { enabled: true, minChars: 1 },
       params: {

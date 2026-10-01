@@ -1,8 +1,8 @@
 import { findPhiFormDefinitionByPurpose, PHI_FORM_PURPOSES } from "../forms/form-registry";
 import { getPhiPasswordChangeRequiredLabels } from "../widgets/label-sets/profile";
 import { readPhiServerApiCredentials } from "../../helpers/phis-server-credentials";
-import { PhiFormWidget } from "../../plugins/runtime-modules/core/widgets/form/built-in";
-import { parsePhiFormWidgetConfig } from "../../plugins/runtime-modules/core/widgets/form/config";
+import { PhiFormWidget } from "../forms/phi-form-widget";
+import { parsePhiFormWidgetConfig } from "../forms/form-widget-config";
 import type { PhiResolvedRuntimeRenderRegistry } from "../../plugins/runtime-modules/contracts";
 import type { PhiBlockRuntime } from "../../types";
 import { createPhiCoreRuntimeControllerAddress } from "./core-runtime-controller-address";

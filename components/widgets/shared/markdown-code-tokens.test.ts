@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { resolvePhiCodeLanguage, tokenizePhiCode, type PhiCodeToken } from "./code-tokens";
+import { resolvePhiCodeLanguage, tokenizePhiCode, type PhiCodeToken } from "./markdown-code-tokens";
 
 /**
  * Colouring a code sample, and the two promises that go with it.

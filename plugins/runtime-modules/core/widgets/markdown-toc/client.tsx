@@ -6,7 +6,8 @@ import { Anchor } from "antd";
 import type { PhiClientBlockBaseProps, PhiNoLabels } from "../../../../../types";
 import { usePhiSignalListener } from "../../../../../components/runtime/runtime-signal-bus";
 import { usePhiConfig } from "../../../../../components/root/phi-config-provider";
-import type { PhiCmsMarkdownTocWidgetConfig, PhiMarkdownTocHeading } from "./config";
+import type { PhiMarkdownTocHeading } from "../../../../../types/markdown";
+import type { PhiCmsMarkdownTocWidgetConfig } from "./config";
 import { PhiEmptyControl } from "../../../../../components/controls/phi-empty-control";
 import { PhiTypographyControl } from "../../../../../components/controls/phi-typography-control";
 

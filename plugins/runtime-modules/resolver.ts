@@ -40,7 +40,7 @@ import {
 import { stripRenderableBlockDefaults } from "../../helpers/renderable-block-serialization";
 import type { PhiRenderableBlockBase } from "../../types/renderable-block";
 import { PhiCmsWidgetType } from "../../constants/cms-widget-types";
-import { parsePhiFormWidgetConfig } from "./core/widgets/form/config";
+import { parsePhiFormWidgetConfig } from "../../components/forms/form-widget-config";
 
 function loadRuntimeWidgetPlugin(entry: PhiRuntimeModuleWidgetDefinition) {
   return entry.loadRuntime();

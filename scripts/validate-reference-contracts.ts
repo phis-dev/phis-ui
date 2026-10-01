@@ -804,7 +804,7 @@ for (const attribute of ["title", "width", "height"]) {
    * translation request.
    */
   const markdownSource = await readFile(
-    new URL("../plugins/runtime-modules/core/widgets/markdown/server.tsx", import.meta.url),
+    new URL("../components/widgets/shared/markdown-render.ts", import.meta.url),
     "utf8",
   );
   assert.match(
@@ -828,7 +828,7 @@ for (const attribute of ["title", "width", "height"]) {
     "A translated title must be read back onto the image it was authored on.",
   );
   const markdownBodySource = await readFile(
-    new URL("../plugins/runtime-modules/core/widgets/markdown/client.tsx", import.meta.url),
+    new URL("../components/widgets/shared/markdown-body-client.tsx", import.meta.url),
     "utf8",
   );
   assert.match(

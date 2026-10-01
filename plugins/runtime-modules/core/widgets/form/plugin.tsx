@@ -1,10 +1,7 @@
 import type { PhiCmsServerWidgetPlugin } from "../../../../../types";
-import { PhiFormWidget } from "./built-in";
-import {
-  PHI_FORM_WIDGET_DEFINITION,
-  PHI_FORM_WIDGET_PLUGIN_TYPE,
-  type PhiCmsFormWidgetConfig,
-} from "./config";
+import { PhiFormWidget } from "../../../../../components/forms/phi-form-widget";
+import type { PhiCmsFormWidgetConfig } from "../../../../../components/forms/form-widget-config";
+import { PHI_FORM_WIDGET_DEFINITION, PHI_FORM_WIDGET_PLUGIN_TYPE } from "./config";
 
 function renderForm({
   widget,

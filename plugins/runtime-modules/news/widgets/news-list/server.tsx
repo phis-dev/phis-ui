@@ -58,7 +58,7 @@ export async function PhiNewsListWidget({ config, runtime }: PhiNewsListWidgetPr
    * start-up, and reaching into the core Module's graph from there closes a cycle through its data
    * provider keys -- eleven unrelated suites failed on an undefined constant before this moved inside.
    */
-  const { resolveMarkdownRenderData } = await import("../../../core/widgets/markdown/server");
+  const { resolveMarkdownRenderData } = await import("../../../../../components/widgets/shared/markdown-render");
 
   const views: PhiNewsListEntryView[] = await Promise.all(
     entries.slice(0, settings.limit).map(async (entry, index) => {

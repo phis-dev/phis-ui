@@ -1,22 +1,22 @@
 import type { ReactNode } from "react";
-import type { PhiBlockRuntime } from "../../../../../types";
-import type { PhiCmsRuntimeRenderRegistry } from "../../../../../types/cms-plugins";
-import { phiRuntime } from "../../../../../server-helpers/phi-runtime";
-import { getResolvedFormDefinition } from "../../../../../gateway/form-registry";
-import type { PhiFormRenderOptions } from "../../../../../components/forms/form-resolution";
-import { resolvePhiFormLabels } from "../../../../../components/forms/form-resolution";
-import { createPhiRuntimeFormControllerAddress } from "../../../../../components/forms/runtime-form-controller-address";
-import { PhiFormWidgetFrame } from "../../../../../components/forms/phi-form-widget-frame";
-import { PhiRuntimeModuleRenderClientHost } from "../../../../../components/runtime/runtime-module-render-client-manifest";
-import { PhiRuntimeRenderClientType } from "../../../../../constants/runtime-render-client-types";
-import type { PhiFormId } from "../../../../../types/form-id";
-import type { PhiCmsFormWidgetConfig } from "./config";
-import { resolvePhiFormText } from "../../../../../components/forms/form-descriptor-contract";
-import { PHI_FORM_DEFAULT_SUBMIT_LABEL } from "../../../../../types/form-descriptor";
+import type { PhiBlockRuntime } from "../../types";
+import type { PhiCmsRuntimeRenderRegistry } from "../../types/cms-plugins";
+import { phiRuntime } from "../../server-helpers/phi-runtime";
+import { getResolvedFormDefinition } from "../../gateway/form-registry";
+import type { PhiFormRenderOptions } from "./form-resolution";
+import { resolvePhiFormLabels } from "./form-resolution";
+import { createPhiRuntimeFormControllerAddress } from "./runtime-form-controller-address";
+import { PhiFormWidgetFrame } from "./phi-form-widget-frame";
+import { PhiRuntimeModuleRenderClientHost } from "../runtime/runtime-module-render-client-manifest";
+import { PhiRuntimeRenderClientType } from "../../constants/runtime-render-client-types";
+import type { PhiFormId } from "../../types/form-id";
+import type { PhiCmsFormWidgetConfig } from "./form-widget-config";
+import { resolvePhiFormText } from "./form-descriptor-contract";
+import { PHI_FORM_DEFAULT_SUBMIT_LABEL } from "../../types/form-descriptor";
 import {
   readPhiRuntimeConditionValue,
   type PhiRuntimeFeatureState,
-} from "../../../../../types/runtime-condition";
+} from "../../types/runtime-condition";
 
 export type PhiFormWidgetProps = {
   runtime: Pick<PhiBlockRuntime, "site" | "locale"> &

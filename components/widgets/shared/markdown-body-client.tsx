@@ -2,17 +2,17 @@
 
 import { Fragment, useEffect, useMemo, type CSSProperties, type ReactNode } from "react";
 
-import { PhiLink } from "../../../../../components/navigation/phi-link";
-import type { PhiClientBlockBaseProps, PhiNoLabels } from "../../../../../types";
-import { PHI_SIGNAL_VALUE_SCHEMAS } from "../../../../../types/signals";
-import { usePhiSignalEmitter } from "../../../../../components/runtime/runtime-signal-identity";
-import { usePhiConfig, type PhiConfig } from "../../../../../components/root/phi-config-provider";
-import type { PhiCodeToken, PhiCodeTokenKind } from "./code-tokens";
-import type { PhiMarkdownSpacingKey, PhiMarkdownTextAlign } from "../../../../../types/core-widget-placements";
-import type { PhiMarkdownTocHeading } from "../markdown-toc/config";
-import { PhiPlainTable } from "../../../../../components/tables/phi-plain-table";
-import { PhiTypographyControl } from "../../../../../components/controls/phi-typography-control";
-import { PhiDividerControl } from "../../../../../components/controls/phi-divider-control";
+import { PhiLink } from "../../navigation/phi-link";
+import type { PhiClientBlockBaseProps, PhiNoLabels } from "../../../types";
+import { PHI_SIGNAL_VALUE_SCHEMAS } from "../../../types/signals";
+import { usePhiSignalEmitter } from "../../runtime/runtime-signal-identity";
+import { usePhiConfig, type PhiConfig } from "../../root/phi-config-provider";
+import type { PhiCodeToken, PhiCodeTokenKind } from "./markdown-code-tokens";
+import type { PhiMarkdownSpacingKey, PhiMarkdownTextAlign } from "../../../types/core-widget-placements";
+import type { PhiMarkdownTocHeading } from "../../../types/markdown";
+import { PhiPlainTable } from "../../tables/phi-plain-table";
+import { PhiTypographyControl } from "../../controls/phi-typography-control";
+import { PhiDividerControl } from "../../controls/phi-divider-control";
 
 export type PhiMarkdownInline =
   | { kind: "text"; text: string }

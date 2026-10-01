@@ -4,13 +4,11 @@ import type { PhiNoLabels, PhiServerBlockBaseProps } from "../../../../../types"
 import { tr } from "../../../../../server-helpers/translate";
 import type { PhiCmsContentWidgetNode, PhiResolvedCmsRenderableTree } from "../../../../../types/cms";
 import { PhiCmsWidgetType } from "../../../../../constants/cms-widget-types";
-import {
-  type PhiCmsMarkdownTocWidgetConfig,
-  type PhiMarkdownTocHeading,
-} from "./config";
+import type { PhiMarkdownTocHeading } from "../../../../../types/markdown";
+import type { PhiCmsMarkdownTocWidgetConfig } from "./config";
 import { parsePhiCmsMarkdownWidgetConfig } from "../markdown/config";
 import { PhiRuntimeModuleRenderClientHost } from "../../../../../components/runtime/runtime-module-render-client-manifest";
-import { resolveMarkdownRenderData } from "../markdown/server";
+import { resolveMarkdownRenderData } from "../../../../../components/widgets/shared/markdown-render";
 import type { PhiMarkdownTocWidgetDefaultLabels } from "../../../../../components/widgets/label-types/markdown-toc";
 
 export type PhiMarkdownTocWidgetProps = PhiServerBlockBaseProps<

@@ -2,8 +2,8 @@
 
 import { useRef, type CSSProperties, type FocusEventHandler, type SyntheticEvent } from "react";
 
-import type { PhiControlSize, PhiControlVariant } from "../../../../types/control";
-import { PhiTextControl } from "../../../../components/controls/phi-text-control";
+import type { PhiControlSize, PhiControlVariant } from "../../types/control";
+import { PhiTextControl } from "./phi-text-control";
 
 export type PhiInlineTextEditorProps = {
   value: string;

@@ -223,7 +223,7 @@ export const PHI_COMMON_RUNTIME_MODULE_RENDER_CLIENT_MANIFEST =
     [
       PhiCmsWidgetType.Card,
       definePhiRuntimeModuleRenderClient(
-        dynamic(() => import("../core/widgets/card/client").then((module) => module.PhiCardWidgetClient)),
+        dynamic(() => import("../../../components/widgets/shared/card-body-client").then((module) => module.PhiCardWidgetClient)),
       ),
     ],
     [
@@ -407,7 +407,7 @@ export const PHI_COMMON_RUNTIME_MODULE_RENDER_CLIENT_MANIFEST =
     [
       PhiCmsWidgetType.Markdown,
       definePhiRuntimeModuleRenderClient(
-        dynamic(() => import("../core/widgets/markdown/client").then((module) => module.PhiMarkdownWidgetClient)),
+        dynamic(() => import("../../../components/widgets/shared/markdown-body-client").then((module) => module.PhiMarkdownWidgetClient)),
       ),
     ],
     [

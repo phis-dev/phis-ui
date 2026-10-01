@@ -4,7 +4,7 @@ import type {
 } from "../../types";
 import { PHI_FORM_CONTROLLER_TYPE } from "./runtime-form-controller-address";
 import { resolvePhiRuntimeConditionControllerRequirements } from "../../types/runtime-condition";
-import type { PhiCmsFormWidgetConfig } from "../../plugins/runtime-modules/core/widgets/form/config";
+import type { PhiCmsFormWidgetConfig } from "./form-widget-config";
 
 /**
  * How a Widget's Form Controller is named, written once and read back once.

@@ -1,7 +1,8 @@
 "use client";
 
 import type { PhiCmsBuilderWidgetPlugin } from "../../../../../types";
-import { PHI_FORM_WIDGET_DEFINITION, type PhiCmsFormWidgetConfig } from "./config";
+import type { PhiCmsFormWidgetConfig } from "../../../../../components/forms/form-widget-config";
+import { PHI_FORM_WIDGET_DEFINITION } from "./config";
 import { PhiWidgetEditorPlaceholder } from "../../../../../components/widgets/builder/widget-editor-placeholder";
 
 export const PHI_FORM_WIDGET_BUILDER_PLUGIN: PhiCmsBuilderWidgetPlugin<PhiCmsFormWidgetConfig> = {

@@ -36,7 +36,7 @@ import {
   type PhiStructureDragData,
   type PhiStructureDropTargetData,
 } from "./structure-dnd";
-import { PhiInlineTextEditor } from "./clients/inline-text-editor";
+import { PhiInlineTextEditor } from "../../../components/controls/phi-inline-text-editor";
 import { PhiButtonControl } from "../../../components/controls/phi-button-control";
 import {
   usePhiAuthoringLayoutDefinition,

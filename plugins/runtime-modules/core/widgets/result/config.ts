@@ -7,8 +7,7 @@ import {
   readString,
   type PhiCmsWidgetConfigBase,
 } from "../../../../../components/widgets/config/parser-primitives";
-
-export type PhiResultWidgetVisualStatus = "success" | "error" | "info" | "warning" | "403" | "404" | "500";
+import type { PhiResultWidgetVisualStatus } from "../../../../../types/result-widget";
 
 export type PhiCmsResultWidgetConfig = PhiCmsWidgetConfigBase & {
   status?: PhiResultWidgetVisualStatus;

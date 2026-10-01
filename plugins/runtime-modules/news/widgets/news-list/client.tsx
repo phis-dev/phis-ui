@@ -9,7 +9,7 @@ import { PhiLink } from "../../../../../components/navigation/phi-link";
 import {
   PhiMarkdownWidgetClient,
   type PhiMarkdownBlock,
-} from "../../../core/widgets/markdown/client";
+} from "../../../../../components/widgets/shared/markdown-body-client";
 import { PHI_SPACE } from "../../../../../theme/antd-css-var-contract";
 import type { PhiNewsListLabels } from "../../../../../components/widgets/label-sets/news";
 

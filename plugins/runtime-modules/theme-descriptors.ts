@@ -1,10 +1,10 @@
-import { PHI_CORE_RUNTIME_MODULE_THEMES } from "../area-base-presets";
-import { PHI_CORE_RUNTIME_MODULE_ID } from "../core/ids";
-import { readAllPhiSiteModuleServerAreaContributions } from "../site-module-contributions";
-import type { PhiSiteModuleServerAreaContributions } from "../site-modules";
-import type { PhiCmsThemeDescriptorContribution } from "../../../types/cms-module-descriptors";
-import { PHI_THEME_RUNTIME_MODULE_BLOCKS } from "./block-descriptors";
-import { PHI_THEME_RUNTIME_MODULE_ID } from "./ids";
+import { PHI_CORE_RUNTIME_MODULE_THEMES } from "./area-base-presets";
+import { PHI_CORE_RUNTIME_MODULE_ID } from "./core/ids";
+import { readAllPhiSiteModuleServerAreaContributions } from "./site-module-contributions";
+import type { PhiSiteModuleServerAreaContributions } from "./site-modules";
+import type { PhiCmsThemeDescriptorContribution } from "../../types/cms-module-descriptors";
+import { PHI_THEME_RUNTIME_MODULE_BLOCKS } from "./theme/block-descriptors";
+import { PHI_THEME_RUNTIME_MODULE_ID } from "./theme/ids";
 
 /**
  * The first-party Theme descriptors, straight from the lists the Modules' catalog entries use.

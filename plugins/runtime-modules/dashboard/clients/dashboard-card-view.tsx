@@ -5,13 +5,13 @@ import { useEffect, useMemo, useState } from "react";
 
 import type { PhiCmsInstanceId } from "../../../../types/cms-instance-id";
 import type { PhiCollectionViewBindingModel } from "../../../../types/collection-provider";
-import type { PhiCmsCollectionViewWidgetConfig } from "../../core/widgets/collection-view/config";
+import type { PhiCmsCollectionViewWidgetConfig } from "../../../../types/collection-view-widget";
 import type {
   PhiDashboardCardForm,
   PhiDashboardCardPayload,
   PhiDashboardCardRow,
 } from "../../../../types/dashboard-cards";
-import { PhiCardWidgetClient, type PhiCardWidgetBody } from "../../core/widgets/card/client";
+import { PhiCardWidgetClient, type PhiCardWidgetBody } from "../../../../components/widgets/shared/card-body-client";
 import { PhiCollectionViewControl } from "../../../../components/controls/phi-collection-view-control";
 import { PhiAlertControl } from "../../../../components/controls/phi-alert-control";
 import { PhiEmptyControl } from "../../../../components/controls/phi-empty-control";

@@ -22,7 +22,7 @@ import {
 } from "../../../../../components/controls/phi-media-asset-tile-control";
 import { usePhiConfig } from "../../../../../components/root/phi-config-provider";
 import { usePhiApplicationFeedback } from "../../../../../components/runtime/use-phi-application-feedback";
-import type { PhiCmsCollectionViewWidgetConfig } from "./config";
+import type { PhiCmsCollectionViewWidgetConfig } from "../../../../../types/collection-view-widget";
 import { resolvePhiButtonIcon } from "../../../../../components/widgets/client/shared/phi-button-icons";
 import { usePhiControlSignalController } from "../../../../../components/widgets/client/shared/phi-control-signals";
 import { usePhiSearchDraft } from "../../../../../components/widgets/client/shared/phi-search-draft";

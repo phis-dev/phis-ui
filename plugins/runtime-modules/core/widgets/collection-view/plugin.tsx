@@ -1,5 +1,5 @@
 import type { PhiCmsServerWidgetPlugin } from "../../../../../types";
-import type { PhiCmsCollectionViewWidgetConfig } from "./config";
+import type { PhiCmsCollectionViewWidgetConfig } from "../../../../../types/collection-view-widget";
 import { PhiCollectionViewWidgetServer } from "./server";
 import { PhiWidgetInertPreview } from "../../../../../components/widgets/built-in/widget-preview";
 import {

@@ -9,11 +9,15 @@ import { readPhiAreaPresetRuntimeModuleIds, readPhiAreaRootRoute } from "./cms-a
 import { PhiCmsPageType } from "../constants/phi-cms";
 import { createPhiBuilderRuntimeModuleCatalog } from "../plugins/runtime-modules/catalog";
 import { createPhiDefaultAreaRuntimeModuleIds } from "../plugins/runtime-modules/area-module-defaults";
-import { PHI_DASHBOARD_RUNTIME_MODULE_ID } from "../plugins/runtime-modules/dashboard/ids";
 import { resolvePhiCmsDescriptorCatalog } from "../plugins/runtime-modules/descriptor-compiler";
 import type { PhiResolvedCmsPageTree } from "../types/cms";
 import type { PhiRuntimeModuleId } from "../types/cms-module-descriptors";
 import { createPhiPageReference } from "../types/references";
+
+/*
+ * Named by id, as data: a Foundation file may say which Module it means, never import it.
+ */
+const PHI_DASHBOARD_RUNTIME_MODULE_ID: PhiRuntimeModuleId = "@phis/ui/modules/dashboard";
 
 /*
  * The configurable half of an Area's front door.

@@ -1,14 +1,14 @@
 "use client";
 
-import { PhiButtonControl } from "../../../../../components/controls/phi-button-control";
+import { PhiButtonControl } from "../../controls/phi-button-control";
 
-import type { PhiClientBlockBaseProps } from "../../../../../types";
-import { PhiCardControl } from "../../../../../components/controls/phi-card-control";
-import { PhiIcon } from "../../../../../components/shell/phi-icon";
-import { PhiLink } from "../../../../../components/navigation/phi-link";
-import { PhiStatisticControl } from "../../../../../components/controls/phi-statistic-control";
-import { usePhiConfig } from "../../../../../components/root/phi-config-provider";
-import { PhiTypographyControl } from "../../../../../components/controls/phi-typography-control";
+import type { PhiClientBlockBaseProps } from "../../../types";
+import { PhiCardControl } from "../../controls/phi-card-control";
+import { PhiIcon } from "../../shell/phi-icon";
+import { PhiLink } from "../../navigation/phi-link";
+import { PhiStatisticControl } from "../../controls/phi-statistic-control";
+import { usePhiConfig } from "../../root/phi-config-provider";
+import { PhiTypographyControl } from "../../controls/phi-typography-control";
 
 /**
  * What fills a card between its eyebrow and its description.

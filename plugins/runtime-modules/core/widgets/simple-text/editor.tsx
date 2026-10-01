@@ -4,7 +4,7 @@ import { useState } from "react";
 
 import { FormatPainterOutlined } from "@ant-design/icons";
 
-import { PhiInlineTextEditor } from "../../../builder/clients/inline-text-editor";
+import { PhiInlineTextEditor } from "../../../../../components/controls/phi-inline-text-editor";
 import { PhiButtonControl } from "../../../../../components/controls/phi-button-control";
 import { PhiCheckboxControl } from "../../../../../components/controls/phi-checkbox-control";
 import { PhiPopoverControl } from "../../../../../components/controls/phi-popover-control";

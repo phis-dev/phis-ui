@@ -4,7 +4,7 @@ import {
   type PhiCmsAreaKey,
 } from "../../../../../constants/cms-areas";
 import { PHI_MEDIA_LIBRARY_DATA_PROVIDER_KEYS } from "../../../../../constants/media-library-provider-keys";
-import { PHI_BUILDER_RUNTIME_DATA_PROVIDER_KEYS } from "../../../builder/ids";
+import { PHI_AUTHORING_OPTION_PROVIDER_KEYS } from "../../../../../constants/authoring-option-provider-keys";
 import { PHI_THEME_SIGNAL_CHANNELS } from "../../../../../plugins/runtime-modules/theme/controller/signals";
 import { createPhiCmsWidgetDefinition } from "../../../../../components/widgets/config/helpers";
 import { readString } from "../../../../../components/widgets/config/parser-primitives";
@@ -67,7 +67,7 @@ export const PHI_BUILDER_BRAND_IDENTITY_CONTROLS_WIDGET_DEFINITION: PhiBuilderBr
    */
   requiredDataProviders: [
     PHI_MEDIA_LIBRARY_DATA_PROVIDER_KEYS.collection,
-    PHI_BUILDER_RUNTIME_DATA_PROVIDER_KEYS.builderPages,
+    PHI_AUTHORING_OPTION_PROVIDER_KEYS.pages,
   ],
   fields: [
     { key: "themeKey", type: "string", label: "Theme Key" },
