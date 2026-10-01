@@ -29,15 +29,3 @@ export async function PhiBuilderModeSwitchWidget({
     />
   );
 }
-
-export async function PhiDeveloperBuilderDraftStatusWidget({
-  runtime,
-}: PhiBuilderChromeWidgetProps) {
-  const labels = await getLabels(runtime);
-  return (
-    <PhiRuntimeModuleRenderClientHost
-      type={PhiRuntimeRenderClientType.BuilderDraftStatus}
-      componentProps={{ labels }}
-    />
-  );
-}

@@ -89,6 +89,13 @@ export const PHI_THEME_RUNTIME_CONTROLLER_DEFINITION = {
         action: "activate",
         valueType: "string",
       },
+      // A Draft Status Widget asking, on mount, for the state; answered to it alone.
+      {
+        id: "draftStatus",
+        channel: PHI_THEME_SIGNAL_CHANNELS.draftStatus,
+        action: "activate",
+        valueType: "none",
+      },
     ],
   },
   defaultConfig: {},

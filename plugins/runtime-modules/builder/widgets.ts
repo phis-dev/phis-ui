@@ -6,7 +6,6 @@ import {
   PHI_BUILDER_INSPECTOR_SECTION_WIDGET_DEFINITIONS,
   PHI_BUILDER_INSPECTOR_HEADER_WIDGET_DEFINITION,
   PHI_BUILDER_MODE_SWITCH_WIDGET_DEFINITION,
-  PHI_DEVELOPER_BUILDER_DRAFT_STATUS_WIDGET_DEFINITION,
 } from "./widgets/chrome/config";
 import {
   PHI_BUILDER_CHROME_CONTROLS_WIDGET_DEFINITION,
@@ -80,13 +79,6 @@ export const PHI_RUNTIME_MODULE_WIDGETS: readonly PhiRuntimeModuleWidgetDefiniti
     renderPolicies: {"runtime":"custom","preview":"visualSkeleton","authoring":"usePreview"},
     loadRuntime: () => import("./widgets/shells-workspace/plugin").then((module) => module.PHI_BUILDER_SHELLS_WORKSPACE_WIDGET_PLUGIN),
     loadPreview: () => import("./widgets/shells-workspace/preview-plugin").then((module) => module.PHI_BUILDER_SHELLS_WORKSPACE_WIDGET_PREVIEW_PLUGIN),
-  }),
-  defineFirstPartyWidget({
-    definition: PHI_DEVELOPER_BUILDER_DRAFT_STATUS_WIDGET_DEFINITION,
-    ownerModuleId: PHI_BUILDER_RUNTIME_MODULE_ID,
-    renderPolicies: {"runtime":"custom","preview":"custom","authoring":"custom"},
-    loadRuntime: () => import("./widgets/draft-status/plugin").then((module) => module.PHI_DEVELOPER_BUILDER_DRAFT_STATUS_WIDGET_PLUGIN),
-    loadPreview: () => import("./widgets/draft-status/plugin").then((module) => module.PHI_DEVELOPER_BUILDER_DRAFT_STATUS_WIDGET_PLUGIN),
   }),
   defineFirstPartyWidget({
     definition: PHI_DEVELOPER_BUILDER_PAGES_HEADER_WIDGET_DEFINITION,

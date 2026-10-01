@@ -55,6 +55,7 @@ const PLACEMENT_ONLY_KEYS: Readonly<Record<string, Readonly<Record<string, strin
   "collection-view": { initialQuery: "the query a Preset opens the Collection with" },
   "command-toolbar": { key: "the Control's signal identity, as for the Button" },
   "theme-mode-switch": {},
+  "draft-status": {},
 };
 
 function writtenPaths(field: PhiCmsConfigField): string[] {

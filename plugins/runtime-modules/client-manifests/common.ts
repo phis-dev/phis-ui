@@ -255,6 +255,12 @@ export const PHI_COMMON_RUNTIME_MODULE_RENDER_CLIENT_MANIFEST =
       ),
     ],
     [
+      PhiCmsWidgetType.DraftStatus,
+      definePhiRuntimeModuleRenderClient(
+        dynamic(() => import("../core/widgets/draft-status/client").then((module) => module.PhiDraftStatusWidget)),
+      ),
+    ],
+    [
       PhiCmsWidgetType.Html,
       definePhiRuntimeModuleRenderClient(
         dynamic(() => import("../core/widgets/html/client").then((module) => module.PhiHtmlWidgetClient)),

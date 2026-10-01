@@ -113,6 +113,19 @@ export function createPhiHistoryStore<TSnapshot>(
     };
   }
 
+  /**
+   * The newest entry still standing, or null. A saved state can remember it and later ask whether the
+   * history has moved since: a new record, a gesture continuing, an undo or a redo all change it, and
+   * undoing back to where it stood brings the same entry back.
+   */
+  function getHead(scopeKey: string): PhiHistoryEntry<TSnapshot> | null {
+    return store.getSnapshot(scopeKey).past.at(-1) ?? null;
+  }
+
+  function useHead(scopeKey: string): PhiHistoryEntry<TSnapshot> | null {
+    return store.useStoreSelector(scopeKey, (state) => state.past.at(-1) ?? null);
+  }
+
   function useAvailability(scopeKey: string) {
     const state = store.useStore(scopeKey);
     return {
@@ -125,10 +138,12 @@ export function createPhiHistoryStore<TSnapshot>(
     clear,
     endGesture,
     getAvailability,
+    getHead,
     record,
     redo,
     subscribe: store.subscribe,
     undo,
     useAvailability,
+    useHead,
   };
 }

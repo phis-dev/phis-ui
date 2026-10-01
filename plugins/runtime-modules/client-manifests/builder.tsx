@@ -44,12 +44,6 @@ export const PHI_BUILDER_RUNTIME_MODULE_RENDER_CLIENT_MANIFEST =
       ),
       ],
       [
-        PhiRuntimeRenderClientType.BuilderDraftStatus,
-        definePhiRuntimeModuleRenderClient(
-        dynamic(() => import("../builder/widgets/draft-status/authoring").then((module) => module.PhiDeveloperBuilderDraftStatusWidgetClient)),
-      ),
-      ],
-      [
         PhiRuntimeRenderClientType.BuilderModeSwitch,
         definePhiRuntimeModuleRenderClient(
         dynamic(() => import("../../../plugins/runtime-modules/builder/clients/mode-switch").then((module) => module.PhiBuilderModeSwitchWidgetClient)),

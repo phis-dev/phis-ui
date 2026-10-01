@@ -31,6 +31,9 @@ import {
   PHI_DESCRIPTION_WIDGET_DEFINITION,
 } from "./widgets/description/config";
 import {
+  PHI_DRAFT_STATUS_WIDGET_DEFINITION,
+} from "./widgets/draft-status/config";
+import {
   PHI_DIMENSION_WIDGET_DEFINITION,
 } from "./widgets/dimension/config";
 import {
@@ -185,6 +188,10 @@ export default createPhiAuthoringWidgetModule([
   definePhiAuthoringWidgetModuleLoader(
     PHI_DESCRIPTION_WIDGET_DEFINITION,
     () => import("./widgets/description/authoring").then((module) => module.PHI_DESCRIPTION_WIDGET_BUILDER_PLUGIN),
+  ),
+  definePhiAuthoringWidgetModuleLoader(
+    PHI_DRAFT_STATUS_WIDGET_DEFINITION,
+    () => import("./widgets/draft-status/authoring").then((module) => module.PHI_DRAFT_STATUS_WIDGET_BUILDER_PLUGIN),
   ),
   definePhiAuthoringWidgetModuleLoader(
     PHI_DIMENSION_WIDGET_DEFINITION,

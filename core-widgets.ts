@@ -8,3 +8,4 @@ export type {
   PhiCmsWidgetPlacementConfig,
   PhiCmsWidgetPlacementFields,
 } from "./helpers/cms-node-factories";
+export * from "./types/draft-status";

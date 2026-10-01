@@ -33,6 +33,9 @@ import {
   PHI_DESCRIPTION_WIDGET_DEFINITION,
 } from "./widgets/description/config";
 import {
+  PHI_DRAFT_STATUS_WIDGET_DEFINITION,
+} from "./widgets/draft-status/config";
+import {
   PHI_DIMENSION_WIDGET_DEFINITION,
 } from "./widgets/dimension/config";
 import {
@@ -227,6 +230,13 @@ export const PHI_RUNTIME_MODULE_WIDGETS: readonly PhiRuntimeModuleWidgetDefiniti
     renderPolicies: {"runtime":"custom","preview":"custom","authoring":"custom"},
     loadRuntime: () => import("./widgets/description/plugin").then((module) => module.PHI_DESCRIPTION_WIDGET_PLUGIN),
     loadPreview: () => import("./widgets/description/plugin").then((module) => module.PHI_DESCRIPTION_WIDGET_PLUGIN),
+  }),
+  defineFirstPartyWidget({
+    definition: PHI_DRAFT_STATUS_WIDGET_DEFINITION,
+    ownerModuleId: PHI_CORE_RUNTIME_MODULE_ID,
+    renderPolicies: {"runtime":"custom","preview":"custom","authoring":"custom"},
+    loadRuntime: () => import("./widgets/draft-status/plugin").then((module) => module.PHI_DRAFT_STATUS_WIDGET_PLUGIN),
+    loadPreview: () => import("./widgets/draft-status/plugin").then((module) => module.PHI_DRAFT_STATUS_WIDGET_PLUGIN),
   }),
   defineFirstPartyWidget({
     definition: PHI_DIMENSION_WIDGET_DEFINITION,

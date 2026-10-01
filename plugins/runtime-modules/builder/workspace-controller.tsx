@@ -143,6 +143,7 @@ import {
   usePhiBuilderDraftCommandController,
   type PhiDeveloperBuilderToolbarCommand,
 } from "./draft-command-controller";
+import { usePhiBuilderDraftStatusController } from "./draft-status-controller";
 import {
   applyPhiDeveloperBuilderSiderLeftMode,
 } from "./region-controller";
@@ -381,13 +382,20 @@ function usePhiDeveloperBuilderWorkspaceController(
     pageMetaLabels,
     state,
   });
-  const { confirmResetPage, runBuilderCommand, confirmDialog } = usePhiBuilderDraftCommandController({
+  const { reportSaved } = usePhiBuilderDraftStatusController({
     commandWorkspace,
+    effectiveArea,
+    effectiveNavKey,
+    effectivePageKey,
+    state,
+  });
+  const { confirmResetPage, runBuilderCommand, confirmDialog } = usePhiBuilderDraftCommandController({
     defaultArea,
     effectiveArea,
     effectiveNavKey,
     effectivePageKey,
     pathname,
+    reportSaved,
     shellPresetDraftsByArea,
     state,
   });

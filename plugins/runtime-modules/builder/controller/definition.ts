@@ -157,6 +157,13 @@ export const PHI_BUILDER_RUNTIME_CONTROLLER_DEFINITION = {
         action: "activate",
         valueType: "string",
       },
+      // A Draft Status Widget asking, on mount, for the state; answered to it alone.
+      {
+        id: "draftStatus",
+        channel: "draftStatus",
+        action: "activate",
+        valueType: "none",
+      },
       {
         id: "builderMode",
         channel: "builderMode",

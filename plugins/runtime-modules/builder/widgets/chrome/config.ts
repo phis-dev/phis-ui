@@ -107,10 +107,3 @@ export const PHI_BUILDER_INSPECTOR_SECTION_WIDGET_DEFINITIONS =
       },
     }),
   }));
-
-export const PHI_DEVELOPER_BUILDER_DRAFT_STATUS_WIDGET_DEFINITION = createBuilderChromeWidgetDefinition({
-  typeKey: "builder-draft-status",
-  slotSizePolicy: "intrinsic",
-  title: "Builder Draft Status",
-  description: "Builder header status showing whether the current scope is draft or published.",
-});

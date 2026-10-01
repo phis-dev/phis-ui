@@ -3,7 +3,6 @@
 import { useState } from "react";
 
 import { usePhiConfirmDialog } from "../../../components/controls/phi-confirm-dialog";
-import { PhiCmsRegionType } from "../../../constants/phi-cms";
 import { PHI_SIGNAL_VALUE_SCHEMAS } from "../../../types/signals";
 import { usePhiSignalDispatcher } from "../../../components/runtime/runtime-signal-bus";
 import { usePhiApplicationFeedback } from "../../../components/runtime/use-phi-application-feedback";
@@ -64,7 +63,6 @@ import type {
   PhiDeveloperBuilderRegionDraft,
   PhiDeveloperBuilderWorkspaceState,
 } from "./developer-workspace-types";
-import { getBuilderRegionKey } from "./region-controller";
 import { findPhiBuilderNavigationSurface } from "../../../helpers/cms-navigation-catalog";
 import {
   createPhiBuilderHistoryContext,
@@ -90,21 +88,22 @@ export type PhiDeveloperBuilderToolbarCommand =
   | "reset";
 
 export function usePhiBuilderDraftCommandController({
-  commandWorkspace,
   defaultArea,
   effectiveArea,
   effectiveNavKey,
   effectivePageKey,
   pathname,
+  reportSaved,
   shellPresetDraftsByArea,
   state,
 }: {
-  commandWorkspace: PhiDeveloperBuilderCommandWorkspace;
   defaultArea: PhiDeveloperBuilderArea;
   effectiveArea: PhiDeveloperBuilderArea;
   effectiveNavKey: string;
   effectivePageKey: string;
   pathname: string | null;
+  /** Tells the draft status what a save or publish of the workspace on screen stored. */
+  reportSaved: (status: "draft" | "published", revisionId: number | null) => void;
   shellPresetDraftsByArea: Record<string, Record<string, PhiDeveloperBuilderRegionDraft>>;
   state: PhiDeveloperBuilderWorkspaceState;
 }) {
@@ -192,29 +191,7 @@ export function usePhiBuilderDraftCommandController({
     return items === navigation.items ? navigation : { ...navigation, items };
   }
 
-  function emitDraftStatus(status: "draft" | "published", revisionId: number | null) {
-    dispatchSignal({
-      scope: "area",
-      channel: "draftStatus",
-      action: "change",
-      value: {
-        status,
-        revisionId,
-        ...(commandWorkspace === "navigation"
-          ? { navKey: effectiveNavKey }
-          : {
-              area: effectiveArea,
-              pageKey: effectivePageKey,
-            }),
-        regionKey: getBuilderRegionKey(PhiCmsRegionType.HeaderMain),
-      },
-      valueType: "json",
-      valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.revisionsDraftStatus,
-      sender: createPhiBuilderControllerAddress(),
-      receiver: "broadcast",
-      timestamp: Date.now(),
-    });
-  }
+
 
   /**
    * The Areas a site-wide Modules command has to reach: every Area with unsaved selection edits,
@@ -288,7 +265,7 @@ export function usePhiBuilderDraftCommandController({
         );
         lastRevisionId = modulesResult.revisionId;
       }
-      emitDraftStatus("draft", lastRevisionId);
+      reportSaved("draft", lastRevisionId);
       showMessage({
         level: "success",
         content: areas.length === 1
@@ -317,7 +294,7 @@ export function usePhiBuilderDraftCommandController({
           },
         );
 
-    emitDraftStatus("draft", result.revisionId);
+    reportSaved("draft", result.revisionId);
     if (!("savedScopes" in result)) {
       const navigationDraft = await resolveCurrentNavigationDraft();
       setPhiBuilderNavigationDraft(effectiveNavKey, {
@@ -355,7 +332,7 @@ export function usePhiBuilderDraftCommandController({
         );
       }
       clearPhiBuilderModuleAreasDirty(defaultArea);
-      emitDraftStatus("published", null);
+      reportSaved("published", null);
       showMessage({
         level: "success",
         content: areas.length === 1
@@ -385,7 +362,7 @@ export function usePhiBuilderDraftCommandController({
       );
     }
 
-    emitDraftStatus("published", null);
+    reportSaved("published", null);
     showMessage({ level: "success", content: "Published CMS draft." });
   }
 
@@ -546,6 +523,7 @@ export function usePhiBuilderDraftCommandController({
             workspace: "modules",
             area: defaultArea,
           }));
+          reportSaved("published", null);
           showMessage({ level: "success", content: "Reset Module drafts." });
         } catch (error) {
           showMessage({ level: "error", content: error instanceof Error ? error.message : "Module reset failed." });
@@ -615,12 +593,12 @@ export function usePhiBuilderDraftCommandController({
                 },
               },
             );
-            emitDraftStatus("draft", result.revisionId);
             phiBuilderHistory.clear(createPhiBuilderHistoryContext({
               workspace: "pages",
               area: effectiveArea,
               pageKey: effectivePageKey,
             }));
+            reportSaved("draft", result.revisionId);
             showMessage({ level: "success", content: "Saved page delete draft." });
             return;
           }
@@ -672,6 +650,7 @@ export function usePhiBuilderDraftCommandController({
             area: effectiveArea,
             pageKey: effectivePageKey,
           }));
+          reportSaved("published", null);
           showMessage({ level: "success", content: "Reset page draft." });
         } catch (error) {
           showMessage({ level: "error", content: error instanceof Error ? error.message : "Page reset failed." });
@@ -700,6 +679,7 @@ export function usePhiBuilderDraftCommandController({
             area: effectiveArea,
             navKey: effectiveNavKey,
           }));
+          reportSaved("published", null);
           dispatchSignal({
             scope: "area",
             channel: "navigation",

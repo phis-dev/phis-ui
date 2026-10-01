@@ -499,13 +499,39 @@ export async function buildPhiDefaultBuilderThemePageTree({
         },
       }),
       nodes.widget({
-        typeKey: "builder-draft-status",
+        typeKey: "draft-status",
         id: PHI_THEME_PAGE_WIDGET_IDS.widgetDraftStatus,
         parentLayoutNodeId: PHI_THEME_PAGE_LAYOUT_IDS.layoutHeaderBottom,
         slotIndex: PHI_CMS_THREE_COLUMN_LAYOUT_SLOT_INDEX.Right,
         sortOrder: 0,
-        label: "builder brand draft status",
-        config: {},
+        label: "Theme draft status",
+        config: {
+          signalRoutes: {
+            emits: [
+              {
+                routeKey: "theme-draft-status-request",
+                capabilityId: "request",
+                scope: "area",
+                channel: PHI_THEME_SIGNAL_CHANNELS.draftStatus,
+                action: "activate",
+                valueType: "none",
+                receiver: createPhiThemeControllerAddress(),
+              },
+            ],
+            listens: [
+              {
+                routeKey: "theme-draft-status",
+                capabilityId: "status",
+                scope: "area",
+                channel: PHI_THEME_SIGNAL_CHANNELS.draftStatus,
+                action: "change",
+                valueType: "json",
+                valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.revisionsDraftStatus,
+                receiver: "broadcast",
+              },
+            ],
+          },
+        },
       }),
       nodes.widget({
         typeKey: "builder-brand-theme-controls",

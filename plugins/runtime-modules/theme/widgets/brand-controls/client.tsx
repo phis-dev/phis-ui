@@ -11,6 +11,7 @@ import { usePhiSignalDispatcher, usePhiSignalListener } from "../../../../../com
 import { usePhiSignalIdentity } from "../../../../../components/runtime/runtime-signal-identity";
 import { usePhiApplicationFeedback } from "../../../../../components/runtime/use-phi-application-feedback";
 import { PHI_SIGNAL_VALUE_SCHEMAS, type PhiSignalAddress } from "../../../../../types/signals";
+import type { PhiDraftStatusSignalValue } from "../../../../../types/draft-status";
 import type { PhiBlockRuntime } from "../../../../../types/widget-runtime";
 import { createPhiThemeControllerAddress } from "../../../../../plugins/runtime-modules/theme/controller/address";
 import { PHI_THEME_SIGNAL_CHANNELS } from "../../../../../plugins/runtime-modules/theme/controller/signals";
@@ -1145,28 +1146,35 @@ function emitThemeState(
 
   dispatchSignal({
     scope: "area",
-    channel: PHI_THEME_SIGNAL_CHANNELS.draftStatus,
-    action: "change",
-    value: {
-      status: draftStatus,
-      revisionId: draftStatus === "published" ? null : revisionId,
-      themeKey: DEFAULT_THEME_KEY,
-    },
-      valueType: "json",
-      valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.revisionsDraftStatus,
-      sender,
-      receiver,
-    correlationId,
-    timestamp: Date.now(),
-  });
-
-  dispatchSignal({
-    scope: "area",
     channel: PHI_THEME_SIGNAL_CHANNELS.presetSelect,
     action: "change",
     value: selectionValue,
     valueType: "string",
     sender,
+    receiver,
+    correlationId,
+    timestamp: Date.now(),
+  });
+}
+
+/**
+ * The draft's state in the words every draft keeper uses (`PhiDraftStatusSignalValue`), for the Core
+ * Draft Status Widget: broadcast when it changes, or addressed to the one Widget that asked on mount.
+ */
+function emitThemeDraftStatus(
+  dispatchSignal: ReturnType<typeof usePhiSignalDispatcher>,
+  receiver: PhiSignalAddress | "broadcast",
+  value: PhiDraftStatusSignalValue,
+  correlationId?: string,
+) {
+  dispatchSignal({
+    scope: "area",
+    channel: PHI_THEME_SIGNAL_CHANNELS.draftStatus,
+    action: "change",
+    value: { ...value, themeKey: DEFAULT_THEME_KEY },
+    valueType: "json",
+    valueSchema: PHI_SIGNAL_VALUE_SCHEMAS.revisionsDraftStatus,
+    sender: createPhiThemeControllerAddress(),
     receiver,
     correlationId,
     timestamp: Date.now(),
@@ -1490,6 +1498,30 @@ export function PhiBuilderBrandThemeControllerWidgetClient({
   /* The draft a picker edit started from, while one is open; see `PhiThemeDraftEdit`. */
   const pickerEditBeforeRef = useRef<ThemePayload | null>(null);
   const [saving, setSaving] = useState(false);
+  /*
+   * The Theme as it is stored -- the saved draft, or the published Theme where no draft stands -- and
+   * why it could not be read, if it could not. What is on screen differing from it is `unsaved`.
+   */
+  const savedThemeRef = useRef<ThemePayload>(initialState.draft);
+  const readErrorRef = useRef<string | null>(null);
+
+  const resolveDraftStatus = useCallback((): PhiDraftStatusSignalValue => {
+    const current = stateRef.current;
+    const subject = `theme/${themeKey}`;
+    if (readErrorRef.current !== null) {
+      return { status: "error", revisionId: null, subject, error: readErrorRef.current };
+    }
+    if (!isSameThemePayload(current.draft, savedThemeRef.current)) {
+      return { status: "unsaved", revisionId: current.revisionId, subject };
+    }
+    return current.revisionId != null
+      ? { status: "draft", revisionId: current.revisionId, subject }
+      : { status: "published", revisionId: null, subject };
+  }, [themeKey]);
+
+  const announceDraftStatus = useCallback((correlationId?: string) => {
+    emitThemeDraftStatus(dispatchSignal, "broadcast", resolveDraftStatus(), correlationId);
+  }, [dispatchSignal, resolveDraftStatus]);
 
   /*
    * A draft exists once one was saved, or once the Theme being worked on is no longer the published one.
@@ -1566,8 +1598,9 @@ export function PhiBuilderBrandThemeControllerWidgetClient({
       "draft",
       options?.correlationId,
     );
+    announceDraftStatus(options?.correlationId);
     emitSelectOptions(options?.correlationId);
-  }, [dispatchSignal, emitSelectOptions, historyScope, resolveSelectionValue]);
+  }, [announceDraftStatus, dispatchSignal, emitSelectOptions, historyScope, resolveSelectionValue]);
 
   useEffect(() => {
     const emitAvailability = () => {
@@ -1633,6 +1666,8 @@ export function PhiBuilderBrandThemeControllerWidgetClient({
         };
         stateRef.current = nextState;
         siteThemeRef.current = draft;
+        savedThemeRef.current = draft;
+        readErrorRef.current = null;
         setState(nextState);
         phiThemeHistory.clear(historyScope);
         emitThemeState(
@@ -1642,18 +1677,32 @@ export function PhiBuilderBrandThemeControllerWidgetClient({
           resolveSelectionValue(),
           revisionId == null ? "published" : "draft",
         );
+        announceDraftStatus();
         emitSelectOptions();
       })
       .catch((error) => {
         if (!cancelled) {
-          showMessage({ level: "error", content: error instanceof Error ? error.message : "Failed to read theme." });
+          const message = error instanceof Error ? error.message : "Failed to read theme.";
+          readErrorRef.current = message;
+          announceDraftStatus();
+          showMessage({ level: "error", content: message });
         }
       });
 
     return () => {
       cancelled = true;
     };
-  }, [dispatchSignal, emitSelectOptions, fallbackTheme, historyScope, resolveSelectionValue, showMessage, siteKey, themeKey]);
+  }, [
+    announceDraftStatus,
+    dispatchSignal,
+    emitSelectOptions,
+    fallbackTheme,
+    historyScope,
+    resolveSelectionValue,
+    showMessage,
+    siteKey,
+    themeKey,
+  ]);
 
   async function saveTheme(
     draftTheme = stateRef.current.draft,
@@ -1706,6 +1755,7 @@ export function PhiBuilderBrandThemeControllerWidgetClient({
       };
       stateRef.current = nextState;
       siteThemeRef.current = savedTheme;
+      savedThemeRef.current = savedTheme;
       setState(nextState);
       emitThemeState(
         dispatchSignal,
@@ -1715,6 +1765,7 @@ export function PhiBuilderBrandThemeControllerWidgetClient({
         "draft",
         options?.correlationId,
       );
+      announceDraftStatus(options?.correlationId);
       emitSelectOptions(options?.correlationId);
       if (options?.notify !== false) {
         showMessage(
@@ -1759,6 +1810,7 @@ export function PhiBuilderBrandThemeControllerWidgetClient({
     };
     stateRef.current = nextState;
     siteThemeRef.current = published;
+    savedThemeRef.current = published;
     setState(nextState);
     emitThemeState(
       dispatchSignal,
@@ -1768,6 +1820,7 @@ export function PhiBuilderBrandThemeControllerWidgetClient({
       "published",
       correlationId,
     );
+    announceDraftStatus(correlationId);
     emitSelectOptions(correlationId);
     showMessage({ level: "success", content: "Published theme." }, { correlationId: correlationId ?? null });
     emitRootReload(dispatchSignal, correlationId);
@@ -1898,6 +1951,22 @@ export function PhiBuilderBrandThemeControllerWidgetClient({
         return;
       }
 
+      return;
+    }
+
+    /*
+     * A Draft Status Widget that mounted asks what stands; the answer goes to it alone, for the reason
+     * `emitThemeStateTo` gives. Answered whatever is in progress, because it is a question about state.
+     */
+    if (
+      signal.scope === "area" &&
+      signal.channel === PHI_THEME_SIGNAL_CHANNELS.draftStatus &&
+      signal.action === "activate" &&
+      signal.receiver === createPhiThemeControllerAddress()
+    ) {
+      if (signal.sender != null) {
+        emitThemeDraftStatus(dispatchSignal, signal.sender, resolveDraftStatus(), signal.correlationId);
+      }
       return;
     }
 

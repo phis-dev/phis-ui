@@ -22,14 +22,6 @@ export type PhiBuilderChromeWidgetLabels = {
     dark: string;
     light: string;
   };
-  draftStatus: {
-    checking: string;
-    draft: string;
-    draftWithRevision: string;
-    published: string;
-    unavailable: string;
-    readFailed: string;
-  };
   pages: {
     newPage: string;
     pageMeta: string;
@@ -115,14 +107,6 @@ export const PHI_BUILDER_CHROME_WIDGET_DEFAULT_LABELS: PhiBuilderChromeWidgetLab
     dark: "Dark",
     light: "Light",
   },
-  draftStatus: {
-    checking: "Checking...",
-    draft: "Draft",
-    draftWithRevision: "Draft #{revisionId}",
-    published: "Published",
-    unavailable: "Unavailable",
-    readFailed: "Failed to read draft status.",
-  },
   pages: {
     newPage: "New page",
     pageMeta: "Page meta",
@@ -189,7 +173,3 @@ export const PHI_BUILDER_CHROME_WIDGET_DEFAULT_LABELS: PhiBuilderChromeWidgetLab
     media: "Media",
   },
 };
-
-export function formatPhiBuilderDraftRevisionLabel(label: string, revisionId: number) {
-  return label.replace("{revisionId}", String(revisionId));
-}

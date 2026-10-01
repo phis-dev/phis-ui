@@ -419,6 +419,14 @@ export type PhiThemeModeSwitchWidgetPlacement = PhiWidgetPlacementBase & {
   controlSize?: PhiThemeModeSwitchSize;
 };
 
+// Draft Status
+
+/**
+ * Wired, not configured: the placement's routes name the Controller whose draft it shows -- `request`
+ * where it asks on mount, `status` what it hears back.
+ */
+export type PhiDraftStatusWidgetPlacement = PhiWidgetPlacementBase;
+
 /**
  * The placement contract of each Core Widget, by type key.
  *
@@ -440,6 +448,7 @@ export type PhiCoreWidgetPlacements = {
   "collection-view": PhiCollectionViewWidgetPlacement;
   "command-toolbar": PhiCommandToolbarWidgetPlacement;
   "theme-mode-switch": PhiThemeModeSwitchWidgetPlacement;
+  "draft-status": PhiDraftStatusWidgetPlacement;
 };
 
 export type PhiCoreWidgetTypeKey = keyof PhiCoreWidgetPlacements;
