@@ -20,26 +20,18 @@ import type {
   PhiFormValidationProviderDescriptor,
 } from "../../types/form-descriptor";
 import { PhiTextControl } from "../controls/phi-text-control";
-import { PhiNumberControl } from "../controls/phi-number-control";
-import { PhiSelectControl } from "../controls/phi-select-control";
-import { PhiMultiSelectControl } from "../controls/phi-multi-select-control";
 import { PhiCheckboxControl } from "../controls/phi-checkbox-control";
 import { PhiCheckboxGroupControl } from "../controls/phi-checkbox-group-control";
 import { PhiSwitchControl } from "../controls/phi-switch-control";
-import { PhiSegmentedControl } from "../controls/phi-segmented-control";
-import {
-  PHI_STORAGE_SIZE_UNIT_LABEL,
-  phiBytesToStorageSize,
-  phiStorageSizeToBytes,
-} from "./storage-size";
 
 /**
  * A field Control whose code loads when a field of its kind is first rendered.
  *
- * The kinds below are rare in a form and heavy to ship: the slider and the cascader, the date and time
- * picker, and the compound Table and Tree fields, which bring the Table and Tree Controls with an editor
- * for every column kind. Text, choice and toggle fields stay in the registry itself, because nearly every
- * form has them and a round trip per field would cost more than it saves.
+ * Every kind below that has code of its own to ship: the choice and number fields, the slider and the
+ * cascader, the date and time picker, and the compound Table and Tree fields, which bring the Table and
+ * Tree Controls with an editor for every column kind. Only text and toggle fields stay in the registry
+ * itself. The choice fields stayed too once, as kinds nearly every form has -- but the form every
+ * Landing carries is the sign-in, which has none of them, and paid for the Select on every first visit.
  */
 function lazyPhiFormFieldControl(
   load: () => Promise<ComponentType<PhiFormFieldProviderProps>>,
@@ -79,6 +71,16 @@ function lazyPhiFormFieldControl(
   };
 }
 
+const PhiLazySelectFormControl = lazyPhiFormFieldControl(() =>
+  import("./choice-form-field-controls").then((module) => module.PhiSelectFormControl));
+const PhiLazyMultiSelectFormControl = lazyPhiFormFieldControl(() =>
+  import("./choice-form-field-controls").then((module) => module.PhiMultiSelectFormControl));
+const PhiLazySegmentedFormControl = lazyPhiFormFieldControl(() =>
+  import("./choice-form-field-controls").then((module) => module.PhiSegmentedFormControl));
+const PhiLazyNumberFormControl = lazyPhiFormFieldControl(() =>
+  import("./extended-form-field-controls").then((module) => module.PhiNumberFormControl));
+const PhiLazyStorageSizeFormControl = lazyPhiFormFieldControl(() =>
+  import("./extended-form-field-controls").then((module) => module.PhiStorageSizeFormControl));
 const PhiLazySliderFormControl = lazyPhiFormFieldControl(() =>
   import("./extended-form-field-controls").then((module) => module.PhiSliderFormControl));
 const PhiLazyCascaderFormControl = lazyPhiFormFieldControl(() =>
@@ -220,22 +222,7 @@ export const PHI_SHARED_FORM_PROVIDER_REGISTRY = createPhiFormProviderRegistry({
       valuePropName: "checked",
     }),
     phiSharedFieldType(PHI_FORM_FIELD_PROVIDER_KEYS.select, {
-      Control: ({
-        id, value, onChange, options, placeholder, disabled, readOnly, onSearch, filterOptionsLocally,
-      }) => (
-        <PhiSelectControl
-          id={id}
-          value={typeof value === "string" ? value : undefined}
-          placeholder={placeholder}
-          disabled={disabled}
-          readOnly={readOnly}
-          options={options ?? []}
-          onSearch={onSearch}
-          filterOptionsLocally={filterOptionsLocally}
-          onChange={(nextValue) => onChange?.(nextValue)}
-          style={{ width: "100%" }}
-        />
-      ),
+      Control: PhiLazySelectFormControl,
     }),
     phiSharedFieldType(PHI_FORM_FIELD_PROVIDER_KEYS.honeypot, {
       Control: ({ id, value, onChange, disabled }) => (
@@ -279,39 +266,13 @@ export const PHI_SHARED_FORM_PROVIDER_REGISTRY = createPhiFormProviderRegistry({
       ),
     }),
     phiSharedFieldType(PHI_FORM_FIELD_PROVIDER_KEYS.number, {
-      Control: ({ id, field, value, onChange, placeholder, disabled, readOnly }) => (
-        <PhiNumberControl
-          id={id}
-          value={typeof value === "number" ? value : null}
-          disabled={disabled}
-          readOnly={readOnly}
-          placeholder={placeholder}
-          min={typeof field.config?.min === "number" ? field.config.min : undefined}
-          max={typeof field.config?.max === "number" ? field.config.max : undefined}
-          step={typeof field.config?.step === "number" ? field.config.step : undefined}
-          precision={typeof field.config?.precision === "number" ? field.config.precision : undefined}
-          prefix={typeof field.config?.prefix === "string" ? field.config.prefix : undefined}
-          style={{ width: "100%" }}
-          onChange={(nextValue) => onChange?.(nextValue)}
-        />
-      ),
+      Control: PhiLazyNumberFormControl,
     }),
     phiSharedFieldType(PHI_FORM_FIELD_PROVIDER_KEYS.slider, {
       Control: PhiLazySliderFormControl,
     }),
     phiSharedFieldType(PHI_FORM_FIELD_PROVIDER_KEYS.multiSelect, {
-      Control: ({ id, value, onChange, options, placeholder, disabled, readOnly }) => (
-        <PhiMultiSelectControl
-          id={id}
-          value={Array.isArray(value) ? value.map(String) : []}
-          placeholder={placeholder}
-          disabled={disabled}
-          readOnly={readOnly}
-          options={options ?? []}
-          style={{ width: "100%" }}
-          onChange={(nextValue) => onChange?.(nextValue)}
-        />
-      ),
+      Control: PhiLazyMultiSelectFormControl,
     }),
     phiSharedFieldType(PHI_FORM_FIELD_PROVIDER_KEYS.checkboxGroup, {
       Control: ({ value, onChange, options, disabled, readOnly }) => (
@@ -338,16 +299,7 @@ export const PHI_SHARED_FORM_PROVIDER_REGISTRY = createPhiFormProviderRegistry({
       valuePropName: "checked",
     }),
     phiSharedFieldType(PHI_FORM_FIELD_PROVIDER_KEYS.segmented, {
-      Control: ({ value, onChange, options, disabled, readOnly }) => (
-        <PhiSegmentedControl
-          value={typeof value === "string" ? value : undefined}
-          disabled={disabled}
-          readOnly={readOnly}
-          options={options ?? []}
-          block
-          onChange={(nextValue) => onChange?.(nextValue)}
-        />
-      ),
+      Control: PhiLazySegmentedFormControl,
     }),
     phiSharedFieldType(PHI_FORM_FIELD_PROVIDER_KEYS.cascader, {
       Control: PhiLazyCascaderFormControl,
@@ -364,34 +316,8 @@ export const PHI_SHARED_FORM_PROVIDER_REGISTRY = createPhiFormProviderRegistry({
     phiSharedFieldType(PHI_FORM_FIELD_PROVIDER_KEYS.upload, {
       Control: PhiLazyUploadFormControl,
     }),
-    /*
-     * The field holds bytes and shows megabytes, so both conversions sit on this one Control: the
-     * value a form carries is bytes before it reaches here and bytes again the moment it leaves,
-     * and no submit handler, validator or API payload learns that a unit was ever involved.
-     */
     phiSharedFieldType(PHI_FORM_FIELD_PROVIDER_KEYS.storageSize, {
-      Control: ({ id, value, onChange, placeholder, disabled, readOnly }) => {
-        const size = phiBytesToStorageSize(value);
-        return (
-          <PhiNumberControl
-            id={id}
-            value={size}
-            /*
-             * A unit belongs to a value, so an empty field has none: the field says what it means by
-             * being empty -- "Unlimited", or whatever its placeholder states -- and a lone "MB" in
-             * front of that reads like the start of an answer nobody gave.
-             */
-            prefix={size == null ? undefined : PHI_STORAGE_SIZE_UNIT_LABEL}
-            min={0}
-            step={1}
-            disabled={disabled}
-            readOnly={readOnly}
-            placeholder={placeholder}
-            style={{ width: "100%" }}
-            onChange={(nextValue) => onChange?.(phiStorageSizeToBytes(nextValue))}
-          />
-        );
-      },
+      Control: PhiLazyStorageSizeFormControl,
     }),
   ],
   validationRules: [
