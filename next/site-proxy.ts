@@ -138,7 +138,15 @@ async function resolvePhiStaticRenderUrl(request: NextRequest, runtimeConfig: Re
     normalizePhiThemeModePreference(request.cookies.get(PHI_THEME_MODE_COOKIE)?.value),
     normalizePhiColorSchemeHint(request.cookies.get(PHI_COLOR_SCHEME_COOKIE)?.value),
   );
-  return new URL(`${PHI_STATIC_RENDER_PREFIX}/${marker}/${mode}${request.nextUrl.pathname}`, request.url);
+  const url = new URL(`${PHI_STATIC_RENDER_PREFIX}/${marker}/${mode}${request.nextUrl.pathname}`, request.url);
+  /*
+   * Plain HTTP, whatever the visitor's request said. Behind a proxy that terminates TLS the request
+   * arrives as `https` through `X-Forwarded-Proto`, and wherever Next counts this rewrite as external (see
+   * `readPhiStaticRenderPass`) it fetches the address from this process -- which speaks HTTP only, so an
+   * `https` address failed every Public page with a TLS error and a 500.
+   */
+  url.protocol = "http:";
+  return url;
 }
 
 const PHI_STATIC_RENDER_PASS_HEADER = "x-phis-static-render";
