@@ -1,6 +1,6 @@
 {
   "name": "@phis/ui",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
@@ -598,7 +598,7 @@
     "@lexical/rich-text": "0.50.0",
     "@lexical/selection": "0.50.0",
     "@lexical/utils": "0.50.0",
-    "@phis/contracts": "^0.4.0",
+    "@phis/contracts": "^0.5.0",
     "dayjs": "^1.11.23",
     "dom-serializer": "^2.0.0",
     "htmlparser2": "^10.1.0",
