@@ -287,7 +287,9 @@ file building the provider with `createPhiOverlayZonesLoaderProvider` (`@phis/ui
 That second file is not ceremony: imported by a root layout, the Action brings every Area's bridge into
 that layout's server graph, and with it every Area's Widget clients onto every page. `phis module` writes
 it with the rest of the projection, from the `exports` of the packages installed in the Site. A package installed from a tarball rather than a workspace link has to be listed in
-`transpilePackages`, because the font loader runs only over modules Next compiles.
+`transpilePackages`, because the font loader runs only over modules Next compiles; `phis module` writes
+the installed package names to `src/generated/site-module-packages.json`, and the scaffold's
+`next.config.ts` spreads them there.
 
 On save, `adoptPhiThemeModuleFonts` (theme/phi-theme-adoption.ts) copies the family names of a Module's
 fonts block into the Theme record, slot by slot under the author's. The name is copied, not the file:
