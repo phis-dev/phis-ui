@@ -864,6 +864,18 @@ built. Remove an entry when it is done.
   `TODOS.md` already carries "freeze the module-graph audit"; a size budget belongs beside it, and the
   numbers to set it from are in the note.
 
+- **An own Button inside `PhiButtonControl`.** The antd Button is on every Public page, and with it
+  Collapse and the color-picker: `antd/es/button/style/token.js` imports `isBright` from
+  `color-picker/components/ColorPresets`, which imports `Collapse` and `@rc-component/color-picker`. On the
+  Landing that is ~40 kB raw for the Button (wave, styles) and ~22 kB for the chain; Turbopack's
+  unused-export/-import removal does not cut it (measured 02.10., same bytes), and an alias onto antd
+  internals would be a shim in the Skeleton's config. Every Button we render goes through the Control,
+  submit buttons included -- an antd Form submits on the native `submit` event, so a plain
+  `<button type="submit">` keeps `onFinish`. Scope: variants, sizes, loading and disabled, icon, `danger`,
+  the antd CSS variables for the look. Buttons antd draws inside its own components (Modal footer,
+  Popconfirm, `Input.Search`, DatePicker, Upload) keep the antd Button and bring it when they load.
+  Check every submit path (`htmlType`, form footers) before building. An upstream PR moving `isBright` to
+  `color-picker/util` would remove the chain alone: ant-design/ant-design#59461 (02.10.).
 - **Freeze the module-graph audit.** `pnpm audit:graph` exists but is not part of `pnpm verify`. Set its
   output budget and failure thresholds, then add it.
 - **Generated-output budget report** for the Skeleton's development build, separating Turbopack cache,
