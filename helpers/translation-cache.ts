@@ -136,7 +136,9 @@ export function clearPhiTranslationCache(options?: { targetLocale?: string; scop
 
   for (const key of [...TRANSLATION_CACHE.keys()]) {
     const [keyScope = "", , keyTargetLocale = ""] = key.split(SEPARATOR);
-    if ((scope == null || keyScope === scope) && (!targetLocale || keyTargetLocale === targetLocale)) {
+    // A locale tag is case-insensitive, and the keys carry the canonical spelling (`pt-BR`) while a
+    // caller may name it however it read it -- so both sides are compared in one case.
+    if ((scope == null || keyScope === scope) && (!targetLocale || keyTargetLocale.toLowerCase() === targetLocale)) {
       TRANSLATION_CACHE.delete(key);
     }
   }

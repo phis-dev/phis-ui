@@ -134,6 +134,13 @@ describe("clearing", () => {
     expect(readPhiTranslationCache(key({ targetLocale: "de" }))).toBeNull();
   });
 
+  it("finds a regional locale the keys spell canonically, however the caller spells it", () => {
+    writePhiTranslationCache(key({ targetLocale: "pt-BR" }), "pt-global");
+    clearPhiTranslationCache({ targetLocale: "pt-br" });
+    expect(readPhiTranslationCache(key({ targetLocale: "pt-BR" }))).toBeNull();
+    expect(readPhiTranslationCache(key({ targetLocale: "de" }))).toBe("de-global");
+  });
+
   it("empties everything without arguments", () => {
     clearPhiTranslationCache();
     expect(getPhiTranslationCacheSize()).toBe(0);
