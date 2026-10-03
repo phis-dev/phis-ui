@@ -19,6 +19,7 @@ import type {
   PhiTableProviderRowMoveMutationRequest,
   PhiTableProviderRowPatchMutationRequest,
   PhiTableQuery,
+  PhiTableQueryValue,
   PhiTableRowIdentity,
   PhiTableSummaryValue,
 } from "../../../types/table-widget";
@@ -31,6 +32,7 @@ import {
   validatePhiTableProviderFieldValue,
 } from "../../../types/table-widget";
 import {
+  mergePhiTableQueryFilters,
   movePhiTableBindingRows,
   movePhiTableBindingTreeRows,
   patchPhiTableBindingRows,
@@ -104,16 +106,14 @@ function resolvePhiTableQuery(
   externalQuery: PhiTableQuery | undefined,
   externalSearch: string | undefined,
   expandedRowIdentities: readonly PhiTableRowIdentity[],
+  fixedFilters: Readonly<Record<string, PhiTableQueryValue>> | undefined,
 ): PhiTableQuery {
   return {
     ...query,
     ...externalQuery,
     search: externalSearch ?? externalQuery?.search ?? query.search,
     sorts: externalQuery?.sorts ?? query.sorts,
-    filters: {
-      ...(query.filters ?? {}),
-      ...(externalQuery?.filters ?? {}),
-    },
+    filters: mergePhiTableQueryFilters(query, externalQuery, fixedFilters),
     expandedRowIdentities,
   };
 }
@@ -126,6 +126,8 @@ export type PhiTableBindingInput = {
   source: PhiProviderResourceSource | null;
   initialQuery?: PhiTableQuery;
   externalQuery?: PhiTableQuery;
+  /** Merged into every query last; see `PhiTableWidgetConfig.fixedFilters`. */
+  fixedFilters?: Readonly<Record<string, PhiTableQueryValue>>;
   externalSearch?: string;
   defaultPageSize?: number;
   refreshKey?: string | number;
@@ -140,6 +142,7 @@ export function usePhiTableBinding({
   source,
   initialQuery = {},
   externalQuery,
+  fixedFilters,
   externalSearch,
   defaultPageSize = 20,
   refreshKey,
@@ -223,9 +226,18 @@ export function usePhiTableBinding({
     return () => { cancelled = true; };
   }, [sourceKey]);
 
+  /*
+   * Held by content, not identity: a caller that writes the object inline hands in a new one every
+   * render, and the query effect below would fetch again each time.
+   */
+  const fixedFiltersKey = JSON.stringify(fixedFilters ?? null);
+  const stableFixedFilters = useMemo<Readonly<Record<string, PhiTableQueryValue>> | undefined>(
+    () => JSON.parse(fixedFiltersKey) ?? undefined,
+    [fixedFiltersKey],
+  );
   const resolvedQuery = useMemo<PhiTableQuery>(
-    () => resolvePhiTableQuery(query, externalQuery, externalSearch, expandedRowIdentities),
-    [expandedRowIdentities, externalQuery, externalSearch, query],
+    () => resolvePhiTableQuery(query, externalQuery, externalSearch, expandedRowIdentities, stableFixedFilters),
+    [expandedRowIdentities, externalQuery, externalSearch, stableFixedFilters, query],
   );
   const resolvedQueryKey = useMemo(
     () => createPhiTableQueryKey(resolvedQuery),
@@ -345,6 +357,7 @@ export function usePhiTableBinding({
             externalQuery,
             externalSearch,
             expandedRowIdentities,
+            stableFixedFilters,
           );
           const canonicalQueryKey = createPhiTableQueryKey(canonicalQuery);
           if (canonicalQueryKey !== resolvedQueryKey) {
@@ -370,7 +383,7 @@ export function usePhiTableBinding({
       }
     });
     return () => abortController.abort();
-  }, [applyData, expandedRowIdentities, externalQuery, externalSearch, provider, query, refreshKey, refreshRequest, resolvedQuery, resolvedQueryKey, resource, resourceError, source]);
+  }, [applyData, expandedRowIdentities, externalQuery, externalSearch, provider, query, refreshKey, refreshRequest, resolvedQuery, resolvedQueryKey, resource, resourceError, source, stableFixedFilters]);
 
   const reload = useCallback(() => setRefreshRequest((current) => ({
     revision: current.revision + 1,

@@ -1,11 +1,29 @@
 import type {
   PhiTableProviderRowMoveMutationRequest,
+  PhiTableQuery,
+  PhiTableQueryValue,
   PhiTableRowIdentity,
 } from "../types/table-widget";
 import { isPhiRecord } from "./is-record";
 import { readPhiDotPath } from "./dot-path";
 
 type TableRow = Record<string, unknown>;
+
+/**
+ * The filters a query is sent with: the reader's, then what the outside handed in, then what the Page
+ * fixed. Last wins, so nothing the reader or a signal does can lift a fixed filter.
+ */
+export function mergePhiTableQueryFilters(
+  query: PhiTableQuery,
+  externalQuery: PhiTableQuery | undefined,
+  fixedFilters: Readonly<Record<string, PhiTableQueryValue>> | undefined,
+): Readonly<Record<string, PhiTableQueryValue>> {
+  return {
+    ...(query.filters ?? {}),
+    ...(externalQuery?.filters ?? {}),
+    ...(fixedFilters ?? {}),
+  };
+}
 
 export function readPhiTableRowValue(row: TableRow, path: string) {
   return readPhiDotPath(row, path);

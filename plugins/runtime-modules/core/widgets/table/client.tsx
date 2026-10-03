@@ -395,6 +395,7 @@ export function PhiTableWidgetClient({
     source: resolvedSource,
     initialQuery: { ...initialQuery, sorts: defaultSorts, filters: initialFilters },
     externalQuery,
+    fixedFilters: config.fixedFilters,
     externalSearch,
     defaultPageSize: features.pagination?.pageSize ?? 20,
     refreshKey,

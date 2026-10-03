@@ -399,6 +399,16 @@ export type PhiTableWidgetConfig = {
   presentation: PhiTableWidgetPresentation;
   features: PhiTableWidgetFeatures;
   initialQuery?: PhiTableQuery;
+  /**
+   * Filters the Page sets and the reader does not: what makes a listing the listing it is, such as a
+   * thread Provider's `kind` pinned to Support.
+   *
+   * Not a filter with a start value. A `features.filters` entry is the reader's -- drawn, changeable,
+   * reset to its default -- and `initialQuery.filters` is only where the query starts, so a signal that
+   * sets the query replaces it. These are drawn nowhere and merged into every query last, over the
+   * reader's filters, a reset and any signal alike, with their values in their own type.
+   */
+  fixedFilters?: Readonly<Record<string, PhiTableQueryValue>>;
   source: PhiProviderResourceSource | null;
   signalRoutes?: PhiSignalRouteSet | null;
 };

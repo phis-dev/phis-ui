@@ -98,9 +98,17 @@ features
 
 initialQuery
 
+fixedFilters
+
 source
 └── providerKey + resourceKey + opaque provider params
 ```
+
+`fixedFilters` are filters the Page sets and the reader does not -- what makes a listing the listing it
+is, such as a thread Provider's `kind` pinned to Support. They are drawn nowhere and merged into every
+query last, over the reader's filters, a reset and any signal that sets the query, with their values in
+their own type. A `features.filters` entry is the reader's (drawn, changeable, reset to its default), and
+`initialQuery.filters` is only where the query starts, which is why neither pins anything.
 
 `signalRoutes` remains the normal shared Widget wiring contract. No presentation field may contain an
 API URL, server action, controller address, receiver, handler function, provider implementation, or

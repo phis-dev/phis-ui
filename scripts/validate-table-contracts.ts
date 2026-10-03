@@ -582,6 +582,13 @@ assert.deepEqual(parsePhiTableWidgetConfig({
     ],
   },
 }).presentation.columns.map((column) => column.editor), [undefined, { control: "checkbox", disabledWhen: undefined }]);
+// Fixed filters are read with a query's rules: kept in their type, and refused rather than dropped.
+assert.deepEqual(parsePhiTableWidgetConfig({ fixedFilters: { kind: 3 } }).fixedFilters, { kind: 3 });
+assert.equal(parsePhiTableWidgetConfig({}).fixedFilters, undefined);
+assert.throws(
+  () => parsePhiTableWidgetConfig({ fixedFilters: { kind: { nested: true } } }),
+  /fixedFilters must map filter keys to query values/,
+);
 const parsedProviderAction = parsePhiTableWidgetConfig({
   features: {
     actions: {

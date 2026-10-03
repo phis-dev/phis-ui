@@ -523,6 +523,13 @@ export function parsePhiTableWidgetConfig(config: Record<string, unknown>): PhiT
     isPhiRecord(config.initialQuery) ? config.initialQuery : {},
   ) ?? {};
   const defaultSorts = readPhiTableQuery({ sorts: sorting.defaultSorts })?.sorts ?? [];
+  // Read with the same rules as any query's filters; a value no filter can carry is refused, not kept.
+  const fixedFilters = config.fixedFilters === undefined
+    ? undefined
+    : readPhiTableQuery({ filters: config.fixedFilters })?.filters;
+  if (config.fixedFilters !== undefined && fixedFilters === undefined) {
+    throw new Error("Table fixedFilters must map filter keys to query values.");
+  }
   const presentationControls = parsePhiControlPresentationConfig(presentation);
   const toolsMode = tools.mode === "external" ? "external" : "self-contained";
   const toolsReset = readBoolean(tools.reset);
@@ -664,6 +671,7 @@ export function parsePhiTableWidgetConfig(config: Record<string, unknown>): PhiT
       ...initialQuery,
       sorts: initialQuery.sorts as readonly PhiTableSort[] | undefined,
     },
+    ...(fixedFilters ? { fixedFilters } : {}),
     source: readPhiProviderResourceSource(config.source),
     signalRoutes: readPhiSignalRouteSet(config.signalRoutes),
   };
