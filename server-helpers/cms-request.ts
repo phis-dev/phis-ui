@@ -142,8 +142,15 @@ async function instantiatePhiRoutePresetPage({
       siteId,
       path: requestedPath,
       runtime,
-      resolveMissingPageTitle: (sourceTitle) =>
-        trForLocale(runtime.locale.current, sourceTitle),
+      // The route's title is the owning Module's text, written in that Module's language.
+      resolveMissingPageTitle: (sourceTitle) => trForLocale(
+        runtime.locale.current,
+        sourceTitle,
+        0,
+        0,
+        "text",
+        catalog.sourceLocaleByModuleId.get(binding.descriptor.ownerModuleId),
+      ),
     }),
   };
 }

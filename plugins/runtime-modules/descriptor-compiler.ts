@@ -52,6 +52,7 @@ import type {
   PhiResolvedCmsPageTree,
 } from "../../types/cms";
 import type { PhiRuntimeModuleCatalog } from "../../types/cms-plugins";
+import { resolvePhiRuntimeModuleSourceLocale } from "../../types/runtime-module-locale";
 import type { PhiBlockRuntime } from "../../types/widget-runtime";
 import {
   canPhiViewerAccess,
@@ -410,8 +411,10 @@ export function compilePhiCmsDescriptorCatalog({
   const routesByArea = new Map<PhiCmsAreaKey, PhiCmsCompiledRoutePattern[]>();
   const themeByKey = new Map<string, PhiCmsThemePresetBinding>();
   const themeBlockByKey = new Map<string, PhiCmsThemeBlockBinding>();
+  const sourceLocaleByModuleId = new Map<PhiRuntimeModuleId, string>();
 
   for (const [moduleId, entry] of catalog) {
+    sourceLocaleByModuleId.set(moduleId, resolvePhiRuntimeModuleSourceLocale(entry.definition));
     const descriptorKeys = new Set<string>();
     const registerIdentity = (presetKey: string) => {
       normalizeRequiredKey(presetKey, `${moduleId} preset key`);
@@ -829,6 +832,7 @@ export function compilePhiCmsDescriptorCatalog({
     routesByArea,
     themeByKey,
     themeBlockByKey,
+    sourceLocaleByModuleId,
   };
 }
 
@@ -1129,6 +1133,10 @@ function buildResolvedNavigationNode(
   const intrinsicChildren = (descriptor.children ?? []).map((child) =>
     buildResolvedNavigationNode(catalog, activeRouteIdentityKeys, navKey, ownerModuleId, child, null),
   );
+  const sourceLocale = catalog.sourceLocaleByModuleId.get(ownerModuleId);
+  if (!sourceLocale) {
+    throw new Error(`${navKey}: Module "${ownerModuleId}" is not in the descriptor catalog.`);
+  }
   return {
     item: {
       id: createPhiPresetCmsInstanceId({
@@ -1141,7 +1149,7 @@ function buildResolvedNavigationNode(
       // An entry that sends is a link in the sense that matters here: it is chosen, and something
       // happens. Only an entry that neither goes nor sends is a container.
       kind: target || descriptor.signalRoutes?.emits?.length ? "link" : "container",
-      label: descriptor.label,
+      label: { ...descriptor.label, sourceLocale },
       ...(descriptor.icon ? { icon: descriptor.icon } : {}),
       ...(descriptor.accessPolicy ? { accessPolicy: descriptor.accessPolicy } : {}),
       ...(descriptor.signalRoutes?.emits?.length
@@ -1487,7 +1495,8 @@ export function resolvePhiCmsNavigationOverlay(
       continue;
     }
     if (override.label !== undefined) {
-      item.label = { ...item.label, defaultMessage: override.label };
+      // The operator's text now, in the Site's language: nothing of the Module's label carries over.
+      item.label = { defaultMessage: override.label };
     }
     if (override.icon !== undefined) {
       if (override.icon === null) {
@@ -1604,7 +1613,7 @@ export function resolvePhiCmsNavigationOverlay(
   return {
     surface: {
       ...surface,
-      ...(overlay.label ? { label: { ...surface.label, defaultMessage: overlay.label } } : {}),
+      ...(overlay.label ? { label: { defaultMessage: overlay.label } } : {}),
       items: visibleRoots,
     },
     diagnostics,

@@ -124,6 +124,11 @@ resolved Site locale to an Ant Design locale key and loads it through an explici
 
 - Ordinary Site translation calls omit `sourceLocale`; `@phis/server` resolves the immutable Site source
   locale.
+- Module text that reaches a Site translation call carries its Module's `sourceLocale`: a Navigation
+  label a Module ships (`PhiCmsNavigationLabel.sourceLocale`, set where the entry is resolved) and the
+  title of a Module route. Without it a Site whose source locale is not the Module's reads the Module's
+  English as its own and never translates it. A label the operator renames or adds loses or never has
+  the field and is read in the Site's source locale.
 - Standalone global labels may declare `sourceLocale`; omission means English. Module-owned third-party
   presets inherit their owning Module locale instead of declaring another source language.
 - Every Runtime Module declares one canonical `sourceLocale`; omission means English. All package-authored

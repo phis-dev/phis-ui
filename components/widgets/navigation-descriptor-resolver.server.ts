@@ -18,6 +18,7 @@ import {
 import { phiRuntime } from "../../server-helpers/phi-runtime";
 import { getPhiRequestNavigationContext } from "../../server-helpers/request-runtime";
 import type {
+  PhiCmsNavigationLabel,
   PhiCmsNavigationOverlay,
   PhiCmsResolvedNavigationItem,
 } from "../../types/cms-module-descriptors";
@@ -25,12 +26,26 @@ import type { PhiBlockRuntime } from "../../types";
 import type { PhiNavItem } from "../shell/shell-types";
 import { readPhiPageReference } from "../../types/references";
 
+/**
+ * One label's identity for translation: its text and the language it is written in.
+ *
+ * The same English word is a different message when a Module shipped it than when an operator typed it
+ * on a Site whose source language is German, so the two are kept apart all the way to the answer.
+ */
+function navigationLabelKey(label: PhiCmsNavigationLabel) {
+  return `${label.sourceLocale ?? ""}\u0000${label.defaultMessage}`;
+}
+
+/** The labels to translate, grouped by source language; `""` is the Site's own. */
 function collectNavigationLabels(
   items: readonly PhiCmsResolvedNavigationItem[],
-  labels = new Set<string>(),
+  labels = new Map<string, Set<string>>(),
 ) {
   for (const item of items) {
-    labels.add(item.label.defaultMessage);
+    const sourceLocale = item.label.sourceLocale ?? "";
+    const group = labels.get(sourceLocale) ?? new Set<string>();
+    group.add(item.label.defaultMessage);
+    labels.set(sourceLocale, group);
     collectNavigationLabels(item.children, labels);
   }
   return labels;
@@ -52,7 +67,7 @@ function mapResolvedNavigationItem(
 ): PhiNavItem {
   return {
     key: item.id,
-    label: translatedLabels.get(item.label.defaultMessage) ?? item.label.defaultMessage,
+    label: translatedLabels.get(navigationLabelKey(item.label)) ?? item.label.defaultMessage,
     ...(readPhiCmsNavigationTargetPath(item.target) ? { href: readPhiCmsNavigationTargetPath(item.target)! } : {}),
     ...(isPhiCmsNavigationOverlayTarget(item.target)
       ? {
@@ -148,25 +163,30 @@ export async function resolvePhiDescriptorNavigationItems(
   }
 
   const rt = phiRuntime(runtime);
-  const labels = [...collectNavigationLabels(surface.items)];
-  const translator = runtime.area === "builder"
-    ? createGlobalTranslator({
-        apiBaseUrl: rt.apiBaseUrl,
-        internalToken: rt.internalToken,
-        locale: runtime.locale.current,
-      })
-    : createSiteTranslator({
-        apiBaseUrl: rt.apiBaseUrl,
-        internalToken: rt.internalToken,
-        siteKey: rt.siteKey,
-        locale: runtime.locale.current,
-      });
-  const translated = labels.length
-    ? await translator.trBulk(labels, PHI_TR_CTX_WEB_UI_LABEL).catch(() => labels)
-    : [];
-  const translatedLabels = new Map(
-    labels.map((source, index) => [source, translated[index] ?? source] as const),
-  );
+  const translatedLabels = new Map<string, string>();
+  /*
+   * One batch per source language. A Module's label names its language and is translated from it; an
+   * operator's names none and is read in the Site's source language, which the server supplies.
+   */
+  await Promise.all([...collectNavigationLabels(surface.items)].map(async ([sourceLocale, group]) => {
+    const labels = [...group];
+    const options = {
+      apiBaseUrl: rt.apiBaseUrl,
+      internalToken: rt.internalToken,
+      locale: runtime.locale.current,
+      ...(sourceLocale ? { sourceLocale } : {}),
+    };
+    const translator = runtime.area === "builder"
+      ? createGlobalTranslator(options)
+      : createSiteTranslator({ ...options, siteKey: rt.siteKey });
+    const translated = await translator.trBulk(labels, PHI_TR_CTX_WEB_UI_LABEL).catch(() => labels);
+    labels.forEach((source, index) => {
+      translatedLabels.set(
+        navigationLabelKey({ defaultMessage: source, ...(sourceLocale ? { sourceLocale } : {}) }),
+        translated[index] ?? source,
+      );
+    });
+  }));
 
   return surface.items.map((item) => mapResolvedNavigationItem(item, translatedLabels));
 }

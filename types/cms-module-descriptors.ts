@@ -157,6 +157,15 @@ export type PhiCmsThemeBlockDescriptor = PhiCmsPresetIdentity & {
 export type PhiCmsNavigationLabel = {
   defaultMessage: string;
   messageId?: string;
+  /**
+   * The language `defaultMessage` is written in, when it is the text a Module shipped.
+   *
+   * Set where a Module's entry is resolved, and gone wherever the Site's operator replaces the text: a
+   * label without it is the operator's and written in the Site's source language. Without the
+   * difference a Site whose source language is not the Module's took the Module's English for its own
+   * German and never translated it.
+   */
+  sourceLocale?: string;
 };
 
 /**
@@ -486,6 +495,8 @@ export type PhiCmsCompiledDescriptorCatalog = {
   themeByKey: ReadonlyMap<string, PhiCmsThemePresetBinding>;
   /** Keyed by `<kind>:<blockKey>`, so a style and a ground may share a name. */
   themeBlockByKey: ReadonlyMap<string, PhiCmsThemeBlockBinding>;
+  /** Each Module's source language: the one the text its descriptors ship is written in. */
+  sourceLocaleByModuleId: ReadonlyMap<PhiRuntimeModuleId, string>;
 };
 
 export type PhiCmsActiveRouteTable = {

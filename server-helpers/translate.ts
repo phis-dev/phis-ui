@@ -88,6 +88,8 @@ export async function trForLocale(
   params: PhiTranslationParams = 0,
   ctx: string | number = 0,
   format: PhiTranslationFormat = "text",
+  /** The language `msg` is written in, when it is not the Site's own -- a Module's text. */
+  sourceLocale?: string,
 ) {
   const normalizedMessage = msg.trim();
   if (!normalizedMessage) {
@@ -95,7 +97,7 @@ export async function trForLocale(
   }
 
   const locale = resolvePhiTranslationLocale(localeInput);
-  const options = buildTranslatorOptions(locale);
+  const options = buildTranslatorOptions(locale, sourceLocale);
   const translated = await requestInternalTranslation(
     options,
     normalizedMessage,
