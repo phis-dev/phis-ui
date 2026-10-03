@@ -1,6 +1,6 @@
 import type { CSSProperties } from "react";
 
-import { resolvePhiBorderWidgetStyle } from "../../helpers/border-widget-style";
+import { PHI_THEME_BORDER_LINE, resolvePhiBorderWidgetStyle } from "../../helpers/border-widget-style";
 import { hasPhiFlag } from "../../helpers/flags";
 import { combinePhiBoxShadows } from "../../helpers/layout-style";
 import {
@@ -18,22 +18,26 @@ import {
   type PhiShellRegionChrome,
 } from "../../helpers/shell-region-style";
 import { PhiCmsFlags } from "../../constants/phi-cms";
-import { PHI_COLOR } from "../../theme/antd-css-var-contract";
 import type {
   PhiBlockRuntime,
   PhiCmsRegionConfig,
   PhiCmsRegionKey,
   PhiRenderableBlock,
 } from "../../types";
-import type { PhiCmsBorderWidgetConfig } from "../../types/cms-config";
+import { resolvePhiCmsBorderSource } from "../../types/cms-border-source";
+import type { PhiSurface } from "../../types/surface";
+import type { PhiSurfaceGround } from "../../helpers/surface-style";
 import { resolvePhiRenderableBlockGeometry } from "../../types/renderable-block-geometry";
 import { createPhiSignalAddress } from "../../types/signals";
 import { resolvePhiPaddingStyle } from "../layouts/phi-layout-contract";
 import { phiRegionUsesShellChromeOverlay } from "../root/phi-shell-chrome-overlay";
 import {
+  normalizePhiBackgroundWidgetConfig,
   phiBackgroundWidgetConfigPaintsGround,
+  resolvePhiBackgroundGroundFilter,
   resolvePhiBackgroundMotion,
   resolvePhiBackgroundMotionHostStyle,
+  resolvePhiBackgroundPane,
   resolvePhiBackgroundWidgetStyle,
   type PhiCmsBackgroundWidgetConfig,
 } from "../widgets/config/background";
@@ -112,6 +116,8 @@ export type PhiCmsRegionShell = {
   backgroundConfig: PhiCmsBackgroundWidgetConfig | null;
   /** The Background moves and this renderer animates it; the renderer mounts the motion layer. */
   animatesBackground: boolean;
+  /** A still paint that needs a layer of its own -- a softened picture; the renderer mounts it. */
+  ground: PhiSurfaceGround | null;
   /** The configured line as one `border` value, for a separator that repeats the Region's own. */
   borderLine: string | undefined;
   effectsConfig: Partial<PhiRenderableBlock>;
@@ -121,8 +127,6 @@ export type PhiCmsRegionShell = {
   /** The content wrapper's style, which is where Region padding lives (LAYOUTING.md "Regions"). */
   contentStyle: CSSProperties;
 };
-
-const PHI_CMS_REGION_FALLBACK_BORDER = `1px solid ${PHI_COLOR.borderSecondary}`;
 
 /*
  * The longhands every Region that paints the Shell Chrome Overlay (SHELL.md) carries, read from the
@@ -147,10 +151,6 @@ function normalizeCssLength(value: unknown) {
   return typeof value === "string" || typeof value === "number" ? value : undefined;
 }
 
-function isBorderConfig(value: unknown): value is PhiCmsBorderWidgetConfig {
-  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
-}
-
 export function resolvePhiCmsRegionShellFamily(regionKey: PhiCmsRegionKey): PhiCmsRegionShellFamily {
   if (regionKey === "header_top" || regionKey === "header_main" || regionKey === "header_bottom") {
     return "header";
@@ -165,35 +165,41 @@ export function resolvePhiCmsRegionShellFamily(regionKey: PhiCmsRegionKey): PhiC
 }
 
 /*
- * A configured `border` of `true` or a string is the separator on the edge that faces the Page, which is
- * why it depends on the family; a Border config draws what it says. Nothing configured draws nothing:
- * header, footer and sider separators are never implicit (LAYOUTING.md "Regions").
+ * A Region's edge, from its Surface.
+ *
+ * `theme` is the separator: the Site's own line on the edge that faces the Page, which is why it depends on
+ * the family -- a Header draws it below, a Footer above, a Sider on its inner side, any other Region all
+ * round. `custom` draws the configured border, corners included, as it says. A Region states no corner of
+ * its own otherwise: it spans its part of the frame and has no surface step to take. Nothing configured
+ * draws nothing; separators are never implicit (LAYOUTING.md "Regions").
  */
-function resolveRegionBorderStyle(
-  border: PhiCmsRegionConfig["border"],
+function resolveRegionEdgeStyle(
+  surface: PhiSurface | null | undefined,
   regionKey: PhiCmsRegionKey,
   family: PhiCmsRegionShellFamily,
 ): CSSProperties {
-  if (border == null || border === false) {
+  const source = resolvePhiCmsBorderSource(surface?.borderSource, surface?.border);
+  if (source === "custom") {
+    return resolvePhiBorderWidgetStyle(surface?.border);
+  }
+  if (source === "none") {
     return {};
   }
-  if (isBorderConfig(border)) {
-    return resolvePhiBorderWidgetStyle(border);
-  }
-  const line = typeof border === "string" ? border : PHI_CMS_REGION_FALLBACK_BORDER;
-  if (family === "header") return { borderBottom: line };
-  if (family === "footer") return { borderTop: line };
+  if (family === "header") return { borderBottom: PHI_THEME_BORDER_LINE };
+  if (family === "footer") return { borderTop: PHI_THEME_BORDER_LINE };
   if (family === "sider") {
-    return regionKey === "sider_left" ? { borderInlineEnd: line } : { borderInlineStart: line };
+    return regionKey === "sider_left"
+      ? { borderInlineEnd: PHI_THEME_BORDER_LINE }
+      : { borderInlineStart: PHI_THEME_BORDER_LINE };
   }
-  return { border: line };
+  return { border: PHI_THEME_BORDER_LINE };
 }
 
-function resolveRegionBorderLine(border: PhiCmsRegionConfig["border"]): string | undefined {
-  if (border === true) return PHI_CMS_REGION_FALLBACK_BORDER;
-  if (typeof border === "string") return border;
-  if (isBorderConfig(border)) {
-    const line = resolvePhiBorderWidgetStyle(border).border;
+function resolveRegionBorderLine(surface: PhiSurface | null | undefined): string | undefined {
+  const source = resolvePhiCmsBorderSource(surface?.borderSource, surface?.border);
+  if (source === "theme") return PHI_THEME_BORDER_LINE;
+  if (source === "custom") {
+    const line = resolvePhiBorderWidgetStyle(surface?.border).border;
     return typeof line === "string" ? line : undefined;
   }
   return undefined;
@@ -252,23 +258,38 @@ export function resolvePhiCmsRegionShell({
    * Region draft it persists, so its presence would otherwise mean "authored" for every Region an author
    * has ever opened.
    */
-  const backgroundConfig = phiBackgroundWidgetConfigPaintsGround(config.backgroundConfig)
-    ? config.backgroundConfig as PhiCmsBackgroundWidgetConfig
+  const surface = config.surface ?? null;
+  const surfaceBackground: PhiCmsBackgroundWidgetConfig | null = surface?.background
+    ? normalizePhiBackgroundWidgetConfig(surface.background)
     : null;
+  const backgroundConfig = phiBackgroundWidgetConfigPaintsGround(surfaceBackground) ? surfaceBackground : null;
+  /*
+   * A pane on a Region without a ground of its own frosts the Shell's ground for this Region -- the
+   * Theme's record, or the family's fallback -- which is what glass on a bare Header has always meant.
+   * A Region that paints its own ground carries its pane inside that Background, as every Surface does.
+   */
+  const shellPane = backgroundConfig == null ? resolvePhiBackgroundPane(surfaceBackground) : null;
   const backgroundMoves =
     animatesBackground &&
     backgroundConfig != null &&
     resolvePhiBackgroundMotion(backgroundConfig) != null;
-  const backgroundStyle = backgroundConfig == null
+  const groundFilter = backgroundConfig == null ? null : resolvePhiBackgroundGroundFilter(backgroundConfig);
+  const ground: PhiSurfaceGround | null = backgroundConfig != null && groundFilter != null && !backgroundMoves
+    ? {
+      paint: resolvePhiBackgroundWidgetStyle({ ...backgroundConfig, filter: null, motion: null }),
+      filter: groundFilter,
+      motion: null,
+    }
+    : null;
+  const backgroundStyle = backgroundConfig == null || ground != null
     ? null
     : backgroundMoves
-      ? resolvePhiBackgroundMotionHostStyle({ ...backgroundConfig, filter: null })
-      : resolvePhiBackgroundWidgetStyle({ ...backgroundConfig, filter: null });
+      ? resolvePhiBackgroundMotionHostStyle(backgroundConfig)
+      : resolvePhiBackgroundWidgetStyle(backgroundConfig);
 
   const chromeInput = {
-    background: typeof config.background === "string" ? config.background : undefined,
-    shadow: config.shadow,
-    effect: config.effect,
+    shadow: surface?.shadow ?? undefined,
+    effect: shellPane ?? undefined,
     tokens: paint.kind === "live" ? paint.tokens : undefined,
   };
   const chrome: Record<"light" | "dark", PhiShellRegionChrome> = {
@@ -288,7 +309,7 @@ export function resolvePhiCmsRegionShell({
   const usesShellChromeOverlay = phiRegionUsesShellChromeOverlay({
     regionKey,
     backgroundConfig,
-    effect: config.effect,
+    pane: shellPane,
     grounds: [chrome.light.background, chrome.dark.background],
   });
 
@@ -339,7 +360,6 @@ export function resolvePhiCmsRegionShell({
     collapsedSizeHint: config.collapsedSizeHint,
     zIndex,
     opacity: config.opacity,
-    effect: config.effect,
     effects: config.effects,
   };
   const effectsAttributes = resolveRenderableBlockEffectsAttributes(effectsConfig);
@@ -388,8 +408,6 @@ export function resolvePhiCmsRegionShell({
     insetBlockStart: isHeader && stuck ? top : undefined,
     zIndex,
     ...geometryStyle,
-    // The flat radius first, so a Border config's per-corner radii land on top of it.
-    borderRadius: normalizeCssLength(config.borderRadius),
     color: liveChrome ? liveChrome.color : "var(--phi-region-color)",
     ...effectStyle,
     ...groundStyle,
@@ -401,12 +419,12 @@ export function resolvePhiCmsRegionShell({
     ),
     ...(typography.fontSize ? { fontSize: typography.fontSize } : {}),
     ...(typography.lineHeight ? { lineHeight: typography.lineHeight } : {}),
-    ...resolveRegionBorderStyle(config.border, regionKey, family),
+    ...resolveRegionEdgeStyle(surface, regionKey, family),
     ...(config.opacity == null ? {} : { opacity: config.opacity }),
     ...(enabled ? {} : { opacity: Math.min(config.opacity ?? 1, 0.5), pointerEvents: "none" }),
     ...(visibility === "collapsed" ? { overflow: "hidden" } : {}),
     ...resolveRenderableBlockEffectsStyle(effectsConfig),
-    ...(backgroundMoves ? { isolation: "isolate" } : {}),
+    ...(backgroundMoves || ground != null ? { isolation: "isolate" } : {}),
     ...style,
     margin: 0,
     ...(!isSider && geometry.inline.max != null ? { marginInline: "auto" } : {}),
@@ -421,7 +439,8 @@ export function resolvePhiCmsRegionShell({
     siderCollapsedWidth,
     backgroundConfig,
     animatesBackground: backgroundMoves,
-    borderLine: resolveRegionBorderLine(config.border),
+    ground,
+    borderLine: resolveRegionBorderLine(surface),
     effectsConfig,
     attributes: {
       "data-phi-region-key": regionKey,

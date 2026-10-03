@@ -527,8 +527,8 @@ Widget, mount another Drawer, or receive a host-owned render callback. Presentat
 section Widgets; a Control is never inserted directly as a CMS node. The selected node and its Draft remain
 Controller/workspace state.
 
-The code-owned configuration of the three Drawers is: right placement, `mountPolicy: "lazy-keep"`, the
-`glass` effect, and a transparent, outside-blocking, closable mask, so a pointer action on the Canvas is
+The code-owned configuration of the three Drawers is: right placement, `mountPolicy: "lazy-keep"`, a Surface
+whose Background is a `glass` pane over no Base, and a transparent, outside-blocking, closable mask, so a pointer action on the Canvas is
 consumed by the mask and closes the Inspector without selecting anything underneath. On first mount only
 `slot_0` is open (Geometry for the Region Inspector, Settings for the Layout and Widget Inspectors); later
 open state is transient Collapsible state. The Collapsible Body roots use `sm` outer and `sm` inner panel

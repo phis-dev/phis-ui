@@ -148,7 +148,6 @@ export async function buildPhiDefaultAdminUsersPageTree({
   const scaffold = buildPhiBasePageContentScaffold({
     page,
     regionId: SYNTHETIC_ADMIN_USERS_REGION_IDS.regionContent,
-    regionConfig: { border: false },
   });
 
   return {

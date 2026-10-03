@@ -56,7 +56,7 @@ export function PhiCmsRegionContainer({
     signalParticipant ||
     config?.collapsible === true ||
     requiresEffectsObserver ||
-    resolvePhiBackgroundMotion(config?.backgroundConfig) != null;
+    resolvePhiBackgroundMotion(config?.surface?.background) != null;
 
   if (!requiresClientEnhancement) {
     return (

@@ -5,7 +5,6 @@ import { PhiBorderControl } from "../../../../components/controls/phi-border-con
 import { PhiGeometryControl } from "../../../../components/controls/phi-geometry-control";
 import { PhiViewportVisibilityControl } from "../../../../components/controls/phi-viewport-visibility-control";
 import { PhiShadowControl } from "../../../../components/controls/phi-shadow-control";
-import { isPhiBackgroundFilter } from "../../../../types/layout-style";
 import { PhiPaddingControl } from "../../../../components/controls/phi-padding-control";
 import type { PhiGeometryWidgetLabels } from "../../../../components/widgets/label-types/geometry";
 import type { PhiBackgroundWidgetLabels } from "../../../../components/widgets/label-types/background";
@@ -153,16 +152,9 @@ export function PhiDeveloperBuilderRegionInspectorWidgetClient({
                   <div style={{ display: "grid", gap: PHI_GAP_SM, width: "100%" }}>
                     <PhiBackgroundControl
                       disabled={isPreviewMode}
-                      value={{
-                        ...effectiveDraft.background,
-                        filter: isPhiBackgroundFilter(effectiveDraft.effect) ? effectiveDraft.effect : null,
-                      }}
+                      value={effectiveDraft.surface?.background ?? null}
                       onChange={(background) => updateDraft({
-                        effect: background.filter ?? null,
-                        background: {
-                          ...background,
-                          filter: null,
-                        },
+                        surface: { ...effectiveDraft.surface, background },
                       })}
                       labels={backgroundLabels}
                       colorPickerLabels={colorPickerLabels}
@@ -180,8 +172,10 @@ export function PhiDeveloperBuilderRegionInspectorWidgetClient({
                     <PhiBorderControl
                       mode="control"
                       disabled={isPreviewMode}
-                      value={effectiveDraft.border ?? null}
-                      onChange={(border) => updateDraft({ border })}
+                      value={effectiveDraft.surface?.border ?? null}
+                      onChange={(border) => updateDraft({
+                        surface: { ...effectiveDraft.surface, border, borderSource: "custom" },
+                      })}
                       labels={borderLabels}
                       colorPickerLabels={colorPickerLabels}
                       colorPickerPlacement="left"
@@ -197,8 +191,10 @@ export function PhiDeveloperBuilderRegionInspectorWidgetClient({
                     <PhiShadowControl
                       mode="control"
                       disabled={isPreviewMode}
-                      value={effectiveDraft.shadow ?? null}
-                      onChange={(shadow) => updateDraft({ shadow })}
+                      value={effectiveDraft.surface?.shadow ?? null}
+                      onChange={(shadow) => updateDraft({
+                        surface: { ...effectiveDraft.surface, shadow },
+                      })}
                     />
                   </div>
                 ),

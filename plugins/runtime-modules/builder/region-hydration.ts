@@ -1,10 +1,5 @@
-import {
-  normalizePhiBackgroundWidgetConfig,
-  type PhiCmsBackgroundWidgetConfig,
-} from "../../../components/widgets/config/background";
 import { normalizePhiGeometryWidgetConfig } from "../../../components/widgets/config/geometry";
 import { stripPhiResolvedAssetProjections } from "../../../components/media/image-presentation";
-import type { PhiCmsBorderWidgetConfig } from "../../../types/cms-config";
 import type {
   PhiCmsContentWidgetNode,
   PhiCmsLayoutNode,
@@ -33,12 +28,7 @@ import {
 import { resolvePhiAnchorPlacement } from "../../../components/layouts/phi-layout-contract";
 import { splitPhiCmsLayoutNamespacedTypeKey } from "../../../constants/cms-layout-types";
 import { isPhiAnchorWidgetPlacement } from "../../../components/controls/phi-anchor-control-contract";
-import {
-  isPhiLayoutEffectId,
-  readPhiShadow,
-  type PhiShadow,
-  type PhiLayoutEffectId,
-} from "../../../types/layout-style";
+import { readPhiSurface } from "../../../types/surface";
 
 type JsonRecord = Record<string, unknown>;
 
@@ -61,10 +51,7 @@ type BuilderPersistedRegionConfig = {
   minHeight?: number | string;
   maxHeight?: number | string;
   zIndex?: number;
-  effect?: PhiLayoutEffectId;
-  backgroundConfig?: PhiCmsBackgroundWidgetConfig | null;
-  border?: boolean | string | PhiCmsBorderWidgetConfig;
-  shadow?: PhiShadow;
+  surface?: unknown;
   padding?: number | string;
   paddingTop?: number | string;
   paddingRight?: number | string;
@@ -79,10 +66,6 @@ function toJsonRecord(value: unknown) {
   return value && typeof value === "object" && !Array.isArray(value)
     ? (value as JsonRecord)
     : {};
-}
-
-function readObjectConfig<T>(value: unknown): T | null {
-  return value && typeof value === "object" && !Array.isArray(value) ? (value as T) : null;
 }
 
 function readGeometrySize(value: unknown) {
@@ -180,16 +163,6 @@ function resolveRootNodePackageName(widgetType: string) {
   return segments.slice(0, -1).join("/");
 }
 
-function resolveRegionBackground(
-  regionConfig: BuilderPersistedRegionConfig,
-  fallback: PhiCmsBackgroundWidgetConfig,
-) {
-  if (regionConfig.backgroundConfig != null) {
-    return normalizePhiBackgroundWidgetConfig(regionConfig.backgroundConfig);
-  }
-  return fallback;
-}
-
 function normalizeHydratedChildLayouts(nodes: PhiCmsLayoutRenderNode[]): PhiCmsLayoutRenderNode[] {
   return nodes.map((node) => ({
     ...node,
@@ -208,14 +181,6 @@ function buildRegionDraft(
   rootNode: PhiCmsLayoutRenderNode | null,
 ): PhiDeveloperBuilderRegionDraft {
   const fallback = getPhiBuilderDefaultRegionDraft(regionKey);
-  const hydratedBackground = resolveRegionBackground(regionConfig, fallback.background);
-  const resolvedEffect = isPhiLayoutEffectId(regionConfig.effect)
-    ? regionConfig.effect
-    : hydratedBackground.filter ?? fallback.effect;
-  const resolvedBackground = {
-    ...hydratedBackground,
-    filter: null,
-  } satisfies PhiCmsBackgroundWidgetConfig;
   const resolvedRootNodeKind = rootNode ? resolveRootNodeKind(rootNode.widgetType) : null;
   const rootNodeDefaults =
     rootNode && resolvedRootNodeKind
@@ -233,9 +198,7 @@ function buildRegionDraft(
     zIndex: typeof regionConfig.zIndex === "number" && Number.isInteger(regionConfig.zIndex)
       ? regionConfig.zIndex
       : fallback.zIndex,
-    effect: resolvedEffect,
-    background: resolvedBackground,
-    border: readObjectConfig<PhiCmsBorderWidgetConfig>(regionConfig.border),
+    surface: readPhiSurface(regionConfig.surface),
     rootNodeId: rootNode?.id ?? null,
     rootNodeTypeKey: rootNode?.widgetType ?? null,
     rootNodeKind: resolvedRootNodeKind,
@@ -249,7 +212,6 @@ function buildRegionDraft(
         : resolvePhiAnchorPlacement(rootNode?.config?.anchor as Parameters<typeof resolvePhiAnchorPlacement>[0])) ?? null,
     rootNodePadding: rootNodeDefaults.rootNodePadding,
     rootNodeSurface: rootNodeDefaults.rootNodeSurface,
-    shadow: readPhiShadow(regionConfig.shadow) ?? null,
     rootNodeChildLayouts: rootNode ? normalizeHydratedChildLayouts(rootNode.childLayouts ?? []) : [],
     rootNodeChildWidgets: rootNode ? normalizeHydratedChildWidgets(rootNode.childWidgets ?? []) : [],
   };
@@ -338,29 +300,13 @@ export function serializePhiDeveloperBuilderRegionConfig(
     delete base.zIndex;
   }
 
-  if (draft.effect != null) {
-    base.effect = draft.effect;
-  } else {
-    delete base.effect;
-  }
-
   // The draft Background carries the Picker's delivery projection so the Editor can draw the current
   // crop; stored content must not, or a focal change would leave a stale revision behind.
-  base.backgroundConfig = stripPhiResolvedAssetProjections({
-    ...draft.background,
-    filter: null,
-  });
-
-  if (draft.border != null) {
-    base.border = draft.border;
+  const surface = readPhiSurface(draft.surface);
+  if (surface != null) {
+    base.surface = stripPhiResolvedAssetProjections(surface);
   } else {
-    delete base.border;
-  }
-
-  if (draft.shadow != null) {
-    base.shadow = draft.shadow;
-  } else {
-    delete base.shadow;
+    delete base.surface;
   }
 
   return base;

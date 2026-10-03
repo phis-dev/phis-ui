@@ -7,9 +7,8 @@ import type {
 } from "../../../types/cms";
 import type { PhiCmsRegionConfig } from "../../../types";
 import type { PhiCmsInstanceId } from "../../../types/cms-instance-id";
-import { isPhiLayoutEffectId, readPhiShadow } from "../../../types/layout-style";
+import { readPhiSurface } from "../../../types/surface";
 import { PHI_VIEWER_ACCESS_ANYONE } from "../../../types/access";
-import type { PhiCmsBackgroundWidgetConfig } from "../../../components/widgets/config/background";
 import { normalizePhiPaddingWidgetConfig } from "../../../types/cms-config";
 import {
   buildPhiBuilderRootNodeRenderConfig,
@@ -66,9 +65,7 @@ function resolveRegionConfig(
   regionType: number,
   regionConfig?: Record<string, unknown> | null,
 ): PhiCmsRegionConfig {
-  const background = typeof regionConfig?.background === "string" ? regionConfig.background : undefined;
-  const effect = isPhiLayoutEffectId(regionConfig?.effect) ? regionConfig.effect : undefined;
-  const shadow = readPhiShadow(regionConfig?.shadow) ?? "none";
+  const surface = readPhiSurface(regionConfig?.surface);
   const padding = normalizePhiPaddingWidgetConfig(regionConfig);
   const paddingConfig = padding == null
     ? {}
@@ -79,6 +76,7 @@ function resolveRegionConfig(
         ...(padding.paddingBottom == null ? {} : { paddingBottom: padding.paddingBottom }),
         ...(padding.paddingLeft == null ? {} : { paddingLeft: padding.paddingLeft }),
       };
+  const surfaceConfig = surface == null ? {} : { surface };
   if (regionType === PhiCmsRegionType.SiderLeft || regionType === PhiCmsRegionType.SiderRight) {
     return {
       fullHeight: true,
@@ -86,20 +84,14 @@ function resolveRegionConfig(
         width: "100%",
         height: "100%",
       },
-      ...(background == null ? {} : { background }),
-      ...(effect == null ? {} : { effect }),
+      ...surfaceConfig,
       ...paddingConfig,
-      border: false,
-      shadow,
     };
   }
 
   return {
-    ...(background == null ? {} : { background }),
-    ...(effect == null ? {} : { effect }),
+    ...surfaceConfig,
     ...paddingConfig,
-    border: false,
-    shadow,
   };
 }
 
@@ -108,13 +100,11 @@ export function buildPhiBuilderRootNodeRenderableTree({
   regionType,
   renderMode,
   regionConfig,
-  regionBackgroundConfig,
 }: {
   rootNode: PhiBuilderRootNodeDraft;
   regionType: number;
   renderMode: "editor" | "preview";
   regionConfig?: Record<string, unknown> | null;
-  regionBackgroundConfig?: PhiCmsBackgroundWidgetConfig | null;
 }): PhiResolvedCmsPageTree | null {
   if (rootNode.kind === null || rootNode.kind === "widget") {
     return null;
@@ -178,7 +168,6 @@ export function buildPhiBuilderRootNodeRenderableTree({
         sortOrder: 0,
         config: {
           ...resolveRegionConfig(regionType, regionConfig),
-          ...(regionBackgroundConfig == null ? {} : { backgroundConfig: regionBackgroundConfig }),
         },
       },
     ],

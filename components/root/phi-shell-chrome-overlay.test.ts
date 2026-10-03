@@ -207,7 +207,7 @@ describe("shell chrome overlay participation", () => {
 
   it("stays out of a Region that authored an Effect", () => {
     expect(
-      phiRegionUsesShellChromeOverlay({ regionKey: "header_main", effect: "glass", grounds: [null] }),
+      phiRegionUsesShellChromeOverlay({ regionKey: "header_main", pane: "glass", grounds: [null] }),
     ).toBe(false);
   });
 });

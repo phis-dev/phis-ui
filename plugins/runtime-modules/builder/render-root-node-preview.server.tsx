@@ -9,7 +9,6 @@ import type {
   PhiResolvedCmsPageTree,
 } from "../../../types/cms";
 import type { PhiCmsInstanceId } from "../../../types/cms-instance-id";
-import type { PhiCmsBackgroundWidgetConfig } from "../../../components/widgets/config/background";
 import { PhiCmsLayoutRenderer } from "../../../components/cms/phi-cms-layout-renderer";
 import { PhiSlotChildFrame } from "../../../plugins/runtime/phi-slot-child-frame";
 import { resolvePhiCmsRegionType } from "../../../helpers/cms-region-keys";
@@ -49,7 +48,6 @@ export type PhiBuilderRootNodeServerPreviewProps = {
   regionKey?: string;
   registry: PhiCmsRuntimeRenderRegistry;
   regionConfig?: Record<string, unknown> | null;
-  regionBackgroundConfig?: PhiCmsBackgroundWidgetConfig | null;
   extraPreviewNodes?: {
     layoutNodes: PhiCmsLayoutNode[];
     contentWidgets: PhiCmsContentWidgetNode[];
@@ -60,22 +58,19 @@ function buildPreviewTree(
   rootNode: PhiBuilderRootNodePreviewInput,
   regionType: number,
   regionConfig?: Record<string, unknown> | null,
-  regionBackgroundConfig?: PhiCmsBackgroundWidgetConfig | null,
 ): PhiResolvedCmsPageTree | null {
   return buildPhiBuilderRootNodeRenderableTree({
     rootNode,
     regionType,
     renderMode: "preview",
     regionConfig,
-    regionBackgroundConfig,
   });
 }
 
 export function resolvePhiBuilderPreviewRegionConfig(draft: PhiBuilderPreviewRegionDraft) {
   return {
     ...(draft.regionConfig ?? {}),
-    ...(draft.effect == null ? {} : { effect: draft.effect }),
-    ...(draft.shadow == null ? {} : { shadow: draft.shadow }),
+    ...(draft.surface == null ? {} : { surface: draft.surface }),
   };
 }
 
@@ -144,7 +139,6 @@ function buildPreviewSnapshotNodes(snapshot: PhiBuilderPreviewSnapshot | null) {
       rootNode,
       resolvePhiCmsRegionType(regionKey),
       resolvePhiBuilderPreviewRegionConfig(draft),
-      draft.background ?? null,
     );
     if (!tree) {
       continue;
@@ -174,7 +168,6 @@ export function buildPhiBuilderPreviewRenderableTrees(
       rootNode,
       PhiCmsRegionType.Content,
       resolvePhiBuilderPreviewRegionConfig(draft),
-      draft.background ?? null,
     );
     return tree ? [mergePreviewTreeNodes(tree, extraPreviewNodes)] : [];
   });
@@ -201,7 +194,6 @@ export function PhiBuilderRegionServerPreview({
   const previewRegionConfig = previewDraft
     ? resolvePhiBuilderPreviewRegionConfig(previewDraft)
     : null;
-  const regionBackgroundConfig = previewDraft?.background ?? null;
   const extraPreviewNodes = buildPreviewSnapshotNodes(snapshot);
 
   if (!rootNode) {
@@ -216,7 +208,6 @@ export function PhiBuilderRegionServerPreview({
       regionType={resolvePhiCmsRegionType(regionKey)}
       registry={registry}
       regionConfig={previewRegionConfig}
-      regionBackgroundConfig={regionBackgroundConfig}
       extraPreviewNodes={extraPreviewNodes}
     />
   );
@@ -268,12 +259,11 @@ export async function PhiBuilderRootNodeServerPreview({
   regionType = PhiCmsRegionType.Content,
   registry,
   regionConfig = null,
-  regionBackgroundConfig = null,
   extraPreviewNodes,
 }: PhiBuilderRootNodeServerPreviewProps): Promise<ReactNode> {
   const rootSlotChildKind = rootNode.kind === "widget" ? "widget" : "layout";
   const rootGeometry = resolvePhiRenderableBlockGeometry(rootNode.rootNodeGeometry);
-  const tree = buildPreviewTree(rootNode, regionType, regionConfig, regionBackgroundConfig);
+  const tree = buildPreviewTree(rootNode, regionType, regionConfig);
 
   if (!tree) {
     return null;

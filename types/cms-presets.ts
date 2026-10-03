@@ -10,7 +10,6 @@ import type {
   PhiRenderableBlockVisibility,
 } from "./renderable-block";
 import type { PhiCssLength } from "./length";
-import type { PhiShadow } from "./layout-style";
 
 export type PhiCmsAreaKey =
   | "public"
@@ -41,7 +40,6 @@ export type PhiCmsLayerConfig = Record<string, unknown> & {
 };
 
 export type PhiCmsRegionConfig = Record<string, unknown> & PhiCmsContainerChromeConfig & {
-  borderRadius?: CSSProperties["borderRadius"];
   visibility?: PhiRenderableBlockVisibility;
   enabled?: boolean;
   mode?: "light" | "dark";
@@ -71,10 +69,6 @@ export type PhiCmsLayoutConfig = PhiCmsLayerConfig & {
   padding?: number | string;
   paddingInline?: number | string;
   paddingBlock?: number | string;
-  background?: string;
-  shadow?: PhiShadow;
-  border?: boolean | CSSProperties["border"];
-  borderRadius?: number | string;
   align?: CSSProperties["alignItems"];
   justify?: CSSProperties["justifyContent"];
   wrap?: boolean | CSSProperties["flexWrap"];

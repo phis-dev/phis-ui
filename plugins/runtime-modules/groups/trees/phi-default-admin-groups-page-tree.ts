@@ -56,7 +56,6 @@ export async function buildPhiDefaultAdminGroupsPageTree({
   const scaffold = buildPhiBasePageContentScaffold({
     page,
     regionId: SYNTHETIC_ADMIN_GROUPS_REGION_IDS.regionContent,
-    regionConfig: { border: false },
   });
 
   const nodes = createPhiCmsPresetNodes(page);

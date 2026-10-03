@@ -114,7 +114,7 @@ export async function buildPhiBuilderInspectorAreaOverlayTree({
         placement: "right",
         size: 377,
         mountPolicy: "lazy-keep",
-        effect: "glass",
+        surface: { background: { base: { kind: "none" }, filter: "glass" } },
         mask: {
           appearance: "transparent",
           allowOutsideInteraction: false,

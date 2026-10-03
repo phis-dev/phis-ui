@@ -8,7 +8,7 @@ import {
   type PhiBackgroundMotionMode,
   type PhiCmsBackgroundWidgetConfig,
 } from "../widgets/config/background";
-import type { PhiBackgroundFilter, PhiLayoutEffectId, PhiShadow } from "../../types/layout-style";
+import type { PhiBackgroundFilter, PhiGlassLayoutEffectId, PhiShadow } from "../../types/layout-style";
 import type { PhiSiteThemeRoot } from "../../types/site-theme";
 import type { PhiThemeMode } from "../../theme/phi-theme-presets";
 
@@ -100,26 +100,26 @@ export const PHI_SHELL_CHROME_OVERLAY_REGION_KEYS: readonly string[] = [
  * Whether this Region paints the shared overlay, which it does only while it authored nothing itself.
  *
  * A Region that authored its own chrome paints over the Theme, and that is how an Area keeps a look of
- * its own. Authored means every carrier, not just one: the structured Background config, the plain
- * ground string a Region or the Shell record can set, and the Region's own Effect. Reading only the
+ * its own. Authored means every carrier, not just one: the Region Surface's Background, the ground the
+ * Shell record sets, and a glass pane the Region asks for over that ground. Reading only the
  * first let the Builder's Sider take the Site's overlay on top of the container ground it paints on
  * purpose, which is what this exists to prevent.
  */
 export function phiRegionUsesShellChromeOverlay({
   regionKey,
   backgroundConfig,
-  effect,
+  pane,
   grounds,
 }: {
   regionKey: string;
   backgroundConfig?: unknown;
-  effect?: PhiLayoutEffectId | null;
+  pane?: PhiGlassLayoutEffectId | null;
   grounds: readonly (string | number | null | undefined)[];
 }): boolean {
   return (
     PHI_SHELL_CHROME_OVERLAY_REGION_KEYS.includes(regionKey) &&
     backgroundConfig == null &&
-    effect == null &&
+    pane == null &&
     grounds.every((ground) => ground == null)
   );
 }

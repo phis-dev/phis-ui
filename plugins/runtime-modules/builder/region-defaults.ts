@@ -1,20 +1,7 @@
 import { PHI_LAYOUT } from "../../../theme/phi-tokens";
-import type { PhiCmsBackgroundWidgetConfig } from "../../../components/widgets/config/background";
 import type { PhiDeveloperBuilderRegionDraft } from "./developer-workspace-types";
 
-function createDefaultRegionBackground(): PhiCmsBackgroundWidgetConfig {
-  return {
-    base: {
-      kind: "none",
-    },
-    overlay: null,
-    filter: null,
-  };
-}
-
 export function getPhiBuilderDefaultRegionDraft(regionKey: string | null): PhiDeveloperBuilderRegionDraft {
-  const background = createDefaultRegionBackground();
-
   switch (regionKey) {
     case "header_top":
       return {
@@ -24,9 +11,7 @@ export function getPhiBuilderDefaultRegionDraft(regionKey: string | null): PhiDe
           height: 34,
         },
         zIndex: 210,
-        background,
-        border: null,
-        shadow: null,
+        surface: null,
         rootNodeSurface: null,
       };
     case "header_main":
@@ -37,9 +22,7 @@ export function getPhiBuilderDefaultRegionDraft(regionKey: string | null): PhiDe
           height: PHI_LAYOUT.headerHeight,
         },
         zIndex: 200,
-        background,
-        border: null,
-        shadow: null,
+        surface: null,
         rootNodeSurface: null,
       };
     case "header_bottom":
@@ -48,9 +31,7 @@ export function getPhiBuilderDefaultRegionDraft(regionKey: string | null): PhiDe
         offsetTop: 0,
         size: undefined,
         zIndex: 220,
-        background,
-        border: null,
-        shadow: null,
+        surface: null,
         rootNodeSurface: null,
       };
     case "sider_left":
@@ -61,9 +42,7 @@ export function getPhiBuilderDefaultRegionDraft(regionKey: string | null): PhiDe
           width: PHI_LAYOUT.sidebarWidth,
         },
         zIndex: 300,
-        background,
-        border: null,
-        shadow: null,
+        surface: null,
         rootNodeSurface: null,
       };
     case "sider_right":
@@ -74,9 +53,7 @@ export function getPhiBuilderDefaultRegionDraft(regionKey: string | null): PhiDe
           width: PHI_LAYOUT.sidebarWidth,
         },
         zIndex: 100,
-        background,
-        border: null,
-        shadow: null,
+        surface: null,
         rootNodeSurface: null,
       };
     case "footer_top":
@@ -85,9 +62,7 @@ export function getPhiBuilderDefaultRegionDraft(regionKey: string | null): PhiDe
         offsetTop: 0,
         size: undefined,
         zIndex: 220,
-        background,
-        border: null,
-        shadow: null,
+        surface: null,
         rootNodeSurface: null,
       };
     case "footer_main":
@@ -96,9 +71,7 @@ export function getPhiBuilderDefaultRegionDraft(regionKey: string | null): PhiDe
         offsetTop: 0,
         size: undefined,
         zIndex: 200,
-        background,
-        border: null,
-        shadow: null,
+        surface: null,
         rootNodeSurface: null,
       };
     case "footer_bottom":
@@ -107,9 +80,7 @@ export function getPhiBuilderDefaultRegionDraft(regionKey: string | null): PhiDe
         offsetTop: 0,
         size: undefined,
         zIndex: 210,
-        background,
-        border: null,
-        shadow: null,
+        surface: null,
         rootNodeSurface: null,
       };
     default:
@@ -118,9 +89,7 @@ export function getPhiBuilderDefaultRegionDraft(regionKey: string | null): PhiDe
         offsetTop: 0,
         size: undefined,
         zIndex: 0,
-        background,
-        border: null,
-        shadow: null,
+        surface: null,
         rootNodeSurface: null,
       };
   }

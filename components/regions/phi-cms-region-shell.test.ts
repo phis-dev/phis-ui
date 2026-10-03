@@ -24,7 +24,7 @@ function resolve(input: Partial<PhiCmsRegionShellInput> & Pick<PhiCmsRegionShell
  */
 describe("region shell glass", () => {
   it("publishes each mode's tint and paints the switched variable", () => {
-    const shell = resolve({ regionKey: "header_main", config: { effect: "glass" }, shellTheme });
+    const shell = resolve({ regionKey: "header_main", config: { surface: { background: { base: { kind: "none" }, filter: "glass" } } }, shellTheme });
     const style = shell.style as Record<string, unknown>;
 
     expect(style.backgroundColor).toBe("var(--phi-region-background)");
@@ -37,7 +37,7 @@ describe("region shell glass", () => {
   it("paints the live mode's tint inline and publishes no variables", () => {
     const shell = resolve({
       regionKey: "header_main",
-      config: { effect: "glass" },
+      config: { surface: { background: { base: { kind: "none" }, filter: "glass" } } },
       shellTheme,
       paint: { kind: "live", mode: "dark" },
     });
@@ -71,14 +71,34 @@ describe("region shell geometry", () => {
     expect(header.style.height).toBeUndefined();
   });
 
-  it("lets a Border config's corners win over the flat radius", () => {
-    const shell = resolve({
+  it("takes its corners from a custom border, and states none otherwise", () => {
+    const custom = resolve({
       regionKey: "content",
-      config: { borderRadius: 4, border: { borderTopLeftRadius: 12 } },
+      config: { surface: { borderSource: "custom", border: { borderTopLeftRadius: 12 } } },
     });
-    const keys = Object.keys(shell.style);
-    expect(shell.style.borderTopLeftRadius).toBe(12);
-    expect(keys.indexOf("borderTopLeftRadius")).toBeGreaterThan(keys.indexOf("borderRadius"));
+    expect(custom.style.borderTopLeftRadius).toBe(12);
+    expect(custom.style.borderRadius).toBeUndefined();
+    expect(resolve({ regionKey: "content" }).style.borderTopLeftRadius).toBeUndefined();
+  });
+});
+
+/**
+ * A Region's `theme` edge is the separator: the Site's line on the side that faces the Page.
+ */
+describe("region shell edge", () => {
+  it("draws the separator below a Header, above a Footer and inside a Sider", () => {
+    const theme = { surface: { borderSource: "theme" as const } };
+    expect(resolve({ regionKey: "header_main", config: theme }).style.borderBottom).toBeTruthy();
+    expect(resolve({ regionKey: "footer_main", config: theme }).style.borderTop).toBeTruthy();
+    expect(resolve({ regionKey: "sider_left", config: theme }).style.borderInlineEnd).toBeTruthy();
+    expect(resolve({ regionKey: "sider_right", config: theme }).style.borderInlineStart).toBeTruthy();
+    expect(resolve({ regionKey: "content", config: theme }).style.border).toBeTruthy();
+  });
+
+  it("draws nothing where nothing is configured", () => {
+    const style = resolve({ regionKey: "header_main" }).style;
+    expect(style.borderBottom).toBeUndefined();
+    expect(style.border).toBeUndefined();
   });
 });
 

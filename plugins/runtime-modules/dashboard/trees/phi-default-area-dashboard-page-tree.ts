@@ -65,7 +65,6 @@ export async function buildPhiDefaultAreaDashboardPageTree({
   const scaffold = buildPhiBasePageContentScaffold({
     page,
     regionId,
-    regionConfig: { border: false },
   });
 
   const nodes = createPhiCmsPresetNodes(page);

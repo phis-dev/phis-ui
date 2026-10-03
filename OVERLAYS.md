@@ -187,22 +187,22 @@ Changing Overlay type, placement, mount policy, or ownership must not change thi
 
 ### Shared container chrome
 
-Overlay presentation does not define a separate visual contract. Modal and Drawer use the shared Region
-chrome fields `background`, `backgroundConfig`, `border`, `shadow`, and `effect`. Overlay container config
-does not own content padding; zone Layouts are the sole padding owners. Shared fields use the same closed
+Overlay presentation does not define a separate visual contract. Modal and Drawer carry a `surface`, the
+shape every Region, Layout and Widget carries (LAYOUTING.md, "Surface"). Overlay container config does not
+own content padding; zone Layouts are the sole padding owners. Shared fields use the same closed
 values, structured configs, token resolution, and Core style resolvers; UI-library-specific visual config
 must not be persisted.
 
 Core applies the resolved chrome to the complete visible Overlay container (`container` for Modal and
 `section` for Drawer), while its header, body, and footer semantic layers remain transparent so they do
-not cover the container background. Every zone Layout may still declare independent background, border,
-shadow, effect, and padding through ordinary Layout config.
+not cover the container background. Every zone Layout may still declare an independent Surface and padding
+through ordinary Layout config.
 
-An omitted container background keeps the active Ant Design theme default. An explicit shared
-`backgroundConfig` with `base.kind: "none"`, or the shared CSS background value `transparent`, makes the
-Overlay container transparent; this is distinct from omission and must not fall back to the theme surface
-color. Solid colors including alpha, gradients, images, borders, standard/custom shadows, and semantic
-effects follow the existing shared Region-compatible resolvers. The mask remains independently configured
+An omitted Surface Background keeps the active theme default. A Surface Background whose `base.kind` is
+`none`, or a colour Base of `transparent`, makes the Overlay container transparent; this is distinct from
+omission and must not fall back to the theme surface color. A glass `filter` over a `none` Base frosts with
+the elevated surface as its tint. The container is the Drawer or Modal primitive's own box and has no ground
+layer, so a `blur` filter or a moving picture paints unsoftened and still (`resolvePhiCmsContainerSurface`). The mask remains independently configured
 and does not become transparent merely because the Overlay container is transparent.
 
 `mountPolicy` uses the shared CMS mount-policy vocabulary (`types/cms-mount-policy.ts`), which Stack

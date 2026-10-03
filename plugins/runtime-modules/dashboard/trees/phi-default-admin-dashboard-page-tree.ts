@@ -53,7 +53,6 @@ export async function buildPhiDefaultAdminDashboardPageTree({
   const scaffold = buildPhiBasePageContentScaffold({
     page,
     regionId: SYNTHETIC_ADMIN_DASHBOARD_REGION_IDS.regionContent,
-    regionConfig: { border: false },
   });
 
   const nodes = createPhiCmsPresetNodes(page);

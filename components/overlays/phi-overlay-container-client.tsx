@@ -13,7 +13,7 @@ import {
 import { readPhiControlSize, type PhiControlSize } from "../../types/control";
 import { readPhiDimensionValue } from "../../types/dimension";
 import type { PhiRenderableBlockSize } from "../../types/renderable-block";
-import { resolvePhiCmsContainerChromeStyle } from "../../helpers/cms-container-chrome";
+import { resolvePhiCmsContainerSurface } from "../../helpers/cms-container-chrome";
 import type { PhiSignal, PhiSignalRoute, PhiSignalScope } from "../../types/signals";
 import {
   PHI_SIGNAL_VALUE_SCHEMAS,
@@ -302,8 +302,12 @@ export function PhiOverlayContainerClient({
    * the new answer takes their place, while a Controller in the middle of something keeps its state.
    */
   const zoneControllers = loadedZones?.zones.controllers ?? null;
-  const containerChromeStyle = resolvePhiCmsContainerChromeStyle(config);
-  const surfaceStyle = { ...containerChromeStyle, padding: 0 };
+  /*
+   * The container draws its Surface through the Drawer or Modal primitive's own box, which has no layer
+   * beneath its content to give a softened paint: a `blur` Filter there paints unsoftened, the way every
+   * Surface without a ground layer does (LAYOUTING.md, "Background filter").
+   */
+  const surfaceStyle = { ...resolvePhiCmsContainerSurface(config).style, padding: 0 };
 
   if (overlayType === "drawer") {
     return (

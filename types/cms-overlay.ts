@@ -1,7 +1,5 @@
-import { normalizePhiBackgroundWidgetConfig } from "../components/widgets/config/background";
-import { readPhiCmsBorderWidgetConfig } from "./cms-border-config";
 import type { PhiCmsContainerChromeConfig } from "./cms-container";
-import { isPhiLayoutEffectId, readPhiShadow } from "./layout-style";
+import { readPhiSurface } from "./surface";
 import { readPhiSignalRouteSet, type PhiSignalRouteSet } from "./signals";
 import {
   readPhiCmsMountPolicy,
@@ -120,12 +118,6 @@ function readPush(value: unknown): PhiCmsOverlayConfig["push"] {
   return false;
 }
 
-function readBorder(value: unknown): PhiCmsOverlayConfig["border"] {
-  if (typeof value === "boolean") return value;
-  if (typeof value === "string" && value.trim()) return value.trim();
-  return readPhiCmsBorderWidgetConfig(value);
-}
-
 export function isPhiCmsOverlayType(value: unknown): value is PhiCmsOverlayType {
   return typeof value === "string" && (PHI_CMS_OVERLAY_TYPES as readonly string[]).includes(value);
 }
@@ -171,15 +163,7 @@ export function parsePhiCmsOverlayConfig(
     openActionKey: typeof rawConfig.openActionKey === "string" && rawConfig.openActionKey.trim()
       ? rawConfig.openActionKey.trim()
       : null,
-    background: typeof rawConfig.background === "string" && rawConfig.background.trim()
-      ? rawConfig.background.trim()
-      : undefined,
-    backgroundConfig: rawConfig.backgroundConfig == null
-      ? null
-      : normalizePhiBackgroundWidgetConfig(rawConfig.backgroundConfig),
-    border: readBorder(rawConfig.border),
-    shadow: readPhiShadow(rawConfig.shadow),
-    effect: isPhiLayoutEffectId(rawConfig.effect) ? rawConfig.effect : undefined,
+    surface: readPhiSurface(rawConfig.surface),
     signalRoutes: readPhiSignalRouteSet(rawConfig.signalRoutes),
   };
 }

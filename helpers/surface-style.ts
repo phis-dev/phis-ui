@@ -54,6 +54,11 @@ export type PhiSurfaceStyleOptions = {
    * ground under the pointer needs the paint apart from the box to move it.
    */
   forceGroundLayer?: boolean;
+  /**
+   * Whether the caller can render a ground layer at all. A box drawn by a primitive it does not own -- an
+   * Overlay's Drawer or Modal -- cannot, so its paint stays on the box: unsoftened and unmoving, but there.
+   */
+  groundLayer?: boolean;
 };
 
 const PHI_SURFACE_EMPTY: PhiResolvedSurface = { style: {}, ground: null, paintsGround: false };
@@ -92,7 +97,9 @@ export function resolvePhiSurfaceStyle(
   const paintsGround = phiBackgroundWidgetConfigPaintsGround(background);
   const groundFilter = background ? resolvePhiBackgroundGroundFilter(background) : null;
   const motion = background ? resolvePhiBackgroundMotion(background) : null;
-  const needsGroundLayer = paintsGround && (groundFilter != null || motion != null || options.forceGroundLayer === true);
+  const needsGroundLayer = options.groundLayer !== false
+    && paintsGround
+    && (groundFilter != null || motion != null || options.forceGroundLayer === true);
 
   const paint = background ? resolvePhiBackgroundWidgetStyle(background) : {};
   const hostPaint: CSSProperties = needsGroundLayer

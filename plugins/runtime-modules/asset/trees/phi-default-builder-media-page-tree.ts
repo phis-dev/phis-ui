@@ -82,8 +82,8 @@ export async function buildPhiDefaultBuilderMediaPageTree({
           placement: "right",
           size: 377,
           mountPolicy: "lazy-keep",
-          effect: "glass",
-          background: "transparent",
+          // A clear pane: the Canvas shows through, frosted.
+          surface: { background: { base: { kind: "color", color: "transparent" }, filter: "glass" } },
           mask: {
             appearance: "transparent",
             allowOutsideInteraction: false,

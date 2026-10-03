@@ -1,7 +1,7 @@
 import type { CSSProperties } from "react";
 import { PHI_COLOR } from "../theme/antd-css-var-contract";
 import { PHI_LAYOUT } from "../theme/phi-tokens";
-import type { PhiShadow, PhiLayoutEffectId } from "../types/layout-style";
+import type { PhiGlassLayoutEffectId, PhiShadow } from "../types/layout-style";
 import { resolvePhiShadow, resolvePhiLayoutEffectStyle } from "./layout-style";
 
 type PhiShellRegionMode = "light" | "dark";
@@ -289,8 +289,8 @@ export function resolvePhiShellRegionChrome(
   shellTheme?: PhiShellRegionTheme | undefined,
   config?: {
     mode?: "light" | "dark";
-    background?: CSSProperties["background"];
-    effect?: PhiLayoutEffectId;
+    /** A glass pane over this Region's Shell ground; a Region with a ground of its own carries its own. */
+    effect?: PhiGlassLayoutEffectId;
     shadow?: PhiShadow;
     tokens?: Partial<PhiShellRegionChromeTokens>;
   } | null,
@@ -310,9 +310,9 @@ export function resolvePhiShellRegionChrome(
   const shellBackground = resolvePhiShellRegionBackground(shellTheme, resolvedMode, { family, region });
   const shellColor = resolvePhiShellRegionColor(shellTheme, resolvedMode, { family, region });
   const resolvedShadow = resolvePhiShadow(config?.shadow);
-  // The Region's own ground, which exists only where somebody authored one: the local config first,
-  // then the Shell record for this Region, its family, and the Shell root.
-  const authoredBackground = config?.background ?? shellBackground;
+  // The Region's ground from the Shell record, which exists only where somebody authored one: this
+  // Region's entry, its family, and the Shell root. A ground the Region paints itself is its Surface's.
+  const authoredBackground = shellBackground;
   /*
    * The family ground, which no Region paints on its own any more.
    *

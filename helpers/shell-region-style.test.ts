@@ -18,15 +18,6 @@ describe("shell region chrome background", () => {
     }
   });
 
-  it("paints the ground the Region itself declares", () => {
-    expect(
-      resolvePhiShellRegionChrome("header_main", undefined, {
-        mode: "light",
-        background: "#ff00ff",
-      }).background,
-    ).toBe("#ff00ff");
-  });
-
   it("paints the ground the Shell record declares for the mode", () => {
     const shellTheme = { light: { background: "#123456" }, dark: { background: "#654321" } };
     expect(resolvePhiShellRegionChrome("sider_left", shellTheme, { mode: "light" }).background).toBe(

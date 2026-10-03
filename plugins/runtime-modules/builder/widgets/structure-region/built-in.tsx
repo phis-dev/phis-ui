@@ -24,7 +24,6 @@ import type { PhiCmsContentWidgetNode, PhiCmsLayoutRenderNode } from "../../../.
 import { readPhiCmsInstanceId, type PhiCmsInstanceId } from "../../../../../types/cms-instance-id";
 import type { PhiCmsRegionConfig } from "../../../../../types";
 import { normalizePhiPaddingWidgetConfig } from "../../../../../types/cms-config";
-import { isPhiBackgroundFilter } from "../../../../../types/layout-style";
 import {
   readPhiRenderableBlockLength,
   resolvePhiRenderableBlockGeometry,
@@ -749,11 +748,8 @@ export function PhiStructureRegionScaffold({
     draftGeometry.block.max == null;
   const shouldStretchAvailableHeight = shouldFillAvailableHeight || shouldStretchContentRegion;
   const hasExplicitSidebarWidth = isFullHeightRegion && draftGeometry.explicitInline;
-  const slotBackgroundStyle = effectiveDraft?.background
-    ? resolvePhiBackgroundWidgetStyle({
-        ...effectiveDraft.background,
-        filter: isPhiBackgroundFilter(effectiveDraft.effect) ? effectiveDraft.effect : null,
-      })
+  const slotBackgroundStyle = effectiveDraft?.surface?.background
+    ? resolvePhiBackgroundWidgetStyle(effectiveDraft.surface.background)
     : {};
   /*
    * Whether the author gave this Region a ground. The Builder writes a Background config onto every
@@ -761,8 +757,8 @@ export function PhiStructureRegionScaffold({
    * transparent in the live Shell, and the Canvas keeps that legible: its slot paints a half-transparent
    * container tint, so the Theme Root Background stays visible through it.
    */
-  const hasAuthoredGround = phiBackgroundWidgetConfigPaintsGround(effectiveDraft?.background);
-  const slotBorderStyle = effectiveDraft?.border ? resolvePhiBorderWidgetStyle(effectiveDraft.border) : {};
+  const hasAuthoredGround = phiBackgroundWidgetConfigPaintsGround(effectiveDraft?.surface?.background ?? null);
+  const slotBorderStyle = effectiveDraft?.surface?.border ? resolvePhiBorderWidgetStyle(effectiveDraft.surface.border) : {};
   const regionConfig = (effectiveDraft?.regionConfig ?? null) as PhiCmsRegionConfig | null;
   const regionPaddingStyle = resolvePhiPaddingStyle(
     normalizePhiPaddingWidgetConfig(effectiveDraft?.regionConfig) ?? {},
@@ -890,7 +886,6 @@ export function PhiStructureRegionScaffold({
       rootNodePadding: null,
       rootNodeAnchor: null,
       rootNodeSurface: null,
-      shadow: null,
         rootNodeChildLayouts: [],
         rootNodeChildWidgets: [],
       }, deletedAddresses);
@@ -2275,7 +2270,7 @@ export function PhiStructureRegionScaffold({
           ...slotCentreStyle,
           ...slotBackgroundStyle,
           ...slotBorderStyle,
-          boxShadow: combinePhiBoxShadows(slotBackgroundStyle.boxShadow, resolvePhiShadow(effectiveDraft?.shadow)),
+          boxShadow: combinePhiBoxShadows(slotBackgroundStyle.boxShadow, resolvePhiShadow(effectiveDraft?.surface?.shadow)),
           zIndex: resolvedRegionZIndex,
           position: resolvedRegionZIndex != null ? "relative" : undefined,
           flex: shouldStretchAvailableHeight ? "1 1 auto" : undefined,
@@ -2400,7 +2395,7 @@ export function PhiStructureRegionScaffold({
                 }),
             boxShadow: combinePhiBoxShadows(
               slotBackgroundStyle.boxShadow,
-              resolvePhiShadow(effectiveDraft?.shadow) ??
+              resolvePhiShadow(effectiveDraft?.surface?.shadow) ??
                 `inset 0 0 0 1px ${isPicking || isSelected ? token.colorPrimary : token.colorBorderSecondary}`,
             ),
             width: slotWidth,

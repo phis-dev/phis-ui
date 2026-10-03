@@ -5,6 +5,8 @@ import { useState } from "react";
 
 import { PhiButtonControl } from "../../controls/phi-button-control";
 import { type PhiCmsBackgroundWidgetConfig } from "../../widgets/config/background";
+import type { PhiCmsBorderWidgetConfig } from "../../../types/cms-config";
+import { PhiSurfaceGroundLayer } from "../../surface/phi-surface-ground";
 import { resolvePhiShellRegionZIndex } from "../../../helpers/shell-region-style";
 import type { PhiCmsRegionConfig, PhiCmsRegionKey } from "../../../types";
 
@@ -77,13 +79,9 @@ export function PhiCmsRegionContainerClient({
     minSize: initialConfig?.minSize,
     maxSize: initialConfig?.maxSize,
     collapsedSizeHint: initialConfig?.collapsedSizeHint,
-    background: initialConfig?.backgroundConfig ?? initialConfig?.background,
-    border:
-      initialConfig?.border && typeof initialConfig.border !== "boolean"
-        ? initialConfig.border
-        : undefined,
-    effect: initialConfig?.effect,
-    shadow: initialConfig?.shadow,
+    background: initialConfig?.surface?.background ?? undefined,
+    border: initialConfig?.surface?.border ?? undefined,
+    shadow: initialConfig?.surface?.shadow ?? undefined,
     effects: initialConfig?.effects,
     runtime: {
       ...runtime,
@@ -93,6 +91,7 @@ export function PhiCmsRegionContainerClient({
   });
   const resolvedVisibility = blockRuntime.state.visibility ?? "visible";
   const runtimeBackground = blockRuntime.state.background;
+  const runtimeBorder = blockRuntime.state.border;
   const config: PhiCmsRegionConfig = {
     ...(initialConfig ?? {}),
     visibility: resolvedVisibility,
@@ -108,17 +107,22 @@ export function PhiCmsRegionContainerClient({
     zIndex: blockRuntime.state.zIndex,
     opacity: blockRuntime.state.opacity,
     effects: blockRuntime.state.effects,
-    background:
-      typeof runtimeBackground === "string"
-        ? runtimeBackground
-        : initialConfig?.background,
-    backgroundConfig:
-      runtimeBackground && typeof runtimeBackground === "object" && !Array.isArray(runtimeBackground)
-        ? runtimeBackground as PhiCmsBackgroundWidgetConfig
-        : null,
-    border: (blockRuntime.state.border ?? initialConfig?.border) as PhiCmsRegionConfig["border"],
-    shadow: blockRuntime.state.shadow ?? initialConfig?.shadow,
-    effect: blockRuntime.state.effect ?? initialConfig?.effect,
+    /*
+     * The Surface as it stands now: what a Signal set for a part wins over what the Region stored, and a
+     * part no Signal touched is the stored one.
+     */
+    surface: {
+      ...(initialConfig?.surface ?? {}),
+      background:
+        runtimeBackground && typeof runtimeBackground === "object" && !Array.isArray(runtimeBackground)
+          ? runtimeBackground as PhiCmsBackgroundWidgetConfig
+          : initialConfig?.surface?.background ?? null,
+      border:
+        runtimeBorder && typeof runtimeBorder === "object" && !Array.isArray(runtimeBorder)
+          ? runtimeBorder as PhiCmsBorderWidgetConfig
+          : initialConfig?.surface?.border ?? null,
+      shadow: blockRuntime.state.shadow ?? initialConfig?.surface?.shadow ?? null,
+    },
   };
   const [collapsed, setCollapsed] = useState(false);
 
@@ -156,7 +160,7 @@ export function PhiCmsRegionContainerClient({
   };
   const backgroundMotionLayer = shell.animatesBackground && shell.backgroundConfig != null
     ? <PhiBackgroundMotionLayer config={shell.backgroundConfig} />
-    : null;
+    : <PhiSurfaceGroundLayer ground={shell.ground} />;
   const effectObservers = (
     <>
       {effectsTrigger === "on_visible" ? (

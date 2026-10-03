@@ -211,11 +211,11 @@ The site-owned Shell Chrome Overlay is its counterpart in front of the scrolling
   and Hero stay out because the overlay would paint over their content
 - is anchored to the viewport, so the participating Regions show one painting rather than each starting it
   again: a gradient runs from the Header into the Sider and a Pattern keeps its grid across the seam
-- is not painted by a Region that authored any chrome of its own. Every carrier counts: the structured
-  Background config, the plain ground string a Region or the Shell record can set, and the Region's own
-  Effect. Such a Region paints over the Theme, which is how a Site gives one Region its own chrome
+- is not painted by a Region that authored any chrome of its own. Every carrier counts: the Background of
+  the Region's Surface, the ground the Shell record sets, and a glass pane the Region's Surface asks for.
+  Such a Region paints over the Theme, which is how a Site gives one Region its own chrome
 - is never locked out by a shipped Area shell. Area shell presets -- Public, App, Accounting, Admin,
-  Editor, and the Builder alike -- author no Background, Effect, Shadow, border, or colour mode on their
+  Editor, and the Builder alike -- author no Surface or colour mode on their
   Regions, and no fixed Region height: those come from the Site's Theme and `site.theme.shell`. A preset
   states structure only -- which Regions exist, what they hold, whether they stick, and which slots a Page
   may inject into. Every Area, the Builder's working surface included, therefore starts on the Site's
@@ -223,7 +223,7 @@ The site-owned Shell Chrome Overlay is its counterpart in front of the scrolling
   is something a Site authors, never something a preset decides for every Site that follows it
 - reads "authored" as painting something, not as the field being present. Builder persistence writes a
   Background config onto every Region draft it stores, so a config whose Base is `none` and that carries
-  no Overlay counts as no ground at all. Otherwise switching a Region's own Effect off would lock it out
+  no Overlay counts as no ground at all. Otherwise switching a Region's own pane off would lock it out
   of the overlay and out of its Shell-record colour, because the same edit stores an empty config
 - travels as custom properties on the Root Layout element, published for both modes and switched by
   `data-phi-theme-mode`, because the Regions that paint it are rendered far below the Theme provider
@@ -256,21 +256,21 @@ The Page is isolated so that nothing inside it can stack over the frame, whateve
 canvas puts there.
 
 Each Shell backdrop uses the canonical structured Phi Background contract and may therefore add a plain or
-semi-transparent color, gradient, image, Pattern, or noise. It may additionally use the canonical Effect
-contract, including glass/backdrop blur, and the canonical Shadow contract. The declarative properties are
+semi-transparent color, gradient, image, Pattern, or noise. It may additionally use the Background `filter`,
+the glass panes, and the canonical Shadow contract. The declarative properties are
 `chrome.shadow.header`, `chrome.shadow.sider` and `chrome.shadow.footer`; they reuse `none`, the shared Shadow
 presets, and the existing explicit custom Shadow value instead of introducing a Shell-specific Shadow shape.
 A preset resolves to offsets pointed at the edge the family owns, because the shared presets are Ant's own
 multi-part variables: they point down, they only exist in the browser, and a value that only exists there
 cannot be turned around for a Footer or a Sider. Both Siders take the one Sider entry, being the same edge
-seen from two sides. A custom value passes through untouched. Border remains Region chrome.
+seen from two sides. A custom value passes through untouched. Border remains the Region Surface's.
 
 The Header-backdrop Shadow is painted exactly once at the outside lower edge of the complete currently visible
 Header stack. It therefore covers `header_top`, `header_main`, and `header_bottom` as one visual unit instead of
 drawing seams between Regions. Its edge follows the same centrally resolved visible geometry when a Header
 Region scrolls away, becomes sticky, mounts, or is absent. The Sider-backdrop Shadow is painted once at the
 Sider's outside logical inline edge and must follow LTR/RTL plus expanded/collapsed geometry. Either Shadow may
-be used independently of Background or Effect.
+be used independently of Background or Filter.
 
 The Header backdrop is composed only by the final `PhiCmsShell`, after the Page-owned `header_bottom` React
 subtree is available. This does not transfer ownership of `header_bottom` to the Area and does not persist it
@@ -304,8 +304,8 @@ That means:
 - region containers may provide chrome and per-region visual treatment
 - shell CSS should not hardcode chrome values into the topology rules
 
-Regions are transparent, effect-free, and shadow-free by default so the shared Shell backdrop remains
-continuous. A Region may add its own canonical Background, Effect, and/or Shadow configuration on top of the
+Regions have no Surface by default -- transparent, unfiltered and shadow-free -- so the shared Shell backdrop
+remains continuous. A Region may add its own Surface -- Background with its Filter, edge, Shadow -- on top of the
 Shell backdrop; this is additive, not a `shell | region` mode switch. If an author explicitly combines Shell and
 Region glass or Shadows, the resulting double blur, edge, or Shadow is an intentional authored result. Authoring
 may warn about it, but the runtime must not silently discard either layer.

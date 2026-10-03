@@ -128,3 +128,12 @@ describe("whether a Surface draws chrome", () => {
     expect(phiSurfaceDrawsChrome({ shadow: "soft" })).toBe(true);
   });
 });
+
+describe("a Surface on a box that cannot carry a layer", () => {
+  it("keeps the paint on the box", () => {
+    const resolved = resolvePhiSurfaceStyle({ background: { ...picture, filter: "blur" } }, { groundLayer: false });
+    expect(resolved.ground).toBeNull();
+    expect(resolved.style.backgroundImage).toBe('url("https://example.test/ground.jpg")');
+    expect(resolved.style.filter).toBeUndefined();
+  });
+});

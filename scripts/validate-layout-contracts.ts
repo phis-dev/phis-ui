@@ -148,14 +148,14 @@ assert.match(
 );
 const roundedRegionProps = {
   regionKey: "content" as const,
-  config: { borderRadius: 12 },
+  config: { surface: { borderSource: "custom" as const, border: { borderTopLeftRadius: 12, borderTopRightRadius: 12, borderBottomRightRadius: 12, borderBottomLeftRadius: 12 } } },
   children: createElement("div", null, "content"),
 };
 const roundedRegionMarkup = renderToStaticMarkup(
   createElement(PhiCmsRegionStatic, roundedRegionProps),
 );
 assert.match(roundedRegionMarkup, /margin:0/);
-assert.match(roundedRegionMarkup, /border-radius:12px/);
+assert.match(roundedRegionMarkup, /border-top-left-radius:12px/);
 
 function EnhancedSlotChildProxy() {
   return null;
@@ -215,12 +215,13 @@ assert.deepEqual(
 );
 assert.deepEqual(
   resolvePhiBuilderPreviewRegionConfig({
-    regionConfig: { effect: "none", padding: 8, paddingRight: 13 },
+    regionConfig: { padding: 8, paddingRight: 13 },
+    surface: { shadow: "soft" },
   }),
   {
-    effect: "none",
     padding: 8,
     paddingRight: 13,
+    surface: { shadow: "soft" },
   },
 );
 const parallaxBackground = normalizePhiBackgroundWidgetConfig({
@@ -231,7 +232,7 @@ const parallaxBackground = normalizePhiBackgroundWidgetConfig({
     attachment: "local",
   },
   motion: { mode: "parallax", strength: 2, direction: "reverse" },
-  effect: "glass",
+  filter: "glass",
 });
 assert.deepEqual(parallaxBackground.motion, {
   mode: "parallax",

@@ -443,8 +443,8 @@ assert.equal(
   const regionHydration = await readSource("plugins/runtime-modules/builder/region-hydration.ts");
   assert.match(
     regionHydration,
-    /base\.backgroundConfig = stripPhiResolvedAssetProjections\(/u,
-    "The Region Background is serialized separately and needs its own strip.",
+    /base\.surface = stripPhiResolvedAssetProjections\(/u,
+    "The Region Surface is serialized separately and needs its own strip.",
   );
 }
 

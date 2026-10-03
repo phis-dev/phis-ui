@@ -58,7 +58,6 @@ export async function buildPhiDefaultAdminLocalesPageTree({
   const scaffold = buildPhiBasePageContentScaffold({
     page,
     regionId: SYNTHETIC_ADMIN_LOCALES_REGION_IDS.regionContent,
-    regionConfig: { border: false },
   });
 
   const nodes = createPhiCmsPresetNodes(page);

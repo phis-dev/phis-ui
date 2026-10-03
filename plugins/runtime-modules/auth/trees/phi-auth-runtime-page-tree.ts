@@ -40,7 +40,7 @@ export function buildPhiAuthRuntimePageTree({
       regionType: PhiCmsRegionType.Content,
       rootLayoutNodeId: layouts.layoutRoot,
       sortOrder: 30,
-      config: { border: false },
+      config: {},
     })],
     layoutNodes: [nodes.layout({
       id: layouts.layoutRoot,

@@ -66,8 +66,8 @@ Layouts, Widgets, and Regions share `PhiRenderableBlockBase` (`types/renderable-
   properties only, and read the three through `resolvePhiRenderableBlockGeometry`
   (LAYOUTING.md, "Block geometry is read once"); nothing draws them by field.
 - `zIndex`, `opacity`, `surface`, `effects`, `anchor`, `accessPolicy`, and `viewportFlags` are the shared
-  chrome and visibility fields. A Layout's look is its `surface` (LAYOUTING.md, "Surface"); the Widget
-  frame's `background`, `border`, `shadow` and the Region's chrome move to the same `surface` next.
+  chrome and visibility fields. A Layout's, a Region's and an Overlay's look is its `surface` (LAYOUTING.md,
+  "Surface"); the Widget frame's `background`, `border`, `shadow` move to the same `surface` next.
 - `className` is the supported styling hook; inline `style` is not part of the block contract.
 - `capabilities` (`selectable`, `draggable`, `hoverable`, `activatable`, `focusable`, `droppable`)
   declares interaction participation; `runtime` carries the host context (`siteKey`, `area`, `pageKey`,

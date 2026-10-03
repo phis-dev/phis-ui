@@ -189,16 +189,21 @@ Regions own shell and page placement rather than child topology. They may config
 
 - visibility, enabled state, viewport behavior, size bounds, opacity, and z-index;
 - sticky/full-height/collapse behavior where the Region family supports it;
-- background, border, shadow, and semantic effect;
+- a `surface` (see [Surface](#surface));
 - `padding`, `paddingTop`, `paddingRight`, `paddingBottom`, and `paddingLeft`.
 
 Region padding is applied to the Region root and is independent of root-Layout padding. It is stored
 flat in the Region config, parsed through the shared padding value rules, and edited as a Region
 property. The Builder must not synthesize a Layout solely to represent Region padding.
 
-A Region without a configured `border` renders no border: header, footer, and sider separators are never
-implicit, and Canvas outlines belong to Builder scaffold chrome only. Static and client-enhanced Region
-renderers resolve chrome through the same Region-shell resolver.
+A Region reads its Surface with two differences that belong to Regions. A `theme` edge is the separator --
+the Site's line on the side that faces the Page: below a Header, above a Footer, on the inner side of a
+Sider, all round any other Region; `custom` draws the configured border as it says. A Region states no corner
+of its own otherwise, because it spans its part of the frame. And a glass pane on a Region without a ground of
+its own frosts the Region's Shell ground (SHELL.md). A Region without a Surface renders no border: separators
+are never implicit, and Canvas outlines belong to Builder scaffold chrome only. Static and client-enhanced
+Region renderers resolve chrome through the same Region-shell resolver, and both mount the ground layer a
+softened paint needs.
 
 `PhiStructureRegionLayout` and `PhiPageRegionLayout` are Builder/preview adapters for Region-owned
 composition, not alternate Layout kinds.
@@ -246,8 +251,8 @@ The parent slot policy is authoritative; child defaults cannot override it.
 - Editor scaffolding is an authoring overlay and must not change persisted topology or runtime depth.
 - Insert, select, drag, delete, and title controls operate on the Layout instance and its declared slots.
 - The Inspector exposes topology fields and shared visual fields for every Layout.
-- Regions expose their own geometry, padding, background (including image motion), border, shadow, and effect
-  controls. Layout Background authoring exposes the same motion fields only when the selected Background owns
+- Regions expose their own geometry, padding, and Surface controls (background including image motion and
+  filter, border, shadow). Layout Background authoring exposes the same motion fields only when the selected Background owns
   an image.
 
 ## Sizing and nesting

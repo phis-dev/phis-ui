@@ -91,7 +91,6 @@ export async function buildPhiDefaultAppThreadsPageTree({
   const scaffold = buildPhiBasePageContentScaffold({
     page,
     regionId: SYNTHETIC_APP_THREADS_REGION_IDS.regionContent,
-    regionConfig: { border: false },
   });
 
   const nodes = createPhiCmsPresetNodes(page);

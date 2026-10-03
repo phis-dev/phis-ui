@@ -1,14 +1,12 @@
 import type { PhiCmsContentWidgetNode, PhiCmsLayoutRenderNode } from "../../../types/cms";
-import type { PhiCmsBorderWidgetConfig, PhiCmsPaddingWidgetConfig } from "../../../types/cms-config";
+import type { PhiCmsPaddingWidgetConfig } from "../../../types/cms-config";
 import type {
   PhiRenderableBlockEffects,
   PhiRuntimeModuleId,
 } from "../../../types";
 import type { PhiBuilderAreaKey } from "../../../constants/cms-areas";
-import type { PhiCmsBackgroundWidgetConfig } from "../../../components/widgets/config/background";
 import type { PhiCmsGeometryWidgetConfig } from "../../../components/widgets/config/geometry";
 import type { PhiAnchorWidgetPlacement } from "../../../components/controls/phi-anchor-control-contract";
-import type { PhiShadow, PhiLayoutEffectId } from "../../../types/layout-style";
 import type { PhiBuilderRootNodeKind } from "./preview-transport";
 import type { PhiCmsInstanceId } from "../../../types/cms-instance-id";
 import type { PhiWorkspaceCatalogState } from "../../../components/workspace/catalog-state";
@@ -28,10 +26,8 @@ export type PhiBuilderChromeControls = {
 };
 
 export type PhiDeveloperBuilderRegionDraft = PhiCmsGeometryWidgetConfig & {
-  background: PhiCmsBackgroundWidgetConfig;
-  border?: PhiCmsBorderWidgetConfig | null;
-  effect?: PhiLayoutEffectId | null;
-  shadow?: PhiShadow | null;
+  /** The Region's own look; the root node's is `rootNodeSurface`. */
+  surface?: PhiSurface | null;
   regionConfig?: Record<string, unknown> | null;
   rootNodeId?: PhiCmsInstanceId | null;
   rootNodeTypeKey?: string | null;
@@ -50,10 +46,10 @@ export type PhiDeveloperBuilderRegionDraft = PhiCmsGeometryWidgetConfig & {
 /**
  * The Inspector's draft for one node inside a Region, a Layout or the root.
  *
- * Its look is `rootNodeSurface`; the Region's own `background` belongs to the Region draft and means
+ * Its look is `rootNodeSurface`; the Region's own `surface` belongs to the Region draft and means
  * nothing here, which is why it is left out rather than filled with a stand-in.
  */
-export type PhiDeveloperBuilderStructureNodeDraft = Omit<PhiDeveloperBuilderRegionDraft, "background">;
+export type PhiDeveloperBuilderStructureNodeDraft = Omit<PhiDeveloperBuilderRegionDraft, "surface">;
 
 export type PhiDeveloperBuilderPageMetaDraft = {
   title?: string | null;

@@ -1,14 +1,11 @@
 import type { PhiCmsContentWidgetNode, PhiCmsLayoutRenderNode } from "../../../types/cms";
 import type {
-  PhiCmsBorderWidgetConfig,
   PhiCmsPaddingWidgetConfig,
 } from "../../../types/cms-config";
-import type { PhiCmsBackgroundWidgetConfig } from "../../../components/widgets/config/background";
 import type { PhiCmsGeometryWidgetConfig } from "../../../components/widgets/config/geometry";
 import type { PhiAnchorWidgetPlacement } from "../../../components/controls/phi-anchor-control-contract";
 import type { PhiCmsInstanceId } from "../../../types/cms-instance-id";
 import type { PhiRuntimeModuleId } from "../../../types/cms-plugins";
-import type { PhiShadow, PhiLayoutEffectId } from "../../../types/layout-style";
 import { isPhiRecord } from "../../../helpers/is-record";
 import type { PhiSurface } from "../../../types/surface";
 
@@ -19,10 +16,8 @@ export const PHI_BUILDER_PREVIEW_TTL_MS = 1000 * 60 * 30;
 export type PhiBuilderRootNodeKind = "layout" | "widget" | null;
 
 export type PhiBuilderPreviewRegionDraft = PhiCmsGeometryWidgetConfig & {
-  background?: PhiCmsBackgroundWidgetConfig | null;
-  border?: PhiCmsBorderWidgetConfig | null;
-  effect?: PhiLayoutEffectId | null;
-  shadow?: PhiShadow | null;
+  /** The Region's own look; the root node's is `rootNodeSurface`. */
+  surface?: PhiSurface | null;
   regionConfig?: Record<string, unknown> | null;
   rootNodeId?: PhiCmsInstanceId | null;
   rootNodeTypeKey?: string | null;
