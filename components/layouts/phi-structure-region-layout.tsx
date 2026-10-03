@@ -2,7 +2,7 @@
 
 import type { CSSProperties, ReactNode } from "react";
 
-import { theme } from "antd";
+import { usePhiConfig } from "../root/phi-config-provider";
 import type { PhiRegionWidgetLabels } from "../widgets/label-types/region";
 import { PHI_LAYOUT } from "../../theme/phi-tokens";
 import { usePhiAuthoringRegionOverrides } from "../runtime/authoring-region-overrides";
@@ -33,7 +33,7 @@ export function PhiStructureRegionLayout({
   style,
   labels,
 }: PhiStructureRegionLayoutProps) {
-  const { token } = theme.useToken();
+  const { token } = usePhiConfig();
   const overrides = usePhiAuthoringRegionOverrides();
   const isPreviewMode = overrides.preview;
   const shellPadding = isPreviewMode ? 0 : PHI_PADDING;

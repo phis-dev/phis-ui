@@ -492,14 +492,16 @@ built. Remove an entry when it is done.
   which is the difference between a decision and an oversight.
 
   Found with it: **ten surfaces read design tokens through antd's `theme` hook** rather than through
-  `usePhiConfig()`, which returns the same set. Not wrong, but a Control adoption still open; they are
-  listed in the allowance so the number shrinks in the open.
+  `usePhiConfig()`, which returns the same set. ~~Not wrong, but a Control adoption still open; they are
+  listed in the allowance so the number shrinks in the open.~~ -- **done**: the nine (the tenth was
+  counted twice) read `usePhiConfig().token`, the vocabulary gained the three tokens they used
+  (`colorSuccessBorder`, `colorWarningBorder`, `controlHeightXS`), and the allowance group is gone.
 
   Order: ~~the two big pass-throughs (`Flex`, `PhiTypographyControl`), the five owner entries, the
   trivial wrappers, `PhiFileDropControl` with `Progress`, `PhiSkeletonControl`, `PhiEmptyControl`,
   `PhiNameControl`, `PhiAvatarControl`, `PhiCardControl`, `PhiAccordionControl`,
   `PhiDescriptionListControl`, `PhiEntryListControl`, `PhiCompactGroupControl`, the deletions, and the
-  allowlist~~ -- **done, all of it.** What is left is not wrapping: the ten `theme` readers above.
+  allowlist~~ -- **done, all of it**, the `theme` readers above included.
 
   `pendingControlAdoptions` is gone with the denylist: it existed to let a primitive join
   `controlledPrimitives` before its last sites were converted, and there are no unconverted sites left.

@@ -1,7 +1,7 @@
 "use client";
 
 import type { CSSProperties, ReactNode } from "react";
-import { theme as antdTheme } from "antd";
+import { usePhiConfig } from "../../../../components/root/phi-config-provider";
 
 import {
   type PhiBuilderInspectableNodeKind,
@@ -90,7 +90,7 @@ export function PhiLayoutDeleteButtonOverlay({
   leading,
   children,
 }: PhiLayoutDeleteButtonOverlayProps) {
-  const { token } = antdTheme.useToken();
+  const { token } = usePhiConfig();
   const resolvedTop = top ?? (placement ? "auto" : -10);
   const resolvedRight = right ?? (placement === "bottom-left" ? "auto" : 0);
   const resolvedBottom = bottom ?? (placement ? -10 : "auto");

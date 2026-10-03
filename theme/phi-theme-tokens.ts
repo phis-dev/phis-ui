@@ -76,11 +76,13 @@ export const PHI_THEME_TOKEN_KEYS = [
   "colorSuccess",
   "colorSuccessBg",
   "colorSuccessBgHover",
+  "colorSuccessBorder",
   "colorSuccessBorderHover",
   "colorSuccessText",
   "colorWarning",
   "colorWarningBg",
   "colorWarningBgHover",
+  "colorWarningBorder",
   "colorWarningBorderHover",
   "colorWarningText",
   "colorError",
@@ -128,6 +130,7 @@ export const PHI_THEME_TOKEN_KEYS = [
 
   // The height a Control stands at.
   "controlHeight",
+  "controlHeightXS",
   "controlHeightSM",
   "controlHeightLG",
 

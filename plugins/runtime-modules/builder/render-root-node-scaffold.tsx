@@ -2,7 +2,7 @@
 
 import { cloneElement, isValidElement, Suspense, useCallback, useEffect, useRef, useState, type CSSProperties, type KeyboardEvent, type ReactElement, type ReactNode } from "react";
 import { NodeIndexOutlined, ShareAltOutlined, WarningOutlined } from "@ant-design/icons";
-import { theme as antdTheme } from "antd";
+import { usePhiConfig } from "../../../components/root/phi-config-provider";
 
 import { PhiEditScaffoldDrawer } from "./edit-scaffold-drawer";
 import type { PhiCmsContentWidgetNode, PhiCmsLayoutRenderNode, PhiResolvedCmsRenderableTree } from "../../../types/cms";
@@ -583,7 +583,7 @@ function PhiWidgetEffectsPreviewFrame({
   style?: CSSProperties;
   children: ReactNode;
 }) {
-  const { token } = antdTheme.useToken();
+  const { token } = usePhiConfig();
   const selected = usePhiDeveloperBuilderStateValue(
     "public",
     (state) =>

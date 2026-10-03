@@ -1,7 +1,7 @@
 "use client";
 
 import { LeftOutlined, RightOutlined } from "@ant-design/icons";
-import { theme } from "antd";
+import { usePhiConfig } from "../../../../../components/root/phi-config-provider";
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 
 import {
@@ -51,7 +51,7 @@ export type PhiGalleryWidgetProps = {
 };
 
 function GalleryPicture({ image, fit }: { image: PhiGalleryImage; fit: "cover" | "contain" }) {
-  const { token } = theme.useToken();
+  const { token } = usePhiConfig();
   const picture = (
     <img
       src={image.url}
@@ -77,7 +77,7 @@ function GalleryPicture({ image, fit }: { image: PhiGalleryImage; fit: "cover" |
 }
 
 export function PhiGalleryWidget({ config, labels }: PhiGalleryWidgetProps) {
-  const { token } = theme.useToken();
+  const { token } = usePhiConfig();
   const images = useMemo(() => config?.images ?? [], [config?.images]);
   const visibleCount = config?.visibleCount ?? 1;
   const windowAnchor = config?.windowAnchor ?? "start";

@@ -1,6 +1,6 @@
 "use client";
 
-import { theme as antdTheme } from "antd";
+import { usePhiConfig } from "../../../../components/root/phi-config-provider";
 import type { CSSProperties, ReactNode } from "react";
 
 import { PhiCmsRegionType } from "../../../../constants/phi-cms";
@@ -218,7 +218,7 @@ export function PhiDeveloperBuilderStructureCanvas({
   regionLabels = PHI_REGION_WIDGET_DEFAULT_LABELS,
   pickerLabels = PHI_BUILDER_CHROME_WIDGET_DEFAULT_LABELS.canvas.picker,
 }: PhiDeveloperBuilderStructureCanvasProps) {
-  const { token } = antdTheme.useToken();
+  const { token } = usePhiConfig();
   const debugScaffold = usePhiDeveloperBuilderStateValue("public", (state) => state.debugScaffold);
   const isPreviewMode = builderMode === "preview";
   const isPagesWorkspace = workspace === "pages";

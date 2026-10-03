@@ -316,20 +316,6 @@ const antdImportAllowance = new Map([
     paths: ["antd/es/input"],
     reason: "`InputRef` for focus handling. The Widget renders PhiTextControl and types against the ref alone.",
   }],
-  /*
-   * Ten surfaces read design tokens through the primitive's own hook rather than through
-   * `usePhiConfig()`, which returns the same token set. That is a Control adoption still open rather
-   * than a decision -- see TODOS.md -- and it is listed here so that it shrinks in the open.
-   */
-  ["components/layouts/clients/phi-carousel-layout-client.tsx", { values: ["theme"], reason: "Reads tokens." }],
-  ["components/layouts/phi-structure-region-layout.tsx", { values: ["theme"], reason: "Reads tokens." }],
-  ["plugins/runtime-modules/builder/clients/inspector-config-field.tsx", { values: ["theme"], reason: "Reads tokens." }],
-  ["plugins/runtime-modules/builder/clients/layout-scaffold-overlays.tsx", { values: ["theme"], reason: "Reads tokens." }],
-  ["plugins/runtime-modules/builder/clients/structure-canvas.tsx", { values: ["theme"], reason: "Reads tokens." }],
-  ["plugins/runtime-modules/builder/edit-scaffold-drawer.tsx", { values: ["theme"], reason: "Reads tokens." }],
-  ["plugins/runtime-modules/builder/render-root-node-scaffold.tsx", { values: ["theme"], reason: "Reads tokens." }],
-  ["plugins/runtime-modules/builder/widgets/structure-region/built-in.tsx", { values: ["theme"], reason: "Reads tokens." }],
-  ["plugins/runtime-modules/core/widgets/gallery/client.tsx", { values: ["theme"], reason: "Reads tokens." }],
 ]);
 
 /** What a file may import: its own entry, plus whatever it is named the owner or adapter of. */

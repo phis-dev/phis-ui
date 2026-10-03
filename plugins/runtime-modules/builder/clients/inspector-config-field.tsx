@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState, type ReactNode } from "react";
-import { theme } from "antd";
+import { usePhiConfig } from "../../../../components/root/phi-config-provider";
 
 import type {
   PhiCmsConfigField,
@@ -489,7 +489,7 @@ function PhiInspectorCollectionFieldControl({
   videoProviderDescriptors: readonly PhiVideoProviderDescriptor[];
   onChange?: (next: Record<string, unknown>) => void;
 }) {
-  const { token } = theme.useToken();
+  const { token } = usePhiConfig();
   const popup = usePhiWidgetScaffoldPopup();
   const [overlayOpen, setOverlayOpen] = useState(false);
   const configuredItems = readPhiInspectorCollectionItems(value);

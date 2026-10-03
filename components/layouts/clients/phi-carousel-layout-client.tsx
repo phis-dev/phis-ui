@@ -1,7 +1,7 @@
 "use client";
 
 import { LeftOutlined, RightOutlined } from "@ant-design/icons";
-import { theme } from "antd";
+import { usePhiConfig } from "../../root/phi-config-provider";
 import type { CSSProperties, ReactNode } from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
@@ -136,7 +136,7 @@ export function PhiCarouselLayout({
   } = layoutProps;
   const isEditMode = renderMode === "editor";
   const editableSlotCount = resolvePhiSequenceEditableSlotCount(slots, slotKeys);
-  const { token } = theme.useToken();
+  const { token } = usePhiConfig();
   const {
     activeIndex,
     slotMeta: resolvedSlotMeta,

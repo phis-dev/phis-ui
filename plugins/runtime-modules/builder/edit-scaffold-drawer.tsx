@@ -2,7 +2,7 @@
 
 import type { CSSProperties, KeyboardEvent, ReactNode } from "react";
 
-import { theme as antdTheme } from "antd";
+import { usePhiConfig } from "../../../components/root/phi-config-provider";
 import { PhiButtonControl } from "../../../components/controls/phi-button-control";
 import { PlusOutlined } from "@ant-design/icons";
 
@@ -38,7 +38,7 @@ export function PhiEditScaffoldDrawer({
   chrome,
   style,
 }: PhiEditScaffoldDrawerProps) {
-  const { token } = antdTheme.useToken();
+  const { token } = usePhiConfig();
   const selected = usePhiDeveloperBuilderStateValue(
     "public",
     (state) =>

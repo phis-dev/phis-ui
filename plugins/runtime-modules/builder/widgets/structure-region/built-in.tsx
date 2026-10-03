@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import type { CSSProperties, ReactElement, ReactNode } from "react";
 
-import { theme as antdTheme } from "antd";
+import { usePhiConfig } from "../../../../../components/root/phi-config-provider";
 import { PlusOutlined } from "@ant-design/icons";
 import {
   buildPhiCmsLayoutNamespacedTypeKey,
@@ -672,7 +672,7 @@ export function PhiStructureRegionScaffold({
   containerStyle,
   containerClassName,
 }: PhiStructureRegionWidgetProps) {
-  const { token } = antdTheme.useToken();
+  const { token } = usePhiConfig();
   const activeModules = usePhiRuntimeModuleState();
   const authoringCanvas = usePhiBuilderAuthoringCanvas();
   const builderState = {
