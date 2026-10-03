@@ -1,6 +1,5 @@
 "use client";
 
-import { LinkOutlined } from "@ant-design/icons";
 import { createContext, useContext, useState, type ReactNode } from "react";
 
 import { PhiButtonControl } from "../../../controls/phi-button-control";
@@ -8,6 +7,7 @@ import { PhiPopoverControl } from "../../../controls/phi-popover-control";
 import { PhiTreeSelectControl } from "../../../controls/phi-tree-select-control";
 import type { PhiPageReference } from "../../../../types/references";
 import type { PhiTreeOption } from "../../../../types/tree";
+import { PhiIcon } from "../../../shell/phi-icon";
 
 /** A Page picked to link to: its reference, and what to show for it. */
 export type PhiPageReferenceSelection = {
@@ -81,7 +81,7 @@ export function PhiPageReferencePicker({
           type="text"
           size="small"
           ariaLabel={ariaLabel}
-          icon={<LinkOutlined />}
+          icon={<PhiIcon name="link" size="inherit" />}
           onClick={() => undefined}
         />
       </span>

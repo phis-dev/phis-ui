@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 
-import { FormatPainterOutlined } from "@ant-design/icons";
 
 import { PhiInlineTextEditor } from "../../../../../components/controls/phi-inline-text-editor";
 import { PhiButtonControl } from "../../../../../components/controls/phi-button-control";
@@ -94,7 +93,7 @@ export function PhiSimpleTextWidgetStyleButton({
           type="text"
           size="small"
           ariaLabel={labels.text.styles}
-          icon={<FormatPainterOutlined />}
+          icon={<PhiIcon name="format-painter" size="inherit" />}
           onClick={() => undefined}
         />
       </span>

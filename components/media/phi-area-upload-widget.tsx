@@ -1,6 +1,5 @@
 "use client";
 
-import { DeleteOutlined, UploadOutlined } from "@ant-design/icons";
 import { PhiTagControl } from "../controls/phi-tag-control";
 import { PhiButtonControl } from "../controls/phi-button-control";
 import NextImage from "next/image";
@@ -45,6 +44,7 @@ import { PhiProgressControl } from "../controls/phi-progress-control";
 import { PhiFlexControl } from "../controls/phi-flex-control";
 import { PhiTypographyControl } from "../controls/phi-typography-control";
 import { PhiSpinControl } from "../controls/phi-spin-control";
+import { PhiIcon } from "../shell/phi-icon";
 
 type UploadWallItem = {
   localId: string;
@@ -364,7 +364,7 @@ export function PhiAreaUploadBinding({ config, labels, onUploadComplete, collect
               cursor: isDragActive ? "copy" : "default",
             }}
           >
-            <UploadOutlined style={{ fontSize: uploadTileIconSize, color: token.colorTextSecondary }} />
+            <PhiIcon name="upload" size="inherit" style={{ fontSize: uploadTileIconSize, color: token.colorTextSecondary }} />
             <PhiTypographyControl strong>{labels.dropTitle}</PhiTypographyControl>
             <PhiTypographyControl type="secondary">{labels.dropHint}</PhiTypographyControl>
           </PhiFlexControl>
@@ -497,7 +497,7 @@ export function PhiAreaUploadBinding({ config, labels, onUploadComplete, collect
                   {allowDelete && item.assetId > 0 ? (
                     <PhiButtonControl
                       ariaLabel={labels.deleteLabel}
-                      icon={<DeleteOutlined />}
+                      icon={<PhiIcon name="delete" size="inherit" />}
                       type="text"
                       size="small"
                       danger

@@ -2,7 +2,6 @@
 
 import { PhiButtonControl } from "../../controls/phi-button-control";
 import { PhiFlexControl } from "../../controls/phi-flex-control";
-import { LeftOutlined, RightOutlined } from "@ant-design/icons";
 import type { CSSProperties, ReactNode } from "react";
 
 import {
@@ -26,6 +25,7 @@ import {
   type PhiLayoutAuthoringSignal,
 } from "../../../helpers/layout-authoring-markers";
 import { PhiTypographyControl } from "../../controls/phi-typography-control";
+import { PhiIcon } from "../../shell/phi-icon";
 
 /**
  * Authoring a sequence, one slot at a time.
@@ -162,7 +162,7 @@ export function PhiSequenceSlotEditor({
         <span onClick={(event) => event.stopPropagation()}>
           <PhiButtonControl
             ariaLabel={`Previous ${slotNoun}`}
-            icon={<LeftOutlined />}
+            icon={<PhiIcon name="left" size="inherit" />}
             size="small"
             type="text"
             disabled={!hasPreviousSlot}
@@ -175,7 +175,7 @@ export function PhiSequenceSlotEditor({
         <span onClick={(event) => event.stopPropagation()}>
           <PhiButtonControl
             ariaLabel={`Next ${slotNoun}`}
-            icon={<RightOutlined />}
+            icon={<PhiIcon name="right" size="inherit" />}
             size="small"
             type="text"
             disabled={!hasNextSlot}

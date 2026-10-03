@@ -1,6 +1,5 @@
 "use client";
 
-import { PictureOutlined } from "@ant-design/icons";
 
 import {
   PhiImageAssetVariantKey,
@@ -18,6 +17,7 @@ import { usePhiWidgetScaffoldPopup } from "./phi-widget-scaffold-popup";
 import { usePhiAuthoringToolsLabels } from "./phi-authoring-tools-labels";
 import { PhiButtonControl } from "../../../controls/phi-button-control";
 import { createPhiMediaPickerAssetControllerRoutes } from "../../../media/asset-controller-routes";
+import { PhiIcon } from "../../../shell/phi-icon";
 
 type PhiWidgetImageToolButtonCommonPatch = {
   trusted?: boolean;
@@ -76,7 +76,7 @@ export function PhiInternalAssetReferencePickerButton({
           <PhiButtonControl
             type="text"
             size="small"
-            icon={<PictureOutlined />}
+            icon={<PhiIcon name="picture" size="inherit" />}
             ariaLabel={ariaLabel ?? labels.fallbacks.selectImage}
             style={{ width: 24, minWidth: 24, height: 24, padding: 0 }}
             onClick={() => undefined}

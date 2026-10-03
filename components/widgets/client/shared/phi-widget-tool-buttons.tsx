@@ -2,16 +2,6 @@
 
 import { useEffect, useState, type ReactNode } from "react";
 
-import {
-  AlignCenterOutlined,
-  AlignLeftOutlined,
-  AlignRightOutlined,
-  BgColorsOutlined,
-  FontSizeOutlined,
-  FormatPainterOutlined,
-  LinkOutlined,
-  MenuOutlined,
-} from "@ant-design/icons";
 import { formatUrl } from "@lexical/link";
 
 import type { PhiWidgetFontFamilyKey, PhiWidgetFontSizeKey } from "../../../../types/site-theme";
@@ -48,6 +38,7 @@ import { PhiInternalAssetReferencePickerButton } from "./phi-widget-image-tool-b
 import { PHI_Z_INDEX } from "../../../../theme/phi-tokens";
 import { PhiFlexControl } from "../../../controls/phi-flex-control";
 import { PhiTypographyControl } from "../../../controls/phi-typography-control";
+import { PhiIcon } from "../../../shell/phi-icon";
 
 function stopOverlayEvent(event: { stopPropagation: () => void }) {
   event.stopPropagation();
@@ -153,7 +144,7 @@ export function PhiWidgetColorToolButton({
           type="text"
           size="small"
           ariaLabel={ariaLabel ?? labels.fallbacks.widgetColor}
-          icon={<BgColorsOutlined style={currentColor ? { color: currentColor } : undefined} />}
+          icon={<PhiIcon name="bg-colors" size="inherit" style={currentColor ? { color: currentColor } : undefined} />}
           onClick={() => undefined}
         />
       </span>
@@ -250,7 +241,7 @@ export function PhiWidgetTypographyToolButton({
           type="text"
           size="small"
           ariaLabel={ariaLabel ?? labels.fallbacks.widgetTypography}
-          icon={<FontSizeOutlined />}
+          icon={<PhiIcon name="font-size" size="inherit" />}
           onClick={() => undefined}
         />
       </span>
@@ -272,14 +263,14 @@ const PHI_HTML_WIDGET_ALIGNMENT_OPTIONS: Array<{
   label: string;
   icon: ReactNode;
 }> = [
-  { value: "left", label: "Align left", icon: <AlignLeftOutlined /> },
-  { value: "center", label: "Align center", icon: <AlignCenterOutlined /> },
-  { value: "right", label: "Align right", icon: <AlignRightOutlined /> },
-  { value: "justify", label: "Justify", icon: <MenuOutlined /> },
+  { value: "left", label: "Align left", icon: <PhiIcon name="align-left" size="inherit" /> },
+  { value: "center", label: "Align center", icon: <PhiIcon name="align-center" size="inherit" /> },
+  { value: "right", label: "Align right", icon: <PhiIcon name="align-right" size="inherit" /> },
+  { value: "justify", label: "Justify", icon: <PhiIcon name="menu" size="inherit" /> },
 ];
 
 function resolvePhiHtmlWidgetAlignmentIcon(alignment: PhiHtmlWidgetAlignment | null | undefined) {
-  return PHI_HTML_WIDGET_ALIGNMENT_OPTIONS.find((option) => option.value === alignment)?.icon ?? <AlignLeftOutlined />;
+  return PHI_HTML_WIDGET_ALIGNMENT_OPTIONS.find((option) => option.value === alignment)?.icon ?? <PhiIcon name="align-left" size="inherit" />;
 }
 
 const PHI_HTML_WIDGET_STYLE_TOGGLES: Array<{
@@ -457,7 +448,7 @@ export function PhiHtmlWidgetToolbarTools({
             type={hasActiveTextStyle ? "primary" : "text"}
             size="small"
             ariaLabel={labels.richText.styles}
-            icon={<FormatPainterOutlined />}
+            icon={<PhiIcon name="format-painter" size="inherit" />}
             disabled={!bridge}
             onClick={() => undefined}
           />
@@ -558,7 +549,7 @@ export function PhiHtmlWidgetToolbarTools({
             type={state?.linkUrl ? "primary" : "text"}
             size="small"
             ariaLabel={labels.richText.link}
-            icon={<LinkOutlined />}
+            icon={<PhiIcon name="link" size="inherit" />}
             disabled={!bridge}
             onClick={() => undefined}
           />

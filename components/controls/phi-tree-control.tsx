@@ -1,6 +1,5 @@
 "use client";
 
-import { HolderOutlined } from "@ant-design/icons";
 import { Button, Flex, Tree, Typography, theme as antdTheme } from "antd";
 import type { DataNode, EventDataNode } from "antd/es/tree";
 import { useMemo, useState, type CSSProperties, type DragEvent as ReactDragEvent } from "react";
@@ -341,7 +340,7 @@ export function PhiTreeControl({
       checkStrictly={checkStrictly}
       checkedKeys={[...checkedNodeIdentities]}
       disabled={disabled}
-      draggable={draggable ? { icon: <HolderOutlined />, nodeDraggable: () => true } : false}
+      draggable={draggable ? { icon: <PhiIcon name="holder" size="inherit" />, nodeDraggable: () => true } : false}
       expandedKeys={[...expandedNodeIdentities]}
       multiple={selectionMode === "multiple"}
       selectable={selectionMode !== "none"}

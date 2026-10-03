@@ -1,6 +1,5 @@
 "use client";
 
-import { LeftOutlined, RightOutlined } from "@ant-design/icons";
 import { usePhiConfig } from "../../../../../components/root/phi-config-provider";
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 
@@ -11,6 +10,7 @@ import {
 import { PhiButtonControl } from "../../../../../components/controls/phi-button-control";
 import { PhiLink } from "../../../../../components/navigation/phi-link";
 import type { PhiCmsGalleryWidgetConfig, PhiGalleryImage } from "./config";
+import { PhiIcon } from "../../../../../components/shell/phi-icon";
 
 /**
  * A run of pictures, and the two things the browser will not do for us.
@@ -170,7 +170,7 @@ export function PhiGalleryWidget({ config, labels }: PhiGalleryWidgetProps) {
           <>
             <div style={{ position: "absolute", insetBlockStart: "50%", insetInlineStart: token.marginXS, transform: "translateY(-50%)" }}>
               <PhiButtonControl
-                icon={<LeftOutlined />}
+                icon={<PhiIcon name="left" size="inherit" />}
                 ariaLabel={labels?.previous ?? "Previous"}
                 shape="circle"
                 disabled={atStart && !loop}
@@ -179,7 +179,7 @@ export function PhiGalleryWidget({ config, labels }: PhiGalleryWidgetProps) {
             </div>
             <div style={{ position: "absolute", insetBlockStart: "50%", insetInlineEnd: token.marginXS, transform: "translateY(-50%)" }}>
               <PhiButtonControl
-                icon={<RightOutlined />}
+                icon={<PhiIcon name="right" size="inherit" />}
                 ariaLabel={labels?.next ?? "Next"}
                 shape="circle"
                 disabled={atEnd && !loop}

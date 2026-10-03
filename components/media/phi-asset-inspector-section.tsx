@@ -1,6 +1,5 @@
 "use client";
 
-import { CopyOutlined } from "@ant-design/icons";
 
 import NextImage from "next/image";
 import type { CSSProperties } from "react";
@@ -24,6 +23,7 @@ import { resolveFocalRectCoverImageStyle } from "./focal-rect";
 import { resolvePhiImagePresentation } from "./image-presentation";
 import { PhiFlexControl } from "../controls/phi-flex-control";
 import { PhiTypographyControl } from "../controls/phi-typography-control";
+import { PhiIcon } from "../shell/phi-icon";
 
 function formatBytes(bytes: number | null | undefined) {
   if (typeof bytes !== "number" || !Number.isFinite(bytes) || bytes <= 0) return null;
@@ -122,7 +122,7 @@ export function PhiAssetInspectorSection({
             <PhiTypographyControl type="secondary">{label}</PhiTypographyControl>
             <PhiFlexControl align="center" gap="small" style={{ minWidth: 0 }}>
               <PhiTypographyControl code ellipsis style={{ flex: "1 1 auto", minWidth: 0 }}>{value}</PhiTypographyControl>
-              <PhiButtonControl ariaLabel={labels.inspector.copyLabelTemplate.replace("%1", label)} type="text" size="small" icon={<CopyOutlined />} onClick={() => copy(value)} />
+              <PhiButtonControl ariaLabel={labels.inspector.copyLabelTemplate.replace("%1", label)} type="text" size="small" icon={<PhiIcon name="copy" size="inherit" />} onClick={() => copy(value)} />
             </PhiFlexControl>
           </PhiFlexControl>
         ))}

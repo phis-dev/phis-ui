@@ -810,6 +810,31 @@ for (const variable of antdComponentVariableAllowance.keys()) {
   );
 }
 
+/*
+ * Icons are drawn through `PhiIcon` by name, and one file knows that they are Ant Design's.
+ *
+ * `components/shell/phi-antd-icon.tsx` loads each icon where it is drawn and maps the house's names onto
+ * them. An icon imported anywhere else is one the swap would have to find by grep, and one that is in
+ * every chunk of the file that imports it. A missing icon is added to the registry, not imported beside it.
+ */
+const iconRegistryPath = "components/shell/phi-antd-icon.tsx";
+let iconRegistrySeen = false;
+for (const relativePath of await listRepositorySources()) {
+  const source = await readSource(relativePath);
+  if (!/["']@ant-design\/icons(?:\/[^"']*)?["']/u.test(source)) continue;
+  if (relativePath === iconRegistryPath) {
+    iconRegistrySeen = true;
+    continue;
+  }
+  failures.push(
+    `${relativePath} imports @ant-design/icons; draw the icon with PhiIcon, and add it to `
+      + `${iconRegistryPath} if the name is missing.`,
+  );
+}
+if (!iconRegistrySeen) {
+  failures.push(`${iconRegistryPath} no longer loads @ant-design/icons; move the icon rule to wherever it went.`);
+}
+
 if (failures.length > 0) {
   console.error(`Control boundary validation failed:\n- ${failures.join("\n- ")}`);
   process.exit(1);

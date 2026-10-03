@@ -1,6 +1,5 @@
 "use client";
 
-import { CloseOutlined, DownOutlined, EditOutlined, HolderOutlined, LeftOutlined, RightOutlined, SaveOutlined, UpOutlined } from "@ant-design/icons";
 import { Button, Flex, Table } from "antd";
 import type { TableColumnsType } from "antd";
 import type { TableRowSelection } from "antd/es/table/interface";
@@ -75,6 +74,7 @@ import { usePhiConfig } from "../root/phi-config-provider";
 import { PhiSkeletonControl } from "./phi-skeleton-control";
 import { readPhiDotPath } from "../../helpers/dot-path";
 import { readPhiTableRowIdentity as readIdentity } from "../../helpers/table-binding";
+import { PhiIcon } from "../shell/phi-icon";
 
 export type PhiTableControlCellEditor = {
   type: Exclude<PhiTableProviderFieldType, "json">;
@@ -214,7 +214,7 @@ function PhiTableRowDragHandle({
       ref={sortable?.setActivatorNodeRef}
       type="text"
       size="small"
-      icon={<HolderOutlined />}
+      icon={<PhiIcon name="holder" size="inherit" />}
       aria-label={dragLabel}
       disabled={disabled || !sortable}
       onClick={(event) => event.stopPropagation()}
@@ -243,7 +243,7 @@ function PhiTableRowPositionControls({
       <Button
         type="text"
         size="small"
-        icon={<UpOutlined />}
+        icon={<PhiIcon name="up" size="inherit" />}
         aria-label={moveUpLabel}
         disabled={!canMoveUp}
         onClick={(event) => { event.stopPropagation(); onMoveUp(); }}
@@ -251,7 +251,7 @@ function PhiTableRowPositionControls({
       <Button
         type="text"
         size="small"
-        icon={<DownOutlined />}
+        icon={<PhiIcon name="down" size="inherit" />}
         aria-label={moveDownLabel}
         disabled={!canMoveDown}
         onClick={(event) => { event.stopPropagation(); onMoveDown(); }}
@@ -967,7 +967,7 @@ export function PhiTableControl<TRow extends Record<string, unknown>>({
           <PhiButtonControl
             type="text"
             size="small"
-            icon={<LeftOutlined />}
+            icon={<PhiIcon name="left" size="inherit" />}
             disabled={reorderIndex === 0}
             ariaLabel="Move column left"
             tooltip="Move column left"
@@ -978,7 +978,7 @@ export function PhiTableControl<TRow extends Record<string, unknown>>({
           <PhiButtonControl
             type="text"
             size="small"
-            icon={<RightOutlined />}
+            icon={<PhiIcon name="right" size="inherit" />}
             disabled={reorderIndex === columnOrder.length - 1}
             ariaLabel="Move column right"
             tooltip="Move column right"
@@ -1111,13 +1111,13 @@ export function PhiTableControl<TRow extends Record<string, unknown>>({
       const active = identity != null && String(identity) === String(editingRowIdentity);
       const disabled = editing.isRowDisabled?.(row) ?? false;
       if (!active) {
-        return <PhiButtonControl type="text" size="small" icon={<EditOutlined />}
+        return <PhiButtonControl type="text" size="small" icon={<PhiIcon name="edit" size="inherit" />}
           ariaLabel={editing.editLabel ?? "Edit row"} tooltip={editing.editLabel ?? "Edit row"}
           disabled={disabled || identity == null || editingRowIdentity != null}
           onClick={() => { setEditingRowIdentity(identity); setRowEditPatch({}); }} />;
       }
       return <Flex align="center" gap={2}>
-        <PhiButtonControl type="text" size="small" icon={<SaveOutlined />}
+        <PhiButtonControl type="text" size="small" icon={<PhiIcon name="save" size="inherit" />}
           ariaLabel={editing.saveLabel ?? "Save row"} tooltip={editing.saveLabel ?? "Save row"}
           disabled={disabled}
           onClick={() => {
@@ -1128,7 +1128,7 @@ export function PhiTableControl<TRow extends Record<string, unknown>>({
             setEditingRowIdentity(null);
             setRowEditPatch({});
           }} />
-        <PhiButtonControl type="text" size="small" icon={<CloseOutlined />}
+        <PhiButtonControl type="text" size="small" icon={<PhiIcon name="close" size="inherit" />}
           ariaLabel={editing.cancelLabel ?? "Cancel row editing"} tooltip={editing.cancelLabel ?? "Cancel row editing"}
           onClick={() => { setEditingRowIdentity(null); setRowEditPatch({}); }} />
       </Flex>;

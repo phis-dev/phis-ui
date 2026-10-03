@@ -2,7 +2,6 @@
 
 import { useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
 
-import { AppstoreOutlined } from "@ant-design/icons";
 import { Flex, Typography } from "antd";
 import type { PhiControlSize } from "../../types/control";
 
@@ -204,7 +203,7 @@ export function PhiIconPickerControl({
   const open = picker.open;
   const resolvedButtonIcon = buttonIcon ?? (picker.value?.trim()
     ? <PhiIcon name={picker.value} size="1em" />
-    : <AppstoreOutlined />);
+    : <PhiIcon name="appstore" size="inherit" />);
   const [mode, setMode] = useState<PhiIconPickerControlMode>(parsedCurrentIcon.mode);
   const [iconifySet, setIconifySet] = useState<PhiIconifySetKey>(parsedCurrentIcon.setKey);
   const [iconifyQuery, setIconifyQuery] = useState(parsedCurrentIcon.query);

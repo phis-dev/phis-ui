@@ -1,7 +1,6 @@
 "use client";
 
 import { cloneElement, isValidElement, Suspense, useCallback, useEffect, useRef, useState, type CSSProperties, type KeyboardEvent, type ReactElement, type ReactNode } from "react";
-import { NodeIndexOutlined, ShareAltOutlined, WarningOutlined } from "@ant-design/icons";
 import { usePhiConfig } from "../../../components/root/phi-config-provider";
 
 import { PhiEditScaffoldDrawer } from "./edit-scaffold-drawer";
@@ -94,6 +93,7 @@ import {
   readPhiDeveloperBuilderEffectsPreview,
   usePhiDeveloperBuilderStateValue,
 } from "./developer-workspace-store";
+import { PhiIcon } from "../../../components/shell/phi-icon";
 
 type PhiBuilderDemandControllerContext = {
   area: string;
@@ -457,7 +457,7 @@ function PhiEffectsPreviewButton({
         className="phi-layout-affordance phi-layout-affordance--effects-preview"
         ariaLabel={previewLabel}
         tooltip={previewLabel}
-        icon={<NodeIndexOutlined />}
+        icon={<PhiIcon name="node-index" size="inherit" />}
         type="text"
         size="small"
         onClick={onRun}
@@ -498,7 +498,7 @@ function PhiSignalWiringToolButton({ onOpen }: { onOpen: () => void }) {
          * two sat side by side in the same toolbar meaning entirely different things. The flow-graph
          * glyph is taken by the effects editor, so wiring gets the connected-nodes one.
          */
-        icon={<ShareAltOutlined />}
+        icon={<PhiIcon name="share-alt" size="inherit" />}
         onClick={onOpen}
       />
     </span>
@@ -519,7 +519,7 @@ function PhiViewportIntersectionDiagnostic() {
         width: "var(--ant-control-height-sm)",
       }}
     >
-      <WarningOutlined />
+      <PhiIcon name="warning" size="inherit" />
     </span>
   );
 }

@@ -2,7 +2,6 @@
 
 import { PhiButtonControl } from "../../../../components/controls/phi-button-control";
 import { PhiDragHandleControl } from "../../../../components/controls/phi-drag-handle-control";
-import { DeleteOutlined, PlusOutlined, SettingOutlined } from "@ant-design/icons";
 import { useMemo, useRef, type CSSProperties, type ReactNode, type SyntheticEvent } from "react";
 import {
   usePhiStructureDraggable,
@@ -10,6 +9,7 @@ import {
   type PhiStructureDragData,
   type PhiStructureDropTargetData,
 } from "../structure-dnd";
+import { PhiIcon } from "../../../../components/shell/phi-icon";
 
 /*
  * The scaffold's own buttons sit on a surface that selects on a press, and a press on one of them must
@@ -79,7 +79,7 @@ export function PhiPlusButtonWidget({
         className={`phi-layout-affordance phi-layout-affordance--insert${dropStateClassName}`}
         type="dashed"
         size="small"
-        icon={<PlusOutlined />}
+        icon={<PhiIcon name="plus" size="inherit" />}
         ariaLabel={ariaLabel ?? (labelText ? `Insert child after ${labelText}` : "Insert child")}
         onClick={() => onInsert(slotIndex)}
         style={
@@ -142,7 +142,7 @@ export function PhiLayoutDeleteButtonWidget({ onDelete, ariaLabel = "Delete layo
       <PhiButtonControl
         className="phi-layout-affordance phi-layout-affordance--delete"
         ariaLabel={ariaLabel}
-        icon={<DeleteOutlined />}
+        icon={<PhiIcon name="delete" size="inherit" />}
         danger
         type="text"
         size="small"
@@ -166,7 +166,7 @@ export function PhiLayoutConfigButtonWidget({
       <PhiButtonControl
         className="phi-layout-affordance phi-layout-affordance--config"
         ariaLabel={ariaLabel}
-        icon={<SettingOutlined />}
+        icon={<PhiIcon name="setting" size="inherit" />}
         type="text"
         size="small"
         onClick={onOpenInspector}

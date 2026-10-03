@@ -1,8 +1,8 @@
 "use client";
 
 import type { CSSProperties } from "react";
+import { PhiIcon } from "../shell/phi-icon";
 
-import { StopOutlined } from "@ant-design/icons";
 
 const PHI_COLOR_ERROR = "var(--ant-color-error)";
 
@@ -25,5 +25,5 @@ export function PhiMediaRestrictedIcon({
     ...style,
   };
 
-  return <StopOutlined className={className} style={iconStyle} title={title} />;
+  return <PhiIcon name="stop" size="inherit" className={className} style={iconStyle} title={title} />;
 }

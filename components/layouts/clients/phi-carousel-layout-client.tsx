@@ -1,6 +1,5 @@
 "use client";
 
-import { LeftOutlined, RightOutlined } from "@ant-design/icons";
 import { usePhiConfig } from "../../root/phi-config-provider";
 import type { CSSProperties, ReactNode } from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -28,6 +27,7 @@ import {
   resolvePhiCarouselPageStarts,
   resolvePhiCarouselStep,
 } from "../phi-carousel-pages";
+import { PhiIcon } from "../../shell/phi-icon";
 
 /**
  * A Stack with a wider window.
@@ -324,7 +324,7 @@ export function PhiCarouselLayout({
           <>
             <div style={{ position: "absolute", insetBlockStart: "50%", insetInlineStart: token.marginXS, transform: "translateY(-50%)", zIndex: 1 }}>
               <PhiButtonControl
-                icon={<LeftOutlined />}
+                icon={<PhiIcon name="left" size="inherit" />}
                 ariaLabel={controlLabels?.previous ?? "Previous"}
                 shape="circle"
                 disabled={atStart && !loop}
@@ -333,7 +333,7 @@ export function PhiCarouselLayout({
             </div>
             <div style={{ position: "absolute", insetBlockStart: "50%", insetInlineEnd: token.marginXS, transform: "translateY(-50%)", zIndex: 1 }}>
               <PhiButtonControl
-                icon={<RightOutlined />}
+                icon={<PhiIcon name="right" size="inherit" />}
                 ariaLabel={controlLabels?.next ?? "Next"}
                 shape="circle"
                 disabled={atEnd && !loop}

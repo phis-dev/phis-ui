@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
 
-import { DeleteOutlined } from "@ant-design/icons";
 import type { PhiColorPickerLabels } from "../../../../../components/widgets/label-types/color-picker";
 
 import { usePhiSignalDispatcher, usePhiSignalListener } from "../../../../../components/runtime/runtime-signal-bus";
@@ -3342,7 +3341,7 @@ export function PhiBuilderBrandIdentityControlsWidgetClient({
                           size="small"
                           danger
                           disabled={wordmarkParts.length === 0}
-                          icon={<DeleteOutlined />}
+                          icon={<PhiIcon name="delete" size="inherit" />}
                           ariaLabel="Remove this part of the Wordmark"
                           onClick={() => {
                             setWordmarkPartKeys((current) => ({

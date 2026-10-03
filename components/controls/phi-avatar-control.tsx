@@ -1,8 +1,8 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { UserOutlined } from "@ant-design/icons";
 import { Avatar } from "antd";
+import { PhiIcon } from "../shell/phi-icon";
 
 /**
  * Two letters from a name: the first of the first two words, or the first two of a single word.
@@ -60,7 +60,7 @@ export function PhiAvatarControl({ src, alt, initialsFrom, icon, size = 32 }: Ph
       size={size}
       src={src}
       alt={alt}
-      icon={src || initials ? icon : icon ?? <UserOutlined />}
+      icon={src || initials ? icon : icon ?? <PhiIcon name="user" size="inherit" />}
       style={{ flexShrink: 0 }}
     >
       {initials}

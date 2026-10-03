@@ -1,7 +1,6 @@
 "use client";
 
 import { useMemo, useRef, useState } from "react";
-import { DeleteOutlined, PlusOutlined } from "@ant-design/icons";
 
 import type { PhiFormFieldProviderProps } from "./form-provider-registry";
 import {
@@ -18,6 +17,7 @@ import { PhiCollectionHeaderControl } from "../controls/phi-collection-header-co
 import { PhiToolbarControl } from "../controls/phi-toolbar-control";
 import type { PhiControlOption } from "../controls/phi-control-options";
 import { readPhiDotPath as readPath } from "../../helpers/dot-path";
+import { PhiIcon } from "../shell/phi-icon";
 
 type RecordValue = Record<string, unknown>;
 
@@ -191,7 +191,7 @@ export function PhiCompoundTableFormControl({
       <PhiButtonControl
         ariaLabel={removeLabel}
         tooltip={removeLabel}
-        icon={<DeleteOutlined />}
+        icon={<PhiIcon name="delete" size="inherit" />}
         type="text"
         danger
         size="small"
@@ -231,7 +231,7 @@ export function PhiCompoundTableFormControl({
               label: addLabel,
               ariaLabel: addLabel,
               tooltip: addLabel,
-              icon: <PlusOutlined />,
+              icon: <PhiIcon name="plus" size="inherit" />,
               type: "primary",
             }]}
             compact

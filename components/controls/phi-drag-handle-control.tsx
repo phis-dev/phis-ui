@@ -2,9 +2,9 @@
 
 import type { CSSProperties, KeyboardEvent, MouseEvent, PointerEvent, ReactNode, TouchEvent } from "react";
 import { Button } from "antd";
-import { HolderOutlined } from "@ant-design/icons";
 
 import type { PhiControlSize } from "../../types/control";
+import { PhiIcon } from "../shell/phi-icon";
 
 /**
  * The grip a node is dragged by.
@@ -101,7 +101,7 @@ export function PhiDragHandleControl({
       ref={setActivatorRef}
       className={className}
       aria-label={ariaLabel}
-      icon={icon ?? <HolderOutlined />}
+      icon={icon ?? <PhiIcon name="holder" size="inherit" />}
       type="text"
       size={size}
       disabled={disabled}

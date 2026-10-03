@@ -2,20 +2,10 @@
 
 import type { CSSProperties } from "react";
 
-import {
-  AudioTwoTone,
-  FileImageTwoTone,
-  FilePdfTwoTone,
-  FileTextTwoTone,
-  FileUnknownTwoTone,
-  FileZipTwoTone,
-  HddTwoTone,
-  HighlightTwoTone,
-  VideoCameraTwoTone,
-} from "@ant-design/icons";
 
 import { PhiMediaKind } from "../../constants/media";
 import type { PhiMediaKindValue } from "../../types/media";
+import { PhiIcon } from "../shell/phi-icon";
 
 const PHI_COLOR_TEXT_SECONDARY = "var(--ant-color-text-secondary)";
 const PHI_COLOR_PRIMARY = "var(--ant-color-primary)";
@@ -36,23 +26,23 @@ export function PhiMediaKindIcon({ kind, size = 32, style, className }: PhiMedia
 
   switch (kind) {
     case PhiMediaKind.Image:
-      return <FileImageTwoTone className={className} style={iconStyle} twoToneColor={PHI_COLOR_PRIMARY} />;
+      return <PhiIcon name="file-image-two-tone" size="inherit" className={className} style={iconStyle} twoToneColor={PHI_COLOR_PRIMARY} />;
     case PhiMediaKind.Video:
-      return <VideoCameraTwoTone className={className} style={iconStyle} twoToneColor={PHI_COLOR_PRIMARY} />;
+      return <PhiIcon name="video-camera-two-tone" size="inherit" className={className} style={iconStyle} twoToneColor={PHI_COLOR_PRIMARY} />;
     case PhiMediaKind.Audio:
-      return <AudioTwoTone className={className} style={iconStyle} twoToneColor={PHI_COLOR_PRIMARY} />;
+      return <PhiIcon name="audio-two-tone" size="inherit" className={className} style={iconStyle} twoToneColor={PHI_COLOR_PRIMARY} />;
     case PhiMediaKind.Pdf:
-      return <FilePdfTwoTone className={className} style={iconStyle} twoToneColor={PHI_COLOR_PRIMARY} />;
+      return <PhiIcon name="file-pdf-two-tone" size="inherit" className={className} style={iconStyle} twoToneColor={PHI_COLOR_PRIMARY} />;
     case PhiMediaKind.Markdown:
     case PhiMediaKind.Document:
-      return <FileTextTwoTone className={className} style={iconStyle} twoToneColor={PHI_COLOR_PRIMARY} />;
+      return <PhiIcon name="file-text-two-tone" size="inherit" className={className} style={iconStyle} twoToneColor={PHI_COLOR_PRIMARY} />;
     case PhiMediaKind.Archive:
-      return <FileZipTwoTone className={className} style={iconStyle} twoToneColor={PHI_COLOR_PRIMARY} />;
+      return <PhiIcon name="file-zip-two-tone" size="inherit" className={className} style={iconStyle} twoToneColor={PHI_COLOR_PRIMARY} />;
     case PhiMediaKind.Font:
-      return <HighlightTwoTone className={className} style={iconStyle} twoToneColor={PHI_COLOR_PRIMARY} />;
+      return <PhiIcon name="highlight-two-tone" size="inherit" className={className} style={iconStyle} twoToneColor={PHI_COLOR_PRIMARY} />;
     case PhiMediaKind.Binary:
-      return <HddTwoTone className={className} style={iconStyle} twoToneColor={PHI_COLOR_PRIMARY} />;
+      return <PhiIcon name="hdd-two-tone" size="inherit" className={className} style={iconStyle} twoToneColor={PHI_COLOR_PRIMARY} />;
     default:
-      return <FileUnknownTwoTone className={className} style={iconStyle} twoToneColor={PHI_COLOR_PRIMARY} />;
+      return <PhiIcon name="file-unknown-two-tone" size="inherit" className={className} style={iconStyle} twoToneColor={PHI_COLOR_PRIMARY} />;
   }
 }

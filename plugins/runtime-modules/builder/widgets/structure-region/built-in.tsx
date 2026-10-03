@@ -4,7 +4,6 @@ import { useEffect, useMemo, useState } from "react";
 import type { CSSProperties, ReactElement, ReactNode } from "react";
 
 import { usePhiConfig } from "../../../../../components/root/phi-config-provider";
-import { PlusOutlined } from "@ant-design/icons";
 import {
   buildPhiCmsLayoutNamespacedTypeKey,
   splitPhiCmsLayoutNamespacedTypeKey,
@@ -95,6 +94,7 @@ import { resolvePhiPaddingStyle } from "../../../../../components/layouts/phi-la
 import { usePhiBuilderAuthoringCanvas } from "../../authoring-canvas";
 import { PhiFlexControl } from "../../../../../components/controls/phi-flex-control";
 import { PhiTypographyControl } from "../../../../../components/controls/phi-typography-control";
+import { PhiIcon } from "../../../../../components/shell/phi-icon";
 
 export type PhiStructureRegionWidgetConfig = {
   slotKind?: "structure" | "content";
@@ -2492,7 +2492,7 @@ export function PhiStructureRegionScaffold({
                     color: isPicking ? token.colorPrimary : token.colorTextSecondary,
                   }}
                 >
-                  <PlusOutlined />
+                  <PhiIcon name="plus" size="inherit" />
                 </span>
               )}
             </div>

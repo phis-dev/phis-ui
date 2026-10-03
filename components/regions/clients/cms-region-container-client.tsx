@@ -4,7 +4,6 @@ import type { CSSProperties, ReactNode } from "react";
 import { useState } from "react";
 
 import { PhiButtonControl } from "../../controls/phi-button-control";
-import { MenuFoldOutlined, MenuUnfoldOutlined } from "@ant-design/icons";
 import { type PhiCmsBackgroundWidgetConfig } from "../../widgets/config/background";
 import { resolvePhiShellRegionZIndex } from "../../../helpers/shell-region-style";
 import type { PhiCmsRegionConfig, PhiCmsRegionKey } from "../../../types";
@@ -248,11 +247,11 @@ export function PhiCmsRegionContainerClient({
                   collapseIcon ? (
                     <PhiIcon name={collapseIcon} />
                   ) : isRightSider ? (
-                    collapsed ? <MenuFoldOutlined /> : <MenuUnfoldOutlined />
+                    collapsed ? <PhiIcon name="menu-fold" size="inherit" /> : <PhiIcon name="menu-unfold" size="inherit" />
                   ) : collapsed ? (
-                    <MenuUnfoldOutlined />
+                    <PhiIcon name="menu-unfold" size="inherit" />
                   ) : (
-                    <MenuFoldOutlined />
+                    <PhiIcon name="menu-fold" size="inherit" />
                   )
                 }
                 style={{

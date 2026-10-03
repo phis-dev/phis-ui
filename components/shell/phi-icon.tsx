@@ -8,7 +8,7 @@ import {
   type ComponentType,
 } from "react";
 
-import { PHI_ANTD_ICON_NAMES, PhiAntdIcon } from "./phi-antd-icon";
+import { PHI_ANTD_ICON_NAMES, PhiAntdIcon, type PhiAntdIconPresentation } from "./phi-antd-icon";
 
 type PhiIconifyProps = {
   icon: string;
@@ -17,10 +17,14 @@ type PhiIconifyProps = {
   inline?: boolean;
 };
 
+/**
+ * `style`, `className`, `title`, `ariaLabel` and `twoToneColor` reach the Ant Design icons, which is
+ * where the house draws its interface icons; a motif, Iconify or asset icon takes its size only.
+ */
 type PhiIconProps = {
   name?: string;
   size?: number | string;
-};
+} & PhiAntdIconPresentation;
 
 let iconifyComponentLoader: Promise<ComponentType<PhiIconifyProps>> | null = null;
 
@@ -61,9 +65,9 @@ function renderIconFallback(size: number | string) {
   );
 }
 
-function renderAntdIcon(key: string, size: number | string) {
+function renderAntdIcon(key: string, size: number | string, presentation: PhiAntdIconPresentation) {
   const icon = PHI_ANTD_ICON_NAMES[key];
-  return icon ? <PhiAntdIcon icon={icon} size={size} /> : null;
+  return icon ? <PhiAntdIcon icon={icon} size={size} {...presentation} /> : null;
 }
 
 function renderBuilderIcon(
@@ -130,7 +134,7 @@ function PhiIconifyIcon({ icon, size }: { icon: string; size: number | string })
   return <IconifyIcon icon={icon} width={size} height={size} inline />;
 }
 
-export function PhiIcon({ name, size = 16 }: PhiIconProps) {
+export function PhiIcon({ name, size = 16, ...presentation }: PhiIconProps) {
   if (!name) {
     return null;
   }
@@ -140,7 +144,7 @@ export function PhiIcon({ name, size = 16 }: PhiIconProps) {
   const value = rest.join(":");
 
   if (!value) {
-    return renderAntdIcon(name, resolvedSize);
+    return renderAntdIcon(name, resolvedSize, presentation);
   }
 
   const builderIcon = renderBuilderIcon(namespace, value, resolvedSize);
@@ -150,7 +154,7 @@ export function PhiIcon({ name, size = 16 }: PhiIconProps) {
 
   switch (namespace) {
     case "antd":
-      return renderAntdIcon(value, resolvedSize);
+      return renderAntdIcon(value, resolvedSize, presentation);
     case "iconify":
       return value ? <PhiIconifyIcon icon={value} size={resolvedSize} /> : null;
     case "asset":

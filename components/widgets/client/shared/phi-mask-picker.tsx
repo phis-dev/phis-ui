@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useState, type ReactNode } from "react";
-import { StarOutlined } from "@ant-design/icons";
 
 import { PhiMediaAssetFlags, PhiMediaAssetSource, PhiMediaKind } from "../../../../constants/media";
 import { normalizePhiImagePreviewTile } from "../../../media/phi-image-preview-data";
@@ -23,6 +22,7 @@ import type { PhiPickerPlacement } from "../../../controls/phi-picker-control-co
 import { usePhiApplicationFeedback } from "../../../runtime/use-phi-application-feedback";
 import { usePhiWidgetScaffoldPopup } from "./phi-widget-scaffold-popup";
 import { createPhiMediaPickerAssetControllerRoutes } from "../../../media/asset-controller-routes";
+import { PhiIcon } from "../../../shell/phi-icon";
 
 type ParsedIconifyIcon = {
   iconSet: string;
@@ -81,7 +81,7 @@ export function PhiMaskPickerButton({
   onCommit,
   onDiscard,
   buttonAriaLabel = "Select mask",
-  buttonIcon = <StarOutlined />,
+  buttonIcon = <PhiIcon name="star" size="inherit" />,
   placement = "bottomRight",
 }: PhiMaskPickerButtonProps) {
   const { showMessage } = usePhiApplicationFeedback();

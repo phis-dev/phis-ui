@@ -1,6 +1,5 @@
 "use client";
 
-import { ReloadOutlined, UndoOutlined } from "@ant-design/icons";
 import type { PhiTableWidgetLabels } from "../../../../../components/widgets/label-types/table";
 import { PHI_TABLE_WIDGET_DEFAULT_LABELS } from "../../../../../components/widgets/label-types/table";
 import { formatPhiTableWidgetLabel } from "../../../../../components/widgets/label-types/table";
@@ -921,10 +920,10 @@ export function PhiTableWidgetClient({
           onActivate={() => activateAction(action, undefined, selectedRowIdentities)} />;
       })}
       {hasQueryTools && features.tools?.reset !== false ? (
-        <PhiButtonControl icon={<UndoOutlined />} ariaLabel={labels.reset} size={resolvedControlSize} onClick={resetQuery} />
+        <PhiButtonControl icon={<PhiIcon name="undo" size="inherit" />} ariaLabel={labels.reset} size={resolvedControlSize} onClick={resetQuery} />
       ) : null}
       {features.tools?.reload ? (
-        <PhiButtonControl icon={<ReloadOutlined />} ariaLabel={labels.reload} tooltip={labels.reload} size={resolvedControlSize} onClick={reload} />
+        <PhiButtonControl icon={<PhiIcon name="reload" size="inherit" />} ariaLabel={labels.reload} tooltip={labels.reload} size={resolvedControlSize} onClick={reload} />
       ) : null}
     </PhiToolbarControl>
   ) : null;

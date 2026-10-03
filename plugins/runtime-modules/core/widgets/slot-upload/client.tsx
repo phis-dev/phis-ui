@@ -1,6 +1,5 @@
 "use client";
 
-import { DeleteOutlined, UploadOutlined } from "@ant-design/icons";
 import { PhiEntryListControl } from "../../../../../components/controls/phi-entry-list-control";
 import { PhiProgressControl } from "../../../../../components/controls/phi-progress-control";
 import { PhiButtonControl } from "../../../../../components/controls/phi-button-control";
@@ -19,6 +18,7 @@ import type { PhiSignal, PhiSignalRoute } from "../../../../../types/signals";
 import type { PhiSlotUploadWidgetConfig } from "./config";
 import { PhiFlexControl } from "../../../../../components/controls/phi-flex-control";
 import { PhiTypographyControl } from "../../../../../components/controls/phi-typography-control";
+import { PhiIcon } from "../../../../../components/shell/phi-icon";
 
 /**
  * A file on a row, through the door Core opens under every Add-on's own root.
@@ -247,7 +247,7 @@ export function PhiSlotUploadWidgetClient({ config }: PhiSlotUploadWidgetClientP
             }}
           />
           <PhiButtonControl
-            icon={<UploadOutlined />}
+            icon={<PhiIcon name="upload" size="inherit" />}
             label="Choose a file"
             onClick={() => fileInputRef.current?.click()}
           />
@@ -265,7 +265,7 @@ export function PhiSlotUploadWidgetClient({ config }: PhiSlotUploadWidgetClientP
           action: (
             <PhiButtonControl
               size="small"
-              icon={<DeleteOutlined />}
+              icon={<PhiIcon name="delete" size="inherit" />}
               ariaLabel="Remove this file"
               tooltip="Remove this file"
               onClick={() => { void remove(file.id).catch(() => setFailure("That file stayed.")); }}

@@ -2,7 +2,6 @@
 
 import type { ReactNode } from "react";
 import { Flex, Typography } from "antd";
-import { PictureOutlined, ReloadOutlined } from "@ant-design/icons";
 
 import type { PhiMediaAssetTile } from "../../types/media";
 import { usePhiConfig } from "../root/phi-config-provider";
@@ -32,6 +31,7 @@ import type {
   PhiPickerTransactionCallbacks,
 } from "./phi-picker-control-contract";
 import { usePhiImmediatePicker } from "./use-phi-immediate-picker";
+import { PhiIcon } from "../shell/phi-icon";
 
 export type PhiMediaPickerControlProps = PhiPickerTransactionCallbacks<number | null> & {
   open?: boolean;
@@ -203,7 +203,7 @@ export function PhiMediaPickerControl({
         <PhiButtonControl
           ariaLabel={labels?.reload ?? "Reload"}
           tooltip={labels?.reload ?? "Reload"}
-          icon={<ReloadOutlined />}
+          icon={<PhiIcon name="reload" size="inherit" />}
           size="small"
           disabled={locked}
           onClick={onReload}
@@ -289,7 +289,7 @@ export function PhiMediaPickerControl({
         <span>
           <PhiButtonControl
             block
-            icon={<PictureOutlined />}
+            icon={<PhiIcon name="picture" size="inherit" />}
             label={labels?.trigger ?? "Select media"}
             disabled={locked}
             onClick={picker.openPicker}

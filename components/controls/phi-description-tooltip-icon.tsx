@@ -1,13 +1,13 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { InfoCircleOutlined } from "@ant-design/icons";
 
 import { usePhiConfig } from "../root/phi-config-provider";
 import { PhiNameControl } from "./phi-name-control";
+import { PhiIcon } from "../shell/phi-icon";
 
 /** Canonical icon for Control and collection descriptions. */
-const PHI_DESCRIPTION_TOOLTIP_ICON = <InfoCircleOutlined />;
+const PHI_DESCRIPTION_TOOLTIP_ICON = <PhiIcon name="info" size="inherit" />;
 
 /**
  * The glyph that carries a description, wherever a surface has a label and no room for a second line.

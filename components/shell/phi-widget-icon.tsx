@@ -1,29 +1,6 @@
 "use client";
 
-import {
-  ApiOutlined,
-  AppstoreOutlined,
-  BranchesOutlined,
-  ClusterOutlined,
-  CodeOutlined,
-  CustomerServiceOutlined,
-  DashboardOutlined,
-  EditOutlined,
-  FileTextOutlined,
-  HistoryOutlined,
-  LayoutOutlined,
-  MenuOutlined,
-  MessageOutlined,
-  MonitorOutlined,
-  PictureOutlined,
-  ReadOutlined,
-  SettingOutlined,
-  ShoppingOutlined,
-  SkinOutlined,
-  TeamOutlined,
-  TranslationOutlined,
-  UserOutlined,
-} from "@ant-design/icons";
+import { PhiIcon } from "./phi-icon";
 
 type PhiWidgetIconProps = {
   family: string;
@@ -31,34 +8,34 @@ type PhiWidgetIconProps = {
 };
 
 const WIDGET_ICON_REGISTRY = {
-  layout: LayoutOutlined,
-  content: AppstoreOutlined,
-  basic: FileTextOutlined,
-  navigation: MenuOutlined,
-  form: ReadOutlined,
-  forms: ReadOutlined,
-  commerce: ShoppingOutlined,
-  auth: UserOutlined,
-  admin: SettingOutlined,
-  builder: BranchesOutlined,
-  dashboard: DashboardOutlined,
-  developer: CodeOutlined,
-  editor: EditOutlined,
-  groups: ClusterOutlined,
-  internal: BranchesOutlined,
-  localization: TranslationOutlined,
-  media: PictureOutlined,
-  observability: MonitorOutlined,
-  revisions: HistoryOutlined,
-  runtime: ApiOutlined,
-  support: CustomerServiceOutlined,
-  threads: MessageOutlined,
-  "user-management": TeamOutlined,
-  brand: SkinOutlined,
-  theme: SkinOutlined,
+  layout: "layout",
+  content: "appstore",
+  basic: "file",
+  navigation: "menu",
+  form: "read",
+  forms: "read",
+  commerce: "shopping",
+  auth: "user",
+  admin: "setting",
+  builder: "branches",
+  dashboard: "dashboard",
+  developer: "code",
+  editor: "edit",
+  groups: "cluster",
+  internal: "branches",
+  localization: "translation",
+  media: "picture",
+  observability: "monitor",
+  revisions: "history",
+  runtime: "api",
+  support: "customer-service",
+  threads: "message",
+  "user-management": "team",
+  brand: "skin",
+  theme: "skin",
 } as const;
 
 export function PhiWidgetIcon({ family, size = 16 }: PhiWidgetIconProps) {
-  const Icon = WIDGET_ICON_REGISTRY[family as keyof typeof WIDGET_ICON_REGISTRY];
-  return Icon ? <Icon style={{ fontSize: size }} /> : null;
+  const name = WIDGET_ICON_REGISTRY[family as keyof typeof WIDGET_ICON_REGISTRY];
+  return name ? <PhiIcon name={name} size={size} /> : null;
 }

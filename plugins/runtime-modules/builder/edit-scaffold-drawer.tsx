@@ -4,10 +4,10 @@ import type { CSSProperties, KeyboardEvent, ReactNode } from "react";
 
 import { usePhiConfig } from "../../../components/root/phi-config-provider";
 import { PhiButtonControl } from "../../../components/controls/phi-button-control";
-import { PlusOutlined } from "@ant-design/icons";
 
 import type { PhiCmsInstanceId } from "../../../types/cms-instance-id";
 import { usePhiDeveloperBuilderStateValue } from "./developer-workspace-store";
+import { PhiIcon } from "../../../components/shell/phi-icon";
 
 export type PhiEditScaffoldDrawerProps = {
   kind: "layout";
@@ -117,7 +117,7 @@ export function PhiEditScaffoldDrawer({
             <PhiButtonControl
               type="dashed"
               size="small"
-              icon={<PlusOutlined />}
+              icon={<PhiIcon name="plus" size="inherit" />}
               ariaLabel="Insert child"
               onClick={() => onOpenInsert?.()}
             />

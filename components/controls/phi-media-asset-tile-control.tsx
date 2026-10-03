@@ -1,6 +1,5 @@
 "use client";
 
-import { DeleteOutlined } from "@ant-design/icons";
 import { Flex, Typography } from "antd";
 import NextImage from "next/image";
 import type { CSSProperties } from "react";
@@ -19,6 +18,7 @@ import {
   type PhiCollectionLayoutControlProps,
 } from "./phi-collection-layout-control";
 import { PhiSkeletonControl } from "./phi-skeleton-control";
+import { PhiIcon } from "../shell/phi-icon";
 
 function resolveAssetTypeLabel(kind: string, contentType: string, originalName: string) {
   const normalizedContentType = contentType.trim().toLowerCase();
@@ -254,7 +254,7 @@ export function PhiMediaAssetTileControl({
             >
               <PhiButtonControl
                 ariaLabel={deleteLabel}
-                icon={<DeleteOutlined />}
+                icon={<PhiIcon name="delete" size="inherit" />}
                 type="text"
                 size="small"
                 danger

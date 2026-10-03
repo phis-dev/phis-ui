@@ -130,6 +130,10 @@ change. If a contract is unclear, stop and ask instead of guessing.
   would have done the same work. `App`, `ConfigProvider` and `theme` are the root and theme adapters and
   stay direct, each named in the allowance with the file that may hold it. antd `List` is deprecated and `Listy` is deliberately not
   adopted in its place; both point at `PhiEntryListControl`.
+- Icons are drawn with `PhiIcon` by name. Only `components/shell/phi-antd-icon.tsx` imports
+  `@ant-design/icons`: it loads each icon where it is drawn and maps the house's names onto it. An icon
+  that is missing is added there, never imported beside the code that needs it; the validator refuses
+  any other import of the package.
 - Shell and Region infrastructure in the RSC path stays plain React and HTML and imports no Ant Design
   module that needs client context.
 - Use the Layout and slot contracts as they are. Do not add wrapper `<div>` layers, alignment shims, or

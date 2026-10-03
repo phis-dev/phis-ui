@@ -1,13 +1,5 @@
 "use client";
 
-import {
-  AppstoreOutlined,
-  DeleteOutlined,
-  EyeInvisibleOutlined,
-  EyeOutlined,
-  PlusOutlined,
-  UnorderedListOutlined,
-} from "@ant-design/icons";
 import { useCallback, useMemo, useRef, useState, type Dispatch, type ReactNode, type SetStateAction } from "react";
 
 import {
@@ -181,7 +173,7 @@ function PhiStaticOptionsTable({ disabled }: { disabled: boolean }) {
         <PhiWidgetIconPickerButton
           value={typeof row.icon === "string" ? row.icon : undefined}
           buttonAriaLabel={`Edit icon for ${String(row.label || row.value)}`}
-          buttonIcon={row.icon ? <PhiIcon name={String(row.icon)} /> : <AppstoreOutlined />}
+          buttonIcon={row.icon ? <PhiIcon name={String(row.icon)} /> : <PhiIcon name="appstore" size="inherit" />}
           placement="right" disabled={disabled || row.disabled === true}
           onChange={(icon) => { void binding.commitField({
             kind: "field", rowIdentity: String(row.rowId), fieldKey: "icon",
@@ -203,12 +195,12 @@ function PhiStaticOptionsTable({ disabled }: { disabled: boolean }) {
       title: labels.columnActions, key: "actions", role: "actions", fieldPath: "rowId", sizing: { mode: "fixed", width: 72 }, fixed: "right",
       render: (_value, row) => (
         <PhiFlexControl align="center" gap={0} style={{ display: "inline-flex" }}>
-          <PhiButtonControl type="text" size="small" icon={row.disabled ? <EyeInvisibleOutlined /> : <EyeOutlined />}
+          <PhiButtonControl type="text" size="small" icon={row.disabled ? <PhiIcon name="eye-invisible" size="inherit" /> : <PhiIcon name="eye" size="inherit" />}
             ariaLabel={formatPhiAuthoringToolsLabel(row.disabled ? labels.enableRow : labels.disableRow, String(row.label))} disabled={disabled}
             tooltip={row.disabled ? labels.enableOption : labels.disableOption}
             onClick={() => { void binding.executeAction({ kind: "action", actionKey: "toggle", rowIdentity: String(row.rowId), selectedRowIdentities: [], query: binding.resolvedQuery }); }}
           />
-          <PhiButtonControl type="text" danger size="small" icon={<DeleteOutlined />} ariaLabel={formatPhiAuthoringToolsLabel(labels.deleteRow, String(row.label || row.value))} disabled={disabled}
+          <PhiButtonControl type="text" danger size="small" icon={<PhiIcon name="delete" size="inherit" />} ariaLabel={formatPhiAuthoringToolsLabel(labels.deleteRow, String(row.label || row.value))} disabled={disabled}
             tooltip={labels.deleteOption}
             onClick={() => { void binding.executeAction({ kind: "action", actionKey: "delete", rowIdentity: String(row.rowId), selectedRowIdentities: [], query: binding.resolvedQuery }); }}
           />
@@ -226,7 +218,7 @@ function PhiStaticOptionsTable({ disabled }: { disabled: boolean }) {
       rowReordering={{ enabled: !disabled, onMove: (move) => { void binding.moveRow({ kind: "row-move", ...move }); } }}
     />
     <PhiFlexControl justify="flex-end">
-      <PhiButtonControl label={labels.addOption} icon={<PlusOutlined />} size="small" disabled={disabled}
+      <PhiButtonControl label={labels.addOption} icon={<PhiIcon name="plus" size="inherit" />} size="small" disabled={disabled}
         onClick={() => { void binding.executeAction({ kind: "action", actionKey: "add", selectedRowIdentities: [], query: binding.resolvedQuery }); }}
       />
     </PhiFlexControl>
@@ -276,7 +268,7 @@ export function PhiStaticOptionsToolButton({
     <>
       <PhiButtonControl
         ariaLabel={labels.edit}
-        icon={<UnorderedListOutlined />}
+        icon={<PhiIcon name="unordered-list" size="inherit" />}
         type="text"
         size="small"
         disabled={disabled}

@@ -1,7 +1,6 @@
 "use client";
 
 import type { CSSProperties } from "react";
-import { NodeIndexOutlined } from "@ant-design/icons";
 
 import type { PhiRenderableBlockEffects } from "../../../../types/renderable-block";
 import type { PhiEffectsWidgetLabels } from "../../../../components/widgets/label-types/effects";
@@ -9,6 +8,7 @@ import { PHI_EFFECTS_WIDGET_DEFAULT_LABELS } from "../../../../components/widget
 import { PhiButtonControl } from "../../../../components/controls/phi-button-control";
 import { openPhiDeveloperBuilderEffectsEditor } from "../developer-workspace-store";
 import type { PhiDeveloperBuilderEffectsRequest } from "../developer-workspace-types";
+import { PhiIcon } from "../../../../components/shell/phi-icon";
 
 export function PhiWidgetEffectsToolButton({
   effects,
@@ -41,7 +41,7 @@ export function PhiWidgetEffectsToolButton({
       <PhiButtonControl
         ariaLabel={labels.openEditor}
         tooltip={labels.openEditor}
-        icon={<NodeIndexOutlined />}
+        icon={<PhiIcon name="node-index" size="inherit" />}
         type="text"
         size="small"
         disabled={disabled || !onChange}

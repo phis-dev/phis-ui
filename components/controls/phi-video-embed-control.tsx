@@ -1,6 +1,5 @@
 "use client";
 
-import { PlayCircleFilled } from "@ant-design/icons";
 import NextImage from "next/image";
 import { useEffect, useState, type CSSProperties } from "react";
 
@@ -14,6 +13,7 @@ import {
 import { PhiButtonControl } from "./phi-button-control";
 import { PhiFlexControl } from "./phi-flex-control";
 import { PhiTypographyControl } from "./phi-typography-control";
+import { PhiIcon } from "../shell/phi-icon";
 
 export type PhiVideoEmbedControlLabels = {
   /** What the button offering to fetch the player says. */
@@ -201,7 +201,7 @@ export function PhiVideoEmbedControl({
             type="primary"
             // Over a poster a filled button states a second background nobody asked for.
             ghost={Boolean(poster)}
-            icon={<PlayCircleFilled />}
+            icon={<PhiIcon name="play-circle-filled" size="inherit" />}
             label={labels.loadLabel}
             onClick={() => setPressed(true)}
           />

@@ -1,12 +1,5 @@
 "use client";
 
-import {
-  ArrowDownOutlined,
-  ArrowUpOutlined,
-  DeleteOutlined,
-  MenuOutlined,
-  PlusOutlined,
-} from "@ant-design/icons";
 
 import { PhiButtonControl } from "../../../../../components/controls/phi-button-control";
 import { PhiPopoverControl } from "../../../../../components/controls/phi-popover-control";
@@ -17,6 +10,7 @@ import { usePhiAuthoringToolsLabels } from "../../../../../components/widgets/cl
 import { PhiFlexControl } from "../../../../../components/controls/phi-flex-control";
 import { PhiTypographyControl } from "../../../../../components/controls/phi-typography-control";
 import { PhiCompactGroupControl } from "../../../../../components/controls/phi-compact-group-control";
+import { PhiIcon } from "../../../../../components/shell/phi-icon";
 
 function stopToolEvent(event: { stopPropagation: () => void }) {
   event.stopPropagation();
@@ -72,7 +66,7 @@ export function PhiCommandToolbarAuthoringTools({
           size="small"
           ariaLabel={labels.commands.addButton}
           tooltip={labels.commands.addButton}
-          icon={<PlusOutlined />}
+          icon={<PhiIcon name="plus" size="inherit" />}
           onClick={() => {
             onChange([...buttons, createNextButton(buttons)]);
           }}
@@ -104,7 +98,7 @@ export function PhiCommandToolbarAuthoringTools({
                   size="small"
                   ariaLabel={`Move ${button.label ?? button.key} earlier`}
                   disabled={index === 0}
-                  icon={<ArrowUpOutlined />}
+                  icon={<PhiIcon name="arrow-up" size="inherit" />}
                   onClick={() => onChange([...moveButton(buttons, index, -1)])}
                 />
                 <PhiButtonControl
@@ -112,7 +106,7 @@ export function PhiCommandToolbarAuthoringTools({
                   size="small"
                   ariaLabel={`Move ${button.label ?? button.key} later`}
                   disabled={index === buttons.length - 1}
-                  icon={<ArrowDownOutlined />}
+                  icon={<PhiIcon name="arrow-down" size="inherit" />}
                   onClick={() => onChange([...moveButton(buttons, index, 1)])}
                 />
                 <PhiButtonControl
@@ -120,7 +114,7 @@ export function PhiCommandToolbarAuthoringTools({
                   size="small"
                   danger
                   ariaLabel={`Remove ${button.label ?? button.key}`}
-                  icon={<DeleteOutlined />}
+                  icon={<PhiIcon name="delete" size="inherit" />}
                   onClick={() => onChange(buttons.filter((_, candidateIndex) => candidateIndex !== index))}
                 />
               </PhiFlexControl>
@@ -135,7 +129,7 @@ export function PhiCommandToolbarAuthoringTools({
             ariaLabel={labels.commands.manageButtons}
             tooltip={labels.commands.manageButtons}
             disabled={buttons.length === 0}
-            icon={<MenuOutlined />}
+            icon={<PhiIcon name="menu" size="inherit" />}
             onClick={() => undefined}
           />
         </span>

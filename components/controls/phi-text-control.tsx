@@ -1,7 +1,6 @@
 "use client";
 
 import { Input } from "antd";
-import { CloseOutlined, SearchOutlined } from "@ant-design/icons";
 import type {
   ChangeEvent,
   CSSProperties,
@@ -18,6 +17,7 @@ import type {
   PhiTextInputType,
 } from "./phi-text-types";
 import { PhiLabeledControl, usePhiControlLabel } from "./phi-labeled-control";
+import { PhiIcon } from "../shell/phi-icon";
 
 export type PhiTextControlPresentation = "input" | "password" | "textarea" | "hidden";
 
@@ -131,7 +131,7 @@ export function PhiTextControl({
   const stableAllowClear = {
     disabled: !allowClear,
     clearIcon: (
-      <CloseOutlined aria-label={clearLabel} />
+      <PhiIcon name="close" size="inherit" ariaLabel={clearLabel} />
     ),
   };
   const commonProps = {
@@ -196,7 +196,7 @@ export function PhiTextControl({
         allowClear={stableAllowClear}
         inputMode={resolvedKind.inputMode}
         prefix={prefix}
-        suffix={resolvedKind.type === "search" ? <SearchOutlined /> : undefined}
+        suffix={resolvedKind.type === "search" ? <PhiIcon name="search" size="inherit" /> : undefined}
         type={resolvedKind.type}
         onClear={onClear}
         onPressEnter={onPressEnter}

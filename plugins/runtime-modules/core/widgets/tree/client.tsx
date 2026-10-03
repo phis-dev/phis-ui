@@ -1,6 +1,5 @@
 "use client";
 
-import { ReloadOutlined, UndoOutlined } from "@ant-design/icons";
 import type { PhiTreeWidgetLabels } from "../../../../../components/widgets/label-types/tree";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -33,6 +32,7 @@ import { usePhiSignalListener } from "../../../../../components/runtime/runtime-
 import { usePhiSignalEmitter, usePhiSignalIdentity } from "../../../../../components/runtime/runtime-signal-identity";
 import { findPhiSignalRoutesByCapabilityId, type PhiSignalValue } from "../../../../../types/signals";
 import { PhiTypographyControl } from "../../../../../components/controls/phi-typography-control";
+import { PhiIcon } from "../../../../../components/shell/phi-icon";
 
 function readPath(value: Record<string, unknown>, path: string): unknown {
   return path.split(".").reduce<unknown>((current, key) =>
@@ -288,10 +288,10 @@ export function PhiTreeWidgetClient({ config, labels }: { config: PhiTreeWidgetC
         />
       ))}
       {hasResettableQuery && tools?.reset !== false ? (
-        <PhiButtonControl icon={<UndoOutlined />} ariaLabel={labels.reset} size={controlSize} onClick={resetTools} />
+        <PhiButtonControl icon={<PhiIcon name="undo" size="inherit" />} ariaLabel={labels.reset} size={controlSize} onClick={resetTools} />
       ) : null}
       {tools?.reload ? (
-        <PhiButtonControl icon={<ReloadOutlined />} ariaLabel={labels.reload} tooltip={labels.reload}
+        <PhiButtonControl icon={<PhiIcon name="reload" size="inherit" />} ariaLabel={labels.reload} tooltip={labels.reload}
           size={controlSize} onClick={binding.reload} />
       ) : null}
     </PhiToolbarControl>

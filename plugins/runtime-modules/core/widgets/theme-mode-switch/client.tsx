@@ -1,6 +1,5 @@
 "use client";
 
-import { MoonOutlined, SunOutlined } from "@ant-design/icons";
 
 import type { PhiBlockRuntime } from "../../../../../types";
 import type { PhiThemeModeSwitchWidgetConfig } from "./config";
@@ -8,6 +7,7 @@ import { usePhiConfig } from "../../../../../components/root/phi-config-provider
 import { usePhiSignalDispatcher } from "../../../../../components/runtime/runtime-signal-bus";
 import { createPhiCoreRuntimeControllerAddress } from "../../../../../components/runtime/core-runtime-controller-address";
 import { PhiSwitchControl } from "../../../../../components/controls/phi-switch-control";
+import { PhiIcon } from "../../../../../components/shell/phi-icon";
 
 /**
  * Light or dark, read from the mode that is on screen and written to the one address that owns it.
@@ -58,8 +58,8 @@ export function PhiThemeModeSwitchWidget({
       readOnly={readOnly || !signalsEnabled}
       size={config?.controlSize}
       label={config?.label}
-      checkedLabel={<MoonOutlined />}
-      uncheckedLabel={<SunOutlined />}
+      checkedLabel={<PhiIcon name="moon" size="inherit" />}
+      uncheckedLabel={<PhiIcon name="sun" size="inherit" />}
       onChange={requestMode}
     />
   );

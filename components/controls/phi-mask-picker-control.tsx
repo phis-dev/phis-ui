@@ -1,7 +1,6 @@
 "use client";
 
 import { useRef, useState, type ReactNode } from "react";
-import { DeleteOutlined, StarOutlined, UploadOutlined } from "@ant-design/icons";
 import { Flex, Typography } from "antd";
 
 import {
@@ -74,7 +73,7 @@ export function PhiMaskPickerControl({
   value,
   open,
   buttonAriaLabel = "Select mask",
-  buttonIcon = <StarOutlined />,
+  buttonIcon = <PhiIcon name="star" size="inherit" />,
   placement = "bottomRight",
   mediaPickerProps,
   selectedIcon,
@@ -133,7 +132,7 @@ export function PhiMaskPickerControl({
             size="small"
             type="text"
             danger
-            icon={<DeleteOutlined />}
+            icon={<PhiIcon name="delete" size="inherit" />}
             ariaLabel="Clear mask"
             onClick={() => picker.changeValue(undefined)}
           />
@@ -196,7 +195,7 @@ export function PhiMaskPickerControl({
               <span style={{ display: "block", width: "100%" }}>
                 <PhiButtonControl
                   block
-                  icon={<UploadOutlined />}
+                  icon={<PhiIcon name="upload" size="inherit" />}
                   loading={uploading}
                   label={uploading ? `Uploading ${uploadProgress}%` : "Upload SVG or PNG mask"}
                   onClick={() => undefined}
@@ -207,7 +206,7 @@ export function PhiMaskPickerControl({
               value={selectedIcon}
               onChange={onIconSelect}
               buttonAriaLabel="Select Iconify mask"
-              buttonIcon={selectedIcon ? <PhiIcon name={selectedIcon} size={16} /> : <StarOutlined />}
+              buttonIcon={selectedIcon ? <PhiIcon name={selectedIcon} size={16} /> : <PhiIcon name="star" size="inherit" />}
               buttonLabel={uploading ? `Uploading ${uploadProgress}%` : "Select Iconify icon"}
               buttonType="default"
               buttonSize="medium"
