@@ -10,7 +10,12 @@ import type { PhiLinkTarget } from "./references";
 import type { PhiMediaImageSourceConfig } from "./media";
 import type { PhiViewerAccessPolicy } from "./access";
 import type { PhiWidgetFontFamilyKey, PhiWidgetFontSizeKey } from "./site-theme";
-import type { PhiTableQuery, PhiTableWidgetFeatures, PhiTableWidgetPresentation } from "./table-widget";
+import type {
+  PhiTableQuery,
+  PhiTableWidgetConfig,
+  PhiTableWidgetFeatures,
+  PhiTableWidgetPresentation,
+} from "./table-widget";
 import type { PhiButtonVariant } from "../components/widgets/config/button-variant";
 import type { PhiTextTone } from "../components/widgets/config/text-tone";
 import type { PhiCommonControlActionKey } from "../components/widgets/label-types/common-controls";
@@ -179,6 +184,7 @@ export type PhiTableWidgetPlacement = PhiWidgetPlacementBase & {
   presentation?: Partial<PhiTableWidgetPresentation>;
   features?: PhiTableWidgetFeatures;
   initialQuery?: PhiTableQuery;
+  fixedFilters?: PhiTableWidgetConfig["fixedFilters"];
   source?: PhiProviderResourceSource | null;
 };
 

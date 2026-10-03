@@ -46,7 +46,10 @@ const PLACEMENT_ONLY_KEYS: Readonly<Record<string, Readonly<Record<string, strin
   icon: { icon: CANVAS, color: CANVAS },
   spacer: {},
   html: { html: CANVAS, fontFamily: CANVAS, fontSize: CANVAS },
-  table: { initialQuery: "the query a Preset opens the Table with" },
+  table: {
+    initialQuery: "the query a Preset opens the Table with",
+    fixedFilters: "the filters a Preset fixes, which no reader changes",
+  },
   form: {
     feedback: "whether a Settings panel reports a save; the shell decides it",
     links: "the ways out of a sign-in, placed by the Module that owns them",
