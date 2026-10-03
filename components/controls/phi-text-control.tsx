@@ -15,7 +15,7 @@ import type { TextAreaRef } from "antd/es/input/TextArea";
 
 import type { PhiControlSize, PhiControlVariant } from "../../types/control";
 import type { PhiTextInputType } from "./phi-text-types";
-import { PhiLabeledControl } from "./phi-labeled-control";
+import { PhiLabeledControl, usePhiControlLabel } from "./phi-labeled-control";
 
 export type PhiTextControlPresentation = "input" | "password" | "textarea" | "hidden";
 
@@ -124,6 +124,7 @@ export function PhiTextControl({
   style,
   inputStyle,
 }: PhiTextControlProps) {
+  const { labelId, labelledBy } = usePhiControlLabel(label, ariaLabel);
   const resolvedKind = resolveTextInputKind(inputType);
   const stableAllowClear = {
     disabled: !allowClear,
@@ -135,6 +136,7 @@ export function PhiTextControl({
     ref: inputRef,
     id,
     "aria-label": ariaLabel,
+    "aria-labelledby": labelledBy,
     autoFocus,
     autoComplete,
     minLength,
@@ -201,7 +203,7 @@ export function PhiTextControl({
   }
 
   return (
-    <PhiLabeledControl label={label} description={description} fill={style?.width === "100%"}>
+    <PhiLabeledControl label={label} labelId={labelId} description={description} fill={style?.width === "100%"}>
       {control}
     </PhiLabeledControl>
   );

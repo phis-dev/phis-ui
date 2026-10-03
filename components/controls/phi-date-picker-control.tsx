@@ -2,7 +2,7 @@
 
 import { usePhiCalendarAdapterClient } from "../runtime/runtime-module-calendar-adapter-client-manifest";
 import type { PhiCalendarAdapterDatePickerProps, PhiCalendarAdapterKey } from "../../types/calendar";
-import { PhiLabeledControl } from "./phi-labeled-control";
+import { PhiLabeledControl, usePhiControlLabel } from "./phi-labeled-control";
 
 export type PhiDatePickerControlProps = PhiCalendarAdapterDatePickerProps & {
   adapterKey: PhiCalendarAdapterKey;
@@ -11,9 +11,10 @@ export type PhiDatePickerControlProps = PhiCalendarAdapterDatePickerProps & {
 
 export function PhiDatePickerControl({ adapterKey, label, ...props }: PhiDatePickerControlProps) {
   const adapter = usePhiCalendarAdapterClient(adapterKey);
+  const { labelId, labelledBy } = usePhiControlLabel(label);
   return (
-    <PhiLabeledControl label={label} fill>
-      {adapter.renderDatePicker(props)}
+    <PhiLabeledControl label={label} labelId={labelId} fill>
+      {adapter.renderDatePicker({ ...props, ariaLabelledBy: labelledBy })}
     </PhiLabeledControl>
   );
 }

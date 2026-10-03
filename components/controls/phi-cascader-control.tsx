@@ -7,7 +7,7 @@ import type { CascaderProps, DefaultOptionType } from "antd/es/cascader";
 
 import type { PhiControlSize } from "../../types/control";
 import type { PhiControlOption } from "./phi-control-options";
-import { PhiLabeledControl } from "./phi-labeled-control";
+import { PhiLabeledControl, usePhiControlLabel } from "./phi-labeled-control";
 
 export type PhiCascaderNormalizeMode = "raw" | "path";
 
@@ -239,6 +239,7 @@ export function PhiCascaderControl({
   getPopupContainer?: CascaderProps["getPopupContainer"];
   style?: CSSProperties;
 }) {
+  const { labelId, labelledBy } = usePhiControlLabel(label);
   const resolvedSeparator = separator.trim() || "/";
   const resolvedRootValue = rootValue.trim() || "/";
   const normalizedValue = normalizePhiCascaderValue(value, {
@@ -268,6 +269,7 @@ export function PhiCascaderControl({
 
   const control = (
     <Cascader
+      aria-labelledby={labelledBy}
       allowClear={allowClear}
       changeOnSelect
       expandTrigger={expandTrigger}
@@ -315,7 +317,7 @@ export function PhiCascaderControl({
     />
   );
   return (
-    <PhiLabeledControl label={label} fill={style?.width === undefined || style.width === "100%"}>
+    <PhiLabeledControl label={label} labelId={labelId} fill={style?.width === undefined || style.width === "100%"}>
       {control}
     </PhiLabeledControl>
   );

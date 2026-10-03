@@ -138,6 +138,11 @@ export type PhiCalendarAdapterDatePickerProps = {
   rangePlaceholders?: readonly [string, string];
   controlSize?: PhiControlSize;
   variant?: PhiControlVariant;
+  /**
+   * The id of the element that names the picker, for its input's `aria-labelledby`. The label is drawn
+   * by the Control around the picker, so the adapter cannot know it otherwise.
+   */
+  ariaLabelledBy?: string;
   onChange?: (selection: PhiTemporalSelection) => void;
 };
 

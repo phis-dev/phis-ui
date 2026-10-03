@@ -4,7 +4,7 @@ import { Segmented } from "antd";
 
 import type { PhiControlSize } from "../../types/control";
 import type { PhiControlOption } from "./phi-control-options";
-import { PhiLabeledControl } from "./phi-labeled-control";
+import { PhiLabeledControl, usePhiControlLabel } from "./phi-labeled-control";
 
 export type PhiSegmentedControlProps<TValue extends string | number = string> = {
   /**
@@ -35,8 +35,10 @@ export function PhiSegmentedControl<TValue extends string | number = string>({
   onBlur,
   onChange,
 }: PhiSegmentedControlProps<TValue>) {
+  const { labelId, labelledBy } = usePhiControlLabel(label);
   const control = (
     <Segmented
+      aria-labelledby={labelledBy}
       block={block}
       value={value as TValue | undefined}
       disabled={disabled || readOnly || !onChange}
@@ -54,5 +56,5 @@ export function PhiSegmentedControl<TValue extends string | number = string>({
     />
   );
 
-  return <PhiLabeledControl label={label} fill={block}>{control}</PhiLabeledControl>;
+  return <PhiLabeledControl label={label} labelId={labelId} fill={block}>{control}</PhiLabeledControl>;
 }

@@ -8,7 +8,7 @@ import type { SelectProps } from "antd";
 import type { PhiControlSize, PhiControlVariant } from "../../types/control";
 import type { PhiControlOption } from "./phi-control-options";
 import { PhiControlOptionContent } from "./phi-control-option-content";
-import { PhiLabeledControl } from "./phi-labeled-control";
+import { PhiLabeledControl, usePhiControlLabel } from "./phi-labeled-control";
 
 export type PhiSelectControlProps<TValue extends string | number = string> = {
   /** The DOM id of the input, so a `<label for>` outside the control can name it. */
@@ -110,6 +110,7 @@ export function PhiSelectControl<TValue extends string | number = string>({
   filterOptionsLocally = true,
   onChange,
 }: PhiSelectControlProps<TValue>) {
+  const { labelId, labelledBy } = usePhiControlLabel(label, ariaLabel);
   const resolvedOptions = groupPhiSelectOptions(options.map((option) => ({
     value: option.value,
     // rc-select synthesizes native HTML title attributes from primitive labels.
@@ -129,6 +130,7 @@ export function PhiSelectControl<TValue extends string | number = string>({
     const control = (
       <AutoComplete
         aria-label={ariaLabel}
+        aria-labelledby={labelledBy}
         value={value}
         placeholder={placeholder}
         disabled={controlDisabled}
@@ -164,13 +166,14 @@ export function PhiSelectControl<TValue extends string | number = string>({
         style={style}
       />
     );
-    return <PhiLabeledControl label={label} description={description} fill={style?.width === "100%"}>{control}</PhiLabeledControl>;
+    return <PhiLabeledControl label={label} labelId={labelId} description={description} fill={style?.width === "100%"}>{control}</PhiLabeledControl>;
   }
 
   const control = (
     <Select
       id={id}
       aria-label={ariaLabel}
+      aria-labelledby={labelledBy}
       value={value ?? undefined}
       placeholder={placeholder}
       disabled={controlDisabled}
@@ -205,5 +208,5 @@ export function PhiSelectControl<TValue extends string | number = string>({
       style={style}
     />
   );
-  return <PhiLabeledControl label={label} description={description} fill={style?.width === "100%"}>{control}</PhiLabeledControl>;
+  return <PhiLabeledControl label={label} labelId={labelId} description={description} fill={style?.width === "100%"}>{control}</PhiLabeledControl>;
 }

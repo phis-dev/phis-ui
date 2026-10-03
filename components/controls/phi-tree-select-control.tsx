@@ -9,7 +9,7 @@ import type { TreeSelectProps } from "antd";
 import type { PhiControlSize, PhiControlVariant } from "../../types/control";
 import type { PhiTreeOption } from "../../types/tree";
 import { PhiControlOptionContent } from "./phi-control-option-content";
-import { PhiLabeledControl } from "./phi-labeled-control";
+import { PhiLabeledControl, usePhiControlLabel } from "./phi-labeled-control";
 
 export type PhiTreeSelectControlProps<TMeta = unknown> = {
   value?: string | null;
@@ -142,6 +142,7 @@ export function PhiTreeSelectControl<TMeta = unknown>({
   onOpenChange,
   onChange,
 }: PhiTreeSelectControlProps<TMeta>) {
+  const { labelId, labelledBy } = usePhiControlLabel(label, ariaLabel);
   const treeData = useMemo(() => buildPhiTreeSelectNodes(options), [options]);
   const optionsByValue = useMemo(() => indexPhiTreeOptions(options, new Map()), [options]);
   const defaultExpandedKeys = useMemo(
@@ -152,6 +153,7 @@ export function PhiTreeSelectControl<TMeta = unknown>({
   const control = (
     <TreeSelect<string>
       aria-label={ariaLabel}
+      aria-labelledby={labelledBy}
       value={value ?? undefined}
       treeData={treeData}
       placeholder={placeholder}
@@ -179,7 +181,7 @@ export function PhiTreeSelectControl<TMeta = unknown>({
     />
   );
   return (
-    <PhiLabeledControl label={label} description={description} fill={style?.width === "100%"}>
+    <PhiLabeledControl label={label} labelId={labelId} description={description} fill={style?.width === "100%"}>
       {control}
     </PhiLabeledControl>
   );

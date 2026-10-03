@@ -5,7 +5,7 @@ import { Rate } from "antd";
 
 import type { PhiControlSize } from "../../types/control";
 import { PhiIcon } from "../shell/phi-icon";
-import { PhiLabeledControl } from "./phi-labeled-control";
+import { PhiLabeledControl, usePhiControlLabel } from "./phi-labeled-control";
 import {
   normalizePhiRateCount,
   normalizePhiRateValue,
@@ -44,13 +44,15 @@ export function PhiRateControl({
   onFocus,
   onBlur,
 }: PhiRateControlProps) {
+  const { labelId, labelledBy } = usePhiControlLabel(label, ariaLabel);
   const normalizedCount = normalizePhiRateCount(count);
   const normalizedValue = normalizePhiRateValue(value, normalizedCount, allowHalf);
 
   return (
-    <PhiLabeledControl label={label} description={description}>
+    <PhiLabeledControl label={label} labelId={labelId} description={description}>
       <Rate
-        aria-label={ariaLabel ?? (typeof label === "string" ? label : undefined)}
+        aria-label={ariaLabel}
+        aria-labelledby={labelledBy}
         value={normalizedValue}
         count={normalizedCount}
         allowHalf={allowHalf}

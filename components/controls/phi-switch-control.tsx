@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 import { Switch } from "antd";
 
 import type { PhiControlSize } from "../../types/control";
-import { PhiLabeledControl } from "./phi-labeled-control";
+import { PhiLabeledControl, usePhiControlLabel } from "./phi-labeled-control";
 
 export type PhiSwitchControlProps = {
   /** The DOM id of the input, so a `<label for>` outside the control can name it. */
@@ -34,10 +34,12 @@ export function PhiSwitchControl({
   size,
   onChange,
 }: PhiSwitchControlProps) {
+  const { labelId, labelledBy } = usePhiControlLabel(label);
   return (
-    <PhiLabeledControl label={label}>
+    <PhiLabeledControl label={label} labelId={labelId}>
       <Switch
         id={id}
+        aria-labelledby={labelledBy}
         checked={checked}
         disabled={disabled || readOnly || !onChange}
         loading={loading}

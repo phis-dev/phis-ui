@@ -7,7 +7,7 @@ import type { SelectProps } from "antd";
 import type { PhiControlSize, PhiControlVariant } from "../../types/control";
 import type { PhiControlOption } from "./phi-control-options";
 import { PhiControlOptionContent } from "./phi-control-option-content";
-import { PhiLabeledControl } from "./phi-labeled-control";
+import { PhiLabeledControl, usePhiControlLabel } from "./phi-labeled-control";
 
 export type PhiMultiSelectControlProps<TValue extends string | number = string> = {
   /** The DOM id of the input, so a `<label for>` outside the control can name it. */
@@ -51,6 +51,7 @@ export function PhiMultiSelectControl<TValue extends string | number = string>({
   onBlur,
   onChange,
 }: PhiMultiSelectControlProps<TValue>) {
+  const { labelId, labelledBy } = usePhiControlLabel(label);
   const selectOptions = useMemo(
     () => options.map((option) => ({
       value: option.value,
@@ -65,6 +66,7 @@ export function PhiMultiSelectControl<TValue extends string | number = string>({
   const control = (
     <Select
       id={id}
+      aria-labelledby={labelledBy}
       mode={allowCustom ? "tags" : "multiple"}
       allowClear={allowClear}
       value={[...(value ?? [])]}
@@ -93,5 +95,5 @@ export function PhiMultiSelectControl<TValue extends string | number = string>({
     />
   );
 
-  return <PhiLabeledControl label={label} description={description} fill={style?.width === "100%"}>{control}</PhiLabeledControl>;
+  return <PhiLabeledControl label={label} labelId={labelId} description={description} fill={style?.width === "100%"}>{control}</PhiLabeledControl>;
 }

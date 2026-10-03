@@ -5,7 +5,7 @@ import { Input } from "antd";
 import type { OTPRef } from "antd/es/input/OTP";
 
 import type { PhiControlSize, PhiControlVariant } from "../../types/control";
-import { PhiLabeledControl } from "./phi-labeled-control";
+import { PhiLabeledControl, usePhiControlLabel } from "./phi-labeled-control";
 
 /**
  * A code of known length, entered one character per cell.
@@ -79,6 +79,7 @@ export function PhiOtpControl({
   onBlur,
   handleRef,
 }: PhiOtpControlProps) {
+  const { labelId, labelledBy } = usePhiControlLabel(label, ariaLabel);
   const otpRef = useRef<OTPRef | null>(null);
   useImperativeHandle(handleRef, () => ({
     focus: () => otpRef.current?.focus(),
@@ -95,6 +96,7 @@ export function PhiOtpControl({
     <Input.OTP
       ref={otpRef}
       aria-label={ariaLabel}
+      aria-labelledby={labelledBy}
       length={length}
       mask={mask}
       size={size}
@@ -115,5 +117,5 @@ export function PhiOtpControl({
     />
   );
 
-  return <PhiLabeledControl label={label} description={description}>{control}</PhiLabeledControl>;
+  return <PhiLabeledControl label={label} labelId={labelId} description={description}>{control}</PhiLabeledControl>;
 }

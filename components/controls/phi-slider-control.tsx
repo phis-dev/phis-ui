@@ -3,7 +3,7 @@
 import type { CSSProperties, ReactNode } from "react";
 import { Slider } from "antd";
 
-import { PhiLabeledControl } from "./phi-labeled-control";
+import { PhiLabeledControl, usePhiControlLabel } from "./phi-labeled-control";
 import type { PhiSliderTooltipMode } from "./phi-slider-control-contract";
 
 export type PhiSliderControlProps = {
@@ -43,10 +43,12 @@ export function PhiSliderControl({
   onChange,
   onChangeComplete,
 }: PhiSliderControlProps) {
+  const { labelId, labelledBy } = usePhiControlLabel(label, ariaLabel);
   return (
-    <PhiLabeledControl label={label} fill={style?.width === "100%"}>
+    <PhiLabeledControl label={label} labelId={labelId} fill={style?.width === "100%"}>
       <Slider
-        aria-label={ariaLabel ?? (typeof label === "string" ? label : undefined)}
+        aria-label={ariaLabel}
+        ariaLabelledByForHandle={labelledBy}
         value={value}
         min={min}
         max={max}

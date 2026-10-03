@@ -4,7 +4,7 @@ import type { CSSProperties, FocusEventHandler, KeyboardEventHandler, ReactNode 
 import { InputNumber } from "antd";
 import type { PhiControlSize, PhiControlVariant } from "../../types/control";
 import { PHI_LAYOUT } from "../../theme/phi-tokens";
-import { PhiLabeledControl } from "./phi-labeled-control";
+import { PhiLabeledControl, usePhiControlLabel } from "./phi-labeled-control";
 
 export type PhiNumberControlProps = {
   /** The DOM id of the input, so a `<label for>` outside the control can name it. */
@@ -53,9 +53,11 @@ export function PhiNumberControl({
   onBlur,
   onKeyDown,
 }: PhiNumberControlProps) {
+  const { labelId, labelledBy } = usePhiControlLabel(label);
   const control = (
     <InputNumber
       id={id}
+      aria-labelledby={labelledBy}
       value={value}
       prefix={prefix}
       placeholder={placeholder}
@@ -77,5 +79,5 @@ export function PhiNumberControl({
       onKeyDown={onKeyDown}
     />
   );
-  return <PhiLabeledControl label={label} fill={style?.width === "100%"}>{control}</PhiLabeledControl>;
+  return <PhiLabeledControl label={label} labelId={labelId} fill={style?.width === "100%"}>{control}</PhiLabeledControl>;
 }

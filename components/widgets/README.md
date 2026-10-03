@@ -159,7 +159,9 @@ exports complete Widgets only.
   ([SIGNALS.md](../../SIGNALS.md#site-core-runtime-controller)).
 - Label and description use `PhiLabeledControl`: label plus description renders the label with an info
   tooltip using `PHI_DESCRIPTION_TOOLTIP_ICON`. Label and description text never becomes a native `title`
-  attribute.
+  attribute. A Control that renders a label takes its id from `usePhiControlLabel` and points its
+  focusable element at it with `aria-labelledby`, so the visible label is also the accessible name; an
+  explicit `ariaLabel` takes precedence.
 - Option-bearing consumers normalize static options to `PhiControlOption` and resolve dynamic options
   with `PhiControlOptionsProviderConfig` and `usePhiControlOptionsProvider`; the Control receives only
   resolved options.

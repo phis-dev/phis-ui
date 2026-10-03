@@ -1,6 +1,6 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { useId, type ReactNode } from "react";
 
 import { usePhiConfig } from "../root/phi-config-provider";
 import { PhiDescriptionHint } from "./phi-description-tooltip-icon";
@@ -16,13 +16,34 @@ import { PhiHoverText } from "./phi-hover-text";
  * graphic that has no name of its own is `PhiNameControl` instead, which renders the named element and
  * can therefore give it both from one string.
  */
+/**
+ * The id a Control's label is rendered with, and the `aria-labelledby` its focusable element names it by.
+ *
+ * The label is drawn beside the Control rather than as a `<label>` around it, so nothing ties the two
+ * together on its own: without this a screen reader announced "edit text" where the eye reads "Email".
+ * The Control generates the id because it renders both halves -- the label through `PhiLabeledControl`,
+ * the element itself -- and a name cannot be handed to a child from outside it. An explicit `ariaLabel`
+ * wins, as it would in the browser, so `labelledBy` stays empty then.
+ */
+export function usePhiControlLabel(label: ReactNode, ariaLabel?: string) {
+  const id = useId();
+  const hasLabel = label != null && label !== "";
+  return {
+    labelId: hasLabel ? id : undefined,
+    labelledBy: hasLabel && !ariaLabel ? id : undefined,
+  };
+}
+
 export function PhiLabeledControl({
   label,
+  labelId,
   description,
   children,
   fill = false,
 }: {
   label?: ReactNode;
+  /** The id the label is rendered with, from `usePhiControlLabel`, so the Control can point at it. */
+  labelId?: string;
   description?: ReactNode;
   children: ReactNode;
   fill?: boolean;
@@ -64,7 +85,7 @@ export function PhiLabeledControl({
       }}
     >
       <span style={{ display: "inline-flex", alignItems: "center", gap: token.paddingXXS, minWidth: 0 }}>
-        <span className="phi-typography phi-labeled-control__label">{label}</span>
+        <span id={labelId} className="phi-typography phi-labeled-control__label">{label}</span>
         {hasDescription ? <PhiDescriptionHint description={description} /> : null}
       </span>
       <div

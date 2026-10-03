@@ -116,6 +116,7 @@ function renderDatePicker(props: PhiCalendarAdapterDatePickerProps) {
     format: props.format,
     size: props.controlSize,
     variant: props.variant,
+    "aria-labelledby": props.ariaLabelledBy,
     minDate: props.min ? dayjs(props.min.isoDate) : undefined,
     maxDate: props.max ? dayjs(props.max.isoDate) : undefined,
     disabledDate: (value: Dayjs) => isDisabled(value, props),
