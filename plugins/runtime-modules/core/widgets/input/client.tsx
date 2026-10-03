@@ -1,12 +1,12 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import type { InputRef } from "antd/es/input";
 
 import type { PhiBlockRuntime, PhiCmsInstanceId } from "../../../../../types";
 import type { PhiCmsInputWidgetConfig } from "./config";
 import { usePhiRenderableWidgetRuntime } from "../../../../../components/runtime/renderable-widget-runtime";
 import { PhiTextControl } from "../../../../../components/controls/phi-text-control";
+import type { PhiTextControlInputRef } from "../../../../../components/controls/phi-text-types";
 import { usePhiInputSignalController } from "../../../../../components/widgets/client/shared/phi-input-signals";
 
 export type PhiInputWidgetProps = {
@@ -17,7 +17,7 @@ export type PhiInputWidgetProps = {
 };
 
 export function PhiInputWidget({ blockId, runtime, config, signalsEnabled = true }: PhiInputWidgetProps) {
-  const inputRef = useRef<InputRef | null>(null);
+  const inputRef = useRef<PhiTextControlInputRef | null>(null);
   const changeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const blockRuntime = usePhiRenderableWidgetRuntime({
     blockId,

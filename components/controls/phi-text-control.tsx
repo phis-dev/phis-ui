@@ -10,11 +10,13 @@ import type {
   ReactNode,
   Ref,
 } from "react";
-import type { InputRef } from "antd/es/input";
-import type { TextAreaRef } from "antd/es/input/TextArea";
 
 import type { PhiControlSize, PhiControlVariant } from "../../types/control";
-import type { PhiTextInputType } from "./phi-text-types";
+import type {
+  PhiTextControlInputRef,
+  PhiTextControlTextAreaRef,
+  PhiTextInputType,
+} from "./phi-text-types";
 import { PhiLabeledControl, usePhiControlLabel } from "./phi-labeled-control";
 
 export type PhiTextControlPresentation = "input" | "password" | "textarea" | "hidden";
@@ -45,8 +47,8 @@ export type PhiTextControlProps = {
   tabIndex?: number;
   size?: PhiControlSize;
   variant?: PhiControlVariant;
-  inputRef?: Ref<InputRef>;
-  textareaRef?: Ref<TextAreaRef>;
+  inputRef?: Ref<PhiTextControlInputRef>;
+  textareaRef?: Ref<PhiTextControlTextAreaRef>;
   onChange?: (nextValue: string | null) => void;
   onPressEnter?: () => void;
   onKeyDown?: KeyboardEventHandler<HTMLInputElement | HTMLTextAreaElement>;

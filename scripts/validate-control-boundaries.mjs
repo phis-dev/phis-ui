@@ -296,25 +296,9 @@ const antdImportAllowance = new Map([
       + "formatter. `themes/seed` and `util/alias` are not public exports -- the deepest coupling in the "
       + "tree, and the reason the deep-path reader now matches more than one segment.",
   }],
-  ["components/forms/form-provider-registry.tsx", {
-    paths: ["antd/es/form"],
-    reason: "Rule types for the Form primitive PhiFormControl wraps.",
-  }],
-  ["plugins/runtime-modules/core/widgets/markdown/editor.tsx", {
-    paths: ["antd/es/input/TextArea"],
-    reason: "A ref to the textarea it has to place a cursor in. A leak, and the smallest one available.",
-  }],
   ["helpers/antd-locale.ts", {
     paths: ["antd/es/locale"],
     reason: "Maps a Phi locale onto the primitive locale bundle the root adapter takes.",
-  }],
-  ["plugins/runtime-modules/builder/tree-options.tsx", {
-    paths: ["antd/es/tree"],
-    reason: "`DataNode` is the Tree primitive's node shape, and PhiTreeControl passes it through.",
-  }],
-  ["plugins/runtime-modules/core/widgets/input/client.tsx", {
-    paths: ["antd/es/input"],
-    reason: "`InputRef` for focus handling. The Widget renders PhiTextControl and types against the ref alone.",
   }],
 ]);
 

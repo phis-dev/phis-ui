@@ -1,3 +1,13 @@
+import type { InputRef } from "antd/es/input";
+import type { TextAreaRef } from "antd/es/input/TextArea";
+
+/**
+ * What a ref on PhiTextControl's field reaches: focus, blur, selection. Named here so a Widget holding
+ * one types against the Control rather than against the primitive drawn inside it.
+ */
+export type PhiTextControlInputRef = InputRef;
+export type PhiTextControlTextAreaRef = TextAreaRef;
+
 export type PhiTextInputType =
   | "text"
   | "url"

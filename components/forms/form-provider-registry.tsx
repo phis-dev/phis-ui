@@ -7,7 +7,7 @@ import {
   type ComponentType,
   type ReactNode,
 } from "react";
-import type { Rule } from "antd/es/form";
+import type { PhiFormControlRule } from "../controls/phi-form-control-contract";
 
 import type {
   PhiFormFieldDescriptor,
@@ -60,7 +60,7 @@ export type PhiFormValidationContext = {
 };
 
 export type PhiFormValidationProvider = Omit<PhiFormValidationProviderDescriptor, "ownerModuleId"> & {
-  createRule: (context: PhiFormValidationContext) => Rule;
+  createRule: (context: PhiFormValidationContext) => PhiFormControlRule;
 };
 
 export type PhiFormProviderRegistry = {

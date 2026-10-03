@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import type { TextAreaRef } from "antd/es/input/TextArea";
+import type { PhiTextControlTextAreaRef } from "../../../../../components/controls/phi-text-types";
 
 import type { PhiCmsInstanceId } from "../../../../../types/cms-instance-id";
 import type { PhiCmsMarkdownWidgetConfig } from "./config";
@@ -35,7 +35,7 @@ export function PhiMarkdownWidgetEditor({
    */
   const [editedMarkdown, setEditedMarkdown] = useState<string | null>(null);
   const draftMarkdown = editedMarkdown ?? markdown;
-  const textareaRef = useRef<TextAreaRef>(null);
+  const textareaRef = useRef<PhiTextControlTextAreaRef>(null);
   const currentValueRef = useRef(draftMarkdown);
   const selectionRef = useRef({ start: draftMarkdown.length, end: draftMarkdown.length });
   const onChangeRef = useRef(onChange);
