@@ -64,30 +64,30 @@ describe("shell chrome overlay variables", () => {
 });
 
 /**
- * The overlay is the Chrome's own ground, not a pane above it, so an Effect here lands on the Region
- * itself. Only the two glass strengths act on what is behind the Region; the rest would take the
- * Header's own content with them and are resolved away without rewriting what is stored.
+ * The overlay is the Chrome's own ground, handed to the Regions as custom properties, with no layer of
+ * its own for `blur` to soften. Only the two glass strengths act on what is behind the Region; `blur` is
+ * resolved away without rewriting what is stored.
  */
-describe("shell chrome overlay effects", () => {
+describe("shell chrome overlay filters", () => {
   it("frosts what is behind the Chrome under glass", () => {
-    const style = resolvePhiShellChromeOverlayStyle({ chrome: { light: { base: { kind: "none" as const }, effect: "glass" as const } } }, "light");
+    const style = resolvePhiShellChromeOverlayStyle({ chrome: { light: { base: { kind: "none" as const }, filter: "glass" as const } } }, "light");
     expect(style?.backdropFilter).toBeTruthy();
     expect(String(style?.backgroundColor)).toContain("color-mix");
   });
 
   it("clouds without frosting under haze, the lighter of the two panes", () => {
     const style = resolvePhiShellChromeOverlayStyle(
-      { chrome: { light: { base: { kind: "color" as const, color: "#123456" }, effect: "haze" as const } } },
+      { chrome: { light: { base: { kind: "color" as const, color: "#123456" }, filter: "haze" as const } } },
       "light",
     );
     expect(String(style?.backdropFilter)).toContain("blur(10px)");
     expect(String(style?.backgroundColor)).toContain("60%");
   });
 
-  it("resolves an Effect it does not offer away", () => {
-    for (const effect of ["blur", "dim"] as const) {
+  it("resolves a Filter it does not offer away", () => {
+    for (const filter of ["blur"] as const) {
       const style = resolvePhiShellChromeOverlayStyle(
-        { chrome: { light: { base: { kind: "color" as const, color: "#123456" }, effect } } },
+        { chrome: { light: { base: { kind: "color" as const, color: "#123456" }, filter } } },
         "light",
       );
       expect(style?.filter).toBeUndefined();
@@ -142,7 +142,7 @@ describe("shell chrome overlay base", () => {
               sourceKind: "url" as const,
               sourceUrl: "https://example.test/frame.jpg",
             },
-            effect: "glass" as const,
+            filter: "glass" as const,
           },
         },
       },

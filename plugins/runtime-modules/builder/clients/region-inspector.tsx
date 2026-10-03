@@ -5,6 +5,7 @@ import { PhiBorderControl } from "../../../../components/controls/phi-border-con
 import { PhiGeometryControl } from "../../../../components/controls/phi-geometry-control";
 import { PhiViewportVisibilityControl } from "../../../../components/controls/phi-viewport-visibility-control";
 import { PhiShadowControl } from "../../../../components/controls/phi-shadow-control";
+import { isPhiBackgroundFilter } from "../../../../types/layout-style";
 import { PhiPaddingControl } from "../../../../components/controls/phi-padding-control";
 import type { PhiGeometryWidgetLabels } from "../../../../components/widgets/label-types/geometry";
 import type { PhiBackgroundWidgetLabels } from "../../../../components/widgets/label-types/background";
@@ -154,13 +155,13 @@ export function PhiDeveloperBuilderRegionInspectorWidgetClient({
                       disabled={isPreviewMode}
                       value={{
                         ...effectiveDraft.background,
-                        effect: effectiveDraft.effect ?? null,
+                        filter: isPhiBackgroundFilter(effectiveDraft.effect) ? effectiveDraft.effect : null,
                       }}
                       onChange={(background) => updateDraft({
-                        effect: background.effect ?? null,
+                        effect: background.filter ?? null,
                         background: {
                           ...background,
-                          effect: null,
+                          filter: null,
                         },
                       })}
                       labels={backgroundLabels}

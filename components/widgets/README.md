@@ -256,7 +256,9 @@ record's source text instead of its localized version.
   `dots`, `checker`, `crosshatch`) plus provider-owned `values`, and an `overlay.ink` color or gradient.
   Noise is a separate grain preset (`fine`, `medium`, `coarse`). An unavailable pattern key stays
   persisted and renders nothing. Image motion (`static`, `fixed`, `parallax`) is described in
-  [LAYOUTING.md](../../LAYOUTING.md#background-motion).
+  [LAYOUTING.md](../../LAYOUTING.md#background-motion), the Background `filter` (`glass`, `haze`, `blur`)
+  in [LAYOUTING.md](../../LAYOUTING.md#background-filter). Darkening or tinting is a `color` Overlay at an
+  opacity, never a filter.
 
 ## Data Widgets
 

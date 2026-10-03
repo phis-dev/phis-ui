@@ -2,13 +2,13 @@ import type { CSSProperties } from "react";
 
 import {
   normalizePhiBackgroundWidgetConfig,
-  resolvePhiBackgroundEffect,
+  resolvePhiBackgroundFilter,
   resolvePhiBackgroundWidgetStyle,
   type PhiBackgroundImageSourceKind,
   type PhiBackgroundMotionMode,
   type PhiCmsBackgroundWidgetConfig,
 } from "../widgets/config/background";
-import type { PhiLayoutEffectId, PhiShadow } from "../../types/layout-style";
+import type { PhiBackgroundFilter, PhiLayoutEffectId, PhiShadow } from "../../types/layout-style";
 import type { PhiSiteThemeRoot } from "../../types/site-theme";
 import type { PhiThemeMode } from "../../theme/phi-theme-presets";
 
@@ -28,16 +28,17 @@ import type { PhiThemeMode } from "../../theme/phi-theme-presets";
  */
 
 /**
- * The Effects the overlay offers and honours, which are the two glass panes.
+ * The Filters the overlay offers and honours, which are the two glass panes.
  *
- * The overlay is not a layer above the Chrome, it is the Chrome's own ground, so an Effect here acts on
- * the Region itself: `blur` and `dim` are `filter`, which would blur and darken the Header's own text.
- * A pane acts on what is behind the Region instead, which is exactly what a shared frame over a
- * scrolling Page wants, and both strengths of it belong to a frame -- `glass` where the Page should
- * read as frosted underneath, `haze` where it should stay almost legible. A wash of colour over the
- * frame is an Overlay rather than an Effect, and the overlay offers those unnarrowed.
+ * The overlay is not a layer above the Chrome, it is the Chrome's own ground, handed to the Regions as
+ * custom properties rather than as a layer of its own -- so there is no separate paint for `blur` to
+ * soften without softening the Header's text. A pane acts on what is behind the Region instead, which is
+ * exactly what a shared frame over a scrolling Page wants, and both strengths of it belong to a frame --
+ * `glass` where the Page should read as frosted underneath, `haze` where it should stay almost legible.
+ * A wash of colour over the frame is an Overlay rather than a Filter, and the overlay offers those
+ * unnarrowed.
  */
-export const PHI_SHELL_CHROME_OVERLAY_EFFECTS: readonly PhiLayoutEffectId[] = ["glass", "haze"];
+export const PHI_SHELL_CHROME_OVERLAY_FILTERS: readonly PhiBackgroundFilter[] = ["glass", "haze"];
 
 /**
  * The Base kinds the overlay offers and honours, which is the whole contract.
@@ -133,7 +134,7 @@ function readPhiShellChromeOverlayConfig(
 /**
  * The overlay as this surface renders it, narrowed to what it offers.
  *
- * A stored value is never rewritten. A Base or an Effect the overlay does not offer simply resolves
+ * A stored value is never rewritten. A Base or a Filter the overlay does not offer simply resolves
  * away, which is what the Control shows for it too.
  */
 export function resolvePhiShellChromeOverlayConfig(
@@ -141,8 +142,8 @@ export function resolvePhiShellChromeOverlayConfig(
 ): PhiCmsBackgroundWidgetConfig {
   const normalized = normalizePhiBackgroundWidgetConfig(config);
   /*
-   * The Base is narrowed first and the Effect resolved against the result, not against what is stored.
-   * The narrowing can only ever take a Base away, and an Effect that needed the Base it took has to go
+   * The Base is narrowed first and the Filter resolved against the result, not against what is stored.
+   * The narrowing can only ever take a Base away, and a Filter that needed the Base it took has to go
    * with it -- `glass` on a picture is the case, and the shared resolver already answers it.
    */
   const narrowed: PhiCmsBackgroundWidgetConfig = {
@@ -152,10 +153,10 @@ export function resolvePhiShellChromeOverlayConfig(
       : { kind: "none" },
     motion: null,
   };
-  const effect = resolvePhiBackgroundEffect(narrowed);
+  const filter = resolvePhiBackgroundFilter(narrowed);
   return {
     ...narrowed,
-    effect: effect && PHI_SHELL_CHROME_OVERLAY_EFFECTS.includes(effect) ? effect : null,
+    filter: filter && PHI_SHELL_CHROME_OVERLAY_FILTERS.includes(filter) ? filter : null,
   };
 }
 

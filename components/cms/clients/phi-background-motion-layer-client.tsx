@@ -5,6 +5,7 @@ import { useEffect, useMemo, useRef, type CSSProperties } from "react";
 import {
   PHI_BACKGROUND_PARALLAX_DEFAULT_STRENGTH,
   normalizePhiBackgroundWidgetConfig,
+  resolvePhiBackgroundGroundFilter,
   resolvePhiBackgroundWidgetStyle,
   type PhiBackgroundMotion,
   type PhiCmsBackgroundWidgetConfig,
@@ -339,6 +340,7 @@ export function PhiBackgroundMotionLayerClient({
   const layerRef = useRef<HTMLDivElement>(null);
   const normalized = useMemo(() => normalizePhiBackgroundWidgetConfig(config), [config]);
   const motion = normalized.base.kind === "image" ? normalized.motion : null;
+  const groundFilter = resolvePhiBackgroundGroundFilter(normalized);
   const backgroundStyle = useMemo(
     () =>
       resolvePhiBackgroundWidgetStyle({
@@ -350,7 +352,7 @@ export function PhiBackgroundMotionLayerClient({
           normalized.base.kind === "image"
             ? { ...normalized.base, variantKey: null, variantVersion: null }
             : normalized.base,
-        effect: null,
+        filter: null,
         motion: null,
       }),
     [normalized],
@@ -432,6 +434,8 @@ export function PhiBackgroundMotionLayerClient({
           insetInline: 0,
           insetBlock: 0,
           willChange: "transform",
+          // The moving paint softens like a still one; the content in front never does.
+          ...(groundFilter ? { filter: groundFilter } : {}),
         } as CSSProperties}
       />
     </div>

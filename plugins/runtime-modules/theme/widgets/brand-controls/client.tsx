@@ -78,12 +78,13 @@ import { PhiBrandControl, resolvePhiBrandLogoUrl } from "../../../../../componen
 import { PhiBackgroundControl, type PhiBackgroundControlProps } from "../../../../../components/controls/phi-background-control";
 import {
   PHI_ROOT_BACKGROUND_IMAGE_SOURCE_KINDS,
+  PHI_ROOT_BACKGROUND_FILTERS,
   PHI_ROOT_BACKGROUND_MOTION_MODES,
   resolvePhiRootBackgroundPaintStyle,
 } from "../../../../../components/root/phi-root-background";
 import {
   PHI_SHELL_CHROME_OVERLAY_BASE_KINDS,
-  PHI_SHELL_CHROME_OVERLAY_EFFECTS,
+  PHI_SHELL_CHROME_OVERLAY_FILTERS,
   PHI_SHELL_CHROME_OVERLAY_IMAGE_SOURCE_KINDS,
   PHI_SHELL_CHROME_OVERLAY_MOTION_MODES,
   resolvePhiShellChromeOverlayConfig,
@@ -3577,6 +3578,7 @@ export function PhiBuilderBrandBackgroundControlsWidgetClient({
                     key={mode}
                     value={rootBackground}
                     motionModes={PHI_ROOT_BACKGROUND_MOTION_MODES}
+                    filters={PHI_ROOT_BACKGROUND_FILTERS}
                     imageSourceKinds={PHI_ROOT_BACKGROUND_IMAGE_SOURCE_KINDS}
                     renderMediaPicker={renderPhiThemeRootBackgroundMediaPicker}
                     editTransaction={editTransaction}
@@ -3613,7 +3615,7 @@ export function PhiBuilderBrandBackgroundControlsWidgetClient({
                     key={`chrome-${mode}`}
                     value={chromeOverlay}
                     motionModes={PHI_SHELL_CHROME_OVERLAY_MOTION_MODES}
-                    effects={PHI_SHELL_CHROME_OVERLAY_EFFECTS}
+                    filters={PHI_SHELL_CHROME_OVERLAY_FILTERS}
                     baseKinds={PHI_SHELL_CHROME_OVERLAY_BASE_KINDS}
                     imageSourceKinds={PHI_SHELL_CHROME_OVERLAY_IMAGE_SOURCE_KINDS}
                     renderMediaPicker={renderPhiThemeRootBackgroundMediaPicker}

@@ -24,7 +24,7 @@ import type { PhiCmsContentWidgetNode, PhiCmsLayoutRenderNode } from "../../../.
 import { readPhiCmsInstanceId, type PhiCmsInstanceId } from "../../../../../types/cms-instance-id";
 import type { PhiCmsRegionConfig } from "../../../../../types";
 import { normalizePhiPaddingWidgetConfig } from "../../../../../types/cms-config";
-import { readPhiShadow } from "../../../../../types/layout-style";
+import { isPhiBackgroundFilter, readPhiShadow } from "../../../../../types/layout-style";
 import {
   readPhiRenderableBlockLength,
   resolvePhiRenderableBlockGeometry,
@@ -758,7 +758,7 @@ export function PhiStructureRegionScaffold({
   const slotBackgroundStyle = effectiveDraft?.background
     ? resolvePhiBackgroundWidgetStyle({
         ...effectiveDraft.background,
-        effect: effectiveDraft.effect ?? null,
+        filter: isPhiBackgroundFilter(effectiveDraft.effect) ? effectiveDraft.effect : null,
       })
     : {};
   /*

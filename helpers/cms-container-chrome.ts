@@ -16,7 +16,7 @@ export function resolvePhiCmsContainerChromeStyle(
   const backgroundStyle = config.backgroundConfig != null
     ? config.backgroundConfig.base.kind === "none"
       ? { background: "transparent" }
-      : resolvePhiBackgroundWidgetStyle({ ...config.backgroundConfig, effect: null })
+      : resolvePhiBackgroundWidgetStyle({ ...config.backgroundConfig, filter: null })
     : config.background == null
       ? {}
       : { background: config.background };

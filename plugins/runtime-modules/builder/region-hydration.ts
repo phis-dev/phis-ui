@@ -211,10 +211,10 @@ function buildRegionDraft(
   const hydratedBackground = resolveRegionBackground(regionConfig, fallback.background);
   const resolvedEffect = isPhiLayoutEffectId(regionConfig.effect)
     ? regionConfig.effect
-    : hydratedBackground.effect ?? fallback.effect;
+    : hydratedBackground.filter ?? fallback.effect;
   const resolvedBackground = {
     ...hydratedBackground,
-    effect: null,
+    filter: null,
   } satisfies PhiCmsBackgroundWidgetConfig;
   const resolvedRootNodeKind = rootNode ? resolveRootNodeKind(rootNode.widgetType) : null;
   const rootNodeDefaults =
@@ -351,7 +351,7 @@ export function serializePhiDeveloperBuilderRegionConfig(
   // crop; stored content must not, or a focal change would leave a stale revision behind.
   base.backgroundConfig = stripPhiResolvedAssetProjections({
     ...draft.background,
-    effect: null,
+    filter: null,
   });
 
   if (draft.border != null) {

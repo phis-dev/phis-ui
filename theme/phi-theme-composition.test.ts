@@ -139,7 +139,7 @@ describe("effective root", () => {
   it("takes the block's ground where nothing was authored", () => {
     const effective = resolvePhiThemeEffectiveRoot(null, ground);
     expect(effective.background?.light?.base?.kind).toBe("image");
-    expect(effective.chrome?.light?.effect).toBe("glass");
+    expect(effective.chrome?.light?.filter).toBe("glass");
     expect(effective.chrome?.shadow?.header).toBe("soft");
   });
 

@@ -13,6 +13,7 @@ import {
   type PhiBackgroundMotionMode,
   type PhiCmsBackgroundWidgetConfig,
 } from "../widgets/config/background";
+import type { PhiBackgroundFilter } from "../../types/layout-style";
 import type { PhiSiteThemeRoot } from "../../types/site-theme";
 import type { PhiThemeMode } from "../../theme/phi-theme-presets";
 
@@ -64,6 +65,21 @@ export const PHI_ROOT_BACKGROUND_MOTION_MODES: readonly PhiBackgroundMotionMode[
  */
 export const PHI_ROOT_BACKGROUND_IMAGE_SOURCE_KINDS: readonly PhiBackgroundImageSourceKind[] = ["asset"];
 
+/**
+ * The Filters the Theme Root Background offers and honours: none.
+ *
+ * A pane frosts what lies behind a surface, and nothing lies behind the ground of the whole Site. A
+ * softened picture would be a Filter of its own, and this layer is not asked for one; a stored value
+ * simply resolves away.
+ */
+export const PHI_ROOT_BACKGROUND_FILTERS: readonly PhiBackgroundFilter[] = [];
+
+function withoutPhiRootBackgroundFilter(
+  config: PhiCmsBackgroundWidgetConfig | null,
+): PhiCmsBackgroundWidgetConfig | null {
+  return config ? { ...normalizePhiBackgroundWidgetConfig(config), filter: null } : null;
+}
+
 function readPhiRootBackgroundConfig(
   root: PhiSiteThemeRoot | null | undefined,
   mode: PhiThemeMode,
@@ -83,7 +99,7 @@ export function resolvePhiRootBackgroundPaintStyle(
   root: PhiSiteThemeRoot | null | undefined,
   mode: PhiThemeMode,
 ): CSSProperties | null {
-  const configured = readPhiRootBackgroundConfig(root, mode);
+  const configured = withoutPhiRootBackgroundFilter(readPhiRootBackgroundConfig(root, mode));
   return configured ? resolvePhiBackgroundWidgetStyle(configured) : null;
 }
 
@@ -153,7 +169,7 @@ export function resolvePhiRootBackgroundPicture(
     ? resolvePhiBackgroundWidgetStyle({
       ...normalized,
       base: { ...base, variantKey: null, variantVersion: null },
-      effect: null,
+      filter: null,
       motion: null,
     })
     : resolvePhiRootBackgroundPaintStyle(root, mode) ?? {};
@@ -162,7 +178,7 @@ export function resolvePhiRootBackgroundPicture(
 
   return {
     key: JSON.stringify(configured ?? null),
-    paint: motion ? resolvePhiBackgroundMotionHostStyle(configured) : pictureStyle,
+    paint: motion ? resolvePhiBackgroundMotionHostStyle(withoutPhiRootBackgroundFilter(configured)) : pictureStyle,
     motion: motion && configured ? configured : null,
     imageUrl: url && !url.startsWith("data:") ? url : null,
     placeholder: url && blurDataUrl && !url.startsWith("data:")

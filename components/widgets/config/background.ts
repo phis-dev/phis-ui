@@ -9,9 +9,10 @@ import {
 import { readPhiMediaImageSourceConfig } from "./image-source-parser";
 import { readBoolean, readNumber, readString } from "./parser-primitives";
 import {
+  isPhiBackgroundFilter,
   isPhiGlassLayoutEffectId,
-  isPhiLayoutEffectId,
-  type PhiLayoutEffectId,
+  type PhiBackgroundFilter,
+  type PhiGlassLayoutEffectId,
 } from "../../../types/layout-style";
 import { composePhiLayoutEffectStyle, resolvePhiLayoutEffectStyle } from "../../../helpers/layout-style";
 import {
@@ -136,8 +137,9 @@ export type PhiBackgroundNoiseOverlay = {
  *
  * It carries the same ink a Pattern does, so a flat colour and a directional fade -- dark at the
  * bottom, clear at the top -- are the same Overlay with a different paint. This is what darkens a
- * photograph enough to carry text, and it does so as a layer rather than as a filter: `dim` acts on
- * the element and takes the content rendered inside it along, a wash only covers the paint.
+ * photograph enough to carry text, and it does so as a layer rather than as a filter: a filter on the
+ * element takes the content rendered inside it along, a wash only covers the paint. There is no `dim`
+ * filter for that reason -- this Overlay in black at an opacity is what darkening is.
  */
 export type PhiBackgroundColorOverlay = {
   kind: "color";
@@ -156,7 +158,7 @@ export const PHI_BACKGROUND_OVERLAY_DEFAULT_OPACITY = 0.14;
 export type PhiCmsBackgroundWidgetConfig = {
   base: PhiBackgroundBaseColor | PhiBackgroundBaseGradient | PhiBackgroundBaseImage | PhiBackgroundBaseNone;
   overlay?: PhiBackgroundOverlay | null;
-  effect?: PhiLayoutEffectId | null;
+  filter?: PhiBackgroundFilter | null;
   motion?: PhiBackgroundMotion | null;
 };
 
@@ -520,12 +522,12 @@ export function normalizePhiBackgroundWidgetConfig(config: unknown): PhiCmsBackg
     return {
       base: readPhiBackgroundBaseCss(config) ?? { kind: "none" },
       overlay: null,
-      effect: null,
+      filter: null,
       motion: null,
     };
   }
   if (!config || typeof config !== "object" || Array.isArray(config)) {
-    return { base: { kind: "none" }, overlay: null, effect: null, motion: null };
+    return { base: { kind: "none" }, overlay: null, filter: null, motion: null };
   }
 
   const raw = config as Record<string, unknown>;
@@ -533,7 +535,7 @@ export function normalizePhiBackgroundWidgetConfig(config: unknown): PhiCmsBackg
   return {
     base,
     overlay: readBackgroundOverlay(raw.overlay),
-    effect: isPhiLayoutEffectId(raw.effect) ? raw.effect : null,
+    filter: isPhiBackgroundFilter(raw.filter) ? raw.filter : null,
     motion: base.kind === "image" ? readBackgroundMotion(raw.motion) : null,
   };
 }
@@ -647,12 +649,20 @@ export function resolvePhiBackgroundWidgetStyle(config: unknown): CSSProperties 
     ].join(", ");
   }
 
+  /*
+   * Only a pane reaches the element. `blur` softens the paint itself, and a filter on the element would
+   * take the content along with it -- so it is applied where the paint has a layer of its own (see
+   * `resolvePhiBackgroundGroundFilter`), and a surface without one simply draws the paint unsoftened.
+   */
+  const filter = resolvePhiBackgroundFilter(normalized);
   return composePhiLayoutEffectStyle(
     style,
-    resolvePhiLayoutEffectStyle({
-      effect: resolvePhiBackgroundEffect(normalized),
-      background: style.background ?? style.backgroundColor,
-    }),
+    isPhiGlassLayoutEffectId(filter)
+      ? resolvePhiLayoutEffectStyle({
+        effect: filter,
+        background: style.background ?? style.backgroundColor,
+      })
+      : undefined,
   );
 }
 
@@ -665,8 +675,7 @@ export function resolvePhiBackgroundWidgetStyle(config: unknown): CSSProperties 
  * taking the Shell Chrome Overlay and from reading its own Shell-record colour: switching a Header's
  * glass off wrote exactly such a config and locked the Region out of everything.
  *
- * The Effect is not part of the question. A Region carries its own Effect beside the Background, and
- * the Builder nulls the one inside the config when it stores it.
+ * The Filter is not part of the question: a pane over nothing is not a ground somebody painted.
  */
 export function phiBackgroundWidgetConfigPaintsGround(config: unknown): boolean {
   if (config == null) {
@@ -684,8 +693,8 @@ export function phiBackgroundWidgetConfigPaintsGround(config: unknown): boolean 
  * that lets the layer beneath it come up. Both strengths work by thinning the Base until the filtered
  * backdrop reads through it, so both need a Base there is something to thin. An image or gradient base is not a pane, it is the material
  * itself, and there is nothing of it to see through -- the frost lands behind opaque paint and the
- * glass ground can only ever read as a wash laid over the picture. So the Effect is neither offered
- * nor honoured there. `blur` and `dim` act on the surface itself and stay valid on every base.
+ * glass ground can only ever read as a wash laid over the picture. So the pane is neither offered
+ * nor honoured there.
  */
 export function phiBackgroundBaseSupportsGlassEffect(
   base: PhiCmsBackgroundWidgetConfig["base"],
@@ -694,15 +703,56 @@ export function phiBackgroundBaseSupportsGlassEffect(
 }
 
 /**
- * The Effect this Background actually renders, which is the configured one unless it is a pane the
- * base cannot express. A stored value is never rewritten; it simply resolves to no Effect.
+ * Whether `blur` has anything to soften: a picture, a gradient, or a patterned Overlay.
+ *
+ * A flat colour blurred is the same flat colour, so the Filter is neither offered nor honoured on one.
  */
-export function resolvePhiBackgroundEffect(config: unknown): PhiLayoutEffectId | null {
+export function phiBackgroundSupportsBlur(config: PhiCmsBackgroundWidgetConfig): boolean {
+  return config.base.kind === "image"
+    || config.base.kind === "gradient"
+    || config.overlay?.kind === "pattern"
+    || config.overlay?.kind === "noise";
+}
+
+/** Whether this Background can render the given Filter at all; the Control offers what this allows. */
+export function phiBackgroundSupportsFilter(
+  config: PhiCmsBackgroundWidgetConfig,
+  filter: PhiBackgroundFilter,
+): boolean {
+  return isPhiGlassLayoutEffectId(filter)
+    ? phiBackgroundBaseSupportsGlassEffect(config.base)
+    : phiBackgroundSupportsBlur(config);
+}
+
+/**
+ * The Filter this Background actually renders, which is the configured one unless the Background
+ * cannot express it. A stored value is never rewritten; it simply resolves to no Filter.
+ */
+export function resolvePhiBackgroundFilter(config: unknown): PhiBackgroundFilter | null {
   const normalized = normalizePhiBackgroundWidgetConfig(config);
-  const effect = normalized.effect ?? null;
-  return isPhiGlassLayoutEffectId(effect) && !phiBackgroundBaseSupportsGlassEffect(normalized.base)
-    ? null
-    : effect;
+  const filter = normalized.filter ?? null;
+  return filter && phiBackgroundSupportsFilter(normalized, filter) ? filter : null;
+}
+
+/** The glass strength this Background frosts its backdrop with, if any. */
+export function resolvePhiBackgroundPane(config: unknown): PhiGlassLayoutEffectId | null {
+  const filter = resolvePhiBackgroundFilter(config);
+  return isPhiGlassLayoutEffectId(filter) ? filter : null;
+}
+
+/** How far `blur` softens the paint. One value, so a ground layer and its preview never disagree. */
+export const PHI_BACKGROUND_BLUR_RADIUS_PX = 6;
+
+export const PHI_BACKGROUND_BLUR_FILTER = `blur(${PHI_BACKGROUND_BLUR_RADIUS_PX}px)`;
+
+/**
+ * The CSS filter for the layer that carries this Background's paint, or `null` when the paint needs none.
+ *
+ * Never for the element itself: whoever draws the paint on a layer of its own applies this there, and the
+ * content in front stays sharp.
+ */
+export function resolvePhiBackgroundGroundFilter(config: unknown): string | null {
+  return resolvePhiBackgroundFilter(config) === "blur" ? PHI_BACKGROUND_BLUR_FILTER : null;
 }
 
 export function resolvePhiBackgroundMotion(config: unknown): PhiBackgroundMotion | null {
@@ -712,6 +762,6 @@ export function resolvePhiBackgroundMotion(config: unknown): PhiBackgroundMotion
 }
 
 export function resolvePhiBackgroundMotionHostStyle(config: unknown): CSSProperties {
-  const normalized = normalizePhiBackgroundWidgetConfig(config);
-  return resolvePhiLayoutEffectStyle({ effect: normalized.effect }) ?? {};
+  const pane = resolvePhiBackgroundPane(config);
+  return pane == null ? {} : resolvePhiLayoutEffectStyle({ effect: pane }) ?? {};
 }

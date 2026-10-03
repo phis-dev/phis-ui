@@ -23,7 +23,7 @@ import {
   PHI_BACKGROUND_MOTION_MODES,
   PHI_BACKGROUND_OVERLAY_DEFAULT_OPACITY,
   PHI_BACKGROUND_PARALLAX_DEFAULT_STRENGTH,
-  phiBackgroundBaseSupportsGlassEffect,
+  phiBackgroundSupportsFilter,
   resolvePhiBackgroundParallaxDefaultStrength,
   normalizePhiBackgroundWidgetConfig,
   readPhiBackgroundGradientCss,
@@ -55,9 +55,8 @@ import {
 } from "../widgets/label-types/background";
 import type { PhiColorPickerLabels } from "../widgets/label-types/color-picker";
 import {
-  PHI_LAYOUT_EFFECT_IDS,
-  isPhiGlassLayoutEffectId,
-  type PhiLayoutEffectId,
+  PHI_BACKGROUND_FILTERS,
+  type PhiBackgroundFilter,
 } from "../../types/layout-style";
 import type { PhiWidgetControlMode } from "../../types/widget-ui";
 import { ConfigPreviewShell } from "./config-preview-shell";
@@ -94,13 +93,13 @@ export type PhiBackgroundControlProps = {
    */
   motionModes?: readonly PhiBackgroundMotionMode[];
   /**
-   * The Effects this surface can actually render, defaulting to the full contract.
+   * The Filters this surface can actually render, defaulting to the full contract.
    *
-   * Same rule as `motionModes`: an Effect acts on the surface that carries it, and not every surface
-   * survives every one of them. The Shell Chrome Overlay is the Chrome's own ground, so `blur` and
-   * `dim` would take the Header's text with them and only the glass panes describe anything there.
+   * Same rule as `motionModes`: not every surface can carry every one of them. `blur` softens the paint
+   * on a layer of its own, and the Shell Chrome Overlay has no such layer -- it is the Chrome's own
+   * ground -- so only the glass panes describe anything there.
    */
-  effects?: readonly PhiLayoutEffectId[];
+  filters?: readonly PhiBackgroundFilter[];
   /**
    * Where an image Base may take its picture from, defaulting to the full contract.
    *
@@ -113,7 +112,7 @@ export type PhiBackgroundControlProps = {
   /**
    * The Base kinds this surface can actually render, defaulting to the full contract.
    *
-   * Same rule as `motionModes` and `effects`. A surface that cannot render a Base kind must not offer
+   * Same rule as `motionModes` and `filters`. A surface that cannot render a Base kind must not offer
    * it, and a value the offer no longer covers reads as `none`, which is what such a surface renders
    * for it.
    */
@@ -233,7 +232,7 @@ export function PhiBackgroundControl({
   colorPickerLabels = PHI_COLOR_PICKER_DEFAULT_LABELS,
   colorPickerPlacement,
   motionModes = PHI_BACKGROUND_MOTION_MODES,
-  effects = PHI_LAYOUT_EFFECT_IDS,
+  filters = PHI_BACKGROUND_FILTERS,
   imageSourceKinds = PHI_BACKGROUND_IMAGE_SOURCE_KINDS,
   baseKinds = PHI_BACKGROUND_BASE_KINDS,
   renderMediaPicker,
@@ -397,27 +396,25 @@ export function PhiBackgroundControl({
     { value: "medium", label: labels.overlay.grains.medium },
     { value: "coarse", label: labels.overlay.grains.coarse },
   ];
-  const effectKindCatalog: Array<{ value: "none" | PhiLayoutEffectId; label: string }> = [
+  const filterKindCatalog: Array<{ value: "none" | PhiBackgroundFilter; label: string }> = [
     { value: "none", label: labels.common.none },
-    { value: "glass", label: labels.effect.glass },
-    { value: "haze", label: labels.effect.haze },
-    { value: "blur", label: labels.effect.blur },
-    { value: "dim", label: labels.effect.dim },
+    { value: "glass", label: labels.filter.glass },
+    { value: "haze", label: labels.filter.haze },
+    { value: "blur", label: labels.filter.blur },
   ];
   /*
-   * Glass frosts what shows through a surface, so a base that paints its own opaque material has
-   * nothing for it to work on. Offering it there promised a pane over a picture and delivered a wash,
-   * so the segment disappears with such a base and a value stored from before reads as no Effect --
-   * which is exactly what `resolvePhiBackgroundEffect` renders for it.
+   * A Filter needs something to act on. Glass frosts what shows through a surface, so a base that paints
+   * its own opaque material has nothing for it; blur softens a picture or a pattern, and a flat colour
+   * softened is the same colour. The segment shows only what this Background can render, and a value
+   * stored from before reads as no Filter -- exactly what `resolvePhiBackgroundFilter` renders for it.
    */
-  const supportsGlassEffect = phiBackgroundBaseSupportsGlassEffect(currentValue.base);
-  const isOfferedEffect = (effect: PhiLayoutEffectId) =>
-    effects.includes(effect) && (!isPhiGlassLayoutEffectId(effect) || supportsGlassEffect);
-  const effectKindOptions = effectKindCatalog.filter(
-    (option) => option.value === "none" || isOfferedEffect(option.value),
+  const isOfferedFilter = (filter: PhiBackgroundFilter) =>
+    filters.includes(filter) && phiBackgroundSupportsFilter(currentValue, filter);
+  const filterKindOptions = filterKindCatalog.filter(
+    (option) => option.value === "none" || isOfferedFilter(option.value),
   );
-  const activeEffectKind =
-    currentValue.effect && isOfferedEffect(currentValue.effect) ? currentValue.effect : "none";
+  const activeFilterKind =
+    currentValue.filter && isOfferedFilter(currentValue.filter) ? currentValue.filter : "none";
   const canOpenPreview = currentValue.base.kind !== "none";
   useEffect(() => {
     if (currentValue.base.kind === "color") {
@@ -899,13 +896,8 @@ export function PhiBackgroundControl({
     });
   }
 
-  function updateEffectKind(nextKind: PhiLayoutEffectId | "none") {
-    if (nextKind === "none") {
-      emit({ ...currentValue, effect: null });
-      return;
-    }
-
-    emit({ ...currentValue, effect: nextKind });
+  function updateFilterKind(nextKind: PhiBackgroundFilter | "none") {
+    emit({ ...currentValue, filter: nextKind === "none" ? null : nextKind });
   }
 
   function renderPreviewChrome() {
@@ -1363,17 +1355,17 @@ export function PhiBackgroundControl({
         ) : null}
       </PhiFlexControl>
 
-      {effectKindOptions.length > 1 ? (
+      {filterKindOptions.length > 1 ? (
         <>
           <Divider dashed size="small" />
 
           <PhiFlexControl vertical gap={8} style={{ width: "100%" }}>
-            <Typography.Text>{labels.sections.effect}</Typography.Text>
+            <Typography.Text>{labels.sections.filter}</Typography.Text>
             <PhiSegmentedControl
               block
-              value={activeEffectKind}
-              options={effectKindOptions}
-              onChange={(next) => updateEffectKind(next as PhiLayoutEffectId | "none")}
+              value={activeFilterKind}
+              options={filterKindOptions}
+              onChange={(next) => updateFilterKind(next as PhiBackgroundFilter | "none")}
             />
           </PhiFlexControl>
         </>

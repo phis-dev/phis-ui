@@ -262,8 +262,8 @@ export function resolvePhiCmsRegionShell({
   const backgroundStyle = backgroundConfig == null
     ? null
     : backgroundMoves
-      ? resolvePhiBackgroundMotionHostStyle({ ...backgroundConfig, effect: null })
-      : resolvePhiBackgroundWidgetStyle({ ...backgroundConfig, effect: null });
+      ? resolvePhiBackgroundMotionHostStyle({ ...backgroundConfig, filter: null })
+      : resolvePhiBackgroundWidgetStyle({ ...backgroundConfig, filter: null });
 
   const chromeInput = {
     background: typeof config.background === "string" ? config.background : undefined,

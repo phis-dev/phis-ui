@@ -95,12 +95,12 @@ const moduleGround: PhiThemeGroundBlock = {
   title: "Dunes",
   root: {
     background: {
-      light: { base: { kind: "image", sourceKind: "url", sourceUrl: "data:image/svg+xml;base64,bGlnaHQ=" }, overlay: null, effect: null, motion: null },
-      dark: { base: { kind: "image", sourceKind: "url", sourceUrl: "data:image/svg+xml;base64,ZGFyaw==" }, overlay: null, effect: "dim", motion: null },
+      light: { base: { kind: "image", sourceKind: "url", sourceUrl: "data:image/svg+xml;base64,bGlnaHQ=" }, overlay: null, filter: null, motion: null },
+      dark: { base: { kind: "image", sourceKind: "url", sourceUrl: "data:image/svg+xml;base64,ZGFyaw==" }, overlay: null, filter: "blur", motion: null },
     },
     chrome: {
-      light: { base: { kind: "color", color: "rgba(255,255,255,0.6)" }, overlay: null, effect: "glass", motion: null },
-      dark: { base: { kind: "color", color: "rgba(0,0,0,0.6)" }, overlay: null, effect: "glass", motion: null },
+      light: { base: { kind: "color", color: "rgba(255,255,255,0.6)" }, overlay: null, filter: "glass", motion: null },
+      dark: { base: { kind: "color", color: "rgba(0,0,0,0.6)" }, overlay: null, filter: "glass", motion: null },
       shadow: { header: "soft", sider: "soft", footer: "soft" },
     },
   },
@@ -122,8 +122,8 @@ describe("adopting a Module ground on save", () => {
     const theme: Theme = { blocks: { ground: { key: moduleGround.key } }, root: null };
     const adopted = adoptPhiThemeModuleGround(theme, moduleGround);
     expect(adopted.root?.background?.light?.base.kind).toBe("image");
-    expect(adopted.root?.background?.dark?.effect).toBe("dim");
-    expect(adopted.root?.chrome?.light?.effect).toBe("glass");
+    expect(adopted.root?.background?.dark?.filter).toBe("blur");
+    expect(adopted.root?.chrome?.light?.filter).toBe("glass");
     expect(adopted.root?.chrome?.dark?.base).toEqual({ kind: "color", color: "rgba(0,0,0,0.6)" });
     expect(adopted.root?.chrome?.shadow).toEqual({ header: "soft", sider: "soft", footer: "soft" });
     // The key stays as provenance; only the values moved.
@@ -131,7 +131,7 @@ describe("adopting a Module ground on save", () => {
   });
 
   it("keeps what the author already set and fills only the rest", () => {
-    const authoredLight = { base: { kind: "color" as const, color: "#ff0000" }, overlay: null, effect: null, motion: null };
+    const authoredLight = { base: { kind: "color" as const, color: "#ff0000" }, overlay: null, filter: null, motion: null };
     const theme: Theme = { root: { background: { light: authoredLight } } };
     const adopted = adoptPhiThemeModuleGround(theme, moduleGround);
     expect(adopted.root?.background?.light).toEqual(authoredLight);
@@ -201,7 +201,7 @@ describe("adopting a Module palette and style on save", () => {
     });
     expect(adopted.palette).toEqual(modulePalette.palette);
     expect(adopted.style?.token).toEqual(moduleStyle.style.token);
-    expect(adopted.root?.chrome?.light?.effect).toBe("glass");
+    expect(adopted.root?.chrome?.light?.filter).toBe("glass");
     expect(adopted.fonts).toEqual(moduleFonts.fonts);
   });
 });

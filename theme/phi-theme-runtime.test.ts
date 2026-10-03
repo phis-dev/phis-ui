@@ -22,7 +22,7 @@ describe("theme runtime payload", () => {
     expect(theme.style?.token).toEqual({});
     // The core ground is folded in like any other block: a Theme that names nothing stands on it.
     expect(theme.root?.background?.light?.base?.kind).toBe("image");
-    expect(theme.root?.chrome?.light?.effect).toBe("glass");
+    expect(theme.root?.chrome?.light?.filter).toBe("glass");
   });
 
   it("puts the style block under the author's tokens", () => {
@@ -63,7 +63,7 @@ describe("theme runtime payload", () => {
     });
     expect(theme.root?.background?.light?.base).toEqual({ kind: "color", color: "#101010" });
     expect(theme.root?.background?.dark?.base?.kind).toBe("image");
-    expect(theme.root?.chrome?.light?.effect).toBe("glass");
+    expect(theme.root?.chrome?.light?.filter).toBe("glass");
   });
 
   it("reports the parts that fell back to a core block", () => {

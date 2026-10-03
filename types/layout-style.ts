@@ -53,3 +53,19 @@ export function readPhiShadow(value: unknown): PhiShadow | undefined {
     ? { kind: "custom", value: customValue }
     : undefined;
 }
+
+/**
+ * What a Background does to the light that reaches it, beside what it paints.
+ *
+ * `glass` and `haze` are panes: they frost what shows THROUGH the surface, so they act on the backdrop and
+ * on a ground thinned enough to let it through. `blur` softens the Background's own paint -- the picture,
+ * the gradient, the pattern -- and nothing in front of it: the content a surface carries is never filtered.
+ * Darkening is not a filter; a colour Overlay at an opacity does it, and lets the colour be chosen.
+ */
+export const PHI_BACKGROUND_FILTERS = ["glass", "haze", "blur"] as const;
+
+export type PhiBackgroundFilter = (typeof PHI_BACKGROUND_FILTERS)[number];
+
+export function isPhiBackgroundFilter(value: unknown): value is PhiBackgroundFilter {
+  return typeof value === "string" && PHI_BACKGROUND_FILTERS.includes(value as PhiBackgroundFilter);
+}

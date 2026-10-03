@@ -172,7 +172,7 @@ export const PHI_CORE_THEME_GROUND_BLOCKS: readonly PhiThemeGroundBlock[] = [
             repeat: "no-repeat",
           },
           overlay: null,
-          effect: null,
+          filter: null,
           motion: { mode: "fixed" },
         },
         dark: {
@@ -184,7 +184,7 @@ export const PHI_CORE_THEME_GROUND_BLOCKS: readonly PhiThemeGroundBlock[] = [
             repeat: "no-repeat",
           },
           overlay: null,
-          effect: null,
+          filter: null,
           motion: { mode: "fixed" },
         },
       },
@@ -192,13 +192,13 @@ export const PHI_CORE_THEME_GROUND_BLOCKS: readonly PhiThemeGroundBlock[] = [
         light: {
           base: { kind: "color", color: "rgba(255, 255, 255, 0.55)" },
           overlay: null,
-          effect: "glass",
+          filter: "glass",
           motion: null,
         },
         dark: {
           base: { kind: "color", color: "rgba(9, 14, 26, 0.55)" },
           overlay: null,
-          effect: "glass",
+          filter: "glass",
           motion: null,
         },
         shadow: { header: "soft", sider: "soft", footer: "soft" },

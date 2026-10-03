@@ -192,7 +192,7 @@ const PHI_SPLIT_CARD_LAYOUT_PANEL_PRESET = {
         color: PHI_COLOR.bgContainer,
       },
       overlay: null,
-      effect: null,
+      filter: null,
     },
     rightBackground: {
       base: {
@@ -200,7 +200,7 @@ const PHI_SPLIT_CARD_LAYOUT_PANEL_PRESET = {
         color: PHI_COLOR.bgContainer,
       },
       overlay: null,
-      effect: null,
+      filter: null,
     },
     leftBorder: {
       borderWidth: 1,

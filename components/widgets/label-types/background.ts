@@ -6,7 +6,7 @@ export type PhiBackgroundWidgetLabels = {
     image: string;
     gradient: string;
     overlay: string;
-    effect: string;
+    filter: string;
     motion: string;
   };
   base: {
@@ -63,12 +63,11 @@ export type PhiBackgroundWidgetLabels = {
       coarse: string;
     };
   };
-  effect: {
+  filter: {
     none: string;
     glass: string;
     haze: string;
     blur: string;
-    dim: string;
   };
   direction: {
     up: string;
@@ -112,13 +111,13 @@ export type PhiBackgroundWidgetLabels = {
 
 export const PHI_BACKGROUND_WIDGET_DEFAULT_LABELS: PhiBackgroundWidgetLabels = {
   title: "Background",
-  description: "Configure background color, gradient, image, overlay, and effects.",
+  description: "Configure background color, gradient, image, overlay, and filter.",
   sections: {
     base: "Base",
     image: "Image",
     gradient: "Gradient",
     overlay: "Overlay",
-    effect: "Effect",
+    filter: "Filter",
     motion: "Motion",
   },
   base: {
@@ -175,12 +174,11 @@ export const PHI_BACKGROUND_WIDGET_DEFAULT_LABELS: PhiBackgroundWidgetLabels = {
       coarse: "Coarse",
     },
   },
-  effect: {
+  filter: {
     none: "None",
     glass: "Glass",
     haze: "Haze",
     blur: "Blur",
-    dim: "Dim",
   },
   direction: {
     up: "Up",

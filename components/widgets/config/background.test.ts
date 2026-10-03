@@ -1,19 +1,21 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  PHI_BACKGROUND_BLUR_FILTER,
   normalizePhiBackgroundWidgetConfig,
   phiBackgroundBaseSupportsGlassEffect,
   phiBackgroundWidgetConfigPaintsGround,
-  resolvePhiBackgroundEffect,
+  resolvePhiBackgroundFilter,
+  resolvePhiBackgroundGroundFilter,
   resolvePhiBackgroundWidgetStyle,
 } from "./background";
 
 /**
  * Glass frosts what shows through a surface. A base that paints its own opaque material is that
- * material rather than a pane above it, so the Effect resolves to nothing there instead of laying a
+ * material rather than a pane above it, so the Filter resolves to nothing there instead of laying a
  * plain wash over the picture.
  */
-describe("background glass effect", () => {
+describe("background glass filter", () => {
   const image = {
     kind: "image" as const,
     sourceKind: "url" as const,
@@ -39,33 +41,80 @@ describe("background glass effect", () => {
     ).toBe(false);
   });
 
-  it("resolves a stored glass on an image base to no effect", () => {
-    expect(resolvePhiBackgroundEffect({ base: image, effect: "glass" })).toBeNull();
-    const style = resolvePhiBackgroundWidgetStyle({ base: image, effect: "glass" });
+  it("resolves a stored glass on an image base to no filter", () => {
+    expect(resolvePhiBackgroundFilter({ base: image, filter: "glass" })).toBeNull();
+    const style = resolvePhiBackgroundWidgetStyle({ base: image, filter: "glass" });
     expect(style.backdropFilter).toBeUndefined();
     expect(style.backgroundImage).toBe('url("https://example.test/ground.jpg")');
   });
 
   it("withholds both glass strengths from a base with nothing to thin", () => {
-    for (const effect of ["glass", "haze"] as const) {
-      expect(resolvePhiBackgroundEffect({ base: image, effect })).toBeNull();
+    for (const filter of ["glass", "haze"] as const) {
+      expect(resolvePhiBackgroundFilter({ base: image, filter })).toBeNull();
     }
-  });
-
-  it("keeps every other effect on an image base", () => {
-    expect(resolvePhiBackgroundEffect({ base: image, effect: "dim" })).toBe("dim");
-    expect(resolvePhiBackgroundWidgetStyle({ base: image, effect: "dim" }).filter).toBe(
-      "brightness(0.85)",
-    );
   });
 
   it("still frosts a colour base", () => {
     const style = resolvePhiBackgroundWidgetStyle({
       base: { kind: "color", color: "#123456" },
-      effect: "glass",
+      filter: "glass",
     });
     expect(style.backdropFilter).toBe("blur(24px) saturate(1.2)");
     expect(style.backgroundColor).toBe("color-mix(in srgb, #123456 36%, transparent)");
+  });
+});
+
+/**
+ * `blur` softens the paint, never the content in front of it. The element never carries it: a surface
+ * that draws its paint on a layer of its own asks for the layer filter, and the rest draws it unsoftened.
+ */
+describe("background blur filter", () => {
+  const image = {
+    kind: "image" as const,
+    sourceKind: "url" as const,
+    sourceUrl: "https://example.test/ground.jpg",
+  };
+
+  it("keeps blur off the element", () => {
+    const style = resolvePhiBackgroundWidgetStyle({ base: image, filter: "blur" });
+    expect(style.filter).toBeUndefined();
+    expect(style.backgroundImage).toBe('url("https://example.test/ground.jpg")');
+  });
+
+  it("hands blur to the ground layer of a picture", () => {
+    expect(resolvePhiBackgroundFilter({ base: image, filter: "blur" })).toBe("blur");
+    expect(resolvePhiBackgroundGroundFilter({ base: image, filter: "blur" })).toBe(PHI_BACKGROUND_BLUR_FILTER);
+  });
+
+  it("resolves blur on a flat colour to nothing, since there is nothing to soften", () => {
+    expect(resolvePhiBackgroundFilter({ base: { kind: "color", color: "#123456" }, filter: "blur" })).toBeNull();
+    expect(resolvePhiBackgroundGroundFilter({ base: { kind: "color", color: "#123456" }, filter: "blur" })).toBeNull();
+  });
+
+  it("softens a patterned Overlay on a flat colour", () => {
+    expect(
+      resolvePhiBackgroundFilter({
+        base: { kind: "color", color: "#123456" },
+        overlay: { kind: "noise", grain: "fine" },
+        filter: "blur",
+      }),
+    ).toBe("blur");
+  });
+
+  it("gives a pane no ground filter", () => {
+    expect(resolvePhiBackgroundGroundFilter({ base: { kind: "none" }, filter: "glass" })).toBeNull();
+  });
+});
+
+/**
+ * Darkening was a `dim` Effect on the element, which darkened the content with the paint. A colour
+ * Overlay at an opacity is what darkening is now, so a stored `dim` -- like any value that is no Filter
+ * -- resolves away.
+ */
+describe("retired effects", () => {
+  it("does not read the old effect key or the dim value", () => {
+    expect(normalizePhiBackgroundWidgetConfig({ base: { kind: "none" }, effect: "glass" }).filter).toBeNull();
+    expect(normalizePhiBackgroundWidgetConfig({ base: { kind: "none" }, filter: "dim" }).filter).toBeNull();
   });
 });
 
@@ -82,7 +131,7 @@ describe("background config paints a ground", () => {
   });
 
   it("is false for the empty config the Builder stores", () => {
-    expect(phiBackgroundWidgetConfigPaintsGround({ base: { kind: "none" }, effect: null })).toBe(false);
+    expect(phiBackgroundWidgetConfigPaintsGround({ base: { kind: "none" }, filter: null })).toBe(false);
   });
 
   it("is true for every Base that paints", () => {
@@ -103,8 +152,8 @@ describe("background config paints a ground", () => {
     ).toBe(true);
   });
 
-  it("ignores the Effect, which a Region carries beside the Background", () => {
-    expect(phiBackgroundWidgetConfigPaintsGround({ base: { kind: "none" }, effect: "glass" })).toBe(false);
+  it("ignores the Filter, since a pane over nothing is not a ground", () => {
+    expect(phiBackgroundWidgetConfigPaintsGround({ base: { kind: "none" }, filter: "glass" })).toBe(false);
   });
 });
 
@@ -263,21 +312,21 @@ describe("background colour overlay", () => {
 
 /**
  * `tint` was a fixed inset Shadow in one Theme colour at one strength, with no way to choose either.
- * The colour Overlay is what it was reaching for, so the Effect is gone rather than doubled.
+ * The colour Overlay is what it was reaching for, so the value is gone rather than doubled.
  */
-describe("retired tint effect", () => {
+describe("retired tint", () => {
   it("resolves away instead of painting", () => {
     const style = resolvePhiBackgroundWidgetStyle({
       base: { kind: "color", color: "#101018" },
-      effect: "tint",
+      filter: "tint",
     });
     expect(style.boxShadow).toBeUndefined();
     expect(style.backgroundColor).toBe("#101018");
   });
 
-  it("normalizes to no Effect at all", () => {
+  it("normalizes to no Filter at all", () => {
     expect(
-      normalizePhiBackgroundWidgetConfig({ base: { kind: "none" }, effect: "tint" }).effect,
+      normalizePhiBackgroundWidgetConfig({ base: { kind: "none" }, filter: "tint" }).filter,
     ).toBeNull();
   });
 });

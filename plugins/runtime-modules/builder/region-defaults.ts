@@ -8,7 +8,7 @@ function createDefaultRegionBackground(): PhiCmsBackgroundWidgetConfig {
       kind: "none",
     },
     overlay: null,
-    effect: null,
+    filter: null,
   };
 }
 

@@ -124,6 +124,28 @@ The Theme Root Background (`components/root/phi-root-background.tsx`) uses the s
 `static` and `parallax`: it is viewport-fixed, so `fixed` would be indistinguishable from `static`, and a
 stored `fixed` resolves to no motion. Its host geometry belongs to [SHELL.md](./SHELL.md).
 
+### Background filter
+
+A Background carries one optional `filter` (`types/layout-style.ts`, `PHI_BACKGROUND_FILTERS`): `glass`,
+`haze`, or `blur`. It acts on the Background, never on the content of the box that carries it.
+
+- `glass` and `haze` are panes: a `backdrop-filter` on the box frosts what lies behind it, through a ground
+  thinned from the Base colour. They need a Base there is something to thin, so they are neither offered nor
+  rendered over an image or a gradient.
+- `blur` softens the paint itself -- a picture, a gradient, a pattern or noise; a flat colour softened is the
+  same colour, so it is neither offered nor rendered there. A filter on the box would soften the content with
+  it, so the paint moves onto a layer of its own: `PhiSurfaceGroundLayer`
+  (`components/surface/phi-surface-ground.tsx`) for a still paint, rendered on the server, and the motion
+  layer for a moving one, which carries the same softening. `resolvePhiBackgroundWidgetStyle` never puts
+  `blur` on the element; a surface that has no ground layer draws the paint unsoftened.
+- There is no darkening filter. A `color` Overlay at an opacity darkens or tints, and its colour and strength
+  are the author's.
+
+A stored value the Background cannot render resolves to no filter without being rewritten
+(`resolvePhiBackgroundFilter`), and the Control offers only what the current Background can render
+(`phiBackgroundSupportsFilter`). A surface narrows the offer with `filters` the way it narrows
+`motionModes`: the Shell Chrome Overlay offers the two panes, the Theme Root Background none.
+
 ## Form grid
 
 A form is a Form Widget and stands in whichever Layout suits the page, commonly a vertical flex in slot 0.
