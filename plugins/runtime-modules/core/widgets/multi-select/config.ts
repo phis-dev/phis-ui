@@ -1,5 +1,4 @@
 import { resolvePhiCmsWidgetPluginKey } from "../../../../../constants/cms-widget-types";
-import { PhiCmsWidgetType } from "../../../../../constants/cms-widget-types";
 import type { PhiCmsWidgetPlugin } from "../../../../../types";
 import type { PhiSignalValueType } from "../../../../../types/signals";
 import {
@@ -157,5 +156,3 @@ export const PHI_MULTI_SELECT_WIDGET_DEFINITION = {
   | "defaultConfig"
   | "parseConfig"
 >;
-
-export const PHI_MULTI_SELECT_WIDGET_PLUGIN_TYPE = PhiCmsWidgetType.MultiSelect;

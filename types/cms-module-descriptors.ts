@@ -429,15 +429,6 @@ export type PhiCmsNavigationOverlayResolution = {
   surface: PhiCmsResolvedNavigationSurface;
   diagnostics: readonly PhiCmsNavigationOverlayDiagnostic[];
 };
-
-export type PhiCmsModulePresetDescriptors = {
-  areaShells?: readonly PhiCmsAreaShellPresetDescriptor[];
-  areaOverlays?: readonly PhiCmsAreaOverlayPresetDescriptor[];
-  routes?: readonly PhiCmsRoutePresetDescriptor[];
-  themes?: readonly PhiCmsThemePresetDescriptor[];
-  themeBlocks?: readonly PhiCmsThemeBlockDescriptor[];
-};
-
 export type PhiCmsAreaShellPresetBinding = {
   descriptor: PhiCmsAreaShellPresetDescriptor;
 };

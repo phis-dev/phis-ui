@@ -2,9 +2,6 @@ import { PHIS_SITE_KEY_HEADER, PHIS_TOKEN_HEADER } from "../constants/http-heade
 
 const DEFAULT_API_BASE_URL = "";
 
-export const PHI_SERVER_API_CACHE_TAG = "phi-server-api-v1" as const;
-export const DEFAULT_GET_REVALIDATE_SECONDS = 86400 as const;
-
 /** The `User-Agent` this package's gateway requests identify themselves with. */
 export const PHIS_UI_USER_AGENT = "phis-ui/1.0" as const;
 

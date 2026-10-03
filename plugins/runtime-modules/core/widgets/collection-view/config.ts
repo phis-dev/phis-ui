@@ -25,17 +25,6 @@ export type PhiCmsAssetPreviewGridWidgetConfig = PhiCmsWidgetConfigBase & {
   emptyDescription?: string;
 };
 
-export function normalizePhiCmsAssetPreviewGridWidgetConfig(config: unknown): PhiCmsAssetPreviewGridWidgetConfig {
-  if (!config || typeof config !== "object" || Array.isArray(config)) return { emptyDescription: undefined };
-  return { emptyDescription: readString((config as Record<string, unknown>).emptyDescription) };
-}
-
-export function parsePhiCmsAssetPreviewGridWidgetConfig(
-  config: Record<string, unknown>,
-): PhiCmsAssetPreviewGridWidgetConfig {
-  return normalizePhiCmsAssetPreviewGridWidgetConfig(config);
-}
-
 function readCardPresentation(value: unknown): PhiCmsCollectionCardPresentation | undefined {
   if (!isPhiRecord(value)) {
     return undefined;

@@ -309,7 +309,3 @@ export function splitPhiCmsLayoutNamespacedTypeKey(namespacedTypeKey: string) {
     typeKey: parts[parts.length - 1],
   };
 }
-
-export const PHI_CMS_LAYOUT_REGISTRY_BY_NAMESPACED_KEY = new Map(
-  PHI_CMS_LAYOUT_REGISTRY.map((entry) => [entry.namespacedTypeKey, entry]),
-);
