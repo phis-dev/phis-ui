@@ -39,21 +39,12 @@
 }
 
 :root {
-  --phi-debug-layer-region-background: transparent;
-  --phi-debug-layer-region-background-strong: transparent;
-  --phi-debug-layer-region-border: transparent;
-  --phi-debug-layer-region-border-strong: transparent;
-
   --phi-debug-layer-layout-background: transparent;
-  --phi-debug-layer-layout-background-strong: transparent;
   --phi-debug-layer-layout-border: transparent;
-  --phi-debug-layer-layout-border-strong: transparent;
 
   --phi-debug-layer-slot-background: transparent;
-  --phi-debug-layer-slot-background-strong: transparent;
   --phi-debug-layer-slot-background-soft: transparent;
   --phi-debug-layer-slot-border: transparent;
-  --phi-debug-layer-slot-border-strong: transparent;
 
   --phi-debug-layer-scaffold-background: transparent;
   --phi-debug-layer-scaffold-background-strong: transparent;
@@ -61,24 +52,14 @@
   --phi-debug-layer-scaffold-border-strong: transparent;
 }
 
-:where(.phi-debug-scaffold--on),
 :where([data-phi-debug-scaffold="on"]) {
-  --phi-debug-layer-region-background: rgba(255, 77, 79, 0.08);
-  --phi-debug-layer-region-background-strong: rgba(255, 77, 79, 0.16);
-  --phi-debug-layer-region-border: rgba(255, 77, 79, 0.45);
-  --phi-debug-layer-region-border-strong: rgba(255, 77, 79, 0.72);
-
   --phi-debug-layer-layout-background: var(--ant-color-success-bg);
-  --phi-debug-layer-layout-background-strong: var(--ant-color-success-bg-hover);
   --phi-debug-layer-layout-border: var(--ant-color-success);
-  --phi-debug-layer-layout-border-strong: var(--ant-color-success-text);
 
   --phi-debug-layer-slot-background: var(--ant-color-warning-bg);
-  --phi-debug-layer-slot-background-strong: var(--ant-color-warning-bg-hover);
   /* The Grid's track guides: a tint light enough that a slot's own band stays the stronger mark. */
   --phi-debug-layer-slot-background-soft: color-mix(in srgb, var(--ant-color-warning-bg) 50%, transparent);
   --phi-debug-layer-slot-border: var(--ant-color-warning);
-  --phi-debug-layer-slot-border-strong: var(--ant-color-warning-text);
 
   --phi-debug-layer-scaffold-background: rgba(114, 46, 209, 0.10);
   --phi-debug-layer-scaffold-background-strong: rgba(114, 46, 209, 0.18);
@@ -86,23 +67,13 @@
   --phi-debug-layer-scaffold-border-strong: rgba(114, 46, 209, 0.72);
 }
 
-:where(.phi-debug-scaffold--off),
 :where([data-phi-debug-scaffold="off"]) {
-  --phi-debug-layer-region-background: transparent;
-  --phi-debug-layer-region-background-strong: transparent;
-  --phi-debug-layer-region-border: transparent;
-  --phi-debug-layer-region-border-strong: transparent;
-
   --phi-debug-layer-layout-background: transparent;
-  --phi-debug-layer-layout-background-strong: transparent;
   --phi-debug-layer-layout-border: transparent;
-  --phi-debug-layer-layout-border-strong: transparent;
 
   --phi-debug-layer-slot-background: transparent;
-  --phi-debug-layer-slot-background-strong: transparent;
   --phi-debug-layer-slot-background-soft: transparent;
   --phi-debug-layer-slot-border: transparent;
-  --phi-debug-layer-slot-border-strong: transparent;
 
   --phi-debug-layer-scaffold-background: transparent;
   --phi-debug-layer-scaffold-background-strong: transparent;
@@ -163,10 +134,8 @@
     .phi-layout[data-phi-block-render-mode="preview"]
 ) {
   --phi-debug-layer-layout-background: transparent;
-  --phi-debug-layer-layout-background-strong: transparent;
   --phi-debug-layer-layout-border: var(--ant-color-success-border-hover);
   --phi-debug-layer-slot-background: transparent;
-  --phi-debug-layer-slot-background-strong: transparent;
   --phi-debug-layer-slot-background-soft: transparent;
   --phi-debug-layer-slot-border: var(--ant-color-warning-border-hover);
   outline-width: 1px;

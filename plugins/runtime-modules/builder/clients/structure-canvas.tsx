@@ -371,7 +371,6 @@ export function PhiDeveloperBuilderStructureCanvas({
               "--phi-builder-content-body-max-height": "none",
               "--phi-builder-content-body-padding": "0px",
               "--phi-builder-content-body-gap": "0px",
-              "--phi-builder-empty-insert-color": token.colorTextSecondary,
             })}
           >
             <div className="phi-builder-structure-canvas__content-body">

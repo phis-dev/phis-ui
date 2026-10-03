@@ -12,7 +12,6 @@
 
 :where([data-layout-kind]) {
   --phi-layout-gap: var(--ant-margin);
-  --phi-layout-slot-gap: var(--phi-layout-gap);
 }
 
 :where([data-layout-kind="flex"]) {
@@ -172,14 +171,6 @@
 :where(.phi-slot-child--block-fill > .phi-layout) {
   flex: 1 1 auto;
   height: 100%;
-}
-
-:where(.phi-slot-child--inline-intrinsic) {
-  width: fit-content;
-}
-
-:where(.phi-slot-child--block-intrinsic) {
-  height: fit-content;
 }
 
 :where(.phi-layout-scaffold-anchor__content[data-phi-layout-fill-slot="true"]) {

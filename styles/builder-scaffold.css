@@ -20,11 +20,6 @@
   height: 100%;
 }
 
-:where(.phi-builder-structure-canvas__intro) {
-  min-width: 0;
-  gap: var(--phi-builder-structure-canvas-intro-gap);
-}
-
 :where(.phi-builder-structure-canvas__sections) {
   display: flex;
   flex-direction: column;
@@ -64,7 +59,6 @@
 
 :where(.phi-builder-structure-canvas__content-slot) {
   border-radius: 0;
-  border: 1px solid var(--phi-builder-content-slot-border);
   padding: 0;
   box-sizing: border-box;
   display: flex;
@@ -140,7 +134,6 @@
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  gap: var(--phi-builder-region-gap);
   padding: var(--phi-builder-region-padding);
   cursor: pointer;
   min-width: 0;
@@ -161,14 +154,6 @@
   max-inline-size: 100%;
 }
 
-:where(.phi-builder-structure-region--empty) {
-  overflow: hidden;
-}
-
-:where(.phi-builder-structure-region__slot--stretch) {
-  flex: 1 1 auto;
-}
-
 :where(.phi-builder-structure-canvas__split > [data-phi-region-slot="sider_left"]) {
   align-self: stretch;
   block-size: 100%;
@@ -185,7 +170,6 @@
   flex-direction: column;
 }
 
-:where(.phi-builder-structure-canvas__split > [data-phi-region-slot="sider_left"] .phi-builder-structure-region__body),
 :where(.phi-builder-structure-canvas__split > [data-phi-region-slot="sider_left"] [data-phi-builder-server-preview-region="sider_left"]),
 :where(.phi-builder-structure-canvas__split > [data-phi-region-slot="sider_left"] [data-phi-region-key="sider_left"]),
 :where(.phi-builder-structure-canvas__split > [data-phi-region-slot="sider_left"] [data-phi-region-key="sider_left"] > .phi-layout) {
@@ -198,7 +182,6 @@
   flex-direction: column;
 }
 
-:where(.phi-builder-structure-canvas__split > [data-phi-region-slot="sider_right"] .phi-builder-structure-region__body),
 :where(.phi-builder-structure-canvas__split > [data-phi-region-slot="sider_right"] [data-phi-builder-server-preview-region="sider_right"]),
 :where(.phi-builder-structure-canvas__split > [data-phi-region-slot="sider_right"] [data-phi-region-key="sider_right"]),
 :where(.phi-builder-structure-canvas__split > [data-phi-region-slot="sider_right"] [data-phi-region-key="sider_right"] > .phi-layout) {
@@ -243,7 +226,6 @@
 }
 
 :where(.phi-page-region-layout__content > .phi-builder-structure-region__slot > [data-phi-region-slot="content"]),
-:where(.phi-page-region-layout__content > .phi-builder-structure-region__slot > [data-phi-region-slot="content"] .phi-builder-structure-region__body),
 :where(.phi-page-region-layout__content > .phi-builder-structure-region__slot > [data-phi-region-slot="content"] [data-phi-region-key="content"]),
 :where(.phi-page-region-layout__content > .phi-builder-structure-region__slot > [data-phi-region-slot="content"] [data-phi-region-key="content"] > .phi-layout) {
   flex: 1 1 auto;
@@ -257,7 +239,6 @@
 
 :where(.phi-page-region-layout__sider-slot > .phi-slot-child),
 :where(.phi-page-region-layout__sider-slot > .phi-slot-child > [data-phi-region-slot="sider_right"]),
-:where(.phi-page-region-layout__sider-slot > .phi-slot-child > [data-phi-region-slot="sider_right"] .phi-builder-structure-region__body),
 :where(.phi-page-region-layout__sider-slot > .phi-slot-child > [data-phi-region-slot="sider_right"] [data-phi-region-key="sider_right"]),
 :where(.phi-page-region-layout__sider-slot > .phi-slot-child > [data-phi-region-slot="sider_right"] [data-phi-region-key="sider_right"] > .phi-layout) {
   flex: 1 1 auto;
@@ -276,72 +257,9 @@
   max-inline-size: 0;
 }
 
-:where(.phi-builder-structure-region__body) {
-  flex: 1 1 auto;
-  min-width: 0;
-  min-height: var(--phi-builder-region-body-min-height);
-  max-height: var(--phi-builder-region-body-max-height);
-  box-sizing: border-box;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: stretch;
-  padding: var(--phi-builder-region-body-padding);
-  gap: var(--phi-builder-region-body-gap);
-}
-
-:where(.phi-builder-structure-region__body--preview) {
-  justify-content: stretch;
-}
-
-:where(.phi-builder-structure-region__empty-shell) {
-  position: absolute;
-  inset: 0;
-  min-height: 0;
-  min-width: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1;
-}
-
-:where(.phi-builder-structure-region__empty-button) {
-  width: 100%;
-  height: 100%;
-  min-width: 0;
-  min-height: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 1px dashed transparent;
-  background: transparent;
-  padding: 0;
-  margin: 0;
-  box-sizing: border-box;
-  color: var(--phi-builder-empty-insert-color);
-}
-
-:where(.phi-builder-structure-region__header) {
-  min-width: 0;
-  width: 100%;
-}
-
-:where(.phi-builder-structure-region__header-row) {
-  min-width: 0;
-  width: 100%;
-  white-space: nowrap;
-}
-
-:where(.phi-builder-structure-region__header-title),
-:where(.phi-builder-structure-region__header-key),
-:where(.phi-builder-structure-region__header-subtitle) {
-  min-width: 0;
-}
-
 :where(.phi-builder-structure-canvas__content-body) {
   display: flex;
   flex-direction: column;
-  flex: var(--phi-builder-content-body-flex);
   min-width: 0;
   min-height: var(--phi-builder-content-body-min-height);
   max-height: var(--phi-builder-content-body-max-height);
@@ -350,27 +268,6 @@
   align-items: stretch;
   padding: var(--phi-builder-content-body-padding);
   gap: var(--phi-builder-content-body-gap);
-}
-
-:where(.phi-builder-structure-canvas__empty-insert) {
-  display: flex;
-  flex: 1 1 auto;
-  min-height: 0;
-  min-width: 0;
-  align-items: var(--phi-builder-content-empty-insert-align);
-  justify-content: var(--phi-builder-content-empty-insert-justify);
-}
-
-:where(.phi-builder-structure-canvas__empty-insert-button) {
-  width: var(--phi-builder-empty-insert-size);
-  height: var(--phi-builder-empty-insert-size);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border: 1px dashed transparent;
-  background: transparent;
-  padding: 0;
-  color: var(--phi-builder-empty-insert-color);
 }
 
 :where(.phi-builder-spacer) {
@@ -440,13 +337,4 @@
   width: 0;
   height: 100%;
   border-left: 2px solid rgba(71, 85, 105, 0.72);
-}
-
-:where(.phi-builder-spacer__label) {
-  font-size: 12px;
-  line-height: 1;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: rgba(71, 85, 105, 0.82);
-  font-weight: 600;
 }
