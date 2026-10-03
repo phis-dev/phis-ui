@@ -16,7 +16,10 @@ What lives here:
 - `runtime-form-controller-*.ts(x)`, `runtime-form-client.ts`, `runtime-form-state.ts` -- the Core Form
   controller and its client.
 - `form-guard-client.ts` -- the browser's guard token request.
-- `form-builder-controller-*.ts` -- the headless Form Builder Controller.
+- `form-builder-controller-address.ts`, `form-builder-controller-definition.ts` -- the headless Form
+  Builder Controller's address and definition, public through `@phis/ui/forms`. Its Client lives in the
+  Form Builder Module (`plugins/runtime-modules/form-builder/controller/client.ts`), the only one that
+  mounts it.
 - `shared-form-descriptors.ts`, `shared-form-ids.ts` -- the descriptors and ids of the first-party
   Login, Registration, Confirmation, Password Reset, Provider Link Confirmation, and Contact Forms.
   The Modules that own them register them: `plugins/runtime-modules/auth/forms.ts` and

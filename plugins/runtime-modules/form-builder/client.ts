@@ -7,5 +7,5 @@ import dynamic from "next/dynamic";
  * route's loadable manifest, and the HTML asks for them before hydration instead of after it.
  */
 export const PhiLazyFormBuilderRuntimeControllerClient = dynamic(() =>
-  import("../../../components/forms/form-builder-controller-plugin").then((module) => module.PhiFormBuilderControllerClient));
+  import("./controller/client").then((module) => module.PhiFormBuilderControllerClient));
 
