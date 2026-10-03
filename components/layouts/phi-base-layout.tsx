@@ -16,6 +16,7 @@ import {
   isPhiLayoutAuthoringRender,
   phiLayoutDebugLayerMarker,
 } from "../../helpers/layout-authoring-markers";
+import { PhiSurfaceGroundLayer } from "../surface/phi-surface-ground";
 
 export type { PhiBaseLayoutProps } from "./phi-layout-view-model";
 
@@ -34,11 +35,8 @@ export function PhiBaseLayout({
   paddingRight,
   paddingBottom,
   paddingLeft,
-  background,
-  backgroundLayer,
-  border,
-  borderRadius,
-  effect,
+  surface,
+  underlay,
   blockId,
   renderMode,
   visibility,
@@ -53,7 +51,6 @@ export function PhiBaseLayout({
   collapsedSizeHint,
   zIndex,
   opacity,
-  shadow,
   margin = 0,
   gap = 0,
   initialSlotStates,
@@ -118,6 +115,7 @@ export function PhiBaseLayout({
     .filter((slot): slot is ReactNode => slot !== null);
   const {
     style: resolvedLayoutStyle,
+    ground,
     hasExplicitLayoutBackground,
   } = resolvePhiBaseLayoutChrome({
     labelEnd,
@@ -126,11 +124,7 @@ export function PhiBaseLayout({
     paddingRight,
     paddingBottom,
     paddingLeft,
-    background,
-    border,
-    borderRadius,
-    effect,
-    shadow,
+    surface,
   });
   const resolvedContainerStyle = {
     ...resolvePhiLayoutBoxStyle({
@@ -184,7 +178,8 @@ export function PhiBaseLayout({
       className={["phi-layout", className].filter(Boolean).join(" ")}
       style={resolvedContainerStyle}
     >
-      {backgroundLayer}
+      <PhiSurfaceGroundLayer ground={ground} />
+      {underlay}
       {resolvedSlots}
     </div>
   );

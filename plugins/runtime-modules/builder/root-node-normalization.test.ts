@@ -12,9 +12,7 @@ describe("readPhiBuilderRootNodeDraftFields", () => {
       rootNodeGeometry: { width: "100%" } as never,
       rootNodeAnchor: "topLeft",
       rootNodePadding: { top: 4 } as never,
-      rootNodeBackground: { base: { kind: "color", color: "#000" } } as never,
-      rootNodeBorder: { width: 1 } as never,
-      rootNodeShadow: { x: 0 } as never,
+      rootNodeSurface: { background: { base: { kind: "color", color: "#000" } }, shadow: "soft" },
       rootNodeChildLayouts: childLayouts,
       rootNodeChildWidgets: childWidgets,
     })).toEqual({
@@ -23,9 +21,7 @@ describe("readPhiBuilderRootNodeDraftFields", () => {
       rootNodeGeometry: { width: "100%" },
       rootNodeAnchor: "topLeft",
       rootNodePadding: { top: 4 },
-      rootNodeBackground: { base: { kind: "color", color: "#000" } },
-      rootNodeBorder: { width: 1 },
-      rootNodeShadow: { x: 0 },
+      rootNodeSurface: { background: { base: { kind: "color", color: "#000" } }, shadow: "soft" },
       childLayouts,
       childWidgets,
     });
@@ -39,9 +35,7 @@ describe("readPhiBuilderRootNodeDraftFields", () => {
       rootNodeGeometry: null,
       rootNodeAnchor: null,
       rootNodePadding: null,
-      rootNodeBackground: null,
-      rootNodeBorder: null,
-      rootNodeShadow: null,
+      rootNodeSurface: null,
       childLayouts: [],
       childWidgets: [],
     });

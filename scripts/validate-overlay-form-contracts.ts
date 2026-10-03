@@ -340,7 +340,7 @@ assert.match(
 );
 assert.match(
   assetMediaPagePresetSource,
-  /typeKey: "content",[\s\S]*?id: PHI_ASSET_INSPECTOR_LAYOUT_IDS\.layoutMediaFocalRectBody,[\s\S]*?padding: 0,[\s\S]*?background: PHI_COLOR\.bgLayout/u,
+  /typeKey: "content",[\s\S]*?id: PHI_ASSET_INSPECTOR_LAYOUT_IDS\.layoutMediaFocalRectBody,[\s\S]*?padding: 0,[\s\S]*?surface: \{ background: \{ base: \{ kind: "color", color: PHI_COLOR\.bgLayout \} \} \}/u,
 );
 assert.match(
   assetMediaPagePresetSource,
@@ -366,7 +366,12 @@ assert.match(builderPresetSource, /innerPadding: PHI_SPACE\.sm/u);
 assert.match(builderPresetSource, /defaultOpenSlotKeys: \["slot_0"\]/u);
 assert.match(
   builderPresetSource,
-  /label: "Builder inspector header",[\s\S]*?paddingLeft: PHI_SPACE\.lg,[\s\S]*?background: "transparent"/u,
+  /label: "Builder inspector header",\s*config: \{\s*anchor: \{[^}]*\},[^}]*paddingLeft: PHI_SPACE\.lg,\s*\}/u,
+);
+// The header stands on the Drawer's own glass: it states no Surface, so it paints nothing over it.
+assert.doesNotMatch(
+  builderPresetSource,
+  /label: "Builder inspector header",\s*config: \{(?:(?!\n\s*\}\)\))[\s\S])*?surface:/u,
 );
 assert.doesNotMatch(effectsToolSource, /usePhiSignalDispatcher|createPhiSignalAddress/u);
 assert.match(effectsToolSource, /openPhiDeveloperBuilderEffectsEditor/u);

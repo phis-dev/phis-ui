@@ -4,6 +4,7 @@ import type { PhiCmsInstanceId } from "./cms-instance-id";
 import type { PhiViewerAccessPolicy, PhiViewportFlags } from "./access";
 import type { PhiShadow, PhiLayoutEffectId } from "./layout-style";
 import type { PhiResponsiveValue } from "./responsive";
+import type { PhiSurface } from "./surface";
 
 export type PhiRenderableBlockRenderMode = "live" | "preview" | "editor";
 
@@ -198,6 +199,8 @@ export type PhiRenderableBlockBase = {
   border?: CSSProperties["border"] | Record<string, unknown> | null;
   effect?: PhiLayoutEffectId;
   shadow?: PhiShadow;
+  /** What the block's box looks like: ground, edge, depth, and the mode its content takes. */
+  surface?: PhiSurface;
   className?: string;
   size?: PhiRenderableBlockResponsiveSize;
   minSize?: PhiRenderableBlockResponsiveSize;

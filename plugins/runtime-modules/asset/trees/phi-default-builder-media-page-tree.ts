@@ -261,9 +261,6 @@ export async function buildPhiDefaultBuilderMediaPageTree({
           },
           gap: PHI_SPACE.base,
           margin: 0,
-          background: "transparent",
-          border: "none",
-          borderRadius: 0,
         },
       }),
       nodes.layout({
@@ -279,8 +276,6 @@ export async function buildPhiDefaultBuilderMediaPageTree({
           gap: 0,
           padding: 0,
           paddingLeft: PHI_SPACE.lg,
-          background: "transparent",
-          border: "none",
         },
       }),
       nodes.layout({
@@ -300,7 +295,6 @@ export async function buildPhiDefaultBuilderMediaPageTree({
             mediaLabels?.inspector.metadataTitle ?? "Metadata",
           ],
           defaultOpenSlotKeys: ["slot_0", "slot_1"],
-          background: "transparent",
         },
       }),
       nodes.layout({
@@ -323,9 +317,7 @@ export async function buildPhiDefaultBuilderMediaPageTree({
         config: {
           margin: 0,
           padding: 0,
-          background: PHI_COLOR.bgLayout,
-          border: "none",
-          borderRadius: 0,
+          surface: { background: { base: { kind: "color", color: PHI_COLOR.bgLayout } } },
         },
       }),
       nodes.layout({
@@ -348,9 +340,7 @@ export async function buildPhiDefaultBuilderMediaPageTree({
         config: {
           margin: 0,
           padding: PHI_SPACE.base,
-          background: PHI_COLOR.bgLayout,
-          border: "none",
-          borderRadius: 0,
+          surface: { background: { base: { kind: "color", color: PHI_COLOR.bgLayout } } },
         },
       }),
       nodes.layout({

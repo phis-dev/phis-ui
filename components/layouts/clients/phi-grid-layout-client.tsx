@@ -252,12 +252,7 @@ export function PhiGridLayout({
       slots={renderedSlots}
       gap={undefined}
       renderMode={renderMode}
-      backgroundLayer={guideOverlay == null ? layoutProps.backgroundLayer : (
-        <>
-          {layoutProps.backgroundLayer}
-          {guideOverlay}
-        </>
-      )}
+      underlay={guideOverlay}
       style={{
         position: "relative",
         /*

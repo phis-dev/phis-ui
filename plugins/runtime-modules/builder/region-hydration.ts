@@ -220,7 +220,7 @@ function buildRegionDraft(
   const rootNodeDefaults =
     rootNode && resolvedRootNodeKind
       ? resolvePhiBuilderRootNodeDefaults(rootNode.config ?? null)
-      : { rootNodePadding: null, rootNodeBackground: null, rootNodeBorder: null };
+      : { rootNodePadding: null, rootNodeSurface: null };
 
   return {
     ...fallback,
@@ -248,11 +248,8 @@ function buildRegionDraft(
         ? rootNode.config.anchor
         : resolvePhiAnchorPlacement(rootNode?.config?.anchor as Parameters<typeof resolvePhiAnchorPlacement>[0])) ?? null,
     rootNodePadding: rootNodeDefaults.rootNodePadding,
-    rootNodeBackground: rootNodeDefaults.rootNodeBackground,
-    rootNodeBorder: rootNodeDefaults.rootNodeBorder,
+    rootNodeSurface: rootNodeDefaults.rootNodeSurface,
     shadow: readPhiShadow(regionConfig.shadow) ?? null,
-    rootNodeShadow:
-      rootNode ? readPhiShadow(rootNode.config.rootNodeShadow) ?? null : null,
     rootNodeChildLayouts: rootNode ? normalizeHydratedChildLayouts(rootNode.childLayouts ?? []) : [],
     rootNodeChildWidgets: rootNode ? normalizeHydratedChildWidgets(rootNode.childWidgets ?? []) : [],
   };

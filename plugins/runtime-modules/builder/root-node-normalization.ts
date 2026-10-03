@@ -1,10 +1,6 @@
 import type { PhiCmsContentWidgetNode, PhiCmsLayoutRenderNode } from "../../../types/cms";
-import type {
-  PhiCmsBorderWidgetConfig,
-  PhiCmsPaddingWidgetConfig,
-} from "../../../types/cms-config";
+import type { PhiCmsPaddingWidgetConfig } from "../../../types/cms-config";
 import { mergePhiCmsConfigValues, normalizePhiPaddingWidgetConfig } from "../../../types/cms-config";
-import type { PhiCmsBackgroundWidgetConfig } from "../../../components/widgets/config/background";
 import type { PhiCmsGeometryWidgetConfig } from "../../../components/widgets/config/geometry";
 import {
   resolvePhiRenderableBlockAnchor,
@@ -13,8 +9,7 @@ import {
 import type { PhiRenderableBlockRenderMode } from "../../../types";
 import type { PhiCmsInstanceId } from "../../../types/cms-instance-id";
 import type { PhiBuilderPreviewRegionDraft, PhiBuilderRootNodeKind } from "./preview-transport";
-import { readPhiShadow, type PhiShadow } from "../../../types/layout-style";
-import { isPhiRecord } from "../../../helpers/is-record";
+import { readPhiSurface, type PhiSurface } from "../../../types/surface";
 
 export type PhiBuilderRootNodeDraft = {
   id?: PhiCmsInstanceId | null;
@@ -26,9 +21,7 @@ export type PhiBuilderRootNodeDraft = {
   rootNodeGeometry?: PhiCmsGeometryWidgetConfig | null;
   rootNodeAnchor?: PhiAnchorWidgetPlacement | null;
   rootNodePadding?: PhiCmsPaddingWidgetConfig | null;
-  rootNodeBackground?: PhiCmsBackgroundWidgetConfig | null;
-  rootNodeBorder?: PhiCmsBorderWidgetConfig | null;
-  rootNodeShadow?: PhiShadow | null;
+  rootNodeSurface?: PhiSurface | null;
   childLayouts?: PhiCmsLayoutRenderNode[];
   childWidgets?: PhiCmsContentWidgetNode[];
 };
@@ -45,9 +38,7 @@ export function readPhiBuilderRootNodeDraftFields(
     | "rootNodeGeometry"
     | "rootNodeAnchor"
     | "rootNodePadding"
-    | "rootNodeBackground"
-    | "rootNodeBorder"
-    | "rootNodeShadow"
+    | "rootNodeSurface"
     | "rootNodeChildLayouts"
     | "rootNodeChildWidgets"
   >,
@@ -58,9 +49,7 @@ export function readPhiBuilderRootNodeDraftFields(
     rootNodeGeometry: draft.rootNodeGeometry ?? null,
     rootNodeAnchor: draft.rootNodeAnchor ?? null,
     rootNodePadding: draft.rootNodePadding ?? null,
-    rootNodeBackground: draft.rootNodeBackground ?? null,
-    rootNodeBorder: draft.rootNodeBorder ?? null,
-    rootNodeShadow: draft.rootNodeShadow ?? null,
+    rootNodeSurface: draft.rootNodeSurface ?? null,
     childLayouts: draft.rootNodeChildLayouts ?? [],
     childWidgets: draft.rootNodeChildWidgets ?? [],
   };
@@ -68,8 +57,7 @@ export function readPhiBuilderRootNodeDraftFields(
 
 export type PhiBuilderRootNodeDefaults = {
   rootNodePadding: PhiCmsPaddingWidgetConfig | null;
-  rootNodeBackground: PhiCmsBackgroundWidgetConfig | null;
-  rootNodeBorder: PhiCmsBorderWidgetConfig | null;
+  rootNodeSurface: PhiSurface | null;
 };
 
 export function resolvePhiBuilderRootNodeDefaults(
@@ -81,23 +69,9 @@ export function resolvePhiBuilderRootNodeDefaults(
 export function resolvePhiBuilderRootNodeDefaultsFromConfig(
   resolvedConfig: Record<string, unknown>,
 ): PhiBuilderRootNodeDefaults {
-  const backgroundConfig =
-    isPhiRecord(resolvedConfig.background) && !Array.isArray(resolvedConfig.background)
-      ? resolvedConfig.background
-      : isPhiRecord(resolvedConfig.rootNodeBackground) && !Array.isArray(resolvedConfig.rootNodeBackground)
-        ? resolvedConfig.rootNodeBackground
-        : null;
-  const borderConfig =
-    isPhiRecord(resolvedConfig.border) && !Array.isArray(resolvedConfig.border)
-      ? resolvedConfig.border
-      : isPhiRecord(resolvedConfig.rootNodeBorder) && !Array.isArray(resolvedConfig.rootNodeBorder)
-        ? resolvedConfig.rootNodeBorder
-        : null;
-
   return {
     rootNodePadding: normalizePhiPaddingWidgetConfig(resolvedConfig),
-    rootNodeBackground: backgroundConfig as PhiCmsBackgroundWidgetConfig | null,
-    rootNodeBorder: borderConfig as PhiCmsBorderWidgetConfig | null,
+    rootNodeSurface: readPhiSurface(resolvedConfig.surface),
   };
 }
 
@@ -112,9 +86,7 @@ export function normalizePhiBuilderRootNodeDraft(rootNode: PhiBuilderRootNodeDra
       defaults.rootNodePadding,
       rootNode.rootNodePadding,
     ),
-    rootNodeBackground: rootNode.rootNodeBackground ?? defaults.rootNodeBackground,
-    rootNodeBorder: rootNode.rootNodeBorder ?? defaults.rootNodeBorder,
-    rootNodeShadow: readPhiShadow(rootNode.rootNodeShadow) ?? null,
+    rootNodeSurface: rootNode.rootNodeSurface ?? defaults.rootNodeSurface,
     childLayouts: rootNode.childLayouts ?? [],
     childWidgets: rootNode.childWidgets ?? [],
   };
@@ -127,7 +99,9 @@ export function buildPhiBuilderRootNodeRenderConfig(
   const normalizedRootNode = normalizePhiBuilderRootNodeDraft(rootNode);
   const parsedRootNodeConfig = { ...(normalizedRootNode.rootNodeConfig ?? {}) };
   delete parsedRootNodeConfig.renderMode;
-  delete parsedRootNodeConfig.shadow;
+  // The Surface is stated once, by the draft; the root config may carry the draft's copy of it.
+  delete parsedRootNodeConfig.surface;
+  delete parsedRootNodeConfig.rootNodeSurface;
   const geometry = normalizedRootNode.rootNodeGeometry;
   const padding = normalizedRootNode.rootNodePadding;
   const anchor = resolvePhiRenderableBlockAnchor(normalizedRootNode.rootNodeAnchor);
@@ -136,9 +110,7 @@ export function buildPhiBuilderRootNodeRenderConfig(
     ...parsedRootNodeConfig,
     renderMode,
     ...(anchor == null ? {} : { anchor }),
-    ...(normalizedRootNode.rootNodeBackground == null ? {} : { rootNodeBackground: normalizedRootNode.rootNodeBackground }),
-    ...(normalizedRootNode.rootNodeBorder == null ? {} : { rootNodeBorder: normalizedRootNode.rootNodeBorder }),
-    ...(normalizedRootNode.rootNodeShadow == null ? {} : { rootNodeShadow: normalizedRootNode.rootNodeShadow }),
+    ...(normalizedRootNode.rootNodeSurface == null ? {} : { surface: normalizedRootNode.rootNodeSurface }),
     ...(geometry?.zIndex == null ? {} : { zIndex: geometry.zIndex }),
     ...(geometry?.size == null ? {} : { size: geometry.size }),
     ...(geometry?.minSize == null ? {} : { minSize: geometry.minSize }),

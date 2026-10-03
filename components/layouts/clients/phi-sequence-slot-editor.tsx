@@ -26,6 +26,7 @@ import {
 } from "../../../helpers/layout-authoring-markers";
 import { PhiTypographyControl } from "../../controls/phi-typography-control";
 import { PhiIcon } from "../../shell/phi-icon";
+import { PhiSurfaceGroundLayer } from "../../surface/phi-surface-ground";
 
 /**
  * Authoring a sequence, one slot at a time.
@@ -78,13 +79,8 @@ export type PhiSequenceSlotEditorProps = {
     | "paddingRight"
     | "paddingBottom"
     | "paddingLeft"
-    | "background"
-    | "border"
-    | "borderRadius"
-    | "effect"
-    | "shadow"
+    | "surface"
   >;
-  backgroundLayer?: ReactNode;
   editSlotAction?: PhiBaseLayoutProps["editSlotAction"];
   editRenderInsertControl?: PhiLayoutEditRenderInsertControl;
   editSlotAnchor?: PhiAnchorWidgetPlacement | null;
@@ -103,7 +99,6 @@ export function PhiSequenceSlotEditor({
   renderMode,
   authoring,
   chrome,
-  backgroundLayer,
   editSlotAction,
   editRenderInsertControl,
   editSlotAnchor = "center",
@@ -120,6 +115,7 @@ export function PhiSequenceSlotEditor({
   const hasNextSlot = currentIndex < editableSlotCount - 1;
   const {
     style: resolvedLayoutStyle,
+    ground,
     hasExplicitLayoutBackground,
   } = resolvePhiBaseLayoutChrome(chrome);
   const resolvedLayoutInset = resolvePhiLayoutInset(chrome);
@@ -141,7 +137,7 @@ export function PhiSequenceSlotEditor({
         ...style,
       }}
     >
-      {backgroundLayer}
+      <PhiSurfaceGroundLayer ground={ground} />
       <PhiFlexControl
         align="center"
         gap={8}

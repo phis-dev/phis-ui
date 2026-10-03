@@ -90,7 +90,6 @@ export async function buildPhiDefaultAdminLocalesPageTree({
           ],
           margin: 0,
           padding: 0,
-          border: false,
         },
       }),
     ],

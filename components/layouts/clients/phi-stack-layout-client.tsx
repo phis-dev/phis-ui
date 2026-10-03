@@ -25,6 +25,7 @@ import { PhiSequenceSlotEditor } from "./phi-sequence-slot-editor";
 import type { PhiAnchorWidgetPlacement } from "../../controls/phi-anchor-control-contract";
 import { resolvePhiSequenceEditableSlotCount, usePhiSlotSequence } from "../use-phi-slot-sequence";
 import { usePhiConfig } from "../../root/phi-config-provider";
+import { PhiSurfaceGroundLayer } from "../../surface/phi-surface-ground";
 
 export type PhiStackLayoutSlotMeta = {
   key: string;
@@ -80,13 +81,7 @@ export function PhiStackLayout({
     paddingRight,
     paddingBottom,
     paddingLeft,
-    background,
-    backgroundLayer,
-    borderSource,
-    border,
-    borderRadius,
-    effect,
-    shadow,
+    surface,
     editSlotAction,
     editRenderInsertControl,
     editSlotAnchor = "center",
@@ -107,12 +102,7 @@ export function PhiStackLayout({
     paddingRight,
     paddingBottom,
     paddingLeft,
-    background,
-    borderSource,
-    border,
-    borderRadius,
-    effect,
-    shadow,
+    surface,
   };
   const outgoingSlotRef = useRef<HTMLDivElement | null>(null);
   const fadeAnimationRef = useRef<Animation | null>(null);
@@ -243,7 +233,6 @@ export function PhiStackLayout({
         renderMode={renderMode}
         authoring={authoring}
         chrome={chrome}
-        backgroundLayer={backgroundLayer}
         editSlotAction={editSlotAction}
         editRenderInsertControl={editRenderInsertControl}
         editSlotAnchor={editSlotAnchor}
@@ -253,6 +242,7 @@ export function PhiStackLayout({
   }
 
   const resolvedLayoutInset = resolvePhiLayoutInset(chrome);
+  const resolvedChrome = resolvePhiBaseLayoutChrome(chrome);
   /*
    * The layer that keeps the box a box.
    *
@@ -277,11 +267,11 @@ export function PhiStackLayout({
         minWidth: 0,
         minHeight: 0,
         boxSizing: "border-box",
-        ...resolvePhiBaseLayoutChrome(chrome).style,
+        ...resolvedChrome.style,
         ...style,
       }}
     >
-      {backgroundLayer}
+      <PhiSurfaceGroundLayer ground={resolvedChrome.ground} />
       <div
         data-phi-stack-stage="true"
         /*

@@ -10,6 +10,7 @@ import type { PhiCmsInstanceId } from "../../../types/cms-instance-id";
 import type { PhiRuntimeModuleId } from "../../../types/cms-plugins";
 import type { PhiShadow, PhiLayoutEffectId } from "../../../types/layout-style";
 import { isPhiRecord } from "../../../helpers/is-record";
+import type { PhiSurface } from "../../../types/surface";
 
 export const PHI_BUILDER_PREVIEW_SEARCH_PARAM = "phiBuilderPreview";
 export const PHI_BUILDER_PREVIEW_ROUTE = "/builder/api/preview";
@@ -32,9 +33,7 @@ export type PhiBuilderPreviewRegionDraft = PhiCmsGeometryWidgetConfig & {
   rootNodeGeometry?: PhiCmsGeometryWidgetConfig | null;
   rootNodeAnchor?: PhiAnchorWidgetPlacement | null;
   rootNodePadding?: PhiCmsPaddingWidgetConfig | null;
-  rootNodeBackground?: PhiCmsBackgroundWidgetConfig | null;
-  rootNodeBorder?: PhiCmsBorderWidgetConfig | null;
-  rootNodeShadow?: PhiShadow | null;
+  rootNodeSurface?: PhiSurface | null;
   rootNodeChildLayouts?: PhiCmsLayoutRenderNode[];
   rootNodeChildWidgets?: PhiCmsContentWidgetNode[];
 };

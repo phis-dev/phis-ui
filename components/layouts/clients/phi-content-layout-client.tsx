@@ -10,14 +10,14 @@ import { resolvePhiBaseLayoutChrome } from "../phi-layout-view-model";
 import { PhiLayoutAnchoredOverlay } from "./phi-layout-anchored-overlay";
 import type { PhiAnchorWidgetPlacement } from "../../controls/phi-anchor-control-contract";
 import type { PhiRenderableBlockRenderMode, PhiRenderableBlockResponsiveSize } from "../../../types";
-import type { PhiShadow, PhiLayoutEffectId } from "../../../types/layout-style";
-import type { PhiCmsBorderSource } from "../../../types/cms-border-source";
+import type { PhiSurface } from "../../../types/surface";
 import {
   isPhiLayoutAuthoringRender,
   phiLayoutDebugLayerMarker,
   phiLayoutSlotClassName,
   phiLayoutSlotContentMarker,
 } from "../../../helpers/layout-authoring-markers";
+import { PhiSurfaceGroundLayer } from "../../surface/phi-surface-ground";
 
 export type PhiContentLayoutProps = {
   blockId?: string | number | null;
@@ -28,8 +28,6 @@ export type PhiContentLayoutProps = {
   maxSize?: PhiRenderableBlockResponsiveSize | null;
   margin?: CSSProperties["margin"];
   zIndex?: number;
-  effect?: PhiLayoutEffectId;
-  shadow?: PhiShadow | null;
   layoutKind?: PhiLayoutKind;
   labelEnd?: number;
   padding?: CSSProperties["padding"];
@@ -37,11 +35,7 @@ export type PhiContentLayoutProps = {
   paddingRight?: CSSProperties["paddingRight"];
   paddingBottom?: CSSProperties["paddingBottom"];
   paddingLeft?: CSSProperties["paddingLeft"];
-  background?: CSSProperties["background"];
-  backgroundLayer?: ReactNode;
-  border?: CSSProperties["border"];
-  borderSource?: PhiCmsBorderSource;
-  borderRadius?: CSSProperties["borderRadius"];
+  surface?: PhiSurface | null;
   editSlotAction?: (
     slotIndex: number,
     options?: {
@@ -67,13 +61,7 @@ export function PhiContentLayout({
   paddingRight,
   paddingBottom,
   paddingLeft,
-  background,
-  backgroundLayer,
-  borderSource,
-  border,
-  borderRadius,
-  effect,
-  shadow,
+  surface,
   editSlotAction,
   editRenderInsertControl,
   editSlotAnchor = "center",
@@ -86,6 +74,7 @@ export function PhiContentLayout({
   const isEditor = renderMode === "editor";
   const {
     style: resolvedLayoutStyle,
+    ground,
     hasExplicitLayoutBackground,
   } = resolvePhiBaseLayoutChrome({
     labelEnd,
@@ -94,12 +83,7 @@ export function PhiContentLayout({
     paddingRight,
     paddingBottom,
     paddingLeft,
-    background,
-    borderSource,
-    border,
-    borderRadius,
-    effect,
-    shadow,
+    surface,
   });
   const resolvedLayoutInset = resolvePhiLayoutInset({
     padding,
@@ -127,7 +111,7 @@ export function PhiContentLayout({
         ...style,
       }}
     >
-      {backgroundLayer}
+      <PhiSurfaceGroundLayer ground={ground} />
       <div
         className={phiLayoutSlotClassName(isAuthoringRender)}
         data-phi-layout-has-content={phiLayoutSlotContentMarker(isAuthoringRender, hasSlot0)}

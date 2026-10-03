@@ -10,13 +10,11 @@ import type {
   PhiRenderableBlockResponsiveSize,
   PhiRenderableBlockSize,
 } from "../../types";
-import type { PhiShadow, PhiLayoutEffectId } from "../../types/layout-style";
-import { resolvePhiCmsBorderSource, type PhiCmsBorderSource } from "../../types/cms-border-source";
+import type { PhiSurface } from "../../types/surface";
 import {
   resolvePhiRenderableBlockGeometry,
   type PhiRenderableBlockGeometryInput,
 } from "../../types/renderable-block-geometry";
-import { PHI_THEME_BORDER_LINE } from "../../helpers/border-widget-style";
 
 export type PhiLayoutProps = {
   size?: PhiRenderableBlockResponsiveSize;
@@ -28,8 +26,6 @@ export type PhiLayoutProps = {
   enabled?: boolean;
   zIndex?: number;
   opacity?: number;
-  effect?: PhiLayoutEffectId;
-  shadow?: PhiShadow | null;
   flags?: number;
   initialSlotStates?: PhiBaseLayoutSlotStates;
   editRenderInsertControl?: PhiLayoutEditRenderInsertControl;
@@ -39,11 +35,8 @@ export type PhiLayoutProps = {
   paddingRight?: CSSProperties["paddingRight"];
   paddingBottom?: CSSProperties["paddingBottom"];
   paddingLeft?: CSSProperties["paddingLeft"];
-  background?: CSSProperties["background"];
-  backgroundLayer?: ReactNode;
-  borderSource?: PhiCmsBorderSource;
-  border?: CSSProperties["border"];
-  borderRadius?: CSSProperties["borderRadius"];
+  /** What the Layout's box looks like (`types/surface.ts`); absent, it paints nothing. */
+  surface?: PhiSurface | null;
 };
 
 export type PhiLayoutEditInsertControl = {
@@ -138,88 +131,14 @@ export function resolvePhiLayoutBoxStyle({
 }
 
 /**
- * The Site's answer for a Layout that states no corner of its own; see `resolvePhiLayoutStyle`.
+ * The Site's answer for a Layout that states no corner of its own: the surface step of the Control shape,
+ * carried on the root as `--phi-surface-radius` (THEME.md, "Control shape"). An author who stated a corner
+ * keeps it -- the step answers silence, it caps nobody.
  *
- * Exported because a Layout's box is not the only surface a Layout draws: the Split Card draws two, one
- * per slot, and they answer the same question with the same value.
+ * The fallback is `0` rather than a token: a Layout rendered outside the Provider does not start rounding
+ * on its own.
  */
 export const PHI_LAYOUT_SURFACE_RADIUS = "var(--phi-surface-radius, 0)";
-
-export function resolvePhiLayoutStyle({
-  padding,
-  paddingTop,
-  paddingRight,
-  paddingBottom,
-  paddingLeft,
-  background,
-  borderSource,
-  border,
-  borderRadius,
-}: Pick<
-  PhiLayoutProps,
-  | "padding"
-  | "paddingTop"
-  | "paddingRight"
-  | "paddingBottom"
-  | "paddingLeft"
-  | "background"
-  | "borderSource"
-  | "border"
-  | "borderRadius"
->): CSSProperties {
-
-  /*
-   * Where the outline comes from, asked before anything about what it looks like.
-   *
-   * `theme` is the Site's own line -- the border colour and the line width it already states -- so a
-   * Layout can take the house style without anybody typing a colour into it, and it moves when the
-   * Theme moves. `custom` is the configured line, and the one source that reads a configured corner.
-   * `none` draws nothing, and is what a Layout that was never asked says now that "no line" and
-   * "nobody said" are two different answers.
-   */
-  const resolvedBorderSource = resolvePhiCmsBorderSource(borderSource, border);
-  const resolvedBorderRadius = resolvedBorderSource === "custom"
-    ? normalizePhiCssSize(borderRadius)
-    : null;
-
-  return {
-    ...(background == null ? {} : { background }),
-    ...(resolvedBorderSource === "theme"
-      ? { border: PHI_THEME_BORDER_LINE }
-      : resolvedBorderSource === "custom" && border != null
-        ? { border }
-        : {}),
-    /*
-     * A Layout is a surface, so an author who said nothing about its corner gets the Site's answer to
-     * that question -- and so does one who said something but is no longer asking for it: a corner is
-     * the author's only under `custom`, which is the one state where the fields that set it are even
-     * shown. Switching to `theme` or `none` therefore shows the shape at once, square or capsule,
-     * instead of keeping the radii of a border that is no longer being drawn.
-     *
-     * The rest of that question -- the same step a Table and a Tree take, carried on the root as
-     * `--phi-surface-radius` (THEME.md, "Control shape"). An author who did say something keeps it: the
-     * step answers silence, it does not cap anybody.
-     *
-     * The fallback is `0` rather than a token, because that is what this returned before there was a
-     * step to take, and a Layout rendered outside the Provider should not start rounding on its own.
-     *
-     * Four corners rather than the shorthand, and only in this branch. A Widget states a single corner
-     * as a longhand (`borderTopLeftRadius`), and React refuses to have a shorthand standing beside a
-     * longhand it may have to remove on the next render -- which is what a shorthand written on every
-     * Layout, configured or not, created. Where the author DID state a radius the shorthand stays: it
-     * is their one value, and it was already the only thing on the box.
-     */
-    ...(resolvedBorderRadius == null
-      ? {
-        borderTopLeftRadius: PHI_LAYOUT_SURFACE_RADIUS,
-        borderTopRightRadius: PHI_LAYOUT_SURFACE_RADIUS,
-        borderBottomRightRadius: PHI_LAYOUT_SURFACE_RADIUS,
-        borderBottomLeftRadius: PHI_LAYOUT_SURFACE_RADIUS,
-      }
-      : { borderRadius: resolvedBorderRadius }),
-    ...resolvePhiPaddingStyle({ padding, paddingTop, paddingRight, paddingBottom, paddingLeft }),
-  };
-}
 
 /**
  * The four sides a `padding` shorthand names, in the order CSS reads them.

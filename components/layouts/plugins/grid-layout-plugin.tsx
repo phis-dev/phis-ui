@@ -33,13 +33,8 @@ export const PHI_GRID_LAYOUT_PLUGIN: PhiCmsLayoutPlugin<PhiCmsGridLayoutConfig> 
       minSize={config.minSize}
       maxSize={config.maxSize}
       collapsedSizeHint={config.collapsedSizeHint}
-      shadow={config.shadow}
-      effect={config.effect}
+      surface={config.surface}
       padding={config.padding}
-      background={config.background}
-      borderSource={config.borderSource}
-      border={config.border}
-      borderRadius={config.borderRadius}
       labelEnd={config.labelEnd}
     />
   )),

@@ -471,9 +471,6 @@ export async function buildPhiDefaultBuilderAreaPresetTree({
           padding: 0,
           paddingLeft: 0,
           paddingRight: 0,
-          background: "transparent",
-          border: "none",
-          borderRadius: 0,
         },
       }),
     ],
@@ -894,9 +891,6 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                 gap: PHI_SPACE.base,
                 margin: 0,
                 padding: PHI_SPACE.base,
-                background: "transparent",
-                border: "none",
-                borderRadius: 0,
               },
             }
           : isNavigationPage
@@ -923,9 +917,6 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                   padding: PHI_SPACE.base,
                   paddingTop: PHI_SPACE.base,
                   paddingBottom: PHI_SPACE.base,
-                  background: "transparent",
-                  border: "none",
-                  borderRadius: 0,
                 },
               }
           : isModulesPage
@@ -949,9 +940,6 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                   gap: PHI_SPACE.base,
                   margin: 0,
                   padding: PHI_SPACE.base,
-                  background: "transparent",
-                  border: "none",
-                  borderRadius: 0,
                 },
               }
           : {
@@ -968,7 +956,6 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
               config: {
                 margin: 0,
                 padding: 0,
-                background: "transparent",
               },
             },
       ),
@@ -988,8 +975,6 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                 padding: PHI_SPACE.xs,
                 paddingLeft: 0,
                 paddingRight: 0,
-                border: "none",
-                borderRadius: 0,
                 // A header as tall as its content, against the Layout default of filling its slot.
                 size: { height: "auto" },
               },
@@ -1008,8 +993,7 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
           config: {
             gap: PHI_SPACE.base,
             padding: PHI_SPACE.base,
-            background: PHI_COLOR.bgLayout,
-            border: "none",
+            surface: { background: { base: { kind: "color", color: PHI_COLOR.bgLayout } } },
           },
         }),
         nodes.layout({
@@ -1033,8 +1017,7 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
           config: {
             gap: PHI_SPACE.base,
             padding: PHI_SPACE.base,
-            background: PHI_COLOR.bgLayout,
-            border: "none",
+            surface: { background: { base: { kind: "color", color: PHI_COLOR.bgLayout } } },
           },
         }),
         nodes.layout({
@@ -1058,8 +1041,7 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
           config: {
             gap: PHI_SPACE.base,
             padding: PHI_SPACE.base,
-            background: PHI_COLOR.bgLayout,
-            border: "none",
+            surface: { background: { base: { kind: "color", color: PHI_COLOR.bgLayout } } },
           },
         }),
       ] : []),
@@ -1080,8 +1062,7 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
           label: "Builder area settings body",
           config: {
             padding: PHI_SPACE.base,
-            background: PHI_COLOR.bgLayout,
-            border: "none",
+            surface: { background: { base: { kind: "color", color: PHI_COLOR.bgLayout } } },
           },
         }),
         nodes.layout({
@@ -1094,8 +1075,6 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
           label: "Builder area settings fields",
           config: {
             gap: PHI_SPACE.base,
-            background: "transparent",
-            border: "none",
           },
         }),
         nodes.layout({
@@ -1121,8 +1100,7 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
           config: {
             gap: PHI_SPACE.base,
             padding: PHI_SPACE.base,
-            background: PHI_COLOR.bgLayout,
-            border: "none",
+            surface: { background: { base: { kind: "color", color: PHI_COLOR.bgLayout } } },
           },
         }),
         nodes.layout({

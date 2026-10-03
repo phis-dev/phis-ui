@@ -1,4 +1,4 @@
-import { cloneElement, isValidElement, type CSSProperties, type ReactElement, type ReactNode } from "react";
+import { cloneElement, isValidElement, type ReactElement, type ReactNode } from "react";
 
 import type {
   PhiCmsContentWidgetNode,
@@ -9,8 +9,6 @@ import type {
 import { comparePhiCmsInstanceIds, type PhiCmsInstanceId } from "../../types/cms-instance-id";
 import type { PhiBlockRuntime, PhiSignalScope } from "../../types";
 import type { PhiRenderableBlock, PhiRenderableBlockBase, PhiRenderableBlockRuntime } from "../../types/renderable-block";
-import { readPhiShadow } from "../../types/layout-style";
-import { combinePhiBoxShadows, resolvePhiShadow } from "../../helpers/layout-style";
 import type {
   PhiCmsLayoutPlugin,
   PhiCmsPreviewWidgetPlugin,
@@ -33,16 +31,6 @@ import {
   resolvePhiRuntimeLayoutPluginConfigParser,
 } from "../../plugins/runtime/layout-plugin-resolution";
 import type { PhiCmsRegionConfig } from "../../types";
-import type { PhiCmsBorderWidgetConfig } from "../../types/cms-config";
-import {
-  resolvePhiBackgroundMotion,
-  resolvePhiBackgroundMotionHostStyle,
-  resolvePhiBackgroundWidgetStyle,
-  type PhiCmsBackgroundWidgetConfig,
-} from "../widgets/config/background";
-import { PhiBackgroundMotionLayer } from "./clients/phi-background-motion-layer-lazy";
-import { resolvePhiSourcedBorderStyle } from "../../helpers/border-widget-style";
-import { readPhiCmsBorderSource, resolvePhiCmsBorderSource } from "../../types/cms-border-source";
 import {
   isPhiCmsPageOwnedRegion,
   resolvePhiCmsRegionKey,
@@ -915,60 +903,8 @@ function renderLayoutNode(
         renderMode,
         moduleId,
       });
-      const rootNodeBackground =
-        typeof node.config.rootNodeBackground === "object" && node.config.rootNodeBackground != null
-          ? (node.config.rootNodeBackground as PhiCmsBackgroundWidgetConfig)
-          : null;
-      const rootNodeBorder =
-        typeof node.config.rootNodeBorder === "object" && node.config.rootNodeBorder != null
-          ? (node.config.rootNodeBorder as PhiCmsBorderWidgetConfig)
-          : null;
-      const rootNodeShadow = readPhiShadow(node.config.rootNodeShadow) ?? null;
-      /*
-       * Where the root node's outline comes from. It has to be asked before the shortcut below, because
-       * `theme` draws a line out of nothing stored -- and because `none` has to be able to take one away.
-       */
-      const rootNodeBorderSource = resolvePhiCmsBorderSource(
-        readPhiCmsBorderSource(node.config.borderSource),
-        rootNodeBorder ?? node.config.border,
-      );
-
-      if (
-        !isValidElement(normalizedRendered) ||
-        (rootNodeBackground == null && rootNodeBorder == null && rootNodeShadow == null
-          && rootNodeBorderSource !== "theme")
-      ) {
-        return wrapPhiRuntimeModuleUiProvider(
-          normalizedRendered,
-          registryType,
-          context.runtimeRegistry.ownerModuleIdByLayoutType,
-          context.runtimeRegistry,
-        );
-      }
-
-      const renderedProps = normalizedRendered.props as { style?: CSSProperties };
-      const rootNodeBackgroundMotion = resolvePhiBackgroundMotion(rootNodeBackground);
-      const rootNodeBackgroundStyle = rootNodeBackground == null
-        ? {}
-        : rootNodeBackgroundMotion == null
-          ? resolvePhiBackgroundWidgetStyle(rootNodeBackground)
-          : resolvePhiBackgroundMotionHostStyle(rootNodeBackground);
-      const styledRendered = cloneElement(normalizedRendered as ReactElement<Record<string, unknown>>, {
-        rootNodeBackground,
-        rootNodeBorder,
-        backgroundLayer: rootNodeBackgroundMotion == null || rootNodeBackground == null
-          ? null
-          : <PhiBackgroundMotionLayer config={rootNodeBackground} />,
-        style: {
-          ...renderedProps.style,
-          ...rootNodeBackgroundStyle,
-          ...(rootNodeBackgroundMotion == null ? {} : { position: "relative", isolation: "isolate" }),
-          ...resolvePhiSourcedBorderStyle(rootNodeBorderSource, rootNodeBorder),
-          boxShadow: combinePhiBoxShadows(rootNodeBackgroundStyle.boxShadow, resolvePhiShadow(rootNodeShadow)),
-        },
-      } as never);
       return wrapPhiRuntimeModuleUiProvider(
-        styledRendered,
+        normalizedRendered,
         registryType,
         context.runtimeRegistry.ownerModuleIdByLayoutType,
         context.runtimeRegistry,

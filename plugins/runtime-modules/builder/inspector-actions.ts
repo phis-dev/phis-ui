@@ -1,4 +1,4 @@
-import { readPhiShadow, type PhiShadow } from "../../../types/layout-style";
+import { readPhiSurface, type PhiSurface } from "../../../types/surface";
 import { isPhiRecord } from "../../../helpers/is-record";
 
 export type PhiBuilderInspectorAction =
@@ -8,9 +8,8 @@ export type PhiBuilderInspectorAction =
   | { kind: "setSelectedWidgetTranslate"; translate: boolean }
   | { kind: "patchSelectedLayoutAnchor"; selectedLayoutAnchor: string }
   | { kind: "patchSelectedLayoutPadding"; padding: Record<string, unknown> | null }
-  | { kind: "patchSelectedLayoutBackground"; background: unknown }
-  | { kind: "patchSelectedLayoutBorder"; border: unknown }
-  | { kind: "patchSelectedLayoutShadow"; shadow: PhiShadow }
+  /** The selected Layout's whole Surface; `null` takes it away. */
+  | { kind: "patchSelectedLayoutSurface"; surface: PhiSurface | null }
   | { kind: "patchSelectedLayoutConfig"; key: string; value?: unknown };
 
 function readRecord(value: unknown): Record<string, unknown> | null {
@@ -54,19 +53,8 @@ export function readPhiBuilderInspectorAction(
     return value.padding == null || padding ? { kind: value.kind, padding } : null;
   }
 
-  if (value.kind === "patchSelectedLayoutBackground") {
-    return { kind: value.kind, background: value.background };
-  }
-
-  if (value.kind === "patchSelectedLayoutBorder") {
-    return { kind: value.kind, border: value.border };
-  }
-
-  if (value.kind === "patchSelectedLayoutShadow") {
-    return {
-      kind: value.kind,
-      shadow: readPhiShadow(value.shadow) ?? "none",
-    };
+  if (value.kind === "patchSelectedLayoutSurface") {
+    return { kind: value.kind, surface: readPhiSurface(value.surface) };
   }
 
   if (value.kind === "patchSelectedLayoutConfig") {

@@ -37,56 +37,67 @@ entry, type-key suffix, renderer, parser, serializer, Builder category, or signa
 Every Layout combines two independent concerns in one config object:
 
 - topology and geometry, such as direction, gap, columns, widths, wrapping, alignment, and slot policy;
-- visual treatment, such as padding, background, border, radius, shadow, and effect.
+- visual treatment: padding, and the Surface.
 
 The shared fields are:
 
 - `padding`, `paddingTop`, `paddingRight`, `paddingBottom`, `paddingLeft`
-- `background`
-- `borderSource`, `border`, `borderRadius`
-- `shadow`
-- `effect`
+- `surface` -- what the Layout's box looks like (see [Surface](#surface))
 - the shared renderable-block geometry, visibility, access, and transition fields
 
 Layout-family plugins add only topology-specific or explicitly family-specific fields. A family must
-not duplicate shared parsing or serialization.
+not duplicate shared parsing or serialization, and it never declares chrome of its own: the Split Card is
+one card split in two, and the card is its Surface.
 
-Canonical defaults are neutral: no margin, no padding, no visible background, no border, no radius, no
-shadow, and no effect. A Layout never adds implicit inner padding around its slot content; a Region that
+Canonical defaults are neutral: no margin, no padding, and no Surface -- so no ground, no line, no
+corner, no depth. A Layout never adds implicit inner padding around its slot content; a Region that
 needs padded composition configures padding on its Layout or on the Region itself. A first-party creation preset may provide an initial visible-container configuration,
 but creation presets are input to the node factory only. Their values are materialized as normal
 Layout config and the preset name is never persisted or interpreted at render time.
 
-Effects and standard shadows are selected by semantic ids and resolved globally (`types/layout-style.ts`):
-effects are exactly `glass`, `haze`, `blur`, and `dim`; shadows are exactly `none`, `soft`, and `strong`.
-Presets store the chosen id, not CSS implementations. A custom shadow is the sole exception and persists
-as `{ kind: "custom", value: "<box-shadow>" }`; arbitrary effect parameters and arbitrary strings in the
-shadow field are invalid. `borderRadius` given as one value is shown by the Border control as four equal
-corner radii; explicit per-corner values override it.
+### Surface
 
-### Where a Layout's outline comes from
+A Surface (`types/surface.ts`, `PhiSurface`) is one object for every box that has a look -- a Layout, and
+in the same shape a Region, an Overlay and a Widget:
 
-`borderSource` is `none`, `theme`, or `custom` (`types/cms-config.ts`), and it answers for every Layout
-family alike -- it is chrome, not a family field, so a Module's own Layout gets it without declaring
-anything.
+- `background` -- the structured Background config, including its `filter` (see
+  [Background filter](#background-filter)) and its motion;
+- `borderSource` and `border` -- where the line comes from, and the line with its four corners;
+- `shadow` -- a semantic id (`none`, `soft`, `strong`) or `{ kind: "custom", value: "<box-shadow>" }`;
+  presets store the id, not CSS;
+- `tone` -- the mode the content is drawn in (`inherit`, `light`, `dark`, `inverse`).
+
+Padding is not part of it, because how far content stands from the edge is geometry; nor are a block's
+`effects`, which say how it arrives. A Surface that states nothing reads as absent (`readPhiSurface`).
+
+It is drawn by one resolver, `resolvePhiSurfaceStyle` (`helpers/surface-style.ts`), and every Layout goes
+through it in `resolvePhiBaseLayoutChrome`. The resolver answers the box style and, when the paint needs a
+layer of its own -- a softened or moving picture -- the ground the Layout renders as its first child with
+`PhiSurfaceGroundLayer`. No second path decorates a Layout from outside: the Builder hands the Surface to
+the Layout like any other prop, so the Canvas draws what the page will.
+
+### Where a Surface's outline comes from
+
+`borderSource` is `none`, `theme`, or `custom` (`types/cms-border-source.ts`).
 
 - `theme` draws the Site's own line: its border colour at its line width, so it follows the Theme rather
   than copying it.
-- `custom` draws the configured `border`, and is the only source that reads a configured `borderRadius`
-  or per-corner radius. Under the other two the corner comes from the Control shape's surface step
+- `custom` draws the configured `border`, and is the only source that reads a configured corner. Under the
+  other two the corner comes from the Control shape's surface step
   ([THEME.md](./THEME.md#control-shape)), so switching to `theme` or `none` shows the shape at once.
 - `none` draws no line and states so, rather than saying nothing: the style is laid over one that may
   already carry a line.
 
-A stored Layout that predates the field is read by `resolvePhiCmsBorderSource`: a configured LINE means
-`custom`, everything else means `none`. A radius alone is not a line. The rule is stated once and read by
-the drawing and the Inspector, which is what keeps them from disagreeing about a Site nobody rewrote.
+A Surface that states no source is read by `resolvePhiCmsBorderSource`: a configured LINE means `custom`,
+everything else means `none`. A radius alone is not a line. The rule is stated once and read by the
+drawing and the Inspector, which is what keeps them from disagreeing.
 
-This is the only thing that decides a Layout's outer edge. A Layout family never draws a frame of its own
--- the Collapsible's `ghost` governs the INSIDE, whether its panels are separate objects or a flat list,
-and says nothing about the edge around them. Its grounds state no corner at all: the Layout box has one
-and clips them to it, because a clip only takes away and a ground rounded more tightly than its box would
-never be reached.
+A corner nobody stated is the Site's surface step for a Layout (`PHI_LAYOUT_SURFACE_RADIUS`), applied as
+four longhands; a Layout without a Surface states no corner. This is the only thing that decides a
+Layout's outer edge. A Layout family never draws a frame of its own -- the Collapsible's `ghost` governs
+the INSIDE, whether its panels are separate objects or a flat list, and says nothing about the edge around
+them. Its grounds state no corner at all: the Layout box has one and clips them to it, because a clip only
+takes away and a ground rounded more tightly than its box would never be reached.
 
 ### Background motion
 

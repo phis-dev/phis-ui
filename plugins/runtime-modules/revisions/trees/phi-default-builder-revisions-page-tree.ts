@@ -174,9 +174,6 @@ export async function buildPhiDefaultBuilderRevisionsPageTree({
           gap: PHI_SPACE.base,
           margin: 0,
           padding: PHI_SPACE.base,
-          background: "transparent",
-          border: "none",
-          borderRadius: 0,
         },
       }),
       nodes.layout({
@@ -190,8 +187,7 @@ export async function buildPhiDefaultBuilderRevisionsPageTree({
         config: {
           gap: PHI_SPACE.base,
           padding: PHI_SPACE.base,
-          background: PHI_COLOR.bgLayout,
-          border: "none",
+          surface: { background: { base: { kind: "color", color: PHI_COLOR.bgLayout } } },
         },
       }),
       nodes.layout({

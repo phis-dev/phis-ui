@@ -6,20 +6,10 @@ import { usePhiConfig } from "../../../components/root/phi-config-provider";
 import { PhiEditScaffoldDrawer } from "./edit-scaffold-drawer";
 import type { PhiCmsContentWidgetNode, PhiCmsLayoutRenderNode, PhiResolvedCmsRenderableTree } from "../../../types/cms";
 import { comparePhiCmsInstanceIds, type PhiCmsInstanceId } from "../../../types/cms-instance-id";
-import type { PhiCmsBorderWidgetConfig } from "../../../types/cms-config";
 import { normalizePhiPaddingWidgetConfig } from "../../../types/cms-config";
 import type { PhiBlockRuntime } from "../../../types/widget-runtime";
-import {
-  resolvePhiBackgroundWidgetStyle,
-  type PhiCmsBackgroundWidgetConfig,
-} from "../../../components/widgets/config/background";
 import type { PhiCmsGeometryWidgetConfig } from "../../../components/widgets/config/geometry";
-import { resolvePhiSourcedBorderStyle } from "../../../helpers/border-widget-style";
-import {
-  readPhiCmsBorderSource,
-  resolvePhiCmsBorderSource,
-  type PhiCmsBorderSource,
-} from "../../../types/cms-border-source";
+import { readPhiSurface } from "../../../types/surface";
 import { resolvePhiAnchorPlacement } from "../../../components/layouts/phi-layout-contract";
 import { PhiSlotChildFrame } from "../../../plugins/runtime/phi-slot-child-frame";
 import {
@@ -60,8 +50,6 @@ import type {
   PhiRuntimeModuleClientWidgetDefinition,
 } from "../../../types";
 import type { PhiRenderableBlockBase, PhiRenderableBlockEffects, PhiSlotSizePolicy } from "../../../types";
-import { readPhiShadow, type PhiShadow } from "../../../types/layout-style";
-import { combinePhiBoxShadows, resolvePhiShadow } from "../../../helpers/layout-style";
 import {
   PHI_VIEWER_ACCESS_ANYONE,
   intersectPhiInheritedViewportFlags,
@@ -1033,10 +1021,6 @@ function PhiAuthoringLayoutEffectsPreviewFrame({
   );
 }
 
-function readObjectConfig<T>(value: unknown): T | null {
-  return typeof value === "object" && value != null ? (value as T) : null;
-}
-
 /**
  * The band under a scaffold: what this node is called, and then what it is.
  *
@@ -1093,44 +1077,9 @@ function resolveLayoutNodeRootProps(node: PhiCmsLayoutRenderNode) {
     rootNodeConfig: node.config,
     rootNodeGeometry: node.config as PhiCmsGeometryWidgetConfig,
     rootNodePadding: normalizePhiPaddingWidgetConfig(node.config),
-    rootNodeBackground: readObjectConfig<PhiCmsBackgroundWidgetConfig>(node.config.rootNodeBackground),
-    rootNodeBorder: readObjectConfig<PhiCmsBorderWidgetConfig>(node.config.rootNodeBorder),
-    rootNodeShadow: readPhiShadow(node.config.rootNodeShadow) ?? null,
+    rootNodeSurface: readPhiSurface(node.config.surface),
     childLayouts: node.childLayouts,
     childWidgets: node.childWidgets,
-  };
-}
-
-function resolveRootNodeChromeStyle({
-  background,
-  borderSource,
-  border,
-  shadow,
-  style,
-}: {
-  background?: PhiCmsBackgroundWidgetConfig | null;
-  borderSource?: PhiCmsBorderSource;
-  border?: PhiCmsBorderWidgetConfig | null;
-  shadow?: PhiShadow | null;
-  style?: CSSProperties;
-}): CSSProperties | undefined {
-  /*
-   * The Canvas draws the same chrome the page will, so it has to ask the same question: where does the
-   * outline come from. `theme` draws a line where nothing is stored, which is why the shortcut below
-   * can no longer take "nothing stored" for "nothing to draw".
-   */
-  const resolvedBorderSource = resolvePhiCmsBorderSource(borderSource, border);
-  if (background == null && border == null && shadow == null && resolvedBorderSource !== "theme") {
-    return style;
-  }
-
-  const backgroundStyle = background == null ? {} : resolvePhiBackgroundWidgetStyle(background);
-
-  return {
-    ...style,
-    ...backgroundStyle,
-    ...resolvePhiSourcedBorderStyle(resolvedBorderSource, border),
-    boxShadow: combinePhiBoxShadows(backgroundStyle.boxShadow, resolvePhiShadow(shadow)),
   };
 }
 
@@ -1896,15 +1845,8 @@ export function renderPhiRootNodeScaffold(
             paddingRight: normalizedRootNode.rootNodePadding?.paddingRight ?? undefined,
             paddingBottom: normalizedRootNode.rootNodePadding?.paddingBottom ?? undefined,
             paddingLeft: normalizedRootNode.rootNodePadding?.paddingLeft ?? undefined,
-            style: resolveRootNodeChromeStyle({
-              background: normalizedRootNode.rootNodeBackground,
-              borderSource: readPhiCmsBorderSource(normalizedRootNode.rootNodeConfig?.borderSource),
-              border: normalizedRootNode.rootNodeBorder,
-              shadow: normalizedRootNode.rootNodeShadow,
-              style: (rendered.props as { style?: CSSProperties }).style,
-            }),
-            rootNodeBackground: normalizedRootNode.rootNodeBackground ?? null,
-            rootNodeBorder: normalizedRootNode.rootNodeBorder ?? null,
+            // The Canvas draws the Surface the page will, through the Layout's own chrome.
+            surface: normalizedRootNode.rootNodeSurface ?? undefined,
           } as never),
           definition.title,
         );
@@ -1964,15 +1906,7 @@ export function renderPhiRootNodePreview(
                 paddingRight: normalizedRootNode.rootNodePadding?.paddingRight ?? undefined,
                 paddingBottom: normalizedRootNode.rootNodePadding?.paddingBottom ?? undefined,
                 paddingLeft: normalizedRootNode.rootNodePadding?.paddingLeft ?? undefined,
-                style: resolveRootNodeChromeStyle({
-                  background: normalizedRootNode.rootNodeBackground,
-                  borderSource: readPhiCmsBorderSource(normalizedRootNode.rootNodeConfig?.borderSource),
-                  border: normalizedRootNode.rootNodeBorder,
-                  shadow: normalizedRootNode.rootNodeShadow,
-                  style: (rendered.props as { style?: CSSProperties }).style,
-                }),
-                rootNodeBackground: normalizedRootNode.rootNodeBackground ?? null,
-                rootNodeBorder: normalizedRootNode.rootNodeBorder ?? null,
+                surface: normalizedRootNode.rootNodeSurface ?? undefined,
               } as never)
             : rendered;
         }}

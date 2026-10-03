@@ -422,7 +422,7 @@ assert.equal(
   const draft = {
     backgroundConfig: backgroundBase({ resolvedAsset: projection() }),
     slots: [{ slotBackground: backgroundBase({ resolvedAsset: projection() }) }],
-    rootNodeBackground: backgroundBase({ resolvedAsset: projection() }),
+    surface: { background: backgroundBase({ resolvedAsset: projection() }) },
   };
   const stripped = stripPhiResolvedAssetProjections(draft);
   assert.doesNotMatch(
@@ -433,7 +433,7 @@ assert.equal(
   // Everything else survives: stripping is not a rewrite.
   assert.equal(stripped.backgroundConfig.base.assetId, ASSET_ID);
   assert.equal(stripped.slots[0].slotBackground.base.kind, "image");
-  assert.equal(stripped.rootNodeBackground.base.repeat, "no-repeat");
+  assert.equal(stripped.surface.background.base.repeat, "no-repeat");
 }
 
 {

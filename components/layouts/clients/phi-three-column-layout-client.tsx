@@ -18,14 +18,14 @@ import type {
   PhiRenderableBlockResponsiveSize,
   PhiRenderableBlockSize,
 } from "../../../types";
-import type { PhiShadow, PhiLayoutEffectId } from "../../../types/layout-style";
-import type { PhiCmsBorderSource } from "../../../types/cms-border-source";
+import type { PhiSurface } from "../../../types/surface";
 import {
   isPhiLayoutAuthoringRender,
   phiLayoutDebugLayerMarker,
   phiLayoutSlotClassName,
   phiLayoutSlotContentMarker,
 } from "../../../helpers/layout-authoring-markers";
+import { PhiSurfaceGroundLayer } from "../../surface/phi-surface-ground";
 
 const PHI_THREE_COLUMN_LAYOUT_DEFAULTS = resolvePhiLayoutDefaults("threecol");
 
@@ -37,7 +37,7 @@ export type PhiThreeColumnLayoutProps = {
   wrap?: boolean | CSSProperties["flexWrap"];
   align?: CSSProperties["alignItems"];
   justify?: CSSProperties["justifyContent"];
-  borderSource?: PhiCmsBorderSource;
+  surface?: PhiSurface | null;
   leftWidth?: CSSProperties["width"];
   middleWidth?: CSSProperties["width"];
   rightWidth?: CSSProperties["width"];
@@ -47,8 +47,6 @@ export type PhiThreeColumnLayoutProps = {
   collapsedSizeHint?: PhiRenderableBlockSize | null;
   renderMode?: PhiRenderableBlockRenderMode;
   zIndex?: number;
-  shadow?: PhiShadow | null;
-  effect?: PhiLayoutEffectId;
   layoutKind?: PhiLayoutKind;
   labelEnd?: number;
   padding?: CSSProperties["padding"];
@@ -56,10 +54,6 @@ export type PhiThreeColumnLayoutProps = {
   paddingRight?: CSSProperties["paddingRight"];
   paddingBottom?: CSSProperties["paddingBottom"];
   paddingLeft?: CSSProperties["paddingLeft"];
-  background?: CSSProperties["background"];
-  backgroundLayer?: ReactNode;
-  border?: CSSProperties["border"];
-  borderRadius?: CSSProperties["borderRadius"];
   editSlotAction?: (
     slotIndex: number,
     options?: {
@@ -209,13 +203,7 @@ export function PhiThreeColumnLayout({
     paddingRight,
     paddingBottom,
     paddingLeft,
-    background,
-    backgroundLayer,
-    borderSource,
-    border,
-    borderRadius,
-    effect,
-    shadow,
+    surface,
     labelEnd,
     size,
     minSize,
@@ -232,6 +220,7 @@ export function PhiThreeColumnLayout({
   const showInsertButton = resolvedRenderMode === "editor";
   const {
     style: resolvedLayoutStyle,
+    ground,
     hasExplicitLayoutBackground,
   } = resolvePhiBaseLayoutChrome({
     labelEnd,
@@ -240,12 +229,7 @@ export function PhiThreeColumnLayout({
     paddingRight,
     paddingBottom,
     paddingLeft,
-    background,
-    borderSource,
-    border,
-    borderRadius,
-    effect,
-    shadow,
+    surface,
   });
   return (
     <div
@@ -280,7 +264,7 @@ export function PhiThreeColumnLayout({
       ...style,
       }}
     >
-      {backgroundLayer}
+      <PhiSurfaceGroundLayer ground={ground} />
       {renderColumn(
         isAuthoringRender,
         "slot-1",

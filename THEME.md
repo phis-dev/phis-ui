@@ -402,13 +402,12 @@ as `--phi-surface-radius` and, where a component has a token for it, as that tok
   Design computes the Tooltip's minimum width from this number, so 9999 would ask for a tooltip twenty
   thousand pixels wide. Half the Control height is the same capsule, because a Tooltip's minimum height is
   the Control height, and a Tooltip that wraps holds that corner instead of growing an arc.
-- **Layout** -- the box, wherever the author configured no radius. An explicit `borderRadius` on a Layout
-  always wins: the step answers silence, it is not a ceiling. Outside the Provider the variable is absent and
-  a Layout falls back to no radius, which is what it had before the step existed. For Phi Controls the shape wins over conflicting component radius overrides.
-  The **Split Card**'s two cards are surfaces of their own and take the same step from the same constant,
-  as longhands so the shorthand never stands beside the corners a configured card border writes. A slot
-  that draws no card -- no background, no border, no shadow -- states no corner, because there is no box
-  there to round.
+- **Layout** -- the box of a Layout with a Surface, wherever the author configured no corner. A corner in a
+  `custom` border always wins: the step answers silence, it is not a ceiling. Outside the Provider the
+  variable is absent and a Layout falls back to no radius. A Layout without a Surface states no corner,
+  because there is no box there to round. The step is applied as longhands, so it never stands beside the
+  corners a configured border writes. For Phi Controls the shape wins over conflicting component radius
+  overrides. The **Split Card** is one card split in two, so its corner is simply its Surface's.
 - **A Phi Control that draws its own surface** -- the frame of a bordered Tree, and a media tile together with
   the skeleton standing in for it. There is no component token to carry the step to a box phis draws itself, so
   it reads the variable. Only where a Control can render outside the Provider does a fallback belong beside it:

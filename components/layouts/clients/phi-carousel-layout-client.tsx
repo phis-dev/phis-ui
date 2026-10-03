@@ -28,6 +28,7 @@ import {
   resolvePhiCarouselStep,
 } from "../phi-carousel-pages";
 import { PhiIcon } from "../../shell/phi-icon";
+import { PhiSurfaceGroundLayer } from "../../surface/phi-surface-ground";
 
 /**
  * A Stack with a wider window.
@@ -123,13 +124,7 @@ export function PhiCarouselLayout({
     paddingRight,
     paddingBottom,
     paddingLeft,
-    background,
-    backgroundLayer,
-    borderSource,
-    border,
-    borderRadius,
-    effect,
-    shadow,
+    surface,
     editSlotAction,
     editRenderInsertControl,
     editSlotAnchor = "center",
@@ -218,12 +213,7 @@ export function PhiCarouselLayout({
     paddingRight,
     paddingBottom,
     paddingLeft,
-    background,
-    borderSource,
-    border,
-    borderRadius,
-    effect,
-    shadow,
+    surface,
   };
 
   if (isEditMode) {
@@ -240,7 +230,6 @@ export function PhiCarouselLayout({
         renderMode={renderMode}
         authoring={authoring}
         chrome={chrome}
-        backgroundLayer={backgroundLayer}
         editSlotAction={editSlotAction}
         editRenderInsertControl={editRenderInsertControl}
         editSlotAnchor={editSlotAnchor}
@@ -250,6 +239,7 @@ export function PhiCarouselLayout({
   }
 
   const resolvedLayoutInset = resolvePhiLayoutInset(chrome);
+  const resolvedChrome = resolvePhiBaseLayoutChrome(chrome);
   /*
    * One dot per window, not per slot: with a wide window the slots move a window at a time, so a dot
    * per slot would offer positions the Carousel never stops at. Each is named after the first slot it
@@ -291,11 +281,11 @@ export function PhiCarouselLayout({
         minWidth: 0,
         minHeight: 0,
         boxSizing: "border-box",
-        ...resolvePhiBaseLayoutChrome(chrome).style,
+        ...resolvedChrome.style,
         ...style,
       }}
     >
-      {backgroundLayer}
+      <PhiSurfaceGroundLayer ground={resolvedChrome.ground} />
       <div style={{ position: "relative", flex: "1 1 auto", minWidth: 0, minHeight: 0 }}>
         <PhiSequenceViewport
           items={track.map((entry) => entry.slot)}

@@ -206,8 +206,6 @@ export async function buildPhiBuilderInspectorAreaOverlayTree({
           gap: PHI_SPACE.sm,
           padding: 0,
           paddingLeft: PHI_SPACE.lg,
-          background: "transparent",
-          border: "none",
         },
       })),
       ...([[
@@ -248,7 +246,7 @@ export async function buildPhiBuilderInspectorAreaOverlayTree({
         slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
         sortOrder: 0,
         label: "Builder effects header",
-        config: { anchor: { horizontal: "center", vertical: "middle" }, gap: 0, padding: 0, background: "transparent", border: "none" },
+        config: { anchor: { horizontal: "center", vertical: "middle" }, gap: 0, padding: 0 },
       }),
       nodes.layout({
         typeKey: "stack",
@@ -262,8 +260,7 @@ export async function buildPhiBuilderInspectorAreaOverlayTree({
           slotTransition: "fade-over",
           defaultActiveSlotKey: "slot_0",
           padding: PHI_SPACE.base,
-          background: PHI_COLOR.bgLayout,
-          border: "none",
+          surface: { background: { base: { kind: "color", color: PHI_COLOR.bgLayout } } },
         },
       }),
       nodes.layout({
@@ -290,7 +287,7 @@ export async function buildPhiBuilderInspectorAreaOverlayTree({
         slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
         sortOrder: 0,
         label: "Builder signal wiring body",
-        config: { gap: PHI_SPACE.sm, padding: PHI_SPACE.base, background: "transparent", border: "none" },
+        config: { gap: PHI_SPACE.sm, padding: PHI_SPACE.base },
       }),
       nodes.layout({
         creationPreset: { layoutKind: "flex", preset: "overlay-actions" },

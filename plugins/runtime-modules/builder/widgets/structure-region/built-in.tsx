@@ -24,7 +24,7 @@ import type { PhiCmsContentWidgetNode, PhiCmsLayoutRenderNode } from "../../../.
 import { readPhiCmsInstanceId, type PhiCmsInstanceId } from "../../../../../types/cms-instance-id";
 import type { PhiCmsRegionConfig } from "../../../../../types";
 import { normalizePhiPaddingWidgetConfig } from "../../../../../types/cms-config";
-import { isPhiBackgroundFilter, readPhiShadow } from "../../../../../types/layout-style";
+import { isPhiBackgroundFilter } from "../../../../../types/layout-style";
 import {
   readPhiRenderableBlockLength,
   resolvePhiRenderableBlockGeometry,
@@ -177,9 +177,7 @@ function clearStructureRootNode(
     rootNodeGeometry: null,
     rootNodeAnchor: null,
     rootNodePadding: null,
-    rootNodeBackground: null,
-    rootNodeBorder: null,
-    rootNodeShadow: null,
+    rootNodeSurface: null,
     rootNodeChildLayouts: [],
     rootNodeChildWidgets: [],
   };
@@ -200,9 +198,7 @@ function copyStructureRootNode(
     rootNodeGeometry: sourceDraft.rootNodeGeometry ?? null,
     rootNodeAnchor: sourceDraft.rootNodeAnchor ?? null,
     rootNodePadding: sourceDraft.rootNodePadding ?? null,
-    rootNodeBackground: sourceDraft.rootNodeBackground ?? null,
-    rootNodeBorder: sourceDraft.rootNodeBorder ?? null,
-    rootNodeShadow: sourceDraft.rootNodeShadow ?? null,
+    rootNodeSurface: sourceDraft.rootNodeSurface ?? null,
     rootNodeChildLayouts: sourceDraft.rootNodeChildLayouts ?? [],
     rootNodeChildWidgets: sourceDraft.rootNodeChildWidgets ?? [],
   };
@@ -231,9 +227,7 @@ function promoteStructureLayoutToRoot(
       ? node.config.anchor
       : null,
     rootNodePadding: rootNodeDefaults.rootNodePadding,
-    rootNodeBackground: rootNodeDefaults.rootNodeBackground,
-    rootNodeBorder: rootNodeDefaults.rootNodeBorder,
-    rootNodeShadow: readPhiShadow(node.config.rootNodeShadow) ?? null,
+    rootNodeSurface: rootNodeDefaults.rootNodeSurface,
     rootNodeChildLayouts: node.childLayouts ?? [],
     rootNodeChildWidgets: node.childWidgets ?? [],
   };
@@ -895,9 +889,7 @@ export function PhiStructureRegionScaffold({
       rootNodeGeometry: null,
       rootNodePadding: null,
       rootNodeAnchor: null,
-      rootNodeBackground: null,
-      rootNodeBorder: null,
-      rootNodeShadow: null,
+      rootNodeSurface: null,
       shadow: null,
         rootNodeChildLayouts: [],
         rootNodeChildWidgets: [],
@@ -1794,9 +1786,7 @@ export function PhiStructureRegionScaffold({
       rootNodeConfig: effectiveDraft?.rootNodeConfig ?? null,
       rootNodeGeometry: effectiveDraft?.rootNodeGeometry ?? null,
       rootNodePadding: effectiveDraft?.rootNodePadding ?? null,
-      rootNodeBackground: effectiveDraft?.rootNodeBackground ?? null,
-      rootNodeBorder: effectiveDraft?.rootNodeBorder ?? null,
-      rootNodeShadow: effectiveDraft?.rootNodeShadow ?? null,
+      rootNodeSurface: effectiveDraft?.rootNodeSurface ?? null,
       childLayouts: rootNodeChildLayouts,
       childWidgets: rootNodeChildWidgets,
     }, openSlot, openRootInspector, deleteRootNode, updateWidgetNodeConfig, updateLayoutNodeConfig, {
@@ -1961,9 +1951,7 @@ export function PhiStructureRegionScaffold({
         rootNodeGeometry: null,
         rootNodeAnchor: item.defaultAnchor ?? null,
         rootNodePadding: rootNodeDefaults.rootNodePadding,
-        rootNodeBackground: rootNodeDefaults.rootNodeBackground,
-        rootNodeBorder: rootNodeDefaults.rootNodeBorder,
-        rootNodeShadow: readPhiShadow(resolvedDefaultConfig?.shadow) ?? null,
+        rootNodeSurface: rootNodeDefaults.rootNodeSurface,
         rootNodeChildLayouts: [],
         rootNodeChildWidgets: [],
       });

@@ -1,16 +1,9 @@
 import type { CSSProperties, ReactNode } from "react";
 
-import { resolvePhiBorderWidgetStyle } from "../../../helpers/border-widget-style";
-import type { PhiCmsBorderWidgetConfig } from "../../../types/cms-config";
-import {
-  resolvePhiBackgroundWidgetStyle,
-  type PhiCmsBackgroundWidgetConfig,
-} from "../../widgets/config/background";
 import {
   normalizePhiCssSize,
-  PHI_LAYOUT_SURFACE_RADIUS,
   type PhiLayoutEditRenderInsertControl,
-  } from "../phi-layout-contract";
+} from "../phi-layout-contract";
 import { PhiLayoutAnchoredOverlay } from "./phi-layout-anchored-overlay";
 import {
   resolvePhiBaseLayoutChrome,
@@ -18,29 +11,29 @@ import {
 } from "../phi-layout-view-model";
 import type { PhiAnchorWidgetPlacement } from "../../controls/phi-anchor-control-contract";
 import { resolvePhiLayoutDefaults } from "../../../helpers/cms-layout-defaults";
-import { combinePhiBoxShadows, resolvePhiShadow } from "../../../helpers/layout-style";
-import type { PhiShadow } from "../../../types/layout-style";
 import {
   isPhiLayoutAuthoringRender,
   phiLayoutDebugLayerMarker,
   phiLayoutSlotClassName,
   phiLayoutSlotContentMarker,
 } from "../../../helpers/layout-authoring-markers";
+import { PhiSurfaceGroundLayer } from "../../surface/phi-surface-ground";
 
 const PHI_SPLIT_CARD_LAYOUT_DEFAULTS = resolvePhiLayoutDefaults("split");
 
+/**
+ * One card, split in two.
+ *
+ * The card is the Layout's own Surface -- one ground, one edge, one depth behind both halves -- so the
+ * Split Card states nothing about chrome of its own and takes the Surface every Layout has. What it adds
+ * is the split: a slot on each side on the golden ratio, the gap between them, and the inset both halves
+ * share. It used to draw two cards, one per slot, with six fields that were always set alike.
+ */
 export type PhiSplitCardLayoutProps = Omit<PhiBaseLayoutProps, "slots"> & {
   slots: ReactNode[];
   gap?: CSSProperties["gap"];
-  borderRadius?: CSSProperties["borderRadius"];
-  leftPadding?: CSSProperties["padding"];
-  rightPadding?: CSSProperties["padding"];
-  leftBackground?: PhiCmsBackgroundWidgetConfig;
-  rightBackground?: PhiCmsBackgroundWidgetConfig;
-  leftBorder?: PhiCmsBorderWidgetConfig;
-  rightBorder?: PhiCmsBorderWidgetConfig;
-  leftShadow?: PhiShadow;
-  rightShadow?: PhiShadow;
+  /** How far each half's content stands from that half's edges; the same for both. */
+  slotPadding?: CSSProperties["padding"];
   editSlotAction?: (
     slotIndex: number,
     options?: {
@@ -63,31 +56,11 @@ function renderSplitCardSlot(
   editSlotAnchor: PhiAnchorWidgetPlacement | null | undefined,
   editSlotAction: PhiSplitCardLayoutProps["editSlotAction"],
   editRenderInsertControl: PhiLayoutEditRenderInsertControl | undefined,
-  label?: ReactNode,
-  slotPadding?: CSSProperties["padding"],
-  slotBackground?: PhiCmsBackgroundWidgetConfig,
-  slotBorder?: PhiCmsBorderWidgetConfig,
-  slotShadow?: PhiShadow,
-  slotBorderRadius?: CSSProperties["borderRadius"],
+  label: ReactNode,
+  slotPadding: CSSProperties["padding"] | undefined,
 ) {
   const hasContent = child !== null && child !== undefined && child !== false;
   const showInsertButton = typeof editSlotAction === "function" && editRenderInsertControl != null;
-  const resolvedSlotBackgroundStyle = resolvePhiBackgroundWidgetStyle(slotBackground ?? null);
-  const hasExplicitCardChrome =
-    (slotBackground != null && slotBackground.base.kind !== "none") ||
-    slotBorder != null ||
-    slotShadow != null;
-  /*
-   * The corner reaches the card as four longhands and never as the shorthand, because the slot radius is
-   * a variable wherever nobody configured one, and React refuses a shorthand standing beside the
-   * longhands a configured border writes on the same box.
-   *
-   * A slot that draws no card states no corner: there is no box there to round, and rounding the frame
-   * would clip content against nothing.
-   */
-  const resolvedSlotBorderStyle = resolvePhiBorderWidgetStyle(slotBorder ?? null, {
-    borderRadius: hasExplicitCardChrome ? slotBorderRadius : 0,
-  });
 
   return (
     <div
@@ -102,18 +75,14 @@ function renderSplitCardSlot(
         minHeight: 0,
         display: "flex",
         alignItems: "stretch",
-        overflow: hasExplicitCardChrome ? "hidden" : undefined,
         padding: normalizePhiCssSize(slotPadding),
         boxSizing: "border-box",
-        ...resolvedSlotBorderStyle,
-        ...resolvedSlotBackgroundStyle,
-        boxShadow: combinePhiBoxShadows(resolvedSlotBackgroundStyle.boxShadow, resolvePhiShadow(slotShadow)),
       }}
     >
       {hasContent ? (
         <PhiLayoutAnchoredOverlay
           anchor={editSlotAnchor}
-          slotRole={slotRole === "left" ? "left" : "right"}
+          slotRole={slotRole}
           positionMode="flow"
           fillAvailableInline
           fillAvailableBlock
@@ -127,7 +96,7 @@ function renderSplitCardSlot(
           slotIndex,
           label,
           anchor: editSlotAnchor,
-          slotRole: slotRole === "left" ? "left" : "right",
+          slotRole,
           onInsert: (targetSlotIndex) =>
             editSlotAction(targetSlotIndex, {
               defaultPickSection: "widget",
@@ -143,15 +112,7 @@ function renderSplitCardSlot(
 export function PhiSplitCardLayout({
   slots,
   gap,
-  borderRadius,
-  leftPadding,
-  rightPadding,
-  leftBackground,
-  rightBackground,
-  leftBorder,
-  rightBorder,
-  leftShadow,
-  rightShadow,
+  slotPadding,
   editSlotAction,
   editRenderInsertControl,
   editSlotAnchor = "center",
@@ -163,27 +124,15 @@ export function PhiSplitCardLayout({
   paddingRight,
   paddingBottom,
   paddingLeft,
-  background,
-  backgroundLayer,
-  borderSource,
-  border,
-  effect,
-  shadow,
+  surface,
   style,
 }: PhiSplitCardLayoutProps) {
   const isAuthoringRender = isPhiLayoutAuthoringRender({ editSlotAction, renderMode });
   const resolvedRenderMode = renderMode ?? "live";
   const resolvedGap = normalizePhiCssSize(gap) ?? (PHI_SPLIT_CARD_LAYOUT_DEFAULTS.gap as number | string);
-  /*
-   * A card in a Split Card is a surface, so the corner nobody stated is the Site's to answer -- the same
-   * step a Layout box, a Table and a Tree take, carried on the root as `--phi-surface-radius`
-   * (THEME.md, "Control shape"). The Split Card's Layout defaults name no radius at all, so what stood
-   * here before answered with nothing: under a `pill` Theme the two cards sat square between capsule
-   * Buttons. An author who did state a radius keeps it -- the step answers silence, it caps nobody.
-   */
-  const resolvedSlotRadius = normalizePhiCssSize(borderRadius) ?? PHI_LAYOUT_SURFACE_RADIUS;
   const {
     style: resolvedLayoutStyle,
+    ground,
     hasExplicitLayoutBackground,
   } = resolvePhiBaseLayoutChrome({
     labelEnd,
@@ -192,12 +141,7 @@ export function PhiSplitCardLayout({
     paddingRight,
     paddingBottom,
     paddingLeft,
-    background,
-    borderSource,
-    border,
-    borderRadius,
-    effect,
-    shadow,
+    surface,
   });
   const resolvedStyle: CSSProperties = {
     position: "relative",
@@ -220,7 +164,7 @@ export function PhiSplitCardLayout({
       className="phi-layout"
       style={resolvedStyle}
     >
-      {backgroundLayer}
+      <PhiSurfaceGroundLayer ground={ground} />
       {renderSplitCardSlot(
         isAuthoringRender,
         "slot-1",
@@ -231,11 +175,7 @@ export function PhiSplitCardLayout({
         editSlotAction,
         editRenderInsertControl,
         "Slot 1",
-        leftPadding,
-        leftBackground,
-        leftBorder,
-        leftShadow,
-        resolvedSlotRadius,
+        slotPadding,
       )}
       {renderSplitCardSlot(
         isAuthoringRender,
@@ -247,11 +187,7 @@ export function PhiSplitCardLayout({
         editSlotAction,
         editRenderInsertControl,
         "Slot 2",
-        rightPadding,
-        rightBackground,
-        rightBorder,
-        rightShadow,
-        resolvedSlotRadius,
+        slotPadding,
       )}
     </div>
   );

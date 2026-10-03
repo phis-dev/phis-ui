@@ -98,7 +98,6 @@ export async function buildPhiDefaultEditorTranslationsPageTree({
           gap: PHI_SPACE.base,
           margin: 0,
           padding: PHI_SPACE.base,
-          border: false,
         },
       }),
       nodes.layout({

@@ -236,7 +236,6 @@ export function buildPhiSettingsPageShellTree({
         maxSize: { width: PHI_LAYOUT.contentMax },
         margin: 0,
         padding: 0,
-        border: false,
       },
     }),
     ...panels.map((panel, panelIndex) =>
@@ -250,7 +249,6 @@ export function buildPhiSettingsPageShellTree({
         config: {
           gap: PHI_SPACE.base,
           padding: 0,
-          border: false,
         },
       }),
     ),
@@ -271,7 +269,6 @@ export function buildPhiSettingsPageShellTree({
         config: {
           gap: PHI_SPACE.base,
           padding: PHI_SPACE.base,
-          border: false,
         },
       }),
       nodes.layout({

@@ -32,6 +32,7 @@ import {
   phiLayoutSlotClassName,
   phiLayoutSlotContentMarker,
 } from "../../../helpers/layout-authoring-markers";
+import { PhiSurfaceGroundLayer } from "../../surface/phi-surface-ground";
 
 export type PhiCollapsibleLayoutSlotMeta = {
   key: string;
@@ -168,13 +169,7 @@ function PhiCollapsibleLayoutBody({
     paddingRight,
     paddingBottom,
     paddingLeft,
-    background,
-    backgroundLayer,
-    borderSource,
-    border,
-    borderRadius,
-    effect,
-    shadow,
+    surface,
     anchor,
     editSlotAnchor,
     editSlotAction,
@@ -442,6 +437,7 @@ function PhiCollapsibleLayoutBody({
 
   const {
     style: resolvedLayoutStyle,
+    ground,
     hasExplicitLayoutBackground,
   } = resolvePhiBaseLayoutChrome({
     labelEnd,
@@ -450,12 +446,7 @@ function PhiCollapsibleLayoutBody({
     paddingRight,
     paddingBottom,
     paddingLeft,
-    background,
-    borderSource,
-    border,
-    borderRadius,
-    effect,
-    shadow,
+    surface,
   });
   const resolvedStyle: CSSProperties = {
     position: "relative",
@@ -617,7 +608,7 @@ function PhiCollapsibleLayoutBody({
       className="phi-layout"
       style={resolvedStyle}
     >
-      {backgroundLayer}
+      <PhiSurfaceGroundLayer ground={ground} />
       <div
         /*
          * The grounds inside follow the corner outside.

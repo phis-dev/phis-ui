@@ -23,17 +23,12 @@ export const PHI_CONTENT_LAYOUT_PLUGIN: PhiCmsLayoutPlugin<PhiCmsContentLayoutCo
       maxSize={config.maxSize}
       margin={config.margin}
       zIndex={config.zIndex}
-      shadow={config.shadow}
-      effect={config.effect}
+      surface={config.surface}
       padding={config.padding}
       paddingLeft={config.paddingLeft}
       paddingRight={config.paddingRight}
       paddingTop={config.paddingTop}
       paddingBottom={config.paddingBottom}
-      background={config.background}
-      borderSource={config.borderSource}
-      border={config.border}
-      borderRadius={config.borderRadius}
       labelEnd={config.labelEnd}
       editSlotAnchor={resolvePhiLayoutAnchor(config.anchor, PHI_CONTENT_LAYOUT_DEFINITION.defaultAnchor)}
     />

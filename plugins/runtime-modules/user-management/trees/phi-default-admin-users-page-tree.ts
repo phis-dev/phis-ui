@@ -202,8 +202,7 @@ export async function buildPhiDefaultAdminUsersPageTree({
           gap: PHI_SPACE.base,
           margin: 0,
           padding: PHI_SPACE.base,
-          background: PHI_COLOR.bgLayout,
-          border: false,
+          surface: { background: { base: { kind: "color", color: PHI_COLOR.bgLayout } } },
         },
       })),
       ...([

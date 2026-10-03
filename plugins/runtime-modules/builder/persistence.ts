@@ -1210,9 +1210,7 @@ export function createPhiDeveloperBuilderInitialPageDrafts(input: {
       rootNodeGeometry: null,
       rootNodeAnchor: null,
       rootNodePadding: null,
-      rootNodeBackground: null,
-      rootNodeBorder: null,
-      rootNodeShadow: null,
+      rootNodeSurface: null,
       rootNodeChildLayouts: [],
       rootNodeChildWidgets: [],
     };

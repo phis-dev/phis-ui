@@ -88,8 +88,7 @@ export async function buildPhiAvatarAreaPickerOverlayTree({
         gap: PHI_SPACE.base,
         padding: PHI_SPACE.base,
         margin: 0,
-        background: PHI_COLOR.bgLayout,
-        border: false,
+        surface: { background: { base: { kind: "color", color: PHI_COLOR.bgLayout } } },
       },
     })],
     contentWidgets: [nodes.widget({

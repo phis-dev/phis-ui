@@ -14,7 +14,7 @@ import { isPhiRecord } from "../../helpers/is-record";
  * the shell Backgrounds render without a revision until a browser check caught it.
  *
  * The walk is shape-driven rather than key-driven on purpose. Background bases sit under `background`,
- * `backgroundConfig`, `rootNodeBackground`, and slot-level keys, and a new container would otherwise
+ * `backgroundConfig`, `surface.background`, and slot-level keys, and a new container would otherwise
  * silently render a stale crop until someone remembered to extend a key list.
  */
 

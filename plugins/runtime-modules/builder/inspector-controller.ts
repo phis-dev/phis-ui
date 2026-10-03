@@ -416,30 +416,18 @@ export function runPhiDeveloperBuilderInspectorAction(
     return;
   }
 
-  if (action.kind === "patchSelectedLayoutBackground") {
-    if (!patchSelectedStructureDraftConfig(state, "background", (config) => ({
-      ...config,
-      rootNodeBackground: action.background,
-    }))) {
-      patchSelectedRootStructureConfig(state, "background", { rootNodeBackground: action.background });
-    }
-    return;
-  }
-
-  if (action.kind === "patchSelectedLayoutBorder") {
-    if (!patchSelectedStructureDraftConfig(state, "border", (config) => ({
-      ...config,
-      rootNodeBorder: action.border,
-    }))) {
-      patchSelectedRootStructureConfig(state, "border", { rootNodeBorder: action.border });
-    }
-    return;
-  }
-
-  if (action.kind === "patchSelectedLayoutShadow") {
-    const shadow = action.shadow;
-    if (!patchSelectedStructureDraftConfig(state, "shadow", (config) => ({ ...config, rootNodeShadow: shadow }))) {
-      patchSelectedRootStructureConfig(state, "shadow", { rootNodeShadow: shadow });
+  if (action.kind === "patchSelectedLayoutSurface") {
+    const surface = action.surface;
+    if (!patchSelectedStructureDraftConfig(state, "surface", (config) => {
+      const next = { ...config };
+      if (surface == null) {
+        delete next.surface;
+      } else {
+        next.surface = surface;
+      }
+      return next;
+    })) {
+      patchSelectedRootStructureConfig(state, "surface", { rootNodeSurface: surface });
     }
     return;
   }

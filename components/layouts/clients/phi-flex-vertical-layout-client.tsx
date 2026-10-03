@@ -19,6 +19,7 @@ import {
   phiLayoutSlotClassName,
   phiLayoutSlotContentMarker,
 } from "../../../helpers/layout-authoring-markers";
+import { PhiSurfaceGroundLayer } from "../../surface/phi-surface-ground";
 
 const PHI_FLEX_VERTICAL_LAYOUT_DEFAULTS = resolvePhiLayoutDefaults("verticalflex");
 
@@ -51,13 +52,7 @@ export function PhiFlexVerticalLayout({
     paddingRight,
     paddingBottom,
     paddingLeft,
-    background,
-    backgroundLayer,
-    borderSource,
-    border,
-    borderRadius,
-    effect,
-    shadow,
+    surface,
     editSlotAction,
     editRenderInsertControl,
     editSlotLabels,
@@ -72,6 +67,7 @@ export function PhiFlexVerticalLayout({
   const isEditMode = resolvedRenderMode === "editor";
   const {
     style: resolvedLayoutStyle,
+    ground,
     hasExplicitLayoutBackground,
   } = resolvePhiBaseLayoutChrome({
     labelEnd,
@@ -80,12 +76,7 @@ export function PhiFlexVerticalLayout({
     paddingRight,
     paddingBottom,
     paddingLeft,
-    background,
-    borderSource,
-    border,
-    borderRadius,
-    effect,
-    shadow,
+    surface,
   });
 
   const resolvedFlowAlignment = resolvePhiFlexAxisAlignment(editSlotAnchor, resolvedVertical);
@@ -219,7 +210,7 @@ export function PhiFlexVerticalLayout({
           ...resolvedStyle,
         }}
       >
-        {backgroundLayer}
+        <PhiSurfaceGroundLayer ground={ground} />
         {contentChildren}
         {insertButton}
       </div>

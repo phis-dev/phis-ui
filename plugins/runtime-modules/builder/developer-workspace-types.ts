@@ -14,6 +14,7 @@ import type { PhiCmsInstanceId } from "../../../types/cms-instance-id";
 import type { PhiWorkspaceCatalogState } from "../../../components/workspace/catalog-state";
 import type { PhiCmsPresetSource } from "../../../types/cms-module-descriptors";
 import type { PhiAreaRootRoute, PhiAreaMeta } from "../../../helpers/cms-area-config";
+import type { PhiSurface } from "../../../types/surface";
 
 export type PhiDeveloperBuilderArea = PhiBuilderAreaKey;
 export type PhiDeveloperBuilderMode = "editor" | "preview";
@@ -41,9 +42,7 @@ export type PhiDeveloperBuilderRegionDraft = PhiCmsGeometryWidgetConfig & {
   rootNodeGeometry?: PhiCmsGeometryWidgetConfig | null;
   rootNodeAnchor?: PhiAnchorWidgetPlacement | null;
   rootNodePadding?: PhiCmsPaddingWidgetConfig | null;
-  rootNodeBackground?: PhiCmsBackgroundWidgetConfig | null;
-  rootNodeBorder?: PhiCmsBorderWidgetConfig | null;
-  rootNodeShadow?: PhiShadow | null;
+  rootNodeSurface?: PhiSurface | null;
   rootNodeChildLayouts?: PhiCmsLayoutRenderNode[];
   rootNodeChildWidgets?: PhiCmsContentWidgetNode[];
 };
@@ -51,8 +50,8 @@ export type PhiDeveloperBuilderRegionDraft = PhiCmsGeometryWidgetConfig & {
 /**
  * The Inspector's draft for one node inside a Region, a Layout or the root.
  *
- * Its background is `rootNodeBackground`; the Region's own `background` belongs to the Region draft
- * and means nothing here, which is why it is left out rather than filled with a stand-in.
+ * Its look is `rootNodeSurface`; the Region's own `background` belongs to the Region draft and means
+ * nothing here, which is why it is left out rather than filled with a stand-in.
  */
 export type PhiDeveloperBuilderStructureNodeDraft = Omit<PhiDeveloperBuilderRegionDraft, "background">;
 

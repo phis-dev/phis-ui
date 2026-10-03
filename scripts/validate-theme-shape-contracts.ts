@@ -1,4 +1,6 @@
 import assert from "node:assert/strict";
+import { PHI_LAYOUT_SURFACE_RADIUS } from "../components/layouts/phi-layout-contract";
+import { resolvePhiBaseLayoutChrome } from "../components/layouts/phi-layout-view-model";
 import { readFile } from "node:fs/promises";
 
 import {
@@ -277,49 +279,37 @@ assert.ok(
 /*
  * And it must reach the box as four corners, never as the shorthand. A Widget states a single corner as
  * a longhand, and React refuses a shorthand standing beside a longhand it may have to drop on the next
- * render -- which is what writing `borderRadius` on every Layout produced.
+ * render -- which is what writing `borderRadius` on every Layout produced. Asked of the Layout chrome
+ * itself, the one place every Layout resolves its Surface.
  */
-for (const corner of [
-  "borderTopLeftRadius",
-  "borderTopRightRadius",
-  "borderBottomRightRadius",
-  "borderBottomLeftRadius",
-]) {
+{
+  const { style } = resolvePhiBaseLayoutChrome({ surface: { borderSource: "theme" } });
+  for (const corner of [
+    "borderTopLeftRadius",
+    "borderTopRightRadius",
+    "borderBottomRightRadius",
+    "borderBottomLeftRadius",
+  ] as const) {
+    assert.equal(
+      style[corner],
+      PHI_LAYOUT_SURFACE_RADIUS,
+      `A Layout's ${corner} must carry the step, so no shorthand stands beside a Widget's own corner.`,
+    );
+  }
+  assert.equal(style.borderRadius, undefined, "A Layout never states its corner as the shorthand.");
+  /*
+   * A Split Card is one card split in two, so its corner is its Surface's and nothing of its own: under a
+   * `pill` Theme it rounds with the Buttons beside it, through the same chrome.
+   */
+  const splitCardSource = await readFile(
+    new URL("../components/layouts/clients/phi-split-card-layout-client.tsx", import.meta.url),
+    "utf8",
+  );
   assert.ok(
-    layoutContractSource.includes(`${corner}: PHI_LAYOUT_SURFACE_RADIUS`),
-    `A Layout's ${corner} must carry the step, so no shorthand stands beside a Widget's own corner.`,
+    splitCardSource.includes("resolvePhiBaseLayoutChrome(") && !/borderRadius/u.test(splitCardSource),
+    "A Split Card takes its corner from the Layout chrome and states none of its own.",
   );
 }
-/*
- * A Split Card draws two more surfaces than its own box -- one card per slot -- and its Layout defaults
- * name no radius at all, so the cards stood square under a `pill` Theme while every Button beside them
- * was a capsule. They answer the same question with the same constant, which is why it is exported.
- */
-assert.ok(
-  layoutContractSource.includes("export const PHI_LAYOUT_SURFACE_RADIUS"),
-  "The step a Layout takes must be exported; the Split Card's two cards read the same one.",
-);
-const splitCardSource = await readFile(
-  new URL("../components/layouts/clients/phi-split-card-layout-client.tsx", import.meta.url),
-  "utf8",
-);
-assert.ok(
-  splitCardSource.includes("normalizePhiCssSize(borderRadius) ?? PHI_LAYOUT_SURFACE_RADIUS"),
-  "A Split Card's cards must take the surface step wherever the author configured no radius.",
-);
-assert.ok(
-  splitCardSource.includes("borderRadius: hasExplicitCardChrome ? slotBorderRadius : 0"),
-  "A card's corner must ride on the border style's fallback, which is what writes the four longhands.",
-);
-assert.equal(
-  splitCardSource.match(/borderRadius: hasExplicitCardChrome/gu)?.length,
-  1,
-  "Once, on that fallback: a second one is the shorthand back on the box beside those longhands.",
-);
-assert.ok(
-  /overflow: hasExplicitCardChrome \? "hidden" : undefined/u.test(splitCardSource),
-  "A card clips what stands in it, or the corner it just took means nothing.",
-);
 
 /**
  * Cascader's own stylesheet contains nothing but the dropdown panel and its columns, so shaping its

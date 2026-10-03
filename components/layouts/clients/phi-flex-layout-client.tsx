@@ -19,6 +19,7 @@ import {
   phiLayoutSlotClassName,
   phiLayoutSlotContentMarker,
 } from "../../../helpers/layout-authoring-markers";
+import { PhiSurfaceGroundLayer } from "../../surface/phi-surface-ground";
 
 const PHI_FLEX_LAYOUT_DEFAULTS = resolvePhiLayoutDefaults("flex");
 
@@ -63,13 +64,7 @@ export function PhiFlexLayout({
     paddingRight,
     paddingBottom,
     paddingLeft,
-    background,
-    backgroundLayer,
-    borderSource,
-    border,
-    borderRadius,
-    effect,
-    shadow,
+    surface,
     editSlotAction,
     editRenderInsertControl,
     editSlotLabels,
@@ -83,6 +78,7 @@ export function PhiFlexLayout({
   const isEditMode = resolvedRenderMode === "editor";
   const {
     style: resolvedLayoutStyle,
+    ground,
     hasExplicitLayoutBackground,
   } = resolvePhiBaseLayoutChrome({
     labelEnd,
@@ -91,12 +87,7 @@ export function PhiFlexLayout({
     paddingRight,
     paddingBottom,
     paddingLeft,
-    background,
-    borderSource,
-    border,
-    borderRadius,
-    effect,
-    shadow,
+    surface,
   });
 
   const resolvedSeparatorSpan = normalizePhiCssSize(separatorSpan) ?? "75%";
@@ -338,7 +329,7 @@ export function PhiFlexLayout({
         ...resolvedStyle,
       }}
     >
-      {backgroundLayer}
+      <PhiSurfaceGroundLayer ground={ground} />
       {renderedContentChildren}
       {insertButton}
     </div>

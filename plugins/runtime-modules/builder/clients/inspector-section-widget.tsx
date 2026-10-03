@@ -45,13 +45,10 @@ import { PhiDeveloperBuilderLayoutInspectorWidgetClient } from "./layout-inspect
 import { PhiDeveloperBuilderWidgetInspectorWidgetClient } from "./widget-inspector";
 import type { PhiInspectorWidgetReferenceOption } from "./inspector-config-field";
 import type { PhiRenderableBlockAnchor } from "../../../../types";
-import { readPhiShadow } from "../../../../types/layout-style";
 import type { PhiCmsContentWidgetNode, PhiCmsLayoutRenderNode } from "../../../../types/cms";
 import type {
-  PhiCmsBorderWidgetConfig,
   PhiCmsPaddingWidgetConfig,
 } from "../../../../types/cms-config";
-import type { PhiCmsBackgroundWidgetConfig } from "../../../../components/widgets/config/background";
 import type { PhiCmsGeometryWidgetConfig } from "../../../../components/widgets/config/geometry";
 import { mergePhiCmsConfigValues } from "../../../../types/cms-config";
 import { normalizePhiPaddingWidgetConfig } from "../../../../types/cms-config";
@@ -140,9 +137,7 @@ function resolveDraftFromRootConfig(
     | "rootNodeAnchor"
     | "rootNodeGeometry"
     | "rootNodePadding"
-    | "rootNodeBackground"
-    | "rootNodeBorder"
-    | "rootNodeShadow"
+    | "rootNodeSurface"
   >,
 ): PhiDeveloperBuilderStructureNodeDraft {
   const rootNodeDefaults = resolvePhiBuilderRootNodeDefaultsFromConfig(parsedConfig);
@@ -159,19 +154,7 @@ function resolveDraftFromRootConfig(
       rootNodeDefaults.rootNodePadding,
       known.rootNodePadding ?? normalizePhiPaddingWidgetConfig(parsedConfig),
     ),
-    rootNodeBackground:
-      known.rootNodeBackground ??
-      (typeof parsedConfig.background === "object" && parsedConfig.background != null
-        ? (parsedConfig.background as PhiCmsBackgroundWidgetConfig)
-        : rootNodeDefaults.rootNodeBackground),
-    rootNodeBorder:
-      known.rootNodeBorder ??
-      (typeof parsedConfig.border === "object" && parsedConfig.border != null
-        ? (parsedConfig.border as PhiCmsBorderWidgetConfig)
-        : rootNodeDefaults.rootNodeBorder),
-    rootNodeShadow:
-      known.rootNodeShadow ??
-      readPhiShadow(parsedConfig.rootNodeShadow) ?? null,
+    rootNodeSurface: known.rootNodeSurface ?? rootNodeDefaults.rootNodeSurface,
   };
 }
 
@@ -225,9 +208,7 @@ function resolveDraftFromRootNodeDraft(
       resolvePhiAnchorPlacement(parsedRootConfig.anchor as PhiRenderableBlockAnchor | null | undefined) ??
       null,
     rootNodePadding: draft.rootNodePadding,
-    rootNodeBackground: draft.rootNodeBackground,
-    rootNodeBorder: draft.rootNodeBorder,
-    rootNodeShadow: draft.rootNodeShadow,
+    rootNodeSurface: draft.rootNodeSurface,
   });
 }
 
@@ -407,7 +388,7 @@ export function PhiBuilderLayoutInspectorSectionWidgetClient({
   iconPickerLabels,
 }: PhiBuilderInspectorSectionWidgetClientProps) {
   const state = usePhiBuilderInspectorSectionState(signalRoutes);
-  return <PhiDeveloperBuilderLayoutInspectorWidgetClient section={section} builderMode={state.builderMode} selectedStructureNodeKind={state.nodeKind} selectedStructureNodeTitle={state.selectedStructureNodeTitle} selectedStructurePlugin={state.selectedStructurePlugin?.kind !== "widget" ? state.selectedStructurePlugin : null} selectedStructureDefaultConfig={resolvePhiBuilderPluginDefaultConfig(state.selectedStructurePlugin) ?? null} currentDraft={state.selectedStructureDraft} currentShadow={state.selectedStructureDraft?.rootNodeShadow ?? null} signalRouteScope={state.selectedSignalRouteScope} selectedLayoutAnchor={state.selectedLayoutAnchor} onLayoutAnchorChange={(selectedLayoutAnchor) => state.emitInspectorControllerAction({ kind: "patchSelectedLayoutAnchor", selectedLayoutAnchor })} onPaddingChange={(padding) => state.emitInspectorControllerAction({ kind: "patchSelectedLayoutPadding", padding })} onBackgroundChange={(background) => state.emitInspectorControllerAction({ kind: "patchSelectedLayoutBackground", background })} onBorderChange={(border) => state.emitInspectorControllerAction({ kind: "patchSelectedLayoutBorder", border })} onShadowChange={(shadow) => state.emitInspectorControllerAction({ kind: "patchSelectedLayoutShadow", shadow })} onConfigChange={(key, value) => state.emitInspectorControllerAction({ kind: "patchSelectedLayoutConfig", key, value: value ?? undefined })} borderLabels={borderLabels} paddingLabels={paddingLabels} backgroundLabels={backgroundLabels} signalsLabels={signalsLabels} colorPickerLabels={colorPickerLabels} iconPickerLabels={iconPickerLabels} dataProviderDescriptors={state.activeDataProviderDescriptors} calendarAdapterDescriptors={state.activeCalendarAdapterDescriptors} videoProviderDescriptors={state.activeVideoProviderDescriptors} renderMediaPicker={state.renderBackgroundMediaPicker} />;
+  return <PhiDeveloperBuilderLayoutInspectorWidgetClient section={section} builderMode={state.builderMode} selectedStructureNodeKind={state.nodeKind} selectedStructureNodeTitle={state.selectedStructureNodeTitle} selectedStructurePlugin={state.selectedStructurePlugin?.kind !== "widget" ? state.selectedStructurePlugin : null} selectedStructureDefaultConfig={resolvePhiBuilderPluginDefaultConfig(state.selectedStructurePlugin) ?? null} currentDraft={state.selectedStructureDraft} signalRouteScope={state.selectedSignalRouteScope} selectedLayoutAnchor={state.selectedLayoutAnchor} onLayoutAnchorChange={(selectedLayoutAnchor) => state.emitInspectorControllerAction({ kind: "patchSelectedLayoutAnchor", selectedLayoutAnchor })} onPaddingChange={(padding) => state.emitInspectorControllerAction({ kind: "patchSelectedLayoutPadding", padding })} onSurfaceChange={(surface) => state.emitInspectorControllerAction({ kind: "patchSelectedLayoutSurface", surface })} onConfigChange={(key, value) => state.emitInspectorControllerAction({ kind: "patchSelectedLayoutConfig", key, value: value ?? undefined })} borderLabels={borderLabels} paddingLabels={paddingLabels} backgroundLabels={backgroundLabels} signalsLabels={signalsLabels} colorPickerLabels={colorPickerLabels} iconPickerLabels={iconPickerLabels} dataProviderDescriptors={state.activeDataProviderDescriptors} calendarAdapterDescriptors={state.activeCalendarAdapterDescriptors} videoProviderDescriptors={state.activeVideoProviderDescriptors} renderMediaPicker={state.renderBackgroundMediaPicker} />;
 }
 
 export function PhiBuilderWidgetInspectorSectionWidgetClient({

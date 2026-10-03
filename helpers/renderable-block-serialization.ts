@@ -25,6 +25,7 @@ import type {
 } from "../types";
 import { isPhiLayoutEffectId, readPhiShadow } from "../types/layout-style";
 import { readPhiCmsInstanceId } from "../types/cms-instance-id";
+import { readPhiSurface } from "../types/surface";
 import {
   PHI_VIEWER_ACCESS_ANYONE,
   readPhiViewerAccessPolicy,
@@ -484,6 +485,7 @@ function normalizeRenderableBlockBase(value: unknown): PhiRenderableBlockBase {
     opacity: normalizeRenderableBlockOpacity(value.opacity) ?? PHI_RENDERABLE_BLOCK_DEFAULT_OPACITY,
     effect: isPhiLayoutEffectId(value.effect) ? value.effect : undefined,
     shadow: readPhiShadow(value.shadow),
+    surface: readPhiSurface(value.surface) ?? undefined,
     className: typeof value.className === "string" ? value.className : undefined,
     size: normalizeRenderableBlockSize(value.size),
     minSize: normalizeRenderableBlockSize(value.minSize),
@@ -734,6 +736,9 @@ export function stripRenderableBlockDefaults(
   }
   if (normalized.shadow !== undefined) {
     next.shadow = normalized.shadow;
+  }
+  if (normalized.surface !== undefined) {
+    next.surface = normalized.surface;
   }
   if (normalized.className) {
     next.className = normalized.className;

@@ -15,13 +15,14 @@ import {
   resolvePhiLayoutDefaults,
 } from "../helpers/cms-layout-defaults";
 import {
+  PHI_LAYOUT_SURFACE_RADIUS,
   resolvePhiLayoutAnchor,
-  resolvePhiLayoutStyle,
   resolvePhiPaddingStyle,
   type PhiLayoutKind,
 } from "../components/layouts/phi-layout-contract";
 import { resolvePhiCmsBorderSource } from "../types/cms-border-source";
 import { resolvePhiSourcedBorderStyle } from "../helpers/border-widget-style";
+import { resolvePhiSurfaceStyle } from "../helpers/surface-style";
 import { PhiCmsRegionStatic } from "../components/regions/phi-cms-region-static";
 import { resolvePhiBuilderPreviewRegionConfig } from "../plugins/runtime-modules/builder/render-root-node-preview.server";
 import { parsePhiCmsContentLayoutConfig, parsePhiCmsGridLayoutConfig } from "../types/cms-config";
@@ -57,11 +58,7 @@ const chromeKeys = [
   "paddingRight",
   "paddingBottom",
   "paddingLeft",
-  "background",
-  "border",
-  "borderRadius",
-  "shadow",
-  "effect",
+  "surface",
 ] as const;
 
 for (const entry of PHI_CMS_LAYOUT_REGISTRY) {
@@ -355,12 +352,22 @@ assert.equal(
  * switching away from it has to show the shape at once rather than keeping the radii of a line nobody
  * draws any more.
  */
-const customCornerStyle = resolvePhiLayoutStyle({ borderSource: "custom", border: "1px solid red", borderRadius: 30 });
-assert.equal(customCornerStyle.borderRadius, "30px", "A custom outline keeps the corner it configured.");
+const configuredCorner = { borderWidth: 1, borderStyle: "solid" as const, borderColor: "red", borderTopLeftRadius: 30 };
+const layoutCorner = { cornerFallback: PHI_LAYOUT_SURFACE_RADIUS };
 assert.equal(
-  resolvePhiLayoutStyle({ borderSource: "theme", border: "1px solid red", borderRadius: 30 }).borderRadius,
+  resolvePhiSurfaceStyle({ borderSource: "custom", border: configuredCorner }, layoutCorner).style.borderTopLeftRadius,
+  30,
+  "A custom outline keeps the corner it configured.",
+);
+assert.equal(
+  resolvePhiSurfaceStyle({ borderSource: "theme", border: configuredCorner }, layoutCorner).style.borderTopLeftRadius,
+  PHI_LAYOUT_SURFACE_RADIUS,
+  "Under `theme` the corner comes from the shape, so no configured radius may survive.",
+);
+assert.equal(
+  resolvePhiSurfaceStyle({ borderSource: "theme" }, layoutCorner).style.borderRadius,
   undefined,
-  "Under `theme` the corner comes from the shape, so no configured radius may survive as a shorthand.",
+  "A Surface states its corner as longhands only, so a configured longhand never meets a shorthand.",
 );
 assert.equal(
   resolvePhiSourcedBorderStyle("none", { borderWidth: 2, borderTopLeftRadius: 30 }).border,

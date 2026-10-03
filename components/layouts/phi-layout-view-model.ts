@@ -2,7 +2,8 @@ import type { CSSProperties, ReactNode } from "react";
 import { PHI_FORM_GRID_TRACKS } from "../../types/form-descriptor";
 
 import {
-  resolvePhiLayoutStyle,
+  PHI_LAYOUT_SURFACE_RADIUS,
+  resolvePhiPaddingStyle,
   type PhiBaseLayoutSlotStates,
   type PhiBaseLayoutSlotState,
   type PhiLayoutKind,
@@ -13,12 +14,7 @@ import type {
   PhiRenderableBlockRuntime,
   PhiRenderableBlockVisibility,
 } from "../../types";
-import {
-  combinePhiBoxShadows,
-  composePhiLayoutEffectStyle,
-  resolvePhiShadow,
-  resolvePhiLayoutEffectStyle,
-} from "../../helpers/layout-style";
+import { resolvePhiSurfaceStyle, type PhiSurfaceGround } from "../../helpers/surface-style";
 
 export type PhiBaseLayoutProps = PhiLayoutProps & {
   blockId?: string | number | null;
@@ -44,6 +40,8 @@ export type PhiBaseLayoutProps = PhiLayoutProps & {
   /** Shared Layout field: the grid line the label column inside this Layout ends at. */
   labelEnd?: number;
   editFrameBackground?: CSSProperties["background"];
+  /** Drawn under the slots and over the Surface: an authoring guide, never part of the Layout's look. */
+  underlay?: ReactNode;
   style?: CSSProperties;
 };
 
@@ -75,12 +73,7 @@ export function resolvePhiBaseLayoutChrome({
   paddingRight,
   paddingBottom,
   paddingLeft,
-  background,
-  borderSource,
-  border,
-  borderRadius,
-  effect,
-  shadow,
+  surface,
   labelEnd,
 }: Pick<
   PhiBaseLayoutProps,
@@ -90,32 +83,21 @@ export function resolvePhiBaseLayoutChrome({
   | "paddingRight"
   | "paddingBottom"
   | "paddingLeft"
-  | "background"
-  | "borderSource"
-  | "border"
-  | "borderRadius"
-  | "effect"
-  | "shadow"
->) {
-  const layoutStyle = resolvePhiLayoutStyle({
-    padding,
-    paddingTop,
-    paddingRight,
-    paddingBottom,
-    paddingLeft,
-    background,
-    borderSource,
-    border,
-    borderRadius,
-  });
-  const effectStyle = resolvePhiLayoutEffectStyle({
-    effect,
-    background: layoutStyle.background,
-  });
-  const resolvedBoxShadow = combinePhiBoxShadows(effectStyle?.boxShadow, resolvePhiShadow(shadow));
+  | "surface"
+>): {
+  style: CSSProperties;
+  /** The layer the paint lives on when the box cannot carry it; render it as the box's first child. */
+  ground: PhiSurfaceGround | null;
+  hasExplicitLayoutBackground: boolean;
+} {
+  /*
+   * A Layout is a surface, so a corner nobody stated is the Site's to answer -- the same step a Table and
+   * a Tree take. A Layout without a Surface states no corner: there is no box there to round.
+   */
+  const resolvedSurface = resolvePhiSurfaceStyle(surface, { cornerFallback: PHI_LAYOUT_SURFACE_RADIUS });
   const style: CSSProperties = {
-    ...composePhiLayoutEffectStyle(layoutStyle, effectStyle),
-    ...(resolvedBoxShadow == null ? {} : { boxShadow: resolvedBoxShadow }),
+    ...resolvedSurface.style,
+    ...resolvePhiPaddingStyle({ padding, paddingTop, paddingRight, paddingBottom, paddingLeft }),
     /*
      * The label column, written the two ways it is read: as the grid line a descriptor form places its
      * labels on, and as the share of the width a labelled Control needs, which knows nothing of the
@@ -133,10 +115,9 @@ export function resolvePhiBaseLayoutChrome({
       "--phi-labeled-control-width": "100%",
     } as CSSProperties),
   };
-  const hasExplicitLayoutBackground =
-    style.background != null ||
-    style.backgroundColor != null ||
-    style.backgroundImage != null;
-
-  return { style, hasExplicitLayoutBackground };
+  return {
+    style,
+    ground: resolvedSurface.ground,
+    hasExplicitLayoutBackground: resolvedSurface.paintsGround,
+  };
 }

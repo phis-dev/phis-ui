@@ -40,12 +40,9 @@ import type {
 } from "../../../../types/cms-plugins";
 import type { PhiCalendarAdapterDescriptor } from "../../../../types/calendar";
 import type { PhiVideoProviderDescriptor } from "../../../../types/video";
-import { readPhiShadow, type PhiShadow } from "../../../../types/layout-style";
-import {
-  expandPhiBorderRadiusConfig,
-  mergePhiBorderWidgetConfig,
-  normalizePhiPaddingWidgetConfig,
-} from "../../../../types/cms-config";
+import { readPhiShadow } from "../../../../types/layout-style";
+import type { PhiSurface } from "../../../../types/surface";
+import { normalizePhiPaddingWidgetConfig } from "../../../../types/cms-config";
 import {
   type PhiDeveloperBuilderMode,
   type PhiDeveloperBuilderNodeKind,
@@ -107,14 +104,12 @@ type PhiDeveloperBuilderLayoutInspectorWidgetClientProps = {
   selectedStructureDefaultConfig?: Record<string, unknown> | null;
   selectedStructurePlugin?: PhiBuilderContainerMeta | null;
   currentDraft?: PhiDeveloperBuilderStructureNodeDraft | null;
-  currentShadow?: PhiShadow | null;
   signalRouteScope?: PhiSignalRoute["scope"];
   selectedLayoutAnchor?: PhiAnchorWidgetPlacement | null;
   onLayoutAnchorChange?: (next: PhiAnchorWidgetPlacement) => void;
   onPaddingChange?: (next: PhiCmsPaddingWidgetConfig | null) => void;
-  onBackgroundChange?: (next: PhiCmsBackgroundWidgetConfig) => void;
-  onBorderChange?: (next: PhiCmsBorderWidgetConfig) => void;
-  onShadowChange?: (next: PhiShadow) => void;
+  /** The whole next Surface; each section changes its own part and hands the rest on unchanged. */
+  onSurfaceChange?: (next: PhiSurface) => void;
   onConfigChange?: (key: string, value: unknown) => void;
   paddingLabels?: PhiPaddingWidgetLabels;
   backgroundLabels?: PhiBackgroundWidgetLabels;
@@ -135,14 +130,11 @@ export function PhiDeveloperBuilderLayoutInspectorWidgetClient({
   selectedStructureDefaultConfig = null,
   selectedStructurePlugin = null,
   currentDraft = null,
-  currentShadow = null,
   signalRouteScope = "layout",
   selectedLayoutAnchor = "center",
   onLayoutAnchorChange,
   onPaddingChange,
-  onBackgroundChange,
-  onBorderChange,
-  onShadowChange,
+  onSurfaceChange,
   onConfigChange,
   paddingLabels,
   backgroundLabels,
@@ -159,30 +151,21 @@ export function PhiDeveloperBuilderLayoutInspectorWidgetClient({
   const isTargetKind = selectedStructureNodeKind === "layout";
   const resolvedLayoutAnchor = currentDraft?.rootNodeAnchor ?? selectedLayoutAnchor;
   const resolvedLayoutPadding = currentDraft?.rootNodePadding ?? null;
-  const resolvedLayoutBackground = currentDraft?.rootNodeBackground ?? null;
-  const resolvedLayoutShadow = currentShadow;
+  const currentSurface: PhiSurface = currentDraft?.rootNodeSurface ?? {};
+  const patchSurface = (patch: Partial<PhiSurface>) => onSurfaceChange?.({ ...currentSurface, ...patch });
   const currentDraftRecord = currentDraft as Record<string, unknown> | null;
   const layoutDefaultConfigRecord = selectedStructureDefaultConfig;
   const currentLayoutConfigRecord = {
     ...(layoutDefaultConfigRecord ?? {}),
     ...(currentDraftRecord ?? {}),
   };
-  const resolvedLayoutBorder = mergePhiBorderWidgetConfig(
-    expandPhiBorderRadiusConfig(
-      currentDraftRecord?.borderRadius ?? layoutDefaultConfigRecord?.borderRadius,
-    ),
-    currentDraft?.rootNodeBorder,
-  );
   const resolvedLayoutPaddingDefaults = normalizePhiPaddingWidgetConfig(layoutDefaultConfigRecord);
   /*
    * Where this Layout's outline comes from. Asked of the same resolver the drawing asks, so a Layout
    * written before the field reads the same on both sides -- a configured line means `custom`, and the
    * absence of one means `none` rather than "unanswered".
    */
-  const layoutBorderSource = resolvePhiCmsBorderSource(
-    currentLayoutConfigRecord.borderSource as PhiCmsBorderSource | undefined,
-    currentDraft?.rootNodeBorder ?? currentLayoutConfigRecord.border,
-  );
+  const layoutBorderSource = resolvePhiCmsBorderSource(currentSurface.borderSource, currentSurface.border);
   const declaredFields = selectedStructurePlugin?.fields ?? [];
   const settingsFields = declaredFields.filter(
     (field) => !isPhiCmsChromeConfigField(field) && isPhiInspectorConfigFieldVisible(field, currentLayoutConfigRecord),
@@ -549,8 +532,8 @@ export function PhiDeveloperBuilderLayoutInspectorWidgetClient({
                           <PhiBackgroundControl
                             mode="control"
                             disabled={isPreviewMode}
-                            value={resolvedLayoutBackground}
-                            onChange={(background) => onBackgroundChange?.(background)}
+                            value={currentSurface.background ?? null}
+                            onChange={(background) => patchSurface({ background })}
                             labels={backgroundLabels}
                             colorPickerLabels={colorPickerLabels}
                             colorPickerPlacement="left"
@@ -582,14 +565,14 @@ export function PhiDeveloperBuilderLayoutInspectorWidgetClient({
                             }))}
                             block
                             disabled={isPreviewMode}
-                            onChange={(source) => onConfigChange?.("borderSource", source)}
+                            onChange={(borderSource) => patchSurface({ borderSource })}
                           />
                           {layoutBorderSource === "custom" ? (
                             <PhiBorderControl
                               mode="control"
                               disabled={isPreviewMode}
-                              value={resolvedLayoutBorder}
-                              onChange={(border) => onBorderChange?.(border)}
+                              value={currentSurface.border ?? null}
+                              onChange={(border) => patchSurface({ border })}
                               labels={borderLabels}
                               colorPickerLabels={colorPickerLabels}
                               colorPickerPlacement="left"
@@ -606,8 +589,8 @@ export function PhiDeveloperBuilderLayoutInspectorWidgetClient({
                           <PhiShadowControl
                             mode="control"
                             disabled={isPreviewMode}
-                            value={resolvedLayoutShadow}
-                            onChange={(shadow) => onShadowChange?.(shadow)}
+                            value={currentSurface.shadow ?? null}
+                            onChange={(shadow) => patchSurface({ shadow })}
                           />
                         </div>
                       ),

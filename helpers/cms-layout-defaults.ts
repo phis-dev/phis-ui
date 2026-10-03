@@ -1,4 +1,4 @@
-import { PHI_COLOR, PHI_MARGIN, PHI_SHADOW, PHI_SPACE } from "../theme/antd-css-var-contract";
+import { PHI_COLOR, PHI_MARGIN, PHI_SPACE } from "../theme/antd-css-var-contract";
 import type { PhiLayoutKind } from "../components/layouts/phi-layout-contract";
 import { PHI_RENDERABLE_BLOCK_DEFAULT_ANCHOR } from "./renderable-block-defaults";
 import { isPhiRecord } from "./is-record";
@@ -51,8 +51,6 @@ const PHI_FLEX_LAYOUT_OVERLAY_ACTIONS_PRESET = {
     paddingBottom: PHI_SPACE.xs,
     paddingLeft: PHI_SPACE.base,
     width: "100%",
-    background: "transparent",
-    border: "none",
 } as const;
 
 export const PHI_FLEX_VERTICAL_LAYOUT_DEFAULTS: PhiLayoutDefaults = {
@@ -70,14 +68,12 @@ const PHI_FLEX_VERTICAL_LAYOUT_PANEL_PRESET = {
 const PHI_FLEX_VERTICAL_LAYOUT_PAGE_BASE_PRESET = {
     gap: PHI_SPACE.base,
     padding: PHI_SPACE.base,
-    width: "100%",
     /*
-     * Transparent, so whatever the theme paints behind the page -- a colour, an image, the frosted
+     * No Surface, so whatever the theme paints behind the page -- a colour, an image, the frosted
      * Chrome pane -- reaches the content region instead of stopping at a grey plate. A page that
      * wants its own ground paints it on a Layout node inside a slot.
      */
-    background: "transparent",
-    border: false,
+    width: "100%",
 } as const;
 
 export const PHI_GRID_LAYOUT_DEFAULTS: PhiLayoutDefaults = {
@@ -180,40 +176,28 @@ export const PHI_SPLIT_CARD_LAYOUT_DEFAULTS: PhiLayoutDefaults = {
     anchor: PHI_SPLIT_CARD_LAYOUT_DEFAULT_ANCHOR,
     gap: 0,
 };
+/*
+ * One card, split in two: the Layout's own Surface is the card, so the inset belongs to each half and the
+ * box itself has none.
+ */
 const PHI_SPLIT_CARD_LAYOUT_PANEL_PRESET = {
     anchor: PHI_SPLIT_CARD_LAYOUT_DEFAULT_ANCHOR,
     gap: PHI_SPACE.base,
-    padding: "1.3125rem",
-    leftPadding: PHI_SPACE.base,
-    rightPadding: PHI_SPACE.base,
-    leftBackground: {
-      base: {
-        kind: "color",
-        color: PHI_COLOR.bgContainer,
+    slotPadding: PHI_SPACE.base,
+    surface: {
+      background: {
+        base: { kind: "color", color: PHI_COLOR.bgContainer },
+        overlay: null,
+        filter: null,
       },
-      overlay: null,
-      filter: null,
-    },
-    rightBackground: {
-      base: {
-        kind: "color",
-        color: PHI_COLOR.bgContainer,
+      borderSource: "custom",
+      border: {
+        borderWidth: 1,
+        borderStyle: "solid",
+        borderColor: PHI_COLOR.borderSecondary,
       },
-      overlay: null,
-      filter: null,
+      shadow: "soft",
     },
-    leftBorder: {
-      borderWidth: 1,
-      borderStyle: "solid",
-      borderColor: PHI_COLOR.borderSecondary,
-    },
-    rightBorder: {
-      borderWidth: 1,
-      borderStyle: "solid",
-      borderColor: PHI_COLOR.borderSecondary,
-    },
-    leftShadow: PHI_SHADOW.secondary,
-    rightShadow: PHI_SHADOW.secondary,
 } as const;
 
 export const PHI_THREE_COLUMN_LAYOUT_DEFAULTS: PhiLayoutDefaults = {

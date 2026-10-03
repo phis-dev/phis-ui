@@ -12,7 +12,6 @@ import {
 } from "../helpers/motion";
 import { readPhiLengthValue, type PhiCssLength } from "./length";
 import type { PhiResponsiveValue } from "./responsive";
-import { readPhiCmsBorderWidgetConfig } from "./cms-border-config";
 
 import {
   isPhiAnchorWidgetPlacement,
@@ -26,27 +25,20 @@ import {
   readRenderableBlockSize,
   readString,
 } from "../components/widgets/config/parser-primitives";
-import {
-  normalizePhiBackgroundWidgetConfig,
-  type PhiCmsBackgroundWidgetConfig,
-} from "../components/widgets/config/background";
 import type {
   PhiRenderableBlockBase,
   PhiRenderableBlockAnchor,
   PhiRenderableBlockResponsiveSize,
 } from "./renderable-block";
 import {
-  isPhiLayoutEffectId,
   readPhiShadow,
   type PhiShadow,
-  type PhiLayoutEffectId,
 } from "./layout-style";
 import type { PhiBaseLayoutSlotStates } from "../components/layouts/phi-layout-contract";
 import { applyPhiLayoutDefaults } from "../helpers/cms-layout-defaults";
 import { resolvePhiLayoutDefaults } from "../helpers/cms-layout-defaults";
 import { normalizeRenderableBlockAnchor } from "../helpers/renderable-block-anchor";
 import { isPhiRecord } from "../helpers/is-record";
-import { readPhiCmsBorderSource, type PhiCmsBorderSource } from "./cms-border-source";
 
 export type PhiCmsPluginConfigBase = Record<string, unknown>;
 
@@ -72,22 +64,6 @@ export type PhiCmsLayerBase = PhiCmsRenderableBlockConfigBase & {
   paddingRight?: CSSProperties["paddingRight"];
   paddingBottom?: CSSProperties["paddingBottom"];
   paddingLeft?: CSSProperties["paddingLeft"];
-  background?: CSSProperties["background"];
-  /**
-   * Where a Layout's outline comes from, which is a different question from what it looks like.
-   *
-   * `none` draws none, `theme` draws the Site's own line -- its border colour and line width, with the
-   * corner the shape already gives every surface -- and `custom` draws what `border` says. Absent means
-   * `custom` where a border was configured and `none` everywhere else, which is how a Site written
-   * before this field reads correctly without being rewritten.
-   *
-   * The point of stating it is that "no border" and "nobody has said yet" stop being the same absence,
-   * and that a Layout with its own frame -- a Collapsible outlining its panels -- no longer has to be a
-   * second way of asking the same thing.
-   */
-  borderSource?: PhiCmsBorderSource;
-  border?: CSSProperties["border"];
-  borderRadius?: CSSProperties["borderRadius"];
 };
 
 // Directional layouts extend the shared layer chrome with flow-specific spacing.
@@ -409,15 +385,8 @@ export type PhiCmsThreeColumnLayoutConfig = PhiCmsDirectionalLayoutConfigBase & 
 
 export type PhiCmsSplitCardLayoutConfig = PhiCmsLayerBase & {
   gap?: CSSProperties["gap"];
-  effect?: PhiLayoutEffectId;
-  leftPadding?: CSSProperties["padding"];
-  rightPadding?: CSSProperties["padding"];
-  leftBackground?: PhiCmsBackgroundWidgetConfig;
-  rightBackground?: PhiCmsBackgroundWidgetConfig;
-  leftBorder?: PhiCmsBorderWidgetConfig;
-  rightBorder?: PhiCmsBorderWidgetConfig;
-  leftShadow?: PhiShadow;
-  rightShadow?: PhiShadow;
+  /** The inset of each half, the same for both; the card itself is the Layout's Surface. */
+  slotPadding?: CSSProperties["padding"];
 };
 
 export type PhiCmsMasonryLayoutConfig = PhiCmsLayerBase & {
@@ -536,10 +505,6 @@ export function parsePhiCmsContentLayoutConfig(
       paddingRight: readCssSize(config.paddingRight),
       paddingTop: readCssSize(config.paddingTop),
       paddingBottom: readCssSize(config.paddingBottom),
-      background: readString(config.background),
-      borderSource: readPhiCmsBorderSource(config.borderSource),
-      border: readString(config.border),
-      borderRadius: readCssSize(config.borderRadius),
       /*
        * Handed on as the block anchor, like every other Layout's. This one used to be folded into a
        * placement name here, and the renderer then asked the name for its `horizontal` -- a string has
@@ -566,10 +531,6 @@ export function parsePhiCmsFlexLayoutConfig(config: Record<string, unknown>): Ph
       paddingRight: readCssSize(config.paddingRight),
       paddingTop: readCssSize(config.paddingTop),
       paddingBottom: readCssSize(config.paddingBottom),
-      background: readString(config.background),
-      borderSource: readPhiCmsBorderSource(config.borderSource),
-      border: readString(config.border),
-      borderRadius: readCssSize(config.borderRadius),
       gap: readCssSize(config.gap),
       verticalSeparators: readBoolean(config.verticalSeparators) ?? false,
       separatorBeforeFirst: readBoolean(config.separatorBeforeFirst) ?? false,
@@ -602,10 +563,6 @@ export function parsePhiCmsFlexVerticalLayoutConfig(
       paddingRight: readCssSize(config.paddingRight),
       paddingTop: readCssSize(config.paddingTop),
       paddingBottom: readCssSize(config.paddingBottom),
-      background: readString(config.background),
-      borderSource: readPhiCmsBorderSource(config.borderSource),
-      border: readString(config.border),
-      borderRadius: readCssSize(config.borderRadius),
       gap: readCssSize(config.gap),
       anchor: readRenderableBlockAnchorOrPlacement(config.anchor),
     },
@@ -622,10 +579,6 @@ export function parsePhiCmsMasonryLayoutConfig(
       ...readRenderableBlockConfig(config),
       labelEnd: readPhiLayoutLabelEnd(config.labelEnd),
       padding: readCssSize(config.padding),
-      background: readString(config.background),
-      borderSource: readPhiCmsBorderSource(config.borderSource),
-      border: readString(config.border),
-      borderRadius: readCssSize(config.borderRadius),
       columns: readNumber(config.columns),
       minColumnWidth: readPhiLengthValue(config.minColumnWidth) ?? undefined,
       gap: readCssSize(config.gap),
@@ -647,10 +600,6 @@ export function parsePhiCmsStackLayoutConfig(
       ...readRenderableBlockConfig(config),
       labelEnd: readPhiLayoutLabelEnd(config.labelEnd),
       padding: readCssSize(config.padding),
-      background: readString(config.background),
-      borderSource: readPhiCmsBorderSource(config.borderSource),
-      border: readString(config.border),
-      borderRadius: readCssSize(config.borderRadius),
       defaultActiveSlotKey: readString(config.defaultActiveSlotKey),
       slotDisplay: config.slotDisplay === "stacked" ? "stacked" : "single",
       mountPolicy: readPhiCmsMountPolicy(config.mountPolicy, "remount"),
@@ -722,10 +671,6 @@ export function parsePhiCmsCarouselLayoutConfig(
       ...readRenderableBlockConfig(config),
       labelEnd: readPhiLayoutLabelEnd(config.labelEnd),
       padding: readCssSize(config.padding),
-      background: readString(config.background),
-      borderSource: readPhiCmsBorderSource(config.borderSource),
-      border: readString(config.border),
-      borderRadius: readCssSize(config.borderRadius),
       defaultActiveSlotKey: readString(config.defaultActiveSlotKey),
       ...(visibleSlots === undefined ? {} : { visibleSlots }),
       ...(windowAnchor === undefined ? {} : { windowAnchor }),
@@ -790,10 +735,6 @@ export function parsePhiCmsCollapsibleLayoutConfig(
       paddingRight: readCssSize(config.paddingRight),
       paddingTop: readCssSize(config.paddingTop),
       paddingBottom: readCssSize(config.paddingBottom),
-      background: readString(config.background),
-      borderSource: readPhiCmsBorderSource(config.borderSource),
-      border: readString(config.border),
-      borderRadius: readCssSize(config.borderRadius),
       anchor: readRenderableBlockAnchorOrPlacement(config.anchor),
       panelMinHeight: readPhiLengthValue(config.panelMinHeight) ?? undefined,
       accordion: readBoolean(config.accordion),
@@ -821,10 +762,6 @@ export function parsePhiCmsGridLayoutConfig(
       ...readRenderableBlockConfig(config),
       labelEnd: readPhiLayoutLabelEnd(config.labelEnd),
       padding: readCssSize(config.padding),
-      background: readString(config.background),
-      borderSource: readPhiCmsBorderSource(config.borderSource),
-      border: readString(config.border),
-      borderRadius: readCssSize(config.borderRadius),
       gap: readCssSize(config.gap),
       anchor: readRenderableBlockAnchorOrPlacement(config.anchor),
       columnGap: readCssSize(config.columnGap),
@@ -862,10 +799,6 @@ export function parsePhiCmsThreeColumnLayoutConfig(
       paddingRight: readCssSize(config.paddingRight),
       paddingTop: readCssSize(config.paddingTop),
       paddingBottom: readCssSize(config.paddingBottom),
-      background: readString(config.background),
-      borderSource: readPhiCmsBorderSource(config.borderSource),
-      border: readString(config.border),
-      borderRadius: readCssSize(config.borderRadius),
       balancedSides: readBoolean(config.balancedSides) ?? true,
       gap: readCssSize(config.gap),
       anchor: readRenderableBlockAnchorOrPlacement(config.anchor),
@@ -896,20 +829,7 @@ export function parsePhiCmsSplitCardLayoutConfig(
       padding: readCssSize(config.padding),
       paddingTop: readCssSize(config.paddingTop),
       paddingBottom: readCssSize(config.paddingBottom),
-      background: readString(config.background),
-      borderSource: readPhiCmsBorderSource(config.borderSource),
-      border: readString(config.border),
-      borderRadius: readCssSize(config.borderRadius),
-      effect: isPhiLayoutEffectId(config.effect) ? config.effect : undefined,
-      shadow: readPhiShadow(config.shadow),
-      leftPadding: readCssSize(config.leftPadding),
-      rightPadding: readCssSize(config.rightPadding),
-      leftBackground: normalizePhiBackgroundWidgetConfig(config.leftBackground),
-      rightBackground: normalizePhiBackgroundWidgetConfig(config.rightBackground),
-      leftBorder: readPhiCmsBorderWidgetConfig(config.leftBorder),
-      rightBorder: readPhiCmsBorderWidgetConfig(config.rightBorder),
-      leftShadow: readPhiShadow(config.leftShadow),
-      rightShadow: readPhiShadow(config.rightShadow),
+      slotPadding: readCssSize(config.slotPadding),
     },
     resolvePhiLayoutDefaults("split"),
   );

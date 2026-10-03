@@ -22,17 +22,12 @@ export const PHI_MASONRY_LAYOUT_PLUGIN: PhiCmsLayoutPlugin<PhiCmsMasonryLayoutCo
       minColumnWidth={config.minColumnWidth}
       gap={config.gap}
       zIndex={config.zIndex}
-      shadow={config.shadow}
-      effect={config.effect}
+      surface={config.surface}
       size={config.size}
       minSize={config.minSize}
       maxSize={config.maxSize}
       collapsedSizeHint={config.collapsedSizeHint}
       padding={config.padding}
-      background={config.background}
-      borderSource={config.borderSource}
-      border={config.border}
-      borderRadius={config.borderRadius}
       labelEnd={config.labelEnd}
     />
   )),
