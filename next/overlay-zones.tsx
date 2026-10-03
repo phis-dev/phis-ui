@@ -12,12 +12,8 @@ import { hasPhiCmsRevisionPreview } from "../server-helpers/cms-root";
 import { materializePhiOverlayRuntimeControllerSettings } from "../components/runtime/runtime-controller-materialization";
 import { PhiRuntimeControllerServerHost } from "../components/runtime/runtime-controller-server-host";
 import { resolvePhiRuntimeControllerDefinitions } from "../plugins/runtime-modules/resolver";
-import {
-  capturePhiRequestRuntimeStore,
-  restorePhiRequestRuntimeStore,
-  runInPhiRequestScope,
-  type PhiCapturedRequestRuntime,
-} from "../server-helpers/request-runtime";
+import { capturePhiRequestRuntimeStore, runInPhiRequestScope } from "../server-helpers/request-runtime";
+import { PhiRestoredRequestRuntime } from "../components/runtime/phi-restored-request-runtime";
 import type { PhiCmsLoadedOverlayZones, PhiCmsOverlayZonesRequest } from "../types/cms-overlay-zones";
 import type { PhiSiteAreaBridgeLoader } from "../gateway/site-area-bridges";
 
@@ -28,18 +24,6 @@ function isOverlayZonesRequest(value: unknown): value is PhiCmsOverlayZonesReque
     typeof root === "string" && root.length > 0 &&
     (path === null || (Array.isArray(path) && path.every((segment) => typeof segment === "string"))) &&
     typeof overlayId === "string" && overlayId.length > 0;
-}
-
-/** Puts the request runtime the Action resolved back in place for the render of what it returned. */
-function PhiRestoredRequestRuntime({
-  captured,
-  children,
-}: {
-  captured: PhiCapturedRequestRuntime;
-  children: React.ReactNode;
-}) {
-  restorePhiRequestRuntimeStore(captured);
-  return children;
 }
 
 /**

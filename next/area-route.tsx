@@ -10,6 +10,10 @@ import { readPhiSiteRuntimeConfigSync } from "../helpers/site-runtime";
 import { PhiCmsErrorPage } from "../components/cms/phi-cms-error-page";
 import type { PhiCmsErrorPageProps } from "../components/cms/phi-cms-error-page";
 import {
+  PhiCmsDeferredErrorPage,
+  type PhiCmsRootErrorPageLoader,
+} from "../components/cms/phi-cms-deferred-error-page";
+import {
   PhiCmsAreaBoundary,
   PhiCmsAreaShell,
   type PhiCmsAreaChrome,
@@ -218,31 +222,23 @@ export type PhiNextRootErrorArea = {
  */
 export function createPhiNextRootErrorPage(
   code: PhiCmsErrorPageProps["code"],
-  area: PhiNextRootErrorArea,
+  loadErrorPage: PhiCmsRootErrorPageLoader,
 ) {
-  const { loadBridge, Boundary } = area;
-
-  return async function PhiNextRootErrorPage() {
-    const cmsBridge = await loadBridge();
-
-    /*
-     * A refusal draws no Shell at all, and asks for none later.
-     *
-     * Next renders every refusal boundary of the matched segments into the response whether one is
-     * shown or not, so a Shell resolved here was paid for by every successful Page as well -- measured
-     * at three resolutions and roughly 56 KB per request, for output almost no visitor sees. Fetching
-     * it from the client afterwards moved that cost rather than removing it, and bought a page that
-     * changed shape after it had appeared.
-     *
-     * The Client boundary is still mounted, because the error page renders a page tree like any other
-     * and cannot resolve its Runtime Module Clients without one. What the visitor loses is the
-     * navigation, which is why the 404 result carries a link to the Area root.
-     */
-    return (
-      <Boundary>
-        <PhiCmsErrorPage code={code} cmsBridge={cmsBridge} area="public" />
-      </Boundary>
-    );
+  /*
+   * A refusal draws no Shell at all, and resolves its page only once it is shown.
+   *
+   * Next renders every refusal boundary of the matched segments into the response whether one is
+   * shown or not. A Shell resolved here was paid for by every successful Page -- measured at three
+   * resolutions and roughly 56 KB per request -- and so was the error page itself: Area and Page for
+   * 404, 403 and 401, six of the sixteen server calls of a plain page view (measured 03.10.2026). The
+   * route now carries a code and the Site's Action; the page is rendered when a refusal is on screen
+   * (`PhiCmsDeferredErrorPage`, `renderPhiCmsRootErrorPage`), and the plain copy stands until then.
+   *
+   * What the visitor loses is the navigation, which is why the 404 result carries a link to the Area
+   * root, and the moment before the Site's page arrives -- on a page that answers almost no request.
+   */
+  return function PhiNextRootErrorPage() {
+    return <PhiCmsDeferredErrorPage code={code} load={loadErrorPage} />;
   };
 }
 

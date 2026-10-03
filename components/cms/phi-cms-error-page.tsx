@@ -18,6 +18,7 @@ import {
 } from "./phi-cms-runtime-registry";
 import { PhiRuntimeModuleDataProviderHost } from "../runtime/runtime-module-data-provider-host";
 import { isPhiStaticCmsSiteBridge } from "../../server-helpers/static-render";
+import { PhiCmsErrorFallback } from "./phi-cms-error-fallback";
 
 export type PhiCmsErrorPageProps = {
   code: PhiCmsErrorCode;
@@ -34,43 +35,6 @@ export type PhiCmsErrorPageProps = {
   locale?: string;
 };
 
-const ERROR_COPY: Record<PhiCmsErrorCode, { title: string; text: string }> = {
-  401: {
-    title: "Not authorized",
-    text: "You are not authorized to view this page.",
-  },
-  403: {
-    title: "Not authorized",
-    text: "You are not allowed to view this page.",
-  },
-  404: {
-    title: "Not found",
-    text: "This page could not be found.",
-  },
-};
-
-function PhiCmsHardFallbackErrorPage({ code }: { code: PhiCmsErrorCode }) {
-  const copy = ERROR_COPY[code];
-
-  return (
-    <main
-      style={{
-        alignItems: "center",
-        boxSizing: "border-box",
-        display: "flex",
-        flexDirection: "column",
-        justifyContent: "center",
-        minHeight: "40vh",
-        padding: "2rem",
-        textAlign: "center",
-      }}
-    >
-      <h1 style={{ fontSize: "2rem", lineHeight: 1.2, margin: 0 }}>{copy.title}</h1>
-      <p style={{ fontSize: "1rem", lineHeight: 1.5, margin: "0.75rem 0 0" }}>{copy.text}</p>
-    </main>
-  );
-}
-
 export function isPhiCmsErrorCode(value: string | number | null | undefined): value is PhiCmsErrorCode {
   return parsePhiCmsErrorCode(value) != null;
 }
@@ -85,7 +49,7 @@ export async function PhiCmsErrorPage({ code, cmsBridge, area, locale: staticLoc
   const siteKey = bridgeRuntime?.siteKey?.trim() ?? "";
 
   if (!siteKey) {
-    return <PhiCmsHardFallbackErrorPage code={code} />;
+    return <PhiCmsErrorFallback code={code} />;
   }
 
   let resolvedRequest: Awaited<ReturnType<typeof loadPhiResolvedCmsRequest>> | null = null;
@@ -118,11 +82,11 @@ export async function PhiCmsErrorPage({ code, cmsBridge, area, locale: staticLoc
       "refusal",
     );
   } catch {
-    return <PhiCmsHardFallbackErrorPage code={code} />;
+    return <PhiCmsErrorFallback code={code} />;
   }
 
   if (!resolvedRequest) {
-    return <PhiCmsHardFallbackErrorPage code={code} />;
+    return <PhiCmsErrorFallback code={code} />;
   }
 
   const runtimeModuleScope = await resolvePhiCmsAreaRuntimeModuleScope({

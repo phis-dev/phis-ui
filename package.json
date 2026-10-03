@@ -155,6 +155,12 @@
       "types": "./next/overlay-zones.tsx",
       "default": "./next/overlay-zones.tsx"
     },
+    "./next/root-error-page": {
+      "import": "./next/root-error-page.tsx",
+      "require": "./next/root-error-page.tsx",
+      "types": "./next/root-error-page.tsx",
+      "default": "./next/root-error-page.tsx"
+    },
     "./next/route-handlers": {
       "import": "./next/route-handlers.ts",
       "require": "./next/route-handlers.ts",
@@ -631,6 +637,7 @@
       "./next/areas/public",
       "./next/overlay-zones",
       "./next/proxy-runtime",
+      "./next/root-error-page",
       "./next/root-route",
       "./next/route-handlers",
       "./next/seo-routes",
