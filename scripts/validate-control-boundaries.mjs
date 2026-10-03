@@ -119,14 +119,17 @@ const applicationFeedbackHostPath = "components/runtime/application-feedback-hos
  */
 const controlledPrimitives = new Map([
   ["Alert", "PhiAlertControl"],
+  ["Anchor", "PhiAnchorNavControl"],
   ["AutoComplete", "PhiSelectControl"],
   ["Avatar", "PhiAvatarControl"],
+  ["Breadcrumb", "PhiBreadcrumbControl"],
   ["Button", "PhiButtonControl"],
   ["Calendar", "PhiCalendarControl"],
   ["Card", "PhiCardControl"],
   ["Cascader", "PhiCascaderControl"],
   ["Checkbox", "PhiCheckboxControl"],
-  ["Collapse", "PhiAccordionControl"],
+  // The general one; `PhiAccordionControl` is the narrow case beside it, one section open at a time.
+  ["Collapse", "PhiCollapseControl"],
   ["ColorPicker", "PhiColorControl"],
   ["DatePicker", "PhiDatePickerControl"],
   ["Descriptions", "PhiDescriptionListControl"],
@@ -136,6 +139,7 @@ const controlledPrimitives = new Map([
   ["Empty", "PhiEmptyControl"],
   ["Flex", "PhiFlexControl"],
   ["Form", "PhiFormControl"],
+  ["Image", "PhiLightboxImageControl"],
   ["Input", "PhiTextControl"],
   ["InputNumber", "PhiNumberControl"],
   /*
@@ -156,6 +160,7 @@ const controlledPrimitives = new Map([
   ["QRCode", "PhiQrCodeControl"],
   ["Radio", "PhiRadioGroupControl"],
   ["Rate", "PhiRateControl"],
+  ["Result", "PhiResultControl"],
   ["Segmented", "PhiSegmentedControl"],
   ["Select", "PhiSelectControl"],
   ["Slider", "PhiSliderControl"],
@@ -188,37 +193,22 @@ const controlDirectory = "components/controls/";
  */
 const primitiveAdapterOwners = new Map([
   ["components/calendar/gregory-calendar-adapter-client.tsx", new Set(["Calendar", "DatePicker"])],
-  /*
-   * The CollapsibleLayout is the adapter for the general collapsible region, and a Control between it
-   * and the primitive would only hand a Layout its own props back. `PhiAccordionControl` is the narrow
-   * case beside it -- one section open at a time, nothing to decide -- and everything else goes there.
-   */
-  ["components/layouts/clients/phi-collapsible-layout-client.tsx", new Set(["Collapse"])],
 ]);
 
 /*
  * Primitives that belong to exactly one file, with no Control standing in for them.
  *
- * The third answer to "how is a primitive closed", beside a Control and a deletion. For these the thing
- * around the primitive is already the contract: the markdown table of contents *is* an `Anchor`, the
- * image Widget's whole job is choosing between `next/image` and Ant Design's preview, and a Control
- * could not take that decision without taking the Widget with it. Wrapping them would produce a file
- * with one caller that adds nothing, which is the outcome TODOS.md calls "a contract without
- * consumers".
+ * The third answer to "how is a primitive closed", beside a Control and a deletion: naming where it
+ * lives. Swapping Ant Design out means visiting these files, and they are named here instead of being
+ * found by grep. Checked both ways: nobody else may import one, and an owner that stops importing it
+ * fails too, so a stale entry cannot sit here looking like a decision.
  *
- * So the primitive is closed by naming where it lives rather than by writing a wrapper. That is worth
- * as much as a Control for the reason the whole effort exists: swapping Ant Design out means visiting
- * these files, and they are named here instead of being found by grep.
- *
- * Unlike `primitiveAdapterOwners` above, which exempts a file from a rule that applies elsewhere, this
- * *is* the rule for these primitives -- and it is checked both ways: nobody else may import one, and an
- * owner that stops importing it fails too, so a stale entry cannot sit here looking like a decision.
+ * It used to hold Anchor, Breadcrumb, Image and Result as well, on the argument that a Control with one
+ * caller adds nothing. The rule won over the argument (03.10.2026): every primitive a Widget draws now
+ * goes through a Control, so a Widget never speaks Ant Design and the swap is a change in this folder
+ * alone. What is left is the one primitive that belongs to an adapter rather than to a Widget.
  */
 const soleOwnerPrimitives = new Map([
-  ["Anchor", "plugins/runtime-modules/core/widgets/markdown-toc/client.tsx"],
-  ["Breadcrumb", "plugins/runtime-modules/core/widgets/breadcrumb/client.tsx"],
-  ["Image", "plugins/runtime-modules/core/widgets/image/client.tsx"],
-  ["Result", "components/widgets/shared/result-body-client.tsx"],
   /*
    * `Badge` is the odd one: its other site is `phi-button-control.tsx`, where the badge is part of the
    * button's own contract. That file is under `components/controls/` and exempt by directory, so the
@@ -253,10 +243,6 @@ const antdImportAllowance = new Map([
   ["components/calendar/gregory-calendar-adapter-client.tsx", {
     types: ["CalendarProps"],
     reason: "The calendar adapter owns Calendar and DatePicker; the prop type comes with them.",
-  }],
-  ["components/layouts/clients/phi-collapsible-layout-client.tsx", {
-    types: ["CollapseProps"],
-    reason: "The CollapsibleLayout is the Collapse adapter; `items` and `styles` are that primitive's own shapes.",
   }],
   ["components/root/phi-config-provider.tsx", {
     values: ["ConfigProvider", "theme"],

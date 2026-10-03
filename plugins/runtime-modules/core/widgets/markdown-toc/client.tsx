@@ -1,13 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { Anchor } from "antd";
 
 import type { PhiClientBlockBaseProps, PhiNoLabels } from "../../../../../types";
 import { usePhiSignalListener } from "../../../../../components/runtime/runtime-signal-bus";
 import { usePhiConfig } from "../../../../../components/root/phi-config-provider";
 import type { PhiMarkdownTocHeading } from "../../../../../types/markdown";
 import type { PhiCmsMarkdownTocWidgetConfig } from "./config";
+import { PhiAnchorNavControl } from "../../../../../components/controls/phi-anchor-nav-control";
 import { PhiEmptyControl } from "../../../../../components/controls/phi-empty-control";
 import { PhiTypographyControl } from "../../../../../components/controls/phi-typography-control";
 
@@ -105,8 +105,7 @@ export function PhiMarkdownTocWidgetClient({ config }: PhiMarkdownTocWidgetClien
           </PhiTypographyControl>
         ) : null}
         {headings.length > 0 ? (
-          <Anchor
-            affix={false}
+          <PhiAnchorNavControl
             offsetTop={config?.offsetTop ?? 0}
             items={buildAnchorItems(headings, token.paddingSM)}
             style={{ width: "100%" }}

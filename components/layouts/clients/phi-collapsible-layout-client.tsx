@@ -1,7 +1,5 @@
 "use client";
 
-import { Collapse } from "antd";
-import type { CollapseProps } from "antd";
 import type { CSSProperties, MouseEvent, ReactNode } from "react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
@@ -14,6 +12,10 @@ import { usePhiSignalDispatcher, usePhiSignalListener } from "../../runtime/runt
 import { usePhiSignalIdentity } from "../../runtime/runtime-signal-identity";
 import type { PhiAnchorWidgetPlacement } from "../../controls/phi-anchor-control-contract";
 import { PhiLayoutAnchoredOverlay } from "./phi-layout-anchored-overlay";
+import {
+  PhiCollapseControl,
+  type PhiCollapseControlSection,
+} from "../../controls/phi-collapse-control";
 import {
   PhiBaseLayoutSlotStateProvider,
   usePhiBaseLayoutSlotStates,
@@ -91,14 +93,6 @@ function resolveDefaultOpenSlotKeys(
   return validSlotKeys[0] ? [validSlotKeys[0]] : [];
 }
 
-function toCollapseActiveKey(keys: readonly string[], accordion: boolean) {
-  return accordion ? keys[0] ?? undefined : [...keys];
-}
-
-function readCollapseKeys(value: string | string[]) {
-  return Array.isArray(value) ? value : value ? [value] : [];
-}
-
 /**
  * The header's own class, put there by this adapter rather than read off Ant Design.
  *
@@ -107,7 +101,7 @@ function readCollapseKeys(value: string | string[]) {
  * told from the other. The test used to be `.ant-collapse-header`, which is a name the library owns: no
  * import names it, no validator sees it, and swapping Ant Design out would have left the check compiling
  * and silently matching nothing, so every header click in the Builder would have selected the block
- * instead of folding the slot. The primitive takes a class for that element, so the name is ours and the
+ * instead of folding the slot. The Control takes a class for that element, so the name is ours and the
  * element is the same one.
  */
 const PHI_COLLAPSIBLE_HEADER_CLASS = "phi-collapsible-header";
@@ -126,27 +120,6 @@ function shouldStopCollapsibleEditorScaffoldEvent(event: MouseEvent<HTMLElement>
     target.closest(`.${PHI_COLLAPSIBLE_HEADER_CLASS}`) ||
     target.closest("[data-phi-collapsible-title-control='true']"),
   );
-}
-
-function resolveCollapsibleStyles(
-  titleStrong: boolean,
-  headerPadding: CSSProperties["padding"] | undefined,
-  innerPadding: CSSProperties["padding"] | undefined,
-): CollapseProps["styles"] {
-  /*
-   * The grounds are square, because they are not an edge.
-   *
-   * A header and a panel are the filling of the Layout box, not a box of their own, and the box has
-   * already decided its corner -- from the shape or from what the author configured. Rounding them a
-   * second time means the same number in two places, which is the arrangement that drifts apart the
-   * moment one of the two gains a source the other does not have. Squared, the wrapper's clip is the
-   * only corner there is, and it is the box's.
-   */
-  return {
-    header: { ...(headerPadding == null ? {} : { padding: headerPadding }), borderRadius: 0 },
-    title: titleStrong ? { fontWeight: 600 } : undefined,
-    body: { ...(innerPadding == null ? {} : { padding: innerPadding }), borderRadius: 0 },
-  };
 }
 
 export function PhiCollapsibleLayout(props: PhiCollapsibleLayoutProps) {
@@ -493,7 +466,7 @@ function PhiCollapsibleLayoutBody({
   };
 
   const items = renderedSlotIndices
-    .map((slotIndex): NonNullable<CollapseProps["items"]>[number] | null => {
+    .map((slotIndex): PhiCollapseControlSection | null => {
       const slotKey = validSlotKeys[slotIndex];
       if (!slotKey) {
         return null;
@@ -593,9 +566,8 @@ function PhiCollapsibleLayoutBody({
       return {
         key: slotKey,
         label,
-        collapsible: effectiveCollapsible,
         forceRender: isEditMode || isHiddenSlot,
-        ...(isHiddenSlot ? { style: { display: "none" } } : {}),
+        hidden: isHiddenSlot,
         children: childContent
           ? childContent
           : editSlotAction && editRenderInsertControl
@@ -634,7 +606,7 @@ function PhiCollapsibleLayoutBody({
             : null,
       };
     })
-    .filter((item): item is NonNullable<CollapseProps["items"]>[number] => item !== null);
+    .filter((item): item is PhiCollapseControlSection => item !== null);
 
   return (
     <div
@@ -657,7 +629,7 @@ function PhiCollapsibleLayoutBody({
          *
          * `border-radius: inherit` takes the box's corner literally, whatever it resolved to, and the
          * clip makes every ground inside end there -- which works because the grounds are square
-         * (`resolveCollapsibleStyles`): a clip only ever takes away, so a ground that rounded itself
+         * (PhiCollapseControl squares them): a clip only ever takes away, so a ground that rounded itself
          * more tightly than the box would keep its own corner and the clip would never reach it.
          *
          * The clip earns its place twice over: it shapes the corner, and it keeps the content of a
@@ -683,32 +655,19 @@ function PhiCollapsibleLayoutBody({
             : undefined
         }
       >
-        <Collapse
+        <PhiCollapseControl
           accordion={accordion}
-          activeKey={toCollapseActiveKey(
-            resolvedOpenSlotKeys.filter((key) => !hiddenSlotKeys.has(key)),
-            accordion,
-          )}
-          /*
-           * Never its own outline: the Layout box draws it, out of `borderSource`, for every Layout the
-           * same way. What stays here is `ghost`, which decides the inside -- and Ant Design's borderless
-           * variant keeps the first header's top corners on `collapsePanelBorderRadius`, the same surface
-           * step the box takes, so inside and outside meet on one number.
-           */
-          bordered={false}
+          openKeys={resolvedOpenSlotKeys.filter((key) => !hiddenSlotKeys.has(key))}
           ghost={ghost}
           collapsible={effectiveCollapsible}
-          destroyOnHidden={false}
           expandIconPlacement={expandIconPlacement}
           size={collapseSize}
-          classNames={{ header: PHI_COLLAPSIBLE_HEADER_CLASS }}
-          items={items}
-          onChange={(nextKeys) => setOpenKeys(readCollapseKeys(nextKeys))}
-          styles={resolveCollapsibleStyles(
-            titleStrong,
-            resolvedHeaderPadding,
-            resolvedInnerPadding,
-          )}
+          headerClassName={PHI_COLLAPSIBLE_HEADER_CLASS}
+          sections={items}
+          onOpenKeysChange={setOpenKeys}
+          titleStrong={titleStrong}
+          headerPadding={resolvedHeaderPadding}
+          bodyPadding={resolvedInnerPadding}
           style={{ width: "100%" }}
         />
       </div>

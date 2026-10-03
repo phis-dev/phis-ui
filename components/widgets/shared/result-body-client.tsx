@@ -1,9 +1,8 @@
 "use client";
 
-import { Result } from "antd";
-
 import type { PhiResultWidgetVisualStatus } from "../../../types/result-widget";
 import { PhiButtonControl } from "../../controls/phi-button-control";
+import { PhiResultControl } from "../../controls/phi-result-control";
 
 export type PhiResultWidgetBodyProps = {
   config?: { status?: PhiResultWidgetVisualStatus; homeLink?: boolean };
@@ -38,7 +37,7 @@ export function PhiResultWidgetBody({
     : (title || code || "Information");
 
   return (
-    <Result
+    <PhiResultControl
       status={config?.status ?? "info"}
       title={renderedTitle}
       subTitle={subTitle}

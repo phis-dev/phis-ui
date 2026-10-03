@@ -299,7 +299,9 @@ built. Remove an entry when it is done.
     new file is needed, just an entry naming it: `Anchor`, `Breadcrumb`, `Image`, `Result`, `Badge`.~~
     Done, as `soleOwnerPrimitives` in the validator. It is checked both ways: nobody else may import
     one, and an owner that stops importing it fails too, so a stale entry cannot sit there looking like
-    a decision.
+    a decision. **Revised 03.10.2026:** four of the five are Controls now -- `PhiAnchorNavControl`,
+    `PhiBreadcrumbControl`, `PhiLightboxImageControl`, `PhiResultControl` -- so no Widget speaks Ant
+    Design; only `Badge` stays an owner entry, with the calendar adapter it belongs to.
   - ~~**Deletion**, where the direct use should stop rather than be wrapped: the footer Widget with
     `Row`, `Col` and `Layout`, and plain `Space` in twelve files.~~ Done.
 
@@ -411,7 +413,9 @@ built. Remove an entry when it is done.
     the page rather than over it, so the quiet shadow is the ordinary one.
   - ~~`Collapse`~~ answered twice, because the two importers are two contracts rather than one.
 
-    **The CollapsibleLayout is the adapter** and keeps the primitive, named in `primitiveAdapterOwners`.
+    ~~**The CollapsibleLayout is the adapter** and keeps the primitive, named in `primitiveAdapterOwners`.~~
+    **Revised 03.10.2026:** the Layout describes sections and `PhiCollapseControl` draws them, so a
+    Layout no longer speaks Ant Design either; the reasoning below is what it replaced.
     It uses nearly the whole surface -- `accordion`, `activeKey`, `bordered`, `ghost`, `collapsible`,
     `destroyOnHidden`, `expandIconPlacement`, `size`, `items`, `onChange`, `styles` -- and a Control
     between the two would only hand a Layout its own props back.

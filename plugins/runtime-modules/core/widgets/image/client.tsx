@@ -1,6 +1,5 @@
 "use client";
 
-import { Image as AntImage } from "antd";
 import NextImage from "next/image";
 
 import type { PhiClientBlockBaseProps } from "../../../../../types";
@@ -12,6 +11,7 @@ import type { PhiImageWidgetLabels } from "../../../../../components/widgets/lab
 import { usePhiConfig } from "../../../../../components/root/phi-config-provider";
 import { resolvePhiMaskStyle } from "../../../../../components/widgets/config/mask";
 import { PhiEmptyControl } from "../../../../../components/controls/phi-empty-control";
+import { PhiLightboxImageControl } from "../../../../../components/controls/phi-lightbox-image-control";
 import { PhiFlexControl } from "../../../../../components/controls/phi-flex-control";
 import { PhiTypographyControl } from "../../../../../components/controls/phi-typography-control";
 
@@ -175,14 +175,13 @@ export function PhiImageWidget({
   if (previewMode === "lightbox") {
     return (
       <div style={wrapperStyle}>
-        <AntImage
+        <PhiLightboxImageControl
           alt={alt}
           src={renderUrl}
           title={title || undefined}
           width={typeof width === "number" ? width : undefined}
           height={typeof height === "number" ? height : undefined}
           style={imageStyle}
-          preview
         />
       </div>
     );
