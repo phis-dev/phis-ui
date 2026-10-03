@@ -428,12 +428,18 @@ const previewSource = await readFile(
 assert.match(previewSource, /applyPhiControlShapeComponentTokens\(/u);
 assert.match(
   previewSource,
-  /components: previewShapedComponents/u,
+  /<PhiThemeScopeControl[\s\S]*?components=\{previewShapedComponents\}/u,
   "The preview must render the shaped components.",
 );
+// The scope Control draws the preview's theme, so the key is built there: from the mode, every token
+// and the components the preview hands in.
+const themeScopeSource = await readFile(
+  new URL("../components/controls/phi-theme-scope-control.tsx", import.meta.url),
+  "utf8",
+);
 assert.match(
-  previewSource,
-  /key: createPhiAntdThemeCssVarKey\("builder-theme-preview", \{[\s\S]*?components: previewShapedComponents/u,
+  themeScopeSource,
+  /key: createPhiAntdThemeCssVarKey\(scope, \{ mode, token, components \}\)/u,
   "Two shapes with otherwise equal tokens must not hash to one CSS variable key.",
 );
 assert.equal(

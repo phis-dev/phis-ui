@@ -2,9 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
 
-import { ConfigProvider, theme as antdTheme } from "antd";
 import { DeleteOutlined } from "@ant-design/icons";
-import type { AliasToken } from "antd/es/theme/interface";
 import type { PhiColorPickerLabels } from "../../../../../components/widgets/label-types/color-picker";
 
 import { usePhiSignalDispatcher, usePhiSignalListener } from "../../../../../components/runtime/runtime-signal-bus";
@@ -57,10 +55,7 @@ import {
 } from "../../../../../theme/phi-theme-typography";
 import { resolvePhiThemeRuntimePayload } from "../../../../../theme/phi-theme-runtime";
 import { materializePhiThemeBrandLogo, materializePhiThemeModuleBlocks } from "../../materialize-images";
-import {
-  createPhiAntdThemeCssVarKey,
-  resolvePhiAntdAliasTokens,
-} from "../../../../../theme/phi-antd-token-resolver";
+import { resolvePhiAntdAliasTokens } from "../../../../../theme/phi-antd-token-resolver";
 import {
   buildPhiThemeStructuralTokens,
 } from "../../../../../theme/phi-theme";
@@ -153,6 +148,7 @@ import {
 } from "../../../../../theme/phi-control-shape";
 import { PhiAccordionControl } from "../../../../../components/controls/phi-accordion-control";
 import { PhiCardControl } from "../../../../../components/controls/phi-card-control";
+import { PhiThemeScopeControl } from "../../../../../components/controls/phi-theme-scope-control";
 import { PhiFlexControl } from "../../../../../components/controls/phi-flex-control";
 import { PhiTypographyControl } from "../../../../../components/controls/phi-typography-control";
 import { PhiDividerControl } from "../../../../../components/controls/phi-divider-control";
@@ -785,11 +781,6 @@ function countThemePaletteLeaves(palette: PhiThemePalette | null | undefined) {
 
 function readTokenColor(token: Record<string, unknown>, key: string, fallback: string) {
   const value = token[key];
-  return typeof value === "string" && value.trim() ? value : fallback;
-}
-
-function readComputedTokenColor(token: AliasToken, key: string, fallback: string) {
-  const value = token[key as keyof AliasToken];
   return typeof value === "string" && value.trim() ? value : fallback;
 }
 
@@ -2272,7 +2263,6 @@ export function PhiBuilderBrandThemeControlsWidgetClient({
   );
 
   const themeComposition = resolvePhiThemeComposition(state.draft, themeBlocks);
-  const algorithm = previewMode === "dark" ? antdTheme.darkAlgorithm : antdTheme.defaultAlgorithm;
   const selectedPreset = resolveThemePayloadPreset(state.draft, themePresets);
   /*
    * What the tab shows is what the Site renders: the palette block with the draft's palette on top,
@@ -2297,12 +2287,11 @@ export function PhiBuilderBrandThemeControlsWidgetClient({
     label: `${colorPickerLabels?.custom ?? "Custom"} ${index + 1}`,
     value: customPalette[key],
   }));
-  const computedToken = antdTheme.getDesignToken({
-    algorithm,
-    token: {
-      ...buildPhiEffectiveNonColorThemeTokens(state.draft),
-      ...baseColorToken,
-    },
+  // What the algorithm derives for the mode being edited: the Foundation's resolver, which is the one
+  // the preview and the live render use too.
+  const computedToken = resolvePhiAntdAliasTokens(previewMode, {
+    ...buildPhiEffectiveNonColorThemeTokens(state.draft),
+    ...baseColorToken,
   });
 
   return (
@@ -2403,7 +2392,7 @@ export function PhiBuilderBrandThemeControlsWidgetClient({
               const seedAuthored =
                 Object.prototype.hasOwnProperty.call(ownPalette.seed ?? {}, section.key) ||
                 Object.prototype.hasOwnProperty.call(ownPalette.modes?.[previewMode]?.seed ?? {}, section.key);
-              const seedDefaultValue = readComputedTokenColor(computedToken, section.key, section.fallback);
+              const seedDefaultValue = readTokenColor(computedToken, section.key, section.fallback);
               const seedValue = seedAuthored
                 ? readTokenColor(colorToken, section.key, seedDefaultValue)
                 : seedDefaultValue;
@@ -2444,7 +2433,7 @@ export function PhiBuilderBrandThemeControlsWidgetClient({
                   <PhiFlexControl wrap="wrap" style={{ minWidth: 0, columnGap: clientToken.paddingXXS, rowGap: clientToken.paddingSM }}>
                     {section.derived.map((item) => {
                       const overridden = Object.prototype.hasOwnProperty.call(ownOverrides, item.key);
-                      const fallback = readComputedTokenColor(computedToken, item.key, section.fallback);
+                      const fallback = readTokenColor(computedToken, item.key, section.fallback);
                       return (
                         <div
                           key={item.key}
@@ -3917,21 +3906,6 @@ export function PhiBuilderBrandThemePreviewWidgetClient({
     previewControlShape,
     previewEffectiveToken,
   );
-  const previewAntdTheme = {
-    inherit: false,
-    cssVar: {
-      prefix: "ant",
-      key: createPhiAntdThemeCssVarKey("builder-theme-preview", {
-        mode,
-        token: previewEffectiveToken,
-        components: previewShapedComponents,
-      }),
-    },
-    token: {
-      ...previewEffectiveToken,
-    },
-    components: previewShapedComponents,
-  };
   const previewCardBackground = readEffectiveTokenString(previewEffectiveToken, "colorBgContainer", mode === "dark" ? "#141414" : "#ffffff");
   const previewSurfaceBackground = readEffectiveTokenString(previewEffectiveToken, "colorBgLayout", mode === "dark" ? "#000000" : "#f5f5f5");
   /*
@@ -4072,7 +4046,12 @@ export function PhiBuilderBrandThemePreviewWidgetClient({
   const wireframeEnabled = readEffectiveTokenBoolean(previewEffectiveToken, "wireframe", true);
 
   return (
-    <ConfigProvider theme={previewAntdTheme}>
+    <PhiThemeScopeControl
+      scope="builder-theme-preview"
+      mode={mode}
+      token={previewEffectiveToken}
+      components={previewShapedComponents}
+    >
       {previewFontStacks.faceCss ? (
         <style href="phi-theme-preview-faces" precedence="default" dangerouslySetInnerHTML={{ __html: previewFontStacks.faceCss }} />
       ) : null}
@@ -4342,6 +4321,6 @@ export function PhiBuilderBrandThemePreviewWidgetClient({
           </PhiFlexControl>
         </PhiBrandChromePreviewShell>
       </PhiCardControl>
-    </ConfigProvider>
+    </PhiThemeScopeControl>
   );
 }

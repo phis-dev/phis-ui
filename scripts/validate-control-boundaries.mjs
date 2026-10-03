@@ -273,11 +273,6 @@ const antdImportAllowance = new Map([
       + " something. Everything else emits Core feedback, and a confirmation with nothing to anchor to"
       + " is a PhiDialogControl rather than an imperative modal.",
   }],
-  ["plugins/runtime-modules/theme/widgets/brand-controls/client.tsx", {
-    values: ["ConfigProvider", "theme"],
-    paths: ["antd/es/theme/interface"],
-    reason: "The Theme preview renders a draft Theme, so it configures Ant Design a second time on purpose.",
-  }],
   ["theme/phi-theme-tokens.ts", {
     paths: ["antd/es/theme/interface"],
     reason: "The stated token vocabulary. The one line that derives its value types is the bridge, "
