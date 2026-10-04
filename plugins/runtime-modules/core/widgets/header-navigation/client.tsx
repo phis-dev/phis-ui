@@ -101,7 +101,6 @@ export function PhiHeaderNavigationWidgetClient({
       }}
     >
       <PhiMenuControl
-        scope="header-navigation"
         mode="horizontal"
         menuTheme={menuTheme}
         selectedKeys={selectedKeys}

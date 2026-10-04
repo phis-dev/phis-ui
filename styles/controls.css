@@ -242,6 +242,55 @@ h5.phi-typography, .phi-typography h5 {
   color: var(--ant-color-error-text);
 }
 
+/* --- Menu -------------------------------------------------------------------------------------------- */
+
+/*
+ * What PhiMenuControl changes about Ant Design's Menu, as the variables the Menu reads.
+ *
+ * Every Ant Design element carries the root's variable class, which declares the Theme's values on it
+ * again -- the Menu's `ul`, a submenu's `ul` inside it, a popup in its portal and the `ul` inside that.
+ * Each of them is named here, at a specificity above that class, so the override holds on all three rather
+ * than only where it was set. The values a Widget configures arrive as `--phi-menu-*` on the Menu and
+ * on its popups.
+ */
+.phi-menu-control--inline.ant-menu.ant-menu-root,
+.phi-menu-control--inline.ant-menu-root .ant-menu.ant-menu-sub,
+.phi-menu-control--inline.phi-menu-control__popup.ant-menu,
+.phi-menu-control--inline.phi-menu-control__popup .ant-menu.ant-menu-sub {
+  --ant-menu-item-margin-block: var(--ant-margin-xxs);
+  --ant-menu-item-margin-inline: 0px;
+  --ant-menu-item-width: calc(100% - 0px);
+  --ant-menu-item-bg: transparent;
+  --ant-menu-sub-menu-item-bg: transparent;
+  --ant-menu-dark-item-bg: transparent;
+  --ant-menu-dark-sub-menu-item-bg: transparent;
+}
+
+.phi-menu-control--collapsed-width.ant-menu.ant-menu-root,
+.phi-menu-control--collapsed-width.ant-menu-root .ant-menu.ant-menu-sub,
+.phi-menu-control--collapsed-width.phi-menu-control__popup.ant-menu,
+.phi-menu-control--collapsed-width.phi-menu-control__popup .ant-menu.ant-menu-sub {
+  --ant-menu-collapsed-width: var(--phi-menu-collapsed-width);
+}
+
+.phi-menu-control--font-family.ant-menu.ant-menu-root,
+.phi-menu-control--font-family.ant-menu-root .ant-menu.ant-menu-sub,
+.phi-menu-control--font-family.phi-menu-control__popup.ant-menu,
+.phi-menu-control--font-family.phi-menu-control__popup .ant-menu.ant-menu-sub {
+  --ant-font-family: var(--phi-menu-font-family);
+}
+
+/* The Menu's tokens that Ant Design derives from the base size, derived the same way. */
+.phi-menu-control--font-size.ant-menu.ant-menu-root,
+.phi-menu-control--font-size.ant-menu-root .ant-menu.ant-menu-sub,
+.phi-menu-control--font-size.phi-menu-control__popup.ant-menu,
+.phi-menu-control--font-size.phi-menu-control__popup .ant-menu.ant-menu-sub {
+  --ant-font-size: var(--phi-menu-font-size);
+  --ant-menu-icon-size: var(--phi-menu-font-size);
+  --ant-menu-group-title-font-size: var(--phi-menu-font-size);
+  --ant-menu-icon-margin-inline-end: calc(var(--ant-control-height-sm) - var(--phi-menu-font-size));
+}
+
 /* --- Labeled control ---------------------------------------------------------------------------- */
 
 /*

@@ -1,10 +1,9 @@
 "use client";
 
 import type { CSSProperties, ReactNode } from "react";
-import { ConfigProvider, Menu } from "antd";
+import { Menu } from "antd";
 import type { ItemType } from "antd/es/menu/interface";
 
-import { createPhiAntdThemeCssVarKey } from "../../theme/phi-antd-token-resolver";
 import { usePhiConfig } from "../root/phi-config-provider";
 
 export type PhiMenuControlDivider = {
@@ -40,11 +39,6 @@ export type PhiMenuControlGroup = {
 export type PhiMenuControlItem = PhiMenuControlDivider | PhiMenuControlGroup | PhiMenuControlEntry;
 
 export type PhiMenuControlProps = {
-  /**
-   * Distinguishes the generated theme CSS variable scope between menus rendered on one page
-   * (for example the sidebar and its Builder preview), so their component tokens never collide.
-   */
-  scope: string;
   items: readonly PhiMenuControlItem[];
   mode: "inline" | "horizontal";
   /** Defaults to the active Phi theme mode. */
@@ -79,12 +73,11 @@ export function toPhiAntdMenuItems(items: readonly PhiMenuControlItem[]): ItemTy
 /**
  * The canonical navigation menu presentation (SETTINGS.md-independent; see the Control layer
  * boundary in AGENTS.md): Widgets describe navigation as `PhiMenuControlItem`s and never touch the
- * Ant Design Menu or its item interface. The theme wiring lives here once — the scoped CSS variable
- * key, the transparent item backgrounds every Phi menu surface uses, and the collapsed-sider width
- * — so menu surfaces cannot drift apart in their component tokens.
+ * Ant Design Menu or its item interface. The theme wiring lives here once — the transparent item
+ * backgrounds every stacked Phi menu uses, its collapsed width, and the type a Widget configures — so
+ * menu surfaces cannot drift apart in their component tokens.
  */
 export function PhiMenuControl({
-  scope,
   items,
   mode,
   menuTheme,
@@ -96,64 +89,63 @@ export function PhiMenuControl({
   fontSize,
   style,
 }: PhiMenuControlProps) {
-  const { mode: themeMode, token } = usePhiConfig();
+  const { mode: themeMode } = usePhiConfig();
   const resolvedMenuTheme = menuTheme ?? themeMode;
-  const localThemeToken = {
-    ...(fontFamily ? { fontFamily } : {}),
-    ...(fontSize ? { fontSize } : {}),
-  };
-  /**
-   * Only the stacked menu overrides item geometry: it fills the width of its Sider, so items carry
-   * no inline margin and paint no background of their own. A horizontal menu keeps the Ant Design
-   * defaults, whose item spacing is what separates the entries in a header bar.
+  /*
+   * What a Menu changes about Ant Design's own Menu, as classes and custom properties rather than a
+   * `ConfigProvider` of its own.
+   *
+   * A nested provider with its own tokens makes Ant Design derive the whole Theme again -- its
+   * component tokens and its variable scope are part of the derivation's cache key -- and write all of
+   * its variables out a second time: a sidebar cost a full derivation and 12 KB of HTML per request
+   * (measured 04.10.2026). The overrides are a handful of variables, so they are set as variables,
+   * by `styles/controls.css` under the classes below. The values a Widget configures travel as
+   * `--phi-menu-*` properties, on the Menu and on its popups, which Ant Design renders into a portal.
    */
-  const menuComponentTheme = mode === "inline"
-    ? {
-      ...(collapsedWidth !== undefined ? { collapsedWidth } : {}),
-      itemMarginBlock: token.marginXXS,
-      itemMarginInline: 0,
-      itemBg: "transparent",
-      subMenuItemBg: "transparent",
-      darkItemBg: "transparent",
-      darkSubMenuItemBg: "transparent",
-    }
-    : {};
-  const themeCssVarKey = createPhiAntdThemeCssVarKey(scope, {
-    mode: themeMode,
-    rootToken: token,
-    token: localThemeToken,
-    menu: menuComponentTheme,
-    menuTheme: resolvedMenuTheme,
-  });
+  const presentationVars = {
+    ...(fontFamily ? { "--phi-menu-font-family": fontFamily } : {}),
+    ...(fontSize ? { "--phi-menu-font-size": `${fontSize}px` } : {}),
+    ...(mode === "inline" && collapsedWidth !== undefined
+      ? { "--phi-menu-collapsed-width": typeof collapsedWidth === "number" ? `${collapsedWidth}px` : collapsedWidth }
+      : {}),
+  } as CSSProperties;
+  const modifiers = [
+    "phi-menu-control",
+    /*
+     * Only the stacked menu overrides item geometry: it fills the width of its Sider, so items carry
+     * no inline margin and paint no background of their own. A horizontal menu keeps the Ant Design
+     * defaults, whose item spacing is what separates the entries in a header bar.
+     */
+    mode === "inline" ? "phi-menu-control--inline" : null,
+    fontFamily ? "phi-menu-control--font-family" : null,
+    fontSize ? "phi-menu-control--font-size" : null,
+    mode === "inline" && collapsedWidth !== undefined ? "phi-menu-control--collapsed-width" : null,
+  ].filter(Boolean).join(" ");
 
   if (items.length === 0) {
     return null;
   }
 
   return (
-    <ConfigProvider
-      theme={{
-        cssVar: { prefix: "ant", key: themeCssVarKey },
-        token: localThemeToken,
-        components: { Menu: menuComponentTheme },
+    <Menu
+      className={modifiers}
+      classNames={{ popup: { root: `${modifiers} phi-menu-control__popup` } }}
+      styles={{ popup: { root: presentationVars } }}
+      mode={mode}
+      theme={resolvedMenuTheme}
+      selectedKeys={selectedKeys ? [...selectedKeys] : undefined}
+      items={toPhiAntdMenuItems(items)}
+      {...(mode === "inline" ? { inlineCollapsed: collapsed, inlineIndent } : {})}
+      style={{
+        ...presentationVars,
+        background: "transparent",
+        width: "100%",
+        minWidth: 0,
+        ...(mode === "inline"
+          ? { height: "auto", borderInlineEnd: "none" }
+          : { borderBottom: "none" }),
+        ...style,
       }}
-    >
-      <Menu
-        mode={mode}
-        theme={resolvedMenuTheme}
-        selectedKeys={selectedKeys ? [...selectedKeys] : undefined}
-        items={toPhiAntdMenuItems(items)}
-        {...(mode === "inline" ? { inlineCollapsed: collapsed, inlineIndent } : {})}
-        style={{
-          background: "transparent",
-          width: "100%",
-          minWidth: 0,
-          ...(mode === "inline"
-            ? { height: "auto", borderInlineEnd: "none" }
-            : { borderBottom: "none" }),
-          ...style,
-        }}
-      />
-    </ConfigProvider>
+    />
   );
 }

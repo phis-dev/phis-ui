@@ -711,6 +711,22 @@ const antdComponentVariableAllowance = new Map([
   ["--ant-cascader-dropdown-height", {
     reason: "Cascader's own token. The root stylesheet sizes the popup by what the component sizes itself by.",
   }],
+  ...[
+    "--ant-menu-item-margin-block",
+    "--ant-menu-item-margin-inline",
+    "--ant-menu-item-width",
+    "--ant-menu-item-bg",
+    "--ant-menu-sub-menu-item-bg",
+    "--ant-menu-dark-item-bg",
+    "--ant-menu-dark-sub-menu-item-bg",
+    "--ant-menu-collapsed-width",
+    "--ant-menu-icon-size",
+    "--ant-menu-group-title-font-size",
+    "--ant-menu-icon-margin-inline-end",
+  ].map((variable) => [variable, {
+    reason: "Menu's own token. PhiMenuControl sets what it changes as variables instead of a ConfigProvider "
+      + "of its own, which would derive the whole Theme again per request (styles/controls.css, Menu).",
+  }]),
 ]);
 
 const SPACING_SEGMENTS = new Set(["xxs", "xs", "sm", "md", "lg", "xl", "xxl"]);

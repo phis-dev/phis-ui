@@ -157,7 +157,7 @@ export function resolvePhiRootTheme({
       /*
        * Ant Design's structure is not rendered: it comes from `styles/antd-static.css`, and only the
        * custom properties a Theme decides are rendered here. Every nested provider inherits both flags --
-       * the tone scopes, the Menu's, and the Theme workspace's, which inherits nothing else.
+       * the tone scopes and the Theme workspace's, which inherits nothing else.
        *
        * Unhashed because that file is one file for development and production, and Ant Design hashes
        * its class names differently in each. The hash only ever kept two Ant Design versions on one page
@@ -167,7 +167,13 @@ export function resolvePhiRootTheme({
       zeroRuntime: true,
       cssVar: {
         prefix: "ant",
-        key: createPhiAntdThemeCssVarKey("root", { mode, token, components }),
+        /*
+         * Named after what the tokens are resolved from, not after the tokens: the same Theme record,
+         * fonts, palette block and mode always resolve to the same tokens, and the record is a fraction
+         * of their size. Hashing the resolved tokens and component tokens cost 1-2 ms per request
+         * (measured 04.10.2026).
+         */
+        key: createPhiAntdThemeCssVarKey("root", { mode, siteTheme, fonts, preset: themePreset }),
       },
       token,
       components,

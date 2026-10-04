@@ -95,7 +95,6 @@ export function PhiSidebarNavigationWidgetClient({
 
   return (
     <PhiMenuControl
-      scope="sidebar-navigation"
       mode="inline"
       menuTheme={menuTheme}
       selectedKeys={collectPhiSelectedNavKeys(pathname, items, availableLocales)}
@@ -128,7 +127,6 @@ export function PhiSidebarNavigationWidgetPreviewClient({
 
   return (
     <PhiMenuControl
-      scope="sidebar-navigation-preview"
       mode="inline"
       menuTheme={menuTheme}
       selectedKeys={collectPhiSelectedNavKeys(pathname, items, [])}
