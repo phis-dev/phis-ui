@@ -10,6 +10,7 @@ export const PHI_LOCALE_WIDGET_DEFINITION = {
   title: "Locale",
   description: "Locale switcher widget.",
   category: "navigation",
+  icon: "antd:translation-outlined",
   iconFamily: "navigation",
   fields: [],
   parseConfig: parsePhiEmptyWidgetConfig,
@@ -22,6 +23,7 @@ export const PHI_LOCALE_WIDGET_DEFINITION = {
   | "title"
   | "description"
   | "category"
+  | "icon"
   | "iconFamily"
 
   | "fields"
