@@ -195,10 +195,26 @@ export const PHI_LAYOUT_CARD_SURFACE = {
     shadow: "soft",
 } as const;
 
+/**
+ * The quietest ground the Theme has: a filling and nothing else -- no line, no depth. For a Layout that
+ * already stands on a container and only needs its content set off from it; the Form Widget's `wash`
+ * step, in Surface values. The fill is translucent, so on the page's own ground it all but disappears:
+ * a Layout standing there wants `PHI_LAYOUT_CARD_SURFACE`.
+ */
+export const PHI_LAYOUT_WASH_SURFACE = {
+    background: {
+      base: { kind: "color", color: PHI_COLOR.fillQuaternary },
+      overlay: null,
+      filter: null,
+    },
+    borderSource: "none",
+    shadow: "none",
+} as const;
+
 /*
  * Two halves on the golden ratio with a gap between them. The Split Card draws no card itself: a card is
- * what stands in a half -- a Layout wearing `PHI_LAYOUT_CARD_SURFACE` -- so each half reads as a card of
- * its own on the page's ground.
+ * what stands in a half -- a Layout wearing `PHI_LAYOUT_CARD_SURFACE`, or `PHI_LAYOUT_WASH_SURFACE` where
+ * the Split Card already stands on a container -- so each half reads as a card of its own.
  */
 const PHI_SPLIT_CARD_LAYOUT_PANEL_PRESET = {
     anchor: PHI_SPLIT_CARD_LAYOUT_DEFAULT_ANCHOR,

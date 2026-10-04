@@ -4,6 +4,7 @@ import { PHI_BACKGROUND_BLUR_FILTER } from "../components/widgets/config/backgro
 import { readPhiSurface } from "../types/surface";
 import { phiSurfaceDrawsChrome, resolvePhiSurfaceStyle } from "./surface-style";
 import { PHI_THEME_BORDER_LINE } from "./border-widget-style";
+import { PHI_LAYOUT_CARD_SURFACE, PHI_LAYOUT_WASH_SURFACE } from "./cms-layout-defaults";
 
 const picture = {
   base: { kind: "image" as const, sourceKind: "url" as const, sourceUrl: "https://example.test/ground.jpg" },
@@ -147,5 +148,19 @@ describe("a Surface in another mode", () => {
   it("gives no class for the page's own mode", () => {
     expect(resolvePhiSurfaceStyle({ shadow: "soft" }).className).toBeUndefined();
     expect(readPhiSurface({ tone: "inherit", shadow: "soft" })?.tone).toBeUndefined();
+  });
+});
+
+describe("the Layout surfaces a Preset writes", () => {
+  it("reads both as plain Surfaces", () => {
+    expect(readPhiSurface(PHI_LAYOUT_CARD_SURFACE)).not.toBeNull();
+    expect(readPhiSurface(PHI_LAYOUT_WASH_SURFACE)).not.toBeNull();
+  });
+
+  it("draws a wash as a filling with no line and no depth", () => {
+    const style = resolvePhiSurfaceStyle(readPhiSurface(PHI_LAYOUT_WASH_SURFACE)).style;
+    expect(style.backgroundColor).toBe("var(--ant-color-fill-quaternary)");
+    expect(style.border).toBe("none");
+    expect(style.boxShadow).toBe("none");
   });
 });

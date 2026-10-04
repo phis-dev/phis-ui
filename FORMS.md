@@ -431,8 +431,8 @@ the only way a Form is placed. There are no domain Form Widgets. Its config:
   Collapsible's body takes, because a filled area holding fields is a body rather than chrome -- so the
   ground does not run flush into the labels. It is for a Form that already stands on a container.
 - Absent is the fourth step and the default: no ground, no frame, no inset. A Form in a Split Card half --
-  the Login and its siblings -- is there, and the card already paints a ground behind both halves, so a
-  box would be a plate inside a plate. Absent is also the only state in which the Form's cap and the width its fields read are
+  the Login and its siblings -- is there, and the Layout in that half already paints the card's ground, so
+  a box would be a plate inside a plate. Absent is also the only state in which the Form's cap and the width its fields read are
   the same measure: every inset sits between the two, so a Form capped at `contentMax` reads 610 flush and
   568 inside a `card`, which puts it one layout mode below the cap it was given.
 - The Widget resolves the definition on the Server, loads labels and `loadInitialValues`, wraps the body

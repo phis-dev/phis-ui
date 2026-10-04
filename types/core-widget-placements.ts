@@ -251,9 +251,9 @@ export type PhiCmsFormWidgetFeedbackConfig = {
  *
  * `presentation` is the switch as well as the step: absent, or anything outside the three names, is no
  * box at all -- no ground and no inset -- which is what every Form placed before this one has and keeps.
- * That matters more than it sounds: the Login and its siblings stand in a Split Card slot that already
- * paints a ground, so a box there would be a plate inside a plate, and an inset would move the query
- * container the fields are measured in for nothing.
+ * That matters more than it sounds: the Login and its siblings stand in a Split Card half whose Layout
+ * already paints a card's ground, so a box there would be a plate inside a plate, and an inset would
+ * move the query container the fields are measured in for nothing.
  *
  * The three names are one ladder -- how far the box separates itself from what is behind it -- and each
  * step is stated once. `card` and `panel` deliberately share a ground: the inset already says how deep

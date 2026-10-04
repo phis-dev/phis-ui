@@ -51,7 +51,9 @@ is two halves on the golden ratio with a gap and a shared `slotPadding`; it may 
 both, but a card is what stands in a half. Its panel creation preset draws no Surface, and the Pages
 built on it (sign-in, registration, password reset, confirmation, contact) put a Layout wearing
 `PHI_LAYOUT_CARD_SURFACE` (`helpers/cms-layout-defaults.ts`) into each half, so they read as two cards
-on the page's ground. One Surface across a Region's full width reads as the page itself, not as a card.
+on the page's ground. Where the Split Card itself stands on a container, the halves take
+`PHI_LAYOUT_WASH_SURFACE` instead: the Theme's quietest filling, no line, no depth -- the Form Widget's
+`wash` step in Surface values. Both are plain Surface values a Preset writes; nothing stores their names. One Surface across a Region's full width reads as the page itself, not as a card.
 
 Canonical defaults are neutral: no margin, no padding, and no Surface -- so no ground, no line, no
 corner, no depth. A Layout never adds implicit inner padding around its slot content; a Region that
