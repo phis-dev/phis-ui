@@ -179,6 +179,7 @@ export const PHI_COMMAND_TOOLBAR_WIDGET_DEFINITION = {
   title: "Command Toolbar",
   description: "Reusable toolbar that emits configured command values through the runtime signal bus.",
   category: "form",
+  icon: "antd:build-outlined",
   iconFamily: "form",
   slotSizePolicy: "intrinsic",
   runtimeSignals: {
@@ -220,6 +221,7 @@ export const PHI_COMMAND_TOOLBAR_WIDGET_DEFINITION = {
   | "title"
   | "description"
   | "category"
+  | "icon"
   | "iconFamily"
   | "slotSizePolicy"
   | "runtimeSignals"

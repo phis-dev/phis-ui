@@ -148,6 +148,7 @@ export const PHI_IMAGE_WIDGET_DEFINITION = {
   title: "Image",
   description: "Flexible image renderer for local media, trusted URLs, and on-demand renditions.",
   category: "content",
+  icon: "antd:picture-outlined",
   iconFamily: "content",
   fields: [
     {
@@ -227,6 +228,7 @@ export const PHI_IMAGE_WIDGET_DEFINITION = {
   | "title"
   | "description"
   | "category"
+  | "icon"
   | "iconFamily"
   | "runtimeSignals"
   | "fields"
