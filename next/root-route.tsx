@@ -12,6 +12,7 @@ import { loadPhiThemeBlockCatalog } from "../plugins/runtime-modules/theme/block
 import { collectPhiThemeDescriptorContributions } from "../plugins/runtime-modules/theme-descriptors";
 import { resolvePhiThemeComposition, type PhiThemeBlockCatalog } from "../theme/phi-theme-composition";
 import { composePhiFontCatalogue } from "../theme/phi-font-catalogue";
+import { PHI_REM_ROOT_PX } from "../theme/phi-css-vars";
 import { buildPhiRootMetadata } from "../helpers/phi-metadata";
 import { localizePath } from "../helpers/locale";
 import {
@@ -267,7 +268,6 @@ function createPhiNextRootDocument(
     children: React.ReactNode;
   }) {
     const blocks = await loadThemeBlocks();
-    const remRootValue = site.theme?.rem?.rootValue ?? 16;
     const themeMode = resolvePhiThemeMode(themeModePreference, browserColorScheme);
     const bootstrapScript = buildPhiThemeModeBootstrapScript(themeModePreference);
 
@@ -275,7 +275,7 @@ function createPhiNextRootDocument(
       <html
         lang={resolvedLocale.intlLocale}
         data-phi-theme-mode={themeMode}
-        style={{ fontSize: `${remRootValue}px`, colorScheme: themeMode }}
+        style={{ fontSize: `${PHI_REM_ROOT_PX}px`, colorScheme: themeMode }}
         suppressHydrationWarning
       >
         <head>

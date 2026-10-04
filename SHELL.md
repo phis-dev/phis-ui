@@ -93,7 +93,7 @@ If the root provider enables Ant Design `cssVar`, the runtime CSS variables are 
 
 The shell must not introduce a second token source for the same values.
 
-`px2remTransformer` remains a separate bridge for rem conversion and is not a token source.
+The px2rem pass over the generated Ant Design structure (`styles/antd-static.css`, at a fixed `16px`) remains a separate bridge for rem conversion and is not a token source.
 
 ## Variable Split
 

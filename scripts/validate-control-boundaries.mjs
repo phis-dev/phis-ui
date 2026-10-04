@@ -765,7 +765,12 @@ const statedTokenNames = new Set([
   ...readStatedTokenList(themeVocabularySource, "PHI_THEME_TOKEN_KEYS"),
   ...readStatedTokenList(themeVocabularySource, "PHI_THEME_OWN_TOKEN_KEYS"),
 ]);
-const styledSources = await listStyledSources();
+/*
+ * `styles/antd-static.css` is Ant Design's own structure, generated from the installed package
+ * (`scripts/generate-antd-static-css.tsx`). It names every variable Ant Design reads, which is not this
+ * package reading them; the vocabulary governs what this package writes.
+ */
+const styledSources = (await listStyledSources()).filter((file) => file !== path.join("styles", "antd-static.css"));
 const componentVariablesSeen = new Set();
 const mentionedNames = new Set();
 

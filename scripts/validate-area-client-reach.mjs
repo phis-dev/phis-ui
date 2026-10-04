@@ -49,7 +49,6 @@ const sourceExtensions = [".ts", ".tsx"];
 const ROOT_CLIENT_REFERENCES = [
   "components/root/phi-dayjs-locale.tsx",
   "components/root/phi-root-live-theme-provider.tsx",
-  "components/root/phi-root-rem-provider.tsx",
   "components/runtime/core-runtime-application-adapter.tsx",
   "components/runtime/runtime-signal-partition.tsx",
 ];

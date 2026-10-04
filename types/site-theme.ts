@@ -1,10 +1,6 @@
 import type { PhiShadow } from "./layout-style";
 import type { PhiCmsBackgroundWidgetConfig } from "../components/widgets/config/background";
 
-export type PhiSiteRemSettings = {
-  rootValue?: number | null;
-};
-
 /**
  * The Theme Root Background (SHELL.md "Root Background and Shell Backdrop Layers"): painted once at
  * the document root, independently per mode, using the canonical structured Phi Background contract.

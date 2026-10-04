@@ -49,7 +49,6 @@ const { prelude } = await prerender(h(StyleProvider, {
     customColors: customColorsByMode.light,
     rootClassName: "",
     rootStyle: {},
-    remRootValue: 16,
     controlShape: "rounded",
     children: h(PhiThemeToneSourceProvider, {
       value: { pageMode: "light", themes: state.themes, customColorsByMode, locale: undefined },

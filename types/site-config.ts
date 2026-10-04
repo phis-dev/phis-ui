@@ -1,7 +1,6 @@
 import type { PhiShellTheme } from "../components/shell/shell-types";
 import type {
   PhiSiteFontSlots,
-  PhiSiteRemSettings,
   PhiSiteThemeBrand,
   PhiSiteThemeContact,
   PhiSiteThemeRoot,
@@ -48,7 +47,6 @@ export type PhiSiteTheme = {
   } | null;
   shell?: PhiShellTheme;
   root?: PhiSiteThemeRoot | null;
-  rem?: PhiSiteRemSettings | null;
   /**
    * The colour the Site owns: a palette in the shape a Module ships one (theme/phi-theme-presets.ts),
    * laid over the palette block the Site follows. Seeds shared by both modes under `seed`; the base

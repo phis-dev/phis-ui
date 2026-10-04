@@ -72,7 +72,6 @@ function PhiConfigValueProvider({
   presets,
   rootClassName,
   rootStyle,
-  remRootValue,
   themeCssVarKey,
 }: {
   children: ReactNode;
@@ -85,7 +84,6 @@ function PhiConfigValueProvider({
   presets: readonly PhiThemePresetPlugin[];
   rootClassName: string;
   rootStyle: CSSProperties & Record<`--${string}`, string>;
-  remRootValue: number;
   themeCssVarKey: string;
 }) {
   const { token, cssVar } = antdTheme.useToken();
@@ -149,7 +147,6 @@ function PhiConfigValueProvider({
         data-phi-root-layout="true"
         data-phi-control-shape={controlShape}
         data-phi-theme-mode={mode}
-        data-phi-rem-root-value={remRootValue}
       >
         {children}
       </div>
@@ -168,7 +165,6 @@ export function PhiConfigProvider({
   customColors,
   rootClassName,
   rootStyle,
-  remRootValue,
   controlShape,
 }: {
   children: ReactNode;
@@ -181,7 +177,6 @@ export function PhiConfigProvider({
   customColors: PhiThemeCustomColorPalette;
   rootClassName: string;
   rootStyle: CSSProperties & Record<`--${string}`, string>;
-  remRootValue: number;
   controlShape: PhiControlShape;
 }) {
   const rawHeroHeight = (theme.token as Record<string, unknown> | undefined)?.heroHeight;
@@ -206,7 +201,6 @@ export function PhiConfigProvider({
         presets={presets}
         rootClassName={rootClassName}
         rootStyle={rootStyle}
-        remRootValue={remRootValue}
         themeCssVarKey={themeCssVarKey}
       >
         {children}

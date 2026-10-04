@@ -2,6 +2,12 @@ import type { ReactNode } from "react";
 import { preload } from "react-dom";
 import { AntdRegistry } from "@ant-design/nextjs-registry";
 import "antd/dist/reset.css";
+/*
+ * Ant Design's structure, generated once (`scripts/generate-antd-static-css.tsx`) because the root runs
+ * it with `zeroRuntime`. Imported before this package's own sheets, where the runtime used to prepend
+ * it: a rule of ours that ties with Ant Design's on specificity keeps winning by coming later.
+ */
+import "../../styles/antd-static.css";
 import "../../styles/root.css";
 import "../../styles/layout.css";
 import "../../styles/control-shape.css";
@@ -12,7 +18,6 @@ import type { PhiSiteConfig } from "../../types/site-config";
 import { loadPhiAntdLocale } from "../../helpers/antd-locale";
 import type { PhiResolvedLocale } from "../../helpers/site-locale-config";
 import { PhiDayjsLocale } from "./phi-dayjs-locale";
-import { PhiRootRemProvider } from "./phi-root-rem-provider";
 import { PhiRootLiveThemeProvider } from "./phi-root-live-theme-provider";
 import { resolvePhiRootThemeState } from "./phi-root-theme-resolver";
 import { PhiSignalRuntimePartitionProvider } from "../runtime/runtime-signal-partition";
@@ -72,11 +77,6 @@ type FontSelection = {
   fontFamily?: string;
 };
 
-
-type PhiRemSelection = {
-  rootValue?: number | null;
-} | null | undefined;
-
 function resolveThemeFont(
   fontName: string | null | undefined,
   fallbackFont: string,
@@ -92,14 +92,6 @@ function resolveThemeFont(
   return {
     fontFamily: familyVariables.get(trimmed) ?? trimmed,
   };
-}
-
-function resolveFinitePositiveNumber(value: number | null | undefined, fallback: number) {
-  if (typeof value !== "number" || !Number.isFinite(value) || value <= 0) {
-    return fallback;
-  }
-
-  return value;
 }
 
 export async function PhiRootLayout({
@@ -165,8 +157,6 @@ export async function PhiRootLayout({
     ?? resolveThemeFont(siteThemeRecord?.fonts?.accent, "", fontCatalogue.familyVariables).fontFamily;
   const displayFont = assetFonts.families.display
     ?? resolveThemeFont(siteThemeRecord?.fonts?.display, "", fontCatalogue.familyVariables).fontFamily;
-  const remSettings: PhiRemSelection = siteThemeRecord?.rem;
-  const remRootValue = resolveFinitePositiveNumber(remSettings?.rootValue, 16);
   const themeFonts = {
       body: bodyFont,
       mono: monoFont,
@@ -183,12 +173,11 @@ export async function PhiRootLayout({
   const publishedRootTheme = resolvePhiPublishedRootTheme({
     siteTheme: siteThemeRecord,
     mode: resolvedThemeMode,
-    remRootValue,
     themePresets,
   });
 
   return (
-    <PhiRootRemProvider rootValue={remRootValue}>
+    <>
       {/*
         * The rules for the Site's own typefaces, hoisted into the head by React.
         *
@@ -227,7 +216,6 @@ export async function PhiRootLayout({
             rootStyle={headingFontFamily
               ? { ...publishedRootTheme.style, [PHI_THEME_HEADING_FONT_VARIABLE]: headingFontFamily }
               : publishedRootTheme.style}
-            remRootValue={remRootValue}
           >
             {/*
               * The page's ground, which used to be Ant Design's `App` element by accident.
@@ -249,6 +237,6 @@ export async function PhiRootLayout({
           </PhiRootLiveThemeProvider>
         </PhiSignalRuntimePartitionProvider>
       </AntdRegistry>
-    </PhiRootRemProvider>
+    </>
   );
 }

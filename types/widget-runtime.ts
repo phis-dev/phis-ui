@@ -1,7 +1,6 @@
 import type { PhiShellTheme } from "../components/shell/shell-types";
 import type {
   PhiSiteFontSlots,
-  PhiSiteRemSettings,
   PhiSiteThemeBrand,
   PhiSiteThemeContact,
   PhiSiteThemeRoot,
@@ -65,7 +64,6 @@ export type PhiBlockRuntimeSite = {
       controls?: PhiControlShapeCorners | null;
     } | null;
     fonts?: PhiSiteFontSlots | null;
-    rem?: PhiSiteRemSettings | null;
     brand?: PhiSiteThemeBrand;
     contact?: PhiSiteThemeContact;
     shell?: PhiShellTheme;

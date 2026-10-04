@@ -12,7 +12,7 @@ import type {
   PhiBlockRuntimeSite,
   PhiWidgetThemeMode,
 } from "../types/widget-runtime";
-import type { PhiSiteFontSlots, PhiSiteRemSettings } from "../types/site-theme";
+import type { PhiSiteFontSlots } from "../types/site-theme";
 import {
   normalizePhiThemeModePreference,
   readPhiColorSchemeHintFromCookieHeader,
@@ -41,7 +41,6 @@ type PhiResolvedWidgetRuntimeSite = PhiBlockRuntimeSite & {
   theme: {
     mode: PhiWidgetThemeMode;
     fonts?: PhiSiteFontSlots | null;
-    rem?: PhiSiteRemSettings | null;
     brand?: PhiWidgetSiteTheme["brand"];
     contact?: PhiWidgetSiteTheme["contact"];
     shell?: PhiWidgetSiteTheme["shell"];
@@ -128,7 +127,6 @@ export async function getPhiCmsRuntimeInfo({
       ...(site.theme?.preset ? { preset: site.theme.preset } : {}),
       ...(site.theme?.presetVersion != null ? { presetVersion: site.theme.presetVersion } : {}),
       ...(site.theme?.fonts ? { fonts: site.theme.fonts } : {}),
-      ...(site.theme?.rem ? { rem: site.theme.rem } : {}),
       ...(site.theme?.brand ? { brand: site.theme.brand } : {}),
       ...(site.theme?.contact ? { contact: site.theme.contact } : {}),
       ...(site.theme?.shell ? { shell: site.theme.shell } : {}),

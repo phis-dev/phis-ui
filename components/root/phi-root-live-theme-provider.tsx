@@ -85,7 +85,6 @@ export function PhiRootLiveThemeProvider({
   presets,
   rootClassName,
   rootStyle,
-  remRootValue,
 }: {
   children: ReactNode;
   siteKey: string;
@@ -106,7 +105,6 @@ export function PhiRootLiveThemeProvider({
   presets: readonly PhiThemePresetPlugin[];
   rootClassName: string;
   rootStyle: CSSProperties & Record<`--${string}`, string>;
-  remRootValue: number;
 }) {
   const signalPartition = usePhiSignalRuntimePartition();
   const coreAddress = createPhiCoreRuntimeControllerAddress();
@@ -349,7 +347,6 @@ export function PhiRootLiveThemeProvider({
         presets={presets}
         rootClassName={rootClassName}
         rootStyle={chromeOverlayStyle}
-        remRootValue={remRootValue}
       >
         <PhiRootBackgroundLayer root={liveSiteTheme.root} mode={mode} />
         <PhiThemeToneSourceProvider value={toneSource}>

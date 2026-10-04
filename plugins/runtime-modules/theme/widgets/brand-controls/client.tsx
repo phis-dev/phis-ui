@@ -2521,7 +2521,6 @@ export function PhiBuilderBrandStyleControlsWidgetClient({
     controlHeightLG: readEffectiveTokenNumber(styleTokenInput, "controlHeightLG", PHI_CONTROL_HEIGHTS.lg),
   };
   const wireframe = readEffectiveTokenBoolean(styleTokenInput, "wireframe", true);
-  const remRootValue = state.draft.rem?.rootValue ?? 16;
   const baseFontSize = readEffectiveTokenNumber(styleTokenInput, "fontSize", 12);
 
   function updateToken(tokenPatch: Record<string, unknown>) {
@@ -2747,16 +2746,11 @@ export function PhiBuilderBrandStyleControlsWidgetClient({
               children: (
                 <PhiFlexControl vertical gap={clientToken.paddingXS}>
                   <PhiFlexControl align="center" gap={clientToken.paddingSM} wrap="nowrap">
-                    <PhiTypographyControl style={{ flex: `0 0 ${fieldLabelWidth}px` }}>Root value</PhiTypographyControl>
-                    <PhiTypographyControl code>{remRootValue}px</PhiTypographyControl>
-                  </PhiFlexControl>
-                  <PhiFlexControl align="center" gap={clientToken.paddingSM} wrap="nowrap">
                     <PhiTypographyControl style={{ flex: `0 0 ${fieldLabelWidth}px` }}>Font size</PhiTypographyControl>
                     <PhiTypographyControl code>{baseFontSize}px</PhiTypographyControl>
                   </PhiFlexControl>
                   <PhiTypographyControl type="secondary">
-                    Root value controls rem conversion; font size is the seed every other type size is
-                    derived from.
+                    The seed every other type size is derived from.
                   </PhiTypographyControl>
                 </PhiFlexControl>
               ),

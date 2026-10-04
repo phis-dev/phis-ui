@@ -36,6 +36,11 @@ const CHECKS = {
     command: "pnpm",
     args: ["exec", "antd", "doctor"],
   },
+  antdCss: {
+    label: "Ant Design static structure (styles/antd-static.css)",
+    command: "pnpm",
+    args: ["antd-css:check"],
+  },
   package: {
     label: "Distribution package",
     command: "pnpm",
@@ -47,9 +52,9 @@ const EXPLICIT_PROFILES = {
   docs: ["diff"],
   code: ["diff", "typecheck", "lint"],
   runtime: ["diff", "typecheck", "lint", "runtime"],
-  antd: ["diff", "typecheck", "lint", "antd"],
+  antd: ["diff", "typecheck", "lint", "antd", "antdCss"],
   package: ["diff", "lint", "package"],
-  all: ["diff", "lint", "runtime", "antd", "package"],
+  all: ["diff", "lint", "runtime", "antd", "antdCss", "package"],
 };
 
 const requestedProfile = process.argv[2] ?? "changed";
@@ -62,7 +67,7 @@ Profiles:
   docs     Whitespace check only
   code     TypeScript and ESLint
   runtime  Code checks plus Runtime module contract validation
-  antd     Code checks plus Ant Design doctor
+  antd     Code checks plus Ant Design doctor and the static structure
   package  ESLint plus compiled distribution validation
   all      All checks
 
@@ -118,6 +123,7 @@ async function resolveChangedChecks() {
   }
   if (hasAntdChange) {
     selectedChecks.add("antd");
+    selectedChecks.add("antdCss");
   }
 
   return [...selectedChecks];
@@ -191,6 +197,7 @@ async function containsAntdRelevantChange(files) {
   if (
     files.some((file) =>
       file === "package.json" ||
+      file === "styles/antd-static.css" ||
       file.startsWith("theme/") ||
       file.startsWith("components/root/"))
   ) {

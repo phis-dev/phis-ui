@@ -43,6 +43,8 @@ export type PhiRootThemeFonts = {
 export type PhiResolvedRootTheme = {
   mode: PhiThemeMode;
   theme: {
+    hashed: false;
+    zeroRuntime: true;
     cssVar: {
       prefix: string;
       key: string;
@@ -152,6 +154,17 @@ export function resolvePhiRootTheme({
   return {
     mode,
     theme: {
+      /*
+       * Ant Design's structure is not rendered: it comes from `styles/antd-static.css`, and only the
+       * custom properties a Theme decides are rendered here. Every nested provider inherits both flags --
+       * the tone scopes, the Menu's, and the Theme workspace's, which inherits nothing else.
+       *
+       * Unhashed because that file is one file for development and production, and Ant Design hashes
+       * its class names differently in each. The hash only ever kept two Ant Design versions on one page
+       * apart, and it sat in `:where()`, so dropping it changes no specificity.
+       */
+      hashed: false,
+      zeroRuntime: true,
       cssVar: {
         prefix: "ant",
         key: createPhiAntdThemeCssVarKey("root", { mode, token, components }),

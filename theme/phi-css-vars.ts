@@ -10,8 +10,18 @@ import type { PhiThemeTokens } from "./phi-theme";
 
 export type PhiCssVars = CSSProperties & Record<`--${string}`, string>;
 
+/**
+ * How many pixels one `rem` is, everywhere: the document's font size, every length this package turns
+ * into `rem`, and the px2rem pass over Ant Design's structure in `styles/antd-static.css`.
+ *
+ * It is the browser's default and Ant Design's, and it is fixed rather than a Theme setting because the
+ * Ant Design structure is generated once for every Site -- a Site that moved it would have its own
+ * lengths converted one way and the Controls' another. A Theme that wants everything larger moves
+ * `fontSize` and the size tokens, which scale the Controls and the Theme together.
+ */
+export const PHI_REM_ROOT_PX = 16;
+
 export type PhiShellCssVarsOptions = {
-  rootValue: number;
   shellTheme?: PhiShellRegionTheme | undefined;
   themeTokens?: Record<string, unknown>;
 };
@@ -24,15 +34,13 @@ function resolveFinitePositiveNumber(value: unknown, fallback: number) {
   return value;
 }
 
-function pxToRem(value: number, rootValue: number) {
-  const effectiveRoot = resolveFinitePositiveNumber(rootValue, 16);
-  const remValue = value / effectiveRoot;
-  return `${Number(remValue.toFixed(6))}rem`;
+function pxToRem(value: number) {
+  return `${Number((value / PHI_REM_ROOT_PX).toFixed(6))}rem`;
 }
 
-function cssSizeToVar(value: number | string | undefined, rootValue: number) {
+function cssSizeToVar(value: number | string | undefined) {
   if (typeof value === "number" && Number.isFinite(value)) {
-    return pxToRem(value, rootValue);
+    return pxToRem(value);
   }
 
   if (typeof value === "string" && value.trim().length > 0) {
@@ -50,12 +58,9 @@ function resolveTokenNumber(
   return resolveFinitePositiveNumber(themeTokens?.[key], fallback);
 }
 
-export function buildPhiCssVars(
-  rootValue = 16,
-  themeTokens?: Record<string, unknown>,
-): PhiCssVars {
+export function buildPhiCssVars(themeTokens?: Record<string, unknown>): PhiCssVars {
   return {
-    "--phi-sidebar-width": pxToRem(resolveTokenNumber(themeTokens, "sidebarWidth", PHI_LAYOUT.sidebarWidth), rootValue),
+    "--phi-sidebar-width": pxToRem(resolveTokenNumber(themeTokens, "sidebarWidth", PHI_LAYOUT.sidebarWidth)),
   };
 }
 
@@ -68,7 +73,6 @@ function resolveThemeTokenNumber(
 }
 
 export function buildPhiShellCssVars({
-  rootValue,
   shellTheme,
   themeTokens,
 }: PhiShellCssVarsOptions): PhiCssVars {
@@ -90,15 +94,15 @@ export function buildPhiShellCssVars({
   );
 
   return {
-    "--phi-shell-gap": pxToRem(shellGap, rootValue),
-    "--phi-shell-padding": pxToRem(shellPadding, rootValue),
-    "--phi-shell-radius": pxToRem(shellRadius, rootValue),
-    "--phi-shell-header-height": pxToRem(shellHeaderHeight, rootValue),
-    "--phi-shell-footer-height": pxToRem(shellFooterHeight, rootValue),
+    "--phi-shell-gap": pxToRem(shellGap),
+    "--phi-shell-padding": pxToRem(shellPadding),
+    "--phi-shell-radius": pxToRem(shellRadius),
+    "--phi-shell-header-height": pxToRem(shellHeaderHeight),
+    "--phi-shell-footer-height": pxToRem(shellFooterHeight),
     "--phi-shell-content-min-height": "100dvh",
-    "--phi-shell-sider-width": cssSizeToVar(resolvePhiShellSiderWidth(shellTheme), rootValue) ?? pxToRem(200, rootValue),
+    "--phi-shell-sider-width": cssSizeToVar(resolvePhiShellSiderWidth(shellTheme)) ?? pxToRem(200),
     "--phi-shell-sider-collapsed-width":
-      cssSizeToVar(resolvePhiShellSiderCollapsedWidth(shellTheme), rootValue) ?? pxToRem(40, rootValue),
+      cssSizeToVar(resolvePhiShellSiderCollapsedWidth(shellTheme)) ?? pxToRem(40),
     "--phi-shell-bg-image": "none",
     "--phi-shell-bg-size": "cover",
     "--phi-shell-bg-position": "center center",

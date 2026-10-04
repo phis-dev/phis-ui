@@ -175,8 +175,9 @@ sparse: readers normalize absent values.
 
 - `fonts?: { body?, mono?, serif?, accent?, display? }` -- five slots (`PhiSiteFontSlots`). A slot holds a
   family name or a `phis:asset/<id>` reference to a Site-owned font Asset.
-- `rem?: { rootValue?: number }` -- the root rem value, default `16`. It feeds Ant Design's
-  `px2remTransformer` and `--phi-rem-root-value`. Typography is not stored under `rem`.
+- There is no rem setting. One `rem` is `16px` everywhere (`PHI_REM_ROOT_PX` in `theme/phi-css-vars.ts`):
+  the document's font size, every length this package converts, and Ant Design's generated structure. A
+  Theme that wants everything larger moves `fontSize` and the size tokens.
 
 See [Fonts and typography](#fonts-and-typography).
 
@@ -275,8 +276,15 @@ shape tokens.
 
 The published Theme has one server projection and one client projection:
 
-- `AntdRegistry` in `PhiRootLayout` extracts Ant Design styles during SSR, including the `--ant-*` variables
-  Server Component markup and plain CSS use.
+- Ant Design's structure is not rendered. The root theme sets `zeroRuntime` (and `hashed: false`), and the
+  structure of every component comes from `styles/antd-static.css`, which
+  `scripts/generate-antd-static-css.tsx` writes from the installed Ant Design (`pnpm antd-css:generate`;
+  `pnpm antd-css:check` and the package build fail on a stale file, so an Ant Design upgrade regenerates
+  it). The structure reads every Theme value through `var(--ant-...)`, so one file serves every Site,
+  Theme, mode and nested scope. It is imported before this package's sheets, so a rule of ours that ties
+  on specificity wins.
+- `AntdRegistry` in `PhiRootLayout` extracts what is still rendered during SSR: the `--ant-*` variables
+  Server Component markup and plain CSS use, per theme scope.
 - `resolvePhiPublishedRootTheme(...)` (`server-only`) emits only Phi-owned structural variables that have no
   Ant Design token.
 - `PhiConfigProvider` is the single Client boundary for Ant Design locale and theme configuration. Its
@@ -451,13 +459,13 @@ are not part of this field.
 ## Tokens and CSS rules
 
 - `theme.palette` and `theme.style.token`, resolved over the followed blocks, are the only source of Ant Design
-  design tokens. `cssVar` output and SSR `--ant-*` variables derive from that source. `px2remTransformer` is
-  a rem bridge, not a token source.
+  design tokens. `cssVar` output and SSR `--ant-*` variables derive from that source. The px2rem pass over
+  the generated structure is a rem bridge, not a token source.
 - Client Components read Ant Design semantics from `usePhiConfig().token` (or `theme.useToken()` inside a
   nested Ant Design provider). Plain CSS and Server Components use `var(--ant-...)`. Server Components never
   depend on `ConfigProvider` or client theme hooks.
 - `--phi-*` is reserved for Phi-owned structural or technical values that Ant Design does not model -- Shell
-  geometry, Builder scaffold geometry, effects, the rem root value, font sources, Control shape radii. Do not
+  geometry, Builder scaffold geometry, effects, font sources, Control shape radii. Do not
   mirror Ant Design colours, spacing, radii, typography, shadows, control sizes, or motion into `--phi-*`.
 - Custom colours are data in `usePhiConfig().customColors`, never global CSS variables; consumers do not
   reconstruct them from CSS or substitute semantic tokens. The Theme workspace is the only place that supplies

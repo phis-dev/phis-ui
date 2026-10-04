@@ -1,5 +1,5 @@
 import type { PhiCapabilitySnapshot } from "./server-capabilities";
-import type { PhiSiteFontSlots, PhiSiteRemSettings } from "./site-theme";
+import type { PhiSiteFontSlots } from "./site-theme";
 import type { PhiBlockRuntime, PhiWidgetThemeMode } from "./widget-runtime";
 
 /*
@@ -27,7 +27,6 @@ export type PhiSiteRequestContext = {
     theme: {
       mode: PhiWidgetThemeMode;
       fonts?: PhiSiteFontSlots | null;
-      rem?: PhiSiteRemSettings | null;
       brand?: {
         slogan?: {
           label?: string | null;
