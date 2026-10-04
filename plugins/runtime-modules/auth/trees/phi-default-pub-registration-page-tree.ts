@@ -1,5 +1,5 @@
 import { createPhiPresetCmsInstanceIdMap } from "../../../../types/cms-instance-id";
-import { PHI_SPACE } from "../../../../theme/antd-css-var-contract";
+import { PHI_MARGIN, PHI_SPACE } from "../../../../theme/antd-css-var-contract";
 import { PHI_AUTH_RUNTIME_MODULE_ID } from "../ids";
 import { localizeAreaPath } from "../../../../helpers/locale";
 import {
@@ -58,7 +58,7 @@ export async function buildPhiDefaultPubRegistrationPageTree({
         sortOrder: 0,
         label: "pub registration page",
         config: {
-          gap: PHI_SPACE.base,
+          gap: PHI_MARGIN.base,
         },
       }),
       nodes.layout({

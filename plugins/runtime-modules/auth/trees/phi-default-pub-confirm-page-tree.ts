@@ -1,5 +1,5 @@
 import { createPhiPresetCmsInstanceIdMap } from "../../../../types/cms-instance-id";
-import { PHI_SPACE } from "../../../../theme/antd-css-var-contract";
+import { PHI_MARGIN, PHI_SPACE } from "../../../../theme/antd-css-var-contract";
 import { PHI_AUTH_RUNTIME_MODULE_ID } from "../ids";
 import {
   PHI_CMS_DEFAULT_SLOT_INDEX,
@@ -89,7 +89,7 @@ export async function buildPhiDefaultPubConfirmPageTree({
         sortOrder: 0,
         label: "pub confirmation page",
         config: {
-          gap: PHI_SPACE.base,
+          gap: PHI_MARGIN.base,
         },
       }),
       nodes.layout({

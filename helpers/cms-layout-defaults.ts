@@ -180,7 +180,8 @@ const PHI_SPLIT_CARD_LAYOUT_DEFAULT_ANCHOR = { horizontal: "center", vertical: "
  */
 export const PHI_SPLIT_CARD_LAYOUT_DEFAULTS: PhiLayoutDefaults = {
     anchor: PHI_SPLIT_CARD_LAYOUT_DEFAULT_ANCHOR,
-    gap: PHI_SPACE.base,
+    // A distance between two things is a margin step; the Paddings panel offers the gap on that scale.
+    gap: PHI_MARGIN.base,
     padding: PHI_SPACE.base,
 };
 

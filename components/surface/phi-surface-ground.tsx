@@ -39,6 +39,22 @@ export type PhiSurfaceGroundFrame = {
   width: string;
 };
 
+function resolvePhiSurfaceGroundPaintBox(
+  bleeds: boolean,
+  frame: PhiSurfaceGroundFrame | undefined,
+): CSSProperties {
+  const edge = bleeds ? PHI_SURFACE_GROUND_BLEED : "0px";
+  if (!frame) {
+    return { top: edge, right: edge, bottom: edge, left: edge };
+  }
+  return {
+    top: edge,
+    bottom: edge,
+    left: bleeds ? `calc(${frame.left} + ${PHI_SURFACE_GROUND_BLEED})` : frame.left,
+    width: bleeds ? `calc(${frame.width} - 2 * ${PHI_SURFACE_GROUND_BLEED})` : frame.width,
+  };
+}
+
 export function PhiSurfaceGroundLayer({
   ground,
   className,
@@ -66,12 +82,8 @@ export function PhiSurfaceGroundLayer({
         style={{
           ...ground.paint,
           position: "absolute",
-          inset: ground.filter ? PHI_SURFACE_GROUND_BLEED : 0,
-          ...(frame
-            ? ground.filter
-              ? { left: `calc(${frame.left} + ${PHI_SURFACE_GROUND_BLEED})`, width: `calc(${frame.width} - 2 * ${PHI_SURFACE_GROUND_BLEED})`, right: "auto" }
-              : { left: frame.left, width: frame.width, right: "auto" }
-            : {}),
+          // Longhands only: React refuses a shorthand beside the longhands a frame sets on a rerender.
+          ...resolvePhiSurfaceGroundPaintBox(ground.filter != null, frame),
           ...(ground.filter ? { filter: ground.filter } : {}),
         }}
       />
