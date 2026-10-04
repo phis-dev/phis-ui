@@ -176,28 +176,33 @@ export const PHI_SPLIT_CARD_LAYOUT_DEFAULTS: PhiLayoutDefaults = {
     anchor: PHI_SPLIT_CARD_LAYOUT_DEFAULT_ANCHOR,
     gap: 0,
 };
+/**
+ * A card on the page: the Site's container ground, its quiet line, the soft shadow. What a Layout wears
+ * when a Preset makes it a card -- the two halves of a Split Card, for one.
+ */
+export const PHI_LAYOUT_CARD_SURFACE = {
+    background: {
+      base: { kind: "color", color: PHI_COLOR.bgContainer },
+      overlay: null,
+      filter: null,
+    },
+    borderSource: "custom",
+    border: {
+      borderWidth: 1,
+      borderStyle: "solid",
+      borderColor: PHI_COLOR.borderSecondary,
+    },
+    shadow: "soft",
+} as const;
+
 /*
- * One card, split in two: the Layout's own Surface is the card, so the inset belongs to each half and the
- * box itself has none.
+ * Two halves on the golden ratio with a gap between them. The Split Card draws no card itself: a card is
+ * what stands in a half -- a Layout wearing `PHI_LAYOUT_CARD_SURFACE` -- so each half reads as a card of
+ * its own on the page's ground.
  */
 const PHI_SPLIT_CARD_LAYOUT_PANEL_PRESET = {
     anchor: PHI_SPLIT_CARD_LAYOUT_DEFAULT_ANCHOR,
     gap: PHI_SPACE.base,
-    slotPadding: PHI_SPACE.base,
-    surface: {
-      background: {
-        base: { kind: "color", color: PHI_COLOR.bgContainer },
-        overlay: null,
-        filter: null,
-      },
-      borderSource: "custom",
-      border: {
-        borderWidth: 1,
-        borderStyle: "solid",
-        borderColor: PHI_COLOR.borderSecondary,
-      },
-      shadow: "soft",
-    },
 } as const;
 
 export const PHI_THREE_COLUMN_LAYOUT_DEFAULTS: PhiLayoutDefaults = {

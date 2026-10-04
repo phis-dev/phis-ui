@@ -298,8 +298,8 @@ assert.ok(
   }
   assert.equal(style.borderRadius, undefined, "A Layout never states its corner as the shorthand.");
   /*
-   * A Split Card is one card split in two, so its corner is its Surface's and nothing of its own: under a
-   * `pill` Theme it rounds with the Buttons beside it, through the same chrome.
+   * A Split Card's corner, where it wears a Surface, is that Surface's and nothing of its own: under a
+   * `pill` Theme it rounds with the Buttons beside it, through the same chrome as every Layout.
    */
   const splitCardSource = await readFile(
     new URL("../components/layouts/clients/phi-split-card-layout-client.tsx", import.meta.url),

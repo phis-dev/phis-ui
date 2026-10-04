@@ -46,8 +46,12 @@ The shared fields are:
 - the shared renderable-block geometry, visibility, access, and transition fields
 
 Layout-family plugins add only topology-specific or explicitly family-specific fields. A family must
-not duplicate shared parsing or serialization, and it never declares chrome of its own: the Split Card is
-one card split in two, and the card is its Surface.
+not duplicate shared parsing or serialization, and it never declares chrome of its own. The Split Card
+is two halves on the golden ratio with a gap and a shared `slotPadding`; it may wear one Surface behind
+both, but a card is what stands in a half. Its panel creation preset draws no Surface, and the Pages
+built on it (sign-in, registration, password reset, confirmation, contact) put a Layout wearing
+`PHI_LAYOUT_CARD_SURFACE` (`helpers/cms-layout-defaults.ts`) into each half, so they read as two cards
+on the page's ground. One Surface across a Region's full width reads as the page itself, not as a card.
 
 Canonical defaults are neutral: no margin, no padding, and no Surface -- so no ground, no line, no
 corner, no depth. A Layout never adds implicit inner padding around its slot content; a Region that

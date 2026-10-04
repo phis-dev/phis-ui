@@ -8,6 +8,7 @@ import {
 } from "../../../../constants/cms-layout-types";
 import { PhiCmsPageType, PhiCmsRegionType } from "../../../../constants/phi-cms";
 import { createPhiCmsPresetNodes } from "../../../../helpers/cms-preset-nodes";
+import { PHI_LAYOUT_CARD_SURFACE } from "../../../../helpers/cms-layout-defaults";
 import type { PhiCmsPageNode, PhiResolvedCmsPageTree } from "../../../../types/cms";
 import {
   buildPhiLoginNodes,
@@ -34,7 +35,7 @@ export async function buildPhiDefaultPubLoginPageTree({
     domain: "page",
     ownerModuleId: PHI_AUTH_RUNTIME_MODULE_ID,
     presetKey,
-  }, ["layoutContent", "layoutForm"]);
+  }, ["layoutContent", "layoutForm", "layoutAside"]);
   const SYNTHETIC_LOGIN_WIDGET_IDS = createPhiPresetCmsInstanceIdMap({
     domain: "page",
     ownerModuleId: PHI_AUTH_RUNTIME_MODULE_ID,
@@ -82,6 +83,17 @@ export async function buildPhiDefaultPubLoginPageTree({
       nodes.layout({
         creationPreset: { layoutKind: "verticalflex", preset: "panel" },
         typeKey: "flex-vertical",
+        id: SYNTHETIC_LOGIN_LAYOUT_IDS.layoutAside,
+        parentLayoutNodeId: SYNTHETIC_LOGIN_LAYOUT_IDS.layoutContent,
+        slotIndex: PHI_CMS_SPLIT_LAYOUT_SLOT_INDEX.Left,
+        sortOrder: 0,
+        label: "pub login aside layout",
+        // One of the Split Card's two cards; the Split Card itself draws none.
+        config: { padding: PHI_SPACE.base, surface: PHI_LAYOUT_CARD_SURFACE },
+      }),
+      nodes.layout({
+        creationPreset: { layoutKind: "verticalflex", preset: "panel" },
+        typeKey: "flex-vertical",
         id: SYNTHETIC_LOGIN_LAYOUT_IDS.layoutForm,
         parentLayoutNodeId: SYNTHETIC_LOGIN_LAYOUT_IDS.layoutContent,
         slotIndex: PHI_CMS_SPLIT_LAYOUT_SLOT_INDEX.Right,
@@ -99,7 +111,8 @@ export async function buildPhiDefaultPubLoginPageTree({
          */
         config: {
           ...PHI_LOGIN_FORM_LAYOUT_CONFIG,
-          padding: 0,
+          padding: PHI_SPACE.base,
+          surface: PHI_LAYOUT_CARD_SURFACE,
           anchor: { horizontal: "center", vertical: "middle" },
         },
       }),
@@ -109,8 +122,8 @@ export async function buildPhiDefaultPubLoginPageTree({
       nodes.widget({
         typeKey: "description",
         id: SYNTHETIC_LOGIN_WIDGET_IDS.widgetDescription,
-        parentLayoutNodeId: SYNTHETIC_LOGIN_LAYOUT_IDS.layoutContent,
-        slotIndex: PHI_CMS_SPLIT_LAYOUT_SLOT_INDEX.Left,
+        parentLayoutNodeId: SYNTHETIC_LOGIN_LAYOUT_IDS.layoutAside,
+        slotIndex: 0,
         sortOrder: 0,
         label: "pub login description widget",
         config: {

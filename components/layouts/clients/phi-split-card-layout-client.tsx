@@ -24,10 +24,10 @@ const PHI_SPLIT_CARD_LAYOUT_DEFAULTS = resolvePhiLayoutDefaults("split");
 /**
  * One card, split in two.
  *
- * The card is the Layout's own Surface -- one ground, one edge, one depth behind both halves -- so the
- * Split Card states nothing about chrome of its own and takes the Surface every Layout has. What it adds
- * is the split: a slot on each side on the golden ratio, the gap between them, and the inset both halves
- * share. It used to draw two cards, one per slot, with six fields that were always set alike.
+ * The Split Card states nothing about chrome of its own and takes the Surface every Layout has -- one
+ * ground behind both halves, where somebody wants that. What it adds is the split: a slot on each side on
+ * the golden ratio, the gap between them, and the inset both halves share. Two cards are two Layouts
+ * wearing a card Surface, one in each half (LAYOUTING.md); the six per-card fields it once had are gone.
  */
 export type PhiSplitCardLayoutProps = Omit<PhiBaseLayoutProps, "slots"> & {
   slots: ReactNode[];

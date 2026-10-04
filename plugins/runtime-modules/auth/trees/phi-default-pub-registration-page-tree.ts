@@ -8,6 +8,7 @@ import {
 } from "../../../../constants/cms-layout-types";
 import { PhiCmsPageType, PhiCmsRegionType } from "../../../../constants/phi-cms";
 import { createPhiCmsPresetNodes } from "../../../../helpers/cms-preset-nodes";
+import { PHI_LAYOUT_CARD_SURFACE } from "../../../../helpers/cms-layout-defaults";
 import type { PhiCmsPageNode, PhiResolvedCmsPageTree } from "../../../../types/cms";
 import { PHI_SHARED_FORM_IDS } from "../../../../components/forms/shared-form-ids";
 
@@ -30,7 +31,7 @@ export async function buildPhiDefaultPubRegistrationPageTree({
     domain: "page",
     ownerModuleId: PHI_AUTH_RUNTIME_MODULE_ID,
     presetKey,
-  }, ["layoutContent", "layoutForm"]);
+  }, ["layoutContent", "layoutForm", "layoutAside"]);
   const SYNTHETIC_REGISTER_WIDGET_IDS = createPhiPresetCmsInstanceIdMap({
     domain: "page",
     ownerModuleId: PHI_AUTH_RUNTIME_MODULE_ID,
@@ -64,20 +65,31 @@ export async function buildPhiDefaultPubRegistrationPageTree({
       nodes.layout({
         creationPreset: { layoutKind: "verticalflex", preset: "panel" },
         typeKey: "flex-vertical",
+        id: SYNTHETIC_REGISTER_LAYOUT_IDS.layoutAside,
+        parentLayoutNodeId: SYNTHETIC_REGISTER_LAYOUT_IDS.layoutContent,
+        slotIndex: PHI_CMS_SPLIT_LAYOUT_SLOT_INDEX.Left,
+        sortOrder: 0,
+        label: "pub registration aside layout",
+        // One of the Split Card's two cards; the Split Card itself draws none.
+        config: { padding: PHI_SPACE.base, surface: PHI_LAYOUT_CARD_SURFACE },
+      }),
+      nodes.layout({
+        creationPreset: { layoutKind: "verticalflex", preset: "panel" },
+        typeKey: "flex-vertical",
         id: SYNTHETIC_REGISTER_LAYOUT_IDS.layoutForm,
         parentLayoutNodeId: SYNTHETIC_REGISTER_LAYOUT_IDS.layoutContent,
         slotIndex: PHI_CMS_SPLIT_LAYOUT_SLOT_INDEX.Right,
         sortOrder: 0,
         label: "pub registration form layout",
-        config: { padding: 0 },
+        config: { padding: PHI_SPACE.base, surface: PHI_LAYOUT_CARD_SURFACE },
       }),
     ],
     contentWidgets: [
       nodes.widget({
         typeKey: "description",
         id: SYNTHETIC_REGISTER_WIDGET_IDS.widgetDescription,
-        parentLayoutNodeId: SYNTHETIC_REGISTER_LAYOUT_IDS.layoutContent,
-        slotIndex: PHI_CMS_SPLIT_LAYOUT_SLOT_INDEX.Left,
+        parentLayoutNodeId: SYNTHETIC_REGISTER_LAYOUT_IDS.layoutAside,
+        slotIndex: 0,
         sortOrder: 0,
         label: "pub registration description widget",
         config: {
