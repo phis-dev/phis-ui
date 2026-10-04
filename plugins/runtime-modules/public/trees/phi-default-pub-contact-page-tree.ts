@@ -48,6 +48,8 @@ export async function buildPhiDefaultPubContactPageTree({
         regionType: PhiCmsRegionType.Content,
         rootLayoutNodeId: SYNTHETIC_CONTACT_LAYOUT_IDS.layoutContent,
         sortOrder: 30,
+        // The page keeps its cards off its edge; a Region has no padding unless it states one.
+        config: { padding: PHI_SPACE.base },
       }),
     ],
     layoutNodes: [
@@ -58,30 +60,24 @@ export async function buildPhiDefaultPubContactPageTree({
         parentLayoutNodeId: null,
         slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
         label: "pub contact page",
-        config: {
-          gap: PHI_SPACE.base,
-        },
+        // The inset of the cards; a Split Card has none of its own.
+        config: { padding: PHI_SPACE.base },
       }),
       nodes.layout({
-        creationPreset: { layoutKind: "verticalflex", preset: "panel" },
         typeKey: "flex-vertical",
         id: SYNTHETIC_CONTACT_LAYOUT_IDS.layoutAside,
         parentLayoutNodeId: SYNTHETIC_CONTACT_LAYOUT_IDS.layoutContent,
         slotIndex: PHI_CMS_SPLIT_LAYOUT_SLOT_INDEX.Left,
         sortOrder: 0,
         label: "pub contact aside layout",
-        // The inset of the Split Card's left card, which has none of its own.
-        config: { padding: PHI_SPACE.base },
       }),
       nodes.layout({
-        creationPreset: { layoutKind: "verticalflex", preset: "panel" },
         typeKey: "flex-vertical",
         id: SYNTHETIC_CONTACT_LAYOUT_IDS.layoutForm,
         parentLayoutNodeId: SYNTHETIC_CONTACT_LAYOUT_IDS.layoutContent,
         slotIndex: PHI_CMS_SPLIT_LAYOUT_SLOT_INDEX.Right,
         sortOrder: 0,
         label: "pub contact form layout",
-        config: { padding: PHI_SPACE.base },
       }),
     ],
     contentWidgets: [

@@ -2,6 +2,7 @@ import type { CSSProperties, ReactNode } from "react";
 
 import {
   normalizePhiCssSize,
+  resolvePhiPaddingStyle,
   type PhiLayoutEditRenderInsertControl,
 } from "../phi-layout-contract";
 import { PhiLayoutAnchoredOverlay } from "./phi-layout-anchored-overlay";
@@ -29,8 +30,8 @@ const PHI_SPLIT_CARD_LAYOUT_DEFAULTS = resolvePhiLayoutDefaults("split");
  * The Layout's Surface is worn by both: each card draws its edge, corner,
  * depth, pane and mode (`PhiSplitCardHalf`), and the Background runs once across the two and shows only
  * inside them, so a picture or a gradient goes on behind the right card instead of starting again. The
- * box between and around them is transparent. A card has no inset of its own -- what stands in a half
- * sets it, usually a Layout with padding.
+ * box between and around them is transparent. The padding is each card's inset, the distance from the
+ * card's edge to what stands in it, as it is for every Layout; the gap stands between the cards.
  */
 export type PhiSplitCardLayoutProps = Omit<PhiBaseLayoutProps, "slots"> & {
   slots: ReactNode[];
@@ -60,7 +61,7 @@ function renderSplitCardSlot(
   editSlotAction: PhiSplitCardLayoutProps["editSlotAction"],
   editRenderInsertControl: PhiLayoutEditRenderInsertControl | undefined,
   label: ReactNode,
-  card: Pick<PhiSplitCardHalfProps, "blockId" | "surface" | "gap" | "swapped">,
+  card: Pick<PhiSplitCardHalfProps, "blockId" | "surface" | "gap" | "swapped"> & { inset: CSSProperties },
 ) {
   const hasContent = child !== null && child !== undefined && child !== false;
   const showInsertButton = typeof editSlotAction === "function" && editRenderInsertControl != null;
@@ -84,6 +85,7 @@ function renderSplitCardSlot(
         display: "flex",
         alignItems: "stretch",
         boxSizing: "border-box",
+        ...card.inset,
       }}
     >
       {hasContent ? (
@@ -142,17 +144,20 @@ export function PhiSplitCardLayout({
   /*
    * The box itself draws nothing: the Surface is the cards', and outside them the Split Card is
    * transparent. It is the query container the cards measure the shared Background against.
+   *
+   * The padding is each card's, as every Layout's padding is the distance from its own edge to its
+   * slots; the box has none, so its content box is the two cards and the gap, which is what the
+   * shared Background is measured across.
    */
-  const { style: resolvedLayoutStyle } = resolvePhiBaseLayoutChrome({
-    labelEnd,
-    padding,
-    paddingTop,
-    paddingRight,
-    paddingBottom,
-    paddingLeft,
-  });
+  const { style: resolvedLayoutStyle } = resolvePhiBaseLayoutChrome({ labelEnd });
   const { hasExplicitLayoutBackground } = resolvePhiBaseLayoutChrome({ surface });
-  const card = { blockId, surface, gap: gapLength, swapped: swapRatio };
+  const card = {
+    blockId,
+    surface,
+    gap: gapLength,
+    swapped: swapRatio,
+    inset: resolvePhiPaddingStyle({ padding, paddingTop, paddingRight, paddingBottom, paddingLeft }),
+  };
   const resolvedStyle: CSSProperties = {
     position: "relative",
     containerType: "inline-size",

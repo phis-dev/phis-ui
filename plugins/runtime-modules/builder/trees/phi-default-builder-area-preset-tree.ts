@@ -888,7 +888,7 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                   horizontal: "center",
                   vertical: "top",
                 },
-                gap: PHI_SPACE.base,
+                gap: PHI_SPACE.sm,
                 margin: 0,
                 padding: PHI_SPACE.base,
               },
@@ -911,7 +911,7 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                     horizontal: "left",
                     vertical: "top",
                   },
-                  gap: PHI_SPACE.base,
+                  gap: PHI_SPACE.sm,
                   wrap: true,
                   margin: 0,
                   padding: PHI_SPACE.base,
@@ -937,7 +937,7 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
                     horizontal: "center",
                     vertical: "top",
                   },
-                  gap: PHI_SPACE.base,
+                  gap: PHI_SPACE.sm,
                   margin: 0,
                   padding: PHI_SPACE.base,
                 },
@@ -971,7 +971,7 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
               config: {
                 balancedSides: true,
                 contentAlign: "center",
-                gap: PHI_SPACE.base,
+                gap: PHI_SPACE.sm,
                 padding: PHI_SPACE.xs,
                 paddingLeft: 0,
                 paddingRight: 0,
@@ -991,7 +991,7 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
           sortOrder: 0,
           label: "Builder module usage body",
           config: {
-            gap: PHI_SPACE.base,
+            gap: PHI_SPACE.sm,
             padding: PHI_SPACE.base,
             surface: { background: { base: { kind: "color", color: PHI_COLOR.bgLayout } } },
           },
@@ -1015,7 +1015,7 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
           sortOrder: 0,
           label: "Builder public route collision body",
           config: {
-            gap: PHI_SPACE.base,
+            gap: PHI_SPACE.sm,
             padding: PHI_SPACE.base,
             surface: { background: { base: { kind: "color", color: PHI_COLOR.bgLayout } } },
           },
@@ -1039,7 +1039,7 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
           sortOrder: 0,
           label: "Builder module detail body",
           config: {
-            gap: PHI_SPACE.base,
+            gap: PHI_SPACE.sm,
             padding: PHI_SPACE.base,
             surface: { background: { base: { kind: "color", color: PHI_COLOR.bgLayout } } },
           },
@@ -1074,7 +1074,7 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
           sortOrder: 0,
           label: "Builder area settings fields",
           config: {
-            gap: PHI_SPACE.base,
+            gap: PHI_SPACE.sm,
           },
         }),
         nodes.layout({
@@ -1098,7 +1098,7 @@ async function buildPhiDefaultBuilderPagePresetTemplateTree({
           sortOrder: 0,
           label: "Builder page metadata body",
           config: {
-            gap: PHI_SPACE.base,
+            gap: PHI_SPACE.sm,
             padding: PHI_SPACE.base,
             surface: { background: { base: { kind: "color", color: PHI_COLOR.bgLayout } } },
           },

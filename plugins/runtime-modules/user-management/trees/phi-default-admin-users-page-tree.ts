@@ -198,7 +198,7 @@ export async function buildPhiDefaultAdminUsersPageTree({
         label,
         config: {
           anchor: { horizontal: "left", vertical: "top" },
-          gap: PHI_SPACE.base,
+          gap: PHI_SPACE.sm,
           margin: 0,
           padding: PHI_SPACE.base,
           surface: { background: { base: { kind: "color", color: PHI_COLOR.bgLayout } } },

@@ -171,7 +171,7 @@ export async function buildPhiDefaultBuilderRevisionsPageTree({
             horizontal: "center",
             vertical: "top",
           },
-          gap: PHI_SPACE.base,
+          gap: PHI_SPACE.sm,
           margin: 0,
           padding: PHI_SPACE.base,
         },
@@ -185,7 +185,7 @@ export async function buildPhiDefaultBuilderRevisionsPageTree({
         sortOrder: 0,
         label: "Builder delete area body",
         config: {
-          gap: PHI_SPACE.base,
+          gap: PHI_SPACE.sm,
           padding: PHI_SPACE.base,
           surface: { background: { base: { kind: "color", color: PHI_COLOR.bgLayout } } },
         },

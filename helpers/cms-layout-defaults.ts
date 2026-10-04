@@ -10,6 +10,21 @@ type JsonRecord = Record<string, unknown>;
 export type PhiLayoutDefaults = JsonRecord;
 export type PhiLayoutCreationPreset = "panel" | "overlay-actions" | "page-base";
 
+/*
+ * What a Layout states when its node states nothing.
+ *
+ * Every gap is the small step (`sm`): one rhythm between children, whatever arranges them. The padding
+ * follows what the Layout is for. A Layout that only arranges its children -- Content, Flex, the
+ * vertical Flex, Stack, Carousel, Collapsible, Split Card -- has none, so nesting one in another adds
+ * nothing. A Layout that shows a field of tiles -- Grid, Masonry -- keeps them off its edge by the base
+ * step; a Three-column row runs edge to edge and keeps its sides off the edge. A Region has no padding
+ * at all: a gap between a Region's edge and its root Layout is something an author sets.
+ *
+ * "None" in the Paddings panel writes 0 rather than clearing the key, so a default is switched off for
+ * good. A side stated on its own wins over the uniform padding: a Three-column row loses its sides by
+ * setting each to none.
+ */
+
 export const PHI_CONTENT_LAYOUT_DEFAULTS: PhiLayoutDefaults = {
     margin: 0,
 };
@@ -20,9 +35,9 @@ const PHI_CONTENT_LAYOUT_PANEL_PRESET = {
 
 export const PHI_FLEX_LAYOUT_DEFAULTS: PhiLayoutDefaults = {
     distribution: "anchor",
-    // A fresh row starts left-aligned and vertically centred, its children one base step apart.
+    // A fresh row starts left-aligned and vertically centred, its children one small step apart.
     anchor: { horizontal: "left", vertical: "middle" },
-    gap: PHI_SPACE.base,
+    gap: PHI_SPACE.sm,
     verticalSeparators: false,
     separatorBeforeFirst: false,
     separatorSpan: "75%",
@@ -30,7 +45,7 @@ export const PHI_FLEX_LAYOUT_DEFAULTS: PhiLayoutDefaults = {
 };
 const PHI_FLEX_LAYOUT_PANEL_PRESET = {
     distribution: "anchor",
-    gap: PHI_SPACE.base,
+    gap: PHI_SPACE.sm,
     verticalSeparators: false,
     separatorBeforeFirst: false,
     separatorSpan: "75%",
@@ -59,7 +74,7 @@ export const PHI_FLEX_VERTICAL_LAYOUT_DEFAULTS: PhiLayoutDefaults = {
     gap: PHI_SPACE.sm,
 };
 const PHI_FLEX_VERTICAL_LAYOUT_PANEL_PRESET = {
-    gap: PHI_SPACE.base,
+    gap: PHI_SPACE.sm,
     padding: PHI_SPACE.base,
 } as const;
 /**
@@ -68,7 +83,7 @@ const PHI_FLEX_VERTICAL_LAYOUT_PANEL_PRESET = {
  * touching this config -- the preset tree contract rejects a deviating copy.
  */
 const PHI_FLEX_VERTICAL_LAYOUT_PAGE_BASE_PRESET = {
-    gap: PHI_SPACE.base,
+    gap: PHI_SPACE.sm,
     padding: PHI_SPACE.base,
     /*
      * No Surface, so whatever the theme paints behind the page -- a colour, an image, the frosted
@@ -79,21 +94,23 @@ const PHI_FLEX_VERTICAL_LAYOUT_PAGE_BASE_PRESET = {
 } as const;
 
 export const PHI_GRID_LAYOUT_DEFAULTS: PhiLayoutDefaults = {
-    gap: 0,
+    gap: PHI_SPACE.sm,
+    padding: PHI_SPACE.base,
     columns: { ...PHI_GRID_LAYOUT_DEFAULT_COLUMNS },
 };
 const PHI_GRID_LAYOUT_PANEL_PRESET = {
-    gap: PHI_SPACE.base,
+    gap: PHI_SPACE.sm,
     padding: PHI_SPACE.base,
 } as const;
 
 export const PHI_MASONRY_LAYOUT_DEFAULTS: PhiLayoutDefaults = {
     columns: 3,
-    gap: PHI_SPACE.md,
+    gap: PHI_SPACE.sm,
+    padding: PHI_SPACE.base,
 };
 const PHI_MASONRY_LAYOUT_PANEL_PRESET = {
     columns: 3,
-    gap: PHI_SPACE.base,
+    gap: PHI_SPACE.sm,
     padding: PHI_SPACE.base,
 } as const;
 
@@ -168,14 +185,13 @@ const PHI_COLLAPSIBLE_LAYOUT_PANEL_PRESET = {
 /** A split card centres what stands in its cards, on both axes, unless it says otherwise. */
 const PHI_SPLIT_CARD_LAYOUT_DEFAULT_ANCHOR = { horizontal: "center", vertical: "middle" } as const;
 /*
- * A Split Card stands spaced: off its Region's edge and between its cards by the base step. The one
- * Layout whose canonical defaults are not neutral, because two cards flush against each other and the
- * Region's edge are not a split anybody means.
+ * The two cards stand the small step apart. Their padding -- the distance from a card's edge to what
+ * stands in it, as every Layout's padding is the distance from its own edge to its slots -- is none
+ * until somebody states one.
  */
 export const PHI_SPLIT_CARD_LAYOUT_DEFAULTS: PhiLayoutDefaults = {
     anchor: PHI_SPLIT_CARD_LAYOUT_DEFAULT_ANCHOR,
-    gap: PHI_SPACE.base,
-    padding: PHI_SPACE.base,
+    gap: PHI_SPACE.sm,
 };
 
 /*
@@ -192,12 +208,14 @@ const PHI_SPLIT_CARD_LAYOUT_PANEL_PRESET = PHI_SPLIT_CARD_LAYOUT_CREATION_CONFIG
 
 export const PHI_THREE_COLUMN_LAYOUT_DEFAULTS: PhiLayoutDefaults = {
     balancedSides: true,
-    gap: 0,
+    gap: PHI_SPACE.sm,
     wrap: false,
+    paddingLeft: PHI_SPACE.base,
+    paddingRight: PHI_SPACE.base,
 };
 const PHI_THREE_COLUMN_LAYOUT_PANEL_PRESET = {
     balancedSides: true,
-    gap: PHI_SPACE.base,
+    gap: PHI_SPACE.sm,
     wrap: false,
     paddingTop: 0,
     paddingBottom: 0,

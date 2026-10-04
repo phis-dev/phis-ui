@@ -246,7 +246,7 @@ export function buildPhiSettingsPageShellTree({
         slotIndex: panelIndex,
         label: panel.title,
         config: {
-          gap: PHI_SPACE.base,
+          gap: PHI_SPACE.sm,
           padding: 0,
         },
       }),
@@ -266,7 +266,7 @@ export function buildPhiSettingsPageShellTree({
         sortOrder: 0,
         label: overlay.title,
         config: {
-          gap: PHI_SPACE.base,
+          gap: PHI_SPACE.sm,
           padding: PHI_SPACE.base,
         },
       }),

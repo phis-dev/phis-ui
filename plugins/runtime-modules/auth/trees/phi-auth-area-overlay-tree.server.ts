@@ -111,7 +111,7 @@ export async function buildPhiAuthAreaLoginOverlayTree({
       label: `${area} auth login body`,
       config: {
         ...PHI_LOGIN_FORM_LAYOUT_CONFIG,
-        gap: PHI_SPACE.base,
+        gap: PHI_SPACE.sm,
         padding: PHI_SPACE.base,
         margin: 0,
         surface: { background: { base: { kind: "color", color: PHI_COLOR.bgLayout } } },

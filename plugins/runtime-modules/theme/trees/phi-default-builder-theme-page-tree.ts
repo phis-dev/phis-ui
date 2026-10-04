@@ -200,7 +200,7 @@ export async function buildPhiDefaultBuilderThemePageTree({
             horizontal: "left",
             vertical: "top",
           },
-          gap: PHI_SPACE.base,
+          gap: PHI_SPACE.sm,
           margin: 0,
           padding: PHI_SPACE.base,
         },
@@ -215,7 +215,7 @@ export async function buildPhiDefaultBuilderThemePageTree({
         config: {
           balancedSides: true,
           contentAlign: "center",
-          gap: PHI_SPACE.base,
+          gap: PHI_SPACE.sm,
           padding: 0,
           paddingLeft: 0,
           paddingRight: 0,
@@ -247,7 +247,7 @@ export async function buildPhiDefaultBuilderThemePageTree({
         sortOrder: 0,
         label: "Color",
         config: {
-          gap: PHI_SPACE.base,
+          gap: PHI_SPACE.sm,
           anchor: {
             horizontal: "left",
             vertical: "top",
@@ -267,7 +267,7 @@ export async function buildPhiDefaultBuilderThemePageTree({
         sortOrder: 1,
         label: "Style",
         config: {
-          gap: PHI_SPACE.base,
+          gap: PHI_SPACE.sm,
           anchor: {
             horizontal: "left",
             vertical: "top",
@@ -291,7 +291,7 @@ export async function buildPhiDefaultBuilderThemePageTree({
         sortOrder: 2,
         label: "Background",
         config: {
-          gap: PHI_SPACE.base,
+          gap: PHI_SPACE.sm,
           anchor: {
             horizontal: "left",
             vertical: "top",
@@ -311,7 +311,7 @@ export async function buildPhiDefaultBuilderThemePageTree({
         sortOrder: 3,
         label: "Brand",
         config: {
-          gap: PHI_SPACE.base,
+          gap: PHI_SPACE.sm,
           anchor: {
             horizontal: "left",
             vertical: "top",

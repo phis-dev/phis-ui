@@ -145,7 +145,7 @@ function buildPhiNewsDialogNodes(
         // The Body's root Layout is its one padding owner (OVERLAYS.md): the Modal adds none.
         config: {
           anchor: { horizontal: "left", vertical: "top" },
-          gap: PHI_SPACE.base,
+          gap: PHI_SPACE.sm,
           margin: 0,
           padding: PHI_SPACE.base,
           borders: false,

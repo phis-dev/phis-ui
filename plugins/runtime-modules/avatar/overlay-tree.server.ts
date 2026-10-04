@@ -85,7 +85,7 @@ export async function buildPhiAvatarAreaPickerOverlayTree({
       sortOrder: 0,
       label: "app avatar picker body",
       config: {
-        gap: PHI_SPACE.base,
+        gap: PHI_SPACE.sm,
         padding: PHI_SPACE.base,
         margin: 0,
         surface: { background: { base: { kind: "color", color: PHI_COLOR.bgLayout } } },

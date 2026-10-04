@@ -95,7 +95,7 @@ export async function buildPhiDefaultEditorTranslationsPageTree({
          */
         config: {
           anchor: { horizontal: "left", vertical: "top" },
-          gap: PHI_SPACE.base,
+          gap: PHI_SPACE.sm,
           margin: 0,
           padding: PHI_SPACE.base,
         },

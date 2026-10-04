@@ -31,6 +31,7 @@ import { parsePhiCmsContentLayoutConfig, parsePhiCmsGridLayoutConfig } from "../
 import { resolvePhiGridSlotPlacement } from "../components/layouts/phi-grid-contract";
 import { PHI_CORE_LAYOUT_KIND_BY_TYPE_KEY, PHI_SPLIT_CARD_LAYOUT_DEFINITION } from "../components/layouts/layout-definitions";
 import { listPhiPresetTreeFiles } from "./preset-tree-files";
+import { PHI_SPACE } from "../theme/antd-css-var-contract";
 import {
   resolvePhiSlotChildSizing,
   resolvePhiSlotChildSizingForConfig,
@@ -285,21 +286,64 @@ assert.equal(
 );
 
 /*
- * LAYOUTING.md: canonical defaults are neutral, with one exception. A Split Card is inserted spaced --
- * off the Region's edge, between and inside its halves -- because two halves flush against each other
- * and the edge are not a split anybody inserts on purpose. Its ground and line stay neutral like
- * everyone else's.
+ * LAYOUTING.md: a Layout's defaults follow what it is for. Every gap is the small step; the padding is
+ * none for a Layout that only arranges its children (a Split Card among them), the base step around a
+ * field of tiles (Grid, Masonry), and the base step at the sides of a Three-column row. No
+ * Layout brings a Surface by default -- a look is something an author, or a creation config, gives it.
  */
-const PHI_SPACED_DEFAULT_KEYS: Readonly<Record<string, readonly string[]>> = { split: ["padding"] };
+const PHI_EXPECTED_LAYOUT_INSETS: Readonly<Record<PhiLayoutKind, Partial<Record<(typeof chromeKeys)[number], string>>>> = {
+  content: {},
+  flex: {},
+  verticalflex: {},
+  stack: {},
+  carousel: {},
+  collapsible: {},
+  grid: { padding: PHI_SPACE.base },
+  masonry: { padding: PHI_SPACE.base },
+  split: {},
+  threecol: { paddingLeft: PHI_SPACE.base, paddingRight: PHI_SPACE.base },
+};
+const PHI_GAPPED_LAYOUT_KINDS: readonly PhiLayoutKind[] = ["flex", "verticalflex", "grid", "masonry", "split", "threecol"];
 for (const layoutKind of layoutKinds) {
   const defaults = resolvePhiLayoutDefaults(layoutKind);
   for (const key of chromeKeys) {
-    if (PHI_SPACED_DEFAULT_KEYS[layoutKind]?.includes(key)) continue;
-    assert.equal(defaults[key], undefined, `${layoutKind}.${key} must be visually neutral.`);
+    assert.equal(
+      defaults[key],
+      PHI_EXPECTED_LAYOUT_INSETS[layoutKind][key],
+      `${layoutKind}.${key} must be ${PHI_EXPECTED_LAYOUT_INSETS[layoutKind][key] ?? "unset"} by default.`,
+    );
+  }
+  if (PHI_GAPPED_LAYOUT_KINDS.includes(layoutKind)) {
+    assert.equal(defaults.gap, PHI_SPACE.sm, `${layoutKind}.gap must be the small step by default.`);
+    assert.equal(
+      resolvePhiLayoutCreationPreset(layoutKind, "panel").gap,
+      PHI_SPACE.sm,
+      `${layoutKind}'s panel preset must space its children by the small step.`,
+    );
   }
 
   const creationConfig = resolvePhiLayoutCreationPreset(layoutKind, "panel");
   assert.equal("creationPreset" in creationConfig, false);
+}
+
+/*
+ * The preset trees keep the same rhythm: a gap they state is the small step, or none where children
+ * meet edge to edge on purpose. A wider gap written into one tree is the drift this check is for.
+ */
+{
+  const { readFile } = await import("node:fs/promises");
+  const root = fileURLToPath(new URL("..", import.meta.url));
+  const offending: string[] = [];
+  for (const file of listPhiPresetTreeFiles(root)) {
+    const source = await readFile(file, "utf8");
+    for (const match of source.matchAll(/\n\s*gap:\s*([^,\n]+),?\n/gu)) {
+      const value = match[1]!.trim();
+      if (value !== "PHI_SPACE.sm" && value !== "0") {
+        offending.push(`${path.relative(root, file)}: gap ${value}`);
+      }
+    }
+  }
+  assert.deepEqual(offending, [], `Preset trees space children by PHI_SPACE.sm or 0:\n${offending.join("\n")}`);
 }
 
 /**
@@ -419,6 +463,7 @@ assert.equal(
   const markup = renderToStaticMarkup(createElement(PhiSplitCardLayout, {
     blockId: "split",
     gap: "20px",
+    padding: "16px",
     surface: {
       background: { base: { kind: "color", color: "#123456" } },
       borderSource: "theme",
@@ -429,6 +474,12 @@ assert.equal(
   const box = markup.match(/<div[^>]*class="phi-layout" style="([^"]*)"/u)?.[1] ?? "";
   assert.doesNotMatch(box, /background|box-shadow|border:/u, "The Split Card's own box paints nothing.");
   assert.match(box, /container-type:inline-size/u, "The Split Card is the container its cards measure against.");
+  assert.doesNotMatch(box, /padding/u, "The Split Card's padding is not around its cards.");
+  assert.equal(
+    (markup.match(/padding-top:16px;padding-right:16px;padding-bottom:16px;padding-left:16px/gu) ?? []).length,
+    2,
+    "The Split Card's padding is inside each card, as every Layout's padding is inside its own edge.",
+  );
   assert.equal((markup.match(/box-shadow:/gu) ?? []).length, 2, "Each of the two cards casts its own shadow.");
   const paints = [...markup.matchAll(/data-phi-surface-ground-paint="true" style="([^"]*)"/gu)].map((match) => match[1]);
   assert.equal(paints.length, 2, "Each card carries its part of the one Background.");
