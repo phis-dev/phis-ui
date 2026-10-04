@@ -124,13 +124,19 @@ export const PHI_NUMBER_CONTROL_SIGNALS = {
   ],
 } satisfies PhiSignalPluginMeta;
 
+/*
+ * The channel is named for the Control, not for its value type: `size/change` is the size of the block
+ * itself, which every renderable block receives (`PHI_RENDERABLE_BLOCK_RECEIVE_BINDINGS`), so a Dimension
+ * listening on it would have said twice that it takes a size -- once for its box, once for its value --
+ * and its endpoint was refused as soon as one was placed.
+ */
 export const PHI_DIMENSION_CONTROL_SIGNALS = {
   emits: [
     { id: "change", action: "change", valueType: "size" },
   ],
   listens: [
-    { ...PHI_CONTROL_SET_VALUE_SIGNAL, channel: "size", valueType: "size" },
-    { ...PHI_CONTROL_CLEAR_SIGNAL, channel: "size" },
+    { ...PHI_CONTROL_SET_VALUE_SIGNAL, channel: "dimension", valueType: "size" },
+    { ...PHI_CONTROL_CLEAR_SIGNAL, channel: "dimension" },
   ],
 } satisfies PhiSignalPluginMeta;
 
