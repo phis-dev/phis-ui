@@ -485,14 +485,14 @@ export const PHI_MASONRY_LAYOUT_DEFINITION = {
   typeKey: "masonry",
   slotSizePolicy: "fill",
   title: "Masonry",
-  description: "Sequential slot masonry layout with column-based flow.",
+  description: "Slots in columns at their own heights, without rows.",
   category: "structure",
   iconName: "masonry",
   defaultConfig: resolvePhiLayoutDefaults("masonry"),
   fields: [
     ...PHI_LAYOUT_PADDING_FIELDS,
-    { key: "columns", type: "number", label: "Columns" },
-    { key: "minColumnWidth", type: "length", label: "Min Column Width", min: 0 },
+    /* How many columns at each width; the gap between them is the Paddings panel's. */
+    { key: "columns", type: "column-count", label: "Columns" },
   ],
   slots: [...PHI_CMS_MASONRY_LAYOUT_SLOTS],
 } satisfies PhiCmsLayoutPluginDefinition<PhiCmsMasonryLayoutConfig>;

@@ -10,6 +10,7 @@ import {
 } from "../theme/phi-container-breakpoints";
 import { PHI_FORM_RESPONSIVE_MIN_WIDTH } from "../components/forms/form-descriptor-contract";
 import { PHI_GRID_RESPONSIVE_MIN_WIDTH } from "../components/layouts/phi-grid-contract";
+import { PHI_MASONRY_RESPONSIVE_MIN_WIDTH } from "../components/layouts/phi-masonry-contract";
 
 /**
  * Every named threshold is a member of the scale.
@@ -73,6 +74,15 @@ for (const threshold of Object.values(PHI_GRID_RESPONSIVE_MIN_WIDTH)) {
     `The Grid switches at ${threshold}, which is not on the container-breakpoint scale.`,
   );
 }
+
+/** The Masonry's column count is picked the same way, by `@container phi-masonry` queries. */
+const masonryThresholds = [...layoutStylesheet.matchAll(/@container phi-masonry \(min-width: (\d+)px\)/gu)]
+  .map((match) => Number(match[1]));
+assert.deepEqual(
+  masonryThresholds,
+  [PHI_MASONRY_RESPONSIVE_MIN_WIDTH.medium, PHI_MASONRY_RESPONSIVE_MIN_WIDTH.wide],
+  "styles/layout.css must compare against the same numbers PHI_MASONRY_RESPONSIVE_MIN_WIDTH declares, in that order.",
+);
 
 /**
  * And the Shell's thresholds are deliberately NOT on it.

@@ -4,6 +4,7 @@ import { PHI_RENDERABLE_BLOCK_DEFAULT_ANCHOR } from "./renderable-block-defaults
 import { isPhiRecord } from "./is-record";
 import { PHI_SURFACE_CARD } from "./surface-presets";
 import { PHI_GRID_LAYOUT_DEFAULT_COLUMNS } from "../components/layouts/phi-grid-contract";
+import { PHI_MASONRY_LAYOUT_DEFAULT_COLUMNS } from "../components/layouts/phi-masonry-contract";
 
 type JsonRecord = Record<string, unknown>;
 
@@ -104,12 +105,12 @@ const PHI_GRID_LAYOUT_PANEL_PRESET = {
 } as const;
 
 export const PHI_MASONRY_LAYOUT_DEFAULTS: PhiLayoutDefaults = {
-    columns: 3,
+    columns: { ...PHI_MASONRY_LAYOUT_DEFAULT_COLUMNS },
     gap: PHI_SPACE.sm,
     padding: PHI_SPACE.base,
 };
 const PHI_MASONRY_LAYOUT_PANEL_PRESET = {
-    columns: 3,
+    columns: { ...PHI_MASONRY_LAYOUT_DEFAULT_COLUMNS },
     gap: PHI_SPACE.sm,
     padding: PHI_SPACE.base,
 } as const;

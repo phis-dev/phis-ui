@@ -31,9 +31,13 @@ export type PhiInspectorWidgetLabels = {
     dark: string;
     inverse: string;
   };
-  /** A Grid's columns: how many slots a row holds at each width, and where one slot stands. */
+  /**
+   * A Grid's columns -- how many slots a row holds at each width, and where one slot stands -- and a
+   * Masonry's, which has columns but no rows.
+   */
   grid: {
     columns: string;
+    masonryColumns: string;
     distribution: string;
     slot: string;
     profiles: { compact: string; medium: string; wide: string };
@@ -73,6 +77,7 @@ export const PHI_INSPECTOR_WIDGET_DEFAULT_LABELS: PhiInspectorWidgetLabels = {
   },
   grid: {
     columns: "Slots per row",
+    masonryColumns: "Columns",
     distribution: "Distribution",
     slot: "Slot",
     profiles: { compact: "Narrow", medium: "Medium", wide: "Wide" },

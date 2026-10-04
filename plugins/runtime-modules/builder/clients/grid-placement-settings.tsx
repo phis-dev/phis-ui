@@ -60,12 +60,17 @@ export type PhiGridPlacementSettingsProps = {
   /** The slots that hold something: only they can be wider or indented. */
   occupiedSlotIndices: readonly number[];
   labels?: PhiInspectorWidgetLabels["grid"];
+  /**
+   * A Grid's: where one slot stands in its row. A Masonry has columns and no rows, so its slots have
+   * nowhere else to stand and it only asks for the count.
+   */
+  withDistribution?: boolean;
   disabled?: boolean;
   onConfigChange?: (key: "columns" | "slotPlacements", value: unknown) => void;
 };
 
 /**
- * A Grid's columns in the Inspector.
+ * A Grid's or a Masonry's columns in the Inspector.
  *
  * First how many slots a row holds at each width, which is all most Grids need; then, for one slot at
  * a time, whether it is wider than one column or indented. Both in the Grid's columns -- "two columns",
@@ -76,6 +81,7 @@ export function PhiGridPlacementSettings({
   defaultConfig,
   occupiedSlotIndices,
   labels = PHI_INSPECTOR_WIDGET_DEFAULT_LABELS.grid,
+  withDistribution = true,
   disabled = false,
   onConfigChange,
 }: PhiGridPlacementSettingsProps) {
@@ -119,7 +125,9 @@ export function PhiGridPlacementSettings({
 
   return (
     <>
-      <PhiDividerControl titlePlacement="start" style={{ marginBlock: 0 }}>{labels.columns}</PhiDividerControl>
+      <PhiDividerControl titlePlacement="start" style={{ marginBlock: 0 }}>
+        {withDistribution ? labels.columns : labels.masonryColumns}
+      </PhiDividerControl>
       {PHI_GRID_LAYOUT_PROFILES.map((profile) =>
         renderPhiInspectorSettingsRow(
           labels.profiles[profile],
@@ -132,7 +140,7 @@ export function PhiGridPlacementSettings({
           />,
           `grid-columns-${profile}`,
         ))}
-      {selectedSlotIndex == null ? null : (
+      {!withDistribution || selectedSlotIndex == null ? null : (
         <>
           <PhiDividerControl titlePlacement="start" style={{ marginBlock: 0 }}>{labels.distribution}</PhiDividerControl>
           {renderPhiInspectorSettingsRow(

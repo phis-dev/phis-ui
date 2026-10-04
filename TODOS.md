@@ -621,7 +621,8 @@ built. Remove an entry when it is done.
   is not one mechanism here, it is three, and the tree is not of one mind about them:
 
   - *CSS decides on its own, nothing is authored.* A Flex Layout's `wrap` is a boolean and the room
-    decides; a Masonry with `minColumnWidth` fills as many columns as fit, and with `columns` does not.
+    decides; a Masonry with `minColumnWidth` filled as many columns as fit, and with `columns` did not (it
+    answers by profile now, LAYOUTING.md "Masonry columns").
   - *The block measures its own width.* A Form declares `container-type: inline-size` and switches at
     360px and 768px (styles/layout.css); a Grid runs a `ResizeObserver` on its own container and reads
     `compact | medium | wide` off it (components/layouts/clients/phi-grid-layout-client.tsx); the Shell

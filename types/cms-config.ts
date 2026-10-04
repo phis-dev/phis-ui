@@ -30,10 +30,6 @@ import type {
   PhiRenderableBlockAnchor,
   PhiRenderableBlockResponsiveSize,
 } from "./renderable-block";
-import {
-  readPhiShadow,
-  type PhiShadow,
-} from "./layout-style";
 import type { PhiBaseLayoutSlotStates } from "../components/layouts/phi-layout-contract";
 import { applyPhiLayoutDefaults } from "../helpers/cms-layout-defaults";
 import { resolvePhiLayoutDefaults } from "../helpers/cms-layout-defaults";
@@ -398,15 +394,10 @@ export type PhiCmsSplitCardLayoutConfig = PhiCmsLayerBase & {
   swapRatio?: boolean;
 };
 
+/** Children in columns at their own heights: how many columns at each width, and the gap between them. */
 export type PhiCmsMasonryLayoutConfig = PhiCmsLayerBase & {
-  columns?: number;
-  minColumnWidth?: PhiCssLength;
+  columns?: PhiResponsiveValue<number>;
   gap?: CSSProperties["gap"];
-  itemPadding?: CSSProperties["padding"];
-  itemBackground?: string;
-  itemBorder?: string;
-  itemBorderRadius?: CSSProperties["borderRadius"];
-  itemShadow?: PhiShadow;
 };
 
 function readRenderableBlockAnchorOrPlacement(value: unknown): PhiRenderableBlockAnchor | undefined {
@@ -569,14 +560,8 @@ export function parsePhiCmsMasonryLayoutConfig(
       paddingRight: readCssSize(config.paddingRight),
       paddingTop: readCssSize(config.paddingTop),
       paddingBottom: readCssSize(config.paddingBottom),
-      columns: readNumber(config.columns),
-      minColumnWidth: readPhiLengthValue(config.minColumnWidth) ?? undefined,
+      columns: readGridResponsiveCount(config.columns, isPhiGridColumnCount),
       gap: readCssSize(config.gap),
-      itemPadding: readCssSize(config.itemPadding),
-      itemBackground: readString(config.itemBackground),
-      itemBorder: readString(config.itemBorder),
-      itemBorderRadius: readCssSize(config.itemBorderRadius),
-      itemShadow: readPhiShadow(config.itemShadow),
     },
     resolvePhiLayoutDefaults("masonry"),
   );

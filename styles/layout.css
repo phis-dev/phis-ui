@@ -53,8 +53,38 @@
   gap: var(--phi-layout-gap);
 }
 
-:where([data-layout-kind="masonry"]) {
-  column-gap: var(--phi-layout-gap);
+/*
+ * A Masonry's columns (components/layouts/phi-masonry-layout.tsx). The Layout box is the `phi-masonry`
+ * container and carries the column count for every width; the column box inside it picks one by the
+ * container queries below, the way a Grid's slots do. Each item holds the gap below its child as
+ * padding, and the column box takes the last one back, so nothing is left under the longest column.
+ */
+.phi-masonry-layout__columns {
+  column-count: var(--phi-masonry-columns-compact, 1);
+  column-gap: var(--phi-masonry-gap, 0px);
+  column-fill: balance;
+  margin-block-end: calc(-1 * var(--phi-masonry-gap, 0px));
+}
+
+.phi-masonry-layout__item {
+  break-inside: avoid;
+  padding-block-end: var(--phi-masonry-gap, 0px);
+}
+
+/*
+ * The same numbers as `PHI_MASONRY_RESPONSIVE_MIN_WIDTH` (components/layouts/phi-masonry-contract.ts),
+ * held together by `validate-container-breakpoint-contracts.ts`.
+ */
+@container phi-masonry (min-width: 377px) {
+  .phi-masonry-layout__columns {
+    column-count: var(--phi-masonry-columns-medium, 1);
+  }
+}
+
+@container phi-masonry (min-width: 610px) {
+  .phi-masonry-layout__columns {
+    column-count: var(--phi-masonry-columns-wide, 1);
+  }
 }
 
 :where(.phi-layout-slot) {

@@ -8,24 +8,32 @@ import {
   phiLayoutSlotClassName,
   phiLayoutSlotContentMarker,
 } from "../../helpers/layout-authoring-markers";
+import type { PhiResponsiveValue } from "../../types/responsive";
+import { resolvePhiMasonryColumnProperties, resolvePhiMasonryColumns } from "./phi-masonry-contract";
 
 const PHI_MASONRY_LAYOUT_DEFAULTS = resolvePhiLayoutDefaults("masonry");
 
 export type PhiMasonryLayoutProps = Omit<PhiBaseLayoutProps, "slots"> & {
   slots: ReactNode[];
-  columns?: number;
-  minColumnWidth?: CSSProperties["minWidth"];
+  /** How many columns at each width; each child stands under the one before it in its column. */
+  columns?: PhiResponsiveValue<number>;
+  /** The distance between children, across and down. */
   gap?: CSSProperties["gap"];
   style?: CSSProperties;
 };
 
+/**
+ * Children in columns, each at its own height and directly under the one before it: no rows, so no
+ * gaps where a short child stands beside a tall one. The browser fills the columns in order and evens
+ * out where they end (`column-fill: balance`), so it is decided in the markup and nothing moves after
+ * hydration. The order runs down a column, then on to the next.
+ */
 export function PhiMasonryLayout({
   slots,
   ...layoutProps
 }: PhiMasonryLayoutProps) {
   const {
-    columns = PHI_MASONRY_LAYOUT_DEFAULTS.columns as number,
-    minColumnWidth,
+    columns,
     gap = PHI_MASONRY_LAYOUT_DEFAULTS.gap as number | string,
     renderMode,
     style,
@@ -34,31 +42,25 @@ export function PhiMasonryLayout({
     editSlotLabels,
     editRenderInsertControl,
   } = layoutProps;
-  const resolvedGap = normalizePhiCssSize(gap) ?? (PHI_MASONRY_LAYOUT_DEFAULTS.gap as number | string);
-  const resolvedColumns = Number.isFinite(columns) && columns > 0 ? Math.floor(columns) : 3;
-  const resolvedMinColumnWidth = normalizePhiCssSize(minColumnWidth);
+  const resolvedGap = normalizePhiCssSize(gap) ?? normalizePhiCssSize(PHI_MASONRY_LAYOUT_DEFAULTS.gap as number | string) ?? "0px";
   const isAuthoringRender = isPhiLayoutAuthoringRender(layoutProps);
   const isEditMode = renderMode === "editor";
   /*
-   * The column item, the one wrapper a Masonry child stands in; `breakInside` is what keeps it whole
-   * when the column breaks. The insert control is given the same one, so the place a Widget will appear
-   * is the place the button stands.
+   * The column item. The distance below a child is the item's padding, not a margin on the child, and
+   * the authoring slot is the element inside it, so a selected slot outlines the child and not the gap.
+   * The column box takes the last gap back (`styles/layout.css`), so nothing is left under the longest
+   * column. The insert control is given the same item, so the place a Widget will appear is the place
+   * the button stands.
    */
   const renderMasonryItem = (key: string, hasContent: boolean, content: ReactNode) => (
-    <div
-      key={key}
-      className={phiLayoutSlotClassName(isAuthoringRender)}
-      data-phi-layout-has-content={phiLayoutSlotContentMarker(isAuthoringRender, hasContent)}
-      style={{
-        display: "inline-block",
-        width: "100%",
-        minWidth: 0,
-        breakInside: "avoid",
-        pageBreakInside: "avoid",
-        marginBottom: resolvedGap,
-      }}
-    >
-      {content}
+    <div key={key} className="phi-masonry-layout__item">
+      <div
+        className={phiLayoutSlotClassName(isAuthoringRender)}
+        data-phi-layout-has-content={phiLayoutSlotContentMarker(isAuthoringRender, hasContent)}
+        style={{ minWidth: 0 }}
+      >
+        {content}
+      </div>
     </div>
   );
   /*
@@ -98,21 +100,28 @@ export function PhiMasonryLayout({
     ));
   }
 
+  /*
+   * The columns stand in a box of their own inside the Layout's: the Layout is the `phi-masonry`
+   * container the column count is asked of, and a container cannot answer a query about itself.
+   */
   return (
     <PhiBaseLayout
       {...layoutProps}
       layoutKind={layoutKind}
-      slots={renderedItems}
+      slots={[
+        <div key="columns" className="phi-masonry-layout__columns">
+          {renderedItems}
+        </div>,
+      ]}
       renderMode={renderMode}
-      gap={resolvedGap}
+      gap={undefined}
       style={{
         minWidth: 0,
-        columnCount: resolvedMinColumnWidth ? undefined : resolvedColumns,
-        columnWidth: resolvedMinColumnWidth,
-        columnGap: resolvedGap,
-        columnFill: "balance",
+        containerType: "inline-size",
+        containerName: "phi-masonry",
+        ...resolvePhiMasonryColumnProperties(resolvePhiMasonryColumns(columns), resolvedGap),
         ...style,
-      }}
+      } as CSSProperties}
     >
     </PhiBaseLayout>
   );

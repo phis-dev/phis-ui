@@ -19,7 +19,6 @@ export const PHI_MASONRY_LAYOUT_PLUGIN: PhiCmsLayoutPlugin<PhiCmsMasonryLayoutCo
       slots={renderSequentialSlotChildren(node)}
       renderMode={renderMode}
       columns={config.columns}
-      minColumnWidth={config.minColumnWidth}
       gap={config.gap}
       zIndex={config.zIndex}
       surface={config.surface}

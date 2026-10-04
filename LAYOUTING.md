@@ -501,6 +501,25 @@ form layout's own control range at each width, including the label column a Form
 because the Grid arranged it. A form whose labels stand above their controls has no label column, and its
 submit starts where its inputs start. The Grid still sees one Widget.
 
+### Masonry columns
+
+A Masonry has columns and no rows: each child keeps its own height and stands directly under the one
+before it, so a short child beside a tall one leaves no gap. That is the whole difference from a Grid,
+and why a Masonry has no slot placement -- every slot is one column wide and has nowhere else to stand.
+
+It states how many columns it has at each profile (`columns`, 1, 2, 3, 4 or 6, default
+`PHI_MASONRY_LAYOUT_DEFAULT_COLUMNS` = 1 / 2 / 3), on the Grid's thresholds and the same way: the Layout
+box is the `phi-masonry` container and carries the count for every width, and a column box inside it
+picks one by `@container phi-masonry` rules (`styles/layout.css`). The column box is the browser's
+multi-column flow with `column-fill: balance`, so the columns end about level, everything is decided in
+the markup and nothing moves after hydration; the order runs down a column, then on to the next. It
+had one `columns` number for every width, or a `minColumnWidth` that silently replaced it -- two fields of
+which only one ever worked.
+
+`gap` is the Paddings panel's, across and down. Down, it is each item's bottom padding, and the column
+box takes the last one back, so nothing stands under the longest column; the authoring slot is the
+element inside the item, so a selected slot outlines the child and not the gap.
+
 ### Stack slot display
 
 `slotDisplay: "single" | "stacked"` decides whether the Stack is a sequence or a pile, and defaults to

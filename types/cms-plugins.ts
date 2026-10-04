@@ -253,7 +253,7 @@ export type PhiCmsConfigField =
       storage?: PhiCmsConfigFieldValueStorage;
     })
   | (PhiCmsConfigFieldBase & {
-      type: "shadow" | "grid-placement";
+      type: "shadow" | "grid-placement" | "column-count";
       section?: string;
     });
 

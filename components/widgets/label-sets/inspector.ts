@@ -39,6 +39,7 @@ const PHI_INSPECTOR_WIDGET_LABEL_SET = definePhiLabelSet({
     tone_dark: PHI_INSPECTOR_WIDGET_DEFAULT_LABELS.tone.dark,
     tone_inverse: PHI_INSPECTOR_WIDGET_DEFAULT_LABELS.tone.inverse,
     grid_columns: PHI_INSPECTOR_WIDGET_DEFAULT_LABELS.grid.columns,
+    grid_masonry_columns: PHI_INSPECTOR_WIDGET_DEFAULT_LABELS.grid.masonryColumns,
     grid_distribution: PHI_INSPECTOR_WIDGET_DEFAULT_LABELS.grid.distribution,
     grid_slot: PHI_INSPECTOR_WIDGET_DEFAULT_LABELS.grid.slot,
     grid_profile_compact: PHI_INSPECTOR_WIDGET_DEFAULT_LABELS.grid.profiles.compact,
@@ -84,6 +85,7 @@ export async function getPhiInspectorWidgetLabels(
     },
     grid: {
       columns: labels.grid_columns,
+      masonryColumns: labels.grid_masonry_columns,
       distribution: labels.grid_distribution,
       slot: labels.grid_slot,
       profiles: {

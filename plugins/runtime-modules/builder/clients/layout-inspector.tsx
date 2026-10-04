@@ -60,7 +60,7 @@ import { PhiTypographyControl } from "../../../../components/controls/phi-typogr
 
 const PHI_GAP_SM = "var(--ant-padding-sm)";
 
-type PhiCmsChromeConfigField = Extract<PhiCmsConfigField, { type: "padding" | "background" | "border" | "shadow" | "grid-placement" }>;
+type PhiCmsChromeConfigField = Extract<PhiCmsConfigField, { type: "padding" | "background" | "border" | "shadow" | "grid-placement" | "column-count" }>;
 
 function isPhiCmsChromeConfigField(field: PhiCmsConfigField): field is PhiCmsChromeConfigField {
   return (
@@ -69,6 +69,7 @@ function isPhiCmsChromeConfigField(field: PhiCmsConfigField): field is PhiCmsChr
     || field.type === "border"
     || field.type === "shadow"
     || field.type === "grid-placement"
+    || field.type === "column-count"
   );
 }
 
@@ -156,12 +157,12 @@ export function PhiDeveloperBuilderLayoutInspectorWidgetClient({
   const chromeFields = declaredFields
     .filter(isPhiCmsChromeConfigField)
     .filter((field) => isPhiInspectorConfigFieldVisible(field, currentLayoutConfigRecord))
-    .filter((field) => field.type !== "grid-placement");
+    .filter((field) => field.type !== "grid-placement" && field.type !== "column-count");
   const gridPlacementField =
     declaredFields
       .filter(isPhiCmsChromeConfigField)
       .filter((field) => isPhiInspectorConfigFieldVisible(field, currentLayoutConfigRecord))
-      .find((field) => field.type === "grid-placement") ?? null;
+      .find((field) => field.type === "grid-placement" || field.type === "column-count") ?? null;
 
   /*
    * The Settings panel hides itself when the layout declares nothing for it. It is the Drawer's first
@@ -322,6 +323,7 @@ export function PhiDeveloperBuilderLayoutInspectorWidgetClient({
                               defaultConfig={layoutDefaultConfigRecord}
                               occupiedSlotIndices={gridOccupiedSlotIndices}
                               labels={gridLabels}
+                              withDistribution={gridPlacementField.type === "grid-placement"}
                               disabled={isPreviewMode}
                               onConfigChange={onConfigChange}
                             />
