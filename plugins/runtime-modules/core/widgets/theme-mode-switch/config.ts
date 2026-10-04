@@ -34,7 +34,7 @@ export function parsePhiThemeModeSwitchWidgetConfig(
   return {
     ...readRenderableBlockConfig(config),
     label: readString(config.label),
-    controlSize: readSize(config.controlSize),
+    controlSize: readSize(config.controlSize) ?? "medium",
   };
 }
 

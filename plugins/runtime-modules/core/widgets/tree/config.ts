@@ -85,7 +85,7 @@ export function parsePhiTreeWidgetConfig(raw: Record<string, unknown>): PhiTreeW
   const initialQuery = isPhiRecord(raw.initialQuery) ? raw.initialQuery : {};
   return {
     presentation: {
-      ...parsePhiControlPresentationConfig(presentation),
+      controlSize: parsePhiControlPresentationConfig(presentation).controlSize ?? "small",
       title: readString(presentation.title),
       description: readString(presentation.description),
       width: readPhiLengthValue(presentation.width) ?? undefined,

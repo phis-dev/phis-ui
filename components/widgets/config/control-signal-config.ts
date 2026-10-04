@@ -171,9 +171,14 @@ export function parsePhiControlConfig<
   allowedSizes?: readonly TSize[],
 ): Required<Pick<PhiControlConfig<TSize>, "key">> &
   Pick<PhiControlConfig<TSize>, "signalRoutes" | "readOnly" | "disabled" | "controlSize"> {
+  const { controlSize } = parsePhiControlPresentationConfig(config, allowedSizes);
   return {
     ...parsePhiControlStateConfig(config, defaults),
-    ...parsePhiControlPresentationConfig(config, allowedSizes),
+    /*
+     * Unset, a Control is drawn at medium; stated here, the Inspector shows it chosen instead of an
+     * empty Size. Nothing around a Widget hands it a size to inherit.
+     */
+    controlSize: controlSize ?? ((allowedSizes ?? PHI_CONTROL_SIZES).includes("medium" as TSize) ? "medium" as TSize : undefined),
   };
 }
 

@@ -549,7 +549,7 @@ export function parsePhiTableWidgetConfig(config: Record<string, unknown>): PhiT
   return {
     presentation: {
       ...presentationControls,
-      controlSize: presentationControls.controlSize ?? (toolsMode === "self-contained" ? "small" : undefined),
+      controlSize: presentationControls.controlSize ?? (toolsMode === "self-contained" ? "small" : "medium"),
       title: readString(presentation.title),
       description: readString(presentation.description),
       columns: readColumns(presentation.columns),
