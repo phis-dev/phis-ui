@@ -15,6 +15,14 @@ export type PhiInspectorWidgetLabels = {
     surface: string;
     signals: string;
   };
+  /** The mode a Surface draws its content in (`tone`). */
+  tone: {
+    title: string;
+    inherit: string;
+    light: string;
+    dark: string;
+    inverse: string;
+  };
 };
 
 export const PHI_INSPECTOR_WIDGET_DEFAULT_LABELS: PhiInspectorWidgetLabels = {
@@ -33,5 +41,12 @@ export const PHI_INSPECTOR_WIDGET_DEFAULT_LABELS: PhiInspectorWidgetLabels = {
     shadow: "Shadow",
     surface: "Surface",
     signals: "Signals",
+  },
+  tone: {
+    title: "Mode",
+    inherit: "Page",
+    light: "Light",
+    dark: "Dark",
+    inverse: "Inverse",
   },
 };

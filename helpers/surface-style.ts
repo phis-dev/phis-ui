@@ -10,7 +10,7 @@ import {
   type PhiCmsBackgroundWidgetConfig,
 } from "../components/widgets/config/background";
 import { resolvePhiCmsBorderSource } from "../types/cms-border-source";
-import type { PhiSurface } from "../types/surface";
+import { resolvePhiSurfaceToneClassName, type PhiSurface } from "../types/surface";
 import { resolvePhiSourcedBorderStyle } from "./border-widget-style";
 import { combinePhiBoxShadows, resolvePhiShadow } from "./layout-style";
 
@@ -37,6 +37,11 @@ export type PhiResolvedSurface = {
   ground: PhiSurfaceGround | null;
   /** Whether the Surface paints a ground at all -- a pane over nothing does not. */
   paintsGround: boolean;
+  /**
+   * The class the box carries for its `tone`, or nothing for `inherit`. The box carries it and renders
+   * `PhiSurfaceTone` around its content; the class alone draws nothing.
+   */
+  className?: string;
 };
 
 export type PhiSurfaceStyleOptions = {
@@ -130,6 +135,7 @@ export function resolvePhiSurfaceStyle(
     },
     ground,
     paintsGround,
+    ...(surface.tone ? { className: resolvePhiSurfaceToneClassName(surface.tone) } : {}),
   };
 }
 

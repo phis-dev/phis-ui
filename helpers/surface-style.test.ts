@@ -137,3 +137,15 @@ describe("a Surface on a box that cannot carry a layer", () => {
     expect(resolved.style.filter).toBeUndefined();
   });
 });
+
+describe("a Surface in another mode", () => {
+  it("gives the box its tone's class", () => {
+    expect(resolvePhiSurfaceStyle({ tone: "dark" }).className).toBe("phi-tone-dark");
+    expect(resolvePhiSurfaceStyle({ tone: "inverse" }).className).toBe("phi-tone-inverse");
+  });
+
+  it("gives no class for the page's own mode", () => {
+    expect(resolvePhiSurfaceStyle({ shadow: "soft" }).className).toBeUndefined();
+    expect(readPhiSurface({ tone: "inherit", shadow: "soft" })?.tone).toBeUndefined();
+  });
+});

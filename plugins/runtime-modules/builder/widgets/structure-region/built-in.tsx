@@ -94,6 +94,8 @@ import { usePhiBuilderAuthoringCanvas } from "../../authoring-canvas";
 import { PhiFlexControl } from "../../../../../components/controls/phi-flex-control";
 import { PhiTypographyControl } from "../../../../../components/controls/phi-typography-control";
 import { PhiIcon } from "../../../../../components/shell/phi-icon";
+import { PhiSurfaceTone } from "../../../../../components/surface/phi-surface-tone";
+import { resolvePhiSurfaceToneClassName } from "../../../../../types/surface";
 
 export type PhiStructureRegionWidgetConfig = {
   slotKind?: "structure" | "content";
@@ -748,6 +750,7 @@ export function PhiStructureRegionScaffold({
     draftGeometry.block.max == null;
   const shouldStretchAvailableHeight = shouldFillAvailableHeight || shouldStretchContentRegion;
   const hasExplicitSidebarWidth = isFullHeightRegion && draftGeometry.explicitInline;
+  const regionToneClassName = resolvePhiSurfaceToneClassName(effectiveDraft?.surface?.tone);
   const slotBackgroundStyle = effectiveDraft?.surface?.background
     ? resolvePhiBackgroundWidgetStyle(effectiveDraft.surface.background)
     : {};
@@ -2254,7 +2257,7 @@ export function PhiStructureRegionScaffold({
     return (
       <div
         data-phi-region-slot={config.regionKey}
-        className="phi-builder-structure-region__slot"
+        className={["phi-builder-structure-region__slot", regionToneClassName].filter(Boolean).join(" ")}
         data-phi-builder-region-mode="preview"
         data-phi-builder-region-has-root-node={hasRootNode ? "true" : "false"}
         data-phi-builder-region-selected="false"
@@ -2278,6 +2281,7 @@ export function PhiStructureRegionScaffold({
           ...(resolvedRegionTypography.lineHeight ? { lineHeight: resolvedRegionTypography.lineHeight } : {}),
         }}
       >
+        <PhiSurfaceTone tone={effectiveDraft?.surface?.tone}>
         <div
           data-phi-debug-scaffold={resolvedDebugScaffold}
           style={{
@@ -2293,6 +2297,7 @@ export function PhiStructureRegionScaffold({
         >
           {previewRoot}
         </div>
+        </PhiSurfaceTone>
       </div>
     );
   }
@@ -2368,7 +2373,7 @@ export function PhiStructureRegionScaffold({
         <div
               ref={setRootDropNodeRef}
               data-phi-region-slot={config.regionKey}
-              className="phi-builder-structure-region__slot"
+              className={["phi-builder-structure-region__slot", regionToneClassName].filter(Boolean).join(" ")}
               data-phi-builder-region-mode="editor"
               data-phi-structure-drop-state={
                 rootDropAccepted
@@ -2441,6 +2446,7 @@ export function PhiStructureRegionScaffold({
               }
             }}
           >
+          <PhiSurfaceTone tone={effectiveDraft?.surface?.tone}>
             <div
               data-phi-debug-scaffold={resolvedDebugScaffold}
               style={{
@@ -2479,6 +2485,7 @@ export function PhiStructureRegionScaffold({
                 </span>
               )}
             </div>
+          </PhiSurfaceTone>
         </div>,
       )}
     </div>

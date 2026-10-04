@@ -6,6 +6,8 @@ import type { PhiCmsInstanceId } from "../../types/cms-instance-id";
 import type { PhiSurface } from "../../types/surface";
 import { resolvePhiSurfaceStyle, type PhiSurfaceGround } from "../../helpers/surface-style";
 import { PhiSurfaceGroundLayer } from "../surface/phi-surface-ground";
+import { PhiSurfaceTone } from "../surface/phi-surface-tone";
+import { resolvePhiSurfaceToneClassName } from "../../types/surface";
 import { PHI_LAYOUT_SURFACE_RADIUS } from "./phi-layout-contract";
 import { usePhiLayoutSignalSurface } from "./phi-layout-signal-surface";
 
@@ -52,7 +54,8 @@ export function resolvePhiLayoutSignalledSurfaceStyle(
  * the ground layer is the one the Layout resolved. As long as no Signal has changed the Surface, this box
  * draws exactly that. Once one has (see `usePhiLayoutSignalSurface`), it takes the given Surface's part
  * out of the style and puts the signalled one in its place -- the Layout's own topology stays as the
- * server drew it.
+ * server drew it. It is also where the Surface's `tone` lands: the class on the box and the tone scope
+ * around its content.
  */
 export function PhiLayoutSurfaceBox({
   blockId,
@@ -63,20 +66,16 @@ export function PhiLayoutSurfaceBox({
   ...attributes
 }: PhiLayoutSurfaceBoxProps) {
   const signalled = usePhiLayoutSignalSurface(blockId, surface);
-  if (signalled === surface) {
-    return (
-      <div {...attributes} style={style}>
-        <PhiSurfaceGroundLayer ground={ground} />
-        {children}
-      </div>
-    );
-  }
-
-  const next = resolvePhiLayoutSignalledSurfaceStyle(style, surface, signalled);
+  const next = signalled === surface ? { style, ground } : resolvePhiLayoutSignalledSurfaceStyle(style, surface, signalled);
+  const toneClassName = resolvePhiSurfaceToneClassName(signalled?.tone);
   return (
-    <div {...attributes} style={next.style}>
+    <div
+      {...attributes}
+      className={[attributes.className, toneClassName].filter(Boolean).join(" ") || undefined}
+      style={next.style}
+    >
       <PhiSurfaceGroundLayer ground={next.ground} />
-      {children}
+      {toneClassName ? <PhiSurfaceTone tone={signalled?.tone}>{children}</PhiSurfaceTone> : children}
     </div>
   );
 }

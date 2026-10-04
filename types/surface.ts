@@ -90,3 +90,11 @@ export function readPhiSurface(value: unknown): PhiSurface | null {
   };
   return Object.keys(surface).length > 0 ? surface : null;
 }
+
+/**
+ * The class a box carries for its tone, or nothing for `inherit`. Fixed per tone, so the server writes it
+ * without knowing the mode; the tone scope inside writes the other mode's variables under it.
+ */
+export function resolvePhiSurfaceToneClassName(tone: PhiSurfaceTone | null | undefined): string | undefined {
+  return tone && tone !== "inherit" ? `phi-tone-${tone}` : undefined;
+}

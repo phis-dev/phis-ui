@@ -14,6 +14,13 @@ export function resolvePhiInspectorSurfaceLabels(labels: PhiInspectorWidgetLabel
       background: labels.sections.background,
       border: labels.sections.border,
       shadow: labels.sections.shadow,
+      tone: labels.tone.title,
+      tones: {
+        inherit: labels.tone.inherit,
+        light: labels.tone.light,
+        dark: labels.tone.dark,
+        inverse: labels.tone.inverse,
+      },
     },
   };
 }

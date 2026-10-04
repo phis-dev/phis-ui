@@ -222,3 +222,64 @@ export function usePhiConfig() {
   }
   return config;
 }
+
+/** The locale the root adapter configures Ant Design with, for whoever hands it on. */
+export type PhiConfigLocale = ConfigProviderProps["locale"];
+
+/**
+ * The page's config in another mode: Ant Design's Theme for `mode` and the house config with that mode's
+ * colours and tokens.
+ *
+ * What a tone scope puts around a Surface's content (`components/surface/phi-surface-tone-scope.tsx`).
+ * The Theme's variables are written under `cssVarKey` -- the class of the box that asked -- so the box's
+ * own paint follows as well. Unlike the root it draws no element and mirrors nothing onto the document:
+ * the shape is the page's.
+ */
+export function PhiNestedModeConfigProvider({
+  mode,
+  theme,
+  cssVarKey,
+  locale,
+  customColors,
+  children,
+}: {
+  mode: PhiThemeMode;
+  theme: ThemeConfig;
+  cssVarKey: string;
+  locale: PhiConfigLocale;
+  customColors: PhiThemeCustomColorPalette;
+  children: ReactNode;
+}) {
+  const keyedTheme = useMemo<ThemeConfig>(
+    () => ({
+      ...theme,
+      cssVar: { ...(typeof theme.cssVar === "object" ? theme.cssVar : {}), key: cssVarKey },
+    }),
+    [cssVarKey, theme],
+  );
+  return (
+    <AntdConfigProvider locale={locale} theme={keyedTheme}>
+      <PhiNestedModeConfigValue mode={mode} customColors={customColors}>
+        {children}
+      </PhiNestedModeConfigValue>
+    </AntdConfigProvider>
+  );
+}
+
+function PhiNestedModeConfigValue({
+  mode,
+  customColors,
+  children,
+}: {
+  mode: PhiThemeMode;
+  customColors: PhiThemeCustomColorPalette;
+  children: ReactNode;
+}) {
+  const outer = usePhiConfig();
+  const { token } = antdTheme.useToken();
+  const value = useMemo<PhiConfig>(
+    () => ({ ...outer, mode, customColors, token }),
+    [customColors, mode, outer, token],
+  );
+  return <PhiConfigContext.Provider value={value}>{children}</PhiConfigContext.Provider>;
+}

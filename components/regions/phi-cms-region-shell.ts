@@ -1,3 +1,4 @@
+import { resolvePhiSurfaceToneClassName, type PhiSurfaceTone } from "../../types/surface";
 import type { CSSProperties } from "react";
 
 import { PHI_THEME_BORDER_LINE, resolvePhiBorderWidgetStyle } from "../../helpers/border-widget-style";
@@ -107,6 +108,11 @@ export type PhiCmsRegionShellInput = {
 
 export type PhiCmsRegionShell = {
   family: PhiCmsRegionShellFamily;
+  /**
+   * The mode the Region's content is drawn in, when its Surface asks for another; the renderer puts
+   * `PhiSurfaceTone` around the element, which carries the tone's class.
+   */
+  tone: PhiSurfaceTone | null;
   element: "header" | "footer" | "aside" | "div";
   visibility: NonNullable<PhiCmsRegionConfig["visibility"]>;
   enabled: boolean;
@@ -437,6 +443,7 @@ export function resolvePhiCmsRegionShell({
     enabled,
     siderWidth,
     siderCollapsedWidth,
+    tone: surface?.tone ?? null,
     backgroundConfig,
     animatesBackground: backgroundMoves,
     ground,
@@ -452,7 +459,9 @@ export function resolvePhiCmsRegionShell({
       "data-phi-viewport-flags": viewportFlags,
       "data-phi-block-enabled": enabled ? "true" : "false",
       ...effectsAttributes,
-      className: ["phi-cms-region-shell", className].filter(Boolean).join(" "),
+      className: ["phi-cms-region-shell", resolvePhiSurfaceToneClassName(surface?.tone), className]
+        .filter(Boolean)
+        .join(" "),
     },
     style: rootStyle,
     contentStyle: resolvePhiPaddingStyle({

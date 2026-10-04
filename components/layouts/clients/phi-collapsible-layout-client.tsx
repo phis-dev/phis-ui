@@ -34,6 +34,8 @@ import {
 } from "../../../helpers/layout-authoring-markers";
 import { PhiSurfaceGroundLayer } from "../../surface/phi-surface-ground";
 import { usePhiLayoutSignalSurface } from "../phi-layout-signal-surface";
+import { PhiSurfaceTone } from "../../surface/phi-surface-tone";
+import { resolvePhiSurfaceToneClassName } from "../../../types/surface";
 
 export type PhiCollapsibleLayoutSlotMeta = {
   key: string;
@@ -602,68 +604,70 @@ function PhiCollapsibleLayoutBody({
     .filter((item): item is PhiCollapseControlSection => item !== null);
 
   return (
-    <div
-      data-layout-kind={layoutKind}
-      data-phi-block-render-mode={resolvedRenderMode}
-      data-phi-layout-debug-layer={phiLayoutDebugLayerMarker(isAuthoringRender)}
-      data-phi-layout-has-explicit-layout-background={hasExplicitLayoutBackground ? "true" : "false"}
-      className="phi-layout"
-      style={resolvedStyle}
-    >
-      <PhiSurfaceGroundLayer ground={ground} />
+    <PhiSurfaceTone tone={surface?.tone}>
       <div
-        /*
-         * The grounds inside follow the corner outside.
-         *
-         * A Collapse paints its own header and panel grounds, and it rounds them from its own token --
-         * the Site's surface step, which is the box's corner only as long as nobody set another one.
-         * Under `custom` the box can be rounded 30px while the ground inside is still rounded 8, and the
-         * colour then squares off the corner it sits in.
-         *
-         * `border-radius: inherit` takes the box's corner literally, whatever it resolved to, and the
-         * clip makes every ground inside end there -- which works because the grounds are square
-         * (PhiCollapseControl squares them): a clip only ever takes away, so a ground that rounded itself
-         * more tightly than the box would keep its own corner and the clip would never reach it.
-         *
-         * The clip earns its place twice over: it shapes the corner, and it keeps the content of a
-         * panel inside the panel.
-         */
-        style={{ borderRadius: "inherit", overflow: "hidden" }}
-        onMouseDown={
-          isEditMode
-            ? (event) => {
-                if (shouldStopCollapsibleEditorScaffoldEvent(event)) {
-                  event.stopPropagation();
-                }
-              }
-            : undefined
-        }
-        onClick={
-          isEditMode
-            ? (event) => {
-                if (shouldStopCollapsibleEditorScaffoldEvent(event)) {
-                  event.stopPropagation();
-                }
-              }
-            : undefined
-        }
+        data-layout-kind={layoutKind}
+        data-phi-block-render-mode={resolvedRenderMode}
+        data-phi-layout-debug-layer={phiLayoutDebugLayerMarker(isAuthoringRender)}
+        data-phi-layout-has-explicit-layout-background={hasExplicitLayoutBackground ? "true" : "false"}
+        className={["phi-layout", resolvePhiSurfaceToneClassName(surface?.tone)].filter(Boolean).join(" ")}
+        style={resolvedStyle}
       >
-        <PhiCollapseControl
-          accordion={accordion}
-          openKeys={resolvedOpenSlotKeys.filter((key) => !hiddenSlotKeys.has(key))}
-          ghost={ghost}
-          collapsible={effectiveCollapsible}
-          expandIconPlacement={expandIconPlacement}
-          size={collapseSize}
-          headerClassName={PHI_COLLAPSIBLE_HEADER_CLASS}
-          sections={items}
-          onOpenKeysChange={setOpenKeys}
-          titleStrong={titleStrong}
-          headerPadding={resolvedHeaderPadding}
-          bodyPadding={resolvedInnerPadding}
-          style={{ width: "100%" }}
-        />
+        <PhiSurfaceGroundLayer ground={ground} />
+        <div
+          /*
+           * The grounds inside follow the corner outside.
+           *
+           * A Collapse paints its own header and panel grounds, and it rounds them from its own token --
+           * the Site's surface step, which is the box's corner only as long as nobody set another one.
+           * Under `custom` the box can be rounded 30px while the ground inside is still rounded 8, and the
+           * colour then squares off the corner it sits in.
+           *
+           * `border-radius: inherit` takes the box's corner literally, whatever it resolved to, and the
+           * clip makes every ground inside end there -- which works because the grounds are square
+           * (PhiCollapseControl squares them): a clip only ever takes away, so a ground that rounded itself
+           * more tightly than the box would keep its own corner and the clip would never reach it.
+           *
+           * The clip earns its place twice over: it shapes the corner, and it keeps the content of a
+           * panel inside the panel.
+           */
+          style={{ borderRadius: "inherit", overflow: "hidden" }}
+          onMouseDown={
+            isEditMode
+              ? (event) => {
+                  if (shouldStopCollapsibleEditorScaffoldEvent(event)) {
+                    event.stopPropagation();
+                  }
+                }
+              : undefined
+          }
+          onClick={
+            isEditMode
+              ? (event) => {
+                  if (shouldStopCollapsibleEditorScaffoldEvent(event)) {
+                    event.stopPropagation();
+                  }
+                }
+              : undefined
+          }
+        >
+          <PhiCollapseControl
+            accordion={accordion}
+            openKeys={resolvedOpenSlotKeys.filter((key) => !hiddenSlotKeys.has(key))}
+            ghost={ghost}
+            collapsible={effectiveCollapsible}
+            expandIconPlacement={expandIconPlacement}
+            size={collapseSize}
+            headerClassName={PHI_COLLAPSIBLE_HEADER_CLASS}
+            sections={items}
+            onOpenKeysChange={setOpenKeys}
+            titleStrong={titleStrong}
+            headerPadding={resolvedHeaderPadding}
+            bodyPadding={resolvedInnerPadding}
+            style={{ width: "100%" }}
+          />
+        </div>
       </div>
-    </div>
+    </PhiSurfaceTone>
   );
 }

@@ -1,10 +1,11 @@
 "use client";
 
-import type { CSSProperties, ReactNode } from "react";
+import type { CSSProperties, ReactElement, ReactNode } from "react";
 import { useState } from "react";
 
 import { PhiButtonControl } from "../../controls/phi-button-control";
 import { PhiSurfaceGroundLayer } from "../../surface/phi-surface-ground";
+import { PhiSurfaceTone } from "../../surface/phi-surface-tone";
 import { resolvePhiShellRegionZIndex } from "../../../helpers/shell-region-style";
 import type { PhiCmsRegionConfig, PhiCmsRegionKey } from "../../../types";
 
@@ -155,16 +156,19 @@ export function PhiCmsRegionContainerClient({
     </>
   );
 
+  const withTone = (element: ReactElement) =>
+    shell.tone ? <PhiSurfaceTone tone={shell.tone}>{element}</PhiSurfaceTone> : element;
+
   if (shell.family !== "sider") {
     const Element = shell.element as "header" | "footer" | "div";
-    return (
+    return withTone(
       <Element {...attributes} style={shell.style}>
         {backgroundMotionLayer}
         <div className="phi-cms-region-shell__content" style={shell.contentStyle}>
           {children}
         </div>
         {effectObservers}
-      </Element>
+      </Element>,
     );
   }
 
@@ -178,7 +182,7 @@ export function PhiCmsRegionContainerClient({
     ? `translate3d(${isRightSider ? "6px" : "-6px"}, 0, 0) scale(0.995)`
     : "translate3d(0, 0, 0) scale(1)";
 
-  return (
+  return withTone(
     <aside
       {...attributes}
       data-phi-sider-collapsed={isCollapsed ? "true" : undefined}
@@ -277,6 +281,6 @@ export function PhiCmsRegionContainerClient({
         </div>
       </PhiSiderContextProvider>
       {effectObservers}
-    </aside>
+    </aside>,
   );
 }

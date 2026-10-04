@@ -28,6 +28,11 @@ const PHI_INSPECTOR_WIDGET_LABEL_SET = definePhiLabelSet({
     section_shadow: PHI_INSPECTOR_WIDGET_DEFAULT_LABELS.sections.shadow,
     section_surface: PHI_INSPECTOR_WIDGET_DEFAULT_LABELS.sections.surface,
     section_signals: PHI_INSPECTOR_WIDGET_DEFAULT_LABELS.sections.signals,
+    tone_title: PHI_INSPECTOR_WIDGET_DEFAULT_LABELS.tone.title,
+    tone_inherit: PHI_INSPECTOR_WIDGET_DEFAULT_LABELS.tone.inherit,
+    tone_light: PHI_INSPECTOR_WIDGET_DEFAULT_LABELS.tone.light,
+    tone_dark: PHI_INSPECTOR_WIDGET_DEFAULT_LABELS.tone.dark,
+    tone_inverse: PHI_INSPECTOR_WIDGET_DEFAULT_LABELS.tone.inverse,
   },
 });
 
@@ -51,6 +56,13 @@ export async function getPhiInspectorWidgetLabels(
       shadow: labels.section_shadow,
       surface: labels.section_surface,
       signals: labels.section_signals,
+    },
+    tone: {
+      title: labels.tone_title,
+      inherit: labels.tone_inherit,
+      light: labels.tone_light,
+      dark: labels.tone_dark,
+      inverse: labels.tone_inverse,
     },
   };
 }

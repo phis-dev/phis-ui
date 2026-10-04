@@ -27,6 +27,8 @@ import {
 import { PhiTypographyControl } from "../../controls/phi-typography-control";
 import { PhiIcon } from "../../shell/phi-icon";
 import { PhiSurfaceGroundLayer } from "../../surface/phi-surface-ground";
+import { PhiSurfaceTone } from "../../surface/phi-surface-tone";
+import { resolvePhiSurfaceToneClassName } from "../../../types/surface";
 
 /**
  * Authoring a sequence, one slot at a time.
@@ -121,103 +123,105 @@ export function PhiSequenceSlotEditor({
   const resolvedLayoutInset = resolvePhiLayoutInset(chrome);
 
   return (
-    <div
-      data-layout-kind={layoutKind}
-      data-phi-block-render-mode={renderMode}
-      data-phi-layout-debug-layer={phiLayoutDebugLayerMarker(isAuthoringRender)}
-      data-phi-layout-has-explicit-layout-background={hasExplicitLayoutBackground ? "true" : "false"}
-      className="phi-layout"
-      style={{
-        position: "relative",
-        display: "flex",
-        flexDirection: "column",
-        ...resolvedLayoutStyle,
-        minWidth: 0,
-        minHeight: 0,
-        ...style,
-      }}
-    >
-      <PhiSurfaceGroundLayer ground={ground} />
-      <PhiFlexControl
-        align="center"
-        gap={8}
-        style={{
-          position: "relative",
-          zIndex: 2,
-          flex: "0 0 auto",
-          width: "100%",
-          justifyContent: "center",
-          paddingBottom: "var(--ant-padding-xs)",
-        }}
-      >
-        {/*
-          * Paging through slots must not also select the Layout underneath, so the click stops here,
-          * around the button, rather than inside it: the button reports that it was pressed and the
-          * element that knows it sits on a selectable surface decides how far that travels.
-          */}
-        <span onClick={(event) => event.stopPropagation()}>
-          <PhiButtonControl
-            ariaLabel={`Previous ${slotNoun}`}
-            icon={<PhiIcon name="left" size="inherit" />}
-            size="small"
-            type="text"
-            disabled={!hasPreviousSlot}
-            onClick={() => onActiveIndexChange(currentIndex - 1)}
-          />
-        </span>
-        <PhiTypographyControl type="secondary" style={{ fontSize: 12, minWidth: 64, textAlign: "center" }}>
-          {currentIndex + 1} / {editableSlotCount}
-        </PhiTypographyControl>
-        <span onClick={(event) => event.stopPropagation()}>
-          <PhiButtonControl
-            ariaLabel={`Next ${slotNoun}`}
-            icon={<PhiIcon name="right" size="inherit" />}
-            size="small"
-            type="text"
-            disabled={!hasNextSlot}
-            onClick={() => onActiveIndexChange(currentIndex + 1)}
-          />
-        </span>
-      </PhiFlexControl>
+    <PhiSurfaceTone tone={chrome.surface?.tone}>
       <div
-        className={phiLayoutSlotClassName(isAuthoringRender)}
-        data-phi-layout-has-content={phiLayoutSlotContentMarker(isAuthoringRender, hasCurrentSlot)}
-        data-phi-sequence-active-slot={currentSlotKey}
+        data-layout-kind={layoutKind}
+        data-phi-block-render-mode={renderMode}
+        data-phi-layout-debug-layer={phiLayoutDebugLayerMarker(isAuthoringRender)}
+        data-phi-layout-has-explicit-layout-background={hasExplicitLayoutBackground ? "true" : "false"}
+        className={["phi-layout", resolvePhiSurfaceToneClassName(chrome.surface?.tone)].filter(Boolean).join(" ")}
         style={{
           position: "relative",
           display: "flex",
-          flex: "1 1 auto",
+          flexDirection: "column",
+          ...resolvedLayoutStyle,
           minWidth: 0,
           minHeight: 0,
+          ...style,
         }}
       >
-        {hasCurrentSlot ? (
-          <PhiLayoutAnchoredOverlay
-            anchor={editSlotAnchor}
-            positionMode="flow"
-            fillAvailableInline
-            fillAvailableBlock
-            inset={resolvedLayoutInset}
-          >
-            {currentSlot}
-          </PhiLayoutAnchoredOverlay>
-        ) : null}
-        {!hasCurrentSlot && editSlotAction && editRenderInsertControl
-          ? editRenderInsertControl({
-            presentation: "overlay",
-            slotIndex: currentIndex,
-            label: currentSlotLabel,
-            anchor: editSlotAnchor,
-            inset: resolvedLayoutInset,
-            onInsert: (targetSlotIndex) =>
-              editSlotAction(targetSlotIndex, {
-                defaultPickSection: "widget",
-                allowWidgetSection: true,
-                slotIndex: targetSlotIndex,
-              }),
-          })
-          : null}
+        <PhiSurfaceGroundLayer ground={ground} />
+        <PhiFlexControl
+          align="center"
+          gap={8}
+          style={{
+            position: "relative",
+            zIndex: 2,
+            flex: "0 0 auto",
+            width: "100%",
+            justifyContent: "center",
+            paddingBottom: "var(--ant-padding-xs)",
+          }}
+        >
+          {/*
+            * Paging through slots must not also select the Layout underneath, so the click stops here,
+            * around the button, rather than inside it: the button reports that it was pressed and the
+            * element that knows it sits on a selectable surface decides how far that travels.
+            */}
+          <span onClick={(event) => event.stopPropagation()}>
+            <PhiButtonControl
+              ariaLabel={`Previous ${slotNoun}`}
+              icon={<PhiIcon name="left" size="inherit" />}
+              size="small"
+              type="text"
+              disabled={!hasPreviousSlot}
+              onClick={() => onActiveIndexChange(currentIndex - 1)}
+            />
+          </span>
+          <PhiTypographyControl type="secondary" style={{ fontSize: 12, minWidth: 64, textAlign: "center" }}>
+            {currentIndex + 1} / {editableSlotCount}
+          </PhiTypographyControl>
+          <span onClick={(event) => event.stopPropagation()}>
+            <PhiButtonControl
+              ariaLabel={`Next ${slotNoun}`}
+              icon={<PhiIcon name="right" size="inherit" />}
+              size="small"
+              type="text"
+              disabled={!hasNextSlot}
+              onClick={() => onActiveIndexChange(currentIndex + 1)}
+            />
+          </span>
+        </PhiFlexControl>
+        <div
+          className={phiLayoutSlotClassName(isAuthoringRender)}
+          data-phi-layout-has-content={phiLayoutSlotContentMarker(isAuthoringRender, hasCurrentSlot)}
+          data-phi-sequence-active-slot={currentSlotKey}
+          style={{
+            position: "relative",
+            display: "flex",
+            flex: "1 1 auto",
+            minWidth: 0,
+            minHeight: 0,
+          }}
+        >
+          {hasCurrentSlot ? (
+            <PhiLayoutAnchoredOverlay
+              anchor={editSlotAnchor}
+              positionMode="flow"
+              fillAvailableInline
+              fillAvailableBlock
+              inset={resolvedLayoutInset}
+            >
+              {currentSlot}
+            </PhiLayoutAnchoredOverlay>
+          ) : null}
+          {!hasCurrentSlot && editSlotAction && editRenderInsertControl
+            ? editRenderInsertControl({
+              presentation: "overlay",
+              slotIndex: currentIndex,
+              label: currentSlotLabel,
+              anchor: editSlotAnchor,
+              inset: resolvedLayoutInset,
+              onInsert: (targetSlotIndex) =>
+                editSlotAction(targetSlotIndex, {
+                  defaultPickSection: "widget",
+                  allowWidgetSection: true,
+                  slotIndex: targetSlotIndex,
+                }),
+            })
+            : null}
+        </div>
       </div>
-    </div>
+    </PhiSurfaceTone>
   );
 }

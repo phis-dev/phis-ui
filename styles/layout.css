@@ -396,3 +396,23 @@
       calc(var(--phi-grid-column-gap, 0px) * var(--phi-grid-slot-trail-wide, 0) / 24);
   }
 }
+
+/*
+ * A Surface whose content is drawn in another mode (`tone`, LAYOUTING.md "Surface tone").
+ *
+ * The tone scope writes the other mode's variables under the box's tone class, but text inherits the
+ * COLOUR the page already computed from them, not the variable -- so the box states its text colour again
+ * and its content reads it from the variables in force there. When the content is already in that mode,
+ * the class has no variables of its own and this resolves to what the page has anyway.
+ */
+:where(.phi-tone-light, .phi-tone-dark, .phi-tone-inverse) {
+  color: var(--ant-color-text);
+}
+
+:where(.phi-tone-light) {
+  color-scheme: light;
+}
+
+:where(.phi-tone-dark) {
+  color-scheme: dark;
+}

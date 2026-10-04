@@ -521,7 +521,8 @@ Each Collapsible slot contains one Builder-Module section Widget. The sections a
 - Widget Inspector: settings, geometry, viewport, surface, signals
 
 The surface section is one `PhiSurfaceControl` for every kind of node: background (with its filter and
-motion), where the line comes from (`none`, `theme`, `custom`) and the line itself, and shadow. It hands on
+motion), where the line comes from (`none`, `theme`, `custom`) and the line itself, the mode (`tone`), and
+shadow. It hands on
 the whole Surface and the Controller stores it as the node's `surface` (`patchSelectedRegionDraft`,
 `patchSelectedLayoutSurface`, `patchSelectedWidgetSurface`; `null` takes it away). A Widget whose plugin
 declares `surface: "none"` has no Surface, and its section hides its own panel through

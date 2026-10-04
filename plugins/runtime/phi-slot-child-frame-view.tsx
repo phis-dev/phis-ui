@@ -20,6 +20,7 @@ import {
 import { resolvePhiSurfaceStyle } from "../../helpers/surface-style";
 import { PHI_LAYOUT_SURFACE_RADIUS } from "../../components/layouts/phi-layout-contract";
 import { PhiSurfaceGroundLayer } from "../../components/surface/phi-surface-ground";
+import { PhiSurfaceTone } from "../../components/surface/phi-surface-tone";
 import {
   buildPhiSlotChildClassName,
   buildPhiSlotChildDataAttributes,
@@ -126,7 +127,7 @@ export function PhiSlotChildFrameView({
   return (
     <div
       hidden={resolvedVisibility === "hidden"}
-      className={[buildPhiSlotChildClassName(policy), className, resolvedConfig.className].filter(Boolean).join(" ")}
+      className={[buildPhiSlotChildClassName(policy), className, resolvedConfig.className, surface?.className].filter(Boolean).join(" ")}
       data-phi-slot-child-frame="true"
       data-phi-renderable-block="true"
       data-phi-slot-child-kind={kind}
@@ -168,7 +169,9 @@ export function PhiSlotChildFrameView({
       onPointerLeave={onPointerLeave}
     >
       <PhiSurfaceGroundLayer ground={surface?.ground ?? null} />
-      {children}
+      {surface?.className ? (
+        <PhiSurfaceTone tone={resolvedConfig.surface?.tone}>{children}</PhiSurfaceTone>
+      ) : children}
     </div>
   );
 }

@@ -16,18 +16,27 @@ import {
   type PhiCmsBorderSource,
 } from "../../types/cms-border-source";
 import type { PhiBackgroundFilter } from "../../types/layout-style";
-import type { PhiSurface } from "../../types/surface";
+import { PHI_SURFACE_TONES, type PhiSurface, type PhiSurfaceTone } from "../../types/surface";
 
 export type PhiSurfaceControlLabels = {
   background: string;
   border: string;
   shadow: string;
+  tone: string;
+  tones: Record<PhiSurfaceTone, string>;
 };
 
 const PHI_SURFACE_CONTROL_DEFAULT_LABELS: PhiSurfaceControlLabels = {
   background: "Background",
   border: "Border",
   shadow: "Shadow",
+  tone: "Mode",
+  tones: {
+    inherit: "Page",
+    light: "Light",
+    dark: "Dark",
+    inverse: "Inverse",
+  },
 };
 
 /** Read only where the Border labels have not arrived; the words themselves live in their label set. */
@@ -69,6 +78,9 @@ function withPart(current: PhiSurface, patch: Partial<PhiSurface>): PhiSurface |
  *
  * Every box that has a look is edited with it -- a Region, a Layout, a Widget -- so the three parts read
  * the same everywhere, and each change hands on the whole Surface with the other parts untouched.
+ *
+ * The mode asks which colours the box and its content are drawn in: the page's (`inherit`), one fixed
+ * mode, or the other one than the page's (`inverse`).
  *
  * The edge asks where the line comes from before it asks what the line is: `theme` takes the Site's own
  * line and follows the Theme, and the line's fields appear only under `custom`, the one source that
@@ -131,6 +143,16 @@ export function PhiSurfaceControl({
             colorPickerPlacement={colorPickerPlacement}
           />
         ) : null}
+      </PhiFlexControl>
+      <PhiFlexControl vertical gap="small" style={{ width: "100%", minWidth: 0 }}>
+        <PhiTypographyControl strong>{labels.tone}</PhiTypographyControl>
+        <PhiSegmentedControl<PhiSurfaceTone>
+          value={current.tone ?? "inherit"}
+          options={PHI_SURFACE_TONES.map((tone) => ({ value: tone, label: labels.tones[tone] }))}
+          block
+          disabled={isDisabled}
+          onChange={(tone) => patch({ tone: tone === "inherit" ? undefined : tone })}
+        />
       </PhiFlexControl>
       <PhiFlexControl vertical gap="small" style={{ width: "100%", minWidth: 0 }}>
         <PhiTypographyControl strong>{labels.shadow}</PhiTypographyControl>

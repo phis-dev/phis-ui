@@ -3,6 +3,7 @@ import type { CSSProperties, ReactNode } from "react";
 import type { PhiCmsRegionConfig, PhiCmsRegionKey } from "../../types";
 import { resolvePhiCmsRegionShell, type PhiCmsRegionShellTheme } from "./phi-cms-region-shell";
 import { PhiSurfaceGroundLayer } from "../surface/phi-surface-ground";
+import { PhiSurfaceTone } from "../surface/phi-surface-tone";
 
 export type PhiCmsRegionStaticProps = {
   children: ReactNode;
@@ -45,7 +46,7 @@ export function PhiCmsRegionStatic({
   }
 
   const Element = shell.element;
-  return (
+  const element = (
     <Element {...shell.attributes} style={shell.style}>
       <PhiSurfaceGroundLayer ground={shell.ground} />
       <div className="phi-cms-region-shell__content" style={shell.contentStyle}>
@@ -53,4 +54,5 @@ export function PhiCmsRegionStatic({
       </div>
     </Element>
   );
+  return shell.tone ? <PhiSurfaceTone tone={shell.tone}>{element}</PhiSurfaceTone> : element;
 }

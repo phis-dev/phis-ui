@@ -65,7 +65,8 @@ in the same shape a Region, an Overlay and a Widget:
 - `borderSource` and `border` -- where the line comes from, and the line with its four corners;
 - `shadow` -- a semantic id (`none`, `soft`, `strong`) or `{ kind: "custom", value: "<box-shadow>" }`;
   presets store the id, not CSS;
-- `tone` -- the mode the content is drawn in (`inherit`, `light`, `dark`, `inverse`).
+- `tone` -- the mode the box and its content are drawn in (`inherit`, `light`, `dark`, `inverse`; see
+  [Surface tone](#surface-tone)).
 
 Padding is not part of it, because how far content stands from the edge is geometry; nor are a block's
 `effects`, which say how it arrives. A Surface that states nothing reads as absent (`readPhiSurface`).
@@ -98,6 +99,31 @@ server takes it through its root box, `PhiLayoutSurfaceBox`, which draws the ser
 swaps only the Surface's part once a Signal arrives; a Client Layout asks `usePhiLayoutSignalSurface`
 directly. Every Layout root is one of the two -- a Layout that draws its root as a plain element does not
 answer.
+
+### Surface tone
+
+`tone` draws a Surface's box and content in a mode of its own: `light`, `dark`, or `inverse` -- the other
+mode than the page's, read against the page and not against the nearest Surface, so every inverse Surface
+on a page is the same mode. `inherit`, the default, is never stored.
+
+- The box carries a fixed class per tone (`phi-tone-light`, `phi-tone-dark`, `phi-tone-inverse`, from
+  `resolvePhiSurfaceStyle(...).className` or `resolvePhiSurfaceToneClassName`), so the server writes it
+  without knowing the mode. `styles/layout.css` gives that class its text colour again, because text
+  inherits the colour the page computed, not the variable.
+- `PhiSurfaceTone` stands around the box's content (it draws no element). When the content is not yet in
+  the asked-for mode, it loads the tone scope (`components/surface/phi-surface-tone-scope.tsx`) -- Ant
+  Design's Theme for that mode with its variables written under the box's class, and the house config
+  (`usePhiConfig`) with that mode's tokens. The scope is code-split and rendered on the server like the
+  rest of the page. When the content already is in that mode, nothing is mounted: the class then has no
+  variables of its own and the content inherits the right ones.
+- Both modes come from the root (`PhiThemeToneSourceProvider` in the live Theme provider), which resolves
+  them anyway for the mode switch; no Surface resolves a Theme of its own.
+- The slot frame does this for a Widget whose Surface it draws, `PhiLayoutSurfaceBox` and the Client
+  Layouts for a Layout, the Region renderers for a Region, the Builder's structure Region for the draft.
+  An Overlay's Surface does not take a tone yet: its box is the Drawer's or Modal's own.
+- A Region's Shell ground and a Layout's own chrome that is painted from JavaScript tokens read the page's
+  mode; a tone changes what the Surface paints and what stands inside it. A Surface that changes its mode
+  without a ground of its own lets the page's ground show through under the other mode's text.
 
 ### Where a Surface's outline comes from
 

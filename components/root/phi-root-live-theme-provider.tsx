@@ -26,6 +26,7 @@ import {
 import { resolvePhiPublishedThemeCustomColors } from "../../theme/phi-theme-palette";
 import { PhiConfigProvider, type PhiFontCatalogueFamily } from "./phi-config-provider";
 import { PhiRootBackgroundLayer } from "./phi-root-background";
+import { PhiThemeToneSourceProvider, type PhiThemeToneSource } from "./phi-theme-tone-source";
 import { resolvePhiControlShape } from "../../theme/phi-control-shape";
 import {
   PHI_SIGNAL_VALUE_SCHEMAS,
@@ -152,9 +153,17 @@ export function PhiRootLiveThemeProvider({
   const [liveThemeState, setLiveThemeState] = useState<PhiRootThemeState | null>(null);
   const liveThemeRequest = useRef(0);
   const activeThemeState = liveThemeState ?? themeState;
-  const customColors = useMemo(
-    () => resolvePhiPublishedThemeCustomColors(liveSiteTheme, mode, presets),
-    [liveSiteTheme, mode, presets],
+  const customColorsByMode = useMemo(
+    () => ({
+      light: resolvePhiPublishedThemeCustomColors(liveSiteTheme, "light", presets),
+      dark: resolvePhiPublishedThemeCustomColors(liveSiteTheme, "dark", presets),
+    }),
+    [liveSiteTheme, presets],
+  );
+  const customColors = customColorsByMode[mode];
+  const toneSource = useMemo<PhiThemeToneSource>(
+    () => ({ pageMode: mode, themes: activeThemeState.themes, customColorsByMode, locale }),
+    [activeThemeState.themes, customColorsByMode, locale, mode],
   );
   /*
    * The Shell Chrome Overlay travels as custom properties on the Root Layout element, both modes at
@@ -343,11 +352,13 @@ export function PhiRootLiveThemeProvider({
         remRootValue={remRootValue}
       >
         <PhiRootBackgroundLayer root={liveSiteTheme.root} mode={mode} />
-        <PhiSiteBrandContext.Provider value={liveSiteTheme.brand ?? null}>
-          <PhiSiteWordmarkTextContext.Provider value={wordmarkText}>
-            {children}
-          </PhiSiteWordmarkTextContext.Provider>
-        </PhiSiteBrandContext.Provider>
+        <PhiThemeToneSourceProvider value={toneSource}>
+          <PhiSiteBrandContext.Provider value={liveSiteTheme.brand ?? null}>
+            <PhiSiteWordmarkTextContext.Provider value={wordmarkText}>
+              {children}
+            </PhiSiteWordmarkTextContext.Provider>
+          </PhiSiteBrandContext.Provider>
+        </PhiThemeToneSourceProvider>
       </PhiConfigProvider>
     </>
   );
