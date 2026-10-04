@@ -977,7 +977,7 @@ declared Module without an Authoring contribution, so the mistake surfaces where
 Public calendar values are serializable adapter-neutral records from `@phis/ui/types`. Do not persist or
 signal `Date`, Dayjs, Luxon, Temporal, or adapter-private objects. Scalar `date` and `time` signals carry
 `YYYY-MM-DD` and `HH:mm[:ss[.fraction]]` strings; calendar-aware selections, ranges, and events use
-`json` with a package-namespaced value schema. Core owns the Gregorian adapter and the Date Picker
+`json` with a package-namespaced value schema. Core owns the Gregorian adapter and the Date Input
 Widget; `@phis/calendar` is an optional Module package with event calendars and further calendar systems.
 
 ## 8a. What a Module package exports

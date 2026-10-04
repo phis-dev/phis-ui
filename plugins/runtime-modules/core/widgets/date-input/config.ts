@@ -24,7 +24,7 @@ import {
 } from "../../../../../components/widgets/config/control-signal-config";
 import { readBoolean, readString } from "../../../../../components/widgets/config/parser-primitives";
 
-export type PhiDatePickerWidgetConfig = PhiControlConfig & {
+export type PhiDateInputWidgetConfig = PhiControlConfig & {
   label?: string;
   calendarAdapterKey: PhiCalendarAdapterKey;
   selectionMode: PhiCalendarSelectionMode;
@@ -61,7 +61,7 @@ function readTimeZone(value: unknown) {
   }
 }
 
-export function parsePhiDatePickerWidgetConfig(config: Record<string, unknown>): PhiDatePickerWidgetConfig {
+export function parsePhiDateInputWidgetConfig(config: Record<string, unknown>): PhiDateInputWidgetConfig {
   const selectionMode = config.selectionMode === "range" || config.selectionMode === "multiple"
     ? config.selectionMode
     : "single";
@@ -74,7 +74,7 @@ export function parsePhiDatePickerWidgetConfig(config: Record<string, unknown>):
     ? config.rangePlaceholders as [string, string]
     : undefined;
   return {
-    ...parsePhiControlConfig(config, { key: "date-picker" }),
+    ...parsePhiControlConfig(config, { key: "date-input" }),
     label: readString(config.label),
     calendarAdapterKey: isPhiCalendarAdapterKey(config.calendarAdapterKey)
       ? config.calendarAdapterKey
@@ -101,11 +101,11 @@ export function parsePhiDatePickerWidgetConfig(config: Record<string, unknown>):
   };
 }
 
-export const PHI_DATE_PICKER_WIDGET_DEFINITION = {
+export const PHI_DATE_INPUT_WIDGET_DEFINITION = {
   kind: "widget",
-  pluginKey: resolvePhiCmsWidgetPluginKey("date-picker"),
-  typeKey: "date-picker",
-  title: "Date Picker",
+  pluginKey: resolvePhiCmsWidgetPluginKey("date-input"),
+  typeKey: "date-input",
+  title: "Date Input",
   description: "Reusable date, period, date-time, and range input.",
   category: "form",
   icon: "antd:calendar-outlined",
@@ -160,7 +160,7 @@ export const PHI_DATE_PICKER_WIDGET_DEFINITION = {
     ...PHI_CONTROL_STATE_FIELDS,
   ],
   defaultConfig: {
-    key: "date-picker",
+    key: "date-input",
     calendarAdapterKey: PHI_GREGORY_CALENDAR_ADAPTER_KEY,
     selectionMode: "single",
     precision: "date",
@@ -168,5 +168,5 @@ export const PHI_DATE_PICKER_WIDGET_DEFINITION = {
     timeZone: "UTC",
     allowClear: true,
   },
-  parseConfig: parsePhiDatePickerWidgetConfig,
-} satisfies Omit<PhiCmsWidgetPlugin<PhiDatePickerWidgetConfig>, "render" | "renderPreview">;
+  parseConfig: parsePhiDateInputWidgetConfig,
+} satisfies Omit<PhiCmsWidgetPlugin<PhiDateInputWidgetConfig>, "render" | "renderPreview">;

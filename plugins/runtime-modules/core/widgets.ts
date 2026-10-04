@@ -39,8 +39,8 @@ import {
   PHI_DIMENSION_WIDGET_DEFINITION,
 } from "./widgets/dimension/config";
 import {
-  PHI_DATE_PICKER_WIDGET_DEFINITION,
-} from "./widgets/date-picker/config";
+  PHI_DATE_INPUT_WIDGET_DEFINITION,
+} from "./widgets/date-input/config";
 import {
   PHI_LENGTH_WIDGET_DEFINITION,
 } from "./widgets/length/config";
@@ -153,13 +153,13 @@ function defineFirstPartyWidget<TConfig>(options: {
 
 export const PHI_RUNTIME_MODULE_WIDGETS: readonly PhiRuntimeModuleWidgetDefinition[] = [
   defineFirstPartyWidget({
-    definition: PHI_DATE_PICKER_WIDGET_DEFINITION,
+    definition: PHI_DATE_INPUT_WIDGET_DEFINITION,
     ownerModuleId: PHI_CORE_RUNTIME_MODULE_ID,
     renderPolicies: {"runtime":"custom","preview":"custom","authoring":"custom"},
-    loadRuntime: () => import("./widgets/date-picker/plugin")
-      .then((module) => module.PHI_DATE_PICKER_WIDGET_PLUGIN),
-    loadPreview: () => import("./widgets/date-picker/plugin")
-      .then((module) => module.PHI_DATE_PICKER_WIDGET_PLUGIN),
+    loadRuntime: () => import("./widgets/date-input/plugin")
+      .then((module) => module.PHI_DATE_INPUT_WIDGET_PLUGIN),
+    loadPreview: () => import("./widgets/date-input/plugin")
+      .then((module) => module.PHI_DATE_INPUT_WIDGET_PLUGIN),
   }),
   defineFirstPartyWidget({
     definition: PHI_ACCOUNT_WIDGET_DEFINITION,

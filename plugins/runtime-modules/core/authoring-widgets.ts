@@ -37,8 +37,8 @@ import {
   PHI_DIMENSION_WIDGET_DEFINITION,
 } from "./widgets/dimension/config";
 import {
-  PHI_DATE_PICKER_WIDGET_DEFINITION,
-} from "./widgets/date-picker/config";
+  PHI_DATE_INPUT_WIDGET_DEFINITION,
+} from "./widgets/date-input/config";
 import {
   PHI_LENGTH_WIDGET_DEFINITION,
 } from "./widgets/length/config";
@@ -145,9 +145,9 @@ import {
 
 export default createPhiAuthoringWidgetModule([
   definePhiAuthoringWidgetModuleLoader(
-    PHI_DATE_PICKER_WIDGET_DEFINITION,
-    () => import("./widgets/date-picker/authoring")
-      .then((module) => module.PHI_DATE_PICKER_WIDGET_BUILDER_PLUGIN),
+    PHI_DATE_INPUT_WIDGET_DEFINITION,
+    () => import("./widgets/date-input/authoring")
+      .then((module) => module.PHI_DATE_INPUT_WIDGET_BUILDER_PLUGIN),
   ),
   definePhiAuthoringWidgetModuleLoader(
     PHI_ACCOUNT_WIDGET_DEFINITION,

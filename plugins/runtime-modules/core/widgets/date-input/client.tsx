@@ -4,20 +4,20 @@ import { useState } from "react";
 
 import { PhiDatePickerControl } from "../../../../../components/controls/phi-date-picker-control";
 import { isPhiTemporalSelection, type PhiTemporalSelection } from "../../../../../types/calendar";
-import type { PhiDatePickerWidgetConfig } from "./config";
+import type { PhiDateInputWidgetConfig } from "./config";
 import { usePhiControlSignalController } from "../../../../../components/widgets/client/shared/phi-control-signals";
 
-function createEmptySelection(mode: PhiDatePickerWidgetConfig["selectionMode"]): PhiTemporalSelection {
+function createEmptySelection(mode: PhiDateInputWidgetConfig["selectionMode"]): PhiTemporalSelection {
   if (mode === "range") return { mode: "range", start: null, end: null };
   if (mode === "multiple") return { mode: "multiple", values: [] };
   return { mode: "single", value: null };
 }
 
-export function PhiDatePickerWidget({
+export function PhiDateInputWidget({
   config,
   signalsEnabled = true,
 }: {
-  config: PhiDatePickerWidgetConfig;
+  config: PhiDateInputWidgetConfig;
   blockId?: string | number | null;
   signalsEnabled?: boolean;
 }) {

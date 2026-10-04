@@ -105,9 +105,9 @@ export const PHI_COMMON_RUNTIME_MODULE_RENDER_CLIENT_MANIFEST =
       ),
     ],
     [
-      PhiCmsWidgetType.DatePicker,
+      PhiCmsWidgetType.DateInput,
       definePhiRuntimeModuleRenderClient(
-        dynamic(() => import("../core/widgets/date-picker/client").then((module) => module.PhiDatePickerWidget)),
+        dynamic(() => import("../core/widgets/date-input/client").then((module) => module.PhiDateInputWidget)),
       ),
     ],
     [
