@@ -58,6 +58,7 @@ export const PHI_HTML_WIDGET_DEFINITION = {
   title: "Rich Text",
   category: "content",
   description: "HTML-backed editorial text block with a Lexical authoring scaffold in edit mode.",
+  icon: "antd:font-colors-outlined",
   iconFamily: "content",
   translatesOwnText: true,
   slotSizePolicy: "fill-inline",
@@ -109,6 +110,7 @@ export const PHI_HTML_WIDGET_DEFINITION = {
   | "title"
   | "description"
   | "category"
+  | "icon"
   | "iconFamily"
   | "slotSizePolicy"
   | "runtimeSignals"

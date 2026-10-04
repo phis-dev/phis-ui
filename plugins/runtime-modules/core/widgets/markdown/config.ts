@@ -89,6 +89,7 @@ export const PHI_MARKDOWN_WIDGET_DEFINITION = {
   title: "Markdown",
   category: "content",
   description: "Render local or remote markdown with shared translation and typography.",
+  icon: "antd:font-colors-outlined",
   iconFamily: "basic",
   /*
    * A text block takes the width it is given, like the HTML Widget and the Markdown TOC. As `intrinsic`
@@ -182,6 +183,7 @@ export const PHI_MARKDOWN_WIDGET_DEFINITION = {
   | "title"
   | "description"
   | "category"
+  | "icon"
   | "iconFamily"
   | "slotSizePolicy"
   | "defaultConfig"

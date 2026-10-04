@@ -46,6 +46,7 @@ export const PHI_RATE_WIDGET_DEFINITION = {
   title: "Rate",
   description: "Reusable rating control that emits typed number signals.",
   category: "form",
+  icon: "antd:star-outlined",
   iconFamily: "form",
   slotSizePolicy: "intrinsic",
   runtimeSignals: { ...PHI_NUMBER_CONTROL_SIGNALS },
@@ -77,6 +78,7 @@ export const PHI_RATE_WIDGET_DEFINITION = {
   | "title"
   | "description"
   | "category"
+  | "icon"
   | "iconFamily"
   | "slotSizePolicy"
   | "runtimeSignals"

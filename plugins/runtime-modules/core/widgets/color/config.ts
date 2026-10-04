@@ -63,6 +63,7 @@ export const PHI_COLOR_WIDGET_DEFINITION = {
   title: "Color",
   description: "Reusable color control widget for CMS builder surfaces.",
   category: "configuration",
+  icon: "antd:bg-colors-outlined",
   iconFamily: "config",
   runtimeSignals: {
     ...PHI_COLOR_CONTROL_SIGNALS,
@@ -108,6 +109,7 @@ export const PHI_COLOR_WIDGET_DEFINITION = {
   | "title"
   | "description"
   | "category"
+  | "icon"
   | "iconFamily"
   | "runtimeSignals"
   | "fields"
