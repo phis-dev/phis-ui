@@ -20,6 +20,7 @@ import {
   phiLayoutSlotContentMarker,
 } from "../../../helpers/layout-authoring-markers";
 import { PhiLayoutSurfaceBox } from "../phi-layout-surface-box";
+import { PHI_CMS_MAX_LAYOUT_SLOTS } from "../../../constants/cms-layout-types";
 
 const PHI_FLEX_VERTICAL_LAYOUT_DEFAULTS = resolvePhiLayoutDefaults("verticalflex");
 
@@ -157,7 +158,7 @@ export function PhiFlexVerticalLayout({
   const contentChildren = renderableSlots.map(({ child, index }) => renderSlotChild(child, index));
   const insertAfterSlotIndex = slots.length;
   const insertButton =
-    isEditMode && editSlotAction && editRenderInsertControl ? (
+    isEditMode && editSlotAction && editRenderInsertControl && insertAfterSlotIndex < PHI_CMS_MAX_LAYOUT_SLOTS ? (
       <div
         key="insert"
         className={phiLayoutSlotClassName(isAuthoringRender)}

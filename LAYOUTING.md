@@ -315,7 +315,9 @@ composition, not alternate Layout kinds.
   slot title. Authoring exposes title editing as an explicit Layout operation.
 - A title-bearing live renderer may omit an empty slot panel without deleting its configured title;
   inserting a later child reuses that title until the operator changes it.
-- The Collapsible Layout is capped at 12 slots (`PHI_CMS_COLLAPSIBLE_LAYOUT_MAX_SLOTS`), one child per
+- A sequential Layout -- Flex, Flex Vertical, Grid, Masonry, Stack, Carousel, Collapsible -- declares
+  at most 24 slots (`PHI_CMS_MAX_LAYOUT_SLOTS`), and authoring offers no insert past the last one.
+- The Collapsible Layout is capped at 24 slots (`PHI_CMS_COLLAPSIBLE_LAYOUT_MAX_SLOTS`), one child per
   slot. Compositions that need more panels — including Module Settings pages, whose sections become
   Collapsible panels — must split across Layouts or pages instead of exceeding the cap.
 

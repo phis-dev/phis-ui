@@ -28,6 +28,7 @@ import {
   phiLayoutSlotClassName,
   phiLayoutSlotContentMarker,
 } from "../../../helpers/layout-authoring-markers";
+import { PHI_CMS_MAX_LAYOUT_SLOTS } from "../../../constants/cms-layout-types";
 
 const PHI_GRID_LAYOUT_DEFAULTS = resolvePhiLayoutDefaults("grid");
 
@@ -181,7 +182,7 @@ export function PhiGridLayout({
       </div>
     );
   });
-  if (isEditMode && editSlotAction && editRenderInsertControl) {
+  if (isEditMode && editSlotAction && editRenderInsertControl && nextInsertSlotIndex < PHI_CMS_MAX_LAYOUT_SLOTS) {
     renderedSlots.push(
       <div
         key={`insert-${nextInsertSlotIndex}`}

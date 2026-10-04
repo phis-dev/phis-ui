@@ -10,6 +10,7 @@ import {
 } from "../../helpers/layout-authoring-markers";
 import type { PhiResponsiveValue } from "../../types/responsive";
 import { resolvePhiMasonryColumnProperties, resolvePhiMasonryColumns } from "./phi-masonry-contract";
+import { PHI_CMS_MAX_LAYOUT_SLOTS } from "../../constants/cms-layout-types";
 
 const PHI_MASONRY_LAYOUT_DEFAULTS = resolvePhiLayoutDefaults("masonry");
 
@@ -82,7 +83,7 @@ export function PhiMasonryLayout({
   const renderedItems = occupiedSlotIndices.map((slotIndex) =>
     renderMasonryItem(`slot-${slotIndex}`, true, slots[slotIndex]));
 
-  if (isEditMode && editSlotAction && editRenderInsertControl) {
+  if (isEditMode && editSlotAction && editRenderInsertControl && nextInsertSlotIndex < PHI_CMS_MAX_LAYOUT_SLOTS) {
     renderedItems.push(renderMasonryItem(
       `insert-${nextInsertSlotIndex}`,
       false,

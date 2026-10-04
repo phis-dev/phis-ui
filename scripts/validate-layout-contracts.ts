@@ -6,7 +6,11 @@ import { renderToStaticMarkup } from "react-dom/server";
 
 import {
   buildPhiCmsLayoutNamespacedTypeKey,
+  PHI_CMS_COLLAPSIBLE_LAYOUT_MAX_SLOTS,
   PHI_CMS_LAYOUT_REGISTRY,
+  PHI_CMS_MASONRY_LAYOUT_SLOTS,
+  PHI_CMS_MAX_LAYOUT_SLOTS,
+  PHI_CMS_SEQUENTIAL_LAYOUT_SLOTS,
   splitPhiCmsLayoutNamespacedTypeKey,
 } from "../constants/cms-layout-types";
 import { resolvePhiCmsLayoutPluginKey } from "../constants/cms-layout-type-keys";
@@ -402,6 +406,17 @@ for (const layoutKind of layoutKinds) {
   }
   assert.deepEqual(deaf, [], `These Layouts draw their Surface without answering Surface Signals:\n${deaf.join("\n")}`);
 }
+
+/**
+ * Every sequential Layout declares the same number of slots, and no more than authoring offers.
+ */
+for (const [name, slots] of Object.entries({
+  sequential: PHI_CMS_SEQUENTIAL_LAYOUT_SLOTS,
+  masonry: PHI_CMS_MASONRY_LAYOUT_SLOTS,
+})) {
+  assert.equal(slots.length, PHI_CMS_MAX_LAYOUT_SLOTS, `The ${name} slots are as many as PHI_CMS_MAX_LAYOUT_SLOTS.`);
+}
+assert.equal(PHI_CMS_COLLAPSIBLE_LAYOUT_MAX_SLOTS, PHI_CMS_MAX_LAYOUT_SLOTS, "The Collapsible has no cap of its own.");
 
 /**
  * A Layout plugin hands its padding on whole. The Canvas sets all five keys on the root Layout itself,

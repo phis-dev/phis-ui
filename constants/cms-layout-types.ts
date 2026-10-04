@@ -54,7 +54,13 @@ export const PHI_CMS_DEFAULT_LAYOUT_SLOTS = [
   },
 ] as const satisfies readonly PhiCmsLayoutSlotDefinition[];
 
-export const PHI_CMS_SEQUENTIAL_LAYOUT_SLOTS = Array.from({ length: 12 }, (_, index) => ({
+/**
+ * The most slots a sequential Layout offers. Flex, Grid and Masonry stop offering an insert once their
+ * last slot is taken, so no child is placed in a slot the Layout does not declare.
+ */
+export const PHI_CMS_MAX_LAYOUT_SLOTS = 24;
+
+export const PHI_CMS_SEQUENTIAL_LAYOUT_SLOTS = Array.from({ length: PHI_CMS_MAX_LAYOUT_SLOTS }, (_, index) => ({
   key: `slot_${index}`,
   label: `Slot ${index}`,
   slotIndex: index,
@@ -77,7 +83,7 @@ export const PHI_CMS_FLEX_VERTICAL_LAYOUT_SLOTS = PHI_CMS_SEQUENTIAL_LAYOUT_SLOT
   },
 })) satisfies readonly PhiCmsLayoutSlotDefinition[];
 
-export const PHI_CMS_MASONRY_LAYOUT_SLOTS = Array.from({ length: 12 }, (_, index) => ({
+export const PHI_CMS_MASONRY_LAYOUT_SLOTS = Array.from({ length: PHI_CMS_MAX_LAYOUT_SLOTS }, (_, index) => ({
   key: `item_${index + 1}`,
   label: `Item ${index + 1}`,
   slotIndex: index,
@@ -87,7 +93,7 @@ export const PHI_CMS_MASONRY_LAYOUT_SLOTS = Array.from({ length: 12 }, (_, index
 export const PHI_CMS_GRID_LAYOUT_SLOTS = PHI_CMS_SEQUENTIAL_LAYOUT_SLOTS;
 export const PHI_CMS_STACK_LAYOUT_SLOTS = PHI_CMS_SEQUENTIAL_LAYOUT_SLOTS;
 export const PHI_CMS_CAROUSEL_LAYOUT_SLOTS = PHI_CMS_SEQUENTIAL_LAYOUT_SLOTS;
-export const PHI_CMS_COLLAPSIBLE_LAYOUT_MAX_SLOTS = 12;
+export const PHI_CMS_COLLAPSIBLE_LAYOUT_MAX_SLOTS = PHI_CMS_MAX_LAYOUT_SLOTS;
 export const PHI_CMS_COLLAPSIBLE_LAYOUT_SLOTS = PHI_CMS_SEQUENTIAL_LAYOUT_SLOTS;
 
 export const PHI_CMS_THREE_COLUMN_LAYOUT_SLOTS = [

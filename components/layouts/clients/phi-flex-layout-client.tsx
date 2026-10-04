@@ -20,6 +20,7 @@ import {
   phiLayoutSlotContentMarker,
 } from "../../../helpers/layout-authoring-markers";
 import { PhiLayoutSurfaceBox } from "../phi-layout-surface-box";
+import { PHI_CMS_MAX_LAYOUT_SLOTS } from "../../../constants/cms-layout-types";
 
 const PHI_FLEX_LAYOUT_DEFAULTS = resolvePhiLayoutDefaults("flex");
 
@@ -276,7 +277,7 @@ export function PhiFlexLayout({
   const renderedContentChildren = contentChildren;
   const insertAfterSlotIndex = slots.length;
   const insertButton =
-    isEditMode && editSlotAction && editRenderInsertControl ? (
+    isEditMode && editSlotAction && editRenderInsertControl && insertAfterSlotIndex < PHI_CMS_MAX_LAYOUT_SLOTS ? (
       <div
         key="insert"
         className={phiLayoutSlotClassName(isAuthoringRender)}
