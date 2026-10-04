@@ -1,3 +1,4 @@
+import type { PhiSurfacePolicy } from "./surface";
 import type {
   PhiCmsBuilderWidgetPlugin,
   PhiCmsConfigField,
@@ -53,6 +54,8 @@ export type PhiBuilderWidgetMeta = PhiBuilderPluginMetaBase & {
   contentBinding?: PhiCmsWidgetContentBinding | null;
   translatesOwnText?: true;
   signalSubcontrols?: readonly PhiCmsWidgetSignalSubcontrolCollection[];
+  /** Who draws the Widget's Surface; the Inspector offers no Surface section under `none`. */
+  surface?: PhiSurfacePolicy | null;
   fields: readonly PhiCmsConfigField[];
 };
 

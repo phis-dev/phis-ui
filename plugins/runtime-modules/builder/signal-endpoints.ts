@@ -68,6 +68,7 @@ function collectWidgetSignalEndpointsFromNodes({
         config: widget.config,
         runtimeSignals: widgetPlugin.runtimeSignals,
         signalSubcontrols: widgetPlugin.signalSubcontrols,
+        surfacePolicy: widgetPlugin.surface,
         routeScope,
       }),
     );
@@ -161,6 +162,7 @@ export function collectPhiBuilderSignalEndpointsFromDrafts({
             config: draft.rootNodeConfig ?? null,
             runtimeSignals: widgetPlugin.runtimeSignals,
             signalSubcontrols: widgetPlugin.signalSubcontrols,
+            surfacePolicy: widgetPlugin.surface,
             routeScope,
           }),
         );

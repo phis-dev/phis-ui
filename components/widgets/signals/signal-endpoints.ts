@@ -15,7 +15,11 @@ import type {
   PhiRuntimeModuleControllerDescriptor,
   PhiRuntimeControllerSetting,
 } from "../../../types";
-import { PHI_RENDERABLE_BLOCK_RECEIVE_BINDINGS } from "./renderable-block-signal-capabilities";
+import {
+  PHI_RENDERABLE_BLOCK_RECEIVE_BINDINGS,
+  PHI_RENDERABLE_BLOCK_SURFACE_CHANNELS,
+} from "./renderable-block-signal-capabilities";
+import type { PhiSurfacePolicy } from "../../../types/surface";
 import type { PhiCmsInstanceId } from "../../../types/cms-instance-id";
 import { isPhiRecord } from "../../../helpers/is-record";
 
@@ -248,6 +252,7 @@ export function resolvePhiWidgetSignalEndpoints({
   config,
   runtimeSignals,
   signalSubcontrols,
+  surfacePolicy,
   routeScope = "widget",
 }: {
   blockId: PhiCmsInstanceId;
@@ -256,6 +261,8 @@ export function resolvePhiWidgetSignalEndpoints({
   config?: Record<string, unknown> | null;
   runtimeSignals?: PhiSignalPluginMeta | null;
   signalSubcontrols?: readonly PhiCmsWidgetSignalSubcontrolCollection[] | null;
+  /** Who draws the Widget's Surface; only the slot frame answers the Surface channels. */
+  surfacePolicy?: PhiSurfacePolicy | null;
   routeScope?: PhiSignalScope;
 }): PhiSignalEndpoint[] {
   const parentEndpoint = resolveSelfSignalEndpoint({
@@ -263,7 +270,10 @@ export function resolvePhiWidgetSignalEndpoints({
     label: label?.trim() || typeKey?.trim() || `cms:${blockId}`,
     runtimeSignals,
     routeScope,
-    inheritedListens: PHI_RENDERABLE_BLOCK_RECEIVE_BINDINGS,
+    inheritedListens: (surfacePolicy ?? "frame") === "frame"
+      ? PHI_RENDERABLE_BLOCK_RECEIVE_BINDINGS
+      : PHI_RENDERABLE_BLOCK_RECEIVE_BINDINGS.filter((binding) =>
+        !PHI_RENDERABLE_BLOCK_SURFACE_CHANNELS.has(binding.channel)),
   });
 
   const subcontrolEndpoints = readWidgetSignalSubcontrolEndpoints(

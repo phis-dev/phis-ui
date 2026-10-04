@@ -6,6 +6,8 @@ import { getPhiBackgroundWidgetLabels } from "../../../components/widgets/label-
 import { getPhiPaddingWidgetLabels } from "../../../components/widgets/label-sets/padding";
 import { getPhiGeometryWidgetLabels } from "../../../components/widgets/label-sets/geometry";
 import { getPhiSignalsWidgetLabels } from "../../../components/widgets/label-sets/signals";
+import { getPhiInspectorWidgetLabels } from "../../../components/widgets/label-sets/inspector";
+import { resolvePhiInspectorSurfaceLabels } from "./clients/inspector-surface-labels";
 import { getPhiColorPickerLabelsForRuntime } from "../../../components/widgets/label-sets/color-picker";
 import { getPhiIconPickerLabelsForRuntime } from "../../../components/widgets/label-sets/icon-picker";
 import {
@@ -81,6 +83,7 @@ export async function PhiBuilderInspectorSectionWidget({
     signalsLabels,
     colorPickerLabels,
     iconPickerLabels,
+    inspectorLabels,
   ] = await Promise.all([
     getPhiBackgroundWidgetLabels({
       apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
@@ -109,7 +112,13 @@ export async function PhiBuilderInspectorSectionWidget({
     }),
     getPhiColorPickerLabelsForRuntime(runtime),
     getPhiIconPickerLabelsForRuntime(runtime),
+    getPhiInspectorWidgetLabels({
+      apiBaseUrl: readPhiServerApiCredentials().apiBaseUrl,
+      internalToken: readPhiServerApiCredentials().internalToken,
+      locale: runtime.locale.current,
+    }),
   ]);
+  const surfaceLabels = resolvePhiInspectorSurfaceLabels(inspectorLabels);
 
   return (
     <PhiRuntimeModuleAuthoringDataProviderHost
@@ -129,6 +138,7 @@ export async function PhiBuilderInspectorSectionWidget({
             backgroundLabels={backgroundLabels}
             borderLabels={borderLabels}
             paddingLabels={paddingLabels}
+            surfaceLabels={surfaceLabels}
             colorPickerLabels={colorPickerLabels}
           />
         ) : view === "layout" ? (
@@ -139,6 +149,7 @@ export async function PhiBuilderInspectorSectionWidget({
             backgroundLabels={backgroundLabels}
             borderLabels={borderLabels}
             paddingLabels={paddingLabels}
+            surfaceLabels={surfaceLabels}
             colorPickerLabels={colorPickerLabels}
             iconPickerLabels={iconPickerLabels}
           />
@@ -147,6 +158,9 @@ export async function PhiBuilderInspectorSectionWidget({
             section={section}
             signalRoutes={signalRoutes}
             geometryLabels={geometryLabels}
+            surfaceLabels={surfaceLabels}
+            backgroundLabels={backgroundLabels}
+            borderLabels={borderLabels}
             signalsLabels={signalsLabels}
             colorPickerLabels={colorPickerLabels}
             iconPickerLabels={iconPickerLabels}

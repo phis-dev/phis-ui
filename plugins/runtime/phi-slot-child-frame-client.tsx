@@ -23,6 +23,7 @@ import {
   type PhiSlotChildFrameViewProps,
 } from "./phi-slot-child-frame-view";
 import type { PhiSlotChildFrameProps } from "./phi-slot-child-frame";
+import { PhiLayoutSignalSurfaceProvider } from "../../components/layouts/phi-layout-signal-surface";
 
 export function PhiSlotChildFrameClient({
   kind,
@@ -90,6 +91,16 @@ export function PhiSlotChildFrameClient({
   const shouldObserveVisibility = effectsTrigger === "on_visible";
   const shouldWaitForReady = effectsTrigger === "on_ready";
 
+  /*
+   * A Layout draws its Surface itself, so what Signals set for it is handed to the Layout rather than
+   * drawn here -- and only once a Signal has set something, so until then the Layout's own config (in the
+   * Builder, the draft being edited) stays the answer.
+   */
+  const signalledLayoutSurface = kind !== "widget" && blockId != null
+    && blockRuntime.state.surface !== (config?.surface ?? undefined)
+    ? { blockId, surface: blockRuntime.state.surface ?? null }
+    : null;
+
   const enhancedChildren = (
     <PhiSignalIdentityProvider
       value={{
@@ -99,7 +110,9 @@ export function PhiSlotChildFrameClient({
       }}
     >
       <PhiRuntimeSignalEmissionBoundary enabled={runtimeSignalEmissionsEnabled}>
-        {children}
+        <PhiLayoutSignalSurfaceProvider value={signalledLayoutSurface}>
+          {children}
+        </PhiLayoutSignalSurfaceProvider>
       </PhiRuntimeSignalEmissionBoundary>
       {chrome}
       {shouldObserveVisibility ? (

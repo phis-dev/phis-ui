@@ -16,7 +16,7 @@ import {
   isPhiLayoutAuthoringRender,
   phiLayoutDebugLayerMarker,
 } from "../../helpers/layout-authoring-markers";
-import { PhiSurfaceGroundLayer } from "../surface/phi-surface-ground";
+import { PhiLayoutSurfaceBox } from "./phi-layout-surface-box";
 
 export type { PhiBaseLayoutProps } from "./phi-layout-view-model";
 
@@ -155,7 +155,10 @@ export function PhiBaseLayout({
   } as CSSProperties;
 
   return (
-    <div
+    <PhiLayoutSurfaceBox
+      blockId={blockId}
+      surface={surface}
+      ground={ground}
       data-phi-block-id={blockId ?? undefined}
       data-layout-kind={layoutKind}
       data-phi-block-render-mode={resolvedRenderMode}
@@ -178,9 +181,8 @@ export function PhiBaseLayout({
       className={["phi-layout", className].filter(Boolean).join(" ")}
       style={resolvedContainerStyle}
     >
-      <PhiSurfaceGroundLayer ground={ground} />
       {underlay}
       {resolvedSlots}
-    </div>
+    </PhiLayoutSurfaceBox>
   );
 }

@@ -26,6 +26,7 @@ const PHI_INSPECTOR_WIDGET_LABEL_SET = definePhiLabelSet({
     section_background: PHI_INSPECTOR_WIDGET_DEFAULT_LABELS.sections.background,
     section_border: PHI_INSPECTOR_WIDGET_DEFAULT_LABELS.sections.border,
     section_shadow: PHI_INSPECTOR_WIDGET_DEFAULT_LABELS.sections.shadow,
+    section_surface: PHI_INSPECTOR_WIDGET_DEFAULT_LABELS.sections.surface,
     section_signals: PHI_INSPECTOR_WIDGET_DEFAULT_LABELS.sections.signals,
   },
 });
@@ -48,6 +49,7 @@ export async function getPhiInspectorWidgetLabels(
       background: labels.section_background,
       border: labels.section_border,
       shadow: labels.section_shadow,
+      surface: labels.section_surface,
       signals: labels.section_signals,
     },
   };

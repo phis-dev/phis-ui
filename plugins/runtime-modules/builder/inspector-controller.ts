@@ -379,6 +379,20 @@ export function runPhiDeveloperBuilderInspectorAction(
     return;
   }
 
+  if (action.kind === "patchSelectedWidgetSurface") {
+    const surface = action.surface;
+    patchSelectedWidgetDraftConfig(state, "surface", (config) => {
+      const next = { ...config };
+      if (surface == null) {
+        delete next.surface;
+      } else {
+        next.surface = surface;
+      }
+      return next;
+    });
+    return;
+  }
+
   if (action.kind === "setSelectedWidgetTranslate") {
     patchSelectedWidgetDraftNode(state, "translate", (node) => ({
       ...node,

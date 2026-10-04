@@ -17,7 +17,7 @@ import {
   phiLayoutSlotClassName,
   phiLayoutSlotContentMarker,
 } from "../../../helpers/layout-authoring-markers";
-import { PhiSurfaceGroundLayer } from "../../surface/phi-surface-ground";
+import { PhiLayoutSurfaceBox } from "../phi-layout-surface-box";
 
 export type PhiContentLayoutProps = {
   blockId?: string | number | null;
@@ -93,7 +93,10 @@ export function PhiContentLayout({
     paddingLeft,
   });
   return (
-    <div
+    <PhiLayoutSurfaceBox
+      blockId={blockId}
+      surface={surface}
+      ground={ground}
       data-layout-kind={layoutKind}
       data-phi-block-id={blockId ?? undefined}
       data-phi-block-render-mode={renderMode}
@@ -111,7 +114,6 @@ export function PhiContentLayout({
         ...style,
       }}
     >
-      <PhiSurfaceGroundLayer ground={ground} />
       <div
         className={phiLayoutSlotClassName(isAuthoringRender)}
         data-phi-layout-has-content={phiLayoutSlotContentMarker(isAuthoringRender, hasSlot0)}
@@ -154,6 +156,6 @@ export function PhiContentLayout({
             }),
         })
         : null}
-    </div>
+    </PhiLayoutSurfaceBox>
   );
 }

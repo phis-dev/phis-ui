@@ -235,8 +235,8 @@ assert.deepEqual(resolvePhiRuntimeConditionControllerRequirements({
   enabled: true,
 }]);
 
-assert.equal(PHI_BUILDER_INSPECTOR_SECTION_WIDGET_SPECS.length, 18);
-assert.equal(new Set(PHI_BUILDER_INSPECTOR_SECTION_WIDGET_SPECS.map((entry) => entry.typeKey)).size, 18);
+assert.equal(PHI_BUILDER_INSPECTOR_SECTION_WIDGET_SPECS.length, 15);
+assert.equal(new Set(PHI_BUILDER_INSPECTOR_SECTION_WIDGET_SPECS.map((entry) => entry.typeKey)).size, 15);
 assert.equal(
   PHI_BUILDER_INSPECTOR_SECTION_WIDGET_DEFINITIONS.every(
     ({ definition }) => definition.slotSizePolicy === "fill-inline",

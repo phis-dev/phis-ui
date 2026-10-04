@@ -33,6 +33,7 @@ import {
   phiLayoutSlotContentMarker,
 } from "../../../helpers/layout-authoring-markers";
 import { PhiSurfaceGroundLayer } from "../../surface/phi-surface-ground";
+import { usePhiLayoutSignalSurface } from "../phi-layout-signal-surface";
 
 export type PhiCollapsibleLayoutSlotMeta = {
   key: string;
@@ -169,7 +170,7 @@ function PhiCollapsibleLayoutBody({
     paddingRight,
     paddingBottom,
     paddingLeft,
-    surface,
+    surface: storedSurface,
     anchor,
     editSlotAnchor,
     editSlotAction,
@@ -180,6 +181,7 @@ function PhiCollapsibleLayoutBody({
     style,
     labelEnd,
   } = layoutProps;
+  const surface = usePhiLayoutSignalSurface(blockId, storedSurface);
   const resolvedRenderMode = renderMode ?? "live";
   const isEditMode = resolvedRenderMode === "editor";
   const resolvedSlotStates = usePhiBaseLayoutSlotStates() ?? [];

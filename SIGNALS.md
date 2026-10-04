@@ -370,9 +370,9 @@ receiver.
 - A custom CSS shadow is persisted configuration and does not travel through `shadow/change`.
 - `background/change`, `border/change` and `shadow/change` each replace one part of the block's Surface
   and keep the others; `null` takes the part away, and a line sent by `border/change` is drawn as sent
-  (`borderSource: "custom"`). A Region and a Widget whose slot frame draws its Surface answer them; a
-  Layout draws its Surface from its config and does not answer them yet, nor does a Widget declaring
-  `surface: "own"` or `"none"`.
+  (`borderSource: "custom"`). Regions, Layouts (see [LAYOUTING.md](./LAYOUTING.md#surface)) and Widgets
+  whose slot frame draws their Surface answer them. A Widget declaring `surface: "own"` or `"none"` does
+  not offer them as inputs, so no route can be wired to a receiver that would not answer.
 - Slot state is addressed to the owning Layout: a Stack Layout listens to `activeSlotIndex` and
   `activeSlotKey` (`components/layouts/stack-signals.ts`).
 - `renderMode` is a transient render hint and never a signal channel.

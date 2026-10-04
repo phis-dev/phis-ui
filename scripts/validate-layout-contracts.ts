@@ -320,6 +320,32 @@ for (const layoutKind of layoutKinds) {
 }
 
 /**
+ * LAYOUTING.md, "Surface": a Layout answers the Surface Signals through its root. The Signals reach the
+ * slot frame, and the frame can only hand them to a Layout that asks -- a root drawn as a plain element
+ * takes the stored Surface and the Signal goes nowhere, with nothing to say so. Every file that resolves a
+ * Layout's chrome therefore draws its root through `PhiLayoutSurfaceBox` or asks
+ * `usePhiLayoutSignalSurface`.
+ */
+{
+  const { readFile, readdir } = await import("node:fs/promises");
+  const root = fileURLToPath(new URL("..", import.meta.url));
+  const layoutDirectories = ["components/layouts", "components/layouts/clients"];
+  // Draws the authoring body of Stack and Carousel from the chrome they hand it, signalled Surface included.
+  const receivesChromeFromItsLayout = new Set(["components/layouts/clients/phi-sequence-slot-editor.tsx"]);
+  const deaf: string[] = [];
+  for (const directory of layoutDirectories) {
+    for (const name of await readdir(path.join(root, directory))) {
+      if (!name.endsWith(".tsx") || receivesChromeFromItsLayout.has(`${directory}/${name}`)) continue;
+      const source = await readFile(path.join(root, directory, name), "utf8");
+      if (!/resolvePhiBaseLayoutChrome\(/u.test(source)) continue;
+      if (/<PhiLayoutSurfaceBox\b|usePhiLayoutSignalSurface\(/u.test(source)) continue;
+      deaf.push(`${directory}/${name}`);
+    }
+  }
+  assert.deepEqual(deaf, [], `These Layouts draw their Surface without answering Surface Signals:\n${deaf.join("\n")}`);
+}
+
+/**
  * LAYOUTING.md, "Where a Layout's outline comes from": a Layout that predates `borderSource` is read by
  * one rule, and the rule turns on the LINE.
  *

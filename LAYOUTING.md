@@ -90,6 +90,15 @@ double every pane and every shadow. The renderer reads the policy from the runti
 (`widgetSurfacePoliciesByType`), the Builder from the Widget's client definition; neither branches on a
 Widget type.
 
+A Layout answers the Surface Signals ([SIGNALS.md](./SIGNALS.md)) although it draws its Surface itself.
+The Signals reach its slot frame, which keeps what they set in the block runtime and hands the result to
+the Layout through `PhiLayoutSignalSurfaceProvider` -- only once a Signal has changed something, so the
+Layout's config (in the Builder, the draft) stays the answer until then. A Layout that renders on the
+server takes it through its root box, `PhiLayoutSurfaceBox`, which draws the server's style unchanged and
+swaps only the Surface's part once a Signal arrives; a Client Layout asks `usePhiLayoutSignalSurface`
+directly. Every Layout root is one of the two -- a Layout that draws its root as a plain element does not
+answer.
+
 ### Where a Surface's outline comes from
 
 `borderSource` is `none`, `theme`, or `custom` (`types/cms-border-source.ts`).
@@ -265,9 +274,9 @@ The parent slot policy is authoritative; child defaults cannot override it.
 - Editor scaffolding is an authoring overlay and must not change persisted topology or runtime depth.
 - Insert, select, drag, delete, and title controls operate on the Layout instance and its declared slots.
 - The Inspector exposes topology fields and shared visual fields for every Layout.
-- Regions expose their own geometry, padding, and Surface controls (background including image motion and
-  filter, border, shadow). Layout Background authoring exposes the same motion fields only when the selected Background owns
-  an image.
+- Regions, Layouts and Widgets edit their Surface with one `PhiSurfaceControl` (background including image
+  motion and filter, border source and border, shadow). The motion fields appear only when the selected
+  Background owns an image.
 
 ## Sizing and nesting
 

@@ -25,7 +25,7 @@ import {
   phiLayoutSlotClassName,
   phiLayoutSlotContentMarker,
 } from "../../../helpers/layout-authoring-markers";
-import { PhiSurfaceGroundLayer } from "../../surface/phi-surface-ground";
+import { PhiLayoutSurfaceBox } from "../phi-layout-surface-box";
 
 const PHI_THREE_COLUMN_LAYOUT_DEFAULTS = resolvePhiLayoutDefaults("threecol");
 
@@ -232,7 +232,10 @@ export function PhiThreeColumnLayout({
     surface,
   });
   return (
-    <div
+    <PhiLayoutSurfaceBox
+      blockId={blockId}
+      surface={surface}
+      ground={ground}
       data-layout-kind={layoutKind}
       data-phi-block-id={blockId ?? undefined}
       className="phi-layout"
@@ -264,7 +267,6 @@ export function PhiThreeColumnLayout({
       ...style,
       }}
     >
-      <PhiSurfaceGroundLayer ground={ground} />
       {renderColumn(
         isAuthoringRender,
         "slot-1",
@@ -307,6 +309,6 @@ export function PhiThreeColumnLayout({
         PHI_CMS_THREE_COLUMN_LAYOUT_SLOTS[2]?.label,
         showInsertButton,
       )}
-    </div>
+    </PhiLayoutSurfaceBox>
   );
 }

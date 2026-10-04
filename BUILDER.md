@@ -516,14 +516,21 @@ to keep Overlay receivers alive.
 
 Each Collapsible slot contains one Builder-Module section Widget. The sections are:
 
-- Region Inspector: geometry, viewport, padding, background, border, shadow
-- Layout Inspector: settings, anchor, padding, viewport, background, border, shadow, signals
-- Widget Inspector: settings, geometry, viewport, signals
+- Region Inspector: geometry, viewport, padding, surface
+- Layout Inspector: settings, anchor, padding, viewport, surface, signals
+- Widget Inspector: settings, geometry, viewport, surface, signals
+
+The surface section is one `PhiSurfaceControl` for every kind of node: background (with its filter and
+motion), where the line comes from (`none`, `theme`, `custom`) and the line itself, and shadow. It hands on
+the whole Surface and the Controller stores it as the node's `surface` (`patchSelectedRegionDraft`,
+`patchSelectedLayoutSurface`, `patchSelectedWidgetSurface`; `null` takes it away). A Widget whose plugin
+declares `surface: "none"` has no Surface, and its section hides its own panel through
+`usePhiBaseLayoutOwnSlotController().hide()` once the Widget's metadata has arrived.
 
 Section Widgets use the `fill-inline` slot-size policy so each occupies the complete panel width. They
 may share internal label/provider preparation and Client hooks, but they do not render through a host
 Widget, mount another Drawer, or receive a host-owned render callback. Presentation-only editors
-(background, border, shadow, padding, geometry, viewport, placement) are Phi Controls composed by the
+(surface, padding, geometry, viewport, placement) are Phi Controls composed by the
 section Widgets; a Control is never inserted directly as a CMS node. The selected node and its Draft remain
 Controller/workspace state.
 
@@ -580,7 +587,7 @@ Preview rendering boundary:
 Control rules:
 
 - colors and gradients are edited through Phi Controls (`PhiColorControl` and the background Control)
-- use presentation-only Phi Controls for background, border, shadow, padding, geometry, viewport,
+- use presentation-only Phi Controls for surface (background, border, shadow), padding, geometry, viewport,
   placement, gap, radius, and asset/image selection; the established viewport and placement contracts
   remain `PhiViewportVisibilityControl` and `PhiPlacementMatrixControl`
 - independently placeable Inspector sections use Builder-Module Widget counterparts that compose those

@@ -29,6 +29,7 @@ import {
 } from "../phi-carousel-pages";
 import { PhiIcon } from "../../shell/phi-icon";
 import { PhiSurfaceGroundLayer } from "../../surface/phi-surface-ground";
+import { usePhiLayoutSignalSurface } from "../phi-layout-signal-surface";
 
 /**
  * A Stack with a wider window.
@@ -124,11 +125,12 @@ export function PhiCarouselLayout({
     paddingRight,
     paddingBottom,
     paddingLeft,
-    surface,
+    surface: storedSurface,
     editSlotAction,
     editRenderInsertControl,
     editSlotAnchor = "center",
   } = layoutProps;
+  const surface = usePhiLayoutSignalSurface(blockId, storedSurface);
   const isEditMode = renderMode === "editor";
   const editableSlotCount = resolvePhiSequenceEditableSlotCount(slots, slotKeys);
   const { token } = usePhiConfig();

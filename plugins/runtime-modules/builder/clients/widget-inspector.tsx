@@ -1,6 +1,15 @@
 "use client";
 
+import { useEffect } from "react";
+
 import { PhiGeometryControl } from "../../../../components/controls/phi-geometry-control";
+import type { PhiBackgroundControlProps } from "../../../../components/controls/phi-background-control";
+import { PhiSurfaceControl } from "../../../../components/controls/phi-surface-control";
+import { usePhiBaseLayoutOwnSlotController } from "../../../../components/layouts/phi-layout-slot-state";
+import type { PhiBackgroundWidgetLabels } from "../../../../components/widgets/label-types/background";
+import type { PhiBorderWidgetLabels } from "../../../../components/widgets/label-types/border";
+import type { PhiSurface } from "../../../../types/surface";
+import type { PhiInspectorSurfaceLabels } from "./inspector-surface-labels";
 import { PhiViewportVisibilityControl } from "../../../../components/controls/phi-viewport-visibility-control";
 import type { PhiGeometryWidgetLabels } from "../../../../components/widgets/label-types/geometry";
 import type { PhiSignalsWidgetLabels } from "../../../../components/widgets/label-types/signals";
@@ -58,9 +67,15 @@ type PhiDeveloperBuilderWidgetInspectorWidgetClientProps = {
   signalRouteScope?: PhiSignalRoute["scope"];
   onConfigChange?: (next: Record<string, unknown>) => void;
   onGeometryChange?: (next: PhiCmsGeometryWidgetConfig) => void;
+  /** The whole next Surface, or `null` once nothing is left in it. */
+  onSurfaceChange?: (next: PhiSurface | null) => void;
   /** Sets the node's `NoTranslate` flag; offered for a Widget that translates its own text. */
   onTranslateChange?: (translate: boolean) => void;
   geometryLabels?: PhiGeometryWidgetLabels;
+  surfaceLabels?: PhiInspectorSurfaceLabels;
+  backgroundLabels?: PhiBackgroundWidgetLabels;
+  borderLabels?: PhiBorderWidgetLabels;
+  renderMediaPicker?: PhiBackgroundControlProps["renderMediaPicker"];
   signalsLabels?: PhiSignalsWidgetLabels;
   colorPickerLabels?: PhiColorPickerLabels;
   iconPickerLabels?: PhiIconPickerControlLabels;
@@ -81,8 +96,13 @@ export function PhiDeveloperBuilderWidgetInspectorWidgetClient({
   signalRouteScope = "widget",
   onConfigChange,
   onGeometryChange,
+  onSurfaceChange,
   onTranslateChange,
   geometryLabels,
+  surfaceLabels,
+  backgroundLabels,
+  borderLabels,
+  renderMediaPicker,
   signalsLabels,
   colorPickerLabels,
   iconPickerLabels,
@@ -115,6 +135,7 @@ export function PhiDeveloperBuilderWidgetInspectorWidgetClient({
         config: currentWidgetConfigRecord,
         runtimeSignals,
         signalSubcontrols: selectedStructureWidgetMeta?.signalSubcontrols,
+        surfacePolicy: selectedStructureWidgetMeta?.surface,
         routeScope: signalRouteScope,
       })
     : [];
@@ -122,6 +143,22 @@ export function PhiDeveloperBuilderWidgetInspectorWidgetClient({
   const settingsFields = (selectedStructureWidgetMeta?.fields ?? []).filter(
     (field) => isPhiInspectorConfigFieldVisible(field, currentWidgetSettingsConfigRecord),
   );
+  /*
+   * A Widget that has no Surface (`surface: "none"`) gets no Surface section: the panel hides itself,
+   * the way the Layout Settings panel does when there is nothing to set. Nothing is decided before the
+   * Widget's metadata has arrived -- not known is not "none".
+   */
+  const surfaceSectionHidden = section === "surface" && isTargetKind
+    && selectedStructureWidgetMeta != null && selectedStructureWidgetMeta.surface === "none";
+  const ownSlot = usePhiBaseLayoutOwnSlotController();
+  useEffect(() => {
+    if (!ownSlot || section !== "surface") return;
+    if (surfaceSectionHidden) {
+      if (ownSlot.state !== "hidden") ownSlot.hide();
+      return;
+    }
+    if (ownSlot.state === "hidden") ownSlot.show();
+  }, [ownSlot, section, surfaceSectionHidden]);
   const geometryValue: PhiCmsGeometryWidgetConfig = {
     sticky: false,
     offsetTop: 0,
@@ -216,6 +253,22 @@ export function PhiDeveloperBuilderWidgetInspectorWidgetClient({
                         viewportFlags,
                       })
                     }
+                  />
+                ),
+              },
+              {
+                key: "surface",
+                title: surfaceLabels?.section ?? "Surface",
+                children: (
+                  <PhiSurfaceControl
+                    disabled={isPreviewMode}
+                    value={currentBlockConfig.surface ?? null}
+                    onChange={(surface) => onSurfaceChange?.(surface)}
+                    labels={surfaceLabels?.parts}
+                    backgroundLabels={backgroundLabels}
+                    borderLabels={borderLabels}
+                    colorPickerLabels={colorPickerLabels}
+                    renderMediaPicker={renderMediaPicker}
                   />
                 ),
               },

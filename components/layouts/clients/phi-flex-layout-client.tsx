@@ -19,7 +19,7 @@ import {
   phiLayoutSlotClassName,
   phiLayoutSlotContentMarker,
 } from "../../../helpers/layout-authoring-markers";
-import { PhiSurfaceGroundLayer } from "../../surface/phi-surface-ground";
+import { PhiLayoutSurfaceBox } from "../phi-layout-surface-box";
 
 const PHI_FLEX_LAYOUT_DEFAULTS = resolvePhiLayoutDefaults("flex");
 
@@ -312,7 +312,10 @@ export function PhiFlexLayout({
   };
 
   return (
-    <div
+    <PhiLayoutSurfaceBox
+      blockId={layoutProps.blockId}
+      surface={surface}
+      ground={ground}
       data-layout-kind={layoutKind}
       data-layout-axis={resolvedVertical ? "vertical" : "horizontal"}
       className="phi-layout"
@@ -329,9 +332,8 @@ export function PhiFlexLayout({
         ...resolvedStyle,
       }}
     >
-      <PhiSurfaceGroundLayer ground={ground} />
       {renderedContentChildren}
       {insertButton}
-    </div>
+    </PhiLayoutSurfaceBox>
   );
 }

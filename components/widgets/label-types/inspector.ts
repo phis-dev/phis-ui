@@ -12,6 +12,7 @@ export type PhiInspectorWidgetLabels = {
     background: string;
     border: string;
     shadow: string;
+    surface: string;
     signals: string;
   };
 };
@@ -30,6 +31,7 @@ export const PHI_INSPECTOR_WIDGET_DEFAULT_LABELS: PhiInspectorWidgetLabels = {
     background: "Background",
     border: "Border",
     shadow: "Shadow",
+    surface: "Surface",
     signals: "Signals",
   },
 };

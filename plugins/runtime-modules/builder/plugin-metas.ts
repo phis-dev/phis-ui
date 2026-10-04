@@ -47,6 +47,7 @@ export function buildPhiBuilderPluginMeta(plugin: PhiAnyCmsBuilderPlugin): PhiBu
       ...("translatesOwnText" in plugin && plugin.translatesOwnText ? { translatesOwnText: true as const } : {}),
       signalSubcontrols: plugin.signalSubcontrols,
       slotSizePolicy: plugin.slotSizePolicy ?? null,
+      surface: "surface" in plugin ? plugin.surface ?? null : null,
       requiredRegionOwnership:
         "requiredRegionOwnership" in plugin ? plugin.requiredRegionOwnership ?? null : null,
       defaultConfig,

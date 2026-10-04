@@ -1,10 +1,10 @@
 "use client";
 
-import { PhiBackgroundControl, type PhiBackgroundControlProps } from "../../../../components/controls/phi-background-control";
-import { PhiBorderControl } from "../../../../components/controls/phi-border-control";
+import type { PhiBackgroundControlProps } from "../../../../components/controls/phi-background-control";
+import { PhiSurfaceControl } from "../../../../components/controls/phi-surface-control";
+import type { PhiInspectorSurfaceLabels } from "./inspector-surface-labels";
 import { PhiGeometryControl } from "../../../../components/controls/phi-geometry-control";
 import { PhiViewportVisibilityControl } from "../../../../components/controls/phi-viewport-visibility-control";
-import { PhiShadowControl } from "../../../../components/controls/phi-shadow-control";
 import { PhiPaddingControl } from "../../../../components/controls/phi-padding-control";
 import type { PhiGeometryWidgetLabels } from "../../../../components/widgets/label-types/geometry";
 import type { PhiBackgroundWidgetLabels } from "../../../../components/widgets/label-types/background";
@@ -64,6 +64,7 @@ type PhiDeveloperBuilderRegionInspectorWidgetClientProps = {
   borderLabels?: PhiBorderWidgetLabels;
   colorPickerLabels?: PhiColorPickerLabels;
   paddingLabels?: PhiPaddingWidgetLabels;
+  surfaceLabels?: PhiInspectorSurfaceLabels;
   renderMediaPicker?: PhiBackgroundControlProps["renderMediaPicker"];
 };
 
@@ -79,6 +80,7 @@ export function PhiDeveloperBuilderRegionInspectorWidgetClient({
   borderLabels,
   colorPickerLabels,
   paddingLabels,
+  surfaceLabels,
   renderMediaPicker,
 }: PhiDeveloperBuilderRegionInspectorWidgetClientProps) {
   const isPreviewMode = builderMode === "preview";
@@ -146,57 +148,19 @@ export function PhiDeveloperBuilderRegionInspectorWidgetClient({
                 ),
               },
               {
-                key: "background",
-                title: backgroundLabels?.title ?? "Background",
+                key: "surface",
+                title: surfaceLabels?.section ?? "Surface",
                 children: (
-                  <div style={{ display: "grid", gap: PHI_GAP_SM, width: "100%" }}>
-                    <PhiBackgroundControl
-                      disabled={isPreviewMode}
-                      value={effectiveDraft.surface?.background ?? null}
-                      onChange={(background) => updateDraft({
-                        surface: { ...effectiveDraft.surface, background },
-                      })}
-                      labels={backgroundLabels}
-                      colorPickerLabels={colorPickerLabels}
-                      colorPickerPlacement="left"
-                      renderMediaPicker={renderMediaPicker}
-                    />
-                  </div>
-                ),
-              },
-              {
-                key: "border",
-                title: borderLabels?.title ?? "Border",
-                children: (
-                  <div style={{ display: "grid", gap: PHI_GAP_SM, width: "100%" }}>
-                    <PhiBorderControl
-                      mode="control"
-                      disabled={isPreviewMode}
-                      value={effectiveDraft.surface?.border ?? null}
-                      onChange={(border) => updateDraft({
-                        surface: { ...effectiveDraft.surface, border, borderSource: "custom" },
-                      })}
-                      labels={borderLabels}
-                      colorPickerLabels={colorPickerLabels}
-                      colorPickerPlacement="left"
-                    />
-                  </div>
-                ),
-              },
-              {
-                key: "shadow",
-                title: "Shadow",
-                children: (
-                  <div style={{ display: "grid", gap: PHI_GAP_SM, width: "100%" }}>
-                    <PhiShadowControl
-                      mode="control"
-                      disabled={isPreviewMode}
-                      value={effectiveDraft.surface?.shadow ?? null}
-                      onChange={(shadow) => updateDraft({
-                        surface: { ...effectiveDraft.surface, shadow },
-                      })}
-                    />
-                  </div>
+                  <PhiSurfaceControl
+                    disabled={isPreviewMode}
+                    value={effectiveDraft.surface ?? null}
+                    onChange={(surface) => updateDraft({ surface })}
+                    labels={surfaceLabels?.parts}
+                    backgroundLabels={backgroundLabels}
+                    borderLabels={borderLabels}
+                    colorPickerLabels={colorPickerLabels}
+                    renderMediaPicker={renderMediaPicker}
+                  />
                 ),
               },
             ]}

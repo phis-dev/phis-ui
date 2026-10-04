@@ -17,7 +17,7 @@ import {
   phiLayoutSlotClassName,
   phiLayoutSlotContentMarker,
 } from "../../../helpers/layout-authoring-markers";
-import { PhiSurfaceGroundLayer } from "../../surface/phi-surface-ground";
+import { PhiLayoutSurfaceBox } from "../phi-layout-surface-box";
 
 const PHI_SPLIT_CARD_LAYOUT_DEFAULTS = resolvePhiLayoutDefaults("split");
 
@@ -110,6 +110,7 @@ function renderSplitCardSlot(
 }
 
 export function PhiSplitCardLayout({
+  blockId,
   slots,
   gap,
   slotPadding,
@@ -156,7 +157,10 @@ export function PhiSplitCardLayout({
   };
 
   return (
-    <div
+    <PhiLayoutSurfaceBox
+      blockId={blockId}
+      surface={surface}
+      ground={ground}
       data-layout-kind={layoutKind}
       data-phi-block-render-mode={resolvedRenderMode}
       data-phi-layout-debug-layer={phiLayoutDebugLayerMarker(isAuthoringRender)}
@@ -164,7 +168,6 @@ export function PhiSplitCardLayout({
       className="phi-layout"
       style={resolvedStyle}
     >
-      <PhiSurfaceGroundLayer ground={ground} />
       {renderSplitCardSlot(
         isAuthoringRender,
         "slot-1",
@@ -189,6 +192,6 @@ export function PhiSplitCardLayout({
         "Slot 2",
         slotPadding,
       )}
-    </div>
+    </PhiLayoutSurfaceBox>
   );
 }

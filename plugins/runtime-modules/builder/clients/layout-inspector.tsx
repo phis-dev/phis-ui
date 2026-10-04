@@ -5,12 +5,8 @@ import { useEffect, useState } from "react";
 import { usePhiBaseLayoutOwnSlotController } from "../../../../components/layouts/phi-layout-slot-state";
 import { PhiBackgroundControl, type PhiBackgroundControlProps } from "../../../../components/controls/phi-background-control";
 import { PhiBorderControl } from "../../../../components/controls/phi-border-control";
-import { PhiSegmentedControl } from "../../../../components/controls/phi-segmented-control";
-import {
-  PHI_CMS_BORDER_SOURCES,
-  resolvePhiCmsBorderSource,
-  type PhiCmsBorderSource,
-} from "../../../../types/cms-border-source";
+import { PhiSurfaceControl } from "../../../../components/controls/phi-surface-control";
+import type { PhiInspectorSurfaceLabels } from "./inspector-surface-labels";
 import { PhiShadowControl } from "../../../../components/controls/phi-shadow-control";
 import { PhiViewportVisibilityControl } from "../../../../components/controls/phi-viewport-visibility-control";
 import { PhiPlacementMatrixControl } from "../../../../components/controls/phi-placement-matrix-control";
@@ -66,13 +62,6 @@ import { PhiTypographyControl } from "../../../../components/controls/phi-typogr
 
 const PHI_GAP_SM = "var(--ant-padding-sm)";
 
-/** Read only where the Border labels have not arrived; the words themselves live in their label set. */
-const PHI_BORDER_SOURCE_FALLBACK_LABELS: Record<PhiCmsBorderSource, string> = {
-  none: "None",
-  theme: "Theme",
-  custom: "Custom",
-};
-
 type PhiCmsChromeConfigField = Extract<PhiCmsConfigField, { type: "padding" | "background" | "border" | "shadow" | "slot-placement" }>;
 
 function isPhiCmsChromeConfigField(field: PhiCmsConfigField): field is PhiCmsChromeConfigField {
@@ -108,10 +97,11 @@ type PhiDeveloperBuilderLayoutInspectorWidgetClientProps = {
   selectedLayoutAnchor?: PhiAnchorWidgetPlacement | null;
   onLayoutAnchorChange?: (next: PhiAnchorWidgetPlacement) => void;
   onPaddingChange?: (next: PhiCmsPaddingWidgetConfig | null) => void;
-  /** The whole next Surface; each section changes its own part and hands the rest on unchanged. */
-  onSurfaceChange?: (next: PhiSurface) => void;
+  /** The whole next Surface, or `null` once nothing is left in it. */
+  onSurfaceChange?: (next: PhiSurface | null) => void;
   onConfigChange?: (key: string, value: unknown) => void;
   paddingLabels?: PhiPaddingWidgetLabels;
+  surfaceLabels?: PhiInspectorSurfaceLabels;
   backgroundLabels?: PhiBackgroundWidgetLabels;
   borderLabels?: PhiBorderWidgetLabels;
   signalsLabels?: PhiSignalsWidgetLabels;
@@ -137,6 +127,7 @@ export function PhiDeveloperBuilderLayoutInspectorWidgetClient({
   onSurfaceChange,
   onConfigChange,
   paddingLabels,
+  surfaceLabels,
   backgroundLabels,
   borderLabels,
   signalsLabels,
@@ -151,8 +142,6 @@ export function PhiDeveloperBuilderLayoutInspectorWidgetClient({
   const isTargetKind = selectedStructureNodeKind === "layout";
   const resolvedLayoutAnchor = currentDraft?.rootNodeAnchor ?? selectedLayoutAnchor;
   const resolvedLayoutPadding = currentDraft?.rootNodePadding ?? null;
-  const currentSurface: PhiSurface = currentDraft?.rootNodeSurface ?? {};
-  const patchSurface = (patch: Partial<PhiSurface>) => onSurfaceChange?.({ ...currentSurface, ...patch });
   const currentDraftRecord = currentDraft as Record<string, unknown> | null;
   const layoutDefaultConfigRecord = selectedStructureDefaultConfig;
   const currentLayoutConfigRecord = {
@@ -160,12 +149,6 @@ export function PhiDeveloperBuilderLayoutInspectorWidgetClient({
     ...(currentDraftRecord ?? {}),
   };
   const resolvedLayoutPaddingDefaults = normalizePhiPaddingWidgetConfig(layoutDefaultConfigRecord);
-  /*
-   * Where this Layout's outline comes from. Asked of the same resolver the drawing asks, so a Layout
-   * written before the field reads the same on both sides -- a configured line means `custom`, and the
-   * absence of one means `none` rather than "unanswered".
-   */
-  const layoutBorderSource = resolvePhiCmsBorderSource(currentSurface.borderSource, currentSurface.border);
   const declaredFields = selectedStructurePlugin?.fields ?? [];
   const settingsFields = declaredFields.filter(
     (field) => !isPhiCmsChromeConfigField(field) && isPhiInspectorConfigFieldVisible(field, currentLayoutConfigRecord),
@@ -525,74 +508,19 @@ export function PhiDeveloperBuilderLayoutInspectorWidgetClient({
               },
               ...[
                     {
-                      key: "background",
-                      title: backgroundLabels?.title ?? "Background",
+                      key: "surface",
+                      title: surfaceLabels?.section ?? "Surface",
                       children: (
-                        <div style={{ display: "grid", gap: PHI_GAP_SM, width: "100%" }}>
-                          <PhiBackgroundControl
-                            mode="control"
-                            disabled={isPreviewMode}
-                            value={currentSurface.background ?? null}
-                            onChange={(background) => patchSurface({ background })}
-                            labels={backgroundLabels}
-                            colorPickerLabels={colorPickerLabels}
-                            colorPickerPlacement="left"
-                            renderMediaPicker={renderMediaPicker}
-                          />
-                        </div>
-                      ),
-                    },
-                    {
-                      key: "border",
-                      title: borderLabels?.title ?? "Border",
-                      children: (
-                        <div style={{ display: "grid", gap: PHI_GAP_SM, width: "100%" }}>
-                          {/*
-                            * The question above the answer: where the line comes from. `theme` takes the
-                            * Site's border colour and line width, so a Layout wears the house style
-                            * without anybody typing a colour into it and moves when the Theme moves.
-                            *
-                            * The fields below appear only for `custom`, the way every other conditional
-                            * field in this Inspector appears -- and unlike the Settings panel that went
-                            * missing, what makes them go is standing right above them.
-                            */}
-                          <PhiSegmentedControl<PhiCmsBorderSource>
-                            value={layoutBorderSource}
-                            options={PHI_CMS_BORDER_SOURCES.map((source) => ({
-                              value: source,
-                              label: borderLabels?.sources?.[source]
-                                ?? PHI_BORDER_SOURCE_FALLBACK_LABELS[source],
-                            }))}
-                            block
-                            disabled={isPreviewMode}
-                            onChange={(borderSource) => patchSurface({ borderSource })}
-                          />
-                          {layoutBorderSource === "custom" ? (
-                            <PhiBorderControl
-                              mode="control"
-                              disabled={isPreviewMode}
-                              value={currentSurface.border ?? null}
-                              onChange={(border) => patchSurface({ border })}
-                              labels={borderLabels}
-                              colorPickerLabels={colorPickerLabels}
-                              colorPickerPlacement="left"
-                            />
-                          ) : null}
-                        </div>
-                      ),
-                    },
-                    {
-                      key: "shadow",
-                      title: "Shadow",
-                      children: (
-                        <div style={{ display: "grid", gap: PHI_GAP_SM, width: "100%" }}>
-                          <PhiShadowControl
-                            mode="control"
-                            disabled={isPreviewMode}
-                            value={currentSurface.shadow ?? null}
-                            onChange={(shadow) => patchSurface({ shadow })}
-                          />
-                        </div>
+                        <PhiSurfaceControl
+                          disabled={isPreviewMode}
+                          value={currentDraft?.rootNodeSurface ?? null}
+                          onChange={(surface) => onSurfaceChange?.(surface)}
+                          labels={surfaceLabels?.parts}
+                          backgroundLabels={backgroundLabels}
+                          borderLabels={borderLabels}
+                          colorPickerLabels={colorPickerLabels}
+                          renderMediaPicker={renderMediaPicker}
+                        />
                       ),
                     },
                     ...declaredChromeSections

@@ -26,6 +26,7 @@ import type { PhiAnchorWidgetPlacement } from "../../controls/phi-anchor-control
 import { resolvePhiSequenceEditableSlotCount, usePhiSlotSequence } from "../use-phi-slot-sequence";
 import { usePhiConfig } from "../../root/phi-config-provider";
 import { PhiSurfaceGroundLayer } from "../../surface/phi-surface-ground";
+import { usePhiLayoutSignalSurface } from "../phi-layout-signal-surface";
 
 export type PhiStackLayoutSlotMeta = {
   key: string;
@@ -81,11 +82,12 @@ export function PhiStackLayout({
     paddingRight,
     paddingBottom,
     paddingLeft,
-    surface,
+    surface: storedSurface,
     editSlotAction,
     editRenderInsertControl,
     editSlotAnchor = "center",
   } = layoutProps;
+  const surface = usePhiLayoutSignalSurface(blockId, storedSurface);
   const isEditMode = renderMode === "editor";
   /*
    * A pile, not a sequence.

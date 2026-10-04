@@ -151,6 +151,7 @@ export function resolvePhiBuilderSelectedSignalEndpoints(state: PhiDeveloperBuil
             config: widget.config,
             runtimeSignals: plugin.runtimeSignals,
             signalSubcontrols: plugin.signalSubcontrols,
+            surfacePolicy: plugin.surface,
             routeScope,
           }),
           widget.config,
