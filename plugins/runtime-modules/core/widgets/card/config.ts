@@ -105,6 +105,7 @@ export const PHI_CARD_WIDGET_DEFINITION = {
   title: "Card",
   category: "content",
   description: "Content card with a picture or an icon, a heading or a figure, and a link.",
+  icon: "antd:idcard-outlined",
   iconFamily: "basic",
   translatesOwnText: true,
   slotSizePolicy: "fill-inline",
@@ -206,6 +207,7 @@ export const PHI_CARD_WIDGET_DEFINITION = {
   | "title"
   | "description"
   | "category"
+  | "icon"
   | "iconFamily"
   | "slotSizePolicy"
   | "surface"
