@@ -20,6 +20,9 @@ import { PhiTableProviderClient, type PhiTableProviderRegistration } from "../cl
 import { usePhiTableBinding } from "../../tables/client/phi-table-binding";
 import { PhiTableBindingControl } from "../../tables/client/phi-table-binding-control";
 import { PhiFlexControl } from "../../controls/phi-flex-control";
+import { PhiCollectionHeaderControl } from "../../controls/phi-collection-header-control";
+import { PhiToolbarControl } from "../../controls/phi-toolbar-control";
+import { PHI_SPACE } from "../../../theme/antd-css-var-contract";
 
 type PhiStaticOptionEditorRow = PhiControlOption & {
   rowId: string;
@@ -208,8 +211,24 @@ function PhiStaticOptionsTable({ disabled }: { disabled: boolean }) {
       ),
     },
   ], [binding, disabled, labels]);
+  /*
+   * Add stands over the table, as every collection's tools do (TABLES.md, "Collection Header"): a
+   * compact toolbar on the right, `space.sm` above the table. It stood under the table on its own.
+   */
   return <>
     {binding.error ? <PhiAlertControl level="error" showIcon title={binding.error.message} /> : null}
+    <PhiFlexControl vertical gap={PHI_SPACE.sm} style={{ width: "100%", minWidth: 0 }}>
+    <PhiCollectionHeaderControl
+      toolbar={(
+        <PhiToolbarControl
+          compact
+          size="small"
+          disabled={disabled}
+          items={[{ key: "add", label: labels.addOption, showLabel: true, icon: <PhiIcon name="plus" size="inherit" /> }]}
+          onActivate={() => { void binding.executeAction({ kind: "action", actionKey: "add", selectedRowIdentities: [], query: binding.resolvedQuery }); }}
+        />
+      )}
+    />
     <PhiTableBindingControl
       rows={binding.rows} fields={binding.resource?.fields ?? []} columns={columns}
       rowIdentityPath="rowId" columnOrder={["icon", "label", "value", "description", "actions"]}
@@ -217,10 +236,6 @@ function PhiStaticOptionsTable({ disabled }: { disabled: boolean }) {
       layout={{ mode: "fixed", overflowX: "auto" }} loading={binding.loading}
       rowReordering={{ enabled: !disabled, onMove: (move) => { void binding.moveRow({ kind: "row-move", ...move }); } }}
     />
-    <PhiFlexControl justify="flex-end">
-      <PhiButtonControl label={labels.addOption} icon={<PhiIcon name="plus" size="inherit" />} size="small" disabled={disabled}
-        onClick={() => { void binding.executeAction({ kind: "action", actionKey: "add", selectedRowIdentities: [], query: binding.resolvedQuery }); }}
-      />
     </PhiFlexControl>
   </>;
 }

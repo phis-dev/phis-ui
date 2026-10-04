@@ -8,6 +8,7 @@ import type { PhiCmsOverlayMaskConfig, PhiOverlayCloseSource } from "../../types
 import type { PhiControlSize } from "../../types/control";
 import { PhiAlertControl, type PhiAlertControlProps } from "./phi-alert-control";
 import { PhiButtonControl } from "./phi-button-control";
+import { PhiCompactGroupControl } from "./phi-compact-group-control";
 import type { PhiButtonType } from "./phi-button-types";
 import { PhiFlexControl } from "./phi-flex-control";
 import { PhiModalControl } from "./phi-modal-control";
@@ -31,7 +32,7 @@ import { PhiModalControl } from "./phi-modal-control";
  * The shape it renders is the one OVERLAYS.md describes for a tree Overlay, so the two paths land on the
  * same thing rather than on something similar: the Body is a vertical flex one `base` apart and one
  * `base` in from every edge, holding the notice first and the subject under it; the Footer anchors its
- * actions right, `xs` apart, `xs` from the fold and `base` from the sides. Both sides derive that from
+ * actions right as one compact group, `xs` from the fold and `base` from the sides. Both sides derive that from
  * the same tokens rather than from each other -- the Layout presets are creation defaults a Builder may
  * edit afterwards, which is not a constant to depend on.
  *
@@ -123,12 +124,15 @@ export function PhiDialogControl({
           {children}
         </PhiFlexControl>
       }
+      /*
+       * The actions are one compact group, as a tree Overlay's footer is (OVERLAYS.md): Cancel and Apply
+       * are the two ends of one decision, and a gap between them read as two unrelated offers. A compact
+       * group does not wrap.
+       */
       footer={actions == null || actions.length === 0 ? null : (
         <PhiFlexControl
           align="center"
           justify="end"
-          wrap
-          gap={PHI_SPACE.xs}
           style={{
             paddingBlock: PHI_SPACE.xs,
             paddingInline: PHI_SPACE.base,
@@ -136,6 +140,7 @@ export function PhiDialogControl({
             minWidth: 0,
           }}
         >
+          <PhiCompactGroupControl>
           {actions.map((action) => (
             <PhiButtonControl
               key={action.key}
@@ -148,6 +153,7 @@ export function PhiDialogControl({
               onClick={action.onClick}
             />
           ))}
+          </PhiCompactGroupControl>
         </PhiFlexControl>
       )}
     />
