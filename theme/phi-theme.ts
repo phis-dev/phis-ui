@@ -3,9 +3,8 @@ import {
   PHI_LAYOUT,
   PHI_RADII,
   PHI_PADDING as PHI_PADDING_VALUES,
-  PHI_MARGIN as PHI_MARGIN_VALUES,
 } from "./phi-tokens";
-import { PHI_CONTROL, PHI_MARGIN, PHI_SPACE } from "./antd-css-var-contract";
+import { PHI_CONTROL, PHI_SPACE } from "./antd-css-var-contract";
 
 export type PhiThemeTokenOptions = {
   wireframe?: boolean;
@@ -78,14 +77,15 @@ export function buildPhiThemeTokens(options: PhiThemeTokenOptions = {}): PhiThem
     paddingLG: PHI_PADDING_VALUES.lg,
     paddingXL: PHI_PADDING_VALUES.xl,
     paddingXXL: PHI_PADDING_VALUES.xxl,
-    marginXXS: PHI_MARGIN_VALUES.xxs,
-    marginXS: PHI_MARGIN_VALUES.xs,
-    marginSM: PHI_MARGIN_VALUES.sm,
-    margin: PHI_MARGIN_VALUES.base,
-    marginMD: PHI_MARGIN_VALUES.md,
-    marginLG: PHI_MARGIN_VALUES.lg,
-    marginXL: PHI_MARGIN_VALUES.xl,
-    marginXXL: PHI_MARGIN_VALUES.xxl,
+    // Ant Design's second family, on the same scale: its own components read it (phi-tokens.ts).
+    marginXXS: PHI_PADDING_VALUES.xxs,
+    marginXS: PHI_PADDING_VALUES.xs,
+    marginSM: PHI_PADDING_VALUES.sm,
+    margin: PHI_PADDING_VALUES.base,
+    marginMD: PHI_PADDING_VALUES.md,
+    marginLG: PHI_PADDING_VALUES.lg,
+    marginXL: PHI_PADDING_VALUES.xl,
+    marginXXL: PHI_PADDING_VALUES.xxl,
     borderRadiusSM: PHI_RADII.xs,
     borderRadius: PHI_RADII.sm,
     borderRadiusLG: PHI_RADII.base,
@@ -127,8 +127,8 @@ export function buildPhiComponentTokens(
     Menu: {
       itemHeight: PHI_CONTROL.md,
       itemPaddingInline: PHI_SPACE.base,
-      itemMarginBlock: PHI_MARGIN.sm,
-      itemMarginInline: PHI_MARGIN.sm,
+      itemMarginBlock: PHI_SPACE.sm,
+      itemMarginInline: PHI_SPACE.sm,
       ...options.menu,
     },
     ...options.overrides,

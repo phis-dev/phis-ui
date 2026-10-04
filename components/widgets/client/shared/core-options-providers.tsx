@@ -1,25 +1,16 @@
 "use client";
 
 import { PHI_CORE_RUNTIME_DATA_PROVIDER_KEYS } from "../../../../constants/core-data-provider-keys";
-import {
-  buildPhiSpacingScaleOptions,
-  type PhiSpacingScaleFamily,
-} from "../../config/spacing-options";
+import { buildPhiSpacingScaleOptions } from "../../config/spacing-options";
 import {
   createPhiStaticControlOptionsProviderClient,
-  readPhiControlOptionsProviderParam,
   type PhiControlOptionsProviderContext,
 } from "../../../controls/phi-options-provider";
 import { readPhiSiteLocaleOptions } from "../../../forms/site-locales-config";
 
-function resolveSpacingScaleOptionsProvider(context: PhiControlOptionsProviderContext) {
-  const family: PhiSpacingScaleFamily =
-    readPhiControlOptionsProviderParam(context.optionsProvider, "family") === "margin"
-      ? "margin"
-      : "padding";
-
+function resolveSpacingScaleOptionsProvider() {
   return {
-    options: buildPhiSpacingScaleOptions(family),
+    options: buildPhiSpacingScaleOptions(),
   };
 }
 

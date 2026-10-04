@@ -1,4 +1,4 @@
-import { PHI_MARGIN, PHI_SPACE } from "../theme/antd-css-var-contract";
+import { PHI_SPACE } from "../theme/antd-css-var-contract";
 import type { PhiLayoutKind } from "../components/layouts/phi-layout-contract";
 import { PHI_RENDERABLE_BLOCK_DEFAULT_ANCHOR } from "./renderable-block-defaults";
 import { isPhiRecord } from "./is-record";
@@ -19,9 +19,9 @@ const PHI_CONTENT_LAYOUT_PANEL_PRESET = {
 
 export const PHI_FLEX_LAYOUT_DEFAULTS: PhiLayoutDefaults = {
     distribution: "anchor",
-    // A fresh row starts left-aligned and vertically centred, its children one base margin apart.
+    // A fresh row starts left-aligned and vertically centred, its children one base step apart.
     anchor: { horizontal: "left", vertical: "middle" },
-    gap: PHI_MARGIN.base,
+    gap: PHI_SPACE.base,
     verticalSeparators: false,
     separatorBeforeFirst: false,
     separatorSpan: "75%",
@@ -29,7 +29,7 @@ export const PHI_FLEX_LAYOUT_DEFAULTS: PhiLayoutDefaults = {
 };
 const PHI_FLEX_LAYOUT_PANEL_PRESET = {
     distribution: "anchor",
-    gap: PHI_MARGIN.base,
+    gap: PHI_SPACE.base,
     verticalSeparators: false,
     separatorBeforeFirst: false,
     separatorSpan: "75%",
@@ -84,7 +84,7 @@ export const PHI_GRID_LAYOUT_DEFAULTS: PhiLayoutDefaults = {
     wrap: false,
 };
 const PHI_GRID_LAYOUT_PANEL_PRESET = {
-    gap: PHI_MARGIN.base,
+    gap: PHI_SPACE.base,
     // Rows apart, columns flush: stated, because an absent column gap follows the gap now.
     columnGap: 0,
     align: undefined,
@@ -95,11 +95,11 @@ const PHI_GRID_LAYOUT_PANEL_PRESET = {
 
 export const PHI_MASONRY_LAYOUT_DEFAULTS: PhiLayoutDefaults = {
     columns: 3,
-    gap: PHI_MARGIN.md,
+    gap: PHI_SPACE.md,
 };
 const PHI_MASONRY_LAYOUT_PANEL_PRESET = {
     columns: 3,
-    gap: PHI_MARGIN.base,
+    gap: PHI_SPACE.base,
     padding: PHI_SPACE.base,
 } as const;
 
@@ -180,8 +180,7 @@ const PHI_SPLIT_CARD_LAYOUT_DEFAULT_ANCHOR = { horizontal: "center", vertical: "
  */
 export const PHI_SPLIT_CARD_LAYOUT_DEFAULTS: PhiLayoutDefaults = {
     anchor: PHI_SPLIT_CARD_LAYOUT_DEFAULT_ANCHOR,
-    // A distance between two things is a margin step; the Paddings panel offers the gap on that scale.
-    gap: PHI_MARGIN.base,
+    gap: PHI_SPACE.base,
     padding: PHI_SPACE.base,
 };
 
@@ -204,7 +203,7 @@ export const PHI_THREE_COLUMN_LAYOUT_DEFAULTS: PhiLayoutDefaults = {
 };
 const PHI_THREE_COLUMN_LAYOUT_PANEL_PRESET = {
     balancedSides: true,
-    gap: PHI_MARGIN.base,
+    gap: PHI_SPACE.base,
     wrap: false,
     paddingTop: 0,
     paddingBottom: 0,

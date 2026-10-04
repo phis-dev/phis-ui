@@ -1,5 +1,5 @@
 import { createPhiPresetCmsInstanceIdMap } from "../../../../types/cms-instance-id";
-import { PHI_MARGIN, PHI_SPACE } from "../../../../theme/antd-css-var-contract";
+import { PHI_SPACE } from "../../../../theme/antd-css-var-contract";
 import { PHI_LAYOUT } from "../../../../theme/phi-tokens";
 import { PHI_AUTH_RUNTIME_MODULE_ID } from "../ids";
 import {
@@ -76,7 +76,7 @@ export async function buildPhiDefaultPubLoginPageTree({
         sortOrder: 0,
         label: "pub login page",
         config: {
-          gap: PHI_MARGIN.base,
+          gap: PHI_SPACE.base,
         },
       }),
       nodes.layout({

@@ -32,6 +32,11 @@ export const PHI_COLOR = {
   warning: "var(--ant-color-warning)",
 } as const;
 
+/**
+ * Every distance a Phi surface states, inside a frame (`padding`) and between two things (`gap`), on the
+ * one scale (`theme/phi-tokens.ts`, `PHI_PADDING`). Ant Design's `--ant-margin-*` family carries the
+ * same values and stays Ant Design's own.
+ */
 export const PHI_SPACE = {
   xxs: "var(--ant-padding-xxs)",
   xs: "var(--ant-padding-xs)",
@@ -41,17 +46,6 @@ export const PHI_SPACE = {
   lg: "var(--ant-padding-lg)",
   xl: "var(--ant-padding-xl)",
   xxl: "var(--ant-padding-xxl)",
-} as const;
-
-export const PHI_MARGIN = {
-  xxs: "var(--ant-margin-xxs)",
-  xs: "var(--ant-margin-xs)",
-  sm: "var(--ant-margin-sm)",
-  base: "var(--ant-margin)",
-  md: "var(--ant-margin-md)",
-  lg: "var(--ant-margin-lg)",
-  xl: "var(--ant-margin-xl)",
-  xxl: "var(--ant-margin-xxl)",
 } as const;
 
 export const PHI_RADIUS = {

@@ -1,5 +1,5 @@
 import { createPhiPresetCmsInstanceIdMap } from "../../../../types/cms-instance-id";
-import { PHI_MARGIN, PHI_SPACE } from "../../../../theme/antd-css-var-contract";
+import { PHI_SPACE } from "../../../../theme/antd-css-var-contract";
 import { PHI_PUBLIC_RUNTIME_MODULE_ID } from "../ids";
 import {
   PHI_CMS_DEFAULT_SLOT_INDEX,
@@ -59,7 +59,7 @@ export async function buildPhiDefaultPubContactPageTree({
         slotIndex: PHI_CMS_DEFAULT_SLOT_INDEX,
         label: "pub contact page",
         config: {
-          gap: PHI_MARGIN.base,
+          gap: PHI_SPACE.base,
         },
       }),
       nodes.layout({

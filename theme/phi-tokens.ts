@@ -1,3 +1,11 @@
+/**
+ * The one spacing scale: the distance inside a frame and the distance between two things alike.
+ *
+ * Ant Design has two families for it, `padding*` and `margin*`, and its own components read both. Here
+ * they are seeded from this one sequence and nothing sets them apart -- no Theme field, no stored Theme,
+ * no block -- so a second scale only meant a second way to write the same distance, and the two were
+ * mixed: a gap written on one scale was not recognized by the field that offered the other.
+ */
 export const PHI_PADDING = {
   xxs: 3,
   xs: 8,
@@ -8,8 +16,6 @@ export const PHI_PADDING = {
   xl: 89,
   xxl: 155,
 } as const;
-
-export const PHI_MARGIN = PHI_PADDING;
 
 export const PHI_RADII = {
   xxs: 3,

@@ -16,7 +16,6 @@ import {
   PHI_SPACING_SCALE_KEYS,
   resolvePhiSpacingScaleKey,
   resolvePhiSpacingScaleValue,
-  type PhiSpacingScaleFamily,
   type PhiSpacingScaleKey,
 } from "../widgets/config/spacing-options";
 
@@ -32,18 +31,8 @@ export type PhiPaddingControlProps = {
   onChange?: (value: PhiCmsPaddingWidgetConfig | null) => void;
 };
 
-function resolvePaddingScaleValue(
-  key: "padding" | "gap" | "paddingTop" | "paddingRight" | "paddingBottom" | "paddingLeft",
-  value: PhiPaddingScaleKey,
-) {
-  return resolvePhiSpacingScaleValue(value, key === "gap" ? "margin" : "padding");
-}
-
-function normalizePaddingScaleKey(
-  value: number | string | null | undefined,
-  family: PhiSpacingScaleFamily,
-): PhiPaddingScaleKey | null {
-  return resolvePhiSpacingScaleKey(value, family);
+function normalizePaddingScaleKey(value: number | string | null | undefined): PhiPaddingScaleKey | null {
+  return resolvePhiSpacingScaleKey(value);
 }
 
 function resolveNextPadding(
@@ -51,7 +40,8 @@ function resolveNextPadding(
   key: "padding" | "gap" | "paddingTop" | "paddingRight" | "paddingBottom" | "paddingLeft",
   value: PhiPaddingScaleKey,
 ) {
-  const nextValue = resolvePaddingScaleValue(key, value);
+  // A padding and a gap are steps of the same scale (theme/phi-tokens.ts).
+  const nextValue = resolvePhiSpacingScaleValue(value);
   const nextPadding: PhiCmsPaddingWidgetConfig = {
     ...(currentValue ?? {}),
     [key]: nextValue ?? undefined,
@@ -99,7 +89,6 @@ function renderPaddingGridCell(content: ReactNode, style?: CSSProperties) {
 function renderPaddingInput(
   label: string,
   value: number | string | null | undefined,
-  family: PhiSpacingScaleFamily,
   disabled: boolean,
   options: readonly PhiControlOption<PhiPaddingScaleKey>[],
   onChange: (nextValue: PhiPaddingScaleKey) => void,
@@ -109,7 +98,7 @@ function renderPaddingInput(
       <Select<PhiPaddingScaleKey>
         aria-label={label}
         disabled={disabled}
-        value={normalizePaddingScaleKey(value, family) ?? "none"}
+        value={normalizePaddingScaleKey(value) ?? "none"}
         onChange={onChange}
         options={[...options]}
         style={{ width: "100%", minWidth: 0 }}
@@ -161,7 +150,6 @@ export function PhiPaddingControl({
       {renderPaddingInput(
         labels.fields.top,
         resolvedDisplayValue?.paddingTop ?? resolvedDisplayValue?.padding,
-        "padding",
         isDisabled,
         scaleOptions,
         (next) => {
@@ -175,7 +163,6 @@ export function PhiPaddingControl({
       {renderPaddingInput(
         labels.fields.left,
         resolvedDisplayValue?.paddingLeft ?? resolvedDisplayValue?.padding,
-        "padding",
         isDisabled,
         scaleOptions,
         (next) => {
@@ -188,7 +175,6 @@ export function PhiPaddingControl({
         ? renderPaddingInput(
             labels.fields.gap,
             resolvedGapValue,
-            "margin",
             isDisabled,
             scaleOptions,
             (next) => {
@@ -201,7 +187,6 @@ export function PhiPaddingControl({
       {renderPaddingInput(
         labels.fields.right,
         resolvedDisplayValue?.paddingRight ?? resolvedDisplayValue?.padding,
-        "padding",
         isDisabled,
         scaleOptions,
         (next) => {
@@ -215,7 +200,6 @@ export function PhiPaddingControl({
       {renderPaddingInput(
         labels.fields.bottom,
         resolvedDisplayValue?.paddingBottom ?? resolvedDisplayValue?.padding,
-        "padding",
         isDisabled,
         scaleOptions,
         (next) => {
