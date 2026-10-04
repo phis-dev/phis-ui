@@ -203,6 +203,8 @@ export const PHI_LAYOUT_CARD_SURFACE = {
 const PHI_SPLIT_CARD_LAYOUT_PANEL_PRESET = {
     anchor: PHI_SPLIT_CARD_LAYOUT_DEFAULT_ANCHOR,
     gap: PHI_SPACE.base,
+    // The cards stand off the Region's edge as far as they stand off each other.
+    padding: PHI_SPACE.base,
 } as const;
 
 export const PHI_THREE_COLUMN_LAYOUT_DEFAULTS: PhiLayoutDefaults = {
