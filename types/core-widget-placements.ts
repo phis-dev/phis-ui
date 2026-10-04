@@ -414,6 +414,8 @@ export type PhiCommandToolbarButtonConfig = {
   display?: "icon" | "label" | "icon-label";
   danger?: boolean;
   disabled?: boolean;
+  /** Shown as it is, not greyed out, and sends nothing when pressed. */
+  readOnly?: boolean;
   variant?: PhiButtonVariant;
 };
 

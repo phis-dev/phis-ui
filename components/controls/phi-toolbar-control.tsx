@@ -19,6 +19,7 @@ export type PhiToolbarControlItem = {
   type?: PhiButtonType;
   danger?: boolean;
   disabled?: boolean;
+  readOnly?: boolean;
   loading?: boolean;
   visible?: boolean;
   badge?: PhiControlBadgePresentation;
@@ -59,6 +60,7 @@ export function PhiToolbarControl({
         type={item.type}
         danger={item.danger}
         disabled={disabled || item.disabled}
+        readOnly={item.readOnly}
         loading={item.loading}
         size={size}
         badge={item.badge}

@@ -127,6 +127,7 @@ function readCommandButtonConfig(value: unknown): PhiCommandToolbarButtonConfig 
       : undefined,
     danger: readBoolean(record.danger),
     disabled: readBoolean(record.disabled),
+    readOnly: readBoolean(record.readOnly),
     variant: readPhiButtonVariant(record.variant),
   };
 }
@@ -172,6 +173,58 @@ export function parsePhiCommandToolbarWidgetConfig(
   };
 }
 
+/** The fewest and most buttons the scaffold's count offers. */
+export const PHI_COMMAND_TOOLBAR_MIN_BUTTONS = 1;
+export const PHI_COMMAND_TOOLBAR_MAX_BUTTONS = 12;
+
+/**
+ * What a new button shows. It has an icon so that Show Labels has something to switch between: a button
+ * without one keeps its label whatever the toolbar says, or it would be an empty box.
+ */
+export const PHI_COMMAND_TOOLBAR_DEFAULT_BUTTON_ICON = "antd:star-outlined";
+
+/**
+ * A new button: the first free `buttonN` key, labelled after it, sending its key as the command. The
+ * number counts on from the list's length, so a button added to three is `button4` unless that is taken.
+ */
+export function createPhiCommandToolbarButton(
+  buttons: readonly PhiCommandToolbarButtonConfig[],
+): PhiCommandToolbarButtonConfig {
+  const keys = new Set(buttons.map((button) => button.key));
+  let index = buttons.length + 1;
+  while (keys.has(`button${index}`)) {
+    index += 1;
+  }
+  const key = `button${index}`;
+
+  return {
+    key,
+    label: `Button ${index}`,
+    icon: PHI_COMMAND_TOOLBAR_DEFAULT_BUTTON_ICON,
+    emits: [{ capabilityId: "command", value: key }],
+  };
+}
+
+/**
+ * The buttons at a new count: kept buttons stay as they are, new ones are created after them, a smaller
+ * count drops the last. Held to at least one -- a toolbar without buttons draws nothing, and an author
+ * has nothing to select it by.
+ */
+export function resizePhiCommandToolbarButtons(
+  buttons: readonly PhiCommandToolbarButtonConfig[],
+  count: number,
+): PhiCommandToolbarButtonConfig[] {
+  const nextCount = Math.max(
+    PHI_COMMAND_TOOLBAR_MIN_BUTTONS,
+    Math.min(PHI_COMMAND_TOOLBAR_MAX_BUTTONS, Math.trunc(count)),
+  );
+  const next = buttons.slice(0, nextCount);
+  while (next.length < nextCount) {
+    next.push(createPhiCommandToolbarButton(next));
+  }
+  return next;
+}
+
 export const PHI_COMMAND_TOOLBAR_WIDGET_DEFINITION = {
   kind: "widget",
   pluginKey: resolvePhiCmsWidgetPluginKey("command-toolbar"),
@@ -193,7 +246,27 @@ export const PHI_COMMAND_TOOLBAR_WIDGET_DEFINITION = {
     },
   ],
   fields: [
-    { key: "buttons", type: "string", label: "Buttons", editorPlacement: "toolbar" },
+    /*
+     * How many there are is set on the scaffold; here one at a time, picked by a select. The key and
+     * what a button sends stay as they were made: the key is its signal address, and the value is
+     * wired from the Signals panel.
+     */
+    {
+      key: "buttons",
+      type: "collection",
+      presentation: "select",
+      label: "Buttons",
+      itemKeyField: "key",
+      itemLabelField: "label",
+      reorderable: false,
+      itemFields: [
+        { key: "label", type: "string", label: "Label" },
+        { key: "icon", type: "icon", label: "Icon" },
+        { key: "danger", type: "boolean", label: "Danger" },
+        { key: "readOnly", type: "boolean", label: "Read only" },
+        { key: "disabled", type: "boolean", label: "Disabled" },
+      ],
+    },
     { key: "compact", type: "boolean", label: "Compact" },
     /*
      * Only while the group is not compact. A compact group cannot wrap (`PhiToolbarControl`), so with
@@ -210,7 +283,8 @@ export const PHI_COMMAND_TOOLBAR_WIDGET_DEFINITION = {
     compact: true,
     wrap: false,
     showLabels: false,
-    buttons: [],
+    /* One to start with, so a toolbar just placed is something to see and to select. */
+    buttons: [createPhiCommandToolbarButton([])],
   },
   parseConfig: parsePhiCommandToolbarWidgetConfig,
 } satisfies Pick<

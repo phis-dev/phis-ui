@@ -68,6 +68,11 @@ export type PhiButtonControlProps = {
    */
   ghost?: boolean;
   disabled?: boolean;
+  /**
+   * Shown as it is and answering nothing: no hover, no press, no click -- where `disabled` greys it out.
+   * A read-only toolbar button states something without being one to use. Its tooltip still opens.
+   */
+  readOnly?: boolean;
   loading?: boolean;
   htmlType?: ButtonProps["htmlType"];
   block?: boolean;
@@ -102,6 +107,7 @@ export function PhiButtonControl({
   danger,
   ghost,
   disabled,
+  readOnly,
   loading,
   htmlType,
   block,
@@ -115,7 +121,7 @@ export function PhiButtonControl({
   const visibleTooltip = typeof label === "string" && typeof tooltip === "string" && label === tooltip
     ? null
     : tooltip;
-  const inert = disabled || (!onClick && !href && htmlType !== "submit");
+  const inert = disabled || (!readOnly && !onClick && !href && htmlType !== "submit");
   const button = (
     <Button
       ref={ref}
@@ -130,9 +136,11 @@ export function PhiButtonControl({
       htmlType={htmlType}
       block={block}
       size={size}
-      style={style}
+      /* Not a pointer target at all, so the Button's own hover and press states never start. */
+      style={readOnly ? { ...style, pointerEvents: "none" } : style}
+      aria-disabled={readOnly || undefined}
       icon={icon}
-      onClick={onClick}
+      onClick={readOnly ? undefined : onClick}
     >
       {label}
     </Button>
@@ -150,7 +158,7 @@ export function PhiButtonControl({
    *
    * The colour is the Button's. A link states one, and here the Button beneath it already has.
    */
-  const linked = href && !disabled ? (
+  const linked = href && !disabled && !readOnly ? (
     <PhiLink
       href={href}
       {...(external === undefined ? {} : { external })}
@@ -188,6 +196,8 @@ export function PhiButtonControl({
    */
   const target = inert
     ? <span style={{ display: "inline-flex", cursor: "not-allowed" }}>{badged}</span>
-    : badged;
+    : readOnly
+      ? <span style={{ display: "inline-flex" }}>{badged}</span>
+      : badged;
   return <PhiHoverText title={visibleTooltip}>{target}</PhiHoverText>;
 }

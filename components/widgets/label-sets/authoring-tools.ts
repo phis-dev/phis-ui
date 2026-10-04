@@ -37,7 +37,7 @@ const PHI_AUTHORING_TOOLS_LABEL_SET = definePhiLabelSet({
     fallback_select_image: PHI_AUTHORING_TOOLS_DEFAULT_LABELS.fallbacks.selectImage,
     fallback_widget_color: PHI_AUTHORING_TOOLS_DEFAULT_LABELS.fallbacks.widgetColor,
     fallback_widget_typography: PHI_AUTHORING_TOOLS_DEFAULT_LABELS.fallbacks.widgetTypography,
-    commands_add_button: PHI_AUTHORING_TOOLS_DEFAULT_LABELS.commands.addButton,
+    commands_buttons: PHI_AUTHORING_TOOLS_DEFAULT_LABELS.commands.buttons,
     commands_manage_buttons: PHI_AUTHORING_TOOLS_DEFAULT_LABELS.commands.manageButtons,
     icon_widget_icon: PHI_AUTHORING_TOOLS_DEFAULT_LABELS.icon.widgetIcon,
     icon_widget_color: PHI_AUTHORING_TOOLS_DEFAULT_LABELS.icon.widgetColor,
@@ -97,7 +97,7 @@ export async function getPhiAuthoringToolsLabels(
       widgetTypography: labels.fallback_widget_typography,
     },
     commands: {
-      addButton: labels.commands_add_button,
+      buttons: labels.commands_buttons,
       manageButtons: labels.commands_manage_buttons,
     },
     icon: {

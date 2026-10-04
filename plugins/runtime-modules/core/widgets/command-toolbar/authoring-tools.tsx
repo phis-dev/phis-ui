@@ -11,25 +11,15 @@ import { PhiFlexControl } from "../../../../../components/controls/phi-flex-cont
 import { PhiTypographyControl } from "../../../../../components/controls/phi-typography-control";
 import { PhiCompactGroupControl } from "../../../../../components/controls/phi-compact-group-control";
 import { PhiIcon } from "../../../../../components/shell/phi-icon";
+import { PhiWidgetCountToolButton } from "../../../../../components/widgets/client/shared/phi-widget-tool-buttons";
+import {
+  PHI_COMMAND_TOOLBAR_MAX_BUTTONS,
+  PHI_COMMAND_TOOLBAR_MIN_BUTTONS,
+  resizePhiCommandToolbarButtons,
+} from "./config";
 
 function stopToolEvent(event: { stopPropagation: () => void }) {
   event.stopPropagation();
-}
-
-function createNextButton(buttons: readonly PhiCommandToolbarButtonConfig[]) {
-  const keys = new Set(buttons.map((button) => button.key));
-  let index = buttons.length + 1;
-  let key = `button${index}`;
-  while (keys.has(key)) {
-    index += 1;
-    key = `button${index}`;
-  }
-
-  return {
-    key,
-    label: `Button ${index}`,
-    emits: [{ capabilityId: "command", value: key }],
-  } satisfies PhiCommandToolbarButtonConfig;
 }
 
 function moveButton(
@@ -60,18 +50,13 @@ export function PhiCommandToolbarAuthoringTools({
 
   return (
     <PhiCompactGroupControl>
-      <span onClick={stopToolEvent} onPointerDown={stopToolEvent} style={{ display: "inline-flex" }}>
-        <PhiButtonControl
-          type="text"
-          size="small"
-          ariaLabel={labels.commands.addButton}
-          tooltip={labels.commands.addButton}
-          icon={<PhiIcon name="plus" size="inherit" />}
-          onClick={() => {
-            onChange([...buttons, createNextButton(buttons)]);
-          }}
-        />
-      </span>
+      <PhiWidgetCountToolButton
+        count={buttons.length}
+        min={PHI_COMMAND_TOOLBAR_MIN_BUTTONS}
+        max={PHI_COMMAND_TOOLBAR_MAX_BUTTONS}
+        label={labels.commands.buttons}
+        onChange={(count) => onChange(resizePhiCommandToolbarButtons(buttons, count))}
+      />
       <PhiPopoverControl
         trigger="click"
         placement="bottomRight"
@@ -114,6 +99,7 @@ export function PhiCommandToolbarAuthoringTools({
                   size="small"
                   danger
                   ariaLabel={`Remove ${button.label ?? button.key}`}
+                  disabled={buttons.length <= PHI_COMMAND_TOOLBAR_MIN_BUTTONS}
                   icon={<PhiIcon name="delete" size="inherit" />}
                   onClick={() => onChange(buttons.filter((_, candidateIndex) => candidateIndex !== index))}
                 />

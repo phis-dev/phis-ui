@@ -594,34 +594,47 @@ export function PhiMarkdownWidgetToolbarTools({
   );
 }
 
-export type PhiDescriptionWidgetItemsToolButtonProps = {
-  value?: string[] | null;
-  onChange: (value: string[]) => void;
+export type PhiWidgetCountToolButtonProps = {
+  /** How many there are now; the button shows it. */
+  count: number;
+  min: number;
+  max: number;
+  /** The button's tooltip and the caption over the field. */
+  label: string;
+  onChange: (count: number) => void;
 };
 
-export function PhiDescriptionWidgetItemsToolButton({
-  value,
+/**
+ * How many of something a Widget has, set from its scaffold: a button showing the number, and a field
+ * behind it. The Description's items and the Command Toolbar's buttons are counted this way.
+ */
+export function PhiWidgetCountToolButton({
+  count,
+  min,
+  max,
+  label,
   onChange,
-}: PhiDescriptionWidgetItemsToolButtonProps) {
-  const labels = usePhiAuthoringToolsLabels();
-  const itemCount = Array.isArray(value) ? value.length : 0;
+}: PhiWidgetCountToolButtonProps) {
   const popup = usePhiWidgetScaffoldPopup();
   /*
    * What is being typed, apart from what is stored. The field reported every keystroke, and each one
    * resized the list: typing "10" committed "1" first and dropped entries two onwards before the "0"
    * arrived. The number is taken when the field is left or Enter is pressed.
    */
-  const [draft, setDraft] = useState({ stored: itemCount, count: itemCount as number | null });
-  if (draft.stored !== itemCount) {
+  const [draft, setDraft] = useState({ stored: count, count: count as number | null });
+  if (draft.stored !== count) {
     // A change from elsewhere -- an undo, another editor -- replaces what was being typed, adjusted
     // during render so the field never shows the stale number for a frame.
-    setDraft({ stored: itemCount, count: itemCount });
+    setDraft({ stored: count, count });
   }
-  const draftCount = draft.stored === itemCount ? draft.count : itemCount;
-  const setDraftCount = (count: number | null) => setDraft({ stored: itemCount, count });
+  const draftCount = draft.stored === count ? draft.count : count;
+  const setDraftCount = (next: number | null) => setDraft({ stored: count, count: next });
+  /* An emptied field on the way to a new number is not a count; out of range is held to the range. */
   const commit = () => {
-    if (draftCount === itemCount) return;
-    onChange(resizePhiDescriptionItems(value, draftCount));
+    if (draftCount == null || !Number.isFinite(draftCount)) return;
+    const nextCount = Math.max(min, Math.min(max, Math.trunc(draftCount)));
+    if (nextCount === count) return;
+    onChange(nextCount);
   };
 
   return (
@@ -640,10 +653,10 @@ export function PhiDescriptionWidgetItemsToolButton({
           onMouseDown={stopOverlayMouseEvent}
           onPointerDown={stopOverlayEvent}
         >
-          <PhiTypographyControl type="secondary">Items</PhiTypographyControl>
+          <PhiTypographyControl type="secondary">{label}</PhiTypographyControl>
           <PhiNumberControl
-            min={0}
-            max={12}
+            min={min}
+            max={max}
             precision={0}
             value={draftCount}
             onChange={setDraftCount}
@@ -665,12 +678,33 @@ export function PhiDescriptionWidgetItemsToolButton({
         <PhiButtonControl
           type="text"
           size="small"
-          ariaLabel={labels.descriptions.items}
-          tooltip={labels.descriptions.items}
-          label={itemCount}
+          ariaLabel={label}
+          tooltip={label}
+          label={count}
           onClick={() => undefined}
         />
       </span>
     </PhiPopoverControl>
+  );
+}
+
+export type PhiDescriptionWidgetItemsToolButtonProps = {
+  value?: string[] | null;
+  onChange: (value: string[]) => void;
+};
+
+export function PhiDescriptionWidgetItemsToolButton({
+  value,
+  onChange,
+}: PhiDescriptionWidgetItemsToolButtonProps) {
+  const labels = usePhiAuthoringToolsLabels();
+  return (
+    <PhiWidgetCountToolButton
+      count={Array.isArray(value) ? value.length : 0}
+      min={0}
+      max={12}
+      label={labels.descriptions.items}
+      onChange={(count) => onChange(resizePhiDescriptionItems(value, count))}
+    />
   );
 }

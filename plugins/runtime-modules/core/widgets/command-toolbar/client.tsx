@@ -122,7 +122,7 @@ export function PhiCommandToolbarWidget({
     }
 
     const button = buttons.find((candidate) => candidate.key === buttonKey);
-    if (!button) {
+    if (!button || button.readOnly) {
       return;
     }
 
@@ -294,6 +294,7 @@ export function PhiCommandToolbarWidget({
       type: resolvePhiButtonVariantType(button.variant ?? action?.variant) ?? "default",
       danger: button.danger === true || action?.danger === true,
       disabled: button.disabled === true || buttonState.enabled === false,
+      readOnly: button.readOnly === true,
       loading: buttonState.loading,
       icon: button.display === "label" ? null : resolvedIcon,
       visible: buttonState.visible,

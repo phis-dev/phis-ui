@@ -492,6 +492,8 @@ function PhiInspectorCollectionFieldControl({
   const { token } = usePhiConfig();
   const popup = usePhiWidgetScaffoldPopup();
   const [overlayOpen, setOverlayOpen] = useState(false);
+  /* The entry a `select` collection shows; held to the list when entries go. */
+  const [selectedItemIndex, setSelectedItemIndex] = useState(0);
   const configuredItems = readPhiInspectorCollectionItems(value);
   const defaultItems = readPhiInspectorCollectionItems(defaultValue);
   const items = value == null ? defaultItems : configuredItems;
@@ -509,6 +511,42 @@ function PhiInspectorCollectionFieldControl({
       : `${field.label} ${index + 1}`;
   };
 
+  /* One entry's own fields, edited in place; the same for every presentation. */
+  const renderItemFields = (item: Record<string, unknown>, index: number) => {
+    const defaultItem = defaultItems[index] ?? field.defaultItem ?? {};
+    return (
+      <PhiFlexControl vertical gap={8} style={{ width: "100%", minWidth: 0 }}>
+        {field.itemFields
+          .filter((itemField) => isPhiInspectorConfigFieldVisible(itemField, item))
+          .map((itemField) => renderPhiInspectorConfigField({
+            field: itemField,
+            value: readPhiInspectorConfigPathValue(item, itemField.key),
+            defaultValue: readPhiInspectorConfigPathValue(defaultItem, itemField.key),
+            config: item,
+            defaultConfig: defaultItem,
+            disabled,
+            widgetReferenceOptions,
+            paddingLabels,
+            backgroundLabels,
+            borderLabels,
+            colorPickerLabels,
+            iconPickerLabels,
+            dataProviderDescriptors,
+            calendarAdapterDescriptors,
+            videoProviderDescriptors,
+            onChange: (patch) => {
+              const nextItems = [...items];
+              nextItems[index] = {
+                ...item,
+                ...buildPhiInspectorConfigPathPatch(item, patch),
+              };
+              publish(nextItems);
+            },
+          }))}
+      </PhiFlexControl>
+    );
+  };
+
   const editor = (
     <PhiFlexControl vertical gap={8} style={{ width: "100%", minWidth: 0 }}>
       {items.length === 0 ? (
@@ -517,7 +555,6 @@ function PhiInspectorCollectionFieldControl({
       {items.map((item, index) => {
         const itemIdentity = item[field.itemKeyField];
         const itemLabel = readItemLabel(item, index);
-        const defaultItem = defaultItems[index] ?? field.defaultItem ?? {};
 
         return (
           <PhiFlexControl
@@ -573,35 +610,7 @@ function PhiInspectorCollectionFieldControl({
                 />
               </PhiFlexControl>
             </PhiFlexControl>
-            <PhiFlexControl vertical gap={8} style={{ width: "100%", minWidth: 0 }}>
-              {field.itemFields
-                .filter((itemField) => isPhiInspectorConfigFieldVisible(itemField, item))
-                .map((itemField) => renderPhiInspectorConfigField({
-                  field: itemField,
-                  value: readPhiInspectorConfigPathValue(item, itemField.key),
-                  defaultValue: readPhiInspectorConfigPathValue(defaultItem, itemField.key),
-                  config: item,
-                  defaultConfig: defaultItem,
-                  disabled,
-                  widgetReferenceOptions,
-                  paddingLabels,
-                  backgroundLabels,
-                  borderLabels,
-                  colorPickerLabels,
-                  iconPickerLabels,
-                  dataProviderDescriptors,
-                  calendarAdapterDescriptors,
-                  videoProviderDescriptors,
-                  onChange: (patch) => {
-                    const nextItems = [...items];
-                    nextItems[index] = {
-                      ...item,
-                      ...buildPhiInspectorConfigPathPatch(item, patch),
-                    };
-                    publish(nextItems);
-                  },
-                }))}
-            </PhiFlexControl>
+            {renderItemFields(item, index)}
           </PhiFlexControl>
         );
       })}
@@ -613,6 +622,30 @@ function PhiInspectorCollectionFieldControl({
       />
     </PhiFlexControl>
   );
+
+  if (field.presentation === "select") {
+    const selectedIndex = Math.min(selectedItemIndex, Math.max(0, items.length - 1));
+    const selectedItem = items[selectedIndex];
+    return renderPhiInspectorConfigFieldBlock(
+      field,
+      <PhiFlexControl vertical gap={8} style={{ width: "100%", minWidth: 0 }}>
+        {selectedItem ? (
+          <>
+            <PhiSelectControl
+              options={items.map((item, index) => ({ value: String(index), label: readItemLabel(item, index) }))}
+              value={String(selectedIndex)}
+              disabled={disabled}
+              style={{ width: "100%" }}
+              onChange={(next) => setSelectedItemIndex(Number(next))}
+            />
+            {renderItemFields(selectedItem, selectedIndex)}
+          </>
+        ) : (
+          <PhiTypographyControl type="secondary">{field.emptyLabel ?? "No items"}</PhiTypographyControl>
+        )}
+      </PhiFlexControl>,
+    );
+  }
 
   if (field.presentation !== "overlay") {
     return renderPhiInspectorConfigFieldBlock(field, editor);

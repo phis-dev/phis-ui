@@ -96,8 +96,13 @@ export type PhiCmsConfigFieldChoicePresentation =
  * becomes a column of truncated Controls in it. Which of the two a collection needs is known by the
  * collection and by nothing else, which is why it is declared here rather than decided by the Inspector
  * from the Widget type.
+ *
+ * `select` shows one entry at a time: a select names the entry, and its fields stand under it. It adds
+ * and removes nothing -- it is for a collection whose length is decided elsewhere, as a Command
+ * Toolbar's buttons are counted on its scaffold -- and it keeps a column of identical cards from
+ * growing with every entry when each one has the same handful of settings.
  */
-export type PhiCmsConfigFieldCollectionPresentation = "inline" | "overlay";
+export type PhiCmsConfigFieldCollectionPresentation = "inline" | "overlay" | "select";
 
 export type PhiCmsConfigFieldChoiceMode = "single" | "multiple";
 

@@ -46,7 +46,7 @@ export type PhiAuthoringToolsLabels = {
     widgetTypography: string;
   };
   commands: {
-    addButton: string;
+    buttons: string;
     manageButtons: string;
   };
   icon: {
@@ -105,7 +105,7 @@ export const PHI_AUTHORING_TOOLS_DEFAULT_LABELS: PhiAuthoringToolsLabels = {
     widgetTypography: "Widget typography",
   },
   commands: {
-    addButton: "Add button",
+    buttons: "Buttons",
     manageButtons: "Manage buttons",
   },
   icon: {
