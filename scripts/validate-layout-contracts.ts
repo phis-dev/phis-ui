@@ -404,6 +404,27 @@ for (const layoutKind of layoutKinds) {
 }
 
 /**
+ * A Layout plugin hands its padding on whole. The Canvas sets all five keys on the root Layout itself,
+ * so a plugin that forwards only some of them looks right while editing and loses the rest on the page
+ * and in the preview -- the Split Card dropped its left and right side this way.
+ */
+{
+  const { readFile, readdir } = await import("node:fs/promises");
+  const directory = path.join(fileURLToPath(new URL("..", import.meta.url)), "components/layouts/plugins");
+  const keys = ["padding", "paddingTop", "paddingRight", "paddingBottom", "paddingLeft"];
+  const partial: string[] = [];
+  for (const name of await readdir(directory)) {
+    if (!name.endsWith(".tsx")) continue;
+    const source = await readFile(path.join(directory, name), "utf8");
+    const forwarded = keys.filter((key) => new RegExp(`\\b${key}=\\{config\\.${key}\\}`, "u").test(source));
+    if (forwarded.length > 0 && forwarded.length < keys.length) {
+      partial.push(`${name}: missing ${keys.filter((key) => !forwarded.includes(key)).join(", ")}`);
+    }
+  }
+  assert.deepEqual(partial, [], `These Layout plugins forward only part of their padding:\n${partial.join("\n")}`);
+}
+
+/**
  * LAYOUTING.md, "Where a Layout's outline comes from": a Layout that predates `borderSource` is read by
  * one rule, and the rule turns on the LINE.
  *

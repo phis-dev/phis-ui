@@ -24,7 +24,9 @@ export const PHI_SPLIT_CARD_LAYOUT_PLUGIN: PhiCmsLayoutPlugin<PhiCmsSplitCardLay
       surface={config.surface}
       padding={config.padding}
       paddingTop={config.paddingTop}
+      paddingRight={config.paddingRight}
       paddingBottom={config.paddingBottom}
+      paddingLeft={config.paddingLeft}
       labelEnd={config.labelEnd}
       editSlotAnchor={resolvePhiLayoutAnchor(config.anchor, PHI_SPLIT_CARD_LAYOUT_DEFINITION.defaultAnchor)}
       size={config.size}
