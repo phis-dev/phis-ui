@@ -54,23 +54,25 @@ Background runs once across both cards and shows only inside them -- each card's
 as the Split Card's content box (`100cqw`, the Split Card being the query container) and moved by the
 card's own offset, so a picture or a gradient goes on behind the right card instead of starting again.
 Around and between the cards the Split Card is transparent. A moving Background does not move there:
-each card would move a copy of its own. Its fields are the Paddings panel -- `padding` outside, `gap`
-between the cards -- and the Surface; a card has no inset of its own, so what stands in a half sets it,
+each card would move a copy of its own. Its fields are `swapRatio`, which puts the larger card on the
+left, the Paddings panel -- `padding` outside, `gap` between the cards -- and the Surface; a card has no inset of its own, so what stands in a half sets it,
 usually a Layout with padding, as on the sign-in, registration, password reset, confirmation and contact
 Pages.
 
 The named looks a Surface can start from are plain values in `helpers/surface-presets.ts`:
 `PHI_SURFACE_CARD` (container ground, quiet line, soft shadow) and `PHI_SURFACE_WASH` (the Theme's
 quietest filling, no line, no depth -- the Form Widget's `wash` step in Surface values). A Preset writes
-them, and the Inspector's style switch writes the same values -- None, Card, Wash, and Custom once they
-were changed; nothing stores their names.
+them, and the Inspector's style switch writes the same values -- None (transparent), Card, Wash, and
+Custom, which opens the parts on the values the Surface has; nothing stores their names.
 
 Canonical defaults are neutral: no margin, no padding, and no Surface -- so no ground, no line, no
 corner, no depth. The Split Card is the one exception: it stands with `padding` and `gap` at the base
 step, because two cards flush against each other and the Region's edge are not a split anybody means, and
-it is created wearing `PHI_SURFACE_CARD` (`PHI_SPLIT_CARD_LAYOUT_CREATION_CONFIG`). The Surface is a
-creation value, not a default: a default is put back under a node that states nothing, so an author who
-took the cards away would get them back. A Layout never adds implicit inner padding around its slot content; a Region that
+it is created wearing `PHI_SURFACE_CARD` (`PHI_SPLIT_CARD_LAYOUT_CREATION_CONFIG`, its definition's
+`creationConfig`). The Surface is a creation value, not a default: a default is put back under a node
+that states nothing, so an author who took the cards away would get them back. A Layout definition's
+`creationConfig` is what the Builder writes into a new node; its `defaultConfig` is what every reader
+puts back under a node that leaves a key out. A Layout never adds implicit inner padding around its slot content; a Region that
 needs padded composition configures padding on its Layout or on the Region itself. A first-party creation preset may provide an initial visible-container configuration,
 but creation presets are input to the node factory only. Their values are materialized as normal
 Layout config and the preset name is never persisted or interpreted at render time.

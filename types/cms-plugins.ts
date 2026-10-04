@@ -623,6 +623,14 @@ export type PhiCmsLayoutPlugin<TConfig> = {
   runtimeSignals?: PhiSignalPluginMeta | null;
   slotSizePolicy: PhiSlotSizePolicy;
   defaultConfig?: Partial<TConfig>;
+  /**
+   * What a node of this Layout is created with, where that is more than its `defaultConfig`.
+   *
+   * A default is put back under every node that leaves the key out, so it can only hold what an author
+   * may not take away. A look the author may remove -- a Surface, say -- belongs here: written into the
+   * new node once, gone for good when the author clears it.
+   */
+  creationConfig?: Partial<TConfig>;
   defaultAnchor?: PhiRenderableBlockAnchor | null;
   fields: PhiCmsConfigField[];
   slots: PhiCmsLayoutSlotDefinition[];
@@ -656,6 +664,7 @@ export type PhiCmsLayoutPluginDefinition<TConfig> = Pick<
   | "runtimeSignals"
   | "slotSizePolicy"
   | "defaultConfig"
+  | "creationConfig"
   | "defaultAnchor"
   | "fields"
   | "slots"

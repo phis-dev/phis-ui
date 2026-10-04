@@ -29,7 +29,7 @@ import { PhiSplitCardLayout } from "../components/layouts/clients/phi-split-card
 import { resolvePhiBuilderPreviewRegionConfig } from "../plugins/runtime-modules/builder/render-root-node-preview.server";
 import { parsePhiCmsContentLayoutConfig, parsePhiCmsGridLayoutConfig } from "../types/cms-config";
 import { resolvePhiGridSlotPlacement } from "../components/layouts/phi-grid-contract";
-import { PHI_CORE_LAYOUT_KIND_BY_TYPE_KEY } from "../components/layouts/layout-definitions";
+import { PHI_CORE_LAYOUT_KIND_BY_TYPE_KEY, PHI_SPLIT_CARD_LAYOUT_DEFINITION } from "../components/layouts/layout-definitions";
 import { listPhiPresetTreeFiles } from "./preset-tree-files";
 import {
   resolvePhiSlotChildSizing,
@@ -432,6 +432,25 @@ assert.equal(
   assert.match(paints[0]!, /left:0px/u, "The left card shows the Background from its start.");
   assert.match(paints[1]!, /left:calc\(-1 \* \(\(\(100cqw - 20px\) \/ 2\.61803398875\) \+ 20px\)\)/u,
     "The right card shows it from past the left card and the gap.");
+
+  // Swapped, the left card is the larger one, and the right card's part of the Background follows it.
+  const swapped = renderToStaticMarkup(createElement(PhiSplitCardLayout, {
+    blockId: "split",
+    gap: "20px",
+    swapRatio: true,
+    surface: { background: { base: { kind: "color", color: "#123456" } } },
+    slots: [createElement("span", { key: "a" }, "left"), createElement("span", { key: "b" }, "right")],
+  }));
+  assert.match(swapped, /grid-template-columns:minmax\(0, 1\.61803398875fr\) minmax\(0, 1fr\)/u,
+    "Swapped, the larger card stands left.");
+  const swappedPaints = [...swapped.matchAll(/data-phi-surface-ground-paint="true" style="([^"]*)"/gu)].map((match) => match[1]);
+  assert.match(swappedPaints[1]!, /left:calc\(-1 \* \(\(\(100cqw - 20px\) \* 1\.61803398875 \/ 2\.61803398875\) \+ 20px\)\)/u,
+    "Swapped, the right card shows the Background from past the larger left card and the gap.");
+
+  // The cards are the creation's: a default would bring them back under a node whose author chose None.
+  assert.equal("surface" in (PHI_SPLIT_CARD_LAYOUT_DEFINITION.defaultConfig ?? {}), false,
+    "The Split Card's defaults carry no Surface.");
+  assert.ok(PHI_SPLIT_CARD_LAYOUT_DEFINITION.creationConfig?.surface, "A new Split Card is created wearing cards.");
 }
 
 /*

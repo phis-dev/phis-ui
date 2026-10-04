@@ -19,6 +19,8 @@ export type PhiSplitCardHalfProps = Omit<HTMLAttributes<HTMLDivElement>, "style"
   side: "left" | "right";
   /** The gap between the cards, as a CSS length; the right card's part of the Background follows it. */
   gap: string;
+  /** Whether the left card is the larger one; the right card's part of the Background follows it. */
+  swapped?: boolean;
   style?: CSSProperties;
   children?: ReactNode;
 };
@@ -39,6 +41,7 @@ export function PhiSplitCardHalf({
   surface,
   side,
   gap,
+  swapped,
   style,
   className,
   children,
@@ -61,7 +64,7 @@ export function PhiSplitCardHalf({
       className={[className, toneClassName].filter(Boolean).join(" ") || undefined}
       style={{ ...card.style, ...style }}
     >
-      <PhiSurfaceGroundLayer ground={card.ground} frame={resolvePhiSplitCardGroundFrame(side, gap)} />
+      <PhiSurfaceGroundLayer ground={card.ground} frame={resolvePhiSplitCardGroundFrame(side, gap, swapped)} />
       {toneClassName ? <PhiSurfaceTone tone={still?.tone}>{children}</PhiSurfaceTone> : children}
     </div>
   );

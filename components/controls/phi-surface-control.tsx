@@ -1,5 +1,7 @@
 "use client";
 
+import { useState } from "react";
+
 import { PhiBackgroundControl, type PhiBackgroundControlProps } from "./phi-background-control";
 import { PhiBorderControl } from "./phi-border-control";
 import { PhiFlexControl } from "./phi-flex-control";
@@ -87,8 +89,10 @@ function withPart(current: PhiSurface, patch: Partial<PhiSurface>): PhiSurface |
  * A Surface (`PhiSurface`) as one Control: its ground, its edge and its depth, each drawn by the Control
  * that owns that part.
  *
- * The style switch on top starts from a named look (`helpers/surface-presets.ts`) and writes its values;
- * the parts below edit them, and the switch says `custom` once they no longer are that look.
+ * The style switch on top picks a look: `none` leaves the box transparent, a named look
+ * (`helpers/surface-presets.ts`) writes its values -- `card` the Theme's container ground, `wash` its
+ * quietest filling -- and `custom` opens the parts, which edit the values the Surface has. The mode stands
+ * beside every look.
  *
  * Every box that has a look is edited with it -- a Region, a Layout, a Widget -- so the three parts read
  * the same everywhere, and each change hands on the whole Surface with the other parts untouched.
@@ -115,17 +119,40 @@ export function PhiSurfaceControl({
 }: PhiSurfaceControlProps) {
   const current: PhiSurface = value ?? {};
   const isDisabled = disabled || !onChange;
-  const patch = (part: Partial<PhiSurface>) => onChange?.(withPart(current, part));
   const borderSource = resolvePhiCmsBorderSource(current.borderSource, current.border);
-  const style = resolvePhiSurfacePresetId(value);
+  const resolvedStyle = resolvePhiSurfacePresetId(value);
   /*
-   * Choosing a style writes that style's values and keeps the mode; `none` takes the look away and keeps
-   * the mode as well. `custom` is not a choice -- it is what the switch says once the values were changed.
+   * `custom` is a choice of its own: it opens the parts -- ground, edge, depth -- on the values the
+   * Surface has, so an author can start from a card and change its line. Until a value changes, those
+   * values are still the card's, so the choice is held here; a Surface that arrives from elsewhere (the
+   * next selected node) drops it, one this Control wrote keeps it.
+   */
+  const [customChosen, setCustomChosen] = useState(false);
+  const [seenValue, setSeenValue] = useState(value);
+  const [writtenValue, setWrittenValue] = useState<PhiSurface | null | undefined>(undefined);
+  if (seenValue !== value) {
+    setSeenValue(value);
+    // Compared by content: the owner may hand back a copy of what was written.
+    if (JSON.stringify(value ?? null) !== JSON.stringify(writtenValue ?? null)) setCustomChosen(false);
+  }
+  const style = customChosen ? "custom" : resolvedStyle;
+  const emit = (next: PhiSurface | null) => {
+    setWrittenValue(next);
+    onChange?.(next);
+  };
+  const patch = (part: Partial<PhiSurface>) => emit(withPart(current, part));
+  /*
+   * A named style writes its values and keeps the mode; `none` takes the look away -- the box stays
+   * transparent -- and keeps the mode as well. `custom` writes nothing and shows the parts.
    */
   const chooseStyle = (next: PhiSurfacePresetId | "none" | "custom") => {
-    if (next === "custom") return;
+    if (next === "custom") {
+      setCustomChosen(true);
+      return;
+    }
+    setCustomChosen(false);
     const look = next === "none" ? {} : PHI_SURFACE_PRESETS[next];
-    onChange?.(withPart({ ...look, ...(current.tone ? { tone: current.tone } : {}) }, {}));
+    emit(withPart({ ...look, ...(current.tone ? { tone: current.tone } : {}) }, {}));
   };
 
   return (
@@ -137,50 +164,12 @@ export function PhiSurfaceControl({
           options={[
             { value: "none", label: labels.styles.none },
             ...PHI_SURFACE_PRESET_IDS.map((id) => ({ value: id, label: labels.styles[id] })),
-            ...(style === "custom" ? [{ value: "custom" as const, label: labels.styles.custom }] : []),
+            { value: "custom", label: labels.styles.custom },
           ]}
           block
           disabled={isDisabled}
           onChange={chooseStyle}
         />
-      </PhiFlexControl>
-      <PhiFlexControl vertical gap="small" style={{ width: "100%", minWidth: 0 }}>
-        <PhiTypographyControl strong>{labels.background}</PhiTypographyControl>
-        <PhiBackgroundControl
-          mode="control"
-          disabled={isDisabled}
-          value={current.background ?? null}
-          onChange={(background) => patch({ background })}
-          labels={backgroundLabels}
-          colorPickerLabels={colorPickerLabels}
-          colorPickerPlacement={colorPickerPlacement}
-          filters={backgroundFilters}
-          renderMediaPicker={renderMediaPicker}
-        />
-      </PhiFlexControl>
-      <PhiFlexControl vertical gap="small" style={{ width: "100%", minWidth: 0 }}>
-        <PhiTypographyControl strong>{labels.border}</PhiTypographyControl>
-        <PhiSegmentedControl<PhiCmsBorderSource>
-          value={borderSource}
-          options={PHI_CMS_BORDER_SOURCES.map((source) => ({
-            value: source,
-            label: borderLabels?.sources?.[source] ?? PHI_BORDER_SOURCE_FALLBACK_LABELS[source],
-          }))}
-          block
-          disabled={isDisabled}
-          onChange={(nextSource) => patch({ borderSource: nextSource })}
-        />
-        {borderSource === "custom" ? (
-          <PhiBorderControl
-            mode="control"
-            disabled={isDisabled}
-            value={current.border ?? null}
-            onChange={(border) => patch({ border, borderSource: "custom" })}
-            labels={borderLabels}
-            colorPickerLabels={colorPickerLabels}
-            colorPickerPlacement={colorPickerPlacement}
-          />
-        ) : null}
       </PhiFlexControl>
       <PhiFlexControl vertical gap="small" style={{ width: "100%", minWidth: 0 }}>
         <PhiTypographyControl strong>{labels.tone}</PhiTypographyControl>
@@ -192,15 +181,57 @@ export function PhiSurfaceControl({
           onChange={(tone) => patch({ tone: tone === "inherit" ? undefined : tone })}
         />
       </PhiFlexControl>
-      <PhiFlexControl vertical gap="small" style={{ width: "100%", minWidth: 0 }}>
-        <PhiTypographyControl strong>{labels.shadow}</PhiTypographyControl>
-        <PhiShadowControl
-          mode="control"
-          disabled={isDisabled}
-          value={current.shadow ?? null}
-          onChange={(shadow) => patch({ shadow })}
-        />
-      </PhiFlexControl>
+      {style === "custom" ? (
+        <>
+          <PhiFlexControl vertical gap="small" style={{ width: "100%", minWidth: 0 }}>
+            <PhiTypographyControl strong>{labels.background}</PhiTypographyControl>
+            <PhiBackgroundControl
+              mode="control"
+              disabled={isDisabled}
+              value={current.background ?? null}
+              onChange={(background) => patch({ background })}
+              labels={backgroundLabels}
+              colorPickerLabels={colorPickerLabels}
+              colorPickerPlacement={colorPickerPlacement}
+              filters={backgroundFilters}
+              renderMediaPicker={renderMediaPicker}
+            />
+          </PhiFlexControl>
+          <PhiFlexControl vertical gap="small" style={{ width: "100%", minWidth: 0 }}>
+            <PhiTypographyControl strong>{labels.border}</PhiTypographyControl>
+            <PhiSegmentedControl<PhiCmsBorderSource>
+              value={borderSource}
+              options={PHI_CMS_BORDER_SOURCES.map((source) => ({
+                value: source,
+                label: borderLabels?.sources?.[source] ?? PHI_BORDER_SOURCE_FALLBACK_LABELS[source],
+              }))}
+              block
+              disabled={isDisabled}
+              onChange={(nextSource) => patch({ borderSource: nextSource })}
+            />
+            {borderSource === "custom" ? (
+              <PhiBorderControl
+                mode="control"
+                disabled={isDisabled}
+                value={current.border ?? null}
+                onChange={(border) => patch({ border, borderSource: "custom" })}
+                labels={borderLabels}
+                colorPickerLabels={colorPickerLabels}
+                colorPickerPlacement={colorPickerPlacement}
+              />
+            ) : null}
+          </PhiFlexControl>
+          <PhiFlexControl vertical gap="small" style={{ width: "100%", minWidth: 0 }}>
+            <PhiTypographyControl strong>{labels.shadow}</PhiTypographyControl>
+            <PhiShadowControl
+              mode="control"
+              disabled={isDisabled}
+              value={current.shadow ?? null}
+              onChange={(shadow) => patch({ shadow })}
+            />
+          </PhiFlexControl>
+        </>
+      ) : null}
     </PhiFlexControl>
   );
 }

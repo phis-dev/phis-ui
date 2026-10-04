@@ -33,7 +33,8 @@ export function buildPhiStructureRegionPickItems(
         tags: meta.tags ?? null,
         icon: resolvePickItemIcon(meta),
         defaultAnchor: resolvePhiAnchorWidgetPlacement(meta.defaultAnchor),
-        defaultConfig: meta.defaultConfig ?? null,
+        // The config a new node is written with: the Layout's creation config where it states one.
+        defaultConfig: meta.creationConfig ?? meta.defaultConfig ?? null,
       });
       continue;
     }

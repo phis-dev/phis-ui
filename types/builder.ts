@@ -43,6 +43,8 @@ export type PhiBuilderContainerMeta = PhiBuilderPluginMetaBase & {
   slotMode?: "named" | "sequential" | "single";
   allowReorder?: true;
   defaultAnchor?: PhiRenderableBlockAnchor | null;
+  /** What a new node is written with, where the Layout says more than its `defaultConfig`. */
+  creationConfig?: Record<string, unknown> | null;
   fields: readonly PhiCmsConfigField[];
 };
 

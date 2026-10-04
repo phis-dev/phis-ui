@@ -46,7 +46,13 @@ export function PhiSegmentedControl<TValue extends string | number = string>({
         value: option.value,
         label: option.label,
         disabled: option.disabled,
-        tooltip: option.description,
+        /*
+         * No browser tooltip: left out, the Segmented writes the label into `title` and every segment
+         * repeats its own text on hover. What a segment has to say beyond its label is its description,
+         * shown as a real tooltip.
+         */
+        title: "",
+        tooltip: option.description || undefined,
       }))}
       size={size}
       onChange={(nextValue) => onChange?.(nextValue as TValue)}

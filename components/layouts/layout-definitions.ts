@@ -20,7 +20,11 @@ import {
   PHI_SEQUENCE_TRANSITION_MIN_MS,
   PHI_SEQUENCE_TRANSITION_STEP_MS,
 } from "../../helpers/motion";
-import { PHI_SPLIT_CARD_LAYOUT_CREATION_CONFIG, resolvePhiLayoutDefaults } from "../../helpers/cms-layout-defaults";
+import {
+  PHI_SPLIT_CARD_LAYOUT_CREATION_CONFIG,
+  PHI_SPLIT_CARD_LAYOUT_DEFAULTS,
+  resolvePhiLayoutDefaults,
+} from "../../helpers/cms-layout-defaults";
 import { PHI_RENDERABLE_BLOCK_DEFAULT_ANCHOR } from "../../helpers/renderable-block-defaults";
 import { PHI_LAYOUT_PADDING_FIELDS } from "../../helpers/layout-padding-field";
 import type { PhiCmsLayoutPluginDefinition } from "../../types/cms-plugins";
@@ -516,9 +520,14 @@ export const PHI_SPLIT_CARD_LAYOUT_DEFINITION = {
   description: "Two cards on the golden ratio, one Surface for both.",
   category: "structure",
   iconName: "split-card",
-  defaultConfig: { ...PHI_SPLIT_CARD_LAYOUT_CREATION_CONFIG },
+  defaultConfig: { ...PHI_SPLIT_CARD_LAYOUT_DEFAULTS },
+  // The cards are the creation's, not a default: "None" in the Surface section has to stay none.
+  creationConfig: { ...PHI_SPLIT_CARD_LAYOUT_CREATION_CONFIG },
   // The outer inset and the gap between the cards are the Paddings panel's; the rest is the Surface.
-  fields: [...PHI_LAYOUT_PADDING_FIELDS],
+  fields: [
+    { key: "swapRatio", type: "boolean", label: "Larger card on the left" },
+    ...PHI_LAYOUT_PADDING_FIELDS,
+  ],
   slots: [...PHI_CMS_SPLIT_LAYOUT_SLOTS],
 } satisfies PhiCmsLayoutPluginDefinition<PhiCmsSplitCardLayoutConfig>;
 

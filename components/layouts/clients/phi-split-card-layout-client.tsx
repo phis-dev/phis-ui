@@ -19,7 +19,7 @@ import {
 } from "../../../helpers/layout-authoring-markers";
 import { PhiLayoutSurfaceBox } from "../phi-layout-surface-box";
 import { PhiSplitCardHalf, type PhiSplitCardHalfProps } from "./phi-split-card-half";
-import { PHI_SPLIT_CARD_RATIO } from "../split-card-geometry";
+import { resolvePhiSplitCardColumns } from "../split-card-geometry";
 
 const PHI_SPLIT_CARD_LAYOUT_DEFAULTS = resolvePhiLayoutDefaults("split");
 
@@ -35,6 +35,8 @@ const PHI_SPLIT_CARD_LAYOUT_DEFAULTS = resolvePhiLayoutDefaults("split");
 export type PhiSplitCardLayoutProps = Omit<PhiBaseLayoutProps, "slots"> & {
   slots: ReactNode[];
   gap?: CSSProperties["gap"];
+  /** The larger card on the left instead of the right. */
+  swapRatio?: boolean;
   editSlotAction?: (
     slotIndex: number,
     options?: {
@@ -58,7 +60,7 @@ function renderSplitCardSlot(
   editSlotAction: PhiSplitCardLayoutProps["editSlotAction"],
   editRenderInsertControl: PhiLayoutEditRenderInsertControl | undefined,
   label: ReactNode,
-  card: { blockId: PhiSplitCardHalfProps["blockId"]; surface: PhiSplitCardHalfProps["surface"]; gap: string },
+  card: Pick<PhiSplitCardHalfProps, "blockId" | "surface" | "gap" | "swapped">,
 ) {
   const hasContent = child !== null && child !== undefined && child !== false;
   const showInsertButton = typeof editSlotAction === "function" && editRenderInsertControl != null;
@@ -69,6 +71,7 @@ function renderSplitCardSlot(
       surface={card.surface}
       side={slotRole}
       gap={card.gap}
+      swapped={card.swapped}
       data-layout-kind="split"
       className={phiLayoutSlotClassName(isAuthoringRender)}
       data-phi-layout-has-content={phiLayoutSlotContentMarker(isAuthoringRender, hasContent)}
@@ -117,6 +120,7 @@ export function PhiSplitCardLayout({
   blockId,
   slots,
   gap,
+  swapRatio = false,
   editSlotAction,
   editRenderInsertControl,
   editSlotAnchor = "center",
@@ -148,13 +152,13 @@ export function PhiSplitCardLayout({
     paddingLeft,
   });
   const { hasExplicitLayoutBackground } = resolvePhiBaseLayoutChrome({ surface });
-  const card = { blockId, surface, gap: gapLength };
+  const card = { blockId, surface, gap: gapLength, swapped: swapRatio };
   const resolvedStyle: CSSProperties = {
     position: "relative",
     containerType: "inline-size",
     ...resolvedLayoutStyle,
     display: "grid",
-    gridTemplateColumns: `minmax(0, 1fr) minmax(0, ${PHI_SPLIT_CARD_RATIO}fr)`,
+    gridTemplateColumns: resolvePhiSplitCardColumns(swapRatio),
     gap: resolvedGap,
     alignItems: "stretch",
     minWidth: 0,

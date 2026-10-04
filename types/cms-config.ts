@@ -390,6 +390,8 @@ export type PhiCmsThreeColumnLayoutConfig = PhiCmsDirectionalLayoutConfigBase & 
  */
 export type PhiCmsSplitCardLayoutConfig = PhiCmsLayerBase & {
   gap?: CSSProperties["gap"];
+  /** The golden ratio the other way round: the left card the larger one. */
+  swapRatio?: boolean;
 };
 
 export type PhiCmsMasonryLayoutConfig = PhiCmsLayerBase & {
@@ -829,6 +831,7 @@ export function parsePhiCmsSplitCardLayoutConfig(
       ...readRenderableBlockConfig(config),
       labelEnd: readPhiLayoutLabelEnd(config.labelEnd),
       gap: readCssSize(config.gap),
+      swapRatio: readBoolean(config.swapRatio),
       padding: readCssSize(config.padding),
       paddingTop: readCssSize(config.paddingTop),
       paddingBottom: readCssSize(config.paddingBottom),

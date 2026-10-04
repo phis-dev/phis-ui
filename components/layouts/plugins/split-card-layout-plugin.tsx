@@ -19,6 +19,7 @@ export const PHI_SPLIT_CARD_LAYOUT_PLUGIN: PhiCmsLayoutPlugin<PhiCmsSplitCardLay
       layoutKind="split"
       slots={renderSequentialSlotChildren(node)}
       gap={config.gap}
+      swapRatio={config.swapRatio}
       zIndex={config.zIndex}
       surface={config.surface}
       padding={config.padding}

@@ -74,6 +74,7 @@ export function buildPhiBuilderPluginMeta(plugin: PhiAnyCmsBuilderPlugin): PhiBu
     slotSizePolicy: plugin.slotSizePolicy ?? null,
     defaultConfig,
     resolvedDefaultConfig,
+    creationConfig: cloneDefaultConfig("creationConfig" in plugin ? plugin.creationConfig : null),
     slots,
     slotPositions: plugin.slotPositions ?? "compact",
     fields: plugin.fields,
