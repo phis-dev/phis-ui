@@ -338,12 +338,22 @@ export type PhiCmsCollectionCardPresentation = {
   meta?: string;
   /** A path to something already servable: a Media delivery path or a URL. */
   imageUrl?: string;
-  /** The same, for the small mark beside the title. A cover and a mark are different pictures. */
-  iconUrl?: string;
+  /**
+   * The mark beside the title or at the top: a field holding an icon name, or a Site path to a picture
+   * (a Media delivery path), which the card draws as an `asset:` icon. A cover and a mark are different
+   * pictures.
+   */
+  icon?: string;
+  /** The figure of a `stat` card. */
+  value?: string;
   href?: string;
   actionLabel?: string;
   actionHref?: string;
   variant?: "default" | "compact" | "featured";
+  /** Every card in the View draws this body; `stat` needs `value`. */
+  body?: "text" | "stat";
+  /** A field whose truth marks the card as highlighted. */
+  highlight?: string;
 };
 
 export type PhiCollectionViewWidgetPlacement = PhiWidgetPlacementBase & {

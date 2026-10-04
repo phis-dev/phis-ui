@@ -10,7 +10,9 @@ import { PhiAlertControl } from "../../../../../components/controls/phi-alert-co
 import { PhiCollectionViewControl } from "../../../../../components/controls/phi-collection-view-control";
 import { PhiEmptyControl } from "../../../../../components/controls/phi-empty-control";
 import { PhiTextControl } from "../../../../../components/controls/phi-text-control";
-import { PhiCardWidgetClient } from "../../../../../components/widgets/shared/card-body-client";
+import { PhiCardWidgetClient, type PhiCardWidgetClientConfig } from "../../../../../components/widgets/shared/card-body-client";
+import { PHI_CARD_DEFAULT_SURFACE } from "../../../../../components/widgets/shared/card-vocabulary";
+import { resolvePhiImagePresentation } from "../../../../../components/media/image-presentation";
 import { normalizePhiCssSize } from "../../../../../components/layouts/phi-layout-contract";
 import { usePhiSearchDraft } from "../../../../../components/widgets/client/shared/phi-search-draft";
 
@@ -55,6 +57,25 @@ function readPath(item: Record<string, unknown>, path: string | undefined) {
   return typeof value === "string" || typeof value === "number" ? String(value) : undefined;
 }
 
+/**
+ * A row's mark as an icon name: a name stays a name, and a Site path -- a Media delivery path -- is drawn
+ * as the picture it points at. A foreign address is not a mark the house draws.
+ */
+function readIconName(value: string | undefined) {
+  if (!value) return undefined;
+  if (value.startsWith("/")) return `asset:${value}`;
+  return /^[a-z]+:\/\//iu.test(value) ? undefined : value;
+}
+
+function readTruth(item: Record<string, unknown>, path: string | undefined) {
+  if (!path) return false;
+  const value = path.split(".").reduce<unknown>(
+    (current, key) => (current && typeof current === "object" ? (current as Record<string, unknown>)[key] : undefined),
+    item,
+  );
+  return value === true || value === "true" || value === 1;
+}
+
 function buildCard(item: Record<string, unknown>, card: PhiCmsCollectionCardPresentation | undefined) {
   const labels = {
     eyebrow: readPath(item, card?.eyebrow),
@@ -62,23 +83,29 @@ function buildCard(item: Record<string, unknown>, card: PhiCmsCollectionCardPres
     description: readPath(item, card?.description) ?? readPath(item, "description"),
     meta: readPath(item, card?.meta),
     actionLabel: readPath(item, card?.actionLabel),
+    value: readPath(item, card?.value),
   };
-  const config = {
-    /*
-     * Two pictures with two jobs, and the fallbacks say which is which.
-     *
-     * A cover opens the card and takes the width it is given; a mark sits beside the title and is read
-     * at one size. Falling the cover back to the icon -- which this did at first -- turned every icon
-     * into a poster, and a 256-pixel square drawn four-by-three is not a mistake anybody can see the
-     * cause of.
-     */
-    imageUrl: readPath(item, card?.imageUrl)
-      ?? readPath(item, "coverUrl")
-      ?? readPath(item, "imageUrl"),
-    iconUrl: readPath(item, card?.iconUrl) ?? readPath(item, "iconUrl"),
+  /*
+   * Two pictures with two jobs, and the fallbacks say which is which. A cover opens the card and takes
+   * the width it is given; a mark sits beside the title and is read at one size. Falling the cover back
+   * to the icon turned every icon into a poster.
+   */
+  const imageUrl = readPath(item, card?.imageUrl) ?? readPath(item, "coverUrl") ?? readPath(item, "imageUrl");
+  const config: PhiCardWidgetClientConfig = {
+    surface: PHI_CARD_DEFAULT_SURFACE,
+    image: imageUrl
+      ? {
+          presentation: resolvePhiImagePresentation({ sourceKind: "url", sourceUrl: imageUrl }),
+          source: "url",
+          alt: labels.title ?? "",
+        }
+      : null,
+    iconName: readIconName(readPath(item, card?.icon) ?? readPath(item, "icon")),
     href: readPath(item, card?.href),
     actionHref: readPath(item, card?.actionHref),
     ...(card?.variant ? { variant: card.variant } : {}),
+    ...(card?.body ? { body: card.body } : {}),
+    highlight: readTruth(item, card?.highlight),
   };
   return { labels, config };
 }

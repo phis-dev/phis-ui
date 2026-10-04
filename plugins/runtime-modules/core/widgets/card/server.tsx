@@ -1,10 +1,14 @@
 import { trBulk } from "../../../../../server-helpers/translate";
 import type { PhiServerBlockBaseProps } from "../../../../../types";
+import type { PhiResolvedLinkTargets } from "../../../../../types/references";
 import type { PhiCmsCardWidgetConfig } from "./config";
+import { isPhiMediaSvgContentType } from "../../../../../constants/media";
 import { resolvePhiImagePresentation } from "../../../../../components/media/image-presentation";
 import { resolvePhiPublicAssetReference } from "../../../../../components/widgets/helpers/internal-reference-resolver.server";
+import { resolvePhiLinkHref } from "../../../../../helpers/link-target";
 import { PhiCmsWidgetType } from "../../../../../constants/cms-widget-types";
 import { PhiRuntimeModuleRenderClientHost } from "../../../../../components/runtime/runtime-module-render-client-manifest";
+import type { PhiCardWidgetClientConfig } from "../../../../../components/widgets/shared/card-body-client";
 
 export type PhiCardWidgetLabels = {
   eyebrow?: string;
@@ -12,18 +16,20 @@ export type PhiCardWidgetLabels = {
   description?: string;
   meta?: string;
   actionLabel?: string;
-  value?: string;
 };
 
 export type PhiCardWidgetProps = PhiServerBlockBaseProps<
   PhiCardWidgetLabels,
   PhiCmsCardWidgetConfig
->;
+> & {
+  links?: PhiResolvedLinkTargets | null;
+};
 
 export async function PhiCardWidget({
   labels,
   config,
   runtime,
+  links,
   translate,
 }: PhiCardWidgetProps & { translate: boolean }) {
   const textEntries = [
@@ -42,19 +48,12 @@ export async function PhiCardWidget({
     textEntries.map(([key], index) => [key, translatedTexts[index] || undefined]),
   );
 
-  const eyebrow = translatedByKey.get("eyebrow");
-  const title = translatedByKey.get("title");
-  const description = translatedByKey.get("description");
-  const meta = translatedByKey.get("meta");
-  const actionLabel = translatedByKey.get("actionLabel");
   /*
-   * The figure is left out of that list on purpose.
-   *
-   * A label set answers for words, and a Site's own number is not one. Sending it through the
-   * translator would make "1,204" a message id, and `translate` is a per-Widget switch, so a stat card
-   * that turned it off to protect the figure would lose its title's translation with it.
+   * The figure is left out of the translation on purpose: a Site's own number is not a word, and
+   * `translate` is a per-Widget switch, so a stat card that turned it off to protect the figure would
+   * lose its title's translation with it.
    */
-  const value = labels.value ?? config?.value;
+  const value = config?.value;
   const resolvedAsset =
     config?.sourceKind === "asset" && typeof config.assetId === "number"
       ? await resolvePhiPublicAssetReference({ runtime, assetId: config.assetId }).catch(() => null)
@@ -71,32 +70,54 @@ export async function PhiCardWidget({
     sourceWidth: resolvedAsset?.width,
     sourceHeight: resolvedAsset?.height,
   });
+  // The target is resolved here and the address travels: a Page reference means nothing in a browser.
+  const link = resolvePhiLinkHref(config?.linkTarget, links);
+  const action = resolvePhiLinkHref(config?.actionLinkTarget, links);
+
+  const clientConfig: PhiCardWidgetClientConfig = {
+    surface: config?.surface ?? null,
+    image: presentation.url
+      ? {
+          presentation,
+          source: config?.sourceKind === "asset" ? "asset" : "url",
+          alt: (config?.alt ?? resolvedAsset?.altText ?? "").trim(),
+          blurDataUrl: resolvedAsset?.blurDataUrl ?? null,
+          /*
+           * Only a public Asset resolves here, so the optimiser takes every variant, and every original
+           * that is not an SVG -- which it refuses whatever the Asset says.
+           */
+          optimizable: resolvedAsset != null
+            && (presentation.kind === "generated-variant" || !isPhiMediaSvgContentType(resolvedAsset.contentType)),
+        }
+      : null,
+    iconName: config?.icon,
+    iconPlacement: config?.iconPlacement,
+    textAlign: config?.textAlign,
+    headingLevel: config?.headingLevel,
+    href: link?.href,
+    newTab: link?.newTab,
+    external: link?.external,
+    actionHref: action?.href,
+    actionNewTab: action?.newTab,
+    variant: config?.variant,
+    body: config?.body,
+    highlight: config?.highlight,
+    hoverEffect: config?.hoverEffect,
+  };
 
   return (
     <PhiRuntimeModuleRenderClientHost
       type={PhiCmsWidgetType.Card}
       componentProps={{
         labels: {
-          eyebrow,
-          title,
-          description,
-          meta,
-          actionLabel,
+          eyebrow: translatedByKey.get("eyebrow"),
+          title: translatedByKey.get("title"),
+          description: translatedByKey.get("description"),
+          meta: translatedByKey.get("meta"),
+          actionLabel: translatedByKey.get("actionLabel"),
           value,
         },
-        config: {
-          imageUrl: presentation.url ?? undefined,
-          imageFit: presentation.fit,
-          imagePosition: presentation.objectPosition,
-          alt: config?.alt ?? resolvedAsset?.altText ?? undefined,
-          href: config?.href,
-          newTab: config?.newTab,
-          actionHref: config?.actionHref,
-          actionNewTab: config?.actionNewTab,
-          variant: config?.variant,
-          body: config?.body,
-          highlight: config?.highlight,
-        },
+        config: clientConfig,
       }}
     />
   );

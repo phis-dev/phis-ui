@@ -521,11 +521,23 @@ for (const path of [
 }
 
 {
-  // The Card cover previously hard-coded `objectFit: "cover"` and no position at all, which framed a
-  // `contain` variant wrongly and discarded the original's focal rectangle.
+  /*
+   * A picture is drawn by `PhiImageControl` from the resolver's answer, and by nothing else: the Card
+   * cover once hard-coded `objectFit: "cover"` with no position, which framed a `contain` variant wrongly
+   * and discarded the original's focal rectangle, and it cropped a 3:2 variant to 4:3 because its box
+   * had a proportion of its own. The box now takes the presentation's proportion.
+   */
+  for (const path of [
+    "components/widgets/shared/card-body-client.tsx",
+    "plugins/runtime-modules/core/widgets/image/client.tsx",
+  ]) {
+    const source = await readSource(path);
+    assert.match(source, /<PhiImageControl\b/u, `${path} must draw its picture with PhiImageControl.`);
+    assert.doesNotMatch(source, /from "next\/image"|<img\b/u, `${path} must not draw a picture of its own.`);
+    assert.doesNotMatch(source, /objectFit:/u, `${path} must not frame a picture beside the resolver.`);
+  }
   const cardBody = await readSource("components/widgets/shared/card-body-client.tsx");
-  assert.match(cardBody, /objectFit: config\.imageFit \?\? "cover"/u);
-  assert.match(cardBody, /objectPosition: config\.imagePosition \?\? "center"/u);
+  assert.match(cardBody, /aspectRatio: resolveMediaAspectRatio\(image\.presentation\)/u);
 }
 
 {

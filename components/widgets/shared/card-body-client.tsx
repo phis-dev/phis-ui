@@ -1,28 +1,36 @@
 "use client";
 
+import type { CSSProperties, ReactNode } from "react";
+
 import { PhiButtonControl } from "../../controls/phi-button-control";
-
-import type { PhiClientBlockBaseProps } from "../../../types";
-import { PhiCardControl } from "../../controls/phi-card-control";
-import { PhiIcon } from "../../shell/phi-icon";
-import { PhiLink } from "../../navigation/phi-link";
+import { PhiImageControl, type PhiImageControlSource } from "../../controls/phi-image-control";
 import { PhiStatisticControl } from "../../controls/phi-statistic-control";
-import { usePhiConfig } from "../../root/phi-config-provider";
 import { PhiTypographyControl } from "../../controls/phi-typography-control";
+import type { PhiImagePresentation } from "../../media/image-presentation";
+import { PhiLink } from "../../navigation/phi-link";
+import { usePhiConfig } from "../../root/phi-config-provider";
+import { PhiIcon } from "../../shell/phi-icon";
+import { PhiSurfaceGroundLayer } from "../../surface/phi-surface-ground";
+import { PhiSurfaceTone } from "../../surface/phi-surface-tone";
+import { combinePhiBoxShadows } from "../../../helpers/layout-style";
+import { resolvePhiSurfaceStyle } from "../../../helpers/surface-style";
+import type { PhiClientBlockBaseProps } from "../../../types";
+import type { PhiSurface } from "../../../types/surface";
+import type {
+  PhiCardHeadingLevel,
+  PhiCardHoverEffect,
+  PhiCardIconPlacement,
+  PhiCardTextAlign,
+  PhiCardWidgetBody,
+} from "./card-vocabulary";
 
-/**
- * What fills a card between its eyebrow and its description.
- *
- * `text` is a heading, which is what a card has always been. `stat` is a labelled figure drawn by the
- * same Control the Theme inspector uses, so the house keeps one statistic rather than two: before this,
- * a Dashboard card wrote its figure into the title slot, and "Site users" was replaced by "42" with
- * only the eyebrow left to say what had been counted.
- *
- * The body is chosen, never inferred from whether a value happens to have arrived. A card that decided
- * by presence would draw as text and reflow into a statistic the moment its figure landed -- twelve
- * times on a Dashboard, on every load.
- */
-export type PhiCardWidgetBody = "text" | "stat";
+export type {
+  PhiCardHeadingLevel,
+  PhiCardHoverEffect,
+  PhiCardIconPlacement,
+  PhiCardTextAlign,
+  PhiCardWidgetBody,
+} from "./card-vocabulary";
 
 export type PhiCardWidgetClientLabels = {
   eyebrow?: string;
@@ -37,61 +45,41 @@ export type PhiCardWidgetClientLabels = {
 /**
  * What is true about a card's content right now, as opposed to what the card says.
  *
- * Handed in, never decided here. `design/STATE_MACHINES.md` puts it plainly -- a Widget "presents a
- * state it was given" -- and this is the whole of what a card is given about its own: whether the
- * content is still coming, and whether it failed.
- *
- * Two plain facts rather than a named phase, deliberately. A phase vocabulary of the card's own would
- * be the feature-local substitute that design forbids, and there would be two of them the day the real
- * machine lands. For the same reason it never travels in `config`: a page tree stores what an author
- * wrote, and "still loading" is not that.
+ * Handed in, never decided here (`design/STATE_MACHINES.md`: a Widget "presents a state it was given"):
+ * whether the content is still coming, and whether it failed. It never travels in `config`.
  */
 export type PhiCardWidgetClientBinding = {
   loading?: boolean;
   error?: string | null;
 };
 
+/** The card's picture, already resolved: which bytes, how they are framed, how they may arrive. */
+export type PhiCardWidgetImage = {
+  presentation: PhiImagePresentation;
+  source: PhiImageControlSource;
+  alt: string;
+  blurDataUrl?: string | null;
+  optimizable?: boolean;
+};
+
 export type PhiCardWidgetClientConfig = {
-  imageUrl?: string;
-  /**
-   * A small mark beside the title -- a logo, an app icon, an avatar.
-   *
-   * Not the cover, and the difference is the point: a cover is an opening image and takes the width it
-   * is given, while a mark is read at one size and stops being a mark when it is stretched. A card that
-   * had only the first turned every icon into a poster.
-   */
-  iconUrl?: string;
-  iconAlt?: string;
-  /**
-   * The same mark, named rather than delivered: `antd:dashboard`, or anything else an icon name reaches.
-   *
-   * A picture that arrives as bytes and an icon that arrives as a name occupy one place on a card, so
-   * they are one decision here. `iconUrl` wins when both are given, because a Site that uploaded a mark
-   * meant it. A contributed card is the case this exists for: a Module ships an icon with itself and
-   * has no file to point at.
-   */
+  surface?: PhiSurface | null;
+  image?: PhiCardWidgetImage | null;
   iconName?: string;
-  /**
-   * How the delivered bytes meet the cover box. Both come from the shared image presentation
-   * resolver, so a generated variant arrives already centered and an original keeps its focal
-   * position instead of the Card inventing a second framing rule.
-   */
-  imageFit?: "cover" | "contain" | "fill";
-  imagePosition?: string;
-  alt?: string;
+  iconPlacement?: PhiCardIconPlacement;
+  textAlign?: PhiCardTextAlign;
+  headingLevel?: PhiCardHeadingLevel;
+  /** Where the whole card leads, already resolved to an address. */
   href?: string;
   newTab?: boolean;
+  external?: boolean;
   actionHref?: string;
   actionNewTab?: boolean;
+  /** Size and weight: insets, type sizes, the button's size. */
   variant?: "default" | "compact" | "featured";
-  /**
-   * Which body draws, independent of `variant`.
-   *
-   * `variant` is size and weight, this is the kind of thing inside. A compact statistic and a featured
-   * statistic are both sensible, which is why folding one into the other would have cost a case.
-   */
   body?: PhiCardWidgetBody;
   highlight?: boolean;
+  hoverEffect?: PhiCardHoverEffect;
 };
 
 export type PhiCardWidgetClientProps = PhiClientBlockBaseProps<
@@ -101,6 +89,13 @@ export type PhiCardWidgetClientProps = PhiClientBlockBaseProps<
   binding?: PhiCardWidgetClientBinding;
 };
 
+/** The box a picture is shown in takes the picture's own proportion; 3:2 where nothing is known. */
+function resolveMediaAspectRatio(presentation: PhiImagePresentation) {
+  return presentation.width && presentation.height
+    ? `${presentation.width} / ${presentation.height}`
+    : "3 / 2";
+}
+
 export function PhiCardWidgetClient({
   labels,
   config,
@@ -108,192 +103,206 @@ export function PhiCardWidgetClient({
 }: PhiCardWidgetClientProps) {
   const { token } = usePhiConfig();
   const variant = config?.variant ?? "default";
-  const size = variant === "compact" ? "small" : "medium";
-  const hasPrimaryLink = Boolean(config?.href);
+  const body = config?.body ?? "text";
+  const textAlign = config?.textAlign ?? "start";
+  const headingLevel = config?.headingLevel ?? "h3";
+  const iconPlacement = config?.iconPlacement ?? "inline";
+  const highlight = config?.highlight === true;
+  const href = config?.href;
+  const hoverEffect = href ? config?.hoverEffect ?? "none" : "none";
   const hasAction = Boolean(config?.actionHref && labels.actionLabel);
-  const cardHighlight = Boolean(config?.highlight);
-  const cover = config?.imageUrl ? (
-    <img
-      alt={config.alt ?? labels.title ?? labels.eyebrow ?? ""}
-      src={config.imageUrl}
-      loading="lazy"
-      style={{
-        display: "block",
-        width: "100%",
-        aspectRatio: variant === "featured" ? "16 / 9" : "4 / 3",
-        objectFit: config.imageFit ?? "cover",
-        objectPosition: config.imagePosition ?? "center",
-      }}
-    />
+  const image = config?.image?.presentation.url ? config.image : null;
+  const iconName = config?.iconName;
+
+  /*
+   * The card's own Surface, drawn by the card: its picture moves inside the box under the pointer, so
+   * the ground goes on a layer the zoom can scale when the card zooms.
+   */
+  const surface = resolvePhiSurfaceStyle(config?.surface, {
+    cornerFallback: "var(--phi-surface-radius, 0)",
+    forceGroundLayer: hoverEffect === "zoom",
+  });
+  const inset = variant === "compact" ? token.paddingSM : variant === "featured" ? token.paddingMD : token.padding;
+  const gap = variant === "compact" ? token.paddingXS : token.paddingSM;
+  const headingSize = variant === "featured"
+    ? token.fontSizeHeading3
+    : variant === "compact"
+      ? token.fontSizeHeading5
+      : token.fontSizeHeading4;
+  const iconSize = variant === "compact" ? 20 : 24;
+  const topIconSize = variant === "compact" ? 32 : variant === "featured" ? 48 : 40;
+  const justify = textAlign === "center" ? "center" : textAlign === "end" ? "flex-end" : "flex-start";
+
+  /*
+   * The whole card is the link, and the link is still one element: the heading's anchor reaches over the
+   * box (`.phi-card__link::after`), so a reader can click anywhere while a screen reader hears one link
+   * named by the heading. The action button stands above that reach, so it stays a button of its own and
+   * is never a link inside a link.
+   */
+  const linked = (content: ReactNode) => href ? (
+    <PhiLink
+      href={href}
+      newTab={config?.newTab}
+      external={config?.external}
+      className="phi-card__link"
+      style={{ color: "inherit" }}
+    >
+      {content}
+    </PhiLink>
+  ) : content;
+
+  const heading = labels.title ? (
+    <PhiTypographyControl
+      presentation="title"
+      level={Number(headingLevel.slice(1)) as 2 | 3 | 4}
+      style={{ margin: 0, fontSize: headingSize, color: token.colorTextHeading }}
+    >
+      {linked(labels.title)}
+    </PhiTypographyControl>
   ) : null;
 
-  const titleNode = labels.title ? (
-    hasPrimaryLink ? (
-      <PhiLink href={config!.href!} newTab={config?.newTab} style={{ color: "inherit" }}>
-        <PhiTypographyControl presentation="title"
-          level={variant === "featured" ? 3 : 4}
-          style={{ margin: 0, color: token.colorTextHeading }}
-        >
-          {labels.title}
-        </PhiTypographyControl>
-      </PhiLink>
-    ) : (
-      <PhiTypographyControl presentation="title" level={variant === "featured" ? 3 : 4} style={{ margin: 0, color: token.colorTextHeading }}>
-        {labels.title}
-      </PhiTypographyControl>
-    )
+  const iconMark = (size: number, framed: number) => iconName ? (
+    <span
+      aria-hidden="true"
+      className="phi-card__icon"
+      style={{
+        display: "inline-flex",
+        flex: "none",
+        alignItems: "center",
+        justifyContent: "center",
+        width: framed,
+        height: framed,
+        borderRadius: token.borderRadius,
+        background: token.colorFillQuaternary,
+        color: highlight ? token.colorPrimary : token.colorTextSecondary,
+      }}
+    >
+      <PhiIcon name={iconName} size={size} />
+    </span>
   ) : null;
 
   /*
-   * A failure stands where the figure would, not in a footnote.
-   *
-   * `design/STATE_MACHINES.md`: "Waiting and failing are states, not flags beside them." A card whose
-   * number could not be resolved has not got a number, and saying so in the place the number belongs is
-   * the difference between a card that failed and a card that is merely quiet. It is set at body size
-   * because a sentence in figure type is unreadable.
+   * A failure stands where the figure would, at body size, because a sentence in figure type is
+   * unreadable. A card whose figure is the only thing it has makes the figure the link.
    */
-  const statNode = (
+  const figure = (
     <PhiStatisticControl
-      title={labels.title}
       value={binding?.error ?? labels.value ?? ""}
       loading={binding?.loading ?? false}
       styles={{
         content: binding?.error
           ? { color: token.colorError, fontSize: token.fontSize }
-          : { color: cardHighlight ? token.colorPrimary : token.colorTextHeading },
+          : { color: highlight ? token.colorPrimary : token.colorTextHeading },
       }}
     />
   );
 
-  /*
-   * On a stat card the link takes the whole body.
-   *
-   * A text card's heading is the link and has been since it was written, so it keeps that. A stat card's
-   * label is small secondary type and a poor target on its own, so the figure goes inside the link with
-   * it. Whether the whole box should be the link is older and wider than this body -- `PhiCardControl`
-   * already lifts the box under the pointer as though it were -- and is not settled here.
-   */
-  const bodyNode = (config?.body ?? "text") === "stat"
-    ? hasPrimaryLink
-      ? (
-        <PhiLink href={config!.href!} newTab={config?.newTab} style={{ color: "inherit", display: "block" }}>
-          {statNode}
-        </PhiLink>
-      )
-      : statNode
-    : titleNode;
+  const headingRow = iconPlacement === "inline" && iconName ? (
+    <div style={{ display: "flex", alignItems: "center", justifyContent: justify, gap }}>
+      {iconMark(iconSize, iconSize + 16)}
+      {heading}
+    </div>
+  ) : heading;
 
-  return (
-    <PhiCardControl
-      size={size}
-      hoverable={hasPrimaryLink || hasAction}
-      cover={cover}
-      style={{
-        width: "100%",
-        borderColor: cardHighlight ? token.colorPrimary : token.colorBorderSecondary,
-        /*
-         * Depth from the Theme, not from three colours typed in by hand. A card sits on the page rather
-         * than over it, so the ordinary one is the quiet shadow and a featured one is the next step up;
-         * a highlighted card keeps its ring, which is a border rather than depth.
-         */
-        boxShadow: cardHighlight
-          ? `0 0 0 1px ${token.colorPrimary} inset, ${token.boxShadowTertiary}`
-          : variant === "featured"
-            ? token.boxShadowSecondary
-            : token.boxShadowTertiary,
-        background: variant === "featured" ? token.colorFillQuaternary : token.colorBgContainer,
-      }}
+  const media = image ? (
+    <div
+      className="phi-card__media"
+      style={{ position: "relative", aspectRatio: resolveMediaAspectRatio(image.presentation), overflow: "hidden" }}
     >
-      {/* The Card is a box; arranging what is in it belongs to this Widget, not to the primitive's body. */}
-      <div style={{ display: "grid", gap: variant === "compact" ? token.paddingSM : token.paddingLG }}>
-        <div
+      <PhiImageControl
+        presentation={image.presentation}
+        source={image.source}
+        alt={image.alt}
+        blurDataUrl={image.blurDataUrl}
+        optimizable={image.optimizable}
+        style={{ width: "100%", height: "100%" }}
+        imageStyle={{ width: "100%", height: "100%" }}
+      />
+      {iconPlacement === "top" && iconName ? (
+        <span
+          aria-hidden="true"
+          className="phi-card__icon"
           style={{
-            display: "grid",
-            gap: variant === "compact" ? token.paddingSM : token.paddingLG,
+            position: "absolute",
+            insetInlineStart: textAlign === "start" ? inset : textAlign === "end" ? undefined : "50%",
+            insetInlineEnd: textAlign === "end" ? inset : undefined,
+            top: "50%",
+            translate: textAlign === "center" ? "-50% -50%" : "0 -50%",
+            display: "inline-flex",
+            alignItems: "center",
+            justifyContent: "center",
+            width: topIconSize + 24,
+            height: topIconSize + 24,
+            borderRadius: "50%",
+            // A ground of its own, so the mark reads on a bright picture and on a dark one alike.
+            background: `color-mix(in srgb, ${token.colorBgContainer} 88%, transparent)`,
+            color: highlight ? token.colorPrimary : token.colorText,
+            boxShadow: token.boxShadowTertiary,
           }}
         >
-          {config?.iconUrl ? (
-            <img
-              alt={config.iconAlt ?? labels.title ?? ""}
-              src={config.iconUrl}
-              loading="lazy"
-              width={40}
-              height={40}
-              style={{
-                display: "block",
-                width: 40,
-                height: 40,
-                borderRadius: token.borderRadius,
-                objectFit: "contain",
-                // Marks are drawn to their own edges, so one is given room rather than cropped: what a
-                // cover may lose at the sides, a logo may not.
-                background: token.colorFillQuaternary,
-              }}
-            />
-          ) : config?.iconName ? (
-            <span
-              aria-hidden="true"
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                justifyContent: "center",
-                width: 40,
-                height: 40,
-                borderRadius: token.borderRadius,
-                background: token.colorFillQuaternary,
-                color: cardHighlight ? token.colorPrimary : token.colorTextSecondary,
-              }}
-            >
-              <PhiIcon name={config.iconName} size={24} />
-            </span>
-          ) : null}
-          {labels.eyebrow ? (
-            <PhiTypographyControl
-              type="secondary"
-              style={{
-                fontSize: token.fontSizeSM,
-                lineHeight: 1.5715,
-                letterSpacing: "0.04em",
-                textTransform: "uppercase",
-                color: cardHighlight ? token.colorPrimary : token.colorTextTertiary,
-              }}
-            >
-              {labels.eyebrow}
-            </PhiTypographyControl>
-          ) : null}
-          {bodyNode}
-        </div>
+          <PhiIcon name={iconName} size={topIconSize} />
+        </span>
+      ) : null}
+    </div>
+  ) : null;
 
+  const boxStyle: CSSProperties = {
+    ...surface.style,
+    position: "relative",
+    display: "flex",
+    flexDirection: "column",
+    width: "100%",
+    minWidth: 0,
+    overflow: "hidden",
+    textAlign,
+    color: token.colorText,
+    // A highlighted card keeps its ring, which is a line rather than depth.
+    ...(highlight
+      ? { boxShadow: combinePhiBoxShadows(surface.style.boxShadow, `inset 0 0 0 1px ${token.colorPrimary}`) }
+      : {}),
+  };
+
+  const content = (
+    <>
+      {media}
+      <div style={{ display: "grid", gap, padding: inset, justifyItems: justify }}>
+        {iconPlacement === "top" && iconName && !image ? iconMark(topIconSize, topIconSize + 24) : null}
+        {labels.eyebrow ? (
+          <PhiTypographyControl
+            type="secondary"
+            style={{
+              fontSize: token.fontSizeSM,
+              letterSpacing: "0.04em",
+              textTransform: "uppercase",
+              color: highlight ? token.colorPrimary : token.colorTextTertiary,
+            }}
+          >
+            {labels.eyebrow}
+          </PhiTypographyControl>
+        ) : null}
+        {headingRow}
+        {body === "stat" ? (labels.title ? figure : linked(figure)) : null}
         {labels.description ? (
-          <PhiTypographyControl presentation="paragraph"
+          <PhiTypographyControl
+            presentation="paragraph"
             style={{
               marginBottom: 0,
               color: token.colorTextSecondary,
               fontSize: variant === "compact" ? token.fontSize : token.fontSizeLG,
-              lineHeight: variant === "compact" ? token.lineHeight : token.lineHeightLG,
             }}
           >
             {labels.description}
           </PhiTypographyControl>
         ) : null}
-
         {labels.meta ? (
-          <PhiTypographyControl
-            type="secondary"
-            style={{
-              fontSize: token.fontSizeSM,
-              lineHeight: 1.5715,
-              color: token.colorTextTertiary,
-            }}
-          >
+          <PhiTypographyControl type="secondary" style={{ fontSize: token.fontSizeSM, color: token.colorTextTertiary }}>
             {labels.meta}
           </PhiTypographyControl>
         ) : null}
-
         {hasAction ? (
-          <div>
+          <div className="phi-card__action">
             <PhiButtonControl
-              type={cardHighlight ? "primary" : "default"}
+              type={highlight ? "primary" : "default"}
               size={variant === "compact" ? "small" : "medium"}
               href={config!.actionHref}
               newTab={config?.actionNewTab}
@@ -302,6 +311,22 @@ export function PhiCardWidgetClient({
           </div>
         ) : null}
       </div>
-    </PhiCardControl>
+    </>
+  );
+
+  return (
+    <article
+      className={[
+        "phi-card",
+        href ? "phi-card--link" : null,
+        hoverEffect !== "none" ? `phi-card--hover-${hoverEffect}` : null,
+        surface.className,
+      ].filter(Boolean).join(" ")}
+      data-phi-card-variant={variant}
+      style={boxStyle}
+    >
+      <PhiSurfaceGroundLayer ground={surface.ground} className="phi-card__ground" />
+      {surface.className ? <PhiSurfaceTone tone={config?.surface?.tone}>{content}</PhiSurfaceTone> : content}
+    </article>
   );
 }

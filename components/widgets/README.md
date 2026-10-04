@@ -236,9 +236,19 @@ record's source text instead of its localized version.
   while an Asset loads, a plain placeholder for every foreign address. The blur is read from the resolved
   Asset, never stored in a node's config. `preview` opens it in `PhiLightboxImageControl`, the one place
   the lightbox lives.
-- The Card Widget has `variant` `default`, `compact`, or `featured`, `highlight`, `href`, and an explicit
-  CTA (`actionLabel`, `actionHref`). Asset sources persist `assetId` and optional `variantKey`; only `url`
-  sources persist `sourceUrl`.
+- The Card Widget draws its own Surface (`surface: "own"`, default `PHI_CARD_DEFAULT_SURFACE`) rather than
+  a `PhiCardControl` box. It carries a picture at the top (`PhiImageControl`, any variant; the box takes
+  the variant's proportion, and the canvas says when the variant is narrower than the card) and an `icon`
+  by name (`iconPlacement` `inline` before the heading or `top`, over the picture on a ground of its own).
+  The heading's tag is `headingLevel` (`h2`, `h3` default, `h4`), its size the `variant` (`default`,
+  `compact`, `featured`, which is size and nothing else); a `stat` body draws the label as that heading and
+  the figure beneath it. `textAlign` is `start`, `center` or `end`. `linkTarget` makes the whole card the
+  link -- one anchor, the heading's, reaching over the box -- and `actionLinkTarget` with `actionLabel` adds
+  a button that stands above it, never a link inside a link. `hoverEffect` (`none`, `lift`, `zoom`) answers
+  only on a card that is a link, only under a hovering pointer or keyboard focus, and not for a reader who
+  asked for less motion; a further effect is an entry in `PHI_CARD_HOVER_EFFECTS` and a rule in
+  `styles/layout.css`. Asset sources persist `assetId` and `variantKey`; only `url` sources persist
+  `sourceUrl`, shown plainly with a placeholder.
 - The Video Widget (`video-embed`, owned by the Video Module) stores `providerKey` and `videoId`, chosen
   from the video providers the Area carries -- the way the Image Widget stores an `assetId` rather than a
   URL. Never a pasted address: a share link carries a playlist, a timestamp, a `si=` and sometimes a

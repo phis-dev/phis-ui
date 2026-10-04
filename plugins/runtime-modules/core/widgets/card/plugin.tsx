@@ -8,7 +8,7 @@ import { PHI_CARD_WIDGET_DEFINITION, PHI_CARD_WIDGET_PLUGIN_TYPE } from "./confi
 
 export const PHI_CARD_WIDGET_PLUGIN: PhiCmsServerWidgetPlugin<PhiCmsCardWidgetConfig> = {
   ...PHI_CARD_WIDGET_DEFINITION,
-  ...definePhiPassiveWidgetRenderers(({ widget, config, runtime }) => (
+  ...definePhiPassiveWidgetRenderers(({ widget, config, runtime, links }) => (
     <PhiCardWidget
       key={`widget-${widget.id}`}
       labels={{
@@ -20,6 +20,7 @@ export const PHI_CARD_WIDGET_PLUGIN: PhiCmsServerWidgetPlugin<PhiCmsCardWidgetCo
       }}
       config={config}
       runtime={runtime}
+      links={links}
       translate={!hasPhiFlag(widget.flags, PhiCmsFlags.NoTranslate)}
     />
   )),

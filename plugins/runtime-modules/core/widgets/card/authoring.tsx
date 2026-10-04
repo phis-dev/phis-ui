@@ -12,6 +12,14 @@ export const PHI_CARD_WIDGET_BUILDER_PLUGIN: PhiCmsBuilderWidgetPlugin<PhiCmsCar
     <PhiCardWidgetEditor config={config} title={widget.label ?? undefined} />
   ),
   renderEditorTools: ({ widget, authoring }) => authoring?.updateConfig ? (
-    <PhiWidgetImageToolButton blockId={widget.id} onChange={authoring.updateConfig} />
+    <PhiWidgetImageToolButton
+      blockId={widget.id}
+      // A card shows a foreign picture plainly and never vouches for one, so it keeps no `trusted`.
+      onChange={(patch) => {
+        const next: Record<string, unknown> = { ...patch };
+        delete next.trusted;
+        authoring.updateConfig?.(next as Partial<PhiCmsCardWidgetConfig>);
+      }}
+    />
   ) : null,
 };

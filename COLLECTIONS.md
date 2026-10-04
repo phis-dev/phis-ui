@@ -70,10 +70,19 @@ Which item field fills which part of the card is Widget presentation, `presentat
 
 ```text
 eyebrow, title, description, meta   dot paths into one item
-imageUrl, iconUrl                   paths to a servable Media delivery path or URL
+imageUrl                            path to a servable Media delivery path or URL (the cover)
+icon                                path to an icon name, or to a Site path drawn as an `asset:` icon
+value                               path to the figure of a `stat` card
 href, actionLabel, actionHref       paths for the card link and action
+highlight                           path to a field whose truth highlights the card
 variant                             default | compact | featured
+body                                text | stat, for every card of the View
 ```
+
+The cards are the Card Widget's own (`PhiCardWidgetClient`) with its default Surface. Without a mapping
+the View falls back to the item fields `name`/`title`, `description`, `coverUrl`/`imageUrl` and `icon`. A
+mark at a foreign address is not drawn: the house draws marks by name, and a picture a provider wants
+shown as a mark is served from the Site.
 
 Only the card View reads `presentation.card`; another View ignores it. A resource whose items are not
 cards registers its own View instead. The Media library (`PhiAssetCollectionViewBinding`,

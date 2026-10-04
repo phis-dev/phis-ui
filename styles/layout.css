@@ -416,3 +416,71 @@
 :where(.phi-tone-dark) {
   color-scheme: dark;
 }
+
+/*
+ * The Card Widget (`components/widgets/shared/card-body-client.tsx`).
+ *
+ * The whole card is its link: the heading's anchor reaches over the box, so a click anywhere follows it
+ * while the card stays one link named by its heading. The action button stands above that reach and
+ * stays a button of its own.
+ */
+:where(.phi-card__link)::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
+
+:where(.phi-card__link):focus-visible {
+  outline: none;
+}
+
+:where(.phi-card--link):focus-within {
+  outline: calc(var(--ant-line-width) * 2) solid var(--ant-color-primary-border);
+  outline-offset: 2px;
+}
+
+:where(.phi-card__action) {
+  position: relative;
+  z-index: 2;
+}
+
+/*
+ * Hover effects: a card that leads somewhere answers the pointer, and only a pointer that hovers.
+ * Keyboard focus gets the same answer, so the effect never says something a keyboard reader misses.
+ */
+:where(.phi-card--hover-lift, .phi-card--hover-zoom) {
+  transition: translate 200ms ease, box-shadow 200ms ease;
+}
+
+:where(.phi-card--hover-zoom) :where(.phi-card__ground, .phi-card__media img, .phi-card__icon) {
+  transition: scale 300ms ease;
+}
+
+@media (hover: hover) {
+  :where(.phi-card--hover-lift):hover {
+    translate: 0 -2px;
+  }
+
+  :where(.phi-card--hover-zoom):hover :where(.phi-card__ground, .phi-card__media img, .phi-card__icon) {
+    scale: 1.04;
+  }
+}
+
+:where(.phi-card--hover-lift):focus-within {
+  translate: 0 -2px;
+}
+
+:where(.phi-card--hover-zoom):focus-within :where(.phi-card__ground, .phi-card__media img, .phi-card__icon) {
+  scale: 1.04;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .phi-card--hover-lift:is(:hover, :focus-within) {
+    translate: none;
+  }
+
+  .phi-card--hover-zoom:is(:hover, :focus-within) :is(.phi-card__ground, .phi-card__media img, .phi-card__icon) {
+    scale: none;
+  }
+}

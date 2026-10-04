@@ -36,13 +36,16 @@ function readCardPresentation(value: unknown): PhiCmsCollectionCardPresentation 
     description: readString(value.description),
     meta: readString(value.meta),
     imageUrl: readString(value.imageUrl),
-    iconUrl: readString(value.iconUrl),
+    icon: readString(value.icon),
+    value: readString(value.value),
     href: readString(value.href),
     actionLabel: readString(value.actionLabel),
     actionHref: readString(value.actionHref),
     variant: variant === "compact" || variant === "featured" || variant === "default"
       ? variant
       : undefined,
+    body: value.body === "text" || value.body === "stat" ? value.body : undefined,
+    highlight: readString(value.highlight),
   };
 }
 
