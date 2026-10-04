@@ -17,7 +17,6 @@ import {
 } from "../../../../../components/widgets/config/parser-primitives";
 import {
   PHI_CONTROL_PRESENTATION_FIELDS,
-  PHI_CONTROL_STATE_FIELDS,
   parsePhiControlConfig,
   type PhiControlConfig,
 } from "../../../../../components/widgets/config/control-signal-config";
@@ -255,7 +254,7 @@ export const PHI_COMMAND_TOOLBAR_WIDGET_DEFINITION = {
       key: "buttons",
       type: "collection",
       presentation: "select",
-      label: "Buttons",
+      label: "Button",
       itemKeyField: "key",
       itemLabelField: "label",
       reorderable: false,
@@ -267,7 +266,12 @@ export const PHI_COMMAND_TOOLBAR_WIDGET_DEFINITION = {
         { key: "disabled", type: "boolean", label: "Disabled" },
       ],
     },
-    { key: "compact", type: "boolean", label: "Compact" },
+    /*
+     * What holds for every button. No Read only or Disabled of the whole toolbar here: each button
+     * has its own, and switching all of them at once is what a signal is for -- every renderable block
+     * receives `enabled/change`.
+     */
+    { key: "compact", type: "boolean", label: "Compact", heading: "Toolbar" },
     /*
      * Only while the group is not compact. A compact group cannot wrap (`PhiToolbarControl`), so with
      * compact on this is a switch whose position changes nothing -- and a control that does nothing is
@@ -276,7 +280,6 @@ export const PHI_COMMAND_TOOLBAR_WIDGET_DEFINITION = {
     { key: "wrap", type: "boolean", label: "Wrap", visibleWhen: { field: "compact", equals: false } },
     { key: "showLabels", type: "boolean", label: "Show Labels" },
     ...PHI_CONTROL_PRESENTATION_FIELDS,
-    ...PHI_CONTROL_STATE_FIELDS,
   ],
   defaultConfig: {
     key: "command",

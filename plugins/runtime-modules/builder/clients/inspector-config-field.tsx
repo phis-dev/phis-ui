@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useState, type ReactNode } from "react";
+import { Fragment, useMemo, useState, type ReactNode } from "react";
+import { PhiDividerControl } from "../../../../components/controls/phi-divider-control";
 import { usePhiConfig } from "../../../../components/root/phi-config-provider";
 
 import type {
@@ -614,27 +615,33 @@ function PhiInspectorCollectionFieldControl({
     </PhiFlexControl>
   );
 
+  /*
+   * The select is the field's row -- labelled with the field, "Button" -- and the chosen entry's fields
+   * follow as rows of their own, so the entry reads as part of the settings and not as a card in them.
+   */
   if (field.presentation === "select") {
     const selectedIndex = Math.min(selectedItemIndex, Math.max(0, items.length - 1));
     const selectedItem = items[selectedIndex];
-    return renderPhiInspectorConfigFieldBlock(
-      field,
-      <PhiFlexControl vertical gap={8} style={{ width: "100%", minWidth: 0 }}>
-        {selectedItem ? (
-          <>
-            <PhiSelectControl
-              options={items.map((item, index) => ({ value: String(index), label: readItemLabel(item, index) }))}
-              value={String(selectedIndex)}
-              disabled={disabled}
-              style={{ width: "100%" }}
-              onChange={(next) => setSelectedItemIndex(Number(next))}
-            />
-            {renderItemFields(selectedItem, selectedIndex)}
-          </>
-        ) : (
-          <PhiTypographyControl type="secondary">{field.emptyLabel ?? "No items"}</PhiTypographyControl>
+    if (!selectedItem) {
+      return renderPhiInspectorConfigFieldControl(
+        field,
+        <PhiTypographyControl type="secondary">{field.emptyLabel ?? "No items"}</PhiTypographyControl>,
+      );
+    }
+    return (
+      <Fragment key={field.key}>
+        {renderPhiInspectorConfigFieldControl(
+          field,
+          <PhiSelectControl
+            options={items.map((item, index) => ({ value: String(index), label: readItemLabel(item, index) }))}
+            value={String(selectedIndex)}
+            disabled={disabled}
+            style={{ width: "100%" }}
+            onChange={(next) => setSelectedItemIndex(Number(next))}
+          />,
         )}
-      </PhiFlexControl>,
+        {renderItemFields(selectedItem, selectedIndex)}
+      </Fragment>
     );
   }
 
@@ -720,7 +727,20 @@ function PhiInspectorNumberListField({
   );
 }
 
-export function renderPhiInspectorConfigField({
+export function renderPhiInspectorConfigField(
+  args: Parameters<typeof renderPhiInspectorConfigFieldBody>[0],
+) {
+  const body = renderPhiInspectorConfigFieldBody(args);
+  if (!args.field.heading || body == null) return body;
+  return (
+    <Fragment key={args.field.key}>
+      <PhiDividerControl titlePlacement="start" style={{ marginBlock: 0 }}>{args.field.heading}</PhiDividerControl>
+      {body}
+    </Fragment>
+  );
+}
+
+function renderPhiInspectorConfigFieldBody({
   field,
   value,
   defaultValue,

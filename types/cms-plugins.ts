@@ -75,6 +75,11 @@ type PhiCmsConfigFieldBase = {
   required?: boolean;
   editorPlacement?: "inspector" | "geometry" | "toolbar";
   visibleWhen?: PhiCmsConfigFieldVisibilityRule;
+  /**
+   * A divider with this title drawn above the field: where a group of the fields that follow begins,
+   * as the Command Toolbar's "Toolbar" stands over what holds for every button.
+   */
+  heading?: string;
 };
 
 export type PhiCmsConfigFieldChoicePresentation =

@@ -66,8 +66,7 @@ export function PhiCommandToolbarWidget({
   const listenRoutes = useMemo(() => config?.signalRoutes?.listens ?? [], [config?.signalRoutes?.listens]);
   const [commandDisabled, setCommandDisabled] = useState<boolean | null>(null);
   const [buttonStateByKey, setButtonStateByKey] = useState<Record<string, PhiCommandToolbarButtonRuntimeState>>({});
-  const resolvedDisabled = disabled || commandDisabled === true || config?.disabled === true;
-  const readOnly = config?.readOnly === true;
+  const resolvedDisabled = disabled || commandDisabled === true;
   const toolbarReceiver = signalIdentity.sender;
   const buttonAddresses = useMemo(
     () => new Map(buttons.map((button) => [button.key, resolveButtonSubcontrolAddress(blockId, button.key)])),
@@ -117,7 +116,7 @@ export function PhiCommandToolbarWidget({
   );
 
   function publish(buttonKey: string) {
-    if (!signalsEnabled || readOnly) {
+    if (!signalsEnabled) {
       return;
     }
 
@@ -310,7 +309,7 @@ export function PhiCommandToolbarWidget({
       compact={config?.compact !== false}
       wrap={config?.wrap === true}
       showLabels={config?.showLabels === true}
-      disabled={resolvedDisabled || readOnly}
+      disabled={resolvedDisabled}
       size={config?.controlSize}
       onActivate={publish}
     />

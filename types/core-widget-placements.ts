@@ -419,7 +419,11 @@ export type PhiCommandToolbarButtonConfig = {
   variant?: PhiButtonVariant;
 };
 
-export type PhiCommandToolbarWidgetPlacement = PhiWidgetPlacementBase & PhiControlPlacement & {
+/**
+ * Without the Control's own Read only and Disabled: each button has its own, and the whole toolbar is
+ * switched by `enabled/change`, which every renderable block receives.
+ */
+export type PhiCommandToolbarWidgetPlacement = PhiWidgetPlacementBase & Omit<PhiControlPlacement, "readOnly" | "disabled"> & {
   compact?: boolean;
   wrap?: boolean;
   showLabels?: boolean;
