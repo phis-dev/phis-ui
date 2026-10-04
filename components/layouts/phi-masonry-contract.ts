@@ -53,3 +53,35 @@ export function resolvePhiMasonryColumnProperties(
   }
   return properties;
 }
+
+/** Where one child stands once packed: its column and its distance from the top of the column box. */
+export type PhiMasonryItemPlacement = {
+  column: number;
+  top: number;
+};
+
+/**
+ * Packs children by height: each goes under the column that ends highest, in the order they come. Ties
+ * go to the leftmost column; half a pixel counts as a tie, so the fractions a browser measures do not
+ * send a child to the far side.
+ *
+ * The heights include the gap below each child (the item's padding), so the column box is as tall as
+ * the longest column and the gap under it is taken back by the column box's margin, as in the
+ * multi-column flow this replaces in the browser.
+ */
+export function packPhiMasonryItems(
+  heights: readonly number[],
+  columns: number,
+): { placements: PhiMasonryItemPlacement[]; height: number } {
+  const ends = Array.from({ length: Math.max(1, columns) }, () => 0);
+  const placements = heights.map((height) => {
+    let column = 0;
+    for (let index = 1; index < ends.length; index += 1) {
+      if (ends[index] < ends[column] - 0.5) column = index;
+    }
+    const top = ends[column];
+    ends[column] += height;
+    return { column, top };
+  });
+  return { placements, height: Math.max(...ends) };
+}

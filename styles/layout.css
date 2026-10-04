@@ -56,11 +56,18 @@
 /*
  * A Masonry's columns (components/layouts/phi-masonry-layout.tsx). The Layout box is the `phi-masonry`
  * container and carries the column count for every width; the column box inside it picks one by the
- * container queries below, the way a Grid's slots do. Each item holds the gap below its child as
- * padding, and the column box takes the last one back, so nothing is left under the longest column.
+ * container queries below, the way a Grid's slots do, into `--phi-masonry-columns`. Each item holds the
+ * gap below its child as padding, and the column box takes the last one back, so nothing is left under
+ * the longest column.
+ *
+ * The server sends a multi-column flow. Once the browser can measure, `PhiMasonryColumns` packs the
+ * children by height and marks the box `data-phi-masonry-packed`: the flow is turned off and each item
+ * stands absolutely in its column at its top. The flow alone balances where the columns end and leaves
+ * a column empty whenever fewer would end lower.
  */
 .phi-masonry-layout__columns {
-  column-count: var(--phi-masonry-columns-compact, 1);
+  --phi-masonry-columns: var(--phi-masonry-columns-compact, 1);
+  column-count: var(--phi-masonry-columns);
   column-gap: var(--phi-masonry-gap, 0px);
   column-fill: balance;
   margin-block-end: calc(-1 * var(--phi-masonry-gap, 0px));
@@ -71,19 +78,35 @@
   padding-block-end: var(--phi-masonry-gap, 0px);
 }
 
+.phi-masonry-layout__columns[data-phi-masonry-packed] {
+  column-count: auto;
+  position: relative;
+  height: var(--phi-masonry-packed-height, auto);
+}
+
+.phi-masonry-layout__columns[data-phi-masonry-packed] > .phi-masonry-layout__item {
+  --phi-masonry-column-pitch:
+    calc((100% + var(--phi-masonry-gap, 0px)) / var(--phi-masonry-packed-columns, 1));
+  position: absolute;
+  top: var(--phi-masonry-item-top, 0px);
+  inset-inline-start: calc(var(--phi-masonry-column-pitch) * var(--phi-masonry-item-column, 0));
+  width: calc(var(--phi-masonry-column-pitch) - var(--phi-masonry-gap, 0px));
+  box-sizing: border-box;
+}
+
 /*
  * The same numbers as `PHI_MASONRY_RESPONSIVE_MIN_WIDTH` (components/layouts/phi-masonry-contract.ts),
  * held together by `validate-container-breakpoint-contracts.ts`.
  */
 @container phi-masonry (min-width: 377px) {
   .phi-masonry-layout__columns {
-    column-count: var(--phi-masonry-columns-medium, 1);
+    --phi-masonry-columns: var(--phi-masonry-columns-medium, 1);
   }
 }
 
 @container phi-masonry (min-width: 610px) {
   .phi-masonry-layout__columns {
-    column-count: var(--phi-masonry-columns-wide, 1);
+    --phi-masonry-columns: var(--phi-masonry-columns-wide, 1);
   }
 }
 

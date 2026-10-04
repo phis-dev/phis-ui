@@ -10,6 +10,7 @@ import {
 } from "../../helpers/layout-authoring-markers";
 import type { PhiResponsiveValue } from "../../types/responsive";
 import { resolvePhiMasonryColumnProperties, resolvePhiMasonryColumns } from "./phi-masonry-contract";
+import { PhiMasonryColumns } from "./phi-masonry-columns";
 import { PHI_CMS_MAX_LAYOUT_SLOTS } from "../../constants/cms-layout-types";
 
 const PHI_MASONRY_LAYOUT_DEFAULTS = resolvePhiLayoutDefaults("masonry");
@@ -25,9 +26,8 @@ export type PhiMasonryLayoutProps = Omit<PhiBaseLayoutProps, "slots"> & {
 
 /**
  * Children in columns, each at its own height and directly under the one before it: no rows, so no
- * gaps where a short child stands beside a tall one. The browser fills the columns in order and evens
- * out where they end (`column-fill: balance`), so it is decided in the markup and nothing moves after
- * hydration. The order runs down a column, then on to the next.
+ * gaps where a short child stands beside a tall one. Each child goes under the column that ends highest
+ * (`PhiMasonryColumns`); until the browser can measure, the server's multi-column flow stands in.
  */
 export function PhiMasonryLayout({
   slots,
@@ -110,9 +110,7 @@ export function PhiMasonryLayout({
       {...layoutProps}
       layoutKind={layoutKind}
       slots={[
-        <div key="columns" className="phi-masonry-layout__columns">
-          {renderedItems}
-        </div>,
+        <PhiMasonryColumns key="columns">{renderedItems}</PhiMasonryColumns>,
       ]}
       renderMode={renderMode}
       gap={undefined}

@@ -512,11 +512,24 @@ and why a Masonry has no slot placement -- every slot is one column wide and has
 It states how many columns it has at each profile (`columns`, 1, 2, 3, 4 or 6, default
 `PHI_MASONRY_LAYOUT_DEFAULT_COLUMNS` = 1 / 2 / 3), on the Grid's thresholds and the same way: the Layout
 box is the `phi-masonry` container and carries the count for every width, and a column box inside it
-picks one by `@container phi-masonry` rules (`styles/layout.css`). The column box is the browser's
-multi-column flow with `column-fill: balance`, so the columns end about level, everything is decided in
-the markup and nothing moves after hydration; the order runs down a column, then on to the next. It
-had one `columns` number for every width, or a `minColumnWidth` that silently replaced it -- two fields of
+picks one by `@container phi-masonry` rules (`styles/layout.css`) into `--phi-masonry-columns`. It had
+one `columns` number for every width, or a `minColumnWidth` that silently replaced it -- two fields of
 which only one ever worked.
+
+The children are packed by height: each goes under the column that ends highest, in slot order, the
+leftmost on a tie (`packPhiMasonryItems`). The server cannot measure, so it sends the browser's
+multi-column flow, and once the page can, `PhiMasonryColumns` measures the items, marks the column box
+`data-phi-masonry-packed` and places each item absolutely in its column at its top. Nothing moves in the
+DOM -- a Widget moved to another parent would mount anew -- and a `ResizeObserver` on the box and on every
+item packs again when the width, the count or a child's height changes. The count is read from the box,
+where the container queries chose it, so the thresholds live only in the stylesheet. One column is not
+packed; the flow is the same thing then.
+
+The flow alone was the whole Masonry first, and it is not one: `column-fill: balance` evens out where
+the columns end and leaves a column empty whenever fewer would end lower, so four children of one height
+in three columns stood two and two. Ant Design's `Masonry` packs the same way but renders nothing on the
+server (it takes its items in an effect), picks its columns by the viewport and takes the gap in pixels;
+the packing is a few lines and is ours.
 
 `gap` is the Paddings panel's, across and down. Down, it is each item's bottom padding, and the column
 box takes the last one back, so nothing stands under the longest column; the authoring slot is the
