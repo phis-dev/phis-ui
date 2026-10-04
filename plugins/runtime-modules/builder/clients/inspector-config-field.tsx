@@ -56,6 +56,7 @@ import {
 } from "./inspector-choice-values";
 import { PhiFlexControl } from "../../../../components/controls/phi-flex-control";
 import { PhiTypographyControl } from "../../../../components/controls/phi-typography-control";
+import { PhiDescriptionHint } from "../../../../components/controls/phi-description-tooltip-icon";
 import { isPhiRecord } from "../../../../helpers/is-record";
 
 export type PhiInspectorWidgetReferenceOption = {
@@ -68,13 +69,13 @@ type PhiInspectorChoiceField = Extract<PhiCmsConfigField, { type: "choice" }>;
 type PhiInspectorCollectionField = Extract<PhiCmsConfigField, { type: "collection" }>;
 const PHI_STATIC_OPTIONS_PROVIDER_VALUE = "__phi_static_options__";
 
-export function renderPhiInspectorSettingsRow(label: string, control: ReactNode, key?: string) {
+export function renderPhiInspectorSettingsRow(label: ReactNode, control: ReactNode, key?: string) {
   return (
     <PhiInspectorFieldRow key={key} label={label}>{control}</PhiInspectorFieldRow>
   );
 }
 
-function renderPhiInspectorSettingsBlock(label: string, control: ReactNode, key?: string) {
+function renderPhiInspectorSettingsBlock(label: ReactNode, control: ReactNode, key?: string) {
   return (
     <PhiFlexControl key={key} vertical gap={8} style={{ width: "100%", minWidth: 0 }}>
       <PhiTypographyControl>{label}</PhiTypographyControl>
@@ -83,32 +84,22 @@ function renderPhiInspectorSettingsBlock(label: string, control: ReactNode, key?
   );
 }
 
-function renderPhiInspectorConfigFieldControl(field: PhiCmsConfigField, control: ReactNode) {
-  const resolvedControl = field.description ? (
-    <PhiFlexControl vertical gap={2} style={{ minWidth: 0, width: "100%" }}>
-      {control}
-      <PhiTypographyControl type="secondary">{field.description}</PhiTypographyControl>
-    </PhiFlexControl>
-  ) : control;
+/** The field's label, with its description behind it as (i), the way a labelled Control carries one. */
+function renderPhiInspectorConfigFieldLabel(field: PhiCmsConfigField): ReactNode {
+  const label = field.required ? `${field.label} *` : field.label;
+  return field.description ? (
+    <>
+      {label} <PhiDescriptionHint description={field.description} />
+    </>
+  ) : label;
+}
 
-  return renderPhiInspectorSettingsRow(
-    field.required ? `${field.label} *` : field.label,
-    resolvedControl,
-    field.key,
-  );
+function renderPhiInspectorConfigFieldControl(field: PhiCmsConfigField, control: ReactNode) {
+  return renderPhiInspectorSettingsRow(renderPhiInspectorConfigFieldLabel(field), control, field.key);
 }
 
 function renderPhiInspectorConfigFieldBlock(field: PhiCmsConfigField, control: ReactNode) {
-  return renderPhiInspectorSettingsBlock(
-    field.required ? `${field.label} *` : field.label,
-    field.description ? (
-      <PhiFlexControl vertical gap={2} style={{ minWidth: 0, width: "100%" }}>
-        <PhiTypographyControl type="secondary">{field.description}</PhiTypographyControl>
-        {control}
-      </PhiFlexControl>
-    ) : control,
-    field.key,
-  );
+  return renderPhiInspectorSettingsBlock(renderPhiInspectorConfigFieldLabel(field), control, field.key);
 }
 
 export function isPhiInspectorConfigFieldVisible(field: PhiCmsConfigField, config: Record<string, unknown>) {
